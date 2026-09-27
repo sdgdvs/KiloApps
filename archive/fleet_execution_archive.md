@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-26T20:45:00Z — kilo-qa: KHash (Pass 5: Tutorial & State Integrity Audit)**
+  - Status: PASS ✅ (F5 quicksave/F9 quickload persistence, tutorial integrity, non-occluding toasts; 0 regressions).
+  - State Persistence: Implemented full state persistence (active tab, hexCase, format, HMAC, audio toggle, manifests) across web and Win32 C `khash.dat`.
+  - Tutorial Integrity: Added first-run guide check (`khash_tutorialSeen` / `khash_tutorial.dat`) that never interrupts restored save states.
+  - Interactive UI & Shortcuts: Bound Esc/Enter/Space to dismiss modals; added Esc/Enter handlers in Win32 C; autofocus on open dialogs.
+  - Toast Occlusion: Re-anchored toast to top-right with pointer cursor and click-to-dismiss, preventing obstruction of bottom controls.
+  - Verification: MSVC compile clean (`KHash.exe` 16.4 KB); Vite clean build in 368ms (`khash.html` 95.1 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-26T19:54:00Z — kilo-graphics: KCosmic (Game Content, Glint Purge & Hydrosphere Balance Pass)**
   - Status: PASS ✅ (Specular glints purged; Hydro-Tower moisture condensation & comet balance; 0 regressions).
   - Glint & Comet Purge: Removed artificial sunward specular glint gradient on ocean worlds and softened Gaia Mie limb.

@@ -304,6 +304,7 @@ int hull = 100;
 int maxHull = 100;
 int enemyHull = 0;
 int enemyMaxHull = 0;
+int enemyClass = 1; // 0=Interceptor, 1=Marauder, 2=Dreadnought
 int inCombat = 0;
 char combatLog[1024] = "";
 
@@ -579,7 +580,28 @@ void DrawPlayerShipSprite(HDC hdc, int cx, int cy, int size, int facingRight) {
         LineTo(hdc, cx - size*3/4 - flameLen, cy - size/6);
         MoveToEx(hdc, cx - size*3/4, cy + size/6, NULL);
         LineTo(hdc, cx - size*3/4 - flameLen, cy + size/6);
+
+        // Center Afterburner Plume (Engine Upgrade)
+        if (engineLevel > 1) {
+            HPEN hCenterFlame = CreatePen(PS_SOLID, 2, RGB(255, 180, 0));
+            SelectObject(hdc, hCenterFlame);
+            MoveToEx(hdc, cx - size*3/4, cy, NULL);
+            LineTo(hdc, cx - size*3/4 - flameLen - 4, cy);
+            DeleteObject(hCenterFlame);
+            SelectObject(hdc, hFlamePen);
+        }
         DeleteObject(hFlamePen);
+
+        // Wingtip Laser Mounts (Weapon Upgrade)
+        if (weaponLevel > 1) {
+            HPEN hWpnPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
+            SelectObject(hdc, hWpnPen);
+            MoveToEx(hdc, cx - size/2, cy - size/2, NULL);
+            LineTo(hdc, cx + size/4, cy - size/2);
+            MoveToEx(hdc, cx - size/2, cy + size/2, NULL);
+            LineTo(hdc, cx + size/4, cy + size/2);
+            DeleteObject(hWpnPen);
+        }
     } else {
         // Facing Up (for Galaxy Map icon)
         pts[0].x = cx;             pts[0].y = cy - size;
@@ -612,44 +634,133 @@ void DrawPlayerShipSprite(HDC hdc, int cx, int cy, int size, int facingRight) {
 }
 
 void DrawPirateShipSprite(HDC hdc, int cx, int cy, int size) {
-    // Custom Crimson Pirate Corsair sprite
-    HBRUSH hBodyBrush = CreateSolidBrush(RGB(110, 15, 25));
-    HPEN hBodyPen = CreatePen(PS_SOLID, 1, RGB(255, 60, 60));
-    HGDIOBJ oldBrush = SelectObject(hdc, hBodyBrush);
-    HGDIOBJ oldPen = SelectObject(hdc, hBodyPen);
+    if (enemyClass == 0) {
+        // --- CORSAIR INTERCEPTOR (Fast needle raider) ---
+        HBRUSH hBodyBrush = CreateSolidBrush(RGB(140, 45, 20));
+        HPEN hBodyPen = CreatePen(PS_SOLID, 1, RGB(255, 120, 50));
+        HGDIOBJ oldBrush = SelectObject(hdc, hBodyBrush);
+        HGDIOBJ oldPen = SelectObject(hdc, hBodyPen);
 
-    // Jagged prow facing left
-    POINT pts[8];
-    pts[0].x = cx - size;      pts[0].y = cy;
-    pts[1].x = cx - size/3;    pts[1].y = cy - size/2;
-    pts[2].x = cx + size/3;    pts[2].y = cy - size/3;
-    pts[3].x = cx + size;      pts[3].y = cy - size/2;
-    pts[4].x = cx + size*3/4;  pts[4].y = cy;
-    pts[5].x = cx + size;      pts[5].y = cy + size/2;
-    pts[6].x = cx + size/3;    pts[6].y = cy + size/3;
-    pts[7].x = cx - size/3;    pts[7].y = cy + size/2;
-    Polygon(hdc, pts, 8);
+        POINT pts[8];
+        pts[0].x = cx - size*5/4;  pts[0].y = cy;
+        pts[1].x = cx - size/2;    pts[1].y = cy - size/3;
+        pts[2].x = cx + size/4;    pts[2].y = cy - size*2/3;
+        pts[3].x = cx + size*3/4;  pts[3].y = cy - size/3;
+        pts[4].x = cx + size/2;    pts[4].y = cy;
+        pts[5].x = cx + size*3/4;  pts[5].y = cy + size/3;
+        pts[6].x = cx + size/4;    pts[6].y = cy + size*2/3;
+        pts[7].x = cx - size/2;    pts[7].y = cy + size/3;
+        Polygon(hdc, pts, 8);
 
-    // Glowing red ocular / sensor pod
-    HBRUSH hEye = CreateSolidBrush(RGB(255, 200, 50));
-    SelectObject(hdc, hEye);
-    Ellipse(hdc, cx - size/2, cy - size/6, cx - size/6, cy + size/6);
-    DeleteObject(hEye);
+        // Amber sensor array
+        HBRUSH hEye = CreateSolidBrush(RGB(255, 220, 60));
+        SelectObject(hdc, hEye);
+        Ellipse(hdc, cx - size*3/4, cy - size/6, cx - size/3, cy + size/6);
+        DeleteObject(hEye);
 
-    // Red thruster exhaust
-    int flameLen = (size/2) + (((animTick + 2) % 4) * 2);
-    HPEN hFlamePen = CreatePen(PS_SOLID, 2, RGB(255, 100, 0));
-    SelectObject(hdc, hFlamePen);
-    MoveToEx(hdc, cx + size*3/4, cy - size/4, NULL);
-    LineTo(hdc, cx + size*3/4 + flameLen, cy - size/4);
-    MoveToEx(hdc, cx + size*3/4, cy + size/4, NULL);
-    LineTo(hdc, cx + size*3/4 + flameLen, cy + size/4);
-    DeleteObject(hFlamePen);
+        // Dual high-temp exhaust
+        int flameLen = (size/2) + (((animTick + 1) % 4) * 2);
+        HPEN hFlamePen = CreatePen(PS_SOLID, 2, RGB(255, 140, 0));
+        SelectObject(hdc, hFlamePen);
+        MoveToEx(hdc, cx + size*3/4, cy - size/3, NULL);
+        LineTo(hdc, cx + size*3/4 + flameLen, cy - size/3);
+        MoveToEx(hdc, cx + size*3/4, cy + size/3, NULL);
+        LineTo(hdc, cx + size*3/4 + flameLen, cy + size/3);
+        DeleteObject(hFlamePen);
 
-    SelectObject(hdc, oldBrush);
-    SelectObject(hdc, oldPen);
-    DeleteObject(hBodyBrush);
-    DeleteObject(hBodyPen);
+        SelectObject(hdc, oldBrush);
+        SelectObject(hdc, oldPen);
+        DeleteObject(hBodyBrush);
+        DeleteObject(hBodyPen);
+
+    } else if (enemyClass == 2) {
+        // --- SYNDICATE DREADNOUGHT (Heavy capital flagship) ---
+        HBRUSH hBodyBrush = CreateSolidBrush(RGB(75, 10, 18));
+        HPEN hBodyPen = CreatePen(PS_SOLID, 1, RGB(220, 40, 40));
+        HGDIOBJ oldBrush = SelectObject(hdc, hBodyBrush);
+        HGDIOBJ oldPen = SelectObject(hdc, hBodyPen);
+
+        POINT pts[6];
+        pts[0].x = cx - size*5/4;  pts[0].y = cy - size/4;
+        pts[1].x = cx - size*5/4;  pts[1].y = cy + size/4;
+        pts[2].x = cx - size/2;    pts[2].y = cy + size*3/4;
+        pts[3].x = cx + size;      pts[3].y = cy + size*3/4;
+        pts[4].x = cx + size;      pts[4].y = cy - size*3/4;
+        pts[5].x = cx - size/2;    pts[5].y = cy - size*3/4;
+        Polygon(hdc, pts, 6);
+
+        // Command Bridge citadel
+        HBRUSH hBridge = CreateSolidBrush(RGB(40, 5, 10));
+        SelectObject(hdc, hBridge);
+        RECT rcBridge = {cx - size/4, cy - size/3, cx + size/2, cy + size/3};
+        FillRect(hdc, &rcBridge, hBridge);
+        DeleteObject(hBridge);
+
+        // Dual crimson slit viewports
+        HBRUSH hEye = CreateSolidBrush(RGB(255, 20, 20));
+        SelectObject(hdc, hEye);
+        RECT rcV1 = {cx - size/2, cy - size/5, cx - size/4, cy - size/10};
+        RECT rcV2 = {cx - size/2, cy + size/10, cx - size/4, cy + size/5};
+        FillRect(hdc, &rcV1, hEye);
+        FillRect(hdc, &rcV2, hEye);
+        DeleteObject(hEye);
+
+        // Triple heavy thruster flames
+        int flameLen = (size/2) + (((animTick + 3) % 4) * 2);
+        HPEN hFlamePen = CreatePen(PS_SOLID, 2, RGB(255, 60, 0));
+        SelectObject(hdc, hFlamePen);
+        MoveToEx(hdc, cx + size, cy - size/2, NULL);
+        LineTo(hdc, cx + size + flameLen, cy - size/2);
+        MoveToEx(hdc, cx + size, cy, NULL);
+        LineTo(hdc, cx + size + flameLen + 4, cy);
+        MoveToEx(hdc, cx + size, cy + size/2, NULL);
+        LineTo(hdc, cx + size + flameLen, cy + size/2);
+        DeleteObject(hFlamePen);
+
+        SelectObject(hdc, oldBrush);
+        SelectObject(hdc, oldPen);
+        DeleteObject(hBodyBrush);
+        DeleteObject(hBodyPen);
+
+    } else {
+        // --- CORSAIR MARAUDER (Standard Cruiser) ---
+        HBRUSH hBodyBrush = CreateSolidBrush(RGB(110, 15, 25));
+        HPEN hBodyPen = CreatePen(PS_SOLID, 1, RGB(255, 60, 60));
+        HGDIOBJ oldBrush = SelectObject(hdc, hBodyBrush);
+        HGDIOBJ oldPen = SelectObject(hdc, hBodyPen);
+
+        POINT pts[8];
+        pts[0].x = cx - size;      pts[0].y = cy;
+        pts[1].x = cx - size/3;    pts[1].y = cy - size/2;
+        pts[2].x = cx + size/3;    pts[2].y = cy - size/3;
+        pts[3].x = cx + size;      pts[3].y = cy - size/2;
+        pts[4].x = cx + size*3/4;  pts[4].y = cy;
+        pts[5].x = cx + size;      pts[5].y = cy + size/2;
+        pts[6].x = cx + size/3;    pts[6].y = cy + size/3;
+        pts[7].x = cx - size/3;    pts[7].y = cy + size/2;
+        Polygon(hdc, pts, 8);
+
+        // Glowing red ocular / sensor pod
+        HBRUSH hEye = CreateSolidBrush(RGB(255, 200, 50));
+        SelectObject(hdc, hEye);
+        Ellipse(hdc, cx - size/2, cy - size/6, cx - size/6, cy + size/6);
+        DeleteObject(hEye);
+
+        // Red thruster exhaust
+        int flameLen = (size/2) + (((animTick + 2) % 4) * 2);
+        HPEN hFlamePen = CreatePen(PS_SOLID, 2, RGB(255, 100, 0));
+        SelectObject(hdc, hFlamePen);
+        MoveToEx(hdc, cx + size*3/4, cy - size/4, NULL);
+        LineTo(hdc, cx + size*3/4 + flameLen, cy - size/4);
+        MoveToEx(hdc, cx + size*3/4, cy + size/4, NULL);
+        LineTo(hdc, cx + size*3/4 + flameLen, cy + size/4);
+        DeleteObject(hFlamePen);
+
+        SelectObject(hdc, oldBrush);
+        SelectObject(hdc, oldPen);
+        DeleteObject(hBodyBrush);
+        DeleteObject(hBodyPen);
+    }
 }
 
 void UpdateDashboard() {
@@ -1247,7 +1358,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                 SetTextColor(memDC, RGB(255, 100, 100));
                 char eLabel[32];
-                sprintf(eLabel, "RAIDER: %d HP", enemyHull);
+                if (enemyClass == 0) sprintf(eLabel, "INTERCEPTOR: %d HP", enemyHull);
+                else if (enemyClass == 2) sprintf(eLabel, "DREADNOUGHT: %d HP", enemyHull);
+                else sprintf(eLabel, "MARAUDER: %d HP", enemyHull);
                 TextOut(memDC, eX - 45, eY - 60, eLabel, strlen(eLabel));
 
                 // Draw active Lasers
@@ -1331,9 +1444,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SetTextColor(memDC, RGB(0, 255, 204));
                 SelectObject(memDC, hFont);
 
-                HPEN hBlackHolePen = CreatePen(PS_DOT, 1, RGB(255, 0, 255));
-                HPEN hSolarPen = CreatePen(PS_DOT, 1, RGB(255, 180, 0));
-                HPEN hDerelictPen = CreatePen(PS_DOT, 1, RGB(160, 210, 255));
+                HPEN hBlackHolePen = CreatePen(PS_SOLID, 1, RGB(255, 0, 255));
+                HPEN hSolarPen = CreatePen(PS_SOLID, 1, RGB(255, 180, 0));
+                HPEN hDerelictPen = CreatePen(PS_SOLID, 1, RGB(160, 210, 255));
                 HBRUSH hNullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
 
                 for (int i = 0; i < MAX_SYSTEMS; i++) {
@@ -1393,11 +1506,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                         // Radar sweep ring pulsing outwards
                         int sweepR = 8 + ((animTick % 12) * 2);
-                        HPEN hSweepPen = CreatePen(PS_DOT, 1, RGB(0, 220, 255));
+                        HPEN hSweepPen = CreatePen(PS_SOLID, 1, RGB(0, 180, 220));
                         SelectObject(memDC, hNullBrush);
                         SelectObject(memDC, hSweepPen);
                         Ellipse(memDC, px - sweepR, py - sweepR, px + sweepR, py + sweepR);
                         DeleteObject(hSweepPen);
+
+                        // Hyperspace Max Range preview boundary
+                        int maxDist = (fuel * engineLevel) * 2;
+                        int rangeR = maxDist * 400 / 100;
+                        HPEN hRangePen = CreatePen(PS_SOLID, 1, RGB(0, 45, 55));
+                        SelectObject(memDC, hRangePen);
+                        Ellipse(memDC, px - rangeR, py - rangeR, px + rangeR, py + rangeR);
+                        DeleteObject(hRangePen);
                     }
 
                     // System Labels
@@ -1584,9 +1705,21 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         
                         PlaySfx(SFX_ENEMY_LASER);
                         inCombat = 1;
-                        enemyMaxHull = 30 + currentSystemId * 20;
+                        int roll = rand() % 100;
+                        if (currentSystemId <= 8 && roll < 65) {
+                            enemyClass = 0; // Interceptor
+                            enemyMaxHull = (int)((30 + currentSystemId * 18) * 0.7f);
+                            strcpy(combatLog, "Corsair Interceptor drops from hyperspace!\nHigh-speed raider detected.\n");
+                        } else if (currentSystemId > 16 || roll < 35) {
+                            enemyClass = 2; // Dreadnought
+                            enemyMaxHull = (int)((30 + currentSystemId * 18) * 1.5f);
+                            strcpy(combatLog, "Syndicate Dreadnought flagship intercepts!\nHeavy capital armor detected.\n");
+                        } else {
+                            enemyClass = 1; // Marauder
+                            enemyMaxHull = 30 + currentSystemId * 18;
+                            strcpy(combatLog, "Corsair Marauder warship intercepts!\nTactical combat initiated.\n");
+                        }
                         enemyHull = enemyMaxHull;
-                        strcpy(combatLog, "Pirate intercepts your ship!\nTactical combat initiated.\n");
                         
                         inManualView = 0;
                         HideManualButtons();
@@ -1731,10 +1864,13 @@ encounter_processed:
                     PlaySfx(SFX_EXPLOSION);
                     SpawnExplosion(310.0f, 270.0f, RGB(255, 60, 60), 40);
                     int bounty = 100 + currentSystemId * 50;
+                    if (enemyClass == 0) bounty = bounty * 8 / 10;
+                    else if (enemyClass == 2) bounty = bounty * 15 / 10;
                     credits += bounty;
                     AdjustRep(6, 3, -8);
                     char winMsg[512];
-                    sprintf(winMsg, "Pirate destroyed! Claimed ₭%d standard bounty.\nReputation: +6 Fed, +3 Traders, -8 Pirates.", bounty);
+                    const char *eTitle = (enemyClass == 0) ? "Interceptor" : (enemyClass == 2 ? "Dreadnought" : "Marauder");
+                    sprintf(winMsg, "%s destroyed! Claimed ₭%d standard bounty.\nReputation: +6 Fed, +3 Traders, -8 Pirates.", eTitle, bounty);
                     if (activeMission.type == 2 && activeMission.targetId == currentSystemId) {
                         int fedBonus = (repFed >= 15) ? (activeMission.reward * 15 / 100) : 0;
                         int totalReward = activeMission.reward + fedBonus;
@@ -1754,15 +1890,22 @@ encounter_processed:
                 if (rand() % 100 < hitChance) {
                     PlaySfx(SFX_ENEMY_LASER);
                     SpawnLaser(310.0f, 270.0f, 100.0f, 270.0f, RGB(255, 60, 60));
-                    int eDmg = (5 + currentSystemId * 5) * (80 + rand() % 40) / 100;
+                    int baseDmg = (5 + currentSystemId * 5);
+                    if (enemyClass == 0) baseDmg = baseDmg * 8 / 10;
+                    else if (enemyClass == 2) baseDmg = baseDmg * 13 / 10;
+                    int eDmg = baseDmg * (80 + rand() % 40) / 100;
                     hull -= eDmg;
                     combatShakeTimer = 6;
                     SpawnExplosion(100.0f, 270.0f, RGB(255, 100, 50), 16);
                     char hitMsg[64];
-                    sprintf(hitMsg, "Pirate hits you for %d damage!\n", eDmg);
+                    const char *eName = (enemyClass == 0) ? "Interceptor" : (enemyClass == 2 ? "Dreadnought" : "Marauder");
+                    sprintf(hitMsg, "%s hits you for %d damage!\n", eName, eDmg);
                     strcat(turnMsg, hitMsg);
                 } else {
-                    strcat(turnMsg, "Pirate's attack misses!\n");
+                    const char *eName = (enemyClass == 0) ? "Interceptor" : (enemyClass == 2 ? "Dreadnought" : "Marauder");
+                    char missMsg[64];
+                    sprintf(missMsg, "%s's attack misses!\n", eName);
+                    strcat(turnMsg, missMsg);
                 }
                 
                 strcpy(combatLog, turnMsg);

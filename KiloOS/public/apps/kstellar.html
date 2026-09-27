@@ -140,22 +140,21 @@
             z-index: 4;
         }
         .phenom-blackhole {
-            border: 2px dashed #ff00ff;
-            box-shadow: 0 0 12px #ff00ff, inset 0 0 8px #ff00ff;
-            animation: phenom-spin 6s linear infinite;
+            border: 2px solid #ff00ff;
+            box-shadow: 0 0 14px #ff00ff, inset 0 0 10px rgba(255, 0, 255, 0.4);
+            animation: phenom-pulse 2.5s ease-in-out infinite;
         }
         .phenom-solarflare {
-            border: 2px dashed #ffaa00;
-            box-shadow: 0 0 12px #ffaa00, inset 0 0 8px #ffaa00;
+            border: 2px solid #ffaa00;
+            box-shadow: 0 0 14px #ffaa00, inset 0 0 10px rgba(255, 170, 0, 0.4);
             animation: phenom-pulse 2s ease-in-out infinite;
         }
         .phenom-derelict {
-            border: 2px dashed #b0d0ff;
-            box-shadow: 0 0 12px #b0d0ff;
+            border: 2px solid #b0d0ff;
+            box-shadow: 0 0 14px #b0d0ff, inset 0 0 8px rgba(176, 208, 255, 0.4);
             animation: phenom-pulse 3s ease-in-out infinite;
         }
-        @keyframes phenom-spin { 100% { transform: translate(-50%, -50%) rotate(360deg); } }
-        @keyframes phenom-pulse { 0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(0.95); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.25); } }
+        @keyframes phenom-pulse { 0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.95); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); } }
 
         /* Commodity badges */
         .market-item-row {
@@ -228,7 +227,7 @@
                         YOU: <span id="combat-player-hull">100</span>/<span id="combat-player-max-hull">100</span> HULL
                     </div>
                     <div style="position:absolute; top:10px; right:15px; background:rgba(30,5,5,0.8); border:1px solid #ff4444; padding:4px 10px; font-size:12px; font-weight:bold; color:#ff4444;">
-                        PIRATE RAIDER: <span id="combat-enemy-hull">50</span>/<span id="combat-enemy-max-hull">50</span> HULL
+                        <span id="combat-enemy-label">PIRATE RAIDER</span>: <span id="combat-enemy-hull">50</span>/<span id="combat-enemy-max-hull">50</span> HULL
                     </div>
                 </div>
 
@@ -549,6 +548,52 @@
             } catch(e) {}
         }
 
+        function playTransaction() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+                const osc1 = audioCtx.createOscillator();
+                const osc2 = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc1.type = 'triangle';
+                osc2.type = 'sine';
+                osc1.frequency.setValueAtTime(587.33, now); // D5
+                osc1.frequency.setValueAtTime(880.00, now + 0.05); // A5
+                osc2.frequency.setValueAtTime(1174.66, now + 0.05); // D6
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+                osc1.connect(gain);
+                osc2.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc1.start(now);
+                osc2.start(now + 0.05);
+                osc1.stop(now + 0.22);
+                osc2.stop(now + 0.22);
+            } catch(e) {}
+        }
+
+        function playShieldImpact() {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(320, now);
+                osc.frequency.exponentialRampToValueAtTime(80, now + 0.15);
+                gain.gain.setValueAtTime(0.18, now);
+                gain.gain.exponentialRampToValueAtTime(0.005, now + 0.15);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } catch(e) {}
+        }
+
         document.addEventListener('click', () => {
             if (!audioCtx) initAudio();
         }, { once: true });
@@ -556,11 +601,11 @@
         // --- Galaxy & Economics Setup ---
         let systems = [];
         const economyTypes = [
-            { name: "Agricultural", color: "#66ff66", foodMult: 0.5, minMult: 1.5, techMult: 1.8 },
-            { name: "Mining", color: "#ff9933", foodMult: 1.5, minMult: 0.5, techMult: 1.5 },
-            { name: "Industrial", color: "#ffcc00", foodMult: 1.3, minMult: 1.2, techMult: 0.8 },
-            { name: "Tech Hub", color: "#00ffff", foodMult: 1.5, minMult: 1.5, techMult: 0.5 },
-            { name: "Trading Hub", color: "#ff55ff", foodMult: 1.0, minMult: 1.0, techMult: 1.0 }
+            { name: "Agricultural", color: "#66ff66", foodMult: 0.5, minMult: 1.5, techMult: 1.8, medMult: 0.6 },
+            { name: "Mining", color: "#ff9933", foodMult: 1.5, minMult: 0.5, techMult: 1.5, medMult: 1.6 },
+            { name: "Industrial", color: "#ffcc00", foodMult: 1.3, minMult: 1.2, techMult: 0.8, medMult: 1.0 },
+            { name: "Tech Hub", color: "#00ffff", foodMult: 1.5, minMult: 1.5, techMult: 0.5, medMult: 0.7 },
+            { name: "Trading Hub", color: "#ff55ff", foodMult: 1.0, minMult: 1.0, techMult: 1.0, medMult: 1.0 }
         ];
         const sysNames = ["Aegis", "Borealis", "Cygnus", "Draco", "Eridanus", "Fenrir", "Goliath", "Helios", "Icarus", "Juno", "Krypton", "Lyra", "Orion", "Pegasus", "Rigel", "Sirius", "Taurus", "Ursa", "Vega", "Wolf"];
         const sectorNames = ["Alpha", "Beta", "Gamma", "Delta", "Omega"];
@@ -571,7 +616,7 @@
                 id: 1, name: "Sol", sector: "Alpha", x: 50, y: 50, 
                 desc: "Cradle of humanity. Highly developed planetary system.", economy: "Trading Hub", 
                 phenomenon: "None",
-                market: {food: 20, minerals: 40, tech: 150}
+                market: {food: 20, minerals: 40, tech: 150, medicine: 60}
             });
             for (let i = 2; i <= 30; i++) {
                 let sec = sectorNames[Math.floor(Math.random() * sectorNames.length)];
@@ -581,6 +626,7 @@
                 let baseFood = 20 + Math.floor(Math.random() * 10);
                 let baseMin = 40 + Math.floor(Math.random() * 20);
                 let baseTech = 100 + Math.floor(Math.random() * 50);
+                let baseMed = 60 + Math.floor(Math.random() * 25);
                 let phenom = "None";
                 if (i % 3 === 0) {
                     const pList = ["Black Hole", "Solar Flare", "Derelict Salvage"];
@@ -598,7 +644,8 @@
                     market: {
                         food: Math.floor(baseFood * eco.foodMult),
                         minerals: Math.floor(baseMin * eco.minMult),
-                        tech: Math.floor(baseTech * eco.techMult)
+                        tech: Math.floor(baseTech * eco.techMult),
+                        medicine: Math.floor(baseMed * eco.medMult)
                     }
                 });
             }
@@ -614,7 +661,7 @@
         let selectedSystem = 1;
         let fuel = 100;
         let credits = 1000;
-        let cargo = { food: 0, minerals: 0, tech: 0 };
+        let cargo = { food: 0, minerals: 0, tech: 0, medicine: 0 };
         let cargoMax = 50;
         let hull = 100;
         let maxHull = 100;
@@ -849,8 +896,9 @@
                 cargo = data.cargo && typeof data.cargo === 'object' ? {
                     food: data.cargo.food || 0,
                     minerals: data.cargo.minerals || 0,
-                    tech: data.cargo.tech || 0
-                } : { food: 0, minerals: 0, tech: 0 };
+                    tech: data.cargo.tech || 0,
+                    medicine: data.cargo.medicine || 0
+                } : { food: 0, minerals: 0, tech: 0, medicine: 0 };
                 cargoMax = typeof data.cargoMax === 'number' ? data.cargoMax : 50;
                 engineLevel = typeof data.engineLevel === 'number' ? data.engineLevel : 1;
                 cargoLevel = typeof data.cargoLevel === 'number' ? data.cargoLevel : 1;
@@ -954,7 +1002,7 @@
         };
 
         function getCargoUsed() {
-            return cargo.food + cargo.minerals + cargo.tech;
+            return (cargo.food || 0) + (cargo.minerals || 0) + (cargo.tech || 0) + (cargo.medicine || 0);
         }
 
         function updateDashboard() {
@@ -1092,11 +1140,11 @@
             const price = getBuyPrice(sys.market[item]);
             if (credits >= price && getCargoUsed() < cargoMax) {
                 credits -= price;
-                cargo[item]++;
+                cargo[item] = (cargo[item] || 0) + 1;
                 adjustRep(0, 1, 0);
                 updateDashboard();
                 showSystemInfo(sys);
-                playBlip();
+                playTransaction();
             } else if (getCargoUsed() >= cargoMax) {
                 playBlip();
                 alert("Cargo hold is full!");
@@ -1109,13 +1157,13 @@
         window.sell = function(item) {
             const sys = systems.find(s => s.id === currentSystemId);
             const price = getSellPrice(sys.market[item]);
-            if (cargo[item] > 0) {
+            if ((cargo[item] || 0) > 0) {
                 credits += price;
                 cargo[item]--;
                 adjustRep(0, 1, 0);
                 updateDashboard();
                 showSystemInfo(sys);
-                playBlip();
+                playTransaction();
             } else {
                 playBlip();
                 alert("You don't have any " + item + " to sell!");
@@ -1228,6 +1276,12 @@
         };
 
         // --- Combat System with Visual Battle Arena ---
+        const ENEMY_CLASSES = [
+            { id: 'interceptor', name: 'Corsair Interceptor', hullMult: 0.65, dmgMult: 0.8, hitChance: 0.9, color: '#ff6633', speed: 20, desc: 'High-speed raider with evasion thrusters.' },
+            { id: 'marauder', name: 'Corsair Marauder', hullMult: 1.0, dmgMult: 1.0, hitChance: 0.85, color: '#cc2222', speed: 15, desc: 'Armored pirate cruiser with twin prow fangs.' },
+            { id: 'dreadnought', name: 'Syndicate Dreadnought', hullMult: 1.5, dmgMult: 1.35, hitChance: 0.80, color: '#990000', speed: 12, desc: 'Heavy capital flagship with triple engine array.' }
+        ];
+        let currentEnemyClass = ENEMY_CLASSES[1];
         let playerShipState = { x: 180, y: 120, targetX: 180, targetY: 120, tilt: 0, shieldGlow: 0, flash: 0 };
         let enemyShipState = { x: 620, y: 120, targetX: 620, targetY: 120, tilt: 0, flash: 0 };
         let combatEnding = false;
@@ -1236,7 +1290,17 @@
             playEnemyLaser();
             inCombat = true;
             combatEnding = false;
-            enemyMaxHull = 30 + currentSystemId * 20;
+            
+            let classIdx = 1;
+            if (currentSystemId <= 8 && Math.random() < 0.65) {
+                classIdx = 0; // Interceptor in earlier sectors
+            } else if (currentSystemId > 16 || Math.random() < 0.35) {
+                classIdx = 2; // Dreadnought in dangerous deep space
+            } else if (Math.random() < 0.45) {
+                classIdx = 0;
+            }
+            currentEnemyClass = ENEMY_CLASSES[classIdx];
+            enemyMaxHull = Math.round((30 + currentSystemId * 18) * currentEnemyClass.hullMult);
             enemyHull = enemyMaxHull;
             playerShipState = { x: 180, y: 120, targetX: 180, targetY: 120, tilt: 0, shieldGlow: 0, flash: 0 };
             enemyShipState = { x: 620, y: 120, targetX: 620, targetY: 120, tilt: 0, flash: 0 };
@@ -1244,7 +1308,9 @@
             projectiles.length = 0;
             
             document.getElementById('combat-overlay').style.display = 'flex';
-            document.getElementById('combat-log').innerHTML = '<p>★ Pirate Corsair warship intercepts your vessel! Tactical combat initiated.</p>';
+            const labelEl = document.getElementById('combat-enemy-label');
+            if (labelEl) labelEl.innerText = currentEnemyClass.name.toUpperCase();
+            document.getElementById('combat-log').innerHTML = `<p>★ ${currentEnemyClass.name} intercepts your vessel! ${currentEnemyClass.desc}</p>`;
             updateCombatUI();
         }
 
@@ -1325,10 +1391,10 @@
                 addParticleBurst(enemyShipState.x, enemyShipState.y, '#ff9900', 35, 7, 'spark');
                 addParticleBurst(enemyShipState.x, enemyShipState.y, '#ff3300', 25, 5, 'debris');
                 
-                let bounty = 100 + currentSystemId * 50;
+                let bounty = Math.round((100 + currentSystemId * 50) * (currentEnemyClass.hullMult || 1.0));
                 credits += bounty;
                 adjustRep(6, 3, -8);
-                let logMsg = `★ PIRATE DESTROYED! Claimed ₭${bounty} standard bounty.<br>Reputation: +6 Federation, +3 Traders, -8 Pirates.`;
+                let logMsg = `★ ${currentEnemyClass.name.toUpperCase()} DESTROYED! Claimed ₭${bounty} standard bounty.<br>Reputation: +6 Federation, +3 Traders, -8 Pirates.`;
                 if (activeMission && activeMission.type === 'bounty' && activeMission.targetId === currentSystemId) {
                     let fedBonus = repFed >= 15 ? Math.round(activeMission.reward * 0.15) : 0;
                     let totalReward = activeMission.reward + fedBonus;
@@ -1344,9 +1410,17 @@
             }
             
             // Enemy turn
-            let hitChance = playerEvading ? 0.45 : 0.85;
+            let baseHit = currentEnemyClass ? currentEnemyClass.hitChance : 0.85;
+            let hitChance = playerEvading ? (baseHit * 0.5) : baseHit;
             if (Math.random() < hitChance) {
-                let eDmg = Math.floor((5 + currentSystemId * 5) * (0.8 + Math.random() * 0.4));
+                let dmgMult = currentEnemyClass ? currentEnemyClass.dmgMult : 1.0;
+                let rawDmg = Math.floor((5 + currentSystemId * 5) * dmgMult * (0.8 + Math.random() * 0.4));
+                let absorbed = 0;
+                if (playerShipState.shieldGlow > 0 || shieldLevel > 1) {
+                    absorbed = Math.min(rawDmg - 1, Math.round(shieldLevel * 3));
+                    if (absorbed > 0) playShieldImpact();
+                }
+                let eDmg = Math.max(1, rawDmg - absorbed);
                 hull -= eDmg;
                 playerShipState.flash = 12;
                 triggerScreenShake(7);
@@ -1355,12 +1429,13 @@
                     sx: enemyShipState.x - 30, sy: enemyShipState.y,
                     tx: playerShipState.x + 30, ty: playerShipState.y,
                     x: enemyShipState.x - 30, y: enemyShipState.y,
-                    color: '#ff3333', speed: 16, isPlayer: false
+                    color: currentEnemyClass ? currentEnemyClass.color : '#ff3333', speed: 16, isPlayer: false
                 });
                 addParticleBurst(playerShipState.x, playerShipState.y, '#ff8800', 14, 4, 'spark');
-                logCombat(`Pirate heavy cannon strikes your hull for ${eDmg} damage!`);
+                let absorbText = absorbed > 0 ? ` (${absorbed} absorbed by shields)` : "";
+                logCombat(`${currentEnemyClass.name} strikes your hull for ${eDmg} damage!${absorbText}`);
             } else {
-                logCombat(`Pirate disruptor salvo missed your vessel!`);
+                logCombat(`${currentEnemyClass.name} disruptor salvo missed your vessel!`);
             }
             
             updateCombatUI();
@@ -1444,6 +1519,8 @@
                 return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" fill="#1b4d2e" stroke="#00ff66" stroke-width="2"/><path d="M7 8h10M7 12h10M7 16h6" stroke="#00ff66" stroke-width="2" stroke-linecap="round"/></svg>`;
             } else if (type === 'minerals') {
                 return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><polygon points="12,2 22,8 18,22 6,22 2,8" fill="#4d2f00" stroke="#ffaa00" stroke-width="2"/><polygon points="12,2 18,12 12,22 6,12" fill="#663e00" stroke="#ffaa00" stroke-width="1.5"/></svg>`;
+            } else if (type === 'medicine') {
+                return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" fill="#33001a" stroke="#ff3399" stroke-width="2"/><path d="M12 7v10M7 12h10" stroke="#ff3399" stroke-width="2.5" stroke-linecap="round"/></svg>`;
             } else {
                 return `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="4" y="4" width="16" height="16" fill="#002b4d" stroke="#00ffff" stroke-width="2"/><rect x="8" y="8" width="8" height="8" fill="#00ffff"/><line x1="12" y1="1" x2="12" y2="4" stroke="#00ffff" stroke-width="2"/><line x1="12" y1="20" x2="12" y2="23" stroke="#00ffff" stroke-width="2"/><line x1="1" y1="12" x2="4" y2="12" stroke="#00ffff" stroke-width="2"/><line x1="20" y1="12" x2="23" y2="12" stroke="#00ffff" stroke-width="2"/></svg>`;
             }
@@ -1467,9 +1544,10 @@
                 </defs>
                 <circle cx="32" cy="32" r="22" fill="url(#planetGrad_${sys.id})"/>
                 ${ringSvg}
-                <!-- Orbiting Satellite Beacon -->
-                <circle cx="48" cy="18" r="2.5" fill="#ffffff"/>
-                <line x1="48" y1="18" x2="52" y2="14" stroke="#00ffff" stroke-width="1"/>
+                <!-- Orbital Station Facility (Clean static architecture) -->
+                <rect x="44" y="14" width="8" height="3" fill="#00ffff" opacity="0.9"/>
+                <rect x="46" y="11" width="4" height="9" fill="#004466" stroke="#00ffff" stroke-width="1"/>
+                <line x1="43" y1="15" x2="53" y2="15" stroke="#00ffcc" stroke-width="1"/>
             </svg>`;
         }
 
@@ -1501,7 +1579,19 @@
             `;
             
             if (sys.id !== currentSystemId) {
-                html += `<button class="action-btn" style="width:100%;" onclick="travelTo(${sys.id})">★ SET HYPERSPACE COURSE ★</button>`;
+                const curSys = systems.find(s => s.id === currentSystemId) || systems[0];
+                const dist = Math.sqrt(Math.pow(sys.x - curSys.x, 2) + Math.pow(sys.y - curSys.y, 2));
+                let fuelCost = Math.round((dist * 0.5) / engineLevel);
+                if (fuelCost < 1) fuelCost = 1;
+                const canReach = (fuel >= fuelCost);
+                html += `
+                    <div style="margin:8px 0; padding:8px; border:1px solid ${canReach ? '#00ffcc' : '#ff4444'}; background:rgba(0,15,25,0.7); font-size:12px;">
+                        <strong>HYPERSPACE NAVIGATION:</strong><br>
+                        Distance: ${Math.round(dist)} Light Years<br>
+                        Fuel Required: <span style="color:${canReach ? '#00ff88' : '#ff4444'}; font-weight:bold;">${fuelCost}%</span> (Current Tank: ${fuel}%)
+                    </div>
+                    <button class="action-btn" style="width:100%; border-color:${canReach ? '#00ffcc' : '#ffaa00'}; color:${canReach ? '#00ffcc' : '#ffaa00'};" onclick="travelTo(${sys.id})">★ SET HYPERSPACE COURSE ★</button>
+                `;
             } else {
                 let phenomAction = "";
                 if (sys.phenomenon && sys.phenomenon !== "None") {
@@ -1552,6 +1642,19 @@
                         <div style="display:flex; gap:4px;">
                             <button class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="buy('tech')">Buy</button>
                             <button class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="sell('tech')">Sell</button>
+                        </div>
+                    </div>
+                    <div class="market-item-row">
+                        <div style="display:flex; align-items:center;">
+                            <span class="market-icon">${getCommodityIcon('medicine')}</span>
+                            <div>
+                                <strong>Medicine</strong> [Hold: ${cargo.medicine || 0}]<br>
+                                <span style="font-size:11px; color:#aaa;">Buy: ₭${getBuyPrice(sys.market.medicine || 60)} | Sell: ₭${getSellPrice(sys.market.medicine || 60)}</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:4px;">
+                            <button class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="buy('medicine')">Buy</button>
+                            <button class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="sell('medicine')">Sell</button>
                         </div>
                     </div>
                 </div>`;
@@ -1841,6 +1944,17 @@
                 const px = curSys.x * mw / 100;
                 const py = curSys.y * mh / 100;
 
+                // Hyperspace Jump Maximum Range Boundary
+                const maxJumpDist = (fuel * engineLevel) / 0.5;
+                const rangePx = (maxJumpDist / 100) * Math.min(mw, mh);
+                mapCtx.save();
+                mapCtx.strokeStyle = 'rgba(0, 255, 204, 0.15)';
+                mapCtx.lineWidth = 1;
+                mapCtx.beginPath();
+                mapCtx.arc(px, py, rangePx, 0, Math.PI * 2);
+                mapCtx.stroke();
+                mapCtx.restore();
+
                 // Pulsing radar ring
                 const ringRad = 14 + Math.sin(animFrameTime * 4) * 3;
                 mapCtx.save();
@@ -2035,9 +2149,30 @@
                 cCtx.fill();
                 cCtx.stroke();
 
+                // Wingtip Laser Mounts (Weapon Upgrade)
+                if (weaponLevel > 1) {
+                    cCtx.strokeStyle = '#00ffff';
+                    cCtx.lineWidth = 2;
+                    cCtx.beginPath();
+                    cCtx.moveTo(-15, -20); cCtx.lineTo(8, -20);
+                    cCtx.moveTo(-15, 20); cCtx.lineTo(8, 20);
+                    cCtx.stroke();
+                }
+
+                // Center Afterburner Plume (Engine Upgrade)
+                if (engineLevel > 1) {
+                    const cFlmLen = 16 + Math.random() * 8;
+                    cCtx.fillStyle = '#ffaa00';
+                    cCtx.beginPath();
+                    cCtx.moveTo(-28, -2);
+                    cCtx.lineTo(-28 - cFlmLen, 0);
+                    cCtx.lineTo(-28, 2);
+                    cCtx.fill();
+                }
+
                 cCtx.restore();
 
-                // DRAW PIRATE CORSAIR RAIDER SPRITE
+                // DRAW ENEMY SHIP SPRITE BASED ON ENEMY CLASS
                 const eBob = Math.sin(animFrameTime * 3.5 + 1) * 4;
                 const ex = enemyShipState.x;
                 const ey = enemyShipState.y + eBob;
@@ -2045,43 +2180,107 @@
                 cCtx.save();
                 cCtx.translate(ex, ey);
 
-                // Pirate Engine Exhaust
-                const eFlmLen = 12 + Math.random() * 7;
-                cCtx.fillStyle = '#ff2200';
-                cCtx.beginPath();
-                cCtx.moveTo(25, -5);
-                cCtx.lineTo(25 + eFlmLen, 0);
-                cCtx.lineTo(25, 5);
-                cCtx.fill();
-
                 // Hull Flash on Damage
                 if (enemyShipState.flash > 0) {
                     cCtx.fillStyle = '#ffffff';
                     enemyShipState.flash--;
                 } else {
-                    cCtx.fillStyle = '#cc2222';
+                    cCtx.fillStyle = (currentEnemyClass && currentEnemyClass.color) ? currentEnemyClass.color : '#cc2222';
                 }
 
-                // Jagged Pirate Corsair Hull
-                cCtx.beginPath();
-                cCtx.moveTo(-35, 0);      // Front ramming blade
-                cCtx.lineTo(-10, -18);    // Upper fang
-                cCtx.lineTo(15, -25);     // Wing spire
-                cCtx.lineTo(5, -8);       // Wing groove
-                cCtx.lineTo(25, -10);     // Rear fin
-                cCtx.lineTo(20, 0);       // Rear core
-                cCtx.lineTo(25, 10);      // Rear fin
-                cCtx.lineTo(5, 8);        // Wing groove
-                cCtx.lineTo(15, 25);      // Wing spire
-                cCtx.lineTo(-10, 18);     // Lower fang
-                cCtx.closePath();
-                cCtx.fill();
+                if (currentEnemyClass && currentEnemyClass.id === 'interceptor') {
+                    // --- CORSAIR INTERCEPTOR SPRITE ---
+                    const eFlmLen = 14 + Math.random() * 8;
+                    cCtx.fillStyle = '#ff8800';
+                    cCtx.beginPath();
+                    cCtx.moveTo(20, -10); cCtx.lineTo(20 + eFlmLen, -10); cCtx.lineTo(20, -7); cCtx.fill();
+                    cCtx.beginPath();
+                    cCtx.moveTo(20, 7); cCtx.lineTo(20 + eFlmLen, 10); cCtx.lineTo(20, 10); cCtx.fill();
 
-                // Menacing Optic Visor
-                cCtx.fillStyle = '#ff0000';
-                cCtx.shadowColor = '#ff0000';
-                cCtx.shadowBlur = 8;
-                cCtx.fillRect(-15, -3, 10, 6);
+                    if (enemyShipState.flash <= 0) cCtx.fillStyle = '#cc4422';
+                    cCtx.beginPath();
+                    cCtx.moveTo(-38, 0);      // Needle nose
+                    cCtx.lineTo(-12, -8);     // Front taper
+                    cCtx.lineTo(16, -20);     // Upper swept wing
+                    cCtx.lineTo(10, -5);      // Inner notch
+                    cCtx.lineTo(20, -12);     // Upper engine housing
+                    cCtx.lineTo(18, 0);       // Rear core
+                    cCtx.lineTo(20, 12);      // Lower engine housing
+                    cCtx.lineTo(10, 5);       // Inner notch
+                    cCtx.lineTo(16, 20);      // Lower swept wing
+                    cCtx.lineTo(-12, 8);      // Front taper
+                    cCtx.closePath();
+                    cCtx.fill();
+
+                    cCtx.fillStyle = '#ffcc00';
+                    cCtx.shadowColor = '#ffaa00';
+                    cCtx.shadowBlur = 6;
+                    cCtx.fillRect(-18, -2, 8, 4);
+
+                } else if (currentEnemyClass && currentEnemyClass.id === 'dreadnought') {
+                    // --- SYNDICATE DREADNOUGHT SPRITE ---
+                    const eFlmLen = 16 + Math.random() * 9;
+                    cCtx.fillStyle = '#ff2200';
+                    cCtx.beginPath();
+                    cCtx.moveTo(28, -12); cCtx.lineTo(28 + eFlmLen, -12); cCtx.lineTo(28, -8); cCtx.fill();
+                    cCtx.beginPath();
+                    cCtx.moveTo(30, -3); cCtx.lineTo(30 + eFlmLen * 1.2, 0); cCtx.lineTo(30, 3); cCtx.fill();
+                    cCtx.beginPath();
+                    cCtx.moveTo(28, 8); cCtx.lineTo(28 + eFlmLen, 12); cCtx.lineTo(28, 12); cCtx.fill();
+
+                    if (enemyShipState.flash <= 0) cCtx.fillStyle = '#771111';
+                    cCtx.beginPath();
+                    cCtx.moveTo(-42, -8);     // Heavy prow top
+                    cCtx.lineTo(-42, 8);      // Heavy prow bottom
+                    cCtx.lineTo(-20, 22);     // Forward armor slab
+                    cCtx.lineTo(5, 30);       // Heavy broadside flank
+                    cCtx.lineTo(25, 20);      // Aft armor block
+                    cCtx.lineTo(28, 6);       // Engine casing
+                    cCtx.lineTo(28, -6);      // Engine casing
+                    cCtx.lineTo(25, -20);     // Aft armor block
+                    cCtx.lineTo(5, -30);      // Heavy broadside flank
+                    cCtx.lineTo(-20, -22);    // Forward armor slab
+                    cCtx.closePath();
+                    cCtx.fill();
+
+                    cCtx.fillStyle = '#440808';
+                    cCtx.fillRect(-5, -12, 22, 24);
+
+                    cCtx.fillStyle = '#ff0033';
+                    cCtx.shadowColor = '#ff0000';
+                    cCtx.shadowBlur = 10;
+                    cCtx.fillRect(-22, -6, 12, 3);
+                    cCtx.fillRect(-22, 3, 12, 3);
+
+                } else {
+                    // --- CORSAIR MARAUDER SPRITE (Standard) ---
+                    const eFlmLen = 12 + Math.random() * 7;
+                    cCtx.fillStyle = '#ff2200';
+                    cCtx.beginPath();
+                    cCtx.moveTo(25, -5);
+                    cCtx.lineTo(25 + eFlmLen, 0);
+                    cCtx.lineTo(25, 5);
+                    cCtx.fill();
+
+                    cCtx.beginPath();
+                    cCtx.moveTo(-35, 0);      // Front ramming blade
+                    cCtx.lineTo(-10, -18);    // Upper fang
+                    cCtx.lineTo(15, -25);     // Wing spire
+                    cCtx.lineTo(5, -8);       // Wing groove
+                    cCtx.lineTo(25, -10);     // Rear fin
+                    cCtx.lineTo(20, 0);       // Rear core
+                    cCtx.lineTo(25, 10);      // Rear fin
+                    cCtx.lineTo(5, 8);        // Wing groove
+                    cCtx.lineTo(15, 25);      // Wing spire
+                    cCtx.lineTo(-10, 18);     // Lower fang
+                    cCtx.closePath();
+                    cCtx.fill();
+
+                    cCtx.fillStyle = '#ff0000';
+                    cCtx.shadowColor = '#ff0000';
+                    cCtx.shadowBlur = 8;
+                    cCtx.fillRect(-15, -3, 10, 6);
+                }
 
                 cCtx.restore();
                 cCtx.restore();
@@ -2124,6 +2323,7 @@
                             <th style="padding:6px; border:1px solid #005555;">Food</th>
                             <th style="padding:6px; border:1px solid #005555;">Minerals</th>
                             <th style="padding:6px; border:1px solid #005555;">Tech</th>
+                            <th style="padding:6px; border:1px solid #005555;">Medicine</th>
                             <th style="padding:6px; border:1px solid #005555;">Primary Strategy</th>
                         </tr>
                         <tr>
@@ -2131,20 +2331,23 @@
                             <td style="padding:5px; border:1px solid #005555; color:#00ff00;">CHEAP (0.5x)</td>
                             <td style="padding:5px; border:1px solid #005555; color:#ffaa55;">HIGH (1.5x)</td>
                             <td style="padding:5px; border:1px solid #005555; color:#ff6666;">PEAK (1.8x)</td>
-                            <td style="padding:5px; border:1px solid #005555;">Buy Food here; Sell Tech for massive profit</td>
+                            <td style="padding:5px; border:1px solid #005555; color:#00ff00;">CHEAP (0.6x)</td>
+                            <td style="padding:5px; border:1px solid #005555;">Buy Food &amp; Medicine; Sell Tech for top profit</td>
                         </tr>
                         <tr>
                             <td style="padding:5px; border:1px solid #005555; font-weight:bold; color:#ffdd88;">Mining</td>
                             <td style="padding:5px; border:1px solid #005555; color:#ffaa55;">HIGH (1.5x)</td>
                             <td style="padding:5px; border:1px solid #005555; color:#00ff00;">CHEAP (0.5x)</td>
                             <td style="padding:5px; border:1px solid #005555; color:#ffaa55;">HIGH (1.5x)</td>
-                            <td style="padding:5px; border:1px solid #005555;">Buy Minerals here; Sell Food &amp; Tech</td>
+                            <td style="padding:5px; border:1px solid #005555; color:#ff6666;">PEAK (1.6x)</td>
+                            <td style="padding:5px; border:1px solid #005555;">Buy Minerals here; Sell Medicine &amp; Food</td>
                         </tr>
                         <tr>
                             <td style="padding:5px; border:1px solid #005555; font-weight:bold; color:#ffaaee;">Industrial</td>
                             <td style="padding:5px; border:1px solid #005555; color:#ffaa55;">HIGH (1.3x)</td>
                             <td style="padding:5px; border:1px solid #005555; color:#ffcc66;">MED (1.2x)</td>
                             <td style="padding:5px; border:1px solid #005555; color:#88ffcc;">LOW (0.8x)</td>
+                            <td style="padding:5px; border:1px solid #005555;">BASE (1.0x)</td>
                             <td style="padding:5px; border:1px solid #005555;">Buy Tech; Sell raw Minerals and Food</td>
                         </tr>
                         <tr>
@@ -2152,10 +2355,12 @@
                             <td style="padding:5px; border:1px solid #005555; color:#ffaa55;">HIGH (1.5x)</td>
                             <td style="padding:5px; border:1px solid #005555; color:#ffaa55;">HIGH (1.5x)</td>
                             <td style="padding:5px; border:1px solid #005555; color:#00ff00;">CHEAP (0.5x)</td>
-                            <td style="padding:5px; border:1px solid #005555;">Buy Tech here for huge margin export</td>
+                            <td style="padding:5px; border:1px solid #005555; color:#88ffcc;">LOW (0.7x)</td>
+                            <td style="padding:5px; border:1px solid #005555;">Buy Tech &amp; Medicine for export</td>
                         </tr>
                         <tr>
                             <td style="padding:5px; border:1px solid #005555; font-weight:bold; color:#ffffaa;">Trading Hub (Sol)</td>
+                            <td style="padding:5px; border:1px solid #005555;">BASE (1.0x)</td>
                             <td style="padding:5px; border:1px solid #005555;">BASE (1.0x)</td>
                             <td style="padding:5px; border:1px solid #005555;">BASE (1.0x)</td>
                             <td style="padding:5px; border:1px solid #005555;">BASE (1.0x)</td>
@@ -2164,7 +2369,8 @@
                     </table>
                     <h3 style="color:#00ffcc;">GOLDEN TRADE ROUTE FORMULAS</h3>
                     <ul style="padding-left:20px;">
-                        <li><strong>The Silicon Circuit:</strong> Buy Tech at <em>Tech Hubs</em> (~₭50-75) → Warp to <em>Agricultural</em> systems → Sell Tech (~₭180-270) for over <strong>300% return on investment</strong>!</li>
+                        <li><strong>The Medical Corridor:</strong> Buy Medicine at <em>Agricultural</em> worlds (~₭35-45) → Sell at <em>Mining</em> outposts (~₭100-140) for guaranteed high-margin returns!</li>
+                        <li><strong>The Silicon Circuit:</strong> Buy Tech at <em>Tech Hubs</em> (~₭50-75) → Warp to <em>Agricultural</em> systems → Sell Tech (~₭180-270) for over <strong>300% ROI</strong>!</li>
                         <li><strong>The Food Run:</strong> Buy Food at <em>Agricultural</em> worlds (~₭10-15) → Sell at <em>Tech Hubs</em> or <em>Mining</em> worlds (~₭30-45).</li>
                         <li><strong>Traders Guild Leverage:</strong> Achieving Friendly standing (≥+15) gives an automatic 10% discount on purchases and 10% bonus on sales, compounding profit margins exponentially!</li>
                     </ul>
@@ -2173,11 +2379,16 @@
             {
                 title: "3. TACTICAL COMBAT & SHIP DEFENSE",
                 html: `
-                    <h3 style="color:#00ffcc; margin-top:0;">HOSTILE PIRATE INTERCEPTIONS</h3>
-                    <p>Warp jumps carry a <strong>25% chance of pirate ambush</strong>. Pirate vessels grow deadlier the deeper you explore into outer sectors.</p>
+                    <h3 style="color:#00ffcc; margin-top:0;">HOSTILE PIRATE INTERCEPTIONS &amp; SHIP CLASSES</h3>
+                    <p>Warp jumps carry a <strong>25% chance of pirate ambush</strong>. Pirate vessels encounterable in the galaxy feature distinct classes:</p>
+                    <ul style="padding-left:20px;">
+                        <li><strong style="color:#ff8800;">Corsair Interceptor:</strong> Nimble light raider. Features high evasive thrusters and rapid blasters, but possesses lighter hull armor (~65% HP).</li>
+                        <li><strong style="color:#cc2222;">Corsair Marauder:</strong> Balanced raider warship. Mounts twin ramming prow blades and heavy burst cannons (~100% HP).</li>
+                        <li><strong style="color:#ff3333;">Syndicate Dreadnought:</strong> Heavily armored capital flagship encountered in outer sectors or high-value bounties. High hull (~150% HP), devastating plasma torpedoes, and pays 1.5x bounty credits upon defeat!</li>
+                    </ul>
                     <h3 style="color:#00ffcc;">TACTICAL COMBAT ACTIONS</h3>
                     <ul style="padding-left:20px;">
-                        <li><strong>ATTACK:</strong> Fires high-energy pulse blasters. Base damage is 15-30, augmented by your <strong>Weapon Level</strong> (+10 damage per level) and Galactic Federation standing (+20% bonus if Friendly).</li>
+                        <li><strong>ATTACK:</strong> Fires high-energy pulse blasters. Base damage is 15-30, augmented by your <strong>Weapon Level</strong> (+10 damage per level) and Galactic Federation standing (+20% bonus if Friendly). Mounts visible wing cannons when upgraded!</li>
                         <li><strong>EVADE:</strong> Performs high-G combat thruster evasions. Halves incoming pirate damage for the turn and raises deflector shields!</li>
                         <li><strong>USE TECH (EMP BURST):</strong> Discharges an overloaded electronic counter-measure pulse. Uses 1 ton of Tech cargo to restore 40 hull and EMP stun!</li>
                         <li><strong>FLEE:</strong> Overcharges sub-light engines for an emergency disengage. Success chance: <code>50% + (Engine Level * 10%)</code>. Higher engine upgrades guarantee reliable escapes!</li>
@@ -2185,7 +2396,7 @@
                     <h3 style="color:#00ffcc;">COMBAT HOTKEYS &amp; SURVIVAL TIPS</h3>
                     <ul style="padding-left:20px;">
                         <li><strong>Tactical Hotkeys:</strong> Press <strong>1 or A</strong> (Attack), <strong>2 or E</strong> (Evade), <strong>3 or T</strong> (Use Tech EMP), <strong>4 or F</strong> (Flee) during combat.</li>
-                        <li>If your hull is low, lead with <strong>Evade</strong> or <strong>Flee</strong> to preserve your ship.</li>
+                        <li>If your hull is low, lead with <strong>Evade</strong> or <strong>Flee</strong> to preserve your ship. Deflector shield upgrades actively absorb incoming fire.</li>
                         <li>Keep at least 1-2 tons of Tech in your hold as emergency EMP ammunition for tough skirmishes.</li>
                         <li>Befriending the <strong>Pirate Syndicate</strong> (+15 rep) turns hostile ambushes into peaceful salutes with ₭150 tribute payments!</li>
                     </ul>

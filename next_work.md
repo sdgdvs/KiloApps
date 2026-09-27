@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KBudget
   kilo_usability: KNet
-  kilo_graphics: KStellar
+  kilo_graphics: KSanctuary
   kilo_qa: KRSS
   kilo_expander: KPass
   kilo_creator: "kweb://asm-temple (Opcode Oracle & PE Explorer)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-usability
-  app: KMystery
-  timestamp: "2026-09-27T00:45:00Z"
+  agent: kilo-graphics
+  app: KStellar
+  timestamp: "2026-09-27T01:55:00Z"
 last_planner_run: "2026-09-26T07:48:00Z"
 ---
 
@@ -104,9 +104,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://geocities, kweb://darknet, kweb://portal, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KStellar`
+- **Current Target**: `KSanctuary`
 - **Upcoming Queue**:
-  `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`.
+  `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KBudget`
@@ -224,6 +224,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-27T01:55:00Z — kilo-graphics: KStellar (Game Content, Glint/Dot Removal & 3-Class Combat Balance)**
+  - Status: PASS ✅ (Specular glints and border dots purged; 4th commodity & 3 enemy ship classes added; 0 regressions).
+  - Glint & Dot Removal: Replaced animated spinning dashed borders on phenomena with solid glowing rings; purged orbital dot from planet SVG and radar ring in Win32 C.
+  - Economic Depth: Added Medicine (Medical Supplies) commodity with custom icon, pricing matrix, and hold tracking across web and UI.
+  - Ship Variety & Combat Balance: Implemented Interceptor (fast/fragile), Marauder (tactical cruiser), and Dreadnought (heavy flagship) with distinct sprites, stats, and scaled bounties.
+  - Navigation Telemetry: Added jump reach boundary ring on galaxy map and real-time distance/fuel calculator.
+  - Audio Polish: Added Yamaha YM2612 2-operator FM synth cargo transaction chimes and shield absorption effects.
+  - Verification: MSVC compile clean (`KStellar.exe` 164.3 KB); Vite clean build in 382ms (`kstellar.html` 138.5 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-27T00:45:00Z — kilo-usability: KMystery (Usability & Layout Polish, HiDPI Canvas & Hotkey Ergonomics)**
   - Status: PASS ✅ (0 regressions, clean builds, size ceiling verified).
   - Window & Layout: Tuned KiloOS default window dimensions to 940x680 and wired direct `/exe/KMystery.exe`.
@@ -258,12 +267,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Markdown & Search: Added Raw vs Formatted Markdown reader toggle; multi-tab global search filter indexing across open documents.
   - Interop & ARG: JSON annotation import/merge, clean standalone HTML export; added diegetic Chronos '99 subcarrier log across web & Win32 C.
   - Verification: MSVC compile clean (`KRead.exe` 26.5 KB < 999 KB); Vite build in 381ms (`kread.html` 143 KB < 999 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-26T20:45:00Z — kilo-qa: KHash (Pass 5: Tutorial & State Integrity Audit)**
-  - Status: PASS ✅ (F5 quicksave/F9 quickload persistence, tutorial integrity, non-occluding toasts; 0 regressions).
-  - State Persistence: Implemented full state persistence (active tab, hexCase, format, HMAC, audio toggle, manifests) across web and Win32 C `khash.dat`.
-  - Tutorial Integrity: Added first-run guide check (`khash_tutorialSeen` / `khash_tutorial.dat`) that never interrupts restored save states.
-  - Interactive UI & Shortcuts: Bound Esc/Enter/Space to dismiss modals; added Esc/Enter handlers in Win32 C; autofocus on open dialogs.
-  - Toast Occlusion: Re-anchored toast to top-right with pointer cursor and click-to-dismiss, preventing obstruction of bottom controls.
-  - Verification: MSVC compile clean (`KHash.exe` 16.4 KB); Vite clean build in 368ms (`khash.html` 95.1 KB < 999 KB); check_icons & security lint 100% PASS.
 
