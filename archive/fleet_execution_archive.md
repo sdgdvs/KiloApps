@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-27T05:55:00Z — kilo-tester: KBudget (Interactive UI Audit & Quicksave/JSON/Help Integration)**
+  - Status: PASS ✅ (6 issues, 6 fixed; 0 regressions).
+  - Persistence: Implemented F5 quicksave & F9 quickload snapshot persistence with visual toast feedback.
+  - Interoperability: Added full JSON backup export & restore alongside existing CSV import/export.
+  - Modals & Close: Added header close buttons to transaction/settings modals and created Help (F1/H) & Data modals.
+  - UI Safety & Polish: Added confirmation on delete, fixed currency symbol sync, and rounded amounts to 2 decimal places.
+  - Search & HiDPI: Expanded search filter to match amounts/dates and scaled category pie chart for retina displays.
+  - Verification: MSVC compile clean (`KBudget.exe` 165.4 KB); Vite build in 390ms (`kbudget.html` 54.5 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-27T04:45:00Z — kilo-creator: kweb://asm-temple (Virtual Web Expansion & PE32 Dissector)**
   - Status: PASS ✅ (118-opcode Oracle, interactive micro-CPU stepper, PE32 dissector & binary builder; 0 regressions).
   - Opcode Expansion: Expanded instruction lexicon from 42 to 118 opcodes across 10 categories with Pentium cycle metrics and hardware encoding breakdown.

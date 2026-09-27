@@ -560,6 +560,41 @@
     opacity: 1;
     transform: translateX(-50%) translateY(0);
   }
+
+  /* Peer Cursors & Collaborative Studio Styles */
+  .peer-cursor {
+    position: absolute;
+    pointer-events: none;
+    z-index: 25;
+    transition: transform 0.08s ease-out;
+  }
+  .peer-cursor-pointer {
+    width: 14px;
+    height: 14px;
+    border-left: 2px solid;
+    border-top: 2px solid;
+    transform: rotate(-45deg);
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+  }
+  .peer-cursor-tag {
+    position: absolute;
+    top: 14px;
+    left: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(15, 17, 26, 0.94);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #ffffff;
+    white-space: nowrap;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.6);
+  }
+  .btn-collab-active {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.35)) !important;
+    border-color: #10b981 !important;
+    color: #6ee7b7 !important;
+  }
 </style>
 </head>
 <body>
@@ -580,6 +615,10 @@
         Redo [Ctrl+Y]
       </button>
       <div style="width: 1px; height: 20px; background: var(--panel-border); margin: 0 4px;"></div>
+      <button class="btn btn-accent" id="btn-collab" onclick="toggleCollabModal()" title="Live Collaborative Studio (O)" aria-label="Collaborative Studio">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+        <span id="collab-btn-label">Collab [O]</span>
+      </button>
       <button class="btn btn-accent" onclick="document.getElementById('img-loader').click()" title="Import Image (Ctrl+O)" aria-label="Import Image">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
         Import [Ctrl+O]
@@ -640,6 +679,9 @@
           <div class="shortcut-item"><kbd>V</kbd><span>Invert Colors</span></div>
           <div class="shortcut-item"><kbd>Y</kbd><span>Grayscale Filter</span></div>
           <div class="shortcut-item"><kbd>+</kbd> / <kbd>-</kbd><span>+/- Brightness</span></div>
+          <div class="shortcut-item"><kbd>O</kbd><span>Collaborative Studio</span></div>
+          <div class="shortcut-item"><kbd>M</kbd><span>Symmetry Mirror Mode</span></div>
+          <div class="shortcut-item"><kbd>T</kbd><span>Text Stamp Tool</span></div>
           <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>S</kbd><span>Save to OS / File</span></div>
           <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>O</kbd><span>Open Image</span></div>
           <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>Z</kbd><span>Undo</span></div>
@@ -654,14 +696,14 @@
 
         <div class="help-section-title" style="margin-top: 14px;">Drawing &amp; Features</div>
         <ul class="help-list">
-          <li><strong>Quick Starters:</strong> 1-click presets for Demo Art (Mountain Sunset), Pixel Grid, Flowcharts, and 8-bit Sprites.</li>
-          <li><strong>Drawing Tools:</strong> Pick any tool from the sidebar or press its shortcut. Adjust brush size and square/round shapes.</li>
-          <li><strong>Color Palette:</strong> Select from 4 curated palettes or choose custom colors. Press <strong>I</strong> or Alt+Click to sample any color.</li>
-          <li><strong>Layers:</strong> Add transparent layers, re-order, toggle visibility, and merge layers down. All drawing tools and filters target the active layer.</li>
-          <li><strong>Selection:</strong> Use Magic Wand to auto-select contiguous color regions, or Lasso for freeform selection. Press <strong>Esc</strong> to clear selection.</li>
-          <li><strong>Filters &amp; Transforms:</strong> Invert colors, grayscale, brightness, contrast, edge detect, sharpen, and rotate/flip.</li>
-          <li><strong>Zoom &amp; Canvas:</strong> Use Zoom In/Out/Fit controls in the status bar or Ctrl+Wheel to zoom into pixels with razor crispness.</li>
-          <li><strong>Export:</strong> Export your art directly to PNG, WEBP, or standard 24-bit BMP, or save to the KiloOS filesystem. Drag-and-drop any image onto canvas to load.</li>
+          <li><strong>Live Collaborative Studio:</strong> Join shared rooms (e.g. <code>studio-99</code>) powered by Firebase RTDB. Paint simultaneously with friends across computers with real-time brush strokes, floating peer cursors, and full canvas snapshot sync!</li>
+          <li><strong>Symmetry / Mirror Modes:</strong> Draw with instant horizontal, vertical, or 4-way quad kaleidoscope mirroring. Press <strong>M</strong> to cycle modes.</li>
+          <li><strong>Floyd-Steinberg Dithering:</strong> Transform art into authentic 1-bit monochrome or 16-color PC VGA retro palettes with mathematical error diffusion.</li>
+          <li><strong>Text Stamping:</strong> Stamp crisp text onto the canvas with retro monospace, impact, and serif fonts. Press <strong>T</strong>.</li>
+          <li><strong>Quick Starters:</strong> 1-click presets for Mountain Sunset Demo Art, Subterranean Signal '99, Pixel Grid, Flowcharts, and 8-bit Sprites.</li>
+          <li><strong>Drawing Tools:</strong> Brush, Line, Rect, Ellipse, Fill, Spray, Eyedropper, Magic Wand, Lasso, Eraser.</li>
+          <li><strong>Layers &amp; Blend Modes:</strong> Transparent layers, re-ordering, visibility toggling, blend modes, and merge down.</li>
+          <li><strong>Export:</strong> Export directly to PNG, WEBP, or standard 24-bit BMP.</li>
         </ul>
       </div>
       <div class="modal-footer" style="justify-content: space-between; align-items: center;">
@@ -669,6 +711,118 @@
           <input type="checkbox" id="chk-tutorial" checked onchange="toggleTutorialSeen(this.checked)"> Don't show on launch
         </label>
         <button class="btn btn-accent" style="padding: 8px 24px; font-weight: 600;" onclick="closeHelp()">Got it!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Collaborative Studio Modal Dialog -->
+  <div id="collab-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="collab-modal-title" onclick="handleCollabBackdropClick(event)">
+    <div class="modal-dialog" style="max-width: 500px;">
+      <div class="modal-header">
+        <div class="modal-title" id="collab-modal-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          Live Collaborative Studio (Firebase RTDB)
+        </div>
+        <button class="modal-close-btn" onclick="closeCollabModal()" aria-label="Close Collaborative Studio">&times;</button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--panel-border);">
+          <span style="font-size: 12px; color: var(--text-muted);">Current Network State:</span>
+          <span id="collab-state-pill" style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px; background: rgba(255,255,255,0.08); color: var(--text-muted);">⚪ Offline (Local Studio)</span>
+        </div>
+
+        <div>
+          <label style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Studio Room Code</label>
+          <div style="display: flex; gap: 6px;">
+            <input type="text" id="collab-room-input" value="studio-99" maxlength="32" placeholder="room-code" style="flex: 1; padding: 7px 10px; background: var(--btn-bg); border: 1px solid var(--panel-border); border-radius: 6px; color: var(--text-main); font-family: monospace; font-size: 13px;">
+          </div>
+          <div style="display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;">
+            <span style="font-size: 10px; color: var(--text-muted); line-height: 22px;">Quick Rooms:</span>
+            <button class="btn" style="padding: 2px 8px; font-size: 10px;" onclick="setCollabRoomCode('studio-99')">#studio-99</button>
+            <button class="btn" style="padding: 2px 8px; font-size: 10px;" onclick="setCollabRoomCode('pixel-jam')">#pixel-jam</button>
+            <button class="btn" style="padding: 2px 8px; font-size: 10px;" onclick="setCollabRoomCode('retro-art')">#retro-art</button>
+            <button class="btn" style="padding: 2px 8px; font-size: 10px;" onclick="setCollabRoomCode('arg-signal')">#arg-signal</button>
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Your Artist Handle</label>
+          <input type="text" id="collab-nick-input" value="Artist_1999" maxlength="20" placeholder="Your handle" style="width: 100%; padding: 7px 10px; background: var(--btn-bg); border: 1px solid var(--panel-border); border-radius: 6px; color: var(--text-main); font-family: inherit; font-size: 13px;">
+        </div>
+
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-accent" id="btn-collab-connect" style="flex: 1; font-weight: 600; padding: 8px;" onclick="joinCollabRoom()">🚀 Connect to Studio</button>
+          <button class="btn" id="btn-collab-disconnect" style="display: none; color: #ef4444; border-color: rgba(239, 68, 68, 0.4); padding: 8px 14px;" onclick="leaveCollabRoom()">Leave Room</button>
+        </div>
+
+        <div id="collab-active-section" style="display: none; flex-direction: column; gap: 10px; border-top: 1px solid var(--panel-border); padding-top: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12px; font-weight: 600; color: #60a5fa;">Connected Artists (<span id="collab-peer-count">1</span>)</span>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn" style="font-size: 11px; padding: 3px 8px;" onclick="pushCanvasSnapshot()" title="Send current full canvas to all peers in room">📡 Push Canvas</button>
+              <button class="btn" style="font-size: 11px; padding: 3px 8px;" onclick="pullCanvasSnapshot()" title="Pull canvas state from room host">📥 Pull Canvas</button>
+            </div>
+          </div>
+          <div id="collab-peer-list" style="display: flex; flex-direction: column; gap: 4px; max-height: 120px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 6px;"></div>
+          <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
+            💡 <strong>Real-time Sync Active:</strong> Brush strokes, spray dots, shapes, and floating cursors are synchronized in real-time across connected users!
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: flex-end;">
+        <button class="btn btn-accent" style="padding: 7px 20px;" onclick="closeCollabModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Text Stamp Modal Dialog -->
+  <div id="text-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="text-modal-title" onclick="handleTextBackdropClick(event)">
+    <div class="modal-dialog" style="max-width: 420px;">
+      <div class="modal-header">
+        <div class="modal-title" id="text-modal-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
+          Stamp Text onto Canvas
+        </div>
+        <button class="modal-close-btn" onclick="closeTextModal()" aria-label="Close Text Stamp">&times;</button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px;">
+        <div>
+          <label style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Text String</label>
+          <input type="text" id="stamp-text-input" value="KPaint '99" placeholder="Enter text..." style="width: 100%; padding: 8px 10px; background: var(--btn-bg); border: 1px solid var(--panel-border); border-radius: 6px; color: var(--text-main); font-size: 14px;">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <label style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Font Size</label>
+            <select id="stamp-font-size">
+              <option value="12">12px Tiny</option>
+              <option value="16">16px Small</option>
+              <option value="22" selected>22px Normal</option>
+              <option value="32">32px Large</option>
+              <option value="48">48px Huge</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Font Family</label>
+            <select id="stamp-font-family">
+              <option value="'Courier New', monospace">Retro Monospace</option>
+              <option value="'Inter', sans-serif">Modern Sans</option>
+              <option value="'Georgia', serif">Classic Serif</option>
+              <option value="'Impact', sans-serif">Impact / Banner</option>
+            </select>
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <label style="font-size: 12px; color: var(--text-main); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+            <input type="checkbox" id="stamp-font-bold" checked> Bold
+          </label>
+          <label style="font-size: 12px; color: var(--text-main); display: flex; align-items: center; gap: 6px; cursor: pointer;">
+            <input type="checkbox" id="stamp-font-outline"> Shadow / Outline
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer" style="justify-content: flex-end; gap: 8px;">
+        <button class="btn" onclick="closeTextModal()">Cancel</button>
+        <button class="btn btn-accent" style="padding: 7px 20px; font-weight: 600;" onclick="confirmStampText()">Stamp Text</button>
       </div>
     </div>
   </div>
@@ -685,6 +839,7 @@
         <div class="section-title">Quick Starters</div>
         <div style="display: flex; gap: 4px; flex-wrap: wrap;">
           <button class="btn btn-accent" style="flex: 1 1 48%; font-size: 11px; padding: 6px 4px;" onclick="loadDemoArtwork()" title="Generate Mountain Sunset Demo Art (D)">🎨 Demo Art [D]</button>
+          <button class="btn" style="flex: 1 1 48%; font-size: 11px; padding: 6px 4px;" onclick="loadSignalAnomalyTemplate()" title="1999 Subterranean Signal Spectrogram">📡 Signal '99</button>
           <button class="btn" style="flex: 1 1 48%; font-size: 11px; padding: 6px 4px;" onclick="loadGridTemplate()" title="16x16 Pixel Art Grid">📐 Pixel Grid</button>
           <button class="btn" style="flex: 1 1 48%; font-size: 11px; padding: 6px 4px;" onclick="loadDiagramTemplate()" title="Flowchart &amp; Diagram Template">📝 Diagram</button>
           <button class="btn" style="flex: 1 1 48%; font-size: 11px; padding: 6px 4px;" onclick="loadRetroIconTemplate()" title="8-Bit Sprite Template">👾 8-Bit Sprite</button>
@@ -705,6 +860,18 @@
           <button class="btn" id="tool-wand" onclick="setTool('wand')" title="Magic Wand (W)" aria-label="Magic Wand (W)">Wand [W]</button>
           <button class="btn" id="tool-lasso" onclick="setTool('lasso')" title="Lasso (S)" aria-label="Lasso (S)">Lasso [S]</button>
           <button class="btn" id="tool-eraser" onclick="setTool('eraser')" title="Eraser (E)" aria-label="Eraser (E)">Eraser [E]</button>
+          <button class="btn" id="tool-text" onclick="setTool('text')" title="Text Stamp (T)" aria-label="Text Stamp (T)" style="grid-column: span 2;">Text Stamp [T]</button>
+        </div>
+      </div>
+
+      <!-- Symmetry / Mirror Drawing -->
+      <div>
+        <div class="section-title">Symmetry / Mirror [M]</div>
+        <div style="display: flex; gap: 4px;">
+          <button class="btn active" id="btn-sym-none" style="flex: 1; font-size: 11px; padding: 5px 2px;" onclick="setSymmetry('none')" title="Normal Drawing (No Mirror)">Off</button>
+          <button class="btn" id="btn-sym-h" style="flex: 1; font-size: 11px; padding: 5px 2px;" onclick="setSymmetry('h')" title="Horizontal Mirror (Left &harr; Right)">Horiz</button>
+          <button class="btn" id="btn-sym-v" style="flex: 1; font-size: 11px; padding: 5px 2px;" onclick="setSymmetry('v')" title="Vertical Mirror (Top &harr; Bottom)">Vert</button>
+          <button class="btn" id="btn-sym-quad" style="flex: 1; font-size: 11px; padding: 5px 2px;" onclick="setSymmetry('quad')" title="4-Way Quad Kaleidoscope">4-Way</button>
         </div>
       </div>
 
@@ -769,6 +936,12 @@
           <button class="btn" onclick="applyFilter('contrast')" aria-label="Increase Contrast">+Contrast</button>
           <button class="btn" onclick="applyFilter('sepia')" aria-label="Sepia Filter">Sepia</button>
 
+          <button class="btn" onclick="applyDither('1bit')" title="Floyd-Steinberg 1-Bit Dither" aria-label="1-Bit Dither">Dither 1-Bit</button>
+          <button class="btn" onclick="applyDither('vga16')" title="Floyd-Steinberg 16-Color VGA Dither" aria-label="16-Color VGA Dither">VGA 16-Col</button>
+          <button class="btn" onclick="applyBoxBlur()" title="Soft Focus Box Blur" aria-label="Blur">Blur</button>
+          <button class="btn" onclick="applyCRTFilter()" title="CRT Scanlines &amp; Phosphor" aria-label="CRT Scanlines">CRT Raster</button>
+          <button class="btn" onclick="applyVignetteFilter()" title="Vignette Falloff" aria-label="Vignette">Vignette</button>
+
           <button class="btn" onclick="applyConvolve('edge')" aria-label="Edge Detect">Edge Detect</button>
           <button class="btn" onclick="applyConvolve('sharpen')" aria-label="Sharpen">Sharpen</button>
           <button class="btn" onclick="applyConvolve('emboss')" aria-label="Emboss">Emboss</button>
@@ -822,6 +995,7 @@
         <canvas id="canvas" width="800" height="600"></canvas>
         <canvas id="preview" width="800" height="600"></canvas>
         <canvas id="selection-canvas" width="800" height="600"></canvas>
+        <div id="peer-cursors-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; overflow: hidden;"></div>
       </div>
     </div>
   </div>
@@ -834,7 +1008,7 @@
       <span>Tool: <strong id="lbl-tool">Brush</strong></span>
     </div>
     <div style="display: flex; align-items: center; gap: 12px;">
-      <span class="status-hints"><strong>Ctrl+Z</strong> Undo | <strong>B</strong> Brush | <strong>E</strong> Eraser | <strong>G</strong> Fill | <strong>I</strong> Pick | <strong>F1/H</strong> Help</span>
+      <span class="status-hints"><strong>Ctrl+Z</strong> Undo | <strong>B</strong> Brush | <strong>E</strong> Eraser | <strong>G</strong> Fill | <strong>I</strong> Pick | <strong>O</strong> Collab | <strong>M</strong> Symmetry | <strong>F1/H</strong> Help</span>
       <div class="zoom-controls" role="group" aria-label="Zoom Controls">
         <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out (Ctrl -)" aria-label="Zoom Out">−</button>
         <span id="lbl-zoom" onclick="resetZoom()" title="Click to Reset Zoom (Ctrl 0)" style="cursor:pointer; min-width:34px; text-align:center; font-weight:600;">100%</span>
@@ -843,6 +1017,42 @@
       </div>
     </div>
   </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+      authDomain: "kiloappschat.firebaseapp.com",
+      databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+      projectId: "kiloappschat",
+      storageBucket: "kiloappschat.firebasestorage.app",
+      messagingSenderId: "290208566057",
+      appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+    };
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      window.fb = {
+        app,
+        db,
+        ref,
+        set,
+        get,
+        push,
+        onValue,
+        onChildAdded,
+        off,
+        serverTimestamp,
+        onDisconnect
+      };
+      if (window.onFirebaseLoaded) window.onFirebaseLoaded();
+    } catch (err) {
+      console.warn("Firebase RTDB init error:", err);
+    }
+  </script>
 
   <script>
     let canvas = document.getElementById('canvas');
@@ -855,12 +1065,32 @@
 
     let painting = false;
     let currentColor = '#111111';
-    let currentTool = 'freehand'; // freehand, line, rect, ellipse, fill, spray, pipette, wand, lasso, eraser
+    let currentTool = 'freehand'; // freehand, line, rect, ellipse, fill, spray, pipette, wand, lasso, eraser, text
     let previousTool = 'freehand';
     let brushSize = 4;
     let brushShape = 'round';
     let currentVfsPath = null;
     let startX = 0, startY = 0;
+    let lastDrawX = 0, lastDrawY = 0;
+
+    // Symmetry / Mirror mode: 'none', 'h', 'v', 'quad'
+    let currentSymmetry = 'none';
+
+    // Collaborative Studio (Firebase Realtime Database)
+    let isLiveCollab = false;
+    let currentCollabRoom = null;
+    let collabClientId = 'artist_' + Math.random().toString(36).substr(2, 9);
+    let collabClientNick = localStorage.getItem('kpaint_collab_nick') || ('Artist_' + Math.floor(1000 + Math.random() * 9000));
+    let presenceUnsub = null;
+    let strokesUnsub = null;
+    let cursorsUnsub = null;
+    let snapshotUnsub = null;
+    let lastCursorPush = 0;
+    let currentStroke = null;
+    let peerCursors = {};
+
+    // Text tool target coordinates
+    let stampTargetX = 100, stampTargetY = 100;
 
     // Layers
     let layers = [{ id: 0, canvas: canvas, ctx: ctx, visible: true, blend: 'source-over' }];
@@ -1437,10 +1667,54 @@
       const toolNames = {
         freehand: 'Brush', line: 'Line', rect: 'Rectangle', ellipse: 'Ellipse',
         fill: 'Fill', spray: 'Spray', pipette: 'Eyedropper', wand: 'Magic Wand',
-        lasso: 'Lasso', eraser: 'Eraser'
+        lasso: 'Lasso', eraser: 'Eraser', text: 'Text Stamp'
       };
       document.getElementById('lbl-tool').innerText = toolNames[t] || (t.charAt(0).toUpperCase() + t.slice(1));
       updateBrushSettings();
+    }
+
+    // Symmetry Management
+    function setSymmetry(sym) {
+      currentSymmetry = sym;
+      ['none', 'h', 'v', 'quad'].forEach(s => {
+        const btn = document.getElementById('btn-sym-' + s);
+        if (btn) {
+          if (s === sym) btn.classList.add('active');
+          else btn.classList.remove('active');
+        }
+      });
+      const names = { none: 'Off', h: 'Horizontal', v: 'Vertical', quad: '4-Way Quad' };
+      showToast(`Symmetry mode: ${names[sym] || sym}`);
+      drawSymmetryGuides();
+    }
+
+    function toggleSymmetry() {
+      const order = ['none', 'h', 'v', 'quad'];
+      const next = order[(order.indexOf(currentSymmetry) + 1) % order.length];
+      setSymmetry(next);
+    }
+
+    function drawSymmetryGuides() {
+      pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+      if (currentSymmetry === 'none') return;
+      pctx.save();
+      pctx.strokeStyle = 'rgba(96, 165, 250, 0.4)';
+      pctx.lineWidth = 1;
+      pctx.setLineDash([5, 5]);
+      const w = canvas.width, h = canvas.height;
+      if (currentSymmetry === 'h' || currentSymmetry === 'quad') {
+        pctx.beginPath();
+        pctx.moveTo(w / 2, 0);
+        pctx.lineTo(w / 2, h);
+        pctx.stroke();
+      }
+      if (currentSymmetry === 'v' || currentSymmetry === 'quad') {
+        pctx.beginPath();
+        pctx.moveTo(0, h / 2);
+        pctx.lineTo(w, h / 2);
+        pctx.stroke();
+      }
+      pctx.restore();
     }
 
     function updateBrushSettings() {
@@ -1505,11 +1779,96 @@
       return '#ffffff';
     }
 
+    // Drawing & Symmetry Core Helpers
+    function applyStrokeSegment(x1, y1, x2, y2, color, size, shape, op) {
+      ctx.save();
+      ctx.globalCompositeOperation = op;
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = size;
+      ctx.lineCap = shape === 'square' ? 'square' : 'round';
+      ctx.lineJoin = shape === 'square' ? 'miter' : 'round';
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawSymmetricSegment(x1, y1, x2, y2, color, size, shape, op) {
+      applyStrokeSegment(x1, y1, x2, y2, color, size, shape, op);
+      const w = canvas.width, h = canvas.height;
+      if (currentSymmetry === 'h' || currentSymmetry === 'quad') {
+        applyStrokeSegment(w - x1, y1, w - x2, y2, color, size, shape, op);
+      }
+      if (currentSymmetry === 'v' || currentSymmetry === 'quad') {
+        applyStrokeSegment(x1, h - y1, x2, h - y2, color, size, shape, op);
+      }
+      if (currentSymmetry === 'quad') {
+        applyStrokeSegment(w - x1, h - y1, w - x2, h - y2, color, size, shape, op);
+      }
+    }
+
+    function applySprayDot(x, y, color) {
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, 1, 1);
+      const w = canvas.width, h = canvas.height;
+      if (currentSymmetry === 'h' || currentSymmetry === 'quad') ctx.fillRect(w - x, y, 1, 1);
+      if (currentSymmetry === 'v' || currentSymmetry === 'quad') ctx.fillRect(x, h - y, 1, 1);
+      if (currentSymmetry === 'quad') ctx.fillRect(w - x, h - y, 1, 1);
+    }
+
+    function applySymmetricShape(targetCtx, tool, sx, sy, ex, ey, color, size, shape) {
+      targetCtx.save();
+      targetCtx.lineWidth = size;
+      targetCtx.lineCap = shape === 'square' ? 'square' : 'round';
+      targetCtx.lineJoin = shape === 'square' ? 'miter' : 'round';
+      targetCtx.strokeStyle = color;
+
+      function renderOne(x0, y0, x1, y1) {
+        targetCtx.beginPath();
+        if (tool === 'line') {
+          targetCtx.moveTo(x0, y0);
+          targetCtx.lineTo(x1, y1);
+          targetCtx.stroke();
+        } else if (tool === 'rect') {
+          targetCtx.strokeRect(x0, y0, x1 - x0, y1 - y0);
+        } else if (tool === 'ellipse') {
+          const rx = Math.abs(x1 - x0) / 2;
+          const ry = Math.abs(y1 - y0) / 2;
+          const cx = x0 + (x1 - x0) / 2;
+          const cy = y0 + (y1 - y0) / 2;
+          targetCtx.ellipse(cx, cy, rx, ry, 0, 0, 2 * Math.PI);
+          targetCtx.stroke();
+        }
+      }
+
+      renderOne(sx, sy, ex, ey);
+      const w = canvas.width, h = canvas.height;
+      if (currentSymmetry === 'h' || currentSymmetry === 'quad') {
+        renderOne(w - sx, sy, w - ex, ey);
+      }
+      if (currentSymmetry === 'v' || currentSymmetry === 'quad') {
+        renderOne(sx, h - sy, ex, h - ey);
+      }
+      if (currentSymmetry === 'quad') {
+        renderOne(w - sx, h - sy, w - ex, h - ey);
+      }
+      targetCtx.restore();
+    }
+
     function startPosition(e) {
       if (e.cancelable && (e.type === 'touchstart' || e.type === 'touchmove')) e.preventDefault();
       const pos = getMousePos(e);
       startX = pos.x;
       startY = pos.y;
+      lastDrawX = pos.x;
+      lastDrawY = pos.y;
+
+      if (currentTool === 'text') {
+        openTextModal(pos.x, pos.y);
+        return;
+      }
 
       if (currentTool === 'pipette' || e.altKey) {
         const sampled = sampleColorAt(pos.x, pos.y);
@@ -1522,6 +1881,18 @@
       if (currentTool === 'fill') {
         floodFill(startX, startY, currentColor);
         saveState();
+        if (isLiveCollab) {
+          broadcastStroke({
+            strokeId: collabClientId + '_' + Date.now(),
+            clientId: collabClientId,
+            nick: collabClientNick,
+            tool: 'fill',
+            color: currentColor,
+            startX,
+            startY,
+            time: Date.now()
+          });
+        }
         return;
       }
 
@@ -1532,18 +1903,28 @@
 
       painting = true;
 
+      if (isLiveCollab) {
+        currentStroke = {
+          strokeId: collabClientId + '_' + Date.now(),
+          clientId: collabClientId,
+          nick: collabClientNick,
+          tool: currentTool,
+          color: currentColor,
+          size: brushSize,
+          shape: brushShape,
+          symmetry: currentSymmetry,
+          startX: pos.x,
+          startY: pos.y,
+          points: [{ x: pos.x, y: pos.y }]
+        };
+      }
+
       if (currentTool === 'lasso') {
         lassoPoints = [pos];
         return;
       }
 
       if (currentTool === 'freehand' || currentTool === 'eraser' || currentTool === 'spray') {
-        ctx.beginPath();
-        if (currentTool === 'freehand' || currentTool === 'eraser') {
-          ctx.moveTo(pos.x, pos.y);
-          ctx.lineTo(pos.x, pos.y);
-          ctx.stroke();
-        }
         draw(e);
       }
     }
@@ -1579,29 +1960,18 @@
       }
 
       if (currentTool !== 'freehand' && currentTool !== 'eraser' && currentTool !== 'spray') {
-        ctx.lineWidth = brushSize;
-        ctx.lineCap = brushShape === 'square' ? 'square' : 'round';
-        ctx.lineJoin = brushShape === 'square' ? 'miter' : 'round';
-        ctx.strokeStyle = currentColor;
-        ctx.beginPath();
-
-        if (currentTool === 'line') {
-          ctx.moveTo(startX, startY);
-          ctx.lineTo(pos.x, pos.y);
-          ctx.stroke();
-        } else if (currentTool === 'rect') {
-          ctx.strokeRect(startX, startY, pos.x - startX, pos.y - startY);
-        } else if (currentTool === 'ellipse') {
-          const rx = Math.abs(pos.x - startX) / 2;
-          const ry = Math.abs(pos.y - startY) / 2;
-          const cx = startX + (pos.x - startX) / 2;
-          const cy = startY + (pos.y - startY) / 2;
-          ctx.ellipse(cx, cy, rx, ry, 0, 0, 2 * Math.PI);
-          ctx.stroke();
-        }
+        applySymmetricShape(ctx, currentTool, startX, startY, pos.x, pos.y, currentColor, brushSize, brushShape);
         pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-      } else {
-        ctx.beginPath();
+        drawSymmetryGuides();
+      }
+
+      if (isLiveCollab && currentStroke) {
+        currentStroke.endX = pos.x;
+        currentStroke.endY = pos.y;
+        currentStroke.time = Date.now();
+        broadcastStroke(currentStroke);
+        currentStroke = null;
+        broadcastCursor(pos.x, pos.y, false);
       }
 
       saveState();
@@ -1611,10 +1981,15 @@
       const pos = getMousePos(e);
       document.getElementById('lbl-pos').innerText = `${pos.x}, ${pos.y}`;
 
+      if (isLiveCollab) {
+        broadcastCursor(pos.x, pos.y, painting);
+      }
+
       if (!painting) return;
 
       const isErasingUpper = currentTool === 'eraser' && activeLayerIndex > 0;
       const activeColor = currentTool === 'eraser' ? (isErasingUpper ? 'rgba(0,0,0,1)' : '#ffffff') : currentColor;
+      const compositeOp = isErasingUpper ? 'destination-out' : 'source-over';
 
       if (currentTool === 'lasso') {
         lassoPoints.push(pos);
@@ -1630,48 +2005,30 @@
         return;
       }
 
+      if (isLiveCollab && currentStroke) {
+        currentStroke.points.push(pos);
+      }
+
       if (currentTool === 'freehand' || currentTool === 'eraser') {
-        ctx.lineWidth = brushSize;
-        ctx.lineCap = brushShape === 'square' ? 'square' : 'round';
-        ctx.lineJoin = brushShape === 'square' ? 'miter' : 'round';
-        ctx.strokeStyle = activeColor;
-        ctx.lineTo(pos.x, pos.y);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(pos.x, pos.y);
+        drawSymmetricSegment(lastDrawX, lastDrawY, pos.x, pos.y, activeColor, brushSize, brushShape, compositeOp);
+        lastDrawX = pos.x;
+        lastDrawY = pos.y;
       } else if (currentTool === 'spray') {
-        ctx.fillStyle = activeColor;
         const density = Math.max(10, brushSize * 2);
         for (let i = 0; i < density; i++) {
           const offsetAngle = Math.random() * 2 * Math.PI;
           const offsetRadius = Math.random() * (brushSize / 2);
           const px = pos.x + Math.cos(offsetAngle) * offsetRadius;
           const py = pos.y + Math.sin(offsetAngle) * offsetRadius;
-          ctx.fillRect(px, py, 1, 1);
+          applySprayDot(px, py, activeColor);
         }
+        lastDrawX = pos.x;
+        lastDrawY = pos.y;
       } else {
         // Shape preview
         pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-        pctx.lineWidth = brushSize;
-        pctx.lineCap = brushShape === 'square' ? 'square' : 'round';
-        pctx.lineJoin = brushShape === 'square' ? 'miter' : 'round';
-        pctx.strokeStyle = activeColor;
-        pctx.beginPath();
-
-        if (currentTool === 'line') {
-          pctx.moveTo(startX, startY);
-          pctx.lineTo(pos.x, pos.y);
-          pctx.stroke();
-        } else if (currentTool === 'rect') {
-          pctx.strokeRect(startX, startY, pos.x - startX, pos.y - startY);
-        } else if (currentTool === 'ellipse') {
-          const rx = Math.abs(pos.x - startX) / 2;
-          const ry = Math.abs(pos.y - startY) / 2;
-          const cx = startX + (pos.x - startX) / 2;
-          const cy = startY + (pos.y - startY) / 2;
-          pctx.ellipse(cx, cy, rx, ry, 0, 0, 2 * Math.PI);
-          pctx.stroke();
-        }
+        drawSymmetryGuides();
+        applySymmetricShape(pctx, currentTool, startX, startY, pos.x, pos.y, activeColor, brushSize, brushShape);
       }
     }
 
@@ -1898,6 +2255,185 @@
       ctx.putImageData(imgData, 0, 0);
       saveState();
       showToast(`Applied ${type} adjustment.`);
+    }
+
+    // Floyd-Steinberg Error Diffusion Dithering (1-Bit & 16-Color Retro VGA)
+    function applyDither(mode) {
+      const w = canvas.width, h = canvas.height;
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const d = imgData.data;
+
+      const rBuf = new Float32Array(w * h);
+      const gBuf = new Float32Array(w * h);
+      const bBuf = new Float32Array(w * h);
+
+      for (let i = 0, p = 0; i < d.length; i += 4, p++) {
+        rBuf[p] = d[i];
+        gBuf[p] = d[i + 1];
+        bBuf[p] = d[i + 2];
+      }
+
+      // Standard 16-color PC VGA palette (1999 standard)
+      const vgaPalette = [
+        [0, 0, 0], [0, 0, 128], [0, 128, 0], [0, 128, 128],
+        [128, 0, 0], [128, 0, 128], [128, 128, 0], [192, 192, 192],
+        [128, 128, 128], [0, 0, 255], [0, 255, 0], [0, 255, 255],
+        [255, 0, 0], [255, 0, 255], [255, 255, 0], [255, 255, 255]
+      ];
+
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = y * w + x;
+          const oldR = Math.max(0, Math.min(255, rBuf[idx]));
+          const oldG = Math.max(0, Math.min(255, gBuf[idx]));
+          const oldB = Math.max(0, Math.min(255, bBuf[idx]));
+
+          let newR, newG, newB;
+          if (mode === '1bit') {
+            const lum = 0.299 * oldR + 0.587 * oldG + 0.114 * oldB;
+            const val = lum < 128 ? 0 : 255;
+            newR = newG = newB = val;
+          } else {
+            let bestDist = Infinity;
+            let bestCol = vgaPalette[0];
+            for (let c = 0; c < 16; c++) {
+              const col = vgaPalette[c];
+              const dist = (oldR - col[0]) * (oldR - col[0]) +
+                           (oldG - col[1]) * (oldG - col[1]) +
+                           (oldB - col[2]) * (oldB - col[2]);
+              if (dist < bestDist) {
+                bestDist = dist;
+                bestCol = col;
+              }
+            }
+            newR = bestCol[0];
+            newG = bestCol[1];
+            newB = bestCol[2];
+          }
+
+          const errR = oldR - newR;
+          const errG = oldG - newG;
+          const errB = oldB - newB;
+
+          const pIdx = idx * 4;
+          d[pIdx] = newR;
+          d[pIdx + 1] = newG;
+          d[pIdx + 2] = newB;
+
+          // Floyd-Steinberg distribution (7/16, 3/16, 5/16, 1/16)
+          if (x + 1 < w) {
+            const nIdx = idx + 1;
+            rBuf[nIdx] += errR * (7 / 16);
+            gBuf[nIdx] += errG * (7 / 16);
+            bBuf[nIdx] += errB * (7 / 16);
+          }
+          if (y + 1 < h) {
+            if (x - 1 >= 0) {
+              const nIdx = (y + 1) * w + (x - 1);
+              rBuf[nIdx] += errR * (3 / 16);
+              gBuf[nIdx] += errG * (3 / 16);
+              bBuf[nIdx] += errB * (3 / 16);
+            }
+            const nIdx = (y + 1) * w + x;
+            rBuf[nIdx] += errR * (5 / 16);
+            gBuf[nIdx] += errG * (5 / 16);
+            bBuf[nIdx] += errB * (5 / 16);
+
+            if (x + 1 < w) {
+              const nIdx = (y + 1) * w + (x + 1);
+              rBuf[nIdx] += errR * (1 / 16);
+              gBuf[nIdx] += errG * (1 / 16);
+              bBuf[nIdx] += errB * (1 / 16);
+            }
+          }
+        }
+      }
+
+      ctx.putImageData(imgData, 0, 0);
+      saveState();
+      showToast(mode === '1bit' ? 'Applied Floyd-Steinberg 1-Bit Dither.' : 'Applied 16-Color VGA Dither.');
+    }
+
+    // Soft Focus Box Blur
+    function applyBoxBlur() {
+      const w = canvas.width, h = canvas.height;
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const src = imgData.data;
+      const output = ctx.createImageData(w, h);
+      const dst = output.data;
+      const matrix = [
+        1/16, 2/16, 1/16,
+        2/16, 4/16, 2/16,
+        1/16, 2/16, 1/16
+      ];
+
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          let r = 0, g = 0, b = 0, a = src[(y * w + x) * 4 + 3];
+          for (let cy = -1; cy <= 1; cy++) {
+            const ny = Math.min(Math.max(y + cy, 0), h - 1);
+            for (let cx = -1; cx <= 1; cx++) {
+              const nx = Math.min(Math.max(x + cx, 0), w - 1);
+              const idx = (ny * w + nx) * 4;
+              const wt = matrix[(cy + 1) * 3 + (cx + 1)];
+              r += src[idx] * wt;
+              g += src[idx + 1] * wt;
+              b += src[idx + 2] * wt;
+            }
+          }
+          const dIdx = (y * w + x) * 4;
+          dst[dIdx] = r;
+          dst[dIdx + 1] = g;
+          dst[dIdx + 2] = b;
+          dst[dIdx + 3] = a;
+        }
+      }
+      ctx.putImageData(output, 0, 0);
+      saveState();
+      showToast('Applied Soft Blur filter.');
+    }
+
+    // CRT Scanlines & Phosphor Filter
+    function applyCRTFilter() {
+      const w = canvas.width, h = canvas.height;
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const d = imgData.data;
+      for (let y = 0; y < h; y++) {
+        const isScanline = (y % 3 === 0);
+        const factor = isScanline ? 0.72 : 1.0;
+        for (let x = 0; x < w; x++) {
+          const idx = (y * w + x) * 4;
+          d[idx] = Math.min(255, d[idx] * factor * 0.98);
+          d[idx + 1] = Math.min(255, d[idx + 1] * factor * 1.04);
+          d[idx + 2] = Math.min(255, d[idx + 2] * factor * 0.96);
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+      saveState();
+      showToast('Applied CRT Scanline & Phosphor filter.');
+    }
+
+    // Vignette Falloff Filter
+    function applyVignetteFilter() {
+      const w = canvas.width, h = canvas.height;
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const d = imgData.data;
+      const cx = w / 2, cy = h / 2;
+      const maxDist = Math.sqrt(cx * cx + cy * cy);
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const dx = x - cx, dy = y - cy;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const factor = Math.max(0.2, 1 - Math.pow(dist / maxDist, 2.2) * 0.75);
+          const idx = (y * w + x) * 4;
+          d[idx] = d[idx] * factor;
+          d[idx + 1] = d[idx + 1] * factor;
+          d[idx + 2] = d[idx + 2] * factor;
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+      saveState();
+      showToast('Applied Vignette filter.');
     }
 
     // Transforms
@@ -2402,6 +2938,499 @@
       showToast('Loaded 8-Bit Sprite template!');
     }
 
+    // 1999 Subterranean Signal Spectrogram Template (ARG Lore & Audio Spectrum Art)
+    function loadSignalAnomalyTemplate() {
+      ctx.fillStyle = '#060a14';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Frequency grid lines
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.12)';
+      ctx.lineWidth = 1;
+      for (let y = 60; y < canvas.height - 40; y += 30) {
+        ctx.beginPath();
+        ctx.moveTo(40, y);
+        ctx.lineTo(canvas.width - 40, y);
+        ctx.stroke();
+      }
+      for (let x = 80; x < canvas.width - 40; x += 60) {
+        ctx.beginPath();
+        ctx.moveTo(x, 60);
+        ctx.lineTo(x, canvas.height - 40);
+        ctx.stroke();
+      }
+
+      // 1999Hz carrier wave
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let x = 40; x < canvas.width - 40; x++) {
+        const freq = 0.035;
+        const y = 240 + Math.sin(x * freq) * 28 + Math.sin(x * 0.09) * 12 + (Math.random() - 0.5) * 4;
+        if (x === 40) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Modulated data burst (10.19.99.4 beacon)
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let x = 320; x < 540; x++) {
+        const burst = Math.sin((x - 320) * 0.22) * 55 * Math.sin((x - 320) / 220 * Math.PI);
+        const y = 380 + burst + (Math.random() - 0.5) * 6;
+        if (x === 320) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Atmospheric telemetry annotations
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 15px monospace';
+      ctx.fillText('RF SPECTRUM DIAGNOSTIC // NODE-7F MONITOR', 42, 42);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '11px monospace';
+      ctx.fillText('SUB-CARRIER: 1999.04 Hz [LOCKED]   HEX OFFSET: 0x00402000   GATEWAY: 10.19.99.4/classified', 42, canvas.height - 18);
+      ctx.fillText('DATA BURST DETECTED [320px..540px] - ECHO SUBNET SYNCHRONIZED', 360, 42);
+
+      saveState();
+      showToast('Loaded 1999 Subterranean Signal Spectrogram.');
+    }
+
+    // Text Tool Stamp Logic
+    function openTextModal(x, y) {
+      stampTargetX = x;
+      stampTargetY = y;
+      const modal = document.getElementById('text-modal');
+      if (modal) modal.classList.add('show');
+      const input = document.getElementById('stamp-text-input');
+      if (input) {
+        input.focus();
+        input.select();
+      }
+    }
+
+    function closeTextModal() {
+      const modal = document.getElementById('text-modal');
+      if (modal) modal.classList.remove('show');
+    }
+
+    function handleTextBackdropClick(e) {
+      if (e.target.id === 'text-modal') closeTextModal();
+    }
+
+    function stampText(targetCtx, text, x, y, size, family, isBold, hasOutline, color) {
+      targetCtx.save();
+      targetCtx.font = `${isBold ? 'bold ' : ''}${size}px ${family}`;
+      targetCtx.textBaseline = 'middle';
+      if (hasOutline) {
+        targetCtx.lineWidth = Math.max(2, size / 8);
+        targetCtx.strokeStyle = '#000000';
+        targetCtx.strokeText(text, x, y);
+      }
+      targetCtx.fillStyle = color;
+      targetCtx.fillText(text, x, y);
+
+      const w = canvas.width, h = canvas.height;
+      if (currentSymmetry === 'h' || currentSymmetry === 'quad') {
+        if (hasOutline) targetCtx.strokeText(text, w - x, y);
+        targetCtx.fillText(text, w - x, y);
+      }
+      if (currentSymmetry === 'v' || currentSymmetry === 'quad') {
+        if (hasOutline) targetCtx.strokeText(text, x, h - y);
+        targetCtx.fillText(text, x, h - y);
+      }
+      if (currentSymmetry === 'quad') {
+        if (hasOutline) targetCtx.strokeText(text, w - x, h - y);
+        targetCtx.fillText(text, w - x, h - y);
+      }
+      targetCtx.restore();
+    }
+
+    function confirmStampText() {
+      const input = document.getElementById('stamp-text-input');
+      const text = input ? input.value.trim() : '';
+      if (!text) {
+        showToast("Please enter text to stamp.");
+        return;
+      }
+      const size = parseInt(document.getElementById('stamp-font-size').value, 10) || 22;
+      const family = document.getElementById('stamp-font-family').value;
+      const isBold = document.getElementById('stamp-font-bold').checked;
+      const hasOutline = document.getElementById('stamp-font-outline').checked;
+
+      stampText(ctx, text, stampTargetX, stampTargetY, size, family, isBold, hasOutline, currentColor);
+      closeTextModal();
+      saveState();
+
+      if (isLiveCollab) {
+        broadcastStroke({
+          strokeId: collabClientId + '_' + Date.now(),
+          clientId: collabClientId,
+          nick: collabClientNick,
+          tool: 'text',
+          text,
+          startX: stampTargetX,
+          startY: stampTargetY,
+          fontSize: size,
+          fontFamily: family,
+          isBold,
+          hasOutline,
+          color: currentColor,
+          symmetry: currentSymmetry,
+          time: Date.now()
+        });
+      }
+      showToast(`Stamped text: "${text}"`);
+    }
+
+    // Collaborative Studio (Firebase RTDB)
+    function toggleCollabModal() {
+      const modal = document.getElementById('collab-modal');
+      if (!modal) return;
+      if (modal.classList.contains('show')) closeCollabModal();
+      else showCollabModal();
+    }
+
+    function showCollabModal() {
+      const modal = document.getElementById('collab-modal');
+      if (modal) modal.classList.add('show');
+      const nickInput = document.getElementById('collab-nick-input');
+      if (nickInput) nickInput.value = collabClientNick;
+      const roomInput = document.getElementById('collab-room-input');
+      if (roomInput && currentCollabRoom) roomInput.value = currentCollabRoom;
+      updateCollabUI();
+    }
+
+    function closeCollabModal() {
+      const modal = document.getElementById('collab-modal');
+      if (modal) modal.classList.remove('show');
+    }
+
+    function handleCollabBackdropClick(e) {
+      if (e.target.id === 'collab-modal') closeCollabModal();
+    }
+
+    function setCollabRoomCode(code) {
+      const input = document.getElementById('collab-room-input');
+      if (input) input.value = code;
+    }
+
+    function updateCollabUI() {
+      const pill = document.getElementById('collab-state-pill');
+      const btn = document.getElementById('btn-collab');
+      const btnLabel = document.getElementById('collab-btn-label');
+      const btnConnect = document.getElementById('btn-collab-connect');
+      const btnDisconnect = document.getElementById('btn-collab-disconnect');
+      const activeSection = document.getElementById('collab-active-section');
+
+      if (isLiveCollab && currentCollabRoom) {
+        if (pill) {
+          pill.textContent = `🟢 Connected: #${currentCollabRoom}`;
+          pill.style.background = 'rgba(16, 185, 129, 0.2)';
+          pill.style.color = '#6ee7b7';
+        }
+        if (btn) btn.classList.add('btn-collab-active');
+        if (btnLabel) btnLabel.textContent = `🟢 ${currentCollabRoom}`;
+        if (btnConnect) btnConnect.textContent = '🔄 Re-sync / Update Nick';
+        if (btnDisconnect) btnDisconnect.style.display = 'block';
+        if (activeSection) activeSection.style.display = 'flex';
+      } else {
+        if (pill) {
+          pill.textContent = '⚪ Offline (Local Studio)';
+          pill.style.background = 'rgba(255,255,255,0.08)';
+          pill.style.color = 'var(--text-muted)';
+        }
+        if (btn) btn.classList.remove('btn-collab-active');
+        if (btnLabel) btnLabel.textContent = 'Collab [O]';
+        if (btnConnect) btnConnect.textContent = '🚀 Connect to Studio';
+        if (btnDisconnect) btnDisconnect.style.display = 'none';
+        if (activeSection) activeSection.style.display = 'none';
+      }
+    }
+
+    function joinCollabRoom() {
+      const roomInput = document.getElementById('collab-room-input');
+      const nickInput = document.getElementById('collab-nick-input');
+      const rawRoom = roomInput ? roomInput.value.trim().toLowerCase() : '';
+      const room = rawRoom.replace(/[^a-z0-9_\-]/g, '') || 'studio-99';
+
+      if (nickInput && nickInput.value.trim()) {
+        collabClientNick = nickInput.value.trim().substring(0, 20);
+        try { localStorage.setItem('kpaint_collab_nick', collabClientNick); } catch (_) {}
+      }
+
+      if (!window.fb || !window.fb.db) {
+        showToast("⚠️ Firebase RTDB is initializing... please wait a second.");
+        return;
+      }
+
+      if (isLiveCollab && currentCollabRoom === room) {
+        showToast("Already connected to #" + room);
+        return;
+      }
+
+      leaveCollabRoom();
+
+      currentCollabRoom = room;
+      isLiveCollab = true;
+      updateCollabUI();
+
+      const db = window.fb.db;
+      const presenceRef = window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/presence/${collabClientId}`);
+      const allPresenceRef = window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/presence`);
+      const strokesRef = window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/strokes`);
+      const cursorsRef = window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/cursors`);
+      const snapRef = window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/snapshot`);
+
+      window.fb.set(presenceRef, {
+        clientId: collabClientId,
+        nick: collabClientNick,
+        joinedAt: Date.now()
+      });
+      window.fb.onDisconnect(presenceRef).remove();
+
+      const curRef = window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/cursors/${collabClientId}`);
+      window.fb.onDisconnect(curRef).remove();
+
+      presenceUnsub = window.fb.onValue(allPresenceRef, snapshot => {
+        const val = snapshot.val();
+        const peerListEl = document.getElementById('collab-peer-list');
+        const countEl = document.getElementById('collab-peer-count');
+        if (!peerListEl) return;
+        peerListEl.innerHTML = '';
+        let count = 0;
+        if (val) {
+          Object.values(val).forEach(p => {
+            count++;
+            const item = document.createElement('div');
+            item.style.cssText = 'display:flex; align-items:center; justify-content:space-between; font-size:11px; padding:3px 6px; border-radius:4px; background:rgba(255,255,255,0.04);';
+            const isMe = p.clientId === collabClientId;
+            item.innerHTML = `<span style="display:flex; align-items:center; gap:6px;">
+              <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#10b981;"></span>
+              <strong>${p.nick || 'Artist'}</strong> ${isMe ? '<em style="color:#60a5fa;">(You)</em>' : ''}
+            </span>
+            <span style="color:var(--text-muted); font-size:10px;">online</span>`;
+            peerListEl.appendChild(item);
+          });
+        }
+        if (countEl) countEl.textContent = count;
+      });
+
+      strokesUnsub = window.fb.onChildAdded(strokesRef, snapshot => {
+        const s = snapshot.val();
+        if (s && s.clientId !== collabClientId) {
+          renderRemoteStroke(s);
+        }
+      });
+
+      cursorsUnsub = window.fb.onValue(cursorsRef, snapshot => {
+        const val = snapshot.val();
+        renderPeerCursors(val);
+      });
+
+      snapshotUnsub = window.fb.onValue(snapRef, snapshot => {
+        const val = snapshot.val();
+        if (val && val.sender !== collabClientNick && (Date.now() - val.time < 15000)) {
+          showToast(`Snapshot received from ${val.sender}! Click 'Pull Canvas' to load.`, 3500);
+        }
+      });
+
+      showToast(`Connected to #${currentCollabRoom} as ${collabClientNick}!`);
+    }
+
+    function leaveCollabRoom() {
+      if (!isLiveCollab) return;
+      if (window.fb && window.fb.db && currentCollabRoom) {
+        try {
+          const db = window.fb.db;
+          window.fb.off(window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/presence`));
+          window.fb.off(window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/strokes`));
+          window.fb.off(window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/cursors`));
+          window.fb.off(window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/snapshot`));
+          window.fb.set(window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/presence/${collabClientId}`), null);
+          window.fb.set(window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/cursors/${collabClientId}`), null);
+        } catch (_) {}
+      }
+      isLiveCollab = false;
+      currentCollabRoom = null;
+      clearPeerCursors();
+      updateCollabUI();
+      showToast("Disconnected from room. Studio is offline.");
+    }
+
+    function broadcastCursor(x, y, isDrawing) {
+      if (!isLiveCollab || !window.fb || !window.fb.db || !currentCollabRoom) return;
+      const now = Date.now();
+      if (now - lastCursorPush < 50) return;
+      lastCursorPush = now;
+      try {
+        const curRef = window.fb.ref(window.fb.db, `multiplayer/kpaint/rooms/${currentCollabRoom}/cursors/${collabClientId}`);
+        window.fb.set(curRef, {
+          clientId: collabClientId,
+          nick: collabClientNick,
+          x,
+          y,
+          color: currentColor,
+          tool: currentTool,
+          painting: isDrawing,
+          updatedAt: now
+        });
+      } catch (_) {}
+    }
+
+    function renderPeerCursors(cursors) {
+      const container = document.getElementById('peer-cursors-container');
+      if (!container) return;
+      if (!cursors) {
+        clearPeerCursors();
+        return;
+      }
+      const now = Date.now();
+      const existingIds = new Set(Object.keys(cursors));
+
+      Object.keys(peerCursors).forEach(id => {
+        if (!existingIds.has(id)) {
+          if (peerCursors[id].el) peerCursors[id].el.remove();
+          delete peerCursors[id];
+        }
+      });
+
+      Object.entries(cursors).forEach(([id, c]) => {
+        if (id === collabClientId) return;
+        if (now - c.updatedAt > 15000) {
+          if (peerCursors[id] && peerCursors[id].el) {
+            peerCursors[id].el.remove();
+            delete peerCursors[id];
+          }
+          return;
+        }
+
+        let cur = peerCursors[id];
+        if (!cur) {
+          const el = document.createElement('div');
+          el.className = 'peer-cursor';
+          el.innerHTML = `<div class="peer-cursor-pointer"></div><div class="peer-cursor-tag"></div>`;
+          container.appendChild(el);
+          cur = { el, ptr: el.querySelector('.peer-cursor-pointer'), tag: el.querySelector('.peer-cursor-tag') };
+          peerCursors[id] = cur;
+        }
+
+        const color = c.color || '#38bdf8';
+        cur.ptr.style.borderColor = color;
+        cur.tag.textContent = `${c.nick || 'Artist'}${c.painting ? ' ✏️' : ''}`;
+        cur.tag.style.borderColor = color;
+
+        const dispX = Math.round(c.x * currentZoom);
+        const dispY = Math.round(c.y * currentZoom);
+        cur.el.style.transform = `translate(${dispX}px, ${dispY}px)`;
+      });
+    }
+
+    function clearPeerCursors() {
+      const container = document.getElementById('peer-cursors-container');
+      if (container) container.innerHTML = '';
+      peerCursors = {};
+    }
+
+    function broadcastStroke(s) {
+      if (!isLiveCollab || !window.fb || !window.fb.db || !currentCollabRoom) return;
+      try {
+        const strokesRef = window.fb.ref(window.fb.db, `multiplayer/kpaint/rooms/${currentCollabRoom}/strokes`);
+        window.fb.push(strokesRef, s);
+      } catch (err) {
+        console.warn("Failed to broadcast stroke:", err);
+      }
+    }
+
+    function renderRemoteStroke(s) {
+      if (!s || !s.tool) return;
+      const targetCtx = layers[0].ctx;
+      const isEraser = s.tool === 'eraser';
+      const color = isEraser ? '#ffffff' : (s.color || '#111111');
+      const size = s.size || 4;
+      const shape = s.shape || 'round';
+      const sym = s.symmetry || 'none';
+
+      const prevSym = currentSymmetry;
+      currentSymmetry = sym;
+
+      if (s.tool === 'freehand' || s.tool === 'eraser') {
+        if (s.points && s.points.length > 0) {
+          for (let i = 1; i < s.points.length; i++) {
+            const p0 = s.points[i - 1];
+            const p1 = s.points[i];
+            drawSymmetricSegment(p0.x, p0.y, p1.x, p1.y, color, size, shape, 'source-over');
+          }
+        }
+      } else if (s.tool === 'spray') {
+        if (s.points && s.points.length > 0) {
+          s.points.forEach(pt => {
+            const density = Math.max(10, size * 2);
+            for (let i = 0; i < density; i++) {
+              const ang = Math.random() * 2 * Math.PI;
+              const rad = Math.random() * (size / 2);
+              const px = pt.x + Math.cos(ang) * rad;
+              const py = pt.y + Math.sin(ang) * rad;
+              applySprayDot(px, py, color);
+            }
+          });
+        }
+      } else if (s.tool === 'line' || s.tool === 'rect' || s.tool === 'ellipse') {
+        applySymmetricShape(targetCtx, s.tool, s.startX, s.startY, s.endX, s.endY, color, size, shape);
+      } else if (s.tool === 'fill') {
+        floodFill(s.startX, s.startY, color);
+      } else if (s.tool === 'text') {
+        stampText(targetCtx, s.text, s.startX, s.startY, s.fontSize, s.fontFamily, s.isBold, s.hasOutline, color);
+      }
+
+      currentSymmetry = prevSym;
+      showToast(`Artist ${s.nick || 'Peer'} painted (${s.tool})`, 1200);
+    }
+
+    function pushCanvasSnapshot() {
+      if (!isLiveCollab || !window.fb || !window.fb.db || !currentCollabRoom) {
+        showToast("Connect to a studio room first!");
+        return;
+      }
+      try {
+        const snap = getCompositedCanvas().toDataURL('image/jpeg', 0.85);
+        const snapRef = window.fb.ref(window.fb.db, `multiplayer/kpaint/rooms/${currentCollabRoom}/snapshot`);
+        window.fb.set(snapRef, {
+          dataUrl: snap,
+          sender: collabClientNick,
+          time: Date.now()
+        });
+        showToast("Pushed canvas snapshot to room peers!");
+      } catch (_) {
+        showToast("Error pushing snapshot.");
+      }
+    }
+
+    function pullCanvasSnapshot() {
+      if (!isLiveCollab || !window.fb || !window.fb.db || !currentCollabRoom) {
+        showToast("Connect to a studio room first!");
+        return;
+      }
+      try {
+        const snapRef = window.fb.ref(window.fb.db, `multiplayer/kpaint/rooms/${currentCollabRoom}/snapshot`);
+        window.fb.get(snapRef).then(snapshot => {
+          const val = snapshot.val();
+          if (val && val.dataUrl) {
+            const img = new Image();
+            img.onload = () => {
+              ctx.drawImage(img, 0, 0);
+              saveState();
+              showToast(`Pulled snapshot from ${val.sender}!`);
+            };
+            img.src = val.dataUrl;
+          } else {
+            showToast("No snapshot found for this room.");
+          }
+        });
+      } catch (_) {
+        showToast("Error pulling snapshot.");
+      }
+    }
+
     // Help Modal Logic
     function toggleHelp() {
       const m = document.getElementById('help-modal');
@@ -2457,12 +3486,10 @@
 
       if (e.key === 'Escape') {
         const m = document.getElementById('help-modal');
-        if (m && m.classList.contains('show')) {
-          closeHelp();
-        } else {
-          clearSelection();
-          showToast("Selection cleared.");
-        }
+        if (m && m.classList.contains('show')) closeHelp();
+        closeCollabModal();
+        closeTextModal();
+        clearSelection();
         const t = document.getElementById('toast');
         if (t) t.classList.remove('show');
         return;
@@ -2503,6 +3530,9 @@
         else if (k === 'i') setTool('pipette');
         else if (k === 'w') setTool('wand');
         else if (k === 's') setTool('lasso');
+        else if (k === 't') setTool('text');
+        else if (k === 'm') toggleSymmetry();
+        else if (k === 'o') toggleCollabModal();
         else if (k === 'd') loadDemoArtwork();
         else if (k === '1') setBrushSize(2);
         else if (k === '2') setBrushSize(6);
@@ -2531,11 +3561,13 @@
     });
 
     window.addEventListener('click', () => closeExportDropdown());
+    window.addEventListener('beforeunload', () => leaveCollabRoom());
 
     // Hash VFS Load support
     window.onload = () => {
       if (window.resizeTo) window.resizeTo(1140, 780);
       initCanvas();
+      updateCollabUI();
       if (window.location.hash) {
         const path = window.location.hash.substring(1);
         if (path) loadVFSFile(path);
@@ -2548,9 +3580,13 @@
         }, 350);
       } else {
         setTimeout(() => {
-          showToast("Welcome to KPaint Pro! Press F1 for Help | Try Quick Starters below", 3500);
+          showToast("Welcome to KPaint Pro! Press F1 for Help | Try Quick Starters & Collab [O]", 3500);
         }, 300);
       }
+    };
+
+    window.onFirebaseLoaded = () => {
+      updateCollabUI();
     };
 
     async function loadVFSFile(path) {

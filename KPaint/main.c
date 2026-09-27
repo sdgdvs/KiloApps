@@ -42,11 +42,12 @@ int redoCount = 0;
 
 // Controls
 HWND hBtnBlack, hBtnRed, hBtnGreen, hBtnBlue, hBtnYellow, hBtnPurple, hBtnEraser, hBtnCustomColor;
-HWND hBtnSizeSmall, hBtnSizeMed, hBtnSizeLarge, hBtnShapeToggle;
+HWND hBtnSizeSmall, hBtnSizeMed, hBtnSizeLarge, hBtnShapeToggle, hBtnMirror;
 HWND hBtnFreehand, hBtnLine, hBtnRect, hBtnEllipse, hBtnSpray, hBtnFill, hBtnPipette;
 HWND hBtnUndo, hBtnRedo, hBtnInvert, hBtnGray, hBtnBright, hBtnDark, hBtnFlipH, hBtnFlipV, hBtnRotate90, hBtnRotateCCW;
 HWND hBtnClear, hBtnSave, hBtnOpen, hBtnHelp, hBtnDemoArt;
-HWND hBtnEdge, hBtnSharpen, hBtnEmboss;
+HWND hBtnEdge, hBtnSharpen, hBtnEmboss, hBtnDither, hBtnScanlines;
+int mirrorMode = 0; // 0 = Normal, 1 = Horizontal Mirror
 
 HFONT hFont = NULL;
 static HBITMAP hbmStockOld = NULL;
@@ -57,6 +58,8 @@ void PerformRedo();
 void UpdatePen();
 void UpdateTitleStatus(HWND hwnd);
 void GenerateDemoArtwork(HWND hwnd);
+void FilterDither1Bit();
+void FilterScanlines();
 
 void UpdatePen() {
     if (hPen) DeleteObject(hPen);
@@ -85,10 +88,11 @@ void UpdatePen() {
 void UpdateTitleStatus(HWND hwnd) {
     const char* toolNames[] = {"Brush", "Line", "Rect", "Circle", "Spray", "Eraser", "Fill", "Pick"};
     const char* toolName = (currentTool >= 0 && currentTool <= 7) ? toolNames[currentTool] : "Brush";
-    char title[180];
-    wsprintfA(title, "KPaint Pro - Tool: %s | Size: %dpx (%s) | Color: #%02X%02X%02X | Press F1 for Help, D for Demo",
+    char title[220];
+    wsprintfA(title, "KPaint Pro - Tool: %s | Size: %dpx (%s) | Color: #%02X%02X%02X | Mirror: %s [M] | F1 Help, D Demo",
         toolName, curSize, brushShape ? "Square" : "Round",
-        GetRValue(curColor), GetGValue(curColor), GetBValue(curColor));
+        GetRValue(curColor), GetGValue(curColor), GetBValue(curColor),
+        mirrorMode ? "ON" : "OFF");
     SetWindowTextA(hwnd, title);
 }
 
@@ -289,6 +293,86 @@ void FilterConvolve(int type) {
     }
     if (pSrc) GlobalFree(pSrc);
     if (pDst) GlobalFree(pDst);
+}
+
+void FilterDither1Bit() {
+    PushUndo();
+    BITMAPINFO bi = {0};
+    bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bi.bmiHeader.biWidth = 2000;
+    bi.bmiHeader.biHeight = -2000;
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 24;
+    bi.bmiHeader.biCompression = BI_RGB;
+
+    DWORD bufSize = 2000 * 2000 * 3;
+    BYTE* pBits = (BYTE*)GlobalAlloc(GPTR, bufSize);
+    int* pCurErr = (int*)GlobalAlloc(GPTR, 2002 * sizeof(int));
+    int* pNextErr = (int*)GlobalAlloc(GPTR, 2002 * sizeof(int));
+
+    if (pBits && pCurErr && pNextErr) {
+        GetDIBits(hdcMem, hbmCanvas, 0, 2000, pBits, &bi, DIB_RGB_COLORS);
+
+        for (int y = 0; y < 2000; y++) {
+            memset(pNextErr, 0, 2002 * sizeof(int));
+            for (int x = 0; x < 2000; x++) {
+                int idx = (y * 2000 + x) * 3;
+                int b = pBits[idx];
+                int g = pBits[idx+1];
+                int r = pBits[idx+2];
+                int gray = (r * 77 + g * 151 + b * 28) >> 8;
+                int val = gray + pCurErr[x + 1];
+                BYTE outVal = (val > 127) ? 255 : 0;
+                int err = val - outVal;
+
+                pBits[idx]   = outVal;
+                pBits[idx+1] = outVal;
+                pBits[idx+2] = outVal;
+
+                pCurErr[x + 2] += (err * 7) / 16;
+                pNextErr[x]     += (err * 3) / 16;
+                pNextErr[x + 1] += (err * 5) / 16;
+                pNextErr[x + 2] += (err * 1) / 16;
+            }
+            int* temp = pCurErr;
+            pCurErr = pNextErr;
+            pNextErr = temp;
+        }
+
+        SetDIBits(hdcMem, hbmCanvas, 0, 2000, pBits, &bi, DIB_RGB_COLORS);
+    }
+    if (pBits) GlobalFree(pBits);
+    if (pCurErr) GlobalFree(pCurErr);
+    if (pNextErr) GlobalFree(pNextErr);
+}
+
+void FilterScanlines() {
+    PushUndo();
+    BITMAPINFO bi = {0};
+    bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bi.bmiHeader.biWidth = 2000;
+    bi.bmiHeader.biHeight = -2000;
+    bi.bmiHeader.biPlanes = 1;
+    bi.bmiHeader.biBitCount = 24;
+    bi.bmiHeader.biCompression = BI_RGB;
+
+    DWORD bufSize = 2000 * 2000 * 3;
+    BYTE* pBits = (BYTE*)GlobalAlloc(GPTR, bufSize);
+    if (pBits) {
+        GetDIBits(hdcMem, hbmCanvas, 0, 2000, pBits, &bi, DIB_RGB_COLORS);
+        for (int y = 0; y < 2000; y++) {
+            if ((y % 3) == 0) {
+                for (int x = 0; x < 2000; x++) {
+                    int idx = (y * 2000 + x) * 3;
+                    pBits[idx]   = (BYTE)((pBits[idx] * 130) / 255);
+                    pBits[idx+1] = (BYTE)((pBits[idx+1] * 130) / 255);
+                    pBits[idx+2] = (BYTE)((pBits[idx+2] * 130) / 255);
+                }
+            }
+        }
+        SetDIBits(hdcMem, hbmCanvas, 0, 2000, pBits, &bi, DIB_RGB_COLORS);
+        GlobalFree(pBits);
+    }
 }
 
 // Transforms
@@ -604,7 +688,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnSizeSmall = CreateWindowA("BUTTON", "2px [1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 209, 38, 22, hwnd, (HMENU)201, NULL, NULL);
             hBtnSizeMed = CreateWindowA("BUTTON", "6px [2]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 46, 209, 38, 22, hwnd, (HMENU)202, NULL, NULL);
             hBtnSizeLarge = CreateWindowA("BUTTON", "14px [3]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 87, 209, 39, 22, hwnd, (HMENU)203, NULL, NULL);
-            hBtnShapeToggle = CreateWindowA("BUTTON", "Shape: Round", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 234, 121, 22, hwnd, (HMENU)204, NULL, NULL);
+            hBtnShapeToggle = CreateWindowA("BUTTON", "Shape", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 234, 58, 22, hwnd, (HMENU)204, NULL, NULL);
+            hBtnMirror = CreateWindowA("BUTTON", "Mirror [M]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 234, 58, 22, hwnd, (HMENU)205, NULL, NULL);
 
             // Filters & Transforms
             hBtnInvert = CreateWindowA("BUTTON", "Invert [V]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 261, 58, 22, hwnd, (HMENU)501, NULL, NULL);
@@ -616,26 +701,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnRotate90 = CreateWindowA("BUTTON", "Rot CW", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 336, 58, 22, hwnd, (HMENU)505, NULL, NULL);
             hBtnRotateCCW = CreateWindowA("BUTTON", "Rot CCW", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 336, 58, 22, hwnd, (HMENU)511, NULL, NULL);
 
-            // Convolve Filters
+            // Convolve & DSP Filters
             hBtnEdge = CreateWindowA("BUTTON", "Edge", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 363, 38, 22, hwnd, (HMENU)506, NULL, NULL);
             hBtnSharpen = CreateWindowA("BUTTON", "Sharp", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 46, 363, 38, 22, hwnd, (HMENU)507, NULL, NULL);
             hBtnEmboss = CreateWindowA("BUTTON", "Emboss", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 87, 363, 39, 22, hwnd, (HMENU)508, NULL, NULL);
+            hBtnDither = CreateWindowA("BUTTON", "Dither", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 388, 58, 22, hwnd, (HMENU)512, NULL, NULL);
+            hBtnScanlines = CreateWindowA("BUTTON", "CRT Lines", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 388, 58, 22, hwnd, (HMENU)513, NULL, NULL);
 
             // History & Actions
-            hBtnUndo = CreateWindowA("BUTTON", "Undo ^Z", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 390, 58, 22, hwnd, (HMENU)601, NULL, NULL);
-            hBtnRedo = CreateWindowA("BUTTON", "Redo ^Y", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 390, 58, 22, hwnd, (HMENU)602, NULL, NULL);
-            hBtnOpen = CreateWindowA("BUTTON", "Open ^O", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 415, 58, 22, hwnd, (HMENU)303, NULL, NULL);
-            hBtnSave = CreateWindowA("BUTTON", "Save ^S", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 415, 58, 22, hwnd, (HMENU)302, NULL, NULL);
-            hBtnClear = CreateWindowA("BUTTON", "Clear Canvas", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 440, 121, 22, hwnd, (HMENU)301, NULL, NULL);
-            hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 465, 121, 22, hwnd, (HMENU)701, NULL, NULL);
-            hBtnDemoArt = CreateWindowA("BUTTON", "Demo Art (D)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 490, 121, 22, hwnd, (HMENU)304, NULL, NULL);
+            hBtnUndo = CreateWindowA("BUTTON", "Undo ^Z", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 413, 58, 22, hwnd, (HMENU)601, NULL, NULL);
+            hBtnRedo = CreateWindowA("BUTTON", "Redo ^Y", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 413, 58, 22, hwnd, (HMENU)602, NULL, NULL);
+            hBtnOpen = CreateWindowA("BUTTON", "Open ^O", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 438, 58, 22, hwnd, (HMENU)303, NULL, NULL);
+            hBtnSave = CreateWindowA("BUTTON", "Save ^S", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 438, 58, 22, hwnd, (HMENU)302, NULL, NULL);
+            hBtnClear = CreateWindowA("BUTTON", "Clear Canvas", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 463, 121, 22, hwnd, (HMENU)301, NULL, NULL);
+            hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 488, 121, 22, hwnd, (HMENU)701, NULL, NULL);
+            hBtnDemoArt = CreateWindowA("BUTTON", "Demo Art (D)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 513, 121, 22, hwnd, (HMENU)304, NULL, NULL);
 
             HWND controls[] = {
                 hBtnBlack, hBtnRed, hBtnGreen, hBtnBlue, hBtnYellow, hBtnPurple, hBtnCustomColor,
                 hBtnFreehand, hBtnLine, hBtnRect, hBtnEllipse, hBtnSpray, hBtnEraser, hBtnFill, hBtnPipette,
-                hBtnSizeSmall, hBtnSizeMed, hBtnSizeLarge, hBtnShapeToggle,
+                hBtnSizeSmall, hBtnSizeMed, hBtnSizeLarge, hBtnShapeToggle, hBtnMirror,
                 hBtnInvert, hBtnGray, hBtnBright, hBtnDark, hBtnFlipH, hBtnFlipV, hBtnRotate90, hBtnRotateCCW,
-                hBtnEdge, hBtnSharpen, hBtnEmboss,
+                hBtnEdge, hBtnSharpen, hBtnEmboss, hBtnDither, hBtnScanlines,
                 hBtnUndo, hBtnRedo, hBtnOpen, hBtnSave, hBtnClear, hBtnHelp, hBtnDemoArt
             };
             for (int i = 0; i < sizeof(controls)/sizeof(controls[0]); i++) {
@@ -681,10 +768,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (id == 203) curSize = 14;
             if (id == 204) {
                 brushShape = 1 - brushShape;
-                SetWindowTextA(hBtnShapeToggle, brushShape ? "Shape: Square" : "Shape: Round");
+                SetWindowTextA(hBtnShapeToggle, brushShape ? "Square" : "Round");
+            }
+            if (id == 205) {
+                mirrorMode = 1 - mirrorMode;
+                SetWindowTextA(hBtnMirror, mirrorMode ? "Mirror ON" : "Mirror [M]");
             }
             
-            if (id >= 101 && id <= 204) {
+            if (id >= 101 && id <= 205) {
                 UpdatePen();
                 UpdateTitleStatus(hwnd);
             }
@@ -746,6 +837,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (id == 506) { FilterConvolve(0); InvalidateRect(hwnd, NULL, FALSE); }
             if (id == 507) { FilterConvolve(1); InvalidateRect(hwnd, NULL, FALSE); }
             if (id == 508) { FilterConvolve(2); InvalidateRect(hwnd, NULL, FALSE); }
+            if (id == 512) { FilterDither1Bit(); InvalidateRect(hwnd, NULL, FALSE); }
+            if (id == 513) { FilterScanlines(); InvalidateRect(hwnd, NULL, FALSE); }
 
             if (id == 304) { GenerateDemoArtwork(hwnd); }
             if (id == 601) { PerformUndo(); InvalidateRect(hwnd, NULL, FALSE); }
@@ -765,11 +858,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "Brush & Shapes:\n"
                     "  [1]  Small (2px)    [2] Medium (6px)    [3] Large (14px)\n"
                     "  [ [ ] / [ ] ]  Decrease / Increase Brush Size\n"
+                    "  [M]  Mirror Drawing Mode\n"
                     "  Shape Toggle: Round / Square\n\n"
                     "Image Filters & Transforms:\n"
                     "  [V]  Invert Colors    [Y] Grayscale\n"
                     "  [+]  +Brightness     [-] -Brightness\n"
-                    "  Edge Detect, Sharpen, Emboss, Flip H/V, Rotate CW/CCW\n\n"
+                    "  Edge Detect, Sharpen, Emboss, Dither (1-Bit), CRT Lines\n"
+                    "  Flip H/V, Rotate CW/CCW\n\n"
                     "Quick Starter & Actions:\n"
                     "  [D]  Generate Demo Artwork (Mountain Sunset)\n"
                     "  Ctrl+Z  Undo          Ctrl+Y  Redo\n"
@@ -815,6 +910,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 currentTool = 6; UpdatePen(); UpdateTitleStatus(hwnd);
             } else if (wParam == 'I' || wParam == 'i') {
                 currentTool = 7; UpdatePen(); UpdateTitleStatus(hwnd);
+            } else if (wParam == 'M' || wParam == 'm') {
+                mirrorMode = 1 - mirrorMode;
+                SetWindowTextA(hBtnMirror, mirrorMode ? "Mirror ON" : "Mirror [M]");
+                UpdateTitleStatus(hwnd);
             } else if (wParam == 'D' || wParam == 'd') {
                 GenerateDemoArtwork(hwnd);
             } else if (wParam == '1') {
@@ -867,14 +966,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SelectObject(hdc, hPen);
                     MoveToEx(hdc, x + 130 - scrollX, y - scrollY, NULL);
                     LineTo(hdc, x + 130 - scrollX, y - scrollY);
+                    if (mirrorMode) {
+                        int mx = 1999 - x;
+                        MoveToEx(hdc, mx + 130 - scrollX, y - scrollY, NULL);
+                        LineTo(hdc, mx + 130 - scrollX, y - scrollY);
+                    }
                     ReleaseDC(hwnd, hdc);
                     MoveToEx(hdcMem, x, y, NULL);
                     LineTo(hdcMem, x, y);
+                    if (mirrorMode) {
+                        int mx = 1999 - x;
+                        MoveToEx(hdcMem, mx, y, NULL);
+                        LineTo(hdcMem, mx, y);
+                    }
                 } else if (currentTool == 4) { // Spray
                     for (int i = 0; i < 15; i++) {
                         int rx = (x + (i * 7) % curSize) - curSize / 2;
                         int ry = (y + (i * 13) % curSize) - curSize / 2;
                         SetPixel(hdcMem, rx, ry, curColor);
+                        if (mirrorMode) {
+                            int mx = 1999 - x;
+                            int mrx = (mx + (i * 7) % curSize) - curSize / 2;
+                            SetPixel(hdcMem, mrx, ry, curColor);
+                        }
                     }
                     InvalidateRect(hwnd, NULL, FALSE);
                 } else {
@@ -901,11 +1015,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     LineTo(hdc, x + 130 - scrollX, y - scrollY);
                     MoveToEx(hdcMem, lastX, lastY, NULL);
                     LineTo(hdcMem, x, y);
+                    if (mirrorMode) {
+                        int m_lastX = 1999 - lastX;
+                        int m_x = 1999 - x;
+                        MoveToEx(hdc, m_lastX + 130 - scrollX, lastY - scrollY, NULL);
+                        LineTo(hdc, m_x + 130 - scrollX, y - scrollY);
+                        MoveToEx(hdcMem, m_lastX, lastY, NULL);
+                        LineTo(hdcMem, m_x, y);
+                    }
                 } else if (currentTool == 4) { // Spray
                     for (int i = 0; i < 15; i++) {
                         int rx = (x + (i * 7) % curSize) - curSize / 2;
                         int ry = (y + (i * 13) % curSize) - curSize / 2;
                         SetPixel(hdcMem, rx, ry, curColor);
+                        if (mirrorMode) {
+                            int mx = 1999 - x;
+                            int mrx = (mx + (i * 7) % curSize) - curSize / 2;
+                            SetPixel(hdcMem, mrx, ry, curColor);
+                        }
                     }
                     InvalidateRect(hwnd, NULL, FALSE);
                 } else {
@@ -945,6 +1072,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (currentTool == 1) { MoveToEx(hdcMem, startX, startY, NULL); LineTo(hdcMem, x, y); }
                     else if (currentTool == 2) { Rectangle(hdcMem, startX, startY, x, y); }
                     else if (currentTool == 3) { Ellipse(hdcMem, startX, startY, x, y); }
+
+                    if (mirrorMode) {
+                        int mStartX = 1999 - startX;
+                        int mX = 1999 - x;
+                        if (currentTool == 1) { MoveToEx(hdcMem, mStartX, startY, NULL); LineTo(hdcMem, mX, y); }
+                        else if (currentTool == 2) { Rectangle(hdcMem, mX, startY, mStartX, y); }
+                        else if (currentTool == 3) { Ellipse(hdcMem, mX, startY, mStartX, y); }
+                    }
                     SelectObject(hdcMem, hBrush);
                     
                     InvalidateRect(hwnd, NULL, FALSE);
