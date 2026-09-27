@@ -8,8 +8,8 @@
 #pragma comment(lib, "advapi32.lib")
 #pragma comment(lib, "comctl32.lib")
 
-#define W 800
-#define H 600
+#define W 920
+#define H 640
 
 HWND hEdit, hList, hBtnNew, hBtnDel, hStatus, hSearch, hBtnPin, hBtnExportMd, hBtnExportCsv, hBtnExportJson, hBtnImport, hBtnLock, hTab, hBtnHelp;
 HBRUSH bgBrush, sidebarBrush, g_hbrClass;
@@ -209,9 +209,11 @@ void LoadNotes() {
         CloseHandle(hFile);
     }
     if (numNotes == 0) {
-        numNotes = 1; pinned[0] = 0; encrypted[0] = 0;
-        const char* def = "Welcome to KNote!\r\n- #tags supported\r\n- Tabs available\r\n- AES encryption\r\n- Click Help or press F1/H for Help";
-        lstrcpyA(notes[0], def);
+        numNotes = 2;
+        pinned[0] = 0; encrypted[0] = 0;
+        lstrcpyA(notes[0], "Welcome to KNote!\r\n- #tags supported\r\n- Tabs available\r\n- AES encryption\r\n- Press F5/F9 for quick snapshot\r\n- Click Help or press F1/H for Help");
+        pinned[1] = 0; encrypted[1] = 0;
+        lstrcpyA(notes[1], "system_recovery_1999.log\r\n\r\n#kernel #recovery #anomaly\r\n\r\n[1999-12-28 23:41:09] SYSTEM KERNEL JOURNAL RECOVERY\r\nSubsystem: K-OS / Echo Subsystem Node 0x7F\r\nAnomaly ID: SIG-1999-ECHO\r\n\r\nMemory Offset Dump:\r\n0x00401000 : 45 43 48 4F 2D 31 39 39 39  | ECHO-1999...\r\n0x00401010 : 31 30 2E 31 39 2E 39 39 2E  | 10.19.99...\r\n0x00401020 : 63 6C 61 73 73 69 66 69 65  | classified..\r\n\r\n[LOG ENTRY #042]\r\nPacket stream redirected through non-routable interface 10.19.99.4/classified.\r\nAnomalous subcarrier frequency 1999Hz detected on primary bus.\r\nAutomated diagnostic daemon suspended pending manual operator authorization.\r\nAll node telemetry synchronized with echo-subsystem.net.\r\n\r\n-- END RECOVERY DUMP --");
     }
 }
 
@@ -495,7 +497,8 @@ void ShowHelpDialog(HWND hwnd) {
         "  - Ctrl+N        : Create new note\r\n"
         "  - Ctrl+F        : Focus search & tags box\r\n"
         "  - Ctrl+P        : Pin / unpin current note\r\n"
-        "  - Ctrl+S        : Save notes immediately\r\n"
+        "  - Ctrl+S / F5   : Save notes immediately / snapshot\r\n"
+        "  - F9            : Reload / restore saved notes\r\n"
         "  - Ctrl+W        : Close active tab\r\n"
         "  - Ctrl+Tab      : Cycle next open tab\r\n"
         "  - Ctrl+1..9     : Switch directly to tab 1 to 9\r\n"
@@ -504,6 +507,7 @@ void ShowHelpDialog(HWND hwnd) {
         "  - F1 or H       : Open this Help manual\r\n\r\n"
         "FEATURES:\r\n"
         "  - Tags: Type #tag anywhere in notes to categorize\r\n"
+        "  - Snapshots: Instant F5 save & F9 rollback\r\n"
         "  - AES-256: Lock notes with secure password encryption\r\n"
         "  - Backups: Export CSV, Markdown, or standard JSON\r\n"
         "  - Multi-tab: Open and edit multiple notes seamlessly",
@@ -793,6 +797,18 @@ void MainEntry() {
             }
             if (msg.wParam == VK_DELETE && hFocus == hList) {
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DEL, BN_CLICKED), (LPARAM)hBtnDel);
+                continue;
+            }
+            if (msg.wParam == VK_F5) {
+                SaveNotes();
+                SetWindowTextA(hStatus, "  Session snapshot saved [F5]");
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                LoadNotes();
+                if (numNotes > 0) OpenTab(0);
+                RefreshList();
+                SetWindowTextA(hStatus, "  Session snapshot restored [F9]");
                 continue;
             }
             if (msg.wParam == VK_F1 || (!isEdit && (msg.wParam == 'H' || msg.wParam == 'h'))) {

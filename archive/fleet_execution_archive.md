@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-27T11:52:00Z — kilo-graphics: KSanctuary (Game Content, Visual Polish & Early-Raid Balance Pass)**
+  - Status: PASS ✅ (0 rotating glints / traveling border dots; weather reactivity & early-raid balance; 0 regressions).
+  - Glint & Dot Purge: Verified 100% clean static retro borders across web and C with zero moving glints or perimeter dots.
+  - Cutaway Visual Polish: Added atmospheric weather reactivity to surface strip and tactical monitor/crate in security room.
+  - Dweller Sprite Differentiation: Added role-distinct gear and hat colors across all 7 dweller jobs in canvas cutaway.
+  - Early-Raid Balance Tuning: Gated raider clans so Day 1-3 faces Clan 0 (Rustfang Marauders, ~30 Atk), smoothing initial difficulty curve.
+  - Doppler Radar Iconography: Rendered 32x32 forecasted hazard sprite in Win32 C early warning radar box.
+  - Verification: MSVC compile clean (`KSanctuary.exe` 264.2 KB); Vite clean build in 387ms (`ksanctuary.html` 408.4 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-27T09:48:00Z — kilo-planner: 24h Fleet Planning, Queue Health & Icon Audit**
   - Status: PASS ✅ (104 apps audited, 0 duplicates, 0 regressions, all queues balanced).
   - Velocity & Health: Assessed 15 runs across 6 skills in past 24h; all passes clean; 100% build pass.

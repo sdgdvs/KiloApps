@@ -38,6 +38,10 @@
     flex-direction: column;
     user-select: none;
     min-width: 200px;
+    transition: width 0.15s ease, opacity 0.15s ease;
+  }
+  .sidebar.collapsed {
+    display: none;
   }
   .sidebar-header {
     padding: 8px;
@@ -664,26 +668,41 @@
   }
   .toast {
     position: fixed;
-    bottom: 35px;
-    right: 20px;
-    background: #2c2c2c;
-    color: #fff;
-    padding: 9px 18px;
+    bottom: 30px;
+    right: 16px;
+    background: #1f2937;
+    color: #f9fafb;
+    padding: 7px 14px;
     border-radius: 6px;
     font-size: 12px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-    z-index: 2000;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+    z-index: 500;
     opacity: 0;
     pointer-events: auto;
     cursor: pointer;
     user-select: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
-    transform: translateY(8px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    transform: translateY(6px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 420px;
   }
   .toast.show {
     opacity: 1;
     transform: translateY(0);
+  }
+  .toast-close {
+    margin-left: auto;
+    cursor: pointer;
+    font-weight: bold;
+    padding: 0 4px;
+    opacity: 0.6;
+    transition: opacity 0.1s;
+  }
+  .toast-close:hover {
+    opacity: 1;
   }
   .template-chip {
     background: #fff;
@@ -754,6 +773,7 @@
   <!-- Toolbar -->
   <header class="toolbar" role="toolbar" aria-label="Note editor toolbar">
     <div class="toolbar-group">
+      <button id="sidebarToggleBtn" title="Toggle Sidebar (Alt+S)" aria-label="Toggle sidebar">◀ Sidebar</button>
       <button id="pinBtn" title="Pin note to top (Ctrl+P)" aria-label="Pin note">📌 Pin [Ctrl+P]</button>
       <button id="lockBtn" title="Encrypt/Decrypt with Password" aria-label="Lock or unlock note">🔒 Lock</button>
       <button id="viewToggleBtn" title="Toggle Preview (Ctrl+E)" aria-label="Toggle preview mode">👁 Preview [Ctrl+E]</button>
@@ -770,6 +790,8 @@
       <div class="dropdown">
         <button id="exportDropdownBtn" title="Export in multiple formats" aria-label="Export options">💾 Export ▾</button>
         <div class="dropdown-content">
+          <button id="snapshotSaveBtn" type="button">📸 Quick Snapshot [F5]</button>
+          <button id="snapshotLoadBtn" type="button">⏪ Restore Snapshot [F9]</button>
           <button id="exportTxtBtn" type="button">📄 Plain Text (.txt)</button>
           <button id="exportMdBtn" type="button">📝 Markdown (.md)</button>
           <button id="exportCsvBtn" type="button">📊 Spreadsheet (.csv)</button>
@@ -923,6 +945,9 @@
         <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">H</span></td><td>Open in-editor Find & Replace</td></tr>
         <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">B</span> / <span class="kbd">I</span></td><td>Format selected text Bold / Italic</td></tr>
         <tr><td><span class="kbd">Alt</span> + <span class="kbd">D</span></td><td>Insert current timestamp</td></tr>
+        <tr><td><span class="kbd">Alt</span> + <span class="kbd">S</span></td><td>Toggle Sidebar (Distraction-Free)</td></tr>
+        <tr><td><span class="kbd">F5</span></td><td>Save Quick Snapshot point</td></tr>
+        <tr><td><span class="kbd">F9</span></td><td>Restore Quick Snapshot point</td></tr>
         <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">P</span></td><td>Pin / Unpin current note</td></tr>
         <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">E</span></td><td>Toggle Markdown Preview</td></tr>
         <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">S</span></td><td>Save notes immediately</td></tr>
@@ -933,6 +958,8 @@
       </table>
       <p style="margin-top: 14px; font-size: 12px; color: #555;">
         <strong>Features & Data Interoperability:</strong><br>
+        • <strong>Snapshot Persistence:</strong> Press F5 to capture an instant state snapshot, and F9 to restore anytime.<br>
+        • <strong>Distraction-Free Mode:</strong> Press Alt+S or click ◀ Sidebar to toggle full editor width.<br>
         • <strong>Multi-Tab Sessions:</strong> Open and edit multiple notes simultaneously in tabbed workspace.<br>
         • <strong>Tag Cloud:</strong> Type <code>#tagname</code> anywhere to tag. Filter instantly via clickable tag chips.<br>
         • <strong>Spreadsheet & Dossier Export:</strong> Export all notes as CSV table, print-ready HTML dossier, master Markdown notebook digest, or complete JSON backup.<br>
@@ -987,10 +1014,14 @@
   const findCloseBtn = document.getElementById('findCloseBtn');
 
   // Toolbar buttons
+  const sidebar = document.querySelector('.sidebar');
+  const sidebarToggleBtn = document.getElementById('sidebarToggleBtn');
   const newBtn = document.getElementById('newBtn');
   const pinBtn = document.getElementById('pinBtn');
   const lockBtn = document.getElementById('lockBtn');
   const viewToggleBtn = document.getElementById('viewToggleBtn');
+  const snapshotSaveBtn = document.getElementById('snapshotSaveBtn');
+  const snapshotLoadBtn = document.getElementById('snapshotLoadBtn');
   const exportTxtBtn = document.getElementById('exportTxtBtn');
   const exportMdBtn = document.getElementById('exportMdBtn');
   const exportCsvBtn = document.getElementById('exportCsvBtn');
@@ -1068,11 +1099,12 @@
   function showToast(msg, duration = 2500, actionCallback = null, actionText = null) {
     if (toastTimer) clearTimeout(toastTimer);
     toastActionCallback = actionCallback;
+    let html = `<span>${msg}</span>`;
     if (actionCallback && actionText) {
-      toast.innerHTML = `${msg} <span style="text-decoration:underline; cursor:pointer; margin-left:8px; font-weight:600; color:#fde047;">${actionText}</span>`;
-    } else {
-      toast.textContent = msg;
+      html += ` <span style="text-decoration:underline; cursor:pointer; margin-left:6px; font-weight:600; color:#fde047;">${actionText}</span>`;
     }
+    html += ` <span class="toast-close" title="Dismiss">✕</span>`;
+    toast.innerHTML = html;
     toast.classList.add('show');
     toastTimer = setTimeout(() => {
       toast.classList.remove('show');
@@ -1080,7 +1112,13 @@
     }, duration);
   }
 
-  toast.addEventListener('click', () => {
+  toast.addEventListener('click', (e) => {
+    if (e.target && e.target.classList.contains('toast-close')) {
+      toast.classList.remove('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastActionCallback = null;
+      return;
+    }
     if (toastActionCallback) {
       toastActionCallback();
       toastActionCallback = null;
@@ -1171,12 +1209,28 @@
     if (!Array.isArray(notes) || notes.length === 0) {
       notes = [{
         id: 'note_' + Date.now(),
-        text: "Welcome to KNote!\n\n#features #notes\n- Multi-tab editing: Open multiple notes simultaneously!\n- Type #tags to categorize and filter.\n- Fast Find & Replace [Ctrl+H].\n- Speed formatting: Bold, Italic, Task Checklists, Tables.\n- AES-GCM password protection for sensitive notes.\n- Multi-format Export: CSV, HTML, Markdown Digest, JSON, TXT.\n- Trash & Undo: Never lose an accidental deletion.\n\nPress F1 or H for full User Manual & Shortcuts.",
+        text: "Welcome to KNote!\n\n#features #notes\n- Multi-tab editing: Open multiple notes simultaneously!\n- Type #tags to categorize and filter.\n- Fast Find & Replace [Ctrl+H].\n- Speed formatting: Bold, Italic, Task Checklists, Tables.\n- AES-GCM password protection for sensitive notes.\n- Multi-format Export: CSV, HTML, Markdown Digest, JSON, TXT.\n- Trash & Undo: Never lose an accidental deletion.\n- Quick Snapshots: Press F5 to save snapshot, F9 to restore.\n- Distraction-Free: Press Alt+S to toggle sidebar.\n\nPress F1 or H for full User Manual & Shortcuts.",
         pinned: false,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         color: 'yellow'
+      }, {
+        id: 'note_recovery_1999',
+        text: "system_recovery_1999.log\n\n#kernel #recovery #anomaly\n\n[1999-12-28 23:41:09] SYSTEM KERNEL JOURNAL RECOVERY\nSubsystem: K-OS / Echo Subsystem Node 0x7F\nAnomaly ID: SIG-1999-ECHO\n\nMemory Offset Dump:\n0x00401000 : 45 43 48 4F 2D 31 39 39 39  | ECHO-1999...\n0x00401010 : 31 30 2E 31 39 2E 39 39 2E  | 10.19.99...\n0x00401020 : 63 6C 61 73 73 69 66 69 65  | classified..\n\n[LOG ENTRY #042]\nPacket stream redirected through non-routable interface 10.19.99.4/classified.\nAnomalous subcarrier frequency 1999Hz detected on primary bus.\nAutomated diagnostic daemon suspended pending manual operator authorization.\nAll node telemetry synchronized with echo-subsystem.net.\n\n-- END RECOVERY DUMP --",
+        pinned: false,
+        created_at: "1999-12-28T23:41:09.000Z",
+        updated_at: "1999-12-28T23:41:09.000Z",
+        color: 'dark'
       }];
+    } else if (!notes.some(n => (n.text || '').includes('system_recovery_1999.log'))) {
+      notes.push({
+        id: 'note_recovery_1999',
+        text: "system_recovery_1999.log\n\n#kernel #recovery #anomaly\n\n[1999-12-28 23:41:09] SYSTEM KERNEL JOURNAL RECOVERY\nSubsystem: K-OS / Echo Subsystem Node 0x7F\nAnomaly ID: SIG-1999-ECHO\n\nMemory Offset Dump:\n0x00401000 : 45 43 48 4F 2D 31 39 39 39  | ECHO-1999...\n0x00401010 : 31 30 2E 31 39 2E 39 39 2E  | 10.19.99...\n0x00401020 : 63 6C 61 73 73 69 66 69 65  | classified..\n\n[LOG ENTRY #042]\nPacket stream redirected through non-routable interface 10.19.99.4/classified.\nAnomalous subcarrier frequency 1999Hz detected on primary bus.\nAutomated diagnostic daemon suspended pending manual operator authorization.\nAll node telemetry synchronized with echo-subsystem.net.\n\n-- END RECOVERY DUMP --",
+        pinned: false,
+        created_at: "1999-12-28T23:41:09.000Z",
+        updated_at: "1999-12-28T23:41:09.000Z",
+        color: 'dark'
+      });
     }
     notes.forEach((n, i) => {
       if (!n.id) n.id = 'note_' + (Date.now() + i);
@@ -1660,7 +1714,16 @@
   }
 
   // Event Listeners for Editor
+  function dismissToastIfActive() {
+    if (toast.classList.contains('show')) {
+      toast.classList.remove('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastActionCallback = null;
+    }
+  }
+
   noteArea.addEventListener('input', () => {
+    dismissToastIfActive();
     const cur = notes[activeIndex];
     if (!cur) return;
     cur.updated_at = new Date().toISOString();
@@ -1677,8 +1740,12 @@
     if (findReplaceBar.style.display === 'flex') updateFindMatches();
   });
 
+  noteArea.addEventListener('focus', dismissToastIfActive);
   noteArea.addEventListener('keyup', updateCursorPos);
-  noteArea.addEventListener('click', updateCursorPos);
+  noteArea.addEventListener('click', () => {
+    dismissToastIfActive();
+    updateCursorPos();
+  });
   noteArea.addEventListener('select', updateCursorPos);
 
   // Tab key indentation support in editor
@@ -2750,6 +2817,79 @@
     });
   });
 
+  // Sidebar Toggle (Distraction-Free Mode)
+  function toggleSidebar(forcedState = null) {
+    if (!sidebar || !sidebarToggleBtn) return;
+    const isCollapsed = forcedState !== null ? !forcedState : !sidebar.classList.contains('collapsed');
+    if (isCollapsed) {
+      sidebar.classList.add('collapsed');
+      sidebarToggleBtn.textContent = '▶ Sidebar';
+      sidebarToggleBtn.setAttribute('title', 'Show Sidebar (Alt+S)');
+      safeSetStorage('knote_sidebar_visible', '0');
+    } else {
+      sidebar.classList.remove('collapsed');
+      sidebarToggleBtn.textContent = '◀ Sidebar';
+      sidebarToggleBtn.setAttribute('title', 'Hide Sidebar (Alt+S)');
+      safeSetStorage('knote_sidebar_visible', '1');
+    }
+  }
+
+  if (sidebarToggleBtn) {
+    sidebarToggleBtn.addEventListener('click', () => toggleSidebar());
+  }
+
+  // Snapshot Persistence (F5 Quick Save / F9 Quick Load)
+  function quicksaveSnapshot() {
+    const cur = notes[activeIndex];
+    if (cur) {
+      if (cur.encrypted && cur.unlockedText !== null) {
+        cur.unlockedText = noteArea.value;
+      } else {
+        cur.text = noteArea.value;
+      }
+    }
+    const snapshot = {
+      timestamp: new Date().toISOString(),
+      notes: JSON.parse(JSON.stringify(notes)),
+      openTabs: [...openTabs],
+      activeTabIndex: activeTabIndex,
+      activeIndex: activeIndex
+    };
+    if (safeSetStorage('knote_snapshot', JSON.stringify(snapshot))) {
+      showToast("Session snapshot saved [F5]");
+    }
+  }
+
+  function quickloadSnapshot() {
+    const raw = safeGetStorage('knote_snapshot');
+    if (!raw) {
+      showToast("No snapshot found. Press F5 to take a snapshot first.");
+      return;
+    }
+    try {
+      const snap = JSON.parse(raw);
+      if (Array.isArray(snap.notes) && snap.notes.length > 0) {
+        notes = snap.notes;
+        openTabs = Array.isArray(snap.openTabs) && snap.openTabs.length > 0 ? snap.openTabs : [0];
+        activeTabIndex = (typeof snap.activeTabIndex === 'number' && snap.activeTabIndex < openTabs.length) ? snap.activeTabIndex : 0;
+        activeIndex = openTabs[activeTabIndex] || 0;
+        saveNotes();
+        loadActive();
+        renderList();
+        renderTabs();
+        const timeStr = snap.timestamp ? new Date(snap.timestamp).toLocaleTimeString() : '';
+        showToast(`Session snapshot restored [F9]${timeStr ? ' (' + timeStr + ')' : ''}`);
+      } else {
+        showToast("Invalid snapshot data.");
+      }
+    } catch (e) {
+      showToast("Error loading snapshot: " + e.message);
+    }
+  }
+
+  if (snapshotSaveBtn) snapshotSaveBtn.addEventListener('click', quicksaveSnapshot);
+  if (snapshotLoadBtn) snapshotLoadBtn.addEventListener('click', quickloadSnapshot);
+
   // Global Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
     const modalOpen = passModal.style.display === 'flex' ||
@@ -2785,6 +2925,20 @@
     // Suppress background hotkeys when any modal is open
     if (modalOpen) return;
 
+    // F5: Quick snapshot save
+    if (e.key === 'F5') {
+      e.preventDefault();
+      quicksaveSnapshot();
+      return;
+    }
+
+    // F9: Quick snapshot restore
+    if (e.key === 'F9') {
+      e.preventDefault();
+      quickloadSnapshot();
+      return;
+    }
+
     const activeTag = document.activeElement ? document.activeElement.tagName : '';
     const isInput = activeTag === 'INPUT' || activeTag === 'TEXTAREA';
 
@@ -2792,6 +2946,13 @@
     if (e.key === 'F1' || (!isInput && (e.key === 'h' || e.key === 'H') && !e.ctrlKey && !e.altKey && !e.metaKey)) {
       e.preventDefault();
       helpBtn.click();
+      return;
+    }
+
+    // Alt+S: Toggle Sidebar (Distraction-Free Mode)
+    if (e.altKey && (e.key === 's' || e.key === 'S')) {
+      e.preventDefault();
+      toggleSidebar();
       return;
     }
 
@@ -2917,7 +3078,21 @@
   // Initialize
   loadNotes();
   loadActive();
-  showToast("Welcome to KNote! Press F1 or H for Help & Shortcuts.", 3500);
+
+  if (safeGetStorage('knote_sidebar_visible') === '0') {
+    toggleSidebar(false);
+  }
+
+  const tutorialSeen = safeGetStorage('knote_tutorialSeen');
+  if (!tutorialSeen) {
+    safeSetStorage('knote_tutorialSeen', '1');
+    setTimeout(() => {
+      helpModal.style.display = 'flex';
+      setTimeout(() => helpOkBtn.focus(), 50);
+    }, 250);
+  } else {
+    showToast("KNote ready. Press F1 or H for Help [F5 Snapshot / F9 Restore]", 2800);
+  }
 })();
 </script>
 </body>

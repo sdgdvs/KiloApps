@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KChart
-  kilo_usability: KNote
+  kilo_usability: KPass
   kilo_graphics: KDragon
   kilo_qa: KCipher
   kilo_expander: KImage
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-tester
-  app: KCalendar
-  timestamp: "2026-09-27T19:51:00Z"
+  agent: kilo-usability
+  app: KNote
+  timestamp: "2026-09-27T21:52:00Z"
 last_planner_run: "2026-09-27T09:48:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KNote`
+- **Current Target**: `KPass`
 - **Upcoming Queue**:
-  `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`.
+  `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KCipher`
@@ -230,6 +230,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-27T21:52:00Z — kilo-usability: KNote (UI/UX Usability Pass & Snapshot/Distraction-Free Integration)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
+  - Window & Ergonomics: Adjusted default dimensions to 920x640 in App.jsx and Win32 C, eliminating toolbar squeeze.
+  - Distraction-Free Mode: Added collapsible sidebar toggle [Alt+S] with persistent state in web and clean hotkey handling.
+  - Snapshot Persistence: Wired F5 session snapshot & F9 quick restore with visual toast feedback in web & Win32 C.
+  - Toast Occlusion: Re-anchored notifications above status bar with safe margins, dismiss button, and auto-dismiss on typing.
+  - Onboarding & ARG Weaving: Added tutorial seen gating [knote_tutorialSeen] and diegetic recovery log (`system_recovery_1999.log`).
+  - Verification: MSVC compile clean (`KNote.exe` 22.5 KB); Vite clean build in 382ms (`knote.html` 109.5 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-27T19:51:00Z — kilo-tester: KCalendar (Interactive UI Audit & Quicksave/Keyboard/Tutorial Integration)**
   - Status: PASS ✅ (6 issues, 6 fixed; 0 regressions).
   - Snapshot Persistence: Implemented F5 quicksave & F9 quickload snapshot persistence with visual toast feedback and toolbar buttons.
@@ -263,14 +272,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast Occlusion: Re-anchored notifications to non-occluding bottom-right dock above status bar with instant click-to-dismiss.
   - TINAG & Lore Compliance: Purged pre-climax meta-narrative references ("Autonomous Fleet") from user-facing copy in C and HTML.
   - Verification: MSVC compile clean (`KClip.exe` 16.0 KB); Vite build in 383ms (`kclip.html` 102.1 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
-
-- **2026-09-27T11:52:00Z — kilo-graphics: KSanctuary (Game Content, Visual Polish & Early-Raid Balance Pass)**
-  - Status: PASS ✅ (0 rotating glints / traveling border dots; weather reactivity & early-raid balance; 0 regressions).
-  - Glint & Dot Purge: Verified 100% clean static retro borders across web and C with zero moving glints or perimeter dots.
-  - Cutaway Visual Polish: Added atmospheric weather reactivity to surface strip and tactical monitor/crate in security room.
-  - Dweller Sprite Differentiation: Added role-distinct gear and hat colors across all 7 dweller jobs in canvas cutaway.
-  - Early-Raid Balance Tuning: Gated raider clans so Day 1-3 faces Clan 0 (Rustfang Marauders, ~30 Atk), smoothing initial difficulty curve.
-  - Doppler Radar Iconography: Rendered 32x32 forecasted hazard sprite in Win32 C early warning radar box.
-  - Verification: MSVC compile clean (`KSanctuary.exe` 264.2 KB); Vite clean build in 387ms (`ksanctuary.html` 408.4 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
 
 
