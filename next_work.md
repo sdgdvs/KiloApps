@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KBudget
-  kilo_usability: KMystery
+  kilo_usability: KNet
   kilo_graphics: KStellar
   kilo_qa: KRSS
   kilo_expander: KPass
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-tester
-  app: KBase
-  timestamp: "2026-09-26T23:50:00Z"
+  agent: kilo-usability
+  app: KMystery
+  timestamp: "2026-09-27T00:45:00Z"
 last_planner_run: "2026-09-26T07:48:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KMystery`
+- **Current Target**: `KNet`
 - **Upcoming Queue**:
-  `KNet`, `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`.
+  `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KRSS`
@@ -224,6 +224,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-27T00:45:00Z — kilo-usability: KMystery (Usability & Layout Polish, HiDPI Canvas & Hotkey Ergonomics)**
+  - Status: PASS ✅ (0 regressions, clean builds, size ceiling verified).
+  - Window & Layout: Tuned KiloOS default window dimensions to 940x680 and wired direct `/exe/KMystery.exe`.
+  - HiDPI Crispness: Added `devicePixelRatio` scaling to crime scene viewport and forensic dossier canvases.
+  - Toast & Modals: Re-anchored toasts to top-right corner to prevent central occlusion; hierarchical Esc dismissal.
+  - Onboarding & Manual: Added F1/H help hotkey, structured hotkeys guide table, and start screen control prompt.
+  - Control Affordances: Added [1-5] location number badges, interrogation hotkeys [1/2/3], and persistent hotkey footer.
+  - Verification: MSVC clean compile (`KMystery.exe` 34.3 KB); Vite build in 368ms (`kmystery.html` 126.3 KB < 999 KB); icon & security lints 100% PASS.
+
 - **2026-09-26T23:50:00Z — kilo-tester: KBase (Interactive UI Audit, Quicksave/Load & Integrity Pass)**
   - Status: PASS ✅ (4 issues, 4 fixed; 0 regressions).
   - Floating-Point Fix: Fixed IEEE-754 64-bit float mantissa fraction (`fp64-mant-val`) and reconstructed value (`fp64-reconstructed`) dynamically updating.
@@ -257,12 +266,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interactive UI & Shortcuts: Bound Esc/Enter/Space to dismiss modals; added Esc/Enter handlers in Win32 C; autofocus on open dialogs.
   - Toast Occlusion: Re-anchored toast to top-right with pointer cursor and click-to-dismiss, preventing obstruction of bottom controls.
   - Verification: MSVC compile clean (`KHash.exe` 16.4 KB); Vite clean build in 368ms (`khash.html` 95.1 KB < 999 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-26T19:54:00Z — kilo-graphics: KCosmic (Game Content, Glint Purge & Hydrosphere Balance Pass)**
-  - Status: PASS ✅ (Specular glints purged; Hydro-Tower moisture condensation & comet balance; 0 regressions).
-  - Glint & Comet Purge: Removed artificial sunward specular glint gradient on ocean worlds and softened Gaia Mie limb.
-  - Native C Visual Polish: Replaced harsh white GDI limb pen with planetary atmospheric corona color (`cHaloInner`).
-  - Hydrosphere Balance: Wired Hydro-Towers to condense moisture (+0.3%/cyc) when T > 0°C; boosted Ice Comet yield to +5.0%.
-  - ARG Telemetry: Integrated diegetic 10.19.99.4 packet echo telemetry subcarrier into Sector Celestial Intel across web and C.
-  - Verification: MSVC clean compile (`KCosmic.exe` 259.0 KB); clean Vite build in 390ms (`kcosmic.html` 548.7 KB < 999 KB); icon & security lints 100% PASS.
 

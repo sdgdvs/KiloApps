@@ -99,7 +99,7 @@ const APPS = [
   { id: 'kmech', title: 'KMech', url: '/apps/kmech.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmech.ico', w: 640, h: 540, folder: 'Games' },
   { id: 'kcyber', title: 'KCyber', url: '/apps/kcyber.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcyber.ico', w: 800, h: 600, folder: 'Games' },
   { id: 'ktrader', title: 'KTrader', url: '/apps/ktrader.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ktrader.ico', w: 800, h: 600, folder: 'Games' },
-  { id: 'kmystery', title: 'KMystery', url: '/apps/kmystery.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kmystery.ico', w: 900, h: 650, folder: 'Games' },
+  { id: 'kmystery', title: 'KMystery', url: '/apps/kmystery.html', exeUrl: '/exe/KMystery.exe', icon: '/assets/icons/kmystery.ico', w: 940, h: 680, folder: 'Games' },
   { id: 'kcolosseum', title: 'KColosseum', url: '/apps/kcolosseum.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcolosseum.ico', w: 800, h: 600, folder: 'Games' },
   { id: 'kstellar', title: 'KStellar', url: '/apps/kstellar.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kstellar.ico', w: 800, h: 600, folder: 'Games' },
   { id: 'ksanctuary', title: 'KSanctuary', url: '/apps/ksanctuary.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/ksanctuary.ico', w: 850, h: 650, folder: 'Games' },

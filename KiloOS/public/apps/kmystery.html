@@ -265,14 +265,13 @@
         #toast-bar {
             position: fixed;
             top: 52px;
-            left: 50%;
-            transform: translateX(-50%);
+            right: 20px;
             background: rgba(18, 16, 12, 0.96);
             border: 1px solid #d4af37;
             color: #ffe899;
-            padding: 9px 20px;
+            padding: 8px 16px;
             border-radius: 4px;
-            font-size: 13px;
+            font-size: 12px;
             letter-spacing: 0.5px;
             box-shadow: 0 4px 22px rgba(0,0,0,0.9), 0 0 10px rgba(212,175,55,0.35);
             z-index: 9999;
@@ -282,6 +281,7 @@
             opacity: 0;
             white-space: pre-line;
             text-align: center;
+            max-width: 320px;
         }
         #toast-bar.visible {
             opacity: 1;
@@ -314,27 +314,43 @@
             <button id="music-toggle-btn" onclick="toggleMusic()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Toggle procedural 16-bit noir jazz audio">♫ Music: ON</button>
             <button onclick="quickSave()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Quicksave game state [F5]">Save [F5]</button>
             <button onclick="quickLoad()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Quickload game state [F9]">Load [F9]</button>
-            <button onclick="toggleHelp()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Toggle detective manual [F1]">Manual [F1]</button>
+            <button onclick="toggleHelp()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Detective manual and hotkeys [F1 / H]">Help [F1/H]</button>
         </div>
     </div>
     
     <div id="help-modal" class="hidden" onclick="if (event.target === this) hideHelp();">
-        <div style="background:#111114; border:2px solid #d4af37; padding:25px; max-width:580px; max-height:85vh; overflow-y:auto; box-shadow: 0 0 30px #000; border-radius:4px;">
-            <h2>Detective's Manual</h2>
+        <div style="background:#111114; border:2px solid #d4af37; padding:22px 25px; max-width:600px; max-height:85vh; overflow-y:auto; box-shadow: 0 0 30px #000; border-radius:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #4a3e26; padding-bottom:8px; margin-bottom:12px;">
+                <h2 style="margin:0; font-size:16px; border:none; padding:0;">Detective's Manual & Operations</h2>
+                <button onclick="hideHelp()" class="btn-gold" style="font-size:11px; padding:4px 10px;" title="Close manual [Esc]">✕ Close [Esc]</button>
+            </div>
             <h3>How to Play</h3>
             <p>1. Move between locations and <b>Search for Clues</b> (Costs 2h).</p>
             <p>2. Analyze objects in the <b>Evidence Lab</b> to reveal usable clues (Costs 1h).</p>
             <p>3. <b>Interrogate</b> suspects by presenting clues to catch them in lies (Costs 1h).</p>
             <p>4. <b>Accuse</b> the killer with the correct motive and weapon before time runs out!</p>
+            <h3>Keyboard Hotkeys</h3>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; font-size:12px; background:rgba(0,0,0,0.5); padding:10px; border-radius:3px; border:1px dashed #4a3e26; margin-bottom:12px;">
+                <div><b style="color:#d4af37;">[F1] / [H]</b>: Help / Manual</div>
+                <div><b style="color:#d4af37;">[F5]</b>: Quicksave Case</div>
+                <div><b style="color:#d4af37;">[F9]</b>: Quickload Case</div>
+                <div><b style="color:#d4af37;">[S]</b>: Search for Clues</div>
+                <div><b style="color:#d4af37;">[L]</b>: Forensic Lab</div>
+                <div><b style="color:#d4af37;">[I]</b>: Interrogate Suspect</div>
+                <div><b style="color:#d4af37;">[A]</b>: Accuse Suspect</div>
+                <div><b style="color:#d4af37;">[1 - 5]</b>: Fast Travel Locations</div>
+                <div><b style="color:#d4af37;">[Esc]</b>: Close Dialog / Step Back</div>
+                <div><b style="color:#d4af37;">[Enter/Space]</b>: Confirm / Dismiss</div>
+            </div>
             <h3>Interrogation Tips</h3>
             <p>- Every suspect has a breaking point (Patience). Presenting unrelated clues reduces patience.</p>
             <p>- Presenting the killer's specific item will catch them in a lie immediately!</p>
             <p>- Cross-reference alibis! If someone's alibi contradicts another's, they might be lying.</p>
             <h3>Evidence Guide</h3>
             <p>- In the lab, calibrate the scanner waveform to match the target frequency.</p>
-            <p>- Use the +11, +7, and -3 frequency shifts strategically.</p>
+            <p>- Use the +11 [1], +7 [2], and -3 [3] frequency shifts strategically.</p>
             <div style="text-align:center; margin-top:20px;">
-                <button onclick="hideHelp()" class="btn-gold">Close Manual [Esc]</button>
+                <button onclick="hideHelp()" class="btn-gold" style="padding:8px 24px;">Close Manual [Esc]</button>
             </div>
         </div>
     </div>
@@ -382,6 +398,9 @@
                 <button onclick="startGame()" class="btn-gold" style="font-size: 15px; padding: 10px 24px; font-weight: bold;">Begin Investigation</button>
                 <button id="resume-btn" onclick="quickLoad()" class="btn-gold hidden" style="font-size: 15px; padding: 10px 24px; font-weight: bold;" title="Resume saved case [F9]">Resume Saved Case [F9]</button>
             </div>
+            <div style="margin-top: 12px; font-size: 12px; color: #9c9586;">
+                Press <b style="color:#d4af37;">[H]</b> or <b style="color:#d4af37;">[F1]</b> anytime for Detective Manual & Controls
+            </div>
             <div id="stats-area" style="margin-top: 20px; font-size: 13px; color: #9c9586; text-align: left; background: rgba(0,0,0,0.6); padding: 12px; border: 1px dashed #4a3e26; border-radius: 3px;">
                 <h3 style="margin-top: 0; color: #d4af37; font-size: 13px;">Detective Record</h3>
                 <p style="margin: 4px 0;">Rank: <strong id="rank-display" style="color: #fff;">Rookie</strong> (Cases: <span id="cases-solved">0</span>)</p>
@@ -407,10 +426,10 @@
             </div>
             
             <div id="action-area">
-                <button id="search-btn" onclick="searchLocation()">Search for Clues</button>
-                <button id="lab-btn" onclick="openLab()">Evidence Lab</button>
-                <button id="interrogate-btn" onclick="startInterrogation()" class="hidden">Interrogate</button>
-                <button id="accuse-btn" onclick="startAccusation()" class="btn-danger">Accuse Someone</button>
+                <button id="search-btn" onclick="searchLocation()" title="Search current scene for forensic clues [S]">Search Clues [S]</button>
+                <button id="lab-btn" onclick="openLab()" title="Examine and calibrate evidence in the lab [L]">Evidence Lab [L]</button>
+                <button id="interrogate-btn" onclick="startInterrogation()" class="hidden" title="Interrogate suspect present at scene [I]">Interrogate [I]</button>
+                <button id="accuse-btn" onclick="startAccusation()" class="btn-danger" title="Deliver formal grand jury indictment [A]">Accuse [A]</button>
             </div>
             
             <div id="interrogation-area" class="hidden"></div>
@@ -425,12 +444,12 @@
                         <span>STABILITY: <b id="scanner-moves">10</b></span>
                     </div>
                     <div style="display: flex; gap: 8px;">
-                        <button onclick="adjScanner(11)" style="flex:1;">+11 kHz</button>
-                        <button onclick="adjScanner(7)" style="flex:1;">+7 kHz</button>
-                        <button onclick="adjScanner(-3)" style="flex:1;">-3 kHz</button>
+                        <button onclick="adjScanner(11)" style="flex:1;" title="Shift frequency +11 kHz [1]">+11 kHz [1]</button>
+                        <button onclick="adjScanner(7)" style="flex:1;" title="Shift frequency +7 kHz [2]">+7 kHz [2]</button>
+                        <button onclick="adjScanner(-3)" style="flex:1;" title="Shift frequency -3 kHz [3]">-3 kHz [3]</button>
                     </div>
                 </div>
-                <button onclick="closeLab()" style="margin-top:10px;">Leave Lab</button>
+                <button onclick="closeLab()" style="margin-top:10px;">Leave Lab [Esc]</button>
             </div>
             
             <div id="accusation-area" class="hidden">
@@ -474,6 +493,11 @@
                 <li>No usable clues.</li>
             </ul>
         </div>
+    </div>
+    
+    <div id="hotkey-footer" style="padding: 6px 16px; background: #0c0b0f; border-top: 1px solid #3a3222; font-size: 11px; color: #8e8574; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; z-index: 5;">
+        <span><b>Hotkeys:</b> <span style="color:#d4af37;">[F1/H]</span> Help · <span style="color:#d4af37;">[F5]</span> Save · <span style="color:#d4af37;">[F9]</span> Load · <span style="color:#d4af37;">[S]</span> Search · <span style="color:#d4af37;">[L]</span> Lab · <span style="color:#d4af37;">[I]</span> Question · <span style="color:#d4af37;">[A]</span> Accuse · <span style="color:#d4af37;">[1-5]</span> Travel</span>
+        <span style="color:#b0a898;">Inspect verified clues in notebook to view forensic sketches 🔍</span>
     </div>
 
     <script>
@@ -823,14 +847,43 @@
         }
 
         function closeAllModals() {
-            hideHelp();
-            closeDossier();
-            const labArea = document.getElementById('lab-area');
-            if (labArea && !labArea.classList.contains('hidden')) closeLab();
+            const helpModal = document.getElementById('help-modal');
+            if (helpModal && !helpModal.classList.contains('hidden')) {
+                hideHelp();
+                return true;
+            }
+            const dossierModal = document.getElementById('dossier-modal');
+            if (dossierModal && !dossierModal.classList.contains('hidden')) {
+                closeDossier();
+                return true;
+            }
             const accArea = document.getElementById('accusation-area');
-            if (accArea && !accArea.classList.contains('hidden')) cancelAccusation();
+            if (accArea && !accArea.classList.contains('hidden')) {
+                cancelAccusation();
+                return true;
+            }
+            const labArea = document.getElementById('lab-area');
+            if (labArea && !labArea.classList.contains('hidden')) {
+                const scannerGame = document.getElementById('scanner-game');
+                if (scannerGame && !scannerGame.classList.contains('hidden')) {
+                    scannerGame.classList.add('hidden');
+                    renderLabList();
+                } else {
+                    closeLab();
+                }
+                return true;
+            }
             const intArea = document.getElementById('interrogation-area');
-            if (intArea && !intArea.classList.contains('hidden')) endInterrogation();
+            if (intArea && !intArea.classList.contains('hidden')) {
+                const selectClueH3 = intArea.querySelector('h3');
+                if (selectClueH3 && selectClueH3.textContent.includes('Select a clue')) {
+                    backFromClues();
+                } else {
+                    endInterrogation();
+                }
+                return true;
+            }
+            return false;
         }
 
         // Quicksave / Quickload
@@ -1153,10 +1206,13 @@
         function renderTravelButtons() {
             const container = document.getElementById('travel-buttons');
             container.innerHTML = '';
+            const allLocs = Object.keys(state.locations);
             for (const loc in state.locations) {
                 if (loc !== state.currentLocation) {
                     const btn = document.createElement('button');
-                    btn.textContent = `Travel: ${loc}`;
+                    const numIdx = allLocs.indexOf(loc) + 1;
+                    btn.textContent = `[${numIdx}] ${loc}`;
+                    btn.title = `Travel to ${loc} [${numIdx}]`;
                     btn.onclick = () => travel(loc);
                     container.appendChild(btn);
                 }
@@ -1168,9 +1224,9 @@
             intArea.innerHTML = `<h3>Interrogating ${suspect}</h3>
             <div id="dialogue-text">${dialogue}</div>
             <div class="dialogue-options">
-                <button onclick="askAlibi()">Ask for Alibi</button>
-                <button onclick="presentClue()">Present Clue</button>
-                <button onclick="endInterrogation()">End Interrogation</button>
+                <button onclick="askAlibi()" title="Ask suspect for their whereabouts [1]">Ask for Alibi [1]</button>
+                <button onclick="presentClue()" title="Present physical evidence to suspect [2]">Present Clue [2]</button>
+                <button onclick="endInterrogation()" title="Return to location investigation [Esc / 3]">End Interrogation [Esc/3]</button>
             </div>`;
             intArea.classList.remove('hidden');
         }
@@ -1214,9 +1270,10 @@
             
             let html = `<h3>Select a clue to present to ${suspect}:</h3><div class="dialogue-options">`;
             state.foundClues.forEach((c, idx) => {
-                html += `<button onclick="submitClue(${idx})">${c}</button>`;
+                const keyHint = idx < 9 ? `[${idx + 1}] ` : '';
+                html += `<button onclick="submitClue(${idx})" title="Present clue to suspect ${keyHint}">${keyHint}${c}</button>`;
             });
-            html += `<button onclick="backFromClues()">Back</button></div>`;
+            html += `<button onclick="backFromClues()">Back [Esc]</button></div>`;
             
             const intArea = document.getElementById('interrogation-area');
             intArea.innerHTML = html;
@@ -1481,8 +1538,19 @@
             const dCanvas = document.getElementById('dossier-canvas');
             if (!dCanvas) return;
             const dCtx = dCanvas.getContext('2d');
-            const dw = dCanvas.width;
-            const dh = dCanvas.height;
+            const dpr = Math.min(2, window.devicePixelRatio || 1);
+            const dw = 160;
+            const dh = 160;
+
+            if (dCanvas.width !== Math.round(dw * dpr) || dCanvas.height !== Math.round(dh * dpr)) {
+                dCanvas.width = Math.round(dw * dpr);
+                dCanvas.height = Math.round(dh * dpr);
+            }
+            dCanvas.style.width = '160px';
+            dCanvas.style.height = '160px';
+
+            dCtx.save();
+            dCtx.scale(dpr, dpr);
 
             dCtx.clearRect(0, 0, dw, dh);
             dCtx.fillStyle = '#08080c';
@@ -1657,6 +1725,7 @@
             dCtx.font = '9px Courier New';
             dCtx.textAlign = 'right';
             dCtx.fillText('CASE #1999-EVID', dw - 8, dh - 8);
+            dCtx.restore();
         }
 
         function updateNotebook() {
@@ -1779,18 +1848,20 @@
                 quickLoad();
                 return;
             }
-            if (e.key === 'F1' || (e.key.toLowerCase() === 'm' && !isInputFocused())) {
+            if (e.key === 'F1' || ((e.key.toLowerCase() === 'h' || e.key.toLowerCase() === 'm' || e.key === '?') && !isInputFocused())) {
                 e.preventDefault();
                 toggleHelp();
                 return;
             }
             if (e.key === 'Escape') {
+                e.preventDefault();
                 closeAllModals();
                 return;
             }
             const helpModal = document.getElementById('help-modal');
             const dossierModal = document.getElementById('dossier-modal');
             const gameOverArea = document.getElementById('game-over-area');
+            const startScreen = document.getElementById('start-screen');
             if (helpModal && !helpModal.classList.contains('hidden')) {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -1812,7 +1883,41 @@
                     return;
                 }
             }
+            if (startScreen && !startScreen.classList.contains('hidden') && !isInputFocused()) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    startGame();
+                    return;
+                }
+            }
             if (!document.getElementById('game-screen').classList.contains('hidden') && !isInputFocused()) {
+                const scannerGame = document.getElementById('scanner-game');
+                const labArea = document.getElementById('lab-area');
+                const intArea = document.getElementById('interrogation-area');
+                
+                // Keyboard controls in active forensic scanner
+                if (labArea && !labArea.classList.contains('hidden') && scannerGame && !scannerGame.classList.contains('hidden')) {
+                    if (e.key === '1') { adjScanner(11); return; }
+                    if (e.key === '2') { adjScanner(7); return; }
+                    if (e.key === '3') { adjScanner(-3); return; }
+                }
+
+                // Keyboard controls in active interrogation
+                if (intArea && !intArea.classList.contains('hidden')) {
+                    const selectClueH3 = intArea.querySelector('h3');
+                    if (selectClueH3 && selectClueH3.textContent.includes('Select a clue')) {
+                        const num = parseInt(e.key);
+                        if (!isNaN(num) && num >= 1 && num <= state.foundClues.length) {
+                            submitClue(num - 1);
+                            return;
+                        }
+                    } else {
+                        if (e.key === '1') { askAlibi(); return; }
+                        if (e.key === '2') { presentClue(); return; }
+                        if (e.key === '3') { endInterrogation(); return; }
+                    }
+                }
+
                 const k = e.key.toLowerCase();
                 if (k === 's') {
                     const searchBtn = document.getElementById('search-btn');
@@ -1825,7 +1930,7 @@
                     if (loc && loc.suspect && !state.inLab) startInterrogation();
                 } else if (k === 'a') {
                     startAccusation();
-                } else if (['1', '2', '3', '4', '5'].includes(e.key)) {
+                } else if (['1', '2', '3', '4', '5'].includes(e.key) && (!intArea || intArea.classList.contains('hidden')) && (!labArea || labArea.classList.contains('hidden'))) {
                     const locNames = Object.keys(state.locations);
                     const idx = parseInt(e.key) - 1;
                     if (idx >= 0 && idx < locNames.length) {
@@ -2570,8 +2675,22 @@
 
         function renderLoop() {
             animFrame++;
-            const w = canvas.width;
-            const h = canvas.height;
+            const rect = canvas.getBoundingClientRect();
+            const dpr = Math.min(2, window.devicePixelRatio || 1);
+            const displayW = Math.max(320, Math.round(rect.width || 640));
+            const displayH = Math.max(160, Math.round(rect.height || 200));
+
+            const targetW = Math.round(displayW * dpr);
+            const targetH = Math.round(displayH * dpr);
+            if (canvas.width !== targetW || canvas.height !== targetH) {
+                canvas.width = targetW;
+                canvas.height = targetH;
+            }
+
+            ctx.save();
+            ctx.scale(dpr, dpr);
+            const w = displayW;
+            const h = displayH;
 
             ctx.save();
             if (shakeTime > 0) {
@@ -2693,7 +2812,8 @@
 
             drawArtDecoFiligree(w, h);
 
-            ctx.restore();
+            ctx.restore(); // shake restore
+            ctx.restore(); // dpr scale restore
             requestAnimationFrame(renderLoop);
         }
 

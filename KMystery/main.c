@@ -1516,11 +1516,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hCmbMotive, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessageA(hCmbWeapon, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-            hBtnHelp = CreateWindowA("BUTTON", "Manual", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
             hBtnSave = CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_QSAVE, NULL, NULL);
             hBtnLoad = CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_QLOAD, NULL, NULL);
             hHelpTitle = CreateWindowA("STATIC", "Detective's Manual", WS_CHILD | SS_CENTER, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
-            hHelpDesc = CreateWindowA("STATIC", "HOW TO PLAY:\n1. Search locations for clues (2h).\n2. Analyze objects in the lab (1h).\n3. Interrogate suspects to catch them in lies (1h).\n4. Accuse the killer with correct motive & weapon!\n\nTIPS:\n- Suspects have patience. Unrelated clues make them angry.\n- The killer's specific clue will catch them immediately!\n- Cross-reference alibis to spot liars.\n- In the lab, calibrate scanner to exactly match the target.\n- Shortcuts: [F5] Save, [F9] Load, [F1] Manual, [Esc] Back.", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
+            hHelpDesc = CreateWindowA("STATIC", "HOW TO PLAY:\n1. Search locations for clues (2h).\n2. Analyze objects in the lab (1h).\n3. Interrogate suspects to catch them in lies (1h).\n4. Accuse the killer with correct motive & weapon!\n\nTIPS:\n- Suspects have patience. Unrelated clues make them angry.\n- The killer's specific clue will catch them immediately!\n- Cross-reference alibis to spot liars.\n- In the lab, calibrate scanner to exactly match the target.\n- Shortcuts: [F1/H] Help, [F5] Save, [F9] Load, [Esc/Enter] Dismiss.", WS_CHILD, 0, 0, 0, 0, hwnd, NULL, NULL, NULL);
             hBtnCloseHelp = CreateWindowA("BUTTON", "Close Manual", WS_CHILD | BS_PUSHBUTTON, 0, 0, 0, 0, hwnd, (HMENU)ID_BTN_CLOSE_HELP, NULL, NULL);
             
             SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hFontBold, TRUE);
@@ -1923,7 +1923,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (wParam == VK_F9) {
                 QuickLoadGame(hwnd);
                 return 0;
-            } else if (wParam == VK_F1) {
+            } else if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
                 if (currentState == 6) {
                     currentState = prevState;
                     MarkTutorialSeen();
@@ -1931,6 +1931,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     prevState = currentState;
                     currentState = 6;
                 }
+                UpdateUI();
+                RECT r; GetClientRect(hwnd, &r); SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
+                return 0;
+            } else if ((wParam == VK_RETURN || wParam == VK_SPACE) && currentState == 6) {
+                currentState = prevState;
+                MarkTutorialSeen();
                 UpdateUI();
                 RECT r; GetClientRect(hwnd, &r); SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
                 return 0;
@@ -2020,7 +2026,7 @@ void __stdcall MainEntry() {
     hMainWnd = CreateWindowExA(
         0, "KMysteryClass", "KMystery",
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 840, 640,
+        CW_USEDEFAULT, CW_USEDEFAULT, 880, 660,
         NULL, NULL, wc.hInstance, NULL
     );
 
