@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KCalendar
+  kilo_tester: KChart
   kilo_usability: KNote
   kilo_graphics: KDragon
   kilo_qa: KCipher
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-creator
-  app: "kweb://cybercafe"
-  timestamp: "2026-09-27T17:51:00Z"
+  agent: kilo-tester
+  app: KCalendar
+  timestamp: "2026-09-27T19:51:00Z"
 last_planner_run: "2026-09-27T09:48:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KCalendar`
+- **Current Target**: `KChart`
 - **Upcoming Queue**:
-  `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`.
+  `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KNote`
@@ -230,6 +230,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-27T19:51:00Z — kilo-tester: KCalendar (Interactive UI Audit & Quicksave/Keyboard/Tutorial Integration)**
+  - Status: PASS ✅ (6 issues, 6 fixed; 0 regressions).
+  - Snapshot Persistence: Implemented F5 quicksave & F9 quickload snapshot persistence with visual toast feedback and toolbar buttons.
+  - Tutorial & Onboarding: Added `kcalendar_tutorialSeen` / `kcalendar_quicksave` gating to launch Help guide on fresh sessions.
+  - Modal Dismissals & Hotkeys: Added Enter key confirmation to delete modal, Space/Enter dismiss to Help/Stats modals, and focused confirm button.
+  - Keyboard Navigation: Added `tabindex="0"`, roles, and Enter/Space event handlers to all event pills and checklist buttons across Month, Week, Day, and Agenda views.
+  - TINAG & Security: Verified zero un-diegetic ARG violations; 100% clean security lint.
+  - Verification: MSVC compile clean (`KCalendar.exe` 21.5 KB); Vite clean build in 389ms (`kcalendar.html` 106.7 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-27T17:51:00Z — kilo-creator: kweb://cybercafe (Virtual Web Expansion: mIRC Client, FM Jukebox & ASCII Studio)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
   - mIRC Chat Client: Implemented 1999 IRC terminal with 4 channels, slash commands, interactive CafeBot, and real-time Firebase RTDB sync across global web patrons.
@@ -263,13 +272,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Early-Raid Balance Tuning: Gated raider clans so Day 1-3 faces Clan 0 (Rustfang Marauders, ~30 Atk), smoothing initial difficulty curve.
   - Doppler Radar Iconography: Rendered 32x32 forecasted hazard sprite in Win32 C early warning radar box.
   - Verification: MSVC compile clean (`KSanctuary.exe` 264.2 KB); Vite clean build in 387ms (`ksanctuary.html` 408.4 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
-
-- **2026-09-27T09:48:00Z — kilo-planner: 24h Fleet Planning, Queue Health & Icon Audit**
-  - Status: PASS ✅ (104 apps audited, 0 duplicates, 0 regressions, all queues balanced).
-  - Velocity & Health: Assessed 15 runs across 6 skills in past 24h; all passes clean; 100% build pass.
-  - Icon Uniqueness: Verified 104 apps in App.jsx with 0 missing files and 0 duplicate SHA256 hashes.
-  - Queue Rework: Confirmed active targets for upcoming cycle (KSanctuary, KClip, KPaint, cybercafe, KCalendar, KNote).
-  - Rotation Schedule: Set agent_rotation starting at kilo-graphics to maintain fair round-robin dispatch.
-  - Compaction: Archived KRSS log entry to fleet_execution_archive.md; retained top 5 active entries.
 
 

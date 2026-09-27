@@ -915,6 +915,8 @@
   </div>
   <div class="action-menu">
     <button class="btn btn-accent" id="newEventBtn" title="Create New Event [N]">+ New <span class="key-badge" style="background:rgba(0,0,0,0.2); border-color:rgba(0,0,0,0.3); color:#0f172a;">N</span></button>
+    <button class="btn" id="quicksaveBtn" title="Quicksave Snapshot [F5]">💾 Save <span class="key-badge">F5</span></button>
+    <button class="btn" id="quickloadBtn" title="Quickload Snapshot [F9]">📂 Load <span class="key-badge">F9</span></button>
     <div class="dropdown" id="exportDropdown">
       <button class="btn" id="exportMenuBtn" title="Export Calendar (ICS, CSV, MD, JSON)">Export ▾</button>
       <div class="dropdown-menu" id="exportMenuContent">
@@ -1106,7 +1108,7 @@
           <li><strong>Create Events:</strong> Press <span class="key-badge">N</span> or click <strong>+ New</strong> to open the event dialog. Assign title, time, category, priority (🔴 Urgent to ⚪ Low), and recurrence (Daily, Weekly, Monthly, Yearly).</li>
           <li><strong>Multiple Views:</strong> Switch seamlessly between Month <span class="key-badge">1</span>, Week <span class="key-badge">2</span>, Day <span class="key-badge">3</span>, and Agenda <span class="key-badge">4</span> views.</li>
           <li><strong>Search & Filter:</strong> Press <span class="key-badge">/</span> to search events instantly. Use category and priority filters to isolate tasks.</li>
-          <li><strong>Export & Backup:</strong> Use the <strong>Export ▾</strong> dropdown to generate <code>.ics</code> (Calendar apps), <code>.csv</code> (Spreadsheets), <code>.md</code> (Markdown agendas), or JSON backups.</li>
+          <li><strong>Export & Backup:</strong> Press <span class="key-badge">F5</span> to Quicksave and <span class="key-badge">F9</span> to Quickload. Use the <strong>Export ▾</strong> dropdown to generate <code>.ics</code> (Calendar apps), <code>.csv</code> (Spreadsheets), <code>.md</code> (Markdown agendas), or JSON backups.</li>
         </ol>
       </div>
 
@@ -1135,6 +1137,14 @@
           <div class="shortcut-row">
             <span class="key-badge">N</span>
             <span class="shortcut-desc">Create New Event</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="key-badge">F5</span>
+            <span class="shortcut-desc">Quicksave Snapshot</span>
+          </div>
+          <div class="shortcut-row">
+            <span class="key-badge">F9</span>
+            <span class="shortcut-desc">Quickload Snapshot</span>
           </div>
           <div class="shortcut-row">
             <span class="key-badge">T</span>
@@ -1600,9 +1610,19 @@
         pill.appendChild(rec);
       }
 
+      pill.setAttribute('tabindex', '0');
+      pill.setAttribute('role', 'button');
+
       pill.onclick = (e) => {
         e.stopPropagation();
         openModal(ev.id);
+      };
+      pill.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          e.stopPropagation();
+          openModal(ev.id);
+        }
       };
       pillList.appendChild(pill);
     });
@@ -1675,6 +1695,9 @@
           card.style.justifyContent = 'space-between';
           card.style.gap = '6px';
 
+          card.setAttribute('tabindex', '0');
+          card.setAttribute('role', 'button');
+
           const prioObj = PRIORITY_MAP[ev.priority || 'normal'] || PRIORITY_MAP.normal;
           const leftSpan = document.createElement('span');
           leftSpan.style.flex = '1';
@@ -1687,13 +1710,30 @@
           chk.className = 'checkbox-btn' + (ev.completed ? ' checked' : '');
           chk.innerHTML = ev.completed ? '✓' : '';
           chk.title = ev.completed ? 'Mark Pending' : 'Mark Completed';
+          chk.setAttribute('tabindex', '0');
+          chk.setAttribute('role', 'checkbox');
+          chk.setAttribute('aria-checked', ev.completed ? 'true' : 'false');
           chk.onclick = (e) => toggleEventCompleted(ev.id, e);
+          chk.onkeydown = (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleEventCompleted(ev.id, e);
+            }
+          };
 
           card.appendChild(leftSpan);
           card.appendChild(chk);
           card.onclick = (e) => {
             e.stopPropagation();
             openModal(ev.id);
+          };
+          card.onkeydown = (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              e.stopPropagation();
+              openModal(ev.id);
+            }
           };
           eventsContainer.appendChild(card);
         });
@@ -1754,6 +1794,9 @@
         card.style.justifyContent = 'space-between';
         card.style.gap = '8px';
 
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('role', 'button');
+
         const prioObj = PRIORITY_MAP[ev.priority || 'normal'] || PRIORITY_MAP.normal;
         const leftSpan = document.createElement('div');
         leftSpan.style.flex = '1';
@@ -1769,13 +1812,30 @@
         chk.className = 'checkbox-btn' + (ev.completed ? ' checked' : '');
         chk.innerHTML = ev.completed ? '✓' : '';
         chk.title = ev.completed ? 'Mark Pending' : 'Mark Completed';
+        chk.setAttribute('tabindex', '0');
+        chk.setAttribute('role', 'checkbox');
+        chk.setAttribute('aria-checked', ev.completed ? 'true' : 'false');
         chk.onclick = (e) => toggleEventCompleted(ev.id, e);
+        chk.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleEventCompleted(ev.id, e);
+          }
+        };
 
         card.appendChild(leftSpan);
         card.appendChild(chk);
         card.onclick = (e) => {
           e.stopPropagation();
           openModal(ev.id);
+        };
+        card.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            openModal(ev.id);
+          }
         };
         eventsDiv.appendChild(card);
       });
@@ -1853,7 +1913,17 @@
         chk.className = 'checkbox-btn' + (ev.completed ? ' checked' : '');
         chk.innerHTML = ev.completed ? '✓' : '';
         chk.title = ev.completed ? 'Mark Pending' : 'Mark Completed';
+        chk.setAttribute('tabindex', '0');
+        chk.setAttribute('role', 'checkbox');
+        chk.setAttribute('aria-checked', ev.completed ? 'true' : 'false');
         chk.onclick = (e) => toggleEventCompleted(ev.id, e);
+        chk.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleEventCompleted(ev.id, e);
+          }
+        };
 
         const details = document.createElement('div');
         details.className = 'agenda-details';
@@ -1902,7 +1972,15 @@
         };
 
         card.style.cursor = 'pointer';
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('role', 'button');
         card.onclick = () => openModal(ev.id);
+        card.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openModal(ev.id);
+          }
+        };
         card.appendChild(chk);
         card.appendChild(details);
         card.appendChild(editBtn);
@@ -2030,6 +2108,7 @@
     const title = ev ? ev.title : 'this event';
     document.getElementById('deleteModalPrompt').textContent = `Are you sure you want to delete "${title}"?`;
     deleteModalOverlay.classList.add('active');
+    setTimeout(() => document.getElementById('confirmDeleteBtn').focus(), 50);
   }
 
   function closeDeleteModal() {
@@ -2214,6 +2293,53 @@
   }
   function closeHelpModal() {
     helpModalOverlay.classList.remove('active');
+    try {
+      localStorage.setItem('kcalendar_tutorialSeen', '1');
+    } catch (e) {}
+  }
+
+  // --- QUICKSAVE & QUICKLOAD ENGINE ---
+  function quicksaveState() {
+    try {
+      const snapshot = {
+        version: 1,
+        events: events,
+        currentView: currentView,
+        selectedDate: selectedDate.toISOString(),
+        savedAt: new Date().toISOString()
+      };
+      localStorage.setItem('kcalendar_quicksave', JSON.stringify(snapshot));
+      showToast('Quicksave Snapshot Saved [F5] ✅', 'success', 2500);
+    } catch (err) {
+      showToast('Quicksave failed: ' + err.message, 'error');
+    }
+  }
+
+  function quickloadState() {
+    try {
+      const raw = localStorage.getItem('kcalendar_quicksave');
+      if (!raw) {
+        showToast('No quicksave snapshot found [F9]', 'error', 2500);
+        return;
+      }
+      const snapshot = JSON.parse(raw);
+      if (snapshot && Array.isArray(snapshot.events)) {
+        events = snapshot.events;
+        if (snapshot.currentView) {
+          switchView(snapshot.currentView);
+        }
+        if (snapshot.selectedDate) {
+          selectedDate = new Date(snapshot.selectedDate);
+        }
+        saveEvents();
+        renderApp();
+        showToast('Quicksave Snapshot Restored [F9] ✅', 'success', 2500);
+      } else {
+        showToast('Corrupted quicksave data.', 'error');
+      }
+    } catch (err) {
+      showToast('Quickload failed: ' + err.message, 'error');
+    }
   }
 
   // --- IMPORT / EXPORT ENGINE ---
@@ -2707,6 +2833,9 @@
     closeStatsModal();
   };
 
+  document.getElementById('quicksaveBtn').onclick = quicksaveState;
+  document.getElementById('quickloadBtn').onclick = quickloadState;
+
   document.getElementById('importBtn').onclick = () => document.getElementById('importFileInput').click();
   document.getElementById('importFileInput').onchange = handleImportFile;
 
@@ -2755,6 +2884,35 @@
       return;
     }
 
+    if (e.key === 'F5') {
+      e.preventDefault();
+      quicksaveState();
+      return;
+    }
+
+    if (e.key === 'F9') {
+      e.preventDefault();
+      quickloadState();
+      return;
+    }
+
+    // Modal Enter / Space confirmation & dismissals
+    if (deleteModalOverlay.classList.contains('active') && e.key === 'Enter') {
+      e.preventDefault();
+      document.getElementById('confirmDeleteBtn').click();
+      return;
+    }
+    if (helpModalOverlay.classList.contains('active') && !isInputActive && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      closeHelpModal();
+      return;
+    }
+    if (statsModalOverlay.classList.contains('active') && !isInputActive && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      closeStatsModal();
+      return;
+    }
+
     if (!isInputActive && !anyModalOpen) {
       if (e.key === '1') { switchView('month'); }
       else if (e.key === '2') { switchView('week'); }
@@ -2781,6 +2939,13 @@
   // Init
   loadEvents();
   renderApp();
+
+  // First-run tutorial onboarding check: only on fresh sessions, never interrupting restored save states
+  const hasSeenTutorial = localStorage.getItem('kcalendar_tutorialSeen');
+  const hasQuicksave = localStorage.getItem('kcalendar_quicksave');
+  if (!hasSeenTutorial && !hasQuicksave) {
+    setTimeout(openHelpModal, 350);
+  }
 </script>
 </body>
 </html>
