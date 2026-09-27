@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KBudget
+  kilo_tester: KCalendar
   kilo_usability: KNet
   kilo_graphics: KSanctuary
   kilo_qa: KClip
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-creator
-  app: "kweb://asm-temple"
-  timestamp: "2026-09-27T04:45:00Z"
+  agent: kilo-tester
+  app: KBudget
+  timestamp: "2026-09-27T05:55:00Z"
 last_planner_run: "2026-09-26T07:48:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KBudget`
+- **Current Target**: `KCalendar`
 - **Upcoming Queue**:
-  `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`.
+  `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KNet`
@@ -226,6 +226,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-27T05:55:00Z — kilo-tester: KBudget (Interactive UI Audit & Quicksave/JSON/Help Integration)**
+  - Status: PASS ✅ (6 issues, 6 fixed; 0 regressions).
+  - Persistence: Implemented F5 quicksave & F9 quickload snapshot persistence with visual toast feedback.
+  - Interoperability: Added full JSON backup export & restore alongside existing CSV import/export.
+  - Modals & Close: Added header close buttons to transaction/settings modals and created Help (F1/H) & Data modals.
+  - UI Safety & Polish: Added confirmation on delete, fixed currency symbol sync, and rounded amounts to 2 decimal places.
+  - Search & HiDPI: Expanded search filter to match amounts/dates and scaled category pie chart for retina displays.
+  - Verification: MSVC compile clean (`KBudget.exe` 165.4 KB); Vite build in 390ms (`kbudget.html` 54.5 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-27T04:45:00Z — kilo-creator: kweb://asm-temple (Virtual Web Expansion & PE32 Dissector)**
   - Status: PASS ✅ (118-opcode Oracle, interactive micro-CPU stepper, PE32 dissector & binary builder; 0 regressions).
   - Opcode Expansion: Expanded instruction lexicon from 42 to 118 opcodes across 10 categories with Pentium cycle metrics and hardware encoding breakdown.
@@ -260,13 +269,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Navigation Telemetry: Added jump reach boundary ring on galaxy map and real-time distance/fuel calculator.
   - Audio Polish: Added Yamaha YM2612 2-operator FM synth cargo transaction chimes and shield absorption effects.
   - Verification: MSVC compile clean (`KStellar.exe` 164.3 KB); Vite clean build in 382ms (`kstellar.html` 138.5 KB < 999 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-27T00:45:00Z — kilo-usability: KMystery (Usability & Layout Polish, HiDPI Canvas & Hotkey Ergonomics)**
-  - Status: PASS ✅ (0 regressions, clean builds, size ceiling verified).
-  - Window & Layout: Tuned KiloOS default window dimensions to 940x680 and wired direct `/exe/KMystery.exe`.
-  - HiDPI Crispness: Added `devicePixelRatio` scaling to crime scene viewport and forensic dossier canvases.
-  - Toast & Modals: Re-anchored toasts to top-right corner to prevent central occlusion; hierarchical Esc dismissal.
-  - Onboarding & Manual: Added F1/H help hotkey, structured hotkeys guide table, and start screen control prompt.
-  - Control Affordances: Added [1-5] location number badges, interrogation hotkeys [1/2/3], and persistent hotkey footer.
-  - Verification: MSVC clean compile (`KMystery.exe` 34.3 KB); Vite build in 368ms (`kmystery.html` 126.3 KB < 999 KB); icon & security lints 100% PASS.
 

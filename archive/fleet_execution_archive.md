@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-27T00:45:00Z — kilo-usability: KMystery (Usability & Layout Polish, HiDPI Canvas & Hotkey Ergonomics)**
+  - Status: PASS ✅ (0 regressions, clean builds, size ceiling verified).
+  - Window & Layout: Tuned KiloOS default window dimensions to 940x680 and wired direct `/exe/KMystery.exe`.
+  - HiDPI Crispness: Added `devicePixelRatio` scaling to crime scene viewport and forensic dossier canvases.
+  - Toast & Modals: Re-anchored toasts to top-right corner to prevent central occlusion; hierarchical Esc dismissal.
+  - Onboarding & Manual: Added F1/H help hotkey, structured hotkeys guide table, and start screen control prompt.
+  - Control Affordances: Added [1-5] location number badges, interrogation hotkeys [1/2/3], and persistent hotkey footer.
+  - Verification: MSVC clean compile (`KMystery.exe` 34.3 KB); Vite build in 368ms (`kmystery.html` 126.3 KB < 999 KB); icon & security lints 100% PASS.
+
 - **2026-09-26T21:55:00Z — kilo-expander: KRead (Deep Feature Expansion: Outline, RSVP Reader, Auto-Scroll & Markdown)**
   - Status: PASS ✅ (Document outline tree, RSVP speed reader, hands-free auto-scroll, formatted markdown view, JSON annotations import/export).
   - Document Outline & TOC: Auto-scans markdown headings (#, ##, ===, ---, ALL CAPS) to build interactive drawer tree with jump-to-section.

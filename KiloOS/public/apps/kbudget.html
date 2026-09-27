@@ -51,6 +51,13 @@
             font-weight: 600;
         }
 
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
         .btn {
             background: var(--primary-color);
             color: white;
@@ -215,6 +222,33 @@
             transform: scale(1);
         }
 
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-header h2 {
+            margin-bottom: 0;
+            font-size: 1.25rem;
+        }
+
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            font-size: 1.5rem;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0.25rem;
+            transition: color 0.2s;
+        }
+
+        .modal-close-btn:hover {
+            color: #fff;
+        }
+
         .modal h2 {
             margin-bottom: 1.5rem;
         }
@@ -297,9 +331,42 @@
             padding: 10px;
         }
 
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 0.75rem 1.25rem;
+            font-size: 0.9rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            z-index: 200;
+            opacity: 0;
+            transform: translateY(-10px);
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        .toast.success { border-color: var(--success-color); }
+        .toast.danger { border-color: var(--danger-color); }
+        .toast.warning { border-color: #f59e0b; }
+        .toast.info { border-color: var(--primary-color); }
+
         @media print {
             body { background: white; color: black; height: auto; overflow: visible; }
-            .header, aside.glass-panel, #pagination-controls, .transaction-right button, .modal-overlay { display: none !important; }
+            .header, aside.glass-panel, #pagination-controls, .transaction-right button, .modal-overlay, .toast { display: none !important; }
             .main-content { display: block; padding: 0; }
             .glass-panel { background: none; border: none; padding: 0; }
             .transaction-item { break-inside: avoid; border: 1px solid #ccc; background: none; color: black; margin-bottom: 0.5rem; }
@@ -311,12 +378,14 @@
 <body>
     <header class="header">
         <h1>KBudget</h1>
-        <div style="display: flex; gap: 0.5rem;">
-            <button class="btn btn-outline" style="color: white" onclick="openSettingsModal()">Settings</button>
-            <button class="btn btn-outline" style="color: white" onclick="importCSV()">Import CSV</button>
-            <button class="btn btn-outline" style="color: white" onclick="exportCSV()">Export CSV</button>
-            <button class="btn btn-outline" style="color: white" onclick="window.print()">Print</button>
-            <button class="btn" onclick="openModal()">+ New Transaction</button>
+        <div class="header-actions">
+            <button class="btn btn-outline" style="color: white" onclick="openHelpModal()" title="Help &amp; Shortcuts [F1 / H]">Help [F1]</button>
+            <button class="btn btn-outline" style="color: white" onclick="quicksaveState()" title="Quicksave Snapshot [F5]">💾 Save [F5]</button>
+            <button class="btn btn-outline" style="color: white" onclick="quickloadState()" title="Quickload Snapshot [F9]">📂 Load [F9]</button>
+            <button class="btn btn-outline" style="color: white" onclick="openDataModal()" title="Import / Export Data (CSV &amp; JSON)">Data ▾</button>
+            <button class="btn btn-outline" style="color: white" onclick="openSettingsModal()" title="Settings">Settings</button>
+            <button class="btn btn-outline" style="color: white" onclick="window.print()" title="Print Ledger">Print</button>
+            <button class="btn" onclick="openModal()" title="Add Transaction [Ctrl+N]">+ New Transaction</button>
         </div>
     </header>
     
@@ -368,7 +437,10 @@
     <!-- Modal -->
     <div class="modal-overlay" id="modal">
         <div class="modal">
-            <h2>Add Transaction</h2>
+            <div class="modal-header">
+                <h2>Add Transaction</h2>
+                <button type="button" class="modal-close-btn" onclick="closeModal()" aria-label="Close modal">&times;</button>
+            </div>
             <form id="transaction-form">
                 <div class="form-group">
                     <label for="type">Type</label>
@@ -411,7 +483,10 @@
     <!-- Settings Modal -->
     <div class="modal-overlay" id="settings-modal">
         <div class="modal">
-            <h2>Settings</h2>
+            <div class="modal-header">
+                <h2>Settings</h2>
+                <button type="button" class="modal-close-btn" onclick="closeSettingsModal()" aria-label="Close modal">&times;</button>
+            </div>
             <form id="settings-form">
                 <div class="form-group">
                     <label for="currency-symbol">Currency Symbol</label>
@@ -424,6 +499,72 @@
             </form>
         </div>
     </div>
+
+    <!-- Help Modal -->
+    <div class="modal-overlay" id="help-modal">
+        <div class="modal" style="max-width: 480px;">
+            <div class="modal-header">
+                <h2>KBudget Guide &amp; Shortcuts</h2>
+                <button type="button" class="modal-close-btn" onclick="closeHelpModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <div style="font-size: 0.9rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 1rem; max-height: 60vh; overflow-y: auto; padding-right: 4px;">
+                <div>
+                    <h3 style="color: #fff; margin-bottom: 0.5rem; font-size: 0.95rem;">Keyboard Shortcuts</h3>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Ctrl + N</kbd></td><td>New Transaction</td></tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Ctrl + F</kbd></td><td>Focus Search Box</td></tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">F5</kbd></td><td>Quicksave Snapshot</td></tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">F9</kbd></td><td>Quickload Snapshot</td></tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">F1</kbd> / <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">H</kbd></td><td>Help &amp; Shortcuts Guide</td></tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Ctrl + S</kbd></td><td>Export CSV File</td></tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Ctrl + O</kbd></td><td>Import CSV File</td></tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);"><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">&larr; / &rarr;</kbd></td><td>Previous / Next Page</td></tr>
+                        <tr><td style="padding: 4px 0;"><kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">Esc</kbd></td><td>Close Active Modal</td></tr>
+                    </table>
+                </div>
+                <div>
+                    <h3 style="color: #fff; margin-bottom: 0.5rem; font-size: 0.95rem;">Features &amp; Persistence</h3>
+                    <p style="margin-bottom: 0.4rem;">• <strong>Quicksave &amp; Quickload:</strong> Store and restore complete workstation snapshots (F5/F9).</p>
+                    <p style="margin-bottom: 0.4rem;">• <strong>CSV &amp; JSON:</strong> Export ledgers to CSV for Excel/spreadsheets or JSON for complete backups.</p>
+                    <p>• <strong>Expenses Pie Chart:</strong> Real-time category allocation visualization with responsive HiDPI rendering.</p>
+                </div>
+            </div>
+            <div class="modal-actions" style="margin-top: 1.5rem;">
+                <button type="button" class="btn" onclick="closeHelpModal()">Got It</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Modal -->
+    <div class="modal-overlay" id="data-modal">
+        <div class="modal" style="max-width: 440px;">
+            <div class="modal-header">
+                <h2>Data Management</h2>
+                <button type="button" class="modal-close-btn" onclick="closeDataModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 1.25rem;">
+                <div>
+                    <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: #cbd5e1;">CSV Spreadsheets</h3>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="button" class="btn btn-outline" style="flex: 1; color: white;" onclick="exportCSV(); closeDataModal();">Export CSV</button>
+                        <button type="button" class="btn btn-outline" style="flex: 1; color: white;" onclick="importCSV(); closeDataModal();">Import CSV</button>
+                    </div>
+                </div>
+                <div>
+                    <h3 style="font-size: 0.95rem; margin-bottom: 0.5rem; color: #cbd5e1;">JSON Full Backup</h3>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="button" class="btn btn-outline" style="flex: 1; color: white;" onclick="exportJSON(); closeDataModal();">Export JSON</button>
+                        <button type="button" class="btn btn-outline" style="flex: 1; color: white;" onclick="importJSON(); closeDataModal();">Import JSON</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-actions" style="margin-top: 1.5rem;">
+                <button type="button" class="btn btn-outline" style="color: white;" onclick="closeDataModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
 
     <script>
         // State
@@ -448,6 +589,28 @@
         const settingsForm = document.getElementById('settings-form');
         const currencyInput = document.getElementById('currency-symbol');
         const amountLabel = document.getElementById('amount-label');
+        const helpModal = document.getElementById('help-modal');
+        const dataModal = document.getElementById('data-modal');
+
+        // Toast notifications
+        let toastTimeout = null;
+        function showToast(msg, type = 'info') {
+            let toastEl = document.getElementById('toast');
+            if (!toastEl) {
+                toastEl = document.createElement('div');
+                toastEl.id = 'toast';
+                document.body.appendChild(toastEl);
+            }
+            toastEl.className = `toast show ${type}`;
+            toastEl.textContent = msg;
+            clearTimeout(toastTimeout);
+            toastEl.onclick = () => {
+                toastEl.className = 'toast';
+            };
+            toastTimeout = setTimeout(() => {
+                toastEl.className = 'toast';
+            }, 3000);
+        }
 
         // Init
         function init() {
@@ -517,6 +680,22 @@
             settingsModal.classList.remove('active');
         }
 
+        function openHelpModal() {
+            if (helpModal) helpModal.classList.add('active');
+        }
+
+        function closeHelpModal() {
+            if (helpModal) helpModal.classList.remove('active');
+        }
+
+        function openDataModal() {
+            if (dataModal) dataModal.classList.add('active');
+        }
+
+        function closeDataModal() {
+            if (dataModal) dataModal.classList.remove('active');
+        }
+
         function updateCategories() {
             const isExpense = typeSelect.value === 'expense';
             const categories = isExpense ? expenseCategories : incomeCategories;
@@ -534,26 +713,160 @@
             localStorage.setItem('kbudget_transactions', JSON.stringify(transactions));
         }
 
+        function quicksaveState() {
+            try {
+                const snapshot = {
+                    version: 1,
+                    currency: currencySymbol,
+                    transactions: transactions,
+                    savedAt: new Date().toISOString()
+                };
+                localStorage.setItem('kbudget_quicksave', JSON.stringify(snapshot));
+                showToast("Quicksave Snapshot Saved [F5] ✅", "success");
+            } catch (err) {
+                showToast("Quicksave failed: " + err.message, "danger");
+            }
+        }
+
+        function quickloadState() {
+            try {
+                const raw = localStorage.getItem('kbudget_quicksave');
+                if (!raw) {
+                    showToast("No quicksave snapshot found [F9]", "warning");
+                    return;
+                }
+                const snapshot = JSON.parse(raw);
+                if (snapshot && Array.isArray(snapshot.transactions)) {
+                    transactions = snapshot.transactions;
+                    if (snapshot.currency) {
+                        currencySymbol = String(snapshot.currency).trim() || '$';
+                        localStorage.setItem('kbudget_currency', currencySymbol);
+                        if (currencyInput) currencyInput.value = currencySymbol;
+                        if (amountLabel) amountLabel.textContent = `Amount (${currencySymbol})`;
+                    }
+                    saveTransactions();
+                    currentPage = 1;
+                    render();
+                    showToast("Quicksave Snapshot Restored [F9] ✅", "success");
+                } else {
+                    showToast("Corrupted quicksave data.", "danger");
+                }
+            } catch (err) {
+                showToast("Quickload failed: " + err.message, "danger");
+            }
+        }
+
+        function exportJSON() {
+            const data = {
+                app: 'KBudget',
+                version: 1,
+                currency: currencySymbol,
+                exportedAt: new Date().toISOString(),
+                transactions: transactions
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `kbudget_backup_${new Date().toLocaleDateString('en-CA')}.json`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showToast("Exported JSON backup!", "success");
+        }
+
+        function importJSON() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json,application/json';
+            input.onchange = e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = event => {
+                    try {
+                        const parsed = JSON.parse(event.target.result);
+                        let list = [];
+                        if (Array.isArray(parsed)) {
+                            list = parsed;
+                        } else if (parsed && Array.isArray(parsed.transactions)) {
+                            list = parsed.transactions;
+                            if (parsed.currency) {
+                                currencySymbol = String(parsed.currency).trim() || '$';
+                                localStorage.setItem('kbudget_currency', currencySymbol);
+                                if (currencyInput) currencyInput.value = currencySymbol;
+                                if (amountLabel) amountLabel.textContent = `Amount (${currencySymbol})`;
+                            }
+                        } else {
+                            throw new Error("Invalid format. Expected JSON array or object with transactions.");
+                        }
+
+                        let count = 0;
+                        list.forEach(item => {
+                            const amt = parseFloat(item.amount);
+                            if (!isNaN(amt) && amt > 0) {
+                                transactions.push({
+                                    id: String(item.id || (Date.now() + Math.random().toString().slice(2, 6))),
+                                    type: item.type === 'income' ? 'income' : 'expense',
+                                    amount: Math.round(amt * 100) / 100,
+                                    category: item.category ? String(item.category).trim() : 'Other',
+                                    date: item.date || new Date().toLocaleDateString('en-CA'),
+                                    description: item.description ? String(item.description).trim() : (item.category || 'Transaction')
+                                });
+                                count++;
+                            }
+                        });
+
+                        if (count > 0) {
+                            transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+                            saveTransactions();
+                            currentPage = 1;
+                            render();
+                            showToast(`Imported ${count} transactions from JSON!`, "success");
+                        } else {
+                            showToast("No valid transactions found in JSON.", "danger");
+                        }
+                    } catch (err) {
+                        showToast("JSON Import error: " + err.message, "danger");
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
         function addTransaction(e) {
             e.preventDefault();
             
+            const rawAmount = parseFloat(document.getElementById('amount').value);
+            if (isNaN(rawAmount) || rawAmount <= 0) {
+                showToast("Please enter a valid positive amount.", "danger");
+                return;
+            }
+            const amount = Math.round(rawAmount * 100) / 100;
+
             const transaction = {
                 id: editingTransactionId || Date.now().toString(),
                 type: typeSelect.value,
-                amount: parseFloat(document.getElementById('amount').value),
-                category: categorySelect.value,
-                date: document.getElementById('date').value,
-                description: document.getElementById('description').value || categorySelect.value
+                amount: amount,
+                category: categorySelect.value || 'Other',
+                date: document.getElementById('date').value || new Date().toLocaleDateString('en-CA'),
+                description: document.getElementById('description').value || categorySelect.value || 'Transaction'
             };
 
             if (editingTransactionId) {
                 const index = transactions.findIndex(t => String(t.id) === String(editingTransactionId));
                 if (index !== -1) {
                     transactions[index] = transaction;
+                } else {
+                    transactions.push(transaction);
                 }
                 editingTransactionId = null;
+                showToast("Transaction updated", "success");
             } else {
                 transactions.push(transaction);
+                showToast("Transaction added", "success");
             }
             
             // Sort by date (newest first)
@@ -566,9 +879,16 @@
 
         function deleteTransaction(id) {
             id = decodeURIComponent(id);
+            if (!confirm("Are you sure you want to delete this transaction?")) {
+                return;
+            }
+            const prevLen = transactions.length;
             transactions = transactions.filter(t => String(t.id) !== String(id));
-            saveTransactions();
-            render();
+            if (transactions.length < prevLen) {
+                saveTransactions();
+                render();
+                showToast("Transaction deleted", "info");
+            }
         }
 
         function exportCSV() {
@@ -590,6 +910,7 @@
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
+            showToast("Exported CSV successfully!", "success");
         }
 
         function importCSV() {
@@ -619,9 +940,9 @@
                                 
                                 if (!isNaN(amount) && amount > 0) {
                                     transactions.push({
-                                        id: Date.now().toString() + Math.random().toString(),
+                                        id: Date.now().toString() + Math.random().toString().slice(2, 6),
                                         type: is_income ? 'income' : 'expense',
-                                        amount: amount,
+                                        amount: Math.round(amount * 100) / 100,
                                         category: category,
                                         date: date,
                                         description: description
@@ -634,10 +955,11 @@
                     if (imported > 0) {
                         transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
                         saveTransactions();
+                        currentPage = 1;
                         render();
-                        alert(`Imported ${imported} transactions!`);
+                        showToast(`Imported ${imported} transactions!`, "success");
                     } else {
-                        alert("No valid transactions found in CSV.");
+                        showToast("No valid transactions found in CSV.", "danger");
                     }
                 };
                 reader.readAsText(file);
@@ -661,22 +983,26 @@
         }
 
         function render() {
-            const searchTerm = (document.getElementById('search-input')?.value || '').toLowerCase();
-            let filteredTransactions = transactions.filter(t => 
-                (t.description || '').toLowerCase().includes(searchTerm) || 
-                (t.category || '').toLowerCase().includes(searchTerm)
-            );
+            const searchTerm = (document.getElementById('search-input')?.value || '').toLowerCase().trim();
+            let filteredTransactions = transactions.filter(t => {
+                if (!searchTerm) return true;
+                const desc = (t.description || '').toLowerCase();
+                const cat = (t.category || '').toLowerCase();
+                const amt = String(t.amount || '');
+                const date = (t.date || '').toLowerCase();
+                return desc.includes(searchTerm) || cat.includes(searchTerm) || amt.includes(searchTerm) || date.includes(searchTerm);
+            });
 
             const sortOption = document.getElementById('sort-select')?.value || 'date-desc';
             filteredTransactions.sort((a, b) => {
                 if (sortOption === 'date-desc') {
-                    return new Date(b.date) - new Date(a.date);
+                    return (new Date(b.date) - new Date(a.date)) || (b.amount - a.amount);
                 } else if (sortOption === 'date-asc') {
-                    return new Date(a.date) - new Date(b.date);
+                    return (new Date(a.date) - new Date(b.date)) || (a.amount - b.amount);
                 } else if (sortOption === 'amount-desc') {
-                    return b.amount - a.amount;
+                    return (b.amount - a.amount) || (new Date(b.date) - new Date(a.date));
                 } else if (sortOption === 'amount-asc') {
-                    return a.amount - b.amount;
+                    return (a.amount - b.amount) || (new Date(b.date) - new Date(a.date));
                 }
                 return 0;
             });
@@ -769,22 +1095,34 @@
             const canvas = document.getElementById('pie-chart');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // HiDPI sharp rendering
+            const dpr = window.devicePixelRatio || 1;
+            if (!canvas._dprSetup) {
+                canvas.width = 200 * dpr;
+                canvas.height = 200 * dpr;
+                canvas.style.width = '200px';
+                canvas.style.height = '200px';
+                canvas._dprSetup = true;
+            }
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.scale(dpr, dpr);
+            ctx.clearRect(0, 0, 200, 200);
             
             if (totalExpense === 0) {
                 ctx.fillStyle = '#64748b';
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.font = '12px Inter';
-                ctx.fillText('No expenses to chart', canvas.width/2, canvas.height/2);
+                ctx.font = '12px Inter, system-ui, sans-serif';
+                ctx.fillText('No expenses to chart', 100, 100);
                 return;
             }
 
             const colors = ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#d946ef'];
             let startAngle = -0.5 * Math.PI;
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = Math.min(centerX, centerY) - 10;
+            const centerX = 100;
+            const centerY = 100;
+            const radius = 90;
             
             let colorIdx = 0;
             for (const [cat, val] of Object.entries(categoryTotals)) {
@@ -803,7 +1141,7 @@
                     ctx.fillStyle = '#ffffff';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    ctx.font = 'bold 10px Inter';
+                    ctx.font = 'bold 10px Inter, system-ui, sans-serif';
                     const percentage = Math.round((val / totalExpense) * 100) + '%';
                     if (val / totalExpense > 0.05) {
                         ctx.fillText(cat.substring(0,3), labelX, labelY - 6);
@@ -821,10 +1159,12 @@
         
         settingsForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            currencySymbol = currencyInput.value;
+            currencySymbol = (currencyInput.value || '$').trim() || '$';
             localStorage.setItem('kbudget_currency', currencySymbol);
+            amountLabel.textContent = `Amount (${currencySymbol})`;
             closeSettingsModal();
             render();
+            showToast("Settings saved!", "success");
         });
         
         // Close modal on click outside
@@ -836,8 +1176,46 @@
             if (e.target === settingsModal) closeSettingsModal();
         });
 
+        if (helpModal) {
+            helpModal.addEventListener('click', (e) => {
+                if (e.target === helpModal) closeHelpModal();
+            });
+        }
+
+        if (dataModal) {
+            dataModal.addEventListener('click', (e) => {
+                if (e.target === dataModal) closeDataModal();
+            });
+        }
+
         // Keyboard Shortcuts
         document.addEventListener('keydown', (e) => {
+            const isInput = ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName);
+            
+            // Global Hotkeys (even when in inputs)
+            if (e.key === 'Escape') {
+                closeModal();
+                closeSettingsModal();
+                closeHelpModal();
+                closeDataModal();
+                return;
+            }
+            if (e.key === 'F5') {
+                e.preventDefault();
+                quicksaveState();
+                return;
+            }
+            if (e.key === 'F9') {
+                e.preventDefault();
+                quickloadState();
+                return;
+            }
+            if (e.key === 'F1') {
+                e.preventDefault();
+                openHelpModal();
+                return;
+            }
+
             if (e.ctrlKey) {
                 switch(e.key.toLowerCase()) {
                     case 'n':
@@ -857,9 +1235,17 @@
                         importCSV();
                         break;
                 }
-            } else if (e.key === 'Escape') {
-                closeModal();
-                closeSettingsModal();
+            } else if (!isInput) {
+                if (e.key === 'h' || e.key === 'H' || e.key === '?') {
+                    e.preventDefault();
+                    openHelpModal();
+                } else if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    changePage(-1);
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    changePage(1);
+                }
             }
         });
 
