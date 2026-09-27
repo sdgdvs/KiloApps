@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -17,8 +17,8 @@ current_targets:
   kilo_graphics: KDragon
   kilo_qa: KCipher
   kilo_expander: KImage
-  kilo_creator: "kweb://cybercafe (Underground BBS, Threaded Forums & ASCII Art Studio)"
-virtual_web_target: "kweb://cybercafe"
+  kilo_creator: "kweb://10.19.99.4/classified (Corporate Network Leak & Signal Diagnostic)"
+virtual_web_target: "kweb://10.19.99.4/classified"
 virtual_web_rotation:
   - "kweb://darknet"
   - "kweb://portal"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-expander
-  app: KPaint
-  timestamp: "2026-09-27T16:00:00Z"
+  agent: kilo-creator
+  app: "kweb://cybercafe"
+  timestamp: "2026-09-27T17:51:00Z"
 last_planner_run: "2026-09-27T09:48:00Z"
 ---
 
@@ -97,10 +97,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://cybercafe` (Underground BBS, Threaded Forums & ASCII Art Studio)
+- **Current Target**: `kweb://10.19.99.4/classified` (Corporate Network Leak & Signal Diagnostic)
 - **Upcoming Queue**:
-  `kweb://10.19.99.4/classified` (Corporate Network Leak & Signal Diagnostic),
-  `kweb://echo-subsystem.net` (Research Journal & Audio Spectrogram)
+  `kweb://echo-subsystem.net` (Research Journal & Audio Spectrogram),
+  `kweb://deep-core` (Ghost Node Terminal & Cryptographic Passkey Analyzer)
   *(Completed: kweb://geocities, kweb://darknet, kweb://portal, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
@@ -130,8 +130,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://cybercafe` (`KiloOS/public/web/cybercafe.html`)
-  - *Next in Rotation*: `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple`.
+- **Current Active Target**: `kweb://10.19.99.4/classified` (`KiloOS/public/web/classified.html`)
+  - *Next in Rotation*: `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe`.
 - **Anti-Potemkin Directive & Content Mandates**:
   0. `kweb://warez` (*0xRELEASE Scene Vault & Cracktros*):
      - ✅ 12 authentic parody releases with 3D vector cracktro launcher, ANSI NFO viewer & .diz/.nfo downloads.
@@ -178,8 +178,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
      - ✅ Win32 PE32 binary builder compiling valid downloadable 1.5KB .EXE executables directly in browser memory.
      - ✅ Yamaha YM2612 FM synthesis & SPC700 stereo delay chiptune jukebox (4 tracks) with real-time FM timbre tuner.
      - ✅ Persistent acolyte guestbook & Central KiloNet Webring node #007 interconnect.
-  6. `kweb://cybercafe` (*The Underground BBS & Forum Lounge*):
-     - New Tier 2 site: Threaded retro message boards, guest canvas ASCII art scratchpad, IRC chat simulator.
+  6. `kweb://cybercafe` (*The Underground BBS, ASCII Studio & mIRC Lounge*):
+     - ✅ Threaded retro message boards with 4 channels, search, localStorage persistence & ASCII art embedding.
+     - ✅ Interactive 60x20 ASCII/ANSI art studio with CP437 glyphs, 16-color palette, .ANS/.TXT export & 1-click forum posting.
+     - ✅ Underground IRC terminal client (mIRC style) with 4 channels, slash commands, interactive CafeBot & real-time Firebase RTDB sync.
+     - ✅ Procedural Genesis YM2612 2-operator FM synthesis & SNES SPC700 stereo delay audio jukebox with 3 tracks & 14-band LED CRT visualizer.
+     - ✅ Terminal booth station telemetry, 56k V.90 throughput benchmark, cafe kiosk with downloadable thermal receipts & hardware vault NFOs.
   7. `kweb://darknet` (*Node 0x7F Transmission Subsystem*):
      - ✅ Tier 3 Ghost Node: VT-100 terminal, 6-algo cryptic packet decoders (Hex, XOR, Rot13, Base64, Bitwise, Polybius), packet capture sniffer, RF spectrum waterfall, YM2612 FM / SPC700 audio engine & Central KiloNet Webring #012.
 - **Execution Protocol**:
@@ -226,6 +230,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-27T17:51:00Z — kilo-creator: kweb://cybercafe (Virtual Web Expansion: mIRC Client, FM Jukebox & ASCII Studio)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
+  - mIRC Chat Client: Implemented 1999 IRC terminal with 4 channels, slash commands, interactive CafeBot, and real-time Firebase RTDB sync across global web patrons.
+  - Procedural Audio Jukebox: Built Genesis YM2612 FM + SNES SPC700 stereo delay engine with 3 tracks and 14-band CRT visualizer.
+  - ASCII Studio & Forum Bridge: Added 1-click "Post to BBS Forum", downloadable .ANS/.TXT exports, and 3 new classic presets.
+  - Refreshments & Vault: Added 4 refreshments, downloadable thermal receipts, and 2 new text vault archives (IRCD_OPER_GUIDE, PENTIUM_III_SSE).
+  - Verification: Security linter 100% PASS; node syntax clean; Vite build in 382ms (`cybercafe.html` 90.0 KB < 999 KB ceiling).
+
 - **2026-09-27T16:00:00Z — kilo-expander: KPaint (Feature Expansion: RTDB Studio, Mirror, Filters & Text)**
   - Status: PASS ✅ (0 regressions; 0 perimeter glints; clean builds; <999KB ceiling verified).
   - Firebase Collaborative Studio: Added real-time multiplayer drawing via RTDB (`multiplayer/kpaint/rooms/`), live cursor sync, stroke broadcasting, and canvas snapshot push/pull.
@@ -260,12 +272,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Rotation Schedule: Set agent_rotation starting at kilo-graphics to maintain fair round-robin dispatch.
   - Compaction: Archived KRSS log entry to fleet_execution_archive.md; retained top 5 active entries.
 
-- **2026-09-27T07:55:00Z — kilo-usability: KNet (UI/UX, HiDPI Canvas & Quicksave/Session Persistence)**
-  - Status: PASS ✅ (0 regressions, 5 usability improvements).
-  - Window & Layout: Tuned App.jsx window dimensions to 1040x740 and set direct exeUrl to /exe/KNet.exe.
-  - Toast Occlusion: Re-anchored toasts to top-right margin with dismiss affordance, preventing control occlusion.
-  - State Persistence: Added F5 quicksave and F9 quickload snapshot persistence with localStorage auto-restore.
-  - Canvas HiDPI: Implemented devicePixelRatio-aware rendering, retro grid with latency labels, and empty/single-sample states.
-  - Navigation & ARG: Added Warez quick chip to 1999 Web links; purged pre-climax meta-narrative in Win32 C darknet node.
-  - Verification: MSVC compile clean (`KNet.exe` 28.5 KB); Vite build in 381ms (`knet.html` 97.2 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
 

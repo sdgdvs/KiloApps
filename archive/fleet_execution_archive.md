@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-27T07:55:00Z — kilo-usability: KNet (UI/UX, HiDPI Canvas & Quicksave/Session Persistence)**
+  - Status: PASS ✅ (0 regressions, 5 usability improvements).
+  - Window & Layout: Tuned App.jsx window dimensions to 1040x740 and set direct exeUrl to /exe/KNet.exe.
+  - Toast Occlusion: Re-anchored toasts to top-right margin with dismiss affordance, preventing control occlusion.
+  - State Persistence: Added F5 quicksave and F9 quickload snapshot persistence with localStorage auto-restore.
+  - Canvas HiDPI: Implemented devicePixelRatio-aware rendering, retro grid with latency labels, and empty/single-sample states.
+  - Navigation & ARG: Added Warez quick chip to 1999 Web links; purged pre-climax meta-narrative in Win32 C darknet node.
+  - Verification: MSVC compile clean (`KNet.exe` 28.5 KB); Vite build in 381ms (`knet.html` 97.2 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-27T05:55:00Z — kilo-tester: KBudget (Interactive UI Audit & Quicksave/JSON/Help Integration)**
   - Status: PASS ✅ (6 issues, 6 fixed; 0 regressions).
   - Persistence: Implemented F5 quicksave & F9 quickload snapshot persistence with visual toast feedback.

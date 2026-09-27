@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<meta name="description" content="CyberCafe '99 // The Underground BBS, Threaded Discussion Forums, ASCII Art Studio & Terminal Lounge.">
-<title>CYBERCAFE '99 // Underground BBS &amp; ASCII Lounge</title>
+<meta name="description" content="CyberCafe '99 // The Underground BBS, Threaded Discussion Forums, ASCII Art Studio, mIRC Terminal Lounge &amp; Procedural FM Jukebox.">
+<title>CYBERCAFE '99 // Underground BBS, ASCII Studio &amp; IRC Lounge</title>
 <style>
   :root {
     --bg-black: #05070a;
@@ -50,11 +50,11 @@
     z-index: 999;
     background-size: 100% 3px, 6px 100%;
     pointer-events: none;
-    opacity: 0.65;
+    opacity: 0.55;
   }
 
   .site-wrap {
-    max-width: 980px;
+    max-width: 990px;
     margin: 0 auto;
     position: relative;
     z-index: 10;
@@ -89,7 +89,7 @@
     gap: 8px;
     padding-top: 8px;
     border-top: 1px dashed var(--border);
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-muted);
   }
 
@@ -120,7 +120,8 @@
   .header-controls {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 
   .btn-audio {
@@ -141,6 +142,23 @@
     color: #000;
   }
 
+  .jukebox-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #0d131f;
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 3px;
+  }
+
+  #audioVisualizer {
+    background: #05070a;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    display: block;
+  }
+
   /* Navigation Bar */
   nav.cyber-tabs {
     display: flex;
@@ -159,7 +177,7 @@
     font-family: var(--font-mono);
     font-size: 12px;
     font-weight: bold;
-    padding: 8px 14px;
+    padding: 8px 12px;
     cursor: pointer;
     white-space: nowrap;
     border-radius: 3px;
@@ -202,7 +220,7 @@
   /* Utility Components */
   .section-title {
     color: var(--cyan-bright);
-    font-size: 15px;
+    font-size: 14px;
     font-weight: bold;
     border-bottom: 1px solid var(--border);
     padding-bottom: 6px;
@@ -210,6 +228,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .btn-retro {
@@ -217,7 +237,7 @@
     border: 1px solid var(--border-bright);
     color: #fff;
     font-family: var(--font-mono);
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
     padding: 5px 12px;
     cursor: pointer;
@@ -225,6 +245,7 @@
     text-decoration: none;
     display: inline-block;
     transition: all 0.15s;
+    user-select: none;
   }
 
   .btn-retro:hover {
@@ -244,10 +265,56 @@
     box-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
   }
 
+  .btn-retro.green {
+    border-color: var(--green);
+    color: var(--green-bright);
+  }
+
+  .btn-retro.green:hover {
+    background: var(--green);
+    color: #000;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
+  }
+
+  .form-input, .form-textarea, .form-select {
+    background: #080c14;
+    border: 1px solid var(--border);
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 3px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .form-input:focus, .form-textarea:focus, .form-select:focus {
+    border-color: var(--cyan-bright);
+  }
+
+  .form-textarea {
+    width: 100%;
+    height: 80px;
+    resize: vertical;
+  }
+
+  .form-row {
+    margin-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .form-row label {
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--cyan-bright);
+  }
+
   /* ------------------- LOUNGE TAB ------------------- */
   .lounge-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 1.3fr 1fr;
     gap: 16px;
   }
 
@@ -257,15 +324,15 @@
 
   .booth-map {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 10px;
-    margin-bottom: 16px;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+    margin-bottom: 14px;
   }
 
   .booth-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    padding: 10px;
+    padding: 8px;
     border-radius: 4px;
     font-size: 11px;
     cursor: pointer;
@@ -288,22 +355,49 @@
   .booth-num {
     font-weight: bold;
     color: var(--cyan-bright);
-    margin-bottom: 4px;
+    margin-bottom: 3px;
+    font-size: 10px;
   }
 
   .booth-user {
     color: #fff;
     font-weight: bold;
-    font-size: 12px;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .booth-task {
     color: var(--text-muted);
     font-size: 10px;
-    margin-top: 4px;
-    white-space: nowrap;
+    margin-top: 3px;
+    height: 28px;
     overflow: hidden;
-    text-overflow: ellipsis;
+  }
+
+  .speed-tester {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 4px;
+    margin-top: 10px;
+  }
+
+  .speed-bar-container {
+    height: 12px;
+    background: #000;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    margin: 8px 0;
+    overflow: hidden;
+  }
+
+  .speed-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--cyan), var(--green-bright));
+    transition: width 0.1s linear;
   }
 
   .cafe-counter-panel {
@@ -313,22 +407,32 @@
     border-radius: 4px;
   }
 
-  .menu-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px dashed #1e293b;
-    font-size: 12px;
+  .menu-item-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 12px;
   }
 
-  .menu-item:last-child {
-    border-bottom: none;
+  @media (max-width: 540px) {
+    .menu-item-grid { grid-template-columns: 1fr; }
+  }
+
+  .menu-card {
+    background: #0d131f;
+    border: 1px solid var(--border);
+    padding: 8px;
+    border-radius: 3px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 6px;
   }
 
   .menu-name {
     font-weight: bold;
-    color: var(--text);
+    color: var(--amber-bright);
+    font-size: 11px;
   }
 
   .menu-desc {
@@ -337,38 +441,16 @@
   }
 
   .receipt-box {
-    background: #000;
-    border: 1px dashed var(--amber);
-    color: var(--amber-bright);
+    background: #05070a;
+    border: 1px dashed var(--border-bright);
     padding: 10px;
-    font-size: 11px;
-    margin-top: 12px;
-    min-height: 90px;
-    white-space: pre-wrap;
     font-family: var(--font-mono);
-  }
-
-  .speed-tester {
-    margin-top: 14px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    padding: 12px;
-  }
-
-  .speed-bar-container {
-    background: #000;
-    height: 16px;
-    border: 1px solid var(--border);
-    margin: 8px 0;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .speed-bar-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, var(--green), var(--cyan));
-    transition: width 0.1s linear;
+    font-size: 10px;
+    line-height: 1.35;
+    color: var(--green-bright);
+    white-space: pre-wrap;
+    min-height: 140px;
+    border-radius: 3px;
   }
 
   /* ------------------- FORUM TAB ------------------- */
@@ -379,125 +461,113 @@
     flex-wrap: wrap;
     gap: 8px;
     margin-bottom: 12px;
-  }
-
-  .forum-search {
-    background: #000;
+    background: var(--bg-panel);
+    padding: 8px;
     border: 1px solid var(--border);
-    color: var(--text);
-    padding: 6px 10px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    width: 240px;
-    border-radius: 3px;
   }
 
   .category-filter {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     flex-wrap: wrap;
   }
 
   .cat-pill {
-    background: var(--bg-card);
+    background: #090e18;
     border: 1px solid var(--border);
     color: var(--text-muted);
-    font-size: 11px;
-    padding: 3px 8px;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 4px 8px;
     border-radius: 3px;
     cursor: pointer;
   }
 
   .cat-pill:hover, .cat-pill.active {
-    background: #1e293b;
-    color: var(--cyan-bright);
-    border-color: var(--cyan);
+    background: var(--cyan);
+    color: #000;
+    border-color: var(--cyan-bright);
+  }
+
+  .forum-search {
+    background: #080c14;
+    border: 1px solid var(--border);
+    color: #fff;
+    padding: 4px 8px;
+    font-size: 11px;
+    width: 200px;
+    border-radius: 3px;
   }
 
   .threads-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    margin-bottom: 16px;
   }
 
   .thread-item {
-    background: var(--bg-panel);
+    background: var(--bg-card);
     border: 1px solid var(--border);
-    border-left: 3px solid var(--cyan);
-    padding: 10px 14px;
-    border-radius: 2px;
+    padding: 10px 12px;
+    border-radius: 4px;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: all 0.15s;
   }
 
   .thread-item:hover {
-    background: #141d30;
-    border-color: var(--cyan-bright);
-  }
-
-  .thread-item.active {
-    background: #18233c;
-    border-left-color: var(--amber);
+    border-color: var(--amber);
+    background: #19243b;
   }
 
   .thread-header {
     display: flex;
     justify-content: space-between;
-    font-size: 11px;
+    font-size: 10px;
     color: var(--text-muted);
     margin-bottom: 4px;
   }
 
-  .thread-title {
-    font-size: 14px;
+  .thread-tag {
+    color: var(--amber-bright);
     font-weight: bold;
-    color: #fff;
+  }
+
+  .thread-title {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--cyan-bright);
     margin-bottom: 4px;
   }
 
   .thread-snippet {
-    font-size: 12px;
-    color: #cbd5e1;
+    font-size: 11px;
+    color: var(--text-muted);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
-  .thread-tag {
-    display: inline-block;
-    padding: 1px 6px;
-    background: #1e293b;
-    border: 1px solid var(--border);
-    border-radius: 2px;
-    color: var(--amber-bright);
-    font-size: 10px;
-    font-weight: bold;
-    margin-right: 6px;
-  }
-
-  /* Thread View Modal / Detail */
   .thread-detail-box {
     background: var(--bg-card);
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-bright);
     padding: 14px;
-    margin-top: 14px;
+    border-radius: 4px;
   }
 
   .post-card {
-    background: var(--bg-panel);
+    background: var(--bg-dark);
     border: 1px solid var(--border);
-    padding: 10px 12px;
-    margin-bottom: 10px;
-    font-size: 12px;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 3px;
   }
 
   .post-meta {
     display: flex;
     justify-content: space-between;
+    font-size: 10px;
     color: var(--text-muted);
-    font-size: 11px;
-    border-bottom: 1px dashed #243048;
+    border-bottom: 1px solid var(--border);
     padding-bottom: 4px;
     margin-bottom: 6px;
   }
@@ -508,44 +578,28 @@
   }
 
   .post-body {
+    font-size: 12px;
+    line-height: 1.45;
     white-space: pre-wrap;
-    line-height: 1.5;
-    color: #e2e8f0;
   }
 
-  /* Form for New Thread / Reply */
-  .form-row {
-    margin-bottom: 10px;
-  }
-
-  .form-row label {
-    display: block;
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-bottom: 3px;
-  }
-
-  .form-input, .form-textarea, .form-select {
-    width: 100%;
+  .ascii-post-art {
     background: #000;
     border: 1px solid var(--border);
-    color: var(--text);
-    padding: 6px 8px;
+    padding: 8px;
     font-family: var(--font-mono);
-    font-size: 12px;
-    border-radius: 3px;
-  }
-
-  .form-textarea {
-    resize: vertical;
-    min-height: 70px;
+    font-size: 11px;
+    line-height: 1.1;
+    overflow-x: auto;
+    color: var(--cyan-bright);
+    margin: 6px 0;
   }
 
   /* ------------------- ASCII STUDIO TAB ------------------- */
   .ascii-studio-grid {
     display: grid;
     grid-template-columns: 240px 1fr;
-    gap: 16px;
+    gap: 14px;
   }
 
   @media (max-width: 860px) {
@@ -558,11 +612,11 @@
     padding: 12px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
   }
 
   .palette-label {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: bold;
     color: var(--cyan-bright);
     text-transform: uppercase;
@@ -571,7 +625,7 @@
   .char-grid {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    gap: 4px;
+    gap: 3px;
   }
 
   .char-btn {
@@ -579,8 +633,8 @@
     border: 1px solid var(--border);
     color: #fff;
     font-family: var(--font-mono);
-    font-size: 14px;
-    height: 28px;
+    font-size: 13px;
+    height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -597,11 +651,11 @@
   .color-grid {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
-    gap: 4px;
+    gap: 3px;
   }
 
   .color-swatch {
-    height: 22px;
+    height: 20px;
     border: 1px solid #000;
     cursor: pointer;
     border-radius: 2px;
@@ -632,22 +686,160 @@
 
   .canvas-tools {
     display: flex;
-    gap: 8px;
+    gap: 4px;
     flex-wrap: wrap;
-    margin-bottom: 8px;
+  }
+
+  /* ------------------- IRC CLIENT TAB (mIRC Style) ------------------- */
+  .irc-container {
+    display: flex;
+    flex-direction: column;
+    height: 520px;
+    border: 1px solid var(--border);
+    background: #05070a;
+  }
+
+  .irc-titlebar {
+    background: linear-gradient(90deg, #1e3a8a, #0284c7);
+    color: #fff;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 4px 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #000;
+  }
+
+  .irc-topicbar {
+    background: #0d1527;
+    border-bottom: 1px solid var(--border);
+    color: var(--amber-bright);
+    font-size: 10px;
+    padding: 4px 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .irc-channels-bar {
+    background: #0a0e1a;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 2px;
+    padding: 2px 4px;
+    overflow-x: auto;
+  }
+
+  .irc-chan-tab {
+    background: #162033;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    padding: 3px 8px;
+    font-size: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 3px 3px 0 0;
+  }
+
+  .irc-chan-tab:hover, .irc-chan-tab.active {
+    background: #1e293b;
+    color: var(--cyan-bright);
+    border-color: var(--cyan);
+  }
+
+  .irc-main-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .irc-log {
+    flex: 1;
+    background: #020408;
+    color: #cbd5e1;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.35;
+    padding: 8px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .irc-log .msg-time { color: #64748b; font-size: 10px; margin-right: 4px; }
+  .irc-log .msg-sys { color: #facc15; }
+  .irc-log .msg-join { color: #34d399; }
+  .irc-log .msg-part { color: #f87171; }
+  .irc-log .msg-action { color: #ec4899; }
+  .irc-log .msg-nick-op { color: #f59e0b; font-weight: bold; }
+  .irc-log .msg-nick-voice { color: #38bdf8; font-weight: bold; }
+  .irc-log .msg-nick-user { color: #e2e8f0; font-weight: bold; }
+  .irc-log .msg-nick-self { color: #4ade80; font-weight: bold; }
+
+  .irc-nicklist {
+    width: 160px;
+    background: #090e18;
+    border-left: 1px solid var(--border);
+    font-size: 10px;
+    padding: 6px;
+    overflow-y: auto;
+  }
+
+  .irc-nick-header {
+    font-size: 9px;
+    font-weight: bold;
+    color: var(--cyan-bright);
+    padding: 2px 4px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+
+  .irc-user-item {
+    padding: 2px 4px;
+    cursor: pointer;
+    border-radius: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .irc-user-item:hover {
+    background: #1e293b;
+    color: var(--amber-bright);
+  }
+
+  .irc-input-bar {
+    background: #0e1626;
+    border-top: 1px solid var(--border);
+    padding: 6px;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .irc-prompt-prefix {
+    font-size: 11px;
+    color: var(--cyan-bright);
+    font-weight: bold;
+    white-space: nowrap;
   }
 
   /* ------------------- ARCHIVE TAB ------------------- */
   .vault-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 12px;
+    font-size: 11px;
     margin-top: 10px;
   }
 
   .vault-table th, .vault-table td {
     border: 1px solid var(--border);
-    padding: 8px 12px;
+    padding: 8px 10px;
     text-align: left;
   }
 
@@ -668,20 +860,20 @@
     padding: 12px;
     text-align: center;
     margin-top: 16px;
-    font-size: 12px;
+    font-size: 11px;
   }
 
   .webring-links {
     margin-top: 8px;
     display: flex;
     justify-content: center;
-    gap: 12px;
+    gap: 8px;
     flex-wrap: wrap;
   }
 
   footer {
     text-align: center;
-    font-size: 11px;
+    font-size: 10px;
     color: var(--text-muted);
     padding: 16px 0;
   }
@@ -708,8 +900,17 @@
         <span style="margin-left: 10px;">CARRIER: 10.19.99.12:1999</span>
       </div>
       <div class="header-controls">
+        <div class="jukebox-bar">
+          <canvas id="audioVisualizer" width="80" height="18"></canvas>
+          <button id="bgmToggleBtn" class="btn-audio" onclick="toggleBgmPlayback()">▶ BGM: PLAY</button>
+          <select id="bgmTrackSelect" class="form-select" style="padding:2px 4px; font-size:10px;" onchange="changeBgmTrack(this.value)">
+            <option value="0">Track 1: Midnight Baud '99</option>
+            <option value="1">Track 2: Packet Storm</option>
+            <option value="2">Track 3: Silicon Sunset</option>
+          </select>
+          <button id="audioToggleBtn" class="btn-audio" onclick="toggleAudioEngine()">🔊 SFX: ON</button>
+        </div>
         <span id="clockDisplay">1999-11-23 23:42:00 EST</span>
-        <button id="audioToggleBtn" class="btn-audio" onclick="toggleAudioEngine()">🔊 AUDIO: ON</button>
       </div>
     </div>
   </header>
@@ -719,6 +920,7 @@
     <button class="tab-btn active" onclick="switchTab('tab-lounge')">☕ TERMINAL LOUNGE</button>
     <button class="tab-btn" onclick="switchTab('tab-forum')">💬 THREADED BBS FORUM</button>
     <button class="tab-btn" onclick="switchTab('tab-ascii')">🎨 ASCII ART STUDIO</button>
+    <button class="tab-btn" onclick="switchTab('tab-irc')">📟 IRC CHAT (mIRC)</button>
     <button class="tab-btn" onclick="switchTab('tab-vault')">💾 FLOPPY ARCHIVES</button>
   </nav>
 
@@ -726,13 +928,13 @@
   <section id="tab-lounge" class="pane-content active">
     <div class="section-title">
       <span>★ CAFE TERMINAL BOOTHS &amp; REFRESHMENT BAR ★</span>
-      <span style="font-size: 11px; color: var(--text-muted);">ACTIVE PATRONS: 7 / 8</span>
+      <span style="font-size: 11px; color: var(--text-muted);">ACTIVE PATRONS: 7 / 8 • GATEWAY: 10.19.99.1</span>
     </div>
 
     <div class="lounge-grid">
       <!-- Left: Booth Map -->
       <div>
-        <h4 style="font-size: 13px; color: var(--amber-bright); margin-bottom: 8px;">TERMINAL STATIONS (LAN HUB 10.19.99.x)</h4>
+        <h4 style="font-size: 12px; color: var(--amber-bright); margin-bottom: 8px;">TERMINAL STATIONS (10Base-T LAN 10.19.99.x)</h4>
         <div class="booth-map" id="boothMap">
           <!-- Populated by JS -->
         </div>
@@ -740,13 +942,13 @@
         <!-- Connection Speedtest Simulator -->
         <div class="speed-tester">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <span style="font-size:12px; font-weight:bold; color:var(--cyan-bright);">📡 MODEM LINE THROUGHPUT BENCHMARK</span>
+            <span style="font-size:11px; font-weight:bold; color:var(--cyan-bright);">📡 MODEM LINE THROUGHPUT BENCHMARK</span>
             <button class="btn-retro" onclick="runSpeedTest()">TEST 56K LINE</button>
           </div>
           <div class="speed-bar-container">
             <div id="speedFill" class="speed-bar-fill"></div>
           </div>
-          <div id="speedStatus" style="font-size:11px; color:var(--text-muted); display:flex; justify-content:space-between;">
+          <div id="speedStatus" style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between;">
             <span>STATUS: IDLE</span>
             <span>0.0 KB/s</span>
           </div>
@@ -756,46 +958,66 @@
       <!-- Right: Cafe Counter & Thermal Receipt -->
       <div>
         <div class="cafe-counter-panel">
-          <h4 style="font-size: 13px; color: var(--amber-bright); margin-bottom: 8px;">☕ CAFE DISPENSER KIOSK</h4>
-          <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Order fuel for your late-night coding or deathmatch session.</p>
+          <h4 style="font-size: 12px; color: var(--amber-bright); margin-bottom: 6px;">☕ CAFE DISPENSER KIOSK</h4>
+          <p style="font-size: 10px; color: var(--text-muted); margin-bottom: 10px;">Select refreshments to vend and print an authentic 1999 thermal voucher.</p>
 
-          <div class="menu-item">
-            <div>
-              <div class="menu-name">Jolt Cola (16oz)</div>
-              <div class="menu-desc">All the sugar, twice the caffeine</div>
+          <div class="menu-item-grid">
+            <div class="menu-card">
+              <div>
+                <div class="menu-name">Jolt Cola (16oz)</div>
+                <div class="menu-desc">All sugar, twice the caffeine</div>
+              </div>
+              <button class="btn-retro amber" onclick="orderItem('Jolt Cola', '$2.25', '+65% Bandwidth')">$2.25</button>
             </div>
-            <button class="btn-retro amber" onclick="orderItem('Jolt Cola', '$2.25', '+65% Brain Bandwidth')">$2.25</button>
+
+            <div class="menu-card">
+              <div>
+                <div class="menu-name">Baud Roast Coffee</div>
+                <div class="menu-desc">Brewed on x86 heatsinks</div>
+              </div>
+              <button class="btn-retro amber" onclick="orderItem('Baud Roast Coffee', '$1.75', '+40% Typing')">$1.75</button>
+            </div>
+
+            <div class="menu-card">
+              <div>
+                <div class="menu-name">Surge Citrus Soda</div>
+                <div class="menu-desc">Radioactive green buzz</div>
+              </div>
+              <button class="btn-retro amber" onclick="orderItem('Surge Citrus Soda', '$1.50', '+50% Twitch')">$1.50</button>
+            </div>
+
+            <div class="menu-card">
+              <div>
+                <div class="menu-name">Bawls Guarana</div>
+                <div class="menu-desc">Blue cobalt glass bottle</div>
+              </div>
+              <button class="btn-retro amber" onclick="orderItem('Bawls Guarana', '$2.50', '+75% APM')">$2.50</button>
+            </div>
+
+            <div class="menu-card">
+              <div>
+                <div class="menu-name">Biscotti Byte</div>
+                <div class="menu-desc">Hard as a floppy disk casing</div>
+              </div>
+              <button class="btn-retro amber" onclick="orderItem('Biscotti Byte', '$1.00', '+10% Morale')">$1.00</button>
+            </div>
+
+            <div class="menu-card">
+              <div>
+                <div class="menu-name">Hot Pocket Byte</div>
+                <div class="menu-desc">Molten pepperoni cheese core</div>
+              </div>
+              <button class="btn-retro amber" onclick="orderItem('Hot Pocket Byte', '$2.00', '+30% Thermal')">$2.00</button>
+            </div>
           </div>
 
-          <div class="menu-item">
-            <div>
-              <div class="menu-name">Baud Roast Coffee</div>
-              <div class="menu-desc">Extra dark, brewed on x86 heatsinks</div>
-            </div>
-            <button class="btn-retro amber" onclick="orderItem('Baud Roast Coffee', '$1.75', '+40% Typing Rate')">$1.75</button>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="font-size:10px; color:var(--cyan-bright); font-weight:bold;">THERMAL RECEIPT PRINTER</span>
+            <button class="btn-retro" onclick="downloadReceiptTxt()">🖨️ SAVE RECEIPT (.TXT)</button>
           </div>
-
-          <div class="menu-item">
-            <div>
-              <div class="menu-name">Surge Citrus Soda</div>
-              <div class="menu-desc">Radioactive green carbonation</div>
-            </div>
-            <button class="btn-retro amber" onclick="orderItem('Surge Citrus Soda', '$1.50', '+50% Twitch Reflexes')">$1.50</button>
-          </div>
-
-          <div class="menu-item">
-            <div>
-              <div class="menu-name">Biscotti Byte (Twin Pack)</div>
-              <div class="menu-desc">Hard as a floppy disk casing</div>
-            </div>
-            <button class="btn-retro amber" onclick="orderItem('Biscotti Byte', '$1.00', '+10% Morale')">$1.00</button>
-          </div>
-
-          <div class="receipt-box" id="receiptOutput">
-[THERMAL RECEIPT PRINTER]
+          <div class="receipt-box" id="receiptOutput">[THERMAL RECEIPT PRINTER]
 READY FOR ORDERS...
-Select an item above to vend.
-          </div>
+Select an item above to vend voucher.</div>
         </div>
       </div>
     </div>
@@ -812,9 +1034,9 @@ Select an item above to vend.
       <div class="category-filter">
         <span class="cat-pill active" onclick="filterForum('ALL')">ALL CHANNELS</span>
         <span class="cat-pill" onclick="filterForum('Lounge')">1. Lounge</span>
-        <span class="cat-pill" onclick="filterForum('Hardware')">2. Hardware &amp; Silicon</span>
-        <span class="cat-pill" onclick="filterForum('ASCII')">3. ASCII / ANSI Scene</span>
-        <span class="cat-pill" onclick="filterForum('Echoes')">4. Echoes &amp; Subnets</span>
+        <span class="cat-pill" onclick="filterForum('Hardware')">2. Hardware</span>
+        <span class="cat-pill" onclick="filterForum('ASCII')">3. ASCII Scene</span>
+        <span class="cat-pill" onclick="filterForum('Echoes')">4. Echoes</span>
       </div>
       <input type="text" id="forumSearchInput" class="forum-search" placeholder="Search threads or author..." oninput="handleForumSearch()">
     </div>
@@ -826,27 +1048,27 @@ Select an item above to vend.
     <!-- Active Thread Detail Area -->
     <div id="threadDetailArea" style="display:none;" class="thread-detail-box">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-        <h3 id="activeThreadTitle" style="color:var(--cyan-bright); font-size:16px;">Thread Title</h3>
+        <h3 id="activeThreadTitle" style="color:var(--cyan-bright); font-size:14px;">Thread Title</h3>
         <button class="btn-retro" onclick="closeThreadDetail()">« BACK TO FORUM</button>
       </div>
       <div id="threadPostsList"></div>
 
       <!-- Quick Reply Box -->
-      <div style="margin-top:14px; background:var(--bg-panel); border:1px solid var(--border); padding:10px;">
+      <div style="margin-top:12px; background:var(--bg-panel); border:1px solid var(--border); padding:10px;">
         <div style="font-size:11px; font-weight:bold; color:var(--amber-bright); margin-bottom:6px;">POST REPLY:</div>
         <div class="form-row">
           <input type="text" id="replyAuthor" class="form-input" style="width:200px;" placeholder="Your Handle (e.g. HexRider)">
         </div>
         <div class="form-row">
-          <textarea id="replyBody" class="form-textarea" placeholder="Type your response... Be constructive. Respect the SysOp."></textarea>
+          <textarea id="replyBody" class="form-textarea" placeholder="Type your response... Respect the SysOp."></textarea>
         </div>
         <button class="btn-retro amber" onclick="submitReply()">SUBMIT REPLY</button>
       </div>
     </div>
 
     <!-- New Thread Form (Collapsible) -->
-    <div id="newThreadModal" style="display:none; background:var(--bg-card); border:1px solid var(--amber); padding:14px; margin-top:14px;">
-      <h3 style="color:var(--amber-bright); font-size:14px; margin-bottom:10px;">★ POST NEW FORUM THREAD</h3>
+    <div id="newThreadModal" style="display:none; background:var(--bg-card); border:1px solid var(--amber); padding:14px; margin-top:12px;">
+      <h3 style="color:var(--amber-bright); font-size:13px; margin-bottom:10px;">★ POST NEW FORUM THREAD</h3>
       <div class="form-row">
         <label>CATEGORY:</label>
         <select id="newThreadCat" class="form-select" style="width:220px;">
@@ -879,7 +1101,7 @@ Select an item above to vend.
   <section id="tab-ascii" class="pane-content">
     <div class="section-title">
       <span>🎨 INTERACTIVE ASCII &amp; ANSI ART CANVAS</span>
-      <span style="font-size:11px; color:var(--text-muted);">GRID: 60 x 20 CELLS</span>
+      <span style="font-size:11px; color:var(--text-muted);">GRID: 60 x 20 CELLS • IBM CP437 SHADING</span>
     </div>
 
     <div class="ascii-studio-grid">
@@ -920,12 +1142,20 @@ Select an item above to vend.
             <option value="crt">Retro CRT Terminal</option>
             <option value="skull">Demoscene Skull</option>
             <option value="cyberdeck">Cyberdeck 1999</option>
+            <option value="modem">USRobotics 56K Modem</option>
+            <option value="floppy">3.5" HD Floppy Disk</option>
+            <option value="relic">Echo Anomaly Node</option>
           </select>
         </div>
 
-        <div style="display:flex; flex-direction:column; gap:6px; margin-top:6px;">
+        <div style="display:flex; flex-direction:column; gap:6px; margin-top:4px;">
+          <button class="btn-retro green" onclick="postArtToForum()">📢 POST TO BBS FORUM</button>
+          <div style="display:flex; gap:4px;">
+            <button class="btn-retro" style="flex:1;" onclick="downloadAnsiFile()">💾 .ANS</button>
+            <button class="btn-retro" style="flex:1;" onclick="downloadTxtFile()">📄 .TXT</button>
+          </div>
           <button class="btn-retro" onclick="copyCanvasText()">📋 COPY AS TEXT</button>
-          <button class="btn-retro amber" onclick="saveDrawingLocal()">💾 SAVE TO BROWSER</button>
+          <button class="btn-retro amber" onclick="saveDrawingLocal()">💾 SAVE TO STORAGE</button>
           <button class="btn-retro" onclick="clearCanvasPrompt()">🗑️ CLEAR CANVAS</button>
         </div>
       </div>
@@ -937,15 +1167,55 @@ Select an item above to vend.
     </div>
   </section>
 
-  <!-- PANE 4: FLOPPY ARCHIVES -->
+  <!-- PANE 4: IRC CHAT CLIENT (mIRC Style) -->
+  <section id="tab-irc" class="pane-content">
+    <div class="section-title">
+      <span>📟 UNDERGROUND IRC TERMINAL // mIRC '99 FEDERATION</span>
+      <span id="ircSyncBadge" style="font-size:10px; color:var(--green-bright); font-weight:bold;">● DAEMON &amp; RTDB READY</span>
+    </div>
+
+    <div class="irc-container">
+      <div class="irc-titlebar">
+        <span>[mIRC32 v5.61] - [UndergroundIRCd 1999 : irc.underground.knet:6667]</span>
+        <span id="ircChannelTitle">#cybercafe-99</span>
+      </div>
+
+      <div class="irc-topicbar">
+        <span id="ircTopicText">Topic: "Welcome to CyberCafe '99 // Baud Roast Coffee hot &amp; fresh // Tremor III LAN tonight at 21:00 EST"</span>
+        <span style="font-size:9px; color:var(--text-muted);">Mode: +nt</span>
+      </div>
+
+      <div class="irc-channels-bar">
+        <button class="irc-chan-tab active" onclick="switchIrcChannel('#cybercafe-99')">#cybercafe-99</button>
+        <button class="irc-chan-tab" onclick="switchIrcChannel('#phreak-scene')">#phreak-scene</button>
+        <button class="irc-chan-tab" onclick="switchIrcChannel('#hardware-oc')">#hardware-oc</button>
+        <button class="irc-chan-tab" onclick="switchIrcChannel('#retro-demoscene')">#retro-demoscene</button>
+      </div>
+
+      <div class="irc-main-body">
+        <div class="irc-log" id="ircLog"></div>
+        <div class="irc-nicklist" id="ircNickList"></div>
+      </div>
+
+      <div class="irc-input-bar">
+        <span class="irc-prompt-prefix" id="ircPromptNick">Guest_1999 &gt;</span>
+        <input type="text" id="ircInput" class="form-input" style="flex:1;" placeholder="Type message or /help, /nick <name>, /me <action>, /join <chan>..." onkeydown="handleIrcKeyDown(event)">
+        <button class="btn-retro amber" onclick="sendIrcMessage()">SEND</button>
+        <button class="btn-retro" onclick="document.getElementById('ircInput').value='/help'; sendIrcMessage();">/HELP</button>
+        <button class="btn-retro" onclick="clearIrcLog()">CLEAR</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANE 5: FLOPPY ARCHIVES -->
   <section id="tab-vault" class="pane-content">
     <div class="section-title">
       <span>💾 CYBERCAFE PUBLIC ARCHIVES &amp; TEXT VAULT</span>
-      <span style="font-size:11px; color:var(--text-muted);">VERIFIED MD5 CHECKSUMS</span>
+      <span style="font-size: 11px; color: var(--text-muted);">6 VERIFIED NFO/TEXT DOCUMENTS</span>
     </div>
 
-    <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
-      Patron-uploaded text files, demoscene NFO archives, cafe logs, and phreaking notes. Click "READ" to inspect in-browser.
+    <p style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">
+      Patron-uploaded text files, demoscene NFO archives, cafe logs, and phreaking notes. Click "VIEW" to inspect in-browser.
     </p>
 
     <table class="vault-table">
@@ -981,6 +1251,20 @@ Select an item above to vend.
           <td><button class="btn-retro" onclick="viewVaultFile('ASCII_PRIMER')">VIEW</button></td>
         </tr>
         <tr>
+          <td><strong>IRCD_OPER_GUIDE.TXT</strong></td>
+          <td>2.4 KB</td>
+          <td>1999-10-25</td>
+          <td>Networking</td>
+          <td><button class="btn-retro" onclick="viewVaultFile('IRCD_GUIDE')">VIEW</button></td>
+        </tr>
+        <tr>
+          <td><strong>PENTIUM_III_SSE.TXT</strong></td>
+          <td>2.9 KB</td>
+          <td>1999-11-08</td>
+          <td>Hardware</td>
+          <td><button class="btn-retro" onclick="viewVaultFile('PENTIUM_SSE')">VIEW</button></td>
+        </tr>
+        <tr>
           <td><strong>SUBNET_ANOMALY_101999.LOG</strong></td>
           <td>2.1 KB</td>
           <td>1999-11-15</td>
@@ -995,7 +1279,7 @@ Select an item above to vend.
         <span id="vaultFileTitle" style="color:var(--cyan-bright); font-weight:bold; font-size:12px;">FILE PREVIEW</span>
         <button class="btn-retro" onclick="document.getElementById('vaultViewerBox').style.display='none'">CLOSE</button>
       </div>
-      <pre id="vaultFileContent" style="color:var(--green-bright); font-size:11px; line-height:1.4; white-space:pre-wrap; max-height:260px; overflow-y:auto;"></pre>
+      <pre id="vaultFileContent" style="color:var(--green-bright); font-size:11px; line-height:1.4; white-space:pre-wrap; max-height:280px; overflow-y:auto;"></pre>
     </div>
   </section>
 
@@ -1014,23 +1298,65 @@ Select an item above to vend.
 
   <footer>
     CyberCafe '99 • Underground BBS &amp; ASCII Lounge • Running on KNet Hypermedia 2.0<br>
-    Strictly &lt; 999 KB • Zero External Dependencies • Genesis FM Synthesis Audio Engine
+    Strictly &lt; 999 KB • Zero External Dependencies • Genesis FM Synthesis &amp; SNES Stereo Delay Engine
   </footer>
 
 </div>
 
 <script>
 /* =========================================================================
-   1. PROCEDURAL SOUND ENGINE (Genesis YM2612 & SNES Delay Inspired)
+   1. PROCEDURAL SOUND ENGINE (Genesis YM2612 FM + SNES SPC700 Stereo Delay)
    ========================================================================= */
 let audioCtx = null;
 let audioEnabled = true;
+let bgmPlaying = false;
+let bgmTimer = null;
+let bgmStep = 0;
+let currentBgmTrack = 0;
+let analyserNode = null;
+let delayL = null;
+let delayR = null;
 
 function initAudio() {
   if (!audioCtx) {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    if (AudioContext) {
-      audioCtx = new AudioContext();
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) {
+      audioCtx = new AudioContextClass();
+      
+      // Setup Analyser for 16-band visualizer
+      analyserNode = audioCtx.createAnalyser();
+      analyserNode.fftSize = 64;
+      analyserNode.smoothingTimeConstant = 0.8;
+
+      // Setup SNES SPC700-style stereo delay line
+      const delayTimeL = audioCtx.createDelay();
+      const delayTimeR = audioCtx.createDelay();
+      delayTimeL.delayTime.value = 0.22;
+      delayTimeR.delayTime.value = 0.33;
+
+      const delayFeedback = audioCtx.createGain();
+      delayFeedback.gain.value = 0.28;
+
+      const delayFilter = audioCtx.createBiquadFilter();
+      delayFilter.type = 'lowpass';
+      delayFilter.frequency.value = 2600;
+
+      const merger = audioCtx.createChannelMerger(2);
+      delayTimeL.connect(merger, 0, 0);
+      delayTimeR.connect(merger, 0, 1);
+
+      merger.connect(delayFilter);
+      delayFilter.connect(delayFeedback);
+      delayFeedback.connect(delayTimeL);
+      delayFeedback.connect(delayTimeR);
+
+      delayFilter.connect(analyserNode);
+      analyserNode.connect(audioCtx.destination);
+
+      delayL = delayTimeL;
+      delayR = delayTimeR;
+
+      startVisualizerLoop();
     }
   }
   if (audioCtx && audioCtx.state === 'suspended') {
@@ -1043,20 +1369,20 @@ function toggleAudioEngine() {
   const btn = document.getElementById('audioToggleBtn');
   if (audioEnabled) {
     initAudio();
-    btn.textContent = '🔊 AUDIO: ON';
+    btn.textContent = '🔊 SFX: ON';
     btn.style.borderColor = 'var(--amber)';
     btn.style.color = 'var(--amber-bright)';
     playChime(660, 0.08);
   } else {
-    btn.textContent = '🔇 AUDIO: MUTED';
+    btn.textContent = '🔇 SFX: MUTED';
     btn.style.borderColor = 'var(--text-muted)';
     btn.style.color = 'var(--text-muted)';
   }
 }
 
-// 2-Operator FM synth sound generator
-function playFmTone(carrierFreq, modRatio, modIndex, duration) {
-  if (!audioEnabled) return;
+// 2-Operator Yamaha YM2612 FM synthesis tone generator
+function playFmTone(carrierFreq, modRatio, modIndex, duration, gainVal = 0.12, toDelay = true) {
+  if (!audioEnabled && !bgmPlaying) return;
   initAudio();
   if (!audioCtx) return;
 
@@ -1078,11 +1404,16 @@ function playFmTone(carrierFreq, modRatio, modIndex, duration) {
   modulator.connect(modGain);
   modGain.connect(carrier.frequency);
 
-  masterGain.gain.setValueAtTime(0.12, now);
-  masterGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+  masterGain.gain.setValueAtTime(gainVal, now);
+  masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
   carrier.connect(masterGain);
-  masterGain.connect(audioCtx.destination);
+  masterGain.connect(analyserNode);
+
+  if (toDelay && delayL && delayR) {
+    masterGain.connect(delayL);
+    masterGain.connect(delayR);
+  }
 
   modulator.start(now);
   carrier.start(now);
@@ -1091,11 +1422,11 @@ function playFmTone(carrierFreq, modRatio, modIndex, duration) {
 }
 
 function playKeyClick() {
-  playFmTone(800 + Math.random() * 200, 1.5, 0.5, 0.03);
+  playFmTone(850 + Math.random() * 200, 1.4, 0.4, 0.03, 0.06, false);
 }
 
 function playChime(freq, dur) {
-  playFmTone(freq || 520, 2.0, 1.2, dur || 0.15);
+  playFmTone(freq || 520, 2.0, 1.2, dur || 0.15, 0.12, true);
 }
 
 function playModemChirp() {
@@ -1109,16 +1440,143 @@ function playModemChirp() {
   osc.frequency.setValueAtTime(1200, now);
   osc.frequency.linearRampToValueAtTime(2400, now + 0.12);
   osc.frequency.linearRampToValueAtTime(960, now + 0.25);
-  gain.gain.setValueAtTime(0.08, now);
+  gain.gain.setValueAtTime(0.06, now);
   gain.gain.linearRampToValueAtTime(0.001, now + 0.25);
   osc.connect(gain);
-  gain.connect(audioCtx.destination);
+  gain.connect(analyserNode);
   osc.start(now);
   osc.stop(now + 0.25);
 }
 
 /* =========================================================================
-   2. TABS & RETRO CLOCK
+   2. PROCEDURAL BGM CHIPTUNE JUKEBOX
+   ========================================================================= */
+const BGM_TRACKS = [
+  {
+    name: "Midnight Baud '99",
+    tempo: 120, // ms per 16th step (~125 BPM)
+    bass: [146.83, 0, 146.83, 0, 116.54, 0, 116.54, 0, 98.00, 0, 98.00, 0, 110.00, 0, 130.81, 0], // D3, Bb2, G2, A2
+    lead: [293.66, 349.23, 440.00, 523.25, 440.00, 349.23, 293.66, 0, 233.08, 293.66, 349.23, 440.00, 349.23, 293.66, 220.00, 261.63],
+    fmRatio: 2.0,
+    fmMod: 1.5
+  },
+  {
+    name: "Packet Storm",
+    tempo: 105, // ~140 BPM
+    bass: [110.00, 110.00, 220.00, 110.00, 130.81, 130.81, 261.63, 130.81, 146.83, 146.83, 293.66, 146.83, 164.81, 146.83, 130.81, 110.00],
+    lead: [440.00, 0, 523.25, 0, 587.33, 0, 659.25, 587.33, 523.25, 0, 440.00, 0, 392.00, 440.00, 523.25, 0],
+    fmRatio: 3.5,
+    fmMod: 2.2
+  },
+  {
+    name: "Silicon Sunset",
+    tempo: 160, // ~94 BPM ambient
+    bass: [130.81, 0, 0, 0, 164.81, 0, 0, 0, 174.61, 0, 0, 0, 196.00, 0, 0, 0], // C3, E3, F3, G3
+    lead: [523.25, 659.25, 783.99, 987.77, 783.99, 659.25, 523.25, 0, 440.00, 523.25, 659.25, 0, 392.00, 0, 440.00, 0],
+    fmRatio: 1.5,
+    fmMod: 0.8
+  }
+];
+
+function toggleBgmPlayback() {
+  initAudio();
+  const btn = document.getElementById('bgmToggleBtn');
+  if (bgmPlaying) {
+    stopBgm();
+    btn.textContent = '▶ BGM: PLAY';
+    btn.style.borderColor = 'var(--border-bright)';
+    btn.style.color = '#fff';
+  } else {
+    startBgm();
+    btn.textContent = '⏹ BGM: STOP';
+    btn.style.borderColor = 'var(--green)';
+    btn.style.color = 'var(--green-bright)';
+  }
+}
+
+function startBgm() {
+  bgmPlaying = true;
+  bgmStep = 0;
+  playBgmStep();
+}
+
+function stopBgm() {
+  bgmPlaying = false;
+  if (bgmTimer) {
+    clearTimeout(bgmTimer);
+    bgmTimer = null;
+  }
+}
+
+function changeBgmTrack(val) {
+  currentBgmTrack = parseInt(val, 10) || 0;
+  if (bgmPlaying) {
+    bgmStep = 0;
+  }
+}
+
+function playBgmStep() {
+  if (!bgmPlaying) return;
+  const track = BGM_TRACKS[currentBgmTrack];
+  const stepIdx = bgmStep % 16;
+
+  // Bass note
+  const bassFreq = track.bass[stepIdx];
+  if (bassFreq > 0) {
+    playFmTone(bassFreq, 1.0, 1.2, (track.tempo * 1.5) / 1000, 0.08, false);
+  }
+
+  // Lead arpeggio
+  const leadFreq = track.lead[stepIdx];
+  if (leadFreq > 0) {
+    playFmTone(leadFreq, track.fmRatio, track.fmMod, (track.tempo * 1.8) / 1000, 0.06, true);
+  }
+
+  bgmStep++;
+  bgmTimer = setTimeout(playBgmStep, track.tempo);
+}
+
+// 16-band visualizer loop
+function startVisualizerLoop() {
+  const canvas = document.getElementById('audioVisualizer');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const bufferLength = analyserNode.frequencyBinCount;
+  const dataArray = new Uint8Array(bufferLength);
+
+  function draw() {
+    requestAnimationFrame(draw);
+    analyserNode.getByteFrequencyData(dataArray);
+
+    ctx.fillStyle = '#05070a';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    const barCount = 14;
+    const barWidth = 4;
+    const gap = 2;
+
+    for (let i = 0; i < barCount; i++) {
+      const val = dataArray[i * 2] || 0;
+      const barHeight = Math.floor((val / 255) * canvas.height);
+      const x = i * (barWidth + gap) + 2;
+      const y = canvas.height - barHeight;
+
+      if (val > 180) {
+        ctx.fillStyle = '#f59e0b';
+      } else if (val > 80) {
+        ctx.fillStyle = '#22d3ee';
+      } else {
+        ctx.fillStyle = '#10b981';
+      }
+
+      ctx.fillRect(x, y, barWidth, barHeight);
+    }
+  }
+  draw();
+}
+
+/* =========================================================================
+   3. TABS & RETRO CLOCK
    ========================================================================= */
 function switchTab(tabId) {
   playChime(440, 0.06);
@@ -1132,11 +1590,16 @@ function switchTab(tabId) {
     'tab-lounge': 0,
     'tab-forum': 1,
     'tab-ascii': 2,
-    'tab-vault': 3
+    'tab-irc': 3,
+    'tab-vault': 4
   };
   const buttons = document.querySelectorAll('.tab-btn');
   if (buttons[btnMap[tabId]]) {
     buttons[btnMap[tabId]].classList.add('active');
+  }
+
+  if (tabId === 'tab-irc') {
+    scrollIrcToBottom();
   }
 }
 
@@ -1152,7 +1615,7 @@ setInterval(updateClock, 1000);
 updateClock();
 
 /* =========================================================================
-   3. CAFE TERMINAL BOOTHS & REFRESHMENT KIOSK
+   4. CAFE TERMINAL BOOTHS & REFRESHMENTS
    ========================================================================= */
 const BOOTHS_DATA = [
   { id: 1, user: '~neon_rider', task: 'Compiling Win32 ASM Demotape', status: 'occupied' },
@@ -1182,7 +1645,13 @@ function interactBooth(id) {
   const booth = BOOTHS_DATA.find(b => b.id === id);
   if (!booth) return;
   const receipt = document.getElementById('receiptOutput');
-  receipt.textContent = `[TERMINAL LINK // BOOTH #${id}]\nPATRON: ${booth.user}\nCURRENT PROCESS: ${booth.task}\nSTATUS: IP 10.19.99.${10 + id} [PORT 1999 VERIFIED]`;
+  receipt.textContent = 
+`[TERMINAL LINK // STATION #${id}]
+PATRON: ${booth.user}
+CURRENT PROCESS: ${booth.task}
+STATUS: IP 10.19.99.${10 + id} [PORT 1999 VERIFIED]
+LINK: 10Base-T Ethernet [COLLISIONS: 0]
+ACTION: Ping sent. Station responded with 0.4ms latency.`;
 }
 
 function orderItem(name, price, perk) {
@@ -1202,6 +1671,16 @@ BUFF: ${perk}
 THANK YOU FOR VISITING THE UNDERGROUND!
 STAY HYDRATED. HACK RESPONSIBLY.
 ==================================`;
+}
+
+function downloadReceiptTxt() {
+  playChime(700, 0.1);
+  const text = document.getElementById('receiptOutput').textContent;
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'CYBERCAFE_RECEIPT.TXT';
+  a.click();
 }
 
 let speedTesting = false;
@@ -1228,13 +1707,13 @@ function runSpeedTest() {
       speedTesting = false;
       fill.style.width = '100%';
       playChime(880, 0.2);
-      status.innerHTML = '<span style="color:var(--green-bright); font-weight:bold;">CONNECTED: 56,600 BPS V.90 OK</span><span style="color:var(--amber-bright);">LATENCY: 124ms</span>';
+      status.innerHTML = '<span style="color:var(--green-bright); font-weight:bold;">CONNECTED: 56,600 BPS V.90 OK</span><span style="color:var(--amber-bright);">LATENCY: 118ms</span>';
     }
-  }, 120);
+  }, 110);
 }
 
 /* =========================================================================
-   4. THREADED FORUM / BBS MESSAGE BOARD (Interactive & Persistent)
+   5. THREADED FORUM / BBS MESSAGE BOARD (Interactive & Persistent)
    ========================================================================= */
 const DEFAULT_THREADS = [
   {
@@ -1355,7 +1834,7 @@ function renderThreadsList() {
   });
 
   if (filtered.length === 0) {
-    container.innerHTML = '<div style="padding:16px; text-align:center; color:var(--text-muted); font-size:12px;">No discussion threads found in this channel.</div>';
+    container.innerHTML = '<div style="padding:16px; text-align:center; color:var(--text-muted); font-size:11px;">No discussion threads found in this channel.</div>';
     return;
   }
 
@@ -1407,9 +1886,17 @@ function viewThread(id) {
         <span>#${idx + 1} POSTED BY <span class="post-author">${escapeHtml(p.author)}</span></span>
         <span>${p.date}</span>
       </div>
-      <div class="post-body">${escapeHtml(p.body)}</div>
+      <div class="post-body">${formatPostBody(p.body)}</div>
     </div>
   `).join('');
+}
+
+function formatPostBody(body) {
+  if (body.includes('[ASCII_ART]') && body.includes('[/ASCII_ART]')) {
+    const parts = body.split(/\[ASCII_ART\]|\[\/ASCII_ART\]/);
+    return escapeHtml(parts[0]) + `<pre class="ascii-post-art">${escapeHtml(parts[1])}</pre>` + escapeHtml(parts[2] || '');
+  }
+  return escapeHtml(body);
 }
 
 function closeThreadDetail() {
@@ -1500,11 +1987,11 @@ function submitNewThread() {
 }
 
 /* =========================================================================
-   5. INTERACTIVE ASCII & ANSI ART STUDIO
+   6. INTERACTIVE ASCII & ANSI ART STUDIO
    ========================================================================= */
 const CANVAS_COLS = 60;
 const CANVAS_ROWS = 20;
-let canvasGrid = []; // 2D array of { char: ' ', fg: '#ffffff' }
+let canvasGrid = [];
 let currentTool = 'pencil';
 let currentChar = '█';
 let currentFg = '#38bdf8';
@@ -1525,7 +2012,6 @@ const ANSI_16_COLORS = [
 ];
 
 function initAsciiStudio() {
-  // Initialize canvas grid
   canvasGrid = [];
   for (let r = 0; r < CANVAS_ROWS; r++) {
     const row = [];
@@ -1535,19 +2021,16 @@ function initAsciiStudio() {
     canvasGrid.push(row);
   }
 
-  // Render character buttons
   const charGridEl = document.getElementById('charGrid');
   charGridEl.innerHTML = PALETTE_CHARS.map(ch => `
     <button class="char-btn ${ch === currentChar ? 'active' : ''}" onclick="selectChar('${ch === '\\' ? '\\\\' : (ch === '\'' ? '\\\'' : ch)}')">${ch === ' ' ? 'SPC' : ch}</button>
   `).join('');
 
-  // Render ANSI color swatches
   const colorGridEl = document.getElementById('fgColorGrid');
   colorGridEl.innerHTML = ANSI_16_COLORS.map(col => `
     <div class="color-swatch ${col === currentFg ? 'active' : ''}" style="background:${col};" onclick="selectColor('${col}')" title="${col}"></div>
   `).join('');
 
-  // Build DOM Canvas
   renderCanvasDom();
   loadSavedDrawing();
 }
@@ -1685,8 +2168,7 @@ function clearCanvasPrompt() {
   }
 }
 
-function copyCanvasText() {
-  playChime(700, 0.1);
+function getCanvasPlainText() {
   let text = '';
   for (let r = 0; r < CANVAS_ROWS; r++) {
     let rowText = '';
@@ -1695,7 +2177,12 @@ function copyCanvasText() {
     }
     text += rowText.trimEnd() + '\n';
   }
+  return text;
+}
 
+function copyCanvasText() {
+  playChime(700, 0.1);
+  const text = getCanvasPlainText();
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(text).then(() => {
       alert('ASCII Art copied to clipboard!');
@@ -1705,6 +2192,66 @@ function copyCanvasText() {
   } else {
     prompt('Copy ASCII text below:', text);
   }
+}
+
+function downloadTxtFile() {
+  playChime(650, 0.1);
+  const text = getCanvasPlainText();
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'CYBERCAFE_ART.TXT';
+  a.click();
+}
+
+function downloadAnsiFile() {
+  playChime(680, 0.12);
+  // Build basic ANSI escape representation
+  let ansi = '\x1b[2J\x1b[H'; // Clear screen & home
+  for (let r = 0; r < CANVAS_ROWS; r++) {
+    for (let c = 0; c < CANVAS_COLS; c++) {
+      ansi += canvasGrid[r][c].char;
+    }
+    ansi += '\r\n';
+  }
+  const blob = new Blob([ansi], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'CYBERCAFE_ART.ANS';
+  a.click();
+}
+
+function postArtToForum() {
+  playChime(820, 0.15);
+  const artText = getCanvasPlainText();
+  const title = prompt('Enter a title for your ASCII art BBS thread:', 'Fresh ASCII Art from Studio Lounge');
+  if (!title) return;
+  const author = prompt('Enter your artist handle:', 'AsciiArtist_99') || 'AsciiArtist_99';
+
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const dateStr = `1999-11-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+  const newThread = {
+    id: Date.now(),
+    category: 'ASCII',
+    title: title,
+    author: author,
+    date: dateStr,
+    posts: [
+      {
+        author: author,
+        date: dateStr,
+        body: `Created in CyberCafe '99 ASCII Art Studio:\n\n[ASCII_ART]${artText}[/ASCII_ART]\n\nFeedback and ANSI tips welcome!`
+      }
+    ]
+  };
+
+  forumThreads.unshift(newThread);
+  saveForumData();
+  switchTab('tab-forum');
+  renderThreadsList();
+  viewThread(newThread.id);
 }
 
 function saveDrawingLocal() {
@@ -1772,6 +2319,40 @@ const PRESETS = {
     "   | IP: 10.19.99.4 [STANDBY]  | | ",
     "   +---------------------------+/  ",
     "     \\__\\__\\__\\__\\__\\__\\__\\__/     "
+  ],
+  modem: [
+    "    .--------------------------------.   ",
+    "   /   USRobotics 56K Sportster V.90  \\  ",
+    "  +====================================+ ",
+    "  | [PWR] [RD] [SD] [TR] [CS] [ARQ] [56]| ",
+    "  |  (*)   (*)  ( )  (*)  (*)  (*)  (*) | ",
+    "  +------------------------------------+ ",
+    "   \\__________________________________/  "
+  ],
+  floppy: [
+    "    .--------------------------------.   ",
+    "   | [======] HD 1.44MB DISKETTE    |   ",
+    "   | +----------------------------+ |   ",
+    "   | | CYBERCAFE BBS BACKUP '99   | |   ",
+    "   | | SECTOR 0: BOOT OK          | |   ",
+    "   | +----------------------------+ |   ",
+    "   |               .---.            |   ",
+    "   |              |  |  |           |   ",
+    "   '--------------'---'-------------'   "
+  ],
+  relic: [
+    "        /\\================/\\        ",
+    "       /  \\  ANOMALY 0x7F /  \\       ",
+    "      / /\\ \\   10.19.99.4/ /\\ \\      ",
+    "     / /  \\ \\  [CARRIER]/ /  \\ \\     ",
+    "    / / /\\ \\ \\   1999Hz/ / /\\ \\ \\    ",
+    "   /_/_/  \\_\\_\\_______/_/_/  \\_\\_\\   ",
+    "   \\ \\ \\  / / /       \\ \\ \\  / / /   ",
+    "    \\ \\ \\/ / /         \\ \\ \\/ / /    ",
+    "     \\ \\  / /           \\ \\  / /     ",
+    "      \\ \\/ /             \\ \\/ /      ",
+    "       \\  /               \\  /       ",
+    "        \\/=================\\/        "
   ]
 };
 
@@ -1809,7 +2390,351 @@ function loadAsciiPreset(key) {
 }
 
 /* =========================================================================
-   6. VAULT FILE VIEWER
+   7. UNDERGROUND IRC TERMINAL CLIENT (mIRC Style + Firebase RTDB)
+   ========================================================================= */
+let currentIrcChan = '#cybercafe-99';
+let userNick = 'Guest_' + Math.floor(1000 + Math.random() * 9000);
+let ircDb = null;
+let ircRef = null;
+let ircListener = null;
+
+const IRC_CHANNELS = {
+  '#cybercafe-99': {
+    topic: 'Welcome to CyberCafe \'99 // Baud Roast Coffee hot & fresh // Tremor III LAN tonight at 21:00 EST',
+    users: ['@SysOp_0x7F', '@NetBarista', '+~neon_rider', '+PixelGoddess', 'BitCrusher_99', 'FragKing_99', 'VoodooMaster', 'RetroEcho', 'ClockJockey', 'CafeBot'],
+    messages: [
+      { time: '23:38', type: 'sys', text: '*** Connecting to irc.underground.knet:6667...' },
+      { time: '23:38', type: 'sys', text: '*** Mode +nt set by irc.underground.knet' },
+      { time: '23:39', nick: '@SysOp_0x7F', text: 'Terminal stations 1-8 are running low latency 10Base-T.' },
+      { time: '23:40', nick: '+PixelGoddess', text: 'Just finished drawing the new skull in the ASCII Studio!' },
+      { time: '23:41', nick: 'FragKing_99', text: 'Tremor III rocket jumps feel crisp with the new mousepad.' },
+      { time: '23:42', nick: 'CafeBot', text: 'CyberCafe Kiosk is open: type !menu or !quote for entertainment.' }
+    ]
+  },
+  '#phreak-scene': {
+    topic: 'Telecom routing, acoustic couplers, 2600 red boxes, non-routable carrier subnets',
+    users: ['@DarkFiber', '+SilverBox', 'ToneDialer', 'FreqHunter', 'Loopback_99'],
+    messages: [
+      { time: '22:15', type: 'sys', text: '*** Topic for #phreak-scene: Telecom routing & classified carrier frequencies' },
+      { time: '22:18', nick: '@DarkFiber', text: 'Carrier tone detected at 1999Hz on intranet gateway 10.19.99.4.' },
+      { time: '22:20', nick: '+SilverBox', text: 'That frequency matches the memory controller sync pulse in KHex.' }
+    ]
+  },
+  '#hardware-oc': {
+    topic: 'Slot 1 overclocking, 3dfx Glide 3.x, Abit BH6 jumpers, Katmai SSE benchmarks',
+    users: ['@ClockJockey', '+VoodooMaster', 'CeleronMaster', 'SiliconDemon', 'PencilTrick'],
+    messages: [
+      { time: '21:00', type: 'sys', text: '*** Topic for #hardware-oc: Celeron 300A @ 450MHz, Glide vs D3D' },
+      { time: '21:05', nick: '@ClockJockey', text: 'L2 cache half-speed divider holds steady at 100MHz FSB.' },
+      { time: '21:12', nick: '+VoodooMaster', text: 'Glide minidrivers give 74 FPS on 1024x768 in Surreal Tournament.' }
+    ]
+  },
+  '#retro-demoscene': {
+    topic: 'ANSI scene (.ANS), Amiga .MOD trackers, x86 assembly rasterizers, Mode 13h',
+    users: ['@PixelGoddess', '+~neon_rider', 'CopperShifter', 'RasterBlaster', 'AmigaDream'],
+    messages: [
+      { time: '20:10', type: 'sys', text: '*** Topic for #retro-demoscene: Demoscene warez art, YM2612 FM tracker tunes' },
+      { time: '20:15', nick: '+~neon_rider', text: 'Check out kweb://users/~neon_rider for my latest Mode 13h plasma canvas!' },
+      { time: '20:18', nick: '@PixelGoddess', text: 'Exported an ANSI 16-color banner using the studio tab here.' }
+    ]
+  }
+};
+
+function renderIrc() {
+  document.getElementById('ircPromptNick').textContent = userNick + ' >';
+  document.getElementById('ircChannelTitle').textContent = currentIrcChan;
+  document.getElementById('ircTopicText').textContent = 'Topic: "' + IRC_CHANNELS[currentIrcChan].topic + '"';
+
+  // Render Nicklist
+  const nickContainer = document.getElementById('ircNickList');
+  const chanData = IRC_CHANNELS[currentIrcChan];
+  const allUsers = [...new Set([userNick, ...chanData.users])];
+
+  nickContainer.innerHTML = `
+    <div class="irc-nick-header">USERS (${allUsers.length})</div>
+    ${allUsers.map(u => {
+      let badge = '';
+      if (u.startsWith('@')) badge = 'style="color:var(--amber-bright); font-weight:bold;"';
+      else if (u.startsWith('+')) badge = 'style="color:var(--cyan-bright); font-weight:bold;"';
+      else if (u === userNick) badge = 'style="color:var(--green-bright); font-weight:bold;"';
+      return `<div class="irc-user-item" ${badge} onclick="insertIrcNick('${escapeHtml(u.replace(/^[@+]/, ''))}')">${escapeHtml(u)}</div>`;
+    }).join('')}
+  `;
+
+  // Render Log
+  const logEl = document.getElementById('ircLog');
+  logEl.innerHTML = chanData.messages.map(m => formatIrcMessage(m)).join('\n');
+  scrollIrcToBottom();
+}
+
+function formatIrcMessage(m) {
+  const time = `<span class="msg-time">[${escapeHtml(m.time)}]</span>`;
+  if (m.type === 'sys') {
+    return `${time} <span class="msg-sys">${escapeHtml(m.text)}</span>`;
+  } else if (m.type === 'action') {
+    return `${time} <span class="msg-action">* ${escapeHtml(m.nick)} ${escapeHtml(m.text)}</span>`;
+  } else {
+    let nickClass = 'msg-nick-user';
+    if (m.nick === userNick) nickClass = 'msg-nick-self';
+    else if (m.nick.startsWith('@')) nickClass = 'msg-nick-op';
+    else if (m.nick.startsWith('+')) nickClass = 'msg-nick-voice';
+
+    return `${time} &lt;<span class="${nickClass}">${escapeHtml(m.nick)}</span>&gt; ${escapeHtml(m.text)}`;
+  }
+}
+
+function scrollIrcToBottom() {
+  const logEl = document.getElementById('ircLog');
+  if (logEl) logEl.scrollTop = logEl.scrollHeight;
+}
+
+function insertIrcNick(nick) {
+  const input = document.getElementById('ircInput');
+  input.value = nick + ': ' + input.value;
+  input.focus();
+}
+
+function switchIrcChannel(chan) {
+  playKeyClick();
+  currentIrcChan = chan;
+  document.querySelectorAll('.irc-chan-tab').forEach(t => {
+    t.classList.toggle('active', t.textContent === chan);
+  });
+  renderIrc();
+  connectFirebaseChannel();
+}
+
+function handleIrcKeyDown(e) {
+  if (e.key === 'Enter') {
+    sendIrcMessage();
+  }
+}
+
+function sendIrcMessage() {
+  const input = document.getElementById('ircInput');
+  const raw = (input.value || '').trim();
+  if (!raw) return;
+  input.value = '';
+
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+  // Slash Commands
+  if (raw.startsWith('/')) {
+    handleIrcCommand(raw, timeStr);
+    return;
+  }
+
+  playKeyClick();
+  addLocalIrcMessage({ time: timeStr, nick: userNick, text: raw });
+
+  // Broadcast to Firebase RTDB if online
+  if (ircDb && ircRef) {
+    try {
+      pushFirebaseMessage({ time: timeStr, nick: userNick, text: raw });
+    } catch (e) {}
+  }
+
+  // Check Bot triggers
+  handleBotTriggers(raw, timeStr);
+}
+
+function addLocalIrcMessage(msg) {
+  IRC_CHANNELS[currentIrcChan].messages.push(msg);
+  if (IRC_CHANNELS[currentIrcChan].messages.length > 100) {
+    IRC_CHANNELS[currentIrcChan].messages.shift();
+  }
+  const logEl = document.getElementById('ircLog');
+  logEl.innerHTML += '\n' + formatIrcMessage(msg);
+  scrollIrcToBottom();
+}
+
+function handleIrcCommand(cmdStr, timeStr) {
+  const parts = cmdStr.split(' ');
+  const cmd = parts[0].toLowerCase();
+  const arg = parts.slice(1).join(' ');
+
+  if (cmd === '/help') {
+    addLocalIrcMessage({ time: timeStr, type: 'sys', text: '*** mIRC32 COMMANDS: /nick <name>, /me <action>, /join <#chan>, /topic <new topic>, /whois <nick>, /ping, /clear, /time' });
+  } else if (cmd === '/nick') {
+    if (!arg) {
+      addLocalIrcMessage({ time: timeStr, type: 'sys', text: '*** Usage: /nick <new_handle>' });
+      return;
+    }
+    const oldNick = userNick;
+    userNick = arg.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 16);
+    addLocalIrcMessage({ time: timeStr, type: 'sys', text: `*** ${oldNick} is now known as ${userNick}` });
+    renderIrc();
+  } else if (cmd === '/me') {
+    if (!arg) return;
+    addLocalIrcMessage({ time: timeStr, type: 'action', nick: userNick, text: arg });
+  } else if (cmd === '/join') {
+    if (IRC_CHANNELS[arg]) {
+      switchIrcChannel(arg);
+    } else {
+      addLocalIrcMessage({ time: timeStr, type: 'sys', text: `*** Available channels: #cybercafe-99, #phreak-scene, #hardware-oc, #retro-demoscene` });
+    }
+  } else if (cmd === '/topic') {
+    if (arg) {
+      IRC_CHANNELS[currentIrcChan].topic = arg;
+      addLocalIrcMessage({ time: timeStr, type: 'sys', text: `*** ${userNick} changed the topic to: "${arg}"` });
+      renderIrc();
+    } else {
+      addLocalIrcMessage({ time: timeStr, type: 'sys', text: `*** Topic for ${currentIrcChan}: "${IRC_CHANNELS[currentIrcChan].topic}"` });
+    }
+  } else if (cmd === '/whois') {
+    const target = arg || userNick;
+    addLocalIrcMessage({ time: timeStr, type: 'sys', text: `*** [WHOIS] ${target}!user@10.19.99.${Math.floor(10 + Math.random() * 50)} : 1999 CyberCafe Terminal Patron (IRCD 2.4)` });
+  } else if (cmd === '/ping') {
+    playChime(880, 0.08);
+    addLocalIrcMessage({ time: timeStr, type: 'sys', text: `*** PING: PONG from irc.underground.knet (Latency: 28ms)` });
+  } else if (cmd === '/clear') {
+    clearIrcLog();
+  } else if (cmd === '/time') {
+    addLocalIrcMessage({ time: timeStr, type: 'sys', text: `*** irc.underground.knet Server Time: 1999-11-23 ${timeStr} EST` });
+  } else {
+    addLocalIrcMessage({ time: timeStr, type: 'sys', text: `*** Unknown command "${cmd}". Type /help for list.` });
+  }
+}
+
+function clearIrcLog() {
+  IRC_CHANNELS[currentIrcChan].messages = [];
+  document.getElementById('ircLog').innerHTML = '';
+}
+
+function handleBotTriggers(text, timeStr) {
+  const lower = text.toLowerCase();
+  setTimeout(() => {
+    if (lower.startsWith('!menu')) {
+      addLocalIrcMessage({ time: timeStr, nick: 'CafeBot', text: 'CAFE MENU: Jolt Cola ($2.25), Baud Roast ($1.75), Surge ($1.50), Bawls Guarana ($2.50), Hot Pocket ($2.00). Use the Lounge tab to vend!' });
+      playChime(600, 0.08);
+    } else if (lower.startsWith('!booths')) {
+      addLocalIrcMessage({ time: timeStr, nick: 'CafeBot', text: 'TERMINAL STATUS: 7 of 8 booths occupied. Tremor III and VoidCraft LAN games in progress.' });
+    } else if (lower.startsWith('!uptime')) {
+      addLocalIrcMessage({ time: timeStr, nick: 'CafeBot', text: 'UPTIME: 42 days, 16 hours, 28 minutes without a kernel panic on Linux 2.2.12.' });
+    } else if (lower.startsWith('!quote')) {
+      const quotes = [
+        '"It\'s a UNIX system! I know this!" - Lex Murphy, 1993',
+        '"Hack the Planet!" - Zero Cool, 1995',
+        '"56,600 bps should be enough bandwidth for anyone." - SysOp_0x7F',
+        '"Where do you want to go today?" - KNet 1999'
+      ];
+      const q = quotes[Math.floor(Math.random() * quotes.length)];
+      addLocalIrcMessage({ time: timeStr, nick: 'CafeBot', text: q });
+    } else if (lower.includes('tremor') || lower.includes('surreal')) {
+      addLocalIrcMessage({ time: timeStr, nick: 'BitCrusher_99', text: 'FragKing_99 and I are playing on 10.19.99.20. Connect if you want to test your railgun aim.' });
+    } else if (lower.includes('10.19.99.4') || lower.includes('echo')) {
+      addLocalIrcMessage({ time: timeStr, nick: '@SysOp_0x7F', text: 'Keep unverified packet rumors in #phreak-scene. If you want telemetry, check SUBNET_ANOMALY_101999.LOG in the vault.' });
+    }
+  }, 600);
+}
+
+// Periodic Ambient Chatter Generator
+setInterval(() => {
+  if (Math.random() > 0.4) return;
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+  const CHATTER_POOL = [
+    { nick: '+PixelGoddess', text: 'Remember to save your drawings in the ASCII studio to browser storage!' },
+    { nick: 'VoodooMaster', text: 'Glide 3.03 drivers are rock solid with Surreal Tournament CTF.' },
+    { nick: '~neon_rider', text: 'Just pushed a 1KB x86 assembly intro to the vault.' },
+    { nick: 'FragKing_99', text: 'Another cup of Baud Roast and I will be unstoppable on Facing Worlds.' },
+    { nick: 'ClockJockey', text: 'Slot 1 heatsink temperature is staying at 38C under full load.' }
+  ];
+
+  const item = CHATTER_POOL[Math.floor(Math.random() * CHATTER_POOL.length)];
+  if (currentIrcChan === '#cybercafe-99') {
+    addLocalIrcMessage({ time: timeStr, nick: item.nick, text: item.text });
+  }
+}, 22000);
+
+/* =========================================================================
+   8. FIREBASE REALTIME DATABASE LIVE MULTIPLAYER CHAT INTEGRATION
+   ========================================================================= */
+let pushFn = null;
+let dbRefFn = null;
+
+async function initFirebaseIrc() {
+  try {
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js");
+    const { getDatabase, ref, push, onChildAdded, limitToLast, query, off } = await import("https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js");
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+      authDomain: "kiloappschat.firebaseapp.com",
+      databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+      projectId: "kiloappschat",
+      storageBucket: "kiloappschat.firebasestorage.app",
+      messagingSenderId: "290208566057",
+      appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    ircDb = getDatabase(app);
+    pushFn = push;
+    dbRefFn = ref;
+
+    window._fbOnChildAdded = onChildAdded;
+    window._fbLimitToLast = limitToLast;
+    window._fbQuery = query;
+    window._fbOff = off;
+
+    connectFirebaseChannel();
+    const badge = document.getElementById('ircSyncBadge');
+    if (badge) badge.textContent = '● GLOBAL RTDB SYNC ACTIVE';
+  } catch (err) {
+    console.log("Running IRC in local daemon mode (Firebase offline or standalone):", err.message);
+  }
+}
+
+function connectFirebaseChannel() {
+  if (!ircDb || !dbRefFn || !window._fbQuery) return;
+
+  try {
+    if (ircRef && ircListener && window._fbOff) {
+      window._fbOff(ircRef, 'child_added', ircListener);
+    }
+
+    const cleanChan = currentIrcChan.replace(/[^a-zA-Z0-9_-]/g, '');
+    ircRef = dbRefFn(ircDb, `virtual_web/cybercafe/irc/${cleanChan}`);
+    const q = window._fbQuery(ircRef, window._fbLimitToLast(25));
+
+    ircListener = window._fbOnChildAdded(q, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return;
+      if (data.nick === userNick) return; // Already rendered locally
+
+      const now = new Date(data.timestamp || Date.now());
+      const pad = (n) => String(n).padStart(2, '0');
+      const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+      addLocalIrcMessage({
+        time: data.time || timeStr,
+        nick: data.nick || 'Patron',
+        text: data.text || ''
+      });
+      playKeyClick();
+    });
+  } catch (e) {}
+}
+
+function pushFirebaseMessage(msg) {
+  if (!ircDb || !pushFn || !dbRefFn) return;
+  const cleanChan = currentIrcChan.replace(/[^a-zA-Z0-9_-]/g, '');
+  const r = dbRefFn(ircDb, `virtual_web/cybercafe/irc/${cleanChan}`);
+  pushFn(r, {
+    nick: msg.nick,
+    text: msg.text,
+    time: msg.time,
+    timestamp: Date.now()
+  });
+}
+
+/* =========================================================================
+   9. VAULT FILE VIEWER
    ========================================================================= */
 const VAULT_FILES = {
   CAFE_WELCOME: `[FILE: CAFE_WELCOME.TXT // 1999-10-01]
@@ -1842,6 +2767,23 @@ BASIC ASCII & ANSI ART TECHNIQUES:
    - 0xDF (223): Upper Half ▀
    - 0xDC (220): Lower Half ▄
 Combine shading blocks with ANSI 16 escape sequences for demoscene magic!`,
+
+  IRCD_GUIDE: `[GUIDE: IRCD_OPER_GUIDE.TXT // 1999-10-25]
+UNDERGROUND IRCD SERVER & BOT CONFIGURATION:
+- Port: 6667 (Standard IRC plaintext)
+- Network: Underground KNet IRC Federation
+- Operator Commands: /mode #channel +o <nick>, /topic, /kick, /ban
+- Bot Integration: CafeBot runs on station #5 gateway listening on socket 6667.
+- Channels: #cybercafe-99, #phreak-scene, #hardware-oc, #retro-demoscene.
+Keep the channels orderly. SysOp reserves the right to drop netsplits.`,
+
+  PENTIUM_SSE: `[DISPATCH: PENTIUM_III_SSE.TXT // 1999-11-08]
+INTEL PENTIUM III KATMAI 500MHz ARCHITECTURAL TELEMETRY:
+- Architecture: 0.25 micron process, 512KB L2 cache running at half-core speed (250MHz).
+- Streaming SIMD Extensions (SSE): 70 new instructions for single-precision floating point.
+- 3D pipeline benchmarks show 28% throughput gain in software 3D transforms.
+- In Win32 assembly, use PREFETCHNTA to pre-warm cache lines for software rasterizers.
+Overclocking tip: With decent air cooling and 2.05V core voltage, 550MHz is stable.`,
 
   SUBNET_LOG: `[TELEMETRY: SUBNET_ANOMALY_101999.LOG // 1999-11-15]
 GATEWAY ROUTER: K-ROUTER-99 [FIRMWARE 1.99.4]
@@ -1882,12 +2824,14 @@ function escapeHtml(str) {
 }
 
 /* =========================================================================
-   7. INITIALIZATION
+   10. INITIALIZATION
    ========================================================================= */
 window.addEventListener('DOMContentLoaded', () => {
   renderBooths();
   loadForumData();
   initAsciiStudio();
+  renderIrc();
+  initFirebaseIrc();
 });
 </script>
 
