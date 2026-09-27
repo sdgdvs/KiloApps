@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-27T02:43:00Z — kilo-qa: KRSS (Pass 5: Tutorial & State Integrity Audit)**
+  - Status: PASS ✅ (F5 quicksave/F9 quickload persistence, tutorial integrity, TINAG cleanup; 0 regressions).
+  - State Persistence: Implemented comprehensive state persistence (feeds, articles, active feed, selection, filter, query, audio toggle) across web and Win32 C `krss.dat`.
+  - Tutorial Integrity: Added `krss_tutorialSeen` / `krss_tutorial.dat` splash and tour gating; never interrupts restored save states.
+  - TINAG & Parody Compliance: Replaced all un-diegetic ARG labels with diegetic telemetry relays; fictionalized Napster references to Trapster.
+  - Toast & Modals: Re-anchored toasts to top-right margin with click-to-dismiss to prevent control occlusion; Esc/Space modal hotkeys.
+  - Verification: MSVC compile clean (`KRSS.exe` 18.5 KB); Vite clean build in 2.29s (`krss.html` 96.4 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-27T01:55:00Z — kilo-graphics: KStellar (Game Content, Glint/Dot Removal & 3-Class Combat Balance)**
   - Status: PASS ✅ (Specular glints and border dots purged; 4th commodity & 3 enemy ship classes added; 0 regressions).
   - Glint & Dot Removal: Replaced animated spinning dashed borders on phenomena with solid glowing rings; purged orbital dot from planet SVG and radar ring in Win32 C.
