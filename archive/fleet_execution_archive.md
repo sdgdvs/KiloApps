@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-27T01:55:00Z — kilo-graphics: KStellar (Game Content, Glint/Dot Removal & 3-Class Combat Balance)**
+  - Status: PASS ✅ (Specular glints and border dots purged; 4th commodity & 3 enemy ship classes added; 0 regressions).
+  - Glint & Dot Removal: Replaced animated spinning dashed borders on phenomena with solid glowing rings; purged orbital dot from planet SVG and radar ring in Win32 C.
+  - Economic Depth: Added Medicine (Medical Supplies) commodity with custom icon, pricing matrix, and hold tracking across web and UI.
+  - Ship Variety & Combat Balance: Implemented Interceptor (fast/fragile), Marauder (tactical cruiser), and Dreadnought (heavy flagship) with distinct sprites, stats, and scaled bounties.
+  - Navigation Telemetry: Added jump reach boundary ring on galaxy map and real-time distance/fuel calculator.
+  - Audio Polish: Added Yamaha YM2612 2-operator FM synth cargo transaction chimes and shield absorption effects.
+  - Verification: MSVC compile clean (`KStellar.exe` 164.3 KB); Vite clean build in 382ms (`kstellar.html` 138.5 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-27T00:45:00Z — kilo-usability: KMystery (Usability & Layout Polish, HiDPI Canvas & Hotkey Ergonomics)**
   - Status: PASS ✅ (0 regressions, clean builds, size ceiling verified).
   - Window & Layout: Tuned KiloOS default window dimensions to 940x680 and wired direct `/exe/KMystery.exe`.

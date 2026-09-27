@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KCalendar
-  kilo_usability: KNet
+  kilo_usability: KNote
   kilo_graphics: KSanctuary
   kilo_qa: KClip
   kilo_expander: KPaint
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-tester
-  app: KBudget
-  timestamp: "2026-09-27T05:55:00Z"
+  agent: kilo-usability
+  app: KNet
+  timestamp: "2026-09-27T07:55:00Z"
 last_planner_run: "2026-09-26T07:48:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KNet`
+- **Current Target**: `KNote`
 - **Upcoming Queue**:
-  `KNote`, `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`.
+  `KPass`, `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KClip`
@@ -226,6 +226,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-27T07:55:00Z — kilo-usability: KNet (UI/UX, HiDPI Canvas & Quicksave/Session Persistence)**
+  - Status: PASS ✅ (0 regressions, 5 usability improvements).
+  - Window & Layout: Tuned App.jsx window dimensions to 1040x740 and set direct exeUrl to /exe/KNet.exe.
+  - Toast Occlusion: Re-anchored toasts to top-right margin with dismiss affordance, preventing control occlusion.
+  - State Persistence: Added F5 quicksave and F9 quickload snapshot persistence with localStorage auto-restore.
+  - Canvas HiDPI: Implemented devicePixelRatio-aware rendering, retro grid with latency labels, and empty/single-sample states.
+  - Navigation & ARG: Added Warez quick chip to 1999 Web links; purged pre-climax meta-narrative in Win32 C darknet node.
+  - Verification: MSVC compile clean (`KNet.exe` 28.5 KB); Vite build in 381ms (`knet.html` 97.2 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-27T05:55:00Z — kilo-tester: KBudget (Interactive UI Audit & Quicksave/JSON/Help Integration)**
   - Status: PASS ✅ (6 issues, 6 fixed; 0 regressions).
   - Persistence: Implemented F5 quicksave & F9 quickload snapshot persistence with visual toast feedback.
@@ -260,13 +269,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - TINAG & Parody Compliance: Replaced all un-diegetic ARG labels with diegetic telemetry relays; fictionalized Napster references to Trapster.
   - Toast & Modals: Re-anchored toasts to top-right margin with click-to-dismiss to prevent control occlusion; Esc/Space modal hotkeys.
   - Verification: MSVC compile clean (`KRSS.exe` 18.5 KB); Vite clean build in 2.29s (`krss.html` 96.4 KB < 999 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-27T01:55:00Z — kilo-graphics: KStellar (Game Content, Glint/Dot Removal & 3-Class Combat Balance)**
-  - Status: PASS ✅ (Specular glints and border dots purged; 4th commodity & 3 enemy ship classes added; 0 regressions).
-  - Glint & Dot Removal: Replaced animated spinning dashed borders on phenomena with solid glowing rings; purged orbital dot from planet SVG and radar ring in Win32 C.
-  - Economic Depth: Added Medicine (Medical Supplies) commodity with custom icon, pricing matrix, and hold tracking across web and UI.
-  - Ship Variety & Combat Balance: Implemented Interceptor (fast/fragile), Marauder (tactical cruiser), and Dreadnought (heavy flagship) with distinct sprites, stats, and scaled bounties.
-  - Navigation Telemetry: Added jump reach boundary ring on galaxy map and real-time distance/fuel calculator.
-  - Audio Polish: Added Yamaha YM2612 2-operator FM synth cargo transaction chimes and shield absorption effects.
-  - Verification: MSVC compile clean (`KStellar.exe` 164.3 KB); Vite clean build in 382ms (`kstellar.html` 138.5 KB < 999 KB); check_icons & security lint 100% PASS.
 
