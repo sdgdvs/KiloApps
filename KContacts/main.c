@@ -230,11 +230,61 @@ void UpdateAppTitle(HWND hwnd) {
     int list_idx = SendMessageA(hList, LB_GETCURSEL, 0, 0);
     if (list_idx >= 0 && list_idx < filtered_count) {
         int real_idx = filtered_indices[list_idx];
-        wsprintfA(title, "KContacts - [%s] (%d/%d) [F1 for Help]", contacts[real_idx].name, filtered_count, contact_count);
+        wsprintfA(title, "KContacts - [%s] (%d/%d) [F1 Help | F5 Save | F9 Load]", contacts[real_idx].name, filtered_count, contact_count);
     } else {
-        wsprintfA(title, "KContacts - %d contacts [F1 for Help]", contact_count);
+        wsprintfA(title, "KContacts - %d contacts [F1 Help | F5 Save | F9 Load]", contact_count);
     }
     SetWindowTextA(hwnd, title);
+}
+
+void NativeQuickSave(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kcontacts_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        DWORD magic = 0x43544E4B; // "KNTC"
+        WriteFile(hFile, &magic, sizeof(magic), &written, NULL);
+        WriteFile(hFile, &contact_count, sizeof(contact_count), &written, NULL);
+        WriteFile(hFile, contacts, sizeof(Contact) * contact_count, &written, NULL);
+        CloseHandle(hFile);
+        char msg[128];
+        wsprintfA(msg, " Quicksaved %d contact(s) to snapshot (F5).", contact_count);
+        ShowNativeStatus(hwnd, msg);
+    } else {
+        ShowNativeStatus(hwnd, " Quicksave failed: cannot write file.");
+    }
+}
+
+void NativeQuickLoad(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kcontacts_quicksave.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD read = 0;
+        DWORD magic = 0;
+        int count = 0;
+        ReadFile(hFile, &magic, sizeof(magic), &read, NULL);
+        if (magic == 0x43544E4B) {
+            ReadFile(hFile, &count, sizeof(count), &read, NULL);
+            if (count >= 0 && count <= MAX_CONTACTS) {
+                contact_count = count;
+                memset(contacts, 0, sizeof(contacts));
+                ReadFile(hFile, contacts, sizeof(Contact) * contact_count, &read, NULL);
+                RefreshList();
+                if (filtered_count > 0) {
+                    SendMessageA(hList, LB_SETCURSEL, 0, 0);
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1001, LBN_SELCHANGE), (LPARAM)hList);
+                } else {
+                    SetWindowTextA(hEdit, "");
+                    SendMessageA(hChkFav, BM_SETCHECK, BST_UNCHECKED, 0);
+                }
+                char msg[128];
+                wsprintfA(msg, " Quickloaded %d contact(s) from snapshot (F9).", contact_count);
+                ShowNativeStatus(hwnd, msg);
+                UpdateAppTitle(hwnd);
+            }
+        }
+        CloseHandle(hFile);
+    } else {
+        ShowNativeStatus(hwnd, " No quicksave snapshot found (Press F5 to save).");
+    }
 }
 
 void CopyContactToClipboard(HWND hwnd) {
@@ -701,6 +751,8 @@ void ShowHelpDialog(HWND hwnd) {
         "KContacts - Contact Manager & Address Book\n\n"
         "KEYBOARD SHORTCUTS:\n"
         "  [F1] or [H]       - Show this Help Guide\n"
+        "  [F5]              - Quicksave snapshot to file\n"
+        "  [F9]              - Quickload snapshot from file\n"
         "  [Ctrl+S]          - Save contact details\n"
         "  [N] or [Ctrl+N]   - Create new contact draft\n"
         "  [Ctrl+C] or [C]   - Copy selected contact details to clipboard\n"
@@ -989,7 +1041,7 @@ void __stdcall MainEntry() {
     RECT rect = {0, 0, S(830), S(588)};
     AdjustWindowRectEx(&rect, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE, 0);
 
-    HWND hwnd = CreateWindowExA(0, "KContactsClass", "KContacts - Contact Manager [Press F1 for Help]", (WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN) & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wc.hInstance, NULL);
+    HWND hwnd = CreateWindowExA(0, "KContactsClass", "KContacts - Contact Manager [F1 Help | F5 Save | F9 Load]", (WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN) & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, wc.hInstance, NULL);
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
@@ -1003,6 +1055,14 @@ void __stdcall MainEntry() {
             int ctrl = (GetKeyState(VK_CONTROL) & 0x8000);
             int alt = (GetKeyState(VK_MENU) & 0x8000);
 
+            if (msg.wParam == VK_F5) {
+                NativeQuickSave(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                NativeQuickLoad(hwnd);
+                continue;
+            }
             if (msg.wParam == VK_F1 || ((msg.wParam == 'H' || msg.wParam == 'h') && !isEdit)) {
                 SendMessageA(hwnd, WM_COMMAND, 1013, 0);
                 continue;

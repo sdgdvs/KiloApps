@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-28T19:22:00Z — kilo-usability: KRadio (HiDPI Spectrum Visualizer, Window Fit & Non-Occluding Toasts)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
+  - Window & Layout: Adjusted default window in App.jsx to 500x480 eliminating iframe vertical clipping and scrollbars.
+  - HiDPI Spectrum Visualizer: Replaced DOM bars with crisp 2D canvas with devicePixelRatio scaling, 3 modes (LED, CRT, VU), and peak decay.
+  - Toast Non-Occlusion: Relocated toast notifications to non-occluding bottom anchor with click-to-dismiss and single-toast queue.
+  - Onboarding & Presets: Added first-run kradio_tutorialSeen onboarding, balanced 6 presets across web/native, and diegetic 1999.4kHz subcarrier.
+  - Verification: MSVC clean (KRadio.exe 7.1 KB); Vite clean in 239ms (kradio.html 54.4 KB < 999 KB); security lint 100% PASS.
+
 - **2026-09-28T18:42:00Z — kilo-creator: kweb://deep-core (Ghost Node Terminal & Passkey Workbench)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
   - Terminal & Directives: Added 16 CLI directives (status, probe, dump, trace, sectors, matrix, verify, hash, entropy, xor, ping, netstat, morse, audio, theme, export).

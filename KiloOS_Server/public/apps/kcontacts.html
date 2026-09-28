@@ -901,10 +901,10 @@
   /* Toast Notification */
   .toast-container {
     position: fixed;
-    top: 14px;
+    bottom: 16px;
     right: 16px;
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     align-items: flex-end;
     gap: 8px;
     z-index: 3000;
@@ -920,7 +920,7 @@
     border-radius: 6px;
     font-size: 12px;
     box-shadow: 0 4px 14px rgba(0,0,0,0.5);
-    animation: toastSlideDown 0.2s ease-out;
+    animation: toastSlideUp 0.2s ease-out;
     pointer-events: auto;
     display: flex;
     align-items: center;
@@ -943,8 +943,8 @@
     background: rgba(255,255,255,0.15);
   }
 
-  @keyframes toastSlideDown {
-    from { opacity: 0; transform: translateY(-8px); }
+  @keyframes toastSlideUp {
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
@@ -1312,9 +1312,11 @@
       <div class="modal-title" id="helpModalTitle"><span>📇</span> KContacts User Guide &amp; Shortcuts</div>
       <ul class="modal-shortcuts-list">
         <li><kbd>F1</kbd> or <kbd>H</kbd> : Open / close this help guide</li>
+        <li><kbd>F5</kbd> : Quicksave snapshot to localStorage</li>
+        <li><kbd>F9</kbd> : Quickload snapshot from localStorage</li>
         <li><kbd>Esc</kbd> : Close modals, unfocus inputs, or clear search</li>
         <li><kbd>1</kbd> - <kbd>7</kbd> : Quick switch categories (1=All, 2=Favs, 3=Work, 4=Personal, etc.)</li>
-        <li><kbd>Ctrl+S</kbd> : Save contact details</li>
+        <li><kbd>Ctrl+S</kbd> or <kbd>Enter</kbd> : Save contact details</li>
         <li><kbd>N</kbd> or <kbd>Ctrl+N</kbd> : Create new contact draft</li>
         <li><kbd>C</kbd> : Quick copy contact info to clipboard</li>
         <li><kbd>Alt+C</kbd> : Call selected contact phone</li>
@@ -1326,7 +1328,7 @@
         <li><kbd>↑</kbd> / <kbd>↓</kbd> : Navigate through contact list</li>
         <li><kbd>Delete</kbd> : Delete selected contact</li>
       </ul>
-      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 14px; line-height: 1.5;">
+      <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px; line-height: 1.5;">
         <strong>Advanced Capabilities:</strong><br>
         • <strong>Extended Schema:</strong> Physical street addresses, website links, birthdays with zodiac/age/countdown, and custom key-value attributes.<br>
         • <strong>Multi-Select Batch Actions:</strong> Click '☑️ Select' to batch-tag, categorize, export, or delete contacts.<br>
@@ -1334,7 +1336,13 @@
         • <strong>Interoperability:</strong> Import and export LDIF (Netscape Communicator standard), vCard 3.0, CSV, and JSON.<br>
         • <strong>Sorting:</strong> Sort by Name, Company, Category, Birthday proximity, or recency.
       </div>
-      <button class="btn btn-primary" id="btnCloseHelp" style="width: 100%;">Got it</button>
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 11px; color: var(--text-muted);">
+        <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none;">
+          <input type="checkbox" id="chkShowHelpOnStartup" checked> Show user guide on startup
+        </label>
+        <span style="font-size: 10px;">v3.1 (1999 Edition)</span>
+      </div>
+      <button class="btn btn-primary" id="btnCloseHelp" style="width: 100%;">Got it [Enter]</button>
     </div>
   </div>
 
@@ -1373,24 +1381,24 @@
   <div id="printModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="printModalTitle">
     <div class="modal-content">
       <div class="modal-title" id="printModalTitle"><span>🖨️</span> Print Address Book</div>
-      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Select format for hardcopy generation:</div>
+      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Select format for hardcopy generation (or press <kbd>1</kbd>-<kbd>3</kbd>):</div>
       <div class="export-option-grid">
-        <div class="export-card" data-printfmt="rolodex">
-          <div class="export-card-title">📇 3x5 Rolodex Cards</div>
+        <div class="export-card active" data-printfmt="rolodex" tabindex="0" role="button" aria-label="Print 3x5 Rolodex Cards" style="border-color: var(--accent-blue);">
+          <div class="export-card-title">📇 [1] 3x5 Rolodex Cards</div>
           <div class="export-card-desc">Individual bordered cards for desk card files</div>
         </div>
-        <div class="export-card" data-printfmt="labels">
-          <div class="export-card-title">🏷️ Mailing Labels</div>
+        <div class="export-card" data-printfmt="labels" tabindex="0" role="button" aria-label="Print Mailing Labels">
+          <div class="export-card-title">🏷️ [2] Mailing Labels</div>
           <div class="export-card-desc">Avery 5160 3-column address label sheet</div>
         </div>
-        <div class="export-card" data-printfmt="directory" style="grid-column: span 2;">
-          <div class="export-card-title">📑 Condensed Phone Directory</div>
+        <div class="export-card" data-printfmt="directory" tabindex="0" role="button" aria-label="Print Condensed Phone Directory" style="grid-column: span 2;">
+          <div class="export-card-title">📑 [3] Condensed Directory</div>
           <div class="export-card-desc">Tabular contact list grouped alphabetically</div>
         </div>
       </div>
       <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px;">
         <button class="btn btn-secondary" id="btnClosePrint">Cancel</button>
-        <button class="btn btn-primary" id="btnExecutePrint">Print Hardcopy</button>
+        <button class="btn btn-primary" id="btnExecutePrint">Print Hardcopy [Enter]</button>
       </div>
     </div>
   </div>
@@ -1421,7 +1429,7 @@
       <div id="statsCategoryBars" style="display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px;"></div>
       <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">Storage Utilization:</div>
       <div style="font-size: 12px; color: #93c5fd; font-family: monospace;" id="statStorageSize">0.0 KB</div>
-      <button class="btn btn-primary" id="btnCloseStats" style="width: 100%; margin-top: 16px;">Close</button>
+      <button class="btn btn-primary" id="btnCloseStats" style="width: 100%; margin-top: 16px;">Close [Enter]</button>
     </div>
   </div>
 
@@ -1435,7 +1443,28 @@
       </div>
       <div style="display: flex; gap: 8px; justify-content: flex-end;">
         <button class="btn btn-secondary" id="btnCancelBatchTag">Cancel</button>
-        <button class="btn btn-primary" id="btnApplyBatchTag">Apply Tag</button>
+        <button class="btn btn-primary" id="btnApplyBatchTag">Apply Tag [Enter]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Batch Category Modal -->
+  <div id="batchCatModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="batchCatModalTitle">
+    <div class="modal-content" style="max-width: 360px;">
+      <div class="modal-title" id="batchCatModalTitle"><span>📂</span> Change Category for Selected</div>
+      <div class="form-group" style="margin: 10px 0;">
+        <label>Select Category</label>
+        <select id="selBatchCat" style="width: 100%; padding: 7px 8px; background: #0f172a; color: #fff; border: 1px solid var(--border-color); border-radius: 4px; font-size: 13px;">
+          <option value="Work">Work</option>
+          <option value="Personal">Personal</option>
+          <option value="Family">Family</option>
+          <option value="Friends">Friends</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+      <div style="display: flex; gap: 8px; justify-content: flex-end;">
+        <button class="btn btn-secondary" id="btnCancelBatchCat">Cancel</button>
+        <button class="btn btn-primary" id="btnApplyBatchCat">Apply Category [Enter]</button>
       </div>
     </div>
   </div>
@@ -1449,7 +1478,7 @@
       </div>
       <div style="display: flex; gap: 10px; justify-content: flex-end;">
         <button class="btn btn-secondary" id="btnCancelDelete">Cancel</button>
-        <button class="btn btn-danger" id="btnConfirmDelete">Delete Contact</button>
+        <button class="btn btn-danger" id="btnConfirmDelete">Delete Contact [Enter]</button>
       </div>
     </div>
   </div>
@@ -1502,8 +1531,10 @@
     const printModal = document.getElementById('printModal');
     const statsModal = document.getElementById('statsModal');
     const batchTagModal = document.getElementById('batchTagModal');
+    const batchCatModal = document.getElementById('batchCatModal');
     const deleteModal = document.getElementById('deleteModal');
     const deleteModalText = document.getElementById('deleteModalText');
+    let deleteAction = 'single';
 
     const headerAvatar = document.getElementById('headerAvatar');
     const headerName = document.getElementById('headerName');
@@ -1543,10 +1574,15 @@
     const btnEmptySample = document.getElementById('btnEmptySample');
     let isDirty = false;
 
-    // Toast Utility
+    // Toast Utility (Bottom-right non-occluding, bounded queue)
     function showToast(msg, duration = 2800) {
       const container = document.getElementById('toastContainer');
       if (!container) return;
+
+      while (container.children.length >= 3) {
+        container.removeChild(container.firstChild);
+      }
+
       const toast = document.createElement('div');
       toast.className = 'toast';
 
@@ -1563,7 +1599,7 @@
       const dismiss = () => {
         if (timer) clearTimeout(timer);
         toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-8px)';
+        toast.style.transform = 'translateY(8px)';
         toast.style.transition = 'all 0.2s ease-out';
         setTimeout(() => toast.remove(), 220);
       };
@@ -1580,7 +1616,20 @@
 
     // Modal Helpers
     function openHelp() { helpModal.style.display = 'flex'; }
-    function closeHelp() { helpModal.style.display = 'none'; }
+    function closeHelp() {
+      helpModal.style.display = 'none';
+      try {
+        localStorage.setItem('kcontacts_tutorialSeen', '1');
+        const chk = document.getElementById('chkShowHelpOnStartup');
+        if (chk) {
+          if (chk.checked) {
+            localStorage.removeItem('kcontacts_hideHelpStartup');
+          } else {
+            localStorage.setItem('kcontacts_hideHelpStartup', '1');
+          }
+        }
+      } catch (e) {}
+    }
     function openExport() {
       if (contacts.length === 0) {
         showToast('No contacts to export.');
@@ -1591,7 +1640,8 @@
     function closeExport() { exportModal.style.display = 'none'; }
     function closeDeleteModal() { deleteModal.style.display = 'none'; }
 
-    [helpModal, exportModal, printModal, statsModal, batchTagModal, deleteModal].forEach(modal => {
+    [helpModal, exportModal, printModal, statsModal, batchTagModal, batchCatModal, deleteModal].forEach(modal => {
+      if (!modal) return;
       modal.onclick = (e) => {
         if (e.target === modal) modal.style.display = 'none';
       };
@@ -1601,6 +1651,7 @@
     document.getElementById('btnClosePrint').onclick = () => printModal.style.display = 'none';
     document.getElementById('btnCloseStats').onclick = () => statsModal.style.display = 'none';
     document.getElementById('btnCancelBatchTag').onclick = () => batchTagModal.style.display = 'none';
+    document.getElementById('btnCancelBatchCat').onclick = () => batchCatModal.style.display = 'none';
     document.getElementById('btnCancelDelete').onclick = closeDeleteModal;
     document.getElementById('btnHelp').onclick = openHelp;
 
@@ -2411,11 +2462,28 @@
       if (!selectedId) return;
       const c = contacts.find(item => item.id === selectedId);
       if (!c) return;
+      deleteAction = 'single';
+      document.getElementById('deleteModalTitle').innerHTML = '<span>🗑️</span> Delete Contact';
       deleteModalText.textContent = `Are you sure you want to permanently delete "${c.name || 'Unnamed'}"?`;
       deleteModal.style.display = 'flex';
     };
 
     document.getElementById('btnConfirmDelete').onclick = () => {
+      if (deleteAction === 'batch') {
+        const count = selectedBatchIds.size;
+        contacts = contacts.filter(c => !selectedBatchIds.has(c.id));
+        selectedBatchIds.clear();
+        selectedId = null;
+        saveContacts();
+        updateTagPills();
+        renderList();
+        emptyState.style.display = 'flex';
+        contentView.style.display = 'none';
+        updateBatchCountUI();
+        closeDeleteModal();
+        showToast(`🗑️ Batch deleted ${count} selected contact(s)`);
+        return;
+      }
       if (!selectedId) return;
       const c = contacts.find(item => item.id === selectedId);
       const name = c ? c.name : 'Contact';
@@ -2567,26 +2635,44 @@
         showToast('⚠️ No contacts selected');
         return;
       }
-      const newCat = prompt('Enter new category for selected contacts (Work, Personal, Family, Friends, Other):', 'Work');
-      if (!newCat) return;
+      batchCatModal.style.display = 'flex';
+      document.getElementById('selBatchCat').focus();
+    };
+
+    document.getElementById('btnApplyBatchCat').onclick = () => {
+      const newCat = document.getElementById('selBatchCat').value;
       let count = 0;
       contacts.forEach(c => {
         if (selectedBatchIds.has(c.id)) {
-          c.category = newCat.trim();
+          c.category = newCat;
           count++;
         }
       });
       saveContacts();
       renderList();
-      showToast(`📂 Moved ${count} contacts to "${newCat}"`);
+      batchCatModal.style.display = 'none';
+      showToast(`📂 Moved ${count} contact(s) to "${newCat}"`);
     };
+
+    document.getElementById('inpBatchTag').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('btnApplyBatchTag').click();
+      }
+    });
+
+    document.getElementById('selBatchCat').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        document.getElementById('btnApplyBatchCat').click();
+      }
+    });
 
     btnBatchExport.onclick = () => {
       if (selectedBatchIds.size === 0) {
         showToast('⚠️ No contacts selected');
         return;
       }
-      const selectedContacts = contacts.filter(c => selectedBatchIds.has(c.id));
       openExport();
     };
 
@@ -2595,18 +2681,10 @@
         showToast('⚠️ No contacts selected');
         return;
       }
-      if (confirm(`Are you sure you want to permanently delete ${selectedBatchIds.size} selected contact(s)?`)) {
-        contacts = contacts.filter(c => !selectedBatchIds.has(c.id));
-        selectedBatchIds.clear();
-        selectedId = null;
-        saveContacts();
-        updateTagPills();
-        renderList();
-        emptyState.style.display = 'flex';
-        contentView.style.display = 'none';
-        updateBatchCountUI();
-        showToast('🗑️ Batch deleted selected contacts');
-      }
+      deleteAction = 'batch';
+      document.getElementById('deleteModalTitle').innerHTML = '<span>🗑️</span> Batch Delete Contacts';
+      deleteModalText.textContent = `Are you sure you want to permanently delete ${selectedBatchIds.size} selected contact(s)?`;
+      deleteModal.style.display = 'flex';
     };
 
     // Merge Duplicates
@@ -2893,15 +2971,32 @@
 
     // Print Rolodex / Mailing Labels / Directory
     let selectedPrintFmt = 'rolodex';
+    function selectPrintFormat(fmt) {
+      selectedPrintFmt = fmt;
+      document.querySelectorAll('.export-card[data-printfmt]').forEach(c => {
+        if (c.getAttribute('data-printfmt') === fmt) {
+          c.style.borderColor = 'var(--accent-blue)';
+          c.classList.add('active');
+        } else {
+          c.style.borderColor = 'var(--border-color)';
+          c.classList.remove('active');
+        }
+      });
+    }
+
     document.querySelectorAll('.export-card[data-printfmt]').forEach(card => {
-      card.onclick = () => {
-        document.querySelectorAll('.export-card[data-printfmt]').forEach(c => c.style.borderColor = 'var(--border-color)');
-        card.style.borderColor = 'var(--accent-blue)';
-        selectedPrintFmt = card.getAttribute('data-printfmt');
+      const fmt = card.getAttribute('data-printfmt');
+      card.onclick = () => selectPrintFormat(fmt);
+      card.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          selectPrintFormat(fmt);
+        }
       };
     });
 
     document.getElementById('btnPrint').onclick = () => {
+      selectPrintFormat(selectedPrintFmt || 'rolodex');
       printModal.style.display = 'flex';
     };
 
@@ -3374,11 +3469,72 @@
       showToast('✨ Restored 5 standard sample contacts');
     };
 
+    // Quicksave & Quickload (F5 / F9)
+    function quickSave() {
+      try {
+        const payload = {
+          contacts,
+          selectedId,
+          currentFilter,
+          currentSort,
+          time: Date.now()
+        };
+        localStorage.setItem('kcontacts_quicksave', JSON.stringify(payload));
+        showToast(`💾 Quicksaved ${contacts.length} contact(s) to snapshot [F5]`);
+      } catch (e) {
+        showToast('⚠️ Quicksave failed: storage quota');
+      }
+    }
+
+    function quickLoad() {
+      try {
+        const raw = localStorage.getItem('kcontacts_quicksave');
+        if (!raw) {
+          showToast('⚠️ No quicksave snapshot found (Press F5 to save)');
+          return;
+        }
+        const data = JSON.parse(raw);
+        if (Array.isArray(data.contacts)) {
+          contacts = data.contacts;
+          saveContacts();
+          updateTagPills();
+          if (data.currentFilter) selectCategoryFilter(data.currentFilter);
+          if (data.currentSort) {
+            currentSort = data.currentSort;
+            sortSelect.value = currentSort;
+          }
+          renderList();
+          if (data.selectedId && contacts.some(c => c.id === data.selectedId)) {
+            selectContact(data.selectedId);
+          } else if (contacts.length > 0) {
+            selectContact(contacts[0].id);
+          }
+          showToast(`📂 Quickloaded snapshot (${contacts.length} contacts) [F9]`);
+        } else {
+          showToast('⚠️ Quicksave data is invalid');
+        }
+      } catch (e) {
+        showToast('⚠️ Error loading quicksave snapshot');
+      }
+    }
+
     // Keyboard Navigation & Shortcuts
     const CATEGORIES_LIST = ['All', 'Favorites', 'Work', 'Personal', 'Family', 'Friends', 'Other'];
 
     document.addEventListener('keydown', (e) => {
       const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
+
+      // F5 Quicksave & F9 Quickload
+      if (e.key === 'F5') {
+        e.preventDefault();
+        quickSave();
+        return;
+      }
+      if (e.key === 'F9') {
+        e.preventDefault();
+        quickLoad();
+        return;
+      }
 
       // Export modal 1-5 shortcuts
       if (exportModal.style.display === 'flex') {
@@ -3389,6 +3545,14 @@
         if (e.key === '5') { e.preventDefault(); closeExport(); doExport('ldif'); return; }
       }
 
+      // Print modal 1-3 shortcuts and Enter
+      if (printModal.style.display === 'flex') {
+        if (e.key === '1') { e.preventDefault(); selectPrintFormat('rolodex'); return; }
+        if (e.key === '2') { e.preventDefault(); selectPrintFormat('labels'); return; }
+        if (e.key === '3') { e.preventDefault(); selectPrintFormat('directory'); return; }
+        if (e.key === 'Enter') { e.preventDefault(); document.getElementById('btnExecutePrint').click(); return; }
+      }
+
       // Global Escape
       if (e.key === 'Escape') {
         if (helpModal.style.display === 'flex') { closeHelp(); return; }
@@ -3396,6 +3560,7 @@
         if (printModal.style.display === 'flex') { printModal.style.display = 'none'; return; }
         if (statsModal.style.display === 'flex') { statsModal.style.display = 'none'; return; }
         if (batchTagModal.style.display === 'flex') { batchTagModal.style.display = 'none'; return; }
+        if (batchCatModal && batchCatModal.style.display === 'flex') { batchCatModal.style.display = 'none'; return; }
         if (deleteModal.style.display === 'flex') { closeDeleteModal(); return; }
         if (isInput) {
           e.target.blur();
@@ -3420,6 +3585,38 @@
         if (helpModal.style.display === 'flex') closeHelp();
         else openHelp();
         return;
+      }
+
+      // Modal Dismissal with Enter or Space
+      if (!isInput) {
+        if (helpModal.style.display === 'flex' && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          closeHelp();
+          return;
+        }
+        if (statsModal.style.display === 'flex' && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          statsModal.style.display = 'none';
+          return;
+        }
+      }
+
+      // Form input Enter saves contact details
+      if (e.key === 'Enter' && isInput && e.target.tagName !== 'TEXTAREA') {
+        if (e.target.id === 'inpBatchTag' || e.target.id === 'selBatchCat') return;
+        if (e.target === searchInput) {
+          const first = contactList.querySelector('.contact-item');
+          if (first) {
+            e.preventDefault();
+            first.click();
+          }
+          return;
+        }
+        if (contentView.style.display !== 'none' && selectedId) {
+          e.preventDefault();
+          saveCurrentContact();
+          return;
+        }
       }
 
       // Ctrl+S / Cmd+S save
@@ -3539,7 +3736,17 @@
     if (contacts.length > 0) {
       selectContact(contacts[0].id);
     }
-    setTimeout(() => showToast("📇 Welcome to KContacts! Press F1 for Help, [N] to add, or [1-7] for categories."), 300);
+    const chkStartup = document.getElementById('chkShowHelpOnStartup');
+    const hideStartupHelp = localStorage.getItem('kcontacts_hideHelpStartup') === '1';
+    const tutorialSeen = localStorage.getItem('kcontacts_tutorialSeen') === '1';
+    if (chkStartup) {
+      chkStartup.checked = !hideStartupHelp;
+    }
+    if (!tutorialSeen && !hideStartupHelp) {
+      openHelp();
+    } else {
+      setTimeout(() => showToast("📇 Welcome to KContacts! Press F1 for Help, [F5] Quicksave, [N] Add, or [1-7] Filter."), 300);
+    }
   </script>
 </body>
 </html>
