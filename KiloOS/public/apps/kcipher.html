@@ -614,7 +614,7 @@
 
     .toast {
       position: absolute;
-      top: 48px;
+      bottom: 28px;
       right: 20px;
       background: var(--surface-2);
       border: 1px solid var(--primary);
@@ -624,7 +624,7 @@
       font-size: 12px;
       font-weight: 600;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-      transform: translateY(-20px);
+      transform: translateY(20px);
       opacity: 0;
       transition: all 0.2s ease;
       z-index: 200;
@@ -661,7 +661,7 @@
         <option value="amber">Theme: Amber CRT</option>
         <option value="matrix">Theme: Matrix Green</option>
       </select>
-      <button class="btn btn-sm btn-accent" id="btnHelpTutorial" title="Open Tutorial">❓ Help</button>
+      <button class="btn btn-sm btn-accent" id="btnHelpTutorial" title="Open Tutorial (F1)">❓ Help [F1]</button>
     </div>
   </header>
 
@@ -1739,7 +1739,7 @@
         cipher: "rc4",
         key: "DEMO1999",
         ciphertext: "248e359a35e408d249f390382d56a312d8a562ca6c8889b9",
-        plaintextHint: "RC4 stream cipher hex output keyed with 'DEMO1999'. Contains the master passkey snippet.",
+        plaintextHint: "RC4 stream cipher hex output keyed with 'DEMO1999'. Decrypts to corrupted memory dump fragment.",
         metadata: "Source: FLARELIGHT Intro NFO • Algorithm: RC4 (Key: DEMO1999, Hex format)"
       }
     ];
@@ -2123,6 +2123,7 @@
 
     function quickSaveSession() {
       const sessionData = {
+        activeTab: state.activeTab,
         inputText: elements.inputText.value,
         outputText: elements.outputText.value,
         cipher: elements.cipherSelect.value,
@@ -2135,6 +2136,7 @@
         rc4Format: elements.rc4Format.value,
         xorKey: elements.xorKey.value,
         xorFormat: elements.xorFormat.value,
+        stegoText: document.getElementById('stegoText') ? document.getElementById('stegoText').value : '',
         theme: document.body.dataset.theme,
         timestamp: Date.now()
       };
@@ -2182,9 +2184,20 @@
         elements.xorFormat.value = data.xorFormat || 'hex';
         state.xorFormat = data.xorFormat || 'hex';
 
+        const stegoText = document.getElementById('stegoText');
+        if (stegoText && data.stegoText !== undefined) {
+          stegoText.value = data.stegoText;
+          updateStegoCapacity();
+        }
+
         if (data.theme) {
           document.body.dataset.theme = data.theme;
           elements.themeSelect.value = data.theme;
+          state.theme = data.theme;
+        }
+
+        if (data.activeTab && document.getElementById(data.activeTab)) {
+          switchTab(data.activeTab);
         }
 
         updateCipherControls();
@@ -2685,8 +2698,10 @@
         const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
         const a = document.createElement('a');
         a.download = `kcipher_export_${Date.now()}.json`;
-        a.href = URL.createObjectURL(blob);
+        const blobUrl = URL.createObjectURL(blob);
+        a.href = blobUrl;
         a.click();
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
         showToast('Session exported to JSON!');
         audio.playClick();
       });
@@ -2771,11 +2786,22 @@
         audio.playClick();
       });
 
-      // Toast Click-to-Dismiss
+      // Toast Click-to-Dismiss & Auto-dismiss on Typing
       elements.toast.addEventListener('click', () => {
         elements.toast.classList.remove('show');
         if (toastTimeout) clearTimeout(toastTimeout);
       });
+
+      const dismissToast = () => {
+        if (elements.toast && elements.toast.classList.contains('show')) {
+          elements.toast.classList.remove('show');
+          if (toastTimeout) clearTimeout(toastTimeout);
+        }
+      };
+      elements.inputText.addEventListener('input', dismissToast);
+      elements.outputText.addEventListener('input', dismissToast);
+      const stegoInput = document.getElementById('stegoText');
+      if (stegoInput) stegoInput.addEventListener('input', dismissToast);
 
       // Modal Backdrop Click Dismissals
       elements.tutorialOverlay.addEventListener('click', (e) => {
@@ -2799,8 +2825,62 @@
         }
       });
 
-      // Keyboard Shortcuts (F5, F9, Ctrl+Enter, Ctrl+Shift+Enter, Escape, Ctrl+1..5)
+      // Keyboard Shortcuts (F1, H, F5, F9, Enter, Space, Arrows, Ctrl+Enter, Ctrl+Shift+Enter, Escape, Ctrl+1..5)
       window.addEventListener('keydown', (e) => {
+        // Modal overlay handling
+        if (elements.tutorialOverlay.style.display === 'flex') {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            closeTutorial();
+            return;
+          }
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            document.getElementById('btnTutNext').click();
+            return;
+          }
+          if (e.key === 'ArrowRight') {
+            e.preventDefault();
+            document.getElementById('btnTutNext').click();
+            return;
+          }
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault();
+            document.getElementById('btnTutPrev').click();
+            return;
+          }
+        }
+
+        if (elements.splashOverlay.style.display !== 'none') {
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            elements.splashOverlay.style.display = 'none';
+            return;
+          }
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            const btnCont = document.getElementById('btnSplashContinue');
+            if (btnCont && !btnCont.disabled) {
+              btnCont.click();
+            } else {
+              document.getElementById('btnSplashNew').click();
+            }
+            return;
+          }
+        }
+
+        if (e.key === 'F1') {
+          e.preventDefault();
+          showTutorialStep(1);
+          return;
+        }
+
+        if ((e.key === 'h' || e.key === 'H') && !['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) {
+          e.preventDefault();
+          showTutorialStep(1);
+          return;
+        }
+
         if (e.key === 'F5') {
           e.preventDefault();
           quickSaveSession();
@@ -2813,12 +2893,6 @@
         } else if (e.key === 'Enter' && e.ctrlKey) {
           e.preventDefault();
           runEncrypt();
-        } else if (e.key === 'Escape') {
-          if (elements.tutorialOverlay.style.display === 'flex') {
-            closeTutorial();
-          } else if (elements.splashOverlay.style.display !== 'none') {
-            elements.splashOverlay.style.display = 'none';
-          }
         } else if (e.ctrlKey && e.key >= '1' && e.key <= '5') {
           const tabMap = {
             '1': 'tabWorkbench',

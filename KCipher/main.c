@@ -47,6 +47,8 @@ static int k_atoi(const char* s) {
 #define ID_BTN_CLEAR        108
 #define ID_BTN_HELP         109
 #define ID_BTN_COPY         110
+#define ID_BTN_QSAVE        111
+#define ID_BTN_QLOAD        112
 
 // Colors
 static COLORREF COLOR_BG = RGB(9, 13, 22);
@@ -76,6 +78,8 @@ static HWND g_hBtnSwap = NULL;
 static HWND g_hBtnClear = NULL;
 static HWND g_hBtnHelp = NULL;
 static HWND g_hBtnCopy = NULL;
+static HWND g_hBtnQuickSave = NULL;
+static HWND g_hBtnQuickLoad = NULL;
 static HWND g_hStatusLabel = NULL;
 
 static char g_szStatus[256] = "KCipher Ready. Select cipher, enter key/shift, and click Encrypt/Decrypt.";
@@ -318,6 +322,113 @@ static void ProcessCipher(int decrypt) {
     SetWindowTextA(g_hStatusLabel, g_szStatus);
 }
 
+static void SaveSnapshot(HWND hwnd) {
+    char inText[4096];
+    char outText[4096];
+    char keyText[128];
+    memset(inText, 0, sizeof(inText));
+    memset(outText, 0, sizeof(outText));
+    memset(keyText, 0, sizeof(keyText));
+
+    GetWindowTextA(g_hEditInput, inText, sizeof(inText) - 1);
+    GetWindowTextA(g_hEditOutput, outText, sizeof(outText) - 1);
+    GetWindowTextA(g_hEditKey, keyText, sizeof(keyText) - 1);
+    int sel = (int)SendMessageA(g_hComboCipher, CB_GETCURSEL, 0, 0);
+
+    HANDLE hFile = CreateFileA("kcipher_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, &sel, sizeof(sel), &written, NULL);
+        int inLen = k_strlen(inText);
+        WriteFile(hFile, &inLen, sizeof(inLen), &written, NULL);
+        if (inLen > 0) WriteFile(hFile, inText, inLen, &written, NULL);
+        int outLen = k_strlen(outText);
+        WriteFile(hFile, &outLen, sizeof(outLen), &written, NULL);
+        if (outLen > 0) WriteFile(hFile, outText, outLen, &written, NULL);
+        int keyLen = k_strlen(keyText);
+        WriteFile(hFile, &keyLen, sizeof(keyLen), &written, NULL);
+        if (keyLen > 0) WriteFile(hFile, keyText, keyLen, &written, NULL);
+        CloseHandle(hFile);
+        wsprintfA(g_szStatus, "Session snapshot saved [F5] to kcipher_quicksave.dat");
+        SetWindowTextA(g_hStatusLabel, g_szStatus);
+    } else {
+        SetWindowTextA(g_hStatusLabel, "Failed to save session snapshot.");
+    }
+}
+
+static void LoadSnapshot(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kcipher_quicksave.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD read = 0;
+        int sel = 0;
+        ReadFile(hFile, &sel, sizeof(sel), &read, NULL);
+        int inLen = 0;
+        char inText[4096];
+        memset(inText, 0, sizeof(inText));
+        ReadFile(hFile, &inLen, sizeof(inLen), &read, NULL);
+        if (inLen > 0 && inLen < (int)sizeof(inText)) ReadFile(hFile, inText, inLen, &read, NULL);
+
+        int outLen = 0;
+        char outText[4096];
+        memset(outText, 0, sizeof(outText));
+        ReadFile(hFile, &outLen, sizeof(outLen), &read, NULL);
+        if (outLen > 0 && outLen < (int)sizeof(outText)) ReadFile(hFile, outText, outLen, &read, NULL);
+
+        int keyLen = 0;
+        char keyText[128];
+        memset(keyText, 0, sizeof(keyText));
+        ReadFile(hFile, &keyLen, sizeof(keyLen), &read, NULL);
+        if (keyLen > 0 && keyLen < (int)sizeof(keyText)) ReadFile(hFile, keyText, keyLen, &read, NULL);
+        CloseHandle(hFile);
+
+        if (sel >= 0 && sel <= 4) {
+            SendMessageA(g_hComboCipher, CB_SETCURSEL, sel, 0);
+        }
+        SetWindowTextA(g_hEditInput, inText);
+        SetWindowTextA(g_hEditOutput, outText);
+        SetWindowTextA(g_hEditKey, keyText);
+
+        wsprintfA(g_szStatus, "Session snapshot restored [F9] (%d chars in, %d chars out)", inLen, outLen);
+        SetWindowTextA(g_hStatusLabel, g_szStatus);
+    } else {
+        SetWindowTextA(g_hStatusLabel, "No quicksave file found. Press F5 to save snapshot.");
+    }
+}
+
+static void CheckFirstRun(HWND hwnd) {
+    // Check if quicksave exists; if it does, do not interrupt restored states
+    HANDLE hSave = CreateFileA("kcipher_quicksave.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hSave != INVALID_HANDLE_VALUE) {
+        CloseHandle(hSave);
+        return;
+    }
+    // Check if tutorial flag exists
+    HANDLE hTut = CreateFileA("kcipher_tutorialSeen.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hTut != INVALID_HANDLE_VALUE) {
+        CloseHandle(hTut);
+        return;
+    }
+    // Create tutorialSeen flag on first run
+    HANDLE hNew = CreateFileA("kcipher_tutorialSeen.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hNew != INVALID_HANDLE_VALUE) {
+        DWORD wr = 0;
+        WriteFile(hNew, "1", 1, &wr, NULL);
+        CloseHandle(hNew);
+    }
+    MessageBoxA(hwnd,
+        "Welcome to KCipher - Cryptographic Cipher Suite (1999 Edition)\n\n"
+        "Quick Guide:\n"
+        "1. Select cipher from dropdown (Caesar, Vigenere, Rail Fence, Atbash, RC4).\n"
+        "2. Configure Key / Shift parameter.\n"
+        "3. Enter or paste text into Plaintext Input.\n"
+        "4. Click Encrypt [Ctrl+E] or Decrypt [Ctrl+D].\n\n"
+        "Hotkeys:\n"
+        "- Ctrl+E: Encrypt | Ctrl+D: Decrypt\n"
+        "- F5: QuickSave snapshot | F9: QuickLoad snapshot\n"
+        "- F1 / H: Cipher Manual",
+        "KCipher - First Run Guide", MB_OK | MB_ICONINFORMATION);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
@@ -366,7 +477,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_hBtnCopy = CreateWindowA("BUTTON", "Copy Output", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 230, 485, 110, 26, hwnd, (HMENU)ID_BTN_COPY, NULL, NULL);
             SendMessageA(g_hBtnCopy, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
-            g_hBtnHelp = CreateWindowA("BUTTON", "Cipher Manual (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 770, 485, 130, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            g_hBtnQuickSave = CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 350, 485, 90, 26, hwnd, (HMENU)ID_BTN_QSAVE, NULL, NULL);
+            SendMessageA(g_hBtnQuickSave, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+
+            g_hBtnQuickLoad = CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 450, 485, 90, 26, hwnd, (HMENU)ID_BTN_QLOAD, NULL, NULL);
+            SendMessageA(g_hBtnQuickLoad, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+
+            g_hBtnHelp = CreateWindowA("BUTTON", "Cipher Manual (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 750, 485, 150, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
             SendMessageA(g_hBtnHelp, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
 
             g_hStatusLabel = CreateWindowA("STATIC", g_szStatus, WS_CHILD | WS_VISIBLE | SS_LEFT, 20, 525, 880, 20, hwnd, NULL, NULL, NULL);
@@ -407,6 +524,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     CloseClipboard();
                     SetWindowTextA(g_hStatusLabel, "Output copied to Windows clipboard.");
                 }
+            } else if (wmId == ID_BTN_QSAVE) {
+                SaveSnapshot(hwnd);
+            } else if (wmId == ID_BTN_QLOAD) {
+                LoadSnapshot(hwnd);
             } else if (wmId == ID_BTN_HELP) {
                 MessageBoxA(hwnd,
                     "KCipher - Cryptographic Cipher Suite (v1.0.0 - 1999)\n\n"
@@ -417,7 +538,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "4. Atbash: Mirror substitution (A<->Z, B<->Y).\n"
                     "5. RC4: Stream cipher with passphrase (hex output).\n\n"
                     "Shortcuts:\n"
-                    "F1: Manual | F5/F9: Session QuickSave/Load in KiloOS web edition.",
+                    "F1 / H: Manual | Ctrl+E: Encrypt | Ctrl+D: Decrypt\n"
+                    "F5: QuickSave snapshot | F9: QuickLoad snapshot",
                     "KCipher Manual", MB_OK | MB_ICONINFORMATION);
             } else if (wmId == ID_COMBO_CIPHER && HIWORD(wParam) == CBN_SELCHANGE) {
                 int sel = (int)SendMessageA(g_hComboCipher, CB_GETCURSEL, 0, 0);
@@ -516,9 +638,40 @@ void MainEntry(void) {
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+    CheckFirstRun(hwnd);
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
+        if (msg.message == WM_KEYDOWN) {
+            HWND hFocus = GetFocus();
+            int isEdit = (hFocus == g_hEditInput || hFocus == g_hEditOutput || hFocus == g_hEditKey);
+            BOOL ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+
+            if (msg.wParam == VK_F5) {
+                SaveSnapshot(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                LoadSnapshot(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F1 || (!isEdit && (msg.wParam == 'H' || msg.wParam == 'h'))) {
+                SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_HELP, 0), (LPARAM)g_hBtnHelp);
+                continue;
+            }
+            if (ctrl && (msg.wParam == 'E' || msg.wParam == 'e')) {
+                ProcessCipher(0);
+                continue;
+            }
+            if (ctrl && (msg.wParam == 'D' || msg.wParam == 'd')) {
+                ProcessCipher(1);
+                continue;
+            }
+            if (ctrl && msg.wParam == VK_RETURN) {
+                ProcessCipher(0);
+                continue;
+            }
+        }
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }

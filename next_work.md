@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KChart
   kilo_usability: KPass
   kilo_graphics: KSubmarine
-  kilo_qa: KCipher
+  kilo_qa: KTodo
   kilo_expander: KImage
   kilo_creator: "kweb://10.19.99.4/classified (Corporate Network Leak & Signal Diagnostic)"
 virtual_web_target: "kweb://10.19.99.4/classified"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-graphics
-  app: KDragon
-  timestamp: "2026-09-27T23:50:00Z"
+  agent: kilo-qa
+  app: KCipher
+  timestamp: "2026-09-28T01:50:00Z"
 last_planner_run: "2026-09-27T09:48:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KCipher`
+- **Current Target**: `KTodo`
 - **Upcoming Queue**:
-  `KTodo`, `KTrader`, `KType`, `KVault`, `KMystery`, `KQuest`, `KSanctuary`, `KClip` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, KClip)*.
+  `KTrader`, `KType`, `KVault`, `KMystery`, `KQuest`, `KSanctuary`, `KClip` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, KClip, KCipher)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KImage`
@@ -230,6 +230,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-28T01:50:00Z — kilo-qa: KCipher (Pass 5: Tutorial & State Integrity Audit)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
+  - Snapshot Persistence: Implemented F5 quicksave & F9 quickload capturing active tab, cipher settings, and stego text in web & Win32 C `kcipher_quicksave.dat`.
+  - Tutorial & Onboarding: Added `kcipher_tutorialSeen` / `.dat` gating to fire guided tour only on fresh sessions without interrupting restored states.
+  - Overlay & Modal Hotkeys: Wired Enter, Space, and Arrow keys to splash and tutorial overlays; added F1 / H manual hotkeys.
+  - Toast & Leak Remediation: Re-anchored toasts to non-occluding bottom-right margin with auto-dismiss on typing; resolved object URL cleanup.
+  - TINAG & Lore Compliance: Verified diegetic intercepts; purged meta-passkey references; 100% clean security lint.
+  - Verification: MSVC compile clean (`KCipher.exe` 11.5 KB); Vite clean build in 393ms (`kcipher.html` 102.1 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-27T23:50:00Z — kilo-graphics: KDragon (Game Content, Visual Polish & Balance Pass)**
   - Status: PASS ✅ (0 rotating glints / traveling border dots; 0 regressions; <999KB ceiling verified).
   - Glint & Dot Purge: Verified 100% clean static ornate borders across web and C with zero moving glints or perimeter dots.
@@ -263,13 +272,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - ASCII Studio & Forum Bridge: Added 1-click "Post to BBS Forum", downloadable .ANS/.TXT exports, and 3 new classic presets.
   - Refreshments & Vault: Added 4 refreshments, downloadable thermal receipts, and 2 new text vault archives (IRCD_OPER_GUIDE, PENTIUM_III_SSE).
   - Verification: Security linter 100% PASS; node syntax clean; Vite build in 382ms (`cybercafe.html` 90.0 KB < 999 KB ceiling).
-
-- **2026-09-27T16:00:00Z — kilo-expander: KPaint (Feature Expansion: RTDB Studio, Mirror, Filters & Text)**
-  - Status: PASS ✅ (0 regressions; 0 perimeter glints; clean builds; <999KB ceiling verified).
-  - Firebase Collaborative Studio: Added real-time multiplayer drawing via RTDB (`multiplayer/kpaint/rooms/`), live cursor sync, stroke broadcasting, and canvas snapshot push/pull.
-  - Mirror & Symmetry Engine: Implemented horizontal/vertical/quad mirror drawing in web and Win32 C with toggle hotkey [M].
-  - DSP & Dithering Suite: Implemented Floyd-Steinberg 1-bit & 16-color dithering, CRT scanlines, soft blur, and vignette in web & C.
-  - Text Stamping & Template: Added retro text stamping tool [T] and diegetic ARG spectrogram starter template.
-  - Verification: MSVC clean (`KPaint.exe` 27.1 KB); Vite build in 764ms (`kpaint.html` 139.5 KB < 999 KB); check_icons & security lint 100% PASS.
 
 
