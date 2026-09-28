@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-tester
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: KPass
   kilo_graphics: KSubmarine
   kilo_qa: KTodo
-  kilo_expander: KImage
+  kilo_expander: KAudio
   kilo_creator: "kweb://10.19.99.4/classified (Corporate Network Leak & Signal Diagnostic)"
 virtual_web_target: "kweb://10.19.99.4/classified"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-qa
-  app: KCipher
-  timestamp: "2026-09-28T01:50:00Z"
+  agent: kilo-expander
+  app: KImage
+  timestamp: "2026-09-28T03:55:00Z"
 last_planner_run: "2026-09-27T09:48:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTrader`, `KType`, `KVault`, `KMystery`, `KQuest`, `KSanctuary`, `KClip` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, KClip, KCipher)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KImage`
+- **Current Target**: `KAudio`
 - **Upcoming Queue**:
-  `KAudio`, `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts`, `KPass` *(Completed: KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass)*.
+  `KSynth`, `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts`, `KPass` *(Completed: KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -230,6 +230,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-28T03:55:00Z — kilo-expander: KImage (Feature Expansion: Retro Dither, Channels, ASCII & Stego Vault)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
+  - Retro Dither & Palette: Added Floyd-Steinberg, Atkinson, Bayer 4x4, Nearest across 8 retro palettes (GB, CGA, C64, EGA, Amber, Matrix).
+  - Channel Studio & DSP: Added RGB extraction, channel inversion/swapping, posterize, solarize, and CRT scanlines in web & Win32 C.
+  - Interoperability & ASCII: Added Netpbm PPM (.ppm) export and full ASCII/ANSI art generator (4 ramps, 40-120 cols, copy/download).
+  - Steganography Vault: Implemented authentic 1999 LSB steganography encode/decode engine hiding UTF-8 text inside image bits.
+  - Quicksave & Persistence: Implemented F5 quicksave & F9 quickload snapshot persistence in web localStorage & Win32 C bitmap.
+  - Verification: MSVC clean (`KImage.exe` 26.0 KB); Vite build in 383ms (`kimage.html` 132.1 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-28T01:50:00Z — kilo-qa: KCipher (Pass 5: Tutorial & State Integrity Audit)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
   - Snapshot Persistence: Implemented F5 quicksave & F9 quickload capturing active tab, cipher settings, and stego text in web & Win32 C `kcipher_quicksave.dat`.
@@ -264,13 +273,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Keyboard Navigation: Added `tabindex="0"`, roles, and Enter/Space event handlers to all event pills and checklist buttons across Month, Week, Day, and Agenda views.
   - TINAG & Security: Verified zero un-diegetic ARG violations; 100% clean security lint.
   - Verification: MSVC compile clean (`KCalendar.exe` 21.5 KB); Vite clean build in 389ms (`kcalendar.html` 106.7 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
-
-- **2026-09-27T17:51:00Z — kilo-creator: kweb://cybercafe (Virtual Web Expansion: mIRC Client, FM Jukebox & ASCII Studio)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
-  - mIRC Chat Client: Implemented 1999 IRC terminal with 4 channels, slash commands, interactive CafeBot, and real-time Firebase RTDB sync across global web patrons.
-  - Procedural Audio Jukebox: Built Genesis YM2612 FM + SNES SPC700 stereo delay engine with 3 tracks and 14-band CRT visualizer.
-  - ASCII Studio & Forum Bridge: Added 1-click "Post to BBS Forum", downloadable .ANS/.TXT exports, and 3 new classic presets.
-  - Refreshments & Vault: Added 4 refreshments, downloadable thermal receipts, and 2 new text vault archives (IRCD_OPER_GUIDE, PENTIUM_III_SSE).
-  - Verification: Security linter 100% PASS; node syntax clean; Vite build in 382ms (`cybercafe.html` 90.0 KB < 999 KB ceiling).
 
 

@@ -40,6 +40,12 @@
 #define ID_BTN_EMBOSS      127
 #define ID_BTN_SOBEL       128
 #define ID_BTN_DEMO        129
+#define ID_BTN_POSTERIZE   130
+#define ID_BTN_THRESHOLD   131
+#define ID_BTN_SOLARIZE    132
+#define ID_BTN_SWAPRB      133
+#define ID_BTN_QUICKSAVE   134
+#define ID_BTN_QUICKLOAD   135
 
 // Global State
 HBITMAP g_hBmpWork = NULL;
@@ -249,6 +255,54 @@ void OpenFileDlg(HWND hwnd) {
     }
 }
 
+int SaveBitmapToFile(const char* szFile) {
+    if (!g_hBmpWork || !g_pBitsWork || g_bmpW <= 0 || g_bmpH <= 0) return 0;
+    BITMAPFILEHEADER bfh = {0};
+    bfh.bfType = 0x4D42; // "BM"
+    bfh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+    bfh.bfSize = bfh.bfOffBits + g_bmpW * g_bmpH * 4;
+
+    BITMAPINFOHEADER bih = {0};
+    bih.biSize = sizeof(BITMAPINFOHEADER);
+    bih.biWidth = g_bmpW;
+    bih.biHeight = -g_bmpH; // top-down
+    bih.biPlanes = 1;
+    bih.biBitCount = 32;
+    bih.biCompression = BI_RGB;
+    bih.biSizeImage = g_bmpW * g_bmpH * 4;
+
+    HANDLE hFile = CreateFileA(szFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+    DWORD written = 0;
+    WriteFile(hFile, &bfh, sizeof(bfh), &written, NULL);
+    WriteFile(hFile, &bih, sizeof(bih), &written, NULL);
+    WriteFile(hFile, g_pBitsWork, g_bmpW * g_bmpH * 4, &written, NULL);
+    CloseHandle(hFile);
+    return 1;
+}
+
+void QuickSave(HWND hwnd) {
+    if (!g_hBmpWork || !g_pBitsWork) {
+        MessageBoxA(hwnd, "No image to quicksave.", "KImage", MB_OK | MB_ICONWARNING);
+        return;
+    }
+    if (SaveBitmapToFile("kimage_quicksave.bmp")) {
+        MessageBoxA(hwnd, "Snapshot quicksaved to 'kimage_quicksave.bmp' [F5].", "KImage Quicksave", MB_OK | MB_ICONINFORMATION);
+    } else {
+        MessageBoxA(hwnd, "Failed to quicksave snapshot.", "KImage Error", MB_OK | MB_ICONERROR);
+    }
+}
+
+void QuickLoad(HWND hwnd) {
+    DWORD attr = GetFileAttributesA("kimage_quicksave.bmp");
+    if (attr == INVALID_FILE_ATTRIBUTES) {
+        MessageBoxA(hwnd, "No quicksave snapshot found ('kimage_quicksave.bmp'). Press F5 to save first.", "KImage", MB_OK | MB_ICONWARNING);
+        return;
+    }
+    LoadBitmapFile(hwnd, "kimage_quicksave.bmp");
+    MessageBoxA(hwnd, "Snapshot restored from 'kimage_quicksave.bmp' [F9].", "KImage Quickload", MB_OK | MB_ICONINFORMATION);
+}
+
 void SaveFileDlg(HWND hwnd) {
     if (!g_hBmpWork || !g_pBitsWork) return;
 
@@ -264,27 +318,7 @@ void SaveFileDlg(HWND hwnd) {
     ofn.Flags = OFN_OVERWRITEPROMPT;
 
     if (GetSaveFileNameA(&ofn) == TRUE) {
-        BITMAPFILEHEADER bfh = {0};
-        bfh.bfType = 0x4D42; // "BM"
-        bfh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
-        bfh.bfSize = bfh.bfOffBits + g_bmpW * g_bmpH * 4;
-
-        BITMAPINFOHEADER bih = {0};
-        bih.biSize = sizeof(BITMAPINFOHEADER);
-        bih.biWidth = g_bmpW;
-        bih.biHeight = -g_bmpH; // top-down
-        bih.biPlanes = 1;
-        bih.biBitCount = 32;
-        bih.biCompression = BI_RGB;
-        bih.biSizeImage = g_bmpW * g_bmpH * 4;
-
-        HANDLE hFile = CreateFileA(szFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (hFile != INVALID_HANDLE_VALUE) {
-            DWORD written = 0;
-            WriteFile(hFile, &bfh, sizeof(bfh), &written, NULL);
-            WriteFile(hFile, &bih, sizeof(bih), &written, NULL);
-            WriteFile(hFile, g_pBitsWork, g_bmpW * g_bmpH * 4, &written, NULL);
-            CloseHandle(hFile);
+        if (SaveBitmapToFile(szFile)) {
             MessageBoxA(hwnd, "Image saved successfully!", "KImage Export", MB_OK | MB_ICONINFORMATION);
         } else {
             MessageBoxA(hwnd, "Failed to save file.", "KImage Error", MB_OK | MB_ICONERROR);
@@ -377,6 +411,58 @@ void FilterBlur() {
         }
     }
     HeapFree(GetProcessHeap(), 0, temp);
+}
+
+void FilterPosterize(int levels) {
+    if (!g_pBitsWork || levels < 2) return;
+    int count = g_bmpW * g_bmpH;
+    float step = 255.0f / (float)(levels - 1);
+    for (int i = 0; i < count; i++) {
+        int r = (int)((int)(g_pBitsWork[i].rgbRed / step + 0.5f) * step);
+        int g = (int)((int)(g_pBitsWork[i].rgbGreen / step + 0.5f) * step);
+        int b = (int)((int)(g_pBitsWork[i].rgbBlue / step + 0.5f) * step);
+        g_pBitsWork[i].rgbRed   = (BYTE)(r > 255 ? 255 : (r < 0 ? 0 : r));
+        g_pBitsWork[i].rgbGreen = (BYTE)(g > 255 ? 255 : (g < 0 ? 0 : g));
+        g_pBitsWork[i].rgbBlue  = (BYTE)(b > 255 ? 255 : (b < 0 ? 0 : b));
+    }
+}
+
+void FilterThreshold(int cutoff) {
+    if (!g_pBitsWork) return;
+    int count = g_bmpW * g_bmpH;
+    for (int i = 0; i < count; i++) {
+        BYTE b = g_pBitsWork[i].rgbBlue;
+        BYTE g = g_pBitsWork[i].rgbGreen;
+        BYTE r = g_pBitsWork[i].rgbRed;
+        int gray = (int)(0.299f * r + 0.587f * g + 0.114f * b);
+        BYTE val = (BYTE)(gray >= cutoff ? 255 : 0);
+        g_pBitsWork[i].rgbRed   = val;
+        g_pBitsWork[i].rgbGreen = val;
+        g_pBitsWork[i].rgbBlue  = val;
+    }
+}
+
+void FilterSolarize(int threshold) {
+    if (!g_pBitsWork) return;
+    int count = g_bmpW * g_bmpH;
+    for (int i = 0; i < count; i++) {
+        BYTE r = g_pBitsWork[i].rgbRed;
+        BYTE g = g_pBitsWork[i].rgbGreen;
+        BYTE b = g_pBitsWork[i].rgbBlue;
+        g_pBitsWork[i].rgbRed   = (r > threshold) ? (BYTE)(255 - r) : r;
+        g_pBitsWork[i].rgbGreen = (g > threshold) ? (BYTE)(255 - g) : g;
+        g_pBitsWork[i].rgbBlue  = (b > threshold) ? (BYTE)(255 - b) : b;
+    }
+}
+
+void FilterSwapRB() {
+    if (!g_pBitsWork) return;
+    int count = g_bmpW * g_bmpH;
+    for (int i = 0; i < count; i++) {
+        BYTE tmp = g_pBitsWork[i].rgbRed;
+        g_pBitsWork[i].rgbRed = g_pBitsWork[i].rgbBlue;
+        g_pBitsWork[i].rgbBlue = tmp;
+    }
 }
 
 // Spatial 3x3 Convolution Matrix Engine
@@ -716,6 +802,8 @@ void ShowHelpDialog(HWND hwnd) {
         "• N / Demo : Load In-Memory Demo Studio Test Image\n"
         "• O / Ctrl+O : Open BMP Image / Scan Directory\n"
         "• Ctrl+S : Save / Export Current Image\n"
+        "• F5 : Quicksave snapshot to kimage_quicksave.bmp\n"
+        "• F9 : Quickload snapshot from kimage_quicksave.bmp\n"
         "• H / F1 : Open this Help Guide\n"
         "• Space : Play / Pause Slideshow\n"
         "• Left / Right Arrow : Previous / Next Image\n"
@@ -736,8 +824,9 @@ void ShowHelpDialog(HWND hwnd) {
         "• Drag & Drop : Drop any BMP file directly onto window\n\n"
         "TOOLBAR CONTROLS:\n"
         "• Open / Save / Demo: Load or export 32-bit BMP files or sample\n"
+        "• QSav [F5] / QLoad [F9]: Quick session snapshot persistence\n"
         "• Rotate & Flip: ↺ -90°, ↻ +90°, Horizontal & Vertical Flip\n"
-        "• Color FX: Grayscale, Sepia, Invert, Blur, Brightness (+/-)\n"
+        "• Color FX: Gray, Sepia, Inv, Blur, Brightness (+/-), Post, Thresh, Solar, SwapRB\n"
         "• Spatial Kernels: Sharpen, Edge Detect, Emboss, Sobel\n"
         "• Interactive Crop: Drag bounding box on canvas to crop\n"
         "• Annotation Draw: Freehand drawing tool with blue ink\n"
@@ -769,7 +858,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 51;
 
             hBtn = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 64, btnH, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 72;
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 68;
+
+            hBtn = CreateWindowEx(0, "BUTTON", "QSav [F5]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 64, btnH, hwnd, (HMENU)ID_BTN_QUICKSAVE, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 68;
+
+            hBtn = CreateWindowEx(0, "BUTTON", "QLoad [F9]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 68, btnH, hwnd, (HMENU)ID_BTN_QUICKLOAD, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 74;
 
             hBtn = CreateWindowEx(0, "BUTTON", "-", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 26, btnH, hwnd, (HMENU)ID_BTN_ZOOM_OUT, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 28;
@@ -778,7 +873,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 28;
 
             hBtn = CreateWindowEx(0, "BUTTON", "1:1", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 32, btnH, hwnd, (HMENU)ID_BTN_ZOOM_RESET, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 40;
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 38;
 
             hBtn = CreateWindowEx(0, "BUTTON", "↺", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 28, btnH, hwnd, (HMENU)ID_BTN_ROT_CCW, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 30;
@@ -786,19 +881,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtn = CreateWindowEx(0, "BUTTON", "↻", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 28, btnH, hwnd, (HMENU)ID_BTN_ROT_CW, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 30;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "FlpH", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 40, btnH, hwnd, (HMENU)ID_BTN_FLIP_H, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 42;
+            hBtn = CreateWindowEx(0, "BUTTON", "FlpH", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 38, btnH, hwnd, (HMENU)ID_BTN_FLIP_H, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 40;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "FlpV", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 40, btnH, hwnd, (HMENU)ID_BTN_FLIP_V, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 42;
+            hBtn = CreateWindowEx(0, "BUTTON", "FlpV", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 38, btnH, hwnd, (HMENU)ID_BTN_FLIP_V, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 40;
 
-            g_hBtnCrop = CreateWindowEx(0, "BUTTON", "Crop", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX | BS_PUSHLIKE, x1, y1, 44, btnH, hwnd, (HMENU)ID_BTN_CROP, NULL, NULL);
-            SendMessage(g_hBtnCrop, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 46;
+            g_hBtnCrop = CreateWindowEx(0, "BUTTON", "Crop", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX | BS_PUSHLIKE, x1, y1, 42, btnH, hwnd, (HMENU)ID_BTN_CROP, NULL, NULL);
+            SendMessage(g_hBtnCrop, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 44;
 
-            g_hBtnDraw = CreateWindowEx(0, "BUTTON", "Draw", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX | BS_PUSHLIKE, x1, y1, 44, btnH, hwnd, (HMENU)ID_BTN_DRAW, NULL, NULL);
-            SendMessage(g_hBtnDraw, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 46;
+            g_hBtnDraw = CreateWindowEx(0, "BUTTON", "Draw", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX | BS_PUSHLIKE, x1, y1, 42, btnH, hwnd, (HMENU)ID_BTN_DRAW, NULL, NULL);
+            SendMessage(g_hBtnDraw, WM_SETFONT, (WPARAM)hFont, TRUE); x1 += 44;
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 46, btnH, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x1, y1, 44, btnH, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             int x2 = 6, y2 = 36;
@@ -830,7 +925,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x2 += 34;
 
             hBtn = CreateWindowEx(0, "BUTTON", "Br-", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x2, y2, 32, btnH, hwnd, (HMENU)ID_BTN_BRIGHT_DOWN, NULL, NULL);
-            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x2 += 42;
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x2 += 40;
+
+            hBtn = CreateWindowEx(0, "BUTTON", "Post", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x2, y2, 38, btnH, hwnd, (HMENU)ID_BTN_POSTERIZE, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x2 += 40;
+
+            hBtn = CreateWindowEx(0, "BUTTON", "Thresh", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x2, y2, 48, btnH, hwnd, (HMENU)ID_BTN_THRESHOLD, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x2 += 50;
+
+            hBtn = CreateWindowEx(0, "BUTTON", "Solar", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x2, y2, 42, btnH, hwnd, (HMENU)ID_BTN_SOLARIZE, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x2 += 44;
+
+            hBtn = CreateWindowEx(0, "BUTTON", "SwapRB", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x2, y2, 54, btnH, hwnd, (HMENU)ID_BTN_SWAPRB, NULL, NULL);
+            SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x2 += 58;
 
             hBtn = CreateWindowEx(0, "BUTTON", "◀", WS_CHILD | WS_VISIBLE | WS_TABSTOP, x2, y2, 28, btnH, hwnd, (HMENU)ID_BTN_PREV, NULL, NULL);
             SendMessage(hBtn, WM_SETFONT, (WPARAM)hFont, TRUE); x2 += 30;
@@ -962,6 +1069,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         LoadBitmapFile(hwnd, g_fileList[g_fileIndex]);
                     }
                     break;
+                case ID_BTN_POSTERIZE:
+                    FilterPosterize(4);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    break;
+                case ID_BTN_THRESHOLD:
+                    FilterThreshold(128);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    break;
+                case ID_BTN_SOLARIZE:
+                    FilterSolarize(128);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    break;
+                case ID_BTN_SWAPRB:
+                    FilterSwapRB();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    break;
+                case ID_BTN_QUICKSAVE:
+                    QuickSave(hwnd);
+                    break;
+                case ID_BTN_QUICKLOAD:
+                    QuickLoad(hwnd);
+                    break;
                 case ID_BTN_PLAY:
                     g_slideshowPlaying = !g_slideshowPlaying;
                     SetWindowTextA(g_hBtnPlay, g_slideshowPlaying ? "⏸ Pause" : "▶ Play");
@@ -1038,6 +1167,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_RESET, 0);
             } else if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
                 ShowHelpDialog(hwnd);
+            } else if (wParam == VK_F5) {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_QUICKSAVE, 0);
+            } else if (wParam == VK_F9) {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_QUICKLOAD, 0);
             } else if (wParam == VK_SPACE) {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_PLAY, 0);
             } else if (wParam == VK_LEFT) {

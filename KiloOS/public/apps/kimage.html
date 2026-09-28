@@ -220,6 +220,57 @@
     width: 100%;
   }
 
+  .swatch-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--glass-border);
+    border-radius: 6px;
+    min-height: 28px;
+    align-items: center;
+  }
+  .swatch-item {
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+  .ascii-preview-box {
+    width: 100%;
+    height: 160px;
+    background: #050a0f;
+    color: #34d399;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 8px;
+    line-height: 1;
+    letter-spacing: 0;
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid var(--glass-border);
+    overflow: auto;
+    white-space: pre;
+    user-select: text;
+  }
+  .stego-text {
+    width: 100%;
+    min-height: 70px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: monospace;
+    resize: vertical;
+    outline: none;
+  }
+  .stego-text:focus {
+    border-color: var(--accent);
+  }
+
   /* Workspace / Canvas Area */
   .workspace {
     flex: 1;
@@ -595,6 +646,14 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
         Demo [N]
       </button>
+      <button id="btnQuickSave" title="Quick Save Session Snapshot (F5)" aria-label="Quicksave Snapshot">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/></svg>
+        QSav [F5]
+      </button>
+      <button id="btnQuickLoad" title="Quick Load Session Snapshot (F9)" aria-label="Quickload Snapshot">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 15v4c0 1.1.9 2 2 2h14a2 2 0 0 0 2-2v-4M17 9l-5 5-5-5M12 12.8V2.5"/></svg>
+        QLoad [F9]
+      </button>
       <button id="btnSaveModal" class="hidden" aria-label="Export Image">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Export / Save
@@ -626,10 +685,12 @@
     <div class="side-panel hidden" id="leftPanel">
       <div class="panel-tabs" role="tablist" aria-label="Tool Panels">
         <button class="tab-btn active" role="tab" aria-selected="true" data-tab="tabAdjust"><span class="key-badge">1</span> Adjust</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-tab="tabKernel"><span class="key-badge">2</span> Kernel FX</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-tab="tabTransform"><span class="key-badge">3</span> Transform</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-tab="tabResize"><span class="key-badge">4</span> Resize</button>
-        <button class="tab-btn" role="tab" aria-selected="false" data-tab="tabDraw"><span class="key-badge">5</span> Draw</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="tabKernel"><span class="key-badge">2</span> Kernel</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="tabDither"><span class="key-badge">3</span> Dither</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="tabChannels"><span class="key-badge">4</span> Channels</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="tabTransform"><span class="key-badge">5</span> Transform</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="tabResize"><span class="key-badge">6</span> Resize</button>
+        <button class="tab-btn" role="tab" aria-selected="false" data-tab="tabDraw"><span class="key-badge">7</span> Draw</button>
       </div>
 
       <div class="panel-content">
@@ -735,7 +796,99 @@
           <button id="btnRevertOriginal" class="danger" style="margin-top:8px;">Revert to Base Image</button>
         </div>
 
-        <!-- Tab 2: Transform & Crop -->
+        <!-- Tab 3: Retro Dither & Palette Studio -->
+        <div id="tabDither" class="tab-page hidden">
+          <div class="control-group">
+            <label>Dithering Algorithm</label>
+            <select id="ditherAlgoSelect">
+              <option value="floyd">Floyd-Steinberg (Error Diffusion)</option>
+              <option value="atkinson">Atkinson (Classic Mac 1984)</option>
+              <option value="bayer">Bayer 4x4 (Ordered Matrix)</option>
+              <option value="none">Nearest Color (No Dither)</option>
+            </select>
+          </div>
+
+          <div class="control-group" style="margin-top:10px;">
+            <label>Target Retro Hardware Palette</label>
+            <select id="ditherPaletteSelect">
+              <option value="mono">1-Bit Monochrome (B&W)</option>
+              <option value="gameboy">Game Boy DMG-01 (4 Shades)</option>
+              <option value="cga1">CGA Mode 1 (Cyan/Mag/Wht/Blk)</option>
+              <option value="cga2">CGA Mode 2 (Grn/Red/Yel/Blk)</option>
+              <option value="c64">Commodore 64 (16 Colors)</option>
+              <option value="ega">EGA PC (16 Colors)</option>
+              <option value="amber">Amber Phosphor CRT (4 Shades)</option>
+              <option value="matrix">Matrix Green CRT (4 Shades)</option>
+            </select>
+          </div>
+
+          <div class="control-group" style="margin-top:8px;">
+            <label>Palette Swatches</label>
+            <div class="swatch-bar" id="paletteSwatches"></div>
+          </div>
+
+          <div class="control-group" id="thresholdGroup" style="margin-top:8px;">
+            <label>1-Bit Cutoff Threshold <span class="val" id="valThreshold">128</span></label>
+            <input type="range" id="sliderThreshold" min="10" max="245" value="128">
+          </div>
+
+          <button id="btnApplyDither" class="primary" style="margin-top:12px;">Apply Retro Dither</button>
+          <button id="btnRevertDither" class="danger" style="margin-top:8px;">Revert to Base Image</button>
+        </div>
+
+        <!-- Tab 4: Channel Studio & Tone Curves -->
+        <div id="tabChannels" class="tab-page hidden">
+          <div class="control-group">
+            <label>Channel Extraction</label>
+            <div class="preset-grid">
+              <button id="btnExtractR">Red Only</button>
+              <button id="btnExtractG">Green Only</button>
+              <button id="btnExtractB">Blue Only</button>
+              <button id="btnExtractLum">Luminance</button>
+            </div>
+          </div>
+
+          <div class="control-group" style="margin-top:10px;">
+            <label>Channel Inversion</label>
+            <div class="preset-grid">
+              <button id="btnInvertR">Invert Red</button>
+              <button id="btnInvertG">Invert Green</button>
+              <button id="btnInvertB">Invert Blue</button>
+              <button id="btnInvertAll">Invert All</button>
+            </div>
+          </div>
+
+          <div class="control-group" style="margin-top:10px;">
+            <label>Channel Permutations</label>
+            <div class="preset-grid">
+              <button id="btnSwapRB">Swap R ↔ B</button>
+              <button id="btnSwapRG">Swap R ↔ G</button>
+              <button id="btnSwapGB">Swap G ↔ B</button>
+              <button id="btnRotateRGB">Rotate RGB ↻</button>
+            </div>
+          </div>
+
+          <div class="control-group" style="margin-top:12px;">
+            <label>Posterize (Color Bits) <span class="val" id="valPosterize">4</span></label>
+            <input type="range" id="sliderPosterize" min="2" max="16" value="4">
+            <button id="btnApplyPosterize" style="margin-top:6px;">Apply Posterize</button>
+          </div>
+
+          <div class="control-group" style="margin-top:12px;">
+            <label>Solarize (Tone Invert) <span class="val" id="valSolarize">128</span></label>
+            <input type="range" id="sliderSolarize" min="20" max="235" value="128">
+            <button id="btnApplySolarize" style="margin-top:6px;">Apply Solarize</button>
+          </div>
+
+          <div class="control-group" style="margin-top:12px;">
+            <label>Retro Display Overlays</label>
+            <button id="btnApplyScanlines">CRT Interlaced Scanlines</button>
+          </div>
+
+          <button id="btnRevertChannels" class="danger" style="margin-top:12px;">Revert to Base Image</button>
+        </div>
+
+        <!-- Tab 5: Transform & Crop -->
         <div id="tabTransform" class="tab-page hidden">
           <div class="control-group">
             <label>Rotate & Flip</label>
@@ -796,6 +949,7 @@
               <option value="image/jpeg">JPEG (.jpg)</option>
               <option value="image/webp">WEBP (.webp)</option>
               <option value="image/bmp">BMP (.bmp)</option>
+              <option value="image/x-portable-pixmap">Netpbm PPM (.ppm)</option>
             </select>
             <div id="qualityGroup" class="control-group hidden" style="margin-top:8px;">
               <label>Quality <span class="val" id="valQuality">90%</span></label>
@@ -803,9 +957,41 @@
             </div>
             <button id="btnExportDownload" class="primary" style="margin-top:12px;">Download Image</button>
           </div>
+
+          <div class="control-group" style="margin-top:20px; border-top:1px solid var(--glass-border); padding-top:12px;">
+            <label>ASCII & ANSI Art Exporter</label>
+            <div class="row">
+              <div style="flex:1;">
+                <span style="font-size:11px; color:var(--text-muted);">Columns</span>
+                <select id="asciiCols" style="width:100%;">
+                  <option value="40">40 Chars</option>
+                  <option value="80" selected>80 Chars (DOS)</option>
+                  <option value="120">120 Chars</option>
+                </select>
+              </div>
+              <div style="flex:1;">
+                <span style="font-size:11px; color:var(--text-muted);">Ramp</span>
+                <select id="asciiRamp" style="width:100%;">
+                  <option value="standard">Standard</option>
+                  <option value="blocks">Blocks (█▓▒░)</option>
+                  <option value="minimal">Minimal</option>
+                  <option value="matrix">Matrix (01)</option>
+                </select>
+              </div>
+            </div>
+            <label style="margin-top:6px; font-weight:normal;">
+              <input type="checkbox" id="checkAsciiInvert"> Invert Light / Dark
+            </label>
+            <button id="btnGenerateAscii" class="primary" style="margin-top:8px;">Generate ASCII Art</button>
+            <div class="ascii-preview-box hidden" id="asciiPreview" style="margin-top:8px;"></div>
+            <div class="row hidden" id="asciiActions" style="margin-top:6px;">
+              <button id="btnCopyAscii" style="flex:1; font-size:11px; padding:4px 6px;">Copy Text</button>
+              <button id="btnDownloadAscii" style="flex:1; font-size:11px; padding:4px 6px;">Save .TXT</button>
+            </div>
+          </div>
         </div>
 
-        <!-- Tab 4: Draw -->
+        <!-- Tab 7: Draw -->
         <div id="tabDraw" class="tab-page hidden">
           <div class="control-group">
             <label>Annotation Tool</label>
@@ -859,41 +1045,71 @@
 
     <!-- Right Inspector Panel -->
     <div class="side-panel right-panel hidden" id="rightPanel">
-      <div class="panel-tabs">
-        <button class="tab-btn active">RGB Histogram & EXIF</button>
+      <div class="panel-tabs" role="tablist" aria-label="Inspector Panels">
+        <button class="tab-btn active" id="tabBtnHist" role="tab" aria-selected="true" data-rtab="hist">Histogram & EXIF</button>
+        <button class="tab-btn" id="tabBtnStego" role="tab" aria-selected="false" data-rtab="stego">Stego Vault</button>
       </div>
       <div class="panel-content">
-        <div class="control-group">
-          <label>RGB Color Histogram</label>
-          <canvas id="histCanvas"></canvas>
+        <div id="rightHistContent">
+          <div class="control-group">
+            <label>RGB Color Histogram</label>
+            <canvas id="histCanvas"></canvas>
+          </div>
+
+          <div class="control-group" style="margin-top:12px;">
+            <label>File & Image Properties</label>
+            <table class="meta-table">
+              <tbody id="metaTableBody">
+                <tr><td>File Name</td><td id="metaName">-</td></tr>
+                <tr><td>Format</td><td id="metaType">-</td></tr>
+                <tr><td>File Size</td><td id="metaSize">-</td></tr>
+                <tr><td>Dimensions</td><td id="metaDim">-</td></tr>
+                <tr><td>Aspect Ratio</td><td id="metaAspect">-</td></tr>
+                <tr><td>Megapixels</td><td id="metaMP">-</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="control-group" style="margin-top:12px;">
+            <label>EXIF Camera Inspector</label>
+            <table class="meta-table">
+              <tbody id="exifTableBody">
+                <tr><td>Camera / Make</td><td id="exifCamera">N/A</td></tr>
+                <tr><td>Date Taken</td><td id="exifDate">N/A</td></tr>
+                <tr><td>Exposure Time</td><td id="exifExposure">N/A</td></tr>
+                <tr><td>Aperture</td><td id="exifAperture">N/A</td></tr>
+                <tr><td>ISO Speed</td><td id="exifISO">N/A</td></tr>
+                <tr><td>Software</td><td id="exifSoftware">N/A</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
-        <div class="control-group" style="margin-top:12px;">
-          <label>File & Image Properties</label>
-          <table class="meta-table">
-            <tbody id="metaTableBody">
-              <tr><td>File Name</td><td id="metaName">-</td></tr>
-              <tr><td>Format</td><td id="metaType">-</td></tr>
-              <tr><td>File Size</td><td id="metaSize">-</td></tr>
-              <tr><td>Dimensions</td><td id="metaDim">-</td></tr>
-              <tr><td>Aspect Ratio</td><td id="metaAspect">-</td></tr>
-              <tr><td>Megapixels</td><td id="metaMP">-</td></tr>
-            </tbody>
-          </table>
-        </div>
+        <div id="rightStegoContent" class="hidden">
+          <div class="control-group">
+            <label>1999 LSB Steganography Engine</label>
+            <span style="font-size:11px; color:var(--text-muted); line-height:1.4;">Hide or extract secret ASCII/UTF-8 messages in the least significant bits of image pixels. Invisible to the naked eye.</span>
+          </div>
 
-        <div class="control-group" style="margin-top:12px;">
-          <label>EXIF Camera Inspector</label>
-          <table class="meta-table">
-            <tbody id="exifTableBody">
-              <tr><td>Camera / Make</td><td id="exifCamera">N/A</td></tr>
-              <tr><td>Date Taken</td><td id="exifDate">N/A</td></tr>
-              <tr><td>Exposure Time</td><td id="exifExposure">N/A</td></tr>
-              <tr><td>Aperture</td><td id="exifAperture">N/A</td></tr>
-              <tr><td>ISO Speed</td><td id="exifISO">N/A</td></tr>
-              <tr><td>Software</td><td id="exifSoftware">N/A</td></tr>
-            </tbody>
-          </table>
+          <div class="control-group" style="margin-top:10px;">
+            <label>Secret Text Payload</label>
+            <textarea class="stego-text" id="stegoInput" placeholder="Enter secret text payload to hide inside this image..."></textarea>
+            <div class="row" style="margin-top:4px;">
+              <button id="btnStegoSample" style="flex:1; font-size:11px; padding:4px 6px;">Load Intercept</button>
+              <button id="btnClearStego" style="flex:1; font-size:11px; padding:4px 6px;">Clear</button>
+            </div>
+          </div>
+
+          <button id="btnStegoEncode" class="primary" style="margin-top:8px;">🔒 Encode Secret into Image</button>
+
+          <div class="control-group" style="margin-top:16px; border-top:1px solid var(--glass-border); padding-top:12px;">
+            <label>Decoded Stego Payload</label>
+            <textarea class="stego-text" id="stegoOutput" readonly placeholder="Click Decode below to scan image pixels for hidden messages..."></textarea>
+            <div class="row" style="margin-top:6px;">
+              <button id="btnStegoDecode" class="primary" style="flex:1;">🔓 Scan & Decode</button>
+              <button id="btnCopyStego" style="flex:1;">Copy Secret</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -946,6 +1162,8 @@
             <div class="shortcut-item"><span>Demo Studio Image</span><kbd>N</kbd></div>
             <div class="shortcut-item"><span>Open Image(s)</span><kbd>O</kbd> / <kbd>Ctrl+O</kbd></div>
             <div class="shortcut-item"><span>Export / Save</span><kbd>Ctrl+S</kbd></div>
+            <div class="shortcut-item"><span>Quicksave Snapshot</span><kbd>F5</kbd></div>
+            <div class="shortcut-item"><span>Quickload Snapshot</span><kbd>F9</kbd></div>
             <div class="shortcut-item"><span>Remove Current Image</span><kbd>X</kbd></div>
             <div class="shortcut-item"><span>Toggle Crop Tool</span><kbd>C</kbd></div>
             <div class="shortcut-item"><span>Toggle Annotation Brush</span><kbd>D</kbd></div>
@@ -957,7 +1175,7 @@
             <div class="shortcut-item"><span>Toggle Fullscreen</span><kbd>F</kbd></div>
             <div class="shortcut-item"><span>Zoom & Pan Canvas</span><kbd>+</kbd> / <kbd>-</kbd> / <kbd>Drag</kbd></div>
             <div class="shortcut-item"><span>Reset Zoom & Center</span><kbd>0</kbd></div>
-            <div class="shortcut-item"><span>Switch Tabs 1-5</span><kbd>1</kbd> .. <kbd>5</kbd></div>
+            <div class="shortcut-item"><span>Switch Tabs 1-7</span><kbd>1</kbd> .. <kbd>7</kbd></div>
             <div class="shortcut-item"><span>Close Modal / Cancel</span><kbd>Esc</kbd></div>
           </div>
         </div>
@@ -969,9 +1187,12 @@
           </div>
           <p>• <b>Adjust & Presets:</b> Real-time GPU/Canvas brightness, contrast, saturation, blur, and 8 cinematic color presets (Grayscale, Sepia, Invert, Vintage, Warm, Cool, Dramatic).</p>
           <p>• <b>Spatial Convolution Matrix:</b> Professional 3x3 kernels (Sharpen, Unsharp Mask, Laplacian Edge, Sobel H/V, Emboss, Gaussian Blur, Ridge Detection) with custom weights, auto-divisor, and channel targeting.</p>
+          <p>• <b>Retro Dither & Palettes:</b> Authentic Floyd-Steinberg, Atkinson, Bayer 4x4, and Nearest Color dithering across 8 retro hardware palettes (Game Boy, CGA 1/2, C64, EGA, Amber/Green Phosphor CRT).</p>
+          <p>• <b>Channel Studio & Tone:</b> RGB channel isolation, channel inverters, RGB permutation swaps, posterization, solarization, and interlaced CRT scanlines.</p>
           <p>• <b>Transform & Interactive Crop:</b> Lossless 90° rotations, horizontal/vertical flipping, and aspect-ratio constrained rectangle crop tool.</p>
-          <p>• <b>Resize & Multi-Format Export:</b> High-precision interpolation, aspect-locking, and export to PNG, JPEG, WEBP, and 32-bit BMP.</p>
-          <p>• <b>Annotation Brush:</b> Freehand vector drawing overlay with live color picker and variable brush radius.</p>
+          <p>• <b>Resize & Multi-Format Export:</b> High-precision interpolation, aspect-locking, and export to PNG, JPEG, WEBP, 32-bit BMP, and Netpbm PPM.</p>
+          <p>• <b>ASCII Art Studio:</b> Convert image to CP437 ASCII text with 4 ramps (Standard, Blocks, Minimal, Matrix), live preview, clipboard copy, and .TXT download.</p>
+          <p>• <b>LSB Steganography Vault:</b> Cryptographic 1999 steganography engine hiding secret UTF-8 payloads in image pixel bits with full decoder.</p>
           <p>• <b>Inspector Panel:</b> Subsampled multi-channel RGB luminance histogram & full EXIF camera metadata decoder.</p>
         </div>
       </div>
@@ -1273,6 +1494,17 @@
     if (helpModal && helpModal.classList.contains('active')) return;
     if (ctrl || e.altKey) return;
 
+    if (e.key === 'F5') {
+      e.preventDefault();
+      quickSaveState();
+      return;
+    }
+    if (e.key === 'F9') {
+      e.preventDefault();
+      quickLoadState();
+      return;
+    }
+
     if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
       e.preventDefault();
       openHelpModal();
@@ -1293,10 +1525,14 @@
     } else if (e.key === '2') {
       switchTab('tabKernel');
     } else if (e.key === '3') {
-      switchTab('tabTransform');
+      switchTab('tabDither');
     } else if (e.key === '4') {
-      switchTab('tabResize');
+      switchTab('tabChannels');
     } else if (e.key === '5') {
+      switchTab('tabTransform');
+    } else if (e.key === '6') {
+      switchTab('tabResize');
+    } else if (e.key === '7') {
       switchTab('tabDraw');
     } else if (e.key === '+' || e.key === '=') {
       state.zoom = Math.min(5, Number((state.zoom * 1.2).toFixed(2)));
@@ -1882,7 +2118,7 @@
     });
   });
 
-  document.getElementById('btnRevertOriginal').onclick = () => {
+  function revertToBaseImage() {
     const item = state.playlist[state.currentIndex];
     if (!item) return;
     const origImg = new Image();
@@ -1894,7 +2130,665 @@
       showToast("Reverted to original base image", "info");
     };
     origImg.src = item.origSrc || (item.file instanceof Blob ? URL.createObjectURL(item.file) : item.img.src);
+  }
+
+  document.getElementById('btnRevertOriginal').onclick = revertToBaseImage;
+  document.getElementById('btnRevertDither')?.addEventListener('click', revertToBaseImage);
+  document.getElementById('btnRevertChannels')?.addEventListener('click', revertToBaseImage);
+
+  // Quicksave & Quickload Session Snapshots
+  function quickSaveState() {
+    if (state.playlist.length === 0 || state.currentIndex === -1) {
+      showToast("No image loaded to quicksave", "warning");
+      return;
+    }
+    const item = state.playlist[state.currentIndex];
+    try {
+      const snap = {
+        name: item.name || 'snapshot.png',
+        imgData: ui.mainCanvas.toDataURL('image/png'),
+        rotation: state.rotation,
+        flipH: state.flipH,
+        flipV: state.flipV,
+        adjustments: { ...state.adjustments },
+        timestamp: Date.now()
+      };
+      localStorage.setItem('kimage_quicksave', JSON.stringify(snap));
+      showToast("Session quicksaved to local snapshot [F5]!", "success");
+    } catch (_) {
+      showToast("Failed to quicksave snapshot (storage limit)", "error");
+    }
+  }
+
+  function quickLoadState() {
+    try {
+      const raw = localStorage.getItem('kimage_quicksave');
+      if (!raw) {
+        showToast("No quicksaved snapshot found. Press F5 to save first.", "warning");
+        return;
+      }
+      const snap = JSON.parse(raw);
+      const img = new Image();
+      img.onload = () => {
+        const snapItem = {
+          file: { name: snap.name, size: snap.imgData.length, type: 'image/png' },
+          img,
+          origSrc: snap.imgData,
+          name: snap.name || 'restored_snapshot.png',
+          size: formatBytes(Math.round(snap.imgData.length * 0.75)),
+          type: 'image/png',
+          exif: { camera: 'KImage Quicksave Restore', date: new Date(snap.timestamp).toLocaleDateString(), exposure: 'N/A', aperture: 'N/A', iso: 'N/A', software: 'KImage Pro v2.1' }
+        };
+        state.playlist = [snapItem];
+        state.currentIndex = 0;
+        state.rotation = snap.rotation || 0;
+        state.flipH = snap.flipH || 1;
+        state.flipV = snap.flipV || 1;
+        state.adjustments = snap.adjustments || { brightness: 0, contrast: 0, blur: 0, saturation: 0, preset: 'none' };
+        updatePlaylistUI();
+        selectImage(0);
+        showToast("Restored quicksaved session snapshot [F9]!", "success");
+      };
+      img.src = snap.imgData;
+    } catch (_) {
+      showToast("Failed to restore quicksave snapshot", "error");
+    }
+  }
+  document.getElementById('btnQuickSave')?.addEventListener('click', quickSaveState);
+  document.getElementById('btnQuickLoad')?.addEventListener('click', quickLoadState);
+
+  // Retro Hardware Palettes & Dithering Engine
+  const RETRO_PALETTES = {
+    mono: {
+      name: '1-Bit Monochrome',
+      colors: [[0, 0, 0], [255, 255, 255]]
+    },
+    gameboy: {
+      name: 'Game Boy DMG-01',
+      colors: [[15, 56, 15], [48, 98, 48], [139, 172, 15], [155, 188, 15]]
+    },
+    cga1: {
+      name: 'CGA Mode 1 High',
+      colors: [[0, 0, 0], [85, 255, 255], [255, 85, 255], [255, 255, 255]]
+    },
+    cga2: {
+      name: 'CGA Mode 2 High',
+      colors: [[0, 0, 0], [85, 255, 85], [255, 85, 85], [255, 255, 85]]
+    },
+    c64: {
+      name: 'Commodore 64',
+      colors: [
+        [0,0,0], [255,255,255], [136,0,0], [170,255,238],
+        [204,68,204], [0,204,85], [0,0,170], [238,238,119],
+        [221,136,85], [102,68,0], [255,119,119], [51,51,51],
+        [119,119,119], [170,255,102], [0,136,255], [187,187,187]
+      ]
+    },
+    ega: {
+      name: 'EGA 16 Colors',
+      colors: [
+        [0,0,0], [0,0,170], [0,170,0], [0,170,170],
+        [170,0,0], [170,0,170], [170,85,0], [170,170,170],
+        [85,85,85], [85,85,255], [85,255,85], [85,255,255],
+        [255,85,85], [255,85,255], [255,255,85], [255,255,255]
+      ]
+    },
+    amber: {
+      name: 'Amber Phosphor CRT',
+      colors: [[0,0,0], [102,51,0], [204,102,0], [255,176,0]]
+    },
+    matrix: {
+      name: 'Matrix Green CRT',
+      colors: [[0,0,0], [0,68,0], [0,170,0], [51,255,51]]
+    }
   };
+
+  function updatePaletteSwatches() {
+    const palKey = document.getElementById('ditherPaletteSelect')?.value || 'mono';
+    const pal = RETRO_PALETTES[palKey] || RETRO_PALETTES.mono;
+    const container = document.getElementById('paletteSwatches');
+    if (!container) return;
+    container.innerHTML = '';
+    pal.colors.forEach(c => {
+      const sw = document.createElement('div');
+      sw.className = 'swatch-item';
+      sw.style.backgroundColor = `rgb(${c[0]},${c[1]},${c[2]})`;
+      sw.title = `rgb(${c[0]},${c[1]},${c[2]})`;
+      container.appendChild(sw);
+    });
+    const threshGrp = document.getElementById('thresholdGroup');
+    if (threshGrp) {
+      threshGrp.classList.toggle('hidden', palKey !== 'mono');
+    }
+  }
+
+  document.getElementById('ditherPaletteSelect')?.addEventListener('change', updatePaletteSwatches);
+  document.getElementById('sliderThreshold')?.addEventListener('input', (e) => {
+    document.getElementById('valThreshold').textContent = e.target.value;
+  });
+  updatePaletteSwatches();
+
+  function findNearestPaletteColor(r, g, b, pal) {
+    let bestDist = Infinity;
+    let best = pal[0];
+    for (let i = 0; i < pal.length; i++) {
+      const c = pal[i];
+      const dr = r - c[0];
+      const dg = g - c[1];
+      const db = b - c[2];
+      const dist = 0.299 * dr * dr + 0.587 * dg * dg + 0.114 * db * db;
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = c;
+      }
+    }
+    return best;
+  }
+
+  function applyRetroDither() {
+    const item = state.playlist[state.currentIndex];
+    if (!item) return;
+
+    const w = item.img.width;
+    const h = item.img.height;
+    if (w <= 0 || h <= 0) return;
+
+    const off = document.createElement('canvas');
+    off.width = w;
+    off.height = h;
+    const offCtx = off.getContext('2d');
+    offCtx.drawImage(item.img, 0, 0);
+
+    const imgData = offCtx.getImageData(0, 0, w, h);
+    const src = imgData.data;
+
+    const algo = document.getElementById('ditherAlgoSelect').value;
+    const palKey = document.getElementById('ditherPaletteSelect').value;
+    const pal = RETRO_PALETTES[palKey]?.colors || RETRO_PALETTES.mono.colors;
+    const thresholdCutoff = parseInt(document.getElementById('sliderThreshold')?.value) || 128;
+
+    if (algo === 'none') {
+      for (let i = 0; i < src.length; i += 4) {
+        let r = src[i], g = src[i + 1], b = src[i + 2];
+        if (palKey === 'mono') {
+          const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+          const val = lum >= thresholdCutoff ? 255 : 0;
+          src[i] = val; src[i + 1] = val; src[i + 2] = val;
+        } else {
+          const matched = findNearestPaletteColor(r, g, b, pal);
+          src[i] = matched[0]; src[i + 1] = matched[1]; src[i + 2] = matched[2];
+        }
+      }
+    } else if (algo === 'bayer') {
+      const bayer4 = [
+        [ 0,  8,  2, 10],
+        [12,  4, 14,  6],
+        [ 3, 11,  1,  9],
+        [15,  7, 13,  5]
+      ];
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = (y * w + x) * 4;
+          const bias = (bayer4[y % 4][x % 4] / 16.0 - 0.5) * 64;
+          let r = Math.max(0, Math.min(255, src[idx] + bias));
+          let g = Math.max(0, Math.min(255, src[idx + 1] + bias));
+          let b = Math.max(0, Math.min(255, src[idx + 2] + bias));
+          if (palKey === 'mono') {
+            const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+            const val = lum >= thresholdCutoff ? 255 : 0;
+            src[idx] = val; src[idx + 1] = val; src[idx + 2] = val;
+          } else {
+            const matched = findNearestPaletteColor(r, g, b, pal);
+            src[idx] = matched[0]; src[idx + 1] = matched[1]; src[idx + 2] = matched[2];
+          }
+        }
+      }
+    } else {
+      // Error diffusion: Floyd-Steinberg or Atkinson
+      const rBuf = new Float32Array(w * h);
+      const gBuf = new Float32Array(w * h);
+      const bBuf = new Float32Array(w * h);
+
+      for (let i = 0, p = 0; i < src.length; i += 4, p++) {
+        rBuf[p] = src[i];
+        gBuf[p] = src[i + 1];
+        bBuf[p] = src[i + 2];
+      }
+
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const p = y * w + x;
+          const oldR = Math.max(0, Math.min(255, rBuf[p]));
+          const oldG = Math.max(0, Math.min(255, gBuf[p]));
+          const oldB = Math.max(0, Math.min(255, bBuf[p]));
+
+          let newR = 0, newG = 0, newB = 0;
+          if (palKey === 'mono') {
+            const lum = 0.299 * oldR + 0.587 * oldG + 0.114 * oldB;
+            const v = lum >= thresholdCutoff ? 255 : 0;
+            newR = v; newG = v; newB = v;
+          } else {
+            const matched = findNearestPaletteColor(oldR, oldG, oldB, pal);
+            newR = matched[0]; newG = matched[1]; newB = matched[2];
+          }
+
+          const idx = p * 4;
+          src[idx] = newR;
+          src[idx + 1] = newG;
+          src[idx + 2] = newB;
+
+          const errR = oldR - newR;
+          const errG = oldG - newG;
+          const errB = oldB - newB;
+
+          if (algo === 'floyd') {
+            if (x + 1 < w) {
+              const q = y * w + (x + 1);
+              rBuf[q] += (errR * 7) / 16; gBuf[q] += (errG * 7) / 16; bBuf[q] += (errB * 7) / 16;
+            }
+            if (y + 1 < h) {
+              if (x - 1 >= 0) {
+                const q = (y + 1) * w + (x - 1);
+                rBuf[q] += (errR * 3) / 16; gBuf[q] += (errG * 3) / 16; bBuf[q] += (errB * 3) / 16;
+              }
+              const q0 = (y + 1) * w + x;
+              rBuf[q0] += (errR * 5) / 16; gBuf[q0] += (errG * 5) / 16; bBuf[q0] += (errB * 5) / 16;
+              if (x + 1 < w) {
+                const q1 = (y + 1) * w + (x + 1);
+                rBuf[q1] += (errR * 1) / 16; gBuf[q1] += (errG * 1) / 16; bBuf[q1] += (errB * 1) / 16;
+              }
+            }
+          } else if (algo === 'atkinson') {
+            // Atkinson diffuses 1/8 to 6 neighbor pixels
+            const spread = [
+              [x + 1, y], [x + 2, y],
+              [x - 1, y + 1], [x, y + 1], [x + 1, y + 1],
+              [x, y + 2]
+            ];
+            for (let k = 0; k < spread.length; k++) {
+              const sx = spread[k][0], sy = spread[k][1];
+              if (sx >= 0 && sx < w && sy >= 0 && sy < h) {
+                const q = sy * w + sx;
+                rBuf[q] += errR * 0.125;
+                gBuf[q] += errG * 0.125;
+                bBuf[q] += errB * 0.125;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    offCtx.putImageData(imgData, 0, 0);
+    const newImg = new Image();
+    newImg.onload = () => {
+      state.playlist[state.currentIndex].img = newImg;
+      renderCanvas();
+      showToast(`Applied ${palKey.toUpperCase()} retro dithering (${algo})`, "success");
+    };
+    newImg.src = off.toDataURL('image/png');
+  }
+  document.getElementById('btnApplyDither')?.addEventListener('click', applyRetroDither);
+
+  // Channel Studio & Tone Functions
+  function mutatePixels(pixelFn, toastMsg) {
+    const item = state.playlist[state.currentIndex];
+    if (!item) return;
+    const w = item.img.width;
+    const h = item.img.height;
+    if (w <= 0 || h <= 0) return;
+
+    const off = document.createElement('canvas');
+    off.width = w;
+    off.height = h;
+    const offCtx = off.getContext('2d');
+    offCtx.drawImage(item.img, 0, 0);
+
+    const imgData = offCtx.getImageData(0, 0, w, h);
+    pixelFn(imgData.data, w, h);
+    offCtx.putImageData(imgData, 0, 0);
+
+    const newImg = new Image();
+    newImg.onload = () => {
+      state.playlist[state.currentIndex].img = newImg;
+      renderCanvas();
+      if (toastMsg) showToast(toastMsg, "success");
+    };
+    newImg.src = off.toDataURL('image/png');
+  }
+
+  document.getElementById('btnExtractR')?.addEventListener('click', () => {
+    mutatePixels((d) => { for (let i = 0; i < d.length; i += 4) { d[i + 1] = 0; d[i + 2] = 0; } }, "Extracted Red channel");
+  });
+  document.getElementById('btnExtractG')?.addEventListener('click', () => {
+    mutatePixels((d) => { for (let i = 0; i < d.length; i += 4) { d[i] = 0; d[i + 2] = 0; } }, "Extracted Green channel");
+  });
+  document.getElementById('btnExtractB')?.addEventListener('click', () => {
+    mutatePixels((d) => { for (let i = 0; i < d.length; i += 4) { d[i] = 0; d[i + 1] = 0; } }, "Extracted Blue channel");
+  });
+  document.getElementById('btnExtractLum')?.addEventListener('click', () => {
+    mutatePixels((d) => {
+      for (let i = 0; i < d.length; i += 4) {
+        const lum = Math.round(0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2]);
+        d[i] = lum; d[i + 1] = lum; d[i + 2] = lum;
+      }
+    }, "Extracted luminance channel");
+  });
+
+  document.getElementById('btnInvertR')?.addEventListener('click', () => {
+    mutatePixels((d) => { for (let i = 0; i < d.length; i += 4) d[i] = 255 - d[i]; }, "Inverted Red channel");
+  });
+  document.getElementById('btnInvertG')?.addEventListener('click', () => {
+    mutatePixels((d) => { for (let i = 0; i < d.length; i += 4) d[i + 1] = 255 - d[i + 1]; }, "Inverted Green channel");
+  });
+  document.getElementById('btnInvertB')?.addEventListener('click', () => {
+    mutatePixels((d) => { for (let i = 0; i < d.length; i += 4) d[i + 2] = 255 - d[i + 2]; }, "Inverted Blue channel");
+  });
+  document.getElementById('btnInvertAll')?.addEventListener('click', () => {
+    mutatePixels((d) => {
+      for (let i = 0; i < d.length; i += 4) {
+        d[i] = 255 - d[i]; d[i + 1] = 255 - d[i + 1]; d[i + 2] = 255 - d[i + 2];
+      }
+    }, "Inverted all channels");
+  });
+
+  document.getElementById('btnSwapRB')?.addEventListener('click', () => {
+    mutatePixels((d) => {
+      for (let i = 0; i < d.length; i += 4) {
+        const tmp = d[i]; d[i] = d[i + 2]; d[i + 2] = tmp;
+      }
+    }, "Swapped Red and Blue channels");
+  });
+  document.getElementById('btnSwapRG')?.addEventListener('click', () => {
+    mutatePixels((d) => {
+      for (let i = 0; i < d.length; i += 4) {
+        const tmp = d[i]; d[i] = d[i + 1]; d[i + 1] = tmp;
+      }
+    }, "Swapped Red and Green channels");
+  });
+  document.getElementById('btnSwapGB')?.addEventListener('click', () => {
+    mutatePixels((d) => {
+      for (let i = 0; i < d.length; i += 4) {
+        const tmp = d[i + 1]; d[i + 1] = d[i + 2]; d[i + 2] = tmp;
+      }
+    }, "Swapped Green and Blue channels");
+  });
+  document.getElementById('btnRotateRGB')?.addEventListener('click', () => {
+    mutatePixels((d) => {
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], g = d[i + 1], b = d[i + 2];
+        d[i] = g; d[i + 1] = b; d[i + 2] = r;
+      }
+    }, "Rotated RGB channels ↻");
+  });
+
+  document.getElementById('sliderPosterize')?.addEventListener('input', (e) => {
+    document.getElementById('valPosterize').textContent = e.target.value;
+  });
+  document.getElementById('btnApplyPosterize')?.addEventListener('click', () => {
+    const levels = parseInt(document.getElementById('sliderPosterize').value) || 4;
+    const step = 255 / (levels - 1);
+    mutatePixels((d) => {
+      for (let i = 0; i < d.length; i += 4) {
+        d[i] = Math.round(Math.round(d[i] / step) * step);
+        d[i + 1] = Math.round(Math.round(d[i + 1] / step) * step);
+        d[i + 2] = Math.round(Math.round(d[i + 2] / step) * step);
+      }
+    }, `Posterized image to ${levels} levels per channel`);
+  });
+
+  document.getElementById('sliderSolarize')?.addEventListener('input', (e) => {
+    document.getElementById('valSolarize').textContent = e.target.value;
+  });
+  document.getElementById('btnApplySolarize')?.addEventListener('click', () => {
+    const thresh = parseInt(document.getElementById('sliderSolarize').value) || 128;
+    mutatePixels((d) => {
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i] > thresh) d[i] = 255 - d[i];
+        if (d[i + 1] > thresh) d[i + 1] = 255 - d[i + 1];
+        if (d[i + 2] > thresh) d[i + 2] = 255 - d[i + 2];
+      }
+    }, `Applied solarization (threshold ${thresh})`);
+  });
+
+  document.getElementById('btnApplyScanlines')?.addEventListener('click', () => {
+    mutatePixels((d, w, h) => {
+      for (let y = 0; y < h; y += 2) {
+        for (let x = 0; x < w; x++) {
+          const idx = (y * w + x) * 4;
+          d[idx] = Math.round(d[idx] * 0.7);
+          d[idx + 1] = Math.round(d[idx + 1] * 0.7);
+          d[idx + 2] = Math.round(d[idx + 2] * 0.7);
+        }
+      }
+    }, "Applied CRT interlaced scanlines");
+  });
+
+  // ASCII Art Studio
+  function generateAsciiArt() {
+    if (state.currentIndex === -1 || state.playlist.length === 0) {
+      showToast("No image loaded to generate ASCII art", "warning");
+      return;
+    }
+    const cols = parseInt(document.getElementById('asciiCols').value) || 80;
+    const rampType = document.getElementById('asciiRamp').value;
+    const invert = document.getElementById('checkAsciiInvert').checked;
+
+    const ramps = {
+      standard: '@%#*+=-:. ',
+      blocks: '█▓▒░ ',
+      minimal: '#*+:. ',
+      matrix: '10 '
+    };
+    let ramp = ramps[rampType] || ramps.standard;
+    if (invert) ramp = ramp.split('').reverse().join('');
+
+    const srcW = ui.mainCanvas.width;
+    const srcH = ui.mainCanvas.height;
+    if (!srcW || !srcH) return;
+
+    const targetW = cols;
+    const targetH = Math.max(1, Math.round((srcH / srcW) * targetW * 0.5));
+
+    const off = document.createElement('canvas');
+    off.width = targetW;
+    off.height = targetH;
+    const octx = off.getContext('2d');
+    octx.drawImage(ui.mainCanvas, 0, 0, targetW, targetH);
+    const data = octx.getImageData(0, 0, targetW, targetH).data;
+
+    let lines = [];
+    for (let y = 0; y < targetH; y++) {
+      let line = '';
+      for (let x = 0; x < targetW; x++) {
+        const idx = (y * targetW + x) * 4;
+        const lum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
+        const charIdx = Math.floor((lum / 256) * ramp.length);
+        line += ramp[Math.min(ramp.length - 1, charIdx)];
+      }
+      lines.push(line);
+    }
+
+    const asciiText = lines.join('\n');
+    const preview = document.getElementById('asciiPreview');
+    const actions = document.getElementById('asciiActions');
+    preview.textContent = asciiText;
+    preview.classList.remove('hidden');
+    actions.classList.remove('hidden');
+    showToast(`Generated ${targetW} × ${targetH} ASCII art`, "success");
+  }
+  document.getElementById('btnGenerateAscii')?.addEventListener('click', generateAsciiArt);
+
+  document.getElementById('btnCopyAscii')?.addEventListener('click', () => {
+    const text = document.getElementById('asciiPreview')?.textContent;
+    if (text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("ASCII text copied to clipboard!", "success");
+      });
+    }
+  });
+
+  document.getElementById('btnDownloadAscii')?.addEventListener('click', () => {
+    const text = document.getElementById('asciiPreview')?.textContent;
+    if (!text) return;
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${(state.playlist[state.currentIndex]?.name || 'image').split('.')[0]}_ascii.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    showToast("Downloaded ASCII art file (.txt)", "success");
+  });
+
+  // 1999 LSB Steganography Engine
+  function encodeStegoPayload() {
+    if (state.currentIndex === -1 || state.playlist.length === 0) {
+      showToast("No image loaded to encode secret", "warning");
+      return;
+    }
+    const text = document.getElementById('stegoInput').value.trim();
+    if (!text) {
+      showToast("Please enter secret text to encode", "warning");
+      return;
+    }
+
+    const w = ui.mainCanvas.width;
+    const h = ui.mainCanvas.height;
+    const off = document.createElement('canvas');
+    off.width = w;
+    off.height = h;
+    const octx = off.getContext('2d');
+    octx.drawImage(ui.mainCanvas, 0, 0);
+
+    const imgData = octx.getImageData(0, 0, w, h);
+    const data = imgData.data;
+
+    const encoder = new TextEncoder();
+    const payloadBytes = encoder.encode(text);
+    const lenHex = ('00000000' + payloadBytes.length.toString(16)).slice(-8);
+    const headerBytes = encoder.encode(`KSTEGO:${lenHex}:`);
+    const allBytes = new Uint8Array(headerBytes.length + payloadBytes.length);
+    allBytes.set(headerBytes, 0);
+    allBytes.set(payloadBytes, headerBytes.length);
+
+    const totalBits = allBytes.length * 8;
+    const availableBits = w * h * 3;
+    if (totalBits > availableBits) {
+      showToast(`Payload too large (${totalBits} bits needed, only ${availableBits} available)`, "error");
+      return;
+    }
+
+    let bitIdx = 0;
+    for (let i = 0; i < allBytes.length; i++) {
+      const byte = allBytes[i];
+      for (let b = 7; b >= 0; b--) {
+        const bit = (byte >> b) & 1;
+        const pixelIdx = Math.floor(bitIdx / 3) * 4;
+        const chan = bitIdx % 3;
+        data[pixelIdx + chan] = (data[pixelIdx + chan] & 0xFE) | bit;
+        bitIdx++;
+      }
+    }
+
+    octx.putImageData(imgData, 0, 0);
+    const newImg = new Image();
+    newImg.onload = () => {
+      state.playlist[state.currentIndex].img = newImg;
+      renderCanvas();
+      showToast(`Encoded ${payloadBytes.length} bytes into pixel LSBs! Save as PNG/BMP to keep.`, "success");
+    };
+    newImg.src = off.toDataURL('image/png');
+  }
+
+  function decodeStegoPayload() {
+    if (state.currentIndex === -1 || state.playlist.length === 0) {
+      showToast("No image loaded to decode", "warning");
+      return;
+    }
+    const w = ui.mainCanvas.width;
+    const h = ui.mainCanvas.height;
+    const data = ui.ctx.getImageData(0, 0, w, h).data;
+    const totalPixels = w * h;
+    const maxBytes = Math.min(32768, Math.floor((totalPixels * 3) / 8));
+
+    const extracted = new Uint8Array(maxBytes);
+    let bitIdx = 0;
+    for (let i = 0; i < maxBytes; i++) {
+      let byte = 0;
+      for (let b = 7; b >= 0; b--) {
+        const pixelIdx = Math.floor(bitIdx / 3) * 4;
+        const chan = bitIdx % 3;
+        const bit = data[pixelIdx + chan] & 1;
+        byte = (byte << 1) | bit;
+        bitIdx++;
+      }
+      extracted[i] = byte;
+    }
+
+    const decoder = new TextDecoder('utf-8', { fatal: false });
+    const rawString = decoder.decode(extracted);
+    if (rawString.startsWith('KSTEGO:')) {
+      const parts = rawString.split(':');
+      if (parts.length >= 3) {
+        const len = parseInt(parts[1], 16);
+        const prefixLen = 7 + 8 + 1;
+        const secret = rawString.substring(prefixLen, prefixLen + len);
+        document.getElementById('stegoOutput').value = secret;
+        showToast(`Found hidden payload (${len} chars)!`, "success");
+        return;
+      }
+    }
+    document.getElementById('stegoOutput').value = '[No valid KSTEGO payload detected in pixel LSBs]';
+    showToast("No valid KSTEGO message found in image LSBs", "info");
+  }
+
+  document.getElementById('btnStegoEncode')?.addEventListener('click', encodeStegoPayload);
+  document.getElementById('btnStegoDecode')?.addEventListener('click', decodeStegoPayload);
+  document.getElementById('btnStegoSample')?.addEventListener('click', () => {
+    document.getElementById('stegoInput').value = "SYS_NET: 10.19.99.4/classified [SEC_LVL_5]\nNODE_STATUS: ACTIVE\nCIPHER_BLOCK: 0x4B494C4F\nMSG: Subcarrier frequency alignment verified. Maintain clandestine reception protocols.";
+    showToast("Loaded sample encrypted intercept", "info");
+  });
+  document.getElementById('btnClearStego')?.addEventListener('click', () => {
+    document.getElementById('stegoInput').value = '';
+    document.getElementById('stegoOutput').value = '';
+  });
+  document.getElementById('btnCopyStego')?.addEventListener('click', () => {
+    const text = document.getElementById('stegoOutput')?.value;
+    if (text && !text.startsWith('[')) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast("Secret payload copied to clipboard!", "success");
+      });
+    }
+  });
+
+  // Right Panel Tabs
+  function switchRightTab(rtab) {
+    const btnHist = document.getElementById('tabBtnHist');
+    const btnStego = document.getElementById('tabBtnStego');
+    const contentHist = document.getElementById('rightHistContent');
+    const contentStego = document.getElementById('rightStegoContent');
+    if (rtab === 'hist') {
+      btnHist?.classList.add('active');
+      btnHist?.setAttribute('aria-selected', 'true');
+      btnStego?.classList.remove('active');
+      btnStego?.setAttribute('aria-selected', 'false');
+      contentHist?.classList.remove('hidden');
+      contentStego?.classList.add('hidden');
+      renderHistogram();
+    } else {
+      btnStego?.classList.add('active');
+      btnStego?.setAttribute('aria-selected', 'true');
+      btnHist?.classList.remove('active');
+      btnHist?.setAttribute('aria-selected', 'false');
+      contentStego?.classList.remove('hidden');
+      contentHist?.classList.add('hidden');
+    }
+  }
+  document.getElementById('tabBtnHist')?.addEventListener('click', () => switchRightTab('hist'));
+  document.getElementById('tabBtnStego')?.addEventListener('click', () => switchRightTab('stego'));
 
   // Transformations
   document.getElementById('btnRotateCCW').onclick = () => { state.rotation = (state.rotation - 90 + 360) % 360; renderCanvas(); showToast("Rotated -90°", "info"); };
@@ -2253,7 +3147,7 @@
     }
     const fmt = exportFormat.value;
     const quality = parseInt(document.getElementById('sliderQuality').value) / 100;
-    const extMap = { 'image/png': '.png', 'image/jpeg': '.jpg', 'image/webp': '.webp', 'image/bmp': '.bmp' };
+    const extMap = { 'image/png': '.png', 'image/jpeg': '.jpg', 'image/webp': '.webp', 'image/bmp': '.bmp', 'image/x-portable-pixmap': '.ppm' };
     const link = document.createElement('a');
     const name = (state.playlist[state.currentIndex]?.name || 'edited_image').split('.')[0];
     link.download = `${name}_edited${extMap[fmt] || '.png'}`;
@@ -2261,6 +3155,14 @@
     if (fmt === 'image/bmp') {
       const bmpBlob = canvasToBMP(ui.mainCanvas);
       const url = URL.createObjectURL(bmpBlob);
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } else if (fmt === 'image/x-portable-pixmap') {
+      const ppmBlob = canvasToPPM(ui.mainCanvas);
+      const url = URL.createObjectURL(ppmBlob);
       link.href = url;
       document.body.appendChild(link);
       link.click();
@@ -2274,6 +3176,19 @@
     }
     showToast("Export download started", "success");
   };
+
+  function canvasToPPM(canvas) {
+    const w = canvas.width;
+    const h = canvas.height;
+    const ctx = canvas.getContext('2d');
+    const data = ctx.getImageData(0, 0, w, h).data;
+    let ppm = `P3\n# KImage Netpbm PPM Portable Pixmap\n${w} ${h}\n255\n`;
+    for (let i = 0; i < data.length; i += 4) {
+      ppm += `${data[i]} ${data[i + 1]} ${data[i + 2]} `;
+      if ((i / 4) % 16 === 15) ppm += '\n';
+    }
+    return new Blob([ppm], { type: 'image/x-portable-pixmap' });
+  }
 
   function canvasToBMP(canvas) {
     const w = canvas.width;
