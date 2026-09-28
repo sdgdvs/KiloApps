@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KContacts
-  kilo_usability: KRadio
+  kilo_usability: KRead
   kilo_graphics: KAbyss
   kilo_qa: KType
   kilo_expander: KMedia
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-tester
-  app: KColosseum
-  timestamp: "2026-09-28T19:12:00Z"
+  agent: kilo-usability
+  app: KRadio
+  timestamp: "2026-09-28T19:22:00Z"
 last_planner_run: "2026-09-28T10:38:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KRadio`
+- **Current Target**: `KRead`
 - **Upcoming Queue**:
-  `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`.
+  `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KRadio)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KType`
@@ -242,6 +242,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-28T19:22:00Z — kilo-usability: KRadio (HiDPI Spectrum Visualizer, Window Fit & Non-Occluding Toasts)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
+  - Window & Layout: Adjusted default window in App.jsx to 500x480 eliminating iframe vertical clipping and scrollbars.
+  - HiDPI Spectrum Visualizer: Replaced DOM bars with crisp 2D canvas with devicePixelRatio scaling, 3 modes (LED, CRT, VU), and peak decay.
+  - Toast Non-Occlusion: Relocated toast notifications to non-occluding bottom anchor with click-to-dismiss and single-toast queue.
+  - Onboarding & Presets: Added first-run kradio_tutorialSeen onboarding, balanced 6 presets across web/native, and diegetic 1999.4kHz subcarrier.
+  - Verification: MSVC clean (KRadio.exe 7.1 KB); Vite clean in 239ms (kradio.html 54.4 KB < 999 KB); security lint 100% PASS.
+
 - **2026-09-28T19:12:00Z — kilo-tester: KColosseum (Interactive UI Audit, Quicksave & Modal Ergonomics)**
   - Status: PASS ✅ (6 issues audited, 6 fixed, 0 regressions, clean builds).
   - Combat Concurrency: Resolved keyboard spam race condition in combatAction via `combatBusy` gating during turns and twin attacks.
@@ -277,15 +285,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Onboarding & Reset Integrity: Verified `ktrader_tutorialSeen` / `.dat` onboarding gating; implemented clean in-memory reset with dual storage clearance.
   - Build Parity & Sync: Synchronized MSVC build pipeline copying `KTrader.exe` directly to `public/exe/`.
   - Verification: MSVC clean (`KTrader.exe` 26.6 KB); Vite clean in 320ms (`ktrader.html` 81.1 KB < 999 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-28T17:55:00Z — kilo-graphics: KStarDredge (Game Content, Visual Polish & Balance Pass)**
-  - Status: PASS ✅ (0 rotating glints / traveling border dots, 0 regressions, clean builds, <999KB ceiling verified).
-  - Glint & Dot Audit: Verified 100% absence of rotating specular glints or traveling perimeter border dots across web & native C.
-  - Procedural Audio: Implemented Sega Genesis Yamaha YM2612 2-Op FM synth & SNES SPC700 stereo delay BGM engine across 4 sector themes.
-  - Audio UX & Controls: Added dedicated BGM toggle, FM volume slider, sector track indicator, [M] hotkey, and diagnostic bench test.
-  - Visual Polish: Added theme-adaptive thruster exhaust trails, retro-thruster puffs, and ore-matching mineral spallation spark bursts.
-  - Gameplay Balance: Tuned drill heat cooling rate scaling with upgrade tiers, balanced torpedo intercept velocity to 3.8, and aligned C/web parity.
-  - Verification: MSVC clean (`KStarDredge.exe` 285.1 KB); Vite clean in 393ms (`kstardredge.html` 488.4 KB < 999 KB); check_icons & security lint 100% PASS.
 
 
 

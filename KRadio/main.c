@@ -22,6 +22,7 @@ void* __cdecl memset(void* dest, int c, size_t count) {
 #define ID_PRESET_3     103
 #define ID_PRESET_4     104
 #define ID_PRESET_5     105
+#define ID_PRESET_6     106
 
 typedef struct {
     const char* name;
@@ -29,12 +30,13 @@ typedef struct {
     const char* url;
 } StationPreset;
 
-static const StationPreset g_presets[5] = {
+static const StationPreset g_presets[6] = {
     { "Subspace",     "Synthwave",    "https://radio.erb.pw/public/subspace" },
     { "Groove Salad", "Chillout",     "https://ice2.somafm.com/groovesalad-128-mp3" },
     { "Nightwave",    "Vaporwave",    "https://radio.plaza.one/mp3" },
     { "DEF CON",      "Cyber Ambient","https://ice2.somafm.com/defcon-128-mp3" },
-    { "Secret Agent", "Spy Retro",    "https://ice1.somafm.com/secretagent-128-mp3" }
+    { "Secret Agent", "Spy Retro",    "https://ice1.somafm.com/secretagent-128-mp3" },
+    { "Space Station","Spacemusic",   "https://ice1.somafm.com/spacestation-128-mp3" }
 };
 
 HWND g_hwndMain = NULL;
@@ -43,7 +45,7 @@ HWND hEditUrl = NULL;
 HWND hBtnPlay = NULL;
 HWND hBtnStop = NULL;
 HWND hBtnHelp = NULL;
-HWND hBtnPresets[5] = {0};
+HWND hBtnPresets[6] = {0};
 HWND hStatus = NULL;
 HWND hHint = NULL;
 HWND hPresetsLabel = NULL;
@@ -57,7 +59,7 @@ void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd,
         "=== KRadio Retro Stream Player ===\n\n"
         "Tuning & Controls:\n"
-        "  - [1-5] Quick Presets: Instantly switch & play preset stations\n"
+        "  - [1-6] Quick Presets: Instantly switch & play preset stations\n"
         "  - [Space / P] Play: Tune into the current URL\n"
         "  - [S] Stop: Stop active audio stream\n"
         "  - [Enter]: Tune to stream when typing in URL field\n"
@@ -67,7 +69,8 @@ void ShowHelpDialog(HWND hwnd) {
         "  [2] Groove Salad (Ambient Chillout)\n"
         "  [3] Nightwave Plaza (Vaporwave)\n"
         "  [4] DEF CON Radio (Cyber Ambient)\n"
-        "  [5] Secret Agent (Spy / Retro Lounge)\n\n"
+        "  [5] Secret Agent (Spy / Retro Lounge)\n"
+        "  [6] Space Station (Spacemusic Ambient)\n\n"
         "Supports direct MP3 and AAC streaming links.",
         "KRadio Help & Keyboard Shortcuts",
         MB_OK | MB_ICONINFORMATION);
@@ -106,7 +109,7 @@ void PlayStream(HWND hwnd) {
 }
 
 void SelectPreset(int index) {
-    if (index < 0 || index >= 5) return;
+    if (index < 0 || index >= 6) return;
     SetWindowTextA(hEditUrl, g_presets[index].url);
     PlayStream(g_hwndMain);
 }
@@ -174,12 +177,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             g_pfnOrigEditProc = (WNDPROC)SetWindowLongPtrA(hEditUrl, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
 
             // Presets Label
-            hPresetsLabel = CreateWindowEx(0, "STATIC", "Station Presets (Hotkeys 1 - 5):",
+            hPresetsLabel = CreateWindowEx(0, "STATIC", "Station Presets (Hotkeys 1 - 6):",
                 WS_CHILD | WS_VISIBLE,
                 16, 108, W - 32, 18, hwnd, NULL, NULL, NULL);
             SendMessage(hPresetsLabel, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
 
-            // Preset Buttons (Row 1: 3 buttons, Row 2: 2 buttons)
+            // Preset Buttons (Row 1: 3 buttons, Row 2: 3 buttons)
             hBtnPresets[0] = CreateWindowEx(0, "BUTTON", "[1] Subspace",
                 WS_CHILD | WS_VISIBLE,
                 16, 130, 140, 28, hwnd, (HMENU)ID_PRESET_1, NULL, NULL);
@@ -195,15 +198,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 312, 130, 140, 28, hwnd, (HMENU)ID_PRESET_3, NULL, NULL);
             SendMessage(hBtnPresets[2], WM_SETFONT, (WPARAM)hFontNormal, TRUE);
 
-            hBtnPresets[3] = CreateWindowEx(0, "BUTTON", "[4] DEF CON Radio",
+            hBtnPresets[3] = CreateWindowEx(0, "BUTTON", "[4] DEF CON",
                 WS_CHILD | WS_VISIBLE,
-                16, 164, 214, 28, hwnd, (HMENU)ID_PRESET_4, NULL, NULL);
+                16, 164, 140, 28, hwnd, (HMENU)ID_PRESET_4, NULL, NULL);
             SendMessage(hBtnPresets[3], WM_SETFONT, (WPARAM)hFontNormal, TRUE);
 
             hBtnPresets[4] = CreateWindowEx(0, "BUTTON", "[5] Secret Agent",
                 WS_CHILD | WS_VISIBLE,
-                238, 164, 214, 28, hwnd, (HMENU)ID_PRESET_5, NULL, NULL);
+                164, 164, 140, 28, hwnd, (HMENU)ID_PRESET_5, NULL, NULL);
             SendMessage(hBtnPresets[4], WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+
+            hBtnPresets[5] = CreateWindowEx(0, "BUTTON", "[6] Space Station",
+                WS_CHILD | WS_VISIBLE,
+                312, 164, 140, 28, hwnd, (HMENU)ID_PRESET_6, NULL, NULL);
+            SendMessage(hBtnPresets[5], WM_SETFONT, (WPARAM)hFontNormal, TRUE);
 
             // Playback Action Buttons
             hBtnPlay = CreateWindowEx(0, "BUTTON", "Play [Space/P]",
@@ -223,7 +231,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hStatus, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             
             // Shortcut Hint
-            hHint = CreateWindowEx(0, "STATIC", "Hotkeys: [1-5] Presets | [Space/P] Play | [S] Stop | [Enter] Tune | [F1] Help",
+            hHint = CreateWindowEx(0, "STATIC", "Hotkeys: [1-6] Presets | [Space/P] Play | [S] Stop | [Enter] Tune | [F1] Help",
                 WS_CHILD | WS_VISIBLE,
                 16, 282, W - 32, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hHint, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
@@ -235,7 +243,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_KEYDOWN: {
             if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
                 ShowHelpDialog(hwnd);
-            } else if (wParam >= '1' && wParam <= '5') {
+            } else if (wParam >= '1' && wParam <= '6') {
                 SelectPreset((int)(wParam - '1'));
             } else if (wParam == VK_SPACE || wParam == 'P' || wParam == 'p') {
                 if (g_isPlaying) StopStream();
@@ -253,7 +261,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 StopStream();
             } else if (id == ID_BTN_HELP) {
                 ShowHelpDialog(hwnd);
-            } else if (id >= ID_PRESET_1 && id <= ID_PRESET_5) {
+            } else if (id >= ID_PRESET_1 && id <= ID_PRESET_6) {
                 SelectPreset(id - ID_PRESET_1);
             }
             break;
@@ -309,7 +317,7 @@ void MainEntry() {
             }
             // If focus is NOT the edit control, process general accelerators
             if (GetFocus() != hEditUrl) {
-                if (msg.wParam >= '1' && msg.wParam <= '5') {
+                if (msg.wParam >= '1' && msg.wParam <= '6') {
                     SelectPreset((int)(msg.wParam - '1'));
                     continue;
                 }
