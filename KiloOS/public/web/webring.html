@@ -1481,6 +1481,19 @@ const DEFAULT_RING_NODES = [
     badgeLabel: "ECHO-SUB",
     latency: 19,
     tags: "echo,audio,spectrogram,research,ym2612,spc700,subcarrier,morse,telemetry"
+  },
+  {
+    id: "#017",
+    num: 17,
+    name: "Deep Core Ghost Node 0x1999",
+    handle: "Ghost_Relay",
+    category: "tools",
+    url: "/web/deep_core.html",
+    desc: "Subterranean Ring-0 relay, SHA-256 passkey analyzer, 1999Hz FM carrier monitor & sector quarantine forensics.",
+    tech: "YM2612 2-Op FM / SPC700 Delay / SHA-256 Crypto / VT100 Core",
+    badgeLabel: "DEEP-CORE",
+    latency: 9,
+    tags: "deep-core,terminal,ghost,passkey,hash,10.19.99.127,sha256,forensics,vt100"
   }
 ];
 
@@ -2302,7 +2315,7 @@ function probeCustomTarget() {
       <span style="color:var(--amber-bright);">[ANOMALOUS CARRIER DETECTED]</span><br>
       Host: non-routable subnet carrier • Frequency: 1999Hz subcarrier active<br>
       Handshake: Direct HTTP blocked • Lithospheric RF telemetry detected at offset 0x7F.<br>
-      <em>Note: Surface HTTP requests restricted. Navigate via terminal sniffer in KNet or <a href="/web/classified.html" style="color:var(--amber-bright); text-decoration:underline;">Access Intranet Gateway: 10.19.99.4/classified</a></em>
+      <em>Note: Surface HTTP requests restricted. Navigate via terminal sniffer in KNet, <a href="/web/classified.html" style="color:var(--amber-bright); text-decoration:underline;">Access Intranet: 10.19.99.4</a>, or <a href="/web/deep_core.html" style="color:var(--cyan); text-decoration:underline;">Deep Core: 10.19.99.127</a></em>
     `;
     return;
   }

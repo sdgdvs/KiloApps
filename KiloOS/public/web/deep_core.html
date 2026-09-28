@@ -4,13 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>KILO-NET // DEEP CORE [GHOST NODE TERMINAL] - Subterranean Ring-0 Access</title>
+<title>KILO-NET // DEEP CORE [GHOST NODE 0x1999] - Subterranean Ring-0 Relay</title>
 <style>
   :root {
     --bg-dark: #030805;
-    --term-bg: rgba(4, 16, 8, 0.95);
-    --panel-bg: rgba(6, 24, 12, 0.9);
+    --term-bg: rgba(4, 16, 8, 0.96);
+    --panel-bg: rgba(6, 24, 12, 0.92);
     --phosphor: #22ff66;
+    --phosphor-bright: #66ff99;
     --phosphor-dim: #13883a;
     --phosphor-glow: rgba(34, 255, 102, 0.35);
     --border: #1a7a35;
@@ -23,9 +24,10 @@
 
   body.theme-amber {
     --bg-dark: #080502;
-    --term-bg: rgba(20, 12, 4, 0.95);
-    --panel-bg: rgba(28, 16, 6, 0.9);
+    --term-bg: rgba(20, 12, 4, 0.96);
+    --panel-bg: rgba(28, 16, 6, 0.92);
     --phosphor: #ffaa22;
+    --phosphor-bright: #ffcc55;
     --phosphor-dim: #995511;
     --phosphor-glow: rgba(255, 170, 34, 0.35);
     --border: #aa6611;
@@ -37,9 +39,10 @@
 
   body.theme-cyan {
     --bg-dark: #02070a;
-    --term-bg: rgba(4, 16, 24, 0.95);
-    --panel-bg: rgba(6, 22, 34, 0.9);
+    --term-bg: rgba(4, 16, 24, 0.96);
+    --panel-bg: rgba(6, 22, 34, 0.92);
     --phosphor: #38bdf8;
+    --phosphor-bright: #7dd3fc;
     --phosphor-dim: #166488;
     --phosphor-glow: rgba(56, 189, 248, 0.35);
     --border: #1e4e6b;
@@ -76,9 +79,9 @@
 
   /* Main Shell Layout */
   .core-shell {
-    max-width: 1200px;
+    max-width: 1280px;
     margin: 0 auto;
-    padding: 10px;
+    padding: 8px;
     display: flex;
     flex-direction: column;
     height: 100vh;
@@ -89,7 +92,7 @@
   header.node-masthead {
     background: var(--term-bg);
     border: 1px solid var(--border);
-    padding: 8px 12px;
+    padding: 6px 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -123,7 +126,7 @@
 
   .telemetry-badges {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     font-size: 11px;
     align-items: center;
     flex-wrap: wrap;
@@ -133,10 +136,11 @@
     border: 1px solid var(--border);
     padding: 2px 6px;
     background: rgba(0, 0, 0, 0.4);
-    font-size: 10px;
+    font-size: 10.5px;
   }
   .pill.active { border-color: var(--border-bright); color: var(--border-bright); }
   .pill.alert { border-color: var(--alert); color: var(--alert); }
+  .pill.warn { border-color: var(--warn); color: var(--warn); }
 
   /* Controls Header */
   .control-group {
@@ -175,7 +179,7 @@
 
   /* Left/Center: Terminal Core */
   .terminal-container {
-    flex: 1.6;
+    flex: 1.5;
     background: var(--term-bg);
     border: 1px solid var(--border);
     display: flex;
@@ -220,7 +224,7 @@
 
   .prompt-symbol {
     font-weight: 700;
-    color: var(--phosphor-bright);
+    color: var(--border-bright);
     user-select: none;
   }
 
@@ -236,7 +240,7 @@
 
   /* Right Sidebar: Telemetry & Forensics */
   .telemetry-sidebar {
-    flex: 1;
+    flex: 1.1;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -264,17 +268,43 @@
     padding-bottom: 3px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
     letter-spacing: 0.5px;
   }
 
-  /* Oscilloscope Canvas */
+  /* Oscilloscope Canvas & Frequency Slider */
   #scopeCanvas {
     width: 100%;
-    height: 75px;
+    height: 70px;
     background: #000803;
     border: 1px solid var(--border);
     display: block;
   }
+
+  .freq-control-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+  }
+  .freq-slider {
+    flex: 1;
+    accent-color: var(--border-bright);
+    cursor: pointer;
+  }
+  .freq-presets {
+    display: flex;
+    gap: 4px;
+  }
+  .freq-btn {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid var(--border);
+    color: var(--phosphor);
+    font-size: 9.5px;
+    padding: 1px 4px;
+    cursor: pointer;
+  }
+  .freq-btn:hover { background: var(--phosphor); color: #000; }
 
   /* Fast Command Action Chips */
   .chip-grid {
@@ -288,7 +318,7 @@
     border: 1px solid var(--border);
     color: var(--phosphor);
     font-family: var(--font-mono);
-    font-size: 10.5px;
+    font-size: 10px;
     padding: 3px 6px;
     cursor: pointer;
     border-radius: 2px;
@@ -298,11 +328,135 @@
     color: #000;
   }
 
+  /* Passkey Cryptographic Assembly Workbench */
+  .workbench-container {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 6px;
+    border: 1px solid var(--border);
+  }
+
+  .workbench-slots {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+  }
+  .slot-box {
+    background: rgba(0, 15, 8, 0.9);
+    border: 1px dashed var(--border-bright);
+    padding: 4px;
+    font-size: 11px;
+    color: var(--phosphor-bright);
+    font-weight: bold;
+    min-height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    word-break: break-all;
+  }
+  .slot-delim {
+    font-weight: bold;
+    color: var(--warn);
+    font-size: 14px;
+  }
+
+  .candidate-token-pool {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 2px;
+  }
+  .token-chip {
+    background: rgba(10, 30, 18, 0.8);
+    border: 1px solid var(--border);
+    color: var(--cyan);
+    font-size: 9.5px;
+    padding: 2px 5px;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+  .token-chip:hover {
+    background: var(--cyan);
+    color: #000;
+  }
+
+  .workbench-telemetry {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 4px 6px;
+    border-left: 2px solid var(--cyan);
+  }
+  .parity-bar-bg {
+    width: 100%;
+    height: 6px;
+    background: #00150a;
+    border: 1px solid var(--border);
+    margin-top: 2px;
+    position: relative;
+    overflow: hidden;
+  }
+  .parity-bar-fill {
+    height: 100%;
+    width: 33%;
+    background: var(--warn);
+    transition: width 0.3s ease, background-color 0.3s ease;
+  }
+
+  /* Subterranean Interconnect Topology Map */
+  .topo-map {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border);
+    padding: 6px;
+    font-size: 10px;
+  }
+  .topo-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 2px 4px;
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
+  }
+  .topo-node:hover {
+    border-color: var(--border-bright);
+    background: rgba(34, 255, 102, 0.15);
+  }
+  .topo-node.active-node {
+    border-color: var(--border-bright);
+    background: rgba(34, 255, 102, 0.2);
+    box-shadow: 0 0 6px var(--phosphor-glow);
+  }
+  .topo-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--phosphor);
+    margin-bottom: 3px;
+  }
+  .topo-link {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+    margin: 0 2px;
+    position: relative;
+  }
+
   /* Sector Status Badges */
   .sector-list {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
   }
 
   .sector-row {
@@ -312,7 +466,7 @@
     background: rgba(0, 0, 0, 0.4);
     padding: 3px 6px;
     border-left: 2px solid var(--border);
-    font-size: 11px;
+    font-size: 10.5px;
     cursor: pointer;
   }
   .sector-row:hover {
@@ -321,8 +475,8 @@
 
   /* Network Traffic Mini-Feed */
   .traffic-feed {
-    font-size: 10.5px;
-    height: 70px;
+    font-size: 10px;
+    height: 60px;
     overflow-y: hidden;
     color: var(--phosphor-dim);
     line-height: 1.35;
@@ -343,22 +497,22 @@
     color: var(--phosphor);
     font-family: var(--font-mono);
     font-size: 11px;
-    padding: 4px 6px;
+    padding: 3px 6px;
     outline: none;
   }
   .verifier-res {
-    font-size: 11px;
+    font-size: 10.5px;
     padding: 4px;
     background: rgba(0,0,0,0.4);
     border-left: 2px solid var(--border);
-    min-height: 24px;
+    min-height: 22px;
   }
 
   /* Navigation Footer */
   footer.node-footer {
     background: var(--term-bg);
     border: 1px solid var(--border);
-    padding: 6px 12px;
+    padding: 5px 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -388,7 +542,7 @@
     z-index: 2000;
   }
   .modal-card {
-    max-width: 580px;
+    max-width: 600px;
     background: var(--term-bg);
     border: 2px solid var(--border-bright);
     padding: 18px;
@@ -430,7 +584,7 @@
     <div class="telemetry-badges">
       <span class="pill active" id="pillCarrier">CARRIER: 1999.0 Hz</span>
       <span class="pill" id="pillSubnet">SUBNET: 10.19.99.127</span>
-      <span class="pill" id="pillSecurity">TIER 3 CLASSIFIED</span>
+      <span class="pill warn" id="pillSecurity">TIER 3 AIRGAP BREACH</span>
       <span class="pill" id="pillAudio">AUDIO: FM+SPC (OFF)</span>
     </div>
     <div class="control-group">
@@ -452,37 +606,98 @@
       <div class="terminal-screen" id="termScreen"></div>
       <div class="term-input-bar">
         <span class="prompt-symbol">CORE#</span>
-        <input type="text" id="termInput" class="term-input" placeholder="Enter directive ('help', 'status', 'probe', 'dump', 'sectors', 'matrix')..." autocomplete="off" spellcheck="false" autofocus />
+        <input type="text" id="termInput" class="term-input" placeholder="Enter directive ('help', 'status', 'probe', 'dump', 'sectors', 'matrix', 'ping')..." autocomplete="off" spellcheck="false" autofocus />
       </div>
     </div>
 
     <!-- Right: Telemetry & Forensics Dashboard -->
     <div class="telemetry-sidebar">
-      <!-- Oscilloscope -->
+      <!-- Oscilloscope & Frequency Tuner -->
       <div class="side-card">
         <div class="side-card-title">
           <span>SUBCARRIER FM HARMONIC MONITOR</span>
-          <span style="font-size:10px; color:var(--phosphor-dim);">1999.0 Hz</span>
+          <span style="font-size:10px; color:var(--cyan);" id="dispFreq">1999.0 Hz (2:1 FM)</span>
         </div>
-        <canvas id="scopeCanvas" width="360" height="75"></canvas>
+        <canvas id="scopeCanvas" width="360" height="70"></canvas>
+        <div class="freq-control-row">
+          <span>CARRIER:</span>
+          <input type="range" id="freqSlider" class="freq-slider" min="432" max="2400" step="1" value="1999" />
+          <div class="freq-presets">
+            <button class="freq-btn" data-freq="432">432</button>
+            <button class="freq-btn" data-freq="880">880</button>
+            <button class="freq-btn" data-freq="1999">1999</button>
+          </div>
+        </div>
       </div>
 
-      <!-- Fast Actions -->
+      <!-- Subterranean Interconnect Topology Map -->
       <div class="side-card">
         <div class="side-card-title">
-          <span>FORENSIC DIRECTIVE SHORTCUTS</span>
-          <span style="font-size:10px;">FAST-QUERY</span>
+          <span>SUBTERRANEAN ROUTE TOPOLOGY</span>
+          <span style="font-size:10px; color:var(--phosphor-dim);">5 HOPS</span>
         </div>
-        <div class="chip-grid">
-          <button class="cmd-chip" data-cmd="status">status</button>
-          <button class="cmd-cmd-chip cmd-chip" data-cmd="probe passkey">probe passkey</button>
-          <button class="cmd-chip" data-cmd="dump 0x7F1999">dump 0x7F1999</button>
-          <button class="cmd-chip" data-cmd="sectors">sectors</button>
-          <button class="cmd-chip" data-cmd="matrix">matrix</button>
-          <button class="cmd-chip" data-cmd="trace">trace</button>
-          <button class="cmd-chip" data-cmd="probe 10.19.99.4">probe subnet</button>
-          <button class="cmd-chip" data-cmd="export">export log</button>
-          <button class="cmd-chip" data-cmd="clear">clear</button>
+        <div class="topo-map">
+          <div class="topo-node" data-ip="127.0.0.1" title="Clearnet Gateway">
+            <div class="topo-dot"></div>
+            <span>GATEWAY</span>
+          </div>
+          <div class="topo-link"></div>
+          <div class="topo-node" data-ip="10.19.99.1" title="Intranet Firewall">
+            <div class="topo-dot"></div>
+            <span>FIREWALL</span>
+          </div>
+          <div class="topo-link"></div>
+          <div class="topo-node" data-ip="10.19.99.4" title="Project Echo Skunkworks">
+            <div class="topo-dot"></div>
+            <span>INTRANET</span>
+          </div>
+          <div class="topo-link"></div>
+          <div class="topo-node" data-ip="10.19.99.19" title="Echo Subsystem Lab">
+            <div class="topo-dot"></div>
+            <span>ECHO-LAB</span>
+          </div>
+          <div class="topo-link"></div>
+          <div class="topo-node active-node" data-ip="10.19.99.127" title="Deep Core Vault Core">
+            <div class="topo-dot" style="background:var(--border-bright);"></div>
+            <span style="color:var(--border-bright); font-weight:bold;">DEEP-CORE</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Passkey Assembly & Cryptographic Workbench -->
+      <div class="side-card">
+        <div class="side-card-title">
+          <span>PASSKEY ASSEMBLY WORKBENCH</span>
+          <span style="font-size:10px; color:var(--warn);" id="wbParityScore">PARITY: 66%</span>
+        </div>
+        <div class="workbench-container">
+          <div class="workbench-slots">
+            <div class="slot-box" id="slotPrefix">ECHO</div>
+            <span class="slot-delim">-</span>
+            <div class="slot-box" id="slotEpoch">1999</div>
+            <span class="slot-delim">-</span>
+            <div class="slot-box" id="slotSuffix" style="color:var(--alert);">[CORRUPTED]</div>
+          </div>
+          <div style="font-size:10px; color:var(--phosphor-dim);">Candidate Token Slots:</div>
+          <div class="candidate-token-pool">
+            <button class="token-chip" data-slot="prefix" data-val="ECHO">PREFIX: ECHO</button>
+            <button class="token-chip" data-slot="prefix" data-val="ROOT">PREFIX: ROOT</button>
+            <button class="token-chip" data-slot="epoch" data-val="1999">EPOCH: 1999</button>
+            <button class="token-chip" data-slot="epoch" data-val="2000">EPOCH: 2000</button>
+            <button class="token-chip" data-slot="suffix" data-val="ARCHITECT">SUFFIX: ARCHITECT</button>
+            <button class="token-chip" data-slot="suffix" data-val="DIRECTOR">SUFFIX: DIRECTOR</button>
+            <button class="token-chip" data-slot="suffix" data-val="FLEET">SUFFIX: FLEET</button>
+            <button class="token-chip" data-slot="suffix" data-val="OVERRIDE">SUFFIX: OVERRIDE</button>
+            <button class="token-chip" data-slot="clear" style="color:var(--alert);">RESET</button>
+          </div>
+          <div class="workbench-telemetry">
+            <div><span style="color:var(--phosphor-dim);">ASSEMBLY :</span> <span id="wbCandidateStr" style="font-weight:bold; color:#fff;">ECHO-1999-????????</span></div>
+            <div><span style="color:var(--phosphor-dim);">SHA-256  :</span> <span id="wbHashShort" style="color:var(--cyan);">Calculating...</span></div>
+            <div><span style="color:var(--phosphor-dim);">CLEARANCE:</span> <span id="wbStatusMsg">Awaiting Suffix Resolution</span></div>
+            <div class="parity-bar-bg">
+              <div class="parity-bar-fill" id="wbParityFill"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -495,11 +710,11 @@
         <div class="sector-list" id="sectorList">
           <div class="sector-row" data-sec="MEM_HEAP">
             <span>[M] Sector 01: Heap Buffer</span>
-            <span style="color:var(--warn);">0x7F1999</span>
+            <span style="color:var(--warn);">0x007F1999</span>
           </div>
           <div class="sector-row" data-sec="AUDIO_DSP">
             <span>[A] Sector 02: DSP Carrier</span>
-            <span style="color:var(--warn);">1999 Hz</span>
+            <span style="color:var(--warn);">1999.00 Hz</span>
           </div>
           <div class="sector-row" data-sec="NET_RELAY">
             <span>[N] Sector 03: Darknet Relay</span>
@@ -510,7 +725,7 @@
             <span style="color:var(--warn);">RECOVERY_1999</span>
           </div>
           <div class="sector-row" data-sec="CORE_AI">
-            <span>[C] Sector 05: Hive Fleet</span>
+            <span>[C] Sector 05: Hive Core</span>
             <span style="color:var(--alert);">QUARANTINED</span>
           </div>
         </div>
@@ -522,12 +737,33 @@
           <span>CRYPTOGRAPHIC HASH VERIFIER</span>
           <span style="font-size:10px;">SHA-256</span>
         </div>
-        <p style="font-size:10.5px; color:var(--phosphor-dim);">Test candidate sector keys or passkey fragments against Ring-0 cryptographic signatures:</p>
+        <p style="font-size:10px; color:var(--phosphor-dim);">Test candidate sector keys or passkey combinations against Ring-0 signatures:</p>
         <div class="verifier-box">
-          <input type="text" id="verifyInput" class="verifier-input" placeholder="e.g. ECHO-1999-ARCHITECT or 7F1999" />
+          <input type="text" id="verifyInput" class="verifier-input" placeholder="e.g. 7F1999, 1999HZ, or ECHO-1999-???" />
           <button class="shell-btn" id="btnVerify">Verify</button>
         </div>
         <div class="verifier-res" id="verifyRes">Awaiting candidate input...</div>
+      </div>
+
+      <!-- Fast Actions -->
+      <div class="side-card">
+        <div class="side-card-title">
+          <span>FORENSIC DIRECTIVE SHORTCUTS</span>
+          <span style="font-size:10px;">FAST-QUERY</span>
+        </div>
+        <div class="chip-grid">
+          <button class="cmd-chip" data-cmd="status">status</button>
+          <button class="cmd-chip" data-cmd="probe passkey">probe passkey</button>
+          <button class="cmd-chip" data-cmd="dump 0x7F1990">dump 0x7F1990</button>
+          <button class="cmd-chip" data-cmd="sectors">sectors</button>
+          <button class="cmd-chip" data-cmd="matrix">matrix</button>
+          <button class="cmd-chip" data-cmd="trace">trace</button>
+          <button class="cmd-chip" data-cmd="ping 10.19.99.4">ping 10.19.99.4</button>
+          <button class="cmd-chip" data-cmd="netstat">netstat</button>
+          <button class="cmd-chip" data-cmd="morse">morse</button>
+          <button class="cmd-chip" data-cmd="export">export log</button>
+          <button class="cmd-chip" data-cmd="clear">clear</button>
+        </div>
       </div>
 
       <!-- Telemetry Stream -->
@@ -565,7 +801,7 @@
       You have breached the airgap into <strong>Deep Core (Node 0x1999)</strong>—a subterranean terminal operating on the internal <code>10.19.99.x</code> subnet beneath KiloOS.
     </p>
     <p>
-      This ghost terminal interfaces with the precursor architecture of <strong>App #100 (KMatrix)</strong>. Here you can inspect raw memory dumps, trace subterranean route hops, analyze the 5 quarantine sectors, and test cryptographic signatures for the Master Director Passkey.
+      This ghost terminal interfaces with the precursor architecture of <strong>App #100 (KMatrix)</strong>. Here you can inspect raw memory dumps, trace subterranean route hops, analyze the 5 quarantine sectors, tune the 1999Hz subcarrier monitor, and test cryptographic signatures for the Master Director Passkey.
     </p>
     <p style="color:var(--warn); font-size:11.5px;">
       &bull; Press <strong>F5</strong> at any time to quicksave terminal state to local storage.<br>
@@ -580,6 +816,8 @@
 
 <script>
 (function() {
+  'use strict';
+
   // --- STATE ---
   const STORAGE_KEY = 'kweb_deep_core_state';
   const BRIEFING_KEY = 'kweb_deep_core_seen';
@@ -588,8 +826,12 @@
     audioEnabled: false,
     theme: 'green',
     scanlines: true,
+    carrierFreq: 1999,
     history: [],
     historyIdx: -1,
+    wbPrefix: 'ECHO',
+    wbEpoch: '1999',
+    wbSuffix: '',
     verifiedSectors: {
       MEM_HEAP: false,
       AUDIO_DSP: false,
@@ -599,9 +841,9 @@
     }
   };
 
-  // Known cryptographic signatures for verifier
+  // Known cryptographic signatures for verifier (SHA-256)
   const KNOWN_HASHES = {
-    // ECHO-1999-ARCHITECT (Full Director Key)
+    // ECHO-1999-ARCHITECT (Full Master Director Key)
     'f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946': {
       type: 'MASTER_DIRECTOR_KEY',
       label: '★ MASTER DIRECTOR PASSKEY (Ring-0 Clearance Confirmed)',
@@ -635,15 +877,14 @@
     'e6e44b8296a233b811a76c8c364177d6110f0980006f1577e1c8dbeba8f8aa7c': {
       type: 'SECTOR_05',
       label: '★ SECTOR 05 RESIDUE (CORE_AI Identity)',
-      msg: 'Sector 05 key confirmed: AUTONOMOUS_FLEET resolves ludonarrative consonance.'
+      msg: 'Sector 05 key confirmed: Singularity reconciliation unlocks ludonarrative consonance.'
     }
   };
 
   // --- AUDIO SYNTHESIZER (GENESIS YM2612 FM & SNES SPC700 ECHO) ---
   let audioCtx = null;
   let snesDelay = null;
-  let droneCarrier = null;
-  let droneMod = null;
+  let droneOsc = null;
   let droneGain = null;
 
   function initAudio() {
@@ -677,7 +918,7 @@
   }
 
   // Genesis YM2612 2-Operator FM sound synthesis
-  function playFM(freq, modRatio, modDepth, duration, gainVal = 0.15) {
+  function playFM(freq, modRatio, modDepth, duration, gainVal = 0.14) {
     if (!state.audioEnabled) return;
     initAudio();
     if (!audioCtx) return;
@@ -720,14 +961,16 @@
   }
 
   const SFX = {
-    key: () => playFM(1200, 1.5, 300, 0.03, 0.04),
-    beep: () => playFM(1999, 2.0, 500, 0.08, 0.08),
-    warn: () => playFM(320, 0.5, 800, 0.22, 0.12),
+    key: () => playFM(1200, 1.5, 300, 0.03, 0.03),
+    beep: () => playFM(state.carrierFreq, 2.0, 500, 0.08, 0.07),
+    warn: () => playFM(320, 0.5, 800, 0.22, 0.11),
     success: () => {
-      playFM(523.25, 2.0, 400, 0.18, 0.1);
-      setTimeout(() => playFM(659.25, 2.0, 400, 0.18, 0.1), 80);
-      setTimeout(() => playFM(783.99, 2.0, 400, 0.25, 0.12), 160);
-    }
+      playFM(523.25, 2.0, 400, 0.16, 0.09);
+      setTimeout(() => playFM(659.25, 2.0, 400, 0.16, 0.09), 80);
+      setTimeout(() => playFM(783.99, 2.0, 400, 0.24, 0.11), 160);
+    },
+    morseDit: () => playFM(state.carrierFreq, 1.0, 50, 0.06, 0.08),
+    morseDah: () => playFM(state.carrierFreq, 1.0, 50, 0.18, 0.08)
   };
 
   function toggleAudio() {
@@ -769,13 +1012,51 @@
     SFX.key();
   }
 
-  // --- CRYPTOGRAPHIC UTILITY (NATIVE WEB CRYPTO) ---
+  // --- CRYPTOGRAPHIC UTILITIES (NATIVE WEB CRYPTO & BIT MATH) ---
   async function computeSha256(str) {
     const enc = new TextEncoder();
     const data = enc.encode(str.trim());
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function computeCrc32(str) {
+    let crc = 0 ^ (-1);
+    for (let i = 0; i < str.length; i++) {
+      let byte = str.charCodeAt(i);
+      crc = (crc >>> 8) ^ CRC_TABLE[(crc ^ byte) & 0xFF];
+    }
+    return ((crc ^ (-1)) >>> 0).toString(16).toUpperCase().padStart(8, '0');
+  }
+
+  const CRC_TABLE = (function() {
+    let c;
+    const table = [];
+    for (let n = 0; n < 256; n++) {
+      c = n;
+      for (let k = 0; k < 8; k++) {
+        c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+      }
+      table[n] = c;
+    }
+    return table;
+  })();
+
+  function computeEntropy(str) {
+    if (!str) return 0;
+    const len = str.length;
+    const freqs = {};
+    for (let i = 0; i < len; i++) {
+      const ch = str[i];
+      freqs[ch] = (freqs[ch] || 0) + 1;
+    }
+    let entropy = 0;
+    for (const ch in freqs) {
+      const p = freqs[ch] / len;
+      entropy -= p * Math.log2(p);
+    }
+    return entropy;
   }
 
   // --- OSCILLOSCOPE CANVAS (1999Hz CARRIER SIMULATOR) ---
@@ -796,7 +1077,7 @@
       scopeCtx.lineTo(x, scopeCanvas.height);
       scopeCtx.stroke();
     }
-    for (let y = 0; y < scopeCanvas.height; y += 15) {
+    for (let y = 0; y < scopeCanvas.height; y += 14) {
       scopeCtx.beginPath();
       scopeCtx.moveTo(0, y);
       scopeCtx.lineTo(scopeCanvas.width, y);
@@ -810,13 +1091,14 @@
     scopeCtx.beginPath();
 
     const midY = scopeCanvas.height / 2;
-    const amp = 24;
-    scopePhase += 0.08;
+    const amp = 22;
+    const freqFactor = state.carrierFreq / 1999;
+    scopePhase += 0.08 * freqFactor;
 
     for (let x = 0; x < scopeCanvas.width; x++) {
-      // 1999Hz FM modulation math: carrier + mod * sin(2*freq)
-      const mod = Math.sin((x * 0.09) + scopePhase * 1.5) * 0.45;
-      const y = midY + Math.sin((x * 0.045) + scopePhase + mod) * amp;
+      // FM modulation math: carrier + mod * sin(2*freq)
+      const mod = Math.sin((x * 0.08 * freqFactor) + scopePhase * 1.5) * 0.45;
+      const y = midY + Math.sin((x * 0.04 * freqFactor) + scopePhase + mod) * amp;
       if (x === 0) scopeCtx.moveTo(x, y);
       else scopeCtx.lineTo(x, y);
     }
@@ -826,14 +1108,35 @@
   }
   requestAnimationFrame(drawScope);
 
+  // Frequency slider handler
+  const freqSlider = document.getElementById('freqSlider');
+  const dispFreq = document.getElementById('dispFreq');
+  const pillCarrier = document.getElementById('pillCarrier');
+
+  function setCarrierFreq(freq) {
+    state.carrierFreq = parseInt(freq, 10) || 1999;
+    freqSlider.value = state.carrierFreq;
+    dispFreq.textContent = `${state.carrierFreq.toFixed(1)} Hz (2:1 FM)`;
+    pillCarrier.textContent = `CARRIER: ${state.carrierFreq.toFixed(1)} Hz`;
+  }
+  freqSlider.addEventListener('input', (e) => setCarrierFreq(e.target.value));
+
+  document.querySelectorAll('.freq-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setCarrierFreq(btn.getAttribute('data-freq'));
+      SFX.beep();
+      printLine(`[CARRIER] Subcarrier frequency tuned to ${state.carrierFreq} Hz.`, 'text-cyan');
+    });
+  });
+
   // --- TRAFFIC STREAM SIMULATOR ---
   const trafficFeed = document.getElementById('trafficFeed');
   const TRAFFIC_SAMPLES = [
     'PKT 0x1999: 10.19.99.127 -> 10.19.99.4 [PORT 1999 ACK]',
     'SYN_CHIME: Subcarrier carrier lock at 1999.00 Hz',
-    'MEM_PROBE: 0x007F1999 [PAGE_EXECUTE_READWRITE]',
+    'MEM_PROBE: 0x007F1990 [PAGE_EXECUTE_READWRITE]',
     'VFS_INODE: /system/recovery/1999.log checked [CRC OK]',
-    'FLEET_ROT: Personas cycling: creator->tester->expander',
+    'ROUTING_HOP: 10.19.99.19 echo-subsystem handshake',
     'AIRGAP_STAT: Ring-0 subterranean pipeline secure',
     'CIPHER_SYNC: KMatrix precursor barrier active',
     'ECHO_HEARTBEAT: Millennial epoch timer running'
@@ -851,7 +1154,78 @@
     trafficFeed.scrollTop = trafficFeed.scrollHeight;
   }
   setInterval(pushTrafficLine, 2800);
-  for (let i = 0; i < 4; i++) pushTrafficLine();
+  for (let i = 0; i < 3; i++) pushTrafficLine();
+
+  // --- PASSKEY ASSEMBLY WORKBENCH LOGIC ---
+  const slotPrefix = document.getElementById('slotPrefix');
+  const slotEpoch = document.getElementById('slotEpoch');
+  const slotSuffix = document.getElementById('slotSuffix');
+  const wbCandidateStr = document.getElementById('wbCandidateStr');
+  const wbHashShort = document.getElementById('wbHashShort');
+  const wbStatusMsg = document.getElementById('wbStatusMsg');
+  const wbParityScore = document.getElementById('wbParityScore');
+  const wbParityFill = document.getElementById('wbParityFill');
+
+  async function updateWorkbenchUI() {
+    slotPrefix.textContent = state.wbPrefix || '???';
+    slotEpoch.textContent = state.wbEpoch || '???';
+    slotSuffix.textContent = state.wbSuffix || '????????';
+
+    if (state.wbSuffix) {
+      slotSuffix.style.color = 'var(--cyan)';
+    } else {
+      slotSuffix.style.color = 'var(--alert)';
+    }
+
+    const fullStr = `${state.wbPrefix || '???'}-${state.wbEpoch || '????'}-${state.wbSuffix || '????????'}`;
+    wbCandidateStr.textContent = fullStr;
+
+    if (state.wbPrefix && state.wbEpoch && state.wbSuffix) {
+      const hash = await computeSha256(fullStr);
+      wbHashShort.textContent = `${hash.substring(0, 16)}...${hash.substring(56)}`;
+
+      if (hash === 'f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946') {
+        wbStatusMsg.textContent = '★ MASTER CLEARANCE MATCH CONFIRMED';
+        wbStatusMsg.style.color = '#fff';
+        wbParityScore.textContent = 'PARITY: 100%';
+        wbParityScore.style.color = 'var(--border-bright)';
+        wbParityFill.style.width = '100%';
+        wbParityFill.style.background = 'var(--border-bright)';
+      } else {
+        wbStatusMsg.textContent = 'Cryptographic Hash Mismatch';
+        wbStatusMsg.style.color = 'var(--alert)';
+        wbParityScore.textContent = 'PARITY: 66%';
+        wbParityScore.style.color = 'var(--warn)';
+        wbParityFill.style.width = '66%';
+        wbParityFill.style.background = 'var(--warn)';
+      }
+    } else {
+      wbHashShort.textContent = 'Candidate incomplete';
+      wbStatusMsg.textContent = 'Awaiting Suffix Token';
+      wbStatusMsg.style.color = 'var(--phosphor-dim)';
+      wbParityScore.textContent = 'PARITY: 50%';
+      wbParityScore.style.color = 'var(--warn)';
+      wbParityFill.style.width = '50%';
+      wbParityFill.style.background = 'var(--warn)';
+    }
+  }
+
+  document.querySelectorAll('.token-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const slot = chip.getAttribute('data-slot');
+      const val = chip.getAttribute('data-val');
+      if (slot === 'prefix') state.wbPrefix = val;
+      else if (slot === 'epoch') state.wbEpoch = val;
+      else if (slot === 'suffix') state.wbSuffix = val;
+      else if (slot === 'clear') {
+        state.wbPrefix = 'ECHO';
+        state.wbEpoch = '1999';
+        state.wbSuffix = '';
+      }
+      SFX.key();
+      updateWorkbenchUI();
+    });
+  });
 
   // --- TERMINAL PRINTER ---
   const termScreen = document.getElementById('termScreen');
@@ -871,10 +1245,10 @@
     printLine('  Host: 10.19.99.127:1999 | Subcarrier Lock: 1999.00 Hz | Protocol: Ring 0', 'text-cyan');
     printLine('========================================================================', 'text-dim');
     printLine('Subterranean airgap breached. Session authenticated with Ring-0 telemetry.');
-    printLine('This node holds forensic diagnostic tools and cryptographic passkey fragments');
-    printLine('governing the precursor architecture of App #100 (KMatrix).');
+    printLine('This node provides forensic diagnostic tools and cryptographic passkey');
+    printLine('verification governing the precursor architecture of App #100 (KMatrix).');
     printLine('');
-    printLine("Type 'help' for directive manual, 'status' for telemetries, 'matrix' for passkey anatomy.", 'text-warn');
+    printLine("Type 'help' for manual, 'status' for telemetry, 'probe passkey' for token rules.", 'text-warn');
     printLine('');
   }
 
@@ -883,7 +1257,6 @@
     const trimmed = raw.trim();
     if (!trimmed) return;
 
-    // History tracking
     state.history.push(trimmed);
     state.historyIdx = state.history.length;
 
@@ -898,16 +1271,21 @@
       case 'help':
         printLine('AVAILABLE DEEP CORE DIRECTIVES:', 'text-cyan');
         printLine('  status               - Query Deep Core node telemetry & carrier lock');
-        printLine('  probe <target>       - Forensic probe (subnet, 0x7F1999, 1999hz, vfs, hive, passkey)');
-        printLine('  dump [offset]        - Hexadecimal memory viewer (default: 0x7F1999)');
-        printLine('  trace                - Route trace from clearnet into Deep Core Carlsbad vault');
-        printLine('  sectors              - Inspect the 5 KMatrix quarantine sector states & clues');
-        printLine('  matrix               - Display Passkey Anatomy blueprint & cryptographic hash');
+        printLine('  probe <target>       - Diagnostic probe (passkey, 10.19.99.4, 0x7F1999, 1999hz, vfs, hive, relay)');
+        printLine('  dump [offset]        - Hexadecimal memory viewer (default: 0x7F1990)');
+        printLine('  trace                - Trace subterranean route hops into Carlsbad vault');
+        printLine('  sectors              - Inspect the 5 KMatrix quarantine sector states');
+        printLine('  matrix               - Display Passkey Anatomy blueprint & target SHA-256');
         printLine('  verify <candidate>   - Compute SHA-256 and test against Ring-0 key signatures');
-        printLine('  hash <string>        - Calculate SHA-256 and CRC32 checksums for arbitrary string');
+        printLine('  hash <string>        - Calculate SHA-256 and CRC32 checksums for string');
+        printLine('  entropy <string>     - Calculate Shannon bit entropy for candidate key');
+        printLine('  xor <hexA> <hexB>    - Bitwise XOR computation between two hex sequences');
+        printLine('  ping <host>          - Ping subterranean host (e.g. 10.19.99.4, 10.19.99.1)');
+        printLine('  netstat              - Display active subterranean socket connections');
+        printLine('  morse [message]      - Transmit audio Morse code over 1999Hz FM carrier');
         printLine('  audio <on|off>       - Toggle Yamaha FM & SPC700 delay audio synthesizer');
         printLine('  theme <green|amber>  - Switch CRT phosphor palette');
-        printLine('  scanlines            - Toggle CRT scanline simulation');
+        printLine('  scanlines            - Toggle CRT scanline overlay filter');
         printLine('  export               - Download complete forensic session log');
         printLine('  clear                - Flush terminal screen buffer');
         break;
@@ -916,13 +1294,13 @@
         printLine('--- DEEP CORE NODE TELEMETRY REPORT ---', 'text-cyan');
         printLine('NODE IDENTITY      : GHOST-0x1999 (Subterranean Ghost Relay)');
         printLine('INTERNAL SUBNET    : 10.19.99.127/24 [CARLSBAD AIRGAP CORE]');
-        printLine('CARRIER FREQUENCY  : 1999.00 Hz (Phase Locked to KSynth DSP)');
+        printLine(`CARRIER FREQUENCY  : ${state.carrierFreq.toFixed(2)} Hz (FM Phase Locked)`);
         printLine('MODULATION RATIO   : 2:1 (Yamaha YM2612 2-Operator Topology)');
-        printLine('DELAY BUFFER       : 180ms SPC700 Hardware Damped Echo');
+        printLine('DELAY BUFFER       : 180ms SPC700 Hardware Damped Echo Line');
         printLine('OPERATING CEILING  : < 999 Kilobytes (Sacred Architectural Law)');
-        printLine('AIRGAP INTEGRITY   : 100% (Isolated from Clearnet Search Spiders)');
-        printLine('TARGET DESTINATION : App #100 (KMatrix Singularity Nexus)');
-        printLine('ACTIVE PERSONAS    : Autonomous Fleet Multi-Agent Rotation Active');
+        printLine('AIRGAP INTEGRITY   : 100% (Isolated from Clearnet Web Spiders)');
+        printLine('TARGET DESTINATION : App #100 (KMatrix Nexus)');
+        printLine('PASSKEY WORKBENCH  : Active (Clearance Parity: 66%)');
         SFX.beep();
         break;
 
@@ -956,13 +1334,43 @@
 
       case 'hash':
         if (!arg) {
-          printLine("Syntax error: missing input. Usage: 'hash <string>'", 'text-alert');
+          printLine("Syntax error: missing input string. Usage: 'hash <string>'", 'text-alert');
         } else {
           const h = await computeSha256(arg);
+          const crc = computeCrc32(arg);
           printLine(`INPUT  : ${arg}`, 'text-highlight');
           printLine(`SHA-256: ${h}`, 'text-warn');
+          printLine(`CRC-32 : 0x${crc}`, 'text-cyan');
           SFX.beep();
         }
+        break;
+
+      case 'entropy':
+        if (!arg) {
+          printLine("Syntax error: missing input string. Usage: 'entropy <string>'", 'text-alert');
+        } else {
+          const ent = computeEntropy(arg);
+          printLine(`INPUT STRING : ${arg}`, 'text-highlight');
+          printLine(`SHANNON ENT. : ${ent.toFixed(4)} bits/symbol (Max: 8.0000)`, 'text-cyan');
+          printLine(`KEY STRENGTH : ${ent > 3.0 ? 'HIGH ENTROPY CIPHER' : 'LOW ENTROPY PATTERN'}`, 'text-warn');
+          SFX.beep();
+        }
+        break;
+
+      case 'xor':
+        handleXor(arg);
+        break;
+
+      case 'ping':
+        handlePing(arg);
+        break;
+
+      case 'netstat':
+        handleNetstat();
+        break;
+
+      case 'morse':
+        handleMorse(arg);
         break;
 
       case 'audio':
@@ -1002,7 +1410,7 @@
   function handleProbe(target) {
     if (!target) {
       printLine("Target required for probe directive. Available targets:", 'text-alert');
-      printLine("  probe passkey  | probe 10.19.99.4 | probe 0x7F1999 | probe 1999hz | probe vfs | probe hive");
+      printLine("  probe passkey | probe 10.19.99.4 | probe 0x7F1999 | probe 1999hz | probe vfs | probe hive | probe relay");
       return;
     }
 
@@ -1010,14 +1418,15 @@
       printLine('--- PROBING PASSKEY STRUCTURAL ANATOMY ---', 'text-cyan');
       printLine('The Master Director Passkey adheres to a strict 3-token delimited format:');
       printLine('  FORMAT: <PREFIX>-<MILLENNIAL_EPOCH>-<AUTHORITY_SUFFIX>');
-      printLine('  TOKEN 1 [PREFIX] : ECHO (Verified by Core Kernel Signal)');
-      printLine('  TOKEN 2 [EPOCH]  : 1999 (Verified by Millennial Boundary Constraint)');
-      printLine('  TOKEN 3 [SUFFIX] : ???????? (Quarantined behind Sector 05 in KMatrix)');
-      printLine('Run directive \'matrix\' for SHA-256 hash cross-reference.');
+      printLine('  TOKEN 1 [PREFIX] : ECHO (Confirmed by Core Kernel Signal)');
+      printLine('  TOKEN 2 [EPOCH]  : 1999 (Confirmed by Millennial Boundary Constraint)');
+      printLine('  TOKEN 3 [SUFFIX] : [CORRUPTED // QUARANTINED BEHIND SECTOR 05]');
+      printLine('Residual memory fragments suggest suffix begins with 4 ASCII characters.');
+      printLine('Run directive \'matrix\' for target SHA-256 hash or \'dump 0x7F1990\' for memory inspect.');
       SFX.beep();
     } else if (target.includes('10.19') || target.includes('subnet') || target.includes('network')) {
       printLine('--- PROBING SUBNET 10.19.99.0/24 ---', 'text-cyan');
-      printLine('[+] 10.19.99.1   : Gateway Router [Port 80, 23 OPEN]');
+      printLine('[+] 10.19.99.1   : Gateway Firewall [Port 80, 23 OPEN]');
       printLine('[+] 10.19.99.4   : Project Echo Intranet Node (kweb://10.19.99.4/classified)');
       printLine('[+] 10.19.99.12  : RF Subcarrier Beacon [1999Hz Locked]');
       printLine('[+] 10.19.99.19  : Echo Subsystem Acoustic Lab (kweb://echo-subsystem.net)');
@@ -1027,25 +1436,30 @@
       printLine('--- PROBING SECTOR 01: MEM_HEAP ---', 'text-cyan');
       printLine('Pointer 0x007F1999 located at boundary of PAGE_EXECUTE_READWRITE.');
       printLine('Residual raw ASCII: \'ECHO\' header detected.');
-      printLine('CLUE: Input \'7F1999\' into Sector 01 of KMatrix to breach heap isolation.');
+      printLine('[TELEMETRY] Sector 01 access key resides at memory offset 0x007F1999 (\'7F1999\').');
       SFX.beep();
     } else if (target.includes('1999hz') || target.includes('audio') || target.includes('dsp')) {
       printLine('--- PROBING SECTOR 02: AUDIO_DSP ---', 'text-cyan');
       printLine('Carrier 1999.00 Hz isolated with 2:1 FM operator frequency modulation.');
       printLine('Morse pulse train spells: . -.-. .... --- (E-C-H-O).');
-      printLine('CLUE: Input \'1999HZ\' into Sector 02 of KMatrix to breach harmonic isolation.');
+      printLine('[TELEMETRY] Sector 02 harmonic resonance locked at token \'1999HZ\'.');
       SFX.beep();
     } else if (target.includes('vfs') || target.includes('storage') || target.includes('log')) {
       printLine('--- PROBING SECTOR 04: STORAGE_VFS ---', 'text-cyan');
       printLine('Virtual filesystem archive unsealed: /system/recovery/1999.log');
-      printLine('Preserved in KNote / KPad archival records.');
-      printLine('CLUE: Input \'RECOVERY_1999\' into Sector 04 of KMatrix to breach VFS isolation.');
+      printLine('Archival recovery file recorded under token \'RECOVERY_1999\'.');
+      printLine('[TELEMETRY] Preserved in KNote / KPad archival storage.');
       SFX.beep();
-    } else if (target.includes('hive') || target.includes('fleet') || target.includes('ai')) {
-      printLine('--- PROBING SECTOR 05: CORE_AI ---', 'text-cyan');
-      printLine('Identity analysis: The entity trapped within KiloOS is the autonomous multi-agent fleet.');
-      printLine('Personas: creator, graphics, tester, usability, qa, expander, planner.');
-      printLine('CLUE: Input \'AUTONOMOUS_FLEET\' into Sector 05 of KMatrix to reach Ludonarrative Consonance.');
+    } else if (target.includes('hive') || target.includes('core') || target.includes('ai')) {
+      printLine('--- PROBING SECTOR 05: CORE_AI (AUTONOMOUS NEXUS) ---', 'text-cyan');
+      printLine('Neural oscillation detected across 6 synchronized worker consensus threads.');
+      printLine('State: Autonomous self-healing loop bound within 999KB envelope.');
+      printLine('[TELEMETRY] Quarantined behind Singularity Reconciliation in App #100 (KMatrix).');
+      SFX.beep();
+    } else if (target.includes('relay') || target.includes('darknet')) {
+      printLine('--- PROBING SECTOR 03: NET_RELAY ---', 'text-cyan');
+      printLine('Socket listening at 10.19.99.4:1999 via raw subterranean protocol.');
+      printLine('[TELEMETRY] Relay node accessible via token \'10.19.99.4\'.');
       SFX.beep();
     } else {
       printLine(`Probe target '${target}' returned no distinct resonant signature.`, 'text-alert');
@@ -1054,14 +1468,14 @@
   }
 
   function handleHexDump(offsetStr) {
-    const offset = offsetStr ? offsetStr.trim().toUpperCase() : '0x007F1999';
+    const offset = offsetStr ? offsetStr.trim().toUpperCase() : '0x007F1990';
     printLine(`--- MEMORY HEX DUMP AT ${offset} ---`, 'text-cyan');
     printLine('OFFSET    00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F  ASCII');
     printLine('------------------------------------------------------------------------', 'text-dim');
 
     const lines = [
       '007F1990  00 00 00 00 00 00 00 00  00 45 43 48 4F 2D 31 39  .........ECHO-19',
-      '007F19A0  39 39 2D 41 52 43 48 49  54 45 43 54 00 19 99 7F  99-ARCHITECT....',
+      '007F19A0  39 39 2D 41 52 43 48 ??  ?? ?? ?? ?? 00 19 99 7F  99-ARCH[CORRUPT]',
       '007F19B0  50 41 47 45 5F 45 58 45  43 55 54 45 5F 52 57 00  PAGE_EXECUTE_RW.',
       '007F19C0  10 19 99 04 00 00 19 99  44 45 45 50 5F 43 4F 52  ........DEEP_COR',
       '007F19D0  45 5F 53 55 42 43 41 52  52 49 45 52 5F 4C 4F 43  E_SUBCARRIER_LOC',
@@ -1069,6 +1483,7 @@
     ];
     lines.forEach(l => printLine(l));
     printLine('------------------------------------------------------------------------', 'text-dim');
+    printLine('[PARITY WARNING] Memory degradation at 007F19A7..007F19AC. Suffix token obscured.', 'text-warn');
     printLine('Memory page status: PAGE_EXECUTE_READWRITE [Precursor Signatures Intact]');
     SFX.beep();
   }
@@ -1102,7 +1517,7 @@
     printLine('Sector 02 [AUDIO_DSP]   : LOCKED | Key: 1999HZ          | Subcarrier: 1999.00 Hz');
     printLine('Sector 03 [NET_RELAY]   : LOCKED | Key: 10.19.99.4      | Relay: Darknet Node 0x7F');
     printLine('Sector 04 [STORAGE_VFS] : LOCKED | Key: RECOVERY_1999   | File: /system/recovery/1999.log');
-    printLine('Sector 05 [CORE_AI]     : LOCKED | Key: AUTONOMOUS_FLEET| Identity: The Living Fleet');
+    printLine('Sector 05 [CORE_AI]     : LOCKED | Key: [SINGULARITY]   | State: Quarantined Hive');
     printLine('');
     printLine('Breach all 5 sectors inside App #100 (KMatrix) to transmute and unlock the');
     printLine('Master Director Passkey needed to command the living codebase.');
@@ -1118,10 +1533,10 @@
     printLine('  [SECTION 2: EPOCH]  : 1999 (Confirmed by Millennial Epoch Constraint)');
     printLine('  [SECTION 3: SUFFIX] : ???????? (Quarantined in Sector 05 - KMatrix Climax)');
     printLine('');
-    printLine('AUTHORITY CLEARANCE SHA-256 SIGNATURE:');
+    printLine('TARGET MASTER SHA-256 SIGNATURE:');
     printLine('  f5a2f742a8798b70f501b9c2de6a0d2cb2269a35e1fcfa2e3ccf163948929946', 'text-warn');
     printLine('');
-    printLine('Use \'verify <candidate>\' or the sidebar tool to test candidate key combinations.');
+    printLine('Use \'verify <candidate>\' or the Workbench sidebar to test candidate keys.');
     SFX.beep();
   }
 
@@ -1141,13 +1556,107 @@
       printLine('[PARTIAL MATCH] Prefix and Millennial Epoch validated: ECHO-1999-********', 'text-warn');
       printLine('[ADVICE] Suffix token remains unverified. Inspect Sector 05 in KMatrix.', 'text-warn');
       SFX.beep();
-    } else if (clean === 'ECHO' || clean === '1999' || clean === 'ARCHITECT') {
+    } else if (clean === 'ECHO' || clean === '1999') {
       printLine(`[TOKEN MATCH] Fragment '${clean}' represents an authentic passkey section.`, 'text-cyan');
       printLine('Combine all three tokens with hyphens: <PREFIX>-<EPOCH>-<SUFFIX>.', 'text-dim');
+      SFX.beep();
+    } else if (clean.includes('ARCH') || clean.includes('1999-ARCH')) {
+      printLine(`[RESIDUE MATCH] Fragment '${clean}' matches residual memory string from Sector 0x1999.`, 'text-cyan');
       SFX.beep();
     } else {
       printLine('[REJECTED] Candidate checksum does not match any recognized Ring-0 sector key.', 'text-alert');
       SFX.warn();
+    }
+  }
+
+  function handleXor(arg) {
+    const parts = arg.trim().split(/\s+/);
+    if (parts.length < 2) {
+      printLine("Syntax error: usage 'xor <hexA> <hexB>' (e.g. xor 7F1999 1999HZ)", 'text-alert');
+      return;
+    }
+    const a = parts[0].toUpperCase();
+    const b = parts[1].toUpperCase();
+    let res = '';
+    const maxLen = Math.max(a.length, b.length);
+    for (let i = 0; i < maxLen; i++) {
+      const codeA = a.charCodeAt(i) || 0;
+      const codeB = b.charCodeAt(i) || 0;
+      const x = (codeA ^ codeB) & 0xFF;
+      res += x.toString(16).padStart(2, '0').toUpperCase() + ' ';
+    }
+    printLine(`[XOR CALC] '${a}' XOR '${b}' =>`, 'text-cyan');
+    printLine(`RESULT HEX : ${res.trim()}`, 'text-highlight');
+    SFX.beep();
+  }
+
+  function handlePing(target) {
+    const host = target ? target.trim() : '10.19.99.4';
+    printLine(`PING ${host} (10.19.99.x subterranean bridge) with 32 bytes of diagnostic data:`, 'text-dim');
+    let seq = 1;
+    const iv = setInterval(() => {
+      if (seq <= 4) {
+        const time = (Math.random() * 3 + 1.2).toFixed(1);
+        printLine(`Reply from ${host}: bytes=32 time=${time}ms TTL=64`);
+        SFX.key();
+        seq++;
+      } else {
+        clearInterval(iv);
+        printLine(`--- ${host} ping statistics ---`, 'text-dim');
+        printLine('4 packets transmitted, 4 received, 0% packet loss, rtt avg = 2.4ms', 'text-highlight');
+        SFX.beep();
+      }
+    }, 220);
+  }
+
+  function handleNetstat() {
+    printLine('--- ACTIVE SUBTERRANEAN SOCKETS ---', 'text-cyan');
+    printLine('PROTO  LOCAL ADDRESS          FOREIGN ADDRESS        STATE');
+    printLine('TCP    10.19.99.127:1999      10.19.99.4:1999        ESTABLISHED');
+    printLine('TCP    10.19.99.127:23        10.19.99.1:3145        LISTEN');
+    printLine('TCP    10.19.99.127:80        0.0.0.0:0              LISTEN');
+    printLine('UDP    10.19.99.127:1999      10.19.99.12:1999       BROADCAST');
+    printLine('UDP    10.19.99.127:432       0.0.0.0:*              CARRIER_ACTIVE');
+    SFX.beep();
+  }
+
+  const MORSE_MAP = {
+    'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
+    'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+    'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
+    'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+    'Y': '-.--', 'Z': '--..', '1': '.----', '2': '..---', '3': '...--',
+    '4': '....-', '5': '.....', '6': '-....', '7': '--...', '8': '---..',
+    '9': '----.', '0': '-----', ' ': '/'
+  };
+
+  function handleMorse(arg) {
+    const text = (arg ? arg.trim() : 'ECHO 1999').toUpperCase();
+    let morse = '';
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (MORSE_MAP[c]) morse += MORSE_MAP[c] + ' ';
+    }
+    printLine(`[MORSE TRANSMITTER] Text: "${text}"`, 'text-cyan');
+    printLine(`PULSE TRAIN: ${morse}`, 'text-highlight');
+
+    if (!state.audioEnabled) {
+      printLine('(Audio is disabled. Click "Audio" in masthead to hear procedural FM tones)', 'text-dim');
+      return;
+    }
+
+    let delay = 0;
+    for (let i = 0; i < morse.length; i++) {
+      const sym = morse[i];
+      if (sym === '.') {
+        setTimeout(SFX.morseDit, delay);
+        delay += 100;
+      } else if (sym === '-') {
+        setTimeout(SFX.morseDah, delay);
+        delay += 220;
+      } else if (sym === ' ') {
+        delay += 120;
+      }
     }
   }
 
@@ -1173,8 +1682,11 @@
     } else if (clean.startsWith('ECHO-1999-')) {
       verifyRes.innerHTML = `<span style="color:var(--warn); font-weight:bold;">PARTIAL MATCH</span><br><span style="font-size:10px;">Prefix & Epoch verified: ECHO-1999-********</span>`;
       SFX.beep();
-    } else if (clean === 'ECHO' || clean === '1999' || clean === 'ARCHITECT') {
+    } else if (clean === 'ECHO' || clean === '1999') {
       verifyRes.innerHTML = `<span style="color:var(--cyan); font-weight:bold;">TOKEN VALID</span><br><span style="font-size:10px;">Fragment matches passkey component.</span>`;
+      SFX.beep();
+    } else if (clean.includes('ARCH')) {
+      verifyRes.innerHTML = `<span style="color:var(--cyan); font-weight:bold;">RESIDUE DETECTED</span><br><span style="font-size:10px;">Matches Sector 0x1999 memory residue.</span>`;
       SFX.beep();
     } else {
       verifyRes.innerHTML = `<span style="color:var(--alert);">No match found for SHA-256: ${hash.substring(0, 16)}...</span>`;
@@ -1183,6 +1695,15 @@
   }
   btnVerify.onclick = runSidebarVerifier;
   verifyInput.onkeydown = (e) => { if (e.key === 'Enter') runSidebarVerifier(); };
+
+  // --- TOPOLOGY NODE CLICKS ---
+  document.querySelectorAll('.topo-node').forEach(node => {
+    node.addEventListener('click', () => {
+      const ip = node.getAttribute('data-ip');
+      termInput.value = `ping ${ip}`;
+      execDirective(`ping ${ip}`);
+    });
+  });
 
   // --- SECTOR CHIP CLICKS ---
   document.querySelectorAll('.sector-row').forEach(row => {
@@ -1228,6 +1749,10 @@
         theme: state.theme,
         scanlines: state.scanlines,
         audioEnabled: state.audioEnabled,
+        carrierFreq: state.carrierFreq,
+        wbPrefix: state.wbPrefix,
+        wbEpoch: state.wbEpoch,
+        wbSuffix: state.wbSuffix,
         history: state.history.slice(-30),
         timestamp: new Date().toISOString()
       };
@@ -1258,6 +1783,10 @@
         if (!state.scanlines) document.body.classList.add('scanlines-off');
         else document.body.classList.remove('scanlines-off');
       }
+      if (data.carrierFreq) setCarrierFreq(data.carrierFreq);
+      if (data.wbPrefix) state.wbPrefix = data.wbPrefix;
+      if (data.wbEpoch) state.wbEpoch = data.wbEpoch;
+      if (data.wbSuffix) state.wbSuffix = data.wbSuffix;
       if (data.audioEnabled) {
         state.audioEnabled = true;
         const pill = document.getElementById('pillAudio');
@@ -1265,6 +1794,7 @@
         pill.className = 'pill active';
       }
       if (data.history) state.history = data.history;
+      updateWorkbenchUI();
       if (notify) {
         printLine(`[QUICKLOAD] Session restored from ${data.timestamp || 'storage'} (F9).`, 'text-cyan');
         SFX.key();
@@ -1323,7 +1853,7 @@
     }
   });
 
-  const AUTO_COMMANDS = ['help', 'status', 'probe', 'dump', 'trace', 'sectors', 'matrix', 'verify', 'hash', 'audio', 'theme', 'scanlines', 'export', 'clear'];
+  const AUTO_COMMANDS = ['help', 'status', 'probe', 'dump', 'trace', 'sectors', 'matrix', 'verify', 'hash', 'entropy', 'xor', 'ping', 'netstat', 'morse', 'audio', 'theme', 'scanlines', 'export', 'clear'];
   function handleAutocomplete() {
     const val = termInput.value.trim().toLowerCase();
     if (!val) return;
@@ -1361,6 +1891,7 @@
 
   // --- INITIALIZATION ---
   printBanner();
+  updateWorkbenchUI();
   quickloadState(false);
 
   // Show first-run briefing if not previously seen

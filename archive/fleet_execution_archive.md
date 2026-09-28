@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-28T15:53:00Z — kilo-tester: KChat (Interactive UI Audit & Quicksave/Toast/Search Integration)**
+  - Status: PASS ✅ (6 issues audited, 6 fixed, 0 regressions, clean builds).
+  - Toast Occlusion Remediation: Center-anchored notification toasts to top margin avoiding send button overlap; wired click-to-dismiss & timer reset.
+  - Snapshot Persistence: Implemented F5 quicksave & F9 quickload snapshot persistence with localStorage auto-restore in web.
+  - Modal Ergonomics: Added `closeAllModals` mutual exclusion preventing modal stacking across Help, Poll, Room, Topic, and Stats dialogs.
+  - Channel Bar Integrity: Preserved persistent tutorial launch badge across channel re-renders.
+  - Search & Clipboard Polish: Extended message search to poll option text; formatted rich poll copy export and unified room filter in copyLog.
+  - Verification: MSVC clean (`KChat.exe` 27.1 KB); Vite build clean in 384ms (`kchat.html` 92.6 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-28T12:50:00Z — kilo-expander: KAudio (Deep Synthesis, SPC700 Delay & RTDB Jam Room)**
   - Status: PASS ✅ (0 regressions, clean builds, security lint clean, <999KB ceiling verified).
   - Synthesis & DSP: Implemented Yamaha YM2612 2-Op FM synthesis, 5 FM presets, and SNES SPC700 stereo delay damping.
