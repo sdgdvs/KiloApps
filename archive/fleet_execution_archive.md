@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-28T16:45:00Z — kilo-usability: KPing (UI/UX, Responsive Controls & Zero-Occlusion Layout)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
+  - Window & Controls Layout: Upgraded window bounds to 960x700 in App.jsx and web postMessage; reorganized controls into dual-row parameter and action bar decks.
+  - Toast Occlusion Remediation: Re-anchored toast container to top-center margin avoiding action button overlap; wired instant click dismissal.
+  - Modal Ergonomics: Implemented `closeAllModals` mutual exclusion preventing help/export modal stacking; added first-run onboarding banner.
+  - HiDPI Canvas & Accessibility: Integrated ResizeObserver for sharp high-DPI telemetry graphing; added accessible header hotkeys hint and filter pill keyboard focus.
+  - Verification: MSVC clean (`KPing.exe` 28.5 KB); Vite clean in 373ms (`kping.html` 87.0 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-28T15:53:00Z — kilo-tester: KChat (Interactive UI Audit & Quicksave/Toast/Search Integration)**
   - Status: PASS ✅ (6 issues audited, 6 fixed, 0 regressions, clean builds).
   - Toast Occlusion Remediation: Center-anchored notification toasts to top margin avoiding send button overlap; wired click-to-dismiss & timer reset.

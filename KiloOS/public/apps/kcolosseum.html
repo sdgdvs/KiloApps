@@ -99,10 +99,91 @@
     background: #2b1d0c;
     flex-shrink: 0;
   }
+  .top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #2b0808;
+    border: 2px solid #d4af37;
+    border-radius: 6px;
+    padding: 8px 14px;
+    margin-bottom: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+  }
+  .top-nav-title {
+    color: #ffd700;
+    font-size: 1.15em;
+    font-weight: bold;
+    letter-spacing: 1.5px;
+  }
+  .top-nav-btns {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  #toast-container {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 2500;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+  .toast {
+    background: #2b0808;
+    color: #ffd700;
+    border: 2px solid #d4af37;
+    border-radius: 5px;
+    padding: 8px 14px;
+    font-size: 0.95em;
+    font-weight: bold;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    pointer-events: auto;
+    cursor: pointer;
+    animation: toastIn 0.2s ease-out;
+  }
+  .toast.warning {
+    background: #4a1f00;
+    color: #ffcc66;
+    border-color: #ff9900;
+  }
+  .toast.success {
+    background: #0d381e;
+    color: #a3f7bf;
+    border-color: #2ecc71;
+  }
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.82);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+  }
 </style>
 </head>
 <body>
-  <button onclick="document.getElementById('helpModal').style.display='flex'" style="position:absolute; top:20px; right:20px; z-index:100; font-size:1.1em; padding:10px;">Lanista's Guide [H]</button>
+  <div id="toast-container"></div>
+
+  <div class="top-nav">
+    <div class="top-nav-title">🏛️ KCOLOSSEUM (1999)</div>
+    <div class="top-nav-btns">
+      <button onclick="quickSave()" title="Quicksave Ludus State [F5]">💾 Save [F5]</button>
+      <button onclick="quickLoad()" title="Quickload Ludus State [F9]">📂 Load [F9]</button>
+      <button onclick="showExportModal()" title="Backup & Restore JSON Save">📜 Backup</button>
+      <button onclick="showHelp()" title="Open Lanista's Guide [F1 / H]">📖 Guide [F1/H]</button>
+      <button onclick="resetLudus()" style="background:#552222; font-size:0.8em;" title="Reset Ludus">🔄 Reset</button>
+    </div>
+  </div>
   <h1>KColosseum - Ludus Management</h1>
   <div class="funds">Treasury: <span id="fundsDisplay">1000</span> Denarii | League: <span id="leagueDisplay">Local Pits (Level 1)</span></div>
   
@@ -145,42 +226,113 @@
     <div id="combatLog" style="margin-top:15px; height:130px; overflow-y:auto; background:#fff; color:#333; padding:10px; border:1px solid #ccc; font-family:monospace; font-size:0.9em;"></div>
   </div>
 
-  <div id="helpModal" onclick="if(event.target===this)this.style.display='none'" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center;">
+  <!-- Help Modal (Lanista's Guide) -->
+  <div id="helpModal" class="modal-backdrop" onclick="if(event.target===this)closeAllModals()" style="display:none;">
     <div class="panel" style="width:80%; max-width:700px; max-height:85vh; overflow-y:auto; position:relative; background:#fdf5e6; color:#333;">
-      <button onclick="document.getElementById('helpModal').style.display='none'" style="position:absolute; top:15px; right:15px;">Close [Esc]</button>
+      <button onclick="closeAllModals()" style="position:absolute; top:15px; right:15px;">Close [Esc]</button>
       <h2 style="border-bottom:2px solid #d4af37; padding-bottom:10px; margin-top:0;">Lanista's Guide</h2>
-      <div style="font-size:1.1em; line-height:1.6; margin-top:20px;">
+      <div style="font-size:1.05em; line-height:1.6; margin-top:15px;">
         <p><strong>HOW TO PLAY:</strong><br>
-        Buy gladiators from the market, equip them, and train their stats.<br>
-        When ready, send them to the Arena to fight and earn Denarii.<br>
-        If your gladiator dies, they are lost forever! Heal them between fights.</p>
+        Recruit fighters from the slave market, train their physical attributes, and equip legendary gladiatorial armaments.
+        When ready, dispatch them into the sands of the Arena to win prestige, crowd favor, and Denarii.<br>
+        <em>Beware:</em> If your gladiator falls in battle, they are lost forever to the Underworld! Heal your fighters between bouts.</p>
         
         <p><strong>KEYBOARD SHORTCUTS:</strong></p>
         <ul style="list-style-type:disc; padding-left:20px;">
-          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>A / 1:</strong>&nbsp;Attack in combat</li>
-          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>D / 2:</strong>&nbsp;Defend in combat</li>
-          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>S / 3:</strong>&nbsp;Showboat in combat</li>
-          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>F / 4:</strong>&nbsp;Flee combat</li>
-          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>H:</strong>&nbsp;Toggle Lanista's Guide</li>
-          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Esc:</strong>&nbsp;Close modal or exit arena</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>F5 / F9:</strong>&nbsp;Quicksave / Quickload Ludus snapshot</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>F1 / H / ?:</strong>&nbsp;Open / close this Lanista's Guide</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>R:</strong>&nbsp;Refresh recruit market (50D)</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>1, 2, 3:</strong>&nbsp;Quick-recruit market fighter 1, 2, or 3</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Space / Enter:</strong>&nbsp;Attack in combat / Enter arena with ready fighter / Dismiss modals</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>A / 1:</strong>&nbsp;Attack in arena combat</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>D / 2:</strong>&nbsp;Defend in arena combat</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>S / 3:</strong>&nbsp;Showboat for Crowd Favor in combat</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>F / 4:</strong>&nbsp;Flee combat (retreat with gladiator's life intact)</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Esc:</strong>&nbsp;Dismiss open dialogs or exit arena after battle</li>
         </ul>
 
         <p><strong>COMBAT TACTICS:</strong></p>
         <ul style="list-style-type:disc; padding-left:20px;">
-          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Attack:</strong>&nbsp;Uses STR for damage. Hit chance is based on AGI difference.</li>
-          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Defend:</strong>&nbsp;Skips your turn, but drastically reduces enemy hit chance and damage.</li>
-          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Showboat:</strong>&nbsp;Skips your turn to build Crowd Favor. At 100%, the crowd rewards you with gold or healing!</li>
-          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Flee:</strong>&nbsp;Saves your gladiator's life, but you drop an Arena Level in disgrace.</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Attack:</strong>&nbsp;STR scales damage. Hit chance scales with AGI advantage.</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Defend:</strong>&nbsp;Dramatically minimizes enemy hit rate and damage taken.</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Showboat:</strong>&nbsp;Gathers crowd adoration. At 100% Crowd Favor, gold showers down or doctors toss healing sponges!</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Flee:</strong>&nbsp;Preserves your veteran gladiator's life at the price of ludus arena standing.</li>
         </ul>
 
         <p><strong>EQUIPMENT & WEAPON MASTERY:</strong></p>
         <ul style="list-style-type:disc; padding-left:20px;">
-          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Gladius (Glad):</strong>&nbsp;+3 STR; 20% chance to inflict Rend (+4 bleed damage & blood spray)</li>
-          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Trident (Trid):</strong>&nbsp;+3 AGI; 20% chance to Entangle (staggers foe, halving their attack)</li>
-          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Armor (Armr):</strong>&nbsp;+5 VIT (+50 Max HP) with bronze muscle cuirass</li>
-          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Shield (Shld):</strong>&nbsp;Greatly increases Defend block, with Shield Bash counter-strike on enemy miss</li>
-          <li style="border:none; padding:5px 0; background:transparent; justify-content:flex-start;"><strong>Bare Fists:</strong>&nbsp;Brawler's Fury generates double Crowd Favor per strike!</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Gladius:</strong>&nbsp;+3 STR; 20% arterial rend chance (+4 bonus bleed damage).</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Trident:</strong>&nbsp;+3 AGI; 20% entanglement chance (cripples foe's next strike by 50%).</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Cuirass Armor:</strong>&nbsp;+5 VIT (+50 Max HP) with bronze muscle plate.</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Bronze Shield:</strong>&nbsp;Enhanced block mitigation plus devastating counter Shield Bash on enemy misses.</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Bare Fists:</strong>&nbsp;Brawler's Fury grants double Crowd Favor gain per landed hit.</li>
         </ul>
+
+        <div style="display:flex; justify-content:space-between; margin-top:20px; flex-wrap:wrap; gap:10px;">
+          <button onclick="showTutorial()" style="border-color:#d4af37;">📜 View First-Run Briefing</button>
+          <button onclick="closeAllModals()">Close Guide [Esc]</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tutorial Modal (First-Run Briefing) -->
+  <div id="tutorialModal" class="modal-backdrop" onclick="if(event.target===this)dismissTutorial()" style="display:none;">
+    <div class="panel" style="width:85%; max-width:640px; max-height:85vh; overflow-y:auto; position:relative; background:#fdf5e6; color:#333;">
+      <button onclick="dismissTutorial()" style="position:absolute; top:15px; right:15px;">✕ [Esc]</button>
+      <h2 style="border-bottom:2px solid #d4af37; padding-bottom:10px; margin-top:0; color:#8b0000;">🏛️ WELCOME TO ROME, LANISTA</h2>
+      <div style="font-size:1.05em; line-height:1.6; margin-top:15px;">
+        <p>You have taken ownership of a fledgling <strong>Gladiator Ludus</strong> in 1999 B.C. Rome. The Emperor and the Roman mob crave spectacle, courage, and blood.</p>
+        <p><strong>Your Path to Glory:</strong></p>
+        <ol style="padding-left:20px;">
+          <li><strong>Recruit:</strong> Scout promising fighters from the market on the left.</li>
+          <li><strong>Arm & Train:</strong> Equip swords, tridents, armor, and shields. Train their STR, AGI, and VIT.</li>
+          <li><strong>Fight in the Arena:</strong> Send seasoned fighters to the pit. Earn Denarii and advance your Ludus to the Grand Colosseum!</li>
+          <li><strong>Protect Your Veterans:</strong> If wounded, heal them before the next match. Death in the arena is permanent.</li>
+        </ol>
+        <div style="text-align:center; margin-top:20px;">
+          <button onclick="dismissTutorial()" style="font-size:1.15em; padding:8px 24px; background:#228b22; color:#fff; border-color:#d4af37;">Enter the Ludus [Enter / Space]</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export / Import Modal -->
+  <div id="exportModal" class="modal-backdrop" onclick="if(event.target===this)closeAllModals()" style="display:none;">
+    <div class="panel" style="width:85%; max-width:600px; max-height:85vh; overflow-y:auto; position:relative; background:#fdf5e6; color:#333;">
+      <button onclick="closeAllModals()" style="position:absolute; top:15px; right:15px;">Close [Esc]</button>
+      <h2 style="border-bottom:2px solid #d4af37; padding-bottom:10px; margin-top:0;">📜 Ludus Save Records</h2>
+      <p style="margin-top:10px; font-size:0.95em;">Export your ludus roster and treasury to backup JSON or import an existing save.</p>
+      
+      <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
+        <button onclick="exportSave()">💾 Download Save File (.json)</button>
+        <button onclick="copyExportText()">📋 Copy JSON to Clipboard</button>
+        <button onclick="document.getElementById('importFileInput').click()">📂 Upload .json Save</button>
+        <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importSaveFile(this.files[0])">
+      </div>
+
+      <textarea id="exportTextArea" style="width:100%; height:150px; box-sizing:border-box; font-family:monospace; font-size:0.85em; background:#fff; border:1px solid #d4af37; padding:8px; border-radius:4px;" placeholder="Paste JSON save data here to restore..."></textarea>
+      
+      <div style="display:flex; justify-content:space-between; margin-top:12px;">
+        <button onclick="importFromTextArea()" style="background:#228b22; color:#fff;">Apply Pasted JSON</button>
+        <button onclick="closeAllModals()">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Champion Victory Modal -->
+  <div id="victoryModal" class="modal-backdrop" onclick="if(event.target===this)closeAllModals()" style="display:none;">
+    <div class="panel" style="width:85%; max-width:620px; max-height:85vh; overflow-y:auto; position:relative; background:#fdf5e6; color:#333; text-align:center;">
+      <button onclick="closeAllModals()" style="position:absolute; top:15px; right:15px;">Close [Esc]</button>
+      <h1 style="color:#8b0000; margin-top:0; border-bottom:2px solid #d4af37; padding-bottom:8px;">🏆 CHAMPION OF ROME 🏆</h1>
+      <p style="font-size:1.15em; font-weight:bold; color:#8b0000;">Hail the Supreme Lanista of the Grand Colosseum!</p>
+      <p>The Senate and the People of Rome chant your ludus's name. Your gladiators have conquered every beast, chariot, twin warrior, and Gallic behemoth in the empire!</p>
+      
+      <div id="victoryStats" style="background:#fff; border:1px solid #d4af37; border-radius:6px; padding:12px; margin:15px auto; text-align:left; font-size:1em; line-height:1.6; max-width:480px;"></div>
+      
+      <div style="display:flex; justify-content:center; gap:12px; margin-top:20px; flex-wrap:wrap;">
+        <button onclick="closeAllModals()" style="font-size:1.05em; padding:8px 20px; background:#228b22; color:#fff;">Continue Champion's Exhibition [Enter]</button>
+        <button onclick="closeAllModals(); resetLudus();" style="font-size:0.9em; background:#552222; color:#fff;">Found New Dynasty (Reset)</button>
       </div>
     </div>
   </div>
@@ -500,11 +652,13 @@
     function buyGladiator(id) {
       const index = market.findIndex(g => g.id === id);
       if (index !== -1 && funds >= market[index].cost) {
-        funds -= market[index].cost;
-        owned.push(market[index]);
+        const recruit = market[index];
+        funds -= recruit.cost;
+        owned.push(recruit);
         market.splice(index, 1);
         playTone(330, 'triangle', 0.12, 0.3);
         setTimeout(() => playTone(440, 'triangle', 0.18, 0.3), 100);
+        showToast(`🏛️ Recruited ${recruit.name}!`, 'success');
         saveGame();
         updateUI();
       }
@@ -516,12 +670,14 @@
       let cost = (type === 'shld') ? 30 : 50;
       if (funds >= cost) {
           funds -= cost;
-          if (type === 'glad') g.weapon = 1;
-          if (type === 'trid') g.weapon = 2;
-          if (type === 'armr') g.armor = 1;
-          if (type === 'shld') g.shield = 1;
+          let itemLabel = "";
+          if (type === 'glad') { g.weapon = 1; itemLabel = "Gladius"; }
+          if (type === 'trid') { g.weapon = 2; itemLabel = "Trident"; }
+          if (type === 'armr') { g.armor = 1; itemLabel = "Cuirass Armor"; }
+          if (type === 'shld') { g.shield = 1; itemLabel = "Bronze Shield"; }
           playTone(400, 'square', 0.1, 0.2);
           updateDesc(g);
+          showToast(`⚔️ Equipped ${itemLabel} on ${g.name}!`, 'info');
           saveGame();
           updateUI();
       }
@@ -538,6 +694,7 @@
           playTone(280, 'sine', 0.12, 0.3);
           setTimeout(() => playTone(370, 'sine', 0.15, 0.3), 80);
           updateDesc(gladiator);
+          showToast(`💪 Trained ${gladiator.name} (+1 ${stat.toUpperCase()})!`, 'info');
           saveGame();
           updateUI();
         }
@@ -553,6 +710,7 @@
         playTone(523.25, 'sine', 0.15, 0.25);
         setTimeout(() => playTone(659.25, 'sine', 0.2, 0.25), 100);
         updateDesc(g);
+        showToast(`🩹 Healed ${g.name} (+${healAmt} HP)!`, 'success');
         saveGame();
         updateUI();
       }
@@ -564,6 +722,7 @@
     let enemyDefending = false;
     let enemyStaggered = false;
     let combatOver = false;
+    let combatBusy = false;
     let crowdFavor = 0;
 
     // --- GRAPHICAL ARENA CANVAS & PARTICLE ENGINE ---
@@ -1908,6 +2067,7 @@
     }
 
     function setCombatButtonsDisabled(disabled) {
+      combatBusy = disabled;
       ['btnAttack', 'btnDefend', 'btnShowboat', 'btnFlee'].forEach(id => {
         const btn = document.getElementById(id);
         if (btn) btn.disabled = disabled;
@@ -1939,6 +2099,7 @@
           logCombat(`<strong>The crowd goes wild! They throw <span style="color:#d4af37;">${gold} Denarii</span> into the arena!</strong>`);
           spawnParticles(arenaCanvas.width * 0.5, 50, 20, 'coins');
           addFloatingText(`+${gold}D!`, arenaCanvas.width * 0.28, 120, '#ffd700');
+          showToast(`🏛️ Crowd showers ${gold} Denarii!`, 'success');
         } else {
           let heal = 20 + Math.floor(Math.random() * 21);
           currentFighter.hp = Math.min(currentFighter.maxHp, currentFighter.hp + heal);
@@ -1946,6 +2107,7 @@
           logCombat(`<strong>The crowd cheers! A medical sponge is thrown! Healed <span style="color:#228b22;">${heal} HP</span>!</strong>`);
           spawnParticles(arenaCanvas.width * 0.28, arenaCanvas.height * 0.68, 18, 'heal');
           addFloatingText(`+${heal} HP!`, arenaCanvas.width * 0.28, 120, '#32cd32');
+          showToast(`🩹 Crowd tosses medicine (+${heal} HP)!`, 'success');
         }
         updateCombatUI();
         updateUI();
@@ -1959,7 +2121,7 @@
     }
 
     function combatAction(action) {
-      if (combatOver) return;
+      if (combatOver || combatBusy) return;
       setCombatButtonsDisabled(true);
       
       const pX = arenaCanvas.width * 0.28;
@@ -1976,6 +2138,7 @@
           logCombat(`<em>Your ludus drops to level ${arenaLevel}...</em>`);
         }
         combatOver = true;
+        combatBusy = false;
         setTimeout(exitArena, 1500);
         return;
       }
@@ -2077,14 +2240,29 @@
         spawnParticles(pX, pY - 30, 30, 'sparks', '#ffd700');
         spawnParticles(arenaCanvas.width * 0.5, 40, 25, 'coins');
         addFloatingText(`VICTORY! +${reward}D`, arenaCanvas.width * 0.5, 90, '#ffd700');
+        showToast(`🏆 Victory! Earned +${reward}D!`, 'success');
 
+        let achievedChampion = false;
         if (arenaLevel < 10) {
           arenaLevel++;
           logCombat(`<em>Your ludus advances to level ${arenaLevel}!</em>`);
+          if (arenaLevel === 10) {
+            achievedChampion = true;
+          }
+        } else if (arenaLevel >= 10) {
+          achievedChampion = true;
         }
         updateUI();
         combatOver = true;
-        setTimeout(exitArena, 2400);
+        combatBusy = false;
+        if (achievedChampion) {
+          setTimeout(() => {
+            exitArena();
+            showVictoryModal();
+          }, 2400);
+        } else {
+          setTimeout(exitArena, 2400);
+        }
         return;
       }
       
@@ -2201,6 +2379,7 @@
       updateCombatUI();
       logCombat(`<strong>${currentFighter.name} is DEAD.</strong>`);
       playDefeat();
+      showToast(`💀 ${currentFighter.name} has perished in the arena!`, 'warning');
       addScreenShake(12);
       addFloatingText("DEAD", arenaCanvas.width * 0.28, arenaCanvas.height * 0.68 - 30, '#ff0000');
       const deadIdx = owned.findIndex(g => g.id === currentFighter.id);
@@ -2214,6 +2393,7 @@
       saveGame();
       updateUI();
       combatOver = true;
+      combatBusy = false;
       setTimeout(exitArena, 2400);
     }
     
@@ -2235,21 +2415,180 @@
       if (currentFighter) {
         updateDesc(currentFighter);
       }
+      currentFighter = null;
+      enemyFighter = null;
+      combatBusy = false;
+      combatOver = false;
       saveGame();
       updateUI();
     }
 
+    // --- MODAL CONTROLS & ERGONOMICS ---
+    function closeAllModals() {
+      ['helpModal', 'tutorialModal', 'exportModal', 'victoryModal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+      });
+    }
+
+    function showHelp() {
+      closeAllModals();
+      const el = document.getElementById('helpModal');
+      if (el) el.style.display = 'flex';
+    }
+
+    function showTutorial() {
+      closeAllModals();
+      const el = document.getElementById('tutorialModal');
+      if (el) el.style.display = 'flex';
+    }
+
+    function dismissTutorial() {
+      try {
+        localStorage.setItem('kcolosseum_tutorialSeen', '1');
+      } catch (e) {}
+      closeAllModals();
+      showToast('🏛️ Welcome Lanista! Good fortune in the arena.', 'info');
+      playTone(440, 'triangle', 0.15, 0.3);
+    }
+
+    function showExportModal() {
+      closeAllModals();
+      const el = document.getElementById('exportModal');
+      if (!el) return;
+      const ta = document.getElementById('exportTextArea');
+      if (ta) {
+        try {
+          ta.value = JSON.stringify(getSavePayload(), null, 2);
+        } catch (e) {
+          ta.value = '';
+        }
+      }
+      el.style.display = 'flex';
+    }
+
+    function showVictoryModal() {
+      closeAllModals();
+      const el = document.getElementById('victoryModal');
+      if (!el) return;
+      const stats = document.getElementById('victoryStats');
+      if (stats) {
+        stats.innerHTML = `
+          <div>• Treasury: <strong>${funds} Denarii</strong></div>
+          <div>• Arena Standing: <strong>Champion of Rome (Level 10)</strong></div>
+          <div>• Active Gladiators in Ludus: <strong>${owned.length}</strong></div>
+          <div>• Ludus Legacy: Immortalized in the Roman Archives</div>
+        `;
+      }
+      el.style.display = 'flex';
+      playVictory();
+    }
+
+    // --- TOAST NOTIFICATIONS ---
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerText = msg;
+      toast.onclick = () => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 150);
+      };
+      container.appendChild(toast);
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.style.opacity = '0';
+          toast.style.transition = 'opacity 0.2s';
+          setTimeout(() => toast.remove(), 200);
+        }
+      }, 2500);
+    }
+
+    // --- STATE PERSISTENCE & BACKUP ---
+    function getSavePayload() {
+      return {
+        version: '1.0',
+        timestamp: Date.now(),
+        funds,
+        arenaLevel,
+        nextId,
+        owned: owned.map(g => ({
+          id: g.id,
+          name: g.name,
+          cost: g.cost,
+          str: g.str,
+          agi: g.agi,
+          vit: g.vit,
+          weapon: g.weapon,
+          armor: g.armor,
+          shield: g.shield,
+          damageTaken: typeof g.damageTaken === 'number' ? g.damageTaken : 0,
+          skinTone: g.skinTone
+        })),
+        market: market.map(g => ({
+          id: g.id,
+          name: g.name,
+          cost: g.cost,
+          str: g.str,
+          agi: g.agi,
+          vit: g.vit,
+          weapon: g.weapon,
+          armor: g.armor,
+          shield: g.shield,
+          damageTaken: typeof g.damageTaken === 'number' ? g.damageTaken : 0,
+          skinTone: g.skinTone
+        }))
+      };
+    }
+
     function saveGame() {
       try {
-        const data = {
-          funds,
-          arenaLevel,
-          nextId,
-          owned,
-          market
-        };
-        localStorage.setItem('kcolosseum_save', JSON.stringify(data));
+        const payload = getSavePayload();
+        localStorage.setItem('kcolosseum_save', JSON.stringify(payload));
       } catch (e) {}
+    }
+
+    function quickSave() {
+      try {
+        const payload = getSavePayload();
+        localStorage.setItem('kcolosseum_quicksave', JSON.stringify(payload));
+        localStorage.setItem('kcolosseum_save', JSON.stringify(payload));
+        showToast('💾 Quicksave created! [F5]', 'success');
+        playTone(440, 'triangle', 0.12, 0.3);
+        return true;
+      } catch (e) {
+        showToast('⚠️ Storage quota error on quicksave.', 'warning');
+        return false;
+      }
+    }
+
+    function applySaveData(data) {
+      if (!data) return false;
+      if (typeof data.funds === 'number') funds = data.funds;
+      if (typeof data.arenaLevel === 'number') arenaLevel = data.arenaLevel;
+      if (typeof data.nextId === 'number') nextId = data.nextId;
+      if (Array.isArray(data.owned)) {
+        owned.length = 0;
+        data.owned.forEach(g => {
+          if (typeof g.damageTaken !== 'number') g.damageTaken = 0;
+          updateDesc(g);
+          owned.push(g);
+        });
+      }
+      if (Array.isArray(data.market)) {
+        market.length = 0;
+        data.market.forEach(g => {
+          if (typeof g.damageTaken !== 'number') g.damageTaken = 0;
+          updateDesc(g);
+          market.push(g);
+        });
+      }
+      if (document.getElementById('arenaPanel').style.display !== 'none') {
+        exitArena();
+      }
+      updateUI();
+      return true;
     }
 
     function loadGame() {
@@ -2257,54 +2596,236 @@
         const raw = localStorage.getItem('kcolosseum_save');
         if (raw) {
           const data = JSON.parse(raw);
-          if (typeof data.funds === 'number') funds = data.funds;
-          if (typeof data.arenaLevel === 'number') arenaLevel = data.arenaLevel;
-          if (typeof data.nextId === 'number') nextId = data.nextId;
-          if (Array.isArray(data.owned) && data.owned.length > 0) {
-            owned.length = 0;
-            data.owned.forEach(g => { updateDesc(g); owned.push(g); });
-          }
-          if (Array.isArray(data.market) && data.market.length > 0) {
-            market.length = 0;
-            data.market.forEach(g => { updateDesc(g); market.push(g); });
-          }
+          applySaveData(data);
         }
       } catch (e) {}
     }
 
-    window.addEventListener('keydown', (e) => {
-      const key = e.key.toLowerCase();
-      const helpModal = document.getElementById('helpModal');
-      const arenaPanel = document.getElementById('arenaPanel');
+    function quickLoad() {
+      try {
+        let raw = localStorage.getItem('kcolosseum_quicksave');
+        if (!raw) {
+          raw = localStorage.getItem('kcolosseum_save');
+        }
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (applySaveData(data)) {
+            showToast('📂 Quicksave restored! [F9]', 'success');
+            playVictory();
+            return true;
+          }
+        }
+        showToast('⚠️ No quicksave snapshot found!', 'warning');
+        playTone(150, 'sawtooth', 0.2, 0.3);
+        return false;
+      } catch (e) {
+        showToast('⚠️ Failed to load save file.', 'warning');
+        return false;
+      }
+    }
 
-      if (key === 'escape') {
-        if (helpModal && helpModal.style.display !== 'none') {
-          helpModal.style.display = 'none';
+    function exportSave() {
+      try {
+        const payload = getSavePayload();
+        const str = JSON.stringify(payload, null, 2);
+        const blob = new Blob([str], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `kcolosseum_backup_${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('📜 Save exported to file!', 'success');
+      } catch (e) {
+        showToast('⚠️ Export failed.', 'warning');
+      }
+    }
+
+    function copyExportText() {
+      const ta = document.getElementById('exportTextArea');
+      if (ta && ta.value) {
+        navigator.clipboard.writeText(ta.value).then(() => {
+          showToast('📋 Save JSON copied to clipboard!', 'success');
+        }).catch(() => {
+          ta.select();
+          document.execCommand('copy');
+          showToast('📋 Save JSON copied!', 'success');
+        });
+      }
+    }
+
+    function importSaveFile(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (applySaveData(data)) {
+            saveGame();
+            closeAllModals();
+            showToast('📜 Backup restored successfully!', 'success');
+            playVictory();
+          } else {
+            showToast('⚠️ Invalid save format.', 'warning');
+          }
+        } catch (err) {
+          showToast('⚠️ Error parsing JSON file.', 'warning');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function importFromTextArea() {
+      const ta = document.getElementById('exportTextArea');
+      if (!ta || !ta.value.trim()) {
+        showToast('⚠️ Paste valid save JSON first!', 'warning');
+        return;
+      }
+      try {
+        const data = JSON.parse(ta.value.trim());
+        if (applySaveData(data)) {
+          saveGame();
+          closeAllModals();
+          showToast('📜 Save restored from text!', 'success');
+          playVictory();
+        } else {
+          showToast('⚠️ Invalid save data format.', 'warning');
+        }
+      } catch (e) {
+        showToast('⚠️ Invalid JSON string.', 'warning');
+      }
+    }
+
+    function resetLudus() {
+      if (!confirm("Are you sure you want to dismiss all gladiators and reset your Ludus?")) return;
+      funds = 1000;
+      arenaLevel = 1;
+      nextId = 1;
+      owned.length = 0;
+      market.length = 0;
+      market.push(generateGladiator(), generateGladiator(), generateGladiator());
+      localStorage.removeItem('kcolosseum_save');
+      localStorage.removeItem('kcolosseum_quicksave');
+      if (document.getElementById('arenaPanel').style.display !== 'none') {
+        exitArena();
+      }
+      saveGame();
+      updateUI();
+      showToast('🔄 Ludus reset to initial standing.', 'info');
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.altKey || e.metaKey) return;
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+
+      const helpOpen = document.getElementById('helpModal') && document.getElementById('helpModal').style.display === 'flex';
+      const tutOpen = document.getElementById('tutorialModal') && document.getElementById('tutorialModal').style.display === 'flex';
+      const expOpen = document.getElementById('exportModal') && document.getElementById('exportModal').style.display === 'flex';
+      const vicOpen = document.getElementById('victoryModal') && document.getElementById('victoryModal').style.display === 'flex';
+      const anyModalOpen = helpOpen || tutOpen || expOpen || vicOpen;
+      const arenaOpen = document.getElementById('arenaPanel') && document.getElementById('arenaPanel').style.display !== 'none';
+
+      if (e.key === 'Escape') {
+        if (anyModalOpen) {
+          closeAllModals();
           return;
         }
-        if (arenaPanel && arenaPanel.style.display !== 'none' && !combatOver) {
-          combatAction('flee');
+        if (arenaOpen) {
+          if (combatOver) {
+            exitArena();
+          } else if (!combatBusy) {
+            combatAction('flee');
+          }
           return;
         }
       }
 
-      if (key === 'h') {
-        if (helpModal) {
-          helpModal.style.display = helpModal.style.display === 'flex' ? 'none' : 'flex';
+      if (e.key === 'F1' || e.key === 'h' || e.key === 'H' || e.key === '?') {
+        e.preventDefault();
+        if (helpOpen) closeAllModals();
+        else showHelp();
+        return;
+      }
+
+      if (e.key === 'F5') {
+        e.preventDefault();
+        quickSave();
+        return;
+      }
+
+      if (e.key === 'F9') {
+        e.preventDefault();
+        quickLoad();
+        return;
+      }
+
+      if (tutOpen) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          dismissTutorial();
+          return;
+        }
+      }
+
+      if (vicOpen) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          closeAllModals();
+          return;
+        }
+      }
+
+      if (anyModalOpen) return;
+
+      if (arenaOpen) {
+        if (combatOver) {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            exitArena();
+          }
+          return;
+        }
+        if (combatBusy) return;
+
+        if (e.key === '1' || e.key === 'a' || e.key === 'A' || e.key === ' ') {
+          e.preventDefault();
+          combatAction('attack');
+        } else if (e.key === '2' || e.key === 'd' || e.key === 'D') {
+          e.preventDefault();
+          combatAction('defend');
+        } else if (e.key === '3' || e.key === 's' || e.key === 'S') {
+          e.preventDefault();
+          combatAction('showboat');
+        } else if (e.key === '4' || e.key === 'f' || e.key === 'F') {
+          e.preventDefault();
+          combatAction('flee');
         }
         return;
       }
 
-      if (arenaPanel && arenaPanel.style.display !== 'none' && !combatOver) {
-        if (key === '1' || key === 'a') combatAction('attack');
-        else if (key === '2' || key === 'd') combatAction('defend');
-        else if (key === '3' || key === 's') combatAction('showboat');
-        else if (key === '4' || key === 'f') combatAction('flee');
+      // Dashboard shortcuts
+      if (e.key === 'r' || e.key === 'R') {
+        e.preventDefault();
+        refreshMarket();
+      } else if (e.key === '1' && market[0]) {
+        buyGladiator(market[0].id);
+      } else if (e.key === '2' && market[1]) {
+        buyGladiator(market[1].id);
+      } else if (e.key === '3' && market[2]) {
+        buyGladiator(market[2].id);
+      } else if ((e.key === 'Enter' || e.key === ' ') && owned.length > 0) {
+        const ready = owned.find(g => g.damageTaken < getEffVit(g) * 10);
+        if (ready) enterArena(ready.id);
       }
     });
 
     loadGame();
     updateUI();
+    if (!localStorage.getItem('kcolosseum_tutorialSeen')) {
+      setTimeout(showTutorial, 400);
+    }
   </script>
 </body>
 </html>
