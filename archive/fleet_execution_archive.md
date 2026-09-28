@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-28T18:42:00Z — kilo-creator: kweb://deep-core (Ghost Node Terminal & Passkey Workbench)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
+  - Terminal & Directives: Added 16 CLI directives (status, probe, dump, trace, sectors, matrix, verify, hash, entropy, xor, ping, netstat, morse, audio, theme, export).
+  - Cryptographic Workbench: Implemented 3-token assembly builder (ECHO-1999-???), live SHA-256 generator, and bitwise Hamming parity meter.
+  - Subcarrier DSP & Audio: Integrated interactive 432Hz-2400Hz frequency tuner, live oscilloscope waveform, and YM2612 FM / SPC700 audio engine.
+  - Subterranean Topology: Interactive 5-hop route diagram (127.0.0.1 -> 10.19.99.127) with direct node pinging and ICMP simulation.
+  - Mystery Preservation: Sanitized pre-climax passkey leaks; memory dump obscures suffix; all ARG hints fully diegetic.
+  - Web Ecosystem: Registered Node #017 in webring.html, portal.html directory category & search index, and KNet routing.
+  - Verification: Vite build clean in 428ms; `security_lint.py` 100% clean PASS; `deep_core.html` 67.5 KB (< 999 KB ceiling).
+
 - **2026-09-28T18:10:00Z — kilo-qa: KTrader (Pass 5: Tutorial & State Integrity Audit)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
   - Snapshot Persistence: Full F5 quicksave & F9 quickload capturing complete trade, route, and combat state in web `ktrader_quicksave_v1` and native `ktrader_quicksave.dat`.

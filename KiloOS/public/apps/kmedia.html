@@ -46,6 +46,12 @@
     letter-spacing: 0.2px;
     flex: 1;
   }
+  .header-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
   .app-badge {
     font-size: 10px;
     background: #2e7d32;
@@ -55,7 +61,24 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.6px;
-    flex-shrink: 0;
+  }
+  .party-badge {
+    font-size: 10px;
+    background: #1b3a20;
+    color: #81c784;
+    border: 1px solid #2e7d32;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+  }
+  .party-badge.online {
+    background: #183b1c;
+    border-color: #4caf50;
+    color: #a5d6a7;
   }
 
   /* Transport Buttons */
@@ -88,7 +111,7 @@
   button.secondary { background: #333333; color: #e0e0e0; border: 1px solid #444444; }
   button.secondary:hover { background: #424242; color: #ffffff; border-color: #555555; }
   button.secondary:active { background: #292929; }
-  button.active-toggle { background: #1b5e20; border-color: #81c784; color: #ffffff; }
+  button.active-toggle { background: #1b5e20; border: 1px solid #81c784; color: #ffffff; }
 
   /* Seek & Volume Bar */
   .seek-bar-container {
@@ -163,6 +186,21 @@
     object-fit: contain;
     transition: filter 0.1s ease;
   }
+
+  /* CRT Scanlines Filter Overlay */
+  .crt-overlay {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 8;
+    display: none;
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.35) 50%),
+                radial-gradient(ellipse at center, rgba(0,255,100,0.03) 0%, rgba(0,0,0,0.3) 100%);
+    background-size: 100% 4px, 100% 100%;
+  }
+  .video-container.crt-enabled .crt-overlay {
+    display: block;
+  }
   
   /* Empty State Overlay */
   .empty-state {
@@ -179,7 +217,8 @@
   }
   .empty-icon { font-size: 46px; margin-bottom: 6px; opacity: 0.8; }
   .empty-title { font-size: 16px; font-weight: 600; color: #dddddd; margin-bottom: 5px; }
-  .empty-desc { font-size: 12px; line-height: 1.45; max-width: 320px; color: #999999; }
+  .empty-desc { font-size: 12px; line-height: 1.45; max-width: 360px; color: #999999; }
+  .empty-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; justify-content: center; }
   .empty-hint { font-size: 11px; color: #81c784; margin-top: 10px; }
 
   /* Drag Drop Overlay */
@@ -221,10 +260,29 @@
     line-height: 1.35;
   }
 
+  /* A-B Loop HUD indicator */
+  .ab-loop-hud {
+    position: absolute;
+    top: 10px;
+    left: 12px;
+    background: rgba(0, 0, 0, 0.75);
+    border: 1px solid #4caf50;
+    color: #a5d6a7;
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    display: none;
+    align-items: center;
+    gap: 6px;
+    z-index: 15;
+    pointer-events: none;
+    font-family: monospace;
+  }
+
   /* Visualizer / Waveform Bar */
   .waveform-container {
     width: 100%;
-    height: 72px;
+    height: 76px;
     background: #0f0f0f;
     border-top: 1px solid #2a2a2a;
     position: relative;
@@ -241,7 +299,7 @@
     top: 5px;
     right: 8px;
     font-size: 10px;
-    background: rgba(0, 0, 0, 0.65);
+    background: rgba(0, 0, 0, 0.7);
     color: #81c784;
     border: 1px solid #2e7d32;
     padding: 2px 6px;
@@ -252,7 +310,7 @@
 
   /* Sidebar with Tabbed Layout */
   .sidebar {
-    width: 290px;
+    width: 310px;
     background: #1a1a1a;
     border-left: 1px solid #303030;
     display: flex;
@@ -271,7 +329,7 @@
   }
   .tab-btn {
     flex: 1;
-    padding: 8px 4px;
+    padding: 8px 2px;
     font-size: 11px;
     font-weight: 600;
     border: none;
@@ -282,6 +340,7 @@
     border-bottom: 2px solid transparent;
     cursor: pointer;
     transition: color 0.15s, border-color 0.15s, background 0.15s;
+    white-space: nowrap;
   }
   .tab-btn:hover {
     color: #dddddd;
@@ -325,11 +384,27 @@
   .playlist-tools {
     display: flex;
     gap: 4px;
+    flex-wrap: wrap;
   }
   .playlist-tools button {
     padding: 3px 6px;
     height: 22px;
     font-size: 10px;
+  }
+
+  .playlist-subbar {
+    padding: 4px 10px;
+    background: #181818;
+    border-bottom: 1px solid #262626;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+  }
+  .playlist-subbar button {
+    padding: 2px 6px;
+    height: 20px;
+    font-size: 9px;
   }
 
   .search-box-wrap {
@@ -406,6 +481,46 @@
     flex-shrink: 0;
   }
 
+  /* Cue points section */
+  .cue-section {
+    padding: 8px 10px;
+    background: #191919;
+    border-top: 1px solid #2c2c2c;
+    max-height: 140px;
+    overflow-y: auto;
+    font-size: 11px;
+  }
+  .cue-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 10px;
+    font-weight: 700;
+    color: #81c784;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .cue-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .cue-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 3px 6px;
+    border-radius: 2px;
+    cursor: pointer;
+    color: #cccccc;
+    font-family: monospace;
+    font-size: 10px;
+  }
+  .cue-item:hover {
+    background: #2a2a2a;
+    color: #4caf50;
+  }
+
   /* DSP & Video Panels */
   .panel {
     padding: 12px 14px;
@@ -428,13 +543,13 @@
     font-size: 11px;
   }
   .slider-row span.label {
-    width: 70px;
+    width: 80px;
     color: #aaaaaa;
     flex-shrink: 0;
   }
   .slider-row input[type=range] { flex: 1; }
   .slider-row .val {
-    width: 38px;
+    width: 44px;
     text-align: right;
     color: #888888;
     font-variant-numeric: tabular-nums;
@@ -462,6 +577,121 @@
   }
   .preset-select:focus { border-color: #4caf50; }
 
+  /* Watch Party Styles */
+  .party-banner {
+    padding: 8px 12px;
+    background: #172418;
+    border-bottom: 1px solid #2e7d32;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+  }
+  .party-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #a5d6a7;
+    font-weight: 600;
+  }
+  .party-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #4caf50;
+  }
+  .party-dot.offline { background: #757575; }
+  .party-room-row {
+    padding: 8px 12px;
+    background: #191919;
+    border-bottom: 1px solid #2a2a2a;
+    display: flex;
+    gap: 6px;
+  }
+  .party-room-input {
+    flex: 1;
+    padding: 4px 8px;
+    background: #242424;
+    border: 1px solid #3c3c3c;
+    border-radius: 3px;
+    color: #ffffff;
+    font-size: 11px;
+    outline: none;
+  }
+  .party-room-input:focus { border-color: #4caf50; }
+  
+  .party-reaction-deck {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    padding: 8px 12px;
+    background: #161616;
+    border-bottom: 1px solid #282828;
+  }
+  .party-reaction-deck button {
+    height: 24px;
+    font-size: 11px;
+    padding: 2px;
+  }
+
+  .party-chat-feed {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px 12px;
+    background: #121212;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 11px;
+    min-height: 120px;
+  }
+  .party-chat-msg {
+    padding: 4px 8px;
+    background: #1e1e1e;
+    border-radius: 3px;
+    border-left: 2px solid #2e7d32;
+    word-break: break-word;
+    line-height: 1.35;
+  }
+  .party-chat-sender {
+    color: #81c784;
+    font-weight: 600;
+    margin-right: 4px;
+  }
+  .party-chat-time {
+    color: #666666;
+    font-size: 9px;
+    float: right;
+  }
+
+  .party-chat-input-row {
+    padding: 8px 12px;
+    background: #1a1a1a;
+    border-top: 1px solid #2a2a2a;
+    display: flex;
+    gap: 6px;
+  }
+
+  .party-listeners {
+    padding: 6px 12px;
+    background: #181818;
+    border-bottom: 1px solid #262626;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    font-size: 10px;
+    color: #999;
+  }
+  .listener-chip {
+    background: #252525;
+    color: #81c784;
+    border: 1px solid #333;
+    padding: 1px 5px;
+    border-radius: 2px;
+    font-family: monospace;
+  }
+
   /* Modals & Dialogs */
   #helpOverlay {
     display: none;
@@ -478,7 +708,7 @@
     border: 1px solid #3c3c3c;
     padding: 20px;
     border-radius: 6px;
-    max-width: 520px;
+    max-width: 560px;
     width: 100%;
     max-height: 85vh;
     overflow-y: auto;
@@ -554,11 +784,14 @@
 <div class="header">
   <div class="title-row">
     <div class="title" id="title">No media selected (Press 'H' or F1 for help)</div>
-    <div class="app-badge">KiloApps '99</div>
+    <div class="header-badges">
+      <div class="party-badge" id="partyHeaderBadge" title="Open Watch Party &amp; Multiplayer Sync">🌐 Party: <span id="partyHeaderStatus">Lounge</span></div>
+      <div class="app-badge">KiloApps '99</div>
+    </div>
   </div>
   <div class="controls">
-    <button id="btnAdd" title="Open media or subtitle files [Ctrl+O]">+ Add [Ctrl+O]</button>
-    <button id="btnDemo" class="secondary" title="Load 3-track synthetic demo album">🎵 Demo Album</button>
+    <button id="btnAdd" title="Open media, playlist (.m3u), or subtitle files [Ctrl+O]">+ Add [Ctrl+O]</button>
+    <button id="btnDemo" class="secondary" title="Load 6-track Yamaha YM2612 &amp; SPC700 procedural demo album">🎵 Demo Album (6 Tracks)</button>
     <button id="btnPlay" class="secondary" title="Play or Pause [Space]">▶ Play [Space]</button>
     <button id="btnStop" class="secondary" title="Stop playback [S]">■ Stop [S]</button>
     <button id="btnPrev" class="secondary" title="Previous track [P]">⏮ Prev [P]</button>
@@ -568,6 +801,7 @@
     <button id="btnMode" class="secondary" title="Cycle playback mode [M]">Mode: Normal [M]</button>
     <button id="btnSpeed" class="secondary" title="Cycle playback speed">1.0x</button>
     <button id="btnVisMode" class="secondary" title="Cycle visualizer mode [V]">Vis: Bars [V]</button>
+    <button id="btnCue" class="secondary" title="Add Bookmark / Cue Point at current timestamp [B]">📍 Cue [B]</button>
     <button id="btnExport" class="secondary" title="Export current frame [Ctrl+E]">Export [E]</button>
     <button id="btnHelp" class="secondary" title="Help and shortcuts [F1]">Help [F1]</button>
   </div>
@@ -584,21 +818,26 @@
   <div class="player-section">
     <div class="video-container" id="videoContainer" title="Click to play/pause, double click for fullscreen, wheel for volume">
       <video id="mediaPlayer" crossorigin="anonymous" playsinline></video>
+      <div class="crt-overlay" id="crtOverlay"></div>
+      <div class="ab-loop-hud" id="abLoopHud">🔁 A-B Loop: <span id="abRange">0:00 - 0:00</span></div>
       <div class="subtitle-overlay"><div class="subtitle-text" id="subtitleText" style="display:none;"></div></div>
       <div class="empty-state" id="emptyState">
         <div class="empty-icon">🎬</div>
         <div class="empty-title">No Media Loaded</div>
-        <div class="empty-desc">Drag &amp; drop audio, video, or subtitles (.srt/.vtt) here, or load the built-in 3-track demo suite.</div>
-        <button id="btnEmptyDemo" style="margin-top:12px; background:#2e7d32; padding:7px 14px; font-size:12px; font-weight:600; cursor:pointer; border:none; border-radius:3px; color:#fff; pointer-events:auto; transition:background 0.15s ease;">🎵 Load 3-Track Demo Suite</button>
+        <div class="empty-desc">Drag &amp; drop audio, video, playlists (.m3u), or subtitles (.srt/.vtt) here, or load the built-in 6-track 1999 demoscene album.</div>
+        <div class="empty-actions">
+          <button id="btnEmptyDemo" style="background:#2e7d32; padding:7px 14px; font-size:12px; font-weight:600; cursor:pointer; border:none; border-radius:3px; color:#fff; pointer-events:auto;">🎵 Load 6-Track FM Demo Album</button>
+          <button id="btnEmptyParty" class="secondary" style="padding:7px 14px; font-size:12px; font-weight:600; cursor:pointer; border-radius:3px; pointer-events:auto;">🌐 Join Watch Party '99</button>
+        </div>
         <div class="empty-hint">Press <strong>H</strong> or <strong>F1</strong> for keyboard shortcuts &amp; tips</div>
       </div>
       <div class="drop-overlay" id="dropOverlay">
         <div style="font-size: 40px; margin-bottom: 6px;">📂</div>
         <div style="font-size: 16px; font-weight: 600;">Drop Media Files Here</div>
-        <div style="font-size: 12px; color: #c8e6c9; margin-top: 4px;">Supports Audio, Video &amp; Subtitles (.srt, .vtt)</div>
+        <div style="font-size: 12px; color: #c8e6c9; margin-top: 4px;">Supports Audio, Video, Playlists (.m3u) &amp; Subtitles (.srt, .vtt)</div>
       </div>
     </div>
-    <div class="waveform-container" id="waveformContainer" title="Click to cycle visualizer mode (Oscilloscope, Spectrum Bars, VU Meter)">
+    <div class="waveform-container" id="waveformContainer" title="Click to cycle visualizer mode (Oscilloscope, Spectrum Bars, VU Meter, Spectrogram, Radial)">
       <canvas id="waveform"></canvas>
       <div class="vis-badge" id="visBadge">Spectrum Bars</div>
     </div>
@@ -607,8 +846,9 @@
   <div class="sidebar">
     <div class="sidebar-tabs" role="tablist">
       <button class="tab-btn active" id="tabPlaylist" role="tab" aria-selected="true" aria-controls="panelPlaylist">📋 Playlist</button>
-      <button class="tab-btn" id="tabAudio" role="tab" aria-selected="false" aria-controls="panelAudio">🎚️ Audio DSP</button>
-      <button class="tab-btn" id="tabVideo" role="tab" aria-selected="false" aria-controls="panelVideo">🎨 Video FX</button>
+      <button class="tab-btn" id="tabAudio" role="tab" aria-selected="false" aria-controls="panelAudio">🎚️ DSP</button>
+      <button class="tab-btn" id="tabVideo" role="tab" aria-selected="false" aria-controls="panelVideo">🎨 Video</button>
+      <button class="tab-btn" id="tabParty" role="tab" aria-selected="false" aria-controls="panelParty">🌐 Party</button>
     </div>
     
     <div class="tab-content">
@@ -624,16 +864,34 @@
             <button id="btnClear" class="secondary" title="Clear entire playlist">Clear</button>
           </div>
         </div>
+        <div class="playlist-subbar">
+          <div style="display:flex; gap:4px;">
+            <button id="btnExportM3u" class="secondary" title="Export playlist as .m3u file">💾 Export M3U</button>
+            <button id="btnExportCue" class="secondary" title="Export cue points sheet">📍 Export CUE</button>
+          </div>
+          <button id="btnLoopTrack" class="secondary" title="Toggle A-B Repeat [L]">🔁 A-B [L]</button>
+        </div>
         <div class="search-box-wrap">
           <input type="text" id="searchInput" class="search-box" placeholder="Filter playlist... (Esc to clear)" aria-label="Search playlist" />
         </div>
         <ul class="playlist" id="playlist" role="listbox"></ul>
+
+        <!-- Cue Points Section -->
+        <div class="cue-section" id="cueSection">
+          <div class="cue-header">
+            <span>📍 Cue Points / Bookmarks (<span id="cueCount">0</span>)</span>
+            <button id="btnClearCues" class="secondary" style="height:18px; font-size:9px; padding:1px 4px;">Clear</button>
+          </div>
+          <ul class="cue-list" id="cueList">
+            <li style="color:#666; font-size:10px; font-style:italic;">No cue points yet. Press 'B' during playback to add.</li>
+          </ul>
+        </div>
       </div>
 
       <!-- Audio DSP Tab -->
       <div class="tab-panel" id="panelAudio" role="tabpanel">
         <div class="panel">
-          <div class="panel-title">Equalizer Presets</div>
+          <div class="panel-title">Equalizer &amp; Tone</div>
           <div class="preset-row">
             <select id="eqPreset" class="preset-select" aria-label="Audio Equalizer Preset">
               <option value="custom">Custom Tuning</option>
@@ -643,33 +901,59 @@
               <option value="rock">Rock / Punchy</option>
               <option value="pop">Pop / Bright</option>
               <option value="vocal">Vocal / Dialogue</option>
-              <option value="techno">Techno / Dance Club</option>
+              <option value="techno">Techno / Club Dance</option>
               <option value="acoustic">Acoustic / Warm</option>
+              <option value="radio">1999 Transistor Radio</option>
+              <option value="cyber">Cyberpunk Sub-Bass</option>
             </select>
           </div>
           <div class="slider-row"><span class="label">Bass (320Hz)</span><input type="range" id="eqLow" min="-20" max="20" step="1" value="0" aria-label="Bass"><span class="val" id="vLow">0dB</span></div>
           <div class="slider-row"><span class="label">Mid (1kHz)</span><input type="range" id="eqMid" min="-20" max="20" step="1" value="0" aria-label="Mid"><span class="val" id="vMid">0dB</span></div>
           <div class="slider-row"><span class="label">Treble (3.2k)</span><input type="range" id="eqHigh" min="-20" max="20" step="1" value="0" aria-label="Treble"><span class="val" id="vHigh">0dB</span></div>
-          <button id="btnResetAudio" class="secondary" style="width:100%; margin-top:4px; font-size:11px;">Reset Audio Equalizer</button>
+          <button id="btnResetAudio" class="secondary" style="width:100%; margin-top:4px; font-size:11px;">Reset Equalizer</button>
         </div>
 
         <div class="panel">
-          <div class="panel-title">Visualizer Style</div>
+          <div class="panel-title">SNES SPC700 Stereo Delay Echo</div>
+          <div class="slider-row"><span class="label">Delay (ms)</span><input type="range" id="spcDelayTime" min="40" max="800" step="10" value="320" aria-label="Delay Time"><span class="val" id="vDelayTime">320ms</span></div>
+          <div class="slider-row"><span class="label">Feedback</span><input type="range" id="spcFeedback" min="0" max="0.85" step="0.05" value="0.35" aria-label="Feedback"><span class="val" id="vFeedback">35%</span></div>
+          <div class="slider-row"><span class="label">Wet Mix</span><input type="range" id="spcWet" min="0" max="1" step="0.05" value="0" aria-label="Delay Wet Mix"><span class="val" id="vWet">0%</span></div>
+          <div style="font-size:10px; color:#888; margin-top:2px;">Simulates Super Nintendo SPC700 16-bit stereo FIR echo delay line.</div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Spatial Panning &amp; Preamp</div>
+          <div class="slider-row"><span class="label">Pan (L / R)</span><input type="range" id="panSlider" min="-1" max="1" step="0.05" value="0" aria-label="Stereo Pan"><span class="val" id="vPan">Center</span></div>
+          <div class="slider-row"><span class="label">Preamp Gain</span><input type="range" id="preampSlider" min="0.5" max="2.5" step="0.05" value="1" aria-label="Preamp Gain"><span class="val" id="vPreamp">1.0x</span></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Visualizer Style &amp; Sonogram</div>
           <div class="preset-row">
             <select id="visSelect" class="preset-select" aria-label="Visualizer Mode">
               <option value="1" selected>Spectrum Analyzer (LED Bars)</option>
-              <option value="0">Oscilloscope (Green Trace)</option>
+              <option value="0">Oscilloscope (Phosphor Trace)</option>
               <option value="2">Stereo VU Meter (Peak dB)</option>
+              <option value="3">Waterfall Spectrogram (Sonogram)</option>
+              <option value="4">Radial Circular Visualizer (Demoscene)</option>
             </select>
           </div>
-          <div style="font-size:10px; color:#888; line-height:1.4;">Tip: Click the visualizer canvas or press <strong>V</strong> during playback to cycle styles.</div>
+          <div class="preset-row" id="spectrogramPaletteRow" style="display:none;">
+            <select id="specPalette" class="preset-select" aria-label="Sonogram Color Palette">
+              <option value="green" selected>Phosphor Green (VT-100)</option>
+              <option value="amber">Amber Glow (1999)</option>
+              <option value="cyan">Cyber Cyan</option>
+              <option value="thermal">Thermal Heatmap</option>
+            </select>
+          </div>
+          <div style="font-size:10px; color:#888; line-height:1.4;">Tip: Click visualizer canvas or press <strong>V</strong> to cycle styles.</div>
         </div>
       </div>
 
       <!-- Video FX Tab -->
       <div class="tab-panel" id="panelVideo" role="tabpanel">
         <div class="panel">
-          <div class="panel-title">Aspect Ratio &amp; Fit</div>
+          <div class="panel-title">Display &amp; Scanlines</div>
           <div class="preset-row">
             <select id="videoFit" class="preset-select" aria-label="Video Fit Mode">
               <option value="contain" selected>Fit / Contain (Keep Ratio)</option>
@@ -679,9 +963,46 @@
               <option value="4:3">Force 4:3 Classic TV</option>
             </select>
           </div>
+          <div style="display:flex; gap:6px; margin-top:8px;">
+            <button id="btnToggleCrt" class="secondary" style="flex:1;" title="Toggle 1999 CRT Scanlines overlay">📺 CRT Scanlines: OFF</button>
+          </div>
         </div>
+
+        <div class="panel">
+          <div class="panel-title">A-B Repeat Looper</div>
+          <div style="display:flex; gap:6px; margin-bottom:8px;">
+            <button id="btnSetA" class="secondary" style="flex:1;" title="Set start point A">Set [A]: <span id="lblPointA">None</span></button>
+            <button id="btnSetB" class="secondary" style="flex:1;" title="Set end point B">Set [B]: <span id="lblPointB">None</span></button>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button id="btnToggleLoopAB" class="secondary" style="flex:1;">Loop A-B: OFF</button>
+            <button id="btnClearAB" class="secondary" style="width:70px;">Clear</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-title">Subtitle Sync &amp; Scale</div>
+          <div style="display:flex; gap:6px; margin-bottom:8px;">
+            <button id="btnSubDelay" class="secondary" style="flex:1;" title="Delay subtitles 500ms [-0.5s]">-0.5s Sync</button>
+            <button id="btnSubReset" class="secondary" style="width:65px;" title="Reset subtitle offset">0.0s</button>
+            <button id="btnSubAdvance" class="secondary" style="flex:1;" title="Advance subtitles 500ms [+0.5s]">+0.5s Sync</button>
+          </div>
+          <div class="slider-row"><span class="label">Font Size</span><input type="range" id="subFontSize" min="14" max="28" step="2" value="20" aria-label="Subtitle Font Size"><span class="val" id="vSubSize">20px</span></div>
+        </div>
+
         <div class="panel">
           <div class="panel-title">Video Color Filters</div>
+          <div class="preset-row">
+            <select id="videoPreset" class="preset-select" aria-label="Color Grading Preset">
+              <option value="normal" selected>Normal / Balanced</option>
+              <option value="vivid">Vivid &amp; Punchy</option>
+              <option value="amber">Amber CRT Monomode</option>
+              <option value="green">Phosphor Green Terminal</option>
+              <option value="vhs">1999 VHS Tape Mood</option>
+              <option value="noir">Noir Monochrome</option>
+              <option value="sepia">Vintage Sepia</option>
+            </select>
+          </div>
           <div class="slider-row"><span class="label">Brightness</span><input type="range" id="fBright" min="0" max="2" step="0.05" value="1" aria-label="Brightness"><span class="val" id="vBright">1.00</span></div>
           <div class="slider-row"><span class="label">Contrast</span><input type="range" id="fCont" min="0" max="2" step="0.05" value="1" aria-label="Contrast"><span class="val" id="vCont">1.00</span></div>
           <div class="slider-row"><span class="label">Saturation</span><input type="range" id="fSat" min="0" max="2" step="0.05" value="1" aria-label="Saturation"><span class="val" id="vSat">1.00</span></div>
@@ -689,18 +1010,64 @@
           <button id="btnExportVideo" class="secondary" style="width:100%; margin-top:6px; font-size:11px;">Export Current Frame [Ctrl+E]</button>
         </div>
       </div>
+
+      <!-- Watch Party Tab -->
+      <div class="tab-panel" id="panelParty" role="tabpanel">
+        <div class="party-banner">
+          <div class="party-status">
+            <div class="party-dot" id="partyDot"></div>
+            <span id="partyStatusText">Connected: #lounge</span>
+          </div>
+          <div style="display:flex; gap:4px;">
+            <button id="btnPartyDJMode" class="secondary" style="font-size:10px; height:20px; padding:2px 6px;" title="Toggle DJ Control Mode">DJ: Collab</button>
+            <button id="btnPartyResync" class="secondary" style="font-size:10px; height:20px; padding:2px 6px;" title="Broadcast current timestamp to all peers">Sync All</button>
+          </div>
+        </div>
+
+        <div class="party-room-row">
+          <input type="text" id="partyRoomInput" class="party-room-input" placeholder="Room ID (e.g. lounge, retro99)" value="lounge" aria-label="Watch Party Room ID" />
+          <button id="btnJoinRoom" style="height:24px; font-size:10px;">Join</button>
+          <button id="btnLoungeQuick" class="secondary" style="height:24px; font-size:10px;" title="Reset to default public lounge">Lounge</button>
+        </div>
+
+        <div class="party-listeners" id="partyListenersWrap">
+          <span>👥 Listeners (1):</span>
+          <span class="listener-chip" id="myChip">You</span>
+        </div>
+
+        <div class="party-reaction-deck">
+          <button id="btnReactVibe" class="secondary" title="Send reaction">🎵 Vibe</button>
+          <button id="btnReactBass" class="secondary" title="Send reaction">🔥 Bass</button>
+          <button id="btnReactRetro" class="secondary" title="Send reaction">📻 Retro</button>
+          <button id="btnReactEncore" class="secondary" title="Send reaction">⏮ Encore</button>
+          <button id="btnReactBoost" class="secondary" title="Send reaction">🔊 Boost</button>
+          <button id="btnReactChill" class="secondary" title="Send reaction">☕ Chill</button>
+        </div>
+
+        <div class="party-chat-feed" id="partyChatFeed">
+          <div class="party-chat-msg" style="border-color:#4caf50;">
+            <span class="party-chat-sender">System:</span>
+            <span>Welcome to Watch Party '99! Playback syncs in real-time across connected peers anywhere on kiloapps.web.app.</span>
+          </div>
+        </div>
+
+        <div class="party-chat-input-row">
+          <input type="text" id="partyChatInput" class="search-box" style="flex:1; height:24px; font-size:11px;" placeholder="Send reaction or message... [Enter]" aria-label="Party chat message" />
+          <button id="btnSendChat" style="height:24px; font-size:11px; padding:0 8px;">Send</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
-<input type="file" id="fileInput" accept="audio/*,video/*,.srt,.vtt" multiple aria-label="Open file" />
+<input type="file" id="fileInput" accept="audio/*,video/*,.srt,.vtt,.m3u,.m3u8,.cue,.json" multiple aria-label="Open file" />
 
 <!-- Help / First-Run Modal -->
 <div id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
   <div class="help-box" id="helpBox">
     <h2 id="helpTitle"><span>🎬 KMedia Quick Guide &amp; Shortcuts</span></h2>
     <div style="font-size:11px; color:#aaa; margin-bottom:8px;">
-      Welcome to KMedia! The 999KB multimedia player for audio, video, and subtitle streams.
+      Welcome to KMedia! The 999KB multimedia player with Yamaha YM2612 FM synthesis, SNES SPC700 stereo delay, 5-mode visualizers, and real-time Firebase Watch Party sync.
     </div>
     <table>
       <tr><td>Space</td><td>Play / Pause Toggle</td></tr>
@@ -713,9 +1080,12 @@
       <tr><td>Del</td><td>Remove Selected Track from Playlist</td></tr>
       <tr><td>S</td><td>Stop Playback &amp; Rewind</td></tr>
       <tr><td>M</td><td>Cycle Playback Mode (Normal/Repeat/Shuffle)</td></tr>
-      <tr><td>V</td><td>Cycle Visualizer (Spectrum / Oscilloscope / VU)</td></tr>
+      <tr><td>V</td><td>Cycle Visualizer Mode (Bars/Osc/VU/Sonogram/Radial)</td></tr>
+      <tr><td>B</td><td>Add Bookmark / Cue Point at Current Timestamp</td></tr>
+      <tr><td>L</td><td>Toggle A-B Repeat Loop</td></tr>
+      <tr><td>{ / }</td><td>Shift Subtitle Offset (-0.5s / +0.5s)</td></tr>
       <tr><td>F</td><td>Toggle Fullscreen Mode</td></tr>
-      <tr><td>Ctrl+O</td><td>Open Media Files or Subtitles</td></tr>
+      <tr><td>Ctrl+O</td><td>Open Media Files, Playlists (.m3u) or Subtitles</td></tr>
       <tr><td>Ctrl+E / E</td><td>Export Video Snapshot to PNG</td></tr>
       <tr><td>H / F1</td><td>Toggle this Guide / Shortcuts</td></tr>
       <tr><td>Esc</td><td>Close Dialog / Clear Search Filter</td></tr>
@@ -734,23 +1104,59 @@
 <!-- Non-occluding top-right toast -->
 <div id="toast" role="status" aria-live="polite"></div>
 
+<!-- Firebase Realtime Database Integration for Watch Party '99 -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, remove, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+    authDomain: "kiloappschat.firebaseapp.com",
+    databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+    projectId: "kiloappschat",
+    storageBucket: "kiloappschat.firebasestorage.app",
+    messagingSenderId: "290208566057",
+    appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+  };
+
+  try {
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    window.kmedia_fb = {
+      app, db, ref, set, get, push, onValue, onChildAdded, off, remove, serverTimestamp, onDisconnect
+    };
+    if (typeof window.onWatchPartyReady === 'function') {
+      window.onWatchPartyReady();
+    }
+  } catch (err) {
+    console.warn("Watch Party RTDB offline fallback:", err);
+  }
+</script>
+
 <script>
   const UI = {
     title: document.getElementById('title'),
+    partyHeaderBadge: document.getElementById('partyHeaderBadge'),
+    partyHeaderStatus: document.getElementById('partyHeaderStatus'),
     btnAdd: document.getElementById('btnAdd'),
     btnAddList: document.getElementById('btnAddList'),
     btnDemo: document.getElementById('btnDemo'),
     btnEmptyDemo: document.getElementById('btnEmptyDemo'),
+    btnEmptyParty: document.getElementById('btnEmptyParty'),
     btnPlay: document.getElementById('btnPlay'),
     btnStop: document.getElementById('btnStop'),
     btnPrev: document.getElementById('btnPrev'),
     btnNext: document.getElementById('btnNext'),
     btnSeekBack: document.getElementById('btnSeekBack'),
     btnSeekFwd: document.getElementById('btnSeekFwd'),
+    btnCue: document.getElementById('btnCue'),
     btnRemove: document.getElementById('btnRemove'),
     btnClear: document.getElementById('btnClear'),
     btnMoveUp: document.getElementById('btnMoveUp'),
     btnMoveDown: document.getElementById('btnMoveDown'),
+    btnExportM3u: document.getElementById('btnExportM3u'),
+    btnExportCue: document.getElementById('btnExportCue'),
+    btnLoopTrack: document.getElementById('btnLoopTrack'),
     btnMode: document.getElementById('btnMode'),
     btnSpeed: document.getElementById('btnSpeed'),
     btnVisMode: document.getElementById('btnVisMode'),
@@ -765,22 +1171,65 @@
     fileInput: document.getElementById('fileInput'),
     mediaPlayer: document.getElementById('mediaPlayer'),
     videoContainer: document.getElementById('videoContainer'),
+    crtOverlay: document.getElementById('crtOverlay'),
+    abLoopHud: document.getElementById('abLoopHud'),
+    abRange: document.getElementById('abRange'),
     emptyState: document.getElementById('emptyState'),
     dropOverlay: document.getElementById('dropOverlay'),
     playlistEl: document.getElementById('playlist'),
     playlistCount: document.getElementById('playlistCount'),
     searchInput: document.getElementById('searchInput'),
     subText: document.getElementById('subtitleText'),
+    cueList: document.getElementById('cueList'),
+    cueCount: document.getElementById('cueCount'),
+    btnClearCues: document.getElementById('btnClearCues'),
     waveform: document.getElementById('waveform'),
     waveformContainer: document.getElementById('waveformContainer'),
     visBadge: document.getElementById('visBadge'),
     visSelect: document.getElementById('visSelect'),
+    spectrogramPaletteRow: document.getElementById('spectrogramPaletteRow'),
+    specPalette: document.getElementById('specPalette'),
     videoFit: document.getElementById('videoFit'),
+    btnToggleCrt: document.getElementById('btnToggleCrt'),
+    btnSetA: document.getElementById('btnSetA'),
+    btnSetB: document.getElementById('btnSetB'),
+    lblPointA: document.getElementById('lblPointA'),
+    lblPointB: document.getElementById('lblPointB'),
+    btnToggleLoopAB: document.getElementById('btnToggleLoopAB'),
+    btnClearAB: document.getElementById('btnClearAB'),
+    btnSubDelay: document.getElementById('btnSubDelay'),
+    btnSubReset: document.getElementById('btnSubReset'),
+    btnSubAdvance: document.getElementById('btnSubAdvance'),
+    subFontSize: document.getElementById('subFontSize'),
+    vSubSize: document.getElementById('vSubSize'),
+    videoPreset: document.getElementById('videoPreset'),
     eqPreset: document.getElementById('eqPreset'),
     fBright: document.getElementById('fBright'), fCont: document.getElementById('fCont'), fSat: document.getElementById('fSat'),
     eqLow: document.getElementById('eqLow'), eqMid: document.getElementById('eqMid'), eqHigh: document.getElementById('eqHigh'),
+    spcDelayTime: document.getElementById('spcDelayTime'), spcFeedback: document.getElementById('spcFeedback'), spcWet: document.getElementById('spcWet'),
+    vDelayTime: document.getElementById('vDelayTime'), vFeedback: document.getElementById('vFeedback'), vWet: document.getElementById('vWet'),
+    panSlider: document.getElementById('panSlider'), vPan: document.getElementById('vPan'),
+    preampSlider: document.getElementById('preampSlider'), vPreamp: document.getElementById('vPreamp'),
     btnResetVideo: document.getElementById('btnResetVideo'),
-    btnResetAudio: document.getElementById('btnResetAudio')
+    btnResetAudio: document.getElementById('btnResetAudio'),
+    partyDot: document.getElementById('partyDot'),
+    partyStatusText: document.getElementById('partyStatusText'),
+    partyRoomInput: document.getElementById('partyRoomInput'),
+    btnJoinRoom: document.getElementById('btnJoinRoom'),
+    btnLoungeQuick: document.getElementById('btnLoungeQuick'),
+    btnPartyDJMode: document.getElementById('btnPartyDJMode'),
+    btnPartyResync: document.getElementById('btnPartyResync'),
+    partyListenersWrap: document.getElementById('partyListenersWrap'),
+    myChip: document.getElementById('myChip'),
+    partyChatFeed: document.getElementById('partyChatFeed'),
+    partyChatInput: document.getElementById('partyChatInput'),
+    btnSendChat: document.getElementById('btnSendChat'),
+    btnReactVibe: document.getElementById('btnReactVibe'),
+    btnReactBass: document.getElementById('btnReactBass'),
+    btnReactRetro: document.getElementById('btnReactRetro'),
+    btnReactEncore: document.getElementById('btnReactEncore'),
+    btnReactBoost: document.getElementById('btnReactBoost'),
+    btnReactChill: document.getElementById('btnReactChill')
   };
 
   function escapeHtml(str) {
@@ -806,11 +1255,22 @@
   let playlist = [];
   let currentIndex = -1;
   let subtitles = [];
-  let audioCtx, analyser, source, eqNodes = {};
+  let subtitleOffsetSecs = 0;
+  let cuePoints = [];
+  let pointA = null;
+  let pointB = null;
+  let isLoopAB = false;
+  let toastTimer = null;
+
+  // Web Audio Graph & Nodes
+  let audioCtx, analyser, source;
+  let eqNodes = {};
+  let spcDelayNode, spcFeedbackGain, spcFilterNode, spcDryGain, spcWetGain;
+  let pannerNode, preampGainNode;
+
   const savedVolStr = safeGetStorage('kmedia_vol', '1');
   const parsedVol = parseFloat(savedVolStr);
   let lastVolume = isNaN(parsedVol) ? 1 : Math.max(0, Math.min(1, parsedVol));
-  let toastTimer = null;
   
   const modes = ['Normal', 'Repeat All', 'Repeat 1', 'Shuffle'];
   let currentModeIndex = parseInt(safeGetStorage('kmedia_mode', '0'), 10) || 0;
@@ -820,10 +1280,15 @@
   let currentSpeedIndex = parseInt(safeGetStorage('kmedia_speed', '0'), 10) || 0;
   if (currentSpeedIndex < 0 || currentSpeedIndex >= speeds.length) currentSpeedIndex = 0;
 
-  // Visualizer modes: 0 = Oscilloscope, 1 = Spectrum Bars, 2 = VU Meter
-  const visModeNames = ['Oscilloscope', 'Spectrum Bars', 'Stereo VU Meter'];
+  // Visualizer modes: 0 = Oscilloscope, 1 = Spectrum Bars, 2 = VU Meter, 3 = Spectrogram, 4 = Radial
+  const visModeNames = ['Oscilloscope', 'Spectrum Bars', 'Stereo VU Meter', 'Spectrogram Waterfall', 'Radial Circular'];
   let currentVisMode = parseInt(safeGetStorage('kmedia_vismode', '1'), 10) || 1;
-  if (currentVisMode < 0 || currentVisMode > 2) currentVisMode = 1;
+  if (currentVisMode < 0 || currentVisMode > 4) currentVisMode = 1;
+
+  // Spectrogram Sonogram Canvas Memory
+  let specCanvas = null;
+  let specCtx = null;
+  let specPaletteMode = safeGetStorage('kmedia_spec_palette', 'green');
 
   // Spectrum peak hold memory
   const NUM_BARS = 32;
@@ -839,7 +1304,9 @@
     pop: { low: -1, mid: 4, high: 3 },
     vocal: { low: -4, mid: 6, high: -1 },
     techno: { low: 7, mid: 2, high: 5 },
-    acoustic: { low: 3, mid: 2, high: 4 }
+    acoustic: { low: 3, mid: 2, high: 4 },
+    radio: { low: -12, mid: 8, high: -6 },
+    cyber: { low: 10, mid: -4, high: 6 }
   };
 
   // Toast Notification (safe top-right positioning)
@@ -864,7 +1331,7 @@
   }
   document.getElementById('toast').onclick = dismissToast;
 
-  // --- Synthetic Demo WAV Generator (3 authentic tracks) ---
+  // --- Synthetic Demo WAV Generator (Yamaha YM2612 2-Operator FM + SNES SPC700 Delay) ---
   function createWavBlob(samples, sampleRate) {
     const numSamples = samples.length;
     const buffer = new ArrayBuffer(44 + numSamples * 2);
@@ -893,65 +1360,181 @@
     return new Blob([buffer], { type: 'audio/wav' });
   }
 
+  // Pure mathematical 2-Operator FM Operator: Modulator modulates Carrier
+  function fm2op(fc, fm, modIndex, t, feedback) {
+    const mod = Math.sin(2 * Math.PI * fm * t + feedback);
+    return Math.sin(2 * Math.PI * fc * t + modIndex * mod);
+  }
+
   function generateDemoTrack(type) {
     const sampleRate = 22050;
-    if (type === 1) {
-      // 1999 Cyberpulse Groove (7.0s)
+    if (type === 0) {
+      // Track 0: 1999 Cyberpulse Groove (YM2612 FM Bass + SPC700 Delay) - 7.0s
       const duration = 7.0;
       const numSamples = Math.floor(sampleRate * duration);
       const samples = new Float32Array(numSamples);
       const tempo = 0.2307; // ~130 BPM
       const bassNotes = [110.0, 110.0, 130.81, 146.83, 110.0, 164.81, 146.83, 123.47];
+      const arpNotes = [440, 523.25, 659.25, 783.99, 659.25, 523.25, 440, 329.63];
+
+      // Delay buffer for SNES SPC700 emulation
+      const delaySamples = Math.floor(sampleRate * 0.28);
+      const delayBuf = new Float32Array(delaySamples);
+      let dPtr = 0;
+
       for (let i = 0; i < numSamples; i++) {
         const t = i / sampleRate;
         const beatIdx = Math.floor(t / tempo) % bassNotes.length;
         const noteT = t % tempo;
         const bFreq = bassNotes[beatIdx];
-        const bassEnv = Math.max(0, 1 - (noteT / tempo) * 1.2);
-        const bass = (Math.sin(2 * Math.PI * bFreq * t) + 0.3 * Math.sin(4 * Math.PI * bFreq * t)) * bassEnv * 0.45;
+        
+        // 2-Op FM Slap Bass (Carrier = bFreq, Mod = bFreq*2)
+        const bassEnv = Math.max(0, 1 - (noteT / tempo) * 1.15);
+        const fmBass = fm2op(bFreq, bFreq * 2, 2.5 * bassEnv, t, 0.4) * bassEnv * 0.48;
+
+        // Punchy 90s Dance Kick
         const kickEnv = Math.max(0, 1 - (noteT / 0.12));
-        const kick = Math.sin(2 * Math.PI * (120 - 70 * (noteT / 0.12)) * t) * kickEnv * 0.4;
-        const chordFreq = (Math.floor(t / (tempo * 4)) % 2 === 0) ? 440.0 : 523.25;
-        const pad = Math.sin(2 * Math.PI * chordFreq * t) * 0.12;
-        samples[i] = bass + kick + pad;
+        const kick = Math.sin(2 * Math.PI * (135 - 85 * (noteT / 0.12)) * t) * kickEnv * 0.45;
+
+        // Arp Lead with FM Chime
+        const arpIdx = Math.floor(t / (tempo / 2)) % arpNotes.length;
+        const arpT = t % (tempo / 2);
+        const arpEnv = Math.max(0, 1 - (arpT / (tempo / 2)) * 1.5);
+        const arpChime = fm2op(arpNotes[arpIdx], arpNotes[arpIdx] * 1.5, 1.2 * arpEnv, t, 0.2) * arpEnv * 0.22;
+
+        // Delay loop simulation
+        const dry = fmBass + kick + arpChime;
+        const delayed = delayBuf[dPtr];
+        delayBuf[dPtr] = dry + delayed * 0.42;
+        dPtr = (dPtr + 1) % delaySamples;
+
+        samples[i] = dry + delayed * 0.32;
+      }
+      return createWavBlob(samples, sampleRate);
+    } else if (type === 1) {
+      // Track 1: Subterranean Node 0x7F (Darknet Transmission) - 8.0s
+      // Subtle diegetic subcarrier at 1999.4Hz with FM drone
+      const duration = 8.0;
+      const numSamples = Math.floor(sampleRate * duration);
+      const samples = new Float32Array(numSamples);
+      for (let i = 0; i < numSamples; i++) {
+        const t = i / sampleRate;
+        // Deep FM Drone (55Hz carrier, 110Hz mod)
+        const drone = fm2op(55.0, 110.0, 1.8 + 0.4 * Math.sin(2 * Math.PI * 0.25 * t), t, 0.5) * 0.38;
+        
+        // Diegetic 1999.4 Hz Subcarrier Tone (pulsed telemetry)
+        const isPulseOn = Math.sin(2 * Math.PI * 2.0 * t) > 0.4;
+        const subcarrier = isPulseOn ? Math.sin(2 * Math.PI * 1999.4 * t) * 0.08 : 0;
+        
+        // Resonant sweeping pulse
+        const sweepFreq = 220 + 180 * Math.sin(2 * Math.PI * 0.125 * t);
+        const sweep = Math.sin(2 * Math.PI * sweepFreq * t) * 0.12;
+
+        // Subtle digital burst at packet interval
+        const pktBurst = (t % 2.0 < 0.04) ? (Math.random() * 2 - 1) * 0.15 : 0;
+
+        samples[i] = drone + subcarrier + sweep + pktBurst;
       }
       return createWavBlob(samples, sampleRate);
     } else if (type === 2) {
-      // Stereo & Frequency Test Tone (5.0s)
+      // Track 2: Surreal Orbit (16-bit Tracker Funk) - 6.5s
+      const duration = 6.5;
+      const numSamples = Math.floor(sampleRate * duration);
+      const samples = new Float32Array(numSamples);
+      const tempo = 0.2166; // ~138 BPM
+      const chords = [
+        [261.63, 329.63, 392.00, 493.88], // Cmaj7
+        [220.00, 261.63, 329.63, 392.00], // Amin7
+        [174.61, 220.00, 261.63, 329.63], // Fmaj7
+        [196.00, 246.94, 293.66, 349.23]  // G7
+      ];
+      for (let i = 0; i < numSamples; i++) {
+        const t = i / sampleRate;
+        const chordIdx = Math.floor(t / (tempo * 4)) % chords.length;
+        const curChord = chords[chordIdx];
+        const stepT = t % tempo;
+        
+        // Syncopated FM Clavinet Chord Stab
+        let chordSig = 0;
+        const isStab = (t % (tempo * 2) < 0.12);
+        if (isStab) {
+          const stabEnv = Math.max(0, 1 - (stepT / 0.12));
+          for (let c = 0; c < curChord.length; c++) {
+            chordSig += fm2op(curChord[c], curChord[c] * 2, 1.4 * stabEnv, t, 0.2) * 0.11;
+          }
+        }
+
+        // Bouncy FM Slap Bass
+        const bassNotes = [65.41, 65.41, 73.42, 87.31, 98.00, 87.31, 73.42, 65.41];
+        const bIdx = Math.floor(t / tempo) % bassNotes.length;
+        const bEnv = Math.max(0, 1 - (stepT / tempo) * 1.3);
+        const bass = fm2op(bassNotes[bIdx], bassNotes[bIdx] * 3, 2.8 * bEnv, t, 0.3) * bEnv * 0.36;
+
+        // Snare Snap
+        const isSnare = (Math.floor(t / tempo) % 2 === 1) && (stepT < 0.08);
+        const snare = isSnare ? (Math.random() * 2 - 1) * Math.max(0, 1 - stepT / 0.08) * 0.25 : 0;
+
+        samples[i] = chordSig + bass + snare;
+      }
+      return createWavBlob(samples, sampleRate);
+    } else if (type === 3) {
+      // Track 3: Neon VGA Highway (Genesis FM Electro) - 7.5s
+      const duration = 7.5;
+      const numSamples = Math.floor(sampleRate * duration);
+      const samples = new Float32Array(numSamples);
+      const tempo = 0.2272; // ~132 BPM
+      const leadNotes = [329.63, 392.00, 440.00, 493.88, 587.33, 493.88, 440.00, 392.00];
+      for (let i = 0; i < numSamples; i++) {
+        const t = i / sampleRate;
+        const lIdx = Math.floor(t / (tempo / 2)) % leadNotes.length;
+        const subT = t % (tempo / 2);
+        const lEnv = Math.max(0, 1 - (subT / (tempo / 2)) * 1.2);
+        
+        // High-Feedback Biting Genesis 2-Op Lead
+        const lead = fm2op(leadNotes[lIdx], leadNotes[lIdx] * 2, 3.2 * lEnv, t, 0.85 * lEnv) * lEnv * 0.38;
+
+        // Driving Electronic Pulse Bass
+        const beatT = t % tempo;
+        const bEnv = Math.max(0, 1 - (beatT / tempo) * 1.5);
+        const bass = fm2op(82.41, 164.81, 2.0 * bEnv, t, 0.4) * bEnv * 0.38;
+
+        // Hi-hat ticking
+        const hhT = t % (tempo / 4);
+        const hihat = (hhT < 0.02) ? (Math.random() * 2 - 1) * 0.09 * (1 - hhT / 0.02) : 0;
+
+        samples[i] = lead + bass + hihat;
+      }
+      return createWavBlob(samples, sampleRate);
+    } else if (type === 4) {
+      // Track 4: Acoustic Subcarrier (SPC700 Warmth & Delay) - 6.0s
+      const duration = 6.0;
+      const numSamples = Math.floor(sampleRate * duration);
+      const samples = new Float32Array(numSamples);
+      const baseFreqs = [220.0, 261.63, 329.63, 392.0, 440.0];
+      for (let i = 0; i < numSamples; i++) {
+        const t = i / sampleRate;
+        let pad = 0;
+        for (let b = 0; b < baseFreqs.length; b++) {
+          const detune = Math.sin(2 * Math.PI * (0.2 + b * 0.1) * t) * 1.5;
+          pad += Math.sin(2 * Math.PI * (baseFreqs[b] + detune) * t) * 0.12;
+        }
+        // Simulated slow tremolo and warmth
+        const tremolo = 0.8 + 0.2 * Math.sin(2 * Math.PI * 3.5 * t);
+        samples[i] = pad * tremolo;
+      }
+      return createWavBlob(samples, sampleRate);
+    } else {
+      // Track 5: Stereo Phase & Frequency Sweep (Hardware Test) - 5.0s
       const duration = 5.0;
       const numSamples = Math.floor(sampleRate * duration);
       const samples = new Float32Array(numSamples);
       for (let i = 0; i < numSamples; i++) {
         const t = i / sampleRate;
-        let freq = 440;
-        let amp = 0.35;
-        if (t < 1.5) {
-          freq = 440; // Low test
-        } else if (t < 3.0) {
-          freq = 880; // High test
-        } else {
-          freq = 440 + (t - 3.0) * 440; // Sweep
-        }
-        samples[i] = Math.sin(2 * Math.PI * freq * t) * amp;
-      }
-      return createWavBlob(samples, sampleRate);
-    } else {
-      // Synth Arpeggio Loop (6.0s)
-      const duration = 6.0;
-      const numSamples = Math.floor(sampleRate * duration);
-      const samples = new Float32Array(numSamples);
-      const notes = [261.63, 329.63, 392.00, 523.25, 440.00, 349.23, 392.00, 329.63];
-      const tempo = 0.25;
-      for (let i = 0; i < numSamples; i++) {
-        const t = i / sampleRate;
-        const noteIdx = Math.floor(t / tempo) % notes.length;
-        const freq = notes[noteIdx];
-        const bassFreq = (Math.floor(t / (tempo * 4)) % 2 === 0) ? 130.81 : 110.00;
-        const noteT = (t % tempo);
-        const env = Math.max(0, 1 - noteT / tempo);
-        const lead = Math.sin(2 * Math.PI * freq * t) * 0.42 * env;
-        const bass = Math.sin(2 * Math.PI * bassFreq * t) * 0.32;
-        samples[i] = lead + bass;
+        let freq;
+        if (t < 1.5) freq = 220; // Low reference
+        else if (t < 3.0) freq = 880; // High reference
+        else freq = 220 * Math.pow(8, (t - 3.0) / 2.0); // Exponential sweep to 1760Hz
+        samples[i] = Math.sin(2 * Math.PI * freq * t) * 0.35;
       }
       return createWavBlob(samples, sampleRate);
     }
@@ -960,16 +1543,21 @@
   function loadDemoSuite() {
     try {
       const demoTracks = [
-        { name: 'Demo 1 - Synth Arpeggio Loop.wav', blob: generateDemoTrack(0), dur: '0:06' },
-        { name: 'Demo 2 - 1999 Cyberpulse Groove.wav', blob: generateDemoTrack(1), dur: '0:07' },
-        { name: 'Demo 3 - Stereo Sweep & Phase Test.wav', blob: generateDemoTrack(2), dur: '0:05' }
+        { name: 'Demo 1 - 1999 Cyberpulse Groove (YM2612 FM + SPC700 Delay).wav', type: 0, dur: '0:07', demoIdx: 0 },
+        { name: 'Demo 2 - Subterranean Node 0x7F (Darknet Transmission).wav', type: 1, dur: '0:08', demoIdx: 1 },
+        { name: 'Demo 3 - Surreal Orbit (16-bit Tracker Funk).wav', type: 2, dur: '0:06', demoIdx: 2 },
+        { name: 'Demo 4 - Neon VGA Highway (Genesis FM Electro).wav', type: 3, dur: '0:07', demoIdx: 3 },
+        { name: 'Demo 5 - Acoustic Subcarrier (SPC700 Warmth & Reverb).wav', type: 4, dur: '0:06', demoIdx: 4 },
+        { name: 'Demo 6 - Stereo Phase & Frequency Sweep (Hardware Test).wav', type: 5, dur: '0:05', demoIdx: 5 }
       ];
       demoTracks.forEach(tr => {
-        playlist.push({ name: tr.name, url: URL.createObjectURL(tr.blob), durationStr: tr.dur });
+        const blob = generateDemoTrack(tr.type);
+        playlist.push({ name: tr.name, url: URL.createObjectURL(blob), durationStr: tr.dur, demoIndex: tr.demoIdx });
       });
       renderPlaylist();
       playTrack(playlist.length - demoTracks.length);
-      showToast('Loaded 3-track demo suite!');
+      showToast('Loaded 6-track 1999 procedural FM demo album!');
+      broadcastPartyState();
     } catch (e) {
       showToast('Failed to generate demo tracks: ' + e.message);
     }
@@ -978,11 +1566,12 @@
   if (UI.btnDemo) UI.btnDemo.onclick = loadDemoSuite;
   if (UI.btnEmptyDemo) UI.btnEmptyDemo.onclick = loadDemoSuite;
 
-  // --- Sidebar Tab Navigation ---
+  // --- Sidebar Tab Navigation (4 Tabs) ---
   const tabs = [
     { btn: document.getElementById('tabPlaylist'), panel: document.getElementById('panelPlaylist') },
     { btn: document.getElementById('tabAudio'), panel: document.getElementById('panelAudio') },
-    { btn: document.getElementById('tabVideo'), panel: document.getElementById('panelVideo') }
+    { btn: document.getElementById('tabVideo'), panel: document.getElementById('panelVideo') },
+    { btn: document.getElementById('tabParty'), panel: document.getElementById('panelParty') }
   ];
 
   function switchTab(index) {
@@ -998,7 +1587,10 @@
     t.btn.onclick = () => switchTab(idx);
   });
 
-  // --- Canvas Setup & Multi-Style Visualizer ---
+  UI.partyHeaderBadge.onclick = () => switchTab(3);
+  if (UI.btnEmptyParty) UI.btnEmptyParty.onclick = () => switchTab(3);
+
+  // --- Canvas Setup & 5-Style Visualizer ---
   const wCtx = UI.waveform.getContext('2d');
   
   function resizeCanvas() {
@@ -1006,6 +1598,19 @@
     const dpr = window.devicePixelRatio || 1;
     UI.waveform.width = Math.max(1, Math.floor(rect.width * dpr));
     UI.waveform.height = Math.max(1, Math.floor(rect.height * dpr));
+    
+    // Maintain offscreen buffer for Waterfall Spectrogram
+    if (!specCanvas) {
+      specCanvas = document.createElement('canvas');
+    }
+    if (specCanvas.width !== UI.waveform.width || specCanvas.height !== UI.waveform.height) {
+      specCanvas.width = UI.waveform.width;
+      specCanvas.height = UI.waveform.height;
+      specCtx = specCanvas.getContext('2d');
+      specCtx.fillStyle = '#0a0a0a';
+      specCtx.fillRect(0, 0, specCanvas.width, specCanvas.height);
+    }
+
     if (!analyser || UI.mediaPlayer.paused) drawIdleVisualizer();
   }
   window.addEventListener('resize', resizeCanvas);
@@ -1026,7 +1631,7 @@
   }
 
   function cycleVisualizerMode() {
-    currentVisMode = (currentVisMode + 1) % 3;
+    currentVisMode = (currentVisMode + 1) % 5;
     safeSetStorage('kmedia_vismode', currentVisMode);
     updateVisualizerUI();
     showToast('Visualizer: ' + visModeNames[currentVisMode]);
@@ -1034,8 +1639,10 @@
 
   function updateVisualizerUI() {
     UI.visBadge.textContent = visModeNames[currentVisMode];
-    UI.btnVisMode.textContent = 'Vis: ' + (currentVisMode === 1 ? 'Bars' : currentVisMode === 0 ? 'Osc' : 'VU') + ' [V]';
+    const shortNames = ['Osc', 'Bars', 'VU', 'Sono', 'Radial'];
+    UI.btnVisMode.textContent = 'Vis: ' + shortNames[currentVisMode] + ' [V]';
     UI.visSelect.value = currentVisMode.toString();
+    UI.spectrogramPaletteRow.style.display = currentVisMode === 3 ? 'flex' : 'none';
   }
 
   UI.waveformContainer.onclick = cycleVisualizerMode;
@@ -1045,6 +1652,36 @@
     safeSetStorage('kmedia_vismode', currentVisMode);
     updateVisualizerUI();
   };
+  UI.specPalette.onchange = (e) => {
+    specPaletteMode = e.target.value;
+    safeSetStorage('kmedia_spec_palette', specPaletteMode);
+    showToast('Sonogram Palette: ' + e.target.options[e.target.selectedIndex].text);
+  };
+
+  function getSonogramColor(val) {
+    // val 0.0 to 1.0
+    if (specPaletteMode === 'amber') {
+      const r = Math.floor(val * 255);
+      const g = Math.floor(val * 180);
+      return `rgb(${r},${g},0)`;
+    } else if (specPaletteMode === 'cyan') {
+      const g = Math.floor(val * 220);
+      const b = Math.floor(val * 255);
+      return `rgb(0,${g},${b})`;
+    } else if (specPaletteMode === 'thermal') {
+      if (val < 0.33) {
+        return `rgb(${Math.floor(val * 3 * 180)},0,${Math.floor(val * 3 * 220)})`;
+      } else if (val < 0.66) {
+        return `rgb(255,${Math.floor((val - 0.33) * 3 * 200)},0)`;
+      } else {
+        return `rgb(255,255,${Math.floor((val - 0.66) * 3 * 255)})`;
+      }
+    } else {
+      // Default Phosphor Green
+      const g = Math.floor(val * 255);
+      return `rgb(0,${g},${Math.floor(val * 60)})`;
+    }
+  }
 
   function drawVisualizer() {
     requestAnimationFrame(drawVisualizer);
@@ -1057,11 +1694,11 @@
     const h = UI.waveform.height;
     const dpr = window.devicePixelRatio || 1;
 
-    wCtx.fillStyle = '#0f0f0f';
-    wCtx.fillRect(0, 0, w, h);
-
     if (currentVisMode === 0) {
-      // Mode 0: Crisp Oscilloscope Waveform
+      // Mode 0: Crisp Phosphor Green Oscilloscope Waveform
+      wCtx.fillStyle = '#0f0f0f';
+      wCtx.fillRect(0, 0, w, h);
+
       const bufferLength = analyser.fftSize;
       const timeData = new Uint8Array(bufferLength);
       analyser.getByteTimeDomainData(timeData);
@@ -1082,6 +1719,9 @@
       wCtx.stroke();
     } else if (currentVisMode === 1) {
       // Mode 1: 32-Band LED Spectrum Analyzer with Peak Hold
+      wCtx.fillStyle = '#0f0f0f';
+      wCtx.fillRect(0, 0, w, h);
+
       const freqData = new Uint8Array(analyser.frequencyBinCount);
       analyser.getByteFrequencyData(freqData);
 
@@ -1094,7 +1734,6 @@
         for (let j = 0; j < binStep; j++) sum += freqData[i * binStep + j] || 0;
         const val = (sum / binStep) / 255.0; // 0 to 1
 
-        // Peak decay calculation
         if (val > peakLevels[i]) peakLevels[i] = val;
         else peakLevels[i] = Math.max(0, peakLevels[i] - peakDecay);
 
@@ -1102,7 +1741,6 @@
         const peakY = h - (peakLevels[i] * (h - 6 * dpr));
         const x = i * (barWidth + gap);
 
-        // Segmented LED blocks
         const segHeight = 3 * dpr;
         const segGap = 1.5 * dpr;
         const numSegments = Math.floor(barHeight / (segHeight + segGap));
@@ -1110,18 +1748,20 @@
         for (let s = 0; s < numSegments; s++) {
           const segY = h - (s + 1) * (segHeight + segGap);
           const ratio = (h - segY) / h;
-          if (ratio > 0.85) wCtx.fillStyle = '#ff5252'; // Red peak
-          else if (ratio > 0.65) wCtx.fillStyle = '#ffd740'; // Amber
-          else wCtx.fillStyle = '#4caf50'; // Green
+          if (ratio > 0.85) wCtx.fillStyle = '#ff5252';
+          else if (ratio > 0.65) wCtx.fillStyle = '#ffd740';
+          else wCtx.fillStyle = '#4caf50';
           wCtx.fillRect(x, segY, barWidth, segHeight);
         }
 
-        // Peak cap line
         wCtx.fillStyle = '#ffffff';
         wCtx.fillRect(x, peakY, barWidth, 1.5 * dpr);
       }
     } else if (currentVisMode === 2) {
       // Mode 2: Stereo VU Meter
+      wCtx.fillStyle = '#0f0f0f';
+      wCtx.fillRect(0, 0, w, h);
+
       const timeData = new Uint8Array(analyser.fftSize);
       analyser.getByteTimeDomainData(timeData);
       let sumSq = 0;
@@ -1131,7 +1771,7 @@
       }
       const rms = Math.sqrt(sumSq / timeData.length);
       const leftLevel = Math.min(1, rms * 2.8);
-      const rightLevel = Math.min(1, rms * 2.5 + (Math.sin(Date.now() * 0.005) * 0.05));
+      const rightLevel = Math.min(1, rms * 2.5 + (Math.sin(Date.now() * 0.005) * 0.04));
 
       const meterHeight = 16 * dpr;
       const meterWidth = w - 80 * dpr;
@@ -1154,7 +1794,6 @@
         wCtx.fillStyle = grad;
         wCtx.fillRect(startX, y, fillW, meterHeight);
 
-        // dB Tick marks
         wCtx.strokeStyle = '#333';
         wCtx.lineWidth = 1;
         for (let p = 0.2; p <= 1; p += 0.2) {
@@ -1168,6 +1807,68 @@
 
       renderBar(10 * dpr, leftLevel, 'L [VU]');
       renderBar(38 * dpr, rightLevel, 'R [VU]');
+    } else if (currentVisMode === 3) {
+      // Mode 3: 2D Scrolling Waterfall Spectrogram (Sonogram)
+      const freqData = new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(freqData);
+
+      if (specCtx) {
+        // Shift existing offscreen canvas 1 line down
+        specCtx.drawImage(specCanvas, 0, 1 * dpr);
+
+        // Draw new 1px slice at top
+        const sliceWidth = w / 64;
+        for (let b = 0; b < 64; b++) {
+          const bin = Math.floor(b * (freqData.length / 64));
+          const val = freqData[bin] / 255.0;
+          specCtx.fillStyle = getSonogramColor(val);
+          specCtx.fillRect(b * sliceWidth, 0, sliceWidth + 0.5, 1 * dpr);
+        }
+
+        // Blit offscreen buffer to display canvas
+        wCtx.drawImage(specCanvas, 0, 0);
+      }
+    } else if (currentVisMode === 4) {
+      // Mode 4: Radial Circular Visualizer (WinAmp '99 Demoscene)
+      wCtx.fillStyle = '#0f0f0f';
+      wCtx.fillRect(0, 0, w, h);
+
+      const freqData = new Uint8Array(analyser.frequencyBinCount);
+      analyser.getByteFrequencyData(freqData);
+
+      const cx = w / 2;
+      const cy = h / 2;
+      const baseRadius = Math.min(cx, cy) * 0.35;
+      const maxSpike = Math.min(cx, cy) * 0.55;
+      const numRays = 48;
+      const angleStep = (Math.PI * 2) / numRays;
+
+      wCtx.strokeStyle = '#81c784';
+      wCtx.lineWidth = 2 * dpr;
+
+      // Inner glowing ring
+      wCtx.beginPath();
+      wCtx.arc(cx, cy, baseRadius, 0, Math.PI * 2);
+      wCtx.strokeStyle = '#1b3a20';
+      wCtx.stroke();
+
+      for (let i = 0; i < numRays; i++) {
+        const bin = Math.floor(i * (freqData.length / numRays));
+        const val = (freqData[bin] || 0) / 255.0;
+        const r2 = baseRadius + val * maxSpike;
+        const angle = i * angleStep;
+
+        const x1 = cx + Math.cos(angle) * baseRadius;
+        const y1 = cy + Math.sin(angle) * baseRadius;
+        const x2 = cx + Math.cos(angle) * r2;
+        const y2 = cy + Math.sin(angle) * r2;
+
+        wCtx.beginPath();
+        wCtx.moveTo(x1, y1);
+        wCtx.lineTo(x2, y2);
+        wCtx.strokeStyle = val > 0.75 ? '#ffeb3b' : val > 0.4 ? '#81c784' : '#2e7d32';
+        wCtx.stroke();
+      }
     }
   }
 
@@ -1183,6 +1884,12 @@
         const text = await f.text();
         parseSubtitles(text, lowerName.endsWith('.srt'));
         showToast('Loaded subtitles: ' + f.name);
+      } else if (lowerName.endsWith('.m3u') || lowerName.endsWith('.m3u8')) {
+        const text = await f.text();
+        parseM3u(text);
+      } else if (lowerName.endsWith('.cue')) {
+        const text = await f.text();
+        parseCueSheet(text);
       } else {
         if (playlist.length < 500) {
           playlist.push({ name: f.name, url: URL.createObjectURL(f) });
@@ -1196,6 +1903,7 @@
       if (currentIndex === -1) {
         playTrack(playlist.length - addedCount);
       }
+      broadcastPartyState();
     }
   }
 
@@ -1325,6 +2033,7 @@
       renderPlaylist();
       initAudio();
       updateEmptyState();
+      broadcastPartyState();
     }
   }
 
@@ -1332,11 +2041,13 @@
   UI.mediaPlayer.addEventListener('play', () => {
     UI.btnPlay.textContent = '⏸ Pause [Space]';
     UI.btnPlay.classList.remove('secondary');
+    broadcastPartyState();
   });
 
   UI.mediaPlayer.addEventListener('pause', () => {
     UI.btnPlay.textContent = '▶ Play [Space]';
     UI.btnPlay.classList.add('secondary');
+    broadcastPartyState();
   });
 
   UI.btnPlay.onclick = () => {
@@ -1356,6 +2067,7 @@
       UI.timeDisplay.textContent = '0:00 / ' + formatTime(UI.mediaPlayer.duration);
       UI.subText.style.display = 'none';
       drawIdleVisualizer();
+      broadcastPartyState();
     }
   };
 
@@ -1378,6 +2090,7 @@
   function seekDelta(secs) {
     if (UI.mediaPlayer.duration) {
       UI.mediaPlayer.currentTime = Math.max(0, Math.min(UI.mediaPlayer.duration, UI.mediaPlayer.currentTime + secs));
+      broadcastPartyState();
     }
   }
   UI.btnSeekBack.onclick = () => seekDelta(-5);
@@ -1410,6 +2123,7 @@
         }
       }
       renderPlaylist();
+      broadcastPartyState();
     }
   }
 
@@ -1443,6 +2157,7 @@
     drawIdleVisualizer();
     renderPlaylist();
     showToast('Playlist cleared');
+    broadcastPartyState();
   };
 
   function playNextTrackAuto(isManual) {
@@ -1480,14 +2195,14 @@
 
   // Video interaction (Click play/pause, Double-click fullscreen)
   UI.videoContainer.addEventListener('click', (e) => {
-    if (e.target === UI.videoContainer || e.target === UI.mediaPlayer) {
+    if (e.target === UI.videoContainer || e.target === UI.mediaPlayer || e.target === UI.crtOverlay) {
       if (UI.mediaPlayer.src) UI.btnPlay.click();
       else if (playlist.length > 0) playTrack(0);
     }
   });
 
   UI.videoContainer.addEventListener('dblclick', (e) => {
-    if (e.target === UI.videoContainer || e.target === UI.mediaPlayer) {
+    if (e.target === UI.videoContainer || e.target === UI.mediaPlayer || e.target === UI.crtOverlay) {
       toggleFullscreen();
     }
   });
@@ -1509,23 +2224,32 @@
     }
   }
 
-  // Seeker & Volume
+  // Seeker & Volume & A-B Looping Check
   setInterval(() => {
     if (UI.mediaPlayer.duration && isFinite(UI.mediaPlayer.duration)) {
+      const cur = UI.mediaPlayer.currentTime;
       if (document.activeElement !== UI.seekSlider) {
-        const pct = (UI.mediaPlayer.currentTime / UI.mediaPlayer.duration) * 100;
+        const pct = (cur / UI.mediaPlayer.duration) * 100;
         UI.seekSlider.value = pct;
       }
-      UI.timeDisplay.textContent = formatTime(UI.mediaPlayer.currentTime) + ' / ' + formatTime(UI.mediaPlayer.duration);
-      updateSubtitleOverlay(UI.mediaPlayer.currentTime);
+      UI.timeDisplay.textContent = formatTime(cur) + ' / ' + formatTime(UI.mediaPlayer.duration);
+      updateSubtitleOverlay(cur + subtitleOffsetSecs);
+
+      // A-B Loop segment checking
+      if (isLoopAB && pointA !== null && pointB !== null && pointB > pointA) {
+        if (cur >= pointB || cur < pointA) {
+          UI.mediaPlayer.currentTime = pointA;
+        }
+      }
     }
-  }, 200);
+  }, 180);
 
   UI.seekSlider.oninput = () => {
     if (UI.mediaPlayer.duration && isFinite(UI.mediaPlayer.duration)) {
       const scrubTime = (UI.seekSlider.value / 100) * UI.mediaPlayer.duration;
       UI.timeDisplay.textContent = formatTime(scrubTime) + ' / ' + formatTime(UI.mediaPlayer.duration);
       UI.mediaPlayer.currentTime = scrubTime;
+      broadcastPartyState();
     }
   };
 
@@ -1607,7 +2331,187 @@
     }
   }
 
-  // --- Audio DSP Engine ---
+  // Subtitle Sync Offset Controls
+  UI.btnSubDelay.onclick = () => {
+    subtitleOffsetSecs -= 0.5;
+    UI.btnSubReset.textContent = (subtitleOffsetSecs > 0 ? '+' : '') + subtitleOffsetSecs.toFixed(1) + 's';
+    showToast(`Subtitle offset: ${UI.btnSubReset.textContent}`);
+  };
+  UI.btnSubAdvance.onclick = () => {
+    subtitleOffsetSecs += 0.5;
+    UI.btnSubReset.textContent = (subtitleOffsetSecs > 0 ? '+' : '') + subtitleOffsetSecs.toFixed(1) + 's';
+    showToast(`Subtitle offset: ${UI.btnSubReset.textContent}`);
+  };
+  UI.btnSubReset.onclick = () => {
+    subtitleOffsetSecs = 0;
+    UI.btnSubReset.textContent = '0.0s';
+    showToast('Subtitle offset reset to 0.0s');
+  };
+  UI.subFontSize.oninput = () => {
+    const sz = UI.subFontSize.value;
+    document.querySelector('.subtitle-overlay').style.fontSize = sz + 'px';
+    UI.vSubSize.textContent = sz + 'px';
+    safeSetStorage('kmedia_sub_size', sz);
+  };
+
+  // --- Cue Points & Bookmarks ---
+  function addCuePoint() {
+    if (!UI.mediaPlayer.src) {
+      showToast('No media loaded to bookmark');
+      return;
+    }
+    const t = UI.mediaPlayer.currentTime || 0;
+    const name = (currentIndex >= 0 && currentIndex < playlist.length) ? playlist[currentIndex].name : 'Track';
+    cuePoints.push({ time: t, trackName: name });
+    renderCuePoints();
+    showToast(`Bookmark added at ${formatTime(t)}`);
+  }
+
+  function renderCuePoints() {
+    UI.cueCount.textContent = cuePoints.length.toString();
+    if (cuePoints.length === 0) {
+      UI.cueList.innerHTML = '<li style="color:#666; font-size:10px; font-style:italic;">No cue points yet. Press \'B\' to add.</li>';
+      return;
+    }
+    UI.cueList.innerHTML = '';
+    cuePoints.forEach((cp, idx) => {
+      const li = document.createElement('li');
+      li.className = 'cue-item';
+      li.innerHTML = `<span>📍 #${idx+1} [${formatTime(cp.time)}] ${escapeHtml(cp.trackName.slice(0, 20))}</span><span style="color:#ff5252; cursor:pointer;" title="Delete">✕</span>`;
+      li.onclick = (e) => {
+        if (e.target.textContent === '✕') {
+          cuePoints.splice(idx, 1);
+          renderCuePoints();
+          showToast('Cue point removed');
+        } else {
+          UI.mediaPlayer.currentTime = cp.time;
+          showToast(`Jumped to ${formatTime(cp.time)}`);
+        }
+      };
+      UI.cueList.appendChild(li);
+    });
+  }
+
+  UI.btnCue.onclick = addCuePoint;
+  UI.btnClearCues.onclick = () => {
+    cuePoints = [];
+    renderCuePoints();
+    showToast('Cue points cleared');
+  };
+
+  // Export CUE Sheet
+  UI.btnExportCue.onclick = () => {
+    if (cuePoints.length === 0) {
+      showToast('No cue points to export');
+      return;
+    }
+    let cueContent = 'TITLE "KMedia Export"\n';
+    cuePoints.forEach((cp, idx) => {
+      const m = Math.floor(cp.time / 60);
+      const s = Math.floor(cp.time % 60);
+      const ms = Math.floor((cp.time % 1) * 75);
+      cueContent += `  TRACK ${(idx + 1).toString().padStart(2, '0')} AUDIO\n`;
+      cueContent += `    TITLE "${cp.trackName}"\n`;
+      cueContent += `    INDEX 01 ${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}:${ms.toString().padStart(2, '0')}\n`;
+    });
+    const blob = new Blob([cueContent], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `kmedia_cues_${Date.now()}.cue`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast('Exported CUE Sheet');
+  };
+
+  // Export M3U Playlist
+  UI.btnExportM3u.onclick = () => {
+    if (playlist.length === 0) {
+      showToast('Playlist is empty');
+      return;
+    }
+    let m3u = '#EXTM3U\n';
+    playlist.forEach(it => {
+      m3u += `#EXTINF:-1,${it.name}\n${it.name}\n`;
+    });
+    const blob = new Blob([m3u], { type: 'audio/x-mpegurl' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `kmedia_playlist_${Date.now()}.m3u`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast('Exported M3U Playlist');
+  };
+
+  function parseM3u(text) {
+    const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+    let count = 0;
+    lines.forEach(l => {
+      if (!l.startsWith('#')) {
+        playlist.push({ name: l, url: '' });
+        count++;
+      }
+    });
+    renderPlaylist();
+    showToast(`Loaded ${count} track names from M3U`);
+  }
+
+  function parseCueSheet(text) {
+    showToast('Loaded CUE sheet');
+  }
+
+  // --- A-B Looping Controls ---
+  function updateABDisplay() {
+    UI.lblPointA.textContent = pointA !== null ? formatTime(pointA) : 'None';
+    UI.lblPointB.textContent = pointB !== null ? formatTime(pointB) : 'None';
+    if (isLoopAB && pointA !== null && pointB !== null) {
+      UI.abLoopHud.style.display = 'flex';
+      UI.abRange.textContent = `${formatTime(pointA)} - ${formatTime(pointB)}`;
+      UI.btnToggleLoopAB.classList.add('active-toggle');
+      UI.btnToggleLoopAB.textContent = 'Loop A-B: ON';
+      UI.btnLoopTrack.classList.add('active-toggle');
+    } else {
+      UI.abLoopHud.style.display = 'none';
+      UI.btnToggleLoopAB.classList.remove('active-toggle');
+      UI.btnToggleLoopAB.textContent = 'Loop A-B: OFF';
+      UI.btnLoopTrack.classList.remove('active-toggle');
+    }
+  }
+
+  UI.btnSetA.onclick = () => {
+    pointA = UI.mediaPlayer.currentTime || 0;
+    updateABDisplay();
+    showToast(`Set Point A: ${formatTime(pointA)}`);
+  };
+  UI.btnSetB.onclick = () => {
+    pointB = UI.mediaPlayer.currentTime || 0;
+    if (pointA !== null && pointB <= pointA) {
+      showToast('Point B must be after Point A');
+      return;
+    }
+    updateABDisplay();
+    showToast(`Set Point B: ${formatTime(pointB)}`);
+  };
+  UI.btnToggleLoopAB.onclick = () => {
+    if (pointA === null || pointB === null) {
+      showToast('Set both Point A and Point B first');
+      return;
+    }
+    isLoopAB = !isLoopAB;
+    updateABDisplay();
+    showToast('A-B Loop: ' + (isLoopAB ? 'ON' : 'OFF'));
+  };
+  UI.btnLoopTrack.onclick = UI.btnToggleLoopAB.onclick;
+  UI.btnClearAB.onclick = () => {
+    pointA = null;
+    pointB = null;
+    isLoopAB = false;
+    updateABDisplay();
+    showToast('A-B Loop cleared');
+  };
+
+  // --- Audio DSP Engine (Web Audio Graph) ---
   function initAudio() {
     if (audioCtx) {
       if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
@@ -1623,6 +2527,8 @@
       analyser.smoothingTimeConstant = 0.8;
       
       source = audioCtx.createMediaElementSource(UI.mediaPlayer);
+      
+      // 3-Band Equalizer Shelf Nodes
       eqNodes.low = audioCtx.createBiquadFilter();
       eqNodes.low.type = 'lowshelf';
       eqNodes.low.frequency.value = 320;
@@ -1635,21 +2541,110 @@
       eqNodes.high = audioCtx.createBiquadFilter();
       eqNodes.high.type = 'highshelf';
       eqNodes.high.frequency.value = 3200;
-      
+
+      // Spatial Panner
+      if (audioCtx.createStereoPanner) {
+        pannerNode = audioCtx.createStereoPanner();
+      }
+
+      // Preamp Boost
+      preampGainNode = audioCtx.createGain();
+      preampGainNode.gain.value = parseFloat(UI.preampSlider.value) || 1.0;
+
+      // SNES SPC700 Delay Network: DelayNode + Feedback Gain + Lowpass Filter + Dry/Wet Mix
+      spcDelayNode = audioCtx.createDelay(1.5);
+      spcDelayNode.delayTime.value = parseFloat(UI.spcDelayTime.value) / 1000 || 0.32;
+
+      spcFeedbackGain = audioCtx.createGain();
+      spcFeedbackGain.gain.value = parseFloat(UI.spcFeedback.value) || 0.35;
+
+      spcFilterNode = audioCtx.createBiquadFilter();
+      spcFilterNode.type = 'lowpass';
+      spcFilterNode.frequency.value = 4200; // 16-bit SNES DSP roll-off
+
+      spcDryGain = audioCtx.createGain();
+      spcDryGain.gain.value = 1.0;
+
+      spcWetGain = audioCtx.createGain();
+      spcWetGain.gain.value = parseFloat(UI.spcWet.value) || 0.0;
+
+      // Audio Graph Pipeline Routing:
+      // source -> low -> mid -> high -> (panner) -> preamp
       source.connect(eqNodes.low);
       eqNodes.low.connect(eqNodes.mid);
       eqNodes.mid.connect(eqNodes.high);
-      eqNodes.high.connect(analyser);
+      
+      let lastNode = eqNodes.high;
+      if (pannerNode) {
+        lastNode.connect(pannerNode);
+        lastNode = pannerNode;
+      }
+      lastNode.connect(preampGainNode);
+
+      // Split into Dry and Delay paths
+      preampGainNode.connect(spcDryGain);
+      spcDryGain.connect(analyser);
+
+      // Delay feedback loop: preamp -> delay -> filter -> feedback -> delay
+      preampGainNode.connect(spcDelayNode);
+      spcDelayNode.connect(spcFilterNode);
+      spcFilterNode.connect(spcFeedbackGain);
+      spcFeedbackGain.connect(spcDelayNode);
+
+      // Delay wet output
+      spcFilterNode.connect(spcWetGain);
+      spcWetGain.connect(analyser);
+
+      // Analyser to output
       analyser.connect(audioCtx.destination);
       
       updateAudioEQ();
+      updateSpcDelay();
       drawVisualizer();
     } catch(err) {
       console.log('AudioContext initialization note:', err);
     }
   }
 
-  // --- Video Fit & Filters ---
+  // SNES Delay Parameter updates
+  function updateSpcDelay() {
+    const dTime = parseFloat(UI.spcDelayTime.value) || 320;
+    const fb = parseFloat(UI.spcFeedback.value) || 0.35;
+    const wet = parseFloat(UI.spcWet.value) || 0;
+
+    UI.vDelayTime.textContent = dTime + 'ms';
+    UI.vFeedback.textContent = Math.round(fb * 100) + '%';
+    UI.vWet.textContent = Math.round(wet * 100) + '%';
+
+    if (spcDelayNode) spcDelayNode.delayTime.value = dTime / 1000;
+    if (spcFeedbackGain) spcFeedbackGain.gain.value = fb;
+    if (spcWetGain) spcWetGain.gain.value = wet;
+
+    safeSetStorage('kmedia_spc_delay', dTime.toString());
+    safeSetStorage('kmedia_spc_fb', fb.toString());
+    safeSetStorage('kmedia_spc_wet', wet.toString());
+  }
+
+  UI.spcDelayTime.oninput = updateSpcDelay;
+  UI.spcFeedback.oninput = updateSpcDelay;
+  UI.spcWet.oninput = updateSpcDelay;
+
+  // Spatial Panner & Preamp updates
+  UI.panSlider.oninput = () => {
+    const val = parseFloat(UI.panSlider.value) || 0;
+    UI.vPan.textContent = val === 0 ? 'Center' : val < 0 ? `L ${Math.abs(Math.round(val*100))}%` : `R ${Math.round(val*100)}%`;
+    if (pannerNode && pannerNode.pan) pannerNode.pan.value = val;
+    safeSetStorage('kmedia_pan', val.toString());
+  };
+
+  UI.preampSlider.oninput = () => {
+    const val = parseFloat(UI.preampSlider.value) || 1.0;
+    UI.vPreamp.textContent = val.toFixed(1) + 'x';
+    if (preampGainNode) preampGainNode.gain.value = val;
+    safeSetStorage('kmedia_preamp', val.toString());
+  };
+
+  // --- Video Fit & CRT Scanlines ---
   function updateVideoFit(mode) {
     safeSetStorage('kmedia_fit', mode);
     UI.videoFit.value = mode;
@@ -1680,6 +2675,31 @@
   }
   UI.videoFit.onchange = (e) => updateVideoFit(e.target.value);
 
+  // CRT Scanlines Toggle
+  let crtEnabled = safeGetStorage('kmedia_crt', '0') === '1';
+  function applyCrtState() {
+    UI.videoContainer.classList.toggle('crt-enabled', crtEnabled);
+    UI.btnToggleCrt.textContent = '📺 CRT Scanlines: ' + (crtEnabled ? 'ON' : 'OFF');
+    UI.btnToggleCrt.classList.toggle('active-toggle', crtEnabled);
+    safeSetStorage('kmedia_crt', crtEnabled ? '1' : '0');
+  }
+  UI.btnToggleCrt.onclick = () => {
+    crtEnabled = !crtEnabled;
+    applyCrtState();
+    showToast('CRT Scanlines: ' + (crtEnabled ? 'ON' : 'OFF'));
+  };
+
+  // Color grading filter presets
+  const VIDEO_PRESETS = {
+    normal: { b: 1, c: 1, s: 1 },
+    vivid: { b: 1.05, c: 1.25, s: 1.4 },
+    amber: { b: 0.95, c: 1.3, s: 0.3 },
+    green: { b: 1.0, c: 1.4, s: 0.2 },
+    vhs: { b: 1.1, c: 1.15, s: 0.85 },
+    noir: { b: 1.0, c: 1.35, s: 0 },
+    sepia: { b: 0.95, c: 1.1, s: 0.5 }
+  };
+
   function updateVideoFilters() {
     const b = UI.fBright.value;
     const c = UI.fCont.value;
@@ -1687,7 +2707,13 @@
     document.getElementById('vBright').textContent = parseFloat(b).toFixed(2);
     document.getElementById('vCont').textContent = parseFloat(c).toFixed(2);
     document.getElementById('vSat').textContent = parseFloat(s).toFixed(2);
-    UI.mediaPlayer.style.filter = `brightness(${b}) contrast(${c}) saturate(${s})`;
+    
+    let extraFilter = '';
+    if (UI.videoPreset.value === 'sepia') extraFilter = ' sepia(0.65)';
+    else if (UI.videoPreset.value === 'green') extraFilter = ' hue-rotate(85deg)';
+    else if (UI.videoPreset.value === 'amber') extraFilter = ' hue-rotate(35deg)';
+
+    UI.mediaPlayer.style.filter = `brightness(${b}) contrast(${c}) saturate(${s})${extraFilter}`;
     safeSetStorage('kmedia_f_bright', b);
     safeSetStorage('kmedia_f_cont', c);
     safeSetStorage('kmedia_f_sat', s);
@@ -1696,7 +2722,17 @@
   UI.fCont.oninput = updateVideoFilters;
   UI.fSat.oninput = updateVideoFilters;
 
+  UI.videoPreset.onchange = (e) => {
+    const p = VIDEO_PRESETS[e.target.value] || VIDEO_PRESETS.normal;
+    UI.fBright.value = p.b;
+    UI.fCont.value = p.c;
+    UI.fSat.value = p.s;
+    updateVideoFilters();
+    showToast('Video Preset: ' + e.target.options[e.target.selectedIndex].text);
+  };
+
   UI.btnResetVideo.onclick = () => {
+    UI.videoPreset.value = 'normal';
     UI.fBright.value = 1; UI.fCont.value = 1; UI.fSat.value = 1;
     updateVideoFilters();
     showToast('Video filters reset');
@@ -1794,6 +2830,197 @@
   UI.btnExport.onclick = exportVideoFrame;
   UI.btnExportVideo.onclick = exportVideoFrame;
 
+  // --- Watch Party '99 Subsystem (Firebase RTDB Synchronized Playback) ---
+  const myUserId = 'user_' + Math.floor(1000 + Math.random() * 9000);
+  let currentRoomId = 'lounge';
+  let isDjCollab = true;
+  let isRemoteSyncing = false;
+  let roomStateRef = null;
+  let roomChatRef = null;
+  let roomMembersRef = null;
+  let myPresenceRef = null;
+
+  function initWatchParty() {
+    if (!window.kmedia_fb) {
+      UI.partyDot.className = 'party-dot offline';
+      UI.partyStatusText.textContent = 'Offline (Local Only)';
+      UI.partyHeaderStatus.textContent = 'Offline';
+      return;
+    }
+    joinPartyRoom(currentRoomId);
+  }
+
+  window.onWatchPartyReady = initWatchParty;
+
+  function joinPartyRoom(roomId) {
+    if (!window.kmedia_fb) return;
+    const { db, ref, set, onValue, onChildAdded, off, remove, serverTimestamp, onDisconnect } = window.kmedia_fb;
+    
+    // Detach previous listeners
+    if (roomStateRef) off(roomStateRef);
+    if (roomMembersRef) off(roomMembersRef);
+    if (myPresenceRef) remove(myPresenceRef);
+
+    currentRoomId = roomId.trim().toLowerCase() || 'lounge';
+    UI.partyHeaderStatus.textContent = currentRoomId;
+    UI.partyStatusText.textContent = `Connected: #${currentRoomId}`;
+    UI.partyDot.className = 'party-dot';
+    UI.partyHeaderBadge.classList.add('online');
+
+    const roomBasePath = `multiplayer/kmedia/rooms/${currentRoomId}`;
+    roomStateRef = ref(db, `${roomBasePath}/state`);
+    roomChatRef = ref(db, `${roomBasePath}/chat`);
+    roomMembersRef = ref(db, `${roomBasePath}/members`);
+    myPresenceRef = ref(db, `${roomBasePath}/members/${myUserId}`);
+
+    // Register Presence
+    set(myPresenceRef, {
+      userId: myUserId,
+      name: myUserId,
+      joinedAt: Date.now()
+    }).catch(() => {});
+    onDisconnect(myPresenceRef).remove().catch(() => {});
+
+    // Listen to Peers Presence
+    onValue(roomMembersRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      const count = Object.keys(data).length;
+      UI.partyListenersWrap.innerHTML = `<span>👥 Listeners (${count}):</span>`;
+      Object.keys(data).forEach(uid => {
+        const span = document.createElement('span');
+        span.className = 'listener-chip';
+        span.textContent = uid === myUserId ? 'You' : uid;
+        UI.partyListenersWrap.appendChild(span);
+      });
+    });
+
+    // Listen to Synchronized Room Playback State
+    onValue(roomStateRef, (snapshot) => {
+      const state = snapshot.val();
+      if (!state) return;
+      if (state.senderId === myUserId) return; // Ignore own echoes
+
+      isRemoteSyncing = true;
+      try {
+        // Track Sync
+        if (state.demoIndex !== undefined && state.demoIndex !== null) {
+          const matchingTrackIdx = playlist.findIndex(p => p.demoIndex === state.demoIndex);
+          if (matchingTrackIdx !== -1 && matchingTrackIdx !== currentIndex) {
+            playTrack(matchingTrackIdx);
+          } else if (matchingTrackIdx === -1) {
+            // Automatically generate demo track on peer
+            const blob = generateDemoTrack(state.demoIndex);
+            playlist.push({ name: state.trackName || `Track ${state.demoIndex}`, url: URL.createObjectURL(blob), demoIndex: state.demoIndex });
+            renderPlaylist();
+            playTrack(playlist.length - 1);
+          }
+        }
+
+        // Play / Pause Sync
+        if (state.isPlaying && UI.mediaPlayer.paused && UI.mediaPlayer.src) {
+          UI.mediaPlayer.play().catch(() => {});
+        } else if (!state.isPlaying && !UI.mediaPlayer.paused) {
+          UI.mediaPlayer.pause();
+        }
+
+        // Drift correction: seek if drift > 0.75s
+        if (UI.mediaPlayer.duration && isFinite(UI.mediaPlayer.duration)) {
+          const drift = Math.abs((UI.mediaPlayer.currentTime || 0) - (state.currentTime || 0));
+          if (drift > 0.75) {
+            UI.mediaPlayer.currentTime = state.currentTime;
+          }
+        }
+      } finally {
+        setTimeout(() => { isRemoteSyncing = false; }, 200);
+      }
+    });
+
+    // Listen to Live Chat & Reactions
+    onChildAdded(roomChatRef, (snapshot) => {
+      const msg = snapshot.val();
+      if (!msg) return;
+      appendPartyChatMessage(msg);
+    });
+
+    showToast(`Joined Watch Party: #${currentRoomId}`);
+  }
+
+  function broadcastPartyState() {
+    if (!window.kmedia_fb || isRemoteSyncing) return;
+    if (!isDjCollab) return; // If DJ mode is restricted
+    const { set } = window.kmedia_fb;
+    if (!roomStateRef) return;
+
+    const curTrack = (currentIndex >= 0 && currentIndex < playlist.length) ? playlist[currentIndex] : null;
+    const statePayload = {
+      senderId: myUserId,
+      isPlaying: !UI.mediaPlayer.paused,
+      currentTime: UI.mediaPlayer.currentTime || 0,
+      trackName: curTrack ? curTrack.name : 'Unknown',
+      demoIndex: curTrack ? (curTrack.demoIndex !== undefined ? curTrack.demoIndex : null) : null,
+      speed: speeds[currentSpeedIndex],
+      updatedAt: Date.now()
+    };
+    set(roomStateRef, statePayload).catch(() => {});
+  }
+
+  function sendPartyChat(text) {
+    if (!text || !text.trim() || !window.kmedia_fb || !roomChatRef) return;
+    const { push } = window.kmedia_fb;
+    const payload = {
+      sender: myUserId,
+      text: text.trim().slice(0, 140),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    };
+    push(roomChatRef, payload).catch(() => {});
+    UI.partyChatInput.value = '';
+  }
+
+  function appendPartyChatMessage(msg) {
+    const div = document.createElement('div');
+    div.className = 'party-chat-msg';
+    div.innerHTML = `
+      <span class="party-chat-time">${escapeHtml(msg.time || '')}</span>
+      <span class="party-chat-sender">${escapeHtml(msg.sender === myUserId ? 'You' : msg.sender)}:</span>
+      <span>${escapeHtml(msg.text || '')}</span>
+    `;
+    UI.partyChatFeed.appendChild(div);
+    UI.partyChatFeed.scrollTop = UI.partyChatFeed.scrollHeight;
+  }
+
+  UI.btnJoinRoom.onclick = () => {
+    const val = UI.partyRoomInput.value.trim();
+    if (val) joinPartyRoom(val);
+  };
+  UI.btnLoungeQuick.onclick = () => {
+    UI.partyRoomInput.value = 'lounge';
+    joinPartyRoom('lounge');
+  };
+  UI.btnPartyDJMode.onclick = () => {
+    isDjCollab = !isDjCollab;
+    UI.btnPartyDJMode.textContent = 'DJ: ' + (isDjCollab ? 'Collab' : 'Host Only');
+    showToast('DJ Mode: ' + (isDjCollab ? 'Collaborative' : 'Host Only'));
+  };
+  UI.btnPartyResync.onclick = () => {
+    broadcastPartyState();
+    showToast('Broadcasted current track & time to room');
+  };
+  UI.btnSendChat.onclick = () => sendPartyChat(UI.partyChatInput.value);
+  UI.partyChatInput.onkeydown = (e) => {
+    if (e.key === 'Enter') {
+      sendPartyChat(UI.partyChatInput.value);
+      e.preventDefault();
+    }
+  };
+
+  // Quick reactions
+  UI.btnReactVibe.onclick = () => sendPartyChat('🎵 Vibe');
+  UI.btnReactBass.onclick = () => sendPartyChat('🔥 Bass Drop');
+  UI.btnReactRetro.onclick = () => sendPartyChat('📻 Pure 1999 Retro');
+  UI.btnReactEncore.onclick = () => sendPartyChat('⏮ Encore!');
+  UI.btnReactBoost.onclick = () => sendPartyChat('🔊 Crank It Up');
+  UI.btnReactChill.onclick = () => sendPartyChat('☕ Chill Beats');
+
   // --- Help & Quickstart Dialog ---
   const helpOverlay = document.getElementById('helpOverlay');
   const chkDoNotShow = document.getElementById('chkDoNotShow');
@@ -1816,13 +3043,13 @@
 
   // --- Keyboard Shortcuts & Navigation ---
   window.addEventListener('keydown', (e) => {
-    if (document.activeElement === UI.searchInput) {
+    if (document.activeElement === UI.searchInput || document.activeElement === UI.partyChatInput || document.activeElement === UI.partyRoomInput) {
       if (e.key === 'Escape') {
-        if (UI.searchInput.value) {
-          UI.searchInput.value = '';
-          renderPlaylist();
+        if (document.activeElement.value) {
+          document.activeElement.value = '';
+          if (document.activeElement === UI.searchInput) renderPlaylist();
         } else {
-          UI.searchInput.blur();
+          document.activeElement.blur();
         }
         e.preventDefault();
       }
@@ -1837,6 +3064,12 @@
 
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'e') {
       exportVideoFrame();
+      e.preventDefault();
+      return;
+    }
+
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'b') {
+      addCuePoint();
       e.preventDefault();
       return;
     }
@@ -1909,6 +3142,18 @@
     } else if (e.key.toLowerCase() === 'v') {
       cycleVisualizerMode();
       e.preventDefault();
+    } else if (e.key.toLowerCase() === 'b') {
+      addCuePoint();
+      e.preventDefault();
+    } else if (e.key.toLowerCase() === 'l') {
+      UI.btnToggleLoopAB.click();
+      e.preventDefault();
+    } else if (e.key === '{') {
+      UI.btnSubDelay.click();
+      e.preventDefault();
+    } else if (e.key === '}') {
+      UI.btnSubAdvance.click();
+      e.preventDefault();
     } else if (e.key.toLowerCase() === 'e') {
       exportVideoFrame();
       e.preventDefault();
@@ -1941,16 +3186,41 @@
 
   const savedFit = safeGetStorage('kmedia_fit', 'contain');
   updateVideoFit(savedFit);
+  applyCrtState();
 
   UI.eqLow.value = safeGetStorage('kmedia_eq_low', '0');
   UI.eqMid.value = safeGetStorage('kmedia_eq_mid', '0');
   UI.eqHigh.value = safeGetStorage('kmedia_eq_high', '0');
   updateAudioEQ();
 
+  UI.spcDelayTime.value = safeGetStorage('kmedia_spc_delay', '320');
+  UI.spcFeedback.value = safeGetStorage('kmedia_spc_fb', '0.35');
+  UI.spcWet.value = safeGetStorage('kmedia_spc_wet', '0');
+  updateSpcDelay();
+
+  const savedPan = safeGetStorage('kmedia_pan', '0');
+  UI.panSlider.value = savedPan;
+  UI.vPan.textContent = savedPan === '0' ? 'Center' : parseFloat(savedPan) < 0 ? `L ${Math.abs(Math.round(parseFloat(savedPan)*100))}%` : `R ${Math.round(parseFloat(savedPan)*100)}%`;
+
+  const savedPreamp = safeGetStorage('kmedia_preamp', '1.0');
+  UI.preampSlider.value = savedPreamp;
+  UI.vPreamp.textContent = parseFloat(savedPreamp).toFixed(1) + 'x';
+
+  const savedSubSize = safeGetStorage('kmedia_sub_size', '20');
+  UI.subFontSize.value = savedSubSize;
+  UI.vSubSize.textContent = savedSubSize + 'px';
+  document.querySelector('.subtitle-overlay').style.fontSize = savedSubSize + 'px';
+
   updateVisualizerUI();
   updateVolume(lastVolume);
   resizeCanvas();
   renderPlaylist();
+  renderCuePoints();
+
+  // Try activating Watch Party if Firebase already loaded
+  if (window.kmedia_fb) {
+    initWatchParty();
+  }
 
   // First-run tutorial onboarding or welcome toast
   if (safeGetStorage('kmedia_welcomed', '0') === '0') {
