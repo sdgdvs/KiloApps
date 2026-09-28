@@ -2,12 +2,12 @@
 current_agent: kilo-expander
 next_agent: kilo-creator
 agent_rotation:
-  - kilo-graphics
-  - kilo-qa
   - kilo-expander
   - kilo-creator
   - kilo-tester
   - kilo-usability
+  - kilo-graphics
+  - kilo-qa
 model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
@@ -35,7 +35,7 @@ last_run:
   agent: kilo-qa
   app: KTodo
   timestamp: "2026-09-28T09:55:00Z"
-last_planner_run: "2026-09-27T09:48:00Z"
+last_planner_run: "2026-09-28T10:38:00Z"
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -121,7 +121,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KTrader`
 - **Upcoming Queue**:
-  `KType`, `KVault`, `KMystery`, `KQuest`, `KSanctuary`, `KClip`, `KTodo` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, KClip, KCipher, KTodo)*.
+  `KType`, `KVault`, `KMystery`, `KQuest`, `KSanctuary`, `KClip`, `KCipher` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, KClip, KCipher, KTodo)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KAudio`
@@ -130,8 +130,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://10.19.99.4/classified` (`KiloOS/public/web/classified.html`)
-  - *Next in Rotation*: `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe`.
+- **Current Active Target**: `kweb://echo-subsystem.net` (`KiloOS/public/web/echo_subsystem.html`)
+  - *Next in Rotation*: `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified`.
 - **Anti-Potemkin Directive & Content Mandates**:
   0. `kweb://warez` (*0xRELEASE Scene Vault & Cracktros*):
      - ✅ 12 authentic parody releases with 3D vector cracktro launcher, ANSI NFO viewer & .diz/.nfo downloads.
@@ -168,7 +168,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
      - ✅ Live Mode 13h VGA 320x200 60FPS demoscene canvas (TinyTunnel, Plasma99, FireBuffer, Starfield3D) with 4 authentic retro palettes.
      - ✅ YM2612 2-Operator FM Synthesizer Laboratory with interactive piano keyboard, SPC700 stereo delay & 4-track tracker jukebox.
      - ✅ Demoscene code vault with client-side .asm/.nfo downloads, persistent CGI guestbook, and KiloNet Webring #006 node interconnect.
-
   5. `kweb://asm-temple` (*x86 Assembly Programming Shrine & PE32 Dissector*):
      - ✅ 118-instruction Opcode Oracle with category filters, Pentium cycle counts, and encoding format deconstruction.
      - ✅ Two-way live x86 assembler & disassembler with preset library, C array / NASM / binary export, and .bin downloads.
@@ -186,6 +185,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
      - ✅ Terminal booth station telemetry, 56k V.90 throughput benchmark, cafe kiosk with downloadable thermal receipts & hardware vault NFOs.
   7. `kweb://darknet` (*Node 0x7F Transmission Subsystem*):
      - ✅ Tier 3 Ghost Node: VT-100 terminal, 6-algo cryptic packet decoders (Hex, XOR, Rot13, Base64, Bitwise, Polybius), packet capture sniffer, RF spectrum waterfall, YM2612 FM / SPC700 audio engine & Central KiloNet Webring #012.
+  8. `kweb://10.19.99.4/classified` (*Corporate Network Leak & Signal Diagnostic*):
+     - ✅ Signal Diagnostic Lab with dual-display time-domain oscilloscope & FFT frequency spectrum, tunable YM2612 FM / SPC700 stereo delay DSP controls & live subcarrier demodulator.
+     - ✅ Subnet RF Sweep: 10.19.99.0/24 node sweep tracking signal-to-noise ratio, carrier lock, and audio DAC leakage.
+     - ✅ Corporate Leak Suite: Sanitized diegetic memos, 4-sector memory hex inspector, packet sniffer with test frame injection & skunkworks CLI.
+     - ✅ Discovery Integration: Linked node in KNet directory, portal category 5 / search index, portal classified ads, and webring node #015 / probe console.
 - **Execution Protocol**:
   - `kilo-expander`, `kilo-creator`, and `kilo-graphics` alternate between native app targets and `virtual_web_target` to ensure the web world has genuine functional depth.
   - All virtual web pages remain strictly `< 999 KB`, self-contained or cleanly linked within `/web/`, and adhere to period-accurate HTML 4.01 aesthetic.
@@ -230,6 +234,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-28T10:38:00Z — kilo-planner: 24h Fleet Planning, Queue Health & Icon Audit**
+  - Status: PASS ✅ (104 apps audited, 0 duplicates, 0 regressions, all queues balanced).
+  - Velocity & Health: Assessed 14 runs across 6 skills in past 24h; 100% pass rate; ~1.7h cadence.
+  - Icon Uniqueness: Verified 104 apps in App.jsx with 0 missing files and 0 duplicate SHA256 hashes.
+  - Queue Rework: Confirmed active targets for upcoming cycle (KAudio, echo-subsystem, KChat, KPing, KStarDredge, KTrader).
+  - Rotation Schedule: Set agent_rotation starting at kilo-expander to maintain fair round-robin dispatch.
+  - Compaction: Archived 10.19.99.4/classified and KCalendar to fleet_execution_archive.md; retained top 5 active entries.
+
 - **2026-09-28T09:55:00Z — kilo-qa: KTodo (Pass 5: Tutorial & State Integrity Audit)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
   - Snapshot Persistence: Full F5 quicksave & F9 quickload capturing tasks, workspaces, tags, and search query in web and Win32 C `ktodo_quicksave.dat`.
@@ -263,13 +275,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Regression Formatting: Added `formatTrendEquation` for clean sign-aware trend equations across canvas overlays and vector SVG exports.
   - Controls & Onboarding: Added `kchart_tutorialSeen` onboarding tour gating, Enter/Space modal dismissal, and synchronized preset cycle state.
   - Verification: MSVC clean (`KChart.exe` 29.1 KB); Vite build clean in 395ms (`kchart.html` 87.5 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
-
-- **2026-09-28T05:52:00Z — kilo-creator: kweb://10.19.99.4/classified (Corporate Network Leak & Signal Diagnostic)**
-  - Status: PASS ✅ (0 regressions, clean Vite build, security lint clean, <999KB ceiling verified).
-  - Signal Diagnostic Lab: Added dual-display time-domain oscilloscope & FFT frequency spectrum, tunable YM2612 FM / SPC700 stereo delay DSP controls, and live subcarrier packet demodulator.
-  - Subnet RF Sweep: Implemented interactive 10.19.99.0/24 node sweep tracking signal-to-noise ratio, carrier lock, and audio DAC leakage.
-  - Corporate Leak Suite: Sanitized all meta-spoilers/TINAG leaks into authentic diegetic memos [6], 4-sector memory hex inspector, packet sniffer with test frame injection, and skunkworks CLI.
-  - Integration & Discovery: Linked node in KNet directory, portal category 5 / search index, portal classified ads, and webring node #015 / probe console.
-  - Verification: Vite build clean in 389ms; `security_lint.py` 100% clean PASS; `classified.html` size: 79.8 KB (< 999 KB ceiling).
 
 
