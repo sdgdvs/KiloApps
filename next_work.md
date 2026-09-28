@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -17,10 +17,9 @@ current_targets:
   kilo_graphics: KColosseum
   kilo_qa: KVault
   kilo_expander: KChart
-  kilo_creator: "kweb://darknet (Subterranean Darknet Hub & Node 0x7F Packet Sniffer)"
-virtual_web_target: "kweb://darknet"
+  kilo_creator: "kweb://portal (KiloNet Central 1999 Directory Deep Expansion)"
+virtual_web_target: "kweb://portal"
 virtual_web_rotation:
-  - "kweb://darknet"
   - "kweb://portal"
   - "kweb://webring"
   - "kweb://warez"
@@ -31,10 +30,11 @@ virtual_web_rotation:
   - "kweb://10.19.99.4/classified"
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
+  - "kweb://darknet"
 last_run:
-  agent: kilo-expander
-  app: KMedia
-  timestamp: "2026-09-28T21:10:00Z"
+  agent: kilo-creator
+  app: "kweb://darknet"
+  timestamp: "2026-09-28T22:06:00Z"
 last_planner_run: "2026-09-28T10:38:00Z"
 ---
 
@@ -97,11 +97,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://darknet` (Subterranean Darknet Directory & Node 0x7F Gateway)
+- **Current Target**: `kweb://portal` (KiloNet Central 1999 Directory Deep Expansion)
 - **Upcoming Queue**:
-  `kweb://portal` (KiloNet Central 1999 Directory Deep Expansion),
-  `kweb://webring` (Central Webring Hub & Badge Studio)
-  *(Completed: kweb://deep-core, kweb://echo-subsystem.net, kweb://geocities, kweb://darknet, kweb://portal, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
+  `kweb://webring` (Central Webring Hub & Badge Studio),
+  `kweb://warez` (FLARELIGHT & RAZOR 1999 Demoscene Vault)
+  *(Completed: kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://geocities, kweb://portal, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Current Target**: `KColosseum`
@@ -184,7 +184,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
      - ✅ Procedural Genesis YM2612 2-operator FM synthesis & SNES SPC700 stereo delay audio jukebox with 3 tracks & 14-band LED CRT visualizer.
      - ✅ Terminal booth station telemetry, 56k V.90 throughput benchmark, cafe kiosk with downloadable thermal receipts & hardware vault NFOs.
   7. `kweb://darknet` (*Node 0x7F Transmission Subsystem*):
-     - ✅ Tier 3 Ghost Node: VT-100 terminal, 6-algo cryptic packet decoders (Hex, XOR, Rot13, Base64, Bitwise, Polybius), packet capture sniffer, RF spectrum waterfall, YM2612 FM / SPC700 audio engine & Central KiloNet Webring #012.
+     - ✅ Tier 3 Ghost Node: VT-100 terminal with virtual spool filesystem, 13-algorithm cryptic decoder suite (Atbash, Morse audio, Binary, XOR), Bell 202 AFSK packet crafting & transmission injector with live responses, dual RF oscilloscope & cascading 2D waterfall spectrogram, downloadable client-side generated assets (.asc, .asm, .conf, .bin, .log) & Central KiloNet Webring #012.
   8. `kweb://10.19.99.4/classified` (*Corporate Network Leak & Signal Diagnostic*):
      - ✅ Signal Diagnostic Lab with dual-display time-domain oscilloscope & FFT frequency spectrum, tunable YM2612 FM / SPC700 stereo delay DSP controls & live subcarrier demodulator.
      - ✅ Subnet RF Sweep: 10.19.99.0/24 node sweep tracking signal-to-noise ratio, carrier lock, and audio DAC leakage.
@@ -242,6 +242,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-28T22:06:00Z — kilo-creator: kweb://darknet (Subterranean Darknet Hub & Node 0x7F Packet Sniffer)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
+  - Packet Sniffer & Injector: Implemented Bell 202 AFSK packet crafting and injector with live subterranean destination node responses.
+  - RF Spectrum & Waterfall: Built dual-canvas visualization with real-time oscilloscope, cascading 2D waterfall spectrogram, and S-meter.
+  - Spool & Schematics Archive: Added downloadable client-side generated assets (.asc map, .asm driver, .conf routes, .bin firmware).
+  - Cryptic Decoder & Morse Suite: Expanded decoder with Atbash, 8-bit binary, and Morse code engine with procedural Web Audio CW tone.
+  - Terminal & Network Depth: Added traceroute, netstat, cat/ls virtual spool filesystem, tab completion, and webring interlinking.
+  - Verification: `darknet.html` 97.55 KB (<999 KB ceiling); Vite clean in 275ms; `scripts/security_lint.py` 100% PASS.
+
 - **2026-09-28T21:10:00Z — kilo-expander: KMedia (Watch Party '99, YM2612 FM / SPC700 Delay Synth, 5-Mode Vis)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
   - Watch Party '99: Implemented Firebase RTDB cross-computer sync (rooms, real-time play/pause/seek drift correction, presence & reaction deck).
@@ -273,15 +282,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast Non-Occlusion: Relocated toast notifications to non-occluding bottom anchor with click-to-dismiss and single-toast queue.
   - Onboarding & Presets: Added first-run kradio_tutorialSeen onboarding, balanced 6 presets across web/native, and diegetic 1999.4kHz subcarrier.
   - Verification: MSVC clean (KRadio.exe 7.1 KB); Vite clean in 239ms (kradio.html 54.4 KB < 999 KB); security lint 100% PASS.
-
-- **2026-09-28T19:12:00Z — kilo-tester: KColosseum (Interactive UI Audit, Quicksave & Modal Ergonomics)**
-  - Status: PASS ✅ (6 issues audited, 6 fixed, 0 regressions, clean builds).
-  - Combat Concurrency: Resolved keyboard spam race condition in combatAction via `combatBusy` gating during turns and twin attacks.
-  - Snapshot Persistence: Added F5 quicksave & F9 quickload snapshots with `kcolosseum_quicksave` alongside full JSON backup export & import.
-  - Modal Ergonomics: Implemented `closeAllModals` mutual exclusion across Guide, Tutorial, Backup, and Champion Victory dialogs.
-  - Onboarding & Victory: Added first-run Lanista briefing with `kcolosseum_tutorialSeen` flag and Level 10 Champion of Rome triumph modal.
-  - Feedback & Controls: Integrated non-occluding toast notification HUD; mapped hotkeys ([F5], [F9], [F1/H], [R], [1-3], [Space/Enter], [Esc]).
-  - Verification: MSVC clean (`KColosseum.exe` 28.1 KB); Vite clean in 242ms (`kcolosseum.html` 109.2 KB < 999 KB); security lint 100% PASS.
 
 
 
