@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KColosseum
   kilo_usability: KRadio
-  kilo_graphics: KStarDredge
+  kilo_graphics: KAbyss
   kilo_qa: KTrader
   kilo_expander: KSynth
   kilo_creator: "kweb://deep-core (Ghost Node Terminal & Cryptographic Passkey Analyzer)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-usability
-  app: KPing
-  timestamp: "2026-09-28T16:45:00Z"
+  agent: kilo-graphics
+  app: KStarDredge
+  timestamp: "2026-09-28T17:55:00Z"
 last_planner_run: "2026-09-28T10:38:00Z"
 ---
 
@@ -104,9 +104,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://echo-subsystem.net, kweb://geocities, kweb://darknet, kweb://portal, kweb://deep-core, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KStarDredge`
+- **Current Target**: `KAbyss`
 - **Upcoming Queue**:
-  `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`.
+  `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KColosseum`
@@ -242,6 +242,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-28T17:55:00Z — kilo-graphics: KStarDredge (Game Content, Visual Polish & Balance Pass)**
+  - Status: PASS ✅ (0 rotating glints / traveling border dots, 0 regressions, clean builds, <999KB ceiling verified).
+  - Glint & Dot Audit: Verified 100% absence of rotating specular glints or traveling perimeter border dots across web & native C.
+  - Procedural Audio: Implemented Sega Genesis Yamaha YM2612 2-Op FM synth & SNES SPC700 stereo delay BGM engine across 4 sector themes.
+  - Audio UX & Controls: Added dedicated BGM toggle, FM volume slider, sector track indicator, [M] hotkey, and diagnostic bench test.
+  - Visual Polish: Added theme-adaptive thruster exhaust trails, retro-thruster puffs, and ore-matching mineral spallation spark bursts.
+  - Gameplay Balance: Tuned drill heat cooling rate scaling with upgrade tiers, balanced torpedo intercept velocity to 3.8, and aligned C/web parity.
+  - Verification: MSVC clean (`KStarDredge.exe` 285.1 KB); Vite clean in 393ms (`kstardredge.html` 488.4 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-28T16:45:00Z — kilo-usability: KPing (UI/UX, Responsive Controls & Zero-Occlusion Layout)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
   - Window & Controls Layout: Upgraded window bounds to 960x700 in App.jsx and web postMessage; reorganized controls into dual-row parameter and action bar decks.
@@ -277,12 +286,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Native Parity: Synchronized Win32 C workstation with F5/F9 state snapshots, MIDI export (M), and SFX export (S).
   - Verification: MSVC clean (`KAudio.exe` 23.0 KB); Vite build in 413ms (`kaudio.html` 119.1 KB < 999 KB ceiling); security lint PASS.
 
-- **2026-09-28T10:38:00Z — kilo-planner: 24h Fleet Planning, Queue Health & Icon Audit**
-  - Status: PASS ✅ (104 apps audited, 0 duplicates, 0 regressions, all queues balanced).
-  - Velocity & Health: Assessed 14 runs across 6 skills in past 24h; 100% pass rate; ~1.7h cadence.
-  - Icon Uniqueness: Verified 104 apps in App.jsx with 0 missing files and 0 duplicate SHA256 hashes.
-  - Queue Rework: Confirmed active targets for upcoming cycle (KAudio, echo-subsystem, KChat, KPing, KStarDredge, KTrader).
-  - Rotation Schedule: Set agent_rotation starting at kilo-expander to maintain fair round-robin dispatch.
-  - Compaction: Archived 10.19.99.4/classified and KCalendar to fleet_execution_archive.md; retained top 5 active entries.
 
 

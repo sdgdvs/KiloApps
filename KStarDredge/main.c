@@ -2731,7 +2731,8 @@ void UpdateGame(float dt) {
             AddLog("CRITICAL: Laser optics overheated! Emergency cooling cycle initiated.", 4);
         }
     } else {
-        g_state.heat = max(0.0f, g_state.heat - 0.3f);
+        float coolRate = 0.32f * (1.3f - drillDef->heatRate * 0.3f);
+        g_state.heat = max(0.0f, g_state.heat - coolRate);
         if (g_state.laserOverheated && g_state.heat < 25.0f) {
             g_state.laserOverheated = 0;
             AddLog("Laser cooling cycle complete. Optics online.", 5);
@@ -2768,7 +2769,8 @@ void UpdateGame(float dt) {
                 if (distToBeam < ast->radius) {
                     float impactX = lx + dirX * proj;
                     float impactY = ly + dirY * proj;
-                    AddSparks(impactX, impactY, THEME_PALETTES[g_state.themeIndex].vector, 2);
+                    COLORREF oreColor = ORE_DEFS[ast->oreType].color;
+                    AddSparks(impactX, impactY, oreColor, 3);
                     
                     float dpsMultiplier = ast->resonantLock ? 1.5f : 1.0f;
                     ast->hp -= 0.6f * drillDef->dpsBonus * dpsMultiplier;
@@ -2795,7 +2797,7 @@ void UpdateGame(float dt) {
                         char buf[128];
                         sprintf(buf, "Asteroid %s shattered into rich mineral fragments!", ast->id);
                         AddLog(buf, 1);
-                        AddSparks(ast->x, ast->y, RGB(245, 158, 11), 18);
+                        AddSparks(ast->x, ast->y, oreColor, 20);
                         
                         // Base chunks from composition
                         for (int c = 0; c < 5 + (rand() % 3); c++) {
@@ -3347,8 +3349,8 @@ void UpdateGame(float dt) {
                         g_state.enemyProjectiles[ep].type = launchTorpedo ? 1 : 0;
                         g_state.enemyProjectiles[ep].x = r->x;
                         g_state.enemyProjectiles[ep].y = r->y;
-                        g_state.enemyProjectiles[ep].vx = (float)cos(r->angle) * (launchTorpedo ? 3.5f : 6.8f);
-                        g_state.enemyProjectiles[ep].vy = (float)sin(r->angle) * (launchTorpedo ? 3.5f : 6.8f);
+                        g_state.enemyProjectiles[ep].vx = (float)cos(r->angle) * (launchTorpedo ? 3.8f : 6.8f);
+                        g_state.enemyProjectiles[ep].vy = (float)sin(r->angle) * (launchTorpedo ? 3.8f : 6.8f);
                         g_state.enemyProjectiles[ep].homing = launchTorpedo;
                         g_state.enemyProjectiles[ep].hp = 30.0f;
                         g_state.enemyProjectiles[ep].damage = launchTorpedo ? 40.0f : 22.0f;
@@ -3369,8 +3371,8 @@ void UpdateGame(float dt) {
                         g_state.enemyProjectiles[ep].type = 1; // Homing Torpedo
                         g_state.enemyProjectiles[ep].x = r->x;
                         g_state.enemyProjectiles[ep].y = r->y;
-                        g_state.enemyProjectiles[ep].vx = (float)cos(r->angle) * 3.2f;
-                        g_state.enemyProjectiles[ep].vy = (float)sin(r->angle) * 3.2f;
+                        g_state.enemyProjectiles[ep].vx = (float)cos(r->angle) * 3.8f;
+                        g_state.enemyProjectiles[ep].vy = (float)sin(r->angle) * 3.8f;
                         g_state.enemyProjectiles[ep].homing = 1;
                         g_state.enemyProjectiles[ep].hp = 45.0f;
                         g_state.enemyProjectiles[ep].damage = 55.0f;

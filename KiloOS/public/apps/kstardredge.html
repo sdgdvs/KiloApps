@@ -2827,6 +2827,22 @@
                             </div>
                             <input type="range" id="sliderSfxVol" min="0" max="100" value="90" style="accent-color: var(--accent-emerald); cursor: pointer;">
                         </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 5px;">
+                            <span style="font-size: 11px;">FM CHIPTUNE BGM:</span>
+                            <button class="btn" id="btnMusicMuteToggle" style="padding: 3px 8px; font-weight: bold; border-color: var(--accent-purple); color: var(--accent-purple);">
+                                <span id="txtMusicMuteState">MUSIC: ON [YM2612]</span>
+                            </button>
+                        </div>
+                        <div style="display: flex; flex-direction: column; gap: 3px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 10px;">
+                                <span>BGM MUSIC (YM2612 + SPC700)</span>
+                                <span id="txtMusicVolVal">55%</span>
+                            </div>
+                            <input type="range" id="sliderMusicVol" min="0" max="100" value="55" style="accent-color: var(--accent-purple); cursor: pointer;">
+                        </div>
+                        <div style="font-size: 9px; color: var(--text-dim); font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="txtMusicSectorTrack">
+                            TRACK: BELT ALPHA-09 (DEEP CORE FOUNDRY)
+                        </div>
                     </div>
 
                     <!-- Right: Sound FX Diagnostic Triggers -->
@@ -2843,6 +2859,7 @@
                             <button class="btn" id="btnTestFlak" style="padding: 5px; font-size: 10px; border-color: #c084fc;">💣 EMP Flak Blast</button>
                             <button class="btn" id="btnTestDock" style="padding: 5px; font-size: 10px; border-color: #10b981;">🛰️ Starport Chime</button>
                             <button class="btn" id="btnTestWarp" style="padding: 5px; font-size: 10px; border-color: #f43f5e;">🌌 Sub-Space Warp Sweep</button>
+                            <button class="btn" id="btnTestMusicFM" style="padding: 5px; font-size: 10px; border-color: var(--accent-purple); color: var(--accent-purple); grid-column: span 2;">🎵 Test YM2612 2-Op FM Chime</button>
                         </div>
                     </div>
                 </div>
@@ -3147,6 +3164,18 @@
                 this.tractorHarmonic = null;
                 this.tractorGain = null;
                 this.tractorActive = false;
+
+                // Genesis YM2612 FM Synthesis & SNES SPC700 Delay Network (Arg Plan Standard)
+                this.musicEnabled = true;
+                this.musicVol = 0.55;
+                this.musicGain = null;
+                this.delayL = null;
+                this.delayR = null;
+                this.delayFilter = null;
+                this.currentSector = 0;
+                this.seqStep = 0;
+                this.seqTimer = null;
+                this.musicInitialized = false;
             }
 
             init() {
@@ -3159,10 +3188,208 @@
                 if (this.ctx && this.ctx.state === 'suspended') {
                     this.ctx.resume();
                 }
+                if (this.ctx && !this.musicInitialized) {
+                    this.initMusicSystem();
+                }
+            }
+
+            initMusicSystem() {
+                if (!this.ctx || this.musicInitialized) return;
+                try {
+                    // SNES SPC700 Stereo Delay Warmth Network (185ms / 255ms with 2.2kHz warm lowpass filter)
+                    this.delayL = this.ctx.createDelay();
+                    this.delayL.delayTime.value = 0.185;
+                    this.delayR = this.ctx.createDelay();
+                    this.delayR.delayTime.value = 0.255;
+
+                    this.delayFilter = this.ctx.createBiquadFilter();
+                    this.delayFilter.type = 'lowpass';
+                    this.delayFilter.frequency.value = 2200;
+                    this.delayFilter.Q.value = 0.7;
+
+                    const delayFeedback = this.ctx.createGain();
+                    delayFeedback.gain.value = 0.28;
+
+                    const panL = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
+                    const panR = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
+                    if (panL && panR) {
+                        panL.pan.value = -0.4;
+                        panR.pan.value = 0.4;
+                        this.delayL.connect(panL);
+                        panL.connect(this.delayFilter);
+                        this.delayR.connect(panR);
+                        panR.connect(this.delayFilter);
+                    } else {
+                        this.delayL.connect(this.delayFilter);
+                        this.delayR.connect(this.delayFilter);
+                    }
+
+                    this.delayFilter.connect(delayFeedback);
+                    delayFeedback.connect(this.delayL);
+                    delayFeedback.connect(this.delayR);
+                    this.delayFilter.connect(this.ctx.destination);
+
+                    this.musicGain = this.ctx.createGain();
+                    this.musicGain.gain.value = this.musicVol * this.masterVol;
+                    this.musicGain.connect(this.ctx.destination);
+                    this.musicGain.connect(this.delayL);
+                    this.musicGain.connect(this.delayR);
+
+                    this.musicInitialized = true;
+                    this.startMusicSequencer();
+                } catch (e) {}
+            }
+
+            playFMNote(freq, dur = 0.45, timbre = 'chime', velocity = 0.6) {
+                if (!this.ctx || !this.enabled || !this.musicEnabled) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const mod = this.ctx.createOscillator();
+                    const modGain = this.ctx.createGain();
+                    const car = this.ctx.createOscillator();
+                    const carGain = this.ctx.createGain();
+
+                    let modRatio = 2.0;
+                    let modDepth = freq * 1.5;
+                    let attack = 0.02;
+                    let decay = dur * 0.9;
+
+                    if (timbre === 'bass') {
+                        modRatio = 0.5;
+                        modDepth = freq * 2.2;
+                        attack = 0.02;
+                        decay = dur * 0.85;
+                        velocity *= 1.15;
+                    } else if (timbre === 'chime') {
+                        modRatio = 3.5;
+                        modDepth = freq * 1.8;
+                        attack = 0.01;
+                        decay = dur * 0.92;
+                    } else if (timbre === 'pad') {
+                        modRatio = 1.004;
+                        modDepth = freq * 0.8;
+                        attack = dur * 0.22;
+                        decay = dur * 0.85;
+                    } else if (timbre === 'lead') {
+                        modRatio = 1.5;
+                        modDepth = freq * 1.6;
+                        attack = 0.03;
+                        decay = dur * 0.9;
+                    }
+
+                    mod.type = 'sine';
+                    mod.frequency.setValueAtTime(freq * modRatio, now);
+                    modGain.gain.setValueAtTime(modDepth * velocity, now);
+                    modGain.gain.exponentialRampToValueAtTime(1.0, now + decay);
+
+                    mod.connect(modGain);
+                    modGain.connect(car.frequency);
+
+                    car.type = 'sine';
+                    car.frequency.setValueAtTime(freq, now);
+
+                    const finalGain = Math.max(0.0001, velocity * 0.22 * this.musicVol * this.masterVol);
+                    carGain.gain.setValueAtTime(0.0001, now);
+                    carGain.gain.linearRampToValueAtTime(finalGain, now + attack);
+                    carGain.gain.exponentialRampToValueAtTime(0.0001, now + decay);
+
+                    car.connect(carGain);
+                    carGain.connect(this.musicGain);
+
+                    mod.start(now);
+                    car.start(now);
+                    mod.stop(now + decay);
+                    car.stop(now + decay);
+                } catch (e) {}
+            }
+
+            getSectorTrackName(secIdx = null) {
+                const s = (secIdx !== null) ? secIdx : this.currentSector;
+                switch (s) {
+                    case 0: return 'TRACK: BELT ALPHA-09 (DEEP CORE FOUNDRY)';
+                    case 1: return 'TRACK: KUIPER RING (GLACIAL EXPANSE)';
+                    case 2: return 'TRACK: DERELICT GRAVEYARD (PHANTOM HULL)';
+                    case 3: return 'TRACK: PLASMA NEBULA (SOLAR FLARE DRIFT)';
+                    default: return 'TRACK: DEEP SPACE DRIFT';
+                }
+            }
+
+            setMusicSector(secIdx) {
+                this.currentSector = Math.max(0, Math.min(3, secIdx));
+                const trackEl = document.getElementById('txtMusicSectorTrack');
+                if (trackEl) trackEl.textContent = this.getSectorTrackName(this.currentSector);
+            }
+
+            toggleMusic() {
+                this.musicEnabled = !this.musicEnabled;
+                return this.musicEnabled;
+            }
+
+            startMusicSequencer() {
+                if (this.seqTimer) clearInterval(this.seqTimer);
+                this.seqStep = 0;
+                this.seqTimer = setInterval(() => {
+                    if (!this.enabled || !this.musicEnabled || !this.ctx) return;
+                    this.tickSequencerStep();
+                }, 340);
+            }
+
+            tickSequencerStep() {
+                const step = this.seqStep % 16;
+                this.seqStep++;
+
+                const patterns = {
+                    0: { // Belt Alpha-09 (Deep Core Foundry)
+                        bass: [73.42, 0, 0, 0, 55.00, 0, 0, 0, 87.31, 0, 0, 0, 65.41, 0, 0, 0],
+                        lead: [293.66, 0, 349.23, 0, 440.00, 0, 349.23, 523.25, 0, 440.00, 0, 293.66, 349.23, 0, 293.66, 0],
+                        chime: [0, 587.33, 0, 440.00, 0, 0, 523.25, 0, 0, 698.46, 0, 587.33, 0, 440.00, 0, 880.00]
+                    },
+                    1: { // Kuiper Ring (Glacial Expanse)
+                        bass: [82.41, 0, 0, 0, 61.74, 0, 0, 0, 98.00, 0, 0, 0, 73.42, 0, 0, 0],
+                        lead: [329.63, 0, 392.00, 0, 493.88, 0, 0, 587.33, 0, 493.88, 0, 392.00, 0, 329.63, 0, 493.88],
+                        chime: [0, 659.25, 0, 0, 783.99, 0, 659.25, 0, 0, 987.77, 0, 783.99, 0, 659.25, 0, 587.33]
+                    },
+                    2: { // Derelict Graveyard (Phantom Hull)
+                        bass: [55.00, 0, 0, 0, 43.65, 0, 0, 0, 41.20, 0, 0, 0, 36.71, 0, 0, 0],
+                        lead: [220.00, 0, 0, 261.63, 0, 329.63, 0, 0, 349.23, 0, 0, 329.63, 0, 261.63, 0, 0],
+                        chime: [0, 0, 415.30, 0, 0, 0, 440.00, 0, 0, 0, 523.25, 0, 0, 415.30, 0, 329.63]
+                    },
+                    3: { // Plasma Nebula (Solar Flare Drift)
+                        bass: [65.41, 0, 0, 0, 49.00, 0, 0, 0, 92.50, 0, 0, 0, 82.41, 0, 0, 0],
+                        lead: [261.63, 0, 329.63, 0, 369.99, 0, 392.00, 0, 493.88, 0, 392.00, 0, 369.99, 0, 329.63, 0],
+                        chime: [0, 523.25, 0, 587.33, 0, 659.25, 0, 739.99, 0, 659.25, 0, 587.33, 0, 523.25, 0, 493.88]
+                    }
+                };
+
+                const pat = patterns[this.currentSector] || patterns[0];
+                const bFreq = pat.bass[step];
+                if (bFreq > 0) {
+                    this.playFMNote(bFreq, 0.95, 'bass', 0.65);
+                    this.playFMNote(bFreq * 2, 0.6, 'pad', 0.35);
+                }
+
+                const lFreq = pat.lead[step];
+                if (lFreq > 0) {
+                    this.playFMNote(lFreq, 0.45, 'lead', 0.45);
+                }
+
+                const cFreq = pat.chime[step];
+                if (cFreq > 0) {
+                    this.playFMNote(cFreq, 0.55, 'chime', 0.40);
+                }
             }
 
             setMasterVolume(val) {
                 this.masterVol = Math.max(0, Math.min(1, val));
+                if (this.musicGain && this.ctx) {
+                    this.musicGain.gain.setValueAtTime(this.musicVol * this.masterVol, this.ctx.currentTime);
+                }
+            }
+            setMusicVolume(val) {
+                this.musicVol = Math.max(0, Math.min(1, val));
+                if (this.musicGain && this.ctx) {
+                    this.musicGain.gain.setValueAtTime(this.musicVol * this.masterVol, this.ctx.currentTime);
+                }
             }
             setAmbientVolume(val) {
                 this.ambientVol = Math.max(0, Math.min(1, val));
@@ -4590,6 +4817,9 @@
             state.currentSectorIndex = sectorIndex;
             const sector = SECTORS[sectorIndex];
             document.getElementById('hdrSector').textContent = sector.name;
+            if (audio && audio.setMusicSector) {
+                audio.setMusicSector(sectorIndex);
+            }
 
             state.stars = [];
             for (let i = 0; i < 220; i++) {
@@ -7151,8 +7381,20 @@
             updateAudioModalUI();
         });
 
+        document.getElementById('btnMusicMuteToggle').addEventListener('click', () => {
+            audio.init();
+            const active = audio.toggleMusic();
+            addLog(`FM Chiptune BGM ${active ? 'enabled' : 'disabled'}.`, 'system');
+            updateAudioModalUI();
+        });
+
         document.getElementById('sliderMasterVol').addEventListener('input', (e) => {
             audio.setMasterVolume(parseFloat(e.target.value) / 100);
+            updateAudioModalUI();
+        });
+
+        document.getElementById('sliderMusicVol').addEventListener('input', (e) => {
+            audio.setMusicVolume(parseFloat(e.target.value) / 100);
             updateAudioModalUI();
         });
 
@@ -7201,6 +7443,12 @@
             audio.init();
             audio.playWarp();
         });
+        document.getElementById('btnTestMusicFM').addEventListener('click', () => {
+            audio.init();
+            audio.playFMNote(440, 0.6, 'chime', 0.8);
+            setTimeout(() => audio.playFMNote(587.33, 0.6, 'lead', 0.7), 160);
+            setTimeout(() => audio.playFMNote(880, 0.8, 'chime', 0.85), 320);
+        });
 
         function openAudioModal() {
             audio.init();
@@ -7218,12 +7466,23 @@
                 txt.textContent = audio.enabled ? 'ACTIVE / UNMUTED' : 'MUTED / OFF';
                 txt.style.color = audio.enabled ? '#10b981' : '#ef4444';
             }
+            const mTxt = document.getElementById('txtMusicMuteState');
+            if (mTxt) {
+                mTxt.textContent = audio.musicEnabled ? 'MUSIC: ON [YM2612]' : 'MUSIC: MUTED / OFF';
+                mTxt.style.color = audio.musicEnabled ? 'var(--accent-purple)' : '#94a3b8';
+            }
             const mv = document.getElementById('txtMasterVolVal');
             if (mv) mv.textContent = Math.round(audio.masterVol * 100) + '%';
+            const muv = document.getElementById('txtMusicVolVal');
+            if (muv) muv.textContent = Math.round(audio.musicVol * 100) + '%';
             const av = document.getElementById('txtAmbienceVolVal');
             if (av) av.textContent = Math.round(audio.ambientVol * 100) + '%';
             const sv = document.getElementById('txtSfxVolVal');
             if (sv) sv.textContent = Math.round(audio.sfxVol * 100) + '%';
+            const trackEl = document.getElementById('txtMusicSectorTrack');
+            if (trackEl && audio.getSectorTrackName) {
+                trackEl.textContent = audio.getSectorTrackName();
+            }
         }
 
         document.getElementById('btnDefense').addEventListener('click', () => {
@@ -7719,21 +7978,25 @@
             state.ship.thrusting = (state.keys['KeyW'] || state.keys['ArrowUp']);
             state.ship.reversing = (state.keys['KeyS'] || state.keys['ArrowDown']);
 
+            const theme = THEMES[state.themeIndex];
+            const pal = THEME_PALETTES[theme.id] || THEME_PALETTES.cyan;
+
             if (state.ship.thrusting) {
                 if (state.fuel > 0) {
                     state.ship.vx += Math.cos(state.ship.angle) * thrustPower;
                     state.ship.vy += Math.sin(state.ship.angle) * thrustPower;
                     state.fuel = Math.max(0, state.fuel - fuelDrainRate);
                     const exAngle = state.ship.angle + Math.PI + (Math.random() - 0.5) * 0.4;
+                    const pCol = Math.random() > 0.35 ? pal.vector : pal.vectorDim;
                     state.particles.push({
                         x: state.ship.x - Math.cos(state.ship.angle) * 18,
                         y: state.ship.y - Math.sin(state.ship.angle) * 18,
                         vx: Math.cos(exAngle) * (2 + Math.random() * 2),
                         vy: Math.sin(exAngle) * (2 + Math.random() * 2),
-                        color: Math.random() > 0.3 ? '#00f0ff' : '#38bdf8',
-                        life: 0.8,
-                        decay: 0.05,
-                        size: 2.5
+                        color: pCol,
+                        life: 0.85,
+                        decay: 0.045,
+                        size: 2.6
                     });
                 }
             }
@@ -7743,6 +8006,17 @@
                     state.ship.vx -= Math.cos(state.ship.angle) * (thrustPower * 0.5);
                     state.ship.vy -= Math.sin(state.ship.angle) * (thrustPower * 0.5);
                     state.fuel = Math.max(0, state.fuel - fuelDrainRate * 0.5);
+                    const retroAngle = state.ship.angle + (Math.random() - 0.5) * 0.6;
+                    state.particles.push({
+                        x: state.ship.x + Math.cos(state.ship.angle) * 16,
+                        y: state.ship.y + Math.sin(state.ship.angle) * 16,
+                        vx: Math.cos(retroAngle) * (1.2 + Math.random() * 1.5),
+                        vy: Math.sin(retroAngle) * (1.2 + Math.random() * 1.5),
+                        color: pal.vectorDim,
+                        life: 0.5,
+                        decay: 0.065,
+                        size: 1.8
+                    });
                 }
             }
 
@@ -7762,7 +8036,7 @@
             state.ship.x += state.ship.vx;
             state.ship.y += state.ship.vy;
 
-            // Passive Reactor & Heat Dissipation
+            // Passive Reactor & Heat Dissipation (Balanced with Tier Scaling)
             if (state.ship.miningActive && !state.laserOverheated) {
                 state.heat += 0.45 * drillDef.heatRate;
                 if (state.heat >= state.maxHeat) {
@@ -7772,7 +8046,8 @@
                     addLog("⚠️ CRITICAL: Laser optics overheated! Emergency cooldown triggered.", "critical");
                 }
             } else {
-                state.heat = Math.max(0, state.heat - 0.25);
+                const coolRate = 0.28 * (1.4 - drillDef.heatRate * 0.4);
+                state.heat = Math.max(0, state.heat - coolRate);
                 if (state.laserOverheated && state.heat < 25) {
                     state.laserOverheated = false;
                     addLog("Laser cooling cycle complete. Optics online.", "success");
@@ -7806,7 +8081,20 @@
                             isLaserHitting = true;
                             const impactX = lx + dirX * proj;
                             const impactY = ly + dirY * proj;
-                            createSparks(impactX, impactY, '#00f0ff', 2);
+                            const astOreInfo = ORE_TYPES[ast.oreType] || { color: '#00f0ff' };
+                            createSparks(impactX, impactY, astOreInfo.color, 3);
+                            if (Math.random() < 0.35) {
+                                state.particles.push({
+                                    x: impactX,
+                                    y: impactY,
+                                    vx: (Math.random() - 0.5) * 2.5,
+                                    vy: (Math.random() - 0.5) * 2.5,
+                                    color: astOreInfo.color,
+                                    life: 0.6,
+                                    decay: 0.05,
+                                    size: 1.8
+                                });
+                            }
                             
                             const dpsMult = ast.resonantLock ? (drillDef.dpsBonus * 1.5) : drillDef.dpsBonus;
                             ast.hp -= 0.5 * dpsMult;
@@ -7828,7 +8116,7 @@
                             if (ast.hp <= 0) {
                                 audio.playFracture('large');
                                 addLog(`Asteroid ${ast.id} fractured into rich mineral fragments!`, 'mining');
-                                createSparks(ast.x, ast.y, '#f59e0b', 20);
+                                createSparks(ast.x, ast.y, astOreInfo.color, 22);
                                 
                                 const baseChunks = 4 + Math.floor(Math.random() * 3);
                                 for (let c = 0; c < baseChunks; c++) {
