@@ -357,6 +357,19 @@
   .key.black.active .key-note {
     color: #0f172a;
   }
+  .key.remote-active {
+    background: #a855f7 !important;
+    color: #fff !important;
+    transform: translateY(3px);
+    box-shadow: 0 0 16px rgba(168, 85, 247, 0.8), inset 0 0 8px rgba(192, 132, 252, 0.6) !important;
+    border: 2px solid #e879f9 !important;
+  }
+  .key.black.remote-active {
+    background: #c084fc !important;
+    color: #0f172a !important;
+    transform: translateY(3px);
+    box-shadow: 0 0 14px rgba(192, 132, 252, 0.9), inset 0 0 6px rgba(232, 121, 249, 0.7) !important;
+  }
 
   /* Multi-Track Sequencer Section */
   .sequencer-panel {
@@ -472,13 +485,24 @@
     <div class="brand">KAudio <span>Pro</span></div>
     <div class="header-actions">
       <button class="btn" id="btnHelp" onclick="toggleHelp()" style="color: #fbbf24; border-color: rgba(251, 191, 36, 0.4); font-weight: 700;">❓ Help [F1 / ?]</button>
+      <button class="btn" id="btnJamRoom" onclick="toggleJamModal()" style="color: #34d399; border-color: rgba(52, 211, 153, 0.4); font-weight: 700;">🌐 Jam Room <span id="jamStatusPill" style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(255,255,255,0.1); margin-left: 4px;">Offline</span></button>
       <div class="control-row" style="margin-right: 6px;">
         <span class="control-label" style="width: auto;">Vol:</span>
         <input type="range" id="masterVol" min="0" max="1" step="0.01" value="0.3" style="width: 70px;">
       </div>
+      <select id="soundbankSelect" class="select-input" title="1999 Soundbank Presets">
+        <option value="custom">Soundbank: Custom</option>
+        <option value="arcade">16-Bit Genesis Arcade</option>
+        <option value="ym_bass">YM2612 FM Slap & Bells</option>
+        <option value="snes_warmth">SNES Ambient Warmth</option>
+        <option value="cyber">Cyberpunk Industrial</option>
+        <option value="vapor">Vaporwave 1999 Chill</option>
+        <option value="dungeon">8-Bit Dungeon Crawler</option>
+      </select>
       <button class="btn" id="btnQuicksave" onclick="quicksaveState()" title="Quicksave session to browser storage (F5)">⚡ Save [F5]</button>
       <button class="btn" id="btnQuickload" onclick="quickloadState()" title="Quickload session from browser storage (F9)">🔄 Load [F9]</button>
       <button class="btn" id="btnExportWav" title="Export 4-second rendered WAV file (Ctrl+E)">💾 Export WAV [Ctrl+E]</button>
+      <button class="btn" id="btnExportMidi" onclick="exportMidiFile()" title="Export 16-step pattern to Standard MIDI (.mid Type 0) File">🎹 Export MIDI [.mid]</button>
       <button class="btn" id="btnExportJson" title="Save synthesizer state (Ctrl+S)">📄 Save JSON [Ctrl+S]</button>
       <button class="btn" id="btnImportJson" title="Open synthesizer state (Ctrl+O)">📂 Open JSON [Ctrl+O]</button>
       <input type="file" id="fileInputJson" accept=".json" style="display: none;">
@@ -487,7 +511,24 @@
 
   <!-- Sound FX Presets -->
   <div class="preset-section">
-    <div class="section-title">⚡ Sound FX Generator Presets (8-Bit Synthesizer) [Keys 1-8]</div>
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+      <div class="section-title">⚡ Sound FX Generator Presets (8-Bit Synthesizer) [Keys 1-9]</div>
+      <div style="display: flex; gap: 6px; align-items: center;">
+        <span style="font-size: 11px; color: #94a3b8;">Export Sample:</span>
+        <select id="sfxExportSelect" class="select-input" style="font-size: 11px; padding: 2px 6px;">
+          <option value="jump">Jump [.wav]</option>
+          <option value="laser">Laser [.wav]</option>
+          <option value="explosion">Explosion [.wav]</option>
+          <option value="coin">Coin [.wav]</option>
+          <option value="powerup">Powerup [.wav]</option>
+          <option value="hurt">Hurt [.wav]</option>
+          <option value="blip">Blip [.wav]</option>
+          <option value="random">Random [.wav]</option>
+          <option value="signal1999">1999Hz Anomaly [.wav]</option>
+        </select>
+        <button class="btn" onclick="exportSelectedSfxWav()" style="padding: 2px 8px; font-size: 11px;">💾 Save Sample</button>
+      </div>
+    </div>
     <div class="preset-grid">
       <button class="preset-btn" onclick="triggerPreset('jump')">🦘 Jump [1]</button>
       <button class="preset-btn" onclick="triggerPreset('laser')">🔫 Laser [2]</button>
@@ -497,6 +538,7 @@
       <button class="preset-btn" onclick="triggerPreset('hurt')">💔 Hurt [6]</button>
       <button class="preset-btn" onclick="triggerPreset('blip')">🔔 Blip [7]</button>
       <button class="preset-btn" onclick="triggerPreset('random')">🎲 Random [8]</button>
+      <button class="preset-btn" onclick="triggerPreset('signal1999')" style="border-color: rgba(245, 158, 11, 0.4); color: #fcd34d;">📻 1999Hz Subcarrier [9]</button>
     </div>
   </div>
 
@@ -505,13 +547,72 @@
     <!-- Left Panel: ADSR & Filter Controls -->
     <div class="panel">
       <div class="panel-header">
-        <div class="section-title">🎛️ Synth & ADSR Envelope</div>
-        <select id="waveType" class="select-input">
-          <option value="square">Square Wave</option>
-          <option value="sine">Sine Wave</option>
-          <option value="sawtooth">Sawtooth Wave</option>
-          <option value="triangle">Triangle Wave</option>
+        <div class="section-title">🎛️ Synth Engine & ADSR</div>
+        <select id="synthEngine" class="select-input">
+          <option value="subtractive">Subtractive (Classic)</option>
+          <option value="ym2612">Yamaha YM2612 2-Op FM</option>
         </select>
+      </div>
+
+      <div id="subtractiveControls">
+        <div class="control-row">
+          <span class="control-label">Osc Wave:</span>
+          <select id="waveType" class="select-input" style="flex: 1;">
+            <option value="square">Square Wave</option>
+            <option value="sine">Sine Wave</option>
+            <option value="sawtooth">Sawtooth Wave</option>
+            <option value="triangle">Triangle Wave</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Yamaha YM2612 2-Operator FM Synthesizer Controls -->
+      <div id="fmControls" style="display: none; background: rgba(14, 165, 233, 0.08); border: 1px solid rgba(56, 189, 248, 0.25); border-radius: 8px; padding: 8px; flex-direction: column; gap: 8px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 11px; font-weight: 700; color: #38bdf8; text-transform: uppercase;">Yamaha YM2612 2-Op FM Lab</span>
+          <select id="fmPresetSelect" class="select-input" style="font-size: 11px; padding: 2px 6px;">
+            <option value="custom">Preset: Custom</option>
+            <option value="slap_bass">Genesis Slap Bass</option>
+            <option value="electric_piano">YM2612 Electric Piano</option>
+            <option value="brass">MegaDrive Brass Horn</option>
+            <option value="bell">FM Metallic Bell</option>
+            <option value="synthwave">Cyber Synthwave Lead</option>
+          </select>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label" title="Modulator Frequency Multiplier">Mod Ratio:</span>
+          <div class="slider-container">
+            <select id="fmRatio" class="select-input" style="flex: 1;">
+              <option value="0.5">0.5x (Sub-octave)</option>
+              <option value="1.0" selected>1.0x (1:1 Fundamental)</option>
+              <option value="2.0">2.0x (2nd Harmonic / Octave)</option>
+              <option value="3.0">3.0x (3rd Harmonic / 5th)</option>
+              <option value="4.0">4.0x (4th Harmonic)</option>
+              <option value="5.0">5.0x (5th Harmonic)</option>
+              <option value="6.0">6.0x (6th Harmonic)</option>
+              <option value="7.0">7.0x (7th Harmonic / Metallic)</option>
+              <option value="8.0">8.0x (8th Harmonic)</option>
+              <option value="12.0">12.0x (Bell Overtones)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label" title="Frequency Modulation Depth in Hz">FM Depth:</span>
+          <div class="slider-container">
+            <input type="range" id="fmDepth" min="0" max="1500" step="10" value="450">
+            <span class="val-display" id="valFmDepth">450Hz</span>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label" title="Modulator Envelope Brightness Decay">Mod Decay:</span>
+          <div class="slider-container">
+            <input type="range" id="fmModDecay" min="0.01" max="2.0" step="0.01" value="0.25">
+            <span class="val-display" id="valFmModDecay">0.25s</span>
+          </div>
+        </div>
       </div>
 
       <div class="control-row">
@@ -593,6 +694,9 @@
           <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #38bdf8; cursor: pointer;">
             <input type="checkbox" id="chkDelay" checked> 🔄 Stereo Delay / Echo (L)
           </label>
+          <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: #a7f3d0; cursor: pointer;" title="Emulates the SNES SPC700 FIR feedback lowpass damping and warmth">
+            <input type="checkbox" id="chkSnesDamp" checked> 🎮 SNES SPC700 Warmth
+          </label>
         </div>
 
         <div class="control-row">
@@ -616,6 +720,14 @@
           <div class="slider-container">
             <input type="range" id="delayMix" min="0" max="1" step="0.01" value="0.35">
             <span class="val-display" id="valDelayMix">35%</span>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label" title="SNES SPC700 Feedback Lowpass Damping Cutoff">SPC700 Damp:</span>
+          <div class="slider-container">
+            <input type="range" id="snesDampCutoff" min="1000" max="8000" step="100" value="3200">
+            <span class="val-display" id="valSnesDamp">3200Hz</span>
           </div>
         </div>
 
@@ -673,14 +785,16 @@
     </div>
     <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; color: #f1f5f9; margin-bottom: 20px; font-size: 13px;">
       <strong style="text-align: right; color: #fbbf24;">A, W, S, E, D, F, T, G, Y, H, U, J, K</strong> <span>Play Chromatic Piano Notes</span>
-      <strong style="text-align: right; color: #38bdf8;">1 – 8</strong> <span>Trigger Sound FX Presets (Jump, Laser, Explode, Coin...)</span>
+      <strong style="text-align: right; color: #38bdf8;">1 – 9</strong> <span>Trigger Sound FX Presets (Jump, Laser, Explode, Coin... & 1999Hz)</span>
       <strong style="text-align: right; color: #38bdf8;">Arrow Keys ← / →</strong> <span>Shift Octave (-4 to +4)</span>
       <strong style="text-align: right; color: #38bdf8;">Z / X</strong> <span>Live Record / Playback Performance</span>
       <strong style="text-align: right; color: #38bdf8;">Space / P / C</strong> <span>Start/Pause Sequencer / Clear Grid Pattern</span>
       <strong style="text-align: right; color: #38bdf8;">L / O / V</strong> <span>Toggle Stereo Delay / Overdrive Saturation / Vis Mode</span>
+      <strong style="text-align: right; color: #34d399;">Ctrl + J</strong> <span>Toggle Online Collaborative Jam Room Modal</span>
       <strong style="text-align: right; color: #38bdf8;">F5 / F9</strong> <span>Quicksave / Quickload State</span>
       <strong style="text-align: right; color: #38bdf8;">Ctrl + S / Ctrl + O</strong> <span>Save / Open JSON Synthesizer Projects</span>
       <strong style="text-align: right; color: #38bdf8;">Ctrl + E</strong> <span>Export 4-second High-Quality DSP WAV File</span>
+      <strong style="text-align: right; color: #38bdf8;">M</strong> <span>Export 16-Step Pattern to Standard MIDI (.mid Type 0) File</span>
       <strong style="text-align: right; color: #fbbf24;">F1 / ? / Esc</strong> <span>Toggle Help Manual / Close Dialog</span>
     </div>
     <div style="text-align: center; color: #94a3b8; font-size: 12px; font-weight: 500; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 8px; cursor: pointer;" onclick="toggleHelp()">
@@ -689,7 +803,98 @@
   </div>
 </div>
 
+<div id="jamModal" style="display: none; position: fixed; inset: 0; background: rgba(11, 15, 25, 0.85); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
+  <div style="background: rgba(15, 23, 42, 0.98); padding: 22px 26px; border-radius: 16px; border: 1px solid #34d399; max-width: 540px; width: 92%; box-shadow: 0 25px 50px rgba(0,0,0,0.8), 0 0 30px rgba(52,211,153,0.2); display: flex; flex-direction: column; gap: 14px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+      <h2 style="color: #34d399; font-size: 18px; font-weight: 800; display: flex; align-items: center; gap: 8px;">🌐 KAudio Collaborative Jam Room</h2>
+      <button class="btn" onclick="toggleJamModal()" style="padding: 4px 8px; font-size: 12px; background: rgba(244,63,94,0.15); color: #fda4af; border-color: rgba(244,63,94,0.3);">✕ Close [Esc]</button>
+    </div>
+    
+    <div style="display: flex; gap: 10px; align-items: center;">
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+        <label style="font-size: 11px; font-weight: 700; color: #94a3b8;">ROOM CHANNEL:</label>
+        <input type="text" id="jamRoomInput" value="studio-1999" maxlength="24" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #38bdf8; border-radius: 6px; padding: 6px 10px; font-size: 13px; font-weight: 600; outline: none;">
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+        <label style="font-size: 11px; font-weight: 700; color: #94a3b8;">YOUR CALLSIGN:</label>
+        <input type="text" id="jamNickInput" value="Jammer-1999" maxlength="16" style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #a7f3d0; border-radius: 6px; padding: 6px 10px; font-size: 13px; font-weight: 600; outline: none;">
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 8px 12px;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span id="jamStatusDot" style="width: 10px; height: 10px; border-radius: 50%; background: #94a3b8; display: inline-block;"></span>
+        <span id="jamStatusText" style="font-size: 12px; font-weight: 600; color: #cbd5e1;">Disconnected (Offline)</span>
+      </div>
+      <button class="btn btn-accent" id="btnJamConnect" onclick="toggleJamConnection()">Join Jam Room</button>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Musicians in Room (<span id="jamPeerCount">0</span>):</span>
+        <label style="font-size: 11px; color: #e2e8f0; display: flex; align-items: center; gap: 6px; cursor: pointer;">
+          <input type="checkbox" id="chkJamSyncSeq" checked> Sync Sequencer Steps
+        </label>
+      </div>
+      <div id="jamPeerList" style="display: flex; gap: 6px; flex-wrap: wrap; min-height: 28px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06); border-radius: 6px; padding: 6px 10px; align-items: center;">
+        <span style="color: #64748b; font-size: 12px; font-style: italic;">No peers connected yet</span>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 6px;">
+      <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Live Jam Activity Ticker:</span>
+      <div id="jamActivityTicker" style="height: 100px; overflow-y: auto; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 8px 10px; font-family: monospace; font-size: 11px; color: #cbd5e1; display: flex; flex-direction: column; gap: 4px;">
+        <div style="color: #64748b;">[System] Connect to start jamming in real-time with other musicians.</div>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #94a3b8; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
+      <span>Cross-computer real-time sync via Firebase RTDB</span>
+      <button class="btn" onclick="toggleJamModal()" style="padding: 4px 10px; font-size: 11px;">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toastContainer"></div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, remove, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+    authDomain: "kiloappschat.firebaseapp.com",
+    databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+    projectId: "kiloappschat",
+    storageBucket: "kiloappschat.firebasestorage.app",
+    messagingSenderId: "290208566057",
+    appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+  };
+
+  try {
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    window.fb = {
+      app,
+      db,
+      ref,
+      set,
+      get,
+      push,
+      onValue,
+      onChildAdded,
+      off,
+      remove,
+      serverTimestamp,
+      onDisconnect
+    };
+    if (typeof window.onFirebaseReady === 'function') {
+      window.onFirebaseReady();
+    }
+  } catch (err) {
+    console.warn("Firebase RTDB init error:", err);
+  }
+</script>
 
 <script>
   function showToast(message, type = 'info', duration = 3000) {
@@ -767,6 +972,7 @@
   let filterNode = null;
   let analyserNode = null;
   let delayNode = null;
+  let delayDampFilter = null;
   let delayFeedbackNode = null;
   let delayDryGainNode = null;
   let delayWetGainNode = null;
@@ -791,9 +997,30 @@
   let recordingStartTime = 0;
   let playbackTimeouts = [];
 
+  // Collaborative Jam Room State (Firebase RTDB)
+  let isJamConnected = false;
+  let jamRoomId = 'studio-1999';
+  let jamClientId = 'peer_' + Math.random().toString(36).substr(2, 8);
+  let jamClientNick = safeGetStorage('kaudio_jam_nick') || ('Jammer-' + Math.floor(1000 + Math.random() * 9000));
+  let jamColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+  let jamEventsUnsub = null;
+  let jamUsersUnsub = null;
+  let jamConnectedUsers = {};
+
   // UI Elements
+  const synthEngine = document.getElementById('synthEngine');
+  const subtractiveControls = document.getElementById('subtractiveControls');
+  const fmControls = document.getElementById('fmControls');
+  const fmPresetSelect = document.getElementById('fmPresetSelect');
+  const fmRatio = document.getElementById('fmRatio');
+  const fmDepth = document.getElementById('fmDepth');
+  const fmModDecay = document.getElementById('fmModDecay');
+  const valFmDepth = document.getElementById('valFmDepth');
+  const valFmModDecay = document.getElementById('valFmModDecay');
+
   const waveSelect = document.getElementById('waveType');
   const masterVol = document.getElementById('masterVol');
+  const soundbankSelect = document.getElementById('soundbankSelect');
   const envA = document.getElementById('envA');
   const envD = document.getElementById('envD');
   const envS = document.getElementById('envS');
@@ -813,6 +1040,9 @@
 
   // DSP FX UI Elements
   const chkDelay = document.getElementById('chkDelay');
+  const chkSnesDamp = document.getElementById('chkSnesDamp');
+  const snesDampCutoff = document.getElementById('snesDampCutoff');
+  const valSnesDamp = document.getElementById('valSnesDamp');
   const delayTime = document.getElementById('delayTime');
   const delayFeedback = document.getElementById('delayFeedback');
   const delayMix = document.getElementById('delayMix');
@@ -827,7 +1057,13 @@
 
   function saveAudioState() {
     const state = {
-      waveType: waveSelect ? waveSelect.value : 'sine',
+      engine: synthEngine ? synthEngine.value : 'subtractive',
+      waveType: waveSelect ? waveSelect.value : 'square',
+      fm: {
+        ratio: fmRatio ? fmRatio.value : '1.0',
+        depth: fmDepth ? fmDepth.value : '450',
+        modDecay: fmModDecay ? fmModDecay.value : '0.25'
+      },
       adsr: {
         attack: envA ? envA.value : '0.05',
         decay: envD ? envD.value : '0.1',
@@ -844,6 +1080,8 @@
         delayTime: delayTime ? delayTime.value : '0.25',
         delayFeedback: delayFeedback ? delayFeedback.value : '0.45',
         delayMix: delayMix ? delayMix.value : '0.3',
+        snesDamp: chkSnesDamp ? chkSnesDamp.checked : true,
+        snesDampCutoff: snesDampCutoff ? snesDampCutoff.value : '3200',
         drive: chkDrive ? chkDrive.checked : false,
         driveAmount: driveAmount ? driveAmount.value : '15'
       },
@@ -858,6 +1096,148 @@
 
   // Slider & FX Event Listeners
   waveSelect.onchange = () => saveAudioState();
+  if (synthEngine) {
+    synthEngine.onchange = () => {
+      let isFm = (synthEngine.value === 'ym2612');
+      if (subtractiveControls) subtractiveControls.style.display = isFm ? 'none' : 'block';
+      if (fmControls) fmControls.style.display = isFm ? 'flex' : 'none';
+      saveAudioState();
+      showToast(isFm ? '🎛️ Yamaha YM2612 2-Op FM Engine active!' : '🎛️ Classic Subtractive Engine active!', 'info', 2000);
+    };
+  }
+
+  if (fmRatio) fmRatio.onchange = () => saveAudioState();
+  if (fmDepth) {
+    fmDepth.oninput = () => {
+      valFmDepth.textContent = fmDepth.value + 'Hz';
+      saveAudioState();
+    };
+  }
+  if (fmModDecay) {
+    fmModDecay.oninput = () => {
+      valFmModDecay.textContent = parseFloat(fmModDecay.value).toFixed(2) + 's';
+      saveAudioState();
+    };
+  }
+
+  const fmPresets = {
+    slap_bass: { ratio: '2.0', depth: '600', decay: '0.18', envA: '0.005', envD: '0.22', envS: '0.2', envR: '0.12' },
+    electric_piano: { ratio: '3.0', depth: '400', decay: '0.45', envA: '0.01', envD: '0.5', envS: '0.4', envR: '0.35' },
+    brass: { ratio: '1.0', depth: '750', decay: '0.3', envA: '0.08', envD: '0.3', envS: '0.7', envR: '0.25' },
+    bell: { ratio: '7.0', depth: '950', decay: '0.8', envA: '0.005', envD: '0.8', envS: '0.2', envR: '0.9' },
+    synthwave: { ratio: '0.5', depth: '320', decay: '0.35', envA: '0.02', envD: '0.25', envS: '0.6', envR: '0.3' }
+  };
+
+  if (fmPresetSelect) {
+    fmPresetSelect.onchange = () => {
+      let p = fmPresets[fmPresetSelect.value];
+      if (p) {
+        if (fmRatio) fmRatio.value = p.ratio;
+        if (fmDepth) { fmDepth.value = p.depth; valFmDepth.textContent = p.depth + 'Hz'; }
+        if (fmModDecay) { fmModDecay.value = p.decay; valFmModDecay.textContent = p.decay + 's'; }
+        if (envA) { envA.value = p.envA; valA.textContent = p.envA + 's'; }
+        if (envD) { envD.value = p.envD; valD.textContent = p.envD + 's'; }
+        if (envS) { envS.value = p.envS; valS.textContent = p.envS; }
+        if (envR) { envR.value = p.envR; valR.textContent = p.envR + 's'; }
+        saveAudioState();
+        showToast(`Loaded FM Preset: ${fmPresetSelect.options[fmPresetSelect.selectedIndex].text}`, 'success', 2000);
+      }
+    };
+  }
+
+  const soundbanks = {
+    arcade: {
+      engine: 'subtractive', wave: 'square',
+      adsr: { a: 0.01, d: 0.12, s: 0.4, r: 0.15 },
+      filter: { type: 'lowpass', cutoff: 3600, q: 1.2 },
+      delay: { on: true, time: 0.22, fb: 0.35, mix: 0.25, snes: false },
+      drive: { on: true, amount: 14 }
+    },
+    ym_bass: {
+      engine: 'ym2612', wave: 'sine',
+      fm: { ratio: '2.0', depth: '550', modDecay: '0.20' },
+      adsr: { a: 0.005, d: 0.25, s: 0.3, r: 0.2 },
+      filter: { type: 'lowpass', cutoff: 5000, q: 1.0 },
+      delay: { on: true, time: 0.28, fb: 0.45, mix: 0.3, snes: true, dampCutoff: '3200' },
+      drive: { on: false, amount: 5 }
+    },
+    snes_warmth: {
+      engine: 'subtractive', wave: 'triangle',
+      adsr: { a: 0.08, d: 0.4, s: 0.6, r: 0.5 },
+      filter: { type: 'lowpass', cutoff: 2400, q: 0.8 },
+      delay: { on: true, time: 0.38, fb: 0.55, mix: 0.45, snes: true, dampCutoff: '2800' },
+      drive: { on: false, amount: 1 }
+    },
+    cyber: {
+      engine: 'subtractive', wave: 'sawtooth',
+      adsr: { a: 0.01, d: 0.2, s: 0.5, r: 0.3 },
+      filter: { type: 'bandpass', cutoff: 1800, q: 2.5 },
+      delay: { on: true, time: 0.25, fb: 0.6, mix: 0.4, snes: false },
+      drive: { on: true, amount: 26 }
+    },
+    vapor: {
+      engine: 'subtractive', wave: 'sine',
+      adsr: { a: 0.05, d: 0.35, s: 0.7, r: 0.6 },
+      filter: { type: 'lowpass', cutoff: 1600, q: 1.0 },
+      delay: { on: true, time: 0.42, fb: 0.5, mix: 0.48, snes: true, dampCutoff: '2200' },
+      drive: { on: false, amount: 2 }
+    },
+    dungeon: {
+      engine: 'subtractive', wave: 'square',
+      adsr: { a: 0.005, d: 0.1, s: 0.2, r: 0.1 },
+      filter: { type: 'lowpass', cutoff: 2800, q: 3.5 },
+      delay: { on: false, time: 0.2, fb: 0.2, mix: 0.2, snes: false },
+      drive: { on: false, amount: 1 }
+    }
+  };
+
+  if (soundbankSelect) {
+    soundbankSelect.onchange = () => {
+      let sb = soundbanks[soundbankSelect.value];
+      if (!sb) return;
+      if (synthEngine) {
+        synthEngine.value = sb.engine;
+        synthEngine.onchange();
+      }
+      if (waveSelect && sb.wave) waveSelect.value = sb.wave;
+      if (sb.fm) {
+        if (fmRatio) fmRatio.value = sb.fm.ratio;
+        if (fmDepth) { fmDepth.value = sb.fm.depth; valFmDepth.textContent = sb.fm.depth + 'Hz'; }
+        if (fmModDecay) { fmModDecay.value = sb.fm.modDecay; valFmModDecay.textContent = sb.fm.modDecay + 's'; }
+      }
+      if (sb.adsr) {
+        if (envA) { envA.value = sb.adsr.a; valA.textContent = sb.adsr.a + 's'; }
+        if (envD) { envD.value = sb.adsr.d; valD.textContent = sb.adsr.d + 's'; }
+        if (envS) { envS.value = sb.adsr.s; valS.textContent = sb.adsr.s; }
+        if (envR) { envR.value = sb.adsr.r; valR.textContent = sb.adsr.r + 's'; }
+      }
+      if (sb.filter) {
+        if (filterType) filterType.value = sb.filter.type;
+        if (filterCutoff) { filterCutoff.value = sb.filter.cutoff; valCutoff.textContent = sb.filter.cutoff + 'Hz'; }
+        if (filterQ) { filterQ.value = sb.filter.q; valQ.textContent = sb.filter.q; }
+        if (filterNode && ctx) {
+          filterNode.type = sb.filter.type;
+          filterNode.frequency.setValueAtTime(sb.filter.cutoff, ctx.currentTime);
+          filterNode.Q.setValueAtTime(sb.filter.q, ctx.currentTime);
+        }
+      }
+      if (sb.delay) {
+        if (chkDelay) { chkDelay.checked = sb.delay.on; chkDelay.onchange(); }
+        if (delayTime) { delayTime.value = sb.delay.time; delayTime.oninput(); }
+        if (delayFeedback) { delayFeedback.value = sb.delay.fb; delayFeedback.oninput(); }
+        if (delayMix) { delayMix.value = sb.delay.mix; delayMix.oninput(); }
+        if (chkSnesDamp) { chkSnesDamp.checked = !!sb.delay.snes; chkSnesDamp.onchange(); }
+        if (sb.delay.dampCutoff && snesDampCutoff) { snesDampCutoff.value = sb.delay.dampCutoff; snesDampCutoff.oninput(); }
+      }
+      if (sb.drive) {
+        if (chkDrive) { chkDrive.checked = sb.drive.on; chkDrive.onchange(); }
+        if (driveAmount) { driveAmount.value = sb.drive.amount; driveAmount.oninput(); }
+      }
+      saveAudioState();
+      showToast(`🎚️ Soundbank: "${soundbankSelect.options[soundbankSelect.selectedIndex].text}" loaded!`, 'success', 2500);
+    };
+  }
+
   envA.oninput = () => { valA.textContent = parseFloat(envA.value).toFixed(2) + 's'; saveAudioState(); };
   envD.oninput = () => { valD.textContent = parseFloat(envD.value).toFixed(2) + 's'; saveAudioState(); };
   envS.oninput = () => { valS.textContent = parseFloat(envS.value).toFixed(2); saveAudioState(); };
@@ -887,6 +1267,24 @@
     }
     saveAudioState();
   };
+  if (chkSnesDamp) {
+    chkSnesDamp.onchange = () => {
+      if (delayDampFilter && ctx) {
+        let dampCut = chkSnesDamp.checked ? parseFloat(snesDampCutoff.value) : 20000;
+        delayDampFilter.frequency.setValueAtTime(dampCut, ctx.currentTime);
+      }
+      saveAudioState();
+    };
+  }
+  if (snesDampCutoff) {
+    snesDampCutoff.oninput = () => {
+      valSnesDamp.textContent = snesDampCutoff.value + 'Hz';
+      if (delayDampFilter && ctx && chkSnesDamp.checked) {
+        delayDampFilter.frequency.setValueAtTime(parseFloat(snesDampCutoff.value), ctx.currentTime);
+      }
+      saveAudioState();
+    };
+  }
   delayTime.oninput = () => {
     valDelayTime.textContent = parseFloat(delayTime.value).toFixed(2) + 's';
     if (delayNode && ctx) delayNode.delayTime.setValueAtTime(parseFloat(delayTime.value), ctx.currentTime);
@@ -966,6 +1364,390 @@
     }
   };
 
+  // Collaborative Jam Room Functions (Firebase RTDB)
+  function toggleJamModal() {
+    const m = document.getElementById('jamModal');
+    if (!m) return;
+    m.style.display = (m.style.display === 'none' || !m.style.display) ? 'flex' : 'none';
+  }
+
+  function appendJamTicker(text, color = '#cbd5e1') {
+    const ticker = document.getElementById('jamActivityTicker');
+    if (!ticker) return;
+    const item = document.createElement('div');
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    item.innerHTML = `<span style="color: #64748b;">[${timeStr}]</span> <span style="color: ${color};">${text}</span>`;
+    ticker.appendChild(item);
+    ticker.scrollTop = ticker.scrollHeight;
+    while (ticker.children.length > 50) ticker.removeChild(ticker.firstChild);
+  }
+
+  function broadcastJamEvent(ev) {
+    if (!isJamConnected || !window.fb || !window.fb.db) return;
+    try {
+      const eventsRef = window.fb.ref(window.fb.db, `multiplayer/kaudio/rooms/${jamRoomId}/events`);
+      window.fb.push(eventsRef, {
+        ...ev,
+        senderId: jamClientId,
+        nick: jamClientNick,
+        color: jamColor,
+        timestamp: Date.now()
+      });
+    } catch(err) {
+      console.warn("Jam broadcast error:", err);
+    }
+  }
+
+  function toggleJamConnection() {
+    if (isJamConnected) {
+      leaveJamRoom();
+    } else {
+      joinJamRoom();
+    }
+  }
+
+  function joinJamRoom() {
+    if (!window.fb || !window.fb.db) {
+      showToast('⚠️ Connecting to Firebase RTDB gateway...', 'warning', 2500);
+      return;
+    }
+    const rInput = document.getElementById('jamRoomInput');
+    const nInput = document.getElementById('jamNickInput');
+    if (rInput && rInput.value.trim()) jamRoomId = rInput.value.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    if (nInput && nInput.value.trim()) {
+      jamClientNick = nInput.value.trim();
+      safeSetStorage('kaudio_jam_nick', jamClientNick);
+    }
+
+    try {
+      const userRef = window.fb.ref(window.fb.db, `multiplayer/kaudio/rooms/${jamRoomId}/users/${jamClientId}`);
+      window.fb.set(userRef, {
+        nick: jamClientNick,
+        color: jamColor,
+        joinedAt: Date.now()
+      });
+      window.fb.onDisconnect(userRef).remove();
+
+      const usersRef = window.fb.ref(window.fb.db, `multiplayer/kaudio/rooms/${jamRoomId}/users`);
+      jamUsersUnsub = window.fb.onValue(usersRef, snap => {
+        const users = snap.val() || {};
+        jamConnectedUsers = users;
+        updateJamUsersUI(users);
+      });
+
+      const eventsRef = window.fb.ref(window.fb.db, `multiplayer/kaudio/rooms/${jamRoomId}/events`);
+      jamEventsUnsub = window.fb.onChildAdded(eventsRef, snap => {
+        const ev = snap.val();
+        if (!ev || ev.senderId === jamClientId) return;
+        handleRemoteJamEvent(ev);
+      });
+
+      isJamConnected = true;
+      updateJamStatusUI(true);
+      appendJamTicker(`Connected to room "#${jamRoomId}" as "${jamClientNick}"`, '#34d399');
+      showToast(`🟢 Connected to Jam Room #${jamRoomId}!`, 'success', 3000);
+    } catch (err) {
+      console.warn("Jam join error:", err);
+      showToast('❌ Failed to connect to Jam Room', 'danger', 3000);
+    }
+  }
+
+  function leaveJamRoom() {
+    if (window.fb && window.fb.db && isJamConnected) {
+      try {
+        const userRef = window.fb.ref(window.fb.db, `multiplayer/kaudio/rooms/${jamRoomId}/users/${jamClientId}`);
+        window.fb.remove(userRef);
+        const usersRef = window.fb.ref(window.fb.db, `multiplayer/kaudio/rooms/${jamRoomId}/users`);
+        const eventsRef = window.fb.ref(window.fb.db, `multiplayer/kaudio/rooms/${jamRoomId}/events`);
+        if (jamUsersUnsub) window.fb.off(usersRef);
+        if (jamEventsUnsub) window.fb.off(eventsRef);
+      } catch(e) {}
+    }
+    isJamConnected = false;
+    updateJamStatusUI(false);
+    appendJamTicker('Disconnected from Jam Room.', '#f43f5e');
+    showToast('⚪ Disconnected from Jam Room', 'info', 2000);
+  }
+
+  function updateJamStatusUI(connected) {
+    const pill = document.getElementById('jamStatusPill');
+    const dot = document.getElementById('jamStatusDot');
+    const text = document.getElementById('jamStatusText');
+    const btn = document.getElementById('btnJamConnect');
+    if (pill) {
+      pill.textContent = connected ? `🟢 Room: ${jamRoomId}` : 'Offline';
+      pill.style.background = connected ? 'rgba(52, 211, 153, 0.2)' : 'rgba(255,255,255,0.1)';
+      pill.style.color = connected ? '#34d399' : '#cbd5e1';
+    }
+    if (dot) dot.style.background = connected ? '#34d399' : '#94a3b8';
+    if (text) text.textContent = connected ? `Connected to #${jamRoomId}` : 'Disconnected (Offline)';
+    if (btn) {
+      btn.textContent = connected ? 'Leave Jam Room' : 'Join Jam Room';
+      btn.className = connected ? 'btn btn-danger' : 'btn btn-accent';
+    }
+  }
+
+  function updateJamUsersUI(users) {
+    const listEl = document.getElementById('jamPeerList');
+    const countEl = document.getElementById('jamPeerCount');
+    const count = Object.keys(users).length;
+    if (countEl) countEl.textContent = count;
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    if (count === 0) {
+      listEl.innerHTML = '<span style="color: #64748b; font-size: 12px; font-style: italic;">No peers connected yet</span>';
+      return;
+    }
+    for (const [uid, u] of Object.entries(users)) {
+      const isMe = (uid === jamClientId);
+      const badge = document.createElement('span');
+      badge.style.cssText = `background: rgba(255,255,255,0.08); border: 1px solid ${u.color || '#38bdf8'}; color: #fff; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;`;
+      badge.innerHTML = `<span style="width: 6px; height: 6px; border-radius: 50%; background: ${u.color || '#38bdf8'};"></span>${u.nick || 'Musician'}${isMe ? ' (You)' : ''}`;
+      listEl.appendChild(badge);
+    }
+  }
+
+  function handleRemoteJamEvent(ev) {
+    if (ev.type === 'note') {
+      if (ev.action === 'on') {
+        playNote(ev.noteIndex, true);
+        if (keyEls[ev.noteIndex]) keyEls[ev.noteIndex].classList.add('remote-active');
+        appendJamTicker(`[${ev.nick}] played ${noteNames[ev.noteIndex] || 'Note'}`, ev.color || '#a855f7');
+      } else {
+        stopNote(ev.noteIndex, true);
+        if (keyEls[ev.noteIndex]) keyEls[ev.noteIndex].classList.remove('remote-active');
+      }
+    } else if (ev.type === 'sfx') {
+      triggerPreset(ev.preset, false);
+      appendJamTicker(`[${ev.nick}] triggered ${ev.preset} FX`, ev.color || '#f59e0b');
+    } else if (ev.type === 'seq_step') {
+      const chkSync = document.getElementById('chkJamSyncSeq');
+      if (chkSync && chkSync.checked && seqTracks[ev.track]) {
+        seqTracks[ev.track].grid[ev.step] = ev.active;
+        const btn = seqGridEl.children[ev.track]?.querySelectorAll('.step-btn')[ev.step];
+        if (btn) btn.classList.toggle('active', ev.active);
+        appendJamTicker(`[${ev.nick}] set ${seqTracks[ev.track].name} Step ${ev.step + 1}`, ev.color || '#38bdf8');
+      }
+    }
+  }
+
+  // Standard MIDI (.mid Type 0) File Generator
+  function exportMidiFile() {
+    const bpm = parseInt(seqBpmEl ? seqBpmEl.value : 120);
+    const hasActiveSteps = seqTracks.some(t => t.grid.some(Boolean));
+    if (!hasActiveSteps) {
+      showToast('⚠️ Sequencer grid has no active steps! Enable steps or load a project first.', 'warning', 3000);
+      return;
+    }
+
+    const ticksPerStep = 24;
+    const ticksPerQuarter = 96;
+    const usPerQuarter = Math.round(60000000 / bpm);
+    let trkBytes = [];
+
+    // Tempo meta event
+    trkBytes.push(0x00, 0xFF, 0x51, 0x03, (usPerQuarter >> 16) & 0xFF, (usPerQuarter >> 8) & 0xFF, usPerQuarter & 0xFF);
+
+    // Track Name
+    const trkName = "KAudio Pro Sequencer";
+    trkBytes.push(0x00, 0xFF, 0x03, trkName.length);
+    for (let c = 0; c < trkName.length; c++) trkBytes.push(trkName.charCodeAt(c));
+
+    function pushVLQ(val) {
+      let buffer = [];
+      buffer.push(val & 0x7F);
+      val >>= 7;
+      while (val > 0) {
+        buffer.push((val & 0x7F) | 0x80);
+        val >>= 7;
+      }
+      for (let i = buffer.length - 1; i >= 0; i--) {
+        trkBytes.push(buffer[i]);
+      }
+    }
+
+    let pendingDelta = 0;
+
+    for (let step = 0; step < 16; step++) {
+      let notesOnStep = [];
+      seqTracks.forEach((track, trIdx) => {
+        if (track.grid[step]) {
+          let midiNote = 60;
+          if (track.notes && track.notes.length > 0) {
+            let offset = track.notes[step % track.notes.length];
+            midiNote = 60 + offset;
+          } else if (trIdx === 1) {
+            midiNote = 48;
+          } else if (trIdx === 2) {
+            midiNote = 38;
+          } else if (trIdx === 3) {
+            midiNote = 72;
+          }
+          if (midiNote < 0) midiNote = 0;
+          if (midiNote > 127) midiNote = 127;
+          notesOnStep.push({ note: midiNote, channel: trIdx % 16 });
+        }
+      });
+
+      if (notesOnStep.length > 0) {
+        notesOnStep.forEach((n, idx) => {
+          pushVLQ(idx === 0 ? pendingDelta : 0);
+          trkBytes.push(0x90 | n.channel, n.note, 100);
+        });
+
+        pendingDelta = 20;
+
+        notesOnStep.forEach((n, idx) => {
+          pushVLQ(idx === 0 ? pendingDelta : 0);
+          trkBytes.push(0x80 | n.channel, n.note, 0);
+        });
+
+        pendingDelta = 4;
+      } else {
+        pendingDelta += ticksPerStep;
+      }
+    }
+
+    pushVLQ(pendingDelta);
+    trkBytes.push(0xFF, 0x2F, 0x00);
+
+    let header = [
+      0x4D, 0x54, 0x68, 0x64,
+      0x00, 0x00, 0x00, 0x06,
+      0x00, 0x00,
+      0x00, 0x01,
+      (ticksPerQuarter >> 8) & 0xFF, ticksPerQuarter & 0xFF
+    ];
+
+    let trkLen = trkBytes.length;
+    let trkHeader = [
+      0x4D, 0x54, 0x72, 0x6B,
+      (trkLen >> 24) & 0xFF, (trkLen >> 16) & 0xFF, (trkLen >> 8) & 0xFF, trkLen & 0xFF
+    ];
+
+    const fileBytes = new Uint8Array(header.length + trkHeader.length + trkBytes.length);
+    fileBytes.set(header, 0);
+    fileBytes.set(trkHeader, header.length);
+    fileBytes.set(trkBytes, header.length + trkHeader.length);
+
+    const blob = new Blob([fileBytes], { type: 'audio/midi' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'kaudio_sequence.mid';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast('🎹 Standard MIDI (.mid Type 0) File Exported to kaudio_sequence.mid!', 'success', 3500);
+  }
+
+  // Single-Shot Sound FX Sample WAV Exporter
+  async function exportSelectedSfxWav() {
+    initAudio();
+    const sel = document.getElementById('sfxExportSelect');
+    const sfxType = sel ? sel.value : 'jump';
+    showToast(`⏳ Rendering sample for "${sfxType}"...`, 'info', 1800);
+
+    const duration = (sfxType === 'signal1999') ? 2.5 : 0.6;
+    const sampleRate = 44100;
+    const offlineCtx = new OfflineAudioContext(1, Math.floor(sampleRate * duration), sampleRate);
+
+    let offFilter = offlineCtx.createBiquadFilter();
+    offFilter.type = filterType.value;
+    offFilter.frequency.setValueAtTime(parseFloat(filterCutoff.value), 0);
+    offFilter.Q.setValueAtTime(parseFloat(filterQ.value), 0);
+    offFilter.connect(offlineCtx.destination);
+
+    let now = 0;
+    if (sfxType === 'explosion') {
+      let bufferSize = Math.floor(sampleRate * 0.4);
+      let buffer = offlineCtx.createBuffer(1, bufferSize, sampleRate);
+      let data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      let noise = offlineCtx.createBufferSource();
+      noise.buffer = buffer;
+      let noiseGain = offlineCtx.createGain();
+      noiseGain.gain.setValueAtTime(0.7, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.38);
+      noise.connect(noiseGain);
+      noiseGain.connect(offFilter);
+      noise.start(now);
+      noise.stop(now + 0.38);
+    } else if (sfxType === 'signal1999') {
+      let osc = offlineCtx.createOscillator();
+      let gain = offlineCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1999, now);
+      gain.gain.setValueAtTime(0.3, now);
+      gain.gain.linearRampToValueAtTime(0.01, now + duration);
+      osc.connect(gain);
+      gain.connect(offFilter);
+      osc.start(now);
+      osc.stop(now + duration);
+    } else {
+      let osc = offlineCtx.createOscillator();
+      let gain = offlineCtx.createGain();
+      osc.connect(gain);
+      gain.connect(offFilter);
+
+      if (sfxType === 'jump') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(600, now + 0.15);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+        osc.start(now); osc.stop(now + 0.15);
+      } else if (sfxType === 'laser') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(1200, now);
+        osc.frequency.exponentialRampToValueAtTime(80, now + 0.2);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+        osc.start(now); osc.stop(now + 0.2);
+      } else if (sfxType === 'coin') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(987.77, now);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.setValueAtTime(0.3, now + 0.08);
+        osc.frequency.setValueAtTime(1318.51, now + 0.08);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+        osc.start(now); osc.stop(now + 0.35);
+      } else if (sfxType === 'powerup') {
+        osc.type = 'triangle';
+        let steps = [330, 392, 659, 523, 587, 784];
+        let stLen = 0.04;
+        steps.forEach((f, idx) => {
+          osc.frequency.setValueAtTime(f, now + idx * stLen);
+        });
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + steps.length * stLen);
+        osc.start(now); osc.stop(now + steps.length * stLen);
+      } else if (sfxType === 'hurt') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.linearRampToValueAtTime(40, now + 0.18);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.18);
+        osc.start(now); osc.stop(now + 0.18);
+      } else {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(sfxType === 'blip' ? 880 : Math.random() * 800 + 200, now);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.1);
+        osc.start(now); osc.stop(now + 0.1);
+      }
+    }
+
+    const rendered = await offlineCtx.startRendering();
+    const wavBlob = bufferToWave(rendered, Math.floor(sampleRate * duration));
+    const url = URL.createObjectURL(wavBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `kaudio_sfx_${sfxType}.wav`;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    showToast(`💾 Sample exported to kaudio_sfx_${sfxType}.wav!`, 'success', 3000);
+  }
+
   // Initialize Web Audio Context with Full DSP Pipeline
   function initAudio() {
     if (!ctx) {
@@ -986,9 +1768,14 @@
       }
       driveGainNode = ctx.createGain();
 
-      // Delay FX Nodes
+      // Delay FX Nodes with SNES SPC700 Warmth Damping
       delayNode = ctx.createDelay(5.0);
       delayNode.delayTime.setValueAtTime(parseFloat(delayTime.value), ctx.currentTime);
+
+      delayDampFilter = ctx.createBiquadFilter();
+      delayDampFilter.type = 'lowpass';
+      let dampCut = (chkSnesDamp && chkSnesDamp.checked) ? parseFloat(snesDampCutoff.value) : 20000;
+      delayDampFilter.frequency.setValueAtTime(dampCut, ctx.currentTime);
 
       delayFeedbackNode = ctx.createGain();
       delayFeedbackNode.gain.setValueAtTime(parseFloat(delayFeedback.value), ctx.currentTime);
@@ -999,8 +1786,9 @@
       delayWetGainNode = ctx.createGain();
       delayWetGainNode.gain.setValueAtTime(chkDelay.checked ? parseFloat(delayMix.value) : 0, ctx.currentTime);
 
-      // Delay Feedback loop
-      delayNode.connect(delayFeedbackNode);
+      // Delay Feedback loop: delayNode -> delayDampFilter -> delayFeedbackNode -> delayNode
+      delayNode.connect(delayDampFilter);
+      delayDampFilter.connect(delayFeedbackNode);
       delayFeedbackNode.connect(delayNode);
 
       // Audio Graph Connections
@@ -1071,7 +1859,7 @@
     keyEls.push(el);
   }
 
-  // Play Synth Note with ADSR
+  // Play Synth Note with ADSR & Yamaha YM2612 2-Op FM Synthesis
   function playNote(i, fromPlayback = false, freqOverride = null) {
     initAudio();
     if (activeOscs[i] && !freqOverride) return;
@@ -1079,29 +1867,59 @@
     if (isRecording && !fromPlayback && recordedEvents.length < 4000) {
       recordedEvents.push({ keyIndex: i, time: Date.now() - recordingStartTime, type: 1 });
     }
+    if (!fromPlayback && typeof i === 'number') {
+      broadcastJamEvent({ type: 'note', action: 'on', noteIndex: i });
+    }
 
-    let osc = ctx.createOscillator();
-    let voiceGain = ctx.createGain();
-
-    osc.type = waveSelect.value;
+    let isFm = (synthEngine && synthEngine.value === 'ym2612');
     let targetFreq = freqOverride || (freqs[i] * Math.pow(2, octaveShift));
-    osc.frequency.setValueAtTime(targetFreq, ctx.currentTime);
-
-    // ADSR Envelope
     let now = ctx.currentTime;
     let a = parseFloat(envA.value);
     let d = parseFloat(envD.value);
     let s = parseFloat(envS.value);
 
+    let voiceGain = ctx.createGain();
     voiceGain.gain.setValueAtTime(0, now);
     voiceGain.gain.linearRampToValueAtTime(0.5, now + a);
     voiceGain.gain.linearRampToValueAtTime(0.5 * s, now + a + d);
 
-    osc.connect(voiceGain);
-    voiceGain.connect(filterNode);
-    osc.start();
+    let osc, modOsc, modGain;
 
-    let oscEntry = { osc, gain: voiceGain };
+    if (isFm) {
+      // Yamaha YM2612 2-Operator FM: Modulator -> Carrier frequency modulation
+      let ratio = parseFloat(fmRatio ? fmRatio.value : '1.0');
+      let depth = parseFloat(fmDepth ? fmDepth.value : '450');
+      let modDecay = parseFloat(fmModDecay ? fmModDecay.value : '0.25');
+
+      osc = ctx.createOscillator(); // Carrier
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(targetFreq, now);
+
+      modOsc = ctx.createOscillator(); // Modulator
+      modOsc.type = 'sine';
+      modOsc.frequency.setValueAtTime(targetFreq * ratio, now);
+
+      modGain = ctx.createGain();
+      modGain.gain.setValueAtTime(depth, now);
+      modGain.gain.exponentialRampToValueAtTime(0.01, now + modDecay);
+
+      modOsc.connect(modGain);
+      modGain.connect(osc.frequency);
+      osc.connect(voiceGain);
+
+      modOsc.start();
+      osc.start();
+    } else {
+      osc = ctx.createOscillator();
+      osc.type = waveSelect.value;
+      osc.frequency.setValueAtTime(targetFreq, now);
+      osc.connect(voiceGain);
+      osc.start();
+    }
+
+    voiceGain.connect(filterNode);
+
+    let oscEntry = { osc, modOsc, modGain, isFm, gain: voiceGain };
     activeOscs[i] = oscEntry;
 
     if (keyEls[i] && !freqOverride) keyEls[i].classList.add('active');
@@ -1114,9 +1932,12 @@
     if (isRecording && !fromPlayback && recordedEvents.length < 4000) {
       recordedEvents.push({ keyIndex: i, time: Date.now() - recordingStartTime, type: 0 });
     }
+    if (!fromPlayback && typeof i === 'number') {
+      broadcastJamEvent({ type: 'note', action: 'off', noteIndex: i });
+    }
 
     if (activeOscs[i]) {
-      let { osc, gain: voiceGain } = activeOscs[i];
+      let { osc, modOsc, modGain, isFm, gain: voiceGain } = activeOscs[i];
       delete activeOscs[i];
 
       if (ctx) {
@@ -1128,11 +1949,22 @@
           voiceGain.gain.setValueAtTime(curVal, now);
           voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + r);
           osc.stop(now + r + 0.05);
+          if (isFm && modOsc) {
+            try { modOsc.stop(now + r + 0.05); } catch(e) {}
+          }
           setTimeout(() => {
-            try { osc.disconnect(); voiceGain.disconnect(); } catch(e) {}
+            try {
+              osc.disconnect();
+              voiceGain.disconnect();
+              if (isFm) {
+                if (modOsc) modOsc.disconnect();
+                if (modGain) modGain.disconnect();
+              }
+            } catch(e) {}
           }, (r + 0.1) * 1000);
         } catch(e) {
           try { osc.stop(); } catch(err) {}
+          if (isFm && modOsc) { try { modOsc.stop(); } catch(err) {} }
         }
       }
     }
@@ -1148,14 +1980,53 @@
     powerup: '⚡ Powerup FX [5]',
     hurt: '💔 Hurt FX [6]',
     blip: '🔔 Blip FX [7]',
-    random: '🎲 Random FX [8]'
+    random: '🎲 Random FX [8]',
+    signal1999: '📻 1999Hz Subcarrier [9]'
   };
 
   function triggerPreset(type, showNotification = true) {
     initAudio();
     let now = ctx.currentTime;
-    if (showNotification && presetNames[type]) {
-      showToast(`${presetNames[type]} triggered`, 'info', 1600);
+    if (showNotification) {
+      if (presetNames[type]) showToast(`${presetNames[type]} triggered`, 'info', 1600);
+      broadcastJamEvent({ type: 'sfx', preset: type });
+    }
+
+    if (type === 'signal1999') {
+      // 1999Hz Subcarrier Anomaly Tone with AM tremor
+      let osc = ctx.createOscillator();
+      let amOsc = ctx.createOscillator();
+      let amGain = ctx.createGain();
+      let gain = ctx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1999, now);
+
+      amOsc.type = 'sine';
+      amOsc.frequency.setValueAtTime(19.99, now);
+      amGain.gain.setValueAtTime(0.18, now);
+
+      gain.gain.setValueAtTime(0.35, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 2.0);
+
+      amOsc.connect(amGain);
+      amGain.connect(gain.gain);
+      osc.connect(gain);
+      gain.connect(filterNode);
+
+      osc.onended = () => {
+        try { osc.disconnect(); amOsc.disconnect(); amGain.disconnect(); gain.disconnect(); } catch(e) {}
+      };
+
+      amOsc.start(now);
+      osc.start(now);
+      amOsc.stop(now + 2.05);
+      osc.stop(now + 2.05);
+
+      if (showNotification) {
+        showToast('📡 [SIGNAL LOCK] 1999Hz Subcarrier Anomaly // ECHO-SUBSYSTEM.NET', 'warning', 3500);
+      }
+      return;
     }
 
     if (type === 'explosion') {
@@ -1365,6 +2236,21 @@
           canvasCtx.fillRect(x, y - 2, barWidth, 2);
         }
       }
+
+      // Check for 1999Hz subcarrier anomaly peak
+      if (analyserNode) {
+        const sampleRate = ctx ? ctx.sampleRate : 44100;
+        const binHz = sampleRate / analyserNode.fftSize;
+        const bin1999 = Math.round(1999 / binHz);
+        const testFreqs = new Uint8Array(analyserNode.frequencyBinCount);
+        analyserNode.getByteFrequencyData(testFreqs);
+        if (bin1999 < testFreqs.length && testFreqs[bin1999] > 135) {
+          canvasCtx.fillStyle = '#f59e0b';
+          canvasCtx.font = 'bold 9px monospace';
+          canvasCtx.fillText('▲ [1999Hz SUBCARRIER // 0x7F CARRIER DETECTED]', 6, 13);
+        }
+      }
+
       canvasCtx.restore();
     }
     draw();
@@ -1393,13 +2279,18 @@
         document.getElementById('btnExportWav').click();
         return;
       }
+      if (e.key === 'j' || e.key === 'J') {
+        e.preventDefault();
+        toggleJamModal();
+        return;
+      }
       return;
     }
     if (e.altKey || e.metaKey) return;
 
-    // Sound FX Presets via 1-8 Numeric Keys
-    if (!e.ctrlKey && !e.altKey && !e.metaKey && e.key >= '1' && e.key <= '8') {
-      const pTypes = ['jump', 'laser', 'explosion', 'coin', 'powerup', 'hurt', 'blip', 'random'];
+    // Sound FX Presets via 1-9 Numeric Keys
+    if (!e.ctrlKey && !e.altKey && !e.metaKey && e.key >= '1' && e.key <= '9') {
+      const pTypes = ['jump', 'laser', 'explosion', 'coin', 'powerup', 'hurt', 'blip', 'random', 'signal1999'];
       triggerPreset(pTypes[parseInt(e.key) - 1]);
       return;
     }
@@ -1505,6 +2396,11 @@
     if (e.key.toUpperCase() === 'V' && !e.repeat) {
       btnVisMode.click();
       showToast(`📊 Visualizer Mode: ${visMode === 'scope' ? 'Oscilloscope' : 'FFT Spectrum'} [V]`, 'info', 1800);
+      return;
+    }
+
+    if (e.key.toUpperCase() === 'M' && !e.repeat && !e.ctrlKey) {
+      exportMidiFile();
       return;
     }
 
@@ -1625,6 +2521,7 @@
         btn.onclick = () => {
           track.grid[st] = !track.grid[st];
           btn.classList.toggle('active', track.grid[st]);
+          broadcastJamEvent({ type: 'seq_step', track: trIdx, step: st, active: track.grid[st] });
           saveAudioState();
         };
         stepsContainer.appendChild(btn);
@@ -1823,8 +2720,14 @@
     let offWet = offlineCtx.createGain();
     offWet.gain.setValueAtTime(chkDelay.checked ? parseFloat(delayMix.value) : 0, 0);
 
-    // Connect Delay feedback
-    offDelay.connect(offFb);
+    // Delay Feedback with SNES SPC700 Warmth Damping
+    let offDamp = offlineCtx.createBiquadFilter();
+    offDamp.type = 'lowpass';
+    let dampCut = (chkSnesDamp && chkSnesDamp.checked) ? parseFloat(snesDampCutoff.value) : 20000;
+    offDamp.frequency.setValueAtTime(dampCut, 0);
+
+    offDelay.connect(offDamp);
+    offDamp.connect(offFb);
     offFb.connect(offDelay);
 
     // Audio Graph
@@ -1841,6 +2744,10 @@
     // Synthesize active sequencer tracks into offline context
     const bpm = parseInt(seqBpmEl.value);
     const stepTime = 60 / bpm / 4;
+    const isFm = (synthEngine && synthEngine.value === 'ym2612');
+    const fmR = parseFloat(fmRatio ? fmRatio.value : '1.0');
+    const fmD = parseFloat(fmDepth ? fmDepth.value : '450');
+    const fmMDecay = parseFloat(fmModDecay ? fmModDecay.value : '0.25');
 
     seqTracks.forEach(track => {
       for (let st = 0; st < 16; st++) {
@@ -1850,10 +2757,29 @@
           let osc = offlineCtx.createOscillator();
           let gain = offlineCtx.createGain();
 
-          osc.type = waveSelect.value;
           let noteOffset = track.notes ? track.notes[st % track.notes.length] : (st % freqs.length);
           let targetFreq = track.notes ? (freqs[0] * Math.pow(2, noteOffset / 12)) : freqs[st % freqs.length];
-          osc.frequency.setValueAtTime(targetFreq, time);
+
+          if (isFm) {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(targetFreq, time);
+
+            let modOsc = offlineCtx.createOscillator();
+            modOsc.type = 'sine';
+            modOsc.frequency.setValueAtTime(targetFreq * fmR, time);
+
+            let modGain = offlineCtx.createGain();
+            modGain.gain.setValueAtTime(fmD, time);
+            modGain.gain.exponentialRampToValueAtTime(0.01, time + fmMDecay);
+
+            modOsc.connect(modGain);
+            modGain.connect(osc.frequency);
+            modOsc.start(time);
+            modOsc.stop(time + stepTime * 0.9);
+          } else {
+            osc.type = waveSelect.value;
+            osc.frequency.setValueAtTime(targetFreq, time);
+          }
 
           gain.gain.setValueAtTime(0, time);
           gain.gain.linearRampToValueAtTime(0.3, time + 0.01);
@@ -1885,6 +2811,22 @@
       const data = JSON.parse(raw);
       if (!data || typeof data !== 'object') return false;
 
+      if (data.engine && synthEngine) {
+        synthEngine.value = data.engine;
+        if (subtractiveControls) subtractiveControls.style.display = (data.engine === 'ym2612') ? 'none' : 'block';
+        if (fmControls) fmControls.style.display = (data.engine === 'ym2612') ? 'flex' : 'none';
+      }
+      if (data.fm) {
+        if (data.fm.ratio && fmRatio) fmRatio.value = data.fm.ratio;
+        if (data.fm.depth && fmDepth && valFmDepth) {
+          fmDepth.value = data.fm.depth;
+          valFmDepth.textContent = data.fm.depth + 'Hz';
+        }
+        if (data.fm.modDecay && fmModDecay && valFmModDecay) {
+          fmModDecay.value = data.fm.modDecay;
+          valFmModDecay.textContent = parseFloat(data.fm.modDecay).toFixed(2) + 's';
+        }
+      }
       if (data.waveType && waveSelect) waveSelect.value = data.waveType;
       if (data.masterVol !== undefined && masterVol) {
         masterVol.value = data.masterVol;
@@ -1934,6 +2876,14 @@
             delayMix.value = data.effects.delayMix;
             valDelayMix.textContent = Math.round(parseFloat(delayMix.value) * 100) + '%';
           }
+        }
+        if (typeof data.effects.snesDamp !== 'undefined' && chkSnesDamp) {
+          chkSnesDamp.checked = !!data.effects.snesDamp;
+          if (data.effects.snesDampCutoff && snesDampCutoff && valSnesDamp) {
+            snesDampCutoff.value = data.effects.snesDampCutoff;
+            valSnesDamp.textContent = data.effects.snesDampCutoff + 'Hz';
+          }
+          if (chkSnesDamp.onchange) chkSnesDamp.onchange();
         }
         if (typeof data.effects.drive !== 'undefined' && chkDrive) {
           chkDrive.checked = !!data.effects.drive;

@@ -148,6 +148,170 @@ int LoadAudioState() {
     return 1;
 }
 
+void QuickSaveState(HWND hwnd) {
+    AudioSaveState st;
+    st.magic = 0x4B415544;
+    st.version = 1;
+    st.instrument = instrument;
+    st.octaveShift = octaveShift;
+    st.delayEnabled = delayEnabled;
+    st.delayTimeMs = delayTimeMs;
+    st.delayFeedback = delayFeedback;
+    st.driveEnabled = driveEnabled;
+    st.visMode = visMode;
+    for (int i = 0; i < 16; i++) st.seqPattern[i] = seqPattern[i];
+
+    HANDLE hFile = CreateFileA("kaudio_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, &st, sizeof(AudioSaveState), &written, NULL);
+        CloseHandle(hFile);
+        SetStatus(hwnd, "⚡ Quicksave Saved to kaudio_quicksave.dat! [F5]", 2500);
+    }
+}
+
+int QuickLoadState(HWND hwnd) {
+    AudioSaveState st;
+    HANDLE hFile = CreateFileA("kaudio_quicksave.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        SetStatus(hwnd, "⚠️ No quicksave file found. Press [F5] first!", 2500);
+        return 0;
+    }
+    DWORD bytesRead = 0;
+    BOOL res = ReadFile(hFile, &st, sizeof(AudioSaveState), &bytesRead, NULL);
+    CloseHandle(hFile);
+    if (!res || bytesRead < sizeof(AudioSaveState)) return 0;
+    if (st.magic != 0x4B415544 || st.version != 1) return 0;
+
+    if (st.instrument >= 0 && st.instrument < 128) {
+        instrument = st.instrument;
+        if (hMidi) midiOutShortMsg(hMidi, 0x000000C0 | (instrument << 8));
+    }
+    if (st.octaveShift >= -4 && st.octaveShift <= 4) octaveShift = st.octaveShift;
+    delayEnabled = (st.delayEnabled != 0);
+    if (st.delayTimeMs >= 50 && st.delayTimeMs <= 1000) delayTimeMs = st.delayTimeMs;
+    if (st.delayFeedback >= 0 && st.delayFeedback <= 95) delayFeedback = st.delayFeedback;
+    driveEnabled = (st.driveEnabled != 0);
+    visMode = (st.visMode != 0);
+    for (int i = 0; i < 16; i++) seqPattern[i] = (st.seqPattern[i] != 0);
+
+    SetStatus(hwnd, "🔄 Quickload Restored from kaudio_quicksave.dat! [F9]", 2500);
+    InvalidateRect(hwnd, NULL, FALSE);
+    return 1;
+}
+
+void ExportMidiFile(HWND hwnd) {
+    unsigned char midiData[512];
+    int idx = 0;
+    // Header MThd
+    midiData[idx++] = 'M'; midiData[idx++] = 'T'; midiData[idx++] = 'h'; midiData[idx++] = 'd';
+    midiData[idx++] = 0x00; midiData[idx++] = 0x00; midiData[idx++] = 0x00; midiData[idx++] = 0x06;
+    midiData[idx++] = 0x00; midiData[idx++] = 0x00; // Format 0
+    midiData[idx++] = 0x00; midiData[idx++] = 0x01; // 1 Track
+    midiData[idx++] = 0x00; midiData[idx++] = 0x60; // 96 ticks per quarter note
+
+    int trkHeadIdx = idx;
+    midiData[idx++] = 'M'; midiData[idx++] = 'T'; midiData[idx++] = 'r'; midiData[idx++] = 'k';
+    midiData[idx++] = 0x00; midiData[idx++] = 0x00; midiData[idx++] = 0x00; midiData[idx++] = 0x00;
+    int trkStart = idx;
+
+    // Tempo event: delta 0, FF 51 03 (500000 us = 120 bpm)
+    midiData[idx++] = 0x00; midiData[idx++] = 0xFF; midiData[idx++] = 0x51; midiData[idx++] = 0x03;
+    midiData[idx++] = 0x07; midiData[idx++] = 0xA1; midiData[idx++] = 0x20;
+
+    // Program change
+    midiData[idx++] = 0x00; midiData[idx++] = 0xC0; midiData[idx++] = (unsigned char)instrument;
+
+    int ticksPerStep = 24;
+    int pendingDelta = 0;
+    for (int s = 0; s < 16; s++) {
+        if (seqPattern[s]) {
+            int noteVal = notes[s % NUM_KEYS] + octaveShift * 12;
+            if (noteVal < 0) noteVal = 0;
+            if (noteVal > 127) noteVal = 127;
+
+            // Note On
+            midiData[idx++] = (unsigned char)pendingDelta;
+            midiData[idx++] = 0x90;
+            midiData[idx++] = (unsigned char)noteVal;
+            midiData[idx++] = 0x64;
+
+            // Note Off after 20 ticks
+            midiData[idx++] = 20;
+            midiData[idx++] = 0x80;
+            midiData[idx++] = (unsigned char)noteVal;
+            midiData[idx++] = 0x00;
+
+            pendingDelta = 4;
+        } else {
+            pendingDelta += ticksPerStep;
+        }
+    }
+
+    // End of Track Meta Event
+    midiData[idx++] = (unsigned char)pendingDelta;
+    midiData[idx++] = 0xFF; midiData[idx++] = 0x2F; midiData[idx++] = 0x00;
+
+    // Fill in track length
+    int trkLen = idx - trkStart;
+    midiData[trkHeadIdx + 4] = (unsigned char)((trkLen >> 24) & 0xFF);
+    midiData[trkHeadIdx + 5] = (unsigned char)((trkLen >> 16) & 0xFF);
+    midiData[trkHeadIdx + 6] = (unsigned char)((trkLen >> 8) & 0xFF);
+    midiData[trkHeadIdx + 7] = (unsigned char)(trkLen & 0xFF);
+
+    HANDLE hFile = CreateFileA("kaudio_export.mid", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, midiData, idx, &written, NULL);
+        CloseHandle(hFile);
+        SetStatus(hwnd, "🎹 Standard MIDI File Exported to kaudio_export.mid! [M]", 3000);
+    }
+}
+
+void ExportPresetWav(HWND hwnd) {
+    DWORD sampleRate = 44100;
+    DWORD durationSec = 1;
+    DWORD totalSamples = sampleRate * durationSec;
+    DWORD dataSize = totalSamples * sizeof(short);
+
+    WavHeader hdr;
+    hdr.chunkId[0] = 'R'; hdr.chunkId[1] = 'I'; hdr.chunkId[2] = 'F'; hdr.chunkId[3] = 'F';
+    hdr.chunkSize = 36 + dataSize;
+    hdr.format[0] = 'W'; hdr.format[1] = 'A'; hdr.format[2] = 'V'; hdr.format[3] = 'E';
+    hdr.subchunk1Id[0] = 'f'; hdr.subchunk1Id[1] = 'm'; hdr.subchunk1Id[2] = 't'; hdr.subchunk1Id[3] = ' ';
+    hdr.subchunk1Size = 16;
+    hdr.audioFormat = 1;
+    hdr.numChannels = 1;
+    hdr.sampleRate = sampleRate;
+    hdr.byteRate = sampleRate * sizeof(short);
+    hdr.blockAlign = sizeof(short);
+    hdr.bitsPerSample = 16;
+    hdr.subchunk2Id[0] = 'd'; hdr.subchunk2Id[1] = 'a'; hdr.subchunk2Id[2] = 't'; hdr.subchunk2Id[3] = 'a';
+    hdr.subchunk2Size = dataSize;
+
+    HANDLE hFile = CreateFileA("kaudio_sfx.wav", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return;
+
+    DWORD written = 0;
+    WriteFile(hFile, &hdr, sizeof(WavHeader), &written, NULL);
+
+    short sampleBuf[1024];
+    DWORD bufIdx = 0;
+    for (DWORD i = 0; i < totalSamples; i++) {
+        double t = (double)i / (double)sampleRate;
+        double freq = 150.0 + 450.0 * (t / (double)durationSec);
+        double rawVal = (MyFmod(t * freq, 1.0) > 0.5) ? 0.4 : -0.4;
+        sampleBuf[bufIdx++] = (short)(rawVal * 32767.0);
+        if (bufIdx == 1024) {
+            WriteFile(hFile, sampleBuf, bufIdx * sizeof(short), &written, NULL);
+            bufIdx = 0;
+        }
+    }
+    if (bufIdx > 0) WriteFile(hFile, sampleBuf, bufIdx * sizeof(short), &written, NULL);
+    CloseHandle(hFile);
+    SetStatus(hwnd, "💾 SFX Sample Saved to kaudio_sfx.wav! [S]", 3000);
+}
+
 void CheckFirstRunTutorial(HWND hwnd, int savedStateLoaded) {
     HANDLE hFile = CreateFileA("kaudio_tutorial.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -624,6 +788,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ExportWavFile(hwnd);
                 break;
             }
+            if (wParam == 'M' && !isRepeat) {
+                ExportMidiFile(hwnd);
+                break;
+            }
+            if (wParam == 'S' && !isRepeat) {
+                ExportPresetWav(hwnd);
+                break;
+            }
+            if (wParam == VK_F5 && !isRepeat) {
+                QuickSaveState(hwnd);
+                break;
+            }
+            if (wParam == VK_F9 && !isRepeat) {
+                QuickLoadState(hwnd);
+                break;
+            }
             if (wParam == 'V' && !isRepeat) {
                 visMode = !visMode;
                 SetStatus(hwnd, visMode ? "Visualizer: FFT Spectrum [V]" : "Visualizer: Oscilloscope [V]", 1800);
@@ -956,7 +1136,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             if (showHelp) {
                 HBRUSH helpBg = CreateSolidBrush(RGB(15, 23, 42));
-                RECT helpRc = {W/2 - 200, H/2 - 150, W/2 + 200, H/2 + 160};
+                RECT helpRc = {W/2 - 210, H/2 - 165, W/2 + 210, H/2 + 175};
                 FillRect(memDC, &helpRc, helpBg);
                 DeleteObject(helpBg);
                 
@@ -972,17 +1152,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetTextColor(memDC, RGB(56, 189, 248));
                 TextOutA(memDC, helpRc.left + 20, helpRc.top + 15, "🎹 KAudio Pro Help & Shortcuts Reference", 41);
                 SetTextColor(memDC, RGB(241, 245, 249));
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 45, "A-K: Play Chromatic Piano Notes", 31);
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 68, "1 - 5: Sound FX Presets (Jump, Laser, Explode, Coin, Power)", 59);
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 91, "Arrows Up/Dn: MIDI Instrument Select (0-127)", 44);
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 114, "Arrows L/R: Transpose Octave (-4 to +4)", 39);
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 137, "Z / X: Live Performance Record / Playback", 41);
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 160, "P / C: Start-Stop Sequencer / Clear Grid Pattern", 48);
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 183, "L / O: Toggle Stereo Delay / Overdrive Saturation", 49);
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 206, "V: Toggle Oscilloscope / FFT Spectrum Analyzer", 46);
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 229, "E: Export DSP-Mastered WAV Audio File", 37);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 42, "A-K: Play Chromatic Piano Notes", 31);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 64, "1 - 5: Sound FX Presets (Jump, Laser, Explode, Coin, Power)", 59);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 86, "Arrows Up/Dn: MIDI Instrument Select (0-127)", 44);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 108, "Arrows L/R: Transpose Octave (-4 to +4)", 39);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 130, "Z / X: Live Performance Record / Playback", 41);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 152, "P / C: Start-Stop Sequencer / Clear Grid Pattern", 48);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 174, "L / O: Toggle Stereo Delay / Overdrive Saturation", 49);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 196, "V: Toggle Oscilloscope / FFT Spectrum Analyzer", 46);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 218, "E / M: Export Master WAV [E] / Standard MIDI [M]", 48);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 240, "S: Export SFX Sample WAV | F5/F9: Quicksave/Load", 48);
                 SetTextColor(memDC, RGB(244, 63, 94));
-                TextOutA(memDC, helpRc.left + 20, helpRc.top + 265, "Press [F1], [?], [Esc], or Click to close guide", 47);
+                TextOutA(memDC, helpRc.left + 20, helpRc.top + 280, "Press [F1], [?], [Esc], or Click to close guide", 47);
             }
 
             SelectObject(memDC, oldFont);

@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-28T06:50:00Z — kilo-tester: KChart (Interactive UI Audit & Quicksave/Toast/Regression Integration)**
+  - Status: PASS ✅ (6 issues audited, 6 fixed, 0 regressions, clean builds).
+  - Snapshot Persistence: Implemented F5 quicksave & F9 quickload snapshot persistence with localStorage auto-restore in web and Win32 C `kchart_quicksave.dat`.
+  - Toast & Occlusion Remediation: Re-anchored toasts to non-occluding top margin; added click-to-dismiss, 3-toast cap, and auto-dismiss on input focus/typing.
+  - Regression Formatting: Added `formatTrendEquation` for clean sign-aware trend equations across canvas overlays and vector SVG exports.
+  - Controls & Onboarding: Added `kchart_tutorialSeen` onboarding tour gating, Enter/Space modal dismissal, and synchronized preset cycle state.
+  - Verification: MSVC clean (`KChart.exe` 29.1 KB); Vite build clean in 395ms (`kchart.html` 87.5 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-28T05:52:00Z — kilo-creator: kweb://10.19.99.4/classified (Corporate Network Leak & Signal Diagnostic)**
   - Status: PASS ✅ (0 regressions, clean Vite build, security lint clean, <999KB ceiling verified).
   - Signal Diagnostic Lab: Added dual-display time-domain oscilloscope & FFT frequency spectrum, tunable YM2612 FM / SPC700 stereo delay DSP controls, and live subcarrier packet demodulator.
