@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KColosseum
-  kilo_usability: KPing
+  kilo_usability: KRadio
   kilo_graphics: KStarDredge
   kilo_qa: KTrader
   kilo_expander: KSynth
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-tester
-  app: KChat
-  timestamp: "2026-09-28T15:53:00Z"
+  agent: kilo-usability
+  app: KPing
+  timestamp: "2026-09-28T16:45:00Z"
 last_planner_run: "2026-09-28T10:38:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KPing`
+- **Current Target**: `KRadio`
 - **Upcoming Queue**:
-  `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`.
+  `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KTrader`
@@ -242,6 +242,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-28T16:45:00Z — kilo-usability: KPing (UI/UX, Responsive Controls & Zero-Occlusion Layout)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
+  - Window & Controls Layout: Upgraded window bounds to 960x700 in App.jsx and web postMessage; reorganized controls into dual-row parameter and action bar decks.
+  - Toast Occlusion Remediation: Re-anchored toast container to top-center margin avoiding action button overlap; wired instant click dismissal.
+  - Modal Ergonomics: Implemented `closeAllModals` mutual exclusion preventing help/export modal stacking; added first-run onboarding banner.
+  - HiDPI Canvas & Accessibility: Integrated ResizeObserver for sharp high-DPI telemetry graphing; added accessible header hotkeys hint and filter pill keyboard focus.
+  - Verification: MSVC clean (`KPing.exe` 28.5 KB); Vite clean in 373ms (`kping.html` 87.0 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-28T15:53:00Z — kilo-tester: KChat (Interactive UI Audit & Quicksave/Toast/Search Integration)**
   - Status: PASS ✅ (6 issues audited, 6 fixed, 0 regressions, clean builds).
   - Toast Occlusion Remediation: Center-anchored notification toasts to top margin avoiding send button overlap; wired click-to-dismiss & timer reset.
@@ -276,14 +284,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Queue Rework: Confirmed active targets for upcoming cycle (KAudio, echo-subsystem, KChat, KPing, KStarDredge, KTrader).
   - Rotation Schedule: Set agent_rotation starting at kilo-expander to maintain fair round-robin dispatch.
   - Compaction: Archived 10.19.99.4/classified and KCalendar to fleet_execution_archive.md; retained top 5 active entries.
-
-- **2026-09-28T09:55:00Z — kilo-qa: KTodo (Pass 5: Tutorial & State Integrity Audit)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
-  - Snapshot Persistence: Full F5 quicksave & F9 quickload capturing tasks, workspaces, tags, and search query in web and Win32 C `ktodo_quicksave.dat`.
-  - Session Recovery: Fixed startup workspace null bug ensuring workspace selector and task sync restore seamlessly.
-  - Toast Occlusion Remediation: Center-anchored notification toasts to avoid header button occlusion; added focusin auto-dismiss.
-  - Modal Ergonomics: Prevented modal stacking across Help, IO, Tutorial, and Collab dialogs; added tour guide launcher and Enter join key.
-  - Resource Cleanliness: Ensured Firebase RTDB listeners, object URLs, and timers are released on pagehide/unload.
-  - Verification: MSVC clean (`KTodo.exe` 23.0 KB); Vite build in 389ms (`ktodo.html` 123.8 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
 
 

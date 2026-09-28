@@ -43,7 +43,54 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
   }
   .controls {
-    display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 14px; margin-bottom: 10px; align-items: flex-end;
+    display: flex; flex-direction: column; gap: 8px; padding: 10px 14px; margin-bottom: 10px;
+  }
+  .controls-row {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; width: 100%;
+  }
+  .actions-row {
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; width: 100%;
+    padding-top: 6px; border-top: 1px solid var(--border-subtle);
+  }
+  .actions-left, .actions-right {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  }
+  .actions-divider {
+    flex: 1; min-width: 8px;
+  }
+  .host-group { flex: 1; min-width: 150px; }
+  .preset-group { width: 140px; }
+  .count-group { width: 52px; }
+  .size-group { width: 62px; }
+  .ttl-group { width: 52px; }
+  .timeout-group { width: 68px; }
+  .options-group {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding-bottom: 5px;
+  }
+  .header-help-hint {
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.35);
+    color: #93c5fd;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: 6px;
+    transition: all 0.15s ease;
+    font-family: inherit;
+  }
+  .header-help-hint:hover {
+    background: rgba(59, 130, 246, 0.3);
+    border-color: #60a5fa;
+    color: #ffffff;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.35);
+  }
+  .header-help-hint:focus-visible {
+    outline: 2px solid var(--accent);
   }
   .input-group {
     display: flex; flex-direction: column; gap: 3px;
@@ -167,8 +214,9 @@
 
   /* Toast Notification System */
   .toast-container {
-    position: fixed; top: 14px; right: 14px; z-index: 1000;
-    display: flex; flex-direction: column; gap: 8px; pointer-events: none;
+    position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 1000;
+    display: flex; flex-direction: column; gap: 8px; pointer-events: none; align-items: center;
+    max-width: 90vw;
   }
   .toast {
     pointer-events: auto; padding: 9px 13px; border-radius: 8px; font-size: 12px; font-weight: 500;
@@ -233,72 +281,76 @@
 </head>
 <body>
   <div class="glass controls">
-    <div class="input-group" style="flex: 1; min-width: 140px;">
-      <label for="host">Target Host / IP</label>
-      <input type="text" id="host" value="127.0.0.1" placeholder="e.g. 1.1.1.1 or google.com" title="Target IP address or domain name (Press Enter to Ping)">
+    <div class="controls-row">
+      <div class="input-group host-group">
+        <label for="host">Target Host / IP</label>
+        <input type="text" id="host" value="127.0.0.1" placeholder="e.g. 1.1.1.1 or google.com" title="Target IP address or domain name (Press Enter to Ping)">
+      </div>
+      <div class="input-group preset-group">
+        <label for="presetSelect">Presets</label>
+        <select id="presetSelect" title="Quickly select preset host [1-6]">
+          <option value="">Quick Presets...</option>
+          <option value="127.0.0.1">1. 127.0.0.1 (Localhost)</option>
+          <option value="1.1.1.1">2. 1.1.1.1 (Cloudflare)</option>
+          <option value="8.8.8.8">3. 8.8.8.8 (Google DNS)</option>
+          <option value="9.9.9.9">4. 9.9.9.9 (Quad9 DNS)</option>
+          <option value="208.67.222.222">5. 208.67.222.222 (OpenDNS)</option>
+          <option value="192.168.1.1">6. 192.168.1.1 (Gateway)</option>
+        </select>
+      </div>
+      <div class="input-group count-group">
+        <label for="count">Count</label>
+        <input type="number" id="count" value="4" min="1" max="1000" title="Number of echo requests to send">
+      </div>
+      <div class="input-group size-group">
+        <label for="size">Size (B)</label>
+        <input type="number" id="size" value="32" min="1" max="65500" title="Payload buffer size in bytes (excludes 28B header)">
+      </div>
+      <div class="input-group ttl-group">
+        <label for="ttl">TTL</label>
+        <input type="number" id="ttl" value="115" min="1" max="255" title="Time-To-Live hop limit">
+      </div>
+      <div class="input-group timeout-group">
+        <label for="timeout">Wait(ms)</label>
+        <input type="number" id="timeout" value="1000" min="100" max="10000" step="100" title="Per-packet reply timeout threshold">
+      </div>
+      <div class="options-group">
+        <label class="checkbox-group" for="continuous" title="Continuous ping loop until stopped">
+          <input type="checkbox" id="continuous">
+          <span style="font-size: 11px; color: var(--text-muted)">-t (Cont)</span>
+        </label>
+        <label class="checkbox-group" for="hexdump" title="Display raw packet payload buffer in hexadecimal">
+          <input type="checkbox" id="hexdump">
+          <span style="font-size: 11px; color: var(--text-muted)">Hex Dump</span>
+        </label>
+        <label class="checkbox-group" for="dfbit" title="Set Don't-Fragment bit in IP header">
+          <input type="checkbox" id="dfbit">
+          <span style="font-size: 11px; color: var(--text-muted)">-f (DF)</span>
+        </label>
+        <label class="checkbox-group" for="resolveCheck" title="Resolve IP addresses to hostnames">
+          <input type="checkbox" id="resolveCheck">
+          <span style="font-size: 11px; color: var(--text-muted)">-a (Resolve)</span>
+        </label>
+      </div>
     </div>
-    <div class="input-group" style="width: 140px;">
-      <label for="presetSelect">Presets</label>
-      <select id="presetSelect" title="Quickly select preset host [1-6]">
-        <option value="">Quick Presets...</option>
-        <option value="127.0.0.1">1. 127.0.0.1 (Localhost)</option>
-        <option value="1.1.1.1">2. 1.1.1.1 (Cloudflare)</option>
-        <option value="8.8.8.8">3. 8.8.8.8 (Google DNS)</option>
-        <option value="9.9.9.9">4. 9.9.9.9 (Quad9 DNS)</option>
-        <option value="208.67.222.222">5. 208.67.222.222 (OpenDNS)</option>
-        <option value="192.168.1.1">6. 192.168.1.1 (Gateway)</option>
-      </select>
+    
+    <div class="actions-row">
+      <div class="actions-left">
+        <button id="btnAction" class="btn btn-primary" title="Start/Stop Ping [P]">Ping <span class="kbd-badge">P</span></button>
+        <button id="btnTrace" class="btn btn-primary" title="Start/Stop Route Trace [T]">Trace <span class="kbd-badge">T</span></button>
+        <button id="btnMTU" class="btn btn-mtu" title="Path MTU Discovery [M]">MTU <span class="kbd-badge">M</span></button>
+        <button id="btnSubnet" class="btn btn-subnet" title="Subnet LAN Discovery Sweep [S]">Subnet <span class="kbd-badge">S</span></button>
+        <button id="btnDNS" class="btn btn-dns" title="DNS & IP Inspector [D]">DNS <span class="kbd-badge">D</span></button>
+      </div>
+      <div class="actions-divider"></div>
+      <div class="actions-right">
+        <button id="btnExport" class="btn btn-secondary" title="Export Log / CSV / Markdown [E]">Export <span class="kbd-badge">E</span></button>
+        <button id="btnCopy" class="btn btn-secondary" title="Copy Console Log [Ctrl+C]">Copy <span class="kbd-badge">^C</span></button>
+        <button id="btnClear" class="btn btn-secondary" title="Clear Console [C]">Clear <span class="kbd-badge">C</span></button>
+        <button id="btnSound" class="btn btn-secondary" title="Toggle Sound Feedback [U]">Audio: ON <span class="kbd-badge">U</span></button>
+        <button id="btnHelp" class="btn btn-secondary" title="Help Guide [F1]">Help <span class="kbd-badge">F1</span></button>
+      </div>
     </div>
-    <div class="input-group" style="width: 50px;">
-      <label for="count">Count</label>
-      <input type="number" id="count" value="4" min="1" max="1000" title="Number of echo requests to send">
-    </div>
-    <div class="input-group" style="width: 60px;">
-      <label for="size">Size (B)</label>
-      <input type="number" id="size" value="32" min="1" max="65500" title="Payload buffer size in bytes (excludes 28B header)">
-    </div>
-    <div class="input-group" style="width: 52px;">
-      <label for="ttl">TTL</label>
-      <input type="number" id="ttl" value="115" min="1" max="255" title="Time-To-Live hop limit">
-    </div>
-    <div class="input-group" style="width: 68px;">
-      <label for="timeout">Wait(ms)</label>
-      <input type="number" id="timeout" value="1000" min="100" max="10000" step="100" title="Per-packet reply timeout threshold">
-    </div>
-    <div class="input-group">
-      <label class="checkbox-group" for="continuous" style="padding: 0; margin-top: auto; margin-bottom: 5px;" title="Continuous ping loop until stopped">
-        <input type="checkbox" id="continuous">
-        <span style="font-size: 11px; color: var(--text-muted)">-t (Cont)</span>
-      </label>
-    </div>
-    <div class="input-group">
-      <label class="checkbox-group" for="hexdump" style="padding: 0; margin-top: auto; margin-bottom: 5px;" title="Display raw packet payload buffer in hexadecimal">
-        <input type="checkbox" id="hexdump">
-        <span style="font-size: 11px; color: var(--text-muted)">Hex Dump</span>
-      </label>
-    </div>
-    <div class="input-group">
-      <label class="checkbox-group" for="dfbit" style="padding: 0; margin-top: auto; margin-bottom: 5px;" title="Set Don't-Fragment bit in IP header">
-        <input type="checkbox" id="dfbit">
-        <span style="font-size: 11px; color: var(--text-muted)">-f (DF)</span>
-      </label>
-    </div>
-    <div class="input-group">
-      <label class="checkbox-group" for="resolveCheck" style="padding: 0; margin-top: auto; margin-bottom: 5px;" title="Resolve IP addresses to hostnames">
-        <input type="checkbox" id="resolveCheck">
-        <span style="font-size: 11px; color: var(--text-muted)">-a (Resolve)</span>
-      </label>
-    </div>
-    <button id="btnAction" class="btn btn-primary" title="Start/Stop Ping [P]">Ping <span class="kbd-badge">P</span></button>
-    <button id="btnTrace" class="btn btn-primary" title="Start/Stop Route Trace [T]">Trace <span class="kbd-badge">T</span></button>
-    <button id="btnMTU" class="btn btn-mtu" title="Path MTU Discovery [M]">MTU <span class="kbd-badge">M</span></button>
-    <button id="btnSubnet" class="btn btn-subnet" title="Subnet LAN Discovery Sweep [S]">Subnet <span class="kbd-badge">S</span></button>
-    <button id="btnDNS" class="btn btn-dns" title="DNS & IP Inspector [D]">DNS <span class="kbd-badge">D</span></button>
-    <button id="btnExport" class="btn btn-secondary" title="Export Log / CSV / Markdown [E]">Export <span class="kbd-badge">E</span></button>
-    <button id="btnCopy" class="btn btn-secondary" title="Copy Console Log [Ctrl+C]">Copy <span class="kbd-badge">^C</span></button>
-    <button id="btnClear" class="btn btn-secondary" title="Clear Console [C]">Clear <span class="kbd-badge">C</span></button>
-    <button id="btnSound" class="btn btn-secondary" title="Toggle Sound Feedback [U]">Audio: ON <span class="kbd-badge">U</span></button>
-    <button id="btnHelp" class="btn btn-secondary" title="Help Guide [F1]">Help <span class="kbd-badge">F1</span></button>
   </div>
   
   <div class="terminal-container">
@@ -309,13 +361,16 @@
         <div class="dot dot-green"></div>
         <span style="margin-left: 6px; font-size: 11.5px; color: var(--text-muted); font-family: monospace;">KPing Diagnostics Log</span>
         <span id="statusBadge" class="status-badge"><span class="pulse-dot"></span><span id="statusText">IDLE</span></span>
+        <button id="headerHelpBtn" class="header-help-hint" title="Open Help Guide & Shortcuts (F1 or H)" aria-label="Open Help Guide">
+          <span style="font-weight: 700; font-size: 11px;">?</span> Shortcuts [F1/H]
+        </button>
         
         <div class="filter-bar">
-          <span class="filter-pill active" data-filter="all">All</span>
-          <span class="filter-pill" data-filter="reply">Replies</span>
-          <span class="filter-pill" data-filter="loss">Loss/Errors</span>
-          <span class="filter-pill" data-filter="hops">Hops</span>
-          <span class="filter-pill" data-filter="probes">Probes</span>
+          <span class="filter-pill active" data-filter="all" tabindex="0" role="button">All</span>
+          <span class="filter-pill" data-filter="reply" tabindex="0" role="button">Replies</span>
+          <span class="filter-pill" data-filter="loss" tabindex="0" role="button">Loss/Errors</span>
+          <span class="filter-pill" data-filter="hops" tabindex="0" role="button">Hops</span>
+          <span class="filter-pill" data-filter="probes" tabindex="0" role="button">Probes</span>
           <input type="text" id="filterInput" placeholder="Filter log..." title="Filter console output lines">
         </div>
       </div>
@@ -515,7 +570,7 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
 
 <script>
   if (window.parent && window.parent !== window) {
-      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 940, height: 680 }, '*');
+      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 960, height: 700 }, '*');
   }
 
   function escapeHtml(str) {
@@ -844,8 +899,17 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
     }
   }
 
+  function closeAllModals() {
+    helpModal.classList.remove('active');
+    exportModal.classList.remove('active');
+    while (toastContainer.firstChild) {
+      toastContainer.removeChild(toastContainer.firstChild);
+    }
+  }
+
   function openHelpModal() {
     lastFocusedEl = document.activeElement;
+    closeAllModals();
     helpModal.classList.add('active');
     modalCloseBtn.focus();
   }
@@ -865,7 +929,9 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
 
   function openExportModal() {
     lastFocusedEl = document.activeElement;
+    closeAllModals();
     exportModal.classList.add('active');
+    exportCloseBtn.focus();
   }
 
   function closeExportModal() {
@@ -880,6 +946,11 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
   exportModal.onclick = (e) => {
     if (e.target === exportModal) closeExportModal();
   };
+
+  const headerHelpBtn = document.getElementById('headerHelpBtn');
+  if (headerHelpBtn) {
+    headerHelpBtn.onclick = openHelpModal;
+  }
 
   presetSelect.addEventListener('change', () => {
     if (isBusy()) return;
@@ -910,6 +981,12 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
     drawGraph();
   }
   window.addEventListener('resize', resizeCanvas);
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(() => {
+      requestAnimationFrame(resizeCanvas);
+    });
+    if (canvas.parentElement) ro.observe(canvas.parentElement);
+  }
 
   continuousCheck.addEventListener('change', () => {
     countInput.disabled = continuousCheck.checked;
@@ -923,6 +1000,12 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
       pill.classList.add('active');
       currentFilter = pill.dataset.filter;
       applyConsoleFilter();
+    });
+    pill.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        pill.click();
+      }
     });
   });
 
@@ -2038,9 +2121,15 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
   window.addEventListener('DOMContentLoaded', resizeCanvas);
   setTimeout(resizeCanvas, 100);
 
-  // Startup Welcome Toast
+  // Startup Welcome & Onboarding
   setTimeout(() => {
-    showToast("⚡ <strong>KPing Diagnostics Suite Ready</strong><br>Modes: <strong>[P]</strong>ing, <strong>[T]</strong>race, <strong>[M]</strong>TU, <strong>[S]</strong>ubnet, <strong>[D]</strong>NS • <strong>[F1]</strong> Help", "info", 5000);
+    const onboarded = safeGetStorage('kping_onboarded', false);
+    if (!onboarded) {
+      safeSetStorage('kping_onboarded', true);
+      showToast("💡 <strong>Welcome to KPing!</strong> Press <strong>F1</strong> or <strong>H</strong> anytime for the interactive manual and keyboard shortcuts.", "info", 6000);
+    } else {
+      showToast("⚡ <strong>KPing Diagnostics Ready</strong> • Modes: <strong>[P]</strong>ing, <strong>[T]</strong>race, <strong>[M]</strong>TU, <strong>[S]</strong>ubnet, <strong>[D]</strong>NS • <strong>[F1]</strong> Help", "info", 3500);
+    }
   }, 400);
 </script>
 </body>

@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-28T09:55:00Z — kilo-qa: KTodo (Pass 5: Tutorial & State Integrity Audit)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
+  - Snapshot Persistence: Full F5 quicksave & F9 quickload capturing tasks, workspaces, tags, and search query in web and Win32 C `ktodo_quicksave.dat`.
+  - Session Recovery: Fixed startup workspace null bug ensuring workspace selector and task sync restore seamlessly.
+  - Toast Occlusion Remediation: Center-anchored notification toasts to avoid header button occlusion; added focusin auto-dismiss.
+  - Modal Ergonomics: Prevented modal stacking across Help, IO, Tutorial, and Collab dialogs; added tour guide launcher and Enter join key.
+  - Resource Cleanliness: Ensured Firebase RTDB listeners, object URLs, and timers are released on pagehide/unload.
+  - Verification: MSVC clean (`KTodo.exe` 23.0 KB); Vite build in 389ms (`ktodo.html` 123.8 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-28T08:50:00Z — kilo-graphics: KSubmarine (Game Content, Visual Polish & Balance Pass)**
   - Status: PASS ✅ (0 rotating glints / traveling border dots, 0 regressions, clean builds, <999KB ceiling verified).
   - Glint & Dot Audit: Verified 100% absence of rotating specular glints or traveling perimeter border dots across web & C.
