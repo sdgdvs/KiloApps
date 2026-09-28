@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-28T20:25:00Z — kilo-qa: KType (Pass 5 QA & Build Quality, Mouse Interactivity, Quicksave State Integrity)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
+  - State Persistence: Implemented accurate elapsed time resumption and mid-word typing highlights on quickload in web and native C.
+  - Native Navigation: Added WM_LBUTTONDOWN mouse click handling across all mode tabs, help screen, save/load, and game restarts.
+  - Controls & Modals: Standardized universal F1/H Help toggle with mutual exclusion against tutorial modal; anchored toasts bottom-right.
+  - Verification: MSVC clean (`KType.exe` 22.5 KB); Vite clean in 314ms (`ktype.html` 82.0 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-28T20:15:00Z — kilo-graphics: KAbyss (Game Content, YM2612 FM Audio, Dread Lich & Balance Pass)**
   - Status: PASS ✅ (0 rotating glints / traveling border dots, 0 regressions, clean builds, <999KB verified).
   - Glint & Dot Audit: Verified 100% absence of rotating specular glints or traveling perimeter border dots across web & native C.

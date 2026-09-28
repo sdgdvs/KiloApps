@@ -268,6 +268,15 @@
           <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Bare Fists:</strong>&nbsp;Brawler's Fury grants double Crowd Favor gain per landed hit.</li>
         </ul>
 
+        <p><strong>ARENA LEGENDS & SPECIAL BOSSES:</strong></p>
+        <ul style="list-style-type:disc; padding-left:20px;">
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Ferocious Lion:</strong>&nbsp;Fast, savage beast with bleeding claws and high agility.</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Armed Chariot:</strong>&nbsp;High-momentum war horse and scythed wheel carriage with devastating charges.</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Twin Gladiators:</strong>&nbsp;Dual-fighter tag team executing coordinated flanking strikes.</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Gallic Behemoth:</strong>&nbsp;Colossal barbarian titan with spiked war maul and earth-shattering slams.</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Praetorian Champion (Level 6+):</strong>&nbsp;Imperial elite in gilded lorica squamata with purple cape, Roman scutum bulwark, and spatha thrusts. Grants massive Denarii and +35 Favor!</li>
+        </ul>
+
         <div style="display:flex; justify-content:space-between; margin-top:20px; flex-wrap:wrap; gap:10px;">
           <button onclick="showTutorial()" style="border-color:#d4af37;">📜 View First-Run Briefing</button>
           <button onclick="closeAllModals()">Close Guide [Esc]</button>
@@ -338,73 +347,183 @@
   </div>
 
   <script>
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    
-    function playTone(freq, type, duration, vol) {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
+    // --- YAMAHA YM2612 2-OPERATOR FM SYNTHESIS & SPC700 DELAY AUDIO ENGINE ---
+    let audioCtx = null;
+    let spcDelay = null;
+    let spcFeedback = null;
+    let spcDamp = null;
+
+    function initAudio() {
+      if (audioCtx) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        return audioCtx;
+      }
+      try {
+        const AudioClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioClass) return null;
+        audioCtx = new AudioClass();
+        
+        // SNES SPC700 Stereo Delay & Spatial Warmth Network
+        spcDelay = audioCtx.createDelay(0.5);
+        spcDelay.delayTime.value = 0.045; // 45ms warm slapback
+        spcFeedback = audioCtx.createGain();
+        spcFeedback.gain.value = 0.22;
+        spcDamp = audioCtx.createBiquadFilter();
+        spcDamp.type = 'lowpass';
+        spcDamp.frequency.value = 3400; // Warm analog tape / SPC700 rolloff
+
+        spcDelay.connect(spcDamp);
+        spcDamp.connect(spcFeedback);
+        spcFeedback.connect(spcDelay);
+        spcDamp.connect(audioCtx.destination);
+      } catch (e) {
+        audioCtx = null;
+      }
+      return audioCtx;
+    }
+
+    // Sega Genesis YM2612 2-Operator FM Synthesizer Voice
+    function playFM(carrierFreq, modRatio, modIndex, duration, vol = 0.3, type = 'sine') {
+      const ctx = initAudio();
+      if (!ctx) return;
+      const t = ctx.currentTime;
+
+      // Operator 2 (Modulator)
+      const op2 = ctx.createOscillator();
+      const op2Gain = ctx.createGain();
+      op2.type = type;
+      op2.frequency.setValueAtTime(carrierFreq * modRatio, t);
+      op2Gain.gain.setValueAtTime(modIndex, t);
+      op2Gain.gain.exponentialRampToValueAtTime(0.01, t + duration * 0.9);
+      op2.connect(op2Gain);
+
+      // Operator 1 (Carrier)
+      const op1 = ctx.createOscillator();
+      const masterGain = ctx.createGain();
+      op1.type = type;
+      op1.frequency.setValueAtTime(carrierFreq, t);
+      op2Gain.connect(op1.frequency);
+
+      masterGain.gain.setValueAtTime(vol, t);
+      masterGain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+
+      op1.connect(masterGain);
+      masterGain.connect(ctx.destination);
+      if (spcDelay) masterGain.connect(spcDelay);
+
+      op2.start(t);
+      op1.start(t);
+      op2.stop(t + duration);
+      op1.stop(t + duration);
+    }
+
+    function playTone(freq, type = 'sine', duration = 0.15, vol = 0.25) {
+      const ctx = initAudio();
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
       osc.type = type;
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(vol, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(ctx.destination);
+      if (spcDelay) gain.connect(spcDelay);
       osc.start();
-      osc.stop(audioCtx.currentTime + duration);
+      osc.stop(ctx.currentTime + duration);
     }
 
     function playClash() {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const bufferSize = audioCtx.sampleRate * 0.1; 
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
-      const noise = audioCtx.createBufferSource();
-      noise.buffer = buffer;
-      const filter = audioCtx.createBiquadFilter();
-      filter.type = 'lowpass';
-      filter.frequency.value = 1000;
-      const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(1, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-      noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
-      noise.start();
-      playTone(800, 'square', 0.1, 0.3);
+      const ctx = initAudio();
+      if (!ctx) return;
+      // FM metallic sword blade clash (2-op bell ring)
+      playFM(580, 2.76, 1200, 0.22, 0.35);
+      // Impact noise burst
+      try {
+        const bufferSize = Math.floor(ctx.sampleRate * 0.08);
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.3));
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 1400;
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.4, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        noise.start();
+      } catch (e) {}
     }
-    
+
+    function playShieldBash() {
+      const ctx = initAudio();
+      if (!ctx) return;
+      // Heavy bronze gong / shield clang
+      playFM(185, 1.41, 850, 0.35, 0.4);
+      playTone(95, 'triangle', 0.25, 0.45);
+    }
+
     function playMiss() {
-      playTone(150, 'sine', 0.2, 0.3);
+      const ctx = initAudio();
+      if (!ctx) return;
+      // Whoosh air slice
+      playTone(190, 'sine', 0.18, 0.25);
     }
 
     function playCheer() {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const bufferSize = audioCtx.sampleRate * 2.0; 
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
-      const noise = audioCtx.createBufferSource();
-      noise.buffer = buffer;
-      const filter = audioCtx.createBiquadFilter();
-      filter.type = 'bandpass'; filter.frequency.value = 500;
-      const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(0, audioCtx.currentTime);
-      gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.5);
-      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 2.0);
-      noise.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
-      noise.start();
+      const ctx = initAudio();
+      if (!ctx) return;
+      try {
+        const bufferSize = Math.floor(ctx.sampleRate * 1.8);
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 650;
+        filter.Q.value = 1.2;
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.45, ctx.currentTime + 0.4);
+        gain.gain.linearRampToValueAtTime(0.35, ctx.currentTime + 1.2);
+        gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 1.8);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        if (spcDelay) gain.connect(spcDelay);
+        noise.start();
+      } catch (e) {}
+    }
+
+    function playTrumpetFanfare() {
+      // Imperial Roman Brass Fanfare using FM Horns
+      const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+      notes.forEach((f, i) => {
+        setTimeout(() => {
+          playFM(f, 1.0, 550, i === 3 ? 0.6 : 0.2, 0.32, 'sawtooth');
+        }, i * 110);
+      });
     }
 
     function playVictory() {
-      playTone(440, 'square', 0.15, 0.4);
-      setTimeout(() => playTone(440, 'square', 0.15, 0.4), 150);
-      setTimeout(() => playTone(440, 'square', 0.15, 0.4), 300);
-      setTimeout(() => playTone(587.33, 'square', 0.4, 0.4), 450);
+      playTrumpetFanfare();
+      setTimeout(() => playCheer(), 250);
     }
 
     function playDefeat() {
-      playTone(200, 'sawtooth', 0.5, 0.4);
-      setTimeout(() => playTone(150, 'sawtooth', 1.0, 0.4), 500);
+      // Somber minor descent with FM war horn
+      const notes = [220, 196, 174.61, 146.83];
+      notes.forEach((f, i) => {
+        setTimeout(() => {
+          playFM(f, 0.5, 300, 0.45, 0.3, 'sawtooth');
+        }, i * 220);
+      });
     }
 
     let funds = 1000;
@@ -1638,6 +1757,262 @@
       ctx.restore();
     }
 
+    function drawPraetorianVisual(ctx, x, y, state, time) {
+      ctx.save();
+      
+      if (state.flash > 0) {
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 16;
+      }
+
+      let bob = Math.sin(time * 4) * 2;
+      let lungeX = state.lunge || 0;
+      let drawX = x - lungeX;
+      let drawY = y + (state.stance === 'dead' ? 24 : bob);
+
+      if (state.stance === 'dead') {
+        // Slumped imperial champion defeat pose on sand
+        ctx.fillStyle = 'rgba(25, 5, 15, 0.45)';
+        ctx.beginPath();
+        ctx.ellipse(drawX, drawY + 20, 36, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Billowing purple cloak pooling on sand
+        ctx.fillStyle = '#4a0e28';
+        ctx.beginPath();
+        ctx.ellipse(drawX - 6, drawY + 16, 26, 12, 0.1, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Slumped golden armored body
+        ctx.fillStyle = '#b8860b';
+        ctx.fillRect(drawX - 16, drawY + 8, 22, 10);
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.arc(drawX - 2, drawY + 12, 6, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Fallen Transverse Crested Helmet
+        ctx.fillStyle = '#d4af37';
+        ctx.beginPath();
+        ctx.arc(drawX - 24, drawY + 16, 9, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#7b1fa2';
+        ctx.beginPath();
+        ctx.ellipse(drawX - 24, drawY + 10, 10, 4, 0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Dropped Golden Roman Scutum Shield
+        ctx.fillStyle = '#8b0000';
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(drawX + 8, drawY + 10, 24, 14, 4);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath();
+        ctx.arc(drawX + 20, drawY + 17, 3.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Dropped Spatha sword
+        ctx.save();
+        ctx.translate(drawX - 8, drawY + 22);
+        ctx.rotate(-0.35);
+        ctx.fillStyle = '#e6e6f0';
+        ctx.fillRect(-2, -24, 4, 28);
+        ctx.fillStyle = '#ffd700';
+        ctx.fillRect(-6, 0, 12, 3);
+        ctx.restore();
+
+        ctx.restore();
+        return;
+      }
+
+      // Ground Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.beginPath();
+      ctx.ellipse(x - lungeX * 0.6, y + 42, 28, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Billowing Imperial Crimson/Purple Cloak behind body
+      const cloakSway = Math.sin(time * 3.5) * 5;
+      ctx.fillStyle = '#581136';
+      ctx.strokeStyle = '#380b22';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(drawX + 8, drawY - 2);
+      ctx.quadraticCurveTo(drawX + 26 + cloakSway, drawY + 12, drawX + 22 + cloakSway, drawY + 34);
+      ctx.lineTo(drawX + 2, drawY + 32);
+      ctx.lineTo(drawX - 8, drawY + 10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Golden Greaves (Ocreae) & Caligae sandals
+      ctx.fillStyle = '#8b4513';
+      ctx.fillRect(drawX - 9, drawY + 18, 6, 22);
+      ctx.fillRect(drawX + 3, drawY + 18, 6, 22);
+      // Gilded Greaves with lion knee cops
+      ctx.fillStyle = '#ffd700';
+      ctx.strokeStyle = '#b8860b';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(drawX - 10, drawY + 24, 7, 14, 2);
+      ctx.roundRect(drawX + 2, drawY + 24, 7, 14, 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Imperial Purple Tunic
+      ctx.fillStyle = '#4a0e2e';
+      ctx.beginPath();
+      ctx.moveTo(drawX - 14, drawY + 2);
+      ctx.lineTo(drawX + 14, drawY + 2);
+      ctx.lineTo(drawX + 16, drawY + 22);
+      ctx.lineTo(drawX - 16, drawY + 22);
+      ctx.closePath();
+      ctx.fill();
+      // Gold hem trim
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Gilded Lorica Squamata / Cuirass (Scale Armor in Gold)
+      ctx.fillStyle = '#ffd700';
+      ctx.strokeStyle = '#b8860b';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(drawX - 12, drawY + 2, 24, 16, 3);
+      ctx.fill();
+      ctx.stroke();
+      // Embossed Golden Lion Medallion on chest
+      ctx.fillStyle = '#d4af37';
+      ctx.beginPath();
+      ctx.arc(drawX, drawY + 9, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#b8860b';
+      ctx.stroke();
+
+      // Heavy Golden Pauldrons
+      ctx.fillStyle = '#ffd700';
+      ctx.beginPath();
+      ctx.arc(drawX - 13, drawY + 4, 5, 0, Math.PI * 2);
+      ctx.arc(drawX + 13, drawY + 4, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Head & Skin
+      ctx.fillStyle = '#d29a68';
+      ctx.beginPath();
+      ctx.arc(drawX, drawY - 12, 11, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Imperial Centurion/Praetorian Helmet (Bronze & Gold)
+      ctx.fillStyle = '#d4af37';
+      ctx.beginPath();
+      ctx.arc(drawX, drawY - 14, 12, Math.PI * 0.85, Math.PI * 2.15);
+      ctx.fill();
+      // Cheek guards
+      ctx.fillStyle = '#b8860b';
+      ctx.fillRect(drawX - 9, drawY - 12, 4, 10);
+      ctx.fillRect(drawX + 5, drawY - 12, 4, 10);
+      // Laurel wreath brow band
+      ctx.fillStyle = '#ffd700';
+      ctx.fillRect(drawX - 9, drawY - 18, 18, 3);
+
+      // Transverse Horsehair Helmet Crest (Imperial Purple & Gold)
+      ctx.fillStyle = '#7b1fa2';
+      ctx.beginPath();
+      ctx.ellipse(drawX, drawY - 26, 14, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.fillStyle = '#ffd700';
+      ctx.fillRect(drawX - 3, drawY - 22, 6, 8);
+
+      // Golden Roman Scutum Tower Shield (Front Left)
+      let shieldX = drawX + 14;
+      let shieldY = drawY + 4;
+      if (state.stance === 'defend') {
+        shieldX = drawX + 6;
+        shieldY = drawY + 2;
+      }
+      ctx.save();
+      ctx.fillStyle = '#8b0000';
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.roundRect(shieldX - 8, shieldY - 12, 16, 32, 4);
+      ctx.fill();
+      ctx.stroke();
+      // Winged Thunderbolts & Central Boss
+      ctx.fillStyle = '#ffd700';
+      ctx.beginPath();
+      ctx.arc(shieldX, shieldY + 4, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(shieldX - 6, shieldY - 4); ctx.lineTo(shieldX, shieldY + 4); ctx.lineTo(shieldX + 6, shieldY - 4);
+      ctx.moveTo(shieldX - 6, shieldY + 12); ctx.lineTo(shieldX, shieldY + 4); ctx.lineTo(shieldX + 6, shieldY + 12);
+      ctx.stroke();
+      ctx.restore();
+
+      // Spatha Longsword on right arm
+      let swordAngle = (state.stance === 'attack') ? -1.6 : -0.3;
+      let swordX = drawX - 12;
+      let swordY = drawY + 6;
+      if (state.stance === 'attack') {
+        swordX = drawX - 22;
+        swordY = drawY + 4;
+      }
+      ctx.save();
+      ctx.translate(swordX, swordY);
+      ctx.rotate(swordAngle);
+      // Steel blade
+      ctx.fillStyle = '#f5f5fa';
+      ctx.strokeStyle = '#9999aa';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-3, 0);
+      ctx.lineTo(3, 0);
+      ctx.lineTo(2, -36);
+      ctx.lineTo(0, -42);
+      ctx.lineTo(-2, -36);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      // Center ridge
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(-0.75, -38, 1.5, 34);
+      // Golden Eagle crossguard & pommel
+      ctx.fillStyle = '#ffd700';
+      ctx.fillRect(-7, -1, 14, 3.5);
+      ctx.beginPath();
+      ctx.arc(0, 8, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      // Slashing shockwave arc when attacking
+      if (state.stance === 'attack' || state.lunge > 15) {
+        ctx.strokeStyle = 'rgba(255, 215, 0, 0.85)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(drawX - 28, drawY, 26, -0.6, 0.8);
+        ctx.stroke();
+      }
+
+      // Phalanx Bulwark Aura when defending
+      if (state.stance === 'defend') {
+        ctx.strokeStyle = 'rgba(255, 215, 0, 0.7)';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.ellipse(drawX, drawY + 4, 26, 30, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
     function drawArenaEnvironment(ctx, width, height, time) {
       // Sky / Colosseum Upper Tier Gradient
       const skyGrad = ctx.createLinearGradient(0, 0, 0, height * 0.55);
@@ -1707,6 +2082,16 @@
       ctx.lineTo(width * 0.62, height);
       ctx.closePath();
       ctx.fill();
+
+      // Atmospheric Dust Motes drifting peacefully in Sunbeams
+      ctx.fillStyle = 'rgba(255, 230, 160, 0.45)';
+      for (let m = 0; m < 16; m++) {
+        let mx = (40 + m * 42 + Math.sin(time * 0.6 + m * 1.7) * 16 + time * 8) % (width * 0.88);
+        let my = (15 + (m * 21 + time * 14) % (height * 0.82));
+        ctx.beginPath();
+        ctx.arc(mx, my, (m % 3 === 0) ? 1.4 : 0.9, 0, Math.PI * 2);
+        ctx.fill();
+      }
       ctx.restore();
 
       // Crowd Tier Silhouettes & Dynamic Cheering
@@ -1877,6 +2262,8 @@
           drawGladiatorVisual(arenaCtx, enemyX - 6, enemyY + 4, enemyFighter, true, enemyState, time);
         } else if (enemyFighter.isBehemoth) {
           drawBehemothVisual(arenaCtx, enemyX, enemyY, enemyState, time);
+        } else if (enemyFighter.isPraetorian) {
+          drawPraetorianVisual(arenaCtx, enemyX, enemyY, enemyState, time);
         } else {
           drawGladiatorVisual(arenaCtx, enemyX, enemyY, enemyFighter, true, enemyState, time);
         }
@@ -2000,7 +2387,7 @@
       
       let isSpecial = (arenaLevel > 2 && Math.random() < 0.35);
       if (isSpecial) {
-        let maxEvents = (arenaLevel >= 4) ? 4 : 3;
+        let maxEvents = (arenaLevel >= 6) ? 5 : ((arenaLevel >= 4) ? 4 : 3);
         let eventType = Math.floor(Math.random() * maxEvents);
         if (eventType === 0) {
           enemyFighter.name = "Ferocious Lion";
@@ -2019,13 +2406,22 @@
           enemyFighter.vit += Math.floor(arenaLevel * 1.5);
           enemyFighter.str += Math.floor(arenaLevel * 1.5);
           enemyFighter.isTwins = true;
-        } else {
+        } else if (eventType === 3) {
           enemyFighter.name = "Gallic Behemoth";
           enemyFighter.vit += Math.floor(arenaLevel * 3.5);
           enemyFighter.str += Math.floor(arenaLevel * 2.5);
           enemyFighter.agi = Math.max(2, enemyFighter.agi - 1);
           enemyFighter.armor = 1;
           enemyFighter.isBehemoth = true;
+        } else {
+          enemyFighter.name = "Praetorian Champion";
+          enemyFighter.vit += Math.floor(arenaLevel * 3.0);
+          enemyFighter.str += Math.floor(arenaLevel * 2.0);
+          enemyFighter.agi += Math.floor(arenaLevel * 1.5);
+          enemyFighter.armor = 1;
+          enemyFighter.shield = 1;
+          enemyFighter.weapon = 1;
+          enemyFighter.isPraetorian = true;
         }
       } else {
         enemyFighter.str += Math.floor(arenaLevel * 1.5);
@@ -2058,7 +2454,8 @@
       const log = document.getElementById('combatLog');
       log.innerHTML = `<em>Match starts! <strong>${currentFighter.name}</strong> vs <strong>${enemyFighter.name}</strong></em><br>`;
       
-      playCheer();
+      playTrumpetFanfare();
+      setTimeout(playCheer, 200);
       setCombatButtonsDisabled(false);
       updateCombatUI();
 
@@ -2091,7 +2488,8 @@
     function checkCrowdFavor() {
       if (crowdFavor >= 100) {
         crowdFavor = 0;
-        playCheer();
+        playTrumpetFanfare();
+        setTimeout(playCheer, 250);
         addScreenShake(8);
         if (Math.random() < 0.5) {
           let gold = 50 + Math.floor(Math.random() * 51);
@@ -2230,8 +2628,13 @@
         enemyState.stance = 'dead';
         updateCombatUI();
         let reward = 100 + (arenaLevel * 50);
-        if (enemyFighter.isBeast || enemyFighter.isTwins || enemyFighter.name === "Armed Chariot" || enemyFighter.isBehemoth) {
+        if (enemyFighter.isBeast || enemyFighter.isTwins || enemyFighter.name === "Armed Chariot" || enemyFighter.isBehemoth || enemyFighter.isPraetorian) {
             reward += 100 + (arenaLevel * 25);
+        }
+        if (enemyFighter.isPraetorian) {
+          reward += 150;
+          crowdFavor = Math.min(100, crowdFavor + 35);
+          playTrumpetFanfare();
         }
         logCombat(`<strong>${enemyFighter.name} is defeated! You win ${reward} Denarii!</strong>`);
         playVictory();
@@ -2270,7 +2673,7 @@
       setTimeout(() => {
         if (combatOver) return;
 
-        enemyDefending = Math.random() < 0.25;
+        enemyDefending = Math.random() < (enemyFighter.isPraetorian ? 0.40 : 0.25);
         if (enemyDefending) {
           logCombat(`${enemyFighter.name} takes a defensive stance.`);
           enemyState.stance = 'defend';
@@ -2285,6 +2688,10 @@
             addScreenShake(12);
             spawnParticles(pX, pY, 16, 'dust');
             logCombat(`<em>The Gallic Behemoth slams his colossal war maul into the earth!</em>`);
+          } else if (enemyFighter.isPraetorian) {
+            addScreenShake(8);
+            spawnParticles(eX, eY, 16, 'sparks', '#ffd700');
+            logCombat(`<em>The Praetorian Champion executes a disciplined imperial thrust!</em>`);
           }
 
           let hitChance = 75 + (getEffAgi(enemyFighter) - getEffAgi(currentFighter)) * 5;
@@ -2326,7 +2733,7 @@
               logCombat(`<strong>${currentFighter.name}</strong> counters with a ferocious <strong>Shield Bash</strong> for <span style="color:#d4af37;">${bashDmg} damage</span>!`);
               addFloatingText(`BASH -${bashDmg}`, eX, eY - 30, '#ffd700');
               spawnParticles(eX, eY, 12, 'sparks', '#ffd700');
-              playClash();
+              playShieldBash();
             }
           }
           

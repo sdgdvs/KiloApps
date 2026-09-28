@@ -31,6 +31,7 @@ DWORD WINAPI SoundThread(LPVOID lpParam) {
     else if (type == 3) { Beep(500, 100); Beep(550, 100); Beep(600, 100); Beep(650, 200); }
     else if (type == 4) { Beep(440, 150); Sleep(50); Beep(440, 150); Sleep(50); Beep(440, 150); Sleep(50); Beep(587, 400); }
     else if (type == 5) { Beep(200, 500); Beep(150, 1000); }
+    else if (type == 6) { Beep(523, 100); Sleep(25); Beep(659, 100); Sleep(25); Beep(784, 150); Sleep(25); Beep(1046, 300); }
     return 0;
 }
 void PlaySoundAsync(int type) {
@@ -75,6 +76,7 @@ typedef struct {
     int isTwins;
     int isBeast;
     int isBehemoth;
+    int isPraetorian;
 } Gladiator;
 
 typedef struct {
@@ -153,6 +155,7 @@ Gladiator GenerateGladiator(int forArena) {
     g.isTwins = 0;
     g.isBeast = 0;
     g.isBehemoth = 0;
+    g.isPraetorian = 0;
     g.desc[0] = '\0';
     g.id = nextId++;
     
@@ -378,7 +381,7 @@ void UpdateCombatUI() {
 void CheckCrowdFavor() {
     if (crowdFavor >= 100) {
         crowdFavor = 0;
-        PlaySoundAsync(3);
+        PlaySoundAsync(6);
         AddScreenShake(8);
         char buf[128];
         if ((my_rand() % 100) < 50) {
@@ -411,7 +414,7 @@ void EnterArena(int index) {
     
     int isSpecial = (arenaLevel > 2 && (my_rand() % 100) < 35);
     if (isSpecial) {
-        int maxEvents = (arenaLevel >= 4) ? 4 : 3;
+        int maxEvents = (arenaLevel >= 6) ? 5 : ((arenaLevel >= 4) ? 4 : 3);
         int eventType = my_rand() % maxEvents;
         if (eventType == 0) {
             lstrcpyA(enemyFighter.name, "Ferocious Lion");
@@ -430,13 +433,22 @@ void EnterArena(int index) {
             enemyFighter.vit += (arenaLevel * 3) / 2;
             enemyFighter.str += (arenaLevel * 3) / 2;
             enemyFighter.isTwins = 1;
-        } else {
+        } else if (eventType == 3) {
             lstrcpyA(enemyFighter.name, "Gallic Behemoth");
             enemyFighter.vit += (arenaLevel * 7) / 2;
             enemyFighter.str += (arenaLevel * 5) / 2;
             enemyFighter.agi = (enemyFighter.agi > 2) ? (enemyFighter.agi - 1) : 2;
             enemyFighter.armor = 1;
             enemyFighter.isBehemoth = 1;
+        } else {
+            lstrcpyA(enemyFighter.name, "Praetorian Champion");
+            enemyFighter.vit += (arenaLevel * 6) / 2;
+            enemyFighter.str += (arenaLevel * 4) / 2;
+            enemyFighter.agi += (arenaLevel * 3) / 2;
+            enemyFighter.armor = 1;
+            enemyFighter.shield = 1;
+            enemyFighter.weapon = 1;
+            enemyFighter.isPraetorian = 1;
         }
     } else {
         enemyFighter.str += (arenaLevel * 3) / 2;
@@ -591,8 +603,13 @@ void CombatAction(int action) {
         g_enemyStance = 4;
         UpdateCombatUI();
         int reward = 100 + (arenaLevel * 50);
-        if (lstrcmpA(enemyFighter.name, "Ferocious Lion") == 0 || lstrcmpA(enemyFighter.name, "Armed Chariot") == 0 || enemyFighter.isTwins || enemyFighter.isBehemoth) {
+        if (lstrcmpA(enemyFighter.name, "Ferocious Lion") == 0 || lstrcmpA(enemyFighter.name, "Armed Chariot") == 0 || enemyFighter.isTwins || enemyFighter.isBehemoth || enemyFighter.isPraetorian) {
             reward += 100 + (arenaLevel * 25);
+        }
+        if (enemyFighter.isPraetorian) {
+            reward += 150;
+            crowdFavor += 35;
+            if (crowdFavor > 100) crowdFavor = 100;
         }
         wsprintfA(buf, "%s is defeated! You win %d Denarii!", enemyFighter.name, reward);
         LogCombat(buf);
@@ -617,7 +634,7 @@ void CombatAction(int action) {
         return;
     }
 
-    enemyDefending = (my_rand() % 100) < 25;
+    enemyDefending = (my_rand() % 100) < (enemyFighter.isPraetorian ? 40 : 25);
     if (enemyDefending) {
         wsprintfA(buf, "%s takes a defensive stance.", enemyFighter.name);
         LogCombat(buf);
@@ -631,6 +648,10 @@ void CombatAction(int action) {
             AddScreenShake(12);
             SpawnParticles(135, 115, 16, 1, RGB(180, 150, 110));
             LogCombat("The Gallic Behemoth slams his colossal war maul into the ground!");
+        } else if (enemyFighter.isPraetorian) {
+            AddScreenShake(8);
+            SpawnParticles(415, 95, 16, 0, RGB(255, 215, 0));
+            LogCombat("The Praetorian Champion executes a disciplined imperial thrust!");
         }
 
         int hitChance = 75 + (GetEffAgi(&enemyFighter) - GetEffAgi(currentFighter)) * 5;
@@ -1365,6 +1386,145 @@ void DrawBehemothGDI(HDC hdc, int x, int y, int lunge, int flash) {
     DeleteObject(hbrIron);
 }
 
+void DrawPraetorianGDI(HDC hdc, int x, int y, int lunge, int flash) {
+    int drawX = x - lunge;
+    int drawY = y;
+    int bob = FastSin((g_animTick * 3) & 15) / 8;
+    drawY += (g_enemyStance == 4 ? 20 : bob);
+
+    HBRUSH hbrShadow = CreateSolidBrush(RGB(20, 8, 4));
+    HPEN hpenNull = (HPEN)GetStockObject(NULL_PEN);
+    HGDIOBJ oldB = SelectObject(hdc, hbrShadow);
+    HGDIOBJ oldP = SelectObject(hdc, hpenNull);
+
+    // Defeat pose
+    if (g_enemyStance == 4) {
+        Ellipse(hdc, drawX - 22, drawY + 16, drawX + 22, drawY + 30);
+        // Purple cape on sand
+        HBRUSH hbrCapeDef = CreateSolidBrush(RGB(75, 18, 50));
+        SelectObject(hdc, hbrCapeDef);
+        RoundRect(hdc, drawX - 20, drawY + 8, drawX + 16, drawY + 24, 6, 6);
+        // Slumped golden armor
+        HBRUSH hbrGoldDef = CreateSolidBrush(RGB(212, 175, 55));
+        SelectObject(hdc, hbrGoldDef);
+        RoundRect(hdc, drawX - 14, drawY + 4, drawX + 8, drawY + 20, 4, 4);
+        // Fallen golden shield
+        RoundRect(hdc, drawX + 8, drawY + 12, drawX + 26, drawY + 26, 4, 4);
+        DeleteObject(hbrCapeDef);
+        DeleteObject(hbrGoldDef);
+        SelectObject(hdc, oldB);
+        SelectObject(hdc, oldP);
+        DeleteObject(hbrShadow);
+        return;
+    }
+
+    // Shadow
+    Ellipse(hdc, x - 22, y + 28, x + 22, y + 40);
+
+    // Billowing Imperial Purple Cape
+    HBRUSH hbrCape = CreateSolidBrush(RGB(95, 20, 60));
+    SelectObject(hdc, hbrCape);
+    int capeSway = FastSin((g_animTick * 2) & 15) / 10;
+    POINT capePts[4] = {
+        { drawX + 10, drawY - 4 },
+        { drawX + 24 + capeSway, drawY + 8 },
+        { drawX + 20 + capeSway, drawY + 32 },
+        { drawX + 2, drawY + 24 }
+    };
+    Polygon(hdc, capePts, 4);
+    DeleteObject(hbrCape);
+
+    // Greaves & Sandals
+    HBRUSH hbrGold = CreateSolidBrush(flash > 0 ? RGB(255, 255, 255) : RGB(218, 165, 32));
+    HBRUSH hbrSandals = CreateSolidBrush(RGB(90, 45, 15));
+    SelectObject(hdc, hbrSandals);
+    Rectangle(hdc, drawX - 8, drawY + 18, drawX - 2, drawY + 32);
+    Rectangle(hdc, drawX + 2, drawY + 18, drawX + 8, drawY + 32);
+    DeleteObject(hbrSandals);
+
+    // Golden Greaves
+    SelectObject(hdc, hbrGold);
+    Rectangle(hdc, drawX - 8, drawY + 22, drawX - 2, drawY + 30);
+    Rectangle(hdc, drawX + 2, drawY + 22, drawX + 8, drawY + 30);
+
+    // Imperial Tunic (Purple)
+    HBRUSH hbrTunic = CreateSolidBrush(RGB(65, 15, 40));
+    SelectObject(hdc, hbrTunic);
+    Rectangle(hdc, drawX - 10, drawY + 2, drawX + 10, drawY + 20);
+    DeleteObject(hbrTunic);
+
+    // Gilded Lorica Cuirass
+    SelectObject(hdc, hbrGold);
+    RoundRect(hdc, drawX - 9, drawY - 2, drawX + 9, drawY + 15, 3, 3);
+    // Lion head medallion
+    HBRUSH hbrDarkGold = CreateSolidBrush(RGB(180, 130, 20));
+    SelectObject(hdc, hbrDarkGold);
+    Ellipse(hdc, drawX - 3, drawY + 3, drawX + 3, drawY + 9);
+    DeleteObject(hbrDarkGold);
+
+    // Head
+    HBRUSH hbrSkin = CreateSolidBrush(RGB(210, 154, 104));
+    SelectObject(hdc, hbrSkin);
+    Ellipse(hdc, drawX - 8, drawY - 18, drawX + 8, drawY - 2);
+    DeleteObject(hbrSkin);
+
+    // Praetorian Crested Bronze Helmet
+    SelectObject(hdc, hbrGold);
+    Ellipse(hdc, drawX - 9, drawY - 20, drawX + 9, drawY - 6);
+    // Transverse horsehair crest (Purple & Gold)
+    HBRUSH hbrCrest = CreateSolidBrush(RGB(128, 0, 128));
+    SelectObject(hdc, hbrCrest);
+    Ellipse(hdc, drawX - 12, drawY - 26, drawX + 12, drawY - 14);
+    DeleteObject(hbrCrest);
+    HBRUSH hbrCrestTop = CreateSolidBrush(RGB(255, 215, 0));
+    SelectObject(hdc, hbrCrestTop);
+    Rectangle(hdc, drawX - 2, drawY - 22, drawX + 2, drawY - 14);
+    DeleteObject(hbrCrestTop);
+
+    // Golden Roman Scutum (Tower Shield on left arm)
+    SelectObject(hdc, hbrGold);
+    RoundRect(hdc, drawX + 8, drawY, drawX + 24, drawY + 28, 4, 4);
+    HBRUSH hbrShieldEmblem = CreateSolidBrush(RGB(120, 20, 20));
+    SelectObject(hdc, hbrShieldEmblem);
+    RoundRect(hdc, drawX + 10, drawY + 2, drawX + 22, drawY + 26, 3, 3);
+    DeleteObject(hbrShieldEmblem);
+    // Thunderbolt boss
+    SelectObject(hdc, hbrGold);
+    Ellipse(hdc, drawX + 14, drawY + 11, drawX + 18, drawY + 17);
+
+    // Spatha Longsword (on weapon arm)
+    HPEN hpenBlade = CreatePen(PS_SOLID, 2, RGB(240, 240, 250));
+    SelectObject(hdc, hpenBlade);
+    int swordX = drawX - 10;
+    int swordY = drawY + 6;
+    if (g_enemyStance == 1) { // Thrust attack
+        MoveToEx(hdc, swordX, swordY, NULL);
+        LineTo(hdc, swordX - 28, swordY - 6);
+        HPEN hpenArc = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
+        SelectObject(hdc, hpenArc);
+        Arc(hdc, swordX - 34, swordY - 16, swordX - 8, swordY + 12, swordX - 10, swordY - 16, swordX - 32, swordY + 6);
+        DeleteObject(hpenArc);
+    } else {
+        MoveToEx(hdc, swordX, swordY, NULL);
+        LineTo(hdc, swordX - 12, swordY - 20);
+    }
+    DeleteObject(hpenBlade);
+
+    // Phalanx golden aura if defending
+    if (g_enemyStance == 2) {
+        HPEN hpenAura = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
+        SelectObject(hdc, (HBRUSH)GetStockObject(NULL_BRUSH));
+        SelectObject(hdc, hpenAura);
+        Ellipse(hdc, drawX - 18, drawY - 22, drawX + 26, drawY + 32);
+        DeleteObject(hpenAura);
+    }
+
+    SelectObject(hdc, oldB);
+    SelectObject(hdc, oldP);
+    DeleteObject(hbrShadow);
+    DeleteObject(hbrGold);
+}
+
 void DrawHealthBarGDI(HDC hdc, int x, int y, int hp, int maxHp, const char* name, COLORREF fillCol) {
     SetTextColor(hdc, RGB(255, 215, 0));
     SetBkMode(hdc, TRANSPARENT);
@@ -1555,9 +1715,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                   "Defend: Skips turn; reduces hit & dmg. Shield Defend executes Shield Bash counter!\n"
                                   "Showboat: Skips turn to build Crowd Favor. Bare fists generate double Favor!\n"
                                   "Flee: Saves your gladiator, but you drop an Arena Level.\n\n"
-                                  "EQUIPMENT:\n"
-                                  "Glad: +3 STR, 20% Rend (+4 bleed) | Trid: +3 AGI, 20% Entangle\n"
-                                  "Armr: +5 VIT (+50 HP)              | Shld: Increases Defend & Counter\n";
+                                  "SPECIAL FOES & LEGENDS:\n"
+                                  "Lions, Chariots, Twins, Gallic Behemoth, and Praetorian Champions (Lvl 6+).\n"
+                                  "Crowd Favor at 100% earns Emperor's Boon: Denarii showers or emergency heals!\n";
 
             hHelpText = CreateWindowA("STATIC", helpStr, WS_CHILD | SS_LEFT,
                           20, 50, 540, 250, hwnd, NULL, NULL, NULL);
@@ -1638,6 +1798,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         DrawGladiatorGDI(memDC, 395, 98, &enemyFighter, 1, g_enemyStance, g_enemyLunge, g_enemyFlash);
                     } else if (enemyFighter.isBehemoth) {
                         DrawBehemothGDI(memDC, 415, 95, g_enemyLunge, g_enemyFlash);
+                    } else if (enemyFighter.isPraetorian) {
+                        DrawPraetorianGDI(memDC, 415, 95, g_enemyLunge, g_enemyFlash);
                     } else {
                         DrawGladiatorGDI(memDC, 415, 95, &enemyFighter, 1, g_enemyStance, g_enemyLunge, g_enemyFlash);
                     }
