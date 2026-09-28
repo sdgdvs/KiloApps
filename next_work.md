@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KCosmic
-  kilo_usability: KRead
+  kilo_usability: KScript
   kilo_graphics: KColosseum
   kilo_qa: KVault
   kilo_expander: KChart
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://deep-core"
   - "kweb://darknet"
 last_run:
-  agent: kilo-tester
-  app: KContacts
-  timestamp: "2026-09-28T22:30:00Z"
+  agent: kilo-usability
+  app: KRead
+  timestamp: "2026-09-28T23:08:00Z"
 last_planner_run: "2026-09-28T10:38:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KRead`
+- **Current Target**: `KScript`
 - **Upcoming Queue**:
-  `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KRadio)*.
+  `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KRadio, KRead)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KVault`
@@ -242,6 +242,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-28T23:08:00Z — kilo-usability: KRead (Window Dimensions, Toast Occlusion Remediation & Drawer UX)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
+  - Window & Layout: Updated default window to 940x680 in App.jsx and 940x660 in native C, eliminating toolbar wrapping squeeze.
+  - Toast Non-Occlusion: Relocated toast notifications to non-occluding bottom-right anchor with bounded queue (≤3 toasts).
+  - Auto-Scroll HUD: Centered auto-scroll indicator pill at chamber bottom to prevent overlapping toolbar controls.
+  - Drawer Ergonomics: Added click-outside dismissal for bookmarks, notes, and outline drawers during active reading.
+  - Responsive Resilience: Added scrollbar-free overflow handling for toolbar & preset decks and window resize progress tracking.
+  - Verification: MSVC clean (`KRead.exe` 27.1 KB); Vite clean in 266ms (`kread.html` 144.7 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-28T22:30:00Z — kilo-tester: KContacts (UI Audit, Quicksave/Load, Toast Non-Occlusion, Modal Repairs)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
   - Quicksave/Quickload: Added F5 quicksave and F9 quickload snapshot persistence across web and native Win32 C.
@@ -274,15 +283,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Native Navigation: Added WM_LBUTTONDOWN mouse click handling across all mode tabs, help screen, save/load, and game restarts.
   - Controls & Modals: Standardized universal F1/H Help toggle with mutual exclusion against tutorial modal; anchored toasts bottom-right.
   - Verification: MSVC clean (`KType.exe` 22.5 KB); Vite clean in 314ms (`ktype.html` 82.0 KB < 999 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-28T20:15:00Z — kilo-graphics: KAbyss (Game Content, YM2612 FM Audio, Dread Lich & Balance Pass)**
-  - Status: PASS ✅ (0 rotating glints / traveling border dots, 0 regressions, clean builds, <999KB verified).
-  - Glint & Dot Audit: Verified 100% absence of rotating specular glints or traveling perimeter border dots across web & native C.
-  - Abyssal Lord Expansion: Implemented Forgotten Crypt Lord "The Dread Lich" at depth 9 with Death Coil, Soul Rot, and Soul Phylactery relic.
-  - Procedural Audio Architecture: Added Sega Genesis YM2612 2-Op FM synth & SNES SPC700 stereo delay BGM engine across all 4 zones.
-  - Visual Polish: Added zone-adaptive atmospheric drifting particles (dust motes, cyan spores, necrotic wisps, astral particles) and Lich sprites.
-  - Gameplay Balance: Balanced delver metabolic hunger rate to 7 turns/tick and aligned web & native C mechanics.
-  - Verification: MSVC clean (`KAbyss.exe` 220.6 KB); Vite clean in 290ms (`kabyss.html` 437.6 KB < 999 KB); check_icons & security lint 100% PASS.
 
 
 

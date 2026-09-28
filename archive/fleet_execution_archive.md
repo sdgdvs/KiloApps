@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-28T20:15:00Z — kilo-graphics: KAbyss (Game Content, YM2612 FM Audio, Dread Lich & Balance Pass)**
+  - Status: PASS ✅ (0 rotating glints / traveling border dots, 0 regressions, clean builds, <999KB verified).
+  - Glint & Dot Audit: Verified 100% absence of rotating specular glints or traveling perimeter border dots across web & native C.
+  - Abyssal Lord Expansion: Implemented Forgotten Crypt Lord "The Dread Lich" at depth 9 with Death Coil, Soul Rot, and Soul Phylactery relic.
+  - Procedural Audio Architecture: Added Sega Genesis YM2612 2-Op FM synth & SNES SPC700 stereo delay BGM engine across all 4 zones.
+  - Visual Polish: Added zone-adaptive atmospheric drifting particles (dust motes, cyan spores, necrotic wisps, astral particles) and Lich sprites.
+  - Gameplay Balance: Balanced delver metabolic hunger rate to 7 turns/tick and aligned web & native C mechanics.
+  - Verification: MSVC clean (`KAbyss.exe` 220.6 KB); Vite clean in 290ms (`kabyss.html` 437.6 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-28T19:22:00Z — kilo-usability: KRadio (HiDPI Spectrum Visualizer, Window Fit & Non-Occluding Toasts)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
   - Window & Layout: Adjusted default window in App.jsx to 500x480 eliminating iframe vertical clipping and scrollbars.
