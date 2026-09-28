@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -17,8 +17,8 @@ current_targets:
   kilo_graphics: KSubmarine
   kilo_qa: KTodo
   kilo_expander: KAudio
-  kilo_creator: "kweb://10.19.99.4/classified (Corporate Network Leak & Signal Diagnostic)"
-virtual_web_target: "kweb://10.19.99.4/classified"
+  kilo_creator: "kweb://echo-subsystem.net (Research Journal & Audio Spectrogram)"
+virtual_web_target: "kweb://echo-subsystem.net"
 virtual_web_rotation:
   - "kweb://darknet"
   - "kweb://portal"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-expander
-  app: KImage
-  timestamp: "2026-09-28T03:55:00Z"
+  agent: kilo-creator
+  app: "kweb://10.19.99.4/classified"
+  timestamp: "2026-09-28T05:52:00Z"
 last_planner_run: "2026-09-27T09:48:00Z"
 ---
 
@@ -97,10 +97,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://10.19.99.4/classified` (Corporate Network Leak & Signal Diagnostic)
+- **Current Target**: `kweb://echo-subsystem.net` (Research Journal & Audio Spectrogram)
 - **Upcoming Queue**:
-  `kweb://echo-subsystem.net` (Research Journal & Audio Spectrogram),
-  `kweb://deep-core` (Ghost Node Terminal & Cryptographic Passkey Analyzer)
+  `kweb://deep-core` (Ghost Node Terminal & Cryptographic Passkey Analyzer),
+  `kweb://darknet` (Subterranean Darknet Directory & Node 0x7F Gateway)
   *(Completed: kweb://geocities, kweb://darknet, kweb://portal, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
@@ -230,6 +230,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-28T05:52:00Z — kilo-creator: kweb://10.19.99.4/classified (Corporate Network Leak & Signal Diagnostic)**
+  - Status: PASS ✅ (0 regressions, clean Vite build, security lint clean, <999KB ceiling verified).
+  - Signal Diagnostic Lab: Added dual-display time-domain oscilloscope & FFT frequency spectrum, tunable YM2612 FM / SPC700 stereo delay DSP controls, and live subcarrier packet demodulator.
+  - Subnet RF Sweep: Implemented interactive 10.19.99.0/24 node sweep tracking signal-to-noise ratio, carrier lock, and audio DAC leakage.
+  - Corporate Leak Suite: Sanitized all meta-spoilers/TINAG leaks into authentic diegetic memos [6], 4-sector memory hex inspector, packet sniffer with test frame injection, and skunkworks CLI.
+  - Integration & Discovery: Linked node in KNet directory, portal category 5 / search index, portal classified ads, and webring node #015 / probe console.
+  - Verification: Vite build clean in 389ms; `security_lint.py` 100% clean PASS; `classified.html` size: 79.8 KB (< 999 KB ceiling).
+
 - **2026-09-28T03:55:00Z — kilo-expander: KImage (Feature Expansion: Retro Dither, Channels, ASCII & Stego Vault)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
   - Retro Dither & Palette: Added Floyd-Steinberg, Atkinson, Bayer 4x4, Nearest across 8 retro palettes (GB, CGA, C64, EGA, Amber, Matrix).
@@ -264,14 +272,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast Occlusion: Re-anchored notifications above status bar with safe margins, dismiss button, and auto-dismiss on typing.
   - Onboarding & ARG Weaving: Added tutorial seen gating [knote_tutorialSeen] and diegetic recovery log (`system_recovery_1999.log`).
   - Verification: MSVC compile clean (`KNote.exe` 22.5 KB); Vite clean build in 382ms (`knote.html` 109.5 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
-
-- **2026-09-27T19:51:00Z — kilo-tester: KCalendar (Interactive UI Audit & Quicksave/Keyboard/Tutorial Integration)**
-  - Status: PASS ✅ (6 issues, 6 fixed; 0 regressions).
-  - Snapshot Persistence: Implemented F5 quicksave & F9 quickload snapshot persistence with visual toast feedback and toolbar buttons.
-  - Tutorial & Onboarding: Added `kcalendar_tutorialSeen` / `kcalendar_quicksave` gating to launch Help guide on fresh sessions.
-  - Modal Dismissals & Hotkeys: Added Enter key confirmation to delete modal, Space/Enter dismiss to Help/Stats modals, and focused confirm button.
-  - Keyboard Navigation: Added `tabindex="0"`, roles, and Enter/Space event handlers to all event pills and checklist buttons across Month, Week, Day, and Agenda views.
-  - TINAG & Security: Verified zero un-diegetic ARG violations; 100% clean security lint.
-  - Verification: MSVC compile clean (`KCalendar.exe` 21.5 KB); Vite clean build in 389ms (`kcalendar.html` 106.7 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
 
 

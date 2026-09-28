@@ -1455,6 +1455,19 @@ const DEFAULT_RING_NODES = [
     badgeLabel: "KRSS FEED",
     latency: 23,
     tags: "rss,news,feeds,ticker,headlines"
+  },
+  {
+    id: "#015",
+    num: 15,
+    name: "Aethel Dynamics 10.19.99.4 Intranet",
+    handle: "Carlsbad_0x7F",
+    category: "tools",
+    url: "/web/classified.html",
+    desc: "Carlsbad skunkworks corporate leak repository, YM2612 FM 1999Hz subcarrier signal diagnostics & memory hex inspector.",
+    tech: "YM2612 FM / SPC700 Delay / Hex Inspector / Telemetry Sniffer",
+    badgeLabel: "10.19.99.4",
+    latency: 14,
+    tags: "intranet,leak,classified,signal,diagnostic,carlsbad,telemetry"
   }
 ];
 
@@ -2275,7 +2288,7 @@ function probeCustomTarget() {
       <span style="color:var(--amber-bright);">[ANOMALOUS CARRIER DETECTED]</span><br>
       Host: non-routable subnet carrier • Frequency: 1999Hz subcarrier active<br>
       Handshake: Direct HTTP blocked • Lithospheric RF telemetry detected at offset 0x7F.<br>
-      <em>Note: Surface HTTP requests restricted. Navigate via terminal sniffer in KNet.</em>
+      <em>Note: Surface HTTP requests restricted. Navigate via terminal sniffer in KNet or <a href="/web/classified.html" style="color:var(--amber-bright); text-decoration:underline;">Access Intranet Gateway: 10.19.99.4/classified</a></em>
     `;
     return;
   }
