@@ -819,32 +819,33 @@
     border-radius: 6px !important;
   }
 
-  /* Toast Notification */
+  /* Toast Notification (Center-anchored to avoid occluding header action buttons) */
   .toast {
     position: fixed;
-    top: 16px;
-    right: 16px;
+    top: 14px;
+    left: 50%;
+    transform: translate(-50%, -40px);
     background: #1a2234;
     border: 1px solid var(--accent-blue);
     color: #fff;
-    padding: 8px 14px;
+    padding: 8px 16px;
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.6);
     font-size: 13px;
     font-weight: 600;
-    transform: translateY(-40px);
     opacity: 0;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 200;
+    z-index: 250;
     display: flex;
     align-items: center;
     gap: 12px;
     pointer-events: none;
     cursor: pointer;
+    max-width: 90vw;
   }
 
   .toast.show {
-    transform: translateY(0);
+    transform: translate(-50%, 0);
     opacity: 1;
     pointer-events: auto;
   }
@@ -1282,7 +1283,10 @@
             <li>• <strong>Data Interoperability:</strong> Import and export Markdown checklists, CSV spreadsheets, JSON backups, Todo.txt, and iCalendar (.ics).</li>
           </ul>
         </div>
-        <button class="btn btn-primary" style="justify-content: center; margin-top: 4px;" onclick="closeHelpModal()">Got it</button>
+        <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; flex-wrap: wrap;">
+          <button class="btn" onclick="closeHelpModal(); openTutorialModal();" title="Relaunch onboarding tutorial guide">✨ View Tour Guide</button>
+          <button class="btn btn-primary" style="justify-content: center;" onclick="closeHelpModal()">Got it</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1349,12 +1353,12 @@
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">Room Code / Channel:</label>
           <div style="display: flex; gap: 8px;">
-            <input type="text" id="collabRoomInput" placeholder="e.g. team-1999" value="team-1999" style="flex: 1; font-family: monospace; font-weight: bold;">
+            <input type="text" id="collabRoomInput" placeholder="e.g. team-1999" value="team-1999" style="flex: 1; font-family: monospace; font-weight: bold;" onkeydown="if(event.key==='Enter') joinCollabRoom();">
             <button class="btn" onclick="generateRandomRoom()">🎲 Random</button>
           </div>
 
           <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">Your Display Nickname:</label>
-          <input type="text" id="collabNickInput" placeholder="e.g. Architect_99" style="font-family: monospace;">
+          <input type="text" id="collabNickInput" placeholder="e.g. Architect_99" style="font-family: monospace;" onkeydown="if(event.key==='Enter') joinCollabRoom();">
         </div>
 
         <div style="display: flex; gap: 8px; margin-top: 4px;">
@@ -1516,6 +1520,14 @@
         clearTimeout(syncDebounceTimer);
         syncDebounceTimer = null;
       }
+      if (typeof collabUnsubscribe === 'function') {
+        try { collabUnsubscribe(); } catch (e) {}
+        collabUnsubscribe = null;
+      }
+      if (typeof presenceUnsubscribe === 'function') {
+        try { presenceUnsubscribe(); } catch (e) {}
+        presenceUnsubscribe = null;
+      }
     }
 
     function normalizeTasksArray(arr) {
@@ -1610,10 +1622,15 @@
     // Full Workspace Snapshot & Quicksave / Quickload
     function getFullStateSnapshot() {
       const sortEl = document.getElementById('sortBy');
+      const searchEl = document.getElementById('searchInput');
       return {
         version: 2,
         timestamp: new Date().toISOString(),
         tasks: tasks,
+        workspaces: workspaces,
+        currentWorkspaceId: currentWorkspaceId,
+        activeTag: activeTag,
+        searchQuery: searchEl ? searchEl.value : '',
         currentViewMode: currentViewMode,
         activeCategory: activeCategory,
         currentFilter: currentFilter,
@@ -1628,6 +1645,17 @@
     function restoreFullStateSnapshot(state) {
       if (!state || typeof state !== 'object') return false;
       try {
+        if (!workspaces) {
+          workspaces = loadWorkspaces();
+        }
+        if (state.workspaces && typeof state.workspaces === 'object') {
+          workspaces = state.workspaces;
+          saveWorkspaces();
+        }
+        if (state.currentWorkspaceId && workspaces && workspaces[state.currentWorkspaceId]) {
+          currentWorkspaceId = state.currentWorkspaceId;
+          safeStorageSet('ktodo_active_ws', currentWorkspaceId);
+        }
         if (Array.isArray(state.tasks)) {
           tasks = state.tasks.filter(t => t && typeof t === 'object').map(t => ({
             id: t.id || getUniqueId(),
@@ -1636,6 +1664,7 @@
             priority: typeof t.priority === 'string' ? t.priority : 'Medium',
             dueDate: typeof t.dueDate === 'string' ? t.dueDate : '',
             completed: !!t.completed,
+            completedAt: t.completedAt || (t.completed ? new Date().toISOString() : undefined),
             subtasks: Array.isArray(t.subtasks) ? t.subtasks.filter(s => s && typeof s === 'object').map(s => ({
               id: s.id || getUniqueId(),
               text: typeof s.text === 'string' ? s.text : '',
@@ -1643,6 +1672,15 @@
             })) : [],
             createdAt: t.createdAt || new Date().toISOString()
           }));
+        }
+        if (typeof state.activeTag !== 'undefined') {
+          activeTag = state.activeTag;
+        }
+        if (typeof state.searchQuery === 'string') {
+          const sInput = document.getElementById('searchInput');
+          if (sInput) sInput.value = state.searchQuery;
+          const clearBtn = document.getElementById('searchClearBtn');
+          if (clearBtn) clearBtn.style.display = state.searchQuery ? 'block' : 'none';
         }
         if (state.currentViewMode && (state.currentViewMode === 'list' || state.currentViewMode === 'kanban')) {
           setViewMode(state.currentViewMode);
@@ -1677,7 +1715,12 @@
         if (state.selectedTaskId) {
           selectedTaskId = state.selectedTaskId;
         }
+        if (workspaces && workspaces[currentWorkspaceId]) {
+          workspaces[currentWorkspaceId].tasks = tasks;
+          saveWorkspaces();
+        }
         saveTasks(false);
+        renderWorkspaceSelect();
         renderAppView();
         return true;
       } catch (err) {
@@ -2293,6 +2336,7 @@
     function openTutorialModal() {
       closeIOModal();
       closeHelpModal();
+      closeCollabModal();
       const m = document.getElementById('tutorialModal');
       if (m) {
         m.classList.add('active');
@@ -2877,12 +2921,14 @@
     function openIOModal() {
       closeHelpModal();
       closeTutorialModal();
+      closeCollabModal();
       document.getElementById('ioModal').classList.add('active');
     }
     function closeIOModal() { document.getElementById('ioModal').classList.remove('active'); }
     function openHelpModal() {
       closeIOModal();
       closeTutorialModal();
+      closeCollabModal();
       document.getElementById('helpModal').classList.add('active');
     }
     function closeHelpModal() { document.getElementById('helpModal').classList.remove('active'); }
@@ -3264,6 +3310,13 @@
     window.addEventListener('pagehide', () => {
       autoSaveSession();
       cleanupResources();
+    });
+
+    // Auto-dismiss toast when any input or select receives focus
+    document.addEventListener('focusin', (e) => {
+      if (e.target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) {
+        hideToast();
+      }
     });
 
     // Keyboard Shortcuts & Modal Handling

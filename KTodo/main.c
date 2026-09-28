@@ -218,6 +218,8 @@ WNDPROC g_OldListProc = NULL;
 void ShowNativeToast(const char* msg);
 int SaveStateToFile(const char* filename);
 int LoadStateFromFile(const char* filename);
+int SaveQuicksaveState(void);
+int LoadQuicksaveState(void);
 
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_GETDLGCODE) {
@@ -232,18 +234,18 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             return 0;
         }
         if (wParam == VK_F5) {
-            if (SaveStateToFile("ktodo.dat")) {
-                ShowNativeToast("★ Tasks saved to ktodo.dat [F5]");
+            if (SaveQuicksaveState()) {
+                ShowNativeToast("★ Tasks quicksaved to ktodo_quicksave.dat [F5]");
             } else {
-                ShowNativeToast("⚠ Failed to save tasks.");
+                ShowNativeToast("⚠ Failed to quicksave tasks.");
             }
             return 0;
         }
         if (wParam == VK_F9) {
-            if (LoadStateFromFile("ktodo.dat")) {
-                ShowNativeToast("★ Restored tasks from ktodo.dat [F9]");
+            if (LoadQuicksaveState()) {
+                ShowNativeToast("★ Restored saved tasks [F9]");
             } else {
-                ShowNativeToast("⚠ No saved tasks found (ktodo.dat).");
+                ShowNativeToast("⚠ No quicksave state found [F5 to save first].");
             }
             return 0;
         }
@@ -254,18 +256,18 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 LRESULT CALLBACK SearchSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_KEYDOWN) {
         if (wParam == VK_F5) {
-            if (SaveStateToFile("ktodo.dat")) {
-                ShowNativeToast("★ Tasks saved to ktodo.dat [F5]");
+            if (SaveQuicksaveState()) {
+                ShowNativeToast("★ Tasks quicksaved to ktodo_quicksave.dat [F5]");
             } else {
-                ShowNativeToast("⚠ Failed to save tasks.");
+                ShowNativeToast("⚠ Failed to quicksave tasks.");
             }
             return 0;
         }
         if (wParam == VK_F9) {
-            if (LoadStateFromFile("ktodo.dat")) {
-                ShowNativeToast("★ Restored tasks from ktodo.dat [F9]");
+            if (LoadQuicksaveState()) {
+                ShowNativeToast("★ Restored saved tasks [F9]");
             } else {
-                ShowNativeToast("⚠ No saved tasks found (ktodo.dat).");
+                ShowNativeToast("⚠ No quicksave state found [F5 to save first].");
             }
             return 0;
         }
@@ -285,18 +287,18 @@ LRESULT CALLBACK ListSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     }
     if (msg == WM_KEYDOWN) {
         if (wParam == VK_F5) {
-            if (SaveStateToFile("ktodo.dat")) {
-                ShowNativeToast("★ Tasks saved to ktodo.dat [F5]");
+            if (SaveQuicksaveState()) {
+                ShowNativeToast("★ Tasks quicksaved to ktodo_quicksave.dat [F5]");
             } else {
-                ShowNativeToast("⚠ Failed to save tasks.");
+                ShowNativeToast("⚠ Failed to quicksave tasks.");
             }
             return 0;
         }
         if (wParam == VK_F9) {
-            if (LoadStateFromFile("ktodo.dat")) {
-                ShowNativeToast("★ Restored tasks from ktodo.dat [F9]");
+            if (LoadQuicksaveState()) {
+                ShowNativeToast("★ Restored saved tasks [F9]");
             } else {
-                ShowNativeToast("⚠ No saved tasks found (ktodo.dat).");
+                ShowNativeToast("⚠ No quicksave state found [F5 to save first].");
             }
             return 0;
         }
@@ -366,8 +368,8 @@ void ShowHelpDialog(HWND hwnd) {
         "  - Space / Enter (in Task List): Toggle task completed\n"
         "  - Del / D: Delete selected task\n"
         "  - C: Clear all completed tasks\n"
-        "  - F5: Quicksave workspace state to ktodo.dat\n"
-        "  - F9: Quickload saved state from ktodo.dat\n"
+        "  - F5: Quicksave workspace state to ktodo_quicksave.dat\n"
+        "  - F9: Quickload saved state from ktodo_quicksave.dat\n"
         "  - S: Show productivity summary & stats\n"
         "  - E: Export Markdown task list (.md)\n"
         "  - I: Import Markdown task list (.md)\n"
@@ -932,6 +934,22 @@ static int HasSavedState(const char* filename) {
     return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
 }
 
+int SaveQuicksaveState(void) {
+    int r1 = SaveStateToFile("ktodo_quicksave.dat");
+    int r2 = SaveStateToFile("ktodo.dat");
+    return (r1 || r2);
+}
+
+int LoadQuicksaveState(void) {
+    if (HasSavedState("ktodo_quicksave.dat")) {
+        return LoadStateFromFile("ktodo_quicksave.dat");
+    }
+    if (HasSavedState("ktodo.dat")) {
+        return LoadStateFromFile("ktodo.dat");
+    }
+    return 0;
+}
+
 static int HasSeenTutorial(void) {
     return HasSavedState("ktodo_tutorial.dat");
 }
@@ -1167,16 +1185,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (id == ID_STATSBTN) {
                 DoShowStats();
             } else if (id == ID_SAVEBTN) {
-                if (SaveStateToFile("ktodo.dat")) {
-                    ShowNativeToast("★ Tasks quicksaved to ktodo.dat [F5]");
+                if (SaveQuicksaveState()) {
+                    ShowNativeToast("★ Tasks quicksaved to ktodo_quicksave.dat [F5]");
                 } else {
                     ShowNativeToast("⚠ Failed to quicksave tasks.");
                 }
             } else if (id == ID_LOADBTN) {
-                if (LoadStateFromFile("ktodo.dat")) {
-                    ShowNativeToast("★ Restored saved tasks from ktodo.dat [F9]");
+                if (LoadQuicksaveState()) {
+                    ShowNativeToast("★ Restored saved tasks [F9]");
                 } else {
-                    ShowNativeToast("⚠ No quicksave state found (ktodo.dat).");
+                    ShowNativeToast("⚠ No quicksave state found [F5 to save first].");
                 }
             } else if (id == ID_EXPORTBTN) {
                 DoExportData();
@@ -1200,17 +1218,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_KEYDOWN: {
             if (wParam == VK_F5) {
-                if (SaveStateToFile("ktodo.dat")) {
-                    ShowNativeToast("★ Tasks quicksaved to ktodo.dat [F5]");
+                if (SaveQuicksaveState()) {
+                    ShowNativeToast("★ Tasks quicksaved to ktodo_quicksave.dat [F5]");
                 } else {
                     ShowNativeToast("⚠ Failed to quicksave tasks.");
                 }
                 return 0;
             } else if (wParam == VK_F9) {
-                if (LoadStateFromFile("ktodo.dat")) {
-                    ShowNativeToast("★ Restored saved tasks from ktodo.dat [F9]");
+                if (LoadQuicksaveState()) {
+                    ShowNativeToast("★ Restored saved tasks [F9]");
                 } else {
-                    ShowNativeToast("⚠ No quicksave state found (ktodo.dat).");
+                    ShowNativeToast("⚠ No quicksave state found [F5 to save first].");
                 }
                 return 0;
             }
@@ -1257,9 +1275,9 @@ void __stdcall MainEntry() {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
-    if (HasSavedState("ktodo.dat")) {
-        if (LoadStateFromFile("ktodo.dat")) {
-            ShowNativeToast("★ Restored saved tasks from ktodo.dat [F9]");
+    if (HasSavedState("ktodo_quicksave.dat") || HasSavedState("ktodo.dat")) {
+        if (LoadQuicksaveState()) {
+            ShowNativeToast("★ Restored saved workspace state [F9]");
         }
     } else if (!HasSeenTutorial()) {
         LoadSampleData();
@@ -1275,18 +1293,18 @@ void __stdcall MainEntry() {
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
             if (msg.wParam == VK_F5) {
-                if (SaveStateToFile("ktodo.dat")) {
-                    ShowNativeToast("★ Tasks quicksaved to ktodo.dat [F5]");
+                if (SaveQuicksaveState()) {
+                    ShowNativeToast("★ Tasks quicksaved to ktodo_quicksave.dat [F5]");
                 } else {
                     ShowNativeToast("⚠ Failed to quicksave tasks.");
                 }
                 continue;
             }
             if (msg.wParam == VK_F9) {
-                if (LoadStateFromFile("ktodo.dat")) {
-                    ShowNativeToast("★ Restored saved tasks from ktodo.dat [F9]");
+                if (LoadQuicksaveState()) {
+                    ShowNativeToast("★ Restored saved tasks [F9]");
                 } else {
-                    ShowNativeToast("⚠ No quicksave state found (ktodo.dat).");
+                    ShowNativeToast("⚠ No quicksave state found [F5 to save first].");
                 }
                 continue;
             }

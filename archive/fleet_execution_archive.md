@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-28T03:55:00Z — kilo-expander: KImage (Feature Expansion: Retro Dither, Channels, ASCII & Stego Vault)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
+  - Retro Dither & Palette: Added Floyd-Steinberg, Atkinson, Bayer 4x4, Nearest across 8 retro palettes (GB, CGA, C64, EGA, Amber, Matrix).
+  - Channel Studio & DSP: Added RGB extraction, channel inversion/swapping, posterize, solarize, and CRT scanlines in web & Win32 C.
+  - Interoperability & ASCII: Added Netpbm PPM (.ppm) export and full ASCII/ANSI art generator (4 ramps, 40-120 cols, copy/download).
+  - Steganography Vault: Implemented authentic 1999 LSB steganography encode/decode engine hiding UTF-8 text inside image bits.
+  - Quicksave & Persistence: Implemented F5 quicksave & F9 quickload snapshot persistence in web localStorage & Win32 C bitmap.
+  - Verification: MSVC clean (`KImage.exe` 26.0 KB); Vite build in 383ms (`kimage.html` 132.1 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-28T01:50:00Z — kilo-qa: KCipher (Pass 5: Tutorial & State Integrity Audit)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
   - Snapshot Persistence: Implemented F5 quicksave & F9 quickload capturing active tab, cipher settings, and stego text in web & Win32 C `kcipher_quicksave.dat`.
