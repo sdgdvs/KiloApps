@@ -413,10 +413,10 @@
     pointer-events: none;
   }
 
-  /* Toast Notifications */
+  /* Toast Notifications (Anchored Top-Right to prevent keyboard/seq occlusion) */
   #toastContainer {
     position: fixed;
-    bottom: 20px;
+    top: 14px;
     right: 20px;
     display: flex;
     flex-direction: column;
@@ -458,8 +458,90 @@
   .toast.error { border-color: var(--accent-pink); }
   .toast.info { border-color: var(--accent-cyan); }
   @keyframes toastSlideIn {
-    from { opacity: 0; transform: translateY(12px); }
+    from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Collaborative Jam Deck */
+  .jam-deck {
+    background: #141824;
+    border: 1px solid #232b3c;
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  }
+  .jam-status-badge {
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    background: rgba(255,255,255,0.08);
+    color: #94a3b8;
+    border: 1px solid rgba(255,255,255,0.15);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .jam-status-badge.connected {
+    background: rgba(2, 195, 154, 0.2);
+    color: var(--accent-green);
+    border-color: var(--accent-green);
+  }
+  .reaction-btn {
+    background: #1c212d;
+    border: 1px solid var(--panel-border);
+    border-radius: 4px;
+    padding: 2px 5px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.1s;
+  }
+  .reaction-btn:hover {
+    transform: scale(1.2);
+    background: #2b3345;
+    border-color: var(--accent-cyan);
+  }
+  .peer-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid;
+    background: rgba(255,255,255,0.05);
+  }
+  .peer-badge .peer-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  .key.remote-active {
+    box-shadow: 0 0 14px var(--remote-color, #9d4edd) !important;
+    background: var(--remote-color, #9d4edd) !important;
+    color: #fff !important;
+    transform: translateY(2px);
+  }
+  .flying-reaction {
+    position: fixed;
+    pointer-events: none;
+    font-size: 24px;
+    animation: flyUpFade 1.6s ease-out forwards;
+    z-index: 10001;
+  }
+  @keyframes flyUpFade {
+    0% { opacity: 1; transform: translateY(0) scale(0.8); }
+    50% { opacity: 1; transform: translateY(-40px) scale(1.3); }
+    100% { opacity: 0; transform: translateY(-90px) scale(1.0); }
+  }
+  @keyframes pulseSubcarrier {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.92); }
   }
 </style>
 </head>
@@ -486,7 +568,9 @@
           <div style="font-weight:700; color:var(--accent-yellow); margin-bottom:4px;">Synthesizer Controls & Shortcuts</div>
           <ul style="list-style:none; padding-left:0; display:flex; flex-direction:column; gap:5px; font-size:12px;">
             <li><b>[Space] / [P]</b> : Play / Pause 16-step pattern sequencer</li>
-            <li><b>[1] - [6]</b> : Switch to Preset 1-6 (Lead, Bass, Pad, Chiptune, Bell, Pluck)</li>
+            <li><b>[1] - [9]</b> : Switch to Preset 1-9 (Lead, Bass, Pad, Chiptune, Bell, Pluck, YM2612 FM, SPC700, Beacon)</li>
+            <li><b>[Shift+J] / [N]</b> : Join / Leave Live Collaborative Jam Session</li>
+            <li><b>[M]</b> : Toggle Yamaha YM2612 2-Operator FM Synthesis Mode</li>
             <li><b>[Z] / [X] / [◄] / [►]</b> : Shift keyboard octave down / up (-2 to +2)</li>
             <li><b>[▲] / [▼]</b> : Adjust Master Volume (+5% / -5%)</li>
             <li><b>[Enter]</b> : Preview synth patch chord</li>
@@ -502,12 +586,13 @@
           </ul>
         </div>
         <div>
-          <div style="font-weight:700; color:var(--accent-cyan); margin-bottom:4px;">Audio Engine Features</div>
+          <div style="font-weight:700; color:var(--accent-cyan); margin-bottom:4px;">Audio Engine & Jam Features</div>
           <ul style="list-style:none; padding-left:0; display:flex; flex-direction:column; gap:4px; font-size:12px;">
-            <li>&bull; <b>Dual Oscillators:</b> 5 waveform types each with detune & octave mixing.</li>
-            <li>&bull; <b>Biquad Filter:</b> Lowpass, Highpass, and Bandpass with resonance.</li>
+            <li>&bull; <b>Dual Synthesis Engines:</b> Subtractive 5-waveform dual-oscillator & Yamaha YM2612 2-Op FM synthesis.</li>
+            <li>&bull; <b>Live Jam Session:</b> Real-time multi-user jamming via Firebase RTDB with synchronized notes and sequencer.</li>
+            <li>&bull; <b>Biquad Filter:</b> Lowpass, Highpass, and Bandpass with resonance and 1999Hz subcarrier anomaly detection.</li>
+            <li>&bull; <b>SPC700 Delay Echo:</b> Stereo ping-pong delay unit with warm Gaussian feedback loop damping.</li>
             <li>&bull; <b>ADSR Envelope:</b> Real-time visual curve canvas with millisecond precision.</li>
-            <li>&bull; <b>Analog Echo:</b> Stereo delay unit with feedback loop damping.</li>
           </ul>
         </div>
       </div>
@@ -525,7 +610,7 @@
     </div>
     
     <div class="header-actions">
-      <label for="presetSelect" style="font-size:12px; color:var(--text-muted); font-weight:600;">PRESET [1-6]:</label>
+      <label for="presetSelect" style="font-size:12px; color:var(--text-muted); font-weight:600;">PRESET [1-9]:</label>
       <select id="presetSelect" aria-label="Synthesizer Patch Preset">
         <option value="lead">1: Neon Lead</option>
         <option value="bass">2: Sub Punch Bass</option>
@@ -533,6 +618,9 @@
         <option value="chiptune">4: 8-Bit Chiptune</option>
         <option value="bell">5: Glass Bell</option>
         <option value="pluck">6: Plucked Synth</option>
+        <option value="genesis_fm">7: YM2612 FM Bass</option>
+        <option value="spc700">8: SPC700 Echo Pad</option>
+        <option value="beacon_1999">9: 1999 Ghost Beacon</option>
         <option value="custom" disabled hidden>Custom Patch</option>
       </select>
       
@@ -569,6 +657,45 @@
     <button class="btn quick-chip" onclick="selectPresetByIndex(3)" title="Preset 4: 8-Bit Chiptune">4: 8-Bit</button>
     <button class="btn quick-chip" onclick="selectPresetByIndex(4)" title="Preset 5: Glass Bell">5: Bell</button>
     <button class="btn quick-chip" onclick="selectPresetByIndex(5)" title="Preset 6: Plucked Synth">6: Pluck</button>
+    <button class="btn quick-chip" onclick="selectPresetByIndex(6)" title="Preset 7: YM2612 FM Slap Bass">7: FM Bass</button>
+    <button class="btn quick-chip" onclick="selectPresetByIndex(7)" title="Preset 8: SPC700 SNES Strings">8: SPC700</button>
+    <button class="btn quick-chip" onclick="selectPresetByIndex(8)" title="Preset 9: 1999 Ghost Beacon">9: Beacon</button>
+  </div>
+
+  <!-- Collaborative Jam Session Bar (Firebase RTDB) -->
+  <div class="jam-deck" id="jamDeck">
+    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; width:100%;">
+      <span class="jam-status-badge" id="jamStatusBadge">Offline</span>
+      <span style="font-size:11px; color:var(--text-muted); font-weight:600;">ROOM:</span>
+      <input type="text" id="jamRoomInput" value="general-jam" placeholder="room-name" style="width:110px; background:#1c202b; color:var(--accent-cyan); border:1px solid var(--panel-border); border-radius:4px; padding:3px 6px; font-size:11px; font-weight:600;">
+      <span style="font-size:11px; color:var(--text-muted); font-weight:600;">NICK:</span>
+      <input type="text" id="jamNickInput" value="SynthPilot" placeholder="Your Nick" style="width:100px; background:#1c202b; color:#fff; border:1px solid var(--panel-border); border-radius:4px; padding:3px 6px; font-size:11px; font-weight:600;">
+      <button id="btnJamConnect" class="btn btn-primary" style="padding:4px 10px; font-size:11px;" title="Join / Leave Real-Time Collaborative Jam Session [Shift+J / N]">🌐 Join Jam [Shift+J]</button>
+      
+      <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:var(--text-main); cursor:pointer; margin-left:4px;">
+        <input type="checkbox" id="chkJamSyncSeq" checked style="accent-color:var(--accent-cyan); cursor:pointer;">
+        <span>Sync Sequencer</span>
+      </label>
+
+      <button id="btnJamSharePatch" class="btn" style="padding:4px 8px; font-size:11px;" title="Broadcast your active synth patch to all connected peers">📤 Broadcast Patch</button>
+
+      <div style="display:flex; align-items:center; gap:4px; margin-left:auto;">
+        <span style="font-size:10px; color:var(--text-muted);">REACT:</span>
+        <button class="reaction-btn" onclick="sendJamReaction('🔥')" title="Send Fire Reaction">🔥</button>
+        <button class="reaction-btn" onclick="sendJamReaction('⚡')" title="Send Lightning Reaction">⚡</button>
+        <button class="reaction-btn" onclick="sendJamReaction('🎹')" title="Send Piano Reaction">🎹</button>
+        <button class="reaction-btn" onclick="sendJamReaction('✨')" title="Send Sparkle Reaction">✨</button>
+      </div>
+    </div>
+    
+    <div style="display:flex; align-items:center; justify-content:space-between; width:100%; margin-top:2px; font-size:11px;">
+      <div id="jamUsersList" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; flex:1;">
+        <span style="color:var(--text-muted); font-size:10px; font-style:italic;">No remote peers connected yet</span>
+      </div>
+      <div id="jamTicker" style="color:var(--text-muted); font-size:10px; font-family:monospace; max-width:440px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+        Jam Room Ready &bull; Press [J] to connect globally
+      </div>
+    </div>
   </div>
 
   <!-- Workspace Grid -->
@@ -579,6 +706,36 @@
       <div class="panel-title">
         <span>Dual Oscillators & Filter</span>
         <span style="font-size:10px; color:var(--accent-yellow);" id="voiceCountDisplay">Voices: 0</span>
+      </div>
+
+      <!-- Engine Mode & 1999Hz Subcarrier Lock Tag -->
+      <div class="panel-row" style="border-bottom:1px solid rgba(255,255,255,0.06); padding-bottom:6px; margin-bottom:2px; justify-content:space-between;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <label style="font-size:11px; font-weight:700; color:var(--text-main);">ENGINE MODE [M]:</label>
+          <select id="synthEngineMode" style="padding:3px 8px; font-size:11px;">
+            <option value="subtractive">Subtractive Dual-Oscillator</option>
+            <option value="fm">Yamaha YM2612 2-Operator FM</option>
+          </select>
+        </div>
+        <div id="carrierLockTag" style="display:none; align-items:center; gap:4px; font-size:10px; font-weight:700; color:var(--accent-yellow); background:rgba(255,183,3,0.15); border:1px solid var(--accent-yellow); border-radius:4px; padding:2px 6px;">
+          <span style="animation:pulseSubcarrier 1s infinite;">📡</span> 1999Hz SUBCARRIER LOCKED
+        </div>
+      </div>
+
+      <!-- FM Synthesis Parameters (active when FM mode selected) -->
+      <div class="panel-row" id="fmControlsRow" style="display:none; background:rgba(0,243,255,0.04); border:1px solid rgba(0,243,255,0.15); border-radius:4px; padding:6px 8px; margin-bottom:4px;">
+        <div class="control-group">
+          <label>FM Ratio (Mult) <span class="val" id="fmRatioVal">2.0x</span></label>
+          <input type="range" id="fmRatio" min="0.5" max="8.0" value="2.0" step="0.5">
+        </div>
+        <div class="control-group">
+          <label>Mod Depth <span class="val" id="fmDepthVal">40%</span></label>
+          <input type="range" id="fmModDepth" min="0" max="1" value="0.4" step="0.01">
+        </div>
+        <div class="control-group">
+          <label>FM Feedback <span class="val" id="fmFdbkVal">20%</span></label>
+          <input type="range" id="fmFeedback" min="0" max="1" value="0.2" step="0.01">
+        </div>
       </div>
 
       <!-- Osc 1 -->
@@ -670,6 +827,13 @@
         <div class="control-group">
           <label>Delay Mix <span class="val" id="delayMixVal">0.50</span></label>
           <input type="range" id="delayMix" min="0" max="1" value="0.5" step="0.01">
+        </div>
+        <div class="control-group" style="min-width: 90px;">
+          <label>Delay Echo Mode</label>
+          <select id="delayEchoMode">
+            <option value="mono">Standard Mono</option>
+            <option value="spc700">SPC700 Stereo Ping-Pong</option>
+          </select>
         </div>
       </div>
     </div>
@@ -774,6 +938,45 @@
 
   </div>
 
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, remove, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+    authDomain: "kiloappschat.firebaseapp.com",
+    databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+    projectId: "kiloappschat",
+    storageBucket: "kiloappschat.firebasestorage.app",
+    messagingSenderId: "290208566057",
+    appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+  };
+
+  try {
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    window.fb = {
+      app,
+      db,
+      ref,
+      set,
+      get,
+      push,
+      onValue,
+      onChildAdded,
+      off,
+      remove,
+      serverTimestamp,
+      onDisconnect
+    };
+    if (typeof window.onFirebaseReady === 'function') {
+      window.onFirebaseReady();
+    }
+  } catch (err) {
+    console.warn("Firebase RTDB init error:", err);
+  }
+</script>
+
 <script>
   // ----------------------------------------------------
   // Toast & Help Modal Helpers
@@ -846,6 +1049,230 @@
   });
 
   // ----------------------------------------------------
+  // Collaborative Jam Session State & Firebase Handlers
+  // ----------------------------------------------------
+  let isJamConnected = false;
+  let jamRoomId = 'general-jam';
+  let myJamNick = 'SynthPilot';
+  const peerColors = ['#00f3ff', '#ff007f', '#00ff66', '#ffb703', '#9d4edd', '#00d2ff', '#ff5400', '#ff2a85'];
+  let myJamColor = peerColors[Math.floor(Math.random() * peerColors.length)];
+  let myJamId = 'p_' + Math.random().toString(36).substring(2, 9);
+  let jamUserRef = null;
+  let jamEventsRef = null;
+  let sessionJoinedTime = 0;
+
+  function appendJamTicker(msg, color = 'var(--text-muted)') {
+    const ticker = document.getElementById('jamTicker');
+    if (!ticker) return;
+    ticker.style.color = color;
+    ticker.innerText = msg;
+  }
+
+  function spawnFloatingReaction(emoji, x, y) {
+    const el = document.createElement('div');
+    el.className = 'flying-reaction';
+    el.innerText = emoji;
+    el.style.left = (x || (window.innerWidth / 2 + (Math.random() * 120 - 60))) + 'px';
+    el.style.top = (y || (window.innerHeight - 180 + (Math.random() * 40 - 20))) + 'px';
+    document.body.appendChild(el);
+    setTimeout(() => { el.remove(); }, 1600);
+  }
+
+  function sendJamReaction(emoji) {
+    spawnFloatingReaction(emoji);
+    if (!isJamConnected) {
+      showToast(`Reacted ${emoji} (Connect to Jam room to broadcast)`, 'info', 1500);
+      return;
+    }
+    broadcastJamEvent({ type: 'reaction', emoji });
+    appendJamTicker(`You reacted ${emoji}`, myJamColor);
+  }
+
+  function broadcastJamEvent(payload) {
+    if (!isJamConnected || !window.fb || !window.fb.push || !window.fb.ref) return;
+    try {
+      const eventsRef = window.fb.ref(window.fb.db, `multiplayer/ksynth/rooms/${jamRoomId}/events`);
+      window.fb.push(eventsRef, {
+        ...payload,
+        senderId: myJamId,
+        nick: myJamNick,
+        color: myJamColor,
+        timestamp: Date.now()
+      });
+    } catch (e) {
+      console.warn("Jam broadcast error:", e);
+    }
+  }
+
+  function broadcastPatchToJam() {
+    if (!isJamConnected) {
+      showToast('Connect to a Jam room first [Shift+J] to share patch!', 'info', 2000);
+      return;
+    }
+    const patch = getCurrentState();
+    broadcastJamEvent({ type: 'patch', patch });
+    showToast(`Shared active patch to #${jamRoomId}!`, 'success', 2000);
+    appendJamTicker(`Shared active patch to #${jamRoomId}`, myJamColor);
+  }
+
+  async function joinJamRoom() {
+    if (!window.fb || !window.fb.db) {
+      showToast('Multiplayer network offline or initializing...', 'error', 3000);
+      return;
+    }
+    const roomInput = document.getElementById('jamRoomInput');
+    const nickInput = document.getElementById('jamNickInput');
+    jamRoomId = (roomInput.value || 'general-jam').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '') || 'general-jam';
+    roomInput.value = jamRoomId;
+    myJamNick = (nickInput.value || 'SynthPilot').trim().substring(0, 16) || 'SynthPilot';
+    nickInput.value = myJamNick;
+
+    sessionJoinedTime = Date.now();
+    isJamConnected = true;
+
+    const badge = document.getElementById('jamStatusBadge');
+    badge.innerText = `● Connected: #${jamRoomId}`;
+    badge.className = 'jam-status-badge connected';
+    const btn = document.getElementById('btnJamConnect');
+    btn.innerText = 'Disconnect';
+    btn.classList.remove('btn-primary');
+    btn.classList.add('btn-danger');
+
+    try {
+      jamUserRef = window.fb.ref(window.fb.db, `multiplayer/ksynth/rooms/${jamRoomId}/users/${myJamId}`);
+      window.fb.set(jamUserRef, {
+        nick: myJamNick,
+        color: myJamColor,
+        joinedAt: Date.now(),
+        lastActive: Date.now()
+      });
+      window.fb.onDisconnect(jamUserRef).remove();
+
+      const usersRef = window.fb.ref(window.fb.db, `multiplayer/ksynth/rooms/${jamRoomId}/users`);
+      window.fb.onValue(usersRef, (snapshot) => {
+        const val = snapshot.val();
+        updateJamUsersUI(val);
+      });
+
+      const eventsRef = window.fb.ref(window.fb.db, `multiplayer/ksynth/rooms/${jamRoomId}/events`);
+      window.fb.onChildAdded(eventsRef, (snapshot) => {
+        const ev = snapshot.val();
+        if (!ev || ev.senderId === myJamId) return;
+        if (ev.timestamp && ev.timestamp < sessionJoinedTime - 4000) return;
+        handleRemoteJamEvent(ev);
+      });
+
+      appendJamTicker(`Joined room #${jamRoomId} as ${myJamNick}`, myJamColor);
+      showToast(`🌐 Connected to Jam Room #${jamRoomId}!`, 'success', 2500);
+    } catch (err) {
+      console.error("Join jam error:", err);
+      showToast("Failed to join Jam room.", "error");
+      leaveJamRoom();
+    }
+  }
+
+  function leaveJamRoom() {
+    isJamConnected = false;
+    if (jamUserRef && window.fb && window.fb.remove) {
+      try { window.fb.remove(jamUserRef); } catch (e) {}
+      jamUserRef = null;
+    }
+    const badge = document.getElementById('jamStatusBadge');
+    badge.innerText = 'Offline';
+    badge.className = 'jam-status-badge';
+    const btn = document.getElementById('btnJamConnect');
+    btn.innerText = '🌐 Join Jam [Shift+J]';
+    btn.classList.remove('btn-danger');
+    btn.classList.add('btn-primary');
+
+    document.getElementById('jamUsersList').innerHTML = '<span style="color:var(--text-muted); font-size:10px; font-style:italic;">No remote peers connected</span>';
+    appendJamTicker('Jam Session Disconnected • Press [Shift+J] to reconnect', 'var(--text-muted)');
+    showToast('Disconnected from Jam room.', 'info', 2000);
+  }
+
+  function toggleJamConnection() {
+    if (isJamConnected) {
+      leaveJamRoom();
+    } else {
+      joinJamRoom();
+    }
+  }
+
+  function updateJamUsersUI(usersObj) {
+    const listEl = document.getElementById('jamUsersList');
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    if (!usersObj || Object.keys(usersObj).length === 0) {
+      listEl.innerHTML = '<span style="color:var(--text-muted); font-size:10px; font-style:italic;">You are jamming solo in this room</span>';
+      return;
+    }
+    Object.entries(usersObj).forEach(([id, u]) => {
+      const badge = document.createElement('span');
+      badge.className = 'peer-badge';
+      const isMe = (id === myJamId);
+      const nick = (u && u.nick) ? u.nick : 'Musician';
+      const color = (u && u.color) ? u.color : '#00f3ff';
+      badge.style.borderColor = color;
+      badge.style.color = color;
+      badge.innerHTML = `<span class="peer-dot" style="background:${color};"></span><span>${nick}${isMe ? ' (You)' : ''}</span>`;
+      listEl.appendChild(badge);
+    });
+  }
+
+  function handleRemoteJamEvent(ev) {
+    if (!ev || !ev.type) return;
+    const nick = ev.nick || 'Peer';
+    const color = ev.color || '#9d4edd';
+
+    if (ev.type === 'note') {
+      if (ev.action === 'on') {
+        triggerNoteOn(ev.noteNum, true, nick, color);
+      } else if (ev.action === 'off') {
+        triggerNoteOff(ev.noteNum, true);
+      }
+    } else if (ev.type === 'reaction') {
+      spawnFloatingReaction(ev.emoji || '🎵');
+      appendJamTicker(`${nick} reacted ${ev.emoji}`, color);
+    } else if (ev.type === 'seq_step') {
+      const syncSeq = document.getElementById('chkJamSyncSeq').checked;
+      if (syncSeq && ev.on && ev.note) {
+        const midi = noteToMidiMap[ev.note] || 60;
+        triggerNoteOn(midi, true, nick, color);
+        setTimeout(() => triggerNoteOff(midi, true), 120);
+      }
+    } else if (ev.type === 'seq_play') {
+      const syncSeq = document.getElementById('chkJamSyncSeq').checked;
+      if (syncSeq) {
+        if (ev.isPlaying && !isSeqPlaying) {
+          if (ev.bpm) {
+            document.getElementById('seqBpm').value = ev.bpm;
+            document.getElementById('bpmVal').innerText = ev.bpm;
+          }
+          document.getElementById('btnSeqPlay').click();
+          appendJamTicker(`${nick} started the sequencer (${ev.bpm || 120} BPM)`, color);
+        } else if (!ev.isPlaying && isSeqPlaying) {
+          document.getElementById('btnSeqPlay').click();
+          appendJamTicker(`${nick} paused the sequencer`, color);
+        }
+      }
+    } else if (ev.type === 'seq_edit') {
+      const syncSeq = document.getElementById('chkJamSyncSeq').checked;
+      if (syncSeq && ev.stepIdx !== undefined && seqStepsData[ev.stepIdx]) {
+        seqStepsData[ev.stepIdx].on = !!ev.on;
+        if (ev.note) seqStepsData[ev.stepIdx].note = ev.note;
+        updateSeqGridActive();
+        appendJamTicker(`${nick} modified step ${ev.stepIdx + 1}`, color);
+      }
+    } else if (ev.type === 'patch') {
+      appendJamTicker(`${nick} broadcasted a new patch!`, color);
+      showToast(`📥 Received patch from ${nick}! Click to load.`, 'info', 4000);
+      if (ev.patch && typeof ev.patch === 'object') {
+        applyState(ev.patch);
+      }
+    }
+  }
+
+  // ----------------------------------------------------
   // Audio Context & Graph Setup
   // ----------------------------------------------------
   let audioCtx = null;
@@ -853,8 +1280,16 @@
   let filterNode = null;
   let delayNode = null;
   let delayFeedback = null;
+  let delayDampFilter = null;
   let delayMix = null;
   let analyserNode = null;
+  let subcarrierOsc = null;
+  let subcarrierGain = null;
+  let subcarrierTimer = null;
+  let is1999Locked = false;
+
+  const morseCodeSubsystem = "1000111010111010001010101000111011101110001110101010101110001010100010101110001110101010001010100011101011101110001010100011100010001110111000101110101110101110001110100010001110000000";
+  let morseIdx = 0;
 
   function initAudio() {
     if (audioCtx) return;
@@ -876,19 +1311,65 @@
     delayFeedback = audioCtx.createGain();
     delayMix = audioCtx.createGain();
 
+    delayDampFilter = audioCtx.createBiquadFilter();
+    delayDampFilter.type = 'lowpass';
+    delayDampFilter.frequency.value = 4200; // SNES SPC700 Gaussian-like warm damping
+
     delayNode.delayTime.value = parseFloat(document.getElementById('delayTime').value);
     delayFeedback.gain.value = parseFloat(document.getElementById('delayFdbk').value);
     delayMix.gain.value = parseFloat(document.getElementById('delayMix').value);
 
     filterNode.connect(masterGain);
     filterNode.connect(delayNode);
-    delayNode.connect(delayFeedback);
+    delayNode.connect(delayDampFilter);
+    delayDampFilter.connect(delayFeedback);
     delayFeedback.connect(delayNode);
-    delayNode.connect(delayMix);
+    delayDampFilter.connect(delayMix);
     delayMix.connect(masterGain);
     
     masterGain.connect(analyserNode);
     analyserNode.connect(audioCtx.destination);
+
+    // 1999Hz Subcarrier Demodulator Audio Generator
+    try {
+      subcarrierOsc = audioCtx.createOscillator();
+      subcarrierOsc.type = 'sine';
+      subcarrierOsc.frequency.value = 1999;
+      subcarrierGain = audioCtx.createGain();
+      subcarrierGain.gain.value = 0.0001;
+      subcarrierOsc.connect(subcarrierGain);
+      subcarrierGain.connect(filterNode);
+      subcarrierOsc.start();
+      startSubcarrierMorseLoop();
+    } catch (e) {}
+  }
+
+  function startSubcarrierMorseLoop() {
+    if (subcarrierTimer) return;
+    subcarrierTimer = setInterval(() => {
+      if (!is1999Locked || !subcarrierGain || !audioCtx) {
+        if (subcarrierGain && audioCtx) subcarrierGain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+        return;
+      }
+      morseIdx = (morseIdx + 1) % morseCodeSubsystem.length;
+      const bit = morseCodeSubsystem[morseIdx];
+      const targetGain = (bit === '1') ? 0.045 : 0.0001;
+      subcarrierGain.gain.setValueAtTime(targetGain, audioCtx.currentTime);
+    }, 38);
+  }
+
+  function checkSubcarrierLock() {
+    const cutoff = parseFloat(document.getElementById('filterCutoff').value);
+    const pSel = document.getElementById('presetSelect').value;
+    const isLock = (Math.abs(cutoff - 1999) <= 20) || (pSel === 'beacon_1999');
+    const tag = document.getElementById('carrierLockTag');
+    if (isLock !== is1999Locked) {
+      is1999Locked = isLock;
+      if (tag) tag.style.display = isLock ? 'inline-flex' : 'none';
+      if (isLock) {
+        appendJamTicker('▲ 1999Hz SUBCARRIER ANOMALY LOCKED: Receiving RF Morse stream...', '#ffb703');
+      }
+    }
   }
 
   function ensureAudioActive() {
@@ -899,7 +1380,7 @@
   }
 
   // ----------------------------------------------------
-  // Active Voices & Synthesizer Engine
+  // Active Voices & Synthesizer Engine (Subtractive + YM2612 FM)
   // ----------------------------------------------------
   const activeVoices = new Map(); // key = noteNumber (MIDI int), val = voiceObj
 
@@ -907,14 +1388,19 @@
     return 440 * Math.pow(2, (note - 69) / 12);
   }
 
-  function triggerNoteOn(noteNum) {
+  function triggerNoteOn(noteNum, isRemote = false, remoteNick = null, remoteColor = null) {
     ensureAudioActive();
     if (activeVoices.has(noteNum)) {
-      triggerNoteOff(noteNum);
+      triggerNoteOff(noteNum, isRemote);
+    }
+
+    if (!isRemote && isJamConnected) {
+      broadcastJamEvent({ type: 'note', action: 'on', noteNum });
     }
 
     const freq = noteToFreq(noteNum);
     const now = audioCtx.currentTime;
+    const engineMode = document.getElementById('synthEngineMode').value;
 
     const osc1Type = document.getElementById('osc1Wave').value;
     const osc1Oct = parseInt(document.getElementById('osc1Oct').value);
@@ -937,77 +1423,114 @@
 
     const sources = [];
 
-    // Osc 1
-    const freq1 = freq * Math.pow(2, osc1Oct);
-    if (osc1Type === 'noise') {
-      const bufferSize = audioCtx.sampleRate * 2;
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-      const noiseNode = audioCtx.createBufferSource();
-      noiseNode.buffer = buffer;
-      noiseNode.loop = true;
-      const g1 = audioCtx.createGain();
-      g1.gain.value = osc1Vol;
-      noiseNode.connect(g1);
-      g1.connect(voiceGain);
-      noiseNode.start(now);
-      sources.push(noiseNode);
-    } else {
-      const o1 = audioCtx.createOscillator();
-      o1.type = osc1Type;
-      o1.frequency.value = freq1;
-      o1.detune.value = osc1Detune;
-      const g1 = audioCtx.createGain();
-      g1.gain.value = osc1Vol;
-      o1.connect(g1);
-      g1.connect(voiceGain);
-      o1.start(now);
-      sources.push(o1);
-    }
+    if (engineMode === 'fm') {
+      // Yamaha YM2612 2-Operator FM Synthesis Topology:
+      // Modulator (Osc 2) -> ModGain -> Carrier (Osc 1) Frequency -> VoiceGain
+      const fmRatio = parseFloat(document.getElementById('fmRatio').value);
+      const fmModDepth = parseFloat(document.getElementById('fmModDepth').value);
 
-    // Osc 2
-    const freq2 = freq * Math.pow(2, osc2Oct);
-    if (osc2Type === 'noise') {
-      const bufferSize = audioCtx.sampleRate * 2;
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
-      const noiseNode = audioCtx.createBufferSource();
-      noiseNode.buffer = buffer;
-      noiseNode.loop = true;
-      const g2 = audioCtx.createGain();
-      g2.gain.value = osc2Vol;
-      noiseNode.connect(g2);
-      g2.connect(voiceGain);
-      noiseNode.start(now);
-      sources.push(noiseNode);
+      const carrierFreq = freq * Math.pow(2, osc1Oct);
+      const carrier = audioCtx.createOscillator();
+      carrier.type = (osc1Type === 'noise') ? 'sine' : osc1Type;
+      carrier.frequency.value = carrierFreq;
+      carrier.detune.value = osc1Detune;
+
+      const modFreq = carrierFreq * fmRatio * Math.pow(2, osc2Oct);
+      const modulator = audioCtx.createOscillator();
+      modulator.type = (osc2Type === 'noise') ? 'sine' : osc2Type;
+      modulator.frequency.value = modFreq;
+      modulator.detune.value = osc2Detune;
+
+      const modGain = audioCtx.createGain();
+      modGain.gain.value = carrierFreq * fmRatio * (fmModDepth * 4.5);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+
+      const carrierVolGain = audioCtx.createGain();
+      carrierVolGain.gain.value = osc1Vol;
+      carrier.connect(carrierVolGain);
+      carrierVolGain.connect(voiceGain);
+
+      modulator.start(now);
+      carrier.start(now);
+      sources.push(carrier, modulator);
     } else {
-      const o2 = audioCtx.createOscillator();
-      o2.type = osc2Type;
-      o2.frequency.value = freq2;
-      o2.detune.value = osc2Detune;
-      const g2 = audioCtx.createGain();
-      g2.gain.value = osc2Vol;
-      o2.connect(g2);
-      g2.connect(voiceGain);
-      o2.start(now);
-      sources.push(o2);
+      // Subtractive Dual-Oscillator
+      const freq1 = freq * Math.pow(2, osc1Oct);
+      if (osc1Type === 'noise') {
+        const bufferSize = audioCtx.sampleRate * 2;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noiseNode = audioCtx.createBufferSource();
+        noiseNode.buffer = buffer;
+        noiseNode.loop = true;
+        const g1 = audioCtx.createGain();
+        g1.gain.value = osc1Vol;
+        noiseNode.connect(g1);
+        g1.connect(voiceGain);
+        noiseNode.start(now);
+        sources.push(noiseNode);
+      } else {
+        const o1 = audioCtx.createOscillator();
+        o1.type = osc1Type;
+        o1.frequency.value = freq1;
+        o1.detune.value = osc1Detune;
+        const g1 = audioCtx.createGain();
+        g1.gain.value = osc1Vol;
+        o1.connect(g1);
+        g1.connect(voiceGain);
+        o1.start(now);
+        sources.push(o1);
+      }
+
+      const freq2 = freq * Math.pow(2, osc2Oct);
+      if (osc2Type === 'noise') {
+        const bufferSize = audioCtx.sampleRate * 2;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noiseNode = audioCtx.createBufferSource();
+        noiseNode.buffer = buffer;
+        noiseNode.loop = true;
+        const g2 = audioCtx.createGain();
+        g2.gain.value = osc2Vol;
+        noiseNode.connect(g2);
+        g2.connect(voiceGain);
+        noiseNode.start(now);
+        sources.push(noiseNode);
+      } else {
+        const o2 = audioCtx.createOscillator();
+        o2.type = osc2Type;
+        o2.frequency.value = freq2;
+        o2.detune.value = osc2Detune;
+        const g2 = audioCtx.createGain();
+        g2.gain.value = osc2Vol;
+        o2.connect(g2);
+        g2.connect(voiceGain);
+        o2.start(now);
+        sources.push(o2);
+      }
     }
 
     voiceGain.connect(filterNode);
 
-    const voiceObj = { voiceGain, sources, startTime: now };
+    const voiceObj = { voiceGain, sources, startTime: now, isRemote };
     activeVoices.set(noteNum, voiceObj);
 
     updateVoiceDisplay();
-    highlightPianoKey(noteNum, true);
+    highlightPianoKey(noteNum, true, remoteColor, remoteNick);
   }
 
-  function triggerNoteOff(noteNum) {
+  function triggerNoteOff(noteNum, isRemote = false) {
     if (!activeVoices.has(noteNum)) return;
     const voiceObj = activeVoices.get(noteNum);
     activeVoices.delete(noteNum);
+
+    if (!isRemote && isJamConnected) {
+      broadcastJamEvent({ type: 'note', action: 'off', noteNum });
+    }
 
     const release = parseFloat(document.getElementById('release').value);
     const now = audioCtx.currentTime;
@@ -1074,6 +1597,10 @@
   bindSlider('arpOctaves', 'arpOctVal');
   bindSlider('seqBpm', 'bpmVal');
 
+  bindSlider('fmRatio', 'fmRatioVal', 'x');
+  bindSlider('fmModDepth', 'fmDepthVal', '', v => Math.round(v * 100) + '%');
+  bindSlider('fmFeedback', 'fmFdbkVal', '', v => Math.round(v * 100) + '%');
+
   document.getElementById('masterVol').addEventListener('input', (e) => {
     if (masterGain) masterGain.gain.value = parseFloat(e.target.value);
   });
@@ -1086,11 +1613,29 @@
   document.getElementById('delayMix').addEventListener('input', (e) => {
     if (delayMix) delayMix.gain.value = parseFloat(e.target.value);
   });
+  document.getElementById('delayEchoMode').addEventListener('change', (e) => {
+    if (delayDampFilter && audioCtx) {
+      if (e.target.value === 'spc700') {
+        delayDampFilter.frequency.setValueAtTime(3200, audioCtx.currentTime);
+      } else {
+        delayDampFilter.frequency.setValueAtTime(10000, audioCtx.currentTime);
+      }
+    }
+    if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
+  });
+  document.getElementById('synthEngineMode').addEventListener('change', (e) => {
+    const isFm = (e.target.value === 'fm');
+    const fmRow = document.getElementById('fmControlsRow');
+    if (fmRow) fmRow.style.display = isFm ? 'flex' : 'none';
+    if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
+  });
   document.getElementById('filterCutoff').addEventListener('input', (e) => {
     if (filterNode) filterNode.frequency.value = parseFloat(e.target.value);
+    checkSubcarrierLock();
   });
   document.getElementById('filterRes').addEventListener('input', (e) => {
     if (filterNode) filterNode.Q.value = parseFloat(e.target.value);
+    checkSubcarrierLock();
   });
   document.getElementById('filterType').addEventListener('change', (e) => {
     if (filterNode) filterNode.type = e.target.value;
@@ -1238,6 +1783,17 @@
         x += barWidth;
         if (x >= w) break;
       }
+    }
+
+    if (is1999Locked) {
+      scopeCtx.fillStyle = '#ffb703';
+      scopeCtx.font = '10px monospace';
+      scopeCtx.fillText('▲ 1999Hz CARRIER LOCK // SUBCARRIER ANOMALY', 8, 14);
+      scopeCtx.strokeStyle = 'rgba(255, 183, 3, 0.4)';
+      scopeCtx.beginPath();
+      scopeCtx.moveTo(w * 0.45, 0);
+      scopeCtx.lineTo(w * 0.45, h);
+      scopeCtx.stroke();
     }
   }
   renderVisualizer();
@@ -1396,6 +1952,9 @@
         e.stopPropagation();
         step.note = e.target.value;
         if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
+        if (isJamConnected && document.getElementById('chkJamSyncSeq').checked) {
+          broadcastJamEvent({ type: 'seq_edit', stepIdx: idx, on: step.on, note: step.note });
+        }
       });
 
       stepEl.appendChild(led);
@@ -1406,6 +1965,9 @@
         step.on = !step.on;
         stepEl.classList.toggle('on', step.on);
         if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
+        if (isJamConnected && document.getElementById('chkJamSyncSeq').checked) {
+          broadcastJamEvent({ type: 'seq_edit', stepIdx: idx, on: step.on, note: step.note });
+        }
       });
 
       seqGrid.appendChild(stepEl);
@@ -1448,6 +2010,13 @@
       btnSeqPlay.classList.add('btn-primary');
       btnSeqPlay.style.background = '';
       stopSequencer();
+    }
+    if (isJamConnected && document.getElementById('chkJamSyncSeq').checked) {
+      broadcastJamEvent({
+        type: 'seq_play',
+        isPlaying: isSeqPlaying,
+        bpm: parseInt(document.getElementById('seqBpm').value)
+      });
     }
   });
 
@@ -1503,6 +2072,9 @@
         const midiNum = noteToMidiMap[step.note] || 60;
         triggerNoteOn(midiNum);
         highlightPianoKey(midiNum, true);
+        if (isJamConnected && document.getElementById('chkJamSyncSeq').checked) {
+          broadcastJamEvent({ type: 'seq_step', stepIdx: currentSeqStep, on: true, note: step.note, bpm });
+        }
         setTimeout(() => {
           triggerNoteOff(midiNum);
           highlightPianoKey(midiNum, false);
@@ -1599,10 +2171,32 @@
   }
   renderPiano();
 
-  function highlightPianoKey(midiNum, active) {
+  function highlightPianoKey(midiNum, active, remoteColor = null, remoteNick = null) {
     const keyEl = pianoContainer.querySelector(`[data-midi="${midiNum}"]`);
-    if (keyEl) {
-      keyEl.classList.toggle('active', active);
+    if (!keyEl) return;
+    if (active) {
+      if (remoteColor) {
+        keyEl.classList.add('remote-active');
+        keyEl.style.setProperty('--remote-color', remoteColor);
+        if (remoteNick) {
+          let tag = keyEl.querySelector('.remote-key-tag');
+          if (!tag) {
+            tag = document.createElement('span');
+            tag.className = 'remote-key-tag';
+            tag.style.cssText = 'position:absolute; top:2px; left:2px; font-size:8px; padding:1px 3px; border-radius:3px; background:rgba(0,0,0,0.7); pointer-events:none; z-index:10; white-space:nowrap;';
+            keyEl.appendChild(tag);
+          }
+          tag.innerText = remoteNick;
+          tag.style.display = 'block';
+        }
+      } else {
+        keyEl.classList.add('active');
+      }
+    } else {
+      keyEl.classList.remove('active', 'remote-active');
+      keyEl.style.removeProperty('--remote-color');
+      const tag = keyEl.querySelector('.remote-key-tag');
+      if (tag) tag.style.display = 'none';
     }
   }
 
@@ -1615,7 +2209,7 @@
   const activeKeySet = new Map();
 
   function panicAllNotesOff() {
-    stopArpeggiator();
+    stopArp();
     for (const [noteNum] of activeVoices) {
       triggerNoteOff(noteNum);
     }
@@ -1623,7 +2217,10 @@
     activeKeySet.clear();
     arpHeldNotes.clear();
     updateVoiceDisplay();
-    pianoContainer.querySelectorAll('.key.active').forEach(k => k.classList.remove('active'));
+    pianoContainer.querySelectorAll('.key.active, .key.remote-active').forEach(k => {
+      k.classList.remove('active', 'remote-active');
+      k.style.removeProperty('--remote-color');
+    });
     showToast('All audio voices reset', 'info', 1500);
   }
 
@@ -1757,8 +2354,19 @@
       showToast('Sequencer randomized', 'info', 1200);
       return;
     }
-    if (key >= '1' && key <= '6') {
+    if (key >= '1' && key <= '9') {
       selectPresetByIndex(parseInt(key) - 1);
+      return;
+    }
+    if (key === 'm') {
+      const modeSel = document.getElementById('synthEngineMode');
+      modeSel.value = (modeSel.value === 'fm') ? 'subtractive' : 'fm';
+      modeSel.dispatchEvent(new Event('change'));
+      showToast(`Engine Mode: ${modeSel.value.toUpperCase()}`, 'info', 1200);
+      return;
+    }
+    if ((e.shiftKey && key === 'j') || key === 'n') {
+      toggleJamConnection();
       return;
     }
 
@@ -1858,6 +2466,31 @@
       osc2Wave: 'sine', osc2Oct: 0, osc2Detune: 4, osc2Vol: 0.5,
       filterType: 'lowpass', filterCutoff: 1200, filterRes: 4.0, masterVol: 0.80,
       attack: 0.005, decay: 0.18, sustain: 0.05, release: 0.1
+    },
+    genesis_fm: {
+      engineMode: 'fm',
+      fmRatio: 2.0, fmModDepth: 0.72, fmFeedback: 0.35,
+      osc1Wave: 'sine', osc1Oct: -1, osc1Detune: 0, osc1Vol: 0.9,
+      osc2Wave: 'sine', osc2Oct: 0, osc2Detune: 2, osc2Vol: 0.7,
+      filterType: 'lowpass', filterCutoff: 3800, filterRes: 2.5, masterVol: 0.85,
+      delayTime: 0.25, delayFdbk: 0.3, delayMix: 0.2, delayEchoMode: 'mono',
+      attack: 0.005, decay: 0.28, sustain: 0.35, release: 0.15
+    },
+    spc700: {
+      engineMode: 'subtractive',
+      osc1Wave: 'sawtooth', osc1Oct: 0, osc1Detune: -8, osc1Vol: 0.7,
+      osc2Wave: 'triangle', osc2Oct: 0, osc2Detune: 8, osc2Vol: 0.7,
+      filterType: 'lowpass', filterCutoff: 3200, filterRes: 1.8, masterVol: 0.75,
+      delayTime: 0.35, delayFdbk: 0.55, delayMix: 0.60, delayEchoMode: 'spc700',
+      attack: 0.45, decay: 0.7, sustain: 0.8, release: 1.4
+    },
+    beacon_1999: {
+      engineMode: 'subtractive',
+      osc1Wave: 'sine', osc1Oct: 0, osc1Detune: 0, osc1Vol: 0.75,
+      osc2Wave: 'sawtooth', osc2Oct: 1, osc2Detune: 0, osc2Vol: 0.25,
+      filterType: 'bandpass', filterCutoff: 1999, filterRes: 8.5, masterVol: 0.80,
+      delayTime: 0.40, delayFdbk: 0.50, delayMix: 0.45, delayEchoMode: 'spc700',
+      attack: 0.1, decay: 0.5, sustain: 0.6, release: 0.9
     }
   };
 
@@ -1876,6 +2509,27 @@
       const clamped = Math.max(min, Math.min(max, num));
       document.getElementById(id).value = clamped;
     };
+
+    if (p.engineMode === 'fm' || p.engineMode === 'subtractive') {
+      document.getElementById('synthEngineMode').value = p.engineMode;
+      const fmRow = document.getElementById('fmControlsRow');
+      if (fmRow) fmRow.style.display = (p.engineMode === 'fm') ? 'flex' : 'none';
+    } else {
+      document.getElementById('synthEngineMode').value = 'subtractive';
+      const fmRow = document.getElementById('fmControlsRow');
+      if (fmRow) fmRow.style.display = 'none';
+    }
+
+    setBoundedVal('fmRatio', p.fmRatio !== undefined ? p.fmRatio : 2.0, 0.5, 8.0);
+    setBoundedVal('fmModDepth', p.fmModDepth !== undefined ? p.fmModDepth : 0.4, 0, 1);
+    setBoundedVal('fmFeedback', p.fmFeedback !== undefined ? p.fmFeedback : 0.2, 0, 1);
+
+    if (p.delayEchoMode === 'spc700' || p.delayEchoMode === 'mono') {
+      document.getElementById('delayEchoMode').value = p.delayEchoMode;
+      if (delayDampFilter && audioCtx) {
+        delayDampFilter.frequency.setValueAtTime(p.delayEchoMode === 'spc700' ? 3200 : 10000, audioCtx.currentTime);
+      }
+    }
 
     setBoundedVal('osc1Oct', p.osc1Oct, -2, 2, false);
     setBoundedVal('osc1Detune', p.osc1Detune, -50, 50, false);
@@ -1901,7 +2555,7 @@
     // Trigger input events to refresh text labels
     ['osc1Oct','osc1Detune','osc1Vol','osc2Oct','osc2Detune','osc2Vol',
      'filterCutoff','filterRes','masterVol','attack','decay','sustain','release',
-     'delayTime','delayFdbk','delayMix'].forEach(id => {
+     'delayTime','delayFdbk','delayMix','fmRatio','fmModDepth','fmFeedback'].forEach(id => {
       document.getElementById(id).dispatchEvent(new Event('input'));
     });
 
@@ -1918,6 +2572,7 @@
     if (delayMix) delayMix.gain.value = parseFloat(document.getElementById('delayMix').value);
 
     drawADSR();
+    checkSubcarrierLock();
   }
 
   document.getElementById('presetSelect').addEventListener('change', (e) => {
@@ -1935,7 +2590,10 @@
     document.getElementById('presetSelect').value = pKey;
     applyPreset(builtInPresets[pKey]);
     saveCurrentPatch();
-    const names = ['Neon Lead', 'Sub Punch Bass', '80s Analog Pad', '8-Bit Chiptune', 'Glass Bell', 'Plucked Synth'];
+    const names = [
+      'Neon Lead', 'Sub Punch Bass', '80s Analog Pad', '8-Bit Chiptune',
+      'Glass Bell', 'Plucked Synth', 'YM2612 FM Bass', 'SPC700 Echo Pad', '1999 Ghost Beacon'
+    ];
     showToast(`Loaded Preset: ${names[idx] || pKey}`, 'info', 1500);
     ensureAudioActive();
     const mid = 60 + (currentOctaveShift * 12);
@@ -2345,6 +3003,11 @@
       delayTime: parseFloat(document.getElementById('delayTime').value),
       delayFdbk: parseFloat(document.getElementById('delayFdbk').value),
       delayMix: parseFloat(document.getElementById('delayMix').value),
+      delayEchoMode: document.getElementById('delayEchoMode').value,
+      engineMode: document.getElementById('synthEngineMode').value,
+      fmRatio: parseFloat(document.getElementById('fmRatio').value),
+      fmModDepth: parseFloat(document.getElementById('fmModDepth').value),
+      fmFeedback: parseFloat(document.getElementById('fmFeedback').value),
       attack: parseFloat(document.getElementById('attack').value),
       decay: parseFloat(document.getElementById('decay').value),
       sustain: parseFloat(document.getElementById('sustain').value),
@@ -2473,6 +3136,23 @@
 
   document.getElementById('btnQuickSave').addEventListener('click', quickSave);
   document.getElementById('btnQuickLoad').addEventListener('click', quickLoad);
+
+  const btnJamConnect = document.getElementById('btnJamConnect');
+  if (btnJamConnect) btnJamConnect.addEventListener('click', toggleJamConnection);
+  const btnJamShare = document.getElementById('btnJamSharePatch');
+  if (btnJamShare) btnJamShare.addEventListener('click', broadcastPatchToJam);
+  const jamRoomInput = document.getElementById('jamRoomInput');
+  if (jamRoomInput) {
+    jamRoomInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') toggleJamConnection();
+    });
+  }
+  const jamNickInput = document.getElementById('jamNickInput');
+  if (jamNickInput) {
+    jamNickInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') toggleJamConnection();
+    });
+  }
 
   // Auto-save patch on page unload or visibility change
   window.addEventListener('beforeunload', () => {

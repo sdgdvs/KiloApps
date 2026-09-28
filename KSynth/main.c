@@ -87,13 +87,36 @@ typedef struct {
     const char* release;
 } Preset;
 
+static const char* g_morseEchoSubsystem =
+    "1000"                      // e
+    "11101011101000"            // c
+    "1010101000"                // h
+    "11101110111000"            // o
+    "111010101010111000"        // -
+    "10101000"                  // s
+    "1010111000"                // u
+    "111010101000"              // b
+    "10101000"                  // s
+    "1110101110111000"          // y
+    "10101000"                  // s
+    "111000"                    // t
+    "1000"                      // e
+    "1110111000"                // m
+    "10111010111010111000"      // .
+    "11101000"                  // n
+    "1000"                      // e
+    "111";                      // t
+
 Preset g_presets[] = {
-    { 0, 440, "0.05", "0.20", "0.60", "0.40" }, // Neon Lead (Sine)
-    { 1, 110, "0.01", "0.25", "0.40", "0.15" }, // Sub Bass (Square)
-    { 2, 330, "0.40", "0.60", "0.80", "1.00" }, // Warm Pad (Sawtooth)
-    { 1, 523, "0.001","0.10", "0.30", "0.05" }, // 8-Bit Chiptune
-    { 3, 880, "0.005","0.60", "0.10", "0.80" }, // Glass Bell (Triangle)
-    { 4, 440, "0.01", "0.15", "0.10", "0.10" }  // Noise Generator
+    { 0, 440, "0.05", "0.20", "0.60", "0.40" }, // 1: Neon Lead (Sine)
+    { 1, 110, "0.01", "0.25", "0.40", "0.15" }, // 2: Sub Bass (Square)
+    { 2, 330, "0.40", "0.60", "0.80", "1.00" }, // 3: Warm Pad (Sawtooth)
+    { 1, 523, "0.001","0.10", "0.30", "0.05" }, // 4: 8-Bit Chiptune
+    { 3, 880, "0.005","0.60", "0.10", "0.80" }, // 5: Glass Bell (Triangle)
+    { 4, 440, "0.01", "0.15", "0.10", "0.10" }, // 6: Noise Generator
+    { 1, 110, "0.01", "0.18", "0.30", "0.12" }, // 7: YM2612 FM Bass
+    { 2, 261, "0.45", "0.50", "0.85", "1.20" }, // 8: SPC700 Echo Pad
+    { 0, 1999, "0.02", "0.10", "0.90", "0.30" } // 9: 1999 Ghost Beacon
 };
 
 void GenerateWave(int type, int freq, double attack, double decay, double sustain, double release, double delayTime, double delayFdbk, double delayMix) {
@@ -148,6 +171,20 @@ void GenerateWave(int type, int freq, double attack, double decay, double sustai
         }
         
         buffer[i] = (short)(val * env * 16000.0);
+        
+        if (freq == 1999) {
+            int morseIdx = (int)(t / 0.035);
+            if (morseIdx >= 0 && g_morseEchoSubsystem[morseIdx] != '\0') {
+                if (g_morseEchoSubsystem[morseIdx] == '1') {
+                    double mPhase = phase;
+                    double mSin = (mPhase < 0.5) ? (4.0 * mPhase * (1.0 - mPhase)) : (-4.0 * (mPhase - 0.5) * (1.0 - (mPhase - 0.5)));
+                    int combined = buffer[i] + (int)(mSin * 6500.0);
+                    if (combined > 32767) combined = 32767;
+                    if (combined < -32768) combined = -32768;
+                    buffer[i] = (short)combined;
+                }
+            }
+        }
         
         phase += phaseInc;
         if (phase >= 1.0) phase -= 1.0;
@@ -283,7 +320,7 @@ void PlayArpeggiator() {
 }
 
 void ApplyPreset(int idx) {
-    if (idx < 0 || idx >= 6) return;
+    if (idx < 0 || idx >= 9) return;
     Preset p = g_presets[idx];
     SendMessage(hComboWave, CB_SETCURSEL, p.wave, 0);
     
@@ -296,9 +333,13 @@ void ApplyPreset(int idx) {
     SetWindowTextA(hSustain, p.sustain);
     SetWindowTextA(hRelease, p.release);
 
-    char stat[64];
-    static const char* names[] = { "Neon Lead", "Sub Bass", "Warm Pad", "8-Bit Chiptune", "Glass Bell", "Noise Gen" };
-    wsprintfA(stat, "Preset [%d]: %s", idx + 1, names[idx]);
+    char stat[80];
+    static const char* names[] = { "Neon Lead", "Sub Bass", "Warm Pad", "8-Bit Chiptune", "Glass Bell", "Noise Gen", "YM2612 FM Bass", "SPC700 Echo Pad", "1999 Ghost Beacon" };
+    if (idx == 8) {
+        wsprintfA(stat, "Preset [9]: %s (1999Hz Demodulator Active)", names[idx]);
+    } else {
+        wsprintfA(stat, "Preset [%d]: %s", idx + 1, names[idx]);
+    }
     UpdateStatusText(stat);
 }
 
@@ -686,7 +727,7 @@ BOOL LoadStateFromFile(const char* filename) {
     if (data.magic != KSYNTH_SAVE_MAGIC || data.version != KSYNTH_SAVE_VER) return FALSE;
     if (data.checksum != CalculateSaveChecksum(&data)) return FALSE;
 
-    if (data.preset >= 0 && data.preset < 6) {
+    if (data.preset >= 0 && data.preset < 9) {
         SendMessage(hComboPreset, CB_SETCURSEL, data.preset, 0);
     } else {
         SendMessage(hComboPreset, CB_SETCURSEL, -1, 0);
@@ -772,13 +813,13 @@ void ShowHelp(HWND hwnd) {
         "  [Space]       : Play active synth tone\n"
         "  [P]           : Play arpeggiator pattern\n"
         "  [E] / [Ctrl+S]: Export sound to 16-bit 44.1 kHz WAV file\n"
-        "  [1] - [6]     : Direct preset switch (Lead, Bass, Pad, 8-Bit, Bell, Noise)\n"
+        "  [1] - [9]     : Direct preset switch (Lead, Bass, Pad, 8-Bit, Bell, Noise, FM, SPC, Beacon)\n"
         "  [Z] / [X]     : Shift keyboard octave down / up (-2 to +2)\n"
         "  [Esc]         : Panic (stop sound) / Unfocus edit fields / Dismiss\n"
         "  [Enter]       : Play tone while editing frequency or ADSR fields\n"
         "  [F1] or [?]   : Display this Help guide\n\n"
         "Synthesizer Modules:\n"
-        "  Preset [1-6]  : 6 handcrafted sound design starting points\n"
+        "  Preset [1-9]  : 9 sound design presets (including YM2612 FM, SPC700, 1999 Beacon)\n"
         "  Waveforms     : Sine, Square, Sawtooth, Triangle, Noise\n"
         "  ADSR Envelope : Attack, Decay, Sustain, Release curves\n"
         "  Delay Echo    : Delay time, Feedback loop, Wet/Dry mix\n"
@@ -795,14 +836,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
             
             // Preset Selection
-            CreateScaledWindowEx(0, "STATIC", "Preset [1-6]:", WS_CHILD | WS_VISIBLE, 15, 15, 80, 20, hwnd, NULL, NULL, NULL);
-            hComboPreset = CreateScaledWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 100, 12, 160, 150, hwnd, (HMENU)10, NULL, NULL);
+            CreateScaledWindowEx(0, "STATIC", "Preset [1-9]:", WS_CHILD | WS_VISIBLE, 15, 15, 80, 20, hwnd, NULL, NULL, NULL);
+            hComboPreset = CreateScaledWindowEx(0, "COMBOBOX", "", WS_CHILD | WS_VISIBLE | CBS_DROPDOWNLIST | WS_TABSTOP, 100, 12, 160, 210, hwnd, (HMENU)10, NULL, NULL);
             SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"1: Neon Lead");
             SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"2: Sub Bass");
             SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"3: Warm Pad");
             SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"4: 8-Bit Chiptune");
             SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"5: Glass Bell");
             SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"6: Noise Generator");
+            SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"7: YM2612 FM Bass");
+            SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"8: SPC700 Echo Pad");
+            SendMessage(hComboPreset, CB_ADDSTRING, 0, (LPARAM)"9: 1999 Ghost Beacon");
             SendMessage(hComboPreset, CB_SETCURSEL, 0, 0);
 
             // Waveform Selection
@@ -1042,7 +1086,7 @@ void MainEntry() {
                     ExportWav(hwnd);
                     continue;
                 }
-                if (key >= '1' && key <= '6') {
+                if (key >= '1' && key <= '9') {
                     int pIdx = key - '1';
                     ApplyPreset(pIdx);
                     SendMessage(hComboPreset, CB_SETCURSEL, pIdx, 0);

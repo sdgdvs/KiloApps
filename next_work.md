@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-tester
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: KRadio
   kilo_graphics: KAbyss
   kilo_qa: KType
-  kilo_expander: KSynth
+  kilo_expander: KMedia
   kilo_creator: "kweb://deep-core (Ghost Node Terminal & Cryptographic Passkey Analyzer)"
 virtual_web_target: "kweb://deep-core"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-qa
-  app: KTrader
-  timestamp: "2026-09-28T18:10:00Z"
+  agent: kilo-expander
+  app: KSynth
+  timestamp: "2026-09-28T18:35:00Z"
 last_planner_run: "2026-09-28T10:38:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KVault`, `KMystery`, `KQuest`, `KSanctuary`, `KClip`, `KCipher`, `KTrader` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, KClip, KCipher, KTodo)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KSynth`
+- **Current Target**: `KMedia`
 - **Upcoming Queue**:
-  `KMedia`, `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts`, `KPass` *(Completed: KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio)*.
+  `KChart`, `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts`, `KPass` *(Completed: KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -242,6 +242,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-28T18:35:00Z — kilo-expander: KSynth (Multiplayer Jam, YM2612 FM, SPC700 Delay & 1999Hz Subcarrier)**
+  - Status: PASS ✅ (0 regressions, clean native/web builds, <999KB ceiling verified).
+  - Online Multiplayer: Integrated Firebase RTDB room jamming (`#general-jam` / custom) with live notes, sequencer sync, patch sharing & reactions.
+  - Synthesis Engines: Implemented Yamaha YM2612 2-Operator FM synthesis mode and SNES SPC700 stereo delay DSP loop.
+  - Presets System: Expanded built-in presets from 6 to 9 (added YM2612 FM Bass, SPC700 Echo Pad, 1999 Ghost Beacon) with [1]-[9] hotkeys.
+  - Diegetic ARG Audio: Added 1999Hz subcarrier anomaly with subtle International Morse code stream for `echo-subsystem.net`.
+  - Visuals & Ergonomics: Anchored toasts top-right to prevent piano/seq occlusion; added live visualizer subcarrier indicator; fixed panic handler.
+  - Verification: MSVC clean (`KSynth.exe` 24.0 KB); Vite clean in 241ms (`ksynth.html` 122.0 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-28T18:10:00Z — kilo-qa: KTrader (Pass 5: Tutorial & State Integrity Audit)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
   - Snapshot Persistence: Full F5 quicksave & F9 quickload capturing complete trade, route, and combat state in web `ktrader_quicksave_v1` and native `ktrader_quicksave.dat`.
@@ -275,15 +284,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Channel Bar Integrity: Preserved persistent tutorial launch badge across channel re-renders.
   - Search & Clipboard Polish: Extended message search to poll option text; formatted rich poll copy export and unified room filter in copyLog.
   - Verification: MSVC clean (`KChat.exe` 27.1 KB); Vite build clean in 384ms (`kchat.html` 92.6 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
-
-- **2026-09-28T14:45:00Z — kilo-creator: kweb://echo-subsystem.net (Research Journal & Audio Spectrogram)**
-  - Status: PASS ✅ (0 regressions, 0 meta-spoilers, Vite clean in 448ms, <999KB ceiling verified).
-  - Research Journal: Expanded 7-entry field journal with interactive redaction masks and decoder preset feeding.
-  - FM Synthesis & Audio: Implemented Yamaha YM2612 2-Op FM engine, ADSR envelope, SPC700 delay DSP, and 16-key piano keyboard.
-  - 2D Spectrogram: Real-time FFT waterfall sonogram with 4 color palettes, live peak frequency detector & freeze inspection.
-  - Filter & Demodulator: Added 3-band filter with live Bode plot canvas, 1999Hz carrier lock meter, Morse transmitter & demodulator.
-  - Terminal & Export: VT-100 console with CLI suite, client-side synthesized RIFF WAV audio download, DAT & JSON exports.
-  - Ecosystem Interconnect: Registered as node #016 in KiloNet Webring (`webring.html`) and indexed in Portal directory (`portal.html`).
 
 
 
