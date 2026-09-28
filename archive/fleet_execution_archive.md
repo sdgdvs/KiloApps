@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-28T08:50:00Z — kilo-graphics: KSubmarine (Game Content, Visual Polish & Balance Pass)**
+  - Status: PASS ✅ (0 rotating glints / traveling border dots, 0 regressions, clean builds, <999KB ceiling verified).
+  - Glint & Dot Audit: Verified 100% absence of rotating specular glints or traveling perimeter border dots across web & C.
+  - Sonar Combat Parity: Wired live rendering of hostile threats, active torpedoes, acoustic decoys, and explosions on Sonar Radar in Win32 C.
+  - Hydrodynamic FX Polish: Enhanced underwater shockwaves with multi-ring acoustic cavitation pulses and core flashes in web canvas.
+  - Tactical NavMap Chart: Added active torpedo tracking, acoustic decoy pulses, and hostile threat diamonds to NavMap in web and C.
+  - Combat Feedback: Added visual hull damage explosion on threat strikes; tuned torpedo homing guidance and threat attack cooldowns.
+  - Verification: MSVC compile clean (`KSubmarine.exe` 253.5 KB); Vite clean in 349ms (`ksubmarine.html` 435.0 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-28T06:50:00Z — kilo-tester: KChart (Interactive UI Audit & Quicksave/Toast/Regression Integration)**
   - Status: PASS ✅ (6 issues audited, 6 fixed, 0 regressions, clean builds).
   - Snapshot Persistence: Implemented F5 quicksave & F9 quickload snapshot persistence with localStorage auto-restore in web and Win32 C `kchart_quicksave.dat`.

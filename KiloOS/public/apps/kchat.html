@@ -590,17 +590,24 @@
         /* System notification toast */
         .toast {
             position: fixed;
-            bottom: 70px;
-            right: 20px;
-            background: var(--accent-purple);
-            color: white;
-            padding: 8px 14px;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 41, 59, 0.95);
+            color: #f1f5f9;
+            border: 1px solid rgba(139, 92, 246, 0.5);
+            padding: 8px 18px;
             border-radius: var(--radius-md);
-            font-weight: 500;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            font-weight: 600;
+            font-size: 13px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
             display: none;
-            animation: fadeIn 0.2s ease;
-            z-index: 100;
+            animation: fadeIn 0.18s ease;
+            z-index: 9999;
+            cursor: pointer;
+            pointer-events: auto;
+            max-width: 90%;
+            text-align: center;
         }
     </style>
 </head>
@@ -698,6 +705,7 @@
                         <div><strong>3. Interactive Polls:</strong> Click <strong>📊 Poll</strong> (or press <span class="key-badge">P</span>) to launch an instant room vote. Click any option bar or use <code>/vote 1</code> to cast a vote.</div>
                         <div><strong>4. Copy & Pin Messages:</strong> Click <strong>📋 Copy</strong> on any message to copy its text to the clipboard with instant confirmation, or <strong>📌 Pin</strong> to pin important notes to the room banner.</div>
                         <div><strong>5. Search & Export:</strong> Press <span class="key-badge">Ctrl+F</span> to filter messages with instant clear button. Click <strong>📋 Copy</strong>, <strong>📥 JSON</strong>, or <strong>📄 TXT</strong> to archive or export your conversations.</div>
+                        <div><strong>6. Quicksave & Quickload:</strong> Press <span class="key-badge">F5</span> to capture a local state snapshot. Press <span class="key-badge">F9</span> anytime to restore your snapshot.</div>
                     </div>
                 </div>
 
@@ -705,6 +713,8 @@
                     <div class="help-section-title">⌨️ Keyboard Shortcuts</div>
                     <table class="help-table">
                         <tr><td>[F1] or [H]</td><td>Open / Close this comprehensive Help Guide & Tutorial</td></tr>
+                        <tr><td>[F5]</td><td>Quicksave chat state snapshot to local storage</td></tr>
+                        <tr><td>[F9]</td><td>Quickload chat state snapshot from local storage</td></tr>
                         <tr><td>[1] - [4]</td><td>Quick switch channel (#general, #dev, #random, #lounge)</td></tr>
                         <tr><td>[P]</td><td>Open Create Interactive Poll modal</td></tr>
                         <tr><td>[S]</td><td>Open Chat Room Analytics & Insights modal</td></tr>
@@ -964,6 +974,60 @@
             }
         }
 
+        const QUICKSAVE_KEY = 'kchat_pro_quicksave_v1';
+        window.quickSave = function() {
+            try {
+                const snapshot = {
+                    version: "2.5",
+                    timestamp: Date.now(),
+                    currentUsername: currentUsername,
+                    currentRoom: currentRoom,
+                    rooms: rooms,
+                    roomTopics: roomTopics,
+                    messages: messages
+                };
+                localStorage.setItem(QUICKSAVE_KEY, JSON.stringify(snapshot));
+                safeSaveState();
+                playChime(784.00, 0.15);
+                showToast("💾 Quicksave created! [F5]");
+            } catch(e) {
+                showToast("⚠️ Failed to create quicksave: " + e.message);
+            }
+        };
+
+        window.quickLoad = function() {
+            try {
+                const raw = localStorage.getItem(QUICKSAVE_KEY) || localStorage.getItem(STORAGE_KEY);
+                if (!raw) {
+                    showToast("⚠️ No quicksave snapshot found.");
+                    return;
+                }
+                const parsed = JSON.parse(raw);
+                if (parsed.messages && Array.isArray(parsed.messages)) {
+                    messages = parsed.messages.filter(m => m && typeof m === 'object' && m.id && m.text !== undefined);
+                }
+                if (parsed.rooms && Array.isArray(parsed.rooms)) {
+                    rooms = parsed.rooms;
+                }
+                if (parsed.roomTopics && typeof parsed.roomTopics === 'object') {
+                    roomTopics = parsed.roomTopics;
+                }
+                if (parsed.currentUsername) {
+                    currentUsername = parsed.currentUsername;
+                }
+                if (parsed.currentRoom) {
+                    currentRoom = parsed.currentRoom;
+                }
+                safeSaveState();
+                if (window.renderChannelBar) window.renderChannelBar();
+                if (window.renderMessages) window.renderMessages();
+                playChime(523.25, 0.15);
+                showToast("📂 Quicksave restored! [F9]");
+            } catch(e) {
+                showToast("⚠️ Failed to load quicksave: " + e.message);
+            }
+        };
+
         let audioCtx = null;
         function playChime(freq = 587.33, duration = 0.12) {
             try {
@@ -1003,10 +1067,19 @@
         const statsModalEl = document.getElementById('statsModal');
         const toastEl = document.getElementById('toast');
 
+        let toastTimeout = null;
         function showToast(msg) {
+            if (!toastEl) return;
             toastEl.textContent = msg;
             toastEl.style.display = 'block';
-            setTimeout(() => { toastEl.style.display = 'none'; }, 3000);
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => { toastEl.style.display = 'none'; }, 2600);
+        }
+        if (toastEl) {
+            toastEl.onclick = () => {
+                toastEl.style.display = 'none';
+                if (toastTimeout) clearTimeout(toastTimeout);
+            };
         }
 
         function updateTopicUI() {
@@ -1019,7 +1092,16 @@
         const roomModalEl = document.getElementById('roomModal');
         const topicModalEl = document.getElementById('topicModal');
 
+        function closeAllModals() {
+            if (helpModalEl) helpModalEl.classList.remove('active');
+            if (pollModalEl) pollModalEl.classList.remove('active');
+            if (roomModalEl) roomModalEl.classList.remove('active');
+            if (topicModalEl) topicModalEl.classList.remove('active');
+            if (statsModalEl) statsModalEl.classList.remove('active');
+        }
+
         window.openHelpModal = function() {
+            closeAllModals();
             if (helpModalEl) helpModalEl.classList.add('active');
         };
         window.closeHelpModal = function() {
@@ -1027,6 +1109,7 @@
         };
 
         window.openPollModal = function() {
+            closeAllModals();
             document.getElementById('pollQuestionInput').value = '';
             document.getElementById('pollOpt1Input').value = '';
             document.getElementById('pollOpt2Input').value = '';
@@ -1062,6 +1145,7 @@
         };
 
         window.openRoomModal = function() {
+            closeAllModals();
             document.getElementById('roomNameInput').value = '';
             document.getElementById('roomTopicInput').value = '';
             if (roomModalEl) {
@@ -1099,6 +1183,14 @@
             addBtn.title = 'Create/Join a channel';
             addBtn.textContent = '+ Room';
             channelBar.appendChild(addBtn);
+
+            const tutBadge = document.createElement('span');
+            tutBadge.className = 'help-tip-badge';
+            tutBadge.onclick = () => window.showHelp();
+            tutBadge.title = 'Click for Quick-Start Tutorial & Shortcuts [F1]';
+            tutBadge.style.cssText = 'cursor: pointer; font-size: 11px; background: rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 2px 8px; color: #93c5fd; margin-left: 4px;';
+            tutBadge.textContent = '💡 Press [F1] for Tutorial';
+            channelBar.appendChild(tutBadge);
         };
 
         window.submitNewRoom = function() {
@@ -1123,6 +1215,7 @@
         };
 
         window.openTopicModal = function() {
+            closeAllModals();
             const current = roomTopics[currentRoom] || "";
             document.getElementById('topicModalLabel').textContent = `Topic for ${currentRoom}:`;
             document.getElementById('channelTopicEditInput').value = current;
@@ -1160,6 +1253,8 @@
         window.renderMessages = function() {
             logEl.innerHTML = '';
             const searchKeyword = searchInput.value.trim().toLowerCase();
+            const clearBtn = document.getElementById('searchClearBtn');
+            if (clearBtn) clearBtn.style.display = searchKeyword ? 'block' : 'none';
 
             const filtered = messages.filter(m => {
                 const inRoom = (m.room || '#general') === currentRoom;
@@ -1169,7 +1264,8 @@
                     const matchUser = (m.user || '').toLowerCase().includes(searchKeyword);
                     const matchText = (m.text || '').toLowerCase().includes(searchKeyword);
                     const matchPoll = m.isPoll && (m.pollQuestion || '').toLowerCase().includes(searchKeyword);
-                    if (!matchUser && !matchText && !matchPoll) return false;
+                    const matchPollOpts = m.isPoll && Array.isArray(m.pollOptions) && m.pollOptions.some(opt => (opt.text || '').toLowerCase().includes(searchKeyword));
+                    if (!matchUser && !matchText && !matchPoll && !matchPollOpts) return false;
                 }
                 return true;
             });
@@ -1308,14 +1404,17 @@
                 copyBtn.title = 'Copy message text to clipboard';
                 copyBtn.textContent = '📋 Copy';
                 copyBtn.onclick = async () => {
+                    const copyText = m.isPoll 
+                        ? `[Poll] ${m.pollQuestion}\n` + (m.pollOptions || []).map((o, i) => `${i+1}. ${o.text} (${o.votes || 0} votes)`).join('\n')
+                        : m.text;
                     try {
-                        await navigator.clipboard.writeText(m.text);
+                        await navigator.clipboard.writeText(copyText);
                         copyBtn.textContent = '✅ Copied!';
                         showToast('Message copied to clipboard');
                         setTimeout(() => { copyBtn.textContent = '📋 Copy'; }, 1500);
                     } catch (err) {
                         const ta = document.createElement('textarea');
-                        ta.value = m.text;
+                        ta.value = copyText;
                         document.body.appendChild(ta);
                         ta.select();
                         document.execCommand('copy');
@@ -1472,6 +1571,7 @@
 
         // Stats Modal
         window.openStatsModal = function() {
+            closeAllModals();
             const totalMsgs = messages.length;
             const roomMsgs = messages.filter(m => (m.room || '#general') === currentRoom).length;
             const pollMsgs = messages.filter(m => m.isPoll);
@@ -1487,11 +1587,11 @@
             document.getElementById('statCurrentRoom').textContent = currentRoom;
             document.getElementById('statServerStatus').textContent = isFirebase ? 'Firebase Global RTDB' : (ws ? 'Connected TCP/WS' : 'Local / Offline');
 
-            statsModalEl.classList.add('active');
+            if (statsModalEl) statsModalEl.classList.add('active');
         };
 
         window.closeStatsModal = function() {
-            statsModalEl.classList.remove('active');
+            if (statsModalEl) statsModalEl.classList.remove('active');
         };
 
         window.showHelp = function() {
@@ -1506,24 +1606,27 @@
             const isTyping = document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA' || document.activeElement.tagName === 'SELECT');
 
             if (e.key === 'Escape') {
-                if (helpModalEl && helpModalEl.classList.contains('active')) {
-                    window.closeHelpModal();
-                } else if (pollModalEl && pollModalEl.classList.contains('active')) {
-                    window.closePollModal();
-                } else if (roomModalEl && roomModalEl.classList.contains('active')) {
-                    window.closeRoomModal();
-                } else if (topicModalEl && topicModalEl.classList.contains('active')) {
-                    window.closeTopicModal();
-                } else if (statsModalEl && statsModalEl.classList.contains('active')) {
-                    window.closeStatsModal();
-                } else if (searchInput === document.activeElement || searchInput.value) {
-                    searchInput.value = '';
-                    window.renderMessages();
-                    searchInput.blur();
+                const anyModalOpen = [helpModalEl, pollModalEl, roomModalEl, topicModalEl, statsModalEl].some(m => m && m.classList.contains('active'));
+                if (anyModalOpen) {
+                    closeAllModals();
+                } else if (searchInput === document.activeElement || (searchInput && searchInput.value)) {
+                    if (searchInput) {
+                        searchInput.value = '';
+                        window.renderMessages();
+                        const clearBtn = document.getElementById('searchClearBtn');
+                        if (clearBtn) clearBtn.style.display = 'none';
+                        searchInput.blur();
+                    }
                 }
             } else if (e.key === 'F1') {
                 e.preventDefault();
                 window.showHelp();
+            } else if (e.key === 'F5') {
+                e.preventDefault();
+                window.quickSave();
+            } else if (e.key === 'F9') {
+                e.preventDefault();
+                window.quickLoad();
             } else if ((e.key === 'h' || e.key === 'H') && !isTyping) {
                 e.preventDefault();
                 window.showHelp();
@@ -1555,12 +1658,17 @@
 
         // Copy Channel Chat Transcript
         window.copyLog = async function() {
-            const roomMsgs = messages.filter(m => m.room === currentRoom);
+            const roomMsgs = messages.filter(m => (m.room || '#general') === currentRoom);
             if (!roomMsgs.length) {
                 showToast("No messages to copy in this channel.");
                 return;
             }
-            const text = roomMsgs.map(m => `[${new Date(m.timestamp).toLocaleTimeString()}] ${m.user}: ${m.text}`).join('\n');
+            const text = roomMsgs.map(m => {
+                if (m.isPoll) {
+                    return `[${new Date(m.timestamp).toLocaleTimeString()}] ${m.user}: [Poll] ${m.pollQuestion} (${(m.pollOptions || []).map(o => `${o.text}: ${o.votes || 0} votes`).join(', ')})`;
+                }
+                return `[${new Date(m.timestamp).toLocaleTimeString()}] ${m.user}: ${m.text}`;
+            }).join('\n');
             try {
                 await navigator.clipboard.writeText(text);
                 showToast("📋 Copied channel chat transcript to clipboard!");
