@@ -33,12 +33,98 @@ NEXT_WORK_FILE = REPO_ROOT / "next_work.md"
 LOG_DIR = REPO_ROOT / "logs"
 LOG_FILE = LOG_DIR / "orchestrator.log"
 RECEIPTS_DIR = REPO_ROOT / ".agents" / "receipts"
+SESSION_FILE = REPO_ROOT / ".agents" / "scheduler_session.json"
+TASK_NAME = "KiloApps-Fleet-Orchestrator"
+
+# Remote fleet contributors (sdgdvs / anonymous2) commit between :35 and :58.
+# Window :32 to :58 is strictly reserved for remote contributors to prevent merge collisions.
+REMOTE_WINDOW_START_MIN = 32
+REMOTE_WINDOW_END_MIN = 58
 
 DEFAULT_AGY_PATH = (
     Path(os.environ.get("LOCALAPPDATA", "")) / "agy" / "bin" / "agy.exe"
     if os.environ.get("LOCALAPPDATA")
     else Path(r"C:\Users\mrbos\AppData\Local\agy\bin\agy.exe")
 )
+
+
+def disable_scheduled_task(task_name: str = TASK_NAME):
+    """Disables the scheduled task in Windows Task Scheduler when session expires."""
+    try:
+        res = subprocess.run(
+            ["schtasks.exe", "/change", "/tn", task_name, "/disable"],
+            capture_output=True,
+            text=True,
+        )
+        if res.returncode == 0:
+            log(f"Windows Scheduled Task '{task_name}' successfully disabled.")
+        else:
+            log(f"Note: schtasks disable returned code {res.returncode}: {res.stderr.strip() or res.stdout.strip()}")
+    except Exception as e:
+        log(f"Warning: Could not disable scheduled task via schtasks: {e}")
+
+
+def check_session_timer() -> bool:
+    """Verifies that the 24-hour fleet contribution session has not expired."""
+    if not SESSION_FILE.exists():
+        return True
+
+    try:
+        data = json.loads(SESSION_FILE.read_text(encoding="utf-8"))
+        end_str = data.get("session_end")
+        if not end_str:
+            return True
+
+        ts_str = str(end_str).strip()
+        if ts_str.endswith("Z"):
+            ts_str = ts_str[:-1] + "+00:00"
+        end_dt = datetime.datetime.fromisoformat(ts_str)
+        now_dt = datetime.datetime.now(datetime.timezone.utc)
+
+        if now_dt >= end_dt:
+            log(f"[SESSION EXPIRED] Active 24-hour contribution period ended at {end_str}. Halting execution until user requests more time.")
+            data["status"] = "expired"
+            try:
+                SESSION_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+            except Exception:
+                pass
+            disable_scheduled_task()
+            return False
+
+        remaining_sec = (end_dt - now_dt).total_seconds()
+        log(f"[SESSION ACTIVE] {remaining_sec / 3600:.1f}h remaining in 24-hour session (expires {end_str}).")
+        return True
+    except Exception as e:
+        log(f"Warning: Failed to read/validate session timer file: {e}")
+        return True
+
+
+def record_turn_in_session():
+    """Increments turns_executed in session file upon successful turn."""
+    if not SESSION_FILE.exists():
+        return
+    try:
+        data = json.loads(SESSION_FILE.read_text(encoding="utf-8"))
+        data["turns_executed"] = data.get("turns_executed", 0) + 1
+        data["last_turn_timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        SESSION_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+        log(f"[SESSION] Turn #{data['turns_executed']} recorded in session timer state.")
+    except Exception as e:
+        log(f"Warning: Failed to update session timer turn count: {e}")
+
+
+def is_in_remote_contributor_window() -> bool:
+    """Checks if current minute is within the active remote contributor window (sdgdvs / anonymous2)."""
+    now = datetime.datetime.now()
+    minute = now.minute
+    if REMOTE_WINDOW_START_MIN <= minute <= REMOTE_WINDOW_END_MIN:
+        log(
+            f"[WINDOW GUARD] Current minute (:{minute:02d}) is in remote fleet contributor window "
+            f"({REMOTE_WINDOW_START_MIN:02d}-{REMOTE_WINDOW_END_MIN:02d}). Deferring turn to prevent "
+            f"concurrent git collisions with sdgdvs / anonymous2."
+        )
+        return True
+    return False
 
 
 def log(msg: str):
@@ -395,6 +481,8 @@ def main():
     parser.add_argument("--dry-run", action="store_true", help="Inspect and validate without executing agy")
     parser.add_argument("--force-agent", type=str, help="Override active agent (e.g. kilo-tester, kilo-qa, kilo-creator)")
     parser.add_argument("--no-receipt", action="store_true", help="Skip emitting turn receipt")
+    parser.add_argument("--ignore-window", action="store_true", help="Bypass remote fleet contributor window guard")
+    parser.add_argument("--ignore-session", action="store_true", help="Bypass 24-hour session timer check")
     args = parser.parse_args()
 
     log("=" * 60)
@@ -404,6 +492,14 @@ def main():
         sys.exit(0)
 
     try:
+        # 1. Enforce 24-hour session limit
+        if not args.ignore_session and not check_session_timer():
+            return
+
+        # 2. Enforce remote fleet collision guard (reserve :32-:58 for sdgdvs / anonymous2)
+        if not args.ignore_window and not args.dry_run and is_in_remote_contributor_window():
+            return
+
         if not args.dry_run:
             if not run_git_pull():
                 log("Proceeding with local state despite git sync warning.")
@@ -512,6 +608,7 @@ def main():
             log(f"Agent turn exited with non-zero code {process.returncode}. Investigation required.")
         else:
             log("Agent turn completed successfully.")
+            record_turn_in_session()
 
         # Post-agent Git check: ensure unpushed commits are synchronized to remote
         if process.returncode == 0 and not args.dry_run:
