@@ -650,9 +650,9 @@
   /* Toast Notification */
   #toast {
     position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%) translateY(80px);
+    top: 48px;
+    right: 16px;
+    transform: translateY(-20px);
     background: #2b2b2b;
     color: #fff;
     border: 1px solid #444;
@@ -664,13 +664,14 @@
     font-weight: 600;
     z-index: 9999;
     opacity: 0;
-    pointer-events: auto;
+    pointer-events: none;
     cursor: pointer;
     transition: transform 0.25s ease, opacity 0.25s ease;
   }
   #toast.show {
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
     opacity: 1;
+    pointer-events: auto;
   }
 </style>
 </head>
@@ -687,6 +688,21 @@
     <div class="setup-msg" id="setupMsg">If this is your first time, entering a password will initialize your encrypted vault. Press Enter to unlock.</div>
   </div>
 
+  <!-- Tutorial / Onboarding Modal -->
+  <div id="tutorialOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="tutTitle">
+    <div class="modal-box" style="max-width: 440px;">
+      <h2 id="tutTitle" class="modal-title">Welcome to KPass!</h2>
+      <div id="tutBody" style="min-height: 100px; font-size: 13px; color: #ddd; line-height: 1.5;"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 16px; border-top: 1px solid #3d3d3d; padding-top: 12px;">
+        <span id="tutStepIndicator" style="font-size: 12px; color: #888;">Step 1 of 3</span>
+        <div style="display:flex; gap: 8px;">
+          <button id="btnTutPrev" style="display:none; background:#333; border-color:#444;">Back</button>
+          <button id="btnTutNext" class="primary" style="background:#e74c3c; border-color:#e74c3c;">Next &rarr;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Help Overlay -->
   <div id="helpOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
     <div class="modal-box">
@@ -699,11 +715,13 @@
       <div style="background:#1a1a1a; padding:10px; border-radius:4px; font-size:12px; color:#2ecc71; margin-top:8px;">
         <div><strong>Shortcuts:</strong></div>
         <div>&bull; '1' = Generator | '2' = Vault | '3' = Security Audit | 'H' / F1 = Help</div>
+        <div>&bull; F5 = Quicksave snapshot | F9 = Quickload snapshot</div>
         <div>&bull; Enter = Unlock / Save / Generate | Ctrl+F or '/' = Focus Search</div>
         <div>&bull; Ctrl+S = Save Credential | Ctrl+G = Generate | Ctrl+C = Copy Password</div>
         <div>&bull; Alt+L = Lock Vault | Alt+J = JSON | Alt+E = CSV | Alt+M = Markdown | Alt+I = Import</div>
       </div>
-      <div style="text-align: right; margin-top: 14px;">
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
+        <button id="btnLaunchTutorial" style="background: #333; border-color: #444; color: #ddd;">Tour</button>
         <button id="btnCloseHelp" style="background: #e74c3c; border-color: #e74c3c;">Close Help</button>
       </div>
     </div>
@@ -1006,7 +1024,7 @@
 
   <script>
     try {
-      window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 520, height: 640 }, '*');
+      window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 540, height: 660 }, '*');
     } catch(e) {}
 
     // Safe storage wrappers
@@ -1019,13 +1037,19 @@
 
     // Toast Notification System
     const toastEl = document.getElementById('toast');
+    function dismissToast() {
+      const toast = document.getElementById('toast');
+      if (toast && toast.classList.contains('show')) {
+        toast.classList.remove('show');
+        clearTimeout(toast.timer);
+      }
+    }
     if (toastEl) {
-      toastEl.addEventListener('click', () => {
-        toastEl.classList.remove('show');
-      });
+      toastEl.addEventListener('click', dismissToast);
     }
     function showToast(msg, isSuccess = true) {
       const toast = document.getElementById('toast');
+      if (!toast) return;
       toast.innerText = msg;
       toast.style.borderLeftColor = isSuccess ? '#2ecc71' : '#e74c3c';
       toast.classList.add('show');
@@ -1034,6 +1058,18 @@
         toast.classList.remove('show');
       }, 2400);
     }
+
+    // Auto-dismiss toast on typing or focusing interactive inputs
+    document.addEventListener('input', (e) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        dismissToast();
+      }
+    });
+    document.addEventListener('focusin', (e) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        dismissToast();
+      }
+    });
 
     // Safe clipboard helper
     function copyText(str, successMsg = "Copied to clipboard!") {
@@ -1242,6 +1278,195 @@
     const auditIssuesList = document.getElementById('auditIssuesList');
     const btnRunAudit = document.getElementById('btnRunAudit');
 
+    // Tutorial elements
+    const tutorialOverlay = document.getElementById('tutorialOverlay');
+    const tutTitle = document.getElementById('tutTitle');
+    const tutBody = document.getElementById('tutBody');
+    const tutStepIndicator = document.getElementById('tutStepIndicator');
+    const btnTutPrev = document.getElementById('btnTutPrev');
+    const btnTutNext = document.getElementById('btnTutNext');
+    const btnLaunchTutorial = document.getElementById('btnLaunchTutorial');
+
+    let currentTutStep = 1;
+    const TUTORIAL_STEPS = [
+      {
+        title: "Step 1: 4 Password Engines",
+        text: "Generate unbreakable credentials in 4 modes: Random Characters, Memorable Passphrase (Diceware), PIN Codes, or Hex Keys. Customize length, entropy, and character sets. Click the password display or press Ctrl+C to copy instantly."
+      },
+      {
+        title: "Step 2: Encrypted Local Vault",
+        text: "Store and categorize your credentials safely. All entries are encrypted locally in your browser using military-grade AES-GCM 256 with PBKDF2 (100,000 iterations). Your vault auto-locks after 1 minute of inactivity for maximum security."
+      },
+      {
+        title: "Step 3: Security Audit & Portability",
+        text: "The Audit tab scans for weak, reused, or stale credentials in real time. Export your data to JSON, CSV, Markdown, or encrypted .kpass backups anytime. Shortcuts: F1/H for Help, F5 Quicksave, F9 Quickload, Ctrl+S Save to Vault, Alt+L Lock."
+      }
+    ];
+
+    function showTutorial(step = 1) {
+      if (!tutorialOverlay) return;
+      currentTutStep = Math.max(1, Math.min(step, TUTORIAL_STEPS.length));
+      const info = TUTORIAL_STEPS[currentTutStep - 1];
+      if (tutTitle) tutTitle.innerText = info.title;
+      if (tutBody) tutBody.innerText = info.text;
+      if (tutStepIndicator) tutStepIndicator.innerText = `Step ${currentTutStep} of ${TUTORIAL_STEPS.length}`;
+      if (btnTutPrev) btnTutPrev.style.display = currentTutStep > 1 ? 'inline-block' : 'none';
+      if (btnTutNext) btnTutNext.innerText = currentTutStep === TUTORIAL_STEPS.length ? "Finish" : "Next \u2192";
+      tutorialOverlay.style.display = 'flex';
+    }
+
+    function advanceTutorial() {
+      if (currentTutStep < TUTORIAL_STEPS.length) {
+        showTutorial(currentTutStep + 1);
+      } else {
+        closeTutorial();
+      }
+    }
+
+    function prevTutorial() {
+      if (currentTutStep > 1) {
+        showTutorial(currentTutStep - 1);
+      }
+    }
+
+    function closeTutorial() {
+      if (tutorialOverlay) {
+        tutorialOverlay.style.display = 'none';
+      }
+      safeSetStorage('kpass_tutorialSeen', '1');
+    }
+
+    if (btnTutNext) btnTutNext.addEventListener('click', advanceTutorial);
+    if (btnTutPrev) btnTutPrev.addEventListener('click', prevTutorial);
+    if (btnLaunchTutorial) {
+      btnLaunchTutorial.addEventListener('click', () => {
+        toggleHelp(false);
+        showTutorial(1);
+      });
+    }
+    if (tutorialOverlay) {
+      tutorialOverlay.addEventListener('click', (e) => {
+        if (e.target === tutorialOverlay) closeTutorial();
+      });
+    }
+
+    // Quicksave / Quickload Snapshot Persistence
+    function quickSaveSession() {
+      const state = {
+        mode: activeGenMode,
+        activeTab: (contentVault && contentVault.style.display !== 'none') ? 'vault' : ((contentAudit && contentAudit.style.display !== 'none') ? 'audit' : 'gen'),
+        chars: {
+          upper: document.getElementById('chkUpper') ? document.getElementById('chkUpper').checked : true,
+          lower: document.getElementById('chkLower') ? document.getElementById('chkLower').checked : true,
+          num: document.getElementById('chkNum') ? document.getElementById('chkNum').checked : true,
+          sym: document.getElementById('chkSym') ? document.getElementById('chkSym').checked : true,
+          ambiguous: document.getElementById('chkAmbiguous') ? document.getElementById('chkAmbiguous').checked : false,
+          len: document.getElementById('rngLen') ? document.getElementById('rngLen').value : '16'
+        },
+        diceware: {
+          words: document.getElementById('rngDwWords') ? document.getElementById('rngDwWords').value : '4',
+          sep: document.getElementById('selDwSep') ? document.getElementById('selDwSep').value : '-',
+          capitalize: document.getElementById('chkDwCapitalize') ? document.getElementById('chkDwCapitalize').checked : true,
+          number: document.getElementById('chkDwNumber') ? document.getElementById('chkDwNumber').checked : true
+        },
+        pin: {
+          len: document.getElementById('rngPinLen') ? document.getElementById('rngPinLen').value : '6'
+        },
+        hex: {
+          len: document.getElementById('rngHexLen') ? document.getElementById('rngHexLen').value : '32',
+          upper: document.getElementById('chkHexUpper') ? document.getElementById('chkHexUpper').checked : false
+        },
+        vaultFilter: {
+          cat: vaultCatFilter ? vaultCatFilter.value : '',
+          risk: vaultRiskFilter ? vaultRiskFilter.value : '',
+          sort: vaultSort ? vaultSort.value : 'date-desc',
+          search: vaultSearch ? vaultSearch.value : ''
+        },
+        saveForm: {
+          label: labelInput ? labelInput.value : '',
+          user: userInput ? userInput.value : '',
+          cat: catInput ? catInput.value : 'Personal',
+          notes: notesInput ? notesInput.value : ''
+        },
+        timestamp: Date.now()
+      };
+      safeSetStorage('kpass_quicksave', JSON.stringify(state));
+      showToast("Session quicksaved [F5]!");
+    }
+
+    function quickLoadSession() {
+      const raw = safeGetStorage('kpass_quicksave');
+      if (!raw) {
+        showToast("No quicksave snapshot found [F5]", false);
+        return;
+      }
+      try {
+        const state = JSON.parse(raw);
+        if (state.chars) {
+          if (document.getElementById('chkUpper')) document.getElementById('chkUpper').checked = state.chars.upper !== false;
+          if (document.getElementById('chkLower')) document.getElementById('chkLower').checked = state.chars.lower !== false;
+          if (document.getElementById('chkNum')) document.getElementById('chkNum').checked = state.chars.num !== false;
+          if (document.getElementById('chkSym')) document.getElementById('chkSym').checked = state.chars.sym !== false;
+          if (document.getElementById('chkAmbiguous')) document.getElementById('chkAmbiguous').checked = !!state.chars.ambiguous;
+          if (state.chars.len && document.getElementById('rngLen')) {
+            document.getElementById('rngLen').value = state.chars.len;
+            const lenVal = document.getElementById('lenVal');
+            if (lenVal) lenVal.innerText = state.chars.len;
+          }
+        }
+        if (state.diceware) {
+          if (state.diceware.words && document.getElementById('rngDwWords')) {
+            document.getElementById('rngDwWords').value = state.diceware.words;
+            const dwWordsVal = document.getElementById('dwWordsVal');
+            if (dwWordsVal) dwWordsVal.innerText = state.diceware.words;
+          }
+          if (state.diceware.sep && document.getElementById('selDwSep')) {
+            document.getElementById('selDwSep').value = state.diceware.sep;
+          }
+          if (document.getElementById('chkDwCapitalize')) document.getElementById('chkDwCapitalize').checked = state.diceware.capitalize !== false;
+          if (document.getElementById('chkDwNumber')) document.getElementById('chkDwNumber').checked = state.diceware.number !== false;
+        }
+        if (state.pin && state.pin.len && document.getElementById('rngPinLen')) {
+          document.getElementById('rngPinLen').value = state.pin.len;
+          const pinLenVal = document.getElementById('pinLenVal');
+          if (pinLenVal) pinLenVal.innerText = state.pin.len;
+        }
+        if (state.hex) {
+          if (state.hex.len && document.getElementById('rngHexLen')) {
+            document.getElementById('rngHexLen').value = state.hex.len;
+            const hexLenVal = document.getElementById('hexLenVal');
+            if (hexLenVal) hexLenVal.innerText = state.hex.len;
+          }
+          if (document.getElementById('chkHexUpper')) document.getElementById('chkHexUpper').checked = !!state.hex.upper;
+        }
+        if (state.saveForm) {
+          if (labelInput) labelInput.value = state.saveForm.label || '';
+          if (userInput) userInput.value = state.saveForm.user || '';
+          if (catInput) catInput.value = state.saveForm.cat || 'Personal';
+          if (notesInput) notesInput.value = state.saveForm.notes || '';
+        }
+        if (state.vaultFilter) {
+          if (vaultCatFilter) vaultCatFilter.value = state.vaultFilter.cat || '';
+          if (vaultRiskFilter) vaultRiskFilter.value = state.vaultFilter.risk || '';
+          if (vaultSort) vaultSort.value = state.vaultFilter.sort || 'date-desc';
+          if (vaultSearch) {
+            vaultSearch.value = state.vaultFilter.search || '';
+            if (btnClearSearch) btnClearSearch.style.display = vaultSearch.value ? 'inline' : 'none';
+          }
+        }
+        if (state.mode) {
+          setGenMode(state.mode);
+        }
+        if (state.activeTab) {
+          switchTab(state.activeTab);
+        }
+        generate();
+        showToast("Session restored [F9]!");
+      } catch (e) {
+        showToast("Error loading quicksave snapshot", false);
+      }
+    }
+
     // Init lock screen message
     if(safeGetStorage('kpass_vault_enc')) {
         setupMsg.style.display = 'none';
@@ -1317,6 +1542,9 @@
                 renderVault();
                 updateVaultCount();
                 showToast("Vault unlocked successfully!");
+                if (!safeGetStorage('kpass_tutorialSeen')) {
+                    setTimeout(() => showTutorial(1), 350);
+                }
             } catch(e) {
                 lockError.innerText = "Error decrypting vault.";
             }
@@ -1330,6 +1558,9 @@
             btnUnlock.innerText = "Unlock Vault";
             resetAutoLock();
             showToast("Master password set! Vault ready.");
+            if (!safeGetStorage('kpass_tutorialSeen')) {
+                setTimeout(() => showTutorial(1), 350);
+            }
         }
     });
 
@@ -1410,6 +1641,7 @@
 
     function closeModals() {
         toggleHelp(false);
+        closeTutorial();
         editModal.style.display = 'none';
         deleteModal.style.display = 'none';
         editingIndex = -1;
@@ -1489,8 +1721,26 @@
 
     // Global Key Listener
     document.addEventListener('keydown', (e) => {
+        if (tutorialOverlay && tutorialOverlay.style.display === 'flex') {
+            if (e.key === 'Escape') {
+                closeTutorial();
+                return;
+            }
+            if (e.key === 'ArrowRight' || e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                advanceTutorial();
+                return;
+            }
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevTutorial();
+                return;
+            }
+            return;
+        }
+
         if (e.key === 'Escape') {
-            if (helpOverlay.style.display === 'flex' || editModal.style.display === 'flex' || deleteModal.style.display === 'flex') {
+            if (helpOverlay.style.display === 'flex' || editModal.style.display === 'flex' || deleteModal.style.display === 'flex' || (tutorialOverlay && tutorialOverlay.style.display === 'flex')) {
                 closeModals();
                 return;
             }
@@ -1500,6 +1750,22 @@
                 renderVault();
                 return;
             }
+        }
+
+        // Global F5 quicksave & F9 quickload
+        if (e.key === 'F5') {
+            e.preventDefault();
+            if (lockScreen.style.display === 'none') {
+                quickSaveSession();
+            }
+            return;
+        }
+        if (e.key === 'F9') {
+            e.preventDefault();
+            if (lockScreen.style.display === 'none') {
+                quickLoadSession();
+            }
+            return;
         }
 
         // Global Ctrl+S shortcut (works even when typing in input)

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KChat
-  kilo_usability: KPass
+  kilo_usability: KPing
   kilo_graphics: KSubmarine
   kilo_qa: KTodo
   kilo_expander: KAudio
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-tester
-  app: KChart
-  timestamp: "2026-09-28T06:50:00Z"
+  agent: kilo-usability
+  app: KPass
+  timestamp: "2026-09-28T07:55:00Z"
 last_planner_run: "2026-09-27T09:48:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KPass`
+- **Current Target**: `KPing`
 - **Upcoming Queue**:
-  `KPing`, `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`.
+  `KRadio`, `KRead`, `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KTodo`
@@ -230,6 +230,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-28T07:55:00Z — kilo-usability: KPass (Usability, Layout & Toast/Persistence Pass)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
+  - Window Dimensions & Layout: Expanded default size to 540x660 in App.jsx and postMessage; linked direct native exeUrl; eliminated action button crowding.
+  - Toast Occlusion Remediation: Re-anchored toasts to non-occluding top-right corner; added click-to-dismiss and auto-dismiss on input focus/typing.
+  - Onboarding & Tour: Implemented 3-step guided tutorial modal (`kpass_tutorialSeen`) with tour launcher in Help dialog and keyboard navigation.
+  - Snapshot Persistence: Implemented F5 quicksave & F9 quickload snapshot persistence across web localStorage and Win32 C `kpass_quicksave.dat`.
+  - Verification: MSVC compile clean (`KPass.exe` 24.5 KB); Vite build in 393ms (`kpass.html` 113.5 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-28T06:50:00Z — kilo-tester: KChart (Interactive UI Audit & Quicksave/Toast/Regression Integration)**
   - Status: PASS ✅ (6 issues audited, 6 fixed, 0 regressions, clean builds).
   - Snapshot Persistence: Implemented F5 quicksave & F9 quickload snapshot persistence with localStorage auto-restore in web and Win32 C `kchart_quicksave.dat`.
@@ -263,13 +271,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast & Leak Remediation: Re-anchored toasts to non-occluding bottom-right margin with auto-dismiss on typing; resolved object URL cleanup.
   - TINAG & Lore Compliance: Verified diegetic intercepts; purged meta-passkey references; 100% clean security lint.
   - Verification: MSVC compile clean (`KCipher.exe` 11.5 KB); Vite clean build in 393ms (`kcipher.html` 102.1 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
-
-- **2026-09-27T23:50:00Z — kilo-graphics: KDragon (Game Content, Visual Polish & Balance Pass)**
-  - Status: PASS ✅ (0 rotating glints / traveling border dots; 0 regressions; <999KB ceiling verified).
-  - Glint & Dot Purge: Verified 100% clean static ornate borders across web and C with zero moving glints or perimeter dots.
-  - Ancient Titan Drake Integration: Added 6th boss enemy encounter to Win32 C with golden/celestial palette, high scaling & gold rewards.
-  - Elemental Combat Balancing: Wired Earth advantage (+30%) vs rock/ground foes and Astral advantage vs Titan in web and C.
-  - Egg Incubation Visual Polish: Differentiated start-screen egg SVG ID and added animation/particle fallbacks.
-  - Verification: MSVC clean (`KDragon.exe` 148.0 KB); Vite build clean in 401ms (`kdragon.html` 133.8 KB); check_icons & security lint 100% PASS.
 
 

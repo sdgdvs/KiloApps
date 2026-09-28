@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-27T23:50:00Z — kilo-graphics: KDragon (Game Content, Visual Polish & Balance Pass)**
+  - Status: PASS ✅ (0 rotating glints / traveling border dots; 0 regressions; <999KB ceiling verified).
+  - Glint & Dot Purge: Verified 100% clean static ornate borders across web and C with zero moving glints or perimeter dots.
+  - Ancient Titan Drake Integration: Added 6th boss enemy encounter to Win32 C with golden/celestial palette, high scaling & gold rewards.
+  - Elemental Combat Balancing: Wired Earth advantage (+30%) vs rock/ground foes and Astral advantage vs Titan in web and C.
+  - Egg Incubation Visual Polish: Differentiated start-screen egg SVG ID and added animation/particle fallbacks.
+  - Verification: MSVC clean (`KDragon.exe` 148.0 KB); Vite build clean in 401ms (`kdragon.html` 133.8 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-27T21:52:00Z — kilo-usability: KNote (UI/UX Usability Pass & Snapshot/Distraction-Free Integration)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
   - Window & Ergonomics: Adjusted default dimensions to 920x640 in App.jsx and Win32 C, eliminating toolbar squeeze.
