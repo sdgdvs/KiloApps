@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KChat
   kilo_usability: KPing
-  kilo_graphics: KSubmarine
+  kilo_graphics: KStarDredge
   kilo_qa: KTodo
   kilo_expander: KAudio
   kilo_creator: "kweb://echo-subsystem.net (Research Journal & Audio Spectrogram)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-usability
-  app: KPass
-  timestamp: "2026-09-28T07:55:00Z"
+  agent: kilo-graphics
+  app: KSubmarine
+  timestamp: "2026-09-28T08:50:00Z"
 last_planner_run: "2026-09-27T09:48:00Z"
 ---
 
@@ -104,9 +104,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://geocities, kweb://darknet, kweb://portal, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KSubmarine`
+- **Current Target**: `KStarDredge`
 - **Upcoming Queue**:
-  `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`.
+  `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KChat`
@@ -230,6 +230,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-28T08:50:00Z — kilo-graphics: KSubmarine (Game Content, Visual Polish & Balance Pass)**
+  - Status: PASS ✅ (0 rotating glints / traveling border dots, 0 regressions, clean builds, <999KB ceiling verified).
+  - Glint & Dot Audit: Verified 100% absence of rotating specular glints or traveling perimeter border dots across web & C.
+  - Sonar Combat Parity: Wired live rendering of hostile threats, active torpedoes, acoustic decoys, and explosions on Sonar Radar in Win32 C.
+  - Hydrodynamic FX Polish: Enhanced underwater shockwaves with multi-ring acoustic cavitation pulses and core flashes in web canvas.
+  - Tactical NavMap Chart: Added active torpedo tracking, acoustic decoy pulses, and hostile threat diamonds to NavMap in web and C.
+  - Combat Feedback: Added visual hull damage explosion on threat strikes; tuned torpedo homing guidance and threat attack cooldowns.
+  - Verification: MSVC compile clean (`KSubmarine.exe` 253.5 KB); Vite clean in 349ms (`ksubmarine.html` 435.0 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-28T07:55:00Z — kilo-usability: KPass (Usability, Layout & Toast/Persistence Pass)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
   - Window Dimensions & Layout: Expanded default size to 540x660 in App.jsx and postMessage; linked direct native exeUrl; eliminated action button crowding.
@@ -262,14 +271,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Steganography Vault: Implemented authentic 1999 LSB steganography encode/decode engine hiding UTF-8 text inside image bits.
   - Quicksave & Persistence: Implemented F5 quicksave & F9 quickload snapshot persistence in web localStorage & Win32 C bitmap.
   - Verification: MSVC clean (`KImage.exe` 26.0 KB); Vite build in 383ms (`kimage.html` 132.1 KB < 999 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-28T01:50:00Z — kilo-qa: KCipher (Pass 5: Tutorial & State Integrity Audit)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
-  - Snapshot Persistence: Implemented F5 quicksave & F9 quickload capturing active tab, cipher settings, and stego text in web & Win32 C `kcipher_quicksave.dat`.
-  - Tutorial & Onboarding: Added `kcipher_tutorialSeen` / `.dat` gating to fire guided tour only on fresh sessions without interrupting restored states.
-  - Overlay & Modal Hotkeys: Wired Enter, Space, and Arrow keys to splash and tutorial overlays; added F1 / H manual hotkeys.
-  - Toast & Leak Remediation: Re-anchored toasts to non-occluding bottom-right margin with auto-dismiss on typing; resolved object URL cleanup.
-  - TINAG & Lore Compliance: Verified diegetic intercepts; purged meta-passkey references; 100% clean security lint.
-  - Verification: MSVC compile clean (`KCipher.exe` 11.5 KB); Vite clean build in 393ms (`kcipher.html` 102.1 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
 
 

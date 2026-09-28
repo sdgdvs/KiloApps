@@ -2149,6 +2149,17 @@ void UpdateSimulation(float dt) {
                     char atMsg[128];
                     snprintf(atMsg, sizeof(atMsg), "⚠️ HOSTILE STRIKE: [%s] rammed hull for %.1f DMG! Hull: %.1f%%", thr->name, dmg, g_sub.hull);
                     AddLog(atMsg, th->accentRed);
+
+                    if (g_sub.explosionCount < 8) {
+                        ExplosionEffect* exp = &g_sub.explosions[g_sub.explosionCount++];
+                        exp->x = g_sub.posX;
+                        exp->y = g_sub.posY;
+                        exp->radius = 12.0f;
+                        exp->maxRadius = 60.0f;
+                        exp->life = 0.85f;
+                        exp->color = RGB(239, 68, 68);
+                        snprintf(exp->text, sizeof(exp->text), "-%.0f%% HULL", dmg);
+                    }
                 }
             } else {
                 thr->state = 1; // stalking
@@ -2868,6 +2879,69 @@ void DrawNavMapChart(HDC hdc, int cx, int cy, int mapW, int mapH, const Submarin
                 SetTextColor(hdc, RGB(251, 191, 36));
                 TextOutA(hdc, sx + 7, sy - 6, sn->name, (int)strlen(sn->name));
             }
+        }
+    }
+
+    // Hostile Threats on Nav Map
+    for (int i = 0; i < THREAT_COUNT; i++) {
+        const HostileThreat* thr = &g_threats[i];
+        if (thr->defeated) continue;
+
+        int tx = cx + (int)((thr->x - g_sub.posX) * scale);
+        int ty = cy + (int)((thr->y - g_sub.posY) * scale);
+
+        if (tx >= rcMap.left + 5 && tx <= rcMap.right - 5 && ty >= rcMap.top + 5 && ty <= rcMap.bottom - 5) {
+            COLORREF thrClr = (thr->type == 1 ? RGB(244, 63, 94) : RGB(251, 191, 36));
+            if (thr->state == 2) thrClr = RGB(239, 68, 68);
+            HBRUSH hBrThr = CreateSolidBrush(thrClr);
+            SelectObject(hdc, hBrThr);
+            POINT tPts[4] = { { tx, ty - 5 }, { tx + 5, ty }, { tx, ty + 5 }, { tx - 5, ty } };
+            Polygon(hdc, tPts, 4);
+            DeleteObject(hBrThr);
+
+            SetTextColor(hdc, thrClr);
+            char tBuf[64];
+            snprintf(tBuf, sizeof(tBuf), "%s [%dHP]", thr->name, thr->hp);
+            TextOutA(hdc, tx + 7, ty - 6, tBuf, (int)strlen(tBuf));
+        }
+    }
+
+    // Active Torpedoes on Nav Map
+    for (int i = 0; i < g_sub.activeTorpedoCount; i++) {
+        const ActiveTorpedo* torp = &g_sub.activeTorpedoes[i];
+        int torpX = cx + (int)((torp->x - g_sub.posX) * scale);
+        int torpY = cy + (int)((torp->y - g_sub.posY) * scale);
+
+        if (torpX >= rcMap.left + 5 && torpX <= rcMap.right - 5 && torpY >= rcMap.top + 5 && torpY <= rcMap.bottom - 5) {
+            COLORREF tClr = torp->type == 0 ? RGB(0, 240, 255) : (torp->type == 1 ? RGB(16, 185, 129) : RGB(239, 68, 68));
+            HPEN hPenTorp = CreatePen(PS_SOLID, 2, tClr);
+            SelectObject(hdc, hPenTorp);
+            float tAng = atan2f(torp->vy, torp->vx);
+            int nx = torpX + (int)(cosf(tAng) * 4.0f);
+            int ny = torpY + (int)(sinf(tAng) * 4.0f);
+            int kx = torpX - (int)(cosf(tAng) * 3.0f);
+            int ky = torpY - (int)(sinf(tAng) * 3.0f);
+            MoveToEx(hdc, kx, ky, NULL);
+            LineTo(hdc, nx, ny);
+            DeleteObject(hPenTorp);
+        }
+    }
+
+    // Active Decoys on Nav Map
+    for (int i = 0; i < g_sub.activeDecoyCount; i++) {
+        const ActiveDecoy* dec = &g_sub.activeDecoys[i];
+        int decX = cx + (int)((dec->x - g_sub.posX) * scale);
+        int decY = cy + (int)((dec->y - g_sub.posY) * scale);
+
+        if (decX >= rcMap.left + 5 && decX <= rcMap.right - 5 && decY >= rcMap.top + 5 && decY <= rcMap.bottom - 5) {
+            HPEN hPenDec = CreatePen(PS_SOLID, 1, RGB(192, 132, 252));
+            SelectObject(hdc, hPenDec);
+            HBRUSH hBrNull = (HBRUSH)GetStockObject(NULL_BRUSH);
+            SelectObject(hdc, hBrNull);
+            Ellipse(hdc, decX - 4, decY - 4, decX + 5, decY + 5);
+            DeleteObject(hPenDec);
+            SetTextColor(hdc, RGB(192, 132, 252));
+            TextOutA(hdc, decX + 6, decY - 5, "DECOY", 5);
         }
     }
 
@@ -4742,6 +4816,161 @@ void DrawUI(HDC hdc, RECT* rcClient) {
                 LineTo(hdc, fcx, fcy);
                 DeleteObject(hPenVec);
                 DeleteObject(hPenReticle);
+            }
+        }
+
+        // --- PHASE 12: DRAW HOSTILE THREATS ON SONAR RADAR ---
+        for (int i = 0; i < THREAT_COUNT; i++) {
+            HostileThreat* thr = &g_threats[i];
+            if (thr->defeated) continue;
+
+            float relX = (thr->x - g_sub.posX) / 2.0f;
+            float relY = (thr->y - g_sub.posY) / 2.0f;
+            float distNorm = sqrtf(relX * relX + relY * relY);
+            if (distNorm > 1.08f) continue;
+
+            int tX = scx + (int)(relX * sRadius);
+            int tY = scy + (int)(relY * sRadius);
+            int isThreatLocked = (i == g_sub.selectedThreatIdx);
+
+            float angleToT = fmodf(atan2f(relY, relX) + 6.2831853f, 6.2831853f);
+            float angleDiff = fabsf(g_sub.sweepAngle - angleToT);
+            int isSwept = (angleDiff < 0.28f) || (g_sub.isPinging && fabsf(g_sub.pingRadius - sRadius * distNorm) < 25.0f);
+
+            COLORREF thrClr = thr->type == 1 ? RGB(244, 63, 94) : RGB(251, 191, 36);
+            if (thr->state == 2) thrClr = RGB(239, 68, 68);
+            else if (thr->stunTimer > 0.0f) thrClr = RGB(0, 240, 255);
+
+            if (thr->type == 1) {
+                DrawLeviathanSprite(hdc, tX, tY, thrClr, isSwept || isThreatLocked);
+            } else {
+                HBRUSH hBrDr = CreateSolidBrush(thr->state == 2 ? RGB(185, 28, 28) : RGB(30, 41, 59));
+                HPEN hPenDr = CreatePen(PS_SOLID, 1, thrClr);
+                HPEN hPenDrOld = (HPEN)SelectObject(hdc, hPenDr);
+                HBRUSH hBrDrOld = (HBRUSH)SelectObject(hdc, hBrDr);
+                POINT drPts[4] = { { tX, tY - 6 }, { tX + 6, tY }, { tX, tY + 6 }, { tX - 6, tY } };
+                Polygon(hdc, drPts, 4);
+                SetPixel(hdc, tX, tY, thrClr);
+                SelectObject(hdc, hPenDrOld);
+                SelectObject(hdc, hBrDrOld);
+                DeleteObject(hBrDr);
+                DeleteObject(hPenDr);
+            }
+
+            if (isSwept || isThreatLocked) {
+                SetTextColor(hdc, thrClr);
+                char tLabel[64];
+                snprintf(tLabel, sizeof(tLabel), "%s [%dHP]", thr->name, thr->hp);
+                TextOutA(hdc, tX + 8, tY - 6, tLabel, (int)strlen(tLabel));
+
+                SetTextColor(hdc, th->textDim);
+                char tSub[64];
+                const char* stStr = thr->stunTimer > 0.0f ? "STUNNED" : (thr->state == 2 ? "ATTACKING" : (thr->state == 1 ? "STALKING" : "PATROL"));
+                snprintf(tSub, sizeof(tSub), "%s | %.0fm", stStr, distNorm * 2000.0f);
+                TextOutA(hdc, tX + 8, tY + 4, tSub, (int)strlen(tSub));
+            }
+
+            if (isThreatLocked) {
+                HPEN hPenLock = CreatePen(PS_SOLID, 1, RGB(239, 68, 68));
+                HPEN hOldPen = (HPEN)SelectObject(hdc, hPenLock);
+                HBRUSH hBrNull = (HBRUSH)GetStockObject(NULL_BRUSH);
+                HBRUSH hOldBr = (HBRUSH)SelectObject(hdc, hBrNull);
+                Ellipse(hdc, tX - 9, tY - 9, tX + 10, tY + 10);
+
+                HPEN hPenVec = CreatePen(PS_DOT, 1, RGB(239, 68, 68));
+                SelectObject(hdc, hPenVec);
+                MoveToEx(hdc, scx, scy, NULL);
+                LineTo(hdc, tX, tY);
+                DeleteObject(hPenVec);
+                SelectObject(hdc, hOldPen);
+                SelectObject(hdc, hOldBr);
+                DeleteObject(hPenLock);
+            }
+        }
+
+        // --- DRAW ACTIVE ACOUSTIC DECOYS ON SONAR RADAR ---
+        for (int i = 0; i < g_sub.activeDecoyCount; i++) {
+            ActiveDecoy* dec = &g_sub.activeDecoys[i];
+            float relX = (dec->x - g_sub.posX) / 2.0f;
+            float relY = (dec->y - g_sub.posY) / 2.0f;
+            int dX = scx + (int)(relX * sRadius);
+            int dY = scy + (int)(relY * sRadius);
+
+            DWORD tick = GetTickCount();
+            int pulseR = (int)((tick % 1000) / 1000.0f * 14.0f) + 2;
+            HPEN hPenPulse = CreatePen(PS_DOT, 1, RGB(168, 85, 247));
+            HPEN hOldPen = (HPEN)SelectObject(hdc, hPenPulse);
+            HBRUSH hBrNull = (HBRUSH)GetStockObject(NULL_BRUSH);
+            HBRUSH hOldBr = (HBRUSH)SelectObject(hdc, hBrNull);
+            Ellipse(hdc, dX - pulseR, dY - pulseR, dX + pulseR, dY + pulseR);
+            SelectObject(hdc, hOldPen);
+            SelectObject(hdc, hOldBr);
+            DeleteObject(hPenPulse);
+
+            HBRUSH hBrDec = CreateSolidBrush(RGB(192, 132, 252));
+            RECT rcDec = { dX - 3, dY - 4, dX + 4, dY + 5 };
+            FillRect(hdc, &rcDec, hBrDec);
+            DeleteObject(hBrDec);
+
+            SetTextColor(hdc, RGB(192, 132, 252));
+            char dLabel[32];
+            snprintf(dLabel, sizeof(dLabel), "DECOY %.0fs", dec->life);
+            TextOutA(hdc, dX + 6, dY - 5, dLabel, (int)strlen(dLabel));
+        }
+
+        // --- DRAW ACTIVE TORPEDOES ON SONAR RADAR ---
+        for (int i = 0; i < g_sub.activeTorpedoCount; i++) {
+            ActiveTorpedo* torp = &g_sub.activeTorpedoes[i];
+            float relX = (torp->x - g_sub.posX) / 2.0f;
+            float relY = (torp->y - g_sub.posY) / 2.0f;
+            int tpX = scx + (int)(relX * sRadius);
+            int tpY = scy + (int)(relY * sRadius);
+
+            COLORREF tClr = RGB(0, 240, 255);
+            if (torp->type == 1) tClr = RGB(16, 185, 129);
+            else if (torp->type == 2) tClr = RGB(239, 68, 68);
+
+            HPEN hPenTorp = CreatePen(PS_SOLID, 2, tClr);
+            HPEN hOldPen = (HPEN)SelectObject(hdc, hPenTorp);
+
+            float tAng = atan2f(torp->vy, torp->vx);
+            int noseX = tpX + (int)(cosf(tAng) * 5.0f);
+            int noseY = tpY + (int)(sinf(tAng) * 5.0f);
+            int tailX = tpX - (int)(cosf(tAng) * 4.0f);
+            int tailY = tpY - (int)(sinf(tAng) * 4.0f);
+
+            MoveToEx(hdc, tailX, tailY, NULL);
+            LineTo(hdc, noseX, noseY);
+            SelectObject(hdc, hOldPen);
+            DeleteObject(hPenTorp);
+
+            SetPixel(hdc, tailX - (int)(cosf(tAng) * 2.0f), tailY - (int)(sinf(tAng) * 2.0f), RGB(224, 242, 254));
+        }
+
+        // --- DRAW UNDERWATER EXPLOSIONS ON SONAR RADAR ---
+        for (int i = 0; i < g_sub.explosionCount; i++) {
+            ExplosionEffect* exp = &g_sub.explosions[i];
+            float relX = (exp->x - g_sub.posX) / 2.0f;
+            float relY = (exp->y - g_sub.posY) / 2.0f;
+            int epX = scx + (int)(relX * sRadius);
+            int epY = scy + (int)(relY * sRadius);
+
+            int eRad = (int)(exp->radius * 0.45f);
+            if (eRad < 3) eRad = 3;
+
+            COLORREF expClr = exp->color != 0 ? exp->color : RGB(239, 68, 68);
+            HPEN hPenExp = CreatePen(PS_SOLID, 2, expClr);
+            HPEN hOldPen = (HPEN)SelectObject(hdc, hPenExp);
+            HBRUSH hBrNull = (HBRUSH)GetStockObject(NULL_BRUSH);
+            HBRUSH hOldBr = (HBRUSH)SelectObject(hdc, hBrNull);
+            Ellipse(hdc, epX - eRad, epY - eRad, epX + eRad, epY + eRad);
+            SelectObject(hdc, hOldPen);
+            SelectObject(hdc, hOldBr);
+            DeleteObject(hPenExp);
+
+            if (exp->text[0]) {
+                SetTextColor(hdc, RGB(255, 255, 255));
+                TextOutA(hdc, epX - 16, epY - eRad - 10, exp->text, (int)strlen(exp->text));
             }
         }
 

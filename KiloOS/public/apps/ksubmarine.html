@@ -8080,18 +8080,40 @@
                     const relY = (exp.y - state.posY) / 2.0;
                     const epX = cx + relX * maxR;
                     const epY = cy + relY * maxR;
+                    const eRad = (exp.radius || 10) * dpr * 0.5;
 
+                    ctx.save();
+                    // Expanding hydrodynamic outer cavitation ring
                     ctx.strokeStyle = exp.color;
-                    ctx.lineWidth = 2 * dpr;
+                    ctx.globalAlpha = Math.max(0.2, exp.life || 0.6);
+                    ctx.lineWidth = 2.2 * dpr;
                     ctx.beginPath();
-                    ctx.arc(epX, epY, (exp.radius || 10) * dpr * 0.5, 0, Math.PI * 2);
+                    ctx.arc(epX, epY, eRad * 1.35, 0, Math.PI * 2);
                     ctx.stroke();
 
+                    // Primary shockwave ring
+                    ctx.lineWidth = 1.6 * dpr;
+                    ctx.beginPath();
+                    ctx.arc(epX, epY, eRad, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    // Cavitation bubble core flash
+                    ctx.fillStyle = exp.color;
+                    ctx.globalAlpha = (exp.life || 0.5) * 0.35;
+                    ctx.beginPath();
+                    ctx.arc(epX, epY, eRad * 0.45, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.globalAlpha = 1.0;
+
                     if (exp.text) {
+                        ctx.shadowColor = '#000000';
+                        ctx.shadowBlur = 4 * dpr;
                         ctx.fillStyle = '#ffffff';
                         ctx.font = `bold ${9 * dpr}px monospace`;
-                        ctx.fillText(exp.text, epX - 18 * dpr, epY - 12 * dpr);
+                        ctx.fillText(exp.text, epX - 18 * dpr, epY - eRad - 4 * dpr);
+                        ctx.shadowBlur = 0;
                     }
+                    ctx.restore();
                 });
             }
 
@@ -8259,6 +8281,43 @@
                             ctx.stroke();
                             ctx.setLineDash([]);
                         }
+                    }
+                });
+
+                // Active Torpedoes on Nav Map (Phase 12)
+                state.activeTorpedoes.forEach(torp => {
+                    const tX = cx + (torp.x - state.posX) * scale;
+                    const tY = cy + (torp.y - state.posY) * scale;
+                    if (tX >= -15 && tX <= w + 15 && tY >= -15 && tY <= h + 15) {
+                        const ord = ORDNANCE_TYPES[torp.type];
+                        const tAng = Math.atan2(torp.vy, torp.vx);
+                        ctx.save();
+                        ctx.translate(tX, tY);
+                        ctx.rotate(tAng);
+                        ctx.fillStyle = ord ? ord.color : '#00f0ff';
+                        ctx.beginPath();
+                        ctx.moveTo(5 * dpr, 0);
+                        ctx.lineTo(-4 * dpr, -2.5 * dpr);
+                        ctx.lineTo(-4 * dpr, 2.5 * dpr);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.restore();
+                    }
+                });
+
+                // Active Decoys on Nav Map (Phase 12)
+                state.activeDecoys.forEach(dec => {
+                    const dX = cx + (dec.x - state.posX) * scale;
+                    const dY = cy + (dec.y - state.posY) * scale;
+                    if (dX >= -15 && dX <= w + 15 && dY >= -15 && dY <= h + 15) {
+                        ctx.strokeStyle = '#c084fc';
+                        ctx.lineWidth = 1.2 * dpr;
+                        ctx.beginPath();
+                        ctx.arc(dX, dY, 4 * dpr, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.fillStyle = '#c084fc';
+                        ctx.font = `bold ${7 * dpr}px monospace`;
+                        ctx.fillText('DECOY', dX + 6 * dpr, dY - 2 * dpr);
                     }
                 });
 

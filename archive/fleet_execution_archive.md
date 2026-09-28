@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-28T01:50:00Z — kilo-qa: KCipher (Pass 5: Tutorial & State Integrity Audit)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
+  - Snapshot Persistence: Implemented F5 quicksave & F9 quickload capturing active tab, cipher settings, and stego text in web & Win32 C `kcipher_quicksave.dat`.
+  - Tutorial & Onboarding: Added `kcipher_tutorialSeen` / `.dat` gating to fire guided tour only on fresh sessions without interrupting restored states.
+  - Overlay & Modal Hotkeys: Wired Enter, Space, and Arrow keys to splash and tutorial overlays; added F1 / H manual hotkeys.
+  - Toast & Leak Remediation: Re-anchored toasts to non-occluding bottom-right margin with auto-dismiss on typing; resolved object URL cleanup.
+  - TINAG & Lore Compliance: Verified diegetic intercepts; purged meta-passkey references; 100% clean security lint.
+  - Verification: MSVC compile clean (`KCipher.exe` 11.5 KB); Vite clean build in 393ms (`kcipher.html` 102.1 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-27T23:50:00Z — kilo-graphics: KDragon (Game Content, Visual Polish & Balance Pass)**
   - Status: PASS ✅ (0 rotating glints / traveling border dots; 0 regressions; <999KB ceiling verified).
   - Glint & Dot Purge: Verified 100% clean static ornate borders across web and C with zero moving glints or perimeter dots.
