@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KContacts
   kilo_usability: KRead
-  kilo_graphics: KAbyss
+  kilo_graphics: KColosseum
   kilo_qa: KType
   kilo_expander: KMedia
   kilo_creator: "kweb://darknet (Subterranean Darknet Hub & Node 0x7F Packet Sniffer)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-usability
-  app: KRadio
-  timestamp: "2026-09-28T19:22:00Z"
+  agent: kilo-graphics
+  app: KAbyss
+  timestamp: "2026-09-28T20:15:00Z"
 last_planner_run: "2026-09-28T10:38:00Z"
 ---
 
@@ -104,9 +104,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://deep-core, kweb://echo-subsystem.net, kweb://geocities, kweb://darknet, kweb://portal, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KAbyss`
+- **Current Target**: `KColosseum`
 - **Upcoming Queue**:
-  `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`.
+  `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KContacts`
@@ -242,6 +242,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-28T20:15:00Z — kilo-graphics: KAbyss (Game Content, YM2612 FM Audio, Dread Lich & Balance Pass)**
+  - Status: PASS ✅ (0 rotating glints / traveling border dots, 0 regressions, clean builds, <999KB verified).
+  - Glint & Dot Audit: Verified 100% absence of rotating specular glints or traveling perimeter border dots across web & native C.
+  - Abyssal Lord Expansion: Implemented Forgotten Crypt Lord "The Dread Lich" at depth 9 with Death Coil, Soul Rot, and Soul Phylactery relic.
+  - Procedural Audio Architecture: Added Sega Genesis YM2612 2-Op FM synth & SNES SPC700 stereo delay BGM engine across all 4 zones.
+  - Visual Polish: Added zone-adaptive atmospheric drifting particles (dust motes, cyan spores, necrotic wisps, astral particles) and Lich sprites.
+  - Gameplay Balance: Balanced delver metabolic hunger rate to 7 turns/tick and aligned web & native C mechanics.
+  - Verification: MSVC clean (`KAbyss.exe` 220.6 KB); Vite clean in 290ms (`kabyss.html` 437.6 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-28T19:22:00Z — kilo-usability: KRadio (HiDPI Spectrum Visualizer, Window Fit & Non-Occluding Toasts)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
   - Window & Layout: Adjusted default window in App.jsx to 500x480 eliminating iframe vertical clipping and scrollbars.
@@ -277,14 +286,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Diegetic ARG Audio: Added 1999Hz subcarrier anomaly with subtle International Morse code stream for `echo-subsystem.net`.
   - Visuals & Ergonomics: Anchored toasts top-right to prevent piano/seq occlusion; added live visualizer subcarrier indicator; fixed panic handler.
   - Verification: MSVC clean (`KSynth.exe` 24.0 KB); Vite clean in 241ms (`ksynth.html` 122.0 KB < 999 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-28T18:10:00Z — kilo-qa: KTrader (Pass 5: Tutorial & State Integrity Audit)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
-  - Snapshot Persistence: Full F5 quicksave & F9 quickload capturing complete trade, route, and combat state in web `ktrader_quicksave_v1` and native `ktrader_quicksave.dat`.
-  - Modal Ergonomics: Added `closeAllModals` mutual exclusion preventing modal stacking across Help, Tutorial, and Victory dialogs.
-  - Onboarding & Reset Integrity: Verified `ktrader_tutorialSeen` / `.dat` onboarding gating; implemented clean in-memory reset with dual storage clearance.
-  - Build Parity & Sync: Synchronized MSVC build pipeline copying `KTrader.exe` directly to `public/exe/`.
-  - Verification: MSVC clean (`KTrader.exe` 26.6 KB); Vite clean in 320ms (`ktrader.html` 81.1 KB < 999 KB); check_icons & security lint 100% PASS.
 
 
 

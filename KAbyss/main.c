@@ -300,6 +300,7 @@ typedef enum {
     // Boss Drops
     ITEM_WPN_CRYPT_GREATSWORD,
     ITEM_ARM_WYRMSCALE,
+    ITEM_REL_SOUL_PHYLACTERY,
     ITEM_REL_MONARCH_CROWN,
     ITEM_REL_PRECURSOR_GLYPH,
     NUM_ITEM_DEFS
@@ -362,6 +363,7 @@ static const ItemDef g_itemDefs[NUM_ITEM_DEFS] = {
     { ITEM_KEY_RUNIC, "Ancient Runic Key", ITEM_TYPE_KEY, SLOT_NONE, "k", COLOR_TEXT_GOLD, "Unlocks crypt chests and sealed doors.", 0,0,0,0, 0,0,0 },
     { ITEM_WPN_CRYPT_GREATSWORD, "Keeper's Greatsword", ITEM_TYPE_EQUIPMENT, SLOT_WEAPON, "/", RGB(245,158,11), "+10 Might, +3 Warding, +15 Max HP. Heavy tomb blade.", 10,3,0,0, 15,0,0 },
     { ITEM_ARM_WYRMSCALE, "Wyrmscale Carapace", ITEM_TYPE_EQUIPMENT, SLOT_ARMOR, "[", RGB(16,185,129), "+9 Warding, +40 Max HP, +2 Might. Impervious to acid.", 2,9,0,0, 40,0,0 },
+    { ITEM_REL_SOUL_PHYLACTERY, "Soul Phylactery", ITEM_TYPE_EQUIPMENT, SLOT_RELIC, "o", RGB(239,68,68), "+12 Max Aether, +20 Max Sanity, +4 Arcana, +2 Warding. Pulsing necrotic relic.", 0,2,4,8, 0,12,20 },
     { ITEM_REL_MONARCH_CROWN, "Crown of Void Monarch", ITEM_TYPE_EQUIPMENT, SLOT_RELIC, "o", RGB(192,132,252), "+10 Light, +35 Max Aether, +35 Max Sanity, +5 Arcana.", 0,2,5,10, 0,35,35 },
     { ITEM_REL_PRECURSOR_GLYPH, "Precursor Relic Glyph", ITEM_TYPE_EQUIPMENT, SLOT_RELIC, "X", RGB(56,189,248), "+11 Light, +25 Max Aether, +25 Max Sanity, +4 Arcana. [Arc 2: 10.19.99.4]", 0,1,4,11, 0,25,25 }
 };
@@ -462,8 +464,9 @@ static int g_logCount = 0;
 #define MONSTER_LEVIATHAN     4
 #define MONSTER_CRYPT_KEEPER  5
 #define MONSTER_ABYSSAL_WYRM  6
-#define MONSTER_VOID_MONARCH  7
-#define NUM_MONSTER_TYPES     8
+#define MONSTER_DREAD_LICH    7
+#define MONSTER_VOID_MONARCH  8
+#define NUM_MONSTER_TYPES     9
 
 typedef struct {
     const char* name;
@@ -487,6 +490,7 @@ static const MonsterDef g_monsterDefs[NUM_MONSTER_TYPES] = {
     { "Abyssal Leviathan", "L", RGB(244, 63, 94), 95, 12, 24, 4, 80, 75, "Colossal horror with crushing slams.", "Susceptible to Glacial Nova (2-turn Freeze)" },
     { "The Crypt Keeper", "K", RGB(245, 158, 11), 280, 25, 28, 4, 250, 220, "Catacombs Lord. Bone plating, tomb cleaves, summons skeletons.", "Weak to Sacred Fire (Pyre x1.75)" },
     { "Abyssal Wyrm", "Y", RGB(16, 185, 129), 380, 35, 36, 5, 400, 350, "Sunken Grotto Sovereign. Spits caustic acid, coils & burrows.", "Weak to Glacial Frost (Cryo Freeze)" },
+    { "The Dread Lich", "D", RGB(239, 68, 68), 450, 40, 42, 5, 520, 420, "Forgotten Crypt Sovereign. Necrotic curses, soul rot, death coils.", "Weak to Sacred Fire & Tempest Shock" },
     { "The Void Monarch", "M", RGB(192, 132, 252), 520, 45, 46, 6, 650, 500, "Cosmic Void Sovereign. Astral beams, singularity pull, dread aura.", "Weak to Aegis Ward & Tempest Shock" }
 };
 
@@ -1321,6 +1325,8 @@ void SpawnMonsters(int level) {
         bossType = MONSTER_CRYPT_KEEPER;
     } else if (level == 6) {
         bossType = MONSTER_ABYSSAL_WYRM;
+    } else if (level == 9) {
+        bossType = MONSTER_DREAD_LICH;
     } else if (level >= 10 && (level == 10 || level % 4 == 0)) {
         bossType = MONSTER_VOID_MONARCH;
     }
@@ -1367,6 +1373,9 @@ void SpawnMonsters(int level) {
                             PlayAudioAsync(SND_BOSS_ROAR);
                         } else if (bossType == MONSTER_ABYSSAL_WYRM) {
                             AddLog("ABYSSAL LORD RISES: The sunken waters churn—The Abyssal Wyrm coils from the depths!", COLOR_ACCENT_GREEN);
+                            PlayAudioAsync(SND_BOSS_ROAR);
+                        } else if (bossType == MONSTER_DREAD_LICH) {
+                            AddLog("ABYSSAL LORD RISES: The Dread Lich awakens in the necrotic sepulcher!", RGB(239, 68, 68));
                             PlayAudioAsync(SND_BOSS_ROAR);
                         } else if (bossType == MONSTER_VOID_MONARCH) {
                             AddLog("ABYSSAL LORD RISES: Reality tears asunder—The Void Monarch commands the abyssal vortex!", COLOR_ACCENT_PURPLE);
@@ -1435,6 +1444,10 @@ void DamageMonster(int idx, int dmg, const char* dmgType, BOOL isCrit) {
             AddPackItem(ITEM_ARM_WYRMSCALE, 1);
             AddPackItem(ITEM_PANACEA_DEEP, 1);
             AddLog("Spoils of Grotto: Discovered Wyrmscale Carapace (+9 Ward, +40 HP) & Panacea!", COLOR_TEXT_GOLD);
+        } else if (m->type == MONSTER_DREAD_LICH) {
+            AddPackItem(ITEM_REL_SOUL_PHYLACTERY, 1);
+            AddPackItem(ITEM_KEY_RUNIC, 1);
+            AddLog("Spoils of Forgotten Crypt: Discovered Soul Phylactery (+12 MP, +20 SAN, +4 Arcana) & Key!", COLOR_TEXT_GOLD);
         } else if (m->type == MONSTER_VOID_MONARCH) {
             AddPackItem(ITEM_REL_MONARCH_CROWN, 1);
             AddPackItem(ITEM_PANACEA_DEEP, 1);
@@ -1525,7 +1538,7 @@ void AttackMonster(int idx) {
     if (g_monsters[idx].alive && g_player.weaponEnchant != ENCHANT_NONE) {
         if (g_player.weaponEnchant == ENCHANT_FIRE) {
             int fireDmg = RandInt(10, 16);
-            if (g_monsters[idx].type == MONSTER_SKELETON || g_monsters[idx].type == MONSTER_CRYPT_KEEPER) {
+            if (g_monsters[idx].type == MONSTER_SKELETON || g_monsters[idx].type == MONSTER_CRYPT_KEEPER || g_monsters[idx].type == MONSTER_DREAD_LICH) {
                 fireDmg = (int)(fireDmg * 1.5f);
             }
             DamageMonster(idx, fireDmg, "FIRE", FALSE);
@@ -1653,6 +1666,10 @@ void UpdateMonsters(void) {
                     g_player.sanity = (g_player.sanity > 3) ? (g_player.sanity - 3) : 0;
                     g_player.aether = (g_player.aether > 5) ? (g_player.aether - 5) : 0;
                     AddLog("The Void Monarch siphons soul and mind (-3 Sanity, -5 Aether)!", COLOR_ACCENT_PURPLE);
+                } else if (mon->type == MONSTER_DREAD_LICH) {
+                    g_player.sanity = (g_player.sanity > 4) ? (g_player.sanity - 4) : 0;
+                    g_player.aether = (g_player.aether > 6) ? (g_player.aether - 6) : 0;
+                    AddLog("The Dread Lich's necrotic touch withers soul & mana (-4 Sanity, -6 Aether)!", RGB(239, 68, 68));
                 }
 
                 // Crypt Keeper minion summons
@@ -1691,8 +1708,63 @@ void UpdateMonsters(void) {
                     }
                 }
 
+                // Dread Lich minion summons
+                if (mon->type == MONSTER_DREAD_LICH && mon->hp < mon->max_hp * 6 / 10 && RandInt(0, 100) < 28) {
+                    int wCount = 0;
+                    for (int s = 0; s < g_numMonsters; s++) {
+                        if (g_monsters[s].alive && (g_monsters[s].type == MONSTER_WRAITH || g_monsters[s].type == MONSTER_SKELETON)) wCount++;
+                    }
+                    if (wCount < 2 && g_numMonsters < MAX_MONSTERS) {
+                        int sx = mon->x + (RandInt(0, 1) ? 1 : -1);
+                        int sy = mon->y + (RandInt(0, 1) ? 1 : -1);
+                        if (sx >= 1 && sx < MAP_WIDTH - 1 && sy >= 1 && sy < MAP_HEIGHT - 1) {
+                            int st = g_dungeon[sy][sx];
+                            if (st == TILE_FLOOR || st == TILE_WATER) {
+                                g_monsters[g_numMonsters].type = MONSTER_WRAITH;
+                                g_monsters[g_numMonsters].x = sx;
+                                g_monsters[g_numMonsters].y = sy;
+                                g_monsters[g_numMonsters].hp = g_monsterDefs[MONSTER_WRAITH].baseHp;
+                                g_monsters[g_numMonsters].max_hp = g_monsterDefs[MONSTER_WRAITH].baseHp;
+                                g_monsters[g_numMonsters].atk = g_monsterDefs[MONSTER_WRAITH].baseAtk;
+                                g_monsters[g_numMonsters].exp = 25;
+                                g_monsters[g_numMonsters].essence = 20;
+                                g_monsters[g_numMonsters].state = 1;
+                                g_monsters[g_numMonsters].freezeTurns = 0;
+                                g_monsters[g_numMonsters].alertRange = 10;
+                                g_monsters[g_numMonsters].isBoss = FALSE;
+                                g_monsters[g_numMonsters].bonePlated = FALSE;
+                                g_monsters[g_numMonsters].alive = TRUE;
+                                g_numMonsters++;
+                                AddLog("NECROTIC RITUAL: The Dread Lich tears a Void Wraith from the nether!", RGB(239, 68, 68));
+                                SpawnCombatText((float)mon->x, (float)mon->y, "SUMMON WRAITH", RGB(239, 68, 68));
+                            }
+                        }
+                    }
+                }
+
                 if (g_player.hp <= 0) {
                     AddLog("You have fallen in the Abyss! Press F2 / Ctrl+N to descend anew.", COLOR_ACCENT_RED);
+                }
+            } else if (mon->type == MONSTER_DREAD_LICH && dist <= 5.0f && hasLOS) {
+                // Death Coil ranged attack
+                int rawDmg = mon->atk + RandInt(0, 5);
+                int netDmg = rawDmg - g_player.warding / 4;
+                if (netDmg < 4) netDmg = 4;
+                if (g_player.shield > 0) {
+                    if (g_player.shield >= netDmg) { g_player.shield -= netDmg; netDmg = 0; }
+                    else { netDmg -= g_player.shield; g_player.shield = 0; }
+                }
+                if (netDmg > 0) {
+                    g_player.hp -= netDmg;
+                    if (g_player.hp < 0) g_player.hp = 0;
+                    g_player.sanity = (g_player.sanity > 4) ? (g_player.sanity - 4) : 0;
+                    char dTxt[32];
+                    snprintf(dTxt, sizeof(dTxt), "-%d DEATH", netDmg);
+                    SpawnCombatText((float)g_player.x, (float)g_player.y, dTxt, RGB(239, 68, 68));
+                    char bBuf[128];
+                    snprintf(bBuf, sizeof(bBuf), "DEATH COIL: %s fires a necrotic skull for %d DMG (-4 Sanity)!", md->name, netDmg);
+                    AddLog(bBuf, RGB(239, 68, 68));
+                    Beep(260, 40);
                 }
             } else if (mon->type == MONSTER_ABYSSAL_WYRM && dist <= 5.0f && hasLOS) {
                 // Caustic Acid Spit
@@ -2905,8 +2977,8 @@ static const char* g_eldritchWhispers[8] = {
 void AdvanceTurn(void) {
     g_turn++;
 
-    // 1. Hunger processing
-    int hungerRate = (g_player.curse == CURSE_DECAY) ? 3 : 5;
+    // 1. Hunger processing (Balanced delver metabolic rate for 48x36 maps)
+    int hungerRate = (g_player.curse == CURSE_DECAY) ? 4 : 7;
     if (g_turn % hungerRate == 0 && g_player.hunger > 0) {
         g_player.hunger--;
         if (g_player.hunger == 35) {
@@ -4111,6 +4183,61 @@ static void DrawMonsterSprite(HDC hdc, int x, int y, int type, int frame, int st
         SetPixel(hdc, cx - 2, headY + 3, RGB(248, 250, 252));
         SetPixel(hdc, cx + 1, headY + 3, RGB(248, 250, 252));
         SetPixel(hdc, cx - 1, headY + 5, RGB(16, 185, 129));
+
+    } else if (type == MONSTER_DREAD_LICH) {
+        int ly = cy + (int)(sinf((float)frame * 0.25f) * 2.0f);
+
+        // Necrotic Miasma Aura
+        HPEN auraPen = CreatePen(PS_SOLID, 1, RGB(239, 68, 68));
+        SelectObject(hdc, auraPen);
+        Ellipse(hdc, cx - 14, ly - 14, cx + 14, ly + 14);
+        SelectObject(hdc, nullPen);
+        DeleteObject(auraPen);
+
+        // Billowing Shroud Robes
+        HBRUSH robeBr = CreateSolidBrush(RGB(55, 18, 60));
+        SelectObject(hdc, robeBr);
+        POINT rPts[4] = {
+            {cx - 7, ly + 10},
+            {cx - 8, ly - 2},
+            {cx + 8, ly - 2},
+            {cx + 7, ly + 10}
+        };
+        Polygon(hdc, rPts, 4);
+        DeleteObject(robeBr);
+
+        // Crowned Horned Skull
+        HBRUSH lSkullBr = CreateSolidBrush(RGB(241, 245, 249));
+        SelectObject(hdc, lSkullBr);
+        Ellipse(hdc, cx - 6, ly - 7, cx + 6, ly + 1);
+        RECT lJawR = {cx - 3, ly + 1, cx + 3, ly + 3};
+        FillRect(hdc, &lJawR, lSkullBr);
+        DeleteObject(lSkullBr);
+
+        // Bone Horns / Crown
+        HPEN hornPen = CreatePen(PS_SOLID, 1, RGB(245, 158, 11));
+        SelectObject(hdc, hornPen);
+        MoveToEx(hdc, cx - 4, ly - 6, NULL); LineTo(hdc, cx - 7, ly - 12);
+        MoveToEx(hdc, cx, ly - 7, NULL); LineTo(hdc, cx, ly - 14);
+        MoveToEx(hdc, cx + 4, ly - 6, NULL); LineTo(hdc, cx + 7, ly - 12);
+        SelectObject(hdc, nullPen);
+        DeleteObject(hornPen);
+
+        // Burning Emerald Soul Eyes
+        SetPixel(hdc, cx - 3, ly - 5, RGB(52, 211, 153));
+        SetPixel(hdc, cx + 2, ly - 5, RGB(52, 211, 153));
+
+        // Necrotic Staff with Soul Phylactery Orb
+        HPEN staffPen = CreatePen(PS_SOLID, 2, RGB(148, 163, 184));
+        SelectObject(hdc, staffPen);
+        MoveToEx(hdc, cx + 7, ly + 10, NULL); LineTo(hdc, cx + 11, ly - 10);
+        SelectObject(hdc, nullPen);
+        DeleteObject(staffPen);
+
+        HBRUSH orbBr = CreateSolidBrush(RGB(168, 85, 247));
+        SelectObject(hdc, orbBr);
+        Ellipse(hdc, cx + 9, ly - 14, cx + 15, ly - 8);
+        DeleteObject(orbBr);
 
     } else if (type == MONSTER_VOID_MONARCH) {
         int my = cy + (int)(sinf((float)frame * 0.2f) * 2.5f);

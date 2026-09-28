@@ -1148,6 +1148,7 @@
                     <button id="btnEnchantTop" class="btn-action" title="Relic Enchanting Altar: Imbue weapon with Fire, Frost, or Void">⛩️ Enchant [I]</button>
                     <button id="btnAudioToggle" class="btn-action" title="Toggle Sound FX & Audio [O]">🔊 Audio: On</button>
                     <button id="btnAmbienceToggle" class="btn-action" title="Toggle Atmospheric Subterranean Soundscape Ambience">🎵 Ambience: On</button>
+                    <button id="btnMusicToggle" class="btn-action" title="Toggle Sega Genesis YM2612 2-Op FM & SNES SPC700 Delay BGM [P]">🎵 Music: On [YM2612]</button>
                     <button id="btnToggleCRT" class="btn-action" title="Toggle CRT scanlines & phosphors">📺 CRT: On</button>
                     <button id="btnToggleFOV" class="btn-action" title="Toggle full map vision (Debug)">👁️ FOV: On</button>
                     <button id="btnHelp">📖 Delver's Tome</button>
@@ -2096,6 +2097,23 @@
                 desc: 'Colossal serpentine bio-horror that slithers through subterranean depths. Spews caustic acid saliva, surges across stone, and crushes composure.',
                 weakness: 'Glacial Frost (ᚦ Frost / Cryo freezes scales and closes acid glands).'
             },
+            DREAD_LICH: {
+                id: 'DREAD_LICH',
+                name: 'The Dread Lich',
+                symbol: '💀🔮',
+                color: '#f43f5e',
+                isBoss: true,
+                bossTitle: 'Sovereign of the Forgotten Crypt',
+                baseHp: 450,
+                hpScale: 40,
+                baseAtk: 40,
+                atkScale: 5,
+                exp: 520,
+                essence: 420,
+                behavior: 'Death Coil, Soul Rot & Necrotic Summons',
+                desc: 'Ancient arch-sorcerer who cheated mortality through foul necromancy. Hurls piercing death coils, drains soul sanity, and commands legions of the crypt.',
+                weakness: 'Sacred Fire & Tempest (🔥 Pyre / Flamebrand and ⚡ Tempest shock disrupt necrotic phylactery).'
+            },
             VOID_MONARCH: {
                 id: 'VOID_MONARCH',
                 name: 'The Void Monarch',
@@ -2201,12 +2219,15 @@
             }
         };
 
-        // Procedural Dungeon Audio & Atmospheric Soundscape System [Phase 13]
+        // Procedural Dungeon Audio, YM2612 FM Synthesis & Atmospheric Soundscape System [Phase 13]
         const AudioSys = {
             ctx: null,
             soundEnabled: true,
             ambienceEnabled: true,
+            musicEnabled: true,
+            musicVol: 0.50,
             masterGain: null,
+            musicGain: null,
             ambienceGain: null,
             ambienceOsc1: null,
             ambienceOsc2: null,
@@ -2214,6 +2235,14 @@
             ambienceLFO: null,
             ambienceLFOGain: null,
             ambientTimer: null,
+            delayL: null,
+            delayR: null,
+            delayFilter: null,
+            delayFeedback: null,
+            musicInitialized: false,
+            seqStep: 0,
+            seqTimer: null,
+            currentZoneTrack: 0,
 
             init() {
                 if (!this.ctx && (window.AudioContext || window.webkitAudioContext)) {
@@ -2228,6 +2257,202 @@
                 }
                 if (this.ambienceEnabled && !this.ambienceOsc1 && this.soundEnabled && this.ctx) {
                     this.startAmbience();
+                }
+                if (this.musicEnabled && !this.musicInitialized && this.soundEnabled && this.ctx) {
+                    this.initMusicSystem();
+                }
+            },
+
+            initMusicSystem() {
+                if (!this.ctx || this.musicInitialized) return;
+                try {
+                    // SNES SPC700 Stereo Delay Warmth Network (185ms / 255ms with 2.2kHz warm lowpass filter)
+                    this.delayL = this.ctx.createDelay();
+                    this.delayL.delayTime.value = 0.185;
+                    this.delayR = this.ctx.createDelay();
+                    this.delayR.delayTime.value = 0.255;
+
+                    this.delayFilter = this.ctx.createBiquadFilter();
+                    this.delayFilter.type = 'lowpass';
+                    this.delayFilter.frequency.value = 2200;
+                    this.delayFilter.Q.value = 0.7;
+
+                    this.delayFeedback = this.ctx.createGain();
+                    this.delayFeedback.gain.value = 0.28;
+
+                    const panL = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
+                    const panR = this.ctx.createStereoPanner ? this.ctx.createStereoPanner() : null;
+                    if (panL && panR) {
+                        panL.pan.value = -0.35;
+                        panR.pan.value = 0.35;
+                        this.delayL.connect(panL);
+                        panL.connect(this.delayFilter);
+                        this.delayR.connect(panR);
+                        panR.connect(this.delayFilter);
+                    } else {
+                        this.delayL.connect(this.delayFilter);
+                        this.delayR.connect(this.delayFilter);
+                    }
+
+                    this.delayFilter.connect(this.delayFeedback);
+                    this.delayFeedback.connect(this.delayL);
+                    this.delayFeedback.connect(this.delayR);
+                    this.delayFilter.connect(this.masterGain);
+
+                    this.musicGain = this.ctx.createGain();
+                    this.musicGain.gain.value = this.musicVol;
+                    this.musicGain.connect(this.masterGain);
+                    this.musicGain.connect(this.delayL);
+                    this.musicGain.connect(this.delayR);
+
+                    this.musicInitialized = true;
+                    this.startMusicSequencer();
+                } catch (e) {
+                    console.error('Music system init error', e);
+                }
+            },
+
+            playFMNote(freq, dur = 0.42, timbre = 'lead', velocity = 0.6) {
+                if (!this.ctx || !this.soundEnabled || !this.musicEnabled || !this.musicGain) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const mod = this.ctx.createOscillator();
+                    const modGain = this.ctx.createGain();
+                    const car = this.ctx.createOscillator();
+                    const carGain = this.ctx.createGain();
+
+                    let modRatio = 1.5;
+                    let modDepth = freq * 1.6;
+                    let attack = 0.02;
+                    let decay = dur * 0.90;
+
+                    if (timbre === 'bass') {
+                        modRatio = 0.5;
+                        modDepth = freq * 2.2;
+                        attack = 0.02;
+                        decay = dur * 0.85;
+                        velocity *= 1.2;
+                    } else if (timbre === 'chime') {
+                        modRatio = 3.5;
+                        modDepth = freq * 1.8;
+                        attack = 0.01;
+                        decay = dur * 0.92;
+                    } else if (timbre === 'pad') {
+                        modRatio = 1.004;
+                        modDepth = freq * 0.8;
+                        attack = dur * 0.22;
+                        decay = dur * 0.85;
+                    }
+
+                    mod.type = 'sine';
+                    mod.frequency.setValueAtTime(freq * modRatio, now);
+                    modGain.gain.setValueAtTime(modDepth * velocity, now);
+                    modGain.gain.exponentialRampToValueAtTime(1.0, now + decay);
+
+                    mod.connect(modGain);
+                    modGain.connect(car.frequency);
+
+                    car.type = 'sine';
+                    car.frequency.setValueAtTime(freq, now);
+
+                    const finalGain = Math.max(0.0001, velocity * 0.22 * this.musicVol);
+                    carGain.gain.setValueAtTime(0.0001, now);
+                    carGain.gain.linearRampToValueAtTime(finalGain, now + attack);
+                    carGain.gain.exponentialRampToValueAtTime(0.0001, now + decay);
+
+                    car.connect(carGain);
+                    carGain.connect(this.musicGain);
+
+                    mod.start(now);
+                    car.start(now);
+                    mod.stop(now + decay);
+                    car.stop(now + decay);
+                } catch (e) {}
+            },
+
+            getZoneTrackName(zIdx = null) {
+                const z = (zIdx !== null) ? zIdx : this.currentZoneTrack;
+                switch (z) {
+                    case 0: return 'HYMN OF THE SEPULCHER (CATALECTIC D-MIN)';
+                    case 1: return 'BIOLUMINESCENT DEPTHS (E-DORIAN PULSE)';
+                    case 2: return 'REQUIEM OF THE LICH (C-MINOR GOTHIC DIRGE)';
+                    case 3: return 'ASTRAL SINGULARITY (AB-MIN COSMIC VOID)';
+                    default: return 'ABYSSAL CRYPT AMBIENCE';
+                }
+            },
+
+            setMusicZone(zIdx) {
+                this.currentZoneTrack = Math.max(0, Math.min(3, zIdx));
+                const trackEl = document.getElementById('txtMusicTrack');
+                if (trackEl) trackEl.textContent = this.getZoneTrackName(this.currentZoneTrack);
+            },
+
+            toggleMusic() {
+                this.init();
+                this.musicEnabled = !this.musicEnabled;
+                if (!this.musicInitialized && this.musicEnabled) {
+                    this.initMusicSystem();
+                }
+                if (this.musicGain && this.ctx) {
+                    this.musicGain.gain.setValueAtTime(this.musicEnabled ? this.musicVol : 0.0001, this.ctx.currentTime);
+                }
+                const btn = document.getElementById('btnMusicToggle');
+                if (btn) {
+                    btn.innerText = this.musicEnabled ? '🎵 Music: On [YM2612]' : '🎵 Music: Off';
+                    btn.style.borderColor = this.musicEnabled ? 'var(--accent-purple)' : 'var(--text-dim)';
+                }
+                logMessage(this.musicEnabled ? `🎵 Genesis YM2612 & SPC700 BGM: ENABLED [${this.getZoneTrackName()}].` : '🎵 BGM Music: MUTED.', 'magic');
+                return this.musicEnabled;
+            },
+
+            startMusicSequencer() {
+                if (this.seqTimer) clearInterval(this.seqTimer);
+                this.seqStep = 0;
+                this.seqTimer = setInterval(() => {
+                    if (!this.soundEnabled || !this.musicEnabled || !this.ctx) return;
+                    this.tickSequencerStep();
+                }, 340);
+            },
+
+            tickSequencerStep() {
+                const step = this.seqStep % 16;
+                this.seqStep++;
+
+                const z = (typeof getZone === 'function' && typeof depthLevel !== 'undefined') ? getZone(depthLevel) : this.currentZoneTrack;
+                this.currentZoneTrack = z;
+
+                const patterns = {
+                    0: { // The Catacombs: Hymn of the Sepulcher (D minor)
+                        bass: [73.42, 0, 0, 0, 55.00, 0, 0, 0, 87.31, 0, 0, 0, 65.41, 0, 0, 0],
+                        lead: [293.66, 0, 349.23, 0, 440.00, 0, 349.23, 523.25, 0, 440.00, 0, 293.66, 349.23, 0, 293.66, 0],
+                        chime: [0, 587.33, 0, 440.00, 0, 0, 523.25, 0, 0, 698.46, 0, 587.33, 0, 440.00, 0, 880.00]
+                    },
+                    1: { // Sunken Grotto: Bioluminescent Depths (E Dorian)
+                        bass: [82.41, 0, 0, 0, 61.74, 0, 0, 0, 98.00, 0, 0, 0, 73.42, 0, 0, 0],
+                        lead: [329.63, 0, 392.00, 0, 493.88, 0, 0, 587.33, 0, 493.88, 0, 392.00, 0, 329.63, 0, 493.88],
+                        chime: [0, 659.25, 0, 0, 783.99, 0, 659.25, 0, 0, 987.77, 0, 783.99, 0, 659.25, 0, 587.33]
+                    },
+                    2: { // Forgotten Crypt: Requiem of the Lich (C minor)
+                        bass: [65.41, 0, 0, 0, 49.00, 0, 0, 0, 103.83, 0, 0, 0, 87.31, 0, 0, 0],
+                        lead: [261.63, 0, 311.13, 0, 392.00, 0, 415.30, 523.25, 0, 392.00, 0, 311.13, 415.30, 0, 261.63, 0],
+                        chime: [0, 523.25, 0, 392.00, 0, 622.25, 0, 0, 0, 783.99, 0, 523.25, 0, 392.00, 0, 622.25]
+                    },
+                    3: { // The Void Abyss: Astral Singularity (Ab minor)
+                        bass: [51.91, 0, 0, 0, 77.78, 0, 0, 0, 69.30, 0, 0, 0, 41.20, 0, 0, 0],
+                        lead: [415.30, 0, 493.88, 0, 622.25, 0, 659.25, 830.61, 0, 622.25, 0, 493.88, 415.30, 0, 622.25, 0],
+                        chime: [0, 830.61, 0, 622.25, 0, 0, 987.77, 0, 0, 1244.51, 0, 830.61, 0, 622.25, 0, 987.77]
+                    }
+                };
+
+                const pat = patterns[z] || patterns[0];
+                if (pat.bass && pat.bass[step]) {
+                    this.playFMNote(pat.bass[step], 0.40, 'bass', 0.65);
+                }
+                if (pat.lead && pat.lead[step]) {
+                    this.playFMNote(pat.lead[step], 0.35, 'lead', 0.50);
+                }
+                if (pat.chime && pat.chime[step]) {
+                    this.playFMNote(pat.chime[step], 0.38, 'chime', 0.42);
                 }
             },
 
@@ -2244,8 +2469,9 @@
                 }
                 if (!this.soundEnabled) {
                     this.stopAmbience();
-                } else if (this.ambienceEnabled) {
-                    this.startAmbience();
+                } else {
+                    if (this.ambienceEnabled) this.startAmbience();
+                    if (this.musicEnabled && !this.musicInitialized) this.initMusicSystem();
                 }
                 logMessage(this.soundEnabled ? '🔊 Dungeon Audio & Procedural Sound FX: ENABLED.' : '🔇 Dungeon Audio & Sound FX: MUTED.', 'magic');
                 return this.soundEnabled;
@@ -2347,6 +2573,7 @@
                 if (this.ambienceFilter) {
                     this.ambienceFilter.frequency.exponentialRampToValueAtTime(cfg.cutoff, now + 1.2);
                 }
+                this.setMusicZone(zoneIdx);
             },
 
             stopAmbience() {
@@ -2374,6 +2601,47 @@
                         }, 450);
                     } catch (e) {}
                 }
+            },
+
+            playDeathCoil() {
+                this.init();
+                if (!this.ctx || !this.soundEnabled) return;
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const filter = this.ctx.createBiquadFilter();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(480, now);
+                osc.frequency.exponentialRampToValueAtTime(110, now + 0.36);
+                filter.type = 'bandpass';
+                filter.frequency.setValueAtTime(650, now);
+                filter.Q.setValueAtTime(3.5, now);
+                gain.gain.setValueAtTime(0.20, now);
+                gain.gain.linearRampToValueAtTime(0.001, now + 0.36);
+                osc.connect(filter);
+                filter.connect(gain);
+                gain.connect(this.masterGain);
+                osc.start(now);
+                osc.stop(now + 0.36);
+            },
+
+            playSoulRot() {
+                this.init();
+                if (!this.ctx || !this.soundEnabled) return;
+                const now = this.ctx.currentTime;
+                [180, 220, 260].forEach((f, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(f, now + i * 0.04);
+                    osc.frequency.linearRampToValueAtTime(f - 60, now + i * 0.04 + 0.28);
+                    gain.gain.setValueAtTime(0.12, now + i * 0.04);
+                    gain.gain.linearRampToValueAtTime(0.001, now + i * 0.04 + 0.28);
+                    osc.connect(gain);
+                    gain.connect(this.masterGain);
+                    osc.start(now + i * 0.04);
+                    osc.stop(now + i * 0.04 + 0.28);
+                });
             },
 
             // --- Procedural Atmospheric Soundscape FX ---
@@ -3130,6 +3398,15 @@
                 icon: '✨',
                 desc: 'Sacred relic emitting holy light (+9 Light Radius, +20 Max Sanity).',
                 might: 0, warding: 1, arcana: 1, light: 9, maxHp: 0, maxAether: 0, maxSanity: 20
+            },
+            REL_SOUL_PHYLACTERY: {
+                id: 'REL_SOUL_PHYLACTERY',
+                name: 'Soul Phylactery',
+                type: ITEM_TYPES.EQUIPMENT,
+                slot: EQUIP_SLOTS.RELIC,
+                icon: '🔮',
+                desc: 'Pulsing necrotic phylactery of The Dread Lich (+12 Max Aether, +20 Max Sanity, +4 Arcana, +2 Warding).',
+                might: 0, warding: 2, arcana: 4, light: 8, maxHp: 0, maxAether: 12, maxSanity: 20
             },
             REL_MONARCH_CROWN: {
                 id: 'REL_MONARCH_CROWN',
@@ -4066,19 +4343,45 @@
             updateHUD();
         }
 
-        // Particle generator for atmospheric subterranean embers
+        // Particle generator for atmospheric subterranean embers & zone motes
         function spawnEmber(x, y, isTorch = false) {
-            if (torchParticles.length > 60) return;
-            const zInfo = ZONE_INFO[getZone(depthLevel)];
+            if (torchParticles.length > 80) return;
+            const z = getZone(depthLevel);
+            const zInfo = ZONE_INFO[z];
+            let pColor = '#fbbf24';
+            let vy = -(0.3 + Math.random() * 0.6);
+            let vx = (Math.random() - 0.5) * 0.4;
+            let sz = 1.2 + Math.random() * 2.0;
+
+            if (isTorch) {
+                pColor = Math.random() > 0.3 ? zInfo.particleColor : '#fbbf24';
+            } else {
+                if (z === 0) { // Catacombs dust motes
+                    pColor = Math.random() > 0.5 ? '#cbd5e1' : '#94a3b8';
+                    vy = (Math.random() - 0.5) * 0.2;
+                    sz = 1.0 + Math.random() * 1.4;
+                } else if (z === 1) { // Sunken Grotto bioluminescent spores
+                    pColor = Math.random() > 0.4 ? '#2dd4bf' : '#38bdf8';
+                    vy = -(0.1 + Math.random() * 0.3);
+                } else if (z === 2) { // Forgotten Crypt necrotic cinder wisps
+                    pColor = Math.random() > 0.4 ? '#f43f5e' : '#a855f7';
+                    vy = -(0.2 + Math.random() * 0.5);
+                } else { // Void Abyss cosmic astral motes
+                    pColor = Math.random() > 0.5 ? '#c084fc' : '#e0e7ff';
+                    vy = (Math.random() - 0.5) * 0.3;
+                    vx = (Math.random() - 0.5) * 0.5;
+                }
+            }
+
             torchParticles.push({
                 x: x + (Math.random() - 0.5) * 16,
                 y: y + (Math.random() - 0.5) * 12,
-                vx: (Math.random() - 0.5) * 0.4,
-                vy: -(0.3 + Math.random() * 0.6),
+                vx: vx,
+                vy: vy,
                 life: 1.0,
-                decay: 0.015 + Math.random() * 0.02,
-                size: 1.2 + Math.random() * 2.0,
-                color: isTorch ? (Math.random() > 0.3 ? zInfo.particleColor : '#fbbf24') : (Math.random() > 0.5 ? '#38bdf8' : '#818cf8')
+                decay: 0.012 + Math.random() * 0.018,
+                size: sz,
+                color: pColor
             });
         }
 
@@ -4854,6 +5157,8 @@
                 bossKey = 'CRYPT_KEEPER';
             } else if (level === 6) {
                 bossKey = 'ABYSSAL_WYRM';
+            } else if (level === 9) {
+                bossKey = 'DREAD_LICH';
             } else if (level >= 10 && (level === 10 || level % 4 === 0)) {
                 bossKey = 'VOID_MONARCH';
             }
@@ -4901,6 +5206,9 @@
                                 } else if (bossKey === 'ABYSSAL_WYRM') {
                                     logMessage(`⚠️ ABYSSAL LORD RISES: The sunken waters churn—The Abyssal Wyrm coils from the depths!`, 'important');
                                     AudioSys.playBossRoar('ABYSSAL_WYRM');
+                                } else if (bossKey === 'DREAD_LICH') {
+                                    logMessage(`⚠️ ABYSSAL LORD RISES: The Dread Lich awakens in the necrotic sepulcher! Beware his death coils & soul rot!`, 'important');
+                                    AudioSys.playBossRoar('DREAD_LICH');
                                 } else if (bossKey === 'VOID_MONARCH') {
                                     logMessage(`⚠️ ABYSSAL LORD RISES: Reality tears asunder—The Void Monarch commands the abyssal vortex!`, 'important');
                                     AudioSys.playBossRoar('VOID_MONARCH');
@@ -4964,6 +5272,9 @@
                 } else if (m.type === 'ABYSSAL_WYRM') {
                     droppedItem = 'ARM_WYRMSCALE';
                     addItem('PANACEA_DEEP', 1);
+                } else if (m.type === 'DREAD_LICH') {
+                    droppedItem = 'REL_SOUL_PHYLACTERY';
+                    addItem('ITEM_KEY_RUNIC', 1);
                 } else if (m.type === 'VOID_MONARCH') {
                     droppedItem = 'REL_MONARCH_CROWN';
                     addItem('PANACEA_DEEP', 1);
@@ -5103,6 +5414,11 @@
                     baseDmg = Math.floor(baseDmg * 1.4);
                     logMessage(`❄️ GLACIAL FRACTURE: Frost rime crystallizes the Abyssal Wyrm's scales (+40% DMG)!`, 'magic');
                 }
+            } else if (m.type === 'DREAD_LICH') {
+                if (player.weaponEnchant === 'FIRE') {
+                    baseDmg = Math.floor(baseDmg * 1.5);
+                    logMessage(`🔥 CONSECRATION: Sacred flame scorches The Dread Lich's necrotic shroud (+50% DMG)!`, 'magic');
+                }
             }
 
             damageMonster(m, baseDmg, player.weaponEnchant !== 'NONE' ? player.weaponEnchant : 'PHYSICAL', isCrit);
@@ -5196,6 +5512,11 @@
                             player.sanity = Math.max(0, player.sanity - 3);
                             player.aether = Math.max(0, player.aether - 5);
                             logMessage(`🌌 The Void Monarch siphons soul and mind (-3 Sanity, -5 Aether)!`, 'important');
+                        } else if (m.type === 'DREAD_LICH') {
+                            player.sanity = Math.max(0, player.sanity - 4);
+                            player.aether = Math.max(0, player.aether - 6);
+                            logMessage(`💀 The Dread Lich's necrotic touch withers soul & mana (-4 Sanity, -6 Aether)!`, 'important');
+                            if (typeof AudioSys.playSoulRot === 'function') AudioSys.playSoulRot();
                         }
 
                         // The Crypt Keeper minion summon
@@ -5232,8 +5553,56 @@
                             }
                         }
 
+                        // The Dread Lich minion summon
+                        if (m.type === 'DREAD_LICH' && m.hp < m.maxHp * 0.6 && Math.random() < 0.28) {
+                            const wCount = monsters.filter(o => o.alive && (o.type === 'WRAITH' || o.type === 'SKELETON')).length;
+                            if (wCount < 2) {
+                                const sx = m.x + (Math.random() > 0.5 ? 1 : -1);
+                                const sy = m.y + (Math.random() > 0.5 ? 1 : -1);
+                                if (dungeon[sy] && (dungeon[sy][sx] === TILE.FLOOR || dungeon[sy][sx] === TILE.WATER) && !monsters.some(o => o.alive && o.x === sx && o.y === sy)) {
+                                    const wb = BESTIARY.WRAITH;
+                                    monsters.push({
+                                        id: `m_wraith_minion_${Date.now()}`,
+                                        type: 'WRAITH',
+                                        name: 'Void Wraith',
+                                        symbol: wb.symbol,
+                                        color: wb.color,
+                                        x: sx,
+                                        y: sy,
+                                        hp: wb.baseHp,
+                                        maxHp: wb.baseHp,
+                                        atk: wb.baseAtk,
+                                        exp: 25,
+                                        essence: 20,
+                                        state: 'alert',
+                                        freezeTurns: 0,
+                                        alertRange: 10,
+                                        alive: true
+                                    });
+                                    logMessage(`🔮 NECROTIC RITUAL: The Dread Lich tears a Void Wraith from the nether realm!`, 'important');
+                                    spawnCombatText(m.x, m.y, 'SUMMON WRAITH', '#f43f5e');
+                                }
+                            }
+                        }
+
                         if (player.hp <= 0) {
                             logMessage('💀 You have fallen to the abyssal horrors. Click [New Descent] to rise again.', 'important');
+                        }
+                    } else if (m.type === 'DREAD_LICH' && dist <= 5 && hasLOS) {
+                        // Death Coil ranged attack
+                        let rawDmg = m.atk + Math.floor(Math.random() * 6);
+                        let netDmg = Math.max(5, rawDmg - Math.floor(player.warding / 4));
+                        if (player.shield > 0) {
+                            if (player.shield >= netDmg) { player.shield -= netDmg; netDmg = 0; }
+                            else { netDmg -= player.shield; player.shield = 0; }
+                        }
+                        if (netDmg > 0) {
+                            player.hp = Math.max(0, player.hp - netDmg);
+                            player.sanity = Math.max(0, player.sanity - 4);
+                            AudioSys.playPlayerHurt();
+                            if (typeof AudioSys.playDeathCoil === 'function') AudioSys.playDeathCoil();
+                            spawnCombatText(player.x, player.y, `-${netDmg} DEATH`, '#f43f5e');
+                            logMessage(`💀 DEATH COIL: The Dread Lich fires a screaming necrotic skull for ${netDmg} DMG (-4 Sanity)!`, 'important');
                         }
                     } else if (m.type === 'ABYSSAL_WYRM' && dist <= 5 && hasLOS) {
                         // Caustic Acid Spit
@@ -5951,6 +6320,78 @@
                 ctx.fillStyle = '#10b981';
                 ctx.fillRect(cx - 2, headY + 4, 1, 2);
 
+            } else if (type === 'DREAD_LICH') {
+                const lHover = Math.sin(animTime * 3) * 2.0;
+                const ly = cy + lHover;
+
+                // Necrotic Miasma Aura
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.22)';
+                ctx.beginPath();
+                ctx.arc(cx, ly, 15, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Billowing Shroud / Robes of Nether
+                ctx.fillStyle = '#37123c';
+                ctx.beginPath();
+                ctx.moveTo(cx - 8, ly + 10);
+                ctx.lineTo(cx - 8, ly - 2);
+                ctx.lineTo(cx + 8, ly - 2);
+                ctx.lineTo(cx + 8, ly + 10);
+                ctx.lineTo(cx + 4, ly + 8);
+                ctx.lineTo(cx, ly + 11);
+                ctx.lineTo(cx - 4, ly + 8);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = '#9333ea';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+
+                // Crowned Skull
+                ctx.fillStyle = '#f1f5f9';
+                ctx.beginPath();
+                ctx.arc(cx, ly - 6, 6, 0, Math.PI * 2);
+                ctx.fill();
+                // Jawbone
+                ctx.fillRect(cx - 3, ly, 6, 3);
+
+                // Horned Bone Crown
+                ctx.fillStyle = '#fbbf24';
+                ctx.beginPath();
+                ctx.moveTo(cx - 6, ly - 8);
+                ctx.lineTo(cx - 5, ly - 14);
+                ctx.lineTo(cx - 2, ly - 9);
+                ctx.lineTo(cx, ly - 15);
+                ctx.lineTo(cx + 2, ly - 9);
+                ctx.lineTo(cx + 5, ly - 14);
+                ctx.lineTo(cx + 6, ly - 8);
+                ctx.closePath();
+                ctx.fill();
+
+                // Burning Emerald Soul Eyes
+                ctx.fillStyle = '#34d399';
+                ctx.shadowColor = '#10b981';
+                ctx.shadowBlur = 6;
+                ctx.fillRect(cx - 3.5, ly - 7, 2, 2);
+                ctx.fillRect(cx + 1.5, ly - 7, 2, 2);
+                ctx.shadowBlur = 0;
+
+                // Necrotic Staff
+                ctx.strokeStyle = '#94a3b8';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(cx + 7, ly + 10);
+                ctx.lineTo(cx + 11, ly - 11);
+                ctx.stroke();
+
+                // Floating Soul Phylactery Orb atop staff
+                ctx.fillStyle = '#a855f7';
+                ctx.shadowColor = '#c084fc';
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.arc(cx + 12, ly - 14, 3.5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+
             } else if (type === 'VOID_MONARCH') {
                 const vFloat = Math.sin(animTime * 3) * 2.5;
                 const my = cy + vFloat;
@@ -6605,6 +7046,13 @@
                 spawnEmber(playerSX + 16, playerSY + 16, true);
             }
 
+            // Spawn ambient subterranean zone motes
+            if (Math.random() < 0.25) {
+                const rx = playerSX + (Math.random() - 0.5) * 360;
+                const ry = playerSY + (Math.random() - 0.5) * 260;
+                spawnEmber(rx, ry, false);
+            }
+
             // Draw & Update Embers Particles
             for (let i = torchParticles.length - 1; i >= 0; i--) {
                 const p = torchParticles[i];
@@ -6746,8 +7194,8 @@
 
             document.getElementById('turnCounter').innerText = `Turn: ${turn}`;
 
-            // 1. Hunger processing
-            const hungerRate = (player.curse === CURSES.DECAY) ? 3 : 5;
+            // 1. Hunger processing (Balanced delver metabolic rate for 48x36 maps)
+            const hungerRate = (player.curse === CURSES.DECAY) ? 4 : 7;
             if (turn % hungerRate === 0 && player.hunger > 0) {
                 player.hunger--;
                 if (player.hunger === 35) {
@@ -7874,15 +8322,15 @@
             document.getElementById('hudTileInfo').innerText = `Position: (${player.x}, ${player.y}) | ${tileNames[curTile] || 'Floor'}${monNote}`;
 
             // Boss HUD bar update
-            const boss = monsters.find(m => m.alive && (m.isBoss || m.type === 'CRYPT_KEEPER' || m.type === 'ABYSSAL_WYRM' || m.type === 'VOID_MONARCH'));
+            const boss = monsters.find(m => m.alive && (m.isBoss || m.type === 'CRYPT_KEEPER' || m.type === 'ABYSSAL_WYRM' || m.type === 'DREAD_LICH' || m.type === 'VOID_MONARCH'));
             const bossBarEl = document.getElementById('bossHudBar');
             if (bossBarEl) {
                 if (boss) {
                     bossBarEl.style.display = 'flex';
-                    const crest = (boss.type === 'CRYPT_KEEPER' ? '👑💀' : (boss.type === 'ABYSSAL_WYRM' ? '🐉' : '👁️🌌'));
+                    const crest = (boss.type === 'CRYPT_KEEPER' ? '👑💀' : (boss.type === 'ABYSSAL_WYRM' ? '🐉' : (boss.type === 'DREAD_LICH' ? '💀🔮' : '👁️🌌')));
                     document.getElementById('bossCrest').innerText = crest;
                     document.getElementById('bossTitle').innerText = boss.name;
-                    const sub = (boss.type === 'CRYPT_KEEPER' ? 'Abyssal Lord of Catacombs' : (boss.type === 'ABYSSAL_WYRM' ? 'Terror of Sunken Grotto' : 'Sovereign of the Void Abyss'));
+                    const sub = (boss.type === 'CRYPT_KEEPER' ? 'Abyssal Lord of Catacombs' : (boss.type === 'ABYSSAL_WYRM' ? 'Terror of Sunken Grotto' : (boss.type === 'DREAD_LICH' ? 'Sovereign of the Forgotten Crypt' : 'Sovereign of the Void Abyss')));
                     document.getElementById('bossSubtitle').innerText = sub;
                     const pct = Math.max(0, Math.min(100, Math.round((boss.hp / boss.maxHp) * 100)));
                     const fillEl = document.getElementById('bossHpFill');
@@ -7892,6 +8340,8 @@
                             fillEl.style.background = 'linear-gradient(90deg, #ef4444, #f59e0b)';
                         } else if (boss.type === 'ABYSSAL_WYRM') {
                             fillEl.style.background = 'linear-gradient(90deg, #10b981, #06b6d4)';
+                        } else if (boss.type === 'DREAD_LICH') {
+                            fillEl.style.background = 'linear-gradient(90deg, #9333ea, #ef4444)';
                         } else {
                             fillEl.style.background = 'linear-gradient(90deg, #a855f7, #38bdf8)';
                         }
@@ -8351,6 +8801,12 @@
                 return;
             }
 
+            // Sega Genesis YM2612 FM & SNES SPC700 Delay BGM toggle hotkey P
+            if (e.key === 'p' || e.key === 'P') {
+                AudioSys.toggleMusic();
+                return;
+            }
+
             AudioSys.init();
 
             // Market modal active shortcuts
@@ -8595,6 +9051,10 @@
 
         document.getElementById('btnAmbienceToggle')?.addEventListener('click', () => {
             AudioSys.toggleAmbience();
+        });
+
+        document.getElementById('btnMusicToggle')?.addEventListener('click', () => {
+            AudioSys.toggleMusic();
         });
 
         document.getElementById('btnQuicksave')?.addEventListener('click', quicksaveGame);
