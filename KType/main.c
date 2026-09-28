@@ -180,6 +180,7 @@ typedef struct {
     int testWordPool[40];
     int keyHits[26];
     int keyErrors[26];
+    DWORD testElapsedSec;
 } KTypeSaveState;
 
 int SaveStateToFile(const char* filename) {
@@ -189,7 +190,7 @@ int SaveStateToFile(const char* filename) {
     KTypeSaveState state;
     memset(&state, 0, sizeof(state));
     state.magic = 0x45505954;
-    state.version = 1;
+    state.version = 2;
     state.highArcadeScore = highArcadeScore;
     state.bestWPM = bestWPM;
     state.currentMode = currentMode;
@@ -213,6 +214,13 @@ int SaveStateToFile(const char* filename) {
     my_memcpy(state.keyHits, keyHits, sizeof(keyHits));
     my_memcpy(state.keyErrors, keyErrors, sizeof(keyErrors));
 
+    if (testActive && testStartTime > 0) {
+        DWORD curElapsed = (GetTickCount() - testStartTime) / 1000;
+        state.testElapsedSec = curElapsed;
+    } else {
+        state.testElapsedSec = 0;
+    }
+
     DWORD written = 0;
     BOOL res = WriteFile(hFile, &state, sizeof(state), &written, NULL);
     CloseHandle(hFile);
@@ -228,7 +236,7 @@ int LoadStateFromFile(const char* filename) {
     BOOL res = ReadFile(hFile, &state, sizeof(state), &readBytes, NULL);
     CloseHandle(hFile);
 
-    if (!res || readBytes != sizeof(state)) return 0;
+    if (!res || readBytes < sizeof(state) - sizeof(DWORD)) return 0;
     if (state.magic != 0x45505954) return 0;
 
     highArcadeScore = state.highArcadeScore;
@@ -242,7 +250,7 @@ int LoadStateFromFile(const char* filename) {
     my_memcpy(fWords, state.fWords, sizeof(fWords));
     testActive = state.testActive;
     testCompleted = state.testCompleted;
-    testDuration = state.testDuration;
+    testDuration = state.testDuration > 0 ? state.testDuration : 30;
     testWordIndex = state.testWordIndex;
     testCharIndex = state.testCharIndex;
     totalTyped = state.totalTyped;
@@ -253,6 +261,13 @@ int LoadStateFromFile(const char* filename) {
     my_memcpy(testWordPool, state.testWordPool, sizeof(testWordPool));
     my_memcpy(keyHits, state.keyHits, sizeof(keyHits));
     my_memcpy(keyErrors, state.keyErrors, sizeof(keyErrors));
+
+    if (testActive) {
+        DWORD elapsed = (state.version >= 2) ? state.testElapsedSec : 0;
+        if (elapsed >= (DWORD)testDuration) elapsed = testDuration > 1 ? (testDuration - 1) : 0;
+        testStartTime = GetTickCount() - (elapsed * 1000);
+        lastKeyTime = GetTickCount();
+    }
 
     return 1;
 }
@@ -606,21 +621,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_KEYDOWN: {
             if (currentMode == 4) {
-                if (wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE || wParam == 'H') {
+                if (wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE || wParam == 'H' || wParam == VK_F1) {
                     MarkTutorialSeen();
                     currentMode = prevMode;
                     InvalidateRect(hwnd, NULL, TRUE);
                     break;
                 }
             }
-            // Mode switching via F1 - F4
+            // Universal Help via F1 or H
             if (wParam == VK_F1) {
-                if (currentMode == 4) { currentMode = 0; }
-                else if (currentMode == 0) { prevMode = 0; currentMode = 4; }
-                else { currentMode = 0; }
+                if (currentMode == 4) {
+                    MarkTutorialSeen();
+                    currentMode = prevMode;
+                } else {
+                    prevMode = currentMode;
+                    currentMode = 4;
+                }
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
             }
+            if (wParam == VK_TAB) { currentMode = 0; InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_F2) { currentMode = 1; ResetSpeedTest(); InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_F3) { currentMode = 2; ResetSpeedTest(); InvalidateRect(hwnd, NULL, TRUE); break; }
             if (wParam == VK_F4) { currentMode = 3; InvalidateRect(hwnd, NULL, TRUE); break; }
@@ -646,15 +666,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             if (wParam == 'H') {
                 if (currentMode == 4) {
+                    MarkTutorialSeen();
                     currentMode = prevMode;
                     InvalidateRect(hwnd, NULL, TRUE);
                     break;
-                } else if (currentMode != 0 && currentMode != 1 && currentMode != 2) {
+                } else if (currentMode == 3) {
                     prevMode = currentMode;
                     currentMode = 4;
                     InvalidateRect(hwnd, NULL, TRUE);
                     break;
                 }
+            }
+            if (currentMode == 3 || currentMode == 4) {
+                if (wParam == '1') { currentMode = 0; InvalidateRect(hwnd, NULL, TRUE); break; }
+                if (wParam == '2') { currentMode = 1; ResetSpeedTest(); InvalidateRect(hwnd, NULL, TRUE); break; }
+                if (wParam == '3') { currentMode = 2; ResetSpeedTest(); InvalidateRect(hwnd, NULL, TRUE); break; }
+                if (wParam == '4') { currentMode = 3; InvalidateRect(hwnd, NULL, TRUE); break; }
             }
             if (wParam == VK_BACK && (currentMode == 1 || currentMode == 2)) {
                 if (testCharIndex > 0) {
@@ -664,14 +691,84 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 break;
             }
             if (wParam == VK_ESCAPE) {
-                if (currentMode == 0) {
+                if (currentMode == 4) {
+                    MarkTutorialSeen();
+                    currentMode = prevMode;
+                } else if (currentMode == 0) {
                     arcadeLives = 3; arcadeScore = 0; arcadeCombo = 0;
                     memset(fWords, 0, sizeof(fWords)); targetWord = -1; SpawnArcadeWord();
+                } else if (currentMode == 3) {
+                    currentMode = 0;
                 } else {
                     ResetSpeedTest();
                 }
                 InvalidateRect(hwnd, NULL, TRUE);
                 break;
+            }
+            break;
+        }
+
+        case WM_LBUTTONDOWN: {
+            int mx = LOWORD(lParam);
+            int my = HIWORD(lParam);
+            if (my < 40) {
+                // Top Header Bar
+                if (mx >= 10 && mx < 100) {
+                    currentMode = 0;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (mx >= 100 && mx < 195) {
+                    currentMode = 1;
+                    ResetSpeedTest();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (mx >= 195 && mx < 285) {
+                    currentMode = 2;
+                    ResetSpeedTest();
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (mx >= 285 && mx < 395) {
+                    currentMode = 3;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (mx >= 395 && mx < 495) {
+                    if (currentMode == 4) {
+                        MarkTutorialSeen();
+                        currentMode = prevMode;
+                    } else {
+                        prevMode = currentMode;
+                        currentMode = 4;
+                    }
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (mx >= 495 && mx < 580) {
+                    if (SaveStateToFile("ktype.dat")) {
+                        ShowNativeStatus("★ Saved to ktype.dat [F5]");
+                    } else {
+                        ShowNativeStatus("⚠ Failed to quicksave");
+                    }
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (mx >= 580 && mx < 665) {
+                    if (LoadStateFromFile("ktype.dat")) {
+                        ShowNativeStatus("★ Loaded from ktype.dat [F9]");
+                    } else {
+                        ShowNativeStatus("⚠ No quicksave (ktype.dat)");
+                    }
+                    InvalidateRect(hwnd, NULL, TRUE);
+                } else if (mx >= 665 && g_statusMsg[0]) {
+                    g_statusMsg[0] = '\0';
+                    g_statusExpiry = 0;
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (currentMode == 4) {
+                // Clicking anywhere in Help dismisses it
+                MarkTutorialSeen();
+                currentMode = prevMode;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (currentMode == 0 && arcadeLives <= 0) {
+                // Restart Arcade on click
+                arcadeLives = 3; arcadeScore = 0; arcadeCombo = 0;
+                memset(fWords, 0, sizeof(fWords)); targetWord = -1; SpawnArcadeWord();
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if ((currentMode == 1 || currentMode == 2) && testCompleted) {
+                // Restart Speed Test on click
+                ResetSpeedTest();
+                InvalidateRect(hwnd, NULL, TRUE);
             }
             break;
         }
@@ -807,7 +904,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HGDIOBJ oldFont = SelectObject(memDC, g_fontNav ? g_fontNav : GetStockObject(DEFAULT_GUI_FONT));
 
             SetTextColor(memDC, (currentMode == 0) ? RGB(0, 242, 254) : RGB(148, 163, 184));
-            TextOutA(memDC, 15, 10, "F1: Arcade", 10);
+            TextOutA(memDC, 15, 10, "Arcade", 6);
 
             SetTextColor(memDC, (currentMode == 1) ? RGB(0, 242, 254) : RGB(148, 163, 184));
             TextOutA(memDC, 115, 10, "F2: Speed", 9);
@@ -819,18 +916,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOutA(memDC, 295, 10, "F4: Heatmap", 11);
 
             SetTextColor(memDC, (currentMode == 4) ? RGB(0, 242, 254) : RGB(148, 163, 184));
-            TextOutA(memDC, 410, 10, "H: Help", 7);
+            TextOutA(memDC, 405, 10, "F1/H: Help", 10);
 
             SetTextColor(memDC, RGB(16, 185, 129));
-            TextOutA(memDC, 490, 10, "F5: Save", 8);
+            TextOutA(memDC, 505, 10, "F5: Save", 8);
 
             SetTextColor(memDC, RGB(147, 197, 253));
-            TextOutA(memDC, 575, 10, "F9: Load", 8);
+            TextOutA(memDC, 590, 10, "F9: Load", 8);
 
             if (g_statusExpiry > GetTickCount() && g_statusMsg[0]) {
                 SelectObject(memDC, g_fontNav ? g_fontNav : GetStockObject(DEFAULT_GUI_FONT));
                 SetTextColor(memDC, RGB(245, 158, 11));
-                TextOutA(memDC, 665, 10, g_statusMsg, StrLen(g_statusMsg));
+                TextOutA(memDC, 675, 10, g_statusMsg, StrLen(g_statusMsg));
             }
 
             if (g_fontMain) SelectObject(memDC, g_fontMain);
@@ -1045,17 +1142,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetTextColor(memDC, RGB(0, 242, 254));
                 TextOutA(memDC, 30, 50, "KType Studio - Help & Controls", 30);
                 SetTextColor(memDC, RGB(248, 250, 252));
-                TextOutA(memDC, 30, 90, "F1: Arcade Cascade Mode", 23);
-                TextOutA(memDC, 30, 120, "F2: 30s Timed Speed Test", 24);
-                TextOutA(memDC, 30, 150, "F3: Code Snippets Speed Test", 28);
-                TextOutA(memDC, 30, 180, "F4: Finger Weakness Heatmap", 27);
-                TextOutA(memDC, 30, 210, "F5: Quicksave Snapshot to ktype.dat", 35);
-                TextOutA(memDC, 30, 240, "F9: Quickload Snapshot from ktype.dat", 37);
+                TextOutA(memDC, 30, 90, "Click / Tab / 1: Arcade Cascade Mode", 36);
+                TextOutA(memDC, 30, 120, "Click / F2 / 2: 30s Timed Speed Test", 36);
+                TextOutA(memDC, 30, 150, "Click / F3 / 3: Code Snippets Speed Test", 40);
+                TextOutA(memDC, 30, 180, "Click / F4 / 4: Finger Weakness Heatmap", 39);
+                TextOutA(memDC, 30, 210, "Click / F5: Quicksave Snapshot to ktype.dat", 43);
+                TextOutA(memDC, 30, 240, "Click / F9: Quickload Snapshot from ktype.dat", 45);
                 TextOutA(memDC, 30, 270, "F6: Export Heatmap to BMP", 25);
                 TextOutA(memDC, 30, 300, "F7: Export Certificate to BMP", 29);
-                TextOutA(memDC, 30, 330, "H: Toggle Help | ESC: Restart Mode / Back", 41);
+                TextOutA(memDC, 30, 330, "F1 / H: Toggle Help | ESC: Restart Mode / Back", 46);
                 SetTextColor(memDC, RGB(16, 185, 129));
-                TextOutA(memDC, 30, 370, "ENTER or SPACE: Exit Help & Start Typing", 40);
+                TextOutA(memDC, 30, 370, "ENTER or SPACE or Click: Exit Help & Start Typing", 49);
             }
 
             SelectObject(memDC, oldFont);

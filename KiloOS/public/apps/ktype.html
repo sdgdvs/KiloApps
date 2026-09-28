@@ -383,14 +383,15 @@
 
   .toast {
     position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%) translateY(10px);
+    bottom: 20px;
+    right: 24px;
+    left: auto;
+    transform: translateY(10px);
     background: #111420;
     color: #f8fafc;
     border: 1px solid var(--accent-cyan);
     box-shadow: 0 4px 20px rgba(0, 242, 254, 0.3);
-    padding: 10px 20px;
+    padding: 10px 18px;
     border-radius: 8px;
     font-size: 13px;
     font-weight: 600;
@@ -399,12 +400,12 @@
     transition: opacity 0.25s ease, transform 0.25s ease;
     cursor: pointer;
     pointer-events: auto;
-    max-width: 90vw;
-    text-align: center;
+    max-width: min(420px, 90vw);
+    text-align: left;
   }
   .toast.show {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
   }
   .toast.warning {
     border-color: var(--accent-amber);
@@ -1121,6 +1122,11 @@ function toggleHelp() {
   const modal = document.getElementById('help-modal');
   if (!modal) return;
   if (modal.style.display === 'none' || modal.style.display === '') {
+    const tutModal = document.getElementById('tutorial-modal');
+    if (tutModal && tutModal.style.display !== 'none') {
+      tutModal.style.display = 'none';
+      safeStorageSet('ktype_tutorialSeen', '1');
+    }
     modal.style.display = 'flex';
   } else {
     modal.style.display = 'none';
@@ -1167,7 +1173,8 @@ function quicksaveState() {
       errorCount,
       totalKeystrokes,
       testWords: testWords.slice(0, 100),
-      timeRemaining
+      timeRemaining,
+      elapsedSec: isTestActive && testStartTime ? ((Date.now() - testStartTime) / 1000) : (testModeVal - timeRemaining)
     }
   };
 
@@ -1244,19 +1251,24 @@ function quickloadState() {
     const targetTab = snapshot.currentTab || 'test';
     switchTab(targetTab);
 
-    if (targetTab === 'arcade' && snapshot.arcadeState && snapshot.arcadeState.running) {
+    if (targetTab === 'arcade' && snapshot.arcadeState) {
       if (arcadeAnimationFrame) cancelAnimationFrame(arcadeAnimationFrame);
-      arcadeRunning = true;
       arcadeScore = snapshot.arcadeState.score || 0;
-      arcadeLives = snapshot.arcadeState.lives || 3;
+      arcadeLives = snapshot.arcadeState.lives !== undefined ? snapshot.arcadeState.lives : 3;
       arcadeCombo = snapshot.arcadeState.combo || 0;
       arcadeTarget = snapshot.arcadeState.target !== undefined ? snapshot.arcadeState.target : -1;
       arcadeWords = Array.isArray(snapshot.arcadeState.words) ? snapshot.arcadeState.words : [];
-      arcadeLastSpawn = Date.now();
-      arcadeAnimationFrame = requestAnimationFrame(arcadeLoop);
+      if (snapshot.arcadeState.running && arcadeLives > 0) {
+        arcadeRunning = true;
+        arcadeLastSpawn = Date.now();
+        arcadeAnimationFrame = requestAnimationFrame(arcadeLoop);
+      } else {
+        arcadeRunning = false;
+        initArcadeCanvas();
+      }
     } else if (targetTab === 'test') {
       if (snapshot.testState && Array.isArray(snapshot.testState.testWords) && snapshot.testState.testWords.length > 0) {
-        clearInterval(testTimer);
+        if (testTimer) clearInterval(testTimer);
         testWords = snapshot.testState.testWords;
         wordIndex = snapshot.testState.wordIndex || 0;
         charIndex = snapshot.testState.charIndex || 0;
@@ -1264,7 +1276,7 @@ function quickloadState() {
         correctKeystrokes = snapshot.testState.correctKeystrokes || 0;
         errorCount = snapshot.testState.errorCount || 0;
         timeRemaining = snapshot.testState.timeRemaining !== undefined ? snapshot.testState.timeRemaining : testModeVal;
-        isTestActive = false;
+        isTestActive = !!snapshot.testState.active;
         testCompleted = !!snapshot.testState.completed;
         renderWords();
         for (let w = 0; w < wordIndex; w++) {
@@ -1273,6 +1285,13 @@ function quickloadState() {
             Array.from(wEl.children).forEach(ch => {
               if (ch.classList.contains('char')) ch.className = 'char correct';
             });
+          }
+        }
+        const curWEl = document.getElementById(`w-${wordIndex}`);
+        if (curWEl) {
+          for (let c = 0; c < charIndex; c++) {
+            const cEl = document.getElementById(`c-${wordIndex}-${c}`);
+            if (cEl) cEl.className = 'char correct';
           }
         }
         document.getElementById('live-timer').textContent = (testModeType === 'time') ? `${timeRemaining}s` : '0s';
@@ -1284,6 +1303,12 @@ function quickloadState() {
         document.getElementById('live-raw').textContent = totalKeystrokes;
         document.getElementById('live-errors').textContent = errorCount;
         updateCaretPosition();
+
+        if (isTestActive && !testCompleted) {
+          const elapsed = snapshot.testState.elapsedSec !== undefined ? snapshot.testState.elapsedSec : (testModeVal - timeRemaining);
+          startTest(elapsed > 0 ? elapsed : null);
+        }
+        focusInput();
       } else {
         resetTest();
       }
@@ -1433,11 +1458,16 @@ function resetTest() {
   drawChart();
 }
 
-function startTest() {
+function startTest(resumeElapsed = null) {
   isTestActive = true;
   testCompleted = false;
-  testStartTime = Date.now();
+  if (resumeElapsed !== null && resumeElapsed > 0) {
+    testStartTime = Date.now() - (resumeElapsed * 1000);
+  } else {
+    testStartTime = Date.now();
+  }
 
+  if (testTimer) clearInterval(testTimer);
   testTimer = setInterval(() => {
     const elapsedSec = (Date.now() - testStartTime) / 1000;
 
@@ -1516,7 +1546,10 @@ document.getElementById('hidden-input').addEventListener('input', (e) => {
     resetTest();
   }
 
-  if (!isTestActive) startTest();
+  if (!isTestActive) {
+    const resumeElapsed = (testModeType === 'time') ? Math.max(0, testModeVal - timeRemaining) : 0;
+    startTest(resumeElapsed > 0 ? resumeElapsed : null);
+  }
 
   const nowTime = Date.now();
   if (lastKeyTime > 0) {

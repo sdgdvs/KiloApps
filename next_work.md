@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KContacts
   kilo_usability: KRead
   kilo_graphics: KColosseum
-  kilo_qa: KType
+  kilo_qa: KVault
   kilo_expander: KMedia
   kilo_creator: "kweb://darknet (Subterranean Darknet Hub & Node 0x7F Packet Sniffer)"
 virtual_web_target: "kweb://darknet"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-graphics
-  app: KAbyss
-  timestamp: "2026-09-28T20:15:00Z"
+  agent: kilo-qa
+  app: KType
+  timestamp: "2026-09-28T20:25:00Z"
 last_planner_run: "2026-09-28T10:38:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KScript`, `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KRadio)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KType`
+- **Current Target**: `KVault`
 - **Upcoming Queue**:
-  `KVault`, `KMystery`, `KQuest`, `KSanctuary`, `KClip`, `KCipher`, `KTrader` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, KClip, KCipher, KTodo)*.
+  `KMystery`, `KQuest`, `KSanctuary`, `KClip`, `KCipher`, `KTrader`, `KType` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, KClip, KCipher, KTodo)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KMedia`
@@ -242,6 +242,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-28T20:25:00Z — kilo-qa: KType (Pass 5 QA & Build Quality, Mouse Interactivity, Quicksave State Integrity)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
+  - State Persistence: Implemented accurate elapsed time resumption and mid-word typing highlights on quickload in web and native C.
+  - Native Navigation: Added WM_LBUTTONDOWN mouse click handling across all mode tabs, help screen, save/load, and game restarts.
+  - Controls & Modals: Standardized universal F1/H Help toggle with mutual exclusion against tutorial modal; anchored toasts bottom-right.
+  - Verification: MSVC clean (`KType.exe` 22.5 KB); Vite clean in 314ms (`ktype.html` 82.0 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-28T20:15:00Z — kilo-graphics: KAbyss (Game Content, YM2612 FM Audio, Dread Lich & Balance Pass)**
   - Status: PASS ✅ (0 rotating glints / traveling border dots, 0 regressions, clean builds, <999KB verified).
   - Glint & Dot Audit: Verified 100% absence of rotating specular glints or traveling perimeter border dots across web & native C.
@@ -277,15 +284,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Mystery Preservation: Sanitized pre-climax passkey leaks; memory dump obscures suffix; all ARG hints fully diegetic.
   - Web Ecosystem: Registered Node #017 in webring.html, portal.html directory category & search index, and KNet routing.
   - Verification: Vite build clean in 428ms; `security_lint.py` 100% clean PASS; `deep_core.html` 67.5 KB (< 999 KB ceiling).
-
-- **2026-09-28T18:35:00Z — kilo-expander: KSynth (Multiplayer Jam, YM2612 FM, SPC700 Delay & 1999Hz Subcarrier)**
-  - Status: PASS ✅ (0 regressions, clean native/web builds, <999KB ceiling verified).
-  - Online Multiplayer: Integrated Firebase RTDB room jamming (`#general-jam` / custom) with live notes, sequencer sync, patch sharing & reactions.
-  - Synthesis Engines: Implemented Yamaha YM2612 2-Operator FM synthesis mode and SNES SPC700 stereo delay DSP loop.
-  - Presets System: Expanded built-in presets from 6 to 9 (added YM2612 FM Bass, SPC700 Echo Pad, 1999 Ghost Beacon) with [1]-[9] hotkeys.
-  - Diegetic ARG Audio: Added 1999Hz subcarrier anomaly with subtle International Morse code stream for `echo-subsystem.net`.
-  - Visuals & Ergonomics: Anchored toasts top-right to prevent piano/seq occlusion; added live visualizer subcarrier indicator; fixed panic handler.
-  - Verification: MSVC clean (`KSynth.exe` 24.0 KB); Vite clean in 241ms (`ksynth.html` 122.0 KB < 999 KB); check_icons & security lint 100% PASS.
 
 
 
