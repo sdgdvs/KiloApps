@@ -279,7 +279,17 @@
       }, duration);
     }
 
+    function closeAllModals() {
+      const help = document.getElementById('help-modal');
+      const tut = document.getElementById('tutorial-modal');
+      const vic = document.getElementById('victory-modal');
+      if (help) help.style.display = 'none';
+      if (tut) tut.style.display = 'none';
+      if (vic) vic.style.display = 'none';
+    }
+
     function showHelp() {
+      closeAllModals();
       const m = document.getElementById('help-modal');
       if (m) m.style.display = 'flex';
     }
@@ -288,6 +298,7 @@
       if (m) m.style.display = 'none';
     }
     function showTutorial() {
+      closeAllModals();
       const m = document.getElementById('tutorial-modal');
       if (m) m.style.display = 'flex';
     }
@@ -298,6 +309,7 @@
       playSound('chime');
     }
     function showVictory() {
+      closeAllModals();
       const statBox = document.getElementById('victory-stats');
       if (statBox) {
         statBox.innerHTML = `
@@ -412,6 +424,7 @@
     };
 
     const STORAGE_KEY = 'ktrader_save_v1';
+    const QUICKSAVE_KEY = 'ktrader_quicksave_v1';
 
     function getSavePayload() {
       return {
@@ -454,14 +467,25 @@
     }
 
     function quickSave() {
-      const ok = saveGame();
-      if (ok) {
-        log('Quicksave created! [F5]');
-        showToast('🚀 Quicksave created! [F5]', 'success');
-        playSound('chime');
-      } else {
-        log('Storage quota error: failed to create quicksave.', true);
+      try {
+        const payload = getSavePayload();
+        const jsonStr = JSON.stringify(payload);
+        const okQuick = safeSetStorage(QUICKSAVE_KEY, jsonStr);
+        const okAuto = safeSetStorage(STORAGE_KEY, jsonStr);
+        if (okQuick || okAuto) {
+          log('Quicksave created! [F5]');
+          showToast('🚀 Quicksave created! [F5]', 'success');
+          playSound('chime');
+          return true;
+        } else {
+          log('Storage quota error: failed to create quicksave.', true);
+          showToast('Storage write failed!', 'warning');
+          return false;
+        }
+      } catch (e) {
+        log('Storage quota error: ' + (e.message || 'failed to save'), true);
         showToast('Storage write failed!', 'warning');
+        return false;
       }
     }
 
@@ -499,16 +523,27 @@
     }
 
     function quickLoad() {
-      if (loadGame()) {
-        log('Quicksave restored! [F9]');
-        showToast('🚀 Quicksave restored! [F9]', 'success');
-        playSound('chime');
-        updateUI();
-      } else {
-        log('No saved voyage found to load! [F9]', true);
-        showToast('No saved voyage found! [F9]', 'warning');
-        playSound('fail');
-      }
+      try {
+        let raw = safeGetStorage(QUICKSAVE_KEY);
+        if (!raw) {
+          raw = safeGetStorage(STORAGE_KEY);
+        }
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (applySaveData(data)) {
+            saveGame();
+            log('Quicksave restored! [F9]');
+            showToast('🚀 Quicksave restored! [F9]', 'success');
+            playSound('chime');
+            updateUI();
+            return true;
+          }
+        }
+      } catch (err) {}
+      log('No saved voyage found to load! [F9]', true);
+      showToast('No saved voyage found! [F9]', 'warning');
+      playSound('fail');
+      return false;
     }
 
     function exportSaveFile() {
@@ -561,7 +596,37 @@
     function resetGame() {
       if (confirm('Start a new voyage? Current captain profile and credits will be reset.')) {
         safeRemoveStorage(STORAGE_KEY);
-        location.reload();
+        safeRemoveStorage(QUICKSAVE_KEY);
+        state.credits = 1000;
+        state.fuel = 100;
+        state.maxFuel = 100;
+        state.cargo = 0;
+        state.maxCargo = 20;
+        state.location = "Earth";
+        state.inventory = { Food: 0, Water: 0, Ore: 0, Tech: 0, Meds: 0, Luxury: 0, Contraband: 0, Military: 0 };
+        state.engineLevel = 0;
+        state.cargoLevel = 0;
+        state.weaponLevel = 0;
+        state.inCombat = false;
+        state.playerShields = 50;
+        state.enemyShields = 30;
+        state.enemyMaxShields = 30;
+        state.repTraders = 0;
+        state.repPirates = 0;
+        state.repNavy = 0;
+        state.availableMissions = [];
+        state.activeMission = null;
+        state.bountyTarget = false;
+        state.hasDreadnought = false;
+        closeAllModals();
+        generateGalaxy();
+        generatePrices();
+        generateMissions();
+        saveGame();
+        updateUI();
+        log('New voyage begun! Welcome aboard, Captain.');
+        showToast('🚀 New voyage initialized! Good luck, Captain.', 'info');
+        playSound('chime');
       }
     }
 

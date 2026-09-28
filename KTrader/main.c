@@ -270,8 +270,8 @@ typedef struct {
     int availMissionReward[3];
 } SaveData;
 
-void SaveGame() {
-    HANDLE hFile = CreateFileA("ktrader.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+int SaveGameToFile(const char* filename) {
+    HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         SaveData data;
         ZeroMemory(&data, sizeof(data));
@@ -289,11 +289,13 @@ void SaveGame() {
         DWORD written = 0;
         WriteFile(hFile, &data, sizeof(data), &written, NULL);
         CloseHandle(hFile);
+        return 1;
     }
+    return 0;
 }
 
-int LoadGame() {
-    HANDLE hFile = CreateFileA("ktrader.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+int LoadGameFromFile(const char* filename) {
+    HANDLE hFile = CreateFileA(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) return 0;
     SaveData data;
     DWORD readBytes = 0;
@@ -312,6 +314,27 @@ int LoadGame() {
         return 1;
     }
     return 0;
+}
+
+void SaveGame() {
+    SaveGameToFile("ktrader.dat");
+}
+
+int LoadGame() {
+    return LoadGameFromFile("ktrader.dat");
+}
+
+void SaveQuickSave() {
+    SaveGameToFile("ktrader_quicksave.dat");
+    SaveGame();
+}
+
+int LoadQuickSave() {
+    if (LoadGameFromFile("ktrader_quicksave.dat")) {
+        SaveGame();
+        return 1;
+    }
+    return LoadGame();
 }
 
 void GenerateMissions() {
@@ -960,11 +983,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     "- Combat: [F / Space] Fire | [E] Flee | [B] Bribe", 
                     "Help", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == ID_BTN_QUICKSAVE) {
-                SaveGame();
-                LogMessage("> Quicksave created! [F5]");
+                SaveQuickSave();
+                LogMessage("> Quicksave created in ktrader_quicksave.dat! [F5]");
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (LOWORD(wParam) == ID_BTN_QUICKLOAD) {
-                if (LoadGame()) {
+                if (LoadQuickSave()) {
                     UpdateUI(hwnd);
                     LogMessage("> Quicksave restored! [F9]");
                     InvalidateRect(hwnd, NULL, FALSE);
@@ -975,6 +998,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             } else if (LOWORD(wParam) == ID_BTN_NEW) {
                 if (MessageBoxA(hwnd, "Start a new voyage? Current captain profile and credits will be reset.", "KTrader - New Game", MB_YESNO | MB_ICONQUESTION) == IDYES) {
                     DeleteFileA("ktrader.dat");
+                    DeleteFileA("ktrader_quicksave.dat");
                     ZeroMemory(&state, sizeof(state));
                     state.credits = 1000;
                     state.fuel = 100;
