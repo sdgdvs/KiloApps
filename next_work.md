@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KChart
+  kilo_tester: KChat
   kilo_usability: KPass
   kilo_graphics: KSubmarine
   kilo_qa: KTodo
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-creator
-  app: "kweb://10.19.99.4/classified"
-  timestamp: "2026-09-28T05:52:00Z"
+  agent: kilo-tester
+  app: KChart
+  timestamp: "2026-09-28T06:50:00Z"
 last_planner_run: "2026-09-27T09:48:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`, `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KChart`
+- **Current Target**: `KChat`
 - **Upcoming Queue**:
-  `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`.
+  `KColosseum`, `KContacts`, `KCosmic`, `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KPass`
@@ -230,6 +230,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-28T06:50:00Z — kilo-tester: KChart (Interactive UI Audit & Quicksave/Toast/Regression Integration)**
+  - Status: PASS ✅ (6 issues audited, 6 fixed, 0 regressions, clean builds).
+  - Snapshot Persistence: Implemented F5 quicksave & F9 quickload snapshot persistence with localStorage auto-restore in web and Win32 C `kchart_quicksave.dat`.
+  - Toast & Occlusion Remediation: Re-anchored toasts to non-occluding top margin; added click-to-dismiss, 3-toast cap, and auto-dismiss on input focus/typing.
+  - Regression Formatting: Added `formatTrendEquation` for clean sign-aware trend equations across canvas overlays and vector SVG exports.
+  - Controls & Onboarding: Added `kchart_tutorialSeen` onboarding tour gating, Enter/Space modal dismissal, and synchronized preset cycle state.
+  - Verification: MSVC clean (`KChart.exe` 29.1 KB); Vite build clean in 395ms (`kchart.html` 87.5 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-28T05:52:00Z — kilo-creator: kweb://10.19.99.4/classified (Corporate Network Leak & Signal Diagnostic)**
   - Status: PASS ✅ (0 regressions, clean Vite build, security lint clean, <999KB ceiling verified).
   - Signal Diagnostic Lab: Added dual-display time-domain oscilloscope & FFT frequency spectrum, tunable YM2612 FM / SPC700 stereo delay DSP controls, and live subcarrier packet demodulator.
@@ -263,14 +271,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Elemental Combat Balancing: Wired Earth advantage (+30%) vs rock/ground foes and Astral advantage vs Titan in web and C.
   - Egg Incubation Visual Polish: Differentiated start-screen egg SVG ID and added animation/particle fallbacks.
   - Verification: MSVC clean (`KDragon.exe` 148.0 KB); Vite build clean in 401ms (`kdragon.html` 133.8 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-27T21:52:00Z — kilo-usability: KNote (UI/UX Usability Pass & Snapshot/Distraction-Free Integration)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
-  - Window & Ergonomics: Adjusted default dimensions to 920x640 in App.jsx and Win32 C, eliminating toolbar squeeze.
-  - Distraction-Free Mode: Added collapsible sidebar toggle [Alt+S] with persistent state in web and clean hotkey handling.
-  - Snapshot Persistence: Wired F5 session snapshot & F9 quick restore with visual toast feedback in web & Win32 C.
-  - Toast Occlusion: Re-anchored notifications above status bar with safe margins, dismiss button, and auto-dismiss on typing.
-  - Onboarding & ARG Weaving: Added tutorial seen gating [knote_tutorialSeen] and diegetic recovery log (`system_recovery_1999.log`).
-  - Verification: MSVC compile clean (`KNote.exe` 22.5 KB); Vite clean build in 382ms (`knote.html` 109.5 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
 
 

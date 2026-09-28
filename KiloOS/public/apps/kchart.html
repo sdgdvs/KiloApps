@@ -377,9 +377,10 @@
   }
 
   /* Toast Notification System */
+  /* Toast Notification System */
   #toastContainer {
     position: fixed;
-    bottom: 20px;
+    top: 64px;
     right: 20px;
     display: flex;
     flex-direction: column;
@@ -405,6 +406,8 @@
     min-width: 240px;
     max-width: 380px;
     pointer-events: auto;
+    cursor: pointer;
+    user-select: none;
     animation: toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     transition: all 0.25s ease;
   }
@@ -412,10 +415,10 @@
   .toast.toast-success { border-color: rgba(34, 197, 94, 0.55); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.7), 0 0 15px rgba(34, 197, 94, 0.2); }
   .toast.toast-warning { border-color: rgba(245, 158, 11, 0.55); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.7), 0 0 15px rgba(245, 158, 11, 0.2); }
   .toast.toast-error { border-color: rgba(239, 68, 68, 0.55); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.7), 0 0 15px rgba(239, 68, 68, 0.2); }
-  .toast.toast-out { opacity: 0; transform: translateY(10px) scale(0.95); }
+  .toast.toast-out { opacity: 0; transform: translateY(-10px) scale(0.95); }
 
   @keyframes toastSlideIn {
-    from { opacity: 0; transform: translateY(15px) scale(0.96); }
+    from { opacity: 0; transform: translateY(-12px) scale(0.96); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
@@ -569,6 +572,8 @@
     </select>
 
     <button id="btnHelp" aria-label="Help"><span class="kbd-badge">F1</span> Help</button>
+    <button id="btnQuickSave" title="QuickSave dataset and layout snapshot (F5)"><span class="kbd-badge">F5</span> 💾 Save</button>
+    <button id="btnQuickLoad" title="QuickLoad saved snapshot (F9)"><span class="kbd-badge">F9</span> 📂 Load</button>
     <button id="btnCopyData" title="Copy dataset & statistics to clipboard (Ctrl+C)"><span class="kbd-badge">Ctrl+C</span> 📋 Copy</button>
     <button id="btnExportSvg" title="Export Scalable Vector Graphic">📐 SVG</button>
     <button id="btnExportPng">📷 PNG</button>
@@ -710,6 +715,8 @@
         <table class="shortcut-table">
           <tbody>
             <tr><td>F1 / H</td><td>Open / Close this Help Guide</td></tr>
+            <tr><td>F5</td><td>QuickSave snapshot to local browser storage</td></tr>
+            <tr><td>F9</td><td>QuickLoad snapshot from local browser storage</td></tr>
             <tr><td>1 – 6</td><td>Select Chart Mode (Bar, Line, Area, Pie, Donut, Radar)</td></tr>
             <tr><td>P</td><td>Cycle through Sample Presets</td></tr>
             <tr><td>M</td><td>Cycle through Chart Modes sequentially</td></tr>
@@ -722,7 +729,7 @@
             <tr><td>Ctrl + S</td><td>Quick Export High-Resolution SVG Vector</td></tr>
             <tr><td>← / →</td><td>Select previous / next data point on chart</td></tr>
             <tr><td>↑ / ↓ (+ / -)</td><td>Nudge selected value (+5 / -5)</td></tr>
-            <tr><td>Escape</td><td>Close Help Dialog / Unfocus inputs</td></tr>
+            <tr><td>Escape / Enter</td><td>Close Help Dialog / Unfocus inputs</td></tr>
           </tbody>
         </table>
       </div>
@@ -922,7 +929,9 @@
 
     // Attach listeners
     tableBody.querySelectorAll('.lbl-input').forEach(input => {
+      input.onfocus = () => dismissAllToasts();
       input.oninput = (e) => {
+        dismissAllToasts();
         const idx = parseInt(e.target.dataset.index);
         data[idx].label = e.target.value;
         renderChart();
@@ -937,7 +946,9 @@
       };
     });
     tableBody.querySelectorAll('.val-input').forEach(input => {
+      input.onfocus = () => dismissAllToasts();
       input.oninput = (e) => {
+        dismissAllToasts();
         const idx = parseInt(e.target.dataset.index);
         data[idx].value = parseFloat(e.target.value) || 0;
         computeStats();
@@ -972,6 +983,15 @@
 
   function escapeHtml(str) {
     return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+
+  function formatTrendEquation(slope, intercept, r2) {
+    const sSign = slope < 0 ? '-' : '';
+    const sVal = Math.abs(slope).toFixed(2);
+    const iSign = intercept < 0 ? '-' : '+';
+    const iVal = Math.abs(intercept).toFixed(2);
+    const r2Val = r2 >= 0.9995 ? '1.000' : r2.toFixed(3);
+    return `Fit: y = ${sSign}${sVal}x ${iSign} ${iVal}  (R² = ${r2Val})`;
   }
 
   function drawRoundedRect(ctx, x, y, w, h, r) {
@@ -1168,7 +1188,7 @@
       ctx.fill();
 
       // Badge
-      const badgeTxt = `Fit: y = ${trendStats.slope >= 0 ? '+' : ''}${trendStats.slope.toFixed(2)}x + ${trendStats.intercept.toFixed(2)}  (R² = ${trendStats.r2.toFixed(3)})`;
+      const badgeTxt = formatTrendEquation(trendStats.slope, trendStats.intercept, trendStats.r2);
       ctx.font = "600 11px 'Inter', sans-serif";
       const bMetrics = ctx.measureText(badgeTxt);
       const bx = padL + chartW - bMetrics.width - 16;
@@ -1564,21 +1584,47 @@
   };
 
   // Toast Notification Manager
+  function dismissAllToasts() {
+    const container = document.getElementById('toastContainer');
+    if (!container) return;
+    const toasts = container.querySelectorAll('.toast:not(.toast-out)');
+    toasts.forEach(t => {
+      t.classList.add('toast-out');
+      setTimeout(() => t.remove(), 250);
+    });
+  }
+
   function showToast(msg, type = 'info', icon = '') {
     const container = document.getElementById('toastContainer');
     if (!container) return;
+
+    // Keep max 3 concurrent toasts to prevent clutter
+    while (container.children.length >= 3) {
+      container.firstChild.remove();
+    }
+
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
+    toast.title = "Click to dismiss";
     let defaultIcon = 'ℹ️';
     if (type === 'success') defaultIcon = '✅';
     if (type === 'warning') defaultIcon = '⚠️';
     if (type === 'error') defaultIcon = '❌';
     toast.innerHTML = `<span style="font-size:16px;">${icon || defaultIcon}</span><span>${escapeHtml(msg)}</span>`;
+
+    // Click to dismiss immediately
+    toast.onclick = () => {
+      toast.classList.add('toast-out');
+      setTimeout(() => toast.remove(), 250);
+    };
+
     container.appendChild(toast);
 
     setTimeout(() => {
-      toast.classList.add('toast-out');
-      setTimeout(() => toast.remove(), 250);
+      if (toast.parentNode) {
+        toast.classList.add('toast-out');
+        setTimeout(() => toast.remove(), 250);
+      }
     }, 3200);
   }
 
@@ -1606,11 +1652,96 @@
     };
   }
 
+  // State Persistence & QuickSave / QuickLoad
+  const STORAGE_KEY = 'kchart_state';
+  const QUICKSAVE_KEY = 'kchart_quicksave';
+  const TUTORIAL_KEY = 'kchart_tutorialSeen';
+
+  function saveCurrentState() {
+    try {
+      const state = {
+        data,
+        chartType,
+        currentTheme,
+        trendMode
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch (e) {}
+  }
+
+  function loadSavedState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const state = JSON.parse(raw);
+        if (Array.isArray(state.data) && state.data.length > 0) {
+          data = state.data;
+        }
+        if (state.chartType && ['bar', 'line', 'area', 'pie', 'donut', 'radar'].includes(state.chartType)) {
+          chartType = state.chartType;
+        }
+        if (state.currentTheme && THEMES[state.currentTheme]) {
+          currentTheme = state.currentTheme;
+          const themeSel = document.getElementById('themeSelect');
+          if (themeSel) themeSel.value = currentTheme;
+        }
+        if (state.trendMode && ['none', 'linear', 'movavg', 'mean'].includes(state.trendMode)) {
+          trendMode = state.trendMode;
+        }
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+
+  function quickSaveState() {
+    try {
+      const snapshot = {
+        timestamp: new Date().toISOString(),
+        data: JSON.parse(JSON.stringify(data)),
+        chartType,
+        currentTheme,
+        trendMode
+      };
+      localStorage.setItem(QUICKSAVE_KEY, JSON.stringify(snapshot));
+      showToast(`QuickSaved ${data.length} points to session [F5]`, 'success', '💾');
+    } catch (e) {
+      showToast('QuickSave failed (storage quota).', 'error', '❌');
+    }
+  }
+
+  function quickLoadState() {
+    try {
+      const raw = localStorage.getItem(QUICKSAVE_KEY);
+      if (!raw) {
+        showToast('No QuickSave snapshot found. Press F5 to save one!', 'warning', '⚠️');
+        return;
+      }
+      const snapshot = JSON.parse(raw);
+      if (Array.isArray(snapshot.data)) {
+        data = snapshot.data;
+        if (snapshot.chartType) setChartType(snapshot.chartType, true);
+        if (snapshot.currentTheme && THEMES[snapshot.currentTheme]) {
+          currentTheme = snapshot.currentTheme;
+          const themeSel = document.getElementById('themeSelect');
+          if (themeSel) themeSel.value = currentTheme;
+        }
+        if (snapshot.trendMode) setTrendMode(snapshot.trendMode, true);
+        updateAll();
+        const timeStr = snapshot.timestamp ? new Date(snapshot.timestamp).toLocaleTimeString() : '';
+        showToast(`QuickLoaded snapshot (${data.length} pts${timeStr ? ' from ' + timeStr : ''}) [F9]`, 'success', '📂');
+      }
+    } catch (e) {
+      showToast('QuickLoad failed: Corrupted save data.', 'error', '❌');
+    }
+  }
+
   // State update wrapper
   function updateAll() {
     renderTable();
     computeStats();
     renderChart();
+    saveCurrentState();
   }
 
   function setChartType(type, silent = false) {
@@ -1644,6 +1775,10 @@
 
   // Button Listeners
   document.getElementById('btnHelp').onclick = toggleHelpModal;
+  const btnQuickSave = document.getElementById('btnQuickSave');
+  if (btnQuickSave) btnQuickSave.onclick = quickSaveState;
+  const btnQuickLoad = document.getElementById('btnQuickLoad');
+  if (btnQuickLoad) btnQuickLoad.onclick = quickLoadState;
 
   document.getElementById('chartTypeGroup').onclick = (e) => {
     const btn = e.target.closest('button');
@@ -1668,6 +1803,7 @@
   document.getElementById('presetSelect').onchange = (e) => {
     const val = e.target.value;
     if (val && PRESETS[val]) {
+      lastLoadedPreset = val;
       const presetName = e.target.selectedOptions[0].text;
       data = JSON.parse(JSON.stringify(PRESETS[val]));
       updateAll();
@@ -1963,7 +2099,7 @@
         const y0 = padT + chartH - (Math.max(0, yHat0) / maxVal) * chartH;
         const y1 = padT + chartH - (Math.max(0, yHat1) / maxVal) * chartH;
         svg += `  <line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#facc15" stroke-width="2.5" stroke-dasharray="6,4"/>\n`;
-        svg += `  <text x="${padL + chartW}" y="${padT + 16}" fill="#fde047" font-size="11" text-anchor="end" font-weight="bold">Fit: y = ${trendStats.slope.toFixed(2)}x + ${trendStats.intercept.toFixed(2)} (R² = ${trendStats.r2.toFixed(3)})</text>\n`;
+        svg += `  <text x="${padL + chartW}" y="${padT + 16}" fill="#fde047" font-size="11" text-anchor="end" font-weight="bold">${escapeHtml(formatTrendEquation(trendStats.slope, trendStats.intercept, trendStats.r2))}</text>\n`;
       } else if (trendMode === 'movavg' && n >= 2) {
         const maPts = [];
         for (let i = 0; i < n; i++) {
@@ -2171,8 +2307,21 @@
   
   // Shortcuts
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      if (helpModal && helpModal.classList.contains('open')) {
+    // Global function keys
+    if (e.key === 'F5') {
+      e.preventDefault();
+      quickSaveState();
+      return;
+    }
+    if (e.key === 'F9') {
+      e.preventDefault();
+      quickLoadState();
+      return;
+    }
+
+    if (helpModal && helpModal.classList.contains('open')) {
+      if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
         closeHelpModal();
         return;
       }
@@ -2271,13 +2420,27 @@
   });
   
   // Init
+  loadSavedState();
   resizeCanvas();
   updateAll();
 
-  // Startup welcome toast
-  setTimeout(() => {
-    showToast("Welcome to KChart Studio! Press F1 or 'H' for Help guide.", "info", "📊");
-  }, 350);
+  if (window.ResizeObserver && canvas.parentElement) {
+    new ResizeObserver(() => resizeCanvas()).observe(canvas.parentElement);
+  }
+
+  // Startup tutorial onboarding check
+  const seenTutorial = localStorage.getItem(TUTORIAL_KEY);
+  if (!seenTutorial) {
+    localStorage.setItem(TUTORIAL_KEY, '1');
+    setTimeout(() => {
+      openHelpModal();
+      showToast("Welcome to KChart Studio! Review user guide & shortcuts.", "info", "📊");
+    }, 400);
+  } else {
+    setTimeout(() => {
+      showToast("Welcome to KChart Studio! Press F1 for Help.", "info", "📊");
+    }, 350);
+  }
 </script>
 </body>
 </html>

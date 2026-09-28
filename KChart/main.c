@@ -283,6 +283,8 @@ void ShowHelpDialog(HWND hwnd) {
         "  5. Export & Copy: Press [Ctrl+C] or click [Copy] to copy data and statistics to the Windows clipboard.\n\n"
         "KEYBOARD SHORTCUTS:\n"
         "  [F1] or [H]   : Open this Help & Feature Guide\n"
+        "  [F5]          : QuickSave snapshot to disk\n"
+        "  [F9]          : QuickLoad snapshot from disk\n"
         "  [1] - [6]     : Direct Mode (1:Bar, 2:Line, 3:Area, 4:Pie, 5:Donut, 6:Radar)\n"
         "  [P]           : Cycle Sample Presets (Revenue, Tech, Temp, Scores, Activity)\n"
         "  [M]           : Cycle Chart Modes sequentially\n"
@@ -558,6 +560,48 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 wsprintfA(buf, "Nudged %s: %d", labels[idx], values[idx]);
                 SetStatus(buf);
                 InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == VK_F5) {
+                HANDLE hFile = CreateFileA("kchart_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hFile != INVALID_HANDLE_VALUE) {
+                    DWORD written = 0;
+                    int state[4 + NUM_ITEMS * 2];
+                    state[0] = chartMode;
+                    state[1] = currentTheme;
+                    state[2] = trendMode;
+                    state[3] = currentPreset;
+                    for (int i = 0; i < NUM_ITEMS; i++) {
+                        state[4 + i] = values[i];
+                        state[4 + NUM_ITEMS + i] = target[i];
+                    }
+                    WriteFile(hFile, state, sizeof(state), &written, NULL);
+                    CloseHandle(hFile);
+                    SetStatus("Session QuickSaved [F5]");
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
+            } else if (wParam == VK_F9) {
+                HANDLE hFile = CreateFileA("kchart_quicksave.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hFile != INVALID_HANDLE_VALUE) {
+                    DWORD read = 0;
+                    int state[4 + NUM_ITEMS * 2];
+                    if (ReadFile(hFile, state, sizeof(state), &read, NULL) && read == sizeof(state)) {
+                        chartMode = state[0] % 6;
+                        currentTheme = state[1] % NUM_THEMES;
+                        trendMode = state[2] % 4;
+                        currentPreset = state[3] % NUM_PRESETS;
+                        LoadPreset(currentPreset);
+                        for (int i = 0; i < NUM_ITEMS; i++) {
+                            values[i] = state[4 + i];
+                            target[i] = state[4 + NUM_ITEMS + i];
+                        }
+                        CalculateStats();
+                        SetStatus("Session QuickLoaded [F9]");
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
+                    CloseHandle(hFile);
+                } else {
+                    SetStatus("No QuickSave found. Press F5 to save!");
+                    InvalidateRect(hwnd, NULL, TRUE);
+                }
             }
             break;
         }

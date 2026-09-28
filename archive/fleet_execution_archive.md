@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-27T21:52:00Z — kilo-usability: KNote (UI/UX Usability Pass & Snapshot/Distraction-Free Integration)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
+  - Window & Ergonomics: Adjusted default dimensions to 920x640 in App.jsx and Win32 C, eliminating toolbar squeeze.
+  - Distraction-Free Mode: Added collapsible sidebar toggle [Alt+S] with persistent state in web and clean hotkey handling.
+  - Snapshot Persistence: Wired F5 session snapshot & F9 quick restore with visual toast feedback in web & Win32 C.
+  - Toast Occlusion: Re-anchored notifications above status bar with safe margins, dismiss button, and auto-dismiss on typing.
+  - Onboarding & ARG Weaving: Added tutorial seen gating [knote_tutorialSeen] and diegetic recovery log (`system_recovery_1999.log`).
+  - Verification: MSVC compile clean (`KNote.exe` 22.5 KB); Vite clean build in 382ms (`knote.html` 109.5 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-27T17:51:00Z — kilo-creator: kweb://cybercafe (Virtual Web Expansion: mIRC Client, FM Jukebox & ASCII Studio)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
   - mIRC Chat Client: Implemented 1999 IRC terminal with 4 channels, slash commands, interactive CafeBot, and real-time Firebase RTDB sync across global web patrons.
