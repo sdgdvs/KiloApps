@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -17,8 +17,8 @@ current_targets:
   kilo_graphics: KStarDredge
   kilo_qa: KTrader
   kilo_expander: KSynth
-  kilo_creator: "kweb://echo-subsystem.net (Research Journal & Audio Spectrogram)"
-virtual_web_target: "kweb://echo-subsystem.net"
+  kilo_creator: "kweb://deep-core (Ghost Node Terminal & Cryptographic Passkey Analyzer)"
+virtual_web_target: "kweb://deep-core"
 virtual_web_rotation:
   - "kweb://darknet"
   - "kweb://portal"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
 last_run:
-  agent: kilo-expander
-  app: KAudio
-  timestamp: "2026-09-28T12:50:00Z"
+  agent: kilo-creator
+  app: "kweb://echo-subsystem.net"
+  timestamp: "2026-09-28T14:45:00Z"
 last_planner_run: "2026-09-28T10:38:00Z"
 ---
 
@@ -97,11 +97,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://echo-subsystem.net` (Research Journal & Audio Spectrogram)
+- **Current Target**: `kweb://deep-core` (Ghost Node Terminal & Cryptographic Passkey Analyzer)
 - **Upcoming Queue**:
-  `kweb://deep-core` (Ghost Node Terminal & Cryptographic Passkey Analyzer),
-  `kweb://darknet` (Subterranean Darknet Directory & Node 0x7F Gateway)
-  *(Completed: kweb://geocities, kweb://darknet, kweb://portal, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
+  `kweb://darknet` (Subterranean Darknet Directory & Node 0x7F Gateway),
+  `kweb://portal` (KiloNet Central 1999 Directory Deep Expansion)
+  *(Completed: kweb://echo-subsystem.net, kweb://geocities, kweb://darknet, kweb://portal, kweb://deep-core, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Current Target**: `KStarDredge`
@@ -130,8 +130,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://echo-subsystem.net` (`KiloOS/public/web/echo_subsystem.html`)
-  - *Next in Rotation*: `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified`.
+- **Current Active Target**: `kweb://deep-core` (`KiloOS/public/web/deep_core.html`)
+  - *Next in Rotation*: `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net`.
 - **Anti-Potemkin Directive & Content Mandates**:
   0. `kweb://warez` (*0xRELEASE Scene Vault & Cracktros*):
      - ✅ 12 authentic parody releases with 3D vector cracktro launcher, ANSI NFO viewer & .diz/.nfo downloads.
@@ -190,6 +190,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
      - ✅ Subnet RF Sweep: 10.19.99.0/24 node sweep tracking signal-to-noise ratio, carrier lock, and audio DAC leakage.
      - ✅ Corporate Leak Suite: Sanitized diegetic memos, 4-sector memory hex inspector, packet sniffer with test frame injection & skunkworks CLI.
      - ✅ Discovery Integration: Linked node in KNet directory, portal category 5 / search index, portal classified ads, and webring node #015 / probe console.
+  9. `kweb://echo-subsystem.net` (*Acoustic Research Lab & 2D Spectrogram*):
+     - ✅ 7-log diegetic acoustic research journal with redaction masks, categorized filters & preset decoders.
+     - ✅ Yamaha YM2612 2-Operator FM synthesis engine with ADSR envelope, SPC700 stereo delay DSP & 16-key interactive piano keyboard.
+     - ✅ Real-time 2D FFT waterfall sonogram with 4 false-color palettes (Phosphor, Amber, Cyan, Thermal) & live peak frequency tracking.
+     - ✅ 3-band parametric filter workbench with interactive live Bode magnitude plot & 1999Hz carrier lock acquisition.
+     - ✅ Subcarrier Morse code transmitter & real-time demodulator stream with raw hex packet buffer.
+     - ✅ VT-100 diagnostic field console and client-side browser synthesis of genuine RIFF WAV, DAT & JSON files.
+     - ✅ Registered as member node #016 in Central KiloNet Webring & linked across KNet portal directory.
 - **Execution Protocol**:
   - `kilo-expander`, `kilo-creator`, and `kilo-graphics` alternate between native app targets and `virtual_web_target` to ensure the web world has genuine functional depth.
   - All virtual web pages remain strictly `< 999 KB`, self-contained or cleanly linked within `/web/`, and adhere to period-accurate HTML 4.01 aesthetic.
@@ -234,6 +242,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-28T14:45:00Z — kilo-creator: kweb://echo-subsystem.net (Research Journal & Audio Spectrogram)**
+  - Status: PASS ✅ (0 regressions, 0 meta-spoilers, Vite clean in 448ms, <999KB ceiling verified).
+  - Research Journal: Expanded 7-entry field journal with interactive redaction masks and decoder preset feeding.
+  - FM Synthesis & Audio: Implemented Yamaha YM2612 2-Op FM engine, ADSR envelope, SPC700 delay DSP, and 16-key piano keyboard.
+  - 2D Spectrogram: Real-time FFT waterfall sonogram with 4 color palettes, live peak frequency detector & freeze inspection.
+  - Filter & Demodulator: Added 3-band filter with live Bode plot canvas, 1999Hz carrier lock meter, Morse transmitter & demodulator.
+  - Terminal & Export: VT-100 console with CLI suite, client-side synthesized RIFF WAV audio download, DAT & JSON exports.
+  - Ecosystem Interconnect: Registered as node #016 in KiloNet Webring (`webring.html`) and indexed in Portal directory (`portal.html`).
+
 - **2026-09-28T12:50:00Z — kilo-expander: KAudio (Deep Synthesis, SPC700 Delay & RTDB Jam Room)**
   - Status: PASS ✅ (0 regressions, clean builds, security lint clean, <999KB ceiling verified).
   - Synthesis & DSP: Implemented Yamaha YM2612 2-Op FM synthesis, 5 FM presets, and SNES SPC700 stereo delay damping.
@@ -268,13 +285,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Tactical NavMap Chart: Added active torpedo tracking, acoustic decoy pulses, and hostile threat diamonds to NavMap in web and C.
   - Combat Feedback: Added visual hull damage explosion on threat strikes; tuned torpedo homing guidance and threat attack cooldowns.
   - Verification: MSVC compile clean (`KSubmarine.exe` 253.5 KB); Vite clean in 349ms (`ksubmarine.html` 435.0 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
-
-- **2026-09-28T07:55:00Z — kilo-usability: KPass (Usability, Layout & Toast/Persistence Pass)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
-  - Window Dimensions & Layout: Expanded default size to 540x660 in App.jsx and postMessage; linked direct native exeUrl; eliminated action button crowding.
-  - Toast Occlusion Remediation: Re-anchored toasts to non-occluding top-right corner; added click-to-dismiss and auto-dismiss on input focus/typing.
-  - Onboarding & Tour: Implemented 3-step guided tutorial modal (`kpass_tutorialSeen`) with tour launcher in Help dialog and keyboard navigation.
-  - Snapshot Persistence: Implemented F5 quicksave & F9 quickload snapshot persistence across web localStorage and Win32 C `kpass_quicksave.dat`.
-  - Verification: MSVC compile clean (`KPass.exe` 24.5 KB); Vite build in 393ms (`kpass.html` 113.5 KB < 999 KB ceiling); check_icons & security lint 100% PASS.
 
 

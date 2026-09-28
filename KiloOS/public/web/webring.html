@@ -1092,13 +1092,13 @@
 
       <!-- Diagnostic Console Output -->
       <div class="diag-terminal" id="diagConsole">[SYSTEM READY] KiloNet Webring Diagnostic Daemon v2.4 initialized.
-Click 'Run Full Ring Diagnostic' to probe all 14 active ring nodes.</div>
+Click 'Run Full Ring Diagnostic' to probe all 16 active ring nodes.</div>
 
       <!-- Stats Bar -->
       <div class="diag-stats-bar">
         <div><strong>Ring Continuity:</strong> <span id="diagContinuity" style="color:var(--green-bright);">UNTESTED</span></div>
         <div><strong>Average Latency:</strong> <span id="diagLatency" style="color:var(--cyan);">-- ms</span></div>
-        <div><strong>Widget Tags Detected:</strong> <span id="diagTags" style="color:var(--amber-bright);">-- / 14</span></div>
+        <div><strong>Widget Tags Detected:</strong> <span id="diagTags" style="color:var(--amber-bright);">-- / 16</span></div>
         <div><strong>Daemon Status:</strong> <span id="diagStatus" style="color:var(--text-muted);">Idle</span></div>
       </div>
 
@@ -1468,6 +1468,19 @@ const DEFAULT_RING_NODES = [
     badgeLabel: "10.19.99.4",
     latency: 14,
     tags: "intranet,leak,classified,signal,diagnostic,carlsbad,telemetry"
+  },
+  {
+    id: "#016",
+    num: 16,
+    name: "Echo Subsystem Acoustic Research Lab",
+    handle: "Dr_A_Vance",
+    category: "tools",
+    url: "/web/echo_subsystem.html",
+    desc: "Acoustic research journal, real-time 2D audio spectrogram analyzer, Yamaha YM2612 2-Op FM decoder & 1999Hz subcarrier telemetry.",
+    tech: "YM2612 2-Op FM / SPC700 Delay / 2D Spectrogram Waterfall / Telemetry",
+    badgeLabel: "ECHO-SUB",
+    latency: 19,
+    tags: "echo,audio,spectrogram,research,ym2612,spc700,subcarrier,morse,telemetry"
   }
 ];
 
@@ -2226,7 +2239,7 @@ function runHealthAudit() {
   const statStatus = document.getElementById('diagStatus');
 
   consoleEl.textContent = "[INITIALIZING DIAGNOSTIC DAEMON]\n";
-  consoleEl.textContent += "Target: 14 Registered Consortium Nodes\n";
+  consoleEl.textContent += `Target: ${ringNodes.length} Registered Consortium Nodes\n`;
   consoleEl.textContent += "Verifying: DNS Resolution, HTTP 200, Webring Widget Tag, Bidirectional Loop\n";
   consoleEl.textContent += "----------------------------------------------------------------------\n";
 
@@ -2243,9 +2256,10 @@ function runHealthAudit() {
       isAuditing = false;
 
       const avgLat = Math.round(totalLatency / ringNodes.length);
+      const lastNodeId = ringNodes[ringNodes.length - 1].id;
       consoleEl.textContent += "----------------------------------------------------------------------\n";
       consoleEl.textContent += `[DIAGNOSTIC COMPLETE] All ${ringNodes.length} nodes probed successfully.\n`;
-      consoleEl.textContent += `Ring Loop Continuity: VERIFIED (Node #014 loops back to #001)\n`;
+      consoleEl.textContent += `Ring Loop Continuity: VERIFIED (Node ${lastNodeId} loops back to #001)\n`;
       consoleEl.textContent += `Average Cluster Latency: ${avgLat}ms • Packet Loss: 0.0%\n`;
       consoleEl.scrollTop = consoleEl.scrollHeight;
 
