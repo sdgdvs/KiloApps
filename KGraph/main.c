@@ -19,6 +19,13 @@ void* memcpy(void* dest, const void* src, size_t count) {
     return dest;
 }
 
+#pragma function(memset)
+void* memset(void* dest, int c, size_t count) {
+    char* bytes = (char*)dest;
+    while (count--) *bytes++ = (char)c;
+    return dest;
+}
+
 // --- Math Expression Evaluator ---
 static const char* expr_ptr;
 static double eval_var_val;
@@ -190,7 +197,7 @@ static HWND hChecks[MAX_FUNCS];
 static HWND hLabels[MAX_FUNCS];
 static HWND hClrBtn[MAX_FUNCS];
 static HWND hPlotBtn, hZoomIn, hZoomOut, hResetBtn, hRootsBtn, hPresetBtn, hHelpBtn, hModeBtn, hSaveBtn, hCopyBtn, hStatus;
-static HWND hIntegralBtn, hTangentBtn, hSonifyBtn, hExportCsvBtn;
+static HWND hIntegralBtn, hTangentBtn, hSonifyBtn, hExportCsvBtn, hQuickSaveBtn, hQuickLoadBtn;
 static HFONT hFontSmall, hFontBold;
 static HBRUSH hTopBgBrush = NULL;
 static HBRUSH hEditBgBrush = NULL;
@@ -348,6 +355,134 @@ static void SaveCSVData(HWND hwnd) {
     ShowNativeStatus("Exported 101 sample points to KGraph_points.csv [E]!");
 }
 
+typedef struct {
+    char magic[4]; // 'K','G','R','P'
+    int mode;
+    double view_cx;
+    double view_cy;
+    double view_scale;
+    int show_integral;
+    int show_tangent;
+    char expr[MAX_FUNCS][128];
+    int enabled[MAX_FUNCS];
+} KGraphSaveData;
+
+static BOOL HasSeenTutorial(void) {
+    DWORD attr = GetFileAttributesA("kgraph_tutorial.dat");
+    return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+static void MarkTutorialSeen(void) {
+    HANDLE hFile = CreateFileA("kgraph_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char val = '1';
+        DWORD written = 0;
+        WriteFile(hFile, &val, 1, &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+static BOOL HasSavedState(void) {
+    DWORD attr = GetFileAttributesA("kgraph_quicksave.dat");
+    return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+static BOOL QuickSaveState(HWND hwnd) {
+    for (int i = 0; i < MAX_FUNCS; i++) {
+        if (hInputs[i]) GetWindowTextA(hInputs[i], funcs[i].expr, 127);
+        if (hChecks[i]) funcs[i].enabled = (SendMessageA(hChecks[i], BM_GETCHECK, 0, 0) == BST_CHECKED);
+    }
+
+    KGraphSaveData data;
+    memset(&data, 0, sizeof(data));
+    data.magic[0] = 'K'; data.magic[1] = 'G'; data.magic[2] = 'R'; data.magic[3] = 'P';
+    data.mode = (int)g_mode;
+    data.view_cx = view_cx;
+    data.view_cy = view_cy;
+    data.view_scale = view_scale;
+    data.show_integral = g_showIntegral;
+    data.show_tangent = g_showTangent;
+    for (int i = 0; i < MAX_FUNCS; i++) {
+        strncpy(data.expr[i], funcs[i].expr, 127);
+        data.expr[i][127] = '\0';
+        data.enabled[i] = funcs[i].enabled;
+    }
+
+    HANDLE hFile = CreateFileA("kgraph_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, &data, sizeof(data), &written, NULL);
+        CloseHandle(hFile);
+        MarkTutorialSeen();
+        ShowNativeStatus("Session QuickSaved to disk [F5]! | F9 to restore");
+        if (hwnd) InvalidateRect(hwnd, NULL, FALSE);
+        return TRUE;
+    }
+    ShowNativeStatus("QuickSave failed: Could not write kgraph_quicksave.dat");
+    return FALSE;
+}
+
+static BOOL QuickLoadState(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kgraph_quicksave.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        KGraphSaveData data;
+        DWORD bytesRead = 0;
+        BOOL ok = ReadFile(hFile, &data, sizeof(data), &bytesRead, NULL);
+        CloseHandle(hFile);
+        if (ok && bytesRead == sizeof(data) && data.magic[0] == 'K' && data.magic[1] == 'G' && data.magic[2] == 'R' && data.magic[3] == 'P') {
+            if (data.mode >= 0 && data.mode <= 2) {
+                g_mode = (PlotMode)data.mode;
+            }
+            if (!isnan(data.view_cx) && !isnan(data.view_cy) && !isnan(data.view_scale) && data.view_scale > 1e-4 && data.view_scale < 1e6) {
+                view_cx = data.view_cx;
+                view_cy = data.view_cy;
+                view_scale = data.view_scale;
+            }
+            g_showIntegral = data.show_integral;
+            g_showTangent = data.show_tangent;
+
+            for (int i = 0; i < MAX_FUNCS; i++) {
+                data.expr[i][127] = '\0';
+                strncpy(funcs[i].expr, data.expr[i], 127);
+                funcs[i].expr[127] = '\0';
+                funcs[i].enabled = data.enabled[i];
+            }
+
+            if (hModeBtn) {
+                if (g_mode == MODE_CARTESIAN) {
+                    SetWindowTextA(hModeBtn, "Mode: Cartesian [M]");
+                    if (hLabels[0]) SetWindowTextA(hLabels[0], "y1 =");
+                    if (hLabels[1]) SetWindowTextA(hLabels[1], "y2 =");
+                    if (hLabels[2]) SetWindowTextA(hLabels[2], "y3 =");
+                    if (g_hWnd) SetWindowTextA(g_hWnd, "KGraph Studio - Cartesian [M: Mode | P: Presets | R: Reset | F1: Help]");
+                } else if (g_mode == MODE_POLAR) {
+                    SetWindowTextA(hModeBtn, "Mode: Polar [M]");
+                    if (hLabels[0]) SetWindowTextA(hLabels[0], "r1 =");
+                    if (hLabels[1]) SetWindowTextA(hLabels[1], "r2 =");
+                    if (hLabels[2]) SetWindowTextA(hLabels[2], "r3 =");
+                    if (g_hWnd) SetWindowTextA(g_hWnd, "KGraph Studio - Polar [M: Mode | P: Presets | R: Reset | F1: Help]");
+                } else {
+                    SetWindowTextA(hModeBtn, "Mode: Parametric [M]");
+                    if (hLabels[0]) SetWindowTextA(hLabels[0], "x1 =");
+                    if (hLabels[1]) SetWindowTextA(hLabels[1], "y1 =");
+                    if (hLabels[2]) SetWindowTextA(hLabels[2], "x2 =");
+                    if (g_hWnd) SetWindowTextA(g_hWnd, "KGraph Studio - Parametric [M: Mode | P: Presets | R: Reset | F1: Help]");
+                }
+            }
+            for (int i = 0; i < MAX_FUNCS; i++) {
+                if (hInputs[i]) SetWindowTextA(hInputs[i], funcs[i].expr);
+                if (hChecks[i]) SendMessageA(hChecks[i], BM_SETCHECK, funcs[i].enabled ? BST_CHECKED : BST_UNCHECKED, 0);
+            }
+            MarkTutorialSeen();
+            ShowNativeStatus("Restored saved session [F9]! | F5 to save");
+            if (hwnd) InvalidateRect(hwnd, NULL, FALSE);
+            return TRUE;
+        }
+    }
+    ShowNativeStatus("No saved state found or corrupted data [F9].");
+    return FALSE;
+}
+
 static void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd,
         "KGraph Studio - Usage Guide & Shortcuts:\n\n"
@@ -364,6 +499,8 @@ static void ShowHelpDialog(HWND hwnd) {
         "• Integral [I] : Compute Simpson's definite integral with shaded region\n"
         "• Roots : Find and highlight numerical roots in view\n"
         "• Presets [P] : Cycle popular mathematical curves & formulas\n"
+        "• Quicksave [F5] : Save complete graph session & expressions to disk\n"
+        "• Quickload [F9] : Restore graph session & expressions from disk\n"
         "• Save BMP [S] / Ctrl+S : Save graph snapshot to KGraph_snapshot.bmp\n"
         "• Export CSV [E] : Save sampled coordinates to KGraph_points.csv\n"
         "• Copy [C] / Ctrl+C : Copy sampled points to Windows clipboard\n"
@@ -385,6 +522,14 @@ static LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPA
         } else if (wParam == VK_F1) {
             HWND hParent = GetParent(hwnd);
             if (hParent) ShowHelpDialog(hParent);
+            return 0;
+        } else if (wParam == VK_F5) {
+            HWND hParent = GetParent(hwnd);
+            if (hParent) QuickSaveState(hParent);
+            return 0;
+        } else if (wParam == VK_F9) {
+            HWND hParent = GetParent(hwnd);
+            if (hParent) QuickLoadState(hParent);
             return 0;
         }
     }
@@ -612,9 +757,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hPresetBtn   = CreateWindowA("BUTTON", "Presets [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(674, g_dpi, 96), MulDiv(35, g_dpi, 96), MulDiv(96, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1006, NULL, NULL);
 
             // Right side toolbar row 3 (Y=64)
-            hSaveBtn      = CreateWindowA("BUTTON", "Save BMP [S]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(344, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(96, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1009, NULL, NULL);
-            hExportCsvBtn = CreateWindowA("BUTTON", "Export CSV [E]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(444, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(104, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1014, NULL, NULL);
-            hCopyBtn      = CreateWindowA("BUTTON", "Copy [C]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(552, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(68, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1010, NULL, NULL);
+            hSaveBtn      = CreateWindowA("BUTTON", "Save BMP [S]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(344, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(88, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1009, NULL, NULL);
+            hExportCsvBtn = CreateWindowA("BUTTON", "CSV [E]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(436, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(68, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1014, NULL, NULL);
+            hCopyBtn      = CreateWindowA("BUTTON", "Copy [C]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(508, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(68, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1010, NULL, NULL);
+            hQuickSaveBtn = CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(580, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(88, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1015, NULL, NULL);
+            hQuickLoadBtn = CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(672, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(88, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1016, NULL, NULL);
 
             // Status bar at row 4 (Y=94)
             hStatus = CreateWindowA("STATIC", "Welcome to KGraph Studio! Drag or use Arrow keys to pan, scroll wheel or +/- to zoom, Space to Sonify, F1 for Help.", WS_CHILD | WS_VISIBLE | SS_LEFT, MulDiv(10, g_dpi, 96), MulDiv(94, g_dpi, 96), MulDiv(760, g_dpi, 96), MulDiv(22, g_dpi, 96), hwnd, NULL, NULL, NULL);
@@ -634,6 +781,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hSaveBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             SendMessageA(hExportCsvBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             SendMessageA(hCopyBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+            SendMessageA(hQuickSaveBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+            SendMessageA(hQuickLoadBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             
             SetTimer(hwnd, 2001, 5000, NULL);
             break;
@@ -803,6 +952,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SonifyActiveCurve(hwnd);
             } else if (id == 1014) { // Export CSV
                 SaveCSVData(hwnd);
+            } else if (id == 1015) { // QuickSave [F5]
+                QuickSaveState(hwnd);
+            } else if (id == 1016) { // QuickLoad [F9]
+                QuickLoadState(hwnd);
             } else if (id >= 1100 && id < 1100 + MAX_FUNCS) {
                 int idx = id - 1100;
                 funcs[idx].enabled = (SendMessageA(hChecks[idx], BM_GETCHECK, 0, 0) == BST_CHECKED);
@@ -834,6 +987,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_KEYDOWN: {
             if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
                 ShowHelpDialog(hwnd);
+            } else if (wParam == VK_F5) {
+                QuickSaveState(hwnd);
+            } else if (wParam == VK_F9) {
+                QuickLoadState(hwnd);
+            } else if (wParam == VK_ESCAPE) {
+                hover_mouse.x = -1;
+                hover_mouse.y = -1;
+                InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'M' || wParam == 'm') {
                 SendMessageA(hwnd, WM_COMMAND, 1008, 0);
             } else if (wParam == 'R' || wParam == 'r' || wParam == VK_HOME) {
@@ -1257,11 +1418,30 @@ void __stdcall MainEntry(void) {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
+    // Pass 5 First-run Tutorial Integrity & Saved State Startup Check
+    if (HasSavedState()) {
+        QuickLoadState(hwnd);
+        ShowNativeStatus("Restored saved session [F9] | Press F1 for Help");
+        MarkTutorialSeen();
+    } else if (!HasSeenTutorial()) {
+        ShowHelpDialog(hwnd);
+        MarkTutorialSeen();
+        ShowNativeStatus("Welcome to KGraph Studio! Press F1 for Help | F5 Save | F9 Load");
+    }
+
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
             if (msg.wParam == VK_F1) {
                 ShowHelpDialog(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F5) {
+                QuickSaveState(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                QuickLoadState(hwnd);
                 continue;
             }
             if (GetKeyState(VK_CONTROL) & 0x8000) {

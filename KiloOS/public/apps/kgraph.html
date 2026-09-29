@@ -843,12 +843,14 @@
     <div class="header-actions">
       <button class="btn" id="sidebarToggleBtn" onclick="toggleSidebar()" title="Toggle Sidebar (Ctrl+B or \)">◀ Sidebar <span class="shortcut-badge">^B</span></button>
       <button class="btn" id="btnSonify" onclick="toggleSonify()" title="Sonify Active Curve with Yamaha YM2612 FM Audio (Space)">🎵 Sonify <span class="shortcut-badge">Space</span></button>
+      <button class="btn" onclick="quickSave()" title="Quicksave State to LocalStorage (F5)">💾 Save <span class="shortcut-badge">F5</span></button>
+      <button class="btn" onclick="quickLoad()" title="Quickload State from LocalStorage (F9)">⚡ Load <span class="shortcut-badge">F9</span></button>
       <button class="btn" onclick="exportPNG()" title="Export PNG Snapshot (Ctrl+S)">📷 PNG <span class="shortcut-badge">^S</span></button>
       <button class="btn" onclick="exportSVG()" title="Export Scalable Vector Graphics (Ctrl+E)">📐 SVG <span class="shortcut-badge">^E</span></button>
       <button class="btn" onclick="exportCSV()" title="Export CSV Data Points (E)">📊 CSV <span class="shortcut-badge">E</span></button>
       <button class="btn" onclick="exportJSON()" title="Save Configuration to JSON">💾 Config</button>
       <label class="btn" style="cursor:pointer" title="Load Configuration File (O)">
-        📂 Load <span class="shortcut-badge">O</span>
+        📂 File <span class="shortcut-badge">O</span>
         <input type="file" id="jsonInput" accept=".json" style="display:none" onchange="importJSON(event)">
       </label>
       <button class="btn" id="btnAudioMute" onclick="toggleMute()" title="Toggle Sound (U)">🔊</button>
@@ -1086,6 +1088,8 @@
           </thead>
           <tbody>
             <tr><td><span class="kbd-key">F1</span> / <span class="kbd-key">H</span></td><td>Toggle this Help & Reference guide</td></tr>
+            <tr><td><span class="kbd-key">F5</span></td><td>Quicksave complete graph state & functions to storage</td></tr>
+            <tr><td><span class="kbd-key">F9</span></td><td>Quickload & restore saved graph state from storage</td></tr>
             <tr><td><span class="kbd-key">Space</span></td><td>Sonify active curve with Yamaha YM2612 FM audio & SPC700 delay</td></tr>
             <tr><td><span class="kbd-key">T</span></td><td>Toggle tangent & normal lines with slope m and inclination angle</td></tr>
             <tr><td><span class="kbd-key">U</span></td><td>Toggle procedural audio mute / unmuted</td></tr>
@@ -1127,6 +1131,9 @@
         <div class="help-section-title">🔬 Calculus & Root Finding Features</div>
         <p>• <strong>Calculus Tab:</strong> Computes instantaneous numerical derivative $f'(x_0)$ and definite integral $\int_a^b f(x)dx$ using composite Simpson's rule with shaded graph visualization.<br>
         • <strong>Analysis Tab:</strong> Performs bisection root finding and finds intersection points between curves in the current view.</p>
+      </div>
+      <div class="modal-footer" style="padding: 12px 20px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: flex-end; background: rgba(15,23,42,0.6);">
+        <button class="btn btn-primary" onclick="closeHelpModal()" style="padding: 8px 20px;">Got It / Close (Esc or Enter)</button>
       </div>
     </div>
   </div>
@@ -1802,6 +1809,12 @@
         showToast('Graph plotted!');
       } else if (event.key === 'Escape') {
         event.target.blur();
+      } else if (event.key === 'F5') {
+        event.preventDefault();
+        quickSave();
+      } else if (event.key === 'F9') {
+        event.preventDefault();
+        quickLoad();
       }
     }
 
@@ -3213,6 +3226,102 @@
       reader.readAsText(file);
       event.target.value = '';
     }
+
+    function quickSave() {
+      try {
+        const targetIdx = parseInt(document.getElementById('calcTargetFunc')?.value) || 0;
+        const rootTargetIdx = parseInt(document.getElementById('rootTargetFunc')?.value) || 0;
+        const config = {
+          mode: currentMode,
+          cartesianFuncs: cartesianFuncs,
+          polarFuncs: polarFuncs,
+          parametricCurves: parametricCurves,
+          polarMinTh: polarMinTh,
+          polarMaxTh: polarMaxTh,
+          showPolarGrid: showPolarGrid,
+          paramMinT: paramMinT,
+          paramMaxT: paramMaxT,
+          view_cx: view_cx,
+          view_cy: view_cy,
+          view_scale: view_scale,
+          calcTargetFunc: targetIdx,
+          rootTargetFunc: rootTargetIdx,
+          intA: typeof intA !== 'undefined' ? intA : -2,
+          intB: typeof intB !== 'undefined' ? intB : 2,
+          isShade: typeof isShade !== 'undefined' ? isShade : true,
+          showRiemann: typeof showRiemann !== 'undefined' ? showRiemann : false,
+          riemannN: typeof riemannN !== 'undefined' ? riemannN : 10,
+          riemannMethod: typeof riemannMethod !== 'undefined' ? riemannMethod : 'midpoint',
+          showTaylor: typeof showTaylor !== 'undefined' ? showTaylor : false,
+          tCenter: typeof tCenter !== 'undefined' ? tCenter : 0,
+          tOrder: typeof tOrder !== 'undefined' ? tOrder : 4,
+          showTangent: typeof showTangent !== 'undefined' ? showTangent : false,
+          tangentX: typeof tangentX !== 'undefined' ? tangentX : 1,
+          showGrid: typeof showGrid !== 'undefined' ? showGrid : true,
+          showCoordsHUD: typeof showCoordsHUD !== 'undefined' ? showCoordsHUD : true,
+          audioMuted: typeof audioMuted !== 'undefined' ? audioMuted : false,
+          savedAt: Date.now()
+        };
+        localStorage.setItem('kgraph_quicksave', JSON.stringify(config));
+        localStorage.setItem('kgraph_tutorialSeen', 'true');
+        localStorage.setItem('kgraph_firstRunSeen', 'true');
+        showToast('💾 State QuickSaved to storage! [F5]');
+        return true;
+      } catch (err) {
+        showToast('⚠️ Quicksave failed: storage quota or error');
+        return false;
+      }
+    }
+
+    function quickLoad() {
+      try {
+        const raw = localStorage.getItem('kgraph_quicksave');
+        if (!raw) {
+          showToast('⚠️ No quicksave found! Press F5 to save state.');
+          return false;
+        }
+        const config = JSON.parse(raw);
+        if (config.cartesianFuncs && Array.isArray(config.cartesianFuncs)) cartesianFuncs = config.cartesianFuncs;
+        if (config.polarFuncs && Array.isArray(config.polarFuncs)) polarFuncs = config.polarFuncs;
+        if (config.parametricCurves && Array.isArray(config.parametricCurves)) parametricCurves = config.parametricCurves;
+        if (config.polarMinTh !== undefined) polarMinTh = config.polarMinTh;
+        if (config.polarMaxTh !== undefined) polarMaxTh = config.polarMaxTh;
+        if (config.showPolarGrid !== undefined) showPolarGrid = config.showPolarGrid;
+        if (config.paramMinT !== undefined) paramMinT = config.paramMinT;
+        if (config.paramMaxT !== undefined) paramMaxT = config.paramMaxT;
+        if (config.mode) currentMode = config.mode;
+        if (config.view_cx !== undefined && !isNaN(config.view_cx)) view_cx = config.view_cx;
+        if (config.view_cy !== undefined && !isNaN(config.view_cy)) view_cy = config.view_cy;
+        if (config.view_scale !== undefined && !isNaN(config.view_scale) && config.view_scale > 0) view_scale = config.view_scale;
+        if (config.intA !== undefined && typeof intA !== 'undefined') intA = config.intA;
+        if (config.intB !== undefined && typeof intB !== 'undefined') intB = config.intB;
+        if (config.isShade !== undefined && typeof isShade !== 'undefined') isShade = config.isShade;
+        if (config.showRiemann !== undefined && typeof showRiemann !== 'undefined') showRiemann = config.showRiemann;
+        if (config.riemannN !== undefined && typeof riemannN !== 'undefined') riemannN = config.riemannN;
+        if (config.riemannMethod !== undefined && typeof riemannMethod !== 'undefined') riemannMethod = config.riemannMethod;
+        if (config.showTaylor !== undefined && typeof showTaylor !== 'undefined') showTaylor = config.showTaylor;
+        if (config.tCenter !== undefined && typeof tCenter !== 'undefined') tCenter = config.tCenter;
+        if (config.tOrder !== undefined && typeof tOrder !== 'undefined') tOrder = config.tOrder;
+        if (config.showTangent !== undefined && typeof showTangent !== 'undefined') showTangent = config.showTangent;
+        if (config.tangentX !== undefined && typeof tangentX !== 'undefined') tangentX = config.tangentX;
+        if (config.showGrid !== undefined && typeof showGrid !== 'undefined') showGrid = config.showGrid;
+        if (config.showCoordsHUD !== undefined && typeof showCoordsHUD !== 'undefined') showCoordsHUD = config.showCoordsHUD;
+        if (config.audioMuted !== undefined && typeof audioMuted !== 'undefined') audioMuted = config.audioMuted;
+
+        localStorage.setItem('kgraph_tutorialSeen', 'true');
+        localStorage.setItem('kgraph_firstRunSeen', 'true');
+
+        setPlotMode(currentMode);
+        if (typeof updateCalcUI === 'function') updateCalcUI();
+        replotAll();
+        drawGraph();
+        showToast('📂 State QuickLoaded successfully! [F9]');
+        return true;
+      } catch (err) {
+        showToast('⚠️ Quickload failed: corrupted data');
+        return false;
+      }
+    }
     
     let toastTimeout;
     function showToast(msg, duration = 4500) {
@@ -3255,13 +3364,18 @@
       if (toolBtn) { toolBtn.innerText = '▶'; toolBtn.title = 'Expand Sidebar (Ctrl+B or \\)'; }
     }
 
-    // First-run tutorial onboarding check
-    const hasSeenTutorial = localStorage.getItem('kgraph_firstRunSeen');
-    if (!hasSeenTutorial) {
+    // First-run tutorial onboarding check (Pass 5 State & Tutorial Integrity)
+    const hasSeenTutorial = localStorage.getItem('kgraph_tutorialSeen') || localStorage.getItem('kgraph_firstRunSeen');
+    const hasSavedState = !!localStorage.getItem('kgraph_quicksave');
+    if (!hasSeenTutorial && !hasSavedState) {
       setTimeout(() => {
-        showToast("👋 Welcome to KGraph Studio!\nPress F1 or H for Help & Shortcuts.\nDrag or use arrow keys to pan, scroll wheel or +/- to zoom.\nExplore Calculus & Analysis in tabs [2] and [3].", 6500);
+        showToast("👋 Welcome to KGraph Studio!\nPress F1 or H for Help & Shortcuts.\nDrag or use arrow keys to pan, scroll wheel or +/- to zoom.\nF5 to Quicksave | F9 to Quickload.", 6500);
+        localStorage.setItem('kgraph_tutorialSeen', 'true');
         localStorage.setItem('kgraph_firstRunSeen', 'true');
       }, 400);
+    } else {
+      localStorage.setItem('kgraph_tutorialSeen', 'true');
+      localStorage.setItem('kgraph_firstRunSeen', 'true');
     }
 
     // Global Keyboard Shortcuts
@@ -3277,9 +3391,44 @@
         }
         return;
       }
+
+      if (isModalOpen && (e.key === 'Enter' || e.code === 'Space' || e.key === ' ')) {
+        e.preventDefault();
+        closeHelpModal();
+        return;
+      }
       
-      // If editing an input, only handle Escape/Enter handled in input listener
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
+      // If editing an input, only handle Hotkeys that should always work
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+        if (e.key === 'F5') {
+          e.preventDefault();
+          quickSave();
+          return;
+        }
+        if (e.key === 'F9') {
+          e.preventDefault();
+          quickLoad();
+          return;
+        }
+        if (e.key === 'F1') {
+          e.preventDefault();
+          if (isModalOpen) closeHelpModal();
+          else openHelpModal();
+          return;
+        }
+        return;
+      }
+      
+      if (e.key === 'F5') {
+        e.preventDefault();
+        quickSave();
+        return;
+      }
+      if (e.key === 'F9') {
+        e.preventDefault();
+        quickLoad();
+        return;
+      }
       
       // Ctrl / Meta Hotkeys
       if (e.ctrlKey || e.metaKey) {

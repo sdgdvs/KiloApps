@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KDragon
   kilo_usability: KTodo
   kilo_graphics: KStarship
-  kilo_qa: KGraph
+  kilo_qa: KContacts
   kilo_expander: KType
   kilo_creator: "kweb://users/~neon_rider (Personal Hacker / Demoscene Homepage)"
 virtual_web_target: "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KWizard
-  timestamp: "2026-09-29T19:55:00Z"
+  agent: kilo-qa
+  app: KGraph
+  timestamp: "2026-09-29T20:10:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KGraph`
+- **Current Target**: `KContacts`
 - **Upcoming Queue**:
-  `KContacts`, `KScript`, `KRead`, `KColosseum`, `KAbyss`, `KMedia`, `KAudio`, `KCosmic` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart)*.
+  `KScript`, `KRead`, `KColosseum`, `KAbyss`, `KMedia`, `KAudio`, `KCosmic` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KType`
@@ -249,6 +249,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T20:10:00Z — kilo-qa: KGraph (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & Modal Ergonomics)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 134 KB < 999 KB).
+  - State Persistence: Implemented F5 quicksave & F9 quickload capturing complete graph state across Web (`localStorage`) and Win32 C (`kgraph_quicksave.dat`).
+  - Tutorial Integrity: Added `HasSeenTutorial` / `kgraph_tutorial.dat` flag in native C and synchronized web tutorial flag; guarded startup against interrupting restored saves.
+  - Modal & UI Ergonomics: Added Save [F5] and Load [F9] buttons to web header and Win32 C toolbar; added Got It action button & keyboard shortcuts (Enter/Space/Esc) to Help modal.
+  - Native C Hardening: Added CRT-free `memset` implementation; synchronized all shortcuts, mode labels, status toasts, and binary output.
+  - Verification: MSVC clean (`KGraph.exe` 36.8 KB); Vite clean in 258ms (`kgraph.html` 134 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-29T19:55:00Z — kilo-graphics: KWizard (YM2612 FM Audio, SPC700 Delay, Venom Archetype, Zero Glints & Visual Polish)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 103.7 KB < 999 KB).
   - Audio Architecture: Added Sega Genesis YM2612 2-Op FM synthesis & SNES SPC700 stereo delay warmth engine with audio toggle [🔊 Audio].
@@ -281,12 +289,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Web 1.0 Tools: Implemented 5 GeoCities neighborhood themes, Retro Banner Studio (468x60/88x31) & Webmaster Page Builder.
   - Live Connectivity: Integrated Firebase RTDB real-time shoutbox stream, 6 quick-stamps & live cyber voyagers presence.
   - Interconnects: Linked in KNet, portal, webring, and cybercafe; verified Vite build (243ms) and security lint 100% clean.
-
-- **2026-09-29T18:56:00Z — kilo-expander: KMandel (Feature Expansion: 8 Formulas, YM2612 FM Audio, Co-Op Beacon & Color Cycling)**
-  - Status: PASS ✅ (0 regressions, clean builds, security lint clean, <999KB verified).
-  - Formulas & Shading: Added Multibrot 3/4, Perp Ship formulas (8 total), continuous potential smooth shading & 60 FPS color cycling.
-  - Audio Engine: Sega Genesis YM2612 2-op FM synthesis & SNES SPC700 stereo delay DSP sonification + live cursor sonifier.
-  - Multiplayer Co-Op Beacon: Firebase RTDB integration (`multiplayer/kmandel/rooms/public`), presence tracking, beacon broadcast & peer jump.
-  - Data Interoperability: Custom Bookmarks bank with localStorage persistence, JSON export/import and coordinate URL share links.
-  - Win32 C Alignment: Implemented all 8 formulas, 9 themes, landmarks & color cycling in `main.c` (MSVC clean 27.1 KB).
-  - Verification: MSVC clean; Vite build clean in 243ms (`kmandel.html` 123.5 KB < 999 KB); security and icon lints 100% PASS.

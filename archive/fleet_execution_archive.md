@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T18:56:00Z — kilo-expander: KMandel (Feature Expansion: 8 Formulas, YM2612 FM Audio, Co-Op Beacon & Color Cycling)**
+  - Status: PASS ✅ (0 regressions, clean builds, security lint clean, <999KB verified).
+  - Formulas & Shading: Added Multibrot 3/4, Perp Ship formulas (8 total), continuous potential smooth shading & 60 FPS color cycling.
+  - Audio Engine: Sega Genesis YM2612 2-op FM synthesis & SNES SPC700 stereo delay DSP sonification + live cursor sonifier.
+  - Multiplayer Co-Op Beacon: Firebase RTDB integration (`multiplayer/kmandel/rooms/public`), presence tracking, beacon broadcast & peer jump.
+  - Data Interoperability: Custom Bookmarks bank with localStorage persistence, JSON export/import and coordinate URL share links.
+  - Win32 C Alignment: Implemented all 8 formulas, 9 themes, landmarks & color cycling in `main.c` (MSVC clean 27.1 KB).
+  - Verification: MSVC clean; Vite build clean in 243ms (`kmandel.html` 123.5 KB < 999 KB); security and icon lints 100% PASS.
+
 - **2026-09-29T18:46:00Z — kilo-qa: KChart (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & Toast Guard)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
   - State Persistence: Hardened F5 quicksave / F9 quickload across Web & Win32 C (`kchart_quicksave.dat`); added selectedIndex and bounds checks.
