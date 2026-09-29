@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -17,8 +17,8 @@ current_targets:
   kilo_graphics: KChrono
   kilo_qa: KScript
   kilo_expander: KZip
-  kilo_creator: "kweb://asm-temple (x86 Assembly Programming Shrine & PE32 Dissector)"
-virtual_web_target: "kweb://asm-temple"
+  kilo_creator: "kweb://cybercafe (The Underground BBS, ASCII Studio & mIRC Lounge)"
+virtual_web_target: "kweb://cybercafe"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KStarship
-  timestamp: "2026-09-29T22:38:00Z"
+  agent: kilo-creator
+  app: "kweb://asm-temple"
+  timestamp: "2026-09-29T22:45:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -97,11 +97,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://asm-temple` (x86 Assembly Programming Shrine & PE32 Dissector)
+- **Current Target**: `kweb://cybercafe` (The Underground BBS, ASCII Studio & mIRC Lounge)
 - **Upcoming Queue**:
-  `kweb://cybercafe` (The Underground BBS, ASCII Studio & mIRC Lounge),
-  `kweb://10.19.99.4/classified` (Corporate Network Leak & Signal Diagnostic)
-  *(Completed: kweb://users/~neon_rider, kweb://geocities, kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
+  `kweb://10.19.99.4/classified` (Corporate Network Leak & Signal Diagnostic),
+  `kweb://echo-subsystem.net` (Acoustic Research & Signal Intelligence)
+  *(Completed: kweb://asm-temple, kweb://users/~neon_rider, kweb://geocities, kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Current Target**: `KChrono`
@@ -130,8 +130,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://users/~neon_rider` (`KiloOS/public/web/users/neon_rider.html`)
-  - *Next in Rotation*: `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities`.
+- **Current Active Target**: `kweb://cybercafe` (`KiloOS/public/web/cybercafe.html`)
+  - *Next in Rotation*: `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple`.
 - **Anti-Potemkin Directive & Content Mandates**:
   0. `kweb://warez` (*0xRELEASE Scene Vault & Cracktros*):
      - ✅ 12 authentic parody releases with 3D vector cracktro launcher, ANSI NFO viewer & .diz/.nfo downloads.
@@ -176,14 +176,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
      - ✅ YM2612 2-Operator FM Synthesizer Laboratory with interactive piano keyboard, SPC700 stereo delay & 4-track tracker jukebox.
      - ✅ Demoscene code vault with client-side .asm/.nfo downloads, persistent CGI guestbook, and KiloNet Webring #006 node interconnect.
   5. `kweb://asm-temple` (*x86 Assembly Programming Shrine & PE32 Dissector*):
-     - ✅ 118-instruction Opcode Oracle with category filters, Pentium cycle counts, and encoding format deconstruction.
+     - ✅ 133-instruction Opcode Oracle with category filters, Pentium cycle counts, and encoding format deconstruction.
      - ✅ Two-way live x86 assembler & disassembler with preset library, C array / NASM / binary export, and .bin downloads.
-     - ✅ Interactive 32-bit micro-CPU single-step emulator (EAX-EIP registers, flags, cycle counter, virtual stack).
+     - ✅ Interactive 32-bit micro-CPU single-step emulator (EAX-EIP, flags, cycle counter, virtual stack, SUB/AND/OR/NOT/NEG/SHL/SHR/XCHG/CMP/TEST).
      - ✅ 32-bit interactive radix altar with IEEE-754 single float, ASCII char[4], and EFLAGS status simulation.
      - ✅ Win32 PE32 binary dissector (headers, Shannon entropy heatmaps, IAT imports, entrypoint disasm, hex dumper, RVA tool).
      - ✅ Win32 PE32 binary builder compiling valid downloadable 1.5KB .EXE executables directly in browser memory.
      - ✅ Yamaha YM2612 FM synthesis & SPC700 stereo delay chiptune jukebox (4 tracks) with real-time FM timbre tuner.
-     - ✅ Persistent acolyte guestbook & Central KiloNet Webring node #007 interconnect.
+     - ✅ Persistent acolyte guestbook & Central KiloNet Webring node #005 interconnect with CyberCafe '99, ~neon_rider & Scene Vault.
   6. `kweb://cybercafe` (*The Underground BBS, ASCII Studio & mIRC Lounge*):
      - ✅ Threaded retro message boards with 4 channels, search, localStorage persistence & ASCII art embedding.
      - ✅ Interactive 60x20 ASCII/ANSI art studio with CP437 glyphs, 16-color palette, .ANS/.TXT export & 1-click forum posting.
@@ -276,6 +276,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T22:45:00Z — kilo-creator: kweb://asm-temple (x86 Assembly Programming Shrine & PE32 Dissector Expansion)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 177 KB < 999 KB).
+  - Micro-CPU & Assembler: Expanded emulator instructions (SUB, AND, OR, NOT, NEG, SHL, SHR, ROL, ROR, XCHG, CMP, TEST, CLC/STC/CMC).
+  - 133-Opcode Oracle: Verified full 133-instruction database with Pentium cycle latencies, encoding matrices, and fast filtering.
+  - Hypermedia Interconnect: Linked to CyberCafe '99 BBS (#006), ~neon_rider (#004), Webring hub (#005), Portal, and Scene Vault.
+  - Web 1.0 Depth: PE32 dissector/builder with client-side binary generation, radix/float altar, and persistent Y2K guestbook.
+  - Verification: Clean null-byte sanitization; Vite clean in 435ms; headless Chrome CDP 100% PASS; security lint 100% PASS.
+
 - **2026-09-29T22:38:00Z — kilo-graphics: KStarship (Superweapon Forge Art, Zero Glints, Stellar Wind Ramscoop & Action Consistency)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 154.2 KB < 999 KB).
   - Superweapon Forge: Added dedicated cyclotron particle accelerator & antimatter crucible vector art in web & Win32 C (`main.c`).
@@ -311,13 +319,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Key & Combat Alignment: Mapped [L] to planetary descent; aligned combat actions (1:Laser, 2:Flee, 3:Superweapon, 4:Shield Boost).
   - Bug Fix & Native Alignment: Fixed Void Leviathan spacebar combat bypass in main.c; synchronized encounter 24 and vector artwork.
   - Verification: MSVC clean (KStarship.exe 145.4 KB); Vite clean in 366ms (kstarship.html 149.6 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-29T21:35:00Z — kilo-usability: KTrader (UI/UX Ergonomics, Toast De-Occlusion, HiDPI Canvas & Window Sizing)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 85.9 KB < 999 KB).
-  - Window & Viewport: Tuned default window to 960x720 in `App.jsx`, `ktrader.html`, and direct native `KTrader.exe` download.
-  - Toast De-Occlusion: Relocated HUD toast to bottom-right, eliminating overlap with header actions, inputs, and modal controls.
-  - Canvas Crispness: Implemented `setupHiDPICanvas()` with `devicePixelRatio` buffer scaling and `ctx.setTransform` crisp vector lines.
-  - Usability Status Bar: Added footer status bar with quick keyboard hints (<kbd>F1</kbd>, <kbd>1-9</kbd>, <kbd>R</kbd>, <kbd>F5</kbd>, <kbd>F9</kbd>, <kbd>Esc</kbd>) and live vessel telemetry.
-  - Control Ergonomics: Added active `:active` and keyboard focus `:focus-visible` styling; added visible header help hint.
-  - Verification: MSVC clean (`KTrader.exe` 26.6 KB); Vite clean in 349ms (`ktrader.html` 85.9 KB); icon & security checks 100% PASS.
 

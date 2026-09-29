@@ -1062,7 +1062,7 @@
           </div>
           <div style="display:flex; gap:8px; font-size:11px;">
             <span>DOS Sig: <strong id="lblDosSig" style="color:var(--emerald);">0x5A4D ("MZ")</strong></span>
-            <span>PE Sig: <strong id="lblPeSig" style="color:var(--emerald);">"PE  "</strong></span>
+            <span>PE Sig: <strong id="lblPeSig" style="color:var(--emerald);">"PE\0\0"</strong></span>
             <span>Target: <strong id="lblMachine" style="color:var(--cyan);">i386 (0x014C)</strong></span>
             <span>Subsystem: <strong id="lblSubsys" style="color:var(--gold-bright);">Win32 Console (3)</strong></span>
           </div>
@@ -1263,7 +1263,7 @@
                 <strong style="color:var(--gold-bright);">3. PE Signature</strong>
                 <div style="font-size:10px; color:var(--text-muted);">Offset: [e_lfanew] = 0x00E0</div>
               </div>
-              <span class="badge-opcode">"PE  "</span>
+              <span class="badge-opcode">"PE\0\0"</span>
             </div>
 
             <div class="pe-block" data-section="coff">
@@ -1443,7 +1443,9 @@
           <a href="/web/users/neon_rider.html">« [Prev] ~neon_rider's Shrine</a>
           <a href="/web/webring.html">🌐 [Hub] Webring Central Hub</a>
           <a href="/web/portal.html">🏠 [Portal] KiloNet 1999 Directory</a>
-          <a href="/web/geocities.html">🌆 [Next] CyberSpire Retro Shrine »</a>
+          <a href="/web/cybercafe.html">☕ [Next] CyberCafe '99 BBS »</a>
+          <a href="/web/geocities.html">🌆 CyberSpire Retro Shrine</a>
+          <a href="/web/warez.html">💾 0xRELEASE Scene Vault</a>
         </div>
       </div>
 
@@ -1865,8 +1867,14 @@
     if (mnem === 'DEC') {
       if (REG32_MAP[op1] !== undefined) return [0x48 + REG32_MAP[op1]];
     }
+    if (mnem === 'NOT') {
+      if (REG32_MAP[op1] !== undefined) return [0xF7, 0xD0 + REG32_MAP[op1]];
+    }
+    if (mnem === 'NEG') {
+      if (REG32_MAP[op1] !== undefined) return [0xF7, 0xD8 + REG32_MAP[op1]];
+    }
 
-    // Two operand: XOR, ADD, SUB, AND, OR, CMP, TEST
+    // Two operand: XOR, ADD, SUB, AND, OR, CMP, TEST, XCHG
     const twoOpOpcodes = {
       XOR: 0x31,
       ADD: 0x01,
@@ -1874,7 +1882,8 @@
       AND: 0x21,
       OR:  0x09,
       CMP: 0x39,
-      TEST: 0x85
+      TEST: 0x85,
+      XCHG: 0x87
     };
 
     if (twoOpOpcodes[mnem] !== undefined) {
@@ -2311,6 +2320,103 @@
         if (cpu[op1.toLowerCase()] !== undefined) cpu[op1.toLowerCase()] = val;
         cpu.esp = (cpu.esp + 4) >>> 0;
       }
+      cpu.cycles += 1;
+    } else if (mnem === 'SUB') {
+      if (cpu[op1.toLowerCase()] !== undefined) {
+        const val = cpu[op2.toLowerCase()] !== undefined ? cpu[op2.toLowerCase()] : (parseHexNum(op2) || 0);
+        cpu[op1.toLowerCase()] = (cpu[op1.toLowerCase()] - val) >>> 0;
+        cpu.zf = (cpu[op1.toLowerCase()] === 0) ? 1 : 0;
+        cpu.sf = (cpu[op1.toLowerCase()] & 0x80000000) ? 1 : 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'AND') {
+      if (cpu[op1.toLowerCase()] !== undefined) {
+        const val = cpu[op2.toLowerCase()] !== undefined ? cpu[op2.toLowerCase()] : (parseHexNum(op2) || 0);
+        cpu[op1.toLowerCase()] = (cpu[op1.toLowerCase()] & val) >>> 0;
+        cpu.zf = (cpu[op1.toLowerCase()] === 0) ? 1 : 0;
+        cpu.cf = 0; cpu.of = 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'OR') {
+      if (cpu[op1.toLowerCase()] !== undefined) {
+        const val = cpu[op2.toLowerCase()] !== undefined ? cpu[op2.toLowerCase()] : (parseHexNum(op2) || 0);
+        cpu[op1.toLowerCase()] = (cpu[op1.toLowerCase()] | val) >>> 0;
+        cpu.zf = (cpu[op1.toLowerCase()] === 0) ? 1 : 0;
+        cpu.cf = 0; cpu.of = 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'NOT') {
+      if (cpu[op1.toLowerCase()] !== undefined) {
+        cpu[op1.toLowerCase()] = (~cpu[op1.toLowerCase()]) >>> 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'NEG') {
+      if (cpu[op1.toLowerCase()] !== undefined) {
+        cpu.cf = (cpu[op1.toLowerCase()] !== 0) ? 1 : 0;
+        cpu[op1.toLowerCase()] = (-cpu[op1.toLowerCase()]) >>> 0;
+        cpu.zf = (cpu[op1.toLowerCase()] === 0) ? 1 : 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'SHL') {
+      if (cpu[op1.toLowerCase()] !== undefined) {
+        const amt = op2 ? (parseHexNum(op2) || 1) : 1;
+        cpu[op1.toLowerCase()] = (cpu[op1.toLowerCase()] << amt) >>> 0;
+        cpu.zf = (cpu[op1.toLowerCase()] === 0) ? 1 : 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'SHR') {
+      if (cpu[op1.toLowerCase()] !== undefined) {
+        const amt = op2 ? (parseHexNum(op2) || 1) : 1;
+        cpu[op1.toLowerCase()] = (cpu[op1.toLowerCase()] >>> amt);
+        cpu.zf = (cpu[op1.toLowerCase()] === 0) ? 1 : 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'ROL') {
+      if (cpu[op1.toLowerCase()] !== undefined) {
+        const val = cpu[op1.toLowerCase()];
+        cpu[op1.toLowerCase()] = ((val << 1) | (val >>> 31)) >>> 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'ROR') {
+      if (cpu[op1.toLowerCase()] !== undefined) {
+        const val = cpu[op1.toLowerCase()];
+        cpu[op1.toLowerCase()] = ((val >>> 1) | (val << 31)) >>> 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'XCHG') {
+      if (cpu[op1.toLowerCase()] !== undefined && cpu[op2.toLowerCase()] !== undefined) {
+        const tmp = cpu[op1.toLowerCase()];
+        cpu[op1.toLowerCase()] = cpu[op2.toLowerCase()];
+        cpu[op2.toLowerCase()] = tmp;
+      }
+      cpu.cycles += 3;
+    } else if (mnem === 'CMP') {
+      if (cpu[op1.toLowerCase()] !== undefined) {
+        const val1 = cpu[op1.toLowerCase()];
+        const val2 = cpu[op2.toLowerCase()] !== undefined ? cpu[op2.toLowerCase()] : (parseHexNum(op2) || 0);
+        const res = (val1 - val2) >>> 0;
+        cpu.zf = (val1 === val2) ? 1 : 0;
+        cpu.cf = (val1 < val2) ? 1 : 0;
+        cpu.sf = (res & 0x80000000) ? 1 : 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'TEST') {
+      if (cpu[op1.toLowerCase()] !== undefined) {
+        const val1 = cpu[op1.toLowerCase()];
+        const val2 = cpu[op2.toLowerCase()] !== undefined ? cpu[op2.toLowerCase()] : (parseHexNum(op2) || 0);
+        const res = val1 & val2;
+        cpu.zf = (res === 0) ? 1 : 0;
+        cpu.cf = 0; cpu.of = 0;
+      }
+      cpu.cycles += 1;
+    } else if (mnem === 'CLC') {
+      cpu.cf = 0;
+      cpu.cycles += 1;
+    } else if (mnem === 'STC') {
+      cpu.cf = 1;
+      cpu.cycles += 1;
+    } else if (mnem === 'CMC') {
+      cpu.cf = cpu.cf ? 0 : 1;
       cpu.cycles += 1;
     } else if (mnem === 'RDTSC') {
       cpu.eax = (Date.now() & 0xFFFFFFFF) >>> 0;

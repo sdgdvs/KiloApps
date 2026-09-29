@@ -16,9 +16,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 14,
+  "turns_executed": 15,
   "last_turn_timestamp": "2026-09-29T18:07:21Z",
-  "last_heartbeat": "2026-09-29T22:09:23.422191+00:00",
-  "current_target": "KContacts",
+  "last_heartbeat": "2026-09-29T22:25:53.205609+00:00",
+  "current_target": "KVault",
   "remote_command": "none"
 }

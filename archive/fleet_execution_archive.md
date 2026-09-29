@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T21:35:00Z — kilo-usability: KTrader (UI/UX Ergonomics, Toast De-Occlusion, HiDPI Canvas & Window Sizing)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 85.9 KB < 999 KB).
+  - Window & Viewport: Tuned default window to 960x720 in `App.jsx`, `ktrader.html`, and direct native `KTrader.exe` download.
+  - Toast De-Occlusion: Relocated HUD toast to bottom-right, eliminating overlap with header actions, inputs, and modal controls.
+  - Canvas Crispness: Implemented `setupHiDPICanvas()` with `devicePixelRatio` buffer scaling and `ctx.setTransform` crisp vector lines.
+  - Usability Status Bar: Added footer status bar with quick keyboard hints (<kbd>F1</kbd>, <kbd>1-9</kbd>, <kbd>R</kbd>, <kbd>F5</kbd>, <kbd>F9</kbd>, <kbd>Esc</kbd>) and live vessel telemetry.
+  - Control Ergonomics: Added active `:active` and keyboard focus `:focus-visible` styling; added visible header help hint.
+  - Verification: MSVC clean (`KTrader.exe` 26.6 KB); Vite clean in 349ms (`ktrader.html` 85.9 KB); icon & security checks 100% PASS.
+
 - **2026-09-29T21:26:00Z — kilo-usability: KTodo (UI/UX Ergonomics, Toast De-Occlusion, 60 FPS Polish & Window Sizing)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 130.3 KB < 999 KB).
   - Window & Viewport: Tuned default window to 960x720 in `App.jsx`, `ktodo.html`, and 960x650 native C with direct `KTodo.exe` download.
