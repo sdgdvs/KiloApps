@@ -48,6 +48,9 @@ DEFAULT_AGY_PATH = (
 )
 
 
+CREATE_NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
+
+
 def disable_scheduled_task(task_name: str = TASK_NAME):
     """Disables the scheduled task in Windows Task Scheduler when session expires."""
     try:
@@ -55,6 +58,8 @@ def disable_scheduled_task(task_name: str = TASK_NAME):
             ["schtasks.exe", "/change", "/tn", task_name, "/disable"],
             capture_output=True,
             text=True,
+            stdin=subprocess.DEVNULL,
+            creationflags=CREATE_NO_WINDOW,
         )
         if res.returncode == 0:
             log(f"Windows Scheduled Task '{task_name}' successfully disabled.")
