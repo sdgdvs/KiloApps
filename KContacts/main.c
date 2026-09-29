@@ -241,11 +241,27 @@ void NativeQuickSave(HWND hwnd) {
     HANDLE hFile = CreateFileA("kcontacts_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD written = 0;
-        DWORD magic = 0x43544E4B; // "KNTC"
+        DWORD magic = 0x32544E4B; // "KNT2" (v2 full-state format)
+        int sel_idx = SendMessageA(hList, LB_GETCURSEL, 0, 0);
+        int cat_idx = SendMessageA(hComboCat, CB_GETCURSEL, 0, 0);
+        char search_buf[64] = {0};
+        GetWindowTextA(hSearch, search_buf, sizeof(search_buf));
+
         WriteFile(hFile, &magic, sizeof(magic), &written, NULL);
         WriteFile(hFile, &contact_count, sizeof(contact_count), &written, NULL);
+        WriteFile(hFile, &sel_idx, sizeof(sel_idx), &written, NULL);
+        WriteFile(hFile, &cat_idx, sizeof(cat_idx), &written, NULL);
+        WriteFile(hFile, search_buf, sizeof(search_buf), &written, NULL);
         WriteFile(hFile, contacts, sizeof(Contact) * contact_count, &written, NULL);
         CloseHandle(hFile);
+
+        // Mark tutorial flag so saved states never prompt tutorial
+        HANDLE hTut = CreateFileA("kcontacts_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTut != INVALID_HANDLE_VALUE) {
+            WriteFile(hTut, "1", 1, &written, NULL);
+            CloseHandle(hTut);
+        }
+
         char msg[128];
         wsprintfA(msg, " Quicksaved %d contact(s) to snapshot (F5).", contact_count);
         ShowNativeStatus(hwnd, msg);
@@ -260,13 +276,60 @@ void NativeQuickLoad(HWND hwnd) {
         DWORD read = 0;
         DWORD magic = 0;
         int count = 0;
+        int sel_idx = 0;
+        int cat_idx = 0;
+        char search_buf[64] = {0};
+
         ReadFile(hFile, &magic, sizeof(magic), &read, NULL);
-        if (magic == 0x43544E4B) {
+        if (magic == 0x32544E4B) { // "KNT2"
+            ReadFile(hFile, &count, sizeof(count), &read, NULL);
+            ReadFile(hFile, &sel_idx, sizeof(sel_idx), &read, NULL);
+            ReadFile(hFile, &cat_idx, sizeof(cat_idx), &read, NULL);
+            ReadFile(hFile, search_buf, sizeof(search_buf), &read, NULL);
+            if (count >= 0 && count <= MAX_CONTACTS) {
+                contact_count = count;
+                memset(contacts, 0, sizeof(contacts));
+                ReadFile(hFile, contacts, sizeof(Contact) * contact_count, &read, NULL);
+
+                SetWindowTextA(hSearch, search_buf);
+                if (cat_idx >= 0 && cat_idx <= 6) {
+                    SendMessageA(hComboCat, CB_SETCURSEL, cat_idx, 0);
+                } else {
+                    SendMessageA(hComboCat, CB_SETCURSEL, 0, 0);
+                }
+                RefreshList();
+                if (sel_idx >= 0 && sel_idx < filtered_count) {
+                    SendMessageA(hList, LB_SETCURSEL, sel_idx, 0);
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1001, LBN_SELCHANGE), (LPARAM)hList);
+                } else if (filtered_count > 0) {
+                    SendMessageA(hList, LB_SETCURSEL, 0, 0);
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(1001, LBN_SELCHANGE), (LPARAM)hList);
+                } else {
+                    SetWindowTextA(hEdit, "");
+                    SendMessageA(hChkFav, BM_SETCHECK, BST_UNCHECKED, 0);
+                }
+
+                // Mark tutorial flag so restored state never prompts tutorial
+                DWORD written = 0;
+                HANDLE hTut = CreateFileA("kcontacts_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hTut != INVALID_HANDLE_VALUE) {
+                    WriteFile(hTut, "1", 1, &written, NULL);
+                    CloseHandle(hTut);
+                }
+
+                char msg[128];
+                wsprintfA(msg, " Quickloaded %d contact(s) from snapshot (F9).", contact_count);
+                ShowNativeStatus(hwnd, msg);
+                UpdateAppTitle(hwnd);
+            }
+        } else if (magic == 0x43544E4B) { // "KNTC" legacy fallback
             ReadFile(hFile, &count, sizeof(count), &read, NULL);
             if (count >= 0 && count <= MAX_CONTACTS) {
                 contact_count = count;
                 memset(contacts, 0, sizeof(contacts));
                 ReadFile(hFile, contacts, sizeof(Contact) * contact_count, &read, NULL);
+                SetWindowTextA(hSearch, "");
+                SendMessageA(hComboCat, CB_SETCURSEL, 0, 0);
                 RefreshList();
                 if (filtered_count > 0) {
                     SendMessageA(hList, LB_SETCURSEL, 0, 0);
@@ -274,6 +337,12 @@ void NativeQuickLoad(HWND hwnd) {
                 } else {
                     SetWindowTextA(hEdit, "");
                     SendMessageA(hChkFav, BM_SETCHECK, BST_UNCHECKED, 0);
+                }
+                DWORD written = 0;
+                HANDLE hTut = CreateFileA("kcontacts_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hTut != INVALID_HANDLE_VALUE) {
+                    WriteFile(hTut, "1", 1, &written, NULL);
+                    CloseHandle(hTut);
                 }
                 char msg[128];
                 wsprintfA(msg, " Quickloaded %d contact(s) from snapshot (F9).", contact_count);
@@ -1045,6 +1114,25 @@ void __stdcall MainEntry() {
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+
+    // First-run Tutorial Integrity: fire only on fresh sessions using kcontacts_tutorial.dat flag
+    HANDLE hTutCheck = CreateFileA("kcontacts_tutorial.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hTutCheck == INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        HANDLE hTutWrite = CreateFileA("kcontacts_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTutWrite != INVALID_HANDLE_VALUE) {
+            WriteFile(hTutWrite, "1", 1, &written, NULL);
+            CloseHandle(hTutWrite);
+        }
+        HANDLE hSaveCheck = CreateFileA("kcontacts_quicksave.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hSaveCheck != INVALID_HANDLE_VALUE) {
+            CloseHandle(hSaveCheck);
+        } else {
+            ShowHelpDialog(hwnd);
+        }
+    } else {
+        CloseHandle(hTutCheck);
+    }
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {

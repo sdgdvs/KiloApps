@@ -1575,6 +1575,11 @@
     let isDirty = false;
 
     // Toast Utility (Bottom-right non-occluding, bounded queue)
+    function clearToasts() {
+      const container = document.getElementById('toastContainer');
+      if (container) container.innerHTML = '';
+    }
+
     function showToast(msg, duration = 2800) {
       const container = document.getElementById('toastContainer');
       if (!container) return;
@@ -1615,7 +1620,12 @@
     }
 
     // Modal Helpers
-    function openHelp() { helpModal.style.display = 'flex'; }
+    function openHelp() {
+      clearToasts();
+      helpModal.style.display = 'flex';
+      const btn = document.getElementById('btnCloseHelp');
+      if (btn) btn.focus();
+    }
     function closeHelp() {
       helpModal.style.display = 'none';
       try {
@@ -1635,7 +1645,10 @@
         showToast('No contacts to export.');
         return;
       }
+      clearToasts();
       exportModal.style.display = 'flex';
+      const btn = document.getElementById('btnCloseExport');
+      if (btn) btn.focus();
     }
     function closeExport() { exportModal.style.display = 'none'; }
     function closeDeleteModal() { deleteModal.style.display = 'none'; }
@@ -1643,7 +1656,12 @@
     [helpModal, exportModal, printModal, statsModal, batchTagModal, batchCatModal, deleteModal].forEach(modal => {
       if (!modal) return;
       modal.onclick = (e) => {
-        if (e.target === modal) modal.style.display = 'none';
+        if (e.target === modal) {
+          if (modal === helpModal) closeHelp();
+          else if (modal === exportModal) closeExport();
+          else if (modal === deleteModal) closeDeleteModal();
+          else modal.style.display = 'none';
+        }
       };
     });
     document.getElementById('btnCloseHelp').onclick = closeHelp;
@@ -2465,7 +2483,10 @@
       deleteAction = 'single';
       document.getElementById('deleteModalTitle').innerHTML = '<span>🗑️</span> Delete Contact';
       deleteModalText.textContent = `Are you sure you want to permanently delete "${c.name || 'Unnamed'}"?`;
+      clearToasts();
       deleteModal.style.display = 'flex';
+      const btn = document.getElementById('btnConfirmDelete');
+      if (btn) btn.focus();
     };
 
     document.getElementById('btnConfirmDelete').onclick = () => {
@@ -2605,6 +2626,7 @@
         showToast('⚠️ No contacts selected');
         return;
       }
+      clearToasts();
       batchTagModal.style.display = 'flex';
       document.getElementById('inpBatchTag').focus();
     };
@@ -2635,6 +2657,7 @@
         showToast('⚠️ No contacts selected');
         return;
       }
+      clearToasts();
       batchCatModal.style.display = 'flex';
       document.getElementById('selBatchCat').focus();
     };
@@ -2684,7 +2707,10 @@
       deleteAction = 'batch';
       document.getElementById('deleteModalTitle').innerHTML = '<span>🗑️</span> Batch Delete Contacts';
       deleteModalText.textContent = `Are you sure you want to permanently delete ${selectedBatchIds.size} selected contact(s)?`;
+      clearToasts();
       deleteModal.style.display = 'flex';
+      const btn = document.getElementById('btnConfirmDelete');
+      if (btn) btn.focus();
     };
 
     // Merge Duplicates
@@ -2784,7 +2810,10 @@
       const bytes = new Blob([rawJson]).size;
       document.getElementById('statStorageSize').textContent = `${(bytes / 1024).toFixed(2)} KB in localStorage (UTF-8 payload)`;
 
+      clearToasts();
       statsModal.style.display = 'flex';
+      const btn = document.getElementById('btnCloseStats');
+      if (btn) btn.focus();
     };
 
     // Export Handler
@@ -2997,7 +3026,10 @@
 
     document.getElementById('btnPrint').onclick = () => {
       selectPrintFormat(selectedPrintFmt || 'rolodex');
+      clearToasts();
       printModal.style.display = 'flex';
+      const btn = document.getElementById('btnExecutePrint');
+      if (btn) btn.focus();
     };
 
     document.getElementById('btnPrintCard').onclick = () => {
@@ -3310,6 +3342,7 @@
         }
 
         saveContacts();
+        try { localStorage.setItem('kcontacts_tutorialSeen', '1'); } catch (_) {}
         updateTagPills();
         renderList();
         showToast(`📥 Successfully imported ${count} contacts!`);
@@ -3477,6 +3510,8 @@
           selectedId,
           currentFilter,
           currentSort,
+          selectedTag: selectedTag || null,
+          searchQuery: searchInput ? searchInput.value : '',
           time: Date.now()
         };
         localStorage.setItem('kcontacts_quicksave', JSON.stringify(payload));
@@ -3497,6 +3532,17 @@
         if (Array.isArray(data.contacts)) {
           contacts = data.contacts;
           saveContacts();
+          try {
+            localStorage.setItem('kcontacts_tutorialSeen', '1');
+          } catch (_) {}
+          if (data.searchQuery !== undefined && searchInput) {
+            searchInput.value = data.searchQuery;
+          }
+          if (data.selectedTag) {
+            selectedTag = data.selectedTag;
+          } else {
+            selectedTag = null;
+          }
           updateTagPills();
           if (data.currentFilter) selectCategoryFilter(data.currentFilter);
           if (data.currentSort) {
@@ -3739,10 +3785,11 @@
     const chkStartup = document.getElementById('chkShowHelpOnStartup');
     const hideStartupHelp = localStorage.getItem('kcontacts_hideHelpStartup') === '1';
     const tutorialSeen = localStorage.getItem('kcontacts_tutorialSeen') === '1';
+    const hasSavedData = localStorage.getItem('kcontacts_quicksave') !== null;
     if (chkStartup) {
       chkStartup.checked = !hideStartupHelp;
     }
-    if (!tutorialSeen && !hideStartupHelp) {
+    if (!tutorialSeen && !hideStartupHelp && !hasSavedData) {
       openHelp();
     } else {
       setTimeout(() => showToast("📇 Welcome to KContacts! Press F1 for Help, [F5] Quicksave, [N] Add, or [1-7] Filter."), 300);

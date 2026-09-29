@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T20:47:00Z — kilo-creator: kweb://users/~neon_rider (Demoscene Homepage Expansion)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 163 KB < 999 KB).
+  - 16-Step Sequencer: Added YM2612 tracker matrix sequencer & arp generator with 4 channels, presets & .asm sound export.
+  - Mode 13h VGA Upgrades: Implemented RotoZoom (affine matrix) & CopperBars (384b Amiga raster + 3D cube) at 60 FPS.
+  - Rig Benchmark: Added Pentium II 450MHz synthetic benchmark (vectors, trig, Bresenham, XOR sieve) & ASCII certificate.
+  - Real-Time RTDB Sync: Connected Firebase RTDB live guestbook stream & hacker presence counter with localStorage fallback.
+  - Binary Builder: Added MS-DOS .COM executable assembler packaging and direct client-side binary download.
+  - Verification: Security lint 100% PASS; Vite build clean in 367ms; aligned Webring node #004 & portal links.
+
 - **2026-09-29T20:26:00Z — kilo-expander: KType (Online Multiplayer Typing Duel & YM2612 FM Audio)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 135 KB < 999 KB).
   - Online Multiplayer: Added Firebase RTDB real-time 1v1 speed racing with public lobby matchmaking & private room codes.

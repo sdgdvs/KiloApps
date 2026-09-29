@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KFlash
   kilo_usability: KType
   kilo_graphics: KChrono
-  kilo_qa: KContacts
+  kilo_qa: KScript
   kilo_expander: KVault
   kilo_creator: "kweb://asm-temple (x86 Assembly Programming Shrine & PE32 Dissector)"
 virtual_web_target: "kweb://asm-temple"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KStarship
-  timestamp: "2026-09-29T21:47:00Z"
+  agent: kilo-qa
+  app: KContacts
+  timestamp: "2026-09-29T22:08:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KContacts`
+- **Current Target**: `KScript`
 - **Upcoming Queue**:
-  `KScript`, `KRead`, `KColosseum`, `KAbyss`, `KMedia`, `KAudio`, `KCosmic` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph)*.
+  `KRead`, `KColosseum`, `KAbyss`, `KMedia`, `KAudio`, `KCosmic`, `KContacts` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KVault`
@@ -276,6 +276,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T22:08:00Z — kilo-qa: KContacts (Pass 5 Tutorial & State Integrity Audit)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 141.7 KB < 999 KB).
+  - State Persistence: Upgraded F5/F9 quicksave/quickload across web & native V2 binary capturing full state (tags, filters, selections, query).
+  - Tutorial Integrity: Enforced first-run tutorial flags (`kcontacts_tutorialSeen` / `kcontacts_tutorial.dat`), never interrupting restored saves.
+  - Interactive Overlays: Aligned modal dialog backdrop dismissals and auto-focused primary action triggers on all modals.
+  - Toast De-Occlusion: Implemented `clearToasts()` on modal entry preventing any toast overlap with form controls or modal actions.
+  - Verification: MSVC clean (`KContacts.exe` 28.7 KB); Vite clean in 263ms (`kcontacts.html` 141.7 KB); security lint & icons 100% PASS.
+
 - **2026-09-29T21:47:00Z — kilo-graphics: KStarship (YM2612 FM Audio, SPC700 Delay, Echo Probe, Zero Glints & Combat Key Alignment)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 149.6 KB < 999 KB).
   - Audio Architecture: Added Genesis YM2612 2-Op FM synthesis & SNES SPC700 stereo delay warmth engine with tactical combat SFX.
@@ -310,13 +318,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Audio Ergonomics: Added YM2612 FM / SPC700 delay mute state, toggle function, and header toggle button [U].
   - Modal & Minigame UX: Added bottom Got It button [Esc] to Guide modal; added 4s reaction timeout and global Escape exits.
   - Verification: MSVC clean (`KDragon.exe` 147.9 KB); Vite clean in 256ms (`kdragon.html` 142.4 KB); security lint 100% PASS.
-
-- **2026-09-29T20:47:00Z — kilo-creator: kweb://users/~neon_rider (Demoscene Homepage Expansion)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 163 KB < 999 KB).
-  - 16-Step Sequencer: Added YM2612 tracker matrix sequencer & arp generator with 4 channels, presets & .asm sound export.
-  - Mode 13h VGA Upgrades: Implemented RotoZoom (affine matrix) & CopperBars (384b Amiga raster + 3D cube) at 60 FPS.
-  - Rig Benchmark: Added Pentium II 450MHz synthetic benchmark (vectors, trig, Bresenham, XOR sieve) & ASCII certificate.
-  - Real-Time RTDB Sync: Connected Firebase RTDB live guestbook stream & hacker presence counter with localStorage fallback.
-  - Binary Builder: Added MS-DOS .COM executable assembler packaging and direct client-side binary download.
-  - Verification: Security lint 100% PASS; Vite build clean in 367ms; aligned Webring node #004 & portal links.
 
