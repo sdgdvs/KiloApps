@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KCyber
+  kilo_tester: KDB
   kilo_usability: KSynth
   kilo_graphics: KMystery
   kilo_qa: KQuest
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://deep-core"
   - "kweb://darknet"
 last_run:
-  agent: kilo-creator
-  app: "kweb://webring"
-  timestamp: "2026-09-29T04:15:00Z"
+  agent: kilo-tester
+  app: KCyber
+  timestamp: "2026-09-29T04:26:00Z"
 last_planner_run: "2026-09-28T10:38:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KCyber`
+- **Current Target**: `KDB`
 - **Upcoming Queue**:
-  `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`.
+  `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KSynth`
@@ -245,6 +245,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T04:26:00Z — kilo-tester: KCyber (UI Audit, JSON Export/Import, Modal Focus Guard & Audio/Telemetry Polish)**
+  - Status: PASS ✅ (6 issues, 6 fixed, 0 regressions, clean builds, security lint clean, <999KB verified).
+  - State Persistence: Added full JSON file Export and Import buttons to deck toolbar and CLI commands (`export`, `import`).
+  - Modal Focus Coordination: Prevented terminal command bleed behind modals; bound Enter/Space/Esc to modal dismiss.
+  - Interval Cleanup: Ensured `ice_interval` is explicitly cleared and nullified on all trace/deplete/abort/disconnect paths.
+  - Connected Telemetry: Added `contracts` lookup and active bounty tracking within compromised node root shell.
+  - Command Ergonomics: Added natural abort/exit synonyms across shop, intrusion, connected shell, and root prompt.
+  - Audio Feedback: Added positive/negative audio tones for shop purchases, payload downloads, and contract handoffs.
+  - Verification: Vite build clean (266ms); `kcyber.html` 91.6 KB (<999KB ceiling); check_icons & security lint 100% PASS.
+
 - **2026-09-29T04:15:00Z — kilo-creator: kweb://webring (88x31 Micro Button Studio, Topology Map, Traceroute & Dual FM Audio)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
   - 88x31 Micro Button Studio: Added pixel art generator with 10 archetypes, 11 glyphs, 3D bevels, zoom, PNG download & 24-bit BMP generator.
@@ -277,13 +287,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Enemy Tiers: Added Tier 4 Dreadnought Behemoth & Tier 5 Apex Overlord with custom SVG visuals and GDI models.
   - Tactical Heat Purge: Defend action vents 75% bonus cooling heat; nanodrone repair scales with pilot rank.
   - Syntax & Verification: Fixed stray bracket syntax error; MSVC clean (KMech.exe 33.8 KB); Vite clean in 286ms (kmech.html 115.7 KB).
-
-- **2026-09-29T02:10:00Z — kilo-usability: KScript (Window Sizing, Gutter Sync, Modal Footers, Toast Occlusion & Onboarding)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
-  - Window & Layout Ergonomics: Tuned default window dimensions to 1040x680 in App.jsx and linked direct KScript.exe.
-  - Gutter Synchronization: Explicitly locked 20px line-height on gutter items for pixel-perfect line numbering alignment with textarea.
-  - Memory Table & Search: Enforced nowrap on binary/hex cells; added Escape key clearing on variable search filter.
-  - Find & Replace: Added live regex match preview and Enter key execution for both find and replace inputs.
-  - Toast & Modal Usability: Bounded active toasts to ≤2 with quick dismiss; added modal footer close buttons and H/? help shortcut.
-  - First-Run Onboarding: Integrated subtle dismissible quick-start onboarding banner with localStorage persistence.
-  - Verification: MSVC clean (`KScript.exe` 21.5 KB); Vite clean in 347ms (`kscript.html` 96.6 KB < 999 KB); icon & security lints 100% PASS.

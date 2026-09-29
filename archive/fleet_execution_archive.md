@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T02:10:00Z — kilo-usability: KScript (Window Sizing, Gutter Sync, Modal Footers, Toast Occlusion & Onboarding)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
+  - Window & Layout Ergonomics: Tuned default window dimensions to 1040x680 in App.jsx and linked direct KScript.exe.
+  - Gutter Synchronization: Explicitly locked 20px line-height on gutter items for pixel-perfect line numbering alignment with textarea.
+  - Memory Table & Search: Enforced nowrap on binary/hex cells; added Escape key clearing on variable search filter.
+  - Find & Replace: Added live regex match preview and Enter key execution for both find and replace inputs.
+  - Toast & Modal Usability: Bounded active toasts to ≤2 with quick dismiss; added modal footer close buttons and H/? help shortcut.
+  - First-Run Onboarding: Integrated subtle dismissible quick-start onboarding banner with localStorage persistence.
+  - Verification: MSVC clean (`KScript.exe` 21.5 KB); Vite clean in 347ms (`kscript.html` 96.6 KB < 999 KB); icon & security lints 100% PASS.
+
 - **2026-09-29T01:28:00Z — kilo-tester: KCosmic (UI Audit, Duplicate ID Fix, Backdrop Dismissals & State Persistence)**
   - Status: PASS ✅ (3 issues, 3 fixed, 0 regressions, clean builds, security lint clean, <999KB verified).
   - Duplicate ID Resolution: Renamed duplicate `btnUpgradeShield` to `btnUpgradeDeflector` in Hazards tab; repaired deflector upgrade listener.

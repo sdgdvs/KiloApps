@@ -227,9 +227,12 @@
     <div class="deck-toolbar">
       <button class="deck-btn" onclick="quickSave()" title="Quicksave deck state [F5]">Save [F5]</button>
       <button class="deck-btn" onclick="quickLoad()" title="Quickload saved state [F9]">Load [F9]</button>
+      <button class="deck-btn" onclick="exportState()" title="Export state to JSON file">Export</button>
+      <button class="deck-btn" onclick="triggerImport()" title="Import state from JSON file">Import</button>
       <button class="deck-btn" onclick="toggleHelp()" title="Runner's Reference Manual [F1]">Help [F1]</button>
       <button class="deck-btn" onclick="showTutorial()" title="Deck Orientation Briefing">Briefing</button>
       <button class="deck-btn" onclick="processCommand('reboot')" title="Reboot Deck">Reboot</button>
+      <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="handleImportFile(event)">
     </div>
   </div>
   <div id="terminal" onclick="document.getElementById('cmd-input').focus()">
@@ -439,11 +442,20 @@
       if (toastTimeout) clearTimeout(toastTimeout);
     }
 
+    function isModalOpen() {
+      const tm = document.getElementById('tutorial-modal');
+      if (tm && tm.style.display !== 'none' && tm.style.display !== '') return true;
+      const hm = document.getElementById('help-modal');
+      if (hm && hm.style.display !== 'none' && hm.style.display !== '') return true;
+      return false;
+    }
+
     function showTutorial() {
       const m = document.getElementById('tutorial-modal');
       if (m) {
         m.style.display = 'flex';
         playKeyClack();
+        if (cmdInput) cmdInput.blur();
       }
     }
     function dismissTutorial() {
@@ -451,7 +463,7 @@
       const m = document.getElementById('tutorial-modal');
       if (m) m.style.display = 'none';
       playAccessGranted();
-      cmdInput.focus();
+      if (cmdInput) cmdInput.focus();
     }
     function toggleHelp(force) {
       const m = document.getElementById('help-modal');
@@ -460,8 +472,9 @@
       m.style.display = willShow ? 'flex' : 'none';
       if (willShow) {
         playKeyClack();
+        if (cmdInput) cmdInput.blur();
       } else {
-        cmdInput.focus();
+        if (cmdInput) cmdInput.focus();
       }
     }
     function hideModals() {
@@ -597,6 +610,54 @@
       }
     }
 
+    function exportState() {
+      const state = getGameState();
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kcyber_deck_${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      printLine('[EXPORT] Cyberdeck state successfully exported to JSON file.');
+      showToast('💾 State exported to file!');
+      playAccessGranted();
+    }
+
+    function triggerImport() {
+      const fi = document.getElementById('import-file-input');
+      if (fi) {
+        fi.value = '';
+        fi.click();
+      }
+    }
+
+    function handleImportFile(e) {
+      const file = e.target && e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        try {
+          const data = JSON.parse(evt.target.result);
+          if (applyGameState(data)) {
+            printLine(`[IMPORT] Cyberdeck state restored from ${file.name}.`);
+            printLine(`         MEM: ${player_mem}/${player_max_mem} | Credits: ${player_credits} cr | Heat: ${player_heat}%`);
+            showToast('💾 State imported from file!');
+            playAccessGranted();
+          } else {
+            throw new Error('Incompatible save format');
+          }
+        } catch (err) {
+          printLine('[IMPORT ERROR] Invalid JSON save file.');
+          showToast('⚠ Import failed (invalid file)!', true);
+          playAccessDenied();
+        }
+      };
+      reader.readAsText(file);
+    }
+
     function generateMissions() {
       missions = [];
       const fileNames = ["paydata.zip", "prototype.exe", "blackmail.txt", "employee_db.sql", "admin_creds.dat", "source_code.c", "financials.xls", "auth_keys.rsa", "ai_core_firmware.bin", "shadow_telemetry.log", "anomalous_manifest.dat"];
@@ -699,7 +760,10 @@
             hacking_node = null;
             connected_node = null;
             updatePrompt();
-            if (ice_interval) clearInterval(ice_interval);
+            if (ice_interval) {
+              clearInterval(ice_interval);
+              ice_interval = null;
+            }
           } else {
             printLine(`[${ice_name}] attacks! System MEM reduced to ${player_mem}/${player_max_mem}`);
           }
@@ -1487,7 +1551,7 @@
         const args = trimmed.split(' ').filter(Boolean);
         const cmdName = args[0].toLowerCase();
         
-        if (cmdName === 'exit' || cmdName === 'abort') {
+        if (cmdName === 'exit' || cmdName === 'abort' || cmdName === 'quit' || cmdName === 'leave' || cmdName === 'back') {
           in_shop = false;
           printLine("Exiting shop.");
           updatePrompt();
@@ -1506,8 +1570,20 @@
           return;
         }
 
+        if (cmdName === 'export') {
+          exportState();
+          updatePrompt();
+          return;
+        }
+
+        if (cmdName === 'import') {
+          triggerImport();
+          updatePrompt();
+          return;
+        }
+
         if (cmdName === 'help') {
-          printLine("Shop commands: ls (list upgrades), buy <item>, status, save, load, clear, exit");
+          printLine("Shop commands: ls (list upgrades), buy <item>, status, save, load, export, import, clear, exit");
           updatePrompt();
           return;
         }
@@ -1542,6 +1618,7 @@
         if (cmdName === 'buy') {
           if (args.length < 2) {
             printLine("Usage: buy <item>");
+            playAccessDenied();
           } else {
             const item = args[1].toLowerCase();
             if (item === 'mem') {
@@ -1550,16 +1627,20 @@
                 player_max_mem += 50;
                 player_mem += 50;
                 printLine(`Purchase successful. Max memory increased to ${player_max_mem}.`);
+                playAccessGranted();
               } else {
                 printLine("Insufficient credits.");
+                playAccessDenied();
               }
             } else if (item === 'cpu') {
               if (player_credits >= 600) {
                 player_credits -= 600;
                 player_max_cpu += 1;
                 printLine(`Purchase successful. Hacking attempts increased to ${player_max_cpu}.`);
+                playAccessGranted();
               } else {
                 printLine("Insufficient credits.");
+                playAccessDenied();
               }
             } else if (item === 'cloak') {
               if (player_credits >= 150) {
@@ -1567,8 +1648,10 @@
                 player_max_cloak += 1;
                 tool_cloak += 1;
                 printLine(`Purchase successful. Max Cloak charges: ${player_max_cloak}.`);
+                playAccessGranted();
               } else {
                 printLine("Insufficient credits.");
+                playAccessDenied();
               }
             } else if (item === 'slow') {
               if (player_credits >= 200) {
@@ -1576,8 +1659,10 @@
                 player_max_slow += 1;
                 tool_slow += 1;
                 printLine(`Purchase successful. Max Slow charges: ${player_max_slow}.`);
+                playAccessGranted();
               } else {
                 printLine("Insufficient credits.");
+                playAccessDenied();
               }
             } else if (item === 'patch') {
               if (player_credits >= 100) {
@@ -1585,8 +1670,10 @@
                 player_max_patch += 1;
                 tool_patch += 1;
                 printLine(`Purchase successful. Max Patch charges: ${player_max_patch}.`);
+                playAccessGranted();
               } else {
                 printLine("Insufficient credits.");
+                playAccessDenied();
               }
             } else if (item === 'probe') {
               if (player_credits >= 250) {
@@ -1594,8 +1681,10 @@
                 player_max_probe += 1;
                 tool_probe += 1;
                 printLine(`Purchase successful. Max Probe charges: ${player_max_probe}.`);
+                playAccessGranted();
               } else {
                 printLine("Insufficient credits.");
+                playAccessDenied();
               }
             } else if (item === 'proxy') {
               if (player_credits >= 120) {
@@ -1603,11 +1692,14 @@
                 player_heat -= 25;
                 if (player_heat < 0) player_heat = 0;
                 printLine(`Purchase successful. Heat reduced to ${player_heat}%.`);
+                playAccessGranted();
               } else {
                 printLine("Insufficient credits.");
+                playAccessDenied();
               }
             } else {
               printLine("Unknown item. Use 'ls' to see available items.");
+              playAccessDenied();
             }
           }
           updatePrompt();
@@ -1615,6 +1707,7 @@
         }
         
         printLine("Command not found. Available: ls, buy <item>, status, clear, exit");
+        playAccessDenied();
         updatePrompt();
         return;
       }
@@ -1623,13 +1716,16 @@
         printLine(`[NODE ${hacking_node}] hack> ${trimmed}`);
         
         let guess = trimmed.toLowerCase();
-        if (guess === 'abort') {
+        if (guess === 'abort' || guess === 'exit' || guess === 'quit' || guess === 'disconnect') {
           hacking_node = null;
           printLine("Hacking aborted.");
           player_heat += 5;
           if (player_heat > 100) player_heat = 100;
           printLine(`[WARNING] Heat increased to ${player_heat}%`);
-          if (ice_interval) clearInterval(ice_interval);
+          if (ice_interval) {
+            clearInterval(ice_interval);
+            ice_interval = null;
+          }
           updatePrompt();
           return;
         }
@@ -1643,8 +1739,18 @@
           updatePrompt();
           return;
         }
+        if (guess === 'export') {
+          exportState();
+          updatePrompt();
+          return;
+        }
+        if (guess === 'import') {
+          triggerImport();
+          updatePrompt();
+          return;
+        }
         if (guess === 'help' || guess === '?') {
-          printLine("Hacking commands: <4-digit PIN> to guess, cloak (blind ICE), slow (halve trace), patch (restore MEM), probe (reveal digit), status, save, load, clear, abort");
+          printLine("Hacking commands: <4-digit PIN> to guess, cloak (blind ICE), slow (halve trace), patch (restore MEM), probe (reveal digit), status, save, load, export, import, clear, abort");
           updatePrompt();
           return;
         }
@@ -1755,10 +1861,13 @@
           spawnBurst(90, 80, 45, 'star', '#00ffcc');
           spawnBurst(90, 80, 30, 'spark', '#ffff33');
           printLine(`ACCESS GRANTED. Connected to node [${hacking_node}].`);
-          if (ice_interval) clearInterval(ice_interval);
+          if (ice_interval) {
+            clearInterval(ice_interval);
+            ice_interval = null;
+          }
           connected_node = hacking_node;
           hacking_node = null;
-          printLine("Type 'ls' to list files, 'download <file>' to extract, 'disconnect' to exit.");
+          printLine("Type 'ls' to list files, 'download <file>' to extract, 'contracts' for tasks, 'disconnect' to exit.");
         } else {
           hacking_attempts--;
           playTone(300, 'square', 0.1, 0.1);
@@ -1777,7 +1886,10 @@
             if (player_heat > 100) player_heat = 100;
             printLine(`[WARNING] Global heat increased to ${player_heat}%`);
             hacking_node = null;
-            if (ice_interval) clearInterval(ice_interval);
+            if (ice_interval) {
+              clearInterval(ice_interval);
+              ice_interval = null;
+            }
           }
         }
         updatePrompt();
@@ -1789,10 +1901,13 @@
         const args = trimmed.split(' ').filter(Boolean);
         const cmd = args[0].toLowerCase();
         
-        if (cmd === 'disconnect' || cmd === 'abort' || cmd === 'exit') {
+        if (cmd === 'disconnect' || cmd === 'abort' || cmd === 'exit' || cmd === 'quit') {
            connected_node = null;
            printLine("Disconnected from node.");
-           if (ice_interval) clearInterval(ice_interval);
+           if (ice_interval) {
+             clearInterval(ice_interval);
+             ice_interval = null;
+           }
            updatePrompt();
            return;
         }
@@ -1809,14 +1924,44 @@
            return;
         }
 
+        if (cmd === 'export') {
+           exportState();
+           updatePrompt();
+           return;
+        }
+
+        if (cmd === 'import') {
+           triggerImport();
+           updatePrompt();
+           return;
+        }
+
+        if (cmd === 'contracts' || cmd === 'contract' || cmd === 'mission' || cmd === 'missions') {
+           if (active_mission) {
+             printLine(`ACTIVE CONTRACT: [${active_mission.id}] Target Node: ${active_mission.node} | File: ${active_mission.file} | Reward: ${active_mission.reward} cr`);
+             if (active_mission.node === connected_node) {
+               printLine(`[MATCH] Target file '${active_mission.file}' is located on this node! Type 'download ${active_mission.file}' to extract.`);
+             } else {
+               printLine(`[NOTICE] Target node for active contract is Node ${active_mission.node} (currently on Node ${connected_node}).`);
+             }
+           } else {
+             printLine("No active contract assigned. (Disconnect to view and accept contracts).");
+           }
+           updatePrompt();
+           return;
+        }
+
         if (cmd === 'help') {
-           printLine("Connected commands: ls (list files), download <file>, status, save, load, clear, disconnect / exit");
+           printLine("Connected commands: ls (list files), download <file>, contracts, status, save, load, export, import, clear, disconnect / exit");
            updatePrompt();
            return;
         }
 
         if (cmd === 'status') {
            printLine(`NODE ${connected_node} STATUS: Root access granted | Deck MEM: ${player_mem}/${player_max_mem} | Credits: ${player_credits} cr`);
+           if (active_mission) {
+             printLine(`  ACTIVE CONTRACT: [${active_mission.id}] Download ${active_mission.file} from Node ${active_mission.node} (${active_mission.reward} cr)`);
+           }
            updatePrompt();
            return;
         }
@@ -1829,7 +1974,7 @@
         
         if (cmd === 'ls') {
            const file = node_files[connected_node];
-           if (file.name === "empty") {
+           if (!file || file.name === "empty") {
              printLine("No files found. Directory is empty.");
            } else {
              printLine("Files:");
@@ -1839,22 +1984,23 @@
            return;
         }
         
-         if (cmd === 'download') {
+        if (cmd === 'download') {
            const file = node_files[connected_node];
-           if (args.length < 2) {
-             if (file.name !== "empty") {
-               printLine(`Usage: download <filename> (e.g. 'download ${file.name}')`);
-             } else {
-               printLine("Usage: download <filename> (No files currently stored on node)");
-             }
+           if (!file || file.name === "empty") {
+             printLine("No downloadable files currently found on node.");
+             playAccessDenied();
+           } else if (args.length < 2) {
+             printLine(`Usage: download <filename> (e.g. 'download ${file.name}')`);
+             playAccessDenied();
            } else {
              const fname = args[1].toLowerCase();
-             if (file.name !== "empty" && fname === file.name.toLowerCase()) {
+             if (fname === file.name.toLowerCase()) {
                printLine(`Downloading ${file.name}...`);
                player_credits += file.value;
                spawnBurst(90, 80, 35, 'bit', '#00ffff');
                spawnBurst(90, 80, 20, 'star', '#ffffff');
                printLine(`Download complete. Data value: ${file.value} credits.`);
+               playAccessGranted();
                if (active_mission && active_mission.file.toLowerCase() === file.name.toLowerCase() && active_mission.node === connected_node) {
                  printLine(`CONTRACT COMPLETE! Reward transferred.`);
                  active_mission = null;
@@ -1862,13 +2008,15 @@
                file.name = "empty";
              } else {
                printLine("File not found.");
+               playAccessDenied();
              }
            }
            updatePrompt();
            return;
         }
         
-        printLine("Command not found. Available: ls, download, status, clear, disconnect / exit");
+        printLine("Command not found. Available: ls, download, contracts, status, clear, disconnect / exit");
+        playAccessDenied();
         updatePrompt();
         return;
       }
@@ -1894,7 +2042,10 @@
           printLine("  guide     - Open Runner's Guide (e.g. 'guide ice')");
           printLine("  save      - Quicksave cyberdeck state [F5]");
           printLine("  load      - Quickload state from storage [F9]");
+          printLine("  export    - Export deck state to JSON file");
+          printLine("  import    - Import deck state from JSON file");
           printLine("  tutorial  - Show runner orientation briefing");
+          printLine("  exit      - Show session exit guidance");
           printLine("During hack:");
           printLine("  abort     - Disconnect immediately");
           printLine("  cloak     - Blind ICE for 2 cycles");
@@ -1960,6 +2111,12 @@
         case 'quickload':
           quickLoad();
           break;
+        case 'export':
+          exportState();
+          break;
+        case 'import':
+          triggerImport();
+          break;
         case 'tutorial':
         case 'briefing':
           showTutorial();
@@ -2011,6 +2168,10 @@
           }
           break;
         case 'reboot':
+          if (ice_interval) {
+            clearInterval(ice_interval);
+            ice_interval = null;
+          }
           player_mem = player_max_mem;
           tool_cloak = player_max_cloak;
           tool_slow = player_max_slow;
@@ -2048,18 +2209,24 @@
         case 'accept':
           if (args.length < 2) {
             printLine("Usage: accept <id>");
+            playAccessDenied();
           } else {
             let id = parseInt(args[1]);
             let m = missions.find(x => x.id === id);
             if (m) {
+              if (active_mission) {
+                printLine(`[NOTICE] Abandoned previous contract [${active_mission.id}] for contract [${m.id}].`);
+              }
               active_mission = m;
               node_files[m.node] = { name: m.file, size: Math.floor(Math.random()*100)+10, value: m.reward };
               printLine(`Contract [${m.id}] accepted.`);
               printLine(`Objective: Download ${m.file} from NODE ${m.node}.`);
+              playAccessGranted();
               missions = missions.filter(x => x.id !== id);
               if (missions.length === 0) generateMissions();
             } else {
               printLine("Invalid contract ID.");
+              playAccessDenied();
             }
           }
           break;
@@ -2127,8 +2294,13 @@
             }
           }
           break;
+        case 'exit':
+        case 'quit':
+          printLine("Cyberdeck neural link active. Use 'save' [F5] or 'export' to persist session, or close the window.");
+          break;
         default:
           printLine(`Command not found: ${command}`);
+          playAccessDenied();
       }
     }
 
@@ -2137,6 +2309,13 @@
 
     cmdInput.addEventListener('keydown', (e) => {
       if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (isModalOpen()) {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+          e.preventDefault();
+          hideModals();
+        }
+        return;
+      }
       if (e.key === 'ArrowUp') {
         if (cmdHistory.length > 0) {
           e.preventDefault();
@@ -2159,8 +2338,8 @@
         const val = cmdInput.value;
         if (val.trim()) {
           cmdHistory.push(val);
-          historyIdx = -1;
         }
+        historyIdx = -1;
         spawnBurst(90, 80, 8, 'spark', '#00ff66');
         processCommand(val);
         cmdInput.value = '';
