@@ -823,6 +823,146 @@
     margin-top: 8px;
   }
 
+  /* Sequencer Matrix Styles */
+  .seq-container {
+    background: #060c16;
+    border: 1px solid var(--border-dim);
+    padding: 10px;
+    margin-top: 12px;
+  }
+
+  .seq-row {
+    display: grid;
+    grid-template-columns: 110px repeat(16, 1fr);
+    gap: 4px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .seq-label {
+    font-size: 10px;
+    font-weight: bold;
+    color: var(--accent-cyan);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .seq-step-btn {
+    aspect-ratio: 1;
+    min-height: 24px;
+    background: #0b1726;
+    border: 1px solid #1e3a4a;
+    color: #475569;
+    font-size: 9px;
+    font-family: var(--font-mono);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s ease;
+    padding: 0;
+  }
+
+  .seq-step-btn:hover {
+    border-color: var(--accent-cyan);
+    color: var(--text-primary);
+  }
+
+  .seq-step-btn.active {
+    background: #00ffcc;
+    border-color: #ffffff;
+    color: #04070d;
+    font-weight: bold;
+    box-shadow: 0 0 8px rgba(0, 255, 204, 0.8);
+  }
+
+  .seq-step-btn.cursor {
+    outline: 2px solid #ff00aa;
+    box-shadow: 0 0 10px rgba(255, 0, 170, 0.9);
+  }
+
+  .seq-step-btn.active.cursor {
+    background: #ff00aa;
+    color: #ffffff;
+    border-color: #ffffff;
+    box-shadow: 0 0 12px rgba(255, 0, 170, 1);
+  }
+
+  .seq-beat-marker {
+    border-left: 2px solid #38bdf8 !important;
+  }
+
+  /* Benchmark Suite Styles */
+  .bench-panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .bench-card {
+    background: #060e19;
+    border: 1px solid var(--border-dim);
+    padding: 12px;
+  }
+
+  .bench-bar-track {
+    background: #02050a;
+    border: 1px solid #1e293b;
+    height: 16px;
+    margin-top: 4px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bench-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00ffcc, #38bdf8);
+    width: 0%;
+    transition: width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .cert-box {
+    background: #020408;
+    border: 2px double var(--accent-amber);
+    color: #fef08a;
+    padding: 12px;
+    font-size: 11px;
+    line-height: 1.35;
+    white-space: pre;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    text-shadow: 0 0 4px rgba(254, 240, 138, 0.4);
+    margin-top: 12px;
+  }
+
+  /* Retro Floating Toast Notification */
+  .retro-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: #040c17;
+    color: var(--accent-cyan);
+    border: 1px solid var(--accent-cyan);
+    box-shadow: 0 0 20px rgba(0, 255, 204, 0.5), inset 0 0 8px rgba(0, 255, 204, 0.2);
+    padding: 10px 18px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+    font-weight: bold;
+    z-index: 10000;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out;
+    pointer-events: none;
+    letter-spacing: 0.5px;
+  }
+
+  .retro-toast.visible {
+    display: block;
+    opacity: 1;
+  }
+
   footer {
     text-align: center;
     font-size: 11px;
@@ -861,7 +1001,7 @@
     <div class="meta-item"><strong>CODER:</strong> neon_rider [0xNEON]</div>
     <div class="meta-item"><strong>CREW:</strong> FLARELIGHT Demogroup</div>
     <div class="meta-item"><strong>SYSTEM:</strong> Win32 ASM / MASM 6.14</div>
-    <div class="meta-item"><strong>CYCLES:</strong> Pentium MMX 200MHz</div>
+    <div class="meta-item" id="presenceMeta"><strong>HACKERS ONLINE:</strong> <span id="onlineCount" style="color:var(--accent-green);">1 [Dialing...]</span></div>
     <div class="counter-box">
       <span style="font-size:11px; color:var(--text-muted);">VISITORS:</span>
       <span class="odometer" id="hitOdometer">0042189</span>
@@ -875,6 +1015,7 @@
     <button class="nav-btn" data-target="tab-sandbox">⚡ x86 Sandbox &amp; Stepper</button>
     <button class="nav-btn" data-target="tab-audio">🎵 YM2612 &amp; SPC700 Audio Lab</button>
     <button class="nav-btn" data-target="tab-vault">💾 Demoscene Vault &amp; Mode 13h</button>
+    <button class="nav-btn" data-target="tab-benchmark">⚡ Rig Benchmark</button>
     <button class="nav-btn" data-target="tab-guestbook">✍️ Guestbook ('99)</button>
     <button class="nav-btn" data-target="tab-webring">🌐 Webring &amp; Badges</button>
   </nav>
@@ -1005,6 +1146,62 @@ ADD EAX, EBX        ; EAX = 8x + 2x = 10x!
           The subcarrier indicates an acoustic frequency of 1999 Hz. When stepped through the x86 Sandbox (Preset #6), the simulated CPU triggers an audio resonance on the YM2612 engine. What classified server is broadcasting on 10.19.99.4?
         </div>
       </div>
+
+      <!-- Article 5 -->
+      <div class="article-item" id="art-5" onclick="toggleArticle(5)">
+        <div class="article-header">
+          <span class="article-title">05. MMX SIMD Packed Arithmetic &amp; 64-Bit Saturating Math</span>
+          <span class="article-meta">1999-12-14 &bull; 0xNEON</span>
+        </div>
+        <div class="article-body">
+          With the introduction of the Pentium MMX and Pentium II processors, Intel aliased eight 64-bit SIMD registers (<code>MM0</code> through <code>MM7</code>) directly onto the x87 FPU stack.
+          This gives us single-instruction multiple-data capabilities for software rendering:
+          <div class="code-snippet">
+; Parallel 8-pixel alpha blend via MMX packed byte addition:
+MOVQ MM0, [ESI]     ; Load 8 background pixels (8 x 8-bit bytes)
+MOVQ MM1, [EDI]     ; Load 8 foreground spark pixels
+PADDSB MM0, MM1     ; Packed Add with Signed Saturation across 8 pixels simultaneously!
+MOVQ [ESI], MM0     ; Store 8 saturated pixels in 1 clock cycle!
+EMMS                ; Empty MMX State (restore FPU stack tag word)
+          </div>
+          Instead of doing 8 separate scalar byte loads, clamp checks, and stores (costing ~24 cycles), MMX accomplishes the exact same visual alpha blend in just 3 clock cycles. This is the bedrock of our 60 FPS Mode 13h particle fire buffers!
+        </div>
+      </div>
+
+      <!-- Article 6 -->
+      <div class="article-item" id="art-6" onclick="toggleArticle(6)">
+        <div class="article-header">
+          <span class="article-title">06. VGA Mode 13h Double Buffering &amp; Smooth Vertical Retrace Sync</span>
+          <span class="article-meta">1999-12-22 &bull; 0xNEON</span>
+        </div>
+        <div class="article-body">
+          Writing directly to video RAM at <code>0xA0000</code> while the CRT electron beam is mid-scan causes horizontal tearing artifacts.
+          To achieve liquid 60 FPS in pure assembly:
+          1. Allocate a 64,000 byte offscreen buffer in conventional or extended memory.
+          2. Render all raster geometry and effects into the offscreen buffer.
+          3. Poll VGA Status Register 1 at I/O Port <code>0x3DA</code> to synchronize with the CRT Vertical Blanking interval:
+          <div class="code-snippet">
+; Wait for Vertical Retrace to begin:
+wait_retrace:
+    mov dx, 03DAh
+.v1:
+    in al, dx
+    test al, 8       ; Bit 3 = 1 during vertical retrace
+    jnz .v1          ; If already in retrace, wait for it to end
+.v2:
+    in al, dx
+    test al, 8
+    jz .v2           ; Wait for fresh vertical retrace to start
+
+; Blit 64,000 bytes offscreen -> 0xA0000 using 32-bit REP MOVSD:
+    mov esi, offscreen_buffer
+    mov edi, 0A0000h
+    mov ecx, 16000   ; 16,000 dwords = 64,000 bytes
+    rep movsd
+          </div>
+          On a Pentium II 450MHz, <code>REP MOVSD</code> transfers the entire screen in under 0.12 milliseconds, leaving 99% of the frame cycle free for complex 3D math and FM synthesis!
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1031,6 +1228,7 @@ ADD EAX, EBX        ; EAX = 8x + 2x = 10x!
         <button class="btn-retro btn-retro-green" id="btnStep">Step [F7]</button>
         <button class="btn-retro btn-retro-pink" id="btnRun">▶ Run Auto</button>
         <button class="btn-retro" id="btnResetCpu">Reset CPU</button>
+        <button class="btn-retro btn-retro-pink" id="btnExportCom">💾 Export .COM</button>
         
         <span style="font-size:10px; color:var(--text-muted); margin-left:auto;">
           Inst: <span id="statInst" style="color:var(--accent-cyan);">0</span> &bull; 
@@ -1263,6 +1461,39 @@ NOP</textarea>
           Play via mouse click or keyboard row: [A] [W] [S] [E] [D] [F] [T] [G] [Y] [H] [U] [J]
         </div>
       </div>
+
+      <!-- 16-Step YM2612 Tracker Matrix Sequencer & Arp Generator -->
+      <div class="seq-container">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+          <div>
+            <span style="font-size:12px; color:var(--accent-magenta); font-weight:bold;">🎛️ 16-STEP YM2612 TRACKER SEQUENCER &amp; ARP GENERATOR</span>
+            <span style="font-size:10px; color:var(--text-muted); display:block;">PROD. 1999 DEMOSCENE PATTERN MATRIX &bull; FM SYNTHESIS ENGINE</span>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+            <button class="btn-retro btn-retro-pink" id="btnToggleSeq">▶ Start Loop</button>
+            <button class="btn-retro" id="btnRandomSeq">🎲 Randomize</button>
+            <button class="btn-retro" id="btnClearSeq">🧹 Clear</button>
+            <label style="font-size:10px; color:var(--accent-amber);">BPM:</label>
+            <input type="number" id="seqBpmInput" min="60" max="220" value="130" style="width:48px; background:#09121f; color:#ffcc00; border:1px solid #1e3a4a; padding:2px; font-family:var(--font-mono); font-size:11px;">
+            <select id="seqPresetSelect" style="background:#09121f; color:#00ffcc; border:1px solid #1e3a4a; padding:2px 4px; font-family:var(--font-mono); font-size:10px;">
+              <option value="preset-overdrive">Pattern: Neon Highway (Default)</option>
+              <option value="preset-rush">Pattern: Demoscene Rush 64k</option>
+              <option value="preset-sub">Pattern: Subterranean Copper</option>
+              <option value="preset-cyber">Pattern: Cyberpunk 1999 Arp</option>
+            </select>
+            <button class="btn-retro" id="btnExportSeqAsm" style="font-size:10px; padding:2px 6px;">💾 Export .ASM</button>
+          </div>
+        </div>
+
+        <div id="seqMatrixWrap">
+          <!-- Rendered via JS: 4 rows x 16 steps -->
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; font-size:9px; color:var(--text-muted);">
+          <span>Step divisions: 16th notes (4 beats per bar). Click steps to toggle triggers.</span>
+          <span id="seqStatusText" style="color:var(--accent-cyan);">Sequencer Idle. Hit [▶ Start Loop].</span>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1284,6 +1515,8 @@ NOP</textarea>
               <option value="plasma">Plasma99 (256b Dual Sine Interferometry)</option>
               <option value="fire">FireBuffer (512b Procedural Thermal Diffusion)</option>
               <option value="starfield">Starfield3D (256b Perspective Warp)</option>
+              <option value="rotozoom">RotoZoom (256b Continuous Affine Matrix &amp; Zoom)</option>
+              <option value="copper">CopperBars (384b Amiga Raster Splits &amp; 3D Cube)</option>
             </select>
           </div>
           <div style="display:flex; gap:6px; align-items:center;">
@@ -1306,6 +1539,8 @@ NOP</textarea>
         <button class="btn-retro" onclick="selectVaultFile('plasma99.asm')">plasma99.asm (256b)</button>
         <button class="btn-retro" onclick="selectVaultFile('fire512.asm')">fire512.asm (512b)</button>
         <button class="btn-retro" onclick="selectVaultFile('starfield.asm')">starfield.asm (256b)</button>
+        <button class="btn-retro" onclick="selectVaultFile('rotozoom.asm')">rotozoom.asm (256b)</button>
+        <button class="btn-retro" onclick="selectVaultFile('copperbars.asm')">copperbars.asm (384b)</button>
         <button class="btn-retro" onclick="selectVaultFile('neon_synth.asm')">neon_synth.asm (512b)</button>
         <button class="btn-retro" onclick="selectVaultFile('fl_neon.nfo')">fl_neon.nfo (Release Info)</button>
       </div>
@@ -1324,12 +1559,100 @@ NOP</textarea>
     </div>
   </section>
 
+  <!-- TAB: Pentium II 450MHz Demoscene Benchmark -->
+  <section class="content-section" id="tab-benchmark">
+    <div class="panel-card amber-edge">
+      <div class="panel-title">
+        <span>⚡ PENTIUM II 450MHz DEMOSCENE RIG BENCHMARK &amp; MIPS PROFILER</span>
+        <span style="font-size:10px; color:var(--accent-amber);">3D VECTOR MATH &bull; TRIGONOMETRIC INTERPOLATION &bull; BRESENHAM RASTER</span>
+      </div>
+
+      <p style="font-size:12px; margin-bottom:12px;">
+        In 1999, rendering software Mode 13h graphics at a steady 60 FPS without dedicated 3D hardware required budgeting every single clock cycle. This synthetic demoscene benchmark executes 100,000 3D vertex matrix rotations, 150,000 trigonometric sine/cosine evaluations, 200,000 Bresenham raster pixel steps, and a 50,000-byte XOR cryptographic sieve to stress-test your instruction pipeline.
+      </p>
+
+      <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
+        <button class="btn-retro btn-retro-pink" id="btnRunBenchmark" style="font-size:12px; padding:6px 14px;">▶ Run 1999 Silicon Benchmark</button>
+        <span id="benchStatusNotice" style="font-size:11px; color:var(--accent-cyan);">Status: Ready for diagnostic cycle profiling.</span>
+      </div>
+
+      <div class="bench-panel">
+        <!-- Results Card -->
+        <div class="bench-card">
+          <span style="font-size:11px; color:var(--accent-cyan); font-weight:bold; display:block; border-bottom:1px solid #1e293b; padding-bottom:4px; margin-bottom:8px;">
+            📊 EXECUTION METRICS
+          </span>
+          <div style="font-size:11px; line-height:1.7;">
+            <div>&bull; Benchmark Runtime: <strong id="metricDuration" style="color:#ffcc00;">-- ms</strong></div>
+            <div>&bull; Computed Throughput: <strong id="metricMips" style="color:#00ffcc;">-- MIPS</strong></div>
+            <div>&bull; Demoscene Performance Index: <strong id="metricIndex" style="color:#ff00aa;">-- pts</strong></div>
+            <div>&bull; System Architecture Grade: <strong id="metricGrade" style="color:#00ff66;">--</strong></div>
+          </div>
+
+          <div style="margin-top:12px;">
+            <div style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between;">
+              <span>1999 Baseline Comparison (Pentium II 450 = 100%):</span>
+              <span id="metricRelativePct" style="color:var(--accent-green); font-weight:bold;">--%</span>
+            </div>
+            <div class="bench-bar-track">
+              <div class="bench-bar-fill" id="metricBar"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Authentic 1999 Hardware Chart -->
+        <div class="bench-card">
+          <span style="font-size:11px; color:var(--accent-amber); font-weight:bold; display:block; border-bottom:1px solid #1e293b; padding-bottom:4px; margin-bottom:8px;">
+            🏛️ 1999 HARDWARE SPECIFICATION RATINGS
+          </span>
+          <table style="width:100%; font-size:10px; border-collapse:collapse; line-height:1.6;">
+            <thead>
+              <tr style="color:var(--text-muted); text-align:left; border-bottom:1px solid #1e293b;">
+                <th>Processor Rig</th>
+                <th>Clock</th>
+                <th>Baseline</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>Intel Pentium II (Deschutes)</td><td>450 MHz</td><td style="color:#ffcc00;">450 MIPS</td><td style="color:#00ff66;">Reference Rig</td></tr>
+              <tr><td>Intel Pentium III (Katmai / SSE)</td><td>500 MHz</td><td style="color:#ffcc00;">510 MIPS</td><td style="color:#38bdf8;">Next-Gen Elite</td></tr>
+              <tr><td>AMD K6-2 (3DNow!)</td><td>400 MHz</td><td style="color:#ffcc00;">380 MIPS</td><td style="color:#94a3b8;">Solid Contender</td></tr>
+              <tr><td>Cyrix MII-300</td><td>233 MHz</td><td style="color:#ffcc00;">160 MIPS</td><td style="color:#ef4444;">Bottlenecked</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Certified 1999 Demoscene Benchmark Certificate -->
+      <div style="margin-top:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:11px; color:var(--accent-amber); font-weight:bold;">📜 OFFICIAL 1999 DEMOSCENE BENCHMARK CERTIFICATE:</span>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-retro" id="btnCopyCert">📋 Copy Certificate</button>
+            <button class="btn-retro btn-retro-pink" id="btnDownloadCert">💾 Download Report (.txt)</button>
+          </div>
+        </div>
+        <div class="cert-box" id="certDisplayArea">; -----------------------------------------------------------------------
+; [NEON_RIDER] 1999 DEMOSCENE SILICON BENCHMARK &amp; PROFILER
+; Run the benchmark above to generate your certified hardware report!
+; -----------------------------------------------------------------------</div>
+      </div>
+    </div>
+  </section>
+
   <!-- TAB 6: Guestbook -->
   <section class="content-section" id="tab-guestbook">
     <div class="panel-card amber-edge">
       <div class="panel-title">
         <span>UNDERGROUND DEMOSCENE GUESTBOOK (CGI-BIN / PERSISTENT)</span>
-        <span style="font-size:10px; color:var(--accent-amber);">LOCALSTORAGE PERSISTENCE</span>
+        <span style="font-size:10px; color:var(--accent-amber);">LOCALSTORAGE &amp; FIREBASE RTDB STREAM</span>
+      </div>
+
+      <!-- Live Presence Stream -->
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; background:#070f1a; border:1px solid #1e293b; padding:6px 10px;">
+        <span id="gbPresenceStream" style="font-size:11px; color:var(--accent-green);">🟢 Scene Hackers Online: <strong id="gbOnlineCount">1</strong> connected via 56k dial-up</span>
+        <span id="gbSyncBadge" style="font-size:10px; color:#38bdf8;">⚡ Firebase RTDB Live Stream &bull; LocalStorage Sync</span>
       </div>
 
       <!-- Add Entry Form -->
@@ -1382,18 +1705,21 @@ NOP</textarea>
     <!-- Webring Box -->
     <div class="webring-widget">
       <div style="font-weight:bold; color:var(--accent-cyan);">★ CENTRAL KILONET 1999 WEBRING ★</div>
-      <div style="font-size:11px; color:var(--text-muted); margin:4px 0;">Node Member #006: ~neon_rider (Win32 Assembly &amp; Demoscene Vault)</div>
+      <div style="font-size:11px; color:var(--text-muted); margin:4px 0;">Node Member #004: ~neon_rider (Win32 Assembly &amp; Demoscene Vault)</div>
       
       <div class="webring-nav-links">
-        <a href="/web/geocities.html" class="btn-retro">« [Prev] CyberSpire's Shrine</a>
+        <a href="/web/warez.html" class="btn-retro">« [Prev] 0xRELEASE Scene Vault</a>
         <a href="/web/webring.html" class="btn-retro">🌐 [Hub] Webring Center</a>
         <a href="/web/portal.html" class="btn-retro">🏠 [Portal] KiloNet 1999</a>
-        <a href="/web/asm_temple.html" class="btn-retro" style="color:var(--accent-amber); border-color:var(--accent-amber);">⚡ [Shrine] x86 Opcode Temple</a>
-        <a href="/web/warez.html" class="btn-retro">💾 [Scene] 0xRELEASE Vault</a>
-        <a href="/apps/contribute.html" class="btn-retro">[Next] Contributor Hub »</a>
+        <a href="/web/asm_temple.html" class="btn-retro" style="color:var(--accent-amber); border-color:var(--accent-amber);">⚡ [Next] x86 Opcode Temple »</a>
+        <a href="/web/cybercafe.html" class="btn-retro">☕ [Lounge] CyberCafe '99</a>
+        <a href="/web/geocities.html" class="btn-retro">💾 [Shrine] CyberSpire Geocities</a>
       </div>
     </div>
   </section>
+
+  <!-- Retro Floating Toast HUD -->
+  <div id="retroToast" class="retro-toast"></div>
 
   <!-- Footer -->
   <footer>
@@ -1405,6 +1731,21 @@ NOP</textarea>
 </div>
 
 <script>
+  /* =========================================================================
+     0. RETRO TOAST HUD NOTIFICATION HELPER
+     ========================================================================= */
+  let toastTimer = null;
+  function showToast(msg, duration = 2500) {
+    const toast = document.getElementById('retroToast');
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.classList.add('visible');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+      toast.classList.remove('visible');
+    }, duration);
+  }
+
   /* =========================================================================
      1. NAVIGATION & TAB SWITCHING
      ========================================================================= */
@@ -2286,6 +2627,35 @@ NOP</textarea>
   });
   document.getElementById('btnResetCpu').addEventListener('click', resetCpu);
 
+  const btnExportCom = document.getElementById('btnExportCom');
+  if (btnExportCom) {
+    btnExportCom.addEventListener('click', () => {
+      const bytes = [];
+      parsedProgram.forEach(item => {
+        if (item.bytes && item.bytes.length > 0) {
+          item.bytes.forEach(b => bytes.push(b));
+        }
+      });
+      if (bytes.length === 0) {
+        showToast("⚠ No assembled opcodes found. Assemble first [F5]!");
+        return;
+      }
+      // Append safe MS-DOS return interrupt: MOV AX, 4C00h (B8 00 4C) / INT 21h (CD 21)
+      bytes.push(0xB8, 0x00, 0x4C, 0xCD, 0x21);
+      const u8 = new Uint8Array(bytes);
+      const blob = new Blob([u8], { type: 'application/octet-stream' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'NEON_ASM.COM';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(`✔ Compiled ${bytes.length} bytes to NEON_ASM.COM!`);
+    });
+  }
+
   // Initialize sandbox
   assembleCode();
 
@@ -2642,6 +3012,276 @@ NOP</textarea>
   initFmKeyboard();
 
   /* =========================================================================
+     5B. 16-STEP YM2612 TRACKER SEQUENCER & ARP GENERATOR
+     ========================================================================= */
+  const seqChannels = [
+    { name: "CH1: BASS (FM)", baseFreq: 110, isBass: true, ratio: 2.0, depth: 600, decay: 0.28 },
+    { name: "CH2: LEAD (FM)", baseFreq: 440, isBass: false, ratio: 1.0, depth: 320, decay: 0.22 },
+    { name: "CH3: ARP (BELL)", baseFreq: 880, isBass: false, ratio: 3.0, depth: 750, decay: 0.16 },
+    { name: "CH4: PERC (NOISE)", isNoise: true, decay: 0.09 }
+  ];
+
+  // 4 channels x 16 steps matrix
+  const seqMatrix = [
+    [true, false, false, false, true, false, false, true, true, false, false, false, true, false, false, false],
+    [false, false, true, false, false, false, true, false, false, false, true, false, false, false, true, true],
+    [true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true],
+    [false, false, true, false, false, false, true, false, false, false, true, false, false, false, true, false]
+  ];
+
+  let isSeqRunning = false;
+  let seqTimer = null;
+  let seqCurrentStep = 0;
+  let seqBpm = 130;
+
+  function renderSeqMatrix() {
+    const wrap = document.getElementById('seqMatrixWrap');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+
+    seqChannels.forEach((ch, chIdx) => {
+      const row = document.createElement('div');
+      row.className = 'seq-row';
+
+      const label = document.createElement('div');
+      label.className = 'seq-label';
+      label.textContent = ch.name;
+      row.appendChild(label);
+
+      for (let s = 0; s < 16; s++) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'seq-step-btn' + (seqMatrix[chIdx][s] ? ' active' : '') + ((s % 4 === 0) ? ' seq-beat-marker' : '');
+        btn.id = `seq-cell-${chIdx}-${s}`;
+        btn.textContent = (s + 1).toString();
+        btn.addEventListener('click', () => {
+          seqMatrix[chIdx][s] = !seqMatrix[chIdx][s];
+          btn.classList.toggle('active', seqMatrix[chIdx][s]);
+          playClickSound();
+          if (seqMatrix[chIdx][s]) {
+            initAudio();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            if (ch.isNoise) triggerNoiseSnare(ch.decay);
+            else triggerFmVoice(ch.baseFreq, ch.decay, ch.isBass, ch.ratio, ch.depth);
+          }
+        });
+        row.appendChild(btn);
+      }
+      wrap.appendChild(row);
+    });
+  }
+
+  function stepSequencer() {
+    for (let c = 0; c < 4; c++) {
+      for (let s = 0; s < 16; s++) {
+        const cell = document.getElementById(`seq-cell-${c}-${s}`);
+        if (cell) cell.classList.toggle('cursor', s === seqCurrentStep);
+      }
+    }
+
+    if (seqMatrix[0][seqCurrentStep]) {
+      const freq = seqChannels[0].baseFreq + (seqCurrentStep % 4 === 3 ? 20 : 0);
+      triggerFmVoice(freq, seqChannels[0].decay, true, seqChannels[0].ratio, seqChannels[0].depth);
+    }
+    if (seqMatrix[1][seqCurrentStep]) {
+      const leadNotes = [440, 523.2, 587.3, 659.2, 587.3, 523.2, 440, 392];
+      const freq = leadNotes[seqCurrentStep % leadNotes.length];
+      triggerFmVoice(freq, seqChannels[1].decay, false, seqChannels[1].ratio, seqChannels[1].depth);
+    }
+    if (seqMatrix[2][seqCurrentStep]) {
+      const arpNotes = [880, 1046.5, 1174.6, 1318.5];
+      const freq = arpNotes[seqCurrentStep % arpNotes.length];
+      triggerFmVoice(freq, seqChannels[2].decay, false, seqChannels[2].ratio, seqChannels[2].depth);
+    }
+    if (seqMatrix[3][seqCurrentStep]) {
+      triggerNoiseSnare(seqChannels[3].decay);
+    }
+
+    seqCurrentStep = (seqCurrentStep + 1) % 16;
+  }
+
+  function startSequencer() {
+    initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    isSeqRunning = true;
+    const btn = document.getElementById('btnToggleSeq');
+    if (btn) {
+      btn.textContent = "⏹ Stop Loop";
+      btn.classList.add('active');
+    }
+    const bpmInput = document.getElementById('seqBpmInput');
+    seqBpm = parseInt(bpmInput.value, 10) || 130;
+    const intervalMs = Math.round((60000 / seqBpm) / 4);
+    if (seqTimer) clearInterval(seqTimer);
+    seqTimer = setInterval(stepSequencer, intervalMs);
+    const statusText = document.getElementById('seqStatusText');
+    if (statusText) statusText.textContent = `▶ Sequencer Loop Active (${seqBpm} BPM @ 16th notes).`;
+  }
+
+  function stopSequencer() {
+    isSeqRunning = false;
+    if (seqTimer) clearInterval(seqTimer);
+    seqTimer = null;
+    const btn = document.getElementById('btnToggleSeq');
+    if (btn) {
+      btn.textContent = "▶ Start Loop";
+      btn.classList.remove('active');
+    }
+    for (let c = 0; c < 4; c++) {
+      for (let s = 0; s < 16; s++) {
+        const cell = document.getElementById(`seq-cell-${c}-${s}`);
+        if (cell) cell.classList.remove('cursor');
+      }
+    }
+    const statusText = document.getElementById('seqStatusText');
+    if (statusText) statusText.textContent = `Sequencer Paused at Step ${seqCurrentStep + 1}.`;
+  }
+
+  const seqPresets = {
+    'preset-overdrive': [
+      [true, false, false, false, true, false, false, true, true, false, false, false, true, false, false, false],
+      [false, false, true, false, false, false, true, false, false, false, true, false, false, false, true, true],
+      [true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true],
+      [false, false, true, false, false, false, true, false, false, false, true, false, false, false, true, false]
+    ],
+    'preset-rush': [
+      [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false],
+      [true, false, false, true, false, true, false, false, true, false, false, true, false, true, false, true],
+      [false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false],
+      [false, false, true, false, false, false, true, false, false, false, true, false, false, false, true, false]
+    ],
+    'preset-sub': [
+      [true, false, false, false, false, false, false, false, true, false, false, false, false, false, true, false],
+      [false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false],
+      [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false],
+      [false, false, false, false, true, false, false, false, false, false, false, false, true, false, false, false]
+    ],
+    'preset-cyber': [
+      [true, false, false, true, false, false, true, false, false, true, false, false, true, false, false, true],
+      [false, true, false, false, true, false, false, true, false, false, true, false, false, true, false, false],
+      [true, true, true, true, false, true, true, true, true, false, true, true, true, true, false, true],
+      [false, false, true, false, false, false, true, false, false, false, true, false, false, false, true, true]
+    ]
+  };
+
+  function loadSeqPreset(presetKey) {
+    const p = seqPresets[presetKey];
+    if (!p) return;
+    for (let c = 0; c < 4; c++) {
+      for (let s = 0; s < 16; s++) {
+        seqMatrix[c][s] = p[c][s];
+      }
+    }
+    renderSeqMatrix();
+    showToast(`Loaded Sequencer Preset: ${presetKey}`);
+  }
+
+  function randomizeSeq() {
+    for (let c = 0; c < 4; c++) {
+      for (let s = 0; s < 16; s++) {
+        seqMatrix[c][s] = Math.random() > 0.65;
+      }
+    }
+    renderSeqMatrix();
+    showToast("🎲 Random pattern generated!");
+  }
+
+  function clearSeq() {
+    for (let c = 0; c < 4; c++) {
+      for (let s = 0; s < 16; s++) {
+        seqMatrix[c][s] = false;
+      }
+    }
+    renderSeqMatrix();
+    showToast("🧹 Sequencer cleared!");
+  }
+
+  function exportSeqAsm() {
+    let asm = `; ==========================================================================\n`;
+    asm += `; NEON_RIDER YM2612 16-STEP TRACKER SOUND ROUTINE (MASM 6.14 / NASM)\n`;
+    asm += `; Generated live via kweb://users/~neon_rider // 1999 Demoscene Engine\n`;
+    asm += `; ==========================================================================\n\n`;
+    asm += `BITS 16\nORG 100h\n\n`;
+    asm += `start:\n`;
+    asm += `    mov cx, 16          ; 16 pattern steps\n`;
+    asm += `play_step:\n`;
+    asm += `    push cx\n`;
+    asm += `    mov si, 16\n`;
+    asm += `    sub si, cx          ; SI = Step index (0..15)\n\n`;
+    asm += `    ; Query Bass track\n`;
+    asm += `    mov al, byte ptr [pattern_bass + si]\n`;
+    asm += `    test al, al\n`;
+    asm += `    jz .skip_bass\n`;
+    asm += `    mov bx, 110\n`;
+    asm += `    call play_ym2612_ch1\n`;
+    asm += `.skip_bass:\n\n`;
+    asm += `    ; Wait 16th note timer\n`;
+    asm += `    mov dx, 80h\n`;
+    asm += `    call delay_ticks\n\n`;
+    asm += `    pop cx\n`;
+    asm += `    loop play_step\n`;
+    asm += `    ret\n\n`;
+    asm += `; --- PATTERN MATRIX DATA ---\n`;
+    asm += `pattern_bass: db ${seqMatrix[0].map(v => v ? '1' : '0').join(', ')}\n`;
+    asm += `pattern_lead: db ${seqMatrix[1].map(v => v ? '1' : '0').join(', ')}\n`;
+    asm += `pattern_arp:  db ${seqMatrix[2].map(v => v ? '1' : '0').join(', ')}\n`;
+    asm += `pattern_perc: db ${seqMatrix[3].map(v => v ? '1' : '0').join(', ')}\n\n`;
+    asm += `; --- FM OPERATOR / SOUND BLASTER STUB ---\n`;
+    asm += `play_ym2612_ch1:\n`;
+    asm += `    mov dx, 0220h       ; Sound Blaster DSP base port\n`;
+    asm += `    out dx, al\n`;
+    asm += `    ret\n\n`;
+    asm += `delay_ticks:\n`;
+    asm += `    in al, 40h\n`;
+    asm += `    ret\n`;
+
+    const blob = new Blob([asm], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'neon_pattern.asm';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast("💾 Exported neon_pattern.asm routine!");
+  }
+
+  // Hook up sequencer toolbar buttons
+  const btnToggleSeq = document.getElementById('btnToggleSeq');
+  if (btnToggleSeq) {
+    btnToggleSeq.addEventListener('click', () => {
+      if (isSeqRunning) stopSequencer();
+      else startSequencer();
+    });
+  }
+  const btnRandomSeq = document.getElementById('btnRandomSeq');
+  if (btnRandomSeq) btnRandomSeq.addEventListener('click', randomizeSeq);
+  const btnClearSeq = document.getElementById('btnClearSeq');
+  if (btnClearSeq) btnClearSeq.addEventListener('click', clearSeq);
+  const btnExportSeqAsm = document.getElementById('btnExportSeqAsm');
+  if (btnExportSeqAsm) btnExportSeqAsm.addEventListener('click', exportSeqAsm);
+  const seqPresetSelect = document.getElementById('seqPresetSelect');
+  if (seqPresetSelect) {
+    seqPresetSelect.addEventListener('change', (e) => {
+      loadSeqPreset(e.target.value);
+    });
+  }
+  const seqBpmInput = document.getElementById('seqBpmInput');
+  if (seqBpmInput) {
+    seqBpmInput.addEventListener('change', (e) => {
+      seqBpm = parseInt(e.target.value, 10) || 130;
+      if (isSeqRunning) {
+        clearInterval(seqTimer);
+        const intervalMs = Math.round((60000 / seqBpm) / 4);
+        seqTimer = setInterval(stepSequencer, intervalMs);
+      }
+    });
+  }
+
+  renderSeqMatrix();
+
+  /* =========================================================================
      6. MODE 13h VGA 320x200 CANVAS & SOURCE VAULT
      ========================================================================= */
   const vgaCanvas = document.getElementById('vgaCanvas');
@@ -2798,6 +3438,92 @@ NOP</textarea>
             vgaPixels[idx+3] = 255;
           }
         });
+      } else if (effect === 'rotozoom') {
+        // 256-byte RotoZoomer continuous affine rotation & zoom
+        const ang = vgaFrame * 0.025;
+        const zoom = 1.0 + Math.sin(vgaFrame * 0.035) * 0.65;
+        const cosA = Math.cos(ang) * zoom;
+        const sinA = Math.sin(ang) * zoom;
+        let idx = 0;
+        for (let y = 0; y < 200; y++) {
+          const dy = y - 100;
+          for (let x = 0; x < 320; x++) {
+            const dx = x - 160;
+            const u = Math.floor(dx * cosA - dy * sinA) & 0xFF;
+            const v = Math.floor(dx * sinA + dy * cosA) & 0xFF;
+            const colorIdx = ((u ^ v) + Math.floor(Math.sin(u * 0.08) * 30 + Math.cos(v * 0.08) * 30)) & 0xFF;
+            const rgb = pal[colorIdx];
+            vgaPixels[idx] = rgb[0];
+            vgaPixels[idx+1] = rgb[1];
+            vgaPixels[idx+2] = rgb[2];
+            vgaPixels[idx+3] = 255;
+            idx += 4;
+          }
+        }
+      } else if (effect === 'copper') {
+        // 384-byte Amiga Copper Bars + 3D Wireframe Cube
+        vgaPixels.fill(0);
+        // Copper gradient background raster bands
+        for (let y = 0; y < 200; y++) {
+          const wave1 = Math.sin(y * 0.08 + vgaFrame * 0.06);
+          const wave2 = Math.cos(y * 0.04 - vgaFrame * 0.04);
+          const barVal = Math.floor((wave1 + wave2 + 2) * 55) & 0xFF;
+          const rgb = pal[barVal];
+          const yOff = y * 320 * 4;
+          for (let x = 0; x < 320; x++) {
+            const idx = yOff + x * 4;
+            vgaPixels[idx] = (rgb[0] >> 1);
+            vgaPixels[idx+1] = (rgb[1] >> 1);
+            vgaPixels[idx+2] = (rgb[2] >> 1);
+            vgaPixels[idx+3] = 255;
+          }
+        }
+        // 3D Wireframe Cube
+        const cubeVertices = [
+          [-45, -45, -45], [45, -45, -45], [45, 45, -45], [-45, 45, -45],
+          [-45, -45,  45], [45, -45,  45], [45, 45,  45], [-45, 45,  45]
+        ];
+        const cubeEdges = [
+          [0,1],[1,2],[2,3],[3,0],
+          [4,5],[5,6],[6,7],[7,4],
+          [0,4],[1,5],[2,6],[3,7]
+        ];
+        const rotX = vgaFrame * 0.03;
+        const rotY = vgaFrame * 0.04;
+        const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+        const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+        const proj = [];
+        for (let i = 0; i < 8; i++) {
+          const v = cubeVertices[i];
+          const x1 = v[0] * cosY + v[2] * sinY;
+          const z1 = -v[0] * sinY + v[2] * cosY;
+          const y2 = v[1] * cosX - z1 * sinX;
+          const z2 = v[1] * sinX + z1 * cosX + 180;
+          const px = Math.floor(160 + (x1 * 220) / z2);
+          const py = Math.floor(100 + (y2 * 220) / z2);
+          proj.push([px, py]);
+        }
+        for (let e = 0; e < cubeEdges.length; e++) {
+          const p1 = proj[cubeEdges[e][0]];
+          const p2 = proj[cubeEdges[e][1]];
+          let x0 = p1[0], y0 = p1[1], x1 = p2[0], y1 = p2[1];
+          const dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
+          const sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+          let err = dx - dy;
+          while (true) {
+            if (x0 >= 0 && x0 < 320 && y0 >= 0 && y0 < 200) {
+              const idx = (y0 * 320 + x0) * 4;
+              vgaPixels[idx] = 255;
+              vgaPixels[idx+1] = 255;
+              vgaPixels[idx+2] = 255;
+              vgaPixels[idx+3] = 255;
+            }
+            if (x0 === x1 && y0 === y1) break;
+            const e2 = 2 * err;
+            if (e2 > -dy) { err -= dy; x0 += sx; }
+            if (e2 < dx) { err += dx; y0 += sy; }
+          }
+        }
       }
 
       vgaCtx.putImageData(vgaImgData, 0, 0);
@@ -3079,6 +3805,115 @@ wave_handle: dd 0`,
    Internal subnet listeners note: 10.19.99.4/classified holds answers.
  ═══════════════════════════════════════════════════════════════════════
 `
+  ,
+
+    'rotozoom.asm': `; rotozoom.asm — 256-byte Continuous Affine Rotozoomer in 16-bit Real Mode
+; Target: DOS COM / VGA Mode 13h (320x200x256)
+; Author: neon_rider [FLARELIGHT / 1999]
+
+BITS 16
+ORG 100h
+
+start:
+    mov ax, 13h          ; Set VGA 320x200 256-color Mode 13h
+    int 10h
+    push 0A000h
+    pop es               ; ES -> Video memory segment (0xA000)
+
+frame_loop:
+    inc bp               ; BP = global rotation timer / phase
+    xor di, di           ; DI = destination video pixel index
+
+pixel_loop:
+    ; Convert DI into centered coordinates (DX = X - 160, AX = Y - 100)
+    mov ax, di
+    xor dx, dx
+    mov bx, 320
+    div bx               ; AX = Y, DX = X
+    sub dx, 160          ; Center X (-160..159)
+    sub ax, 100          ; Center Y (-100..99)
+
+    ; Continuous Affine Transformation Matrix:
+    ; U = (DX * cos - AX * sin) >> 8
+    ; V = (DX * sin + AX * cos) >> 8
+    mov bx, bp
+    mov cx, dx
+    imul cx, bx          ; DX * timer
+    mov si, ax
+    imul si, bx          ; AX * timer
+    add cx, si           ; CX = texture U coordinate
+
+    mov si, dx
+    imul si, bx
+    sub si, cx           ; SI = texture V coordinate
+
+    ; Sample procedural XOR checkerboard texture with interference
+    mov al, cl
+    xor al, ch
+    xor al, byte ptr [di]
+    stosb                ; Write color byte to ES:DI
+
+    cmp di, 64000
+    jb pixel_loop
+
+    in al, 60h           ; Check Escape key
+    dec al
+    jnz frame_loop
+
+    mov ax, 03h          ; Restore 80x25 color text mode
+    int 10h
+    ret`,
+
+    'copperbars.asm': `; copperbars.asm — 384-byte Amiga Copper Raster Splits & 3D Wireframe Cube
+; Target: DOS COM / Win32 Real Mode Console
+; Author: neon_rider [0xNEON / 1999]
+
+BITS 16
+ORG 100h
+
+start:
+    mov al, 13h          ; Enter Mode 13h
+    int 10h
+    push 0A000h
+    pop es
+
+render:
+    inc word [timer]     ; Advance copper phase
+    xor di, di
+
+raster_bars:
+    mov ax, di
+    xor dx, dx
+    mov bx, 320
+    div bx               ; AX = scanline Y (0..199)
+
+    ; Calculate Amiga copper split color based on sine phase
+    add ax, [timer]
+    and al, 63           ; 64-color gradient cycle
+    mov ah, al
+    shr ah, 1
+    add al, ah           ; Warm copper hue
+
+    mov cx, 320
+    rep stosb            ; Fill current horizontal scanline
+    cmp di, 64000
+    jb raster_bars
+
+    ; Overlay 3D wireframe cube vertices using Bresenham line stepping
+    call draw_wireframe_cube
+
+    in al, 60h           ; Check ESC key
+    dec al
+    jnz render
+
+    mov ax, 03h          ; Restore text mode
+    int 10h
+    ret
+
+timer: dw 0
+draw_wireframe_cube:
+    ; 3D perspective projection and 12-edge Bresenham line stepping
+    ret`
   };
 
   let currentVaultKey = 'tinytunnel.asm';
@@ -3097,7 +3932,7 @@ wave_handle: dd 0`,
     const text = vaultFiles[currentVaultKey];
     if (navigator.clipboard) {
       navigator.clipboard.writeText(text);
-      alert(`Copied ${currentVaultKey} to clipboard!`);
+      showToast(`✔ Copied ${currentVaultKey} to clipboard!`);
     }
   }
 
@@ -3112,13 +3947,161 @@ wave_handle: dd 0`,
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    showToast(`💾 Downloaded ${currentVaultKey}!`);
   }
 
   // Initial vault load
   selectVaultFile('tinytunnel.asm');
 
   /* =========================================================================
-     7. GUESTBOOK (PERSISTENT WITH LOCALSTORAGE)
+     6B. PENTIUM II 450MHz DEMOSCENE RIG BENCHMARK & MIPS PROFILER
+     ========================================================================= */
+  let lastBenchmarkResult = null;
+
+  function runSiliconBenchmark() {
+    const notice = document.getElementById('benchStatusNotice');
+    if (notice) notice.textContent = "Status: Executing 3D vector transformations & trig pipeline...";
+
+    const btn = document.getElementById('btnRunBenchmark');
+    if (btn) btn.disabled = true;
+
+    setTimeout(() => {
+      const t0 = performance.now();
+
+      // Stage 1: 3D Vector Transformations (100,000 vertex rotations)
+      let vx = 1.0, vy = 2.0, vz = 3.0;
+      const cosAngle = Math.cos(0.01745);
+      const sinAngle = Math.sin(0.01745);
+      for (let i = 0; i < 100000; i++) {
+        const nx = vx * cosAngle - vy * sinAngle;
+        const ny = vx * sinAngle + vy * cosAngle;
+        const nz = vz + (nx * 0.001);
+        vx = nx; vy = ny; vz = nz;
+      }
+
+      // Stage 2: Trigonometric & Math Evaluations (150,000 steps)
+      let trigAccum = 0;
+      for (let i = 0; i < 150000; i++) {
+        trigAccum += Math.sin(i * 0.01) * Math.cos(i * 0.005);
+      }
+
+      // Stage 3: Bresenham Raster Line Stepper & Memory Fill (200,000 steps)
+      let rasterSum = 0;
+      let bx = 0, by = 0;
+      for (let i = 0; i < 200000; i++) {
+        bx = (bx + 7) % 320;
+        by = (by + 11) % 200;
+        rasterSum = (rasterSum + (by * 320 + bx)) & 0xFFFFFFFF;
+      }
+
+      // Stage 4: Cryptographic XOR Sieve (50,000 bytes)
+      let xorSieve = 0x1999;
+      for (let i = 0; i < 50000; i++) {
+        xorSieve = ((xorSieve << 1) ^ ((xorSieve >> 7) & 0x7F) ^ (i & 0xFF)) & 0xFFFF;
+      }
+
+      const t1 = performance.now();
+      const elapsedMs = Math.max(1, t1 - t0);
+
+      // Total synthetic instructions executed:
+      const totalOps = 500000;
+      const mips = Math.round((totalOps / (elapsedMs / 1000)) / 1000);
+      const demosceneIndex = Math.round((450 / elapsedMs) * 1000);
+
+      // Pentium II 450 reference is 450 MIPS
+      const baselineRatio = Math.round((mips / 450) * 100);
+
+      let grade = "PENTIUM II CLASS (AUTHENTIC 1999)";
+      if (mips > 2000) grade = "TITAN OF CYBERSPACE (HYPER-THREADED GOD)";
+      else if (mips > 1000) grade = "OVERCLOCKED DESCHUTES (LIQUID NITROGEN)";
+      else if (mips >= 450) grade = "PENTIUM III / 3dfx VOODOO2 SLI ELITE";
+      else if (mips >= 300) grade = "AMD K6-2 400 (SOLID CONTENDER)";
+      else grade = "CYRIX MII (REQUIRES ASSEMBLY TUNING)";
+
+      // Update UI elements
+      document.getElementById('metricDuration').textContent = `${elapsedMs.toFixed(1)} ms`;
+      document.getElementById('metricMips').textContent = `${mips} MIPS`;
+      document.getElementById('metricIndex').textContent = `${demosceneIndex} pts`;
+      document.getElementById('metricGrade').textContent = grade;
+      document.getElementById('metricRelativePct').textContent = `${baselineRatio}%`;
+
+      const barFill = document.getElementById('metricBar');
+      if (barFill) {
+        const fillWidth = Math.min(100, Math.max(5, (baselineRatio / 4)));
+        barFill.style.width = `${fillWidth}%`;
+      }
+
+      if (notice) notice.textContent = `✔ Benchmark Complete in ${elapsedMs.toFixed(1)} ms!`;
+      if (btn) btn.disabled = false;
+
+      // Build ASCII Certificate
+      const certText = [
+        "╔═══════════════════════════════════════════════════════════════════════╗",
+        "║      CERTIFIED 1999 DEMOSCENE SILICON BENCHMARK CERTIFICATE          ║",
+        "║             AUTHENTICATED BY: neon_rider [FLARELIGHT / 0xNEON]        ║",
+        "╠═══════════════════════════════════════════════════════════════════════╣",
+        `║  TIMESTAMP        : 1999-${new Date().toISOString().slice(5, 10)} // CYBER-STAMP                 ║`,
+        `║  TOTAL RUNTIME    : ${elapsedMs.toFixed(1).padEnd(10)} ms                                     ║`,
+        `║  COMPUTED MIPS    : ${(mips + ' MIPS').padEnd(10)}                                          ║`,
+        `║  DEMOSCENE INDEX  : ${(demosceneIndex + ' PTS').padEnd(10)}                                          ║`,
+        `║  PENTIUM II RATIO : ${(baselineRatio + '% OF 450MHz BASELINE').padEnd(30)}             ║`,
+        `║  SYSTEM GRADE     : ${grade.padEnd(46)}║`,
+        "╠═══════════════════════════════════════════════════════════════════════╣",
+        "║  TEST MATRIX VERIFIED:                                                ║",
+        "║  [✔] 100,000 3D Vector Projections & Perspective Affine Matrix       ║",
+        "║  [✔] 150,000 Trigonometric Sine/Cosine Interpolation Steps           ║",
+        "║  [✔] 200,000 Bresenham Pixel Steps across VGA Mode 13h Plane          ║",
+        "║  [✔] 50,000 Byte Diegetic Cryptographic Sieve (10.19.99.4 Parity)    ║",
+        "╠═══════════════════════════════════════════════════════════════════════╣",
+        "║  VERDICT: CERTIFIED READY FOR 60 FPS HANDCRAFTED ASSEMBLY INTROS!    ║",
+        "╚═══════════════════════════════════════════════════════════════════════╝"
+      ].join('\n');
+
+      document.getElementById('certDisplayArea').textContent = certText;
+      lastBenchmarkResult = certText;
+      showToast("⚡ Silicon benchmark completed!");
+    }, 40);
+  }
+
+  const btnRunBenchmark = document.getElementById('btnRunBenchmark');
+  if (btnRunBenchmark) btnRunBenchmark.addEventListener('click', runSiliconBenchmark);
+
+  const btnCopyCert = document.getElementById('btnCopyCert');
+  if (btnCopyCert) {
+    btnCopyCert.addEventListener('click', () => {
+      if (!lastBenchmarkResult) {
+        showToast("⚠ Please run the benchmark first!");
+        return;
+      }
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(lastBenchmarkResult);
+        showToast("📋 Copied Silicon Certificate to clipboard!");
+      }
+    });
+  }
+
+  const btnDownloadCert = document.getElementById('btnDownloadCert');
+  if (btnDownloadCert) {
+    btnDownloadCert.addEventListener('click', () => {
+      if (!lastBenchmarkResult) {
+        showToast("⚠ Please run the benchmark first!");
+        return;
+      }
+      const blob = new Blob([lastBenchmarkResult], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'BENCHMARK_1999_NEON.TXT';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("💾 Downloaded BENCHMARK_1999_NEON.TXT!");
+    });
+  }
+
+  /* =========================================================================
+     7. GUESTBOOK (PERSISTENT WITH LOCALSTORAGE & FIREBASE RTDB STREAM)
      ========================================================================= */
   const defaultGuestbook = [
     {
@@ -3184,6 +4167,77 @@ wave_handle: dd 0`,
     });
   }
 
+  /* Firebase RTDB Live Stream & Presence Setup */
+  let fbDb = null;
+  let fbPush = null;
+  let fbRef = null;
+  const hackerId = '0xNEON_' + Math.floor(Math.random() * 0xFFFF).toString(16).padStart(4, '0');
+
+  async function initFirebaseStream() {
+    try {
+      const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js");
+      const { getDatabase, ref, push, onChildAdded, set, onDisconnect, onValue } = await import("https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js");
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+        authDomain: "kiloappschat.firebaseapp.com",
+        databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+        projectId: "kiloappschat",
+        storageBucket: "kiloappschat.firebasestorage.app",
+        messagingSenderId: "290208566057",
+        appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+      };
+
+      const fbApp = initializeApp(firebaseConfig, 'neon_rider_instance_' + Date.now());
+      fbDb = getDatabase(fbApp);
+      fbPush = push;
+      fbRef = ref;
+
+      // Register presence for this browser session
+      const presRef = ref(fbDb, `virtual_web/neon_rider/presence/${hackerId}`);
+      set(presRef, { time: Date.now(), handle: hackerId });
+      onDisconnect(presRef).remove();
+
+      // Listen for all active cyber hackers
+      const allPresRef = ref(fbDb, `virtual_web/neon_rider/presence`);
+      onValue(allPresRef, (snapshot) => {
+        const val = snapshot.val();
+        let count = 1;
+        if (val) {
+          count = Object.keys(val).length;
+        }
+        updateOnlineCount(count);
+      });
+
+      // Listen for remote guestbook additions from other players
+      const gbRemoteRef = ref(fbDb, `virtual_web/neon_rider/guestbook`);
+      onChildAdded(gbRemoteRef, (snap) => {
+        const data = snap.val();
+        if (!data || !data.nick || !data.msg) return;
+        const current = getGuestbook();
+        const exists = current.some(e => e.nick === data.nick && e.msg === data.msg);
+        if (!exists) {
+          current.unshift(data);
+          localStorage.setItem('neon_rider_guestbook', JSON.stringify(current));
+          renderGuestbook();
+        }
+      });
+
+      const syncBadge = document.getElementById('gbSyncBadge');
+      if (syncBadge) syncBadge.textContent = "⚡ Firebase RTDB Live Stream Active";
+    } catch (err) {
+      console.log("Firebase RTDB offline fallback mode:", err);
+      updateOnlineCount(1);
+    }
+  }
+
+  function updateOnlineCount(count) {
+    const el1 = document.getElementById('onlineCount');
+    if (el1) el1.textContent = `${count} Online (56k V.90)`;
+    const el2 = document.getElementById('gbOnlineCount');
+    if (el2) el2.textContent = count.toString();
+  }
+
   function handleGbSubmit(e) {
     e.preventDefault();
     const nick = document.getElementById('gbNick').value.trim();
@@ -3200,9 +4254,20 @@ wave_handle: dd 0`,
       msg
     };
 
+    // Save locally
     const entries = getGuestbook();
     entries.unshift(newEntry);
     localStorage.setItem('neon_rider_guestbook', JSON.stringify(entries));
+
+    // Push to Firebase RTDB if available
+    if (fbDb && fbPush && fbRef) {
+      try {
+        const remoteRef = fbRef(fbDb, `virtual_web/neon_rider/guestbook`);
+        fbPush(remoteRef, newEntry);
+      } catch (err) {
+        console.log("Firebase push failed, stored in localStorage:", err);
+      }
+    }
 
     document.getElementById('gbNick').value = '';
     document.getElementById('gbCrew').value = '';
@@ -3210,11 +4275,13 @@ wave_handle: dd 0`,
 
     renderGuestbook();
     status.textContent = "✔ Entry #0" + entries.length + " written to guestbook.dat. Thanks for signing!";
+    showToast("✍️ Signed ~neon_rider's guestbook!");
     setTimeout(() => { status.textContent = ''; }, 4000);
     playClickSound();
   }
 
   renderGuestbook();
+  initFirebaseStream();
 
   /* =========================================================================
      8. 88x31 BADGE SNIPPET COPIER
@@ -3224,7 +4291,7 @@ wave_handle: dd 0`,
     document.getElementById('badgeSnippet').value = snippet;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(snippet);
-      alert(`Copied ${badgeName} badge code to clipboard!`);
+      showToast(`✔ Copied ${badgeName} badge code to clipboard!`);
     }
   }
 </script>

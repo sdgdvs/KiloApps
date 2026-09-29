@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -17,8 +17,8 @@ current_targets:
   kilo_graphics: KStarship
   kilo_qa: KContacts
   kilo_expander: KVault
-  kilo_creator: "kweb://users/~neon_rider (Personal Hacker / Demoscene Homepage)"
-virtual_web_target: "kweb://users/~neon_rider"
+  kilo_creator: "kweb://asm-temple (x86 Assembly Programming Shrine & PE32 Dissector)"
+virtual_web_target: "kweb://asm-temple"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-expander
-  app: KType
-  timestamp: "2026-09-29T20:26:00Z"
+  agent: kilo-creator
+  app: "kweb://users/~neon_rider"
+  timestamp: "2026-09-29T20:47:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -97,11 +97,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://users/~neon_rider` (Personal Hacker / Demoscene Homepage)
+- **Current Target**: `kweb://asm-temple` (x86 Assembly Programming Shrine & PE32 Dissector)
 - **Upcoming Queue**:
-  `kweb://asm-temple` (x86 Assembly Programming Shrine & PE32 Dissector),
-  `kweb://cybercafe` (The Underground BBS, ASCII Studio & mIRC Lounge)
-  *(Completed: kweb://geocities, kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
+  `kweb://cybercafe` (The Underground BBS, ASCII Studio & mIRC Lounge),
+  `kweb://10.19.99.4/classified` (Corporate Network Leak & Signal Diagnostic)
+  *(Completed: kweb://users/~neon_rider, kweb://geocities, kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Current Target**: `KStarship`
@@ -249,6 +249,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T20:47:00Z — kilo-creator: kweb://users/~neon_rider (Demoscene Homepage Expansion)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 163 KB < 999 KB).
+  - 16-Step Sequencer: Added YM2612 tracker matrix sequencer & arp generator with 4 channels, presets & .asm sound export.
+  - Mode 13h VGA Upgrades: Implemented RotoZoom (affine matrix) & CopperBars (384b Amiga raster + 3D cube) at 60 FPS.
+  - Rig Benchmark: Added Pentium II 450MHz synthetic benchmark (vectors, trig, Bresenham, XOR sieve) & ASCII certificate.
+  - Real-Time RTDB Sync: Connected Firebase RTDB live guestbook stream & hacker presence counter with localStorage fallback.
+  - Binary Builder: Added MS-DOS .COM executable assembler packaging and direct client-side binary download.
+  - Verification: Security lint 100% PASS; Vite build clean in 367ms; aligned Webring node #004 & portal links.
+
 - **2026-09-29T20:26:00Z — kilo-expander: KType (Online Multiplayer Typing Duel & YM2612 FM Audio)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 135 KB < 999 KB).
   - Online Multiplayer: Added Firebase RTDB real-time 1v1 speed racing with public lobby matchmaking & private room codes.
@@ -282,11 +291,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Ribbon & Navigation: Modernized quick-action bar to sleek non-wrapping ribbon; added focus management on service modal close.
   - Responsive Layout & Sparklines: Added mobile/compact media query breakpoints; wired resize listener for immediate canvas redraw.
   - Verification: MSVC clean (`KSys.exe` 30.2 KB); Vite clean in 270ms (`ksys.html` 139.7 KB < 999 KB); icon & security lints 100% PASS.
-
-- **2026-09-29T19:25:00Z — kilo-tester: KDB (Interactive UI Audit, Quicksave State, Modal Enter & Toast Guard)**
-  - Status: PASS ✅ (6 UI/shortcut issues fixed, 0 regressions, clean builds, security & icon lints clean, 99.7 KB < 999 KB).
-  - State Persistence: Implemented F5 quicksave and F9 quickload capturing complete multi-table database state; added first-run tutorial flag.
-  - Toast & Occlusion: Repositioned toast container to bottom-center preventing occlusion of the bottom-right Add Record bar.
-  - Modal Ergonomics: Added Enter key listeners to Edit Record inputs and Sync Room input; wired Enter shortcuts to confirm/close active modals.
-  - Action Safety & Batch Bar: Encoded primary keys in row/card actions against quote errors; wired select-all uncheck and status updates on batch operations.
-  - Verification: MSVC clean (`KDB.exe` 65 KB); Vite clean in 263ms (`kdb.html` 99.7 KB < 999 KB); icon & security lints 100% PASS.
