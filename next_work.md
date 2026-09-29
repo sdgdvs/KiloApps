@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KDragon
+  kilo_tester: KFlash
   kilo_usability: KTodo
   kilo_graphics: KStarship
   kilo_qa: KContacts
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://users/~neon_rider"
-  timestamp: "2026-09-29T20:47:00Z"
+  agent: kilo-tester
+  app: KDragon
+  timestamp: "2026-09-29T21:07:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KDragon`
+- **Current Target**: `KFlash`
 - **Upcoming Queue**:
-  `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB)*.
+  `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KTodo`
@@ -249,6 +249,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T21:07:00Z — kilo-tester: KDragon (Interactive UI Audit, State Portability & Ergonomics)**
+  - Status: PASS ✅ (4 issues found, 4 fixed; 0 regressions; 142.4 KB < 999 KB).
+  - Storage & Portability: Added JSON save file Export (.json) and Import (.json) with schema validation and start screen upload.
+  - Toast Occlusion: Moved toast container to bottom-right (column-reverse) eliminating modal header and window control overlap.
+  - Audio Ergonomics: Added YM2612 FM / SPC700 delay mute state, toggle function, and header toggle button [U].
+  - Modal & Minigame UX: Added bottom Got It button [Esc] to Guide modal; added 4s reaction timeout and global Escape exits.
+  - Verification: MSVC clean (`KDragon.exe` 147.9 KB); Vite clean in 256ms (`kdragon.html` 142.4 KB); security lint 100% PASS.
+
 - **2026-09-29T20:47:00Z — kilo-creator: kweb://users/~neon_rider (Demoscene Homepage Expansion)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 163 KB < 999 KB).
   - 16-Step Sequencer: Added YM2612 tracker matrix sequencer & arp generator with 4 channels, presets & .asm sound export.
@@ -283,11 +291,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visuals & Combat FX: Added poison projectile/trail rendering, critical strike floating damage numbers (CRIT ≥ 8 dmg), and static filigree borders.
   - Native C Alignment: Synchronized all 40 cards, MageDef capacity, Venomancer deck, and crit floaters in Win32 C (`main.c`).
   - Verification: MSVC clean (`KWizard.exe` 33.3 KB); Vite clean in 403ms (`kwizard.html` 103.7 KB < 999 KB); icon & security lints 100% PASS.
-
-- **2026-09-29T19:44:00Z — kilo-usability: KSys (Toast Occlusion Guard, Modal Viewport Clipping & Responsive Layout)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security & icon lints clean, 139.7 KB < 999 KB).
-  - Toast & Action Ergonomics: Repositioned toast container to bottom-center with safe bounds, eliminating occlusion of export download actions.
-  - Modal Viewport Guard: Bounded modal overlay and dialogs against vertical clipping with dynamic scroll limits across smaller viewports.
-  - Ribbon & Navigation: Modernized quick-action bar to sleek non-wrapping ribbon; added focus management on service modal close.
-  - Responsive Layout & Sparklines: Added mobile/compact media query breakpoints; wired resize listener for immediate canvas redraw.
-  - Verification: MSVC clean (`KSys.exe` 30.2 KB); Vite clean in 270ms (`ksys.html` 139.7 KB < 999 KB); icon & security lints 100% PASS.

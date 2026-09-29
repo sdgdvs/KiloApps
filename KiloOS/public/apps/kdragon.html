@@ -217,11 +217,11 @@
 
         #toast-container {
             position: fixed;
-            top: 15px;
-            right: 15px;
+            bottom: 20px;
+            right: 20px;
             z-index: 9999;
             display: flex;
-            flex-direction: column;
+            flex-direction: column-reverse;
             gap: 8px;
             pointer-events: none;
             max-width: 320px;
@@ -242,14 +242,14 @@
         }
         .toast.hide {
             opacity: 0;
-            transform: translateY(-10px);
+            transform: translateY(10px);
         }
         .toast-gold { border-color: #ffd700; color: #fff8db; }
         .toast-info { border-color: #74c0fc; color: #e7f5ff; }
         .toast-success { border-color: #69db7c; color: #ebfbee; }
         .toast-warn { border-color: #ffa94d; color: #fff4e6; }
         @keyframes toastIn {
-            from { opacity: 0; transform: translateY(-15px); }
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -369,9 +369,12 @@
                 <button id="btn-hoard"><span class="btn-badge">5</span> Hoard (🗺️)</button>
                 <button id="btn-battle"><span class="btn-badge">6</span> Battle (⚔️)</button>
                 <button id="btn-shop"><span class="btn-badge">7</span> Shop (🛒)</button>
-                <button id="btn-save"><span class="btn-badge">F5</span> Save (💾)</button>
-                <button id="btn-load"><span class="btn-badge">F9</span> Load (📂)</button>
-                <button id="btn-help"><span class="btn-badge">F1</span> Help (❓)</button>
+                <button id="btn-save" title="Quicksave Dragon [F5]"><span class="btn-badge">F5</span> Save (💾)</button>
+                <button id="btn-load" title="Quickload Dragon [F9]"><span class="btn-badge">F9</span> Load (📂)</button>
+                <button id="btn-export" title="Export Save File (.json)"><span class="btn-badge">Exp</span> Export (📤)</button>
+                <button id="btn-import" title="Import Save File (.json)"><span class="btn-badge">Imp</span> Import (📥)</button>
+                <button id="btn-audio" title="Toggle Sound [U]"><span class="btn-badge">U</span> 🔊 Audio</button>
+                <button id="btn-help" title="Dragon Master's Guide [F1/H]"><span class="btn-badge">F1</span> Help (❓)</button>
             </div>
             <div class="controls" id="shop-controls" style="display: none; flex-wrap: wrap; justify-content: center; gap: 14px;">
                 <div class="shop-card">
@@ -514,6 +517,9 @@
                     <tr><td>Guide / Help</td><td><span class="kbd-chip">F1</span> or <span class="kbd-chip">H</span></td><td>Toggle this Guide dialog</td></tr>
                     <tr><td>Quicksave</td><td><span class="kbd-chip">F5</span></td><td>Save complete dragon vitals, gold &amp; relics</td></tr>
                     <tr><td>Quickload</td><td><span class="kbd-chip">F9</span></td><td>Restore saved dragon sanctuary state</td></tr>
+                    <tr><td>Export Save</td><td><span class="kbd-chip">Exp</span></td><td>Download complete save state (.json)</td></tr>
+                    <tr><td>Import Save</td><td><span class="kbd-chip">Imp</span></td><td>Upload &amp; restore JSON save file</td></tr>
+                    <tr><td>Toggle Sound</td><td><span class="kbd-chip">U</span></td><td>Toggle YM2612 FM Audio &amp; SPC700 Delay</td></tr>
                     <tr><td>Incubate Egg</td><td><span class="kbd-chip">Space</span> or <span class="kbd-chip">1</span></td><td>Hatch mystical dragon egg</td></tr>
                     <tr><td>Feed</td><td><span class="kbd-chip">1</span> or <span class="kbd-chip">F</span></td><td>Restore +20 Hunger (-5 Energy)</td></tr>
                     <tr><td>Play</td><td><span class="kbd-chip">2</span> or <span class="kbd-chip">P</span></td><td>Restore +20 Happiness (-20 Energy)</td></tr>
@@ -522,7 +528,7 @@
                     <tr><td>Expedition (Hoard)</td><td><span class="kbd-chip">5</span> or <span class="kbd-chip">O</span></td><td>Forage for Gold and rare Artifacts</td></tr>
                     <tr><td>Battle Arena</td><td><span class="kbd-chip">6</span> or <span class="kbd-chip">B</span></td><td>Fight wild enemy dragons for Gold</td></tr>
                     <tr><td>Shop Bazaar</td><td><span class="kbd-chip">7</span> or <span class="kbd-chip">M</span></td><td>Purchase Food, Toys, Equipment</td></tr>
-                    <tr><td>Submenus & Modals</td><td><span class="kbd-chip">Esc</span></td><td>Close dialog / Return to Main menu</td></tr>
+                    <tr><td>Submenus & Modals</td><td><span class="kbd-chip">Esc</span></td><td>Close dialog / Cancel minigame / Return</td></tr>
                 </table>
 
                 <h3>Minigames & Sub-Controls</h3>
@@ -558,6 +564,9 @@
                     </li>
                     <li><b>Sacred Hoard Relics:</b> Collect all 6 rare artifacts on expeditions to achieve Treasure Sovereign status!</li>
                 </ul>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button id="btn-close-help-bottom" style="padding: 10px 24px; font-size: 15px;"><span class="btn-badge">Esc</span> Got It / Return to Game</button>
+                </div>
             </div>
         </div>
         
@@ -592,10 +601,12 @@
   <rect x="5" y="12" width="6" height="1" fill="rgb(180,150,100)" />
 </svg></div>
             <p>A mysterious egg awaits...</p>
-            <p style="font-size: 14px; font-style: italic;">Press H or F1 for Help | F5/F9 to Save/Load</p>
+            <p style="font-size: 14px; font-style: italic;">Press H or F1 for Help | F5/F9 to Save/Load | U for Sound</p>
             <button id="btn-hatch"><span class="btn-badge">Space</span> Incubate Egg</button>
             <button id="btn-start-load"><span class="btn-badge">F9</span> Load Saved Dragon</button>
+            <button id="btn-start-import"><span class="btn-badge">Imp</span> Import Save</button>
             <button id="btn-start-help"><span class="btn-badge">F1</span> Help (❓)</button>
+            <input type="file" id="import-save-file" accept=".json" style="display: none;">
         </div>
     </div>
 
@@ -855,8 +866,19 @@
             delayNode: null,
             feedbackGain: null,
             filterNode: null,
+            muted: false,
+
+            toggleMute() {
+                this.muted = !this.muted;
+                const btn = document.getElementById('btn-audio');
+                if (btn) {
+                    btn.innerHTML = `<span class="btn-badge">U</span> ${this.muted ? '🔇 Muted' : '🔊 Audio'}`;
+                }
+                return this.muted;
+            },
 
             init() {
+                if (this.muted) return;
                 if (!this.ctx) {
                     const AudioCtx = window.AudioContext || window.webkitAudioContext;
                     if (!AudioCtx) return;
@@ -881,6 +903,7 @@
             },
 
             playFM(carrierFreq, modRatio, modIndex, duration, type = 'sine', enableEcho = false, masterVol = 0.18) {
+                if (this.muted) return;
                 this.init();
                 if (!this.ctx) return;
                 const t = this.ctx.currentTime;
@@ -918,6 +941,7 @@
             },
 
             playPreset(name) {
+                if (this.muted) return;
                 this.init();
                 if (!this.ctx) return;
                 const t = this.ctx.currentTime;
@@ -1147,8 +1171,10 @@
                 }, duration);
             },
 
-            quickSave() {
-                const payload = {
+            getPayload() {
+                return {
+                    app: "KDragon",
+                    version: "1.0",
                     state: this.state,
                     element: this.element,
                     feedCount: this.feedCount,
@@ -1176,6 +1202,10 @@
                     } : null,
                     timestamp: Date.now()
                 };
+            },
+
+            quickSave() {
+                const payload = this.getPayload();
                 const ok = safeSetStorage(STORAGE_KEY, JSON.stringify(payload));
                 if (ok) {
                     this.log("Dragon sanctuary state saved! [F5]");
@@ -1186,6 +1216,48 @@
                     this.log("Storage quota error: failed to create quicksave.");
                     this.showToast("Storage quota error: failed to save!", "warn");
                 }
+            },
+
+            exportSaveFile() {
+                const payload = this.getPayload();
+                const jsonStr = JSON.stringify(payload, null, 2);
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `kdragon_save_${Date.now()}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                this.log("Exported dragon save file (.json)!");
+                this.showToast("📤 <b>Save File Exported!</b>", "gold");
+                AudioEngine.playPreset('gold');
+            },
+
+            importSaveFile(file) {
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        if (!data || !data.stats) {
+                            throw new Error("Invalid save file structure");
+                        }
+                        safeSetStorage(STORAGE_KEY, JSON.stringify(data));
+                        const loaded = this.quickLoad();
+                        if (loaded) {
+                            this.log(`Imported dragon save file: ${file.name}`);
+                            this.showToast(`📥 <b>Save Imported:</b> ${file.name}`, "gold", 4500);
+                        }
+                    } catch (err) {
+                        console.error("Import save parse error", err);
+                        this.log("Failed to import save: invalid or corrupt JSON!");
+                        this.showToast("Failed to import: invalid JSON!", "warn");
+                        AudioEngine.playPreset('defeat');
+                    }
+                };
+                reader.readAsText(file);
             },
 
             quickLoad() {
@@ -1305,12 +1377,29 @@
             init() {
                 document.getElementById('btn-hatch').addEventListener('click', () => this.hatch());
                 document.getElementById('btn-start-load')?.addEventListener('click', () => this.quickLoad());
+                document.getElementById('btn-start-import')?.addEventListener('click', () => {
+                    document.getElementById('import-save-file')?.click();
+                });
                 document.getElementById('btn-start-help')?.addEventListener('click', () => {
                     safeSetStorage(TUTORIAL_KEY, '1');
                     document.getElementById('help-modal').style.display = 'block';
                 });
                 document.getElementById('btn-save')?.addEventListener('click', () => this.quickSave());
                 document.getElementById('btn-load')?.addEventListener('click', () => this.quickLoad());
+                document.getElementById('btn-export')?.addEventListener('click', () => this.exportSaveFile());
+                document.getElementById('btn-import')?.addEventListener('click', () => {
+                    document.getElementById('import-save-file')?.click();
+                });
+                document.getElementById('import-save-file')?.addEventListener('change', (e) => {
+                    if (e.target.files && e.target.files[0]) {
+                        this.importSaveFile(e.target.files[0]);
+                        e.target.value = '';
+                    }
+                });
+                document.getElementById('btn-audio')?.addEventListener('click', () => {
+                    const isMuted = AudioEngine.toggleMute();
+                    this.showToast(isMuted ? "🔇 Audio Muted [U]" : "🔊 Audio Enabled [U]", "info");
+                });
                 document.getElementById('btn-feed').addEventListener('click', () => this.action('feed'));
                 document.getElementById('btn-play').addEventListener('click', () => this.action('play'));
                 document.getElementById('btn-sleep').addEventListener('click', () => this.action('sleep'));
@@ -1327,6 +1416,9 @@
                     document.getElementById('help-modal').style.display = 'block';
                 });
                 document.getElementById('close-help').addEventListener('click', () => {
+                    document.getElementById('help-modal').style.display = 'none';
+                });
+                document.getElementById('btn-close-help-bottom')?.addEventListener('click', () => {
                     document.getElementById('help-modal').style.display = 'none';
                 });
                 window.addEventListener('click', (e) => {
@@ -1358,6 +1450,12 @@
                         if (!isClosing) safeSetStorage(TUTORIAL_KEY, '1');
                         return;
                     }
+                    if (e.key.toLowerCase() === 'u') {
+                        e.preventDefault();
+                        const isMuted = AudioEngine.toggleMute();
+                        this.showToast(isMuted ? "🔇 Audio Muted [U]" : "🔊 Audio Enabled [U]", "info");
+                        return;
+                    }
                     if (e.key === 'Escape') {
                         const hm = document.getElementById('help-modal');
                         if (hm.style.display === 'block') {
@@ -1367,16 +1465,53 @@
                         if (this.isBusy) {
                             if (document.getElementById('shop-controls').style.display === 'flex') {
                                 document.getElementById('btn-shop-back').click();
-                            } else if (document.getElementById('train-controls').style.display === 'flex') {
+                                return;
+                            }
+                            if (document.getElementById('train-controls').style.display === 'flex') {
                                 document.getElementById('btn-train-back').click();
+                                return;
+                            }
+                            if (document.getElementById('minigame-str').style.display === 'flex') {
+                                if (this.minigameInterval) clearInterval(this.minigameInterval);
+                                document.getElementById('btn-str-hit').onclick = null;
+                                this.log("Training canceled.");
+                                this.endMinigame('str');
+                                return;
+                            }
+                            if (document.getElementById('minigame-spd').style.display === 'flex') {
+                                if (this.minigameTimeout) clearTimeout(this.minigameTimeout);
+                                this.minigameState = null;
+                                document.getElementById('btn-spd-react').onclick = null;
+                                this.log("Training canceled.");
+                                this.endMinigame('spd');
+                                return;
+                            }
+                            if (document.getElementById('minigame-loy').style.display === 'flex') {
+                                this.log("Training canceled.");
+                                this.endMinigame('loy');
+                                return;
+                            }
+                            if (document.getElementById('event-controls').style.display === 'flex') {
+                                document.getElementById('btn-event-opt2').click();
+                                return;
+                            }
+                            if (this.battleState && document.getElementById('battle-controls').style.display === 'flex') {
+                                this.battleTurn('flee');
+                                return;
                             }
                         }
                         return;
                     }
 
-                    // Suppress background keys while Help modal is open
+                    // Suppress background keys while Help modal is open, but allow Enter/Space to dismiss
                     const hm = document.getElementById('help-modal');
-                    if (hm && hm.style.display === 'block') return;
+                    if (hm && hm.style.display === 'block') {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            hm.style.display = 'none';
+                        }
+                        return;
+                    }
                     if (this.state === 'egg') {
                         if (e.key === ' ' || e.key === 'Enter' || e.key === '1') {
                             e.preventDefault();
@@ -1895,6 +2030,16 @@
                         this.minigameState = 'ready';
                         document.getElementById('spd-status').innerText = 'NOW!';
                         this.minigameValue = Date.now();
+                        this.minigameTimeout = setTimeout(() => {
+                            if (this.minigameState === 'ready') {
+                                this.minigameState = null;
+                                document.getElementById('btn-spd-react').onclick = null;
+                                this.log("Too slow! Reaction timed out. Speed +0");
+                                this.showToast("Too slow! Reaction timed out.", "warn");
+                                AudioEngine.playPreset('click');
+                                this.endMinigame('spd');
+                            }
+                        }, 4000);
                     }, delay);
                     
                     document.getElementById('btn-spd-react').onclick = () => {
@@ -1907,6 +2052,7 @@
                             AudioEngine.playPreset('click');
                             this.endMinigame('spd');
                         } else if (this.minigameState === 'ready') {
+                            clearTimeout(this.minigameTimeout);
                             this.minigameState = null;
                             document.getElementById('btn-spd-react').onclick = null;
                             let time = Date.now() - this.minigameValue;
