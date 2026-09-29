@@ -178,6 +178,7 @@ def load_config() -> dict:
     defaults = {
         "autostart_with_windows": True,
         "autostart_turns_on_launch": False,  # Defensive default: only start on this PC if explicitly configured!
+        "enable_24h_timer": False,  # Optional auto-stop timer: defaults to OFF (continuous mode)
         "always_on_top": False,
         "node_id": "auto",
     }
@@ -517,7 +518,7 @@ class FleetDashboard(tk.Tk):
 
         self.lbl_next_run = add_metric_row(grid_frame, 0, "Next Scheduled Run:")
         self.lbl_window = add_metric_row(grid_frame, 1, "Fleet Window Alignment:")
-        self.lbl_session = add_metric_row(grid_frame, 2, "24h Session Remaining:")
+        self.lbl_session = add_metric_row(grid_frame, 2, "Fleet Session Mode:")
         self.lbl_turns = add_metric_row(grid_frame, 3, "Turns Executed (Today):")
         self.lbl_target = add_metric_row(grid_frame, 4, "Active Fleet Target:")
 
@@ -544,9 +545,12 @@ class FleetDashboard(tk.Tk):
         pref_frame = tk.Frame(main_frame, bg=self.c_bg)
         pref_frame.pack(fill=tk.X, pady=(2, 6))
 
+        pref_row1 = tk.Frame(pref_frame, bg=self.c_bg)
+        pref_row1.pack(fill=tk.X)
+
         self.var_autostart_win = tk.BooleanVar(value=self.config_data.get("autostart_with_windows", True))
         self.chk_autostart_win = tk.Checkbutton(
-            pref_frame,
+            pref_row1,
             text="Autostart with Windows",
             variable=self.var_autostart_win,
             command=self._on_toggle_autostart_win,
@@ -561,7 +565,7 @@ class FleetDashboard(tk.Tk):
 
         self.var_autostart_turns = tk.BooleanVar(value=self.config_data.get("autostart_turns_on_launch", True))
         self.chk_autostart_turns = tk.Checkbutton(
-            pref_frame,
+            pref_row1,
             text="Auto-start turns on login",
             variable=self.var_autostart_turns,
             command=self._on_toggle_autostart_turns,
@@ -576,7 +580,7 @@ class FleetDashboard(tk.Tk):
 
         self.var_ontop = tk.BooleanVar(value=self.config_data.get("always_on_top", False))
         self.chk_ontop = tk.Checkbutton(
-            pref_frame,
+            pref_row1,
             text="Always on top",
             variable=self.var_ontop,
             command=self._on_toggle_ontop,
@@ -588,6 +592,24 @@ class FleetDashboard(tk.Tk):
             activeforeground=self.c_fg,
         )
         self.chk_ontop.pack(side=tk.RIGHT)
+
+        pref_row2 = tk.Frame(pref_frame, bg=self.c_bg)
+        pref_row2.pack(fill=tk.X, pady=(2, 0))
+
+        self.var_24h_timer = tk.BooleanVar(value=self.config_data.get("enable_24h_timer", False))
+        self.chk_24h_timer = tk.Checkbutton(
+            pref_row2,
+            text="⏱ Auto-stop after 24 hours (optional)",
+            variable=self.var_24h_timer,
+            command=self._on_toggle_24h_timer,
+            font=("Segoe UI", 8),
+            fg=self.c_fg,
+            bg=self.c_bg,
+            selectcolor="#313244",
+            activebackground=self.c_bg,
+            activeforeground=self.c_fg,
+        )
+        self.chk_24h_timer.pack(side=tk.LEFT)
 
         # 6. Bottom Actions Bar
         bot_bar = tk.Frame(main_frame, bg=self.c_bg)
@@ -653,6 +675,13 @@ class FleetDashboard(tk.Tk):
         save_config(self.config_data)
         self.log(f"Auto-start turns on login set to: {val}")
 
+    def _on_toggle_24h_timer(self):
+        val = self.var_24h_timer.get()
+        self.config_data["enable_24h_timer"] = val
+        save_config(self.config_data)
+        desc = "enabled (24h session)" if val else "disabled (continuous execution)"
+        self.log(f"Auto-stop timer preference set to: {desc}")
+
     def _on_change_cadence(self):
         val = self.var_cadence.get()
         self.config_data["cadence"] = val
@@ -679,7 +708,11 @@ class FleetDashboard(tk.Tk):
             return
         self.is_busy = True
         self.btn_start.configure(state=tk.DISABLED)
-        self.log(f"Activating KiloApps creation turns on {self.current_node_name} (24h session armed)...")
+        use_24h = self.var_24h_timer.get()
+        if use_24h:
+            self.log(f"Activating KiloApps creation turns on {self.current_node_name} (24h timed session)...")
+        else:
+            self.log(f"Activating KiloApps creation turns on {self.current_node_name} (Continuous mode: unlimited session)...")
 
         def task():
             try:
@@ -692,11 +725,14 @@ class FleetDashboard(tk.Tk):
                     "Bypass",
                     "-File",
                     str(ps_script),
-                    "-Hours",
-                    "24",
                     "-NodeId",
                     self.current_node_id,
                 ]
+                if use_24h:
+                    cmd.extend(["-Hours", "24"])
+                else:
+                    cmd.extend(["-Continuous", "-Hours", "0"])
+
                 if self.current_node_id == "pc_c":
                     cmd.extend(["-Cadence", str(self.config_data.get("cadence", 4))])
                 res = subprocess.run(
@@ -708,7 +744,8 @@ class FleetDashboard(tk.Tk):
                     creationflags=CREATE_NO_WINDOW,
                 )
                 if res.returncode == 0:
-                    self.after(0, lambda: self.log("Windows Scheduled Task active & 24h timer set."))
+                    status_desc = "24h session armed." if use_24h else "Continuous mode active (repeats indefinitely)."
+                    self.after(0, lambda: self.log(f"Windows Scheduled Task active & {status_desc}"))
                 else:
                     err = res.stderr.strip() or res.stdout.strip()
                     self.after(0, lambda: self.log(f"Registration warning: {err}"))
@@ -962,8 +999,16 @@ class FleetDashboard(tk.Tk):
                 s_data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
                 turns_count = s_data.get("turns_executed", 0)
                 status = s_data.get("status", "unknown")
+                limit_enabled = s_data.get("session_limit_enabled", False)
                 end_str = s_data.get("session_end", "")
-                if end_str:
+
+                if status == "stopped":
+                    session_active = False
+                    remaining_str = "STOPPED by user"
+                elif not limit_enabled or not end_str:
+                    session_active = (status == "active")
+                    remaining_str = "🟢 Continuous (No auto-stop timer)"
+                else:
                     if end_str.endswith("Z"):
                         end_str = end_str[:-1] + "+00:00"
                     if "." in end_str and ("+" in end_str or "-" in end_str):
@@ -982,7 +1027,7 @@ class FleetDashboard(tk.Tk):
                     elif status == "stopped":
                         remaining_str = "STOPPED by user"
                     else:
-                        remaining_str = "EXPIRED (24h elapsed)"
+                        remaining_str = "EXPIRED (Session limit reached)"
             except Exception:
                 pass
 
@@ -1033,7 +1078,11 @@ class FleetDashboard(tk.Tk):
             )
 
         # 5. Session & Turns
-        self.lbl_session.configure(text=remaining_str, fg=self.c_fg if session_active else self.c_sub)
+        is_continuous = "Continuous" in remaining_str
+        self.lbl_session.configure(
+            text=remaining_str,
+            fg=self.c_green if is_continuous else (self.c_fg if session_active else self.c_sub),
+        )
         self.lbl_turns.configure(text=f"{turns_count} turns executed", fg=self.c_fg)
 
         # 6. Active Queue Target

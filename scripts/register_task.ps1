@@ -7,9 +7,12 @@
       - PC B (anonymous2, Gemini Pro): 1 turn/hr at :30 past each hour (Window :28 - :36)
       - PC C (This PC / anonymous1, Gemini Ultra): 4 turns/hr at :02, :20, :38, :48 past each hour
         (or 3 turns/hr at :02, :22, :42 past each hour).
-    Automatically halts and disables the task when the 24-hour session expires.
+    Supports continuous mode (default: indefinite repetition, no auto-stop timer)
+    or optional timed sessions (e.g. -Hours 24).
 .PARAMETER Hours
-    Duration of the active contribution session in hours. Default: 24.0 (1 day).
+    Duration of the active contribution session in hours. Default: 0.0 (Continuous / Indefinite).
+.PARAMETER Continuous
+    Explicit switch to run in continuous mode with no auto-stop timer.
 .PARAMETER NodeId
     Node identifier: "pc_c" (this PC), "pc_a", "pc_b", or "auto".
 .PARAMETER Cadence
@@ -22,7 +25,8 @@
     Optionally trigger an immediate turn right now (if inside safe window).
 #>
 param(
-    [double]$Hours = 24.0,
+    [double]$Hours = 0.0,
+    [switch]$Continuous,
     [string]$NodeId = "auto",
     [int]$Cadence = 0,
     [int[]]$Minutes = @(),
@@ -78,8 +82,9 @@ if ($Minutes.Count -eq 0) {
     $NodeDesc = "$NodeId (Custom Minutes: $minList)"
 }
 
+$IsContinuous = ($Continuous -or $Hours -le 0.0)
 $Now = Get-Date
-$SessionEnd = $Now.AddHours($Hours)
+$SessionEnd = if ($IsContinuous) { $null } else { $Now.AddHours($Hours) }
 $minDisplay = ($Minutes | ForEach-Object { ":$($_.ToString('D2'))" }) -join ", "
 
 Write-Host "============================================================" -ForegroundColor Cyan
@@ -87,23 +92,43 @@ Write-Host " KiloApps Multi-PC Fleet Scheduler Configuration" -ForegroundColor C
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host "Target Machine:      $NodeDesc [Node ID: $NodeId]"
 Write-Host "Session Start:       $($Now.ToString('yyyy-MM-dd HH:mm:ss'))"
-Write-Host "Session Expiration:  $($SessionEnd.ToString('yyyy-MM-dd HH:mm:ss')) (${Hours}h window)"
-Write-Host "Dispatch Cadence:    Every hour at $minDisplay ($($Minutes.Count) turns/hr = $([int]($Hours * $Minutes.Count)) turns/session)"
+if ($IsContinuous) {
+    Write-Host "Session Mode:        Continuous (No auto-stop timer; unlimited session)" -ForegroundColor Green
+    Write-Host "Session Expiration:  None (repeats every hour indefinitely)" -ForegroundColor Green
+    Write-Host "Dispatch Cadence:    Every hour at $minDisplay ($($Minutes.Count) turns/hr)"
+} else {
+    Write-Host "Session Mode:        Timed Session (${Hours}h window)" -ForegroundColor Yellow
+    Write-Host "Session Expiration:  $($SessionEnd.ToString('yyyy-MM-dd HH:mm:ss'))"
+    Write-Host "Dispatch Cadence:    Every hour at $minDisplay ($($Minutes.Count) turns/hr = $([int]($Hours * $Minutes.Count)) turns/session)"
+}
 Write-Host "Fleet Harmony:       Dedicated collision-free slot across PC A, PC B, and PC C"
 Write-Host "------------------------------------------------------------"
 
+# Preserve previous turn statistics if session file exists
+$PreviousTurns = 0
+$PrevLastTurn = $null
+if (Test-Path $SessionFile) {
+    try {
+        $Existing = Get-Content $SessionFile -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($Existing.turns_executed) { $PreviousTurns = [int]$Existing.turns_executed }
+        if ($Existing.last_turn_timestamp) { $PrevLastTurn = $Existing.last_turn_timestamp }
+    } catch {}
+}
+
 # 1. Initialize session tracking file
-$SessionData = @{
-    node_id             = $NodeId
-    session_start       = $Now.ToUniversalTime().ToString("o")
-    session_end         = $SessionEnd.ToUniversalTime().ToString("o")
-    duration_hours      = $Hours
-    max_turns_estimate  = [int]($Hours * $Minutes.Count)
-    turns_executed      = 0
-    minutes             = $Minutes
-    task_name           = $TaskName
-    status              = "active"
-    last_turn_timestamp = $null
+$SessionData = [ordered]@{
+    node_id               = $NodeId
+    session_start         = $Now.ToUniversalTime().ToString("o")
+    session_end           = if ($IsContinuous) { $null } else { $SessionEnd.ToUniversalTime().ToString("o") }
+    session_limit_enabled = (-not $IsContinuous)
+    timer_enabled         = (-not $IsContinuous)
+    duration_hours        = if ($IsContinuous) { 0.0 } else { $Hours }
+    max_turns_estimate    = if ($IsContinuous) { 0 } else { [int]($Hours * $Minutes.Count) }
+    turns_executed        = $PreviousTurns
+    minutes               = $Minutes
+    task_name             = $TaskName
+    status                = "active"
+    last_turn_timestamp   = $PrevLastTurn
 }
 
 # Update fleet node broadcast file
@@ -113,7 +138,9 @@ if (Test-Path $NodeFile) {
         $NodeData = Get-Content $NodeFile -Raw -Encoding UTF8 | ConvertFrom-Json
         $NodeData.status = "active"
         $NodeData.session_start = $Now.ToUniversalTime().ToString("o")
-        $NodeData.session_end = $SessionEnd.ToUniversalTime().ToString("o")
+        $NodeData.session_end = if ($IsContinuous) { $null } else { $SessionEnd.ToUniversalTime().ToString("o") }
+        $NodeData.session_limit_enabled = (-not $IsContinuous)
+        $NodeData.timer_enabled = (-not $IsContinuous)
         $NodeData.schedule_minutes = $Minutes
         $NodeData.last_heartbeat = $Now.ToUniversalTime().ToString("o")
         $NodeData.remote_command = "none"
@@ -129,14 +156,18 @@ $SessionData | ConvertTo-Json -Depth 4 | Set-Content $SessionFile -Encoding UTF8
 Write-Host "[OK] Session state initialized: .agents\scheduler_session.json" -ForegroundColor Green
 
 # 2. Create scheduled task triggers
-$TimeSpanHours = [TimeSpan]::FromHours($Hours)
 $Triggers = @()
-
 foreach ($m in $Minutes) {
     $s = (Get-Date -Hour $Now.Hour -Minute $m -Second 0)
     if ($s -le $Now) { $s = $s.AddHours(1) }
-    $trig = New-ScheduledTaskTrigger -Once -At $s -RepetitionInterval (New-TimeSpan -Hours 1) -RepetitionDuration $TimeSpanHours
-    $trig.EndBoundary = $SessionEnd.ToString("s")
+    if ($IsContinuous) {
+        # Continuous repetition with NO EndBoundary and NO RepetitionDuration limit
+        $trig = New-ScheduledTaskTrigger -Once -At $s -RepetitionInterval (New-TimeSpan -Hours 1)
+    } else {
+        $TimeSpanHours = [TimeSpan]::FromHours($Hours)
+        $trig = New-ScheduledTaskTrigger -Once -At $s -RepetitionInterval (New-TimeSpan -Hours 1) -RepetitionDuration $TimeSpanHours
+        $trig.EndBoundary = $SessionEnd.ToString("s")
+    }
     $Triggers += $trig
 }
 
@@ -160,7 +191,11 @@ Write-Host "[OK] Windows Scheduled Task '$TaskName' registered successfully!" -F
 Write-Host "    State:          $($Task.State)"
 Write-Host "    Next Run:       $($TaskInfo.NextRunTime)"
 Write-Host "    Triggers Active: $($Triggers.Count) (at $minDisplay past each hour)"
-Write-Host "    Auto-Stop At:   $($SessionEnd.ToString('yyyy-MM-dd HH:mm:ss'))"
+if ($IsContinuous) {
+    Write-Host "    Auto-Stop At:   Disabled (Continuous indefinite execution)" -ForegroundColor Green
+} else {
+    Write-Host "    Auto-Stop At:   $($SessionEnd.ToString('yyyy-MM-dd HH:mm:ss'))"
+}
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host "Fleet Commands:"
 Write-Host "  Check Status:    .\scripts\task_status.ps1" -ForegroundColor Yellow

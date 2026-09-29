@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Reports the status of the KiloApps Fleet Windows Scheduled Task and 24-hour session.
+    Reports the status of the KiloApps Fleet Windows Scheduled Task and session mode.
 #>
 param(
     [string]$TaskName = "KiloApps-Fleet-Orchestrator"
@@ -36,29 +36,37 @@ Write-Host "------------------------------------------------------------"
 # 2. Check Session Timer State
 if (Test-Path $SessionFile) {
     try {
-        $Session = Get-Content $SessionFile -Raw | ConvertFrom-Json
+        $Session = Get-Content $SessionFile -Raw -Encoding UTF8 | ConvertFrom-Json
         $NowUtc = (Get-Date).ToUniversalTime()
-        $EndUtc = ([DateTime]$Session.session_end).ToUniversalTime()
-        $StartUtc = ([DateTime]$Session.session_start).ToUniversalTime()
+        $IsContinuous = (-not $Session.session_limit_enabled -or -not $Session.session_end)
 
-        $Remaining = $EndUtc - $NowUtc
-        $TotalDuration = $EndUtc - $StartUtc
-
-        $StatusColor = "Yellow"
-        if ($Session.status -eq "active" -and $Remaining.TotalSeconds -gt 0) { $StatusColor = "Green" }
-
-        Write-Host "Session Status:     $($Session.status.ToUpper())" -ForegroundColor $StatusColor
-        Write-Host "Session Start:      $($StartUtc.ToLocalTime().ToString('yyyy-MM-dd HH:mm:ss'))"
-        Write-Host "Session Expiration: $($EndUtc.ToLocalTime().ToString('yyyy-MM-dd HH:mm:ss'))"
-
-        if ($Remaining.TotalSeconds -gt 0) {
-            Write-Host "Time Remaining:     $([Math]::Floor($Remaining.TotalHours)) hours, $($Remaining.Minutes) minutes" -ForegroundColor Green
+        if ($IsContinuous) {
+            $StatusColor = if ($Session.status -eq "stopped") { "Red" } else { "Green" }
+            Write-Host "Session Status:     $($Session.status.ToUpper()) (Continuous Mode)" -ForegroundColor $StatusColor
+            Write-Host "Session Mode:       Continuous (No auto-stop timer; unlimited execution)" -ForegroundColor Green
+            Write-Host "Session Expiration: Disabled (Repeats indefinitely)" -ForegroundColor Green
+            Write-Host "Time Remaining:     Unlimited (Continuous Mode)" -ForegroundColor Green
         } else {
-            Write-Host "Time Remaining:     EXPIRED (24-hour window completed)" -ForegroundColor Red
-            Write-Host "Note:               Task halted until user runs .\scripts\extend_time.ps1" -ForegroundColor Yellow
+            $EndUtc = ([DateTime]$Session.session_end).ToUniversalTime()
+            $StartUtc = if ($Session.session_start) { ([DateTime]$Session.session_start).ToUniversalTime() } else { $NowUtc }
+            $Remaining = $EndUtc - $NowUtc
+
+            $StatusColor = "Yellow"
+            if ($Session.status -eq "active" -and $Remaining.TotalSeconds -gt 0) { $StatusColor = "Green" }
+
+            Write-Host "Session Status:     $($Session.status.ToUpper()) (Timed Session)" -ForegroundColor $StatusColor
+            Write-Host "Session Start:      $($StartUtc.ToLocalTime().ToString('yyyy-MM-dd HH:mm:ss'))"
+            Write-Host "Session Expiration: $($EndUtc.ToLocalTime().ToString('yyyy-MM-dd HH:mm:ss'))"
+
+            if ($Remaining.TotalSeconds -gt 0) {
+                Write-Host "Time Remaining:     $([Math]::Floor($Remaining.TotalHours)) hours, $($Remaining.Minutes) minutes" -ForegroundColor Green
+            } else {
+                Write-Host "Time Remaining:     EXPIRED (Timed window completed)" -ForegroundColor Red
+                Write-Host "Note:               Task halted until user runs .\scripts\extend_time.ps1" -ForegroundColor Yellow
+            }
         }
 
-        Write-Host "Turns Executed:     $($Session.turns_executed) of estimated $($Session.max_turns_estimate)"
+        Write-Host "Turns Executed:     $($Session.turns_executed)"
         if ($Session.last_turn_timestamp) {
             Write-Host "Last Turn Completed: $($Session.last_turn_timestamp)"
         }

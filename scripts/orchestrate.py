@@ -97,15 +97,94 @@ def disable_scheduled_task(task_name: str = TASK_NAME):
         log(f"Warning: Could not disable scheduled task via schtasks: {e}")
 
 
+def clean_task_triggers_boundary(task_name: str = TASK_NAME):
+    """Ensures Windows Scheduled Task triggers have no EndBoundary or Duration limit (Continuous Mode)."""
+    if sys.platform != "win32":
+        return
+    ps_cmd = (
+        f"$task = Get-ScheduledTask -TaskName '{task_name}' -ErrorAction SilentlyContinue; "
+        f"if ($task) {{ "
+        f"  $updated = $false; "
+        f"  foreach ($trig in $task.Triggers) {{ "
+        f"    if ($trig.EndBoundary -or $trig.Repetition.Duration) {{ "
+        f"      $trig.EndBoundary = $null; "
+        f"      $trig.Repetition.Duration = $null; "
+        f"      $updated = $true; "
+        f"    }} "
+        f"  }}; "
+        f"  if ($updated) {{ "
+        f"    Set-ScheduledTask -TaskName '{task_name}' -Trigger $task.Triggers | Out-Null; "
+        f"    Write-Host 'CONTINUOUS_MIGRATED'; "
+        f"  }} "
+        f"}}"
+    )
+    try:
+        res = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", ps_cmd],
+            capture_output=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+            creationflags=CREATE_NO_WINDOW,
+            timeout=10,
+        )
+        if "CONTINUOUS_MIGRATED" in res.stdout:
+            log(f"[MIGRATION] Neutralized EndBoundary and Duration limit on Task '{task_name}' triggers (continuous repetition).")
+    except Exception as e:
+        log(f"Warning checking task triggers boundary: {e}")
+
+
+def ensure_continuous_scheduler(node_id: str):
+    """Ensures local machine runs in continuous mode with no auto-stop timer unless explicitly enabled."""
+    if SESSION_FILE.exists():
+        try:
+            s_data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
+            if s_data.get("session_limit_enabled") is not True:
+                needs_save = False
+                if s_data.get("session_end") is not None:
+                    s_data["session_end"] = None
+                    needs_save = True
+                if s_data.get("session_limit_enabled") is not False:
+                    s_data["session_limit_enabled"] = False
+                    needs_save = True
+                if s_data.get("timer_enabled") is not False:
+                    s_data["timer_enabled"] = False
+                    needs_save = True
+                if s_data.get("duration_hours") != 0:
+                    s_data["duration_hours"] = 0
+                    needs_save = True
+                if s_data.get("status") == "expired":
+                    s_data["status"] = "active"
+                    needs_save = True
+                if needs_save:
+                    SESSION_FILE.write_text(json.dumps(s_data, indent=2), encoding="utf-8")
+                    log("[MIGRATION] Neutralized auto-stop timer in scheduler_session.json (session_end: null, status: active).")
+        except Exception as e:
+            log(f"Warning verifying session continuous state: {e}")
+
+    # Remove EndBoundary and RepetitionDuration from Windows Scheduled Task
+    clean_task_triggers_boundary(TASK_NAME)
+
+
 def check_session_timer() -> bool:
-    """Verifies that the 24-hour fleet contribution session has not expired."""
+    """Verifies whether a session limit is active and has expired.
+    
+    Defaults to Continuous Mode (unlimited fleet execution) unless session_limit_enabled is explicitly True.
+    """
     if not SESSION_FILE.exists():
+        log("[SESSION ACTIVE] Continuous mode (unlimited fleet execution, no session file).")
         return True
 
     try:
         data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
+        
+        # If timer is not explicitly enabled, fleet runs continuously
+        if not data.get("session_limit_enabled", False):
+            log("[SESSION ACTIVE] Continuous mode enabled (no auto-stop timer).")
+            return True
+
         end_str = data.get("session_end")
         if not end_str:
+            log("[SESSION ACTIVE] Continuous mode enabled (session_end is null).")
             return True
 
         ts_str = str(end_str).strip()
@@ -115,7 +194,7 @@ def check_session_timer() -> bool:
         now_dt = datetime.datetime.now(datetime.timezone.utc)
 
         if now_dt >= end_dt:
-            log(f"[SESSION EXPIRED] Active 24-hour contribution period ended at {end_str}. Halting execution until user requests more time.")
+            log(f"[SESSION EXPIRED] Timed session ended at {end_str}. Halting execution until user requests more time.")
             data["status"] = "expired"
             try:
                 SESSION_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
@@ -125,7 +204,7 @@ def check_session_timer() -> bool:
             return False
 
         remaining_sec = (end_dt - now_dt).total_seconds()
-        log(f"[SESSION ACTIVE] {remaining_sec / 3600:.1f}h remaining in 24-hour session (expires {end_str}).")
+        log(f"[SESSION ACTIVE] {remaining_sec / 3600:.1f}h remaining in timed session (expires {end_str}).")
         return True
     except Exception as e:
         log(f"Warning: Failed to read/validate session timer file: {e}")
@@ -257,6 +336,12 @@ def broadcast_node_heartbeat(node_id: str, status: str = "active", target: str =
             data["turns_executed"] = s_data.get("turns_executed", 0)
             data["session_end"] = s_data.get("session_end")
             data["session_start"] = s_data.get("session_start")
+            data["session_limit_enabled"] = s_data.get("session_limit_enabled", False)
+            data["timer_enabled"] = s_data.get("session_limit_enabled", False)
+        else:
+            data["session_end"] = None
+            data["session_limit_enabled"] = False
+            data["timer_enabled"] = False
         node_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
     except Exception as e:
         log(f"Warning updating fleet node status: {e}")
@@ -462,7 +547,14 @@ def run_git_pull() -> bool:
         text=True,
     )
     if res.returncode == 0:
-        log(f"Git sync clean: {res.stdout.strip() or 'Already up to date.'}")
+        out = res.stdout.strip()
+        log(f"Git sync clean: {out or 'Already up to date.'}")
+        if "scripts/orchestrate.py" in out and os.environ.get("ORCHESTRATOR_REEXEC") != "1":
+            log("[AUTO-UPDATE] Detected update to orchestrator.py from git pull. Re-executing freshly pulled script...")
+            os.environ["ORCHESTRATOR_REEXEC"] = "1"
+            release_lock()
+            re_res = subprocess.run([sys.executable, str(Path(__file__).resolve())] + sys.argv[1:], cwd=str(REPO_ROOT))
+            sys.exit(re_res.returncode)
         return True
 
     err_output = res.stderr.strip() or res.stdout.strip()
@@ -640,24 +732,28 @@ def main():
         node_name = NODE_PROFILES.get(node_id, {}).get("name", node_id)
         log(f"Operating Node Identity: {node_name} [{node_id}]")
 
-        # 2. Check for remote commands from fleet dashboard
-        if not check_and_handle_remote_commands(node_id):
-            return
-
-        # 3. Enforce 24-hour session limit
-        if not args.ignore_session and not check_session_timer():
-            broadcast_node_heartbeat(node_id, status="expired")
-            return
-
-        # 4. Enforce collision-free window guard for this specific node
-        if not args.ignore_window and not args.dry_run and is_in_collision_window(node_id):
-            return
-
+        # 2. Git Sync: pull remote changes first so this machine runs with latest logic & signals
         if not args.dry_run:
             if not run_git_pull():
                 log("Proceeding with local state despite git sync warning.")
         else:
             check_and_recover_git_state()
+
+        # 3. Continuous Mode Self-Healing: neutralize 24h timer and task trigger boundaries
+        ensure_continuous_scheduler(node_id)
+
+        # 4. Check for remote commands from fleet dashboard
+        if not check_and_handle_remote_commands(node_id):
+            return
+
+        # 5. Enforce session limit (Continuous mode by default unless explicitly configured)
+        if not args.ignore_session and not check_session_timer():
+            broadcast_node_heartbeat(node_id, status="expired")
+            return
+
+        # 6. Enforce collision-free window guard for this specific node
+        if not args.ignore_window and not args.dry_run and is_in_collision_window(node_id):
+            return
 
         is_valid, content_or_err = validate_next_work_file(NEXT_WORK_FILE)
         if not is_valid:
