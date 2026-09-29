@@ -7,6 +7,31 @@
 <script>
   if (window.resizeTo) window.resizeTo(1000, 800);
 </script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+  const firebaseConfig = {
+      apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+      authDomain: "kiloappschat.firebaseapp.com",
+      databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+      projectId: "kiloappschat",
+      storageBucket: "kiloappschat.firebasestorage.app",
+      messagingSenderId: "290208566057",
+      appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+  };
+
+  try {
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      window.fb = {
+          app, db, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect
+      };
+      if (typeof window.onFirebaseLoaded === 'function') window.onFirebaseLoaded();
+  } catch (err) {
+      console.warn("Firebase RTDB init error:", err);
+  }
+</script>
 <style>
   :root {
     --bg-dark: #0b0d14;
@@ -581,6 +606,109 @@
     font-size: 11px;
     font-weight: 700;
   }
+
+  /* Typing Duel Online Multiplayer Styles */
+  .btn-success {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #fff;
+  }
+  .btn-success:hover {
+    background: linear-gradient(135deg, #34d399, #10b981);
+    box-shadow: 0 0 14px rgba(16, 185, 129, 0.4);
+  }
+  .duel-lane-road {
+    position: relative;
+    height: 42px;
+    background: #090c14;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    overflow: visible;
+  }
+  .duel-road-stripes {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 36px;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, rgba(255,255,255,0.15), rgba(255,255,255,0.15) 12px, transparent 12px, transparent 24px);
+    transform: translateY(-50%);
+  }
+  .duel-finish-flag {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 36px;
+    background: repeating-linear-gradient(45deg, #000, #000 6px, #fff 6px, #fff 12px);
+    border-top-right-radius: 7px;
+    border-bottom-right-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    z-index: 1;
+    box-shadow: -2px 0 6px rgba(0,0,0,0.5);
+  }
+  .duel-racer-avatar {
+    position: absolute;
+    left: 0%;
+    top: 50%;
+    transform: translate(-10px, -50%);
+    font-size: 26px;
+    line-height: 1;
+    transition: left 0.12s linear;
+    display: flex;
+    align-items: center;
+    z-index: 3;
+    pointer-events: none;
+  }
+  .duel-taunt-bubble {
+    display: none;
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ffffff;
+    color: #0b0d14;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+    pointer-events: none;
+    animation: tauntPop 0.25s ease-out;
+    z-index: 10;
+  }
+  .duel-taunt-bubble::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -4px;
+    border-width: 4px;
+    border-style: solid;
+    border-color: #ffffff transparent transparent transparent;
+  }
+  @keyframes tauntPop {
+    from { opacity: 0; transform: translate(-50%, 6px) scale(0.85); }
+    to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+  }
+  .duel-word {
+    display: inline-block;
+    margin-right: 12px;
+    margin-bottom: 8px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    transition: background 0.15s ease;
+  }
+  .duel-word.active {
+    background: rgba(0, 242, 254, 0.15);
+    outline: 1px solid rgba(0, 242, 254, 0.4);
+  }
+  .duel-word.completed {
+    opacity: 0.6;
+  }
 </style>
 </head>
 <body>
@@ -599,6 +727,7 @@
     <button class="tab-btn" id="tab-btn-custom" role="tab" aria-selected="false" aria-controls="tab-custom" onclick="switchTab('custom')">📝 Custom Lessons</button>
     <button class="tab-btn" id="tab-btn-analytics" role="tab" aria-selected="false" aria-controls="tab-analytics" onclick="switchTab('analytics')">📊 Analytics & Heatmap</button>
     <button class="tab-btn" id="tab-btn-history" role="tab" aria-selected="false" aria-controls="tab-history" onclick="switchTab('history')">🏆 Leaderboard</button>
+    <button class="tab-btn" id="tab-btn-duel" role="tab" aria-selected="false" aria-controls="tab-duel" onclick="switchTab('duel')">🏁 Typing Duel</button>
   </nav>
 
   <div class="header-actions">
@@ -790,6 +919,252 @@
       </div>
     </div>
   </div>
+
+  <!-- TAB 6: ONLINE MULTIPLAYER TYPING DUEL -->
+  <div id="tab-duel" class="tab-content" role="tabpanel" aria-labelledby="tab-btn-duel">
+    <!-- Duel Profile & Network Status Bar -->
+    <div class="controls-bar" style="justify-content: space-between;">
+      <div class="control-group" style="gap: 12px; flex-wrap: wrap;">
+        <span class="control-label">Racer Callsign:</span>
+        <input type="text" id="duel-callsign" maxlength="15" placeholder="CALLSIGN" style="background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: var(--accent-cyan); padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 13px; font-family: var(--font-mono); width: 140px; text-transform: uppercase;" onchange="saveDuelCallsign(this.value)">
+        <span class="control-label">Vehicle:</span>
+        <select id="duel-vehicle" style="background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 13px;" onchange="saveDuelVehicle(this.value)">
+          <option value="🏎️">🏎️ Formula V</option>
+          <option value="🚀">🚀 Rocket Cruiser</option>
+          <option value="⚡">⚡ Cyber Vector</option>
+          <option value="🛸">🛸 Hover Craft</option>
+          <option value="🐆">🐆 Neon Cheetah</option>
+          <option value="🏍️">🏍️ Pulse Bike</option>
+        </select>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div id="duel-net-status" style="display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #10b981;">
+          <span id="duel-net-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #10b981; box-shadow: 0 0 8px #10b981;"></span>
+          <span id="duel-net-text">Firebase RTDB Ready</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Matchmaking & Setup Card -->
+    <div id="duel-lobby-card" class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+        <div>
+          <h2 style="font-size: 18px; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+            <span>🏁</span> Typing Duel — Live Speed Racing
+          </h2>
+          <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+            Compete live against players anywhere in real-time side-by-side keystroke races via Firebase Realtime Database.
+          </p>
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <span class="badge">Multiplayer Duel Arena</span>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin-bottom: 16px;">
+        <!-- Quick Match Box -->
+        <div style="background: rgba(0, 242, 254, 0.05); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="font-weight: 700; font-size: 14px; color: var(--accent-cyan); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+              <span>⚡</span> Quick Matchmaking
+            </div>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4;">
+              Auto-match with any challenger waiting in the global lobby, or host an open public race.
+            </p>
+          </div>
+          <button class="btn" style="width: 100%; justify-content: center;" id="btn-quick-duel" onclick="duelStartQuickMatch()">
+            ⚡ Find / Host Race
+          </button>
+        </div>
+
+        <!-- Custom Room Box -->
+        <div style="background: rgba(157, 78, 221, 0.05); border: 1px solid rgba(157, 78, 221, 0.3); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="font-weight: 700; font-size: 14px; color: var(--accent-purple); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+              <span>⚔️</span> Private Room Code
+            </div>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">
+              Share a race room code with a colleague or join an existing race.
+            </p>
+            <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+              <input type="text" id="duel-room-code-input" placeholder="CODE" maxlength="8" style="background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: #fff; padding: 6px 10px; border-radius: 6px; font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; width: 50%;">
+              <select id="duel-race-preset" style="background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 12px; width: 50%;">
+                <option value="words_25">Sprint (25 Words)</option>
+                <option value="words_50" selected>Grand Prix (50 Words)</option>
+                <option value="code_30">Code Snippets</option>
+              </select>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn btn-secondary" style="flex: 1; justify-content: center;" onclick="duelCreateCustomRoom()">Create</button>
+            <button class="btn" style="flex: 1; justify-content: center;" onclick="duelJoinCustomRoom()">Join</button>
+          </div>
+        </div>
+
+        <!-- Solo / AI Bot Duel Box -->
+        <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="font-weight: 700; font-size: 14px; color: var(--accent-green); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+              <span>🤖</span> Practice vs AI Rival
+            </div>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;">
+              Instant solo speed duel against an adaptive bot with realistic typing pacing.
+            </p>
+            <div style="margin-bottom: 10px;">
+              <select id="duel-ai-difficulty" style="width: 100%; background: rgba(0,0,0,0.5); border: 1px solid var(--border-color); color: #fff; padding: 6px 10px; border-radius: 6px; font-size: 12px;">
+                <option value="rookie">Rookie Bot (ByteRacer ~42 WPM)</option>
+                <option value="pro" selected>Pro Bot (SiliconGhost ~75 WPM)</option>
+                <option value="master">Grandmaster Bot (NeoTypist ~112 WPM)</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn btn-success" style="width: 100%; justify-content: center;" onclick="duelStartAiMatch()">
+            🤖 Race AI Rival
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Lobby List or Waiting Notice -->
+      <div id="duel-lobby-status-banner" style="display: none; background: rgba(0, 242, 254, 0.1); border: 1px dashed var(--accent-cyan); border-radius: 8px; padding: 14px; text-align: center;">
+        <div style="font-weight: 700; color: var(--accent-cyan); font-size: 15px; margin-bottom: 6px;" id="duel-lobby-banner-title">
+          ⏳ Waiting for Challenger...
+        </div>
+        <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 10px;" id="duel-lobby-banner-desc">
+          Room Code: <strong id="duel-banner-room-code" style="color: #fff; font-family: var(--font-mono); font-size: 14px;">---</strong>. Share this code with an opponent!
+        </div>
+        <div style="display: flex; justify-content: center; gap: 10px;">
+          <button class="btn btn-sm btn-secondary" onclick="duelCopyRoomCode()">📋 Copy Code</button>
+          <button class="btn btn-sm" onclick="duelFillWithAi()">🤖 Fill with AI Rival</button>
+          <button class="btn btn-sm btn-danger" onclick="duelCancelMatch()">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Race Arena -->
+    <div id="duel-arena-card" class="card" style="display: none;">
+      <!-- Race Top Bar -->
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-weight: 700; color: var(--text-muted); font-size: 12px; text-transform: uppercase;">Room: <span id="duel-arena-room-id" style="color: var(--accent-cyan); font-family: var(--font-mono);">---</span></span>
+          <span class="badge" id="duel-state-badge">Waiting</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div id="duel-countdown-display" style="font-size: 20px; font-weight: 800; font-family: var(--font-mono); color: var(--accent-amber);"></div>
+          <button class="btn btn-sm btn-secondary" onclick="duelLeaveRace()">🚪 Leave Race</button>
+        </div>
+      </div>
+
+      <!-- Visual Side-by-Side Race Track -->
+      <div class="duel-track-container" style="background: rgba(6, 8, 14, 0.9); border: 1px solid var(--border-color); border-radius: 12px; padding: 18px; margin-bottom: 16px; position: relative;">
+        <!-- Lane 1: Player (You) -->
+        <div style="margin-bottom: 18px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 12px;">
+            <div style="font-weight: 700; color: var(--accent-cyan); display: flex; align-items: center; gap: 6px;">
+              <span id="duel-p1-vehicle-icon">🏎️</span>
+              <span id="duel-p1-name-display">YOU</span>
+              <span style="font-size: 11px; color: var(--text-muted);">(You)</span>
+            </div>
+            <div style="font-family: var(--font-mono); display: flex; gap: 12px; font-weight: 700;">
+              <span><span id="duel-p1-wpm">0</span> <small style="color: var(--text-muted);">WPM</small></span>
+              <span><span id="duel-p1-acc">100%</span> <small style="color: var(--text-muted);">ACC</small></span>
+              <span style="color: var(--accent-cyan);"><span id="duel-p1-pct">0</span>%</span>
+            </div>
+          </div>
+          <div class="duel-lane-road">
+            <div class="duel-road-stripes"></div>
+            <div id="duel-p1-progressbar" style="position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: linear-gradient(90deg, rgba(0,242,254,0.15), rgba(79,172,254,0.3)); border-right: 2px solid var(--accent-cyan); border-radius: 8px 0 0 8px; transition: width 0.1s linear;"></div>
+            <div id="duel-p1-racer" class="duel-racer-avatar" style="left: 0%;">
+              <span id="duel-p1-avatar-sprite">🏎️</span>
+              <div id="duel-p1-taunt-bubble" class="duel-taunt-bubble"></div>
+            </div>
+            <div class="duel-finish-flag">🏁</div>
+          </div>
+        </div>
+
+        <!-- Lane 2: Opponent (Rival or Bot) -->
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 12px;">
+            <div style="font-weight: 700; color: var(--accent-purple); display: flex; align-items: center; gap: 6px;">
+              <span id="duel-p2-vehicle-icon">🚀</span>
+              <span id="duel-p2-name-display">OPPONENT</span>
+              <span id="duel-p2-tag" style="font-size: 11px; color: var(--text-muted);">(Rival)</span>
+            </div>
+            <div style="font-family: var(--font-mono); display: flex; gap: 12px; font-weight: 700;">
+              <span><span id="duel-p2-wpm">0</span> <small style="color: var(--text-muted);">WPM</small></span>
+              <span><span id="duel-p2-acc">100%</span> <small style="color: var(--text-muted);">ACC</small></span>
+              <span style="color: var(--accent-purple);"><span id="duel-p2-pct">0</span>%</span>
+            </div>
+          </div>
+          <div class="duel-lane-road">
+            <div class="duel-road-stripes"></div>
+            <div id="duel-p2-progressbar" style="position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: linear-gradient(90deg, rgba(157,78,221,0.15), rgba(245,158,11,0.3)); border-right: 2px solid var(--accent-purple); border-radius: 8px 0 0 8px; transition: width 0.1s linear;"></div>
+            <div id="duel-p2-racer" class="duel-racer-avatar" style="left: 0%;">
+              <span id="duel-p2-avatar-sprite">🚀</span>
+              <div id="duel-p2-taunt-bubble" class="duel-taunt-bubble"></div>
+            </div>
+            <div class="duel-finish-flag">🏁</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Duel Typing Area -->
+      <div class="card" style="padding: 16px; margin-bottom: 14px; position: relative;">
+        <div class="typing-area" id="duel-typing-area" onclick="duelFocusInput()" style="min-height: 130px; font-size: 20px;">
+          <input type="text" id="duel-hidden-input" class="hidden-input" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Duel typing input">
+          <div id="duel-words-container" aria-live="polite"></div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; font-size: 12px; color: var(--text-muted);">
+          <div>Type the highlighted word and press <kbd style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; color: #fff;">Space</kbd> to advance!</div>
+          <div id="duel-word-counter">Word 0 / 0</div>
+        </div>
+      </div>
+
+      <!-- In-Race Quick Taunts & Emojis Bar -->
+      <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.25); border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 14px; flex-wrap: wrap; gap: 8px;">
+        <span style="font-size: 12px; font-weight: 700; color: var(--text-muted);">Quick Taunts:</span>
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <button class="chip" onclick="duelSendTaunt('🏎️ Vroom!')">🏎️ Vroom!</button>
+          <button class="chip" onclick="duelSendTaunt('⚡ 100+ WPM!')">⚡ 100+ WPM!</button>
+          <button class="chip" onclick="duelSendTaunt('💨 Catch Up!')">💨 Catch Up!</button>
+          <button class="chip" onclick="duelSendTaunt('🔥 Pure Flow!')">🔥 Pure Flow!</button>
+          <button class="chip" onclick="duelSendTaunt('🤖 Beep Boop!')">🤖 Beep Boop!</button>
+          <button class="chip" onclick="duelSendTaunt('GG!')">GG!</button>
+        </div>
+      </div>
+
+      <!-- Post-Race Victory / Podium Banner -->
+      <div id="duel-podium-banner" style="display: none; margin-top: 16px; background: linear-gradient(135deg, rgba(0,242,254,0.15), rgba(157,78,221,0.2)); border: 1px solid var(--accent-cyan); border-radius: 12px; padding: 20px; text-align: center;">
+        <div id="duel-podium-title" style="font-size: 26px; font-weight: 800; color: #fff; margin-bottom: 8px;">
+          🏆 VICTORY!
+        </div>
+        <p id="duel-podium-subtitle" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;">
+          You won the speed duel!
+        </p>
+
+        <!-- Stats Comparison Table -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 500px; margin: 0 auto 18px auto; text-align: left;">
+          <div style="background: rgba(0,0,0,0.4); border-radius: 8px; padding: 12px; border: 1px solid rgba(0,242,254,0.3);">
+            <div style="font-weight: 700; color: var(--accent-cyan); font-size: 13px; margin-bottom: 6px;" id="duel-podium-p1-label">YOU</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">WPM: <strong style="color: #fff;" id="duel-podium-p1-wpm">0</strong></div>
+            <div style="font-size: 12px; color: var(--text-secondary);">Accuracy: <strong style="color: #fff;" id="duel-podium-p1-acc">100%</strong></div>
+            <div style="font-size: 12px; color: var(--text-secondary);">Time: <strong style="color: #fff;" id="duel-podium-p1-time">0s</strong></div>
+          </div>
+          <div style="background: rgba(0,0,0,0.4); border-radius: 8px; padding: 12px; border: 1px solid rgba(157,78,221,0.3);">
+            <div style="font-weight: 700; color: var(--accent-purple); font-size: 13px; margin-bottom: 6px;" id="duel-podium-p2-label">RIVAL</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">WPM: <strong style="color: #fff;" id="duel-podium-p2-wpm">0</strong></div>
+            <div style="font-size: 12px; color: var(--text-secondary);">Accuracy: <strong style="color: #fff;" id="duel-podium-p2-acc">100%</strong></div>
+            <div style="font-size: 12px; color: var(--text-secondary);">Time: <strong style="color: #fff;" id="duel-podium-p2-time">0s</strong></div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 12px;">
+          <button class="btn" id="btn-duel-rematch" onclick="duelRequestRematch()">🔄 Rematch Request</button>
+          <button class="btn btn-secondary" onclick="duelReturnToLobby()">🏁 Lobby / New Match</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <!-- Tutorial / Welcome Modal -->
@@ -854,6 +1229,7 @@
       <li><strong>Backspace</strong>: Delete previous character</li>
       <li><strong>Space</strong>: Submit current word (or restart when Game Over)</li>
       <li><strong>Enter</strong>: Confirm actions or restart game</li>
+      <li><strong>🏁 Typing Duel</strong>: Live online multiplayer speed racing via Firebase RTDB or local AI rivals</li>
     </ul>
     <div style="text-align: right;">
       <button class="btn" onclick="toggleHelp()">Close (Esc / Enter)</button>
@@ -895,59 +1271,108 @@ const FINGER_MAP = {
   p: 'R Pinky', 0: 'R Pinky'
 };
 
-// --- Sound Synthesizer (Web Audio API) ---
+// --- Yamaha YM2612 2-Operator FM Synthesizer & SNES SPC700 Stereo Delay Engine ---
 let audioCtx = null;
 let soundEnabled = true;
+let spcDelayNode = null;
+let spcFeedbackNode = null;
+let spcFilterNode = null;
+
+function initAudioSystem() {
+  if (audioCtx) return;
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    audioCtx = new AudioContextClass();
+
+    // SNES SPC700 Stereo Delay Simulation (120ms delay, feedback gain, 2.8kHz warm lowpass filter)
+    spcDelayNode = audioCtx.createDelay();
+    spcDelayNode.delayTime.setValueAtTime(0.12, audioCtx.currentTime);
+
+    spcFeedbackNode = audioCtx.createGain();
+    spcFeedbackNode.gain.setValueAtTime(0.28, audioCtx.currentTime);
+
+    spcFilterNode = audioCtx.createBiquadFilter();
+    spcFilterNode.type = 'lowpass';
+    spcFilterNode.frequency.setValueAtTime(2800, audioCtx.currentTime);
+
+    spcDelayNode.connect(spcFilterNode);
+    spcFilterNode.connect(spcFeedbackNode);
+    spcFeedbackNode.connect(spcDelayNode);
+    spcFilterNode.connect(audioCtx.destination);
+  } catch (e) {}
+}
+
+function playFMSound(carrierFreq, modRatio, modIndex, duration, type = 'sine', withDelay = false) {
+  if (!soundEnabled) return;
+  try {
+    initAudioSystem();
+    if (!audioCtx) return;
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+
+    const now = audioCtx.currentTime;
+
+    // YM2612 2-Operator FM Synthesizer Nodes
+    const carrier = audioCtx.createOscillator();
+    const modulator = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const masterGain = audioCtx.createGain();
+
+    carrier.type = type;
+    carrier.frequency.setValueAtTime(carrierFreq, now);
+
+    modulator.type = 'sine';
+    modulator.frequency.setValueAtTime(carrierFreq * modRatio, now);
+
+    const modDepth = carrierFreq * modIndex;
+    modGain.gain.setValueAtTime(modDepth, now);
+    modGain.gain.exponentialRampToValueAtTime(Math.max(1, modDepth * 0.05), now + duration);
+
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    masterGain.gain.setValueAtTime(0, now);
+    masterGain.gain.linearRampToValueAtTime(0.14, now + 0.005);
+    masterGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+    carrier.connect(masterGain);
+    masterGain.connect(audioCtx.destination);
+
+    if (withDelay && spcDelayNode) {
+      const sendGain = audioCtx.createGain();
+      sendGain.gain.setValueAtTime(0.4, now);
+      masterGain.connect(sendGain);
+      sendGain.connect(spcDelayNode);
+    }
+
+    modulator.start(now);
+    carrier.start(now);
+    modulator.stop(now + duration);
+    carrier.stop(now + duration);
+  } catch (e) {}
+}
 
 function playSound(type, cadence = 0) {
   if (!soundEnabled) return;
   try {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-
-    const now = audioCtx.currentTime;
-
     if (type === 'key') {
-      let baseFreq = 300 + (cadence * 15);
-      if (baseFreq > 800) baseFreq = 800;
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(baseFreq, now);
-      
-      let attack = 0.01;
-      let decay = 0.05;
-      let sustain = 0.02;
-      let release = 0.05;
-      
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.08, now + attack);
-      gain.gain.linearRampToValueAtTime(sustain, now + attack + decay);
-      gain.gain.linearRampToValueAtTime(0, now + attack + decay + release);
-      
-      osc.start(now);
-      osc.stop(now + attack + decay + release);
+      let baseFreq = 340 + Math.min(480, (cadence || 0) * 16);
+      playFMSound(baseFreq, 2.0, 1.2, 0.045, 'triangle');
     } else if (type === 'error') {
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(150, now);
-      gain.gain.setValueAtTime(0.08, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-      osc.start(now);
-      osc.stop(now + 0.12);
-    } else if (type === 'complete') {
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(523.25, now);
-      osc.frequency.setValueAtTime(659.25, now + 0.08);
-      osc.frequency.setValueAtTime(783.99, now + 0.16);
-      gain.gain.setValueAtTime(0.1, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-      osc.start(now);
-      osc.stop(now + 0.3);
+      playFMSound(120, 1.414, 3.5, 0.14, 'sawtooth');
+    } else if (type === 'countdown') {
+      playFMSound(440, 1.0, 0.6, 0.09, 'sine', true);
+    } else if (type === 'go') {
+      playFMSound(880, 2.0, 1.5, 0.22, 'square', true);
+    } else if (type === 'taunt') {
+      playFMSound(587.33, 1.5, 2.0, 0.12, 'sine', true);
+    } else if (type === 'complete' || type === 'victory') {
+      const notes = [523.25, 659.25, 783.99, 1046.50];
+      notes.forEach((freq, idx) => {
+        setTimeout(() => {
+          playFMSound(freq, 2.0, 1.0, 0.25, 'triangle', true);
+        }, idx * 75);
+      });
     }
   } catch (e) {}
 }
@@ -1093,6 +1518,8 @@ function switchTab(tabId) {
     renderHeatmap();
   } else if (tabId === 'history') {
     renderHistoryTable();
+  } else if (tabId === 'duel') {
+    initDuelTab();
   } else if (tabId === 'arcade') {
     if (!arcadeRunning) {
       initArcadeCanvas();
@@ -1145,6 +1572,8 @@ function quicksaveState() {
     testModeVal,
     currentPreset,
     soundEnabled,
+    duelCallsign: (typeof duelCallsign !== 'undefined' ? duelCallsign : 'RACER-99'),
+    duelVehicle: (typeof duelVehicle !== 'undefined' ? duelVehicle : '🏎️'),
     customLesson: PRESETS.custom,
     customInputText: document.getElementById('custom-text-input') ? document.getElementById('custom-text-input').value : '',
     keyHeatmapData,
@@ -1224,6 +1653,17 @@ function quickloadState() {
     if (snapshot.customInputText !== undefined) {
       const el = document.getElementById('custom-text-input');
       if (el) el.value = snapshot.customInputText;
+    }
+
+    if (snapshot.duelCallsign) {
+      duelCallsign = snapshot.duelCallsign;
+      const el = document.getElementById('duel-callsign');
+      if (el) el.value = duelCallsign;
+    }
+    if (snapshot.duelVehicle) {
+      duelVehicle = snapshot.duelVehicle;
+      const el = document.getElementById('duel-vehicle');
+      if (el) el.value = duelVehicle;
     }
 
     if (snapshot.testModeType && snapshot.testModeVal) {
@@ -2324,11 +2764,826 @@ function arcadeLoop() {
   ctx.restore();
 }
 
+// ============================================================================
+// --- ONLINE MULTIPLAYER SPEED RACING & DUEL ENGINE (Firebase RTDB) ---
+// ============================================================================
+let duelCallsign = 'RACER-' + Math.floor(100 + Math.random() * 900);
+let duelVehicle = '🏎️';
+let duelPreset = 'words_50';
+let duelWords = [];
+let duelWordIdx = 0;
+let duelCharIdx = 0;
+let duelCorrectChars = 0;
+let duelTotalChars = 0;
+let duelStartTime = null;
+let duelState = 'idle'; // 'idle', 'waiting', 'countdown', 'racing', 'finished'
+let duelRoomId = null;
+let duelMySlot = 'p1'; // 'p1' or 'p2'
+let duelIsAiMatch = false;
+let duelAiDifficulty = 'pro';
+let duelAiInterval = null;
+let duelAiProgress = 0;
+let duelAiCharsTyped = 0;
+let duelAiWpm = 0;
+let duelCountdownTimer = null;
+let duelLastThrottleTime = 0;
+let duelLastReceivedTauntId = null;
+let duelPlayerFinished = false;
+let duelOpponentFinished = false;
+let duelWinner = null;
+let duelRoomRef = null;
+
+function initDuelTab() {
+  const savedCallsign = safeStorageGet('ktype_callsign');
+  if (savedCallsign) duelCallsign = savedCallsign;
+  const callsignInput = document.getElementById('duel-callsign');
+  if (callsignInput) callsignInput.value = duelCallsign;
+
+  const savedVehicle = safeStorageGet('ktype_vehicle');
+  if (savedVehicle) duelVehicle = savedVehicle;
+  const vehicleSelect = document.getElementById('duel-vehicle');
+  if (vehicleSelect) vehicleSelect.value = duelVehicle;
+
+  updateDuelNetStatus();
+}
+
+function updateDuelNetStatus() {
+  const dot = document.getElementById('duel-net-dot');
+  const txt = document.getElementById('duel-net-text');
+  if (!dot || !txt) return;
+
+  if (window.fb && window.fb.db) {
+    dot.style.background = '#10b981';
+    dot.style.boxShadow = '0 0 8px #10b981';
+    txt.textContent = 'Firebase RTDB Ready';
+    txt.style.color = '#10b981';
+  } else {
+    dot.style.background = '#f59e0b';
+    dot.style.boxShadow = '0 0 8px #f59e0b';
+    txt.textContent = 'Offline (AI Rival Ready)';
+    txt.style.color = '#f59e0b';
+  }
+}
+
+window.onFirebaseLoaded = () => {
+  updateDuelNetStatus();
+};
+
+function saveDuelCallsign(val) {
+  if (!val || !val.trim()) return;
+  duelCallsign = val.trim().toUpperCase().slice(0, 15);
+  safeStorageSet('ktype_callsign', duelCallsign);
+  const input = document.getElementById('duel-callsign');
+  if (input) input.value = duelCallsign;
+}
+
+function saveDuelVehicle(val) {
+  if (!val) return;
+  duelVehicle = val;
+  safeStorageSet('ktype_vehicle', duelVehicle);
+}
+
+function duelGetPresetWords(presetKey) {
+  let pool = PRESETS.common;
+  let count = 50;
+  if (presetKey === 'words_25') {
+    pool = PRESETS.common;
+    count = 25;
+  } else if (presetKey === 'words_50') {
+    pool = PRESETS.common;
+    count = 50;
+  } else if (presetKey === 'code_30') {
+    pool = PRESETS.code;
+    count = 30;
+  }
+  const result = [];
+  for (let i = 0; i < count; i++) {
+    result.push(pool[Math.floor(Math.random() * pool.length)]);
+  }
+  return result;
+}
+
+function duelRenderWords() {
+  const container = document.getElementById('duel-words-container');
+  if (!container) return;
+  container.innerHTML = '';
+  duelWords.forEach((word, wIdx) => {
+    const wordSpan = document.createElement('span');
+    wordSpan.className = 'duel-word' + (wIdx === duelWordIdx ? ' active' : '');
+    wordSpan.id = `dw-${wIdx}`;
+    for (let cIdx = 0; cIdx < word.length; cIdx++) {
+      const charSpan = document.createElement('span');
+      charSpan.className = 'char';
+      charSpan.id = `dc-${wIdx}-${cIdx}`;
+      charSpan.textContent = word[cIdx];
+      wordSpan.appendChild(charSpan);
+    }
+    container.appendChild(wordSpan);
+  });
+}
+
+function duelFocusInput() {
+  const input = document.getElementById('duel-hidden-input');
+  if (input && duelState === 'racing') {
+    input.focus();
+  }
+}
+
+// Quick Match / Auto Matchmaking
+async function duelStartQuickMatch() {
+  if (!window.fb || !window.fb.db) {
+    showToast('Operating offline: Starting local AI Rival match!', 'warning');
+    duelStartAiMatch();
+    return;
+  }
+
+  showToast('🔍 Searching public lobby for open match...');
+  const btn = document.getElementById('btn-quick-duel');
+  if (btn) btn.disabled = true;
+
+  try {
+    const lobbyRef = window.fb.ref(window.fb.db, 'multiplayer/ktype/lobby');
+    const snapshot = await window.fb.get(lobbyRef);
+    const lobbyData = snapshot.val();
+
+    let matchedRoomId = null;
+
+    if (lobbyData) {
+      const now = Date.now();
+      for (const [rId, room] of Object.entries(lobbyData)) {
+        if (room && room.id && (!room.createdAt || (now - room.createdAt < 300000))) {
+          matchedRoomId = room.id;
+          break;
+        }
+      }
+    }
+
+    if (matchedRoomId) {
+      await duelJoinExistingRoom(matchedRoomId);
+    } else {
+      const code = 'TYP' + Math.floor(100 + Math.random() * 900);
+      await duelHostRoom(code, true);
+    }
+  } catch (err) {
+    console.warn('Matchmaking error:', err);
+    showToast('Matchmaking error, launching AI duel fallback.', 'warning');
+    duelStartAiMatch();
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+async function duelCreateCustomRoom() {
+  let code = document.getElementById('duel-room-code-input').value.trim().toUpperCase();
+  if (!code) code = 'TYP' + Math.floor(100 + Math.random() * 900);
+  code = code.replace(/[^A-Z0-9]/g, '').slice(0, 8);
+  if (!code) code = 'ROOM99';
+
+  const preset = document.getElementById('duel-race-preset').value || 'words_50';
+  duelPreset = preset;
+
+  if (!window.fb || !window.fb.db) {
+    showToast(`Offline mode: Created local room [${code}] with AI Rival!`, 'info');
+    duelStartAiMatch();
+    return;
+  }
+
+  await duelHostRoom(code, false);
+}
+
+async function duelHostRoom(roomId, isPublicLobby) {
+  duelRoomId = roomId;
+  duelMySlot = 'p1';
+  duelIsAiMatch = false;
+  duelWords = duelGetPresetWords(duelPreset);
+
+  const roomData = {
+    id: roomId,
+    state: 'waiting',
+    preset: duelPreset,
+    words: duelWords,
+    createdAt: Date.now(),
+    p1: {
+      name: duelCallsign,
+      vehicle: duelVehicle,
+      progress: 0,
+      wpm: 0,
+      acc: 100,
+      completed: false,
+      connected: true
+    },
+    p2: null,
+    winner: null,
+    taunt: null,
+    rematch: { p1: false, p2: false }
+  };
+
+  try {
+    const roomRef = window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${roomId}`);
+    await window.fb.set(roomRef, roomData);
+
+    window.fb.onDisconnect(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${roomId}/p1/connected`)).set(false);
+
+    if (isPublicLobby) {
+      const lobbyEntryRef = window.fb.ref(window.fb.db, `multiplayer/ktype/lobby/${roomId}`);
+      await window.fb.set(lobbyEntryRef, {
+        id: roomId,
+        hostName: duelCallsign,
+        createdAt: Date.now()
+      });
+      window.fb.onDisconnect(lobbyEntryRef).set(null);
+    }
+
+    const banner = document.getElementById('duel-lobby-status-banner');
+    const codeEl = document.getElementById('duel-banner-room-code');
+    if (banner) banner.style.display = 'block';
+    if (codeEl) codeEl.textContent = roomId;
+
+    duelListenToRoom(roomId);
+    showToast(`🏁 Room [${roomId}] hosted. Waiting for challenger...`, 'info');
+  } catch (err) {
+    console.warn('Host room error:', err);
+    showToast('Failed to connect to Firebase. Starting offline AI match.', 'warning');
+    duelStartAiMatch();
+  }
+}
+
+async function duelJoinCustomRoom() {
+  const code = document.getElementById('duel-room-code-input').value.trim().toUpperCase();
+  if (!code) {
+    showToast('⚠️ Please enter a room code to join!', 'warning');
+    return;
+  }
+  await duelJoinExistingRoom(code);
+}
+
+async function duelJoinExistingRoom(roomId) {
+  if (!window.fb || !window.fb.db) {
+    showToast('Offline mode: Starting AI Rival match!', 'warning');
+    duelStartAiMatch();
+    return;
+  }
+
+  showToast(`Joining room [${roomId}]...`);
+  try {
+    const roomRef = window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${roomId}`);
+    const snapshot = await window.fb.get(roomRef);
+    const data = snapshot.val();
+
+    if (!data) {
+      showToast(`⚠️ Room [${roomId}] not found.`, 'warning');
+      return;
+    }
+    if (data.p2 && data.p2.connected) {
+      showToast(`⚠️ Room [${roomId}] is already full!`, 'warning');
+      return;
+    }
+
+    duelRoomId = roomId;
+    duelMySlot = 'p2';
+    duelIsAiMatch = false;
+    duelWords = data.words || duelGetPresetWords('words_50');
+
+    window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/lobby/${roomId}`), null);
+
+    const p2Data = {
+      name: duelCallsign,
+      vehicle: duelVehicle,
+      progress: 0,
+      wpm: 0,
+      acc: 100,
+      completed: false,
+      connected: true
+    };
+    await window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${roomId}/p2`), p2Data);
+    window.fb.onDisconnect(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${roomId}/p2/connected`)).set(false);
+
+    const countdownTime = Date.now() + 3500;
+    await window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${roomId}/startTime`), countdownTime);
+    await window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${roomId}/state`), 'countdown');
+
+    duelListenToRoom(roomId);
+  } catch (err) {
+    console.warn('Join room error:', err);
+    showToast('Failed to join room.', 'warning');
+  }
+}
+
+function duelListenToRoom(roomId) {
+  if (duelRoomRef) {
+    window.fb.off(duelRoomRef);
+  }
+  duelRoomRef = window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${roomId}`);
+
+  window.fb.onValue(duelRoomRef, snapshot => {
+    const data = snapshot.val();
+    if (!data) return;
+
+    if (data.state === 'countdown' && duelState !== 'countdown' && duelState !== 'racing' && duelState !== 'finished') {
+      const oppSlot = (duelMySlot === 'p1') ? 'p2' : 'p1';
+      const oppData = data[oppSlot] || { name: 'Challenger', vehicle: '🚀' };
+      duelSetupArenaView(oppData.name, oppData.vehicle, false);
+      duelStartCountdown(data.startTime);
+    }
+
+    const oppSlot = (duelMySlot === 'p1') ? 'p2' : 'p1';
+    const oppData = data[oppSlot];
+    if (oppData && duelState === 'racing') {
+      const p2Prog = oppData.progress || 0;
+      const bar = document.getElementById('duel-p2-progressbar');
+      const racer = document.getElementById('duel-p2-racer');
+      const wpmEl = document.getElementById('duel-p2-wpm');
+      const accEl = document.getElementById('duel-p2-acc');
+      const pctEl = document.getElementById('duel-p2-pct');
+
+      if (bar) bar.style.width = p2Prog + '%';
+      if (racer) racer.style.left = `calc(${p2Prog}% - 14px)`;
+      if (wpmEl) wpmEl.textContent = oppData.wpm || 0;
+      if (accEl) accEl.textContent = (oppData.acc !== undefined ? oppData.acc : 100) + '%';
+      if (pctEl) pctEl.textContent = p2Prog;
+
+      if (oppData.completed && !duelOpponentFinished) {
+        duelOpponentFinished = true;
+        if (!duelPlayerFinished) {
+          duelWinner = oppSlot;
+          showToast(`⚡ ${oppData.name} crossed the finish line!`, 'warning');
+        }
+      }
+    }
+
+    if (data.taunt && data.taunt.id !== duelLastReceivedTauntId) {
+      duelLastReceivedTauntId = data.taunt.id;
+      if (data.taunt.sender !== duelMySlot) {
+        duelShowTaunt('p2', data.taunt.text);
+      }
+    }
+
+    if (data.rematch && data.rematch.p1 && data.rematch.p2) {
+      if (duelMySlot === 'p1') {
+        const newWords = duelGetPresetWords(duelPreset);
+        const nextStart = Date.now() + 3500;
+        window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${roomId}/words`), newWords);
+        window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${roomId}/startTime`), nextStart);
+        window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${roomId}/p1/progress`), 0);
+        window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${roomId}/p1/completed`), false);
+        window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${roomId}/p2/progress`), 0);
+        window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${roomId}/p2/completed`), false);
+        window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${roomId}/winner`), null);
+        window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${roomId}/rematch`), { p1: false, p2: false });
+        window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${roomId}/state`), 'countdown');
+      }
+      duelWords = data.words || duelWords;
+      duelStartCountdown(data.startTime);
+    }
+  });
+}
+
+// AI Rival Match
+function duelStartAiMatch() {
+  const diffSelect = document.getElementById('duel-ai-difficulty');
+  duelAiDifficulty = diffSelect ? diffSelect.value : 'pro';
+
+  duelIsAiMatch = true;
+  duelRoomId = 'BOT-' + Math.floor(100 + Math.random() * 900);
+  duelMySlot = 'p1';
+  duelPreset = document.getElementById('duel-race-preset') ? document.getElementById('duel-race-preset').value : 'words_50';
+  duelWords = duelGetPresetWords(duelPreset);
+
+  let botName = 'SiliconGhost 🤖';
+  let botVehicle = '🚀';
+  if (duelAiDifficulty === 'rookie') {
+    botName = 'ByteRacer 🤖';
+    botVehicle = '🏎️';
+  } else if (duelAiDifficulty === 'master') {
+    botName = 'NeoTypist 🤖';
+    botVehicle = '⚡';
+  }
+
+  const banner = document.getElementById('duel-lobby-status-banner');
+  if (banner) banner.style.display = 'none';
+
+  duelSetupArenaView(botName, botVehicle, true);
+  duelStartCountdown(Date.now() + 3200);
+}
+
+function duelFillWithAi() {
+  if (duelRoomId && !duelIsAiMatch) {
+    duelCancelMatch();
+  }
+  duelStartAiMatch();
+}
+
+function duelSetupArenaView(oppName, oppVehicle, isAi) {
+  document.getElementById('duel-lobby-card').style.display = 'none';
+  document.getElementById('duel-arena-card').style.display = 'block';
+  document.getElementById('duel-podium-banner').style.display = 'none';
+
+  document.getElementById('duel-arena-room-id').textContent = duelRoomId;
+  document.getElementById('duel-p1-name-display').textContent = duelCallsign;
+  document.getElementById('duel-p1-vehicle-icon').textContent = duelVehicle;
+  document.getElementById('duel-p1-avatar-sprite').textContent = duelVehicle;
+
+  document.getElementById('duel-p2-name-display').textContent = oppName;
+  document.getElementById('duel-p2-vehicle-icon').textContent = oppVehicle;
+  document.getElementById('duel-p2-avatar-sprite').textContent = oppVehicle;
+  document.getElementById('duel-p2-tag').textContent = isAi ? '(AI Rival)' : '(Rival)';
+
+  document.getElementById('duel-p1-progressbar').style.width = '0%';
+  document.getElementById('duel-p1-racer').style.left = '0%';
+  document.getElementById('duel-p1-wpm').textContent = '0';
+  document.getElementById('duel-p1-acc').textContent = '100%';
+  document.getElementById('duel-p1-pct').textContent = '0';
+
+  document.getElementById('duel-p2-progressbar').style.width = '0%';
+  document.getElementById('duel-p2-racer').style.left = '0%';
+  document.getElementById('duel-p2-wpm').textContent = '0';
+  document.getElementById('duel-p2-acc').textContent = '100%';
+  document.getElementById('duel-p2-pct').textContent = '0';
+
+  duelWordIdx = 0;
+  duelCharIdx = 0;
+  duelCorrectChars = 0;
+  duelTotalChars = 0;
+  duelPlayerFinished = false;
+  duelOpponentFinished = false;
+  duelWinner = null;
+  duelAiProgress = 0;
+  duelAiCharsTyped = 0;
+
+  duelRenderWords();
+  document.getElementById('duel-word-counter').textContent = `Word 0 / ${duelWords.length}`;
+}
+
+function duelStartCountdown(targetStartTime) {
+  duelState = 'countdown';
+  document.getElementById('duel-state-badge').textContent = 'Countdown';
+  document.getElementById('duel-podium-banner').style.display = 'none';
+
+  if (duelCountdownTimer) clearInterval(duelCountdownTimer);
+
+  const countdownEl = document.getElementById('duel-countdown-display');
+
+  duelCountdownTimer = setInterval(() => {
+    const remainingMs = targetStartTime ? (targetStartTime - Date.now()) : 0;
+    const remainingSec = Math.ceil(remainingMs / 1000);
+
+    if (remainingSec > 0) {
+      if (countdownEl) countdownEl.textContent = `Race starting in ${remainingSec}...`;
+      playSound('countdown');
+    } else {
+      clearInterval(duelCountdownTimer);
+      duelCountdownTimer = null;
+      duelBeginRacing();
+    }
+  }, 1000);
+
+  playSound('countdown');
+  if (countdownEl) countdownEl.textContent = 'Race starting in 3...';
+}
+
+function duelBeginRacing() {
+  duelState = 'racing';
+  duelStartTime = Date.now();
+  playSound('go');
+
+  const badge = document.getElementById('duel-state-badge');
+  if (badge) {
+    badge.textContent = 'RACING!';
+    badge.style.background = 'rgba(16, 185, 129, 0.2)';
+    badge.style.borderColor = '#10b981';
+    badge.style.color = '#10b981';
+  }
+
+  const countdownEl = document.getElementById('duel-countdown-display');
+  if (countdownEl) countdownEl.textContent = 'GO!';
+  setTimeout(() => {
+    if (countdownEl && duelState === 'racing') countdownEl.textContent = '';
+  }, 1800);
+
+  const hiddenInput = document.getElementById('duel-hidden-input');
+  if (hiddenInput) {
+    hiddenInput.value = '';
+    hiddenInput.focus();
+  }
+
+  if (duelIsAiMatch) {
+    duelStartAiLoop();
+  }
+}
+
+function duelStartAiLoop() {
+  if (duelAiInterval) clearInterval(duelAiInterval);
+
+  let targetCharsPerTick = 0.58;
+  if (duelAiDifficulty === 'rookie') targetCharsPerTick = 0.32;
+  else if (duelAiDifficulty === 'master') targetCharsPerTick = 0.90;
+
+  let totalCharsInDuel = duelWords.join(' ').length;
+
+  duelAiInterval = setInterval(() => {
+    if (duelState !== 'racing') {
+      clearInterval(duelAiInterval);
+      return;
+    }
+
+    const variance = (Math.random() * 0.5) - 0.25;
+    const charsThisTick = (Math.random() < 0.05) ? 0 : Math.max(0, targetCharsPerTick * (1 + variance));
+    duelAiCharsTyped += charsThisTick;
+
+    duelAiProgress = Math.min(100, Math.round((duelAiCharsTyped / totalCharsInDuel) * 100));
+
+    const elapsedSec = (Date.now() - duelStartTime) / 1000;
+    duelAiWpm = elapsedSec > 0 ? Math.round((duelAiCharsTyped / 5) / (elapsedSec / 60)) : 0;
+
+    const bar = document.getElementById('duel-p2-progressbar');
+    const racer = document.getElementById('duel-p2-racer');
+    const wpmEl = document.getElementById('duel-p2-wpm');
+    const pctEl = document.getElementById('duel-p2-pct');
+
+    if (bar) bar.style.width = duelAiProgress + '%';
+    if (racer) racer.style.left = `calc(${duelAiProgress}% - 14px)`;
+    if (wpmEl) wpmEl.textContent = duelAiWpm;
+    if (pctEl) pctEl.textContent = duelAiProgress;
+
+    if (Math.round(duelAiProgress) === 40 && Math.random() < 0.4) {
+      duelShowTaunt('p2', '🤖 Byte processing at 100%!');
+    } else if (Math.round(duelAiProgress) === 75 && Math.random() < 0.4) {
+      duelShowTaunt('p2', '⚡ Turbo overclock engaged!');
+    }
+
+    if (duelAiProgress >= 100) {
+      clearInterval(duelAiInterval);
+      duelOpponentFinished = true;
+      if (!duelPlayerFinished) {
+        duelWinner = 'p2';
+        showToast('🤖 AI Rival has crossed the finish line!', 'warning');
+      }
+    }
+  }, 100);
+}
+
+document.getElementById('duel-hidden-input').addEventListener('input', (e) => {
+  if (duelState !== 'racing') return;
+  const inputVal = e.target.value;
+  if (!inputVal) return;
+
+  const typedChar = inputVal[inputVal.length - 1];
+  e.target.value = '';
+
+  const targetWord = duelWords[duelWordIdx];
+  if (!targetWord) return;
+
+  duelTotalChars++;
+
+  if (typedChar === ' ') {
+    const curWordEl = document.getElementById(`dw-${duelWordIdx}`);
+    if (curWordEl) {
+      curWordEl.classList.remove('active');
+      curWordEl.classList.add('completed');
+    }
+
+    duelWordIdx++;
+    duelCharIdx = 0;
+
+    const nextWordEl = document.getElementById(`dw-${duelWordIdx}`);
+    if (nextWordEl) nextWordEl.classList.add('active');
+
+    duelUpdatePlayerProgress();
+
+    if (duelWordIdx >= duelWords.length) {
+      duelCompletePlayerRace();
+    }
+    return;
+  }
+
+  const expectedChar = targetWord[duelCharIdx];
+  const charSpan = document.getElementById(`dc-${duelWordIdx}-${duelCharIdx}`);
+
+  if (expectedChar && typedChar === expectedChar) {
+    if (charSpan) charSpan.className = 'char correct';
+    duelCorrectChars++;
+    playSound('key');
+  } else {
+    if (charSpan) charSpan.className = 'char incorrect';
+    playSound('error');
+  }
+
+  duelCharIdx++;
+  duelUpdatePlayerProgress();
+});
+
+function duelUpdatePlayerProgress() {
+  const wordsProgress = Math.min(100, Math.round((duelWordIdx / duelWords.length) * 100));
+  const elapsedSec = (Date.now() - duelStartTime) / 1000;
+  const wpm = elapsedSec > 0 ? Math.round((duelCorrectChars / 5) / (elapsedSec / 60)) : 0;
+  const acc = duelTotalChars > 0 ? Math.round((duelCorrectChars / duelTotalChars) * 100) : 100;
+
+  const bar = document.getElementById('duel-p1-progressbar');
+  const racer = document.getElementById('duel-p1-racer');
+  const wpmEl = document.getElementById('duel-p1-wpm');
+  const accEl = document.getElementById('duel-p1-acc');
+  const pctEl = document.getElementById('duel-p1-pct');
+  const counterEl = document.getElementById('duel-word-counter');
+
+  if (bar) bar.style.width = wordsProgress + '%';
+  if (racer) racer.style.left = `calc(${wordsProgress}% - 14px)`;
+  if (wpmEl) wpmEl.textContent = wpm;
+  if (accEl) accEl.textContent = acc + '%';
+  if (pctEl) pctEl.textContent = wordsProgress;
+  if (counterEl) counterEl.textContent = `Word ${duelWordIdx} / ${duelWords.length}`;
+
+  const now = Date.now();
+  if (!duelIsAiMatch && window.fb && window.fb.db && duelRoomId && (now - duelLastThrottleTime > 120)) {
+    duelLastThrottleTime = now;
+    window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${duelRoomId}/${duelMySlot}`), {
+      name: duelCallsign,
+      vehicle: duelVehicle,
+      progress: wordsProgress,
+      wpm: wpm,
+      acc: acc,
+      completed: false,
+      connected: true,
+      updatedAt: now
+    });
+  }
+}
+
+function duelCompletePlayerRace() {
+  duelPlayerFinished = true;
+  duelState = 'finished';
+
+  const elapsedSec = (Date.now() - duelStartTime) / 1000;
+  const finalWpm = elapsedSec > 0 ? Math.round((duelCorrectChars / 5) / (elapsedSec / 60)) : 0;
+  const finalAcc = duelTotalChars > 0 ? Math.round((duelCorrectChars / duelTotalChars) * 100) : 100;
+
+  document.getElementById('duel-p1-progressbar').style.width = '100%';
+  document.getElementById('duel-p1-racer').style.left = 'calc(100% - 14px)';
+  document.getElementById('duel-p1-pct').textContent = '100';
+
+  if (!duelWinner) {
+    duelWinner = duelMySlot;
+  }
+
+  const isVictor = (duelWinner === duelMySlot);
+  if (isVictor) {
+    playSound('victory');
+  } else {
+    playSound('complete');
+  }
+
+  if (!duelIsAiMatch && window.fb && window.fb.db && duelRoomId) {
+    window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${duelRoomId}/${duelMySlot}`), {
+      name: duelCallsign,
+      vehicle: duelVehicle,
+      progress: 100,
+      wpm: finalWpm,
+      acc: finalAcc,
+      completed: true,
+      finishTime: elapsedSec,
+      connected: true
+    });
+    if (isVictor) {
+      window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${duelRoomId}/winner`), duelMySlot);
+    }
+  }
+
+  const banner = document.getElementById('duel-podium-banner');
+  const title = document.getElementById('duel-podium-title');
+  const sub = document.getElementById('duel-podium-subtitle');
+
+  if (title) title.textContent = isVictor ? '🏆 1ST PLACE — VICTORY!' : '🥈 2ND PLACE — FINISH!';
+  if (sub) sub.textContent = isVictor ? `Dominant win at ${finalWpm} WPM!` : `Solid race finish at ${finalWpm} WPM!`;
+
+  document.getElementById('duel-podium-p1-label').textContent = duelCallsign + ' (You)';
+  document.getElementById('duel-podium-p1-wpm').textContent = finalWpm;
+  document.getElementById('duel-podium-p1-acc').textContent = finalAcc + '%';
+  document.getElementById('duel-podium-p1-time').textContent = `${elapsedSec.toFixed(1)}s`;
+
+  const oppWpm = duelIsAiMatch ? duelAiWpm : (document.getElementById('duel-p2-wpm').textContent || '0');
+  const oppAcc = duelIsAiMatch ? '98%' : (document.getElementById('duel-p2-acc').textContent || '100%');
+  document.getElementById('duel-podium-p2-label').textContent = document.getElementById('duel-p2-name-display').textContent;
+  document.getElementById('duel-podium-p2-wpm').textContent = oppWpm;
+  document.getElementById('duel-podium-p2-acc').textContent = oppAcc;
+  document.getElementById('duel-podium-p2-time').textContent = duelOpponentFinished ? 'Finished' : 'DNF';
+
+  if (banner) banner.style.display = 'block';
+
+  const duelHistorySession = {
+    id: Date.now(),
+    date: new Date().toLocaleString(),
+    mode: `Duel (${duelPreset})`,
+    preset: isVictor ? '🏆 Won Duel' : '🥈 2nd Place',
+    wpm: finalWpm,
+    accuracy: finalAcc,
+    cpm: Math.round(finalWpm * 5),
+    errors: duelTotalChars - duelCorrectChars,
+    duration: `${Math.round(elapsedSec)}s`
+  };
+  testHistory.unshift(duelHistorySession);
+  if (testHistory.length > 50) testHistory.pop();
+  safeStorageSet('ktype_history', testHistory);
+}
+
+function duelSendTaunt(text) {
+  duelShowTaunt('p1', text);
+  playSound('taunt');
+
+  if (!duelIsAiMatch && window.fb && window.fb.db && duelRoomId) {
+    window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${duelRoomId}/taunt`), {
+      id: Date.now(),
+      sender: duelMySlot,
+      text: text
+    });
+  }
+}
+
+function duelShowTaunt(slot, text) {
+  const bubble = document.getElementById(`duel-${slot}-taunt-bubble`);
+  if (!bubble) return;
+  bubble.textContent = text;
+  bubble.style.display = 'block';
+  playSound('taunt');
+  setTimeout(() => {
+    bubble.style.display = 'none';
+  }, 2400);
+}
+
+function duelRequestRematch() {
+  const btn = document.getElementById('btn-duel-rematch');
+  if (btn) {
+    btn.textContent = '⏳ Waiting for Rival...';
+    btn.disabled = true;
+  }
+
+  if (duelIsAiMatch) {
+    showToast('🔄 Rematch accepted by AI Rival!');
+    setTimeout(() => {
+      if (btn) {
+        btn.textContent = '🔄 Rematch Request';
+        btn.disabled = false;
+      }
+      duelStartAiMatch();
+    }, 600);
+    return;
+  }
+
+  if (window.fb && window.fb.db && duelRoomId) {
+    window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${duelRoomId}/rematch/${duelMySlot}`), true);
+    showToast('Rematch requested! Waiting for opponent confirmation...');
+  }
+}
+
+function duelCopyRoomCode() {
+  if (!duelRoomId) return;
+  navigator.clipboard.writeText(duelRoomId).then(() => {
+    showToast(`📋 Copied code [${duelRoomId}] to clipboard!`);
+  }).catch(() => {
+    showToast(`Room code: ${duelRoomId}`);
+  });
+}
+
+function duelCancelMatch() {
+  if (!duelIsAiMatch && window.fb && window.fb.db && duelRoomId) {
+    window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/lobby/${duelRoomId}`), null);
+    if (duelRoomRef) window.fb.off(duelRoomRef);
+  }
+  const banner = document.getElementById('duel-lobby-status-banner');
+  if (banner) banner.style.display = 'none';
+  showToast('Match search cancelled.');
+}
+
+function duelLeaveRace() {
+  if (duelCountdownTimer) clearInterval(duelCountdownTimer);
+  if (duelAiInterval) clearInterval(duelAiInterval);
+
+  if (!duelIsAiMatch && window.fb && window.fb.db && duelRoomId) {
+    window.fb.set(window.fb.ref(window.fb.db, `multiplayer/ktype/rooms/${duelRoomId}/${duelMySlot}/connected`), false);
+    if (duelRoomRef) window.fb.off(duelRoomRef);
+  }
+
+  duelReturnToLobby();
+  showToast('Left duel race.');
+}
+
+function duelReturnToLobby() {
+  duelState = 'idle';
+  document.getElementById('duel-arena-card').style.display = 'none';
+  document.getElementById('duel-lobby-card').style.display = 'block';
+  document.getElementById('duel-lobby-status-banner').style.display = 'none';
+
+  const rematchBtn = document.getElementById('btn-duel-rematch');
+  if (rematchBtn) {
+    rematchBtn.textContent = '🔄 Rematch Request';
+    rematchBtn.disabled = false;
+  }
+}
+
 // Window Load Init
 window.addEventListener('load', () => {
   resetTest();
   renderHeatmap();
   renderHistoryTable();
+  initDuelTab();
   try {
     const savedLesson = safeStorageGetJSON('ktype_custom_lesson', null);
     if (savedLesson && Array.isArray(savedLesson) && savedLesson.length > 0) {

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-tester
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: KTodo
   kilo_graphics: KStarship
   kilo_qa: KContacts
-  kilo_expander: KType
+  kilo_expander: KVault
   kilo_creator: "kweb://users/~neon_rider (Personal Hacker / Demoscene Homepage)"
 virtual_web_target: "kweb://users/~neon_rider"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KGraph
-  timestamp: "2026-09-29T20:10:00Z"
+  agent: kilo-expander
+  app: KType
+  timestamp: "2026-09-29T20:26:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KScript`, `KRead`, `KColosseum`, `KAbyss`, `KMedia`, `KAudio`, `KCosmic` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KType`
+- **Current Target**: `KVault`
 - **Upcoming Queue**:
-  `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts`, `KPass` *(Completed: KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia)*.
+  `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts`, `KPass` *(Completed: KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -249,6 +249,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T20:26:00Z — kilo-expander: KType (Online Multiplayer Typing Duel & YM2612 FM Audio)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 135 KB < 999 KB).
+  - Online Multiplayer: Added Firebase RTDB real-time 1v1 speed racing with public lobby matchmaking & private room codes.
+  - Race Tracks & Telemetry: Implemented live side-by-side lanes, smooth vehicle translation, live WPM/Acc, and finish line podium.
+  - AI Rival Practice: Added adaptive solo AI bot (Rookie/Pro/Master ~42-112 WPM) with natural cadence and quick taunts.
+  - Universal Audio: Upgraded audio engine to Yamaha YM2612 2-op FM synthesis and SNES SPC700 stereo delay warmth.
+  - State & Hotkeys: Integrated duel profiles with quicksave/quickload; documented in Help [F1/H] & tutorial modals.
+  - Verification: MSVC clean (`KType.exe` 35 KB); Vite clean in 251ms (`ktype.html` 135 KB < 999 KB); security lint 100% PASS.
+
 - **2026-09-29T20:10:00Z — kilo-qa: KGraph (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & Modal Ergonomics)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 134 KB < 999 KB).
   - State Persistence: Implemented F5 quicksave & F9 quickload capturing complete graph state across Web (`localStorage`) and Win32 C (`kgraph_quicksave.dat`).
@@ -281,11 +290,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Modal Ergonomics: Added Enter key listeners to Edit Record inputs and Sync Room input; wired Enter shortcuts to confirm/close active modals.
   - Action Safety & Batch Bar: Encoded primary keys in row/card actions against quote errors; wired select-all uncheck and status updates on batch operations.
   - Verification: MSVC clean (`KDB.exe` 65 KB); Vite clean in 263ms (`kdb.html` 99.7 KB < 999 KB); icon & security lints 100% PASS.
-
-- **2026-09-29T19:12:00Z — kilo-creator: kweb://geocities (CyberSpire Shrine & MOD Vault Deep Expansion)**
-  - Status: PASS ✅ (0 regressions, clean builds, security & icon lints clean, 198.3 KB < 999 KB).
-  - Audio & Synthesis: Added Track 4 (Silicon Horizon 1999) + YM2612 2-op FM Synth Lab (18-key keyboard, oscilloscope, 8 presets).
-  - MOD Architecture: Added Amiga ProTracker (.MOD) Dissector & 4-channel pattern matrix with 31-sample PCM audio audition.
-  - Web 1.0 Tools: Implemented 5 GeoCities neighborhood themes, Retro Banner Studio (468x60/88x31) & Webmaster Page Builder.
-  - Live Connectivity: Integrated Firebase RTDB real-time shoutbox stream, 6 quick-stamps & live cyber voyagers presence.
-  - Interconnects: Linked in KNet, portal, webring, and cybercafe; verified Vite build (243ms) and security lint 100% clean.
