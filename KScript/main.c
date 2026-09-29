@@ -9,6 +9,7 @@
 HWND hMainWnd = NULL;
 HWND hInput, hOutput, hMemory, hRegexFind, hRegexRep;
 HWND hBtnRun, hBtnLoad, hBtnSave, hBtnStep, hBtnBench, hBtnRec, hBtnPlay, hBtnRep, hBtnHelp, hBtnClear;
+HWND hBtnQS, hBtnQL;
 
 #define MAX_VARS 256
 #define MAX_VAR_NAME 32
@@ -792,6 +793,111 @@ void SaveJsonDump(HWND hwnd) {
     }
 }
 
+int MemEqual(const void* a, const void* b, int n) {
+    const unsigned char* pa = (const unsigned char*)a;
+    const unsigned char* pb = (const unsigned char*)b;
+    for (int i = 0; i < n; i++) {
+        if (pa[i] != pb[i]) return 0;
+    }
+    return 1;
+}
+
+#define QUICKSAVE_FILE "kscript_quicksave.dat"
+#define TUTORIAL_FILE  "kscript_tutorial.dat"
+
+int HasSeenTutorial(void) {
+    DWORD attr = GetFileAttributesA(TUTORIAL_FILE);
+    return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+void MarkTutorialSeen(void) {
+    HANDLE h = CreateFileA(TUTORIAL_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (h != INVALID_HANDLE_VALUE) {
+        const char tag[] = "TUTORIAL_SEEN_V1\r\n";
+        DWORD dwWritten;
+        WriteFile(h, tag, sizeof(tag) - 1, &dwWritten, NULL);
+        CloseHandle(h);
+    }
+}
+
+int HasQuicksave(void) {
+    DWORD attr = GetFileAttributesA(QUICKSAVE_FILE);
+    return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+int SaveQuicksaveState(HWND hwnd) {
+    HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        MessageBoxA(hwnd, "Failed to create quicksave file (kscript_quicksave.dat).", "KScript Error", MB_OK | MB_ICONERROR);
+        return 0;
+    }
+    const char magic[8] = "KSCR_QS1";
+    DWORD dwWritten = 0;
+    WriteFile(hFile, magic, 8, &dwWritten, NULL);
+
+    int textLen = GetWindowTextLengthA(hInput);
+    WriteFile(hFile, &textLen, sizeof(int), &dwWritten, NULL);
+    if (textLen > 0) {
+        char* buf = (char*)VirtualAlloc(NULL, textLen + 1, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        if (buf) {
+            GetWindowTextA(hInput, buf, textLen + 1);
+            WriteFile(hFile, buf, textLen, &dwWritten, NULL);
+            VirtualFree(buf, 0, MEM_RELEASE);
+        }
+    }
+
+    WriteFile(hFile, &macroLen, sizeof(int), &dwWritten, NULL);
+    if (macroLen > 0) {
+        WriteFile(hFile, macroBuf, macroLen, &dwWritten, NULL);
+    }
+
+    CloseHandle(hFile);
+    MarkTutorialSeen();
+    return 1;
+}
+
+int LoadQuicksaveState(HWND hwnd) {
+    if (!HasQuicksave()) return 0;
+    HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+
+    char magic[8] = {0};
+    DWORD dwRead = 0;
+    ReadFile(hFile, magic, 8, &dwRead, NULL);
+    if (dwRead < 8 || !MemEqual(magic, "KSCR_QS1", 8)) {
+        CloseHandle(hFile);
+        return 0;
+    }
+
+    int textLen = 0;
+    ReadFile(hFile, &textLen, sizeof(int), &dwRead, NULL);
+    if (textLen >= 0 && textLen < sizeof(debugInput)) {
+        char* buf = (char*)VirtualAlloc(NULL, textLen + 1, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+        if (buf) {
+            if (textLen > 0) {
+                ReadFile(hFile, buf, textLen, &dwRead, NULL);
+                buf[dwRead] = '\0';
+            } else {
+                buf[0] = '\0';
+            }
+            SetWindowTextA(hInput, buf);
+            VirtualFree(buf, 0, MEM_RELEASE);
+        }
+    }
+
+    int mLen = 0;
+    if (ReadFile(hFile, &mLen, sizeof(int), &dwRead, NULL) && mLen >= 0 && mLen < (int)sizeof(macroBuf)) {
+        macroLen = mLen;
+        if (macroLen > 0) {
+            ReadFile(hFile, macroBuf, macroLen, &dwRead, NULL);
+        }
+    }
+
+    CloseHandle(hFile);
+    RunScript();
+    return 1;
+}
+
 void ShowHelpDialog(HWND hwnd) {
     const char* helpText =
         "====================================================\n"
@@ -812,7 +918,9 @@ void ShowHelpDialog(HWND hwnd) {
         " print \"Result is:\", val\n"
         " print \"Bitmask:\", mask, \"Flags:\", flags\n\n"
         "[SHORTCUTS]\n"
-        " - [F5] / [Ctrl+Enter] : Run Entire Script\n"
+        " - [Ctrl+Enter]        : Run Entire Script\n"
+        " - [F5]                : Quicksave Snapshot (kscript_quicksave.dat)\n"
+        " - [F9]                : Quickload Snapshot (kscript_quicksave.dat)\n"
         " - [F6]                : Run Benchmark (500 iterations)\n"
         " - [F10] / [Alt+S]     : Step Line-by-Line\n"
         " - [Ctrl+S]            : Save Script File (.ksc / .json)\n"
@@ -829,7 +937,7 @@ void UpdateWindowTitle() {
     if (isRecording) {
         SetWindowTextA(hMainWnd, "KScript [● RECORDING MACRO] - Press Alt+M to Stop");
     } else {
-        SetWindowTextA(hMainWnd, "KScript - [F5] Run | [F6] Bench | [F10] Step | [F1] Help");
+        SetWindowTextA(hMainWnd, "KScript - [Ctrl+Enter] Run | [F5] Save | [F9] Load | [F1] Help");
     }
 }
 
@@ -840,7 +948,15 @@ LRESULT CALLBACK InputEditProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         }
     }
     if (msg == WM_KEYDOWN) {
-        if (wp == VK_F5 || (GetKeyState(VK_CONTROL) < 0 && wp == VK_RETURN)) {
+        if (wp == VK_F5) {
+            SendMessage(GetParent(hwnd), WM_COMMAND, 11, 0);
+            return 0;
+        }
+        if (wp == VK_F9) {
+            SendMessage(GetParent(hwnd), WM_COMMAND, 12, 0);
+            return 0;
+        }
+        if (GetKeyState(VK_CONTROL) < 0 && wp == VK_RETURN) {
             SendMessage(GetParent(hwnd), WM_COMMAND, 1, 0);
             return 0;
         }
@@ -926,22 +1042,24 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
 
             // Toolbar Buttons
-            hBtnRec   = CreateWindowEx(0, "BUTTON", "Rec [Alt+M]", WS_CHILD | WS_VISIBLE, S(6), S(8), S(86), S(26), hwnd, (HMENU)4, NULL, NULL);
-            hBtnPlay  = CreateWindowEx(0, "BUTTON", "Play [Alt+P]", WS_CHILD | WS_VISIBLE, S(96), S(8), S(86), S(26), hwnd, (HMENU)5, NULL, NULL);
-            hBtnStep  = CreateWindowEx(0, "BUTTON", "Step [F10]", WS_CHILD | WS_VISIBLE, S(186), S(8), S(78), S(26), hwnd, (HMENU)6, NULL, NULL);
-            hBtnRun   = CreateWindowEx(0, "BUTTON", "Run [F5]", WS_CHILD | WS_VISIBLE, S(268), S(8), S(74), S(26), hwnd, (HMENU)1, NULL, NULL);
-            hBtnBench = CreateWindowEx(0, "BUTTON", "Bench [F6]", WS_CHILD | WS_VISIBLE, S(346), S(8), S(80), S(26), hwnd, (HMENU)10, NULL, NULL);
-            hBtnLoad  = CreateWindowEx(0, "BUTTON", "Load [Ctrl+O]", WS_CHILD | WS_VISIBLE, S(430), S(8), S(90), S(26), hwnd, (HMENU)2, NULL, NULL);
-            hBtnSave  = CreateWindowEx(0, "BUTTON", "Save [Ctrl+S]", WS_CHILD | WS_VISIBLE, S(524), S(8), S(90), S(26), hwnd, (HMENU)3, NULL, NULL);
-            hBtnClear = CreateWindowEx(0, "BUTTON", "Clear [Ctrl+K]", WS_CHILD | WS_VISIBLE, S(618), S(8), S(90), S(26), hwnd, (HMENU)9, NULL, NULL);
-            hBtnHelp  = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE, S(712), S(8), S(74), S(26), hwnd, (HMENU)8, NULL, NULL);
+            hBtnRec   = CreateWindowEx(0, "BUTTON", "Rec", WS_CHILD | WS_VISIBLE, S(6), S(8), S(52), S(26), hwnd, (HMENU)4, NULL, NULL);
+            hBtnPlay  = CreateWindowEx(0, "BUTTON", "Play", WS_CHILD | WS_VISIBLE, S(62), S(8), S(52), S(26), hwnd, (HMENU)5, NULL, NULL);
+            hBtnStep  = CreateWindowEx(0, "BUTTON", "Step [F10]", WS_CHILD | WS_VISIBLE, S(118), S(8), S(78), S(26), hwnd, (HMENU)6, NULL, NULL);
+            hBtnRun   = CreateWindowEx(0, "BUTTON", "Run [^Ent]", WS_CHILD | WS_VISIBLE, S(200), S(8), S(84), S(26), hwnd, (HMENU)1, NULL, NULL);
+            hBtnQS    = CreateWindowEx(0, "BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE, S(288), S(8), S(72), S(26), hwnd, (HMENU)11, NULL, NULL);
+            hBtnQL    = CreateWindowEx(0, "BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE, S(364), S(8), S(72), S(26), hwnd, (HMENU)12, NULL, NULL);
+            hBtnBench = CreateWindowEx(0, "BUTTON", "Bench [F6]", WS_CHILD | WS_VISIBLE, S(440), S(8), S(76), S(26), hwnd, (HMENU)10, NULL, NULL);
+            hBtnLoad  = CreateWindowEx(0, "BUTTON", "Imp [^O]", WS_CHILD | WS_VISIBLE, S(520), S(8), S(68), S(26), hwnd, (HMENU)2, NULL, NULL);
+            hBtnSave  = CreateWindowEx(0, "BUTTON", "Exp [^S]", WS_CHILD | WS_VISIBLE, S(592), S(8), S(68), S(26), hwnd, (HMENU)3, NULL, NULL);
+            hBtnClear = CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE, S(664), S(8), S(56), S(26), hwnd, (HMENU)9, NULL, NULL);
+            hBtnHelp  = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE, S(724), S(8), S(68), S(26), hwnd, (HMENU)8, NULL, NULL);
 
-            hRegexFind = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, S(790), S(9), S(60), S(24), hwnd, NULL, NULL, NULL);
-            hRegexRep  = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, S(854), S(9), S(60), S(24), hwnd, NULL, NULL, NULL);
-            hBtnRep    = CreateWindowEx(0, "BUTTON", "Rep", WS_CHILD | WS_VISIBLE, S(918), S(8), S(50), S(26), hwnd, (HMENU)7, NULL, NULL);
+            hRegexFind = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, S(796), S(9), S(56), S(24), hwnd, NULL, NULL, NULL);
+            hRegexRep  = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, S(856), S(9), S(56), S(24), hwnd, NULL, NULL, NULL);
+            hBtnRep    = CreateWindowEx(0, "BUTTON", "Rep", WS_CHILD | WS_VISIBLE, S(916), S(8), S(46), S(26), hwnd, (HMENU)7, NULL, NULL);
 
-            HWND hwnds[] = {hBtnRec, hBtnPlay, hBtnStep, hBtnRun, hBtnBench, hBtnLoad, hBtnSave, hBtnClear, hRegexFind, hRegexRep, hBtnRep, hBtnHelp};
-            for (int i = 0; i < 12; i++) SendMessage(hwnds[i], WM_SETFONT, (WPARAM)hFont, TRUE);
+            HWND hwnds[] = {hBtnRec, hBtnPlay, hBtnStep, hBtnRun, hBtnQS, hBtnQL, hBtnBench, hBtnLoad, hBtnSave, hBtnClear, hRegexFind, hRegexRep, hBtnRep, hBtnHelp};
+            for (int i = 0; i < 14; i++) SendMessage(hwnds[i], WM_SETFONT, (WPARAM)hFont, TRUE);
 
             oldFindProc = (WNDPROC)SetWindowLongPtr(hRegexFind, GWLP_WNDPROC, (LONG_PTR)FindEditProc);
             oldRepProc  = (WNDPROC)SetWindowLongPtr(hRegexRep, GWLP_WNDPROC, (LONG_PTR)RepEditProc);
@@ -951,7 +1069,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Panels
             const char* defaultCode =
                 "// Welcome to KScript Advanced!\r\n"
-                "// Press F5 to Run, F6 to Benchmark, F10 to Step, F1 for Help\r\n"
+                "// Press Ctrl+Enter to Run, F5 to Quicksave, F9 to Quickload, F1 for Help\r\n"
                 "mask = 0xFF00\r\n"
                 "flag = 0b10101010\r\n"
                 "combined = (mask >> 8) | flag\r\n"
@@ -978,6 +1096,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hMemory, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             RunScript();
+
+            if (!HasSeenTutorial() && !HasQuicksave()) {
+                MessageBoxA(hwnd,
+                    "Welcome to KScript!\n\n"
+                    " - Press Ctrl+Enter to execute script\n"
+                    " - Press F5 to quicksave workspace state\n"
+                    " - Press F9 to restore quicksaved state\n"
+                    " - Press F1 for Help & Reference\n\n"
+                    "Click OK to begin writing code.",
+                    "KScript - Getting Started", MB_OK | MB_ICONINFORMATION);
+                MarkTutorialSeen();
+            }
             break;
         }
         case WM_DROPFILES: {
@@ -1111,6 +1241,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
             }
+            else if (wmId == 11) {
+                if (SaveQuicksaveState(hwnd)) {
+                    MessageBoxA(hwnd, "Workspace state quicksaved to kscript_quicksave.dat [F5].", "KScript", MB_OK | MB_ICONINFORMATION);
+                }
+            }
+            else if (wmId == 12) {
+                if (LoadQuicksaveState(hwnd)) {
+                    MessageBoxA(hwnd, "Quicksave snapshot restored from kscript_quicksave.dat [F9].", "KScript", MB_OK | MB_ICONINFORMATION);
+                } else {
+                    MessageBoxA(hwnd, "No quicksave snapshot found (kscript_quicksave.dat).\nPress F5 to save snapshot.", "KScript", MB_OK | MB_ICONWARNING);
+                }
+            }
             break;
         }
         case WM_SYSKEYDOWN: {
@@ -1138,7 +1280,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 return 0;
             }
             if (wParam == VK_F5) {
-                RunScript();
+                SendMessage(hwnd, WM_COMMAND, 11, 0);
+                return 0;
+            }
+            if (wParam == VK_F9) {
+                SendMessage(hwnd, WM_COMMAND, 12, 0);
+                return 0;
+            }
+            if (GetKeyState(VK_CONTROL) < 0 && wParam == VK_RETURN) {
+                SendMessage(hwnd, WM_COMMAND, 1, 0);
                 return 0;
             }
             if (wParam == VK_F6) {
@@ -1243,7 +1393,7 @@ void MainEntry() {
     DWORD style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN;
     RECT rect = {0, 0, S(W), S(H)};
     AdjustWindowRect(&rect, style, FALSE);
-    HWND hwnd = CreateWindowEx(0, "KScriptApp", "KScript - [F5] Run | [F6] Bench | [F10] Step | [F1] Help", style,
+    HWND hwnd = CreateWindowEx(0, "KScriptApp", "KScript - [Ctrl+Enter] Run | [F5] Save | [F9] Load | [F1] Help", style,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);

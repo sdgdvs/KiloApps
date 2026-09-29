@@ -763,8 +763,14 @@
             <button id="btnContinue" type="button" style="background:#d97706" title="Continue to Breakpoint (F8)">
                 <span>⏯ Continue</span> <span class="btn-key">F8</span>
             </button>
-            <button id="btnRun" type="button" title="Execute Script (F5 / Ctrl+Enter)">
-                <span>⚡ Run</span> <span class="btn-key">F5</span>
+            <button id="btnRun" type="button" title="Execute Script (Ctrl+Enter)">
+                <span>⚡ Run</span> <span class="btn-key">Ctrl+Enter</span>
+            </button>
+            <button id="btnQuicksave" type="button" style="background:#4338ca" title="Quicksave Workspace Snapshot [F5]">
+                <span>💾 Save</span> <span class="btn-key">F5</span>
+            </button>
+            <button id="btnQuickload" type="button" style="background:#4338ca" title="Restore Quicksaved Workspace [F9]">
+                <span>📂 Load</span> <span class="btn-key">F9</span>
             </button>
             <button id="btnBench" type="button" style="background:#6366f1" title="Run Performance Benchmark (F6)">
                 <span>⏱️ Bench</span> <span class="btn-key">F6</span>
@@ -827,7 +833,7 @@
 
     <!-- Onboarding / Quick Tip Banner -->
     <div id="onboardingBanner" class="onboarding-banner" style="display:none;" role="status">
-        <span>💡 <strong>Welcome to KScript!</strong> Pick any preset or type code in the editor. Press <span class="kbd">F5</span> to run, <span class="kbd">F10</span> to step line-by-line, and <span class="kbd">F1</span> / <span class="kbd">H</span> for guide & reference.</span>
+        <span>💡 <strong>Welcome to KScript!</strong> Pick any preset or type code in the editor. Press <span class="kbd">Ctrl+Enter</span> to run, <span class="kbd">F5</span> to quicksave workspace, <span class="kbd">F9</span> to quickload, and <span class="kbd">F1</span> / <span class="kbd">H</span> for guide & reference.</span>
         <button type="button" id="btnDismissOnboarding" class="banner-close" title="Dismiss Tip [Esc]">&times;</button>
     </div>
 
@@ -919,17 +925,19 @@
                     <tr><th>Action</th><th>Shortcut</th><th>Description</th></tr>
                 </thead>
                 <tbody>
-                    <tr><td>Run Script</td><td><span class="kbd">F5</span> / <span class="kbd">Ctrl+Enter</span></td><td>Execute entire script with telemetry</td></tr>
+                    <tr><td>Run Script</td><td><span class="kbd">Ctrl+Enter</span></td><td>Execute entire script with telemetry</td></tr>
+                    <tr><td>Quicksave Snapshot</td><td><span class="kbd">F5</span></td><td>Quicksave workspace snapshot (code, breakpoints, macros) to localStorage</td></tr>
+                    <tr><td>Quickload Snapshot</td><td><span class="kbd">F9</span></td><td>Restore quicksaved workspace snapshot from localStorage</td></tr>
                     <tr><td>Step Statement</td><td><span class="kbd">F10</span> / <span class="kbd">Alt+S</span></td><td>Step statement-by-statement with active line highlight</td></tr>
                     <tr><td>Continue Run</td><td><span class="kbd">F8</span></td><td>Run until next breakpoint is reached</td></tr>
                     <tr><td>Benchmark</td><td><span class="kbd">F6</span></td><td>Execute iterations benchmark with latency analysis</td></tr>
                     <tr><td>Toggle Breakpoint</td><td><span class="kbd">Click Gutter</span></td><td>Set / clear breakpoint on line</td></tr>
-                    <tr><td>Save Script / State</td><td><span class="kbd">Ctrl+S</span></td><td>Save .ksc script file or state dump</td></tr>
-                    <tr><td>Load Script</td><td><span class="kbd">Ctrl+O</span></td><td>Load .ksc or .txt script file</td></tr>
+                    <tr><td>Save Script File</td><td><span class="kbd">Ctrl+S</span></td><td>Save .ksc script file or state dump</td></tr>
+                    <tr><td>Import Script File</td><td><span class="kbd">Ctrl+O</span></td><td>Load .ksc or .txt script file</td></tr>
                     <tr><td>Clear Console & State</td><td><span class="kbd">Ctrl+K</span></td><td>Reset engine state and console</td></tr>
                     <tr><td>Toggle Macro</td><td><span class="kbd">Alt+M</span></td><td>Record editor input keystrokes</td></tr>
                     <tr><td>Play Macro</td><td><span class="kbd">Alt+P</span></td><td>Replay recorded keystrokes</td></tr>
-                    <tr><td>Help / Reference</td><td><span class="kbd">F1</span> / <span class="kbd">Alt+H</span></td><td>Open this guide</td></tr>
+                    <tr><td>Help / Reference</td><td><span class="kbd">F1</span> / <span class="kbd">H</span></td><td>Open this guide</td></tr>
                 </tbody>
             </table>
             <div class="modal-footer">
@@ -944,7 +952,7 @@
     <div class="modal">
         <div class="modal-header">
             <h2>⏱️ Performance Benchmark Suite</h2>
-            <button id="benchModalClose" type="button" class="modal-close">&times;</button>
+            <button id="benchModalClose" type="button" class="modal-close" title="Close [Esc]" aria-label="Close [Esc]">&times;</button>
         </div>
         <div style="font-size: 13px; line-height: 1.6; color: #e2e8f0;">
             <p>Benchmark script execution throughput, latency distribution, and AST evaluation speed.</p>
@@ -982,7 +990,7 @@
     <div class="modal">
         <div class="modal-header">
             <h2>📤 Export & Data Interoperability</h2>
-            <button id="exportModalClose" type="button" class="modal-close">&times;</button>
+            <button id="exportModalClose" type="button" class="modal-close" title="Close [Esc]" aria-label="Close [Esc]">&times;</button>
         </div>
         <p style="font-size:12.5px; color:var(--text-muted); margin-top:0;">Export execution results, memory states, or formatted telemetry.</p>
         <div class="export-grid">
@@ -1050,6 +1058,96 @@
     const exportModal = document.getElementById('exportModal');
     const exportModalClose = document.getElementById('exportModalClose');
     const toastContainer = document.getElementById('toastContainer');
+    const btnQuicksave = document.getElementById('btnQuicksave');
+    const btnQuickload = document.getElementById('btnQuickload');
+
+    // Safe storage utilities (quota and serialization protections)
+    function safeStorageSet(key, val) {
+        try {
+            localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+            return true;
+        } catch(e) {
+            console.warn("Storage quota exceeded", e);
+            return false;
+        }
+    }
+    function safeStorageGet(key, def = null) {
+        try {
+            const v = localStorage.getItem(key);
+            return v !== null ? v : def;
+        } catch(e) {
+            return def;
+        }
+    }
+    function safeStorageGetJSON(key, def = null) {
+        try {
+            const v = localStorage.getItem(key);
+            return v !== null ? JSON.parse(v) : def;
+        } catch(e) {
+            return def;
+        }
+    }
+
+    // Quicksave (F5) & Quickload (F9) State Persistence
+    function quicksaveState() {
+        const fInput = document.getElementById('regexFind');
+        const rInput = document.getElementById('regexRep');
+        const snapshot = {
+            version: '2.0-qa',
+            timestamp: Date.now(),
+            timeStr: new Date().toLocaleTimeString(),
+            code: exprInput.value,
+            breakpoints: Array.from(breakpoints),
+            macroKeys: macroKeys || [],
+            regexFind: fInput ? fInput.value : '',
+            regexRep: rInput ? rInput.value : '',
+            status: statusBadge ? statusBadge.textContent : 'READY'
+        };
+        if (safeStorageSet('kscript_quicksave', snapshot)) {
+            showToast(`💾 Workspace quicksaved [F5] (${snapshot.timeStr})`, 'success', 2200);
+        } else {
+            showToast('⚠️ Storage quota exceeded, unable to quicksave', 'error', 3000);
+        }
+    }
+
+    function quickloadState() {
+        const snapshot = safeStorageGetJSON('kscript_quicksave', null);
+        if (!snapshot || typeof snapshot !== 'object') {
+            showToast('⚠️ No quicksave snapshot found [Press F5 to save]', 'warning', 2500);
+            return;
+        }
+        try {
+            if (typeof snapshot.code === 'string') {
+                exprInput.value = snapshot.code;
+            }
+            breakpoints.clear();
+            if (Array.isArray(snapshot.breakpoints)) {
+                snapshot.breakpoints.forEach(line => breakpoints.add(Number(line)));
+            }
+            if (Array.isArray(snapshot.macroKeys)) {
+                macroKeys = snapshot.macroKeys;
+            }
+            const fInput = document.getElementById('regexFind');
+            const rInput = document.getElementById('regexRep');
+            if (fInput && typeof snapshot.regexFind === 'string') fInput.value = snapshot.regexFind;
+            if (rInput && typeof snapshot.regexRep === 'string') rInput.value = snapshot.regexRep;
+
+            renderGutter();
+            activeStepper = null;
+            activeStepLine = -1;
+            btnRun.click();
+            const ob = document.getElementById('onboardingBanner');
+            if (ob) ob.style.display = 'none';
+            const timeLabel = snapshot.timeStr ? ` from ${snapshot.timeStr}` : '';
+            showToast(`📂 Quicksave snapshot restored [F9]${timeLabel}`, 'success', 2400);
+        } catch(err) {
+            console.error('Quickload failed', err);
+            showToast('⚠️ Failed to restore quicksave data', 'error', 2500);
+        }
+    }
+
+    if (btnQuicksave) btnQuicksave.onclick = quicksaveState;
+    if (btnQuickload) btnQuickload.onclick = quickloadState;
 
     // State
     let breakpoints = new Set();
@@ -1063,7 +1161,7 @@
     // Default script template
     const DEFAULT_SCRIPT = 
 `// Welcome to KScript v2.0!
-// Press F5 to Run, F6 to Benchmark, F10 to Step, F1 for Help
+// Press Ctrl+Enter to Run, F5 to Quicksave, F9 to Quickload, F1 for Help
 
 mask = 0xFF00
 flag = 0b10101010
@@ -1333,6 +1431,8 @@ print "Stress test result:", acc`
             helpModal.classList.remove('active');
             benchModal.classList.remove('active');
             exportModal.classList.remove('active');
+            const ob = document.getElementById('onboardingBanner');
+            if (ob) ob.style.display = 'none';
             toastContainer.innerHTML = '';
             return;
         }
@@ -1342,13 +1442,24 @@ print "Stress test result:", acc`
         );
         if (e.key === 'F1' || (!isInputFocused && (e.key === 'h' || e.key === 'H' || e.key === '?')) || (e.altKey && !e.ctrlKey && (e.key === 'h' || e.key === 'H'))) {
             e.preventDefault();
+            toastContainer.innerHTML = '';
             helpModal.classList.toggle('active');
             return;
         }
         if (helpModal.classList.contains('active') || benchModal.classList.contains('active') || exportModal.classList.contains('active')) {
             return;
         }
-        if (e.key === 'F5' || (e.ctrlKey && !e.altKey && e.key === 'Enter')) {
+        if (e.key === 'F5') {
+            e.preventDefault();
+            quicksaveState();
+            return;
+        }
+        if (e.key === 'F9') {
+            e.preventDefault();
+            quickloadState();
+            return;
+        }
+        if (e.ctrlKey && !e.altKey && e.key === 'Enter') {
             e.preventDefault();
             btnRun.click();
             return;
@@ -2246,6 +2357,7 @@ print "Stress test result:", acc`
 
     // Benchmark Suite
     btnBench.onclick = () => {
+        toastContainer.innerHTML = '';
         benchModal.classList.add('active');
     };
     benchModalClose.onclick = () => benchModal.classList.remove('active');
@@ -2454,7 +2566,10 @@ print "Stress test result:", acc`
     };
 
     // Export Center
-    btnExport.onclick = () => exportModal.classList.add('active');
+    btnExport.onclick = () => {
+        toastContainer.innerHTML = '';
+        exportModal.classList.add('active');
+    };
     exportModalClose.onclick = () => exportModal.classList.remove('active');
 
     window.exportJson = () => {
@@ -2563,7 +2678,7 @@ print "Stress test result:", acc`
     };
 
     // Modal Events
-    btnHelp.onclick = () => helpModal.classList.add('active');
+    btnHelp.onclick = () => { toastContainer.innerHTML = ''; helpModal.classList.add('active'); };
     modalClose.onclick = () => helpModal.classList.remove('active');
     document.getElementById('btnHelpModalCloseBottom').onclick = () => helpModal.classList.remove('active');
     document.getElementById('btnBenchModalCloseBottom').onclick = () => benchModal.classList.remove('active');
@@ -2572,18 +2687,21 @@ print "Stress test result:", acc`
     benchModal.onclick = (e) => { if (e.target === benchModal) benchModal.classList.remove('active'); };
     exportModal.onclick = (e) => { if (e.target === exportModal) exportModal.classList.remove('active'); };
 
-    // Onboarding Banner Logic
+    // Onboarding Banner Logic & Pass 5 Tutorial Integrity
     const onboardingBanner = document.getElementById('onboardingBanner');
     const btnDismissOnboarding = document.getElementById('btnDismissOnboarding');
-    try {
-        if (!localStorage.getItem('kscript_visited')) {
-            onboardingBanner.style.display = 'flex';
-        }
-    } catch(e) {}
-    btnDismissOnboarding.onclick = () => {
-        onboardingBanner.style.display = 'none';
-        try { localStorage.setItem('kscript_visited', 'true'); } catch(e) {}
-    };
+    const tutorialSeen = safeStorageGet('kscript_tutorialSeen') || safeStorageGet('kscript_visited');
+    const hasQuicksave = safeStorageGet('kscript_quicksave');
+    if (!tutorialSeen && !hasQuicksave) {
+        if (onboardingBanner) onboardingBanner.style.display = 'flex';
+    }
+    if (btnDismissOnboarding) {
+        btnDismissOnboarding.onclick = () => {
+            if (onboardingBanner) onboardingBanner.style.display = 'none';
+            safeStorageSet('kscript_tutorialSeen', 'true');
+            safeStorageSet('kscript_visited', 'true');
+        };
+    }
 
     // Drag and Drop support
     window.addEventListener('dragover', (e) => e.preventDefault());
@@ -2606,7 +2724,7 @@ print "Stress test result:", acc`
         renderGutter();
         btnRun.click();
         setTimeout(() => {
-            showToast("⚡ Welcome to KScript v2.0! Press F1 for Help & Shortcuts.", "info", 3500);
+            showToast("⚡ Welcome to KScript v2.0! [Ctrl+Enter] Run · [F5] Save · [F9] Load · [F1] Help", "info", 3500);
         }, 300);
     });
 </script>

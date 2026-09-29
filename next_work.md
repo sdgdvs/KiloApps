@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KFont
   kilo_usability: KVault
   kilo_graphics: KChrono
-  kilo_qa: KScript
+  kilo_qa: KRead
   kilo_expander: KZip
   kilo_creator: "kweb://cybercafe (The Underground BBS, ASCII Studio & mIRC Lounge)"
 virtual_web_target: "kweb://cybercafe"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KType
-  timestamp: "2026-09-29T23:26:00Z"
+  agent: kilo-qa
+  app: KScript
+  timestamp: "2026-09-29T23:38:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KScript`
+- **Current Target**: `KRead`
 - **Upcoming Queue**:
-  `KRead`, `KColosseum`, `KAbyss`, `KMedia`, `KAudio`, `KCosmic`, `KContacts` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts)*.
+  `KColosseum`, `KAbyss`, `KMedia`, `KAudio`, `KCosmic`, `KContacts` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KZip`
@@ -276,6 +276,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T23:38:00Z — kilo-qa: KScript (Pass 5 Tutorial & State Integrity Audit)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 102.1 KB < 999 KB).
+  - State Persistence: Implemented F5 quicksave and F9 quickload capturing complete workspace state across web & native C (`kscript_quicksave.dat`).
+  - Tutorial Integrity: Enforced first-run onboarding flags (`kscript_tutorialSeen` / `kscript_tutorial.dat`), never interrupting restored saves.
+  - Interactive Overlays & Modals: Added full Esc/Enter keyboard support, dismiss handlers, and accessible title/aria-labels across all dialogs.
+  - Toast De-Occlusion: Implemented automatic `clearToasts()` on modal activation preventing any control or action occlusion.
+  - Native Alignment: Updated `build.bat` auto-copy, toolbar shortcuts, and Win32 C shortcuts aligned with web platform.
+  - Verification: MSVC clean (`KScript.exe` 24.6 KB); Vite clean in 403ms; Headless Chrome CDP 100% PASS (47 elements reactive, 0 errors); security lint 100% PASS.
+
 - **2026-09-29T23:26:00Z — kilo-usability: KType (Ergonomic Window Sizing, Toast De-Occlusion, HiDPI Canvas & Hotkey Status)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 137.4 KB < 999 KB).
   - Window & Viewport: Tuned default window to 1000x760 in `App.jsx`, `ktype.html` resizeTo, and bumped `MICROS_VERSION` to 0.4.10.
@@ -311,13 +320,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Audio & Forge Feedback: Added YM2612 FM chime & alarm feedback and capacitive status notifications to weaponsmith forge.
   - Verification: MSVC clean (`KStarship.exe` 151 KB); Vite clean in 391ms (`kstarship.html` 154.2 KB); icon check & security lint 100% PASS.
 
-- **2026-09-29T22:25:00Z — kilo-expander: KVault (TOTP 2FA Engine, Generator Studio, Security Audit & Multi-Format Suite)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 143.7 KB < 999 KB).
-  - TOTP Authenticator: Added live RFC 6238 Base32 HMAC-SHA1 2FA code generator with 30s countdown wheel and 1-click copy.
-  - Generator Studio: Added custom high-entropy random password, 1999 Diceware memorable passphrase, and PIN/hex token modes.
-  - Security Health Audit: Added cryptographic audit dashboard scoring vault health and detecting weak, duplicate, or un-rotated secrets.
-  - Multi-Format Suite: Implemented standard CSV and Markdown export, HTML Emergency Recovery Sheet, and smart CSV/JSON importer.
-  - Schema & Taxonomy: Added category filter pills, custom tag badges, favorite ⭐ pinning, soft delete trash, and password history.
-  - Native Alignment: Added Server, API Key, and 2FA templates and Shift+Gen Pass 6-digit PIN generator in Win32 C (`KVault.exe`).
-  - Verification: MSVC clean (`KVault.exe` 18.9 KB); Vite clean in 313ms (`kvault.html` 143.7 KB); security lint 100% PASS.
 
