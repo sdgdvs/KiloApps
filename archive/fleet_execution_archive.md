@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T21:07:00Z — kilo-tester: KDragon (Interactive UI Audit, State Portability & Ergonomics)**
+  - Status: PASS ✅ (4 issues found, 4 fixed; 0 regressions; 142.4 KB < 999 KB).
+  - Storage & Portability: Added JSON save file Export (.json) and Import (.json) with schema validation and start screen upload.
+  - Toast Occlusion: Moved toast container to bottom-right (column-reverse) eliminating modal header and window control overlap.
+  - Audio Ergonomics: Added YM2612 FM / SPC700 delay mute state, toggle function, and header toggle button [U].
+  - Modal & Minigame UX: Added bottom Got It button [Esc] to Guide modal; added 4s reaction timeout and global Escape exits.
+  - Verification: MSVC clean (`KDragon.exe` 147.9 KB); Vite clean in 256ms (`kdragon.html` 142.4 KB); security lint 100% PASS.
+
 - **2026-09-29T20:47:00Z — kilo-creator: kweb://users/~neon_rider (Demoscene Homepage Expansion)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 163 KB < 999 KB).
   - 16-Step Sequencer: Added YM2612 tracker matrix sequencer & arp generator with 4 channels, presets & .asm sound export.

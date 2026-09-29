@@ -258,11 +258,24 @@ void DecryptData(HWND hTextEdit, HWND hPassEdit) {
 }
 
 void GeneratePassword(HWND hTextEdit) {
-    const char chars[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
+    BOOL bShift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+    if (bShift) {
+        char pin[7];
+        for (int i = 0; i < 6; i++) {
+            pin[i] = '0' + (char)(my_rand() % 10);
+        }
+        pin[6] = '\0';
+        SendMessage(hTextEdit, EM_REPLACESEL, TRUE, (LPARAM)pin);
+        SetFocus(hTextEdit);
+        secure_zero(pin, sizeof(pin));
+        return;
+    }
+
+    const char chars[] = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*()_+~=";
     int charCount = sizeof(chars) - 1;
-    int len = 16;
-    char pass[17];
-    BYTE randBytes[16];
+    int len = 18;
+    char pass[19];
+    BYTE randBytes[18];
     
     HCRYPTPROV hProv = 0;
     if (CryptAcquireContextA(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
@@ -603,11 +616,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HWND hBtnGen = CreateWindowA("BUTTON", "Gen Pass", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 490, 320, 90, 25, hwnd, (HMENU)ID_BTN_GENERATE, NULL, NULL);
             SendMessage(hBtnGen, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            HWND hComboTpl = CreateWindowA("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 15, 355, 90, 100, hwnd, (HMENU)ID_COMBO_TEMPLATE, NULL, NULL);
+            HWND hComboTpl = CreateWindowA("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 15, 355, 90, 150, hwnd, (HMENU)ID_COMBO_TEMPLATE, NULL, NULL);
             SendMessage(hComboTpl, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Login");
             SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Finance");
             SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Note");
+            SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Server");
+            SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"API Key");
+            SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"2FA Seed");
             SendMessage(hComboTpl, CB_SETCURSEL, 0, 0);
             
             HWND hBtnTpl = CreateWindowA("BUTTON", "Insert", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 110, 355, 55, 25, hwnd, (HMENU)ID_BTN_INSERT_TEMPLATE, NULL, NULL);
@@ -773,9 +789,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (LOWORD(wParam) == ID_BTN_INSERT_TEMPLATE) {
                 int sel = (int)SendMessage(GetDlgItem(hwnd, ID_COMBO_TEMPLATE), CB_GETCURSEL, 0, 0);
                 const char* tpl = "";
-                if (sel == 0) tpl = "\r\n--- Login ---\r\nURL: \r\nUsername: \r\nPassword: \r\n-------------\r\n";
-                else if (sel == 1) tpl = "\r\n--- Finance ---\r\nBank: \r\nAccount: \r\nRouting: \r\nPIN: \r\n---------------\r\n";
-                else if (sel == 2) tpl = "\r\n--- Secure Note ---\r\nTitle: \r\nNote: \r\n-------------------\r\n";
+                if (sel == 0) tpl = "\r\n--- Login ---\r\nURL: \r\nUsername: \r\nPassword: \r\n2FA Key: \r\n-------------\r\n";
+                else if (sel == 1) tpl = "\r\n--- Finance ---\r\nCardholder: \r\nCard Number: \r\nExpiry (MM/YY): \r\nCVV: \r\nPIN: \r\n---------------\r\n";
+                else if (sel == 2) tpl = "\r\n--- Secure Note ---\r\nTitle: \r\nTags: \r\nNote: \r\n-------------------\r\n";
+                else if (sel == 3) tpl = "\r\n--- Server ---\r\nHost: \r\nPort: 22\r\nUser: \r\nPrivate Key / Password: \r\n--------------\r\n";
+                else if (sel == 4) tpl = "\r\n--- API Key ---\r\nService: \r\nKey ID: \r\nSecret Token: \r\nEndpoint: \r\n---------------\r\n";
+                else if (sel == 5) tpl = "\r\n--- 2FA Seed ---\r\nAccount: \r\nBase32 Secret: \r\nAlgorithm: SHA1-30s-6digits\r\n----------------\r\n";
                 SendMessage(hData, EM_REPLACESEL, TRUE, (LPARAM)tpl);
                 SetFocus(hData);
             } else if (LOWORD(wParam) == ID_BTN_COPY_DATA) {
@@ -835,9 +854,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "   Ctrl+S: Save file | Ctrl+O: Open file\n"
                     "   Ctrl+L: Lock vault | Ctrl+E: Encrypt data\n"
                     "   Ctrl+D: Decrypt data | Ctrl+G: Gen password\n"
+                    "   Shift+Gen Pass: Generate 6-digit numeric PIN\n"
                     "   Ctrl+F: Focus Find | F1: Help\n"
-                    "5. Drag & Drop: Drop file to load contents into editor.\n"
-                    "6. Clipboard: Clear Clip wipes clipboard after use.",
+                    "5. Templates: Login, Finance, Note, Server, API Key, 2FA Seed.\n"
+                    "6. Drag & Drop: Drop file to load contents into editor.\n"
+                    "7. Clipboard: Clear Clip wipes clipboard after use.",
                     "KVault Help", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == ID_BTN_FIND) {
                 char findText[256];

@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KVault - Secure Password & Note Manager</title>
+    <title>KVault - Secure Password & Security Manager</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         
         :root {
             --bg-color: #0f0f13;
             --text-color: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.65);
             --glass-bg: rgba(255, 255, 255, 0.03);
             --glass-border: rgba(255, 255, 255, 0.08);
             --glass-hover: rgba(255, 255, 255, 0.08);
@@ -17,8 +18,13 @@
             --primary-hover: #5b4dd1;
             --danger-accent: #ff4757;
             --danger-hover: #e8414f;
-            --input-bg: rgba(0, 0, 0, 0.3);
+            --input-bg: rgba(0, 0, 0, 0.35);
             --success-color: #2ed573;
+            --warning-color: #ffa502;
+            --gold-color: #f1c40f;
+            --card-bg: rgba(255, 255, 255, 0.025);
+            --badge-bg: rgba(108, 92, 231, 0.18);
+            --badge-border: rgba(108, 92, 231, 0.35);
         }
 
         * {
@@ -29,10 +35,10 @@
             margin: 0;
             padding: 0;
             height: 100%;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             background-color: var(--bg-color);
-            background-image: radial-gradient(circle at top left, rgba(108, 92, 231, 0.15), transparent 40%),
-                              radial-gradient(circle at bottom right, rgba(108, 92, 231, 0.05), transparent 40%);
+            background-image: radial-gradient(circle at top left, rgba(108, 92, 231, 0.15), transparent 45%),
+                              radial-gradient(circle at bottom right, rgba(108, 92, 231, 0.06), transparent 45%);
             color: var(--text-color);
             display: flex;
             justify-content: center;
@@ -47,7 +53,7 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
-            padding: 30px;
+            padding: 24px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
@@ -59,51 +65,54 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 16px;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
             border-bottom: 1px solid var(--glass-border);
-            animation: slideDown 0.4s ease-out;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
         .header h1 {
             margin: 0;
-            font-size: 26px;
-            font-weight: 600;
+            font-size: 24px;
+            font-weight: 700;
             display: flex;
             align-items: center;
             gap: 10px;
             letter-spacing: -0.5px;
         }
 
-        .content {
-            flex: 1;
+        .header-actions {
             display: flex;
-            flex-direction: column;
-            gap: 20px;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .btn {
             background-color: var(--primary-accent);
             color: white;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 12px 24px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 9px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: inherit;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 6px;
             box-shadow: 0 4px 12px rgba(108, 92, 231, 0.2);
+            user-select: none;
+            text-decoration: none;
         }
 
         .btn:hover, .btn:focus-visible {
             background-color: var(--primary-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(108, 92, 231, 0.3);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(108, 92, 231, 0.35);
             outline: 2px solid var(--primary-accent);
             outline-offset: 2px;
         }
@@ -114,18 +123,19 @@
         
         .btn.danger {
             background-color: var(--danger-accent);
-            box-shadow: 0 4px 12px rgba(255, 71, 87, 0.2);
+            box-shadow: 0 4px 12px rgba(255, 71, 87, 0.25);
         }
         
         .btn.danger:hover, .btn.danger:focus-visible {
             background-color: var(--danger-hover);
-            box-shadow: 0 6px 16px rgba(255, 71, 87, 0.3);
+            box-shadow: 0 6px 16px rgba(255, 71, 87, 0.35);
         }
 
         .btn.secondary {
-            background: transparent;
+            background: rgba(255, 255, 255, 0.04);
             border: 1px solid var(--glass-border);
             box-shadow: none;
+            color: var(--text-color);
         }
 
         .btn.secondary:hover, .btn.secondary:focus-visible {
@@ -133,132 +143,348 @@
             border-color: rgba(255, 255, 255, 0.2);
         }
 
+        .btn.icon-only {
+            padding: 8px 10px;
+        }
+
         .input-group {
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 6px;
+            margin-bottom: 14px;
         }
 
         .input-group label {
-            font-size: 13px;
-            font-weight: 500;
-            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
             letter-spacing: 0.3px;
+            text-transform: uppercase;
         }
 
         input[type="text"], input[type="password"], textarea, select {
             background-color: var(--input-bg);
             border: 1px solid var(--glass-border);
-            color: white;
-            padding: 14px;
-            border-radius: 10px;
-            font-family: 'Inter', sans-serif;
-            font-size: 15px;
+            color: var(--text-color);
+            padding: 11px 13px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
             outline: none;
             transition: all 0.2s;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.15);
         }
 
         input:focus, textarea:focus, select:focus {
             border-color: var(--primary-accent);
-            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2), inset 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.25), inset 0 2px 4px rgba(0,0,0,0.15);
         }
         
         textarea {
             resize: vertical;
-            min-height: 100px;
+            min-height: 90px;
             line-height: 1.5;
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.02);
+            background: var(--card-bg);
             border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            padding: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-            animation: scaleIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+            animation: scaleIn 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         .view-section {
             display: none;
             opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.25s ease;
         }
 
         .view-section.active {
             display: flex;
             flex-direction: column;
             opacity: 1;
-            animation: fadeIn 0.4s ease forwards;
+            animation: fadeIn 0.3s ease forwards;
         }
 
+        /* Filter bar & Category tabs */
+        .filter-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+            align-items: center;
+        }
+
+        .pill-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            user-select: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .pill-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-color);
+        }
+
+        .pill-btn.active {
+            background: var(--primary-accent);
+            border-color: var(--primary-accent);
+            color: white;
+            box-shadow: 0 2px 8px rgba(108, 92, 231, 0.3);
+        }
+
+        .pill-badge {
+            font-size: 10px;
+            padding: 1px 6px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            margin-left: 2px;
+        }
+
+        /* Secret cards grid */
         .secret-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            padding-bottom: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 16px;
+            padding-bottom: 24px;
         }
 
         .secret-item {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--glass-border);
-            border-radius: 12px;
-            padding: 20px;
+            border-radius: 10px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-            animation: slideUp 0.4s ease backwards;
+            gap: 12px;
+            transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+            position: relative;
         }
         
         .secret-item:hover {
-            transform: translateY(-4px);
+            transform: translateY(-3px);
             background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+            border-color: rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+        }
+
+        .secret-item.favorite {
+            border-color: rgba(241, 196, 15, 0.35);
+            background: rgba(241, 196, 15, 0.035);
         }
         
         .secret-item-header {
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
             font-weight: 600;
+            font-size: 15px;
+            color: var(--text-color);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding-bottom: 8px;
+            gap: 8px;
+        }
+
+        .secret-title-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .secret-title-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 15px;
+        }
+
+        .fav-star {
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.25);
             font-size: 16px;
-            color: #fff;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            padding-bottom: 10px;
+            line-height: 1;
+            transition: color 0.15s ease, transform 0.15s ease;
+            user-select: none;
+        }
+
+        .fav-star:hover {
+            transform: scale(1.2);
+            color: var(--gold-color);
+        }
+
+        .fav-star.active {
+            color: var(--gold-color);
+            text-shadow: 0 0 8px rgba(241, 196, 15, 0.4);
+        }
+
+        .secret-badge-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
         }
         
-        .secret-item-value {
+        .cat-badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            background: var(--badge-bg);
+            border: 1px solid var(--badge-border);
+            border-radius: 12px;
+            font-weight: 500;
+            color: #c7c1ff;
+            user-select: none;
+        }
+
+        .tag-badge {
+            font-size: 10px;
+            padding: 2px 7px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .tag-badge:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+        }
+
+        .secret-fields {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .secret-field-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             background: var(--input-bg);
-            padding: 12px;
-            border-radius: 8px;
+            padding: 7px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(0,0,0,0.25);
+            gap: 8px;
+        }
+
+        .secret-field-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            min-width: 65px;
+        }
+
+        .secret-field-val {
             font-family: 'Courier New', Courier, monospace;
             word-break: break-all;
-            display: none;
-            font-size: 14px;
-            line-height: 1.4;
-            color: rgba(255,255,255,0.9);
-            border: 1px solid rgba(0,0,0,0.2);
+            flex: 1;
+            color: rgba(255, 255, 255, 0.95);
             user-select: text;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        
-        .secret-item-value.visible {
-            display: block;
-            animation: fadeIn 0.2s ease;
+
+        .secret-field-val.masked {
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.5);
+            user-select: none;
+        }
+
+        .secret-field-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn-field-mini {
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid var(--glass-border);
+            color: var(--text-color);
+            padding: 3px 7px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .btn-field-mini:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        /* Live TOTP 2FA Box */
+        .totp-box {
+            background: rgba(108, 92, 231, 0.08);
+            border: 1px solid rgba(108, 92, 231, 0.25);
+            border-radius: 8px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+
+        .totp-code {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: #00f2fe;
+            user-select: all;
+            cursor: pointer;
+        }
+
+        .totp-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .totp-progress-ring {
+            width: 20px;
+            height: 20px;
+            transform: rotate(-90deg);
+        }
+
+        .totp-progress-bg {
+            stroke: rgba(255, 255, 255, 0.1);
+        }
+
+        .totp-progress-fill {
+            stroke: var(--success-color);
+            transition: stroke-dashoffset 1s linear, stroke 0.3s ease;
         }
 
         .secret-actions {
             display: flex;
-            gap: 10px;
+            gap: 6px;
             margin-top: auto;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
         
         .secret-actions button {
             flex: 1;
-            padding: 8px;
-            font-size: 13px;
+            padding: 7px 10px;
+            font-size: 12px;
         }
         
         .notification {
@@ -270,19 +496,19 @@
             background: var(--primary-accent);
             color: white;
             padding: 12px 20px;
-            border-radius: 12px;
+            border-radius: 10px;
             font-size: 13px;
             font-weight: 500;
             opacity: 0;
             transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
             pointer-events: none;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             display: flex;
             align-items: center;
             gap: 8px;
             z-index: 3000;
-            max-width: min(380px, calc(100vw - 40px));
+            max-width: min(400px, calc(100vw - 40px));
             text-align: left;
             user-select: none;
         }
@@ -296,182 +522,376 @@
         
         .notification.error {
             background: var(--danger-accent);
-            box-shadow: 0 8px 24px rgba(255, 71, 87, 0.4);
-            border-color: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 8px 24px rgba(255, 71, 87, 0.45);
+            border-color: rgba(255, 255, 255, 0.3);
         }
         
         .notification.success {
             background: var(--success-color);
+            color: #0b2212;
             box-shadow: 0 8px 24px rgba(46, 213, 115, 0.4);
-            border-color: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.3);
         }
 
-        @media (max-width: 620px) {
-            .container { padding: 16px; }
-            .header { flex-direction: column; align-items: flex-start; gap: 12px; }
-            .modal-content { padding: 20px; width: 95%; }
-            .card { padding: 20px; }
-            .secret-list { grid-template-columns: 1fr; }
+        .notification.warning {
+            background: var(--warning-color);
+            color: #2c1a00;
+            box-shadow: 0 8px 24px rgba(255, 165, 2, 0.4);
         }
+
+        /* Security Audit Studio Modal / Cards */
+        .audit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+        }
+
+        .audit-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .audit-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .audit-card-val {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .audit-card-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        /* Password Generator UI */
+        .gen-display-box {
+            background: var(--input-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .gen-preview-text {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 16px;
+            font-weight: 600;
+            word-break: break-all;
+            color: #00ffcc;
+        }
+
+        .gen-slider-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .gen-slider-row input[type="range"] {
+            flex: 1;
+            accent-color: var(--primary-accent);
+        }
+
+        .gen-options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .gen-checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .gen-checkbox-label input {
+            accent-color: var(--primary-accent);
+            cursor: pointer;
+        }
+
+        /* Modals */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: none; justify-content: center; align-items: center; z-index: 2000;
+            opacity: 0; transition: opacity 0.25s ease;
+            padding: 16px;
+        }
+        .modal-overlay.active { display: flex; opacity: 1; }
+        .modal-content {
+            background: var(--bg-color); border: 1px solid var(--glass-border);
+            border-radius: 14px; padding: 24px; max-width: 540px; width: 100%;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.6);
+            max-height: 85vh; overflow-y: auto;
+            position: relative;
+        }
+        .modal-content h3 { margin: 0 0 12px 0; font-size: 18px; }
+        .modal-content p { line-height: 1.5; font-size: 13px; color: var(--text-muted); margin: 0 0 14px 0; }
+        .modal-content ul { font-size: 13px; line-height: 1.6; padding-left: 20px; color: rgba(255,255,255,0.85); }
+        .close-modal { margin-top: 16px; width: 100%; }
 
         /* Animations */
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
-        
         @keyframes scaleIn {
-            from { opacity: 0; transform: scale(0.95); }
+            from { opacity: 0; transform: scale(0.97); }
             to { opacity: 1; transform: scale(1); }
         }
-        
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
+
         #empty-state {
             text-align: center;
-            padding: 60px 20px;
-            opacity: 0.5;
-            background: rgba(0,0,0,0.1);
-            border-radius: 16px;
+            padding: 50px 20px;
+            opacity: 0.6;
+            background: rgba(0,0,0,0.15);
+            border-radius: 12px;
             border: 1px dashed var(--glass-border);
-            animation: fadeIn 0.4s ease;
+            animation: fadeIn 0.3s ease;
         }
-        
-        #empty-state p {
-            font-size: 16px;
-            margin-bottom: 20px;
+
+        @media (max-width: 640px) {
+            .container { padding: 14px; }
+            .header { flex-direction: column; align-items: flex-start; }
+            .header-actions { width: 100%; justify-content: flex-start; }
+            .modal-content { padding: 18px; }
+            .secret-list { grid-template-columns: 1fr; }
+            .gen-options-grid { grid-template-columns: 1fr; }
         }
-        
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); backdrop-filter: blur(5px);
-            display: none; justify-content: center; align-items: center; z-index: 2000;
-            opacity: 0; transition: opacity 0.3s;
-        }
-        .modal-overlay.active { display: flex; opacity: 1; }
-        .modal-content {
-            background: var(--bg-color); border: 1px solid var(--glass-border);
-            border-radius: 16px; padding: 30px; max-width: 500px; width: 90%;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            max-height: 80vh; overflow-y: auto;
-        }
-        .modal-content h3 { margin-top: 0; }
-        .modal-content p { line-height: 1.5; font-size: 14px; opacity: 0.9; }
-        .modal-content ul { font-size: 14px; line-height: 1.6; padding-left: 20px; opacity: 0.9; }
-        .close-modal { margin-top: 20px; width: 100%; }
     </style>
 </head>
 <body>
     <div class="container" id="app-container">
+        <!-- Main Top Bar -->
         <div class="header">
             <h1><span aria-hidden="true">🔒</span> KVault</h1>
-            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-                <button class="btn secondary" style="padding: 8px 12px; font-size: 13px;" onclick="quicksaveState()" title="Quicksave Snapshot [F5]" aria-label="Quicksave Snapshot">💾 Save [F5]</button>
-                <button class="btn secondary" style="padding: 8px 12px; font-size: 13px;" onclick="quickloadState()" title="Restore Quicksaved Snapshot [F9]" aria-label="Quickload Snapshot">📂 Load [F9]</button>
-                <button class="btn secondary" style="padding: 8px 12px; font-size: 13px;" onclick="showHelp()" aria-label="Open Help Dialog">Help [F1]</button>
-                <div id="auth-controls" style="display:none; align-items:center; gap:10px; flex-wrap:wrap;">
-                    <select id="theme-select" onchange="updateTheme()" aria-label="Select Color Theme" style="background:var(--input-bg); border:1px solid var(--glass-border); color:var(--text-color); padding:10px 14px; border-radius:10px; font-family:inherit; font-size:14px; outline:none;">
+            <div class="header-actions">
+                <button class="btn secondary" onclick="quicksaveState()" title="Quicksave Snapshot [F5]" aria-label="Quicksave Snapshot">💾 Save [F5]</button>
+                <button class="btn secondary" onclick="quickloadState()" title="Restore Quicksaved Snapshot [F9]" aria-label="Quickload Snapshot">📂 Load [F9]</button>
+                <button class="btn secondary" onclick="openGeneratorModal()" title="Password & Diceware Generator [Ctrl+G]" aria-label="Password Generator">🎲 Gen [Ctrl+G]</button>
+                <button class="btn secondary" onclick="showHelp()" aria-label="Open Help Dialog">Help [F1]</button>
+                <div id="auth-controls" style="display:none; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <select id="theme-select" onchange="updateTheme()" aria-label="Select Color Theme" style="padding:7px 10px; font-size:13px;">
                         <option value="dark">Dark Theme</option>
                         <option value="light">Light Theme</option>
                         <option value="neon">Neon Theme</option>
                     </select>
-                    <select id="auto-lock-select" onchange="updateAutoLock()" aria-label="Select Auto Lock Timeout" style="background:var(--input-bg); border:1px solid var(--glass-border); color:var(--text-color); padding:10px 14px; border-radius:10px; font-family:inherit; font-size:14px; outline:none;">
+                    <select id="auto-lock-select" onchange="updateAutoLock()" aria-label="Select Auto Lock Timeout" style="padding:7px 10px; font-size:13px;">
                         <option value="60000">Lock: 1 min</option>
                         <option value="300000">Lock: 5 min</option>
                         <option value="900000">Lock: 15 min</option>
                         <option value="0">Lock: Never</option>
                     </select>
-                    <button class="btn" onclick="lockVault()" aria-label="Lock Vault Now">Lock Vault</button>
+                    <button class="btn" onclick="lockVault()" aria-label="Lock Vault Now">🔒 Lock [Ctrl+L]</button>
                 </div>
             </div>
         </div>
         
-        <div class="content">
+        <!-- Content Area -->
+        <div class="content" style="flex:1; display:flex; flex-direction:column;">
+            
             <!-- Setup / Login View -->
             <div id="view-auth" class="view-section active">
-                <div class="card" style="max-width: 420px; margin: 40px auto 0; width: 100%;">
-                    <div style="text-align: center; margin-bottom: 24px;">
-                        <h2 id="auth-title" style="margin:0 0 8px 0; font-size: 24px;">Unlock Vault</h2>
-                        <p id="auth-desc" style="margin:0; opacity:0.7; font-size:14px; line-height: 1.5;">Enter your master password to decrypt your vault.</p>
+                <div class="card" style="max-width: 440px; margin: 30px auto 0; width: 100%;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <div style="font-size: 40px; margin-bottom: 8px;">🔐</div>
+                        <h2 id="auth-title" style="margin:0 0 6px 0; font-size: 22px;">Unlock Vault</h2>
+                        <p id="auth-desc" style="margin:0; opacity:0.75; font-size:13px; line-height: 1.5;">Enter your master password to decrypt your credentials locally.</p>
                     </div>
                     <div class="input-group">
                         <label for="master-password">Master Password</label>
-                        <input type="password" id="master-password" placeholder="Master Password" oninput="checkStrength()" onkeydown="if(event.key === 'Enter') handleAuth()" aria-describedby="auth-error strength-text" autocomplete="current-password">
+                        <input type="password" id="master-password" placeholder="Master Password" oninput="checkStrength()" onkeydown="if(event.key === 'Enter') handleAuth()" autocomplete="current-password">
                         <div id="strength-bar-container" style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-top: 5px; overflow: hidden; display: none;">
                             <div id="strength-bar" style="height: 100%; width: 0%; background: var(--danger-accent); transition: all 0.3s;"></div>
                         </div>
-                        <div id="strength-text" style="font-size: 12px; text-align: right; margin-top: 2px; color: rgba(255,255,255,0.5); display: none;"></div>
+                        <div id="strength-text" style="font-size: 11px; text-align: right; margin-top: 3px; color: rgba(255,255,255,0.6); display: none;"></div>
                     </div>
-                    <button class="btn" style="width: 100%; margin-top: 10px; padding: 14px;" onclick="handleAuth()" id="auth-btn">Unlock Vault</button>
-                    <p id="auth-error" style="color:var(--danger-accent); font-size:14px; display:none; margin-top:16px; text-align: center; font-weight: 500;" role="alert">Incorrect password. Please try again.</p>
+                    <button class="btn" style="width: 100%; margin-top: 8px; padding: 12px;" onclick="handleAuth()" id="auth-btn">Unlock Vault</button>
+                    <p id="auth-error" style="color:var(--danger-accent); font-size:13px; display:none; margin-top:14px; text-align: center; font-weight: 500;" role="alert">Incorrect password. Please try again.</p>
                 </div>
             </div>
 
             <!-- Main Vault View -->
             <div id="view-vault" class="view-section">
-                <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 10px;">
-                    <h2 style="margin:0; font-weight: 600;">Your Secrets</h2>
-                    <div style="display:flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <input type="text" id="search-input" placeholder="Search secrets..." oninput="filterSecrets()" aria-label="Search Secrets" style="padding: 10px 14px; width: 140px; font-size: 14px; margin-right: 5px;">
-                        <button class="btn secondary" onclick="importVault()" aria-label="Import Vault JSON Backup">Import</button>
-                        <button class="btn secondary" onclick="exportVault()" aria-label="Export Vault Encrypted JSON">Export</button>
-                        <button class="btn secondary" onclick="copyVaultBackup()" title="Copy Encrypted Backup to Clipboard" aria-label="Copy Encrypted Backup">Copy</button>
-                        <button class="btn danger" style="padding: 12px; background: rgba(255, 71, 87, 0.2); border-color: rgba(255, 71, 87, 0.3); color: #ff4757; box-shadow: none;" onclick="clearAppClipboard()" title="Clear Clipboard" aria-label="Clear Clipboard">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><line x1="9" y1="14" x2="15" y2="14"></line><line x1="12" y1="11" x2="12" y2="17"></line></svg>
-                        </button>
+                <!-- Action Controls Header -->
+                <div style="display:flex; justify-content:space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                        <h2 style="margin:0; font-size: 20px; font-weight: 700;">Vault Items</h2>
+                        <span id="vault-count-badge" style="font-size:12px; color:var(--text-muted); background:rgba(255,255,255,0.06); padding:3px 8px; border-radius:12px;">0 items</span>
+                    </div>
+                    <div style="display:flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                        <input type="text" id="search-input" placeholder="Search (Ctrl+F)..." oninput="filterSecrets()" aria-label="Search Secrets" style="padding: 8px 12px; width: 160px; font-size: 13px;">
+                        <button class="btn secondary" onclick="openAuditModal()" title="Security & Password Health Audit" aria-label="Security Audit">🛡️ Audit</button>
+                        <button class="btn secondary" onclick="openImportModal()" aria-label="Import Backup">Import</button>
+                        <button class="btn secondary" onclick="openExportModal()" aria-label="Export Options">Export</button>
+                        <button class="btn secondary" onclick="copyVaultBackup()" title="Copy Encrypted Raw Backup to Clipboard" aria-label="Copy Backup">Copy</button>
+                        <button class="btn secondary" onclick="clearAppClipboard()" title="Clear Clipboard" aria-label="Clear Clipboard">🧹 Clr Clip</button>
                         <button class="btn" onclick="showAddSecret()" aria-label="Add New Secret Item">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                            Add Secret
+                            <span aria-hidden="true">+</span> Add Secret
                         </button>
                     </div>
                 </div>
-                
-                <div class="secret-list" id="secret-list">
-                    <!-- Secrets injected here -->
+
+                <!-- Category & Tag Filter Pills -->
+                <div class="filter-bar" id="category-filter-bar">
+                    <button class="pill-btn active" data-cat="ALL" onclick="setCategoryFilter('ALL')">All <span class="pill-badge" id="badge-count-all">0</span></button>
+                    <button class="pill-btn" data-cat="FAV" onclick="setCategoryFilter('FAV')">⭐ Pinned <span class="pill-badge" id="badge-count-fav">0</span></button>
+                    <button class="pill-btn" data-cat="Login" onclick="setCategoryFilter('Login')">🔑 Login <span class="pill-badge" id="badge-count-login">0</span></button>
+                    <button class="pill-btn" data-cat="Finance" onclick="setCategoryFilter('Finance')">💳 Finance <span class="pill-badge" id="badge-count-finance">0</span></button>
+                    <button class="pill-btn" data-cat="Note" onclick="setCategoryFilter('Note')">📝 Notes <span class="pill-badge" id="badge-count-note">0</span></button>
+                    <button class="pill-btn" data-cat="Server" onclick="setCategoryFilter('Server')">🖥️ Server <span class="pill-badge" id="badge-count-server">0</span></button>
+                    <button class="pill-btn" data-cat="General" onclick="setCategoryFilter('General')">📦 General <span class="pill-badge" id="badge-count-general">0</span></button>
+                    <button class="pill-btn" data-cat="TRASH" onclick="setCategoryFilter('TRASH')" style="margin-left:auto; color:var(--danger-accent);">🗑️ Trash <span class="pill-badge" id="badge-count-trash">0</span></button>
                 </div>
                 
+                <!-- Secret Cards Grid -->
+                <div class="secret-list" id="secret-list">
+                    <!-- Dynamic secrets injected here -->
+                </div>
+                
+                <!-- Empty State -->
                 <div id="empty-state">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5; margin-bottom: 16px;" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                    <p>Your vault is empty.</p>
-                    <button class="btn secondary" onclick="showAddSecret()">Create your first secret</button>
+                    <div style="font-size: 40px; margin-bottom: 10px;">📦</div>
+                    <p id="empty-state-text" style="font-size: 15px; margin: 0 0 16px 0;">Your vault is empty.</p>
+                    <button class="btn secondary" id="empty-state-btn" onclick="showAddSecret()">Create your first secret</button>
                 </div>
             </div>
             
-            <!-- Add/Edit Secret View -->
+            <!-- Add / Edit Secret View -->
             <div id="view-add" class="view-section">
-                <div class="card" style="max-width: 500px; margin: 20px auto; width: 100%;">
-                    <h2 id="add-secret-heading" style="margin:0 0 24px 0;">Add New Secret</h2>
-                    <div class="input-group">
-                        <label for="new-secret-category">Category</label>
-                        <select id="new-secret-category" style="background-color: var(--input-bg); border: 1px solid var(--glass-border); color: white; padding: 14px; border-radius: 10px; font-family: 'Inter', sans-serif; font-size: 15px; outline: none;">
-                            <option value="General">General</option>
-                            <option value="Login">Login</option>
-                            <option value="Finance">Finance</option>
-                            <option value="Note">Secure Note</option>
-                        </select>
+                <div class="card" style="max-width: 580px; margin: 10px auto; width: 100%;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px; border-bottom:1px solid var(--glass-border); padding-bottom:10px;">
+                        <h2 id="add-secret-heading" style="margin:0; font-size:18px;">Add New Secret</h2>
+                        <label class="gen-checkbox-label" style="font-size:13px; color:var(--gold-color);">
+                            <input type="checkbox" id="new-secret-favorite"> ⭐ Pin to top
+                        </label>
                     </div>
-                    <div class="input-group">
-                        <label for="new-secret-title">Title / Identifier</label>
-                        <input type="text" id="new-secret-title" placeholder="e.g. Github Password or API Key" onkeydown="if(event.key === 'Enter') { event.preventDefault(); document.getElementById('new-secret-value').focus(); }">
-                    </div>
-                    <div class="input-group">
-                        <label for="new-secret-value">Secret Value</label>
-                        <div style="display:flex; gap:10px;">
-                            <textarea id="new-secret-value" placeholder="Enter password, token, or secure note here..." style="flex:1;" onkeydown="if((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); saveNewSecret(); }"></textarea>
-                            <button class="btn secondary" style="align-self: flex-start; padding: 14px;" onclick="generatePassword()" title="Generate Password" aria-label="Generate Random Password">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
-                            </button>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                        <div class="input-group">
+                            <label for="new-secret-category">Category</label>
+                            <select id="new-secret-category" onchange="adjustFormForCategory()">
+                                <option value="Login">🔑 Login (Web / App)</option>
+                                <option value="Finance">💳 Credit Card / Finance</option>
+                                <option value="Note">📝 Secure Note</option>
+                                <option value="Server">🖥️ Server / Host</option>
+                                <option value="General">📦 General Secret</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="new-secret-title">Title / Name</label>
+                            <input type="text" id="new-secret-title" placeholder="e.g. ProtonMail, GitHub, Visa Card">
                         </div>
                     </div>
-                    <div style="display:flex; gap:16px; margin-top: 30px;">
+
+                    <!-- Category specific: Login -->
+                    <div id="cat-fields-login">
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                            <div class="input-group">
+                                <label for="new-secret-username">Username / Email</label>
+                                <input type="text" id="new-secret-username" placeholder="user@example.com">
+                            </div>
+                            <div class="input-group">
+                                <label for="new-secret-url">Website URL</label>
+                                <input type="text" id="new-secret-url" placeholder="https://example.com">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="new-secret-totp">2FA / TOTP Authenticator Key (Base32)</label>
+                            <input type="text" id="new-secret-totp" placeholder="e.g. JBSWY3DPEHPK3PXP (RFC 6238)">
+                        </div>
+                    </div>
+
+                    <!-- Category specific: Finance -->
+                    <div id="cat-fields-finance" style="display:none;">
+                        <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:10px;">
+                            <div class="input-group">
+                                <label for="new-secret-cardnum">Card Number</label>
+                                <input type="text" id="new-secret-cardnum" placeholder="4000 1234 5678 9010">
+                            </div>
+                            <div class="input-group">
+                                <label for="new-secret-cardexpiry">Expiry (MM/YY)</label>
+                                <input type="text" id="new-secret-cardexpiry" placeholder="12/28">
+                            </div>
+                            <div class="input-group">
+                                <label for="new-secret-cardcvv">CVV / CVC</label>
+                                <input type="text" id="new-secret-cardcvv" placeholder="123">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label for="new-secret-cardholder">Cardholder Name / PIN</label>
+                            <input type="text" id="new-secret-cardholder" placeholder="CARDHOLDER NAME / PIN">
+                        </div>
+                    </div>
+
+                    <!-- Category specific: Server -->
+                    <div id="cat-fields-server" style="display:none;">
+                        <div style="display:grid; grid-template-columns: 2fr 1fr; gap:10px;">
+                            <div class="input-group">
+                                <label for="new-secret-serverhost">Host / IP Address</label>
+                                <input type="text" id="new-secret-serverhost" placeholder="10.19.99.1 or bastion.corp">
+                            </div>
+                            <div class="input-group">
+                                <label for="new-secret-serverport">Port</label>
+                                <input type="text" id="new-secret-serverport" placeholder="22">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Primary Secret Value (Password / Note / Key) -->
+                    <div class="input-group">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <label for="new-secret-value" id="val-field-label">Password / Secret Key</label>
+                            <button class="btn secondary" style="padding: 2px 8px; font-size:11px;" type="button" onclick="openGeneratorModal(true)">🎲 Open Generator</button>
+                        </div>
+                        <div style="display:flex; gap:8px;">
+                            <textarea id="new-secret-value" placeholder="Enter password, private key, or confidential note..." style="flex:1; min-height:80px;"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Tags & Notes -->
+                    <div style="display:grid; grid-template-columns: 1fr; gap:10px;">
+                        <div class="input-group">
+                            <label for="new-secret-tags">Tags (comma-separated)</label>
+                            <input type="text" id="new-secret-tags" placeholder="work, email, critical, dev">
+                        </div>
+                        <div class="input-group">
+                            <label for="new-secret-notes">Additional Notes</label>
+                            <textarea id="new-secret-notes" placeholder="Security questions, recovery seeds, PINs..." style="min-height:60px;"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Password Revision History (Visible when editing) -->
+                    <div id="password-history-container" style="display:none; margin-top:10px; background:rgba(0,0,0,0.25); border:1px solid var(--glass-border); border-radius:8px; padding:10px;">
+                        <div style="font-size:12px; font-weight:600; color:var(--text-muted); margin-bottom:6px;">PASSWORD REVISION HISTORY</div>
+                        <div id="password-history-list" style="font-size:12px; display:flex; flex-direction:column; gap:6px;"></div>
+                    </div>
+
+                    <!-- Form Action Buttons -->
+                    <div style="display:flex; gap:12px; margin-top: 20px;">
                         <button class="btn secondary" style="flex:1" onclick="showVault()">Cancel</button>
                         <button class="btn" id="save-secret-btn" style="flex:1" onclick="saveNewSecret()">Save to Vault</button>
                     </div>
@@ -480,19 +900,214 @@
         </div>
     </div>
     
+    <!-- Notification Toast -->
     <div class="notification" id="notification" role="status" aria-live="polite" onclick="dismissNotification()" title="Click to dismiss">Action successful</div>
 
+    <!-- Password & Passphrase Generator Studio Modal -->
+    <div class="modal-overlay" id="generator-modal" role="dialog" aria-modal="true" aria-labelledby="gen-modal-title">
+        <div class="modal-content" style="max-width: 500px;">
+            <h3 id="gen-modal-title">🎲 Password & Passphrase Generator</h3>
+            <p>Generate high-entropy cryptographic passwords or Diceware passphrases.</p>
+            
+            <div style="display:flex; gap:8px; margin-bottom:14px;">
+                <button class="pill-btn active" id="tab-gen-random" onclick="switchGenTab('random')">Random Password</button>
+                <button class="pill-btn" id="tab-gen-diceware" onclick="switchGenTab('diceware')">Memorable Passphrase</button>
+                <button class="pill-btn" id="tab-gen-pin" onclick="switchGenTab('pin')">PIN / Hex Token</button>
+            </div>
+
+            <!-- Result Box -->
+            <div class="gen-display-box">
+                <span class="gen-preview-text" id="gen-output-text">Generating...</span>
+                <button class="btn secondary" onclick="copyGeneratedPassword()" title="Copy Generated String">📋 Copy</button>
+            </div>
+
+            <!-- Entropy Meter -->
+            <div style="margin-bottom:16px;">
+                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                    <span id="gen-entropy-label">Entropy: -- bits</span>
+                    <span id="gen-strength-label" style="font-weight:600; color:var(--success-color);">Very Strong</span>
+                </div>
+                <div style="height:6px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden;">
+                    <div id="gen-entropy-bar" style="height:100%; width:80%; background:var(--success-color); transition:all 0.2s;"></div>
+                </div>
+            </div>
+
+            <!-- Tab 1: Random Character Password -->
+            <div id="panel-gen-random">
+                <div class="gen-slider-row">
+                    <label style="font-size:13px; font-weight:600;">Length: <span id="gen-len-val">18</span></label>
+                    <input type="range" id="gen-length-slider" min="8" max="64" value="18" oninput="document.getElementById('gen-len-val').textContent = this.value; generateLivePassword();">
+                </div>
+                <div class="gen-options-grid">
+                    <label class="gen-checkbox-label"><input type="checkbox" id="gen-opt-upper" checked onchange="generateLivePassword()"> Uppercase (A-Z)</label>
+                    <label class="gen-checkbox-label"><input type="checkbox" id="gen-opt-lower" checked onchange="generateLivePassword()"> Lowercase (a-z)</label>
+                    <label class="gen-checkbox-label"><input type="checkbox" id="gen-opt-digits" checked onchange="generateLivePassword()"> Digits (0-9)</label>
+                    <label class="gen-checkbox-label"><input type="checkbox" id="gen-opt-symbols" checked onchange="generateLivePassword()"> Symbols (!@#$%)</label>
+                    <label class="gen-checkbox-label"><input type="checkbox" id="gen-opt-ambig" onchange="generateLivePassword()"> Exclude Ambiguous (l, 1, O, 0)</label>
+                </div>
+            </div>
+
+            <!-- Tab 2: Diceware Memorable Passphrase -->
+            <div id="panel-gen-diceware" style="display:none;">
+                <div class="gen-slider-row">
+                    <label style="font-size:13px; font-weight:600;">Words: <span id="gen-words-val">4</span></label>
+                    <input type="range" id="gen-words-slider" min="3" max="7" value="4" oninput="document.getElementById('gen-words-val').textContent = this.value; generateLivePassword();">
+                </div>
+                <div class="gen-options-grid">
+                    <div class="input-group" style="margin:0;">
+                        <label>Separator</label>
+                        <select id="gen-words-sep" onchange="generateLivePassword()" style="padding:8px;">
+                            <option value="-">Hyphen (-)</option>
+                            <option value="_">Underscore (_)</option>
+                            <option value=".">Period (.)</option>
+                            <option value=" ">Space ( )</option>
+                        </select>
+                    </div>
+                    <label class="gen-checkbox-label" style="align-self:center;"><input type="checkbox" id="gen-words-cap" checked onchange="generateLivePassword()"> Capitalize Words</label>
+                </div>
+            </div>
+
+            <!-- Tab 3: PIN / Hex -->
+            <div id="panel-gen-pin" style="display:none;">
+                <div class="gen-slider-row">
+                    <label style="font-size:13px; font-weight:600;">Digits / Hex Length: <span id="gen-pin-val">6</span></label>
+                    <input type="range" id="gen-pin-slider" min="4" max="32" value="6" oninput="document.getElementById('gen-pin-val').textContent = this.value; generateLivePassword();">
+                </div>
+                <div style="display:flex; gap:16px;">
+                    <label class="gen-checkbox-label"><input type="radio" name="pin-mode" id="pin-mode-num" checked onchange="generateLivePassword()"> Numeric PIN</label>
+                    <label class="gen-checkbox-label"><input type="radio" name="pin-mode" id="pin-mode-hex" onchange="generateLivePassword()"> Hexadecimal Seed</label>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+                <button class="btn secondary" style="flex:1;" onclick="generateLivePassword()">🔄 Regenerate</button>
+                <button class="btn" style="flex:1;" id="gen-apply-btn" onclick="applyGeneratedPassword()">Use in Secret</button>
+                <button class="btn secondary" onclick="closeGeneratorModal()">Close (Esc)</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Security Audit Studio Modal -->
+    <div class="modal-overlay" id="audit-modal" role="dialog" aria-modal="true" aria-labelledby="audit-title">
+        <div class="modal-content" style="max-width: 580px;">
+            <h3 id="audit-title">🛡️ Vault Security & Password Health Audit</h3>
+            <p>Cryptographic inspection of stored credentials for compromised patterns and age.</p>
+
+            <!-- Overall Score Banner -->
+            <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:10px; padding:16px; display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+                <div>
+                    <div style="font-size:12px; color:var(--text-muted); text-transform:uppercase; font-weight:600;">Overall Security Score</div>
+                    <div id="audit-score-text" style="font-size:28px; font-weight:800; color:var(--success-color);">100%</div>
+                    <div id="audit-score-subtitle" style="font-size:12px; color:var(--text-muted);">All active credentials are robust and unique.</div>
+                </div>
+                <div id="audit-score-icon" style="font-size:44px;">🛡️</div>
+            </div>
+
+            <!-- Breakdown Grid -->
+            <div class="audit-grid">
+                <div class="audit-card" onclick="filterAuditItems('WEAK')">
+                    <div class="audit-card-val" id="audit-weak-count" style="color:var(--danger-accent);">0</div>
+                    <div class="audit-card-label">Weak Passwords</div>
+                </div>
+                <div class="audit-card" onclick="filterAuditItems('REUSED')">
+                    <div class="audit-card-val" id="audit-reused-count" style="color:var(--warning-color);">0</div>
+                    <div class="audit-card-label">Reused Credentials</div>
+                </div>
+                <div class="audit-card" onclick="filterAuditItems('OLD')">
+                    <div class="audit-card-val" id="audit-old-count" style="color:#a29bfe;">0</div>
+                    <div class="audit-card-label">Aging (>90 Days)</div>
+                </div>
+                <div class="audit-card" onclick="filterAuditItems('NO2FA')">
+                    <div class="audit-card-val" id="audit-no2fa-count" style="color:#00f2fe;">0</div>
+                    <div class="audit-card-label">Missing 2FA/TOTP</div>
+                </div>
+            </div>
+
+            <div id="audit-recommendations" style="font-size:13px; line-height:1.6; background:rgba(0,0,0,0.25); border-radius:8px; padding:12px; margin-bottom:16px;">
+                <strong>Recommendations:</strong>
+                <ul id="audit-rec-list" style="margin:6px 0 0 0; padding-left:20px;">
+                    <li>No urgent vulnerabilities identified.</li>
+                </ul>
+            </div>
+
+            <button class="btn close-modal" onclick="closeAuditModal()">Done (Esc)</button>
+        </div>
+    </div>
+
+    <!-- Multi-Format Export Modal -->
+    <div class="modal-overlay" id="export-modal" role="dialog" aria-modal="true" aria-labelledby="export-title">
+        <div class="modal-content" style="max-width: 500px;">
+            <h3 id="export-title">📤 Export Vault Credentials</h3>
+            <p>Choose an export format for secure backups or migration to other managers.</p>
+            
+            <div style="display:flex; flex-direction:column; gap:10px; margin: 16px 0;">
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="font-size:14px;">🔒 Encrypted JSON (.json)</strong>
+                        <div style="font-size:12px; color:var(--text-muted);">AES-GCM 256-bit ciphertext with PBKDF2 salt.</div>
+                    </div>
+                    <button class="btn secondary" onclick="exportEncryptedJSON()">Export JSON</button>
+                </div>
+
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="font-size:14px;">📊 Standard CSV (.csv)</strong>
+                        <div style="font-size:12px; color:var(--text-muted);">Compatible with KeePass, Bitwarden, and spreadsheets.</div>
+                    </div>
+                    <button class="btn secondary" onclick="exportPlainCSV()">Export CSV</button>
+                </div>
+
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="font-size:14px;">📝 Security Inventory Markdown (.md)</strong>
+                        <div style="font-size:12px; color:var(--text-muted);">Human-readable formatted document (redacted passwords).</div>
+                    </div>
+                    <button class="btn secondary" onclick="exportMarkdownSummary()">Export MD</button>
+                </div>
+
+                <div style="background:rgba(255,255,255,0.03); border:1px solid var(--glass-border); border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <strong style="font-size:14px;">📋 Emergency Access Sheet (.html)</strong>
+                        <div style="font-size:12px; color:var(--text-muted);">Printable recovery document for physical vaults/safes.</div>
+                    </div>
+                    <button class="btn secondary" onclick="exportEmergencyKit()">Generate Sheet</button>
+                </div>
+            </div>
+
+            <button class="btn secondary close-modal" onclick="closeExportModal()">Cancel (Esc)</button>
+        </div>
+    </div>
+
+    <!-- Smart CSV & JSON Import Modal -->
+    <div class="modal-overlay" id="import-modal" role="dialog" aria-modal="true" aria-labelledby="import-title">
+        <div class="modal-content" style="max-width: 500px;">
+            <h3 id="import-title">📥 Import Vault Data</h3>
+            <p>Upload an Encrypted KVault JSON backup or standard CSV file.</p>
+
+            <div id="drop-zone" style="border: 2px dashed var(--glass-border); border-radius:10px; padding:30px 20px; text-align:center; background:rgba(0,0,0,0.2); cursor:pointer; margin: 16px 0;" onclick="document.getElementById('import-file-input').click()">
+                <div style="font-size:32px; margin-bottom:8px;">📁</div>
+                <div style="font-size:14px; font-weight:600; margin-bottom:4px;">Click to select file or Drag & Drop here</div>
+                <div style="font-size:12px; color:var(--text-muted);">Accepts .json (encrypted backup) or .csv (spreadsheet / KeePass)</div>
+                <input type="file" id="import-file-input" accept=".json,.csv,text/csv,application/json" style="display:none;" onchange="handleFileSelected(event)">
+            </div>
+
+            <button class="btn secondary close-modal" onclick="closeImportModal()">Cancel (Esc)</button>
+        </div>
+    </div>
+
+    <!-- Help & Security Guide Modal -->
     <div class="modal-overlay" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
         <div class="modal-content">
             <h3 id="help-title">📖 KVault Help & Security Guide</h3>
-            <p>Welcome to KVault! Your secure, client-side encrypted password manager and secure note storage.</p>
+            <p>Welcome to KVault! Your secure, client-side encrypted password manager, TOTP authenticator, and confidential data storage.</p>
             <ul>
-                <li><strong>Encryption:</strong> Uses AES-GCM 256-bit encryption. Data is encrypted locally with your Master Password which is NEVER stored.</li>
+                <li><strong>Encryption:</strong> Local AES-GCM 256-bit encryption with PBKDF2 (100,000 rounds). The Master Password is NEVER sent over the network or stored unencrypted.</li>
+                <li><strong>TOTP 2FA Authenticator:</strong> Stores RFC 6238 Base32 secret keys and calculates live 6-digit one-time authorization tokens refreshed every 30 seconds with animated timers.</li>
+                <li><strong>Password Generator Studio:</strong> Press <code>[Ctrl+G]</code> anytime for high-entropy random passwords, 1999 Diceware passphrases, or PINs.</li>
+                <li><strong>Security Audit:</strong> Click <strong>🛡️ Audit</strong> to assess overall vault health, detect weak or reused credentials, and identify missing 2FA.</li>
                 <li><strong>Quicksave & Quickload:</strong> Press <strong>F5</strong> to save an instant snapshot of your vault state to localStorage, and <strong>F9</strong> to restore it.</li>
-                <li><strong>Auto-Lock:</strong> Automatically locks your vault and clears clipboard after inactivity.</li>
-                <li><strong>Shortcuts:</strong> <code>[F5]</code> Quicksave, <code>[F9]</code> Quickload, <code>[F1 / H]</code> Help, <code>[Ctrl+S]</code> Save/Export, <code>[Ctrl+L]</code> Lock instantly, <code>[Ctrl+F]</code> Find, <code>[Esc]</code> Close modals / Return.</li>
-                <li><strong>Import/Export:</strong> Backup or restore using encrypted JSON files or drag & drop.</li>
-                <li><strong>Clipboard Security:</strong> Click "Clear Clipboard" after copying passwords to protect sensitive credentials.</li>
+                <li><strong>Auto-Lock & Wipe:</strong> Automatically locks and clears the operating system clipboard after inactivity.</li>
+                <li><strong>Shortcuts:</strong> <code>[F5]</code> Quicksave, <code>[F9]</code> Quickload, <code>[F1 / H]</code> Help, <code>[Ctrl+S]</code> Save/Export, <code>[Ctrl+L]</code> Lock instantly, <code>[Ctrl+F]</code> Find, <code>[Ctrl+G]</code> Generator, <code>[Esc]</code> Close modals / Return.</li>
             </ul>
             <button class="btn close-modal" onclick="closeHelp()">Got it (Esc / Enter)</button>
         </div>
@@ -502,12 +1117,13 @@
     <div class="modal-overlay" id="tutorial-modal" role="dialog" aria-modal="true" aria-labelledby="tutorial-title" style="display:none;">
         <div class="modal-content" style="max-width: 520px;">
             <h3 id="tutorial-title">🔐 Welcome to KVault</h3>
-            <p>KVault provides client-side encrypted password management and confidential notes.</p>
-            <div style="background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 8px; padding: 12px; margin: 12px 0; font-size: 13px; line-height: 1.6;">
+            <p>KVault provides client-side encrypted password management, live TOTP 2FA codes, and confidential notes.</p>
+            <div style="background: var(--input-bg); border: 1px solid var(--glass-border); border-radius: 8px; padding: 14px; margin: 12px 0; font-size: 13px; line-height: 1.6;">
                 <div>🔒 <strong>AES-GCM 256-bit:</strong> Secrets are encrypted locally with your Master Password.</div>
+                <div style="margin-top: 6px;">⏱️ <strong>Live TOTP 2FA:</strong> Generate time-based 2FA tokens directly inside vault entries.</div>
                 <div style="margin-top: 6px;">💾 <strong>State & Quicksave:</strong> Press <strong>F5</strong> anytime to snapshot vault state, and <strong>F9</strong> to restore.</div>
-                <div style="margin-top: 6px;">⏱️ <strong>Auto-Lock:</strong> Inactivity wipes displayed credentials and clears clipboard.</div>
-                <div style="margin-top: 6px;">⌨️ <strong>Hotkeys:</strong> [F1/H] Help &middot; [F5] Quicksave &middot; [F9] Quickload &middot; [Ctrl+L] Lock Vault &middot; [Esc] Close modals.</div>
+                <div style="margin-top: 6px;">🛡️ <strong>Security Audit:</strong> Identify reused, weak, or aging passwords with 1-click filters.</div>
+                <div style="margin-top: 6px;">⌨️ <strong>Hotkeys:</strong> [F1/H] Help &middot; [F5] Quicksave &middot; [F9] Quickload &middot; [Ctrl+L] Lock &middot; [Ctrl+G] Generator.</div>
             </div>
             <div style="display:flex; gap:10px; margin-top:20px;">
                 <button class="btn secondary close-modal" style="flex:1; margin-top:0;" onclick="dismissTutorial()">Skip (Esc)</button>
@@ -520,13 +1136,13 @@
     <div class="modal-overlay" id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title" style="display:none;">
         <div class="modal-content" style="max-width: 440px;">
             <h3 id="confirm-title" style="color: var(--danger-accent); display:flex; align-items:center; gap:8px;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-                Delete Secret
+                <span aria-hidden="true">⚠️</span>
+                <span>Confirm Action</span>
             </h3>
-            <p id="confirm-message" style="margin: 12px 0 20px 0; font-size:14px; line-height:1.5;">Are you sure you want to permanently delete this secret? This action cannot be undone.</p>
+            <p id="confirm-message" style="margin: 12px 0 20px 0; font-size:14px; line-height:1.5;">Are you sure?</p>
             <div style="display:flex; gap:12px;">
                 <button class="btn secondary close-modal" style="flex:1; margin-top:0;" onclick="closeConfirmModal()">Cancel (Esc)</button>
-                <button class="btn danger close-modal" style="flex:1; margin-top:0;" id="confirm-action-btn" onclick="executePendingDelete()">Delete (Enter)</button>
+                <button class="btn danger close-modal" style="flex:1; margin-top:0;" id="confirm-action-btn" onclick="executePendingConfirm()">Proceed (Enter)</button>
             </div>
         </div>
     </div>
@@ -538,6 +1154,23 @@
         let autoLockTimeout = 60000;
         let idleTimer = null;
         let editingSecretId = null;
+        let activeCategoryFilter = 'ALL';
+        let currentAuditFilter = null;
+        let genTargetIsForm = false;
+        let totpTimer = null;
+
+        // 1999 Cyber / Retro Wordbank for Memorable Diceware Passphrases
+        const WORD_BANK = [
+            "matrix", "cyber", "packet", "router", "subzero", "vector", "flux", "zenith", "daemon",
+            "beacon", "quantum", "vault", "gateway", "cipher", "shadow", "pixel", "uplink", "socket",
+            "nexus", "hyper", "vortex", "sector", "kernel", "glitch", "buffer", "circuit", "terminal",
+            "signal", "pulse", "tracer", "phantom", "aurora", "delta", "omega", "vanguard", "protocol",
+            "binary", "stratum", "cluster", "relay", "spectrum", "tensor", "vertex", "cascade",
+            "epoch", "chronos", "sonar", "orbit", "horizon", "dynamo", "solaris", "nebula", "pulsar",
+            "quasar", "starlight", "plasma", "argon", "krypton", "neon", "silicon", "crystal", "photon",
+            "laser", "telecom", "modem", "synapse", "cortex", "neural", "parity", "checksum", "opcode",
+            "vector", "assembler", "dissector", "entropy", "cipher", "bastion", "firewall", "sentinel"
+        ];
 
         function escapeHtml(str) {
             if (!str) return '';
@@ -555,102 +1188,18 @@
             if (window.notifTimeout) clearTimeout(window.notifTimeout);
         }
 
-        function showHelp() {
-            const tutModal = document.getElementById('tutorial-modal');
-            if (tutModal && tutModal.classList.contains('active')) {
-                tutModal.classList.remove('active');
-                tutModal.style.display = 'none';
-            }
-            const modal = document.getElementById('help-modal');
-            if (!modal) return;
-            modal.style.display = 'flex';
-            setTimeout(() => {
-                modal.classList.add('active');
-                const btn = modal.querySelector('.close-modal');
-                if (btn) btn.focus();
-            }, 10);
-        }
-        function closeHelp() {
-            const modal = document.getElementById('help-modal');
-            if (!modal) return;
-            modal.classList.remove('active');
-            setTimeout(() => modal.style.display = 'none', 300);
+        function showNotification(msg, type='success') {
+            const notif = document.getElementById('notification');
+            if (!notif) return;
+            notif.textContent = msg;
+            notif.className = `notification show ${type}`;
+            if (window.notifTimeout) clearTimeout(window.notifTimeout);
+            window.notifTimeout = setTimeout(() => {
+                notif.classList.remove('show');
+            }, 3200);
         }
 
-        function showTutorial() {
-            const helpModal = document.getElementById('help-modal');
-            if (helpModal && helpModal.classList.contains('active')) {
-                helpModal.classList.remove('active');
-                helpModal.style.display = 'none';
-            }
-            const modal = document.getElementById('tutorial-modal');
-            if (!modal) return;
-            modal.style.display = 'flex';
-            setTimeout(() => {
-                modal.classList.add('active');
-                const btn = modal.querySelector('.close-modal');
-                if (btn) btn.focus();
-            }, 10);
-        }
-        function dismissTutorial() {
-            const modal = document.getElementById('tutorial-modal');
-            if (modal) {
-                modal.classList.remove('active');
-                setTimeout(() => modal.style.display = 'none', 300);
-            }
-            safeStorageSet('kvault_tutorialSeen', '1');
-            const passInput = document.getElementById('master-password');
-            if (passInput && passInput.offsetParent !== null) passInput.focus();
-        }
-
-        // In-App Confirm Delete Modal
-        let pendingDeleteId = null;
-
-        function showConfirmModal(id, title = '') {
-            pendingDeleteId = id;
-            const tutModal = document.getElementById('tutorial-modal');
-            if (tutModal && tutModal.classList.contains('active')) tutModal.classList.remove('active');
-            const helpModal = document.getElementById('help-modal');
-            if (helpModal && helpModal.classList.contains('active')) helpModal.classList.remove('active');
-
-            const modal = document.getElementById('confirm-modal');
-            const msg = document.getElementById('confirm-message');
-            if (msg) {
-                msg.textContent = title ? `Are you sure you want to permanently delete "${title}"? This action cannot be undone.` : 'Are you sure you want to permanently delete this secret? This action cannot be undone.';
-            }
-            if (!modal) return;
-            modal.style.display = 'flex';
-            setTimeout(() => {
-                modal.classList.add('active');
-                const btn = document.getElementById('confirm-action-btn');
-                if (btn) btn.focus();
-            }, 10);
-        }
-
-        function closeConfirmModal() {
-            pendingDeleteId = null;
-            const modal = document.getElementById('confirm-modal');
-            if (modal) {
-                modal.classList.remove('active');
-                setTimeout(() => modal.style.display = 'none', 300);
-            }
-        }
-
-        async function executePendingDelete() {
-            if (!pendingDeleteId) {
-                closeConfirmModal();
-                return;
-            }
-            const id = pendingDeleteId;
-            closeConfirmModal();
-            if (editingSecretId === id) editingSecretId = null;
-            vaultData = vaultData.filter(s => s.id !== id);
-            await saveVaultToStorage();
-            renderSecrets();
-            showNotification("Secret permanently deleted", "success");
-        }
-
-        // Safe Storage Helpers
+        // --- Safe Storage Helpers ---
         function safeStorageGet(key, fallback = null) {
             try {
                 const val = localStorage.getItem(key);
@@ -680,186 +1229,7 @@
             }
         }
 
-        // Quicksave & Quickload (F5 / F9)
-        async function quicksaveState() {
-            if (masterKey) {
-                await saveVaultToStorage();
-            }
-            const themeName = document.getElementById('theme-select') ? document.getElementById('theme-select').value : 'dark';
-            const activeView = document.querySelector('.view-section.active');
-            const currentViewId = activeView ? activeView.id : 'view-auth';
-            const searchInput = document.getElementById('search-input');
-            const newTitle = document.getElementById('new-secret-title');
-            const newVal = document.getElementById('new-secret-value');
-            const newCat = document.getElementById('new-secret-category');
-
-            const snapshot = {
-                version: 2,
-                timestamp: Date.now(),
-                vaultData: safeStorageGet(STORAGE_KEY, null),
-                theme: themeName,
-                autolock: autoLockTimeout,
-                activeView: currentViewId,
-                searchQuery: searchInput ? searchInput.value : '',
-                draft: (currentViewId === 'view-add') ? {
-                    title: newTitle ? newTitle.value : '',
-                    value: newVal ? newVal.value : '',
-                    category: newCat ? newCat.value : 'General',
-                    editingSecretId: editingSecretId
-                } : null
-            };
-            if (safeStorageSet('kvault_quicksave', snapshot)) {
-                showNotification("💾 Vault snapshot quicksaved [F5]");
-            }
-        }
-
-        async function quickloadState() {
-            const snapshot = safeStorageGetJSON('kvault_quicksave', null);
-            if (!snapshot) {
-                showNotification("⚠️ No quicksave snapshot found [Press F5 to save]", "error");
-                return;
-            }
-            try {
-                if (snapshot.vaultData) {
-                    safeStorageSet(STORAGE_KEY, snapshot.vaultData);
-                }
-                if (snapshot.theme) {
-                    safeStorageSet('kvault_theme', snapshot.theme);
-                    const themeSel = document.getElementById('theme-select');
-                    if (themeSel) {
-                        themeSel.value = snapshot.theme;
-                        updateTheme();
-                    }
-                }
-                if (typeof snapshot.autolock !== 'undefined') {
-                    autoLockTimeout = parseInt(snapshot.autolock) || 60000;
-                    safeStorageSet('kvault_autolock', autoLockTimeout);
-                    const sel = document.getElementById('auto-lock-select');
-                    if (sel) sel.value = autoLockTimeout;
-                    resetIdleTimer();
-                }
-                safeStorageSet('kvault_tutorialSeen', '1');
-
-                if (masterKey && snapshot.vaultData) {
-                    try {
-                        const parsed = JSON.parse(snapshot.vaultData);
-                        if (parsed && parsed.vault) {
-                            const decrypted = await decryptData(parsed.vault, masterKey);
-                            if (decrypted !== null) {
-                                vaultData = JSON.parse(decrypted);
-                                if (snapshot.searchQuery) {
-                                    const searchInput = document.getElementById('search-input');
-                                    if (searchInput) {
-                                        searchInput.value = snapshot.searchQuery;
-                                        filterSecrets();
-                                    }
-                                }
-                                if (snapshot.activeView === 'view-add' && snapshot.draft) {
-                                    editingSecretId = snapshot.draft.editingSecretId || null;
-                                    const heading = document.getElementById('add-secret-heading');
-                                    const saveBtn = document.getElementById('save-secret-btn');
-                                    if (heading) heading.textContent = editingSecretId ? "Edit Secret" : "Add New Secret";
-                                    if (saveBtn) saveBtn.textContent = editingSecretId ? "Update Secret" : "Save to Vault";
-                                    const catElem = document.getElementById('new-secret-category');
-                                    if (catElem) catElem.value = snapshot.draft.category || 'General';
-                                    const titleElem = document.getElementById('new-secret-title');
-                                    if (titleElem) titleElem.value = snapshot.draft.title || '';
-                                    const valElem = document.getElementById('new-secret-value');
-                                    if (valElem) valElem.value = snapshot.draft.value || '';
-                                    switchView('view-add');
-                                } else {
-                                    showVault();
-                                }
-                                showNotification("📂 Vault snapshot restored [F9]");
-                                return;
-                            }
-                        }
-                    } catch(e) {}
-                }
-
-                lockVault(true);
-                showNotification("📂 Vault snapshot restored [F9]. Please unlock.");
-            } catch(err) {
-                showNotification("⚠️ Failed to restore quicksave data", "error");
-            }
-        }
-
-        // Theme Support
-        const themes = {
-            dark: {
-                '--bg-color': '#0f0f13',
-                '--text-color': '#ffffff',
-                '--glass-bg': 'rgba(255, 255, 255, 0.03)',
-                '--glass-border': 'rgba(255, 255, 255, 0.08)',
-                '--glass-hover': 'rgba(255, 255, 255, 0.08)',
-                '--primary-accent': '#6C5CE7',
-                '--primary-hover': '#5b4dd1',
-                '--danger-accent': '#ff4757',
-                '--danger-hover': '#e8414f',
-                '--input-bg': 'rgba(0, 0, 0, 0.3)',
-                '--success-color': '#2ed573'
-            },
-            light: {
-                '--bg-color': '#f0f2f5',
-                '--text-color': '#1a1a1a',
-                '--glass-bg': 'rgba(255, 255, 255, 0.8)',
-                '--glass-border': 'rgba(0, 0, 0, 0.1)',
-                '--glass-hover': 'rgba(0, 0, 0, 0.05)',
-                '--primary-accent': '#0984e3',
-                '--primary-hover': '#074ea2',
-                '--danger-accent': '#d63031',
-                '--danger-hover': '#b02122',
-                '--input-bg': 'rgba(255, 255, 255, 0.9)',
-                '--success-color': '#00b894'
-            },
-            neon: {
-                '--bg-color': '#050505',
-                '--text-color': '#00ffcc',
-                '--glass-bg': 'rgba(0, 255, 204, 0.05)',
-                '--glass-border': 'rgba(0, 255, 204, 0.3)',
-                '--glass-hover': 'rgba(0, 255, 204, 0.1)',
-                '--primary-accent': '#ff00ff',
-                '--primary-hover': '#cc00cc',
-                '--danger-accent': '#ff0033',
-                '--danger-hover': '#cc0029',
-                '--input-bg': 'rgba(0, 25, 20, 0.5)',
-                '--success-color': '#00ff00'
-            }
-        };
-
-        function updateTheme() {
-            const themeName = document.getElementById('theme-select').value;
-            const theme = themes[themeName] || themes.dark;
-            for (const key in theme) {
-                document.documentElement.style.setProperty(key, theme[key]);
-            }
-            try { localStorage.setItem('kvault_theme', themeName); } catch(e){}
-        }
-
-        function updateAutoLock() {
-            autoLockTimeout = parseInt(document.getElementById('auto-lock-select').value) || 0;
-            try { localStorage.setItem('kvault_autolock', autoLockTimeout); } catch(e){}
-            resetIdleTimer();
-        }
-
-        function resetIdleTimer() {
-            if (idleTimer) clearTimeout(idleTimer);
-            if (autoLockTimeout > 0 && masterKey) {
-                idleTimer = setTimeout(() => {
-                    if (masterKey) {
-                        lockVault();
-                        showNotification("Vault auto-locked due to inactivity", "error");
-                    }
-                }, autoLockTimeout);
-            }
-        }
-
-        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
-            document.addEventListener(evt, resetIdleTimer, { passive: true });
-        });
-        
         // --- Cryptography Utilities (Web Crypto API) ---
-        
         async function deriveKey(password, salt) {
             const enc = new TextEncoder();
             const keyMaterial = await window.crypto.subtle.importKey(
@@ -910,11 +1280,175 @@
                 return null;
             }
         }
-        
+
+        // --- RFC 6238 TOTP 2FA Authenticator Engine ---
+        function base32Decode(str) {
+            const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+            let cleaned = (str || '').toUpperCase().replace(/[\s\-=]/g, '');
+            let bits = 0;
+            let value = 0;
+            let output = [];
+            for (let i = 0; i < cleaned.length; i++) {
+                const val = alphabet.indexOf(cleaned[i]);
+                if (val === -1) continue;
+                value = (value << 5) | val;
+                bits += 5;
+                if (bits >= 8) {
+                    output.push((value >>> (bits - 8)) & 255);
+                    bits -= 8;
+                }
+            }
+            return new Uint8Array(output);
+        }
+
+        async function calculateTOTP(secretKey) {
+            if (!secretKey) return null;
+            try {
+                const keyBytes = base32Decode(secretKey);
+                if (keyBytes.length === 0) return null;
+                const epoch = Math.floor(Date.now() / 1000);
+                const timeStep = Math.floor(epoch / 30);
+                const buffer = new ArrayBuffer(8);
+                const view = new DataView(buffer);
+                view.setUint32(0, 0, false);
+                view.setUint32(4, timeStep, false);
+
+                const cryptoKey = await window.crypto.subtle.importKey(
+                    "raw",
+                    keyBytes,
+                    { name: "HMAC", hash: "SHA-1" },
+                    false,
+                    ["sign"]
+                );
+                const sig = await window.crypto.subtle.sign("HMAC", cryptoKey, buffer);
+                const bytes = new Uint8Array(sig);
+                const offset = bytes[19] & 0x0f;
+                const code = ((bytes[offset] & 0x7f) << 24) |
+                             ((bytes[offset + 1] & 0xff) << 16) |
+                             ((bytes[offset + 2] & 0xff) << 8) |
+                             (bytes[offset + 3] & 0xff);
+                const otp = (code % 1000000).toString().padStart(6, '0');
+                const remaining = 30 - (epoch % 30);
+                return {
+                    formatted: otp.slice(0, 3) + ' ' + otp.slice(3),
+                    raw: otp,
+                    remaining: remaining,
+                    progress: (remaining / 30) * 100
+                };
+            } catch(e) {
+                return null;
+            }
+        }
+
+        function startTotpTicker() {
+            if (totpTimer) clearInterval(totpTimer);
+            totpTimer = setInterval(async () => {
+                if (!masterKey) return;
+                const totpContainers = document.querySelectorAll('[data-totp-key]');
+                if (totpContainers.length === 0) return;
+
+                for (const container of totpContainers) {
+                    const key = container.getAttribute('data-totp-key');
+                    const res = await calculateTOTP(key);
+                    if (res) {
+                        const codeSpan = container.querySelector('.totp-code');
+                        const secSpan = container.querySelector('.totp-seconds');
+                        const circle = container.querySelector('.totp-progress-fill');
+                        if (codeSpan) codeSpan.textContent = res.formatted;
+                        if (secSpan) secSpan.textContent = `${res.remaining}s`;
+                        if (circle) {
+                            const offset = 56.5 - (56.5 * res.progress / 100);
+                            circle.style.strokeDashoffset = offset;
+                            circle.style.stroke = res.remaining < 6 ? 'var(--danger-accent)' : 'var(--success-color)';
+                        }
+                    }
+                }
+            }, 1000);
+        }
+
+        // --- Themes ---
+        const themes = {
+            dark: {
+                '--bg-color': '#0f0f13',
+                '--text-color': '#ffffff',
+                '--text-muted': 'rgba(255, 255, 255, 0.65)',
+                '--glass-bg': 'rgba(255, 255, 255, 0.03)',
+                '--glass-border': 'rgba(255, 255, 255, 0.08)',
+                '--glass-hover': 'rgba(255, 255, 255, 0.08)',
+                '--primary-accent': '#6C5CE7',
+                '--primary-hover': '#5b4dd1',
+                '--danger-accent': '#ff4757',
+                '--danger-hover': '#e8414f',
+                '--input-bg': 'rgba(0, 0, 0, 0.35)',
+                '--success-color': '#2ed573',
+                '--card-bg': 'rgba(255, 255, 255, 0.025)'
+            },
+            light: {
+                '--bg-color': '#f0f2f5',
+                '--text-color': '#1a1a1a',
+                '--text-muted': 'rgba(0, 0, 0, 0.6)',
+                '--glass-bg': 'rgba(255, 255, 255, 0.85)',
+                '--glass-border': 'rgba(0, 0, 0, 0.1)',
+                '--glass-hover': 'rgba(0, 0, 0, 0.05)',
+                '--primary-accent': '#0984e3',
+                '--primary-hover': '#074ea2',
+                '--danger-accent': '#d63031',
+                '--danger-hover': '#b02122',
+                '--input-bg': 'rgba(255, 255, 255, 0.95)',
+                '--success-color': '#00b894',
+                '--card-bg': 'rgba(255, 255, 255, 0.8)'
+            },
+            neon: {
+                '--bg-color': '#050505',
+                '--text-color': '#00ffcc',
+                '--text-muted': 'rgba(0, 255, 204, 0.7)',
+                '--glass-bg': 'rgba(0, 255, 204, 0.05)',
+                '--glass-border': 'rgba(0, 255, 204, 0.3)',
+                '--glass-hover': 'rgba(0, 255, 204, 0.1)',
+                '--primary-accent': '#ff00ff',
+                '--primary-hover': '#cc00cc',
+                '--danger-accent': '#ff0033',
+                '--danger-hover': '#cc0029',
+                '--input-bg': 'rgba(0, 25, 20, 0.6)',
+                '--success-color': '#00ff00',
+                '--card-bg': 'rgba(0, 255, 204, 0.03)'
+            }
+        };
+
+        function updateTheme() {
+            const themeName = document.getElementById('theme-select').value;
+            const theme = themes[themeName] || themes.dark;
+            for (const key in theme) {
+                document.documentElement.style.setProperty(key, theme[key]);
+            }
+            try { localStorage.setItem('kvault_theme', themeName); } catch(e){}
+        }
+
+        function updateAutoLock() {
+            autoLockTimeout = parseInt(document.getElementById('auto-lock-select').value) || 0;
+            try { localStorage.setItem('kvault_autolock', autoLockTimeout); } catch(e){}
+            resetIdleTimer();
+        }
+
+        function resetIdleTimer() {
+            if (idleTimer) clearTimeout(idleTimer);
+            if (autoLockTimeout > 0 && masterKey) {
+                idleTimer = setTimeout(() => {
+                    if (masterKey) {
+                        lockVault();
+                        showNotification("Vault auto-locked due to inactivity", "error");
+                    }
+                }, autoLockTimeout);
+            }
+        }
+
+        ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(evt => {
+            document.addEventListener(evt, resetIdleTimer, { passive: true });
+        });
+
         // --- Vault Operations ---
-        
         const STORAGE_KEY = 'kvault_data';
-        
+
         function initAuthView() {
             let savedTheme = 'dark';
             try { savedTheme = localStorage.getItem('kvault_theme') || 'dark'; } catch(e){}
@@ -931,16 +1465,16 @@
                 const sel = document.getElementById('auto-lock-select');
                 if (sel) sel.value = autoLockTimeout;
             }
-            
+
             let stored = null;
             try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
             if (stored) {
                 document.getElementById('auth-title').innerText = "Unlock Vault";
-                document.getElementById('auth-desc').innerText = "Enter your master password to decrypt.";
+                document.getElementById('auth-desc').innerText = "Enter your master password to decrypt your credentials.";
                 document.getElementById('auth-btn').innerText = "Unlock Vault";
             } else {
-                document.getElementById('auth-title').innerText = "Setup Vault";
-                document.getElementById('auth-desc').innerText = "Create a master password. Do not lose it!";
+                document.getElementById('auth-title').innerText = "Initialize Vault";
+                document.getElementById('auth-desc').innerText = "Create a master password. It will encrypt your vault locally.";
                 document.getElementById('auth-btn').innerText = "Initialize Vault";
             }
             setTimeout(() => {
@@ -954,19 +1488,19 @@
                 showTutorial();
             }
         }
-        
+
         async function handleAuth() {
             const pwd = document.getElementById('master-password').value;
             if (!pwd) {
                 showNotification("Please enter a master password", "error");
                 return;
             }
-            
+
             let stored = null;
             try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
             const errElem = document.getElementById('auth-error');
             if (errElem) errElem.style.display = 'none';
-            
+
             if (stored) {
                 try {
                     const parsed = JSON.parse(stored);
@@ -979,7 +1513,6 @@
                     }
                     const salt = new Uint8Array(parsed.salt);
                     const key = await deriveKey(pwd, salt);
-                    
                     const testDecrypt = await decryptData(parsed.vault, key);
                     if (testDecrypt === null) {
                         if (errElem) {
@@ -988,16 +1521,16 @@
                         }
                         return;
                     }
-                    
+
                     masterKey = key;
                     const loadedData = JSON.parse(testDecrypt);
                     vaultData = Array.isArray(loadedData) ? loadedData : [];
                     document.getElementById('master-password').value = '';
                     checkStrength();
                     showVault();
+                    startTotpTicker();
                     showNotification("Vault unlocked successfully");
-                } catch (e) {
-                    console.error(e);
+                } catch(e) {
                     if (errElem) {
                         errElem.textContent = "Incorrect password or decryption failure.";
                         errElem.style.display = 'block';
@@ -1011,6 +1544,7 @@
                 document.getElementById('master-password').value = '';
                 checkStrength();
                 showVault();
+                startTotpTicker();
                 showNotification("Vault initialized successfully");
             }
         }
@@ -1020,24 +1554,24 @@
             const container = document.getElementById('strength-bar-container');
             const text = document.getElementById('strength-text');
             const bar = document.getElementById('strength-bar');
-            
+
             if (!pwd) {
                 if(container) container.style.display = 'none';
                 if(text) text.style.display = 'none';
                 return;
             }
-            
+
             container.style.display = 'block';
             text.style.display = 'block';
-            
+
             let score = 0;
-            if (pwd.length > 4) score += 1;
-            if (pwd.length >= 8) score += 1;
-            if (pwd.length >= 12) score += 1;
+            if (pwd.length > 5) score += 1;
+            if (pwd.length >= 10) score += 1;
+            if (pwd.length >= 14) score += 1;
             if (/[A-Z]/.test(pwd)) score += 1;
             if (/[0-9]/.test(pwd)) score += 1;
             if (/[^A-Za-z0-9]/.test(pwd)) score += 1;
-            
+
             if (score < 3) {
                 bar.style.width = '33%';
                 bar.style.background = 'var(--danger-accent)';
@@ -1045,9 +1579,9 @@
                 text.style.color = 'var(--danger-accent)';
             } else if (score < 5) {
                 bar.style.width = '66%';
-                bar.style.background = '#ffa502';
+                bar.style.background = 'var(--warning-color)';
                 text.innerText = 'Medium';
-                text.style.color = '#ffa502';
+                text.style.color = 'var(--warning-color)';
             } else {
                 bar.style.width = '100%';
                 bar.style.background = 'var(--success-color)';
@@ -1055,10 +1589,9 @@
                 text.style.color = 'var(--success-color)';
             }
         }
-        
+
         async function saveVaultToStorage(salt = null) {
             if (!masterKey) return;
-            
             let storedSalt = null;
             if (salt) {
                 storedSalt = salt;
@@ -1077,74 +1610,146 @@
                     storedSalt = window.crypto.getRandomValues(new Uint8Array(16));
                 }
             }
-            
+
             const vaultStr = JSON.stringify(vaultData);
             const encryptedVault = await encryptData(vaultStr, masterKey);
-            
             const payload = {
                 salt: Array.from(storedSalt),
                 vault: encryptedVault
             };
-            
             try {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
             } catch(e) {
                 showNotification("Error saving to local storage", "error");
             }
         }
-        
+
         function lockVault(silent = false) {
             masterKey = null;
             vaultData = [];
             editingSecretId = null;
+            activeCategoryFilter = 'ALL';
+            currentAuditFilter = null;
+            if (totpTimer) clearInterval(totpTimer);
+
             const passElem = document.getElementById('master-password');
             if (passElem) passElem.value = '';
-            const newTitle = document.getElementById('new-secret-title');
-            if (newTitle) newTitle.value = '';
-            const newVal = document.getElementById('new-secret-value');
-            if (newVal) newVal.value = '';
-            const searchInput = document.getElementById('search-input');
-            if (searchInput) searchInput.value = '';
             checkStrength();
             switchView('view-auth');
             const authControls = document.getElementById('auth-controls');
             if (authControls) authControls.style.display = 'none';
             initAuthView();
-            try { 
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText('').catch(() => {});
-                }
-            } catch(e) {}
+            clearAppClipboard(true);
             if (!silent) {
-                showNotification("Vault locked & clipboard cleared");
+                showNotification("Vault locked & clipboard wiped");
             }
             resetIdleTimer();
         }
-        
-        // --- UI Flow ---
-        
+
         function switchView(viewId) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             const target = document.getElementById(viewId);
             if (target) target.classList.add('active');
         }
-        
+
         function showVault() {
             switchView('view-vault');
             document.getElementById('auth-controls').style.display = 'flex';
             renderSecrets();
             resetIdleTimer();
         }
-        
+
+        // --- Category Filters & Badges ---
+        function setCategoryFilter(cat) {
+            activeCategoryFilter = cat;
+            currentAuditFilter = null;
+            document.querySelectorAll('#category-filter-bar .pill-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-cat') === cat);
+            });
+            renderSecrets();
+        }
+
+        function updateCategoryCounts() {
+            const activeItems = vaultData.filter(s => !s.trash);
+            const trashItems = vaultData.filter(s => s.trash);
+            const favItems = activeItems.filter(s => s.favorite);
+
+            const counts = {
+                ALL: activeItems.length,
+                FAV: favItems.length,
+                Login: activeItems.filter(s => (s.category || 'General') === 'Login').length,
+                Finance: activeItems.filter(s => s.category === 'Finance').length,
+                Note: activeItems.filter(s => s.category === 'Note').length,
+                Server: activeItems.filter(s => s.category === 'Server').length,
+                General: activeItems.filter(s => !s.category || s.category === 'General').length,
+                TRASH: trashItems.length
+            };
+
+            const countBadge = document.getElementById('vault-count-badge');
+            if (countBadge) countBadge.textContent = `${activeItems.length} active`;
+
+            const badgeAll = document.getElementById('badge-count-all');
+            if (badgeAll) badgeAll.textContent = counts.ALL;
+            const badgeFav = document.getElementById('badge-count-fav');
+            if (badgeFav) badgeFav.textContent = counts.FAV;
+            const badgeLogin = document.getElementById('badge-count-login');
+            if (badgeLogin) badgeLogin.textContent = counts.Login;
+            const badgeFinance = document.getElementById('badge-count-finance');
+            if (badgeFinance) badgeFinance.textContent = counts.Finance;
+            const badgeNote = document.getElementById('badge-count-note');
+            if (badgeNote) badgeNote.textContent = counts.Note;
+            const badgeServer = document.getElementById('badge-count-server');
+            if (badgeServer) badgeServer.textContent = counts.Server;
+            const badgeGeneral = document.getElementById('badge-count-general');
+            if (badgeGeneral) badgeGeneral.textContent = counts.General;
+            const badgeTrash = document.getElementById('badge-count-trash');
+            if (badgeTrash) badgeTrash.textContent = counts.TRASH;
+        }
+
+        // --- Add / Edit Secrets Flow ---
+        function adjustFormForCategory() {
+            const cat = document.getElementById('new-secret-category').value;
+            const loginBox = document.getElementById('cat-fields-login');
+            const financeBox = document.getElementById('cat-fields-finance');
+            const serverBox = document.getElementById('cat-fields-server');
+            const valLabel = document.getElementById('val-field-label');
+
+            if (loginBox) loginBox.style.display = (cat === 'Login') ? 'block' : 'none';
+            if (financeBox) financeBox.style.display = (cat === 'Finance') ? 'block' : 'none';
+            if (serverBox) serverBox.style.display = (cat === 'Server') ? 'block' : 'none';
+
+            if (valLabel) {
+                if (cat === 'Finance') valLabel.textContent = 'Card Security Notes / Secondary Password';
+                else if (cat === 'Note') valLabel.textContent = 'Confidential Note Content';
+                else if (cat === 'Server') valLabel.textContent = 'SSH Private Key / Root Password';
+                else valLabel.textContent = 'Password / Secret Value';
+            }
+        }
+
         function showAddSecret() {
             editingSecretId = null;
-            const heading = document.getElementById('add-secret-heading');
-            if (heading) heading.textContent = 'Add New Secret';
-            const saveBtn = document.getElementById('save-secret-btn');
-            if (saveBtn) saveBtn.textContent = 'Save to Vault';
+            document.getElementById('add-secret-heading').textContent = 'Add New Secret';
+            document.getElementById('save-secret-btn').textContent = 'Save to Vault';
+            document.getElementById('new-secret-favorite').checked = false;
+            document.getElementById('new-secret-category').value = (activeCategoryFilter !== 'ALL' && activeCategoryFilter !== 'FAV' && activeCategoryFilter !== 'TRASH') ? activeCategoryFilter : 'Login';
             document.getElementById('new-secret-title').value = '';
+            document.getElementById('new-secret-username').value = '';
+            document.getElementById('new-secret-url').value = '';
+            document.getElementById('new-secret-totp').value = '';
+            document.getElementById('new-secret-cardnum').value = '';
+            document.getElementById('new-secret-cardexpiry').value = '';
+            document.getElementById('new-secret-cardcvv').value = '';
+            document.getElementById('new-secret-cardholder').value = '';
+            document.getElementById('new-secret-serverhost').value = '';
+            document.getElementById('new-secret-serverport').value = '22';
             document.getElementById('new-secret-value').value = '';
-            document.getElementById('new-secret-category').value = 'General';
+            document.getElementById('new-secret-tags').value = '';
+            document.getElementById('new-secret-notes').value = '';
+
+            const historyContainer = document.getElementById('password-history-container');
+            if (historyContainer) historyContainer.style.display = 'none';
+
+            adjustFormForCategory();
             switchView('view-add');
             setTimeout(() => document.getElementById('new-secret-title').focus(), 100);
         }
@@ -1153,35 +1758,472 @@
             const secret = vaultData.find(s => s.id === id);
             if (!secret) return;
             editingSecretId = id;
-            const heading = document.getElementById('add-secret-heading');
-            if (heading) heading.textContent = 'Edit Secret';
-            const saveBtn = document.getElementById('save-secret-btn');
-            if (saveBtn) saveBtn.textContent = 'Update Secret';
-            document.getElementById('new-secret-title').value = secret.title || '';
-            document.getElementById('new-secret-value').value = secret.value || '';
+            document.getElementById('add-secret-heading').textContent = 'Edit Secret';
+            document.getElementById('save-secret-btn').textContent = 'Update Secret';
+            document.getElementById('new-secret-favorite').checked = !!secret.favorite;
             document.getElementById('new-secret-category').value = secret.category || 'General';
+            document.getElementById('new-secret-title').value = secret.title || '';
+            document.getElementById('new-secret-username').value = secret.username || '';
+            document.getElementById('new-secret-url').value = secret.url || '';
+            document.getElementById('new-secret-totp').value = secret.totpKey || '';
+            document.getElementById('new-secret-cardnum').value = secret.cardNumber || '';
+            document.getElementById('new-secret-cardexpiry').value = secret.cardExpiry || '';
+            document.getElementById('new-secret-cardcvv').value = secret.cardCvv || '';
+            document.getElementById('new-secret-cardholder').value = secret.cardHolder || '';
+            document.getElementById('new-secret-serverhost').value = secret.serverHost || '';
+            document.getElementById('new-secret-serverport').value = secret.serverPort || '22';
+            document.getElementById('new-secret-value').value = secret.value || '';
+            document.getElementById('new-secret-tags').value = Array.isArray(secret.tags) ? secret.tags.join(', ') : (secret.tags || '');
+            document.getElementById('new-secret-notes').value = secret.notes || '';
+
+            // Password revision history
+            const historyContainer = document.getElementById('password-history-container');
+            const historyList = document.getElementById('password-history-list');
+            if (historyContainer && historyList) {
+                if (Array.isArray(secret.history) && secret.history.length > 0) {
+                    historyList.innerHTML = secret.history.slice(-5).reverse().map((h, idx) => {
+                        const dateStr = new Date(h.date).toLocaleDateString();
+                        const safeVal = escapeHtml(h.value);
+                        return `
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.04); padding:4px 8px; border-radius:4px;">
+                                <span>${dateStr}: <code>${safeVal.substring(0, 16)}...</code></span>
+                                <button class="btn-field-mini" type="button" onclick="restorePastPassword('${escapeHtml(h.value)}')">Restore</button>
+                            </div>
+                        `;
+                    }).join('');
+                    historyContainer.style.display = 'block';
+                } else {
+                    historyContainer.style.display = 'none';
+                }
+            }
+
+            adjustFormForCategory();
             switchView('view-add');
             setTimeout(() => document.getElementById('new-secret-title').focus(), 100);
         }
-        
-        function generatePassword() {
-            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+~`|}{[]:;?><,./-=";
-            let pass = "";
-            const length = 16;
-            const randomValues = new Uint32Array(length);
-            window.crypto.getRandomValues(randomValues);
-            for (let i = 0; i < length; i++) {
-                pass += chars[randomValues[i] % chars.length];
-            }
-            const valElem = document.getElementById('new-secret-value');
-            if (valElem) {
-                valElem.value = pass;
-                valElem.focus();
-                valElem.select();
-            }
-            showNotification("Strong password generated");
+
+        function restorePastPassword(val) {
+            document.getElementById('new-secret-value').value = val;
+            showNotification("Restored previous password into edit field");
         }
-        
+
+        async function saveNewSecret() {
+            const title = document.getElementById('new-secret-title').value.trim();
+            const value = document.getElementById('new-secret-value').value;
+            const category = document.getElementById('new-secret-category').value;
+            const favorite = document.getElementById('new-secret-favorite').checked;
+
+            if (!title) {
+                showNotification("Secret Title / Name is required", "error");
+                return;
+            }
+
+            const rawTags = document.getElementById('new-secret-tags').value;
+            const tagArray = rawTags.split(',').map(t => t.trim().toLowerCase()).filter(t => t.length > 0);
+
+            if (editingSecretId) {
+                const item = vaultData.find(s => s.id === editingSecretId);
+                if (item) {
+                    // Save history if password changed
+                    if (item.value && item.value !== value) {
+                        if (!Array.isArray(item.history)) item.history = [];
+                        item.history.push({ value: item.value, date: new Date().toISOString() });
+                        if (item.history.length > 5) item.history = item.history.slice(-5);
+                    }
+                    item.title = title;
+                    item.value = value;
+                    item.category = category;
+                    item.favorite = favorite;
+                    item.username = document.getElementById('new-secret-username').value.trim();
+                    item.url = document.getElementById('new-secret-url').value.trim();
+                    item.totpKey = document.getElementById('new-secret-totp').value.trim().replace(/\s/g, '');
+                    item.cardNumber = document.getElementById('new-secret-cardnum').value.trim();
+                    item.cardExpiry = document.getElementById('new-secret-cardexpiry').value.trim();
+                    item.cardCvv = document.getElementById('new-secret-cardcvv').value.trim();
+                    item.cardHolder = document.getElementById('new-secret-cardholder').value.trim();
+                    item.serverHost = document.getElementById('new-secret-serverhost').value.trim();
+                    item.serverPort = document.getElementById('new-secret-serverport').value.trim();
+                    item.tags = tagArray;
+                    item.notes = document.getElementById('new-secret-notes').value.trim();
+                    item.modified = new Date().toISOString();
+                }
+                editingSecretId = null;
+                showNotification("Secret updated successfully");
+            } else {
+                vaultData.push({
+                    id: Date.now().toString() + '_' + Math.random().toString(36).substring(2, 7),
+                    title: title,
+                    value: value,
+                    category: category,
+                    favorite: favorite,
+                    username: document.getElementById('new-secret-username').value.trim(),
+                    url: document.getElementById('new-secret-url').value.trim(),
+                    totpKey: document.getElementById('new-secret-totp').value.trim().replace(/\s/g, ''),
+                    cardNumber: document.getElementById('new-secret-cardnum').value.trim(),
+                    cardExpiry: document.getElementById('new-secret-cardexpiry').value.trim(),
+                    cardCvv: document.getElementById('new-secret-cardcvv').value.trim(),
+                    cardHolder: document.getElementById('new-secret-cardholder').value.trim(),
+                    serverHost: document.getElementById('new-secret-serverhost').value.trim(),
+                    serverPort: document.getElementById('new-secret-serverport').value.trim(),
+                    tags: tagArray,
+                    notes: document.getElementById('new-secret-notes').value.trim(),
+                    created: new Date().toISOString()
+                });
+                showNotification("New secret saved to vault");
+            }
+
+            await saveVaultToStorage();
+            showVault();
+        }
+
+        // --- Soft Delete, Trash, and Permanently Delete ---
+        function toggleFavorite(id) {
+            const item = vaultData.find(s => s.id === id);
+            if (!item) return;
+            item.favorite = !item.favorite;
+            saveVaultToStorage();
+            renderSecrets();
+            showNotification(item.favorite ? "Pinned to top ⭐" : "Unpinned");
+        }
+
+        function trashSecret(id) {
+            const item = vaultData.find(s => s.id === id);
+            if (!item) return;
+            item.trash = true;
+            item.trashDate = new Date().toISOString();
+            saveVaultToStorage();
+            renderSecrets();
+            showNotification(`Moved "${item.title}" to Trash`, "warning");
+        }
+
+        function restoreSecret(id) {
+            const item = vaultData.find(s => s.id === id);
+            if (!item) return;
+            delete item.trash;
+            delete item.trashDate;
+            saveVaultToStorage();
+            renderSecrets();
+            showNotification(`Restored "${item.title}" to active vault`, "success");
+        }
+
+        let pendingConfirmAction = null;
+        function showConfirmModal(msg, onConfirm) {
+            pendingConfirmAction = onConfirm;
+            const modal = document.getElementById('confirm-modal');
+            const msgElem = document.getElementById('confirm-message');
+            if (msgElem) msgElem.textContent = msg;
+            if (modal) {
+                modal.style.display = 'flex';
+                setTimeout(() => modal.classList.add('active'), 10);
+            }
+        }
+
+        function closeConfirmModal() {
+            pendingConfirmAction = null;
+            const modal = document.getElementById('confirm-modal');
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.style.display = 'none', 250);
+            }
+        }
+
+        function executePendingConfirm() {
+            if (pendingConfirmAction) {
+                pendingConfirmAction();
+            }
+            closeConfirmModal();
+        }
+
+        function deletePermanently(id) {
+            const item = vaultData.find(s => s.id === id);
+            const title = item ? item.title : 'this secret';
+            showConfirmModal(`Permanently delete "${title}"? This cannot be undone.`, async () => {
+                vaultData = vaultData.filter(s => s.id !== id);
+                await saveVaultToStorage();
+                renderSecrets();
+                showNotification("Secret permanently deleted", "success");
+            });
+        }
+
+        function emptyTrash() {
+            const count = vaultData.filter(s => s.trash).length;
+            if (count === 0) return;
+            showConfirmModal(`Permanently delete all ${count} items in Trash?`, async () => {
+                vaultData = vaultData.filter(s => !s.trash);
+                await saveVaultToStorage();
+                renderSecrets();
+                showNotification("Trash emptied permanently", "success");
+            });
+        }
+
+        // --- Render Secrets Card Grid ---
+        async function renderSecrets() {
+            const list = document.getElementById('secret-list');
+            const empty = document.getElementById('empty-state');
+            const queryElem = document.getElementById('search-input');
+            const query = queryElem ? queryElem.value.toLowerCase().trim() : '';
+
+            updateCategoryCounts();
+
+            // Filter
+            let filtered = vaultData.slice();
+
+            if (activeCategoryFilter === 'TRASH') {
+                filtered = filtered.filter(s => s.trash);
+            } else {
+                filtered = filtered.filter(s => !s.trash);
+                if (activeCategoryFilter === 'FAV') {
+                    filtered = filtered.filter(s => s.favorite);
+                } else if (activeCategoryFilter !== 'ALL') {
+                    filtered = filtered.filter(s => (s.category || 'General') === activeCategoryFilter);
+                }
+            }
+
+            // Audit filter if active
+            if (currentAuditFilter) {
+                filtered = filtered.filter(s => checkItemMatchesAudit(s, currentAuditFilter));
+            }
+
+            // Search filter
+            if (query) {
+                filtered = filtered.filter(s => {
+                    const title = (s.title || '').toLowerCase();
+                    const user = (s.username || '').toLowerCase();
+                    const url = (s.url || '').toLowerCase();
+                    const cat = (s.category || '').toLowerCase();
+                    const tags = Array.isArray(s.tags) ? s.tags.join(' ').toLowerCase() : '';
+                    const notes = (s.notes || '').toLowerCase();
+                    return title.includes(query) || user.includes(query) || url.includes(query) || cat.includes(query) || tags.includes(query) || notes.includes(query);
+                });
+            }
+
+            // Sort: favorites first, then alphabetically
+            filtered.sort((a, b) => {
+                if (activeCategoryFilter !== 'TRASH') {
+                    if (a.favorite && !b.favorite) return -1;
+                    if (!a.favorite && b.favorite) return 1;
+                }
+                return (a.title || '').localeCompare(b.title || '');
+            });
+
+            list.innerHTML = '';
+
+            if (filtered.length === 0) {
+                empty.style.display = 'block';
+                list.style.display = 'none';
+                const p = document.getElementById('empty-state-text');
+                const btn = document.getElementById('empty-state-btn');
+                if (activeCategoryFilter === 'TRASH') {
+                    if (p) p.innerText = 'Trash is empty.';
+                    if (btn) btn.style.display = 'none';
+                } else if (query || currentAuditFilter) {
+                    if (p) p.innerText = 'No secrets match your filter criteria.';
+                    if (btn) btn.style.display = 'none';
+                } else {
+                    if (p) p.innerText = 'Your vault is empty.';
+                    if (btn) btn.style.display = 'inline-flex';
+                }
+                return;
+            }
+
+            empty.style.display = 'none';
+            list.style.display = 'grid';
+
+            for (let i = 0; i < filtered.length; i++) {
+                const s = filtered[i];
+                const card = document.createElement('div');
+                card.className = `secret-item ${s.favorite ? 'favorite' : ''}`;
+                const domId = 'sec_' + s.id.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+                const safeTitle = escapeHtml(s.title);
+                const safeCat = escapeHtml(s.category || 'General');
+                const safeUser = escapeHtml(s.username || '');
+                const safeUrl = escapeHtml(s.url || '');
+                const hasTotp = !!s.totpKey;
+                const isTrash = !!s.trash;
+
+                // Tags HTML
+                let tagsHtml = '';
+                if (Array.isArray(s.tags) && s.tags.length > 0) {
+                    tagsHtml = s.tags.map(t => `<span class="tag-badge" onclick="filterByTag('${escapeHtml(t)}')">#${escapeHtml(t)}</span>`).join(' ');
+                }
+
+                // Fields depending on category
+                let fieldsHtml = '';
+
+                if (s.category === 'Login') {
+                    if (safeUser) {
+                        fieldsHtml += `
+                            <div class="secret-field-row">
+                                <span class="secret-field-label">User</span>
+                                <span class="secret-field-val">${safeUser}</span>
+                                <div class="secret-field-actions">
+                                    <button class="btn-field-mini" onclick="copySecret('${escapeHtml(s.username)}')">Copy</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    if (safeUrl) {
+                        fieldsHtml += `
+                            <div class="secret-field-row">
+                                <span class="secret-field-label">URL</span>
+                                <span class="secret-field-val"><a href="${safeUrl}" target="_blank" rel="noopener noreferrer" style="color:#00f2fe; text-decoration:none;">${safeUrl}</a></span>
+                                <div class="secret-field-actions">
+                                    <button class="btn-field-mini" onclick="copySecret('${safeUrl}')">Copy</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else if (s.category === 'Finance') {
+                    if (s.cardNumber) {
+                        const maskedCard = s.cardNumber.length > 4 ? `•••• •••• •••• ${s.cardNumber.slice(-4)}` : s.cardNumber;
+                        fieldsHtml += `
+                            <div class="secret-field-row">
+                                <span class="secret-field-label">Card</span>
+                                <span class="secret-field-val masked" id="val-card-${domId}">${maskedCard}</span>
+                                <div class="secret-field-actions">
+                                    <button class="btn-field-mini" onclick="toggleMask('val-card-${domId}', '${escapeHtml(s.cardNumber)}', '${maskedCard}')">👁️</button>
+                                    <button class="btn-field-mini" onclick="copySecret('${escapeHtml(s.cardNumber)}')">Copy</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    if (s.cardExpiry || s.cardCvv) {
+                        fieldsHtml += `
+                            <div class="secret-field-row">
+                                <span class="secret-field-label">Exp/CVV</span>
+                                <span class="secret-field-val">${escapeHtml(s.cardExpiry || '')} &middot; CVV: •••</span>
+                                <div class="secret-field-actions">
+                                    <button class="btn-field-mini" onclick="copySecret('${escapeHtml(s.cardCvv)}')">Copy CVV</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                } else if (s.category === 'Server') {
+                    if (s.serverHost) {
+                        fieldsHtml += `
+                            <div class="secret-field-row">
+                                <span class="secret-field-label">Host</span>
+                                <span class="secret-field-val">${escapeHtml(s.serverHost)}:${escapeHtml(s.serverPort || '22')}</span>
+                                <div class="secret-field-actions">
+                                    <button class="btn-field-mini" onclick="copySecret('${escapeHtml(s.serverHost)}')">Copy</button>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+
+                // Primary secret value row
+                if (s.value) {
+                    const maskedPass = '••••••••••••';
+                    fieldsHtml += `
+                        <div class="secret-field-row">
+                            <span class="secret-field-label">${s.category === 'Note' ? 'Note' : 'Secret'}</span>
+                            <span class="secret-field-val ${s.category === 'Note' ? '' : 'masked'}" id="val-pass-${domId}">${s.category === 'Note' ? escapeHtml(s.value) : maskedPass}</span>
+                            <div class="secret-field-actions">
+                                ${s.category !== 'Note' ? `<button class="btn-field-mini" id="toggle-btn-${domId}" onclick="toggleMask('val-pass-${domId}', '${escapeHtml(s.value)}', '${maskedPass}')">Reveal</button>` : ''}
+                                <button class="btn-field-mini" onclick="copySecret('${escapeHtml(s.value)}')">Copy</button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // TOTP Live Box
+                let totpHtml = '';
+                if (hasTotp) {
+                    const totpRes = await calculateTOTP(s.totpKey);
+                    const codeStr = totpRes ? totpRes.formatted : '--- ---';
+                    const remainingStr = totpRes ? `${totpRes.remaining}s` : '30s';
+                    const progressVal = totpRes ? totpRes.progress : 100;
+                    const strokeOffset = 56.5 - (56.5 * progressVal / 100);
+
+                    totpHtml = `
+                        <div class="totp-box" data-totp-key="${escapeHtml(s.totpKey)}" onclick="copySecret('${totpRes ? totpRes.raw : ''}', 'Copied 2FA code!')" title="Click to copy 2FA token">
+                            <div>
+                                <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase; font-weight:700;">2FA AUTHENTICATOR CODE</div>
+                                <div class="totp-code">${codeStr}</div>
+                            </div>
+                            <div class="totp-meta">
+                                <span class="totp-seconds">${remainingStr}</span>
+                                <svg class="totp-progress-ring" viewBox="0 0 24 24">
+                                    <circle class="totp-progress-bg" cx="12" cy="12" r="9" fill="none" stroke-width="2.5"></circle>
+                                    <circle class="totp-progress-fill" cx="12" cy="12" r="9" fill="none" stroke-width="2.5" stroke-dasharray="56.5" stroke-dashoffset="${strokeOffset}"></circle>
+                                </svg>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Action buttons
+                let actionBtns = '';
+                if (isTrash) {
+                    actionBtns = `
+                        <button class="btn secondary" onclick="restoreSecret('${s.id}')">Restore</button>
+                        <button class="btn danger" onclick="deletePermanently('${s.id}')">Delete Forever</button>
+                    `;
+                } else {
+                    actionBtns = `
+                        <button class="btn secondary" onclick="editSecret('${s.id}')">Edit</button>
+                        <button class="btn secondary" onclick="copySecret('${escapeHtml(s.value)}')">Copy Pass</button>
+                        <button class="btn danger" onclick="trashSecret('${s.id}')" title="Move to Trash">Trash</button>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="secret-item-header">
+                        <div class="secret-title-area">
+                            ${!isTrash ? `<span class="fav-star ${s.favorite ? 'active' : ''}" onclick="toggleFavorite('${s.id}')" title="${s.favorite ? 'Unpin' : 'Pin to top'}">★</span>` : ''}
+                            <span class="secret-title-text" title="${safeTitle}">${safeTitle}</span>
+                        </div>
+                        <div class="secret-badge-group">
+                            <span class="cat-badge">${safeCat}</span>
+                        </div>
+                    </div>
+                    ${tagsHtml ? `<div style="display:flex; gap:4px; flex-wrap:wrap;">${tagsHtml}</div>` : ''}
+                    <div class="secret-fields">${fieldsHtml}</div>
+                    ${totpHtml}
+                    <div class="secret-actions">${actionBtns}</div>
+                `;
+
+                list.appendChild(card);
+            }
+        }
+
+        function toggleMask(elemId, actualValue, maskedValue) {
+            const el = document.getElementById(elemId);
+            if (!el) return;
+            if (el.classList.contains('masked')) {
+                el.classList.remove('masked');
+                el.textContent = actualValue;
+            } else {
+                el.classList.add('masked');
+                el.textContent = maskedValue;
+            }
+        }
+
+        function filterSecrets() {
+            renderSecrets();
+        }
+
+        function filterByTag(tag) {
+            const search = document.getElementById('search-input');
+            if (search) {
+                search.value = tag;
+                filterSecrets();
+            }
+        }
+
+        function copySecret(val, msg = "Copied to clipboard!") {
+            if (!val) return;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(val).then(() => {
+                    showNotification(msg);
+                }).catch(() => fallbackCopy(val, msg));
+            } else {
+                fallbackCopy(val, msg);
+            }
+        }
+
         function fallbackCopy(text, successMsg) {
             try {
                 const ta = document.createElement('textarea');
@@ -1194,196 +2236,576 @@
                 ta.select();
                 const ok = document.execCommand('copy');
                 document.body.removeChild(ta);
-                if (ok) {
-                    showNotification(successMsg || "Copied to clipboard!");
-                } else {
-                    showNotification("Failed to copy to clipboard", "error");
-                }
+                if (ok) showNotification(successMsg || "Copied to clipboard!");
+                else showNotification("Failed to copy", "error");
             } catch(e) {
-                showNotification("Failed to copy to clipboard", "error");
+                showNotification("Failed to copy", "error");
             }
         }
 
-        async function saveNewSecret() {
-            const title = document.getElementById('new-secret-title').value.trim();
-            const value = document.getElementById('new-secret-value').value;
-            const category = document.getElementById('new-secret-category').value;
-            
-            if (!title || value.length === 0) {
-                showNotification("Both Title and Value are required", "error");
-                return;
-            }
-            
-            if (editingSecretId) {
-                const item = vaultData.find(s => s.id === editingSecretId);
-                if (item) {
-                    item.title = title;
-                    item.value = value;
-                    item.category = category;
-                    item.modified = new Date().toISOString();
-                }
-                editingSecretId = null;
-                showNotification("Secret updated");
-            } else {
-                vaultData.push({
-                    id: Date.now().toString() + '_' + Math.random().toString(36).substring(2, 7),
-                    title: title,
-                    value: value,
-                    category: category,
-                    created: new Date().toISOString()
-                });
-                showNotification("Secret saved");
-            }
-            
-            await saveVaultToStorage();
-            showVault();
-        }
-        
-        function deleteSecret(id) {
-            const item = vaultData.find(s => s.id === id);
-            showConfirmModal(id, item ? item.title : '');
-        }
-        
-        function toggleSecretValue(id) {
-            const el = document.getElementById('secret-val-' + id);
-            const btn = document.getElementById('secret-btn-toggle-' + id);
-            if (!el || !btn) return;
-            if (el.classList.contains('visible')) {
-                el.classList.remove('visible');
-                btn.innerText = 'Reveal';
-                btn.setAttribute('aria-expanded', 'false');
-            } else {
-                el.classList.add('visible');
-                btn.innerText = 'Hide';
-                btn.setAttribute('aria-expanded', 'true');
-            }
-        }
-        
-        function copySecret(val) {
-            if (!val) return;
+        function clearAppClipboard(silent = false) {
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(val).then(() => {
-                    showNotification("Copied secret to clipboard!");
-                }).catch(() => {
-                    fallbackCopy(val, "Copied secret to clipboard!");
-                });
+                navigator.clipboard.writeText('').catch(() => fallbackCopy(''));
             } else {
-                fallbackCopy(val, "Copied secret to clipboard!");
+                fallbackCopy('');
+            }
+            if (!silent) showNotification("Clipboard wiped clean");
+        }
+
+        // --- Password & Diceware Passphrase Generator Studio ---
+        let currentGenTab = 'random';
+
+        function openGeneratorModal(isForForm = false) {
+            genTargetIsForm = isForForm;
+            const modal = document.getElementById('generator-modal');
+            const applyBtn = document.getElementById('gen-apply-btn');
+            if (applyBtn) {
+                applyBtn.textContent = isForForm ? "Use in Secret" : "Copy & Close";
+            }
+            if (modal) {
+                modal.style.display = 'flex';
+                setTimeout(() => modal.classList.add('active'), 10);
+            }
+            generateLivePassword();
+        }
+
+        function closeGeneratorModal() {
+            const modal = document.getElementById('generator-modal');
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.style.display = 'none', 250);
             }
         }
-        
-        function filterSecrets() {
-            const queryElem = document.getElementById('search-input');
-            const query = queryElem ? queryElem.value.toLowerCase().trim() : '';
-            const items = document.querySelectorAll('.secret-item');
-            let visibleCount = 0;
-            
-            items.forEach(item => {
-                const titleSpan = item.querySelector('.secret-item-header span:first-child');
-                const catSpan = item.querySelector('.secret-item-header .cat-badge');
-                const titleText = (titleSpan ? titleSpan.textContent : '');
-                const catText = (catSpan ? catSpan.textContent : '');
-                const searchTarget = (titleText + ' ' + catText).toLowerCase();
-                if (searchTarget.includes(query)) {
-                    item.style.display = 'flex';
-                    visibleCount++;
+
+        function switchGenTab(tab) {
+            currentGenTab = tab;
+            document.getElementById('tab-gen-random').classList.toggle('active', tab === 'random');
+            document.getElementById('tab-gen-diceware').classList.toggle('active', tab === 'diceware');
+            document.getElementById('tab-gen-pin').classList.toggle('active', tab === 'pin');
+
+            document.getElementById('panel-gen-random').style.display = (tab === 'random') ? 'block' : 'none';
+            document.getElementById('panel-gen-diceware').style.display = (tab === 'diceware') ? 'block' : 'none';
+            document.getElementById('panel-gen-pin').style.display = (tab === 'pin') ? 'block' : 'none';
+
+            generateLivePassword();
+        }
+
+        function generateLivePassword() {
+            let result = '';
+            let entropy = 0;
+
+            if (currentGenTab === 'random') {
+                const len = parseInt(document.getElementById('gen-length-slider').value) || 18;
+                const upper = document.getElementById('gen-opt-upper').checked;
+                const lower = document.getElementById('gen-opt-lower').checked;
+                const digits = document.getElementById('gen-opt-digits').checked;
+                const symbols = document.getElementById('gen-opt-symbols').checked;
+                const noAmbig = document.getElementById('gen-opt-ambig').checked;
+
+                let chars = '';
+                if (upper) chars += noAmbig ? 'ABCDEFGHJKLMNPQRSTUVWXYZ' : 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                if (lower) chars += noAmbig ? 'abcdefghijkmnopqrstuvwxyz' : 'abcdefghijklmnopqrstuvwxyz';
+                if (digits) chars += noAmbig ? '23456789' : '0123456789';
+                if (symbols) chars += '!@#$%^&*()_+~`|}{[]:;?><,./-=';
+
+                if (!chars) chars = 'abcdefghijklmnopqrstuvwxyz';
+
+                const randBytes = new Uint32Array(len);
+                window.crypto.getRandomValues(randBytes);
+                for (let i = 0; i < len; i++) {
+                    result += chars[randBytes[i] % chars.length];
+                }
+                entropy = Math.round(len * Math.log2(chars.length));
+            } else if (currentGenTab === 'diceware') {
+                const count = parseInt(document.getElementById('gen-words-slider').value) || 4;
+                const sep = document.getElementById('gen-words-sep').value;
+                const cap = document.getElementById('gen-words-cap').checked;
+
+                const words = [];
+                const randIndices = new Uint32Array(count);
+                window.crypto.getRandomValues(randIndices);
+                for (let i = 0; i < count; i++) {
+                    let w = WORD_BANK[randIndices[i] % WORD_BANK.length];
+                    if (cap) w = w.charAt(0).toUpperCase() + w.slice(1);
+                    words.push(w);
+                }
+                result = words.join(sep);
+                entropy = Math.round(count * Math.log2(WORD_BANK.length));
+            } else if (currentGenTab === 'pin') {
+                const len = parseInt(document.getElementById('gen-pin-slider').value) || 6;
+                const isHex = document.getElementById('pin-mode-hex').checked;
+                const chars = isHex ? '0123456789ABCDEF' : '0123456789';
+                const randBytes = new Uint32Array(len);
+                window.crypto.getRandomValues(randBytes);
+                for (let i = 0; i < len; i++) {
+                    result += chars[randBytes[i] % chars.length];
+                }
+                entropy = Math.round(len * Math.log2(chars.length));
+            }
+
+            const outElem = document.getElementById('gen-output-text');
+            if (outElem) outElem.textContent = result;
+
+            // Entropy score updates
+            const entLabel = document.getElementById('gen-entropy-label');
+            const strLabel = document.getElementById('gen-strength-label');
+            const bar = document.getElementById('gen-entropy-bar');
+
+            if (entLabel) entLabel.textContent = `Entropy: ~${entropy} bits`;
+            if (strLabel && bar) {
+                if (entropy < 45) {
+                    strLabel.textContent = 'Weak';
+                    strLabel.style.color = 'var(--danger-accent)';
+                    bar.style.background = 'var(--danger-accent)';
+                    bar.style.width = '30%';
+                } else if (entropy < 70) {
+                    strLabel.textContent = 'Medium';
+                    strLabel.style.color = 'var(--warning-color)';
+                    bar.style.background = 'var(--warning-color)';
+                    bar.style.width = '65%';
                 } else {
-                    item.style.display = 'none';
+                    strLabel.textContent = 'Very Strong';
+                    strLabel.style.color = 'var(--success-color)';
+                    bar.style.background = 'var(--success-color)';
+                    bar.style.width = '100%';
+                }
+            }
+        }
+
+        function copyGeneratedPassword() {
+            const txt = document.getElementById('gen-output-text').textContent;
+            copySecret(txt, "Generated password copied!");
+        }
+
+        function applyGeneratedPassword() {
+            const txt = document.getElementById('gen-output-text').textContent;
+            if (genTargetIsForm) {
+                const valElem = document.getElementById('new-secret-value');
+                if (valElem) {
+                    valElem.value = txt;
+                    showNotification("Generated password inserted into form");
+                }
+                closeGeneratorModal();
+            } else {
+                copyGeneratedPassword();
+                closeGeneratorModal();
+            }
+        }
+
+        // --- Security Audit Studio ---
+        function openAuditModal() {
+            runSecurityAudit();
+            const modal = document.getElementById('audit-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                setTimeout(() => modal.classList.add('active'), 10);
+            }
+        }
+
+        function closeAuditModal() {
+            const modal = document.getElementById('audit-modal');
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.style.display = 'none', 250);
+            }
+        }
+
+        function checkItemMatchesAudit(item, filterType) {
+            if (filterType === 'WEAK') {
+                return (item.value || '').length < 10;
+            }
+            if (filterType === 'REUSED') {
+                if (!item.value) return false;
+                const count = vaultData.filter(s => !s.trash && s.value === item.value).length;
+                return count > 1;
+            }
+            if (filterType === 'OLD') {
+                const d = new Date(item.modified || item.created || 0);
+                const days = (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24);
+                return days > 90;
+            }
+            if (filterType === 'NO2FA') {
+                return (item.category === 'Login') && !item.totpKey;
+            }
+            return true;
+        }
+
+        function runSecurityAudit() {
+            const active = vaultData.filter(s => !s.trash);
+            let weakCount = 0;
+            let reusedCount = 0;
+            let oldCount = 0;
+            let no2faCount = 0;
+
+            const passMap = {};
+            active.forEach(s => {
+                if (s.value) {
+                    passMap[s.value] = (passMap[s.value] || 0) + 1;
                 }
             });
-            
-            const empty = document.getElementById('empty-state');
-            if (vaultData.length > 0) {
-                if (visibleCount === 0) {
-                    empty.style.display = 'block';
-                    empty.querySelector('p').innerText = 'No secrets match your search.';
-                    const btn = empty.querySelector('button');
-                    if (btn) btn.style.display = 'none';
+
+            active.forEach(s => {
+                if ((s.value || '').length < 10) weakCount++;
+                if (s.value && passMap[s.value] > 1) reusedCount++;
+                const d = new Date(s.modified || s.created || 0);
+                const days = (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24);
+                if (days > 90) oldCount++;
+                if (s.category === 'Login' && !s.totpKey) no2faCount++;
+            });
+
+            document.getElementById('audit-weak-count').textContent = weakCount;
+            document.getElementById('audit-reused-count').textContent = reusedCount;
+            document.getElementById('audit-old-count').textContent = oldCount;
+            document.getElementById('audit-no2fa-count').textContent = no2faCount;
+
+            // Score formula
+            let score = 100;
+            score -= Math.min(35, weakCount * 12);
+            score -= Math.min(30, reusedCount * 8);
+            score -= Math.min(15, oldCount * 3);
+            score -= Math.min(15, no2faCount * 4);
+            if (active.length === 0) score = 100;
+            if (score < 15 && active.length > 0) score = 15;
+
+            const scoreText = document.getElementById('audit-score-text');
+            const scoreSub = document.getElementById('audit-score-subtitle');
+            const scoreIcon = document.getElementById('audit-score-icon');
+
+            if (scoreText) scoreText.textContent = `${score}%`;
+            if (scoreSub) {
+                if (score >= 90) {
+                    scoreSub.textContent = "Excellent: All stored credentials meet security standards.";
+                    scoreText.style.color = "var(--success-color)";
+                    scoreIcon.textContent = "🛡️";
+                } else if (score >= 65) {
+                    scoreSub.textContent = "Moderate: Some passwords should be updated or rotated.";
+                    scoreText.style.color = "var(--warning-color)";
+                    scoreIcon.textContent = "⚠️";
                 } else {
-                    empty.style.display = 'none';
+                    scoreSub.textContent = "Action Required: Significant password reuse or weak credentials found.";
+                    scoreText.style.color = "var(--danger-accent)";
+                    scoreIcon.textContent = "🚨";
                 }
+            }
+
+            // Recommendations
+            const recList = document.getElementById('audit-rec-list');
+            if (recList) {
+                const recs = [];
+                if (weakCount > 0) recs.push(`Rotate ${weakCount} weak passwords to high-entropy strings (>= 14 chars).`);
+                if (reusedCount > 0) recs.push(`Eliminate credential reuse across ${reusedCount} duplicate accounts.`);
+                if (no2faCount > 0) recs.push(`Enable 2FA/TOTP on ${no2faCount} login accounts for multi-factor authentication.`);
+                if (oldCount > 0) recs.push(`${oldCount} secrets have not been updated in over 90 days.`);
+                if (recs.length === 0) recs.push("No urgent security concerns detected. Great job!");
+                recList.innerHTML = recs.map(r => `<li>${r}</li>`).join('');
             }
         }
 
-        function renderSecrets() {
-            const list = document.getElementById('secret-list');
-            const empty = document.getElementById('empty-state');
-            
-            list.innerHTML = '';
-            if (vaultData.length === 0) {
-                empty.style.display = 'block';
-                empty.querySelector('p').innerText = 'Your vault is empty.';
-                const btn = empty.querySelector('button');
-                if (btn) btn.style.display = 'inline-flex';
-                list.style.display = 'none';
-            } else {
-                empty.style.display = 'none';
-                list.style.display = 'grid';
-                
-                vaultData.forEach((secret, index) => {
-                    if (!secret) return;
-                    if (!secret.id) {
-                        secret.id = 'sec_' + index + '_' + Date.now().toString(36) + Math.random().toString(36).substring(2, 6);
+        function filterAuditItems(type) {
+            closeAuditModal();
+            currentAuditFilter = type;
+            renderSecrets();
+            showNotification(`Filtering: ${type} issues`);
+        }
+
+        // --- Export Multi-Format Suite ---
+        function openExportModal() {
+            const modal = document.getElementById('export-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                setTimeout(() => modal.classList.add('active'), 10);
+            }
+        }
+
+        function closeExportModal() {
+            const modal = document.getElementById('export-modal');
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.style.display = 'none', 250);
+            }
+        }
+
+        async function exportEncryptedJSON() {
+            closeExportModal();
+            let stored = null;
+            try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
+            if (!stored) {
+                showNotification("Vault is empty or not initialized", "error");
+                return;
+            }
+            downloadFile("kvault_backup.json", "application/json", stored);
+            showNotification("Encrypted JSON backup downloaded");
+        }
+
+        function exportPlainCSV() {
+            closeExportModal();
+            const active = vaultData.filter(s => !s.trash);
+            if (active.length === 0) {
+                showNotification("No active secrets to export", "error");
+                return;
+            }
+
+            const headers = ["Title", "Category", "Username", "Password", "URL", "TOTP_Key", "CardNumber", "CardExpiry", "CardCVV", "Tags", "Notes", "Created", "Modified"];
+            const rows = [headers.map(h => `"${h}"`).join(',')];
+
+            active.forEach(s => {
+                const row = [
+                    s.title || '',
+                    s.category || 'General',
+                    s.username || '',
+                    s.value || '',
+                    s.url || '',
+                    s.totpKey || '',
+                    s.cardNumber || '',
+                    s.cardExpiry || '',
+                    s.cardCvv || '',
+                    Array.isArray(s.tags) ? s.tags.join('; ') : '',
+                    s.notes || '',
+                    s.created || '',
+                    s.modified || ''
+                ];
+                rows.push(row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','));
+            });
+
+            downloadFile("kvault_export.csv", "text/csv;charset=utf-8;", rows.join('\r\n'));
+            showNotification(`Exported ${active.length} credentials to CSV`);
+        }
+
+        function exportMarkdownSummary() {
+            closeExportModal();
+            const active = vaultData.filter(s => !s.trash);
+            let md = `# KVault Security Inventory\n*Generated: ${new Date().toLocaleString()}*\n\n`;
+            md += `| Title | Category | Username | URL | Tags | 2FA |\n`;
+            md += `| :--- | :--- | :--- | :--- | :--- | :--- |\n`;
+            active.forEach(s => {
+                const tags = Array.isArray(s.tags) ? s.tags.join(', ') : '';
+                const has2fa = s.totpKey ? 'Yes' : 'No';
+                md += `| ${s.title || '-'} | ${s.category || 'General'} | ${s.username || '-'} | ${s.url || '-'} | ${tags || '-'} | ${has2fa} |\n`;
+            });
+            downloadFile("kvault_inventory.md", "text/markdown", md);
+            showNotification("Markdown inventory report downloaded");
+        }
+
+        function exportEmergencyKit() {
+            closeExportModal();
+            const active = vaultData.filter(s => !s.trash);
+            const dateStr = new Date().toLocaleDateString();
+            let kitHtml = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>KVault - Emergency Access Sheet</title>
+<style>
+body { font-family: sans-serif; padding: 40px; color: #222; background: #fff; line-height: 1.5; }
+h1 { border-bottom: 2px solid #333; padding-bottom: 8px; margin-bottom: 4px; }
+.meta { font-size: 13px; color: #666; margin-bottom: 20px; }
+table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px; }
+th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+th { background: #f4f4f4; }
+.box { border: 1px dashed #666; padding: 15px; margin: 20px 0; background: #fafafa; border-radius: 6px; }
+</style>
+</head>
+<body>
+<h1>🔒 KVault Emergency Recovery Document</h1>
+<div class="meta">Generated: ${dateStr} &middot; Total Credentials: ${active.length}</div>
+<div class="box">
+<strong>⚠️ Physical Safe-Keeping Instructions:</strong><br>
+Store this sheet in a fireproof safe or secure physical vault. It provides emergency access in the event of hardware failure.
+<br><br>
+<strong>Master Password Hint / Note:</strong> ____________________________________________________
+</div>
+<table>
+<tr><th>Title</th><th>Category</th><th>Username / Identity</th><th>URL / Target</th><th>2FA / Notes</th></tr>
+`;
+            active.forEach(s => {
+                kitHtml += `<tr>
+<td><strong>${escapeHtml(s.title)}</strong></td>
+<td>${escapeHtml(s.category || 'General')}</td>
+<td>${escapeHtml(s.username || '-')}</td>
+<td>${escapeHtml(s.url || '-')}</td>
+<td>${s.totpKey ? '[2FA Enabled]' : ''} ${escapeHtml(s.notes || '')}</td>
+</tr>`;
+            });
+            kitHtml += `</table></body></html>`;
+
+            downloadFile("kvault_emergency_kit.html", "text/html", kitHtml);
+            showNotification("Emergency Access Kit generated");
+        }
+
+        function downloadFile(filename, mimeType, content) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        }
+
+        // --- Smart CSV & JSON Import ---
+        function openImportModal() {
+            const modal = document.getElementById('import-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                setTimeout(() => modal.classList.add('active'), 10);
+            }
+        }
+
+        function closeImportModal() {
+            const modal = document.getElementById('import-modal');
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.style.display = 'none', 250);
+            }
+        }
+
+        function handleFileSelected(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            processImportFile(file);
+        }
+
+        function processImportFile(file) {
+            if (file.size > 10 * 1024 * 1024) {
+                showNotification("File exceeds 10MB limit", "error");
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                const text = ev.target.result;
+                closeImportModal();
+                try {
+                    // Try parsing as JSON first
+                    let data = null;
+                    try { data = JSON.parse(text); } catch(err) {}
+
+                    if (data && data.salt && data.vault) {
+                        // Raw encrypted backup
+                        localStorage.setItem(STORAGE_KEY, text);
+                        lockVault(true);
+                        showNotification("Encrypted vault imported. Please unlock with master password.");
+                        return;
                     }
-                    const safeDomId = 'sec_' + index + '_' + String(secret.id).replace(/[^a-zA-Z0-9_-]/g, '_');
-                    const item = document.createElement('div');
-                    item.className = 'secret-item';
-                    item.style.animationDelay = `${index * 0.05}s`;
-                    
-                    const safeTitle = escapeHtml(secret.title);
-                    const safeCat = escapeHtml(secret.category || '');
-                    const catBadge = safeCat ? `<span class="cat-badge" style="font-size: 11px; padding: 4px 8px; background: rgba(108, 92, 231, 0.2); border: 1px solid rgba(108, 92, 231, 0.3); border-radius: 12px; font-weight: normal; color: #a29bfe;">${safeCat}</span>` : '';
-                    
-                    item.innerHTML = `
-                        <div class="secret-item-header">
-                            <span>${safeTitle}</span>
-                            ${catBadge}
-                        </div>
-                        <div class="secret-item-value" id="secret-val-${safeDomId}"></div>
-                        <div class="secret-actions">
-                            <button class="btn secondary" id="secret-btn-toggle-${safeDomId}" aria-expanded="false">Reveal</button>
-                            <button class="btn secondary" style="background: rgba(255,255,255,0.05);" id="secret-btn-copy-${safeDomId}">Copy</button>
-                            <button class="btn secondary" style="background: rgba(255,255,255,0.05);" id="secret-btn-edit-${safeDomId}">Edit</button>
-                            <button class="btn danger" id="secret-btn-delete-${safeDomId}">Delete</button>
-                        </div>
-                    `;
-                    list.appendChild(item);
-                    
-                    const valContainer = document.getElementById(`secret-val-${safeDomId}`);
-                    if (valContainer) valContainer.textContent = secret.value;
-                    
-                    const toggleBtn = document.getElementById(`secret-btn-toggle-${safeDomId}`);
-                    if (toggleBtn) toggleBtn.onclick = () => toggleSecretValue(safeDomId);
-                    
-                    const copyBtn = document.getElementById(`secret-btn-copy-${safeDomId}`);
-                    if (copyBtn) copyBtn.onclick = () => copySecret(secret.value);
 
-                    const editBtn = document.getElementById(`secret-btn-edit-${safeDomId}`);
-                    if (editBtn) editBtn.onclick = () => editSecret(secret.id);
-                    
-                    const delBtn = document.getElementById(`secret-btn-delete-${safeDomId}`);
-                    if (delBtn) delBtn.onclick = () => deleteSecret(secret.id);
-                });
-                
-                if (document.getElementById('search-input')) {
-                    filterSecrets();
+                    if (Array.isArray(data) && masterKey) {
+                        let count = 0;
+                        data.forEach((item, idx) => {
+                            if (item && item.title) {
+                                vaultData.push({
+                                    id: item.id || ('sec_' + Date.now() + '_' + idx),
+                                    title: String(item.title),
+                                    value: String(item.value || ''),
+                                    category: item.category || 'General',
+                                    username: item.username || '',
+                                    url: item.url || '',
+                                    totpKey: item.totpKey || '',
+                                    tags: item.tags || [],
+                                    notes: item.notes || '',
+                                    created: item.created || new Date().toISOString()
+                                });
+                                count++;
+                            }
+                        });
+                        await saveVaultToStorage();
+                        renderSecrets();
+                        showNotification(`Imported ${count} items from JSON`);
+                        return;
+                    }
+
+                    // Otherwise parse as CSV
+                    if (!masterKey) {
+                        showNotification("Unlock your vault first before importing unencrypted CSV data", "error");
+                        return;
+                    }
+
+                    const imported = parseCSV(text);
+                    if (imported && imported.length > 0) {
+                        imported.forEach((item, idx) => {
+                            vaultData.push({
+                                id: 'sec_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substring(2, 6),
+                                title: item.title || 'Imported Credential',
+                                value: item.value || '',
+                                category: item.category || 'Login',
+                                username: item.username || '',
+                                url: item.url || '',
+                                totpKey: item.totpKey || '',
+                                cardNumber: item.cardNumber || '',
+                                cardExpiry: item.cardExpiry || '',
+                                cardCvv: item.cardCvv || '',
+                                tags: item.tags || [],
+                                notes: item.notes || '',
+                                created: new Date().toISOString()
+                            });
+                        });
+                        await saveVaultToStorage();
+                        renderSecrets();
+                        showNotification(`Successfully imported ${imported.length} items from CSV`);
+                    } else {
+                        showNotification("No recognizable records found in CSV file", "error");
+                    }
+                } catch(err) {
+                    showNotification("Failed to parse import file", "error");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(text) {
+            const lines = text.split(/\r?\n/).filter(l => l.trim().length > 0);
+            if (lines.length < 2) return [];
+
+            function parseCSVLine(line) {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    if (char === '"') {
+                        if (inQuotes && line[i + 1] === '"') {
+                            current += '"';
+                            i++;
+                        } else {
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                result.push(current.trim());
+                return result;
+            }
+
+            const headerLine = parseCSVLine(lines[0]).map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+            const results = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const cols = parseCSVLine(lines[i]);
+                if (cols.length === 0) continue;
+                const obj = {};
+                for (let j = 0; j < headerLine.length; j++) {
+                    const key = headerLine[j];
+                    const val = cols[j] || '';
+                    if (key.includes('title') || key.includes('name')) obj.title = val;
+                    else if (key.includes('pass') || key.includes('secret')) obj.value = val;
+                    else if (key.includes('user') || key.includes('email') || key.includes('login')) obj.username = val;
+                    else if (key.includes('url') || key.includes('website') || key.includes('link')) obj.url = val;
+                    else if (key.includes('cat') || key.includes('type')) obj.category = val;
+                    else if (key.includes('totp') || key.includes('otp') || key.includes('2fa')) obj.totpKey = val;
+                    else if (key.includes('note') || key.includes('comment')) obj.notes = val;
+                    else if (key.includes('tag')) obj.tags = val.split(/[;,]/).map(t => t.trim().toLowerCase()).filter(t => t.length > 0);
+                }
+                if (obj.title || obj.value || obj.username) {
+                    results.push(obj);
                 }
             }
+            return results;
         }
-        
-        function showNotification(msg, type='success') {
-            const notif = document.getElementById('notification');
-            if (!notif) return;
-            notif.textContent = msg;
-            notif.className = `notification show ${type}`;
-            
-            if (window.notifTimeout) clearTimeout(window.notifTimeout);
-            
-            window.notifTimeout = setTimeout(() => {
-                notif.classList.remove('show');
-            }, 3000);
-        }
-        
+
         async function copyVaultBackup() {
             if (masterKey) {
                 await saveVaultToStorage();
@@ -1394,167 +2816,174 @@
                 showNotification("Vault is empty or not configured", "error");
                 return;
             }
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(stored).then(() => {
-                    showNotification("Encrypted backup copied to clipboard");
-                }).catch(() => {
-                    fallbackCopy(stored, "Encrypted backup copied to clipboard");
-                });
-            } else {
-                fallbackCopy(stored, "Encrypted backup copied to clipboard");
-            }
-        }
-        
-        function clearAppClipboard() {
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText('').then(() => {
-                    showNotification("Clipboard cleared successfully");
-                }).catch(() => {
-                    fallbackCopy('', "Clipboard cleared successfully");
-                });
-            } else {
-                fallbackCopy('', "Clipboard cleared successfully");
-            }
+            copySecret(stored, "Encrypted backup copied to clipboard");
         }
 
-        async function exportVault() {
+        // --- Quicksave & Quickload (F5 / F9) ---
+        async function quicksaveState() {
             if (masterKey) {
                 await saveVaultToStorage();
             }
-            let stored = null;
-            try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
-            if (!stored) {
-                showNotification("Vault is empty", "error");
+            const themeName = document.getElementById('theme-select') ? document.getElementById('theme-select').value : 'dark';
+            const activeView = document.querySelector('.view-section.active');
+            const currentViewId = activeView ? activeView.id : 'view-auth';
+            const searchInput = document.getElementById('search-input');
+
+            const snapshot = {
+                version: 3,
+                timestamp: Date.now(),
+                vaultData: safeStorageGet(STORAGE_KEY, null),
+                theme: themeName,
+                autolock: autoLockTimeout,
+                activeView: currentViewId,
+                activeCategoryFilter: activeCategoryFilter,
+                searchQuery: searchInput ? searchInput.value : '',
+                draft: (currentViewId === 'view-add') ? {
+                    title: document.getElementById('new-secret-title').value,
+                    value: document.getElementById('new-secret-value').value,
+                    category: document.getElementById('new-secret-category').value,
+                    username: document.getElementById('new-secret-username').value,
+                    url: document.getElementById('new-secret-url').value,
+                    totp: document.getElementById('new-secret-totp').value,
+                    notes: document.getElementById('new-secret-notes').value,
+                    editingSecretId: editingSecretId
+                } : null
+            };
+            if (safeStorageSet('kvault_quicksave', snapshot)) {
+                showNotification("💾 Vault snapshot quicksaved [F5]");
+            }
+        }
+
+        async function quickloadState() {
+            const snapshot = safeStorageGetJSON('kvault_quicksave', null);
+            if (!snapshot) {
+                showNotification("⚠️ No quicksave snapshot found [Press F5 to save]", "error");
                 return;
             }
             try {
-                const blob = new Blob([stored], {type: "application/json"});
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "kvault_backup.json";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(url), 1500);
-                showNotification("Vault backup exported");
-            } catch(e) {
-                showNotification("Failed to export backup", "error");
-            }
-        }
-
-        function importVault() {
-            const input = document.createElement("input");
-            input.type = "file";
-            input.accept = ".json,application/json";
-            input.onchange = (e) => {
-                const file = e.target.files[0];
-                if (!file) return;
-                if (file.size > 10 * 1024 * 1024) {
-                    showNotification("File exceeds 10MB limit", "error");
-                    return;
+                if (snapshot.vaultData) {
+                    safeStorageSet(STORAGE_KEY, snapshot.vaultData);
                 }
-                const reader = new FileReader();
-                reader.onerror = () => {
-                    showNotification("Failed to read file", "error");
-                };
-                reader.onload = async (ev) => {
+                if (snapshot.theme) {
+                    safeStorageSet('kvault_theme', snapshot.theme);
+                    const themeSel = document.getElementById('theme-select');
+                    if (themeSel) {
+                        themeSel.value = snapshot.theme;
+                        updateTheme();
+                    }
+                }
+                if (typeof snapshot.autolock !== 'undefined') {
+                    autoLockTimeout = parseInt(snapshot.autolock) || 60000;
+                    safeStorageSet('kvault_autolock', autoLockTimeout);
+                    const sel = document.getElementById('auto-lock-select');
+                    if (sel) sel.value = autoLockTimeout;
+                    resetIdleTimer();
+                }
+                safeStorageSet('kvault_tutorialSeen', '1');
+
+                if (masterKey && snapshot.vaultData) {
                     try {
-                        const data = JSON.parse(ev.target.result);
-                        if (data && data.salt && data.vault) {
-                            try {
-                                localStorage.setItem(STORAGE_KEY, ev.target.result);
-                            } catch(storageErr) {
-                                showNotification("Storage quota exceeded", "error");
+                        const parsed = JSON.parse(snapshot.vaultData);
+                        if (parsed && parsed.vault) {
+                            const decrypted = await decryptData(parsed.vault, masterKey);
+                            if (decrypted !== null) {
+                                vaultData = JSON.parse(decrypted);
+                                if (snapshot.activeCategoryFilter) {
+                                    activeCategoryFilter = snapshot.activeCategoryFilter;
+                                }
+                                if (snapshot.searchQuery) {
+                                    const searchInput = document.getElementById('search-input');
+                                    if (searchInput) searchInput.value = snapshot.searchQuery;
+                                }
+                                showVault();
+                                showNotification("📂 Vault snapshot restored [F9]");
                                 return;
                             }
-                            lockVault(true);
-                            showNotification("Vault imported successfully. Please unlock.");
-                        } else if (Array.isArray(data) && masterKey) {
-                            let count = 0;
-                            data.forEach((item, idx) => {
-                                if (item && item.title && item.value) {
-                                    vaultData.push({
-                                        id: item.id || ('sec_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substring(2, 6)),
-                                        title: String(item.title),
-                                        value: String(item.value),
-                                        category: item.category || 'General',
-                                        created: item.created || new Date().toISOString()
-                                    });
-                                    count++;
-                                }
-                            });
-                            await saveVaultToStorage();
-                            renderSecrets();
-                            showNotification(`Imported ${count} secrets into active vault`);
-                        } else if (Array.isArray(data) && !masterKey) {
-                            showNotification("Please unlock your vault before importing an unencrypted secret list", "error");
-                        } else {
-                            showNotification("Invalid vault backup file format", "error");
                         }
-                    } catch (err) {
-                        showNotification("Error parsing backup file", "error");
-                    }
-                };
-                reader.readAsText(file);
-            };
-            input.click();
+                    } catch(e) {}
+                }
+
+                lockVault(true);
+                showNotification("📂 Vault snapshot restored [F9]. Please unlock.");
+            } catch(err) {
+                showNotification("Failed to restore quicksave data", "error");
+            }
         }
-        
-        // Keyboard Shortcuts & Modal Accessibility
+
+        // --- Modals Management ---
+        function showHelp() {
+            const modal = document.getElementById('help-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                setTimeout(() => modal.classList.add('active'), 10);
+            }
+        }
+        function closeHelp() {
+            const modal = document.getElementById('help-modal');
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.style.display = 'none', 250);
+            }
+        }
+
+        function showTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            if (modal) {
+                modal.style.display = 'flex';
+                setTimeout(() => modal.classList.add('active'), 10);
+            }
+        }
+        function dismissTutorial() {
+            const modal = document.getElementById('tutorial-modal');
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.style.display = 'none', 250);
+            }
+            safeStorageSet('kvault_tutorialSeen', '1');
+            const passInput = document.getElementById('master-password');
+            if (passInput) passInput.focus();
+        }
+
+        // Modal outside click handlers
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                    setTimeout(() => modal.style.display = 'none', 250);
+                }
+            });
+        });
+
+        // --- Keyboard Shortcuts & Global Hotkeys ---
         document.addEventListener('keydown', (e) => {
-            // Check active modals first
-            const confirmModal = document.getElementById('confirm-modal');
-            const isConfirmOpen = confirmModal && confirmModal.classList.contains('active');
-            if (isConfirmOpen) {
+            const activeModal = document.querySelector('.modal-overlay.active');
+            if (activeModal) {
                 if (e.key === 'Escape') {
                     e.preventDefault();
-                    closeConfirmModal();
+                    activeModal.classList.remove('active');
+                    setTimeout(() => activeModal.style.display = 'none', 250);
                     return;
                 }
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' && activeModal.id === 'confirm-modal') {
                     e.preventDefault();
-                    executePendingDelete();
-                    return;
-                }
-            }
-
-            const tutModal = document.getElementById('tutorial-modal');
-            const isTutOpen = tutModal && tutModal.classList.contains('active');
-            const helpModal = document.getElementById('help-modal');
-            const isHelpOpen = helpModal && helpModal.classList.contains('active');
-
-            if (isTutOpen) {
-                if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    dismissTutorial();
-                    return;
-                }
-            }
-
-            if (isHelpOpen) {
-                if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    closeHelp();
+                    executePendingConfirm();
                     return;
                 }
             }
 
             const hasModifier = e.ctrlKey || e.metaKey;
-            if (hasModifier && !e.altKey && !e.shiftKey) {
+            if (hasModifier && !e.altKey) {
                 if (e.key === 's' || e.key === 'S') {
                     e.preventDefault();
                     const activeView = document.querySelector('.view-section.active');
                     if (activeView && activeView.id === 'view-add') {
                         saveNewSecret();
                     } else if (masterKey) {
-                        exportVault();
+                        openExportModal();
                     }
                 } else if (e.key === 'l' || e.key === 'L') {
                     e.preventDefault();
-                    if (masterKey) {
-                        lockVault();
-                    }
+                    if (masterKey) lockVault();
                 } else if (e.key === 'f' || e.key === 'F') {
                     if (masterKey) {
                         const searchInput = document.getElementById('search-input');
@@ -1570,6 +2999,9 @@
                         e.preventDefault();
                         showAddSecret();
                     }
+                } else if (e.key === 'g' || e.key === 'G') {
+                    e.preventDefault();
+                    openGeneratorModal(false);
                 }
             } else if (!hasModifier && !e.altKey && !e.shiftKey) {
                 if (e.key === 'F1') {
@@ -1583,13 +3015,9 @@
                     quickloadState();
                 } else if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
                     e.preventDefault();
-                    if (isHelpOpen) closeHelp();
-                    else showHelp();
+                    showHelp();
                 } else if (e.key === 'Escape') {
-                    const notif = document.getElementById('notification');
-                    if (notif && notif.classList.contains('show')) {
-                        dismissNotification();
-                    }
+                    dismissNotification();
                     const activeView = document.querySelector('.view-section.active');
                     if (activeView && activeView.id === 'view-add' && masterKey) {
                         showVault();
@@ -1604,107 +3032,30 @@
             }
         });
 
-        // Drag and Drop Vault Import
+        // Drag & drop file to import anywhere in container
         document.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.stopPropagation();
             const container = document.querySelector('.container');
-            if(container) container.style.borderColor = 'var(--primary-accent)';
+            if (container) container.style.borderColor = 'var(--primary-accent)';
         });
-
         document.addEventListener('dragleave', (e) => {
             e.preventDefault();
             e.stopPropagation();
             const container = document.querySelector('.container');
-            if(container) container.style.borderColor = 'var(--glass-border)';
+            if (container) container.style.borderColor = 'var(--glass-border)';
         });
-
         document.addEventListener('drop', (e) => {
             e.preventDefault();
             e.stopPropagation();
             const container = document.querySelector('.container');
-            if(container) container.style.borderColor = 'var(--glass-border)';
-            
+            if (container) container.style.borderColor = 'var(--glass-border)';
             if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                const file = e.dataTransfer.files[0];
-                if (file.size > 10 * 1024 * 1024) {
-                    showNotification("File exceeds 10MB limit", "error");
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onerror = () => {
-                    showNotification("Failed to read dropped file", "error");
-                };
-                reader.onload = async (ev) => {
-                    try {
-                        const data = JSON.parse(ev.target.result);
-                        if (data && data.salt && data.vault) {
-                            try {
-                                localStorage.setItem(STORAGE_KEY, ev.target.result);
-                            } catch(storageErr) {
-                                showNotification("Storage quota exceeded", "error");
-                                return;
-                            }
-                            lockVault(true);
-                            showNotification("Vault backup dropped & imported. Please unlock.");
-                        } else if (Array.isArray(data) && masterKey) {
-                            let count = 0;
-                            data.forEach((item, idx) => {
-                                if (item && item.title && item.value) {
-                                    vaultData.push({
-                                        id: item.id || ('sec_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).substring(2, 6)),
-                                        title: String(item.title),
-                                        value: String(item.value),
-                                        category: item.category || 'General',
-                                        created: item.created || new Date().toISOString()
-                                    });
-                                    count++;
-                                }
-                            });
-                            await saveVaultToStorage();
-                            renderSecrets();
-                            showNotification(`Imported ${count} dropped secrets`);
-                        } else if (Array.isArray(data) && !masterKey) {
-                            showNotification("Please unlock your vault before dropping unencrypted secret list", "error");
-                        } else {
-                            showNotification("Invalid vault backup file format", "error");
-                        }
-                    } catch (err) {
-                        showNotification("Error parsing dropped file", "error");
-                    }
-                };
-                reader.readAsText(file);
+                processImportFile(e.dataTransfer.files[0]);
             }
         });
 
-        const helpModal = document.getElementById('help-modal');
-        if (helpModal) {
-            helpModal.addEventListener('click', (e) => {
-                if (e.target === e.currentTarget) {
-                    closeHelp();
-                }
-            });
-        }
-
-        const tutModal = document.getElementById('tutorial-modal');
-        if (tutModal) {
-            tutModal.addEventListener('click', (e) => {
-                if (e.target === e.currentTarget) {
-                    dismissTutorial();
-                }
-            });
-        }
-
-        const confirmModalEl = document.getElementById('confirm-modal');
-        if (confirmModalEl) {
-            confirmModalEl.addEventListener('click', (e) => {
-                if (e.target === e.currentTarget) {
-                    closeConfirmModal();
-                }
-            });
-        }
-
-        // Init
+        // Initialize view
         initAuthView();
     </script>
 </body>
