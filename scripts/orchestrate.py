@@ -34,18 +34,36 @@ LOG_DIR = REPO_ROOT / "logs"
 LOG_FILE = LOG_DIR / "orchestrator.log"
 RECEIPTS_DIR = REPO_ROOT / ".agents" / "receipts"
 SESSION_FILE = REPO_ROOT / ".agents" / "scheduler_session.json"
+FLEET_NODES_DIR = REPO_ROOT / ".agents" / "fleet_nodes"
 TASK_NAME = "KiloApps-Fleet-Orchestrator"
 
-# Remote fleet contributors (sdgdvs / anonymous2) commit between :35 and :58.
-# Window :32 to :58 is strictly reserved for remote contributors to prevent merge collisions.
-REMOTE_WINDOW_START_MIN = 32
-REMOTE_WINDOW_END_MIN = 58
-
-DEFAULT_AGY_PATH = (
-    Path(os.environ.get("LOCALAPPDATA", "")) / "agy" / "bin" / "agy.exe"
-    if os.environ.get("LOCALAPPDATA")
-    else Path(r"C:\Users\mrbos\AppData\Local\agy\bin\agy.exe")
-)
+# Multi-PC Node Profiles: Each computer has dedicated, non-colliding dispatch windows
+NODE_PROFILES = {
+    "pc_a": {
+        "node_id": "pc_a",
+        "name": "PC A (anonymous1 / 12900K)",
+        "account": "anonymous1",
+        "minutes": [2, 17],
+        "allowed_window": lambda m: 0 <= m <= 20,
+        "collision_desc": "Reserved for PC B (:30-:50) and PC C (:20-:30, :50-:60)",
+    },
+    "pc_b": {
+        "node_id": "pc_b",
+        "name": "PC B (sdgdvs)",
+        "account": "sdgdvs",
+        "minutes": [32, 47],
+        "allowed_window": lambda m: 30 <= m <= 50,
+        "collision_desc": "Reserved for PC A (:00-:20) and PC C (:20-:30, :50-:60)",
+    },
+    "pc_c": {
+        "node_id": "pc_c",
+        "name": "PC C (anonymous2)",
+        "account": "anonymous2",
+        "minutes": [22, 52],
+        "allowed_window": lambda m: (20 <= m <= 30) or (50 <= m <= 60),
+        "collision_desc": "Reserved for PC A (:00-:20) and PC B (:30-:50)",
+    },
+}
 
 
 CREATE_NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
@@ -118,18 +136,120 @@ def record_turn_in_session():
         log(f"Warning: Failed to update session timer turn count: {e}")
 
 
-def is_in_remote_contributor_window() -> bool:
-    """Checks if current minute is within the active remote contributor window (sdgdvs / anonymous2)."""
+def get_current_node_id() -> str:
+    """Identifies which physical PC / account is executing (pc_a, pc_b, or pc_c)."""
+    # 1. Local session file
+    if SESSION_FILE.exists():
+        try:
+            s_data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
+            if s_data.get("node_id") in NODE_PROFILES:
+                return s_data["node_id"]
+        except Exception:
+            pass
+
+    # 2. Local dashboard config
+    cfg_file = REPO_ROOT / ".agents" / "dashboard_config.json"
+    if cfg_file.exists():
+        try:
+            cfg = json.loads(cfg_file.read_text(encoding="utf-8-sig"))
+            if cfg.get("node_id") in NODE_PROFILES:
+                return cfg["node_id"]
+        except Exception:
+            pass
+
+    # 3. Git user configuration
+    try:
+        res = subprocess.run(["git", "config", "user.name"], cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=2)
+        if res.returncode == 0:
+            uname = res.stdout.strip().lower()
+            if "sdgdvs" in uname:
+                return "pc_b"
+            if "anonymous2" in uname:
+                return "pc_c"
+            if "anonymous1" in uname or "kiloapps" in uname:
+                return "pc_a"
+    except Exception:
+        pass
+
+    # 4. Hostname hint
+    import socket
+    h = socket.gethostname().upper()
+    if "12900K" in h:
+        return "pc_a"
+
+    return "pc_a"
+
+
+def check_and_handle_remote_commands(node_id: str) -> bool:
+    """Checks if another PC has commanded this PC to stop or start."""
+    node_file = FLEET_NODES_DIR / f"node_{node_id.replace('pc_', '')}.json"
+    if not node_file.exists():
+        return True
+    try:
+        data = json.loads(node_file.read_text(encoding="utf-8-sig"))
+        cmd = data.get("remote_command", "none")
+        if cmd == "stop":
+            log(f"[REMOTE CONTROL] Received remote 'stop' command. Disabling Windows Scheduled Task on {node_id}.")
+            disable_scheduled_task()
+            data["status"] = "stopped"
+            data["remote_command"] = "none"
+            data["last_heartbeat"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+            node_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+            if SESSION_FILE.exists():
+                try:
+                    s_data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
+                    s_data["status"] = "stopped"
+                    SESSION_FILE.write_text(json.dumps(s_data, indent=2), encoding="utf-8")
+                except Exception:
+                    pass
+            return False
+    except Exception as e:
+        log(f"Warning reading remote commands: {e}")
+    return True
+
+
+def is_in_collision_window(node_id: str) -> bool:
+    """Checks if current minute is outside this computer's designated dispatch window."""
     now = datetime.datetime.now()
     minute = now.minute
-    if REMOTE_WINDOW_START_MIN <= minute <= REMOTE_WINDOW_END_MIN:
+    profile = NODE_PROFILES.get(node_id, NODE_PROFILES["pc_a"])
+    is_allowed = profile["allowed_window"](minute)
+    if not is_allowed:
         log(
-            f"[WINDOW GUARD] Current minute (:{minute:02d}) is in remote fleet contributor window "
-            f"({REMOTE_WINDOW_START_MIN:02d}-{REMOTE_WINDOW_END_MIN:02d}). Deferring turn to prevent "
-            f"concurrent git collisions with sdgdvs / anonymous2."
+            f"[WINDOW GUARD] Current minute (:{minute:02d}) is outside {profile['name']}'s "
+            f"designated dispatch window. {profile['collision_desc']}. Deferring turn."
         )
         return True
     return False
+
+
+def broadcast_node_heartbeat(node_id: str, status: str = "active", target: str = ""):
+    """Updates fleet node status file so other computers see this PC's state."""
+    node_file = FLEET_NODES_DIR / f"node_{node_id.replace('pc_', '')}.json"
+    FLEET_NODES_DIR.mkdir(parents=True, exist_ok=True)
+    try:
+        import socket
+        data = {}
+        if node_file.exists():
+            data = json.loads(node_file.read_text(encoding="utf-8-sig"))
+        profile = NODE_PROFILES.get(node_id, NODE_PROFILES["pc_a"])
+        data["node_id"] = node_id
+        data["name"] = profile["name"]
+        data["account"] = profile["account"]
+        data["hostname"] = socket.gethostname().upper()
+        data["status"] = status
+        data["schedule_minutes"] = profile["minutes"]
+        data["last_heartbeat"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        if target:
+            data["current_target"] = target
+        if SESSION_FILE.exists():
+            s_data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
+            data["turns_executed"] = s_data.get("turns_executed", 0)
+            data["session_end"] = s_data.get("session_end")
+            data["session_start"] = s_data.get("session_start")
+        node_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    except Exception as e:
+        log(f"Warning updating fleet node status: {e}")
 
 
 def log(msg: str):
@@ -233,8 +353,16 @@ def find_agy_executable() -> str:
     which_agy = shutil.which("agy") or shutil.which("agy.exe")
     if which_agy:
         return which_agy
-    if DEFAULT_AGY_PATH.exists():
-        return str(DEFAULT_AGY_PATH)
+    candidates = [
+        Path(os.environ.get("LOCALAPPDATA", "")) / "agy" / "bin" / "agy.exe",
+        Path(os.environ.get("USERPROFILE", "")) / ".local" / "bin" / "agy.exe",
+        Path(os.environ.get("USERPROFILE", "")) / "AppData" / "Local" / "agy" / "bin" / "agy.exe",
+        Path(r"C:\Users\mrbos\AppData\Local\agy\bin\agy.exe"),
+        Path(r"C:\Users\M\AppData\Local\agy\bin\agy.exe"),
+    ]
+    for c in candidates:
+        if c.exists():
+            return str(c)
     raise FileNotFoundError("Could not locate agy.exe. Please ensure Antigravity CLI is installed.")
 
 
@@ -497,12 +625,22 @@ def main():
         sys.exit(0)
 
     try:
-        # 1. Enforce 24-hour session limit
-        if not args.ignore_session and not check_session_timer():
+        # 1. Detect current node identity (PC A, PC B, or PC C)
+        node_id = get_current_node_id()
+        node_name = NODE_PROFILES.get(node_id, {}).get("name", node_id)
+        log(f"Operating Node Identity: {node_name} [{node_id}]")
+
+        # 2. Check for remote commands from fleet dashboard
+        if not check_and_handle_remote_commands(node_id):
             return
 
-        # 2. Enforce remote fleet collision guard (reserve :32-:58 for sdgdvs / anonymous2)
-        if not args.ignore_window and not args.dry_run and is_in_remote_contributor_window():
+        # 3. Enforce 24-hour session limit
+        if not args.ignore_session and not check_session_timer():
+            broadcast_node_heartbeat(node_id, status="expired")
+            return
+
+        # 4. Enforce collision-free window guard for this specific node
+        if not args.ignore_window and not args.dry_run and is_in_collision_window(node_id):
             return
 
         if not args.dry_run:
@@ -611,13 +749,21 @@ def main():
 
         if process.returncode != 0:
             log(f"Agent turn exited with non-zero code {process.returncode}. Investigation required.")
+            broadcast_node_heartbeat(node_id, status="error", target=target_app)
         else:
             log("Agent turn completed successfully.")
             record_turn_in_session()
+            broadcast_node_heartbeat(node_id, status="active", target=target_app)
 
-        # Post-agent Git check: ensure unpushed commits are synchronized to remote
+        # Post-agent Git check: ensure unpushed commits and node state are synchronized to remote
         if process.returncode == 0 and not args.dry_run:
             try:
+                # Stage fleet node telemetry
+                subprocess.run(
+                    ["git", "add", ".agents/fleet_nodes"],
+                    cwd=str(REPO_ROOT),
+                    capture_output=True,
+                )
                 rev_res = subprocess.run(
                     ["git", "rev-list", "@{u}..HEAD", "--count"],
                     cwd=str(REPO_ROOT),

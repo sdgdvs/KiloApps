@@ -26,16 +26,100 @@ from tkinter import messagebox, ttk
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CONFIG_FILE = REPO_ROOT / ".agents" / "dashboard_config.json"
 SESSION_FILE = REPO_ROOT / ".agents" / "scheduler_session.json"
+FLEET_NODES_DIR = REPO_ROOT / ".agents" / "fleet_nodes"
 LOCK_FILE = REPO_ROOT / ".agents" / ".orchestrator.lock"
 NEXT_WORK_FILE = REPO_ROOT / "next_work.md"
 ICON_PATH = REPO_ROOT / "KiloOS" / "public" / "assets" / "icons" / "ksys.ico"
 
 TASK_NAME = "KiloApps-Fleet-Orchestrator"
-MINUTE1 = 2
-MINUTE2 = 17
-REMOTE_START_MIN = 32
-REMOTE_END_MIN = 58
 CREATE_NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
+
+# Multi-PC Node Profiles: Each computer has distinct, collision-free dispatch minutes
+NODE_PROFILES = {
+    "pc_a": {
+        "node_id": "pc_a",
+        "name": "PC A (anonymous1)",
+        "account": "anonymous1",
+        "hostname_hint": "12900K",
+        "minutes": [2, 17],
+        "safe_window": ":00 - :20",
+        "is_safe": lambda m: 0 <= m <= 20,
+        "collision_desc": "PC B (:30-:50) & PC C (:20-:30, :50-:60)",
+    },
+    "pc_b": {
+        "node_id": "pc_b",
+        "name": "PC B (sdgdvs)",
+        "account": "sdgdvs",
+        "hostname_hint": "PC-B",
+        "minutes": [32, 47],
+        "safe_window": ":30 - :50",
+        "is_safe": lambda m: 30 <= m <= 50,
+        "collision_desc": "PC A (:00-:20) & PC C (:20-:30, :50-:60)",
+    },
+    "pc_c": {
+        "node_id": "pc_c",
+        "name": "PC C (anonymous2)",
+        "account": "anonymous2",
+        "hostname_hint": "PC-C",
+        "minutes": [22, 52],
+        "safe_window": ":20 - :30 & :50 - :60",
+        "is_safe": lambda m: (20 <= m <= 30) or (50 <= m <= 60),
+        "collision_desc": "PC A (:00-:20) & PC B (:30-:50)",
+    },
+}
+
+
+def get_current_node_id() -> str:
+    """Detects which physical PC / account is running this dashboard."""
+    if SESSION_FILE.exists():
+        try:
+            s_data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
+            if s_data.get("node_id") in NODE_PROFILES:
+                return s_data["node_id"]
+        except Exception:
+            pass
+
+    if CONFIG_FILE.exists():
+        try:
+            cfg = json.loads(CONFIG_FILE.read_text(encoding="utf-8-sig"))
+            if cfg.get("node_id") in NODE_PROFILES:
+                return cfg["node_id"]
+        except Exception:
+            pass
+
+    try:
+        res = subprocess.run(["git", "config", "user.name"], cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=2)
+        if res.returncode == 0:
+            uname = res.stdout.strip().lower()
+            if "sdgdvs" in uname:
+                return "pc_b"
+            if "anonymous2" in uname:
+                return "pc_c"
+            if "anonymous1" in uname or "kiloapps" in uname:
+                return "pc_a"
+    except Exception:
+        pass
+
+    import socket
+    h = socket.gethostname().upper()
+    if "12900K" in h:
+        return "pc_a"
+
+    return "pc_a"
+
+
+def load_fleet_nodes() -> dict:
+    """Reads status files from all computers in the fleet."""
+    nodes = {}
+    if FLEET_NODES_DIR.exists():
+        for f in FLEET_NODES_DIR.glob("node_*.json"):
+            try:
+                data = json.loads(f.read_text(encoding="utf-8-sig"))
+                nid = data.get("node_id", f.stem.replace("node_", "pc_"))
+                nodes[nid] = data
+            except Exception:
+                pass
+    return nodes
 
 
 def get_startup_folder() -> Path:
@@ -86,12 +170,13 @@ def ensure_desktop_shortcut():
 def load_config() -> dict:
     defaults = {
         "autostart_with_windows": True,
-        "autostart_turns_on_launch": True,
+        "autostart_turns_on_launch": False,  # Defensive default: only start on this PC if explicitly configured!
         "always_on_top": False,
+        "node_id": "auto",
     }
     if CONFIG_FILE.exists():
         try:
-            data = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+            data = json.loads(CONFIG_FILE.read_text(encoding="utf-8-sig"))
             defaults.update(data)
         except Exception:
             pass
@@ -176,9 +261,9 @@ def query_task_state_from_system() -> str:
 class FleetDashboard(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.title("KiloApps Creation Dashboard")
-        self.geometry("520x620")
-        self.minsize(480, 560)
+        self.title("KiloApps Multi-PC Fleet Dashboard")
+        self.geometry("540x820")
+        self.minsize(480, 700)
         self.configure(bg="#1e1e2e")
 
         if ICON_PATH.exists():
@@ -189,6 +274,11 @@ class FleetDashboard(tk.Tk):
 
         self.config_data = load_config()
         self.is_busy = False
+
+        # Identify local node
+        self.current_node_id = get_current_node_id()
+        self.current_node_profile = NODE_PROFILES.get(self.current_node_id, NODE_PROFILES["pc_a"])
+        self.current_node_name = self.current_node_profile["name"]
 
         # Telemetry query caching
         self.cached_task_state = "UNKNOWN"
@@ -208,7 +298,7 @@ class FleetDashboard(tk.Tk):
         self.last_task_query_time = time.time()
 
         # Initial autostart turn trigger if enabled
-        if self.config_data.get("autostart_turns_on_launch", True):
+        if self.config_data.get("autostart_turns_on_launch", False):
             self.after(500, self._auto_start_on_launch)
 
         # Start periodic telemetry polling (1-second ticker, 0-subprocess overhead)
@@ -231,12 +321,12 @@ class FleetDashboard(tk.Tk):
         self.c_orange = "#ffb86c"
 
         # Main Container
-        main_frame = tk.Frame(self, bg=self.c_bg, padx=16, pady=14)
+        main_frame = tk.Frame(self, bg=self.c_bg, padx=16, pady=12)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
         # 1. Header Frame
         hdr_frame = tk.Frame(main_frame, bg=self.c_bg)
-        hdr_frame.pack(fill=tk.X, pady=(0, 10))
+        hdr_frame.pack(fill=tk.X, pady=(0, 6))
 
         title_lbl = tk.Label(
             hdr_frame,
@@ -247,52 +337,105 @@ class FleetDashboard(tk.Tk):
         )
         title_lbl.pack(anchor="w")
 
+        min_desc = f":{self.current_node_profile['minutes'][0]:02d} & :{self.current_node_profile['minutes'][1]:02d}"
         subtitle_lbl = tk.Label(
             hdr_frame,
-            text="Autonomous Dispatcher • 2 Turns/Hr (:02 & :17) • Collision-Guarded",
+            text=f"Multi-PC Dispatcher • Local: {self.current_node_name} (Slots {min_desc})",
             font=("Segoe UI", 9),
             fg=self.c_sub,
             bg=self.c_bg,
         )
         subtitle_lbl.pack(anchor="w")
 
-        # 2. Main Control Buttons Frame
+        # 2. Main Local Control Buttons Frame
         btn_frame = tk.Frame(main_frame, bg=self.c_bg)
-        btn_frame.pack(fill=tk.X, pady=8)
+        btn_frame.pack(fill=tk.X, pady=(4, 6))
 
-        # Start Button
+        # Start Button (Local Machine)
         self.btn_start = tk.Button(
             btn_frame,
-            text="▶  Start Kiloapps creation turns",
-            font=("Segoe UI", 12, "bold"),
+            text=f"▶  Start Kiloapps creation turns (This PC)",
+            font=("Segoe UI", 11, "bold"),
             bg=self.c_green_btn,
             fg="#ffffff",
             activebackground=self.c_green_hover,
             activeforeground="#ffffff",
             relief=tk.FLAT,
-            padx=12,
-            pady=10,
+            padx=10,
+            pady=8,
             cursor="hand2",
             command=self.start_creation_turns,
         )
-        self.btn_start.pack(fill=tk.X, pady=(0, 6))
+        self.btn_start.pack(fill=tk.X, pady=(0, 4))
 
-        # Stop Button
+        # Stop Button (Local Machine)
         self.btn_stop = tk.Button(
             btn_frame,
-            text="⏹  Stop Kiloapps creation turns",
-            font=("Segoe UI", 12, "bold"),
+            text=f"⏹  Stop Kiloapps creation turns (This PC)",
+            font=("Segoe UI", 11, "bold"),
             bg=self.c_red_btn,
             fg="#ffffff",
             activebackground=self.c_red_hover,
             activeforeground="#ffffff",
             relief=tk.FLAT,
-            padx=12,
-            pady=10,
+            padx=10,
+            pady=8,
             cursor="hand2",
             command=self.stop_creation_turns,
         )
-        self.btn_stop.pack(fill=tk.X, pady=(0, 8))
+        self.btn_stop.pack(fill=tk.X, pady=(0, 6))
+
+        # 3. Multi-PC Fleet Network Card
+        fleet_card = tk.Frame(main_frame, bg=self.c_card, highlightbackground=self.c_card_border, highlightthickness=1, padx=10, pady=8)
+        fleet_card.pack(fill=tk.X, pady=(0, 8))
+
+        flt_hdr = tk.Frame(fleet_card, bg=self.c_card)
+        flt_hdr.pack(fill=tk.X, pady=(0, 4))
+        tk.Label(flt_hdr, text="FLEET COMPUTERS (MULTI-PC NETWORK)", font=("Segoe UI", 8, "bold"), fg=self.c_accent, bg=self.c_card).pack(side=tk.LEFT)
+        self.lbl_fleet_badge = tk.Label(flt_hdr, text=f"★ THIS PC: {self.current_node_id.upper()}", font=("Segoe UI", 8, "bold"), fg=self.c_green, bg="#313244", padx=6, pady=1)
+        self.lbl_fleet_badge.pack(side=tk.RIGHT)
+
+        self.fleet_rows = {}
+        for nid in ("pc_a", "pc_b", "pc_c"):
+            prof = NODE_PROFILES[nid]
+            row = tk.Frame(fleet_card, bg=self.c_card)
+            row.pack(fill=tk.X, pady=1)
+            lbl_name = tk.Label(row, text="💻 " + prof["name"], font=("Segoe UI", 8, "bold"), fg=self.c_fg, bg=self.c_card, width=20, anchor="w")
+            lbl_name.pack(side=tk.LEFT)
+            lbl_stat = tk.Label(row, text="CHECKING...", font=("Segoe UI", 8), fg=self.c_sub, bg=self.c_card, width=20, anchor="w")
+            lbl_stat.pack(side=tk.LEFT)
+            lbl_time = tk.Label(row, text="--", font=("Segoe UI", 8), fg=self.c_sub, bg=self.c_card, anchor="e")
+            lbl_time.pack(side=tk.RIGHT, fill=tk.X, expand=True)
+            self.fleet_rows[nid] = {"name": lbl_name, "status": lbl_stat, "time": lbl_time}
+
+        flt_btn_row = tk.Frame(fleet_card, bg=self.c_card)
+        flt_btn_row.pack(fill=tk.X, pady=(4, 0))
+
+        self.btn_remote_stop = tk.Button(
+            flt_btn_row,
+            text="⏹ Request Stop on Other PCs",
+            font=("Segoe UI", 8),
+            bg="#383a59",
+            fg="#ff5555",
+            relief=tk.FLAT,
+            padx=6,
+            pady=2,
+            command=self.stop_all_remote_pcs,
+        )
+        self.btn_remote_stop.pack(side=tk.LEFT)
+
+        self.btn_git_sync = tk.Button(
+            flt_btn_row,
+            text="🔄 Git Sync Fleet",
+            font=("Segoe UI", 8),
+            bg="#383a59",
+            fg=self.c_fg,
+            relief=tk.FLAT,
+            padx=6,
+            pady=2,
+            command=self.sync_fleet_via_git,
+        )
+        self.btn_git_sync.pack(side=tk.RIGHT)
 
         # 3. Telemetry Card Frame
         card = tk.Frame(main_frame, bg=self.c_card, highlightbackground=self.c_card_border, highlightthickness=1, padx=12, pady=10)
@@ -469,11 +612,11 @@ class FleetDashboard(tk.Tk):
             return
         self.is_busy = True
         self.btn_start.configure(state=tk.DISABLED)
-        self.log("Activating KiloApps creation turns (24h session armed)...")
+        self.log(f"Activating KiloApps creation turns on {self.current_node_name} (24h session armed)...")
 
         def task():
             try:
-                # 1. Run register_task.ps1 via PowerShell
+                # 1. Run register_task.ps1 via PowerShell with -NodeId and -Hours 24
                 ps_script = REPO_ROOT / "scripts" / "register_task.ps1"
                 res = subprocess.run(
                     [
@@ -485,6 +628,8 @@ class FleetDashboard(tk.Tk):
                         str(ps_script),
                         "-Hours",
                         "24",
+                        "-NodeId",
+                        self.current_node_id,
                     ],
                     cwd=str(REPO_ROOT),
                     capture_output=True,
@@ -506,6 +651,18 @@ class FleetDashboard(tk.Tk):
                     stdin=subprocess.DEVNULL,
                     creationflags=CREATE_NO_WINDOW,
                 )
+
+                # 3. Update local node json broadcast file
+                node_file = FLEET_NODES_DIR / f"node_{self.current_node_id.replace('pc_', '')}.json"
+                if node_file.exists():
+                    try:
+                        n_data = json.loads(node_file.read_text(encoding="utf-8-sig"))
+                        n_data["status"] = "active"
+                        n_data["remote_command"] = "none"
+                        n_data["last_heartbeat"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+                        node_file.write_text(json.dumps(n_data, indent=2), encoding="utf-8")
+                    except Exception:
+                        pass
             except Exception as e:
                 self.after(0, lambda: self.log(f"Error starting turns: {e}"))
             finally:
@@ -524,13 +681,22 @@ class FleetDashboard(tk.Tk):
             return
         self.is_busy = True
         self.btn_stop.configure(state=tk.DISABLED)
-        self.log("Stopping KiloApps creation turns and freeing system resources...")
+        self.log(f"Stopping KiloApps creation turns on {self.current_node_name} and freeing system resources...")
 
         def task():
             try:
-                # 1. Disable scheduled task immediately
+                # 1. Run stop_task.ps1 via PowerShell
+                ps_script = REPO_ROOT / "scripts" / "stop_task.ps1"
                 subprocess.run(
-                    ["schtasks.exe", "/change", "/tn", TASK_NAME, "/disable"],
+                    [
+                        "powershell.exe",
+                        "-NoProfile",
+                        "-ExecutionPolicy",
+                        "Bypass",
+                        "-File",
+                        str(ps_script),
+                    ],
+                    cwd=str(REPO_ROOT),
                     capture_output=True,
                     text=True,
                     stdin=subprocess.DEVNULL,
@@ -569,6 +735,17 @@ class FleetDashboard(tk.Tk):
                     except Exception:
                         pass
 
+                # 4. Update local node json file
+                node_file = FLEET_NODES_DIR / f"node_{self.current_node_id.replace('pc_', '')}.json"
+                if node_file.exists():
+                    try:
+                        n_data = json.loads(node_file.read_text(encoding="utf-8-sig"))
+                        n_data["status"] = "stopped"
+                        n_data["last_heartbeat"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+                        node_file.write_text(json.dumps(n_data, indent=2), encoding="utf-8")
+                    except Exception:
+                        pass
+
                 self.after(0, lambda: self.log("⏹ Turns stopped. Scheduled task disabled. All resources freed."))
             except Exception as e:
                 self.after(0, lambda: self.log(f"Error stopping turns: {e}"))
@@ -583,18 +760,98 @@ class FleetDashboard(tk.Tk):
         self.cached_task_state = "Disabled"
         self.refresh_status(force_query=True)
 
+    def stop_all_remote_pcs(self):
+        other_nodes = [nid for nid in ("pc_a", "pc_b", "pc_c") if nid != self.current_node_id]
+        other_names = ", ".join([NODE_PROFILES[nid]["name"] for nid in other_nodes])
+        confirm = messagebox.askyesno(
+            "Request Stop on Remote Fleet PCs",
+            f"Send a voluntary stop command to remote nodes ({other_names}) via git?\n\n"
+            f"When those computers run git pull, their orchestrator will honor the stop command, "
+            f"disable their scheduled task, and free system resources.\n\n"
+            f"Proceed?",
+        )
+        if not confirm:
+            return
+
+        self.log(f"Broadcasting stop command to remote nodes ({other_names})...")
+
+        def task():
+            try:
+                for nid in other_nodes:
+                    node_key = nid.replace("pc_", "")
+                    node_file = FLEET_NODES_DIR / f"node_{node_key}.json"
+                    if node_file.exists():
+                        try:
+                            data = json.loads(node_file.read_text(encoding="utf-8-sig"))
+                            data["remote_command"] = "stop"
+                            node_file.write_text(json.dumps(data, indent=2), encoding="utf-8")
+                        except Exception:
+                            pass
+
+                # Stage, commit, and push via git
+                subprocess.run(["git", "add", ".agents/fleet_nodes/"], cwd=str(REPO_ROOT), capture_output=True, creationflags=CREATE_NO_WINDOW)
+                c_res = subprocess.run(
+                    ["git", "commit", "-m", "chore(fleet): request remote stop across fleet nodes"],
+                    cwd=str(REPO_ROOT),
+                    capture_output=True,
+                    text=True,
+                    creationflags=CREATE_NO_WINDOW,
+                )
+                if c_res.returncode == 0:
+                    p_res = subprocess.run(["git", "push"], cwd=str(REPO_ROOT), capture_output=True, text=True, creationflags=CREATE_NO_WINDOW)
+                    if p_res.returncode == 0:
+                        self.after(0, lambda: self.log("✓ Remote stop request committed and pushed to git."))
+                    else:
+                        self.after(0, lambda: self.log(f"Git push warning: {p_res.stderr.strip()}"))
+                else:
+                    self.after(0, lambda: self.log("Fleet nodes already marked for stop or no changes."))
+            except Exception as e:
+                self.after(0, lambda: self.log(f"Error requesting remote stop: {e}"))
+            finally:
+                self.after(0, lambda: self.refresh_status(force_query=True))
+
+        threading.Thread(target=task, daemon=True).start()
+
+    def sync_fleet_via_git(self):
+        self.log("Syncing fleet telemetry with remote repository (git pull --rebase)...")
+
+        def task():
+            try:
+                res = subprocess.run(
+                    ["git", "pull", "--rebase"],
+                    cwd=str(REPO_ROOT),
+                    capture_output=True,
+                    text=True,
+                    stdin=subprocess.DEVNULL,
+                    creationflags=CREATE_NO_WINDOW,
+                    timeout=20,
+                )
+                if res.returncode == 0:
+                    self.after(0, lambda: self.log("✓ Fleet telemetry synced with remote repository."))
+                else:
+                    err = res.stderr.strip() or res.stdout.strip()
+                    self.after(0, lambda: self.log(f"Git sync warning: {err}"))
+            except Exception as e:
+                self.after(0, lambda: self.log(f"Git sync error: {e}"))
+            finally:
+                self.after(0, lambda: self.refresh_status(force_query=True))
+
+        threading.Thread(target=task, daemon=True).start()
+
     def run_manual_turn(self):
         now = datetime.datetime.now()
-        if REMOTE_START_MIN <= now.minute <= REMOTE_END_MIN:
+        is_safe = self.current_node_profile.get("is_safe", lambda m: True)
+        if not is_safe(now.minute):
+            msg = self.current_node_profile.get("collision_desc", "other fleet nodes")
             messagebox.showwarning(
-                "Remote Contributor Window",
-                f"Current time ({now.strftime('%H:%M')}) is in the remote fleet contributor window (:32-:58).\n\n"
-                f"Manual dispatch is blocked to prevent git merge conflicts with remote agents (sdgdvs / anonymous2).\n"
-                f"Please try again between :00 and :31.",
+                "Fleet Collision Guard",
+                f"Current time ({now.strftime('%H:%M')}) is in the reserved window for {msg}.\n\n"
+                f"Manual dispatch is blocked to prevent git merge conflicts across computers.\n"
+                f"Your node's safe dispatch window is: {self.current_node_profile.get('safe_window', 'N/A')}.",
             )
             return
 
-        self.log("Launching single turn manually via orchestrator.bat...")
+        self.log(f"Launching single turn manually on {self.current_node_name} via orchestrator.bat...")
         bat_script = REPO_ROOT / "scripts" / "run_orchestrator.bat"
 
         def task():
@@ -671,15 +928,14 @@ class FleetDashboard(tk.Tk):
 
         # 3. Calculate Next Run Time
         now = datetime.datetime.now()
-        t1 = now.replace(minute=MINUTE1, second=0, microsecond=0)
-        if t1 <= now:
-            t1 += datetime.timedelta(hours=1)
-
-        t2 = now.replace(minute=MINUTE2, second=0, microsecond=0)
-        if t2 <= now:
-            t2 += datetime.timedelta(hours=1)
-
-        next_time = min(t1, t2)
+        mins = self.current_node_profile.get("minutes", [2, 17])
+        candidates = []
+        for m in mins:
+            t = now.replace(minute=m, second=0, microsecond=0)
+            if t <= now:
+                t += datetime.timedelta(hours=1)
+            candidates.append(t)
+        next_time = min(candidates)
         diff_next = next_time - now
         next_m = int(diff_next.total_seconds() // 60)
         next_s = int(diff_next.total_seconds() % 60)
@@ -694,15 +950,16 @@ class FleetDashboard(tk.Tk):
 
         # 4. Window Alignment
         cur_min = now.minute
-        if REMOTE_START_MIN <= cur_min <= REMOTE_END_MIN:
+        is_safe = self.current_node_profile.get("is_safe", lambda m: True)
+        if is_safe(cur_min):
             self.lbl_window.configure(
-                text=f"🟡 Remote Window (:{cur_min:02d} in :32-:58)",
-                fg=self.c_orange,
+                text=f"🟢 Safe Window (:{cur_min:02d} within {self.current_node_profile.get('safe_window', '')})",
+                fg=self.c_green,
             )
         else:
             self.lbl_window.configure(
-                text=f"🟢 Safe Window (:{cur_min:02d} in :00-:31)",
-                fg=self.c_green,
+                text=f"🟡 Busy Window (:{cur_min:02d} — {self.current_node_profile.get('collision_desc', 'Reserved')})",
+                fg=self.c_orange,
             )
 
         # 5. Session & Turns
@@ -739,6 +996,65 @@ class FleetDashboard(tk.Tk):
                     self.lbl_target.configure(text="--", fg=self.c_sub)
             except Exception:
                 self.lbl_target.configure(text="--", fg=self.c_sub)
+
+        # 7. Update Multi-PC Fleet Network Card Rows
+        fleet_data = load_fleet_nodes()
+        for nid, row_widgets in self.fleet_rows.items():
+            nd = fleet_data.get(nid, {})
+            status = nd.get("status", "unknown").lower()
+            remote_cmd = nd.get("remote_command", "none")
+            sched_mins = nd.get("schedule_minutes", NODE_PROFILES.get(nid, {}).get("minutes", []))
+            sched_str = f":{sched_mins[0]:02d}, :{sched_mins[1]:02d}" if len(sched_mins) >= 2 else "--"
+
+            if nid == self.current_node_id:
+                if task_state == "Ready" and session_active:
+                    stat_text = f"ACTIVE ({sched_str})"
+                    stat_color = self.c_green
+                elif task_state == "Disabled" or status == "stopped":
+                    stat_text = "STOPPED (Local)"
+                    stat_color = self.c_red
+                else:
+                    stat_text = f"{task_state.upper()} ({sched_str})"
+                    stat_color = self.c_orange
+            else:
+                if remote_cmd == "stop":
+                    stat_text = "STOP REQUESTED"
+                    stat_color = self.c_orange
+                elif status == "active":
+                    stat_text = f"ACTIVE ({sched_str})"
+                    stat_color = self.c_green
+                elif status == "stopped":
+                    stat_text = "STOPPED"
+                    stat_color = self.c_sub
+                else:
+                    stat_text = f"{status.upper()} ({sched_str})"
+                    stat_color = self.c_sub
+
+            hb_str = nd.get("last_heartbeat") or nd.get("last_turn_timestamp")
+            time_text = "--"
+            if hb_str:
+                try:
+                    if hb_str.endswith("Z"):
+                        hb_str = hb_str[:-1] + "+00:00"
+                    if "." in hb_str and ("+" in hb_str or "-" in hb_str):
+                        base_dt, tz_part = hb_str.split("+") if "+" in hb_str else hb_str.rsplit("-", 1)
+                        if "." in base_dt:
+                            sec_base, frac = base_dt.split(".", 1)
+                            hb_str = f"{sec_base}.{frac[:6]}+{tz_part}"
+                    hb_dt = datetime.datetime.fromisoformat(hb_str)
+                    now_utc = datetime.datetime.now(datetime.timezone.utc)
+                    delta_sec = max(0, (now_utc - hb_dt).total_seconds())
+                    if delta_sec < 60:
+                        time_text = f"{int(delta_sec)}s ago"
+                    elif delta_sec < 3600:
+                        time_text = f"{int(delta_sec // 60)}m ago"
+                    else:
+                        time_text = f"{int(delta_sec // 3600)}h ago"
+                except Exception:
+                    time_text = "--"
+
+            row_widgets["status"].configure(text=stat_text, fg=stat_color)
+            row_widgets["time"].configure(text=time_text)
 
     def refresh_status_loop(self):
         try:

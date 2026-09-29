@@ -27,6 +27,23 @@ if (Test-Path $SessionFile) {
         $Session.status = "stopped"
         $Session | ConvertTo-Json -Depth 4 | Set-Content $SessionFile -Encoding UTF8
         Write-Host "[✓] Session status set to 'stopped' in .agents\scheduler_session.json." -ForegroundColor Green
+
+        $NodeId = $Session.node_id
+        if (-not $NodeId) {
+            $GitUser = ""
+            try { $GitUser = (git -C $RepoRoot config user.name) } catch {}
+            if ($GitUser -match "sdgdvs") { $NodeId = "pc_b" }
+            elseif ($GitUser -match "anonymous2") { $NodeId = "pc_c" }
+            else { $NodeId = "pc_a" }
+        }
+        $NodeFile = Join-Path $RepoRoot ".agents\fleet_nodes\node_$($NodeId.Replace('pc_', '')).json"
+        if (Test-Path $NodeFile) {
+            $NodeData = Get-Content $NodeFile -Raw -Encoding UTF8 | ConvertFrom-Json
+            $NodeData.status = "stopped"
+            $NodeData.last_heartbeat = (Get-Date).ToUniversalTime().ToString("o")
+            $NodeData | ConvertTo-Json -Depth 4 | Set-Content $NodeFile -Encoding UTF8
+            Write-Host "[✓] Node status set to 'stopped' in .agents\fleet_nodes\node_$($NodeId.Replace('pc_', '')).json." -ForegroundColor Green
+        }
     } catch {
         Write-Warning "Could not update session file: $($_.Exception.Message)"
     }

@@ -19,8 +19,9 @@
 #>
 param(
     [double]$Hours = 24.0,
-    [int]$Minute1 = 2,
-    [int]$Minute2 = 17,
+    [string]$NodeId = "auto",
+    [int]$Minute1 = -1,
+    [int]$Minute2 = -1,
     [string]$TaskName = "KiloApps-Fleet-Orchestrator",
     [switch]$RunNow
 )
@@ -35,20 +36,55 @@ if (-not (Test-Path $BatPath)) {
     exit 1
 }
 
+# Auto-detect PC Node identity
+$GitUser = ""
+try { $GitUser = (git -C $RepoRoot config user.name) } catch {}
+$HostName = $env:COMPUTERNAME
+
+if ($NodeId -eq "auto") {
+    if ($GitUser -match "sdgdvs") {
+        $NodeId = "pc_b"
+    } elseif ($GitUser -match "anonymous2") {
+        $NodeId = "pc_c"
+    } else {
+        $NodeId = "pc_a"
+    }
+}
+
+if ($Minute1 -lt 0 -or $Minute2 -lt 0) {
+    if ($NodeId -eq "pc_b") {
+        $Minute1 = 32
+        $Minute2 = 47
+        $NodeDesc = "PC B (sdgdvs)"
+    } elseif ($NodeId -eq "pc_c") {
+        $Minute1 = 22
+        $Minute2 = 52
+        $NodeDesc = "PC C (anonymous2)"
+    } else {
+        $Minute1 = 2
+        $Minute2 = 17
+        $NodeDesc = "PC A (anonymous1 / 12900K)"
+    }
+} else {
+    $NodeDesc = "$NodeId (Custom :$($Minute1.ToString('D2')) & :$($Minute2.ToString('D2')))"
+}
+
 $Now = Get-Date
 $SessionEnd = $Now.AddHours($Hours)
 
 Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host " KiloApps 24-Hour Autonomous Fleet Scheduler Configuration" -ForegroundColor Cyan
+Write-Host " KiloApps Multi-PC Fleet Scheduler Configuration" -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
+Write-Host "Target Machine:      $NodeDesc [Node ID: $NodeId]"
 Write-Host "Session Start:       $($Now.ToString('yyyy-MM-dd HH:mm:ss'))"
 Write-Host "Session Expiration:  $($SessionEnd.ToString('yyyy-MM-dd HH:mm:ss')) (${Hours}h window)"
 Write-Host "Dispatch Cadence:    Every hour at :$($Minute1.ToString('D2')) and :$($Minute2.ToString('D2')) (2 turns/hr = $([int]($Hours * 2)) turns/session)"
-Write-Host "Remote Fleet Window: XX:32 - XX:58 reserved for sdgdvs & anonymous2 (zero collisions)"
+Write-Host "Fleet Harmony:       Dedicated collision-free slot across PC A, PC B, and PC C"
 Write-Host "------------------------------------------------------------"
 
 # 1. Initialize session tracking file
 $SessionData = @{
+    node_id             = $NodeId
     session_start       = $Now.ToUniversalTime().ToString("o")
     session_end         = $SessionEnd.ToUniversalTime().ToString("o")
     duration_hours      = $Hours
@@ -59,6 +95,21 @@ $SessionData = @{
     task_name           = $TaskName
     status              = "active"
     last_turn_timestamp = $null
+}
+
+# Update fleet node broadcast file
+$NodeFile = Join-Path $RepoRoot ".agents\fleet_nodes\node_$($NodeId.Replace('pc_', '')).json"
+if (Test-Path $NodeFile) {
+    try {
+        $NodeData = Get-Content $NodeFile -Raw -Encoding UTF8 | ConvertFrom-Json
+        $NodeData.status = "active"
+        $NodeData.session_start = $Now.ToUniversalTime().ToString("o")
+        $NodeData.session_end = $SessionEnd.ToUniversalTime().ToString("o")
+        $NodeData.schedule_minutes = @($Minute1, $Minute2)
+        $NodeData.last_heartbeat = $Now.ToUniversalTime().ToString("o")
+        $NodeData.remote_command = "none"
+        $NodeData | ConvertTo-Json -Depth 4 | Set-Content $NodeFile -Encoding UTF8
+    } catch {}
 }
 
 $SessionDir = Split-Path $SessionFile

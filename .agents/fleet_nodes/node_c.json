@@ -1,0 +1,15 @@
+{
+  "node_id": "pc_c",
+  "name": "PC C (anonymous2)",
+  "account": "anonymous2",
+  "hostname": "PC-C",
+  "status": "stopped",
+  "schedule_minutes": [22, 52],
+  "session_start": null,
+  "session_end": null,
+  "turns_executed": 0,
+  "last_turn_timestamp": "2026-09-28T17:56:12Z",
+  "last_heartbeat": "2026-09-28T17:56:12Z",
+  "current_target": "idle",
+  "remote_command": "none"
+}
