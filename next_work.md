@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KDB
   kilo_usability: KSys
-  kilo_graphics: KMystery
+  kilo_graphics: KWizard
   kilo_qa: KChart
   kilo_expander: KMandel
   kilo_creator: "kweb://geocities (CyberSpire's Retro Shrine & MOD Vault)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KSynth
-  timestamp: "2026-09-29T05:17:00Z"
+  agent: kilo-graphics
+  app: KMystery
+  timestamp: "2026-09-29T18:30:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -104,9 +104,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KMystery`
+- **Current Target**: `KWizard`
 - **Upcoming Queue**:
-  `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum` *(Completed: KMech, KColosseum, KAbyss)*.
+  `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum` *(Completed: KMystery, KMech, KColosseum, KAbyss)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KDB`
@@ -245,6 +245,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T18:30:00Z — kilo-graphics: KMystery (Visual Polish, Casino Dot Removal, Audio Architecture & Dialogue Expansion)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
+  - Perimeter Dot Removal: Removed rotating ball and spinning spokes from Casino roulette wheel; replaced with static Art Deco mahogany table, numbered pockets, chip stacks & cards.
+  - Scene Atmosphere: Polished Office (case files, magnifying glass), Manor (stone hearth glow), Docks (mooring bollards, rope), and Train Station (iron trusses, luggage trunk, firebox glow).
+  - Procedural Audio: Added FM scanner calibration tones, victory/defeat stings, and lie-caught dramatic chords in Web and native C.
+  - Content & Balance: Added character-specific interrogation dialogues across all 5 suspects; balanced investigation hours to 16h/14h/12h.
+  - Verification: MSVC clean (`KMystery.exe` 39.9 KB); Vite clean in 415ms (`kmystery.html` 145.3 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-29T05:17:00Z — kilo-usability: KSynth (Layout Polish, Audio Oscilloscope, Responsive Canvas & Window Tuning)**
   - Status: PASS ✅ (0 regressions, clean builds, security lint clean, <999KB verified).
   - Usability: Tuned default window to 1040x860 in App.jsx, fixed clipping on high-DPI displays.
@@ -277,11 +285,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Audio Architecture: Added Sega Genesis YM2612 2-Op FM synthesis & SNES SPC700 stereo delay sonification scanner in Web and native PCM worker thread.
   - Export & Presets: Added SVG vector export, CSV data export, JSON import/export, and expanded presets bank across Cartesian, Polar, and Parametric.
   - Verification: MSVC clean (`KGraph.exe` 33.8 KB); Vite clean in 316ms (`kgraph.html` 126.1 KB < 999 KB); icon & security lints 100% PASS.
-
-- **2026-09-29T03:10:00Z — kilo-qa: KMystery (Pass 5 QA, State Persistence, Hotkeys & Toast Remediation)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
-  - State Persistence: Fixed quickload wiping minigame state in lab; persisted active accusation state and restored seamlessly.
-  - Keyboard Navigation: Implemented full hotkeys across all states in native C (S, L, I, A, 1-5 travel, 1-3 scanner, Esc/Enter).
-  - Toast Non-Occlusion: Relocated toast bar above hotkey footer at bottom-right, eliminating header and case file occlusion.
-  - Start Screen & Ergonomics: Added dynamic Resume Saved Case [F9] state checking in native C and Enter key start on web.
-  - Verification: MSVC clean (`KMystery.exe` 34.3 KB); Vite clean in 269ms (`kmystery.html` 130.8 KB < 999 KB); check_icons & security lint 100% PASS.

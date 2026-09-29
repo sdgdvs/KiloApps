@@ -780,6 +780,64 @@
                     osc.stop(this.ctx.currentTime + 2.2);
                 });
             }
+
+            playCalibrationTone(currHz, targetHz) {
+                if (!this.ctx) this.init();
+                this.resume();
+                const t = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                const pitch = 220 + Math.min(880, Math.max(50, currHz * 10));
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(pitch, t);
+                gain.gain.setValueAtTime(0.14, t);
+                gain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+                osc.connect(gain);
+                gain.connect(this.sfxGain);
+                osc.start(t);
+                osc.stop(t + 0.16);
+            }
+
+            playSuccessChord() {
+                if (!this.ctx) this.init();
+                this.resume();
+                const notes = [261.63, 329.63, 392.00, 493.88, 523.25, 659.25];
+                notes.forEach((freq, idx) => {
+                    setTimeout(() => {
+                        this.playFMNote(freq, 1.4, 'lead', 0.85);
+                    }, idx * 80);
+                });
+            }
+
+            playDefeatChord() {
+                if (!this.ctx) this.init();
+                this.resume();
+                const notes = [220.00, 196.00, 174.61, 146.83, 110.00];
+                notes.forEach((freq, idx) => {
+                    setTimeout(() => {
+                        this.playFMNote(freq, 1.6, 'bass', 0.95);
+                    }, idx * 110);
+                });
+            }
+
+            playLieCaughtSting() {
+                if (!this.ctx) this.init();
+                this.resume();
+                const freqs = [130.81, 196.00, 246.94, 311.13, 440.00];
+                freqs.forEach((f, i) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(f, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(f * 1.05, this.ctx.currentTime + 0.6);
+                    gain.gain.setValueAtTime(0.22, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 1.2);
+                    osc.connect(gain);
+                    gain.connect(this.sfxGain);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 1.2);
+                });
+            }
         }
 
         const noirAudio = new NoirAudioEngine();
@@ -1050,8 +1108,8 @@
             const diff = document.getElementById('difficulty').value;
             let numItems = 3;
             let time = 16;
-            if (diff === 'Medium') { numItems = 4; time = 12; }
-            else if (diff === 'Hard') { numItems = 5; time = 8; }
+            if (diff === 'Medium') { numItems = 4; time = 14; }
+            else if (diff === 'Hard') { numItems = 5; time = 12; }
             
             state.suspects = allSuspects.slice(0, numItems);
             state.locations = {};
@@ -1318,31 +1376,68 @@
             let intimidated = false;
             
             if (actualClue === killerClueMap[suspect]) {
-                noirAudio.playDramaticChord();
+                noirAudio.playLieCaughtSting();
                 triggerLightning();
                 state.interrogationMood = 'caught';
-                triggerScreenShake(16);
-                spawnParticleBurst(canvas.width / 2, canvas.height / 2, 40, '#ff4444');
-                response = '"Wait, where did you find that?! I... I lost it weeks ago! You can\'t prove anything!" (Caught in a lie!)';
+                triggerScreenShake(18);
+                spawnParticleBurst(canvas.width / 2, canvas.height / 2, 45, '#ff3333');
+                if (suspect === 'Mr. Black') {
+                    response = '"Where did you unearth that?! My attorney will have your badge for this unlawful search! ...I lost that cufflink, it proves nothing!" (Caught in a lie!)';
+                } else if (suspect === 'Miss Scarlet') {
+                    response = '"My signature perfume! How dare you rummage through my private dressing room! ...Fine, I was there, but you can\'t prove murder!" (Caught in a lie!)';
+                } else if (suspect === 'Colonel Mustard') {
+                    response = '"Confound it! That button was torn from my dress tunic! Who authorized this inquiry?! ...Stand at attention, Detective, you have no case!" (Caught in a lie!)';
+                } else if (suspect === 'Mrs. White') {
+                    response = '"My silk glove! I... I must have dropped it during evening service... This is preposterous! You know nothing!" (Caught in a lie!)';
+                } else if (suspect === 'Professor Plum') {
+                    response = '"Good heavens, my reading spectacles! I was wondering why my vision was so blurred... Wait, this is entrapment! Statistically invalid!" (Caught in a lie!)';
+                } else {
+                    response = '"Wait, where did you find that?! I... I lost it weeks ago! You can\'t prove anything!" (Caught in a lie!)';
+                }
             } else if (Object.values(killerClueMap).includes(actualClue)) {
-                response = '"That doesn\'t belong to me."';
+                if (suspect === 'Mr. Black') response = '"Pedestrian junk. I only associate with custom craftsmanship, Detective."';
+                else if (suspect === 'Miss Scarlet') response = '"Tragic, darling, but totally lacking in taste. It certainly isn\'t mine."';
+                else if (suspect === 'Colonel Mustard') response = '"Civilian scrap! Not regulation issue in any civilized theatre of war."';
+                else if (suspect === 'Mrs. White') response = '"I have cleaned every square foot of this estate; that filthy trifle is not mine."';
+                else if (suspect === 'Professor Plum') response = '"A curious artifact, but statistically improbable to belong to me."';
+                else response = '"That doesn\'t belong to me."';
                 intimidated = true;
                 state.interrogationMood = 'angry';
             } else if (Object.values(motiveClueMap).includes(actualClue)) {
                 if (suspect === state.solution.killer) {
-                    response = '"That proves nothing! Anyone could have that motive!" (They look nervous)';
+                    if (suspect === 'Mr. Black') response = '"Contracts and ledgers are ruthless, Detective, but that paper trail proves nothing!" (Nervous sweat)';
+                    else if (suspect === 'Miss Scarlet') response = '"Drama is my profession on stage, Detective... but that note was meant to stay confidential!" (Looking shaken)';
+                    else if (suspect === 'Colonel Mustard') response = '"Every campaign requires decisive retribution, but I never wrote such orders!" (Visibly agitated)';
+                    else if (suspect === 'Mrs. White') response = '"Thirty years of loyal discretion, Detective... but even saints have their breaking point!" (Fidgeting nervously)';
+                    else if (suspect === 'Professor Plum') response = '"A compelling psychological hypothesis, but motive does not equate to commission of the crime!" (Stammering)';
+                    else response = '"That proves nothing! Anyone could have that motive!" (They look nervous)';
                     state.interrogationMood = 'nervous';
                 } else {
-                    response = '"Shocking, but not my problem."';
+                    if (suspect === 'Mr. Black') response = '"Petty squabbles of the lower classes. Entirely beneath my ledger."';
+                    else if (suspect === 'Miss Scarlet') response = '"Fascinating melodrama, darling, but I don\'t read amateur scripts."';
+                    else if (suspect === 'Colonel Mustard') response = '"Soldiers fight for honor and king, sir! Not for petty civilian grievances."';
+                    else if (suspect === 'Mrs. White') response = '"The family has had secrets for generations. None of them concern me."';
+                    else if (suspect === 'Professor Plum') response = '"An interesting sociological thesis, but quite unrelated to my studies."';
+                    else response = '"Shocking, but not my problem."';
                     intimidated = true;
                     state.interrogationMood = 'angry';
                 }
             } else if (Object.values(weaponClueMap).includes(actualClue)) {
                 if (suspect === state.solution.killer) {
-                    response = '"I\'ve never seen that weapon in my life!" (They are sweating)';
+                    if (suspect === 'Mr. Black') response = '"A gentleman settles disputes through banks and courts, not with... with that!" (Pale and shaking)';
+                    else if (suspect === 'Miss Scarlet') response = '"Ugh, what a hideous, bloodied instrument! I could never bear to touch it!" (Trembling violently)';
+                    else if (suspect === 'Colonel Mustard') response = '"A soldier uses standard ordinance! That crude weapon is an insult to ballistics!" (Veins bulging on temple)';
+                    else if (suspect === 'Mrs. White') response = '"I scrub floors and polish silver, Detective! I would never handle such violence!" (Voice cracking)';
+                    else if (suspect === 'Professor Plum') response = '"The kinetic transfer necessary to inflict blunt trauma exceeds my physical capacity!" (Sweating profusely)';
+                    else response = '"I\'ve never seen that weapon in my life!" (They are sweating)';
                     state.interrogationMood = 'nervous';
                 } else {
-                    response = '"A gruesome weapon, but I didn\'t use it."';
+                    if (suspect === 'Mr. Black') response = '"Brutal and uncivilized. Take that repulsive thing away from my sight."';
+                    else if (suspect === 'Miss Scarlet') response = '"Ugh, far too messy, Detective. I couldn\'t bear the thought of ruining my satin gloves."';
+                    else if (suspect === 'Colonel Mustard') response = '"Sloppy civilian work. An undisciplined blow without tactical precision."';
+                    else if (suspect === 'Mrs. White') response = '"Lord have mercy. How dreadfully violent... but I know nothing of it."';
+                    else if (suspect === 'Professor Plum') response = '"A forensic monstrosity. Please remove it before contaminating your sample."';
+                    else response = '"A gruesome weapon, but I didn\'t use it."';
                     intimidated = true;
                     state.interrogationMood = 'angry';
                 }
@@ -1429,6 +1524,7 @@
             analysisState.current += val;
             analysisState.moves--;
             triggerScreenShake(3);
+            noirAudio.playCalibrationTone(analysisState.current, analysisState.target);
             
             if (analysisState.current === analysisState.target) {
                 const item = state.unanalyzedClues[analysisState.idx];
@@ -1438,7 +1534,7 @@
                 }
                 state.unanalyzedClues.splice(analysisState.idx, 1);
                 state.foundClues.push(`[${item.locName}] ${item.realClue}`);
-                noirAudio.playDramaticChord();
+                noirAudio.playClueReveal();
                 triggerLightning();
                 spawnParticleBurst(canvas.width / 2, canvas.height / 2, 45, '#44ff44');
                 showToast(`🔬 Spectral Analysis Complete!\nRevealed: ${item.realClue}`);
@@ -1818,7 +1914,7 @@
                 safeSetStorage('kmystery_perfectSolves', String(perfectSolves));
                 
                 updateStatsUI();
-                noirAudio.playDramaticChord();
+                noirAudio.playSuccessChord();
                 triggerLightning();
                 spawnParticleBurst(canvas.width / 2, canvas.height / 2, 100, '#d4af37');
                 
@@ -1827,7 +1923,7 @@
                 msg += "\nCongratulations - You cracked the case!";
                 showGameOver("Case Solved! ★", msg);
             } else {
-                noirAudio.playDramaticChord();
+                noirAudio.playDefeatChord();
                 triggerScreenShake(25);
                 showGameOver("Catastrophic Failure", `You indicted ${suspect}, but the real culprit was ${state.solution.killer} (Motive: ${state.solution.motive}, Weapon: ${state.solution.weapon}).\nThe Commissioner has revoked your badge.`);
             }
@@ -2103,11 +2199,37 @@
                 ctx.closePath();
                 ctx.fill();
 
-                // Desk details: Telephone & Ashtray with curling smoke
+                // Desk details: Telephone, Manila Case Files, Magnifying Glass & Ashtray
                 ctx.fillStyle = '#1e1c18';
                 ctx.fillRect(w * 0.65, h * 0.66, 45, 18);
                 ctx.fillStyle = '#0a0a0a';
                 ctx.fillRect(w * 0.68, h * 0.62, 35, 6);
+
+                // Manila Case Files folder stack
+                ctx.fillStyle = '#9e855a';
+                ctx.fillRect(w * 0.42, h * 0.68, 55, 14);
+                ctx.fillStyle = '#b59b6d';
+                ctx.fillRect(w * 0.44, h * 0.65, 52, 14);
+                ctx.strokeStyle = '#5a4625';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(w * 0.44, h * 0.65, 52, 14);
+                ctx.fillStyle = '#8b2020';
+                ctx.fillRect(w * 0.48, h * 0.67, 10, 3); // Red case seal tag
+
+                // Brass Magnifying Glass on case files
+                ctx.strokeStyle = '#d4af37';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(w * 0.52, h * 0.68, 8, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.fillStyle = 'rgba(200, 230, 255, 0.25)';
+                ctx.fill();
+                ctx.beginPath();
+                ctx.moveTo(w * 0.57, h * 0.72);
+                ctx.lineTo(w * 0.62, h * 0.76);
+                ctx.stroke();
+
+                // Ashtray with curling smoke
                 ctx.fillStyle = '#222';
                 ctx.fillRect(w * 0.82, h * 0.68, 14, 6);
                 ctx.fillStyle = '#ff4400';
@@ -2165,6 +2287,16 @@
                 ctx.fillRect(w * 0.25, h * 0.55, 12, 16);
                 ctx.fillRect(w * 0.72, h * 0.55, 12, 16);
 
+                // Warm hearth glow in ground floor drawing room
+                const hearthFlicker = Math.sin(animFrame * 0.18) * 0.12 + 0.88;
+                const hearthGlow = ctx.createRadialGradient(w * 0.5, h * 0.65, 3, w * 0.5, h * 0.65, 35);
+                hearthGlow.addColorStop(0, `rgba(255, 120, 30, ${0.45 * hearthFlicker})`);
+                hearthGlow.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = hearthGlow;
+                ctx.beginPath();
+                ctx.arc(w * 0.5, h * 0.65, 35, 0, Math.PI * 2);
+                ctx.fill();
+
                 ctx.fillStyle = '#040406';
                 ctx.fillRect(0, h * 0.82, w, h * 0.18);
 
@@ -2221,6 +2353,22 @@
                 for (let px = 10; px < w * 0.45; px += 25) {
                     ctx.fillRect(px, h * 0.65, 2, h * 0.35);
                 }
+
+                // Wooden mooring bollard with rope on pier edge
+                const bolX = w * 0.42;
+                const bolY = h * 0.65;
+                ctx.fillStyle = '#261b11';
+                ctx.fillRect(bolX - 6, bolY - 24, 12, 24);
+                ctx.fillStyle = '#3a2b1c';
+                ctx.beginPath();
+                ctx.ellipse(bolX, bolY - 24, 8, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#c2a66e';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(bolX - 6, bolY - 12); ctx.lineTo(bolX + 6, bolY - 12);
+                ctx.moveTo(bolX - 6, bolY - 8); ctx.lineTo(bolX + 6, bolY - 8);
+                ctx.stroke();
 
                 // Ocean water swell reflections
                 ctx.strokeStyle = 'rgba(100, 180, 255, 0.18)';
@@ -2289,43 +2437,99 @@
                 ctx.fillText('★ GOLDEN PALACE ★', w / 2, 44);
                 ctx.shadowBlur = 0;
 
-                // Foreground Roulette Wheel with rotating wedges & rolling ivory ball
+                // Static Authentic Art Deco Roulette Table & Wheel (Zero rotating balls or traveling dots)
                 const wheelX = w / 2;
                 const wheelY = h * 0.85;
-                ctx.fillStyle = '#0f381e';
+
+                // Green felt table rim
+                ctx.fillStyle = '#0d361b';
                 ctx.beginPath();
-                ctx.ellipse(wheelX, wheelY, w * 0.45, 45, 0, 0, Math.PI * 2);
+                ctx.ellipse(wheelX, wheelY, w * 0.46, 48, 0, 0, Math.PI * 2);
                 ctx.fill();
                 ctx.strokeStyle = '#d4af37';
                 ctx.lineWidth = 3;
                 ctx.stroke();
 
-                const rSpin = animFrame * 0.025;
-                for (let a = 0; a < Math.PI * 2; a += Math.PI / 8) {
-                    ctx.strokeStyle = '#3d3018';
+                // Mahogany wheel outer bowl
+                ctx.fillStyle = '#3a1a08';
+                ctx.beginPath();
+                ctx.ellipse(wheelX, wheelY, w * 0.38, 38, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#5a2a10';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // Static alternating Red and Black pockets with gold dividers
+                const numPockets = 16;
+                for (let i = 0; i < numPockets; i++) {
+                    const a1 = (i / numPockets) * Math.PI * 2;
+                    const a2 = ((i + 1) / numPockets) * Math.PI * 2;
+                    ctx.fillStyle = (i % 2 === 0) ? '#8b1520' : '#141416';
+                    ctx.beginPath();
+                    ctx.moveTo(wheelX, wheelY);
+                    ctx.lineTo(wheelX + Math.cos(a1) * (w * 0.36), wheelY + Math.sin(a1) * 34);
+                    ctx.lineTo(wheelX + Math.cos(a2) * (w * 0.36), wheelY + Math.sin(a2) * 34);
+                    ctx.closePath();
+                    ctx.fill();
+
+                    // Gold pocket dividers
+                    ctx.strokeStyle = '#c5a038';
                     ctx.lineWidth = 1;
                     ctx.beginPath();
                     ctx.moveTo(wheelX, wheelY);
-                    ctx.lineTo(wheelX + Math.cos(a + rSpin) * (w * 0.4), wheelY + Math.sin(a + rSpin) * 38);
+                    ctx.lineTo(wheelX + Math.cos(a1) * (w * 0.36), wheelY + Math.sin(a1) * 34);
                     ctx.stroke();
                 }
 
-                ctx.fillStyle = '#4a2505';
+                // Inner mahogany ring
+                ctx.fillStyle = '#261005';
                 ctx.beginPath();
-                ctx.ellipse(wheelX, wheelY, 35, 15, 0, 0, Math.PI * 2);
+                ctx.ellipse(wheelX, wheelY, 32, 14, 0, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.fillStyle = '#d4af37';
+
+                // Static polished brass center turret with cross arms
+                ctx.strokeStyle = '#d4af37';
+                ctx.lineWidth = 2.5;
+                ctx.beginPath();
+                ctx.moveTo(wheelX - 16, wheelY); ctx.lineTo(wheelX + 16, wheelY);
+                ctx.moveTo(wheelX, wheelY - 8); ctx.lineTo(wheelX, wheelY + 8);
+                ctx.stroke();
+
+                ctx.fillStyle = '#f0c840';
                 ctx.beginPath();
                 ctx.arc(wheelX, wheelY, 5, 0, Math.PI * 2);
                 ctx.fill();
 
-                const ballAngle = animFrame * 0.045;
-                const ballX = wheelX + Math.cos(ballAngle) * (w * 0.38);
-                const ballY = wheelY + Math.sin(ballAngle) * 34;
-                ctx.fillStyle = '#f5f0e6';
-                ctx.beginPath();
-                ctx.arc(ballX, ballY, 3, 0, Math.PI * 2);
-                ctx.fill();
+                // Static Casino Chip Stacks on felt table
+                const drawChipStack = (cx, cy, color, rimColor, count) => {
+                    for (let c = 0; c < count; c++) {
+                        const chipY = cy - c * 3;
+                        ctx.fillStyle = color;
+                        ctx.beginPath();
+                        ctx.ellipse(cx, chipY, 11, 4, 0, 0, Math.PI * 2);
+                        ctx.fill();
+                        ctx.strokeStyle = rimColor;
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                    }
+                };
+                drawChipStack(w * 0.16, h * 0.74, '#b31e28', '#ffd700', 5);
+                drawChipStack(w * 0.21, h * 0.77, '#1e48b3', '#ffffff', 4);
+                drawChipStack(w * 0.82, h * 0.75, '#222226', '#ffd700', 6);
+
+                // Vintage playing cards on felt table
+                ctx.save();
+                ctx.translate(w * 0.74, h * 0.68);
+                ctx.rotate(0.2);
+                ctx.fillStyle = '#f5efe0';
+                ctx.fillRect(-10, -14, 20, 28);
+                ctx.strokeStyle = '#222';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(-10, -14, 20, 28);
+                ctx.fillStyle = '#b31e28';
+                ctx.font = 'bold 9px sans-serif';
+                ctx.fillText('♥ A', -6, -3);
+                ctx.restore();
             } else if (locName === 'Train Station') {
                 const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
                 bgGrad.addColorStop(0, '#0a0d14');
@@ -2367,10 +2571,27 @@
                 ctx.lineTo(clockX + Math.cos(secAngle) * 16, clockY + Math.sin(secAngle) * 16);
                 ctx.stroke();
 
+                // Vaulted ceiling iron truss framework
+                ctx.strokeStyle = '#252b36';
+                ctx.lineWidth = 2;
+                for (let a = Math.PI * 1.05; a < Math.PI * 1.95; a += Math.PI / 8) {
+                    ctx.beginPath();
+                    ctx.moveTo(w / 2 + Math.cos(a) * (w * 0.42), h * 0.7 + Math.sin(a) * (w * 0.42));
+                    ctx.lineTo(w / 2 + Math.cos(a) * (w * 0.42), 0);
+                    ctx.stroke();
+                }
+
                 ctx.fillStyle = '#08080a';
                 ctx.fillRect(w * 0.15, h * 0.48, 140, 50);
                 ctx.fillRect(w * 0.28, h * 0.35, 35, 20);
                 ctx.fillRect(w * 0.15, h * 0.38, 40, 30);
+
+                // Locomotive firebox glow underneath cab
+                const fbGlow = ctx.createRadialGradient(w * 0.22, h * 0.68, 2, w * 0.22, h * 0.68, 28);
+                fbGlow.addColorStop(0, 'rgba(255, 120, 20, 0.45)');
+                fbGlow.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = fbGlow;
+                ctx.fillRect(w * 0.15, h * 0.65, 50, 15);
 
                 // Billowing steam locomotive puffs
                 for (let s = 0; s < 4; s++) {
@@ -2382,6 +2603,7 @@
                     ctx.fill();
                 }
 
+                // Station platform & railway tracks
                 ctx.strokeStyle = '#444';
                 ctx.lineWidth = 2;
                 ctx.beginPath();
@@ -2390,6 +2612,20 @@
                 ctx.moveTo(0, h * 0.95);
                 ctx.lineTo(w, h * 0.95);
                 ctx.stroke();
+
+                // Leather travel trunk on boarding platform
+                const trunkX = w * 0.72;
+                const trunkY = h * 0.78;
+                ctx.fillStyle = '#422812';
+                ctx.fillRect(trunkX, trunkY, 32, 18);
+                ctx.strokeStyle = '#201206';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(trunkX, trunkY, 32, 18);
+                // Brass trunk corner straps & lock
+                ctx.fillStyle = '#d4af37';
+                ctx.fillRect(trunkX + 6, trunkY, 3, 18);
+                ctx.fillRect(trunkX + 23, trunkY, 3, 18);
+                ctx.fillRect(trunkX + 14, trunkY + 7, 4, 5);
             }
             ctx.restore();
         }

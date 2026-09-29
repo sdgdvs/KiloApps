@@ -277,6 +277,29 @@ void PlayDramaticChord() {
     SpawnShockwave(200, 90, RGB(212, 175, 55));
 }
 
+void PlaySuccessJingle() {
+    Beep(523, 90);
+    Beep(659, 90);
+    Beep(784, 180);
+    TriggerShake(5.0f);
+    SpawnShockwave(200, 90, RGB(68, 255, 68));
+}
+
+void PlayDefeatSting() {
+    Beep(330, 120);
+    Beep(294, 120);
+    Beep(220, 260);
+    TriggerShake(18.0f);
+    SpawnShockwave(200, 90, RGB(255, 50, 50));
+}
+
+void PlayLieCaughtSting() {
+    Beep(440, 70);
+    Beep(880, 160);
+    TriggerShake(15.0f);
+    SpawnShockwave(200, 90, RGB(255, 60, 60));
+}
+
 void LoadStats() {
     HANDLE hFile = CreateFileA("kmystery_stats.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -1129,6 +1152,21 @@ void DrawLocationSceneGDI(HDC hdc, int locIdx, int w, int h) {
         FillRect(hdc, &rd, hDesk);
         DeleteObject(hDesk);
 
+        // Manila Case File on desk
+        HBRUSH hFolder = CreateSolidBrush(RGB(160, 130, 90));
+        RECT rf = {w / 2 - 20, h * 7 / 10 + 6, w / 2 + 40, h * 7 / 10 + 20};
+        FillRect(hdc, &rf, hFolder);
+        DeleteObject(hFolder);
+
+        // Brass Magnifying Glass on case file
+        HPEN hGoldP = CreatePen(PS_SOLID, 2, RGB(212, 175, 55));
+        HGDIOBJ op = SelectObject(hdc, hGoldP);
+        Ellipse(hdc, w / 2 - 6, h * 7 / 10 + 8, w / 2 + 10, h * 7 / 10 + 24);
+        MoveToEx(hdc, w / 2 + 8, h * 7 / 10 + 20, NULL);
+        LineTo(hdc, w / 2 + 16, h * 7 / 10 + 28);
+        SelectObject(hdc, op);
+        DeleteObject(hGoldP);
+
         // Green Banker's lamp
         int lx = w / 4, ly = h * 7 / 10;
         HBRUSH hLamp = CreateSolidBrush(RGB(26, 94, 42));
@@ -1136,7 +1174,7 @@ void DrawLocationSceneGDI(HDC hdc, int locIdx, int w, int h) {
         Ellipse(hdc, lx - 16, ly - 35, lx + 16, ly - 20);
         DeleteObject(hLamp);
     } else if (locIdx == 1) {
-        // Manor: Gothic roofline and yellow police tape
+        // Manor: Gothic roofline, lit windows, hearth and yellow police tape
         HBRUSH hSky = CreateSolidBrush(RGB(9, 10, 18));
         RECT r = {0, 0, w, h};
         FillRect(hdc, &r, hSky);
@@ -1156,7 +1194,15 @@ void DrawLocationSceneGDI(HDC hdc, int locIdx, int w, int h) {
         HBRUSH hWin = CreateSolidBrush(RGB(243, 207, 88));
         RECT rw1 = {w / 2 - 8, h / 2 - 15, w / 2 + 8, h / 2 + 5};
         FillRect(hdc, &rw1, hWin);
+        RECT rw2 = {w * 3 / 10 - 6, h * 6 / 10 - 10, w * 3 / 10 + 6, h * 6 / 10 + 6};
+        FillRect(hdc, &rw2, hWin);
         DeleteObject(hWin);
+
+        // Warm fireplace hearth glow
+        HBRUSH hHearth = CreateSolidBrush(RGB(240, 110, 30));
+        SelectObject(hdc, hHearth);
+        Ellipse(hdc, w / 2 - 12, h * 7 / 10 - 8, w / 2 + 12, h * 7 / 10 + 8);
+        DeleteObject(hHearth);
 
         // Police tape
         HBRUSH hTape = CreateSolidBrush(RGB(230, 200, 32));
@@ -1167,7 +1213,7 @@ void DrawLocationSceneGDI(HDC hdc, int locIdx, int w, int h) {
         SetBkMode(hdc, TRANSPARENT);
         TextOutA(hdc, 20, h * 4 / 5 - 1, "POLICE LINE DO NOT CROSS - CRIME SCENE", 38);
     } else if (locIdx == 2) {
-        // Docks: Water, pier, lantern
+        // Docks: Water, pier, mooring bollard, lantern
         HBRUSH hSea = CreateSolidBrush(RGB(6, 10, 16));
         RECT r = {0, 0, w, h};
         FillRect(hdc, &r, hSea);
@@ -1178,6 +1224,18 @@ void DrawLocationSceneGDI(HDC hdc, int locIdx, int w, int h) {
         RECT rp = {0, h * 3 / 5, w / 2, h};
         FillRect(hdc, &rp, hPier);
         DeleteObject(hPier);
+
+        // Mooring post with wrapped rope
+        HBRUSH hPost = CreateSolidBrush(RGB(38, 27, 17));
+        RECT rpost = {w * 2 / 5, h * 3 / 5 - 18, w * 2 / 5 + 10, h * 3 / 5 + 6};
+        FillRect(hdc, &rpost, hPost);
+        DeleteObject(hPost);
+        HPEN hRope = CreatePen(PS_SOLID, 2, RGB(194, 166, 110));
+        HGDIOBJ opR = SelectObject(hdc, hRope);
+        MoveToEx(hdc, w * 2 / 5 - 2, h * 3 / 5 - 10, NULL);
+        LineTo(hdc, w * 2 / 5 + 12, h * 3 / 5 - 10);
+        SelectObject(hdc, opR);
+        DeleteObject(hRope);
 
         // Streetlamp
         int lx = w / 3, ly = h * 3 / 5;
@@ -1193,7 +1251,7 @@ void DrawLocationSceneGDI(HDC hdc, int locIdx, int w, int h) {
         Ellipse(hdc, lx - 10, ly - 80, lx + 10, ly - 60);
         DeleteObject(hLight);
     } else if (locIdx == 3) {
-        // Casino: Marquee, green felt roulette
+        // Casino: Marquee, static green felt roulette & chip stacks (Zero traveling dots)
         HBRUSH hCas = CreateSolidBrush(RGB(18, 8, 8));
         RECT r = {0, 0, w, h};
         FillRect(hdc, &r, hCas);
@@ -1203,29 +1261,83 @@ void DrawLocationSceneGDI(HDC hdc, int locIdx, int w, int h) {
         SetBkMode(hdc, TRANSPARENT);
         TextOutA(hdc, w / 2 - 80, 20, "* GOLDEN PALACE CASINO *", 24);
 
-        // Green roulette table
+        // Green roulette table felt
         HBRUSH hFelt = CreateSolidBrush(RGB(15, 56, 30));
         SelectObject(hdc, hFelt);
         Ellipse(hdc, w / 2 - 120, h * 7 / 10, w / 2 + 120, h + 30);
         DeleteObject(hFelt);
+
+        // Mahogany outer bowl rim
+        HBRUSH hBowl = CreateSolidBrush(RGB(58, 26, 8));
+        SelectObject(hdc, hBowl);
+        Ellipse(hdc, w / 2 - 60, h * 7 / 10 + 6, w / 2 + 60, h + 24);
+        DeleteObject(hBowl);
+
+        // Static brass turret hub in center
+        HPEN hTurret = CreatePen(PS_SOLID, 2, RGB(212, 175, 55));
+        HGDIOBJ opT = SelectObject(hdc, hTurret);
+        MoveToEx(hdc, w / 2 - 14, h * 7 / 10 + 15, NULL);
+        LineTo(hdc, w / 2 + 14, h * 7 / 10 + 15);
+        MoveToEx(hdc, w / 2, h * 7 / 10 + 8, NULL);
+        LineTo(hdc, w / 2, h * 7 / 10 + 22);
+        SelectObject(hdc, opT);
+        DeleteObject(hTurret);
+
+        // Clay chip stacks on felt
+        HBRUSH hChipRed = CreateSolidBrush(RGB(180, 30, 40));
+        RECT rc1 = {w / 2 - 95, h * 7 / 10 + 8, w / 2 - 75, h * 7 / 10 + 14};
+        FillRect(hdc, &rc1, hChipRed);
+        RECT rc2 = {w / 2 - 95, h * 7 / 10 + 4, w / 2 - 75, h * 7 / 10 + 8};
+        FillRect(hdc, &rc2, hChipRed);
+        DeleteObject(hChipRed);
+
+        HBRUSH hChipBlue = CreateSolidBrush(RGB(30, 80, 180));
+        RECT rc3 = {w / 2 + 75, h * 7 / 10 + 8, w / 2 + 95, h * 7 / 10 + 14};
+        FillRect(hdc, &rc3, hChipBlue);
+        RECT rc4 = {w / 2 + 75, h * 7 / 10 + 4, w / 2 + 95, h * 7 / 10 + 8};
+        FillRect(hdc, &rc4, hChipBlue);
+        DeleteObject(hChipBlue);
     } else if (locIdx == 4) {
-        // Train Station: Concourse clock & locomotive
+        // Train Station: Concourse iron trusses, clock, luggage trunk & locomotive
         HBRUSH hStn = CreateSolidBrush(RGB(10, 13, 20));
         RECT r = {0, 0, w, h};
         FillRect(hdc, &r, hStn);
         DeleteObject(hStn);
+
+        // Vaulted iron trusses
+        HPEN hTruss = CreatePen(PS_SOLID, 1, RGB(35, 42, 54));
+        HGDIOBJ opTr = SelectObject(hdc, hTruss);
+        for (int tx = 20; tx < w; tx += 60) {
+            MoveToEx(hdc, tx, 0, NULL);
+            LineTo(hdc, tx + 30, h / 2);
+            LineTo(hdc, tx + 60, 0);
+        }
+        SelectObject(hdc, opTr);
+        DeleteObject(hTruss);
 
         // Station Clock
         HBRUSH hClock = CreateSolidBrush(RGB(240, 235, 216));
         SelectObject(hdc, hClock);
         Ellipse(hdc, w / 2 - 20, 20, w / 2 + 20, 60);
         DeleteObject(hClock);
+        HPEN hHands = CreatePen(PS_SOLID, 2, RGB(18, 18, 18));
+        HGDIOBJ opH = SelectObject(hdc, hHands);
+        MoveToEx(hdc, w / 2, 40, NULL); LineTo(hdc, w / 2, 27);
+        MoveToEx(hdc, w / 2, 40, NULL); LineTo(hdc, w / 2 + 9, 44);
+        SelectObject(hdc, opH);
+        DeleteObject(hHands);
 
         // Locomotive engine
         HBRUSH hTrain = CreateSolidBrush(RGB(8, 8, 10));
         RECT rt = {w / 6, h / 2, w * 5 / 6, h};
         FillRect(hdc, &rt, hTrain);
         DeleteObject(hTrain);
+
+        // Leather luggage trunk on platform
+        HBRUSH hTrunk = CreateSolidBrush(RGB(70, 42, 20));
+        RECT rtk = {w * 4 / 5, h * 7 / 10 + 4, w * 4 / 5 + 30, h * 7 / 10 + 22};
+        FillRect(hdc, &rtk, hTrunk);
+        DeleteObject(hTrunk);
     }
 }
 
@@ -1696,10 +1808,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 StartGame(3, 16);
                 RECT r; GetClientRect(hwnd, &r); SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
             } else if (id == ID_BTN_START_MED) {
-                StartGame(4, 12);
+                StartGame(4, 14);
                 RECT r; GetClientRect(hwnd, &r); SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
             } else if (id == ID_BTN_START_HARD) {
-                StartGame(5, 8);
+                StartGame(5, 12);
                 RECT r; GetClientRect(hwnd, &r); SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
             } else if (id == ID_BTN_SEARCH) {
                 SearchLocation(hwnd);
@@ -1756,13 +1868,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (my_strlen(actualClue) == 0) {
                         SetWindowTextA(hIntDesc, "\"That's not a valid clue.\"");
                     } else {
-                        char response[256];
+                        char response[512];
                         int intimidated = 0;
                         if (my_strcmp(actualClue, killerClues[sIdx]) == 0) {
-                            PlayDramaticChord();
+                            PlayLieCaughtSting();
                             suspectMood = 3;
-                            SpawnBurst(200, 90, 35, RGB(255, 60, 60));
-                            my_strcpy(response, "\"Wait, where did you find that?! I... I lost it weeks ago! You can't prove anything!\" (Caught in a lie!)");
+                            SpawnBurst(200, 90, 45, RGB(255, 60, 60));
+                            if (sIdx == 0) my_strcpy(response, "\"Where did you unearth that?! My attorney will have your badge for this unlawful search! ...I lost that cufflink, it proves nothing!\" (Caught in a lie!)");
+                            else if (sIdx == 1) my_strcpy(response, "\"My signature perfume! How dare you rummage through my private dressing room! ...Fine, I was there, but you can't prove murder!\" (Caught in a lie!)");
+                            else if (sIdx == 2) my_strcpy(response, "\"Confound it! That button was torn from my dress tunic! Who authorized this inquiry?! ...Stand at attention, Detective, you have no case!\" (Caught in a lie!)");
+                            else if (sIdx == 3) my_strcpy(response, "\"My silk glove! I... I must have dropped it during evening service... This is preposterous! You know nothing!\" (Caught in a lie!)");
+                            else if (sIdx == 4) my_strcpy(response, "\"Good heavens, my reading spectacles! I was wondering why my vision was so blurred... Wait, this is entrapment! Statistically invalid!\" (Caught in a lie!)");
+                            else my_strcpy(response, "\"Wait, where did you find that?! I... I lost it weeks ago! You can't prove anything!\" (Caught in a lie!)");
                         } else {
                             int isMotive = 0, isWeapon = 0;
                             for (int m=0; m<3; m++) {
@@ -1775,24 +1892,49 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             if (isMotive) {
                                 if (sIdx == currentSolution.killerIdx) {
                                     suspectMood = 1;
-                                    my_strcpy(response, "\"That proves nothing! Anyone could have that motive!\" (They look nervous)");
+                                    if (sIdx == 0) my_strcpy(response, "\"Contracts and ledgers are ruthless, Detective, but that paper trail proves nothing!\" (Nervous sweat)");
+                                    else if (sIdx == 1) my_strcpy(response, "\"Drama is my profession on stage, Detective... but that note was meant to stay confidential!\" (Looking shaken)");
+                                    else if (sIdx == 2) my_strcpy(response, "\"Every campaign requires decisive retribution, but I never wrote such orders!\" (Visibly agitated)");
+                                    else if (sIdx == 3) my_strcpy(response, "\"Thirty years of loyal discretion, Detective... but even saints have their breaking point!\" (Fidgeting nervously)");
+                                    else if (sIdx == 4) my_strcpy(response, "\"A compelling psychological hypothesis, but motive does not equate to commission of the crime!\" (Stammering)");
+                                    else my_strcpy(response, "\"That proves nothing! Anyone could have that motive!\" (They look nervous)");
                                 } else {
                                     suspectMood = 2;
-                                    my_strcpy(response, "\"Shocking, but not my problem.\"");
+                                    if (sIdx == 0) my_strcpy(response, "\"Petty squabbles of the lower classes. Entirely beneath my ledger.\"");
+                                    else if (sIdx == 1) my_strcpy(response, "\"Fascinating melodrama, darling, but I don't read amateur scripts.\"");
+                                    else if (sIdx == 2) my_strcpy(response, "\"Soldiers fight for honor and king, sir! Not for petty civilian grievances.\"");
+                                    else if (sIdx == 3) my_strcpy(response, "\"The family has had secrets for generations. None of them concern me.\"");
+                                    else if (sIdx == 4) my_strcpy(response, "\"An interesting sociological thesis, but quite unrelated to my studies.\"");
+                                    else my_strcpy(response, "\"Shocking, but not my problem.\"");
                                     intimidated = 1;
                                 }
                             } else if (isWeapon) {
                                 if (sIdx == currentSolution.killerIdx) {
                                     suspectMood = 1;
-                                    my_strcpy(response, "\"I've never seen that weapon in my life!\" (They are sweating)");
+                                    if (sIdx == 0) my_strcpy(response, "\"A gentleman settles disputes through banks and courts, not with... with that!\" (Pale and shaking)");
+                                    else if (sIdx == 1) my_strcpy(response, "\"Ugh, what a hideous, bloodied instrument! I could never bear to touch it!\" (Trembling violently)");
+                                    else if (sIdx == 2) my_strcpy(response, "\"A soldier uses standard ordinance! That crude weapon is an insult to ballistics!\" (Veins bulging on temple)");
+                                    else if (sIdx == 3) my_strcpy(response, "\"I scrub floors and polish silver, Detective! I would never handle such violence!\" (Voice cracking)");
+                                    else if (sIdx == 4) my_strcpy(response, "\"The kinetic transfer necessary to inflict blunt trauma exceeds my physical capacity!\" (Sweating profusely)");
+                                    else my_strcpy(response, "\"I've never seen that weapon in my life!\" (They are sweating)");
                                 } else {
                                     suspectMood = 2;
-                                    my_strcpy(response, "\"A gruesome weapon, but I didn't use it.\"");
+                                    if (sIdx == 0) my_strcpy(response, "\"Brutal and uncivilized. Take that repulsive thing away from my sight.\"");
+                                    else if (sIdx == 1) my_strcpy(response, "\"Ugh, far too messy, Detective. I couldn't bear the thought of ruining my satin gloves.\"");
+                                    else if (sIdx == 2) my_strcpy(response, "\"Sloppy civilian work. An undisciplined blow without tactical precision.\"");
+                                    else if (sIdx == 3) my_strcpy(response, "\"Lord have mercy. How dreadfully violent... but I know nothing of it.\"");
+                                    else if (sIdx == 4) my_strcpy(response, "\"A forensic monstrosity. Please remove it before contaminating your sample.\"");
+                                    else my_strcpy(response, "\"A gruesome weapon, but I didn't use it.\"");
                                     intimidated = 1;
                                 }
                             } else {
                                 suspectMood = 2;
-                                my_strcpy(response, "\"That doesn't belong to me.\"");
+                                if (sIdx == 0) my_strcpy(response, "\"Pedestrian junk. I only associate with custom craftsmanship, Detective.\"");
+                                else if (sIdx == 1) my_strcpy(response, "\"Tragic, darling, but totally lacking in taste. It certainly isn't mine.\"");
+                                else if (sIdx == 2) my_strcpy(response, "\"Civilian scrap! Not regulation issue in any civilized theatre of war.\"");
+                                else if (sIdx == 3) my_strcpy(response, "\"I have cleaned every square foot of this estate; that filthy trifle is not mine.\"");
+                                else if (sIdx == 4) my_strcpy(response, "\"A curious artifact, but statistically improbable to belong to me.\"");
+                                else my_strcpy(response, "\"That doesn't belong to me.\"");
                                 intimidated = 1;
                             }
                         }
@@ -1890,7 +2032,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (penaltyFree) statsPerfectSolves++;
                     SaveStats();
                     
-                    PlayDramaticChord();
+                    PlaySuccessJingle();
                     SpawnBurst(200, 90, 80, RGB(212, 175, 55));
                     
                     char msgBuf[512];
@@ -1901,7 +2043,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                     MessageBoxA(hwnd, msgBuf, "You Win!", MB_OK | MB_ICONINFORMATION);
                 } else {
-                    PlayDramaticChord();
+                    PlayDefeatSting();
                     TriggerShake(25.0f);
                     char msgBuf[256];
                     wsprintfA(msgBuf, "Disastrous mistake! The real culprit was %s. The commissioner has revoked your badge. GAME OVER.", suspects[currentSolution.killerIdx]);
