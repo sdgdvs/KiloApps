@@ -340,7 +340,10 @@ void CopyDataToClipboard(HWND hwnd) {
     }
 }
 
+void MarkTutorialSeen(void);
+
 void ShowHelpDialog(HWND hwnd) {
+    MarkTutorialSeen();
     MessageBox(hwnd,
         "KChart Studio - Advanced Data Visualization & Analytics Suite\n\n"
         "QUICK-START TUTORIAL:\n"
@@ -362,12 +365,111 @@ void ShowHelpDialog(HWND hwnd) {
         "  [S]           : Sort Dataset Ascending\n"
         "  [Left]/[Right]: Select / Navigate data point\n"
         "  [Up]/[Down]   : Nudge selected value (+5 / -5)\n"
-        "  [Ctrl+C]      : Copy dataset and summary statistics to Clipboard\n\n"
+        "  [Ctrl+C]      : Copy dataset and summary statistics to Clipboard\n"
+        "  [Esc]         : Deselect current data point\n\n"
         "MOUSE CONTROLS:\n"
         "  - Hover over bars, points, pie slices, radar spokes, or petals for interactive tooltips\n"
         "  - Click toolbar buttons at bottom to switch views & controls",
         "KChart Studio Guide",
         MB_OK | MB_ICONINFORMATION);
+}
+
+BOOL HasSeenTutorial(void) {
+    DWORD attr = GetFileAttributesA("kchart_tutorial.dat");
+    return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+void MarkTutorialSeen(void) {
+    HANDLE hFile = CreateFileA("kchart_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char val = '1';
+        DWORD written = 0;
+        WriteFile(hFile, &val, 1, &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+BOOL HasSavedState(void) {
+    DWORD attr = GetFileAttributesA("kchart_quicksave.dat");
+    return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+BOOL QuickSaveState(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kchart_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        int state[5 + NUM_ITEMS * 2];
+        state[0] = chartMode;
+        state[1] = currentTheme;
+        state[2] = trendMode;
+        state[3] = currentPreset;
+        state[4] = selectedIndex;
+        for (int i = 0; i < NUM_ITEMS; i++) {
+            state[5 + i] = values[i];
+            state[5 + NUM_ITEMS + i] = target[i];
+        }
+        WriteFile(hFile, state, sizeof(state), &written, NULL);
+        CloseHandle(hFile);
+        MarkTutorialSeen();
+        SetStatus("Session QuickSaved to disk [F5]");
+        if (hwnd) InvalidateRect(hwnd, NULL, TRUE);
+        return TRUE;
+    }
+    SetStatus("QuickSave failed: Could not write file.");
+    if (hwnd) InvalidateRect(hwnd, NULL, TRUE);
+    return FALSE;
+}
+
+BOOL QuickLoadState(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kchart_quicksave.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD read = 0;
+        int state[5 + NUM_ITEMS * 2];
+        DWORD sz = sizeof(state);
+        DWORD legacySz = sizeof(int) * (4 + NUM_ITEMS * 2);
+        if (ReadFile(hFile, state, sz, &read, NULL) && (read == sz || read == legacySz)) {
+            chartMode = state[0];
+            if (chartMode < 0 || chartMode >= NUM_MODES) chartMode = 0;
+            currentTheme = state[1];
+            if (currentTheme < 0 || currentTheme >= NUM_THEMES) currentTheme = 0;
+            trendMode = state[2];
+            if (trendMode < 0 || trendMode >= NUM_TRENDS) trendMode = 0;
+            currentPreset = state[3];
+            if (currentPreset < 0 || currentPreset >= NUM_PRESETS) currentPreset = 0;
+            LoadPreset(currentPreset);
+
+            if (read == sz) {
+                selectedIndex = state[4];
+                if (selectedIndex < 0 || selectedIndex >= NUM_ITEMS) selectedIndex = 0;
+                for (int i = 0; i < NUM_ITEMS; i++) {
+                    values[i] = state[5 + i];
+                    target[i] = state[5 + NUM_ITEMS + i];
+                    if (values[i] < 0) values[i] = 0;
+                    if (target[i] < 0) target[i] = 0;
+                }
+            } else {
+                for (int i = 0; i < NUM_ITEMS; i++) {
+                    values[i] = state[4 + i];
+                    target[i] = state[4 + NUM_ITEMS + i];
+                    if (values[i] < 0) values[i] = 0;
+                    if (target[i] < 0) target[i] = 0;
+                }
+            }
+            CalculateStats();
+            MarkTutorialSeen();
+            SetStatus("Session QuickLoaded from disk [F9]");
+            if (hwnd) InvalidateRect(hwnd, NULL, TRUE);
+            CloseHandle(hFile);
+            return TRUE;
+        }
+        CloseHandle(hFile);
+        SetStatus("QuickLoad failed: Corrupt save file.");
+        if (hwnd) InvalidateRect(hwnd, NULL, TRUE);
+        return FALSE;
+    }
+    SetStatus("No QuickSave found. Press F5 to save!");
+    if (hwnd) InvalidateRect(hwnd, NULL, TRUE);
+    return FALSE;
 }
 
 void LayoutButtons(HWND hwnd) {
@@ -656,47 +758,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetStatus(buf);
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == VK_F5) {
-                HANDLE hFile = CreateFileA("kchart_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-                if (hFile != INVALID_HANDLE_VALUE) {
-                    DWORD written = 0;
-                    int state[4 + NUM_ITEMS * 2];
-                    state[0] = chartMode;
-                    state[1] = currentTheme;
-                    state[2] = trendMode;
-                    state[3] = currentPreset;
-                    for (int i = 0; i < NUM_ITEMS; i++) {
-                        state[4 + i] = values[i];
-                        state[4 + NUM_ITEMS + i] = target[i];
-                    }
-                    WriteFile(hFile, state, sizeof(state), &written, NULL);
-                    CloseHandle(hFile);
-                    SetStatus("Session QuickSaved [F5]");
-                    InvalidateRect(hwnd, NULL, TRUE);
-                }
+                QuickSaveState(hwnd);
             } else if (wParam == VK_F9) {
-                HANDLE hFile = CreateFileA("kchart_quicksave.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-                if (hFile != INVALID_HANDLE_VALUE) {
-                    DWORD read = 0;
-                    int state[4 + NUM_ITEMS * 2];
-                    if (ReadFile(hFile, state, sizeof(state), &read, NULL) && read == sizeof(state)) {
-                        chartMode = state[0] % NUM_MODES;
-                        currentTheme = state[1] % NUM_THEMES;
-                        trendMode = state[2] % NUM_TRENDS;
-                        currentPreset = state[3] % NUM_PRESETS;
-                        LoadPreset(currentPreset);
-                        for (int i = 0; i < NUM_ITEMS; i++) {
-                            values[i] = state[4 + i];
-                            target[i] = state[4 + NUM_ITEMS + i];
-                        }
-                        CalculateStats();
-                        SetStatus("Session QuickLoaded [F9]");
-                        InvalidateRect(hwnd, NULL, TRUE);
-                    }
-                    CloseHandle(hFile);
-                } else {
-                    SetStatus("No QuickSave found. Press F5 to save!");
-                    InvalidateRect(hwnd, NULL, TRUE);
-                }
+                QuickLoadState(hwnd);
+            } else if (wParam == VK_ESCAPE) {
+                hoveredIndex = -1;
+                InvalidateRect(hwnd, NULL, TRUE);
             }
             break;
         }
@@ -1530,6 +1597,17 @@ void MainEntry() {
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+
+    // Pass 5 First-run Tutorial Integrity & Saved State Startup Check
+    if (HasSavedState()) {
+        QuickLoadState(hwnd);
+        SetStatus("Restored saved session [F9] | Press F1 for Help");
+        MarkTutorialSeen();
+    } else if (!HasSeenTutorial()) {
+        ShowHelpDialog(hwnd);
+        MarkTutorialSeen();
+        SetStatus("Welcome to KChart Studio! Press F1 for Help | F5 Save");
+    }
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {

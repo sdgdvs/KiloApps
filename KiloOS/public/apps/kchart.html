@@ -386,13 +386,15 @@
     color: #ffffff;
   }
 
-  /* Toast Notification System (Anchored Bottom-Right to Prevent Occlusion) */
+  /* Toast Notification System (Centered Bottom to Prevent Occlusion of Inputs & Drop Zone) */
   #toastContainer {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     flex-direction: column-reverse;
+    align-items: center;
     gap: 8px;
     z-index: 9999;
     pointer-events: none;
@@ -788,10 +790,13 @@
         </table>
       </div>
     </div>
+    <div class="modal-footer" style="padding: 10px 18px; border-top: 1px solid var(--card-border); display: flex; justify-content: flex-end; gap: 8px; background: rgba(0,0,0,0.3); border-radius: 0 0 10px 10px;">
+      <button class="btn" id="btnModalGotIt" style="background: var(--accent); color: #fff; font-weight: 600; padding: 6px 16px; border-radius: 6px; border: none; cursor: pointer;">Got It / Close [Enter / Esc]</button>
+    </div>
   </div>
 </div>
 
-<!-- Toast Notifications (Bottom-Right Anchor) -->
+<!-- Toast Notifications (Centered Bottom Anchor) -->
 <div id="toastContainer" aria-live="polite"></div>
 
 <script>
@@ -896,6 +901,7 @@
   // Sonification playhead state
   let isSonifying = false;
   let sonifyPlayheadIndex = -1;
+  let sonifyInterval = null;
 
   // DOM Elements
   const canvas = document.getElementById('chartCanvas');
@@ -1002,20 +1008,32 @@
     }
   }
 
-  // Data Sonification Sweep
+  // Data Sonification Sweep Lifecycle
+  function stopSonification(silent = false) {
+    if (sonifyInterval) {
+      clearInterval(sonifyInterval);
+      sonifyInterval = null;
+    }
+    const wasRunning = isSonifying;
+    isSonifying = false;
+    sonifyPlayheadIndex = -1;
+    renderChart();
+    if (wasRunning && !silent) {
+      showToast("Sonification stopped.", "info", "⏹️");
+    }
+  }
+
   function sonifyDataset() {
     if (data.length === 0) {
       showToast("No data to sonify.", "warning", "⚠️");
       return;
     }
     if (isSonifying) {
-      isSonifying = false;
-      sonifyPlayheadIndex = -1;
-      renderChart();
-      showToast("Sonification stopped.", "info", "⏹️");
+      stopSonification();
       return;
     }
 
+    stopSonification(true);
     initAudio();
     isSonifying = true;
     showToast(`Sonifying dataset (${data.length} pts) via YM2612 FM Synth...`, 'info', '🎵');
@@ -1029,9 +1047,12 @@
     const scale = [196.00, 220.00, 261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00];
 
     let i = 0;
-    const interval = setInterval(() => {
+    sonifyInterval = setInterval(() => {
       if (!isSonifying || i >= data.length) {
-        clearInterval(interval);
+        if (sonifyInterval) {
+          clearInterval(sonifyInterval);
+          sonifyInterval = null;
+        }
         isSonifying = false;
         sonifyPlayheadIndex = -1;
         renderChart();
@@ -2469,13 +2490,23 @@
   // ==========================================
   const helpModal = document.getElementById('helpModal');
   const btnCloseHelp = document.getElementById('btnCloseHelp');
+  const btnModalGotIt = document.getElementById('btnModalGotIt');
 
   function openHelpModal() {
-    if (helpModal) helpModal.classList.add('open');
+    if (helpModal) {
+      helpModal.classList.add('open');
+      if (btnModalGotIt) btnModalGotIt.focus();
+      else if (btnCloseHelp) btnCloseHelp.focus();
+    }
   }
 
   function closeHelpModal() {
-    if (helpModal) helpModal.classList.remove('open');
+    if (helpModal) {
+      helpModal.classList.remove('open');
+      try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch (e) {}
+      const btnHelp = document.getElementById('btnHelp');
+      if (btnHelp) btnHelp.focus();
+    }
   }
 
   function toggleHelpModal() {
@@ -2484,6 +2515,7 @@
   }
 
   if (btnCloseHelp) btnCloseHelp.onclick = closeHelpModal;
+  if (btnModalGotIt) btnModalGotIt.onclick = closeHelpModal;
   if (helpModal) {
     helpModal.onclick = (e) => {
       if (e.target === helpModal) closeHelpModal();
@@ -2521,6 +2553,10 @@
         }
         if (state.chartType) {
           chartType = state.chartType;
+          document.querySelectorAll('#chartTypeGroup button').forEach(b => {
+            if (b.dataset.type === chartType) b.classList.add('active');
+            else b.classList.remove('active');
+          });
         }
         if (state.currentTheme && THEMES[state.currentTheme]) {
           currentTheme = state.currentTheme;
@@ -2529,6 +2565,10 @@
         }
         if (state.trendMode) {
           trendMode = state.trendMode;
+          document.querySelectorAll('#trendGroup button').forEach(b => {
+            if (b.dataset.trend === trendMode) b.classList.add('active');
+            else b.classList.remove('active');
+          });
         }
         if (state.targetEnabled !== undefined) {
           targetEnabled = !!state.targetEnabled;
@@ -2558,6 +2598,7 @@
         targetValue
       };
       localStorage.setItem(QUICKSAVE_KEY, JSON.stringify(snapshot));
+      try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch (e) {}
       playSfx('click');
       showToast(`QuickSaved ${data.length} points to session [F5]`, 'success', '💾');
     } catch (e) {
@@ -2574,6 +2615,7 @@
       }
       const snapshot = JSON.parse(raw);
       if (Array.isArray(snapshot.data)) {
+        stopSonification(true);
         pushUndo();
         data = snapshot.data;
         if (snapshot.chartType) setChartType(snapshot.chartType, true);
@@ -2593,6 +2635,7 @@
           const numT = document.getElementById('numTargetVal');
           if (numT) numT.value = targetValue;
         }
+        try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch (e) {}
         updateAll();
         playSfx('mode');
         const timeStr = snapshot.timestamp ? new Date(snapshot.timestamp).toLocaleTimeString() : '';
@@ -3331,7 +3374,7 @@
   });
 
   // Init
-  loadSavedState();
+  const stateRestored = loadSavedState();
   resizeCanvas();
   updateAll();
 
@@ -3339,17 +3382,19 @@
     new ResizeObserver(() => resizeCanvas()).observe(canvas.parentElement);
   }
 
-  // Startup tutorial onboarding check
+  // Startup tutorial onboarding check (Pass 5 Integrity Guard)
   const seenTutorial = localStorage.getItem(TUTORIAL_KEY);
-  if (!seenTutorial) {
+  const hasSavedSnapshot = !!localStorage.getItem(QUICKSAVE_KEY);
+  if (!seenTutorial && !stateRestored && !hasSavedSnapshot) {
     localStorage.setItem(TUTORIAL_KEY, '1');
     setTimeout(() => {
       openHelpModal();
       showToast("Welcome to KChart Studio! Review user guide & shortcuts.", "info", "📊");
     }, 400);
   } else {
+    if (!seenTutorial) localStorage.setItem(TUTORIAL_KEY, '1');
     setTimeout(() => {
-      showToast("Welcome to KChart Studio! Press F1 for Help.", "info", "📊");
+      showToast(stateRestored ? "Restored saved workspace session! Press F1 for Help." : "Welcome to KChart Studio! Press F1 for Help.", "info", "📊");
     }, 350);
   }
 </script>

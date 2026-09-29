@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T03:30:00Z — kilo-expander: KGraph (YM2612 Curve Sonification, Simpson/Riemann Calculus Suite, Tangent/Normal Overlay & SVG Export)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
+  - Calculus Engine: Added Simpson's definite integral with hatched shading, Riemann sums suite (4 methods, N=2..64), and degree-5 Taylor polynomials.
+  - Geometry & Overlays: Added instantaneous Tangent & Normal lines with slope/angle display, roots markers, and intersections markers.
+  - Audio Architecture: Added Sega Genesis YM2612 2-Op FM synthesis & SNES SPC700 stereo delay sonification scanner in Web and native PCM worker thread.
+  - Export & Presets: Added SVG vector export, CSV data export, JSON import/export, and expanded presets bank across Cartesian, Polar, and Parametric.
+  - Verification: MSVC clean (`KGraph.exe` 33.8 KB); Vite clean in 316ms (`kgraph.html` 126.1 KB < 999 KB); icon & security lints 100% PASS.
+
 - **2026-09-29T18:05:00Z — kilo-planner: 24h Fleet Planning, Queue Health & Icon Audit**
   - Status: PASS ✅ (104 apps audited, 0 duplicates, 0 regressions, all queues balanced).
   - Velocity & Health: Assessed 16 runs across 6 skills in past 24h; 100% pass rate; ~1.5h cadence.

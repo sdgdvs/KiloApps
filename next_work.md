@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KDB
   kilo_usability: KSys
   kilo_graphics: KWizard
-  kilo_qa: KChart
+  kilo_qa: KGraph
   kilo_expander: KMandel
   kilo_creator: "kweb://geocities (CyberSpire's Retro Shrine & MOD Vault)"
 virtual_web_target: "kweb://geocities"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KMystery
-  timestamp: "2026-09-29T18:30:00Z"
+  agent: kilo-qa
+  app: KChart
+  timestamp: "2026-09-29T18:46:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KChart`
+- **Current Target**: `KGraph`
 - **Upcoming Queue**:
-  `KGraph`, `KContacts`, `KScript`, `KRead`, `KColosseum`, `KAbyss`, `KMedia`, `KAudio`, `KCosmic` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048)*.
+  `KContacts`, `KScript`, `KRead`, `KColosseum`, `KAbyss`, `KMedia`, `KAudio`, `KCosmic` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KMandel`
@@ -245,6 +245,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T18:46:00Z — kilo-qa: KChart (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & Toast Guard)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
+  - State Persistence: Hardened F5 quicksave / F9 quickload across Web & Win32 C (`kchart_quicksave.dat`); added selectedIndex and bounds checks.
+  - Tutorial Integrity: Added `HasSeenTutorial` / `kchart_tutorial.dat` flag in native C; guarded startup check to never interrupt restored saves.
+  - Toast & Modal Usability: Centered toasts bottom-screen to prevent control occlusion; added Got It action button & focus guard to help modal.
+  - Audio & Interval Safety: Sealed sonification playhead lifecycle (`stopSonification`); guaranteed zero leaking timers on data mutations.
+  - Verification: MSVC clean (`KChart.exe` 36.8 KB); Vite clean in 278ms (`kchart.html` 118.7 KB < 999 KB); icon & security lints 100% PASS.
+
 - **2026-09-29T18:30:00Z — kilo-graphics: KMystery (Visual Polish, Casino Dot Removal, Audio Architecture & Dialogue Expansion)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
   - Perimeter Dot Removal: Removed rotating ball and spinning spokes from Casino roulette wheel; replaced with static Art Deco mahogany table, numbered pockets, chip stacks & cards.
@@ -277,11 +285,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Webring Widgets & Passport: Added 8 official HTML widget styles, dynamic Web Voyager ranks & 5-category postal stamp collection book.
   - Audio Architecture: Dual Sega Genesis YM2612 FM tracks ("Hyperlink Voyager '99", "Ringmaster's Cadence") with SNES SPC700 stereo delay.
   - Verification: Vite build clean (278ms); `webring.html` 151.4 KB (<999KB ceiling); check_icons & security lint 100% PASS.
-
-- **2026-09-29T03:30:00Z — kilo-expander: KGraph (YM2612 Curve Sonification, Simpson/Riemann Calculus Suite, Tangent/Normal Overlay & SVG Export)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
-  - Calculus Engine: Added Simpson's definite integral with hatched shading, Riemann sums suite (4 methods, N=2..64), and degree-5 Taylor polynomials.
-  - Geometry & Overlays: Added instantaneous Tangent & Normal lines with slope/angle display, roots markers, and intersections markers.
-  - Audio Architecture: Added Sega Genesis YM2612 2-Op FM synthesis & SNES SPC700 stereo delay sonification scanner in Web and native PCM worker thread.
-  - Export & Presets: Added SVG vector export, CSV data export, JSON import/export, and expanded presets bank across Cartesian, Polar, and Parametric.
-  - Verification: MSVC clean (`KGraph.exe` 33.8 KB); Vite clean in 316ms (`kgraph.html` 126.1 KB < 999 KB); icon & security lints 100% PASS.
