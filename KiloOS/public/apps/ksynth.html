@@ -36,8 +36,8 @@
     height: 100vh;
     overflow-y: auto;
     overflow-x: hidden;
-    padding: 12px;
-    gap: 10px;
+    padding: 8px 12px;
+    gap: 8px;
   }
 
   /* Header Bar */
@@ -45,11 +45,13 @@
     background: var(--panel-bg);
     border: 1px solid var(--panel-border);
     border-radius: 8px;
-    padding: 8px 16px;
+    padding: 6px 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   .brand {
@@ -70,9 +72,9 @@
     font-size: 16px;
   }
   .brand-title {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
-    letter-spacing: 1px;
+    letter-spacing: 0.8px;
     background: linear-gradient(90deg, var(--accent-cyan), #ffffff);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -81,28 +83,38 @@
   .header-actions {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 5px;
+    flex-wrap: wrap;
   }
 
   .btn {
     background: #222734;
     color: var(--text-main);
     border: 1px solid var(--panel-border);
-    padding: 6px 12px;
+    padding: 5px 9px;
     border-radius: 5px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
+    white-space: nowrap;
   }
   .btn:hover {
     background: #2c3344;
     border-color: var(--accent-cyan);
     color: #fff;
     box-shadow: 0 0 8px rgba(0, 243, 255, 0.3);
+  }
+  #btnHelp {
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+  }
+  #btnHelp:hover {
+    background: rgba(0, 243, 255, 0.15);
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.4);
   }
   .btn-primary {
     background: linear-gradient(135deg, #0077b6, #00b4d8);
@@ -136,16 +148,16 @@
   .quick-starter-bar {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     background: var(--panel-bg);
     border: 1px solid var(--panel-border);
     border-radius: 8px;
-    padding: 6px 12px;
+    padding: 5px 10px;
     flex-wrap: wrap;
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   }
   .quick-chip {
-    padding: 3px 8px;
+    padding: 2px 7px;
     font-size: 11px;
     border-radius: 4px;
     background: #1e2330;
@@ -166,21 +178,21 @@
     display: grid;
     grid-template-columns: 2.2fr 1.8fr;
     grid-template-rows: auto auto 1fr;
-    gap: 10px;
+    gap: 8px;
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
-    padding-bottom: 6px;
+    padding-bottom: 4px;
   }
 
   .panel {
     background: var(--panel-bg);
     border: 1px solid var(--panel-border);
     border-radius: 8px;
-    padding: 10px 14px;
+    padding: 8px 12px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     position: relative;
   }
@@ -251,7 +263,7 @@
     position: relative;
     width: 100%;
     height: 100%;
-    min-height: 130px;
+    min-height: 115px;
     background: #090b0f;
     border-radius: 6px;
     border: 1px solid #1c2230;
@@ -304,12 +316,12 @@
     background: #1e2330;
     border: 1px solid #2a3144;
     border-radius: 4px;
-    height: 55px;
+    height: 48px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
-    padding: 4px 2px;
+    padding: 3px 2px;
     cursor: pointer;
     transition: all 0.15s;
   }
@@ -358,7 +370,7 @@
   }
   .piano-container {
     position: relative;
-    height: 100px;
+    height: 88px;
     width: 100%;
     display: flex;
     background: #111;
@@ -413,24 +425,25 @@
     pointer-events: none;
   }
 
-  /* Toast Notifications (Anchored Top-Right to prevent keyboard/seq occlusion) */
+  /* Toast Notifications (Anchored Safely Above Keyboard / Non-Occluding) */
   #toastContainer {
     position: fixed;
-    top: 14px;
+    bottom: 114px;
     right: 20px;
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    z-index: 10000;
+    flex-direction: column-reverse;
+    gap: 6px;
+    z-index: 9000;
     pointer-events: none;
+    max-width: 380px;
   }
   .toast {
-    background: #161922;
+    background: rgba(22, 25, 34, 0.95);
     border: 1px solid var(--accent-cyan);
     color: var(--text-main);
-    padding: 9px 15px;
+    padding: 7px 12px;
     border-radius: 6px;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     box-shadow: 0 4px 16px rgba(0,0,0,0.6);
     display: flex;
@@ -438,8 +451,9 @@
     gap: 8px;
     pointer-events: auto;
     cursor: pointer;
+    backdrop-filter: blur(4px);
     animation: toastSlideIn 0.25s ease-out forwards;
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    transition: opacity 0.25s ease, transform 0.25s ease;
   }
   .toast:hover {
     filter: brightness(1.15);
@@ -458,7 +472,7 @@
   .toast.error { border-color: var(--accent-pink); }
   .toast.info { border-color: var(--accent-cyan); }
   @keyframes toastSlideIn {
-    from { opacity: 0; transform: translateY(-10px); }
+    from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
@@ -467,10 +481,10 @@
     background: #141824;
     border: 1px solid #232b3c;
     border-radius: 8px;
-    padding: 8px 12px;
+    padding: 6px 10px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.35);
   }
   .jam-status-badge {
@@ -545,10 +559,10 @@
   }
 </style>
 </head>
-<body data-width="980" data-height="820" role="application">
+<body data-width="1040" data-height="860" role="application">
   <div id="toastContainer" aria-live="polite"></div>
 
-  <div id="helpModal" role="dialog" aria-modal="true" aria-label="KSynth Workstation Pro Guide" onclick="if(event.target===this) toggleHelp(false)" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; justify-content:center; align-items:center; flex-direction:column; color:#fff; backdrop-filter:blur(3px);">
+  <div id="helpModal" role="dialog" aria-modal="true" aria-label="KSynth Workstation Pro Guide" onclick="if(event.target===this) toggleHelp(false)" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10002; justify-content:center; align-items:center; flex-direction:column; color:#fff; backdrop-filter:blur(3px);">
     <div style="background:#161922; border:1px solid var(--accent-cyan); padding:22px; border-radius:10px; max-width:540px; width:92%; box-shadow:0 10px 30px rgba(0,243,255,0.25);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px;">
         <h2 style="color:var(--accent-cyan); font-size:17px; display:flex; align-items:center; gap:8px;">
@@ -610,7 +624,7 @@
     </div>
     
     <div class="header-actions">
-      <label for="presetSelect" style="font-size:12px; color:var(--text-muted); font-weight:600;">PRESET [1-9]:</label>
+      <label for="presetSelect" style="font-size:11px; color:var(--text-muted); font-weight:600;">PRESET [1-9]:</label>
       <select id="presetSelect" aria-label="Synthesizer Patch Preset">
         <option value="lead">1: Neon Lead</option>
         <option value="bass">2: Sub Punch Bass</option>
@@ -624,14 +638,14 @@
         <option value="custom" disabled hidden>Custom Patch</option>
       </select>
       
-      <button id="btnQuickSave" class="btn" title="Quicksave Synth State to Local Storage [F5]">💾 Quicksave [F5]</button>
-      <button id="btnQuickLoad" class="btn" title="Quickload Saved State [F9]">📂 Quickload [F9]</button>
+      <button id="btnQuickSave" class="btn" title="Quicksave Synth State to Local Storage [F5]">💾 Q.Save [F5]</button>
+      <button id="btnQuickLoad" class="btn" title="Quickload Saved State [F9]">📂 Q.Load [F9]</button>
 
-      <button id="btnSavePreset" class="btn" title="Export Synth Preset as JSON [Ctrl+S]">💾 Save [Ctrl+S]</button>
-      <button id="btnLoadPreset" class="btn" title="Import Synth Preset JSON [Ctrl+O]">📂 Load [Ctrl+O]</button>
+      <button id="btnSavePreset" class="btn" title="Export Synth Preset as JSON [Ctrl+S]">💾 Patch [^S]</button>
+      <button id="btnLoadPreset" class="btn" title="Import Synth Preset JSON [Ctrl+O]">📂 Patch [^O]</button>
       <input type="file" id="presetFileInput" accept=".json" style="display:none;">
 
-      <button id="btnExportWav" class="btn" title="Export Synth Audio Preview to WAV [Ctrl+E]">🔊 WAV [Ctrl+E]</button>
+      <button id="btnExportWav" class="btn" title="Export Synth Audio Preview to WAV [Ctrl+E]">🔊 WAV [^E]</button>
 
       <button id="btnExportSeq" class="btn" title="Export Sequencer Pattern">🎵 Seq Out</button>
       <button id="btnImportSeq" class="btn" title="Import Sequencer Pattern">📥 Seq In</button>
@@ -828,9 +842,9 @@
           <label>Delay Mix <span class="val" id="delayMixVal">0.50</span></label>
           <input type="range" id="delayMix" min="0" max="1" value="0.5" step="0.01">
         </div>
-        <div class="control-group" style="min-width: 90px;">
+        <div class="control-group" style="min-width: 145px; flex: 1.2;">
           <label>Delay Echo Mode</label>
-          <select id="delayEchoMode">
+          <select id="delayEchoMode" style="width: 100%;">
             <option value="mono">Standard Mono</option>
             <option value="spc700">SPC700 Stereo Ping-Pong</option>
           </select>
@@ -984,6 +998,9 @@
   function showToast(message, type = 'info', duration = 3200) {
     const container = document.getElementById('toastContainer');
     if (!container) return;
+    if (container.children.length >= 3) {
+      container.firstElementChild.remove();
+    }
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     let icon = 'ℹ️';
@@ -996,7 +1013,7 @@
       if (isRemoved) return;
       isRemoved = true;
       toast.style.opacity = '0';
-      toast.style.transform = 'translateY(12px)';
+      toast.style.transform = 'translateY(10px)';
       setTimeout(() => toast.remove(), 250);
     };
     toast.onclick = dismiss;
@@ -1039,7 +1056,6 @@
     if (!seen) {
       setTimeout(() => {
         toggleHelp(true);
-        showToast("🎹 Welcome to KSynth Workstation Pro! Review keyboard controls & quickstart guide below.", "info", 5000);
       }, 350);
     } else {
       setTimeout(() => {
@@ -1655,47 +1671,92 @@
   const adsrCtx = adsrCanvas.getContext('2d');
 
   function drawADSR() {
+    if (!adsrCanvas || !adsrCtx) return;
     const dpr = window.devicePixelRatio || 1;
-    adsrCanvas.width = adsrCanvas.clientWidth * dpr;
-    adsrCanvas.height = adsrCanvas.clientHeight * dpr;
+    const rect = adsrCanvas.getBoundingClientRect();
+    const w = Math.round(rect.width || adsrCanvas.clientWidth || 320);
+    const h = Math.round(rect.height || adsrCanvas.clientHeight || 45);
+    if (w <= 0 || h <= 0) return;
+
+    const targetW = Math.floor(w * dpr);
+    const targetH = Math.floor(h * dpr);
+    if (adsrCanvas.width !== targetW || adsrCanvas.height !== targetH) {
+      adsrCanvas.width = targetW;
+      adsrCanvas.height = targetH;
+    }
     adsrCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const w = adsrCanvas.clientWidth;
-    const h = adsrCanvas.clientHeight;
 
     adsrCtx.clearRect(0, 0, w, h);
 
-    const a = parseFloat(document.getElementById('attack').value);
-    const d = parseFloat(document.getElementById('decay').value);
-    const s = parseFloat(document.getElementById('sustain').value);
-    const r = parseFloat(document.getElementById('release').value);
+    // Subtle background grid
+    adsrCtx.strokeStyle = 'rgba(255, 255, 255, 0.04)';
+    adsrCtx.lineWidth = 1;
+    for (let x = 0; x < w; x += 30) {
+      adsrCtx.beginPath(); adsrCtx.moveTo(x, 0); adsrCtx.lineTo(x, h); adsrCtx.stroke();
+    }
 
-    const totalT = a + d + 0.5 + r;
-    const xA = (a / totalT) * w;
-    const xD = ((a + d) / totalT) * w;
-    const xS = ((a + d + 0.5) / totalT) * w;
-    const xR = w;
+    const aInput = document.getElementById('attack');
+    const dInput = document.getElementById('decay');
+    const sInput = document.getElementById('sustain');
+    const rInput = document.getElementById('release');
+
+    const a = aInput ? parseFloat(aInput.value) : 0.05;
+    const d = dInput ? parseFloat(dInput.value) : 0.20;
+    const s = sInput ? parseFloat(sInput.value) : 0.60;
+    const r = rInput ? parseFloat(rInput.value) : 0.40;
+
+    const totalT = Math.max(0.1, a + d + 0.5 + r);
+    const pad = 6;
+    const availW = w - pad * 2;
+    const xA = pad + (a / totalT) * availW;
+    const xD = pad + ((a + d) / totalT) * availW;
+    const xS = pad + ((a + d + 0.5) / totalT) * availW;
+    const xR = pad + availW;
 
     const yPeak = 5;
-    const ySustain = h - (s * (h - 10)) - 5;
+    const ySustain = Math.max(yPeak, Math.min(h - 5, h - (s * (h - 12)) - 5));
     const yZero = h - 5;
 
+    // Fill curve
     adsrCtx.beginPath();
-    adsrCtx.moveTo(0, yZero);
+    adsrCtx.moveTo(pad, yZero);
     adsrCtx.lineTo(xA, yPeak);
     adsrCtx.lineTo(xD, ySustain);
     adsrCtx.lineTo(xS, ySustain);
     adsrCtx.lineTo(xR, yZero);
+    adsrCtx.lineTo(pad, yZero);
+    adsrCtx.fillStyle = 'rgba(0, 243, 255, 0.18)';
+    adsrCtx.fill();
 
+    // Outline
+    adsrCtx.beginPath();
+    adsrCtx.moveTo(pad, yZero);
+    adsrCtx.lineTo(xA, yPeak);
+    adsrCtx.lineTo(xD, ySustain);
+    adsrCtx.lineTo(xS, ySustain);
+    adsrCtx.lineTo(xR, yZero);
     adsrCtx.strokeStyle = '#00f3ff';
     adsrCtx.lineWidth = 2;
     adsrCtx.stroke();
 
-    adsrCtx.fillStyle = 'rgba(0, 243, 255, 0.15)';
-    adsrCtx.lineTo(0, yZero);
-    adsrCtx.fill();
+    // Key stage dots
+    const dots = [
+      [xA, yPeak, '#ff007f'],
+      [xD, ySustain, '#00f3ff'],
+      [xS, ySustain, '#02c39a'],
+      [xR, yZero, '#ffb703']
+    ];
+    for (const [dx, dy, color] of dots) {
+      adsrCtx.beginPath();
+      adsrCtx.arc(dx, dy, 2.5, 0, Math.PI * 2);
+      adsrCtx.fillStyle = color;
+      adsrCtx.fill();
+    }
   }
   window.addEventListener('resize', drawADSR);
-  setTimeout(drawADSR, 100);
+  requestAnimationFrame(drawADSR);
+  setTimeout(drawADSR, 50);
+  setTimeout(drawADSR, 200);
 
   // ----------------------------------------------------
   // Oscilloscope & Spectrum Visualizer Canvas
@@ -1719,13 +1780,20 @@
 
   function renderVisualizer() {
     requestAnimationFrame(renderVisualizer);
-    if (!scopeCanvas.clientWidth) return;
+    if (!scopeCanvas) return;
     const dpr = window.devicePixelRatio || 1;
-    scopeCanvas.width = scopeCanvas.clientWidth * dpr;
-    scopeCanvas.height = scopeCanvas.clientHeight * dpr;
+    const rect = scopeCanvas.getBoundingClientRect();
+    const w = Math.round(rect.width || scopeCanvas.clientWidth || 300);
+    const h = Math.round(rect.height || scopeCanvas.clientHeight || 115);
+    if (w <= 0 || h <= 0) return;
+
+    const targetW = Math.floor(w * dpr);
+    const targetH = Math.floor(h * dpr);
+    if (scopeCanvas.width !== targetW || scopeCanvas.height !== targetH) {
+      scopeCanvas.width = targetW;
+      scopeCanvas.height = targetH;
+    }
     scopeCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const w = scopeCanvas.clientWidth;
-    const h = scopeCanvas.clientHeight;
 
     scopeCtx.fillStyle = '#090b0f';
     scopeCtx.fillRect(0, 0, w, h);
@@ -2287,7 +2355,6 @@
     if (e.altKey) return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
 
-    const hm = document.getElementById('helpModal');
     if (hm && hm.style.display !== 'none') return;
 
     if (e.key === 'ArrowUp') {

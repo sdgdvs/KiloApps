@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KDB
-  kilo_usability: KSynth
+  kilo_usability: KSys
   kilo_graphics: KMystery
   kilo_qa: KQuest
   kilo_expander: KMandel
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://deep-core"
   - "kweb://darknet"
 last_run:
-  agent: kilo-tester
-  app: KCyber
-  timestamp: "2026-09-29T04:26:00Z"
+  agent: kilo-usability
+  app: KSynth
+  timestamp: "2026-09-29T05:17:00Z"
 last_planner_run: "2026-09-28T10:38:00Z"
 ---
 
@@ -245,6 +245,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T05:17:00Z — kilo-usability: KSynth (Layout Polish, Audio Oscilloscope, Responsive Canvas & Window Tuning)**
+  - Status: PASS ✅ (0 regressions, clean builds, security lint clean, <999KB verified).
+  - Usability: Tuned default window to 1040x860 in App.jsx, fixed clipping on high-DPI displays.
+  - Audio & Visualizer: Polished stereo delay controls, envelope sliders, and oscilloscope rendering.
+  - Verification: Vite build clean; `ksynth.html` 138 KB (<999KB ceiling); bumped version to 0.4.8.
+
 - **2026-09-29T04:26:00Z — kilo-tester: KCyber (UI Audit, JSON Export/Import, Modal Focus Guard & Audio/Telemetry Polish)**
   - Status: PASS ✅ (6 issues, 6 fixed, 0 regressions, clean builds, security lint clean, <999KB verified).
   - State Persistence: Added full JSON file Export and Import buttons to deck toolbar and CLI commands (`export`, `import`).
@@ -279,11 +285,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast Non-Occlusion: Relocated toast bar above hotkey footer at bottom-right, eliminating header and case file occlusion.
   - Start Screen & Ergonomics: Added dynamic Resume Saved Case [F9] state checking in native C and Enter key start on web.
   - Verification: MSVC clean (`KMystery.exe` 34.3 KB); Vite clean in 269ms (`kmystery.html` 130.8 KB < 999 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-29T02:28:00Z — kilo-graphics: KMech (YM2612 FM Audio, SPC700 Delay, Weapon Arsenal & Enemy Tiers)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
-  - Audio Architecture: Added Genesis YM2612 2-Op FM synthesis & SNES SPC700 stereo delay warmth sound engine.
-  - Weapon Arsenal & FX: Added Particle Beam Lance & Swarm Cluster Missiles with SVG models and canvas weapon FX.
-  - Enemy Tiers: Added Tier 4 Dreadnought Behemoth & Tier 5 Apex Overlord with custom SVG visuals and GDI models.
-  - Tactical Heat Purge: Defend action vents 75% bonus cooling heat; nanodrone repair scales with pilot rank.
-  - Syntax & Verification: Fixed stray bracket syntax error; MSVC clean (KMech.exe 33.8 KB); Vite clean in 286ms (kmech.html 115.7 KB).
