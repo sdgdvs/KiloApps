@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KDragon
   kilo_usability: KTodo
-  kilo_graphics: KWizard
+  kilo_graphics: KStarship
   kilo_qa: KGraph
   kilo_expander: KType
   kilo_creator: "kweb://users/~neon_rider (Personal Hacker / Demoscene Homepage)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KSys
-  timestamp: "2026-09-29T19:44:00Z"
+  agent: kilo-graphics
+  app: KWizard
+  timestamp: "2026-09-29T19:55:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -104,9 +104,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://geocities, kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KWizard`
+- **Current Target**: `KStarship`
 - **Upcoming Queue**:
-  `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum` *(Completed: KMystery, KMech, KColosseum, KAbyss)*.
+  `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KDragon`
@@ -249,6 +249,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T19:55:00Z — kilo-graphics: KWizard (YM2612 FM Audio, SPC700 Delay, Venom Archetype, Zero Glints & Visual Polish)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 103.7 KB < 999 KB).
+  - Audio Architecture: Added Sega Genesis YM2612 2-Op FM synthesis & SNES SPC700 stereo delay warmth engine with audio toggle [🔊 Audio].
+  - Card & Archetype Expansion: Added 4 rich Venom spells (Toxic Cloud, Noxious Mire, Acid Splash, Viper Fang) expanding deck pool to 40 cards.
+  - Deck Builder & Balance: Added Venom Preset, color-coded element badges (Fire, Ice, Arcane, Nature, Poison), and poison AI scoring.
+  - Visuals & Combat FX: Added poison projectile/trail rendering, critical strike floating damage numbers (CRIT ≥ 8 dmg), and static filigree borders.
+  - Native C Alignment: Synchronized all 40 cards, MageDef capacity, Venomancer deck, and crit floaters in Win32 C (`main.c`).
+  - Verification: MSVC clean (`KWizard.exe` 33.3 KB); Vite clean in 403ms (`kwizard.html` 103.7 KB < 999 KB); icon & security lints 100% PASS.
+
 - **2026-09-29T19:44:00Z — kilo-usability: KSys (Toast Occlusion Guard, Modal Viewport Clipping & Responsive Layout)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security & icon lints clean, 139.7 KB < 999 KB).
   - Toast & Action Ergonomics: Repositioned toast container to bottom-center with safe bounds, eliminating occlusion of export download actions.
@@ -281,11 +290,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Data Interoperability: Custom Bookmarks bank with localStorage persistence, JSON export/import and coordinate URL share links.
   - Win32 C Alignment: Implemented all 8 formulas, 9 themes, landmarks & color cycling in `main.c` (MSVC clean 27.1 KB).
   - Verification: MSVC clean; Vite build clean in 243ms (`kmandel.html` 123.5 KB < 999 KB); security and icon lints 100% PASS.
-
-- **2026-09-29T18:46:00Z — kilo-qa: KChart (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & Toast Guard)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
-  - State Persistence: Hardened F5 quicksave / F9 quickload across Web & Win32 C (`kchart_quicksave.dat`); added selectedIndex and bounds checks.
-  - Tutorial Integrity: Added `HasSeenTutorial` / `kchart_tutorial.dat` flag in native C; guarded startup check to never interrupt restored saves.
-  - Toast & Modal Usability: Centered toasts bottom-screen to prevent control occlusion; added Got It action button & focus guard to help modal.
-  - Audio & Interval Safety: Sealed sonification playhead lifecycle (`stopSonification`); guaranteed zero leaking timers on data mutations.
-  - Verification: MSVC clean (`KChart.exe` 36.8 KB); Vite clean in 278ms (`kchart.html` 118.7 KB < 999 KB); icon & security lints 100% PASS.

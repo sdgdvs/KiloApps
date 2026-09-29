@@ -14,9 +14,9 @@
   ],
   "session_start": "2026-09-29T18:14:37.0112595Z",
   "session_end": "2026-09-30T18:14:37.0112595Z",
-  "turns_executed": 5,
+  "turns_executed": 6,
   "last_turn_timestamp": "2026-09-29T18:07:21Z",
-  "last_heartbeat": "2026-09-29T19:26:07.980229+00:00",
-  "current_target": "KDB",
+  "last_heartbeat": "2026-09-29T19:44:13.911207+00:00",
+  "current_target": "KSys",
   "remote_command": "none"
 }

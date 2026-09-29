@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T18:46:00Z — kilo-qa: KChart (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & Toast Guard)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
+  - State Persistence: Hardened F5 quicksave / F9 quickload across Web & Win32 C (`kchart_quicksave.dat`); added selectedIndex and bounds checks.
+  - Tutorial Integrity: Added `HasSeenTutorial` / `kchart_tutorial.dat` flag in native C; guarded startup check to never interrupt restored saves.
+  - Toast & Modal Usability: Centered toasts bottom-screen to prevent control occlusion; added Got It action button & focus guard to help modal.
+  - Audio & Interval Safety: Sealed sonification playhead lifecycle (`stopSonification`); guaranteed zero leaking timers on data mutations.
+  - Verification: MSVC clean (`KChart.exe` 36.8 KB); Vite clean in 278ms (`kchart.html` 118.7 KB < 999 KB); icon & security lints 100% PASS.
+
 - **2026-09-29T18:30:00Z — kilo-graphics: KMystery (Visual Polish, Casino Dot Removal, Audio Architecture & Dialogue Expansion)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
   - Perimeter Dot Removal: Removed rotating ball and spinning spokes from Casino roulette wheel; replaced with static Art Deco mahogany table, numbered pockets, chip stacks & cards.

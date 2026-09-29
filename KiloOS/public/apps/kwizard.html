@@ -364,6 +364,7 @@
             <button id="load-btn" title="Quickload Game (F9)" style="background: linear-gradient(180deg, #065f46 0%, #064e3b 100%); border-color: #10b981;">Load [F9]</button>
             <button id="export-save-btn" title="Export Game Save to JSON file" style="background: linear-gradient(180deg, #374151 0%, #1f2937 100%); border-color: #9ca3af;">Export</button>
             <button id="import-save-btn" title="Import Game Save from JSON file" style="background: linear-gradient(180deg, #374151 0%, #1f2937 100%); border-color: #9ca3af;">Import</button>
+            <button id="audio-toggle-btn" title="Toggle Genesis YM2612 FM / SNES DSP Audio" style="background: linear-gradient(180deg, #4b5563 0%, #1f2937 100%); border-color: #10b981;">🔊 Audio</button>
             <input type="file" id="import-save-file" accept=".json" style="display: none;">
         </div>
         
@@ -400,6 +401,7 @@
             <button id="preset-cryo-btn" style="font-size: 11px; padding: 3px 8px; border-color: #06b6d4;">Cryo Preset</button>
             <button id="preset-arcane-btn" style="font-size: 11px; padding: 3px 8px; border-color: #a855f7;">Arcane Preset</button>
             <button id="preset-druid-btn" style="font-size: 11px; padding: 3px 8px; border-color: #22c55e;">Druid Preset</button>
+            <button id="preset-venom-btn" style="font-size: 11px; padding: 3px 8px; border-color: #10b981;">Venom Preset</button>
             <button id="export-deck-btn" style="font-size: 11px; padding: 3px 8px; border-color: #60a5fa;">Export Deck</button>
             <button id="import-deck-btn" style="font-size: 11px; padding: 3px 8px; border-color: #60a5fa;">Import Deck</button>
             <button id="clear-deck-btn" style="font-size: 11px; padding: 3px 8px; border-color: #ef4444;">Clear</button>
@@ -454,83 +456,160 @@
     </div>
 
     <script>
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        // === GENESIS YM2612 2-OPERATOR FM SYNTHESIS & SNES SPC700 STEREO DELAY AUDIO ENGINE ===
+        let audioCtx = null;
+        let spcDelay = null;
+        let spcFeedback = null;
+        let spcDamp = null;
+        let audioMuted = false;
+
+        function initAudio() {
+            if (audioCtx) {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                return audioCtx;
+            }
+            try {
+                const AudioClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioClass) return null;
+                audioCtx = new AudioClass();
+
+                // SNES SPC700 Stereo Delay & Spatial Warmth Network
+                spcDelay = audioCtx.createDelay(0.5);
+                spcDelay.delayTime.value = 0.055; // 55ms warm slapback echo
+                spcFeedback = audioCtx.createGain();
+                spcFeedback.gain.value = 0.24;
+                spcDamp = audioCtx.createBiquadFilter();
+                spcDamp.type = 'lowpass';
+                spcDamp.frequency.value = 3200; // Warm analog tape / SPC700 rolloff
+
+                spcDelay.connect(spcDamp);
+                spcDamp.connect(spcFeedback);
+                spcFeedback.connect(spcDelay);
+                spcDamp.connect(audioCtx.destination);
+            } catch (e) {
+                audioCtx = null;
+            }
+            return audioCtx;
+        }
+
+        // Sega Genesis YM2612 2-Operator FM Synthesizer Voice
+        function playFM(carrierFreq, modRatio, modIndex, duration, vol = 0.25, type = 'sine', enableEcho = true) {
+            if (audioMuted) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            const t = ctx.currentTime;
+
+            // Operator 2 (Modulator)
+            const op2 = ctx.createOscillator();
+            const op2Gain = ctx.createGain();
+            op2.type = type;
+            op2.frequency.setValueAtTime(carrierFreq * modRatio, t);
+            const modDev = carrierFreq * modIndex;
+            op2Gain.gain.setValueAtTime(modDev, t);
+            op2Gain.gain.exponentialRampToValueAtTime(Math.max(1, modDev * 0.02), t + duration * 0.85);
+            op2.connect(op2Gain);
+
+            // Operator 1 (Carrier)
+            const op1 = ctx.createOscillator();
+            const masterGain = ctx.createGain();
+            op1.type = type;
+            op1.frequency.setValueAtTime(carrierFreq, t);
+            op2Gain.connect(op1.frequency);
+
+            masterGain.gain.setValueAtTime(vol, t);
+            masterGain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+
+            op1.connect(masterGain);
+            masterGain.connect(ctx.destination);
+            if (enableEcho && spcDelay) {
+                masterGain.connect(spcDelay);
+            }
+
+            op2.start(t);
+            op1.start(t);
+            op2.stop(t + duration);
+            op1.stop(t + duration);
+        }
+
+        function playNoiseBurst(duration = 0.12, vol = 0.25) {
+            if (audioMuted) return;
+            const ctx = initAudio();
+            if (!ctx) return;
+            try {
+                const bufferSize = Math.floor(ctx.sampleRate * duration);
+                const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.35));
+                }
+                const noise = ctx.createBufferSource();
+                noise.buffer = buffer;
+                const filter = ctx.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 650;
+                const gain = ctx.createGain();
+                gain.gain.setValueAtTime(vol, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(ctx.destination);
+                noise.start();
+            } catch (e) {}
+        }
 
         function playSound(type) {
+            if (audioMuted) return;
             try {
-                if (audioCtx && audioCtx.state === 'suspended') {
-                    audioCtx.resume().catch(() => {});
-                }
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
+                const ctx = initAudio();
+                if (!ctx) return;
 
-                const now = audioCtx.currentTime;
-            
-            if (type === 'fire') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(150, now);
-                osc.frequency.exponentialRampToValueAtTime(10, now + 0.5);
-                gain.gain.setValueAtTime(0.5, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-                osc.start(now);
-                osc.stop(now + 0.5);
-            } else if (type === 'ice') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(800, now);
-                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                osc.start(now);
-                osc.stop(now + 0.2);
-            } else if (type === 'poison') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(240, now);
-                osc.frequency.exponentialRampToValueAtTime(80, now + 0.35);
-                gain.gain.setValueAtTime(0.35, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
-                osc.start(now);
-                osc.stop(now + 0.35);
-            } else if (type === 'arcane' || type === 'heal') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.linearRampToValueAtTime(600, now + 0.1);
-                osc.frequency.linearRampToValueAtTime(800, now + 0.3);
-                gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(0.4, now + 0.1);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
-                osc.start(now);
-                osc.stop(now + 0.6);
-            } else if (type === 'damage') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(100, now);
-                osc.frequency.exponentialRampToValueAtTime(20, now + 0.2);
-                gain.gain.setValueAtTime(0.5, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                osc.start(now);
-                osc.stop(now + 0.2);
-            } else if (type === 'win') {
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(440, now);
-                osc.frequency.setValueAtTime(554, now + 0.2);
-                osc.frequency.setValueAtTime(659, now + 0.4);
-                osc.frequency.setValueAtTime(880, now + 0.6);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.linearRampToValueAtTime(0, now + 1.0);
-                osc.start(now);
-                osc.stop(now + 1.0);
-            } else if (type === 'lose') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(300, now);
-                osc.frequency.linearRampToValueAtTime(100, now + 0.8);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.linearRampToValueAtTime(0, now + 0.8);
-                osc.start(now);
-                osc.stop(now + 0.8);
-            }
-        } catch (e) {}
-    }
+                if (type === 'fire') {
+                    // Harsh biting FM sweep + crackle
+                    playFM(320, 2.5, 3.2, 0.28, 0.28, 'sawtooth', true);
+                    playNoiseBurst(0.18, 0.22);
+                } else if (type === 'ice') {
+                    // Crystalline high-ratio FM bell ring with warm SPC700 delay
+                    playFM(880, 3.5, 4.0, 0.35, 0.24, 'sine', true);
+                    playFM(1320, 1.414, 2.0, 0.25, 0.16, 'triangle', true);
+                } else if (type === 'arcane') {
+                    // Shimmering cosmic FM harmonic tone
+                    playFM(523.25, 2.0, 2.8, 0.45, 0.26, 'sine', true);
+                    playFM(659.25, 1.5, 2.0, 0.40, 0.20, 'sine', true);
+                } else if (type === 'nature' || type === 'heal') {
+                    // Resonant organic wooden flute / chord
+                    playFM(440, 1.0, 1.5, 0.4, 0.25, 'triangle', true);
+                    playFM(554.37, 1.0, 1.2, 0.4, 0.18, 'sine', true);
+                } else if (type === 'poison') {
+                    // Acidic squelching low-ratio FM wobble
+                    playFM(180, 4.25, 5.0, 0.38, 0.28, 'sawtooth', true);
+                } else if (type === 'damage') {
+                    // Deep resonant impact punch
+                    playFM(95, 1.5, 4.5, 0.22, 0.35, 'triangle', false);
+                    playNoiseBurst(0.12, 0.20);
+                } else if (type === 'shield') {
+                    // Glassy protective chime
+                    playFM(784, 2.0, 3.0, 0.3, 0.22, 'sine', true);
+                } else if (type === 'win') {
+                    // Sega Genesis 16-bit victorious fanfare triad chord arpeggio
+                    const notes = [523.25, 659.25, 783.99, 1046.5];
+                    notes.forEach((f, idx) => {
+                        setTimeout(() => {
+                            playFM(f, 2.0, 2.5, 0.45, 0.26, 'sine', true);
+                        }, idx * 140);
+                    });
+                } else if (type === 'lose') {
+                    // Crushing descending FM dissonance
+                    const notes = [330, 311, 293, 220];
+                    notes.forEach((f, idx) => {
+                        setTimeout(() => {
+                            playFM(f, 3.1, 4.0, 0.4, 0.28, 'sawtooth', false);
+                        }, idx * 160);
+                    });
+                } else if (type === 'click') {
+                    playFM(900, 1.0, 0.5, 0.04, 0.15, 'sine', false);
+                }
+            } catch (e) {}
+        }
 
         const sampleCards = [
             { name: "Fireball", cost: 3, effect: "Deals 4 Fire damage", type: "fire", damage: 4, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 0 },
@@ -568,7 +647,11 @@
             { name: "Greater Heal", cost: 5, effect: "Heals 7", type: "nature", damage: 0, heal: 7, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 0 },
             { name: "Renew", cost: 1, effect: "Heals 2 over time", type: "nature", damage: 0, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 3, poison: 0 },
             { name: "Poison Bolt", cost: 4, effect: "Deals 2 dmg, poisons for 3", type: "poison", damage: 2, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 3 },
-            { name: "Venom Strike", cost: 2, effect: "Poisons for 2", type: "poison", damage: 0, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 2 }
+            { name: "Venom Strike", cost: 2, effect: "Poisons for 2", type: "poison", damage: 0, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 2 },
+            { name: "Toxic Cloud", cost: 3, effect: "Poisons for 4 dmg over time", type: "poison", damage: 0, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 4 },
+            { name: "Noxious Mire", cost: 5, effect: "Deals 3 dmg, poisons 3, slows", type: "poison", damage: 3, heal: 0, burn: 0, freeze: 1, shield: 0, regen: 0, poison: 3 },
+            { name: "Acid Splash", cost: 1, effect: "Deals 1 dmg, poisons for 1", type: "poison", damage: 1, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 1 },
+            { name: "Viper Fang", cost: 2, effect: "Deals 2 dmg, heals 2, poisons 1", type: "poison", damage: 2, heal: 2, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 1 }
         ];
 
         function getCardSVG(card) {
@@ -595,19 +678,26 @@
             } else if (t === 'nature') {
                 return `<svg viewBox="0 0 80 50"><path d="M40 38 C 24 38, 20 22, 40 10 C 60 22, 56 38, 40 38 Z" fill="#22c55e"/><path d="M40 38 L40 14" stroke="#86efac" stroke-width="1.5"/><circle cx="40" cy="22" r="3" fill="#fde047"/></svg>`;
             } else if (t === 'poison') {
+                if (card.name === 'Toxic Cloud') {
+                    return `<svg viewBox="0 0 80 50"><ellipse cx="40" cy="26" rx="22" ry="12" fill="#15803d" opacity="0.85"/><circle cx="28" cy="28" r="9" fill="#16a34a"/><circle cx="52" cy="24" r="10" fill="#22c55e"/><circle cx="39" cy="18" r="7" fill="#84cc16"/></svg>`;
+                } else if (card.name === 'Noxious Mire') {
+                    return `<svg viewBox="0 0 80 50"><ellipse cx="40" cy="35" rx="30" ry="8" fill="#14532d"/><circle cx="28" cy="26" r="5" fill="#65a30d"/><circle cx="48" cy="24" r="6" fill="#84cc16"/><circle cx="38" cy="28" r="3.5" fill="#bef264"/></svg>`;
+                } else if (card.name === 'Acid Splash') {
+                    return `<svg viewBox="0 0 80 50"><path d="M40 8 C36 18 24 24 24 34 C24 42 56 42 56 34 C56 24 44 18 40 8 Z" fill="#22c55e"/><circle cx="26" cy="22" r="2.5" fill="#84cc16"/><circle cx="54" cy="20" r="3" fill="#bef264"/></svg>`;
+                } else if (card.name === 'Viper Fang') {
+                    return `<svg viewBox="0 0 80 50"><polygon points="30,10 36,32 28,30" fill="#86efac" stroke="#15803d" stroke-width="1.5"/><polygon points="50,10 52,30 44,32" fill="#86efac" stroke="#15803d" stroke-width="1.5"/><circle cx="33" cy="34" r="2" fill="#22c55e"/><circle cx="47" cy="34" r="2" fill="#22c55e"/></svg>`;
+                }
                 return `<svg viewBox="0 0 80 50"><path d="M35 12 L45 12 L47 18 L55 35 C55 42, 25 42, 25 35 L33 18 Z" fill="#15803d" stroke="#86efac" stroke-width="1.5"/><circle cx="40" cy="30" r="4" fill="#a3e635"/><circle cx="36" cy="34" r="2" fill="#a3e635"/></svg>`;
             }
             return `<svg viewBox="0 0 80 50"><circle cx="40" cy="25" r="10" fill="#a855f7"/></svg>`;
         }
 
         function getSoundType(card) {
+            if (card.shield > 0 && card.damage === 0) return 'shield';
             if (card.type === 'poison' || card.poison > 0) return 'poison';
-            if (card.damage > 0 && card.effect.includes("Fire")) return 'fire';
-            if (card.damage > 0 && card.effect.includes("Ice")) return 'ice';
-            if (card.damage > 0 && card.effect.includes("Arcane")) return 'arcane';
-            if (card.heal > 0 || card.regen > 0) return 'heal';
-            if (card.name === 'Ice Lance' || card.name.includes("Frost") || card.name.includes("Cold") || card.name.includes("Blizzard")) return 'ice';
-            if (card.name.includes("Fire") || card.name.includes("Flame") || card.name.includes("Pyro") || card.name.includes("Ignite") || card.name.includes("Ember") || card.name.includes("Scorch") || card.name.includes("Meteor")) return 'fire';
+            if (card.type === 'fire') return 'fire';
+            if (card.type === 'ice') return 'ice';
+            if (card.type === 'nature' || card.heal > 0 || card.regen > 0) return 'nature';
             return 'arcane';
         }
 
@@ -623,12 +713,12 @@
             { name: "Apprentice Cryomancer", diff: "easy", hp: 25, deck: [8, 9, 12, 14], color: "#06b6d4", staff: "#a5f3fc" },
             { name: "Arcane Scholar", diff: "medium", hp: 30, deck: [15, 16, 18, 19, 22], color: "#8b5cf6", staff: "#c084fc" },
             { name: "Forest Druid", diff: "medium", hp: 35, deck: [23, 24, 25, 28, 29, 30], color: "#22c55e", staff: "#86efac" },
-            { name: "Venomancer", diff: "medium", hp: 40, deck: [34, 35, 23, 30], color: "#10b981", staff: "#6ee7b7" },
+            { name: "Venomancer", diff: "medium", hp: 40, deck: [34, 35, 36, 37, 38, 39, 22], color: "#10b981", staff: "#6ee7b7" },
             { name: "Master Pyromancer", diff: "hard", hp: 45, deck: [0, 1, 2, 3, 4, 5, 6, 7], color: "#dc2626", staff: "#f97316" },
             { name: "Master Cryomancer", diff: "hard", hp: 50, deck: [8, 9, 10, 11, 12, 13, 14], color: "#0284c7", staff: "#38bdf8" },
             { name: "Arcane Archon", diff: "hard", hp: 55, deck: [15, 16, 17, 18, 19, 20, 21, 22], color: "#7c3aed", staff: "#e879f9" },
             { name: "High Priest", diff: "hard", hp: 60, deck: [16, 22, 23, 26, 27, 28, 31, 32], color: "#eab308", staff: "#fef08a" },
-            { name: "Grand Magus", diff: "hard", hp: 70, deck: Array.from({length: 36}, (_, i) => i), color: "#f59e0b", staff: "#ffd700" }
+            { name: "Grand Magus", diff: "hard", hp: 70, deck: Array.from({length: 40}, (_, i) => i), color: "#f59e0b", staff: "#ffd700" }
         ];
 
         let playerDeck = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
@@ -987,7 +1077,7 @@
                         vx: (Math.random() - 0.5) * 1.5,
                         vy: (Math.random() - 0.5) * 1.5,
                         size: Math.random() * 3 + 2,
-                        color: p.type === 'fire' ? '#ff7700' : (p.type === 'ice' ? '#38bdf8' : (p.type === 'nature' ? '#4ade80' : '#c084fc')),
+                        color: p.type === 'fire' ? '#ff7700' : (p.type === 'ice' ? '#38bdf8' : (p.type === 'nature' ? '#4ade80' : (p.type === 'poison' ? '#10b981' : '#c084fc'))),
                         life: 0.7,
                         decay: 0.05,
                         type: 'spark'
@@ -996,7 +1086,7 @@
 
                 ctx.beginPath();
                 ctx.arc(curX, curY, 8, 0, Math.PI * 2);
-                ctx.fillStyle = p.type === 'fire' ? '#ff3700' : (p.type === 'ice' ? '#00f0ff' : (p.type === 'nature' ? '#22c55e' : '#e879f9'));
+                ctx.fillStyle = p.type === 'fire' ? '#ff3700' : (p.type === 'ice' ? '#00f0ff' : (p.type === 'nature' ? '#22c55e' : (p.type === 'poison' ? '#10b981' : '#e879f9')));
                 ctx.shadowColor = ctx.fillStyle;
                 ctx.shadowBlur = 15;
                 ctx.fill();
@@ -1168,6 +1258,8 @@
             currDeckDiv.innerHTML = '';
             deckCountSpan.innerText = playerDeck.length;
             
+            const typeBadgeColors = { fire: '#f97316', ice: '#38bdf8', arcane: '#c084fc', nature: '#4ade80', poison: '#34d399' };
+            
             sampleCards.forEach((c, idx) => {
                 let el = document.createElement('div');
                 el.className = 'deck-card';
@@ -1177,7 +1269,7 @@
                 el.innerHTML = `
                     <div class="card-mana-gem" style="width:16px;height:16px;font-size:9px;">${c.cost}</div>
                     <div class="deck-card-title">${c.name}</div>
-                    <div style="font-size:9px;color:#a855f7;">${c.type.toUpperCase()}</div>
+                    <div style="font-size:9px;color:${typeBadgeColors[c.type] || '#c084fc'};">${c.type.toUpperCase()}</div>
                 `;
                 el.onclick = () => {
                     if (playerDeck.length < 20) {
@@ -1206,7 +1298,7 @@
                 el.innerHTML = `
                     <div class="card-mana-gem" style="width:16px;height:16px;font-size:9px;">${c.cost}</div>
                     <div class="deck-card-title">${c.name}</div>
-                    <div style="font-size:9px;color:#a855f7;">${c.type.toUpperCase()}</div>
+                    <div style="font-size:9px;color:${typeBadgeColors[c.type] || '#c084fc'};">${c.type.toUpperCase()}</div>
                 `;
                 el.onclick = () => {
                     playerDeck.splice(i, 1);
@@ -1275,6 +1367,29 @@
             renderDeckBuilder();
             showToast("Loaded Druid Preset (20 cards)", "info");
         };
+        const presetVenomBtn = document.getElementById('preset-venom-btn');
+        if (presetVenomBtn) presetVenomBtn.onclick = () => {
+            playerDeck = [34, 34, 35, 35, 36, 36, 37, 37, 38, 38, 39, 39, 16, 16, 22, 22, 23, 23, 15, 15];
+            renderDeckBuilder();
+            showToast("Loaded Venomancer Preset (20 cards)", "info");
+        };
+        const audioToggleBtn = document.getElementById('audio-toggle-btn');
+        if (audioToggleBtn) {
+            audioToggleBtn.onclick = () => {
+                audioMuted = !audioMuted;
+                if (!audioMuted) {
+                    initAudio();
+                    playSound('click');
+                    audioToggleBtn.innerHTML = '🔊 Audio';
+                    audioToggleBtn.style.borderColor = '#10b981';
+                    showToast('Sound Enabled (YM2612 FM / SPC700 Delay)', 'info');
+                } else {
+                    audioToggleBtn.innerHTML = '🔇 Muted';
+                    audioToggleBtn.style.borderColor = '#ef4444';
+                    showToast('Sound Muted', 'info');
+                }
+            };
+        }
         if (clearDeckBtn) clearDeckBtn.onclick = () => {
             playerDeck = [];
             renderDeckBuilder();
@@ -1303,7 +1418,7 @@
                     renderDeckBuilder();
                     showToast("Deck Imported Successfully (20 cards)", "success");
                 } else {
-                    showToast("Invalid Deck JSON! Must be array of 20 card IDs (0-35).", "error");
+                    showToast("Invalid Deck JSON! Must be array of 20 valid card IDs.", "error");
                 }
             } catch (err) {
                 showToast("Failed to parse Deck JSON!", "error");
@@ -1375,7 +1490,9 @@
             }
             if (dmg > 0) {
                 playerHp -= dmg;
-                spawnFloater(w * 0.22, h * 0.45, `-${dmg} HP`, '#ef4444');
+                const txt = dmg >= 8 ? `CRIT -${dmg} HP!` : `-${dmg} HP`;
+                const col = dmg >= 8 ? '#facc15' : '#ef4444';
+                spawnFloater(w * 0.22, h * 0.45, txt, col);
             }
             if (playerHp < 0) playerHp = 0;
         }
@@ -1397,7 +1514,9 @@
             }
             if (dmg > 0) {
                 opponentHp -= dmg;
-                spawnFloater(w * 0.78, h * 0.45, `-${dmg} HP`, '#ef4444');
+                const txt = dmg >= 8 ? `CRIT -${dmg} HP!` : `-${dmg} HP`;
+                const col = dmg >= 8 ? '#facc15' : '#ef4444';
+                spawnFloater(w * 0.78, h * 0.45, txt, col);
             }
             if (opponentHp < 0) opponentHp = 0;
         }
@@ -1412,6 +1531,9 @@
             }
             if (playerHp <= 10 && card.damage > 0) {
                 score += card.damage * 4;
+            }
+            if (card.poison > 0) {
+                score += card.poison * 3;
             }
             if (card.name === "Time Warp") score += 25;
             if (card.name === "Arcane Intellect" && opponentCards.length < 3) score += 15;

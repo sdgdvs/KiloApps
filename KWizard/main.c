@@ -120,7 +120,11 @@ CardDef sampleCards[] = {
     {"Greater Heal", 5, "Heals 7", 0, 7, 0, 0, 0, 0, 0, 3},
     {"Renew", 1, "Heals 2 over time", 0, 0, 0, 0, 0, 3, 0, 3},
     {"Poison Bolt", 4, "Deals 2 dmg, poisons for 3", 2, 0, 0, 0, 0, 0, 3, 4},
-    {"Venom Strike", 2, "Poisons for 2", 0, 0, 0, 0, 0, 0, 2, 4}
+    {"Venom Strike", 2, "Poisons for 2", 0, 0, 0, 0, 0, 0, 2, 4},
+    {"Toxic Cloud", 3, "Poisons for 4 dmg over time", 0, 0, 0, 0, 0, 0, 4, 4},
+    {"Noxious Mire", 5, "Deals 3 dmg, poisons 3, slows", 3, 0, 0, 1, 0, 0, 3, 4},
+    {"Acid Splash", 1, "Deals 1 dmg, poisons for 1", 1, 0, 0, 0, 0, 0, 1, 4},
+    {"Viper Fang", 2, "Deals 2 dmg, heals 2, poisons 1", 2, 2, 0, 0, 0, 0, 1, 4}
 };
 #define NUM_SAMPLE_CARDS (sizeof(sampleCards)/sizeof(CardDef))
 
@@ -143,7 +147,7 @@ typedef struct {
     int diff;
     int hp;
     int deckSize;
-    int deck[36];
+    int deck[48];
     COLORREF robeColor;
     COLORREF staffColor;
 } MageDef;
@@ -153,12 +157,12 @@ MageDef mages[] = {
     {"Apprentice Cryomancer", 0, 25, 4, {8, 9, 12, 14}, RGB(10, 120, 180), RGB(100, 220, 255)},
     {"Arcane Scholar", 1, 30, 5, {15, 16, 18, 19, 22}, RGB(110, 50, 160), RGB(200, 100, 255)},
     {"Forest Druid", 1, 35, 6, {23, 24, 25, 28, 29, 30}, RGB(20, 120, 50), RGB(100, 255, 120)},
-    {"Venomancer", 1, 40, 4, {34, 35, 23, 30}, RGB(15, 100, 60), RGB(80, 240, 120)},
+    {"Venomancer", 1, 40, 7, {34, 35, 36, 37, 38, 39, 22}, RGB(15, 100, 60), RGB(80, 240, 120)},
     {"Master Pyromancer", 2, 45, 8, {0, 1, 2, 3, 4, 5, 6, 7}, RGB(220, 30, 20), RGB(255, 160, 20)},
     {"Master Cryomancer", 2, 50, 7, {8, 9, 10, 11, 12, 13, 14}, RGB(10, 90, 190), RGB(120, 240, 255)},
     {"Arcane Archon", 2, 55, 8, {15, 16, 17, 18, 19, 20, 21, 22}, RGB(130, 30, 180), RGB(240, 120, 255)},
     {"High Priest", 2, 60, 8, {16, 22, 23, 26, 27, 28, 31, 32}, RGB(180, 140, 20), RGB(255, 240, 100)},
-    {"Grand Magus", 2, 70, 36, {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35}, RGB(220, 160, 20), RGB(255, 215, 0)}
+    {"Grand Magus", 2, 70, 40, {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39}, RGB(220, 160, 20), RGB(255, 215, 0)}
 };
 
 int playerMana = 1;
@@ -375,8 +379,10 @@ void DealDamageToPlayer(int dmg, int cw, int ch) {
     }
     if (dmg > 0) {
         playerHp -= dmg;
-        char b[32]; wsprintf(b, "-%d HP", dmg);
-        SpawnFloater((float)cw * 0.25f, (float)ch * 0.40f, b, RGB(239, 68, 68));
+        char b[32];
+        if (dmg >= 8) wsprintf(b, "CRIT -%d HP!", dmg);
+        else wsprintf(b, "-%d HP", dmg);
+        SpawnFloater((float)cw * 0.25f, (float)ch * 0.40f, b, dmg >= 8 ? RGB(250, 204, 21) : RGB(239, 68, 68));
     }
     if (playerHp < 0) playerHp = 0;
 }
@@ -397,20 +403,20 @@ void DealDamageToOpponent(int dmg, int cw, int ch) {
     }
     if (dmg > 0) {
         opponentHp -= dmg;
-        char b[32]; wsprintf(b, "-%d HP", dmg);
-        SpawnFloater((float)cw * 0.75f, (float)ch * 0.40f, b, RGB(239, 68, 68));
+        char b[32];
+        if (dmg >= 8) wsprintf(b, "CRIT -%d HP!", dmg);
+        else wsprintf(b, "-%d HP", dmg);
+        SpawnFloater((float)cw * 0.75f, (float)ch * 0.40f, b, dmg >= 8 ? RGB(250, 204, 21) : RGB(239, 68, 68));
     }
     if (opponentHp < 0) opponentHp = 0;
 }
 
 const char* GetSoundType(CardDef* cd) {
+    if (cd->shield > 0 && cd->damage == 0) return "shield";
     if (cd->type == 4 || cd->poison > 0) return "poison";
-    if (cd->damage > 0 && strstr(cd->effect, "Fire") != NULL) return "fire";
-    if (cd->damage > 0 && strstr(cd->effect, "Ice") != NULL) return "ice";
-    if (cd->damage > 0 && strstr(cd->effect, "Arcane") != NULL) return "arcane";
-    if (cd->heal > 0 || cd->regen > 0) return "heal";
-    if (strcmp(cd->name, "Ice Lance") == 0 || strstr(cd->name, "Frost") != NULL || strstr(cd->name, "Cold") != NULL || strstr(cd->name, "Blizzard") != NULL) return "ice";
-    if (strstr(cd->name, "Fire") != NULL || strstr(cd->name, "Flame") != NULL || strstr(cd->name, "Pyro") != NULL || strstr(cd->name, "Ignite") != NULL || strstr(cd->name, "Ember") != NULL || strstr(cd->name, "Scorch") != NULL || strstr(cd->name, "Meteor") != NULL) return "fire";
+    if (cd->type == 0) return "fire";
+    if (cd->type == 1) return "ice";
+    if (cd->type == 3 || cd->heal > 0 || cd->regen > 0) return "heal";
     return "arcane";
 }
 
@@ -427,6 +433,8 @@ void PlaySoundEffect(const char* type) {
     } else if (strcmp(type, "arcane") == 0 || strcmp(type, "heal") == 0) {
         Beep(500, 40);
         Beep(800, 50);
+    } else if (strcmp(type, "shield") == 0) {
+        Beep(784, 50);
     } else if (strcmp(type, "damage") == 0) {
         Beep(120, 50);
     } else if (strcmp(type, "win") == 0) {
@@ -663,6 +671,9 @@ int EvaluateCard(CardDef* cd) {
     }
     if (playerHp <= 10 && cd->damage > 0) {
         score += cd->damage * 4;
+    }
+    if (cd->poison > 0) {
+        score += cd->poison * 3;
     }
     if (strcmp(cd->name, "Time Warp") == 0) score += 25;
     if (strcmp(cd->name, "Arcane Intellect") == 0 && opponentCount < 3) score += 15;
