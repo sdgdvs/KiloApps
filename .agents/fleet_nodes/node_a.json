@@ -1,18 +1,17 @@
 {
   "node_id": "pc_a",
-  "name": "PC A (anonymous1)",
-  "account": "anonymous1",
-  "hostname": "12900K",
-  "status": "active",
-  "schedule_minutes": [
-    2,
-    17
-  ],
-  "session_start": "2026-09-29T18:00:43.7103231Z",
-  "session_end": "2026-09-30T18:00:43.7103231Z",
+  "name": "PC A (sdgdvs)",
+  "account": "sdgdvs",
+  "hostname": "PC-A",
+  "model_tier": "Gemini Pro",
+  "cadence": "1 turn/hour",
+  "status": "stopped",
+  "schedule_minutes": [12],
+  "session_start": null,
+  "session_end": null,
   "turns_executed": 0,
-  "last_turn_timestamp": "2026-09-29T17:16:06Z",
-  "last_heartbeat": "2026-09-29T18:00:43.822660+00:00",
-  "current_target": "kilo-graphics \u2794 KMystery",
+  "last_turn_timestamp": "2026-09-28T18:42:51Z",
+  "last_heartbeat": "2026-09-28T18:42:51Z",
+  "current_target": "idle",
   "remote_command": "none"
 }

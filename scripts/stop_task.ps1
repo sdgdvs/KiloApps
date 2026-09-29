@@ -15,7 +15,7 @@ Write-Host "Stopping KiloApps Fleet Orchestrator..." -ForegroundColor Yellow
 # 1. Disable scheduled task
 try {
     Disable-ScheduledTask -TaskName $TaskName -ErrorAction Stop | Out-Null
-    Write-Host "[✓] Windows Scheduled Task '$TaskName' disabled." -ForegroundColor Green
+    Write-Host "[OK] Windows Scheduled Task '$TaskName' disabled." -ForegroundColor Green
 } catch {
     Write-Warning "Could not disable scheduled task '$TaskName': $($_.Exception.Message)"
 }
@@ -26,15 +26,17 @@ if (Test-Path $SessionFile) {
         $Session = Get-Content $SessionFile -Raw | ConvertFrom-Json
         $Session.status = "stopped"
         $Session | ConvertTo-Json -Depth 4 | Set-Content $SessionFile -Encoding UTF8
-        Write-Host "[✓] Session status set to 'stopped' in .agents\scheduler_session.json." -ForegroundColor Green
+        Write-Host "[OK] Session status set to 'stopped' in .agents\scheduler_session.json." -ForegroundColor Green
 
         $NodeId = $Session.node_id
         if (-not $NodeId) {
             $GitUser = ""
             try { $GitUser = (git -C $RepoRoot config user.name) } catch {}
-            if ($GitUser -match "sdgdvs") { $NodeId = "pc_b" }
-            elseif ($GitUser -match "anonymous2") { $NodeId = "pc_c" }
-            else { $NodeId = "pc_a" }
+            $HostName = $env:COMPUTERNAME
+            if ($GitUser -match "anonymous1" -or $HostName -match "12900K") { $NodeId = "pc_c" }
+            elseif ($GitUser -match "sdgdvs") { $NodeId = "pc_a" }
+            elseif ($GitUser -match "anonymous2") { $NodeId = "pc_b" }
+            else { $NodeId = "pc_c" }
         }
         $NodeFile = Join-Path $RepoRoot ".agents\fleet_nodes\node_$($NodeId.Replace('pc_', '')).json"
         if (Test-Path $NodeFile) {
@@ -42,7 +44,7 @@ if (Test-Path $SessionFile) {
             $NodeData.status = "stopped"
             $NodeData.last_heartbeat = (Get-Date).ToUniversalTime().ToString("o")
             $NodeData | ConvertTo-Json -Depth 4 | Set-Content $NodeFile -Encoding UTF8
-            Write-Host "[✓] Node status set to 'stopped' in .agents\fleet_nodes\node_$($NodeId.Replace('pc_', '')).json." -ForegroundColor Green
+            Write-Host "[OK] Node status set to 'stopped' in .agents\fleet_nodes\node_$($NodeId.Replace('pc_', '')).json." -ForegroundColor Green
         }
     } catch {
         Write-Warning "Could not update session file: $($_.Exception.Message)"
@@ -53,7 +55,7 @@ if (Test-Path $SessionFile) {
 if (Test-Path $LockFile) {
     try {
         Remove-Item $LockFile -Force
-        Write-Host "[✓] Orchestrator lockfile removed." -ForegroundColor Green
+        Write-Host "[OK] Orchestrator lockfile removed." -ForegroundColor Green
     } catch {
         Write-Warning "Could not remove lockfile: $($_.Exception.Message)"
     }

@@ -37,31 +37,41 @@ SESSION_FILE = REPO_ROOT / ".agents" / "scheduler_session.json"
 FLEET_NODES_DIR = REPO_ROOT / ".agents" / "fleet_nodes"
 TASK_NAME = "KiloApps-Fleet-Orchestrator"
 
-# Multi-PC Node Profiles: Each computer has dedicated, non-colliding dispatch windows
+# Multi-PC Node Profiles: Dedicated, non-colliding dispatch windows based on account model tier:
+# - PC A: sdgdvs (Gemini Pro) - 1 turn/hr at :12 past each hour (Window :10 - :18)
+# - PC B: anonymous2 (Gemini Pro) - 1 turn/hr at :30 past each hour (Window :28 - :36)
+# - PC C: This PC / anonymous1 (Gemini Ultra) - 3-4 turns/hr at :02, :20, :38, :48 past each hour
 NODE_PROFILES = {
     "pc_a": {
         "node_id": "pc_a",
-        "name": "PC A (anonymous1 / 12900K)",
-        "account": "anonymous1",
-        "minutes": [2, 17],
-        "allowed_window": lambda m: 0 <= m <= 20,
-        "collision_desc": "Reserved for PC B (:30-:50) and PC C (:20-:30, :50-:60)",
+        "name": "PC A (sdgdvs)",
+        "account": "sdgdvs",
+        "model_tier": "Gemini Pro",
+        "minutes": [12],
+        "allowed_window": lambda m: 10 <= m <= 18,
+        "safe_window": ":10 - :18",
+        "collision_desc": "Reserved for PC B (Pro: :28-:36) & PC C (Ultra: :00-:10, :18-:28, :36-:56)",
     },
     "pc_b": {
         "node_id": "pc_b",
-        "name": "PC B (sdgdvs)",
-        "account": "sdgdvs",
-        "minutes": [32, 47],
-        "allowed_window": lambda m: 30 <= m <= 50,
-        "collision_desc": "Reserved for PC A (:00-:20) and PC C (:20-:30, :50-:60)",
+        "name": "PC B (anonymous2)",
+        "account": "anonymous2",
+        "model_tier": "Gemini Pro",
+        "minutes": [30],
+        "allowed_window": lambda m: 28 <= m <= 36,
+        "safe_window": ":28 - :36",
+        "collision_desc": "Reserved for PC A (Pro: :10-:18) & PC C (Ultra: :00-:10, :18-:28, :36-:56)",
     },
     "pc_c": {
         "node_id": "pc_c",
-        "name": "PC C (anonymous2)",
-        "account": "anonymous2",
-        "minutes": [22, 52],
-        "allowed_window": lambda m: (20 <= m <= 30) or (50 <= m <= 60),
-        "collision_desc": "Reserved for PC A (:00-:20) and PC B (:30-:50)",
+        "name": "PC C (This PC / anonymous1)",
+        "account": "anonymous1",
+        "hostname_hint": "12900K",
+        "model_tier": "Gemini Ultra",
+        "minutes": [2, 20, 38, 48],
+        "allowed_window": lambda m: not ((10 <= m <= 18) or (28 <= m <= 36)),
+        "safe_window": "Outside Pro Windows (:00-:10, :18-:28, :36-:56)",
+        "collision_desc": "Reserved for PC A (Pro: :10-:18) & PC B (Pro: :28-:36)",
     },
 }
 
@@ -162,12 +172,12 @@ def get_current_node_id() -> str:
         res = subprocess.run(["git", "config", "user.name"], cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=2)
         if res.returncode == 0:
             uname = res.stdout.strip().lower()
-            if "sdgdvs" in uname:
-                return "pc_b"
-            if "anonymous2" in uname:
-                return "pc_c"
             if "anonymous1" in uname or "kiloapps" in uname:
+                return "pc_c"
+            if "sdgdvs" in uname:
                 return "pc_a"
+            if "anonymous2" in uname:
+                return "pc_b"
     except Exception:
         pass
 
@@ -175,9 +185,9 @@ def get_current_node_id() -> str:
     import socket
     h = socket.gethostname().upper()
     if "12900K" in h:
-        return "pc_a"
+        return "pc_c"
 
-    return "pc_a"
+    return "pc_c"
 
 
 def check_and_handle_remote_commands(node_id: str) -> bool:

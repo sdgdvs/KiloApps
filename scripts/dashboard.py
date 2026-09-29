@@ -34,37 +34,44 @@ ICON_PATH = REPO_ROOT / "KiloOS" / "public" / "assets" / "icons" / "ksys.ico"
 TASK_NAME = "KiloApps-Fleet-Orchestrator"
 CREATE_NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
 
-# Multi-PC Node Profiles: Each computer has distinct, collision-free dispatch minutes
+# Multi-PC Node Profiles: Dedicated, non-colliding dispatch windows based on account model tier:
+# - PC A: sdgdvs (Gemini Pro) - 1 turn/hr at :12 past each hour (Window :10 - :18)
+# - PC B: anonymous2 (Gemini Pro) - 1 turn/hr at :30 past each hour (Window :28 - :36)
+# - PC C: This PC / anonymous1 (Gemini Ultra) - 3-4 turns/hr at :02, :20, :38, :48 past each hour
 NODE_PROFILES = {
     "pc_a": {
         "node_id": "pc_a",
-        "name": "PC A (anonymous1)",
-        "account": "anonymous1",
-        "hostname_hint": "12900K",
-        "minutes": [2, 17],
-        "safe_window": ":00 - :20",
-        "is_safe": lambda m: 0 <= m <= 20,
-        "collision_desc": "PC B (:30-:50) & PC C (:20-:30, :50-:60)",
+        "name": "PC A (sdgdvs)",
+        "account": "sdgdvs",
+        "model_tier": "Gemini Pro",
+        "cadence_desc": "1 turn/hr",
+        "minutes": [12],
+        "safe_window": ":10 - :18",
+        "is_safe": lambda m: 10 <= m <= 18,
+        "collision_desc": "Reserved for PC B (Pro: :28-:36) & PC C (Ultra: :00-:10, :18-:28, :36-:56)",
     },
     "pc_b": {
         "node_id": "pc_b",
-        "name": "PC B (sdgdvs)",
-        "account": "sdgdvs",
-        "hostname_hint": "PC-B",
-        "minutes": [32, 47],
-        "safe_window": ":30 - :50",
-        "is_safe": lambda m: 30 <= m <= 50,
-        "collision_desc": "PC A (:00-:20) & PC C (:20-:30, :50-:60)",
+        "name": "PC B (anonymous2)",
+        "account": "anonymous2",
+        "model_tier": "Gemini Pro",
+        "cadence_desc": "1 turn/hr",
+        "minutes": [30],
+        "safe_window": ":28 - :36",
+        "is_safe": lambda m: 28 <= m <= 36,
+        "collision_desc": "Reserved for PC A (Pro: :10-:18) & PC C (Ultra: :00-:10, :18-:28, :36-:56)",
     },
     "pc_c": {
         "node_id": "pc_c",
-        "name": "PC C (anonymous2)",
-        "account": "anonymous2",
-        "hostname_hint": "PC-C",
-        "minutes": [22, 52],
-        "safe_window": ":20 - :30 & :50 - :60",
-        "is_safe": lambda m: (20 <= m <= 30) or (50 <= m <= 60),
-        "collision_desc": "PC A (:00-:20) & PC B (:30-:50)",
+        "name": "PC C (This PC / anonymous1)",
+        "account": "anonymous1",
+        "hostname_hint": "12900K",
+        "model_tier": "Gemini Ultra",
+        "cadence_desc": "4 turns/hr",
+        "minutes": [2, 20, 38, 48],
+        "safe_window": "Outside Pro Windows (:00-:10, :18-:28, :36-:56)",
+        "is_safe": lambda m: not ((10 <= m <= 18) or (28 <= m <= 36)),
+        "collision_desc": "Reserved for PC A (Pro: :10-:18) & PC B (Pro: :28-:36)",
     },
 }
 
@@ -91,21 +98,21 @@ def get_current_node_id() -> str:
         res = subprocess.run(["git", "config", "user.name"], cwd=str(REPO_ROOT), capture_output=True, text=True, timeout=2)
         if res.returncode == 0:
             uname = res.stdout.strip().lower()
-            if "sdgdvs" in uname:
-                return "pc_b"
-            if "anonymous2" in uname:
-                return "pc_c"
             if "anonymous1" in uname or "kiloapps" in uname:
+                return "pc_c"
+            if "sdgdvs" in uname:
                 return "pc_a"
+            if "anonymous2" in uname:
+                return "pc_b"
     except Exception:
         pass
 
     import socket
     h = socket.gethostname().upper()
     if "12900K" in h:
-        return "pc_a"
+        return "pc_c"
 
-    return "pc_a"
+    return "pc_c"
 
 
 def load_fleet_nodes() -> dict:
@@ -277,7 +284,15 @@ class FleetDashboard(tk.Tk):
 
         # Identify local node
         self.current_node_id = get_current_node_id()
-        self.current_node_profile = NODE_PROFILES.get(self.current_node_id, NODE_PROFILES["pc_a"])
+        self.current_node_profile = dict(NODE_PROFILES.get(self.current_node_id, NODE_PROFILES["pc_c"]))
+        if self.current_node_id == "pc_c":
+            cad = self.config_data.get("cadence", 4)
+            if cad == 3:
+                self.current_node_profile["minutes"] = [2, 22, 42]
+                self.current_node_profile["cadence_desc"] = "3 turns/hr"
+            else:
+                self.current_node_profile["minutes"] = [2, 20, 38, 48]
+                self.current_node_profile["cadence_desc"] = "4 turns/hr"
         self.current_node_name = self.current_node_profile["name"]
 
         # Telemetry query caching
@@ -337,15 +352,51 @@ class FleetDashboard(tk.Tk):
         )
         title_lbl.pack(anchor="w")
 
-        min_desc = f":{self.current_node_profile['minutes'][0]:02d} & :{self.current_node_profile['minutes'][1]:02d}"
-        subtitle_lbl = tk.Label(
+        min_desc = ", ".join([f":{m:02d}" for m in self.current_node_profile["minutes"]])
+        tier_desc = self.current_node_profile.get("model_tier", "Gemini Ultra")
+        self.subtitle_lbl = tk.Label(
             hdr_frame,
-            text=f"Multi-PC Dispatcher • Local: {self.current_node_name} (Slots {min_desc})",
+            text=f"Multi-PC Dispatcher • Local: {self.current_node_name} • {tier_desc} (Slots {min_desc})",
             font=("Segoe UI", 9),
             fg=self.c_sub,
             bg=self.c_bg,
         )
-        subtitle_lbl.pack(anchor="w")
+        self.subtitle_lbl.pack(anchor="w")
+
+        # For PC C (Gemini Ultra): Cadence selection (3 or 4 turns/hr)
+        if self.current_node_id == "pc_c":
+            cad_frame = tk.Frame(main_frame, bg="#212234", padx=8, pady=4, highlightbackground=self.c_card_border, highlightthickness=1)
+            cad_frame.pack(fill=tk.X, pady=(2, 6))
+            tk.Label(cad_frame, text="⚡ ULTRA CADENCE:", font=("Segoe UI", 8, "bold"), fg=self.c_accent, bg="#212234").pack(side=tk.LEFT)
+            self.var_cadence = tk.IntVar(value=self.config_data.get("cadence", 4))
+            r4 = tk.Radiobutton(
+                cad_frame,
+                text="4 turns/hr (:02, :20, :38, :48)",
+                variable=self.var_cadence,
+                value=4,
+                command=self._on_change_cadence,
+                font=("Segoe UI", 8),
+                fg=self.c_fg,
+                bg="#212234",
+                selectcolor="#313244",
+                activebackground="#212234",
+                activeforeground=self.c_fg,
+            )
+            r4.pack(side=tk.LEFT, padx=(10, 6))
+            r3 = tk.Radiobutton(
+                cad_frame,
+                text="3 turns/hr (:02, :22, :42)",
+                variable=self.var_cadence,
+                value=3,
+                command=self._on_change_cadence,
+                font=("Segoe UI", 8),
+                fg=self.c_fg,
+                bg="#212234",
+                selectcolor="#313244",
+                activebackground="#212234",
+                activeforeground=self.c_fg,
+            )
+            r3.pack(side=tk.LEFT)
 
         # 2. Main Local Control Buttons Frame
         btn_frame = tk.Frame(main_frame, bg=self.c_bg)
@@ -602,6 +653,22 @@ class FleetDashboard(tk.Tk):
         save_config(self.config_data)
         self.log(f"Auto-start turns on login set to: {val}")
 
+    def _on_change_cadence(self):
+        val = self.var_cadence.get()
+        self.config_data["cadence"] = val
+        save_config(self.config_data)
+        if val == 3:
+            self.current_node_profile["minutes"] = [2, 22, 42]
+            self.current_node_profile["cadence_desc"] = "3 turns/hr"
+        else:
+            self.current_node_profile["minutes"] = [2, 20, 38, 48]
+            self.current_node_profile["cadence_desc"] = "4 turns/hr"
+        min_desc = ", ".join([f":{m:02d}" for m in self.current_node_profile["minutes"]])
+        tier_desc = self.current_node_profile.get("model_tier", "Gemini Ultra")
+        self.subtitle_lbl.configure(text=f"Multi-PC Dispatcher • Local: {self.current_node_name} • {tier_desc} (Slots {min_desc})")
+        self.log(f"Ultra cadence updated to {val} turns/hr (Slots {min_desc}). Re-arming scheduler...")
+        self.start_creation_turns(silent=True)
+
     def on_close(self):
         self.destroy()
 
@@ -616,21 +683,24 @@ class FleetDashboard(tk.Tk):
 
         def task():
             try:
-                # 1. Run register_task.ps1 via PowerShell with -NodeId and -Hours 24
+                # 1. Run register_task.ps1 via PowerShell with -NodeId and -Cadence
                 ps_script = REPO_ROOT / "scripts" / "register_task.ps1"
+                cmd = [
+                    "powershell.exe",
+                    "-NoProfile",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(ps_script),
+                    "-Hours",
+                    "24",
+                    "-NodeId",
+                    self.current_node_id,
+                ]
+                if self.current_node_id == "pc_c":
+                    cmd.extend(["-Cadence", str(self.config_data.get("cadence", 4))])
                 res = subprocess.run(
-                    [
-                        "powershell.exe",
-                        "-NoProfile",
-                        "-ExecutionPolicy",
-                        "Bypass",
-                        "-File",
-                        str(ps_script),
-                        "-Hours",
-                        "24",
-                        "-NodeId",
-                        self.current_node_id,
-                    ],
+                    cmd,
                     cwd=str(REPO_ROOT),
                     capture_output=True,
                     text=True,
@@ -1004,7 +1074,7 @@ class FleetDashboard(tk.Tk):
             status = nd.get("status", "unknown").lower()
             remote_cmd = nd.get("remote_command", "none")
             sched_mins = nd.get("schedule_minutes", NODE_PROFILES.get(nid, {}).get("minutes", []))
-            sched_str = f":{sched_mins[0]:02d}, :{sched_mins[1]:02d}" if len(sched_mins) >= 2 else "--"
+            sched_str = ", ".join([f":{m:02d}" for m in sched_mins]) if sched_mins else "--"
 
             if nid == self.current_node_id:
                 if task_state == "Ready" and session_active:
@@ -1024,7 +1094,7 @@ class FleetDashboard(tk.Tk):
                     stat_text = f"ACTIVE ({sched_str})"
                     stat_color = self.c_green
                 elif status == "stopped":
-                    stat_text = "STOPPED"
+                    stat_text = f"STOPPED ({sched_str})"
                     stat_color = self.c_sub
                 else:
                     stat_text = f"{status.upper()} ({sched_str})"

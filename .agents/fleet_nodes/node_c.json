@@ -1,15 +1,22 @@
 {
   "node_id": "pc_c",
-  "name": "PC C (anonymous2)",
-  "account": "anonymous2",
-  "hostname": "PC-C",
-  "status": "stopped",
-  "schedule_minutes": [22, 52],
-  "session_start": null,
-  "session_end": null,
-  "turns_executed": 0,
-  "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-09-28T17:56:12Z",
-  "current_target": "idle",
+  "name": "PC C (This PC / anonymous1)",
+  "account": "anonymous1",
+  "hostname": "12900K",
+  "model_tier": "Gemini Ultra",
+  "cadence": "4 turns/hour",
+  "status": "active",
+  "schedule_minutes": [
+    2,
+    20,
+    38,
+    48
+  ],
+  "session_start": "2026-09-29T18:14:37.0112595Z",
+  "session_end": "2026-09-30T18:14:37.0112595Z",
+  "turns_executed": 1,
+  "last_turn_timestamp": "2026-09-29T18:07:21Z",
+  "last_heartbeat": "2026-09-29T18:14:37.0112595Z",
+  "current_target": "kilo-graphics ➔ KMystery",
   "remote_command": "none"
 }

@@ -2,26 +2,30 @@
 .SYNOPSIS
     Registers and activates the Windows Scheduled Task for the KiloApps Fleet Orchestrator.
 .DESCRIPTION
-    Harmonizes with remote fleet contributors (sdgdvs and anonymous2) by dispatching
-    at the maximum practical non-conflicting rate (2 turns/hour at XX:02 and XX:17) for
-    exactly 24 hours (1 day). Automatically halts and disables the task when the 24-hour
-    duration expires until the user explicitly requests more time.
+    Multi-PC Fleet Topology:
+      - PC A (sdgdvs, Gemini Pro): 1 turn/hr at :12 past each hour (Window :10 - :18)
+      - PC B (anonymous2, Gemini Pro): 1 turn/hr at :30 past each hour (Window :28 - :36)
+      - PC C (This PC / anonymous1, Gemini Ultra): 4 turns/hr at :02, :20, :38, :48 past each hour
+        (or 3 turns/hr at :02, :22, :42 past each hour).
+    Automatically halts and disables the task when the 24-hour session expires.
 .PARAMETER Hours
     Duration of the active contribution session in hours. Default: 24.0 (1 day).
-.PARAMETER Minute1
-    First trigger minute past each hour. Default: 2.
-.PARAMETER Minute2
-    Second trigger minute past each hour. Default: 17.
+.PARAMETER NodeId
+    Node identifier: "pc_c" (this PC), "pc_a", "pc_b", or "auto".
+.PARAMETER Cadence
+    For PC C: 4 (default, 4 turns/hr) or 3 (3 turns/hr).
+.PARAMETER Minutes
+    Custom explicit array of minute integers past each hour.
 .PARAMETER TaskName
     Name of the scheduled task. Default: "KiloApps-Fleet-Orchestrator".
 .PARAMETER RunNow
-    Optionally trigger an immediate turn right now (if inside the safe window).
+    Optionally trigger an immediate turn right now (if inside safe window).
 #>
 param(
     [double]$Hours = 24.0,
     [string]$NodeId = "auto",
-    [int]$Minute1 = -1,
-    [int]$Minute2 = -1,
+    [int]$Cadence = 0,
+    [int[]]$Minutes = @(),
     [string]$TaskName = "KiloApps-Fleet-Orchestrator",
     [switch]$RunNow
 )
@@ -42,35 +46,41 @@ try { $GitUser = (git -C $RepoRoot config user.name) } catch {}
 $HostName = $env:COMPUTERNAME
 
 if ($NodeId -eq "auto") {
-    if ($GitUser -match "sdgdvs") {
-        $NodeId = "pc_b"
-    } elseif ($GitUser -match "anonymous2") {
+    if ($GitUser -match "anonymous1" -or $HostName -match "12900K") {
         $NodeId = "pc_c"
-    } else {
+    } elseif ($GitUser -match "sdgdvs") {
         $NodeId = "pc_a"
+    } elseif ($GitUser -match "anonymous2") {
+        $NodeId = "pc_b"
+    } else {
+        $NodeId = "pc_c"
     }
 }
 
-if ($Minute1 -lt 0 -or $Minute2 -lt 0) {
-    if ($NodeId -eq "pc_b") {
-        $Minute1 = 32
-        $Minute2 = 47
-        $NodeDesc = "PC B (sdgdvs)"
-    } elseif ($NodeId -eq "pc_c") {
-        $Minute1 = 22
-        $Minute2 = 52
-        $NodeDesc = "PC C (anonymous2)"
+if ($Minutes.Count -eq 0) {
+    if ($NodeId -eq "pc_a") {
+        $Minutes = @(12)
+        $NodeDesc = "PC A (sdgdvs • Gemini Pro - 1 turn/hr at :12)"
+    } elseif ($NodeId -eq "pc_b") {
+        $Minutes = @(30)
+        $NodeDesc = "PC B (anonymous2 • Gemini Pro - 1 turn/hr at :30)"
     } else {
-        $Minute1 = 2
-        $Minute2 = 17
-        $NodeDesc = "PC A (anonymous1 / 12900K)"
+        if ($Cadence -eq 3) {
+            $Minutes = @(2, 22, 42)
+            $NodeDesc = "PC C (This PC / anonymous1 • Gemini Ultra - 3 turns/hr at :02, :22, :42)"
+        } else {
+            $Minutes = @(2, 20, 38, 48)
+            $NodeDesc = "PC C (This PC / anonymous1 • Gemini Ultra - 4 turns/hr at :02, :20, :38, :48)"
+        }
     }
 } else {
-    $NodeDesc = "$NodeId (Custom :$($Minute1.ToString('D2')) & :$($Minute2.ToString('D2')))"
+    $minList = ($Minutes | ForEach-Object { ":$($_.ToString('D2'))" }) -join ", "
+    $NodeDesc = "$NodeId (Custom Minutes: $minList)"
 }
 
 $Now = Get-Date
 $SessionEnd = $Now.AddHours($Hours)
+$minDisplay = ($Minutes | ForEach-Object { ":$($_.ToString('D2'))" }) -join ", "
 
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host " KiloApps Multi-PC Fleet Scheduler Configuration" -ForegroundColor Cyan
@@ -78,7 +88,7 @@ Write-Host "============================================================" -Foreg
 Write-Host "Target Machine:      $NodeDesc [Node ID: $NodeId]"
 Write-Host "Session Start:       $($Now.ToString('yyyy-MM-dd HH:mm:ss'))"
 Write-Host "Session Expiration:  $($SessionEnd.ToString('yyyy-MM-dd HH:mm:ss')) (${Hours}h window)"
-Write-Host "Dispatch Cadence:    Every hour at :$($Minute1.ToString('D2')) and :$($Minute2.ToString('D2')) (2 turns/hr = $([int]($Hours * 2)) turns/session)"
+Write-Host "Dispatch Cadence:    Every hour at $minDisplay ($($Minutes.Count) turns/hr = $([int]($Hours * $Minutes.Count)) turns/session)"
 Write-Host "Fleet Harmony:       Dedicated collision-free slot across PC A, PC B, and PC C"
 Write-Host "------------------------------------------------------------"
 
@@ -88,10 +98,9 @@ $SessionData = @{
     session_start       = $Now.ToUniversalTime().ToString("o")
     session_end         = $SessionEnd.ToUniversalTime().ToString("o")
     duration_hours      = $Hours
-    max_turns_estimate  = [int]($Hours * 2)
+    max_turns_estimate  = [int]($Hours * $Minutes.Count)
     turns_executed      = 0
-    minute1             = $Minute1
-    minute2             = $Minute2
+    minutes             = $Minutes
     task_name           = $TaskName
     status              = "active"
     last_turn_timestamp = $null
@@ -105,7 +114,7 @@ if (Test-Path $NodeFile) {
         $NodeData.status = "active"
         $NodeData.session_start = $Now.ToUniversalTime().ToString("o")
         $NodeData.session_end = $SessionEnd.ToUniversalTime().ToString("o")
-        $NodeData.schedule_minutes = @($Minute1, $Minute2)
+        $NodeData.schedule_minutes = $Minutes
         $NodeData.last_heartbeat = $Now.ToUniversalTime().ToString("o")
         $NodeData.remote_command = "none"
         $NodeData | ConvertTo-Json -Depth 4 | Set-Content $NodeFile -Encoding UTF8
@@ -117,25 +126,21 @@ if (-not (Test-Path $SessionDir)) {
     New-Item -ItemType Directory -Path $SessionDir -Force | Out-Null
 }
 $SessionData | ConvertTo-Json -Depth 4 | Set-Content $SessionFile -Encoding UTF8
-Write-Host "[✓] Session state initialized: .agents\scheduler_session.json" -ForegroundColor Green
+Write-Host "[OK] Session state initialized: .agents\scheduler_session.json" -ForegroundColor Green
 
-# 2. Calculate trigger start boundaries
-$s1 = (Get-Date -Hour $Now.Hour -Minute $Minute1 -Second 0)
-if ($s1 -le $Now) { $s1 = $s1.AddHours(1) }
-
-$s2 = (Get-Date -Hour $Now.Hour -Minute $Minute2 -Second 0)
-if ($s2 -le $Now) { $s2 = $s2.AddHours(1) }
-
-# 3. Create scheduled task triggers
+# 2. Create scheduled task triggers
 $TimeSpanHours = [TimeSpan]::FromHours($Hours)
+$Triggers = @()
 
-$Trigger1 = New-ScheduledTaskTrigger -Once -At $s1 -RepetitionInterval (New-TimeSpan -Hours 1) -RepetitionDuration $TimeSpanHours
-$Trigger1.EndBoundary = $SessionEnd.ToString("s")
+foreach ($m in $Minutes) {
+    $s = (Get-Date -Hour $Now.Hour -Minute $m -Second 0)
+    if ($s -le $Now) { $s = $s.AddHours(1) }
+    $trig = New-ScheduledTaskTrigger -Once -At $s -RepetitionInterval (New-TimeSpan -Hours 1) -RepetitionDuration $TimeSpanHours
+    $trig.EndBoundary = $SessionEnd.ToString("s")
+    $Triggers += $trig
+}
 
-$Trigger2 = New-ScheduledTaskTrigger -Once -At $s2 -RepetitionInterval (New-TimeSpan -Hours 1) -RepetitionDuration $TimeSpanHours
-$Trigger2.EndBoundary = $SessionEnd.ToString("s")
-
-# 4. Action and Settings
+# 3. Action and Settings
 $Action = New-ScheduledTaskAction -Execute $BatPath -WorkingDirectory $RepoRoot
 $Settings = New-ScheduledTaskSettingsSet `
     -AllowStartIfOnBatteries `
@@ -144,17 +149,17 @@ $Settings = New-ScheduledTaskSettingsSet `
     -ExecutionTimeLimit (New-TimeSpan -Minutes 25) `
     -MultipleInstances IgnoreNew
 
-# 5. Register Task
-Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger @($Trigger1, $Trigger2) -Settings $Settings -Force | Out-Null
+# 4. Register Task
+Register-ScheduledTask -TaskName $TaskName -Action $Action -Trigger $Triggers -Settings $Settings -Force | Out-Null
 Enable-ScheduledTask -TaskName $TaskName | Out-Null
 
 $Task = Get-ScheduledTask -TaskName $TaskName
 $TaskInfo = Get-ScheduledTaskInfo -TaskName $TaskName
 
-Write-Host "[✓] Windows Scheduled Task '$TaskName' registered successfully!" -ForegroundColor Green
+Write-Host "[OK] Windows Scheduled Task '$TaskName' registered successfully!" -ForegroundColor Green
 Write-Host "    State:          $($Task.State)"
 Write-Host "    Next Run:       $($TaskInfo.NextRunTime)"
-Write-Host "    Triggers Active: 2 (at :$($Minute1.ToString('D2')) and :$($Minute2.ToString('D2')) past each hour)"
+Write-Host "    Triggers Active: $($Triggers.Count) (at $minDisplay past each hour)"
 Write-Host "    Auto-Stop At:   $($SessionEnd.ToString('yyyy-MM-dd HH:mm:ss'))"
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host "Fleet Commands:"
@@ -164,10 +169,6 @@ Write-Host "  Extend/Resume:   .\scripts\extend_time.ps1 -Hours 24" -ForegroundC
 Write-Host "============================================================" -ForegroundColor Cyan
 
 if ($RunNow) {
-    if ($Now.Minute -ge 32 -and $Now.Minute -le 58) {
-        Write-Warning "Current minute (:$($Now.Minute.ToString('D2'))) is in the remote fleet contributor window (XX:32-XX:58). Skipping immediate run to prevent git collisions. Next run will trigger at $($TaskInfo.NextRunTime)."
-    } else {
-        Write-Host "Launching initial turn now via Task Scheduler..." -ForegroundColor Cyan
-        Start-ScheduledTask -TaskName $TaskName
-    }
+    Write-Host "Launching initial turn now via Task Scheduler..." -ForegroundColor Cyan
+    Start-ScheduledTask -TaskName $TaskName
 }
