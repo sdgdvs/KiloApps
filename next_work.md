@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-tester
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: KScript
   kilo_graphics: KMech
   kilo_qa: KMystery
-  kilo_expander: KChart
+  kilo_expander: KGraph
   kilo_creator: "kweb://portal (KiloNet Central 1999 Directory Deep Expansion)"
 virtual_web_target: "kweb://portal"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://deep-core"
   - "kweb://darknet"
 last_run:
-  agent: kilo-qa
-  app: KVault
-  timestamp: "2026-09-29T00:08:00Z"
+  agent: kilo-expander
+  app: KChart
+  timestamp: "2026-09-29T00:25:00Z"
 last_planner_run: "2026-09-28T10:38:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KQuest`, `KSanctuary`, `KClip`, `KCipher`, `KTrader`, `KType`, `KVault` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, KClip, KCipher, KTodo)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KChart`
+- **Current Target**: `KGraph`
 - **Upcoming Queue**:
-  `KGraph`, `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts`, `KPass` *(Completed: KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia)*.
+  `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts`, `KPass` *(Completed: KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -242,6 +242,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T00:25:00Z — kilo-expander: KChart (10-Mode Vis, YM2612 FM Sonification, Poly/Exp Regressions & Transforms)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
+  - Visualization Engines: Added Horizontal Bar, Stepped Waveform, Scatter Plot with Crosshairs, and Polar Coxcomb Rose (10 modes total).
+  - Mathematical Analytics: Added 2nd-order Quadratic Polynomial ($y=ax^2+bx+c$), Exponential ($y=ae^{bx}$), and Confidence Corridor ($\pm\sigma$) regressions.
+  - Procedural Audio Architecture: Added Sega Genesis YM2612 2-Op FM synthesis & SNES SPC700 stereo delay DSP; built live dataset sonification sweep.
+  - Data Transforms & Target: Implemented Normalize (0-100%), CumSum, Delta, Gaussian Smooth, Reverse, Undo history, and KPI Benchmark line.
+  - Exports & Native Parity: Added Markdown, C header, and HTML widget exports; expanded Win32 C binary with all new modes/presets and clean MSVC build.
+  - Verification: MSVC clean (`KChart.exe` 35.0 KB); Vite clean in 287ms (`kchart.html` 116.5 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-29T00:08:00Z — kilo-qa: KVault (Pass 5 QA, State Persistence, In-App Confirm Modal & Toast Occlusion)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
   - Quicksave/Quickload: Enhanced F5 snapshot and F9 restore capturing drafts, search query, theme, and timeout.
@@ -275,15 +284,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Input Ergonomics: Added Form Enter keydown handler to save contact changes; wired F5/F9/Enter shortcuts into help guide.
   - Toast Non-Occlusion: Relocated toast notifications to non-occluding bottom-right anchor with bounded queue (≤3 toasts).
   - Verification: MSVC clean (`KContacts.exe` 28.1 KB); Vite clean in 328ms (`kcontacts.html` 139.9 KB < 999 KB); security lint & check_icons 100% PASS.
-
-- **2026-09-28T22:06:00Z — kilo-creator: kweb://darknet (Subterranean Darknet Hub & Node 0x7F Packet Sniffer)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
-  - Packet Sniffer & Injector: Implemented Bell 202 AFSK packet crafting and injector with live subterranean destination node responses.
-  - RF Spectrum & Waterfall: Built dual-canvas visualization with real-time oscilloscope, cascading 2D waterfall spectrogram, and S-meter.
-  - Spool & Schematics Archive: Added downloadable client-side generated assets (.asc map, .asm driver, .conf routes, .bin firmware).
-  - Cryptic Decoder & Morse Suite: Expanded decoder with Atbash, 8-bit binary, and Morse code engine with procedural Web Audio CW tone.
-  - Terminal & Network Depth: Added traceroute, netstat, cat/ls virtual spool filesystem, tab completion, and webring interlinking.
-  - Verification: `darknet.html` 97.55 KB (<999 KB ceiling); Vite clean in 275ms; `scripts/security_lint.py` 100% PASS.
 
 
 

@@ -66,13 +66,17 @@ COLORREF themes[NUM_THEMES][NUM_ITEMS] = {
 
 int currentTheme = 0;
 
-#define NUM_PRESETS 5
+#define NUM_PRESETS 9
 const char* presetNames[NUM_PRESETS] = {
     "Quarterly Revenue",
     "Tech Stack Share",
     "Monthly Temp",
     "Exam Score Dist",
-    "Weekly Activity"
+    "Weekly Activity",
+    "Subnet 10.19.99.x Packet Activity",
+    "Y2K System Readiness %",
+    "1999 Sound Card Market Share",
+    "Surreal vs Tremor LAN Ping (ms)"
 };
 
 const char* presetLabels[NUM_PRESETS][NUM_ITEMS] = {
@@ -80,7 +84,11 @@ const char* presetLabels[NUM_PRESETS][NUM_ITEMS] = {
     { "React", "Vue", "Svelte", "Node", "Python" },
     { "Jan", "Apr", "Jul", "Oct", "Dec" },
     { "A", "B", "C", "D", "F" },
-    { "Mon", "Tue", "Wed", "Thu", "Fri" }
+    { "Mon", "Tue", "Wed", "Thu", "Fri" },
+    { "10.19.99.1", "10.19.99.4", "10.19.99.12", "10.19.99.7F", "10.19.99.128" },
+    { "BIOS", "Win98", "RTDB", "SCADA", "Mail" },
+    { "SBLive", "AWE64", "GUS", "Solo1", "YMF724" },
+    { "Surreal", "Tremor", "VoidCraft", "HalfCycle", "MachinaEx" }
 };
 
 int presetValues[NUM_PRESETS][NUM_ITEMS] = {
@@ -88,7 +96,11 @@ int presetValues[NUM_PRESETS][NUM_ITEMS] = {
     { 42, 28, 18, 55, 60 },
     { 14, 22, 35, 20, 10 },
     { 28, 45, 32, 14, 6 },
-    { 30, 45, 15, 50, 40 }
+    { 30, 45, 15, 50, 40 },
+    { 32, 84, 46, 98, 62 },
+    { 98, 95, 82, 74, 100 },
+    { 52, 22, 11, 7, 5 },
+    { 28, 34, 42, 38, 55 }
 };
 
 int currentPreset = 0;
@@ -104,7 +116,7 @@ void LoadPreset(int idx) {
 
 int selectedIndex = 0;
 
-char statusText[128] = "Press [F1] Help | [P] Presets | [1-6] Mode | [T] Trend | [C] Theme | [R] Rand | [Up/Down] Nudge | [Ctrl+C] Copy";
+char statusText[128] = "Press [F1] Help | [P] Presets | [1-9] Mode | [T] Trend | [C] Theme | [R] Rand | [Up/Down] Nudge | [Ctrl+C] Copy";
 DWORD statusExpiry = 0;
 
 void SetStatus(const char* msg) {
@@ -133,17 +145,27 @@ HWND hBtnCopy;
 HWND hBtnHelp;
 HFONT hBtnFont = NULL;
 
-// Chart modes: 0 = Bar, 1 = Line, 2 = Area, 3 = Pie, 4 = Donut, 5 = Radar
+// Chart modes: 0=Bar, 1=Line, 2=Area, 3=Pie, 4=Donut, 5=Radar, 6=H-Bar, 7=Step, 8=Polar
+#define NUM_MODES 9
 int chartMode = 0;
-const char* modeNames[6] = { "Bar View", "Line View", "Area View", "Pie View", "Donut View", "Radar View" };
+const char* modeNames[NUM_MODES] = {
+    "Bar View", "Line View", "Area View", "Pie View", "Donut View",
+    "Radar View", "H-Bar View", "Step View", "Polar View"
+};
 
-// Trend modes: 0 = Off, 1 = Linear Fit, 2 = Mov Avg (3), 3 = Mean Line
+// Trend modes: 0=Off, 1=Linear Fit, 2=Mov Avg, 3=Mean, 4=Poly (x2)
+#define NUM_TRENDS 5
 int trendMode = 0;
-const char* trendNames[4] = { "Trend: Off", "Trend: Linear Fit", "Trend: MovAvg", "Trend: Mean" };
+const char* trendNames[NUM_TRENDS] = {
+    "Trend: Off", "Trend: Linear Fit", "Trend: MovAvg", "Trend: Mean", "Trend: Poly (x2)"
+};
 
 double trendSlope = 0.0;
 double trendIntercept = 0.0;
 double trendR2 = 0.0;
+double polyA = 0.0;
+double polyB = 0.0;
+double polyC = 0.0;
 
 static void FormatTrendEq(char* dest, double slope, double intercept, double r2) {
     int sSign = slope < 0 ? -1 : 1;
@@ -171,6 +193,27 @@ static void FormatTrendEq(char* dest, double slope, double intercept, double r2)
             iSign < 0 ? '-' : '+', iWhole, iFrac,
             rFrac);
     }
+}
+
+static void FormatPolyEq(char* dest, double a, double b, double c) {
+    int aSign = a < 0 ? -1 : 1;
+    double absA = a < 0 ? -a : a;
+    int aWhole = (int)absA;
+    int aFrac = (int)((absA - (double)aWhole) * 100.0 + 0.5);
+
+    int bSign = b < 0 ? -1 : 1;
+    double absB = b < 0 ? -b : b;
+    int bWhole = (int)absB;
+    int bFrac = (int)((absB - (double)bWhole) * 100.0 + 0.5);
+
+    int cSign = c < 0 ? -1 : 1;
+    double absC = c < 0 ? -c : c;
+    int cWhole = (int)absC;
+
+    wsprintfA(dest, "Poly: y = %s%d.%02dx^2 %c %d.%02dx %c %d",
+        aSign < 0 ? "-" : "", aWhole, aFrac,
+        bSign < 0 ? '-' : '+', bWhole, bFrac,
+        cSign < 0 ? '-' : '+', cWhole);
 }
 
 int hoveredIndex = -1;
@@ -244,6 +287,31 @@ void CalculateStats() {
         trendIntercept = (double)statMean;
         trendR2 = 0.0;
     }
+
+    // Polynomial Quadratic Fit: y = a x^2 + b x + c
+    double s0 = (double)NUM_ITEMS;
+    double s1 = 0, s2 = 0, s3 = 0, s4 = 0;
+    double v0 = 0, v1 = 0, v2 = 0;
+    for (int i = 0; i < NUM_ITEMS; i++) {
+        double x = (double)i;
+        double y = (double)values[i];
+        double x2 = x * x;
+        s1 += x;
+        s2 += x2;
+        s3 += x2 * x;
+        s4 += x2 * x2;
+        v0 += y;
+        v1 += x * y;
+        v2 += x2 * y;
+    }
+    double D = s0 * (s2 * s4 - s3 * s3) - s1 * (s1 * s4 - s2 * s3) + s2 * (s1 * s3 - s2 * s2);
+    if (D < -0.0001 || D > 0.0001) {
+        polyC = (v0 * (s2 * s4 - s3 * s3) - s1 * (v1 * s4 - v2 * s3) + s2 * (v1 * s3 - v2 * s2)) / D;
+        polyB = (s0 * (v1 * s4 - v2 * s3) - v0 * (s1 * s4 - s2 * s3) + s2 * (s1 * v2 - v1 * s2)) / D;
+        polyA = (s0 * (s2 * v2 - v1 * s3) - s1 * (s1 * v2 - v1 * s2) + v0 * (s1 * s3 - s2 * s2)) / D;
+    } else {
+        polyA = 0.0; polyB = 0.0; polyC = (double)statMean;
+    }
 }
 
 void CopyDataToClipboard(HWND hwnd) {
@@ -274,21 +342,21 @@ void CopyDataToClipboard(HWND hwnd) {
 
 void ShowHelpDialog(HWND hwnd) {
     MessageBox(hwnd,
-        "KChart Studio - Advanced Data Visualization & Regression Suite\n\n"
+        "KChart Studio - Advanced Data Visualization & Analytics Suite\n\n"
         "QUICK-START TUTORIAL:\n"
-        "  1. Direct Mode: Press 1-6 or click [Mode] to switch Bar, Line, Area, Pie, Donut, Radar views.\n"
-        "  2. Presets: Press [P] or click [Preset] to cycle realistic business, tech, & scientific datasets.\n"
-        "  3. Interactive Tweaking: Press [Left]/[Right] to select a bar; press [Up]/[Down] or [+/-] to nudge value.\n"
-        "  4. Regression Overlays: Press [T] or click [Trend] for Linear Fit (OLS y=mx+b), Moving Avg, or Mean.\n"
+        "  1. Direct Mode: Press 1-9 to switch Bar, Line, Area, Pie, Donut, Radar, H-Bar, Step, Polar views.\n"
+        "  2. Presets: Press [P] or click [Preset] to cycle 9 sample datasets (Finance, Tech, Subnet Telemetry '99, Y2K).\n"
+        "  3. Interactive Tweaking: Press [Left]/[Right] to select; press [Up]/[Down] or [+/-] to nudge value.\n"
+        "  4. Regression Overlays: Press [T] or click [Trend] for Linear Fit, MovAvg, Mean, or Quadratic Poly.\n"
         "  5. Export & Copy: Press [Ctrl+C] or click [Copy] to copy data and statistics to the Windows clipboard.\n\n"
         "KEYBOARD SHORTCUTS:\n"
         "  [F1] or [H]   : Open this Help & Feature Guide\n"
         "  [F5]          : QuickSave snapshot to disk\n"
         "  [F9]          : QuickLoad snapshot from disk\n"
-        "  [1] - [6]     : Direct Mode (1:Bar, 2:Line, 3:Area, 4:Pie, 5:Donut, 6:Radar)\n"
-        "  [P]           : Cycle Sample Presets (Revenue, Tech, Temp, Scores, Activity)\n"
+        "  [1] - [9]     : Select Chart Mode (1:Bar, 2:Line, 3:Area, 4:Pie, 5:Donut, 6:Radar, 7:HBar, 8:Step, 9:Polar)\n"
+        "  [P]           : Cycle Sample Presets & 1999 Logs\n"
         "  [M]           : Cycle Chart Modes sequentially\n"
-        "  [T]           : Cycle Trendline Overlays (Off, Linear Fit, MovAvg, Mean)\n"
+        "  [T]           : Cycle Trendline Overlays (Off, Linear Fit, MovAvg, Mean, Poly x2)\n"
         "  [C]           : Cycle Color Themes (Cyber Teal, Neon Sunset, Emerald, etc.)\n"
         "  [R]           : Generate Randomized Dataset with animation\n"
         "  [S]           : Sort Dataset Ascending\n"
@@ -296,7 +364,7 @@ void ShowHelpDialog(HWND hwnd) {
         "  [Up]/[Down]   : Nudge selected value (+5 / -5)\n"
         "  [Ctrl+C]      : Copy dataset and summary statistics to Clipboard\n\n"
         "MOUSE CONTROLS:\n"
-        "  - Hover over chart bars, line vertices, slices, or radar nodes for interactive tooltips\n"
+        "  - Hover over bars, points, pie slices, radar spokes, or petals for interactive tooltips\n"
         "  - Click toolbar buttons at bottom to switch views & controls",
         "KChart Studio Guide",
         MB_OK | MB_ICONINFORMATION);
@@ -444,17 +512,44 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
                 }
-            } else { // Bar, Line, Area
+            } else if (chartMode == 6) { // Horizontal Bar
+                int chartX = SCALE(90);
+                int chartY = SCALE(66);
+                int chartW = W - SCALE(115);
+                int chartH = H - SCALE(115);
+                int stepY = chartH / NUM_ITEMS;
+                int barH = SCALE(24);
+                for (int i = 0; i < NUM_ITEMS; i++) {
+                    int by = chartY + i * stepY + (stepY - barH) / 2;
+                    if (mouseY >= by && mouseY <= by + barH && mouseX >= chartX - SCALE(80) && mouseX <= chartX + chartW) {
+                        newHover = i;
+                        break;
+                    }
+                }
+            } else if (chartMode == 8) { // Polar Coxcomb Rose
+                int cx = W / 2 - SCALE(50);
+                int cy = (H - SCALE(100)) / 2 + SCALE(45);
+                int dx = mouseX - cx;
+                int dy = mouseY - cy;
+                int distSq = dx * dx + dy * dy;
+                int maxR = (W < H - SCALE(100) ? W : H - SCALE(100)) * 34 / 100;
+                if (distSq <= (maxR + 15) * (maxR + 15)) {
+                    double angle = my_atan2((double)dy, (double)dx);
+                    if (angle < -MY_PI / 2.0) angle += MY_PI * 2.0;
+                    double offsetAngle = angle + MY_PI / 2.0;
+                    while (offsetAngle < 0.0) offsetAngle += MY_PI * 2.0;
+                    while (offsetAngle >= MY_PI * 2.0) offsetAngle -= MY_PI * 2.0;
+                    double angleStep = (MY_PI * 2.0) / NUM_ITEMS;
+                    int idx = (int)(offsetAngle / angleStep);
+                    if (idx >= 0 && idx < NUM_ITEMS) newHover = idx;
+                }
+            } else { // Bar, Line, Area, Step
                 int chartX = SCALE(50);
                 int chartY = SCALE(66);
                 int chartW = W - SCALE(75);
                 int chartH = H - SCALE(115);
                 if (chartW < 50) chartW = 50;
                 if (chartH < 50) chartH = 50;
-
-                int maxVal = 100;
-                for (int i = 0; i < NUM_ITEMS; i++) if (values[i] > maxVal) maxVal = values[i];
-                if (maxVal <= 0) maxVal = 1;
 
                 int barW = SCALE(32);
                 int spacing = (chartW - (NUM_ITEMS * barW)) / (NUM_ITEMS + 1);
@@ -494,7 +589,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
                 ShowHelpDialog(hwnd);
-            } else if (wParam >= '1' && wParam <= '6') {
+            } else if (wParam >= '1' && wParam <= '9') {
                 chartMode = (int)(wParam - '1');
                 char buf[64];
                 wsprintfA(buf, "Chart View: %s", modeNames[chartMode]);
@@ -508,13 +603,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetStatus(buf);
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 'T' || wParam == 't') {
-                trendMode = (trendMode + 1) % 4;
+                trendMode = (trendMode + 1) % NUM_TRENDS;
                 char buf[64];
                 wsprintfA(buf, "Overlay: %s", trendNames[trendMode]);
                 SetStatus(buf);
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (wParam == 'M' || wParam == 'm') {
-                chartMode = (chartMode + 1) % 6;
+                chartMode = (chartMode + 1) % NUM_MODES;
                 char buf[64];
                 wsprintfA(buf, "Chart View: %s", modeNames[chartMode]);
                 SetStatus(buf);
@@ -584,9 +679,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DWORD read = 0;
                     int state[4 + NUM_ITEMS * 2];
                     if (ReadFile(hFile, state, sizeof(state), &read, NULL) && read == sizeof(state)) {
-                        chartMode = state[0] % 6;
+                        chartMode = state[0] % NUM_MODES;
                         currentTheme = state[1] % NUM_THEMES;
-                        trendMode = state[2] % 4;
+                        trendMode = state[2] % NUM_TRENDS;
                         currentPreset = state[3] % NUM_PRESETS;
                         LoadPreset(currentPreset);
                         for (int i = 0; i < NUM_ITEMS; i++) {
@@ -625,7 +720,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_COMMAND: {
-            SetFocus(hwnd); // Ensure the main window keeps focus for keyboard shortcuts
+            SetFocus(hwnd);
             int cmdId = LOWORD(wParam);
             if (cmdId == 1) { // Randomize
                 for (int i = 0; i < NUM_ITEMS; i++) {
@@ -633,7 +728,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
                 SetStatus("Generated randomized dataset");
             } else if (cmdId == 2) { // Toggle Mode
-                chartMode = (chartMode + 1) % 6;
+                chartMode = (chartMode + 1) % NUM_MODES;
                 char buf[64];
                 wsprintfA(buf, "Chart View: %s", modeNames[chartMode]);
                 SetStatus(buf);
@@ -645,7 +740,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetStatus(buf);
                 InvalidateRect(hwnd, NULL, TRUE);
             } else if (cmdId == 6) { // Toggle Trendline Overlay
-                trendMode = (trendMode + 1) % 4;
+                trendMode = (trendMode + 1) % NUM_TRENDS;
                 char buf[64];
                 wsprintfA(buf, "Overlay: %s", trendNames[trendMode]);
                 SetStatus(buf);
@@ -707,7 +802,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HGDIOBJ oldFont = SelectObject(memDC, hFont);
             SetBkMode(memDC, TRANSPARENT);
 
-            // Title & Mode & Theme Header
+            // Title Header
             SetTextColor(memDC, RGB(244, 244, 245));
             char titleStr[128];
             wsprintfA(titleStr, "KChart Studio | %s | %s | %s", modeNames[chartMode], themeNames[currentTheme], trendNames[trendMode]);
@@ -725,7 +820,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Status Bar & Shortcut Cue
             if (statusExpiry != 0 && GetTickCount() > statusExpiry) {
                 statusExpiry = 0;
-                char* def = "Press [F1] Help | [P] Presets | [1-6] Mode | [T] Trend | [C] Theme | [R] Rand | [Up/Down] Nudge | [Ctrl+C] Copy";
+                char* def = "Press [F1] Help | [P] Presets | [1-9] Mode | [T] Trend | [C] Theme | [R] Rand | [Up/Down] Nudge | [Ctrl+C] Copy";
                 int idx = 0;
                 while (def[idx] && idx < sizeof(statusText) - 1) {
                     statusText[idx] = def[idx];
@@ -881,7 +976,163 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(ptBrush);
                     DeleteObject(noPen);
                 }
-            } else { // Bar, Line, Area
+            } else if (chartMode == 6) { // Horizontal Bar View (H-Bar)
+                int chartX = SCALE(90);
+                int chartY = SCALE(66);
+                int chartW = W - SCALE(115);
+                int chartH = H - SCALE(115);
+                if (chartW < 50) chartW = 50;
+                if (chartH < 50) chartH = 50;
+
+                int maxVal = 100;
+                for (int i = 0; i < NUM_ITEMS; i++) if (values[i] > maxVal) maxVal = values[i];
+                if (maxVal <= 0) maxVal = 1;
+
+                // Vertical Grid lines
+                HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(40, 40, 48));
+                HGDIOBJ oldGridPen = SelectObject(memDC, gridPen);
+                SetTextColor(memDC, RGB(113, 113, 122));
+
+                for (int i = 0; i <= 4; i++) {
+                    int x = chartX + (chartW / 4) * i;
+                    MoveToEx(memDC, x, chartY, NULL);
+                    LineTo(memDC, x, chartY + chartH);
+
+                    int valNum = (maxVal / 4) * i;
+                    char vstr[16];
+                    wsprintfA(vstr, "%d", valNum);
+                    RECT vr = { x - SCALE(20), chartY + chartH + SCALE(6), x + SCALE(20), chartY + chartH + SCALE(22) };
+                    DrawTextA(memDC, vstr, -1, &vr, DT_CENTER | DT_SINGLELINE);
+                }
+                SelectObject(memDC, oldGridPen);
+                DeleteObject(gridPen);
+
+                // Axes
+                HPEN axisPen = CreatePen(PS_SOLID, 2, RGB(100, 116, 139));
+                HGDIOBJ oldAxisPen = SelectObject(memDC, axisPen);
+                MoveToEx(memDC, chartX, chartY, NULL);
+                LineTo(memDC, chartX, chartY + chartH);
+                LineTo(memDC, chartX + chartW, chartY + chartH);
+                SelectObject(memDC, oldAxisPen);
+                DeleteObject(axisPen);
+
+                int stepY = chartH / NUM_ITEMS;
+                int barH = SCALE(22);
+
+                for (int i = 0; i < NUM_ITEMS; i++) {
+                    int safeV = values[i] > 0 ? values[i] : 0;
+                    int bw = (safeV * chartW) / maxVal;
+                    int by = chartY + i * stepY + (stepY - barH) / 2;
+
+                    RECT br = { chartX, by, chartX + bw, by + barH };
+                    HBRUSH brBrush = CreateSolidBrush(palette[i]);
+                    FillRect(memDC, &br, brBrush);
+                    DeleteObject(brBrush);
+
+                    if (hoveredIndex == i) {
+                        HPEN hPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+                        HGDIOBJ oldHPen = SelectObject(memDC, hPen);
+                        HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
+                        HGDIOBJ oldHBr = SelectObject(memDC, nullBr);
+                        Rectangle(memDC, chartX - 1, by - 1, chartX + bw + 2, by + barH + 1);
+                        SelectObject(memDC, oldHBr);
+                        SelectObject(memDC, oldHPen);
+                        DeleteObject(hPen);
+                    }
+
+                    // Label on left
+                    SetTextColor(memDC, hoveredIndex == i ? RGB(255, 255, 255) : RGB(161, 161, 170));
+                    RECT lr = { chartX - SCALE(85), by + SCALE(2), chartX - SCALE(8), by + barH };
+                    DrawTextA(memDC, labels[i], -1, &lr, DT_RIGHT | DT_SINGLELINE);
+
+                    // Value text on right
+                    char vstr[16];
+                    wsprintfA(vstr, "%d", values[i]);
+                    RECT vr = { chartX + bw + SCALE(6), by + SCALE(2), chartX + bw + SCALE(45), by + barH };
+                    SetTextColor(memDC, RGB(244, 244, 245));
+                    DrawTextA(memDC, vstr, -1, &vr, DT_LEFT | DT_SINGLELINE);
+                }
+            } else if (chartMode == 8) { // Polar Coxcomb Rose
+                int cx = W / 2 - SCALE(50);
+                int cy = (H - SCALE(100)) / 2 + SCALE(45);
+                int maxR = (W < H - SCALE(100) ? W : H - SCALE(100)) * 34 / 100;
+                double angleStep = (MY_PI * 2.0) / NUM_ITEMS;
+
+                // Concentric circles
+                HPEN gridPen = CreatePen(PS_SOLID, 1, RGB(40, 40, 50));
+                HGDIOBJ oldGridPen = SelectObject(memDC, gridPen);
+                for (int level = 1; level <= 4; level++) {
+                    int r = maxR * level / 4;
+                    HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
+                    HGDIOBJ oldBr = SelectObject(memDC, nullBr);
+                    Ellipse(memDC, cx - r, cy - r, cx + r, cy + r);
+                    SelectObject(memDC, oldBr);
+                }
+
+                // Spokes
+                for (int i = 0; i < NUM_ITEMS; i++) {
+                    double angle = -MY_PI / 2.0 + i * angleStep;
+                    int sx = cx + (int)(my_cos(angle) * maxR);
+                    int sy = cy + (int)(my_sin(angle) * maxR);
+                    MoveToEx(memDC, cx, cy, NULL);
+                    LineTo(memDC, sx, sy);
+
+                    int lx = cx + (int)(my_cos(angle + angleStep / 2.0) * (maxR + 18));
+                    int ly = cy + (int)(my_sin(angle + angleStep / 2.0) * (maxR + 18));
+                    RECT lr = { lx - 20, ly - 8, lx + 20, ly + 8 };
+                    SetTextColor(memDC, hoveredIndex == i ? RGB(255, 255, 255) : RGB(161, 161, 170));
+                    DrawTextA(memDC, labels[i], -1, &lr, DT_CENTER | DT_SINGLELINE);
+                }
+                SelectObject(memDC, oldGridPen);
+                DeleteObject(gridPen);
+
+                int maxVal = 100;
+                for (int i = 0; i < NUM_ITEMS; i++) if (values[i] > maxVal) maxVal = values[i];
+                if (maxVal <= 0) maxVal = 1;
+
+                // Petal Wedges
+                for (int i = 0; i < NUM_ITEMS; i++) {
+                    int safeV = values[i] > 0 ? values[i] : 0;
+                    int pr = (safeV * maxR) / maxVal;
+                    if (pr < 4) pr = 4;
+                    double startAngle = -MY_PI / 2.0 + i * angleStep;
+                    double endAngle = startAngle + angleStep;
+
+                    int xr1 = cx + (int)(my_cos(startAngle) * 1000.0);
+                    int yr1 = cy + (int)(my_sin(startAngle) * 1000.0);
+                    int xr2 = cx + (int)(my_cos(endAngle) * 1000.0);
+                    int yr2 = cy + (int)(my_sin(endAngle) * 1000.0);
+
+                    HBRUSH wedgeBrush = CreateSolidBrush(palette[i]);
+                    HGDIOBJ oldWBrush = SelectObject(memDC, wedgeBrush);
+                    HPEN wedgePen = CreatePen(PS_SOLID, hoveredIndex == i ? 2 : 1, RGB(9, 9, 11));
+                    HGDIOBJ oldWPen = SelectObject(memDC, wedgePen);
+
+                    Pie(memDC, cx - pr, cy - pr, cx + pr, cy + pr, xr1, yr1, xr2, yr2);
+
+                    SelectObject(memDC, oldWBrush);
+                    SelectObject(memDC, oldWPen);
+                    DeleteObject(wedgeBrush);
+                    DeleteObject(wedgePen);
+                }
+
+                // Legend
+                int legX = W - SCALE(115);
+                int legY = cy - SCALE(45);
+                for (int i = 0; i < NUM_ITEMS; i++) {
+                    int ly = legY + i * SCALE(20);
+                    HBRUSH legBrush = CreateSolidBrush(palette[i]);
+                    RECT legDot = { legX, ly + SCALE(3), legX + SCALE(10), ly + SCALE(13) };
+                    FillRect(memDC, &legDot, legBrush);
+                    DeleteObject(legBrush);
+
+                    char ltxt[32];
+                    wsprintfA(ltxt, "%s: %d", labels[i], values[i]);
+                    RECT legTxtR = { legX + SCALE(15), ly, W - SCALE(5), ly + SCALE(18) };
+                    SetTextColor(memDC, hoveredIndex == i ? RGB(255, 255, 255) : RGB(161, 161, 170));
+                    DrawTextA(memDC, ltxt, -1, &legTxtR, DT_LEFT | DT_SINGLELINE);
+                }
+            } else { // Bar, Line, Area, Step
                 int chartX = SCALE(50);
                 int chartY = SCALE(66);
                 int chartW = W - SCALE(75);
@@ -1008,6 +1259,44 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         RECT lr = { pts[i].x - 20, chartY + chartH + 6, pts[i].x + 20, chartY + chartH + 24 };
                         DrawTextA(memDC, labels[i], -1, &lr, DT_CENTER | DT_SINGLELINE);
                     }
+                } else if (chartMode == 7) { // Step View (Stepped Line & Area)
+                    POINT pts[NUM_ITEMS];
+                    for (int i = 0; i < NUM_ITEMS; i++) {
+                        int safeV = values[i] > 0 ? values[i] : 0;
+                        int bh = (safeV * chartH) / maxVal;
+                        pts[i].x = chartX + spacing + i * (barW + spacing) + barW / 2;
+                        pts[i].y = chartY + chartH - bh;
+                    }
+
+                    HPEN stepPen = CreatePen(PS_SOLID, 3, palette[0]);
+                    HGDIOBJ oldStepPen = SelectObject(memDC, stepPen);
+                    MoveToEx(memDC, chartX, pts[0].y, NULL);
+                    LineTo(memDC, pts[0].x, pts[0].y);
+                    for (int i = 0; i < NUM_ITEMS - 1; i++) {
+                        LineTo(memDC, pts[i + 1].x, pts[i].y);
+                        LineTo(memDC, pts[i + 1].x, pts[i + 1].y);
+                    }
+                    LineTo(memDC, chartX + chartW, pts[NUM_ITEMS - 1].y);
+                    SelectObject(memDC, oldStepPen);
+                    DeleteObject(stepPen);
+
+                    // Marker dots
+                    for (int i = 0; i < NUM_ITEMS; i++) {
+                        HBRUSH ptBrush = CreateSolidBrush(palette[i]);
+                        HGDIOBJ oldBrush = SelectObject(memDC, ptBrush);
+                        HPEN noPen = CreatePen(PS_NULL, 0, 0);
+                        HGDIOBJ oldP = SelectObject(memDC, noPen);
+                        int pr = (hoveredIndex == i) ? 7 : 5;
+                        Ellipse(memDC, pts[i].x - pr, pts[i].y - pr, pts[i].x + pr, pts[i].y + pr);
+                        SelectObject(memDC, oldBrush);
+                        SelectObject(memDC, oldP);
+                        DeleteObject(ptBrush);
+                        DeleteObject(noPen);
+
+                        SetTextColor(memDC, hoveredIndex == i ? RGB(255, 255, 255) : RGB(161, 161, 170));
+                        RECT lr = { pts[i].x - 20, chartY + chartH + 6, pts[i].x + 20, chartY + chartH + 24 };
+                        DrawTextA(memDC, labels[i], -1, &lr, DT_CENTER | DT_SINGLELINE);
+                    }
                 }
 
                 // Trendline & Regression Overlays in Cartesian Views
@@ -1109,6 +1398,34 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     DeleteObject(bgR);
                     SetTextColor(memDC, RGB(236, 72, 153));
                     DrawTextA(memDC, mStr, -1, &mR, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                } else if (trendMode == 4) { // Polynomial Parabola
+                    int xStart = chartX + spacing + barW / 2;
+                    int xEnd = chartX + spacing + (NUM_ITEMS - 1) * (barW + spacing) + barW / 2;
+
+                    HPEN pPen = CreatePen(PS_SOLID, 2, RGB(245, 158, 11));
+                    HGDIOBJ oldPPen = SelectObject(memDC, pPen);
+
+                    int samples = 30;
+                    for (int s = 0; s <= samples; s++) {
+                        double t = (double)s / (double)samples * (double)(NUM_ITEMS - 1);
+                        double yHat = polyA * t * t + polyB * t + polyC;
+                        if (yHat < 0) yHat = 0;
+                        int px = xStart + (int)((double)(xEnd - xStart) * (double)s / (double)samples);
+                        int py = chartY + chartH - (int)((yHat * chartH) / maxVal);
+                        if (s == 0) MoveToEx(memDC, px, py, NULL);
+                        else LineTo(memDC, px, py);
+                    }
+                    SelectObject(memDC, oldPPen);
+                    DeleteObject(pPen);
+
+                    char pStr[64];
+                    FormatPolyEq(pStr, polyA, polyB, polyC);
+                    RECT pr = { chartX + chartW - SCALE(240), chartY + SCALE(6), chartX + chartW - SCALE(5), chartY + SCALE(24) };
+                    HBRUSH bgR = CreateSolidBrush(RGB(24, 24, 30));
+                    FillRect(memDC, &pr, bgR);
+                    DeleteObject(bgR);
+                    SetTextColor(memDC, RGB(245, 158, 11));
+                    DrawTextA(memDC, pStr, -1, &pr, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
                 }
             }
 

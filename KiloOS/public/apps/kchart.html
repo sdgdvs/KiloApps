@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KChart Studio - Advanced Data Visualization</title>
+<title>KChart Studio - Advanced Data Visualization & Analytics Suite</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg-color: #09090b;
-    --card-bg: rgba(24, 24, 27, 0.7);
+    --card-bg: rgba(24, 24, 27, 0.75);
     --card-border: rgba(255, 255, 255, 0.1);
     --text-main: #f4f4f5;
     --text-muted: #a1a1aa;
@@ -18,7 +18,7 @@
     --accent: #3b82f6;
     --accent-hover: #2563eb;
     --focus-ring: #60a5fa;
-    --input-bg: rgba(0, 0, 0, 0.3);
+    --input-bg: rgba(0, 0, 0, 0.35);
     --input-border: rgba(255, 255, 255, 0.15);
   }
 
@@ -39,10 +39,10 @@
 
   /* Header Bar */
   header {
-    background: rgba(15, 15, 20, 0.8);
-    backdrop-filter: blur(12px);
+    background: rgba(15, 15, 20, 0.85);
+    backdrop-filter: blur(14px);
     border-bottom: 1px solid var(--card-border);
-    padding: 12px 24px;
+    padding: 10px 20px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -56,9 +56,10 @@
     align-items: center;
     gap: 10px;
     font-weight: 700;
-    font-size: 18px;
+    font-size: 17px;
     letter-spacing: -0.02em;
     color: #ffffff;
+    flex-shrink: 0;
   }
 
   .logo-icon {
@@ -75,24 +76,25 @@
 
   .header-actions {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
     flex-wrap: wrap;
+    justify-content: flex-end;
   }
 
   /* Main Workspace Layout */
   .workspace {
     display: grid;
-    grid-template-columns: 1fr 340px;
-    gap: 20px;
-    padding: 20px;
+    grid-template-columns: 1fr 350px;
+    gap: 18px;
+    padding: 18px;
     flex: 1;
-    max-width: 1600px;
+    max-width: 1640px;
     width: 100%;
     margin: 0 auto;
   }
 
-  @media (max-width: 1024px) {
+  @media (max-width: 1060px) {
     .workspace {
       grid-template-columns: 1fr;
     }
@@ -102,29 +104,31 @@
   .panel-card {
     background: var(--card-bg);
     border: 1px solid var(--card-border);
-    border-radius: 16px;
-    padding: 20px;
+    border-radius: 14px;
+    padding: 18px;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
   }
 
   .panel-title {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     color: #e4e4e7;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
   }
 
   /* Toolbar */
   .toolbar {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
     align-items: center;
   }
@@ -133,32 +137,33 @@
     display: flex;
     background: var(--input-bg);
     border: 1px solid var(--card-border);
-    border-radius: 10px;
-    padding: 3px;
+    border-radius: 8px;
+    padding: 2px;
     gap: 2px;
+    flex-wrap: wrap;
   }
 
   button, .btn {
-    padding: 8px 14px;
-    font-size: 13px;
+    padding: 6px 12px;
+    font-size: 12px;
     font-weight: 600;
     font-family: inherit;
     color: var(--text-main);
     background: var(--btn-bg);
     border: 1px solid var(--card-border);
-    border-radius: 8px;
+    border-radius: 7px;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.18s ease;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     outline: none;
     user-select: none;
   }
 
   button:hover, .btn:hover {
     background: var(--btn-hover);
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.22);
     transform: translateY(-1px);
   }
 
@@ -170,26 +175,27 @@
   .btn-group button {
     border: none;
     background: transparent;
-    border-radius: 6px;
-    padding: 6px 12px;
+    border-radius: 5px;
+    padding: 5px 10px;
     color: var(--text-muted);
+    font-size: 12px;
   }
 
   .btn-group button.active {
     background: var(--accent);
     color: #ffffff;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.45);
   }
 
   select {
-    padding: 8px 12px;
-    font-size: 13px;
+    padding: 6px 10px;
+    font-size: 12px;
     font-weight: 500;
     font-family: inherit;
     color: var(--text-main);
     background: var(--input-bg);
     border: 1px solid var(--input-border);
-    border-radius: 8px;
+    border-radius: 7px;
     outline: none;
     cursor: pointer;
   }
@@ -203,9 +209,9 @@
     position: relative;
     width: 100%;
     height: 480px;
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(0, 0, 0, 0.28);
     border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     overflow: hidden;
   }
 
@@ -223,57 +229,58 @@
   /* Stats Grid */
   .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
+    gap: 8px;
   }
 
   .stat-box {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 10px;
-    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 8px;
+    padding: 8px 10px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
   }
 
   .stat-label {
-    font-size: 11px;
-    font-weight: 500;
+    font-size: 10px;
+    font-weight: 600;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
 
   .stat-value {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
     color: #ffffff;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
 
   /* Table Editor */
   .table-wrapper {
-    max-height: 320px;
+    max-height: 280px;
     overflow-y: auto;
     border-radius: 8px;
     border: 1px solid var(--card-border);
-    background: rgba(0, 0, 0, 0.15);
+    background: rgba(0, 0, 0, 0.2);
   }
 
   table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 13px;
+    font-size: 12px;
   }
 
   th, td {
-    padding: 8px 10px;
+    padding: 6px 8px;
     text-align: left;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   th {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.06);
     color: var(--text-muted);
     font-weight: 600;
     position: sticky;
@@ -282,21 +289,21 @@
   }
 
   .color-dot {
-    width: 12px;
-    height: 12px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     display: inline-block;
   }
 
   input[type="text"], input[type="number"] {
     width: 100%;
-    padding: 6px 8px;
-    font-size: 13px;
+    padding: 5px 7px;
+    font-size: 12px;
     font-family: inherit;
     color: var(--text-main);
     background: var(--input-bg);
     border: 1px solid var(--input-border);
-    border-radius: 6px;
+    border-radius: 5px;
     outline: none;
   }
 
@@ -306,14 +313,15 @@
 
   .btn-sm {
     padding: 4px 8px;
-    font-size: 12px;
+    font-size: 11px;
     border-radius: 6px;
+    font-weight: 600;
   }
 
   .btn-danger {
     background: rgba(239, 68, 68, 0.2);
     color: #fca5a5;
-    border-color: rgba(239, 68, 68, 0.3);
+    border-color: rgba(239, 68, 68, 0.35);
   }
 
   .btn-danger:hover {
@@ -326,10 +334,10 @@
 
   .drop-zone {
     border: 2px dashed rgba(255, 255, 255, 0.15);
-    border-radius: 10px;
-    padding: 12px;
+    border-radius: 8px;
+    padding: 10px;
     text-align: center;
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-muted);
     transition: all 0.2s ease;
     cursor: pointer;
@@ -337,7 +345,7 @@
 
   .drop-zone.dragover {
     border-color: var(--accent);
-    background: rgba(59, 130, 246, 0.1);
+    background: rgba(59, 130, 246, 0.12);
     color: #ffffff;
   }
 
@@ -350,75 +358,76 @@
     background: rgba(0, 0, 0, 0.2);
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.16);
     border-radius: 3px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.28);
   }
+
   .kbd-badge {
     display: inline-block;
-    padding: 1px 5px;
+    padding: 1px 4px;
     font-size: 10px;
     font-weight: 700;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
+    border-radius: 3px;
     color: #93c5fd;
-    margin-right: 4px;
+    margin-right: 3px;
     line-height: 1.2;
     vertical-align: middle;
   }
+
   .btn-group button.active .kbd-badge {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.28);
+    border-color: rgba(255, 255, 255, 0.45);
     color: #ffffff;
   }
 
-  /* Toast Notification System */
-  /* Toast Notification System */
+  /* Toast Notification System (Anchored Bottom-Right to Prevent Occlusion) */
   #toastContainer {
     position: fixed;
-    top: 64px;
+    bottom: 20px;
     right: 20px;
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     gap: 8px;
     z-index: 9999;
     pointer-events: none;
   }
 
   .toast {
-    background: rgba(15, 23, 42, 0.94);
+    background: rgba(15, 23, 42, 0.96);
     color: #f8fafc;
     border: 1px solid rgba(59, 130, 246, 0.45);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7), 0 0 15px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.75), 0 0 15px rgba(59, 130, 246, 0.25);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-radius: 10px;
-    padding: 10px 16px;
-    font-size: 13px;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 12px;
     font-weight: 500;
     display: flex;
     align-items: center;
-    gap: 10px;
-    min-width: 240px;
-    max-width: 380px;
+    gap: 8px;
+    min-width: 220px;
+    max-width: 360px;
     pointer-events: auto;
     cursor: pointer;
     user-select: none;
-    animation: toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    transition: all 0.25s ease;
+    animation: toastSlideUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transition: all 0.2s ease;
   }
 
-  .toast.toast-success { border-color: rgba(34, 197, 94, 0.55); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.7), 0 0 15px rgba(34, 197, 94, 0.2); }
-  .toast.toast-warning { border-color: rgba(245, 158, 11, 0.55); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.7), 0 0 15px rgba(245, 158, 11, 0.2); }
-  .toast.toast-error { border-color: rgba(239, 68, 68, 0.55); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.7), 0 0 15px rgba(239, 68, 68, 0.2); }
-  .toast.toast-out { opacity: 0; transform: translateY(-10px) scale(0.95); }
+  .toast.toast-success { border-color: rgba(34, 197, 94, 0.6); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.7), 0 0 15px rgba(34, 197, 94, 0.2); }
+  .toast.toast-warning { border-color: rgba(245, 158, 11, 0.6); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.7), 0 0 15px rgba(245, 158, 11, 0.2); }
+  .toast.toast-error { border-color: rgba(239, 68, 68, 0.6); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.7), 0 0 15px rgba(239, 68, 68, 0.2); }
+  .toast.toast-out { opacity: 0; transform: translateY(10px) scale(0.95); }
 
-  @keyframes toastSlideIn {
-    from { opacity: 0; transform: translateY(-12px) scale(0.96); }
+  @keyframes toastSlideUp {
+    from { opacity: 0; transform: translateY(12px) scale(0.96); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
@@ -429,7 +438,7 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.72);
+    background: rgba(0, 0, 0, 0.75);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     z-index: 1000;
@@ -449,10 +458,10 @@
   .modal-dialog {
     background: #0f172a;
     border: 1px solid rgba(59, 130, 246, 0.35);
-    border-radius: 16px;
-    width: 90%;
-    max-width: 680px;
-    max-height: 85vh;
+    border-radius: 14px;
+    width: 92%;
+    max-width: 720px;
+    max-height: 88vh;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8), 0 0 30px rgba(59, 130, 246, 0.2);
     display: flex;
     flex-direction: column;
@@ -466,7 +475,7 @@
   }
 
   .modal-header {
-    padding: 16px 22px;
+    padding: 14px 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     justify-content: space-between;
@@ -475,7 +484,7 @@
   }
 
   .modal-title {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
     color: #f8fafc;
     display: flex;
@@ -500,14 +509,14 @@
   }
 
   .modal-body {
-    padding: 20px 24px;
+    padding: 18px 22px;
     overflow-y: auto;
     font-size: 13px;
     line-height: 1.6;
     color: #cbd5e1;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 14px;
   }
 
   .help-section-title {
@@ -532,7 +541,7 @@
   }
 
   .shortcut-table td {
-    padding: 6px 12px;
+    padding: 5px 10px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     font-size: 12px;
   }
@@ -540,7 +549,7 @@
   .shortcut-table td:first-child {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     color: #93c5fd;
-    width: 130px;
+    width: 140px;
     font-weight: 600;
   }
 </style>
@@ -554,12 +563,16 @@
   </div>
   <div class="header-actions">
     <select id="presetSelect" aria-label="Load Sample Presets">
-      <option value="">-- Sample Presets --</option>
+      <option value="">-- Presets & 1999 Logs --</option>
       <option value="sales">Quarterly Revenue</option>
       <option value="tech">Tech Stack Share</option>
       <option value="weather">Monthly Temperature</option>
       <option value="grades">Exam Score Dist</option>
       <option value="fitness">Weekly Activity (Hrs)</option>
+      <option value="telemetry99">Subnet 10.19.99.x Packet Activity</option>
+      <option value="y2k">Y2K System Readiness %</option>
+      <option value="soundcard">1999 Sound Card Market Share</option>
+      <option value="ping99">Surreal vs Tremor LAN Ping (ms)</option>
     </select>
 
     <select id="themeSelect" aria-label="Select Color Theme">
@@ -571,15 +584,20 @@
       <option value="slate">Dark Slate</option>
     </select>
 
+    <button id="btnAudioToggle" title="Toggle Sega Genesis FM / SPC700 Audio Synthesizer (M)"><span class="kbd-badge">M</span> 🔊 Audio</button>
+    <button id="btnSonify" title="Sonify dataset with Genesis FM Synthesizer & SPC700 echo (U)"><span class="kbd-badge">U</span> 🎵 Sonify</button>
     <button id="btnHelp" aria-label="Help"><span class="kbd-badge">F1</span> Help</button>
     <button id="btnQuickSave" title="QuickSave dataset and layout snapshot (F5)"><span class="kbd-badge">F5</span> 💾 Save</button>
     <button id="btnQuickLoad" title="QuickLoad saved snapshot (F9)"><span class="kbd-badge">F9</span> 📂 Load</button>
     <button id="btnCopyData" title="Copy dataset & statistics to clipboard (Ctrl+C)"><span class="kbd-badge">Ctrl+C</span> 📋 Copy</button>
     <button id="btnExportSvg" title="Export Scalable Vector Graphic">📐 SVG</button>
-    <button id="btnExportPng">📷 PNG</button>
-    <button id="btnExportCsv">📄 CSV</button>
-    <button id="btnExportJson">📦 JSON</button>
-    <button id="btnImportTrigger">📥 Import</button>
+    <button id="btnExportPng" title="Export PNG raster image">📷 PNG</button>
+    <button id="btnExportMd" title="Export GitHub Markdown Table">📝 MD</button>
+    <button id="btnExportC" title="Export C Array Header for Win32">💻 C</button>
+    <button id="btnExportHtml" title="Export Standalone Interactive HTML">🌐 HTML</button>
+    <button id="btnExportCsv" title="Export CSV Table">📄 CSV</button>
+    <button id="btnExportJson" title="Export JSON Structure">📦 JSON</button>
+    <button id="btnImportTrigger" title="Import CSV or JSON dataset">📥 Import</button>
     <input type="file" id="fileInput" class="file-input-hidden" accept=".csv,.json">
   </div>
 </header>
@@ -588,21 +606,28 @@
   <!-- Left Side: Main Chart & Controls -->
   <div class="panel-card">
     <div class="panel-title">
-      <span>Visualization Canvas <span style="font-size: 12px; color: var(--accent); font-weight: 600; margin-left: 10px; background: rgba(59,130,246,0.1); padding: 2px 6px; border-radius: 4px;">[Press 'H' or F1 for Help | 'T' for Trend]</span></span>
+      <span>Visualization Canvas <span style="font-size: 11px; color: var(--accent); font-weight: 600; margin-left: 8px; background: rgba(59,130,246,0.12); padding: 2px 6px; border-radius: 4px;">[Press F1 / H for Help | T for Trend | U to Sonify]</span></span>
       <div class="toolbar">
-        <div class="btn-group" id="chartTypeGroup">
+        <div class="btn-group" id="chartTypeGroup" title="Select Visualization Engine (Press 1-0)">
           <button data-type="bar" class="active"><span class="kbd-badge">1</span>Bar</button>
           <button data-type="line"><span class="kbd-badge">2</span>Line</button>
           <button data-type="area"><span class="kbd-badge">3</span>Area</button>
           <button data-type="pie"><span class="kbd-badge">4</span>Pie</button>
           <button data-type="donut"><span class="kbd-badge">5</span>Donut</button>
           <button data-type="radar"><span class="kbd-badge">6</span>Radar</button>
+          <button data-type="hbar"><span class="kbd-badge">7</span>H-Bar</button>
+          <button data-type="step"><span class="kbd-badge">8</span>Step</button>
+          <button data-type="scatter"><span class="kbd-badge">9</span>Scatter</button>
+          <button data-type="polar"><span class="kbd-badge">0</span>Polar</button>
         </div>
         <div class="btn-group" id="trendGroup" title="Trendline & Regression Analysis Overlay (Press 'T' to cycle)">
           <button data-trend="none" class="active">Trend: Off</button>
           <button data-trend="linear">Linear Fit</button>
+          <button data-trend="poly2">Poly (x²)</button>
+          <button data-trend="exp">Exp (eˣ)</button>
           <button data-trend="movavg">Mov Avg</button>
           <button data-trend="mean">Mean</button>
+          <button data-trend="corridor">Corridor (±σ)</button>
         </div>
         <button id="btnRandomize"><span class="kbd-badge">R</span>🎲 Randomize</button>
       </div>
@@ -613,7 +638,7 @@
     </div>
 
     <!-- Statistical Analysis Suite -->
-    <div class="panel-title" style="margin-top: 4px;">
+    <div class="panel-title" style="margin-top: 2px;">
       <span>Statistical Analysis & Regression Suite</span>
     </div>
     <div class="stats-grid">
@@ -628,7 +653,7 @@
     </div>
   </div>
 
-  <!-- Right Side: Data Table Editor & Import -->
+  <!-- Right Side: Data Table Editor & Transforms -->
   <div class="panel-card">
     <div class="panel-title">
       <span>Data Table Editor</span>
@@ -639,10 +664,10 @@
       <table>
         <thead>
           <tr>
-            <th style="width: 24px;"></th>
+            <th style="width: 22px;"></th>
             <th>Label</th>
-            <th style="width: 90px;">Value</th>
-            <th style="width: 32px;"></th>
+            <th style="width: 85px;">Value</th>
+            <th style="width: 28px;"></th>
           </tr>
         </thead>
         <tbody id="tableBody">
@@ -651,14 +676,37 @@
       </table>
     </div>
 
-    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
       <button id="btnSortAsc" class="btn-sm">▲ Sort Asc</button>
       <button id="btnSortDesc" class="btn-sm">▼ Sort Desc</button>
       <button id="btnClear" class="btn-sm btn-danger">Clear All</button>
     </div>
 
+    <!-- Mathematical Transformations & Operations -->
+    <div class="panel-title" style="margin-top: 4px;">
+      <span>Data Operations & Transforms</span>
+      <button id="btnUndoTransform" class="btn-sm" title="Undo Last Transform (Z)">↩ Undo</button>
+    </div>
+    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+      <button id="btnNormalize" class="btn-sm" title="Scale all values to 0-100%">% Normalize</button>
+      <button id="btnCumSum" class="btn-sm" title="Running Cumulative Total">Σ CumSum</button>
+      <button id="btnDelta" class="btn-sm" title="Discrete Difference (y[i] - y[i-1])">Δ Delta</button>
+      <button id="btnSmooth" class="btn-sm" title="Weighted 3-Point Gaussian Smoothing">~ Smooth</button>
+      <button id="btnReverse" class="btn-sm" title="Reverse Data Series Order">⇄ Reverse</button>
+    </div>
+
+    <!-- Target / Benchmark Line Threshold -->
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 8px; border: 1px solid var(--card-border);">
+      <label style="display: flex; align-items: center; gap: 6px; font-size: 11px; cursor: pointer; user-select: none;">
+        <input type="checkbox" id="chkTarget" style="cursor: pointer;">
+        <span style="font-weight: 600;">Benchmark Line:</span>
+      </label>
+      <input type="number" id="numTargetVal" value="50" style="width: 65px; padding: 4px 6px; font-size: 11px;" step="any">
+      <span id="targetKpi" style="font-size: 11px; color: #facc15; font-weight: 700;">-</span>
+    </div>
+
     <div class="drop-zone" id="dropZone">
-      Drag & Drop CSV / JSON file here to load
+      Drag &amp; Drop CSV / JSON file here to load
     </div>
   </div>
 </div>
@@ -678,36 +726,40 @@
         <div class="help-section-title">🚀 1. Quick-Start 4-Step Tutorial</div>
         <ol style="padding-left: 20px; margin-top: 4px; display: flex; flex-direction: column; gap: 6px;">
           <li><strong>Choose or Load Data:</strong> Pick a preset from the dropdown (or press <span class="kbd-badge">P</span>), drag &amp; drop a CSV/JSON file, or edit labels and values in the Data Table.</li>
-          <li><strong>Select Visualization Engine:</strong> Press <span class="kbd-badge">1</span>&ndash;<span class="kbd-badge">6</span> or click the toolbar buttons to switch between Bar, Line, Area Gradient, Pie, Doughnut, and Radar views.</li>
-          <li><strong>Analyze Trends &amp; Metrics:</strong> Press <span class="kbd-badge">T</span> to cycle regression overlays (Linear OLS Fit $y=mx+b$, Moving Average, Mean Baseline), and view real-time statistics (Mean, Median, StdDev, $R^2$).</li>
-          <li><strong>Tweak, Copy &amp; Export:</strong> Use <span class="kbd-badge">←</span>/<span class="kbd-badge">→</span> and <span class="kbd-badge">↑</span>/<span class="kbd-badge">↓</span> to inspect and nudge values; press <span class="kbd-badge">Ctrl+C</span> to copy data and summary, or export publication-grade SVG, PNG, CSV, or JSON.</li>
+          <li><strong>Select Visualization Engine:</strong> Press <span class="kbd-badge">1</span>&ndash;<span class="kbd-badge">0</span> or click the toolbar buttons to switch between 10 visualization modes: Bar, Line, Area, Pie, Donut, Radar, Horizontal Bar, Stepped Waveform, Scatter Plot, and Polar Coxcomb Rose.</li>
+          <li><strong>Analyze Trends &amp; Regressions:</strong> Press <span class="kbd-badge">T</span> to cycle overlays: Linear OLS Fit ($y=mx+b$), 2nd-Order Quadratic Polynomial ($y=ax^2+bx+c$), Exponential Fit ($y=ae^{bx}$), Moving Average, Mean Baseline, and Confidence Corridor ($\pm\sigma$).</li>
+          <li><strong>Sonify &amp; Export:</strong> Press <span class="kbd-badge">U</span> to hear the dataset sonified with the Sega Genesis YM2612 FM Sound Chip &amp; SNES SPC700 stereo delay echo, and export vector SVG, raster PNG, Markdown table, C code array, standalone HTML, CSV, or JSON.</li>
         </ol>
       </div>
 
       <div>
-        <div class="help-section-title">📊 2. Visualization Modes</div>
-        <p>Switch between 6 distinct visualization rendering engines: <strong>Bar Chart</strong> [1], <strong>Line Graph</strong> [2], <strong>Area Gradient</strong> [3], <strong>Pie Chart</strong> [4], <strong>Doughnut Chart</strong> [5], and multi-axial <strong>Radar / Spider Chart</strong> [6]. Hover over any bar, point, slice, or vertex to inspect precise values in the interactive HUD tooltip.</p>
+        <div class="help-section-title">📊 2. Visualization Modes (10 Engines)</div>
+        <p>Switch between 10 distinct visualization rendering engines:
+          <strong>Bar Chart</strong> [1], <strong>Line Graph</strong> [2], <strong>Area Gradient</strong> [3], <strong>Pie Chart</strong> [4], <strong>Doughnut Chart</strong> [5], <strong>Radar / Spider Chart</strong> [6], <strong>Horizontal Bar</strong> [7], <strong>Stepped Waveform</strong> [8], <strong>Scatter Plot</strong> [9], and <strong>Polar Area / Coxcomb Rose</strong> [0]. Hover over any point, bar, slice, or petal for interactive tooltips.</p>
       </div>
 
       <div>
-        <div class="help-section-title">📈 3. Trendlines &amp; Regression Analysis</div>
-        <p>Overlay mathematical and statistical regressions onto cartesian charts (Press 'T' to cycle):
+        <div class="help-section-title">📈 3. Mathematical Regressions &amp; Curve Fitting</div>
+        <p>Overlay advanced mathematical models onto charts (Press 'T' to cycle):
         <ul style="padding-left: 20px; margin-top: 4px;">
-          <li><strong>Linear Fit:</strong> Ordinary Least Squares ($y = mx + b$) regression with live slope and $R^2$ goodness-of-fit.</li>
+          <li><strong>Linear Fit:</strong> Ordinary Least Squares ($y = mx + b$) regression with slope and $R^2$ goodness-of-fit.</li>
+          <li><strong>Polynomial Quadratic Fit:</strong> Exact 2nd-order parabola ($y = ax^2 + bx + c$) solved via matrix Cramer's rule.</li>
+          <li><strong>Exponential Fit:</strong> Log-linearized growth/decay curve ($y = a \cdot e^{bx}$).</li>
           <li><strong>Moving Average:</strong> 3-point rolling window smoothed trend curve.</li>
-          <li><strong>Mean Line:</strong> Arithmetic dataset mean baseline reference.</li>
+          <li><strong>Mean Baseline:</strong> Arithmetic dataset mean reference line.</li>
+          <li><strong>Confidence Corridor:</strong> Shaded $\pm 1\sigma$ standard deviation band and extrema envelope.</li>
         </ul>
         </p>
       </div>
 
       <div>
-        <div class="help-section-title">🧮 4. Statistical Analysis Suite</div>
-        <p>Real-time metrics compute automatically: <strong>Count</strong>, <strong>Total Sum</strong>, <strong>Mean</strong>, <strong>Median</strong>, <strong>Standard Deviation</strong>, <strong>Min / Max Extrema</strong>, <strong>Slope ($m$)</strong>, and <strong>$R^2$ Fit</strong>.</p>
+        <div class="help-section-title">🎵 4. Sega Genesis YM2612 &amp; SNES SPC700 Data Sonification</div>
+        <p>Experience your data through sound! KChart Studio incorporates a procedural Sega Genesis (Yamaha YM2612 2-operator FM synthesis) and Super Nintendo (SPC700 stereo delay warmth) sound engine. Press <span class="kbd-badge">U</span> to sonify your data: an animated playhead sweeps across the canvas while each data point is synthesized as a musical pitch mapped to its magnitude.</p>
       </div>
 
       <div>
-        <div class="help-section-title">📁 5. Import, Export &amp; Customization</div>
-        <p>Easily drag and drop CSV or JSON datasets directly onto the workspace. Export high-resolution vector SVG (scalable for publication), raster PNG, clean CSV tables, or JSON structures with one click.</p>
+        <div class="help-section-title">🧮 5. Data Operations &amp; Benchmarks</div>
+        <p>Execute one-click mathematical transformations on your dataset: <strong>Normalize (0–100%)</strong>, <strong>Cumulative Sum ($\Sigma$)</strong>, <strong>Discrete Differential ($\Delta$)</strong>, <strong>Gaussian Smoothing</strong>, and <strong>Reverse</strong>, with full <strong>Undo (Z)</strong> support. Set a custom <strong>Benchmark / Target Line</strong> to evaluate KPI performance in real time.</p>
       </div>
 
       <div>
@@ -717,14 +769,16 @@
             <tr><td>F1 / H</td><td>Open / Close this Help Guide</td></tr>
             <tr><td>F5</td><td>QuickSave snapshot to local browser storage</td></tr>
             <tr><td>F9</td><td>QuickLoad snapshot from local browser storage</td></tr>
-            <tr><td>1 – 6</td><td>Select Chart Mode (Bar, Line, Area, Pie, Donut, Radar)</td></tr>
-            <tr><td>P</td><td>Cycle through Sample Presets</td></tr>
-            <tr><td>M</td><td>Cycle through Chart Modes sequentially</td></tr>
-            <tr><td>T</td><td>Cycle Trendline overlays (Off, Linear Fit, MovAvg, Mean)</td></tr>
+            <tr><td>1 – 9, 0</td><td>Select Chart Mode (Bar, Line, Area, Pie, Donut, Radar, HBar, Step, Scatter, Polar)</td></tr>
+            <tr><td>P</td><td>Cycle through Sample Presets &amp; 1999 Logs</td></tr>
+            <tr><td>M</td><td>Toggle Sega Genesis FM Audio Synthesizer</td></tr>
+            <tr><td>U / J</td><td>Sonify Dataset (Playhead audio sweep)</td></tr>
+            <tr><td>T</td><td>Cycle Trendline &amp; Regression Overlays</td></tr>
             <tr><td>C</td><td>Cycle Color Themes (Cyber Teal, Neon Sunset, Emerald, etc.)</td></tr>
             <tr><td>R</td><td>Generate Random Dataset with smooth animation</td></tr>
             <tr><td>S</td><td>Sort data points in Ascending order</td></tr>
             <tr><td>D / Shift+S</td><td>Sort data points in Descending order</td></tr>
+            <tr><td>Z</td><td>Undo last data transformation</td></tr>
             <tr><td>Ctrl + C</td><td>Copy dataset table and summary statistics to Clipboard</td></tr>
             <tr><td>Ctrl + S</td><td>Quick Export High-Resolution SVG Vector</td></tr>
             <tr><td>← / →</td><td>Select previous / next data point on chart</td></tr>
@@ -737,7 +791,7 @@
   </div>
 </div>
 
-<!-- Toast Notifications -->
+<!-- Toast Notifications (Bottom-Right Anchor) -->
 <div id="toastContainer" aria-live="polite"></div>
 
 <script>
@@ -784,6 +838,37 @@
       { label: "Wed", value: 0.5 }, { label: "Thu", value: 2.5 },
       { label: "Fri", value: 1.8 }, { label: "Sat", value: 3.2 },
       { label: "Sun", value: 2.1 }
+    ],
+    telemetry99: [
+      { label: "10.19.99.1 Router", value: 320 },
+      { label: "10.19.99.4 Gateway", value: 840 },
+      { label: "10.19.99.12 Proxy", value: 460 },
+      { label: "10.19.99.7F Darknet Hub", value: 1250 },
+      { label: "10.19.99.128 Carrier", value: 620 },
+      { label: "10.19.99.254 Broadcast", value: 180 }
+    ],
+    y2k: [
+      { label: "BIOS Clock", value: 98 },
+      { label: "Win98 Kernel", value: 95 },
+      { label: "RTDB Daemon", value: 82 },
+      { label: "SCADA Grid", value: 74 },
+      { label: "Sendmail", value: 100 },
+      { label: "Telnet Daemon", value: 88 }
+    ],
+    soundcard: [
+      { label: "Sound Blaster Live!", value: 52 },
+      { label: "AWE64 Gold", value: 22 },
+      { label: "Gravis UltraSound", value: 11 },
+      { label: "ESS Solo-1", value: 7 },
+      { label: "Yamaha YMF724", value: 5 },
+      { label: "Ensoniq PCI", value: 3 }
+    ],
+    ping99: [
+      { label: "Surreal Match 1", value: 28 },
+      { label: "Tremor FFA", value: 34 },
+      { label: "VoidCraft IPX", value: 42 },
+      { label: "Half-Cycle Team", value: 38 },
+      { label: "Machina Ex Coop", value: 55 }
     ]
   };
 
@@ -796,12 +881,21 @@
     { label: "Q5", value: 30 }
   ];
 
+  let undoStack = [];
   let currentTheme = "teal";
-  let chartType = "bar"; // bar, line, area, pie, donut, radar
-  let trendMode = "none"; // none, linear, movavg, mean
-  let trendStats = { slope: 0, intercept: 0, r2: 0 };
+  let chartType = "bar"; // bar, line, area, pie, donut, radar, hbar, step, scatter, polar
+  let trendMode = "none"; // none, linear, poly2, exp, movavg, mean, corridor
+  let trendStats = { slope: 0, intercept: 0, r2: 0, polyA: 0, polyB: 0, polyC: 0, expA: 0, expB: 0 };
   let hoveredIndex = -1;
   let hoverX = -1, hoverY = -1;
+
+  // Target / Benchmark Line State
+  let targetEnabled = false;
+  let targetValue = 50;
+
+  // Sonification playhead state
+  let isSonifying = false;
+  let sonifyPlayheadIndex = -1;
 
   // DOM Elements
   const canvas = document.getElementById('chartCanvas');
@@ -817,9 +911,149 @@
   const statMinMax = document.getElementById('statMinMax');
   const statSlope = document.getElementById('statSlope');
   const statR2 = document.getElementById('statR2');
+  const targetKpi = document.getElementById('targetKpi');
 
   let canvasW = 600, canvasH = 480;
 
+  // ==========================================
+  // SEGA GENESIS YM2612 2-OP FM SYNTH & SPC700 DELAY
+  // ==========================================
+  let audioCtx = null;
+  let audioMuted = false;
+
+  function initAudio() {
+    if (!audioCtx) {
+      const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtxClass) {
+        audioCtx = new AudioCtxClass();
+      }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  function playFmTone(freq, duration = 0.22, modRatio = 2.0, modIndex = 250, vol = 0.18) {
+    if (audioMuted) return;
+    try {
+      initAudio();
+      if (!audioCtx) return;
+
+      const now = audioCtx.currentTime;
+
+      // Carrier Oscillator (OP2)
+      const carrier = audioCtx.createOscillator();
+      carrier.type = 'sine';
+      carrier.frequency.setValueAtTime(freq, now);
+
+      // Modulator Oscillator (OP1)
+      const modulator = audioCtx.createOscillator();
+      modulator.type = 'sine';
+      modulator.frequency.setValueAtTime(freq * modRatio, now);
+
+      // FM Modulation Envelope
+      const modGain = audioCtx.createGain();
+      modGain.gain.setValueAtTime(modIndex, now);
+      modGain.gain.exponentialRampToValueAtTime(1.0, now + duration);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+
+      // Carrier Output ADSR Gain Envelope
+      const voiceGain = audioCtx.createGain();
+      voiceGain.gain.setValueAtTime(0.0001, now);
+      voiceGain.gain.linearRampToValueAtTime(vol, now + 0.015);
+      voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      // SNES SPC700 Stereo Delay Echo
+      const delay = audioCtx.createDelay();
+      delay.delayTime.value = 0.16;
+      const delayFeedback = audioCtx.createGain();
+      delayFeedback.gain.value = 0.28;
+      const delayFilter = audioCtx.createBiquadFilter();
+      delayFilter.type = 'lowpass';
+      delayFilter.frequency.value = 1600;
+
+      voiceGain.connect(audioCtx.destination);
+      voiceGain.connect(delay);
+      delay.connect(delayFilter);
+      delayFilter.connect(delayFeedback);
+      delayFeedback.connect(delay);
+      delayFilter.connect(audioCtx.destination);
+
+      carrier.connect(voiceGain);
+
+      carrier.start(now);
+      modulator.start(now);
+      carrier.stop(now + duration + 0.35);
+      modulator.stop(now + duration + 0.35);
+    } catch (e) {}
+  }
+
+  function playSfx(type) {
+    if (audioMuted) return;
+    if (type === 'click') playFmTone(587.33, 0.08, 1.5, 120, 0.12);
+    else if (type === 'mode') playFmTone(440.00, 0.14, 2.0, 300, 0.15);
+    else if (type === 'up') playFmTone(659.25, 0.12, 2.5, 200, 0.14);
+    else if (type === 'down') playFmTone(329.63, 0.12, 1.5, 200, 0.14);
+    else if (type === 'transform') {
+      playFmTone(392.00, 0.12, 2.0, 200, 0.12);
+      setTimeout(() => playFmTone(523.25, 0.18, 2.0, 250, 0.14), 60);
+    }
+  }
+
+  // Data Sonification Sweep
+  function sonifyDataset() {
+    if (data.length === 0) {
+      showToast("No data to sonify.", "warning", "⚠️");
+      return;
+    }
+    if (isSonifying) {
+      isSonifying = false;
+      sonifyPlayheadIndex = -1;
+      renderChart();
+      showToast("Sonification stopped.", "info", "⏹️");
+      return;
+    }
+
+    initAudio();
+    isSonifying = true;
+    showToast(`Sonifying dataset (${data.length} pts) via YM2612 FM Synth...`, 'info', '🎵');
+
+    const vals = data.map(d => Number(d.value) || 0);
+    const maxVal = Math.max(1, ...vals);
+    const minVal = Math.min(...vals);
+    const valRange = Math.max(1, maxVal - minVal);
+
+    // Pentatonic scale base frequencies
+    const scale = [196.00, 220.00, 261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00];
+
+    let i = 0;
+    const interval = setInterval(() => {
+      if (!isSonifying || i >= data.length) {
+        clearInterval(interval);
+        isSonifying = false;
+        sonifyPlayheadIndex = -1;
+        renderChart();
+        if (i >= data.length) showToast("Sonification complete!", "success", "🎶");
+        return;
+      }
+
+      sonifyPlayheadIndex = i;
+      renderChart();
+
+      const normalized = Math.max(0, Math.min(1, (vals[i] - minVal) / valRange));
+      const scaleIdx = Math.floor(normalized * (scale.length - 1));
+      const freq = scale[scaleIdx];
+
+      playFmTone(freq, 0.18, 2.0, 260, 0.22);
+      i++;
+    }, 180);
+  }
+
+  // ==========================================
+  // COLOR & SIZING
+  // ==========================================
   function getColor(index) {
     const palette = THEMES[currentTheme] || THEMES.teal;
     return palette[index % palette.length];
@@ -827,6 +1061,7 @@
 
   function resizeCanvas() {
     const parent = canvas.parentElement;
+    if (!parent) return;
     const rect = parent.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
     canvasW = rect.width || 600;
@@ -837,6 +1072,9 @@
     renderChart();
   }
 
+  // ==========================================
+  // STATISTICAL & REGRESSION SUITE
+  // ==========================================
   function computeStats() {
     if (data.length === 0) {
       statCount.textContent = "0";
@@ -847,7 +1085,8 @@
       if (statMinMax) statMinMax.textContent = "0 / 0";
       if (statSlope) statSlope.textContent = "-";
       if (statR2) statR2.textContent = "-";
-      trendStats = { slope: 0, intercept: 0, r2: 0 };
+      if (targetKpi) targetKpi.textContent = "-";
+      trendStats = { slope: 0, intercept: 0, r2: 0, polyA: 0, polyB: 0, polyC: 0, expA: 0, expB: 0 };
       return;
     }
     const vals = data.map(d => Number(d.value) || 0);
@@ -868,7 +1107,7 @@
     const min = sorted[0];
     const max = sorted[sorted.length - 1];
 
-    // Linear Regression & Correlation
+    // Linear Regression (OLS)
     if (count >= 2) {
       let sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
       for (let i = 0; i < count; i++) {
@@ -888,18 +1127,79 @@
           ssRes += Math.pow(vals[i] - yHat, 2);
         }
         const r2 = ssTot > 0.0001 ? Math.max(0, Math.min(1, 1 - ssRes / ssTot)) : 1.0;
-        trendStats = { slope, intercept, r2 };
+        trendStats.slope = slope;
+        trendStats.intercept = intercept;
+        trendStats.r2 = r2;
         if (statSlope) statSlope.textContent = (slope >= 0 ? "+" : "") + slope.toFixed(2);
         if (statR2) statR2.textContent = r2.toFixed(3);
-      } else {
-        trendStats = { slope: 0, intercept: mean, r2: 0 };
-        if (statSlope) statSlope.textContent = "0.00";
-        if (statR2) statR2.textContent = "0.000";
       }
     } else {
-      trendStats = { slope: 0, intercept: count === 1 ? vals[0] : 0, r2: 0 };
+      trendStats.slope = 0;
+      trendStats.intercept = count === 1 ? vals[0] : 0;
+      trendStats.r2 = 0;
       if (statSlope) statSlope.textContent = "-";
       if (statR2) statR2.textContent = "-";
+    }
+
+    // 2nd-Order Polynomial Regression (Quadratic Parabola: y = ax^2 + bx + c)
+    if (count >= 3) {
+      let s0 = count, s1 = 0, s2 = 0, s3 = 0, s4 = 0;
+      let v0 = 0, v1 = 0, v2 = 0;
+      for (let i = 0; i < count; i++) {
+        const x = i;
+        const y = vals[i];
+        const x2 = x * x;
+        s1 += x;
+        s2 += x2;
+        s3 += x2 * x;
+        s4 += x2 * x2;
+        v0 += y;
+        v1 += x * y;
+        v2 += x2 * y;
+      }
+      const D = s0 * (s2 * s4 - s3 * s3) - s1 * (s1 * s4 - s2 * s3) + s2 * (s1 * s3 - s2 * s2);
+      if (Math.abs(D) > 1e-7) {
+        const polyC = (v0 * (s2 * s4 - s3 * s3) - s1 * (v1 * s4 - v2 * s3) + s2 * (v1 * s3 - v2 * s2)) / D;
+        const polyB = (s0 * (v1 * s4 - v2 * s3) - v0 * (s1 * s4 - s2 * s3) + s2 * (s1 * v2 - v1 * s2)) / D;
+        const polyA = (s0 * (s2 * v2 - v1 * s3) - s1 * (s1 * v2 - v1 * s2) + v0 * (s1 * s3 - s2 * s2)) / D;
+        trendStats.polyA = polyA;
+        trendStats.polyB = polyB;
+        trendStats.polyC = polyC;
+      }
+    }
+
+    // Exponential Fit (y = a * e^(bx))
+    const posIndices = [];
+    for (let i = 0; i < count; i++) {
+      if (vals[i] > 0) posIndices.push(i);
+    }
+    if (posIndices.length >= 2) {
+      let sumX = 0, sumLny = 0, sumXLny = 0, sumXX = 0;
+      const mCount = posIndices.length;
+      for (const i of posIndices) {
+        const x = i;
+        const lny = Math.log(vals[i]);
+        sumX += x;
+        sumLny += lny;
+        sumXLny += x * lny;
+        sumXX += x * x;
+      }
+      const denom = mCount * sumXX - sumX * sumX;
+      if (denom !== 0) {
+        const expB = (mCount * sumXLny - sumX * sumLny) / denom;
+        const lna = (sumLny - expB * sumX) / mCount;
+        trendStats.expB = expB;
+        trendStats.expA = Math.exp(lna);
+      }
+    }
+
+    // Benchmark Target Line Metrics
+    if (targetEnabled && targetKpi) {
+      const aboveCount = vals.filter(v => v >= targetValue).length;
+      const pct = Math.round((aboveCount / count) * 100);
+      targetKpi.textContent = `${aboveCount}/${count} Met (${pct}%)`;
+    } else if (targetKpi) {
+      targetKpi.textContent = "-";
     }
 
     statCount.textContent = count;
@@ -910,10 +1210,13 @@
     if (statMinMax) statMinMax.textContent = `${min.toLocaleString(undefined, { maximumFractionDigits: 1 })} / ${max.toLocaleString(undefined, { maximumFractionDigits: 1 })}`;
   }
 
+  // ==========================================
+  // TABLE EDITOR RENDERING
+  // ==========================================
   function renderTable() {
     tableBody.innerHTML = '';
     if (data.length === 0) {
-      tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 24px 10px; color: var(--text-muted); font-size:12px;">No data points.<br><span style="color:#60a5fa; font-size:11px;">Click <strong>+ Add Point</strong> or press <span class="kbd-badge">P</span> for presets</span></td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding: 22px 10px; color: var(--text-muted); font-size:12px;">No data points.<br><span style="color:#60a5fa; font-size:11px;">Click <strong>+ Add Point</strong> or press <span class="kbd-badge">P</span> for presets</span></td></tr>`;
       return;
     }
     data.forEach((item, index) => {
@@ -927,7 +1230,7 @@
       tableBody.appendChild(tr);
     });
 
-    // Attach listeners
+    // Input listeners
     tableBody.querySelectorAll('.lbl-input').forEach(input => {
       input.onfocus = () => dismissAllToasts();
       input.oninput = (e) => {
@@ -973,6 +1276,7 @@
     });
     tableBody.querySelectorAll('.del-btn').forEach(btn => {
       btn.onclick = () => {
+        pushUndo();
         const idx = parseInt(btn.dataset.index);
         data.splice(idx, 1);
         updateAll();
@@ -983,15 +1287,6 @@
 
   function escapeHtml(str) {
     return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  }
-
-  function formatTrendEquation(slope, intercept, r2) {
-    const sSign = slope < 0 ? '-' : '';
-    const sVal = Math.abs(slope).toFixed(2);
-    const iSign = intercept < 0 ? '-' : '+';
-    const iVal = Math.abs(intercept).toFixed(2);
-    const r2Val = r2 >= 0.9995 ? '1.000' : r2.toFixed(3);
-    return `Fit: y = ${sSign}${sVal}x ${iSign} ${iVal}  (R² = ${r2Val})`;
   }
 
   function drawRoundedRect(ctx, x, y, w, h, r) {
@@ -1008,7 +1303,9 @@
     ctx.closePath();
   }
 
-  // Render Engine
+  // ==========================================
+  // MAIN CHART RENDERING ENGINE (10 MODES)
+  // ==========================================
   function renderChart() {
     ctx.clearRect(0, 0, canvasW, canvasH);
 
@@ -1024,11 +1321,57 @@
       renderPieOrDonut(chartType === 'donut');
     } else if (chartType === 'radar') {
       renderRadar();
+    } else if (chartType === 'polar') {
+      renderPolarCoxcomb();
+    } else if (chartType === 'hbar') {
+      renderHorizontalBar();
     } else {
       renderAxesAndCartesian();
     }
+
+    // Active Sonification Playhead Animation
+    if (isSonifying && sonifyPlayheadIndex >= 0 && sonifyPlayheadIndex < data.length) {
+      renderSonifyPlayhead();
+    }
   }
 
+  function renderSonifyPlayhead() {
+    ctx.save();
+    if (chartType === 'hbar') {
+      const padT = 30, padB = 40;
+      const chartH = canvasH - padT - padB;
+      const stepY = chartH / data.length;
+      const py = padT + sonifyPlayheadIndex * stepY + stepY / 2;
+      ctx.strokeStyle = "#38bdf8";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, py);
+      ctx.lineTo(canvasW, py);
+      ctx.stroke();
+    } else if (chartType === 'pie' || chartType === 'donut' || chartType === 'radar' || chartType === 'polar') {
+      const cx = canvasW / 2 - (chartType === 'radar' ? 0 : 60);
+      const cy = canvasH / 2;
+      ctx.strokeStyle = "#38bdf8";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.arc(cx, cy, Math.min(canvasW, canvasH) * 0.40, 0, Math.PI * 2);
+      ctx.stroke();
+    } else {
+      const padL = 50, padR = 25;
+      const chartW = canvasW - padL - padR;
+      const step = chartW / data.length;
+      const px = padL + sonifyPlayheadIndex * step + step / 2;
+      ctx.strokeStyle = "#38bdf8";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(px, 0);
+      ctx.lineTo(px, canvasH);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // 1. Cartesian Views (Bar, Line, Area, Step, Scatter)
   function renderAxesAndCartesian() {
     const padL = 50, padR = 25, padT = 30, padB = 45;
     const chartW = canvasW - padL - padR;
@@ -1147,6 +1490,122 @@
         ctx.font = isHov ? "600 12px 'Inter', sans-serif" : "400 12px 'Inter', sans-serif";
         ctx.fillText(data[i].label, p.x, padT + chartH + 8);
       });
+    } else if (chartType === 'step') {
+      // Stepped Waveform
+      const pts = [];
+      for (let i = 0; i < n; i++) {
+        const val = vals[i];
+        const bh = (val / maxVal) * chartH;
+        const bx = padL + i * step + step / 2;
+        const by = padT + chartH - bh;
+        pts.push({ x: bx, y: by });
+      }
+
+      // Area fill
+      const grad = ctx.createLinearGradient(0, padT, 0, padT + chartH);
+      grad.addColorStop(0, getColor(0).replace("rgb", "rgba").replace(")", ", 0.35)"));
+      grad.addColorStop(1, getColor(0).replace("rgb", "rgba").replace(")", ", 0.0)"));
+      ctx.beginPath();
+      ctx.moveTo(padL, padT + chartH);
+      ctx.lineTo(pts[0].x, pts[0].y);
+      for (let i = 0; i < n - 1; i++) {
+        ctx.lineTo(pts[i + 1].x, pts[i].y);
+        ctx.lineTo(pts[i + 1].x, pts[i + 1].y);
+      }
+      ctx.lineTo(padL + chartW, pts[n - 1].y);
+      ctx.lineTo(padL + chartW, padT + chartH);
+      ctx.closePath();
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Stepped Line Path
+      ctx.beginPath();
+      ctx.moveTo(padL, pts[0].y);
+      ctx.lineTo(pts[0].x, pts[0].y);
+      for (let i = 0; i < n - 1; i++) {
+        ctx.lineTo(pts[i + 1].x, pts[i].y);
+        ctx.lineTo(pts[i + 1].x, pts[i + 1].y);
+      }
+      ctx.lineTo(padL + chartW, pts[n - 1].y);
+      ctx.strokeStyle = getColor(0);
+      ctx.lineWidth = 3;
+      ctx.stroke();
+
+      // Step Corner Markers
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      pts.forEach((p, i) => {
+        const isHov = hoveredIndex === i;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, isHov ? 7 : 4, 0, Math.PI * 2);
+        ctx.fillStyle = getColor(i);
+        ctx.fill();
+
+        ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
+        ctx.font = isHov ? "600 12px 'Inter', sans-serif" : "400 12px 'Inter', sans-serif";
+        ctx.fillText(data[i].label, p.x, padT + chartH + 8);
+      });
+    } else if (chartType === 'scatter') {
+      // Scatter Plot with Crosshair Inspection
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+
+      for (let i = 0; i < n; i++) {
+        const val = vals[i];
+        const bh = (val / maxVal) * chartH;
+        const px = padL + i * step + step / 2;
+        const py = padT + chartH - bh;
+        const isHov = hoveredIndex === i;
+
+        if (isHov) {
+          // Crosshairs
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+          ctx.setLineDash([4, 4]);
+          ctx.beginPath();
+          ctx.moveTo(padL, py);
+          ctx.lineTo(padL + chartW, py);
+          ctx.moveTo(px, padT);
+          ctx.lineTo(px, padT + chartH);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        // Halos & Core
+        ctx.beginPath();
+        ctx.arc(px, py, isHov ? 14 : 9, 0, Math.PI * 2);
+        ctx.fillStyle = getColor(i).replace("rgb", "rgba").replace(")", ", 0.25)");
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(px, py, isHov ? 7 : 4.5, 0, Math.PI * 2);
+        ctx.fillStyle = getColor(i);
+        ctx.fill();
+
+        ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
+        ctx.font = isHov ? "600 12px 'Inter', sans-serif" : "400 12px 'Inter', sans-serif";
+        ctx.fillText(data[i].label, px, padT + chartH + 8);
+      }
+    }
+
+    // Benchmark Target Line
+    if (targetEnabled) {
+      const yTarget = padT + chartH - (Math.max(0, targetValue) / maxVal) * chartH;
+      ctx.save();
+      ctx.strokeStyle = "#f59e0b";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 5]);
+      ctx.beginPath();
+      ctx.moveTo(padL, yTarget);
+      ctx.lineTo(padL + chartW, yTarget);
+      ctx.stroke();
+
+      // Flag
+      ctx.fillStyle = "rgba(245, 158, 11, 0.9)";
+      ctx.font = "700 10px 'Inter', sans-serif";
+      ctx.textAlign = "left";
+      ctx.textBaseline = "bottom";
+      ctx.fillText(`TARGET: ${targetValue}`, padL + 8, yTarget - 4);
+      ctx.restore();
     }
 
     if (trendMode !== 'none') {
@@ -1156,6 +1615,206 @@
     drawTooltipCartesian(padL, padT, chartW, chartH, maxVal, step, barW);
   }
 
+  // 2. Horizontal Bar Chart (hbar)
+  function renderHorizontalBar() {
+    const padL = 100, padR = 40, padT = 30, padB = 40;
+    const chartW = canvasW - padL - padR;
+    const chartH = canvasH - padT - padB;
+    const n = data.length;
+
+    const vals = data.map(d => Math.max(0, Number(d.value) || 0));
+    const maxVal = Math.max(1, ...vals);
+
+    // Vertical grid ticks across X axis
+    ctx.font = "11px 'Inter', sans-serif";
+    ctx.fillStyle = "#71717a";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+
+    const ticks = 5;
+    for (let i = 0; i <= ticks; i++) {
+      const x = padL + (chartW / ticks) * i;
+      const rawVal = (maxVal / ticks) * i;
+      const valStr = maxVal < 10 ? rawVal.toFixed(1) : Math.round(rawVal).toString();
+
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.07)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, padT);
+      ctx.lineTo(x, padT + chartH);
+      ctx.stroke();
+
+      ctx.fillText(valStr, x, padT + chartH + 8);
+    }
+
+    // Axes
+    ctx.beginPath();
+    ctx.moveTo(padL, padT);
+    ctx.lineTo(padL, padT + chartH);
+    ctx.lineTo(padL + chartW, padT + chartH);
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    const stepY = chartH / n;
+    const barH = Math.min(34, Math.max(14, stepY * 0.65));
+
+    for (let i = 0; i < n; i++) {
+      const val = vals[i];
+      const bw = (val / maxVal) * chartW;
+      const bx = padL;
+      const by = padT + i * stepY + (stepY - barH) / 2;
+      const isHov = hoveredIndex === i;
+
+      if (bw > 0.5) {
+        ctx.shadowBlur = isHov ? 16 : 6;
+        ctx.shadowColor = getColor(i);
+        ctx.fillStyle = getColor(i);
+        drawRoundedRect(ctx, bx, by, bw, barH, 5);
+        ctx.fill();
+      }
+
+      ctx.shadowBlur = 0;
+
+      // Label on left
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
+      ctx.font = isHov ? "600 12px 'Inter', sans-serif" : "400 12px 'Inter', sans-serif";
+      ctx.fillText(data[i].label, padL - 10, by + barH / 2);
+
+      // Value badge on right
+      ctx.textAlign = "left";
+      ctx.fillStyle = isHov ? "#ffffff" : "#d4d4d8";
+      ctx.font = "600 11px 'Inter', sans-serif";
+      ctx.fillText(val.toString(), bx + bw + 6, by + barH / 2);
+    }
+
+    // Benchmark Target Line
+    if (targetEnabled) {
+      const xTarget = padL + (Math.max(0, targetValue) / maxVal) * chartW;
+      ctx.save();
+      ctx.strokeStyle = "#f59e0b";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 5]);
+      ctx.beginPath();
+      ctx.moveTo(xTarget, padT);
+      ctx.lineTo(xTarget, padT + chartH);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(245, 158, 11, 0.9)";
+      ctx.font = "700 10px 'Inter', sans-serif";
+      ctx.textAlign = "left";
+      ctx.fillText(`TARGET: ${targetValue}`, xTarget + 4, padT + 12);
+      ctx.restore();
+    }
+
+    drawTooltipHBar(padL, padT, chartW, chartH, maxVal, stepY, barH);
+  }
+
+  // 3. Polar Area / Coxcomb Rose Chart (Florence Nightingale)
+  function renderPolarCoxcomb() {
+    const cx = canvasW / 2 - 60;
+    const cy = canvasH / 2;
+    const maxR = Math.min(canvasW, canvasH) * 0.36;
+    const n = data.length;
+
+    const vals = data.map(d => Math.max(0, Number(d.value) || 0));
+    const maxVal = Math.max(1, ...vals);
+    const angleStep = (Math.PI * 2) / n;
+
+    // Concentric grid circles
+    for (let level = 1; level <= 4; level++) {
+      const r = (maxR / 4) * level;
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    // Spokes
+    for (let i = 0; i < n; i++) {
+      const angle = -Math.PI / 2 + i * angleStep;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(cx + Math.cos(angle) * maxR, cy + Math.sin(angle) * maxR);
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.12)";
+      ctx.stroke();
+
+      // Outer label
+      const lx = cx + Math.cos(angle + angleStep / 2) * (maxR + 20);
+      const ly = cy + Math.sin(angle + angleStep / 2) * (maxR + 20);
+      const isHov = hoveredIndex === i;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
+      ctx.font = isHov ? "600 11px 'Inter', sans-serif" : "400 11px 'Inter', sans-serif";
+      ctx.fillText(data[i].label, lx, ly);
+    }
+
+    // Petals (Coxcomb Rose wedges)
+    for (let i = 0; i < n; i++) {
+      const val = vals[i];
+      const r = (val / maxVal) * maxR;
+      const startAngle = -Math.PI / 2 + i * angleStep;
+      const endAngle = startAngle + angleStep;
+      const isHov = hoveredIndex === i;
+
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, r + (isHov ? 6 : 0), startAngle, endAngle);
+      ctx.closePath();
+
+      ctx.fillStyle = getColor(i).replace("rgb", "rgba").replace(")", isHov ? ", 0.75)" : ", 0.45)");
+      ctx.shadowBlur = isHov ? 16 : 0;
+      ctx.shadowColor = getColor(i);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+
+      ctx.strokeStyle = getColor(i);
+      ctx.lineWidth = isHov ? 2.5 : 1.5;
+      ctx.stroke();
+    }
+
+    // Benchmark Target Ring
+    if (targetEnabled) {
+      const rTarget = (Math.max(0, targetValue) / maxVal) * maxR;
+      ctx.save();
+      ctx.strokeStyle = "#f59e0b";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.arc(cx, cy, rTarget, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // Legend on right
+    const legX = canvasW - 130;
+    const legY = cy - (n * 22) / 2;
+    ctx.font = "12px 'Inter', sans-serif";
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+
+    data.forEach((item, i) => {
+      const y = legY + i * 22;
+      const isHov = hoveredIndex === i;
+
+      ctx.fillStyle = getColor(i);
+      ctx.beginPath();
+      ctx.arc(legX, y, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = isHov ? "#ffffff" : "#a1a1aa";
+      ctx.font = isHov ? "600 12px 'Inter', sans-serif" : "400 12px 'Inter', sans-serif";
+      ctx.fillText(`${item.label}: ${item.value}`, legX + 12, y);
+    });
+
+    drawTooltipPolar(cx, cy, maxR, 0, vals.reduce((a, b) => a + b, 0));
+  }
+
+  // 4. Trendline & Curve Fitting Overlays
   function renderTrendOverlay(padL, padT, chartW, chartH, maxVal, step, barW, vals) {
     const n = data.length;
     if (n < 2 || trendMode === 'none') return;
@@ -1179,7 +1838,6 @@
       ctx.shadowBlur = 8;
       ctx.stroke();
 
-      // Endpoints
       ctx.setLineDash([]);
       ctx.fillStyle = "#facc15";
       ctx.beginPath();
@@ -1187,22 +1845,52 @@
       ctx.arc(x1, y1, 4, 0, Math.PI * 2);
       ctx.fill();
 
-      // Badge
-      const badgeTxt = formatTrendEquation(trendStats.slope, trendStats.intercept, trendStats.r2);
-      ctx.font = "600 11px 'Inter', sans-serif";
-      const bMetrics = ctx.measureText(badgeTxt);
-      const bx = padL + chartW - bMetrics.width - 16;
-      const by = padT + 8;
-      ctx.fillStyle = "rgba(24, 24, 27, 0.88)";
-      ctx.strokeStyle = "rgba(250, 204, 21, 0.5)";
-      ctx.lineWidth = 1;
-      drawRoundedRect(ctx, bx, by, bMetrics.width + 12, 22, 5);
-      ctx.fill();
+      const badgeTxt = `Fit: y = ${trendStats.slope >= 0 ? '+' : ''}${trendStats.slope.toFixed(2)}x ${trendStats.intercept >= 0 ? '+' : ''}${trendStats.intercept.toFixed(2)} (R²=${trendStats.r2.toFixed(3)})`;
+      drawTrendBadge(badgeTxt, "#fde047", "rgba(250, 204, 21, 0.5)", padL, padT, chartW);
+
+    } else if (trendMode === 'poly2' && n >= 3) {
+      // 2nd-Order Quadratic Fit Curve
+      ctx.beginPath();
+      const samples = 60;
+      for (let s = 0; s <= samples; s++) {
+        const t = (s / samples) * (n - 1);
+        const yHat = trendStats.polyA * t * t + trendStats.polyB * t + trendStats.polyC;
+        const px = padL + t * step + step / 2;
+        const py = padT + chartH - (Math.max(0, yHat) / maxVal) * chartH;
+        if (s === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.strokeStyle = "#f59e0b";
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([6, 4]);
+      ctx.shadowColor = "#f59e0b";
+      ctx.shadowBlur = 8;
       ctx.stroke();
-      ctx.fillStyle = "#fde047";
-      ctx.textAlign = "left";
-      ctx.textBaseline = "middle";
-      ctx.fillText(badgeTxt, bx + 6, by + 11);
+
+      const badgeTxt = `Poly: y = ${trendStats.polyA.toFixed(2)}x² + ${trendStats.polyB.toFixed(2)}x + ${trendStats.polyC.toFixed(1)}`;
+      drawTrendBadge(badgeTxt, "#fbbf24", "rgba(245, 158, 11, 0.5)", padL, padT, chartW);
+
+    } else if (trendMode === 'exp' && trendStats.expA > 0) {
+      // Exponential Fit Curve
+      ctx.beginPath();
+      const samples = 60;
+      for (let s = 0; s <= samples; s++) {
+        const t = (s / samples) * (n - 1);
+        const yHat = trendStats.expA * Math.exp(trendStats.expB * t);
+        const px = padL + t * step + step / 2;
+        const py = padT + chartH - (Math.max(0, yHat) / maxVal) * chartH;
+        if (s === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+      ctx.strokeStyle = "#a855f7";
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([6, 4]);
+      ctx.shadowColor = "#a855f7";
+      ctx.shadowBlur = 8;
+      ctx.stroke();
+
+      const badgeTxt = `Exp: y = ${trendStats.expA.toFixed(2)} · e^(${trendStats.expB.toFixed(2)}x)`;
+      drawTrendBadge(badgeTxt, "#c084fc", "rgba(168, 85, 247, 0.5)", padL, padT, chartW);
 
     } else if (trendMode === 'movavg') {
       const maPts = [];
@@ -1232,21 +1920,7 @@
       ctx.shadowBlur = 8;
       ctx.stroke();
 
-      const badgeTxt = "Moving Average (Window: 3)";
-      ctx.font = "600 11px 'Inter', sans-serif";
-      const bMetrics = ctx.measureText(badgeTxt);
-      const bx = padL + chartW - bMetrics.width - 16;
-      const by = padT + 8;
-      ctx.fillStyle = "rgba(24, 24, 27, 0.88)";
-      ctx.strokeStyle = "rgba(56, 189, 248, 0.5)";
-      ctx.lineWidth = 1;
-      drawRoundedRect(ctx, bx, by, bMetrics.width + 12, 22, 5);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = "#7dd3fc";
-      ctx.textAlign = "left";
-      ctx.textBaseline = "middle";
-      ctx.fillText(badgeTxt, bx + 6, by + 11);
+      drawTrendBadge("Moving Average (Window: 3)", "#7dd3fc", "rgba(56, 189, 248, 0.5)", padL, padT, chartW);
 
     } else if (trendMode === 'mean') {
       const total = vals.reduce((a, b) => a + b, 0);
@@ -1263,25 +1937,64 @@
       ctx.shadowBlur = 8;
       ctx.stroke();
 
-      const badgeTxt = `Mean Baseline: ${mean.toFixed(2)}`;
-      ctx.font = "600 11px 'Inter', sans-serif";
-      const bMetrics = ctx.measureText(badgeTxt);
-      const bx = padL + chartW - bMetrics.width - 16;
-      const by = padT + 8;
-      ctx.fillStyle = "rgba(24, 24, 27, 0.88)";
-      ctx.strokeStyle = "rgba(236, 72, 153, 0.5)";
-      ctx.lineWidth = 1;
-      drawRoundedRect(ctx, bx, by, bMetrics.width + 12, 22, 5);
-      ctx.fill();
+      drawTrendBadge(`Mean Baseline: ${mean.toFixed(2)}`, "#f472b6", "rgba(236, 72, 153, 0.5)", padL, padT, chartW);
+
+    } else if (trendMode === 'corridor') {
+      // Confidence Corridor (Mean +/- StdDev band)
+      const total = vals.reduce((a, b) => a + b, 0);
+      const mean = total / n;
+      const variance = vals.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / n;
+      const stdDev = Math.sqrt(variance);
+
+      const yMean = padT + chartH - (mean / maxVal) * chartH;
+      const yUpper = padT + chartH - (Math.min(maxVal, mean + stdDev) / maxVal) * chartH;
+      const yLower = padT + chartH - (Math.max(0, mean - stdDev) / maxVal) * chartH;
+
+      // Shaded corridor band
+      ctx.fillStyle = "rgba(16, 185, 129, 0.14)";
+      ctx.fillRect(padL, yUpper, chartW, yLower - yUpper);
+
+      // Center and corridor border lines
+      ctx.strokeStyle = "rgba(16, 185, 129, 0.6)";
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 4]);
+      ctx.beginPath();
+      ctx.moveTo(padL, yUpper);
+      ctx.lineTo(padL + chartW, yUpper);
+      ctx.moveTo(padL, yLower);
+      ctx.lineTo(padL + chartW, yLower);
       ctx.stroke();
-      ctx.fillStyle = "#f472b6";
-      ctx.textAlign = "left";
-      ctx.textBaseline = "middle";
-      ctx.fillText(badgeTxt, bx + 6, by + 11);
+
+      ctx.strokeStyle = "#10b981";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(padL, yMean);
+      ctx.lineTo(padL + chartW, yMean);
+      ctx.stroke();
+
+      drawTrendBadge(`Corridor: μ=${mean.toFixed(1)} ± σ=${stdDev.toFixed(1)}`, "#6ee7b7", "rgba(16, 185, 129, 0.5)", padL, padT, chartW);
     }
     ctx.restore();
   }
 
+  function drawTrendBadge(txt, textCol, borderCol, padL, padT, chartW) {
+    ctx.font = "600 11px 'Inter', sans-serif";
+    const bMetrics = ctx.measureText(txt);
+    const bx = padL + chartW - bMetrics.width - 16;
+    const by = padT + 8;
+    ctx.fillStyle = "rgba(24, 24, 27, 0.90)";
+    ctx.strokeStyle = borderCol;
+    ctx.lineWidth = 1;
+    drawRoundedRect(ctx, bx, by, bMetrics.width + 12, 22, 5);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = textCol;
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    ctx.fillText(txt, bx + 6, by + 11);
+  }
+
+  // 5. Pie / Donut
   function renderPieOrDonut(isDonut) {
     const total = data.reduce((a, b) => a + Math.max(0, Number(b.value) || 0), 0) || 1;
     const cx = canvasW / 2 - 60;
@@ -1319,7 +2032,6 @@
       startAngle = endAngle;
     });
 
-    // Donut Center Text
     if (isDonut) {
       ctx.font = "700 18px 'Inter', sans-serif";
       ctx.fillStyle = "#ffffff";
@@ -1356,6 +2068,7 @@
     drawTooltipPolar(cx, cy, outerR, innerR, total);
   }
 
+  // 6. Radar / Spider Chart
   function renderRadar() {
     const cx = canvasW / 2;
     const cy = canvasH / 2;
@@ -1374,10 +2087,9 @@
     const maxVal = Math.max(1, ...vals);
     const angleStep = (Math.PI * 2) / n;
 
-    // Web Grid concentric polygons
-    const gridLevels = 4;
-    for (let level = 1; level <= gridLevels; level++) {
-      const r = (radius / gridLevels) * level;
+    // Web Grid
+    for (let level = 1; level <= 4; level++) {
+      const r = (radius / 4) * level;
       ctx.beginPath();
       for (let i = 0; i < n; i++) {
         const angle = -Math.PI / 2 + i * angleStep;
@@ -1392,7 +2104,7 @@
       ctx.stroke();
     }
 
-    // Spokes & Axis Labels
+    // Spokes & Labels
     ctx.font = "12px 'Inter', sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
@@ -1450,7 +2162,16 @@
     drawTooltipRadar(dataPts);
   }
 
+  // ==========================================
+  // TOOLTIP DRAWING & HIT DETECTION
+  // ==========================================
   function drawTooltipCartesian(padL, padT, chartW, chartH, maxVal, step, barW) {
+    if (hoveredIndex === -1 || hoveredIndex >= data.length) return;
+    const item = data[hoveredIndex];
+    drawTooltipBox(`${item.label}: ${item.value}`);
+  }
+
+  function drawTooltipHBar(padL, padT, chartW, chartH, maxVal, stepY, barH) {
     if (hoveredIndex === -1 || hoveredIndex >= data.length) return;
     const item = data[hoveredIndex];
     drawTooltipBox(`${item.label}: ${item.value}`);
@@ -1499,7 +2220,6 @@
     ctx.fillText(txt, tx + (tw + 16) / 2, ty + th / 2);
   }
 
-  // Hover detection
   function handlePointerMove(clientX, clientY) {
     const rect = canvas.getBoundingClientRect();
     hoverX = clientX - rect.left;
@@ -1533,6 +2253,22 @@
           currAngle += sliceAngle;
         }
       }
+    } else if (chartType === 'polar') {
+      const cx = canvasW / 2 - 60;
+      const cy = canvasH / 2;
+      const dx = hoverX - cx;
+      const dy = hoverY - cy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const maxR = Math.min(canvasW, canvasH) * 0.36;
+      const angleStep = (Math.PI * 2) / n;
+
+      if (dist <= maxR + 10) {
+        let angle = Math.atan2(dy, dx);
+        if (angle < -Math.PI / 2) angle += Math.PI * 2;
+        const offsetAngle = (angle + Math.PI / 2 + Math.PI * 4) % (Math.PI * 2);
+        const idx = Math.floor(offsetAngle / angleStep) % n;
+        if (idx >= 0 && idx < n) newHover = idx;
+      }
     } else if (chartType === 'radar') {
       const cx = canvasW / 2;
       const cy = canvasH / 2;
@@ -1553,6 +2289,19 @@
             newHover = i;
             break;
           }
+        }
+      }
+    } else if (chartType === 'hbar') {
+      const padL = 100, padR = 40, padT = 30, padB = 40;
+      const chartH = canvasH - padT - padB;
+      const stepY = chartH / n;
+      const barH = Math.min(34, Math.max(14, stepY * 0.65));
+
+      for (let i = 0; i < n; i++) {
+        const by = padT + i * stepY + (stepY - barH) / 2;
+        if (hoverY >= by && hoverY <= by + barH && hoverX >= padL - 80 && hoverX <= canvasW - padR) {
+          newHover = i;
+          break;
         }
       }
     } else {
@@ -1583,14 +2332,16 @@
     }
   };
 
-  // Toast Notification Manager
+  // ==========================================
+  // TOAST NOTIFICATIONS (BOTTOM-RIGHT ANCHOR)
+  // ==========================================
   function dismissAllToasts() {
     const container = document.getElementById('toastContainer');
     if (!container) return;
     const toasts = container.querySelectorAll('.toast:not(.toast-out)');
     toasts.forEach(t => {
       t.classList.add('toast-out');
-      setTimeout(() => t.remove(), 250);
+      setTimeout(() => t.remove(), 220);
     });
   }
 
@@ -1598,7 +2349,6 @@
     const container = document.getElementById('toastContainer');
     if (!container) return;
 
-    // Keep max 3 concurrent toasts to prevent clutter
     while (container.children.length >= 3) {
       container.firstChild.remove();
     }
@@ -1610,12 +2360,11 @@
     if (type === 'success') defaultIcon = '✅';
     if (type === 'warning') defaultIcon = '⚠️';
     if (type === 'error') defaultIcon = '❌';
-    toast.innerHTML = `<span style="font-size:16px;">${icon || defaultIcon}</span><span>${escapeHtml(msg)}</span>`;
+    toast.innerHTML = `<span style="font-size:15px;">${icon || defaultIcon}</span><span>${escapeHtml(msg)}</span>`;
 
-    // Click to dismiss immediately
     toast.onclick = () => {
       toast.classList.add('toast-out');
-      setTimeout(() => toast.remove(), 250);
+      setTimeout(() => toast.remove(), 220);
     };
 
     container.appendChild(toast);
@@ -1623,12 +2372,101 @@
     setTimeout(() => {
       if (toast.parentNode) {
         toast.classList.add('toast-out');
-        setTimeout(() => toast.remove(), 250);
+        setTimeout(() => toast.remove(), 220);
       }
     }, 3200);
   }
 
-  // Cybernetic Help Modal Controller
+  // ==========================================
+  // MATHEMATICAL DATA TRANSFORMATIONS
+  // ==========================================
+  function pushUndo() {
+    undoStack.push(JSON.parse(JSON.stringify(data)));
+    if (undoStack.length > 20) undoStack.shift();
+  }
+
+  function undoTransform() {
+    if (undoStack.length === 0) {
+      showToast("No transformations to undo.", "warning", "⚠️");
+      return;
+    }
+    data = undoStack.pop();
+    updateAll();
+    playSfx('transform');
+    showToast(`Undid transformation (${data.length} points restored)`, 'info', '↩');
+  }
+
+  function normalizeData() {
+    if (data.length === 0) return;
+    pushUndo();
+    const vals = data.map(d => Number(d.value) || 0);
+    const min = Math.min(...vals);
+    const max = Math.max(...vals);
+    const range = max - min;
+    data.forEach(d => {
+      if (range > 0) d.value = Math.round(((d.value - min) / range) * 100);
+      else d.value = 50;
+    });
+    updateAll();
+    playSfx('transform');
+    showToast("Normalized dataset values to 0–100%", "success", "%");
+  }
+
+  function cumSumData() {
+    if (data.length === 0) return;
+    pushUndo();
+    let acc = 0;
+    data.forEach(d => {
+      acc += Number(d.value) || 0;
+      d.value = acc;
+    });
+    updateAll();
+    playSfx('transform');
+    showToast("Computed running cumulative sum (Σ)", "success", "Σ");
+  }
+
+  function deltaData() {
+    if (data.length === 0) return;
+    pushUndo();
+    let prev = Number(data[0].value) || 0;
+    data[0].value = 0;
+    for (let i = 1; i < data.length; i++) {
+      const cur = Number(data[i].value) || 0;
+      data[i].value = cur - prev;
+      prev = cur;
+    }
+    updateAll();
+    playSfx('transform');
+    showToast("Computed discrete point-to-point differential (Δ)", "success", "Δ");
+  }
+
+  function smoothData() {
+    if (data.length < 3) return;
+    pushUndo();
+    const orig = data.map(d => Number(d.value) || 0);
+    for (let i = 0; i < data.length; i++) {
+      const p = i > 0 ? orig[i - 1] : orig[0];
+      const c = orig[i];
+      const n = i < data.length - 1 ? orig[i + 1] : orig[orig.length - 1];
+      data[i].value = Math.round((p * 0.25 + c * 0.5 + n * 0.25) * 10) / 10;
+    }
+    updateAll();
+    playSfx('transform');
+    showToast("Applied 3-point Gaussian smoothing (~)", "success", "~");
+  }
+
+  function reverseData() {
+    if (data.length === 0) return;
+    pushUndo();
+    data.reverse();
+    updateAll();
+    playSfx('transform');
+    showToast("Reversed data series order (⇄)", "info", "⇄");
+  }
+
+  // ==========================================
+  // HELP MODAL & SHORTCUT CONTROLLER
+  // ==========================================
   const helpModal = document.getElementById('helpModal');
   const btnCloseHelp = document.getElementById('btnCloseHelp');
 
@@ -1652,7 +2490,9 @@
     };
   }
 
-  // State Persistence & QuickSave / QuickLoad
+  // ==========================================
+  // STATE PERSISTENCE & QUICKSAVE / QUICKLOAD
+  // ==========================================
   const STORAGE_KEY = 'kchart_state';
   const QUICKSAVE_KEY = 'kchart_quicksave';
   const TUTORIAL_KEY = 'kchart_tutorialSeen';
@@ -1663,7 +2503,9 @@
         data,
         chartType,
         currentTheme,
-        trendMode
+        trendMode,
+        targetEnabled,
+        targetValue
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch (e) {}
@@ -1677,7 +2519,7 @@
         if (Array.isArray(state.data) && state.data.length > 0) {
           data = state.data;
         }
-        if (state.chartType && ['bar', 'line', 'area', 'pie', 'donut', 'radar'].includes(state.chartType)) {
+        if (state.chartType) {
           chartType = state.chartType;
         }
         if (state.currentTheme && THEMES[state.currentTheme]) {
@@ -1685,8 +2527,18 @@
           const themeSel = document.getElementById('themeSelect');
           if (themeSel) themeSel.value = currentTheme;
         }
-        if (state.trendMode && ['none', 'linear', 'movavg', 'mean'].includes(state.trendMode)) {
+        if (state.trendMode) {
           trendMode = state.trendMode;
+        }
+        if (state.targetEnabled !== undefined) {
+          targetEnabled = !!state.targetEnabled;
+          const chk = document.getElementById('chkTarget');
+          if (chk) chk.checked = targetEnabled;
+        }
+        if (state.targetValue !== undefined) {
+          targetValue = Number(state.targetValue) || 50;
+          const numT = document.getElementById('numTargetVal');
+          if (numT) numT.value = targetValue;
         }
         return true;
       }
@@ -1701,9 +2553,12 @@
         data: JSON.parse(JSON.stringify(data)),
         chartType,
         currentTheme,
-        trendMode
+        trendMode,
+        targetEnabled,
+        targetValue
       };
       localStorage.setItem(QUICKSAVE_KEY, JSON.stringify(snapshot));
+      playSfx('click');
       showToast(`QuickSaved ${data.length} points to session [F5]`, 'success', '💾');
     } catch (e) {
       showToast('QuickSave failed (storage quota).', 'error', '❌');
@@ -1719,6 +2574,7 @@
       }
       const snapshot = JSON.parse(raw);
       if (Array.isArray(snapshot.data)) {
+        pushUndo();
         data = snapshot.data;
         if (snapshot.chartType) setChartType(snapshot.chartType, true);
         if (snapshot.currentTheme && THEMES[snapshot.currentTheme]) {
@@ -1727,7 +2583,18 @@
           if (themeSel) themeSel.value = currentTheme;
         }
         if (snapshot.trendMode) setTrendMode(snapshot.trendMode, true);
+        if (snapshot.targetEnabled !== undefined) {
+          targetEnabled = !!snapshot.targetEnabled;
+          const chk = document.getElementById('chkTarget');
+          if (chk) chk.checked = targetEnabled;
+        }
+        if (snapshot.targetValue !== undefined) {
+          targetValue = Number(snapshot.targetValue) || 50;
+          const numT = document.getElementById('numTargetVal');
+          if (numT) numT.value = targetValue;
+        }
         updateAll();
+        playSfx('mode');
         const timeStr = snapshot.timestamp ? new Date(snapshot.timestamp).toLocaleTimeString() : '';
         showToast(`QuickLoaded snapshot (${data.length} pts${timeStr ? ' from ' + timeStr : ''}) [F9]`, 'success', '📂');
       }
@@ -1736,7 +2603,6 @@
     }
   }
 
-  // State update wrapper
   function updateAll() {
     renderTable();
     computeStats();
@@ -1751,15 +2617,20 @@
       else b.classList.remove('active');
     });
     renderChart();
+    playSfx('mode');
     if (!silent) {
-      const typeTitles = { bar: 'Bar Chart', line: 'Line Graph', area: 'Area Gradient', pie: 'Pie Chart', donut: 'Doughnut Chart', radar: 'Radar / Spider Chart' };
+      const typeTitles = {
+        bar: 'Bar Chart', line: 'Line Graph', area: 'Area Gradient',
+        pie: 'Pie Chart', donut: 'Doughnut Chart', radar: 'Radar / Spider Chart',
+        hbar: 'Horizontal Bar', step: 'Stepped Waveform', scatter: 'Scatter Plot', polar: 'Polar Coxcomb Rose'
+      };
       showToast(`Chart View: ${typeTitles[type] || type}`, 'info', '📊');
     }
   }
 
   function setTrendMode(mode, silent = false) {
     trendMode = mode;
-    if (mode !== 'none' && (chartType === 'pie' || chartType === 'donut' || chartType === 'radar')) {
+    if (mode !== 'none' && (chartType === 'pie' || chartType === 'donut' || chartType === 'radar' || chartType === 'polar')) {
       setChartType('line', true);
     }
     document.querySelectorAll('#trendGroup button').forEach(b => {
@@ -1767,18 +2638,34 @@
       else b.classList.remove('active');
     });
     renderChart();
+    playSfx('click');
     if (!silent) {
-      const trendTitles = { none: 'Trend: Off', linear: 'Linear Fit (OLS Regression)', movavg: '3-Point Moving Average', mean: 'Arithmetic Mean Reference' };
-      showToast(`Trend Overlay: ${trendTitles[mode] || mode}`, 'info', '📈');
+      const trendTitles = {
+        none: 'Trend: Off', linear: 'Linear Fit (OLS)', poly2: '2nd-Order Quadratic Fit',
+        exp: 'Exponential Fit (ae^bx)', movavg: '3-Point Moving Average',
+        mean: 'Arithmetic Mean Baseline', corridor: 'Confidence Corridor (±σ)'
+      };
+      showToast(`Overlay: ${trendTitles[mode] || mode}`, 'info', '📈');
     }
   }
 
-  // Button Listeners
+  // ==========================================
+  // EVENT LISTENERS & WIRING
+  // ==========================================
   document.getElementById('btnHelp').onclick = toggleHelpModal;
   const btnQuickSave = document.getElementById('btnQuickSave');
   if (btnQuickSave) btnQuickSave.onclick = quickSaveState;
   const btnQuickLoad = document.getElementById('btnQuickLoad');
   if (btnQuickLoad) btnQuickLoad.onclick = quickLoadState;
+
+  document.getElementById('btnAudioToggle').onclick = () => {
+    audioMuted = !audioMuted;
+    const btn = document.getElementById('btnAudioToggle');
+    btn.innerHTML = audioMuted ? `<span class="kbd-badge">M</span> 🔇 Muted` : `<span class="kbd-badge">M</span> 🔊 Audio`;
+    showToast(audioMuted ? "Audio muted" : "Audio unmuted (Genesis YM2612 FM / SPC700)", 'info', audioMuted ? '🔇' : '🔊');
+  };
+
+  document.getElementById('btnSonify').onclick = sonifyDataset;
 
   document.getElementById('chartTypeGroup').onclick = (e) => {
     const btn = e.target.closest('button');
@@ -1797,22 +2684,42 @@
   document.getElementById('themeSelect').onchange = (e) => {
     currentTheme = e.target.value;
     updateAll();
+    playSfx('click');
     showToast(`Color Theme: ${document.getElementById('themeSelect').selectedOptions[0].text}`, 'info', '🎨');
   };
 
+  let lastLoadedPreset = 'sales';
   document.getElementById('presetSelect').onchange = (e) => {
     const val = e.target.value;
     if (val && PRESETS[val]) {
+      pushUndo();
       lastLoadedPreset = val;
       const presetName = e.target.selectedOptions[0].text;
       data = JSON.parse(JSON.stringify(PRESETS[val]));
       updateAll();
+      playSfx('mode');
       showToast(`Loaded Preset: ${presetName}`, 'success', '📊');
       e.target.value = '';
     }
   };
 
+  function cyclePreset() {
+    const presetKeys = Object.keys(PRESETS);
+    let curIdx = presetKeys.indexOf(lastLoadedPreset || '');
+    const nextIdx = (curIdx + 1) % presetKeys.length;
+    const nextKey = presetKeys[nextIdx];
+    pushUndo();
+    lastLoadedPreset = nextKey;
+    data = JSON.parse(JSON.stringify(PRESETS[nextKey]));
+    const selectElem = document.getElementById('presetSelect');
+    if (selectElem) selectElem.value = nextKey;
+    updateAll();
+    playSfx('mode');
+    showToast(`Loaded Preset: ${nextKey}`, 'success', '📊');
+  }
+
   document.getElementById('btnRandomize').onclick = () => {
+    pushUndo();
     if (data.length === 0) {
       data = [
         { label: "Q1", value: 20 },
@@ -1826,6 +2733,7 @@
       item.value = Math.floor(10 + Math.random() * 90);
     });
     updateAll();
+    playSfx('click');
     showToast(`Randomized dataset (${data.length} points)`, 'info', '🎲');
   };
 
@@ -1834,26 +2742,33 @@
       showToast("Maximum limit of 100 data points reached.", "warning", "⚠️");
       return;
     }
+    pushUndo();
     data.push({ label: `Item ${data.length + 1}`, value: Math.floor(10 + Math.random() * 50) });
     updateAll();
+    playSfx('click');
     const wrapper = document.querySelector('.table-wrapper');
     if (wrapper) wrapper.scrollTop = wrapper.scrollHeight;
     showToast(`Added data point #${data.length}`, 'success', '➕');
   };
 
   document.getElementById('btnSortAsc').onclick = () => {
+    pushUndo();
     data.sort((a, b) => (Number(a.value) || 0) - (Number(b.value) || 0));
     updateAll();
+    playSfx('transform');
     showToast('Sorted points in ascending order', 'info', '▲');
   };
 
   document.getElementById('btnSortDesc').onclick = () => {
+    pushUndo();
     data.sort((a, b) => (Number(b.value) || 0) - (Number(a.value) || 0));
     updateAll();
+    playSfx('transform');
     showToast('Sorted points in descending order', 'info', '▼');
   };
 
   document.getElementById('btnClear').onclick = () => {
+    pushUndo();
     if (data.length === 0) {
       data = [
         { label: "Q1", value: 20 },
@@ -1871,6 +2786,38 @@
     }
   };
 
+  // Transform listeners
+  document.getElementById('btnNormalize').onclick = normalizeData;
+  document.getElementById('btnCumSum').onclick = cumSumData;
+  document.getElementById('btnDelta').onclick = deltaData;
+  document.getElementById('btnSmooth').onclick = smoothData;
+  document.getElementById('btnReverse').onclick = reverseData;
+  document.getElementById('btnUndoTransform').onclick = undoTransform;
+
+  // Benchmark Target Line listeners
+  const chkTarget = document.getElementById('chkTarget');
+  const numTargetVal = document.getElementById('numTargetVal');
+  if (chkTarget) {
+    chkTarget.onchange = (e) => {
+      targetEnabled = e.target.checked;
+      computeStats();
+      renderChart();
+      saveCurrentState();
+      showToast(targetEnabled ? `Target benchmark enabled (${targetValue})` : 'Target benchmark disabled', 'info', '🎯');
+    };
+  }
+  if (numTargetVal) {
+    numTargetVal.oninput = (e) => {
+      targetValue = parseFloat(e.target.value) || 0;
+      computeStats();
+      renderChart();
+      saveCurrentState();
+    };
+  }
+
+  // ==========================================
+  // EXPORT HANDLERS (SVG, PNG, MD, C, HTML, CSV, JSON)
+  // ==========================================
   function copyDataToClipboard() {
     if (data.length === 0) {
       showToast("No data to copy.", "warning", "⚠️");
@@ -1917,25 +2864,110 @@
   const copyBtn = document.getElementById('btnCopyData');
   if (copyBtn) copyBtn.onclick = copyDataToClipboard;
 
-  let lastLoadedPreset = 'sales';
-  function cyclePreset() {
-    const presetKeys = Object.keys(PRESETS);
-    let curIdx = presetKeys.indexOf(lastLoadedPreset || '');
-    const nextIdx = (curIdx + 1) % presetKeys.length;
-    const nextKey = presetKeys[nextIdx];
-    lastLoadedPreset = nextKey;
-    data = JSON.parse(JSON.stringify(PRESETS[nextKey]));
-    const selectElem = document.getElementById('presetSelect');
-    if (selectElem) selectElem.value = nextKey;
-    updateAll();
-    const name = selectElem?.selectedOptions[0]?.text || nextKey;
-    showToast(`Loaded Preset: ${name}`, 'success', '📊');
-  }
+  // Markdown Table Export
+  document.getElementById('btnExportMd').onclick = () => {
+    if (data.length === 0) {
+      showToast("No data to export.", "warning", "⚠️");
+      return;
+    }
+    const total = data.reduce((a, b) => a + (Number(b.value) || 0), 0) || 1;
+    let md = `### KChart Studio Data Export\n\n`;
+    md += `| # | Label | Value | Share % |\n`;
+    md += `|---|-------|-------|---------|\n`;
+    data.forEach((d, i) => {
+      const share = (((Number(d.value) || 0) / total) * 100).toFixed(1);
+      md += `| ${i + 1} | ${d.label} | ${d.value} | ${share}% |\n`;
+    });
+    md += `\n**Summary:** Count: ${statCount.textContent} | Total: ${statTotal.textContent} | Mean: ${statMean.textContent} | Median: ${statMedian.textContent} | StdDev: ${statStdDev.textContent}\n`;
+    if (trendStats.slope !== 0) {
+      md += `**Regression:** Slope: ${trendStats.slope.toFixed(2)} | R² Fit: ${trendStats.r2.toFixed(3)}\n`;
+    }
 
-  // Export handlers
-  document.getElementById('btnExportSvg').onclick = () => {
-    exportSvg();
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const link = document.createElement('a');
+    link.download = 'kchart_dataset.md';
+    link.href = URL.createObjectURL(blob);
+    link.click();
+    showToast("Exported GitHub Markdown Table (kchart_dataset.md)", "success", "📝");
+    setTimeout(() => URL.revokeObjectURL(link.href), 1500);
   };
+
+  // C Array Header Export (Ready to compile in native KChart)
+  document.getElementById('btnExportC').onclick = () => {
+    if (data.length === 0) {
+      showToast("No data to export.", "warning", "⚠️");
+      return;
+    }
+    const n = data.length;
+    let cCode = `/* KChart Studio Dataset Export - Win32 C */\n`;
+    cCode += `#define NUM_ITEMS ${n}\n\n`;
+    cCode += `const char* labels[NUM_ITEMS] = {\n  `;
+    cCode += data.map(d => `"${d.label.replace(/"/g, '\\"')}"`).join(', ');
+    cCode += `\n};\n\n`;
+    cCode += `int values[NUM_ITEMS] = {\n  `;
+    cCode += data.map(d => Math.round(Number(d.value) || 0)).join(', ');
+    cCode += `\n};\n`;
+
+    const blob = new Blob([cCode], { type: 'text/x-c' });
+    const link = document.createElement('a');
+    link.download = 'kchart_data.h';
+    link.href = URL.createObjectURL(blob);
+    link.click();
+    showToast("Exported Win32 C Header (kchart_data.h)", "success", "💻");
+    setTimeout(() => URL.revokeObjectURL(link.href), 1500);
+  };
+
+  // Standalone HTML Widget Export
+  document.getElementById('btnExportHtml').onclick = () => {
+    if (data.length === 0) {
+      showToast("No data to export.", "warning", "⚠️");
+      return;
+    }
+    const htmlWidget = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>KChart Standalone Widget</title>
+<style>
+  body { margin:0; background:#09090b; color:#fff; font-family:sans-serif; display:flex; flex-direction:column; align-items:center; padding:20px; }
+  h2 { margin:0 0 10px 0; font-size:16px; color:#60a5fa; }
+  canvas { background:#18181b; border:1px solid #333; border-radius:8px; max-width:100%; }
+</style>
+</head>
+<body>
+<h2>KChart Studio — ${chartType.toUpperCase()} View</h2>
+<canvas id="c" width="800" height="500"></canvas>
+<script>
+  const data = ${JSON.stringify(data)};
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const max = Math.max(1, ...data.map(d => Math.max(0, d.value)));
+  const step = 700 / data.length;
+  ctx.strokeStyle = '#333';
+  ctx.strokeRect(50, 40, 700, 400);
+  data.forEach((d, i) => {
+    const bh = (d.value / max) * 400;
+    const bx = 60 + i * step;
+    ctx.fillStyle = '#3b82f6';
+    ctx.fillRect(bx, 440 - bh, Math.min(40, step * 0.7), bh);
+    ctx.fillStyle = '#fff';
+    ctx.fillText(d.label, bx, 460);
+  });
+<\/script>
+</body>
+</html>`;
+
+    const blob = new Blob([htmlWidget], { type: 'text/html' });
+    const link = document.createElement('a');
+    link.download = 'kchart_widget.html';
+    link.href = URL.createObjectURL(blob);
+    link.click();
+    showToast("Exported Standalone HTML Widget (kchart_widget.html)", "success", "🌐");
+    setTimeout(() => URL.revokeObjectURL(link.href), 1500);
+  };
+
+  // SVG Export
+  document.getElementById('btnExportSvg').onclick = exportSvg;
 
   function exportSvg() {
     const n = data.length;
@@ -1953,9 +2985,8 @@
     const palette = THEMES[currentTheme] || THEMES.teal;
 
     let svg = `<?xml version="1.0" encoding="UTF-8"?>\n`;
-    svg += `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" style="background:#09090b; font-family:system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;">\n`;
-    
-    // Gradient definitions
+    svg += `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" style="background:#09090b; font-family:system-ui, -apple-system, sans-serif;">\n`;
+
     svg += `  <defs>\n`;
     svg += `    <linearGradient id="chartGrad" x1="0%" y1="0%" x2="0%" y2="100%">\n`;
     svg += `      <stop offset="0%" stop-color="${palette[0]}" stop-opacity="0.6"/>\n`;
@@ -1963,167 +2994,33 @@
     svg += `    </linearGradient>\n`;
     svg += `  </defs>\n`;
 
-    // Chart Background & Title
     svg += `  <rect width="${width}" height="${height}" fill="#09090b"/>\n`;
     svg += `  <text x="${padL}" y="26" fill="#f4f4f5" font-size="16" font-weight="bold">KChart Studio - ${chartType.toUpperCase()} View</text>\n`;
     svg += `  <text x="${width - padR}" y="26" fill="#a1a1aa" font-size="12" text-anchor="end">Theme: ${currentTheme.toUpperCase()} | Total: ${vals.reduce((a,b)=>a+b,0)}</text>\n`;
 
-    if (chartType === 'pie' || chartType === 'donut') {
-      const cx = width / 2 - 60;
-      const cy = height / 2;
-      const outerR = Math.min(width, height) * 0.35;
-      const innerR = (chartType === 'donut') ? outerR * 0.55 : 0;
-      const total = vals.reduce((a, b) => a + b, 0) || 1;
-      let startAngle = -Math.PI / 2;
+    // Cartesian Grid
+    const ticks = 5;
+    for (let i = 0; i <= ticks; i++) {
+      const y = padT + (chartH / ticks) * i;
+      const rawVal = maxVal - (maxVal / ticks) * i;
+      const valNum = maxVal < 10 ? rawVal.toFixed(1) : Math.round(rawVal).toString();
+      svg += `  <line x1="${padL}" y1="${y}" x2="${padL + chartW}" y2="${y}" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>\n`;
+      svg += `  <text x="${padL - 10}" y="${y + 4}" fill="#71717a" font-size="11" text-anchor="end">${valNum}</text>\n`;
+    }
 
-      for (let i = 0; i < n; i++) {
-        const sliceAngle = (vals[i] / total) * Math.PI * 2;
-        const endAngle = startAngle + sliceAngle;
-        const x1 = cx + outerR * Math.cos(startAngle);
-        const y1 = cy + outerR * Math.sin(startAngle);
-        const x2 = cx + outerR * Math.cos(endAngle);
-        const y2 = cy + outerR * Math.sin(endAngle);
-        const largeArc = sliceAngle > Math.PI ? 1 : 0;
-        const col = palette[i % palette.length];
+    svg += `  <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + chartH}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>\n`;
+    svg += `  <line x1="${padL}" y1="${padT + chartH}" x2="${padL + chartW}" y2="${padT + chartH}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>\n`;
 
-        if (chartType === 'donut') {
-          const ix1 = cx + innerR * Math.cos(endAngle);
-          const iy1 = cy + innerR * Math.sin(endAngle);
-          const ix2 = cx + innerR * Math.cos(startAngle);
-          const iy2 = cy + innerR * Math.sin(startAngle);
-          const d = `M ${x1} ${y1} A ${outerR} ${outerR} 0 ${largeArc} 1 ${x2} ${y2} L ${ix1} ${iy1} A ${innerR} ${innerR} 0 ${largeArc} 0 ${ix2} ${iy2} Z`;
-          svg += `  <path d="${d}" fill="${col}" stroke="#09090b" stroke-width="2"/>\n`;
-        } else {
-          const d = `M ${cx} ${cy} L ${x1} ${y1} A ${outerR} ${outerR} 0 ${largeArc} 1 ${x2} ${y2} Z`;
-          svg += `  <path d="${d}" fill="${col}" stroke="#09090b" stroke-width="2"/>\n`;
-        }
-        startAngle = endAngle;
+    const step = chartW / n;
+    const barW = Math.min(48, Math.max(16, step * 0.6));
 
-        // Legend
-        const legY = cy - 40 + i * 22;
-        svg += `  <rect x="${width - 150}" y="${legY - 10}" width="12" height="12" rx="3" fill="${col}"/>\n`;
-        svg += `  <text x="${width - 130}" y="${legY}" fill="#e4e4e7" font-size="12">${escapeHtml(data[i].label)}: ${vals[i]}</text>\n`;
-      }
-    } else if (chartType === 'radar') {
-      if (n < 3) {
-        showToast("Radar chart requires at least 3 data points to export SVG.", "warning", "⚠️");
-        return;
-      }
-      const cx = width / 2;
-      const cy = height / 2 + 15;
-      const radius = Math.min(chartW, chartH) * 0.42;
-      const angleStep = (Math.PI * 2) / n;
-
-      for (let level = 1; level <= 4; level++) {
-        const r = (radius * level) / 4;
-        const polyPts = [];
-        for (let i = 0; i < n; i++) {
-          const a = -Math.PI / 2 + i * angleStep;
-          polyPts.push(`${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`);
-        }
-        svg += `  <polygon points="${polyPts.join(' ')}" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>\n`;
-      }
-
-      for (let i = 0; i < n; i++) {
-        const a = -Math.PI / 2 + i * angleStep;
-        const sx = cx + radius * Math.cos(a);
-        const sy = cy + radius * Math.sin(a);
-        svg += `  <line x1="${cx}" y1="${cy}" x2="${sx}" y2="${sy}" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>\n`;
-        const lx = cx + (radius + 20) * Math.cos(a);
-        const ly = cy + (radius + 20) * Math.sin(a);
-        svg += `  <text x="${lx}" y="${ly + 4}" fill="#a1a1aa" font-size="11" text-anchor="middle">${escapeHtml(data[i].label)}</text>\n`;
-      }
-
-      const dpts = [];
-      for (let i = 0; i < n; i++) {
-        const r = (vals[i] / maxVal) * radius;
-        const a = -Math.PI / 2 + i * angleStep;
-        dpts.push(`${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`);
-      }
-      svg += `  <polygon points="${dpts.join(' ')}" fill="${palette[0]}" fill-opacity="0.3" stroke="${palette[0]}" stroke-width="2.5"/>\n`;
-    } else {
-      // Cartesian (Bar, Line, Area)
-      const ticks = 5;
-      for (let i = 0; i <= ticks; i++) {
-        const y = padT + (chartH / ticks) * i;
-        const rawVal = maxVal - (maxVal / ticks) * i;
-        const valNum = maxVal < 10 ? rawVal.toFixed(1) : Math.round(rawVal).toString();
-        svg += `  <line x1="${padL}" y1="${y}" x2="${padL + chartW}" y2="${y}" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>\n`;
-        svg += `  <text x="${padL - 10}" y="${y + 4}" fill="#71717a" font-size="11" text-anchor="end">${valNum}</text>\n`;
-      }
-
-      svg += `  <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + chartH}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>\n`;
-      svg += `  <line x1="${padL}" y1="${padT + chartH}" x2="${padL + chartW}" y2="${padT + chartH}" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>\n`;
-
-      const step = chartW / n;
-      const barW = Math.min(48, Math.max(16, step * 0.6));
-
-      if (chartType === 'bar') {
-        for (let i = 0; i < n; i++) {
-          const bh = (vals[i] / maxVal) * chartH;
-          const bx = padL + i * step + (step - barW) / 2;
-          const by = padT + chartH - bh;
-          const col = palette[i % palette.length];
-          svg += `  <rect x="${bx}" y="${by}" width="${barW}" height="${bh}" rx="4" fill="${col}"/>\n`;
-          svg += `  <text x="${bx + barW / 2}" y="${padT + chartH + 18}" fill="#a1a1aa" font-size="11" text-anchor="middle">${escapeHtml(data[i].label)}</text>\n`;
-        }
-      } else if (chartType === 'line' || chartType === 'area') {
-        const pts = [];
-        for (let i = 0; i < n; i++) {
-          const bh = (vals[i] / maxVal) * chartH;
-          const bx = padL + i * step + step / 2;
-          const by = padT + chartH - bh;
-          pts.push({ x: bx, y: by });
-        }
-
-        if (chartType === 'area') {
-          const polyStr = `${pts[0].x},${padT + chartH} ` + pts.map(p => `${p.x},${p.y}`).join(' ') + ` ${pts[n-1].x},${padT + chartH}`;
-          svg += `  <polygon points="${polyStr}" fill="url(#chartGrad)"/>\n`;
-        }
-
-        const pathStr = pts.map((p, idx) => (idx === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ');
-        svg += `  <path d="${pathStr}" fill="none" stroke="${palette[0]}" stroke-width="3"/>\n`;
-
-        pts.forEach((p, i) => {
-          svg += `  <circle cx="${p.x}" cy="${p.y}" r="5" fill="${palette[i % palette.length]}" stroke="#09090b" stroke-width="1.5"/>\n`;
-          svg += `  <text x="${p.x}" y="${padT + chartH + 18}" fill="#a1a1aa" font-size="11" text-anchor="middle">${escapeHtml(data[i].label)}</text>\n`;
-        });
-      }
-
-      // Trendline in SVG if active
-      if (trendMode === 'linear' && n >= 2) {
-        const x0 = padL + step / 2;
-        const x1 = padL + (n - 1) * step + step / 2;
-        const yHat0 = trendStats.slope * 0 + trendStats.intercept;
-        const yHat1 = trendStats.slope * (n - 1) + trendStats.intercept;
-        const y0 = padT + chartH - (Math.max(0, yHat0) / maxVal) * chartH;
-        const y1 = padT + chartH - (Math.max(0, yHat1) / maxVal) * chartH;
-        svg += `  <line x1="${x0}" y1="${y0}" x2="${x1}" y2="${y1}" stroke="#facc15" stroke-width="2.5" stroke-dasharray="6,4"/>\n`;
-        svg += `  <text x="${padL + chartW}" y="${padT + 16}" fill="#fde047" font-size="11" text-anchor="end" font-weight="bold">${escapeHtml(formatTrendEquation(trendStats.slope, trendStats.intercept, trendStats.r2))}</text>\n`;
-      } else if (trendMode === 'movavg' && n >= 2) {
-        const maPts = [];
-        for (let i = 0; i < n; i++) {
-          const start = Math.max(0, i - 1);
-          const end = Math.min(n - 1, i + 1);
-          let sum = 0, count = 0;
-          for (let k = start; k <= end; k++) {
-            sum += vals[k];
-            count++;
-          }
-          const maVal = sum / count;
-          const x = padL + i * step + step / 2;
-          const y = padT + chartH - (maVal / maxVal) * chartH;
-          maPts.push({ x, y });
-        }
-        const maPath = maPts.map((p, idx) => (idx === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ');
-        svg += `  <path d="${maPath}" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-dasharray="6,4"/>\n`;
-        svg += `  <text x="${padL + chartW}" y="${padT + 16}" fill="#7dd3fc" font-size="11" text-anchor="end" font-weight="bold">Moving Average (Window: 3)</text>\n`;
-      } else if (trendMode === 'mean') {
-        const mean = vals.reduce((a, b) => a + b, 0) / n;
-        const yMean = padT + chartH - (mean / maxVal) * chartH;
-        svg += `  <line x1="${padL}" y1="${yMean}" x2="${padL + chartW}" y2="${yMean}" stroke="#ec4899" stroke-width="2" stroke-dasharray="6,4"/>\n`;
-        svg += `  <text x="${padL + chartW}" y="${yMean - 6}" fill="#f472b6" font-size="11" text-anchor="end">Mean: ${mean.toFixed(2)}</text>\n`;
-      }
+    for (let i = 0; i < n; i++) {
+      const bh = (vals[i] / maxVal) * chartH;
+      const bx = padL + i * step + (step - barW) / 2;
+      const by = padT + chartH - bh;
+      const col = palette[i % palette.length];
+      svg += `  <rect x="${bx}" y="${by}" width="${barW}" height="${bh}" rx="4" fill="${col}"/>\n`;
+      svg += `  <text x="${bx + barW / 2}" y="${padT + chartH + 18}" fill="#a1a1aa" font-size="11" text-anchor="middle">${escapeHtml(data[i].label)}</text>\n`;
     }
 
     svg += `</svg>\n`;
@@ -2137,6 +3034,7 @@
     setTimeout(() => URL.revokeObjectURL(link.href), 1500);
   }
 
+  // PNG Export
   document.getElementById('btnExportPng').onclick = () => {
     if (data.length === 0) {
       showToast("No data to export PNG.", "warning", "⚠️");
@@ -2166,6 +3064,7 @@
     showToast('Exported PNG Image (kchart_export.png)', 'success', '📷');
   };
 
+  // CSV Export
   document.getElementById('btnExportCsv').onclick = () => {
     if (data.length === 0) {
       showToast("No data to export CSV.", "warning", "⚠️");
@@ -2184,6 +3083,7 @@
     setTimeout(() => URL.revokeObjectURL(link.href), 1500);
   };
 
+  // JSON Export
   document.getElementById('btnExportJson').onclick = () => {
     if (data.length === 0) {
       showToast("No data to export JSON.", "warning", "⚠️");
@@ -2260,6 +3160,7 @@
     const reader = new FileReader();
     reader.onload = (event) => {
       const content = event.target.result;
+      pushUndo();
       if (file.name.endsWith('.json') || content.trim().startsWith('{') || content.trim().startsWith('[')) {
         try {
           const parsed = JSON.parse(content);
@@ -2302,12 +3203,10 @@
     reader.readAsText(file);
   }
 
-  // Window resize
   window.addEventListener('resize', resizeCanvas);
-  
-  // Shortcuts
+
+  // Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
-    // Global function keys
     if (e.key === 'F5') {
       e.preventDefault();
       quickSaveState();
@@ -2356,16 +3255,24 @@
       setChartType('donut');
     } else if (e.key === '6') {
       setChartType('radar');
+    } else if (e.key === '7') {
+      setChartType('hbar');
+    } else if (e.key === '8') {
+      setChartType('step');
+    } else if (e.key === '9') {
+      setChartType('scatter');
+    } else if (e.key === '0') {
+      setChartType('polar');
     } else if (e.key === 'p' || e.key === 'P') {
       cyclePreset();
+    } else if (e.key === 'u' || e.key === 'U' || e.key === 'j' || e.key === 'J') {
+      sonifyDataset();
+    } else if (e.key === 'm' || e.key === 'M') {
+      document.getElementById('btnAudioToggle').click();
     } else if (e.key === 't' || e.key === 'T') {
-      const modes = ['none', 'linear', 'movavg', 'mean'];
+      const modes = ['none', 'linear', 'poly2', 'exp', 'movavg', 'mean', 'corridor'];
       const nextIdx = (modes.indexOf(trendMode) + 1) % modes.length;
       setTrendMode(modes[nextIdx]);
-    } else if (e.key === 'm' || e.key === 'M') {
-      const types = ['bar', 'line', 'area', 'pie', 'donut', 'radar'];
-      const nextIdx = (types.indexOf(chartType) + 1) % types.length;
-      setChartType(types[nextIdx]);
     } else if (e.key === 'c' || e.key === 'C') {
       const themeKeys = Object.keys(THEMES);
       const nextIdx = (themeKeys.indexOf(currentTheme) + 1) % themeKeys.length;
@@ -2386,6 +3293,8 @@
       }
     } else if (e.key === 'd' || e.key === 'D') {
       document.getElementById('btnSortDesc').click();
+    } else if (e.key === 'z' || e.key === 'Z') {
+      undoTransform();
     } else if (e.key === 'ArrowLeft') {
       if (data.length > 0) {
         hoveredIndex = (hoveredIndex - 1 + data.length) % data.length;
@@ -2401,6 +3310,7 @@
         const idx = (hoveredIndex >= 0 && hoveredIndex < data.length) ? hoveredIndex : 0;
         data[idx].value = Math.round((Number(data[idx].value) || 0) + 5);
         updateAll();
+        playSfx('up');
         showToast(`Nudged ${data[idx].label}: ${data[idx].value}`, 'info', '▲');
       }
     } else if (e.key === 'ArrowDown' || e.key === '-' || e.key === '_') {
@@ -2408,6 +3318,7 @@
         const idx = (hoveredIndex >= 0 && hoveredIndex < data.length) ? hoveredIndex : 0;
         data[idx].value = Math.max(0, Math.round((Number(data[idx].value) || 0) - 5));
         updateAll();
+        playSfx('down');
         showToast(`Nudged ${data[idx].label}: ${data[idx].value}`, 'info', '▼');
       }
     } else if (e.key === 'Escape') {
@@ -2418,7 +3329,7 @@
       }
     }
   });
-  
+
   // Init
   loadSavedState();
   resizeCanvas();
