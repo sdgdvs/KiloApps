@@ -420,6 +420,9 @@ void TriggerEncounter(int type) {
     } else if (type == 23) {
         PlaySoundEffect(6);
         lstrcpyA(combat_log, "Vintage FLARELIGHT demoscene archive satellite broadcasting 16-bit tracker MODs.");
+    } else if (type == 24) {
+        PlaySoundEffect(6);
+        lstrcpyA(combat_log, "Unmapped subcarrier telemetry probe emitting at 1999Hz [10.19.99.4/classified].");
     } else if (type == 16) {
         PlaySoundEffect(2);
         lstrcpyA(combat_log, "WARNING: Entered active Faction War combat zone!");
@@ -536,7 +539,7 @@ void InitStars() {
             systems[i].planets[p] = rand() % 5;
         }
 
-        int enc = rand() % 17;
+        int enc = rand() % 18;
         if (enc == 0) systems[i].encounter_type = 1;
         else if (enc == 1) systems[i].encounter_type = 2;
         else if (enc == 2) systems[i].encounter_type = 3;
@@ -552,6 +555,7 @@ void InitStars() {
         else if (enc == 12) systems[i].encounter_type = 21;
         else if (enc == 13) systems[i].encounter_type = 22; // Void Leviathan
         else if (enc == 14) systems[i].encounter_type = 23; // FLARELIGHT Beacon
+        else if (enc == 15) systems[i].encounter_type = 24; // ECHO Subcarrier Probe
         else systems[i].encounter_type = 0;
         
         systems[i].visited = 0;
@@ -1236,6 +1240,37 @@ void DrawEncounterTacticalView(HDC memDC, int cx, int cy, int enc_type) {
         RECT lr2 = { cx + 2, by + 2, cx + 6, by + 6 };
         FillRect(memDC, &lr1, led1); FillRect(memDC, &lr2, led2);
         DeleteObject(led1); DeleteObject(led2);
+    } else if (enc_type == 24) {
+        // ECHO Subcarrier Autonomous Probe
+        int by = cy - 20;
+
+        // Expanding RF Broadcast Wave
+        int rWave = 8 + (time % 1400) / 40;
+        HPEN wPen = CreatePen(PS_SOLID, 1, RGB(168, 85, 247));
+        SelectObject(memDC, wPen); SelectObject(memDC, GetStockObject(NULL_BRUSH));
+        Ellipse(memDC, cx - rWave, by - rWave, cx + rWave, by + rWave);
+        DeleteObject(wPen);
+
+        // Dual Parabolic Dish Antennas
+        HPEN dPen = CreatePen(PS_SOLID, 2, RGB(56, 189, 248));
+        SelectObject(memDC, dPen);
+        Arc(memDC, cx - 44, by - 16, cx - 20, by + 16, cx - 20, by - 16, cx - 20, by + 16);
+        Arc(memDC, cx + 20, by - 16, cx + 44, by + 16, cx + 20, by + 16, cx + 20, by - 16);
+        DeleteObject(dPen);
+
+        // Core Spherical Probe Housing
+        HBRUSH pbBrush = CreateSolidBrush(RGB(15, 23, 42));
+        HPEN pbPen = CreatePen(PS_SOLID, 2, RGB(168, 85, 247));
+        SelectObject(memDC, pbBrush); SelectObject(memDC, pbPen);
+        Ellipse(memDC, cx - 20, by - 20, cx + 20, by + 20);
+        DeleteObject(pbBrush); DeleteObject(pbPen);
+
+        // Center Pulsing 1999Hz Subcarrier Emitter
+        int strobe = ((time / 250) % 2 == 0);
+        HBRUSH coreBrush = CreateSolidBrush(strobe ? RGB(236, 72, 153) : RGB(147, 51, 234));
+        SelectObject(memDC, coreBrush);
+        Ellipse(memDC, cx - 7, by - 7, cx + 7, by + 7);
+        DeleteObject(coreBrush);
     }
 }
 
@@ -1594,6 +1629,7 @@ void Draw(HDC hdc, RECT* rect) {
             else if (sys->encounter_type == 21) eN = "Precursor Ruin";
             else if (sys->encounter_type == 22) eN = "Void Leviathan";
             else if (sys->encounter_type == 23) eN = "FLARELIGHT Relay";
+            else if (sys->encounter_type == 24) eN = "ECHO Probe";
             else if (sys->encounter_type == 4) eN = "Orbital Station";
             else if (sys->encounter_type == 16) eN = "War Zone";
             else if (sys->encounter_type == 14) eN = "Alien Vessel";
@@ -1686,6 +1722,10 @@ void Draw(HDC hdc, RECT* rect) {
         else if (modal_enc_type == 23) {
             title = "FLARELIGHT ARCHIVE BEACON";
             desc = "Demoscene FLARELIGHT 1999 satellite relay.\r\n1: Download Tracker MODs (+25 Morale, +150C)\r\n2: Extract x86 Kernels (+2 Tech, +200C)\r\nSPACE: Leave Orbit";
+        }
+        else if (modal_enc_type == 24) {
+            title = "ECHO SUBCARRIER PROBE";
+            desc = "Unmapped telemetry probe emitting on 1999Hz from 10.19.99.4/classified.\r\n1: Demodulate Carrier (+2 Tech, +180C, +15 Morale)\r\n2: Harvest Fuel Cells (+350 Fuel)\r\nSPACE: Leave Orbit";
         }
         else if (modal_enc_type == 16) {
             title = "FACTION WAR ZONE";
@@ -1798,9 +1838,9 @@ void Draw(HDC hdc, RECT* rect) {
             DrawTextA(memDC, "[ 1-3 OR SPACE ]", -1, &bRect, DT_CENTER);
         } else if (modal_enc_type == 16 || modal_enc_type == 17 || modal_enc_type == 18) {
             DrawTextA(memDC, "[ 1-4 OR SPACE ]", -1, &bRect, DT_CENTER);
-        } else if ((modal_enc_type == 1 || modal_enc_type == 13 || modal_enc_type == 19 || modal_enc_type == 20 || modal_enc_type == 21) && res_hull > 0 && pirate_hp > 0) {
-            DrawTextA(memDC, "[ 1: Laser  2: Flee  3: Superweapon ]", -1, &bRect, DT_CENTER);
-        } else if (modal_enc_type == 7 || modal_enc_type == 8 || modal_enc_type == 9 || modal_enc_type == 14 || modal_enc_type == 2 || modal_enc_type == 15) {
+        } else if ((modal_enc_type == 1 || modal_enc_type == 13 || modal_enc_type == 19 || modal_enc_type == 20 || modal_enc_type == 21 || modal_enc_type == 22) && res_hull > 0 && pirate_hp > 0) {
+            DrawTextA(memDC, "[ 1: Laser  2: Flee  3: Superweapon  4: Shield Boost ]", -1, &bRect, DT_CENTER);
+        } else if (modal_enc_type == 7 || modal_enc_type == 8 || modal_enc_type == 9 || modal_enc_type == 14 || modal_enc_type == 2 || modal_enc_type == 15 || modal_enc_type == 24) {
             DrawTextA(memDC, "[ 1-2 OR SPACE ]", -1, &bRect, DT_CENTER);
         } else {
             DrawTextA(memDC, "[ PRESS SPACE OR ENTER ]", -1, &bRect, DT_CENTER);
@@ -2107,6 +2147,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         res_credits += 200;
                         PlaySoundEffect(3);
                         lstrcpyA(combat_log, "Extracted optimized x86 assembly routines (+2 Tech, +200C).");
+                        modal_enc_type = 11;
+                    } else if (wParam == VK_SPACE || wParam == VK_RETURN) {
+                        modal_open = 0;
+                    }
+                } else if (modal_enc_type == 24) {
+                    if (wParam == '1') {
+                        cargo_tech += 2;
+                        res_credits += 180;
+                        res_morale = (res_morale + 15 > 100) ? 100 : res_morale + 15;
+                        PlaySoundEffect(3);
+                        lstrcpyA(combat_log, "Demodulated 1999Hz subcarrier packet [FLARELIGHT-1999-ECHO]. Decoded classified transit telemetry (+2 Tech, +180C, +15 Morale).");
+                        modal_enc_type = 11;
+                    } else if (wParam == '2') {
+                        res_fuel += 350.0f;
+                        PlaySoundEffect(5);
+                        lstrcpyA(combat_log, "Siphoned isotopic power cells from probe (+350 Fuel).");
                         modal_enc_type = 11;
                     } else if (wParam == VK_SPACE || wParam == VK_RETURN) {
                         modal_open = 0;
@@ -2452,7 +2508,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 return 0;
             }
             if (modal_open) {
-                int in_combat = (modal_enc_type == 1 || modal_enc_type == 13 || modal_enc_type == 19 || modal_enc_type == 20 || modal_enc_type == 21);
+                int in_combat = (modal_enc_type == 1 || modal_enc_type == 13 || modal_enc_type == 19 || modal_enc_type == 20 || modal_enc_type == 21 || modal_enc_type == 22);
                 if (!in_combat || pirate_hp <= 0) {
                     if (modal_enc_type == 12 || modal_enc_type == 11 || modal_enc_type == 10 || modal_enc_type == 3 || pirate_hp <= 0) {
                         modal_open = 0;

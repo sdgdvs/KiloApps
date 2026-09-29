@@ -126,8 +126,9 @@
   #toast {
     position: absolute;
     bottom: 16px;
-    left: 50%;
-    transform: translateX(-50%);
+    right: 16px;
+    left: auto;
+    transform: none;
     background: rgba(4, 12, 28, 0.95);
     border: 1px solid #00ffff;
     color: #00ffff;
@@ -279,9 +280,47 @@
       showToast(soundMuted ? 'Audio muted' : 'Audio enabled');
     }
 
-    function playFM(cType, mType, cFreq, mRatio, modIndex, duration, envDecay, gainAmt = 0.28) {
+    // Genesis YM2612 2-Operator FM Synthesizer & SNES SPC700 Stereo Delay Architecture
+    let spcBus = null;
+    function initSPCDelay() {
+      if (spcBus || !audioCtx) return;
+      try {
+        const dryGain = audioCtx.createGain();
+        const wetGain = audioCtx.createGain();
+        const delayL = audioCtx.createDelay();
+        const delayR = audioCtx.createDelay();
+        const feedback = audioCtx.createGain();
+        const lowpass = audioCtx.createBiquadFilter();
+        const merger = audioCtx.createChannelMerger(2);
+
+        // Warm SPC700 stereo delay parameters (140ms L / 210ms R with 1350Hz warmth rolloff)
+        delayL.delayTime.value = 0.14;
+        delayR.delayTime.value = 0.21;
+        feedback.gain.value = 0.28;
+        lowpass.type = 'lowpass';
+        lowpass.frequency.value = 1350;
+
+        wetGain.gain.value = 0.32;
+        dryGain.gain.value = 0.85;
+
+        dryGain.connect(audioCtx.destination);
+        delayL.connect(merger, 0, 0);
+        delayR.connect(merger, 0, 1);
+        merger.connect(lowpass);
+        lowpass.connect(feedback);
+        feedback.connect(delayL);
+        feedback.connect(delayR);
+        lowpass.connect(wetGain);
+        wetGain.connect(audioCtx.destination);
+
+        spcBus = { dryGain, delayL, delayR };
+      } catch(e) {}
+    }
+
+    function playFM(cType, mType, cFreq, mRatio, modIndex, duration, envDecay, gainAmt = 0.28, useDelay = true) {
       if (soundMuted) return;
       if (audioCtx.state === 'suspended') audioCtx.resume();
+      initSPCDelay();
       try {
         const now = audioCtx.currentTime;
         const carrier = audioCtx.createOscillator();
@@ -304,7 +343,14 @@
         modulator.connect(modGain);
         modGain.connect(carrier.frequency);
         carrier.connect(mainGain);
-        mainGain.connect(audioCtx.destination);
+
+        if (spcBus && useDelay) {
+          mainGain.connect(spcBus.dryGain);
+          mainGain.connect(spcBus.delayL);
+          mainGain.connect(spcBus.delayR);
+        } else {
+          mainGain.connect(audioCtx.destination);
+        }
 
         modulator.start(now);
         carrier.start(now);
@@ -314,22 +360,34 @@
     }
 
     function playLaser() {
-      playFM('sawtooth', 'sine', 760, 2.5, 4.0, 0.22, 0.16, 0.32);
+      playFM('sawtooth', 'sine', 780, 2.5, 4.2, 0.22, 0.16, 0.32);
     }
     function playSuperweapon() {
-      playFM('triangle', 'sawtooth', 140, 0.5, 6.5, 0.55, 0.45, 0.45);
+      playFM('triangle', 'sawtooth', 130, 0.5, 7.0, 0.65, 0.5, 0.45);
     }
     function playShieldBoost() {
-      playFM('sine', 'sine', 340, 1.5, 3.2, 0.38, 0.3, 0.28);
+      playFM('sine', 'sine', 360, 1.5, 3.4, 0.42, 0.32, 0.3);
+    }
+    function playShieldDeflect() {
+      playFM('sine', 'triangle', 920, 2.0, 3.8, 0.18, 0.12, 0.25);
     }
     function playAlarm() {
-      playFM('square', 'sine', 480, 1.25, 2.0, 0.35, 0.25, 0.22);
+      playFM('square', 'sine', 480, 1.25, 2.0, 0.35, 0.25, 0.22, false);
     }
     function playBeacon() {
       playFM('sine', 'sine', 880, 2.0, 1.8, 0.45, 0.38, 0.22);
     }
     function playChime() {
       playFM('sine', 'sine', 660, 1.5, 2.2, 0.32, 0.26, 0.26);
+    }
+    function playWarpPing() {
+      playFM('sine', 'sine', 1100, 1.33, 1.6, 0.4, 0.28, 0.22);
+    }
+    function playVictoryFanfare() {
+      if (soundMuted) return;
+      playFM('triangle', 'sine', 523.25, 1.5, 1.8, 0.25, 0.2, 0.25);
+      setTimeout(() => playFM('triangle', 'sine', 659.25, 1.5, 1.8, 0.25, 0.2, 0.25), 140);
+      setTimeout(() => playFM('triangle', 'sine', 783.99, 1.5, 2.2, 0.45, 0.35, 0.28), 280);
     }
 
     let humOsc = null;
@@ -523,7 +581,7 @@
         { type: 'White Dwarf', color: '#ffffff', corona: 'rgba(200, 240, 255, 0.5)', minP: 0, maxP: 1, size: 2.5 }
       ];
       const planetTypes = ['Terrestrial', 'Gas Giant', 'Ice World', 'Lava', 'Barren'];
-      const encounterPool = ['Pirates', 'Anomaly', 'Trader', 'Station', 'Story', 'None', 'Fleet', 'Diplomacy', 'FactionWar', 'Boarding', 'Superweapon', 'XenonHunter', 'SyndicateFrigate', 'PrecursorRuin', 'VoidLeviathan', 'FlarelightBeacon'];
+      const encounterPool = ['Pirates', 'Anomaly', 'Trader', 'Station', 'Story', 'None', 'Fleet', 'Diplomacy', 'FactionWar', 'Boarding', 'Superweapon', 'XenonHunter', 'SyndicateFrigate', 'PrecursorRuin', 'VoidLeviathan', 'FlarelightBeacon', 'EchoProbe'];
 
       for (let i = 0; i < 220; i++) {
         const sType = starTypes[Math.floor(Math.random() * starTypes.length)];
@@ -777,6 +835,23 @@
       c.fillRect(w - 10, h - 10, 4, 4);
       c.fillRect(w - 16, h - 16, 2, 2);
 
+      // Static 1999 Vector HUD bridge telemetry (Zero traveling dots / comets)
+      c.fillStyle = 'rgba(0, 255, 255, 0.75)';
+      c.font = '10px "Courier New", monospace';
+      c.textBaseline = 'top';
+      const headingDeg = Math.round(((state.ship.angle * 180 / Math.PI) % 360 + 360) % 360);
+      const coordText = `SECTOR [X:${Math.round(state.ship.x)}, Y:${Math.round(state.ship.y)}] | BRG: ${headingDeg}°`;
+      c.textAlign = 'center';
+      c.fillText(coordText, w / 2, 8);
+
+      c.textBaseline = 'bottom';
+      c.textAlign = 'left';
+      const scanStatus = state.modules && state.modules.scanner ? 'SUBSPACE SCANNER: ONLINE' : 'STANDARD OPTICAL: NOMINAL';
+      c.fillText(scanStatus, 14, h - 8);
+
+      c.textAlign = 'right';
+      const driveStatus = state.ship.moving ? 'IMPULSE DRIVE: ACTIVE' : 'INERTIAL DRIFT: STANDBY';
+      c.fillText(driveStatus, w - 14, h - 8);
 
       c.restore();
     }
@@ -1244,6 +1319,59 @@
         pCtx.fillRect(-6, 2, 4, 4);
         pCtx.fillStyle = !ledStrobe ? '#eab308' : '#713f12';
         pCtx.fillRect(2, 2, 4, 4);
+
+        pCtx.restore();
+      } else if (type === 'EchoProbe') {
+        pCtx.save();
+        pCtx.translate(cx, cy);
+
+        // Expanding 1999Hz Subcarrier RF Waves
+        let rWave = (time % 1400) / 1400;
+        pCtx.strokeStyle = `rgba(168, 85, 247, ${1.0 - rWave})`;
+        pCtx.lineWidth = 1.5;
+        pCtx.beginPath();
+        pCtx.arc(0, 0, 10 + rWave * 42, 0, Math.PI * 2);
+        pCtx.stroke();
+
+        // Dual Parabolic Receiver Dishes
+        pCtx.strokeStyle = '#38bdf8';
+        pCtx.lineWidth = 2;
+        pCtx.beginPath();
+        pCtx.arc(-30, 0, 16, Math.PI * 0.6, Math.PI * 1.4);
+        pCtx.stroke();
+        pCtx.beginPath();
+        pCtx.arc(30, 0, 16, -Math.PI * 0.4, Math.PI * 0.4);
+        pCtx.stroke();
+
+        // Support Struts
+        pCtx.strokeStyle = 'rgba(56, 189, 248, 0.6)';
+        pCtx.lineWidth = 1.5;
+        pCtx.beginPath();
+        pCtx.moveTo(-30, 0); pCtx.lineTo(-18, 0);
+        pCtx.moveTo(30, 0); pCtx.lineTo(18, 0);
+        pCtx.stroke();
+
+        // Central Spherical Probe Chassis
+        let pGrad = pCtx.createRadialGradient(-4, -6, 2, 0, 0, 22);
+        pGrad.addColorStop(0, '#38bdf8');
+        pGrad.addColorStop(0.35, '#1e293b');
+        pGrad.addColorStop(1, '#090d16');
+        pCtx.fillStyle = pGrad;
+        pCtx.strokeStyle = '#a855f7';
+        pCtx.lineWidth = 2;
+        pCtx.beginPath();
+        pCtx.arc(0, 0, 20, 0, Math.PI * 2);
+        pCtx.fill();
+        pCtx.stroke();
+
+        // 1999Hz Subcarrier Resonance Core
+        let pulse = (Math.sin(time * 0.008) + 1) * 0.5;
+        pCtx.fillStyle = '#ec4899';
+        pCtx.shadowColor = '#ec4899';
+        pCtx.shadowBlur = 8 + pulse * 6;
+        pCtx.beginPath();
+        pCtx.arc(0, 0, 6, 0, Math.PI * 2);
+        pCtx.fill();
 
         pCtx.restore();
       } else if (type === 'FactionWar') {
@@ -2066,6 +2194,7 @@
             actions.innerHTML = '';
             renderModalPreview(type);
             if (enemyHp <= 0) {
+                playVictoryFanfare();
                 let rewardC = 120;
                 let repFed = 10;
                 let techBonus = 0;
@@ -2099,7 +2228,8 @@
             } else if (state.resources.hull <= 0) {
                 showGameOver("Your starship was destroyed in combat!");
             } else {
-                addBtn('Fire Lasers', () => {
+                // Button 1: Lasers
+                addBtn('Fire Lasers [1]', () => {
                     playLaser();
                     let pDmg = 10 + state.upgrades.weapons * 5 + Math.floor(Math.random()*10);
                     let gIdx = getOfficer(2);
@@ -2130,6 +2260,7 @@
                     let result = (isCrit ? '[CRITICAL HIT!] ' : '') + `You hit enemy for ${pDmg}!`;
                     if (enemyHp > 0) {
                         if (isEvaded) {
+                          playShieldDeflect();
                           result += `\n[EVADED] Pilot evaded incoming enemy blast!`;
                           addXP(1, 15);
                         } else {
@@ -2150,46 +2281,9 @@
                     }
                     updateCombatBtns(result);
                 });
-                if (state.superweapon.charges > 0) {
-                    addBtn(`Fire ${state.superweapon.name} [${state.superweapon.charges}]`, () => {
-                        state.superweapon.charges--;
-                        playSuperweapon();
-                        spawnSuperweaponBeam(state.ship.x, state.ship.y);
-                        let swDmg = 75 + state.superweapon.type * 30 + Math.floor(Math.random()*20);
-                        let gIdx = getOfficer(2); if (gIdx !== -1) swDmg += state.crew[gIdx].level * 5;
-                        enemyHp -= swDmg;
-                        if (enemyHp < 0) enemyHp = 0;
-                        let result = `SUPERWEAPON BLAST hits for ${swDmg}!`;
-                        if (enemyHp > 0) {
-                            let sDmg = Math.max(0, Math.floor(baseEnemyDmg * 0.45) - state.upgrades.shields * 2);
-                            let pIdx = getOfficer(1);
-                            if (pIdx !== -1 && Math.random() < state.crew[pIdx].level * 0.06) {
-                              result += `\n[EVADED] Pilot evaded counter-fire!`;
-                            } else {
-                              state.resources.hull -= sDmg;
-                              result += ` Counter-fire caused ${sDmg} hull dmg.`;
-                            }
-                        } else {
-                            result += ` Target completely annihilated!`;
-                        }
-                        updateCombatBtns(result);
-                        updateUI();
-                    }, true);
-                }
-                if (state.resources.fuel >= 250 && state.resources.hull < 100) {
-                    addBtn('Shield Matrix Boost (-250 Fuel, +20% Hull)', () => {
-                        state.resources.fuel -= 250;
-                        state.resources.hull = Math.min(100, state.resources.hull + 20);
-                        playShieldBoost();
-                        spawnShockwave(state.ship.x, state.ship.y, 50, '#00ffff');
-                        let eIdx = getOfficer(3);
-                        if (eIdx !== -1) addXP(3, 15);
-                        showToast('Emergency deflector shields restored +20% Hull!');
-                        updateCombatBtns(`Diverted 250 fuel to recharge emergency deflectors (+20% Hull)!`);
-                        updateUI();
-                    });
-                }
-                addBtn('Flee', () => {
+
+                // Button 2: Flee
+                addBtn('Flee Combat [2]', () => {
                     let sDmg = Math.max(0, 15 - state.upgrades.shields * 2);
                     let pIdx = getOfficer(1);
                     if (pIdx !== -1 && Math.random() < state.crew[pIdx].level * 0.08) {
@@ -2205,6 +2299,50 @@
                     actions.innerHTML = '';
                     closeBtn();
                 });
+
+                // Button 3: Superweapon (when charged)
+                if (state.superweapon.charges > 0) {
+                    addBtn(`Fire ${state.superweapon.name} [3] (Charges: ${state.superweapon.charges})`, () => {
+                        state.superweapon.charges--;
+                        playSuperweapon();
+                        spawnSuperweaponBeam(state.ship.x, state.ship.y);
+                        let swDmg = 75 + state.superweapon.type * 30 + Math.floor(Math.random()*20);
+                        let gIdx = getOfficer(2); if (gIdx !== -1) swDmg += state.crew[gIdx].level * 5;
+                        enemyHp -= swDmg;
+                        if (enemyHp < 0) enemyHp = 0;
+                        let result = `SUPERWEAPON BLAST hits for ${swDmg}!`;
+                        if (enemyHp > 0) {
+                            let sDmg = Math.max(0, Math.floor(baseEnemyDmg * 0.45) - state.upgrades.shields * 2);
+                            let pIdx = getOfficer(1);
+                            if (pIdx !== -1 && Math.random() < state.crew[pIdx].level * 0.06) {
+                              playShieldDeflect();
+                              result += `\n[EVADED] Pilot evaded counter-fire!`;
+                            } else {
+                              state.resources.hull -= sDmg;
+                              result += ` Counter-fire caused ${sDmg} hull dmg.`;
+                            }
+                        } else {
+                            result += ` Target completely annihilated!`;
+                        }
+                        updateCombatBtns(result);
+                        updateUI();
+                    }, true);
+                }
+
+                // Button 4: Shield Matrix Boost (if fuel available)
+                if (state.resources.fuel >= 250 && state.resources.hull < 100) {
+                    addBtn(`Shield Matrix Boost [${state.superweapon.charges > 0 ? '4' : '3'}] (-250 Fuel, +20% Hull)`, () => {
+                        state.resources.fuel -= 250;
+                        state.resources.hull = Math.min(100, state.resources.hull + 20);
+                        playShieldBoost();
+                        spawnShockwave(state.ship.x, state.ship.y, 50, '#00ffff');
+                        let eIdx = getOfficer(3);
+                        if (eIdx !== -1) addXP(3, 15);
+                        showToast('Emergency deflector shields restored +20% Hull!');
+                        updateCombatBtns(`Diverted 250 fuel to recharge emergency deflectors (+20% Hull)!`);
+                        updateUI();
+                    });
+                }
             }
         };
         updateCombatBtns(introMsg);
@@ -2682,6 +2820,31 @@
           actions.innerHTML = ''; closeBtn(); updateUI();
         });
         addBtn('Leave Beacon in Orbit', () => {
+          modal.style.display = 'none';
+          state.modalOpen = false;
+          updateUI();
+        });
+      } else if (type === 'EchoProbe') {
+        playWarpPing();
+        title.innerText = "ECHO SUBCARRIER PROBE";
+        desc.innerText = "Deep-space optical sensors lock onto an unmapped automated probe emitting an encrypted telemetry carrier at 1999Hz from non-routable address 10.19.99.4/classified.\nChoose action:";
+        addBtn('Demodulate 1999Hz Subcarrier (+2 Tech, +180C, +15 Morale)', () => {
+          state.cargo.tech += 2;
+          state.resources.credits += 180;
+          state.resources.morale = Math.min(100, state.resources.morale + 15);
+          playVictoryFanfare();
+          showToast('Demodulated 1999Hz packet [FLARELIGHT-1999-ECHO] (+2 Tech, +180C)!');
+          desc.innerText = "Demodulated 1999Hz carrier packet [FLARELIGHT-1999-ECHO]! Decoded classified transit routing (+2 Ancient Tech, +180 Credits, +15 Morale).";
+          actions.innerHTML = ''; closeBtn(); updateUI();
+        });
+        addBtn('Harvest Isotopic Power Cells (+350 Fuel)', () => {
+          state.resources.fuel += 350;
+          playShieldBoost();
+          showToast('Siphoned probe power cells (+350 Fuel)!');
+          desc.innerText = "Successfully transferred remaining fuel cell charges into propulsion banks (+350 Fuel).";
+          actions.innerHTML = ''; closeBtn(); updateUI();
+        });
+        addBtn('Leave in Deep Space Orbit', () => {
           modal.style.display = 'none';
           state.modalOpen = false;
           updateUI();
@@ -3384,6 +3547,9 @@
       if (k === 'h' || e.key === 'F1' || k === '?') { openHelpModal(); }
       if (k === 'm') { toggleSound(); }
       if (k === 'e') { interactWithStar(); }
+      if (k === 'l') {
+        if (btnLand && btnLand.style.display !== 'none' && !state.modalOpen) btnLand.click();
+      }
       if (k === 'b' && state.resources.fuel <= 0) { triggerEmergencyBeacon(); }
       if (e.key === 'F5' || (e.ctrlKey && k === 's')) {
         e.preventDefault();

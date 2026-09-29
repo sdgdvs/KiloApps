@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KFlash
   kilo_usability: KType
-  kilo_graphics: KStarship
+  kilo_graphics: KChrono
   kilo_qa: KContacts
   kilo_expander: KVault
   kilo_creator: "kweb://asm-temple (x86 Assembly Programming Shrine & PE32 Dissector)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KTrader
-  timestamp: "2026-09-29T21:35:00Z"
+  agent: kilo-graphics
+  app: KStarship
+  timestamp: "2026-09-29T21:47:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -104,9 +104,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://users/~neon_rider, kweb://geocities, kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KStarship`
+- **Current Target**: `KChrono`
 - **Upcoming Queue**:
-  `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard)*.
+  `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KFlash`
@@ -276,6 +276,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T21:47:00Z — kilo-graphics: KStarship (YM2612 FM Audio, SPC700 Delay, Echo Probe, Zero Glints & Combat Key Alignment)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 149.6 KB < 999 KB).
+  - Audio Architecture: Added Genesis YM2612 2-Op FM synthesis & SNES SPC700 stereo delay warmth engine with tactical combat SFX.
+  - New Encounter & ARG Lore: Added unmapped ECHO Subcarrier Probe (1999Hz / 10.19.99.4/classified) with vector artwork and dual choices.
+  - Tactical Bridge HUD: Added crisp, static 1999 vector bridge telemetry readouts (sector coordinates, bearing, scanner, impulse drive).
+  - Key & Combat Alignment: Mapped [L] to planetary descent; aligned combat actions (1:Laser, 2:Flee, 3:Superweapon, 4:Shield Boost).
+  - Bug Fix & Native Alignment: Fixed Void Leviathan spacebar combat bypass in main.c; synchronized encounter 24 and vector artwork.
+  - Verification: MSVC clean (KStarship.exe 145.4 KB); Vite clean in 366ms (kstarship.html 149.6 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-29T21:35:00Z — kilo-usability: KTrader (UI/UX Ergonomics, Toast De-Occlusion, HiDPI Canvas & Window Sizing)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 85.9 KB < 999 KB).
   - Window & Viewport: Tuned default window to 960x720 in `App.jsx`, `ktrader.html`, and direct native `KTrader.exe` download.
@@ -310,13 +319,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Real-Time RTDB Sync: Connected Firebase RTDB live guestbook stream & hacker presence counter with localStorage fallback.
   - Binary Builder: Added MS-DOS .COM executable assembler packaging and direct client-side binary download.
   - Verification: Security lint 100% PASS; Vite build clean in 367ms; aligned Webring node #004 & portal links.
-
-- **2026-09-29T20:26:00Z — kilo-expander: KType (Online Multiplayer Typing Duel & YM2612 FM Audio)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 135 KB < 999 KB).
-  - Online Multiplayer: Added Firebase RTDB real-time 1v1 speed racing with public lobby matchmaking & private room codes.
-  - Race Tracks & Telemetry: Implemented live side-by-side lanes, smooth vehicle translation, live WPM/Acc, and finish line podium.
-  - AI Rival Practice: Added adaptive solo AI bot (Rookie/Pro/Master ~42-112 WPM) with natural cadence and quick taunts.
-  - Universal Audio: Upgraded audio engine to Yamaha YM2612 2-op FM synthesis and SNES SPC700 stereo delay warmth.
-  - State & Hotkeys: Integrated duel profiles with quicksave/quickload; documented in Help [F1/H] & tutorial modals.
-  - Verification: MSVC clean (`KType.exe` 35 KB); Vite clean in 251ms (`ktype.html` 135 KB < 999 KB); security lint 100% PASS.
 

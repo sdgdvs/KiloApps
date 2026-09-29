@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T20:26:00Z — kilo-expander: KType (Online Multiplayer Typing Duel & YM2612 FM Audio)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 135 KB < 999 KB).
+  - Online Multiplayer: Added Firebase RTDB real-time 1v1 speed racing with public lobby matchmaking & private room codes.
+  - Race Tracks & Telemetry: Implemented live side-by-side lanes, smooth vehicle translation, live WPM/Acc, and finish line podium.
+  - AI Rival Practice: Added adaptive solo AI bot (Rookie/Pro/Master ~42-112 WPM) with natural cadence and quick taunts.
+  - Universal Audio: Upgraded audio engine to Yamaha YM2612 2-op FM synthesis and SNES SPC700 stereo delay warmth.
+  - State & Hotkeys: Integrated duel profiles with quicksave/quickload; documented in Help [F1/H] & tutorial modals.
+  - Verification: MSVC clean (`KType.exe` 35 KB); Vite clean in 251ms (`ktype.html` 135 KB < 999 KB); security lint 100% PASS.
+
+
 - **2026-09-29T20:10:00Z — kilo-qa: KGraph (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & Modal Ergonomics)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 134 KB < 999 KB).
   - State Persistence: Implemented F5 quicksave & F9 quickload capturing complete graph state across Web (`localStorage`) and Win32 C (`kgraph_quicksave.dat`).
