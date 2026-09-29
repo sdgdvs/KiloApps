@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KFlash
-  kilo_usability: KTrader
+  kilo_usability: KType
   kilo_graphics: KStarship
   kilo_qa: KContacts
   kilo_expander: KVault
@@ -33,8 +33,8 @@ virtual_web_rotation:
   - "kweb://warez"
 last_run:
   agent: kilo-usability
-  app: KTodo
-  timestamp: "2026-09-29T21:26:00Z"
+  app: KTrader
+  timestamp: "2026-09-29T21:35:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KTrader`
+- **Current Target**: `KType`
 - **Upcoming Queue**:
-  `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo)*.
+  `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KContacts`
@@ -276,6 +276,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T21:35:00Z — kilo-usability: KTrader (UI/UX Ergonomics, Toast De-Occlusion, HiDPI Canvas & Window Sizing)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 85.9 KB < 999 KB).
+  - Window & Viewport: Tuned default window to 960x720 in `App.jsx`, `ktrader.html`, and direct native `KTrader.exe` download.
+  - Toast De-Occlusion: Relocated HUD toast to bottom-right, eliminating overlap with header actions, inputs, and modal controls.
+  - Canvas Crispness: Implemented `setupHiDPICanvas()` with `devicePixelRatio` buffer scaling and `ctx.setTransform` crisp vector lines.
+  - Usability Status Bar: Added footer status bar with quick keyboard hints (<kbd>F1</kbd>, <kbd>1-9</kbd>, <kbd>R</kbd>, <kbd>F5</kbd>, <kbd>F9</kbd>, <kbd>Esc</kbd>) and live vessel telemetry.
+  - Control Ergonomics: Added active `:active` and keyboard focus `:focus-visible` styling; added visible header help hint.
+  - Verification: MSVC clean (`KTrader.exe` 26.6 KB); Vite clean in 349ms (`ktrader.html` 85.9 KB); icon & security checks 100% PASS.
+
 - **2026-09-29T21:26:00Z — kilo-usability: KTodo (UI/UX Ergonomics, Toast De-Occlusion, 60 FPS Polish & Window Sizing)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 130.3 KB < 999 KB).
   - Window & Viewport: Tuned default window to 960x720 in `App.jsx`, `ktodo.html`, and 960x650 native C with direct `KTodo.exe` download.
@@ -311,10 +320,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - State & Hotkeys: Integrated duel profiles with quicksave/quickload; documented in Help [F1/H] & tutorial modals.
   - Verification: MSVC clean (`KType.exe` 35 KB); Vite clean in 251ms (`ktype.html` 135 KB < 999 KB); security lint 100% PASS.
 
-- **2026-09-29T20:10:00Z — kilo-qa: KGraph (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & Modal Ergonomics)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 134 KB < 999 KB).
-  - State Persistence: Implemented F5 quicksave & F9 quickload capturing complete graph state across Web (`localStorage`) and Win32 C (`kgraph_quicksave.dat`).
-  - Tutorial Integrity: Added `HasSeenTutorial` / `kgraph_tutorial.dat` flag in native C and synchronized web tutorial flag; guarded startup against interrupting restored saves.
-  - Modal & UI Ergonomics: Added Save [F5] and Load [F9] buttons to web header and Win32 C toolbar; added Got It action button & keyboard shortcuts (Enter/Space/Esc) to Help modal.
-  - Native C Hardening: Added CRT-free `memset` implementation; synchronized all shortcuts, mode labels, status toasts, and binary output.
-  - Verification: MSVC clean (`KGraph.exe` 36.8 KB); Vite clean in 258ms (`kgraph.html` 134 KB < 999 KB); check_icons & security lint 100% PASS.

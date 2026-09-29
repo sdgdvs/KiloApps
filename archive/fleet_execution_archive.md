@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T20:10:00Z — kilo-qa: KGraph (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & Modal Ergonomics)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 134 KB < 999 KB).
+  - State Persistence: Implemented F5 quicksave & F9 quickload capturing complete graph state across Web (`localStorage`) and Win32 C (`kgraph_quicksave.dat`).
+  - Tutorial Integrity: Added `HasSeenTutorial` / `kgraph_tutorial.dat` flag in native C and synchronized web tutorial flag; guarded startup against interrupting restored saves.
+  - Modal & UI Ergonomics: Added Save [F5] and Load [F9] buttons to web header and Win32 C toolbar; added Got It action button & keyboard shortcuts (Enter/Space/Esc) to Help modal.
+  - Native C Hardening: Added CRT-free `memset` implementation; synchronized all shortcuts, mode labels, status toasts, and binary output.
+  - Verification: MSVC clean (`KGraph.exe` 36.8 KB); Vite clean in 258ms (`kgraph.html` 134 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-29T19:55:00Z — kilo-graphics: KWizard (YM2612 FM Audio, SPC700 Delay, Venom Archetype, Zero Glints & Visual Polish)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 103.7 KB < 999 KB).
   - Audio Architecture: Added Sega Genesis YM2612 2-Op FM synthesis & SNES SPC700 stereo delay warmth engine with audio toggle [🔊 Audio].

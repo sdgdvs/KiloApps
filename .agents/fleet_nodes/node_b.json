@@ -1,17 +1,19 @@
-{
-  "node_id": "pc_b",
-  "name": "PC B (anonymous2)",
-  "account": "anonymous2",
-  "hostname": "PC-B",
-  "model_tier": "Gemini Pro",
-  "cadence": "1 turn/hour",
-  "status": "stopped",
-  "schedule_minutes": [30],
-  "session_start": null,
-  "session_end": null,
-  "turns_executed": 0,
-  "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-09-28T17:56:12Z",
-  "current_target": "idle",
-  "remote_command": "none"
+﻿{
+    "node_id":  "pc_b",
+    "name":  "PC B (anonymous2)",
+    "account":  "anonymous2",
+    "hostname":  "PC-B",
+    "model_tier":  "Gemini Pro",
+    "cadence":  "1 turn/hour",
+    "status":  "active",
+    "schedule_minutes":  [
+                             30
+                         ],
+    "session_start":  "2026-09-29T21:24:32.6330826Z",
+    "session_end":  "2026-09-30T21:24:32.6330826Z",
+    "turns_executed":  0,
+    "last_turn_timestamp":  "2026-09-28T17:56:12Z",
+    "last_heartbeat":  "2026-09-29T21:24:32.6330826Z",
+    "current_target":  "idle",
+    "remote_command":  "none"
 }

@@ -58,6 +58,14 @@
       color: #000;
       box-shadow: 0 0 15px #0ff;
     }
+    button:active {
+      transform: translateY(1px);
+      box-shadow: 0 0 8px #0ff;
+    }
+    button:focus-visible {
+      outline: 2px solid #fff;
+      outline-offset: 2px;
+    }
     button:disabled {
       border-color: #555;
       color: #555;
@@ -88,7 +96,7 @@
     <button onclick="showHelp()" title="Captain's Log Help Guide [F1]" style="font-size: 0.95em; padding: 4px 8px; margin: 2px;">Help [F1]</button>
   </div>
 
-  <div id="hud-toast" onclick="if(toastTimer)clearTimeout(toastTimer); this.style.display='none';" title="Click to dismiss" style="display:none; position:fixed; top:18px; left:50%; transform:translateX(-50%); background:rgba(0,25,35,0.95); border:1px solid #0ff; color:#0ff; padding:8px 18px; font-weight:bold; font-size:1em; box-shadow:0 0 15px rgba(0,255,255,0.6); z-index:200; cursor:pointer; pointer-events:auto; border-radius:3px; transition:opacity 0.25s; text-align:center;"></div>
+  <div id="hud-toast" onclick="if(toastTimer)clearTimeout(toastTimer); this.style.display='none';" title="Click to dismiss" style="display:none; position:fixed; bottom:20px; right:20px; background:rgba(0,20,30,0.96); border:1px solid #0ff; color:#0ff; padding:9px 18px; font-weight:bold; font-size:0.95em; box-shadow:0 4px 20px rgba(0,255,255,0.4); z-index:200; cursor:pointer; pointer-events:auto; border-radius:4px; transition:opacity 0.25s; max-width:calc(100vw - 40px); user-select:none;"></div>
 
   <!-- First-Run Tutorial Commissioning Modal -->
   <div id="tutorial-modal" onclick="if(event.target===this)dismissTutorial();" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,10,15,0.85); z-index:150; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;">
@@ -128,7 +136,10 @@
     </div>
   </div>
 
-  <h1>KTrader Space Trading Sim</h1>
+  <div style="display: flex; align-items: baseline; gap: 12px; border-bottom: 1px solid #0ff; padding-bottom: 8px; margin-bottom: 12px; box-shadow: 0 10px 10px -10px #0ff; flex-wrap: wrap;">
+    <h1 style="border-bottom: none; padding-bottom: 0; margin: 0; box-shadow: none;">KTrader Space Trading Sim</h1>
+    <span style="font-size: 11px; color: #8ee; font-weight: normal;">[Press <kbd style="background: rgba(0,255,255,0.15); border: 1px solid rgba(0,255,255,0.3); border-radius: 3px; padding: 1px 5px; font-family: monospace; color: #0ff; font-weight: bold;">F1</kbd> for Captain's Log &amp; Help]</span>
+  </div>
   <canvas id="gfx-canvas" width="600" height="150" style="display:block; margin: 10px auto; background: rgba(0,20,30,0.5); border: 1px solid #0ff; box-shadow: 0 0 10px #0ff;"></canvas>
   
   <div id="help-modal" onclick="if(event.target===this)hideHelp();" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,10,15,0.85); z-index:100; align-items:center; justify-content:center; padding:20px; box-sizing:border-box;">
@@ -241,7 +252,23 @@
     <div class="log-entry">Welcome to KTrader, Captain.</div>
   </div>
 
+  <!-- Usability Status & Quick Shortcuts Bar -->
+  <footer class="app-status-bar" id="appStatusBar" style="display:flex; justify-content:space-between; align-items:center; padding:7px 12px; background:rgba(0,15,20,0.85); border-radius:4px; border:1px solid #0ff; font-size:11px; color:#8ee; gap:8px; flex-wrap:wrap; user-select:none; margin-top:12px; box-shadow:0 0 10px rgba(0,255,255,0.2);">
+    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+      <span style="display:inline-flex; align-items:center; gap:4px; background:rgba(0,255,255,0.06); padding:2px 7px; border-radius:3px; border:1px solid rgba(0,255,255,0.2);"><kbd style="background:rgba(0,255,255,0.2); border:1px solid rgba(0,255,255,0.4); border-radius:2px; padding:1px 4px; font-family:monospace; color:#0ff; font-weight:bold;">F1</kbd> Help</span>
+      <span style="display:inline-flex; align-items:center; gap:4px; background:rgba(0,255,255,0.06); padding:2px 7px; border-radius:3px; border:1px solid rgba(0,255,255,0.2);"><kbd style="background:rgba(0,255,255,0.2); border:1px solid rgba(0,255,255,0.4); border-radius:2px; padding:1px 4px; font-family:monospace; color:#0ff; font-weight:bold;">1-9</kbd> Hyperspace</span>
+      <span style="display:inline-flex; align-items:center; gap:4px; background:rgba(0,255,255,0.06); padding:2px 7px; border-radius:3px; border:1px solid rgba(0,255,255,0.2);"><kbd style="background:rgba(0,255,255,0.2); border:1px solid rgba(0,255,255,0.4); border-radius:2px; padding:1px 4px; font-family:monospace; color:#0ff; font-weight:bold;">R</kbd> Refuel</span>
+      <span style="display:inline-flex; align-items:center; gap:4px; background:rgba(0,255,255,0.06); padding:2px 7px; border-radius:3px; border:1px solid rgba(0,255,255,0.2);"><kbd style="background:rgba(0,255,255,0.2); border:1px solid rgba(0,255,255,0.4); border-radius:2px; padding:1px 4px; font-family:monospace; color:#0ff; font-weight:bold;">F5</kbd> Save</span>
+      <span style="display:inline-flex; align-items:center; gap:4px; background:rgba(0,255,255,0.06); padding:2px 7px; border-radius:3px; border:1px solid rgba(0,255,255,0.2);"><kbd style="background:rgba(0,255,255,0.2); border:1px solid rgba(0,255,255,0.4); border-radius:2px; padding:1px 4px; font-family:monospace; color:#0ff; font-weight:bold;">F9</kbd> Load</span>
+      <span style="display:inline-flex; align-items:center; gap:4px; background:rgba(0,255,255,0.06); padding:2px 7px; border-radius:3px; border:1px solid rgba(0,255,255,0.2);"><kbd style="background:rgba(0,255,255,0.2); border:1px solid rgba(0,255,255,0.4); border-radius:2px; padding:1px 4px; font-family:monospace; color:#0ff; font-weight:bold;">Esc</kbd> Close</span>
+    </div>
+    <div id="statusTelemetryText" style="font-family:'Courier New', monospace; font-size:11px; color:#0ff;">
+      Sector: Outer Quadrant • Retro 1999 Engine Active
+    </div>
+  </footer>
+
   <script>
+    window.resizeTo(960, 720);
     function safeGetStorage(key) {
       try { return localStorage.getItem(key); } catch (e) { return null; }
     }
@@ -870,12 +897,30 @@
       animFrameId = requestAnimationFrame(renderLoop);
     }
 
+    function setupHiDPICanvas() {
+      const canvas = document.getElementById('gfx-canvas');
+      if (!canvas) return;
+      const dpr = window.devicePixelRatio || 1;
+      const logicalW = 600;
+      const logicalH = 150;
+      const targetW = Math.round(logicalW * dpr);
+      const targetH = Math.round(logicalH * dpr);
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
+        canvas.style.width = logicalW + 'px';
+        canvas.style.height = logicalH + 'px';
+      }
+    }
+
     function drawGraphics() {
       const canvas = document.getElementById('gfx-canvas');
       if (!canvas) return;
+      setupHiDPICanvas();
       const ctx = canvas.getContext('2d');
-      const W = canvas.width;
-      const H = canvas.height;
+      const dpr = window.devicePixelRatio || 1;
+      const W = 600;
+      const H = 150;
 
       // Update screen shake
       let offX = 0, offY = 0;
@@ -889,6 +934,7 @@
       }
 
       ctx.save();
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, W, H);
       ctx.translate(offX, offY);
 
@@ -1611,6 +1657,11 @@
           btn.onclick = () => acceptMission(idx);
           missionsContainer.appendChild(btn);
         });
+      }
+      const statusTel = document.getElementById('statusTelemetryText');
+      if (statusTel) {
+        const flag = state.hasDreadnought ? 'Dreadnought Titan' : `Sloop (Wp Lv ${state.weaponLevel}, Eng Lv ${state.engineLevel})`;
+        statusTel.textContent = `Vessel: ${flag} • Location: ${state.location} • Credits: ${state.credits} cr • Offline-First`;
       }
       drawGraphics();
     }
