@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -17,8 +17,8 @@ current_targets:
   kilo_graphics: KMech
   kilo_qa: KMystery
   kilo_expander: KGraph
-  kilo_creator: "kweb://portal (KiloNet Central 1999 Directory Deep Expansion)"
-virtual_web_target: "kweb://portal"
+  kilo_creator: "kweb://webring (Central Webring Hub & Badge Studio)"
+virtual_web_target: "kweb://webring"
 virtual_web_rotation:
   - "kweb://portal"
   - "kweb://webring"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://deep-core"
   - "kweb://darknet"
 last_run:
-  agent: kilo-expander
-  app: KChart
-  timestamp: "2026-09-29T00:25:00Z"
+  agent: kilo-creator
+  app: "kweb://portal"
+  timestamp: "2026-09-29T01:12:00Z"
 last_planner_run: "2026-09-28T10:38:00Z"
 ---
 
@@ -97,11 +97,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://portal` (KiloNet Central 1999 Directory Deep Expansion)
+- **Current Target**: `kweb://webring` (Central Webring Hub & Badge Studio)
 - **Upcoming Queue**:
-  `kweb://webring` (Central Webring Hub & Badge Studio),
-  `kweb://warez` (FLARELIGHT & RAZOR 1999 Demoscene Vault)
-  *(Completed: kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://geocities, kweb://portal, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
+  `kweb://warez` (FLARELIGHT & RAZOR 1999 Demoscene Vault),
+  `kweb://geocities` (Personal Homepages & Web Builder Hub)
+  *(Completed: kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://geocities, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Current Target**: `KMech`
@@ -242,6 +242,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T01:12:00Z — kilo-creator: kweb://portal (KiloNet 1999 Directory Deep Expansion & Dial-Up Baud Lab)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
+  - Community Web Poll: Added interactive 1999 poll with 4 debates, animated SVG bars, FM chimes, and localStorage persistence.
+  - Webmaster Site Submission: Added custom URL submission modal injecting user sites into dynamic search index & storage.
+  - Dial-Up Baud Lab: Added procedural Web Audio V.90 modem acoustic simulator, front-panel LEDs, and 1999 download estimator.
+  - Market & Zodiac: Added VOOD/AETH dot-com tickers with SVG sparklines and 12-sign Silicon Zodiac computing prophecies.
+  - Consortium Harmonization: Linked Node #018 (darknet.html) across directory and webring.html; added search highlighting.
+  - Verification: Vite build clean (`portal.html` 179.3 KB, `webring.html` 93.7 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-29T00:25:00Z — kilo-expander: KChart (10-Mode Vis, YM2612 FM Sonification, Poly/Exp Regressions & Transforms)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
   - Visualization Engines: Added Horizontal Bar, Stepped Waveform, Scatter Plot with Crosshairs, and Polar Coxcomb Rose (10 modes total).
@@ -275,15 +284,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Drawer Ergonomics: Added click-outside dismissal for bookmarks, notes, and outline drawers during active reading.
   - Responsive Resilience: Added scrollbar-free overflow handling for toolbar & preset decks and window resize progress tracking.
   - Verification: MSVC clean (`KRead.exe` 27.1 KB); Vite clean in 266ms (`kread.html` 144.7 KB < 999 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-28T22:30:00Z — kilo-tester: KContacts (UI Audit, Quicksave/Load, Toast Non-Occlusion, Modal Repairs)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
-  - Quicksave/Quickload: Added F5 quicksave and F9 quickload snapshot persistence across web and native Win32 C.
-  - Interactive Modals: Replaced prompt() with batchCatModal; hooked Enter key for batch tagging, category, and print hardcopy.
-  - Deletion Workflow: Replaced native confirm() with in-app delete confirmation modal supporting both single and batch deletion.
-  - Input Ergonomics: Added Form Enter keydown handler to save contact changes; wired F5/F9/Enter shortcuts into help guide.
-  - Toast Non-Occlusion: Relocated toast notifications to non-occluding bottom-right anchor with bounded queue (≤3 toasts).
-  - Verification: MSVC clean (`KContacts.exe` 28.1 KB); Vite clean in 328ms (`kcontacts.html` 139.9 KB < 999 KB); security lint & check_icons 100% PASS.
 
 
 

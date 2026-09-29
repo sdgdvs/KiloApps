@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-28T22:30:00Z — kilo-tester: KContacts (UI Audit, Quicksave/Load, Toast Non-Occlusion, Modal Repairs)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
+  - Quicksave/Quickload: Added F5 quicksave and F9 quickload snapshot persistence across web and native Win32 C.
+  - Interactive Modals: Replaced prompt() with batchCatModal; hooked Enter key for batch tagging, category, and print hardcopy.
+  - Deletion Workflow: Replaced native confirm() with in-app delete confirmation modal supporting both single and batch deletion.
+  - Input Ergonomics: Added Form Enter keydown handler to save contact changes; wired F5/F9/Enter shortcuts into help guide.
+  - Toast Non-Occlusion: Relocated toast notifications to non-occluding bottom-right anchor with bounded queue (≤3 toasts).
+  - Verification: MSVC clean (`KContacts.exe` 28.1 KB); Vite clean in 328ms (`kcontacts.html` 139.9 KB < 999 KB); security lint & check_icons 100% PASS.
+
+
 - **2026-09-28T22:06:00Z — kilo-creator: kweb://darknet (Subterranean Darknet Hub & Node 0x7F Packet Sniffer)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
   - Packet Sniffer & Injector: Implemented Bell 202 AFSK packet crafting and injector with live subterranean destination node responses.

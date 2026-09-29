@@ -756,6 +756,288 @@
     font-size: 9px;
     font-weight: bold;
   }
+
+  /* Search Result Highlights */
+  mark.search-highlight {
+    background: #fffb91;
+    color: #000000;
+    font-weight: bold;
+    padding: 0 2px;
+  }
+
+  /* Community Web Poll Widget */
+  .poll-card {
+    background: #fdfae6;
+    border: 2px groove #cc9900;
+    margin-bottom: 10px;
+    font-family: Arial, sans-serif;
+  }
+
+  .poll-header {
+    background: #cc9900;
+    color: #ffffff;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: bold;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .poll-body {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .poll-question {
+    font-weight: bold;
+    color: #804000;
+    margin-bottom: 8px;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .poll-option-row {
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .poll-option-row label {
+    cursor: pointer;
+    font-size: 12px;
+  }
+
+  .poll-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 6px;
+    border-top: 1px dotted #ccb066;
+  }
+
+  .poll-bar-wrap {
+    margin-bottom: 6px;
+  }
+
+  .poll-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    margin-bottom: 2px;
+  }
+
+  .poll-bar-track {
+    background: #e0d8b0;
+    height: 12px;
+    border: 1px inset #998844;
+    overflow: hidden;
+  }
+
+  .poll-bar-fill {
+    background: linear-gradient(90deg, #cc4400, #ff8800);
+    height: 100%;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  /* Dial-Up Speed Test & Baud Lab */
+  .speedtest-card {
+    background: #f5f5f5;
+    border: 2px groove var(--navy-dark);
+    padding: 10px 14px;
+    margin-bottom: 12px;
+  }
+
+  .modem-terminal {
+    background: #000000;
+    color: #22ff66;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.45;
+    padding: 10px;
+    border: 2px inset #444444;
+    min-height: 130px;
+    max-height: 160px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+  }
+
+  .modem-leds {
+    display: flex;
+    gap: 12px;
+    background: #222222;
+    padding: 6px 12px;
+    border: 2px inset #555555;
+    align-items: center;
+    margin-bottom: 10px;
+    font-family: Arial, sans-serif;
+    font-size: 10px;
+    font-weight: bold;
+    color: #cccccc;
+  }
+
+  .modem-led {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .led-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #440000;
+    border: 1px solid #222222;
+    box-shadow: inset 1px 1px 2px #000000;
+  }
+  .led-dot.active-red {
+    background: #ff2222;
+    box-shadow: 0 0 6px #ff2222;
+  }
+  .led-dot.active-green {
+    background: #22ff22;
+    box-shadow: 0 0 6px #22ff22;
+  }
+  .led-dot.active-amber {
+    background: #ffaa00;
+    box-shadow: 0 0 6px #ffaa00;
+  }
+
+  .speed-gauge-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .speed-metric-box {
+    background: #ffffff;
+    border: 1px solid #b3c6dd;
+    padding: 8px;
+  }
+  .speed-metric-val {
+    font-family: 'Courier New', monospace;
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--navy-dark);
+  }
+  .speed-metric-lbl {
+    font-size: 11px;
+    color: #666666;
+    margin-top: 2px;
+  }
+
+  .speed-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    margin-top: 8px;
+  }
+  .speed-table th {
+    background: var(--navy-dark);
+    color: #ffffff;
+    padding: 5px 8px;
+    text-align: left;
+    border: 1px solid #888888;
+  }
+  .speed-table td {
+    padding: 5px 8px;
+    border: 1px solid #dddddd;
+    background: #ffffff;
+  }
+  .speed-table tr:nth-child(even) td {
+    background: #f8f8f8;
+  }
+
+  /* 1999 Silicon Zodiac & Horoscopes */
+  .horoscope-card {
+    background: #fbf6ff;
+    border: 2px groove #660099;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+  }
+
+  .zodiac-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    margin: 10px 0;
+  }
+
+  .zodiac-btn {
+    background: #ffffff;
+    border: 1px solid #aa88cc;
+    padding: 6px 4px;
+    text-align: center;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+  }
+  .zodiac-btn:hover {
+    background: #f0e0ff;
+    border-color: #660099;
+  }
+  .zodiac-btn.active {
+    background: #660099;
+    color: #ffffff;
+    font-weight: bold;
+    border-color: #330066;
+  }
+
+  .oracle-display {
+    background: #ffffff;
+    border: 2px inset #9966cc;
+    padding: 12px 16px;
+    margin-top: 10px;
+    font-family: Arial, sans-serif;
+  }
+
+  .oracle-title-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #ddbbff;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+  }
+
+  .oracle-hex-badge {
+    background: #2b0d38;
+    color: #ff99ff;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+
+  .mood-meter-track {
+    background: #dddddd;
+    height: 12px;
+    border: 1px inset #888888;
+    width: 140px;
+    display: inline-block;
+    vertical-align: middle;
+    overflow: hidden;
+  }
+  .mood-meter-fill {
+    background: linear-gradient(90deg, #6600cc, #cc00ff);
+    height: 100%;
+    width: 85%;
+  }
+
+  /* Stock Chart Modal */
+  .stock-chart-box {
+    background: #000000;
+    border: 2px inset #555555;
+    padding: 8px;
+    text-align: center;
+    margin: 8px 0;
+  }
 </style>
 </head>
 <body>
@@ -783,6 +1065,7 @@
         <a href="/apps/kchat.html">💬 KChat IRC</a>
         <a href="/apps/kbbs.html">📠 KBBS Door Games</a>
         <a href="/apps/krss.html">📰 News Feeds</a>
+        <a href="#" onclick="openSubmitSiteModal(); return false;" style="color:#800000; font-weight:bold;">➕ Submit URL</a>
         <a href="/apps/contribute.html">🚀 Contributor Portal</a>
         <a href="/web/webring.html">🌐 Webring Hub</a>
       </div>
@@ -797,9 +1080,10 @@
       <span class="ticker-item">KLNT: <span class="tick-up">$44.25 ▲ +3.10</span></span>
       <span class="ticker-item">CYBR: <span class="tick-up">$88.50 ▲ +12.30</span></span>
       <span class="ticker-item">GEOC: <span class="tick-up">$64.20 ▲ +5.80</span></span>
-      <span class="ticker-item">VFS99: <span class="tick-down">$28.40 ▼ -1.20</span></span>
+      <span class="ticker-item">VOOD: <span class="tick-up">$42.10 ▲ +4.60</span></span>
       <span class="ticker-item">ASMX: <span class="tick-up">$114.00 ▲ +7.50</span></span>
       <span class="ticker-item">TRAP: <span class="tick-up">$19.80 ▲ +4.20</span></span>
+      <span class="ticker-item">AETH: <span class="tick-down">$19.99 ▼ -0.40</span></span>
       <span class="ticker-item">MODT: <span class="tick-up">$35.00 ▲ +2.10</span></span>
       <span class="ticker-item">SURR: <span class="tick-up">$54.20 ▲ +1.80</span></span>
       <span class="ticker-item">FLAR: <span class="tick-down">$46.50 ▼ -0.80</span></span>
@@ -819,6 +1103,8 @@
       <div class="portal-tab" id="tabNav-stocks" onclick="switchPortalTab('stocks')">📈 Stock Exchange &amp; Portfolio</div>
       <div class="portal-tab" id="tabNav-classifieds" onclick="switchPortalTab('classifieds')">📰 Classified Ads Board</div>
       <div class="portal-tab" id="tabNav-weather" onclick="switchPortalTab('weather')">⛅ Weather &amp; Station</div>
+      <div class="portal-tab" id="tabNav-speedtest" onclick="switchPortalTab('speedtest')">⚡ Dial-Up Speed &amp; Baud Lab</div>
+      <div class="portal-tab" id="tabNav-horoscope" onclick="switchPortalTab('horoscope')">🔮 1999 Silicon Zodiac</div>
       <div class="portal-tab" id="tabNav-trivia" onclick="switchPortalTab('trivia')">🧠 1999 Retro Trivia</div>
     </div>
   </header>
@@ -833,18 +1119,22 @@
           <input type="text" id="portalSearchInput" class="search-field" placeholder="Search 98 applications, games, tools, or webring sites..." oninput="handleLiveSearch(this.value)" />
           <input type="submit" class="btn-retro btn-primary-retro" value="Search Central!" />
           <button type="button" class="btn-retro" onclick="handleFeelingRetro()">🎲 I'm Feeling Retro!</button>
+          <button type="button" class="btn-retro" onclick="openSubmitSiteModal()">➕ Add Your URL</button>
           <button type="button" class="btn-retro" onclick="clearSearch()">Clear</button>
         </div>
       </form>
       <div class="search-chips">
         <span>Quick Filters:</span>
-        <a class="search-chip-link" onclick="quickFilter('Games')">🎮 Games (46)</a>
-        <a class="search-chip-link" onclick="quickFilter('System')">⚙️ System Tools (29)</a>
-        <a class="search-chip-link" onclick="quickFilter('Office')">💼 Office &amp; Notes (9)</a>
-        <a class="search-chip-link" onclick="quickFilter('Media')">🎨 Media &amp; Synth (9)</a>
-        <a class="search-chip-link" onclick="quickFilter('Network')">📡 Network (7)</a>
-        <a class="search-chip-link" onclick="quickFilter('Dev')">⚡ Dev &amp; Scripts (3)</a>
+        <a class="search-chip-link" onclick="quickFilter('Games')">🎮 Games</a>
+        <a class="search-chip-link" onclick="quickFilter('System')">⚙️ System Tools</a>
+        <a class="search-chip-link" onclick="quickFilter('Office')">💼 Office &amp; Notes</a>
+        <a class="search-chip-link" onclick="quickFilter('Media')">🎨 Media &amp; Synth</a>
+        <a class="search-chip-link" onclick="quickFilter('Network')">📡 Network</a>
+        <a class="search-chip-link" onclick="quickFilter('Dev')">⚡ Dev &amp; Scripts</a>
         <a class="search-chip-link" onclick="quickFilter('Web')">🌐 Web Destinations</a>
+      </div>
+      <div style="font-size:11px; color:#555; margin-top:4px;">
+        💡 <em>Pro Tip: Use <code>cat:games</code>, <code>tag:multiplayer</code>, or exact quotes <code>"portal"</code> for precision 1999 querying.</em>
       </div>
     </div>
 
@@ -871,6 +1161,31 @@
                 A classic personal cyber-temple featuring Web Audio tracker chiptunes, Amiga ProTracker (.MOD) downloads, an interactive 16-color Pixel Art Studio, and the Silicon Oracle '99!
               </p>
               <span style="font-size:11px; color:#666666;">[Added 1999-10-14] Rating: ★★★★★ • Member #002</span>
+            </div>
+
+            <!-- KiloPoll '99: Voice of the Web -->
+            <div class="poll-card" id="kiloPollWidget">
+              <div class="poll-header">
+                <span>📊 KiloPoll '99: Voice of the Web</span>
+                <select id="pollTopicSelect" class="form-input" style="font-size:11px; padding:1px 4px; width:155px; height:22px;" onchange="changePollTopic(this.value)">
+                  <option value="y2k">Y2K Bug Readiness</option>
+                  <option value="gpu">3D Accelerator Wars</option>
+                  <option value="shooters">Tournament Shooters</option>
+                  <option value="browsers">Primary 1999 Browser</option>
+                </select>
+              </div>
+              <div class="poll-body">
+                <div class="poll-question" id="pollQuestionText">Loading 1999 community poll...</div>
+                <form id="pollVoteForm" onsubmit="submitPollVote(event)">
+                  <div id="pollOptionsContainer"></div>
+                  <div class="poll-actions">
+                    <button type="submit" class="btn-retro btn-primary-retro" style="font-size:11px; padding:2px 10px;" id="pollVoteBtn">Vote Now</button>
+                    <button type="button" class="btn-retro" style="font-size:11px; padding:2px 8px;" onclick="togglePollView()">Toggle Results</button>
+                    <span id="pollVoteCount" style="font-size:10px; color:#666; margin-left:auto;">1,428 votes</span>
+                  </div>
+                </form>
+                <div id="pollResultsContainer" style="display:none; margin-top:8px;"></div>
+              </div>
             </div>
 
             <!-- Category 1: Games & Arcade -->
@@ -970,6 +1285,7 @@
                   <li><a href="/web/echo_subsystem.html">Echo Subsystem Acoustic Research Lab</a> — Acoustic research journal, real-time 2D spectrogram waterfall &amp; YM2612 1999Hz harmonic decoder</li>
                   <li><a href="/web/classified.html">10.19.99.4 Corporate Intranet Leak</a> — Carlsbad Skunkworks repository, 1999Hz RF signal lab &amp; memory hex inspector</li>
                   <li><a href="/web/deep_core.html">Deep Core Ghost Terminal (10.19.99.127)</a> — Subterranean Ring-0 relay, SHA-256 passkey analyzer &amp; 1999Hz subcarrier monitor</li>
+                  <li><a href="/web/darknet.html">Subterranean Darknet Terminal (Node 0x7F)</a> — Quarantined memory dumps, raw packet injector &amp; subcarrier sniffer</li>
                   <li><a href="/apps/contribute.html">Fleet Contributor Portal</a> — Donate free compute quota to power the living machine</li>
                 </ul>
               </div>
@@ -1029,20 +1345,39 @@
   <!-- TAB 3: CLASSIFIED ADS BOARD -->
   <section id="tab-classifieds" class="tab-content">
     <div class="classified-filter-row">
-      <div>
-        <label style="font-weight:bold; margin-right:4px;">Filter Category:</label>
-        <select id="adCategoryFilter" class="form-input" style="width:160px; display:inline-block;" onchange="filterClassifieds()">
-          <option value="ALL">All Categories (12)</option>
-          <option value="HARDWARE">💾 Computer Hardware</option>
-          <option value="SOFTWARE">💿 Software &amp; Media</option>
-          <option value="JOBS">💼 Jobs &amp; Services</option>
-          <option value="COMMUNITY">🕹️ Community &amp; LAN</option>
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+        <label style="font-weight:bold; margin-right:2px;">Category:</label>
+        <select id="adCategoryFilter" class="form-input" style="width:150px; display:inline-block;" onchange="filterClassifieds()">
+          <option value="ALL">All Categories</option>
+          <option value="HARDWARE">💾 Hardware</option>
+          <option value="SOFTWARE">💿 Software</option>
+          <option value="JOBS">💼 Jobs &amp; Gigs</option>
+          <option value="COMMUNITY">🕹️ Community</option>
         </select>
-        <input type="text" id="adSearchInput" class="form-input" style="width:180px; display:inline-block; margin-left:6px;" placeholder="Search listings..." oninput="filterClassifieds()" />
+        <label style="font-weight:bold; margin-left:6px; margin-right:2px;">Sort:</label>
+        <select id="adSortSelect" class="form-input" style="width:140px; display:inline-block;" onchange="filterClassifieds()">
+          <option value="newest">📅 Newest First</option>
+          <option value="price_low">💲 Price (Low-High)</option>
+          <option value="price_high">💰 Price (High-Low)</option>
+          <option value="title">🔤 Title (A-Z)</option>
+        </select>
+        <input type="text" id="adSearchInput" class="form-input" style="width:160px; display:inline-block;" placeholder="Search listings..." oninput="filterClassifieds()" />
       </div>
       <div>
         <button class="btn-retro btn-primary-retro" onclick="openPostAdModal()">➕ Post Free Classified Ad</button>
       </div>
+    </div>
+
+    <!-- Quick Tag Chips -->
+    <div style="font-size:11px; margin-bottom:8px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+      <span style="font-weight:bold; color:#555;">Popular Filters:</span>
+      <a class="search-chip-link" onclick="quickFilterAds('voodoo')">#3dfx Voodoo</a>
+      <a class="search-chip-link" onclick="quickFilterAds('modem')">#56K Modem</a>
+      <a class="search-chip-link" onclick="quickFilterAds('crt')">#CRT Trinitron</a>
+      <a class="search-chip-link" onclick="quickFilterAds('lan')">#LAN Party</a>
+      <a class="search-chip-link" onclick="quickFilterAds('y2k')">#Y2K Audit</a>
+      <a class="search-chip-link" onclick="quickFilterAds('tracker')">#Tracker Audio</a>
+      <a class="search-chip-link" onclick="quickFilterAds('')">Show All</a>
     </div>
 
     <div id="classifiedsList">
@@ -1128,6 +1463,164 @@
     </div>
   </section>
 
+  <!-- TAB 6: DIAL-UP SPEED TEST & BAUD LAB -->
+  <section id="tab-speedtest" class="tab-content">
+    <div class="speedtest-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #b3d1ff; padding-bottom:6px; margin-bottom:10px;">
+        <h3 style="margin:0; font-family:Arial, sans-serif; color:var(--navy-dark);">⚡ KiloSpeed '99 - Dial-Up Acoustic Benchmark &amp; Baud Lab</h3>
+        <div style="font-family:Arial, sans-serif; font-size:12px;">
+          Line Status: <strong id="modemStatusText" style="color:#008000;">IDLE / ON HOOK</strong>
+        </div>
+      </div>
+
+      <!-- Modem Front Panel LEDs -->
+      <div class="modem-leds">
+        <span style="color:#ffffff;">MODEM 56K V.90:</span>
+        <div class="modem-led"><div class="led-dot" id="ledMR"></div><span>MR</span></div>
+        <div class="modem-led"><div class="led-dot" id="ledTR"></div><span>TR</span></div>
+        <div class="modem-led"><div class="led-dot" id="ledCD"></div><span>CD</span></div>
+        <div class="modem-led"><div class="led-dot" id="ledSD"></div><span>SD</span></div>
+        <div class="modem-led"><div class="led-dot" id="ledRD"></div><span>RD</span></div>
+        <div class="modem-led"><div class="led-dot" id="ledHS"></div><span>HS</span></div>
+        <div class="modem-led"><div class="led-dot" id="ledOH"></div><span>OH</span></div>
+        <div class="modem-led"><div class="led-dot" id="ledAA"></div><span>AA</span></div>
+      </div>
+
+      <!-- Controls Row -->
+      <div style="background:#ffffff; border:1px solid #cccccc; padding:8px 10px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div>
+          <label style="font-family:Arial, sans-serif; font-size:12px; font-weight:bold; margin-right:6px;">Target Modulation Standard:</label>
+          <select id="modemStandardSelect" class="form-input" style="width:230px; display:inline-block;" onchange="handleStandardChange()">
+            <option value="56000" selected>V.90 / K56flex (56.0 kbps Down / 33.6k Up)</option>
+            <option value="33600">V.34+ Enhanced (33.6 kbps Asynchronous)</option>
+            <option value="28800">V.34 Standard (28.8 kbps Asynchronous)</option>
+            <option value="14400">V.32bis High Speed (14.4 kbps)</option>
+            <option value="64000">ISDN BRI Single-B Channel (64.0 kbps)</option>
+            <option value="128000">ISDN Dual Bonded 2B+D (128.0 kbps)</option>
+            <option value="1544000">T1 Leased Line Digital Trunk (1.544 Mbps)</option>
+          </select>
+        </div>
+        <div>
+          <button class="btn-retro btn-primary-retro" id="runBenchmarkBtn" onclick="runAcousticSpeedTest()">🔊 Run Acoustic Benchmark</button>
+          <button class="btn-retro" onclick="abortSpeedTest()">Hang Up</button>
+        </div>
+      </div>
+
+      <!-- Terminal Output Window -->
+      <div class="modem-terminal" id="modemTerminalLog">
+        ATZ<br>
+        OK<br>
+        AT&amp;F1 E1 V1 X4 &amp;C1 &amp;D2 S95=47<br>
+        OK<br>
+        KiloSpeed '99 Diagnostics Ready. Click [Run Acoustic Benchmark] to dial KNet Gateway.
+      </div>
+
+      <!-- Speed Metrics Grid -->
+      <div class="speed-gauge-grid">
+        <div class="speed-metric-box">
+          <div class="speed-metric-val" id="metricBaud">0 bps</div>
+          <div class="speed-metric-lbl">Negotiated Baud</div>
+        </div>
+        <div class="speed-metric-box">
+          <div class="speed-metric-val" id="metricThroughput">0.00 KB/s</div>
+          <div class="speed-metric-lbl">Actual Throughput</div>
+        </div>
+        <div class="speed-metric-box">
+          <div class="speed-metric-val" id="metricLatency">-- ms</div>
+          <div class="speed-metric-lbl">Ping RTT Latency</div>
+        </div>
+        <div class="speed-metric-box">
+          <div class="speed-metric-val" id="metricSnr">-- dB</div>
+          <div class="speed-metric-lbl">Signal-to-Noise Ratio</div>
+        </div>
+      </div>
+
+      <!-- 1999 Download Duration Calculator -->
+      <div style="background:#ffffff; border:1px solid #b3d1ff; padding:10px 12px;">
+        <h4 style="margin:0 0 6px 0; font-family:Arial, sans-serif; font-size:13px; color:var(--navy-dark);">⏱️ 1999 File Download Duration Calculator</h4>
+        <div style="font-family:Arial, sans-serif; font-size:12px; margin-bottom:8px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <label style="font-weight:bold;">File Size to Download:</label>
+          <input type="number" id="calcFileSizeInput" class="form-input" style="width:100px; display:inline-block;" value="999" min="1" max="2000000" oninput="recalcDownloadTimes()" />
+          <select id="calcSizeUnitSelect" class="form-input" style="width:80px; display:inline-block;" onchange="recalcDownloadTimes()">
+            <option value="KB" selected>KB</option>
+            <option value="MB">MB</option>
+          </select>
+          <span>Presets:</span>
+          <button class="btn-retro" style="font-size:11px; padding:1px 6px;" onclick="setCalcPreset(999, 'KB')">999 KB (KiloApp)</button>
+          <button class="btn-retro" style="font-size:11px; padding:1px 6px;" onclick="setCalcPreset(3.5, 'MB')">3.5 MB (MP3 Song)</button>
+          <button class="btn-retro" style="font-size:11px; padding:1px 6px;" onclick="setCalcPreset(12, 'MB')">12 MB (Game Demo)</button>
+          <button class="btn-retro" style="font-size:11px; padding:1px 6px;" onclick="setCalcPreset(650, 'MB')">650 MB (CD-ROM)</button>
+        </div>
+
+        <table class="speed-table">
+          <thead>
+            <tr>
+              <th>Modulation Standard</th>
+              <th>Raw Line Speed</th>
+              <th>Est. Transfer Rate</th>
+              <th>Download Time</th>
+              <th>Dial-Up Commentary</th>
+            </tr>
+          </thead>
+          <tbody id="calcTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 7: 1999 SILICON ZODIAC & ASTROLOGICAL HOROSCOPES -->
+  <section id="tab-horoscope" class="tab-content">
+    <div class="horoscope-card">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #cca3ff; padding-bottom:6px; margin-bottom:8px;">
+        <h3 style="margin:0; font-family:Arial, sans-serif; color:#660099;">🔮 K-Horoscope '99 — Astrological Silicon Zodiac &amp; Computing Oracle</h3>
+        <span style="font-size:11px; color:#555; font-family:Arial, sans-serif;">Celestial Alignment: October 1999 • Mercury in Silicon</span>
+      </div>
+      <p style="margin:0 0 10px 0; font-size:12px; font-family:Arial, sans-serif; color:#444;">
+        Select your Zodiac sign below to receive your daily 1999 cyber-prophecy, lucky hex offset, harmonic webring neighbor, and dial-up mood index!
+      </p>
+
+      <!-- 12 Signs Grid -->
+      <div class="zodiac-grid" id="zodiacBtnGrid">
+        <!-- Dynamically injected buttons -->
+      </div>
+
+      <!-- Oracle Output Display -->
+      <div class="oracle-display" id="oracleDisplayBox">
+        <div class="oracle-title-bar">
+          <div>
+            <span style="font-size:18px; font-weight:bold; color:#660099;" id="oracleSignTitle">♈ Aries (The Overclocker)</span>
+            <span style="font-size:12px; color:#777; margin-left:8px;" id="oracleDateRange">Mar 21 - Apr 19</span>
+          </div>
+          <div>
+            <span class="oracle-hex-badge" id="oracleHexBadge">OFFSET: 0x1999:0x00A0</span>
+          </div>
+        </div>
+
+        <div style="font-size:13px; line-height:1.5; color:#222; margin-bottom:10px;" id="oracleProphecyText">
+          Your multiplier settings are favorable today. The celestial bus clock rises effortlessly from 66MHz to 100MHz with zero thermal throttling. Take bold architectural risks in your assembly code, but keep a watchful eye on your Northbridge heat sinks.
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; border-top:1px dotted #cca3ff; padding-top:8px; font-size:12px; font-family:Arial, sans-serif;">
+          <div>
+            <strong>Tech Element:</strong> <span id="oracleElement" style="color:#660099;">Silicon &amp; Copper</span><br>
+            <strong>Optimal Baud:</strong> <span id="oracleBaud">56,000 bps V.90</span>
+          </div>
+          <div>
+            <strong>Compatible Sign:</strong> <span id="oracleCompat">Leo (The Demoscener)</span><br>
+            <strong>Affinity Node:</strong> <a href="/web/users/neon_rider.html" id="oracleNodeLink">~neon_rider's Shrine</a>
+          </div>
+          <div>
+            <strong>Daily Bandwidth Mood:</strong><br>
+            <div class="mood-meter-track"><div class="mood-meter-fill" id="oracleMoodFill"></div></div>
+            <span id="oracleMoodPct" style="font-weight:bold; margin-left:4px;">92%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Webring Member Widget -->
   <div class="webring-widget">
     <strong>[ Central KiloNet 1999 Webring Member #001 ]</strong><br>
@@ -1136,6 +1629,7 @@
       <a href="/web/geocities.html">[« Previous Site: CyberSpire]</a>
       <a href="/web/webring.html">[Central Hub]</a>
       <a href="#" onclick="jumpRandom(); return false;">[🎲 Random Ring Jump]</a>
+      <a href="/web/darknet.html">[Node 0x7F: Darknet]</a>
       <a href="/apps/contribute.html">[Next Site: Contributor Portal »]</a>
     </div>
   </div>
@@ -1255,6 +1749,96 @@
       <div style="text-align:right; margin-top:8px;">
         <button type="button" class="btn-retro" onclick="closeReplyModal()">Cancel</button>
         <button type="button" class="btn-retro btn-primary-retro" onclick="sendClassifiedReply()">Send via KMail</button>
+      </div>
+    </div>
+  </div>
+<!-- MODAL 4: Submit Site to KiloNet Directory -->
+<div class="modal-overlay" id="submitSiteModal">
+  <div class="retro-dialog">
+    <div class="dialog-titlebar">
+      <span>➕ Suggest a Site / Add URL to KiloNet</span>
+      <button class="dialog-close-btn" onclick="closeSubmitSiteModal()">×</button>
+    </div>
+    <div class="dialog-body">
+      <form id="submitSiteForm" onsubmit="handleSubmitSite(event)">
+        <div class="form-group">
+          <label>Website Title:</label>
+          <input type="text" id="siteInputTitle" class="form-input" placeholder="e.g. Captain's Retro Amiga Haven" required />
+        </div>
+        <div class="form-group">
+          <label>Target URL:</label>
+          <input type="text" id="siteInputUrl" class="form-input" placeholder="e.g. kweb://users/~captain or /web/amiga.html" required />
+        </div>
+        <div class="form-group">
+          <label>Directory Category:</label>
+          <select id="siteInputCategory" class="form-input">
+            <option value="Web">🌐 Web Destination</option>
+            <option value="Games">🎮 Games &amp; Arcade</option>
+            <option value="System">⚙️ System Tools</option>
+            <option value="Media">🎨 Media &amp; Synth</option>
+            <option value="Office">💼 Office &amp; Communications</option>
+            <option value="Dev">⚡ Dev &amp; Scripting</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Webmaster Handle / Call-Sign:</label>
+          <input type="text" id="siteInputHandle" class="form-input" placeholder="e.g. AmigaPilot_99" required />
+        </div>
+        <div class="form-group">
+          <label>Tags (comma separated):</label>
+          <input type="text" id="siteInputTags" class="form-input" placeholder="e.g. amiga,tracker,demoscene,retro" required />
+        </div>
+        <div class="form-group">
+          <label>Site Description (under 180 chars):</label>
+          <textarea id="siteInputDesc" class="form-input" style="height:55px; resize:none;" placeholder="Detail what visitors will discover on your shrine or tool..." required></textarea>
+        </div>
+        <div style="text-align:right; margin-top:8px;">
+          <button type="button" class="btn-retro" onclick="closeSubmitSiteModal()">Cancel</button>
+          <button type="submit" class="btn-retro btn-primary-retro">Submit to Directory</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL 5: Stock Performance Chart & Volatility Curve -->
+<div class="modal-overlay" id="stockChartModal">
+  <div class="retro-dialog" style="width:520px;">
+    <div class="dialog-titlebar">
+      <span id="stockChartModalTitle">📈 Stock Volatility Curve: KLNT</span>
+      <button class="dialog-close-btn" onclick="closeStockChartModal()">×</button>
+    </div>
+    <div class="dialog-body">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <div>
+          <strong id="chartStockName" style="font-size:14px; color:var(--navy-dark);">KiloNet Systems Inc.</strong><br>
+          <span style="font-family:'Courier New', monospace; font-size:14px; font-weight:bold;" id="chartCurrentPrice">$44.25</span>
+          <span id="chartChangeLabel" class="tick-up" style="font-size:12px; margin-left:6px;">▲ +3.10 (+7.5%)</span>
+        </div>
+        <div style="text-align:right; font-size:11px; color:#555;">
+          52-Wk Range: <span id="chart52WkRange">$22.50 - $48.00</span><br>
+          Simulated Volume: <span id="chartVolume">482,900 shares</span>
+        </div>
+      </div>
+
+      <!-- SVG Sparkline Price Chart -->
+      <div class="stock-chart-box">
+        <svg id="stockChartSvg" viewBox="0 0 460 140" style="width:100%; height:140px; display:block;">
+          <!-- Injected via JavaScript -->
+        </svg>
+      </div>
+
+      <div style="font-size:11px; color:#444; line-height:1.4; margin-bottom:10px;" id="chartCompanyDesc">
+        Leading late-90s network infrastructure and hypermedia directory consortium.
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #ccc; padding-top:8px;">
+        <span style="font-size:11px;">You own: <strong id="chartSharesOwned">0 shares</strong></span>
+        <div>
+          <button class="btn-retro" id="chartTradeBtn" onclick="openTradeFromChart()">Execute Trade</button>
+          <button class="btn-retro" id="chartSellAllBtn" onclick="sellAllSharesFromChart()">Sell All</button>
+          <button class="btn-retro btn-primary-retro" onclick="closeStockChartModal()">Close</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1392,6 +1976,98 @@ function playErrorBuzz() {
   osc.stop(now + 0.26);
 }
 
+// Dial-Up Modem Acoustic Synthesis
+let modemOscillatorBank = [];
+let modemNoiseNode = null;
+let modemBenchmarkTimeout = null;
+
+function stopModemAudio() {
+  if (modemBenchmarkTimeout) {
+    clearTimeout(modemBenchmarkTimeout);
+    modemBenchmarkTimeout = null;
+  }
+  modemOscillatorBank.forEach(osc => {
+    try { osc.stop(); osc.disconnect(); } catch(e) {}
+  });
+  modemOscillatorBank = [];
+  if (modemNoiseNode) {
+    try { modemNoiseNode.stop(); modemNoiseNode.disconnect(); } catch(e) {}
+    modemNoiseNode = null;
+  }
+}
+
+function playDualTone(f1, f2, duration, gainVal = 0.15) {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc1.type = 'sine';
+  osc2.type = 'sine';
+  osc1.frequency.setValueAtTime(f1, now);
+  osc2.frequency.setValueAtTime(f2, now);
+
+  gain.gain.setValueAtTime(gainVal, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  osc1.connect(gain);
+  osc2.connect(gain);
+  gain.connect(masterGain);
+
+  osc1.start(now);
+  osc2.start(now);
+  osc1.stop(now + duration);
+  osc2.stop(now + duration);
+  modemOscillatorBank.push(osc1, osc2);
+}
+
+function playNoiseBurst(duration, filterFreq = 1800) {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  const bufferSize = audioCtx.sampleRate * duration;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(filterFreq, audioCtx.currentTime);
+  filter.Q.setValueAtTime(2.0, audioCtx.currentTime);
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.14, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(masterGain);
+
+  noise.start();
+  modemNoiseNode = noise;
+}
+
+function loadCustomSites() {
+  const saved = localStorage.getItem('knet_portal_custom_sites');
+  if (saved) {
+    try {
+      const sites = JSON.parse(saved);
+      sites.forEach(site => {
+        if (!APPS_DATABASE.find(item => item.id === site.id)) {
+          APPS_DATABASE.push(site);
+        }
+      });
+    } catch(e) {}
+  }
+}
+
 /* =========================================================================
    2. EXHAUSTIVE DATABASE OF 98 KILOAPPS & WEBRING SITES
    ========================================================================= */
@@ -1522,6 +2198,7 @@ const APPS_DATABASE = [
   { id: 'web-echo', title: 'Echo Subsystem Acoustic Research Lab', folder: 'Web', url: '/web/echo_subsystem.html', desc: 'Acoustic research journal, real-time 2D audio spectrogram waterfall, Yamaha YM2612 2-Op FM decoder & 1999Hz subcarrier telemetry.', tags: 'echo,audio,spectrogram,journal,research,ym2612,spc700,subcarrier,morse,telemetry,web' },
   { id: 'web-classified', title: '[UNINDEXED] 10.19.99.4 Corporate Intranet Leak', folder: 'Web', url: '/web/classified.html', desc: 'Leaked Aethel Dynamics Carlsbad skunkworks intranet: memory hex inspector, 1999Hz RF signal diagnostics & packet sniffer.', tags: 'classified,leak,intranet,10.19.99.4,skunkworks,diagnostic,signal,web' },
   { id: 'web-deep-core', title: '[TIER 3] Deep Core Ghost Node Terminal', folder: 'Web', url: '/web/deep_core.html', desc: 'Subterranean Ring-0 relay & cryptographic passkey analyzer. Real-time 1999Hz subcarrier monitor & sector forensics.', tags: 'deep-core,terminal,ghost,passkey,hash,10.19.99.127,sha256,forensics,web' },
+  { id: 'web-darknet', title: 'Subterranean Darknet Terminal (Node 0x7F)', folder: 'Web', url: '/web/darknet.html', desc: 'Subterranean packet sniffer, raw frame injector, quarantined memory viewer & 1999Hz acoustic carrier scanner.', tags: 'darknet,terminal,packet,sniffer,subterranean,forensics,hex,0x7f,web' },
   { id: 'web-contrib', title: 'Fleet Compute Contributor Portal', folder: 'Web', url: '/apps/contribute.html', desc: 'Volunteer compute portal donating free Gemini quota to fuel the living autonomous fleet.', tags: 'contribute,compute,quota,fleet,fuel,web' }
 ];
 
@@ -1578,18 +2255,54 @@ function executeSearch(query) {
     return;
   }
 
+  // Parse operators
+  let categoryFilter = null;
+  let tagFilter = null;
+  let cleanQuery = query;
+
+  const catMatch = cleanQuery.match(/\bcat:([a-z0-9_-]+)\b/);
+  if (catMatch) {
+    categoryFilter = catMatch[1].toLowerCase();
+    cleanQuery = cleanQuery.replace(catMatch[0], '').trim();
+  }
+
+  const tagMatch = cleanQuery.match(/\btag:([a-z0-9_-]+)\b/);
+  if (tagMatch) {
+    tagFilter = tagMatch[1].toLowerCase();
+    cleanQuery = cleanQuery.replace(tagMatch[0], '').trim();
+  }
+
+  // Check for exact quotes
+  let exactMatch = null;
+  const quoteMatch = cleanQuery.match(/"([^"]+)"/);
+  if (quoteMatch) {
+    exactMatch = quoteMatch[1].toLowerCase();
+    cleanQuery = cleanQuery.replace(quoteMatch[0], '').trim();
+  }
+
+  const tokens = cleanQuery.split(/\s+/).filter(t => t.length > 0);
+  if (exactMatch) tokens.push(exactMatch);
+
   const results = APPS_DATABASE.filter(item => {
-    return item.title.toLowerCase().includes(query) ||
-           item.id.toLowerCase().includes(query) ||
-           item.desc.toLowerCase().includes(query) ||
-           item.folder.toLowerCase().includes(query) ||
-           item.tags.toLowerCase().includes(query);
+    if (categoryFilter && item.folder.toLowerCase() !== categoryFilter) {
+      return false;
+    }
+    if (tagFilter && !item.tags.toLowerCase().includes(tagFilter)) {
+      return false;
+    }
+    if (tokens.length === 0) return true;
+
+    const haystack = `${item.title} ${item.id} ${item.desc} ${item.folder} ${item.tags}`.toLowerCase();
+    if (exactMatch) {
+      return haystack.includes(exactMatch);
+    }
+    return tokens.some(token => haystack.includes(token));
   });
 
   container.style.display = 'block';
   standardView.style.display = 'none';
 
-  summaryEl.textContent = `Found ${results.length} result(s) matching "${query}" in 0.014 seconds (Powered by KiloSearch 1.0)`;
+  summaryEl.textContent = `Found ${results.length} result(s) matching "${query}" in 0.012 seconds (Powered by KiloSearch 1.0)`;
 
   if (results.length === 0) {
     listEl.innerHTML = `
@@ -1601,15 +2314,30 @@ function executeSearch(query) {
     return;
   }
 
+  function highlightMatches(text, searchTokens) {
+    let escaped = escapeHtml(text);
+    if (!searchTokens || searchTokens.length === 0) return escaped;
+    searchTokens.forEach(tok => {
+      if (tok.length < 2) return;
+      const safeTok = tok.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`(${safeTok})`, 'gi');
+      escaped = escaped.replace(regex, '<mark class="search-highlight">$1</mark>');
+    });
+    return escaped;
+  }
+
   let html = '';
   results.forEach(app => {
     const badgeClass = 'badge-' + app.folder.toLowerCase();
     const actionLabel = app.folder === 'Web' ? 'Visit Website' : 'Launch in KiloOS';
+    const highlightedTitle = highlightMatches(app.title, tokens);
+    const highlightedDesc = highlightMatches(app.desc, tokens);
+
     html += `
       <div class="search-result-item">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <div>
-            <a href="${app.url}" class="result-title-link">${escapeHtml(app.title)}</a>
+            <a href="${app.url}" class="result-title-link">${highlightedTitle}</a>
             <span class="result-badge ${badgeClass}">${app.folder}</span>
             <span style="font-size:11px; color:#777; margin-left:6px;">[${app.id}.html]</span>
           </div>
@@ -1618,7 +2346,7 @@ function executeSearch(query) {
           </div>
         </div>
         <div style="font-size:12px; color:#333; margin-top:3px;">
-          ${escapeHtml(app.desc)}
+          ${highlightedDesc}
         </div>
         <div style="font-size:10px; color:#888; margin-top:2px;">
           URL: <code>${app.url}</code> &bull; Size: &lt; 999 KB &bull; Verified 1999 Build
@@ -1645,16 +2373,18 @@ function handleFeelingRetro() {
    4. STOCK MARKET TICKER & INTERACTIVE PORTFOLIO TRADER
    ========================================================================= */
 const STOCK_DATA = [
-  { symbol: 'KLNT', name: 'KiloNet Systems Inc.', price: 44.25, change: 3.10, high: 48.00, low: 22.50 },
-  { symbol: 'CYBR', name: 'CyberSpire Interactive', price: 88.50, change: 12.30, high: 95.00, low: 34.00 },
-  { symbol: 'GEOC', name: 'GeoCities Web Alliance', price: 64.20, change: 5.80, high: 71.00, low: 18.00 },
-  { symbol: 'VFS99', name: 'Virtual File Systems Corp', price: 28.40, change: -1.20, high: 39.50, low: 15.00 },
-  { symbol: 'ASMX', name: 'x86 Silicon Foundry Ltd', price: 114.00, change: 7.50, high: 128.00, low: 52.00 },
-  { symbol: 'TRAP', name: 'Trapster P2P Network', price: 19.80, change: 4.20, high: 26.00, low: 4.50 },
-  { symbol: 'MODT', name: 'Tracker Audio Technologies', price: 35.00, change: 2.10, high: 41.00, low: 12.00 },
-  { symbol: 'SURR', name: 'Surreal Gaming Software', price: 54.20, change: 1.80, high: 62.00, low: 28.00 },
-  { symbol: 'FLAR', name: 'FlareLight Media Group', price: 46.50, change: -0.80, high: 59.00, low: 20.00 },
-  { symbol: 'PKT', name: 'PacketWorks Telecom Corp', price: 31.25, change: 0.60, high: 38.00, low: 14.50 }
+  { symbol: 'KLNT', name: 'KiloNet Systems Inc.', price: 44.25, change: 3.10, high: 48.00, low: 22.50, volume: 482900, desc: 'Leading late-90s network infrastructure, directory indexing, and dial-up portal consortium.', history: [38.5, 39.2, 40.0, 41.5, 41.0, 42.2, 41.8, 43.0, 42.5, 43.8, 44.0, 43.5, 44.2, 43.9, 44.5, 44.1, 43.8, 44.0, 44.25] },
+  { symbol: 'CYBR', name: 'CyberSpire Interactive', price: 88.50, change: 12.30, high: 95.00, low: 34.00, volume: 624100, desc: 'Pioneering multimedia gaming portal, tracker MOD distribution network, and pixel art tech.', history: [65.0, 67.5, 71.0, 70.0, 74.5, 76.0, 78.2, 81.0, 79.5, 83.0, 85.2, 84.0, 86.5, 85.0, 87.2, 86.8, 87.5, 88.0, 88.50] },
+  { symbol: 'GEOC', name: 'GeoCities Web Alliance', price: 64.20, change: 5.80, high: 71.00, low: 18.00, volume: 819200, desc: 'Free personal web hosting neighborhood alliance hosting hundreds of thousands of personal shrines.', history: [52.0, 54.0, 56.5, 55.0, 58.0, 60.2, 59.5, 61.0, 60.5, 62.0, 63.5, 62.8, 63.2, 64.0, 63.5, 64.0, 63.8, 64.1, 64.20] },
+  { symbol: 'VOOD', name: '3dfx Interactive Graphics', price: 42.10, change: 4.60, high: 46.00, low: 16.50, volume: 945000, desc: 'World leader in Glide 3D hardware accelerators, makers of Voodoo2 SLI and Voodoo3 AGP.', history: [31.0, 32.5, 34.0, 33.5, 36.0, 37.5, 36.8, 38.0, 39.5, 38.8, 40.2, 41.0, 40.5, 41.2, 40.8, 41.5, 41.8, 42.0, 42.10] },
+  { symbol: 'VFS99', name: 'Virtual File Systems Corp', price: 28.40, change: -1.20, high: 39.50, low: 15.00, volume: 215400, desc: 'High-density FAT32 and NTFS storage compression algorithms and virtual disk utilities.', history: [34.0, 33.5, 32.0, 31.5, 30.8, 31.2, 30.5, 29.8, 30.0, 29.2, 29.5, 28.8, 29.0, 28.5, 28.8, 28.2, 28.5, 28.3, 28.40] },
+  { symbol: 'ASMX', name: 'x86 Silicon Foundry Ltd', price: 114.00, change: 7.50, high: 128.00, low: 52.00, volume: 431000, desc: 'High-speed pipelined microprocessor fab producing slot-based CPUs and opcode co-processors.', history: [98.0, 99.5, 102.0, 101.5, 104.0, 106.5, 108.0, 107.2, 109.5, 111.0, 110.2, 112.5, 111.8, 113.0, 112.5, 113.8, 113.2, 113.9, 114.00] },
+  { symbol: 'TRAP', name: 'Trapster P2P Network', price: 19.80, change: 4.20, high: 26.00, low: 4.50, volume: 1420000, desc: 'Decentralized peer-to-peer MP3 file swapping protocol with millions of concurrent dial-up nodes.', history: [12.0, 13.5, 14.2, 15.0, 14.8, 16.2, 17.0, 16.5, 17.8, 18.5, 18.0, 19.1, 18.8, 19.2, 19.0, 19.5, 19.2, 19.6, 19.80] },
+  { symbol: 'AETH', name: 'Aethel Dynamics Technologies', price: 19.99, change: -0.40, high: 24.50, low: 8.20, volume: 384000, desc: 'Carlsbad corporate technology contractor specializing in RF acoustic sensors and telemetry relay.', history: [22.0, 21.5, 21.8, 21.0, 20.8, 21.2, 20.5, 20.9, 20.4, 20.6, 20.1, 20.3, 19.8, 20.2, 19.7, 20.0, 19.8, 20.1, 19.99] },
+  { symbol: 'MODT', name: 'Tracker Audio Technologies', price: 35.00, change: 2.10, high: 41.00, low: 12.00, volume: 312000, desc: 'Demoscene software firm behind multi-channel sound trackers, software synths & DSP reverb.', history: [28.0, 29.2, 30.5, 31.0, 30.8, 32.0, 32.5, 33.0, 32.8, 33.5, 34.0, 33.8, 34.2, 34.0, 34.5, 34.8, 34.6, 34.9, 35.00] },
+  { symbol: 'SURR', name: 'Surreal Gaming Software', price: 54.20, change: 1.80, high: 62.00, low: 28.00, volume: 567000, desc: 'Premier 3D action game studio, creators of legendary tournament arena deathmatch series.', history: [45.0, 46.5, 48.0, 49.5, 48.8, 50.2, 51.0, 52.5, 51.8, 52.8, 53.0, 52.5, 53.4, 53.0, 53.8, 53.5, 53.9, 54.1, 54.20] },
+  { symbol: 'FLAR', name: 'FlareLight Media Group', price: 46.50, change: -0.80, high: 59.00, low: 20.00, volume: 298000, desc: 'International demoscene multimedia group publishing 64KB intros, vector cracktros & chiptunes.', history: [51.0, 50.2, 49.5, 49.8, 48.5, 48.0, 48.8, 47.5, 48.0, 47.2, 47.5, 46.8, 47.0, 46.5, 46.8, 46.2, 46.6, 46.4, 46.50] },
+  { symbol: 'PKT', name: 'PacketWorks Telecom Corp', price: 31.25, change: 0.60, high: 38.00, low: 14.50, volume: 442000, desc: 'National ISP backbone provider maintaining high-speed OC-3 and T3 fiber trunks.', history: [26.0, 27.2, 28.0, 28.5, 29.0, 29.8, 29.5, 30.0, 30.4, 30.2, 30.8, 30.5, 31.0, 30.8, 31.2, 31.0, 31.4, 31.1, 31.25] }
 ];
 
 let portfolioState = {
@@ -1712,6 +2442,7 @@ function renderStockTable() {
         <td style="font-family:'Courier New', monospace;">$${positionVal}</td>
         <td>
           <button class="btn-retro" style="font-size:11px; padding:1px 6px;" onclick="openTradeModal('${stock.symbol}')">Trade</button>
+          <button class="btn-retro" style="font-size:11px; padding:1px 6px; margin-left:3px;" onclick="openStockChart('${stock.symbol}')">📊 Chart</button>
         </td>
       </tr>
     `;
@@ -1760,6 +2491,9 @@ function tickStockMarket() {
     stock.change = delta;
     if (stock.price > stock.high) stock.high = stock.price;
     if (stock.price < stock.low) stock.low = stock.price;
+    if (!stock.history) stock.history = [];
+    stock.history.push(stock.price);
+    if (stock.history.length > 20) stock.history.shift();
   });
 
   // Update top banner
@@ -1775,13 +2509,120 @@ function tickStockMarket() {
 
   // Refresh table if active tab is stocks
   const stocksTab = document.getElementById('tab-stocks');
-  if (stocksTab.classList.contains('active')) {
+  if (stocksTab && stocksTab.classList.contains('active')) {
     renderStockTable();
     updatePortfolioStats();
+  }
+
+  // Refresh chart modal if open
+  if (activeChartSymbol && document.getElementById('stockChartModal').style.display === 'flex') {
+    const activeStock = STOCK_DATA.find(s => s.symbol === activeChartSymbol);
+    if (activeStock) renderStockSvgChart(activeStock);
   }
 }
 
 let activeTradeSymbol = 'KLNT';
+let activeChartSymbol = null;
+
+function openStockChart(sym) {
+  playClick();
+  activeChartSymbol = sym;
+  const stock = STOCK_DATA.find(s => s.symbol === sym) || STOCK_DATA[0];
+  renderStockSvgChart(stock);
+  document.getElementById('stockChartModal').style.display = 'flex';
+}
+
+function closeStockChartModal() {
+  document.getElementById('stockChartModal').style.display = 'none';
+  activeChartSymbol = null;
+}
+
+function renderStockSvgChart(stock) {
+  const holding = portfolioState.holdings[stock.symbol] || { shares: 0 };
+  document.getElementById('stockChartModalTitle').textContent = `📈 Stock Volatility Curve: ${stock.symbol}`;
+  document.getElementById('chartStockName').textContent = `${stock.symbol} — ${stock.name}`;
+  document.getElementById('chartCurrentPrice').textContent = `$${stock.price.toFixed(2)}`;
+
+  const isUp = stock.change >= 0;
+  const changeEl = document.getElementById('chartChangeLabel');
+  changeEl.className = isUp ? 'tick-up' : 'tick-down';
+  const pct = ((stock.change / (stock.price - stock.change)) * 100).toFixed(1);
+  changeEl.textContent = `${isUp ? '▲ +' : '▼ '}${Math.abs(stock.change).toFixed(2)} (${isUp ? '+' : ''}${pct}%)`;
+
+  document.getElementById('chart52WkRange').textContent = `$${stock.low.toFixed(2)} - $${stock.high.toFixed(2)}`;
+  document.getElementById('chartVolume').textContent = `${(stock.volume || 450000).toLocaleString()} shares`;
+  document.getElementById('chartCompanyDesc').textContent = stock.desc || 'Public dot-com technology and network corporation.';
+  document.getElementById('chartSharesOwned').textContent = `${holding.shares} shares ($${(holding.shares * stock.price).toFixed(2)})`;
+
+  // Draw SVG sparkline
+  const hist = stock.history && stock.history.length > 1 ? stock.history : [stock.price * 0.95, stock.price];
+  const minVal = Math.min(...hist) * 0.98;
+  const maxVal = Math.max(...hist) * 1.02;
+  const width = 460;
+  const height = 140;
+  const padding = 16;
+
+  const points = hist.map((val, idx) => {
+    const x = padding + (idx / (hist.length - 1)) * (width - padding * 2);
+    const y = height - padding - ((val - minVal) / (maxVal - minVal || 1)) * (height - padding * 2);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
+
+  const strokeColor = isUp ? '#00ff66' : '#ff4444';
+  const fillColor = isUp ? 'rgba(0, 255, 102, 0.15)' : 'rgba(255, 68, 68, 0.15)';
+
+  const firstX = padding;
+  const lastX = width - padding;
+  const bottomY = height - padding;
+  const areaPoints = `${firstX},${bottomY} ${points} ${lastX},${bottomY}`;
+
+  const svgEl = document.getElementById('stockChartSvg');
+  svgEl.innerHTML = `
+    <!-- Grid Lines -->
+    <line x1="${padding}" y1="${padding}" x2="${width - padding}" y2="${padding}" stroke="#333333" stroke-dasharray="2,2" />
+    <line x1="${padding}" y1="${height / 2}" x2="${width - padding}" y2="${height / 2}" stroke="#333333" stroke-dasharray="2,2" />
+    <line x1="${padding}" y1="${bottomY}" x2="${width - padding}" y2="${bottomY}" stroke="#555555" />
+    
+    <!-- Shaded Area -->
+    <polygon points="${areaPoints}" fill="${fillColor}" />
+    <!-- Trend Line -->
+    <polyline points="${points}" fill="none" stroke="${strokeColor}" stroke-width="2.5" />
+    
+    <!-- Labels -->
+    <text x="${padding + 4}" y="${padding + 10}" fill="#888888" font-family="'Courier New', monospace" font-size="10">High: $${maxVal.toFixed(2)}</text>
+    <text x="${padding + 4}" y="${bottomY - 4}" fill="#888888" font-family="'Courier New', monospace" font-size="10">Low: $${minVal.toFixed(2)}</text>
+    <text x="${width - padding - 80}" y="${bottomY - 4}" fill="${strokeColor}" font-family="'Courier New', monospace" font-size="11" font-weight="bold">$${stock.price.toFixed(2)}</text>
+  `;
+}
+
+function openTradeFromChart() {
+  if (!activeChartSymbol) return;
+  const sym = activeChartSymbol;
+  closeStockChartModal();
+  openTradeModal(sym);
+}
+
+function sellAllSharesFromChart() {
+  if (!activeChartSymbol) return;
+  const stock = STOCK_DATA.find(s => s.symbol === activeChartSymbol);
+  const holding = portfolioState.holdings[stock.symbol];
+  if (!holding || holding.shares <= 0) {
+    alert(`You do not own any shares of ${stock.symbol} to sell.`);
+    return;
+  }
+  const qty = holding.shares;
+  const revenue = qty * stock.price;
+  portfolioState.cash += revenue;
+  holding.shares = 0;
+  portfolioState.tradeLog.push(`[${new Date().toLocaleTimeString()}] LIQUIDATED ALL ${qty} shares ${stock.symbol} @ $${stock.price.toFixed(2)} (+$${revenue.toFixed(2)})`);
+  playStockChime();
+  savePortfolio();
+  renderStockTable();
+  updatePortfolioStats();
+  renderStockSvgChart(stock);
+  alert(`Liquidated ${qty} shares of ${stock.symbol} for $${revenue.toFixed(2)}!`);
+}
+
 function openTradeModal(sym) {
   playClick();
   activeTradeSymbol = sym;
@@ -1995,9 +2836,19 @@ function saveClassifieds() {
   localStorage.setItem('knet_portal_classifieds', JSON.stringify(classifiedsData));
 }
 
+function quickFilterAds(term) {
+  playClick();
+  const input = document.getElementById('adSearchInput');
+  if (input) {
+    input.value = term;
+    filterClassifieds();
+  }
+}
+
 function filterClassifieds() {
   const cat = document.getElementById('adCategoryFilter').value;
   const query = document.getElementById('adSearchInput').value.trim().toLowerCase();
+  const sort = document.getElementById('adSortSelect') ? document.getElementById('adSortSelect').value : 'newest';
   const listEl = document.getElementById('classifiedsList');
 
   const filtered = classifiedsData.filter(ad => {
@@ -2007,6 +2858,22 @@ function filterClassifieds() {
       ad.desc.toLowerCase().includes(query) ||
       ad.handle.toLowerCase().includes(query);
     return matchesCat && matchesQuery;
+  });
+
+  filtered.sort((a, b) => {
+    if (sort === 'newest') return (b.id || 0) - (a.id || 0);
+    if (sort === 'price_low') {
+      const pA = parseFloat((a.price.match(/\d+/) || [0])[0]);
+      const pB = parseFloat((b.price.match(/\d+/) || [0])[0]);
+      return pA - pB;
+    }
+    if (sort === 'price_high') {
+      const pA = parseFloat((a.price.match(/\d+/) || [0])[0]);
+      const pB = parseFloat((b.price.match(/\d+/) || [0])[0]);
+      return pB - pA;
+    }
+    if (sort === 'title') return a.title.localeCompare(b.title);
+    return 0;
   });
 
   if (filtered.length === 0) {
@@ -2386,11 +3253,628 @@ function nextTriviaQuestion() {
 }
 
 /* =========================================================================
-   8. TAB NAVIGATION & GENERAL CONTROLS
+   8. COMMUNITY WEB POLL (KILOPOLL '99: VOICE OF THE WEB)
+   ========================================================================= */
+const POLL_DATA = {
+  y2k: {
+    question: "Y2K Millennium Bug: What is your survival readiness posture for midnight 1999?",
+    options: [
+      "Fully patched BIOS, audited RTC clocks & verified tape backups",
+      "Stockpiled canned soup, flashlights & emergency boot floppies",
+      "Skeptical: It's media hype, system clocks will tick over fine",
+      "Disconnecting all RJ-11 modem telephone cords at 23:59:00"
+    ],
+    baseVotes: [842, 412, 195, 320]
+  },
+  gpu: {
+    question: "The 1999 3D Accelerator Holy War: Which chipset dominates your gaming rig?",
+    options: [
+      "3dfx Voodoo3 3000 AGP (Glide supremacy & silky framerates)",
+      "NVIDIA RIVA TNT2 Ultra (32-bit color rendering powerhouse)",
+      "Matrox Millennium G400 MAX (DualHead & environment bump mapping)",
+      "3dfx Voodoo2 SLI Rig (Dual texelfx raw horsepower)"
+    ],
+    baseVotes: [1120, 680, 240, 530]
+  },
+  shooters: {
+    question: "Ultimate 1999 Multiplayer Tournament Arena Showdown?",
+    options: [
+      "Surreal Tournament (Shock rifle combos & instagib deathmatch)",
+      "Tremor III Arena (Rocket jumping & railgun twitch precision)",
+      "Half-Cycle Deathmatch (Crowbar & gluon gun radioactive chaos)",
+      "VoidCraft Brood Wars (12-pool zergling rush & carrier fleets)"
+    ],
+    baseVotes: [960, 1040, 720, 480]
+  },
+  browsers: {
+    question: "Primary Web Browser of Choice in late 1999?",
+    options: [
+      "Netscape Communicator 4.7 (Netcenter directory loyalty)",
+      "Microsoft Internet Explorer 5.0 (Trident engine & ActiveX)",
+      "Opera 3.6 (Lightweight multi-document speed demon)",
+      "Lynx 2.8 (Pure text VT100 terminal purity)"
+    ],
+    baseVotes: [780, 890, 310, 140]
+  }
+};
+
+let activePollTopic = 'y2k';
+let userPollVotes = {}; // { 'y2k': optionIndex }
+let pollViewResults = false;
+
+function loadPollState() {
+  const saved = localStorage.getItem('knet_portal_poll_votes');
+  if (saved) {
+    try { userPollVotes = JSON.parse(saved); } catch(e) {}
+  }
+}
+
+function savePollState() {
+  localStorage.setItem('knet_portal_poll_votes', JSON.stringify(userPollVotes));
+}
+
+function changePollTopic(topicKey) {
+  playClick();
+  activePollTopic = topicKey;
+  pollViewResults = (userPollVotes[topicKey] !== undefined);
+  renderPoll(topicKey);
+}
+
+function renderPoll(topicKey) {
+  const poll = POLL_DATA[topicKey] || POLL_DATA.y2k;
+  const qEl = document.getElementById('pollQuestionText');
+  if (qEl) qEl.textContent = poll.question;
+  const optContainer = document.getElementById('pollOptionsContainer');
+  const resContainer = document.getElementById('pollResultsContainer');
+  const voteBtn = document.getElementById('pollVoteBtn');
+
+  const userVote = userPollVotes[topicKey];
+  const hasVoted = (userVote !== undefined);
+
+  // Compute vote totals
+  const votes = [...poll.baseVotes];
+  if (hasVoted) votes[userVote]++;
+  const totalVotes = votes.reduce((a, b) => a + b, 0);
+  const countEl = document.getElementById('pollVoteCount');
+  if (countEl) countEl.textContent = `${totalVotes.toLocaleString()} votes`;
+
+  if (pollViewResults || hasVoted) {
+    if (optContainer) optContainer.style.display = 'none';
+    if (resContainer) resContainer.style.display = 'block';
+    if (voteBtn) voteBtn.style.display = 'none';
+
+    let resHtml = '';
+    poll.options.forEach((opt, idx) => {
+      const vCount = votes[idx];
+      const pct = Math.round((vCount / totalVotes) * 100);
+      const isUserChoice = (userVote === idx);
+      resHtml += `
+        <div class="poll-bar-wrap">
+          <div class="poll-bar-label">
+            <span>${isUserChoice ? '⭐ <strong>' : ''}${escapeHtml(opt)}${isUserChoice ? ' (Your Vote)</strong>' : ''}</span>
+            <span><strong>${pct}%</strong> (${vCount.toLocaleString()})</span>
+          </div>
+          <div class="poll-bar-track">
+            <div class="poll-bar-fill" style="width:${pct}%;"></div>
+          </div>
+        </div>
+      `;
+    });
+    if (resContainer) resContainer.innerHTML = resHtml;
+  } else {
+    if (optContainer) optContainer.style.display = 'block';
+    if (resContainer) resContainer.style.display = 'none';
+    if (voteBtn) voteBtn.style.display = 'inline-block';
+
+    let optHtml = '';
+    poll.options.forEach((opt, idx) => {
+      optHtml += `
+        <div class="poll-option-row">
+          <input type="radio" name="knetPollOpt" id="pollOpt_${idx}" value="${idx}" ${idx === 0 ? 'checked' : ''} />
+          <label for="pollOpt_${idx}">${escapeHtml(opt)}</label>
+        </div>
+      `;
+    });
+    if (optContainer) optContainer.innerHTML = optHtml;
+  }
+}
+
+function submitPollVote(e) {
+  e.preventDefault();
+  const selected = document.querySelector('input[name="knetPollOpt"]:checked');
+  if (!selected) {
+    alert("Please select an option before voting.");
+    return;
+  }
+  const idx = parseInt(selected.value);
+  userPollVotes[activePollTopic] = idx;
+  savePollState();
+  playSuccessChime();
+  pollViewResults = true;
+  renderPoll(activePollTopic);
+}
+
+function togglePollView() {
+  playClick();
+  pollViewResults = !pollViewResults;
+  renderPoll(activePollTopic);
+}
+
+/* =========================================================================
+   9. WEBMASTER SITE SUBMISSION ENGINE (ADD YOUR URL)
+   ========================================================================= */
+function openSubmitSiteModal() {
+  playClick();
+  document.getElementById('submitSiteModal').style.display = 'flex';
+}
+
+function closeSubmitSiteModal() {
+  document.getElementById('submitSiteModal').style.display = 'none';
+}
+
+function handleSubmitSite(e) {
+  e.preventDefault();
+  const title = document.getElementById('siteInputTitle').value.trim();
+  let url = document.getElementById('siteInputUrl').value.trim();
+  const category = document.getElementById('siteInputCategory').value;
+  const handle = document.getElementById('siteInputHandle').value.trim();
+  const tags = document.getElementById('siteInputTags').value.trim();
+  const desc = document.getElementById('siteInputDesc').value.trim();
+
+  if (!title || !url || !handle || !desc) {
+    alert("Please complete all site submission fields.");
+    return;
+  }
+
+  // Format URL if needed
+  if (!url.startsWith('kweb://') && !url.startsWith('/web/') && !url.startsWith('/apps/')) {
+    url = 'kweb://' + url.replace(/^https?:\/\//, '');
+  }
+
+  const siteId = 'custom-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 16);
+  const newSite = {
+    id: siteId,
+    title: title,
+    folder: category,
+    url: url,
+    desc: `${desc} [Submitted by ~${handle}]`,
+    tags: tags.toLowerCase() + ',custom,webmaster'
+  };
+
+  APPS_DATABASE.push(newSite);
+
+  // Persist to custom sites storage
+  let customSites = [];
+  try {
+    customSites = JSON.parse(localStorage.getItem('knet_portal_custom_sites') || '[]');
+  } catch(err) {}
+  customSites.push(newSite);
+  localStorage.setItem('knet_portal_custom_sites', JSON.stringify(customSites));
+
+  playSuccessChime();
+  closeSubmitSiteModal();
+  alert(`Thank you, ~${handle}! Your site "${title}" has been indexed into KiloSearch 1.0 and registered in the KiloNet directory!`);
+  
+  // Immediately show in search results
+  executeSearch(title.toLowerCase());
+}
+
+/* =========================================================================
+   10. KILOSPEED '99 - DIAL-UP ACOUSTIC SPEED TEST & BAUD BENCHMARK
+   ========================================================================= */
+const SPEED_PROFILES = {
+  '56000': { name: "V.90 / K56flex", kbps: 56.0, bytesSec: 6850, latency: 125, snr: 44.2, comment: "Golden standard 1999 dial-up! Capable of full-speed MP3 and JPEG surfing." },
+  '33600': { name: "V.34+ Enhanced", kbps: 33.6, bytesSec: 4100, latency: 148, snr: 39.8, comment: "Solid copper performance. Good for IRC, BBS door games, and USENET news." },
+  '28800': { name: "V.34 Standard", kbps: 28.8, bytesSec: 3500, latency: 168, snr: 36.5, comment: "Standard mid-90s baud rate. Adequate for HTML browsing with images disabled." },
+  '14400': { name: "V.32bis High Speed", kbps: 14.4, bytesSec: 1750, latency: 220, snr: 31.0, comment: "Noisy line or vintage Rockwell modem. Patience required for large downloads!" },
+  '64000': { name: "ISDN BRI Single-B", kbps: 64.0, bytesSec: 7900, latency: 45, snr: 58.0, comment: "Pure digital ISDN channel! Zero analog line hiss and lightning-fast pings." },
+  '128000': { name: "ISDN Dual Bonded", kbps: 128.0, bytesSec: 15800, latency: 38, snr: 60.5, comment: "Dual 64k B-channels bonded via Multilink PPP. Power user luxury setup!" },
+  '1544000': { name: "T1 Leased Line", kbps: 1544.0, bytesSec: 192000, latency: 18, snr: 64.0, comment: "Corporate enterprise trunk (24 channels @ 64k). Ultimate 1999 speed!" }
+};
+
+let benchmarkRunning = false;
+
+function setLedState(ledId, stateClass) {
+  const el = document.getElementById(ledId);
+  if (!el) return;
+  el.className = 'led-dot ' + (stateClass || '');
+}
+
+function resetAllModemLeds() {
+  ['ledMR', 'ledTR', 'ledCD', 'ledSD', 'ledRD', 'ledHS', 'ledOH', 'ledAA'].forEach(id => {
+    setLedState(id, '');
+  });
+}
+
+function appendTerminalLog(text) {
+  const term = document.getElementById('modemTerminalLog');
+  if (term) {
+    term.innerHTML += '<br>' + escapeHtml(text);
+    term.scrollTop = term.scrollHeight;
+  }
+}
+
+function handleStandardChange() {
+  recalcDownloadTimes();
+}
+
+function runAcousticSpeedTest() {
+  if (benchmarkRunning) return;
+  benchmarkRunning = true;
+  initAudio();
+  playClick();
+
+  const stdKey = document.getElementById('modemStandardSelect').value;
+  const profile = SPEED_PROFILES[stdKey] || SPEED_PROFILES['56000'];
+
+  const runBtn = document.getElementById('runBenchmarkBtn');
+  runBtn.disabled = true;
+  document.getElementById('modemStatusText').textContent = "OFF HOOK / DIALING...";
+  document.getElementById('modemStatusText').style.color = "#ffaa00";
+
+  resetAllModemLeds();
+  setLedState('ledMR', 'active-red');
+  setLedState('ledTR', 'active-green');
+  setLedState('ledOH', 'active-red');
+
+  appendTerminalLog(`ATDT 1-800-555-5638`);
+
+  // Stage 1: Dial tone (dual tone 350+440Hz for 600ms)
+  playDualTone(350, 440, 0.6, 0.12);
+
+  modemBenchmarkTimeout = setTimeout(() => {
+    // Stage 2: DTMF dialing sequence
+    const dtmfPairs = [
+      [697, 1209], [852, 1336], [941, 1336], [941, 1336],
+      [770, 1336], [770, 1336], [770, 1336], [852, 1477]
+    ];
+    dtmfPairs.forEach((pair, i) => {
+      setTimeout(() => {
+        playDualTone(pair[0], pair[1], 0.06, 0.15);
+        setLedState('ledSD', i % 2 === 0 ? 'active-green' : '');
+      }, i * 75);
+    });
+
+    modemBenchmarkTimeout = setTimeout(() => {
+      // Stage 3: Ringback
+      appendTerminalLog("RINGING...");
+      setLedState('ledAA', 'active-amber');
+      playDualTone(440, 480, 0.7, 0.12);
+
+      modemBenchmarkTimeout = setTimeout(() => {
+        // Stage 4: V.90 Answer Tone & Carrier FSK Warble
+        appendTerminalLog("CONNECTING... NEGOTIATING MODULATION [V.90 / K56flex]");
+        document.getElementById('modemStatusText').textContent = "CARRIER DETECTED / TRAINING...";
+        setLedState('ledCD', 'active-green');
+        setLedState('ledHS', 'active-amber');
+
+        // Carrier chirp
+        if (audioEnabled && audioCtx) {
+          const now = audioCtx.currentTime;
+          const carrier = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          carrier.type = 'sawtooth';
+          carrier.frequency.setValueAtTime(1200, now);
+          carrier.frequency.linearRampToValueAtTime(2400, now + 0.5);
+          carrier.frequency.linearRampToValueAtTime(1800, now + 0.8);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+          carrier.connect(gain);
+          gain.connect(masterGain);
+          carrier.start(now);
+          carrier.stop(now + 0.82);
+          modemOscillatorBank.push(carrier);
+        }
+
+        modemBenchmarkTimeout = setTimeout(() => {
+          // Stage 5: Phase Scrambler Equalizer Noise Burst
+          appendTerminalLog("TRAINING LINE EQUALIZER & ECHO CANCELLATION...");
+          setLedState('ledRD', 'active-green');
+          playNoiseBurst(0.9, 1800);
+
+          modemBenchmarkTimeout = setTimeout(() => {
+            // Stage 6: Final Connection Lock
+            stopModemAudio();
+            playSuccessChime();
+
+            const actualBaud = Math.round(profile.kbps * 1000 - Math.random() * 2000);
+            const actualKBps = (actualBaud / 8000).toFixed(2);
+            const latency = profile.latency + Math.round(Math.random() * 12);
+            const snr = (profile.snr - Math.random() * 1.5).toFixed(1);
+
+            document.getElementById('metricBaud').textContent = `${actualBaud.toLocaleString()} bps`;
+            document.getElementById('metricThroughput').textContent = `${actualKBps} KB/s`;
+            document.getElementById('metricLatency').textContent = `${latency} ms`;
+            document.getElementById('metricSnr').textContent = `${snr} dB`;
+
+            appendTerminalLog(`CONNECT ${actualBaud} / V.42bis / LAPM / COMPRESSION ENABLED`);
+            appendTerminalLog(`Protocol: ${profile.name} // Line Quality: EXCELLENT (${snr} dB)`);
+            appendTerminalLog(`Gateway IP: 10.19.99.1 [K-NET PRIMARY POP] // MTU: 1500`);
+
+            document.getElementById('modemStatusText').textContent = `ONLINE @ ${actualBaud} BPS`;
+            document.getElementById('modemStatusText').style.color = "#008000";
+
+            setLedState('ledCD', 'active-green');
+            setLedState('ledRD', 'active-green');
+            setLedState('ledSD', 'active-green');
+            setLedState('ledHS', 'active-green');
+
+            benchmarkRunning = false;
+            runBtn.disabled = false;
+          }, 950);
+        }, 850);
+      }, 750);
+    }, 650);
+  }, 650);
+}
+
+function abortSpeedTest() {
+  stopModemAudio();
+  benchmarkRunning = false;
+  resetAllModemLeds();
+  document.getElementById('runBenchmarkBtn').disabled = false;
+  document.getElementById('modemStatusText').textContent = "DISCONNECTED / ON HOOK";
+  document.getElementById('modemStatusText').style.color = "#cc0000";
+  appendTerminalLog("+++ ATH0");
+  appendTerminalLog("NO CARRIER // DISCONNECTED");
+}
+
+function recalcDownloadTimes() {
+  const sizeInput = parseFloat(document.getElementById('calcFileSizeInput').value) || 0;
+  const unit = document.getElementById('calcSizeUnitSelect').value;
+  const sizeInBytes = unit === 'MB' ? sizeInput * 1024 * 1024 : sizeInput * 1024;
+
+  const tbody = document.getElementById('calcTableBody');
+  if (!tbody) return;
+  let html = '';
+
+  Object.keys(SPEED_PROFILES).forEach(key => {
+    const p = SPEED_PROFILES[key];
+    const totalSecs = sizeInBytes / p.bytesSec;
+    let timeStr = '';
+    if (totalSecs < 60) {
+      timeStr = `${Math.ceil(totalSecs)} seconds`;
+    } else if (totalSecs < 3600) {
+      const mins = Math.floor(totalSecs / 60);
+      const secs = Math.ceil(totalSecs % 60);
+      timeStr = `${mins}m ${secs}s`;
+    } else {
+      const hrs = Math.floor(totalSecs / 3600);
+      const mins = Math.ceil((totalSecs % 3600) / 60);
+      timeStr = `${hrs}h ${mins}m`;
+    }
+
+    html += `
+      <tr>
+        <td><strong>${escapeHtml(p.name)}</strong></td>
+        <td>${p.kbps >= 1000 ? (p.kbps/1000).toFixed(2) + ' Mbps' : p.kbps + ' kbps'}</td>
+        <td style="font-family:'Courier New', monospace;">${(p.bytesSec / 1024).toFixed(2)} KB/s</td>
+        <td style="font-weight:bold; color:var(--navy-dark);">${timeStr}</td>
+        <td style="font-size:11px; color:#555;">${escapeHtml(p.comment)}</td>
+      </tr>
+    `;
+  });
+  tbody.innerHTML = html;
+}
+
+function setCalcPreset(size, unit) {
+  playClick();
+  document.getElementById('calcFileSizeInput').value = size;
+  document.getElementById('calcSizeUnitSelect').value = unit;
+  recalcDownloadTimes();
+}
+
+/* =========================================================================
+   11. 1999 SILICON ZODIAC & COMPUTING HOROSCOPES
+   ========================================================================= */
+const ZODIAC_DATA = {
+  aries: {
+    title: "♈ Aries (The Overclocker)",
+    dates: "Mar 21 - Apr 19",
+    element: "Silicon & Copper",
+    offset: "0x1999:0x00A0",
+    baud: "56,000 bps V.90",
+    compat: "Leo (The Demoscener)",
+    nodeName: "~neon_rider's Shrine",
+    nodeUrl: "/web/users/neon_rider.html",
+    mood: 94,
+    prophecy: "Your multiplier settings are favorable today. The celestial bus clock rises effortlessly from 66MHz to 100MHz with zero thermal throttling. Take bold architectural risks in your assembly code, but keep a watchful eye on your Northbridge heat sinks."
+  },
+  taurus: {
+    title: "♉ Taurus (The FAT32 Custodian)",
+    dates: "Apr 20 - May 20",
+    element: "Ferrite & Magnetic Oxide",
+    offset: "0x00FF:0x0020",
+    baud: "33,600 bps V.34",
+    compat: "Virgo (The Code Inspector)",
+    nodeName: "x86 Opcode Temple",
+    nodeUrl: "/web/asm_temple.html",
+    mood: 88,
+    prophecy: "A steady, grounded day for disk maintenance. Run Scandisk and defragment your secondary IDE drive before midnight. Your backup DAT tapes align with Jupiter, protecting your cluster chains from corruption."
+  },
+  gemini: {
+    title: "♊ Gemini (The Dual Celeron)",
+    dates: "May 21 - Jun 20",
+    element: "Silicon & Dual Die Silver",
+    offset: "0x07F0:0x1999",
+    baud: "128,000 bps Dual-ISDN",
+    compat: "Libra (The Socket Balancer)",
+    nodeName: "CyberCafe '99 Lounge",
+    nodeUrl: "/web/cybercafe.html",
+    mood: 91,
+    prophecy: "Dual threads converge in harmony on your ABIT BP6 dual-socket board. Multi-tasking between mIRC chat channels and background MP3 encoding yields maximum productivity. Beware split-brain race conditions in your socket daemons."
+  },
+  cancer: {
+    title: "♋ Cancer (The Hardware Firewall)",
+    dates: "Jun 21 - Jul 22",
+    element: "Shielded Copper & Lead",
+    offset: "0x1019:0x9904",
+    baud: "56,000 bps V.90",
+    compat: "Scorpio (The Hex Cryptographer)",
+    nodeName: "10.19.99.4 Carlsbad Intranet",
+    nodeUrl: "/web/classified.html",
+    mood: 85,
+    prophecy: "Your emotional packet filter is fortified. Reject unauthorized ICMP ping probes from unfamiliar subnets. A secret memo or internal directory cache will reveal itself if you inspect non-routable gateways."
+  },
+  leo: {
+    title: "♌ Leo (The Demoscene Showman)",
+    dates: "Jul 23 - Aug 22",
+    element: "Phosphor & Gold Leaf",
+    offset: "0x2A00:0x0118",
+    baud: "56,000 bps V.90",
+    compat: "Sagittarius (The Webring Surfer)",
+    nodeName: "0xRELEASE Scene Vault",
+    nodeUrl: "/web/warez.html",
+    mood: 98,
+    prophecy: "Your 3D Gouraud-shading routines radiate brilliance. A crowded demoparty compo awaits your 64KB vector intro. Set your Glide rasterizer to full screen and let the crowd marvel at your smooth 60 FPS transform pipeline."
+  },
+  virgo: {
+    title: "♍ Virgo (The Code Inspector)",
+    dates: "Aug 23 - Sep 22",
+    element: "Pure Quartz & Optical Glass",
+    offset: "0x0000:0x7C00",
+    baud: "64,000 bps ISDN BRI",
+    compat: "Capricorn (The Y2K Auditor)",
+    nodeName: "x86 Opcode Temple",
+    nodeUrl: "/web/asm_temple.html",
+    mood: 89,
+    prophecy: "Zero warnings, zero lint errors! Your rigorous adherence to memory bounds and strict 999KB size constraints pleases the compiler gods. Every pointer is dereferenced safely and every allocated heap byte is accounted for."
+  },
+  libra: {
+    title: "♎ Libra (The Socket Balancer)",
+    dates: "Sep 23 - Oct 22",
+    element: "Platinum & Nichrome Alloy",
+    offset: "0x1999:0x1999",
+    baud: "56,000 bps V.90",
+    compat: "Gemini (The Dual Celeron)",
+    nodeName: "KiloNet Central Portal",
+    nodeUrl: "/web/portal.html",
+    mood: 93,
+    prophecy: "Equilibrium restored between client and server. Round-robin load balancing distributes packet traffic with poetic grace. A harmonious compromise will settle a heated flame war on USENET comp.sys."
+  },
+  scorpio: {
+    title: "♏ Scorpio (The Hex Cryptographer)",
+    dates: "Oct 23 - Nov 21",
+    element: "Obsidian & Cobalt Ferrite",
+    offset: "0x007F:0xDEAD",
+    baud: "56,000 bps V.90",
+    compat: "Pisces (The Waveform Synthesizer)",
+    nodeName: "Subterranean Darknet Terminal",
+    nodeUrl: "/web/darknet.html",
+    mood: 96,
+    prophecy: "Subterranean packet traces disclose quarantined secrets. Encrypted payloads with 2048-bit keys bend to your cryptographic intuition. Guard your private keys closely—someone is sniffing port 23."
+  },
+  sagittarius: {
+    title: "♐ Sagittarius (The Webring Surfer)",
+    dates: "Nov 22 - Dec 21",
+    element: "Amber Resin & Pure Glass",
+    offset: "0x2000:0x0001",
+    baud: "128,000 bps Dual-ISDN",
+    compat: "Aries (The Overclocker)",
+    nodeName: "Central Webring Hub",
+    nodeUrl: "/web/webring.html",
+    mood: 95,
+    prophecy: "An endless highway of blue underlined hyperlinks beckons! Click the [Random Ring Jump] teleporter and discover uncharted virtual communities, underground web shrines, and lost midi tracks."
+  },
+  capricorn: {
+    title: "♑ Capricorn (The Y2K Auditor)",
+    dates: "Dec 22 - Jan 19",
+    element: "Solid Tungsten & Carbon",
+    offset: "0x1999:0x1231",
+    baud: "33,600 bps V.34",
+    compat: "Taurus (The FAT32 Custodian)",
+    nodeName: "Fleet Contributor Portal",
+    nodeUrl: "/apps/contribute.html",
+    mood: 87,
+    prophecy: "Disciplined preparations guarantee survival when the clock rolls over to 2000. Your mainframes are patched, four-digit year algorithms verified, and diesel backup generators fueled. The fleet endures through your diligence."
+  },
+  aquarius: {
+    title: "♒ Aquarius (The Protocol Architect)",
+    dates: "Jan 20 - Feb 18",
+    element: "Superconducting Tin & Indium",
+    offset: "0x0001:0x0000",
+    baud: "1,544,000 bps T1 Leased",
+    compat: "Gemini (The Dual Celeron)",
+    nodeName: "Deep Core Ghost Terminal",
+    nodeUrl: "/web/deep_core.html",
+    mood: 97,
+    prophecy: "You envision revolutionary decentralized peer-to-peer protocols that will shape the next millennium. Draft your RFC specifications today; the open-source community will celebrate your distributed architecture."
+  },
+  pisces: {
+    title: "♓ Pisces (The Waveform Synthesizer)",
+    dates: "Feb 19 - Mar 20",
+    element: "Beryllium Copper & Silver Wire",
+    offset: "0x1999:0x07D0",
+    baud: "56,000 bps V.90",
+    compat: "Scorpio (The Hex Cryptographer)",
+    nodeName: "Echo Subsystem Acoustic Lab",
+    nodeUrl: "/web/echo_subsystem.html",
+    mood: 90,
+    prophecy: "Harmonic overtones resonate deeply within your soul. Tune your FM carrier frequency to exactly 1999Hz. The warm SPC700 stereo delay reflections carry mysterious messages from across the void."
+  }
+};
+
+let activeZodiacKey = 'aries';
+
+function renderZodiacButtons() {
+  const container = document.getElementById('zodiacBtnGrid');
+  if (!container) return;
+  let html = '';
+  Object.keys(ZODIAC_DATA).forEach(key => {
+    const z = ZODIAC_DATA[key];
+    const isAct = key === activeZodiacKey ? 'active' : '';
+    html += `
+      <button class="zodiac-btn ${isAct}" id="zodiacBtn_${key}" onclick="selectZodiacSign('${key}')">
+        <strong>${z.title.split(' ')[0]}</strong><br>
+        <span style="font-size:10px;">${z.title.split(' ')[1]}</span>
+      </button>
+    `;
+  });
+  container.innerHTML = html;
+}
+
+function selectZodiacSign(key) {
+  triggerFmChime(880, 1.5, 2.0, 0.45);
+  activeZodiacKey = key;
+  const z = ZODIAC_DATA[key] || ZODIAC_DATA.aries;
+
+  document.querySelectorAll('.zodiac-btn').forEach(btn => btn.classList.remove('active'));
+  const btn = document.getElementById(`zodiacBtn_${key}`);
+  if (btn) btn.classList.add('active');
+
+  const titleEl = document.getElementById('oracleSignTitle');
+  if (titleEl) titleEl.textContent = z.title;
+  const dateEl = document.getElementById('oracleDateRange');
+  if (dateEl) dateEl.textContent = z.dates;
+  const hexEl = document.getElementById('oracleHexBadge');
+  if (hexEl) hexEl.textContent = `OFFSET: ${z.offset}`;
+  const prophEl = document.getElementById('oracleProphecyText');
+  if (prophEl) prophEl.textContent = z.prophecy;
+  const elemEl = document.getElementById('oracleElement');
+  if (elemEl) elemEl.textContent = z.element;
+  const baudEl = document.getElementById('oracleBaud');
+  if (baudEl) baudEl.textContent = z.baud;
+  const compatEl = document.getElementById('oracleCompat');
+  if (compatEl) compatEl.textContent = z.compat;
+
+  const nodeLink = document.getElementById('oracleNodeLink');
+  if (nodeLink) {
+    nodeLink.textContent = z.nodeName;
+    nodeLink.href = z.nodeUrl;
+  }
+
+  const moodFill = document.getElementById('oracleMoodFill');
+  if (moodFill) moodFill.style.width = `${z.mood}%`;
+  const moodPct = document.getElementById('oracleMoodPct');
+  if (moodPct) moodPct.textContent = `${z.mood}%`;
+}
+
+/* =========================================================================
+   12. TAB NAVIGATION & GENERAL CONTROLS
    ========================================================================= */
 function switchPortalTab(tabName) {
   playClick();
-  const tabs = ['directory', 'stocks', 'classifieds', 'weather', 'trivia'];
+  const tabs = ['directory', 'stocks', 'classifieds', 'weather', 'speedtest', 'horoscope', 'trivia'];
   tabs.forEach(t => {
     const navEl = document.getElementById(`tabNav-${t}`);
     const contentEl = document.getElementById(`tab-${t}`);
@@ -2410,6 +3894,11 @@ function switchPortalTab(tabName) {
     filterClassifieds();
   } else if (tabName === 'weather') {
     updateWeatherDisplay();
+  } else if (tabName === 'speedtest') {
+    recalcDownloadTimes();
+  } else if (tabName === 'horoscope') {
+    renderZodiacButtons();
+    selectZodiacSign(activeZodiacKey);
   } else if (tabName === 'trivia') {
     renderTriviaQuestion();
   }
@@ -2423,6 +3912,10 @@ const WEBRING_SITES = [
   '/web/cybercafe.html',
   '/web/users/neon_rider.html',
   '/web/asm_temple.html',
+  '/web/echo_subsystem.html',
+  '/web/classified.html',
+  '/web/deep_core.html',
+  '/web/darknet.html',
   '/apps/contribute.html',
   '/apps/krogue.html',
   '/apps/kbbs.html'
@@ -2446,7 +3939,7 @@ function escapeHtml(str) {
 }
 
 /* =========================================================================
-   9. INITIALIZATION
+   13. INITIALIZATION
    ========================================================================= */
 window.addEventListener('DOMContentLoaded', () => {
   // Visitor counter
@@ -2457,9 +3950,11 @@ window.addEventListener('DOMContentLoaded', () => {
   counterEl.textContent = currentHits.toString().padStart(7, '0');
 
   // Load state
+  loadCustomSites();
   loadPortfolio();
   loadClassifieds();
   loadTriviaState();
+  loadPollState();
 
   // Initial renders
   renderStockTable();
@@ -2467,6 +3962,9 @@ window.addEventListener('DOMContentLoaded', () => {
   filterClassifieds();
   updateWeatherDisplay();
   renderTriviaQuestion();
+  renderPoll(activePollTopic);
+  recalcDownloadTimes();
+  renderZodiacButtons();
 
   // Start real-time stock ticker (every 3.5 seconds)
   setInterval(tickStockMarket, 3500);
