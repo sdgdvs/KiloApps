@@ -263,31 +263,33 @@
         
         .notification {
             position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%) translateY(20px);
+            bottom: 20px;
+            right: 20px;
+            left: auto;
+            transform: translateY(20px);
             background: var(--primary-accent);
             color: white;
-            padding: 12px 24px;
-            border-radius: 30px;
-            font-size: 14px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 13px;
             font-weight: 500;
             opacity: 0;
-            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
             pointer-events: none;
-            box-shadow: 0 8px 24px rgba(108, 92, 231, 0.4);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             display: flex;
             align-items: center;
             gap: 8px;
-            z-index: 1000;
-            max-width: 90vw;
-            text-align: center;
+            z-index: 3000;
+            max-width: min(380px, calc(100vw - 40px));
+            text-align: left;
             user-select: none;
         }
         
         .notification.show {
             opacity: 1;
-            transform: translateX(-50%) translateY(0);
+            transform: translateY(0);
             pointer-events: auto;
             cursor: pointer;
         }
@@ -295,11 +297,13 @@
         .notification.error {
             background: var(--danger-accent);
             box-shadow: 0 8px 24px rgba(255, 71, 87, 0.4);
+            border-color: rgba(255, 255, 255, 0.25);
         }
         
         .notification.success {
             background: var(--success-color);
             box-shadow: 0 8px 24px rgba(46, 213, 115, 0.4);
+            border-color: rgba(255, 255, 255, 0.25);
         }
 
         @media (max-width: 620px) {
@@ -512,6 +516,21 @@
         </div>
     </div>
 
+    <!-- In-App Delete Confirmation Modal -->
+    <div class="modal-overlay" id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title" style="display:none;">
+        <div class="modal-content" style="max-width: 440px;">
+            <h3 id="confirm-title" style="color: var(--danger-accent); display:flex; align-items:center; gap:8px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                Delete Secret
+            </h3>
+            <p id="confirm-message" style="margin: 12px 0 20px 0; font-size:14px; line-height:1.5;">Are you sure you want to permanently delete this secret? This action cannot be undone.</p>
+            <div style="display:flex; gap:12px;">
+                <button class="btn secondary close-modal" style="flex:1; margin-top:0;" onclick="closeConfirmModal()">Cancel (Esc)</button>
+                <button class="btn danger close-modal" style="flex:1; margin-top:0;" id="confirm-action-btn" onclick="executePendingDelete()">Delete (Enter)</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Core State
         let masterKey = null;
@@ -584,6 +603,53 @@
             if (passInput && passInput.offsetParent !== null) passInput.focus();
         }
 
+        // In-App Confirm Delete Modal
+        let pendingDeleteId = null;
+
+        function showConfirmModal(id, title = '') {
+            pendingDeleteId = id;
+            const tutModal = document.getElementById('tutorial-modal');
+            if (tutModal && tutModal.classList.contains('active')) tutModal.classList.remove('active');
+            const helpModal = document.getElementById('help-modal');
+            if (helpModal && helpModal.classList.contains('active')) helpModal.classList.remove('active');
+
+            const modal = document.getElementById('confirm-modal');
+            const msg = document.getElementById('confirm-message');
+            if (msg) {
+                msg.textContent = title ? `Are you sure you want to permanently delete "${title}"? This action cannot be undone.` : 'Are you sure you want to permanently delete this secret? This action cannot be undone.';
+            }
+            if (!modal) return;
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('active');
+                const btn = document.getElementById('confirm-action-btn');
+                if (btn) btn.focus();
+            }, 10);
+        }
+
+        function closeConfirmModal() {
+            pendingDeleteId = null;
+            const modal = document.getElementById('confirm-modal');
+            if (modal) {
+                modal.classList.remove('active');
+                setTimeout(() => modal.style.display = 'none', 300);
+            }
+        }
+
+        async function executePendingDelete() {
+            if (!pendingDeleteId) {
+                closeConfirmModal();
+                return;
+            }
+            const id = pendingDeleteId;
+            closeConfirmModal();
+            if (editingSecretId === id) editingSecretId = null;
+            vaultData = vaultData.filter(s => s.id !== id);
+            await saveVaultToStorage();
+            renderSecrets();
+            showNotification("Secret permanently deleted", "success");
+        }
+
         // Safe Storage Helpers
         function safeStorageGet(key, fallback = null) {
             try {
@@ -620,12 +686,27 @@
                 await saveVaultToStorage();
             }
             const themeName = document.getElementById('theme-select') ? document.getElementById('theme-select').value : 'dark';
+            const activeView = document.querySelector('.view-section.active');
+            const currentViewId = activeView ? activeView.id : 'view-auth';
+            const searchInput = document.getElementById('search-input');
+            const newTitle = document.getElementById('new-secret-title');
+            const newVal = document.getElementById('new-secret-value');
+            const newCat = document.getElementById('new-secret-category');
+
             const snapshot = {
-                version: 1,
+                version: 2,
                 timestamp: Date.now(),
                 vaultData: safeStorageGet(STORAGE_KEY, null),
                 theme: themeName,
-                autolock: autoLockTimeout
+                autolock: autoLockTimeout,
+                activeView: currentViewId,
+                searchQuery: searchInput ? searchInput.value : '',
+                draft: (currentViewId === 'view-add') ? {
+                    title: newTitle ? newTitle.value : '',
+                    value: newVal ? newVal.value : '',
+                    category: newCat ? newCat.value : 'General',
+                    editingSecretId: editingSecretId
+                } : null
             };
             if (safeStorageSet('kvault_quicksave', snapshot)) {
                 showNotification("💾 Vault snapshot quicksaved [F5]");
@@ -666,7 +747,29 @@
                             const decrypted = await decryptData(parsed.vault, masterKey);
                             if (decrypted !== null) {
                                 vaultData = JSON.parse(decrypted);
-                                showVault();
+                                if (snapshot.searchQuery) {
+                                    const searchInput = document.getElementById('search-input');
+                                    if (searchInput) {
+                                        searchInput.value = snapshot.searchQuery;
+                                        filterSecrets();
+                                    }
+                                }
+                                if (snapshot.activeView === 'view-add' && snapshot.draft) {
+                                    editingSecretId = snapshot.draft.editingSecretId || null;
+                                    const heading = document.getElementById('add-secret-heading');
+                                    const saveBtn = document.getElementById('save-secret-btn');
+                                    if (heading) heading.textContent = editingSecretId ? "Edit Secret" : "Add New Secret";
+                                    if (saveBtn) saveBtn.textContent = editingSecretId ? "Update Secret" : "Save to Vault";
+                                    const catElem = document.getElementById('new-secret-category');
+                                    if (catElem) catElem.value = snapshot.draft.category || 'General';
+                                    const titleElem = document.getElementById('new-secret-title');
+                                    if (titleElem) titleElem.value = snapshot.draft.title || '';
+                                    const valElem = document.getElementById('new-secret-value');
+                                    if (valElem) valElem.value = snapshot.draft.value || '';
+                                    switchView('view-add');
+                                } else {
+                                    showVault();
+                                }
                                 showNotification("📂 Vault snapshot restored [F9]");
                                 return;
                             }
@@ -1136,14 +1239,9 @@
             showVault();
         }
         
-        async function deleteSecret(id) {
-            if (confirm("Are you sure you want to delete this secret permanently?")) {
-                if (editingSecretId === id) editingSecretId = null;
-                vaultData = vaultData.filter(s => s.id !== id);
-                await saveVaultToStorage();
-                renderSecrets();
-                showNotification("Secret deleted");
-            }
+        function deleteSecret(id) {
+            const item = vaultData.find(s => s.id === id);
+            showConfirmModal(id, item ? item.title : '');
         }
         
         function toggleSecretValue(id) {
@@ -1406,6 +1504,21 @@
         // Keyboard Shortcuts & Modal Accessibility
         document.addEventListener('keydown', (e) => {
             // Check active modals first
+            const confirmModal = document.getElementById('confirm-modal');
+            const isConfirmOpen = confirmModal && confirmModal.classList.contains('active');
+            if (isConfirmOpen) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeConfirmModal();
+                    return;
+                }
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    executePendingDelete();
+                    return;
+                }
+            }
+
             const tutModal = document.getElementById('tutorial-modal');
             const isTutOpen = tutModal && tutModal.classList.contains('active');
             const helpModal = document.getElementById('help-modal');
@@ -1473,6 +1586,10 @@
                     if (isHelpOpen) closeHelp();
                     else showHelp();
                 } else if (e.key === 'Escape') {
+                    const notif = document.getElementById('notification');
+                    if (notif && notif.classList.contains('show')) {
+                        dismissNotification();
+                    }
                     const activeView = document.querySelector('.view-section.active');
                     if (activeView && activeView.id === 'view-add' && masterKey) {
                         showVault();
@@ -1574,6 +1691,15 @@
             tutModal.addEventListener('click', (e) => {
                 if (e.target === e.currentTarget) {
                     dismissTutorial();
+                }
+            });
+        }
+
+        const confirmModalEl = document.getElementById('confirm-modal');
+        if (confirmModalEl) {
+            confirmModalEl.addEventListener('click', (e) => {
+                if (e.target === e.currentTarget) {
+                    closeConfirmModal();
                 }
             });
         }

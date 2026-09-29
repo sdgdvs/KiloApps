@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-28T21:10:00Z — kilo-expander: KMedia (Watch Party '99, YM2612 FM / SPC700 Delay Synth, 5-Mode Vis)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
+  - Watch Party '99: Implemented Firebase RTDB cross-computer sync (rooms, real-time play/pause/seek drift correction, presence & reaction deck).
+  - Procedural Audio: Added 6-track 1999 demoscene procedural album using Yamaha YM2612 2-Op FM synthesis & SNES SPC700 stereo delay DSP.
+  - Audio/Video DSP: Integrated SNES SPC700 stereo delay network, spatial panner, preamp gain, CRT scanline overlay, and A-B repeat looper.
+  - Visualizer & Format Suite: Added 2D scrolling sonogram & demoscene radial visualizers; added M3U playlist and CUE sheet export.
+  - Verification: MSVC clean (`KMedia.exe` 18.4 KB); Vite build in 1.23s (`kmedia.html` 117.2 KB < 999 KB); security lint & check_icons 100% PASS.
+
+
 - **2026-09-28T20:25:00Z — kilo-qa: KType (Pass 5 QA & Build Quality, Mouse Interactivity, Quicksave State Integrity)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, <999KB ceiling verified).
   - State Persistence: Implemented accurate elapsed time resumption and mid-word typing highlights on quickload in web and native C.

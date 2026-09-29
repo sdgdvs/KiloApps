@@ -639,7 +639,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 LoadSnapshot(hwnd, 0);
             } else if (!HasSeenTutorial()) {
                 MessageBoxA(hwnd,
-                    "Welcome to KVault (Pass 5 Verified)\n\n"
+                    "Welcome to KVault\n\n"
                     "Your client-side encrypted password & secret manager.\n\n"
                     "- Enter a Master Key to encrypt/decrypt sensitive text.\n"
                     "- Press F5 at any time to quicksave snapshot to kvault.dat.\n"
@@ -992,6 +992,10 @@ void __stdcall MainEntry() {
                             SendMessage(hwnd, WM_COMMAND, ID_BTN_ENCRYPT, 0);
                             continue;
                         }
+                    } else if (msg.wParam == VK_ESCAPE) {
+                        SetWindowTextA(GetDlgItem(hwnd, ID_EDIT_FIND), "");
+                        if (hData) SetFocus(hData);
+                        continue;
                     }
                 }
             }
