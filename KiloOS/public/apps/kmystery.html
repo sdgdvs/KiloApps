@@ -264,7 +264,7 @@
         }
         #toast-bar {
             position: fixed;
-            top: 52px;
+            bottom: 38px;
             right: 20px;
             background: rgba(18, 16, 12, 0.96);
             border: 1px solid #d4af37;
@@ -898,6 +898,8 @@
                     showToast("⚠️ Cannot save concluded case. Start a new case.");
                     return;
                 }
+                const isAccusing = !document.getElementById('accusation-area').classList.contains('hidden');
+                state.inAccusation = isAccusing;
                 const saveData = {
                     version: 1,
                     timestamp: Date.now(),
@@ -939,7 +941,8 @@
                 noirAudio.init();
                 noirAudio.resume();
                 Object.assign(state, data.state);
-                analysisState = data.analysisState ? JSON.parse(JSON.stringify(data.analysisState)) : null;
+                const savedAnalysisState = data.analysisState ? JSON.parse(JSON.stringify(data.analysisState)) : null;
+                const savedAnalyzingIdx = state.analyzingIdx;
                 if (data.difficulty) {
                     const diffSelect = document.getElementById('difficulty');
                     if (diffSelect) diffSelect.value = data.difficulty;
@@ -952,12 +955,22 @@
                 updateLocation();
                 updateNotebook();
 
-                if (state.inLab) {
-                    openLab();
-                    if (state.analyzingIdx >= 0 && analysisState) {
+                if (state.inAccusation) {
+                    startAccusation();
+                } else if (state.inLab) {
+                    state.currentInterrogation = null;
+                    document.getElementById('action-area').classList.add('hidden');
+                    document.getElementById('travel-container').classList.add('hidden');
+                    document.getElementById('interrogation-area').classList.add('hidden');
+                    document.getElementById('lab-area').classList.remove('hidden');
+                    if (savedAnalyzingIdx >= 0 && savedAnalysisState) {
+                        state.analyzingIdx = savedAnalyzingIdx;
+                        analysisState = savedAnalysisState;
                         document.getElementById('lab-list').innerHTML = '';
                         document.getElementById('scanner-game').classList.remove('hidden');
                         updateScannerUI();
+                    } else {
+                        renderLabList();
                     }
                 } else if (state.currentInterrogation) {
                     document.getElementById('action-area').classList.add('hidden');
@@ -999,7 +1012,8 @@
             currentInterrogation: null,
             interrogationMood: 'normal',
             inLab: false,
-            analyzingIdx: -1
+            analyzingIdx: -1,
+            inAccusation: false
         };
 
         const allLocations = [
@@ -1381,7 +1395,8 @@
             
             let html = '<p style="font-size:13px; margin:4px 0;">Select evidence for spectral waveform analysis:</p><div class="dialogue-options">';
             state.unanalyzedClues.forEach((c, idx) => {
-                html += `<button onclick="startAnalysis(${idx})">Analyze: Object from ${c.locName}</button>`;
+                const keyHint = idx < 9 ? `[${idx + 1}] ` : '';
+                html += `<button onclick="startAnalysis(${idx})" title="Analyze evidence ${keyHint}">${keyHint}Analyze: Object from ${c.locName}</button>`;
             });
             html += '</div>';
             listDiv.innerHTML = html;
@@ -1756,6 +1771,7 @@
         }
 
         function startAccusation() {
+            state.inAccusation = true;
             state.inLab = false;
             state.currentInterrogation = null;
             document.getElementById('action-area').classList.add('hidden');
@@ -1774,12 +1790,14 @@
         }
 
         function cancelAccusation() {
+            state.inAccusation = false;
             document.getElementById('accusation-area').classList.add('hidden');
             document.getElementById('action-area').classList.remove('hidden');
             document.getElementById('travel-container').classList.remove('hidden');
         }
 
         function submitAccusation() {
+            state.inAccusation = false;
             const suspect = document.getElementById('accuse-suspect').value;
             const motive = document.getElementById('accuse-motive').value;
             const weapon = document.getElementById('accuse-weapon').value;
@@ -1883,7 +1901,7 @@
                     return;
                 }
             }
-            if (startScreen && !startScreen.classList.contains('hidden') && !isInputFocused()) {
+            if (startScreen && !startScreen.classList.contains('hidden')) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     startGame();
@@ -1895,11 +1913,19 @@
                 const labArea = document.getElementById('lab-area');
                 const intArea = document.getElementById('interrogation-area');
                 
-                // Keyboard controls in active forensic scanner
-                if (labArea && !labArea.classList.contains('hidden') && scannerGame && !scannerGame.classList.contains('hidden')) {
-                    if (e.key === '1') { adjScanner(11); return; }
-                    if (e.key === '2') { adjScanner(7); return; }
-                    if (e.key === '3') { adjScanner(-3); return; }
+                // Keyboard controls in active forensic lab
+                if (labArea && !labArea.classList.contains('hidden')) {
+                    if (scannerGame && !scannerGame.classList.contains('hidden')) {
+                        if (e.key === '1') { adjScanner(11); return; }
+                        if (e.key === '2') { adjScanner(7); return; }
+                        if (e.key === '3') { adjScanner(-3); return; }
+                    } else {
+                        const num = parseInt(e.key);
+                        if (!isNaN(num) && num >= 1 && num <= state.unanalyzedClues.length) {
+                            startAnalysis(num - 1);
+                            return;
+                        }
+                    }
                 }
 
                 // Keyboard controls in active interrogation

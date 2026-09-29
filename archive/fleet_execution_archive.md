@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T00:25:00Z — kilo-expander: KChart (10-Mode Vis, YM2612 FM Sonification, Poly/Exp Regressions & Transforms)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
+  - Visualization Engines: Added Horizontal Bar, Stepped Waveform, Scatter Plot with Crosshairs, and Polar Coxcomb Rose (10 modes total).
+  - Mathematical Analytics: Added 2nd-order Quadratic Polynomial ($y=ax^2+bx+c$), Exponential ($y=ae^{bx}$), and Confidence Corridor ($\pm\sigma$) regressions.
+  - Procedural Audio Architecture: Added Sega Genesis YM2612 2-Op FM synthesis & SNES SPC700 stereo delay DSP; built live dataset sonification sweep.
+  - Data Transforms & Target: Implemented Normalize (0-100%), CumSum, Delta, Gaussian Smooth, Reverse, Undo history, and KPI Benchmark line.
+  - Exports & Native Parity: Added Markdown, C header, and HTML widget exports; expanded Win32 C binary with all new modes/presets and clean MSVC build.
+  - Verification: MSVC clean (`KChart.exe` 35.0 KB); Vite clean in 287ms (`kchart.html` 116.5 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-29T00:08:00Z — kilo-qa: KVault (Pass 5 QA, State Persistence, In-App Confirm Modal & Toast Occlusion)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
   - Quicksave/Quickload: Enhanced F5 snapshot and F9 restore capturing drafts, search query, theme, and timeout.

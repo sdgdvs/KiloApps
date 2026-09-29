@@ -423,6 +423,13 @@ void UpdateUI() {
         ShowWindow(hBtnHelp, SW_HIDE);
         ShowWindow(hBtnSave, SW_HIDE);
         ShowWindow(hBtnLoad, SW_SHOW);
+        if (GetFileAttributesA("kmystery_save.dat") != INVALID_FILE_ATTRIBUTES) {
+            EnableWindow(hBtnLoad, TRUE);
+            SetWindowTextA(hBtnLoad, "Resume Saved Case [F9]");
+        } else {
+            EnableWindow(hBtnLoad, FALSE);
+            SetWindowTextA(hBtnLoad, "No Saved Case [F9]");
+        }
     } else if (currentState == 1) {
         ShowWindow(hStartPanel, SW_HIDE);
         ShowWindow(hStartDesc, SW_HIDE);
@@ -434,6 +441,8 @@ void UpdateUI() {
         ShowWindow(hBtnHelp, SW_SHOW);
         ShowWindow(hBtnSave, SW_SHOW);
         ShowWindow(hBtnLoad, SW_SHOW);
+        EnableWindow(hBtnLoad, TRUE);
+        SetWindowTextA(hBtnLoad, "Load [F9]");
         ShowWindow(hHelpTitle, SW_HIDE);
         ShowWindow(hHelpDesc, SW_HIDE);
         ShowWindow(hBtnCloseHelp, SW_HIDE);
@@ -786,7 +795,9 @@ void QuickLoadGame(HWND hwnd) {
     wsprintfA(timeBuf, "Time Left: %dh", timeLeft);
     SetWindowTextA(hTimeLeft, timeBuf);
 
-    if (currentState == 4) {
+    if (currentState == 2) {
+        SetWindowTextA(hIntDesc, "\"What do you want, Detective?\"");
+    } else if (currentState == 4) {
         char scanBuf[128];
         wsprintfA(scanBuf, "TARGET: %d Hz | TUNED: %d Hz | STABILITY: %d", scanTarget, scanCurrent, scanMoves);
         SetWindowTextA(hScanDesc, scanBuf);
@@ -1947,9 +1958,78 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     UpdateUI();
                     RECT r; GetClientRect(hwnd, &r); SendMessageA(hwnd, WM_SIZE, 0, MAKELPARAM(r.right, r.bottom));
                     return 0;
+                } else if (currentState == 4) {
+                    currentState = 3;
+                    UpdateUI();
+                    return 0;
                 } else if (currentState == 2 || currentState == 3 || currentState == 5) {
                     currentState = 1;
                     UpdateUI();
+                    return 0;
+                }
+            } else if (currentState == 0) {
+                if (wParam == VK_RETURN || wParam == VK_SPACE) {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_START, 0), 0);
+                    return 0;
+                }
+            } else if (currentState == 1) {
+                if (wParam == 'S' || wParam == 's') {
+                    if (!locations[currentLocation].searched) {
+                        SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SEARCH, 0), 0);
+                    }
+                    return 0;
+                } else if (wParam == 'L' || wParam == 'l') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_LAB, 0), 0);
+                    return 0;
+                } else if (wParam == 'I' || wParam == 'i') {
+                    if (locations[currentLocation].suspectIdx >= 0) {
+                        SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_INTERROGATE, 0), 0);
+                    }
+                    return 0;
+                } else if (wParam == 'A' || wParam == 'a') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_ACCUSE, 0), 0);
+                    return 0;
+                } else if (wParam >= '1' && wParam <= '5') {
+                    int targetLoc = (int)(wParam - '1');
+                    if (targetLoc < activeItems && targetLoc != currentLocation) {
+                        int btnIds[5] = { ID_BTN_TRAVEL_OFFICE, ID_BTN_TRAVEL_MANOR, ID_BTN_TRAVEL_DOCKS, ID_BTN_TRAVEL_CASINO, ID_BTN_TRAVEL_STATION };
+                        SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(btnIds[targetLoc], 0), 0);
+                    }
+                    return 0;
+                }
+            } else if (currentState == 2) {
+                if (wParam == '1') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_ASK_ALIBI, 0), 0);
+                    return 0;
+                } else if (wParam == '2') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_PRESENT_CLUE, 0), 0);
+                    return 0;
+                } else if (wParam == '3') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_END_INT, 0), 0);
+                    return 0;
+                }
+            } else if (currentState == 3) {
+                if (wParam == VK_RETURN) {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_ANALYZE, 0), 0);
+                    return 0;
+                } else if (wParam == 'L' || wParam == 'l') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_LEAVE_LAB, 0), 0);
+                    return 0;
+                }
+            } else if (currentState == 4) {
+                if (wParam == '1') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SCAN_11, 0), 0);
+                    return 0;
+                } else if (wParam == '2') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SCAN_7, 0), 0);
+                    return 0;
+                } else if (wParam == '3') {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SCAN_M3, 0), 0);
+                    return 0;
+                }
+            } else if (currentState == 5) {
+                if (wParam == VK_RETURN) {
+                    SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_SUBMIT_ACCUSE, 0), 0);
                     return 0;
                 }
             }

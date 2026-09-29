@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KCyber
   kilo_usability: KSynth
   kilo_graphics: KMystery
-  kilo_qa: KMystery
+  kilo_qa: KQuest
   kilo_expander: KGraph
   kilo_creator: "kweb://webring (Central Webring Hub & Badge Studio)"
 virtual_web_target: "kweb://webring"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://deep-core"
   - "kweb://darknet"
 last_run:
-  agent: kilo-graphics
-  app: KMech
-  timestamp: "2026-09-29T02:28:00Z"
+  agent: kilo-qa
+  app: KMystery
+  timestamp: "2026-09-29T03:10:00Z"
 last_planner_run: "2026-09-28T10:38:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KScript` *(Completed: KRadio, KRead, KScript)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KMystery`
+- **Current Target**: `KQuest`
 - **Upcoming Queue**:
-  `KQuest`, `KSanctuary`, `KClip`, `KCipher`, `KTrader`, `KType`, `KVault` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, KClip, KCipher, KTodo)*.
+  `KSanctuary`, `KClip`, `KCipher`, `KTrader`, `KType`, `KVault`, `KMystery` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, KClip, KCipher, KTodo)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KGraph`
@@ -242,6 +242,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T03:10:00Z — kilo-qa: KMystery (Pass 5 QA, State Persistence, Hotkeys & Toast Remediation)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
+  - State Persistence: Fixed quickload wiping minigame state in lab; persisted active accusation state and restored seamlessly.
+  - Keyboard Navigation: Implemented full hotkeys across all states in native C (S, L, I, A, 1-5 travel, 1-3 scanner, Esc/Enter).
+  - Toast Non-Occlusion: Relocated toast bar above hotkey footer at bottom-right, eliminating header and case file occlusion.
+  - Start Screen & Ergonomics: Added dynamic Resume Saved Case [F9] state checking in native C and Enter key start on web.
+  - Verification: MSVC clean (`KMystery.exe` 34.3 KB); Vite clean in 269ms (`kmystery.html` 130.8 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-29T02:28:00Z — kilo-graphics: KMech (YM2612 FM Audio, SPC700 Delay, Weapon Arsenal & Enemy Tiers)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
   - Audio Architecture: Added Genesis YM2612 2-Op FM synthesis & SNES SPC700 stereo delay warmth sound engine.
@@ -278,14 +286,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Consortium Harmonization: Linked Node #018 (darknet.html) across directory and webring.html; added search highlighting.
   - Verification: Vite build clean (`portal.html` 179.3 KB, `webring.html` 93.7 KB < 999 KB); check_icons & security lint 100% PASS.
 
-- **2026-09-29T00:25:00Z — kilo-expander: KChart (10-Mode Vis, YM2612 FM Sonification, Poly/Exp Regressions & Transforms)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
-  - Visualization Engines: Added Horizontal Bar, Stepped Waveform, Scatter Plot with Crosshairs, and Polar Coxcomb Rose (10 modes total).
-  - Mathematical Analytics: Added 2nd-order Quadratic Polynomial ($y=ax^2+bx+c$), Exponential ($y=ae^{bx}$), and Confidence Corridor ($\pm\sigma$) regressions.
-  - Procedural Audio Architecture: Added Sega Genesis YM2612 2-Op FM synthesis & SNES SPC700 stereo delay DSP; built live dataset sonification sweep.
-  - Data Transforms & Target: Implemented Normalize (0-100%), CumSum, Delta, Gaussian Smooth, Reverse, Undo history, and KPI Benchmark line.
-  - Exports & Native Parity: Added Markdown, C header, and HTML widget exports; expanded Win32 C binary with all new modes/presets and clean MSVC build.
-  - Verification: MSVC clean (`KChart.exe` 35.0 KB); Vite clean in 287ms (`kchart.html` 116.5 KB < 999 KB); check_icons & security lint 100% PASS.
 
 
 
