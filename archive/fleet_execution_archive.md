@@ -4,6 +4,12 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T05:17:00Z — kilo-usability: KSynth (Layout Polish, Audio Oscilloscope, Responsive Canvas & Window Tuning)**
+  - Status: PASS ✅ (0 regressions, clean builds, security lint clean, <999KB verified).
+  - Usability: Tuned default window to 1040x860 in App.jsx, fixed clipping on high-DPI displays.
+  - Audio & Visualizer: Polished stereo delay controls, envelope sliders, and oscilloscope rendering.
+  - Verification: Vite build clean; `ksynth.html` 138 KB (<999KB ceiling); bumped version to 0.4.8.
+
 - **2026-09-29T04:15:00Z — kilo-creator: kweb://webring (88x31 Micro Button Studio, Topology Map, Traceroute & Dual FM Audio)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
   - 88x31 Micro Button Studio: Added pixel art generator with 10 archetypes, 11 glyphs, 3D bevels, zoom, PNG download & 24-bit BMP generator.

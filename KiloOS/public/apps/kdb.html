@@ -779,14 +779,16 @@
     letter-spacing: 0.5px;
   }
 
-  /* Toast Notification Container */
+  /* Toast Notification Container - Safe Centered Positioning to Prevent Control Occlusion */
   #toastContainer {
     position: fixed;
-    bottom: 24px;
-    right: 24px;
+    bottom: 38px;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 9999;
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 8px;
     pointer-events: none;
   }
@@ -1061,7 +1063,7 @@
     </p>
     <div class="modal-field">
       <label for="syncRoomInput">Sync Room Code</label>
-      <input type="text" id="syncRoomInput" value="kdb-central" maxlength="32">
+      <input type="text" id="syncRoomInput" value="kdb-central" maxlength="32" onkeydown="if(event.key==='Enter') connectLiveSync()">
     </div>
     <div class="modal-field">
       <label>Current Status</label>
@@ -1129,6 +1131,7 @@
         <tr><td style="color:var(--primary);font-family:monospace;font-weight:600;">[J] / [O]</td><td>Export JSON / Import JSON</td></tr>
         <tr><td style="color:var(--primary);font-family:monospace;font-weight:600;">[M]</td><td>Export Markdown Directory Report</td></tr>
         <tr><td style="color:var(--primary);font-family:monospace;font-weight:600;">[R]</td><td>Reset database to defaults</td></tr>
+        <tr><td style="color:var(--primary);font-family:monospace;font-weight:600;">[F5] / [F9]</td><td>Quicksave Snapshot / Quickload Quicksave</td></tr>
         <tr><td style="color:var(--primary);font-family:monospace;font-weight:600;">[Esc]</td><td>Close dialogs or clear active search</td></tr>
       </table>
     </div>
@@ -1668,7 +1671,7 @@ function renderGridTable(displayList) {
     // Checkbox td
     const tdCheck = document.createElement('td');
     tdCheck.style.textAlign = 'center';
-    tdCheck.innerHTML = `<input type="checkbox" ${selectedRecordIds.has(pkVal) ? 'checked' : ''} onchange="toggleSelectRecord('${escapeHtml(pkVal)}', this.checked)">`;
+    tdCheck.innerHTML = `<input type="checkbox" ${selectedRecordIds.has(pkVal) ? 'checked' : ''} onchange="toggleSelectRecord(decodeURIComponent('${encodeURIComponent(pkVal)}'), this.checked)">`;
     tr.appendChild(tdCheck);
 
     // Columns
@@ -1699,8 +1702,8 @@ function renderGridTable(displayList) {
     const tdAct = document.createElement('td');
     tdAct.className = 'actions-cell';
     tdAct.innerHTML = `
-      <button class="btn-action edit-btn" onclick="openEditModal('${escapeHtml(pkVal)}')">Edit</button>
-      <button class="btn-action del-btn" onclick="promptDelete('${escapeHtml(pkVal)}')">Del</button>
+      <button class="btn-action edit-btn" onclick="openEditModal(decodeURIComponent('${encodeURIComponent(pkVal)}'))">Edit</button>
+      <button class="btn-action del-btn" onclick="promptDelete(decodeURIComponent('${encodeURIComponent(pkVal)}'))">Del</button>
     `;
     tr.appendChild(tdAct);
 
@@ -1741,8 +1744,8 @@ function renderCardsView(displayList) {
       <h3 class="card-title">${escapeHtml(nameVal)}</h3>
       <div class="card-meta">${metaChips}</div>
       <div class="card-actions">
-        <button class="btn-action edit-btn" onclick="openEditModal('${escapeHtml(pkVal)}')">Edit</button>
-        <button class="btn-action del-btn" onclick="promptDelete('${escapeHtml(pkVal)}')">Delete</button>
+        <button class="btn-action edit-btn" onclick="openEditModal(decodeURIComponent('${encodeURIComponent(pkVal)}'))">Edit</button>
+        <button class="btn-action del-btn" onclick="promptDelete(decodeURIComponent('${encodeURIComponent(pkVal)}'))">Delete</button>
       </div>
     `;
     grid.appendChild(card);
@@ -1793,9 +1796,12 @@ function batchDeleteSelected() {
   const count = selectedRecordIds.size;
   tbl.records = tbl.records.filter(r => !selectedRecordIds.has(String(r[tbl.primaryKey])));
   selectedRecordIds.clear();
+  const chk = document.getElementById('selectAllCheckbox');
+  if (chk) chk.checked = false;
   saveDatabase();
   renderAll();
   showToast(`Deleted ${count} records`, 'info');
+  updateStatus(`Deleted ${count} records from ${tbl.title}`);
 }
 
 function batchExportSelected() {
@@ -1805,6 +1811,7 @@ function batchExportSelected() {
   const blob = new Blob([JSON.stringify(selected, null, 2)], { type: 'application/json' });
   downloadBlob(blob, `${dbState.activeTable}_selected.json`);
   showToast(`Exported ${selected.length} selected records`, 'success');
+  updateStatus(`Exported ${selected.length} records from ${tbl.title}`);
 }
 
 // --- Edit Modal Handling ---
@@ -1822,7 +1829,7 @@ function openEditModal(pkVal) {
     field.className = 'modal-field';
     field.innerHTML = `
       <label for="editField_${col}">${escapeHtml(col.toUpperCase())}</label>
-      <input type="text" id="editField_${col}" value="${escapeHtml(rec[col] || '')}">
+      <input type="text" id="editField_${col}" value="${escapeHtml(rec[col] || '')}" onkeydown="if(event.key==='Enter') saveEditedRecord()">
     `;
     container.appendChild(field);
   });
@@ -1857,11 +1864,17 @@ function saveEditedRecord() {
     return;
   }
 
+  if (origPk !== newPk && selectedRecordIds.has(origPk)) {
+    selectedRecordIds.delete(origPk);
+    selectedRecordIds.add(newPk);
+  }
+
   Object.assign(rec, updated);
   saveDatabase();
   closeEditModal();
   renderAll();
   showToast(`Updated record ${newPk}`, 'success');
+  updateStatus(`Updated record ${newPk} in ${tbl.title}`);
 }
 
 // --- Delete Dialog ---
@@ -1984,8 +1997,8 @@ function executeSqlFromEditor() {
 }
 
 function runSql(rawSql) {
-  // Strip trailing semicolon
-  const sql = rawSql.trim().replace(/;+$/, '');
+  // Strip trailing semicolons and whitespace
+  const sql = rawSql.trim().replace(/;+\s*$/, '').trim();
   const tokens = sql.split(/\s+/);
   const command = tokens[0].toUpperCase();
 
@@ -2033,8 +2046,8 @@ function runSql(rawSql) {
 }
 
 function executeSelectSql(sql) {
-  // Regex to extract clauses
-  const regex = /SELECT\s+(.+?)\s+FROM\s+([a-zA-Z0-9_]+)(?:\s+WHERE\s+(.+?))?(?:\s+GROUP\s+BY\s+([a-zA-Z0-9_]+))?(?:\s+ORDER\s+BY\s+([a-zA-Z0-9_]+)(?:\s+(ASC|DESC))?)?(?:\s+LIMIT\s+(\d+))?$/i;
+  // Regex to extract clauses with optional trailing whitespace
+  const regex = /SELECT\s+(.+?)\s+FROM\s+([a-zA-Z0-9_]+)(?:\s+WHERE\s+(.+?))?(?:\s+GROUP\s+BY\s+([a-zA-Z0-9_]+))?(?:\s+ORDER\s+BY\s+([a-zA-Z0-9_]+)(?:\s+(ASC|DESC))?)?(?:\s+LIMIT\s+(\d+))?\s*$/i;
   const match = sql.match(regex);
   if (!match) throw new Error("Invalid SELECT syntax. Example: SELECT * FROM employees WHERE dept = 'Engineering' ORDER BY name ASC;");
 
@@ -2553,9 +2566,13 @@ function importJSON(e) {
       const parsed = JSON.parse(data);
       if (parsed && parsed.tables) {
         dbState = parsed;
+        sortCol = null;
+        sortAsc = true;
+        selectedRecordIds.clear();
         saveDatabase();
         renderAll();
         showToast('Full database JSON restored successfully', 'success');
+        updateStatus('Database JSON restored successfully');
       } else {
         showToast('Invalid database schema in JSON file.', 'danger');
       }
@@ -2680,6 +2697,39 @@ function handleSearchKey(e) {
   if (e.key === 'Escape') clearSearch();
 }
 
+function quicksaveDatabase() {
+  try {
+    localStorage.setItem('kdb_quicksave', JSON.stringify(dbState));
+    showToast('💾 Quicksave recorded (F5)', 'success');
+    updateStatus('Database snapshot quicksaved (F5)');
+  } catch(err) {
+    showToast('Failed to quicksave state.', 'danger');
+  }
+}
+
+function quickloadDatabase() {
+  try {
+    const saved = localStorage.getItem('kdb_quicksave');
+    if (!saved) {
+      showToast('No quicksave state found (Press F5 to quicksave).', 'warning');
+      return;
+    }
+    const parsed = JSON.parse(saved);
+    if (parsed && parsed.tables) {
+      dbState = parsed;
+      sortCol = null;
+      sortAsc = true;
+      selectedRecordIds.clear();
+      saveDatabase();
+      renderAll();
+      showToast('📂 Quicksave restored (F9)', 'success');
+      updateStatus('Quicksave restored from F5 snapshot');
+    }
+  } catch(err) {
+    showToast('Failed to restore quicksave.', 'danger');
+  }
+}
+
 // Global Key Listeners
 window.addEventListener('keydown', function(e) {
   const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
@@ -2703,14 +2753,51 @@ window.addEventListener('keydown', function(e) {
     return;
   }
 
+  if (e.key === 'F5') {
+    e.preventDefault();
+    quicksaveDatabase();
+    return;
+  }
+
+  if (e.key === 'F9') {
+    e.preventDefault();
+    quickloadDatabase();
+    return;
+  }
+
   const isModalActive = Boolean(document.querySelector('.modal-overlay.active'));
-  if (isModalActive) return;
+  if (isModalActive) {
+    if (e.key === 'Enter') {
+      if (document.getElementById('deleteModal').classList.contains('active')) {
+        e.preventDefault();
+        confirmDelete();
+      } else if (document.getElementById('resetModal').classList.contains('active')) {
+        e.preventDefault();
+        confirmReset();
+      } else if (document.getElementById('helpModal').classList.contains('active')) {
+        e.preventDefault();
+        closeHelpModal();
+      } else if (document.getElementById('statsModal').classList.contains('active')) {
+        e.preventDefault();
+        closeStatsModal();
+      }
+    }
+    return;
+  }
 
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
     e.preventDefault();
     const searchInput = document.getElementById('searchInput');
     if (searchInput) { searchInput.focus(); searchInput.select(); }
     return;
+  }
+
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    if (currentView === 'sql') {
+      e.preventDefault();
+      executeSqlFromEditor();
+      return;
+    }
   }
 
   if (!isInput && !e.ctrlKey && !e.metaKey && !e.altKey) {
@@ -2744,9 +2831,17 @@ if (window.resizeTo) {
 
 // Initial Boot
 loadDatabase();
-setTimeout(() => {
-  showToast('👋 Welcome to KDB Studio! [1] Grid [2] Cards [3] SQL [4] Dash. [F1] Help.', 'info', 4500);
-}, 300);
+const hasSeenWelcome = localStorage.getItem('kdb_has_seen_tutorial');
+if (!hasSeenWelcome) {
+  setTimeout(() => {
+    showToast('👋 Welcome to KDB Studio! [1] Grid [2] Cards [3] SQL [4] Dash. [F1] Help.', 'info', 4500);
+    localStorage.setItem('kdb_has_seen_tutorial', 'true');
+  }, 300);
+} else {
+  setTimeout(() => {
+    updateStatus('Database ready. [F1] Help | [F5] Quicksave');
+  }, 200);
+}
 </script>
 </body>
 </html>
