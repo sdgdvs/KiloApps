@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T21:47:00Z — kilo-graphics: KStarship (YM2612 FM Audio, SPC700 Delay, Echo Probe, Zero Glints & Combat Key Alignment)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 149.6 KB < 999 KB).
+  - Audio Architecture: Added Genesis YM2612 2-Op FM synthesis & SNES SPC700 stereo delay warmth engine with tactical combat SFX.
+  - New Encounter & ARG Lore: Added unmapped ECHO Subcarrier Probe (1999Hz / 10.19.99.4/classified) with vector artwork and dual choices.
+  - Tactical Bridge HUD: Added crisp, static 1999 vector bridge telemetry readouts (sector coordinates, bearing, scanner, impulse drive).
+  - Key & Combat Alignment: Mapped [L] to planetary descent; aligned combat actions (1:Laser, 2:Flee, 3:Superweapon, 4:Shield Boost).
+  - Bug Fix & Native Alignment: Fixed Void Leviathan spacebar combat bypass in main.c; synchronized encounter 24 and vector artwork.
+  - Verification: MSVC clean (KStarship.exe 145.4 KB); Vite clean in 366ms (kstarship.html 149.6 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-29T21:35:00Z — kilo-usability: KTrader (UI/UX Ergonomics, Toast De-Occlusion, HiDPI Canvas & Window Sizing)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 85.9 KB < 999 KB).
   - Window & Viewport: Tuned default window to 960x720 in `App.jsx`, `ktrader.html`, and direct native `KTrader.exe` download.
