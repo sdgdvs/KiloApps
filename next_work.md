@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KCosmic
+  kilo_tester: KCyber
   kilo_usability: KScript
   kilo_graphics: KMech
   kilo_qa: KMystery
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://deep-core"
   - "kweb://darknet"
 last_run:
-  agent: kilo-creator
-  app: "kweb://portal"
-  timestamp: "2026-09-29T01:12:00Z"
+  agent: kilo-tester
+  app: KCosmic
+  timestamp: "2026-09-29T01:28:00Z"
 last_planner_run: "2026-09-28T10:38:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KMystery`, `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KCosmic`
+- **Current Target**: `KCyber`
 - **Upcoming Queue**:
-  `KCyber`, `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`.
+  `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KScript`
@@ -242,6 +242,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T01:28:00Z — kilo-tester: KCosmic (UI Audit, Duplicate ID Fix, Backdrop Dismissals & State Persistence)**
+  - Status: PASS ✅ (3 issues, 3 fixed, 0 regressions, clean builds, security lint clean, <999KB verified).
+  - Duplicate ID Resolution: Renamed duplicate `btnUpgradeShield` to `btnUpgradeDeflector` in Hazards tab; repaired deflector upgrade listener.
+  - Modal Dismissals: Added overlay backdrop click dismissal to Codex, Tutorial, JSON, and Splash modals; wired Escape target deselect.
+  - Keyboard Controls: Consolidated duplicate keydown listeners; added arrow key camera panning, zoom (+/-), pause, and modal navigation.
+  - Toast Non-Occlusion: Anchored toasts bottom-right with bounded queue (≤3 toasts) and click-to-dismiss functionality.
+  - State Persistence: Added missing colony structures (domes, vaults, megacities), defense tiers, and display settings to F5/F9 saves.
+  - Verification: MSVC clean (`KCosmic.exe` 16.5 KB); Vite clean in 401ms (`kcosmic.html` 543.1 KB < 999 KB); CDP 100% PASS.
+
 - **2026-09-29T01:12:00Z — kilo-creator: kweb://portal (KiloNet 1999 Directory Deep Expansion & Dial-Up Baud Lab)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
   - Community Web Poll: Added interactive 1999 poll with 4 debates, animated SVG bars, FM chimes, and localStorage persistence.
@@ -275,15 +284,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Visual Polish: Added atmospheric drifting sunbeam dust motes, imperial SPQR laurel banners, and Praetorian golden slash trails.
   - Balance & Polish: Balanced Emperor's Boon (morale heal surge / denarii reward) and Shield Bash counter on defend miss across web and native C.
   - Verification: MSVC clean (`KColosseum.exe` 30.2 KB); Vite clean in 272ms (`kcolosseum.html` 123.8 KB < 999 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-28T23:08:00Z — kilo-usability: KRead (Window Dimensions, Toast Occlusion Remediation & Drawer UX)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
-  - Window & Layout: Updated default window to 940x680 in App.jsx and 940x660 in native C, eliminating toolbar wrapping squeeze.
-  - Toast Non-Occlusion: Relocated toast notifications to non-occluding bottom-right anchor with bounded queue (≤3 toasts).
-  - Auto-Scroll HUD: Centered auto-scroll indicator pill at chamber bottom to prevent overlapping toolbar controls.
-  - Drawer Ergonomics: Added click-outside dismissal for bookmarks, notes, and outline drawers during active reading.
-  - Responsive Resilience: Added scrollbar-free overflow handling for toolbar & preset decks and window resize progress tracking.
-  - Verification: MSVC clean (`KRead.exe` 27.1 KB); Vite clean in 266ms (`kread.html` 144.7 KB < 999 KB); check_icons & security lint 100% PASS.
 
 
 

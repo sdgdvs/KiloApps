@@ -1926,37 +1926,41 @@
             resize: vertical;
         }
 
-        /* Toast Notifications */
+        /* Toast Notifications (Bottom-Right Non-Occluding Anchor) */
         #toastContainer {
             position: fixed;
-            top: 20px;
+            bottom: 44px;
             right: 20px;
             display: flex;
-            flex-direction: column;
+            flex-direction: column-reverse;
             gap: 8px;
             z-index: 2000;
             pointer-events: none;
+            max-width: 340px;
         }
         .toast-item {
             background: rgba(10, 17, 32, 0.95);
             border: 1px solid var(--accent-cyan);
-            box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+            border-left: 3px solid var(--accent-cyan);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
             color: var(--text-bright);
-            padding: 10px 16px;
+            padding: 9px 14px;
             border-radius: 4px;
-            font-size: 12px;
+            font-size: 11px;
             font-family: var(--font-mono);
-            animation: toastSlide 0.3s ease-out;
+            animation: toastSlide 0.25s ease-out;
             pointer-events: auto;
+            cursor: pointer;
             display: flex;
             align-items: center;
             gap: 10px;
+            user-select: none;
         }
-        .toast-item.success { border-color: var(--accent-emerald); box-shadow: 0 0 20px rgba(16, 185, 129, 0.3); }
-        .toast-item.warn { border-color: var(--accent-rose); box-shadow: 0 0 20px rgba(244, 63, 94, 0.3); }
+        .toast-item.success { border-color: var(--accent-emerald); border-left: 3px solid var(--accent-emerald); box-shadow: 0 4px 16px rgba(16, 185, 129, 0.2); }
+        .toast-item.warn { border-color: var(--accent-rose); border-left: 3px solid var(--accent-rose); box-shadow: 0 4px 16px rgba(244, 63, 94, 0.2); }
         @keyframes toastSlide {
-            0% { transform: translateX(50px); opacity: 0; }
-            100% { transform: translateX(0); opacity: 1; }
+            0% { transform: translateY(20px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
         }
 
     </style>
@@ -2316,9 +2320,6 @@
                 </div>
 
                 <div class="action-grid">
-                    <button class="action-btn" id="btnSolarMirror" style="display:none;"></button>
-                    <button class="action-btn" id="btnAtmoProcessor" style="display:none;"></button>
-
                     <button class="action-btn" id="btnCometDrop" title="Tug icy comets from the outer belt to collide softly into polar basins">
                         <span class="btn-title">Redirect Ice Comet</span>
                         <span class="btn-desc">+5.0% Water, +0.02 atm<br>Cost: 300 Vol, 150 kW</span>
@@ -3238,7 +3239,7 @@
                             <strong style="color:var(--accent-blue);">Planetary Shield Deflector Grid (Tier <span id="valShieldTier">0</span>)</strong>
                             <div class="module-sub" id="subShieldInfo">Passively absorbs 30% Solar Flare & Ion Storm Energy Drains</div>
                         </div>
-                        <button class="mini-btn highlight" id="btnUpgradeShield">+ Construct Grid (380M, 240E)</button>
+                        <button class="mini-btn highlight" id="btnUpgradeDeflector">+ Construct Grid (380M, 240E)</button>
                     </div>
                 </div>
 
@@ -8562,29 +8563,6 @@
             });
         }
 
-        // Global Keyboard Navigation & Audio Hotkeys
-        window.addEventListener('keydown', (e) => {
-            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
-            const key = e.key.toLowerCase();
-            if (key === 'm') {
-                if (audioBtn) audioBtn.click();
-            } else if (key === 'a') {
-                cycleSoundscapeMode();
-            } else if (e.code === 'Space') {
-                e.preventDefault();
-                setSpeed(0, !sim.paused);
-            } else if (key === '1') {
-                setSpeed(1);
-            } else if (key === '2') {
-                setSpeed(2);
-            } else if (key === '5') {
-                setSpeed(5);
-            } else if (key === 'r') {
-                sim.camX = 0; sim.camY = 0; sim.zoom = 1.0;
-                playSound('click');
-            }
-        });
-
         function logMsg(txt, isWarn = false) {
             const banner = document.getElementById('logBanner');
             if (isWarn) {
@@ -9193,7 +9171,7 @@
             });
         }
 
-        const btnUpgShield = document.getElementById('btnUpgradeShield');
+        const btnUpgShield = document.getElementById('btnUpgradeDeflector');
         if (btnUpgShield) {
             btnUpgShield.addEventListener('click', () => {
                 initAudio();
@@ -10434,23 +10412,32 @@
         // --- PHASE 14: HELP, CODEX, SPLASH & STATE PERSISTENCE ENGINE ---
         // =========================================================================
 
-        // Toast Notification System
+        // Toast Notification System (Bounded Queue & Click-to-Dismiss)
         function showToast(msg, type = 'info') {
             const container = document.getElementById('toastContainer');
             if (!container) return;
+            while (container.children.length >= 3) {
+                container.removeChild(container.firstChild);
+            }
             const toast = document.createElement('div');
             toast.className = `toast-item ${type}`;
             let icon = 'ℹ️';
             if (type === 'success') icon = '⭐';
             if (type === 'warn') icon = '⚠️';
-            toast.innerHTML = `<span>${icon}</span> <span>${msg}</span>`;
-            container.appendChild(toast);
-            setTimeout(() => {
+            toast.innerHTML = `<span>${icon}</span> <span style="flex:1;">${msg}</span><span style="opacity:0.5; font-size:10px; margin-left:4px;">✕</span>`;
+            toast.title = 'Click to dismiss';
+            let removed = false;
+            const dismiss = () => {
+                if (removed) return;
+                removed = true;
                 toast.style.opacity = '0';
-                toast.style.transform = 'translateX(50px)';
-                toast.style.transition = 'all 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
+                toast.style.transform = 'translateY(15px)';
+                toast.style.transition = 'all 0.2s ease';
+                setTimeout(() => toast.remove(), 200);
+            };
+            toast.addEventListener('click', dismiss);
+            container.appendChild(toast);
+            setTimeout(dismiss, 3500);
         }
 
         // Full State Persistence: Quicksave (F5) & Quickload (F9)
@@ -10539,6 +10526,23 @@
                     pctScientists: sim.pctScientists,
                     demoFocus: sim.demoFocus,
                     rationPolicy: sim.rationPolicy,
+                    geodesicDomes: sim.geodesicDomes,
+                    subterraneanVaults: sim.subterraneanVaults,
+                    domedMegacities: sim.domedMegacities,
+                    aeroponicFarms: sim.aeroponicFarms,
+                    algalVats: sim.algalVats,
+                    earlyWarningRadar: sim.earlyWarningRadar,
+                    shieldDeflector: sim.shieldDeflector,
+                    repairDrones: sim.repairDrones,
+                    nextCrisisCycle: sim.nextCrisisCycle,
+                    crisisActive: sim.crisisActive,
+                    crisisType: sim.crisisType,
+                    crisisTimer: sim.crisisTimer,
+                    crisisMaxTime: sim.crisisMaxTime,
+                    crisisSeverity: sim.crisisSeverity,
+                    crtThemeIndex: sim.crtThemeIndex,
+                    showGrid: sim.showGrid,
+                    phosphorGlow: sim.phosphorGlow,
                     tradeRoutes: sim.tradeRoutes,
                     xenoSites: sim.xenoSites
                 },
@@ -10558,6 +10562,23 @@
                     loadStarSystem(data.currentSystemIndex);
                 }
                 Object.assign(sim, data.sim);
+                if (sim.crtThemeIndex !== undefined && CRT_THEMES[sim.crtThemeIndex]) {
+                    const t = CRT_THEMES[sim.crtThemeIndex];
+                    document.body.setAttribute('data-theme', t.id);
+                    const btnTheme = document.getElementById('btnCrtTheme');
+                    if (btnTheme) btnTheme.textContent = t.name;
+                }
+                if (sim.showGrid !== undefined) {
+                    const btnGrid = document.getElementById('btnGridToggle');
+                    if (btnGrid) btnGrid.textContent = sim.showGrid ? 'Grid: ON' : 'Grid: OFF';
+                    const cartoBadge = document.getElementById('cartoBadge');
+                    if (cartoBadge) cartoBadge.textContent = sim.showGrid ? 'RA 19h 54m 36s | DEC +44° 01\' 00" | CARTOGRAPHY: ACTIVE' : 'RA 19h 54m 36s | DEC +44° 01\' 00" | ATLAS: MINIMAL';
+                }
+                if (sim.phosphorGlow !== undefined) {
+                    const btnGlow = document.getElementById('btnPhosphorGlow');
+                    if (btnGlow) btnGlow.textContent = sim.phosphorGlow ? 'Glow: ON' : 'Glow: OFF';
+                }
+                updateCrisisUI();
                 if (data.planets && Array.isArray(data.planets)) {
                     data.planets.forEach(savedP => {
                         const targetP = celestialBodies.find(b => b.id === savedP.id);
@@ -10689,6 +10710,9 @@
         });
 
         document.getElementById('codexCloseBtn').addEventListener('click', closeCodex);
+        codexModal.addEventListener('click', (e) => {
+            if (e.target === codexModal) closeCodex();
+        });
         const btnHeaderCodex = document.getElementById('btnHeaderCodex');
         if (btnHeaderCodex) btnHeaderCodex.addEventListener('click', () => openCodex(0));
         const btnOpenCodex = document.getElementById('btnOpenCodex');
@@ -10696,6 +10720,12 @@
 
         // Start Splash Screen Logic
         const splashOverlay = document.getElementById('splashOverlay');
+        splashOverlay.addEventListener('click', (e) => {
+            if (e.target === splashOverlay) {
+                initAudio();
+                splashOverlay.classList.remove('active');
+            }
+        });
         const splashBtnNew = document.getElementById('splashBtnNew');
         const splashBtnContinue = document.getElementById('splashBtnContinue');
         const splashBtnCodex = document.getElementById('splashBtnCodex');
@@ -10831,6 +10861,9 @@
         });
 
         tutBtnSkip.addEventListener('click', closeTutorial);
+        tutorialOverlay.addEventListener('click', (e) => {
+            if (e.target === tutorialOverlay) closeTutorial();
+        });
         const codexBtnLaunchTutorial = document.getElementById('codexBtnLaunchTutorial');
         if (codexBtnLaunchTutorial) {
             codexBtnLaunchTutorial.addEventListener('click', () => {
@@ -10852,6 +10885,9 @@
             playSound('click');
         }
         document.getElementById('jsonCloseBtn').addEventListener('click', closeJsonModal);
+        jsonModal.addEventListener('click', (e) => {
+            if (e.target === jsonModal) closeJsonModal();
+        });
         const btnBackupData = document.getElementById('btnBackupData');
         if (btnBackupData) btnBackupData.addEventListener('click', openJsonModal);
 
@@ -10896,23 +10932,30 @@
         const btnQuickLoad = document.getElementById('btnQuickLoad');
         if (btnQuickLoad) btnQuickLoad.addEventListener('click', quickload);
 
-        // Extended Global Keyboard Shortcuts
+        // Extended Global Keyboard Shortcuts & Navigation
         window.addEventListener('keydown', (e) => {
             if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
             const key = e.key.toLowerCase();
 
-            // Escape closes modals
+            // Escape closes modals or deselects active target
             if (e.key === 'Escape') {
                 if (codexModal.classList.contains('active')) { closeCodex(); return; }
                 if (tutorialOverlay.classList.contains('active')) { closeTutorial(); return; }
                 if (jsonModal.classList.contains('active')) { closeJsonModal(); return; }
                 if (splashOverlay.classList.contains('active')) {
+                    initAudio();
                     splashOverlay.classList.remove('active');
+                    return;
+                }
+                const selCard = document.getElementById('selectionCard');
+                if (selCard && selCard.style.display !== 'none') {
+                    selCard.style.display = 'none';
+                    sim.selected = null;
                     return;
                 }
             }
 
-            // Enter / Space starts expedition on splash
+            // Splash Screen Shortcuts
             if (splashOverlay.classList.contains('active')) {
                 if (e.key === 'Enter' || e.code === 'Space') {
                     e.preventDefault();
@@ -10928,6 +10971,46 @@
                     openCodex(0);
                     return;
                 }
+                if (key === 'd' || key === 'b') {
+                    openJsonModal();
+                    return;
+                }
+                return;
+            }
+
+            // Onboarding Tutorial Shortcuts
+            if (tutorialOverlay.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') {
+                    if (currentTutorialStep > 0) renderTutorialStep(currentTutorialStep - 1);
+                    return;
+                }
+                if (e.key === 'ArrowRight' || e.key === 'Enter' || e.code === 'Space') {
+                    e.preventDefault();
+                    tutBtnNext.click();
+                    return;
+                }
+                return;
+            }
+
+            // Codex Modal Shortcuts
+            if (codexModal.classList.contains('active')) {
+                const num = parseInt(e.key);
+                if (num >= 1 && num <= 6) {
+                    e.preventDefault();
+                    openCodex(num - 1);
+                    return;
+                }
+                if (e.key === 'ArrowLeft') {
+                    const activeIdx = Array.from(codexTabs).findIndex(b => b.classList.contains('active'));
+                    if (activeIdx > 0) openCodex(activeIdx - 1);
+                    return;
+                }
+                if (e.key === 'ArrowRight') {
+                    const activeIdx = Array.from(codexTabs).findIndex(b => b.classList.contains('active'));
+                    if (activeIdx < codexTabs.length - 1) openCodex(activeIdx + 1);
+                    return;
+                }
+                return;
             }
 
             // Quicksave & Quickload
@@ -10950,7 +11033,92 @@
                 return;
             }
 
-            // Cycle CRT theme
+            // Sidebar Tabs (Alt + 1..8)
+            if (e.altKey) {
+                const tabNum = parseInt(e.key);
+                const sidebarTabs = ['tab-terra', 'tab-fleet', 'tab-colony', 'tab-research', 'tab-megas', 'tab-xeno', 'tab-hazards', 'tab-economy'];
+                if (tabNum >= 1 && tabNum <= sidebarTabs.length) {
+                    e.preventDefault();
+                    switchTab(sidebarTabs[tabNum - 1]);
+                    return;
+                }
+            }
+
+            // Time Warp & Simulation Speed
+            if (e.code === 'Space') {
+                e.preventDefault();
+                setSpeed(0, !sim.paused);
+                return;
+            }
+            if (key === '0') {
+                setSpeed(0, true);
+                return;
+            }
+            if (key === '1') {
+                setSpeed(1);
+                return;
+            }
+            if (key === '2') {
+                setSpeed(2);
+                return;
+            }
+            if (key === '5') {
+                setSpeed(5);
+                return;
+            }
+
+            // Camera Panning with Arrow Keys
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                sim.camX += 50 / sim.zoom;
+                return;
+            }
+            if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                sim.camX -= 50 / sim.zoom;
+                return;
+            }
+            if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                sim.camY += 50 / sim.zoom;
+                return;
+            }
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                sim.camY -= 50 / sim.zoom;
+                return;
+            }
+
+            // Camera Zooming (+ / -) & Reset (R)
+            if (e.key === '+' || e.key === '=') {
+                sim.zoom = Math.min(2.5, sim.zoom * 1.25);
+                playSound('click');
+                return;
+            }
+            if (e.key === '-' || e.key === '_') {
+                sim.zoom = Math.max(0.4, sim.zoom * 0.8);
+                playSound('click');
+                return;
+            }
+            if (key === 'r') {
+                sim.camX = 0;
+                sim.camY = 0;
+                sim.zoom = 1.0;
+                playSound('click');
+                return;
+            }
+
+            // Audio & Soundscape Controls
+            if (key === 'm') {
+                if (audioBtn) audioBtn.click();
+                return;
+            }
+            if (key === 'a') {
+                cycleSoundscapeMode();
+                return;
+            }
+
+            // Cycle CRT Phosphor Theme
             if (key === 'c') {
                 const themeBtn = document.getElementById('btnCrtTheme');
                 if (themeBtn) themeBtn.click();
@@ -10971,7 +11139,7 @@
                 return;
             }
 
-            // Designate Target
+            // Target & Camera Centering
             if (key === 't') {
                 const selActTarget = document.getElementById('selActTarget');
                 if (selActTarget && selActTarget.style.display !== 'none') {
@@ -10979,11 +11147,14 @@
                 }
                 return;
             }
-
-            // Focus Target
             if (key === 'p') {
                 const btnCenterPlanet = document.getElementById('btnCenterPlanet');
                 if (btnCenterPlanet) btnCenterPlanet.click();
+                return;
+            }
+            if (key === 'f') {
+                const btnCenterFleet = document.getElementById('btnCenterFleet');
+                if (btnCenterFleet) btnCenterFleet.click();
                 return;
             }
         });

@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-28T23:08:00Z — kilo-usability: KRead (Window Dimensions, Toast Occlusion Remediation & Drawer UX)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
+  - Window & Layout: Updated default window to 940x680 in App.jsx and 940x660 in native C, eliminating toolbar wrapping squeeze.
+  - Toast Non-Occlusion: Relocated toast notifications to non-occluding bottom-right anchor with bounded queue (≤3 toasts).
+  - Auto-Scroll HUD: Centered auto-scroll indicator pill at chamber bottom to prevent overlapping toolbar controls.
+  - Drawer Ergonomics: Added click-outside dismissal for bookmarks, notes, and outline drawers during active reading.
+  - Responsive Resilience: Added scrollbar-free overflow handling for toolbar & preset decks and window resize progress tracking.
+  - Verification: MSVC clean (`KRead.exe` 27.1 KB); Vite clean in 266ms (`kread.html` 144.7 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-28T22:30:00Z — kilo-tester: KContacts (UI Audit, Quicksave/Load, Toast Non-Occlusion, Modal Repairs)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
   - Quicksave/Quickload: Added F5 quicksave and F9 quickload snapshot persistence across web and native Win32 C.
