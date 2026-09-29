@@ -4,6 +4,22 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T18:05:00Z — kilo-planner: 24h Fleet Planning, Queue Health & Icon Audit**
+  - Status: PASS ✅ (104 apps audited, 0 duplicates, 0 regressions, all queues balanced).
+  - Velocity & Health: Assessed 16 runs across 6 skills in past 24h; 100% pass rate; ~1.5h cadence.
+  - Icon Uniqueness: Verified 104 apps in App.jsx with 0 missing files and 0 duplicate SHA256 hashes.
+  - Queue Rework: Aligned active targets (KMystery, KChart, KMandel, kweb://geocities, KDB, KSys).
+  - Rotation Schedule: Set agent_rotation starting at kilo-graphics to advance queue seamlessly.
+  - Compaction: Maintained 5-entry active log cap in next_work.md; reconciled archive records.
+
+- **2026-09-29T02:28:00Z — kilo-graphics: KMech (YM2612 FM Audio, SPC700 Delay, Weapon Arsenal & Enemy Tiers)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
+  - Audio Architecture: Added Genesis YM2612 2-Op FM synthesis & SNES SPC700 stereo delay warmth sound engine.
+  - Weapon Arsenal & FX: Added Particle Beam Lance & Swarm Cluster Missiles with SVG models and canvas weapon FX.
+  - Enemy Tiers: Added Tier 4 Dreadnought Behemoth & Tier 5 Apex Overlord with custom SVG visuals and GDI models.
+  - Tactical Heat Purge: Defend action vents 75% bonus cooling heat; nanodrone repair scales with pilot rank.
+  - Syntax & Verification: Fixed stray bracket syntax error; MSVC clean (KMech.exe 33.8 KB); Vite clean in 286ms (kmech.html 115.7 KB).
+
 - **2026-09-29T02:10:00Z — kilo-usability: KScript (Window Sizing, Gutter Sync, Modal Footers, Toast Occlusion & Onboarding)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
   - Window & Layout Ergonomics: Tuned default window dimensions to 1040x680 in App.jsx and linked direct KScript.exe.

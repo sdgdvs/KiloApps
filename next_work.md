@@ -2,12 +2,12 @@
 current_agent: kilo-graphics
 next_agent: kilo-qa
 agent_rotation:
+  - kilo-graphics
+  - kilo-qa
   - kilo-expander
   - kilo-creator
   - kilo-tester
   - kilo-usability
-  - kilo-graphics
-  - kilo-qa
 model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
@@ -15,14 +15,11 @@ current_targets:
   kilo_tester: KDB
   kilo_usability: KSys
   kilo_graphics: KMystery
-  kilo_qa: KQuest
+  kilo_qa: KChart
   kilo_expander: KMandel
-  kilo_creator: "kweb://warez (FLARELIGHT & RAZOR 1999 Demoscene Vault)"
-virtual_web_target: "kweb://warez"
+  kilo_creator: "kweb://geocities (CyberSpire's Retro Shrine & MOD Vault)"
+virtual_web_target: "kweb://geocities"
 virtual_web_rotation:
-  - "kweb://portal"
-  - "kweb://webring"
-  - "kweb://warez"
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
   - "kweb://asm-temple"
@@ -31,11 +28,14 @@ virtual_web_rotation:
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
   - "kweb://darknet"
+  - "kweb://portal"
+  - "kweb://webring"
+  - "kweb://warez"
 last_run:
   agent: kilo-usability
   app: KSynth
   timestamp: "2026-09-29T05:17:00Z"
-last_planner_run: "2026-09-28T10:38:00Z"
+last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -97,41 +97,41 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://warez` (FLARELIGHT & RAZOR 1999 Demoscene Vault)
+- **Current Target**: `kweb://geocities` (CyberSpire's Retro Shrine & MOD Vault)
 - **Upcoming Queue**:
-  `kweb://geocities` (Personal Homepages & Web Builder Hub),
-  `kweb://users/~neon_rider` (Personal Hacker / Demoscene Homepage)
-  *(Completed: kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://geocities, kweb://cybercafe, kweb://users/~neon_rider, kweb://asm-temple, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
+  `kweb://users/~neon_rider` (Personal Hacker / Demoscene Homepage),
+  `kweb://asm-temple` (x86 Assembly Programming Shrine & PE32 Dissector)
+  *(Completed: kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Current Target**: `KMystery`
 - **Upcoming Queue**:
-  `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KMech`.
+  `KWizard`, `KStarship`, `KChrono`, `KStarForge`, `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum` *(Completed: KMech, KColosseum, KAbyss)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KDB`
 - **Upcoming Queue**:
-  `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KCyber`.
+  `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KSynth`
+- **Current Target**: `KSys`
 - **Upcoming Queue**:
-  `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KScript` *(Completed: KRadio, KRead, KScript)*.
+  `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KQuest`
+- **Current Target**: `KChart`
 - **Upcoming Queue**:
-  `KSanctuary`, `KClip`, `KCipher`, `KTrader`, `KType`, `KVault`, `KMystery` *(Completed in Pass 5: K2048, KAudio, KBBS, KChrono, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, KClip, KCipher, KTodo)*.
+  `KGraph`, `KContacts`, `KScript`, `KRead`, `KColosseum`, `KAbyss`, `KMedia`, `KAudio`, `KCosmic` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KGraph`
+- **Current Target**: `KMandel`
 - **Upcoming Queue**:
-  `KMandel`, `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts`, `KPass` *(Completed: KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia)*.
+  `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts`, `KPass` *(Completed: KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://deep-core` (`KiloOS/public/web/deep_core.html`)
-  - *Next in Rotation*: `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net`.
+- **Current Active Target**: `kweb://geocities` (`KiloOS/public/web/geocities.html`)
+  - *Next in Rotation*: `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez`.
 - **Anti-Potemkin Directive & Content Mandates**:
   0. `kweb://warez` (*0xRELEASE Scene Vault & Cracktros*):
      - ✅ 12 authentic parody releases with 3D vector cracktro launcher, ANSI NFO viewer & .diz/.nfo downloads.
