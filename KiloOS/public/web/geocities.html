@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>~*~ CyberSpire's Underground Retro Shrine &amp; MOD Vault (1999) ~*~</title>
 <style>
+
   :root {
     --bg-dark: #000000;
     --neon-pink: #ff00aa;
@@ -600,9 +601,346 @@
     letter-spacing: 3px;
     box-shadow: inset 0 0 6px #00ff00;
   }
+
+  /* GeoCities Neighborhood Themes */
+  body.theme-siliconvalley {
+    --bg-dark: #000000;
+    --neon-pink: #ff00aa;
+    --neon-cyan: #00ffcc;
+    --neon-yellow: #ffff00;
+    --neon-green: #00ff66;
+    --neon-purple: #aa00ff;
+    --card-bg: rgba(10, 5, 25, 0.94);
+    --border-color: #ff00ff;
+  }
+  body.theme-area51 {
+    --bg-dark: #030d05;
+    --neon-pink: #00ff66;
+    --neon-cyan: #39ff14;
+    --neon-yellow: #a6ff00;
+    --neon-green: #00ff44;
+    --neon-purple: #00aa33;
+    --card-bg: rgba(2, 20, 8, 0.95);
+    --border-color: #39ff14;
+    color: #39ff14;
+  }
+  body.theme-beverlyhills {
+    --bg-dark: #070e1e;
+    --neon-pink: #ffd700;
+    --neon-cyan: #64b5f6;
+    --neon-yellow: #ffe082;
+    --neon-green: #81c784;
+    --neon-purple: #ba68c8;
+    --card-bg: rgba(13, 27, 62, 0.95);
+    --border-color: #ffd700;
+    color: #ffd700;
+  }
+  body.theme-soho {
+    --bg-dark: #120905;
+    --neon-pink: #ff6f00;
+    --neon-cyan: #ffb74d;
+    --neon-yellow: #ffe082;
+    --neon-green: #ff8a65;
+    --neon-purple: #d84315;
+    --card-bg: rgba(35, 18, 10, 0.95);
+    --border-color: #ff6f00;
+    color: #ffb74d;
+  }
+  body.theme-enchantedforest {
+    --bg-dark: #041208;
+    --neon-pink: #ff80bf;
+    --neon-cyan: #80ffaa;
+    --neon-yellow: #ffff80;
+    --neon-green: #50e3c2;
+    --neon-purple: #b388ff;
+    --card-bg: rgba(6, 32, 16, 0.95);
+    --border-color: #50e3c2;
+    color: #80ffaa;
+  }
+
+  .neighborhood-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: #0d001a;
+    border: 2px outset var(--border-color);
+    padding: 6px 12px;
+    margin-bottom: 12px;
+    font-size: 11px;
+  }
+  .neighborhood-btn {
+    background: #110028;
+    color: var(--neon-cyan);
+    border: 1px solid var(--border-color);
+    padding: 3px 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.1s;
+  }
+  .neighborhood-btn.active, .neighborhood-btn:hover {
+    background: var(--neon-cyan);
+    color: #000;
+  }
+  .voyagers-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #002211;
+    color: #00ff66;
+    border: 1px solid #00ff66;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    box-shadow: 0 0 8px rgba(0, 255, 102, 0.3);
+  }
+  .pulse-dot {
+    width: 8px;
+    height: 8px;
+    background: #00ff66;
+    border-radius: 50%;
+    animation: blinkGlow 1.2s infinite;
+  }
+  @keyframes blinkGlow {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.3; transform: scale(0.8); }
+  }
+
+  /* FM Synth Lab Styles */
+  .fm-keyboard-container {
+    background: #050510;
+    border: 2px solid #00ffcc;
+    padding: 10px;
+    margin-top: 10px;
+    position: relative;
+    user-select: none;
+  }
+  .fm-keys {
+    display: flex;
+    position: relative;
+    height: 120px;
+    margin-top: 8px;
+    background: #111;
+    border: 2px solid #333;
+    overflow-x: auto;
+  }
+  .fm-white-key {
+    flex: 1;
+    min-width: 32px;
+    background: #f0f0f0;
+    border: 1px solid #999;
+    border-radius: 0 0 4px 4px;
+    position: relative;
+    cursor: pointer;
+    color: #333;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding-bottom: 6px;
+    font-weight: bold;
+    transition: background 0.05s;
+  }
+  .fm-white-key:hover { background: #e0f7fa; }
+  .fm-white-key.active { background: #00ffcc !important; color: #000; box-shadow: inset 0 -3px 6px rgba(0,0,0,0.4); }
+  .fm-black-key {
+    position: absolute;
+    width: 22px;
+    height: 72px;
+    background: #111;
+    border: 1px solid #444;
+    border-radius: 0 0 3px 3px;
+    z-index: 2;
+    cursor: pointer;
+    color: #00ffcc;
+    font-family: 'Courier New', monospace;
+    font-size: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding-bottom: 4px;
+    font-weight: bold;
+    transition: background 0.05s;
+  }
+  .fm-black-key:hover { background: #222; }
+  .fm-black-key.active { background: #ff00aa !important; color: #fff; box-shadow: 0 0 10px #ff00aa; }
+  .fm-controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .fm-panel {
+    background: #001020;
+    border: 1px solid #005577;
+    padding: 8px;
+    font-size: 11px;
+  }
+  .fm-knob-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .fm-knob-row label { color: #88ccee; font-size: 11px; }
+  .fm-knob-row input[type=range] { width: 90px; }
+  .fm-val { color: #ffff00; font-family: 'Courier New', monospace; font-size: 11px; min-width: 35px; text-align: right; }
+  .fm-osc-canvas {
+    width: 100%;
+    height: 60px;
+    background: #000810;
+    border: 1px solid #004466;
+    display: block;
+    margin-top: 6px;
+  }
+
+  /* MOD Dissector Styles */
+  .mod-table-box {
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px solid #005577;
+    background: #000c18;
+    margin-top: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+  }
+  .mod-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .mod-table th {
+    background: #002244;
+    color: #00ffcc;
+    text-align: left;
+    padding: 4px 6px;
+    position: sticky;
+    top: 0;
+    border-bottom: 1px solid #0088aa;
+  }
+  .mod-table td {
+    padding: 3px 6px;
+    border-bottom: 1px solid #002233;
+    color: #ddffff;
+  }
+  .mod-table tr:hover { background: rgba(0, 255, 204, 0.1); }
+  .pattern-matrix-view {
+    display: grid;
+    grid-template-columns: 45px 1fr 1fr 1fr 1fr;
+    gap: 2px;
+    background: #00060e;
+    border: 1px solid #004466;
+    padding: 4px;
+    margin-top: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+  .pat-row-num { color: #ffff00; text-align: center; }
+  .pat-cell { color: #00ffcc; padding: 1px 4px; background: #001222; text-align: center; }
+  .pat-cell.active-row { background: #004466; color: #ffffff; font-weight: bold; }
+
+  /* Banner Studio Styles */
+  .banner-studio-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-items: start;
+  }
+  @media (max-width: 720px) {
+    .banner-studio-wrap { grid-template-columns: 1fr; }
+  }
+  .banner-canvas-preview {
+    background: #000;
+    border: 2px inset #555;
+    padding: 10px;
+    text-align: center;
+    margin-bottom: 8px;
+    overflow-x: auto;
+  }
+
+  /* Page Builder Styles */
+  .builder-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 760px) {
+    .builder-grid { grid-template-columns: 1fr; }
+  }
+  .netscape-frame {
+    background: #c0c0c0;
+    border: 3px outset #fff;
+    padding: 4px;
+    color: #000;
+    font-family: 'Arial', sans-serif;
+  }
+  .netscape-titlebar {
+    background: linear-gradient(90deg, #000080, #1084d0);
+    color: #fff;
+    font-weight: bold;
+    font-size: 11px;
+    padding: 2px 4px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .netscape-menubar {
+    font-size: 11px;
+    padding: 2px 4px;
+    border-bottom: 1px solid #808080;
+    background: #c0c0c0;
+  }
+  .netscape-urlbar {
+    background: #fff;
+    border: 2px inset #808080;
+    padding: 2px 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    margin: 3px 0;
+  }
+  .netscape-viewport {
+    background: #fff;
+    border: 2px inset #808080;
+    min-height: 260px;
+    max-height: 380px;
+    overflow-y: auto;
+    padding: 10px;
+  }
+
+  /* Quick Stamp Buttons */
+  .quick-stamp-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin: 6px 0;
+  }
+  .quick-stamp-btn {
+    background: #002233;
+    color: #00ffcc;
+    border: 1px solid #005577;
+    font-size: 10px;
+    font-family: 'Courier New', monospace;
+    padding: 2px 6px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.1s;
+  }
+  .quick-stamp-btn:hover {
+    background: #00ffcc;
+    color: #000;
+  }
+
 </style>
 </head>
-<body>
+<body class="theme-siliconvalley">
 
 <div class="page-card">
   <!-- Under Construction Banner -->
@@ -615,15 +953,35 @@
     <div class="subtitle">"Surfing the information superhighway since December 1999 • GeoCities SiliconValley / CyberSpire / 1999"</div>
   </header>
 
+  <!-- GeoCities Neighborhoods & Presence Bar -->
+  <div class="neighborhood-bar">
+    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+      <span style="font-weight:bold; color:#ffff00;">🏘️ GeoCities Neighborhood:</span>
+      <button class="neighborhood-btn active" id="btnThemeSilicon" onclick="setNeighborhood('siliconvalley')">SiliconValley</button>
+      <button class="neighborhood-btn" id="btnThemeArea51" onclick="setNeighborhood('area51')">Area51</button>
+      <button class="neighborhood-btn" id="btnThemeBeverly" onclick="setNeighborhood('beverlyhills')">BeverlyHills</button>
+      <button class="neighborhood-btn" id="btnThemeSoHo" onclick="setNeighborhood('soho')">SoHo</button>
+      <button class="neighborhood-btn" id="btnThemeForest" onclick="setNeighborhood('enchantedforest')">EnchantedForest</button>
+    </div>
+    <div class="voyagers-pill">
+      <span class="pulse-dot"></span>
+      <span>Cyber Voyagers Online: <span id="onlineVoyagersCount">1</span></span>
+    </div>
+  </div>
+
   <!-- Retro Navigation Bar -->
   <nav class="retro-nav">
     <a href="#shrine-welcome" class="nav-btn">🔮 Home</a>
     <a href="#jukebox-section" class="nav-btn">📻 MIDI Jukebox</a>
     <a href="#mod-vault" class="nav-btn">💾 MOD Downloads</a>
+    <a href="#dissector-section" class="nav-btn">🎼 MOD Dissector</a>
     <a href="#pixel-studio" class="nav-btn">🎨 Pixel Studio</a>
+    <a href="#synth-section" class="nav-btn">🎛️ FM Synth Lab</a>
     <a href="#oracle-section" class="nav-btn">🔮 Silicon Oracle '99</a>
     <a href="#y2k-diagnostic" class="nav-btn">⏱️ Y2K Diagnostic</a>
-    <a href="#guestbook-section" class="nav-btn">📖 Guestbook</a>
+    <a href="#banner-studio" class="nav-btn">🚧 Banner Studio</a>
+    <a href="#page-builder" class="nav-btn">🏗️ Page Builder</a>
+    <a href="#guestbook-section" class="nav-btn">📖 Live Shoutbox</a>
     <a href="#bookmarks-section" class="nav-btn">⭐ Bookmarks</a>
   </nav>
 
@@ -641,15 +999,15 @@
   <div class="section-box" id="shrine-welcome">
     <div class="section-title">
       <span>🔮 Welcome, Cyber Voyager!</span>
-      <span style="font-size:11px; color:#aaffee;">[NODE #002 / GEO-SILICONVALLEY]</span>
+      <span style="font-size:11px; color:#aaffee;" id="neighborhoodNodeTag">[NODE #002 / GEO-SILICONVALLEY]</span>
     </div>
     <p style="font-size:13px; margin:0 0 8px 0; line-height:1.5;">
-      You have docked with <strong>CyberSpire's Underground Retro Shrine</strong>. In this corner of the virtual 1999 web,
+      You have docked with <strong>CyberSpire's Underground Retro Shrine &amp; MOD Vault</strong>. In this corner of the virtual 1999 web,
       we preserve the golden demoscene epoch: pure 16-color pixel sprites, genuine Amiga 4-channel ProTracker (.MOD) module downloads,
-      Web Audio synthesizer jams, and esoteric Silicon Oracle predictions before the Y2K clock flips.
+      YM2612 FM synthesis laboratories, live Web 1.0 banner generators, and esoteric Silicon Oracle predictions before the Y2K clock flips.
     </p>
     <p style="font-size:12px; color:#aaffee; margin:0;">
-      ⚡ <em>Anti-Potemkin guarantee</em>: Every tool works client-side—draw and download pixel sprites (.PNG, .BMP, C-Code), download real Amiga .MOD tracker music files, or consult the Oracle!
+      ⚡ <em>Anti-Potemkin guarantee</em>: Every tool works client-side—draw and download pixel sprites (.PNG, .BMP, C-Code), download real Amiga .MOD tracker music files, dissect 31 sample records and pattern matrices, synthesize custom FM timbres, or design your own personal 1999 homepage!
     </p>
   </div>
 
@@ -662,7 +1020,7 @@
     
     <div class="lcd-display">
       <div class="lcd-top">
-        <span id="lcdTrackNo">TRACK 01/03</span>
+        <span id="lcdTrackNo">TRACK 01/04</span>
         <span id="lcdBpm">135 BPM</span>
         <span id="lcdPattern">PAT: 01/18</span>
         <span id="lcdTime">00:00 / 02:08</span>
@@ -687,6 +1045,7 @@
         <option value="0">01: CyberSpire Neon Horizon (135 BPM - Demoscene Synth Anthem [02:08])</option>
         <option value="1">02: Underground Tracker Dreams (128 BPM - Amiga ProTracker MOD [02:15])</option>
         <option value="2">03: Phosphor Cyberpunk Pulse (144 BPM - Hardcore Keygen Chiptune [02:13])</option>
+        <option value="3">04: Silicon Horizon 1999 (140 BPM - Dreamy Euro-Trance / Paula Anthems [02:16])</option>
       </select>
 
       <div class="vol-control">
@@ -747,6 +1106,18 @@
         <button class="btn-download-mod" onclick="downloadModTrack(2)">💾 Download Cyberpunk_Pulse.mod</button>
       </div>
 
+      <!-- Mod 4 -->
+      <div class="mod-card">
+        <div class="mod-title">📁 Track 04: Silicon Horizon</div>
+        <div class="mod-meta">
+          Format: Euro-Trance Anthem (M.K.)<br>
+          BPM: 140 • 18 Patterns<br>
+          Samples: 8 (Saw, Acid, Strings, Drums)<br>
+          Size: ~27.4 KB (.MOD Binary)
+        </div>
+        <button class="btn-download-mod" onclick="downloadModTrack(3)">💾 Download Silicon_Horizon.mod</button>
+      </div>
+
       <!-- Mod Generator -->
       <div class="mod-card" style="border-color:#ff00aa; background:#1b0024;">
         <div class="mod-title" style="color:#ff00ff;">⚡ Procedural .MOD Synthesizer</div>
@@ -767,7 +1138,80 @@
     </div>
   </div>
 
-  <!-- 3. Pixel Art Gallery & Studio -->
+  <!-- 3. Amiga ProTracker (.MOD) File Dissector & Pattern Matrix Analyzer -->
+  <div class="section-box" id="dissector-section">
+    <div class="section-title">
+      <span>🎼 AMIGA PROTRACKER (.MOD) DISSECTOR &amp; PATTERN MATRIX</span>
+      <span style="font-size:11px; color:#00ffcc;">[4-CHANNEL M.K. ARCHITECTURE INSPECTOR]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0;">
+      Inspect any 4-channel ProTracker module's binary structure: 31 sample records (word length, finetune, volume, repeat bounds),
+      audition raw 8-bit signed PCM audio waveforms through Web Audio, and navigate the 64-row pattern note matrix!
+    </p>
+
+    <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center; background:#001525; padding:8px; border:1px solid #005577; margin-bottom:10px;">
+      <span style="font-size:11px; color:#aaffee;">Inspect Track:</span>
+      <select id="dissectorTrackSelect" onchange="loadDissectorTrack(this.value)" style="background:#000; color:#00ffcc; border:1px solid #00ffcc; font-size:11px; padding:3px;">
+        <option value="0">Track 01: Neon Horizon (.MOD)</option>
+        <option value="1">Track 02: Tracker Dreams (.MOD)</option>
+        <option value="2">Track 03: Cyberpunk Pulse (.MOD)</option>
+        <option value="3">Track 04: Silicon Horizon (.MOD)</option>
+        <option value="proc">Procedural Demoscene Synth (.MOD)</option>
+      </select>
+      <input type="file" id="dissectorFileInput" accept=".mod" style="display:none;" onchange="handleCustomModUpload(event)">
+      <button class="tool-btn" onclick="document.getElementById('dissectorFileInput').click()">📂 Load Custom .MOD File</button>
+      <button class="tool-btn" id="btnAuditionPat" onclick="auditionCurrentPattern()">▶ Audition Active Pattern</button>
+      <button class="tool-btn" onclick="stopPatternAudition()">⏹ Stop Audition</button>
+    </div>
+
+    <!-- Song Metadata -->
+    <div style="display:flex; justify-content:space-between; font-size:11px; color:#ffff00; font-family:'Courier New', monospace; margin-bottom:6px; flex-wrap:wrap; gap:4px;">
+      <span>Song Title: <strong id="dissSongTitle">NEON_HORIZON</strong></span>
+      <span>Format Tag: <strong id="dissFormatTag">M.K. (4 Channels)</strong></span>
+      <span>Song Length: <strong id="dissSongLen">18 Patterns</strong></span>
+    </div>
+
+    <!-- 31 Sample Header Table -->
+    <div style="font-size:12px; color:#00ffcc; font-weight:bold; margin-top:8px;">📦 31 Sample Records (Click '▶ Audition' to hear PCM waveform):</div>
+    <div class="mod-table-box">
+      <table class="mod-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Sample Name</th>
+            <th>Length</th>
+            <th>Finetune</th>
+            <th>Vol</th>
+            <th>Repeat Off</th>
+            <th>Repeat Len</th>
+            <th>Audition</th>
+          </tr>
+        </thead>
+        <tbody id="dissectorSampleRows">
+          <!-- Populated dynamically -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pattern Matrix Viewer -->
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:12px; flex-wrap:wrap; gap:6px;">
+      <span style="font-size:12px; color:#00ffcc; font-weight:bold;">🎹 4-Channel Pattern Matrix Roll:</span>
+      <div style="display:flex; gap:6px; align-items:center; font-size:11px;">
+        <label for="patternSelect">Pattern:</label>
+        <select id="patternSelect" onchange="renderPatternMatrix(parseInt(this.value))" style="background:#000; color:#00ffcc; border:1px solid #00ffcc; font-size:11px; padding:2px;">
+        </select>
+        <button class="tool-btn" onclick="stepPatternRow(-1)">▲ Prev Row</button>
+        <button class="tool-btn" onclick="stepPatternRow(1)">▼ Next Row</button>
+        <span id="patternRowIndicator" style="color:#ffff00; font-family:'Courier New', monospace;">Row: 00/63</span>
+      </div>
+    </div>
+
+    <div class="pattern-matrix-view" id="patternMatrixView">
+      <!-- 64 rows of 4 channels populated dynamically -->
+    </div>
+  </div>
+
+  <!-- 4. Pixel Art Gallery & Studio -->
   <div class="section-box" id="pixel-studio">
     <div class="section-title">
       <span>🎨 16-COLOR CYBER PIXEL ART STUDIO &amp; GALLERY</span>
@@ -858,7 +1302,152 @@
     </div>
   </div>
 
-  <!-- 4. The Silicon Oracle '99 & Y2K Diagnostic -->
+  <!-- 5. YM2612 2-Operator FM Synthesizer & Instrument Laboratory -->
+  <div class="section-box" id="synth-section">
+    <div class="section-title">
+      <span>🎛️ YM2612 2-OPERATOR FM SYNTHESIZER &amp; INSTRUMENT LAB</span>
+      <span style="font-size:11px; color:#ff00ff;">[GENESIS FM / SPC700 STEREO DELAY WORKBENCH]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0;">
+      Craft authentic Sega Genesis 16-bit sound timbres using dual-operator Frequency Modulation synthesis.
+      Adjust carrier &amp; modulator harmonic multipliers, modulation index, ADSR envelope, and SNES SPC700 stereo delay DSP.
+      Play live using your mouse or computer keyboard (A..K keys)!
+    </p>
+
+    <!-- Preset & Export Toolbar -->
+    <div style="display:flex; flex-wrap:wrap; gap:6px; justify-content:space-between; align-items:center; background:#001020; padding:6px 10px; border:1px solid #005577;">
+      <div style="display:flex; gap:6px; align-items:center;">
+        <span style="font-size:11px; color:#ffff00;">Preset Timbre:</span>
+        <select id="fmPresetSelect" onchange="loadFmPreset(this.value)" style="background:#000; color:#00ffcc; border:1px solid #00ffcc; font-size:11px; padding:2px;">
+          <option value="bass">01: Demoscene Slap Bass</option>
+          <option value="brass">02: Genesis FM Brass</option>
+          <option value="acid">03: Acid 303 Resonant Zap</option>
+          <option value="bell">04: Paula Crystal Bell</option>
+          <option value="laser">05: Sci-Fi Warp Laser</option>
+          <option value="square">06: Chiptune Pulse Square</option>
+          <option value="pad">07: Ambient Space Pad</option>
+          <option value="rave">08: Hardcore Rave Stabs</option>
+        </select>
+      </div>
+      <div style="display:flex; gap:4px;">
+        <button class="tool-btn" onclick="testFmNote()">▶ Test Note (C-3)</button>
+        <button class="tool-btn" onclick="exportFmPatchJson()">💾 Export JSON</button>
+        <button class="tool-btn" onclick="copyFmCStruct()">📋 Copy C Struct</button>
+      </div>
+    </div>
+
+    <!-- Parameter Controls Grid -->
+    <div class="fm-controls-grid">
+      <!-- Operator 1: Carrier -->
+      <div class="fm-panel">
+        <div style="color:#00ffcc; font-weight:bold; margin-bottom:6px; border-bottom:1px solid #004466; padding-bottom:2px;">Operator 1: Carrier</div>
+        <div class="fm-knob-row">
+          <label>Waveform:</label>
+          <select id="fmCarWave" onchange="updateFmParams()" style="background:#000; color:#fff; font-size:10px;">
+            <option value="sawtooth">Sawtooth</option>
+            <option value="sine">Sine</option>
+            <option value="square">Square</option>
+            <option value="triangle">Triangle</option>
+          </select>
+        </div>
+        <div class="fm-knob-row">
+          <label>Harmonic Ratio:</label>
+          <input type="range" id="fmCarRatio" min="0.5" max="8" step="0.5" value="1" oninput="updateFmParams()">
+          <span class="fm-val" id="valCarRatio">1.0x</span>
+        </div>
+        <div class="fm-knob-row">
+          <label>Attack (s):</label>
+          <input type="range" id="fmAttack" min="0.001" max="0.5" step="0.005" value="0.01" oninput="updateFmParams()">
+          <span class="fm-val" id="valAttack">0.01s</span>
+        </div>
+        <div class="fm-knob-row">
+          <label>Decay (s):</label>
+          <input type="range" id="fmDecay" min="0.01" max="1.5" step="0.01" value="0.25" oninput="updateFmParams()">
+          <span class="fm-val" id="valDecay">0.25s</span>
+        </div>
+        <div class="fm-knob-row">
+          <label>Sustain Level:</label>
+          <input type="range" id="fmSustain" min="0" max="1" step="0.05" value="0.2" oninput="updateFmParams()">
+          <span class="fm-val" id="valSustain">0.20</span>
+        </div>
+        <div class="fm-knob-row">
+          <label>Release (s):</label>
+          <input type="range" id="fmRelease" min="0.01" max="2.0" step="0.02" value="0.2" oninput="updateFmParams()">
+          <span class="fm-val" id="valRelease">0.20s</span>
+        </div>
+      </div>
+
+      <!-- Operator 2: Modulator -->
+      <div class="fm-panel">
+        <div style="color:#ff00aa; font-weight:bold; margin-bottom:6px; border-bottom:1px solid #660044; padding-bottom:2px;">Operator 2: Modulator</div>
+        <div class="fm-knob-row">
+          <label>Waveform:</label>
+          <select id="fmModWave" onchange="updateFmParams()" style="background:#000; color:#fff; font-size:10px;">
+            <option value="sine">Sine</option>
+            <option value="sawtooth">Sawtooth</option>
+            <option value="square">Square</option>
+            <option value="triangle">Triangle</option>
+          </select>
+        </div>
+        <div class="fm-knob-row">
+          <label>Mod Ratio:</label>
+          <input type="range" id="fmModRatio" min="0.5" max="16" step="0.5" value="2" oninput="updateFmParams()">
+          <span class="fm-val" id="valModRatio">2.0x</span>
+        </div>
+        <div class="fm-knob-row">
+          <label>Mod Depth / Index:</label>
+          <input type="range" id="fmModIndex" min="0" max="1200" step="20" value="450" oninput="updateFmParams()">
+          <span class="fm-val" id="valModIndex">450</span>
+        </div>
+        <div class="fm-knob-row">
+          <label>Mod Feedback (0-7):</label>
+          <input type="range" id="fmFeedback" min="0" max="7" step="1" value="3" oninput="updateFmParams()">
+          <span class="fm-val" id="valFeedback">3</span>
+        </div>
+        <div style="margin-top:8px; font-size:10px; color:#88aacc;">
+          Oscilloscope Waveform Preview:
+        </div>
+        <canvas id="fmOscCanvas" class="fm-osc-canvas" width="220" height="50"></canvas>
+      </div>
+
+      <!-- SPC700 Stereo Delay DSP -->
+      <div class="fm-panel">
+        <div style="color:#ffff00; font-weight:bold; margin-bottom:6px; border-bottom:1px solid #666600; padding-bottom:2px;">SPC700 Stereo Delay DSP</div>
+        <div class="fm-knob-row">
+          <label>Delay Time (s):</label>
+          <input type="range" id="fmDelayTime" min="0.05" max="0.6" step="0.02" value="0.22" oninput="updateFmParams()">
+          <span class="fm-val" id="valDelayTime">0.22s</span>
+        </div>
+        <div class="fm-knob-row">
+          <label>Delay Feedback:</label>
+          <input type="range" id="fmDelayFb" min="0" max="0.65" step="0.05" value="0.28" oninput="updateFmParams()">
+          <span class="fm-val" id="valDelayFb">28%</span>
+        </div>
+        <div class="fm-knob-row">
+          <label>Damping Lowpass:</label>
+          <input type="range" id="fmDelayCutoff" min="800" max="8000" step="200" value="2600" oninput="updateFmParams()">
+          <span class="fm-val" id="valDelayCutoff">2600Hz</span>
+        </div>
+        <div style="margin-top:10px;">
+          <div style="font-size:10px; color:#00ffcc;">C Array Struct Output:</div>
+          <textarea id="fmCStructOutput" style="width:100%; height:45px; background:#000810; border:1px solid #004466; color:#00ff66; font-family:'Courier New', monospace; font-size:9px; padding:2px;" readonly></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- Playable 18-Key Retro Keyboard -->
+    <div class="fm-keyboard-container">
+      <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px;">
+        <span style="color:#00ffcc; font-weight:bold;">🎹 18-Key Playable Synth Keyboard (C-3 to F-4)</span>
+        <span style="color:#ffff00;">Computer Keys: [A, W, S, E, D, F, T, G, Y, H, U, J, K, O, L, P, ;, ']</span>
+      </div>
+      <div class="fm-keys" id="fmKeyboard">
+        <!-- 18 keys populated dynamically with black keys placed precisely -->
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. The Silicon Oracle '99 & Y2K Diagnostic -->
   <div class="section-box" id="oracle-section">
     <div class="section-title">
       <span>🔮 THE SILICON ORACLE '99</span>
@@ -925,7 +1514,173 @@
     </div>
   </div>
 
-  <!-- 5. CyberSpire Bookmark Vault -->
+  <!-- 7. Retro Web 1.0 GIF & Banner Studio -->
+  <div class="section-box" id="banner-studio">
+    <div class="section-title">
+      <span>🚧 RETRO WEB 1.0 GIF &amp; BANNER STUDIO</span>
+      <span style="font-size:11px; color:#ffff00;">[88x31 &amp; 468x60 CANVAS GENERATOR]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0;">
+      Craft authentic 1999 animated-style banners, hazard stripes, and 88x31 micro buttons.
+      Export as downloadable <strong>.PNG images</strong> or copy ready-to-paste <strong>Web 1.0 HTML embed code</strong> for your GeoCities page!
+    </p>
+
+    <div class="banner-studio-wrap">
+      <!-- Left: Controls -->
+      <div style="background:#001020; border:1px solid #005577; padding:10px; font-size:11px;">
+        <div style="margin-bottom:8px;">
+          <label style="color:#aaffee; font-weight:bold;">Banner Preset Archetype:</label>
+          <select id="bannerPreset" onchange="applyBannerPreset(this.value)" style="width:100%; background:#000; color:#00ffcc; border:1px solid #00ffcc; font-size:11px; padding:3px; margin-top:2px;">
+            <option value="hazard">🚧 Classic Caution Hazard (Under Construction)</option>
+            <option value="netscape">💻 Netscape Now 4.0 (Best Viewed in 800x600)</option>
+            <option value="area51">🛸 Area51 Roswell Base (Surfing Cyberspace '99)</option>
+            <option value="protracker">💾 Made with ProTracker (Amiga Sound System)</option>
+            <option value="y2k">🔮 Silicon Oracle (100% Y2K Compliant)</option>
+            <option value="custom">🌐 Custom Webmaster Badge</option>
+          </select>
+        </div>
+
+        <div style="display:flex; gap:8px; margin-bottom:8px;">
+          <div style="flex:1;">
+            <label style="color:#aaffee;">Dimensions:</label>
+            <select id="bannerDim" onchange="renderBannerCanvas()" style="width:100%; background:#000; color:#fff; border:1px solid #005577; font-size:11px; padding:2px;">
+              <option value="468x60">468x60 (Full Banner)</option>
+              <option value="88x31">88x31 (Micro Button)</option>
+            </select>
+          </div>
+          <div style="flex:1;">
+            <label style="color:#aaffee;">Border Style:</label>
+            <select id="bannerBorder" onchange="renderBannerCanvas()" style="width:100%; background:#000; color:#fff; border:1px solid #005577; font-size:11px; padding:2px;">
+              <option value="hazard">Hazard Stripes</option>
+              <option value="bevel">3D Raised Bevel</option>
+              <option value="neon">Neon Cyber Dual</option>
+              <option value="chiseled">Chiseled Gold</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-bottom:6px;">
+          <label style="color:#aaffee;">Banner Main Text:</label>
+          <input type="text" id="bannerText" value="UNDER HEAVY EXPANSION!" oninput="renderBannerCanvas()" style="width:100%; background:#000; color:#ffff00; border:1px solid #0088aa; font-size:11px; padding:3px;">
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <label style="color:#aaffee;">Subtitle / Caption:</label>
+          <input type="text" id="bannerSubtext" value="BEST IN 800x600 • 16-BIT COLOR" oninput="renderBannerCanvas()" style="width:100%; background:#000; color:#00ffcc; border:1px solid #0088aa; font-size:11px; padding:3px;">
+        </div>
+
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+          <label style="color:#aaffee;">Theme Colors:</label>
+          <select id="bannerTheme" onchange="renderBannerCanvas()" style="flex:1; background:#000; color:#fff; border:1px solid #005577; font-size:11px; padding:2px;">
+            <option value="hazard">Toxic Hazard (Yellow/Black)</option>
+            <option value="cyber">Cyber Neon (Pink/Cyan)</option>
+            <option value="amiga">Amiga Copper (Blue/Orange)</option>
+            <option value="gold">Millennium Gold (Gold/Navy)</option>
+            <option value="matrix">Matrix Phosphor (Green/Black)</option>
+          </select>
+          <label><input type="checkbox" id="bannerBlink" onchange="renderBannerCanvas()" checked> Blink</label>
+        </div>
+
+        <div style="display:flex; gap:4px; margin-top:8px;">
+          <button class="tool-btn" style="flex:1; background:#005577;" onclick="downloadBannerPng()">💾 Download .PNG</button>
+          <button class="tool-btn" style="flex:1; background:#440066;" onclick="copyBannerHtml()">📋 Copy HTML Embed</button>
+        </div>
+      </div>
+
+      <!-- Right: Live Canvas Preview -->
+      <div style="background:#001020; border:1px solid #005577; padding:10px;">
+        <div style="font-size:12px; color:#ffff00; font-weight:bold; margin-bottom:6px;">Live Render Canvas:</div>
+        <div class="banner-canvas-preview">
+          <canvas id="bannerCanvas" width="468" height="60"></canvas>
+        </div>
+        <div style="font-size:11px; color:#aaffee; margin-top:6px;">HTML Embed Snippet:</div>
+        <textarea id="bannerEmbedSnippet" style="width:100%; height:55px; background:#000810; border:1px solid #004466; color:#00ffcc; font-family:'Courier New', monospace; font-size:10px; padding:4px;" readonly></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. Webmaster Acolyte Workbench (1999 Personal Page Generator) -->
+  <div class="section-box" id="page-builder">
+    <div class="section-title">
+      <span>🏗️ WEBMASTER ACOLYTE WORKBENCH (1999 PAGE GENERATOR)</span>
+      <span style="font-size:11px; color:#00ffcc;">[STANDALONE WEB 1.0 PERSONAL SITE BUILDER]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0;">
+      Design your own authentic 1999 GeoCities personal homepage! Configure page layout, bio, favorite demoscene warez,
+      animated marquee ticker, Webring links, and hit counter. Preview in real-time in the Netscape CRT window and download a standalone <code>index.html</code>!
+    </p>
+
+    <div class="builder-grid">
+      <!-- Left: Form Controls -->
+      <div style="background:#001020; border:1px solid #005577; padding:10px; font-size:11px;">
+        <div style="margin-bottom:6px;">
+          <label style="color:#aaffee; font-weight:bold;">Homepage Title:</label>
+          <input type="text" id="builderTitle" value="~*~ CyBer_ShaDow's 1999 DoMaIn ~*~" oninput="updatePagePreview()" style="width:100%; background:#000; color:#ffff00; border:1px solid #0088aa; font-size:11px; padding:3px;">
+        </div>
+
+        <div style="display:flex; gap:8px; margin-bottom:6px;">
+          <div style="flex:1;">
+            <label style="color:#aaffee;">Webmaster Alias:</label>
+            <input type="text" id="builderAlias" value="ShadowLord_99" oninput="updatePagePreview()" style="width:100%; background:#000; color:#00ffcc; border:1px solid #0088aa; font-size:11px; padding:3px;">
+          </div>
+          <div style="flex:1;">
+            <label style="color:#aaffee;">GeoCities Neighborhood:</label>
+            <select id="builderNeighborhood" onchange="updatePagePreview()" style="width:100%; background:#000; color:#fff; border:1px solid #0088aa; font-size:11px; padding:3px;">
+              <option value="SiliconValley">SiliconValley (Cyber/Tech)</option>
+              <option value="Area51">Area51 (Sci-Fi/UFO)</option>
+              <option value="BeverlyHills">BeverlyHills (Glamour/Gold)</option>
+              <option value="SoHo">SoHo (Bohemian/Art)</option>
+              <option value="EnchantedForest">EnchantedForest (Fantasy)</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-bottom:6px;">
+          <label style="color:#aaffee;">Personal Bio / Introduction:</label>
+          <textarea id="builderBio" rows="2" oninput="updatePagePreview()" style="width:100%; background:#000; color:#fff; border:1px solid #0088aa; font-size:11px; padding:3px;">Welcome to my cyber realm! Surfing the web at 56k V.90. Coding x86 assembly, tracking Amiga MODs, and exploring KiloNet!</textarea>
+        </div>
+
+        <div style="margin-bottom:6px;">
+          <label style="color:#aaffee;">Favorite Games / Demoscene Software:</label>
+          <input type="text" id="builderFavorites" value="Tremor III Arena, Surreal Tournament, ProTracker 2.3, KiloOS" oninput="updatePagePreview()" style="width:100%; background:#000; color:#ff00aa; border:1px solid #0088aa; font-size:11px; padding:3px;">
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <label style="color:#aaffee;">Marquee Ticker Message:</label>
+          <input type="text" id="builderMarquee" value="★ LAST UPDATED: DECEMBER 1999 • Y2K READY • SIGN MY GUESTBOOK! ★" oninput="updatePagePreview()" style="width:100%; background:#000; color:#00ff66; border:1px solid #0088aa; font-size:11px; padding:3px;">
+        </div>
+
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; font-size:10px;">
+          <label><input type="checkbox" id="chkBuilderMarquee" onchange="updatePagePreview()" checked> Marquee Ticker</label>
+          <label><input type="checkbox" id="chkBuilderHazard" onchange="updatePagePreview()" checked> Hazard Banner</label>
+          <label><input type="checkbox" id="chkBuilderBlink" onchange="updatePagePreview()" checked> Blink Text</label>
+          <label><input type="checkbox" id="chkBuilderWebring" onchange="updatePagePreview()" checked> Webring Widget</label>
+          <label><input type="checkbox" id="chkBuilderCounter" onchange="updatePagePreview()" checked> Hit Counter</label>
+        </div>
+
+        <button class="btn-sign" style="width:100%; background:#005500; border-color:#00ff00;" onclick="downloadGeneratedPage()">
+          💾 Download Standalone index.html (&lt;10 KB)
+        </button>
+      </div>
+
+      <!-- Right: Netscape 4.0 CRT Preview Window -->
+      <div>
+        <div class="netscape-frame">
+          <div class="netscape-titlebar">
+            <span id="previewWindowBar">Netscape Communicator 4.0 - [Home]</span>
+            <span>✕</span>
+          </div>
+          <div class="netscape-menubar">File &nbsp; Edit &nbsp; View &nbsp; Go &nbsp; Communicator &nbsp; Help</div>
+          <div class="netscape-urlbar" id="previewUrlBar">Location: http://www.geocities.com/SiliconValley/Peaks/1999/index.html</div>
+          <div class="netscape-viewport" id="previewViewport">
+            <!-- Rendered live -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. CyberSpire Bookmark Vault -->
   <div class="section-box" id="bookmarks-section">
     <div class="section-title">⭐ CyberSpire's 1999 Cyberspace Vault</div>
     <ul style="font-size:13px; line-height:1.7; margin:0; padding-left:20px;">
@@ -940,15 +1695,30 @@
     </ul>
   </div>
 
-  <!-- 6. Guestbook -->
+  <!-- 10. Cyber Guestbook & Live Shoutbox -->
   <div class="section-box" id="guestbook-section">
     <div class="section-title">
-      <span>📖 Sign the Cyber Guestbook!</span>
-      <span style="font-size:11px; color:#ffff00;">[PERSISTENT WEB 1.0 LOG]</span>
+      <span>📖 Cyber Guestbook &amp; Live Shoutbox</span>
+      <span style="font-size:11px; color:#ffff00;" id="shoutboxStatusBadge">[LIVE RTDB CONNECTED]</span>
     </div>
-    <div class="guestbook-form">
+    <p style="font-size:12px; margin:0 0 8px 0;">
+      Leave your mark on CyberSpire's guestbook! Synced in real-time across all online cyber voyagers via Firebase Realtime Database.
+    </p>
+
+    <!-- Quick Stamp Greetings -->
+    <div class="quick-stamp-group">
+      <span style="font-size:11px; color:#ffff00; font-family:'Courier New', monospace; margin-right:4px;">1-Click Stamps:</span>
+      <button class="quick-stamp-btn" onclick="applyQuickStamp('Greetings to FLARELIGHT &amp; RAZOR 1999!')">⚡ FLARELIGHT &amp; RAZOR 1999</button>
+      <button class="quick-stamp-btn" onclick="applyQuickStamp('ProTracker .MOD vault certified gold!')">💾 ProTracker Gold</button>
+      <button class="quick-stamp-btn" onclick="applyQuickStamp('Silicon Oracle prophecy holds true!')">🔮 Oracle Prophecy</button>
+      <button class="quick-stamp-btn" onclick="applyQuickStamp('Surfing from Area51 neighborhood!')">🛸 Area51 Voyager</button>
+      <button class="quick-stamp-btn" onclick="applyQuickStamp('100% Y2K Compliant Workstation!')">⏱️ Y2K Compliant</button>
+      <button class="quick-stamp-btn" onclick="applyQuickStamp('Long live the 999KB Web 1.0 frontier!')">🌐 999KB Frontier</button>
+    </div>
+
+    <div class="guestbook-form" style="margin-top:6px;">
       <input type="text" id="gbAlias" class="gb-input" placeholder="Your Cyber Alias (e.g. PixelMage_99, NeoSurfer)" />
-      <textarea id="gbMsg" class="gb-input" rows="2" placeholder="Leave your mark on CyberSpire's guestbook..."></textarea>
+      <textarea id="gbMsg" class="gb-input" rows="2" placeholder="Leave your mark on CyberSpire's live shoutbox..."></textarea>
       <button class="btn-sign" onclick="addGuestbookEntry()">Sign Guestbook [✍️]</button>
     </div>
     <div id="guestbookList" style="margin-top:12px;"></div>
@@ -972,6 +1742,7 @@
 </div>
 
 <script>
+
 // ============================================================================
 // AUDIO & SOUND EFFECT SYSTEM (GENESIS YM2612 FM & SPC700 STEREO DELAY)
 // ============================================================================
@@ -1361,7 +2132,81 @@ const track3 = {
   ]
 };
 
-const allTracks = [track1, track2, track3];
+
+
+// TRACK 4: Silicon Horizon 1999 (140 BPM - Dreamy Euro-Trance / Paula Anthems)
+const T4_CHORDS_MAIN = [
+  ...rep16([64, 67, 71, 76]), // Em
+  ...rep16([60, 64, 67, 72]), // C
+  ...rep16([62, 66, 69, 74]), // D
+  ...rep16([59, 62, 66, 71])  // Bm
+];
+const T4_CHORDS_BRIDGE = [
+  ...rep16([67, 71, 74, 79]), // G
+  ...rep16([62, 66, 69, 74]), // D
+  ...rep16([69, 72, 76, 81]), // Am
+  ...rep16([60, 64, 67, 72])  // C
+];
+const T4_BASS_MAIN = [
+  ...[28,28,40,28, 28,40,28,28, 28,28,40,28, 28,40,28,40],
+  ...[24,24,36,24, 24,36,24,24, 24,24,36,24, 24,36,24,36],
+  ...[26,26,38,26, 26,38,26,26, 26,26,38,26, 26,38,26,38],
+  ...[23,23,35,23, 23,35,23,23, 23,23,35,23, 23,35,23,35]
+];
+const T4_BASS_BRIDGE = [
+  ...[31,31,43,31, 31,43,31,31, 31,31,43,31, 31,43,31,43],
+  ...[26,26,38,26, 26,38,26,26, 26,26,38,26, 26,38,26,38],
+  ...[21,21,33,21, 21,33,21,21, 21,21,33,21, 21,33,21,33],
+  ...[24,24,36,24, 24,36,24,24, 24,24,36,24, 24,36,24,36]
+];
+const T4_LEAD_THEME_A = [
+  76,null,79,83, null,83,81,79, 81,null,79,78, 76,null,null,null,
+  72,null,76,79, null,81,79,76, 79,null,78,76, 74,null,76,78,
+  74,null,78,81, null,83,81,78, 81,null,79,78, 76,null,78,79,
+  71,null,74,78, null,79,78,74, 78,null,79,81, 83,81,79,78
+];
+const T4_LEAD_THEME_HIGH = [
+  88,null,91,95, null,95,93,91, 93,null,91,90, 88,null,null,null,
+  84,null,88,91, null,93,91,88, 91,null,90,88, 86,null,88,90,
+  86,null,90,93, null,95,93,90, 93,null,91,90, 88,null,90,91,
+  83,null,86,90, null,91,90,86, 90,null,91,93, 95,93,91,90
+];
+const T4_LEAD_SOLO = [
+  76,78,79,81, 83,81,79,78, 79,81,83,86, 88,86,83,81,
+  72,74,76,78, 79,78,76,74, 76,78,79,83, 84,83,79,76,
+  74,76,78,79, 81,79,78,76, 78,79,81,85, 86,85,81,78,
+  71,74,76,78, 81,78,76,74, 76,78,81,83, 86,83,81,78
+];
+
+const track4 = {
+  title: "Track 4: Silicon Horizon 1999 (Euro-Trance / Paula Anthems)",
+  shortTitle: "Silicon Horizon",
+  modName: "Silicon_Horizon",
+  bpm: 140,
+  genre: "140 BPM - Dreamy Euro-Trance Anthem",
+  patterns: [
+    { name: "Intro Ambient Chords", lead: SILENT_64, arp: T4_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "Bass Pulse Build", lead: SILENT_64, arp: T4_CHORDS_MAIN, bass: T4_BASS_MAIN, kick: KICK_4, snare: SNARE_OFF, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Main Theme In", lead: T4_LEAD_THEME_A, arp: T4_CHORDS_MAIN, bass: T4_BASS_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Driving Groove", lead: T4_LEAD_THEME_A, arp: T4_CHORDS_MAIN, bass: T4_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_OPEN, crash: false, riser: false, laser: false },
+    { name: "Bridge Melodic", lead: T4_LEAD_THEME_A, arp: T4_CHORDS_BRIDGE, bass: T4_BASS_BRIDGE, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Pre-Drop Euphoria", lead: T4_LEAD_THEME_A, arp: T4_CHORDS_MAIN, bass: T4_BASS_MAIN, kick: KICK_4, snare: SNARE_BUILD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Riser & Laser Sweep", lead: SILENT_64, arp: T4_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_BUILD, hihat: HAT_OFF, crash: false, riser: true, laser: true },
+    { name: "THE EURO DROP", lead: T4_LEAD_THEME_HIGH, arp: T4_CHORDS_MAIN, bass: T4_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH, crash: true, riser: false, laser: false },
+    { name: "Drop Peak Rave", lead: T4_LEAD_THEME_HIGH, arp: T4_CHORDS_MAIN, bass: T4_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_OPEN, crash: false, riser: false, laser: false },
+    { name: "Atmospheric Breakdown", lead: SILENT_64, arp: T4_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "Paula Lead Solo 1", lead: T4_LEAD_SOLO, arp: T4_CHORDS_MAIN, bass: T4_BASS_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Paula Lead Solo 2", lead: T4_LEAD_SOLO, arp: T4_CHORDS_BRIDGE, bass: T4_BASS_BRIDGE, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_OPEN, crash: false, riser: false, laser: false },
+    { name: "Mega Tension Build", lead: SILENT_64, arp: T4_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_BUILD, hihat: HAT_OFF, crash: false, riser: true, laser: true },
+    { name: "MEGA DROP 2", lead: T4_LEAD_THEME_HIGH, arp: T4_CHORDS_MAIN, bass: T4_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH, crash: true, riser: false, laser: false },
+    { name: "Mega Climax", lead: T4_LEAD_THEME_HIGH, arp: T4_CHORDS_MAIN, bass: T4_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_OPEN, crash: false, riser: false, laser: false },
+    { name: "Outro Arp Theme", lead: T4_LEAD_THEME_A, arp: T4_CHORDS_MAIN, bass: T4_BASS_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Fadeout Groove", lead: T4_LEAD_THEME_A, arp: T4_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "Final Echo Pad", lead: SILENT_64, arp: T4_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFF, crash: false, riser: false, laser: false }
+  ]
+};
+
+const allTracks = [track1, track2, track3, track4];
 const midiTracks = allTracks;
 
 // Lead, Bass, Percussion Synths
@@ -1870,10 +2715,12 @@ function drawEqualizer() {
 }
 drawEqualizer();
 
+
+
 // ============================================================================
 // AMIGA PROTRACKER (.MOD) BINARY GENERATOR (STANDARD M.K. 4-CHANNEL)
 // ============================================================================
-// Standard Amiga Paula Periods for ProTracker finetune 0 (octaves 1 to 3)
+// Standard Amiga Paula Periods for ProTracker finetune 0 (octaves 1 to 4)
 const AMIGA_PERIOD_TABLE = {
   36: 856, 37: 808, 38: 762, 39: 720, 40: 678, 41: 640, 42: 604, 43: 570, 44: 538, 45: 508, 46: 480, 47: 453, // C-1 to B-1
   48: 428, 49: 404, 50: 381, 51: 360, 52: 339, 53: 320, 54: 302, 55: 285, 56: 269, 57: 254, 58: 240, 59: 226, // C-2 to B-2
@@ -1883,7 +2730,6 @@ const AMIGA_PERIOD_TABLE = {
 
 function noteToAmigaPeriod(note) {
   if (!note) return 0;
-  // Clamp to valid range
   let n = Math.max(36, Math.min(83, note));
   return AMIGA_PERIOD_TABLE[n] || 214;
 }
@@ -1907,8 +2753,10 @@ function generate8BitPcm(type, length) {
       val = (Math.random() * 2 - 1) * 110 * Math.exp(-phase * 5);
     } else if (type === 'hihat') {
       val = (Math.random() * 2 - 1) * 90 * Math.exp(-phase * 12);
-    } else { // Sine chime
+    } else if (type === 'bell') {
       val = Math.sin(phase * Math.PI * 2 * 4) * 90 * Math.exp(-phase * 3);
+    } else { // Sine aura
+      val = Math.sin(phase * Math.PI * 2) * 85 * Math.exp(-phase * 1.5);
     }
     pcm[i] = Math.max(-128, Math.min(127, Math.round(val)));
   }
@@ -1916,7 +2764,6 @@ function generate8BitPcm(type, length) {
 }
 
 function buildModBinary(track) {
-  // Samples definition (7 active samples)
   const sampleDefs = [
     { name: "Saw Lead Synth", len: 512, finetune: 0, vol: 64, type: 'saw' },
     { name: "Square Bass Stab", len: 512, finetune: 0, vol: 64, type: 'square' },
@@ -1924,12 +2771,13 @@ function buildModBinary(track) {
     { name: "Demoscene 8Bit Kick", len: 1024, finetune: 0, vol: 64, type: 'kick' },
     { name: "Dual Noise Snare", len: 1024, finetune: 0, vol: 58, type: 'snare' },
     { name: "Metallic Open Hat", len: 512, finetune: 0, vol: 50, type: 'hihat' },
-    { name: "FM Bell Chime", len: 512, finetune: 0, vol: 60, type: 'bell' }
+    { name: "FM Bell Chime", len: 512, finetune: 0, vol: 60, type: 'bell' },
+    { name: "Paula Space Aura", len: 1024, finetune: 0, vol: 55, type: 'sine' }
   ];
 
   const pcmList = sampleDefs.map(s => generate8BitPcm(s.type, s.len));
-  const numPatterns = Math.min(16, track.patterns.length);
-  const patternDataSize = numPatterns * 1024; // 1024 bytes per 4-channel pattern
+  const numPatterns = Math.min(18, track.patterns.length);
+  const patternDataSize = numPatterns * 1024;
   const totalPcmSize = pcmList.reduce((acc, pcm) => acc + pcm.length, 0);
   const totalSize = 1084 + patternDataSize + totalPcmSize;
 
@@ -1947,34 +2795,30 @@ function buildModBinary(track) {
       const def = sampleDefs[s];
       const sName = def.name.padEnd(22, '\0');
       for (let i = 0; i < 22; i++) buffer[off + i] = sName.charCodeAt(i) || 0;
-      // Length in 16-bit words (big-endian)
       view.setUint16(off + 22, def.len / 2, false);
-      buffer[off + 24] = def.finetune; // Finetune
-      buffer[off + 25] = def.vol;      // Volume
-      view.setUint16(off + 26, 0, false); // Repeat point
-      view.setUint16(off + 28, 1, false); // Repeat length (1 word = non-looping)
-    } else {
-      // Empty sample
-      view.setUint16(off + 22, 0, false);
-      buffer[off + 25] = 0;
+      buffer[off + 24] = def.finetune & 0x0F;
+      buffer[off + 25] = def.vol & 0x7F;
+      view.setUint16(off + 26, 0, false);
       view.setUint16(off + 28, 1, false);
+    } else {
+      for (let i = 0; i < 30; i++) buffer[off + i] = 0;
     }
   }
 
   // 3. Song Length & Restart Byte (offset 950..951)
-  buffer[950] = numPatterns; // Number of song positions
-  buffer[951] = 127;         // Standard restart flag
+  buffer[950] = numPatterns;
+  buffer[951] = 127;
 
-  // 4. Pattern Sequence Table (128 bytes, offset 952..1079)
+  // 4. Pattern Table / Order List (offset 952..1079)
   for (let i = 0; i < 128; i++) {
     buffer[952 + i] = (i < numPatterns) ? i : 0;
   }
 
-  // 5. M.K. Tag (offset 1080..1083)
-  buffer[1080] = 0x4D; // 'M'
-  buffer[1081] = 0x2E; // '.'
-  buffer[1082] = 0x4B; // 'K'
-  buffer[1083] = 0x2E; // '.'
+  // 5. Signature 'M.K.' at offset 1080..1083
+  buffer[1080] = 'M'.charCodeAt(0);
+  buffer[1081] = '.'.charCodeAt(0);
+  buffer[1082] = 'K'.charCodeAt(0);
+  buffer[1083] = '.'.charCodeAt(0);
 
   // 6. Pattern Data (offset 1084 onwards)
   let patOffset = 1084;
@@ -1990,9 +2834,9 @@ function buildModBinary(track) {
       buffer[patOffset++] = ((s1 & 0x0F) << 4);
       buffer[patOffset++] = 0;
 
-      // Channel 2: Arp / Chord (Sample 2 or 7)
-      let n2 = pat.arp[r] ? pat.arp[r][0] : null;
-      let p2 = n2 ? noteToAmigaPeriod(n2) : 0;
+      // Channel 2: Arp / Chord (Sample 2)
+      let n2 = pat.arp ? pat.arp[r] : null;
+      let p2 = n2 ? (Array.isArray(n2) ? noteToAmigaPeriod(n2[0]) : noteToAmigaPeriod(n2)) : 0;
       let s2 = n2 ? 2 : 0;
       buffer[patOffset++] = (s2 & 0xF0) | ((p2 >> 8) & 0x0F);
       buffer[patOffset++] = p2 & 0xFF;
@@ -2059,7 +2903,7 @@ function generateProceduralMod() {
       { name: "Procedural Pat 1", lead: T1_LEAD_THEME_A, arp: T1_CHORDS_MAIN, bass: T1_BASS_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_16TH },
       { name: "Procedural Pat 2", lead: T2_LEAD_SOLO, arp: T2_CHORDS_MAIN, bass: T2_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_GHOST, hihat: HAT_OPEN },
       { name: "Procedural Pat 3", lead: T3_LEAD_HOOK_HIGH, arp: T3_CHORDS_MAIN, bass: T3_BASS_ACID_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH },
-      { name: "Procedural Pat 4", lead: T1_LEAD_OUTRO, arp: T1_CHORDS_OUTRO, bass: T1_BASS_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_OFFBEAT }
+      { name: "Procedural Pat 4", lead: T4_LEAD_THEME_A, arp: T4_CHORDS_MAIN, bass: T4_BASS_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_OFFBEAT }
     ]
   };
   const modBuffer = buildModBinary(rndTrack);
@@ -2097,27 +2941,6 @@ function inspectModHeader() {
   lines.push("... [Offset 1080: TAG 'M.K.' Verified 4-Channel ProTracker] ...");
   hexDumpEl.textContent = lines.join('\n');
 }
-
-// ============================================================================
-// 16-COLOR PIXEL ART STUDIO & GALLERY ENGINE
-// ============================================================================
-const PALETTES = {
-  cyber: [
-    "#000000", "#0a0a20", "#ff00aa", "#00ffcc", "#ffff00", "#00ff66", "#aa00ff", "#ffffff",
-    "#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4", "#64748b"
-  ],
-  ega: [
-    "#000000", "#0000aa", "#00aa00", "#00aaaa", "#aa0000", "#aa00aa", "#aa5500", "#aaaaaa",
-    "#555555", "#5555ff", "#55ff55", "#55ffff", "#ff5555", "#ff55ff", "#ffff55", "#ffffff"
-  ],
-  c64: [
-    "#000000", "#ffffff", "#880000", "#aaffee", "#cc44cc", "#00cc55", "#0000aa", "#eeee77",
-    "#dd8855", "#664400", "#ff7777", "#333333", "#777777", "#aaff66", "#0088ff", "#bbbbbb"
-  ],
-  gameboy: [
-    "#0f380f", "#306230", "#8bac0f", "#9bbc0f"
-  ]
-};
 
 let currentPaletteName = 'cyber';
 let currentPalette = PALETTES.cyber;
@@ -2811,6 +3634,7 @@ function loadSelectedToStudio() {
   exportCHex();
 }
 
+
 // ============================================================================
 // THE SILICON ORACLE '99 & 3D WIREFRAME POLYHEDRON
 // ============================================================================
@@ -3015,13 +3839,15 @@ function downloadY2kCertificate() {
   URL.revokeObjectURL(url);
 }
 
+
+
 // ============================================================================
 // GUESTBOOK & HIT COUNTER PERSISTENCE
 // ============================================================================
 const defaultEntries = [
   { alias: "ByteRider_99", text: "Rad shrine! Loving the neon glow. Found this from the webring!", time: "1999-11-20 14:22" },
   { alias: "PixelMage", text: "The living machine is awake. App #100 draws near.", time: "1999-12-05 03:41" },
-  { alias: "ModMaster_Amiga", text: "Grabbed all 3 .MOD tracks for my ProTracker collection. Crisp Paula periods!", time: "1999-12-14 18:09" },
+  { alias: "ModMaster_Amiga", text: "Grabbed all 4 .MOD tracks for my ProTracker collection. Crisp Paula periods!", time: "1999-12-14 18:09" },
   { alias: "NeonSurfer", text: "Made a sweet 16x16 floppy disk in the Pixel Studio. 10/10 GeoCities site!", time: "1999-12-22 09:15" }
 ];
 
@@ -3041,9 +3867,10 @@ function renderGuestbook(entries) {
   const list = document.getElementById('guestbookList');
   if (!list) return;
   list.innerHTML = entries.map(e => `
-    <div class="gb-entry">
+    <div class="gb-entry" data-time="${escapeHtml(e.time || '')}" data-alias="${escapeHtml(e.alias || '')}">
       <span class="gb-alias">${escapeHtml(e.alias)}</span> &nbsp;
-      <span class="gb-time">${escapeHtml(e.time)}</span>
+      <span class="gb-time">${escapeHtml(e.time || '')}</span>
+      ${e.neighborhood ? `<span style="font-size:10px; color:#ff00aa; margin-left:6px;">[${escapeHtml(e.neighborhood)}]</span>` : ''}
       <div style="margin-top:2px; color:#ffffff;">${escapeHtml(e.text)}</div>
     </div>
   `).join('');
@@ -3067,13 +3894,19 @@ function addGuestbookEntry() {
   const newEntry = {
     alias: alias,
     text: text,
+    neighborhood: currentNeighborhood,
     time: new Date().toISOString().replace('T', ' ').substring(0, 16)
   };
 
   saved.unshift(newEntry);
-  localStorage.setItem('knet_guestbook', JSON.stringify(saved.slice(0, 20)));
+  localStorage.setItem('knet_guestbook', JSON.stringify(saved.slice(0, 30)));
   document.getElementById('gbMsg').value = '';
   renderGuestbook(saved);
+
+  // If Firebase Realtime Database is connected, push live
+  if (window.submitGuestbookToFirebase) {
+    window.submitGuestbookToFirebase(newEntry);
+  }
 }
 
 // Hit counter
@@ -3083,14 +3916,969 @@ localStorage.setItem('knet_shrine_hits', hits.toString());
 const hitEl = document.getElementById('gbHits');
 if (hitEl) hitEl.textContent = hits.toString().padStart(7, '0');
 
-loadGuestbook();
 
-// Initialize Studio & Swatches
+// ============================================================================
+// AUDIO SFX & CHIMES
+// ============================================================================
+function playDemosceneChime() {
+  try {
+    initAudioCtx();
+    const notes = [64, 69, 72, 76]; // E, A, C, E soaring demoscene chime
+    notes.forEach((n, idx) => {
+      const t = audioCtx.currentTime + idx * 0.08;
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(midiNoteToFreq(n), t);
+      g.gain.setValueAtTime(0.09, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+      osc.connect(g);
+      g.connect(masterGain);
+      if (delayNode) g.connect(delayNode);
+      osc.start(t);
+      osc.stop(t + 0.55);
+    });
+  } catch(e) {}
+}
+
+// ============================================================================
+// GEOCITIES NEIGHBORHOOD THEMES
+// ============================================================================
+const NEIGHBORHOOD_NAMES = ['siliconvalley', 'area51', 'beverlyhills', 'soho', 'enchantedforest'];
+let currentNeighborhood = localStorage.getItem('cyberspire_neighborhood') || 'siliconvalley';
+
+function setNeighborhood(name) {
+  if (!NEIGHBORHOOD_NAMES.includes(name)) name = 'siliconvalley';
+  currentNeighborhood = name;
+  localStorage.setItem('cyberspire_neighborhood', name);
+
+  NEIGHBORHOOD_NAMES.forEach(n => {
+    document.body.classList.remove('theme-' + n);
+  });
+  document.body.classList.add('theme-' + name);
+
+  const btnMap = {
+    siliconvalley: 'btnThemeSilicon',
+    area51: 'btnThemeArea51',
+    beverlyhills: 'btnThemeBeverly',
+    soho: 'btnThemeSoHo',
+    enchantedforest: 'btnThemeForest'
+  };
+
+  Object.values(btnMap).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  const activeBtn = document.getElementById(btnMap[name]);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  const tagEl = document.getElementById('neighborhoodNodeTag');
+  if (tagEl) {
+    const code = name.toUpperCase();
+    tagEl.textContent = `[NODE #002 / GEO-${code}]`;
+  }
+
+  const urlBar = document.getElementById('previewUrlBar');
+  if (urlBar) {
+    urlBar.textContent = `Location: http://www.geocities.com/${capitalize(name)}/Peaks/1999/index.html`;
+  }
+
+  playUiBeep(1200, 0.04);
+}
+
+function capitalize(s) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// ============================================================================
+// AMIGA PROTRACKER (.MOD) FILE DISSECTOR & PATTERN MATRIX
+// ============================================================================
+let currentDissectorModBuffer = null;
+let currentDissectorParsed = null;
+let currentDissectorPatIdx = 0;
+let currentDissectorRow = 0;
+let patternAuditionTimer = null;
+
+const AMIGA_PERIOD_NAMES = {
+  856: "C-1", 808: "C#1", 762: "D-1", 720: "D#1", 678: "E-1", 640: "F-1", 604: "F#1", 570: "G-1", 538: "G#1", 508: "A-1", 480: "A#1", 453: "B-1",
+  428: "C-2", 404: "C#2", 381: "D-2", 360: "D#2", 339: "E-2", 320: "F-2", 302: "F#2", 285: "G-2", 269: "G#2", 254: "A-2", 240: "A#2", 226: "B-2",
+  214: "C-3", 202: "C#3", 190: "D-3", 180: "D#3", 170: "E-3", 160: "F-3", 151: "F#3", 143: "G-3", 135: "G#3", 127: "A-3", 120: "A#3", 113: "B-3",
+  107: "C-4", 101: "C#4",  95: "D-4",  90: "D#4",  85: "E-4",  80: "F-4",  75: "F#4",  71: "G-4",  67: "G#4",  63: "A-4",  60: "A#4",  56: "B-4"
+};
+
+function periodToNoteStr(period) {
+  if (!period || period === 0) return "---";
+  // Find nearest period in table
+  let closest = null;
+  let minDiff = 9999;
+  for (const [pStr, name] of Object.entries(AMIGA_PERIOD_NAMES)) {
+    const p = parseInt(pStr);
+    const diff = Math.abs(p - period);
+    if (diff < minDiff) {
+      minDiff = diff;
+      closest = name;
+    }
+  }
+  return (minDiff <= 12) ? closest : `P${period}`;
+}
+
+function parseModBinary(buffer) {
+  const view = new DataView(buffer.buffer, buffer.byteOffset, buffer.byteLength);
+  let title = "";
+  for (let i = 0; i < 20; i++) {
+    const b = buffer[i];
+    if (b > 0) title += String.fromCharCode(b);
+  }
+
+  const samples = [];
+  let sampleDataTotalLen = 0;
+  for (let s = 0; s < 31; s++) {
+    const off = 20 + s * 30;
+    let sName = "";
+    for (let i = 0; i < 22; i++) {
+      const b = buffer[off + i];
+      if (b > 0) sName += String.fromCharCode(b);
+    }
+    const lenWords = view.getUint16(off + 22);
+    const byteLen = lenWords * 2;
+    const finetune = view.getUint8(off + 24) & 0x0F;
+    const vol = view.getUint8(off + 25);
+    const repOff = view.getUint16(off + 26) * 2;
+    const repLen = view.getUint16(off + 28) * 2;
+    samples.push({
+      index: s + 1,
+      name: sName.trim() || `(Empty Sample ${s+1})`,
+      byteLen,
+      finetune,
+      vol,
+      repOff,
+      repLen
+    });
+    sampleDataTotalLen += byteLen;
+  }
+
+  const songLen = buffer[950] || 1;
+  const restartByte = buffer[951] || 127;
+  const orderTable = [];
+  let maxPat = 0;
+  for (let i = 0; i < 128; i++) {
+    const p = buffer[952 + i];
+    orderTable.push(p);
+    if (i < songLen && p > maxPat) maxPat = p;
+  }
+
+  let sig = "";
+  for (let i = 0; i < 4; i++) {
+    sig += String.fromCharCode(buffer[1080 + i] || 0);
+  }
+
+  const numPatterns = maxPat + 1;
+  const patterns = [];
+  const patStart = 1084;
+
+  for (let p = 0; p < numPatterns; p++) {
+    const pOffset = patStart + p * 1024;
+    const rows = [];
+    for (let r = 0; r < 64; r++) {
+      const rowOffset = pOffset + r * 16;
+      const channels = [];
+      for (let ch = 0; ch < 4; ch++) {
+        const chOffset = rowOffset + ch * 4;
+        if (chOffset + 3 < buffer.length) {
+          const b0 = buffer[chOffset];
+          const b1 = buffer[chOffset + 1];
+          const b2 = buffer[chOffset + 2];
+          const b3 = buffer[chOffset + 3];
+
+          const sampleNum = (b0 & 0xF0) | (b2 >> 4);
+          const period = ((b0 & 0x0F) << 8) | b1;
+          const effectCmd = b2 & 0x0F;
+          const effectParam = b3;
+
+          channels.push({
+            sample: sampleNum,
+            period: period,
+            note: periodToNoteStr(period),
+            effect: effectCmd.toString(16).toUpperCase() + effectParam.toString(16).padStart(2, '0').toUpperCase()
+          });
+        } else {
+          channels.push({ sample: 0, period: 0, note: "---", effect: "000" });
+        }
+      }
+      rows.push(channels);
+    }
+    patterns.push(rows);
+  }
+
+  // Sample PCM data offset begins at patStart + numPatterns * 1024
+  let currentPcmOffset = patStart + numPatterns * 1024;
+  samples.forEach(s => {
+    s.pcmOffset = currentPcmOffset;
+    currentPcmOffset += s.byteLen;
+  });
+
+  return {
+    title: title.trim() || "UNTITLED_MOD",
+    sig,
+    songLen,
+    numPatterns,
+    samples,
+    patterns,
+    buffer
+  };
+}
+
+function loadDissectorTrack(val) {
+  playUiBeep(1100, 0.05);
+  let track = null;
+  if (val === 'proc') {
+    const rndBpm = 120 + Math.floor(Math.random() * 30);
+    track = {
+      title: "CyberSpire Procedural Mod '99",
+      shortTitle: "PROCEDURAL",
+      bpm: rndBpm,
+      patterns: [
+        { name: "Pat 1", lead: T1_LEAD_THEME_A, arp: T1_CHORDS_MAIN, bass: T1_BASS_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_16TH },
+        { name: "Pat 2", lead: T2_LEAD_SOLO, arp: T2_CHORDS_MAIN, bass: T2_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_GHOST, hihat: HAT_OPEN },
+        { name: "Pat 3", lead: T3_LEAD_HOOK_HIGH, arp: T3_CHORDS_MAIN, bass: T3_BASS_ACID_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH },
+        { name: "Pat 4", lead: T4_LEAD_THEME_A, arp: T4_CHORDS_MAIN, bass: T4_BASS_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_16TH }
+      ]
+    };
+  } else {
+    track = allTracks[parseInt(val)] || allTracks[0];
+  }
+
+  currentDissectorModBuffer = buildModBinary(track);
+  currentDissectorParsed = parseModBinary(currentDissectorModBuffer);
+  renderDissectorViews();
+}
+
+function handleCustomModUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    try {
+      currentDissectorModBuffer = new Uint8Array(evt.target.result);
+      currentDissectorParsed = parseModBinary(currentDissectorModBuffer);
+      renderDissectorViews();
+      playUiBeep(1400, 0.08);
+    } catch(err) {
+      alert("Error parsing MOD file: " + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function renderDissectorViews() {
+  if (!currentDissectorParsed) return;
+  const p = currentDissectorParsed;
+
+  const tEl = document.getElementById('dissSongTitle');
+  if (tEl) tEl.textContent = p.title;
+  const sigEl = document.getElementById('dissFormatTag');
+  if (sigEl) sigEl.textContent = `${p.sig} (4 Channels)`;
+  const lenEl = document.getElementById('dissSongLen');
+  if (lenEl) lenEl.textContent = `${p.numPatterns} Patterns (${p.songLen} Orders)`;
+
+  // Render Sample Rows
+  const tbody = document.getElementById('dissectorSampleRows');
+  if (tbody) {
+    tbody.innerHTML = p.samples.map(s => `
+      <tr>
+        <td style="color:#ffff00; font-weight:bold;">${s.index.toString().padStart(2, '0')}</td>
+        <td style="color:#00ffff;">${escapeHtml(s.name)}</td>
+        <td>${s.byteLen} B</td>
+        <td>${s.finetune}</td>
+        <td>${s.vol}/64</td>
+        <td>${s.repOff}</td>
+        <td>${s.repLen}</td>
+        <td>
+          ${s.byteLen > 0 ? `<button class="tool-btn" style="padding:1px 6px; font-size:9px;" onclick="auditionDissectorSample(${s.index - 1})">▶ Play</button>` : `<span style="color:#555;">--</span>`}
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Populate Pattern Select Dropdown
+  const patSelect = document.getElementById('patternSelect');
+  if (patSelect) {
+    patSelect.innerHTML = '';
+    for (let i = 0; i < p.numPatterns; i++) {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = `Pattern ${i.toString().padStart(2, '0')}`;
+      patSelect.appendChild(opt);
+    }
+    patSelect.value = "0";
+  }
+
+  currentDissectorPatIdx = 0;
+  currentDissectorRow = 0;
+  renderPatternMatrix(0);
+}
+
+function auditionDissectorSample(sIdx) {
+  if (!currentDissectorParsed) return;
+  const s = currentDissectorParsed.samples[sIdx];
+  if (!s || s.byteLen <= 0) return;
+
+  try {
+    initAudioCtx();
+    const pcmData = currentDissectorParsed.buffer.subarray(s.pcmOffset, s.pcmOffset + s.byteLen);
+    const audioBuf = audioCtx.createBuffer(1, s.byteLen, 8287); // Standard Amiga C-2 sampling rate ~8287 Hz
+    const outData = audioBuf.getChannelData(0);
+
+    for (let i = 0; i < s.byteLen; i++) {
+      // 8-bit signed int to float (-128..127 -> -1.0..1.0)
+      const int8 = (pcmData[i] << 24) >> 24;
+      outData[i] = int8 / 128.0;
+    }
+
+    const src = audioCtx.createBufferSource();
+    src.buffer = audioBuf;
+
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime((s.vol / 64.0) * 0.4, audioCtx.currentTime);
+
+    src.connect(g);
+    g.connect(masterGain);
+    if (delayNode) g.connect(delayNode);
+    src.start();
+  } catch(e) {
+    console.error("Audition sample error:", e);
+  }
+}
+
+function renderPatternMatrix(patIdx) {
+  if (!currentDissectorParsed || !currentDissectorParsed.patterns[patIdx]) return;
+  currentDissectorPatIdx = patIdx;
+  const pat = currentDissectorParsed.patterns[patIdx];
+  const container = document.getElementById('patternMatrixView');
+  if (!container) return;
+
+  const rowInd = document.getElementById('patternRowIndicator');
+  if (rowInd) rowInd.textContent = `Row: ${currentDissectorRow.toString().padStart(2, '0')}/63`;
+
+  let html = `
+    <div style="color:#ffff00; font-weight:bold; text-align:center; border-bottom:1px solid #005577;">Row</div>
+    <div style="color:#00ffcc; font-weight:bold; text-align:center; border-bottom:1px solid #005577;">Ch 1 (Left)</div>
+    <div style="color:#ff00aa; font-weight:bold; text-align:center; border-bottom:1px solid #005577;">Ch 2 (Right)</div>
+    <div style="color:#00ff66; font-weight:bold; text-align:center; border-bottom:1px solid #005577;">Ch 3 (Right)</div>
+    <div style="color:#38bdf8; font-weight:bold; text-align:center; border-bottom:1px solid #005577;">Ch 4 (Left)</div>
+  `;
+
+  for (let r = 0; r < 64; r++) {
+    const isActive = (r === currentDissectorRow);
+    const rowClass = isActive ? "pat-cell active-row" : "pat-cell";
+    const numClass = isActive ? "pat-row-num active-row" : "pat-row-num";
+
+    html += `<div class="${numClass}">${r.toString().padStart(2, '0')}</div>`;
+    for (let ch = 0; ch < 4; ch++) {
+      const cell = pat[r] ? pat[r][ch] : { note: '---', sample: 0, effect: '000' };
+      const sStr = cell.sample > 0 ? cell.sample.toString().padStart(2, '0') : '--';
+      const cellText = `${cell.note} ${sStr} ${cell.effect}`;
+      html += `<div class="${rowClass}">${cellText}</div>`;
+    }
+  }
+
+  container.innerHTML = html;
+}
+
+function stepPatternRow(dir) {
+  currentDissectorRow = (currentDissectorRow + dir + 64) % 64;
+  renderPatternMatrix(currentDissectorPatIdx);
+  playUiBeep(800 + currentDissectorRow * 10, 0.03);
+}
+
+function auditionCurrentPattern() {
+  stopPatternAudition();
+  playUiBeep(1200, 0.08);
+  const btn = document.getElementById('btnAuditionPat');
+  if (btn) btn.textContent = "⏹ Auditioning...";
+
+  currentDissectorRow = 0;
+  const bpm = 135;
+  const rowIntervalMs = (60000 / bpm) / 4; // 16th note step
+
+  patternAuditionTimer = setInterval(() => {
+    currentDissectorRow = (currentDissectorRow + 1) % 64;
+    renderPatternMatrix(currentDissectorPatIdx);
+
+    // Play quick audible feedback for pattern activity
+    if (currentDissectorParsed && currentDissectorParsed.patterns[currentDissectorPatIdx]) {
+      const channels = currentDissectorParsed.patterns[currentDissectorPatIdx][currentDissectorRow];
+      if (channels) {
+        channels.forEach((ch, idx) => {
+          if (ch.period > 0) {
+            const freq = 3546895 / (ch.period * 2);
+            playUiBeep(freq, 0.05, idx % 2 === 0 ? 'sawtooth' : 'square');
+          }
+        });
+      }
+    }
+  }, rowIntervalMs);
+}
+
+function stopPatternAudition() {
+  if (patternAuditionTimer) {
+    clearInterval(patternAuditionTimer);
+    patternAuditionTimer = null;
+  }
+  const btn = document.getElementById('btnAuditionPat');
+  if (btn) btn.textContent = "▶ Audition Active Pattern";
+}
+
+// ============================================================================
+// YM2612 2-OPERATOR FM SYNTHESIZER & INSTRUMENT LAB
+// ============================================================================
+const FM_PRESETS = {
+  bass: { carWave: 'sawtooth', carRatio: 1.0, attack: 0.002, decay: 0.22, sustain: 0.1, release: 0.15, modWave: 'sine', modRatio: 2.0, modIndex: 450, feedback: 3, delayTime: 0.18, delayFb: 0.22, delayCutoff: 2200 },
+  brass: { carWave: 'sawtooth', carRatio: 1.0, attack: 0.04, decay: 0.35, sustain: 0.6, release: 0.25, modWave: 'square', modRatio: 1.0, modIndex: 380, feedback: 2, delayTime: 0.24, delayFb: 0.35, delayCutoff: 3000 },
+  acid: { carWave: 'sawtooth', carRatio: 1.0, attack: 0.001, decay: 0.25, sustain: 0.05, release: 0.12, modWave: 'sawtooth', modRatio: 3.0, modIndex: 850, feedback: 5, delayTime: 0.20, delayFb: 0.40, delayCutoff: 3500 },
+  bell: { carWave: 'sine', carRatio: 1.0, attack: 0.001, decay: 0.8, sustain: 0.1, release: 0.9, modWave: 'sine', modRatio: 3.5, modIndex: 600, feedback: 1, delayTime: 0.30, delayFb: 0.45, delayCutoff: 4000 },
+  laser: { carWave: 'square', carRatio: 2.0, attack: 0.001, decay: 0.15, sustain: 0.0, release: 0.1, modWave: 'sawtooth', modRatio: 7.0, modIndex: 1100, feedback: 6, delayTime: 0.15, delayFb: 0.25, delayCutoff: 5000 },
+  square: { carWave: 'square', carRatio: 1.0, attack: 0.005, decay: 0.15, sustain: 0.7, release: 0.2, modWave: 'square', modRatio: 0.5, modIndex: 150, feedback: 0, delayTime: 0.22, delayFb: 0.28, delayCutoff: 2600 },
+  pad: { carWave: 'triangle', carRatio: 1.0, attack: 0.35, decay: 0.6, sustain: 0.8, release: 1.2, modWave: 'sine', modRatio: 2.0, modIndex: 220, feedback: 2, delayTime: 0.35, delayFb: 0.50, delayCutoff: 2000 },
+  rave: { carWave: 'sawtooth', carRatio: 1.0, attack: 0.002, decay: 0.18, sustain: 0.2, release: 0.1, modWave: 'sine', modRatio: 4.0, modIndex: 750, feedback: 4, delayTime: 0.19, delayFb: 0.32, delayCutoff: 3200 }
+};
+
+let currentFmParams = Object.assign({}, FM_PRESETS.bass);
+
+function updateFmParams() {
+  currentFmParams.carWave = document.getElementById('fmCarWave').value;
+  currentFmParams.carRatio = parseFloat(document.getElementById('fmCarRatio').value);
+  currentFmParams.attack = parseFloat(document.getElementById('fmAttack').value);
+  currentFmParams.decay = parseFloat(document.getElementById('fmDecay').value);
+  currentFmParams.sustain = parseFloat(document.getElementById('fmSustain').value);
+  currentFmParams.release = parseFloat(document.getElementById('fmRelease').value);
+
+  currentFmParams.modWave = document.getElementById('fmModWave').value;
+  currentFmParams.modRatio = parseFloat(document.getElementById('fmModRatio').value);
+  currentFmParams.modIndex = parseFloat(document.getElementById('fmModIndex').value);
+  currentFmParams.feedback = parseInt(document.getElementById('fmFeedback').value);
+
+  currentFmParams.delayTime = parseFloat(document.getElementById('fmDelayTime').value);
+  currentFmParams.delayFb = parseFloat(document.getElementById('fmDelayFb').value);
+  currentFmParams.delayCutoff = parseFloat(document.getElementById('fmDelayCutoff').value);
+
+  // Update value labels
+  document.getElementById('valCarRatio').textContent = currentFmParams.carRatio.toFixed(1) + 'x';
+  document.getElementById('valAttack').textContent = currentFmParams.attack.toFixed(3) + 's';
+  document.getElementById('valDecay').textContent = currentFmParams.decay.toFixed(2) + 's';
+  document.getElementById('valSustain').textContent = currentFmParams.sustain.toFixed(2);
+  document.getElementById('valRelease').textContent = currentFmParams.release.toFixed(2) + 's';
+
+  document.getElementById('valModRatio').textContent = currentFmParams.modRatio.toFixed(1) + 'x';
+  document.getElementById('valModIndex').textContent = Math.round(currentFmParams.modIndex);
+  document.getElementById('valFeedback').textContent = currentFmParams.feedback;
+
+  document.getElementById('valDelayTime').textContent = currentFmParams.delayTime.toFixed(2) + 's';
+  document.getElementById('valDelayFb').textContent = Math.round(currentFmParams.delayFb * 100) + '%';
+  document.getElementById('valDelayCutoff').textContent = Math.round(currentFmParams.delayCutoff) + 'Hz';
+
+  renderFmCStruct();
+}
+
+function loadFmPreset(name) {
+  const p = FM_PRESETS[name] || FM_PRESETS.bass;
+  currentFmParams = Object.assign({}, p);
+
+  document.getElementById('fmCarWave').value = p.carWave;
+  document.getElementById('fmCarRatio').value = p.carRatio;
+  document.getElementById('fmAttack').value = p.attack;
+  document.getElementById('fmDecay').value = p.decay;
+  document.getElementById('fmSustain').value = p.sustain;
+  document.getElementById('fmRelease').value = p.release;
+
+  document.getElementById('fmModWave').value = p.modWave;
+  document.getElementById('fmModRatio').value = p.modRatio;
+  document.getElementById('fmModIndex').value = p.modIndex;
+  document.getElementById('fmFeedback').value = p.feedback;
+
+  document.getElementById('fmDelayTime').value = p.delayTime;
+  document.getElementById('fmDelayFb').value = p.delayFb;
+  document.getElementById('fmDelayCutoff').value = p.delayCutoff;
+
+  updateFmParams();
+  testFmNote();
+}
+
+function triggerFmNote(midiNote, dur = 0.5) {
+  try {
+    initAudioCtx();
+    const t = audioCtx.currentTime;
+    const baseFreq = midiNoteToFreq(midiNote);
+
+    // Operator 1: Carrier
+    const carrier = audioCtx.createOscillator();
+    carrier.type = currentFmParams.carWave;
+    carrier.frequency.setValueAtTime(baseFreq * currentFmParams.carRatio, t);
+
+    // Operator 2: Modulator
+    const modulator = audioCtx.createOscillator();
+    modulator.type = currentFmParams.modWave;
+    modulator.frequency.setValueAtTime(baseFreq * currentFmParams.modRatio, t);
+
+    // Modulator Gain (Index envelope)
+    const modGain = audioCtx.createGain();
+    const depth = currentFmParams.modIndex * (baseFreq / 220);
+    modGain.gain.setValueAtTime(depth, t);
+    modGain.gain.exponentialRampToValueAtTime(Math.max(1, depth * 0.1), t + dur);
+
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    // Carrier Amp Gain (ADSR)
+    const ampGain = audioCtx.createGain();
+    const att = Math.max(0.001, currentFmParams.attack);
+    const dec = Math.max(0.01, currentFmParams.decay);
+    const sus = Math.max(0.001, currentFmParams.sustain);
+    const rel = Math.max(0.01, currentFmParams.release);
+
+    ampGain.gain.setValueAtTime(0.001, t);
+    ampGain.gain.linearRampToValueAtTime(0.22, t + att);
+    ampGain.gain.exponentialRampToValueAtTime(Math.max(0.001, 0.22 * sus), t + att + dec);
+    ampGain.gain.exponentialRampToValueAtTime(0.001, t + att + dec + rel);
+
+    carrier.connect(ampGain);
+    ampGain.connect(masterGain);
+    if (delayNode) ampGain.connect(delayNode);
+
+    modulator.start(t);
+    carrier.start(t);
+    modulator.stop(t + att + dec + rel + 0.05);
+    carrier.stop(t + att + dec + rel + 0.05);
+
+    // Visual highlight on keyboard
+    const keyEl = document.querySelector(`[data-midi="${midiNote}"]`);
+    if (keyEl) {
+      keyEl.classList.add('active');
+      setTimeout(() => keyEl.classList.remove('active'), (att + dec) * 1000);
+    }
+  } catch(e) {
+    console.error("FM synthesis error:", e);
+  }
+}
+
+function testFmNote() {
+  triggerFmNote(60, 0.6); // C-4
+}
+
+function exportFmPatchJson() {
+  const json = JSON.stringify(currentFmParams, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `YM2612_Patch_${Date.now()}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function renderFmCStruct() {
+  const p = currentFmParams;
+  const structStr = `/* YM2612 2-Operator FM Patch */
+const FMPatch patch_1999 = {
+  .c_ratio = ${p.carRatio.toFixed(1)}f, .m_ratio = ${p.modRatio.toFixed(1)}f,
+  .mod_index = ${p.modIndex.toFixed(0)}f, .feedback = ${p.feedback},
+  .attack = ${p.attack.toFixed(3)}f, .decay = ${p.decay.toFixed(2)}f,
+  .sustain = ${p.sustain.toFixed(2)}f, .release = ${p.release.toFixed(2)}f
+};`;
+  const el = document.getElementById('fmCStructOutput');
+  if (el) el.value = structStr;
+}
+
+function copyFmCStruct() {
+  const el = document.getElementById('fmCStructOutput');
+  if (el) {
+    navigator.clipboard.writeText(el.value);
+    playUiBeep(1400, 0.05);
+    alert("C FM Patch struct copied to clipboard!");
+  }
+}
+
+// Render 18-Key Keyboard
+const KEYBOARD_KEYS = [
+  { midi: 48, note: "C-3", key: "A", isBlack: false },
+  { midi: 49, note: "C#3", key: "W", isBlack: true, leftOffset: 20 },
+  { midi: 50, note: "D-3", key: "S", isBlack: false },
+  { midi: 51, note: "D#3", key: "E", isBlack: true, leftOffset: 52 },
+  { midi: 52, note: "E-3", key: "D", isBlack: false },
+  { midi: 53, note: "F-3", key: "F", isBlack: false },
+  { midi: 54, note: "F#3", key: "T", isBlack: true, leftOffset: 116 },
+  { midi: 55, note: "G-3", key: "G", isBlack: false },
+  { midi: 56, note: "G#3", key: "Y", isBlack: true, leftOffset: 148 },
+  { midi: 57, note: "A-3", key: "H", isBlack: false },
+  { midi: 58, note: "A#3", key: "U", isBlack: true, leftOffset: 180 },
+  { midi: 59, note: "B-3", key: "J", isBlack: false },
+  { midi: 60, note: "C-4", key: "K", isBlack: false },
+  { midi: 61, note: "C#4", key: "O", isBlack: true, leftOffset: 244 },
+  { midi: 62, note: "D-4", key: "L", isBlack: false },
+  { midi: 63, note: "D#4", key: "P", isBlack: true, leftOffset: 276 },
+  { midi: 64, note: "E-4", key: ";", isBlack: false },
+  { midi: 65, note: "F-4", key: "'", isBlack: false }
+];
+
+function buildFmKeyboard() {
+  const container = document.getElementById('fmKeyboard');
+  if (!container) return;
+  container.innerHTML = '';
+
+  KEYBOARD_KEYS.forEach(k => {
+    const el = document.createElement('div');
+    el.dataset.midi = k.midi;
+    if (k.isBlack) {
+      el.className = 'fm-black-key';
+      el.style.left = `${k.leftOffset}px`;
+      el.innerHTML = `<span>${k.note}</span><span style="color:#ffff00;">[${k.key}]</span>`;
+    } else {
+      el.className = 'fm-white-key';
+      el.innerHTML = `<span>${k.note}</span><span style="color:#0088aa;">[${k.key}]</span>`;
+    }
+    el.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      triggerFmNote(k.midi);
+    });
+    container.appendChild(el);
+  });
+}
+
+// Keyboard shortcuts for FM Synth
+const KEY_NOTE_MAP = {
+  'a': 48, 'w': 49, 's': 50, 'e': 51, 'd': 52, 'f': 53, 't': 54, 'g': 55, 'y': 56,
+  'h': 57, 'u': 58, 'j': 59, 'k': 60, 'o': 61, 'l': 62, 'p': 63, ';': 64, "'": 65
+};
+
+window.addEventListener('keydown', (e) => {
+  if (['input', 'textarea', 'select'].includes(e.target.tagName.toLowerCase())) return;
+  const k = e.key.toLowerCase();
+  if (KEY_NOTE_MAP[k]) {
+    triggerFmNote(KEY_NOTE_MAP[k]);
+  }
+});
+
+// Real-time FM Oscilloscope
+function drawFmOscilloscope() {
+  requestAnimationFrame(drawFmOscilloscope);
+  const canvas = document.getElementById('fmOscCanvas');
+  if (!canvas || !analyser) return;
+  const ctx = canvas.getContext('2d');
+
+  const buf = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteTimeDomainData(buf);
+
+  ctx.fillStyle = '#000810';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = '#00ffcc';
+  ctx.beginPath();
+
+  const sliceWidth = canvas.width / buf.length;
+  let x = 0;
+  for (let i = 0; i < buf.length; i++) {
+    const v = buf[i] / 128.0;
+    const y = (v * canvas.height) / 2;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+    x += sliceWidth;
+  }
+  ctx.stroke();
+}
+
+// ============================================================================
+// RETRO WEB 1.0 GIF & BANNER STUDIO
+// ============================================================================
+const BANNER_PRESETS = {
+  hazard: { dim: "468x60", border: "hazard", title: "UNDER HEAVY EXPANSION!", sub: "BEST IN 800x600 • 16-BIT COLOR", theme: "hazard" },
+  netscape: { dim: "88x31", border: "bevel", title: "NETSCAPE", sub: "NOW 4.0", theme: "amiga" },
+  area51: { dim: "468x60", border: "neon", title: "AREA 51 ROSWELL BEACON", sub: "NON-ROUTABLE INTRANET 10.19.99.4", theme: "matrix" },
+  protracker: { dim: "88x31", border: "bevel", title: "AMIGA", sub: "PROTRACKER", theme: "amiga" },
+  y2k: { dim: "88x31", border: "chiseled", title: "100% Y2K", sub: "COMPLIANT", theme: "gold" },
+  custom: { dim: "468x60", border: "neon", title: "CYBER VOYAGER '99", sub: "KILONET WEBRING SITE #002", theme: "cyber" }
+};
+
+function applyBannerPreset(name) {
+  const p = BANNER_PRESETS[name] || BANNER_PRESETS.hazard;
+  document.getElementById('bannerDim').value = p.dim;
+  document.getElementById('bannerBorder').value = p.border;
+  document.getElementById('bannerText').value = p.title;
+  document.getElementById('bannerSubtext').value = p.sub;
+  document.getElementById('bannerTheme').value = p.theme;
+  renderBannerCanvas();
+}
+
+let bannerBlinkState = false;
+setInterval(() => {
+  bannerBlinkState = !bannerBlinkState;
+  const chk = document.getElementById('bannerBlink');
+  if (chk && chk.checked) {
+    renderBannerCanvas();
+  }
+}, 500);
+
+function renderBannerCanvas() {
+  const canvas = document.getElementById('bannerCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const dim = document.getElementById('bannerDim').value || "468x60";
+  const [w, h] = dim.split('x').map(x => parseInt(x));
+  canvas.width = w;
+  canvas.height = h;
+
+  const border = document.getElementById('bannerBorder').value;
+  const text = document.getElementById('bannerText').value || "CYBERSPIRE";
+  const subtext = document.getElementById('bannerSubtext').value || "";
+  const theme = document.getElementById('bannerTheme').value;
+  const doBlink = document.getElementById('bannerBlink').checked;
+
+  // Background
+  if (theme === 'hazard') ctx.fillStyle = '#0a0a00';
+  else if (theme === 'matrix') ctx.fillStyle = '#020d04';
+  else if (theme === 'gold') ctx.fillStyle = '#070e1e';
+  else if (theme === 'amiga') ctx.fillStyle = '#001a33';
+  else ctx.fillStyle = '#0a0014';
+  ctx.fillRect(0, 0, w, h);
+
+  // Border Styles
+  if (border === 'hazard') {
+    // 45 deg diagonal caution stripes
+    ctx.save();
+    for (let x = -h; x < w + h; x += 16) {
+      ctx.fillStyle = '#ffcc00';
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x + 8, 0);
+      ctx.lineTo(x + 8 - h, h);
+      ctx.lineTo(x - h, h);
+      ctx.fill();
+    }
+    ctx.restore();
+    ctx.fillStyle = (theme === 'hazard') ? '#000000' : '#080010';
+    ctx.fillRect(4, 4, w - 8, h - 8);
+  } else if (border === 'bevel') {
+    // 3D raised border
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, w, 2);
+    ctx.fillRect(0, 0, 2, h);
+    ctx.fillStyle = '#444444';
+    ctx.fillRect(0, h - 2, w, 2);
+    ctx.fillRect(w - 2, 0, 2, h);
+  } else if (border === 'neon') {
+    ctx.strokeStyle = '#00ffcc';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, w - 2, h - 2);
+    ctx.strokeStyle = '#ff00aa';
+    ctx.strokeRect(3, 3, w - 6, h - 6);
+  } else if (border === 'chiseled') {
+    ctx.strokeStyle = '#ffd700';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(2, 2, w - 4, h - 4);
+  }
+
+  // Draw Text
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  const isBlinkedOut = (doBlink && bannerBlinkState);
+
+  if (dim === '88x31') {
+    ctx.font = 'bold 9px "Courier New", monospace';
+    ctx.fillStyle = (theme === 'matrix') ? '#00ff44' : ((theme === 'hazard') ? '#ffcc00' : '#00ffff');
+    if (!isBlinkedOut) {
+      ctx.fillText(text.slice(0, 12), w / 2, 11);
+    }
+    ctx.font = '8px "Courier New", monospace';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(subtext.slice(0, 14), w / 2, 22);
+  } else {
+    // 468x60 Banner
+    ctx.font = 'bold 15px "Courier New", monospace';
+    ctx.fillStyle = (theme === 'matrix') ? '#00ff44' : ((theme === 'hazard') ? '#ffff00' : '#ff00ff');
+    ctx.shadowColor = ctx.fillStyle;
+    ctx.shadowBlur = 6;
+    if (!isBlinkedOut) {
+      ctx.fillText(text, w / 2, 22);
+    }
+    ctx.shadowBlur = 0;
+
+    ctx.font = 'bold 11px "Courier New", monospace';
+    ctx.fillStyle = '#00ffff';
+    ctx.fillText(subtext, w / 2, 42);
+  }
+
+  // Update HTML Embed Snippet
+  const snippet = `<a href="/web/geocities.html"><img src="data:image/png;base64,..." alt="${escapeHtml(text)}" border="0" width="${w}" height="${h}"></a>`;
+  const snipEl = document.getElementById('bannerEmbedSnippet');
+  if (snipEl) {
+    snipEl.value = snippet;
+  }
+}
+
+function downloadBannerPng() {
+  playUiBeep(1200, 0.08);
+  const canvas = document.getElementById('bannerCanvas');
+  if (!canvas) return;
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `CyberSpire_Banner_${canvas.width}x${canvas.height}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+}
+
+function copyBannerHtml() {
+  const canvas = document.getElementById('bannerCanvas');
+  if (!canvas) return;
+  const dataUrl = canvas.toDataURL('image/png');
+  const text = document.getElementById('bannerText').value || "CyberSpire";
+  const snippet = `<a href="/web/geocities.html"><img src="${dataUrl}" alt="${escapeHtml(text)}" border="0"></a>`;
+  navigator.clipboard.writeText(snippet);
+  playUiBeep(1400, 0.05);
+  alert("Web 1.0 HTML embed snippet with embedded PNG image copied to clipboard!");
+}
+
+// ============================================================================
+// WEBMASTER ACOLYTE WORKBENCH (1999 PAGE GENERATOR)
+// ============================================================================
+function generateWeb10Html() {
+  const title = document.getElementById('builderTitle').value || "My 1999 Domain";
+  const alias = document.getElementById('builderAlias').value || "WebVoyager";
+  const neigh = document.getElementById('builderNeighborhood').value || "SiliconValley";
+  const bio = document.getElementById('builderBio').value || "";
+  const favs = document.getElementById('builderFavorites').value || "";
+  const marquee = document.getElementById('builderMarquee').value || "";
+
+  const incMarquee = document.getElementById('chkBuilderMarquee').checked;
+  const incHazard = document.getElementById('chkBuilderHazard').checked;
+  const incBlink = document.getElementById('chkBuilderBlink').checked;
+  const incWebring = document.getElementById('chkBuilderWebring').checked;
+  const incCounter = document.getElementById('chkBuilderCounter').checked;
+
+  let bg = "#000000";
+  let fg = "#00ffff";
+  let link = "#ff00ff";
+  let vlink = "#00ff66";
+
+  if (neigh === 'Area51') { bg = "#030d05"; fg = "#00ff44"; link = "#ffff00"; vlink = "#39ff14"; }
+  else if (neigh === 'BeverlyHills') { bg = "#070e1e"; fg = "#ffd700"; link = "#64b5f6"; vlink = "#ffe082"; }
+  else if (neigh === 'SoHo') { bg = "#120905"; fg = "#ffb74d"; link = "#ff6f00"; vlink = "#d84315"; }
+  else if (neigh === 'EnchantedForest') { bg = "#041208"; fg = "#80ffaa"; link = "#ff80bf"; vlink = "#50e3c2"; }
+
+  return `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>${escapeHtml(title)}</title>
+<style type="text/css">
+body { background-color: ${bg}; color: ${fg}; font-family: "Courier New", monospace; margin: 16px; }
+h1 { color: ${link}; text-shadow: 0 0 10px ${link}; font-size: 22px; }
+a:link { color: ${link}; }
+a:visited { color: ${vlink}; }
+.box { border: 2px dashed ${link}; padding: 12px; background: rgba(255,255,255,0.05); margin-bottom: 12px; }
+.hazard { background: repeating-linear-gradient(45deg, #ffcc00, #ffcc00 10px, #000 10px, #000 20px); color: #000; font-weight: bold; padding: 6px; text-align: center; }
+.counter { background: #000; border: 2px inset #999; color: #00ff00; padding: 2px 6px; font-weight: bold; }
+</style>
+</head>
+<body bgcolor="${bg}" text="${fg}" link="${link}" vlink="${vlink}">
+
+<center>
+  ${incHazard ? `<div class="hazard">&#9888; UNDER HEAVY RECONSTRUCTION &#9888;</div><br>` : ''}
+  <h1>${escapeHtml(title)}</h1>
+  <p><em>"Docked in GeoCities ${escapeHtml(neigh)} &bull; Station Master: <strong>${escapeHtml(alias)}</strong>"</em></p>
+  ${incMarquee ? `<marquee bgcolor="#110022" scrollamount="4" style="border:1px solid ${fg}; padding:4px; color:#ffff00;">${escapeHtml(marquee)}</marquee><br>` : ''}
+</center>
+
+<div class="box">
+  <h3>&#128187; Webmaster Telemetry</h3>
+  <p>${escapeHtml(bio)}</p>
+  <p><strong>Favorite Demoscene Warez &amp; Modules:</strong><br>${escapeHtml(favs)}</p>
+  ${incBlink ? `<p><blink style="color:#ff00aa; font-weight:bold;">&#9733; TRANSMISSION ACTIVE &bull; 56K V.90 MODEM LOCK ESTABLISHED &#9733;</blink></p>` : ''}
+</div>
+
+${incWebring ? `
+<div class="box" style="text-align:center;">
+  <strong>[ KiloNet Virtual Webring 1999 ]</strong><br>
+  <small>Member of the autonomous 999KB Web 1.0 Ring.</small><br>
+  [ <a href="/web/portal.html">&laquo; Previous Site</a> | <a href="/web/webring.html">Webring Hub</a> | <a href="/web/geocities.html">CyberSpire Shrine &raquo;</a> ]
+</div>
+` : ''}
+
+${incCounter ? `
+<center>
+  <p>You are cyber visitor #<span class="counter">0001999</span> to this shrine!</p>
+</center>
+` : ''}
+
+<center>
+  <hr width="80%">
+  <small>Crafted with CyberSpire's Webmaster Acolyte Workbench &bull; Hosted on GeoCities ${escapeHtml(neigh)} &bull; Dec 1999</small>
+</center>
+
+</body>
+</html>`;
+}
+
+function updatePagePreview() {
+  const html = generateWeb10Html();
+  const viewport = document.getElementById('previewViewport');
+  if (viewport) {
+    viewport.innerHTML = `
+      <div style="font-family:'Courier New', monospace; font-size:11px; background:#000; color:#00ffcc; padding:10px; border:1px solid #333;">
+        ${html.replace(/<!DOCTYPE.*?>/s, '').replace(/<\/?html>/g, '').replace(/<\/?head>/g, '').replace(/<title>.*?<\/title>/s, '').replace(/<\/?body.*?>/s, '')}
+      </div>
+    `;
+  }
+}
+
+function downloadGeneratedPage() {
+  playUiBeep(1400, 0.1);
+  const html = generateWeb10Html();
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'index.html';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ============================================================================
+// QUICK-STAMP GREETINGS HANDLER
+// ============================================================================
+function applyQuickStamp(text) {
+  playUiBeep(1200, 0.05);
+  const msgEl = document.getElementById('gbMsg');
+  if (msgEl) {
+    msgEl.value = (msgEl.value ? msgEl.value + ' ' : '') + text;
+    msgEl.focus();
+  }
+}
+
+
+// Initialize Everything
+setNeighborhood(currentNeighborhood);
 renderSwatches();
 drawPaintCanvas();
 renderGalleryGrid();
 exportCHex();
 inspectModHeader();
+loadDissectorTrack("0");
+updateFmParams();
+buildFmKeyboard();
+drawFmOscilloscope();
+applyBannerPreset("hazard");
+updatePagePreview();
+loadGuestbook();
 
 // Auto-unlock audio context on user interaction
 document.body.addEventListener('click', () => {
@@ -3098,6 +4886,118 @@ document.body.addEventListener('click', () => {
     audioCtx.resume();
   }
 }, { once: true });
+
+</script>
+
+<script type="module">
+
+// ============================================================================
+// FIREBASE REALTIME DATABASE SHOUTBOX & PRESENCE STREAM
+// ============================================================================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+import { getDatabase, ref, set, push, onValue, onChildAdded, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+    authDomain: "kiloappschat.firebaseapp.com",
+    databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+    projectId: "kiloappschat",
+    storageBucket: "kiloappschat.firebasestorage.app",
+    messagingSenderId: "290208566057",
+    appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+};
+
+let db = null;
+let voyagerId = localStorage.getItem('cyberspire_voyager_id');
+if (!voyagerId) {
+  voyagerId = 'voyager_' + Math.random().toString(16).slice(2, 10);
+  localStorage.setItem('cyberspire_voyager_id', voyagerId);
+}
+
+const pageLoadTime = Date.now();
+
+try {
+  const fbApp = initializeApp(firebaseConfig);
+  db = getDatabase(fbApp);
+
+  // Presence system
+  const presenceRef = ref(db, `virtual_web/geocities/presence/${voyagerId}`);
+  onDisconnect(presenceRef).remove();
+  set(presenceRef, {
+    alias: document.getElementById('gbAlias')?.value || 'Anonymous Voyager',
+    neighborhood: currentNeighborhood,
+    timestamp: serverTimestamp()
+  });
+
+  // Online count
+  const allPresenceRef = ref(db, 'virtual_web/geocities/presence');
+  onValue(allPresenceRef, (snapshot) => {
+    const data = snapshot.val();
+    const count = data ? Object.keys(data).length : 1;
+    const badge = document.getElementById('onlineVoyagersCount');
+    if (badge) badge.textContent = count;
+  });
+
+  // Live guestbook stream
+  const guestbookRef = ref(db, 'virtual_web/geocities/guestbook');
+  onChildAdded(guestbookRef, (snapshot) => {
+    const entry = snapshot.val();
+    if (entry) {
+      prependLiveGuestbookEntry(entry);
+      if (entry.senderId !== voyagerId && entry.created && entry.created > pageLoadTime - 2000) {
+        playDemosceneChime();
+      }
+    }
+  });
+
+  const badgeEl = document.getElementById('shoutboxStatusBadge');
+  if (badgeEl) badgeEl.textContent = '[LIVE RTDB CONNECTED]';
+} catch(err) {
+  console.warn("Firebase RTDB offline or blocked, falling back to localStorage:", err);
+  const badgeEl = document.getElementById('shoutboxStatusBadge');
+  if (badgeEl) badgeEl.textContent = '[LOCAL STORAGE MODE]';
+}
+
+function prependLiveGuestbookEntry(e) {
+  const list = document.getElementById('guestbookList');
+  if (!list) return;
+
+  // Prevent duplicate rendering
+  const existing = list.querySelector(`[data-time="${e.time}"][data-alias="${e.alias}"]`);
+  if (existing) return;
+
+  const item = document.createElement('div');
+  item.className = 'gb-entry';
+  item.dataset.time = e.time || '';
+  item.dataset.alias = e.alias || '';
+  item.innerHTML = `
+    <span class="gb-alias">${escapeHtml(e.alias)}</span> &nbsp;
+    <span class="gb-time">${escapeHtml(e.time || '')}</span>
+    ${e.neighborhood ? `<span style="font-size:10px; color:#ff00aa; margin-left:6px;">[${escapeHtml(e.neighborhood)}]</span>` : ''}
+    <div style="margin-top:2px; color:#ffffff;">${escapeHtml(e.text)}</div>
+  `;
+  list.insertBefore(item, list.firstChild);
+}
+
+// Window export for addGuestbookEntry to communicate with Firebase
+window.submitGuestbookToFirebase = function(entry) {
+  if (db) {
+    try {
+      const gbRef = ref(db, 'virtual_web/geocities/guestbook');
+      push(gbRef, {
+        alias: entry.alias,
+        text: entry.text,
+        neighborhood: currentNeighborhood,
+        senderId: voyagerId,
+        time: entry.time,
+        created: Date.now()
+      });
+    } catch(err) {
+      console.warn("Error pushing to Firebase:", err);
+    }
+  }
+};
+
 </script>
 
 </body>

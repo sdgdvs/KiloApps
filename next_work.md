@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -17,8 +17,8 @@ current_targets:
   kilo_graphics: KWizard
   kilo_qa: KGraph
   kilo_expander: KType
-  kilo_creator: "kweb://geocities (CyberSpire's Retro Shrine & MOD Vault)"
-virtual_web_target: "kweb://geocities"
+  kilo_creator: "kweb://users/~neon_rider (Personal Hacker / Demoscene Homepage)"
+virtual_web_target: "kweb://users/~neon_rider"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-expander
-  app: KMandel
-  timestamp: "2026-09-29T18:56:00Z"
+  agent: kilo-creator
+  app: "kweb://geocities (CyberSpire's Retro Shrine & MOD Vault)"
+  timestamp: "2026-09-29T19:12:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -97,11 +97,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://geocities` (CyberSpire's Retro Shrine & MOD Vault)
+- **Current Target**: `kweb://users/~neon_rider` (Personal Hacker / Demoscene Homepage)
 - **Upcoming Queue**:
-  `kweb://users/~neon_rider` (Personal Hacker / Demoscene Homepage),
-  `kweb://asm-temple` (x86 Assembly Programming Shrine & PE32 Dissector)
-  *(Completed: kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
+  `kweb://asm-temple` (x86 Assembly Programming Shrine & PE32 Dissector),
+  `kweb://cybercafe` (The Underground BBS, ASCII Studio & mIRC Lounge)
+  *(Completed: kweb://geocities, kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://cybercafe, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Current Target**: `KWizard`
@@ -130,8 +130,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://geocities` (`KiloOS/public/web/geocities.html`)
-  - *Next in Rotation*: `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez`.
+- **Current Active Target**: `kweb://users/~neon_rider` (`KiloOS/public/web/users/neon_rider.html`)
+  - *Next in Rotation*: `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities`.
 - **Anti-Potemkin Directive & Content Mandates**:
   0. `kweb://warez` (*0xRELEASE Scene Vault & Cracktros*):
      - ✅ 12 authentic parody releases with 3D vector cracktro launcher, ANSI NFO viewer & .diz/.nfo downloads.
@@ -142,10 +142,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
      - ✅ 1999 Scene Top-List voting poll & persistent underground courier shoutbox/guestbook.
      - ✅ Central KiloNet Webring node #013 integration with subtle darknet discovery hooks.
   1. `kweb://geocities` (*CyberSpire's Retro Shrine & MOD Vault*):
-     - ✅ Web Audio 16-bit tracker MIDI jukebox with 3 synthwave/MOD tracks and dancing LED equalizer.
-     - ✅ Working guestbook with local persistence.
+     - ✅ 5 GeoCities Neighborhood Themes (SiliconValley, Area51, BeverlyHills, SoHo, EnchantedForest) & live presence badge.
+     - ✅ Web Audio 16-bit tracker MIDI jukebox with 4 demoscene/MOD tracks and dancing LED equalizer.
+     - ✅ Amiga ProTracker (.MOD) File Dissector & Pattern Matrix Analyzer with 31-sample table & PCM waveform audition.
+     - ✅ YM2612 2-Operator FM Synthesizer & Instrument Laboratory with 18-key interactive keyboard, oscilloscope & 8 presets.
+     - ✅ Retro Web 1.0 GIF & Banner Studio (468x60 / 88x31 canvas badge generator, PNG download, HTML embed).
+     - ✅ Webmaster Acolyte Workbench (1999 GeoCities personal page builder with live Netscape CRT preview & index.html download).
+     - ✅ Live Firebase Realtime Database Shoutbox & Cyber Voyagers Presence with quick-stamps and local storage fallback.
      - ✅ 16-color Pixel Art Studio & Gallery with 8 retro sprites, zoom, and PNG/BMP/C-Hex export.
-     - ✅ Genuine Amiga ProTracker (.MOD) binary generator & direct downloads for all tracks.
      - ✅ 3D wireframe Silicon Oracle '99 techno-divination & Y2K compliance diagnostic terminal.
   2. `kweb://portal` (*KiloNet Central 1999 Directory*):
      - ✅ KiloSearch 1.0 simulated search engine indexing all 98 KiloApps & webring nodes with live filtering.
@@ -245,6 +249,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T19:12:00Z — kilo-creator: kweb://geocities (CyberSpire Shrine & MOD Vault Deep Expansion)**
+  - Status: PASS ✅ (0 regressions, clean builds, security & icon lints clean, 198.3 KB < 999 KB).
+  - Audio & Synthesis: Added Track 4 (Silicon Horizon 1999) + YM2612 2-op FM Synth Lab (18-key keyboard, oscilloscope, 8 presets).
+  - MOD Architecture: Added Amiga ProTracker (.MOD) Dissector & 4-channel pattern matrix with 31-sample PCM audio audition.
+  - Web 1.0 Tools: Implemented 5 GeoCities neighborhood themes, Retro Banner Studio (468x60/88x31) & Webmaster Page Builder.
+  - Live Connectivity: Integrated Firebase RTDB real-time shoutbox stream, 6 quick-stamps & live cyber voyagers presence.
+  - Interconnects: Linked in KNet, portal, webring, and cybercafe; verified Vite build (243ms) and security lint 100% clean.
+
 - **2026-09-29T18:56:00Z — kilo-expander: KMandel (Feature Expansion: 8 Formulas, YM2612 FM Audio, Co-Op Beacon & Color Cycling)**
   - Status: PASS ✅ (0 regressions, clean builds, security lint clean, <999KB verified).
   - Formulas & Shading: Added Multibrot 3/4, Perp Ship formulas (8 total), continuous potential smooth shading & 60 FPS color cycling.
@@ -275,13 +287,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Usability: Tuned default window to 1040x860 in App.jsx, fixed clipping on high-DPI displays.
   - Audio & Visualizer: Polished stereo delay controls, envelope sliders, and oscilloscope rendering.
   - Verification: Vite build clean; `ksynth.html` 138 KB (<999KB ceiling); bumped version to 0.4.8.
-
-- **2026-09-29T04:26:00Z — kilo-tester: KCyber (UI Audit, JSON Export/Import, Modal Focus Guard & Audio/Telemetry Polish)**
-  - Status: PASS ✅ (6 issues, 6 fixed, 0 regressions, clean builds, security lint clean, <999KB verified).
-  - State Persistence: Added full JSON file Export and Import buttons to deck toolbar and CLI commands (`export`, `import`).
-  - Modal Focus Coordination: Prevented terminal command bleed behind modals; bound Enter/Space/Esc to modal dismiss.
-  - Interval Cleanup: Ensured `ice_interval` is explicitly cleared and nullified on all trace/deplete/abort/disconnect paths.
-  - Connected Telemetry: Added `contracts` lookup and active bounty tracking within compromised node root shell.
-  - Command Ergonomics: Added natural abort/exit synonyms across shop, intrusion, connected shell, and root prompt.
-  - Audio Feedback: Added positive/negative audio tones for shop purchases, payload downloads, and contract handoffs.
-  - Verification: Vite build clean (266ms); `kcyber.html` 91.6 KB (<999KB ceiling); check_icons & security lint 100% PASS.
