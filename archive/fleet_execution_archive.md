@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T01:28:00Z — kilo-tester: KCosmic (UI Audit, Duplicate ID Fix, Backdrop Dismissals & State Persistence)**
+  - Status: PASS ✅ (3 issues, 3 fixed, 0 regressions, clean builds, security lint clean, <999KB verified).
+  - Duplicate ID Resolution: Renamed duplicate `btnUpgradeShield` to `btnUpgradeDeflector` in Hazards tab; repaired deflector upgrade listener.
+  - Modal Dismissals: Added overlay backdrop click dismissal to Codex, Tutorial, JSON, and Splash modals; wired Escape target deselect.
+  - Keyboard Controls: Consolidated duplicate keydown listeners; added arrow key camera panning, zoom (+/-), pause, and modal navigation.
+  - Toast Non-Occlusion: Anchored toasts bottom-right with bounded queue (≤3 toasts) and click-to-dismiss functionality.
+  - State Persistence: Added missing colony structures (domes, vaults, megacities), defense tiers, and display settings to F5/F9 saves.
+  - Verification: MSVC clean (`KCosmic.exe` 16.5 KB); Vite clean in 401ms (`kcosmic.html` 543.1 KB < 999 KB); CDP 100% PASS.
+
 - **2026-09-29T00:25:00Z — kilo-expander: KChart (10-Mode Vis, YM2612 FM Sonification, Poly/Exp Regressions & Transforms)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
   - Visualization Engines: Added Horizontal Bar, Stepped Waveform, Scatter Plot with Crosshairs, and Polar Coxcomb Rose (10 modes total).
