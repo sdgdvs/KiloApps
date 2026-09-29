@@ -14,9 +14,9 @@
   ],
   "session_start": "2026-09-29T18:14:37.0112595Z",
   "session_end": "2026-09-30T18:14:37.0112595Z",
-  "turns_executed": 1,
+  "turns_executed": 2,
   "last_turn_timestamp": "2026-09-29T18:07:21Z",
-  "last_heartbeat": "2026-09-29T18:30:43.319089+00:00",
-  "current_target": "KMystery",
+  "last_heartbeat": "2026-09-29T18:47:04.841810+00:00",
+  "current_target": "KChart",
   "remote_command": "none"
 }

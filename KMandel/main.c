@@ -28,9 +28,12 @@ const char* fractalNames[] = {
     "Burning Ship",
     "Tricorn",
     "Celtic",
-    "Buffalo"
+    "Buffalo",
+    "Multibrot 3",
+    "Multibrot 4",
+    "Perpendicular Ship"
 };
-#define NUM_FRACTAL_TYPES 5
+#define NUM_FRACTAL_TYPES 8
 
 typedef struct {
     const char* name;
@@ -53,7 +56,13 @@ static const Landmark landmarks[] = {
     {"Celtic Ring", 3, 0, 0.0, 0.0, -2.0, 1.0, -1.2, 1.2, 150},
     {"Buffalo Heart", 4, 0, 0.0, 0.0, -2.0, 1.0, -1.5, 1.5, 150},
     {"Julia Dendrite", 0, 1, -0.4, 0.6, -1.5, 1.5, -1.5, 1.5, 200},
-    {"Julia San Marco", 0, 1, -0.75, 0.0, -1.6, 1.6, -1.2, 1.2, 200}
+    {"Julia San Marco", 0, 1, -0.75, 0.0, -1.6, 1.6, -1.2, 1.2, 200},
+    {"Multibrot 3 Clover", 5, 0, 0.0, 0.0, -1.6, 1.6, -1.6, 1.6, 150},
+    {"Multibrot 3 Cusp", 5, 0, 0.0, 0.0, 0.35, 0.65, 0.65, 0.95, 350},
+    {"Multibrot 4 Cross", 6, 0, 0.0, 0.0, -1.5, 1.5, -1.5, 1.5, 160},
+    {"Multibrot 4 Feather", 6, 0, 0.0, 0.0, 0.72, 0.88, 0.42, 0.58, 380},
+    {"Perp Ship Spire", 7, 0, 0.0, 0.0, -1.75, 0.95, -1.65, 0.95, 180},
+    {"Perp Ship Web", 7, 0, 0.0, 0.0, -0.47, -0.42, -0.59, -0.54, 420}
 };
 #define NUM_LANDMARKS (sizeof(landmarks) / sizeof(landmarks[0]))
 int currentLandmark = 0;
@@ -319,18 +328,25 @@ void LoadState(int idx) {
     }
 }
 
+static int colorCycleActive = 0;
+static double colorCyclePhase = 0.0;
+
 void GetColors(unsigned int n, unsigned int iter, int t, unsigned char* r, unsigned char* g, unsigned char* b) {
     if (iter == 0) iter = 1;
+    double tVal = ((double)n / iter + colorCyclePhase);
+    while (tVal >= 1.0) tVal -= 1.0;
+    while (tVal < 0.0) tVal += 1.0;
+
     if (t == 0) { // Fire
-        *r = (unsigned char)((n * 255) / iter);
-        *g = (unsigned char)(((unsigned __int64)n * n * 255) / ((unsigned __int64)iter * iter));
-        *b = (unsigned char)((n * 128) / iter);
+        double v = tVal * 320.0; *r = (unsigned char)(v > 255.0 ? 255 : v);
+        double v2 = tVal * tVal * 290.0; *g = (unsigned char)(v2 > 255.0 ? 255 : v2);
+        double v3 = tVal * 130.0; *b = (unsigned char)(v3 > 255.0 ? 255 : v3);
     } else if (t == 1) { // Ocean
-        *r = (unsigned char)((n * 128) / iter);
-        *g = (unsigned char)(((unsigned __int64)n * n * 255) / ((unsigned __int64)iter * iter));
-        *b = (unsigned char)((n * 255) / iter);
+        *r = (unsigned char)(tVal * 120.0);
+        double v2 = tVal * tVal * 255.0; *g = (unsigned char)(v2 > 255.0 ? 255 : v2);
+        double v3 = tVal * 300.0; *b = (unsigned char)(v3 > 255.0 ? 255 : v3);
     } else if (t == 2) { // Cyberpunk Neon
-        double f = ((double)n / iter) * 6.2831853;
+        double f = tVal * 6.2831853;
         *r = (unsigned char)((FastSin(f) * 0.5 + 0.5) * 255.0);
         *g = (unsigned char)((FastSin(f * 2.0) * 0.5 + 0.5) * 128.0);
         *b = (unsigned char)((FastCos(f) * 0.5 + 0.5) * 255.0);
@@ -339,17 +355,25 @@ void GetColors(unsigned int n, unsigned int iter, int t, unsigned char* r, unsig
         *r = v; *g = v; *b = v;
     } else if (t == 4) { // Emerald Matrix
         *r = (unsigned char)((n * 30) % 100);
-        *g = (unsigned char)((n * 255) / iter);
+        *g = (unsigned char)(tVal * 255.0);
         *b = (unsigned char)((n * 90) % 180);
     } else if (t == 5) { // Sunset Neon
-        *r = (unsigned char)((n * 255) / iter);
-        *g = (unsigned char)((n * 70) / iter);
-        *b = (unsigned char)((n * 190) / iter);
-    } else if (t == 6) { // Custom
-        double f = (double)n / iter;
-        *r = (unsigned char)(customColor1[0] + f * (customColor2[0] - customColor1[0]));
-        *g = (unsigned char)(customColor1[1] + f * (customColor2[1] - customColor1[1]));
-        *b = (unsigned char)(customColor1[2] + f * (customColor2[2] - customColor1[2]));
+        *r = (unsigned char)(tVal * 255.0);
+        *g = (unsigned char)(tVal * 70.0);
+        *b = (unsigned char)(tVal * 190.0);
+    } else if (t == 6) { // Cosmic Nebula
+        double f = tVal * 6.2831853;
+        *r = (unsigned char)((FastSin(f + 1.0) * 0.5 + 0.5) * 230.0 + 25.0);
+        *g = (unsigned char)((FastSin(f * 2.0 + 2.0) * 0.5 + 0.5) * 160.0);
+        *b = (unsigned char)((FastCos(f + 0.5) * 0.5 + 0.5) * 255.0);
+    } else if (t == 7) { // Solar Flare
+        double v = tVal * 350.0; *r = (unsigned char)(v > 255.0 ? 255 : v);
+        double v2 = tVal * 210.0; *g = (unsigned char)(v2 > 255.0 ? 255 : v2);
+        double v3 = tVal * tVal * 120.0; *b = (unsigned char)(v3 > 255.0 ? 255 : v3);
+    } else if (t == 8) { // Custom
+        *r = (unsigned char)(customColor1[0] + tVal * (customColor2[0] - customColor1[0]));
+        *g = (unsigned char)(customColor1[1] + tVal * (customColor2[1] - customColor1[1]));
+        *b = (unsigned char)(customColor1[2] + tVal * (customColor2[2] - customColor1[2]));
     }
 }
 
@@ -410,6 +434,18 @@ DWORD WINAPI RenderThreadProc(LPVOID lpParam) {
                     double a = (Z_re < 0.0) ? -Z_re : Z_re;
                     Z_im = -2.0 * a * Z_im + c_im;
                     Z_re = re_temp + c_re;
+                } else if (task->fType == 5) { // Multibrot 3 (z³ + c)
+                    double n_re = Z_re * (Z_re2 - 3.0 * Z_im2) + c_re;
+                    double n_im = Z_im * (3.0 * Z_re2 - Z_im2) + c_im;
+                    Z_re = n_re; Z_im = n_im;
+                } else if (task->fType == 6) { // Multibrot 4 (z⁴ + c)
+                    double n_re = Z_re2 * Z_re2 - 6.0 * Z_re2 * Z_im2 + Z_im2 * Z_im2 + c_re;
+                    double n_im = 4.0 * Z_re * Z_im * (Z_re2 - Z_im2) + c_im;
+                    Z_re = n_re; Z_im = n_im;
+                } else if (task->fType == 7) { // Perpendicular Burning Ship
+                    double a = (Z_re < 0.0) ? -Z_re : Z_re;
+                    Z_im = -2.0 * a * Z_im + c_im;
+                    Z_re = Z_re2 - Z_im2 + c_re;
                 } else { // 0: Standard Mandelbrot
                     Z_im = 2.0 * Z_re * Z_im + c_im;
                     Z_re = Z_re2 - Z_im2 + c_re;
@@ -679,13 +715,14 @@ void ShowHelpDialog(HWND hwnd) {
         " • Arrow Keys: Pan viewport (Up/Down/Left/Right)\n"
         " • [R] or [0]: Reset to default coordinates\n\n"
         "FORMULAS & PRESETS:\n"
-        " • [1] - [5]: Direct Formula Select (Mandel, Ship, Tricorn, Celtic, Buffalo)\n"
-        " • [F]: Cycle all 5 fractal formulas\n"
-        " • [L] or [P]: Cycle Landmark presets (Seahorse, Spiral, Mini Mandel, etc.)\n"
+        " • [1] - [8]: Direct Formula Select (Mandel, Ship, Tricorn, Celtic, Buffalo, Multibrot 3/4, Perp Ship)\n"
+        " • [F]: Cycle all 8 fractal formulas\n"
+        " • [L] or [P]: Cycle Landmark presets (18 curated destinations)\n"
         " • Shift + Left Click: Sample point as Julia constant\n"
         " • [J]: Toggle Julia / Mandelbrot mode\n\n"
         "VISUALIZATION & EXPORT:\n"
-        " • [T]: Cycle 7 color spectrum themes\n"
+        " • [Space]: Toggle 60 FPS continuous Color Cycling flow\n"
+        " • [T]: Cycle 9 color spectrum themes\n"
         " • [C]: Pick custom gradient palette\n"
         " • [Z] / [Y]: Undo / Redo view navigation history\n"
         " • [F5] / [F9]: Quicksave / Quickload Viewport\n"
@@ -712,6 +749,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_TIMER: {
             if (wParam == 1) {
+                // Update 60 FPS color cycling if active
+                if (colorCycleActive && pixels && bmpW > 0 && bmpH > 0) {
+                    colorCyclePhase += 0.02;
+                    if (colorCyclePhase >= 1.0) colorCyclePhase -= 1.0;
+                    RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
+                }
+
                 // Update screen shake
                 if (shakeMagnitude > 0.05) {
                     shakeAngle += 0.8;
@@ -900,13 +944,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 isDragging = 0;
                 ReleaseCapture();
             }
-            if (wParam >= '1' && wParam <= '5') {
+            if (wParam >= '1' && wParam <= '8') {
                 fractalType = (int)(wParam - '1');
                 isJulia = 0;
                 if (fractalType == 1) { // Burning Ship
                     minRe = -1.8; maxRe = 1.0; minIm = -1.8; maxIm = 1.0;
                 } else if (fractalType == 2) { // Tricorn
                     minRe = -2.0; maxRe = 1.0; minIm = -1.5; maxIm = 1.5;
+                } else if (fractalType == 5) { // Multibrot 3
+                    minRe = -1.6; maxRe = 1.6; minIm = -1.6; maxIm = 1.6;
+                } else if (fractalType == 6) { // Multibrot 4
+                    minRe = -1.5; maxRe = 1.5; minIm = -1.5; maxIm = 1.5;
+                } else if (fractalType == 7) { // Perpendicular Ship
+                    minRe = -1.8; maxRe = 1.0; minIm = -1.8; maxIm = 1.0;
                 } else {
                     minRe = -2.0; maxRe = 1.0; minIm = -1.2; maxIm = 1.2;
                 }
@@ -914,6 +964,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TriggerImpact(bmpW / 2, bmpH / 2, 6.0, 25);
                 SaveState();
                 RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == VK_SPACE) {
+                colorCycleActive = !colorCycleActive;
+                TriggerImpact(bmpW / 2, bmpH / 2, 4.0, 16);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'F') {
                 fractalType = (fractalType + 1) % NUM_FRACTAL_TYPES;
@@ -978,13 +1032,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'T') {
-                theme = (theme + 1) % 7;
+                theme = (theme + 1) % 9;
                 TriggerImpact(bmpW / 2, bmpH / 2, 5.0, 20);
                 SaveState();
                 RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 'C') {
-                theme = 6; // Switch to Custom
+                theme = 8; // Switch to Custom Dual
                 PickColor(hwnd, customColor1);
                 PickColor(hwnd, customColor2);
                 TriggerImpact(bmpW / 2, bmpH / 2, 5.0, 20);
@@ -1250,7 +1304,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 char hudMsg[256];
                 const char* curF = (fractalType >= 0 && fractalType < NUM_FRACTAL_TYPES) ? fractalNames[fractalType] : "Fractal";
-                wsprintf(hudMsg, "%s%s | [1-5/F]ormula [L]andmark [T]heme [F5/F9]Save/Load [F1]Help", curF, isJulia ? " (Julia)" : "");
+                wsprintf(hudMsg, "%s%s | [1-8/F]ormula [L]andmark [T]heme [Space]Cycle [F5/F9]Save/Load [F1]Help", curF, isJulia ? " (Julia)" : "");
                 
                 int len = 0;
                 while (hudMsg[len]) len++;

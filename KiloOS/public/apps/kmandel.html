@@ -5,18 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="window-width" content="1024">
 <meta name="window-height" content="720">
-<title>KMandel - Fractal Explorer</title>
+<title>KMandel Pro - Ultra Fractal Explorer &amp; Co-Op Synth</title>
 <style>
   :root {
     --bg-color: #070a12;
-    --panel-bg: rgba(11, 19, 36, 0.82);
-    --border-color: rgba(96, 165, 250, 0.25);
+    --panel-bg: rgba(11, 19, 36, 0.86);
+    --border-color: rgba(96, 165, 250, 0.28);
     --border-glow: rgba(59, 130, 246, 0.45);
     --text-color: #f8fafc;
     --primary: #3b82f6;
     --primary-hover: #60a5fa;
     --accent: #8b5cf6;
     --gold: #fbbf24;
+    --emerald: #10b981;
+    --rose: #f43f5e;
   }
   body {
     margin: 0;
@@ -53,18 +55,24 @@
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 16px;
+    padding: 14px;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.65), 0 0 20px rgba(59, 130, 246, 0.15);
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    width: 260px;
+    gap: 8px;
+    width: 270px;
     pointer-events: auto;
     user-select: none;
-    max-height: 92vh;
+    max-height: 94vh;
     overflow-y: auto;
     z-index: 10;
-    position: absolute;
+  }
+  .controls::-webkit-scrollbar {
+    width: 5px;
+  }
+  .controls::-webkit-scrollbar-thumb {
+    background: rgba(96, 165, 250, 0.3);
+    border-radius: 4px;
   }
   .controls::before {
     content: '';
@@ -76,10 +84,10 @@
   .control-group {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
   }
   .control-group label {
-    font-size: 11px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.8px;
     color: #94a3b8;
@@ -87,10 +95,10 @@
   }
   .value-display {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 12px;
+    font-size: 11px;
     background: rgba(3, 7, 18, 0.6);
-    padding: 5px 8px;
-    border-radius: 6px;
+    padding: 4px 7px;
+    border-radius: 5px;
     word-break: break-all;
     border: 1px solid rgba(96, 165, 250, 0.2);
     box-shadow: inset 0 1px 3px rgba(0,0,0,0.5);
@@ -100,14 +108,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
     background: linear-gradient(180deg, rgba(30, 58, 102, 0.5) 0%, rgba(15, 23, 42, 0.7) 100%);
     border: 1px solid var(--border-color);
     color: var(--text-color);
-    padding: 8px 12px;
+    padding: 7px 10px;
     border-radius: 6px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     position: relative;
     overflow: hidden;
@@ -142,7 +150,7 @@
     background: linear-gradient(180deg, rgba(59, 130, 246, 0.35) 0%, rgba(30, 58, 102, 0.8) 100%);
     transform: translateY(-1px);
     border-color: rgba(147, 197, 253, 0.5);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    box-shadow: 0 3px 10px rgba(59, 130, 246, 0.25);
   }
   button:active {
     transform: scale(0.97);
@@ -153,9 +161,14 @@
     transform: none;
     box-shadow: none;
   }
+  .btn-active {
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.6) 0%, rgba(37, 99, 235, 0.8) 100%) !important;
+    border-color: #93c5fd !important;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.5) !important;
+  }
   .row {
     display: flex;
-    gap: 8px;
+    gap: 6px;
   }
   .row button {
     flex: 1;
@@ -170,7 +183,7 @@
     padding: 12px 24px;
     border-radius: 20px;
     border: 1px solid var(--border-color);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     pointer-events: none;
     opacity: 0;
@@ -197,7 +210,7 @@
   }
   input[type="color"] {
     width: 100%;
-    height: 30px;
+    height: 28px;
     border: 1px solid var(--border-color);
     border-radius: 4px;
     cursor: pointer;
@@ -213,10 +226,10 @@
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    padding: 8px 16px;
+    padding: 8px 14px;
     color: #f8fafc;
     pointer-events: none;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), 0 0 12px rgba(59, 130, 246, 0.2);
     display: flex;
@@ -224,7 +237,31 @@
     gap: 10px;
     z-index: 10;
   }
-  #help-overlay {
+  .coop-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    color: #34d399;
+    font-weight: 600;
+    padding: 2px 6px;
+    background: rgba(16, 185, 129, 0.15);
+    border-radius: 4px;
+    border: 1px solid rgba(52, 211, 153, 0.3);
+  }
+  .coop-dot {
+    width: 7px;
+    height: 7px;
+    background: #34d399;
+    border-radius: 50%;
+    box-shadow: 0 0 6px #34d399;
+    animation: pulseDot 1.8s infinite;
+  }
+  @keyframes pulseDot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+  #help-overlay, #import-overlay {
     display: none;
     position: absolute;
     top: 0;
@@ -242,8 +279,10 @@
     background: #0b1329;
     border: 1px solid var(--border-color);
     border-radius: 12px;
-    padding: 28px 36px;
-    max-width: 520px;
+    padding: 24px 30px;
+    max-width: 580px;
+    max-height: 88vh;
+    overflow-y: auto;
     box-shadow: 0 16px 48px rgba(0,0,0,0.8), 0 0 30px rgba(59, 130, 246, 0.2);
     position: relative;
   }
@@ -256,16 +295,16 @@
   }
   .help-card h2 {
     margin-top: 0;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     color: var(--primary-hover);
-    font-size: 20px;
+    font-size: 18px;
   }
   .help-grid {
     display: grid;
-    grid-template-columns: 140px 1fr;
-    gap: 8px 16px;
-    font-size: 13px;
-    line-height: 1.5;
+    grid-template-columns: 130px 1fr;
+    gap: 6px 14px;
+    font-size: 12px;
+    line-height: 1.45;
   }
   .help-key {
     font-family: monospace;
@@ -281,11 +320,11 @@
   .shortcut-badge {
     margin-left: auto;
     font-family: monospace;
-    font-size: 11px;
+    font-size: 10px;
     background: rgba(255, 255, 255, 0.1);
     border: 1px solid rgba(255, 255, 255, 0.15);
-    padding: 1px 5px;
-    border-radius: 4px;
+    padding: 1px 4px;
+    border-radius: 3px;
     color: #93c5fd;
     font-weight: 600;
   }
@@ -308,9 +347,9 @@
     border: 1px solid rgba(96, 165, 250, 0.35);
     border-left: 4px solid #3b82f6;
     border-radius: 8px;
-    padding: 10px 16px;
+    padding: 9px 14px;
     color: #f8fafc;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 12px rgba(59, 130, 246, 0.2);
     display: flex;
@@ -338,7 +377,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 14px;
   }
   .help-close-x {
     background: transparent;
@@ -346,7 +385,7 @@
     color: #94a3b8;
     cursor: pointer;
     font-size: 18px;
-    padding: 4px 8px;
+    padding: 3px 8px;
     border-radius: 6px;
     line-height: 1;
   }
@@ -354,25 +393,23 @@
     color: #fff;
     border-color: rgba(96, 165, 250, 0.6);
   }
-  /* Focus visible accessibility */
-  button:focus-visible, select:focus-visible, input:focus-visible {
+  button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible {
     outline: 2px solid #60a5fa;
     outline-offset: 2px;
   }
-  /* Collapsible Controls Header */
   .controls-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: 8px;
+    padding-bottom: 6px;
     margin-bottom: 2px;
     border-bottom: 1px solid rgba(96, 165, 250, 0.2);
   }
   .controls-title {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 12px;
+    gap: 6px;
+    font-size: 11px;
     font-weight: 700;
     color: #60a5fa;
     letter-spacing: 0.5px;
@@ -404,8 +441,8 @@
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid var(--border-color);
     border-radius: 20px;
-    padding: 8px 16px;
-    font-size: 13px;
+    padding: 7px 14px;
+    font-size: 12px;
     font-weight: 600;
     color: #f8fafc;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 15px rgba(59, 130, 246, 0.2);
@@ -424,41 +461,54 @@
     from { opacity: 0; transform: translateY(-5px); }
     to { opacity: 1; transform: translateY(0); }
   }
+  /* Import Modal Styling */
+  .import-card {
+    background: #0b1329;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 22px 28px;
+    width: 440px;
+    max-width: 90vw;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.8), 0 0 30px rgba(59, 130, 246, 0.2);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .import-textarea {
+    width: 100%;
+    height: 110px;
+    background: rgba(3, 7, 18, 0.8);
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    border-radius: 6px;
+    color: #38bdf8;
+    font-family: monospace;
+    font-size: 11px;
+    padding: 8px;
+    box-sizing: border-box;
+    resize: none;
+  }
   /* Responsive Media Queries */
   @media (max-width: 768px) {
     .controls {
-      width: 230px;
-      right: 12px;
-      top: 12px;
-      padding: 12px;
-      gap: 8px;
+      width: 240px;
+      right: 10px;
+      top: 10px;
+      padding: 10px;
+      gap: 6px;
     }
     #hud-badge {
-      left: 12px;
-      bottom: 12px;
-      padding: 6px 12px;
+      left: 10px;
+      bottom: 10px;
+      padding: 5px 10px;
       font-size: 11px;
     }
     #toast-container {
-      top: 12px;
+      top: 10px;
       left: 50%;
       transform: translateX(-50%);
       width: 90%;
       max-width: 320px;
-    }
-  }
-  @media (max-height: 640px) {
-    .controls {
-      max-height: 96vh;
-      padding: 10px;
-      gap: 6px;
-    }
-    .control-group label {
-      font-size: 10px;
-    }
-    select, button {
-      padding: 6px 10px;
-      font-size: 12px;
     }
   }
 </style>
@@ -482,25 +532,30 @@
     <div class="controls">
       <div class="controls-header">
         <div class="controls-title">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-          <span>Fractal Controls</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          <span>KMandel Pro</span>
         </div>
         <button id="btn-toggle-controls" class="btn-icon-sm" aria-label="Collapse Controls (C)" title="Collapse Controls (C)">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
         </button>
       </div>
 
+      <!-- 1. Fractal Formula Select (8 Formulas) -->
       <div class="control-group">
-        <label for="fractal-select">Fractal Formula <span style="color:#60a5fa;font-size:10px;">[1-5/F]</span></label>
+        <label for="fractal-select">Fractal Formula <span style="color:#60a5fa;font-size:10px;">[1-8/F]</span></label>
         <select id="fractal-select" aria-label="Fractal Formula">
           <option value="0">1. Mandelbrot (z² + c)</option>
           <option value="1">2. Burning Ship</option>
           <option value="2">3. Tricorn / Mandelbar</option>
           <option value="3">4. Celtic Mandelbrot</option>
           <option value="4">5. Buffalo Fractal</option>
+          <option value="5">6. Multibrot 3 (z³ + c)</option>
+          <option value="6">7. Multibrot 4 (z⁴ + c)</option>
+          <option value="7">8. Perpendicular Ship</option>
         </select>
       </div>
 
+      <!-- 2. Landmark Presets (18 Presets) -->
       <div class="control-group">
         <label for="landmark-select">Landmark Presets <span style="color:#fbbf24;font-size:10px;">[L/P]</span></label>
         <select id="landmark-select" aria-label="Landmark Presets">
@@ -517,9 +572,29 @@
           <option value="9">Buffalo Heart</option>
           <option value="10">Julia Dendrite</option>
           <option value="11">Julia San Marco</option>
+          <option value="12">Multibrot 3 Clover</option>
+          <option value="13">Multibrot 3 Cusp</option>
+          <option value="14">Multibrot 4 Cross</option>
+          <option value="15">Multibrot 4 Feather</option>
+          <option value="16">Perp Ship Spire</option>
+          <option value="17">Perp Ship Web</option>
         </select>
       </div>
 
+      <!-- 3. Saved Custom Bookmarks -->
+      <div class="control-group">
+        <label for="bookmark-select">Custom Bookmarks</label>
+        <div class="row">
+          <select id="bookmark-select" style="flex:2;" aria-label="Saved Bookmarks">
+            <option value="-1">-- Saved Views (0) --</option>
+          </select>
+          <button id="btn-add-bookmark" style="flex:1;" aria-label="Bookmark View (B)" title="Bookmark View (B)">
+            ⭐ <span class="shortcut-badge">B</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4. Zoom & Iterations Telemetry -->
       <div class="control-group">
         <label>Zoom &amp; Iterations</label>
         <div class="row">
@@ -530,31 +605,32 @@
 
       <div class="row">
         <button id="btn-zoom-in" aria-label="Zoom In">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg> Zoom In <span class="shortcut-badge">+</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg> Zoom In <span class="shortcut-badge">+</span>
         </button>
         <button id="btn-zoom-out" aria-label="Zoom Out">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg> Zoom Out <span class="shortcut-badge">-</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg> Zoom Out <span class="shortcut-badge">-</span>
         </button>
       </div>
 
       <div class="row">
         <button id="btn-undo" disabled aria-label="Undo">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path></svg> Undo <span class="shortcut-badge">Z</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path></svg> Undo <span class="shortcut-badge">Z</span>
         </button>
         <button id="btn-redo" disabled aria-label="Redo">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"></path><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path></svg> Redo <span class="shortcut-badge">Y</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"></path><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path></svg> Redo <span class="shortcut-badge">Y</span>
         </button>
       </div>
 
       <div class="row">
         <button id="btn-quicksave" aria-label="Quicksave View (F5)" title="Quicksave Viewport (F5)">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Save <span class="shortcut-badge">F5</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Save <span class="shortcut-badge">F5</span>
         </button>
         <button id="btn-quickload" aria-label="Quickload View (F9)" title="Quickload Viewport (F9)">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> Load <span class="shortcut-badge">F9</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> Load <span class="shortcut-badge">F9</span>
         </button>
       </div>
 
+      <!-- 5. Palette & Shading Engine -->
       <div class="control-group">
         <label for="theme-select">Color Theme <span style="color:#a855f7;font-size:10px;">[T]</span></label>
         <select id="theme-select" aria-label="Color Theme">
@@ -564,7 +640,9 @@
           <option value="3">Monochrome Band</option>
           <option value="4">Emerald Matrix</option>
           <option value="5">Sunset Glow</option>
-          <option value="6">Custom Dual Palette</option>
+          <option value="6">Cosmic Nebula</option>
+          <option value="7">Solar Flare</option>
+          <option value="8">Custom Dual Palette</option>
         </select>
       </div>
 
@@ -576,28 +654,89 @@
         </div>
       </div>
 
+      <div class="row">
+        <button id="btn-color-cycle" aria-label="Toggle Color Cycling" title="Toggle 60 FPS Color Cycling (Space)">
+          🌈 <span>Cycle</span> <span class="shortcut-badge">Space</span>
+        </button>
+        <button id="btn-smooth" aria-label="Toggle Smooth Shading" title="Toggle Continuous Potential Gradients (G)">
+          ✨ <span>Smooth</span> <span class="shortcut-badge">G</span>
+        </button>
+      </div>
+
+      <!-- 6. Yamaha YM2612 FM Audio & Sonification -->
+      <div class="row">
+        <button id="btn-audio-mute" aria-label="Toggle Audio" title="Toggle Sega Genesis YM2612 FM Audio (M)">
+          🎵 <span id="txt-audio-mute">FM Sound</span> <span class="shortcut-badge">M</span>
+        </button>
+        <button id="btn-sonify" aria-label="Sonify Cursor" title="Sonify Cursor Location in Real-Time (U)">
+          ✨ <span id="txt-sonify">Sonify Off</span> <span class="shortcut-badge">U</span>
+        </button>
+      </div>
+
+      <!-- 7. Firebase Realtime Co-Op Exploration -->
+      <div class="row" style="align-items:center;">
+        <button id="btn-broadcast-beacon" style="flex:1;" aria-label="Broadcast Beacon" title="Broadcast Current Coordinate Beacon to Worldwide Peers (O)">
+          📡 Beacon <span class="shortcut-badge">O</span>
+        </button>
+        <div id="coop-status" class="coop-indicator" style="flex:1; justify-content:center;" title="Live connected explorers">
+          <span class="coop-dot"></span>
+          <span id="coop-count-text">1 Online</span>
+        </div>
+      </div>
+
+      <!-- 8. Julia Mode & Export Utilities -->
       <button id="btn-julia" aria-label="Toggle Julia">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path><path d="M2 12h20"></path></svg> <span id="btn-julia-text">Toggle Julia Mode</span> <span class="shortcut-badge">J</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path><path d="M2 12h20"></path></svg> <span id="btn-julia-text">Toggle Julia Mode</span> <span class="shortcut-badge">J</span>
       </button>
 
       <button id="btn-save" aria-label="Save 4K PNG">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Export 4K PNG <span class="shortcut-badge">S</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Export 4K PNG <span class="shortcut-badge">S</span>
       </button>
 
+      <div class="row">
+        <button id="btn-export-json" aria-label="Export Presets JSON" title="Export Presets and Bookmarks JSON (E)">
+          📤 JSON <span class="shortcut-badge">E</span>
+        </button>
+        <button id="btn-import-json" aria-label="Import Presets JSON" title="Import Presets JSON (I)">
+          📥 Import <span class="shortcut-badge">I</span>
+        </button>
+        <button id="btn-share-coords" aria-label="Copy Share Coords" title="Copy Coordinate Share Link (K)">
+          🔗 Share <span class="shortcut-badge">K</span>
+        </button>
+      </div>
+
       <button id="btn-reset" aria-label="Reset View">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg> Reset View <span class="shortcut-badge">R / 0</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg> Reset View <span class="shortcut-badge">R / 0</span>
       </button>
 
       <button id="btn-help" aria-label="Help & Controls" style="background: linear-gradient(180deg, rgba(59, 130, 246, 0.25) 0%, rgba(30, 58, 102, 0.5) 100%); border-color: rgba(96, 165, 250, 0.4);">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Help &amp; Controls <span class="shortcut-badge">F1 / H</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Help &amp; Controls <span class="shortcut-badge">F1 / H</span>
       </button>
     </div>
 
+    <!-- HUD Telemetry Badge -->
     <div id="hud-badge">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-      <span id="hud-text">Mandelbrot | Shift+Click to sample Julia | F1 for Help</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+      <span id="hud-text">Mandelbrot | Shift+Click for Julia | F1 for Help</span>
     </div>
 
+    <!-- JSON Import Modal -->
+    <div id="import-overlay" role="dialog" aria-modal="true" aria-labelledby="import-title">
+      <div class="import-card">
+        <div class="help-header-row" style="margin-bottom:4px;">
+          <h2 id="import-title" style="margin:0; font-size:16px; color:#60a5fa;">📥 Import Coordinates &amp; Bookmarks</h2>
+          <button class="help-close-x" id="btn-close-import-x" aria-label="Close Import">&times;</button>
+        </div>
+        <p style="font-size:11px; color:#94a3b8; margin:0;">Paste KMandel JSON preset data or coordinate string below:</p>
+        <textarea id="import-text" class="import-textarea" placeholder='{"app":"KMandel","currentView":{...}}'></textarea>
+        <div class="row">
+          <button id="btn-do-import" style="flex:1;">Load Preset</button>
+          <button id="btn-cancel-import" style="flex:1; background:rgba(255,255,255,0.08);">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Help & Controls Modal -->
     <div id="help-overlay" role="dialog" aria-modal="true" aria-labelledby="help-title">
       <div class="help-card" id="help-card">
         <div class="help-header-row">
@@ -609,27 +748,62 @@
           <span class="help-key">Scroll / + / -</span><span>Zoom In &amp; Out (2x / 0.5x)</span>
           <span class="help-key">Pinch Zoom</span><span>Two-finger touch zoom on touchscreens</span>
           <span class="help-key">Arrow Keys</span><span>Fine pan viewport in all directions</span>
-          <span class="help-key">Shift + Click</span><span>Pick Julia constant from coordinate</span>
-          <span class="help-key">1 - 5</span><span>Direct Formula (Mandel, Ship, Tricorn, Celtic, Buffalo)</span>
-          <span class="help-key">F</span><span>Cycle all Fractal Formulas</span>
-          <span class="help-key">L / P</span><span>Cycle Landmark Presets</span>
+          <span class="help-key">Shift + Click</span><span>Pick Julia constant from clicked coordinate</span>
+          <span class="help-key">1 - 8</span><span>Direct Formula Select (Mandel, Ship, Tricorn, Celtic, Buffalo, Multibrot 3/4, Perp Ship)</span>
+          <span class="help-key">F</span><span>Cycle all 8 Fractal Formulas</span>
+          <span class="help-key">L / P</span><span>Cycle Landmark Presets (18 curated destinations)</span>
+          <span class="help-key">B</span><span>Save current view into Custom Bookmarks bank</span>
+          <span class="help-key">Space</span><span>Toggle 60 FPS continuous Color Cycling flow</span>
+          <span class="help-key">G</span><span>Toggle Smooth Shading (continuous potential)</span>
+          <span class="help-key">M</span><span>Toggle Yamaha YM2612 2-Op FM Sound &amp; SPC700 Delay</span>
+          <span class="help-key">U</span><span>Toggle Real-time Cursor Fractal Sonification</span>
+          <span class="help-key">O</span><span>Broadcast Co-Op Discovery Beacon to active peers</span>
+          <span class="help-key">E / I</span><span>Export &amp; Import JSON Presets and Bookmarks</span>
+          <span class="help-key">K</span><span>Copy shareable coordinate link to clipboard</span>
           <span class="help-key">J</span><span>Toggle Julia / Mandelbrot Mode</span>
-          <span class="help-key">T</span><span>Cycle Color Themes</span>
+          <span class="help-key">T</span><span>Cycle 9 Color Themes</span>
           <span class="help-key">Z / Y</span><span>Undo / Redo View History</span>
           <span class="help-key">F5 / F9</span><span>Quicksave / Quickload Viewport</span>
           <span class="help-key">C</span><span>Toggle Controls Panel Visibility</span>
           <span class="help-key">S</span><span>Export Ultra-HD 4K PNG</span>
           <span class="help-key">R / 0</span><span>Reset Coordinates to default</span>
-          <span class="help-key">Esc</span><span>Close Help dialog &amp; dismiss notifications</span>
+          <span class="help-key">Esc</span><span>Close dialogs &amp; dismiss notifications</span>
           <span class="help-key">F1 / H</span><span>Toggle this Help overlay</span>
         </div>
-        <div style="display:flex;gap:10px;margin-top:20px;">
+        <div style="display:flex;gap:10px;margin-top:16px;">
           <button id="btn-close-help" style="flex:1;">Got It! [Esc]</button>
-          <button id="btn-dont-show-help" style="flex:1;background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);font-size:12px;">Don't show on start</button>
+          <button id="btn-dont-show-help" style="flex:1;background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.15);font-size:11px;">Don't show on start</button>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Firebase RTDB Module for Seamless Online Multiplayer Exploration -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+      authDomain: "kiloappschat.firebaseapp.com",
+      databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+      projectId: "kiloappschat",
+      storageBucket: "kiloappschat.firebasestorage.app",
+      messagingSenderId: "290208566057",
+      appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+    };
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      window.fb = { app, db, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect };
+      if (typeof window.onFirebaseReady === 'function') {
+        window.onFirebaseReady();
+      }
+    } catch (err) {
+      console.warn("Firebase RTDB init error:", err);
+    }
+  </script>
 
   <script>
     const canvas = document.getElementById('c');
@@ -647,8 +821,11 @@
     let minRe = -2.0, maxRe = 1.0;
     let minIm = -1.2, maxIm = 1.2;
     let max_iter = 100;
-    let theme = 0; // 0: Fire, 1: Ocean, 2: Cyberpunk, 3: BW, 4: Emerald, 5: Sunset, 6: Custom
-    let fractalType = 0; // 0: Mandelbrot, 1: Burning Ship, 2: Tricorn, 3: Celtic, 4: Buffalo
+    let theme = 0; // 0: Fire, 1: Ocean, 2: Cyberpunk, 3: BW, 4: Emerald, 5: Sunset, 6: Nebula, 7: Solar, 8: Custom
+    let fractalType = 0; // 0-7: Mandel, Ship, Tricorn, Celtic, Buffalo, Multi3, Multi4, PerpShip
+    let smoothShading = true;
+    let colorCycleActive = false;
+    let colorCyclePhase = 0;
     let isRendering = false;
     let renderRequested = false;
 
@@ -661,7 +838,32 @@
     let customColor1 = [255, 0, 85];
     let customColor2 = [0, 229, 255];
 
-    const fractalNames = ["Mandelbrot", "Burning Ship", "Tricorn", "Celtic", "Buffalo"];
+    // Iteration buffer cache for zero-latency 60 FPS color cycling
+    let cachedIters = null;
+    let cachedW = 0, cachedH = 0;
+
+    const fractalNames = [
+      "Mandelbrot",
+      "Burning Ship",
+      "Tricorn",
+      "Celtic",
+      "Buffalo",
+      "Multibrot 3",
+      "Multibrot 4",
+      "Perpendicular Ship"
+    ];
+
+    const themeNames = [
+      "Fire Spectrum",
+      "Deep Ocean",
+      "Cyberpunk Neon",
+      "Monochrome Band",
+      "Emerald Matrix",
+      "Sunset Glow",
+      "Cosmic Nebula",
+      "Solar Flare",
+      "Custom Dual Palette"
+    ];
 
     const landmarks = [
       { name: "Mandelbrot Overview", fType: 0, isJ: false, jRe: 0, jIm: 0, minRe: -2.0, maxRe: 1.0, minIm: -1.2, maxIm: 1.2, iter: 100 },
@@ -675,19 +877,240 @@
       { name: "Celtic Ring", fType: 3, isJ: false, jRe: 0, jIm: 0, minRe: -2.0, maxRe: 1.0, minIm: -1.2, maxIm: 1.2, iter: 150 },
       { name: "Buffalo Heart", fType: 4, isJ: false, jRe: 0, jIm: 0, minRe: -2.0, maxRe: 1.0, minIm: -1.5, maxIm: 1.5, iter: 150 },
       { name: "Julia Dendrite", fType: 0, isJ: true, jRe: -0.4, jIm: 0.6, minRe: -1.5, maxRe: 1.5, minIm: -1.5, maxIm: 1.5, iter: 200 },
-      { name: "Julia San Marco", fType: 0, isJ: true, jRe: -0.75, jIm: 0.0, minRe: -1.6, maxRe: 1.6, minIm: -1.2, maxIm: 1.2, iter: 200 }
+      { name: "Julia San Marco", fType: 0, isJ: true, jRe: -0.75, jIm: 0.0, minRe: -1.6, maxRe: 1.6, minIm: -1.2, maxIm: 1.2, iter: 200 },
+      { name: "Multibrot 3 Clover", fType: 5, isJ: false, jRe: 0, jIm: 0, minRe: -1.6, maxRe: 1.6, minIm: -1.6, maxIm: 1.6, iter: 150 },
+      { name: "Multibrot 3 Cusp", fType: 5, isJ: false, jRe: 0, jIm: 0, minRe: 0.35, maxRe: 0.65, minIm: 0.65, maxIm: 0.95, iter: 350 },
+      { name: "Multibrot 4 Cross", fType: 6, isJ: false, jRe: 0, jIm: 0, minRe: -1.5, maxRe: 1.5, minIm: -1.5, maxIm: 1.5, iter: 160 },
+      { name: "Multibrot 4 Feather", fType: 6, isJ: false, jRe: 0, jIm: 0, minRe: 0.72, maxRe: 0.88, minIm: 0.42, maxIm: 0.58, iter: 380 },
+      { name: "Perp Ship Spire", fType: 7, isJ: false, jRe: 0, jIm: 0, minRe: -1.75, maxRe: 0.95, minIm: -1.65, maxIm: 0.95, iter: 180 },
+      { name: "Perp Ship Web", fType: 7, isJ: false, jRe: 0, jIm: 0, minRe: -0.47, maxRe: -0.42, minIm: -0.59, maxIm: -0.54, iter: 420 }
     ];
 
     // ==========================================
-    // VISUAL EFFECTS ENGINE (LOOP 3)
+    // PROCEDURAL AUDIO ENGINE: YAMAHA YM2612 & SPC700 DELAY
+    // ==========================================
+    let audioCtx = null;
+    let audioMuted = false;
+    let sonifyActive = false;
+    let lastSonifyTime = 0;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtxClass) {
+          audioCtx = new AudioCtxClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function toggleAudio() {
+      audioMuted = !audioMuted;
+      safeSetStorage('kmandel_audio_muted', audioMuted);
+      const btn = document.getElementById('btn-audio-mute');
+      const txt = document.getElementById('txt-audio-mute');
+      if (audioMuted) {
+        if (btn) btn.classList.remove('btn-active');
+        if (txt) txt.textContent = 'Muted';
+        showToast('🔇 Audio Muted', 'info', 1600);
+      } else {
+        if (btn) btn.classList.add('btn-active');
+        if (txt) txt.textContent = 'FM Sound';
+        initAudio();
+        playFmTone(523.25, 0.12, 2.0, 150, 0.12);
+        showToast('🎵 Genesis YM2612 FM Sound Enabled', 'success', 2200);
+      }
+    }
+
+    function toggleSonify() {
+      sonifyActive = !sonifyActive;
+      const btn = document.getElementById('btn-sonify');
+      const txt = document.getElementById('txt-sonify');
+      if (sonifyActive) {
+        initAudio();
+        if (audioMuted) toggleAudio();
+        if (btn) btn.classList.add('btn-active');
+        if (txt) txt.textContent = 'Sonify On';
+        showToast('✨ Cursor Sonification Active (Move mouse across fractal)', 'purple', 2800);
+      } else {
+        if (btn) btn.classList.remove('btn-active');
+        if (txt) txt.textContent = 'Sonify Off';
+        showToast('Cursor Sonification Disabled', 'info', 1600);
+      }
+    }
+
+    function playFmTone(freq, duration = 0.18, modRatio = 2.0, modIndex = 220, vol = 0.14) {
+      if (audioMuted) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+
+        const now = audioCtx.currentTime;
+
+        // Carrier Oscillator (OP2)
+        const carrier = audioCtx.createOscillator();
+        carrier.type = 'sine';
+        carrier.frequency.setValueAtTime(Math.max(35, Math.min(4500, freq)), now);
+
+        // Modulator Oscillator (OP1)
+        const modulator = audioCtx.createOscillator();
+        modulator.type = 'sine';
+        modulator.frequency.setValueAtTime(Math.max(35, Math.min(9000, freq * modRatio)), now);
+
+        // Modulation Gain Envelope
+        const modGain = audioCtx.createGain();
+        modGain.gain.setValueAtTime(modIndex, now);
+        modGain.gain.exponentialRampToValueAtTime(Math.max(0.1, modIndex * 0.04), now + duration);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+
+        // Voice ADSR Gain Envelope
+        const voiceGain = audioCtx.createGain();
+        voiceGain.gain.setValueAtTime(0.0001, now);
+        voiceGain.gain.linearRampToValueAtTime(vol, now + 0.015);
+        voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        // SNES SPC700 Warm Stereo Delay Network
+        const delay = audioCtx.createDelay();
+        delay.delayTime.value = 0.16;
+        const delayFeedback = audioCtx.createGain();
+        delayFeedback.gain.value = 0.22;
+        const delayFilter = audioCtx.createBiquadFilter();
+        delayFilter.type = 'lowpass';
+        delayFilter.frequency.value = 1800;
+
+        voiceGain.connect(audioCtx.destination);
+        voiceGain.connect(delay);
+        delay.connect(delayFilter);
+        delayFilter.connect(delayFeedback);
+        delayFeedback.connect(delay);
+        delayFilter.connect(audioCtx.destination);
+
+        carrier.connect(voiceGain);
+
+        carrier.start(now);
+        modulator.start(now);
+        carrier.stop(now + duration + 0.35);
+        modulator.stop(now + duration + 0.35);
+      } catch (e) {}
+    }
+
+    function playSfx(type) {
+      if (audioMuted) return;
+      if (type === 'zoomIn') {
+        playFmTone(587.33, 0.08, 2.0, 180, 0.11);
+        setTimeout(() => playFmTone(880.00, 0.12, 1.5, 220, 0.12), 40);
+      } else if (type === 'zoomOut') {
+        playFmTone(659.25, 0.08, 1.5, 180, 0.10);
+        setTimeout(() => playFmTone(392.00, 0.12, 2.0, 160, 0.10), 40);
+      } else if (type === 'formula') {
+        playFmTone(329.63, 0.10, 3.0, 280, 0.12);
+        setTimeout(() => playFmTone(493.88, 0.14, 2.0, 200, 0.14), 60);
+      } else if (type === 'landmark') {
+        playFmTone(440.00, 0.08, 2.0, 180, 0.12);
+        setTimeout(() => playFmTone(659.25, 0.10, 1.5, 220, 0.13), 50);
+        setTimeout(() => playFmTone(880.00, 0.18, 1.0, 250, 0.15), 110);
+      } else if (type === 'theme') {
+        playFmTone(523.25, 0.09, 2.5, 210, 0.11);
+        setTimeout(() => playFmTone(783.99, 0.11, 2.0, 240, 0.12), 45);
+      } else if (type === 'julia') {
+        playFmTone(783.99, 0.14, 4.0, 350, 0.15);
+        setTimeout(() => playFmTone(1046.50, 0.22, 2.0, 300, 0.16), 70);
+      } else if (type === 'quicksave') {
+        playFmTone(880.00, 0.07, 3.0, 200, 0.11);
+        setTimeout(() => playFmTone(1174.66, 0.14, 1.5, 180, 0.13), 50);
+      } else if (type === 'quickload') {
+        playFmTone(587.33, 0.08, 2.0, 220, 0.12);
+        setTimeout(() => playFmTone(880.00, 0.16, 2.0, 260, 0.14), 60);
+      } else if (type === 'beacon') {
+        playFmTone(659.25, 0.10, 2.0, 300, 0.14);
+        setTimeout(() => playFmTone(987.77, 0.14, 3.0, 320, 0.15), 70);
+        setTimeout(() => playFmTone(1318.51, 0.20, 1.5, 280, 0.16), 150);
+      }
+    }
+
+    // Interactive Real-Time Fractal Sonifier
+    const sonifyScale = [
+      130.81, 146.83, 164.81, 196.00, 220.00, 
+      261.63, 293.66, 329.63, 392.00, 440.00, 
+      523.25, 587.33, 659.25, 783.99, 880.00, 1046.50
+    ];
+
+    function sonifyAtClientCoord(cx, cy) {
+      if (!sonifyActive || audioMuted) return;
+      const now = performance.now();
+      if (now - lastSonifyTime < 75) return;
+      lastSonifyTime = now;
+
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      if (w <= 1 || h <= 1) return;
+
+      const re_factor = (maxRe - minRe) / (w - 1);
+      const im_factor = (maxIm - minIm) / (h - 1);
+      const c_re_view = minRe + cx * re_factor;
+      const c_im_view = maxIm - cy * im_factor;
+
+      let c_re = isJulia ? juliaCRe : c_re_view;
+      let c_im = isJulia ? juliaCIm : c_im_view;
+      let Z_re = c_re_view, Z_im = c_im_view;
+      let n = 0;
+      const testIter = 80;
+
+      for (n = 0; n < testIter; ++n) {
+        const Z_re2 = Z_re * Z_re, Z_im2 = Z_im * Z_im;
+        if (Z_re2 + Z_im2 > 4.0) break;
+        if (fractalType === 1) { // Ship
+          const a = Math.abs(Z_re), b = Math.abs(Z_im);
+          Z_im = -2.0 * a * b + c_im; Z_re = Z_re2 - Z_im2 + c_re;
+        } else if (fractalType === 2) { // Tricorn
+          Z_im = -2.0 * Z_re * Z_im + c_im; Z_re = Z_re2 - Z_im2 + c_re;
+        } else if (fractalType === 3) { // Celtic
+          const re_temp = Math.abs(Z_re2 - Z_im2);
+          Z_im = 2.0 * Z_re * Z_im + c_im; Z_re = re_temp + c_re;
+        } else if (fractalType === 4) { // Buffalo
+          const re_temp = Math.abs(Z_re2 - Z_im2);
+          const a = Math.abs(Z_re);
+          Z_im = -2.0 * a * Z_im + c_im; Z_re = re_temp + c_re;
+        } else if (fractalType === 5) { // Multi 3
+          const n_re = Z_re * (Z_re2 - 3.0 * Z_im2) + c_re;
+          const n_im = Z_im * (3.0 * Z_re2 - Z_im2) + c_im;
+          Z_re = n_re; Z_im = n_im;
+        } else if (fractalType === 6) { // Multi 4
+          const n_re = Z_re2 * Z_re2 - 6.0 * Z_re2 * Z_im2 + Z_im2 * Z_im2 + c_re;
+          const n_im = 4.0 * Z_re * Z_im * (Z_re2 - Z_im2) + c_im;
+          Z_re = n_re; Z_im = n_im;
+        } else if (fractalType === 7) { // Perp Ship
+          const a = Math.abs(Z_re);
+          Z_im = -2.0 * a * Z_im + c_im; Z_re = Z_re2 - Z_im2 + c_re;
+        } else { // Mandelbrot (0)
+          Z_im = 2.0 * Z_re * Z_im + c_im; Z_re = Z_re2 - Z_im2 + c_re;
+        }
+      }
+
+      if (n >= testIter) {
+        // Interior deep resonant sub-bass
+        playFmTone(73.42, 0.09, 1.0, 80, 0.08);
+      } else {
+        const noteIdx = Math.floor((n / testIter) * sonifyScale.length) % sonifyScale.length;
+        const noteFreq = sonifyScale[noteIdx];
+        const ratio = [1.0, 1.5, 2.0, 3.0][fractalType % 4];
+        playFmTone(noteFreq, 0.08, ratio, 120 + n * 3, 0.09);
+      }
+    }
+
+    // ==========================================
+    // VISUAL EFFECTS ENGINE (Particles, Motes, Filigree)
     // ==========================================
     let shakeMagnitude = 0;
     let shakeDecay = 0.88;
     let shakeAngle = 0;
 
-    // Atmospheric Floating Motes
     const motes = [];
-    const NUM_MOTES = 45;
+    const NUM_MOTES = 40;
     function initMotes() {
       motes.length = 0;
       for (let i = 0; i < NUM_MOTES; i++) {
@@ -705,21 +1128,15 @@
     }
     initMotes();
 
-    // 4-Layer Kinematic Particle Engine
-    // Layer 0: Incandescent Core Needle Sparks
-    // Layer 1: Expanding Buoyant Plasma Puffs
-    // Layer 2: Kinematic Crystal/Debris Shards (rotation, drag, gravity, bounce)
-    // Layer 3: Radiant Golden Celebration Energy Stars
     const particles = [];
-
     function triggerScreenShake(magnitude) {
-      shakeMagnitude = Math.min(shakeMagnitude + magnitude, 28);
+      shakeMagnitude = Math.min(shakeMagnitude + magnitude, 26);
     }
 
-    function spawnParticleBurst(x, y, count = 28, colorTheme = 0) {
+    function spawnParticleBurst(x, y, count = 26, colorTheme = 0) {
       for (let i = 0; i < count; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const speed = 2.0 + Math.random() * 8.5;
+        const speed = 2.0 + Math.random() * 8.0;
         const layer = Math.floor(Math.random() * 4);
         
         let color = '#38bdf8';
@@ -728,18 +1145,19 @@
         else if (colorTheme === 2) color = ['#ff007f', '#00ffff', '#a855f7', '#ffffff'][Math.floor(Math.random()*4)];
         else if (colorTheme === 4) color = ['#10b981', '#34d399', '#6ee7b7', '#ffffff'][Math.floor(Math.random()*4)];
         else if (colorTheme === 5) color = ['#f43f5e', '#fb923c', '#facc15', '#ffffff'][Math.floor(Math.random()*4)];
+        else if (colorTheme === 6) color = ['#c084fc', '#818cf8', '#38bdf8', '#fbbf24'][Math.floor(Math.random()*4)];
+        else if (colorTheme === 7) color = ['#facc15', '#f97316', '#ef4444', '#ffffff'][Math.floor(Math.random()*4)];
         else color = ['#38bdf8', '#818cf8', '#c084fc', '#fbbf24'][Math.floor(Math.random()*4)];
 
         particles.push({
           layer: layer,
-          x: x,
-          y: y,
+          x: x, y: y,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
-          size: layer === 0 ? 1.5 : (layer === 1 ? 8.0 : (layer === 2 ? 4.0 : 6.0)),
-          growth: layer === 1 ? 0.35 : (layer === 3 ? 0.15 : -0.05),
+          size: layer === 0 ? 1.5 : (layer === 1 ? 7.0 : (layer === 2 ? 4.0 : 5.5)),
+          growth: layer === 1 ? 0.3 : (layer === 3 ? 0.12 : -0.05),
           alpha: 1.0,
-          decay: layer === 0 ? 0.04 : (layer === 1 ? 0.025 : 0.02),
+          decay: layer === 0 ? 0.045 : (layer === 1 ? 0.026 : 0.022),
           gravity: layer === 2 ? 0.18 : (layer === 1 ? -0.05 : 0.0),
           drag: layer === 0 ? 0.94 : (layer === 1 ? 0.92 : 0.97),
           rotation: Math.random() * Math.PI * 2,
@@ -749,33 +1167,41 @@
       }
     }
 
-    // Dual-Tier Concentric Shockwave Ripples
     const shockwaves = [];
-    function spawnShockwave(x, y, maxR = 90, color = 'rgba(56, 189, 248, 0.8)') {
-      // Inner high-speed compression wave
+    function spawnShockwave(x, y, maxR = 85, color = 'rgba(56, 189, 248, 0.8)') {
       shockwaves.push({
-        x: x, y: y, radius: 2, maxRadius: maxR, speed: 7.0, alpha: 1.0, decay: 0.035,
-        width: 3.5, color: '#ffffff', isInner: true
+        x: x, y: y, radius: 2, maxRadius: maxR, speed: 6.5, alpha: 1.0, decay: 0.035,
+        width: 3.0, color: '#ffffff'
       });
-      // Outer chromatic dispersion halo
       shockwaves.push({
-        x: x, y: y, radius: 1, maxRadius: maxR * 1.35, speed: 4.5, alpha: 0.85, decay: 0.022,
-        width: 6.0, color: color, isInner: false
+        x: x, y: y, radius: 1, maxRadius: maxR * 1.35, speed: 4.2, alpha: 0.85, decay: 0.024,
+        width: 5.0, color: color
       });
     }
 
-    function triggerImpact(x, y, intensity = 6, count = 30) {
+    function triggerImpact(x, y, intensity = 5, count = 26) {
       triggerScreenShake(intensity);
-      spawnShockwave(x, y, 60 + intensity * 8);
+      spawnShockwave(x, y, 55 + intensity * 7);
       spawnParticleBurst(x, y, count, theme);
     }
 
-    // Continuous 60 FPS Animation & Compositing Loop
+    // Collaborative Explorer Beacons list for rendering markers on canvas
+    const peerBeacons = [];
+
+    // ==========================================
+    // CONTINUOUS 60 FPS ANIMATION & COMPOSITING LOOP
+    // ==========================================
     let lastTime = 0;
 
     function renderLoop(time) {
       const dt = (time - lastTime) / 1000 || 0.016;
       lastTime = time;
+
+      // Handle 60 FPS Color Cycling flow without re-rendering fractal math
+      if (colorCycleActive && cachedIters && cachedW > 0 && cachedH > 0 && !isRendering) {
+        colorCyclePhase = (colorCyclePhase + 0.015) % 1.0;
+        recolorFromCachedIters();
+      }
 
       const w = canvas.width;
       const h = canvas.height;
@@ -783,7 +1209,7 @@
       ctx.save();
       ctx.clearRect(0, 0, w, h);
 
-      // Apply Procedural Screen-Shake
+      // Screen-Shake transform
       if (shakeMagnitude > 0.05) {
         shakeAngle += 0.8;
         const shakeX = Math.sin(shakeAngle * 2.3) * shakeMagnitude;
@@ -802,7 +1228,7 @@
         ctx.drawImage(fractalCanvas, 0, 0, w, h);
       }
 
-      // High-DPI Scaling for overlay elements (motes, shockwaves, particles)
+      // High-DPI Scaling for overlay elements
       const dpr = window.devicePixelRatio || 1;
       const cssW = window.innerWidth;
       const cssH = window.innerHeight;
@@ -810,7 +1236,7 @@
       ctx.save();
       ctx.scale(dpr, dpr);
 
-      // 2. Draw Atmospheric Floating Quantum Motes
+      // 2. Draw Floating Motes
       for (let i = 0; i < motes.length; i++) {
         const m = motes[i];
         m.x += m.vx;
@@ -852,7 +1278,7 @@
         ctx.globalAlpha = 1.0;
       }
 
-      // 4. Draw 4-Layer Kinematic Particles
+      // 4. Draw 4-Layer Particles
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.vx;
@@ -874,16 +1300,14 @@
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rotation);
 
-        if (p.layer === 0) {
-          // Needle Spark Trail
+        if (p.layer === 0) { // Spark
           ctx.beginPath();
           ctx.moveTo(-p.vx * 2, -p.vy * 2);
           ctx.lineTo(p.vx * 2, p.vy * 2);
           ctx.strokeStyle = p.color;
           ctx.lineWidth = p.size;
           ctx.stroke();
-        } else if (p.layer === 1) {
-          // Expanding Plasma Puff
+        } else if (p.layer === 1) { // Puff
           const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, p.size);
           grad.addColorStop(0, p.color);
           grad.addColorStop(1, 'transparent');
@@ -891,8 +1315,7 @@
           ctx.beginPath();
           ctx.arc(0, 0, p.size, 0, Math.PI * 2);
           ctx.fill();
-        } else if (p.layer === 2) {
-          // Tumbling Crystal Shard
+        } else if (p.layer === 2) { // Shard
           ctx.fillStyle = p.color;
           ctx.strokeStyle = '#ffffff';
           ctx.lineWidth = 1;
@@ -904,8 +1327,7 @@
           ctx.closePath();
           ctx.fill();
           ctx.stroke();
-        } else {
-          // Radiant Golden Celebration Star
+        } else { // Star
           ctx.fillStyle = p.color;
           ctx.beginPath();
           for (let s = 0; s < 4; s++) {
@@ -921,10 +1343,13 @@
         ctx.restore();
       }
 
+      // 5. Draw Active Peer Discovery Beacons
+      drawPeerBeacons(ctx, cssW, cssH);
+
       ctx.restore(); // Restore DPR scale
       ctx.restore(); // Restore shake transform
 
-      // 5. Ornate Cybernetic HUD Corner Filigree L-Brackets & Gold Rivets
+      // 6. Static Ornate Cybernetic HUD Corner Filigree (Strictly no moving glints)
       ctx.save();
       ctx.scale(dpr, dpr);
       drawCornerFiligree(ctx, cssW, cssH);
@@ -936,7 +1361,7 @@
     function drawCornerFiligree(c, w, h) {
       c.save();
       const margin = 12;
-      const len = 36;
+      const len = 34;
       const notch = 8;
       const corners = [
         { x: margin, y: margin, dx: 1, dy: 1 },
@@ -956,7 +1381,6 @@
         c.lineTo(cn.x + cn.dx * len, cn.y);
         c.stroke();
 
-        // Accent inner corner line
         c.strokeStyle = 'rgba(251, 191, 36, 0.6)';
         c.lineWidth = 1;
         c.beginPath();
@@ -965,7 +1389,7 @@
         c.lineTo(cn.x + cn.dx * (len - 6), cn.y + cn.dy * 6);
         c.stroke();
 
-        // Gold Rivet Accents
+        // Static Gold Rivets
         c.fillStyle = '#fbbf24';
         c.shadowColor = '#fbbf24';
         c.shadowBlur = 4;
@@ -977,50 +1401,92 @@
       c.restore();
     }
 
+    function drawPeerBeacons(c, w, h) {
+      const now = Date.now();
+      for (let i = peerBeacons.length - 1; i >= 0; i--) {
+        const b = peerBeacons[i];
+        if (now - b.time > 15000) {
+          peerBeacons.splice(i, 1);
+          continue;
+        }
 
+        // If beacon is within current viewport, draw target reticle
+        if (b.centerRe >= minRe && b.centerRe <= maxRe && b.centerIm >= minIm && b.centerIm <= maxIm) {
+          const re_factor = (maxRe - minRe) / (w - 1);
+          const im_factor = (maxIm - minIm) / (h - 1);
+          const screenX = (b.centerRe - minRe) / re_factor;
+          const screenY = (maxIm - b.centerIm) / im_factor;
+
+          c.save();
+          c.strokeStyle = '#34d399';
+          c.lineWidth = 1.5;
+          c.beginPath();
+          c.arc(screenX, screenY, 14, 0, Math.PI * 2);
+          c.stroke();
+
+          c.beginPath();
+          c.moveTo(screenX - 20, screenY); c.lineTo(screenX + 20, screenY);
+          c.moveTo(screenX, screenY - 20); c.lineTo(screenX, screenY + 20);
+          c.stroke();
+
+          c.font = '10px monospace';
+          c.fillStyle = '#34d399';
+          c.fillText(`📡 ${b.sender}: ${b.name}`, screenX + 18, screenY - 8);
+          c.restore();
+        }
+      }
+    }
 
     requestAnimationFrame(renderLoop);
 
+    // ==========================================
+    // STORAGE & COLOR UTILITIES
+    // ==========================================
     function safeGetStorage(key, fallback) {
-        try {
-            const val = localStorage.getItem(key);
-            return val !== null ? JSON.parse(val) : fallback;
-        } catch (e) {
-            return fallback;
-        }
+      try {
+        const val = localStorage.getItem(key);
+        return val !== null ? JSON.parse(val) : fallback;
+      } catch (e) {
+        return fallback;
+      }
     }
     function safeSetStorage(key, value) {
-        try {
-            localStorage.setItem(key, JSON.stringify(value));
-        } catch (e) {}
+      try {
+        localStorage.setItem(key, JSON.stringify(value));
+      } catch (e) {}
     }
 
     function hexToRgb(hex) {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? [
-            parseInt(result[1], 16),
-            parseInt(result[2], 16),
-            parseInt(result[3], 16)
-        ] : [255,255,255];
+      const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+      return result ? [
+        parseInt(result[1], 16),
+        parseInt(result[2], 16),
+        parseInt(result[3], 16)
+      ] : [255, 255, 255];
     }
     function rgbToHex(rgb) {
-        return '#' + rgb.map(x => {
-            const h = Math.max(0, Math.min(255, Math.floor(x))).toString(16);
-            return h.length === 1 ? '0' + h : h;
-        }).join('');
+      return '#' + rgb.map(x => {
+        const h = Math.max(0, Math.min(255, Math.floor(x))).toString(16);
+        return h.length === 1 ? '0' + h : h;
+      }).join('');
     }
 
     // Load persisted settings
     const savedTheme = safeGetStorage('kmandel_theme', null);
-    if (savedTheme !== null && savedTheme >= 0 && savedTheme <= 6) {
-        theme = savedTheme;
+    if (savedTheme !== null && savedTheme >= 0 && savedTheme < themeNames.length) {
+      theme = savedTheme;
     }
     const savedType = safeGetStorage('kmandel_fractal_type', null);
     if (savedType !== null && savedType >= 0 && savedType < fractalNames.length) {
-        fractalType = savedType;
-        if (fractalType === 1) { minRe = -1.8; maxRe = 1.0; minIm = -1.8; maxIm = 1.0; }
-        else if (fractalType === 2) { minRe = -2.0; maxRe = 1.0; minIm = -1.5; maxIm = 1.5; }
+      fractalType = savedType;
+      if (fractalType === 1) { minRe = -1.8; maxRe = 1.0; minIm = -1.8; maxIm = 1.0; }
+      else if (fractalType === 2) { minRe = -2.0; maxRe = 1.0; minIm = -1.5; maxIm = 1.5; }
+      else if (fractalType === 5) { minRe = -1.6; maxRe = 1.6; minIm = -1.6; maxIm = 1.6; }
+      else if (fractalType === 6) { minRe = -1.5; maxRe = 1.5; minIm = -1.5; maxIm = 1.5; }
     }
+    const savedSmooth = safeGetStorage('kmandel_smooth', true);
+    smoothShading = savedSmooth;
+
     const savedC1 = safeGetStorage('kmandel_custom_color1', null);
     if (Array.isArray(savedC1) && savedC1.length === 3) customColor1 = savedC1;
     const savedC2 = safeGetStorage('kmandel_custom_color2', null);
@@ -1028,88 +1494,137 @@
 
     document.getElementById('fractal-select').value = fractalType;
     document.getElementById('theme-select').value = theme;
-    document.getElementById('custom-colors').style.display = theme === 6 ? 'block' : 'none';
+    document.getElementById('custom-colors').style.display = theme === 8 ? 'block' : 'none';
     document.getElementById('color1').value = rgbToHex(customColor1);
     document.getElementById('color2').value = rgbToHex(customColor2);
+    if (smoothShading) document.getElementById('btn-smooth').classList.add('btn-active');
     
     document.getElementById('color1').addEventListener('input', (e) => {
-        customColor1 = hexToRgb(e.target.value);
-        safeSetStorage('kmandel_custom_color1', customColor1);
-        if (theme === 6) requestRender();
+      customColor1 = hexToRgb(e.target.value);
+      safeSetStorage('kmandel_custom_color1', customColor1);
+      if (theme === 8) requestRender();
     });
-    document.getElementById('color1').addEventListener('change', () => {
-        saveState();
-    });
+    document.getElementById('color1').addEventListener('change', () => saveState());
     document.getElementById('color2').addEventListener('input', (e) => {
-        customColor2 = hexToRgb(e.target.value);
-        safeSetStorage('kmandel_custom_color2', customColor2);
-        if (theme === 6) requestRender();
+      customColor2 = hexToRgb(e.target.value);
+      safeSetStorage('kmandel_custom_color2', customColor2);
+      if (theme === 8) requestRender();
     });
-    document.getElementById('color2').addEventListener('change', () => {
-        saveState();
-    });
+    document.getElementById('color2').addEventListener('change', () => saveState());
 
-    // Interaction state
-    let isDragging = false;
-    let hasDragged = false;
-    let dragStartX, dragStartY;
-    let startMinRe, startMaxRe, startMinIm, startMaxIm;
-    
-    function saveState() {
-        const state = { minRe, maxRe, minIm, maxIm, max_iter, isJulia, juliaCRe, juliaCIm, theme, fractalType, customColor1: [...customColor1], customColor2: [...customColor2] };
-        if (historyIdx < history.length - 1) {
-            history = history.slice(0, historyIdx + 1);
+    // ==========================================
+    // TOAST NOTIFICATION SYSTEM
+    // ==========================================
+    function showToast(message, type = 'info', duration = 2800) {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      while (container.children.length >= 5) {
+        container.removeChild(container.firstChild);
+      }
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      
+      let iconSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
+      if (type === 'success') {
+        iconSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+      } else if (type === 'warning') {
+        iconSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+      } else if (type === 'purple') {
+        iconSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
+      }
+
+      const iconWrap = document.createElement('span');
+      iconWrap.style.display = 'inline-flex';
+      iconWrap.innerHTML = iconSvg;
+      const msgSpan = document.createElement('span');
+      if (message.includes('<') && message.includes('>')) {
+        msgSpan.innerHTML = message;
+      } else {
+        msgSpan.textContent = message;
+      }
+      toast.appendChild(iconWrap.firstElementChild || iconWrap);
+      toast.appendChild(msgSpan);
+      toast.onclick = () => {
+        toast.classList.add('hiding');
+        setTimeout(() => toast.remove(), 250);
+      };
+      container.appendChild(toast);
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.classList.add('hiding');
+          setTimeout(() => toast.remove(), 250);
         }
-        history.push(state);
-        if (history.length > 256) history.shift();
-        historyIdx = history.length - 1;
-        updateUndoRedoButtons();
+      }, duration);
+    }
+
+    // ==========================================
+    // HISTORY & STATE MANAGEMENT
+    // ==========================================
+    function saveState() {
+      const state = { 
+        minRe, maxRe, minIm, maxIm, max_iter, isJulia, juliaCRe, juliaCIm, 
+        theme, fractalType, smoothShading, 
+        customColor1: [...customColor1], customColor2: [...customColor2] 
+      };
+      if (historyIdx < history.length - 1) {
+        history = history.slice(0, historyIdx + 1);
+      }
+      history.push(state);
+      if (history.length > 256) history.shift();
+      historyIdx = history.length - 1;
+      updateUndoRedoButtons();
     }
     
     function loadState(state) {
-        minRe = state.minRe; maxRe = state.maxRe;
-        minIm = state.minIm; maxIm = state.maxIm;
-        max_iter = state.max_iter;
-        isJulia = state.isJulia;
-        juliaCRe = state.juliaCRe; juliaCIm = state.juliaCIm;
-        theme = state.theme;
-        fractalType = state.fractalType !== undefined ? state.fractalType : 0;
-        customColor1 = [...state.customColor1];
-        customColor2 = [...state.customColor2];
-        
-        document.getElementById('fractal-select').value = fractalType;
-        document.getElementById('theme-select').value = theme;
-        document.getElementById('custom-colors').style.display = theme === 6 ? 'block' : 'none';
-        document.getElementById('color1').value = rgbToHex(customColor1);
-        document.getElementById('color2').value = rgbToHex(customColor2);
-        updateUndoRedoButtons();
+      minRe = state.minRe; maxRe = state.maxRe;
+      minIm = state.minIm; maxIm = state.maxIm;
+      max_iter = state.max_iter;
+      isJulia = state.isJulia;
+      juliaCRe = state.juliaCRe; juliaCIm = state.juliaCIm;
+      theme = state.theme;
+      fractalType = state.fractalType !== undefined ? state.fractalType : 0;
+      smoothShading = state.smoothShading !== undefined ? state.smoothShading : true;
+      customColor1 = [...state.customColor1];
+      customColor2 = [...state.customColor2];
+      
+      document.getElementById('fractal-select').value = fractalType;
+      document.getElementById('theme-select').value = theme;
+      document.getElementById('custom-colors').style.display = theme === 8 ? 'block' : 'none';
+      document.getElementById('color1').value = rgbToHex(customColor1);
+      document.getElementById('color2').value = rgbToHex(customColor2);
+      if (smoothShading) document.getElementById('btn-smooth').classList.add('btn-active');
+      else document.getElementById('btn-smooth').classList.remove('btn-active');
+
+      updateUndoRedoButtons();
     }
     
     function updateUndoRedoButtons() {
-        document.getElementById('btn-undo').disabled = historyIdx <= 0;
-        document.getElementById('btn-redo').disabled = historyIdx >= history.length - 1;
-        document.getElementById('btn-julia-text').textContent = isJulia ? 'Return to Formula' : 'Toggle Julia Mode';
-        
-        const fName = fractalNames[fractalType] || "Fractal";
-        hudText.textContent = `${fName}${isJulia ? ' (Julia)' : ''} | Shift+Click to sample | F1 for Help`;
+      document.getElementById('btn-undo').disabled = historyIdx <= 0;
+      document.getElementById('btn-redo').disabled = historyIdx >= history.length - 1;
+      document.getElementById('btn-julia-text').textContent = isJulia ? 'Return to Formula' : 'Toggle Julia Mode';
+      
+      const fName = fractalNames[fractalType] || "Fractal";
+      hudText.textContent = `${fName}${isJulia ? ' (Julia)' : ''} | Shift+Click to sample | F1 for Help`;
     }
 
     function undo() {
-        if (historyIdx > 0) {
-            historyIdx--;
-            loadState(history[historyIdx]);
-            triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 4, 18);
-            requestRender();
-        }
+      if (historyIdx > 0) {
+        historyIdx--;
+        loadState(history[historyIdx]);
+        triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 4, 18);
+        playSfx('zoomOut');
+        requestRender();
+      }
     }
     
     function redo() {
-        if (historyIdx < history.length - 1) {
-            historyIdx++;
-            loadState(history[historyIdx]);
-            triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 4, 18);
-            requestRender();
-        }
+      if (historyIdx < history.length - 1) {
+        historyIdx++;
+        loadState(history[historyIdx]);
+        triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 4, 18);
+        playSfx('zoomIn');
+        requestRender();
+      }
     }
     
     function updateDisplays() {
@@ -1122,26 +1637,37 @@
       
       const needed_iter = Math.floor(100 * Math.pow(zoomLevel, 0.2));
       if (needed_iter > max_iter && zoomLevel > 5) {
-          max_iter = Math.min(needed_iter, 2000);
+        max_iter = Math.min(needed_iter, 2500);
       } else if (zoomLevel <= 5 && max_iter > 100 && !isJulia) {
-          max_iter = 100;
+        max_iter = 100;
       }
       iterDisp.textContent = max_iter + ' iter';
       updateUndoRedoButtons();
     }
 
-    // WEB WORKER LOGIC
+    // ==========================================
+    // MULTI-THREADED WEB WORKER ENGINE (8 FORMULAS & SMOOTH POTENTIAL)
+    // ==========================================
     const workerCode = `
       self.onmessage = function(e) {
-          const { renderId, id, w, h, startY, endY, minRe, maxRe, minIm, maxIm, max_iter, isJulia, juliaCRe, juliaCIm, theme, fractalType, customColor1, customColor2 } = e.data;
+          const { 
+            renderId, id, w, h, startY, endY, 
+            minRe, maxRe, minIm, maxIm, max_iter, 
+            isJulia, juliaCRe, juliaCIm, 
+            theme, fractalType, smoothShading, colorCycleOffset,
+            customColor1, customColor2 
+          } = e.data;
           
           const re_factor = (maxRe - minRe) / (w > 1 ? (w - 1) : 1);
           const im_factor = (maxIm - minIm) / (h > 1 ? (h - 1) : 1);
           
           const chunkH = endY - startY;
           const buf = new ArrayBuffer(chunkH * w * 4);
+          const iterBuf = new ArrayBuffer(chunkH * w * 4);
           const data = new Uint8ClampedArray(buf);
+          const iters = new Float32Array(iterBuf);
           let idx = 0;
+          let iterIdx = 0;
           
           for (let y = startY; y < endY; ++y) {
               const c_im_view = maxIm - y * im_factor;
@@ -1152,9 +1678,10 @@
                   let Z_re = c_re_view, Z_im = c_im_view;
                   let isInside = true;
                   let n = 0;
+                  let Z_re2 = Z_re * Z_re, Z_im2 = Z_im * Z_im;
                   
                   for (n = 0; n < max_iter; ++n) {
-                      const Z_re2 = Z_re * Z_re, Z_im2 = Z_im * Z_im;
+                      Z_re2 = Z_re * Z_re; Z_im2 = Z_im * Z_im;
                       if (Z_re2 + Z_im2 > 4.0) {
                           isInside = false;
                           break;
@@ -1177,6 +1704,18 @@
                           const a = Math.abs(Z_re);
                           Z_im = -2.0 * a * Z_im + c_im;
                           Z_re = re_temp + c_re;
+                      } else if (fractalType === 5) { // Multibrot 3 (z³ + c)
+                          const n_re = Z_re * (Z_re2 - 3.0 * Z_im2) + c_re;
+                          const n_im = Z_im * (3.0 * Z_re2 - Z_im2) + c_im;
+                          Z_re = n_re; Z_im = n_im;
+                      } else if (fractalType === 6) { // Multibrot 4 (z⁴ + c)
+                          const n_re = Z_re2 * Z_re2 - 6.0 * Z_re2 * Z_im2 + Z_im2 * Z_im2 + c_re;
+                          const n_im = 4.0 * Z_re * Z_im * (Z_re2 - Z_im2) + c_im;
+                          Z_re = n_re; Z_im = n_im;
+                      } else if (fractalType === 7) { // Perpendicular Burning Ship
+                          const a = Math.abs(Z_re);
+                          Z_im = -2.0 * a * Z_im + c_im;
+                          Z_re = Z_re2 - Z_im2 + c_re;
                       } else { // Mandelbrot (0)
                           Z_im = 2.0 * Z_re * Z_im + c_im;
                           Z_re = Z_re2 - Z_im2 + c_re;
@@ -1184,44 +1723,69 @@
                   }
                   
                   if (isInside) {
+                      iters[iterIdx++] = -1;
                       data[idx++] = 0; data[idx++] = 0; data[idx++] = 0; data[idx++] = 255;
                   } else {
+                      let smoothVal = n;
+                      if (smoothShading) {
+                          const modulus = Math.sqrt(Z_re2 + Z_im2);
+                          const p = (fractalType === 5) ? 3.0 : ((fractalType === 6) ? 4.0 : 2.0);
+                          const logRatio = Math.log(Math.max(1e-9, Math.log(Math.max(1.0, modulus)))) / Math.log(p);
+                          smoothVal = n + 1 - logRatio;
+                          if (isNaN(smoothVal) || smoothVal < 0) smoothVal = n;
+                      }
+                      iters[iterIdx++] = smoothVal;
+
+                      let tVal = (smoothVal / max_iter + colorCycleOffset) % 1.0;
+                      if (tVal < 0) tVal += 1.0;
+
                       let r = 0, g = 0, b = 0;
                       if (theme === 0) { // Fire
-                        r = Math.floor((n * 255) / max_iter);
-                        g = Math.floor((n * n * 255) / (max_iter * max_iter));
-                        b = Math.floor((n * 128) / max_iter);
+                        r = Math.floor(Math.min(255, tVal * 320));
+                        g = Math.floor(Math.min(255, tVal * tVal * 290));
+                        b = Math.floor(Math.min(255, tVal * 130));
                       } else if (theme === 1) { // Ocean
-                        r = Math.floor((n * 128) / max_iter);
-                        g = Math.floor((n * n * 255) / (max_iter * max_iter));
-                        b = Math.floor((n * 255) / max_iter);
+                        r = Math.floor(tVal * 120);
+                        g = Math.floor(Math.min(255, tVal * tVal * 255));
+                        b = Math.floor(Math.min(255, tVal * 300));
                       } else if (theme === 2) { // Cyberpunk Neon
-                        let f = (n / max_iter) * 6.2831853;
+                        const f = tVal * 6.2831853;
                         r = Math.floor((Math.sin(f) * 0.5 + 0.5) * 255);
                         g = Math.floor((Math.sin(f * 2.0) * 0.5 + 0.5) * 128);
                         b = Math.floor((Math.cos(f) * 0.5 + 0.5) * 255);
-                      } else if (theme === 3) { // BW
-                        let f = (n % 20) > 10 ? 255 : 0;
+                      } else if (theme === 3) { // Monochrome Band
+                        const f = ((smoothVal % 18) > 9) ? 255 : 0;
                         r = f; g = f; b = f;
                       } else if (theme === 4) { // Emerald Matrix
-                        r = (n * 30) % 100;
-                        g = Math.floor((n * 255) / max_iter);
-                        b = (n * 90) % 180;
-                      } else if (theme === 5) { // Sunset Neon
-                        r = Math.floor((n * 255) / max_iter);
-                        g = Math.floor((n * 70) / max_iter);
-                        b = Math.floor((n * 190) / max_iter);
-                      } else if (theme === 6) { // Custom
-                        let f = n / max_iter;
-                        r = Math.floor(customColor1[0] + f * (customColor2[0] - customColor1[0]));
-                        g = Math.floor(customColor1[1] + f * (customColor2[1] - customColor1[1]));
-                        b = Math.floor(customColor1[2] + f * (customColor2[2] - customColor1[2]));
+                        r = Math.floor((smoothVal * 25) % 90);
+                        g = Math.floor(tVal * 255);
+                        b = Math.floor((smoothVal * 70) % 160);
+                      } else if (theme === 5) { // Sunset Glow
+                        r = Math.floor(tVal * 255);
+                        g = Math.floor(tVal * 75);
+                        b = Math.floor(tVal * 190);
+                      } else if (theme === 6) { // Cosmic Nebula
+                        const f = tVal * 6.2831853;
+                        r = Math.floor((Math.sin(f + 1.0) * 0.5 + 0.5) * 230 + 25);
+                        g = Math.floor((Math.sin(f * 2.0 + 2.0) * 0.5 + 0.5) * 160);
+                        b = Math.floor((Math.cos(f + 0.5) * 0.5 + 0.5) * 255);
+                      } else if (theme === 7) { // Solar Flare
+                        r = Math.floor(Math.min(255, tVal * 350));
+                        g = Math.floor(Math.min(255, tVal * 210));
+                        b = Math.floor(Math.min(255, tVal * tVal * 120));
+                      } else if (theme === 8) { // Custom Dual
+                        r = Math.floor(customColor1[0] + tVal * (customColor2[0] - customColor1[0]));
+                        g = Math.floor(customColor1[1] + tVal * (customColor2[1] - customColor1[1]));
+                        b = Math.floor(customColor1[2] + tVal * (customColor2[2] - customColor1[2]));
                       }
-                      data[idx++] = r; data[idx++] = g; data[idx++] = b; data[idx++] = 255;
+                      data[idx++] = Math.max(0, Math.min(255, r));
+                      data[idx++] = Math.max(0, Math.min(255, g));
+                      data[idx++] = Math.max(0, Math.min(255, b));
+                      data[idx++] = 255;
                   }
               }
           }
-          self.postMessage({ renderId, id, startY, chunkH, w, data: buf }, [buf]);
+          self.postMessage({ renderId, id, startY, chunkH, w, data: buf, iters: iterBuf }, [buf, iterBuf]);
       };
     `;
 
@@ -1229,146 +1793,251 @@
     const workers = [];
     let numWorkers = 4;
     try {
-        const workerBlob = new Blob([workerCode], { type: 'application/javascript' });
-        const workerUrl = URL.createObjectURL(workerBlob);
-        numWorkers = Math.min(navigator.hardwareConcurrency || 4, 8);
-        for (let i = 0; i < numWorkers; i++) {
-            const w = new Worker(workerUrl);
-            w.onerror = function(err) {
-                console.warn('Web Worker error, falling back to sync render', err);
-                useWorkers = false;
-            };
-            workers.push(w);
-        }
-        URL.revokeObjectURL(workerUrl);
+      const workerBlob = new Blob([workerCode], { type: 'application/javascript' });
+      const workerUrl = URL.createObjectURL(workerBlob);
+      numWorkers = Math.min(navigator.hardwareConcurrency || 4, 8);
+      for (let i = 0; i < numWorkers; i++) {
+        const w = new Worker(workerUrl);
+        w.onerror = function(err) {
+          console.warn('Web Worker error, fallback to sync', err);
+          useWorkers = false;
+        };
+        workers.push(w);
+      }
+      URL.revokeObjectURL(workerUrl);
     } catch (err) {
-        console.warn('Web Workers unavailable, using synchronous rendering fallback', err);
-        useWorkers = false;
+      console.warn('Web Workers unavailable, fallback to sync', err);
+      useWorkers = false;
     }
 
     function syncRender(targetCanvas, w, h, callback) {
-        const targetCtx = targetCanvas.getContext('2d');
-        const re_factor = (maxRe - minRe) / (w > 1 ? (w - 1) : 1);
-        const im_factor = (maxIm - minIm) / (h > 1 ? (h - 1) : 1);
-        const imgData = targetCtx.createImageData(w, h);
-        const data = imgData.data;
-        let idx = 0;
-        for (let y = 0; y < h; ++y) {
-            const c_im_view = maxIm - y * im_factor;
-            for (let x = 0; x < w; ++x) {
-                const c_re_view = minRe + x * re_factor;
-                let c_re = isJulia ? juliaCRe : c_re_view;
-                let c_im = isJulia ? juliaCIm : c_im_view;
-                let Z_re = c_re_view, Z_im = c_im_view;
-                let isInside = true;
-                let n = 0;
-                for (n = 0; n < max_iter; ++n) {
-                    const Z_re2 = Z_re * Z_re, Z_im2 = Z_im * Z_im;
-                    if (Z_re2 + Z_im2 > 4.0) { isInside = false; break; }
-                    if (fractalType === 1) {
-                        const a = Math.abs(Z_re), b = Math.abs(Z_im);
-                        Z_im = -2.0 * a * b + c_im;
-                        Z_re = Z_re2 - Z_im2 + c_re;
-                    } else if (fractalType === 2) {
-                        Z_im = -2.0 * Z_re * Z_im + c_im;
-                        Z_re = Z_re2 - Z_im2 + c_re;
-                    } else if (fractalType === 3) {
-                        const re_temp = Math.abs(Z_re2 - Z_im2);
-                        Z_im = 2.0 * Z_re * Z_im + c_im;
-                        Z_re = re_temp + c_re;
-                    } else if (fractalType === 4) {
-                        const re_temp = Math.abs(Z_re2 - Z_im2);
-                        const a = Math.abs(Z_re);
-                        Z_im = -2.0 * a * Z_im + c_im;
-                        Z_re = re_temp + c_re;
-                    } else {
-                        Z_im = 2.0 * Z_re * Z_im + c_im;
-                        Z_re = Z_re2 - Z_im2 + c_re;
-                    }
-                }
-                if (isInside) {
-                    data[idx++] = 0; data[idx++] = 0; data[idx++] = 0; data[idx++] = 255;
-                } else {
-                    let r = 0, g = 0, b = 0;
-                    if (theme === 0) {
-                        r = Math.floor((n * 255) / max_iter);
-                        g = Math.floor((n * n * 255) / (max_iter * max_iter));
-                        b = Math.floor((n * 128) / max_iter);
-                    } else if (theme === 1) {
-                        r = Math.floor((n * 128) / max_iter);
-                        g = Math.floor((n * n * 255) / (max_iter * max_iter));
-                        b = Math.floor((n * 255) / max_iter);
-                    } else if (theme === 2) {
-                        let f = (n / max_iter) * 6.2831853;
-                        r = Math.floor((Math.sin(f) * 0.5 + 0.5) * 255);
-                        g = Math.floor((Math.sin(f * 2.0) * 0.5 + 0.5) * 128);
-                        b = Math.floor((Math.cos(f) * 0.5 + 0.5) * 255);
-                    } else if (theme === 3) {
-                        let f = (n % 20) > 10 ? 255 : 0;
-                        r = f; g = f; b = f;
-                    } else if (theme === 4) {
-                        r = (n * 30) % 100;
-                        g = Math.floor((n * 255) / max_iter);
-                        b = (n * 90) % 180;
-                    } else if (theme === 5) {
-                        r = Math.floor((n * 255) / max_iter);
-                        g = Math.floor((n * 70) / max_iter);
-                        b = Math.floor((n * 190) / max_iter);
-                    } else if (theme === 6) {
-                        let f = n / max_iter;
-                        r = Math.floor(customColor1[0] + f * (customColor2[0] - customColor1[0]));
-                        g = Math.floor(customColor1[1] + f * (customColor2[1] - customColor1[1]));
-                        b = Math.floor(customColor1[2] + f * (customColor2[2] - customColor1[2]));
-                    }
-                    data[idx++] = r; data[idx++] = g; data[idx++] = b; data[idx++] = 255;
-                }
+      const targetCtx = targetCanvas.getContext('2d');
+      const re_factor = (maxRe - minRe) / (w > 1 ? (w - 1) : 1);
+      const im_factor = (maxIm - minIm) / (h > 1 ? (h - 1) : 1);
+      const imgData = targetCtx.createImageData(w, h);
+      const data = imgData.data;
+      if (!cachedIters || cachedW !== w || cachedH !== h) {
+        cachedIters = new Float32Array(w * h);
+        cachedW = w; cachedH = h;
+      }
+      let idx = 0;
+      let iterIdx = 0;
+
+      for (let y = 0; y < h; ++y) {
+        const c_im_view = maxIm - y * im_factor;
+        for (let x = 0; x < w; ++x) {
+          const c_re_view = minRe + x * re_factor;
+          let c_re = isJulia ? juliaCRe : c_re_view;
+          let c_im = isJulia ? juliaCIm : c_im_view;
+          let Z_re = c_re_view, Z_im = c_im_view;
+          let isInside = true;
+          let n = 0;
+          let Z_re2 = Z_re * Z_re, Z_im2 = Z_im * Z_im;
+
+          for (n = 0; n < max_iter; ++n) {
+            Z_re2 = Z_re * Z_re; Z_im2 = Z_im * Z_im;
+            if (Z_re2 + Z_im2 > 4.0) { isInside = false; break; }
+            if (fractalType === 1) {
+              const a = Math.abs(Z_re), b = Math.abs(Z_im);
+              Z_im = -2.0 * a * b + c_im; Z_re = Z_re2 - Z_im2 + c_re;
+            } else if (fractalType === 2) {
+              Z_im = -2.0 * Z_re * Z_im + c_im; Z_re = Z_re2 - Z_im2 + c_re;
+            } else if (fractalType === 3) {
+              const re_temp = Math.abs(Z_re2 - Z_im2);
+              Z_im = 2.0 * Z_re * Z_im + c_im; Z_re = re_temp + c_re;
+            } else if (fractalType === 4) {
+              const re_temp = Math.abs(Z_re2 - Z_im2);
+              const a = Math.abs(Z_re);
+              Z_im = -2.0 * a * Z_im + c_im; Z_re = re_temp + c_re;
+            } else if (fractalType === 5) {
+              const n_re = Z_re * (Z_re2 - 3.0 * Z_im2) + c_re;
+              const n_im = Z_im * (3.0 * Z_re2 - Z_im2) + c_im;
+              Z_re = n_re; Z_im = n_im;
+            } else if (fractalType === 6) {
+              const n_re = Z_re2 * Z_re2 - 6.0 * Z_re2 * Z_im2 + Z_im2 * Z_im2 + c_re;
+              const n_im = 4.0 * Z_re * Z_im * (Z_re2 - Z_im2) + c_im;
+              Z_re = n_re; Z_im = n_im;
+            } else if (fractalType === 7) {
+              const a = Math.abs(Z_re);
+              Z_im = -2.0 * a * Z_im + c_im; Z_re = Z_re2 - Z_im2 + c_re;
+            } else {
+              Z_im = 2.0 * Z_re * Z_im + c_im; Z_re = Z_re2 - Z_im2 + c_re;
             }
+          }
+
+          if (isInside) {
+            cachedIters[iterIdx++] = -1;
+            data[idx++] = 0; data[idx++] = 0; data[idx++] = 0; data[idx++] = 255;
+          } else {
+            let smoothVal = n;
+            if (smoothShading) {
+              const modulus = Math.sqrt(Z_re2 + Z_im2);
+              const p = (fractalType === 5) ? 3.0 : ((fractalType === 6) ? 4.0 : 2.0);
+              const logRatio = Math.log(Math.max(1e-9, Math.log(Math.max(1.0, modulus)))) / Math.log(p);
+              smoothVal = n + 1 - logRatio;
+              if (isNaN(smoothVal) || smoothVal < 0) smoothVal = n;
+            }
+            cachedIters[iterIdx++] = smoothVal;
+
+            let tVal = (smoothVal / max_iter + colorCyclePhase) % 1.0;
+            if (tVal < 0) tVal += 1.0;
+
+            let r = 0, g = 0, b = 0;
+            if (theme === 0) {
+              r = Math.floor(Math.min(255, tVal * 320));
+              g = Math.floor(Math.min(255, tVal * tVal * 290));
+              b = Math.floor(Math.min(255, tVal * 130));
+            } else if (theme === 1) {
+              r = Math.floor(tVal * 120);
+              g = Math.floor(Math.min(255, tVal * tVal * 255));
+              b = Math.floor(Math.min(255, tVal * 300));
+            } else if (theme === 2) {
+              const f = tVal * 6.2831853;
+              r = Math.floor((Math.sin(f) * 0.5 + 0.5) * 255);
+              g = Math.floor((Math.sin(f * 2.0) * 0.5 + 0.5) * 128);
+              b = Math.floor((Math.cos(f) * 0.5 + 0.5) * 255);
+            } else if (theme === 3) {
+              const f = ((smoothVal % 18) > 9) ? 255 : 0;
+              r = f; g = f; b = f;
+            } else if (theme === 4) {
+              r = Math.floor((smoothVal * 25) % 90);
+              g = Math.floor(tVal * 255);
+              b = Math.floor((smoothVal * 70) % 160);
+            } else if (theme === 5) {
+              r = Math.floor(tVal * 255);
+              g = Math.floor(tVal * 75);
+              b = Math.floor(tVal * 190);
+            } else if (theme === 6) {
+              const f = tVal * 6.2831853;
+              r = Math.floor((Math.sin(f + 1.0) * 0.5 + 0.5) * 230 + 25);
+              g = Math.floor((Math.sin(f * 2.0 + 2.0) * 0.5 + 0.5) * 160);
+              b = Math.floor((Math.cos(f + 0.5) * 0.5 + 0.5) * 255);
+            } else if (theme === 7) {
+              r = Math.floor(Math.min(255, tVal * 350));
+              g = Math.floor(Math.min(255, tVal * 210));
+              b = Math.floor(Math.min(255, tVal * tVal * 120));
+            } else if (theme === 8) {
+              r = Math.floor(customColor1[0] + tVal * (customColor2[0] - customColor1[0]));
+              g = Math.floor(customColor1[1] + tVal * (customColor2[1] - customColor1[1]));
+              b = Math.floor(customColor1[2] + tVal * (customColor2[2] - customColor1[2]));
+            }
+            data[idx++] = Math.max(0, Math.min(255, r));
+            data[idx++] = Math.max(0, Math.min(255, g));
+            data[idx++] = Math.max(0, Math.min(255, b));
+            data[idx++] = 255;
+          }
         }
-        targetCtx.putImageData(imgData, 0, 0);
-        if (callback) callback();
+      }
+      targetCtx.putImageData(imgData, 0, 0);
+      if (callback) callback();
+    }
+
+    // High-Speed 60 FPS Recoloring from Cached Iteration Array
+    function recolorFromCachedIters() {
+      if (!cachedIters || cachedW <= 0 || cachedH <= 0) return;
+      const targetCtx = fractalCanvas.getContext('2d');
+      const imgData = targetCtx.getImageData(0, 0, cachedW, cachedH);
+      const data = imgData.data;
+      const totalPixels = cachedW * cachedH;
+      let idx = 0;
+
+      for (let i = 0; i < totalPixels; i++) {
+        const smoothVal = cachedIters[i];
+        if (smoothVal < 0) {
+          idx += 4; // Black interior remains black
+          continue;
+        }
+
+        let tVal = (smoothVal / max_iter + colorCyclePhase) % 1.0;
+        if (tVal < 0) tVal += 1.0;
+
+        let r = 0, g = 0, b = 0;
+        if (theme === 0) {
+          r = Math.floor(Math.min(255, tVal * 320));
+          g = Math.floor(Math.min(255, tVal * tVal * 290));
+          b = Math.floor(Math.min(255, tVal * 130));
+        } else if (theme === 1) {
+          r = Math.floor(tVal * 120);
+          g = Math.floor(Math.min(255, tVal * tVal * 255));
+          b = Math.floor(Math.min(255, tVal * 300));
+        } else if (theme === 2) {
+          const f = tVal * 6.2831853;
+          r = Math.floor((Math.sin(f) * 0.5 + 0.5) * 255);
+          g = Math.floor((Math.sin(f * 2.0) * 0.5 + 0.5) * 128);
+          b = Math.floor((Math.cos(f) * 0.5 + 0.5) * 255);
+        } else if (theme === 3) {
+          const f = ((smoothVal % 18) > 9) ? 255 : 0;
+          r = f; g = f; b = f;
+        } else if (theme === 4) {
+          r = Math.floor((smoothVal * 25) % 90);
+          g = Math.floor(tVal * 255);
+          b = Math.floor((smoothVal * 70) % 160);
+        } else if (theme === 5) {
+          r = Math.floor(tVal * 255);
+          g = Math.floor(tVal * 75);
+          b = Math.floor(tVal * 190);
+        } else if (theme === 6) {
+          const f = tVal * 6.2831853;
+          r = Math.floor((Math.sin(f + 1.0) * 0.5 + 0.5) * 230 + 25);
+          g = Math.floor((Math.sin(f * 2.0 + 2.0) * 0.5 + 0.5) * 160);
+          b = Math.floor((Math.cos(f + 0.5) * 0.5 + 0.5) * 255);
+        } else if (theme === 7) {
+          r = Math.floor(Math.min(255, tVal * 350));
+          g = Math.floor(Math.min(255, tVal * 210));
+          b = Math.floor(Math.min(255, tVal * tVal * 120));
+        } else if (theme === 8) {
+          r = Math.floor(customColor1[0] + tVal * (customColor2[0] - customColor1[0]));
+          g = Math.floor(customColor1[1] + tVal * (customColor2[1] - customColor1[1]));
+          b = Math.floor(customColor1[2] + tVal * (customColor2[2] - customColor1[2]));
+        }
+        data[idx] = Math.max(0, Math.min(255, r));
+        data[idx + 1] = Math.max(0, Math.min(255, g));
+        data[idx + 2] = Math.max(0, Math.min(255, b));
+        idx += 4;
+      }
+      targetCtx.putImageData(imgData, 0, 0);
     }
 
     let activeWorkers = 0;
-    
-    function requestRender() {
-        if (isRendering) {
-            renderRequested = true;
-            return;
-        }
-        isRendering = true;
-        renderRequested = false;
-        loading.classList.add('active');
-        
-        requestAnimationFrame(() => {
-            const dpr = window.devicePixelRatio || 1;
-            const w = Math.floor(window.innerWidth * dpr);
-            const h = Math.floor(window.innerHeight * dpr);
-            performRender(fractalCanvas, w, h, false, () => {
-                loading.classList.remove('active');
-                isRendering = false;
-                if (renderRequested) requestRender();
-            });
-        });
-    }
-
     let currentRenderId = 0;
+
+    function requestRender() {
+      if (isRendering) {
+        renderRequested = true;
+        return;
+      }
+      isRendering = true;
+      renderRequested = false;
+      loading.classList.add('active');
+      
+      requestAnimationFrame(() => {
+        const dpr = window.devicePixelRatio || 1;
+        const w = Math.floor(window.innerWidth * dpr);
+        const h = Math.floor(window.innerHeight * dpr);
+        performRender(fractalCanvas, w, h, false, () => {
+          loading.classList.remove('active');
+          isRendering = false;
+          if (renderRequested) requestRender();
+        });
+      });
+    }
 
     function performRender(targetCanvas, w, h, isOffscreen, callback) {
       if (targetCanvas.width !== w || targetCanvas.height !== h) {
-          targetCanvas.width = w;
-          targetCanvas.height = h;
+        targetCanvas.width = w;
+        targetCanvas.height = h;
       }
       if (!isOffscreen) {
-          if (canvas.width !== w || canvas.height !== h) {
-              canvas.width = w;
-              canvas.height = h;
-          }
-          updateDisplays();
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width = w;
+          canvas.height = h;
+        }
+        updateDisplays();
       }
       
       if (!useWorkers || workers.length === 0) {
-          syncRender(targetCanvas, w, h, callback);
-          return;
+        syncRender(targetCanvas, w, h, callback);
+        return;
       }
 
       currentRenderId++;
@@ -1376,257 +2045,546 @@
       const targetCtx = targetCanvas.getContext('2d');
       const chunkH = Math.ceil(h / numWorkers);
       activeWorkers = 0;
+
+      if (!isOffscreen) {
+        if (!cachedIters || cachedW !== w || cachedH !== h) {
+          cachedIters = new Float32Array(w * h);
+          cachedW = w; cachedH = h;
+        }
+      }
       
       for (let i = 0; i < numWorkers; i++) {
-          const startY = i * chunkH;
-          if (startY >= h) break;
-          const endY = Math.min(h, startY + chunkH);
+        const startY = i * chunkH;
+        if (startY >= h) break;
+        const endY = Math.min(h, startY + chunkH);
+        
+        activeWorkers++;
+        
+        workers[i].onmessage = function(e) {
+          if (e.data.renderId !== renderId) return;
+          const { startY: sy, chunkH: ch, w: cw, data, iters } = e.data;
+          const imgData = new ImageData(new Uint8ClampedArray(data), cw, ch);
+          targetCtx.putImageData(imgData, 0, sy);
           
-          activeWorkers++;
-          
-          workers[i].onmessage = function(e) {
-              if (e.data.renderId !== renderId) return;
-              const { startY: sy, chunkH: ch, w: cw, data } = e.data;
-              const imgData = new ImageData(new Uint8ClampedArray(data), cw, ch);
-              targetCtx.putImageData(imgData, 0, sy);
-              activeWorkers--;
-              if (activeWorkers === 0) {
-                  if (callback) callback();
-              }
-          };
-          
-          workers[i].postMessage({
-              renderId, id: i, w, h, startY, endY, minRe, maxRe, minIm, maxIm, max_iter, isJulia, juliaCRe, juliaCIm, theme, fractalType, customColor1, customColor2
-          });
+          if (!isOffscreen && cachedIters && iters) {
+            const chunkIters = new Float32Array(iters);
+            cachedIters.set(chunkIters, sy * cw);
+          }
+
+          activeWorkers--;
+          if (activeWorkers === 0) {
+            if (callback) callback();
+          }
+        };
+        
+        workers[i].postMessage({
+          renderId, id: i, w, h, startY, endY, 
+          minRe, maxRe, minIm, maxIm, max_iter, 
+          isJulia, juliaCRe, juliaCIm, 
+          theme, fractalType, smoothShading, 
+          colorCycleOffset: colorCyclePhase,
+          customColor1, customColor2
+        });
       }
     }
-    
+
     function zoom(factor, centerX, centerY, dontSave) {
-        const w = window.innerWidth;
-        const h = window.innerHeight;
-        if (w <= 1 || h <= 1) return;
-        const re_factor = (maxRe - minRe) / (w - 1);
-        const im_factor = (maxIm - minIm) / (h - 1);
-        
-        const centerRe = minRe + centerX * re_factor;
-        const centerIm = maxIm - centerY * im_factor;
-        
-        const newWRe = (maxRe - minRe) * factor;
-        const newWIm = (maxIm - minIm) * factor;
-        
-        if (newWRe < 1e-13 || newWRe > 10.0) return;
-        
-        minRe = centerRe - (centerX / (w - 1)) * newWRe;
-        maxRe = minRe + newWRe;
-        
-        maxIm = centerIm + (centerY / (h - 1)) * newWIm;
-        minIm = maxIm - newWIm;
-        
-        triggerImpact(centerX, centerY, factor < 1.0 ? 5 : 3, 20);
-        if (!dontSave) saveState();
-        requestRender();
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      if (w <= 1 || h <= 1) return;
+      const re_factor = (maxRe - minRe) / (w - 1);
+      const im_factor = (maxIm - minIm) / (h - 1);
+      
+      const centerRe = minRe + centerX * re_factor;
+      const centerIm = maxIm - centerY * im_factor;
+      
+      const newWRe = (maxRe - minRe) * factor;
+      const newWIm = (maxIm - minIm) * factor;
+      
+      if (newWRe < 1e-13 || newWRe > 10.0) return;
+      
+      minRe = centerRe - (centerX / (w - 1)) * newWRe;
+      maxRe = minRe + newWRe;
+      
+      maxIm = centerIm + ((centerY / (h - 1)) * newWIm);
+      minIm = maxIm - newWIm;
+      
+      triggerImpact(centerX, centerY, factor < 1.0 ? 5 : 3, 20);
+      playSfx(factor < 1.0 ? 'zoomIn' : 'zoomOut');
+      if (!dontSave) saveState();
+      requestRender();
     }
 
     function applyLandmark(idx) {
-        if (idx < 0 || idx >= landmarks.length) return;
-        const lm = landmarks[idx];
-        fractalType = lm.fType;
-        isJulia = lm.isJ;
-        juliaCRe = lm.jRe;
-        juliaCIm = lm.jIm;
-        minRe = lm.minRe;
-        maxRe = lm.maxRe;
-        minIm = lm.minIm;
-        maxIm = lm.maxIm;
-        max_iter = lm.iter;
-        document.getElementById('fractal-select').value = fractalType;
-        triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 8, 40);
-        saveState();
-        requestRender();
-    }
-
-    window.addEventListener('resize', () => {
-      initMotes();
+      if (idx < 0 || idx >= landmarks.length) return;
+      const lm = landmarks[idx];
+      fractalType = lm.fType;
+      isJulia = lm.isJ;
+      juliaCRe = lm.jRe;
+      juliaCIm = lm.jIm;
+      minRe = lm.minRe;
+      maxRe = lm.maxRe;
+      minIm = lm.minIm;
+      maxIm = lm.maxIm;
+      max_iter = lm.iter;
+      document.getElementById('fractal-select').value = fractalType;
+      triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 7, 36);
+      playSfx('landmark');
+      saveState();
       requestRender();
-    });
-    
-    document.getElementById('fractal-select').addEventListener('change', (e) => {
-        fractalType = parseInt(e.target.value, 10);
-        isJulia = false;
-        if (fractalType === 1) { // Burning ship default
-            minRe = -1.8; maxRe = 1.0; minIm = -1.8; maxIm = 1.0;
-        } else if (fractalType === 2) { // Tricorn default
-            minRe = -2.0; maxRe = 1.0; minIm = -1.5; maxIm = 1.5;
-        } else {
-            minRe = -2.0; maxRe = 1.0; minIm = -1.2; maxIm = 1.2;
-        }
-        max_iter = 100;
-        safeSetStorage('kmandel_fractal_type', fractalType);
-        triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 6, 25);
-        saveState();
-        requestRender();
-    });
-
-    document.getElementById('landmark-select').addEventListener('change', (e) => {
-        const val = parseInt(e.target.value, 10);
-        if (val >= 0) {
-            currentLandmarkIdx = val;
-            applyLandmark(val);
-            showToast(`Landmark: ${landmarks[val].name}`, 'purple', 2200);
-        }
-        e.target.value = "-1";
-    });
-
-    // ==========================================
-    // TOAST NOTIFICATION SYSTEM
-    // ==========================================
-    function showToast(message, type = 'info', duration = 3000) {
-        const container = document.getElementById('toast-container');
-        if (!container) return;
-        while (container.children.length >= 5) {
-            container.removeChild(container.firstChild);
-        }
-        const toast = document.createElement('div');
-        toast.className = `toast toast-${type}`;
-        
-        let iconSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>';
-        if (type === 'success') {
-            iconSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
-        } else if (type === 'warning') {
-            iconSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
-        } else if (type === 'purple') {
-            iconSvg = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#c084fc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
-        }
-
-        const iconWrap = document.createElement('span');
-        iconWrap.style.display = 'inline-flex';
-        iconWrap.innerHTML = iconSvg;
-        const msgSpan = document.createElement('span');
-        if (message.includes('<') && message.includes('>')) {
-            msgSpan.innerHTML = message;
-        } else {
-            msgSpan.textContent = message;
-        }
-        toast.appendChild(iconWrap.firstElementChild || iconWrap);
-        toast.appendChild(msgSpan);
-        toast.onclick = () => {
-            toast.classList.add('hiding');
-            setTimeout(() => toast.remove(), 250);
-        };
-        container.appendChild(toast);
-        setTimeout(() => {
-            if (toast.parentNode) {
-                toast.classList.add('hiding');
-                setTimeout(() => toast.remove(), 250);
-            }
-        }, duration);
     }
 
-    const themeNames = ["Fire Spectrum", "Deep Ocean", "Cyberpunk Neon", "Monochrome Band", "Emerald Matrix", "Sunset Glow", "Custom Dual Palette"];
+    // ==========================================
+    // CUSTOM BOOKMARKS & PRESET PERSISTENCE
+    // ==========================================
+    let customBookmarks = safeGetStorage('kmandel_custom_bookmarks', []);
+
+    function refreshBookmarkSelect() {
+      const select = document.getElementById('bookmark-select');
+      select.innerHTML = `<option value="-1">-- Saved Views (${customBookmarks.length}) --</option>`;
+      customBookmarks.forEach((b, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = `${idx + 1}. ${b.name || 'Bookmark ' + (idx + 1)}`;
+        select.appendChild(opt);
+      });
+    }
+    refreshBookmarkSelect();
+
+    function addBookmark() {
+      const defaultName = `${fractalNames[fractalType]} @ ${(3.0 / (maxRe - minRe)).toFixed(1)}x`;
+      const name = prompt("Enter a label for this bookmark:", defaultName) || defaultName;
+      const bm = {
+        name: name.trim().slice(0, 32),
+        minRe, maxRe, minIm, maxIm, max_iter,
+        isJulia, juliaCRe, juliaCIm,
+        theme, fractalType, smoothShading,
+        customColor1: [...customColor1],
+        customColor2: [...customColor2],
+        timestamp: Date.now()
+      };
+      customBookmarks.push(bm);
+      safeSetStorage('kmandel_custom_bookmarks', customBookmarks);
+      refreshBookmarkSelect();
+      triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 5, 22);
+      playSfx('quicksave');
+      showToast(`⭐ Bookmarked: "${bm.name}"`, 'success', 2500);
+    }
+
+    document.getElementById('btn-add-bookmark').addEventListener('click', addBookmark);
+
+    document.getElementById('bookmark-select').addEventListener('change', (e) => {
+      const idx = parseInt(e.target.value, 10);
+      if (idx >= 0 && idx < customBookmarks.length) {
+        const b = customBookmarks[idx];
+        loadState(b);
+        triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 6, 28);
+        playSfx('quickload');
+        saveState();
+        requestRender();
+        showToast(`Loaded Bookmark: "${b.name}"`, 'purple', 2200);
+      }
+      e.target.value = "-1";
+    });
+
+    // ==========================================
+    // JSON EXPORT / IMPORT & URL SHARING
+    // ==========================================
+    function exportPresetsJson() {
+      const payload = {
+        app: "KMandel",
+        version: "1.0",
+        timestamp: Date.now(),
+        currentView: {
+          fractalType,
+          fractalName: fractalNames[fractalType],
+          minRe, maxRe, minIm, maxIm, max_iter,
+          isJulia, juliaCRe, juliaCIm,
+          theme, smoothShading,
+          customColor1, customColor2
+        },
+        customBookmarks: customBookmarks
+      };
+      const jsonStr = JSON.stringify(payload, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = `kmandel_presets_${Date.now()}.json`;
+      link.href = url;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      playSfx('quicksave');
+      showToast('📤 Presets exported to JSON file', 'success', 2500);
+    }
+
+    function shareCoordinatesUrl() {
+      const wRe = maxRe - minRe;
+      const zoomLevel = 3.0 / wRe;
+      const hashStr = `#f=${fractalType}&re=${minRe.toFixed(6)}&mxre=${maxRe.toFixed(6)}&im=${minIm.toFixed(6)}&mxim=${maxIm.toFixed(6)}&iter=${max_iter}&j=${isJulia ? 1 : 0}&jre=${juliaCRe.toFixed(6)}&jim=${juliaCIm.toFixed(6)}&th=${theme}`;
+      try {
+        history.replaceState(null, '', hashStr);
+        navigator.clipboard.writeText(window.location.href);
+        playSfx('quicksave');
+        showToast('🔗 Coordinate URL copied to clipboard!', 'success', 3000);
+      } catch (err) {
+        showToast(`Coords: ${fractalNames[fractalType]} (${zoomLevel.toFixed(1)}x)`, 'info', 3000);
+      }
+    }
+
+    function checkUrlHash() {
+      if (!window.location.hash || window.location.hash.length < 5) return;
+      try {
+        const params = new URLSearchParams(window.location.hash.slice(1));
+        if (params.has('f')) fractalType = parseInt(params.get('f'), 10) || 0;
+        if (params.has('re') && params.has('mxre')) {
+          minRe = parseFloat(params.get('re'));
+          maxRe = parseFloat(params.get('mxre'));
+        }
+        if (params.has('im') && params.has('mxim')) {
+          minIm = parseFloat(params.get('im'));
+          maxIm = parseFloat(params.get('mxim'));
+        }
+        if (params.has('iter')) max_iter = parseInt(params.get('iter'), 10) || 100;
+        if (params.has('j')) isJulia = params.get('j') === '1';
+        if (params.has('jre')) juliaCRe = parseFloat(params.get('jre'));
+        if (params.has('jim')) juliaCIm = parseFloat(params.get('jim'));
+        if (params.has('th')) theme = parseInt(params.get('th'), 10) || 0;
+
+        document.getElementById('fractal-select').value = fractalType;
+        document.getElementById('theme-select').value = theme;
+        showToast('Restored coordinates from URL link!', 'purple', 3000);
+      } catch (e) {}
+    }
+    checkUrlHash();
+
+    document.getElementById('btn-export-json').addEventListener('click', exportPresetsJson);
+    document.getElementById('btn-share-coords').addEventListener('click', shareCoordinatesUrl);
+    
+    document.getElementById('btn-import-json').addEventListener('click', () => {
+      document.getElementById('import-overlay').style.display = 'flex';
+      document.getElementById('import-text').focus();
+    });
+    document.getElementById('btn-close-import-x').addEventListener('click', () => {
+      document.getElementById('import-overlay').style.display = 'none';
+    });
+    document.getElementById('btn-cancel-import').addEventListener('click', () => {
+      document.getElementById('import-overlay').style.display = 'none';
+    });
+    document.getElementById('btn-do-import').addEventListener('click', () => {
+      const txt = document.getElementById('import-text').value.trim();
+      if (!txt) return;
+      try {
+        const data = JSON.parse(txt);
+        if (data.currentView) {
+          loadState(data.currentView);
+        } else if (data.minRe !== undefined) {
+          loadState(data);
+        }
+        if (Array.isArray(data.customBookmarks) && data.customBookmarks.length > 0) {
+          customBookmarks = [...customBookmarks, ...data.customBookmarks];
+          safeSetStorage('kmandel_custom_bookmarks', customBookmarks);
+          refreshBookmarkSelect();
+        }
+        document.getElementById('import-overlay').style.display = 'none';
+        triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 7, 30);
+        playSfx('quickload');
+        saveState();
+        requestRender();
+        showToast('📥 Presets imported successfully!', 'success', 2800);
+      } catch (err) {
+        showToast('⚠️ Invalid JSON format', 'warning', 2500);
+      }
+    });
+
+    // ==========================================
+    // FIREBASE REALTIME MULTIPLAYER BEACON & CO-OP ROOM
+    // ==========================================
+    let userCallsign = safeGetStorage('kmandel_callsign', null);
+    if (!userCallsign) {
+      const suffixes = ["Voyager", "Echo", "Specter", "Pioneer", "Drifter", "Archon", "Vector", "Pulse"];
+      const num = Math.floor(10 + Math.random() * 89);
+      userCallsign = `${suffixes[Math.floor(Math.random() * suffixes.length)]}-${num}`;
+      safeSetStorage('kmandel_callsign', userCallsign);
+    }
+    const explorerId = 'exp_' + Math.random().toString(36).substr(2, 9);
+
+    function initCoopRoom() {
+      if (!window.fb) return;
+      const { db, ref, set, onValue, push, onChildAdded, onDisconnect, serverTimestamp } = window.fb;
+      const roomRef = ref(db, 'multiplayer/kmandel/rooms/public');
+      const myPresenceRef = ref(db, `multiplayer/kmandel/rooms/public/explorers/${explorerId}`);
+      
+      // Update my presence
+      set(myPresenceRef, {
+        id: explorerId,
+        callsign: userCallsign,
+        fractal: fractalNames[fractalType],
+        online: true,
+        lastSeen: serverTimestamp()
+      });
+      onDisconnect(myPresenceRef).remove();
+
+      // Listen to peer count
+      const explorersListRef = ref(db, 'multiplayer/kmandel/rooms/public/explorers');
+      onValue(explorersListRef, (snapshot) => {
+        const val = snapshot.val();
+        const count = val ? Object.keys(val).length : 1;
+        const txt = document.getElementById('coop-count-text');
+        if (txt) txt.textContent = `${count} Online`;
+      });
+
+      // Listen to peer discovery beacons
+      const beaconsRef = ref(db, 'multiplayer/kmandel/rooms/public/beacons');
+      onChildAdded(beaconsRef, (snapshot) => {
+        const b = snapshot.val();
+        if (!b || b.sender === userCallsign) return;
+        peerBeacons.push({
+          sender: b.sender,
+          name: b.name,
+          centerRe: (b.minRe + b.maxRe) / 2,
+          centerIm: (b.minIm + b.maxIm) / 2,
+          minRe: b.minRe, maxRe: b.maxRe, minIm: b.minIm, maxIm: b.maxIm,
+          iter: b.iter, fractalType: b.fractalType, isJulia: b.isJulia,
+          jRe: b.jRe, jIm: b.jIm, theme: b.theme,
+          time: Date.now()
+        });
+        playSfx('beacon');
+        showToast(`📡 <b>${b.sender}</b> beacon at ${b.name}! <span style="text-decoration:underline;">[Click to Jump]</span>`, 'purple', 5000);
+        
+        // Clicking toast teleports to peer view
+        const container = document.getElementById('toast-container');
+        if (container && container.lastElementChild) {
+          container.lastElementChild.onclick = () => {
+            teleportToPeer(b);
+          };
+        }
+      });
+    }
+
+    if (window.fb) initCoopRoom();
+    else window.onFirebaseReady = initCoopRoom;
+
+    function broadcastBeacon() {
+      const wRe = maxRe - minRe;
+      const zoomStr = (3.0 / wRe).toFixed(1) + 'x';
+      const beaconName = `${fractalNames[fractalType]} (${zoomStr})`;
+
+      if (window.fb) {
+        const { db, ref, push, serverTimestamp } = window.fb;
+        const beaconsRef = ref(db, 'multiplayer/kmandel/rooms/public/beacons');
+        push(beaconsRef, {
+          sender: userCallsign,
+          name: beaconName,
+          minRe, maxRe, minIm, maxIm,
+          iter: max_iter,
+          fractalType,
+          isJulia,
+          jRe: juliaCRe,
+          jIm: juliaCIm,
+          theme,
+          timestamp: serverTimestamp()
+        });
+      }
+
+      triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 8, 35);
+      playSfx('beacon');
+      showToast(`📡 Beacon broadcasted as "${userCallsign}"!`, 'success', 2800);
+    }
+
+    function teleportToPeer(b) {
+      fractalType = b.fractalType;
+      isJulia = b.isJulia;
+      juliaCRe = b.jRe;
+      juliaCIm = b.jIm;
+      minRe = b.minRe;
+      maxRe = b.maxRe;
+      minIm = b.minIm;
+      maxIm = b.maxIm;
+      max_iter = b.iter;
+      theme = b.theme;
+      document.getElementById('fractal-select').value = fractalType;
+      document.getElementById('theme-select').value = theme;
+      triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 9, 45);
+      playSfx('landmark');
+      saveState();
+      requestRender();
+      showToast(`🚀 Teleported to ${b.sender}'s Beacon!`, 'purple', 3000);
+    }
+
+    document.getElementById('btn-broadcast-beacon').addEventListener('click', broadcastBeacon);
+
+    // ==========================================
+    // UI INTERACTION HANDLERS
+    // ==========================================
+    document.getElementById('fractal-select').addEventListener('change', (e) => {
+      fractalType = parseInt(e.target.value, 10);
+      isJulia = false;
+      if (fractalType === 1) { minRe = -1.8; maxRe = 1.0; minIm = -1.8; maxIm = 1.0; }
+      else if (fractalType === 2) { minRe = -2.0; maxRe = 1.0; minIm = -1.5; maxIm = 1.5; }
+      else if (fractalType === 5) { minRe = -1.6; maxRe = 1.6; minIm = -1.6; maxIm = 1.6; }
+      else if (fractalType === 6) { minRe = -1.5; maxRe = 1.5; minIm = -1.5; maxIm = 1.5; }
+      else if (fractalType === 7) { minRe = -1.8; maxRe = 1.0; minIm = -1.8; maxIm = 1.0; }
+      else { minRe = -2.0; maxRe = 1.0; minIm = -1.2; maxIm = 1.2; }
+      max_iter = 100;
+      safeSetStorage('kmandel_fractal_type', fractalType);
+      triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 6, 25);
+      playSfx('formula');
+      saveState();
+      requestRender();
+      showToast(`Formula: ${fractalNames[fractalType]}`, 'info', 2000);
+    });
+
+    let currentLandmarkIdx = 0;
+    document.getElementById('landmark-select').addEventListener('change', (e) => {
+      const val = parseInt(e.target.value, 10);
+      if (val >= 0) {
+        currentLandmarkIdx = val;
+        applyLandmark(val);
+        showToast(`Landmark: ${landmarks[val].name}`, 'purple', 2200);
+      }
+      e.target.value = "-1";
+    });
 
     document.getElementById('theme-select').addEventListener('change', (e) => {
-        theme = parseInt(e.target.value, 10);
-        document.getElementById('custom-colors').style.display = theme === 6 ? 'block' : 'none';
-        safeSetStorage('kmandel_theme', theme);
-        triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 4, 20);
-        saveState();
-        requestRender();
-        showToast(`Theme: ${themeNames[theme] || 'Custom'}`, 'purple', 2200);
+      theme = parseInt(e.target.value, 10);
+      document.getElementById('custom-colors').style.display = theme === 8 ? 'block' : 'none';
+      safeSetStorage('kmandel_theme', theme);
+      triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 4, 20);
+      playSfx('theme');
+      saveState();
+      requestRender();
+      showToast(`Theme: ${themeNames[theme] || 'Custom'}`, 'purple', 2000);
     });
 
+    document.getElementById('btn-color-cycle').addEventListener('click', () => {
+      colorCycleActive = !colorCycleActive;
+      const btn = document.getElementById('btn-color-cycle');
+      if (colorCycleActive) {
+        btn.classList.add('btn-active');
+        showToast('🌈 60 FPS Color Cycling Active [Space]', 'purple', 2000);
+      } else {
+        btn.classList.remove('btn-active');
+        showToast('Color Cycling Stopped', 'info', 1500);
+      }
+    });
+
+    document.getElementById('btn-smooth').addEventListener('click', () => {
+      smoothShading = !smoothShading;
+      safeSetStorage('kmandel_smooth', smoothShading);
+      const btn = document.getElementById('btn-smooth');
+      if (smoothShading) {
+        btn.classList.add('btn-active');
+        showToast('✨ Smooth Shading Enabled (Continuous Potential)', 'info', 2200);
+      } else {
+        btn.classList.remove('btn-active');
+        showToast('Discrete Stepped Bands Enabled', 'info', 2000);
+      }
+      saveState();
+      requestRender();
+    });
+
+    document.getElementById('btn-audio-mute').addEventListener('click', toggleAudio);
+    document.getElementById('btn-sonify').addEventListener('click', toggleSonify);
+
     document.getElementById('btn-reset').addEventListener('click', () => {
-        if (isJulia) {
-            minRe = -2.0; maxRe = 2.0;
-            minIm = -2.0; maxIm = 2.0;
-        } else {
-            minRe = -2.0; maxRe = 1.0;
-            minIm = -1.2; maxIm = 1.2;
-        }
-        max_iter = 100;
-        triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 7, 35);
-        saveState();
-        requestRender();
-        showToast('Viewport reset to default coordinates', 'info', 2000);
+      if (isJulia) {
+        minRe = -2.0; maxRe = 2.0;
+        minIm = -2.0; maxIm = 2.0;
+      } else {
+        minRe = -2.0; maxRe = 1.0;
+        minIm = -1.2; maxIm = 1.2;
+      }
+      max_iter = 100;
+      triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 7, 32);
+      playSfx('formula');
+      saveState();
+      requestRender();
+      showToast('Viewport reset to default coordinates', 'info', 2000);
     });
     
     document.getElementById('btn-julia').addEventListener('click', () => {
-        if (!isJulia) {
-            isJulia = true;
-            juliaCRe = minRe + (maxRe - minRe) / 2.0;
-            juliaCIm = minIm + (maxIm - minIm) / 2.0;
-            minRe = -2.0; maxRe = 2.0;
-            minIm = -2.0; maxIm = 2.0;
-            showToast(`Julia Mode Enabled (c = ${juliaCRe.toFixed(3)} + ${juliaCIm.toFixed(3)}i)`, 'purple', 2500);
-        } else {
-            isJulia = false;
-            minRe = -2.0; maxRe = 1.0;
-            minIm = -1.2; maxIm = 1.2;
-            showToast('Returned to Standard Formula', 'info', 2000);
-        }
-        max_iter = 100;
-        triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 6, 30);
-        saveState();
-        requestRender();
+      if (!isJulia) {
+        isJulia = true;
+        juliaCRe = minRe + (maxRe - minRe) / 2.0;
+        juliaCIm = minIm + (maxIm - minIm) / 2.0;
+        minRe = -2.0; maxRe = 2.0;
+        minIm = -2.0; maxIm = 2.0;
+        showToast(`Julia Mode (c = ${juliaCRe.toFixed(3)} + ${juliaCIm.toFixed(3)}i)`, 'purple', 2500);
+      } else {
+        isJulia = false;
+        minRe = -2.0; maxRe = 1.0;
+        minIm = -1.2; maxIm = 1.2;
+        showToast('Returned to Standard Formula', 'info', 2000);
+      }
+      max_iter = 100;
+      triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 6, 28);
+      playSfx('julia');
+      saveState();
+      requestRender();
     });
     
     document.getElementById('btn-zoom-in').addEventListener('click', () => {
-        zoom(0.5, window.innerWidth/2, window.innerHeight/2);
-        showToast('Zoom In (2.0x)', 'info', 1500);
+      zoom(0.5, window.innerWidth / 2, window.innerHeight / 2);
+      showToast('Zoom In (2.0x)', 'info', 1500);
     });
     
     document.getElementById('btn-zoom-out').addEventListener('click', () => {
-        zoom(2.0, window.innerWidth/2, window.innerHeight/2);
-        showToast('Zoom Out (0.5x)', 'info', 1500);
+      zoom(2.0, window.innerWidth / 2, window.innerHeight / 2);
+      showToast('Zoom Out (0.5x)', 'info', 1500);
     });
 
     document.getElementById('btn-undo').addEventListener('click', () => {
-        undo();
-        showToast(`Undo (step ${historyIdx + 1}/${history.length})`, 'info', 1500);
+      undo();
+      showToast(`Undo (step ${historyIdx + 1}/${history.length})`, 'info', 1500);
     });
     document.getElementById('btn-redo').addEventListener('click', () => {
-        redo();
-        showToast(`Redo (step ${historyIdx + 1}/${history.length})`, 'info', 1500);
+      redo();
+      showToast(`Redo (step ${historyIdx + 1}/${history.length})`, 'info', 1500);
     });
 
     function quicksave() {
-        const state = {
-            minRe, maxRe, minIm, maxIm, max_iter,
-            isJulia, juliaCRe, juliaCIm,
-            theme, fractalType,
-            customColor1: [...customColor1],
-            customColor2: [...customColor2],
-            timestamp: Date.now()
-        };
-        safeSetStorage('kmandel_quicksave', state);
-        triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 6, 25);
-        showToast('💾 Viewport quicksaved (F5)', 'success', 2500);
+      const state = {
+        minRe, maxRe, minIm, maxIm, max_iter,
+        isJulia, juliaCRe, juliaCIm,
+        theme, fractalType, smoothShading,
+        customColor1: [...customColor1],
+        customColor2: [...customColor2],
+        timestamp: Date.now()
+      };
+      safeSetStorage('kmandel_quicksave', state);
+      triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 6, 25);
+      playSfx('quicksave');
+      showToast('💾 Viewport quicksaved (F5)', 'success', 2500);
     }
 
     function quickload() {
-        const state = safeGetStorage('kmandel_quicksave', null);
-        if (!state) {
-            showToast('⚠️ No quicksave found (Press F5 to save)', 'warning', 2500);
-            return;
-        }
-        loadState(state);
-        triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 7, 30);
-        requestRender();
-        showToast('📂 Viewport quickloaded (F9)', 'purple', 2500);
+      const state = safeGetStorage('kmandel_quicksave', null);
+      if (!state) {
+        showToast('⚠️ No quicksave found (Press F5 to save)', 'warning', 2500);
+        return;
+      }
+      loadState(state);
+      triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 7, 30);
+      playSfx('quickload');
+      requestRender();
+      showToast('📂 Viewport quickloaded (F9)', 'purple', 2500);
     }
 
     function toggleControls() {
-        const controls = document.querySelector('.controls');
-        const expandBtn = document.getElementById('btn-expand-controls');
-        if (!controls || !expandBtn) return;
-        if (controls.style.display === 'none') {
-            controls.style.display = 'flex';
-            expandBtn.style.display = 'none';
-            showToast('Controls visible', 'info', 1500);
-        } else {
-            controls.style.display = 'none';
-            expandBtn.style.display = 'flex';
-            showToast('Controls hidden (Press C to restore)', 'info', 2000);
-        }
+      const controls = document.querySelector('.controls');
+      const expandBtn = document.getElementById('btn-expand-controls');
+      if (!controls || !expandBtn) return;
+      if (controls.style.display === 'none') {
+        controls.style.display = 'flex';
+        expandBtn.style.display = 'none';
+        showToast('Controls visible', 'info', 1500);
+      } else {
+        controls.style.display = 'none';
+        expandBtn.style.display = 'flex';
+        showToast('Controls hidden (Press C to restore)', 'info', 2000);
+      }
     }
 
     document.getElementById('btn-quicksave').addEventListener('click', quicksave);
@@ -1635,391 +2593,450 @@
     document.getElementById('btn-expand-controls').addEventListener('click', toggleControls);
     
     document.getElementById('btn-help').addEventListener('click', () => {
-        const overlay = document.getElementById('help-overlay');
-        overlay.style.display = overlay.style.display === 'none' || overlay.style.display === '' ? 'flex' : 'none';
+      const overlay = document.getElementById('help-overlay');
+      overlay.style.display = overlay.style.display === 'none' || overlay.style.display === '' ? 'flex' : 'none';
     });
     
     document.getElementById('btn-save').addEventListener('click', () => {
-        const btnSave = document.getElementById('btn-save');
-        if (btnSave.disabled) return;
-        btnSave.disabled = true;
-        document.getElementById('loading-text').textContent = "Rendering 4K PNG...";
-        loading.classList.add('active');
-        showToast('Generating Ultra-HD 4K PNG...', 'warning', 3000);
-        triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 8, 45);
-        
-        const exportCanvas = document.createElement('canvas');
-        const expW = 3840;
-        const expH = 2160;
-        exportCanvas.width = expW;
-        exportCanvas.height = expH;
-        
-        performRender(exportCanvas, expW, expH, true, () => {
-            const fname = `kmandel_${fractalNames[fractalType].toLowerCase().replace(/[^a-z0-9]/g, '_')}_4k.png`;
-            try {
-                exportCanvas.toBlob((blob) => {
-                    if (!blob) {
-                        const link = document.createElement('a');
-                        link.download = fname;
-                        link.href = exportCanvas.toDataURL('image/png');
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                    } else {
-                        const url = URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.download = fname;
-                        link.href = url;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        setTimeout(() => URL.revokeObjectURL(url), 10000);
-                    }
-                    document.getElementById('loading-text').textContent = "Rendering...";
-                    loading.classList.remove('active');
-                    btnSave.disabled = false;
-                    showToast(`✨ Saved: ${fname}`, 'success', 3500);
-                }, 'image/png');
-            } catch (err) {
-                const link = document.createElement('a');
-                link.download = fname;
-                link.href = exportCanvas.toDataURL('image/png');
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                document.getElementById('loading-text').textContent = "Rendering...";
-                loading.classList.remove('active');
-                btnSave.disabled = false;
-                showToast(`✨ Saved: ${fname}`, 'success', 3500);
+      const btnSave = document.getElementById('btn-save');
+      if (btnSave.disabled) return;
+      btnSave.disabled = true;
+      document.getElementById('loading-text').textContent = "Rendering 4K PNG...";
+      loading.classList.add('active');
+      showToast('Generating Ultra-HD 4K PNG...', 'warning', 3000);
+      triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 8, 42);
+      playSfx('quicksave');
+      
+      const exportCanvas = document.createElement('canvas');
+      const expW = 3840;
+      const expH = 2160;
+      exportCanvas.width = expW;
+      exportCanvas.height = expH;
+      
+      performRender(exportCanvas, expW, expH, true, () => {
+        const fname = `kmandel_${fractalNames[fractalType].toLowerCase().replace(/[^a-z0-9]/g, '_')}_4k.png`;
+        try {
+          exportCanvas.toBlob((blob) => {
+            const link = document.createElement('a');
+            link.download = fname;
+            if (blob) {
+              const url = URL.createObjectURL(blob);
+              link.href = url;
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+              setTimeout(() => URL.revokeObjectURL(url), 10000);
+            } else {
+              link.href = exportCanvas.toDataURL('image/png');
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
             }
-        });
+            document.getElementById('loading-text').textContent = "Rendering...";
+            loading.classList.remove('active');
+            btnSave.disabled = false;
+            showToast(`✨ Saved: ${fname}`, 'success', 3500);
+          }, 'image/png');
+        } catch (err) {
+          const link = document.createElement('a');
+          link.download = fname;
+          link.href = exportCanvas.toDataURL('image/png');
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          document.getElementById('loading-text').textContent = "Rendering...";
+          loading.classList.remove('active');
+          btnSave.disabled = false;
+          showToast(`✨ Saved: ${fname}`, 'success', 3500);
+        }
+      });
     });
 
-    let currentLandmarkIdx = 0;
+    window.addEventListener('resize', () => {
+      initMotes();
+      requestRender();
+    });
+
+    // ==========================================
+    // KEYBOARD SHORTCUTS
+    // ==========================================
     window.addEventListener('keydown', (e) => {
-        // Prevent key shortcut hijacking when typing in form controls
-        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) {
-            if (e.key === 'Escape') {
-                e.target.blur();
-            }
-            return;
-        }
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) {
+        if (e.key === 'Escape') e.target.blur();
+        return;
+      }
 
-        // Handle Escape to dismiss Help modal & toasts
-        if (e.key === 'Escape') {
-            const overlay = document.getElementById('help-overlay');
-            if (overlay && (overlay.style.display === 'flex' || overlay.style.display === 'block')) {
-                overlay.style.display = 'none';
-                return;
-            }
-            const toasts = document.querySelectorAll('.toast');
-            toasts.forEach(t => t.remove());
-            return;
+      // Handle Escape to dismiss dialogs
+      if (e.key === 'Escape') {
+        const hOverlay = document.getElementById('help-overlay');
+        if (hOverlay && (hOverlay.style.display === 'flex' || hOverlay.style.display === 'block')) {
+          hOverlay.style.display = 'none';
+          return;
         }
-
-        // Toggle Help overlay (F1 or H)
-        if (e.key === 'F1' || (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.altKey && !e.metaKey)) {
-            e.preventDefault();
-            const overlay = document.getElementById('help-overlay');
-            overlay.style.display = overlay.style.display === 'none' || overlay.style.display === '' ? 'flex' : 'none';
-            return;
+        const iOverlay = document.getElementById('import-overlay');
+        if (iOverlay && (iOverlay.style.display === 'flex' || iOverlay.style.display === 'block')) {
+          iOverlay.style.display = 'none';
+          return;
         }
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(t => t.remove());
+        return;
+      }
 
-        // Suppress background hotkeys while Help modal is open
+      // Toggle Help overlay (F1 or H)
+      if (e.key === 'F1' || (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.altKey && !e.metaKey)) {
+        e.preventDefault();
         const overlay = document.getElementById('help-overlay');
-        if (overlay && (overlay.style.display === 'flex' || overlay.style.display === 'block')) {
-            return;
-        }
+        overlay.style.display = overlay.style.display === 'none' || overlay.style.display === '' ? 'flex' : 'none';
+        return;
+      }
 
-        // Undo: Z, Ctrl+Z
-        if ((e.key.toLowerCase() === 'z' && !e.ctrlKey && !e.altKey && !e.metaKey) || (e.ctrlKey && !e.altKey && !e.metaKey && e.key.toLowerCase() === 'z' && !e.shiftKey)) {
-            undo();
-            showToast(`Undo (${historyIdx + 1}/${history.length})`, 'info', 1500);
-            return;
-        }
-        // Redo: Y, Ctrl+Y, Ctrl+Shift+Z
-        if ((e.key.toLowerCase() === 'y' && !e.ctrlKey && !e.altKey && !e.metaKey) || (e.ctrlKey && !e.altKey && !e.metaKey && e.key.toLowerCase() === 'y') || (e.ctrlKey && e.shiftKey && !e.altKey && !e.metaKey && e.key.toLowerCase() === 'z')) {
-            redo();
-            showToast(`Redo (${historyIdx + 1}/${history.length})`, 'info', 1500);
-            return;
-        }
+      // Suppress background hotkeys when modals are open
+      const hOverlay = document.getElementById('help-overlay');
+      if (hOverlay && (hOverlay.style.display === 'flex' || hOverlay.style.display === 'block')) return;
+      const iOverlay = document.getElementById('import-overlay');
+      if (iOverlay && (iOverlay.style.display === 'flex' || iOverlay.style.display === 'block')) return;
 
-        // Quicksave (F5) and Quickload (F9)
-        if (e.key === 'F5') {
-            e.preventDefault();
-            quicksave();
-            return;
-        }
-        if (e.key === 'F9') {
-            e.preventDefault();
-            quickload();
-            return;
-        }
-        // Toggle Controls Panel (C)
-        if (e.key.toLowerCase() === 'c' && !e.ctrlKey && !e.altKey && !e.metaKey) {
-            toggleControls();
-            return;
-        }
+      // Undo / Redo
+      if ((e.key.toLowerCase() === 'z' && !e.ctrlKey && !e.altKey && !e.metaKey) || (e.ctrlKey && !e.altKey && !e.metaKey && e.key.toLowerCase() === 'z' && !e.shiftKey)) {
+        undo();
+        return;
+      }
+      if ((e.key.toLowerCase() === 'y' && !e.ctrlKey && !e.altKey && !e.metaKey) || (e.ctrlKey && !e.altKey && !e.metaKey && e.key.toLowerCase() === 'y') || (e.ctrlKey && e.shiftKey && !e.altKey && !e.metaKey && e.key.toLowerCase() === 'z')) {
+        redo();
+        return;
+      }
 
-        if (e.key.toLowerCase() === 's' && !e.ctrlKey && !e.altKey && !e.metaKey) document.getElementById('btn-save').click();
-        if ((e.key.toLowerCase() === 'r' || e.key === '0') && !e.ctrlKey && !e.altKey && !e.metaKey) document.getElementById('btn-reset').click();
-        
-        if ((e.key === '+' || e.key === '=' || e.key === 'Add') && !e.ctrlKey && !e.altKey && !e.metaKey) {
-            zoom(0.5, window.innerWidth / 2, window.innerHeight / 2);
-            showToast('Zoom In (2.0x)', 'info', 1500);
-        }
-        if ((e.key === '-' || e.key === '_' || e.key === 'Subtract') && !e.ctrlKey && !e.altKey && !e.metaKey) {
-            zoom(2.0, window.innerWidth / 2, window.innerHeight / 2);
-            showToast('Zoom Out (0.5x)', 'info', 1500);
-        }
+      // Quicksave / Quickload
+      if (e.key === 'F5') { e.preventDefault(); quicksave(); return; }
+      if (e.key === 'F9') { e.preventDefault(); quickload(); return; }
 
-        // Direct Formula Jump (1-5)
-        if (e.key >= '1' && e.key <= '5' && !e.ctrlKey && !e.altKey && !e.metaKey) {
-            const idx = parseInt(e.key, 10) - 1;
-            if (idx >= 0 && idx < fractalNames.length) {
-                fractalType = idx;
-                isJulia = false;
-                if (fractalType === 1) { // Burning ship default
-                    minRe = -1.8; maxRe = 1.0; minIm = -1.8; maxIm = 1.0;
-                } else if (fractalType === 2) { // Tricorn default
-                    minRe = -2.0; maxRe = 1.0; minIm = -1.5; maxIm = 1.5;
-                } else {
-                    minRe = -2.0; maxRe = 1.0; minIm = -1.2; maxIm = 1.2;
-                }
-                max_iter = 100;
-                document.getElementById('fractal-select').value = fractalType;
-                safeSetStorage('kmandel_fractal_type', fractalType);
-                triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 6, 25);
-                saveState();
-                requestRender();
-                showToast(`Formula: ${fractalNames[fractalType]}`, 'info', 2200);
-            }
-        }
+      // Toggle Controls (C)
+      if (e.key.toLowerCase() === 'c' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        toggleControls(); return;
+      }
 
-        if (e.key.toLowerCase() === 'f' && !e.ctrlKey && !e.altKey && !e.metaKey) {
-            fractalType = (fractalType + 1) % fractalNames.length;
-            document.getElementById('fractal-select').value = fractalType;
-            safeSetStorage('kmandel_fractal_type', fractalType);
-            triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 6, 25);
-            saveState();
-            requestRender();
-            showToast(`Formula: ${fractalNames[fractalType]}`, 'info', 2200);
-        }
-        if ((e.key.toLowerCase() === 'l' || e.key.toLowerCase() === 'p') && !e.ctrlKey && !e.altKey && !e.metaKey) {
-            currentLandmarkIdx = (currentLandmarkIdx + 1) % landmarks.length;
-            applyLandmark(currentLandmarkIdx);
-            showToast(`Landmark: ${landmarks[currentLandmarkIdx].name}`, 'purple', 2200);
-        }
-        if (e.key.toLowerCase() === 't' && !e.ctrlKey && !e.altKey && !e.metaKey) {
-            theme = (theme + 1) % 7;
-            document.getElementById('theme-select').value = theme;
-            document.getElementById('custom-colors').style.display = theme === 6 ? 'block' : 'none';
-            safeSetStorage('kmandel_theme', theme);
-            triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 5, 20);
-            saveState();
-            requestRender();
-            showToast(`Theme: ${themeNames[theme] || 'Custom'}`, 'purple', 2200);
-        }
-        if (e.key.toLowerCase() === 'j' && !e.ctrlKey && !e.altKey && !e.metaKey) document.getElementById('btn-julia').click();
+      // Color Cycling (Space)
+      if (e.code === 'Space' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        e.preventDefault();
+        document.getElementById('btn-color-cycle').click();
+        return;
+      }
 
-        const panAmount = 0.1;
-        let moved = false;
-        if (e.key === 'ArrowUp' && !e.ctrlKey && !e.altKey && !e.metaKey) {
-            const h = maxIm - minIm;
-            minIm += h * panAmount; maxIm += h * panAmount; moved = true;
-        } else if (e.key === 'ArrowDown' && !e.ctrlKey && !e.altKey && !e.metaKey) {
-            const h = maxIm - minIm;
-            minIm -= h * panAmount; maxIm -= h * panAmount; moved = true;
-        } else if (e.key === 'ArrowLeft' && !e.ctrlKey && !e.altKey && !e.metaKey) {
-            const w = maxRe - minRe;
-            minRe -= w * panAmount; maxRe -= w * panAmount; moved = true;
-        } else if (e.key === 'ArrowRight' && !e.ctrlKey && !e.altKey && !e.metaKey) {
-            const w = maxRe - minRe;
-            minRe -= w * panAmount; maxRe -= w * panAmount; moved = true;
+      // Smooth Shading (G)
+      if (e.key.toLowerCase() === 'g' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        document.getElementById('btn-smooth').click();
+        return;
+      }
+
+      // Audio Mute (M) & Sonify (U)
+      if (e.key.toLowerCase() === 'm' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        toggleAudio(); return;
+      }
+      if (e.key.toLowerCase() === 'u' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        toggleSonify(); return;
+      }
+
+      // Bookmark View (B)
+      if (e.key.toLowerCase() === 'b' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        addBookmark(); return;
+      }
+
+      // Broadcast Beacon (O)
+      if (e.key.toLowerCase() === 'o' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        broadcastBeacon(); return;
+      }
+
+      // Export / Import JSON & Share
+      if (e.key.toLowerCase() === 'e' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        exportPresetsJson(); return;
+      }
+      if (e.key.toLowerCase() === 'i' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        document.getElementById('btn-import-json').click(); return;
+      }
+      if (e.key.toLowerCase() === 'k' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        shareCoordinatesUrl(); return;
+      }
+
+      if (e.key.toLowerCase() === 's' && !e.ctrlKey && !e.altKey && !e.metaKey) document.getElementById('btn-save').click();
+      if ((e.key.toLowerCase() === 'r' || e.key === '0') && !e.ctrlKey && !e.altKey && !e.metaKey) document.getElementById('btn-reset').click();
+      
+      if ((e.key === '+' || e.key === '=' || e.key === 'Add') && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        zoom(0.5, window.innerWidth / 2, window.innerHeight / 2);
+        showToast('Zoom In (2.0x)', 'info', 1500);
+      }
+      if ((e.key === '-' || e.key === '_' || e.key === 'Subtract') && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        zoom(2.0, window.innerWidth / 2, window.innerHeight / 2);
+        showToast('Zoom Out (0.5x)', 'info', 1500);
+      }
+
+      // Direct Formula Jump (1 - 8)
+      if (e.key >= '1' && e.key <= '8' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        const idx = parseInt(e.key, 10) - 1;
+        if (idx >= 0 && idx < fractalNames.length) {
+          fractalType = idx;
+          isJulia = false;
+          if (fractalType === 1) { minRe = -1.8; maxRe = 1.0; minIm = -1.8; maxIm = 1.0; }
+          else if (fractalType === 2) { minRe = -2.0; maxRe = 1.0; minIm = -1.5; maxIm = 1.5; }
+          else if (fractalType === 5) { minRe = -1.6; maxRe = 1.6; minIm = -1.6; maxIm = 1.6; }
+          else if (fractalType === 6) { minRe = -1.5; maxRe = 1.5; minIm = -1.5; maxIm = 1.5; }
+          else if (fractalType === 7) { minRe = -1.8; maxRe = 1.0; minIm = -1.8; maxIm = 1.0; }
+          else { minRe = -2.0; maxRe = 1.0; minIm = -1.2; maxIm = 1.2; }
+          max_iter = 100;
+          document.getElementById('fractal-select').value = fractalType;
+          safeSetStorage('kmandel_fractal_type', fractalType);
+          triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 6, 25);
+          playSfx('formula');
+          saveState();
+          requestRender();
+          showToast(`Formula: ${fractalNames[fractalType]}`, 'info', 2000);
         }
-        
-        if (moved) {
-            triggerScreenShake(2.5);
-            saveState();
-            requestRender();
-        }
+      }
+
+      // Cycle Formulas (F)
+      if (e.key.toLowerCase() === 'f' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        fractalType = (fractalType + 1) % fractalNames.length;
+        document.getElementById('fractal-select').value = fractalType;
+        safeSetStorage('kmandel_fractal_type', fractalType);
+        triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 6, 25);
+        playSfx('formula');
+        saveState();
+        requestRender();
+        showToast(`Formula: ${fractalNames[fractalType]}`, 'info', 2000);
+      }
+
+      // Cycle Landmarks (L / P)
+      if ((e.key.toLowerCase() === 'l' || e.key.toLowerCase() === 'p') && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        currentLandmarkIdx = (currentLandmarkIdx + 1) % landmarks.length;
+        applyLandmark(currentLandmarkIdx);
+        showToast(`Landmark: ${landmarks[currentLandmarkIdx].name}`, 'purple', 2200);
+      }
+
+      // Cycle Themes (T)
+      if (e.key.toLowerCase() === 't' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        theme = (theme + 1) % themeNames.length;
+        document.getElementById('theme-select').value = theme;
+        document.getElementById('custom-colors').style.display = theme === 8 ? 'block' : 'none';
+        safeSetStorage('kmandel_theme', theme);
+        triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 5, 20);
+        playSfx('theme');
+        saveState();
+        requestRender();
+        showToast(`Theme: ${themeNames[theme] || 'Custom'}`, 'purple', 2000);
+      }
+
+      // Toggle Julia (J)
+      if (e.key.toLowerCase() === 'j' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        document.getElementById('btn-julia').click();
+      }
+
+      // Arrow Key Fine Pan
+      const panAmount = 0.1;
+      let moved = false;
+      if (e.key === 'ArrowUp' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        const h = maxIm - minIm;
+        minIm += h * panAmount; maxIm += h * panAmount; moved = true;
+      } else if (e.key === 'ArrowDown' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        const h = maxIm - minIm;
+        minIm -= h * panAmount; maxIm -= h * panAmount; moved = true;
+      } else if (e.key === 'ArrowLeft' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        const w = maxRe - minRe;
+        minRe -= w * panAmount; maxRe -= w * panAmount; moved = true;
+      } else if (e.key === 'ArrowRight' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        const w = maxRe - minRe;
+        minRe += w * panAmount; maxRe += w * panAmount; moved = true;
+      }
+      
+      if (moved) {
+        triggerScreenShake(2.5);
+        saveState();
+        requestRender();
+      }
     });
 
     const container = document.getElementById('canvas-container');
     
     // Help overlay dismissal
     document.getElementById('btn-close-help').addEventListener('click', () => {
-        document.getElementById('help-overlay').style.display = 'none';
-        safeSetStorage('kmandel_tutorial_seen', true);
+      document.getElementById('help-overlay').style.display = 'none';
+      safeSetStorage('kmandel_tutorial_seen', true);
     });
     document.getElementById('btn-close-help-x').addEventListener('click', () => {
-        document.getElementById('help-overlay').style.display = 'none';
-        safeSetStorage('kmandel_tutorial_seen', true);
+      document.getElementById('help-overlay').style.display = 'none';
+      safeSetStorage('kmandel_tutorial_seen', true);
     });
     document.getElementById('btn-dont-show-help').addEventListener('click', () => {
-        document.getElementById('help-overlay').style.display = 'none';
-        safeSetStorage('kmandel_tutorial_seen', true);
-        showToast('Onboarding preference saved. Press F1 or H anytime for help.', 'info', 2500);
+      document.getElementById('help-overlay').style.display = 'none';
+      safeSetStorage('kmandel_tutorial_seen', true);
+      showToast('Preference saved. Press F1 or H anytime for help.', 'info', 2200);
     });
     document.getElementById('help-overlay').addEventListener('click', (e) => {
-        if (e.target === document.getElementById('help-overlay')) {
-            document.getElementById('help-overlay').style.display = 'none';
-            safeSetStorage('kmandel_tutorial_seen', true);
-        }
+      if (e.target === document.getElementById('help-overlay')) {
+        document.getElementById('help-overlay').style.display = 'none';
+        safeSetStorage('kmandel_tutorial_seen', true);
+      }
     });
 
-    // Multi-touch pinch-to-zoom support for mobile/touch displays
+    // Multi-touch pinch-to-zoom
     let initialPinchDist = 0;
     let isPinching = false;
 
     container.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 2) {
-            isPinching = true;
-            isDragging = false;
-            const dx = e.touches[0].clientX - e.touches[1].clientX;
-            const dy = e.touches[0].clientY - e.touches[1].clientY;
-            initialPinchDist = Math.hypot(dx, dy);
-        }
+      if (e.touches.length === 2) {
+        isPinching = true;
+        isDragging = false;
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        initialPinchDist = Math.hypot(dx, dy);
+      }
     }, { passive: true });
 
     container.addEventListener('touchmove', (e) => {
-        if (isPinching && e.touches.length === 2) {
-            const dx = e.touches[0].clientX - e.touches[1].clientX;
-            const dy = e.touches[0].clientY - e.touches[1].clientY;
-            const currentDist = Math.hypot(dx, dy);
-            if (initialPinchDist > 0 && Math.abs(currentDist - initialPinchDist) > 12) {
-                const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
-                const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-                const factor = initialPinchDist / currentDist;
-                zoom(factor, midX, midY, true);
-                initialPinchDist = currentDist;
-                clearTimeout(wheelTimeout);
-                wheelTimeout = setTimeout(saveState, 400);
-            }
+      if (isPinching && e.touches.length === 2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const currentDist = Math.hypot(dx, dy);
+        if (initialPinchDist > 0 && Math.abs(currentDist - initialPinchDist) > 12) {
+          const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+          const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+          const factor = initialPinchDist / currentDist;
+          zoom(factor, midX, midY, true);
+          initialPinchDist = currentDist;
+          clearTimeout(wheelTimeout);
+          wheelTimeout = setTimeout(saveState, 400);
         }
+      }
     }, { passive: true });
 
     container.addEventListener('touchend', (e) => {
-        if (e.touches.length < 2) {
-            if (isPinching) {
-                isPinching = false;
-                saveState();
-            }
-        }
+      if (e.touches.length < 2 && isPinching) {
+        isPinching = false;
+        saveState();
+      }
     }, { passive: true });
     
     let wheelTimeout;
     container.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        const factor = e.deltaY > 0 ? 1.5 : 1/1.5;
-        zoom(factor, e.clientX, e.clientY, true);
-        clearTimeout(wheelTimeout);
-        wheelTimeout = setTimeout(saveState, 400);
+      e.preventDefault();
+      const factor = e.deltaY > 0 ? 1.5 : 1/1.5;
+      zoom(factor, e.clientX, e.clientY, true);
+      clearTimeout(wheelTimeout);
+      wheelTimeout = setTimeout(saveState, 400);
     });
     
     container.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        zoom(2.0, e.clientX, e.clientY);
-        showToast('Zoom Out (0.5x)', 'info', 1500);
+      e.preventDefault();
+      zoom(2.0, e.clientX, e.clientY);
+      showToast('Zoom Out (0.5x)', 'info', 1500);
     });
+
+    let isDragging = false;
+    let hasDragged = false;
+    let dragStartX = 0, dragStartY = 0;
+    let startMinRe = 0, startMaxRe = 0, startMinIm = 0, startMaxIm = 0;
     
     container.addEventListener('pointerdown', (e) => {
-        if (e.target !== canvas || e.button !== 0) return;
+      if (e.target !== canvas || e.button !== 0) return;
+      
+      // Interactive Julia bridging
+      if (e.shiftKey && !isJulia) {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        if (w <= 1 || h <= 1) return;
+        const re_factor = (maxRe - minRe) / (w - 1);
+        const im_factor = (maxIm - minIm) / (h - 1);
+        const clickRe = minRe + e.clientX * re_factor;
+        const clickIm = maxIm - e.clientY * im_factor;
         
-        // Interactive Julia bridging
-        if (e.shiftKey && !isJulia) {
-            const w = window.innerWidth;
-            const h = window.innerHeight;
-            if (w <= 1 || h <= 1) return;
-            const re_factor = (maxRe - minRe) / (w - 1);
-            const im_factor = (maxIm - minIm) / (h - 1);
-            const clickRe = minRe + e.clientX * re_factor;
-            const clickIm = maxIm - e.clientY * im_factor;
-            
-            triggerImpact(e.clientX, e.clientY, 9, 45);
-            isJulia = true;
-            juliaCRe = clickRe;
-            juliaCIm = clickIm;
-            minRe = -2.0; maxRe = 2.0;
-            minIm = -2.0; maxIm = 2.0;
-            max_iter = 100;
-            saveState();
-            requestRender();
-            showToast(`Julia Set Created (c = ${clickRe.toFixed(3)} + ${clickIm.toFixed(3)}i)`, 'purple', 2500);
-            return;
-        }
+        triggerImpact(e.clientX, e.clientY, 8, 40);
+        playSfx('julia');
+        isJulia = true;
+        juliaCRe = clickRe;
+        juliaCIm = clickIm;
+        minRe = -2.0; maxRe = 2.0;
+        minIm = -2.0; maxIm = 2.0;
+        max_iter = 100;
+        saveState();
+        requestRender();
+        showToast(`Julia Set Created (c = ${clickRe.toFixed(3)} + ${clickIm.toFixed(3)}i)`, 'purple', 2500);
+        return;
+      }
 
-        triggerImpact(e.clientX, e.clientY, 4, 18);
+      triggerImpact(e.clientX, e.clientY, 4, 18);
 
-        isDragging = true;
-        hasDragged = false;
-        dragStartX = e.clientX;
-        dragStartY = e.clientY;
-        startMinRe = minRe; startMaxRe = maxRe;
-        startMinIm = minIm; startMaxIm = maxIm;
-        try { container.setPointerCapture(e.pointerId); } catch(err) {}
+      isDragging = true;
+      hasDragged = false;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      startMinRe = minRe; startMaxRe = maxRe;
+      startMinIm = minIm; startMaxIm = maxIm;
+      try { container.setPointerCapture(e.pointerId); } catch(err) {}
     });
     
     container.addEventListener('pointermove', (e) => {
-        if (!isDragging) return;
-        const dx = e.clientX - dragStartX;
-        const dy = e.clientY - dragStartY;
-        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
-            hasDragged = true;
-        }
+      // Real-time cursor sonification
+      if (sonifyActive) {
+        sonifyAtClientCoord(e.clientX, e.clientY);
+      }
+
+      if (!isDragging) return;
+      const dx = e.clientX - dragStartX;
+      const dy = e.clientY - dragStartY;
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        hasDragged = true;
+      }
+      
+      if (hasDragged) {
+        const w = window.innerWidth;
+        const h = window.innerHeight;
+        if (w <= 1 || h <= 1) return;
+        const re_factor = (startMaxRe - startMinRe) / (w - 1);
+        const im_factor = (startMaxIm - startMinIm) / (h - 1);
         
-        if (hasDragged) {
-            const w = window.innerWidth;
-            const h = window.innerHeight;
-            if (w <= 1 || h <= 1) return;
-            const re_factor = (startMaxRe - startMinRe) / (w - 1);
-            const im_factor = (startMaxIm - startMinIm) / (h - 1);
-            
-            minRe = startMinRe - dx * re_factor;
-            maxRe = startMaxRe - dx * re_factor;
-            
-            minIm = startMinIm + dy * im_factor;
-            maxIm = startMaxIm + dy * im_factor;
-            
-            requestRender();
-        }
+        minRe = startMinRe - dx * re_factor;
+        maxRe = startMaxRe - dx * re_factor;
+        
+        minIm = startMinIm + dy * im_factor;
+        maxIm = startMaxIm + dy * im_factor;
+        
+        requestRender();
+      }
     });
     
     container.addEventListener('pointerup', (e) => {
-        if (!isDragging) return;
-        isDragging = false;
-        try { container.releasePointerCapture(e.pointerId); } catch(err) {}
-        if (!hasDragged) {
-            // Quick click without moving -> Zoom In
-            zoom(0.5, e.clientX, e.clientY);
-            showToast('Zoom In (2.0x)', 'info', 1500);
-        } else {
-            triggerScreenShake(2);
-            saveState();
-            hasDragged = false;
-        }
+      if (!isDragging) return;
+      isDragging = false;
+      try { container.releasePointerCapture(e.pointerId); } catch(err) {}
+      if (!hasDragged) {
+        zoom(0.5, e.clientX, e.clientY);
+        showToast('Zoom In (2.0x)', 'info', 1500);
+      } else {
+        triggerScreenShake(2);
+        saveState();
+        hasDragged = false;
+      }
     });
 
     container.addEventListener('pointercancel', (e) => {
-        if (isDragging) {
-            isDragging = false;
-            hasDragged = false;
-            try { container.releasePointerCapture(e.pointerId); } catch(err) {}
-        }
+      if (isDragging) {
+        isDragging = false;
+        hasDragged = false;
+        try { container.releasePointerCapture(e.pointerId); } catch(err) {}
+      }
     });
 
     saveState();
     requestRender();
 
-    // Startup Welcome Toast & First-Run Tutorial Onboarding
+    // Startup Welcome Toast & Onboarding
     setTimeout(() => {
-        const tutorialSeen = safeGetStorage('kmandel_tutorial_seen', false);
-        if (!tutorialSeen) {
-            const overlay = document.getElementById('help-overlay');
-            if (overlay) overlay.style.display = 'flex';
-        } else {
-            showToast('✨ Welcome to KMandel Pro! Press <b>F1</b> or <b>H</b> for Help &amp; Controls.', 'info', 5000);
-        }
+      const tutorialSeen = safeGetStorage('kmandel_tutorial_seen', false);
+      if (!tutorialSeen) {
+        const overlay = document.getElementById('help-overlay');
+        if (overlay) overlay.style.display = 'flex';
+      } else {
+        showToast('✨ KMandel Pro active! <b>Space</b> for Color Cycle, <b>M</b> for YM2612 FM Audio, <b>F1</b> for Help.', 'info', 4500);
+      }
     }, 450);
   </script>
 </body>

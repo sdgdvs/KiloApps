@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-tester
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: KSys
   kilo_graphics: KWizard
   kilo_qa: KGraph
-  kilo_expander: KMandel
+  kilo_expander: KType
   kilo_creator: "kweb://geocities (CyberSpire's Retro Shrine & MOD Vault)"
 virtual_web_target: "kweb://geocities"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KChart
-  timestamp: "2026-09-29T18:46:00Z"
+  agent: kilo-expander
+  app: KMandel
+  timestamp: "2026-09-29T18:56:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KContacts`, `KScript`, `KRead`, `KColosseum`, `KAbyss`, `KMedia`, `KAudio`, `KCosmic` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KMandel`
+- **Current Target**: `KType`
 - **Upcoming Queue**:
-  `KType`, `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts`, `KPass` *(Completed: KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia)*.
+  `KVault`, `KZip`, `KSys`, `KTask`, `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts`, `KPass` *(Completed: KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -245,6 +245,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T18:56:00Z — kilo-expander: KMandel (Feature Expansion: 8 Formulas, YM2612 FM Audio, Co-Op Beacon & Color Cycling)**
+  - Status: PASS ✅ (0 regressions, clean builds, security lint clean, <999KB verified).
+  - Formulas & Shading: Added Multibrot 3/4, Perp Ship formulas (8 total), continuous potential smooth shading & 60 FPS color cycling.
+  - Audio Engine: Sega Genesis YM2612 2-op FM synthesis & SNES SPC700 stereo delay DSP sonification + live cursor sonifier.
+  - Multiplayer Co-Op Beacon: Firebase RTDB integration (`multiplayer/kmandel/rooms/public`), presence tracking, beacon broadcast & peer jump.
+  - Data Interoperability: Custom Bookmarks bank with localStorage persistence, JSON export/import and coordinate URL share links.
+  - Win32 C Alignment: Implemented all 8 formulas, 9 themes, landmarks & color cycling in `main.c` (MSVC clean 27.1 KB).
+  - Verification: MSVC clean; Vite build clean in 243ms (`kmandel.html` 123.5 KB < 999 KB); security and icon lints 100% PASS.
+
 - **2026-09-29T18:46:00Z — kilo-qa: KChart (Pass 5 QA & Build Audit: State Persistence, Tutorial Integrity & Toast Guard)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
   - State Persistence: Hardened F5 quicksave / F9 quickload across Web & Win32 C (`kchart_quicksave.dat`); added selectedIndex and bounds checks.
@@ -276,12 +285,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Command Ergonomics: Added natural abort/exit synonyms across shop, intrusion, connected shell, and root prompt.
   - Audio Feedback: Added positive/negative audio tones for shop purchases, payload downloads, and contract handoffs.
   - Verification: Vite build clean (266ms); `kcyber.html` 91.6 KB (<999KB ceiling); check_icons & security lint 100% PASS.
-
-- **2026-09-29T04:15:00Z — kilo-creator: kweb://webring (88x31 Micro Button Studio, Topology Map, Traceroute & Dual FM Audio)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
-  - 88x31 Micro Button Studio: Added pixel art generator with 10 archetypes, 11 glyphs, 3D bevels, zoom, PNG download & 24-bit BMP generator.
-  - Ring Topology Map: Added 880x420 canvas visualizing 18 nodes with photon packets, 3 view modes (Ring, Star, Radar) & FM ping sounds.
-  - Diagnostics: Added 5-hop ICMP backbone traceroute simulator & 1999 baud rate transfer benchmark across dial-up to T1 leased lines.
-  - Webring Widgets & Passport: Added 8 official HTML widget styles, dynamic Web Voyager ranks & 5-category postal stamp collection book.
-  - Audio Architecture: Dual Sega Genesis YM2612 FM tracks ("Hyperlink Voyager '99", "Ringmaster's Cadence") with SNES SPC700 stereo delay.
-  - Verification: Vite build clean (278ms); `webring.html` 151.4 KB (<999KB ceiling); check_icons & security lint 100% PASS.
