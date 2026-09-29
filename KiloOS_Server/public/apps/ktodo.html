@@ -131,12 +131,12 @@
 
   /* Glass App Container */
   .app-container {
-    background: var(--bg-card);
+    background: rgba(22, 27, 38, 0.92);
     border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 16px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(6px);
     display: flex;
     flex-direction: column;
     flex: 1;
@@ -418,7 +418,10 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    transition: all 0.2s ease;
+    transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .task-card.newly-added {
     animation: fadeIn 0.25s ease-out;
   }
 
@@ -580,7 +583,7 @@
   /* Kanban Board View */
   .kanban-board {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(240px, 1fr));
     gap: 12px;
     flex: 1;
     min-height: 200px;
@@ -646,6 +649,12 @@
     border-color: var(--accent-blue);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .kanban-card.selected {
+    border-color: var(--accent-blue);
+    background: rgba(59, 130, 246, 0.15);
+    box-shadow: 0 0 0 1px var(--accent-blue), 0 4px 14px rgba(59, 130, 246, 0.25);
   }
 
   .kanban-card-title {
@@ -819,28 +828,29 @@
     border-radius: 6px !important;
   }
 
-  /* Toast Notification */
+  /* Toast Notification (Anchored to bottom-right to eliminate modal and header occlusion) */
   .toast {
     position: fixed;
-    top: 16px;
-    right: 16px;
+    bottom: 20px;
+    right: 20px;
+    transform: translateY(20px);
     background: #1a2234;
     border: 1px solid var(--accent-blue);
     color: #fff;
-    padding: 8px 14px;
+    padding: 8px 16px;
     border-radius: 8px;
     box-shadow: 0 8px 24px rgba(0,0,0,0.6);
     font-size: 13px;
     font-weight: 600;
-    transform: translateY(-40px);
     opacity: 0;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    z-index: 200;
+    z-index: 250;
     display: flex;
     align-items: center;
     gap: 12px;
     pointer-events: none;
     cursor: pointer;
+    max-width: calc(100vw - 40px);
   }
 
   .toast.show {
@@ -1004,12 +1014,55 @@
     box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
   }
 
-  /* Batch Actions Bar */
-  .batch-bar {
+  /* Usability Status & Shortcut Bar */
+  .app-status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 12px;
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 11px;
+    color: var(--text-secondary);
+    gap: 8px;
+    flex-wrap: wrap;
+    user-select: none;
+    margin-top: 4px;
+  }
+
+  .status-hints {
     display: flex;
     gap: 6px;
     align-items: center;
     flex-wrap: wrap;
+  }
+
+  .hint-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .hint-pill kbd {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    padding: 1px 4px;
+    font-family: monospace;
+    font-size: 10px;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  .status-summary {
+    font-family: monospace;
+    font-size: 11px;
+    color: #94a3b8;
   }
 </style>
 </head>
@@ -1019,6 +1072,7 @@
   <header class="header">
     <div class="header-title">
       <h1>KTodo</h1>
+      <span style="font-size: 11px; color: var(--text-secondary); margin-left: 6px; font-weight: 500;">[Press <kbd style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 3px; padding: 1px 4px; font-family: monospace; color: #fff;">F1</kbd> for Help]</span>
     </div>
     <div class="header-actions">
       <button class="btn btn-collab" id="btnLiveCollab" onclick="openCollabModal()" title="Live Team Collaboration via Firebase RTDB [O]">
@@ -1192,6 +1246,22 @@
       <!-- Kanban Columns rendered dynamically -->
     </section>
 
+    <!-- Usability Status & Quick Shortcuts Bar -->
+    <footer class="app-status-bar" id="appStatusBar">
+      <div class="status-hints">
+        <span class="hint-pill"><kbd>F1</kbd> Help</span>
+        <span class="hint-pill"><kbd>N</kbd> New</span>
+        <span class="hint-pill"><kbd>/</kbd> Search</span>
+        <span class="hint-pill"><kbd>Space</kbd> Done</span>
+        <span class="hint-pill"><kbd>1</kbd>/<kbd>2</kbd> View</span>
+        <span class="hint-pill"><kbd>F5</kbd> Save</span>
+        <span class="hint-pill"><kbd>F9</kbd> Load</span>
+      </div>
+      <div class="status-summary" id="statusSummaryText">
+        KTodo 1999 • Sovereign &amp; Offline-First
+      </div>
+    </footer>
+
   </main>
 
   <!-- Import / Export Modal -->
@@ -1282,7 +1352,10 @@
             <li>• <strong>Data Interoperability:</strong> Import and export Markdown checklists, CSV spreadsheets, JSON backups, Todo.txt, and iCalendar (.ics).</li>
           </ul>
         </div>
-        <button class="btn btn-primary" style="justify-content: center; margin-top: 4px;" onclick="closeHelpModal()">Got it</button>
+        <div style="display: flex; gap: 8px; justify-content: flex-end; margin-top: 6px; flex-wrap: wrap;">
+          <button class="btn" onclick="closeHelpModal(); openTutorialModal();" title="Relaunch onboarding tutorial guide">✨ View Tour Guide</button>
+          <button class="btn btn-primary" style="justify-content: center;" onclick="closeHelpModal()">Got it</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1349,12 +1422,12 @@
         <div style="display: flex; flex-direction: column; gap: 8px;">
           <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">Room Code / Channel:</label>
           <div style="display: flex; gap: 8px;">
-            <input type="text" id="collabRoomInput" placeholder="e.g. team-1999" value="team-1999" style="flex: 1; font-family: monospace; font-weight: bold;">
+            <input type="text" id="collabRoomInput" placeholder="e.g. team-1999" value="team-1999" style="flex: 1; font-family: monospace; font-weight: bold;" onkeydown="if(event.key==='Enter') joinCollabRoom();">
             <button class="btn" onclick="generateRandomRoom()">🎲 Random</button>
           </div>
 
           <label style="font-size: 12px; font-weight: 600; color: var(--text-secondary);">Your Display Nickname:</label>
-          <input type="text" id="collabNickInput" placeholder="e.g. Architect_99" style="font-family: monospace;">
+          <input type="text" id="collabNickInput" placeholder="e.g. Architect_99" style="font-family: monospace;" onkeydown="if(event.key==='Enter') joinCollabRoom();">
         </div>
 
         <div style="display: flex; gap: 8px; margin-top: 4px;">
@@ -1415,7 +1488,7 @@
   </div>
 
   <script>
-    window.resizeTo(800, 600);
+    window.resizeTo(960, 720);
     
     let tasks = [];
     let currentFilter = 'all';
@@ -1516,6 +1589,14 @@
         clearTimeout(syncDebounceTimer);
         syncDebounceTimer = null;
       }
+      if (typeof collabUnsubscribe === 'function') {
+        try { collabUnsubscribe(); } catch (e) {}
+        collabUnsubscribe = null;
+      }
+      if (typeof presenceUnsubscribe === 'function') {
+        try { presenceUnsubscribe(); } catch (e) {}
+        presenceUnsubscribe = null;
+      }
     }
 
     function normalizeTasksArray(arr) {
@@ -1610,10 +1691,15 @@
     // Full Workspace Snapshot & Quicksave / Quickload
     function getFullStateSnapshot() {
       const sortEl = document.getElementById('sortBy');
+      const searchEl = document.getElementById('searchInput');
       return {
         version: 2,
         timestamp: new Date().toISOString(),
         tasks: tasks,
+        workspaces: workspaces,
+        currentWorkspaceId: currentWorkspaceId,
+        activeTag: activeTag,
+        searchQuery: searchEl ? searchEl.value : '',
         currentViewMode: currentViewMode,
         activeCategory: activeCategory,
         currentFilter: currentFilter,
@@ -1628,6 +1714,17 @@
     function restoreFullStateSnapshot(state) {
       if (!state || typeof state !== 'object') return false;
       try {
+        if (!workspaces) {
+          workspaces = loadWorkspaces();
+        }
+        if (state.workspaces && typeof state.workspaces === 'object') {
+          workspaces = state.workspaces;
+          saveWorkspaces();
+        }
+        if (state.currentWorkspaceId && workspaces && workspaces[state.currentWorkspaceId]) {
+          currentWorkspaceId = state.currentWorkspaceId;
+          safeStorageSet('ktodo_active_ws', currentWorkspaceId);
+        }
         if (Array.isArray(state.tasks)) {
           tasks = state.tasks.filter(t => t && typeof t === 'object').map(t => ({
             id: t.id || getUniqueId(),
@@ -1636,6 +1733,7 @@
             priority: typeof t.priority === 'string' ? t.priority : 'Medium',
             dueDate: typeof t.dueDate === 'string' ? t.dueDate : '',
             completed: !!t.completed,
+            completedAt: t.completedAt || (t.completed ? new Date().toISOString() : undefined),
             subtasks: Array.isArray(t.subtasks) ? t.subtasks.filter(s => s && typeof s === 'object').map(s => ({
               id: s.id || getUniqueId(),
               text: typeof s.text === 'string' ? s.text : '',
@@ -1643,6 +1741,15 @@
             })) : [],
             createdAt: t.createdAt || new Date().toISOString()
           }));
+        }
+        if (typeof state.activeTag !== 'undefined') {
+          activeTag = state.activeTag;
+        }
+        if (typeof state.searchQuery === 'string') {
+          const sInput = document.getElementById('searchInput');
+          if (sInput) sInput.value = state.searchQuery;
+          const clearBtn = document.getElementById('searchClearBtn');
+          if (clearBtn) clearBtn.style.display = state.searchQuery ? 'block' : 'none';
         }
         if (state.currentViewMode && (state.currentViewMode === 'list' || state.currentViewMode === 'kanban')) {
           setViewMode(state.currentViewMode);
@@ -1677,7 +1784,12 @@
         if (state.selectedTaskId) {
           selectedTaskId = state.selectedTaskId;
         }
+        if (workspaces && workspaces[currentWorkspaceId]) {
+          workspaces[currentWorkspaceId].tasks = tasks;
+          saveWorkspaces();
+        }
         saveTasks(false);
+        renderWorkspaceSelect();
         renderAppView();
         return true;
       } catch (err) {
@@ -2293,6 +2405,7 @@
     function openTutorialModal() {
       closeIOModal();
       closeHelpModal();
+      closeCollabModal();
       const m = document.getElementById('tutorialModal');
       if (m) {
         m.classList.add('active');
@@ -2350,7 +2463,12 @@
       const val = document.getElementById('searchInput').value;
       const clearBtn = document.getElementById('searchClearBtn');
       if (clearBtn) clearBtn.style.display = val ? 'block' : 'none';
-      renderAppView();
+      const filtered = getFilteredTasks();
+      if (currentViewMode === 'list') {
+        renderListView(filtered);
+      } else {
+        renderKanbanView(filtered);
+      }
     }
 
     function clearSearch() {
@@ -2615,6 +2733,12 @@
       const percent = total === 0 ? 0 : Math.round((completed / total) * 100);
       document.getElementById('statProgressBar').style.width = percent + '%';
       document.getElementById('statProgressText').textContent = `${percent}% Done`;
+
+      const summaryEl = document.getElementById('statusSummaryText');
+      if (summaryEl) {
+        const curWs = (workspaces && workspaces[currentWorkspaceId]) ? workspaces[currentWorkspaceId].name : 'Default';
+        summaryEl.textContent = `Tasks: ${total} | Done: ${completed} (${percent}%) | Workspace: ${curWs}`;
+      }
     }
 
     function getFilteredTasks() {
@@ -2844,10 +2968,15 @@
         cardsContainer.className = 'kanban-cards';
 
         col.tasks.forEach(task => {
+          const isSelected = selectedTaskId === task.id;
           const card = document.createElement('div');
-          card.className = `kanban-card ${task.completed ? 'completed' : ''}`;
+          card.className = `kanban-card ${task.completed ? 'completed' : ''} ${isSelected ? 'selected' : ''}`;
           card.onclick = () => {
             selectedTaskId = task.id;
+            document.querySelectorAll('.kanban-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+          };
+          card.ondblclick = () => {
             toggleTask(task.id);
           };
 
@@ -2877,12 +3006,14 @@
     function openIOModal() {
       closeHelpModal();
       closeTutorialModal();
+      closeCollabModal();
       document.getElementById('ioModal').classList.add('active');
     }
     function closeIOModal() { document.getElementById('ioModal').classList.remove('active'); }
     function openHelpModal() {
       closeIOModal();
       closeTutorialModal();
+      closeCollabModal();
       document.getElementById('helpModal').classList.add('active');
     }
     function closeHelpModal() { document.getElementById('helpModal').classList.remove('active'); }
@@ -3266,6 +3397,13 @@
       cleanupResources();
     });
 
+    // Auto-dismiss toast when any input or select receives focus
+    document.addEventListener('focusin', (e) => {
+      if (e.target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) {
+        hideToast();
+      }
+    });
+
     // Keyboard Shortcuts & Modal Handling
     document.addEventListener('keydown', (e) => {
       // 1. Modal Dialog Navigation & Escape/Enter Handling
@@ -3391,21 +3529,25 @@
             let nextIdx = (curIdx + 1) % wsKeys.length;
             switchWorkspace(wsKeys[nextIdx]);
           }
-        } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-          if (currentViewMode === 'list') {
-            const filtered = getFilteredTasks();
-            if (filtered.length > 0) {
-              e.preventDefault();
-              let curIdx = filtered.findIndex(t => t.id === selectedTaskId);
-              if (curIdx < 0) curIdx = 0;
-              if (e.key === 'ArrowDown') {
-                curIdx = (curIdx + 1) % filtered.length;
-              } else {
-                curIdx = (curIdx - 1 + filtered.length) % filtered.length;
-              }
-              selectedTaskId = filtered[curIdx].id;
+        } else if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          const filtered = getFilteredTasks();
+          if (filtered.length > 0) {
+            e.preventDefault();
+            let curIdx = filtered.findIndex(t => t.id === selectedTaskId);
+            if (curIdx < 0) curIdx = 0;
+            if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
+              curIdx = (curIdx + 1) % filtered.length;
+            } else {
+              curIdx = (curIdx - 1 + filtered.length) % filtered.length;
+            }
+            selectedTaskId = filtered[curIdx].id;
+            if (currentViewMode === 'list') {
               renderListView(filtered);
               const card = document.querySelector('.task-card.selected');
+              if (card && card.scrollIntoViewIfNeeded) card.scrollIntoViewIfNeeded(false);
+            } else {
+              renderKanbanView(filtered);
+              const card = document.querySelector('.kanban-card.selected');
               if (card && card.scrollIntoViewIfNeeded) card.scrollIntoViewIfNeeded(false);
             }
           }
@@ -3417,7 +3559,11 @@
           deleteTask(selectedTaskId);
         } else if (e.key === 'Enter' && selectedTaskId) {
           e.preventDefault();
-          toggleSubtaskExpand(selectedTaskId);
+          if (currentViewMode === 'list') {
+            toggleSubtaskExpand(selectedTaskId);
+          } else {
+            toggleTask(selectedTaskId);
+          }
         }
       }
     });

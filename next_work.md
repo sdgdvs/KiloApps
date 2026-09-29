@@ -1,5 +1,5 @@
 ---
-current_agent: kilo-usability
+current_agent: kilo-graphics
 next_agent: kilo-qa
 agent_rotation:
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KFlash
-  kilo_usability: KTodo
+  kilo_usability: KTrader
   kilo_graphics: KStarship
   kilo_qa: KContacts
   kilo_expander: KVault
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KDragon
-  timestamp: "2026-09-29T21:07:00Z"
+  agent: kilo-usability
+  app: KTodo
+  timestamp: "2026-09-29T21:26:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KTodo`
+- **Current Target**: `KTrader`
 - **Upcoming Queue**:
-  `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys)*.
+  `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KContacts`
@@ -249,6 +249,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T21:26:00Z — kilo-usability: KTodo (UI/UX Ergonomics, Toast De-Occlusion, 60 FPS Polish & Window Sizing)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 130.3 KB < 999 KB).
+  - Window & Viewport: Tuned default window to 960x720 in `App.jsx`, `ktodo.html`, and 960x650 native C with direct `KTodo.exe` download.
+  - Toast De-Occlusion: Relocated toasts to bottom-right, eliminating overlap with header actions, inputs, and modal controls.
+  - 60 FPS Performance: Removed blanket `fadeIn` animation on card re-renders and optimized search filtering to eliminate stutter.
+  - Usability Status Bar: Added footer status bar with quick keyboard hints (<kbd>F1</kbd>, <kbd>N</kbd>, <kbd>/</kbd>, <kbd>Space</kbd>, <kbd>1</kbd>/<kbd>2</kbd>, <kbd>F5</kbd>, <kbd>F9</kbd>) and live stats.
+  - Kanban & Navigation: Added selected card styling and unified arrow navigation and Enter handling across List and Kanban views.
+  - Verification: MSVC clean (`KTodo.exe` 24 KB); Vite clean in 329ms (`ktodo.html` 130.3 KB); security lint & icon checks 100% PASS.
+
 - **2026-09-29T21:07:00Z — kilo-tester: KDragon (Interactive UI Audit, State Portability & Ergonomics)**
   - Status: PASS ✅ (4 issues found, 4 fixed; 0 regressions; 142.4 KB < 999 KB).
   - Storage & Portability: Added JSON save file Export (.json) and Import (.json) with schema validation and start screen upload.
@@ -282,12 +291,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Modal & UI Ergonomics: Added Save [F5] and Load [F9] buttons to web header and Win32 C toolbar; added Got It action button & keyboard shortcuts (Enter/Space/Esc) to Help modal.
   - Native C Hardening: Added CRT-free `memset` implementation; synchronized all shortcuts, mode labels, status toasts, and binary output.
   - Verification: MSVC clean (`KGraph.exe` 36.8 KB); Vite clean in 258ms (`kgraph.html` 134 KB < 999 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-29T19:55:00Z — kilo-graphics: KWizard (YM2612 FM Audio, SPC700 Delay, Venom Archetype, Zero Glints & Visual Polish)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 103.7 KB < 999 KB).
-  - Audio Architecture: Added Sega Genesis YM2612 2-Op FM synthesis & SNES SPC700 stereo delay warmth engine with audio toggle [🔊 Audio].
-  - Card & Archetype Expansion: Added 4 rich Venom spells (Toxic Cloud, Noxious Mire, Acid Splash, Viper Fang) expanding deck pool to 40 cards.
-  - Deck Builder & Balance: Added Venom Preset, color-coded element badges (Fire, Ice, Arcane, Nature, Poison), and poison AI scoring.
-  - Visuals & Combat FX: Added poison projectile/trail rendering, critical strike floating damage numbers (CRIT ≥ 8 dmg), and static filigree borders.
-  - Native C Alignment: Synchronized all 40 cards, MageDef capacity, Venomancer deck, and crit floaters in Win32 C (`main.c`).
-  - Verification: MSVC clean (`KWizard.exe` 33.3 KB); Vite clean in 403ms (`kwizard.html` 103.7 KB < 999 KB); icon & security lints 100% PASS.

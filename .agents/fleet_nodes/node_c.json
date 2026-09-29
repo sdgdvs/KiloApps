@@ -14,9 +14,9 @@
   ],
   "session_start": "2026-09-29T18:14:37.0112595Z",
   "session_end": "2026-09-30T18:14:37.0112595Z",
-  "turns_executed": 10,
+  "turns_executed": 11,
   "last_turn_timestamp": "2026-09-29T18:07:21Z",
-  "last_heartbeat": "2026-09-29T20:48:20.783230+00:00",
-  "current_target": "kweb://users/~neon_rider (Personal Hacker / Demoscene Homepage)",
+  "last_heartbeat": "2026-09-29T21:08:27.382541+00:00",
+  "current_target": "KDragon",
   "remote_command": "none"
 }

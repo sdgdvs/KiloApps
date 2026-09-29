@@ -1268,7 +1268,7 @@ void __stdcall MainEntry() {
 
     RegisterClassA(&wc);
     
-    RECT r = {0, 0, 800, 600};
+    RECT r = {0, 0, 960, 650};
     AdjustWindowRect(&r, WS_OVERLAPPEDWINDOW, FALSE);
     HWND hwnd = CreateWindowExA(0, "KTodoClass", "KTodo - Smart Task & Productivity Manager [F1: Help | Space: Done | N: New | Del: Remove]", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, r.right - r.left, r.bottom - r.top, NULL, NULL, wc.hInstance, NULL);
 

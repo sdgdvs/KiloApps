@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T19:55:00Z — kilo-graphics: KWizard (YM2612 FM Audio, SPC700 Delay, Venom Archetype, Zero Glints & Visual Polish)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 103.7 KB < 999 KB).
+  - Audio Architecture: Added Sega Genesis YM2612 2-Op FM synthesis & SNES SPC700 stereo delay warmth engine with audio toggle [🔊 Audio].
+  - Card & Archetype Expansion: Added 4 rich Venom spells (Toxic Cloud, Noxious Mire, Acid Splash, Viper Fang) expanding deck pool to 40 cards.
+  - Deck Builder & Balance: Added Venom Preset, color-coded element badges (Fire, Ice, Arcane, Nature, Poison), and poison AI scoring.
+  - Visuals & Combat FX: Added poison projectile/trail rendering, critical strike floating damage numbers (CRIT ≥ 8 dmg), and static filigree borders.
+  - Native C Alignment: Synchronized all 40 cards, MageDef capacity, Venomancer deck, and crit floaters in Win32 C (`main.c`).
+  - Verification: MSVC clean (`KWizard.exe` 33.3 KB); Vite clean in 403ms (`kwizard.html` 103.7 KB < 999 KB); icon & security lints 100% PASS.
+
 - **2026-09-29T18:56:00Z — kilo-expander: KMandel (Feature Expansion: 8 Formulas, YM2612 FM Audio, Co-Op Beacon & Color Cycling)**
   - Status: PASS ✅ (0 regressions, clean builds, security lint clean, <999KB verified).
   - Formulas & Shading: Added Multibrot 3/4, Perp Ship formulas (8 total), continuous potential smooth shading & 60 FPS color cycling.
