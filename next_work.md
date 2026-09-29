@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KDragon
-  kilo_usability: KSys
+  kilo_usability: KTodo
   kilo_graphics: KWizard
   kilo_qa: KGraph
   kilo_expander: KType
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KDB
-  timestamp: "2026-09-29T19:25:00Z"
+  agent: kilo-usability
+  app: KSys
+  timestamp: "2026-09-29T19:44:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KSys`
+- **Current Target**: `KTodo`
 - **Upcoming Queue**:
-  `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio)*.
+  `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KGraph`
@@ -249,6 +249,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T19:44:00Z — kilo-usability: KSys (Toast Occlusion Guard, Modal Viewport Clipping & Responsive Layout)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security & icon lints clean, 139.7 KB < 999 KB).
+  - Toast & Action Ergonomics: Repositioned toast container to bottom-center with safe bounds, eliminating occlusion of export download actions.
+  - Modal Viewport Guard: Bounded modal overlay and dialogs against vertical clipping with dynamic scroll limits across smaller viewports.
+  - Ribbon & Navigation: Modernized quick-action bar to sleek non-wrapping ribbon; added focus management on service modal close.
+  - Responsive Layout & Sparklines: Added mobile/compact media query breakpoints; wired resize listener for immediate canvas redraw.
+  - Verification: MSVC clean (`KSys.exe` 30.2 KB); Vite clean in 270ms (`ksys.html` 139.7 KB < 999 KB); icon & security lints 100% PASS.
+
 - **2026-09-29T19:25:00Z — kilo-tester: KDB (Interactive UI Audit, Quicksave State, Modal Enter & Toast Guard)**
   - Status: PASS ✅ (6 UI/shortcut issues fixed, 0 regressions, clean builds, security & icon lints clean, 99.7 KB < 999 KB).
   - State Persistence: Implemented F5 quicksave and F9 quickload capturing complete multi-table database state; added first-run tutorial flag.
@@ -281,11 +289,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast & Modal Usability: Centered toasts bottom-screen to prevent control occlusion; added Got It action button & focus guard to help modal.
   - Audio & Interval Safety: Sealed sonification playhead lifecycle (`stopSonification`); guaranteed zero leaking timers on data mutations.
   - Verification: MSVC clean (`KChart.exe` 36.8 KB); Vite clean in 278ms (`kchart.html` 118.7 KB < 999 KB); icon & security lints 100% PASS.
-
-- **2026-09-29T18:30:00Z — kilo-graphics: KMystery (Visual Polish, Casino Dot Removal, Audio Architecture & Dialogue Expansion)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
-  - Perimeter Dot Removal: Removed rotating ball and spinning spokes from Casino roulette wheel; replaced with static Art Deco mahogany table, numbered pockets, chip stacks & cards.
-  - Scene Atmosphere: Polished Office (case files, magnifying glass), Manor (stone hearth glow), Docks (mooring bollards, rope), and Train Station (iron trusses, luggage trunk, firebox glow).
-  - Procedural Audio: Added FM scanner calibration tones, victory/defeat stings, and lie-caught dramatic chords in Web and native C.
-  - Content & Balance: Added character-specific interrogation dialogues across all 5 suspects; balanced investigation hours to 16h/14h/12h.
-  - Verification: MSVC clean (`KMystery.exe` 39.9 KB); Vite clean in 415ms (`kmystery.html` 145.3 KB < 999 KB); check_icons & security lint 100% PASS.

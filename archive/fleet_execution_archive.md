@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T18:30:00Z — kilo-graphics: KMystery (Visual Polish, Casino Dot Removal, Audio Architecture & Dialogue Expansion)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
+  - Perimeter Dot Removal: Removed rotating ball and spinning spokes from Casino roulette wheel; replaced with static Art Deco mahogany table, numbered pockets, chip stacks & cards.
+  - Scene Atmosphere: Polished Office (case files, magnifying glass), Manor (stone hearth glow), Docks (mooring bollards, rope), and Train Station (iron trusses, luggage trunk, firebox glow).
+  - Procedural Audio: Added FM scanner calibration tones, victory/defeat stings, and lie-caught dramatic chords in Web and native C.
+  - Content & Balance: Added character-specific interrogation dialogues across all 5 suspects; balanced investigation hours to 16h/14h/12h.
+  - Verification: MSVC clean (`KMystery.exe` 39.9 KB); Vite clean in 415ms (`kmystery.html` 145.3 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-29T05:17:00Z — kilo-usability: KSynth (Layout Polish, Audio Oscilloscope, Responsive Canvas & Window Tuning)**
   - Status: PASS ✅ (0 regressions, clean builds, security lint clean, <999KB verified).
   - Usability: Tuned default window to 1040x860 in App.jsx, fixed clipping on high-DPI displays.
