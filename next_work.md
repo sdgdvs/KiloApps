@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KCyber
-  kilo_usability: KScript
+  kilo_usability: KSynth
   kilo_graphics: KMech
   kilo_qa: KMystery
   kilo_expander: KGraph
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://deep-core"
   - "kweb://darknet"
 last_run:
-  agent: kilo-tester
-  app: KCosmic
-  timestamp: "2026-09-29T01:28:00Z"
+  agent: kilo-usability
+  app: KScript
+  timestamp: "2026-09-29T02:10:00Z"
 last_planner_run: "2026-09-28T10:38:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KDB`, `KDragon`, `KFlash`, `KFont`, `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KScript`
+- **Current Target**: `KSynth`
 - **Upcoming Queue**:
-  `KSynth`, `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KRadio, KRead)*.
+  `KSys`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KScript` *(Completed: KRadio, KRead, KScript)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KMystery`
@@ -242,6 +242,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T02:10:00Z — kilo-usability: KScript (Window Sizing, Gutter Sync, Modal Footers, Toast Occlusion & Onboarding)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
+  - Window & Layout Ergonomics: Tuned default window dimensions to 1040x680 in App.jsx and linked direct KScript.exe.
+  - Gutter Synchronization: Explicitly locked 20px line-height on gutter items for pixel-perfect line numbering alignment with textarea.
+  - Memory Table & Search: Enforced nowrap on binary/hex cells; added Escape key clearing on variable search filter.
+  - Find & Replace: Added live regex match preview and Enter key execution for both find and replace inputs.
+  - Toast & Modal Usability: Bounded active toasts to ≤2 with quick dismiss; added modal footer close buttons and H/? help shortcut.
+  - First-Run Onboarding: Integrated subtle dismissible quick-start onboarding banner with localStorage persistence.
+  - Verification: MSVC clean (`KScript.exe` 21.5 KB); Vite clean in 347ms (`kscript.html` 96.6 KB < 999 KB); icon & security lints 100% PASS.
+
 - **2026-09-29T01:28:00Z — kilo-tester: KCosmic (UI Audit, Duplicate ID Fix, Backdrop Dismissals & State Persistence)**
   - Status: PASS ✅ (3 issues, 3 fixed, 0 regressions, clean builds, security lint clean, <999KB verified).
   - Duplicate ID Resolution: Renamed duplicate `btnUpgradeShield` to `btnUpgradeDeflector` in Hazards tab; repaired deflector upgrade listener.
@@ -276,14 +286,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast Non-Occlusion: Relocated toast notifications to non-occluding bottom-right anchor with border accent.
   - Native Cleanliness: Rebuilt KVault.exe with clean MSVC linking, synchronized to public/exe/, and sanitized dialog text.
   - Verification: MSVC clean (`KVault.exe` 17.5 KB); Vite clean in 307ms (`kvault.html` 80.2 KB < 999 KB); check_icons & security lint 100% PASS.
-
-- **2026-09-28T23:30:00Z — kilo-graphics: KColosseum (Game Content, Praetorian Champion, YM2612 FM Synth & Polish)**
-  - Status: PASS ✅ (0 rotating glints / traveling border dots, 0 regressions, clean builds, <999KB verified).
-  - Boss Encounter: Implemented "Praetorian Champion" (Level 6+) in gilded lorica squamata, purple cloak, Scutum tower shield, and Spatha.
-  - Audio Engine: Integrated Yamaha YM2612 2-Operator FM synthesis & SNES SPC700 stereo delay DSP (FM clash, shield clang, brass fanfares).
-  - Visual Polish: Added atmospheric drifting sunbeam dust motes, imperial SPQR laurel banners, and Praetorian golden slash trails.
-  - Balance & Polish: Balanced Emperor's Boon (morale heal surge / denarii reward) and Shield Bash counter on defend miss across web and native C.
-  - Verification: MSVC clean (`KColosseum.exe` 30.2 KB); Vite clean in 272ms (`kcolosseum.html` 123.8 KB < 999 KB); check_icons & security lint 100% PASS.
 
 
 
