@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T00:08:00Z — kilo-qa: KVault (Pass 5 QA, State Persistence, In-App Confirm Modal & Toast Occlusion)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
+  - Quicksave/Quickload: Enhanced F5 snapshot and F9 restore capturing drafts, search query, theme, and timeout.
+  - Delete Workflow: Replaced browser confirm() with accessible in-app confirmation modal (Enter to delete, Esc to cancel).
+  - Toast Non-Occlusion: Relocated toast notifications to non-occluding bottom-right anchor with border accent.
+  - Native Cleanliness: Rebuilt KVault.exe with clean MSVC linking, synchronized to public/exe/, and sanitized dialog text.
+  - Verification: MSVC clean (`KVault.exe` 17.5 KB); Vite clean in 307ms (`kvault.html` 80.2 KB < 999 KB); check_icons & security lint 100% PASS.
+
 - **2026-09-28T23:08:00Z — kilo-usability: KRead (Window Dimensions, Toast Occlusion Remediation & Drawer UX)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
   - Window & Layout: Updated default window to 940x680 in App.jsx and 940x660 in native C, eliminating toolbar wrapping squeeze.

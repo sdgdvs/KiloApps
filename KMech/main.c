@@ -32,7 +32,7 @@ typedef struct {
     int heat;
 } MechStats;
 
-#define NUM_WEAPONS 5
+#define NUM_WEAPONS 7
 #define NUM_ARMORS 4
 #define NUM_SINKS 4
 #define NUM_SPECIALS 5
@@ -69,11 +69,13 @@ typedef struct {
 } Special;
 
 Weapon weapons[NUM_WEAPONS] = {
-    {"Pulse Laser", 16, 25, 0},
-    {"Heavy Gauss Cannon", 28, 45, 150},
-    {"Twin Autocannons", 22, 35, 220},
-    {"Plasma Mortar", 35, 55, 340},
-    {"EMP Arc Disruptor", 18, 30, 420}
+    {"Pulse Laser", 16, 22, 0},
+    {"Heavy Gauss Cannon", 28, 46, 150},
+    {"Twin Autocannons", 22, 34, 220},
+    {"Plasma Mortar", 36, 58, 340},
+    {"EMP Arc Disruptor", 20, 26, 420},
+    {"Particle Beam Lance", 42, 64, 520},
+    {"Swarm Missiles", 34, 42, 610}
 };
 
 Armor armors[NUM_ARMORS] = {
@@ -107,13 +109,14 @@ typedef struct {
     const char* mechClass;
 } EnemyTier;
 
-#define NUM_ENEMY_TIERS 5
+#define NUM_ENEMY_TIERS 6
 EnemyTier enemyTiers[NUM_ENEMY_TIERS] = {
-    {"Scout Raider", 70, 11, 2, 80, "Light Biped"},
-    {"Assault Goliath", 100, 15, 5, 100, "Medium Quad"},
-    {"Stealth Interceptor", 85, 18, 4, 90, "Light Striker"},
-    {"Siege Titan", 135, 22, 8, 120, "Heavy Bastion"},
-    {"Apex Overlord", 175, 26, 11, 150, "Prototype Dreadnought"}
+    {"Scout Raider", 75, 12, 3, 100, "Light Biped"},
+    {"Assault Goliath", 105, 16, 5, 120, "Medium Quad"},
+    {"Stealth Interceptor", 135, 21, 7, 135, "Light Striker"},
+    {"Siege Titan", 165, 25, 9, 150, "Heavy Bastion"},
+    {"Dreadnought Behemoth", 200, 29, 11, 160, "Command Heavy"},
+    {"Apex Overlord", 240, 34, 14, 180, "Prototype Dreadnought"}
 };
 
 int equipWpn = 0;
@@ -592,12 +595,21 @@ void ActionAttack() {
         Beep(300, 100);
     } else {
         int effectiveDef = enemyIsDefending ? (enemyStats.def * 2) : enemyStats.def;
+        if (equipWpn == 5) {
+            effectiveDef /= 2; // Particle Beam Lance pierces 50% defense
+        }
         int baseDmg = (playerStats.atk - effectiveDef) + (my_rand() % 5);
         if (baseDmg < 1) baseDmg = 1;
         if (specials[equipSpec].overdriveMult > 0.0f) {
             baseDmg = (int)(baseDmg * (1.0f + specials[equipSpec].overdriveMult));
         }
         int dmg = (int)(baseDmg * limbDmgMult[target]);
+        if (equipWpn == 6) { // Swarm Missiles collateral splash
+            int splash = (dmg * 35) / 100;
+            if (splash < 4) splash = 4;
+            dmg += splash;
+            addLog("Swarm cluster detonated with collateral splash!");
+        }
         enemyStats.hp -= dmg;
         animEnemyDmg = 10;
         SpawnExplosion(440.0f, 145.0f, 20, true);
@@ -611,6 +623,8 @@ void ActionAttack() {
             enemyStats.heat += 20;
             if (enemyStats.heat > enemyStats.maxHeat) enemyStats.heat = enemyStats.maxHeat;
             addLog("EMP arc overloaded enemy capacitors (+20 heat)!");
+        } else if (equipWpn == 5) {
+            addLog("Particle lance pierced directly through armor plating!");
         }
 
         // Subsystem critical effects
@@ -677,8 +691,12 @@ void ActionAttack() {
 
 void ActionDefend() {
     isDefending = true;
+    int extraVent = (playerCooling * 3) / 4;
+    playerStats.heat -= extraVent;
+    if (playerStats.heat < 0) playerStats.heat = 0;
+
     if (specials[equipSpec].nanodroneHeal > 0) {
-        int heal = specials[equipSpec].nanodroneHeal;
+        int heal = specials[equipSpec].nanodroneHeal + (playerLevel - 1) * 2;
         if (playerStats.hp + heal > playerStats.maxHp) heal = playerStats.maxHp - playerStats.hp;
         if (heal > 0) {
             playerStats.hp += heal;
@@ -687,7 +705,9 @@ void ActionDefend() {
             addLog(nbuf);
         }
     }
-    addLog("You brace behind reinforced bulwark (Defending).");
+    char defBuf[64];
+    wsprintfA(defBuf, "Bracing bulwark: -%d extra heat vented.", extraVent);
+    addLog(defBuf);
     AddShockwave(150.0f, 145.0f, 40.0f, RGB(0, 255, 255), 3.0f);
     EnemyTurn();
     isDefending = false;
@@ -967,7 +987,7 @@ void DrawPlayerMechGDI(HDC hdc, int cx, int cy, float scale, bool isDead) {
         SelectObject(hdc, oP);
         DeleteObject(pMorBrush);
         DeleteObject(pMorPen);
-    } else { // EMP Arc Disruptor: Twin prong cathode
+    } else if (equipWpn == 4) { // EMP Arc Disruptor: Twin prong cathode
         HPEN arcPen = CreatePen(PS_SOLID, 2, RGB(180, 80, 255));
         HGDIOBJ oWP = SelectObject(hdc, arcPen);
         MoveToEx(hdc, cx + (int)(26 * scale), cy + (int)(7 * scale), NULL);
@@ -977,6 +997,30 @@ void DrawPlayerMechGDI(HDC hdc, int cx, int cy, float scale, bool isDead) {
         Ellipse(hdc, cx + (int)(36 * scale), cy + (int)(8 * scale), cx + (int)(40 * scale), cy + (int)(12 * scale));
         SelectObject(hdc, oWP);
         DeleteObject(arcPen);
+    } else if (equipWpn == 5) { // Particle Beam Lance: Elongated cyan lance
+        HPEN wpnPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
+        HGDIOBJ oWP = SelectObject(hdc, wpnPen);
+        MoveToEx(hdc, cx + (int)(26 * scale), cy + (int)(10 * scale), NULL);
+        LineTo(hdc, cx + (int)(50 * scale), cy + (int)(10 * scale));
+        Ellipse(hdc, cx + (int)(34 * scale), cy + (int)(7 * scale), cx + (int)(38 * scale), cy + (int)(13 * scale));
+        Ellipse(hdc, cx + (int)(42 * scale), cy + (int)(7 * scale), cx + (int)(46 * scale), cy + (int)(13 * scale));
+        SelectObject(hdc, oWP);
+        DeleteObject(wpnPen);
+    } else { // Swarm Missiles: 4-tube rack box
+        HBRUSH rkBrush = CreateSolidBrush(RGB(50, 40, 20));
+        HPEN rkPen = CreatePen(PS_SOLID, 1, RGB(255, 170, 0));
+        HGDIOBJ oB = SelectObject(hdc, rkBrush);
+        HGDIOBJ oP = SelectObject(hdc, rkPen);
+        Rectangle(hdc, cx + (int)(26 * scale), cy + (int)(3 * scale), cx + (int)(42 * scale), cy + (int)(17 * scale));
+        HBRUSH warheadBrush = CreateSolidBrush(RGB(255, 60, 0));
+        SelectObject(hdc, warheadBrush);
+        Ellipse(hdc, cx + (int)(37 * scale), cy + (int)(5 * scale), cx + (int)(41 * scale), cy + (int)(9 * scale));
+        Ellipse(hdc, cx + (int)(37 * scale), cy + (int)(11 * scale), cx + (int)(41 * scale), cy + (int)(15 * scale));
+        SelectObject(hdc, oB);
+        SelectObject(hdc, oP);
+        DeleteObject(warheadBrush);
+        DeleteObject(rkBrush);
+        DeleteObject(rkPen);
     }
 
     SelectObject(hdc, oldPen);
@@ -1138,7 +1182,33 @@ void DrawEnemyMechGDI(HDC hdc, int cx, int cy, float scale, int battleNum, bool 
         Rectangle(hdc, cx - (int)(42 * scale), cy - (int)(6 * scale), cx - (int)(30 * scale), cy + (int)(26 * scale));
         Rectangle(hdc, cx + (int)(30 * scale), cy - (int)(6 * scale), cx + (int)(42 * scale), cy + (int)(26 * scale));
 
-    } else { // Apex Overlord (Battle 9+)
+    } else if (enemyType == 4) { // Dreadnought Behemoth (Battle 9-11)
+        Rectangle(hdc, cx - (int)(26 * scale), cy + (int)(18 * scale), cx - (int)(12 * scale), cy + (int)(46 * scale));
+        Rectangle(hdc, cx + (int)(12 * scale), cy + (int)(18 * scale), cx + (int)(26 * scale), cy + (int)(46 * scale));
+        POINT torsoE[4] = {
+            {cx - (int)(32 * scale), cy - (int)(24 * scale)},
+            {cx + (int)(32 * scale), cy - (int)(24 * scale)},
+            {cx + (int)(22 * scale), cy + (int)(18 * scale)},
+            {cx - (int)(22 * scale), cy + (int)(18 * scale)}
+        };
+        Polygon(hdc, torsoE, 4);
+        Rectangle(hdc, cx - (int)(44 * scale), cy - (int)(6 * scale), cx - (int)(32 * scale), cy + (int)(28 * scale));
+        Rectangle(hdc, cx + (int)(32 * scale), cy - (int)(6 * scale), cx + (int)(44 * scale), cy + (int)(28 * scale));
+        HPEN muzzlePen = CreatePen(PS_SOLID, 2, RGB(255, 60, 60));
+        HGDIOBJ oM = SelectObject(hdc, muzzlePen);
+        MoveToEx(hdc, cx - (int)(38 * scale), cy + (int)(28 * scale), NULL);
+        LineTo(hdc, cx - (int)(38 * scale), cy + (int)(36 * scale));
+        MoveToEx(hdc, cx + (int)(38 * scale), cy + (int)(28 * scale), NULL);
+        LineTo(hdc, cx + (int)(38 * scale), cy + (int)(36 * scale));
+        SelectObject(hdc, oM);
+        DeleteObject(muzzlePen);
+        HPEN eyePen = CreatePen(PS_SOLID, 2, enemyEye);
+        HGDIOBJ oE = SelectObject(hdc, eyePen);
+        MoveToEx(hdc, cx - (int)(14 * scale), cy - (int)(14 * scale), NULL);
+        LineTo(hdc, cx + (int)(14 * scale), cy - (int)(14 * scale));
+        SelectObject(hdc, oE);
+        DeleteObject(eyePen);
+    } else { // Apex Overlord (Battle 12+)
         // Massive Dreadnought Torso
         POINT torsoE[6] = {
             {cx - (int)(34 * scale), cy - (int)(24 * scale)},
@@ -1576,7 +1646,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             else if (g_projectiles[i].weaponType == 1) projPen = CreatePen(PS_SOLID, 5, RGB(255, 200, 50));
                             else if (g_projectiles[i].weaponType == 2) projPen = CreatePen(PS_SOLID, 2, RGB(255, 140, 0));
                             else if (g_projectiles[i].weaponType == 3) projPen = CreatePen(PS_SOLID, 6, RGB(0, 255, 100));
-                            else projPen = CreatePen(PS_SOLID, 3, RGB(180, 50, 255));
+                            else if (g_projectiles[i].weaponType == 4) projPen = CreatePen(PS_SOLID, 3, RGB(180, 50, 255));
+                            else if (g_projectiles[i].weaponType == 5) projPen = CreatePen(PS_SOLID, 6, RGB(0, 255, 255));
+                            else projPen = CreatePen(PS_SOLID, 4, RGB(255, 170, 0));
                         } else {
                             if (g_projectiles[i].weaponType == 1) projPen = CreatePen(PS_SOLID, 5, RGB(255, 120, 50));
                             else if (g_projectiles[i].weaponType == 3) projPen = CreatePen(PS_SOLID, 6, RGB(255, 60, 180));
@@ -1658,16 +1730,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "- Combat: [A/Space/1] Attack | [D/2] Defend | [T] Cycle Target Limb\n"
                     "- Post-Battle: [R/Space/Enter/Esc] Return to Garage (Autosaves)\n"
                     "- Anywhere: [F1/H/Esc] Open / Close Pilot's Manual\n\n"
-                    "TACTICAL SUBSYSTEM TARGETING:\n"
-                    "- Head: High risk / 3.0x damage, disruption causes enemy to lose a turn!\n"
-                    "- Torso: Standard 80% hit chance / reliable core damage.\n"
-                    "- L.Arm: 1.4x damage, strips 2 enemy DEF.\n"
-                    "- R.Arm: 1.4x damage, shears weapon servo for -3 enemy ATK.\n"
-                    "- Legs: 1.2x damage, damages enemy actuators to boost pilot evasion.\n\n"
-                    "ADVANCED GEAR & SPECIALS:\n"
-                    "- Jump Jets: +20% Evasion | Energy Shield: Absorbs 6 incoming damage\n"
-                    "- Overdrive Core: +25% ATK damage (+12 heat) | Nanodrones: Heals 10 HP on Defend\n"
-                    "- EMP Arc Disruptor: Hits capacitors to pump +20 heat directly into enemy!";
+                    "WEAPON ARSENAL & SYSTEMS:\n"
+                    "- Pulse Laser (Low heat) | Heavy Gauss (High kinetic) | Twin Autocannons (Burst)\n"
+                    "- Plasma Mortar (Matter shell) | EMP Disruptor (+20 enemy heat)\n"
+                    "- Particle Beam Lance (Pierces 50% DEF) | Swarm Missiles (Explosive collateral splash)\n\n"
+                    "TACTICAL COMBAT & SUBSYSTEM TARGETING:\n"
+                    "- Head: Precision 3.0x lethal strike (Stuns enemy systems) | Torso: Center mass 80% hit\n"
+                    "- L.Arm: Disarms defensive plating (-2 DEF) | R.Arm: Shears weapon servos (-3 ATK)\n"
+                    "- Legs: Cripples locomotion (+15% pilot evasion) | Defend: Doubles DEF & active heat purge!";
                 
                 RECT textRect = {35, 55, 565, 415};
                 DrawTextA(memDC, helpText, -1, &textRect, DT_LEFT | DT_WORDBREAK);

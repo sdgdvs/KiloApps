@@ -692,9 +692,18 @@
                     <tr><td>Open / Close Pilot's Manual</td><td><span class="shortcut-key">F1 / H / Esc</span></td><td>Anywhere</td></tr>
                 </table>
 
+                <p><strong>WEAPON ARSENAL & SYSTEMS:</strong><br>
+                - <em>Pulse Laser:</em> Rapid coherent beam (16 ATK, 22 Heat, low heat profile).<br>
+                - <em>Heavy Gauss Cannon:</em> Kinetic hypervelocity slug (28 ATK, 46 Heat).<br>
+                - <em>Twin Autocannons:</em> Explosive dual tracer burst (22 ATK, 34 Heat).<br>
+                - <em>Plasma Mortar:</em> Superheated matter shell (36 ATK, 58 Heat).<br>
+                - <em>EMP Arc Disruptor:</em> Electrical lightning arc (20 ATK, 26 Heat, +16 enemy heat).<br>
+                - <em>Particle Beam Lance:</em> High-energy focused beam (42 ATK, 64 Heat, pierces 50% enemy DEF).<br>
+                - <em>Swarm Cluster Missiles:</em> Multi-warhead missile salvo (34 ATK, 42 Heat, explosive collateral splash).</p>
+
                 <p><strong>TACTICAL COMBAT & SUBSYSTEM TARGETING:</strong><br>
                 - <em>Attack:</em> Deals weapon damage and builds up core heat. Exceeding Max Heat causes 15 HP catastrophic burnout!<br>
-                - <em>Defend:</em> Doubles DEF armor, vents reactor heat, and activates Repair Nanodrones if equipped.<br>
+                - <em>Defend:</em> Doubles DEF armor, vents reactor heat (bonus active cooldown), and activates Repair Nanodrones if equipped.<br>
                 - <em>Head/Cockpit:</em> Precision strike (20% hit chance, 3.0x lethal damage, stuns enemy systems).<br>
                 - <em>Torso:</em> Center mass (80% hit chance, 1.0x damage, highest reliability).<br>
                 - <em>L.Arm:</em> Shield/Subsystem disarm (60% hit chance, 1.4x damage, strips 2 enemy DEF).<br>
@@ -706,14 +715,15 @@
                 - <em>Battles 3-4:</em> Assault Goliath (Heavy armor, shoulder quad-missile pod).<br>
                 - <em>Battles 5-6:</em> Stealth Interceptor (Swept delta chassis, optical active-camo).<br>
                 - <em>Battles 7-8:</em> Siege Titan (Quad-leg walking fortress, heavy siege mortars).<br>
-                - <em>Battles 9+:</em> Apex Overlord (Command dreadnought with void cyclops eye and forcefield).</p>
+                - <em>Battles 9-11:</em> Dreadnought Behemoth (Heavy command chassis, dual high-velocity railguns).<br>
+                - <em>Battles 12+:</em> Apex Overlord (Command dreadnought with void cyclops eye and forcefield matrix).</p>
 
                 <p><strong>PILOT RANKS & SUBSYSTEMS:</strong><br>
                 - <em>XP & Pilot Ranks:</em> Cadet &rarr; Scout &rarr; Veteran &rarr; Ace &rarr; Commander (+5% accuracy & evasion per level).<br>
                 - <em>Jump Jets:</em> +20% evasion bonus.<br>
                 - <em>Energy Shield:</em> Absorbs 6 damage per incoming hit.<br>
                 - <em>Overdrive Core:</em> +25% attack damage boost (adds +12 heat).<br>
-                - <em>Repair Nanodrones:</em> Restores +10 HP whenever defending / venting heat.</p>
+                - <em>Repair Nanodrones:</em> Restores +10 HP (scaling with rank) whenever defending / venting heat.</p>
             </div>
             
             <div class="actions">
@@ -723,123 +733,146 @@
     </div>
 
     <script>
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        /* ==================== YAMAHA YM2612 FM SYNTHESIS & SPC700 STEREO DELAY ==================== */
+        let audioCtx = null;
+        let spcDelay = null;
+        let spcFeedback = null;
+        let spcDamp = null;
+
+        function initAudio() {
+            if (audioCtx) {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                return audioCtx;
+            }
+            try {
+                const AudioClass = window.AudioContext || window.webkitAudioContext;
+                if (!AudioClass) return null;
+                audioCtx = new AudioClass();
+
+                // Super Nintendo SPC700 Stereo Delay & Spatial Warmth Network
+                spcDelay = audioCtx.createDelay(0.5);
+                spcDelay.delayTime.value = 0.055; // 55ms warm slapback
+                spcFeedback = audioCtx.createGain();
+                spcFeedback.gain.value = 0.22;
+                spcDamp = audioCtx.createBiquadFilter();
+                spcDamp.type = 'lowpass';
+                spcDamp.frequency.value = 3200; // Warm analog tape / SPC700 rolloff
+
+                spcDelay.connect(spcDamp);
+                spcDamp.connect(spcFeedback);
+                spcFeedback.connect(spcDelay);
+                spcDamp.connect(audioCtx.destination);
+            } catch (e) {
+                audioCtx = null;
+            }
+            return audioCtx;
+        }
+
+        // Sega Genesis YM2612 2-Operator Frequency Modulation Voice
+        function playFM(carrierFreq, modRatio, modIndex, duration, vol = 0.22, carrierType = 'sine', modType = 'sine') {
+            const ctx = initAudio();
+            if (!ctx) return;
+            const t = ctx.currentTime;
+
+            try {
+                // Operator 2 (Modulator)
+                const op2 = ctx.createOscillator();
+                const op2Gain = ctx.createGain();
+                op2.type = modType;
+                op2.frequency.setValueAtTime(carrierFreq * modRatio, t);
+                op2Gain.gain.setValueAtTime(modIndex, t);
+                op2Gain.gain.exponentialRampToValueAtTime(0.01, t + duration * 0.9);
+                op2.connect(op2Gain);
+
+                // Operator 1 (Carrier)
+                const op1 = ctx.createOscillator();
+                const masterGain = ctx.createGain();
+                op1.type = carrierType;
+                op1.frequency.setValueAtTime(carrierFreq, t);
+                op2Gain.connect(op1.frequency);
+
+                masterGain.gain.setValueAtTime(vol, t);
+                masterGain.gain.exponentialRampToValueAtTime(0.001, t + duration);
+
+                op1.connect(masterGain);
+                masterGain.connect(ctx.destination);
+                if (spcDelay) masterGain.connect(spcDelay);
+
+                op2.start(t);
+                op1.start(t);
+                op2.stop(t + duration);
+                op1.stop(t + duration);
+            } catch(e) {}
+        }
+
         function playSound(type) {
             try {
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                
+                const ctx = initAudio();
+                if (!ctx) return;
+                const t = ctx.currentTime;
+
                 if (type === 'laser') {
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(1000, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
-                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.2);
-                } else if (type === 'enemyLaser') {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.3);
-                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.3);
-                } else if (type === 'impact') {
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(100, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(20, audioCtx.currentTime + 0.1);
-                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.1);
+                    // Pulse Laser: Biting FM Square-Sine 2:1 harmonic chirp
+                    playFM(880, 2.0, 420, 0.18, 0.2, 'square', 'sine');
                 } else if (type === 'cannon') {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.35);
-                    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.35);
-                } else if (type === 'alarm') {
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(1200, audioCtx.currentTime);
-                    osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.1);
-                    osc.frequency.setValueAtTime(1200, audioCtx.currentTime + 0.2);
-                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.3);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.3);
-                } else if (type === 'miss') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(200, audioCtx.currentTime + 0.1);
-                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.1);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.1);
-                } else if (type === 'victory') {
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(400, audioCtx.currentTime);
-                    osc.frequency.setValueAtTime(500, audioCtx.currentTime + 0.1);
-                    osc.frequency.setValueAtTime(600, audioCtx.currentTime + 0.2);
-                    osc.frequency.setValueAtTime(800, audioCtx.currentTime + 0.3);
-                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.6);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.6);
-                } else if (type === 'defeat') {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(300, audioCtx.currentTime);
-                    osc.frequency.setValueAtTime(200, audioCtx.currentTime + 0.3);
-                    osc.frequency.setValueAtTime(100, audioCtx.currentTime + 0.6);
-                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.0);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 1.0);
+                    // Heavy Gauss: 55Hz Sub-bass carrier with massive kinetic FM punch
+                    playFM(55, 3.5, 380, 0.38, 0.35, 'sawtooth', 'triangle');
+                } else if (type === 'autocannon') {
+                    // Twin Autocannons: Staccato rapid dual tracer burst
+                    playFM(160, 2.2, 220, 0.12, 0.22, 'sawtooth', 'square');
                 } else if (type === 'plasma') {
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(340, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(35, audioCtx.currentTime + 0.4);
-                    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.4);
+                    // Plasma Mortar: Superheated 1.414 inharmonic sizzle
+                    playFM(260, 1.414, 520, 0.38, 0.28, 'triangle', 'sine');
                 } else if (type === 'emp') {
-                    osc.type = 'sawtooth';
-                    osc.frequency.setValueAtTime(1400, audioCtx.currentTime);
-                    osc.frequency.linearRampToValueAtTime(180, audioCtx.currentTime + 0.25);
-                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.25);
+                    // EMP Arc Disruptor: Sawtooth electric arc with high modulation
+                    playFM(980, 4.0, 780, 0.28, 0.22, 'sawtooth', 'sawtooth');
+                } else if (type === 'beam') {
+                    // Particle Beam Lance: Coherent high-energy focused particle lance
+                    playFM(1200, 1.5, 650, 0.35, 0.25, 'sine', 'sawtooth');
+                } else if (type === 'missile') {
+                    // Swarm Cluster Missiles: Explosive rocket whoosh
+                    playFM(95, 4.2, 280, 0.26, 0.26, 'sawtooth', 'triangle');
+                } else if (type === 'enemyLaser') {
+                    // Hostile crimson laser pulse
+                    playFM(420, 1.8, 300, 0.22, 0.18, 'sawtooth', 'sine');
+                } else if (type === 'impact') {
+                    // Armor plate impact thud with low-frequency resonance
+                    playFM(70, 2.0, 200, 0.16, 0.32, 'triangle', 'sawtooth');
                 } else if (type === 'shield') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(620, audioCtx.currentTime);
-                    osc.frequency.exponentialRampToValueAtTime(110, audioCtx.currentTime + 0.25);
-                    gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                    gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.25);
+                    // SPC700 Delayed Deflector Ring
+                    playFM(640, 1.0, 280, 0.3, 0.22, 'sine', 'sine');
                 } else if (type === 'repair') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(520, audioCtx.currentTime);
-                    osc.frequency.setValueAtTime(680, audioCtx.currentTime + 0.1);
-                    osc.frequency.setValueAtTime(920, audioCtx.currentTime + 0.2);
-                    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
-                    gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.35);
+                    // Nanite repair harmonic arpeggio (C4 -> E4 -> G4 -> C5)
+                    const notes = [261.6, 329.6, 392.0, 523.2];
+                    notes.forEach((freq, idx) => {
+                        setTimeout(() => {
+                            playFM(freq, 2.0, 100, 0.15, 0.15, 'sine', 'sine');
+                        }, idx * 70);
+                    });
+                } else if (type === 'alarm') {
+                    // Genesis FM two-tone warning klaxon
+                    playFM(1100, 1.0, 50, 0.12, 0.18, 'square', 'sine');
+                    setTimeout(() => {
+                        playFM(850, 1.0, 50, 0.14, 0.18, 'square', 'sine');
+                    }, 120);
+                } else if (type === 'miss') {
+                    // Deflection ricochet / evasive whoosh
+                    playFM(320, 0.5, 80, 0.1, 0.12, 'sine', 'sine');
+                } else if (type === 'victory') {
+                    // Genesis triumph fanfare (D4 -> F#4 -> A4 -> D5) with SPC700 stereo delay
+                    const fan = [293.7, 370.0, 440.0, 587.3];
+                    fan.forEach((freq, idx) => {
+                        setTimeout(() => {
+                            playFM(freq, 2.0, 120, 0.28, 0.22, 'square', 'sine');
+                        }, idx * 90);
+                    });
+                } else if (type === 'defeat') {
+                    // Hydraulic failure shutdown groan
+                    playFM(240, 0.5, 120, 0.4, 0.25, 'sawtooth', 'sawtooth');
+                    setTimeout(() => playFM(140, 0.5, 80, 0.5, 0.25, 'sawtooth', 'triangle'), 300);
                 } else if (type === 'click') {
-                    osc.type = 'square';
-                    osc.frequency.setValueAtTime(1100, audioCtx.currentTime);
-                    gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
-                    gain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.04);
-                    osc.start();
-                    osc.stop(audioCtx.currentTime + 0.04);
+                    // Tactile mechanical switch click
+                    playFM(1200, 0.5, 30, 0.035, 0.1, 'square', 'sine');
                 }
             } catch(e) {}
         }
@@ -861,11 +894,13 @@
         }
 
         const weapons = [
-            { name: "Pulse Laser", atk: 16, heatGen: 22, type: 0 },
-            { name: "Heavy Gauss Cannon", atk: 28, heatGen: 46, type: 1 },
-            { name: "Twin Autocannons", atk: 22, heatGen: 34, type: 2 },
-            { name: "Plasma Mortar", atk: 36, heatGen: 58, type: 3 },
-            { name: "EMP Arc Disruptor", atk: 20, heatGen: 26, type: 4 }
+            { name: "Pulse Laser", atk: 16, heatGen: 22, type: 0, desc: "Rapid coherent beam (Low heat)" },
+            { name: "Heavy Gauss Cannon", atk: 28, heatGen: 46, type: 1, desc: "Kinetic hypervelocity slug" },
+            { name: "Twin Autocannons", atk: 22, heatGen: 34, type: 2, desc: "Rapid-fire explosive tracer burst" },
+            { name: "Plasma Mortar", atk: 36, heatGen: 58, type: 3, desc: "Superheated matter splash" },
+            { name: "EMP Arc Disruptor", atk: 20, heatGen: 26, type: 4, desc: "Disrupts & overheats target (+16 heat)" },
+            { name: "Particle Beam Lance", atk: 42, heatGen: 64, type: 5, desc: "Pierces 50% target armor plating" },
+            { name: "Swarm Cluster Missiles", atk: 34, heatGen: 42, type: 6, desc: "Salvo strikes target + collateral damage" }
         ];
         const armors = [
             { name: "Standard Composite", def: 5, maxHp: 100, evadeMod: 0.0 },
@@ -1042,7 +1077,6 @@
                 showToast("Failed to load telemetry", 3000, 'danger');
             }
         }
-        ];
 
         /* ==================== PROCEDURAL SPRITE RENDERERS ==================== */
         function getPlayerMechSVG(size = 90) {
@@ -1092,7 +1126,7 @@
                         <circle cx="16" cy="5" r="2.5" fill="#ffffff"/>
                         <rect x="21" y="3" width="7" height="4" fill="#550088" stroke="#e066ff" stroke-width="0.8"/>
                     </g>`;
-            } else { // EMP Arc Disruptor
+            } else if (equipWpn === 4) { // EMP Arc Disruptor
                 wpnSvg = `
                     <g transform="translate(74, 42)">
                         <rect x="0" y="0" width="12" height="9" fill="#0d2833" stroke="#00e5ff" stroke-width="1.2"/>
@@ -1100,6 +1134,25 @@
                         <line x1="18" y1="2" x2="26" y2="1" stroke="#00ffff" stroke-width="1.5"/>
                         <line x1="18" y1="7" x2="26" y2="8" stroke="#00ffff" stroke-width="1.5"/>
                         <circle cx="6" cy="4.5" r="2" fill="#00ffff"/>
+                    </g>`;
+            } else if (equipWpn === 5) { // Particle Beam Lance
+                wpnSvg = `
+                    <g transform="translate(72, 41)">
+                        <rect x="0" y="2" width="16" height="7" fill="#0a3028" stroke="#00ffff" stroke-width="1.2"/>
+                        <rect x="16" y="3" width="14" height="5" fill="#005544" stroke="#00e5ff" stroke-width="1"/>
+                        <line x1="18" y1="1" x2="18" y2="10" stroke="#00ffff" stroke-width="1.2"/>
+                        <line x1="24" y1="1" x2="24" y2="10" stroke="#00ffff" stroke-width="1.2"/>
+                        <polygon points="30,2 38,5.5 30,9" fill="#00e5ff" stroke="#ffffff" stroke-width="0.8"/>
+                        <circle cx="8" cy="5.5" r="2.5" fill="#00ffff"/>
+                    </g>`;
+            } else { // Swarm Cluster Missiles
+                wpnSvg = `
+                    <g transform="translate(72, 38)">
+                        <rect x="0" y="0" width="16" height="15" fill="#2d1f05" stroke="#ffaa00" stroke-width="1.2"/>
+                        <circle cx="4" cy="4" r="2" fill="#ff3300" stroke="#ffff00" stroke-width="0.6"/>
+                        <circle cx="11" cy="4" r="2" fill="#ff3300" stroke="#ffff00" stroke-width="0.6"/>
+                        <circle cx="4" cy="11" r="2" fill="#ff3300" stroke="#ffff00" stroke-width="0.6"/>
+                        <circle cx="11" cy="11" r="2" fill="#ff3300" stroke="#ffff00" stroke-width="0.6"/>
                     </g>`;
             }
 
@@ -1185,8 +1238,9 @@
         }
 
         function getEnemyMechSVG(size = 90) {
-            let enemyType = 0; // 0=Scout, 1=Goliath, 2=Interceptor, 3=Titan, 4=Overlord
-            if (battleCount >= 9) enemyType = 4;
+            let enemyType = 0; // 0=Scout, 1=Goliath, 2=Interceptor, 3=Titan, 4=Dreadnought, 5=Overlord
+            if (battleCount >= 12) enemyType = 5;
+            else if (battleCount >= 9) enemyType = 4;
             else if (battleCount >= 7) enemyType = 3;
             else if (battleCount >= 5) enemyType = 2;
             else if (battleCount >= 3) enemyType = 1;
@@ -1283,7 +1337,31 @@
                         <line x1="45" y1="46" x2="55" y2="46" stroke="#ff3333" stroke-width="2"/>
                     </g>
                 </svg>`;
-            } else { // Apex Overlord (Battle 9+)
+            } else if (enemyType === 4) { // Dreadnought Behemoth (Battle 9-11)
+                return `
+                <svg class="mech-svg-elem" width="${size}" height="${size * 0.95}" viewBox="0 0 100 100">
+                    <g stroke="#ff2244" stroke-width="1.8" fill="#38060e">
+                        <!-- Heavy Reinforced Bipedal Pillars -->
+                        <path d="M32,64 L16,84 L12,96 L32,96 L38,66" fill="#200307"/>
+                        <path d="M68,64 L84,84 L88,96 L68,96 L62,66" fill="#200307"/>
+                        <!-- Heavy Armored Torso -->
+                        <polygon points="18,24 82,24 72,66 28,66" fill="#440812" stroke="#ff2244" stroke-width="2"/>
+                        <!-- Shoulder Command Armor Plates -->
+                        <polygon points="18,24 6,12 22,12" fill="#aa1133"/>
+                        <polygon points="82,24 94,12 78,12" fill="#aa1133"/>
+                        <!-- Twin Heavy Command Railguns -->
+                        <rect x="4" y="24" width="12" height="34" fill="#1a0205" stroke="#ff2244" stroke-width="1.2"/>
+                        <rect x="84" y="24" width="12" height="34" fill="#1a0205" stroke="#ff2244" stroke-width="1.2"/>
+                        <line x1="10" y1="58" x2="10" y2="70" stroke="#ff5555" stroke-width="2.5"/>
+                        <line x1="90" y1="58" x2="90" y2="70" stroke="#ff5555" stroke-width="2.5"/>
+                        <!-- Visor Bar -->
+                        <rect x="36" y="14" width="28" height="12" fill="#200307" stroke="#ff2244" stroke-width="1.4" rx="2"/>
+                        <rect x="40" y="18" width="20" height="4" fill="#ffff00"/>
+                        <!-- Reactor Core -->
+                        <circle cx="50" cy="45" r="5" fill="#ff0044" stroke="#ffffff" stroke-width="0.8"/>
+                    </g>
+                </svg>`;
+            } else { // Apex Overlord (Battle 12+)
                 return `
                 <svg class="mech-svg-elem" width="${size}" height="${size * 0.95}" viewBox="0 0 100 100">
                     <polygon points="50,2 94,22 94,76 50,98 6,76 6,22" 
@@ -1345,7 +1423,8 @@
 
             const enemyTitle = document.getElementById('enemy-title-name');
             if (enemyTitle) {
-                if (battleCount >= 9) enemyTitle.innerText = "Apex Overlord";
+                if (battleCount >= 12) enemyTitle.innerText = "Apex Overlord";
+                else if (battleCount >= 9) enemyTitle.innerText = "Dreadnought Behemoth";
                 else if (battleCount >= 7) enemyTitle.innerText = "Siege Titan";
                 else if (battleCount >= 5) enemyTitle.innerText = "Stealth Interceptor";
                 else if (battleCount >= 3) enemyTitle.innerText = "Assault Goliath";
@@ -1520,7 +1599,7 @@
                         fxCtx.beginPath();
                         fxCtx.arc(p.x, p.y, 3, 0, Math.PI * 2);
                         fxCtx.fill();
-                    } else { // EMP Arc Disruptor: Electric lightning bolt
+                    } else if (p.weaponType === 4) { // EMP Arc Disruptor: Electric lightning bolt
                         fxCtx.strokeStyle = '#00ffff';
                         fxCtx.lineWidth = 2.5;
                         fxCtx.shadowColor = '#00ffff';
@@ -1530,17 +1609,46 @@
                         fxCtx.lineTo(p.x - 8, p.y + (Math.random() - 0.5) * 8);
                         fxCtx.lineTo(p.x, p.y);
                         fxCtx.stroke();
+                    } else if (p.weaponType === 5) { // Particle Beam Lance: Focused piercing lance
+                        fxCtx.strokeStyle = '#00ffff';
+                        fxCtx.lineWidth = 6;
+                        fxCtx.shadowColor = '#00ffff';
+                        fxCtx.shadowBlur = 16;
+                        fxCtx.beginPath();
+                        fxCtx.moveTo(p.startX + (p.targetX - p.startX) * Math.max(0, p.progress - 0.35), p.y);
+                        fxCtx.lineTo(p.x, p.y);
+                        fxCtx.stroke();
+                        fxCtx.strokeStyle = '#ffffff';
+                        fxCtx.lineWidth = 2.5;
+                        fxCtx.stroke();
+                    } else { // Swarm Cluster Missiles: Multi micro-missile salvo
+                        fxCtx.fillStyle = '#ffaa00';
+                        fxCtx.shadowColor = '#ff4400';
+                        fxCtx.shadowBlur = 8;
+                        const w1 = Math.sin(p.progress * 18) * 5;
+                        const w2 = Math.cos(p.progress * 16) * 5;
+                        fxCtx.beginPath();
+                        fxCtx.arc(p.x - 4, p.y + w1, 3, 0, Math.PI * 2);
+                        fxCtx.arc(p.x, p.y, 3.5, 0, Math.PI * 2);
+                        fxCtx.arc(p.x - 4, p.y + w2, 3, 0, Math.PI * 2);
+                        fxCtx.fill();
                     }
                 } else { // Enemy projectile based on tier
-                    if (battleCount >= 9) { // Void Beam
+                    if (battleCount >= 12) { // Void Beam (Apex Overlord)
                         fxCtx.strokeStyle = '#ff00ff';
-                        fxCtx.lineWidth = 4.5;
+                        fxCtx.lineWidth = 5.5;
                         fxCtx.shadowColor = '#ff0055';
-                        fxCtx.shadowBlur = 14;
+                        fxCtx.shadowBlur = 16;
                         fxCtx.beginPath();
                         fxCtx.moveTo(p.startX + (p.targetX - p.startX) * Math.max(0, p.progress - 0.3), p.y);
                         fxCtx.lineTo(p.x, p.y);
                         fxCtx.stroke();
+                    } else if (battleCount >= 9) { // Heavy Command Railgun (Dreadnought Behemoth)
+                        fxCtx.fillStyle = '#ff2255';
+                        fxCtx.shadowColor = '#ff0000';
+                        fxCtx.shadowBlur = 12;
+                        fxCtx.fillRect(p.x - 10, p.y - 3, 14, 4);
+                        fxCtx.fillRect(p.x - 10, p.y + 2, 14, 4);
                     } else if (battleCount >= 7) { // Heavy Siege Mortar
                         fxCtx.fillStyle = '#ff4400';
                         fxCtx.shadowColor = '#ff2200';
@@ -1843,15 +1951,20 @@
 
         function startBattle() {
             let eHp = 80, eAtk = 12, eDef = 3, eHeat = 100;
-            if (battleCount >= 9) {
-                eHp = 210 + (battleCount - 9) * 20;
-                eAtk = 30 + (battleCount - 9) * 2;
-                eDef = 12;
-                eHeat = 170;
+            if (battleCount >= 12) {
+                eHp = 240 + (battleCount - 12) * 20;
+                eAtk = 34 + (battleCount - 12) * 2;
+                eDef = 14;
+                eHeat = 180;
+            } else if (battleCount >= 9) {
+                eHp = 200;
+                eAtk = 29;
+                eDef = 11;
+                eHeat = 160;
             } else if (battleCount >= 7) {
-                eHp = 170;
-                eAtk = 26;
-                eDef = 10;
+                eHp = 165;
+                eAtk = 25;
+                eDef = 9;
                 eHeat = 150;
             } else if (battleCount >= 5) {
                 eHp = 135;
@@ -1859,7 +1972,7 @@
                 eDef = 7;
                 eHeat = 135;
             } else if (battleCount >= 3) {
-                eHp = 110;
+                eHp = 105;
                 eAtk = 16;
                 eDef = 5;
                 eHeat = 120;
@@ -1983,8 +2096,11 @@
             if (hitChance > 1.0) hitChance = 1.0;
 
             if (equipWpn === 1) playSound('cannon');
+            else if (equipWpn === 2) playSound('autocannon');
             else if (equipWpn === 3) playSound('plasma');
             else if (equipWpn === 4) playSound('emp');
+            else if (equipWpn === 5) playSound('beam');
+            else if (equipWpn === 6) playSound('missile');
             else playSound('laser');
 
             fireProjectile(true, equipWpn);
@@ -2008,7 +2124,11 @@
                 setTimeout(() => {
                     triggerAnim('enemy-mech-container', 'damaged', 450);
                     playSound('impact');
-                    let baseDmg = Math.max(1, playerStats.atk - (enemyIsDefending ? enemyStats.def * 2 : enemyStats.def) + Math.floor(Math.random() * 5));
+                    let targetEnemyDef = enemyIsDefending ? enemyStats.def * 2 : enemyStats.def;
+                    if (equipWpn === 5) { // Particle Beam Lance: pierces 50% enemy defense
+                        targetEnemyDef = Math.floor(targetEnemyDef * 0.5);
+                    }
+                    let baseDmg = Math.max(1, playerStats.atk - targetEnemyDef + Math.floor(Math.random() * 5));
                     if (equipSpec === 3) {
                         baseDmg = Math.floor(baseDmg * 1.25); // Overdrive Core +25%
                     }
@@ -2031,6 +2151,12 @@
                     if (equipWpn === 4) {
                         enemyStats.heat = Math.min(enemyStats.maxHeat, enemyStats.heat + 16);
                         logMsg("EMP wave destabilized enemy reactor (+16 heat)!");
+                    } else if (equipWpn === 5) {
+                        logMsg("Particle lance pierced directly through enemy armor plating!");
+                    } else if (equipWpn === 6) {
+                        let splashDmg = Math.max(4, Math.floor(dmg * 0.35));
+                        dmg += splashDmg;
+                        logMsg(`Swarm cluster salvo detonated! +${splashDmg} explosive collateral splash.`);
                     }
 
                     enemyStats.hp -= dmg;
@@ -2057,11 +2183,13 @@
             if (isProcessingTurn || document.getElementById('battle-actions').style.display === 'none') return;
             isProcessingTurn = true;
             isDefending = true;
-            logMsg("Bracing for impact (Armor doubled, Heat venting).");
+            const extraVent = Math.floor(playerCooling * 0.75);
+            playerStats.heat = Math.max(0, playerStats.heat - extraVent);
+            logMsg(`Bracing for impact (Armor doubled, -${extraVent} extra heat vented).`);
             addShockwave(140, 70, 50, '#00ffff', 4);
 
             if (equipSpec === 4 && playerStats.hp < playerStats.maxHp) {
-                let heal = Math.min(10, playerStats.maxHp - playerStats.hp);
+                let heal = Math.min(10 + (playerLevel - 1) * 2, playerStats.maxHp - playerStats.hp);
                 playerStats.hp += heal;
                 logMsg(`Repair Nanodrones deploy: restored +${heal} HP.`);
                 playSound('repair');
