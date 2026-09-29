@@ -4,12 +4,15 @@
   "account": "anonymous1",
   "hostname": "12900K",
   "status": "active",
-  "schedule_minutes": [2, 17],
-  "session_start": "2026-09-29T17:49:03Z",
-  "session_end": "2026-09-30T17:49:03Z",
+  "schedule_minutes": [
+    2,
+    17
+  ],
+  "session_start": "2026-09-29T18:00:43.7103231Z",
+  "session_end": "2026-09-30T18:00:43.7103231Z",
   "turns_executed": 0,
   "last_turn_timestamp": "2026-09-29T17:16:06Z",
-  "last_heartbeat": "2026-09-29T17:49:03Z",
-  "current_target": "kilo-graphics ➔ KMystery",
+  "last_heartbeat": "2026-09-29T18:00:43.822660+00:00",
+  "current_target": "kilo-graphics \u2794 KMystery",
   "remote_command": "none"
 }

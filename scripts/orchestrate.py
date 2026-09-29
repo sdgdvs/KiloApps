@@ -93,7 +93,7 @@ def check_session_timer() -> bool:
         return True
 
     try:
-        data = json.loads(SESSION_FILE.read_text(encoding="utf-8"))
+        data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
         end_str = data.get("session_end")
         if not end_str:
             return True
@@ -127,7 +127,7 @@ def record_turn_in_session():
     if not SESSION_FILE.exists():
         return
     try:
-        data = json.loads(SESSION_FILE.read_text(encoding="utf-8"))
+        data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
         data["turns_executed"] = data.get("turns_executed", 0) + 1
         data["last_turn_timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
         SESSION_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")

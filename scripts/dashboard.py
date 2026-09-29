@@ -1063,13 +1063,17 @@ class FleetDashboard(tk.Tk):
             self.after(1000, self.refresh_status_loop)
 
 
+_mutex_handle = None
+
+
 def main():
+    global _mutex_handle
     # Enforce single-instance via Win32 Mutex
     try:
         import ctypes
-        mutex = ctypes.windll.kernel32.CreateMutexW(None, False, "KiloApps_Fleet_Dashboard_Mutex")
+        _mutex_handle = ctypes.windll.kernel32.CreateMutexW(None, False, "KiloApps_Fleet_Dashboard_Mutex")
         if ctypes.windll.kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
-            hwnd = ctypes.windll.user32.FindWindowW(None, "KiloApps Creation Dashboard")
+            hwnd = ctypes.windll.user32.FindWindowW(None, "KiloApps Multi-PC Fleet Dashboard")
             if hwnd:
                 ctypes.windll.user32.ShowWindow(hwnd, 9)  # SW_RESTORE
                 ctypes.windll.user32.SetForegroundWindow(hwnd)
