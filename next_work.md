@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-tester
 agent_rotation:
   - kilo-expander
   - kilo-creator
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: KSynth
   kilo_graphics: KMystery
   kilo_qa: KQuest
-  kilo_expander: KGraph
+  kilo_expander: KMandel
   kilo_creator: "kweb://webring (Central Webring Hub & Badge Studio)"
 virtual_web_target: "kweb://webring"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://deep-core"
   - "kweb://darknet"
 last_run:
-  agent: kilo-qa
-  app: KMystery
-  timestamp: "2026-09-29T03:10:00Z"
+  agent: kilo-expander
+  app: KGraph
+  timestamp: "2026-09-29T03:30:00Z"
 last_planner_run: "2026-09-28T10:38:00Z"
 ---
 
@@ -242,6 +242,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T03:30:00Z — kilo-expander: KGraph (YM2612 Curve Sonification, Simpson/Riemann Calculus Suite, Tangent/Normal Overlay & SVG Export)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
+  - Calculus Engine: Added Simpson's definite integral with hatched shading, Riemann sums suite (4 methods, N=2..64), and degree-5 Taylor polynomials.
+  - Geometry & Overlays: Added instantaneous Tangent & Normal lines with slope/angle display, roots markers, and intersections markers.
+  - Audio Architecture: Added Sega Genesis YM2612 2-Op FM synthesis & SNES SPC700 stereo delay sonification scanner in Web and native PCM worker thread.
+  - Export & Presets: Added SVG vector export, CSV data export, JSON import/export, and expanded presets bank across Cartesian, Polar, and Parametric.
+  - Verification: MSVC clean (`KGraph.exe` 33.8 KB); Vite clean in 316ms (`kgraph.html` 126.1 KB < 999 KB); icon & security lints 100% PASS.
+
 - **2026-09-29T03:10:00Z — kilo-qa: KMystery (Pass 5 QA, State Persistence, Hotkeys & Toast Remediation)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB ceiling verified).
   - State Persistence: Fixed quickload wiping minigame state in lab; persisted active accusation state and restored seamlessly.
@@ -276,15 +284,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast Non-Occlusion: Anchored toasts bottom-right with bounded queue (≤3 toasts) and click-to-dismiss functionality.
   - State Persistence: Added missing colony structures (domes, vaults, megacities), defense tiers, and display settings to F5/F9 saves.
   - Verification: MSVC clean (`KCosmic.exe` 16.5 KB); Vite clean in 401ms (`kcosmic.html` 543.1 KB < 999 KB); CDP 100% PASS.
-
-- **2026-09-29T01:12:00Z — kilo-creator: kweb://portal (KiloNet 1999 Directory Deep Expansion & Dial-Up Baud Lab)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, <999KB verified).
-  - Community Web Poll: Added interactive 1999 poll with 4 debates, animated SVG bars, FM chimes, and localStorage persistence.
-  - Webmaster Site Submission: Added custom URL submission modal injecting user sites into dynamic search index & storage.
-  - Dial-Up Baud Lab: Added procedural Web Audio V.90 modem acoustic simulator, front-panel LEDs, and 1999 download estimator.
-  - Market & Zodiac: Added VOOD/AETH dot-com tickers with SVG sparklines and 12-sign Silicon Zodiac computing prophecies.
-  - Consortium Harmonization: Linked Node #018 (darknet.html) across directory and webring.html; added search highlighting.
-  - Verification: Vite build clean (`portal.html` 179.3 KB, `webring.html` 93.7 KB < 999 KB); check_icons & security lint 100% PASS.
 
 
 

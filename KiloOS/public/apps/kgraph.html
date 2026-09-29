@@ -842,13 +842,16 @@
     </div>
     <div class="header-actions">
       <button class="btn" id="sidebarToggleBtn" onclick="toggleSidebar()" title="Toggle Sidebar (Ctrl+B or \)">◀ Sidebar <span class="shortcut-badge">^B</span></button>
+      <button class="btn" id="btnSonify" onclick="toggleSonify()" title="Sonify Active Curve with Yamaha YM2612 FM Audio (Space)">🎵 Sonify <span class="shortcut-badge">Space</span></button>
       <button class="btn" onclick="exportPNG()" title="Export PNG Snapshot (Ctrl+S)">📷 PNG <span class="shortcut-badge">^S</span></button>
+      <button class="btn" onclick="exportSVG()" title="Export Scalable Vector Graphics (Ctrl+E)">📐 SVG <span class="shortcut-badge">^E</span></button>
       <button class="btn" onclick="exportCSV()" title="Export CSV Data Points (E)">📊 CSV <span class="shortcut-badge">E</span></button>
       <button class="btn" onclick="exportJSON()" title="Save Configuration to JSON">💾 Config</button>
       <label class="btn" style="cursor:pointer" title="Load Configuration File (O)">
         📂 Load <span class="shortcut-badge">O</span>
         <input type="file" id="jsonInput" accept=".json" style="display:none" onchange="importJSON(event)">
       </label>
+      <button class="btn" id="btnAudioMute" onclick="toggleMute()" title="Toggle Sound (U)">🔊</button>
       <button class="btn" onclick="openHelpModal()" title="Help & Reference Guide (F1 or H)">❓ Help <span class="shortcut-badge">F1</span></button>
       <button class="btn btn-primary" onclick="replotAll()" title="Plot Graph (Enter)">▶ Plot <span class="shortcut-badge">↵</span></button>
     </div>
@@ -906,7 +909,7 @@
       
       <!-- Calculus Tab -->
       <div class="tab-content" id="tabCalc">
-        <div class="section-title">Derivative & Integral Suite</div>
+        <div class="section-title">Derivative & Tangent Suite</div>
         
         <div class="control-group">
           <div class="field-row">
@@ -923,15 +926,19 @@
             <span class="field-label">Point x₀</span>
             <input type="number" step="0.1" class="field-input" id="calcX0" value="1.0" oninput="updateCalcResults()">
           </div>
+          <div class="field-row">
+            <label class="checkbox-label" style="font-size:12px; color:#cbd5e1;">
+              <input type="checkbox" id="showTangentLine" onchange="updateCalcResults()">
+              Show Tangent & Normal on Canvas [T]
+            </label>
+          </div>
           <div class="calc-result-box" id="derivativeResult">
             f'(1.0) = ...
           </div>
         </div>
         
+        <div class="section-title">Definite Integral & Riemann Sums</div>
         <div class="control-group">
-          <div class="field-row">
-            <span class="field-label">Definite Integral ∫ [a, b]</span>
-          </div>
           <div class="field-row">
             <span class="field-label">Lower Bound a</span>
             <input type="number" step="0.5" class="field-input" id="intA" value="0.0" oninput="updateCalcResults()">
@@ -943,11 +950,53 @@
           <div class="field-row">
             <label class="checkbox-label" style="font-size:12px; color:#cbd5e1;">
               <input type="checkbox" id="shadeIntegral" checked onchange="replotAll()">
-              Shade Region on Graph
+              Shade Definite Integral Region
             </label>
+          </div>
+          <div class="field-row">
+            <label class="checkbox-label" style="font-size:12px; color:#cbd5e1;">
+              <input type="checkbox" id="showRiemann" onchange="updateCalcResults()">
+              Show Riemann Sum Rectangles
+            </label>
+          </div>
+          <div class="field-row" style="margin-top:6px;">
+            <span class="field-label">Method</span>
+            <select class="field-select" id="riemannMethod" onchange="updateCalcResults()">
+              <option value="midpoint">Midpoint Rule</option>
+              <option value="left">Left Riemann Sum</option>
+              <option value="right">Right Riemann Sum</option>
+              <option value="trapezoid">Trapezoidal Rule</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <span class="field-label">Partitions N</span>
+            <input type="number" min="2" max="64" step="1" class="field-input" id="riemannN" value="10" oninput="updateCalcResults()">
           </div>
           <div class="calc-result-box" id="integralResult">
             ∫ f(x) dx = ...
+          </div>
+        </div>
+
+        <div class="section-title">Taylor Series Approximation</div>
+        <div class="control-group">
+          <div class="field-row">
+            <span class="field-label">Degree N</span>
+            <select class="field-select" id="taylorDegree" onchange="updateCalcResults()">
+              <option value="1">N = 1 (Linear Tangent)</option>
+              <option value="2">N = 2 (Quadratic Parabola)</option>
+              <option value="3" selected>N = 3 (Cubic Polynomial)</option>
+              <option value="4">N = 4 (Quartic)</option>
+              <option value="5">N = 5 (Quintic)</option>
+            </select>
+          </div>
+          <div class="field-row">
+            <label class="checkbox-label" style="font-size:12px; color:#cbd5e1;">
+              <input type="checkbox" id="showTaylorOverlay" onchange="updateCalcResults()">
+              Overlay Taylor Curve T_N(x)
+            </label>
+          </div>
+          <div class="calc-result-box" id="taylorResult" style="font-size:11px; line-height:1.5;">
+            T_N(x) = ...
           </div>
         </div>
       </div>
@@ -1005,6 +1054,9 @@
       <div class="canvas-tools">
         <button class="tool-btn" onclick="toggleSidebar()" id="toolBtnSidebar" title="Toggle Sidebar (Ctrl+B or \)">◀</button>
         <button class="tool-btn" onclick="toggleReadout()" id="toolBtnReadout" title="Toggle Coordinates HUD">📊</button>
+        <button class="tool-btn" onclick="toggleSonify()" id="toolBtnSonify" title="Sonify Active Curve with FM Audio (Space)">🎵</button>
+        <button class="tool-btn" onclick="toggleTangent()" id="toolBtnTangent" title="Toggle Tangent Line (T)">📐</button>
+        <button class="tool-btn" onclick="toggleMute()" id="toolBtnMute" title="Toggle Sound (U)">🔊</button>
         <button class="tool-btn" onclick="zoomIn()" title="Zoom In (+)">+</button>
         <button class="tool-btn" onclick="zoomOut()" title="Zoom Out (-)">-</button>
         <button class="tool-btn" onclick="resetView()" title="Reset View (R or 0)">⟲</button>
@@ -1034,6 +1086,9 @@
           </thead>
           <tbody>
             <tr><td><span class="kbd-key">F1</span> / <span class="kbd-key">H</span></td><td>Toggle this Help & Reference guide</td></tr>
+            <tr><td><span class="kbd-key">Space</span></td><td>Sonify active curve with Yamaha YM2612 FM audio & SPC700 delay</td></tr>
+            <tr><td><span class="kbd-key">T</span></td><td>Toggle tangent & normal lines with slope m and inclination angle</td></tr>
+            <tr><td><span class="kbd-key">U</span></td><td>Toggle procedural audio mute / unmuted</td></tr>
             <tr><td><span class="kbd-key">Ctrl+B</span> / <span class="kbd-key">\</span> / <span class="kbd-key">[</span></td><td>Toggle collapsible function sidebar (maximize canvas)</td></tr>
             <tr><td><span class="kbd-key">Enter</span></td><td>Plot / re-evaluate expressions immediately</td></tr>
             <tr><td><span class="kbd-key">←</span> <span class="kbd-key">→</span> <span class="kbd-key">↑</span> <span class="kbd-key">↓</span></td><td>Smoothly pan viewport across canvas</td></tr>
@@ -1042,6 +1097,7 @@
             <tr><td><span class="kbd-key">+</span> / <span class="kbd-key">-</span> (or <span class="kbd-key">PgUp</span>/<span class="kbd-key">PgDn</span>)</td><td>Zoom viewport in / out</td></tr>
             <tr><td><span class="kbd-key">0</span> / <span class="kbd-key">R</span> / <span class="kbd-key">Home</span></td><td>Reset viewport to origin and default [-10, 10] range</td></tr>
             <tr><td><span class="kbd-key">Ctrl+S</span></td><td>Export high-res PNG graph snapshot</td></tr>
+            <tr><td><span class="kbd-key">Ctrl+E</span></td><td>Export scalable vector graphics (SVG)</td></tr>
             <tr><td><span class="kbd-key">E</span></td><td>Export sampled curve points to CSV</td></tr>
             <tr><td><span class="kbd-key">Ctrl+O</span> / <span class="kbd-key">O</span></td><td>Load saved graph configuration JSON</td></tr>
             <tr><td><span class="kbd-key">Esc</span></td><td>Unfocus input fields or close any active modal dialog</td></tr>
@@ -1131,6 +1187,229 @@
     const canvas = document.getElementById('graphCanvas');
     const ctx = canvas.getContext('2d');
     
+    // --- Universal Yamaha YM2612 2-Operator FM Synthesizer & SNES SPC700 Delay Audio Architecture ---
+    let audioCtx = null;
+    let audioMuted = localStorage.getItem('kgraph_muted') === 'true';
+    let isSonifying = false;
+    let sonifyProgress = 0;
+    let sonifyX = 0;
+    let sonifyTimer = null;
+    let showTangent = false;
+    let compiledTaylorFn = null;
+    let taylorFormulaStr = '';
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioCtxClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtxClass) {
+          audioCtx = new AudioCtxClass();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function toggleMute() {
+      audioMuted = !audioMuted;
+      localStorage.setItem('kgraph_muted', audioMuted ? 'true' : 'false');
+      const btnHeader = document.getElementById('btnAudioMute');
+      if (btnHeader) btnHeader.innerText = audioMuted ? '🔇' : '🔊';
+      const btnTool = document.getElementById('toolBtnMute');
+      if (btnTool) btnTool.innerText = audioMuted ? '🔇' : '🔊';
+      showToast(audioMuted ? '🔇 Sound muted' : '🔊 Sound enabled (Yamaha YM2612 FM / SPC700 Delay)');
+    }
+
+    function playFmTone(freq, duration = 0.16, modRatio = 2.0, modIndex = 200, vol = 0.16) {
+      if (audioMuted) return;
+      try {
+        initAudio();
+        if (!audioCtx) return;
+
+        const now = audioCtx.currentTime;
+
+        // Carrier Oscillator (OP2)
+        const carrier = audioCtx.createOscillator();
+        carrier.type = 'sine';
+        carrier.frequency.setValueAtTime(Math.max(40, Math.min(4000, freq)), now);
+
+        // Modulator Oscillator (OP1)
+        const modulator = audioCtx.createOscillator();
+        modulator.type = 'sine';
+        modulator.frequency.setValueAtTime(Math.max(40, Math.min(8000, freq * modRatio)), now);
+
+        // FM Modulation Index Envelope
+        const modGain = audioCtx.createGain();
+        modGain.gain.setValueAtTime(modIndex, now);
+        modGain.gain.exponentialRampToValueAtTime(Math.max(0.1, modIndex * 0.05), now + duration);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+
+        // Voice ADSR Gain Envelope
+        const voiceGain = audioCtx.createGain();
+        voiceGain.gain.setValueAtTime(0.0001, now);
+        voiceGain.gain.linearRampToValueAtTime(vol, now + 0.012);
+        voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        // SNES SPC700 Stereo Delay Network
+        const delay = audioCtx.createDelay();
+        delay.delayTime.value = 0.16;
+        const delayFeedback = audioCtx.createGain();
+        delayFeedback.gain.value = 0.25;
+        const delayFilter = audioCtx.createBiquadFilter();
+        delayFilter.type = 'lowpass';
+        delayFilter.frequency.value = 1800;
+
+        voiceGain.connect(audioCtx.destination);
+        voiceGain.connect(delay);
+        delay.connect(delayFilter);
+        delayFilter.connect(delayFeedback);
+        delayFeedback.connect(delay);
+        delayFilter.connect(audioCtx.destination);
+
+        carrier.connect(voiceGain);
+
+        carrier.start(now);
+        modulator.start(now);
+        carrier.stop(now + duration + 0.35);
+        modulator.stop(now + duration + 0.35);
+      } catch(e) {}
+    }
+
+    function playSfx(type) {
+      if (audioMuted) return;
+      if (type === 'click') playFmTone(587.33, 0.06, 1.5, 100, 0.10);
+      else if (type === 'mode') playFmTone(440.00, 0.12, 2.0, 250, 0.14);
+      else if (type === 'plot') {
+        playFmTone(523.25, 0.08, 2.0, 150, 0.12);
+        setTimeout(() => playFmTone(659.25, 0.12, 1.5, 200, 0.14), 50);
+      } else if (type === 'root') {
+        playFmTone(783.99, 0.15, 3.0, 300, 0.16);
+      } else if (type === 'preset') {
+        playFmTone(392.00, 0.09, 2.0, 180, 0.12);
+        setTimeout(() => playFmTone(587.33, 0.14, 2.5, 220, 0.14), 60);
+      } else if (type === 'export') {
+        playFmTone(440.00, 0.08, 1.5, 120, 0.10);
+        setTimeout(() => playFmTone(880.00, 0.16, 2.0, 240, 0.14), 70);
+      }
+    }
+
+    function toggleTangent() {
+      showTangent = !showTangent;
+      const chk = document.getElementById('showTangentLine');
+      if (chk) chk.checked = showTangent;
+      showToast(showTangent ? '📐 Tangent & Normal lines enabled [T]' : 'Tangent visualizer hidden');
+      drawGraph();
+    }
+
+    function toggleSonify() {
+      if (isSonifying) {
+        stopSonification();
+        showToast("⏹️ Sonification stopped.");
+      } else {
+        startSonification();
+      }
+    }
+
+    function startSonification() {
+      initAudio();
+      isSonifying = true;
+      sonifyProgress = 0;
+      const btnHeader = document.getElementById('btnSonify');
+      if (btnHeader) btnHeader.innerHTML = '⏹️ Stop <span class="shortcut-badge">Space</span>';
+      const btnTool = document.getElementById('toolBtnSonify');
+      if (btnTool) btnTool.innerText = '⏹️';
+
+      showToast("🎵 Scanning curve with Yamaha YM2612 FM audio... [Space to Stop]");
+      
+      const totalSteps = 120;
+      const stepInterval = 32;
+      let step = 0;
+
+      clearInterval(sonifyTimer);
+      sonifyTimer = setInterval(() => {
+        if (!isSonifying) {
+          clearInterval(sonifyTimer);
+          return;
+        }
+
+        sonifyProgress = step / totalSteps;
+        const width = canvas.parentElement.clientWidth;
+        const height = canvas.parentElement.clientHeight;
+        const view_height = 2 * view_scale * (height / width);
+        const minX = view_cx - view_scale;
+        const maxX = view_cx + view_scale;
+        const minY = view_cy - view_height / 2;
+        const maxY = view_cy + view_height / 2;
+
+        if (currentMode === 'cartesian') {
+          const activeIdx = cartesianFuncs.findIndex(f => f.enabled && compiledCartesian[cartesianFuncs.indexOf(f)]);
+          const fn = activeIdx >= 0 ? compiledCartesian[activeIdx] : null;
+          sonifyX = minX + sonifyProgress * (maxX - minX);
+
+          if (fn) {
+            const y = fn(sonifyX);
+            if (!isNaN(y) && isFinite(y)) {
+              const normY = Math.max(0, Math.min(1, (y - minY) / (maxY - minY)));
+              const pitchFreq = 130 * Math.pow(2, normY * 3.2);
+
+              const df = evalDeriv(fn, sonifyX);
+              const modIndex = Math.min(750, 60 + (isNaN(df) ? 0 : Math.abs(df)) * 45);
+
+              const nearRoot = Math.abs(y) < 0.04 * view_scale;
+              playFmTone(pitchFreq, 0.07, nearRoot ? 3.0 : 2.0, nearRoot ? 400 : modIndex, nearRoot ? 0.20 : 0.13);
+            }
+          }
+        } else if (currentMode === 'polar') {
+          const activeIdx = polarFuncs.findIndex(f => f.enabled && compiledPolar[polarFuncs.indexOf(f)]);
+          const fn = activeIdx >= 0 ? compiledPolar[activeIdx] : null;
+          const th = polarMinTh + sonifyProgress * (polarMaxTh - polarMinTh);
+          if (fn) {
+            const r = fn(th);
+            if (!isNaN(r) && isFinite(r)) {
+              const normR = Math.max(0, Math.min(1, Math.abs(r) / (2 * view_scale)));
+              const pitchFreq = 140 * Math.pow(2, normR * 3.0);
+              playFmTone(pitchFreq, 0.07, 2.0, 150, 0.13);
+            }
+          }
+        } else if (currentMode === 'parametric') {
+          const activeIdx = parametricCurves.findIndex(c => c.enabled && compiledParametric[parametricCurves.indexOf(c)]);
+          const p = activeIdx >= 0 ? compiledParametric[activeIdx] : null;
+          const t = paramMinT + sonifyProgress * (paramMaxT - paramMinT);
+          if (p && p.fnX && p.fnY) {
+            const px = p.fnX(t);
+            const py = p.fnY(t);
+            if (!isNaN(px) && !isNaN(py)) {
+              const dist = Math.sqrt(px * px + py * py);
+              const normD = Math.max(0, Math.min(1, dist / (2 * view_scale)));
+              const pitchFreq = 150 * Math.pow(2, normD * 3.0);
+              playFmTone(pitchFreq, 0.07, 2.5, 200, 0.13);
+            }
+          }
+        }
+
+        drawGraph();
+        step++;
+
+        if (step > totalSteps) {
+          stopSonification();
+          playSfx('export');
+          showToast("🎵 Sonification sweep finished!");
+        }
+      }, stepInterval);
+    }
+
+    function stopSonification() {
+      isSonifying = false;
+      clearInterval(sonifyTimer);
+      const btnHeader = document.getElementById('btnSonify');
+      if (btnHeader) btnHeader.innerHTML = '🎵 Sonify <span class="shortcut-badge">Space</span>';
+      const btnTool = document.getElementById('toolBtnSonify');
+      if (btnTool) btnTool.innerText = '🎵';
+      drawGraph();
+    }
+
     // --- Expression Compiler ---
     function compileMathExpr(str) {
       if (!str || !str.trim()) return null;
@@ -1202,6 +1481,88 @@
         sum += (i % 2 === 1 ? 4 : 2) * val;
       }
       return (h / 3) * sum;
+    }
+
+    function evalRiemannSum(fn, a, b, n = 10, method = 'midpoint') {
+      if (!fn || a >= b || n <= 0) return { sum: NaN, dx: 0 };
+      const dx = (b - a) / n;
+      let sum = 0;
+      for (let i = 0; i < n; i++) {
+        const x_left = a + i * dx;
+        const x_right = x_left + dx;
+        let sampleX = x_left;
+        if (method === 'right') sampleX = x_right;
+        else if (method === 'midpoint') sampleX = (x_left + x_right) / 2;
+        else if (method === 'trapezoid') {
+          const y1 = fn(x_left);
+          const y2 = fn(x_right);
+          if (!isNaN(y1) && !isNaN(y2)) {
+            sum += ((y1 + y2) / 2) * dx;
+          }
+          continue;
+        }
+        const y = fn(sampleX);
+        if (!isNaN(y) && isFinite(y)) {
+          sum += y * dx;
+        }
+      }
+      return { sum, dx };
+    }
+
+    function computeTaylorSeries(fn, x0, degree = 3) {
+      if (!fn || isNaN(x0)) return null;
+      const h = 0.02;
+      const coeffs = [];
+
+      const f0 = fn(x0);
+      if (isNaN(f0) || !isFinite(f0)) return null;
+      coeffs.push(f0);
+
+      const f1 = (fn(x0 + h) - fn(x0 - h)) / (2 * h);
+      coeffs.push(isNaN(f1) ? 0 : f1);
+
+      if (degree >= 2) {
+        const f2 = (fn(x0 + h) - 2 * f0 + fn(x0 - h)) / (h * h);
+        coeffs.push(isNaN(f2) ? 0 : f2 / 2);
+      }
+      if (degree >= 3) {
+        const f3 = (fn(x0 + 2 * h) - 2 * fn(x0 + h) + 2 * fn(x0 - h) - fn(x0 - 2 * h)) / (2 * h * h * h);
+        coeffs.push(isNaN(f3) ? 0 : f3 / 6);
+      }
+      if (degree >= 4) {
+        const f4 = (fn(x0 + 2 * h) - 4 * fn(x0 + h) + 6 * f0 - 4 * fn(x0 - h) + fn(x0 - 2 * h)) / (h * h * h * h);
+        coeffs.push(isNaN(f4) ? 0 : f4 / 24);
+      }
+      if (degree >= 5) {
+        const f5 = (fn(x0 + 3 * h) - 5 * fn(x0 + 2 * h) + 10 * fn(x0 + h) - 10 * fn(x0 - h) + 5 * fn(x0 - 2 * h) - fn(x0 - 3 * h)) / (2 * Math.pow(h, 5));
+        coeffs.push(isNaN(f5) ? 0 : f5 / 120);
+      }
+
+      const taylorFn = function(x) {
+        let val = 0;
+        const dx = x - x0;
+        let p = 1;
+        for (let k = 0; k < coeffs.length; k++) {
+          val += coeffs[k] * p;
+          p *= dx;
+        }
+        return val;
+      };
+
+      let str = `T_${degree}(x) = `;
+      coeffs.forEach((c, k) => {
+        if (Math.abs(c) < 1e-4 && k > 0) return;
+        const sign = (c >= 0 && k > 0) ? ' + ' : (c < 0 && k > 0 ? ' - ' : (c < 0 ? '-' : ''));
+        const absC = Math.abs(c);
+        const cStr = absC.toFixed(3).replace(/\.?0+$/, '');
+        let termStr = '';
+        if (k === 0) termStr = `${c.toFixed(3).replace(/\.?0+$/, '')}`;
+        else if (k === 1) termStr = `${sign}${cStr}(x${x0 === 0 ? '' : (x0 > 0 ? ' - ' + x0 : ' + ' + Math.abs(x0))})`;
+        else termStr = `${sign}${cStr}(x${x0 === 0 ? '' : (x0 > 0 ? ' - ' + x0 : ' + ' + Math.abs(x0))})^${k}`;
+        str += termStr;
+      });
+
+      return { fn: taylorFn, coeffs, formula: str };
     }
     
     // --- Mode Switcher ---
@@ -1451,6 +1812,9 @@
         { name: 'Cubic Polynomial', expr: 'x^3 - 3*x' },
         { name: 'Gaussian Curve', expr: 'exp(-x^2)' },
         { name: 'Damped Oscillation', expr: 'exp(-abs(x)/3) * cos(3*x)' },
+        { name: 'Fourier Square Wave', expr: 'sin(x) + sin(3*x)/3 + sin(5*x)/5' },
+        { name: 'Witch of Agnesi', expr: '8 / (x^2 + 4)' },
+        { name: 'Subcarrier Resonance', expr: '2.5 * sin(19.99 * x) * exp(-abs(x)/4)' },
         { name: 'Rational Function', expr: '1 / (1 + x^2)' },
         { name: 'Sigmoid', expr: '1 / (1 + exp(-x))' },
         { name: 'Parabola', expr: 'x^2 / 4 - 2' }
@@ -1459,14 +1823,19 @@
         { name: 'Quad Rose', expr: '3 * cos(4 * t)', type: 'polar' },
         { name: 'Penta Rose', expr: '4 * sin(5 * t)', type: 'polar' },
         { name: 'Cardioid', expr: '2 * (1 - cos(t))', type: 'polar' },
+        { name: 'Fermat Spiral', expr: 'sqrt(t)', type: 'polar' },
         { name: 'Archimedes Spiral', expr: 't / 2', type: 'polar' },
+        { name: 'Butterfly Polar', expr: 'exp(cos(t)) - 2*cos(4*t) + sin(t/12)^5', type: 'polar' },
         { name: 'Lemniscate', expr: 'sqrt(abs(9 * cos(2 * t)))', type: 'polar' },
         { name: 'Limaçon', expr: '2 + 3 * cos(t)', type: 'polar' }
       ],
       parametric: [
         { name: 'Lissajous 3:2', exprX: '4 * cos(3 * t)', exprY: '4 * sin(2 * t)', type: 'parametric' },
+        { name: 'Lissajous 3:4', exprX: '4 * sin(3 * t)', exprY: '4 * cos(4 * t)', type: 'parametric' },
         { name: 'Butterfly Curve', exprX: 'sin(t)*(exp(cos(t))-2*cos(4*t))', exprY: 'cos(t)*(exp(cos(t))-2*cos(4*t))', type: 'parametric' },
         { name: 'Astroid', exprX: '4 * cos(t)^3', exprY: '4 * sin(t)^3', type: 'parametric' },
+        { name: 'Trefoil Projection', exprX: 'sin(t) + 2*sin(2*t)', exprY: 'cos(t) - 2*cos(2*t)', type: 'parametric' },
+        { name: 'Hypotrochoid', exprX: '4*cos(t) + 2*cos(3*t)', exprY: '4*sin(t) - 2*sin(3*t)', type: 'parametric' },
         { name: 'Heart Curve', exprX: '16 * sin(t)^3', exprY: '13*cos(t) - 5*cos(2*t) - 2*cos(3*t) - cos(4*t)', type: 'parametric' }
       ]
     };
@@ -1624,9 +1993,20 @@
       const x0 = parseFloat(document.getElementById('calcX0').value) || 0;
       
       const derivBox = document.getElementById('derivativeResult');
+      const showTanEl = document.getElementById('showTangentLine');
+      if (showTanEl) showTangent = showTanEl.checked;
+
       if (fn && cartesianFuncs[idx].enabled) {
         const df = evalDeriv(fn, x0);
-        derivBox.innerHTML = `<strong>y${idx+1}'(${x0})</strong> = ${isNaN(df) ? 'Undefined' : df.toFixed(6)}`;
+        const y0 = fn(x0);
+        const angle = isNaN(df) ? 0 : Math.atan(df) * 180 / Math.PI;
+        derivBox.innerHTML = `
+          <div><strong>y${idx+1}'(${x0})</strong> = ${isNaN(df) ? 'Undefined' : df.toFixed(6)}</div>
+          <div style="font-size:11px; color:#cbd5e1; margin-top:4px;">
+            <span>Tangent: y = ${isNaN(y0)?'N/A':y0.toFixed(3)} + ${(isNaN(df)?0:df).toFixed(3)}(x - ${x0.toFixed(2)})</span><br>
+            <span>Inclination: θ = ${angle.toFixed(1)}°</span>
+          </div>
+        `;
       } else {
         derivBox.innerHTML = `Selected function disabled or invalid.`;
       }
@@ -1634,12 +2014,50 @@
       const a = parseFloat(document.getElementById('intA').value) || 0;
       const b = parseFloat(document.getElementById('intB').value) || 0;
       const intBox = document.getElementById('integralResult');
+      const showRiemannEl = document.getElementById('showRiemann');
+      const isRiemann = showRiemannEl ? showRiemannEl.checked : false;
+      const rMethod = document.getElementById('riemannMethod') ? document.getElementById('riemannMethod').value : 'midpoint';
+      const rN = document.getElementById('riemannN') ? parseInt(document.getElementById('riemannN').value) || 10 : 10;
       
       if (fn && cartesianFuncs[idx].enabled && a < b) {
         const area = evalIntegral(fn, a, b);
-        intBox.innerHTML = `<strong>∫ [${a}, ${b}] y${idx+1}(x) dx</strong> = ${isNaN(area) ? 'Undefined' : area.toFixed(6)}`;
+        let riemannInfo = '';
+        if (isRiemann) {
+          const rRes = evalRiemannSum(fn, a, b, rN, rMethod);
+          const err = Math.abs(rRes.sum - area);
+          const pctErr = area !== 0 ? (err / Math.abs(area) * 100).toFixed(2) : '0.00';
+          riemannInfo = `
+            <div style="font-size:11px; color:#c084fc; margin-top:4px; border-top:1px solid rgba(255,255,255,0.1); padding-top:4px;">
+              <strong>${rMethod.toUpperCase()} (N=${rN}, Δx=${rRes.dx.toFixed(3)}):</strong> ${rRes.sum.toFixed(6)}<br>
+              <span>Error vs Simpson: ${err.toFixed(6)} (${pctErr}%)</span>
+            </div>
+          `;
+        }
+        intBox.innerHTML = `<div><strong>∫ [${a}, ${b}] y${idx+1}(x) dx</strong> = ${isNaN(area) ? 'Undefined' : area.toFixed(6)}</div>${riemannInfo}`;
       } else {
         intBox.innerHTML = `Specify valid bounds [a < b] & active function.`;
+      }
+
+      // Taylor Series Evaluation
+      const degreeEl = document.getElementById('taylorDegree');
+      const deg = degreeEl ? parseInt(degreeEl.value) || 3 : 3;
+      const taylorBox = document.getElementById('taylorResult');
+      const showTaylorEl = document.getElementById('showTaylorOverlay');
+      const isShowTaylor = showTaylorEl ? showTaylorEl.checked : false;
+
+      if (fn && cartesianFuncs[idx].enabled) {
+        const tObj = computeTaylorSeries(fn, x0, deg);
+        if (tObj) {
+          compiledTaylorFn = isShowTaylor ? tObj.fn : null;
+          taylorFormulaStr = tObj.formula;
+          if (taylorBox) taylorBox.innerHTML = `<span style="color:#fbbf24;">${tObj.formula}</span>`;
+        } else {
+          compiledTaylorFn = null;
+          if (taylorBox) taylorBox.innerHTML = `Could not compute Taylor series at x₀ = ${x0}`;
+        }
+      } else {
+        compiledTaylorFn = null;
+        if (taylorBox) taylorBox.innerHTML = `Active function required.`;
       }
       
       drawGraph();
@@ -1959,6 +2377,56 @@
           ctx.fill();
         }
 
+        // Riemann Sums Partitions Overlay
+        const showRiemann = document.getElementById('showRiemann')?.checked;
+        if (showRiemann && targetFn && cartesianFuncs[targetIdx].enabled && intA < intB) {
+          const rMethod = document.getElementById('riemannMethod')?.value || 'mid';
+          const rN = Math.max(2, Math.min(64, parseInt(document.getElementById('riemannN')?.value) || 16));
+          const dx = (intB - intA) / rN;
+          const baselinePy = toScreenY(0, height);
+          
+          ctx.fillStyle = 'rgba(168, 85, 247, 0.22)';
+          ctx.strokeStyle = 'rgba(168, 85, 247, 0.8)';
+          ctx.lineWidth = 1;
+          
+          for (let i = 0; i < rN; i++) {
+            const xL = intA + i * dx;
+            const xR = xL + dx;
+            const pxL = toScreenX(xL, width);
+            const pxR = toScreenX(xR, width);
+            const rw = pxR - pxL;
+            
+            if (rMethod === 'trap') {
+              const yL = targetFn(xL);
+              const yR = targetFn(xR);
+              if (!isNaN(yL) && !isNaN(yR) && isFinite(yL) && isFinite(yR)) {
+                const pyL = toScreenY(yL, height);
+                const pyR = toScreenY(yR, height);
+                ctx.beginPath();
+                ctx.moveTo(pxL, baselinePy);
+                ctx.lineTo(pxL, pyL);
+                ctx.lineTo(pxR, pyR);
+                ctx.lineTo(pxR, baselinePy);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+              }
+            } else {
+              let sampleX = xL;
+              if (rMethod === 'right') sampleX = xR;
+              else if (rMethod === 'mid') sampleX = xL + dx / 2;
+              const sampleY = targetFn(sampleX);
+              if (!isNaN(sampleY) && isFinite(sampleY)) {
+                const py = toScreenY(sampleY, height);
+                const top = Math.min(py, baselinePy);
+                const rh = Math.abs(baselinePy - py);
+                ctx.fillRect(pxL, top, rw, rh);
+                ctx.strokeRect(pxL, top, rw, rh);
+              }
+            }
+          }
+        }
+
         // Draw Function Curves
         cartesianFuncs.forEach((f, idx) => {
           if (!f.enabled) return;
@@ -2021,6 +2489,57 @@
           }
         });
 
+        // Taylor Polynomial Approximation Overlay
+        const showTaylor = document.getElementById('showTaylor')?.checked;
+        if (showTaylor && targetFn && cartesianFuncs[targetIdx].enabled) {
+          const tOrder = Math.max(1, Math.min(5, parseInt(document.getElementById('taylorOrder')?.value) || 3));
+          const tCenter = parseFloat(document.getElementById('taylorCenter')?.value) || 0;
+          const coeffs = computeTaylorSeries(targetFn, tCenter, tOrder);
+          
+          ctx.strokeStyle = '#f59e0b';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([5, 3]);
+          ctx.beginPath();
+          let tFirst = true;
+          for (let px = 0; px <= width; px += 2) {
+            const x = toWorldX(px, width);
+            const dx = x - tCenter;
+            let y = 0;
+            let pwr = 1;
+            for (let k = 0; k <= tOrder; k++) {
+              y += coeffs[k] * pwr;
+              pwr *= dx;
+            }
+            if (isNaN(y) || !isFinite(y) || Math.abs(y) > view_scale * 8) {
+              tFirst = true;
+              continue;
+            }
+            const py = toScreenY(y, height);
+            if (tFirst) {
+              ctx.moveTo(px, py);
+              tFirst = false;
+            } else {
+              ctx.lineTo(px, py);
+            }
+          }
+          ctx.stroke();
+          ctx.setLineDash([]);
+          
+          // Center Point Marker
+          const cY = targetFn(tCenter);
+          if (!isNaN(cY) && isFinite(cY)) {
+            const cPx = toScreenX(tCenter, width);
+            const cPy = toScreenY(cY, height);
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.arc(cPx, cPy, 4.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+          }
+        }
+
         // Roots Markers
         computedRoots.forEach(r => {
           const px = toScreenX(r.x, width);
@@ -2050,6 +2569,56 @@
           ctx.lineWidth = 1.5;
           ctx.stroke();
         });
+
+        // Instantaneous Tangent & Normal Line Overlay
+        if (showTangent && targetFn && cartesianFuncs[targetIdx].enabled) {
+          const tx = currentHoverX;
+          const ty = targetFn(tx);
+          if (!isNaN(ty) && isFinite(ty)) {
+            const slope = evalDeriv(targetFn, tx);
+            if (!isNaN(slope) && isFinite(slope)) {
+              const tPx = toScreenX(tx, width);
+              const tPy = toScreenY(ty, height);
+              
+              // Tangent Line
+              ctx.strokeStyle = '#facc15';
+              ctx.lineWidth = 1.8;
+              ctx.setLineDash([6, 3]);
+              ctx.beginPath();
+              const x1 = minX;
+              const y1 = ty + slope * (x1 - tx);
+              const x2 = maxX;
+              const y2 = ty + slope * (x2 - tx);
+              ctx.moveTo(toScreenX(x1, width), toScreenY(y1, height));
+              ctx.lineTo(toScreenX(x2, width), toScreenY(y2, height));
+              ctx.stroke();
+              
+              // Normal Line (-1/m)
+              if (Math.abs(slope) > 1e-5) {
+                const normSlope = -1 / slope;
+                ctx.strokeStyle = '#06b6d4';
+                ctx.lineWidth = 1.2;
+                ctx.setLineDash([2, 3]);
+                ctx.beginPath();
+                const ny1 = ty + normSlope * (x1 - tx);
+                const ny2 = ty + normSlope * (x2 - tx);
+                ctx.moveTo(toScreenX(x1, width), toScreenY(ny1, height));
+                ctx.lineTo(toScreenX(x2, width), toScreenY(ny2, height));
+                ctx.stroke();
+              }
+              ctx.setLineDash([]);
+              
+              // Contact Point
+              ctx.fillStyle = '#facc15';
+              ctx.beginPath();
+              ctx.arc(tPx, tPy, 5, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.strokeStyle = '#0f172a';
+              ctx.lineWidth = 1.5;
+              ctx.stroke();
+            }
+          }
+        }
 
       } else if (currentMode === 'polar') {
         
@@ -2139,6 +2708,37 @@
         ctx.lineTo(width, hoverPy);
         ctx.stroke();
         ctx.setLineDash([]);
+      }
+
+      // Auditory Curve Scanline
+      if (isSonifying) {
+        const sPx = toScreenX(sonifyX, width);
+        if (sPx >= 0 && sPx <= width) {
+          ctx.strokeStyle = '#38bdf8';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([4, 2]);
+          ctx.beginPath();
+          ctx.moveTo(sPx, 0);
+          ctx.lineTo(sPx, height);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          
+          const targetIdx = parseInt(document.getElementById('calcTargetFunc')?.value) || 0;
+          const targetFn = currentMode === 'cartesian' ? compiledCartesian[targetIdx] : null;
+          if (targetFn) {
+            const sy = targetFn(sonifyX);
+            if (!isNaN(sy) && isFinite(sy)) {
+              const sPy = toScreenY(sy, height);
+              ctx.fillStyle = '#38bdf8';
+              ctx.beginPath();
+              ctx.arc(sPx, sPy, 6, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.strokeStyle = '#ffffff';
+              ctx.lineWidth = 1.5;
+              ctx.stroke();
+            }
+          }
+        }
       }
       
       updateReadout();
@@ -2343,6 +2943,147 @@
       link.click();
       document.body.removeChild(link);
       showToast('📷 PNG snapshot exported!');
+    }
+
+    function exportSVG() {
+      const width = canvas.width;
+      const height = canvas.height;
+      const minX = view_cx - view_scale;
+      const maxX = view_cx + view_scale;
+      const view_h = 2 * view_scale * (height / width);
+      const minY = view_cy - view_h / 2;
+      const maxY = view_cy + view_h / 2;
+      const axisX = ((0 - minX) / (2 * view_scale)) * width;
+      const axisY = height - ((0 - minY) / view_h) * height;
+
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+      svg += `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">\n`;
+      svg += `  <style>\n`;
+      svg += `    .grid { stroke: rgba(255, 255, 255, 0.08); stroke-width: 1; }\n`;
+      svg += `    .axis { stroke: rgba(255, 255, 255, 0.45); stroke-width: 2; }\n`;
+      svg += `    .text { fill: #94a3b8; font-family: Consolas, monospace; font-size: 11px; }\n`;
+      svg += `  </style>\n`;
+      svg += `  <!-- Background -->\n`;
+      svg += `  <rect width="100%" height="100%" fill="#0a0e17"/>\n`;
+      
+      // Axes
+      if (axisX >= 0 && axisX <= width) {
+        svg += `  <line x1="${axisX.toFixed(1)}" y1="0" x2="${axisX.toFixed(1)}" y2="${height}" class="axis"/>\n`;
+      }
+      if (axisY >= 0 && axisY <= height) {
+        svg += `  <line x1="0" y1="${axisY.toFixed(1)}" x2="${width}" y2="${axisY.toFixed(1)}" class="axis"/>\n`;
+      }
+
+      // Shaded Integral in SVG if enabled
+      if (currentMode === 'cartesian') {
+        const isShade = document.getElementById('shadeIntegral')?.checked;
+        const targetIdx = parseInt(document.getElementById('calcTargetFunc')?.value) || 0;
+        const targetFn = compiledCartesian[targetIdx];
+        const intA = parseFloat(document.getElementById('intA')?.value) || 0;
+        const intB = parseFloat(document.getElementById('intB')?.value) || 0;
+        if (isShade && targetFn && cartesianFuncs[targetIdx].enabled && intA < intB) {
+          const startPx = Math.max(0, ((intA - minX) / (2 * view_scale)) * width);
+          const endPx = Math.min(width, ((intB - minX) / (2 * view_scale)) * width);
+          const baselinePy = height - ((0 - minY) / view_h) * height;
+          let polyD = `M ${startPx.toFixed(1)} ${baselinePy.toFixed(1)} `;
+          for (let px = startPx; px <= endPx; px += 2) {
+            const x = minX + (px / width) * (2 * view_scale);
+            const y = targetFn(x);
+            if (!isNaN(y) && isFinite(y)) {
+              const py = height - ((y - minY) / view_h) * height;
+              polyD += `L ${px.toFixed(1)} ${py.toFixed(1)} `;
+            }
+          }
+          polyD += `L ${endPx.toFixed(1)} ${baselinePy.toFixed(1)} Z`;
+          svg += `  <path d="${polyD}" fill="rgba(56, 189, 248, 0.2)" stroke="none"/>\n`;
+        }
+
+        cartesianFuncs.forEach((f, idx) => {
+          if (!f.enabled) return;
+          const fn = compiledCartesian[idx];
+          if (!fn) return;
+          let pathD = '';
+          let first = true;
+          for (let px = 0; px <= width; px += 2) {
+            const x = minX + (px / width) * (2 * view_scale);
+            const y = fn(x);
+            if (isNaN(y) || !isFinite(y) || Math.abs(y) > view_scale * 10) {
+              first = true;
+              continue;
+            }
+            const py = height - ((y - minY) / view_h) * height;
+            if (first) {
+              pathD += `M ${px.toFixed(1)} ${py.toFixed(1)} `;
+              first = false;
+            } else {
+              pathD += `L ${px.toFixed(1)} ${py.toFixed(1)} `;
+            }
+          }
+          if (pathD) {
+            svg += `  <path d="${pathD}" fill="none" stroke="${FUNC_COLORS[idx]}" stroke-width="2.5" />\n`;
+          }
+        });
+      } else if (currentMode === 'polar') {
+        polarFuncs.forEach((f, idx) => {
+          if (!f.enabled) return;
+          const fn = compiledPolar[idx];
+          if (!fn) return;
+          let pathD = '';
+          let first = true;
+          const steps = 600;
+          const dTh = (polarMaxTh - polarMinTh) / steps;
+          for (let i = 0; i <= steps; i++) {
+            const th = polarMinTh + i * dTh;
+            const r = fn(th);
+            if (isNaN(r) || !isFinite(r)) { first = true; continue; }
+            const x = r * Math.cos(th);
+            const y = r * Math.sin(th);
+            const px = ((x - minX) / (2 * view_scale)) * width;
+            const py = height - ((y - minY) / view_h) * height;
+            if (first) { pathD += `M ${px.toFixed(1)} ${py.toFixed(1)} `; first = false; }
+            else { pathD += `L ${px.toFixed(1)} ${py.toFixed(1)} `; }
+          }
+          if (pathD) {
+            svg += `  <path d="${pathD}" fill="none" stroke="${FUNC_COLORS[idx]}" stroke-width="2.5" />\n`;
+          }
+        });
+      } else if (currentMode === 'parametric') {
+        parametricCurves.forEach((c, idx) => {
+          if (!c.enabled) return;
+          const p = compiledParametric[idx];
+          if (!p || !p.fnX || !p.fnY) return;
+          let pathD = '';
+          let first = true;
+          const steps = 600;
+          const dt = (paramMaxT - paramMinT) / steps;
+          for (let i = 0; i <= steps; i++) {
+            const t = paramMinT + i * dt;
+            const x = p.fnX(t);
+            const y = p.fnY(t);
+            if (isNaN(x) || isNaN(y) || !isFinite(x) || !isFinite(y)) { first = true; continue; }
+            const px = ((x - minX) / (2 * view_scale)) * width;
+            const py = height - ((y - minY) / view_h) * height;
+            if (first) { pathD += `M ${px.toFixed(1)} ${py.toFixed(1)} `; first = false; }
+            else { pathD += `L ${px.toFixed(1)} ${py.toFixed(1)} `; }
+          }
+          if (pathD) {
+            svg += `  <path d="${pathD}" fill="none" stroke="${FUNC_COLORS[idx]}" stroke-width="2.5" />\n`;
+          }
+        });
+      }
+      
+      svg += `</svg>\n`;
+
+      const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `KGraph_${currentMode}_vector.svg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast('📐 SVG vector graphics exported!');
     }
     
     function exportCSV() {
@@ -2552,6 +3293,11 @@
           exportPNG();
           return;
         }
+        if (e.key.toLowerCase() === 'e') {
+          e.preventDefault();
+          exportSVG();
+          return;
+        }
         if (e.key.toLowerCase() === 'o') {
           e.preventDefault();
           const fileIn = document.getElementById('jsonInput');
@@ -2561,6 +3307,24 @@
         return;
       }
       if (e.altKey) return;
+
+      if (e.code === 'Space' || e.key === ' ') {
+        e.preventDefault();
+        toggleSonify();
+        return;
+      }
+
+      if (e.key.toLowerCase() === 't') {
+        e.preventDefault();
+        toggleTangent();
+        return;
+      }
+
+      if (e.key.toLowerCase() === 'u') {
+        e.preventDefault();
+        toggleMute();
+        return;
+      }
 
       if (e.key === '\\' || e.key === '[') {
         e.preventDefault();

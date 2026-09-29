@@ -190,12 +190,15 @@ static HWND hChecks[MAX_FUNCS];
 static HWND hLabels[MAX_FUNCS];
 static HWND hClrBtn[MAX_FUNCS];
 static HWND hPlotBtn, hZoomIn, hZoomOut, hResetBtn, hRootsBtn, hPresetBtn, hHelpBtn, hModeBtn, hSaveBtn, hCopyBtn, hStatus;
+static HWND hIntegralBtn, hTangentBtn, hSonifyBtn, hExportCsvBtn;
 static HFONT hFontSmall, hFontBold;
 static HBRUSH hTopBgBrush = NULL;
 static HBRUSH hEditBgBrush = NULL;
 static WNDPROC g_oldEditProc = NULL;
 static int g_dpi = 96;
-static int g_canvasTop = 130;
+static int g_canvasTop = 125;
+static int g_showIntegral = 0;
+static int g_showTangent = 0;
 
 static void ShowNativeStatus(const char* text) {
     if (hStatus) {
@@ -204,6 +207,145 @@ static void ShowNativeStatus(const char* text) {
             SetTimer(g_hWnd, 2001, 4000, NULL);
         }
     }
+}
+
+static double EvalSimpsonIntegral(const char* expr_str, double a, double b, int n) {
+    if (a >= b || n <= 0) return 0.0;
+    if (n % 2 != 0) n++;
+    double h = (b - a) / (double)n;
+    double sum = evaluate(expr_str, a) + evaluate(expr_str, b);
+    if (isnan(sum)) sum = 0.0;
+    for (int i = 1; i < n; i++) {
+        double x = a + i * h;
+        double y = evaluate(expr_str, x);
+        if (!isnan(y)) {
+            sum += (i % 2 == 1 ? 4.0 : 2.0) * y;
+        }
+    }
+    return (h / 3.0) * sum;
+}
+
+static DWORD WINAPI SonifyThreadProc(LPVOID lpParam) {
+    WAVEFORMATEX wfx = {0};
+    wfx.wFormatTag = WAVE_FORMAT_PCM;
+    wfx.nChannels = 1;
+    wfx.nSamplesPerSec = 22050;
+    wfx.wBitsPerSample = 8;
+    wfx.nBlockAlign = 1;
+    wfx.nAvgBytesPerSec = 22050;
+    wfx.cbSize = 0;
+
+    HWAVEOUT hWaveOut = NULL;
+    if (waveOutOpen(&hWaveOut, WAVE_MAPPER, &wfx, 0, 0, CALLBACK_NULL) != MMSYSERR_NOERROR) {
+        return 0;
+    }
+
+    const int totalSamples = 26460; // 1.2 seconds duration
+    BYTE* pBuffer = (BYTE*)malloc(totalSamples);
+    if (!pBuffer) {
+        waveOutClose(hWaveOut);
+        return 0;
+    }
+
+    double minX = view_cx - view_scale;
+    double maxX = view_cx + view_scale;
+    int steps = 36;
+    int samplesPerStep = totalSamples / steps;
+    double phase = 0.0;
+
+    for (int s = 0; s < steps; s++) {
+        double x = minX + ((double)s / steps) * (maxX - minX);
+        double y = evaluate(funcs[0].expr, x);
+        if (isnan(y)) y = 0.0;
+
+        double normY = (y - (view_cy - view_scale)) / (2.0 * view_scale);
+        if (normY < 0.0) normY = 0.0;
+        if (normY > 1.0) normY = 1.0;
+        double freq = 180.0 + normY * 720.0;
+        double phaseInc = (2.0 * M_PI * freq) / 22050.0;
+
+        for (int i = 0; i < samplesPerStep; i++) {
+            int bufIdx = s * samplesPerStep + i;
+            if (bufIdx < totalSamples) {
+                double sampleVal = sin(phase) * 55.0;
+                double env = 1.0;
+                if (i < 80) env = (double)i / 80.0;
+                else if (i > samplesPerStep - 80) env = (double)(samplesPerStep - i) / 80.0;
+                pBuffer[bufIdx] = (BYTE)(128 + (int)(sampleVal * env));
+                phase += phaseInc;
+                if (phase > 2.0 * M_PI) phase -= 2.0 * M_PI;
+            }
+        }
+    }
+
+    WAVEHDR wh = {0};
+    wh.lpData = (LPSTR)pBuffer;
+    wh.dwBufferLength = totalSamples;
+    wh.dwFlags = 0;
+
+    waveOutPrepareHeader(hWaveOut, &wh, sizeof(wh));
+    waveOutWrite(hWaveOut, &wh, sizeof(wh));
+
+    while ((wh.dwFlags & WHDR_DONE) == 0) {
+        Sleep(25);
+    }
+
+    waveOutUnprepareHeader(hWaveOut, &wh, sizeof(wh));
+    waveOutClose(hWaveOut);
+    free(pBuffer);
+    return 0;
+}
+
+static void SonifyActiveCurve(HWND hwnd) {
+    if (g_mode != MODE_CARTESIAN && g_mode != MODE_POLAR) {
+        ShowNativeStatus("Curve Sonification active in Cartesian & Polar modes.");
+        return;
+    }
+    ShowNativeStatus("Playing curve sonification audio [Space]...");
+    HANDLE hThread = CreateThread(NULL, 0, SonifyThreadProc, NULL, 0, NULL);
+    if (hThread) CloseHandle(hThread);
+}
+
+static void SaveCSVData(HWND hwnd) {
+    FILE* f = fopen("KGraph_points.csv", "w");
+    if (!f) {
+        ShowNativeStatus("Failed to create KGraph_points.csv");
+        return;
+    }
+    if (g_mode == MODE_CARTESIAN) {
+        fprintf(f, "x,y1,y2,y3\n");
+        double minX = view_cx - view_scale;
+        double maxX = view_cx + view_scale;
+        double dx = (maxX - minX) / 100.0;
+        for (int i = 0; i <= 100; i++) {
+            double x = minX + i * dx;
+            double y1 = funcs[0].enabled ? evaluate(funcs[0].expr, x) : 0.0;
+            double y2 = funcs[1].enabled ? evaluate(funcs[1].expr, x) : 0.0;
+            double y3 = funcs[2].enabled ? evaluate(funcs[2].expr, x) : 0.0;
+            fprintf(f, "%.5f,%.5f,%.5f,%.5f\n", x, y1, y2, y3);
+        }
+    } else if (g_mode == MODE_POLAR) {
+        fprintf(f, "theta,r1,r2,r3\n");
+        for (int i = 0; i <= 100; i++) {
+            double th = (4.0 * M_PI * i) / 100.0;
+            double r1 = funcs[0].enabled ? evaluate(funcs[0].expr, th) : 0.0;
+            double r2 = funcs[1].enabled ? evaluate(funcs[1].expr, th) : 0.0;
+            double r3 = funcs[2].enabled ? evaluate(funcs[2].expr, th) : 0.0;
+            fprintf(f, "%.5f,%.5f,%.5f,%.5f\n", th, r1, r2, r3);
+        }
+    } else {
+        fprintf(f, "t,x1,y1,x2,y2\n");
+        for (int i = 0; i <= 100; i++) {
+            double t = (2.0 * M_PI * i) / 100.0;
+            double x1 = funcs[0].enabled ? evaluate(funcs[0].expr, t) : 0.0;
+            double y1 = funcs[1].enabled ? evaluate(funcs[1].expr, t) : 0.0;
+            double x2 = funcs[2].enabled ? evaluate(funcs[2].expr, t) : 0.0;
+            double y2 = 3.0 * sin(t);
+            fprintf(f, "%.5f,%.5f,%.5f,%.5f\n", t, x1, y1, x2, y2);
+        }
+    }
+    fclose(f);
+    ShowNativeStatus("Exported 101 sample points to KGraph_points.csv [E]!");
 }
 
 static void ShowHelpDialog(HWND hwnd) {
@@ -216,12 +358,14 @@ static void ShowHelpDialog(HWND hwnd) {
         "• Mouse Scroll Wheel or +/- Keys : Smooth zoom in / out\n"
         "• Reset [R] / Home Key : Restore origin & default [-10, 10] viewport\n"
         "• Hover Mouse : Instant coordinates and numerical derivative tracer f'(x)\n\n"
-        "[Inputs & Controls]\n"
-        "• Enter in input : Instantly re-plot graph\n"
-        "• Escape in input : Unfocus input and return to canvas\n"
-        "• Presets [P] : Cycle popular curves & formulas\n"
+        "[Calculus, Audio & Analysis]\n"
+        "• Space : Sonify active curve with authentic PCM retro audio\n"
+        "• Tangent [T] : Toggle instantaneous tangent & normal lines with slope m\n"
+        "• Integral [I] : Compute Simpson's definite integral with shaded region\n"
         "• Roots : Find and highlight numerical roots in view\n"
+        "• Presets [P] : Cycle popular mathematical curves & formulas\n"
         "• Save BMP [S] / Ctrl+S : Save graph snapshot to KGraph_snapshot.bmp\n"
+        "• Export CSV [E] : Save sampled coordinates to KGraph_points.csv\n"
         "• Copy [C] / Ctrl+C : Copy sampled points to Windows clipboard\n"
         "• Clr Buttons : Quick 1-click expression clear\n"
         "• F1 or H : Open this Help guide",
@@ -453,21 +597,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
 
             // Right side toolbar row 1 (Y=6)
-            hModeBtn  = CreateWindowA("BUTTON", "Mode: Cartesian [M]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(344, g_dpi, 96), MulDiv(6, g_dpi, 96), MulDiv(156, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1008, NULL, NULL);
-            hPlotBtn  = CreateWindowA("BUTTON", "Plot [Enter]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(505, g_dpi, 96), MulDiv(6, g_dpi, 96), MulDiv(85, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1001, NULL, NULL);
-            hZoomIn   = CreateWindowA("BUTTON", "+", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(595, g_dpi, 96), MulDiv(6, g_dpi, 96), MulDiv(30, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1002, NULL, NULL);
-            hZoomOut  = CreateWindowA("BUTTON", "-", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(630, g_dpi, 96), MulDiv(6, g_dpi, 96), MulDiv(30, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1003, NULL, NULL);
-            hResetBtn = CreateWindowA("BUTTON", "Reset [R]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(665, g_dpi, 96), MulDiv(6, g_dpi, 96), MulDiv(70, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1004, NULL, NULL);
+            hModeBtn  = CreateWindowA("BUTTON", "Mode: Cartesian [M]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(344, g_dpi, 96), MulDiv(6, g_dpi, 96), MulDiv(140, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1008, NULL, NULL);
+            hPlotBtn  = CreateWindowA("BUTTON", "Plot [Enter]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(488, g_dpi, 96), MulDiv(6, g_dpi, 96), MulDiv(78, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1001, NULL, NULL);
+            hZoomIn   = CreateWindowA("BUTTON", "+", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(570, g_dpi, 96), MulDiv(6, g_dpi, 96), MulDiv(26, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1002, NULL, NULL);
+            hZoomOut  = CreateWindowA("BUTTON", "-", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(600, g_dpi, 96), MulDiv(6, g_dpi, 96), MulDiv(26, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1003, NULL, NULL);
+            hResetBtn = CreateWindowA("BUTTON", "Reset [R]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(630, g_dpi, 96), MulDiv(6, g_dpi, 96), MulDiv(68, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1004, NULL, NULL);
+            hHelpBtn  = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(702, g_dpi, 96), MulDiv(6, g_dpi, 96), MulDiv(68, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1007, NULL, NULL);
 
-            // Right side toolbar row 2 (Y=38)
-            hRootsBtn  = CreateWindowA("BUTTON", "Roots", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(344, g_dpi, 96), MulDiv(38, g_dpi, 96), MulDiv(65, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1005, NULL, NULL);
-            hPresetBtn = CreateWindowA("BUTTON", "Presets [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(414, g_dpi, 96), MulDiv(38, g_dpi, 96), MulDiv(85, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1006, NULL, NULL);
-            hHelpBtn   = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(504, g_dpi, 96), MulDiv(38, g_dpi, 96), MulDiv(75, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1007, NULL, NULL);
-            hSaveBtn   = CreateWindowA("BUTTON", "Save BMP [S]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(584, g_dpi, 96), MulDiv(38, g_dpi, 96), MulDiv(88, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1009, NULL, NULL);
-            hCopyBtn   = CreateWindowA("BUTTON", "Copy [C]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(677, g_dpi, 96), MulDiv(38, g_dpi, 96), MulDiv(58, g_dpi, 96), MulDiv(28, g_dpi, 96), hwnd, (HMENU)1010, NULL, NULL);
+            // Right side toolbar row 2 (Y=35)
+            hRootsBtn    = CreateWindowA("BUTTON", "Roots", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(344, g_dpi, 96), MulDiv(35, g_dpi, 96), MulDiv(58, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1005, NULL, NULL);
+            hIntegralBtn = CreateWindowA("BUTTON", "Integral [I]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(406, g_dpi, 96), MulDiv(35, g_dpi, 96), MulDiv(78, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1011, NULL, NULL);
+            hTangentBtn  = CreateWindowA("BUTTON", "Tangent [T]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(488, g_dpi, 96), MulDiv(35, g_dpi, 96), MulDiv(82, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1012, NULL, NULL);
+            hSonifyBtn   = CreateWindowA("BUTTON", "Sonify [Space]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(574, g_dpi, 96), MulDiv(35, g_dpi, 96), MulDiv(96, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1013, NULL, NULL);
+            hPresetBtn   = CreateWindowA("BUTTON", "Presets [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(674, g_dpi, 96), MulDiv(35, g_dpi, 96), MulDiv(96, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1006, NULL, NULL);
 
-            // Status bar at row 3 (Y=92)
-            hStatus = CreateWindowA("STATIC", "Welcome to KGraph Studio! Drag or use Arrow keys to pan, scroll wheel or +/- to zoom, F1 for Help.", WS_CHILD | WS_VISIBLE | SS_LEFT, MulDiv(10, g_dpi, 96), MulDiv(94, g_dpi, 96), MulDiv(740, g_dpi, 96), MulDiv(22, g_dpi, 96), hwnd, NULL, NULL, NULL);
+            // Right side toolbar row 3 (Y=64)
+            hSaveBtn      = CreateWindowA("BUTTON", "Save BMP [S]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(344, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(96, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1009, NULL, NULL);
+            hExportCsvBtn = CreateWindowA("BUTTON", "Export CSV [E]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(444, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(104, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1014, NULL, NULL);
+            hCopyBtn      = CreateWindowA("BUTTON", "Copy [C]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, MulDiv(552, g_dpi, 96), MulDiv(64, g_dpi, 96), MulDiv(68, g_dpi, 96), MulDiv(26, g_dpi, 96), hwnd, (HMENU)1010, NULL, NULL);
+
+            // Status bar at row 4 (Y=94)
+            hStatus = CreateWindowA("STATIC", "Welcome to KGraph Studio! Drag or use Arrow keys to pan, scroll wheel or +/- to zoom, Space to Sonify, F1 for Help.", WS_CHILD | WS_VISIBLE | SS_LEFT, MulDiv(10, g_dpi, 96), MulDiv(94, g_dpi, 96), MulDiv(760, g_dpi, 96), MulDiv(22, g_dpi, 96), hwnd, NULL, NULL, NULL);
             SendMessageA(hStatus, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
 
             SendMessageA(hModeBtn, WM_SETFONT, (WPARAM)hFontBold, TRUE);
@@ -476,9 +626,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hZoomOut, WM_SETFONT, (WPARAM)hFontBold, TRUE);
             SendMessageA(hResetBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             SendMessageA(hRootsBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+            SendMessageA(hIntegralBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+            SendMessageA(hTangentBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+            SendMessageA(hSonifyBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             SendMessageA(hPresetBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             SendMessageA(hHelpBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             SendMessageA(hSaveBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
+            SendMessageA(hExportCsvBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             SendMessageA(hCopyBtn, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
             
             SetTimer(hwnd, 2001, 5000, NULL);
@@ -568,43 +722,43 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             } else if (id == 1006) { // Presets
                 if (g_mode == MODE_CARTESIAN) {
                     static int cartPresetIdx = 0;
-                    const char* p1[3] = {"exp(-x^2)", "sin(x)*cos(2*x)", "1/(1+x^2)"};
-                    const char* p2[3] = {"sin(3*x)", "x^2/4 - 2", "cos(x)"};
-                    const char* p3[3] = {"x^3 - 3*x", "exp(-abs(x)/3)", "sin(x)"};
-                    const char* names[3] = {"Gaussian & Waves", "Harmonics & Parabola", "Cubic & Damped Wave"};
+                    const char* p1[6] = {"exp(-x^2)", "sin(x)*cos(2*x)", "1/(1+x^2)", "3*exp(-abs(x)/3)*cos(4*x)", "sin(x)+sin(3*x)/3+sin(5*x)/5", "8/(x^2+4)"};
+                    const char* p2[6] = {"sin(3*x)", "x^2/4 - 2", "cos(x)", "sin(2*x)", "cos(3*x)", "exp(-x^2/2)"};
+                    const char* p3[6] = {"x^3 - 3*x", "exp(-abs(x)/3)", "sin(x)", "cos(x)/2", "sin(x)", "x^2/6 - 3"};
+                    const char* names[6] = {"Gaussian & Waves", "Harmonics & Parabola", "Cubic & Witch of Agnesi", "Damped Oscillation", "Fourier Square Wave", "Witch & Bell Curve"};
                     SetWindowTextA(hInputs[0], p1[cartPresetIdx]);
                     SetWindowTextA(hInputs[1], p2[cartPresetIdx]);
                     SetWindowTextA(hInputs[2], p3[cartPresetIdx]);
                     char pMsg[128];
-                    sprintf(pMsg, "Loaded Cartesian Preset [%d/3]: %s", cartPresetIdx + 1, names[cartPresetIdx]);
+                    sprintf(pMsg, "Loaded Cartesian Preset [%d/6]: %s", cartPresetIdx + 1, names[cartPresetIdx]);
                     ShowNativeStatus(pMsg);
-                    cartPresetIdx = (cartPresetIdx + 1) % 3;
+                    cartPresetIdx = (cartPresetIdx + 1) % 6;
                 } else if (g_mode == MODE_POLAR) {
                     static int polarPresetIdx = 0;
-                    const char* p1[3] = {"4*sin(5*t)", "3*cos(4*t)", "2*(1-cos(t))"};
-                    const char* p2[3] = {"3*(1 - sin(t))", "t/2", "3+2*cos(t)"};
-                    const char* p3[3] = {"sqrt(abs(9*cos(2*t)))", "sin(3*t)", "cos(2*t)"};
-                    const char* names[3] = {"Penta-Rose & Cardioid", "Cardioid & Spiral", "Lemniscate & Waves"};
+                    const char* p1[6] = {"4*sin(5*t)", "3*cos(4*t)", "2*(1-cos(t))", "sqrt(t)", "sqrt(abs(9*cos(2*t)))", "2+3*cos(t)"};
+                    const char* p2[6] = {"3*(1 - sin(t))", "t/2", "3+2*cos(t)", "t/3", "2*cos(3*t)", "1-cos(t)"};
+                    const char* p3[6] = {"sqrt(abs(9*cos(2*t)))", "sin(3*t)", "cos(2*t)", "sin(5*t)", "cos(t)", "2*sin(4*t)"};
+                    const char* names[6] = {"Penta-Rose & Cardioid", "Cardioid & Archimedes", "Lemniscate & Rose", "Fermat & Archimedes Spiral", "Lemniscate & Trefoil", "Limaçon & Cardioid"};
                     SetWindowTextA(hInputs[0], p1[polarPresetIdx]);
                     SetWindowTextA(hInputs[1], p2[polarPresetIdx]);
                     SetWindowTextA(hInputs[2], p3[polarPresetIdx]);
                     char pMsg[128];
-                    sprintf(pMsg, "Loaded Polar Preset [%d/3]: %s", polarPresetIdx + 1, names[polarPresetIdx]);
+                    sprintf(pMsg, "Loaded Polar Preset [%d/6]: %s", polarPresetIdx + 1, names[polarPresetIdx]);
                     ShowNativeStatus(pMsg);
-                    polarPresetIdx = (polarPresetIdx + 1) % 3;
+                    polarPresetIdx = (polarPresetIdx + 1) % 6;
                 } else if (g_mode == MODE_PARAMETRIC) {
                     static int paramPresetIdx = 0;
-                    const char* p1[3] = {"sin(t)*(exp(cos(t))-2*cos(4*t))", "4*cos(3*t)", "4*cos(t)^3"};
-                    const char* p2[3] = {"cos(t)*(exp(cos(t))-2*cos(4*t))", "4*sin(2*t)", "4*sin(t)^3"};
-                    const char* p3[3] = {"4*cos(t)^3", "3*cos(t)", "sin(2*t)"};
-                    const char* names[3] = {"Butterfly Curve", "Lissajous 3:2", "Astroid"};
+                    const char* p1[6] = {"sin(t)*(exp(cos(t))-2*cos(4*t))", "4*cos(3*t)", "4*cos(t)^3", "4*sin(3*t)", "sin(t)+2*sin(2*t)", "4*cos(t)+2*cos(3*t)"};
+                    const char* p2[6] = {"cos(t)*(exp(cos(t))-2*cos(4*t))", "4*sin(2*t)", "4*sin(t)^3", "4*cos(4*t)", "cos(t)-2*cos(2*t)", "4*sin(t)-2*sin(3*t)"};
+                    const char* p3[6] = {"4*cos(t)^3", "3*cos(t)", "sin(2*t)", "cos(2*t)", "3*sin(t)", "sin(3*t)"};
+                    const char* names[6] = {"Butterfly Curve", "Lissajous 3:2", "Astroid", "Lissajous 3:4", "Trefoil Projection", "Hypotrochoid"};
                     SetWindowTextA(hInputs[0], p1[paramPresetIdx]);
                     SetWindowTextA(hInputs[1], p2[paramPresetIdx]);
                     SetWindowTextA(hInputs[2], p3[paramPresetIdx]);
                     char pMsg[128];
-                    sprintf(pMsg, "Loaded Parametric Preset [%d/3]: %s", paramPresetIdx + 1, names[paramPresetIdx]);
+                    sprintf(pMsg, "Loaded Parametric Preset [%d/6]: %s", paramPresetIdx + 1, names[paramPresetIdx]);
                     ShowNativeStatus(pMsg);
-                    paramPresetIdx = (paramPresetIdx + 1) % 3;
+                    paramPresetIdx = (paramPresetIdx + 1) % 6;
                 }
                 SendMessageA(hChecks[0], BM_SETCHECK, BST_CHECKED, 0);
                 SendMessageA(hChecks[1], BM_SETCHECK, BST_CHECKED, 0);
@@ -620,6 +774,35 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SaveGraphBMP(hwnd);
             } else if (id == 1010) { // Copy Points
                 CopyPointsToClipboard(hwnd);
+            } else if (id == 1011) { // Definite Integral
+                if (g_mode == MODE_CARTESIAN) {
+                    g_showIntegral = !g_showIntegral;
+                    if (g_showIntegral) {
+                        double a = view_cx - 0.5 * view_scale;
+                        double b = view_cx + 0.5 * view_scale;
+                        double area = EvalSimpsonIntegral(funcs[0].expr, a, b, 200);
+                        char msgBuf[128];
+                        sprintf(msgBuf, "Simpson's Integral ∫[%.2f, %.2f] y1(x) dx = %.5f", a, b, area);
+                        ShowNativeStatus(msgBuf);
+                    } else {
+                        ShowNativeStatus("Definite integral shading hidden.");
+                    }
+                } else {
+                    ShowNativeStatus("Definite integral calculation active in Cartesian mode.");
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (id == 1012) { // Tangent Line
+                if (g_mode == MODE_CARTESIAN) {
+                    g_showTangent = !g_showTangent;
+                    ShowNativeStatus(g_showTangent ? "Tangent & Normal line tracer enabled [T]." : "Tangent line disabled.");
+                } else {
+                    ShowNativeStatus("Tangent & slope tracer active in Cartesian mode.");
+                }
+                InvalidateRect(hwnd, NULL, FALSE);
+            } else if (id == 1013) { // Sonify
+                SonifyActiveCurve(hwnd);
+            } else if (id == 1014) { // Export CSV
+                SaveCSVData(hwnd);
             } else if (id >= 1100 && id < 1100 + MAX_FUNCS) {
                 int idx = id - 1100;
                 funcs[idx].enabled = (SendMessageA(hChecks[idx], BM_GETCHECK, 0, 0) == BST_CHECKED);
@@ -661,6 +844,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SendMessageA(hwnd, WM_COMMAND, 1009, 0);
             } else if (wParam == 'C' || wParam == 'c') {
                 SendMessageA(hwnd, WM_COMMAND, 1010, 0);
+            } else if (wParam == 'I' || wParam == 'i') {
+                SendMessageA(hwnd, WM_COMMAND, 1011, 0);
+            } else if (wParam == 'T' || wParam == 't') {
+                SendMessageA(hwnd, WM_COMMAND, 1012, 0);
+            } else if (wParam == VK_SPACE) {
+                SendMessageA(hwnd, WM_COMMAND, 1013, 0);
+            } else if (wParam == 'E' || wParam == 'e') {
+                SendMessageA(hwnd, WM_COMMAND, 1014, 0);
             } else if (wParam == VK_ADD || wParam == VK_OEM_PLUS || wParam == VK_PRIOR) {
                 SendMessageA(hwnd, WM_COMMAND, 1002, 0);
             } else if (wParam == VK_SUBTRACT || wParam == VK_OEM_MINUS || wParam == VK_NEXT) {
@@ -835,6 +1026,46 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                 // Plot Curves according to Mode
                 if (g_mode == MODE_CARTESIAN) {
+                    // Shaded Definite Integral Region
+                    if (g_showIntegral && funcs[0].enabled) {
+                        double intA = view_cx - 0.5 * view_scale;
+                        double intB = view_cx + 0.5 * view_scale;
+                        int startPx = rect.left + (int)((intA - (view_cx - view_scale)) / (2.0 * view_scale) * w);
+                        int endPx = rect.left + (int)((intB - (view_cx - view_scale)) / (2.0 * view_scale) * w);
+                        if (startPx < rect.left) startPx = rect.left;
+                        if (endPx > rect.right) endPx = rect.right;
+
+                        if (startPx < endPx) {
+                            POINT poly[320];
+                            int polyCount = 0;
+                            poly[polyCount].x = startPx;
+                            poly[polyCount].y = axis_y;
+                            polyCount++;
+
+                            for (int px = startPx; px <= endPx && polyCount < 310; px += 2) {
+                                double x = view_cx - view_scale + ((double)(px - rect.left) / w) * (2.0 * view_scale);
+                                double y = evaluate(funcs[0].expr, x);
+                                if (!isnan(y)) {
+                                    int py = canvasTop + (int)(h - (y - (view_cy - view_scale)) / (2.0 * view_scale) * h);
+                                    poly[polyCount].x = px;
+                                    poly[polyCount].y = py;
+                                    polyCount++;
+                                }
+                            }
+                            poly[polyCount].x = endPx;
+                            poly[polyCount].y = axis_y;
+                            polyCount++;
+
+                            HBRUSH intBrush = CreateSolidBrush(RGB(18, 48, 76));
+                            HPEN intPen = CreatePen(PS_SOLID, 1, RGB(56, 189, 248));
+                            SelectObject(memDC, intBrush);
+                            SelectObject(memDC, intPen);
+                            Polygon(memDC, poly, polyCount);
+                            DeleteObject(intBrush);
+                            DeleteObject(intPen);
+                        }
+                    }
+
                     for (int idx = 0; idx < MAX_FUNCS; idx++) {
                         if (!funcs[idx].enabled) continue;
                         HPEN plotPen = CreatePen(PS_SOLID, 2, funcs[idx].color);
@@ -853,6 +1084,47 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             } else { first = 1; }
                         }
                         DeleteObject(plotPen);
+                    }
+
+                    // Tangent and Normal Line Overlay
+                    if (g_showTangent && hover_mouse.y >= canvasTop && funcs[0].enabled) {
+                        double hoverX = view_cx - view_scale + ((double)hover_mouse.x / w) * (2.0 * view_scale);
+                        double hoverY = evaluate(funcs[0].expr, hoverX);
+                        double slope = eval_derivative(funcs[0].expr, hoverX);
+                        if (!isnan(hoverY) && !isnan(slope)) {
+                            double xLeft = view_cx - view_scale;
+                            double xRight = view_cx + view_scale;
+                            double yLeft = hoverY + slope * (xLeft - hoverX);
+                            double yRight = hoverY + slope * (xRight - hoverX);
+                            int pyLeft = canvasTop + (int)(h - (yLeft - (view_cy - view_scale)) / (2.0 * view_scale) * h);
+                            int pyRight = canvasTop + (int)(h - (yRight - (view_cy - view_scale)) / (2.0 * view_scale) * h);
+
+                            HPEN tanPen = CreatePen(PS_SOLID, 2, RGB(251, 191, 36));
+                            SelectObject(memDC, tanPen);
+                            MoveToEx(memDC, rect.left, pyLeft, NULL);
+                            LineTo(memDC, rect.right, pyRight);
+                            DeleteObject(tanPen);
+
+                            if (fabs(slope) > 1e-4) {
+                                HPEN normPen = CreatePen(PS_DOT, 1, RGB(6, 182, 212));
+                                SelectObject(memDC, normPen);
+                                double normSlope = -1.0 / slope;
+                                double ynLeft = hoverY + normSlope * (xLeft - hoverX);
+                                double ynRight = hoverY + normSlope * (xRight - hoverX);
+                                int pynLeft = canvasTop + (int)(h - (ynLeft - (view_cy - view_scale)) / (2.0 * view_scale) * h);
+                                int pynRight = canvasTop + (int)(h - (ynRight - (view_cy - view_scale)) / (2.0 * view_scale) * h);
+                                MoveToEx(memDC, rect.left, pynLeft, NULL);
+                                LineTo(memDC, rect.right, pynRight);
+                                DeleteObject(normPen);
+                            }
+
+                            int ptX = rect.left + (int)((hoverX - (view_cx - view_scale)) / (2.0 * view_scale) * w);
+                            int ptY = canvasTop + (int)(h - (hoverY - (view_cy - view_scale)) / (2.0 * view_scale) * h);
+                            HBRUSH ptBrush = CreateSolidBrush(RGB(251, 191, 36));
+                            SelectObject(memDC, ptBrush);
+                            Ellipse(memDC, ptX - 5, ptY - 5, ptX + 6, ptY + 6);
+                            DeleteObject(ptBrush);
+                        }
                     }
 
                     // Root Markers
