@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T21:26:00Z — kilo-usability: KTodo (UI/UX Ergonomics, Toast De-Occlusion, 60 FPS Polish & Window Sizing)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 130.3 KB < 999 KB).
+  - Window & Viewport: Tuned default window to 960x720 in `App.jsx`, `ktodo.html`, and 960x650 native C with direct `KTodo.exe` download.
+  - Toast De-Occlusion: Relocated toasts to bottom-right, eliminating overlap with header actions, inputs, and modal controls.
+  - 60 FPS Performance: Removed blanket `fadeIn` animation on card re-renders and optimized search filtering to eliminate stutter.
+  - Usability Status Bar: Added footer status bar with quick keyboard hints (<kbd>F1</kbd>, <kbd>N</kbd>, <kbd>/</kbd>, <kbd>Space</kbd>, <kbd>1</kbd>/<kbd>2</kbd>, <kbd>F5</kbd>, <kbd>F9</kbd>) and live stats.
+  - Kanban & Navigation: Added selected card styling and unified arrow navigation and Enter handling across List and Kanban views.
+  - Verification: MSVC clean (`KTodo.exe` 24 KB); Vite clean in 329ms (`ktodo.html` 130.3 KB); security lint & icon checks 100% PASS.
+
 - **2026-09-29T21:07:00Z — kilo-tester: KDragon (Interactive UI Audit, State Portability & Ergonomics)**
   - Status: PASS ✅ (4 issues found, 4 fixed; 0 regressions; 142.4 KB < 999 KB).
   - Storage & Portability: Added JSON save file Export (.json) and Import (.json) with schema validation and start screen upload.

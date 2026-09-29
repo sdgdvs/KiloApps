@@ -661,6 +661,18 @@ void Update() {
         }
     }
     active_sys_idx = found_sys_idx;
+
+    // Passive Quantum Ramscoop Stellar Wind Fuel Harvesting
+    if (mod_ramscoop && !modal_open) {
+        for (int i = 0; i < NUM_SYSTEMS; i++) {
+            int dX = systems[i].x - ship_x;
+            int dY = systems[i].y - ship_y;
+            if (dX*dX + dY*dY < 14400) {
+                res_fuel += 0.25f;
+                break;
+            }
+        }
+    }
     
     if (found_sys_idx != -1) {
         if (!systems[found_sys_idx].visited && !modal_open) {
@@ -672,32 +684,30 @@ void Update() {
     }
 }
 
-// Draw Cybernetic HUD Corner Filigree L-Brackets
+// Draw Cybernetic HUD Corner Filigree L-Brackets (Clean static vector reticles, zero border dots)
 void DrawCyberHUD(HDC memDC, int w, int h) {
     int len = 20;
     HPEN hudPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
     HPEN oldPen = SelectObject(memDC, hudPen);
-    HBRUSH cyanBrush = CreateSolidBrush(RGB(0, 255, 255));
 
-    // Top-Left
+    // Top-Left Reticle
     MoveToEx(memDC, 6, 6 + len, NULL); LineTo(memDC, 6, 6); LineTo(memDC, 6 + len, 6);
-    RECT r1 = {4, 4, 8, 8}; FillRect(memDC, &r1, cyanBrush);
+    MoveToEx(memDC, 11, 11 + len / 2, NULL); LineTo(memDC, 11, 11); LineTo(memDC, 11 + len / 2, 11);
 
-    // Top-Right
+    // Top-Right Reticle
     MoveToEx(memDC, w - 6 - len, 6, NULL); LineTo(memDC, w - 6, 6); LineTo(memDC, w - 6, 6 + len);
-    RECT r2 = {w - 8, 4, w - 4, 8}; FillRect(memDC, &r2, cyanBrush);
+    MoveToEx(memDC, w - 11 - len / 2, 11, NULL); LineTo(memDC, w - 11, 11); LineTo(memDC, w - 11, 11 + len / 2);
 
-    // Bottom-Left
+    // Bottom-Left Reticle
     MoveToEx(memDC, 6, h - 6 - len, NULL); LineTo(memDC, 6, h - 6); LineTo(memDC, 6 + len, h - 6);
-    RECT r3 = {4, h - 8, 8, h - 4}; FillRect(memDC, &r3, cyanBrush);
+    MoveToEx(memDC, 11, h - 11 - len / 2, NULL); LineTo(memDC, 11, h - 11); LineTo(memDC, 11 + len / 2, h - 11);
 
-    // Bottom-Right
+    // Bottom-Right Reticle
     MoveToEx(memDC, w - 6 - len, h - 6, NULL); LineTo(memDC, w - 6, h - 6); LineTo(memDC, w - 6, h - 6 - len);
-    RECT r4 = {w - 8, h - 8, w - 4, h - 4}; FillRect(memDC, &r4, cyanBrush);
+    MoveToEx(memDC, w - 11 - len / 2, h - 11, NULL); LineTo(memDC, w - 11, h - 11); LineTo(memDC, w - 11, h - 11 - len / 2);
 
     SelectObject(memDC, oldPen);
     DeleteObject(hudPen);
-    DeleteObject(cyanBrush);
 }
 
 // Draw Procedural Player Flagship with Rotation & Weapons
@@ -871,7 +881,7 @@ void DrawEncounterTacticalView(HDC memDC, int cx, int cy, int enc_type) {
         FillRect(memDC, &cr2, cBrush);
         DeleteObject(cBrush);
     }
-    else if (enc_type == 4 || enc_type == 18) {
+    else if (enc_type == 4) {
         // Orbital Space Station
         int rot = (time / 20) % 360;
         float a = rot * (float)M_PI / 180.0f;
@@ -898,6 +908,55 @@ void DrawEncounterTacticalView(HDC memDC, int cx, int cy, int enc_type) {
         RECT dr = { cx - 3, cy - 3 - 20, cx + 3, cy + 3 - 20 };
         FillRect(memDC, &dr, dBrush);
         DeleteObject(dBrush);
+    }
+    else if (enc_type == 18) {
+        // Superweapon Forge - Heavy Particle Accelerator Station
+        int fy = cy - 20;
+
+        // Heavy Collimator Pylons
+        POINT p1[4] = { {cx - 55, fy - 18}, {cx - 26, fy - 10}, {cx - 26, fy + 10}, {cx - 55, fy + 18} };
+        POINT p2[4] = { {cx + 55, fy - 18}, {cx + 26, fy - 10}, {cx + 26, fy + 10}, {cx + 55, fy + 18} };
+        HBRUSH pyb = CreateSolidBrush(RGB(15, 23, 42));
+        HPEN pyp = CreatePen(PS_SOLID, 2, RGB(2, 132, 199));
+        SelectObject(memDC, pyb); SelectObject(memDC, pyp);
+        Polygon(memDC, p1, 4); Polygon(memDC, p2, 4);
+        DeleteObject(pyb); DeleteObject(pyp);
+
+        // Radiator vanes
+        HPEN rPen = CreatePen(PS_SOLID, 1, RGB(245, 158, 11));
+        SelectObject(memDC, rPen);
+        MoveToEx(memDC, cx - 48, fy - 8, NULL); LineTo(memDC, cx - 32, fy - 4);
+        MoveToEx(memDC, cx - 48, fy + 8, NULL); LineTo(memDC, cx - 32, fy + 4);
+        MoveToEx(memDC, cx + 48, fy - 8, NULL); LineTo(memDC, cx + 32, fy - 4);
+        MoveToEx(memDC, cx + 48, fy + 8, NULL); LineTo(memDC, cx + 32, fy + 4);
+        DeleteObject(rPen);
+
+        // Outer Accelerator Torus Ring
+        HPEN torPen = CreatePen(PS_SOLID, 3, RGB(56, 189, 248));
+        SelectObject(memDC, torPen); SelectObject(memDC, GetStockObject(NULL_BRUSH));
+        Ellipse(memDC, cx - 32, fy - 22, cx + 32, fy + 22);
+        DeleteObject(torPen);
+
+        // Inner Cyclotron Core Ring
+        HPEN inPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
+        SelectObject(memDC, inPen);
+        Ellipse(memDC, cx - 18, fy - 14, cx + 18, fy + 14);
+        DeleteObject(inPen);
+
+        // Twin Accelerator Focusing Prongs
+        HBRUSH prb = CreateSolidBrush(RGB(30, 41, 59));
+        HPEN prp = CreatePen(PS_SOLID, 1, RGB(0, 255, 255));
+        SelectObject(memDC, prb); SelectObject(memDC, prp);
+        Rectangle(memDC, cx - 8, fy - 26, cx - 3, fy - 12);
+        Rectangle(memDC, cx + 3, fy - 26, cx + 8, fy - 12);
+        DeleteObject(prb); DeleteObject(prp);
+
+        // Pulsing Antimatter Compression Core
+        int strobe = ((time / 250) % 2 == 0);
+        HBRUSH cBrush = CreateSolidBrush(strobe ? RGB(255, 170, 0) : RGB(239, 68, 68));
+        SelectObject(memDC, cBrush); SelectObject(memDC, GetStockObject(NULL_PEN));
+        Ellipse(memDC, cx - 6, fy - 6, cx + 6, fy + 6);
+        DeleteObject(cBrush);
     }
     else if (enc_type == 2) {
         // Dimensional Rift Anomaly

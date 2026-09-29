@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-tester
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-expander
-  app: KVault
-  timestamp: "2026-09-29T22:25:00Z"
+  agent: kilo-graphics
+  app: KStarship
+  timestamp: "2026-09-29T22:38:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -276,6 +276,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T22:38:00Z — kilo-graphics: KStarship (Superweapon Forge Art, Zero Glints, Stellar Wind Ramscoop & Action Consistency)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 154.2 KB < 999 KB).
+  - Superweapon Forge: Added dedicated cyclotron particle accelerator & antimatter crucible vector art in web & Win32 C (`main.c`).
+  - Specular Glint & Border Audit: Replaced corner dot blocks with crisp double-bracket reticles in HUD; verified 0 perimeter glints/dots.
+  - Tactical Combat Key Alignment: Aligned 4-key combat array (1:Laser, 2:Flee, 3:Superweapon, 4:Shield Boost) with persistent hotkeys.
+  - Ramscoop Balance Pass: Added passive stellar wind fuel trickle (+0.25 fuel/frame) when navigating within 120px of star systems.
+  - Audio & Forge Feedback: Added YM2612 FM chime & alarm feedback and capacitive status notifications to weaponsmith forge.
+  - Verification: MSVC clean (`KStarship.exe` 151 KB); Vite clean in 391ms (`kstarship.html` 154.2 KB); icon check & security lint 100% PASS.
+
 - **2026-09-29T22:25:00Z — kilo-expander: KVault (TOTP 2FA Engine, Generator Studio, Security Audit & Multi-Format Suite)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 143.7 KB < 999 KB).
   - TOTP Authenticator: Added live RFC 6238 Base32 HMAC-SHA1 2FA code generator with 30s countdown wheel and 1-click copy.
@@ -311,13 +320,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Usability Status Bar: Added footer status bar with quick keyboard hints (<kbd>F1</kbd>, <kbd>1-9</kbd>, <kbd>R</kbd>, <kbd>F5</kbd>, <kbd>F9</kbd>, <kbd>Esc</kbd>) and live vessel telemetry.
   - Control Ergonomics: Added active `:active` and keyboard focus `:focus-visible` styling; added visible header help hint.
   - Verification: MSVC clean (`KTrader.exe` 26.6 KB); Vite clean in 349ms (`ktrader.html` 85.9 KB); icon & security checks 100% PASS.
-
-- **2026-09-29T21:26:00Z — kilo-usability: KTodo (UI/UX Ergonomics, Toast De-Occlusion, 60 FPS Polish & Window Sizing)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 130.3 KB < 999 KB).
-  - Window & Viewport: Tuned default window to 960x720 in `App.jsx`, `ktodo.html`, and 960x650 native C with direct `KTodo.exe` download.
-  - Toast De-Occlusion: Relocated toasts to bottom-right, eliminating overlap with header actions, inputs, and modal controls.
-  - 60 FPS Performance: Removed blanket `fadeIn` animation on card re-renders and optimized search filtering to eliminate stutter.
-  - Usability Status Bar: Added footer status bar with quick keyboard hints (<kbd>F1</kbd>, <kbd>N</kbd>, <kbd>/</kbd>, <kbd>Space</kbd>, <kbd>1</kbd>/<kbd>2</kbd>, <kbd>F5</kbd>, <kbd>F9</kbd>) and live stats.
-  - Kanban & Navigation: Added selected card styling and unified arrow navigation and Enter handling across List and Kanban views.
-  - Verification: MSVC clean (`KTodo.exe` 24 KB); Vite clean in 329ms (`ktodo.html` 130.3 KB); security lint & icon checks 100% PASS.
 

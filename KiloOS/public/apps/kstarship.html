@@ -810,30 +810,29 @@
       c.shadowColor = '#00ffff';
       c.shadowBlur = 6;
 
+      // Top-Left Reticle (Clean static vector reticle, zero border dots)
       c.beginPath();
       c.moveTo(8, 8 + len); c.lineTo(8, 8); c.lineTo(8 + len, 8);
+      c.moveTo(14, 14 + len / 2); c.lineTo(14, 14); c.lineTo(14 + len / 2, 14);
       c.stroke();
-      c.fillStyle = '#00ffff';
-      c.fillRect(6, 6, 4, 4);
-      c.fillRect(14, 14, 2, 2);
 
+      // Top-Right Reticle
       c.beginPath();
       c.moveTo(w - 8 - len, 8); c.lineTo(w - 8, 8); c.lineTo(w - 8, 8 + len);
+      c.moveTo(w - 14 - len / 2, 14); c.lineTo(w - 14, 14); c.lineTo(w - 14, 14 + len / 2);
       c.stroke();
-      c.fillRect(w - 10, 6, 4, 4);
-      c.fillRect(w - 16, 14, 2, 2);
 
+      // Bottom-Left Reticle
       c.beginPath();
       c.moveTo(8, h - 8 - len); c.lineTo(8, h - 8); c.lineTo(8 + len, h - 8);
+      c.moveTo(14, h - 14 - len / 2); c.lineTo(14, h - 14); c.lineTo(14 + len / 2, h - 14);
       c.stroke();
-      c.fillRect(6, h - 10, 4, 4);
-      c.fillRect(14, h - 16, 2, 2);
 
+      // Bottom-Right Reticle
       c.beginPath();
       c.moveTo(w - 8 - len, h - 8); c.lineTo(w - 8, h - 8); c.lineTo(w - 8, h - 8 - len);
+      c.moveTo(w - 14 - len / 2, h - 14); c.lineTo(w - 14, h - 14); c.lineTo(w - 14, h - 14 - len / 2);
       c.stroke();
-      c.fillRect(w - 10, h - 10, 4, 4);
-      c.fillRect(w - 16, h - 16, 2, 2);
 
       // Static 1999 Vector HUD bridge telemetry (Zero traveling dots / comets)
       c.fillStyle = 'rgba(0, 255, 255, 0.75)';
@@ -954,7 +953,7 @@
         pCtx.fillRect(-10, -8, 20, 4);
 
         pCtx.restore();
-      } else if (type === 'Station' || type === 'Superweapon') {
+      } else if (type === 'Station') {
         pCtx.save();
         pCtx.translate(cx, cy);
         let rot = time * 0.001;
@@ -1001,6 +1000,77 @@
         pCtx.arc(-8, 0, 2.5, 0, Math.PI*2);
         pCtx.arc(8, 0, 2.5, 0, Math.PI*2);
         pCtx.fill();
+
+        pCtx.restore();
+      } else if (type === 'Superweapon') {
+        // High-Tech Orbital Superweapon Forge (Particle Accelerator & Antimatter Crucible)
+        pCtx.save();
+        pCtx.translate(cx, cy);
+
+        // Heavy Collimator Pylons
+        pCtx.fillStyle = '#0f172a';
+        pCtx.strokeStyle = '#0284c7';
+        pCtx.lineWidth = 1.5;
+        pCtx.beginPath();
+        pCtx.moveTo(-60, -22); pCtx.lineTo(-30, -12); pCtx.lineTo(-30, 12); pCtx.lineTo(-60, 22);
+        pCtx.closePath();
+        pCtx.fill();
+        pCtx.stroke();
+
+        pCtx.beginPath();
+        pCtx.moveTo(60, -22); pCtx.lineTo(30, -12); pCtx.lineTo(30, 12); pCtx.lineTo(60, 22);
+        pCtx.closePath();
+        pCtx.fill();
+        pCtx.stroke();
+
+        // Radiating Heat Dissipation Vanes
+        pCtx.strokeStyle = '#f59e0b';
+        pCtx.lineWidth = 1.5;
+        for (let i = -1; i <= 1; i++) {
+          pCtx.beginPath();
+          pCtx.moveTo(-52, i * 10); pCtx.lineTo(-38, i * 6);
+          pCtx.moveTo(52, i * 10); pCtx.lineTo(38, i * 6);
+          pCtx.stroke();
+        }
+
+        // Heavy Torus Accelerator Ring
+        pCtx.strokeStyle = '#38bdf8';
+        pCtx.lineWidth = 3;
+        pCtx.beginPath();
+        pCtx.ellipse(0, 0, 32, 24, 0, 0, Math.PI * 2);
+        pCtx.stroke();
+
+        // Inner Cyclotron Core Ring
+        pCtx.strokeStyle = '#00ffff';
+        pCtx.lineWidth = 1.5;
+        pCtx.beginPath();
+        pCtx.ellipse(0, 0, 20, 15, 0, 0, Math.PI * 2);
+        pCtx.stroke();
+
+        // Twin Forward Particle Focusing Prongs
+        pCtx.fillStyle = '#1e293b';
+        pCtx.strokeStyle = '#00ffff';
+        pCtx.lineWidth = 1.5;
+        pCtx.fillRect(-8, -26, 4, 16);
+        pCtx.strokeRect(-8, -26, 4, 16);
+        pCtx.fillRect(4, -26, 4, 16);
+        pCtx.strokeRect(4, -26, 4, 16);
+
+        // Pulsing Antimatter Compression Plasma Core (Static clean vector glow)
+        let pulse = (Math.sin(time * 0.006) + 1) * 0.5;
+        pCtx.fillStyle = '#ffaa00';
+        pCtx.shadowColor = '#ffaa00';
+        pCtx.shadowBlur = 10 + pulse * 8;
+        pCtx.beginPath();
+        pCtx.arc(0, 0, 7 + pulse * 2, 0, Math.PI * 2);
+        pCtx.fill();
+
+        // Core containment ring
+        pCtx.strokeStyle = '#ffffff';
+        pCtx.lineWidth = 1;
+        pCtx.beginPath();
+        pCtx.arc(0, 0, 4, 0, Math.PI * 2);
+        pCtx.stroke();
 
         pCtx.restore();
       } else if (type === 'Anomaly') {
@@ -2300,49 +2370,60 @@
                     closeBtn();
                 });
 
-                // Button 3: Superweapon (when charged)
-                if (state.superweapon.charges > 0) {
-                    addBtn(`Fire ${state.superweapon.name} [3] (Charges: ${state.superweapon.charges})`, () => {
-                        state.superweapon.charges--;
-                        playSuperweapon();
-                        spawnSuperweaponBeam(state.ship.x, state.ship.y);
-                        let swDmg = 75 + state.superweapon.type * 30 + Math.floor(Math.random()*20);
-                        let gIdx = getOfficer(2); if (gIdx !== -1) swDmg += state.crew[gIdx].level * 5;
-                        enemyHp -= swDmg;
-                        if (enemyHp < 0) enemyHp = 0;
-                        let result = `SUPERWEAPON BLAST hits for ${swDmg}!`;
-                        if (enemyHp > 0) {
-                            let sDmg = Math.max(0, Math.floor(baseEnemyDmg * 0.45) - state.upgrades.shields * 2);
-                            let pIdx = getOfficer(1);
-                            if (pIdx !== -1 && Math.random() < state.crew[pIdx].level * 0.06) {
-                              playShieldDeflect();
-                              result += `\n[EVADED] Pilot evaded counter-fire!`;
-                            } else {
-                              state.resources.hull -= sDmg;
-                              result += ` Counter-fire caused ${sDmg} hull dmg.`;
-                            }
+                // Button 3: Superweapon [3] (Always index 2 / key 3)
+                const swCharged = state.superweapon.charges > 0;
+                addBtn(`Fire ${state.superweapon.name} [3] (Charges: ${state.superweapon.charges}/${state.superweapon.maxCharges})`, () => {
+                    if (state.superweapon.charges <= 0) {
+                        playAlarm();
+                        showToast('No Superweapon charges! Synthesize at a Starbase or Forge.');
+                        return;
+                    }
+                    state.superweapon.charges--;
+                    playSuperweapon();
+                    spawnSuperweaponBeam(state.ship.x, state.ship.y);
+                    let swDmg = 75 + state.superweapon.type * 30 + Math.floor(Math.random()*20);
+                    let gIdx = getOfficer(2); if (gIdx !== -1) swDmg += state.crew[gIdx].level * 5;
+                    enemyHp -= swDmg;
+                    if (enemyHp < 0) enemyHp = 0;
+                    let result = `SUPERWEAPON BLAST hits for ${swDmg}!`;
+                    if (enemyHp > 0) {
+                        let sDmg = Math.max(0, Math.floor(baseEnemyDmg * 0.45) - state.upgrades.shields * 2);
+                        let pIdx = getOfficer(1);
+                        if (pIdx !== -1 && Math.random() < state.crew[pIdx].level * 0.06) {
+                          playShieldDeflect();
+                          result += `\n[EVADED] Pilot evaded counter-fire!`;
                         } else {
-                            result += ` Target completely annihilated!`;
+                          state.resources.hull -= sDmg;
+                          result += ` Counter-fire caused ${sDmg} hull dmg.`;
                         }
-                        updateCombatBtns(result);
-                        updateUI();
-                    }, true);
-                }
+                    } else {
+                        result += ` Target completely annihilated!`;
+                    }
+                    updateCombatBtns(result);
+                    updateUI();
+                }, swCharged);
 
-                // Button 4: Shield Matrix Boost (if fuel available)
-                if (state.resources.fuel >= 250 && state.resources.hull < 100) {
-                    addBtn(`Shield Matrix Boost [${state.superweapon.charges > 0 ? '4' : '3'}] (-250 Fuel, +20% Hull)`, () => {
-                        state.resources.fuel -= 250;
-                        state.resources.hull = Math.min(100, state.resources.hull + 20);
-                        playShieldBoost();
-                        spawnShockwave(state.ship.x, state.ship.y, 50, '#00ffff');
-                        let eIdx = getOfficer(3);
-                        if (eIdx !== -1) addXP(3, 15);
-                        showToast('Emergency deflector shields restored +20% Hull!');
-                        updateCombatBtns(`Diverted 250 fuel to recharge emergency deflectors (+20% Hull)!`);
-                        updateUI();
-                    });
-                }
+                // Button 4: Shield Matrix Boost [4] (Always index 3 / key 4)
+                addBtn(`Shield Matrix Boost [4] (-250 Fuel, +20% Hull)`, () => {
+                    if (state.resources.fuel < 250) {
+                        playAlarm();
+                        showToast('Insufficient fuel for shield boost (-250 needed)!');
+                        return;
+                    }
+                    if (state.resources.hull >= 100) {
+                        showToast('Deflectors already at 100% capacity.');
+                        return;
+                    }
+                    state.resources.fuel -= 250;
+                    state.resources.hull = Math.min(100, state.resources.hull + 20);
+                    playShieldBoost();
+                    spawnShockwave(state.ship.x, state.ship.y, 50, '#00ffff');
+                    let eIdx = getOfficer(3);
+                    if (eIdx !== -1) addXP(3, 15);
+                    showToast('Emergency deflector shields restored +20% Hull!');
+                    updateCombatBtns(`Diverted 250 fuel to recharge emergency deflectors (+20% Hull)!`);
+                    updateUI();
+                });
             }
         };
         updateCombatBtns(introMsg);
@@ -2472,7 +2553,12 @@
                     state.resources.credits -= 200; state.cargo.tech -= 2;
                     state.superweapon.type = 1; state.superweapon.name = 'Tachyon Beam';
                     state.superweapon.charges = state.superweapon.maxCharges;
+                    playChime();
+                    showToast('Tachyon Beam forged and fully charged!');
                     updateForge(); updateUI();
+                } else {
+                    playAlarm();
+                    showToast('Insufficient credits or tech (-200C, -2 Tech needed)!');
                 }
             });
             addBtn('Forge Antimatter Torpedo (400C, 4 Tech)', () => {
@@ -2480,7 +2566,12 @@
                     state.resources.credits -= 400; state.cargo.tech -= 4;
                     state.superweapon.type = 2; state.superweapon.name = 'Antimatter Torpedo';
                     state.superweapon.charges = state.superweapon.maxCharges;
+                    playChime();
+                    showToast('Antimatter Torpedo forged and fully charged!');
                     updateForge(); updateUI();
+                } else {
+                    playAlarm();
+                    showToast('Insufficient credits or tech (-400C, -4 Tech needed)!');
                 }
             });
             addBtn('Forge Nova Obliterator (800C, 6 Tech)', () => {
@@ -2488,7 +2579,12 @@
                     state.resources.credits -= 800; state.cargo.tech -= 6;
                     state.superweapon.type = 4; state.superweapon.name = 'Nova Obliterator';
                     state.superweapon.charges = state.superweapon.maxCharges;
+                    playChime();
+                    showToast('Nova Obliterator forged and fully charged!');
                     updateForge(); updateUI();
+                } else {
+                    playAlarm();
+                    showToast('Insufficient credits or tech (-800C, -6 Tech needed)!');
                 }
             });
             addBtn('Synthesize 2 Charges (100C, 1 Tech)', () => {
@@ -2496,8 +2592,15 @@
                     if (state.superweapon.charges < state.superweapon.maxCharges) {
                         state.resources.credits -= 100; state.cargo.tech -= 1;
                         state.superweapon.charges = Math.min(state.superweapon.maxCharges, state.superweapon.charges + 2);
+                        playChime();
+                        showToast(`Synthesized charges: ${state.superweapon.charges}/${state.superweapon.maxCharges}`);
                         updateForge(); updateUI();
+                    } else {
+                        showToast('Superweapon capacitors are already at maximum charge!');
                     }
+                } else {
+                    playAlarm();
+                    showToast('Insufficient credits or tech (-100C, -1 Tech needed)!');
                 }
             });
             addBtn(fromStation ? 'Back to Station' : 'Exit Forge', () => {
@@ -3129,6 +3232,14 @@
         if (Math.random() < 0.1) addXP(1, 1);
       } else {
         setHum(false);
+      }
+
+      // Passive Quantum Ramscoop Stellar Wind Fuel Harvesting
+      if (state.modules && state.modules.ramscoop && !state.modalOpen) {
+        const nearStar = state.stars.find(s => Math.hypot(s.x - state.ship.x, s.y - state.ship.y) < 120);
+        if (nearStar) {
+          state.resources.fuel += 0.25;
+        }
       }
 
       if (state.ship.moving) {
