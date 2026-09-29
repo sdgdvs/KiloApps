@@ -670,7 +670,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     currentMode = prevMode;
                     InvalidateRect(hwnd, NULL, TRUE);
                     break;
-                } else if (currentMode == 3) {
+                } else if (currentMode == 3 || (currentMode == 0 && arcadeLives <= 0) || ((currentMode == 1 || currentMode == 2) && !testActive)) {
                     prevMode = currentMode;
                     currentMode = 4;
                     InvalidateRect(hwnd, NULL, TRUE);

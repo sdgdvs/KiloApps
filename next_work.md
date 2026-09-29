@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KFont
-  kilo_usability: KType
+  kilo_usability: KVault
   kilo_graphics: KChrono
   kilo_qa: KScript
   kilo_expander: KZip
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KFlash
-  timestamp: "2026-09-29T23:15:00Z"
+  agent: kilo-usability
+  app: KType
+  timestamp: "2026-09-29T23:26:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KFortress`, `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KType`
+- **Current Target**: `KVault`
 - **Upcoming Queue**:
-  `KVault`, `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader)*.
+  `KVoid`, `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KScript`
@@ -276,6 +276,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-29T23:26:00Z — kilo-usability: KType (Ergonomic Window Sizing, Toast De-Occlusion, HiDPI Canvas & Hotkey Status)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 137.4 KB < 999 KB).
+  - Window & Viewport: Tuned default window to 1000x760 in `App.jsx`, `ktype.html` resizeTo, and bumped `MICROS_VERSION` to 0.4.10.
+  - Toast De-Occlusion: Relocated HUD toast to bottom-center with `clearToasts()` on modal entry, preventing control occlusion.
+  - Speed Test Ergonomics: Integrated compact font loader chip in toolbar; added persistent hotkey chips (<kbd>F1/H</kbd>, <kbd>Esc</kbd>, <kbd>F5</kbd>, <kbd>F9</kbd>, <kbd>M</kbd>).
+  - Arcade & HiDPI Canvas: Converted arcade canvas to responsive width with aspect ratio preservation and scaled `devicePixelRatio`.
+  - Audio & Controls: Added <kbd>M</kbd> sound toggle hotkey with toast feedback; documented in Help guide [F1/H] & tutorial modal.
+  - Verification: MSVC clean (`KType.exe` 35 KB); Vite clean in 260ms; icon check & security lint 100% PASS.
+
 - **2026-09-29T23:15:00Z — kilo-tester: KFlash (Interactive UI Audit, Quicksave/Load, Dialog Flow & Ergonomics)**
   - Status: PASS ✅ (6 issues fixed; 0 regressions; 0 perimeter glints; 94.9 KB < 999 KB).
   - Quicksave & State: Added F5 snapshot quicksave and F9 quickload restoring deck state, filters, index, and study progress.
@@ -311,12 +320,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Schema & Taxonomy: Added category filter pills, custom tag badges, favorite ⭐ pinning, soft delete trash, and password history.
   - Native Alignment: Added Server, API Key, and 2FA templates and Shift+Gen Pass 6-digit PIN generator in Win32 C (`KVault.exe`).
   - Verification: MSVC clean (`KVault.exe` 18.9 KB); Vite clean in 313ms (`kvault.html` 143.7 KB); security lint 100% PASS.
-
-- **2026-09-29T22:08:00Z — kilo-qa: KContacts (Pass 5 Tutorial & State Integrity Audit)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 141.7 KB < 999 KB).
-  - State Persistence: Upgraded F5/F9 quicksave/quickload across web & native V2 binary capturing full state (tags, filters, selections, query).
-  - Tutorial Integrity: Enforced first-run tutorial flags (`kcontacts_tutorialSeen` / `kcontacts_tutorial.dat`), never interrupting restored saves.
-  - Interactive Overlays: Aligned modal dialog backdrop dismissals and auto-focused primary action triggers on all modals.
-  - Toast De-Occlusion: Implemented `clearToasts()` on modal entry preventing any toast overlap with form controls or modal actions.
-  - Verification: MSVC clean (`KContacts.exe` 28.7 KB); Vite clean in 263ms (`kcontacts.html` 141.7 KB); security lint & icons 100% PASS.
 

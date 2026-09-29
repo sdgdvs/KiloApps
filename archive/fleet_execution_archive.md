@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T22:08:00Z — kilo-qa: KContacts (Pass 5 Tutorial & State Integrity Audit)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 141.7 KB < 999 KB).
+  - State Persistence: Upgraded F5/F9 quicksave/quickload across web & native V2 binary capturing full state (tags, filters, selections, query).
+  - Tutorial Integrity: Enforced first-run tutorial flags (`kcontacts_tutorialSeen` / `kcontacts_tutorial.dat`), never interrupting restored saves.
+  - Interactive Overlays: Aligned modal dialog backdrop dismissals and auto-focused primary action triggers on all modals.
+  - Toast De-Occlusion: Implemented `clearToasts()` on modal entry preventing any toast overlap with form controls or modal actions.
+  - Verification: MSVC clean (`KContacts.exe` 28.7 KB); Vite clean in 263ms (`kcontacts.html` 141.7 KB); security lint & icons 100% PASS.
+
 - **2026-09-29T21:47:00Z — kilo-graphics: KStarship (YM2612 FM Audio, SPC700 Delay, Echo Probe, Zero Glints & Combat Key Alignment)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 149.6 KB < 999 KB).
   - Audio Architecture: Added Genesis YM2612 2-Op FM synthesis & SNES SPC700 stereo delay warmth engine with tactical combat SFX.
