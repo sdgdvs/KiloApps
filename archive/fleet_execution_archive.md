@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T23:25:00Z — kilo-usability: Fleet-Wide 60 FPS Pacing Optimization Sprint**
+  - Scope: Remediated rendering bottlenecks across KHex, KSolitaire, KPong, KChrono, KType, KVault.
+  - KHex: Virtualized row scroller (20K DOM elements ➔ ~400 nodes); eliminated backdrop-filter blurs.
+  - KSolitaire: Cached board element & rects; stripped shadowBlur from particle motes/sparks; static gold inlay.
+  - KPong: Removed frame-skipping timing throttle; batched canvas geometry paths; native 60 FPS rAF loop.
+  - KChrono: Eliminated per-frame backdrop-filter CPU gaussian blurs and cached chronograph dimensions.
+  - KType & KVault: Removed heavy backdrop-filter blurs and parallelized WebCrypto TOTP calculation.
+  - Results: All 6 apps verified at locked 60 FPS (17ms max delta, 0 stutters); Vite clean; security lint & ARG test 100% PASS.
+
 - **2026-09-30T23:10:00Z — kilo-tester: KMail (Interactive UI Audit, Quicksave/Load, Toast Safe Zone & Action Wiring)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 117.1 KB web / 504.0 KB native < 999 KB ceiling).
   - Quicksave & Quickload: Implemented F5 / F9 mailbox snapshot save & restore across localStorage with audio & toast feedback.

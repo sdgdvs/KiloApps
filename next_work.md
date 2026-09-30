@@ -33,8 +33,8 @@ virtual_web_rotation:
   - "kweb://warez"
 last_run:
   agent: kilo-expander
-  app: "Retro Firebase Multiplayer Expansion (KReversi, KGo, KDarts)"
-  timestamp: "2026-09-30T23:59:00Z"
+  app: "Native Binaries Release Pipeline (100 Win32 C Apps)"
+  timestamp: "2026-10-01T00:15:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -295,6 +295,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-01T00:15:00Z — kilo-expander: Automated Native Binaries Release Pipeline (100 Win32 C Apps)**
+  - Pipeline Automation: Built `scripts/package_native_releases.py` with PE header and <999KB size validation.
+  - Native Executables Sync: Copied all 100 compiled Win32 binaries into `KiloOS/public/exe/` and `KiloOS_Server/public/exe/`.
+  - App.jsx Direct Downloads: Synchronized 71 previously generic apps in `App.jsx` to individual `/exe/<AppName>.exe` URLs.
+  - Suite Packaging: Generated full 100-app bundle `KApps.zip` (3.4 MB) for bulk downloads; dynamic window title bar tooltips.
+  - Verification: `npm run build` clean in 246ms (v0.4.15); smoke_test_native 100/100 PASS; security & ARG lints 100% PASS.
+
 - **2026-09-30T23:59:00Z — kilo-expander: Retro Firebase Multiplayer Service (RFMS Expansion to KReversi, KGo, KDarts)**
   - RFMS Spec & Agent Guidance: Created `docs/RFMS_SPEC.md`; updated `kilo-expander` and `kilo-creator` skills with standard snippets.
   - Direction 3 Retrofits: Upgraded `KReversi`, `KGo`, and `KDarts` to full RFMS compliance with room codes and deep links.
@@ -327,12 +334,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Responsive Viewports: Added adaptive toolbar and status bar rules (@media max 960px & 680px) ensuring no vertical clipping or overflow.
   - Interactive Status Bar: Wired diagnostics dialog to word/char count and manual autosave snapshot to auto-save status indicator.
   - Verification: MSVC clean (`KPad.exe` 31.7 KB); Vite clean in 280ms; check_icons & security lint 100% PASS; <999KB ceiling.
-
-- **2026-09-30T23:25:00Z — kilo-usability: Fleet-Wide 60 FPS Pacing Optimization Sprint**
-  - Scope: Remediated rendering bottlenecks across KHex, KSolitaire, KPong, KChrono, KType, KVault.
-  - KHex: Virtualized row scroller (20K DOM elements ➔ ~400 nodes); eliminated backdrop-filter blurs.
-  - KSolitaire: Cached board element & rects; stripped shadowBlur from particle motes/sparks; static gold inlay.
-  - KPong: Removed frame-skipping timing throttle; batched canvas geometry paths; native 60 FPS rAF loop.
-  - KChrono: Eliminated per-frame backdrop-filter CPU gaussian blurs and cached chronograph dimensions.
-  - KType & KVault: Removed heavy backdrop-filter blurs and parallelized WebCrypto TOTP calculation.
-  - Results: All 6 apps verified at locked 60 FPS (17ms max delta, 0 stutters); Vite clean; security lint & ARG test 100% PASS.
