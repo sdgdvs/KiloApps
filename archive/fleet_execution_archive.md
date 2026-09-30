@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T04:45:00Z — kilo-tester: KGraph (Interactive UI Audit, Calculus Rendering, Quicksave & Audio Polish)**
+  - Status: PASS ✅ (6 issues fixed, 0 regressions, 0 perimeter glints, 141.5 KB < 999 KB).
+  - Taylor Series Overlay: Fixed element ID mismatch, degree parsing, expansion point, and return object handling in canvas and SVG export.
+  - Riemann Sum Method: Corrected method matching for 'midpoint' and 'trapezoid' partition shapes and SVG rendering.
+  - Quicksave & State: Synchronized full calculus DOM controls (bounds, partitions, Taylor degree, HUD, mute) across F5/F9 and JSON import/export.
+  - Audio Mute & Sound Effects: Added `updateMuteUI()` on init, save/load FM chimes, root/intersection alerts, and preset click feedback.
+  - Tangent Line Redraw: Fixed `toggleTangent()` [T] to immediately trigger canvas redraw and tangent slope update.
+  - Verification: MSVC clean (`KGraph.exe` 36.8 KB); Vite clean in 431ms; JS syntax verified; security linter 100% PASS; <999KB ceiling.
+
 - **2026-09-30T04:26:00Z — kilo-creator: echo-subsystem.net (Acoustic Research & Signal Intelligence)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, 123.5 KB < 999 KB ceiling).
   - Phased Beamformer Grid: Added Tab [05] with 360° polar radar array, 4 listening stations, azimuth steering & live beam audio.
