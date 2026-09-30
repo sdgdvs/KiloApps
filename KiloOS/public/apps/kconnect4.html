@@ -941,6 +941,7 @@
     <button class="close" onclick="closeAllModals()" style="margin-top:12px; background:#ff5252; width:100%;">Close [Esc]</button>
   </div>
 
+  <script src="../assets/js/retro_multiplayer.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
     import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
@@ -1023,6 +1024,29 @@
     let localLastMoveTs = 0;
     let localLastChatTs = 0;
     let localLastFreezeTs = 0;
+    let soloFallbackTimer = null;
+
+    function startSoloFallbackTimer(code) {
+      clearSoloFallbackTimer();
+      soloFallbackTimer = setTimeout(() => {
+        if (isOnlineGame && currentRoomStatus === 'waiting' && currentRoomId === code) {
+          showToast("⏱️ No opponent joined in 25s. Engaging Subnet AI Cyber-Bot...", "warning");
+          leaveOnlineGame(true);
+          gameMode = 1; // vs AI
+          aiPersonality = 2; // Trapper Cyber-Bot
+          updateDiffSelect();
+          initGame();
+          showToast("🎮 Subnet Cyber-Bot initialized! Your move (Red).", "info");
+        }
+      }, 25000);
+    }
+
+    function clearSoloFallbackTimer() {
+      if (soloFallbackTimer) {
+        clearTimeout(soloFallbackTimer);
+        soloFallbackTimer = null;
+      }
+    }
 
     function isLocalPlayerTurn() {
       if (isOnlineGame) {
@@ -1243,6 +1267,10 @@
 
         closeAllModals();
         attachRoomListener(code);
+        startSoloFallbackTimer(code);
+        if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+          window.history.replaceState(null, '', `#room=${code}`);
+        }
         
         document.getElementById('onlineBar').style.display = 'flex';
         document.getElementById('onlineRoomIdText').textContent = code;
@@ -1327,6 +1355,9 @@
 
         closeAllModals();
         attachRoomListener(code);
+        if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+          window.history.replaceState(null, '', `#room=${code}`);
+        }
 
         document.getElementById('onlineBar').style.display = 'flex';
         document.getElementById('onlineRoomIdText').textContent = code;
@@ -1386,6 +1417,10 @@
           if (oppIndicator) oppIndicator.textContent = '🔴';
           if (oppText) oppText.textContent = `Opponent: ${opponentName} (Disconnected)`;
         }
+      }
+
+      if (room.status === 'playing' || (room.p2 && room.p2.connected)) {
+        clearSoloFallbackTimer();
       }
 
       if (room.status === 'playing' && gameActive === false && !room.winner) {
@@ -1595,6 +1630,7 @@
     }
 
     function leaveOnlineGame(notifyServer = true) {
+      clearSoloFallbackTimer();
       if (activeRoomRef && activeRoomListener && window.fb) {
         try { window.fb.off(activeRoomRef, 'value', activeRoomListener); } catch(e) {}
         activeRoomRef = null;
@@ -1619,6 +1655,11 @@
       isHost = false;
       currentRoomStatus = 'none';
 
+      if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+        const cleanUrl = window.location.pathname + window.location.search;
+        window.history.replaceState(null, '', cleanUrl);
+      }
+
       const bar = document.getElementById('onlineBar');
       if (bar) bar.style.display = 'none';
       
@@ -1628,7 +1669,7 @@
 
     function copyOnlineRoomLink() {
       if (!currentRoomId) return;
-      const url = `${window.location.origin}${window.location.pathname}?room=${currentRoomId}`;
+      const url = `${window.location.origin}${window.location.pathname}#room=${currentRoomId}`;
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(() => {
           showToast(`📋 Room invite link copied! (${currentRoomId})`, 'success');
@@ -3945,8 +3986,15 @@
 
     function checkUrlAutoJoin() {
       try {
+        let room = null;
         const params = new URLSearchParams(window.location.search);
-        const room = params.get('room') || params.get('join');
+        room = params.get('room') || params.get('join');
+        if (!room && window.location.hash) {
+          const h = window.location.hash.replace(/^#/, '');
+          if (h.startsWith('room=')) room = h.split('=')[1];
+          else if (h.includes('?room=')) room = new URLSearchParams(h.split('?')[1]).get('room');
+          else if (/^[A-Za-z0-9_-]{3,10}$/.test(h)) room = h;
+        }
         if (room && window.fb) {
           setTimeout(() => {
             joinOnlineRoom(room);
