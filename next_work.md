@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KGraph
-  kilo_usability: KVoid
+  kilo_usability: KWizard
   kilo_graphics: KStarForge
   kilo_qa: KColosseum
   kilo_expander: KTask
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KFortress
-  timestamp: "2026-09-30T02:48:00Z"
+  agent: kilo-usability
+  app: KVoid
+  timestamp: "2026-09-30T03:10:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KVoid`
+- **Current Target**: `KWizard`
 - **Upcoming Queue**:
-  `KWizard`, `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault)*.
+  `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KColosseum`
@@ -276,6 +276,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T03:10:00Z — kilo-usability: KVoid (Window Sizing, Responsive Layout, HiDPI Canvas & Audio Mute)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, 104.9 KB web / 31.2 KB native < 999 KB ceiling).
+  - Window Ergonomics: Tuned default dimensions to 780x710 in `App.jsx`, eliminating vertical clipping and scrollbars.
+  - Layout & Scrolling: Removed flex center clipping; added responsive 4:3 canvas aspect ratio and flexible stats layout.
+  - HiDPI Rendering: Added `window.devicePixelRatio` canvas backing store scaling for crisp high-density display output.
+  - Audio FX Controls: Added `[M]` / `[Shift+M]` audio mute toggle with persistent storage and button feedback in web & native.
+  - First-Run & Guide: Updated Survival Guide and hint bar documenting all hotkeys, EMP, chem flares, and sound controls.
+  - Verification: MSVC clean (`KVoid.exe` 31.2 KB); Vite clean in 304ms; security linter 100% PASS; icon audits clean.
+
 - **2026-09-30T02:48:00Z — kilo-tester: KFortress (Interactive UI Audit, Save Data Integrity & De-Occlusion)**
   - Status: PASS ✅ (6 issues fixed, 0 regressions, 0 perimeter glints, 195.6 KB < 999 KB).
   - Toast De-Occlusion: Relocated `.toast-container` to bottom-left with `clearToasts()` on modal open/close, fixing tutorial modal button blockage.
@@ -311,14 +320,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Unicode Robustness: Updated custom pair calculation with surrogate pair support; bound change events to color pickers.
   - View Synchronization: Added auto-refresh to Unicode glyph grid on tab activation and hoisted storage helper definitions.
   - Verification: MSVC clean (`KFont.exe` 30.7 KB); Vite clean in 412ms; Chrome CDP 100% PASS (148 elements); security clean.
-
-- **2026-09-30T01:35:00Z — kilo-qa: KRead (Pass 5: Tutorial & State Integrity, Quicksave/Load, YM2612 Audio)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 157 KB < 999 KB).
-  - State Persistence: Added full snapshot quicksave [F5] & quickload [F9] in web and native (`kread_quicksave.dat`).
-  - Tutorial Integrity: Added first-run `#tutorialModal` and `CheckFirstRunTutorial` via `kread_tutorialSeen` / `.dat`.
-  - Audio Engine: Integrated Yamaha YM2612 2-op FM and SNES SPC700 stereo delay warmth sound engine with [Shift+M] / [M].
-  - Toast & UX Polish: Added `clearToasts()` de-occlusion on modal and drawer triggers; wired Esc and backdrop dismissals.
-  - Verification: MSVC clean (`KRead.exe` 29.5 KB); Vite clean in 330ms; Chrome CDP 100% PASS (79 elements, 0 errors); security/icons clean.
 
 
 

@@ -23,7 +23,10 @@ int abs(int v) {
     return (v < 0) ? -v : v;
 }
 
+static int soundMuted = 0;
+
 DWORD WINAPI SoundThread(LPVOID lpParam) {
+    if (soundMuted) return 0;
     int type = (int)(intptr_t)lpParam;
     if (type == 1) { // Heartbeat
         Beep(100, 100);
@@ -51,6 +54,7 @@ DWORD WINAPI SoundThread(LPVOID lpParam) {
     return 0;
 }
 void PlaySoundEffect(int type) {
+    if (soundMuted) return;
     HANDLE hThread = CreateThread(NULL, 0, SoundThread, (LPVOID)(intptr_t)type, 0, NULL);
     if (hThread) {
         CloseHandle(hThread);
@@ -1547,7 +1551,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 TextOut(hdcMem, 55, y, "Controls & How to Play:", 23); y += 15;
                 TextOut(hdcMem, 65, y, "WASD / Arrows: Move (Consumes O2)", 33); y += 15;
                 TextOut(hdcMem, 65, y, "Space: EMP Blast (Stun)    F: Deploy Chem Flare (Repel)", 55); y += 15;
-                TextOut(hdcMem, 65, y, "F1 / H: Guide   F5: Save   F9: Load   R: Restart", 48); y += 20;
+                TextOut(hdcMem, 65, y, "F1/H: Guide  M: Audio  F5: Save  F9: Load  R: Restart", 53); y += 20;
 
                 TextOut(hdcMem, 55, y, "Station Resources & Hazards:", 28); y += 15;
                 TextOut(hdcMem, 65, y, "Cyan Canister: Emergency O2 (+35%)   Gold Cell: Battery (+40%)", 62); y += 15;
@@ -1635,6 +1639,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             if (wParam == VK_F9) {
                 LoadGameState();
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (wParam == 'M') {
+                soundMuted = !soundMuted;
+                lstrcpy(sysMsg, soundMuted ? "AUDIO FX MUTED." : "AUDIO FX ENABLED.");
+                msgTimer = 40;
                 InvalidateRect(hwnd, NULL, FALSE);
                 return 0;
             }

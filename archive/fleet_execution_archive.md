@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T01:35:00Z — kilo-qa: KRead (Pass 5: Tutorial & State Integrity, Quicksave/Load, YM2612 Audio)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 157 KB < 999 KB).
+  - State Persistence: Added full snapshot quicksave [F5] & quickload [F9] in web and native (`kread_quicksave.dat`).
+  - Tutorial Integrity: Added first-run `#tutorialModal` and `CheckFirstRunTutorial` via `kread_tutorialSeen` / `.dat`.
+  - Audio Engine: Integrated Yamaha YM2612 2-op FM and SNES SPC700 stereo delay warmth sound engine with [Shift+M] / [M].
+  - Toast & UX Polish: Added `clearToasts()` de-occlusion on modal and drawer triggers; wired Esc and backdrop dismissals.
+  - Verification: MSVC clean (`KRead.exe` 29.5 KB); Vite clean in 330ms; Chrome CDP 100% PASS (79 elements, 0 errors); security/icons clean.
+
 - **2026-09-30T01:15:00Z — kilo-graphics: KChrono (YM2612 FM Audio & SPC700 Delay, Zero Glints, Scenario 6 Balance & Native Alignment)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 176 KB < 999 KB).
   - Audio Engine: Integrated Yamaha YM2612 2-op FM synthesis and SNES SPC700 stereo delay warmth with [M] hotkey and header/footer toggle.

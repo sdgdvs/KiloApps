@@ -18,7 +18,6 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             box-sizing: border-box;
         }
         #game-container {
@@ -26,10 +25,16 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            width: 100%;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 10px 12px 20px;
+            box-sizing: border-box;
         }
         h1 {
-            margin: 0 0 10px 0;
-            font-size: 24px;
+            margin: 0 0 8px 0;
+            font-size: 22px;
+            letter-spacing: 2px;
             text-shadow: 0 0 5px #0f0, 0 0 10px #0f0;
             animation: flicker 4s infinite;
         }
@@ -39,12 +44,26 @@
         }
         #canvas-wrapper {
             position: relative;
+            width: 100%;
+            max-width: 640px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         canvas {
             background-color: #050505;
             border: 2px solid #0f0;
-            box-shadow: 0 0 15px #0f0;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+            image-rendering: -moz-crisp-edges;
+            image-rendering: -webkit-crisp-edges;
             image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            width: 100%;
+            max-width: 640px;
+            height: auto;
+            aspect-ratio: 4 / 3;
+            display: block;
+            box-sizing: border-box;
         }
         .scanlines {
             position: absolute;
@@ -70,50 +89,70 @@
         #stats {
             display: flex;
             justify-content: space-between;
-            width: 640px;
-            margin-bottom: 5px;
-            font-size: 18px;
+            width: 100%;
+            max-width: 640px;
+            margin-bottom: 4px;
+            font-size: 16px;
             font-weight: bold;
+            box-sizing: border-box;
+            user-select: none;
         }
         #inventory {
             display: flex;
             justify-content: center;
-            width: 640px;
-            margin-bottom: 10px;
-            font-size: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+            width: 100%;
+            max-width: 640px;
+            margin-bottom: 8px;
+            font-size: 14px;
             font-weight: bold;
             color: #555;
+            box-sizing: border-box;
+            user-select: none;
+            gap: 6px;
         }
-        .inv-item { color: #fff; margin-left: 15px; }
+        .inv-item { color: #fff; margin-left: 10px; }
         .has-key { color: #fff; text-shadow: 0 0 5px #fff; }
         .key-red.has-key { color: #f55; text-shadow: 0 0 5px #f00; }
         .key-green.has-key { color: #5f5; text-shadow: 0 0 5px #0f0; }
         .key-blue.has-key { color: #77f; text-shadow: 0 0 5px #00f; }
         #message {
-            margin-top: 10px;
-            font-size: 16px;
-            height: 20px;
+            margin-top: 8px;
+            font-size: 14px;
+            min-height: 20px;
             text-shadow: 0 0 3px #0f0;
+            text-align: center;
+            width: 100%;
+            max-width: 640px;
+            box-sizing: border-box;
+            word-break: break-word;
         }
         .btn-panel {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             margin-top: 8px;
             justify-content: center;
             flex-wrap: wrap;
+            width: 100%;
+            max-width: 640px;
+            box-sizing: border-box;
         }
         .retro-btn {
             background: #0a140a;
             color: #0f0;
             border: 1px solid #0f0;
             font-family: inherit;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
-            padding: 4px 10px;
+            padding: 5px 9px;
             cursor: pointer;
             text-shadow: 0 0 3px #0f0;
             box-shadow: 0 0 4px rgba(0, 255, 0, 0.2);
-            transition: background 0.15s, color 0.15s;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+            user-select: none;
+            touch-action: manipulation;
+            border-radius: 2px;
         }
         .retro-btn:hover {
             background: #0f0;
@@ -214,16 +253,17 @@
             <div class="scanlines"></div>
             <div class="crt-overlay"></div>
         </div>
-        <div id="message">Use WASD to move &bull; Space for EMP &bull; [F] Flare &bull; [F1] Guide &bull; [F5] Save &bull; [F9] Load</div>
+        <div id="message">Use WASD to move &bull; Space for EMP &bull; [F] Flare &bull; [F1] Guide &bull; [M] Audio &bull; [F5] Save &bull; [F9] Load</div>
         <div class="btn-panel">
-            <button class="retro-btn" id="btn-help" onclick="toggleHelp()">[F1/H] Guide</button>
-            <button class="retro-btn" id="btn-emp" onclick="deployEMP()">[Space] EMP</button>
-            <button class="retro-btn" id="btn-flare" onclick="deployFlare()">[F] Flare</button>
-            <button class="retro-btn" id="btn-save" onclick="quickSave()">[F5] Quicksave</button>
-            <button class="retro-btn" id="btn-load" onclick="quickLoad()">[F9] Quickload</button>
-            <button class="retro-btn" id="btn-export" onclick="exportSaveFile()" title="Export JSON Save">Export</button>
-            <button class="retro-btn" id="btn-import" onclick="document.getElementById('import-file-input').click()" title="Import JSON Save">Import</button>
-            <button class="retro-btn" id="btn-restart" onclick="resetGame()">[R] Restart</button>
+            <button class="retro-btn" id="btn-help" onclick="toggleHelp()" title="Survival Guide & Hotkeys (F1 / H)">[F1/H] Guide</button>
+            <button class="retro-btn" id="btn-emp" onclick="deployEMP()" title="EMP Blast - Stun Entities (Space)">[Space] EMP</button>
+            <button class="retro-btn" id="btn-flare" onclick="deployFlare()" title="Distress Flare - Repel Entities (F)">[F] Flare</button>
+            <button class="retro-btn" id="btn-sound" onclick="toggleSound()" title="Toggle Audio FX (M / Shift+M)">[M] Audio: ON</button>
+            <button class="retro-btn" id="btn-save" onclick="quickSave()" title="Quicksave Game State (F5)">[F5] Quicksave</button>
+            <button class="retro-btn" id="btn-load" onclick="quickLoad()" title="Quickload Game State (F9)">[F9] Quickload</button>
+            <button class="retro-btn" id="btn-export" onclick="exportSaveFile()" title="Export JSON Save File">Export</button>
+            <button class="retro-btn" id="btn-import" onclick="document.getElementById('import-file-input').click()" title="Import JSON Save File">Import</button>
+            <button class="retro-btn" id="btn-restart" onclick="resetGame()" title="Restart Expedition from Deck 1 (R)">[R] Restart</button>
             <input type="file" id="import-file-input" accept=".json" style="display:none;" onchange="importSaveFile(this.files[0]); this.value='';">
         </div>
         <div id="help-modal-overlay" class="modal-overlay" onclick="handleOverlayClick(event)">
@@ -234,9 +274,10 @@
                 </div>
                 <div class="help-section">
                     <h3>Controls & How to Play</h3>
-                    <p><b>WASD / Arrows:</b> Move Explorer<br>
+                    <p><b>WASD / Arrows:</b> Move Explorer (consumes O2)<br>
                     <b>Space / [Space] Button:</b> Use EMP Charge (Stuns nearby entities)<br>
                     <b>F / [F] Button:</b> Deploy Distress Flare (Creates illuminated safe zone that repels lurkers)<br>
+                    <b>M / Shift+M / [M] Button:</b> Toggle Audio FX Sound (Mute / Unmute)<br>
                     <b>F1 / H / Esc:</b> Toggle / Close Survival Guide<br>
                     <b>F5 / Quicksave:</b> Quicksave State &bull; <b>F9 / Quickload:</b> Quickload State<br>
                     <b>Export / Import:</b> Backup or restore game state to/from JSON files<br>
@@ -266,9 +307,50 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const VIRTUAL_WIDTH = 640;
+        const VIRTUAL_HEIGHT = 480;
         const TILE_SIZE = 16;
-        const COLS = Math.floor(canvas.width / TILE_SIZE);
-        const ROWS = Math.floor(canvas.height / TILE_SIZE);
+        const COLS = Math.floor(VIRTUAL_WIDTH / TILE_SIZE); // 40
+        const ROWS = Math.floor(VIRTUAL_HEIGHT / TILE_SIZE); // 30
+
+        let dpr = 1;
+        function updateCanvasDpi() {
+            dpr = Math.min(window.devicePixelRatio || 1, 2);
+            canvas.width = Math.round(VIRTUAL_WIDTH * dpr);
+            canvas.height = Math.round(VIRTUAL_HEIGHT * dpr);
+        }
+        updateCanvasDpi();
+        window.addEventListener('resize', () => {
+            updateCanvasDpi();
+            draw();
+        });
+
+        let soundMuted = false;
+        try {
+            soundMuted = (localStorage.getItem('kvoid_soundMuted') === '1');
+        } catch (e) {}
+
+        function updateSoundButton() {
+            const btn = document.getElementById('btn-sound');
+            if (btn) {
+                btn.textContent = soundMuted ? '[M] Audio: OFF' : '[M] Audio: ON';
+                btn.style.borderColor = soundMuted ? '#666' : '#0f0';
+                btn.style.color = soundMuted ? '#888' : '#0f0';
+                btn.title = soundMuted ? 'Audio FX Muted (Press M or Shift+M)' : 'Audio FX Enabled (Press M or Shift+M)';
+            }
+        }
+
+        function toggleSound() {
+            soundMuted = !soundMuted;
+            try {
+                localStorage.setItem('kvoid_soundMuted', soundMuted ? '1' : '0');
+            } catch (e) {}
+            updateSoundButton();
+            showMessage(soundMuted ? "AUDIO FX MUTED." : "AUDIO FX ENABLED.", soundMuted ? "#aaa" : "#00ffff");
+            if (!soundMuted) {
+                playBeep(660, 'sine', 0.1, 0.15);
+            }
+        }
 
         let map = [];
         let player = { x: 2, y: 2 };
@@ -339,6 +421,7 @@
         }
         
         function playBeep(freq, type, duration, vol=0.1) {
+            if (soundMuted) return;
             try {
                 let actx = getAudioContext();
                 if (!actx) return;
@@ -357,6 +440,7 @@
 
         // Yamaha YM2612 2-Operator FM Synthesis Engine & SNES Stereo Delay Warmth
         function playFMTone(carrierFreq, modRatio, modDepth, duration, vol=0.15, waveform='sine') {
+            if (soundMuted) return;
             try {
                 let actx = getAudioContext();
                 if (!actx) return;
@@ -391,6 +475,7 @@
         }
 
         function playO2Hiss() {
+            if (soundMuted) return;
             try {
                 let actx = getAudioContext();
                 if (!actx) return;
@@ -418,35 +503,42 @@
         }
 
         function playBatterySurge() {
+            if (soundMuted) return;
             playFMTone(220, 2.0, 120, 0.1, 0.15);
             setTimeout(() => playFMTone(440, 2.0, 160, 0.12, 0.18), 70);
             setTimeout(() => playFMTone(880, 1.0, 80, 0.22, 0.2), 140);
         }
 
         function playFlareIgnite() {
+            if (soundMuted) return;
             playFMTone(180, 3.5, 200, 0.4, 0.22, 'sawtooth');
             setTimeout(() => playBeep(920, 'triangle', 0.2, 0.15), 100);
         }
 
         function playAcidSizzle() {
+            if (soundMuted) return;
             playFMTone(140, 4.0, 160, 0.3, 0.25, 'sawtooth');
         }
 
         function playApexRoar() {
+            if (soundMuted) return;
             playFMTone(55, 1.5, 100, 0.7, 0.35, 'sawtooth');
         }
 
         function playHeartbeat() {
+            if (soundMuted) return;
             playBeep(40, 'sine', 0.5, 0.5);
             setTimeout(() => playBeep(40, 'sine', 0.5, 0.5), 200);
         }
 
         function playAlarm() {
+            if (soundMuted) return;
             playBeep(800, 'square', 0.3, 0.2);
             setTimeout(() => playBeep(600, 'square', 0.3, 0.2), 300);
         }
 
         function playAlienScreech() {
+            if (soundMuted) return;
             try {
                 let actx = getAudioContext();
                 if (!actx) return;
@@ -1618,6 +1710,7 @@
 
         function draw(time = performance.now()) {
             ctx.save();
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             // Apply Screen Shake
             if (screenShake > 0) {
                 let sx = (Math.random() - 0.5) * screenShake * 4;
@@ -1626,7 +1719,7 @@
                 screenShake = Math.max(0, screenShake - 0.05);
             }
 
-            ctx.clearRect(-10, -10, canvas.width + 20, canvas.height + 20);
+            ctx.clearRect(-10, -10, VIRTUAL_WIDTH + 20, VIRTUAL_HEIGHT + 20);
             drawMap(time);
             drawActiveFlares(time);
             drawShockwaves();
@@ -1636,29 +1729,35 @@
             ctx.restore();
 
             if (wonGame) {
+                ctx.save();
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
                 ctx.fillStyle = 'rgba(0,0,0,0.85)';
-                ctx.fillRect(0,0,canvas.width,canvas.height);
+                ctx.fillRect(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
                 ctx.fillStyle = '#0f0';
                 ctx.font = '16px Courier New';
                 ctx.textAlign = 'center';
-                ctx.fillText(winEnding, canvas.width/2, canvas.height/2 - 20);
+                ctx.fillText(winEnding, VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2 - 20);
                 ctx.font = '14px Courier New';
-                ctx.fillText("Press 'R' / Space / Enter to play again", canvas.width/2, canvas.height/2 + 15);
+                ctx.fillText("Press 'R' / Space / Enter to play again", VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2 + 15);
                 ctx.fillStyle = '#0ff';
-                ctx.fillText("[F9] Reload Quicksave", canvas.width/2, canvas.height/2 + 40);
+                ctx.fillText("[F9] Reload Quicksave", VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2 + 40);
+                ctx.restore();
             }
             if (isDead) {
+                ctx.save();
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
                 ctx.fillStyle = 'rgba(0,0,0,0.85)';
-                ctx.fillRect(0,0,canvas.width,canvas.height);
+                ctx.fillRect(0, 0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
                 ctx.fillStyle = '#f00';
                 ctx.font = '30px Courier New';
                 ctx.textAlign = 'center';
-                ctx.fillText("SIGNAL LOST", canvas.width/2, canvas.height/2 - 25);
+                ctx.fillText("SIGNAL LOST", VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2 - 25);
                 ctx.fillStyle = '#0f0';
                 ctx.font = '14px Courier New';
-                ctx.fillText("Press 'R' / Space / Enter to restart", canvas.width/2, canvas.height/2 + 15);
+                ctx.fillText("Press 'R' / Space / Enter to restart", VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2 + 15);
                 ctx.fillStyle = '#0ff';
-                ctx.fillText("[F9] Reload Quicksave", canvas.width/2, canvas.height/2 + 40);
+                ctx.fillText("[F9] Reload Quicksave", VIRTUAL_WIDTH / 2, VIRTUAL_HEIGHT / 2 + 40);
+                ctx.restore();
             }
         }
 
@@ -1898,7 +1997,7 @@
                         }
                     }
                     oxygen -= 0.2;
-                    if (target === 0) showMessage("Use WASD to move &bull; Space for EMP &bull; [F] Flare &bull; [F1] Guide");
+                    if (target === 0) showMessage("Use WASD to move &bull; Space for EMP &bull; [F] Flare &bull; [F1] Guide &bull; [M] Audio");
                     if (oxygen <= 0) {
                         oxygen = 0;
                         updateStatsDisplay();
@@ -2108,7 +2207,7 @@
             updateInventoryDisplay();
             updateStatsDisplay();
             startAlienInterval();
-            showMessage("Use WASD to move • Space for EMP • [F] Flare • [F1] Guide");
+            showMessage("Use WASD to move • Space for EMP • [F] Flare • [F1] Guide • [M] Audio");
             draw();
         }
 
@@ -2137,6 +2236,11 @@
             }
             if (e.key === 'h' || e.key === 'H') {
                 toggleHelp();
+                return;
+            }
+            if (e.key === 'm' || e.key === 'M') {
+                e.preventDefault();
+                toggleSound();
                 return;
             }
             if (showHelp) {
@@ -2196,6 +2300,8 @@
                     break;
             }
         });
+
+        updateSoundButton();
 
         try {
             if (!localStorage.getItem('kvoid_tutorialSeen')) {
