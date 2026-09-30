@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<meta name="description" content="CyberCafe '99 // The Underground BBS, Threaded Discussion Forums, ASCII Art Studio, mIRC Terminal Lounge &amp; Procedural FM Jukebox.">
-<title>CYBERCAFE '99 // Underground BBS, ASCII Studio &amp; IRC Lounge</title>
+<meta name="description" content="CyberCafe '99 // The Underground BBS, Threaded Discussion Forums, ASCII Art Studio, mIRC Terminal Lounge, Classic BBS Door Game &amp; Procedural FM Jukebox.">
+<title>CYBERCAFE '99 // Underground BBS, ASCII Studio, Door Game &amp; IRC Lounge</title>
 <style>
   :root {
     --bg-black: #05070a;
@@ -276,6 +276,17 @@
     box-shadow: 0 0 8px rgba(16, 185, 129, 0.5);
   }
 
+  .btn-retro.pink {
+    border-color: var(--pink);
+    color: var(--pink);
+  }
+
+  .btn-retro.pink:hover {
+    background: var(--pink);
+    color: #000;
+    box-shadow: 0 0 8px rgba(236, 72, 153, 0.5);
+  }
+
   .form-input, .form-textarea, .form-select {
     background: #080c14;
     border: 1px solid var(--border);
@@ -309,6 +320,77 @@
     font-size: 11px;
     font-weight: bold;
     color: var(--cyan-bright);
+  }
+
+  /* ------------------- FM SOUND CHIP LAB ------------------- */
+  #fmLaboratoryPanel {
+    display: none;
+    background: #090e18;
+    border: 2px solid var(--amber);
+    border-radius: 4px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    animation: fadeIn 0.2s ease-in;
+  }
+
+  .fm-lab-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .fm-lab-control {
+    background: #111726;
+    border: 1px solid var(--border);
+    padding: 8px 10px;
+    border-radius: 3px;
+  }
+
+  .fm-keyboard-row {
+    display: flex;
+    gap: 2px;
+    justify-content: center;
+    margin-top: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+
+  .piano-key {
+    background: #e2e8f0;
+    color: #0f172a;
+    font-size: 10px;
+    font-weight: bold;
+    width: 32px;
+    height: 64px;
+    border: 1px solid #334155;
+    border-radius: 0 0 3px 3px;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 4px;
+    user-select: none;
+    transition: background 0.1s;
+  }
+
+  .piano-key:active, .piano-key.active {
+    background: var(--amber-bright);
+    color: #000;
+  }
+
+  .piano-key.black {
+    background: #1e293b;
+    color: #cbd5e1;
+    width: 22px;
+    height: 42px;
+    margin: 0 -11px;
+    z-index: 2;
+  }
+
+  .piano-key.black:active, .piano-key.black.active {
+    background: var(--cyan-bright);
+    color: #000;
   }
 
   /* ------------------- LOUNGE TAB ------------------- */
@@ -829,6 +911,50 @@
     white-space: nowrap;
   }
 
+  /* ------------------- BBS DOOR GAME TAB ------------------- */
+  .game-crt-wrap {
+    background: #020406;
+    border: 2px solid #22c55e;
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.25);
+    border-radius: 4px;
+    padding: 14px;
+    font-family: var(--font-mono);
+  }
+
+  .game-status-bar {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    background: #052e16;
+    border: 1px solid #16a34a;
+    padding: 6px 10px;
+    color: #4ade80;
+    font-size: 11px;
+    font-weight: bold;
+    margin-bottom: 12px;
+  }
+
+  .game-screen {
+    background: #010a04;
+    border: 1px solid #14532d;
+    padding: 12px;
+    color: #86efac;
+    font-size: 11px;
+    line-height: 1.4;
+    min-height: 240px;
+    max-height: 380px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    margin-bottom: 12px;
+  }
+
+  .game-controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+  }
+
   /* ------------------- ARCHIVE TAB ------------------- */
   .vault-table {
     width: 100%;
@@ -850,6 +976,28 @@
 
   .vault-table tr:hover td {
     background: #141e30;
+  }
+
+  /* Modal System */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 16px;
+  }
+
+  .modal-box {
+    background: var(--bg-card);
+    border: 2px solid var(--border-bright);
+    box-shadow: 0 0 25px rgba(56, 189, 248, 0.3);
+    max-width: 560px;
+    width: 100%;
+    border-radius: 4px;
+    padding: 16px;
   }
 
   /* Webring & Footer */
@@ -907,7 +1055,10 @@
             <option value="0">Track 1: Midnight Baud '99</option>
             <option value="1">Track 2: Packet Storm</option>
             <option value="2">Track 3: Silicon Sunset</option>
+            <option value="3">Track 4: Subnet Odyssey (FM Slap)</option>
+            <option value="4">Track 5: Neon Barista (SPC700 Warmth)</option>
           </select>
+          <button id="fmLabToggleBtn" class="btn-audio" onclick="toggleFmLab()">🎛️ FM LAB</button>
           <button id="audioToggleBtn" class="btn-audio" onclick="toggleAudioEngine()">🔊 SFX: ON</button>
         </div>
         <span id="clockDisplay">1999-11-23 23:42:00 EST</span>
@@ -915,12 +1066,82 @@
     </div>
   </header>
 
+  <!-- YM2612 FM SOUND CHIP LAB & TIMBRE TUNER (Collapsible) -->
+  <div id="fmLaboratoryPanel">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:4px;">
+      <span style="font-size:12px; font-weight:bold; color:var(--amber-bright);">🎛️ YAMAHA YM2612 2-OPERATOR FM SYNTHESIZER &amp; TIMBRE WORKBENCH</span>
+      <button class="btn-retro" style="padding:2px 8px; font-size:10px;" onclick="toggleFmLab()">CLOSE [X]</button>
+    </div>
+
+    <div class="fm-lab-grid">
+      <div class="fm-lab-control">
+        <label style="font-size:10px; color:var(--cyan-bright); font-weight:bold;">PRESET TIMBRE</label>
+        <select class="form-select" style="width:100%; margin-top:4px;" onchange="setFmPreset(this.value)">
+          <option value="slap">Slap Bass '99 (Sega Genesis)</option>
+          <option value="chime">Crystal Bell Chime</option>
+          <option value="voodoo">Voodoo Lead Overdrive</option>
+          <option value="modem">56K Modem Handshake Chirp</option>
+          <option value="ambient">Subnet Ambient Space Pad</option>
+        </select>
+      </div>
+
+      <div class="fm-lab-control">
+        <div style="display:flex; justify-content:space-between; font-size:10px;">
+          <span style="color:var(--cyan-bright); font-weight:bold;">MODULATOR RATIO</span>
+          <span id="fmRatioVal" style="color:var(--amber-bright);">2.0x</span>
+        </div>
+        <input type="range" id="fmRatioSlider" min="0.5" max="7.0" step="0.5" value="2.0" style="width:100%; margin-top:6px;" oninput="updateFmParams()">
+      </div>
+
+      <div class="fm-lab-control">
+        <div style="display:flex; justify-content:space-between; font-size:10px;">
+          <span style="color:var(--cyan-bright); font-weight:bold;">MODULATION INDEX</span>
+          <span id="fmModVal" style="color:var(--amber-bright);">2.5</span>
+        </div>
+        <input type="range" id="fmModSlider" min="0.0" max="10.0" step="0.1" value="2.5" style="width:100%; margin-top:6px;" oninput="updateFmParams()">
+      </div>
+
+      <div class="fm-lab-control">
+        <div style="display:flex; justify-content:space-between; font-size:10px;">
+          <span style="color:var(--cyan-bright); font-weight:bold;">DECAY ENVELOPE</span>
+          <span id="fmDecayVal" style="color:var(--amber-bright);">0.40s</span>
+        </div>
+        <input type="range" id="fmDecaySlider" min="0.05" max="1.5" step="0.05" value="0.4" style="width:100%; margin-top:6px;" oninput="updateFmParams()">
+      </div>
+    </div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <span style="font-size:10px; color:var(--text-muted);">Play 13-Key Keyboard (Click or Keys: A W S E D F T G Y H U J K):</span>
+      <label style="font-size:10px; color:var(--green-bright); display:flex; align-items:center; gap:4px; cursor:pointer;">
+        <input type="checkbox" id="fmDelayToggle" checked onchange="updateFmParams()"> SNES SPC700 Stereo Delay Echo
+      </label>
+    </div>
+
+    <!-- 13-Key Interactive Piano Keyboard -->
+    <div class="fm-keyboard-row" id="fmPianoKeys">
+      <div class="piano-key" data-note="C4" data-freq="261.63">C4 [A]</div>
+      <div class="piano-key black" data-note="C#4" data-freq="277.18">C# [W]</div>
+      <div class="piano-key" data-note="D4" data-freq="293.66">D4 [S]</div>
+      <div class="piano-key black" data-note="D#4" data-freq="311.13">D# [E]</div>
+      <div class="piano-key" data-note="E4" data-freq="329.63">E4 [D]</div>
+      <div class="piano-key" data-note="F4" data-freq="349.23">F4 [F]</div>
+      <div class="piano-key black" data-note="F#4" data-freq="369.99">F# [T]</div>
+      <div class="piano-key" data-note="G4" data-freq="392.00">G4 [G]</div>
+      <div class="piano-key black" data-note="G#4" data-freq="415.30">G# [Y]</div>
+      <div class="piano-key" data-note="A4" data-freq="440.00">A4 [H]</div>
+      <div class="piano-key black" data-note="A#4" data-freq="466.16">A# [U]</div>
+      <div class="piano-key" data-note="B4" data-freq="493.88">B4 [J]</div>
+      <div class="piano-key" data-note="C5" data-freq="523.25">C5 [K]</div>
+    </div>
+  </div>
+
   <!-- Navigation Tabs -->
   <nav class="cyber-tabs">
     <button class="tab-btn active" onclick="switchTab('tab-lounge')">☕ TERMINAL LOUNGE</button>
     <button class="tab-btn" onclick="switchTab('tab-forum')">💬 THREADED BBS FORUM</button>
     <button class="tab-btn" onclick="switchTab('tab-ascii')">🎨 ASCII ART STUDIO</button>
     <button class="tab-btn" onclick="switchTab('tab-irc')">📟 IRC CHAT (mIRC)</button>
+    <button class="tab-btn" onclick="switchTab('tab-game')">⚔️ BBS DOOR GAME</button>
     <button class="tab-btn" onclick="switchTab('tab-vault')">💾 FLOPPY ARCHIVES</button>
   </nav>
 
@@ -1101,7 +1322,7 @@ Select an item above to vend voucher.</div>
   <section id="tab-ascii" class="pane-content">
     <div class="section-title">
       <span>🎨 INTERACTIVE ASCII &amp; ANSI ART CANVAS</span>
-      <span style="font-size:11px; color:var(--text-muted);">GRID: 60 x 20 CELLS • IBM CP437 SHADING</span>
+      <span style="font-size:11px; color:var(--text-muted);">GRID: 60 x 20 CELLS • IBM CP437 SHADING &amp; BOX DRAWING</span>
     </div>
 
     <div class="ascii-studio-grid">
@@ -1111,14 +1332,24 @@ Select an item above to vend voucher.</div>
           <div class="palette-label">Tool Mode</div>
           <div class="canvas-tools" style="margin-top:4px;">
             <button class="btn-retro active" id="toolPencil" onclick="setTool('pencil')">✏️ PENCIL</button>
+            <button class="btn-retro" id="toolLine" onclick="setTool('line')">📏 LINE</button>
+            <button class="btn-retro" id="toolBox" onclick="setTool('box')">📦 BOX</button>
             <button class="btn-retro" id="toolEraser" onclick="setTool('eraser')">🧹 ERASER</button>
             <button class="btn-retro" id="toolFill" onclick="setTool('fill')">🪣 FILL</button>
           </div>
         </div>
 
         <div>
-          <div class="palette-label">Character Glyph</div>
-          <div class="char-grid" id="charGrid">
+          <div class="palette-label" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>Character Glyph</span>
+            <select id="glyphCatSelect" class="form-select" style="padding:1px 3px; font-size:9px;" onchange="switchGlyphCategory(this.value)">
+              <option value="blocks">Blocks &amp; Shades</option>
+              <option value="box_single">Single-Line Box</option>
+              <option value="box_double">Double-Line Box</option>
+              <option value="ascii">Classic ASCII</option>
+            </select>
+          </div>
+          <div class="char-grid" id="charGrid" style="margin-top:4px;">
             <!-- Injected by JS -->
           </div>
           <div style="margin-top:6px; display:flex; align-items:center; gap:6px;">
@@ -1153,6 +1384,7 @@ Select an item above to vend voucher.</div>
           <div style="display:flex; gap:4px;">
             <button class="btn-retro" style="flex:1;" onclick="downloadAnsiFile()">💾 .ANS</button>
             <button class="btn-retro" style="flex:1;" onclick="downloadTxtFile()">📄 .TXT</button>
+            <button class="btn-retro" style="flex:1;" onclick="downloadCHeaderFile()">⚙️ .H (C)</button>
           </div>
           <button class="btn-retro" onclick="copyCanvasText()">📋 COPY AS TEXT</button>
           <button class="btn-retro amber" onclick="saveDrawingLocal()">💾 SAVE TO STORAGE</button>
@@ -1207,15 +1439,60 @@ Select an item above to vend voucher.</div>
     </div>
   </section>
 
-  <!-- PANE 5: FLOPPY ARCHIVES -->
+  <!-- PANE 5: BBS DOOR GAME (NODE-WARS '99: Subnet Hacker) -->
+  <section id="tab-game" class="pane-content">
+    <div class="section-title">
+      <span>⚔️ BBS DOOR GAME // NODE-WARS '99: SUBTERRANEAN HACKER</span>
+      <span style="font-size:11px; color:var(--green-bright);">DIAL-UP DOOR PROTOCOL ACTIVE (PORT 1999)</span>
+    </div>
+
+    <div class="game-crt-wrap">
+      <!-- Player Status Bar -->
+      <div class="game-status-bar" id="gameStatusBar">
+        <span>OPERATOR: UNREGISTERED</span>
+        <span>CLASS: NONE</span>
+        <span>BUFFER: 100/100</span>
+        <span>CREDITS: 0 CR</span>
+        <span>TURNS: 25/25</span>
+      </div>
+
+      <!-- Main CRT Screen -->
+      <div class="game-screen" id="gameScreenOutput">
+========================================================================
+             * * *   N O D E - W A R S   ' 9 9   * * *
+               Subterranean Dial-Up Hacker Door Game
+                     Underground BBS Node #006
+========================================================================
+
+Welcome to the 1999 dial-up subterranean hacking challenge!
+Equip your cyberdeck, scan the 10.19.99.x subnet, crack rogue ICE daemons,
+accumulate BBS credits, upgrade your rig at the armory, and etch your
+handle into the Hall of Fame.
+
+Choose an option below to initialize your carrier!
+      </div>
+
+      <!-- Interactive Game Control Buttons -->
+      <div class="game-controls-grid" id="gameControlsBar">
+        <button class="btn-retro green" onclick="doorGameAction('new_game')">▶ NEW GAME / ENTER</button>
+        <button class="btn-retro" onclick="doorGameAction('scan')">📡 PROBE SUBNET</button>
+        <button class="btn-retro amber" onclick="doorGameAction('armory')">🛒 RIG ARMORY</button>
+        <button class="btn-retro" onclick="doorGameAction('tavern')">🍺 SYSOP TAVERN</button>
+        <button class="btn-retro" onclick="doorGameAction('hall_of_fame')">🏆 HALL OF FAME</button>
+        <button class="btn-retro" onclick="downloadDoorGameLog()">💾 SAVE LOG (.LOG)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANE 6: FLOPPY ARCHIVES -->
   <section id="tab-vault" class="pane-content">
     <div class="section-title">
       <span>💾 CYBERCAFE PUBLIC ARCHIVES &amp; TEXT VAULT</span>
-      <span style="font-size: 11px; color: var(--text-muted);">6 VERIFIED NFO/TEXT DOCUMENTS</span>
+      <span style="font-size: 11px; color: var(--text-muted);">9 VERIFIED NFO/TEXT DOCUMENTS</span>
     </div>
 
     <p style="font-size:11px; color:var(--text-muted); margin-bottom:12px;">
-      Patron-uploaded text files, demoscene NFO archives, cafe logs, and phreaking notes. Click "VIEW" to inspect in-browser.
+      Patron-uploaded text files, demoscene NFO archives, cafe logs, and phreaking notes. Click "VIEW" to inspect and download in-browser.
     </p>
 
     <table class="vault-table">
@@ -1251,49 +1528,91 @@ Select an item above to vend voucher.</div>
           <td><button class="btn-retro" onclick="viewVaultFile('ASCII_PRIMER')">VIEW</button></td>
         </tr>
         <tr>
-          <td><strong>IRCD_OPER_GUIDE.TXT</strong></td>
-          <td>2.4 KB</td>
+          <td><strong>IRCD_GUIDE.TXT</strong></td>
+          <td>2.1 KB</td>
           <td>1999-10-25</td>
           <td>Networking</td>
           <td><button class="btn-retro" onclick="viewVaultFile('IRCD_GUIDE')">VIEW</button></td>
         </tr>
         <tr>
           <td><strong>PENTIUM_III_SSE.TXT</strong></td>
-          <td>2.9 KB</td>
+          <td>3.5 KB</td>
           <td>1999-11-08</td>
-          <td>Hardware</td>
+          <td>Silicon Dev</td>
           <td><button class="btn-retro" onclick="viewVaultFile('PENTIUM_SSE')">VIEW</button></td>
         </tr>
         <tr>
           <td><strong>SUBNET_ANOMALY_101999.LOG</strong></td>
-          <td>2.1 KB</td>
+          <td>1.8 KB</td>
           <td>1999-11-15</td>
-          <td>Telemetrics</td>
+          <td>Telemetry</td>
           <td><button class="btn-retro" onclick="viewVaultFile('SUBNET_LOG')">VIEW</button></td>
+        </tr>
+        <tr>
+          <td><strong>VOODOO_GLIDE_BENCHMARKS.NFO</strong></td>
+          <td>2.9 KB</td>
+          <td>1999-11-19</td>
+          <td>3D Graphics</td>
+          <td><button class="btn-retro" onclick="viewVaultFile('GLIDE_BENCH')">VIEW</button></td>
+        </tr>
+        <tr>
+          <td><strong>CYBERCAFE_1999_MENU.TXT</strong></td>
+          <td>1.6 KB</td>
+          <td>1999-11-20</td>
+          <td>Cafe Kiosk</td>
+          <td><button class="btn-retro" onclick="viewVaultFile('CAFE_MENU')">VIEW</button></td>
+        </tr>
+        <tr>
+          <td><strong>DOOR_GAME_HACKERS_GUIDE.TXT</strong></td>
+          <td>3.1 KB</td>
+          <td>1999-11-22</td>
+          <td>BBS Gaming</td>
+          <td><button class="btn-retro" onclick="viewVaultFile('DOOR_GUIDE')">VIEW</button></td>
         </tr>
       </tbody>
     </table>
 
-    <div id="vaultViewerBox" style="display:none; background:#000; border:1px solid var(--border-bright); padding:12px; margin-top:14px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <span id="vaultFileTitle" style="color:var(--cyan-bright); font-weight:bold; font-size:12px;">FILE PREVIEW</span>
-        <button class="btn-retro" onclick="document.getElementById('vaultViewerBox').style.display='none'">CLOSE</button>
+    <!-- File Inspection Box -->
+    <div id="vaultViewerBox" style="display:none; background:#000; border:1px solid var(--border-bright); padding:12px; margin-top:14px; border-radius:4px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--border); padding-bottom:6px; margin-bottom:8px;">
+        <span id="vaultFileTitle" style="color:var(--amber-bright); font-size:12px; font-weight:bold;">FILE INSPECTION</span>
+        <div style="display:flex; gap:6px;">
+          <button class="btn-retro green" onclick="downloadCurrentVaultFile()">💾 DOWNLOAD FILE</button>
+          <button class="btn-retro" onclick="document.getElementById('vaultViewerBox').style.display='none'">CLOSE</button>
+        </div>
       </div>
-      <pre id="vaultFileContent" style="color:var(--green-bright); font-size:11px; line-height:1.4; white-space:pre-wrap; max-height:280px; overflow-y:auto;"></pre>
+      <pre id="vaultFileContent" style="color:var(--green-bright); font-size:11px; line-height:1.4; white-space:pre-wrap; max-height:300px; overflow-y:auto;"></pre>
     </div>
   </section>
 
-  <!-- Webring / Link Hub -->
+  <!-- BOOTH DETAIL & TELEMETRY MODAL -->
+  <div id="boothModal" class="modal-overlay">
+    <div class="modal-box">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid var(--border); padding-bottom:6px;">
+        <span id="boothModalTitle" style="color:var(--cyan-bright); font-size:13px; font-weight:bold;">TERMINAL STATION TELEMETRY</span>
+        <button class="btn-retro" style="padding:2px 8px;" onclick="closeBoothModal()">[X]</button>
+      </div>
+      <div id="boothModalBody" style="font-size:11px; line-height:1.5; color:var(--text); margin-bottom:12px;"></div>
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button class="btn-retro" id="boothPingBtn" onclick="pingBoothStation()">📡 PING ICMP (0.4ms)</button>
+        <button class="btn-retro amber" id="boothClaimBtn" onclick="claimBoothStation()">🪑 CLAIM BOOTH</button>
+        <button class="btn-retro" onclick="closeBoothModal()">CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Webring / Link Hub (Strictly Clearnet Navigation per arg_plan.md) -->
   <div class="webring-box">
-    <strong>[ KiloNet 1999 Webring Member #008 — CyberCafe '99 ]</strong><br>
+    <strong>[ KiloNet 1999 Webring Member #006 — CyberCafe '99 BBS &amp; Lounge ]</strong><br>
     <span style="color:var(--text-muted);">Navigate the interconnected virtual 1999 web nodes:</span>
     <div class="webring-links">
       <a href="/web/portal.html" class="btn-retro">🏠 KiloNet Portal</a>
       <a href="/web/asm_temple.html" class="btn-retro">« Prev: x86 Temple</a>
       <a href="/web/geocities.html" class="btn-retro">✨ CyberSpire Shrine</a>
       <a href="/web/webring.html" class="btn-retro">🌐 Webring Hub</a>
-      <a href="/web/warez.html" class="btn-retro">Next: Scene Vault »</a>
-      <a href="/web/darknet.html" class="btn-retro">👁️ Node 0x7F Darknet</a>
+      <a href="/web/warez.html" class="btn-retro">💾 Warez Vault</a>
+      <a href="/web/echo_subsystem.html" class="btn-retro">🔬 Echo Subsystem</a>
+      <a href="/web/users/neon_rider.html" class="btn-retro">Next: ~neon_rider »</a>
     </div>
   </div>
 
@@ -1324,7 +1643,7 @@ function initAudio() {
     if (AudioContextClass) {
       audioCtx = new AudioContextClass();
       
-      // Setup Analyser for 16-band visualizer
+      // Setup Analyser for 14-band visualizer
       analyserNode = audioCtx.createAnalyser();
       analyserNode.fftSize = 64;
       analyserNode.smoothingTimeConstant = 0.8;
@@ -1368,66 +1687,67 @@ function initAudio() {
 function toggleAudioEngine() {
   audioEnabled = !audioEnabled;
   const btn = document.getElementById('audioToggleBtn');
-  if (audioEnabled) {
-    initAudio();
-    btn.textContent = '🔊 SFX: ON';
-    btn.style.borderColor = 'var(--amber)';
-    btn.style.color = 'var(--amber-bright)';
-    playChime(660, 0.08);
-  } else {
-    btn.textContent = '🔇 SFX: MUTED';
-    btn.style.borderColor = 'var(--text-muted)';
-    btn.style.color = 'var(--text-muted)';
+  if (btn) {
+    btn.textContent = audioEnabled ? '🔊 SFX: ON' : '🔇 SFX: OFF';
+    btn.style.color = audioEnabled ? 'var(--amber-bright)' : 'var(--text-muted)';
+  }
+  if (!audioEnabled && bgmPlaying) {
+    toggleBgmPlayback();
   }
 }
 
-// 2-Operator Yamaha YM2612 FM synthesis tone generator
+// 2-Operator FM Tone Generator (Genesis YM2612 Architecture)
 function playFmTone(carrierFreq, modRatio, modIndex, duration, gainVal = 0.12, toDelay = true) {
-  if (!audioEnabled && !bgmPlaying) return;
+  if (!audioEnabled) return;
   initAudio();
   if (!audioCtx) return;
 
   const now = audioCtx.currentTime;
+
   const carrier = audioCtx.createOscillator();
   const modulator = audioCtx.createOscillator();
   const modGain = audioCtx.createGain();
-  const masterGain = audioCtx.createGain();
+  const carrierGain = audioCtx.createGain();
 
   carrier.type = 'sine';
   carrier.frequency.setValueAtTime(carrierFreq, now);
 
-  modulator.type = 'sawtooth';
-  modulator.frequency.setValueAtTime(carrierFreq * modRatio, now);
+  modulator.type = 'sine';
+  const modFreq = carrierFreq * modRatio;
+  modulator.frequency.setValueAtTime(modFreq, now);
 
-  modGain.gain.setValueAtTime(carrierFreq * modIndex, now);
+  const deviation = modFreq * modIndex;
+  modGain.gain.setValueAtTime(deviation, now);
   modGain.gain.exponentialRampToValueAtTime(0.01, now + duration);
 
   modulator.connect(modGain);
   modGain.connect(carrier.frequency);
 
-  masterGain.gain.setValueAtTime(gainVal, now);
-  masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+  carrierGain.gain.setValueAtTime(gainVal, now);
+  carrierGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
 
-  carrier.connect(masterGain);
-  masterGain.connect(analyserNode);
+  carrier.connect(carrierGain);
+  carrierGain.connect(analyserNode);
 
   if (toDelay && delayL && delayR) {
-    masterGain.connect(delayL);
-    masterGain.connect(delayR);
+    carrierGain.connect(delayL);
+    carrierGain.connect(delayR);
   }
 
-  modulator.start(now);
   carrier.start(now);
-  modulator.stop(now + duration);
+  modulator.start(now);
   carrier.stop(now + duration);
+  modulator.stop(now + duration);
 }
 
 function playKeyClick() {
-  playFmTone(850 + Math.random() * 200, 1.4, 0.4, 0.03, 0.06, false);
+  if (!audioEnabled) return;
+  playFmTone(1200 + Math.random() * 400, 3.5, 1.2, 0.02, 0.04, false);
 }
 
 function playChime(freq, dur) {
-  playFmTone(freq || 520, 2.0, 1.2, dur || 0.15, 0.12, true);
+  if (!audioEnabled) return;
+  playFmTone(freq, 2.0, 1.5, dur, 0.08, true);
 }
 
 function playModemChirp() {
@@ -1437,26 +1757,25 @@ function playModemChirp() {
   const now = audioCtx.currentTime;
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
-  osc.type = 'square';
-  osc.frequency.setValueAtTime(1200, now);
-  osc.frequency.linearRampToValueAtTime(2400, now + 0.12);
-  osc.frequency.linearRampToValueAtTime(960, now + 0.25);
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(980, now);
+  osc.frequency.linearRampToValueAtTime(1850, now + 0.08);
   gain.gain.setValueAtTime(0.06, now);
-  gain.gain.linearRampToValueAtTime(0.001, now + 0.25);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
   osc.connect(gain);
-  gain.connect(analyserNode);
+  gain.connect(audioCtx.destination);
   osc.start(now);
-  osc.stop(now + 0.25);
+  osc.stop(now + 0.1);
 }
 
 /* =========================================================================
-   2. PROCEDURAL BGM CHIPTUNE JUKEBOX
+   2. PROCEDURAL BGM CHIPTUNE JUKEBOX (5 Tracks)
    ========================================================================= */
 const BGM_TRACKS = [
   {
     name: "Midnight Baud '99",
-    tempo: 120, // ms per 16th step (~125 BPM)
-    bass: [146.83, 0, 146.83, 0, 116.54, 0, 116.54, 0, 98.00, 0, 98.00, 0, 110.00, 0, 130.81, 0], // D3, Bb2, G2, A2
+    tempo: 120, // ~125 BPM
+    bass: [146.83, 0, 146.83, 0, 116.54, 0, 116.54, 0, 98.00, 0, 98.00, 0, 110.00, 0, 130.81, 0],
     lead: [293.66, 349.23, 440.00, 523.25, 440.00, 349.23, 293.66, 0, 233.08, 293.66, 349.23, 440.00, 349.23, 293.66, 220.00, 261.63],
     fmRatio: 2.0,
     fmMod: 1.5
@@ -1472,10 +1791,26 @@ const BGM_TRACKS = [
   {
     name: "Silicon Sunset",
     tempo: 160, // ~94 BPM ambient
-    bass: [130.81, 0, 0, 0, 164.81, 0, 0, 0, 174.61, 0, 0, 0, 196.00, 0, 0, 0], // C3, E3, F3, G3
+    bass: [130.81, 0, 0, 0, 164.81, 0, 0, 0, 174.61, 0, 0, 0, 196.00, 0, 0, 0],
     lead: [523.25, 659.25, 783.99, 987.77, 783.99, 659.25, 523.25, 0, 440.00, 523.25, 659.25, 0, 392.00, 0, 440.00, 0],
     fmRatio: 1.5,
     fmMod: 0.8
+  },
+  {
+    name: "Subnet Odyssey",
+    tempo: 115, // ~130 BPM Genesis funk
+    bass: [146.83, 146.83, 0, 146.83, 174.61, 0, 146.83, 0, 130.81, 130.81, 0, 130.81, 110.00, 0, 123.47, 130.81],
+    lead: [587.33, 523.25, 440.00, 392.00, 440.00, 523.25, 587.33, 0, 659.25, 587.33, 523.25, 440.00, 392.00, 440.00, 523.25, 587.33],
+    fmRatio: 1.0,
+    fmMod: 2.6
+  },
+  {
+    name: "Neon Barista",
+    tempo: 175, // ~85 BPM chill lounge
+    bass: [110.00, 0, 0, 110.00, 130.81, 0, 0, 130.81, 146.83, 0, 0, 146.83, 164.81, 0, 130.81, 0],
+    lead: [440.00, 493.88, 523.25, 659.25, 587.33, 523.25, 440.00, 392.00, 440.00, 523.25, 659.25, 783.99, 659.25, 523.25, 440.00, 392.00],
+    fmRatio: 2.5,
+    fmMod: 1.1
   }
 ];
 
@@ -1537,7 +1872,7 @@ function playBgmStep() {
   bgmTimer = setTimeout(playBgmStep, track.tempo);
 }
 
-// 16-band visualizer loop
+// 14-band visualizer loop
 function startVisualizerLoop() {
   const canvas = document.getElementById('audioVisualizer');
   if (!canvas) return;
@@ -1577,7 +1912,81 @@ function startVisualizerLoop() {
 }
 
 /* =========================================================================
-   3. TABS & RETRO CLOCK
+   3. FM SOUND CHIP LAB & WORKBENCH
+   ========================================================================= */
+let fmLabVisible = false;
+let fmRatio = 2.0;
+let fmMod = 2.5;
+let fmDecay = 0.40;
+
+function toggleFmLab() {
+  fmLabVisible = !fmLabVisible;
+  const panel = document.getElementById('fmLaboratoryPanel');
+  if (panel) {
+    panel.style.display = fmLabVisible ? 'block' : 'none';
+  }
+  playChime(640, 0.06);
+}
+
+function updateFmParams() {
+  fmRatio = parseFloat(document.getElementById('fmRatioSlider').value) || 2.0;
+  fmMod = parseFloat(document.getElementById('fmModSlider').value) || 2.5;
+  fmDecay = parseFloat(document.getElementById('fmDecaySlider').value) || 0.40;
+
+  document.getElementById('fmRatioVal').textContent = fmRatio.toFixed(1) + 'x';
+  document.getElementById('fmModVal').textContent = fmMod.toFixed(1);
+  document.getElementById('fmDecayVal').textContent = fmDecay.toFixed(2) + 's';
+}
+
+function setFmPreset(key) {
+  const ratioSlider = document.getElementById('fmRatioSlider');
+  const modSlider = document.getElementById('fmModSlider');
+  const decaySlider = document.getElementById('fmDecaySlider');
+
+  if (key === 'slap') {
+    ratioSlider.value = 1.0; modSlider.value = 2.8; decaySlider.value = 0.25;
+  } else if (key === 'chime') {
+    ratioSlider.value = 3.5; modSlider.value = 1.8; decaySlider.value = 0.80;
+  } else if (key === 'voodoo') {
+    ratioSlider.value = 2.0; modSlider.value = 4.5; decaySlider.value = 0.60;
+  } else if (key === 'modem') {
+    ratioSlider.value = 7.0; modSlider.value = 6.0; decaySlider.value = 0.15;
+  } else if (key === 'ambient') {
+    ratioSlider.value = 0.5; modSlider.value = 0.9; decaySlider.value = 1.20;
+  }
+  updateFmParams();
+  playFmTone(440, fmRatio, fmMod, fmDecay, 0.12, true);
+}
+
+function playPianoNote(freq, keyEl) {
+  initAudio();
+  const delayToggle = document.getElementById('fmDelayToggle');
+  const toDelay = delayToggle ? delayToggle.checked : true;
+  playFmTone(freq, fmRatio, fmMod, fmDecay, 0.14, toDelay);
+
+  if (keyEl) {
+    keyEl.classList.add('active');
+    setTimeout(() => keyEl.classList.remove('active'), 150);
+  }
+}
+
+// Map Computer Keyboard to Piano Keys
+window.addEventListener('keydown', (e) => {
+  if (['input', 'textarea'].includes((e.target.tagName || '').toLowerCase())) return;
+  const keyMap = {
+    'a': 261.63, 'w': 277.18, 's': 293.66, 'e': 311.13, 'd': 329.63,
+    'f': 349.23, 't': 369.99, 'g': 392.00, 'y': 415.30, 'h': 440.00,
+    'u': 466.16, 'j': 493.88, 'k': 523.25
+  };
+  const noteFreq = keyMap[e.key.toLowerCase()];
+  if (noteFreq) {
+    const keyBtn = document.querySelector(`.piano-key[data-freq="${noteFreq.toFixed(2)}"]`);
+    playPianoNote(noteFreq, keyBtn);
+  }
+});
+
+/* =========================================================================
+   4. TABS & RETRO CLOCK
    ========================================================================= */
 function switchTab(tabId) {
   playChime(440, 0.06);
@@ -1592,7 +2001,8 @@ function switchTab(tabId) {
     'tab-forum': 1,
     'tab-ascii': 2,
     'tab-irc': 3,
-    'tab-vault': 4
+    'tab-game': 4,
+    'tab-vault': 5
   };
   const buttons = document.querySelectorAll('.tab-btn');
   if (buttons[btnMap[tabId]]) {
@@ -1616,18 +2026,20 @@ setInterval(updateClock, 1000);
 updateClock();
 
 /* =========================================================================
-   4. CAFE TERMINAL BOOTHS & REFRESHMENTS
+   5. CAFE TERMINAL BOOTHS & REFRESHMENTS
    ========================================================================= */
-const BOOTHS_DATA = [
-  { id: 1, user: '~neon_rider', task: 'Compiling Win32 ASM Demotape', status: 'occupied' },
-  { id: 2, user: 'BitCrusher_99', task: 'Deathmatch in Tremor III', status: 'occupied' },
-  { id: 3, user: 'PixelGoddess', task: 'Drawing 16-color ANSI skull', status: 'occupied' },
-  { id: 4, user: 'OPEN STATION', task: 'Terminal waiting for patron...', status: 'available' },
-  { id: 5, user: 'DarkFiber', task: 'BBS SysOp Administration', status: 'occupied' },
-  { id: 6, user: 'RetroEcho', task: 'Analyzing packet noise on 10.19.99.4', status: 'occupied' },
-  { id: 7, user: 'VoodooMaster', task: 'Glide API driver benchmarking', status: 'occupied' },
-  { id: 8, user: 'VoidWalker', task: 'VoidCraft LAN tournament', status: 'occupied' }
+let BOOTHS_DATA = [
+  { id: 1, user: '~neon_rider', task: 'Compiling Win32 ASM Demotape', status: 'occupied', ip: '10.19.99.11' },
+  { id: 2, user: 'BitCrusher_99', task: 'Deathmatch in Tremor III', status: 'occupied', ip: '10.19.99.12' },
+  { id: 3, user: 'PixelGoddess', task: 'Drawing 16-color ANSI skull', status: 'occupied', ip: '10.19.99.13' },
+  { id: 4, user: 'OPEN STATION', task: 'Terminal waiting for patron...', status: 'available', ip: '10.19.99.14' },
+  { id: 5, user: 'DarkFiber', task: 'BBS SysOp Administration', status: 'occupied', ip: '10.19.99.15' },
+  { id: 6, user: 'RetroEcho', task: 'Analyzing packet noise on 10.19.99.4', status: 'occupied', ip: '10.19.99.16' },
+  { id: 7, user: 'VoodooMaster', task: 'Glide API driver benchmarking', status: 'occupied', ip: '10.19.99.17' },
+  { id: 8, user: 'VoidWalker', task: 'VoidCraft LAN tournament', status: 'occupied', ip: '10.19.99.18' }
 ];
+
+let selectedBoothId = null;
 
 function renderBooths() {
   const container = document.getElementById('boothMap');
@@ -1643,16 +2055,59 @@ function renderBooths() {
 
 function interactBooth(id) {
   playChime(580, 0.08);
+  selectedBoothId = id;
   const booth = BOOTHS_DATA.find(b => b.id === id);
   if (!booth) return;
-  const receipt = document.getElementById('receiptOutput');
-  receipt.textContent = 
-`[TERMINAL LINK // STATION #${id}]
-PATRON: ${booth.user}
-CURRENT PROCESS: ${booth.task}
-STATUS: IP 10.19.99.${10 + id} [PORT 1999 VERIFIED]
-LINK: 10Base-T Ethernet [COLLISIONS: 0]
-ACTION: Ping sent. Station responded with 0.4ms latency.`;
+
+  const modal = document.getElementById('boothModal');
+  const title = document.getElementById('boothModalTitle');
+  const body = document.getElementById('boothModalBody');
+  const claimBtn = document.getElementById('boothClaimBtn');
+
+  title.textContent = `TERMINAL BOOTH #${booth.id} // [${booth.status.toUpperCase()}]`;
+  body.innerHTML = `
+    <div style="background:#090e18; border:1px solid var(--border); padding:8px; margin-bottom:8px;">
+      <div><strong>PATRON HANDLE:</strong> <span style="color:var(--amber-bright);">${escapeHtml(booth.user)}</span></div>
+      <div><strong>CURRENT PROCESS:</strong> ${escapeHtml(booth.task)}</div>
+      <div><strong>STATION IP:</strong> ${booth.ip} (10Base-T Ethernet, Collision Domain: 0)</div>
+      <div><strong>NETWORK SOCKET:</strong> PORT 1999 (ESTABLISHED) • PING: 0.4ms</div>
+    </div>
+    <div style="font-size:10px; color:var(--text-muted);">
+      HARDWARE: Intel Pentium III Katmai 500MHz • 128MB PC100 SDRAM • 3dfx Voodoo3 3000 AGP<br>
+      OPERATING SYSTEM: KiloOS Retro Terminal 1999 • TCP/IP Stack v2.4 Active
+    </div>
+  `;
+
+  if (booth.status === 'available') {
+    claimBtn.style.display = 'inline-block';
+    claimBtn.textContent = '🪑 CLAIM BOOTH #4';
+  } else {
+    claimBtn.style.display = 'none';
+  }
+
+  modal.style.display = 'flex';
+}
+
+function closeBoothModal() {
+  document.getElementById('boothModal').style.display = 'none';
+}
+
+function pingBoothStation() {
+  playModemChirp();
+  alert(`PING ${BOOTHS_DATA.find(b => b.id === selectedBoothId)?.ip}: 64 bytes received in 0.41ms. Station is alive!`);
+}
+
+function claimBoothStation() {
+  const booth = BOOTHS_DATA.find(b => b.id === selectedBoothId);
+  if (booth) {
+    booth.user = userNick;
+    booth.task = 'Browsing Underground BBS & Coding';
+    booth.status = 'occupied';
+    renderBooths();
+    closeBoothModal();
+    playChime(880, 0.15);
+    alert(`You have claimed Booth #${booth.id}! Your station is online.`);
+  }
 }
 
 function orderItem(name, price, perk) {
@@ -1714,7 +2169,7 @@ function runSpeedTest() {
 }
 
 /* =========================================================================
-   5. THREADED FORUM / BBS MESSAGE BOARD (Interactive & Persistent)
+   6. THREADED FORUM / BBS MESSAGE BOARD (Interactive & Persistent)
    ========================================================================= */
 const DEFAULT_THREADS = [
   {
@@ -1826,30 +2281,28 @@ function renderThreadsList() {
   const container = document.getElementById('threadsContainer');
   if (!container) return;
 
-  const search = (document.getElementById('forumSearchInput')?.value || '').toLowerCase();
-
   const filtered = forumThreads.filter(t => {
-    const matchCat = (currentCategory === 'ALL' || t.category === currentCategory);
-    const matchSearch = !search || t.title.toLowerCase().includes(search) || t.author.toLowerCase().includes(search);
-    return matchCat && matchSearch;
+    if (currentCategory === 'ALL') return true;
+    return t.category.toLowerCase() === currentCategory.toLowerCase();
   });
 
   if (filtered.length === 0) {
-    container.innerHTML = '<div style="padding:16px; text-align:center; color:var(--text-muted); font-size:11px;">No discussion threads found in this channel.</div>';
+    container.innerHTML = '<div style="padding:20px; text-align:center; color:var(--text-muted);">No threads found in this category.</div>';
     return;
   }
 
   container.innerHTML = filtered.map(t => {
-    const replyCount = t.posts.length - 1;
-    const lastPost = t.posts[t.posts.length - 1];
+    const postCount = t.posts.length;
+    const lastPost = t.posts[postCount - 1];
     return `
-      <div class="thread-item ${activeThreadId === t.id ? 'active' : ''}" onclick="viewThread(${t.id})">
+      <div class="thread-item" onclick="viewThread(${t.id})">
         <div class="thread-header">
-          <span><span class="thread-tag">[#${t.category.toUpperCase()}]</span> BY <strong style="color:var(--green-bright);">${escapeHtml(t.author)}</strong></span>
-          <span>${t.date} • ${replyCount} ${replyCount === 1 ? 'REPLY' : 'REPLIES'}</span>
+          <span class="thread-tag">[${escapeHtml(t.category)}]</span>
+          <span>Started by <strong>${escapeHtml(t.author)}</strong> • ${escapeHtml(t.date)}</span>
+          <span style="color:var(--amber-bright);">${postCount} ${postCount === 1 ? 'post' : 'posts'}</span>
         </div>
         <div class="thread-title">${escapeHtml(t.title)}</div>
-        <div class="thread-snippet">${escapeHtml(lastPost ? lastPost.body : '')}</div>
+        <div class="thread-snippet">${escapeHtml(lastPost.body.replace(/\[\/?ASCII_ART\]/g, ''))}</div>
       </div>
     `;
   }).join('');
@@ -1858,34 +2311,43 @@ function renderThreadsList() {
 function filterForum(cat) {
   playKeyClick();
   currentCategory = cat;
-  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
-  const target = Array.from(document.querySelectorAll('.cat-pill')).find(p => p.textContent.includes(cat) || (cat === 'ALL' && p.textContent.includes('ALL')));
-  if (target) target.classList.add('active');
+  document.querySelectorAll('.cat-pill').forEach(pill => {
+    pill.classList.toggle('active', pill.textContent.toLowerCase().includes(cat.toLowerCase()));
+  });
+  closeThreadDetail();
   renderThreadsList();
 }
 
 function handleForumSearch() {
-  renderThreadsList();
+  const q = (document.getElementById('forumSearchInput').value || '').toLowerCase();
+  const items = document.querySelectorAll('.thread-item');
+  forumThreads.forEach((t, idx) => {
+    const text = (t.title + ' ' + t.author + ' ' + t.posts.map(p => p.body).join(' ')).toLowerCase();
+    if (items[idx]) {
+      items[idx].style.display = text.includes(q) ? 'block' : 'none';
+    }
+  });
 }
 
 function viewThread(id) {
-  playChime(500, 0.08);
+  playChime(520, 0.08);
   activeThreadId = id;
   const thread = forumThreads.find(t => t.id === id);
   if (!thread) return;
 
-  renderThreadsList();
   document.getElementById('threadsContainer').style.display = 'none';
+  document.getElementById('newThreadModal').style.display = 'none';
   const detail = document.getElementById('threadDetailArea');
   detail.style.display = 'block';
 
-  document.getElementById('activeThreadTitle').textContent = `[#${thread.category}] ${thread.title}`;
-  const listEl = document.getElementById('threadPostsList');
-  listEl.innerHTML = thread.posts.map((p, idx) => `
+  document.getElementById('activeThreadTitle').textContent = `[${thread.category}] ${thread.title}`;
+  
+  const postsList = document.getElementById('threadPostsList');
+  postsList.innerHTML = thread.posts.map((p, idx) => `
     <div class="post-card">
       <div class="post-meta">
-        <span>#${idx + 1} POSTED BY <span class="post-author">${escapeHtml(p.author)}</span></span>
-        <span>${p.date}</span>
+        <span class="post-author">#${idx + 1} — ${escapeHtml(p.author)}</span>
+        <span>${escapeHtml(p.date)}</span>
       </div>
       <div class="post-body">${formatPostBody(p.body)}</div>
     </div>
@@ -1893,117 +2355,104 @@ function viewThread(id) {
 }
 
 function formatPostBody(body) {
-  if (body.includes('[ASCII_ART]') && body.includes('[/ASCII_ART]')) {
-    const parts = body.split(/\[ASCII_ART\]|\[\/ASCII_ART\]/);
-    return escapeHtml(parts[0]) + `<pre class="ascii-post-art">${escapeHtml(parts[1])}</pre>` + escapeHtml(parts[2] || '');
+  if (body.includes('[ASCII_ART]')) {
+    return body.replace(/\[ASCII_ART\]([\s\S]*?)\[\/ASCII_ART\]/g, (match, art) => {
+      return `<pre class="ascii-post-art">${escapeHtml(art)}</pre>`;
+    });
   }
   return escapeHtml(body);
 }
 
 function closeThreadDetail() {
-  playKeyClick();
   activeThreadId = null;
   document.getElementById('threadDetailArea').style.display = 'none';
   document.getElementById('threadsContainer').style.display = 'flex';
-  renderThreadsList();
 }
 
 function submitReply() {
-  const author = (document.getElementById('replyAuthor').value || '').trim() || 'AnonymousPatron';
+  const author = (document.getElementById('replyAuthor').value || '').trim() || 'Anonymous_99';
   const body = (document.getElementById('replyBody').value || '').trim();
-
   if (!body) {
-    alert('Please enter a response body.');
+    alert('Please enter a response message.');
     return;
   }
 
   const thread = forumThreads.find(t => t.id === activeThreadId);
   if (!thread) return;
 
-  playChime(620, 0.12);
   const now = new Date();
   const pad = (n) => String(n).padStart(2, '0');
   const dateStr = `1999-11-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
-  thread.posts.push({
-    author,
-    date: dateStr,
-    body
-  });
-
+  thread.posts.push({ author, date: dateStr, body });
   saveForumData();
   document.getElementById('replyBody').value = '';
+  playChime(660, 0.1);
   viewThread(activeThreadId);
 }
 
 function openNewThreadModal() {
   playKeyClick();
+  closeThreadDetail();
   document.getElementById('newThreadModal').style.display = 'block';
 }
 
 function closeNewThreadModal() {
-  playKeyClick();
   document.getElementById('newThreadModal').style.display = 'none';
 }
 
 function submitNewThread() {
-  const category = document.getElementById('newThreadCat').value;
-  const author = (document.getElementById('newThreadAuthor').value || '').trim() || 'AnonymousCafeUser';
+  const cat = document.getElementById('newThreadCat').value;
+  const author = (document.getElementById('newThreadAuthor').value || '').trim() || 'Anonymous_99';
   const title = (document.getElementById('newThreadTitle').value || '').trim();
   const body = (document.getElementById('newThreadBody').value || '').trim();
 
   if (!title || !body) {
-    alert('Please specify both a thread topic and initial post content.');
+    alert('Please enter a thread title and first post content.');
     return;
   }
 
-  playChime(740, 0.15);
   const now = new Date();
   const pad = (n) => String(n).padStart(2, '0');
   const dateStr = `1999-11-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
   const newThread = {
     id: Date.now(),
-    category,
-    title,
-    author,
+    category: cat,
+    title: title,
+    author: author,
     date: dateStr,
-    posts: [
-      {
-        author,
-        date: dateStr,
-        body
-      }
-    ]
+    posts: [{ author, date: dateStr, body }]
   };
 
   forumThreads.unshift(newThread);
   saveForumData();
-
-  document.getElementById('newThreadTitle').value = '';
-  document.getElementById('newThreadBody').value = '';
   closeNewThreadModal();
+  playChime(780, 0.12);
   renderThreadsList();
   viewThread(newThread.id);
 }
 
 /* =========================================================================
-   6. INTERACTIVE ASCII & ANSI ART STUDIO
+   7. ASCII ART STUDIO (Pencil, Line, Box, Eraser, Fill, CP437 Palettes)
    ========================================================================= */
 const CANVAS_COLS = 60;
 const CANVAS_ROWS = 20;
 let canvasGrid = [];
 let currentTool = 'pencil';
 let currentChar = '█';
-let currentFg = '#38bdf8';
+let currentFg = '#ffffff';
 let isMouseDown = false;
+let toolStartCell = null;
 
-const PALETTE_CHARS = [
-  '█', '▀', '▄', '▌', '▐', '░',
-  '▒', '▓', '■', '▪', '#', '@',
-  '*', '+', '=', '-', ':', '.',
-  '/', '\\', '|', '~', '^', ' '
-];
+const GLYPH_SETS = {
+  blocks: ['█', '▀', '▄', '▌', '▐', '░', '▒', '▓', '■', '▪', '#', '@'],
+  box_single: ['┌', '─', '┐', '│', '└', '┘', '├', '┤', '┬', '┴', '┼', ' '],
+  box_double: ['╔', '═', '╗', '║', '╚', '╝', '╠', '╣', '╦', '╩', '╬', ' '],
+  ascii: ['*', '+', '=', '-', ':', '.', '/', '\\', '|', '~', '^', ' ']
+};
+
+let currentGlyphCategory = 'blocks';
 
 const ANSI_16_COLORS = [
   '#000000', '#0000aa', '#00aa00', '#00aaaa',
@@ -2022,10 +2471,7 @@ function initAsciiStudio() {
     canvasGrid.push(row);
   }
 
-  const charGridEl = document.getElementById('charGrid');
-  charGridEl.innerHTML = PALETTE_CHARS.map(ch => `
-    <button class="char-btn ${ch === currentChar ? 'active' : ''}" onclick="selectChar('${ch === '\\' ? '\\\\' : (ch === '\'' ? '\\\'' : ch)}')">${ch === ' ' ? 'SPC' : ch}</button>
-  `).join('');
+  renderGlyphButtons();
 
   const colorGridEl = document.getElementById('fgColorGrid');
   colorGridEl.innerHTML = ANSI_16_COLORS.map(col => `
@@ -2034,6 +2480,19 @@ function initAsciiStudio() {
 
   renderCanvasDom();
   loadSavedDrawing();
+}
+
+function renderGlyphButtons() {
+  const charGridEl = document.getElementById('charGrid');
+  const chars = GLYPH_SETS[currentGlyphCategory] || GLYPH_SETS.blocks;
+  charGridEl.innerHTML = chars.map(ch => `
+    <button class="char-btn ${ch === currentChar ? 'active' : ''}" onclick="selectChar('${ch === '\\' ? '\\\\' : (ch === '\'' ? '\\\'' : ch)}')">${ch === ' ' ? 'SPC' : ch}</button>
+  `).join('');
+}
+
+function switchGlyphCategory(cat) {
+  currentGlyphCategory = cat;
+  renderGlyphButtons();
 }
 
 function renderCanvasDom() {
@@ -2058,11 +2517,13 @@ function renderCanvasDom() {
       span.onmousedown = (e) => {
         e.preventDefault();
         isMouseDown = true;
-        applyTool(r, c);
+        handleCellMouseDown(r, c);
       };
 
       span.onmouseenter = () => {
-        if (isMouseDown) applyTool(r, c);
+        if (isMouseDown && (currentTool === 'pencil' || currentTool === 'eraser')) {
+          applyPencilOrEraser(r, c);
+        }
       };
 
       rowDiv.appendChild(span);
@@ -2071,11 +2532,41 @@ function renderCanvasDom() {
   }
 }
 
-window.addEventListener('mouseup', () => { isMouseDown = false; });
+window.addEventListener('mouseup', () => {
+  if (isMouseDown) {
+    isMouseDown = false;
+  }
+});
 
-function applyTool(r, c) {
+function handleCellMouseDown(r, c) {
+  if (currentTool === 'pencil' || currentTool === 'eraser') {
+    applyPencilOrEraser(r, c);
+  } else if (currentTool === 'fill') {
+    floodFill(r, c, canvasGrid[r][c].char, currentChar, currentFg);
+    playChime(600, 0.1);
+  } else if (currentTool === 'line') {
+    if (!toolStartCell) {
+      toolStartCell = { r, c };
+      playKeyClick();
+    } else {
+      drawLine(toolStartCell.r, toolStartCell.c, r, c);
+      toolStartCell = null;
+      playChime(700, 0.08);
+    }
+  } else if (currentTool === 'box') {
+    if (!toolStartCell) {
+      toolStartCell = { r, c };
+      playKeyClick();
+    } else {
+      drawBox(toolStartCell.r, toolStartCell.c, r, c);
+      toolStartCell = null;
+      playChime(720, 0.08);
+    }
+  }
+}
+
+function applyPencilOrEraser(r, c) {
   if (r < 0 || r >= CANVAS_ROWS || c < 0 || c >= CANVAS_COLS) return;
-
   if (currentTool === 'pencil') {
     canvasGrid[r][c].char = currentChar;
     canvasGrid[r][c].fg = currentFg;
@@ -2085,9 +2576,6 @@ function applyTool(r, c) {
     canvasGrid[r][c].char = ' ';
     canvasGrid[r][c].fg = '#aaaaaa';
     updateCellDom(r, c);
-  } else if (currentTool === 'fill') {
-    floodFill(r, c, canvasGrid[r][c].char, currentChar, currentFg);
-    playChime(600, 0.1);
   }
 }
 
@@ -2096,6 +2584,65 @@ function updateCellDom(r, c) {
   if (cell) {
     cell.textContent = canvasGrid[r][c].char;
     cell.style.color = canvasGrid[r][c].fg;
+  }
+}
+
+function drawLine(r0, c0, r1, c1) {
+  const dr = Math.abs(r1 - r0);
+  const dc = Math.abs(c1 - c0);
+  const sr = r0 < r1 ? 1 : -1;
+  const sc = c0 < c1 ? 1 : -1;
+  let err = (dr > dc ? dr : -dc) / 2;
+
+  let currR = r0;
+  let currC = c0;
+
+  while (true) {
+    if (currR >= 0 && currR < CANVAS_ROWS && currC >= 0 && currC < CANVAS_COLS) {
+      canvasGrid[currR][currC].char = currentChar;
+      canvasGrid[currR][currC].fg = currentFg;
+      updateCellDom(currR, currC);
+    }
+    if (currR === r1 && currC === c1) break;
+    const e2 = err;
+    if (e2 > -dr) { err -= dc; currR += sr; }
+    if (e2 < dc) { err += dr; currC += sc; }
+  }
+}
+
+function drawBox(r0, c0, r1, c1) {
+  const minR = Math.min(r0, r1);
+  const maxR = Math.max(r0, r1);
+  const minC = Math.min(c0, c1);
+  const maxC = Math.max(c0, c1);
+
+  const isDouble = currentGlyphCategory === 'box_double';
+  const cTL = isDouble ? '╔' : '┌';
+  const cTR = isDouble ? '╗' : '┐';
+  const cBL = isDouble ? '╚' : '└';
+  const cBR = isDouble ? '╝' : '┘';
+  const cH = isDouble ? '═' : '─';
+  const cV = isDouble ? '║' : '│';
+
+  for (let c = minC; c <= maxC; c++) {
+    setCanvasCell(minR, c, cH);
+    setCanvasCell(maxR, c, cH);
+  }
+  for (let r = minR; r <= maxR; r++) {
+    setCanvasCell(r, minC, cV);
+    setCanvasCell(r, maxC, cV);
+  }
+  setCanvasCell(minR, minC, cTL);
+  setCanvasCell(minR, maxC, cTR);
+  setCanvasCell(maxR, minC, cBL);
+  setCanvasCell(maxR, maxC, cBR);
+}
+
+function setCanvasCell(r, c, char) {
+  if (r >= 0 && r < CANVAS_ROWS && c >= 0 && c < CANVAS_COLS) {
+    canvasGrid[r][c].char = char;
+    canvasGrid[r][c].fg = currentFg;
+    updateCellDom(r, c);
   }
 }
 
@@ -2128,9 +2675,11 @@ function floodFill(startR, startC, targetChar, fillChar, fillFg) {
 function setTool(tool) {
   playKeyClick();
   currentTool = tool;
-  document.getElementById('toolPencil').classList.toggle('active', tool === 'pencil');
-  document.getElementById('toolEraser').classList.toggle('active', tool === 'eraser');
-  document.getElementById('toolFill').classList.toggle('active', tool === 'fill');
+  toolStartCell = null;
+  ['toolPencil', 'toolLine', 'toolBox', 'toolEraser', 'toolFill'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('active', id.toLowerCase().includes(tool));
+  });
 }
 
 function selectChar(ch) {
@@ -2207,11 +2756,17 @@ function downloadTxtFile() {
 
 function downloadAnsiFile() {
   playChime(680, 0.12);
-  // Build basic ANSI escape representation
-  let ansi = '\x1b[2J\x1b[H'; // Clear screen & home
+  let ansi = '\x1b[2J\x1b[H'; // Clear screen
+  let lastFg = '';
+
   for (let r = 0; r < CANVAS_ROWS; r++) {
     for (let c = 0; c < CANVAS_COLS; c++) {
-      ansi += canvasGrid[r][c].char;
+      const cell = canvasGrid[r][c];
+      if (cell.fg !== lastFg) {
+        lastFg = cell.fg;
+        ansi += '\x1b[37m'; // Default to white
+      }
+      ansi += cell.char;
     }
     ansi += '\r\n';
   }
@@ -2219,6 +2774,27 @@ function downloadAnsiFile() {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'CYBERCAFE_ART.ANS';
+  a.click();
+}
+
+function downloadCHeaderFile() {
+  playChime(720, 0.1);
+  let cCode = `/* CyberCafe '99 ASCII Art C Header */\n#ifndef CYBER_ART_H\n#define CYBER_ART_H\n\n`;
+  cCode += `static const char *CYBER_ART[${CANVAS_ROWS}] = {\n`;
+  for (let r = 0; r < CANVAS_ROWS; r++) {
+    let rowText = '';
+    for (let c = 0; c < CANVAS_COLS; c++) {
+      rowText += canvasGrid[r][c].char;
+    }
+    const safeStr = rowText.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    cCode += `    "${safeStr}"${r < CANVAS_ROWS - 1 ? ',' : ''}\n`;
+  }
+  cCode += `};\n\n#endif /* CYBER_ART_H */\n`;
+
+  const blob = new Blob([cCode], { type: 'text/x-c' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'CYBER_ART.H';
   a.click();
 }
 
@@ -2391,7 +2967,7 @@ function loadAsciiPreset(key) {
 }
 
 /* =========================================================================
-   7. UNDERGROUND IRC TERMINAL CLIENT (mIRC Style + Firebase RTDB)
+   8. UNDERGROUND IRC TERMINAL CLIENT (mIRC Style + Firebase RTDB)
    ========================================================================= */
 let currentIrcChan = '#cybercafe-99';
 let userNick = 'Guest_' + Math.floor(1000 + Math.random() * 9000);
@@ -2521,7 +3097,6 @@ function sendIrcMessage() {
   const pad = (n) => String(n).padStart(2, '0');
   const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
 
-  // Slash Commands
   if (raw.startsWith('/')) {
     handleIrcCommand(raw, timeStr);
     return;
@@ -2530,14 +3105,12 @@ function sendIrcMessage() {
   playKeyClick();
   addLocalIrcMessage({ time: timeStr, nick: userNick, text: raw });
 
-  // Broadcast to Firebase RTDB if online
   if (ircDb && ircRef) {
     try {
       pushFirebaseMessage({ time: timeStr, nick: userNick, text: raw });
     } catch (e) {}
   }
 
-  // Check Bot triggers
   handleBotTriggers(raw, timeStr);
 }
 
@@ -2653,7 +3226,7 @@ setInterval(() => {
 }, 22000);
 
 /* =========================================================================
-   8. FIREBASE REALTIME DATABASE LIVE MULTIPLAYER CHAT INTEGRATION
+   9. FIREBASE REALTIME DATABASE LIVE MULTIPLAYER CHAT INTEGRATION
    ========================================================================= */
 let pushFn = null;
 let dbRefFn = null;
@@ -2706,7 +3279,7 @@ function connectFirebaseChannel() {
     ircListener = window._fbOnChildAdded(q, (snapshot) => {
       const data = snapshot.val();
       if (!data) return;
-      if (data.nick === userNick) return; // Already rendered locally
+      if (data.nick === userNick) return;
 
       const now = new Date(data.timestamp || Date.now());
       const pad = (n) => String(n).padStart(2, '0');
@@ -2735,7 +3308,360 @@ function pushFirebaseMessage(msg) {
 }
 
 /* =========================================================================
-   9. VAULT FILE VIEWER
+   10. BBS DOOR GAME: NODE-WARS '99 (Subterranean Hacker)
+   ========================================================================= */
+let doorGameState = {
+  active: false,
+  player: {
+    handle: 'Guest_1999',
+    cls: 'Deck Hacker',
+    level: 1,
+    xp: 0,
+    xpNext: 100,
+    hp: 100,
+    maxHp: 100,
+    credits: 250,
+    baud: '56K V.90',
+    ram: 64,
+    nodesHacked: 0,
+    turns: 25,
+    maxTurns: 25,
+    inventory: ['IceBreaker v1.0', 'Packet Sniffer']
+  },
+  combat: null,
+  history: []
+};
+
+const DOOR_CLASSES = {
+  'Deck Hacker': { hpBonus: 0, ram: 64, item: 'Buffer Overflow Payload', desc: '+20% Exploit Attack Dmg' },
+  'Phreaker': { hpBonus: 10, ram: 32, item: '2600Hz Tone Dial', desc: 'Bypass ICE without alert' },
+  'ANSI Artist': { hpBonus: 0, ram: 48, item: 'Color Burst Script', desc: '+30% Credit Loot' },
+  'Silicon Overclocker': { hpBonus: -10, ram: 128, item: 'Pentium Bus Booster', desc: 'High Critical Hit Ratio' }
+};
+
+const LEADERBOARD_DEFAULT = [
+  { rank: 1, handle: 'SysOp_0x7F', cls: 'Deck Hacker', level: 12, credits: 8940, nodes: 44 },
+  { rank: 2, handle: '~neon_rider', cls: 'Silicon Overclocker', level: 9, credits: 5410, nodes: 29 },
+  { rank: 3, handle: 'PixelGoddess', cls: 'ANSI Artist', level: 8, credits: 4200, nodes: 22 },
+  { rank: 4, handle: 'DarkFiber', cls: 'Phreaker', level: 7, credits: 3100, nodes: 18 },
+  { rank: 5, handle: 'FragKing_99', cls: 'Deck Hacker', level: 5, credits: 1850, nodes: 11 }
+];
+
+function initDoorGame() {
+  const saved = localStorage.getItem('kweb_cybercafe_nodewars');
+  if (saved) {
+    try {
+      doorGameState = JSON.parse(saved);
+    } catch (e) {}
+  }
+  updateDoorGameUI();
+}
+
+function saveDoorGame() {
+  localStorage.setItem('kweb_cybercafe_nodewars', JSON.stringify(doorGameState));
+  updateDoorGameUI();
+}
+
+function updateDoorGameUI() {
+  const bar = document.getElementById('gameStatusBar');
+  if (bar) {
+    const p = doorGameState.player;
+    bar.innerHTML = `
+      <span>OPERATOR: ${escapeHtml(p.handle)}</span>
+      <span>CLASS: ${p.cls} (LV ${p.level})</span>
+      <span>BUFFER: ${p.hp}/${p.maxHp} HP</span>
+      <span>CREDITS: ${p.credits} CR</span>
+      <span>TURNS: ${p.turns}/${p.maxTurns}</span>
+    `;
+  }
+}
+
+function printDoorGame(text) {
+  const scr = document.getElementById('gameScreenOutput');
+  if (scr) {
+    scr.textContent += '\n' + text;
+    scr.scrollTop = scr.scrollHeight;
+    doorGameState.history.push(text);
+  }
+}
+
+function doorGameAction(act) {
+  playKeyClick();
+  const scr = document.getElementById('gameScreenOutput');
+  const p = doorGameState.player;
+
+  if (act === 'new_game') {
+    const handle = prompt('Enter your Hacker Alias / Handle:', userNick) || userNick;
+    const clsKeys = Object.keys(DOOR_CLASSES);
+    const clsChoice = prompt(`Choose Class:\n1. Deck Hacker\n2. Phreaker\n3. ANSI Artist\n4. Silicon Overclocker`, '1');
+    const chosenCls = clsKeys[parseInt(clsChoice, 10) - 1] || 'Deck Hacker';
+
+    doorGameState.active = true;
+    p.handle = handle;
+    p.cls = chosenCls;
+    p.level = 1;
+    p.xp = 0;
+    p.xpNext = 100;
+    p.maxHp = 100 + DOOR_CLASSES[chosenCls].hpBonus;
+    p.hp = p.maxHp;
+    p.ram = DOOR_CLASSES[chosenCls].ram;
+    p.credits = 300;
+    p.turns = 25;
+    p.nodesHacked = 0;
+    p.inventory = ['IceBreaker v1.0', DOOR_CLASSES[chosenCls].item];
+    doorGameState.combat = null;
+
+    scr.textContent = 
+`========================================================================
+[CARRIER LOCKED] Operator "${p.handle}" connected via ${p.baud}.
+Class: ${p.cls} (${DOOR_CLASSES[p.cls].desc})
+RAM: ${p.ram}MB PC100 SDRAM | Credits: ${p.credits} CR | Daily Turns: ${p.turns}
+Subnet 10.19.99.0/24 waiting for reconnaissance...
+========================================================================
+Choose "PROBE SUBNET" to explore servers or "RIG ARMORY" to upgrade.`;
+    playChime(880, 0.2);
+    saveDoorGame();
+    return;
+  }
+
+  if (!doorGameState.active) {
+    alert('Please start a New Game first!');
+    return;
+  }
+
+  if (doorGameState.combat) {
+    alert('Combat in progress! Resolve active ICE encounter first.');
+    return;
+  }
+
+  if (act === 'scan') {
+    if (p.turns <= 0) {
+      printDoorGame('[ERROR] Out of daily modem turns! Visit the SysOp Tavern to recharge or vend Baud Roast.');
+      playChime(250, 0.1);
+      return;
+    }
+    p.turns--;
+    playModemChirp();
+    const nodeOctet = Math.floor(2 + Math.random() * 250);
+    const targetIp = `10.19.99.${nodeOctet}`;
+
+    printDoorGame(`\n[DIAL] Dialing ${targetIp}:1999... Handshake verified.`);
+
+    const roll = Math.random();
+    if (roll < 0.45) {
+      // ICE Encounter
+      const iceTypes = [
+        { name: 'PORT_SCAN_SENTINEL', hp: 45, atk: 12, xp: 40, loot: 90 },
+        { name: 'AETHEL_SECURITY_ICE', hp: 70, atk: 16, xp: 65, loot: 150 },
+        { name: 'CARLSBAD_ROUTER_DAEMON', hp: 100, atk: 22, xp: 110, loot: 280 }
+      ];
+      const ice = iceTypes[Math.floor(Math.random() * iceTypes.length)];
+      doorGameState.combat = { ...ice, maxHp: ice.hp, ip: targetIp };
+
+      printDoorGame(`[ALERT] Rogue ICE Encountered: ${ice.name} (${ice.hp} HP)!`);
+      printDoorGame(`Commands: [A] Attack Exploit | [S] Shield | [R] Run`);
+      renderCombatControls();
+    } else if (roll < 0.75) {
+      // Data Cache
+      const lootCredits = Math.floor(40 + Math.random() * 120);
+      p.credits += lootCredits;
+      p.nodesHacked++;
+      printDoorGame(`[SUCCESS] Breached unencrypted storage cache on ${targetIp}! Extracted +${lootCredits} CR.`);
+      playChime(750, 0.1);
+    } else {
+      // Lore Fragment / Signal
+      p.nodesHacked++;
+      const signals = [
+        `Captured fragmented memo: "Intranet gateway 10.19.99.4 responds with carrier tone on 1999Hz."`,
+        `Telemetry sniffer logged packet loopback on sector offset 0x0040.`,
+        `Discovered abandoned FTP spool containing Win32 assembler macros.`
+      ];
+      printDoorGame(`[TELEMETRY] ${signals[Math.floor(Math.random() * signals.length)]}`);
+      playChime(600, 0.08);
+    }
+    saveDoorGame();
+  } else if (act === 'armory') {
+    printDoorGame(`\n--- [RIG ARMORY & SILICON KIOSK] ---
+1. Upgrade to 128MB SDRAM (+40 Max HP) - $200 CR
+2. Upgrade to 3dfx Voodoo3 3000 AGP (+15 Atk) - $350 CR
+3. Purchase IceBreaker v2.0 (High Crit Payload) - $120 CR`);
+    const choice = prompt('Enter item number to purchase (1-3):', '');
+    if (choice === '1') {
+      if (p.credits >= 200) {
+        p.credits -= 200; p.maxHp += 40; p.hp += 40; p.ram = 128;
+        printDoorGame('[ARMORY] Installed 128MB SDRAM! Max Buffer increased.');
+        playChime(880, 0.15);
+      } else printDoorGame('[ERROR] Insufficient credits.');
+    } else if (choice === '2') {
+      if (p.credits >= 350) {
+        p.credits -= 350; p.inventory.push('3dfx Voodoo3 3000');
+        printDoorGame('[ARMORY] Slotted Voodoo3 AGP! Exploit damage boosted.');
+        playChime(880, 0.15);
+      } else printDoorGame('[ERROR] Insufficient credits.');
+    } else if (choice === '3') {
+      if (p.credits >= 120) {
+        p.credits -= 120; p.inventory.push('IceBreaker v2.0');
+        printDoorGame('[ARMORY] Acquired IceBreaker v2.0 script.');
+        playChime(880, 0.15);
+      } else printDoorGame('[ERROR] Insufficient credits.');
+    }
+    saveDoorGame();
+  } else if (act === 'tavern') {
+    printDoorGame(`\n--- [SYSOP TAVERN & RECHARGE BAR] ---
+BBS Patrons present: SysOp_0x7F, ~neon_rider, DarkFiber.
+1. Buy Round of Baud Roast (+5 Turns) - $80 CR
+2. High/Low 2d6 Dice Wager (Double your credits)`);
+    const tChoice = prompt('Choose (1: Coffee / 2: Dice):', '1');
+    if (tChoice === '1') {
+      if (p.credits >= 80) {
+        p.credits -= 80; p.turns += 5;
+        printDoorGame('[TAVERN] Purchased piping hot Baud Roast! +5 Turns added.');
+        playChime(880, 0.1);
+      } else printDoorGame('[ERROR] Insufficient credits.');
+    } else if (tChoice === '2') {
+      const wager = parseInt(prompt('Wager credits (10 - 200):', '50'), 10) || 50;
+      if (p.credits >= wager && wager > 0) {
+        const guess = prompt('Predict 2d6 roll: [H] High (8-12) or [L] Low (2-6):', 'H').toUpperCase();
+        const d1 = Math.floor(1 + Math.random() * 6);
+        const d2 = Math.floor(1 + Math.random() * 6);
+        const total = d1 + d2;
+        printDoorGame(`[DICE] Rolled: ${d1} + ${d2} = ${total}`);
+        if ((guess === 'H' && total >= 8) || (guess === 'L' && total <= 6)) {
+          p.credits += wager;
+          printDoorGame(`[WINNER!] You won +${wager} CR!`);
+          playChime(950, 0.2);
+        } else {
+          p.credits -= wager;
+          printDoorGame(`[HOUSE WINS] You lost ${wager} CR.`);
+          playChime(260, 0.15);
+        }
+      } else printDoorGame('[ERROR] Invalid wager amount.');
+    }
+    saveDoorGame();
+  } else if (act === 'hall_of_fame') {
+    printDoorGame(`\n========================================================================
+              * * *   B B S   H A L L   O F   F A M E   * * *
+========================================================================
+RANK  OPERATOR         CLASS                 LEVEL   NODES   CREDITS
+------------------------------------------------------------------------`);
+    LEADERBOARD_DEFAULT.forEach(l => {
+      printDoorGame(`${String(l.rank).padEnd(5)} ${l.handle.padEnd(16)} ${l.cls.padEnd(21)} ${String(l.level).padEnd(7)} ${String(l.nodes).padEnd(7)} ${l.credits} CR`);
+    });
+    printDoorGame(`------------------------------------------------------------------------`);
+  }
+}
+
+function renderCombatControls() {
+  const bar = document.getElementById('gameControlsBar');
+  bar.innerHTML = `
+    <button class="btn-retro green" onclick="executeCombatMove('attack')">⚔️ BUFFER OVERFLOW</button>
+    <button class="btn-retro amber" onclick="executeCombatMove('trojan')">💉 TROJAN INJECT</button>
+    <button class="btn-retro" onclick="executeCombatMove('shield')">🛡️ REPAIR FIREWALL</button>
+    <button class="btn-retro pink" onclick="executeCombatMove('run')">🏃 DROP CARRIER</button>
+  `;
+}
+
+function resetCombatControls() {
+  const bar = document.getElementById('gameControlsBar');
+  bar.innerHTML = `
+    <button class="btn-retro green" onclick="doorGameAction('new_game')">▶ NEW GAME / ENTER</button>
+    <button class="btn-retro" onclick="doorGameAction('scan')">📡 PROBE SUBNET</button>
+    <button class="btn-retro amber" onclick="doorGameAction('armory')">🛒 RIG ARMORY</button>
+    <button class="btn-retro" onclick="doorGameAction('tavern')">🍺 SYSOP TAVERN</button>
+    <button class="btn-retro" onclick="doorGameAction('hall_of_fame')">🏆 HALL OF FAME</button>
+    <button class="btn-retro" onclick="downloadDoorGameLog()">💾 SAVE LOG (.LOG)</button>
+  `;
+}
+
+function executeCombatMove(move) {
+  const c = doorGameState.combat;
+  const p = doorGameState.player;
+  if (!c) return;
+
+  if (move === 'attack') {
+    let dmg = Math.floor(15 + Math.random() * 20);
+    if (p.inventory.includes('3dfx Voodoo3 3000')) dmg += 12;
+    c.hp -= dmg;
+    printDoorGame(`[EXPLOIT] Sent Buffer Overflow -> ${c.name} takes ${dmg} damage! (${Math.max(0, c.hp)}/${c.maxHp} HP)`);
+    playFmTone(540, 2.5, 3.0, 0.08, 0.1, false);
+  } else if (move === 'trojan') {
+    if (Math.random() > 0.3) {
+      const dmg = Math.floor(35 + Math.random() * 30);
+      c.hp -= dmg;
+      printDoorGame(`[CRITICAL] Trojan Rootkit executed! ${c.name} takes ${dmg} massive damage!`);
+      playFmTone(780, 4.0, 5.0, 0.12, 0.12, true);
+    } else {
+      printDoorGame(`[BLOCKED] Sentinel ICE filtered your Trojan payload!`);
+      playChime(300, 0.08);
+    }
+  } else if (move === 'shield') {
+    const heal = Math.floor(18 + Math.random() * 15);
+    p.hp = Math.min(p.maxHp, p.hp + heal);
+    printDoorGame(`[SHIELD] Patched firewall sockets! Restored +${heal} Buffer HP (${p.hp}/${p.maxHp}).`);
+    playChime(620, 0.1);
+  } else if (move === 'run') {
+    printDoorGame(`[ESCAPE] Carrier dropped. Escaped from ${c.name}.`);
+    doorGameState.combat = null;
+    resetCombatControls();
+    saveDoorGame();
+    return;
+  }
+
+  // Check ICE death
+  if (c.hp <= 0) {
+    printDoorGame(`[VICTORY] ${c.name} neutralized! Looted +${c.loot} Credits, gained +${c.xp} XP!`);
+    p.credits += c.loot;
+    p.xp += c.xp;
+    p.nodesHacked++;
+    doorGameState.combat = null;
+
+    if (p.xp >= p.xpNext) {
+      p.level++;
+      p.xp -= p.xpNext;
+      p.xpNext = Math.floor(p.xpNext * 1.5);
+      p.maxHp += 15;
+      p.hp = p.maxHp;
+      printDoorGame(`★ ★ ★ LEVEL UP! Reached Operator Level ${p.level}! Max Buffer increased to ${p.maxHp} HP. ★ ★ ★`);
+      playChime(980, 0.25);
+    } else {
+      playChime(820, 0.15);
+    }
+
+    resetCombatControls();
+    saveDoorGame();
+    return;
+  }
+
+  // ICE counter-attack
+  const enemyDmg = Math.floor(c.atk * 0.6 + Math.random() * (c.atk * 0.8));
+  p.hp -= enemyDmg;
+  printDoorGame(`[COUNTER] ${c.name} fires ICE retaliatory shock -> Player takes ${enemyDmg} damage!`);
+  playFmTone(220, 1.5, 3.5, 0.1, 0.12, false);
+
+  if (p.hp <= 0) {
+    printDoorGame(`\n[FATAL ERROR] Buffer overwhelmed! Rig disconnected with 0 HP.`);
+    printDoorGame(`System rebooted in safe mode. Credits reduced by half.`);
+    p.hp = Math.floor(p.maxHp * 0.5);
+    p.credits = Math.floor(p.credits * 0.5);
+    doorGameState.combat = null;
+    resetCombatControls();
+  }
+
+  saveDoorGame();
+}
+
+function downloadDoorGameLog() {
+  playChime(700, 0.1);
+  const logText = doorGameState.history.join('\n');
+  const blob = new Blob([logText], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'NODE_WARS_1999.LOG';
+  a.click();
+}
+
+/* =========================================================================
+   11. VAULT FILE VIEWER & DIRECT DOWNLOADER
    ========================================================================= */
 const VAULT_FILES = {
   CAFE_WELCOME: `[FILE: CAFE_WELCOME.TXT // 1999-10-01]
@@ -2798,11 +3724,59 @@ TIMESTAMP           SRC              DST              FLAGS    PAYLOAD
 
 NOTE: IP 10.19.99.4 responds with valid handshake despite having no physical NIC.
 Packets appear to loop back from the system memory controller.
-Investigate further using KHex or access kweb://10.19.99.4/classified.`
+Investigate further using KHex or access kweb://10.19.99.4/classified.`,
+
+  GLIDE_BENCH: `[BENCHMARK: VOODOO_GLIDE_BENCHMARKS.NFO // 1999-11-19]
+========================================================================
+3DFX VOODOO3 3000 AGP 16MB // GLIDE 3.x vs DIRECT3D 6.1 BENCHMARK REPORT
+Tested on: Intel Pentium III 500MHz, 128MB PC100 SDRAM, 1024x768 16-bit
+========================================================================
+GAME / ENGINE                   DIRECT3D 6.1    3DFX GLIDE 3.03   DELTA
+------------------------------------------------------------------------
+Tremor III Arena (Timedemo 1)   48.2 FPS        67.4 FPS          +39.8%
+Surreal Tournament (CTF-Face)   41.5 FPS        58.9 FPS          +41.9%
+Machina Ex (Liberty Island)     34.8 FPS        49.2 FPS          +41.3%
+Half-Cycle (Crossfire LAN)      52.0 FPS        74.1 FPS          +42.5%
+------------------------------------------------------------------------
+VERDICT: Glide remains king of low-overhead draw call dispatching in '99.`,
+
+  CAFE_MENU: `[PRICING: CYBERCAFE_1999_MENU.TXT // 1999-11-20]
+========================================================================
+             CYBERCAFE '99 // REFRESHMENT & SERVICE TARIFF
+========================================================================
+BEVERAGES:
+- Baud Roast Coffee (Columbian Dark, Heatsink Brewed) .......... $1.75
+- Jolt Cola 16oz (All the sugar and twice the caffeine!) ...... $2.25
+- Surge Citrus Green Soda (12oz can) ........................... $1.50
+- Bawls Guarana (10oz Cobalt Glass Bottle) ..................... $2.50
+
+SNACKS:
+- Biscotti Byte (Almond Crunched) .............................. $1.00
+- Hot Pocket Pepperoni Byte .................................... $2.00
+
+STATION HOURLY RATES:
+- 1 Hour Station Time (10Base-T Ethernet, 56k Internet) ........ $4.00
+- 4 Hour LAN Deathmatch Pass ................................... $12.00
+- All-Night Hackathon Pass (22:00 to 06:00 EST) ................ $20.00`,
+
+  DOOR_GUIDE: `[STRATEGY: DOOR_GAME_HACKERS_GUIDE.TXT // 1999-11-22]
+========================================================================
+      NODE-WARS '99: SURVIVAL GUIDE FOR UNDERGROUND SUBTERRANEANS
+========================================================================
+1. Choose your class wisely:
+   - Deck Hacker: Best raw damage output for aggressive play.
+   - Silicon Overclocker: Highest crit chance; best paired with Voodoo3.
+2. Monitor your daily turn meter. Don't waste turns probing when low HP.
+3. Visit the Armory early: 128MB SDRAM upgrade gives you buffer headroom.
+4. Stop by the SysOp Tavern if you need emergency turns (+5 Baud Roast).
+5. Listen for anomalous packets on 10.19.99.4 for secret lore coordinates!`
 };
+
+let currentVaultKey = null;
 
 function viewVaultFile(key) {
   playChime(550, 0.08);
+  currentVaultKey = key;
   const viewer = document.getElementById('vaultViewerBox');
   const title = document.getElementById('vaultFileTitle');
   const content = document.getElementById('vaultFileContent');
@@ -2812,6 +3786,17 @@ function viewVaultFile(key) {
     content.textContent = VAULT_FILES[key];
     viewer.style.display = 'block';
   }
+}
+
+function downloadCurrentVaultFile() {
+  if (!currentVaultKey || !VAULT_FILES[currentVaultKey]) return;
+  playChime(700, 0.1);
+  const text = VAULT_FILES[currentVaultKey];
+  const blob = new Blob([text], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${currentVaultKey}.TXT`;
+  a.click();
 }
 
 function escapeHtml(str) {
@@ -2825,14 +3810,23 @@ function escapeHtml(str) {
 }
 
 /* =========================================================================
-   10. INITIALIZATION
+   12. INITIALIZATION
    ========================================================================= */
 window.addEventListener('DOMContentLoaded', () => {
   renderBooths();
   loadForumData();
   initAsciiStudio();
   renderIrc();
+  initDoorGame();
   initFirebaseIrc();
+
+  // Attach Piano key clicks
+  document.querySelectorAll('.piano-key').forEach(k => {
+    k.addEventListener('click', () => {
+      const freq = parseFloat(k.getAttribute('data-freq'));
+      if (freq) playPianoNote(freq, k);
+    });
+  });
 });
 </script>
 

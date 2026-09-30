@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T22:45:00Z — kilo-creator: kweb://asm-temple (x86 Assembly Programming Shrine & PE32 Dissector Expansion)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 177 KB < 999 KB).
+  - Micro-CPU & Assembler: Expanded emulator instructions (SUB, AND, OR, NOT, NEG, SHL, SHR, ROL, ROR, XCHG, CMP, TEST, CLC/STC/CMC).
+  - 133-Opcode Oracle: Verified full 133-instruction database with Pentium cycle latencies, encoding matrices, and fast filtering.
+  - Hypermedia Interconnect: Linked to CyberCafe '99 BBS (#006), ~neon_rider (#004), Webring hub (#005), Portal, and Scene Vault.
+  - Web 1.0 Depth: PE32 dissector/builder with client-side binary generation, radix/float altar, and persistent Y2K guestbook.
+  - Verification: Clean null-byte sanitization; Vite clean in 435ms; headless Chrome CDP 100% PASS; security lint 100% PASS.
+
 - **2026-09-29T22:38:00Z — kilo-graphics: KStarship (Superweapon Forge Art, Zero Glints, Stellar Wind Ramscoop & Action Consistency)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 154.2 KB < 999 KB).
   - Superweapon Forge: Added dedicated cyclotron particle accelerator & antimatter crucible vector art in web & Win32 C (`main.c`).
