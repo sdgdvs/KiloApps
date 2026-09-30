@@ -420,7 +420,10 @@ const char* GetSoundType(CardDef* cd) {
     return "arcane";
 }
 
+static int audioMuted = 0;
+
 void PlaySoundEffect(const char* type) {
+    if (audioMuted) return;
     if (strcmp(type, "fire") == 0) {
         Beep(150, 40);
         Beep(100, 40);
@@ -928,6 +931,92 @@ void DrawSpellIconGDI(HDC hdc, int x, int y, int type) {
     }
 }
 
+static void CastPlayerCard(HWND hwnd, int cardIndex, int cw, int ch) {
+    if (gameState != 0 || cardIndex < 0 || cardIndex >= playerCount) return;
+    if (playerFreeze > 0) {
+        lstrcpyA(arenaMsg, "You are frozen and cannot cast spells!");
+        InvalidateRect(hwnd, NULL, FALSE);
+        return;
+    }
+    CardDef cd = sampleCards[playerHand[cardIndex]];
+    if (playerMana >= cd.cost) {
+        playerMana -= cd.cost;
+        
+        int dmg = cd.damage;
+        if (strcmp(cd.name, "Ice Lance") == 0 && opponentFreeze > 0) dmg = 3;
+        DealDamageToOpponent(dmg, cw, ch);
+        
+        if (cd.heal > 0) {
+            playerHp += cd.heal;
+            char b[32]; wsprintf(b, "+%d HP", cd.heal);
+            SpawnFloater((float)cw * 0.25f, (float)ch * 0.40f, b, RGB(74, 222, 128));
+        }
+        opponentBurn += cd.burn;
+        opponentFreeze += cd.freeze;
+        playerShield += cd.shield;
+        playerRegen += cd.regen;
+        opponentPoison += cd.poison;
+        
+        LaunchSpellVisual(1, &cd, cw, ch);
+        PlaySoundEffect(GetSoundType(&cd));
+        
+        if (strcmp(cd.name, "Arcane Intellect") == 0) {
+            DrawCard(0); DrawCard(0);
+        } else if (strcmp(cd.name, "Time Warp") == 0) {
+            playerMana = playerMaxMana;
+            DrawCard(0);
+            SpawnFloater((float)cw * 0.25f, (float)ch * 0.28f, "EXTRA TURN!", RGB(168, 85, 247));
+        } else if (strcmp(cd.name, "Counterspell") == 0) {
+            if (opponentCount > 0) {
+                int bestIdx = 0;
+                for (int k = 1; k < opponentCount; k++) {
+                    if (sampleCards[opponentHand[k]].cost > sampleCards[opponentHand[bestIdx]].cost) {
+                        bestIdx = k;
+                    }
+                }
+                char b[64];
+                wsprintf(b, "BANISHED %s!", sampleCards[opponentHand[bestIdx]].name);
+                for (int k = bestIdx; k < opponentCount - 1; k++) {
+                    opponentHand[k] = opponentHand[k + 1];
+                }
+                opponentCount--;
+                SpawnFloater((float)cw * 0.75f, (float)ch * 0.28f, b, RGB(168, 85, 247));
+            }
+        } else if (strcmp(cd.name, "Polymorph") == 0) {
+            opponentShield = 0;
+            SpawnFloater((float)cw * 0.75f, (float)ch * 0.28f, "BAAA! SHEEP!", RGB(255, 215, 0));
+        }
+
+        if (opponentHp <= 0) {
+            opponentHp = 0;
+            if (gameState != 1) PlaySoundEffect("win");
+            gameState = 1; // player win
+            SpawnCelebrationStars((float)cw * 0.5f, (float)ch * 0.48f);
+        }
+        if (playerHp > 30) playerHp = 30;
+
+        if (gameState == 1 && campaignLevel > 0) {
+            if (campaignLevel < 10) {
+                wsprintf(arenaMsg, "VICTORY! %s defeated! Next battle in 3s...", mages[campaignLevel-1].name);
+                SetTimer(hwnd, IDT_CAMPAIGN_NEXT, 3000, NULL);
+            } else {
+                lstrcpyA(arenaMsg, "CAMPAIGN COMPLETE! You are the Grand Magus!");
+                campaignLevel = 0;
+            }
+        } else {
+            wsprintf(arenaMsg, "Cast %s: %s", cd.name, cd.effect);
+        }
+        
+        for (int j = cardIndex; j < playerCount - 1; j++) {
+            playerHand[j] = playerHand[j + 1];
+        }
+        playerCount--;
+    } else {
+        wsprintf(arenaMsg, "Not enough mana for %s!", cd.name);
+    }
+    InvalidateRect(hwnd, NULL, FALSE);
+}
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     switch (uMsg) {
         case WM_CREATE:
@@ -1249,92 +1338,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             int playerY = ch - cardH - 20;
 
             if (gameState != 0) return 0;
-            if (playerFreeze > 0) {
-                lstrcpyA(arenaMsg, "You are frozen and cannot cast spells!");
-                InvalidateRect(hwnd, NULL, FALSE);
-                return 0;
-            }
             
             for (int i = 0; i < playerCount; i++) {
                 int cx = playerX + i * (cardW + gap);
                 if (xPos >= cx && xPos <= cx + cardW && yPos >= playerY && yPos <= playerY + cardH) {
-                    CardDef cd = sampleCards[playerHand[i]];
-                    if (playerMana >= cd.cost) {
-                        playerMana -= cd.cost;
-                        
-                        int dmg = cd.damage;
-                        if (strcmp(cd.name, "Ice Lance") == 0 && opponentFreeze > 0) dmg = 3;
-                        DealDamageToOpponent(dmg, cw, ch);
-                        
-                        if (cd.heal > 0) {
-                            playerHp += cd.heal;
-                            char b[32]; wsprintf(b, "+%d HP", cd.heal);
-                            SpawnFloater((float)cw * 0.25f, (float)ch * 0.40f, b, RGB(74, 222, 128));
-                        }
-                        opponentBurn += cd.burn;
-                        opponentFreeze += cd.freeze;
-                        playerShield += cd.shield;
-                        playerRegen += cd.regen;
-                        opponentPoison += cd.poison;
-                        
-                        LaunchSpellVisual(1, &cd, cw, ch);
-                        PlaySoundEffect(GetSoundType(&cd));
-                        
-                        if (strcmp(cd.name, "Arcane Intellect") == 0) {
-                            DrawCard(0); DrawCard(0);
-                        } else if (strcmp(cd.name, "Time Warp") == 0) {
-                            playerMana = playerMaxMana;
-                            DrawCard(0);
-                            SpawnFloater((float)cw * 0.25f, (float)ch * 0.28f, "EXTRA TURN!", RGB(168, 85, 247));
-                        } else if (strcmp(cd.name, "Counterspell") == 0) {
-                            if (opponentCount > 0) {
-                                int bestIdx = 0;
-                                for (int k = 1; k < opponentCount; k++) {
-                                    if (sampleCards[opponentHand[k]].cost > sampleCards[opponentHand[bestIdx]].cost) {
-                                        bestIdx = k;
-                                    }
-                                }
-                                char b[64];
-                                wsprintf(b, "BANISHED %s!", sampleCards[opponentHand[bestIdx]].name);
-                                for (int k = bestIdx; k < opponentCount - 1; k++) {
-                                    opponentHand[k] = opponentHand[k + 1];
-                                }
-                                opponentCount--;
-                                SpawnFloater((float)cw * 0.75f, (float)ch * 0.28f, b, RGB(168, 85, 247));
-                            }
-                        } else if (strcmp(cd.name, "Polymorph") == 0) {
-                            opponentShield = 0;
-                            SpawnFloater((float)cw * 0.75f, (float)ch * 0.28f, "BAAA! SHEEP!", RGB(255, 215, 0));
-                        }
-
-                        if (opponentHp <= 0) {
-                            opponentHp = 0;
-                            if (gameState != 1) PlaySoundEffect("win");
-                            gameState = 1; // player win
-                            SpawnCelebrationStars((float)cw * 0.5f, (float)ch * 0.48f);
-                        }
-                        if (playerHp > 30) playerHp = 30;
-
-                        if (gameState == 1 && campaignLevel > 0) {
-                            if (campaignLevel < 10) {
-                                wsprintf(arenaMsg, "VICTORY! %s defeated! Next battle in 3s...", mages[campaignLevel-1].name);
-                                SetTimer(hwnd, IDT_CAMPAIGN_NEXT, 3000, NULL);
-                            } else {
-                                lstrcpyA(arenaMsg, "CAMPAIGN COMPLETE! You are the Grand Magus!");
-                                campaignLevel = 0;
-                            }
-                        } else {
-                            wsprintf(arenaMsg, "Cast %s: %s", cd.name, cd.effect);
-                        }
-                        
-                        for (int j = i; j < playerCount - 1; j++) {
-                            playerHand[j] = playerHand[j + 1];
-                        }
-                        playerCount--;
-                    } else {
-                        wsprintf(arenaMsg, "Not enough mana for %s!", cd.name);
-                    }
-                    InvalidateRect(hwnd, NULL, FALSE);
+                    CastPlayerCard(hwnd, i, cw, ch);
                     break;
                 }
             }
@@ -1607,10 +1615,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 RECT manaRect = {cx + 5, playerY + 6, cx + 23, playerY + 23};
                 DrawText(memDC, costStr, -1, &manaRect, DT_CENTER | DT_SINGLELINE);
 
-                // Card Title
-                SetTextColor(memDC, RGB(255, 215, 0));
+                // Card Title & Hotkey
+                char titleStr[48];
+                wsprintf(titleStr, "%s [%d]", cd.name, i + 1);
+                SetTextColor(memDC, (playerMana >= cd.cost && playerFreeze == 0 && gameState == 0) ? RGB(255, 215, 0) : RGB(140, 130, 110));
                 RECT nameRect = {cx + 25, playerY + 6, cx + cardW - 4, playerY + 24};
-                DrawText(memDC, cd.name, -1, &nameRect, DT_CENTER | DT_SINGLELINE);
+                DrawText(memDC, titleStr, -1, &nameRect, DT_CENTER | DT_SINGLELINE);
 
                 // Card Art Area
                 HBRUSH artBg = CreateSolidBrush(RGB(10, 5, 18));
@@ -1651,6 +1661,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             if (playerRegen > 0) pos += wsprintf(playerLabel + pos, " [Regen %d]", playerRegen);
             RECT lblPlayer = {0, playerY - 20, cw, playerY};
             DrawText(memDC, playerLabel, -1, &lblPlayer, DT_CENTER | DT_SINGLELINE);
+
+            char hintStr[] = "[1-7] Cast   [Space/E] End Turn   [D] Deck   [F1/H] Grimoire   [F5/F9] Save/Load   [M] Audio   [R] Reset";
+            RECT lblHint = {0, ch - 18, cw, ch - 2};
+            SetTextColor(memDC, RGB(168, 148, 116));
+            DrawText(memDC, hintStr, -1, &lblHint, DT_CENTER | DT_SINGLELINE);
 
             SelectObject(memDC, oldFont);
             DeleteObject(hFont);
@@ -1713,6 +1728,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     SendMessage(hwnd, WM_COMMAND, BTN_HELP, 0);
                 }
                 return 0;
+            } else if (wParam >= '1' && wParam <= '7') {
+                int idx = (int)(wParam - '1');
+                if (gameState == 0 && idx < playerCount) {
+                    RECT rc;
+                    GetClientRect(hwnd, &rc);
+                    CastPlayerCard(hwnd, idx, rc.right - rc.left, rc.bottom - rc.top);
+                    return 0;
+                }
+            } else if (wParam == 'M') {
+                audioMuted = !audioMuted;
+                lstrcpyA(arenaMsg, audioMuted ? "Sound Muted [M]" : "Sound Enabled [M]");
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
             } else if (wParam == 'D') {
                 if (gameState == 3) {
                     SendMessage(hwnd, WM_COMMAND, BTN_DECK_CLOSE, 0);
@@ -1755,7 +1783,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdL
         CLASS_NAME,
         "KWizard",
         WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, CW_USEDEFAULT, 840, 640,
+        CW_USEDEFAULT, CW_USEDEFAULT, 880, 680,
         NULL,
         NULL,
         hInstance,

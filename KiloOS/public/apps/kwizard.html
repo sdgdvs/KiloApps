@@ -23,21 +23,21 @@
         }
         #game-board {
             width: 100%;
-            max-width: 860px;
+            max-width: 880px;
             height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 12px 16px;
+            padding: 8px 12px;
             position: relative;
         }
         .hand-area {
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 155px;
-            gap: 10px;
-            padding: 8px 12px;
+            height: 148px;
+            gap: 8px;
+            padding: 4px 8px;
             border: 2px solid #5a4225;
             border-radius: 10px;
             background: rgba(15, 6, 28, 0.75);
@@ -45,11 +45,27 @@
             position: relative;
             overflow-x: auto;
             overflow-y: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: #b89947 #150926;
+        }
+        .hand-area::-webkit-scrollbar {
+            height: 6px;
+        }
+        .hand-area::-webkit-scrollbar-track {
+            background: #150926;
+            border-radius: 3px;
+        }
+        .hand-area::-webkit-scrollbar-thumb {
+            background: #b89947;
+            border-radius: 3px;
+        }
+        .hand-area::-webkit-scrollbar-thumb:hover {
+            background: #ffd700;
         }
         .play-area {
             flex-grow: 1;
             position: relative;
-            margin: 8px 0;
+            margin: 6px 0;
             border: 3px solid #b89947;
             border-radius: 12px;
             background: #120721;
@@ -64,8 +80,8 @@
             display: block;
         }
         .card {
-            width: 104px;
-            height: 142px;
+            width: 102px;
+            height: 138px;
             background: linear-gradient(135deg, #2b1f3d 0%, #150a22 100%);
             border: 2px solid #b89947;
             border-radius: 8px;
@@ -74,11 +90,32 @@
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
-            padding: 6px 4px 4px 4px;
-            transition: transform 0.15s ease-out, border-color 0.2s, box-shadow 0.2s;
+            padding: 4px 3px 3px 3px;
+            transition: transform 0.15s ease-out, border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
             color: #f5ecd5;
             box-shadow: 0 4px 10px rgba(0,0,0,0.7), inset 0 0 8px rgba(184, 153, 71, 0.25);
             position: relative;
+            flex-shrink: 0;
+        }
+        .card.card-dimmed {
+            opacity: 0.6;
+            filter: grayscale(25%);
+        }
+        .card.card-playable {
+            opacity: 1.0;
+            border-color: #ffd700;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.7), 0 0 8px rgba(255, 215, 0, 0.4);
+        }
+        .card-key-badge {
+            font-size: 9px;
+            font-weight: bold;
+            color: #ffd700;
+            background: rgba(0, 0, 0, 0.65);
+            border: 1px solid rgba(184, 153, 71, 0.7);
+            border-radius: 3px;
+            padding: 1px 3px;
+            margin-left: 2px;
+            letter-spacing: 0.5px;
             flex-shrink: 0;
         }
         .card:hover {
@@ -349,22 +386,22 @@
     <div id="toast-container" role="status" aria-live="polite"></div>
     <div id="game-board">
         <div id="controls">
-            <select id="difficulty-select">
+            <select id="difficulty-select" title="Duel Difficulty">
                 <option value="easy">Easy</option>
                 <option value="medium" selected>Medium</option>
                 <option value="hard">Hard</option>
             </select>
-            <button id="draw-btn">Draw Card</button>
-            <button id="end-turn-btn">End Turn</button>
-            <button id="reset-btn">Reset Game</button>
-            <button id="campaign-btn" style="background: linear-gradient(180deg, #6d3a1f 0%, #3d1c0b 100%); border-color: #e69138;">Campaign</button>
-            <button id="deck-btn" style="background: linear-gradient(180deg, #1e3a8a 0%, #0f172a 100%); border-color: #60a5fa;">Deck</button>
-            <button id="help-btn" style="background: linear-gradient(180deg, #6b21a8 0%, #3b0764 100%); border-color: #c084fc;">Grimoire</button>
+            <button id="draw-btn" title="Draw a Spell Card">Draw</button>
+            <button id="end-turn-btn" title="End Turn [Space or E]">End Turn [Space]</button>
+            <button id="reset-btn" title="Reset Skirmish [R]">Reset [R]</button>
+            <button id="campaign-btn" title="Single Player Campaign" style="background: linear-gradient(180deg, #6d3a1f 0%, #3d1c0b 100%); border-color: #e69138;">Campaign</button>
+            <button id="deck-btn" title="Open Deck Builder [D]" style="background: linear-gradient(180deg, #1e3a8a 0%, #0f172a 100%); border-color: #60a5fa;">Deck [D]</button>
+            <button id="help-btn" title="Grimoire & Help [F1 or H]" style="background: linear-gradient(180deg, #6b21a8 0%, #3b0764 100%); border-color: #c084fc;">Grimoire [F1]</button>
             <button id="save-btn" title="Quicksave Game (F5)" style="background: linear-gradient(180deg, #1e3a8a 0%, #0f172a 100%); border-color: #3b82f6;">Save [F5]</button>
             <button id="load-btn" title="Quickload Game (F9)" style="background: linear-gradient(180deg, #065f46 0%, #064e3b 100%); border-color: #10b981;">Load [F9]</button>
             <button id="export-save-btn" title="Export Game Save to JSON file" style="background: linear-gradient(180deg, #374151 0%, #1f2937 100%); border-color: #9ca3af;">Export</button>
             <button id="import-save-btn" title="Import Game Save from JSON file" style="background: linear-gradient(180deg, #374151 0%, #1f2937 100%); border-color: #9ca3af;">Import</button>
-            <button id="audio-toggle-btn" title="Toggle Genesis YM2612 FM / SNES DSP Audio" style="background: linear-gradient(180deg, #4b5563 0%, #1f2937 100%); border-color: #10b981;">🔊 Audio</button>
+            <button id="audio-toggle-btn" title="Toggle Genesis YM2612 FM / SNES DSP Audio [M]" style="background: linear-gradient(180deg, #4b5563 0%, #1f2937 100%); border-color: #10b981;">🔊 Audio [M]</button>
             <input type="file" id="import-save-file" accept=".json" style="display: none;">
         </div>
         
@@ -388,6 +425,15 @@
                 <span id="player-status-container"></span>
             </div>
             <div id="player-hand" class="hand-area"></div>
+            <div id="keyboard-hint-bar" style="text-align: center; font-size: 11px; color: #a89474; padding-top: 4px; letter-spacing: 0.3px;">
+                <span style="color: #ffd700; font-weight: bold;">[1-7]</span> Cast &bull;
+                <span style="color: #ffd700; font-weight: bold;">[Space/E]</span> End Turn &bull;
+                <span style="color: #ffd700; font-weight: bold;">[D]</span> Deck &bull;
+                <span style="color: #ffd700; font-weight: bold;">[F1/H]</span> Grimoire &bull;
+                <span style="color: #ffd700; font-weight: bold;">[F5/F9]</span> Save/Load &bull;
+                <span style="color: #ffd700; font-weight: bold;">[M]</span> Audio &bull;
+                <span style="color: #ffd700; font-weight: bold;">[R]</span> Reset
+            </div>
         </div>
     </div>
 
@@ -433,6 +479,7 @@
                 <li><b>[F9]:</b> Quickload State</li>
                 <li><b>[D]:</b> Open Deck Builder (20 cards required)</li>
                 <li><b>[E] / [Space]:</b> End Turn</li>
+                <li><b>[M]:</b> Toggle Genesis YM2612 FM / SNES DSP Audio</li>
                 <li><b>[R]:</b> Reset Skirmish</li>
                 <li><b>[Esc]:</b> Close Active Dialog / Grimoire / Deck Builder</li>
             </ul>
@@ -462,6 +509,9 @@
         let spcFeedback = null;
         let spcDamp = null;
         let audioMuted = false;
+        try {
+            audioMuted = localStorage.getItem('kwizard_audioMuted') === '1';
+        } catch (e) {}
 
         function initAudio() {
             if (audioCtx) {
@@ -752,11 +802,17 @@
         let runicAngle = 0;
         let ambientMotes = [];
 
+        let arenaLogicalWidth = 800;
+        let arenaLogicalHeight = 220;
+
         function resizeCanvas() {
             if (!arenaCanvas || !arenaCanvas.parentElement) return;
             const rect = arenaCanvas.parentElement.getBoundingClientRect();
-            arenaCanvas.width = Math.max(300, rect.width || 800);
-            arenaCanvas.height = Math.max(150, rect.height || 220);
+            const dpr = window.devicePixelRatio || 1;
+            arenaLogicalWidth = Math.max(300, Math.floor(rect.width || 800));
+            arenaLogicalHeight = Math.max(150, Math.floor(rect.height || 220));
+            arenaCanvas.width = Math.floor(arenaLogicalWidth * dpr);
+            arenaCanvas.height = Math.floor(arenaLogicalHeight * dpr);
         }
         window.addEventListener('resize', resizeCanvas);
         setTimeout(resizeCanvas, 50);
@@ -867,8 +923,8 @@
         }
 
         function launchSpellVisual(fromPlayer, cardData) {
-            const w = arenaCanvas.width || 800;
-            const h = arenaCanvas.height || 220;
+            const w = arenaLogicalWidth;
+            const h = arenaLogicalHeight;
             const startX = fromPlayer ? w * 0.22 : w * 0.78;
             const startY = h * 0.6;
             const targetX = fromPlayer ? w * 0.78 : w * 0.22;
@@ -991,9 +1047,12 @@
 
         function updateAndDrawArena(timestamp) {
             const time = timestamp * 0.001;
-            const w = arenaCanvas.width || 800;
-            const h = arenaCanvas.height || 220;
+            const dpr = window.devicePixelRatio || 1;
+            const w = arenaLogicalWidth;
+            const h = arenaLogicalHeight;
 
+            ctx.save();
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             ctx.clearRect(0, 0, w, h);
 
             // Screen Shake Offset
@@ -1004,7 +1063,6 @@
                 screenShake *= screenShakeDecay;
             }
 
-            ctx.save();
             ctx.translate(offsetX, offsetY);
 
             // Background Chamber Wall & Floor
@@ -1373,20 +1431,31 @@
             renderDeckBuilder();
             showToast("Loaded Venomancer Preset (20 cards)", "info");
         };
+        function updateAudioUI() {
+            if (!audioToggleBtn) return;
+            if (!audioMuted) {
+                audioToggleBtn.innerHTML = '🔊 Audio [M]';
+                audioToggleBtn.style.borderColor = '#10b981';
+            } else {
+                audioToggleBtn.innerHTML = '🔇 Muted [M]';
+                audioToggleBtn.style.borderColor = '#ef4444';
+            }
+        }
         const audioToggleBtn = document.getElementById('audio-toggle-btn');
         if (audioToggleBtn) {
+            updateAudioUI();
             audioToggleBtn.onclick = () => {
                 audioMuted = !audioMuted;
+                try {
+                    localStorage.setItem('kwizard_audioMuted', audioMuted ? '1' : '0');
+                } catch (e) {}
+                updateAudioUI();
                 if (!audioMuted) {
                     initAudio();
                     playSound('click');
-                    audioToggleBtn.innerHTML = '🔊 Audio';
-                    audioToggleBtn.style.borderColor = '#10b981';
-                    showToast('Sound Enabled (YM2612 FM / SPC700 Delay)', 'info');
+                    showToast('Sound Enabled (YM2612 FM / SPC700 Delay) [M]', 'info');
                 } else {
-                    audioToggleBtn.innerHTML = '🔇 Muted';
-                    audioToggleBtn.style.borderColor = '#ef4444';
-                    showToast('Sound Muted', 'info');
+                    showToast('Sound Muted [M]', 'info');
                 }
             };
         }
@@ -1451,6 +1520,23 @@
         helpBtn.onclick = openHelp;
         closeHelpBtn.onclick = closeHelp;
 
+        function updatePlayerHandHotkeys() {
+            for (let i = 0; i < playerHand.children.length; i++) {
+                const cardEl = playerHand.children[i];
+                let badge = cardEl.querySelector('.card-key-badge');
+                if (!badge) {
+                    badge = document.createElement('div');
+                    badge.className = 'card-key-badge';
+                    const header = cardEl.querySelector('.card-header');
+                    if (header) header.appendChild(badge);
+                }
+                if (badge) {
+                    badge.innerText = `[${i + 1}]`;
+                    badge.title = `Press ${i + 1} to cast`;
+                }
+            }
+        }
+
         function updateManaDisplay() {
             document.getElementById('opp-mana-display').innerText = ` | HP: ${opponentHp} | Mana: ${opponentMana}/${opponentMaxMana}`;
             document.getElementById('player-mana-display').innerText = ` | HP: ${playerHp} | Mana: ${playerMana}/${playerMaxMana}`;
@@ -1471,12 +1557,25 @@
             if (playerPoison > 0) pCont.innerHTML += `<span class="hud-status-badge badge-poison">🧪 ${playerPoison}</span>`;
             if (playerFreeze > 0) pCont.innerHTML += `<span class="hud-status-badge badge-freeze">❄️ ${playerFreeze}</span>`;
             if (playerRegen > 0) pCont.innerHTML += `<span class="hud-status-badge badge-regen">🌿 ${playerRegen}</span>`;
+
+            for (let i = 0; i < playerHand.children.length; i++) {
+                const cEl = playerHand.children[i];
+                if (cEl && cEl.cardData) {
+                    if (gameState !== 0 || playerFreeze > 0 || playerMana < cEl.cardData.cost) {
+                        cEl.classList.add('card-dimmed');
+                        cEl.classList.remove('card-playable');
+                    } else {
+                        cEl.classList.remove('card-dimmed');
+                        cEl.classList.add('card-playable');
+                    }
+                }
+            }
         }
 
         function dealDamageToPlayer(dmg) {
             if (dmg <= 0) return;
-            const w = arenaCanvas.width || 800;
-            const h = arenaCanvas.height || 220;
+            const w = arenaLogicalWidth;
+            const h = arenaLogicalHeight;
             if (playerShield > 0) {
                 if (playerShield >= dmg) {
                     playerShield -= dmg;
@@ -1499,8 +1598,8 @@
 
         function dealDamageToOpponent(dmg) {
             if (dmg <= 0) return;
-            const w = arenaCanvas.width || 800;
-            const h = arenaCanvas.height || 220;
+            const w = arenaLogicalWidth;
+            const h = arenaLogicalHeight;
             if (opponentShield > 0) {
                 if (opponentShield >= dmg) {
                     opponentShield -= dmg;
@@ -1541,8 +1640,8 @@
         }
 
         function handleWin() {
-            const w = arenaCanvas.width || 800;
-            const h = arenaCanvas.height || 220;
+            const w = arenaLogicalWidth;
+            const h = arenaLogicalHeight;
             spawnCelebrationStars(w * 0.5, h * 0.5);
 
             if (campaignLevel > 0) {
@@ -1587,6 +1686,7 @@
                     <div class="card-header">
                         <div class="card-mana-gem">${cardData.cost}</div>
                         <div class="card-title">${cardData.name}</div>
+                        <div class="card-key-badge"></div>
                     </div>
                     <div class="card-art">${getCardSVG(cardData)}</div>
                     <div class="card-desc">${cardData.effect}</div>
@@ -1613,9 +1713,9 @@
                         if (cardData.name === "Ice Lance" && opponentFreeze > 0) dmg = 3;
                         dealDamageToOpponent(dmg);
                         
+                        const w = arenaLogicalWidth, h = arenaLogicalHeight;
                         if (cardData.heal) {
                             playerHp += cardData.heal;
-                            const w = arenaCanvas.width || 800, h = arenaCanvas.height || 220;
                             spawnFloater(w * 0.22, h * 0.45, `+${cardData.heal} HP`, '#4ade80');
                         }
                         opponentBurn += cardData.burn || 0;
@@ -1632,7 +1732,6 @@
                         } else if (cardData.name === "Time Warp") {
                             playerMana = playerMaxMana;
                             drawCard(false);
-                            const w = arenaCanvas.width || 800, h = arenaCanvas.height || 220;
                             spawnFloater(w * 0.22, h * 0.35, "EXTRA TURN!", "#a855f7");
                         } else if (cardData.name === "Counterspell") {
                             if (opponentCards.length > 0) {
@@ -1644,12 +1743,10 @@
                                 if (opponentHand.children[bestIdx]) {
                                     opponentHand.removeChild(opponentHand.children[bestIdx]);
                                 }
-                                const w = arenaCanvas.width || 800, h = arenaCanvas.height || 220;
                                 spawnFloater(w * 0.78, h * 0.35, `BANISHED ${dispelled.name.toUpperCase()}!`, "#c084fc");
                             }
                         } else if (cardData.name === "Polymorph") {
                             opponentShield = 0;
-                            const w = arenaCanvas.width || 800, h = arenaCanvas.height || 220;
                             spawnFloater(w * 0.78, h * 0.35, "BAAA! SHEEP!", "#fde047");
                         }
 
@@ -1674,6 +1771,8 @@
                         setTimeout(() => {
                             if(card.parentElement === playerHand) {
                                 playerHand.removeChild(card);
+                                updatePlayerHandHotkeys();
+                                updateManaDisplay();
                             }
                         }, 250);
                     } else {
@@ -1703,7 +1802,12 @@
             const cardElement = createCardElement(randomCard, isOpponent);
             cardElement.cardData = randomCard;
             hand.appendChild(cardElement);
-            if (isOpponent) opponentCards.push(randomCard);
+            if (isOpponent) {
+                opponentCards.push(randomCard);
+            } else {
+                updatePlayerHandHotkeys();
+                updateManaDisplay();
+            }
         }
 
         function playOpponentTurn() {
@@ -1730,6 +1834,7 @@
 
             let playedCards = [];
             let i = 0;
+            const w = arenaLogicalWidth, h = arenaLogicalHeight;
             while (i < opponentCards.length) {
                 if (opponentMana >= opponentCards[i].cost) {
                     let cardData = opponentCards[i];
@@ -1741,7 +1846,6 @@
                     
                     if (cardData.heal) {
                         opponentHp += cardData.heal;
-                        const w = arenaCanvas.width || 800, h = arenaCanvas.height || 220;
                         spawnFloater(w * 0.78, h * 0.45, `+${cardData.heal} HP`, '#4ade80');
                     }
                     playerBurn += cardData.burn || 0;
@@ -1758,7 +1862,6 @@
                     } else if (cardData.name === "Time Warp") {
                         opponentMana = opponentMaxMana;
                         drawCard(true);
-                        const w = arenaCanvas.width || 800, h = arenaCanvas.height || 220;
                         spawnFloater(w * 0.78, h * 0.35, "EXTRA TURN!", "#a855f7");
                     } else if (cardData.name === "Counterspell") {
                         if (playerHand.children.length > 0) {
@@ -1773,13 +1876,15 @@
                             }
                             const lostEl = playerHand.children[bestIdx];
                             const lostName = lostEl && lostEl.cardData ? lostEl.cardData.name : "Spell";
-                            if (lostEl) playerHand.removeChild(lostEl);
-                            const w = arenaCanvas.width || 800, h = arenaCanvas.height || 220;
+                            if (lostEl) {
+                                playerHand.removeChild(lostEl);
+                                updatePlayerHandHotkeys();
+                                updateManaDisplay();
+                            }
                             spawnFloater(w * 0.22, h * 0.35, `DISPELLED ${lostName.toUpperCase()}!`, "#c084fc");
                         }
                     } else if (cardData.name === "Polymorph") {
                         playerShield = 0;
-                        const w = arenaCanvas.width || 800, h = arenaCanvas.height || 220;
                         spawnFloater(w * 0.22, h * 0.35, "BAAA! SHEEP!", "#fde047");
                     }
                     
@@ -2035,6 +2140,7 @@
                     });
                 }
 
+                updatePlayerHandHotkeys();
                 updateManaDisplay();
                 showToast("State Quickloaded [F9]", "success");
                 playSound('arcane');
@@ -2090,6 +2196,10 @@
         }
 
         window.addEventListener('keydown', (e) => {
+            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) {
+                if (e.key === 'Escape') e.target.blur();
+                return;
+            }
             if (e.key === 'F5') {
                 e.preventDefault();
                 quickSave();
@@ -2147,6 +2257,8 @@
             } else if (e.key === 'd' || e.key === 'D') {
                 renderDeckBuilder();
                 deckModal.style.display = 'flex';
+            } else if (e.key === 'm' || e.key === 'M') {
+                if (audioToggleBtn) audioToggleBtn.click();
             } else if (e.key === 'r' || e.key === 'R') {
                 resetBtn.click();
             } else if (e.key === 'e' || e.key === 'E' || e.key === ' ') {

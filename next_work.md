@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KHabit
-  kilo_usability: KWizard
+  kilo_usability: KZip
   kilo_graphics: KFortress
   kilo_qa: KAbyss
   kilo_expander: KNet
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KGraph
-  timestamp: "2026-09-30T04:45:00Z"
+  agent: kilo-usability
+  app: KWizard
+  timestamp: "2026-09-30T05:45:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -113,9 +113,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KWizard`
+- **Current Target**: `KZip`
 - **Upcoming Queue**:
-  `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid)*.
+  `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KAbyss`
@@ -276,6 +276,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T05:45:00Z — kilo-usability: KWizard (Ergonomics, Responsive Hand Layout, HiDPI & Keyboard Hotkeys)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 108.4 KB web / 33.8 KB native < 999 KB).
+  - Window & Arena Layout: Expanded window dimensions to 880x680 in KiloOS; expanded arena max-width to 880px so 7-card hand fits without overflow.
+  - HiDPI Canvas Scaling: Scaled arena canvas backing store by `devicePixelRatio` with logical coordinate transforms, ensuring razor-sharp rendering.
+  - Card Ergonomics & Hotkeys: Added [1]-[7] card badges and hotkeys, playable/dimmed states, on-screen hint bar, and [M] audio mute toggle.
+  - Native Win32 Alignment: Added 1-7 casting hotkeys, [M] audio toggle, bottom hint bar, and aligned window size to 880x680 (`KWizard.exe` 33.8 KB).
+  - Verification: MSVC clean; Vite clean in 412ms; JS syntax verified; security linter & icon checks 100% PASS.
+
 - **2026-09-30T04:45:00Z — kilo-tester: KGraph (Interactive UI Audit, Calculus Rendering, Quicksave & Audio Polish)**
   - Status: PASS ✅ (6 issues fixed, 0 regressions, 0 perimeter glints, 141.5 KB < 999 KB).
   - Taylor Series Overlay: Fixed element ID mismatch, degree parsing, expansion point, and return object handling in canvas and SVG export.
@@ -312,12 +320,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Audio Engine Mute: Added persistent audio mute controls (`soundToggleBtn`, `[M]` hotkey) across web and Win32 C.
   - Native Hotkeys: Added F5, F9, F1, H, M, Esc, R, 1-3, Space, and combat action shortcuts to Win32 message loop.
   - Verification: MSVC clean (`KColosseum.exe` 32.5 KB); Vite clean in 388ms; JS syntax verified; security linter & icon checks 100% PASS.
-
-- **2026-09-30T03:35:00Z — kilo-graphics: KStarForge (YM2612 FM Audio, Modular Engineering, Boss Waves & Zero Glints)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 201.1 KB web / 30.2 KB native < 999 KB).
-  - Audio Synthesis: Integrated Yamaha YM2612 2-op FM and SNES SPC700 stereo delay DSP; added [M] mute toggle.
-  - Engineering Depth: Added Point-Defense Flak, Subspace Booster, Capacitor Bank, and Tractor Beam modules.
-  - Ship Archetypes: Added Sol Invictus Dreadnought & Project 1999 Echo templates; added [T] archetype cycling in native.
-  - Proving Grounds Polish: Added wave 3 boss flagships, salvage recovery physics, tractor beam, and tactical radar HUD.
-  - ARG Lore & Alignment: Implemented diegetic 1999Hz carrier lock & subnet 10.19.99.4 references; native binary synced.
-  - Verification: MSVC clean (`KStarForge.exe` 30.2 KB); Vite clean in 290ms; security lint 100% clean; fleet icons valid.
