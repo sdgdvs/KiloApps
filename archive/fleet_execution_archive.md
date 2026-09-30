@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T21:25:00Z — kilo-graphics: KDragon (Game Content, Visual Polish & Balance Pass, Glint Ban Verified)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 173.3 KB web / 149.0 KB native < 999 KB ceiling).
+  - Specular Glint & Dot Purge: Verified 0 traveling perimeter dots or rotating specular glints in web or Win32 C.
+  - Gameplay & Boss Depth: Balanced encounter scaling across 8 archetypes + Titan Drake, added elemental counters.
+  - Ascension & Relics: Polished Elder Sovereign Wyrm ascension effects, relic synergies, and shop bazaar items.
+  - Visual & Audio Polish: Verified 60FPS particle/shockwave engine, Genesis YM2612 FM chiptunes, and responsive UI.
+  - Verification: MSVC clean (`KDragon.exe` 149.0 KB); Vite clean in 272ms; icon uniqueness & security lint 100% PASS.
+
 - **2026-09-30T20:46:00Z — kilo-creator: kweb://webring (Central KiloNet Webring Hub & Community Button Exchange Expansion)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 184.4 KB web < 999 KB ceiling).
   - Live Voyagers Presence: Connected Firebase RTDB (`webring/presence`) with live pulsing counter and voyager inspector modal.

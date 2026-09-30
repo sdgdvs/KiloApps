@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<meta name="description" content="Simulated 1999 demoscene cracktro, chiptune jukebox & underground release vault. Fictional alternate reality game installation.">
-<title>[0xRELEASE] // Underground Scene Vault, Cracktros &amp; Chiptune Jukebox (1999)</title>
+<meta name="description" content="Simulated 1999 demoscene cracktro vault, chiptune jukebox, x86 reverse engineering sandbox & ANSI NFO studio. Fictional alternate reality game installation.">
+<title>[0xRELEASE] // Underground Scene Vault, Cracktros &amp; x86 Reverse Engineering Lab (1999)</title>
 <style>
   :root {
     --bg-main: #05080c;
@@ -48,7 +48,7 @@
   }
 
   .site-container {
-    max-width: 1024px;
+    max-width: 1080px;
     margin: 0 auto;
     position: relative;
     z-index: 10;
@@ -108,7 +108,7 @@
     border: 1px solid #1e3a29;
     border-bottom: none;
     color: #94a3b8;
-    padding: 7px 14px;
+    padding: 7px 12px;
     font-family: inherit;
     font-size: 11px;
     font-weight: bold;
@@ -180,6 +180,7 @@
     font-size: 11px;
     cursor: pointer;
     transition: all 0.15s;
+    border-radius: 2px;
   }
   .btn-filter:hover, .btn-filter.active {
     background: var(--accent-green);
@@ -287,6 +288,24 @@
     border-color: #64748b;
   }
 
+  .btn-sandbox {
+    background: #3b0764;
+    color: #d8b4fe;
+    border: 1px solid #9333ea;
+    padding: 3px 7px;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+  .btn-sandbox:hover {
+    background: #9333ea;
+    color: #ffffff;
+    box-shadow: 0 0 8px #a855f7;
+  }
+
   .btn-dl {
     background: #0f172a;
     color: #38bdf8;
@@ -324,7 +343,7 @@
     background: #020408;
     border: 2px solid var(--accent-cyan);
     box-shadow: 0 0 30px rgba(0, 240, 255, 0.3), inset 0 0 20px rgba(0, 255, 102, 0.1);
-    width: 760px;
+    width: 780px;
     max-width: 95vw;
     border-radius: 6px;
     overflow: hidden;
@@ -481,7 +500,7 @@
     background: #030712;
     border: 2px solid var(--accent-green);
     box-shadow: 0 0 25px rgba(0, 255, 102, 0.3);
-    width: 720px;
+    width: 760px;
     max-width: 95vw;
     border-radius: 4px;
     overflow: hidden;
@@ -549,9 +568,71 @@
   }
   canvas#vizCanvas {
     width: 100%;
-    height: 160px;
+    height: 150px;
     display: block;
     background: #02050a;
+  }
+
+  /* 4-Channel Tracker Pattern Visualizer */
+  .tracker-matrix-wrap {
+    background: #010307;
+    border: 1px solid #14243b;
+    border-radius: 4px;
+    padding: 8px;
+    margin-top: 12px;
+  }
+  .tracker-header-row {
+    display: grid;
+    grid-template-columns: 45px repeat(4, 1fr);
+    gap: 4px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #1e3a29;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+  }
+  .tracker-ch-badge {
+    padding: 2px 4px;
+    border-radius: 2px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .tracker-btn-mute {
+    font-size: 9px;
+    background: #1e293b;
+    color: #94a3b8;
+    border: none;
+    padding: 1px 4px;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+  .tracker-btn-mute.muted {
+    background: #dc2626;
+    color: #ffffff;
+  }
+  .tracker-rows-container {
+    height: 120px;
+    overflow-y: hidden;
+    font-family: 'Consolas', monospace;
+    font-size: 10px;
+    position: relative;
+    padding-top: 4px;
+  }
+  .tracker-row-line {
+    display: grid;
+    grid-template-columns: 45px repeat(4, 1fr);
+    gap: 4px;
+    padding: 1px 0;
+    color: #64748b;
+    text-align: center;
+  }
+  .tracker-row-line.current {
+    background: rgba(0, 240, 255, 0.15);
+    color: var(--accent-cyan);
+    font-weight: bold;
+    border-left: 2px solid var(--accent-cyan);
+    border-right: 2px solid var(--accent-cyan);
   }
 
   .track-list {
@@ -598,146 +679,297 @@
   }
   .fm-key {
     background: #111a28;
-    border: 1px solid #334155;
+    border: 1px solid #1e3a29;
     color: #e2e8f0;
     min-width: 32px;
-    height: 70px;
-    border-radius: 0 0 3px 3px;
+    height: 48px;
     display: flex;
     align-items: flex-end;
     justify-content: center;
-    font-size: 10px;
     padding-bottom: 4px;
+    font-size: 10px;
     cursor: pointer;
     user-select: none;
+    border-radius: 0 0 3px 3px;
     transition: background 0.1s;
   }
-  .fm-key:active, .fm-key.pressed {
+  .fm-key:hover, .fm-key:active {
     background: var(--accent-green);
-    color: #000;
-    box-shadow: 0 0 8px var(--accent-green);
+    color: #022c22;
+    font-weight: bold;
   }
 
-  /* Form & Workbench Controls */
-  .field-row {
+  /* x86 Reverse Engineering Sandbox */
+  .sandbox-grid {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 860px) {
+    .sandbox-grid { grid-template-columns: 1fr; }
+  }
+
+  .softice-window {
+    background: #02050b;
+    border: 1px solid #1e3a29;
+    border-radius: 4px;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+  }
+  .softice-header {
+    background: #061c28;
+    color: #38bdf8;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: bold;
+    border-bottom: 1px solid #143547;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .softice-body {
+    padding: 10px;
+    font-family: 'Consolas', monospace;
+    font-size: 11px;
+    line-height: 1.4;
+    max-height: 380px;
+    overflow-y: auto;
+    background: #010307;
+  }
+  .asm-line {
+    display: flex;
+    gap: 12px;
+    padding: 2px 4px;
+    cursor: pointer;
+    border-radius: 2px;
+  }
+  .asm-line:hover {
+    background: rgba(56, 189, 248, 0.15);
+  }
+  .asm-line.current-eip {
+    background: rgba(0, 255, 102, 0.2);
+    border-left: 3px solid var(--accent-green);
+    color: #6ee7b7;
+    font-weight: bold;
+  }
+  .asm-line.patched-line {
+    background: rgba(255, 221, 0, 0.15);
+    color: #fef08a;
+  }
+  .asm-addr { color: #64748b; width: 68px; }
+  .asm-bytes { color: #38bdf8; width: 90px; }
+  .asm-inst { color: #f1f5f9; flex: 1; }
+  .asm-comment { color: #10b981; font-style: italic; }
+
+  .register-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
     margin-bottom: 10px;
   }
-  .field-row label {
+  .register-table td {
+    padding: 3px 6px;
+    border: 1px solid #142033;
+  }
+  .reg-name { color: #38bdf8; font-weight: bold; width: 35px; }
+  .reg-val { color: #facc15; font-family: monospace; }
+  .reg-val.modified { color: var(--accent-green); font-weight: bold; }
+
+  .hexdump-viewer {
+    background: #02050b;
+    border: 1px solid #142033;
+    padding: 8px;
+    font-family: 'Consolas', monospace;
+    font-size: 10px;
+    line-height: 1.35;
+    color: #94a3b8;
+    max-height: 170px;
+    overflow-y: auto;
+    white-space: pre;
+  }
+  .hexdump-highlight {
+    background: #16a34a;
+    color: #ffffff;
+    font-weight: bold;
+    padding: 0 1px;
+  }
+
+  /* Form / Input Elements */
+  .field-row {
+    margin-bottom: 10px;
+  }
+  .field-label {
+    display: flex;
+    justify-content: space-between;
     font-size: 11px;
     color: #94a3b8;
+    margin-bottom: 3px;
   }
-  .field-input, .field-select, .field-textarea {
-    background: #05080c;
-    border: 1px solid #1e3a29;
-    color: var(--accent-cyan);
+  .field-input, .field-select {
+    width: 100%;
+    background: #050b14;
+    border: 1px solid var(--border);
+    color: var(--text-main);
     padding: 6px 8px;
     font-family: inherit;
     font-size: 11px;
     outline: none;
-    border-radius: 2px;
+    border-radius: 3px;
   }
-  .field-input:focus, .field-select:focus, .field-textarea:focus {
+  .field-input:focus, .field-select:focus {
     border-color: var(--accent-cyan);
+    box-shadow: 0 0 6px rgba(0, 240, 255, 0.3);
   }
 
-  /* Poll Bars */
+  /* Scene Charts & Polls */
   .poll-row {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
   }
   .poll-meta {
     display: flex;
     justify-content: space-between;
     font-size: 11px;
-    margin-bottom: 3px;
+    margin-bottom: 2px;
   }
   .poll-bar-bg {
-    background: #050912;
-    border: 1px solid #1e3a29;
-    height: 14px;
+    background: #091322;
+    border: 1px solid #14243b;
+    height: 12px;
     border-radius: 2px;
     overflow: hidden;
   }
   .poll-bar-fill {
+    background: linear-gradient(90deg, #0284c7, #38bdf8);
     height: 100%;
-    background: linear-gradient(90deg, #0284c7, #00f0ff);
-    width: 0%;
-    transition: width 0.4s ease;
+    transition: width 0.3s ease;
+  }
+
+  /* Demoscene Trivia & Challenge */
+  .challenge-box {
+    background: #040913;
+    border: 1px solid #142940;
+    padding: 14px;
+    border-radius: 4px;
+  }
+  .q-option {
+    background: #091220;
+    border: 1px solid #1e3352;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: all 0.12s;
+  }
+  .q-option:hover {
+    background: #112238;
+    border-color: var(--accent-cyan);
+    color: #ffffff;
+  }
+  .q-option.correct {
+    background: #064e3b;
+    border-color: #10b981;
+    color: #a7f3d0;
+    font-weight: bold;
+  }
+  .q-option.wrong {
+    background: #7f1d1d;
+    border-color: #ef4444;
+    color: #fecaca;
   }
 
   /* Shoutbox */
   .shout-list {
+    background: #02050b;
+    border: 1px solid var(--border);
+    padding: 10px;
+    height: 260px;
+    overflow-y: auto;
+    font-size: 11px;
     display: flex;
     flex-direction: column;
     gap: 6px;
-    max-height: 280px;
-    overflow-y: auto;
-    padding: 8px;
-    background: #060a12;
-    border: 1px solid #1e3a29;
     border-radius: 4px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
   }
   .shout-item {
-    font-size: 11px;
-    padding: 4px 6px;
-    border-bottom: 1px dashed #142033;
-    line-height: 1.3;
+    line-height: 1.35;
+    word-break: break-word;
   }
-  .shout-item .handle {
-    color: var(--accent-green);
-    font-weight: bold;
-    margin-right: 6px;
+  .shout-item .time { color: #64748b; margin-right: 6px; font-size: 10px; }
+  .shout-item .handle { color: var(--accent-green); font-weight: bold; margin-right: 6px; }
+  .shout-item .handle.courier { color: #38bdf8; }
+  .shout-item .handle.sysop { color: #f43f5e; text-shadow: 0 0 5px #f43f5e; }
+  .shout-item.special-alert {
+    background: rgba(244, 63, 94, 0.1);
+    border-left: 2px solid #f43f5e;
+    padding: 4px 8px;
+    border-radius: 2px;
   }
-  .shout-item .time {
-    color: #64748b;
+
+  .presence-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-size: 10px;
-    margin-right: 6px;
+    padding: 2px 8px;
+    background: #061523;
+    border: 1px solid #143547;
+    border-radius: 10px;
+    color: #38bdf8;
+  }
+  .presence-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 6px #10b981;
   }
 
   footer {
-    text-align: center;
+    margin-top: 30px;
+    padding: 14px 10px;
+    border-top: 1px dashed var(--border);
     font-size: 11px;
     color: var(--text-muted);
-    border-top: 1px solid #1e293b;
-    padding-top: 14px;
-    margin-top: 24px;
+    text-align: center;
+    line-height: 1.6;
   }
-  footer a { color: var(--accent-cyan); text-decoration: none; }
-  footer a:hover { text-decoration: underline; color: #fff; }
 </style>
 </head>
 <body>
 
 <div class="site-container">
-  <!-- Top ASCII Header -->
+
+  <!-- ASCII Banner -->
   <div class="ascii-banner">
-  ██████╗ ██╗  ██╗██████╗ ███████╗██╗     ███████╗ █████╗ ███████╗███████╗
- ██╔═████╗╚██╗██╔╝██╔══██╗██╔════╝██║     ██╔════╝██╔══██╗██╔════╝██╔════╝
- ██║██╔██║ ╚███╔╝ ██████╔╝█████╗  ██║     █████╗  ███████║███████╗█████╗  
- ████╔╝██║ ██╔██╗ ██╔══██╗██╔══╝  ██║     ██╔══╝  ██╔══██║╚════██║██╔══╝  
- ╚██████╔╝██╔╝ ██╗██║  ██║███████╗███████╗███████╗██║  ██║███████║███████╗
-  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝
+██████╗ ██╗  ██╗██████╗ ███████╗██╗     ███████╗ █████╗ ███████╗███████╗
+██╔═████╗╚██╗██╔╝██╔══██╗██╔════╝██║     ██╔════╝██╔══██╗██╔════╝██╔════╝
+██║██╔██║ ╚███╔╝ ██████╔╝█████╗  ██║     █████╗  ███████║███████╗█████╗  
+████╔╝██║ ██╔██╗ ██╔══██╗██╔══╝  ██║     ██╔══╝  ██╔══██║╚════██║██╔══╝  
+╚██████╔╝██╔╝ ██╗██║  ██║███████╗███████╗███████╗██║  ██║███████║███████╗
+ ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚══════╝╚══════╝╚═╝  ╚═╝╚══════╝╚══════╝
   </div>
 
   <div class="scene-subhead">
-    ★ 0xRELEASE // THE DEMOSCENE &amp; CRACKTRO ARCHIVE (1999) // WEBRING #013 ★
+    -= 1999 DEMOSCENE CRACKTRO VAULT • YM2612 FM CHIPTUNES • x86 REVERSE ENGINEERING LAB =-
   </div>
 
   <div class="notice-banner">
-    <span>⚠️ <strong>SCENE ARCHIVE &amp; SOUND LAB:</strong> Authentic 1999 cracktros, Genesis FM &amp; SNES chiptunes, ANSI NFO studio &amp; demoscene vault.</span>
+    <span>⚠️ <strong>SCENE ARCHIVE &amp; REVERSE-ENGINEERING LAB:</strong> Authentic 1999 cracktros, Genesis FM &amp; SNES chiptunes, interactive x86 disassembler &amp; ANSI NFO studio.</span>
     <span style="font-size:10px; color:#fbcfe8;">NODE: 1999.0x7F // PROTOCOL: KWEB</span>
   </div>
 
   <!-- Navigation Tabs -->
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="switchMainTab('releases', this)">[ 💾 RELEASES &amp; CRACKTROS ]</button>
-    <button class="tab-btn" onclick="switchMainTab('jukebox', this)">[ 🔊 CHIPTUNE JUKEBOX &amp; FM LAB ]</button>
+    <button class="tab-btn" onclick="switchMainTab('sandbox', this)">[ 🛠️ x86 CRACK SANDBOX ]</button>
+    <button class="tab-btn" onclick="switchMainTab('jukebox', this)">[ 🔊 CHIPTUNE JUKEBOX &amp; TRACKER ]</button>
     <button class="tab-btn" onclick="switchMainTab('workbench', this)">[ ⚡ CRACKTRO WORKBENCH ]</button>
-    <button class="tab-btn" onclick="switchMainTab('generator', this)">[ 📜 ANSI / NFO GENERATOR ]</button>
-    <button class="tab-btn" onclick="switchMainTab('charts', this)">[ 🏆 1999 SCENE CHARTS ]</button>
+    <button class="tab-btn" onclick="switchMainTab('generator', this)">[ 📜 ANSI / NFO STUDIO ]</button>
+    <button class="tab-btn" onclick="switchMainTab('charts', this)">[ 🏆 SCENE CHARTS &amp; CHALLENGE ]</button>
     <button class="tab-btn" onclick="switchMainTab('shoutbox', this)">[ 💬 UNDERGROUND SHOUTBOX ]</button>
   </div>
 
@@ -769,200 +1001,339 @@
             <th>Media</th>
             <th>Type</th>
             <th>Cracktro</th>
-            <th>Downloads</th>
+            <th>NFO</th>
+            <th>Disassemble</th>
+            <th>Files</th>
           </tr>
         </thead>
         <tbody id="releaseTableBody">
-          <!-- Rendered dynamically via JS -->
+          <!-- Rendered via JS -->
         </tbody>
       </table>
     </div>
 
-    <!-- Scene Lore & Audio Architecture Box -->
     <div class="section-box">
       <div class="section-title">
-        <span>🔊 DEMOSCENE &amp; AUDIO HARDWARE ARCHITECTURE (1999 STANDARD)</span>
-        <span style="font-size:10px; color:#6ee7b7;">HARDWARE STANDARD: YM2612 &amp; SPC700</span>
+        <span>SCENE DISTRIBUTION PHILOSOPHY &amp; FILE INTEGRITY</span>
+        <span style="font-size:10px; color:#4ade80;">100% 1999 FIDELITY</span>
       </div>
-      <p style="font-size:11px; color:#94a3b8; margin-bottom:8px;">
-        In the 1990s, underground cracking groups competed intensely on the visual and musical quality of their <strong>cracktros</strong> (crack introductions).
-        These programs combined real-time 3D vector polyhedra, copper sine raster bars, and procedural FM chiptunes packed into mere kilobytes.
-      </p>
+      <div style="font-size:11px; line-height:1.6; color:#94a3b8;">
+        Every release in the 0xRELEASE archive reflects the peak late-90s PC demoscene era. Intros and keygens run pure procedural x86-modeled Canvas rendering with Genesis YM2612 2-operator FM synthesis and SNES SPC700 stereo delay warmth. Zero external audio samples or bloated frameworks are used.
+      </div>
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; font-size:11px; margin-top:8px;">
         <div style="background:#09101d; padding:8px 12px; border-left:2px solid var(--accent-cyan);">
-          <strong style="color:var(--accent-cyan);">Yamaha YM2612 2-Op FM Synthesis:</strong><br>
-          Carrier frequency modulation with exponential envelopes generating punchy Genesis slap bass, metallic leads, and chime bells.
+          <strong style="color:var(--accent-cyan);">PARODY GAME LEXICON:</strong> All release titles feature in-universe fictional parodies (*Surreal Tournament*, *Tremor III Arena*, *Half-Cycle 1.1*, *VoidCraft*, *Machina Ex*, *System Glitch 2*).
         </div>
         <div style="background:#09101d; padding:8px 12px; border-left:2px solid var(--accent-green);">
-          <strong style="color:var(--accent-green);">SNES SPC700 Stereo Delay &amp; Warmth:</strong><br>
-          Low-pass filtered slapback feedback delay lines (~180ms, 2200Hz damping) recreating lush 16-bit acoustic space.
+          <strong style="color:var(--accent-green);">CARRIER ECHO DETECTIONS:</strong> Certain release notes contain strange 1999Hz subcarrier anomaly intercepts and subterranean hex residues.
         </div>
       </div>
     </div>
   </div>
 
   <!-- ================================================================= -->
-  <!-- TAB 2: STANDALONE CHIPTUNE JUKEBOX & SYNTH LAB -->
+  <!-- TAB 2: x86 CRACK SANDBOX / REVERSE ENGINEERING STUDIO -->
+  <!-- ================================================================= -->
+  <div id="tab-sandbox" class="tab-content">
+    <div class="section-box">
+      <div class="section-title">
+        <span>INTERACTIVE x86 REVERSE ENGINEERING &amp; CRACK STUDIO</span>
+        <span style="font-size:10px; color:#38bdf8;">SOFTICE '99 SIMULATOR v3.7</span>
+      </div>
+
+      <div class="control-bar" style="margin-bottom:10px;">
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <span style="font-size:11px; color:#94a3b8; font-weight:bold;">TARGET EXE:</span>
+          <select id="sandboxTargetSelect" class="field-select" style="width:230px;" onchange="loadSandboxTarget(this.value)">
+            <option value="SurrealTournament.exe">SurrealTournament.exe (SafeDisc)</option>
+            <option value="tremor3.exe">tremor3.exe (SecuROM v2)</option>
+            <option value="halfcycle.exe">halfcycle.exe (WON Auth CD-Key)</option>
+            <option value="MachinaEx.exe">MachinaEx.exe (Safedisc + Ring-0)</option>
+            <option value="glitch2.exe">glitch2.exe (LaserLock CD Check)</option>
+            <option value="voidcraft.exe">voidcraft.exe (BattleNet Auth Check)</option>
+          </select>
+          <span id="sandboxStatusBadge" style="padding:2px 8px; border-radius:3px; font-size:10px; font-weight:bold; background:rgba(239, 68, 68, 0.15); color:#ef4444; border:1px solid #dc2626;">
+            [PROTECTED: CD-CHECK ACTIVE]
+          </span>
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn-filter" onclick="sandboxStepInstruction()">[ ▶ STEP (F8) ]</button>
+          <button class="btn-filter" style="border-color:#ca8a04; color:#facc15;" onclick="sandboxApplyNopPatch()">[ ⚡ NOP JUMP (0x90 0x90) ]</button>
+          <button class="btn-filter" style="border-color:#38bdf8; color:#38bdf8;" onclick="sandboxInvertJump()">[ 🔄 INVERT (JZ -> JNZ) ]</button>
+          <button class="btn-filter" style="border-color:#a855f7; color:#c084fc;" onclick="sandboxForceLicense()">[ 🔑 FORCE LICENSE (EAX=1) ]</button>
+          <button class="btn-filter" style="border-color:#e11d48; color:#fda4af;" onclick="sandboxReset()">[ ↺ RESET ]</button>
+        </div>
+      </div>
+
+      <div class="sandbox-grid">
+        <!-- Disassembly Window -->
+        <div class="softice-window">
+          <div class="softice-header">
+            <span>DISASSEMBLY VIEW: .text SECTION (x86 32-bit Protected Mode)</span>
+            <span id="sandboxEipLabel" style="color:var(--accent-green);">EIP: 00401024</span>
+          </div>
+          <div class="softice-body" id="sandboxAsmBody">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Registers & Hex Dump Window -->
+        <div>
+          <!-- CPU Registers -->
+          <div class="softice-window" style="margin-bottom:10px;">
+            <div class="softice-header">
+              <span>CPU REGISTERS &amp; EFLAGS</span>
+              <span style="font-size:10px; color:#facc15;">INTEL PENTIUM III</span>
+            </div>
+            <div style="padding:8px; background:#02050b;">
+              <table class="register-table">
+                <tr>
+                  <td class="reg-name">EAX</td><td class="reg-val" id="reg_eax">00000000</td>
+                  <td class="reg-name">EBX</td><td class="reg-val" id="reg_ebx">0012FF40</td>
+                  <td class="reg-name">ZF</td><td class="reg-val" id="flag_zf">1</td>
+                </tr>
+                <tr>
+                  <td class="reg-name">ECX</td><td class="reg-val" id="reg_ecx">00000004</td>
+                  <td class="reg-name">EDX</td><td class="reg-val" id="reg_edx">7FFDF000</td>
+                  <td class="reg-name">CF</td><td class="reg-val" id="flag_cf">0</td>
+                </tr>
+                <tr>
+                  <td class="reg-name">ESI</td><td class="reg-val" id="reg_esi">00405000</td>
+                  <td class="reg-name">EDI</td><td class="reg-val" id="reg_edi">0012FFB0</td>
+                  <td class="reg-name">SF</td><td class="reg-val" id="flag_sf">0</td>
+                </tr>
+                <tr>
+                  <td class="reg-name">EBP</td><td class="reg-val" id="reg_ebp">0012FF88</td>
+                  <td class="reg-name">ESP</td><td class="reg-val" id="reg_esp">0012FF60</td>
+                  <td class="reg-name">OF</td><td class="reg-val" id="flag_of">0</td>
+                </tr>
+              </table>
+              <div style="font-size:10px; color:#64748b; line-height:1.4;">
+                Tip: Step through the anti-piracy subroutine. When execution reaches the conditional jump (<code>JZ loc_cd_fail</code>), apply a <strong>NOP Patch</strong> (0x90 0x90) or <strong>Invert Jump</strong> (0x75 JNZ) to bypass the check!
+              </div>
+            </div>
+          </div>
+
+          <!-- Hex Dump -->
+          <div class="softice-window">
+            <div class="softice-header">
+              <span>LIVE HEX DUMP (.text 0x00401000)</span>
+              <span id="sandboxCrcLabel" style="font-size:10px; color:#38bdf8;">CRC32: 8F2A109C</span>
+            </div>
+            <div class="hexdump-viewer" id="sandboxHexBody">
+              <!-- Rendered by JS -->
+            </div>
+            <div style="padding:6px 10px; background:#060f1c; border-top:1px solid #14243b; display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size:10px; color:#94a3b8;">Binary Status: <strong id="sandboxCrackResultText" style="color:#ef4444;">UNCRACKED</strong></span>
+              <button class="btn-gen" onclick="exportPatchedBinary()">[ 💾 EXPORT PATCHED EXE ]</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- TAB 3: CHIPTUNE JUKEBOX & TRACKER -->
   <!-- ================================================================= -->
   <div id="tab-jukebox" class="tab-content">
     <div class="jukebox-layout">
-      <!-- Left Column: Player & Visualizer -->
+      <!-- Player & Visualizer -->
       <div class="section-box">
         <div class="section-title">
-          <span>📻 RETRO CHIPTUNE JUKEBOX</span>
-          <span id="jukeboxStatusBadge" style="font-size:10px; color:var(--accent-green);">IDLE</span>
+          <span>HARDWARE AUDIO ENGINE // YM2612 + SPC700</span>
+          <span id="jukeboxStatusBadge" style="font-size:10px; color:#64748b;">IDLE</span>
         </div>
 
-        <!-- Canvas Visualizer -->
         <div class="viz-canvas-wrap">
-          <canvas id="vizCanvas" width="460" height="160"></canvas>
+          <canvas id="vizCanvas" width="480" height="150"></canvas>
         </div>
 
-        <!-- Now Playing Meta -->
         <div style="background:#060d18; border:1px solid #14243b; padding:8px 12px; border-radius:3px; margin-bottom:10px;">
           <div style="font-size:10px; color:#64748b;">NOW PLAYING:</div>
           <div id="jukeboxTrackName" style="font-size:13px; font-weight:bold; color:var(--accent-cyan);">Mega Drive FM Rush</div>
           <div id="jukeboxTrackDetails" style="font-size:11px; color:#34d399;">140 BPM • Yamaha YM2612 2-Op FM Synthesis + 16-bit Drumkit</div>
         </div>
 
-        <!-- Transport Controls -->
+        <!-- Controls -->
         <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
-          <button class="btn-filter" id="btnJukeboxPlay" onclick="toggleJukeboxPlay()">▶ PLAY</button>
-          <button class="btn-filter" onclick="jukeboxPrev()">⏮ PREV</button>
-          <button class="btn-filter" onclick="jukeboxNext()">NEXT ⏭</button>
+          <button class="btn-gen" id="btnJukeboxPlay" onclick="toggleJukeboxPlay()">▶ PLAY</button>
+          <button class="btn-filter" onclick="jukeboxPrev()">|« PREV</button>
+          <button class="btn-filter" onclick="jukeboxNext()">NEXT »|</button>
           <button class="btn-filter" id="btnJukeboxEcho" onclick="toggleJukeboxEcho()">SPC700 ECHO: ON</button>
           <button class="btn-filter" onclick="toggleAudioMute()">MUTE</button>
         </div>
 
-        <!-- Speed & Volume -->
-        <div style="display:flex; gap:16px; font-size:11px; color:#94a3b8; align-items:center;">
+        <div style="display:flex; gap:16px; font-size:11px; color:#94a3b8; align-items:center; flex-wrap:wrap;">
           <div style="display:flex; gap:6px; align-items:center;">
             <span>VOL:</span>
-            <input type="range" min="0" max="100" value="70" style="width:80px; accent-color:var(--accent-cyan);" oninput="setAudioVolume(this.value)">
+            <input type="range" min="0" max="100" value="80" oninput="setAudioVolume(this.value)" style="width:70px;" />
           </div>
           <div style="display:flex; gap:6px; align-items:center;">
             <span>TEMPO:</span>
-            <input type="range" id="tempoSlider" min="70" max="140" value="100" style="width:80px; accent-color:var(--accent-green);" oninput="setJukeboxTempo(this.value)">
-            <span id="tempoLabel">1.0x</span>
+            <input type="range" min="70" max="140" value="100" oninput="setJukeboxTempo(this.value)" style="width:70px;" />
+            <span id="tempoLabel" style="color:var(--accent-cyan);">1.0x</span>
+          </div>
+          <div>ECHO: <span id="lblEchoState" style="color:var(--accent-green);">Active (180ms)</span></div>
+        </div>
+
+        <!-- 4-Channel Tracker Pattern Visualizer -->
+        <div class="tracker-matrix-wrap">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="font-size:10px; font-weight:bold; color:var(--accent-cyan);">4-CHANNEL PROTRACKER PATTERN MATRIX</span>
+            <span id="trackerRowIndicator" style="font-size:10px; color:#facc15;">ROW: 00 / 3F</span>
+          </div>
+          <div class="tracker-header-row">
+            <span style="color:#64748b;">ROW</span>
+            <div class="tracker-ch-badge" style="background:#082f49; color:#38bdf8;">
+              <span>CH1: LEAD</span>
+              <button class="tracker-btn-mute" id="mute_ch0" onclick="toggleChannelMute(0)">M</button>
+            </div>
+            <div class="tracker-ch-badge" style="background:#052e16; color:#4ade80;">
+              <span>CH2: BASS</span>
+              <button class="tracker-btn-mute" id="mute_ch1" onclick="toggleChannelMute(1)">M</button>
+            </div>
+            <div class="tracker-ch-badge" style="background:#3b0764; color:#c084fc;">
+              <span>CH3: PAD</span>
+              <button class="tracker-btn-mute" id="mute_ch2" onclick="toggleChannelMute(2)">M</button>
+            </div>
+            <div class="tracker-ch-badge" style="background:#451a03; color:#fb923c;">
+              <span>CH4: DRUM</span>
+              <button class="tracker-btn-mute" id="mute_ch3" onclick="toggleChannelMute(3)">M</button>
+            </div>
+          </div>
+          <div class="tracker-rows-container" id="trackerRowsContainer">
+            <!-- Tracker rows populated live -->
           </div>
         </div>
 
-        <!-- Track List -->
         <div style="margin-top:14px;">
           <div style="font-size:11px; color:var(--accent-cyan); font-weight:bold; margin-bottom:6px;">AVAILABLE TRACKS (PROCEDURAL 0-SAMPLE AUDIO):</div>
           <div class="track-list" id="trackListContainer">
-            <!-- Dynamically populated -->
+            <!-- Populated via JS -->
           </div>
         </div>
       </div>
 
-      <!-- Right Column: FM Sound Chip Laboratory -->
+      <!-- FM Synthesizer Lab -->
       <div class="section-box">
         <div class="section-title">
-          <span>🔬 YAMAHA YM2612 FM SOUND CHIP LABORATORY</span>
-          <span style="font-size:10px; color:#facc15;">INTERACTIVE LAB</span>
+          <span>YAMAHA YM2612 SOUND CHIP LABORATORY</span>
+          <span style="font-size:10px; color:#f59e0b;">FM 2-OP SYNTH</span>
         </div>
-        <p style="font-size:11px; color:#94a3b8; margin-bottom:10px;">
-          Experiment with 2-operator Frequency Modulation in real-time. The <strong>Modulator</strong> frequency shifts the <strong>Carrier</strong> wave, turning simple sines into metallic bells, aggressive slap bass, or laser zaps!
-        </p>
+        <div style="font-size:11px; color:#94a3b8; margin-bottom:12px; line-height:1.5;">
+          The Sega Genesis sound hardware utilized a Yamaha YM2612 sound chip with 6 FM channels. Adjust modulation ratio, index, and decay below to sculpt slap-bass, bell, or brass timbres in real time!
+        </div>
 
         <!-- Presets -->
         <div style="display:flex; gap:4px; margin-bottom:12px; flex-wrap:wrap;">
-          <button class="btn-filter" style="font-size:10px; padding:3px 6px;" onclick="loadFmPreset('slap_bass')">Slap Bass</button>
-          <button class="btn-filter" style="font-size:10px; padding:3px 6px;" onclick="loadFmPreset('fm_bell')">FM Bell</button>
-          <button class="btn-filter" style="font-size:10px; padding:3px 6px;" onclick="loadFmPreset('brass_lead')">Brass Lead</button>
-          <button class="btn-filter" style="font-size:10px; padding:3px 6px;" onclick="loadFmPreset('laser_zap')">Laser Zap</button>
-          <button class="btn-filter" style="font-size:10px; padding:3px 6px;" onclick="loadFmPreset('sub_bass')">Sub Sine</button>
+          <button class="btn-filter" onclick="loadFmPreset('slap_bass')">Slap Bass</button>
+          <button class="btn-filter" onclick="loadFmPreset('fm_bell')">Crystal Bell</button>
+          <button class="btn-filter" onclick="loadFmPreset('brass_lead')">Poly Brass</button>
+          <button class="btn-filter" onclick="loadFmPreset('piano_ep')">FM E-Piano</button>
+          <button class="btn-filter" onclick="loadFmPreset('overdrive')">Drive Lead</button>
+          <button class="btn-filter" onclick="loadFmPreset('acid_sub')">Acid Sub</button>
         </div>
 
-        <!-- Sliders -->
         <div class="field-row">
-          <label>Modulator Harmonic Ratio: <span id="lblModRatio" style="color:var(--accent-green);">2.0x</span></label>
-          <input type="range" id="rngModRatio" min="0.5" max="6.0" step="0.5" value="2.0" oninput="updateFmParams()" style="accent-color:var(--accent-green);">
-        </div>
-        <div class="field-row">
-          <label>Modulation Depth / Index: <span id="lblModIndex" style="color:var(--accent-cyan);">3.5</span></label>
-          <input type="range" id="rngModIndex" min="0.0" max="10.0" step="0.2" value="3.5" oninput="updateFmParams()" style="accent-color:var(--accent-cyan);">
-        </div>
-        <div class="field-row">
-          <label>Decay Duration: <span id="lblModDecay" style="color:var(--accent-yellow);">0.25s</span></label>
-          <input type="range" id="rngModDecay" min="0.05" max="1.0" step="0.05" value="0.25" oninput="updateFmParams()" style="accent-color:var(--accent-yellow);">
-        </div>
-        <div class="field-row">
-          <label>SPC700 Slapback Delay: <span id="lblEchoState" style="color:var(--accent-pink);">Active (180ms)</span></label>
-          <input type="range" id="rngEchoFeedback" min="0.0" max="0.6" step="0.05" value="0.28" oninput="updateFmParams()" style="accent-color:var(--accent-pink);">
+          <div class="field-label">
+            <span>Harmonic Modulator Ratio (C:M)</span>
+            <span id="lblModRatio" style="color:var(--accent-cyan);">2.0x</span>
+          </div>
+          <input type="range" min="0.5" max="8.0" step="0.5" value="2.0" id="rngModRatio" class="field-input" oninput="updateFmParams()" />
         </div>
 
-        <!-- Interactive Virtual Piano Keys -->
+        <div class="field-row">
+          <div class="field-label">
+            <span>Modulation Index (FM Depth)</span>
+            <span id="lblModIndex" style="color:var(--accent-green);">3.5</span>
+          </div>
+          <input type="range" min="0.1" max="10.0" step="0.1" value="3.5" id="rngModIndex" class="field-input" oninput="updateFmParams()" />
+        </div>
+
+        <div class="field-row">
+          <div class="field-label">
+            <span>Modulator Decay Envelope (sec)</span>
+            <span id="lblModDecay" style="color:var(--accent-yellow);">0.25s</span>
+          </div>
+          <input type="range" min="0.05" max="1.5" step="0.05" value="0.25" id="rngModDecay" class="field-input" oninput="updateFmParams()" />
+        </div>
+
+        <div class="field-row">
+          <div class="field-label">
+            <span>SNES SPC700 Delay Feedback</span>
+            <span id="lblEchoFb" style="color:var(--accent-pink);">0.28</span>
+          </div>
+          <input type="range" min="0.0" max="0.6" step="0.02" value="0.28" id="rngEchoFeedback" class="field-input" oninput="updateFmParams()" />
+        </div>
+
         <div style="font-size:11px; color:var(--accent-cyan); font-weight:bold; margin-top:12px;">CLICK OR PRESS PIANO TILES TO AUDIT TIMBRE:</div>
         <div class="fm-keyboard" id="fmKeyboard">
-          <!-- Dynamically populated keys C3 to C5 -->
+          <!-- Populated via JS -->
         </div>
       </div>
     </div>
   </div>
 
   <!-- ================================================================= -->
-  <!-- TAB 3: CRACKTRO WORKBENCH -->
+  <!-- TAB 4: CRACKTRO WORKBENCH -->
   <!-- ================================================================= -->
   <div id="tab-workbench" class="tab-content">
     <div class="section-box">
       <div class="section-title">
-        <span>⚡ CRACKTRO WORKBENCH &amp; 3D DEMO ENGINE</span>
-        <span style="font-size:10px; color:var(--accent-green);">REAL-TIME VECTOR RENDERER</span>
+        <span>3D DEMOSCENE VECTOR CRACKTRO WORKBENCH</span>
+        <span style="font-size:10px; color:#38bdf8;">REAL-TIME RENDERER</span>
       </div>
 
       <div style="display:grid; grid-template-columns: 2fr 1fr; gap:16px;">
-        <!-- Canvas Wrap -->
         <div>
           <div style="background:#000; border:1px solid #1e3a29; border-radius:4px; overflow:hidden;">
             <canvas id="workbenchCanvas" width="600" height="340" style="width:100%; display:block;"></canvas>
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-            <span style="font-size:11px; color:#64748b;">FPS: ~60 • Procedural Vector Pipeline • Zero External Assets</span>
-            <button class="btn-filter" onclick="captureWorkbenchScreenshot()">📸 EXPORT PNG FRAME</button>
+            <span style="font-size:11px; color:#64748b;">Procedural Canvas 3D Perspective Projection (Focal Length: 320)</span>
+            <button class="btn-gen" onclick="downloadIntroAsm()">[ 💾 DOWNLOAD INTRO SOURCE (.ASM) ]</button>
           </div>
         </div>
 
-        <!-- Controls -->
         <div>
           <div class="field-row">
-            <label>3D Polyhedron Geometry:</label>
-            <select id="wbGeometrySelect" class="field-select" onchange="updateWorkbenchGeometry(this.value)">
-              <option value="cube">Cube (8 vertices, 12 edges)</option>
-              <option value="octahedron">Octahedron (6 vertices, 12 edges)</option>
-              <option value="star">3D Star (14 vertices, 24 edges)</option>
-              <option value="torus">Torus Ring (64 vertices, 128 edges)</option>
-              <option value="icosahedron">Icosahedron (12 vertices, 30 edges)</option>
-              <option value="helix">Double Helix DNA (32 vertices, 46 edges)</option>
-              <option value="wavegrid">Morphing Sine Mesh (64 vertices, 112 edges)</option>
+            <div class="field-label"><span>Vector Geometry Archetype</span></div>
+            <select id="wbGeometrySelect" class="field-select" onchange="changeWorkbenchGeometry(this.value)">
+              <option value="cube">Wireframe Cube (8 Vertices / 12 Edges)</option>
+              <option value="octahedron">Diamond Octahedron (6 Vertices / 12 Edges)</option>
+              <option value="star">Demoscene 3D Star (14 Vertices / 24 Edges)</option>
+              <option value="torus">Wireframe Torus Ring (32 Vertices / 64 Edges)</option>
+              <option value="icosahedron">Dual Icosahedron (12 Vertices / 30 Edges)</option>
+              <option value="helix">Double DNA Helix (32 Vertices / 48 Edges)</option>
+              <option value="wavegrid">Oscillating Wave Grid (36 Vertices / 60 Edges)</option>
             </select>
           </div>
 
           <div class="field-row">
-            <label>Color Theme:</label>
-            <select id="wbColorSelect" class="field-select" onchange="updateWorkbenchColor(this.value)">
-              <option value="#00ff66">Phosphor Green (#00ff66)</option>
-              <option value="#00f0ff">Electric Cyan (#00f0ff)</option>
-              <option value="#ff0077">Neon Magenta (#ff0077)</option>
-              <option value="#ffdd00">Amber Gold (#ffdd00)</option>
-              <option value="#c084fc">Acid Purple (#c084fc)</option>
+            <div class="field-label"><span>Copper Raster Bar Theme</span></div>
+            <select id="wbColorSelect" class="field-select" onchange="changeWorkbenchColors(this.value)">
+              <option value="cyan">FLARELIGHT Neon Cyan</option>
+              <option value="green">RAZOR 1999 Toxic Green</option>
+              <option value="magenta">PARALAX Deep Magenta</option>
+              <option value="yellow">SKID VECTOR Golden Copper</option>
+              <option value="purple">KLASS Amiga Purple</option>
             </select>
           </div>
 
           <div class="field-row">
-            <label>Rotation Velocity (X / Y / Z):</label>
-            <input type="range" id="wbSpeedSlider" min="0.2" max="3.0" step="0.1" value="1.0" class="field-input" oninput="updateWorkbenchSpeed(this.value)">
+            <div class="field-label"><span>Rotation Velocity</span></div>
+            <input type="range" min="0.2" max="3.0" step="0.1" value="1.0" id="wbSpeed" class="field-input" />
           </div>
 
           <div class="field-row">
-            <label>Copper Raster Bars Count:</label>
-            <input type="range" id="wbCopperCount" min="0" max="16" step="1" value="8" class="field-input" oninput="updateWorkbenchBars(this.value)">
+            <div class="field-label"><span>Field of View (FOV Distance)</span></div>
+            <input type="range" min="150" max="450" step="10" value="240" id="wbFov" class="field-input" />
           </div>
 
           <div class="field-row">
-            <label>Custom Bouncing Scroller Text:</label>
-            <input type="text" id="wbScrollerText" class="field-input" value="*** 0xRELEASE DEMOSCENE WORKBENCH *** KEEP THE 999 KB CEILING UNBROKEN! ***" oninput="updateWorkbenchScroller(this.value)">
+            <div class="field-label"><span>Custom Sine Text Scroller</span></div>
+            <textarea id="wbScrollerText" class="field-input" rows="3" oninput="updateWorkbenchScroller(this.value)">+++ 0xRELEASE 1999 DEMOSCENE CRACKTRO WORKBENCH +++ CODED IN PURE x86 ASSEMBLY &amp; PROCEDURAL CANVAS +++ GREETS TO FLARELIGHT * RAZOR 1999 * PARALAX * SKID VECTOR * FUTURE CREW * TRSI +++</textarea>
           </div>
         </div>
       </div>
@@ -970,130 +1341,169 @@
   </div>
 
   <!-- ================================================================= -->
-  <!-- TAB 4: ANSI / NFO GENERATOR -->
+  <!-- TAB 5: ANSI / NFO STUDIO -->
   <!-- ================================================================= -->
   <div id="tab-generator" class="tab-content">
     <div class="section-box">
       <div class="section-title">
-        <span>📜 RETRO ANSI &amp; .NFO GENERATOR STUDIO</span>
-        <span style="font-size:10px; color:#38bdf8;">CP437 BOX BUILDER</span>
+        <span>CP437 ANSI / NFO ART GENERATOR STUDIO</span>
+        <span style="font-size:10px; color:#10b981;">DOS CODEPAGE 437</span>
       </div>
 
       <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
-        <!-- Form Inputs -->
         <div>
           <div class="field-row">
-            <label>Preset Release Template:</label>
-            <select id="nfoPresetSelect" class="field-select" onchange="applyNfoPreset(this.value)">
-              <option value="game">Commercial Game No-CD Crack</option>
-              <option value="keygen">Keymaker &amp; CDKey Generator</option>
-              <option value="trainer">Game Trainer (+12 Options)</option>
-              <option value="music">Demoscene Music Pack (.MOD/.XM)</option>
+            <div class="field-label"><span>Scene Group Header Preset</span></div>
+            <select id="nfoGroupPreset" class="field-select" onchange="applyNfoPreset(this.value)">
+              <option value="FLARELIGHT">FLARELIGHT [FLT] - Nordic Scene Masters</option>
+              <option value="RAZOR 1999">RAZOR 1999 [RZR] - Speed &amp; Keygens</option>
+              <option value="PARALAX">PARALAX [PDX] - German Assembly Division</option>
+              <option value="SKID VECTOR">SKID VECTOR [SKD] - Trainer Pioneers</option>
+              <option value="KLASS">KLASS [CLS] - ISO &amp; Multi-Disk Couriers</option>
+              <option value="CYBRID">CYBRID [CYB] - Demoscene Vanguard</option>
             </select>
           </div>
 
           <div class="field-row">
-            <label>Release Title:</label>
-            <input type="text" id="nfoInputTitle" class="field-input" value="Surreal Tournament '99 v436 No-CD Patch" oninput="generateCustomNfo()">
+            <div class="field-label"><span>Release Title</span></div>
+            <input type="text" id="nfoGenTitle" class="field-input" value="Surreal Tournament '99 v436 No-CD Patch" oninput="generateCustomNfo()" />
           </div>
 
           <div class="field-row">
-            <label>Group Name:</label>
-            <input type="text" id="nfoInputGroup" class="field-input" value="FLARELIGHT" oninput="generateCustomNfo()">
+            <div class="field-label"><span>Cracker / Audio Handle</span></div>
+            <input type="text" id="nfoGenCracker" class="field-input" value="SubCarrier &amp; HexLord" oninput="generateCustomNfo()" />
           </div>
 
           <div class="field-row">
-            <label>Cracker / Supplier Handle:</label>
-            <input type="text" id="nfoInputCracker" class="field-input" value="SceneVoyager99" oninput="generateCustomNfo()">
+            <div class="field-label"><span>Media Distribution Size</span></div>
+            <input type="text" id="nfoGenMedia" class="field-input" value="01 x 1.44 MB Floppy" oninput="generateCustomNfo()" />
           </div>
 
           <div class="field-row">
-            <label>Protection Type:</label>
-            <input type="text" id="nfoInputProt" class="field-input" value="SafeDisc / SecuROM / WON" oninput="generateCustomNfo()">
+            <div class="field-label"><span>Custom Release Notes &amp; Steganography</span></div>
+            <textarea id="nfoGenNotes" class="field-input" rows="4" oninput="generateCustomNfo()">SafeDisc v1 checks uncoupled and replaced with clean NOP opcodes.
+Procedural YM2612 FM chiptune included in cracktro intro.
+Tested clean on Windows 98 SE and DOS 7.1.</textarea>
           </div>
 
+          <!-- CP437 Palette Insert Buttons -->
           <div class="field-row">
-            <label>Greetings to other groups:</label>
-            <input type="text" id="nfoInputGreets" class="field-input" value="RAZOR 1999 * PARALAX * SKID VECTOR * KLASS * CYBRID" oninput="generateCustomNfo()">
+            <div class="field-label"><span>CP437 Character Insertion Palette</span></div>
+            <div style="display:flex; gap:4px; flex-wrap:wrap;">
+              <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertCp437('█')">█</button>
+              <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertCp437('▀')">▀</button>
+              <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertCp437('▄')">▄</button>
+              <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertCp437('░')">░</button>
+              <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertCp437('▒')">▒</button>
+              <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertCp437('▓')">▓</button>
+              <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertCp437('═')">═</button>
+              <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertCp437('║')">║</button>
+              <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertCp437('╔')">╔</button>
+              <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertCp437('╗')">╗</button>
+              <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertCp437('╚')">╚</button>
+              <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertCp437('╝')">╝</button>
+              <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertCp437('╬')">╬</button>
+            </div>
           </div>
 
           <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
-            <button class="btn-filter" onclick="copyNfoClipboard()">📋 COPY NFO</button>
-            <button class="btn-filter" onclick="downloadCustomNfo()">💾 DOWNLOAD .NFO</button>
-            <button class="btn-filter" style="background:#0f766e; border-color:#2dd4bf;" onclick="downloadMockAsm()">⚡ GET CRACKTRO .ASM</button>
+            <button class="btn-gen" onclick="downloadCustomNfo()">[ 💾 DOWNLOAD .NFO ]</button>
+            <button class="btn-filter" onclick="downloadCustomDiz()">[ 📄 DOWNLOAD .DIZ ]</button>
+            <button class="btn-filter" onclick="injectEchoInterceptNote()">[ 📡 INJECT 1999Hz INTERCEPT NOTE ]</button>
           </div>
         </div>
 
-        <!-- Live ANSI Preview -->
         <div>
           <div style="font-size:11px; color:#94a3b8; margin-bottom:4px;">LIVE ANSI / ASCII PREVIEW:</div>
-          <div id="nfoLivePreview" style="background:#02050b; border:1px solid #1e3a29; border-radius:4px; padding:10px; font-family:'Consolas', monospace; font-size:10px; color:#34d399; white-space:pre; overflow-x:auto; max-height:360px; line-height:1.2;">
-            <!-- Rendered via JS -->
-          </div>
+          <div id="nfoLivePreview" style="background:#02050b; border:1px solid #1e3a29; border-radius:4px; padding:10px; font-family:'Consolas', monospace; font-size:10px; color:#34d399; white-space:pre; overflow-x:auto; max-height:420px; line-height:1.2;"></div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- ================================================================= -->
-  <!-- TAB 5: 1999 SCENE CHARTS -->
+  <!-- TAB 6: 1999 SCENE CHARTS & CHALLENGE -->
   <!-- ================================================================= -->
   <div id="tab-charts" class="tab-content">
     <div class="section-box">
       <div class="section-title">
-        <span>🏆 1999 DEMOSCENE TOP-LIST &amp; VOTING POLLS</span>
-        <span style="font-size:10px; color:#facc15;">COMMUNITY BALLOT</span>
+        <span>1999 DEMOSCENE POPULARITY CHARTS &amp; VOTING</span>
+        <span style="font-size:10px; color:#facc15;">PERSISTENT COMMUNITY BALLOT</span>
       </div>
 
-      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
-        <!-- Group of the Year Poll -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:16px;">
         <div style="background:#080f1a; border:1px solid #142033; padding:12px; border-radius:4px;">
           <div style="font-size:12px; font-weight:bold; color:var(--accent-cyan); margin-bottom:8px;">★ TOP SCENE GROUP OF 1999</div>
-          <div id="groupPollContainer">
-            <!-- Dynamically populated -->
-          </div>
+          <div id="groupPollContainer"></div>
           <div style="font-size:10px; color:#64748b; margin-top:8px;">Click any group above to cast your persistent vote.</div>
         </div>
 
-        <!-- Best Audio Architecture Poll -->
         <div style="background:#080f1a; border:1px solid #142033; padding:12px; border-radius:4px;">
           <div style="font-size:12px; font-weight:bold; color:var(--accent-green); margin-bottom:8px;">★ PREFERRED RETRO AUDIO STANDARD</div>
-          <div id="audioPollContainer">
-            <!-- Dynamically populated -->
-          </div>
+          <div id="audioPollContainer"></div>
           <div style="font-size:10px; color:#64748b; margin-top:8px;">Votes saved locally in browser storage.</div>
+        </div>
+      </div>
+
+      <!-- Demoscene Hacker Challenge -->
+      <div class="challenge-box">
+        <div class="section-title" style="margin-bottom:10px;">
+          <span>🏆 DEMOSCENE &amp; CRACKING KNOWLEDGE CHALLENGE '99</span>
+          <span id="challengeScoreBadge" style="font-size:10px; color:#38bdf8;">QUESTION 1 / 10 • SCORE: 0</span>
+        </div>
+
+        <div id="challengeQuestionContainer">
+          <div id="challengeQText" style="font-size:12px; color:#f1f5f9; font-weight:bold; margin-bottom:12px;"></div>
+          <div id="challengeOptionsContainer"></div>
+        </div>
+
+        <div id="challengeResultContainer" style="display:none; text-align:center; padding:14px 8px;">
+          <div style="font-size:15px; font-weight:bold; color:var(--accent-cyan); margin-bottom:6px;">CHALLENGE COMPLETE!</div>
+          <div id="challengeFinalRank" style="font-size:13px; color:var(--accent-green); font-weight:bold; margin-bottom:10px;"></div>
+          <div id="challengeFinalDetails" style="font-size:11px; color:#94a3b8; margin-bottom:14px;"></div>
+          <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+            <button class="btn-gen" onclick="downloadSceneCertificate()">[ 📜 DOWNLOAD SCENE CREDENTIAL (.TXT) ]</button>
+            <button class="btn-filter" onclick="postChallengeBragToShoutbox()">[ 💬 BRAG TO SHOUTBOX ]</button>
+            <button class="btn-filter" onclick="restartChallenge()">[ ↺ RETRY CHALLENGE ]</button>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <!-- ================================================================= -->
-  <!-- TAB 6: UNDERGROUND SHOUTBOX -->
+  <!-- TAB 7: UNDERGROUND COURIER SHOUTBOX -->
   <!-- ================================================================= -->
   <div id="tab-shoutbox" class="tab-content">
     <div class="section-box">
       <div class="section-title">
-        <span>💬 UNDERGROUND COURIER SHOUTBOX &amp; GUESTBOOK</span>
-        <span style="font-size:10px; color:var(--accent-green);">PERSISTENT IRC LOGS</span>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <span>UNDERGROUND SCENE COURIER SHOUTBOX</span>
+          <div class="presence-badge">
+            <span class="presence-dot"></span>
+            <span id="shoutboxPresenceCount">3 COURIERS ONLINE</span>
+          </div>
+        </div>
+        <span id="shoutboxModeLabel" style="font-size:10px; color:#10b981;">CONNECTED: FIREBASE REALTIME DB</span>
       </div>
 
-      <!-- Shout Feed -->
       <div class="shout-list" id="shoutListContainer">
-        <!-- Rendered via JS -->
+        <!-- Shouts populated dynamically -->
       </div>
 
-      <!-- Post Form -->
       <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-        <input type="text" id="shoutHandleInput" class="search-input" placeholder="Your Handle (e.g. NeoScener)" style="width:180px;">
-        <input type="text" id="shoutMsgInput" class="search-input" placeholder="Leave a shout for the demoscene..." style="flex:1;" onkeydown="if(event.key==='Enter')postShout()">
-        <button class="btn-filter" onclick="postShout()">⚡ POST SHOUT</button>
+        <input type="text" id="shoutHandleInput" class="search-input" style="width:140px;" placeholder="Handle..." value="Courier_99" />
+        <input type="text" id="shoutMsgInput" class="search-input" style="flex:1;" placeholder="Enter underground scene transmission or shout..." onkeydown="if(event.key==='Enter') postShout();" />
+        <button class="btn-gen" onclick="postShout()">[ TRANSMIT ]</button>
       </div>
-      <div style="display:flex; gap:6px; margin-top:8px; font-size:10px;">
+      <div style="display:flex; gap:6px; margin-top:8px; font-size:10px; flex-wrap:wrap;">
         <span style="color:#64748b;">QUICK TAGS:</span>
         <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertShoutTag('[GREETS]')">[GREETS]</button>
         <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertShoutTag('[RELEASE]')">[RELEASE]</button>
+        <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertShoutTag('[0DAY]')">[0DAY]</button>
         <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertShoutTag('[SCENE]')">[SCENE]</button>
         <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertShoutTag('[YM2612]')">[YM2612]</button>
+        <button class="btn-filter" style="font-size:10px; padding:2px 6px; border-color:#e11d48; color:#fda4af;" onclick="insertShoutTag('1999Hz')">[1999Hz ECHO]</button>
       </div>
     </div>
   </div>
@@ -1101,7 +1511,7 @@
   <!-- Quick Nav to Clearnet & Webring -->
   <div class="section-box" style="text-align:center;">
     <div style="font-size:12px; color:#cbd5e1; margin-bottom:6px;">
-      [ 0xRELEASE SCENE COURIER • CENTRAL KILONET WEBRING MEMBER #013 ]
+      [ 0xRELEASE SCENE COURIER • CENTRAL KILONET WEBRING MEMBER #003 ]
     </div>
     <div style="font-size:11px;">
       <a href="/web/geocities.html" style="color:var(--accent-cyan); margin:0 8px;">« Prev: CyberSpire's Shrine</a> |
@@ -1128,60 +1538,60 @@
       <button class="btn-close" onclick="closeCracktro()">[ X ] CLOSE</button>
     </div>
 
-    <!-- Cracktro Visuals Canvas -->
     <div class="cracktro-canvas-wrap">
-      <canvas id="cracktroCanvas" width="700" height="320"></canvas>
+      <canvas id="cracktroCanvas" width="760" height="320"></canvas>
     </div>
 
-    <!-- Cracktro Interactive Panel (Keygen / Patch) -->
     <div class="cracktro-interactive-bar">
       <!-- Keygen Controls -->
       <div id="keygenBox" class="keygen-row">
-        <label style="font-size:11px; color:#38bdf8; font-weight:bold;">REG NAME / SEED:</label>
-        <input type="text" id="regNameInput" class="keygen-input" value="SceneVoyager99" style="max-width:180px;" oninput="onKeygenInputChanged()" />
-        <label style="font-size:11px; color:#38bdf8; font-weight:bold;">CD-KEY:</label>
-        <input type="text" id="serialOutput" class="keygen-input" readonly value="FLT-4892-8819-2041" />
+        <span style="font-size:11px; color:#38bdf8; font-weight:bold;">REGISTRATION NAME:</span>
+        <input type="text" id="regNameInput" class="keygen-input" value="KiloScener_1999" oninput="onKeygenInputChanged()" />
+        <span style="font-size:11px; color:var(--accent-yellow); font-weight:bold;">SERIAL / CD-KEY:</span>
+        <input type="text" id="serialOutput" class="keygen-input" readonly value="FLT-8B2A-99F1-44E2" />
         <button class="btn-gen" onclick="generateKey()">⚡ GENERATE</button>
-        <button class="btn-gen" style="background:#0f766e; border-color:#2dd4bf;" onclick="copyKey()">📋 COPY</button>
+        <button class="btn-filter" onclick="copyKey()">COPY</button>
       </div>
 
       <!-- Patch Controls -->
       <div id="patchBox" class="keygen-row" style="display:none;">
         <span style="font-size:11px; color:#4ade80;">TARGET: <code id="patchTargetName" style="color:#fff;">SurrealTournament.exe</code></span>
-        <button class="btn-patch" id="btnApplyPatch" onclick="applyPatch()">⚡ APPLY NO-CD PATCH</button>
+        <button class="btn-patch" id="btnApplyPatch" onclick="applyPatch()">⚡ APPLY NO-CD CRACK</button>
         <div class="patch-progress-box" id="patchProgressBox" style="flex:1;">
           <div class="patch-progress-fill" id="patchProgressFill"></div>
           <div class="patch-progress-text" id="patchProgressText">READY TO PATCH</div>
         </div>
       </div>
 
-      <!-- Audio & Status line -->
       <div class="cracktro-status-line">
-        <span id="cracktroMusicStatus">♫ Genesis YM2612 FM Synthesis • 140 BPM</span>
         <div style="display:flex; gap:10px; align-items:center;">
-          <label style="font-size:10px; color:#94a3b8;">VOLUME:</label>
-          <input type="range" id="modalVolume" min="0" max="100" value="70" style="width:70px; accent-color:var(--accent-cyan);" oninput="setAudioVolume(this.value)" />
-          <button class="btn-filter" style="padding:2px 6px; font-size:10px;" onclick="toggleAudioMute()">MUTE</button>
+          <span id="cracktroMusicStatus">♫ Mega Drive FM Rush (140 BPM)</span>
+          <span style="color:#64748b;">•</span>
+          <span style="color:#facc15;">Press ESC to return</span>
+        </div>
+        <div>
+          <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="loadActiveIntoSandbox()">[ 🛠️ OPEN IN x86 SANDBOX ]</button>
         </div>
       </div>
 
-      <!-- Terminal feedback line for easter egg -->
       <div id="keygenGatewayLine" class="terminal-gateway-box"></div>
     </div>
   </div>
 </div>
 
 <!-- ================================================================= -->
-<!-- NFO VIEWER MODAL WINDOW -->
+<!-- NFO MODAL WINDOW -->
 <!-- ================================================================= -->
 <div class="modal-overlay" id="nfoModal">
   <div class="nfo-window">
     <div class="modal-header" style="background:#064e3b; border-color:var(--accent-green); color:#6ee7b7;">
-      <span id="nfoTitle">📜 FLARELIGHT.NFO - RELEASE INFORMATION</span>
+      <span id="nfoTitle">📜 RELEASE.NFO - RELEASE INFORMATION</span>
       <button class="btn-close" onclick="closeNfo()">[ X ] CLOSE</button>
     </div>
-    <div class="nfo-content" id="nfoBody">
-      <!-- NFO rendered dynamically with clickable corrupted checksum for darknet discovery -->
+    <div class="nfo-content" id="nfoBody"></div>
+    <div style="padding:8px 12px; background:#02050b; border-top:1px solid #14243b; display:flex; justify-content:flex-end; gap:8px;">
+      <button class="btn-gen" onclick="downloadCurrentNfo()">[ 💾 DOWNLOAD THIS .NFO ]</button>
+      <button class="btn-close" onclick="closeNfo()">CLOSE</button>
     </div>
   </div>
 </div>
@@ -1423,7 +1833,7 @@ function switchMainTab(tabId, btn) {
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   
-  btn.classList.add('active');
+  if (btn) btn.classList.add('active');
   const target = document.getElementById(`tab-${tabId}`);
   if (target) target.classList.add('active');
 
@@ -1432,6 +1842,10 @@ function switchMainTab(tabId, btn) {
     startVizAnimation();
   } else if (tabId === 'workbench') {
     startWorkbenchAnimation();
+  } else if (tabId === 'sandbox') {
+    if (!sandboxActiveTarget) loadSandboxTarget('SurrealTournament.exe');
+  } else if (tabId === 'charts') {
+    initChallenge();
   }
 }
 
@@ -1439,70 +1853,86 @@ function switchMainTab(tabId, btn) {
 // 3. UI RENDERING & FILTERING
 // ==========================================
 let currentFilter = 'all';
+let currentSearch = '';
+
+function filterReleases(type, btn) {
+  currentFilter = type;
+  document.querySelectorAll('.btn-filter').forEach(b => {
+    if (b.parentElement && b.parentElement.parentElement && b.parentElement.parentElement.classList.contains('control-bar')) {
+      b.classList.remove('active');
+    }
+  });
+  if (btn) btn.classList.add('active');
+  renderReleases();
+}
+
+function searchReleases(query) {
+  currentSearch = query.trim().toLowerCase();
+  renderReleases();
+}
 
 function renderReleases() {
   const tbody = document.getElementById('releaseTableBody');
-  const query = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  if (!tbody) return;
 
   const filtered = RELEASES.filter(r => {
-    const matchesFilter = currentFilter === 'all' || r.type === currentFilter;
-    const matchesQuery = !query || r.title.toLowerCase().includes(query) || r.group.toLowerCase().includes(query);
-    return matchesFilter && matchesQuery;
+    const matchType = (currentFilter === 'all') || (r.type === currentFilter);
+    const matchSearch = !currentSearch || 
+      r.title.toLowerCase().includes(currentSearch) ||
+      r.group.toLowerCase().includes(currentSearch) ||
+      r.targetExe.toLowerCase().includes(currentSearch);
+    return matchType && matchSearch;
   });
 
   tbody.innerHTML = filtered.map(r => `
     <tr>
-      <td style="color:#94a3b8;">${r.date}</td>
+      <td style="color:#64748b; white-space:nowrap;">${r.date}</td>
       <td><span class="tag-group ${r.groupClass}">${r.group}</span></td>
-      <td style="font-weight:bold; color:#f1f5f9;">${escapeHtml(r.title)}</td>
+      <td><strong>${escapeHtml(r.title)}</strong></td>
       <td style="color:#64748b; font-size:10px;">${r.media}</td>
-      <td style="color:${r.type==='keygen'?'#38bdf8':(r.type==='trainer'?'#facc15':'#4ade80')}; font-weight:bold;">${r.typeName}</td>
+      <td><span style="font-size:10px; color:#38bdf8;">${r.typeName}</span></td>
       <td>
         <button class="btn-cracktro" onclick="launchCracktro('${r.id}')">⚡ CRACKTRO</button>
       </td>
-      <td style="white-space:nowrap; display:flex; gap:4px; align-items:center;">
-        <button class="btn-nfo" onclick="openNfo('${r.id}')">📜 .NFO</button>
-        <button class="btn-dl" onclick="downloadReleaseDiz('${r.id}')">💾 .DIZ</button>
-        <button class="btn-dl" style="color:#4ade80; border-color:#16a34a;" onclick="downloadReleaseNfo('${r.id}')">📦 .NFO</button>
+      <td>
+        <button class="btn-nfo" onclick="openNfo('${r.id}')">📜 NFO</button>
+      </td>
+      <td>
+        <button class="btn-sandbox" onclick="loadSandboxFromRelease('${r.id}')">🛠️ SANDBOX</button>
+      </td>
+      <td style="white-space:nowrap;">
+        <button class="btn-dl" onclick="downloadReleaseDiz('${r.id}')">.DIZ</button>
+        <button class="btn-dl" onclick="downloadReleaseNfo('${r.id}')">.NFO</button>
       </td>
     </tr>
   `).join('');
 }
 
-function filterReleases(type, btn) {
-  currentFilter = type;
-  document.querySelectorAll('.btn-filter').forEach(b => {
-    if (b.parentElement === btn.parentElement) b.classList.remove('active');
-  });
-  btn.classList.add('active');
-  renderReleases();
-}
-
-function searchReleases() {
-  renderReleases();
-}
-
 function escapeHtml(str) {
-  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 // ==========================================
-// 4. GENESIS (YM2612 FM) & SNES (SPC700) SYNTHESIZER
+// 4. PROCEDURAL AUDIO SYNTHESIZER
 // ==========================================
 let audioCtx = null;
 let masterGain = null;
+let analyserNode = null;
 let snesDelay = null;
 let snesFeedback = null;
-let analyserNode = null;
-let isAudioMuted = false;
-let currentVolume = 0.7;
 let schedulerTimer = null;
+let currentVolume = 0.8;
+let isAudioMuted = false;
+
 let currentSongIndex = 0;
 let isSongPlaying = false;
 let songStep = 0;
 let nextNoteTime = 0;
 let tempoMultiplier = 1.0;
 let isSnesEchoEnabled = true;
+
+// Channel Mute States [0: Lead, 1: Bass, 2: Pad, 3: Drum]
+const channelMuted = [false, false, false, false];
 
 // Custom FM Lab parameters
 let customModRatio = 2.0;
@@ -1692,6 +2122,11 @@ function scheduleSongNotes() {
     const step = songStep % 64;
     const song = SONGS[currentSongIndex];
 
+    let ch1Note = "---";
+    let ch2Note = "---";
+    let ch3Note = "---";
+    let ch4Note = "---";
+
     if (song.style === 'genesis_rush') {
       const bassProg = [
         33,33,45,33, 33,45,33,36, 33,33,45,33, 38,36,35,33,
@@ -1699,107 +2134,134 @@ function scheduleSongNotes() {
         36,36,48,36, 36,48,36,40, 36,36,48,36, 43,41,40,36,
         31,31,43,31, 31,43,31,35, 31,31,43,31, 38,36,35,31
       ];
-      const leadMelody = [
-        57, null, 60, null, 64, 62, 60, null, 62, null, 64, null, 67, null, 64, null,
-        65, null, 64, null, 62, null, 60, null, 57, null, 59, null, 60, null, 62, null,
-        60, null, 64, null, 67, 65, 64, null, 67, null, 69, null, 72, null, 69, null,
-        67, null, 65, null, 64, null, 62, null, 60, null, 59, null, 57, null, null, null
+      const leadProg = [
+        69, 0, 72, 0, 76, 74, 72, 69, 74, 0, 76, 0, 79, 76, 74, 72,
+        65, 0, 69, 0, 72, 70, 69, 65, 70, 0, 72, 0, 74, 72, 70, 69,
+        72, 0, 76, 0, 79, 77, 76, 72, 77, 0, 79, 0, 81, 79, 77, 76,
+        67, 0, 71, 0, 74, 72, 71, 67, 72, 0, 74, 0, 76, 74, 72, 71
       ];
-      const bNote = bassProg[step];
-      if (bNote) playYm2612Fm(mtof(bNote), 2.0, 3.8, 0.12, nextNoteTime, 0.28, false);
-      const lNote = leadMelody[step];
-      if (lNote) playYm2612Fm(mtof(lNote), 3.0, 2.2, 0.24, nextNoteTime, 0.2, true);
-      if (step % 8 === 0 || step % 16 === 10) play16BitDrum('kick', nextNoteTime);
-      if (step % 16 === 4 || step % 16 === 12) play16BitDrum('snare', nextNoteTime);
-      if (step % 2 === 0) play16BitDrum('hat', nextNoteTime);
+      const padProg = [57, 0, 0, 0, 0, 0, 0, 0, 53, 0, 0, 0, 0, 0, 0, 0, 60, 0, 0, 0, 0, 0, 0, 0, 55, 0, 0, 0, 0, 0, 0, 0];
 
+      if (!channelMuted[1] && bassProg[step]) {
+        playYm2612Fm(mtof(bassProg[step]), 2.0, 4.0, 0.12, nextNoteTime, 0.26);
+        ch2Note = noteNumToString(bassProg[step]);
+      }
+      if (!channelMuted[0] && leadProg[step]) {
+        playYm2612Fm(mtof(leadProg[step]), 1.0, 2.5, 0.18, nextNoteTime, 0.22, true);
+        ch1Note = noteNumToString(leadProg[step]);
+      }
+      if (!channelMuted[2] && padProg[step % 32]) {
+        playSnesPad(mtof(padProg[step % 32]), 1.8, nextNoteTime, 0.16);
+        ch3Note = noteNumToString(padProg[step % 32]);
+      }
     } else if (song.style === 'snes_dream') {
-      const snesChords = [
-        [50, 57, 62, 65], [46, 53, 58, 62], [48, 55, 60, 64], [45, 52, 57, 60]
-      ];
-      const chordIdx = Math.floor(step / 16);
-      if (step % 16 === 0) {
-        snesChords[chordIdx].forEach(n => playSnesPad(mtof(n), 1.8, nextNoteTime, 0.08));
-      }
-      const funkBass = [
-        38, null, 50, 38, null, 48, null, 38, null, 50, 38, null, 48, 49, 50, null,
-        34, null, 46, 34, null, 44, null, 34, null, 46, 34, null, 44, 45, 46, null,
-        36, null, 48, 36, null, 46, null, 36, null, 48, 36, null, 46, 47, 48, null,
-        33, null, 45, 33, null, 43, null, 33, null, 45, 33, null, 43, 44, 45, null
-      ];
-      const fB = funkBass[step];
-      if (fB) playYm2612Fm(mtof(fB), 1.0, 3.2, 0.14, nextNoteTime, 0.25, false);
-      if (step % 8 === 0) play16BitDrum('kick', nextNoteTime);
-      if (step % 8 === 4) play16BitDrum('snare', nextNoteTime);
-      play16BitDrum('hat', nextNoteTime);
+      const padNotes = [60, 63, 67, 70, 58, 62, 65, 68, 56, 60, 63, 67, 55, 58, 62, 65];
+      const melody = [72, 0, 75, 74, 70, 0, 72, 0, 67, 0, 70, 68, 65, 0, 67, 0];
+      const bass = [36, 0, 36, 0, 34, 0, 34, 0, 32, 0, 32, 0, 31, 0, 31, 0];
 
-    } else if (song.style === 'pdx_euphoria') {
-      const arpChords = [
-        [40, 47, 52, 55], [36, 43, 48, 52], [38, 45, 50, 54], [35, 42, 47, 51]
-      ];
-      const chord = arpChords[Math.floor(step / 16)];
-      const arpNote = chord[step % 4] + 12;
-      playYm2612Fm(mtof(arpNote), 3.0, 2.5, 0.08, nextNoteTime, 0.16, true);
-      if (step % 2 === 0) {
-        const root = [28, 24, 26, 23][Math.floor(step / 16)];
-        playYm2612Fm(mtof(root), 2.0, 4.2, 0.1, nextNoteTime, 0.3, false);
+      if (!channelMuted[2] && step % 4 === 0) {
+        const p = padNotes[(step / 4) % padNotes.length];
+        playSnesPad(mtof(p), 1.2, nextNoteTime, 0.2);
+        ch3Note = noteNumToString(p);
       }
-      if (step % 8 === 0 || step % 16 === 6 || step % 16 === 10) play16BitDrum('kick', nextNoteTime);
-      if (step % 8 === 4) play16BitDrum('snare', nextNoteTime);
-      if (step % 2 === 0) play16BitDrum('hat', nextNoteTime);
+      if (!channelMuted[0] && melody[step % 16]) {
+        playYm2612Fm(mtof(melody[step % 16]), 2.5, 1.8, 0.25, nextNoteTime, 0.2, true);
+        ch1Note = noteNumToString(melody[step % 16]);
+      }
+      if (!channelMuted[1] && bass[step % 16]) {
+        playYm2612Fm(mtof(bass[step % 16]), 2.0, 3.2, 0.18, nextNoteTime, 0.25);
+        ch2Note = noteNumToString(bass[step % 16]);
+      }
+    } else {
+      // Fast arpeggiated demoscene tracks
+      const arpNotes = [60, 64, 67, 72, 64, 67, 72, 76, 58, 62, 65, 70, 62, 65, 70, 74];
+      const bassNotes = [36, 36, 48, 36, 34, 34, 46, 34];
 
-    } else if (song.style === 'yuzo_groove') {
-      const yuzoBass = [
-        36, null, 36, null, 48, 36, null, 39, null, 36, null, 46, 48, null, null, null,
-        34, null, 34, null, 46, 34, null, 37, null, 34, null, 44, 46, null, null, null,
-        33, null, 33, null, 45, 33, null, 36, null, 33, null, 43, 45, null, null, null,
-        31, null, 31, null, 43, 31, null, 34, null, 31, null, 41, 43, null, null, null
-      ];
-      const yB = yuzoBass[step];
-      if (yB) playYm2612Fm(mtof(yB), 2.0, 4.0, 0.15, nextNoteTime, 0.32, false);
-      if (step % 4 === 2) {
-        const pChord = [[48, 55, 60, 63], [46, 53, 58, 61], [45, 52, 57, 60], [43, 50, 55, 58]][Math.floor(step / 16)];
-        pChord.forEach(n => playYm2612Fm(mtof(n), 1.0, 2.0, 0.18, nextNoteTime, 0.12, true));
+      if (!channelMuted[0]) {
+        const a = arpNotes[step % arpNotes.length];
+        playYm2612Fm(mtof(a), 3.0, 2.0, 0.08, nextNoteTime, 0.18, true);
+        ch1Note = noteNumToString(a);
       }
-      if (step % 4 === 0) play16BitDrum('kick', nextNoteTime);
-      if (step % 8 === 4) play16BitDrum('snare', nextNoteTime);
-      if (step % 2 === 0) play16BitDrum('hat', nextNoteTime);
-
-    } else if (song.style === 'amiga_twilight') {
-      const amigaMelody = [
-        60, 63, 67, 70, 68, 67, 63, 60, 58, 62, 65, 68, 67, 65, 62, 58,
-        56, 60, 63, 67, 65, 63, 60, 56, 55, 58, 62, 65, 63, 62, 58, 55
-      ];
-      const aN = amigaMelody[step % 32];
-      playYm2612Fm(mtof(aN), 2.0, 2.8, 0.14, nextNoteTime, 0.18, true);
-      if (step % 4 === 0) {
-        const root = [36, 34, 32, 31][Math.floor((step % 32) / 8)];
-        playYm2612Fm(mtof(root), 1.0, 3.5, 0.2, nextNoteTime, 0.28, false);
+      if (!channelMuted[1] && bassNotes[step % bassNotes.length]) {
+        const b = bassNotes[step % bassNotes.length];
+        playYm2612Fm(mtof(b), 2.0, 4.5, 0.14, nextNoteTime, 0.24);
+        ch2Note = noteNumToString(b);
       }
-      if (step % 4 === 0) play16BitDrum('kick', nextNoteTime);
-      if (step % 8 === 4) play16BitDrum('snare', nextNoteTime);
-      if (step % 2 === 0) play16BitDrum('hat', nextNoteTime);
-
-    } else if (song.style === 'void_fantasy') {
-      const voidBells = [
-        72, null, 75, 79, null, 82, 79, null, 70, null, 74, 77, null, 80, 77, null,
-        68, null, 72, 75, null, 79, 75, null, 67, null, 70, 74, null, 77, 74, null
-      ];
-      const vB = voidBells[step % 32];
-      if (vB) playYm2612Fm(mtof(vB), 4.0, 1.8, 0.2, nextNoteTime, 0.16, true);
-      if (step % 2 === 0) {
-        const root = [36, 34, 32, 31][Math.floor((step % 32) / 8)];
-        playYm2612Fm(mtof(root), 2.0, 3.2, 0.1, nextNoteTime, 0.25, false);
+      if (!channelMuted[2] && step % 8 === 0) {
+        playSnesPad(mtof(48 + (step % 24)), 1.5, nextNoteTime, 0.16);
+        ch3Note = noteNumToString(48 + (step % 24));
       }
-      if (step % 8 === 0) play16BitDrum('kick', nextNoteTime);
-      if (step % 8 === 4) play16BitDrum('snare', nextNoteTime);
-      play16BitDrum('hat', nextNoteTime);
     }
 
-    const baseStepDuration = (60 / song.bpm) / 4;
+    // Drum rhythm
+    if (!channelMuted[3]) {
+      if (step % 4 === 0) {
+        play16BitDrum('kick', nextNoteTime);
+        ch4Note = "KIK";
+      } else if (step % 4 === 2) {
+        play16BitDrum('snare', nextNoteTime);
+        ch4Note = "SNR";
+      }
+      if (step % 2 === 1) {
+        play16BitDrum('hat', nextNoteTime);
+        if (ch4Note === "---") ch4Note = "HAT";
+      }
+    }
+
+    // Update live tracker row display
+    updateTrackerRowDisplay(step, ch1Note, ch2Note, ch3Note, ch4Note);
+
+    const baseStepDuration = 60 / (song.bpm * 4);
     const stepDuration = baseStepDuration / tempoMultiplier;
     nextNoteTime += stepDuration;
     songStep++;
+  }
+}
+
+function noteNumToString(num) {
+  if (!num) return "---";
+  const notes = ["C-", "C#", "D-", "D#", "E-", "F-", "F#", "G-", "G#", "A-", "A#", "B-"];
+  const oct = Math.floor(num / 12) - 1;
+  const n = notes[num % 12];
+  return `${n}${oct}`;
+}
+
+function toggleChannelMute(chIdx) {
+  channelMuted[chIdx] = !channelMuted[chIdx];
+  const btn = document.getElementById(`mute_ch${chIdx}`);
+  if (btn) {
+    if (channelMuted[chIdx]) {
+      btn.classList.add('muted');
+      btn.textContent = "MUTED";
+    } else {
+      btn.classList.remove('muted');
+      btn.textContent = "M";
+    }
+  }
+}
+
+function updateTrackerRowDisplay(step, c1, c2, c3, c4) {
+  const container = document.getElementById('trackerRowsContainer');
+  const ind = document.getElementById('trackerRowIndicator');
+  if (!container) return;
+
+  const hexRow = step.toString(16).toUpperCase().padStart(2, '0');
+  if (ind) ind.textContent = `ROW: ${hexRow} / 3F`;
+
+  const rowHtml = `
+    <div class="tracker-row-line current">
+      <span style="color:#facc15;">${hexRow}</span>
+      <span style="color:#38bdf8;">${c1} 01</span>
+      <span style="color:#4ade80;">${c2} 02</span>
+      <span style="color:#c084fc;">${c3} 03</span>
+      <span style="color:#fb923c;">${c4} 04</span>
+    </div>
+  `;
+
+  // Keep last 5 rows visible
+  container.innerHTML = rowHtml + container.innerHTML;
+  while (container.children.length > 5) {
+    container.removeChild(container.lastChild);
   }
 }
 
@@ -1882,7 +2344,6 @@ function updateJukeboxUI() {
   if (trackName) trackName.textContent = song.name;
   if (trackDetails) trackDetails.textContent = `${song.bpm} BPM • ${song.desc}`;
 
-  // Update track list active class
   document.querySelectorAll('.track-item').forEach((item, idx) => {
     if (idx === currentSongIndex) item.classList.add('active');
     else item.classList.remove('active');
@@ -1951,7 +2412,6 @@ function startVizAnimation() {
       }
       vCtx.stroke();
     } else {
-      // Idle oscilloscope line
       vCtx.strokeStyle = '#1e3a29';
       vCtx.lineWidth = 1;
       vCtx.beginPath();
@@ -1982,6 +2442,7 @@ function updateFmParams() {
   document.getElementById('lblModRatio').textContent = `${customModRatio.toFixed(1)}x`;
   document.getElementById('lblModIndex').textContent = customModIndex.toFixed(1);
   document.getElementById('lblModDecay').textContent = `${customModDecay.toFixed(2)}s`;
+  document.getElementById('lblEchoFb').textContent = echoFb.toFixed(2);
 
   if (snesFeedback && audioCtx) {
     snesFeedback.gain.setValueAtTime(echoFb, audioCtx.currentTime);
@@ -1999,66 +2460,75 @@ function loadFmPreset(preset) {
     document.getElementById('rngModDecay').value = 0.65;
   } else if (preset === 'brass_lead') {
     document.getElementById('rngModRatio').value = 1.0;
-    document.getElementById('rngModIndex').value = 2.5;
+    document.getElementById('rngModIndex').value = 3.0;
     document.getElementById('rngModDecay').value = 0.4;
-  } else if (preset === 'laser_zap') {
-    document.getElementById('rngModRatio').value = 5.0;
+  } else if (preset === 'piano_ep') {
+    document.getElementById('rngModRatio').value = 4.0;
+    document.getElementById('rngModIndex').value = 1.5;
+    document.getElementById('rngModDecay').value = 0.35;
+  } else if (preset === 'overdrive') {
+    document.getElementById('rngModRatio').value = 1.5;
     document.getElementById('rngModIndex').value = 8.0;
-    document.getElementById('rngModDecay').value = 0.08;
-  } else if (preset === 'sub_bass') {
-    document.getElementById('rngModRatio').value = 0.5;
-    document.getElementById('rngModIndex').value = 0.2;
     document.getElementById('rngModDecay').value = 0.5;
+  } else if (preset === 'acid_sub') {
+    document.getElementById('rngModRatio').value = 0.5;
+    document.getElementById('rngModIndex').value = 5.0;
+    document.getElementById('rngModDecay').value = 0.22;
   }
   updateFmParams();
-  playFmNote(48); // preview note C3
 }
 
-function playFmNote(midiNote) {
-  initAudio();
-  playYm2612Fm(mtof(midiNote), customModRatio, customModIndex, customModDecay, audioCtx.currentTime, 0.28, true);
-}
+const PIANO_NOTES = [
+  { name: "C3", n: 48 }, { name: "D3", n: 50 }, { name: "E3", n: 52 },
+  { name: "F3", n: 53 }, { name: "G3", n: 55 }, { name: "A3", n: 57 }, { name: "B3", n: 59 },
+  { name: "C4", n: 60 }, { name: "D4", n: 62 }, { name: "E4", n: 64 },
+  { name: "F4", n: 65 }, { name: "G4", n: 67 }, { name: "A4", n: 69 }, { name: "B4", n: 71 },
+  { name: "C5", n: 72 }
+];
 
 function renderFmKeyboard() {
-  const kb = document.getElementById('fmKeyboard');
-  if (!kb) return;
-  const notes = [
-    { n: 48, name: "C3" }, { n: 50, name: "D3" }, { n: 52, name: "E3" }, { n: 53, name: "F3" },
-    { n: 55, name: "G3" }, { n: 57, name: "A3" }, { n: 59, name: "B3" }, { n: 60, name: "C4" },
-    { n: 62, name: "D4" }, { n: 64, name: "E4" }, { n: 65, name: "F4" }, { n: 67, name: "G4" },
-    { n: 69, name: "A4" }, { n: 71, name: "B4" }, { n: 72, name: "C5" }
-  ];
-  kb.innerHTML = notes.map(item => `
+  const container = document.getElementById('fmKeyboard');
+  if (!container) return;
+  container.innerHTML = PIANO_NOTES.map(item => `
     <div class="fm-key" onclick="playFmNote(${item.n})">${item.name}</div>
   `).join('');
 }
 
+function playFmNote(midiNum) {
+  initAudio();
+  const freq = mtof(midiNum);
+  playYm2612Fm(freq, customModRatio, customModIndex, customModDecay, audioCtx.currentTime, 0.3, true);
+}
+
 // ==========================================
-// 5. 3D VECTOR GEOMETRIES (CRACKTRO & WORKBENCH)
+// 5. 3D GEOMETRY DATA STRUCTURES
 // ==========================================
 const GEOMETRIES = {
   cube: {
     vertices: [
       [-50, -50, -50], [50, -50, -50], [50, 50, -50], [-50, 50, -50],
-      [-50, -50, 50],  [50, -50, 50],  [50, 50, 50],  [-50, 50, 50]
+      [-50, -50, 50], [50, -50, 50], [50, 50, 50], [-50, 50, 50]
     ],
     edges: [
-      [0,1],[1,2],[2,3],[3,0], [4,5],[5,6],[6,7],[7,4], [0,4],[1,5],[2,6],[3,7]
+      [0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],
+      [0,4],[1,5],[2,6],[3,7]
     ]
   },
   octahedron: {
     vertices: [
-      [0, -70, 0], [0, 70, 0], [-60, 0, -60], [60, 0, -60], [60, 0, 60], [-60, 0, 60]
+      [0, -75, 0], [0, 75, 0], [-60, 0, -60],
+      [60, 0, -60], [60, 0, 60], [-60, 0, 60]
     ],
     edges: [
-      [0,2],[0,3],[0,4],[0,5], [1,2],[1,3],[1,4],[1,5], [2,3],[3,4],[4,5],[5,2]
+      [0,2],[0,3],[0,4],[0,5],[1,2],[1,3],[1,4],[1,5],
+      [2,3],[3,4],[4,5],[5,2]
     ]
   },
   star: {
     vertices: [
-      [0, -80, 0], [0, 80, 0], [-70, 0, 0], [70, 0, 0], [0, 0, -70], [0, 0, 70],
-      [-30, -30, -30], [30, -30, -30], [30, 30, -30], [-30, 30, -30],
-      [-30, -30, 30],  [30, -30, 30],  [30, 30, 30],  [-30, 30, 30]
+      [0,-85,0],[0,85,0],[-85,0,0],[85,0,0],[0,0,-85],[0,0,85],
+      [-35,-35,-35],[35,-35,-35],[35,35,-35],[-35,35,-35],
+      [-35,-35,35],[35,-35,35],[35,35,35],[-35,35,35]
     ],
     edges: [
       [0,6],[0,7],[0,8],[0,9],[1,10],[1,11],[1,12],[1,13],
@@ -2066,137 +2536,143 @@ const GEOMETRIES = {
       [4,6],[4,7],[4,10],[4,11],[5,8],[5,9],[5,12],[5,13]
     ]
   },
-  torus: (function() {
-    const v = [];
-    const R = 55, r = 22;
-    for (let i = 0; i < 8; i++) {
-      const u = (i / 8) * Math.PI * 2;
-      for (let j = 0; j < 8; j++) {
-        const w = (j / 8) * Math.PI * 2;
-        v.push([
-          (R + r * Math.cos(w)) * Math.cos(u),
-          (R + r * Math.cos(w)) * Math.sin(u),
-          r * Math.sin(w)
-        ]);
+  torus: {
+    vertices: (function() {
+      const v = [];
+      const R = 55, r = 24;
+      for (let i = 0; i < 8; i++) {
+        const u = (i / 8) * Math.PI * 2;
+        for (let j = 0; j < 4; j++) {
+          const w = (j / 4) * Math.PI * 2;
+          const x = (R + r * Math.cos(w)) * Math.cos(u);
+          const y = (R + r * Math.cos(w)) * Math.sin(u);
+          const z = r * Math.sin(w);
+          v.push([x, y, z]);
+        }
       }
-    }
-    const e = [];
-    for (let i = 0; i < 8; i++) {
-      for (let j = 0; j < 8; j++) {
-        const cur = i * 8 + j;
-        const nextRing = ((i + 1) % 8) * 8 + j;
-        const nextPoint = i * 8 + ((j + 1) % 8);
-        e.push([cur, nextRing]);
-        e.push([cur, nextPoint]);
+      return v;
+    })(),
+    edges: (function() {
+      const e = [];
+      for (let i = 0; i < 8; i++) {
+        for (let j = 0; j < 4; j++) {
+          const curr = i * 4 + j;
+          const nextJ = i * 4 + ((j + 1) % 4);
+          const nextI = ((i + 1) % 8) * 4 + j;
+          e.push([curr, nextJ]);
+          e.push([curr, nextI]);
+        }
       }
-    }
-    return { vertices: v, edges: e };
-  })(),
-  icosahedron: (function() {
-    const t = (1 + Math.sqrt(5)) / 2 * 36;
-    const s = 36;
-    const v = [
-      [-s, t, 0], [s, t, 0], [-s, -t, 0], [s, -t, 0],
-      [0, -s, t], [0, s, t], [0, -s, -t], [0, s, -t],
-      [t, 0, -s], [t, 0, s], [-t, 0, -s], [-t, 0, s]
-    ];
-    const e = [
-      [0,11],[0,5],[0,1],[0,7],[0,10],
-      [1,5],[5,11],[11,10],[10,7],[7,1],
-      [3,9],[3,4],[3,2],[3,6],[3,8],
-      [4,9],[9,8],[8,6],[6,2],[2,4],
-      [4,5],[5,9],[9,1],[1,8],[8,7],[7,6],[6,10],[10,2],[2,11],[11,4]
-    ];
-    return { vertices: v, edges: e };
-  })(),
-  helix: (function() {
-    const v = [];
-    const e = [];
-    const count = 16;
-    for (let i = 0; i < count; i++) {
-      const a = (i / count) * Math.PI * 4;
-      const y = (i - count / 2) * 8;
-      v.push([Math.cos(a) * 45, y, Math.sin(a) * 45]);
-      v.push([Math.cos(a + Math.PI) * 45, y, Math.sin(a + Math.PI) * 45]);
-      const cur = i * 2;
-      e.push([cur, cur + 1]); // rung
-      if (i > 0) {
-        e.push([cur - 2, cur]); // backbone 1
-        e.push([cur - 1, cur + 1]); // backbone 2
+      return e;
+    })()
+  },
+  icosahedron: {
+    vertices: (function() {
+      const t = (1.0 + Math.sqrt(5.0)) / 2.0;
+      const s = 45;
+      return [
+        [-s, t*s, 0], [s, t*s, 0], [-s, -t*s, 0], [s, -t*s, 0],
+        [0, -s, t*s], [0, s, t*s], [0, -s, -t*s], [0, s, -t*s],
+        [t*s, 0, -s], [t*s, 0, s], [-t*s, 0, -s], [-t*s, 0, s]
+      ];
+    })(),
+    edges: [
+      [0,11],[0,5],[0,1],[0,7],[0,10],[1,5],[1,9],[1,8],[1,7],
+      [2,11],[2,10],[2,6],[2,3],[2,4],[3,9],[3,8],[3,6],[3,4],
+      [4,5],[4,9],[4,11],[5,9],[6,7],[6,8],[6,10],[7,8],[7,10],
+      [8,9],[10,11]
+    ]
+  },
+  helix: {
+    vertices: (function() {
+      const v = [];
+      for (let i = 0; i < 16; i++) {
+        const a = (i / 16) * Math.PI * 4;
+        const y = -70 + i * 9.5;
+        v.push([Math.cos(a) * 45, y, Math.sin(a) * 45]);
+        v.push([Math.cos(a + Math.PI) * 45, y, Math.sin(a + Math.PI) * 45]);
       }
-    }
-    return { vertices: v, edges: e };
-  })(),
-  wavegrid: (function() {
-    const v = [];
-    const e = [];
-    const size = 6;
-    for (let x = 0; x < size; x++) {
-      for (let z = 0; z < size; z++) {
-        const px = (x - size / 2) * 22;
-        const pz = (z - size / 2) * 22;
-        v.push([px, 0, pz]);
+      return v;
+    })(),
+    edges: (function() {
+      const e = [];
+      for (let i = 0; i < 15; i++) {
+        e.push([i * 2, (i + 1) * 2]);
+        e.push([i * 2 + 1, (i + 1) * 2 + 1]);
+        if (i % 2 === 0) e.push([i * 2, i * 2 + 1]);
       }
-    }
-    for (let x = 0; x < size; x++) {
-      for (let z = 0; z < size; z++) {
-        const idx = x * size + z;
-        if (x < size - 1) e.push([idx, (x + 1) * size + z]);
-        if (z < size - 1) e.push([idx, x * size + (z + 1)]);
+      return e;
+    })()
+  },
+  wavegrid: {
+    vertices: (function() {
+      const v = [];
+      for (let x = -3; x <= 3; x++) {
+        for (let z = -3; z <= 3; z++) {
+          v.push([x * 24, 0, z * 24]);
+        }
       }
-    }
-    return { vertices: v, edges: e };
-  })()
+      return v;
+    })(),
+    edges: (function() {
+      const e = [];
+      for (let i = 0; i < 7; i++) {
+        for (let j = 0; j < 7; j++) {
+          const idx = i * 7 + j;
+          if (j < 6) e.push([idx, idx + 1]);
+          if (i < 6) e.push([idx, idx + 7]);
+        }
+      }
+      return e;
+    })()
+  }
 };
 
 // ==========================================
-// 6. CRACKTRO MODAL VISUAL ENGINE
+// 6. MODAL CRACKTRO VISUALIZER & MEMORY FLASHES
 // ==========================================
+let modalAnimId = null;
 let modalCanvas = null;
 let modalCtx = null;
-let modalAnimId = null;
 let activeRelease = null;
-let modalAnimTime = 0;
 let modalScrollerOffset = 0;
+let modalAnimTime = 0;
 
-const STARS_COUNT = 160;
-const stars = [];
-for (let i = 0; i < STARS_COUNT; i++) {
-  stars.push({
-    x: (Math.random() - 0.5) * 600,
-    y: (Math.random() - 0.5) * 400,
-    z: Math.random() * 800 + 10
-  });
-}
+// Starfield particles
+const STARS = Array.from({ length: 90 }, () => ({
+  x: (Math.random() - 0.5) * 800,
+  y: (Math.random() - 0.5) * 600,
+  z: Math.random() * 600 + 1
+}));
 
 function renderModalCracktroFrame() {
-  if (!modalCtx) return;
-  modalAnimTime += 0.02;
+  if (!modalCanvas || !modalCtx) return;
 
   const w = modalCanvas.width;
   const h = modalCanvas.height;
   const cx = w / 2;
-  const cy = h / 2 - 20;
+  const cy = h / 2;
 
-  modalCtx.fillStyle = "#010408";
+  modalAnimTime += 0.035;
+
+  modalCtx.fillStyle = '#000000';
   modalCtx.fillRect(0, 0, w, h);
 
-  // 1. 3D Starfield
-  modalCtx.fillStyle = "#ffffff";
-  for (let i = 0; i < STARS_COUNT; i++) {
-    const s = stars[i];
-    s.z -= 4.5;
-    if (s.z <= 0) {
-      s.z = 800;
-      s.x = (Math.random() - 0.5) * 600;
-      s.y = (Math.random() - 0.5) * 400;
+  // 1. 3D Starfield Warp
+  for (let i = 0; i < STARS.length; i++) {
+    const star = STARS[i];
+    star.z -= 4.2;
+    if (star.z <= 0) {
+      star.x = (Math.random() - 0.5) * 800;
+      star.y = (Math.random() - 0.5) * 600;
+      star.z = 600;
     }
-    const fov = 260;
-    const px = cx + (s.x / s.z) * fov;
-    const py = cy + (s.y / s.z) * fov;
+    const k = 220 / star.z;
+    const px = cx + star.x * k;
+    const py = cy + star.y * k;
     if (px >= 0 && px < w && py >= 0 && py < h) {
-      const size = Math.max(1, (1 - s.z / 800) * 3);
-      const alpha = (1 - s.z / 800);
+      const size = Math.max(1, (1 - star.z / 600) * 2.8);
+      const alpha = Math.min(1, 1 - star.z / 600);
       modalCtx.fillStyle = `rgba(200, 240, 255, ${alpha})`;
       modalCtx.fillRect(px, py, size, size);
     }
@@ -2321,6 +2797,29 @@ function renderModalCracktroFrame() {
   }
   modalCtx.shadowBlur = 0;
 
+  // ==========================================
+  // ARG DIRECTOR DIRECTIVE: FLASH DEEP_CORE OFFSETS
+  // Periodically flash subtle phosphor memory glitch
+  // ==========================================
+  const glitchCycle = modalAnimTime % 6.0;
+  if (glitchCycle > 4.8 && glitchCycle < 5.5) {
+    modalCtx.fillStyle = "rgba(0, 255, 102, 0.08)";
+    modalCtx.fillRect(0, 0, w, h);
+
+    // Glitch Scanlines
+    modalCtx.fillStyle = "rgba(0, 240, 255, 0.35)";
+    modalCtx.fillRect(0, (modalAnimTime * 400) % h, w, 2);
+
+    modalCtx.font = "10px Consolas, monospace";
+    modalCtx.fillStyle = "rgba(0, 255, 102, 0.9)";
+    modalCtx.textAlign = "left";
+
+    modalCtx.fillText("[MEM_RESIDUE_DETECTED]: 0x007F1999 [PAGE_EXECUTE_READWRITE]", 20, cy - 20);
+    modalCtx.fillText("0x007F1990: 45 43 48 4F 2D 31 39 39 39 2D 53 59 53 54 45 4D (ECHO-1999-SYSTEM)", 20, cy);
+    modalCtx.fillText("[CARLSBAD RELAY LOCK]: 10.19.99.127:1999 -> 10.19.99.4 [PORT 1999 ACK]", 20, cy + 20);
+    modalCtx.fillText("TRANSPONDER FREQ: 1999Hz • RING-0 ACCESS SECTOR 01: 7F1999", 20, cy + 40);
+  }
+
   modalAnimId = requestAnimationFrame(renderModalCracktroFrame);
 }
 
@@ -2368,6 +2867,14 @@ function closeCracktro() {
   activeRelease = null;
 }
 
+function loadActiveIntoSandbox() {
+  if (activeRelease) {
+    closeCracktro();
+    switchMainTab('sandbox', document.querySelectorAll('.tab-btn')[1]);
+    loadSandboxTarget(activeRelease.targetExe);
+  }
+}
+
 // ==========================================
 // 7. KEYGEN, PATCHER & CIPHER SEEDS
 // ==========================================
@@ -2387,12 +2894,13 @@ function generateKey() {
   const out = document.getElementById('serialOutput');
   const gatewayLine = document.getElementById('keygenGatewayLine');
 
-  if (name.includes('darknet') || name.includes('echo') || name.includes('0x7f') || name.includes('matrix') || name.includes('subsystem') || name.includes('deep-core')) {
+  if (name.includes('darknet') || name.includes('echo') || name.includes('0x7f') || name.includes('matrix') || name.includes('subsystem') || name.includes('deep-core') || name.includes('1999hz') || name.includes('carlsbad') || name.includes('7f1999')) {
     out.value = 'KDARK-NODE0x7F-1999-ECHO';
     gatewayLine.style.display = 'block';
     gatewayLine.innerHTML = `
-      🚨 <strong>CRYPTIC GATEWAY RESOLVED:</strong> Cipher seed accepted.<br>
-      Subterranean Node 0x7F coordinate detected at <a href="/web/darknet.html" class="darknet-corrupt-link" onclick="stopSong()">kweb://darknet</a> (Enter now).
+      🚨 <strong>CRYPTIC GATEWAY RESOLVED:</strong> Subterranean cipher seed accepted.<br>
+      Node 0x7F relay active: <a href="/web/darknet.html" class="darknet-corrupt-link" onclick="stopSong()">kweb://darknet</a> |
+      Deep Core terminal: <a href="/web/deep_core.html" class="darknet-corrupt-link" onclick="stopSong()">kweb://deep-core</a>
     `;
     return;
   } else {
@@ -2408,7 +2916,7 @@ function generateKey() {
 
 function onKeygenInputChanged() {
   const name = (document.getElementById('regNameInput').value || '').trim().toLowerCase();
-  if (name.includes('darknet') || name.includes('echo') || name.includes('0x7f') || name.includes('matrix')) {
+  if (name.includes('darknet') || name.includes('echo') || name.includes('0x7f') || name.includes('matrix') || name.includes('1999hz')) {
     generateKey();
   }
 }
@@ -2457,20 +2965,28 @@ function applyPatch() {
 }
 
 // ==========================================
-// 8. NFO VIEWER & CLIENT DOWNLOADS
+// 8. NFO VIEWER & INDIVIDUALIZED SCENE DATA
 // ==========================================
+let currentModalNfoReleaseId = null;
+
 function openNfo(releaseId) {
   const rel = RELEASES.find(r => r.id === releaseId);
   if (!rel) return;
+  currentModalNfoReleaseId = releaseId;
 
-  document.getElementById('nfoTitle').textContent = `📜 ${rel.group}.NFO - RELEASE INFORMATION`;
-  const nfoText = buildNfoString(rel.group, rel.title, rel.date, rel.media, rel.targetExe, rel.id);
+  document.getElementById('nfoTitle').textContent = `📜 ${rel.group}.NFO - ${rel.title.toUpperCase()}`;
+  const nfoText = buildDetailedNfo(rel);
   document.getElementById('nfoBody').innerHTML = nfoText;
   document.getElementById('nfoModal').classList.add('active');
 }
 
 function closeNfo() {
   document.getElementById('nfoModal').classList.remove('active');
+  currentModalNfoReleaseId = null;
+}
+
+function downloadCurrentNfo() {
+  if (currentModalNfoReleaseId) downloadReleaseNfo(currentModalNfoReleaseId);
 }
 
 function triggerDarknetGateway() {
@@ -2479,31 +2995,54 @@ function triggerDarknetGateway() {
   window.location.href = '/web/darknet.html';
 }
 
-function buildNfoString(group, title, date, media, targetExe, relId) {
+function buildDetailedNfo(rel) {
+  const group = rel.group;
+  const isPdx = rel.id === 'pdx_hl';
+  const isRzr = rel.id === 'rzr_q3a';
+
+  let customNote = `Welcome to another quality release from ${group}!
+This crack decouples memory constraints and removes all physical disc checks.
+Audio soundtrack synthesized via procedural Yamaha YM2612 2-op FM emulation.`;
+
+  if (isPdx) {
+    customNote = `================ [ SPECIAL COURIER TRANSMISSION ] ================
+During packet routing on European T1 trunks, our Swedish couriers intercepted
+an anomalous subcarrier audio frequency modulated at exactly 1999Hz.
+Carrier packets carry header tags linking to internal corporate relay 10.19.99.4.
+Hex inspection reveals residual memory offsets matching Sector 01 heap
+at offset 0x007F1999 ('7F1999'). Seek the acoustic research array or tune
+the darknet spectrum analyzer at 1999Hz to decode the subterranean carrier.
+==================================================================`;
+  } else if (isRzr) {
+    customNote = `>>> [ SCENE BULLETIN: ECHO TRANSMISSIONS ] <<<
+RAZOR 1999 radio couriers report strange packet bursts echoing on 1999Hz.
+Data contains fragmented strings from Carlsbad salt vaults on subnet 10.19.99.0/24.
+Do not attempt direct ping without entering correct transponder coordinates.
+Relay gateway confirmed at Node 0x7F. Seek out the living machine.`;
+  }
+
   return `
 ╔══════════════════════════════════════════════════════════════════════════════╗
-║                   ${group.padEnd(20, ' ')} 1999 SCENE RELEASES                      ║
+║                   ${group.padEnd(20, ' ')} 1999 SCENE ARCHIVE                     ║
 ║                     "Surpassing the 999 KB Horizon"                          ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
-║ RELEASE NAME : ${title.padEnd(58, ' ')} ║
+║ RELEASE NAME : ${rel.title.padEnd(58, ' ')} ║
 ║ GROUP        : ${group.padEnd(58, ' ')} ║
-║ DATE         : ${date.padEnd(58, ' ')} ║
-║ PROTECTION   : SafeDisc / SecuROM / WON                                      ║
-║ DISK SIZE    : ${media.padEnd(58, ' ')} ║
+║ DATE         : ${rel.date.padEnd(58, ' ')} ║
+║ TARGET EXE   : ${rel.targetExe.padEnd(58, ' ')} ║
+║ DISK MEDIA   : ${rel.media.padEnd(58, ' ')} ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
-║ [ RELEASE NOTES ]                                                            ║
-║ Welcome to another quality release from ${group}!                         
-║ This crack removes all CD checks and uncouples memory constraints.          
-║ Run the attached cracktro for high-speed YM2612 FM / SPC700 chiptunes.       
+║ [ RELEASE NOTES &amp; CRACKING INTEL ]                                           ║
+║ ${customNote.replace(/\n/g, '\n║ ')}
 ╠══════════════════════════════════════════════════════════════════════════════╣
-║ [ INSTALLATION ]                                                             ║
+║ [ INSTALLATION INSTRUCTIONS ]                                                ║
 ║ 1. Unpack archives using KZip or PKUNZIP.                                    ║
-║ 2. Replace the original ${targetExe} with our cracked binary.            ║
-║ 3. Execute and enjoy the ultimate 1999 experience.                           ║
+║ 2. Replace original ${rel.targetExe} with our cracked executable binary.     ║
+║ 3. Execute and enjoy the ultimate 1999 demoscene experience.                 ║
 ╠══════════════════════════════════════════════════════════════════════════════╣
-║ [ FILE VERIFICATION & CRC32 CHECKSUMS ]                                      ║
-║ ${relId}.r00 : 2E4B91A0                                                     ║
-║ ${relId}.nfo : 8C194D02                                                     ║
+║ [ CRC32 CHECKSUMS &amp; ANOMALOUS RELAYS ]                                       ║
+║ ${rel.id}.r00 : 2E4B91A0                                                     ║
+║ ${rel.id}.nfo : 8C194D02                                                     ║
 ║ [CORRUPTED GATEWAY CHECKSUM] : <span class="darknet-corrupt-link" onclick="triggerDarknetGateway()">0x7F_DARKNET_RELAY [RESOLVE CIPHER]</span>
 ║ NOTE: Subterranean courier coordinates are NEVER listed on surface bookmarks. ║
 ║       Seek the inner circle through cracked checksums and keygen anomalies.  ║
@@ -2514,19 +3053,17 @@ function buildNfoString(group, title, date, media, targetExe, relId) {
 `;
 }
 
-// Download Mock DIZ file
 function downloadReleaseDiz(releaseId) {
   const rel = RELEASES.find(r => r.id === releaseId);
   if (!rel) return;
-  const diz = `[ .DIZ - ${rel.title} ]\n[ GROUP: ${rel.group} ]\n[ SUPPLIER: 0xRELEASE SCENE VAULT ]\n[ 100% RETRO VERIFIED CLEAN ]\n`;
+  const diz = `[ .DIZ - ${rel.title} ]\n[ GROUP: ${rel.group} ]\n[ SUPPLIER: 0xRELEASE SCENE VAULT ]\n[ 100% RETRO VERIFIED CLEAN ]\n[ CEILING: < 999 KB ]\n`;
   downloadBlob(diz, `${rel.id}_file_id.diz`, 'text/plain');
 }
 
-// Download Plain NFO file
 function downloadReleaseNfo(releaseId) {
   const rel = RELEASES.find(r => r.id === releaseId);
   if (!rel) return;
-  const rawNfo = buildNfoString(rel.group, rel.title, rel.date, rel.media, rel.targetExe, rel.id).replace(/<[^>]+>/g, '');
+  const rawNfo = buildDetailedNfo(rel).replace(/<[^>]+>/g, '');
   downloadBlob(rawNfo, `${rel.id}.nfo`, 'text/plain');
 }
 
@@ -2543,256 +3080,547 @@ function downloadBlob(content, filename, type) {
 }
 
 // ==========================================
-// 9. CRACKTRO WORKBENCH ENGINE
+// 9. x86 CRACK SANDBOX ENGINE
+// ==========================================
+const SANDBOX_TARGETS = {
+  "SurrealTournament.exe": {
+    name: "SurrealTournament.exe",
+    protection: "SafeDisc v1.0",
+    checkAddr: "00401024",
+    instructions: [
+      { addr: "00401018", bytes: "55", inst: "PUSH EBP", comment: "; Function prologue" },
+      { addr: "00401019", bytes: "89 E5", inst: "MOV EBP, ESP", comment: "; Setup stack frame" },
+      { addr: "0040101B", bytes: "83 EC 18", inst: "SUB ESP, 0x18", comment: "; Local buffer allocation" },
+      { addr: "0040101E", bytes: "E8 40 02 00 00", inst: "CALL CheckSafeDiscCD", comment: "; Hardware CD-ROM query" },
+      { addr: "00401023", bytes: "85 C0", inst: "TEST EAX, EAX", comment: "; EAX = 0 (No CD) / 1 (CD Valid)" },
+      { addr: "00401025", bytes: "74 0D", inst: "JZ loc_cd_fail", comment: "; Jump if disc check fails!", isJump: true, target: "00401034" },
+      { addr: "00401027", bytes: "B8 01 00 00 00", inst: "MOV EAX, 0x01", comment: "; Success return code" },
+      { addr: "0040102C", bytes: "89 EC", inst: "MOV ESP, EBP", comment: "; Epilogue" },
+      { addr: "0040102E", bytes: "5D", inst: "POP EBP", comment: "" },
+      { addr: "0040102F", bytes: "C3", inst: "RET", comment: "; Return to main game loop" },
+      { addr: "00401034", bytes: "B8 00 00 00 00", inst: "MOV EAX, 0x00", comment: "; loc_cd_fail: CD missing!" },
+      { addr: "00401039", bytes: "C3", inst: "RET", comment: "; Exit process" }
+    ],
+    initialHex: [
+      "55 89 E5 83 EC 18 E8 40  02 00 00 85 C0 74 0D B8",
+      "01 00 00 00 89 EC 5D C3  B8 00 00 00 00 C3 90 90",
+      "43 44 2D 52 4F 4D 20 4E  4F 54 20 46 4F 55 4E 44",
+      "53 75 72 72 65 61 6C 54  6F 75 72 6E 61 6D 65 6E"
+    ]
+  },
+  "tremor3.exe": {
+    name: "tremor3.exe",
+    protection: "SecuROM v2.0",
+    checkAddr: "00401024",
+    instructions: [
+      { addr: "00401018", bytes: "55", inst: "PUSH EBP", comment: "" },
+      { addr: "00401019", bytes: "89 E5", inst: "MOV EBP, ESP", comment: "" },
+      { addr: "0040101B", bytes: "E8 80 01 00 00", inst: "CALL VerifyCDKeyAuth", comment: "; CDKey Verification" },
+      { addr: "00401020", bytes: "83 F8 01", inst: "CMP EAX, 0x01", comment: "; Check key validity" },
+      { addr: "00401023", bytes: "75 0C", inst: "JNZ loc_key_invalid", comment: "; Jump if key mismatch", isJump: true, target: "00401031" },
+      { addr: "00401025", bytes: "B8 01 00 00 00", inst: "MOV EAX, 0x01", comment: "; Unlock Arena Engine" },
+      { addr: "0040102A", bytes: "5D", inst: "POP EBP", comment: "" },
+      { addr: "0040102B", bytes: "C3", inst: "RET", comment: "" },
+      { addr: "00401031", bytes: "E8 00 00 00 00", inst: "CALL ExitProcess", comment: "; loc_key_invalid" }
+    ],
+    initialHex: [
+      "55 89 E5 E8 80 01 00 00  83 F8 01 75 0C B8 01 00",
+      "00 00 5D C3 E8 00 00 00  00 90 90 90 90 90 90 90",
+      "54 72 65 6D 6F 72 20 49  49 49 20 41 72 65 6E 61",
+      "49 4E 56 41 4C 49 44 20  43 44 2D 4B 45 59 21 00"
+    ]
+  },
+  "halfcycle.exe": {
+    name: "halfcycle.exe",
+    protection: "WON Auth + SafeDisc",
+    checkAddr: "00401024",
+    instructions: [
+      { addr: "00401018", bytes: "55", inst: "PUSH EBP", comment: "" },
+      { addr: "00401019", bytes: "89 E5", inst: "MOV EBP, ESP", comment: "" },
+      { addr: "0040101B", bytes: "E8 12 04 00 00", inst: "CALL WonAuthenticate", comment: "; Server auth check" },
+      { addr: "00401020", bytes: "85 C0", inst: "TEST EAX, EAX", comment: "" },
+      { addr: "00401022", bytes: "74 0E", inst: "JZ loc_won_reject", comment: "; Deny entry without auth", isJump: true, target: "00401032" },
+      { addr: "00401024", bytes: "B8 01 00 00 00", inst: "MOV EAX, 0x01", comment: "; Authenticated!" },
+      { addr: "00401029", bytes: "5D", inst: "POP EBP", comment: "" },
+      { addr: "0040102A", bytes: "C3", inst: "RET", comment: "" },
+      { addr: "00401032", bytes: "B8 00 00 00 00", inst: "MOV EAX, 0x00", comment: "; loc_won_reject" },
+      { addr: "00401037", bytes: "C3", inst: "RET", comment: "" }
+    ],
+    initialHex: [
+      "55 89 E5 E8 12 04 00 00  85 C0 74 0E B8 01 00 00",
+      "00 5D C3 B8 00 00 00 00  C3 90 90 90 90 90 90 90",
+      "48 41 4C 46 2D 43 59 43  4C 45 20 57 4F 4E 20 42",
+      "59 50 41 53 53 20 50 44  58 20 31 39 39 39 00 00"
+    ]
+  },
+  "MachinaEx.exe": {
+    name: "MachinaEx.exe",
+    protection: "Ring-0 Hardware Dongle",
+    checkAddr: "00401024",
+    instructions: [
+      { addr: "00401018", bytes: "55", inst: "PUSH EBP", comment: "" },
+      { addr: "00401019", bytes: "89 E5", inst: "MOV EBP, ESP", comment: "" },
+      { addr: "0040101B", bytes: "E8 70 03 00 00", inst: "CALL ReadAugmentDongle", comment: "; Hardware query" },
+      { addr: "00401020", bytes: "85 C0", inst: "TEST EAX, EAX", comment: "" },
+      { addr: "00401022", bytes: "74 0B", inst: "JZ loc_no_dongle", comment: "; Jump if dongle missing", isJump: true, target: "0040102F" },
+      { addr: "00401024", bytes: "B8 01 00 00 00", inst: "MOV EAX, 0x01", comment: "; Augmentation active" },
+      { addr: "00401029", bytes: "5D", inst: "POP EBP", comment: "" },
+      { addr: "0040102A", bytes: "C3", inst: "RET", comment: "" },
+      { addr: "0040102F", bytes: "C3", inst: "RET", comment: "; loc_no_dongle" }
+    ],
+    initialHex: [
+      "55 89 E5 E8 70 03 00 00  85 C0 74 0B B8 01 00 00",
+      "00 5D C3 C3 90 90 90 90  90 90 90 90 90 90 90 90",
+      "4D 61 63 68 69 6E 61 20  45 78 20 44 65 75 73 20",
+      "53 4B 49 44 20 56 45 43  54 4F 52 20 32 30 30 30"
+    ]
+  },
+  "glitch2.exe": {
+    name: "glitch2.exe",
+    protection: "LaserLock Sector Check",
+    checkAddr: "00401024",
+    instructions: [
+      { addr: "00401018", bytes: "55", inst: "PUSH EBP", comment: "" },
+      { addr: "00401019", bytes: "89 E5", inst: "MOV EBP, ESP", comment: "" },
+      { addr: "0040101B", bytes: "E8 44 02 00 00", inst: "CALL LaserLockCheck", comment: "; Bad sector laser check" },
+      { addr: "00401020", bytes: "85 C0", inst: "TEST EAX, EAX", comment: "" },
+      { addr: "00401022", bytes: "74 08", inst: "JZ loc_lock_fail", comment: "; Jump if corrupted disc", isJump: true, target: "0040102C" },
+      { addr: "00401024", bytes: "B8 01 00 00 00", inst: "MOV EAX, 0x01", comment: "" },
+      { addr: "00401029", bytes: "5D", inst: "POP EBP", comment: "" },
+      { addr: "0040102A", bytes: "C3", inst: "RET", comment: "" },
+      { addr: "0040102C", bytes: "C3", inst: "RET", comment: "; loc_lock_fail" }
+    ],
+    initialHex: [
+      "55 89 E5 E8 44 02 00 00  85 C0 74 08 B8 01 00 00",
+      "00 5D C3 C3 90 90 90 90  90 90 90 90 90 90 90 90",
+      "53 79 73 74 65 6D 20 47  6C 69 74 63 68 20 32 00",
+      "43 59 42 52 49 44 20 31  39 39 39 20 46 4C 45 45"
+    ]
+  },
+  "voidcraft.exe": {
+    name: "voidcraft.exe",
+    protection: "BattleNet Brood Auth",
+    checkAddr: "00401024",
+    instructions: [
+      { addr: "00401018", bytes: "55", inst: "PUSH EBP", comment: "" },
+      { addr: "00401019", bytes: "89 E5", inst: "MOV EBP, ESP", comment: "" },
+      { addr: "0040101B", bytes: "E8 90 01 00 00", inst: "CALL NetCheckHash", comment: "; Brood Strife net check" },
+      { addr: "00401020", bytes: "85 C0", inst: "TEST EAX, EAX", comment: "" },
+      { addr: "00401022", bytes: "74 09", inst: "JZ loc_auth_fail", comment: "; Jump if unregistered", isJump: true, target: "0040102D" },
+      { addr: "00401024", bytes: "B8 01 00 00 00", inst: "MOV EAX, 0x01", comment: "" },
+      { addr: "00401029", bytes: "5D", inst: "POP EBP", comment: "" },
+      { addr: "0040102A", bytes: "C3", inst: "RET", comment: "" },
+      { addr: "0040102D", bytes: "C3", inst: "RET", comment: "; loc_auth_fail" }
+    ],
+    initialHex: [
+      "55 89 E5 E8 90 01 00 00  85 C0 74 09 B8 01 00 00",
+      "00 5D C3 C3 90 90 90 90  90 90 90 90 90 90 90 90",
+      "56 6F 69 64 43 72 61 66  74 20 42 72 6F 6F 64 20",
+      "4B 4C 41 53 53 20 4E 45  54 20 4C 4F 41 44 45 52"
+    ]
+  }
+};
+
+let sandboxActiveTarget = "SurrealTournament.exe";
+let sandboxInstructions = [];
+let sandboxHex = [];
+let sandboxCurrentLineIdx = 0;
+let sandboxIsCracked = false;
+
+function loadSandboxFromRelease(relId) {
+  const rel = RELEASES.find(r => r.id === relId);
+  if (!rel) return;
+  switchMainTab('sandbox', document.querySelectorAll('.tab-btn')[1]);
+  loadSandboxTarget(rel.targetExe);
+}
+
+function loadSandboxTarget(exeName) {
+  sandboxActiveTarget = exeName;
+  const sel = document.getElementById('sandboxTargetSelect');
+  if (sel) sel.value = exeName;
+
+  const target = SANDBOX_TARGETS[exeName] || SANDBOX_TARGETS["SurrealTournament.exe"];
+  // Deep clone instructions
+  sandboxInstructions = JSON.parse(JSON.stringify(target.instructions));
+  sandboxHex = [...target.initialHex];
+  sandboxCurrentLineIdx = 0;
+  sandboxIsCracked = false;
+
+  renderSandboxUI();
+}
+
+function renderSandboxUI() {
+  const body = document.getElementById('sandboxAsmBody');
+  const hexBody = document.getElementById('sandboxHexBody');
+  const eipLabel = document.getElementById('sandboxEipLabel');
+  const statusBadge = document.getElementById('sandboxStatusBadge');
+  const crackText = document.getElementById('sandboxCrackResultText');
+
+  if (body) {
+    body.innerHTML = sandboxInstructions.map((inst, idx) => {
+      const isCurrent = idx === sandboxCurrentLineIdx;
+      const isPatched = inst.isPatched;
+      let cls = "asm-line";
+      if (isCurrent) cls += " current-eip";
+      if (isPatched) cls += " patched-line";
+
+      return `
+        <div class="${cls}" onclick="sandboxSetEip(${idx})">
+          <span class="asm-addr">${inst.addr}</span>
+          <span class="asm-bytes">${inst.bytes.padEnd(12, ' ')}</span>
+          <span class="asm-inst">${inst.inst}</span>
+          <span class="asm-comment">${inst.comment || ''}</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  if (hexBody) {
+    hexBody.innerHTML = sandboxHex.map((line, lIdx) => {
+      const offset = (0x00401000 + lIdx * 16).toString(16).toUpperCase().padStart(8, '0');
+      // Format with ASCII
+      const ascii = getAsciiFromHex(line);
+      return `${offset}  ${line}  |${ascii}|`;
+    }).join('\n');
+  }
+
+  const currInst = sandboxInstructions[sandboxCurrentLineIdx];
+  if (eipLabel && currInst) {
+    eipLabel.textContent = `EIP: ${currInst.addr}`;
+  }
+
+  if (statusBadge) {
+    if (sandboxIsCracked) {
+      statusBadge.style.background = "rgba(16, 185, 129, 0.2)";
+      statusBadge.style.color = "#34d399";
+      statusBadge.style.borderColor = "#10b981";
+      statusBadge.textContent = "[CRACKED: PROTECTION BYPASSED]";
+    } else {
+      statusBadge.style.background = "rgba(239, 68, 68, 0.15)";
+      statusBadge.style.color = "#ef4444";
+      statusBadge.style.borderColor = "#dc2626";
+      statusBadge.textContent = "[PROTECTED: CD-CHECK ACTIVE]";
+    }
+  }
+
+  if (crackText) {
+    if (sandboxIsCracked) {
+      crackText.style.color = "#34d399";
+      crackText.textContent = "CRACKED & READY TO EXPORT";
+    } else {
+      crackText.style.color = "#ef4444";
+      crackText.textContent = "UNCRACKED";
+    }
+  }
+
+  updateRegistersView();
+}
+
+function getAsciiFromHex(hexLine) {
+  const parts = hexLine.replace(/\s+/g, ' ').trim().split(' ');
+  return parts.map(h => {
+    const val = parseInt(h, 16);
+    return (val >= 32 && val <= 126) ? String.fromCharCode(val) : '.';
+  }).join('');
+}
+
+function updateRegistersView() {
+  const currInst = sandboxInstructions[sandboxCurrentLineIdx];
+  const eaxEl = document.getElementById('reg_eax');
+  const zfEl = document.getElementById('flag_zf');
+
+  if (currInst) {
+    if (currInst.inst.includes('TEST EAX, EAX') || currInst.inst.includes('CMP')) {
+      if (zfEl) zfEl.textContent = "1";
+    }
+    if (currInst.inst.includes('MOV EAX, 0x01') || currInst.inst.includes('MOV EAX, 1')) {
+      if (eaxEl) {
+        eaxEl.textContent = "00000001";
+        eaxEl.classList.add('modified');
+      }
+      if (zfEl) zfEl.textContent = "0";
+    }
+  }
+}
+
+function sandboxSetEip(idx) {
+  sandboxCurrentLineIdx = idx;
+  initAudio();
+  playYm2612Fm(440, 1.0, 1.0, 0.03, audioCtx.currentTime, 0.1);
+  renderSandboxUI();
+}
+
+function sandboxStepInstruction() {
+  initAudio();
+  playYm2612Fm(600 + sandboxCurrentLineIdx * 20, 1.0, 1.0, 0.04, audioCtx.currentTime, 0.12);
+
+  const curr = sandboxInstructions[sandboxCurrentLineIdx];
+  if (curr && curr.isJump && !sandboxIsCracked) {
+    // Jump taken to fail routine!
+    const targetIdx = sandboxInstructions.findIndex(i => i.addr === curr.target);
+    if (targetIdx !== -1) {
+      sandboxCurrentLineIdx = targetIdx;
+      renderSandboxUI();
+      return;
+    }
+  }
+
+  sandboxCurrentLineIdx = (sandboxCurrentLineIdx + 1) % sandboxInstructions.length;
+  renderSandboxUI();
+}
+
+function sandboxApplyNopPatch() {
+  initAudio();
+  playYm2612Fm(880, 2.0, 2.0, 0.08, audioCtx.currentTime, 0.2);
+  setTimeout(() => playYm2612Fm(1760, 2.0, 1.5, 0.1, audioCtx.currentTime, 0.2), 70);
+
+  // Find jump instruction
+  const jumpIdx = sandboxInstructions.findIndex(i => i.isJump);
+  if (jumpIdx !== -1) {
+    sandboxInstructions[jumpIdx].bytes = "90 90";
+    sandboxInstructions[jumpIdx].inst = "NOP (No Operation) [PATCHED]";
+    sandboxInstructions[jumpIdx].comment = "; CD-Check jump obliterated!";
+    sandboxInstructions[jumpIdx].isPatched = true;
+    sandboxInstructions[jumpIdx].isJump = false;
+    sandboxIsCracked = true;
+
+    // Patch hex
+    sandboxHex[0] = sandboxHex[0].replace(/74\s+[0-9A-F]{2}/, "90 90").replace(/75\s+[0-9A-F]{2}/, "90 90");
+    document.getElementById('sandboxCrcLabel').textContent = "CRC32: 9090C00L";
+    renderSandboxUI();
+  }
+}
+
+function sandboxInvertJump() {
+  initAudio();
+  playYm2612Fm(784, 2.0, 1.5, 0.08, audioCtx.currentTime, 0.18);
+
+  const jumpIdx = sandboxInstructions.findIndex(i => i.isJump);
+  if (jumpIdx !== -1) {
+    const isJz = sandboxInstructions[jumpIdx].inst.startsWith('JZ');
+    if (isJz) {
+      sandboxInstructions[jumpIdx].bytes = sandboxInstructions[jumpIdx].bytes.replace(/^74/, "75");
+      sandboxInstructions[jumpIdx].inst = sandboxInstructions[jumpIdx].inst.replace(/^JZ/, "JNZ");
+      sandboxInstructions[jumpIdx].comment = "; Jump inverted (Pass on Zero!)";
+    } else {
+      sandboxInstructions[jumpIdx].bytes = sandboxInstructions[jumpIdx].bytes.replace(/^75/, "74");
+      sandboxInstructions[jumpIdx].inst = sandboxInstructions[jumpIdx].inst.replace(/^JNZ/, "JZ");
+      sandboxInstructions[jumpIdx].comment = "; Jump inverted";
+    }
+    sandboxInstructions[jumpIdx].isPatched = true;
+    sandboxIsCracked = true;
+    renderSandboxUI();
+  }
+}
+
+function sandboxForceLicense() {
+  initAudio();
+  playYm2612Fm(1046, 2.0, 2.5, 0.15, audioCtx.currentTime, 0.2);
+
+  // Replace check call with MOV EAX, 1
+  const callIdx = sandboxInstructions.findIndex(i => i.inst.startsWith('CALL Check') || i.inst.startsWith('CALL Verify') || i.inst.startsWith('CALL Won'));
+  if (callIdx !== -1) {
+    sandboxInstructions[callIdx].bytes = "B8 01 00 00 00";
+    sandboxInstructions[callIdx].inst = "MOV EAX, 0x01 [INJECTED]";
+    sandboxInstructions[callIdx].comment = "; Force success return register";
+    sandboxInstructions[callIdx].isPatched = true;
+    sandboxIsCracked = true;
+    renderSandboxUI();
+  }
+}
+
+function sandboxReset() {
+  loadSandboxTarget(sandboxActiveTarget);
+}
+
+function exportPatchedBinary() {
+  initAudio();
+  playYm2612Fm(523, 2.0, 2.0, 0.1, audioCtx.currentTime, 0.2);
+  setTimeout(() => playYm2612Fm(659, 2.0, 2.0, 0.1, audioCtx.currentTime, 0.2), 80);
+  setTimeout(() => playYm2612Fm(784, 2.0, 2.0, 0.2, audioCtx.currentTime, 0.25), 160);
+
+  // Synthesize a valid 1536-byte MS-DOS MZ / Win32 PE stub
+  const buffer = new Uint8Array(1536);
+  // MZ Signature
+  buffer[0] = 0x4D; buffer[1] = 0x5A; // MZ
+  buffer[2] = 0x90; buffer[3] = 0x00; // e_cblp
+  buffer[4] = 0x03; buffer[5] = 0x00; // e_cp
+  buffer[0x3C] = 0x80; // PE offset
+
+  // DOS Stub message: "This program was cracked by 0xRELEASE (1999)!"
+  const msg = `This program was cracked by 0xRELEASE Scene Vault (1999)!\r\nTarget: ${sandboxActiveTarget}\r\nStatus: 100% Verified Clean < 999 KB\r\n$`;
+  for (let i = 0; i < msg.length; i++) buffer[0x40 + i] = msg.charCodeAt(i);
+
+  // PE Header Signature
+  buffer[0x80] = 0x50; buffer[0x81] = 0x45; buffer[0x82] = 0x00; buffer[0x83] = 0x00; // PE\0\0
+  buffer[0x84] = 0x4C; buffer[0x85] = 0x01; // Machine: i386
+
+  // Injected cracked opcodes
+  buffer[0x200] = 0x55; // PUSH EBP
+  buffer[0x201] = 0x89; buffer[0x202] = 0xE5; // MOV EBP, ESP
+  buffer[0x203] = 0xB8; buffer[0x204] = 0x01; // MOV EAX, 1
+  buffer[0x205] = 0x00; buffer[0x206] = 0x00; buffer[0x207] = 0x00;
+  buffer[0x208] = 0x90; buffer[0x209] = 0x90; // NOP NOP
+  buffer[0x20A] = 0x5D; // POP EBP
+  buffer[0x20B] = 0xC3; // RET
+
+  downloadBlob(buffer, `${sandboxActiveTarget.replace('.exe', '')}_Cracked.exe`, 'application/octet-stream');
+  alert(`Patched binary generated successfully!\n\nTarget: ${sandboxActiveTarget}\nSize: 1,536 Bytes (< 999 KB)\nStatus: Anti-Piracy Check Bypassed`);
+}
+
+// ==========================================
+// 10. CRACKTRO WORKBENCH ENGINE
 // ==========================================
 let wbCanvas = null;
 let wbCtx = null;
 let wbAnimId = null;
-let wbTime = 0;
-let wbGeometryKey = 'cube';
-let wbColor = '#00ff66';
-let wbSpeed = 1.0;
-let wbBars = 8;
-let wbScrollerText = "*** 0xRELEASE DEMOSCENE WORKBENCH *** KEEP THE 999 KB CEILING UNBROKEN! ***";
+let wbAnimTime = 0;
+let wbCurrentGeo = 'cube';
+let wbCurrentColor = 'cyan';
 let wbScrollerOffset = 0;
-
-function updateWorkbenchGeometry(val) { wbGeometryKey = val; }
-function updateWorkbenchColor(val) { wbColor = val; }
-function updateWorkbenchSpeed(val) { wbSpeed = parseFloat(val); }
-function updateWorkbenchBars(val) { wbBars = parseInt(val, 10); }
-function updateWorkbenchScroller(val) { wbScrollerText = val || "0xRELEASE"; }
-
-function renderWorkbenchFrame() {
-  if (!wbCtx) return;
-  wbTime += 0.02 * wbSpeed;
-
-  const w = wbCanvas.width;
-  const h = wbCanvas.height;
-  const cx = w / 2;
-  const cy = h / 2 - 10;
-
-  wbCtx.fillStyle = '#010306';
-  wbCtx.fillRect(0, 0, w, h);
-
-  // 1. Warp Starfield
-  wbCtx.fillStyle = '#ffffff';
-  for (let i = 0; i < 100; i++) {
-    const s = stars[i % stars.length];
-    const fov = 220;
-    const px = cx + (s.x / s.z) * fov;
-    const py = cy + (s.y / s.z) * fov;
-    if (px >= 0 && px < w && py >= 0 && py < h) {
-      const alpha = (1 - s.z / 800);
-      wbCtx.fillStyle = `rgba(180, 240, 255, ${alpha})`;
-      wbCtx.fillRect(px, py, 1.5, 1.5);
-    }
-  }
-
-  // 2. Copper Raster Bars
-  for (let i = 0; i < wbBars; i++) {
-    const barY = cy + Math.sin(wbTime * 2.2 + i * 0.35) * 55;
-    const grad = wbCtx.createLinearGradient(0, barY - 4, 0, barY + 4);
-    grad.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    grad.addColorStop(0.5, wbColor + '55');
-    grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-    wbCtx.fillStyle = grad;
-    wbCtx.fillRect(0, barY - 4, w, 8);
-  }
-
-  // 3. 3D Polyhedron
-  const geo = GEOMETRIES[wbGeometryKey] || GEOMETRIES.cube;
-  const ax = wbTime * 1.1;
-  const ay = wbTime * 1.5;
-  const az = wbTime * 0.8;
-
-  const cosX = Math.cos(ax), sinX = Math.sin(ax);
-  const cosY = Math.cos(ay), sinY = Math.sin(ay);
-  const cosZ = Math.cos(az), sinZ = Math.sin(az);
-
-  const proj = [];
-  for (let i = 0; i < geo.vertices.length; i++) {
-    let [vx, vy, vz] = geo.vertices[i];
-    if (wbGeometryKey === 'wavegrid') {
-      vy = Math.sin(wbTime * 3.5 + vx * 0.08) * 14;
-    }
-
-    let x1 = vx * cosY + vz * sinY;
-    let y1 = vy;
-    let z1 = -vx * sinY + vz * cosY;
-
-    let x2 = x1;
-    let y2 = y1 * cosX - z1 * sinX;
-    let z2 = y1 * sinX + z1 * cosX;
-
-    let x3 = x2 * cosZ - y2 * sinZ;
-    let y3 = x2 * sinZ + y2 * cosZ;
-    let z3 = z2;
-
-    const fov = 300;
-    const distance = 240;
-    const scale = fov / (z3 + distance);
-    const px = cx + x3 * scale;
-    const py = cy + y3 * scale;
-
-    proj.push({ x: px, y: py });
-  }
-
-  wbCtx.lineWidth = 2;
-  wbCtx.strokeStyle = wbColor;
-  wbCtx.shadowColor = wbColor;
-  wbCtx.shadowBlur = 8;
-
-  wbCtx.beginPath();
-  for (let i = 0; i < geo.edges.length; i++) {
-    const [p1, p2] = geo.edges[i];
-    if (proj[p1] && proj[p2]) {
-      wbCtx.moveTo(proj[p1].x, proj[p1].y);
-      wbCtx.lineTo(proj[p2].x, proj[p2].y);
-    }
-  }
-  wbCtx.stroke();
-  wbCtx.shadowBlur = 0;
-
-  // 4. Custom Bouncing Text Scroller
-  wbScrollerOffset -= 2.5 * wbSpeed;
-  if (wbScrollerOffset < -wbScrollerText.length * 14) {
-    wbScrollerOffset = w;
-  }
-
-  wbCtx.font = "bold 13px 'Courier New', monospace";
-  wbCtx.textAlign = "left";
-  const baseY = h - 22;
-
-  for (let i = 0; i < wbScrollerText.length; i++) {
-    const charX = wbScrollerOffset + i * 14;
-    if (charX >= -20 && charX <= w + 20) {
-      const charY = baseY + Math.sin(wbTime * 4.0 + i * 0.2) * 10;
-      const charHue = (wbTime * 60 + i * 8) % 360;
-      wbCtx.fillStyle = `hsl(${charHue}, 100%, 75%)`;
-      wbCtx.shadowColor = `hsl(${charHue}, 100%, 50%)`;
-      wbCtx.shadowBlur = 5;
-      wbCtx.fillText(wbScrollerText[i], charX, charY);
-    }
-  }
-  wbCtx.shadowBlur = 0;
-
-  wbAnimId = requestAnimationFrame(renderWorkbenchFrame);
-}
 
 function startWorkbenchAnimation() {
   wbCanvas = document.getElementById('workbenchCanvas');
   if (!wbCanvas) return;
   wbCtx = wbCanvas.getContext('2d');
   wbScrollerOffset = wbCanvas.width;
-  if (wbAnimId) cancelAnimationFrame(wbAnimId);
-  wbAnimId = requestAnimationFrame(renderWorkbenchFrame);
-}
 
-function captureWorkbenchScreenshot() {
-  if (!wbCanvas) return;
-  const link = document.createElement('a');
-  link.download = `cracktro_snapshot_${Date.now()}.png`;
-  link.href = wbCanvas.toDataURL();
-  link.click();
-}
+  function renderWb() {
+    const w = wbCanvas.width;
+    const h = wbCanvas.height;
+    const cx = w / 2;
+    const cy = h / 2;
 
-// ==========================================
-// 10. ANSI / NFO GENERATOR STUDIO
-// ==========================================
-function applyNfoPreset(preset) {
-  const t = document.getElementById('nfoInputTitle');
-  const g = document.getElementById('nfoInputGroup');
-  const c = document.getElementById('nfoInputCracker');
-  const p = document.getElementById('nfoInputProt');
+    const speed = parseFloat(document.getElementById('wbSpeed').value) || 1.0;
+    const fovDist = parseFloat(document.getElementById('wbFov').value) || 240;
+    wbAnimTime += 0.03 * speed;
 
-  if (preset === 'game') {
-    t.value = "Surreal Tournament '99 v436 No-CD Patch";
-    g.value = "FLARELIGHT";
-    c.value = "SceneVoyager99";
-    p.value = "SafeDisc / SecuROM / WON";
-  } else if (preset === 'keygen') {
-    t.value = "Tremor III Arena Keymaker & CDKey Gen";
-    g.value = "RAZOR 1999";
-    c.value = "ByteSlayer";
-    p.value = "Algorithmic Hash Verification";
-  } else if (preset === 'trainer') {
-    t.value = "Machina Ex +12 Trainer & CD-Fix";
-    g.value = "SKID VECTOR";
-    c.value = "HexMaster99";
-    p.value = "Memory Injection Guard";
-  } else if (preset === 'music') {
-    t.value = "Demoscene Tracker Anthems Vol. 1";
-    g.value = "PARALAX";
-    c.value = "ChiptuneMaestro";
-    p.value = "Freely Distributable Scene Art";
+    wbCtx.fillStyle = '#010307';
+    wbCtx.fillRect(0, 0, w, h);
+
+    // Grid Floor
+    wbCtx.strokeStyle = '#081a2e';
+    wbCtx.lineWidth = 1;
+    for (let x = -200; x <= 200; x += 40) {
+      wbCtx.beginPath();
+      wbCtx.moveTo(cx + x * 1.5, cy + 50);
+      wbCtx.lineTo(cx + x * 3.5, h);
+      wbCtx.stroke();
+    }
+
+    // 3D Geometry
+    const geo = GEOMETRIES[wbCurrentGeo] || GEOMETRIES.cube;
+    const ax = wbAnimTime * 0.9;
+    const ay = wbAnimTime * 1.2;
+    const az = wbAnimTime * 0.5;
+
+    const cosX = Math.cos(ax), sinX = Math.sin(ax);
+    const cosY = Math.cos(ay), sinY = Math.sin(ay);
+    const cosZ = Math.cos(az), sinZ = Math.sin(az);
+
+    const proj = [];
+    for (let i = 0; i < geo.vertices.length; i++) {
+      let [vx, vy, vz] = geo.vertices[i];
+      if (wbCurrentGeo === 'wavegrid') {
+        vy = Math.sin(wbAnimTime * 3.0 + vx * 0.08) * 14;
+      }
+
+      let x1 = vx * cosY + vz * sinY;
+      let y1 = vy;
+      let z1 = -vx * sinY + vz * cosY;
+
+      let x2 = x1;
+      let y2 = y1 * cosX - z1 * sinX;
+      let z2 = y1 * sinX + z1 * cosX;
+
+      let x3 = x2 * cosZ - y2 * sinZ;
+      let y3 = x2 * sinZ + y2 * cosZ;
+      let z3 = z2;
+
+      const scale = 320 / (z3 + fovDist);
+      const px = cx + x3 * scale;
+      const py = cy - 20 + y3 * scale;
+
+      proj.push({ x: px, y: py, z: z3 });
+    }
+
+    let colorHex = '#00f0ff';
+    if (wbCurrentColor === 'green') colorHex = '#00ff66';
+    else if (wbCurrentColor === 'magenta') colorHex = '#ff0077';
+    else if (wbCurrentColor === 'yellow') colorHex = '#ffdd00';
+    else if (wbCurrentColor === 'purple') colorHex = '#c084fc';
+
+    wbCtx.lineWidth = 1.8;
+    wbCtx.strokeStyle = colorHex;
+    wbCtx.shadowColor = colorHex;
+    wbCtx.shadowBlur = 6;
+
+    wbCtx.beginPath();
+    for (let i = 0; i < geo.edges.length; i++) {
+      const [p1, p2] = geo.edges[i];
+      if (proj[p1] && proj[p2]) {
+        wbCtx.moveTo(proj[p1].x, proj[p1].y);
+        wbCtx.lineTo(proj[p2].x, proj[p2].y);
+      }
+    }
+    wbCtx.stroke();
+    wbCtx.shadowBlur = 0;
+
+    // Scroller in workbench
+    const text = document.getElementById('wbScrollerText').value || "0xRELEASE 1999 DEMOSCENE CRACKTRO";
+    wbScrollerOffset -= 2.0;
+    if (wbScrollerOffset < -text.length * 12) wbScrollerOffset = w;
+
+    wbCtx.font = "bold 12px 'Consolas', monospace";
+    wbCtx.textAlign = "left";
+    const scrollerY = h - 18;
+
+    for (let i = 0; i < text.length; i++) {
+      const charX = wbScrollerOffset + i * 12;
+      if (charX >= -15 && charX <= w + 15) {
+        const charY = scrollerY + Math.sin(wbAnimTime * 3.5 + i * 0.25) * 8;
+        wbCtx.fillStyle = colorHex;
+        wbCtx.fillText(text[i], charX, charY);
+      }
+    }
+
+    wbAnimId = requestAnimationFrame(renderWb);
   }
-  generateCustomNfo();
+
+  if (wbAnimId) cancelAnimationFrame(wbAnimId);
+  wbAnimId = requestAnimationFrame(renderWb);
 }
 
-function generateCustomNfo() {
-  const title = document.getElementById('nfoInputTitle').value || 'Untitled Release';
-  const group = document.getElementById('nfoInputGroup').value || 'ANONYMOUS';
-  const cracker = document.getElementById('nfoInputCracker').value || 'Coder';
-  const prot = document.getElementById('nfoInputProt').value || 'None';
-  const greets = document.getElementById('nfoInputGreets').value || 'All Scene Groups';
-
-  const nfo = `
-╔══════════════════════════════════════════════════════════════════════╗
-║                   ${group.padEnd(20, ' ')} 1999 DISPATCH                   ║
-║                     "Surpassing the 999 KB Horizon"                  ║
-╠══════════════════════════════════════════════════════════════════════╣
-║ RELEASE : ${title.padEnd(58, ' ')} ║
-║ GROUP   : ${group.padEnd(58, ' ')} ║
-║ AUTHOR  : ${cracker.padEnd(58, ' ')} ║
-║ PROT    : ${prot.padEnd(58, ' ')} ║
-║ DATE    : 1999-12-31                                                 ║
-╠══════════════════════════════════════════════════════════════════════╣
-║ [ NOTES & INSTRUCTIONS ]                                             ║
-║ 1. Run the cracktro to enjoy procedural Genesis YM2612 chiptunes.    ║
-║ 2. Apply patch or insert keymaker serial into registration window.   ║
-║ 3. Always remember: keep code lightweight, modular, and bloat-free!  ║
-╠══════════════════════════════════════════════════════════════════════╣
-║ [ GREETINGS ]                                                        ║
-║ ${greets.padEnd(68, ' ')} ║
-╚══════════════════════════════════════════════════════════════════════╝
-`;
-  const preview = document.getElementById('nfoLivePreview');
-  if (preview) preview.textContent = nfo;
+function changeWorkbenchGeometry(geo) {
+  wbCurrentGeo = geo;
 }
 
-function copyNfoClipboard() {
-  const preview = document.getElementById('nfoLivePreview');
-  if (!preview) return;
-  navigator.clipboard.writeText(preview.textContent).then(() => {
-    alert("ANSI NFO copied to clipboard!");
-  });
+function changeWorkbenchColors(col) {
+  wbCurrentColor = col;
 }
 
-function downloadCustomNfo() {
-  const preview = document.getElementById('nfoLivePreview');
-  if (!preview) return;
-  downloadBlob(preview.textContent, "release.nfo", "text/plain");
+function updateWorkbenchScroller(txt) {
+  // Scroller auto-updates from textarea value
 }
 
-function downloadMockAsm() {
-  const asm = `; ========================================================
-; 0xRELEASE DEMOSCENE CRACKTRO KERNEL (1999)
-; Hardware: VGA Mode 13h (320x200 256 Colors), YM2612 / SoundBlaster
-; Strict Footprint: < 512 Bytes Assembly Intros
-; ========================================================
-[BITS 16]
-[ORG 0x100]
+function downloadIntroAsm() {
+  const asm = `; -------------------------------------------------------------
+; 0xRELEASE 1999 64KB DEMOSCENE INTRO TEMPLATE
+; Target: NASM / FASM for DOS Mode 13h (320x200 256 Colors)
+; Strict size budget: < 4096 bytes compiled .COM executable
+; -------------------------------------------------------------
+[org 0x100]
 
 start:
-    mov ax, 0x0013        ; Set VGA Mode 13h (320x200 256 colors)
+    mov ax, 0x0013        ; Set VGA Mode 13h (320x200, 256 colors)
     int 0x10
 
-    mov dx, 0x03C8        ; DAC Address Write Port
+    ; Setup Palette for Copper Bars
+    mov dx, 0x03C8        ; PEL Address Write Mode Register
     xor al, al
     out dx, al
-    inc dx                ; DAC Data Port (0x03C9)
+    inc dx                ; PEL Data Register (0x03C9)
 
-copper_palette:
     mov cx, 64
 .set_blue:
     xor al, al            ; Red = 0
@@ -2824,7 +3652,86 @@ main_loop:
 }
 
 // ==========================================
-// 11. 1999 SCENE CHARTS & VOTING POLLS
+// 11. ANSI / NFO GENERATOR STUDIO
+// ==========================================
+function applyNfoPreset(group) {
+  const titleInput = document.getElementById('nfoGenTitle');
+  if (group === 'FLARELIGHT') titleInput.value = "Surreal Tournament '99 v436 No-CD Patch";
+  else if (group === 'RAZOR 1999') titleInput.value = "Tremor III Arena v1.32 Keymaker";
+  else if (group === 'PARALAX') titleInput.value = "Half-Cycle 1.1.1.0 WON Auth Bypass";
+  else if (group === 'SKID VECTOR') titleInput.value = "Machina Ex +12 Trainer & CD-Fix";
+  else if (group === 'KLASS') titleInput.value = "VoidCraft: Brood Strife Net Loader";
+  else if (group === 'CYBRID') titleInput.value = "System Glitch 2 CD-Check Remover";
+
+  generateCustomNfo();
+}
+
+function insertCp437(char) {
+  const notes = document.getElementById('nfoGenNotes');
+  notes.value += char;
+  generateCustomNfo();
+}
+
+function injectEchoInterceptNote() {
+  const notes = document.getElementById('nfoGenNotes');
+  notes.value += "\n\n[SUBTERRANEAN ECHO INTERCEPT]\nTransponder carrier detected at 1999Hz on intranet subnet 10.19.99.0/24.\nSector 01 heap offset: 0x007F1999. Decode packet stream on Node 0x7F.";
+  generateCustomNfo();
+}
+
+function generateCustomNfo() {
+  const group = document.getElementById('nfoGroupPreset').value;
+  const title = document.getElementById('nfoGenTitle').value;
+  const cracker = document.getElementById('nfoGenCracker').value;
+  const media = document.getElementById('nfoGenMedia').value;
+  const notes = document.getElementById('nfoGenNotes').value;
+
+  const now = new Date();
+  const dateStr = `1999-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+
+  const preview = document.getElementById('nfoLivePreview');
+  if (!preview) return;
+
+  const nfo = `
+╔══════════════════════════════════════════════════════════════════════════╗
+║                     ${group.padEnd(20, ' ')} 1999 SCENE RELEASES                  ║
+║                      "Pure Procedural Excellence"                        ║
+╠══════════════════════════════════════════════════════════════════════════╣
+║ RELEASE : ${title.padEnd(62, ' ')} ║
+║ GROUP   : ${group.padEnd(62, ' ')} ║
+║ CRACKER : ${cracker.padEnd(62, ' ')} ║
+║ DATE    : ${dateStr.padEnd(62, ' ')} ║
+║ SIZE    : ${media.padEnd(62, ' ')} ║
+╠══════════════════════════════════════════════════════════════════════════╣
+║ [ RELEASE NOTES ]                                                        ║
+║ ${notes.replace(/\n/g, '\n║ ')}
+╠══════════════════════════════════════════════════════════════════════════╣
+║ [ INSTALLATION &amp; VERIFICATION ]                                          ║
+║ 1. Extract archives with KZip.                                           ║
+║ 2. Overwrite target binary with cracked executable.                      ║
+║ 3. Enjoy 60 FPS demoscene gaming at zero piracy risk!                    ║
+║                                                                          ║
+║ FILE CHECKSUM CRC32: 9B4F81A2                                            ║
+║ CARRIER FREQUENCY  : 1999Hz [ECHO LOCK DETECTED]                         ║
+╚══════════════════════════════════════════════════════════════════════════╝
+`;
+
+  preview.textContent = nfo;
+}
+
+function downloadCustomNfo() {
+  const preview = document.getElementById('nfoLivePreview');
+  if (preview) downloadBlob(preview.textContent, "scene_release.nfo", "text/plain");
+}
+
+function downloadCustomDiz() {
+  const title = document.getElementById('nfoGenTitle').value;
+  const group = document.getElementById('nfoGroupPreset').value;
+  const diz = `[ .DIZ - ${title} ]\n[ GROUP: ${group} ]\n[ SUPPLIER: 0xRELEASE SCENE ARCHIVE ]\n[ 100% RETRO CLEAN ]\n`;
+  downloadBlob(diz, "file_id.diz", "text/plain");
+}
+
+// ==========================================
+// 12. 1999 SCENE CHARTS & TRIVIA CHALLENGE
 // ==========================================
 const DEFAULT_GROUP_VOTES = {
   FLARELIGHT: 1420,
@@ -2919,8 +3826,172 @@ function voteAudio(eng) {
   renderPolls();
 }
 
+// 10-Question Demoscene Trivia Challenge
+const CHALLENGE_QUESTIONS = [
+  {
+    q: "What was the standard display resolution of classic DOS Mode 13h?",
+    options: ["320x200 in 256 colors", "640x480 in 16 colors", "800x600 in 24-bit TrueColor", "320x240 in Mode X"],
+    correct: 0
+  },
+  {
+    q: "Which PC sound card was legendary among tracker musicians for hardware 32-voice mixing and 512KB RAM?",
+    options: ["Sound Blaster 16", "Gravis UltraSound (GUS)", "AdLib Gold", "Roland MT-32"],
+    correct: 1
+  },
+  {
+    q: "What is the machine byte opcode for an x86 NOP (No Operation)?",
+    options: ["0xCC", "0xEB", "0x90", "0xC3"],
+    correct: 2
+  },
+  {
+    q: "What FM synthesizer chip powered the Sega Genesis 16-bit sound hardware?",
+    options: ["Yamaha YM2612", "MOS 6581 SID", "Yamaha OPL3", "NEC μPD7759"],
+    correct: 0
+  },
+  {
+    q: "What was the strict executable size limit for PC 64KB Intro competitions at Assembly '99?",
+    options: ["65,536 Bytes", "999 Kilobytes", "32,768 Bytes", "1.44 Megabytes"],
+    correct: 0
+  },
+  {
+    q: "In x86 assembly, which instruction jumps if the Zero Flag (ZF) is set?",
+    options: ["JNZ", "JZ / JE", "JMP", "JC"],
+    correct: 1
+  },
+  {
+    q: "What SNES sound chip feature provided its legendary warm, spatial acoustic space?",
+    options: ["8-Tap Stereo Slapback Echo (SPC700 DSP)", "Analog Spring Reverb Tank", "FM Modulation Operators", "Wavetable ROM Banks"],
+    correct: 0
+  },
+  {
+    q: "What classic demoscene effect changes palette color lines synchronized with the CRT electron beam?",
+    options: ["Voxel Terrain", "Copper / Raster Bars", "Plasma Field", "Roto-zoomer"],
+    correct: 1
+  },
+  {
+    q: "What is the single-byte opcode for an x86 RET (Return from Procedure)?",
+    options: ["0xC3", "0x5D", "0xE8", "0x00"],
+    correct: 0
+  },
+  {
+    q: "What is the strict golden size ceiling for all standalone KiloApps applications?",
+    options: ["1.44 Megabytes", "999 Kilobytes", "64 Kilobytes", "512 Kilobytes"],
+    correct: 1
+  }
+];
+
+let challengeIndex = 0;
+let challengeScore = 0;
+let challengeActive = false;
+
+function initChallenge() {
+  if (challengeActive) return;
+  challengeIndex = 0;
+  challengeScore = 0;
+  challengeActive = true;
+  document.getElementById('challengeResultContainer').style.display = 'none';
+  document.getElementById('challengeQuestionContainer').style.display = 'block';
+  renderChallengeQuestion();
+}
+
+function renderChallengeQuestion() {
+  if (challengeIndex >= CHALLENGE_QUESTIONS.length) {
+    finishChallenge();
+    return;
+  }
+
+  const q = CHALLENGE_QUESTIONS[challengeIndex];
+  document.getElementById('challengeScoreBadge').textContent = `QUESTION ${challengeIndex + 1} / ${CHALLENGE_QUESTIONS.length} • SCORE: ${challengeScore}`;
+  document.getElementById('challengeQText').textContent = `${challengeIndex + 1}. ${q.q}`;
+
+  const optContainer = document.getElementById('challengeOptionsContainer');
+  optContainer.innerHTML = q.options.map((opt, oIdx) => `
+    <div class="q-option" onclick="answerChallenge(${oIdx}, this)">${opt}</div>
+  `).join('');
+}
+
+function answerChallenge(selectedIdx, el) {
+  const q = CHALLENGE_QUESTIONS[challengeIndex];
+  initAudio();
+
+  const options = document.querySelectorAll('.q-option');
+  options.forEach(o => o.style.pointerEvents = 'none');
+
+  if (selectedIdx === q.correct) {
+    challengeScore++;
+    el.classList.add('correct');
+    playYm2612Fm(880, 2.0, 1.5, 0.1, audioCtx.currentTime, 0.2);
+    setTimeout(() => playYm2612Fm(1320, 2.0, 1.5, 0.15, audioCtx.currentTime, 0.2), 80);
+  } else {
+    el.classList.add('wrong');
+    options[q.correct].classList.add('correct');
+    playYm2612Fm(220, 3.0, 3.0, 0.25, audioCtx.currentTime, 0.2);
+  }
+
+  setTimeout(() => {
+    challengeIndex++;
+    renderChallengeQuestion();
+  }, 900);
+}
+
+function finishChallenge() {
+  document.getElementById('challengeQuestionContainer').style.display = 'none';
+  const res = document.getElementById('challengeResultContainer');
+  res.style.display = 'block';
+
+  let rank = "Lamer / Leech";
+  if (challengeScore >= 10) rank = "★ Demoscene Legend of 1999 ★";
+  else if (challengeScore >= 8) rank = "Elite x86 Coder";
+  else if (challengeScore >= 6) rank = "Tracker Musician / ANSI Artist";
+  else if (challengeScore >= 4) rank = "Scene Swapper / BBS Courier";
+
+  document.getElementById('challengeFinalRank').textContent = `SCENE RANK: ${rank}`;
+  document.getElementById('challengeFinalDetails').textContent = `You scored ${challengeScore} out of 10 points on the 1999 Demoscene & Cracking Knowledge Challenge.`;
+
+  initAudio();
+  playYm2612Fm(523, 2.0, 2.0, 0.1, audioCtx.currentTime, 0.2);
+  setTimeout(() => playYm2612Fm(659, 2.0, 2.0, 0.1, audioCtx.currentTime, 0.2), 100);
+  setTimeout(() => playYm2612Fm(784, 2.0, 2.0, 0.2, audioCtx.currentTime, 0.2), 200);
+  setTimeout(() => playYm2612Fm(1046, 2.0, 2.0, 0.3, audioCtx.currentTime, 0.25), 300);
+}
+
+function restartChallenge() {
+  challengeActive = false;
+  initChallenge();
+}
+
+function downloadSceneCertificate() {
+  const cert = `
+==================================================================
+        0xRELEASE 1999 DEMOSCENE ARCHIVE & VAULT
+           OFFICIAL SCENE CREDENTIAL CERTIFICATE
+==================================================================
+Score: ${challengeScore} / 10 Points
+Rank : ${document.getElementById('challengeFinalRank').textContent}
+Date : 1999-12-31 23:59:59 (Y2K Verified)
+Node : 1999.0x7F / Subterranean Relay
+
+Certified proficient in:
+- DOS Mode 13h & 256-color palette mechanics
+- Yamaha YM2612 2-Operator FM synthesis & SPC700 stereo delay
+- x86 disassembly, NOP patching & conditional jump inversion
+- Demoscene ethics: STRICT COMPLIANCE WITH < 999 KB CEILING
+==================================================================
+`;
+  downloadBlob(cert, "scene_credential_1999.txt", "text/plain");
+}
+
+function postChallengeBragToShoutbox() {
+  switchMainTab('shoutbox', document.querySelectorAll('.tab-btn')[6]);
+  const msgInput = document.getElementById('shoutMsgInput');
+  if (msgInput) {
+    msgInput.value = `[CHALLENGE] Scored ${challengeScore}/10 on the 1999 Scene Trivia Challenge! Rank: ${document.getElementById('challengeFinalRank').textContent.replace('SCENE RANK: ', '')}`;
+    postShout();
+  }
+}
+
 // ==========================================
-// 12. UNDERGROUND COURIER SHOUTBOX
+// 13. UNDERGROUND COURIER SHOUTBOX & FIREBASE RTDB
 // ==========================================
 const DEFAULT_SHOUTS = [
   { handle: "AcidBurn", time: "1999-12-31 23:45", msg: "[GREETS] Happy Y2K to FLARELIGHT and RAZOR 1999! Keep the 999KB limit sacred!" },
@@ -2930,7 +4001,11 @@ const DEFAULT_SHOUTS = [
   { handle: "DarkAvenger", time: "1999-09-15 08:05", msg: "[GREETS] Shouts to SKID VECTOR and PARALAX! Keep the cracktros spinning in 60 FPS!" }
 ];
 
-function getShouts() {
+let localShouts = [...DEFAULT_SHOUTS];
+let isFirebaseConnected = false;
+let fbDbRef = null;
+
+function getStoredShouts() {
   try {
     const raw = localStorage.getItem('warez_shoutbox');
     return raw ? JSON.parse(raw) : DEFAULT_SHOUTS;
@@ -2939,17 +4014,36 @@ function getShouts() {
   }
 }
 
-function renderShouts() {
+function saveStoredShouts(shouts) {
+  try {
+    localStorage.setItem('warez_shoutbox', JSON.stringify(shouts));
+  } catch (e) {}
+}
+
+function renderShouts(shoutsList) {
   const container = document.getElementById('shoutListContainer');
   if (!container) return;
-  const shouts = getShouts();
-  container.innerHTML = shouts.map(s => `
-    <div class="shout-item">
-      <span class="time">[${s.time}]</span>
-      <span class="handle">&lt;${escapeHtml(s.handle)}&gt;</span>
-      <span style="color:#e2e8f0;">${escapeHtml(s.msg)}</span>
-    </div>
-  `).join('');
+  const list = shoutsList || localShouts;
+
+  container.innerHTML = list.map(s => {
+    let handleClass = "handle";
+    let itemClass = "shout-item";
+    if (s.handle.includes('SysOp') || s.handle.includes('Ghost')) {
+      handleClass += " sysop";
+      itemClass += " special-alert";
+    } else if (s.handle.includes('Courier') || s.handle.includes('Scener')) {
+      handleClass += " courier";
+    }
+
+    return `
+      <div class="${itemClass}">
+        <span class="time">[${s.time}]</span>
+        <span class="${handleClass}">&lt;${escapeHtml(s.handle)}&gt;</span>
+        <span style="color:#e2e8f0;">${escapeHtml(s.msg)}</span>
+      </div>
+    `;
+  }).join('');
+
   container.scrollTop = container.scrollHeight;
 }
 
@@ -2963,18 +4057,50 @@ function postShout() {
   initAudio();
   playYm2612Fm(1046, 2.0, 1.5, 0.06, audioCtx.currentTime, 0.15);
 
-  const shouts = getShouts();
   const now = new Date();
   const timeStr = `1999-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-  shouts.push({ handle, time: timeStr, msg });
-  if (shouts.length > 40) shouts.shift();
+  const newEntry = { handle, time: timeStr, msg };
 
-  try {
-    localStorage.setItem('warez_shoutbox', JSON.stringify(shouts));
-  } catch (e) {}
+  // Dispatch to Firebase if connected
+  if (isFirebaseConnected && window.WarezFirebasePush) {
+    window.WarezFirebasePush(newEntry);
+  } else {
+    localShouts.push(newEntry);
+    if (localShouts.length > 50) localShouts.shift();
+    saveStoredShouts(localShouts);
+    renderShouts(localShouts);
+  }
+
+  // Dead-drop Guestbook trigger check (Director Directive)
+  checkDeadDropTriggers(msg);
 
   mInput.value = '';
-  renderShouts();
+}
+
+function checkDeadDropTriggers(msg) {
+  const lower = msg.toLowerCase();
+  if (lower.includes('1999hz') || lower.includes('echo') || lower.includes('0x7f') || lower.includes('sector 01') || lower.includes('deep-core') || lower.includes('carlsbad')) {
+    setTimeout(() => {
+      const now = new Date();
+      const timeStr = `1999-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+      const alertMsg = {
+        handle: "Ghost_SysOp_0x7F",
+        time: timeStr,
+        msg: "*** [CARLSBAD RELAY 0x7F ACKNOWLEDGED] Transponder lock acquired on 1999Hz carrier. Sector 01 heap residue located at offset 0x007F1999. Seeking Deep Core gateway at 10.19.99.127."
+      };
+
+      if (isFirebaseConnected && window.WarezFirebasePush) {
+        window.WarezFirebasePush(alertMsg);
+      } else {
+        localShouts.push(alertMsg);
+        saveStoredShouts(localShouts);
+        renderShouts(localShouts);
+      }
+
+      initAudio();
+      playYm2612Fm(880, 2.5, 3.0, 0.3, audioCtx.currentTime, 0.25);
+    }, 800);
+  }
 }
 
 function insertShoutTag(tag) {
@@ -2992,19 +4118,81 @@ window.addEventListener('keydown', (e) => {
 });
 
 // Initial boot
+localShouts = getStoredShouts();
 renderReleases();
 renderTrackList();
 renderFmKeyboard();
 generateCustomNfo();
 renderPolls();
-renderShouts();
+renderShouts(localShouts);
+</script>
+
+<!-- ================================================================= -->
+<!-- FIREBASE REALTIME DATABASE SYNC (CROSS-COMPUTER MULTIPLAYER)      -->
+<!-- ================================================================= -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getDatabase, ref, set, push, onValue, onChildAdded, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+    authDomain: "kiloappschat.firebaseapp.com",
+    databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+    projectId: "kiloappschat",
+    storageBucket: "kiloappschat.firebasestorage.app",
+    messagingSenderId: "290208566057",
+    appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+  };
+
+  try {
+    const fbApp = initializeApp(firebaseConfig);
+    const db = getDatabase(fbApp);
+    const shoutboxRef = ref(db, 'warez/shoutbox');
+    const presenceRef = ref(db, 'warez/presence');
+
+    // Register presence
+    const userSessionId = 'scener_' + Math.random().toString(36).substring(2, 9);
+    const userPresenceRef = ref(db, 'warez/presence/' + userSessionId);
+    set(userPresenceRef, { handle: 'Courier_' + userSessionId.substring(7), ts: Date.now() });
+    onDisconnect(userPresenceRef).remove();
+
+    onValue(presenceRef, (snap) => {
+      const val = snap.val();
+      const count = val ? Object.keys(val).length : 1;
+      const el = document.getElementById('shoutboxPresenceCount');
+      if (el) el.textContent = `${count} COURIER${count === 1 ? '' : 'S'} ONLINE`;
+    });
+
+    // Listen for live shouts
+    onValue(shoutboxRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const remoteShouts = Object.values(data);
+        window.localShouts = remoteShouts;
+        renderShouts(remoteShouts);
+      }
+    });
+
+    window.WarezFirebasePush = function(entry) {
+      push(shoutboxRef, { ...entry, createdAt: serverTimestamp() });
+    };
+
+    window.isFirebaseConnected = true;
+    const modeLbl = document.getElementById('shoutboxModeLabel');
+    if (modeLbl) modeLbl.textContent = "CONNECTED: FIREBASE REALTIME DB";
+  } catch (err) {
+    console.warn("Firebase RTDB offline; running in local storage courier mode:", err);
+    window.isFirebaseConnected = false;
+    const modeLbl = document.getElementById('shoutboxModeLabel');
+    if (modeLbl) modeLbl.textContent = "OFFLINE LOCAL COURIER CACHE";
+  }
 </script>
 
 <footer style="margin-top: 40px; padding: 18px 12px; border-top: 1px dashed var(--border); font-size: 11px; color: var(--text-muted); text-align: center; line-height: 1.6; max-width: 900px; margin-left: auto; margin-right: auto;">
   <b>[ARTISTIC SIMULATION NOTICE]</b><br>
   0xRELEASE is a fictional 1999 demoscene art installation and retro computing simulation component of KiloApps.<br>
   All software titles, scene groups, and media entities are original fictional parodies (Surreal Tournament, Tremor III Arena, FLARELIGHT, RAZOR 1999, etc.).<br>
-  <b>Zero Piracy / Zero Malware:</b> No copyrighted binaries, proprietary commercial code, or functional key generators are hosted or distributed. All cracktros and audio are procedurally rendered via client-side HTML5 Canvas and Web Audio API.
+  <b>Zero Piracy / Zero Malware:</b> No copyrighted commercial binaries or proprietary keygens are hosted or distributed. All cracktros, visualizers, x86 disassemblies, and audio are procedurally rendered via client-side HTML5 Canvas, Web Audio API, and x86 machine state simulation.
 </footer>
 
 </body>
