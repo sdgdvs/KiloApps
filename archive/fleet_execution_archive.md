@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T08:40:00Z — kilo-qa: KAbyss (Pass 5: Tutorial & State Integrity, Quicksave/Load, Modals & Win32 I/O)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 449.8 KB web / 246.2 KB native < 999 KB).
+  - Quicksave & Load: Added full state persistence via F5 / F9 across web and native binary (`kabyss_quicksave.dat`).
+  - First-Run Tutorial: Added tutorial flags (`kabyss_tutorialSeen` / `kabyss_tutorial.dat`) preventing interruption on save restore.
+  - Interactive Modals: Wired Game Over and Victory modal dialogues with stat breakdown, retry, and quickload/quicksave hotkeys.
+  - Toast Occlusion: Repositioned toast container to bottom-center with reverse stacking, eliminating HUD and button obstruction.
+  - Diegetic ARG Touchstone: Preserved subtle node reference `[ECHO-1999 // NODE 10.19.99.4 // kweb://echo-subsystem.net]`.
+  - Verification: MSVC clean (`KAbyss.exe` 246.2 KB); Vite clean in 440ms; security lint 100% PASS; icon audit clean.
+
 - **2026-09-30T05:45:00Z — kilo-usability: KWizard (Ergonomics, Responsive Hand Layout, HiDPI & Keyboard Hotkeys)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 108.4 KB web / 33.8 KB native < 999 KB).
   - Window & Arena Layout: Expanded window dimensions to 880x680 in KiloOS; expanded arena max-width to 880px so 7-card hand fits without overflow.

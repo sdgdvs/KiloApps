@@ -783,6 +783,10 @@ static void CalculateHabitability(void) {
     if (w >= 5.0f) {
         wScore = (w / 60.0f) * 100.0f;
         if (wScore > 100.0f) wScore = 100.0f;
+        if (w > 75.0f) {
+            wScore = 100.0f - (w - 75.0f) * 3.0f;
+            if (wScore < 25.0f) wScore = 25.0f;
+        }
     }
 
     float o = sim.oxygen;
@@ -2730,13 +2734,31 @@ static void DrawExoplanetGDI(HDC hdc, CelestialBody* b, int px, int py, int pr, 
             SelectObject(hdc, hOldRing);
             DeleteObject(hRingPen);
 
-            // Ring Hub Nodes
+            // Ring Hub Nodes (Fixed structural anchors aligned with spokes)
             int hubCount = (sim.orbitalRingStage == 3) ? 8 : 4;
             for (int h = 0; h < hubCount; h++) {
-                float hAng = simTime * 0.1f + (float)h * (6.2831853f / (float)hubCount);
+                float hAng = (float)h * (6.2831853f / (float)hubCount);
                 int hx = px + (int)(cosf(hAng) * (float)rW);
                 int hy = py + (int)(sinf(hAng) * (float)rH);
                 FillSolidRect(hdc, hx - 2, hy - 2, 5, 5, (sim.orbitalRingStage == 3) ? RGB(251, 191, 36) : RGB(0, 240, 255));
+            }
+
+            // Stage 3 Zenith Foundry: Solar collector vanes & thermal radiators
+            if (sim.orbitalRingStage == 3) {
+                HPEN hVanePen = CreatePen(PS_SOLID, 1, RGB(251, 191, 36));
+                HPEN hOldV = (HPEN)SelectObject(hdc, hVanePen);
+                for (int v = 0; v < 4; v++) {
+                    float vAng = ((float)v * 1.5707963f) + 0.7853981f;
+                    int vx1 = px + (int)(cosf(vAng) * (float)rW);
+                    int vy1 = py + (int)(sinf(vAng) * (float)rH);
+                    int vx2 = px + (int)(cosf(vAng) * (float)(rW + (int)(10.0f * z)));
+                    int vy2 = py + (int)(sinf(vAng) * (float)(rH + (int)(6.0f * z)));
+                    MoveToEx(hdc, vx1, vy1, NULL);
+                    LineTo(hdc, vx2, vy2);
+                    FillSolidRect(hdc, vx2 - 1, vy2 - 1, 3, 3, RGB(245, 158, 11));
+                }
+                SelectObject(hdc, hOldV);
+                DeleteObject(hVanePen);
             }
         }
 
@@ -2747,6 +2769,15 @@ static void DrawExoplanetGDI(HDC hdc, CelestialBody* b, int px, int py, int pr, 
             HPEN hOldEl = (HPEN)SelectObject(hdc, hElPen);
             MoveToEx(hdc, px, py - pr, NULL);
             LineTo(hdc, px, elTopY);
+
+            // Stage 3 Hyperloop: Reinforced dual stabilizing tether cables
+            if (sim.starElevatorStage == 3) {
+                MoveToEx(hdc, px - (int)(14.0f * z), py - (int)(pr * 0.95f), NULL);
+                LineTo(hdc, px, elTopY);
+                MoveToEx(hdc, px + (int)(14.0f * z), py - (int)(pr * 0.95f), NULL);
+                LineTo(hdc, px, elTopY);
+            }
+
             SelectObject(hdc, hOldEl);
             DeleteObject(hElPen);
 

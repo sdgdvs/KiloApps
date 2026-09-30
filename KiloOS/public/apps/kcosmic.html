@@ -5669,11 +5669,14 @@
             }
             tScore = Math.max(0, Math.min(100, tScore));
 
-            // Water score: optimal at 60% coverage (0 at <5%, 100 at 50-70%)
+            // Water score: optimal at 60% coverage (0 at <5%, 100 at 50-70%, flooded penalty >75%)
             const w = (p.water !== undefined) ? p.water : 0;
             let wScore = 0;
             if (w >= 5) {
                 wScore = Math.min(100, (w / 60) * 100);
+                if (w > 75) {
+                    wScore = Math.max(25, 100 - (w - 75) * 3);
+                }
             }
 
             // Oxygen score: optimal at 20.9% (breathable at >=16%)
@@ -6427,6 +6430,19 @@
             ctx.fill();
 
             ctx.restore();
+
+            // Terraformed Atmospheric Haze (Forms as pressure increases above 0.15 atm)
+            const atmoP = (planet.pressure !== undefined) ? planet.pressure : (planet.id === sim.activePlanetId ? sim.pressure : 0);
+            if (atmoP > 0.15) {
+                const hazeAlpha = Math.min(0.42, (atmoP - 0.15) * 0.35);
+                const hazeGrad = ctx.createRadialGradient(px, py, pr * 0.96, px, py, pr + 8 * z);
+                hazeGrad.addColorStop(0, `rgba(56, 189, 248, ${hazeAlpha})`);
+                hazeGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = hazeGrad;
+                ctx.beginPath();
+                ctx.arc(px, py, pr + 8 * z, 0, Math.PI * 2);
+                ctx.fill();
+            }
         }
 
         // 2. Class-II: Toxic Greenhouse Procedural Shader (Superheated, sulfuric clouds, storm vortex, magma fissures)
@@ -6545,7 +6561,15 @@
             ctx.fillStyle = shadeGrad;
             ctx.beginPath();
             ctx.arc(px, py, pr, 0, Math.PI * 2);
-            ctx.fill();
+            // G. Terraformed Atmospheric Cleansing (Sulfuric fog breaks reveal cooling crust)
+            const curGHG = (planet.greenhouseFactor !== undefined) ? planet.greenhouseFactor : (planet.id === sim.activePlanetId ? sim.greenhouseFactor : 220);
+            if (curGHG < 180) {
+                const clearFactor = Math.min(0.55, (180 - curGHG) * 0.006);
+                ctx.fillStyle = `rgba(14, 165, 233, ${clearFactor * 0.35})`;
+                ctx.beginPath();
+                ctx.arc(px, py, pr * 0.88, 0, Math.PI * 2);
+                ctx.fill();
+            }
 
             ctx.restore();
         }
@@ -6641,9 +6665,22 @@
             shadeGrad.addColorStop(0.6, 'rgba(8, 20, 44, 0.35)');
             shadeGrad.addColorStop(1, 'rgba(3, 8, 22, 0.85)');
             ctx.fillStyle = shadeGrad;
-            ctx.beginPath();
-            ctx.arc(px, py, pr, 0, Math.PI * 2);
-            ctx.fill();
+            // G. Terraformed Meltwater Glacial Lakes (Forms as temperature rises above -15°C)
+            const curT = (planet.temp !== undefined) ? planet.temp : (planet.id === sim.activePlanetId ? sim.temp : -50);
+            if (curT > -15) {
+                const lakeAlpha = Math.min(0.70, (curT + 15) * 0.025);
+                ctx.fillStyle = `rgba(6, 182, 212, ${lakeAlpha})`;
+                const lakes = [
+                    { x: -0.22, y: -0.05, rx: 0.16, ry: 0.08 },
+                    { x: 0.18, y: 0.22, rx: 0.20, ry: 0.10 },
+                    { x: -0.06, y: 0.26, rx: 0.12, ry: 0.06 }
+                ];
+                lakes.forEach(lk => {
+                    ctx.beginPath();
+                    ctx.ellipse(px + lk.x * pr, py + lk.y * pr, lk.rx * pr, lk.ry * pr, 0.2, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
 
             ctx.restore();
         }
@@ -7054,17 +7091,15 @@
             ctx.moveTo(sz * 1.8, -sz * 0.5); ctx.lineTo(sz * 1.8, sz * 0.5);
             ctx.stroke();
 
-            // Rotating Docking Ring / Gantry
-            const ringAngle = time * 0.8;
+            // Structural Docking Gantry Ring (Clean static orientation)
             ctx.save();
-            ctx.rotate(ringAngle);
             ctx.strokeStyle = '#10b981';
             ctx.lineWidth = 1.5;
             ctx.beginPath();
             ctx.arc(0, 0, sz * 1.1, 0, Math.PI * 2);
             ctx.stroke();
 
-            // 4 Docking clamps on ring
+            // 4 Docking clamps on ring (Orthogonal berths)
             for (let i = 0; i < 4; i++) {
                 const a = (i * Math.PI / 2);
                 ctx.fillStyle = '#34d399';
@@ -7356,13 +7391,12 @@
                     route.progress = (route.progress + route.speed * fuelSpeedBonus * sim.speed) % 1.0;
                 }
 
-                // Draw glowing trade route conduit lane
+                // Draw glowing trade route conduit lane (clean static dashed conduit)
                 ctx.save();
                 ctx.strokeStyle = route.color;
                 ctx.lineWidth = Math.max(1, 1.2 * z);
                 ctx.globalAlpha = 0.35;
                 ctx.setLineDash([6, 6]);
-                ctx.lineDashOffset = -time * 25;
                 ctx.beginPath();
                 ctx.moveTo(coords.startX, coords.startY);
                 ctx.lineTo(coords.endX, coords.endY);
@@ -7824,14 +7858,33 @@
                                 ctx.stroke();
                             }
 
-                            // Modular Hubs along the ring
+                            // Modular Hubs along the ring (Fixed structural anchors aligned with tethers)
                             const hubCount = (sim.orbitalRingStage === 3) ? 8 : 4;
                             for (let h = 0; h < hubCount; h++) {
-                                const hAng = (sim.time * 0.1) + (h * (Math.PI * 2 / hubCount));
-                                const hx = px + Math.cos(hAng - 0.25) * oRingR;
-                                const hy = py + Math.sin(hAng - 0.25) * (oRingR * 0.38);
+                                const hAng = (h * (Math.PI * 2 / hubCount)) - 0.25;
+                                const hx = px + Math.cos(hAng) * oRingR;
+                                const hy = py + Math.sin(hAng) * (oRingR * 0.38);
                                 ctx.fillStyle = (sim.orbitalRingStage === 3) ? '#fbbf24' : '#00f0ff';
                                 ctx.fillRect(hx - 2 * z, hy - 2 * z, 4 * z, 4 * z);
+                            }
+
+                            // Stage 3 Zenith Foundry: Solar collector vanes & thermal radiators
+                            if (sim.orbitalRingStage === 3) {
+                                ctx.strokeStyle = 'rgba(251, 191, 36, 0.6)';
+                                ctx.lineWidth = 1.2 * z;
+                                for (let v = 0; v < 4; v++) {
+                                    const vAng = (v * Math.PI / 2) + Math.PI / 4 - 0.25;
+                                    const vx1 = px + Math.cos(vAng) * oRingR;
+                                    const vy1 = py + Math.sin(vAng) * (oRingR * 0.38);
+                                    const vx2 = px + Math.cos(vAng) * (oRingR + 10 * z);
+                                    const vy2 = py + Math.sin(vAng) * ((oRingR + 10 * z) * 0.38);
+                                    ctx.beginPath();
+                                    ctx.moveTo(vx1, vy1);
+                                    ctx.lineTo(vx2, vy2);
+                                    ctx.stroke();
+                                    ctx.fillStyle = '#f59e0b';
+                                    ctx.fillRect(vx2 - 1.5 * z, vy2 - 1.5 * z, 3 * z, 3 * z);
+                                }
                             }
                             ctx.restore();
                         }
@@ -7846,6 +7899,18 @@
                             ctx.moveTo(px, py - pr);
                             ctx.lineTo(px, elTopY);
                             ctx.stroke();
+
+                            // Stage 3 Hyperloop: Reinforced dual stabilizing tether cables
+                            if (sim.starElevatorStage === 3) {
+                                ctx.strokeStyle = 'rgba(0, 240, 255, 0.4)';
+                                ctx.lineWidth = 1 * z;
+                                ctx.beginPath();
+                                ctx.moveTo(px - 14 * z, py - pr * 0.95);
+                                ctx.lineTo(px, elTopY);
+                                ctx.moveTo(px + 14 * z, py - pr * 0.95);
+                                ctx.lineTo(px, elTopY);
+                                ctx.stroke();
+                            }
 
                             // Geostationary anchor terminal
                             ctx.fillStyle = '#00f0ff';
@@ -7883,12 +7948,13 @@
                                 ctx.fill();
                                 ctx.stroke();
 
-                                // Rotating radar target beam
-                                const radarAng = sim.time * 3 + d;
-                                ctx.strokeStyle = 'rgba(244, 63, 94, 0.4)';
+                                // Directional targeting array (clean static outward pointing)
+                                const outwardAng = dAng;
+                                ctx.strokeStyle = 'rgba(244, 63, 94, 0.5)';
+                                ctx.lineWidth = 1.2 * z;
                                 ctx.beginPath();
                                 ctx.moveTo(dx, dy);
-                                ctx.lineTo(dx + Math.cos(radarAng) * 16 * z, dy + Math.sin(radarAng) * 16 * z);
+                                ctx.lineTo(dx + Math.cos(outwardAng) * 12 * z, dy + Math.sin(outwardAng) * 12 * z);
                                 ctx.stroke();
 
                                 // Defense battery weapon beam when firing
