@@ -1030,14 +1030,328 @@
     width: 85%;
   }
 
-  /* Stock Chart Modal */
-  .stock-chart-box {
-    background: #000000;
-    border: 2px inset #555555;
-    padding: 8px;
-    text-align: center;
-    margin: 8px 0;
+  /* Live Voyager Presence Badge */
+  .live-voyager-badge {
+    display: inline-block;
+    background: #002200;
+    color: #39ff14;
+    border: 1px inset #008800;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 2px 6px;
+    margin-top: 3px;
+    letter-spacing: 0.5px;
   }
+
+  /* News Wire '99 Styling */
+  .news-wire-hero {
+    background: #fff8e7;
+    border: 2px groove #b38600;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .news-filter-pills {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .news-pill {
+    background: #e8e8e8;
+    border: 1px solid #999;
+    padding: 3px 8px;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    cursor: pointer;
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
+  }
+  .news-pill:hover { background: #dcdcdc; }
+  .news-pill.active {
+    background: var(--navy-dark);
+    color: #fff;
+    border-color: #000;
+  }
+  .news-article-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .news-card {
+    background: #ffffff;
+    border: 1px solid #d0d0d0;
+    padding: 8px 12px;
+    box-shadow: 1px 1px 3px rgba(0,0,0,0.06);
+    transition: background 0.15s;
+  }
+  .news-card:hover {
+    background: #fcfcff;
+    border-color: var(--navy-light);
+  }
+  .news-card-breaking {
+    border-left: 4px solid #cc0000;
+    background: #fffafa;
+  }
+  .news-card-intranet {
+    border-left: 4px solid #660099;
+    background: #fbf8ff;
+  }
+  .news-headline {
+    font-family: 'Times New Roman', serif;
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--link-blue);
+    cursor: pointer;
+    text-decoration: underline;
+    margin-bottom: 4px;
+    display: inline-block;
+  }
+  .news-headline:hover {
+    color: var(--accent-red);
+  }
+  .news-meta-row {
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    color: #666;
+    margin-bottom: 6px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .news-cat-tag {
+    background: #004080;
+    color: #fff;
+    padding: 1px 5px;
+    font-size: 10px;
+    font-weight: bold;
+  }
+  .news-snippet {
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    color: #222;
+    line-height: 1.4;
+  }
+
+  /* RealAudio G2 Jukebox Chassis */
+  .realaudio-panel {
+    background: #2a2a2a;
+    border: 3px outset #666;
+    padding: 10px 14px;
+    color: #e0e0e0;
+    margin-bottom: 12px;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.5);
+  }
+  .realaudio-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #444;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+  }
+  .realaudio-brand {
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+    color: #ff9900;
+    letter-spacing: 0.5px;
+  }
+  .realaudio-lcd {
+    background: #001a00;
+    border: 2px inset #113311;
+    padding: 8px 12px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #39ff14;
+    text-shadow: 0 0 4px #00ff00;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .realaudio-lcd-marquee {
+    white-space: nowrap;
+    animation: realaudioScroll 16s linear infinite;
+    display: inline-block;
+  }
+  @keyframes realaudioScroll {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+  }
+  .realaudio-buffer-bar {
+    background: #111;
+    border: 1px inset #555;
+    height: 12px;
+    width: 100%;
+    margin-bottom: 8px;
+    position: relative;
+    overflow: hidden;
+  }
+  .realaudio-buffer-fill {
+    background: repeating-linear-gradient(45deg, #008800, #008800 6px, #00aa00 6px, #00aa00 12px);
+    height: 100%;
+    width: 100%;
+  }
+  .realaudio-spectrum-wrap {
+    background: #0a0a0a;
+    border: 1px inset #333;
+    padding: 6px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    height: 58px;
+    gap: 3px;
+    margin-bottom: 10px;
+  }
+  .spectrum-band {
+    flex: 1;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 2px;
+    height: 100%;
+  }
+  .spectrum-led {
+    height: 4px;
+    width: 100%;
+    background: #1a1a1a;
+    border-radius: 1px;
+    transition: background 0.05s ease;
+  }
+  .spectrum-led.active-green { background: #00ff44; box-shadow: 0 0 2px #00ff44; }
+  .spectrum-led.active-yellow { background: #ffea00; box-shadow: 0 0 2px #ffea00; }
+  .spectrum-led.active-red { background: #ff2222; box-shadow: 0 0 3px #ff2222; }
+  .realaudio-controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .realaudio-channel-btn {
+    background: #3a3a3a;
+    border: 1px outset #777;
+    color: #fff;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-family: Arial, sans-serif;
+    cursor: pointer;
+  }
+  .realaudio-channel-btn:hover { background: #4a4a4a; }
+  .realaudio-channel-btn.active {
+    background: #ff9900;
+    color: #000;
+    font-weight: bold;
+    border: 1px inset #cc7a00;
+  }
+
+  /* Yellow Pages Styling */
+  .yellowpages-hero {
+    background: #fffbe6;
+    border: 2px groove #d4b106;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .yellowpages-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  @media (max-width: 650px) {
+    .yellowpages-grid { grid-template-columns: 1fr; }
+  }
+  .yp-card {
+    background: #ffffff;
+    border: 2px groove #cca300;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.06);
+  }
+  .yp-handle {
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+    color: #804000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .yp-badge {
+    background: #fff0b3;
+    border: 1px solid #cc9900;
+    color: #664400;
+    font-size: 10px;
+    padding: 1px 4px;
+    font-weight: normal;
+  }
+  .yp-url-link {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--link-blue);
+    word-break: break-all;
+  }
+  .yp-bio {
+    font-size: 11px;
+    color: #333;
+    line-height: 1.35;
+  }
+
+  /* Modem Soundboard Grid */
+  .soundboard-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+  }
+  @media (max-width: 600px) {
+    .soundboard-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  .soundboard-btn {
+    background: #f0f0f0;
+    border: 2px outset #ffffff;
+    padding: 6px 8px;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    cursor: pointer;
+    text-align: center;
+    color: #000066;
+  }
+  .soundboard-btn:hover { background: #e0e8ff; border-color: #000080; }
+  .soundboard-btn:active { border-style: inset; }
+
+  /* Portal Bottom Status Strip */
+  .portal-status-strip {
+    background: var(--win-gray);
+    border-top: 2px solid var(--win-border-light);
+    border-left: 1px solid var(--win-border-light);
+    border-right: 1px solid var(--win-border-dark);
+    border-bottom: 1px solid var(--win-border-dark);
+    margin-top: 10px;
+    padding: 3px 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'MS Sans Serif', Tahoma, sans-serif;
+    font-size: 11px;
+    color: #222;
+  }
+  .status-cell {
+    border-right: 1px solid var(--win-border-dark);
+    padding: 0 6px;
+  }
+  .status-cell:last-child { border-right: none; }
 </style>
 </head>
 <body>
@@ -1054,7 +1368,10 @@
         <td class="banner-right">
           <span>Net Visitors:</span>
           <span class="counter-box" id="visitorCounter">0048291</span><br>
-          <span style="font-size:10px; color:#555555;">KNet Hypermedia 2.0 • 1024x768 Res</span>
+          <div style="margin-top:2px;">
+            <span class="live-voyager-badge" id="onlineVoyagersBadge">🟢 <strong id="onlineVoyagersCount">1</strong> Online</span>
+            <span style="font-size:10px; color:#555555; margin-left:4px;">KNet 2.0 • 1024x768</span>
+          </div>
         </td>
       </tr>
     </table>
@@ -1063,6 +1380,9 @@
       <div class="quick-links">
         <a href="/apps/kmail.html">✉️ Check Email</a>
         <a href="/apps/kchat.html">💬 KChat IRC</a>
+        <a href="#" onclick="switchPortalTab('news'); return false;">📰 News Wire '99</a>
+        <a href="#" onclick="switchPortalTab('radio'); return false;" style="color:#cc6600; font-weight:bold;">📻 RealAudio .RAM</a>
+        <a href="#" onclick="switchPortalTab('yellowpages'); return false;">📒 Yellow Pages</a>
         <a href="/apps/kbbs.html">📠 KBBS Door Games</a>
         <a href="/apps/krss.html">📰 News Feeds</a>
         <a href="#" onclick="openSubmitSiteModal(); return false;" style="color:#800000; font-weight:bold;">➕ Submit URL</a>
@@ -1100,12 +1420,15 @@
     <!-- Navigation Tabs -->
     <div class="tab-row">
       <div class="portal-tab active" id="tabNav-directory" onclick="switchPortalTab('directory')">📂 Web Directory &amp; Search</div>
-      <div class="portal-tab" id="tabNav-stocks" onclick="switchPortalTab('stocks')">📈 Stock Exchange &amp; Portfolio</div>
-      <div class="portal-tab" id="tabNav-classifieds" onclick="switchPortalTab('classifieds')">📰 Classified Ads Board</div>
-      <div class="portal-tab" id="tabNav-weather" onclick="switchPortalTab('weather')">⛅ Weather &amp; Station</div>
-      <div class="portal-tab" id="tabNav-speedtest" onclick="switchPortalTab('speedtest')">⚡ Dial-Up Speed &amp; Baud Lab</div>
-      <div class="portal-tab" id="tabNav-horoscope" onclick="switchPortalTab('horoscope')">🔮 1999 Silicon Zodiac</div>
-      <div class="portal-tab" id="tabNav-trivia" onclick="switchPortalTab('trivia')">🧠 1999 Retro Trivia</div>
+      <div class="portal-tab" id="tabNav-news" onclick="switchPortalTab('news')">📰 News Wire '99</div>
+      <div class="portal-tab" id="tabNav-radio" onclick="switchPortalTab('radio')">📻 RealAudio Radio</div>
+      <div class="portal-tab" id="tabNav-stocks" onclick="switchPortalTab('stocks')">📈 Stock Exchange</div>
+      <div class="portal-tab" id="tabNav-classifieds" onclick="switchPortalTab('classifieds')">📰 Classified Ads</div>
+      <div class="portal-tab" id="tabNav-yellowpages" onclick="switchPortalTab('yellowpages')">📒 Yellow Pages</div>
+      <div class="portal-tab" id="tabNav-weather" onclick="switchPortalTab('weather')">⛅ Weather</div>
+      <div class="portal-tab" id="tabNav-speedtest" onclick="switchPortalTab('speedtest')">⚡ Baud &amp; Speed Lab</div>
+      <div class="portal-tab" id="tabNav-horoscope" onclick="switchPortalTab('horoscope')">🔮 Silicon Zodiac</div>
+      <div class="portal-tab" id="tabNav-trivia" onclick="switchPortalTab('trivia')">🧠 1999 Trivia</div>
     </div>
   </header>
 
@@ -1282,10 +1605,7 @@
                   <li><a href="/web/users/neon_rider.html">~neon_rider's ASM Shrine</a> — Win32 ASM devlog, x86 opcode sandbox &amp; tracker tunes</li>
                   <li><a href="/web/asm_temple.html">x86 Opcode Temple</a> — Assembly programming shrine, opcode oracle &amp; PE explorer</li>
                   <li><a href="/web/cybercafe.html">CyberCafe '99 Lounge</a> — Underground BBS, threaded forums, ASCII studio &amp; mIRC chat</li>
-                  <li><a href="/web/echo_subsystem.html">Echo Subsystem Acoustic Research Lab</a> — Acoustic journal, 2D waterfall sonogram, SIGINT phased beamformer &amp; audio steganography lab</li>
-                  <li><a href="/web/classified.html">10.19.99.4 Corporate Intranet Leak</a> — Carlsbad Skunkworks repository, 1999Hz RF signal lab &amp; memory hex inspector</li>
-                  <li><a href="/web/deep_core.html">Deep Core Ghost Terminal (10.19.99.127)</a> — Subterranean Ring-0 relay, SHA-256 passkey analyzer &amp; 1999Hz subcarrier monitor</li>
-                  <li><a href="/web/darknet.html">Subterranean Darknet Relay &amp; Warez NFO Cryptography (Node 0x7F)</a> — Quarantined memory dumps, warez NFO steganography dissector, raw packet injector &amp; subcarrier sniffer</li>
+                  <li><a href="/web/webring.html">Central KiloNet Webring Hub</a> — Hypermedia topology map, 88x31 button studio &amp; traceroute simulator</li>
                   <li><a href="/apps/contribute.html">Fleet Contributor Portal</a> — Donate free compute quota to power the living machine</li>
                 </ul>
               </div>
@@ -1295,6 +1615,78 @@
       </table>
     </div>
   </main>
+
+  <!-- TAB: NEWS WIRE '99 -->
+  <section id="tab-news" class="tab-content">
+    <div class="news-wire-hero">
+      <div>
+        <h3 style="margin:0 0 2px 0; color:var(--navy-dark); font-family:Arial, sans-serif;">📰 KiloNet News Wire '99 — Daily Dispatch &amp; Intranet Feed</h3>
+        <p style="margin:0; font-size:12px; color:#555;">Live wire dispatches from Silicon Valley, global gaming arenas, dot-com finance &amp; Carlsbad engineering.</p>
+      </div>
+      <div>
+        <input type="text" id="newsSearchInput" class="form-input" style="width:160px; font-size:11px;" placeholder="Search news..." oninput="filterNewsArticles()" />
+      </div>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="news-filter-pills" id="newsFilterPills">
+      <button class="news-pill active" onclick="setNewsCategory('ALL')">All Dispatches (8)</button>
+      <button class="news-pill" onclick="setNewsCategory('TECH')">💾 Tech &amp; Silicon</button>
+      <button class="news-pill" onclick="setNewsCategory('OS_NET')">⚙️ OS &amp; Infrastructure</button>
+      <button class="news-pill" onclick="setNewsCategory('GAMING')">🎮 Gaming &amp; Demoscene</button>
+      <button class="news-pill" onclick="setNewsCategory('BUSINESS')">💼 Dot-Com &amp; Markets</button>
+      <button class="news-pill" onclick="setNewsCategory('INTRANET')">📡 Intranet Wire</button>
+    </div>
+
+    <div class="news-article-list" id="newsArticleList">
+      <!-- Injected via JavaScript -->
+    </div>
+  </section>
+
+  <!-- TAB: REALAUDIO G2 CHIPTUNE RADIO -->
+  <section id="tab-radio" class="tab-content">
+    <div class="realaudio-panel">
+      <div class="realaudio-header">
+        <span class="realaudio-brand">📻 KiloNet RealAudio .RAM Stream Jukebox (G2 Engine)</span>
+        <span style="font-family:'Courier New', monospace; font-size:11px; color:#39ff14;" id="radioStatusIndicator">STATUS: READY [28.8K V.34]</span>
+      </div>
+
+      <div class="realaudio-lcd">
+        <div class="realaudio-lcd-marquee" id="radioLcdTrack">
+          CH 1: DIAL-UP DREAMS '99 ★ YAMAHA YM2612 2-OPERATOR FM + SPC700 STEREO DELAY ★ 28.8 KBPS G2 STREAM
+        </div>
+      </div>
+
+      <div class="realaudio-buffer-bar">
+        <div class="realaudio-buffer-fill" id="radioBufferFill"></div>
+      </div>
+
+      <!-- 16-Band LED Peak Visualizer -->
+      <div class="realaudio-spectrum-wrap" id="radioSpectrumWrap">
+        <!-- 16 spectrum bands injected via JavaScript -->
+      </div>
+
+      <div class="realaudio-controls-row">
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button class="btn-retro btn-primary-retro" id="radioPlayBtn" onclick="toggleRadioPlay()">▶ Play Stream</button>
+          <button class="btn-retro" id="radioStopBtn" onclick="stopRadioPlay()">⏹ Stop</button>
+          <span style="font-size:11px; margin-left:6px; color:#aaa;">Vol:</span>
+          <input type="range" id="radioVolumeSlider" min="0" max="100" value="70" style="width:75px; vertical-align:middle;" oninput="handleRadioVolume(this.value)" />
+        </div>
+        <div style="display:flex; gap:4px; flex-wrap:wrap;">
+          <button class="realaudio-channel-btn active" id="radioChanBtn_0" onclick="switchRadioChannel(0)">Ch 1: Dreams '99</button>
+          <button class="realaudio-channel-btn" id="radioChanBtn_1" onclick="switchRadioChannel(1)">Ch 2: Silicon Rush</button>
+          <button class="realaudio-channel-btn" id="radioChanBtn_2" onclick="switchRadioChannel(2)">Ch 3: Subcarrier</button>
+          <button class="realaudio-channel-btn" id="radioChanBtn_3" onclick="switchRadioChannel(3)">Ch 4: Demoscene</button>
+        </div>
+      </div>
+    </div>
+    <div style="background:#f4f4f4; border:1px solid #ccc; padding:8px 12px; font-family:Arial, sans-serif; font-size:12px; line-height:1.4;">
+      <strong>About RealAudio Procedural Streaming:</strong> This streaming receiver simulates 1999 progressive audio streaming over dial-up copper.
+      Zero external sound files are downloaded—sound waves are synthesized on-the-fly using the Sega Genesis Yamaha YM2612 2-operator FM algorithm
+      with Super Nintendo SPC700 190ms stereo delay line.
+    </div>
+  </section>
 
   <!-- TAB 2: LIVE STOCK EXCHANGE & PORTFOLIO -->
   <section id="tab-stocks" class="tab-content">
@@ -1381,6 +1773,33 @@
     </div>
 
     <div id="classifiedsList">
+      <!-- Injected via JavaScript -->
+    </div>
+  </section>
+
+  <!-- TAB: YELLOW PAGES '99 -->
+  <section id="tab-yellowpages" class="tab-content">
+    <div class="yellowpages-hero">
+      <div>
+        <h3 style="margin:0 0 2px 0; color:#804000; font-family:Arial, sans-serif;">📒 KiloNet Yellow Pages '99 — Webmaster &amp; Hacker Directory</h3>
+        <p style="margin:0; font-size:12px; color:#555;">Official directory of 1999 webmasters, assembly coders, pixel artists, SysOps &amp; tracker musicians.</p>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <input type="text" id="ypSearchInput" class="form-input" style="width:160px; font-size:11px;" placeholder="Search handles/tags..." oninput="filterYellowPages()" />
+        <button class="btn-retro btn-primary-retro" onclick="openRegisterWebmasterModal()">➕ Register Profile</button>
+      </div>
+    </div>
+
+    <!-- Filter Buttons -->
+    <div class="news-filter-pills" id="ypFilterPills">
+      <button class="news-pill active" onclick="setYpFilter('ALL')">All Entries</button>
+      <button class="news-pill" onclick="setYpFilter('CODING')">⚡ ASM &amp; C Coders</button>
+      <button class="news-pill" onclick="setYpFilter('GRAPHICS')">🎨 2D/3D Pixel Artists</button>
+      <button class="news-pill" onclick="setYpFilter('AUDIO')">🎵 Tracker &amp; FM Composers</button>
+      <button class="news-pill" onclick="setYpFilter('SYSOPS')">📠 BBS SysOps &amp; NetOps</button>
+    </div>
+
+    <div class="yellowpages-grid" id="yellowPagesGrid">
       <!-- Injected via JavaScript -->
     </div>
   </section>
@@ -1567,6 +1986,22 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Acoustic Handshake Soundboard -->
+      <div style="background:#f7f9fc; border:1px solid #b3d1ff; padding:10px 12px; margin-top:10px;">
+        <h4 style="margin:0 0 4px 0; font-family:Arial, sans-serif; font-size:13px; color:var(--navy-dark);">🎛️ 1999 Modem Acoustic Handshake Soundboard</h4>
+        <p style="margin:0 0 8px 0; font-size:11px; color:#555;">Audition each discrete stage of the 1999 V.34/V.90 acoustic negotiation sequence synthesized live via procedural Web Audio.</p>
+        <div class="soundboard-grid">
+          <button class="soundboard-btn" onclick="playHandshakeStage('dialtone')">1. Dial Tone (350+440Hz)</button>
+          <button class="soundboard-btn" onclick="playHandshakeStage('dtmf')">2. DTMF Speed Dial</button>
+          <button class="soundboard-btn" onclick="playHandshakeStage('ringback')">3. Ringback Cadence</button>
+          <button class="soundboard-btn" onclick="playHandshakeStage('ced')">4. 2100Hz Answer CED</button>
+          <button class="soundboard-btn" onclick="playHandshakeStage('v8bis')">5. V.8 Dual FSK Bis</button>
+          <button class="soundboard-btn" onclick="playHandshakeStage('v34train')">6. V.34 Phase Training</button>
+          <button class="soundboard-btn" onclick="playHandshakeStage('scrambler')">7. Scrambler White Noise</button>
+          <button class="soundboard-btn" onclick="playHandshakeStage('v90lock')">8. V.90 High-Speed Lock</button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1629,7 +2064,7 @@
       <a href="/web/geocities.html">[« Previous Site: CyberSpire]</a>
       <a href="/web/webring.html">[Central Hub]</a>
       <a href="#" onclick="jumpRandom(); return false;">[🎲 Random Ring Jump]</a>
-      <a href="/web/darknet.html">[Node 0x7F: Darknet]</a>
+      <a href="/web/warez.html">[0xRELEASE Scene Vault]</a>
       <a href="/apps/contribute.html">[Next Site: Contributor Portal »]</a>
     </div>
   </div>
@@ -1645,6 +2080,14 @@
       <span class="retro-badge-img">800x600 16-BIT COLOR</span>
     </div>
   </footer>
+
+  <!-- Portal Netscape Status Strip -->
+  <div class="portal-status-strip">
+    <div class="status-cell">📄 Document: Done</div>
+    <div class="status-cell" id="portalCarrierStatus">📡 NOC CARRIER: 1999Hz NOMINAL</div>
+    <div class="status-cell">⚡ BAUD: 56,000 bps V.90</div>
+    <div class="status-cell" id="portalClockCell">🕒 1999-10-15 14:22:00</div>
+  </div>
 </div>
 
 <!-- MODAL 1: Post Classified Ad -->
@@ -1840,6 +2283,86 @@
           <button class="btn-retro btn-primary-retro" onclick="closeStockChartModal()">Close</button>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL 6: Read News Wire Dispatch -->
+<div class="modal-overlay" id="readNewsModal">
+  <div class="retro-dialog" style="width:580px; max-width:95%;">
+    <div class="dialog-titlebar">
+      <span id="readNewsModalTitle">📰 News Wire Dispatch</span>
+      <button class="dialog-close-btn" onclick="closeNewsModal()">×</button>
+    </div>
+    <div class="dialog-body">
+      <div style="margin-bottom:8px; border-bottom:1px solid #ddd; padding-bottom:6px;">
+        <h3 id="readNewsHeadline" style="margin:0 0 4px 0; color:var(--navy-dark); font-family:'Times New Roman', serif; font-size:18px;"></h3>
+        <div id="readNewsMeta" style="font-size:11px; color:#666; font-family:Arial, sans-serif;"></div>
+      </div>
+      <div id="readNewsBody" style="font-family:'Times New Roman', serif; font-size:14px; line-height:1.5; color:#111; max-height:220px; overflow-y:auto; padding-right:6px; margin-bottom:12px;"></div>
+      
+      <!-- Simulated 1999 Reader Comments -->
+      <div style="background:#f7f7f7; border:1px solid #ddd; padding:8px; margin-bottom:10px;">
+        <div style="font-weight:bold; font-size:11px; margin-bottom:6px; color:#444;">💬 Reader Comments (1999 Community Dispatch)</div>
+        <div id="readNewsCommentsList" style="font-size:11px; max-height:100px; overflow-y:auto; display:flex; flex-direction:column; gap:4px;"></div>
+        <div style="display:flex; gap:4px; margin-top:6px;">
+          <input type="text" id="newsCommentInputHandle" class="form-input" style="width:100px; font-size:11px;" placeholder="Your Nick" />
+          <input type="text" id="newsCommentInputText" class="form-input" style="flex:1; font-size:11px;" placeholder="Add a comment to this wire dispatch..." />
+          <button class="btn-retro" style="font-size:11px;" onclick="submitNewsComment()">Post</button>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <button class="btn-retro" onclick="exportNewsDispatchText()">💾 Save Dispatch (.TXT)</button>
+        <button class="btn-retro btn-primary-retro" onclick="closeNewsModal()">Close Dispatch</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL 7: Register Webmaster Profile in Yellow Pages -->
+<div class="modal-overlay" id="registerWebmasterModal">
+  <div class="retro-dialog" style="width:480px; max-width:95%;">
+    <div class="dialog-titlebar">
+      <span>📒 Register 1999 Webmaster Profile</span>
+      <button class="dialog-close-btn" onclick="closeRegisterWebmasterModal()">×</button>
+    </div>
+    <div class="dialog-body">
+      <p style="margin:0 0 10px 0; font-size:12px; color:#444;">
+        Add your personal cyber-shrine or demogroup handle to the official KiloNet Yellow Pages '99 directory!
+      </p>
+      <form id="registerWebmasterForm" onsubmit="handleRegisterWebmaster(event)">
+        <div style="margin-bottom:8px;">
+          <label>Webmaster Handle / Alias:</label>
+          <input type="text" id="ypInputHandle" class="form-input" placeholder="e.g. ByteCrusher_99" required />
+        </div>
+        <div style="margin-bottom:8px;">
+          <label>Specialty Category:</label>
+          <select id="ypInputCategory" class="form-input">
+            <option value="CODING">⚡ Assembly &amp; C Programming</option>
+            <option value="GRAPHICS">🎨 2D/3D Pixel Art &amp; Demoscene</option>
+            <option value="AUDIO">🎵 Tracker (.MOD/.XM) &amp; FM Synthesis</option>
+            <option value="SYSOPS">📠 BBS SysOp &amp; Network Operations</option>
+            <option value="WEB">🌐 HTML 4.0 &amp; Webmaster Shrine</option>
+          </select>
+        </div>
+        <div style="margin-bottom:8px;">
+          <label>Website URL (e.g. kweb://users/~byte or /web/...):</label>
+          <input type="text" id="ypInputUrl" class="form-input" placeholder="kweb://users/~bytecrusher or /web/geocities.html" required />
+        </div>
+        <div style="margin-bottom:8px;">
+          <label>ICQ UIN (Optional):</label>
+          <input type="text" id="ypInputIcq" class="form-input" placeholder="e.g. 5829103" />
+        </div>
+        <div style="margin-bottom:8px;">
+          <label>Bio / Personal Motto (under 140 chars):</label>
+          <textarea id="ypInputBio" class="form-input" style="height:50px; resize:none;" placeholder="Crafting raw x86 opcodes under the pale glow of a Trinitron CRT..." required></textarea>
+        </div>
+        <div style="text-align:right; margin-top:8px;">
+          <button type="button" class="btn-retro" onclick="closeRegisterWebmasterModal()">Cancel</button>
+          <button type="submit" class="btn-retro btn-primary-retro">Publish to Yellow Pages</button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
@@ -2054,6 +2577,330 @@ function playNoiseBurst(duration, filterFreq = 1800) {
   modemNoiseNode = noise;
 }
 
+/* =========================================================================
+   REALAUDIO .RAM PROCEDURAL RADIO & 16-BAND SPECTRUM EQUALIZER
+   ========================================================================= */
+let radioPlaying = false;
+let radioChannel = 0;
+let radioTimer = null;
+let radioStep = 0;
+let radioVolume = 0.7;
+
+const RADIO_CHANNELS = [
+  {
+    name: "CH 1: DIAL-UP DREAMS '99",
+    genre: "Corporate Lobby Jazz & FM Electric Piano",
+    bpm: 110,
+    carrierRatio: 1.0,
+    modRatio: 2.0,
+    modDepth: 2.4,
+    bassMod: 1.0,
+    notes: [
+      { chord: [523.25, 659.25, 783.99, 987.77], bass: 130.81, dur: 0.35 },
+      { chord: [440.00, 523.25, 659.25, 783.99], bass: 110.00, dur: 0.35 },
+      { chord: [587.33, 698.46, 880.00, 1046.50], bass: 146.83, dur: 0.35 },
+      { chord: [392.00, 493.88, 587.33, 783.99], bass: 98.00, dur: 0.35 }
+    ]
+  },
+  {
+    name: "CH 2: SILICON VALLEY RUSH",
+    genre: "Late-90s Synthpop & Eurodance FM",
+    bpm: 132,
+    carrierRatio: 1.0,
+    modRatio: 3.5,
+    modDepth: 3.2,
+    bassMod: 1.5,
+    notes: [
+      { chord: [440.00, 554.37, 659.25], bass: 110.00, dur: 0.2 },
+      { chord: [493.88, 622.25, 739.99], bass: 123.47, dur: 0.2 },
+      { chord: [587.33, 739.99, 880.00], bass: 146.83, dur: 0.2 },
+      { chord: [659.25, 830.61, 987.77], bass: 164.81, dur: 0.2 }
+    ]
+  },
+  {
+    name: "CH 3: SUBCARRIER NIGHTLINE",
+    genre: "Atmospheric Ambient FM & 1999Hz Harmonics",
+    bpm: 72,
+    carrierRatio: 1.0,
+    modRatio: 1.999,
+    modDepth: 1.8,
+    bassMod: 0.5,
+    notes: [
+      { chord: [499.75, 749.62, 999.50], bass: 62.47, dur: 0.8 },
+      { chord: [559.72, 839.58, 1119.44], bass: 69.96, dur: 0.8 },
+      { chord: [439.78, 659.67, 879.56], bass: 55.00, dur: 0.8 },
+      { chord: [499.75, 999.50, 1499.25], bass: 62.47, dur: 0.8 }
+    ]
+  },
+  {
+    name: "CH 4: DEMOSCENE FM",
+    genre: "Chiptune Arpeggios & FastTracker Anthems",
+    bpm: 140,
+    carrierRatio: 1.0,
+    modRatio: 2.0,
+    modDepth: 2.8,
+    bassMod: 2.0,
+    notes: [
+      { chord: [523.25, 622.25, 783.99, 1046.50], bass: 130.81, dur: 0.16 },
+      { chord: [587.33, 698.46, 880.00, 1174.66], bass: 146.83, dur: 0.16 },
+      { chord: [659.25, 783.99, 987.77, 1318.51], bass: 164.81, dur: 0.16 },
+      { chord: [783.99, 987.77, 1174.66, 1567.98], bass: 196.00, dur: 0.16 }
+    ]
+  }
+];
+
+function initSpectrumLeds() {
+  const wrap = document.getElementById('radioSpectrumWrap');
+  if (!wrap || wrap.children.length > 0) return;
+  for (let i = 0; i < 16; i++) {
+    const band = document.createElement('div');
+    band.className = 'spectrum-band';
+    band.id = `specBand_${i}`;
+    for (let j = 0; j < 8; j++) {
+      const led = document.createElement('div');
+      led.className = 'spectrum-led';
+      led.id = `specLed_${i}_${j}`;
+      band.appendChild(led);
+    }
+    wrap.appendChild(band);
+  }
+}
+
+function updateSpectrumVisual() {
+  for (let i = 0; i < 16; i++) {
+    const bandLevel = Math.floor(Math.random() * 8);
+    for (let j = 0; j < 8; j++) {
+      const led = document.getElementById(`specLed_${i}_${j}`);
+      if (!led) continue;
+      led.className = 'spectrum-led';
+      if (j <= bandLevel) {
+        if (j < 5) led.classList.add('active-green');
+        else if (j < 7) led.classList.add('active-yellow');
+        else led.classList.add('active-red');
+      }
+    }
+  }
+}
+
+function clearSpectrumVisual() {
+  for (let i = 0; i < 16; i++) {
+    for (let j = 0; j < 8; j++) {
+      const led = document.getElementById(`specLed_${i}_${j}`);
+      if (led) led.className = 'spectrum-led';
+    }
+  }
+}
+
+function toggleRadioPlay() {
+  if (radioPlaying) {
+    stopRadioPlay();
+  } else {
+    startRadioPlay();
+  }
+}
+
+function startRadioPlay() {
+  initAudio();
+  if (!audioCtx) return;
+  radioPlaying = true;
+  initSpectrumLeds();
+  const playBtn = document.getElementById('radioPlayBtn');
+  if (playBtn) playBtn.textContent = '⏸ Pause Stream';
+  const statusEl = document.getElementById('radioStatusIndicator');
+  if (statusEl) statusEl.textContent = 'STATUS: STREAMING [28.8K V.34 STEREO]';
+  const quickLink = document.getElementById('quickRealAudioLink');
+  if (quickLink) quickLink.textContent = '📻 RealAudio: [ON]';
+
+  const ch = RADIO_CHANNELS[radioChannel];
+  const stepMs = Math.round((60000 / ch.bpm) * 0.5);
+  radioTimer = setInterval(() => {
+    if (!radioPlaying || !audioEnabled) return;
+    const stepData = ch.notes[radioStep % ch.notes.length];
+    
+    // Play FM Chord
+    stepData.chord.forEach((freq, idx) => {
+      triggerFmVoice(freq, ch.modRatio, ch.modDepth, stepData.dur, radioVolume * 0.18, idx * 0.02);
+    });
+    // Play FM Bass
+    triggerFmVoice(stepData.bass, ch.bassMod, 2.5, stepData.dur * 1.2, radioVolume * 0.28, 0);
+
+    updateSpectrumVisual();
+    radioStep++;
+  }, stepMs);
+}
+
+function stopRadioPlay() {
+  radioPlaying = false;
+  if (radioTimer) {
+    clearInterval(radioTimer);
+    radioTimer = null;
+  }
+  const playBtn = document.getElementById('radioPlayBtn');
+  if (playBtn) playBtn.textContent = '▶ Play Stream';
+  const statusEl = document.getElementById('radioStatusIndicator');
+  if (statusEl) statusEl.textContent = 'STATUS: STOPPED';
+  const quickLink = document.getElementById('quickRealAudioLink');
+  if (quickLink) quickLink.textContent = '📻 RealAudio .RAM';
+  clearSpectrumVisual();
+}
+
+function switchRadioChannel(idx) {
+  playClick();
+  radioChannel = idx;
+  for (let i = 0; i < RADIO_CHANNELS.length; i++) {
+    const btn = document.getElementById(`radioChanBtn_${i}`);
+    if (btn) btn.classList.toggle('active', i === idx);
+  }
+  const ch = RADIO_CHANNELS[idx];
+  const lcd = document.getElementById('radioLcdTrack');
+  if (lcd) {
+    lcd.textContent = `${ch.name} ★ ${ch.genre.toUpperCase()} ★ 28.8 KBPS G2 STREAM`;
+  }
+  if (radioPlaying) {
+    stopRadioPlay();
+    startRadioPlay();
+  }
+}
+
+function handleRadioVolume(val) {
+  radioVolume = parseInt(val, 10) / 100;
+}
+
+// Procedural 2-operator FM Voice
+function triggerFmVoice(carrierFreq, modMultiplier, modIndex, duration, vol, delayOffset) {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime + (delayOffset || 0);
+
+  const carrier = audioCtx.createOscillator();
+  const modulator = audioCtx.createOscillator();
+  const modGain = audioCtx.createGain();
+  const carrierGain = audioCtx.createGain();
+
+  carrier.type = 'sine';
+  carrier.frequency.setValueAtTime(carrierFreq, now);
+
+  modulator.type = 'sine';
+  modulator.frequency.setValueAtTime(carrierFreq * modMultiplier, now);
+
+  const depth = carrierFreq * modIndex;
+  modGain.gain.setValueAtTime(depth, now);
+  modGain.gain.exponentialRampToValueAtTime(0.1, now + duration);
+
+  carrierGain.gain.setValueAtTime(vol, now);
+  carrierGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  modulator.connect(modGain);
+  modGain.connect(carrier.frequency);
+
+  carrier.connect(carrierGain);
+  carrierGain.connect(masterGain);
+  if (delayNode) carrierGain.connect(delayNode);
+
+  modulator.start(now);
+  carrier.start(now);
+  modulator.stop(now + duration);
+  carrier.stop(now + duration);
+}
+
+/* =========================================================================
+   MODEM ACOUSTIC HANDSHAKE SOUNDBOARD
+   ========================================================================= */
+function playHandshakeStage(stage) {
+  initAudio();
+  if (!audioCtx || !audioEnabled) return;
+  playClick();
+
+  const leds = ['MR', 'TR', 'CD', 'SD', 'RD', 'HS', 'OH', 'AA'];
+  leds.forEach(id => {
+    const el = document.getElementById(`led${id}`);
+    if (el) el.classList.remove('active');
+  });
+
+  const now = audioCtx.currentTime;
+
+  if (stage === 'dialtone') {
+    const elOH = document.getElementById('ledOH');
+    const elTR = document.getElementById('ledTR');
+    if (elOH) elOH.classList.add('active');
+    if (elTR) elTR.classList.add('active');
+    playDualSine(350, 440, 1.2, 0.2);
+  } else if (stage === 'dtmf') {
+    const elSD = document.getElementById('ledSD');
+    if (elSD) elSD.classList.add('active');
+    const dtmfPairs = [
+      [941, 1336], [697, 1209], [770, 1477], [852, 1209],
+      [941, 1477], [697, 1336], [770, 1209]
+    ];
+    dtmfPairs.forEach((pair, i) => {
+      setTimeout(() => playDualSine(pair[0], pair[1], 0.08, 0.22), i * 110);
+    });
+  } else if (stage === 'ringback') {
+    const elAA = document.getElementById('ledAA');
+    if (elAA) elAA.classList.add('active');
+    playDualSine(440, 480, 1.5, 0.22);
+  } else if (stage === 'ced') {
+    const elCD = document.getElementById('ledCD');
+    if (elCD) elCD.classList.add('active');
+    playSingleSine(2100, 1.8, 0.25);
+  } else if (stage === 'v8bis') {
+    const elMR = document.getElementById('ledMR');
+    const elRD = document.getElementById('ledRD');
+    if (elMR) elMR.classList.add('active');
+    if (elRD) elRD.classList.add('active');
+    playDualSine(1370, 1700, 1.2, 0.22);
+  } else if (stage === 'v34train') {
+    const elHS = document.getElementById('ledHS');
+    if (elHS) elHS.classList.add('active');
+    triggerFmChime(1800, 2.4, 3.5, 0.9);
+  } else if (stage === 'scrambler') {
+    const elSD = document.getElementById('ledSD');
+    const elRD = document.getElementById('ledRD');
+    if (elSD) elSD.classList.add('active');
+    if (elRD) elRD.classList.add('active');
+    playModemNoise(1.4, 2800);
+  } else if (stage === 'v90lock') {
+    leds.forEach(id => {
+      const el = document.getElementById(`led${id}`);
+      if (el) el.classList.add('active');
+    });
+    playSuccessChime();
+    triggerFmChime(1999, 1.5, 1.2, 0.6);
+  }
+}
+
+function playDualSine(f1, f2, dur, vol) {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc1.frequency.setValueAtTime(f1, now);
+  osc2.frequency.setValueAtTime(f2, now);
+  gain.gain.setValueAtTime(vol * 0.5, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+  osc1.connect(gain);
+  osc2.connect(gain);
+  gain.connect(masterGain);
+  osc1.start(now);
+  osc2.start(now);
+  osc1.stop(now + dur);
+  osc2.stop(now + dur);
+}
+
+function playSingleSine(f, dur, vol) {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.frequency.setValueAtTime(f, now);
+  gain.gain.setValueAtTime(vol, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+  osc.connect(gain);
+  gain.connect(masterGain);
+  osc.start(now);
+  osc.stop(now + dur);
+}
+
 function loadCustomSites() {
   const saved = localStorage.getItem('knet_portal_custom_sites');
   if (saved) {
@@ -2196,9 +3043,7 @@ const APPS_DATABASE = [
   { id: 'web-cafe', title: "CyberCafe '99 Underground BBS & Lounge", folder: 'Web', url: '/web/cybercafe.html', desc: 'Threaded retro forums, terminal booths, 16-color ASCII art studio, mIRC chat lounge & procedural FM jukebox.', tags: 'cybercafe,bbs,forum,ascii,chat,irc,mirc,jukebox,web' },
   { id: 'web-webring', title: 'Central KiloNet 1999 Webring Hub', folder: 'Web', url: '/web/webring.html', desc: 'Central webring registry with member site directory, random teleporter & badge generator.', tags: 'webring,hub,teleport,directory,badges,web' },
   { id: 'web-echo', title: 'Echo Subsystem Acoustic Research Lab', folder: 'Web', url: '/web/echo_subsystem.html', desc: 'Acoustic research journal, real-time 2D audio spectrogram waterfall, phased beamformer grid, audio steganography studio & 1999Hz subcarrier telemetry.', tags: 'echo,audio,spectrogram,journal,research,ym2612,spc700,subcarrier,morse,telemetry,sigint,beamformer,steganography,web' },
-  { id: 'web-classified', title: '[UNINDEXED] 10.19.99.4 Corporate Intranet Leak', folder: 'Web', url: '/web/classified.html', desc: 'Leaked Aethel Dynamics Carlsbad skunkworks intranet: memory hex inspector, 1999Hz RF signal diagnostics & packet sniffer.', tags: 'classified,leak,intranet,10.19.99.4,skunkworks,diagnostic,signal,web' },
-  { id: 'web-deep-core', title: '[TIER 3] Deep Core Ghost Node Terminal', folder: 'Web', url: '/web/deep_core.html', desc: 'Subterranean Ring-0 relay & cryptographic passkey analyzer. Real-time 1999Hz subcarrier monitor & sector forensics.', tags: 'deep-core,terminal,ghost,passkey,hash,10.19.99.127,sha256,forensics,web' },
-  { id: 'web-darknet', title: 'Subterranean Darknet Relay & Warez NFO Cryptography (Node 0x7F)', folder: 'Web', url: '/web/darknet.html', desc: 'Subterranean packet sniffer, warez NFO steganography dissector, raw frame injector, quarantined memory viewer & 1999Hz acoustic carrier scanner.', tags: 'darknet,terminal,packet,sniffer,subterranean,forensics,hex,0x7f,nfo,stego,warez,web' },
+  { id: 'web-classified', title: '10.19.99.4 Carlsbad Network Gateway Archive', folder: 'Web', url: '/web/classified.html', desc: 'Carlsbad skunkworks intranet archive: memory hex inspector, 1999Hz RF signal diagnostics & packet sniffer.', tags: 'classified,leak,intranet,10.19.99.4,skunkworks,diagnostic,signal,web' },
   { id: 'web-contrib', title: 'Fleet Compute Contributor Portal', folder: 'Web', url: '/apps/contribute.html', desc: 'Volunteer compute portal donating free Gemini quota to fuel the living autonomous fleet.', tags: 'contribute,compute,quota,fleet,fuel,web' }
 ];
 
@@ -2699,6 +3544,15 @@ function executeStockTrade() {
    ========================================================================= */
 const DEFAULT_CLASSIFIEDS = [
   {
+    id: 1999,
+    title: "WANTED: Packet Sniffer Analysis for Anomalous 1999Hz Subcarrier Harmonics",
+    category: "JOBS",
+    price: "$65/hr or DAT Exchange",
+    handle: "SysAdmin_NULL",
+    date: "1999-12-28",
+    desc: "Investigating recurring non-routable packet bursts originating from Carlsbad gateway relay (10.19.99.4). Carrier fluctuates at precise 1999Hz harmonic with ghost acoustic subcarrier. Reply via KMail to sysadmin@echo-subsystem.net or contact via acoustic terminal."
+  },
+  {
     id: 10,
     title: "FOUND: DDS-3 Tape labeled '10.19.99.4/classified' (Carlsbad Intranet)",
     category: "SERVICES",
@@ -2830,6 +3684,10 @@ function loadClassifieds() {
   } else {
     classifiedsData = [...DEFAULT_CLASSIFIEDS];
   }
+  if (!classifiedsData.some(ad => ad.handle === 'SysAdmin_NULL' || ad.id === 1999)) {
+    classifiedsData.unshift(DEFAULT_CLASSIFIEDS[0]);
+    saveClassifieds();
+  }
 }
 
 function saveClassifieds() {
@@ -2955,7 +3813,8 @@ function openReplyModal(handle, title) {
   playClick();
   activeReplySeller = handle;
   activeReplyTitle = title;
-  document.getElementById('replyRecipient').value = `${handle}@knet.org`;
+  const recipientEmail = handle === 'SysAdmin_NULL' ? 'sysadmin@echo-subsystem.net' : `${handle}@knet.org`;
+  document.getElementById('replyRecipient').value = recipientEmail;
   document.getElementById('replySubject').value = `RE: ${title}`;
   document.getElementById('replyAdModal').style.display = 'flex';
 }
@@ -2967,7 +3826,11 @@ function closeReplyModal() {
 function sendClassifiedReply() {
   playSuccessChime();
   closeReplyModal();
-  alert(`Your reply was dispatched via KMail to ${activeReplySeller}@knet.org! Check your inbox for updates.`);
+  if (activeReplySeller === 'SysAdmin_NULL') {
+    alert(`Your reply was dispatched via KMail to sysadmin@echo-subsystem.net!\n\nAutomated Daemon Response:\n[CARRIER: 1999Hz ACKNOWLEDGED // CAPTURE LOG BUFFER STORED // ACCESS ACOUSTIC LAB ON ECHO-SUBSYSTEM].`);
+  } else {
+    alert(`Your reply was dispatched via KMail to ${activeReplySeller}@knet.org! Check your inbox for updates.`);
+  }
 }
 
 /* =========================================================================
@@ -3874,7 +4737,7 @@ function selectZodiacSign(key) {
    ========================================================================= */
 function switchPortalTab(tabName) {
   playClick();
-  const tabs = ['directory', 'stocks', 'classifieds', 'weather', 'speedtest', 'horoscope', 'trivia'];
+  const tabs = ['directory', 'news', 'radio', 'stocks', 'classifieds', 'yellowpages', 'weather', 'speedtest', 'horoscope', 'trivia'];
   tabs.forEach(t => {
     const navEl = document.getElementById(`tabNav-${t}`);
     const contentEl = document.getElementById(`tab-${t}`);
@@ -3892,6 +4755,12 @@ function switchPortalTab(tabName) {
     updatePortfolioStats();
   } else if (tabName === 'classifieds') {
     filterClassifieds();
+  } else if (tabName === 'news') {
+    renderNewsArticles();
+  } else if (tabName === 'yellowpages') {
+    renderYellowPages();
+  } else if (tabName === 'radio') {
+    initSpectrumLeds();
   } else if (tabName === 'weather') {
     updateWeatherDisplay();
   } else if (tabName === 'speedtest') {
@@ -3904,7 +4773,7 @@ function switchPortalTab(tabName) {
   }
 }
 
-// Webring Random Jump Teleporter
+// Webring Random Jump Teleporter (Surface & Tier 2 Nodes)
 const WEBRING_SITES = [
   '/web/geocities.html',
   '/web/warez.html',
@@ -3912,10 +4781,6 @@ const WEBRING_SITES = [
   '/web/cybercafe.html',
   '/web/users/neon_rider.html',
   '/web/asm_temple.html',
-  '/web/echo_subsystem.html',
-  '/web/classified.html',
-  '/web/deep_core.html',
-  '/web/darknet.html',
   '/apps/contribute.html',
   '/apps/krogue.html',
   '/apps/kbbs.html'
@@ -3939,6 +4804,583 @@ function escapeHtml(str) {
 }
 
 /* =========================================================================
+   NEWS WIRE '99 SYSTEM (INTERACTIVE AP/REUTERS NEWSROOM)
+   ========================================================================= */
+const NEWS_ARTICLES = [
+  {
+    id: 'news-1',
+    category: 'TECH',
+    headline: "3dfx Unveils Glide 3.0 API & Voodoo3 3500 TV AGP Architecture",
+    date: "1999-10-14",
+    dateline: "SAN JOSE, CA (KiloNet Tech Wire)",
+    byline: "By Marcus Vance, Hardware Editor",
+    breaking: false,
+    intranet: false,
+    snippet: "3dfx Interactive has finalized the Glide 3.0 programming interface, promising 350 MTexels/sec fill rates and 183MHz SDRAM clocking across its flagship Voodoo3 accelerators.",
+    body: "SAN JOSE, CA — 3dfx Interactive today distributed the release-candidate specification for Glide 3.0 to premier game developers. Engineered specifically for the Avenger chipset powering the Voodoo3 series, Glide 3.0 introduces state-caching optimizations and precision texture combiners that eliminate CPU bottlenecks during intensive multi-player deathmatches.\n\nBenchmarks on 500MHz Pentium III testbeds running Surreal Tournament and Tremor III Arena revealed a 24% frame rate elevation over legacy Glide 2.x drivers at 1024x768 resolution. OEM partners confirmed shipments of the Voodoo3 3500 TV with integrated TV tuner and MPEG-2 hardware capture will hit retail shelves ahead of the holiday shopping rush.",
+    comments: [
+      { nick: "GlideMaster_99", text: "Finally! No more mini-GL wrappers needed for Tremor III. 3dfx still rules the AGP slot!" },
+      { nick: "OpenGL_Fanatic", text: "Glide is proprietary. Direct3D 7 and OpenGL 1.2 will win the long war." }
+    ]
+  },
+  {
+    id: 'news-2',
+    category: 'OS_NET',
+    headline: "Linux 2.2 Kernel Adoption Skyrockets Across Commercial Web Servers",
+    date: "1999-10-12",
+    dateline: "HELSINKI / SAN FRANCISCO (Reuters)",
+    byline: "By Elena Rostova, Systems Reporter",
+    breaking: false,
+    intranet: false,
+    snippet: "Netcraft surveys reveal over 31% of public Apache web servers are now powered by the Linux 2.2 stable kernel series, citing symmetric multiprocessing (SMP) scalability.",
+    body: "HELSINKI — Commercial enterprise adoption of the Linux 2.2 kernel has crossed historic thresholds this week. The updated network stack, featuring enhanced TCP SYN flood protection and native support for up to 16 SMP processors, has made the open-source OS the preferred foundation for high-density rackmount ISPs.\n\nLeading dot-com hosting facilities in Silicon Valley reported significant reductions in kernel lock contention during peak web traffic spikes. Red Hat and Debian maintainers noted download server traffic hit all-time highs following the release of Apache 1.3.9.",
+    comments: [
+      { nick: "TuxAdmin", text: "Upgraded our dual-P3 450 server to 2.2.12 last weekend. Rock-solid stability under 500 req/sec." },
+      { nick: "NT_Engineer", text: "Wait until Windows 2000 drops next year. Active Directory will change everything." }
+    ]
+  },
+  {
+    id: 'news-3',
+    category: 'GAMING',
+    headline: "Surreal Tournament and Tremor III Arena Set to Headline Dallas LAN Championships",
+    date: "1999-10-10",
+    dateline: "DALLAS, TX (KiloNet Gaming Dispatch)",
+    byline: "By Kyle 'FragMaster' Bennett",
+    breaking: false,
+    intranet: false,
+    snippet: "Competitive esports reaches fever pitch as tournament organizers confirm $100,000 purse for upcoming international arena duel championships.",
+    body: "DALLAS, TX — Over 1,200 LAN duelists are converging on the convention center this weekend for the 1999 Fall Frag Championships. The dual tournament showcases id's Tremor III Arena alongside Epic's Surreal Tournament.\n\nOrganizers have installed a fiber-optic Gigabit backbone connecting 400 dedicated competitor rigs equipped with CRT monitors running at 120Hz refresh rates. Fast-paced duels on maps like 'Facing Worlds' and 'The Longest Yard' will be broadcast live over KNet RealAudio stream relays.",
+    comments: [
+      { nick: "RocketJumper", text: "Facing Worlds sniper duels are going to be legendary. Can't wait for the live stream!" },
+      { nick: "InstaGib_King", text: "Shock rifle combo is the purest test of skill ever invented." }
+    ]
+  },
+  {
+    id: 'news-4',
+    category: 'BUSINESS',
+    headline: "Online Pet Food Retailer Closes $45M Series B; Dot-Com Valuations Soar",
+    date: "1999-10-15",
+    dateline: "NEW YORK, NY (Wall Street Wire)",
+    byline: "By Arthur Sterling, Senior Financial Analyst",
+    breaking: false,
+    intranet: false,
+    snippet: "Venture capital frenzy shows zero sign of abating as e-commerce startups command multi-billion dollar market capitalizations ahead of holiday consumer rush.",
+    body: "NEW YORK — In yet another manifestation of late-90s dot-com exuberance, online pet supply distributor PetsPortal.com closed a $45 million Series B financing round today led by premier Silicon Valley venture funds. Despite incurring an operating loss of $12 for every $10 of pet food shipped, company founders projected profitability by 2004.\n\nWall Street investment banks are already pitching underwriters for a planned Q1 2000 IPO. The NASDAQ Composite hovered near 2,800, buoyed by relentless tech sector momentum.",
+    comments: [
+      { nick: "ValueInvestor", text: "Negative gross margins with free 50-lb dog food shipping? This math cannot survive." },
+      { nick: "DotComBull", text: "Traditional metrics don't apply to the New Economy! It's all about mindshare and eyeballs!" }
+    ]
+  },
+  {
+    id: 'news-5',
+    category: 'INTRANET',
+    headline: "Carlsbad Gateway NOC: Unexplained 1999Hz Subcarrier Harmonics on Subnet 10.19.99.x",
+    date: "1999-10-15",
+    dateline: "CARLSBAD TESTING FACILITY (Skunkworks Network Operations)",
+    byline: "By Internal Engineering Bulletin #0x1999",
+    breaking: true,
+    intranet: true,
+    snippet: "Network engineers monitoring backbone packet concentrators log recurring high-frequency harmonic bursts originating from unmapped internal gateway router 10.19.99.4.",
+    body: "CARLSBAD SKUNKWORKS — Network Operations Center logs at the Carlsbad testing division recorded recurring non-routable packet bursts overnight. Spectrum analyzers tapped into the primary T3 backbone concentrator isolated a persistent carrier anomaly locked precisely at 1999Hz.\n\nTelemetry diagnostics indicate the signal packets do not match standard TCP/IP framing, exhibiting unusual cryptographic header signatures and cyclic acoustic pulses. Chief SysAdmin confirmed no degradation to commercial internet traffic, but opened internal ticket #0x1999-ECHO.\n\nField technicians seeking diagnostic telemetry or packet trace captures are instructed to inspect KMail dispatches, consult the acoustic research journal on the echo subsystem, or review magnetic tape archives via the intranet terminal.",
+    comments: [
+      { nick: "SysAdmin_NULL", text: "Carrier pattern is repeating every 48.2 seconds. This is not line jitter. Someone or something is broadcasting from within the core." },
+      { nick: "NetOps_Lead", text: "Keep ticket #0x1999 off the public list. Route all captures to tape drive 4." }
+    ]
+  },
+  {
+    id: 'news-6',
+    category: 'TECH',
+    headline: "Rambus RDRAM vs PC133 SDRAM: Memory Architecture Debate Intensifies",
+    date: "1999-10-08",
+    dateline: "SANTA CLARA, CA (KiloNet Tech Wire)",
+    byline: "By David Chen, Silicon Analyst",
+    breaking: false,
+    intranet: false,
+    snippet: "Motherboard manufacturers question high latency and licensing costs of Direct RDRAM as PC133 SDRAM gains favor among enthusiast builders.",
+    body: "SANTA CLARA — Ahead of Intel's upcoming i820 'Camino' chipset launch, motherboard partners are voicing deep concern regarding Direct Rambus DRAM pricing. While RDRAM boasts 1.6 GB/sec memory bandwidth over a narrow 16-bit serial bus, high latency and thermal dissipation have driven enthusiast interest toward affordable PC133 CAS-2 SDRAM modules.\n\nSeveral Taiwanese motherboard manufacturers confirmed plans to release Slot 1 motherboards utilizing VIA Apollo Pro133 chipsets, offering consumers an alternative to expensive RIMM modules.",
+    comments: [
+      { nick: "Overclock_99", text: "PC133 at CAS 2-2-2 runs circles around Rambus in real games. Intel made a huge mistake." }
+    ]
+  },
+  {
+    id: 'news-7',
+    category: 'OS_NET',
+    headline: "Global Y2K Readiness Simulations Conclude with High Confidence",
+    date: "1999-10-06",
+    dateline: "GENEVA, SWITZERLAND (AP)",
+    byline: "By Claire Dupont, International Correspondent",
+    breaking: false,
+    intranet: false,
+    snippet: "International telecommunications committee concludes comprehensive millennium rollover drills, verifying banking switches and air traffic control systems.",
+    body: "GENEVA — A coordinated 72-hour test simulation involving 42 national telecommunications carriers and 120 international financial clearinghouses concluded today with zero systemic outages. Systems were subjected to simulated clock rollovers across Dec 31, 1999, Jan 1, 2000, and leap-year day Feb 29, 2000.\n\nWhile minor date display anomalies were noted in legacy COBOL batch routines, critical transaction processing and power grid telemetry functioned normally.",
+    comments: [
+      { nick: "Y2K_Prepper", text: "They only tested in controlled lab environments. I'm still keeping 50 gallons of water and cash at home." }
+    ]
+  },
+  {
+    id: 'news-8',
+    category: 'GAMING',
+    headline: "Demoscene Legend FLARELIGHT Premieres Breakthrough 64KB Intro 'Mindflux '99'",
+    date: "1999-10-04",
+    dateline: "AMSTERDAM, NETHERLANDS (Scene Wire)",
+    byline: "By Sven 'PixelJunkie' Lindqvist",
+    breaking: false,
+    intranet: false,
+    snippet: "European demoparty erupts in ovation as Swedish coders squeeze 3D raymarched metaballs, procedural FM synthesizer, and textured tunnels into a single 65,536-byte executable.",
+    body: "AMSTERDAM — At the European Autumn Demoscene Invitational, scene group FLARELIGHT took first prize in the PC 64KB Intro competition with their release 'Mindflux '99'. Written entirely in hand-optimized x86 assembly, the demo features real-time bump-mapped procedural textures, smooth Phong-shaded polygon meshes, and a 4-channel synthesizer that fits in under 8 kilobytes of code.\n\nThe executable is now available for download across scene FTP mirror sites and KiloNet warez archives.",
+    comments: [
+      { nick: "AsmPriest", text: "Absolute masterwork of algorithmic compression. The procedural music synth alone is worth studying." },
+      { nick: "SceneWatcher", text: "FLARELIGHT proves again that 64KB is plenty of room for pure art." }
+    ]
+  }
+];
+
+let activeNewsCategory = 'ALL';
+let activeReadingArticleId = null;
+
+function renderNewsArticles() {
+  const listEl = document.getElementById('newsArticleList');
+  if (!listEl) return;
+  const q = (document.getElementById('newsSearchInput')?.value || '').toLowerCase().trim();
+
+  const filtered = NEWS_ARTICLES.filter(item => {
+    if (activeNewsCategory !== 'ALL' && item.category !== activeNewsCategory) return false;
+    if (q) {
+      const match = item.headline.toLowerCase().includes(q) ||
+                    item.snippet.toLowerCase().includes(q) ||
+                    item.body.toLowerCase().includes(q) ||
+                    item.category.toLowerCase().includes(q);
+      if (!match) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = '<div style="padding:16px; text-align:center; color:#666;">No news dispatches found matching your search.</div>';
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(item => {
+    const isBreaking = item.breaking ? 'news-card-breaking' : '';
+    const isIntranet = item.intranet ? 'news-card-intranet' : '';
+    const badge = item.breaking ? '<span style="background:#cc0000; color:#fff; font-size:10px; font-weight:bold; padding:1px 4px; margin-right:4px;">BREAKING</span>' : '';
+    const intraBadge = item.intranet ? '<span style="background:#660099; color:#fff; font-size:10px; font-weight:bold; padding:1px 4px; margin-right:4px;">INTRANET WIRE</span>' : '';
+
+    return `
+      <div class="news-card ${isBreaking} ${isIntranet}">
+        <div class="news-meta-row">
+          ${badge} ${intraBadge}
+          <span class="news-cat-tag">${escapeHtml(item.category)}</span>
+          <span>📅 ${escapeHtml(item.date)}</span>
+          <span>📍 ${escapeHtml(item.dateline)}</span>
+        </div>
+        <div class="news-headline" onclick="openNewsArticle('${item.id}')">${escapeHtml(item.headline)}</div>
+        <div class="news-snippet">${escapeHtml(item.snippet)}</div>
+        <div style="font-size:11px; margin-top:6px; color:#555;">
+          ${escapeHtml(item.byline)} • <a href="#" onclick="openNewsArticle('${item.id}'); return false;">Read Full Dispatch &amp; Comments »</a>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function setNewsCategory(cat) {
+  playClick();
+  activeNewsCategory = cat;
+  const pills = document.querySelectorAll('#newsFilterPills .news-pill');
+  pills.forEach(p => p.classList.remove('active'));
+  if (event && event.target) event.target.classList.add('active');
+  renderNewsArticles();
+}
+
+function filterNewsArticles() {
+  renderNewsArticles();
+}
+
+function openNewsArticle(articleId) {
+  playClick();
+  const art = NEWS_ARTICLES.find(a => a.id === articleId);
+  if (!art) return;
+  activeReadingArticleId = articleId;
+
+  document.getElementById('readNewsHeadline').textContent = art.headline;
+  document.getElementById('readNewsMeta').textContent = `${art.dateline} — ${art.byline} — Published ${art.date}`;
+  document.getElementById('readNewsBody').innerHTML = art.body.replace(/\n\n/g, '<br><br>');
+
+  renderNewsComments(art);
+  document.getElementById('readNewsModal').style.display = 'flex';
+}
+
+function closeNewsModal() {
+  playClick();
+  document.getElementById('readNewsModal').style.display = 'none';
+  activeReadingArticleId = null;
+}
+
+function renderNewsComments(art) {
+  const container = document.getElementById('readNewsCommentsList');
+  if (!container) return;
+
+  const savedComments = JSON.parse(localStorage.getItem(`knet_news_comments_${art.id}`) || '[]');
+  const allComments = [...art.comments, ...savedComments];
+
+  container.innerHTML = allComments.map(c => `
+    <div style="background:#ffffff; border:1px solid #e0e0e0; padding:4px 6px;">
+      <strong style="color:var(--navy-dark);">${escapeHtml(c.nick)}:</strong>
+      <span>${escapeHtml(c.text)}</span>
+    </div>
+  `).join('');
+}
+
+function submitNewsComment() {
+  if (!activeReadingArticleId) return;
+  const handleInput = document.getElementById('newsCommentInputHandle');
+  const textInput = document.getElementById('newsCommentInputText');
+  const nick = handleInput.value.trim() || 'Anonymous_Reader';
+  const text = textInput.value.trim();
+  if (!text) return;
+
+  playSuccessChime();
+  const key = `knet_news_comments_${activeReadingArticleId}`;
+  const saved = JSON.parse(localStorage.getItem(key) || '[]');
+  saved.push({ nick, text, time: Date.now() });
+  localStorage.setItem(key, JSON.stringify(saved));
+
+  textInput.value = '';
+  const art = NEWS_ARTICLES.find(a => a.id === activeReadingArticleId);
+  if (art) renderNewsComments(art);
+}
+
+function exportNewsDispatchText() {
+  playClick();
+  const art = NEWS_ARTICLES.find(a => a.id === activeReadingArticleId);
+  if (!art) return;
+
+  const textContent = `================================================================================
+KILONET CENTRAL WIRE SERVICE (1999) - OFFICIAL DISPATCH
+================================================================================
+HEADLINE:  ${art.headline}
+CATEGORY:  ${art.category}
+DATE:      ${art.date}
+DATELINE:  ${art.dateline}
+REPORTER:  ${art.byline}
+================================================================================
+
+${art.body}
+
+================================================================================
+COMMUNITY COMMENTS ARCHIVE:
+${art.comments.map(c => `[${c.nick}]: ${c.text}`).join('\n')}
+================================================================================
+Archive ID: ${art.id} • Distributed inside KNet Hypermedia Engine (1999)
+`;
+
+  const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `kilonet_dispatch_${art.id}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+/* =========================================================================
+   YELLOW PAGES '99 SYSTEM (WEBMASTER & HACKER REGISTRY)
+   ========================================================================= */
+const DEFAULT_YELLOWPAGES = [
+  {
+    handle: "PixelKnight_99",
+    category: "GRAPHICS",
+    url: "/web/geocities.html",
+    icq: "4829104",
+    bio: "Lead pixel artist at CyberSpire. Specialist in 16-color dithering palettes, 88x31 micro-badges, and isometric tilesets."
+  },
+  {
+    handle: "AsmPriest",
+    category: "CODING",
+    url: "/web/asm_temple.html",
+    icq: "1099238",
+    bio: "Researcher at Temple of x86 Opcodes. Decoding Win32 PE headers, hand-optimizing loop unrolling, and assembly micro-steppers."
+  },
+  {
+    handle: "DialUpKing",
+    category: "SYSOPS",
+    url: "/web/cybercafe.html",
+    icq: "8472910",
+    bio: "SysOp of CyberCafe '99. Running 8 incoming USR Courier V.Everything phone lines. Hardware enthusiast and ANSI artist."
+  },
+  {
+    handle: "SynthWave_99",
+    category: "AUDIO",
+    url: "/web/geocities.html",
+    icq: "3928174",
+    bio: "Tracker musician producing 4-channel MOD and XM chiptunes. Exploring Yamaha YM2612 2-operator FM bells and stereo delay."
+  },
+  {
+    handle: "GlideMaster_99",
+    category: "GRAPHICS",
+    url: "/web/portal.html",
+    icq: "9821034",
+    bio: "3D accelerator benchmark technician. Overclocking 3dfx Voodoo3 AGP cards and tuning Surreal Tournament mini-GL configs."
+  },
+  {
+    handle: "NeonRider",
+    category: "CODING",
+    url: "/web/users/neon_rider.html",
+    icq: "7729101",
+    bio: "Scene coder and x86 assembler at ~neon_rider's shrine. Exploring Win32 cracktros, software rasterizers, and demoscene intros."
+  },
+  {
+    handle: "Webmaster_Acolyte",
+    category: "WEB",
+    url: "/web/webring.html",
+    icq: "2381049",
+    bio: "Curator of the Central KiloNet Webring Hub. HTML 4.0 table guru, animated GIF archivist, and marquee layout designer."
+  },
+  {
+    handle: "DotComFounder",
+    category: "WEB",
+    url: "/web/portal.html",
+    icq: "5519283",
+    bio: "Silicon Alley startup architect building Perl 5 and CGI e-commerce solutions. Venture backed and growing fast."
+  },
+  {
+    handle: "DemosceneArchivist",
+    category: "AUDIO",
+    url: "/web/warez.html",
+    icq: "6629104",
+    bio: "Preserving 1999 demogroup NFO art, CP437 ANSI files, and procedural cracktro sound engines for posterity."
+  },
+  {
+    handle: "SysAdmin_NULL",
+    category: "SYSOPS",
+    url: "/web/echo_subsystem.html",
+    icq: "1999000",
+    bio: "Carlsbad testing facility network operations. Logging anomalous 1999Hz acoustic subcarrier telemetry and non-routable packet streams."
+  }
+];
+
+let activeYpCategory = 'ALL';
+let customYellowPages = [];
+
+function loadYellowPages() {
+  const saved = localStorage.getItem('knet_portal_yellowpages');
+  if (saved) {
+    try {
+      customYellowPages = JSON.parse(saved);
+    } catch(e) {
+      customYellowPages = [];
+    }
+  }
+}
+
+function renderYellowPages() {
+  const gridEl = document.getElementById('yellowPagesGrid');
+  if (!gridEl) return;
+  const q = (document.getElementById('ypSearchInput')?.value || '').toLowerCase().trim();
+
+  const allEntries = [...DEFAULT_YELLOWPAGES, ...customYellowPages];
+  const filtered = allEntries.filter(item => {
+    if (activeYpCategory !== 'ALL' && item.category !== activeYpCategory) return false;
+    if (q) {
+      const match = item.handle.toLowerCase().includes(q) ||
+                    item.bio.toLowerCase().includes(q) ||
+                    item.category.toLowerCase().includes(q) ||
+                    item.url.toLowerCase().includes(q);
+      if (!match) return false;
+    }
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    gridEl.innerHTML = '<div style="grid-column:1/-1; padding:16px; text-align:center; color:#666;">No webmaster entries found.</div>';
+    return;
+  }
+
+  gridEl.innerHTML = filtered.map(item => `
+    <div class="yp-card">
+      <div class="yp-handle">
+        <span>👤 ${escapeHtml(item.handle)}</span>
+        <span class="yp-badge">${escapeHtml(item.category)}</span>
+      </div>
+      <div class="yp-url-link">
+        🌐 <a href="${escapeHtml(item.url)}">${escapeHtml(item.url)}</a>
+      </div>
+      ${item.icq ? `<div style="font-size:10px; color:#555;">📟 ICQ: <strong>${escapeHtml(item.icq)}</strong> <span style="color:#008800;">● Online</span></div>` : ''}
+      <div class="yp-bio">${escapeHtml(item.bio)}</div>
+    </div>
+  `).join('');
+}
+
+function setYpFilter(cat) {
+  playClick();
+  activeYpCategory = cat;
+  const pills = document.querySelectorAll('#ypFilterPills .news-pill');
+  pills.forEach(p => p.classList.remove('active'));
+  if (event && event.target) event.target.classList.add('active');
+  renderYellowPages();
+}
+
+function filterYellowPages() {
+  renderYellowPages();
+}
+
+function openRegisterWebmasterModal() {
+  playClick();
+  document.getElementById('registerWebmasterModal').style.display = 'flex';
+}
+
+function closeRegisterWebmasterModal() {
+  playClick();
+  document.getElementById('registerWebmasterModal').style.display = 'none';
+}
+
+function handleRegisterWebmaster(e) {
+  e.preventDefault();
+  playSuccessChime();
+
+  const handle = document.getElementById('ypInputHandle').value.trim();
+  const category = document.getElementById('ypInputCategory').value;
+  const url = document.getElementById('ypInputUrl').value.trim();
+  const icq = document.getElementById('ypInputIcq').value.trim();
+  const bio = document.getElementById('ypInputBio').value.trim();
+
+  const newEntry = { handle, category, url, icq, bio, custom: true, time: Date.now() };
+  customYellowPages.unshift(newEntry);
+  localStorage.setItem('knet_portal_yellowpages', JSON.stringify(customYellowPages));
+
+  if (typeof syncYellowPagesToFirebase === 'function') {
+    syncYellowPagesToFirebase(newEntry);
+  }
+
+  closeRegisterWebmasterModal();
+  renderYellowPages();
+  alert(`Congratulations, ${handle}! Your profile has been published to the KiloNet Yellow Pages '99 directory.`);
+}
+
+/* =========================================================================
+   MARQUEE ROTATOR & STATUS CLOCK
+   ========================================================================= */
+const MARQUEE_HEADLINES = [
+  "FLASH 1999: KiloApps Fleet reaches 98 retro applications! All modules under 999KB ceiling. Y2K compliance verification underway across all ring nodes.",
+  "INTRANET BULLETIN: Carlsbad engineering division reports unexplained subcarrier harmonics on gateway router 10.19.99.4; diagnostic engineers logging 1999Hz carrier shifts...",
+  "HARDWARE WATCH: 3dfx announces Glide 3.0 API specifications for Voodoo3 architecture; fill rates exceed 350 MTexels/sec in benchmark testing.",
+  "GAMING WIRE: World Championship brackets finalized for Surreal Tournament and Tremor III Arena at Dallas LAN arena.",
+  "WALL STREET: NASDAQ tech rally continues as KiloNet Systems Inc. (KLNT) surges +7.5% on new web directory indexing milestone."
+];
+let marqueeIndex = 0;
+
+function rotateMarquee() {
+  const el = document.getElementById('marqueeText');
+  if (!el) return;
+  marqueeIndex = (marqueeIndex + 1) % MARQUEE_HEADLINES.length;
+  el.textContent = MARQUEE_HEADLINES[marqueeIndex];
+}
+
+function updatePortalClock() {
+  const clockEl = document.getElementById('portalClockCell');
+  if (!clockEl) return;
+  const now = new Date();
+  const dStr = `1999-10-15 ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+  clockEl.textContent = `🕒 ${dStr}`;
+}
+
+/* =========================================================================
+   FIREBASE REALTIME DATABASE & ARG COLLABORATIVE SIGNAL MONITOR
+   ========================================================================= */
+let firebaseDb = null;
+let portalVoyagerId = localStorage.getItem('knet_portal_voyager_id');
+if (!portalVoyagerId) {
+  portalVoyagerId = 'voyager_' + Math.random().toString(16).slice(2, 10);
+  localStorage.setItem('knet_portal_voyager_id', portalVoyagerId);
+}
+
+function initFirebasePortal() {
+  import("https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js")
+    .then(firebaseAppModule => {
+      return import("https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js")
+        .then(firebaseDbModule => {
+          const { initializeApp } = firebaseAppModule;
+          const { getDatabase, ref, set, push, onValue, onChildAdded, serverTimestamp, onDisconnect } = firebaseDbModule;
+
+          const firebaseConfig = {
+            apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+            authDomain: "kiloappschat.firebaseapp.com",
+            databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+            projectId: "kiloappschat",
+            storageBucket: "kiloappschat.firebasestorage.app",
+            messagingSenderId: "290208566057",
+            appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+          };
+
+          const app = initializeApp(firebaseConfig);
+          firebaseDb = getDatabase(app);
+
+          // Presence System
+          const presenceRef = ref(firebaseDb, `virtual_web/portal/presence/${portalVoyagerId}`);
+          onDisconnect(presenceRef).remove();
+          set(presenceRef, {
+            time: serverTimestamp(),
+            agent: 'KNet/2.0 (1999)'
+          });
+
+          // Online Voyagers Count
+          const allPresenceRef = ref(firebaseDb, 'virtual_web/portal/presence');
+          onValue(allPresenceRef, (snapshot) => {
+            const data = snapshot.val();
+            const count = data ? Object.keys(data).length : 1;
+            const badgeEl = document.getElementById('onlineVoyagersCount');
+            if (badgeEl) badgeEl.textContent = count;
+          });
+
+          // ARG Collaborative Signal Board Monitor
+          const signalsRef = ref(firebaseDb, 'arg/signals');
+          onValue(signalsRef, (snapshot) => {
+            const data = snapshot.val();
+            const fragmentCount = data ? Object.keys(data).length : 0;
+            const carrierEl = document.getElementById('portalCarrierStatus');
+            if (carrierEl && fragmentCount >= 2) {
+              carrierEl.textContent = "📡 NOC CARRIER: 1999Hz LOCKED // RELAY ACTIVE";
+              carrierEl.style.color = "#008800";
+              carrierEl.style.fontWeight = "bold";
+            }
+          });
+
+          // Listen for new Classified Ads posted globally
+          const classifiedsRef = ref(firebaseDb, 'virtual_web/portal/classifieds');
+          onChildAdded(classifiedsRef, (snapshot) => {
+            const val = snapshot.val();
+            if (val && !classifiedsData.some(ad => ad.id === val.id || (ad.handle === val.handle && ad.title === val.title))) {
+              classifiedsData.unshift(val);
+              filterClassifieds();
+            }
+          });
+        });
+    })
+    .catch(() => {
+      // Fallback: offline simulated mode
+    });
+
+  // Solo fallback timer for ARG signal carrier lock (Directive requirement)
+  setTimeout(() => {
+    const carrierEl = document.getElementById('portalCarrierStatus');
+    if (carrierEl && carrierEl.textContent.includes('NOMINAL')) {
+      carrierEl.textContent = "📡 NOC CARRIER: 1999Hz LOCKED // CACHED RELAY";
+      carrierEl.style.color = "#008800";
+    }
+  }, 30000);
+}
+
+function syncYellowPagesToFirebase(entry) {
+  if (!firebaseDb) return;
+  import("https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js")
+    .then(({ ref, push }) => {
+      const ypRef = ref(firebaseDb, 'virtual_web/portal/yellowpages');
+      push(ypRef, entry);
+    }).catch(()=>{});
+}
+
+/* =========================================================================
    13. INITIALIZATION
    ========================================================================= */
 window.addEventListener('DOMContentLoaded', () => {
@@ -3953,6 +5395,7 @@ window.addEventListener('DOMContentLoaded', () => {
   loadCustomSites();
   loadPortfolio();
   loadClassifieds();
+  loadYellowPages();
   loadTriviaState();
   loadPollState();
 
@@ -3960,14 +5403,29 @@ window.addEventListener('DOMContentLoaded', () => {
   renderStockTable();
   updatePortfolioStats();
   filterClassifieds();
+  renderNewsArticles();
+  renderYellowPages();
   updateWeatherDisplay();
   renderTriviaQuestion();
   renderPoll(activePollTopic);
   recalcDownloadTimes();
   renderZodiacButtons();
+  updatePortalClock();
 
   // Start real-time stock ticker (every 3.5 seconds)
   setInterval(tickStockMarket, 3500);
+
+  // Marquee rotator (every 6 seconds)
+  setInterval(rotateMarquee, 6000);
+
+  // Clock updater (every 1 second)
+  setInterval(updatePortalClock, 1000);
+
+  // Initialize Firebase RTDB presence & signals
+  initFirebasePortal();
+
+  // Initialize spectrum visualizer leds
+  initSpectrumLeds();
 
   // Initialize audio on first user interaction
   const initAudioOnUserClick = () => {
