@@ -28,6 +28,12 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 APP_JSX_PATH = REPO_ROOT / "KiloOS" / "src" / "App.jsx"
+
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
 ICON_DIR = REPO_ROOT / "KiloOS" / "public" / "assets" / "icons"
 
 
