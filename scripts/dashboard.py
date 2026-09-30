@@ -244,10 +244,19 @@ def query_task_state_from_system() -> str:
         )
         if res.returncode == 0:
             lines = res.stdout.strip().splitlines()
+            states = []
             for line in lines:
                 parts = [p.strip().strip('"') for p in line.split(",")]
                 if len(parts) >= 3 and parts[2]:
-                    return parts[2]
+                    states.append(parts[2])
+            if any(s.lower() == "running" for s in states):
+                return "Running"
+            if any(s.lower() == "ready" for s in states):
+                return "Ready"
+            if any(s.lower() == "disabled" for s in states):
+                return "Disabled"
+            if states:
+                return states[0]
         elif res.returncode == 1:
             if "cannot find the file" in res.stderr.lower():
                 return "NOT REGISTERED"
@@ -1032,18 +1041,20 @@ class FleetDashboard(tk.Tk):
                 pass
 
         # Update Engine Status Badge
-        if task_state == "Ready" and session_active:
+        if task_state == "Running":
+            self.lbl_status.configure(text="⚡ RUNNING (Executing Turn)", fg=self.c_accent)
+        elif task_state == "Ready" and session_active:
             self.lbl_status.configure(text="🟢 ACTIVE & SCHEDULED", fg=self.c_green)
         elif task_state == "Ready" and not session_active:
-            self.lbl_status.configure(text="🟡 READY (Session Expired/Stopped)", fg=self.c_orange)
-        elif task_state == "Disabled":
+            self.lbl_status.configure(text="🟡 READY (Session Stopped)", fg=self.c_orange)
+        elif task_state == "Disabled" or not session_active:
             self.lbl_status.configure(text="🔴 STOPPED (Resources 100% Free)", fg=self.c_red)
         else:
             self.lbl_status.configure(text=f"⚪ {task_state}", fg=self.c_sub)
 
         # 3. Calculate Next Run Time
         now = datetime.datetime.now()
-        mins = self.current_node_profile.get("minutes", [2, 17])
+        mins = self.current_node_profile.get("minutes", [2, 20, 38, 48])
         candidates = []
         for m in mins:
             t = now.replace(minute=m, second=0, microsecond=0)
@@ -1055,25 +1066,32 @@ class FleetDashboard(tk.Tk):
         next_m = int(diff_next.total_seconds() // 60)
         next_s = int(diff_next.total_seconds() % 60)
 
-        if task_state == "Ready" and session_active:
+        if task_state == "Running":
+            self.lbl_next_run.configure(
+                text=f"{next_time.strftime('%H:%M:%S')} (in {next_m}m {next_s}s) • Turn in progress",
+                fg=self.c_accent,
+            )
+        elif task_state == "Ready" and session_active:
             self.lbl_next_run.configure(
                 text=f"{next_time.strftime('%H:%M:%S')} (in {next_m}m {next_s}s)",
                 fg=self.c_fg,
             )
+        elif task_state == "Disabled" or not session_active:
+            self.lbl_next_run.configure(text="Suspended (Task Stopped)", fg=self.c_sub)
         else:
-            self.lbl_next_run.configure(text="Suspended (Task Disabled)", fg=self.c_sub)
+            self.lbl_next_run.configure(text=f"{task_state}", fg=self.c_sub)
 
         # 4. Window Alignment
         cur_min = now.minute
         is_safe = self.current_node_profile.get("is_safe", lambda m: True)
         if is_safe(cur_min):
             self.lbl_window.configure(
-                text=f"🟢 Safe Window (:{cur_min:02d} within {self.current_node_profile.get('safe_window', '')})",
+                text=f"🟢 Safe Window (:{cur_min:02d} — In Node Slot)",
                 fg=self.c_green,
             )
         else:
             self.lbl_window.configure(
-                text=f"🟡 Busy Window (:{cur_min:02d} — {self.current_node_profile.get('collision_desc', 'Reserved')})",
+                text=f"🟡 Busy Window (:{cur_min:02d} — Reserved for Other Node)",
                 fg=self.c_orange,
             )
 
@@ -1126,7 +1144,10 @@ class FleetDashboard(tk.Tk):
             sched_str = ", ".join([f":{m:02d}" for m in sched_mins]) if sched_mins else "--"
 
             if nid == self.current_node_id:
-                if task_state == "Ready" and session_active:
+                if task_state == "Running":
+                    stat_text = f"RUNNING ({sched_str})"
+                    stat_color = self.c_accent
+                elif task_state == "Ready" and session_active:
                     stat_text = f"ACTIVE ({sched_str})"
                     stat_color = self.c_green
                 elif task_state == "Disabled" or status == "stopped":
