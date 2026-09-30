@@ -758,6 +758,82 @@ void UpdateFont(HWND hwnd) {
     }
 }
 
+#define QUICKSAVE_FILE "kfont_quicksave.dat"
+
+typedef struct {
+    char fontName[64];
+    int size;
+    BOOL bold;
+    BOOL italic;
+    int tab;
+    WCHAR anatomyChar;
+    char customText[512];
+} KFontSaveData;
+
+void QuicksaveNative(HWND hwnd) {
+    KFontSaveData data = {0};
+    lstrcpynA(data.fontName, currentFontName, sizeof(data.fontName));
+    data.size = currentSize;
+    data.bold = isBold;
+    data.italic = isItalic;
+    data.tab = currentTab;
+    data.anatomyChar = anatomyChar;
+    GetWindowTextA(hCustomText, data.customText, sizeof(data.customText));
+
+    HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, &data, sizeof(data), &written, NULL);
+        CloseHandle(hFile);
+        MessageBoxA(hwnd, "Workspace state quicksaved to kfont_quicksave.dat [F5].", "KFont", MB_OK | MB_ICONINFORMATION);
+    } else {
+        MessageBoxA(hwnd, "Failed to create quicksave file (kfont_quicksave.dat).", "KFont Error", MB_OK | MB_ICONERROR);
+    }
+}
+
+void QuickloadNative(HWND hwnd) {
+    HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        KFontSaveData data = {0};
+        DWORD read = 0;
+        ReadFile(hFile, &data, sizeof(data), &read, NULL);
+        CloseHandle(hFile);
+        if (read == sizeof(data)) {
+            isBold = data.bold;
+            isItalic = data.italic;
+            SendMessage(hBold, BM_SETCHECK, isBold ? BST_CHECKED : BST_UNCHECKED, 0);
+            SendMessage(hItalic, BM_SETCHECK, isItalic ? BST_CHECKED : BST_UNCHECKED, 0);
+
+            int lbIdx = (int)SendMessageA(hList, LB_FINDSTRINGEXACT, -1, (LPARAM)data.fontName);
+            if (lbIdx != LB_ERR) {
+                SendMessage(hList, LB_SETCURSEL, lbIdx, 0);
+                lstrcpyA(currentFontName, data.fontName);
+            }
+
+            char szBuf[16];
+            wsprintfA(szBuf, "%d", data.size);
+            int cbIdx = (int)SendMessageA(hSizeList, CB_FINDSTRINGEXACT, -1, (LPARAM)szBuf);
+            if (cbIdx != CB_ERR) {
+                SendMessage(hSizeList, CB_SETCURSEL, cbIdx, 0);
+            }
+
+            anatomyChar = data.anatomyChar;
+            WCHAR wBuf[16];
+            wsprintfW(wBuf, L"U+%04X", (UINT)anatomyChar);
+            SetWindowTextW(hAnatomyChar, wBuf);
+
+            lstrcpynA(currentCustomText, data.customText, sizeof(currentCustomText));
+            SetWindowTextA(hCustomText, currentCustomText);
+
+            UpdateFont(hwnd);
+            SelectTab(hwnd, data.tab);
+            MessageBoxA(hwnd, "Quicksave snapshot restored from kfont_quicksave.dat [F9].", "KFont", MB_OK | MB_ICONINFORMATION);
+            return;
+        }
+    }
+    MessageBoxA(hwnd, "No quicksave snapshot found (kfont_quicksave.dat).\nPress F5 to save snapshot.", "KFont", MB_OK | MB_ICONWARNING);
+}
+
 void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd,
         "=== KFont - Typography & Font Engineering Inspector ===\n\n"
@@ -771,6 +847,8 @@ void ShowHelpDialog(HWND hwnd) {
         "  [7] Spec / Code: Win32 C LOGFONT & CSS variables code generator\n\n"
         "Keyboard Shortcuts:\n"
         "  [1-7]  : Switch inspector tabs\n"
+        "  [F5]   : Quicksave workspace snapshot (kfont_quicksave.dat)\n"
+        "  [F9]   : Quickload snapshot (kfont_quicksave.dat)\n"
         "  [B]    : Toggle Bold\n"
         "  [I]    : Toggle Italic\n"
         "  [C]    : Copy context report or C LOGFONT code snippet\n"
@@ -1009,7 +1087,13 @@ void MainEntry() {
         if (msg.message == WM_KEYDOWN) {
             HWND hFocus = GetFocus();
             BOOL inEdit = (hFocus == hCustomText || hFocus == hAnatomyChar);
-            if (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1) {
+            if (msg.wParam == VK_F5) {
+                QuicksaveNative(hwnd);
+                continue;
+            } else if (msg.wParam == VK_F9) {
+                QuickloadNative(hwnd);
+                continue;
+            } else if (msg.wParam == 'H' || msg.wParam == 'h' || msg.wParam == VK_F1) {
                 if (!inEdit) {
                     ShowHelpDialog(hwnd);
                     continue;

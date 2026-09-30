@@ -105,9 +105,9 @@
   #toastNotification { display: none; position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: #1e293b; color: #fff; padding: 10px 22px; border-radius: 20px; box-shadow: 0 4px 18px rgba(0,0,0,0.35); font-size: 12px; font-weight: 500; z-index: 2000; cursor: pointer; border-bottom: 2px solid #3b82f6; max-width: 90vw; text-align: center; pointer-events: auto; }
   #toastNotification:hover { background: #273142; }
 
-  #helpOverlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-  #helpOverlay.visible { display: flex; animation: fadeIn 0.15s ease-out; }
-  .help-modal { background: white; padding: 22px 28px; border-radius: 8px; box-shadow: 0 6px 30px rgba(0,0,0,0.3); max-width: 560px; font-family: inherit; position: relative; max-height: 90vh; overflow-y: auto; }
+  #helpOverlay, #exportModal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+  #helpOverlay.visible, #exportModal.visible { display: flex; animation: fadeIn 0.15s ease-out; }
+  .help-modal { background: white; padding: 22px 28px; border-radius: 8px; box-shadow: 0 6px 30px rgba(0,0,0,0.3); max-width: 580px; font-family: inherit; position: relative; max-height: 90vh; overflow-y: auto; }
   .help-modal h2 { margin-top: 0; border-bottom: none; color: #0066cc; display: flex; justify-content: space-between; align-items: center; font-size: 18px; }
   .help-modal ul { margin-bottom: 14px; line-height: 1.6; font-size: 13px; color: #334155; }
   .help-close-btn { background: none; border: none; font-size: 22px; cursor: pointer; color: #64748b; padding: 0 4px; line-height: 1; }
@@ -157,7 +157,13 @@
     </select>
     <label class="checkbox-label"><input type="checkbox" id="boldCheck"> Bold <span class="kbd-hint">B</span></label>
     <label class="checkbox-label"><input type="checkbox" id="italicCheck"> Italic <span class="kbd-hint">I</span></label>
-    <button id="helpBtn" class="action-btn" style="margin-left:auto;">Help [F1/H]</button>
+    <div style="display:flex; gap:6px; align-items:center; margin-left:auto; flex-wrap:wrap;">
+      <button id="quicksaveBtn" class="action-btn" title="Quicksave Workspace Snapshot [F5]">Save [F5]</button>
+      <button id="quickloadBtn" class="action-btn" title="Quickload Workspace Snapshot [F9]">Load [F9]</button>
+      <button id="exportModalBtn" class="action-btn" title="Export / Import Workspace Profile [JSON]">Profile</button>
+      <button id="soundToggleBtn" class="action-btn" title="Toggle Synthesizer Sound Effects [M]">🔊 Sound: ON</button>
+      <button id="helpBtn" class="action-btn" title="Typography Inspector Help &amp; Shortcuts [F1/H]">Help [F1/H]</button>
+    </div>
   </div>
   
   <div class="main">
@@ -415,6 +421,30 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
 
   <div id="toastNotification" title="Click to dismiss"></div>
 
+  <div id="exportModal" role="dialog" aria-modal="true" aria-labelledby="exportTitle">
+    <div class="help-modal">
+      <h2 id="exportTitle">
+        <span>KFont Workspace Profile &amp; Export</span>
+        <button class="help-close-btn" id="exportCloseBtn" title="Close Dialog">&times;</button>
+      </h2>
+      <p>Export or import your complete typography workspace, active font selections, sample strings, and custom analysis profiles.</p>
+      <div style="margin-bottom: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="action-btn" id="downloadProfileJsonBtn">💾 Download .kfont.json</button>
+        <button class="action-btn" id="copyProfileJsonBtn">📋 Copy Profile JSON</button>
+        <label class="action-btn" style="cursor: pointer; margin-bottom: 0;">
+          📁 Open File...
+          <input type="file" id="importFileInput" accept=".json,.kfont" style="display:none;">
+        </label>
+      </div>
+      <label for="profileJsonTextarea" style="font-size: 11px; font-weight: 600; color: #475569; display: block; margin-bottom: 4px;">WORKSPACE PROFILE JSON:</label>
+      <textarea id="profileJsonTextarea" style="width: 100%; height: 160px; font-family: Consolas, monospace; font-size: 12px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 4px; box-sizing: border-box; resize: vertical; background: #f8fafc;"></textarea>
+      <div style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <button class="action-btn" id="applyProfileTextBtn" style="background: #10b981;">Apply Profile from Text</button>
+        <button class="action-btn" id="exportModalCloseBtn" style="background: #64748b;">Close [Esc]</button>
+      </div>
+    </div>
+  </div>
+
   <div id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
     <div class="help-modal">
       <h2 id="helpTitle">
@@ -435,11 +465,14 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       <p><strong>Keyboard Shortcuts:</strong></p>
       <ul style="font-size:12px; color:#475569;">
         <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">1</kbd>–<kbd style="background:#eee; padding:1px 5px; border-radius:3px;">8</kbd> : Switch inspector tabs</li>
-        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">B</kbd> : Toggle Bold</li>
-        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">I</kbd> : Toggle Italic</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">F5</kbd> : Quicksave complete workspace snapshot</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">F9</kbd> : Quickload snapshot from storage</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">M</kbd> : Toggle Sega Genesis FM / SNES audio feedback</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">B</kbd> : Toggle Bold font weight</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">I</kbd> : Toggle Italic font style</li>
         <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">C</kbd> : Copy active context report or C LOGFONT snippet</li>
         <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">H</kbd> / <kbd style="background:#eee; padding:1px 5px; border-radius:3px;">F1</kbd> : Toggle this Help dialog</li>
-        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">Esc</kbd> : Dismiss Help dialog or Toast</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">Esc</kbd> : Dismiss active dialog or toast notification</li>
       </ul>
       <div style="margin-top:16px; display:flex; justify-content:flex-end;">
         <button class="action-btn" id="helpModalCloseBtn" style="padding:8px 18px; font-size:13px;">Close [Esc]</button>
@@ -467,19 +500,126 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     const customFg = document.getElementById('customFg');
     const customBg = document.getElementById('customBg');
     const customKernInput = document.getElementById('customKernInput');
+    const exportModal = document.getElementById('exportModal');
+    const soundToggleBtn = document.getElementById('soundToggleBtn');
+    const quicksaveBtn = document.getElementById('quicksaveBtn');
+    const quickloadBtn = document.getElementById('quickloadBtn');
+    const exportModalBtn = document.getElementById('exportModalBtn');
 
-    function escapeHtml(str) {
-      if (str === null || str === undefined) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+    let soundEnabled = safeGetStorage('kfont_sound_enabled', '1') === '1';
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) audioCtx = new AudioContextClass();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
     }
 
-    function escapeAttr(str) {
-      return escapeHtml(str);
+    function playSound(type, param) {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const now = ctx.currentTime;
+
+        if (type === 'tab') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(600, now);
+          osc.frequency.exponentialRampToValueAtTime(1200, now + 0.05);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.07);
+        } else if (type === 'click') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(440, now);
+          gain.gain.setValueAtTime(0.05, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        } else if (type === 'save') {
+          [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.045);
+            gain.gain.setValueAtTime(0, now + idx * 0.045);
+            gain.gain.linearRampToValueAtTime(0.08, now + idx * 0.045 + 0.015);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.045 + 0.18);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.045);
+            osc.stop(now + idx * 0.045 + 0.20);
+          });
+        } else if (type === 'load') {
+          [783.99, 659.25, 523.25, 659.25].forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.045);
+            gain.gain.setValueAtTime(0, now + idx * 0.045);
+            gain.gain.linearRampToValueAtTime(0.09, now + idx * 0.045 + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.045 + 0.22);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.045);
+            osc.stop(now + idx * 0.045 + 0.24);
+          });
+        } else if (type === 'copy') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(659.25, now);
+          osc.frequency.setValueAtTime(880, now + 0.05);
+          gain.gain.setValueAtTime(0.07, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.13);
+        } else if (type === 'glyph') {
+          const cp = typeof param === 'number' ? param : 65;
+          const baseFreq = 220 + ((cp * 31) % 660);
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(baseFreq, now);
+          osc.frequency.exponentialRampToValueAtTime(baseFreq * 0.5, now + 0.14);
+          gain.gain.setValueAtTime(0.07, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.15);
+        }
+      } catch (e) {}
+    }
+
+    function updateSoundBtn() {
+      if (soundToggleBtn) {
+        soundToggleBtn.textContent = soundEnabled ? '🔊 Sound: ON' : '🔈 Sound: OFF';
+        soundToggleBtn.title = soundEnabled ? 'Audio feedback enabled [M to mute]' : 'Audio feedback muted [M to unmute]';
+      }
+    }
+
+    function clearToasts() {
+      if (toastNotification) {
+        toastNotification.style.display = 'none';
+        clearTimeout(toastNotification._timer);
+      }
     }
 
     function showToast(msg) {
@@ -505,6 +645,139 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       try {
         localStorage.setItem(key, val);
       } catch (e) {}
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeAttr(str) {
+      return escapeHtml(str);
+    }
+
+    function getWorkspaceState() {
+      return {
+        app: "KFont",
+        version: "1.0",
+        fontFamily: fontList.value,
+        fontSize: sizeList.value,
+        isBold: boldCheck.checked,
+        isItalic: italicCheck.checked,
+        unicodeRange: unicodeRange.value,
+        anatomyChar: anatomyInput.value,
+        scaleRatio: scaleRatio.value,
+        customFg: customFg.value,
+        customBg: customBg.value,
+        customKern: customKernInput.value,
+        sampleText: sampleOutput.innerText,
+        activeTab: document.querySelector('.tab-btn.active')?.dataset.target || 'panel-metrics',
+        soundEnabled: soundEnabled,
+        savedAt: new Date().toISOString()
+      };
+    }
+
+    function applyWorkspaceState(state) {
+      if (!state || typeof state !== 'object') return false;
+      if (state.fontFamily && Array.from(fontList.options).some(o => o.value === state.fontFamily)) {
+        fontList.value = state.fontFamily;
+        safeSetStorage('kfont_font', state.fontFamily);
+      }
+      if (state.fontSize && Array.from(sizeList.options).some(o => o.value === state.fontSize)) {
+        sizeList.value = state.fontSize;
+        safeSetStorage('kfont_size', state.fontSize);
+      }
+      if (typeof state.isBold === 'boolean') {
+        boldCheck.checked = state.isBold;
+        safeSetStorage('kfont_bold', state.isBold ? '1' : '0');
+      }
+      if (typeof state.isItalic === 'boolean') {
+        italicCheck.checked = state.isItalic;
+        safeSetStorage('kfont_italic', state.isItalic ? '1' : '0');
+      }
+      if (state.unicodeRange && Array.from(unicodeRange.options).some(o => o.value === state.unicodeRange)) {
+        unicodeRange.value = state.unicodeRange;
+        safeSetStorage('kfont_range', state.unicodeRange);
+      }
+      if (state.anatomyChar) {
+        anatomyInput.value = state.anatomyChar;
+        safeSetStorage('kfont_anatomy_char', state.anatomyChar);
+      }
+      if (state.scaleRatio && Array.from(scaleRatio.options).some(o => o.value === String(state.scaleRatio))) {
+        scaleRatio.value = String(state.scaleRatio);
+        safeSetStorage('kfont_scale_ratio', String(state.scaleRatio));
+      }
+      if (state.customFg) {
+        customFg.value = state.customFg;
+        safeSetStorage('kfont_custom_fg', state.customFg);
+      }
+      if (state.customBg) {
+        customBg.value = state.customBg;
+        safeSetStorage('kfont_custom_bg', state.customBg);
+      }
+      if (state.customKern !== undefined) {
+        customKernInput.value = state.customKern;
+        safeSetStorage('kfont_custom_kern', state.customKern);
+      }
+      if (state.sampleText !== undefined) {
+        sampleOutput.innerText = state.sampleText;
+        safeSetStorage('kfont_sample', state.sampleText);
+      }
+      if (typeof state.soundEnabled === 'boolean') {
+        soundEnabled = state.soundEnabled;
+        updateSoundBtn();
+        safeSetStorage('kfont_sound_enabled', soundEnabled ? '1' : '0');
+      }
+      updateAll();
+      if (state.activeTab && document.getElementById(state.activeTab)) {
+        switchToTab(state.activeTab);
+      }
+      return true;
+    }
+
+    function quicksave() {
+      const state = getWorkspaceState();
+      safeSetStorage('kfont_quicksave', JSON.stringify(state));
+      playSound('save');
+      showToast("Workspace snapshot quicksaved [F5]");
+    }
+
+    function quickload() {
+      const raw = safeGetStorage('kfont_quicksave', null);
+      if (!raw) {
+        showToast("No quicksave snapshot found [Press F5 to save]");
+        playSound('click');
+        return;
+      }
+      try {
+        const state = JSON.parse(raw);
+        if (applyWorkspaceState(state)) {
+          playSound('load');
+          showToast("Workspace snapshot restored [F9]");
+        } else {
+          showToast("Invalid quicksave data format");
+        }
+      } catch (e) {
+        showToast("Error parsing quicksave data");
+      }
+    }
+
+    function openExportModal() {
+      clearToasts();
+      const state = getWorkspaceState();
+      document.getElementById('profileJsonTextarea').value = JSON.stringify(state, null, 2);
+      exportModal.classList.add('visible');
+      playSound('tab');
+    }
+
+    function closeExportModal() {
+      exportModal.classList.remove('visible');
+      playSound('click');
     }
     
     function getFontString(familyOverride, sizeOverride) {
@@ -610,6 +883,7 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
           const char = String.fromCodePoint(cp);
           anatomyInput.value = char;
           safeSetStorage('kfont_anatomy_char', anatomyInput.value);
+          playSound('glyph', cp);
           switchToTab('panel-anatomy');
           showToast(`Dissecting "${char}" (U+${cp.toString(16).toUpperCase().padStart(4, '0')})`);
         }
@@ -1386,9 +1660,107 @@ body {
       };
     }
 
+    // Toolbar Button Handlers
+    if (quicksaveBtn) quicksaveBtn.onclick = quicksave;
+    if (quickloadBtn) quickloadBtn.onclick = quickload;
+    if (exportModalBtn) exportModalBtn.onclick = openExportModal;
+    if (soundToggleBtn) {
+      soundToggleBtn.onclick = () => {
+        soundEnabled = !soundEnabled;
+        safeSetStorage('kfont_sound_enabled', soundEnabled ? '1' : '0');
+        updateSoundBtn();
+        if (soundEnabled) playSound('save');
+        showToast(`Sound FX: ${soundEnabled ? 'Enabled' : 'Muted'}`);
+      };
+    }
+
+    // Export / Import Modal Handlers
+    const exportCloseBtn = document.getElementById('exportCloseBtn');
+    if (exportCloseBtn) exportCloseBtn.onclick = closeExportModal;
+
+    const exportModalCloseBtn = document.getElementById('exportModalCloseBtn');
+    if (exportModalCloseBtn) exportModalCloseBtn.onclick = closeExportModal;
+
+    const downloadProfileJsonBtn = document.getElementById('downloadProfileJsonBtn');
+    if (downloadProfileJsonBtn) {
+      downloadProfileJsonBtn.onclick = () => {
+        const state = getWorkspaceState();
+        const jsonStr = JSON.stringify(state, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `kfont_${state.fontFamily.toLowerCase().replace(/\s+/g, '_')}_profile.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        playSound('copy');
+        showToast("Downloaded .kfont.json profile!");
+      };
+    }
+
+    const copyProfileJsonBtn = document.getElementById('copyProfileJsonBtn');
+    if (copyProfileJsonBtn) {
+      copyProfileJsonBtn.onclick = () => {
+        const text = document.getElementById('profileJsonTextarea').value;
+        copyToClipboard(text, "Copied profile JSON to clipboard!");
+      };
+    }
+
+    const applyProfileTextBtn = document.getElementById('applyProfileTextBtn');
+    if (applyProfileTextBtn) {
+      applyProfileTextBtn.onclick = () => {
+        try {
+          const raw = document.getElementById('profileJsonTextarea').value;
+          const parsed = JSON.parse(raw);
+          if (applyWorkspaceState(parsed)) {
+            closeExportModal();
+            playSound('load');
+            showToast("Workspace profile applied successfully!");
+          } else {
+            showToast("Invalid workspace profile format");
+          }
+        } catch (e) {
+          showToast("JSON parse error: check syntax in box");
+        }
+      };
+    }
+
+    const importFileInput = document.getElementById('importFileInput');
+    if (importFileInput) {
+      importFileInput.onchange = (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            const parsed = JSON.parse(evt.target.result);
+            if (applyWorkspaceState(parsed)) {
+              closeExportModal();
+              playSound('load');
+              showToast(`Imported profile from ${file.name}!`);
+            } else {
+              showToast("Invalid profile JSON format");
+            }
+          } catch (err) {
+            showToast("Error reading JSON file");
+          }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+      };
+    }
+
+    if (exportModal) {
+      exportModal.addEventListener('click', function(e) {
+        if (e.target === this) closeExportModal();
+      });
+    }
+
     if (toastNotification) {
       toastNotification.onclick = () => {
-        toastNotification.style.display = 'none';
+        clearToasts();
       };
     }
 
@@ -1414,6 +1786,20 @@ body {
     const savedAnatomy = safeGetStorage('kfont_anatomy_char', null);
     if (savedAnatomy) anatomyInput.value = savedAnatomy;
 
+    const savedScale = safeGetStorage('kfont_scale_ratio', null);
+    if (savedScale && Array.from(scaleRatio.options).some(o => o.value === savedScale)) {
+      scaleRatio.value = savedScale;
+    }
+
+    const savedFg = safeGetStorage('kfont_custom_fg', null);
+    if (savedFg) customFg.value = savedFg;
+
+    const savedBg = safeGetStorage('kfont_custom_bg', null);
+    if (savedBg) customBg.value = savedBg;
+
+    const savedKern = safeGetStorage('kfont_custom_kern', null);
+    if (savedKern) customKernInput.value = savedKern;
+
     const savedSample = safeGetStorage('kfont_sample', null);
     if (savedSample) sampleOutput.innerText = savedSample;
 
@@ -1423,6 +1809,7 @@ body {
     }
     
     updateAll();
+    updateSoundBtn();
 
     // First-run tutorial onboarding flag
     const tutorialSeen = safeGetStorage('kfont_tutorialSeen', '0');
@@ -1439,13 +1826,16 @@ body {
     });
 
     function openHelp() {
+      clearToasts();
       helpOverlay.classList.add('visible');
       const closeBtn = document.getElementById('helpModalCloseBtn') || document.getElementById('helpCloseBtn');
       if (closeBtn) closeBtn.focus();
+      playSound('tab');
     }
 
     function closeHelp() {
       helpOverlay.classList.remove('visible');
+      playSound('click');
     }
 
     document.getElementById('helpBtn').addEventListener('click', openHelp);
@@ -1463,13 +1853,29 @@ body {
     document.addEventListener('keydown', (e) => {
       const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable;
 
+      // Quicksave [F5] & Quickload [F9] work globally
+      if (e.key === 'F5') {
+        e.preventDefault();
+        quicksave();
+        return;
+      }
+      if (e.key === 'F9') {
+        e.preventDefault();
+        quickload();
+        return;
+      }
+
       if (e.key === 'Escape') {
-        if (helpOverlay.classList.contains('visible')) {
-          helpOverlay.classList.remove('visible');
+        if (exportModal && exportModal.classList.contains('visible')) {
+          closeExportModal();
+          return;
+        }
+        if (helpOverlay && helpOverlay.classList.contains('visible')) {
+          closeHelp();
           return;
         }
         if (toastNotification && toastNotification.style.display !== 'none') {
-          toastNotification.style.display = 'none';
+          clearToasts();
           return;
         }
         if (isInput && document.activeElement && document.activeElement.blur) {
@@ -1489,8 +1895,8 @@ body {
       }
 
       if (e.ctrlKey || e.altKey || e.metaKey) return;
-      if (helpOverlay.classList.contains('visible')) {
-        if (e.key.toLowerCase() === 'h') {
+      if (helpOverlay.classList.contains('visible') || (exportModal && exportModal.classList.contains('visible'))) {
+        if (e.key.toLowerCase() === 'h' && helpOverlay.classList.contains('visible')) {
           closeHelp();
         }
         return;
@@ -1499,20 +1905,31 @@ body {
       if (!isInput) {
         if (e.key.toLowerCase() === 'h') {
           openHelp();
+        } else if (e.key.toLowerCase() === 'm') {
+          soundEnabled = !soundEnabled;
+          safeSetStorage('kfont_sound_enabled', soundEnabled ? '1' : '0');
+          updateSoundBtn();
+          if (soundEnabled) playSound('save');
+          showToast(`Sound FX: ${soundEnabled ? 'Enabled' : 'Muted'}`);
         } else if (e.key >= '1' && e.key <= '8') {
           const tabMap = [
             'panel-metrics', 'panel-glyphs', 'panel-diagnostics', 'panel-anatomy',
             'panel-waterfall', 'panel-contrast', 'panel-spec', 'panel-sample'
           ];
           const target = tabMap[parseInt(e.key, 10) - 1];
-          if (target) switchToTab(target);
+          if (target) {
+            playSound('tab');
+            switchToTab(target);
+          }
         } else if (e.key.toLowerCase() === 'b') {
           boldCheck.checked = !boldCheck.checked;
           safeSetStorage('kfont_bold', boldCheck.checked ? '1' : '0');
+          playSound('click');
           updateAll();
         } else if (e.key.toLowerCase() === 'i') {
           italicCheck.checked = !italicCheck.checked;
           safeSetStorage('kfont_italic', italicCheck.checked ? '1' : '0');
+          playSound('click');
           updateAll();
         } else if (e.key.toLowerCase() === 'c') {
           const activePanel = document.querySelector('.panel.active');
@@ -1528,7 +1945,7 @@ body {
     });
 
     helpOverlay.addEventListener('click', function(e) {
-      if (e.target === this) this.classList.remove('visible');
+      if (e.target === this) closeHelp();
     });
   </script>
 </body>

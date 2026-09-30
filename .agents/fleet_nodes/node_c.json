@@ -18,7 +18,7 @@
   "timer_enabled": false,
   "turns_executed": 21,
   "last_turn_timestamp": "2026-09-30T00:26:00Z",
-  "last_heartbeat": "2026-09-30T00:26:00.000000+00:00",
-  "current_target": "kweb://cybercafe",
+  "last_heartbeat": "2026-09-30T00:26:59.783817+00:00",
+  "current_target": "kweb://cybercafe (The Underground BBS, ASCII Studio & mIRC Lounge)",
   "remote_command": "none"
 }
