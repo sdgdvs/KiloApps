@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KMandel
-  kilo_usability: KPad
+  kilo_usability: KBookmark
   kilo_graphics: KStarDredge
   kilo_qa: KPaint
   kilo_expander: KPad
@@ -33,8 +33,8 @@ virtual_web_rotation:
   - "kweb://warez"
 last_run:
   agent: kilo-usability
-  app: "Fleet Pacing (KHex, KSolitaire, KPong, KChrono, KType, KVault)"
-  timestamp: "2026-09-30T23:25:00Z"
+  app: KPad
+  timestamp: "2026-09-30T23:30:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -113,9 +113,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KPad`
+- **Current Target**: `KBookmark`
 - **Upcoming Queue**:
-  `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge)*.
+  `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KPaint`
@@ -294,6 +294,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T23:30:00Z — kilo-usability: KPad (Usability & Layout Pass, Draggable Splitter, Searchable Help & Responsive Toolbars)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 169.5 KB web / 31.7 KB native < 999 KB ceiling).
+  - Window Sizing: Optimized KiloOS window dimensions to 1000x680 across App.jsx and Win32 C (`KPad.exe`).
+  - Draggable Splitter & Ratio Controls: Implemented interactive divider with 30%/50%/70% quick ratios, persistent sizing & mouse/touch drag.
+  - Searchable Help & Shortcuts: Built real-time instant search input with category filter chips (Files, Editing, Security) and highlight matches.
+  - Responsive Viewports: Added adaptive toolbar and status bar rules (@media max 960px & 680px) ensuring no vertical clipping or overflow.
+  - Interactive Status Bar: Wired diagnostics dialog to word/char count and manual autosave snapshot to auto-save status indicator.
+  - Verification: MSVC clean (`KPad.exe` 31.7 KB); Vite clean in 280ms; check_icons & security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T23:25:00Z — kilo-usability: Fleet-Wide 60 FPS Pacing Optimization Sprint**
   - Scope: Remediated rendering bottlenecks across KHex, KSolitaire, KPong, KChrono, KType, KVault.
   - KHex: Virtualized row scroller (20K DOM elements ➔ ~400 nodes); eliminated backdrop-filter blurs.
@@ -329,11 +338,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - ARG Breadcrumb Density & Flashes: Injected 1999Hz echo intercept notes across NFOs + cracktro CRT glitch flashing deep_core offsets.
   - Firebase RTDB Courier Shoutbox: Wired live presence & shouts with dead-drop keyword daemon (`Ghost_SysOp_0x7F`) & local fallback.
   - Verification: Vite build clean in 290ms; icon uniqueness & security lint 100% PASS; <999KB ceiling verified.
-
-- **2026-09-30T22:30:00Z — kilo-expander: KFont (Feature Expansion: Bitmap Studio, OpenType Features, VarAxes & Typo Linter)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 150.0 KB web / 30.0 KB native < 999 KB ceiling).
-  - Bitmap ROM Studio: Added 1-bit pixel editor (8x8 to 16x16), active font rasterizer, CRT audition & multi-format export (C, ASM, Hex, BDF, Arduino).
-  - OpenType & Variable Axes: Implemented OTF layout tags inspector (liga, dlig, smcp, frac, zero) & variable axes explorer with pulse oscillation.
-  - Diff Comparator & Linter: Built dual-font split & overlay diff comparator plus automated typographic proofing & 1-click auto-fix.
-  - Diegetic Integration: Embedded subtle Carlsbad telemetry streams and ghost relay ROM presets aligned with 1999 ARG architecture.
-  - Verification: MSVC clean (KFont.exe 30.0 KB); Vite clean in 423ms; check_icons & security lint 100% PASS; <999KB ceiling verified.

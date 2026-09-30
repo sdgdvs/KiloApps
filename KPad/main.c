@@ -6,8 +6,8 @@
 #include <string.h>
 #include <stdio.h>
 
-#define W 960
-#define H 640
+#define W 1000
+#define H 680
 #define MAX_TABS 10
 
 typedef struct {

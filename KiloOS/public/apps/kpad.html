@@ -552,11 +552,60 @@
     overflow: hidden;
     z-index: 5;
     position: relative;
+    min-width: 180px;
   }
   .preview-pane.full {
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
     z-index: 10;
+  }
+  .preview-splitter {
+    width: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-left: 1px solid var(--border-glass);
+    border-right: 1px solid var(--border-glass);
+    cursor: col-resize;
+    user-select: none;
+    z-index: 6;
+    position: relative;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+    flex-shrink: 0;
+  }
+  .preview-splitter:hover, .preview-splitter.dragging {
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent-glow);
+  }
+  .preview-splitter::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 2px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 1px;
+  }
+  .preview-ratio-btn {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border-glass);
+    color: var(--text-secondary);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .preview-ratio-btn:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .preview-ratio-btn.active {
+    background: rgba(59, 130, 246, 0.28);
+    border-color: var(--accent);
+    color: var(--accent-hover);
+    font-weight: 600;
   }
   .preview-header {
     padding: 6px 12px;
@@ -759,6 +808,9 @@
     animation: dropIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     color: var(--text-primary);
   }
+  .modal-card.modal-wide {
+    max-width: min(94vw, 760px);
+  }
   .modal-header {
     padding: 14px 18px;
     background: var(--bg-glass);
@@ -817,6 +869,34 @@
   .modal-btn:hover {
     background: var(--accent-hover);
   }
+  .help-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin: 4px 0 12px 0;
+  }
+  .help-cat-chip {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-glass);
+    color: var(--text-secondary);
+    padding: 3px 9px;
+    border-radius: 12px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .help-cat-chip:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .help-cat-chip.active {
+    background: rgba(59, 130, 246, 0.28);
+    border-color: var(--accent);
+    color: var(--accent-hover);
+    font-weight: 600;
+  }
   .shortcut-category {
     font-size: 11px;
     font-weight: 700;
@@ -831,8 +911,24 @@
     grid-template-columns: 1fr 1fr;
     gap: 6px 10px;
   }
-  @media (max-width: 460px) {
+  @media (max-width: 520px) {
     .shortcut-grid { grid-template-columns: 1fr; }
+  }
+  /* Responsive Viewport Optimizations */
+  @media (max-width: 960px) {
+    .brand-badge { display: none; }
+    .quick-toolbar { padding: 3px 6px; gap: 4px; }
+    .quick-btn { padding: 2px 6px; font-size: 10px; }
+    .kbd-hint { display: none; }
+    .status-bar { font-size: 10px; padding: 3px 8px; gap: 6px; }
+    #stat-words, #stat-encoding { display: none; }
+  }
+  @media (max-width: 680px) {
+    .quick-group:last-child { display: none; }
+    .tag-preset-chip { display: none; }
+    .modal-card { width: 96%; max-height: 92vh; }
+    #stat-crlf, #stat-indent { display: none; }
+    .preview-ratio-btn { display: none; }
   }
   .shortcut-row {
     display: flex;
@@ -1049,7 +1145,7 @@
       <span>📖 Help [F1]</span>
     </div>
 
-    <div class="brand-badge">KPad Pro</div>
+    <div class="brand-badge" onclick="showAbout()" style="cursor:pointer;" title="KPad Pro • Click for Info">KPad Pro</div>
   </div>
 
   <!-- Quick Action & Templates Toolbar -->
@@ -1145,17 +1241,21 @@
     </div>
   </div>
 
-  <!-- Editor Container with Line Gutter and Split Preview -->
+  <!-- Editor Container with Line Gutter, Draggable Resizer, and Split Preview -->
   <div class="editor-wrapper" id="editor-wrapper">
     <div class="gutter" id="gutter"></div>
     <div class="code-container" id="code-container">
       <pre id="highlight-pre" aria-hidden="true"><code id="highlight-code"></code></pre>
       <textarea id="editor" spellcheck="false" wrap="off" aria-label="Text Editor" placeholder="Start typing or click a template above (📝 Notes, ⚡ JS, 🌐 HTML5, ⚙️ C, 📦 JSON)..."></textarea>
     </div>
+    <div class="preview-splitter" id="preview-splitter" style="display:none;" title="Drag to resize preview pane (double-click to reset 50/50)"></div>
     <div class="preview-pane" id="preview-pane" style="display:none;">
       <div class="preview-header">
         <span id="preview-title">👁️ Live Preview (Markdown)</span>
         <div class="preview-controls">
+          <button class="preview-ratio-btn" id="btn-ratio-30" onclick="setPreviewRatio(0.3)" title="30% Preview Width">30%</button>
+          <button class="preview-ratio-btn active" id="btn-ratio-50" onclick="setPreviewRatio(0.5)" title="50% Split Width">50%</button>
+          <button class="preview-ratio-btn" id="btn-ratio-70" onclick="setPreviewRatio(0.7)" title="70% Preview Width">70%</button>
           <button class="quick-btn" id="btn-preview-max" onclick="togglePreviewMaximize()" title="Maximize / Split Preview">⛶</button>
           <button class="quick-btn" onclick="togglePreview()" title="Close Preview">✕</button>
         </div>
@@ -1169,7 +1269,7 @@
     <div class="status-left">
       <div class="status-item" id="file-path">Untitled 1</div>
       <div class="status-item" id="file-status">Ready</div>
-      <div class="status-item" id="stat-autosave" style="color: #34d399; font-size:10px;">● Auto-Saved</div>
+      <div class="status-item status-clickable" id="stat-autosave" style="color: #34d399; font-size:10px;" onclick="triggerManualAutoSave()" title="Click to trigger manual autosave & sync snapshot">● Auto-Saved</div>
     </div>
     <div class="status-right">
       <div class="status-item status-clickable" style="font-weight:bold; color:var(--accent-hover);" onclick="showHelp()" title="Help & Shortcuts Guide (F1 / Alt+H)">
@@ -1199,10 +1299,10 @@
       </div>
       <div class="status-item status-clickable" id="stat-crlf" onclick="toggleLineEndings()" title="Click to toggle Line Endings (CRLF / LF)">CRLF</div>
       <div class="status-item status-clickable" id="stat-indent" onclick="toggleIndentSize()" title="Click to toggle indentation spaces (Spaces: 4 / Spaces: 2)">Spaces: 4</div>
-      <div class="status-item" id="stat-encoding" title="Character encoding">UTF-8</div>
+      <div class="status-item status-clickable" id="stat-encoding" onclick="showToast('Document Encoding: UTF-8 (Unicode). Universal character set.', 'info', 2000)" title="Encoding: UTF-8 (Click for details)">UTF-8</div>
       <div class="status-item status-clickable" id="stat-pos" onclick="promptGoToLine()" title="Click to Go to Line (Ctrl+G)">Ln 1, Col 1</div>
-      <div class="status-item" id="stat-words" title="Words and estimated reading time">0 Words (~0m read)</div>
-      <div class="status-item" id="stat-counts">1 Lines, 0 Chars</div>
+      <div class="status-item status-clickable" id="stat-words" onclick="showDiagnostics()" title="Words & estimated reading time (Click for Document Diagnostics & SHA-256)">0 Words (~0m read)</div>
+      <div class="status-item status-clickable" id="stat-counts" onclick="showDiagnostics()" title="Lines & characters (Click for Document Diagnostics & SHA-256)">1 Lines, 0 Chars</div>
     </div>
   </div>
 
@@ -2388,7 +2488,7 @@
           <div class="search-tabs-container" id="global-search-results"></div>
         </div>
       `;
-      openModal('🌐 Search in All Open Tabs', bodyHTML, false);
+      openModal('🌐 Search in All Open Tabs', bodyHTML, false, true);
       setTimeout(() => {
         const inp = document.getElementById('global-search-input');
         if (inp) {
@@ -2493,15 +2593,38 @@
     // --- Live Markdown & HTML Preview Engine ---
     let previewActive = false;
     let previewMaximized = false;
+    let currentPreviewRatio = parseFloat(safeGetStorage('kpad_preview_ratio') || '0.50');
+
+    function setPreviewRatio(ratio) {
+      if (ratio < 0.20) ratio = 0.20;
+      if (ratio > 0.80) ratio = 0.80;
+      currentPreviewRatio = ratio;
+      const pane = document.getElementById('preview-pane');
+      if (pane) {
+        pane.style.flex = `0 0 ${(ratio * 100).toFixed(1)}%`;
+      }
+      safeSetStorage('kpad_preview_ratio', ratio.toFixed(2));
+      ['30', '50', '70'].forEach(r => {
+        const b = document.getElementById(`btn-ratio-${r}`);
+        if (b) b.classList.toggle('active', Math.abs(ratio - (parseInt(r, 10)/100)) < 0.08);
+      });
+    }
 
     function togglePreview() {
       previewActive = !previewActive;
       const pane = document.getElementById('preview-pane');
+      const splitter = document.getElementById('preview-splitter');
       const btn = document.getElementById('btn-quick-preview');
       if (btn) btn.classList.toggle('active', previewActive);
 
       if (pane) {
         pane.style.display = previewActive ? 'flex' : 'none';
+        if (previewActive && !previewMaximized) {
+          setPreviewRatio(currentPreviewRatio);
+        }
+      }
+      if (splitter) {
+        splitter.style.display = (previewActive && !previewMaximized) ? 'block' : 'none';
       }
       if (previewActive) {
         updatePreview();
@@ -2514,9 +2637,62 @@
     function togglePreviewMaximize() {
       previewMaximized = !previewMaximized;
       const pane = document.getElementById('preview-pane');
+      const splitter = document.getElementById('preview-splitter');
       const maxBtn = document.getElementById('btn-preview-max');
-      if (pane) pane.classList.toggle('full', previewMaximized);
+      if (pane) {
+        pane.classList.toggle('full', previewMaximized);
+        if (!previewMaximized) {
+          setPreviewRatio(currentPreviewRatio);
+        }
+      }
+      if (splitter) {
+        splitter.style.display = (previewActive && !previewMaximized) ? 'block' : 'none';
+      }
       if (maxBtn) maxBtn.innerText = previewMaximized ? '❐' : '⛶';
+    }
+
+    function initSplitter() {
+      const splitter = document.getElementById('preview-splitter');
+      const wrapper = document.getElementById('editor-wrapper');
+      if (!splitter || !wrapper) return;
+
+      let isDragging = false;
+
+      function onPointerDown(e) {
+        if (!previewActive || previewMaximized) return;
+        isDragging = true;
+        splitter.classList.add('dragging');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+        e.preventDefault();
+      }
+
+      function onPointerMove(e) {
+        if (!isDragging) return;
+        const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : null);
+        if (clientX === null) return;
+        const rect = wrapper.getBoundingClientRect();
+        if (rect.width <= 0) return;
+        const ratio = (rect.right - clientX) / rect.width;
+        setPreviewRatio(ratio);
+      }
+
+      function onPointerUp() {
+        if (!isDragging) return;
+        isDragging = false;
+        splitter.classList.remove('dragging');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+      }
+
+      splitter.addEventListener('mousedown', onPointerDown);
+      splitter.addEventListener('touchstart', onPointerDown, { passive: false });
+      splitter.addEventListener('dblclick', () => setPreviewRatio(0.50));
+
+      window.addEventListener('mousemove', onPointerMove);
+      window.addEventListener('touchmove', onPointerMove, { passive: true });
+      window.addEventListener('mouseup', onPointerUp);
+      window.addEventListener('touchend', onPointerUp);
     }
 
     function parseMarkdown(md) {
@@ -3468,11 +3644,13 @@
       }
     }
 
-    function openModal(titleHTML, bodyHTML, showDefaultFooter = true) {
+    function openModal(titleHTML, bodyHTML, showDefaultFooter = true, isWide = false) {
       document.getElementById('modal-title').innerHTML = titleHTML;
       document.getElementById('modal-body').innerHTML = bodyHTML;
       const footer = document.getElementById('modal-footer');
       footer.style.display = showDefaultFooter ? 'flex' : 'none';
+      const card = document.querySelector('#app-modal .modal-card');
+      if (card) card.classList.toggle('modal-wide', !!isWide);
       document.getElementById('app-modal').classList.add('active');
     }
 
@@ -3481,70 +3659,136 @@
       if (tourCb) {
         safeSetStorage('kpad_tutorialSeen', '1');
       }
+      const card = document.querySelector('#app-modal .modal-card');
+      if (card) card.classList.remove('modal-wide');
       document.getElementById('app-modal').classList.remove('active');
       editor.focus();
     }
 
+    function triggerManualAutoSave() {
+      saveVFS();
+      quicksaveSnapshot();
+      showToast('● Workspace snapshot and active tab auto-saved to VFS & storage', 'success', 2200);
+    }
+
+    const ALL_SHORTCUTS = [
+      // Files & Tabs
+      { cat: 'files', label: 'New Tab / Document', key: 'Ctrl + T / Ctrl + N' },
+      { cat: 'files', label: 'Quicksave Snapshot', key: 'F5' },
+      { cat: 'files', label: 'Quickload Snapshot', key: 'F9' },
+      { cat: 'files', label: 'Close Active Tab', key: 'Ctrl + W' },
+      { cat: 'files', label: 'Switch Tab (1-9)', key: 'Ctrl + 1..9' },
+      { cat: 'files', label: 'Previous / Next Tab', key: 'Ctrl + PgUp / PgDn' },
+      { cat: 'files', label: 'Close Tab (Mouse)', key: 'Middle-Click' },
+      { cat: 'files', label: 'Save (VFS / Local)', key: 'Ctrl + S' },
+      { cat: 'files', label: 'Open Local File', key: 'Ctrl + O' },
+      { cat: 'files', label: 'Export Workspace Snapshot', key: 'Ctrl + Shift + S' },
+      { cat: 'files', label: 'Pin / Unpin Active Tab', key: '📌 Toolbar Pin' },
+
+      // Editing, Navigation & Formatting
+      { cat: 'edit', label: 'Search Across All Open Tabs', key: 'Ctrl + Shift + F' },
+      { cat: 'edit', label: 'Toggle Live Preview (MD/HTML)', key: 'Alt + P' },
+      { cat: 'edit', label: 'Go to Line Number', key: 'Ctrl + G' },
+      { cat: 'edit', label: 'Find in Active Tab', key: 'Ctrl + F' },
+      { cat: 'edit', label: 'Find & Replace in Tab', key: 'Ctrl + H' },
+      { cat: 'edit', label: 'Tag Active Tab', key: 'Alt + T' },
+      { cat: 'edit', label: 'Toggle Line Comment', key: 'Ctrl + /' },
+      { cat: 'edit', label: 'Indent / Outdent Selection', key: 'Tab / Shift+Tab' },
+      { cat: 'edit', label: 'Copy Entire Document', key: 'Alt+C / Ctrl+Shift+C' },
+      { cat: 'edit', label: 'Clear Document Buffer', key: 'Alt + X' },
+      { cat: 'edit', label: 'Toggle Word Wrap', key: 'Alt + Z' },
+      { cat: 'edit', label: 'Zoom In / Out / Reset', key: 'Ctrl++ / Ctrl+- / Ctrl+0' },
+      { cat: 'edit', label: 'Insert Current Date & Time', key: 'F7' },
+      { cat: 'edit', label: 'Format & Pretty-Print JSON', key: 'Tools > Format JSON' },
+
+      // Security & Shortcuts
+      { cat: 'sec', label: 'Encrypt Document (AES-256)', key: 'Ctrl + E' },
+      { cat: 'sec', label: 'Decrypt Document (Unlock)', key: 'Ctrl + D' },
+      { cat: 'sec', label: 'Document Diagnostics & SHA-256', key: 'Tools > Diagnostics' },
+      { cat: 'sec', label: 'Help & Shortcuts Guide', key: 'F1 / Alt + H / ?' },
+      { cat: 'sec', label: 'Close Dialog / Search / Preview', key: 'Escape' },
+      { cat: 'sec', label: 'Switch Theme / Language Mode', key: 'Status Bar Selectors' }
+    ];
+
+    let activeHelpCat = 'all';
+
+    function renderHelpShortcuts(filterText = '') {
+      const q = filterText.trim().toLowerCase();
+      const container = document.getElementById('help-shortcuts-list');
+      if (!container) return;
+
+      const filtered = ALL_SHORTCUTS.filter(s => {
+        const matchesCat = activeHelpCat === 'all' || s.cat === activeHelpCat;
+        if (!matchesCat) return false;
+        if (!q) return true;
+        return s.label.toLowerCase().includes(q) || s.key.toLowerCase().includes(q);
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:24px 12px; color:var(--text-muted); font-size:12px;">No shortcuts match "<strong>${escapeHtml(filterText)}</strong>"</div>`;
+        return;
+      }
+
+      const categories = [
+        { id: 'files', name: '📁 Files & Tabs' },
+        { id: 'edit', name: '✏️ Editing, Navigation & Formatting' },
+        { id: 'sec', name: '🔒 Security & Tools' }
+      ];
+
+      let html = '';
+      categories.forEach(cat => {
+        const items = filtered.filter(s => s.cat === cat.id);
+        if (items.length > 0) {
+          html += `<div class="shortcut-category">${cat.name} (${items.length})</div><div class="shortcut-grid">`;
+          items.forEach(s => {
+            let labelHtml = escapeHtml(s.label);
+            let keyHtml = escapeHtml(s.key);
+            if (q) {
+              const reg = new RegExp(`(${escapeRegExp(q)})`, 'gi');
+              labelHtml = labelHtml.replace(reg, '<span style="background:rgba(245,158,11,0.3); color:#fbbf24; font-weight:bold; border-radius:2px; padding:0 2px;">$1</span>');
+              keyHtml = keyHtml.replace(reg, '<span style="background:rgba(245,158,11,0.3); color:#fbbf24; font-weight:bold; border-radius:2px; padding:0 2px;">$1</span>');
+            }
+            html += `<div class="shortcut-row"><span>${labelHtml}</span><span class="shortcut-key">${keyHtml}</span></div>`;
+          });
+          html += '</div>';
+        }
+      });
+      container.innerHTML = html;
+    }
+
+    function filterHelpCategory(cat) {
+      activeHelpCat = cat;
+      ['all', 'files', 'edit', 'sec'].forEach(c => {
+        const el = document.getElementById(`chip-help-${c}`);
+        if (el) el.classList.toggle('active', c === cat);
+      });
+      const inp = document.getElementById('help-search-input');
+      renderHelpShortcuts(inp ? inp.value : '');
+    }
+
     function showHelp() {
-      const fileShortcuts = [
-        { label: 'New Tab / Document', key: 'Ctrl + T / Ctrl + N' },
-        { label: 'Quicksave Snapshot', key: 'F5' },
-        { label: 'Quickload Snapshot', key: 'F9' },
-        { label: 'Close Active Tab', key: 'Ctrl + W' },
-        { label: 'Switch Tab (1-9)', key: 'Ctrl + 1..9' },
-        { label: 'Previous / Next Tab', key: 'Ctrl + PgUp / PgDn' },
-        { label: 'Close Tab (Mouse)', key: 'Middle-Click' },
-        { label: 'Save (VFS / Local)', key: 'Ctrl + S' },
-        { label: 'Open Local File', key: 'Ctrl + O' },
-        { label: 'Export Workspace Snapshot', key: 'Ctrl + Shift + S' }
-      ];
+      activeHelpCat = 'all';
+      const html = `
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div>
+            <input type="text" id="help-search-input" class="find-input" style="width:100%; box-sizing:border-box; padding:8px 12px; font-size:12px;" placeholder="🔍 Filter shortcuts or actions (e.g. save, find, wrap, tab, enc, comment)..." oninput="renderHelpShortcuts(this.value)">
+          </div>
+          <div class="help-filter-bar">
+            <button class="help-cat-chip active" id="chip-help-all" onclick="filterHelpCategory('all')">All Shortcuts</button>
+            <button class="help-cat-chip" id="chip-help-files" onclick="filterHelpCategory('files')">📁 Files & Tabs</button>
+            <button class="help-cat-chip" id="chip-help-edit" onclick="filterHelpCategory('edit')">✏️ Editing</button>
+            <button class="help-cat-chip" id="chip-help-sec" onclick="filterHelpCategory('sec')">🔒 Security & Tools</button>
+          </div>
+          <div id="help-shortcuts-list" style="max-height:55vh; overflow-y:auto; padding-right:4px;"></div>
+        </div>
+      `;
 
-      const editShortcuts = [
-        { label: 'Search in All Open Tabs', key: 'Ctrl + Shift + F' },
-        { label: 'Toggle Live Preview (MD/HTML)', key: 'Alt + P' },
-        { label: 'Go to Line Number', key: 'Ctrl + G' },
-        { label: 'Find in Active Tab', key: 'Ctrl + F' },
-        { label: 'Find & Replace in Tab', key: 'Ctrl + H' },
-        { label: 'Tag Active Tab', key: 'Alt + T' },
-        { label: 'Toggle Line Comment', key: 'Ctrl + /' },
-        { label: 'Indent / Outdent', key: 'Tab / Shift+Tab' },
-        { label: 'Copy All Document', key: 'Alt+C / Ctrl+Shift+C' },
-        { label: 'Clear Document', key: 'Alt + X' },
-        { label: 'Toggle Word Wrap', key: 'Alt + Z' },
-        { label: 'Zoom In / Out / Reset', key: 'Ctrl++ / Ctrl+- / Ctrl+0' },
-        { label: 'Insert Date & Time', key: 'F7' }
-      ];
-
-      const securityShortcuts = [
-        { label: 'Encrypt Document (AES-256)', key: 'Ctrl + E' },
-        { label: 'Decrypt Document (Unlock)', key: 'Ctrl + D' },
-        { label: 'Help & Shortcuts Guide', key: 'F1 / Alt + H' },
-        { label: 'Close Dialog / Search / Preview', key: 'Escape' }
-      ];
-      
-      let html = '<div>';
-      
-      html += '<div class="shortcut-category">📁 Files & Tabs</div><div class="shortcut-grid">';
-      fileShortcuts.forEach(s => {
-        html += `<div class="shortcut-row"><span>${s.label}</span><span class="shortcut-key">${s.key}</span></div>`;
-      });
-      html += '</div>';
-
-      html += '<div class="shortcut-category">✏️ Editing, Navigation & Formatting</div><div class="shortcut-grid">';
-      editShortcuts.forEach(s => {
-        html += `<div class="shortcut-row"><span>${s.label}</span><span class="shortcut-key">${s.key}</span></div>`;
-      });
-      html += '</div>';
-
-      html += '<div class="shortcut-category">🔒 Security & Shortcuts</div><div class="shortcut-grid">';
-      securityShortcuts.forEach(s => {
-        html += `<div class="shortcut-row"><span>${s.label}</span><span class="shortcut-key">${s.key}</span></div>`;
-      });
-      html += '</div>';
-
-      html += '</div>';
-
-      openModal('📖 KPad Pro User Guide & Shortcuts', html, true);
+      openModal('📖 KPad Pro User Guide & Shortcuts', html, true, true);
+      renderHelpShortcuts('');
+      setTimeout(() => {
+        const inp = document.getElementById('help-search-input');
+        if (inp) inp.focus();
+      }, 50);
     }
 
     function promptGoToLine() {
@@ -3883,6 +4127,8 @@
           changeFontSize(savedSize - 14);
         }
       } catch (e) {}
+
+      initSplitter();
 
       if (window.location.hash) {
         const path = window.location.hash.substring(1);
