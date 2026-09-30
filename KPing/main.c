@@ -55,20 +55,26 @@ typedef struct {
 const char* PRESET_NAMES[] = {
     "Quick Presets...",
     "1. 127.0.0.1 (Localhost)",
-    "2. 1.1.1.1 (Cloudflare)",
-    "3. 8.8.8.8 (Google DNS)",
-    "4. 9.9.9.9 (Quad9 DNS)",
-    "5. 208.67.222.222 (OpenDNS)",
-    "6. 192.168.1.1 (Gateway)"
+    "2. 10.19.99.1 (Core Gateway)",
+    "3. 10.19.99.4 (Signal Beacon)",
+    "4. 10.19.99.19 (Carrier Node)",
+    "5. 10.19.99.127 (Classified Relay)",
+    "6. 1.1.1.1 (Cloudflare)",
+    "7. 8.8.8.8 (Google DNS)",
+    "8. 9.9.9.9 (Quad9 DNS)",
+    "9. 192.168.1.1 (Gateway)"
 };
 
 const char* PRESET_HOSTS[] = {
     "",
     "127.0.0.1",
+    "10.19.99.1",
+    "10.19.99.4",
+    "10.19.99.19",
+    "10.19.99.127",
     "1.1.1.1",
     "8.8.8.8",
     "9.9.9.9",
-    "208.67.222.222",
     "192.168.1.1"
 };
 

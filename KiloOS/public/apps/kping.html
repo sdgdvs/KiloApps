@@ -137,6 +137,10 @@
   .btn-subnet:hover { background: var(--cyan-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4); }
   .btn-dns { background: var(--emerald); color: white; }
   .btn-dns:hover { background: var(--emerald-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); }
+  .btn-mesh { background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%); color: white; font-weight: 700; }
+  .btn-mesh:hover { background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(13, 148, 136, 0.4); }
+  .btn-bgp { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; font-weight: 700; }
+  .btn-bgp:hover { background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
   
   .terminal-container {
@@ -163,6 +167,8 @@
   .status-badge.mtu { background: rgba(139, 92, 246, 0.2); color: #c084fc; }
   .status-badge.subnet { background: rgba(6, 182, 212, 0.2); color: #22d3ee; }
   .status-badge.dns { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
+  .status-badge.mesh { background: rgba(13, 148, 136, 0.25); color: #2dd4bf; }
+  .status-badge.bgp { background: rgba(99, 102, 241, 0.25); color: #a5b4fc; }
   .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
   .filter-bar {
@@ -210,26 +216,37 @@
   .graph-box {
     flex: 1; min-width: 0; position: relative; display: flex; flex-direction: column;
   }
+  .graph-mode-pills {
+    position: absolute; top: 2px; right: 8px; display: flex; gap: 4px; z-index: 5;
+  }
+  .g-pill {
+    padding: 1px 6px; font-size: 9.5px; font-family: "Consolas", monospace; border-radius: 3px;
+    background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-muted); cursor: pointer; transition: all 0.15s ease;
+  }
+  .g-pill:hover { background: rgba(255, 255, 255, 0.18); color: white; }
+  .g-pill.active { background: rgba(59, 130, 246, 0.35); border-color: #60a5fa; color: #93c5fd; font-weight: 700; }
+
   canvas { flex: 1; width: 100%; height: 100%; border-radius: 6px; background: rgba(0,0,0,0.25); }
 
-  /* Toast Notification System */
+  /* Toast Notification System (Bottom-Center non-occluding positioning) */
   .toast-container {
-    position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 1000;
-    display: flex; flex-direction: column; gap: 8px; pointer-events: none; align-items: center;
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 1000;
+    display: flex; flex-direction: column-reverse; gap: 8px; pointer-events: none; align-items: center;
     max-width: 90vw;
   }
   .toast {
     pointer-events: auto; padding: 9px 13px; border-radius: 8px; font-size: 12px; font-weight: 500;
     display: flex; align-items: center; gap: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.4);
     animation: toastIn 0.25s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; transition: all 0.2s ease;
-    border: 1px solid var(--border); backdrop-filter: blur(8px); max-width: 380px;
+    border: 1px solid var(--border); backdrop-filter: blur(8px); max-width: 420px;
   }
   .toast-info { background: rgba(15, 23, 42, 0.95); border-left: 4px solid var(--accent); color: #e2e8f0; }
   .toast-success { background: rgba(6, 78, 59, 0.95); border-left: 4px solid var(--success); color: #d1fae5; }
   .toast-warning { background: rgba(120, 53, 15, 0.95); border-left: 4px solid var(--warning); color: #fef3c7; }
   .toast-error { background: rgba(127, 29, 29, 0.95); border-left: 4px solid var(--danger); color: #fee2e2; }
   @keyframes toastIn {
-    from { opacity: 0; transform: translateY(-12px) scale(0.95); }
+    from { opacity: 0; transform: translateY(12px) scale(0.95); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
@@ -284,18 +301,21 @@
     <div class="controls-row">
       <div class="input-group host-group">
         <label for="host">Target Host / IP</label>
-        <input type="text" id="host" value="127.0.0.1" placeholder="e.g. 1.1.1.1 or google.com" title="Target IP address or domain name (Press Enter to Ping)">
+        <input type="text" id="host" value="127.0.0.1" placeholder="e.g. 1.1.1.1 or 10.19.99.1" title="Target IP address or domain name (Press Enter to Ping)">
       </div>
       <div class="input-group preset-group">
         <label for="presetSelect">Presets</label>
-        <select id="presetSelect" title="Quickly select preset host [1-6]">
+        <select id="presetSelect" title="Quickly select preset host [1-9]">
           <option value="">Quick Presets...</option>
           <option value="127.0.0.1">1. 127.0.0.1 (Localhost)</option>
           <option value="1.1.1.1">2. 1.1.1.1 (Cloudflare)</option>
           <option value="8.8.8.8">3. 8.8.8.8 (Google DNS)</option>
-          <option value="9.9.9.9">4. 9.9.9.9 (Quad9 DNS)</option>
-          <option value="208.67.222.222">5. 208.67.222.222 (OpenDNS)</option>
-          <option value="192.168.1.1">6. 192.168.1.1 (Gateway)</option>
+          <option value="192.168.1.1">4. 192.168.1.1 (KiloGate DSL)</option>
+          <option value="10.19.99.1">5. 10.19.99.1 (Core Gateway)</option>
+          <option value="10.19.99.4">6. 10.19.99.4 (Classified Intranet)</option>
+          <option value="10.19.99.19">7. 10.19.99.19 (Echo Subsystem)</option>
+          <option value="10.19.99.127">8. 10.19.99.127 (Deep Core Vault)</option>
+          <option value="208.67.222.222">9. 208.67.222.222 (OpenDNS)</option>
         </select>
       </div>
       <div class="input-group count-group">
@@ -305,6 +325,21 @@
       <div class="input-group size-group">
         <label for="size">Size (B)</label>
         <input type="number" id="size" value="32" min="1" max="65500" title="Payload buffer size in bytes (excludes 28B header)">
+      </div>
+      <div class="input-group interval-group" style="width: 58px;">
+        <label for="interval">Int(ms)</label>
+        <input type="number" id="interval" value="1000" min="50" max="5000" step="50" title="Packet interval pacing (50ms burst to 5000ms slow pulse)">
+      </div>
+      <div class="input-group pattern-group" style="width: 104px;">
+        <label for="patternSelect">Pattern</label>
+        <select id="patternSelect" title="Payload Byte Pattern">
+          <option value="ascii">ASCII 1999</option>
+          <option value="zeros">0x00 Zeros</option>
+          <option value="ones">0xFF Ones</option>
+          <option value="alt">0xAA Alternating</option>
+          <option value="counter">00..FF Counter</option>
+          <option value="entropy">High Entropy</option>
+        </select>
       </div>
       <div class="input-group ttl-group">
         <label for="ttl">TTL</label>
@@ -341,6 +376,8 @@
         <button id="btnMTU" class="btn btn-mtu" title="Path MTU Discovery [M]">MTU <span class="kbd-badge">M</span></button>
         <button id="btnSubnet" class="btn btn-subnet" title="Subnet LAN Discovery Sweep [S]">Subnet <span class="kbd-badge">S</span></button>
         <button id="btnDNS" class="btn btn-dns" title="DNS & IP Inspector [D]">DNS <span class="kbd-badge">D</span></button>
+        <button id="btnBGP" class="btn btn-bgp" title="BGP AS Route Transit Inspector [B]">BGP <span class="kbd-badge">B</span></button>
+        <button id="btnMesh" class="btn btn-mesh" title="Global Peer Mesh & Real-Time Echo [G]">Mesh <span class="kbd-badge">G</span></button>
       </div>
       <div class="actions-divider"></div>
       <div class="actions-right">
@@ -375,9 +412,9 @@
         </div>
       </div>
       <textarea id="out" readonly spellcheck="false" role="log" aria-live="polite" aria-atomic="false">Welcome to KPing Network Diagnostics Suite.
-Modes: Ping [P], Route Trace [T], Path MTU [M], Subnet LAN Sweep [S], DNS Inspector [D].
+Modes: Ping [P], Route Trace [T], Path MTU [M], Subnet LAN Sweep [S], DNS Inspector [D], BGP [B], Global Mesh [G].
 Metrics: Mean Jitter (RFC 3550), Std Dev, VoIP MOS Quality Score, SLA Rating.
-Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' for Help.
+Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for Help.
 
 </textarea>
     </div>
@@ -410,6 +447,11 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
       </div>
       <div class="graph-box" style="position: relative;">
         <span style="font-size: 10px; color: var(--text-muted); position: absolute; top: 2px; left: 8px; font-family: monospace;">Latency & Jitter Telemetry (ms)</span>
+        <div class="graph-mode-pills">
+          <button id="btnModeLine" class="g-pill active" title="Latency Trend Line">Line</button>
+          <button id="btnModeHist" class="g-pill" title="Jitter Distribution Histogram">Hist</button>
+          <button id="btnModeStrip" class="g-pill" title="Packet Timeline Strip">Strip</button>
+        </div>
         <canvas id="graphCanvas" role="img" aria-label="Network latency and jitter telemetry chart"></canvas>
         <div id="graphTooltip" style="display:none; position:absolute; pointer-events:none; background:rgba(15,23,42,0.95); border:1px solid var(--accent); padding:3px 8px; border-radius:4px; font-size:11px; font-family:monospace; color:#93c5fd; z-index:10; box-shadow:0 4px 12px rgba(0,0,0,0.5); white-space:nowrap;"></div>
       </div>
@@ -460,6 +502,54 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
     </div>
   </div>
 
+  <!-- Global Mesh Dialog Modal -->
+  <div id="meshModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="meshModalTitle">
+    <div class="modal-dialog glass" style="width: 660px;">
+      <div class="modal-header">
+        <div id="meshModalTitle" class="modal-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: #2dd4bf;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          Global Fleet Mesh & Real-Time Peer Echo
+        </div>
+        <button id="meshCloseBtn" class="modal-close" title="Close [Esc]" aria-label="Close mesh dialog">&times;</button>
+      </div>
+
+      <div class="info-block" style="border-left-color: #2dd4bf;">
+        <strong>Global RTDB Peer Mesh (Cross-Computer Connectivity):</strong>
+        <br>• Synchronized via Firebase Realtime Database across all active KiloApps users worldwide.
+        <br>• Select any peer station to send live timestamped ICMP echo probes and measure real internet round-trip latency (RTT).
+        <br>• Virtual relay nodes (Gateway, Classified Subnet, Echo Carrier) ensure instant solo testing even when offline.
+      </div>
+
+      <div style="display: flex; gap: 10px; margin-bottom: 12px; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 8px; align-items: center; border: 1px solid var(--border-subtle);">
+        <div style="flex: 1;">
+          <label style="font-size: 10.5px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Your Station Callsign</label>
+          <input type="text" id="stationCallsign" value="KStation-1999" style="width: 100%; margin-top: 3px;" title="Your display callsign on the global mesh">
+        </div>
+        <div style="width: 150px;">
+          <label style="font-size: 10.5px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Assigned POP Region</label>
+          <div id="stationRegion" style="font-size: 12px; font-family: monospace; color: #93c5fd; margin-top: 6px;">US-West (MCI)</div>
+        </div>
+        <div style="text-align: right;">
+          <label style="font-size: 10.5px; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Mesh Status</label>
+          <div id="meshStatusIndicator" style="font-size: 12px; font-weight: 700; color: #34d399; margin-top: 6px;">● ONLINE</div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+        <span style="font-size: 11.5px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Mesh Directory (<span id="meshPeerCount">0</span> stations online)</span>
+        <button id="btnBroadcastEcho" class="btn btn-secondary" style="font-size: 11px; padding: 3px 8px;">📡 Broadcast Echo Pulse</button>
+      </div>
+
+      <div id="meshStationsList" style="max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;">
+        <!-- Dynamic Station Cards populated via Firebase / virtual relays -->
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+        <button id="btnMeshClose" class="btn btn-secondary">Close [Esc]</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Help & Shortcuts Modal -->
   <div id="helpModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
     <div class="modal-dialog glass">
@@ -478,6 +568,8 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
         <br>• <strong>PMTU [M]:</strong> Path MTU Discovery sweep probing Don't-Fragment buffer limits to compute recommended TCP MSS.
         <br>• <strong>Subnet [S]:</strong> Fast CIDR LAN discovery sweep scanning active nodes on the local subnet.
         <br>• <strong>DNS [D]:</strong> Reverse PTR resolution and RFC IP classification (RFC 1918, RFC 1122, RFC 3927, CGNAT).
+        <br>• <strong>BGP [B]:</strong> Autonomous System transit path inspector (AS701 UUNET, AS3561 MCI, AS1239 SprintLink).
+        <br>• <strong>Global Mesh [G]:</strong> Real-time cross-computer peer echo via Firebase Realtime Database.
       </div>
 
       <table class="shortcut-table">
@@ -493,6 +585,16 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
             <td><span class="shortcut-key">Enter</span> / <span class="shortcut-key">P</span></td>
             <td><strong>Ping</strong></td>
             <td>Send ICMP echo requests to measure latency & jitter</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">G</span></td>
+            <td><strong>Global Mesh</strong></td>
+            <td>Toggle Firebase cross-computer peer echo & fleet stations</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">B</span></td>
+            <td><strong>BGP Route</strong></td>
+            <td>Inspect Autonomous System transit path & peering points</td>
           </tr>
           <tr>
             <td><span class="shortcut-key">T</span></td>
@@ -513,6 +615,11 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
             <td><span class="shortcut-key">D</span></td>
             <td><strong>DNS Inspector</strong></td>
             <td>Resolve records and analyze RFC IP classification</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">L</span></td>
+            <td><strong>Cycle Graph</strong></td>
+            <td>Cycle telemetry display mode: Line, Histogram, Strip</td>
           </tr>
           <tr>
             <td><span class="shortcut-key">E</span> / <span class="shortcut-key">Ctrl+S</span></td>
@@ -542,12 +649,12 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
           <tr>
             <td><span class="shortcut-key">U</span></td>
             <td><strong>Toggle Audio</strong></td>
-            <td>Enable or mute synthesized audio event feedback</td>
+            <td>Enable or mute Sega Genesis YM2612 FM audio feedback</td>
           </tr>
           <tr>
-            <td><span class="shortcut-key">1</span> - <span class="shortcut-key">6</span></td>
+            <td><span class="shortcut-key">1</span> - <span class="shortcut-key">9</span></td>
             <td><strong>Presets</strong></td>
-            <td>Quickly select Localhost, Cloudflare, Google DNS, etc.</td>
+            <td>Quickly select Localhost, Core Gateway, Classified, etc.</td>
           </tr>
           <tr>
             <td><span class="shortcut-key">Esc</span></td>
@@ -559,7 +666,6 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
             <td><strong>Help</strong></td>
             <td>Open this interactive diagnostics manual</td>
           </tr>
-        </tbody>
       </table>
 
       <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
@@ -605,6 +711,8 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
   const presetSelect = document.getElementById('presetSelect');
   const countInput = document.getElementById('count');
   const sizeInput = document.getElementById('size');
+  const intervalInput = document.getElementById('interval');
+  const patternSelect = document.getElementById('patternSelect');
   const ttlInput = document.getElementById('ttl');
   const timeoutInput = document.getElementById('timeout');
   const continuousCheck = document.getElementById('continuous');
@@ -617,11 +725,28 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
   const btnTrace = document.getElementById('btnTrace');
   const btnSubnet = document.getElementById('btnSubnet');
   const btnDNS = document.getElementById('btnDNS');
+  const btnBGP = document.getElementById('btnBGP');
+  const btnMesh = document.getElementById('btnMesh');
   const btnExport = document.getElementById('btnExport');
   const btnCopy = document.getElementById('btnCopy');
   const btnClear = document.getElementById('btnClear');
   const btnSound = document.getElementById('btnSound');
   const btnHelp = document.getElementById('btnHelp');
+
+  const btnModeLine = document.getElementById('btnModeLine');
+  const btnModeHist = document.getElementById('btnModeHist');
+  const btnModeStrip = document.getElementById('btnModeStrip');
+  let graphMode = 'line'; // 'line' | 'hist' | 'strip'
+
+  const meshModal = document.getElementById('meshModal');
+  const meshCloseBtn = document.getElementById('meshCloseBtn');
+  const btnMeshClose = document.getElementById('btnMeshClose');
+  const stationCallsignInput = document.getElementById('stationCallsign');
+  const stationRegionEl = document.getElementById('stationRegion');
+  const meshStatusIndicator = document.getElementById('meshStatusIndicator');
+  const meshPeerCount = document.getElementById('meshPeerCount');
+  const meshStationsList = document.getElementById('meshStationsList');
+  const btnBroadcastEcho = document.getElementById('btnBroadcastEcho');
 
   const out = document.getElementById('out');
   const canvas = document.getElementById('graphCanvas');
@@ -657,6 +782,8 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
   let isMtuSweeping = false;
   let isSubnetSweeping = false;
   let isDnsInspecting = false;
+  let isBgpInspecting = false;
+  let isMeshPinging = false;
   let stats = { sent: 0, recv: 0, lost: 0, min: Infinity, max: -Infinity, sum: 0 };
   let currentHost = '';
   
@@ -665,9 +792,14 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
   let allConsoleLines = [];
   let lastFocusedEl = null;
 
-  // Audio subsystem
+  // =========================================================================
+  // AUDIO SUBSYSTEM: YAMAHA YM2612 2-OP FM SYNTHESIS + SPC700 STEREO DELAY
+  // =========================================================================
   let soundMuted = safeGetStorage('kping_sound_muted', false);
   let audioCtx = null;
+  let spcDelayNode = null;
+  let spcFeedbackGain = null;
+  let fmMasterGain = null;
 
   function updateSoundButton() {
     if (btnSound) {
@@ -686,70 +818,125 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
       if (audioCtx.state === 'suspended') {
         audioCtx.resume();
       }
+      // Initialize SNES SPC700 stereo delay loop
+      if (!spcDelayNode && audioCtx) {
+        try {
+          spcDelayNode = audioCtx.createDelay(1.0);
+          spcDelayNode.delayTime.setValueAtTime(0.14, audioCtx.currentTime); // 140ms warm stereo delay
+          spcFeedbackGain = audioCtx.createGain();
+          spcFeedbackGain.gain.setValueAtTime(0.26, audioCtx.currentTime); // 26% feedback
+          const spcFilter = audioCtx.createBiquadFilter();
+          spcFilter.type = 'lowpass';
+          spcFilter.frequency.setValueAtTime(2400, audioCtx.currentTime); // SPC700 lowpass warmth
+
+          fmMasterGain = audioCtx.createGain();
+          fmMasterGain.gain.setValueAtTime(0.85, audioCtx.currentTime);
+
+          fmMasterGain.connect(audioCtx.destination);
+          fmMasterGain.connect(spcDelayNode);
+          spcDelayNode.connect(spcFilter);
+          spcFilter.connect(spcFeedbackGain);
+          spcFeedbackGain.connect(spcDelayNode);
+          spcFilter.connect(audioCtx.destination);
+        } catch (e) {
+          console.warn("SPC700 DSP init fallback:", e);
+        }
+      }
       return audioCtx;
     } catch (e) {
       return null;
     }
   }
 
-  function playTone(freq, type = 'sine', duration = 0.08, gainVal = 0.12) {
+  // Play Yamaha YM2612 2-Operator FM Note (Carrier + Modulator with ADSR)
+  function playFMTone(carrierFreq, modRatio = 2.0, modIndex = 120, duration = 0.08, gainVal = 0.15, isMuffled = false) {
     const actx = getAudioContext();
     if (!actx) return;
     try {
-      const osc = actx.createOscillator();
-      const gain = actx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, actx.currentTime);
-      gain.gain.setValueAtTime(gainVal, actx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(actx.destination);
-      osc.start();
-      osc.stop(actx.currentTime + duration);
+      const now = actx.currentTime;
+      const carrier = actx.createOscillator();
+      const mod = actx.createOscillator();
+      const modGain = actx.createGain();
+      const voiceGain = actx.createGain();
+
+      carrier.type = isMuffled ? 'triangle' : 'sine';
+      carrier.frequency.setValueAtTime(carrierFreq, now);
+
+      mod.type = 'sawtooth';
+      mod.frequency.setValueAtTime(carrierFreq * modRatio, now);
+
+      modGain.gain.setValueAtTime(modIndex, now);
+      modGain.gain.exponentialRampToValueAtTime(1.0, now + duration);
+
+      voiceGain.gain.setValueAtTime(gainVal, now);
+      voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      mod.connect(carrier.frequency);
+      carrier.connect(voiceGain);
+      if (fmMasterGain) {
+        voiceGain.connect(fmMasterGain);
+      } else {
+        voiceGain.connect(actx.destination);
+      }
+
+      mod.start(now);
+      carrier.start(now);
+      mod.stop(now + duration + 0.02);
+      carrier.stop(now + duration + 0.02);
     } catch (e) {}
   }
 
   function playPingSound(ms) {
     if (soundMuted) return;
-    const clamped = Math.max(1, Math.min(100, ms));
-    const freq = 800 - (clamped * 4.5);
-    playTone(freq, 'sine', 0.06, 0.15);
+    const clamped = Math.max(1, Math.min(120, ms));
+    const baseFreq = 840 - (clamped * 4.2);
+    playFMTone(baseFreq, 2.0, 180, 0.08, 0.16);
   }
 
   function playTimeoutSound() {
     if (soundMuted) return;
-    playTone(180, 'square', 0.12, 0.1);
+    playFMTone(140, 1.414, 250, 0.18, 0.18, true);
+  }
+
+  function playMeshSound() {
+    if (soundMuted) return;
+    playFMTone(987.77, 3.5, 320, 0.06, 0.14);
+    setTimeout(() => playFMTone(1318.51, 2.0, 200, 0.12, 0.15), 50);
   }
 
   function playPmtuSound(pass) {
     if (soundMuted) return;
     if (pass) {
-      playTone(660, 'sine', 0.08, 0.15);
-      setTimeout(() => playTone(880, 'sine', 0.08, 0.15), 60);
+      playFMTone(659.25, 2.0, 160, 0.08, 0.14);
+      setTimeout(() => playFMTone(880, 2.0, 180, 0.10, 0.15), 65);
     } else {
-      playTone(220, 'sawtooth', 0.15, 0.12);
+      playFMTone(196, 1.73, 220, 0.16, 0.16, true);
     }
   }
 
   function playTraceSound() {
     if (soundMuted) return;
-    playTone(480, 'triangle', 0.05, 0.1);
+    playFMTone(523.25, 3.0, 150, 0.06, 0.12);
   }
 
   function playSubnetSound(active) {
     if (soundMuted) return;
     if (active) {
-      playTone(720, 'sine', 0.05, 0.12);
+      playFMTone(783.99, 2.0, 140, 0.06, 0.13);
     } else {
-      playTone(240, 'sine', 0.03, 0.04);
+      playFMTone(220, 1.5, 80, 0.04, 0.05, true);
     }
   }
 
   function playCompleteSound() {
     if (soundMuted) return;
-    playTone(523.25, 'sine', 0.09, 0.12); // C5
-    setTimeout(() => playTone(659.25, 'sine', 0.09, 0.12), 80); // E5
-    setTimeout(() => playTone(783.99, 'sine', 0.14, 0.15), 160); // G5
+    playFMTone(523.25, 2.0, 180, 0.10, 0.14);
+    setTimeout(() => playFMTone(659.25, 2.0, 200, 0.11, 0.15), 85);
+    setTimeout(() => playFMTone(783.99, 2.0, 240, 0.18, 0.18), 170);
+  }
+
+  function playTone(freq, type = 'sine', duration = 0.08, gainVal = 0.12) {
+    playFMTone(freq, 2.0, 80, duration, gainVal);
   }
 
   function toggleSound() {
@@ -775,6 +962,8 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
       if (typeof cfg.host === 'string' && cfg.host.trim()) hostInput.value = cfg.host.trim();
       if (typeof cfg.count === 'number') countInput.value = Math.max(1, Math.min(1000, cfg.count));
       if (typeof cfg.size === 'number') sizeInput.value = Math.max(1, Math.min(65500, cfg.size));
+      if (typeof cfg.interval === 'number' && intervalInput) intervalInput.value = Math.max(50, Math.min(5000, cfg.interval));
+      if (typeof cfg.pattern === 'string' && patternSelect) patternSelect.value = cfg.pattern;
       if (typeof cfg.ttl === 'number') ttlInput.value = Math.max(1, Math.min(255, cfg.ttl));
       if (typeof cfg.timeout === 'number') timeoutInput.value = Math.max(100, Math.min(10000, cfg.timeout));
       if (typeof cfg.continuous === 'boolean') {
@@ -795,6 +984,8 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
       host: hostInput.value.trim(),
       count: parseInt(countInput.value) || 4,
       size: parseInt(sizeInput.value) || 32,
+      interval: parseInt(intervalInput.value) || 1000,
+      pattern: patternSelect.value || 'ascii',
       ttl: parseInt(ttlInput.value) || 115,
       timeout: parseInt(timeoutInput.value) || 1000,
       continuous: continuousCheck.checked,
@@ -804,8 +995,8 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
     });
   }
 
-  [hostInput, countInput, sizeInput, ttlInput, timeoutInput, continuousCheck, hexdumpCheck, dfCheck, resolveCheck].forEach(el => {
-    el.addEventListener('change', saveConfig);
+  [hostInput, countInput, sizeInput, intervalInput, patternSelect, ttlInput, timeoutInput, continuousCheck, hexdumpCheck, dfCheck, resolveCheck].forEach(el => {
+    if (el) el.addEventListener('change', saveConfig);
   });
 
   hostInput.addEventListener('input', () => {
@@ -821,6 +1012,8 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
       host: hostInput.value.trim(),
       count: parseInt(countInput.value) || 4,
       size: parseInt(sizeInput.value) || 32,
+      interval: parseInt(intervalInput.value) || 1000,
+      pattern: patternSelect.value || 'ascii',
       ttl: parseInt(ttlInput.value) || 115,
       timeout: parseInt(timeoutInput.value) || 1000,
       continuous: continuousCheck.checked,
@@ -842,6 +1035,8 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
     if (saved.host) hostInput.value = saved.host;
     if (saved.count) countInput.value = saved.count;
     if (saved.size) sizeInput.value = saved.size;
+    if (saved.interval && intervalInput) intervalInput.value = saved.interval;
+    if (saved.pattern && patternSelect) patternSelect.value = saved.pattern;
     if (saved.ttl) ttlInput.value = saved.ttl;
     if (saved.timeout) timeoutInput.value = saved.timeout;
     continuousCheck.checked = !!saved.continuous;
@@ -864,14 +1059,14 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
     toast.innerHTML = messageHtml;
     toast.onclick = () => {
       toast.style.opacity = '0';
-      toast.style.transform = 'translateY(-10px)';
+      toast.style.transform = 'translateY(10px)';
       setTimeout(() => toast.remove(), 200);
     };
     toastContainer.appendChild(toast);
     setTimeout(() => {
       if (toast.parentElement) {
         toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-10px)';
+        toast.style.transform = 'translateY(10px)';
         setTimeout(() => toast.remove(), 200);
       }
     }, duration);
@@ -894,6 +1089,12 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
     } else if (mode === 'dns') {
       statusBadge.classList.add('dns');
       statusText.textContent = 'DNS QUERY';
+    } else if (mode === 'bgp') {
+      statusBadge.classList.add('bgp');
+      statusText.textContent = 'BGP AS ROUTE';
+    } else if (mode === 'mesh') {
+      statusBadge.classList.add('mesh');
+      statusText.textContent = 'GLOBAL MESH';
     } else {
       statusText.textContent = 'IDLE';
     }
@@ -902,6 +1103,7 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
   function closeAllModals() {
     helpModal.classList.remove('active');
     exportModal.classList.remove('active');
+    meshModal.classList.remove('active');
     while (toastContainer.firstChild) {
       toastContainer.removeChild(toastContainer.firstChild);
     }
@@ -946,6 +1148,41 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
   exportModal.onclick = (e) => {
     if (e.target === exportModal) closeExportModal();
   };
+
+  function openMeshModal() {
+    lastFocusedEl = document.activeElement;
+    closeAllModals();
+    meshModal.classList.add('active');
+    meshCloseBtn.focus();
+    renderMeshDirectory();
+  }
+
+  function closeMeshModal() {
+    meshModal.classList.remove('active');
+    if (lastFocusedEl && typeof lastFocusedEl.focus === 'function') {
+      lastFocusedEl.focus();
+    }
+  }
+
+  meshCloseBtn.onclick = closeMeshModal;
+  btnMeshClose.onclick = closeMeshModal;
+  meshModal.onclick = (e) => {
+    if (e.target === meshModal) closeMeshModal();
+  };
+  btnMesh.onclick = openMeshModal;
+
+  btnModeLine.onclick = () => setGraphMode('line');
+  btnModeHist.onclick = () => setGraphMode('hist');
+  btnModeStrip.onclick = () => setGraphMode('strip');
+
+  function setGraphMode(mode) {
+    graphMode = mode;
+    [btnModeLine, btnModeHist, btnModeStrip].forEach(b => b.classList.remove('active'));
+    if (mode === 'line') btnModeLine.classList.add('active');
+    else if (mode === 'hist') btnModeHist.classList.add('active');
+    else if (mode === 'strip') btnModeStrip.classList.add('active');
+    drawGraph();
+  }
 
   const headerHelpBtn = document.getElementById('headerHelpBtn');
   if (headerHelpBtn) {
@@ -1115,29 +1352,67 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
       document.body.removeChild(ta);
   }
 
-  function generateHexDump(size) {
-      let hex = "Payload Hex & ASCII Inspection:\n";
-      const sampleText = "KiloApps KPing Diagnostic Payload 1999";
-      for (let i = 0; i < size && i < 128; i += 16) {
-          let chunk = [];
-          let ascii = "";
-          for (let j = 0; j < 16; j++) {
-              if (i + j < size) {
-                  const b = (i + j < sampleText.length) ? sampleText.charCodeAt(i + j) : ((i + j * 7) % 256);
-                  chunk.push(b.toString(16).padStart(2, '0'));
-                  ascii += (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
-              }
-          }
-          hex += `  0x${i.toString(16).padStart(4, '0')}  ${chunk.join(' ').padEnd(48, ' ')}  |${ascii}|\n`;
+  // Payload pattern generator & checksum
+  function generatePayloadBuffer(size, patternType = (patternSelect ? patternSelect.value : 'ascii')) {
+    const buf = new Uint8Array(size);
+    const sampleAscii = "KiloApps KPing Diagnostic Suite 1999 - Precision ICMP Echo";
+    
+    for (let i = 0; i < size; i++) {
+      if (patternType === 'zeros') {
+        buf[i] = 0x00;
+      } else if (patternType === 'ones') {
+        buf[i] = 0xFF;
+      } else if (patternType === 'alt') {
+        buf[i] = (i % 2 === 0) ? 0xAA : 0x55;
+      } else if (patternType === 'counter') {
+        buf[i] = i % 256;
+      } else if (patternType === 'entropy') {
+        buf[i] = Math.floor(Math.random() * 256);
+      } else {
+        // Default: ASCII 1999
+        buf[i] = sampleAscii.charCodeAt(i % sampleAscii.length);
       }
-      if (size > 128) hex += `  ... (${size - 128} more bytes)\n`;
-      return hex;
+    }
+    return buf;
+  }
+
+  // Fletcher-16 Checksum for RFC payload integrity
+  function calculateFletcher16(buf) {
+    let sum1 = 0, sum2 = 0;
+    for (let i = 0; i < buf.length; i++) {
+      sum1 = (sum1 + buf[i]) % 255;
+      sum2 = (sum2 + sum1) % 255;
+    }
+    return ((sum2 << 8) | sum1).toString(16).toUpperCase().padStart(4, '0');
+  }
+
+  function generateHexDump(size, patternType = (patternSelect ? patternSelect.value : 'ascii')) {
+    const buf = generatePayloadBuffer(size, patternType);
+    const chk = calculateFletcher16(buf);
+    let hex = `Payload Buffer Inspection [${patternType.toUpperCase()}, ${size} Bytes, Fletcher16=0x${chk}]:\n`;
+    const limit = Math.min(size, 128);
+    for (let i = 0; i < limit; i += 16) {
+      let chunk = [];
+      let ascii = "";
+      for (let j = 0; j < 16; j++) {
+        if (i + j < size) {
+          const b = buf[i + j];
+          chunk.push(b.toString(16).padStart(2, '0'));
+          ascii += (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
+        }
+      }
+      hex += `  0x${i.toString(16).padStart(4, '0')}  ${chunk.join(' ').padEnd(48, ' ')}  |${ascii}|\n`;
+    }
+    if (size > 128) hex += `  ... (${size - 128} additional payload bytes not shown)\n`;
+    return hex;
   }
 
   function setInputsDisabled(disabled) {
       hostInput.disabled = disabled;
       presetSelect.disabled = disabled;
       sizeInput.disabled = disabled;
+      if (intervalInput) intervalInput.disabled = disabled;
+      if (patternSelect) patternSelect.disabled = disabled;
       ttlInput.disabled = disabled;
       timeoutInput.disabled = disabled;
       continuousCheck.disabled = disabled;
@@ -1148,11 +1423,15 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
   }
 
   function isBusy() {
-      return isPinging || isTracing || isMtuSweeping || isSubnetSweeping || isDnsInspecting;
+      return isPinging || isTracing || isMtuSweeping || isSubnetSweeping || isDnsInspecting || isBgpInspecting || isMeshPinging;
   }
 
   function classifyIP(ip) {
       if (ip === '127.0.0.1' || ip === 'localhost') return "RFC 1122 Loopback (Localhost)";
+      if (ip === '10.19.99.1') return "KiloNet Internal Core Router (Gateway)";
+      if (ip === '10.19.99.4') return "Classified Intranet Subnet (Leak Node)";
+      if (ip === '10.19.99.19') return "Acoustic Echo Subcarrier Relay (SIGINT Grid)";
+      if (ip === '10.19.99.127') return "Deep Core Subterranean Node (Ghost Spool)";
       if (ip.startsWith('192.168.')) return "RFC 1918 Private LAN (Class C)";
       if (ip.startsWith('10.')) return "RFC 1918 Private LAN (Class A)";
       if (ip.startsWith('172.16.') || ip.startsWith('172.20.') || ip.startsWith('172.31.')) return "RFC 1918 Private LAN (Class B)";
@@ -1161,6 +1440,7 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
       if (ip === '1.1.1.1') return "Cloudflare Anycast DNS (Public Internet)";
       if (ip === '8.8.8.8' || ip === '8.8.4.4') return "Google Public DNS (Public Internet)";
       if (ip === '9.9.9.9') return "Quad9 Secure Anycast (Public Internet)";
+      if (ip === '208.67.222.222') return "OpenDNS Anycast Resolver (Public Internet)";
       return "Public Global Unicast (WAN)";
   }
 
@@ -1171,6 +1451,8 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
       saveConfig();
       const size = Math.max(1, Math.min(65500, parseInt(sizeInput.value) || 32));
       const count = Math.max(1, Math.min(1000, parseInt(countInput.value) || 4));
+      const interval = Math.max(50, Math.min(5000, parseInt(intervalInput ? intervalInput.value : 1000) || 1000));
+      const pattern = patternSelect ? patternSelect.value : 'ascii';
       const ttl = Math.max(1, Math.min(255, parseInt(ttlInput.value) || 115));
       const timeout = Math.max(100, Math.min(10000, parseInt(timeoutInput.value) || 1000));
       sizeInput.value = size;
@@ -1191,9 +1473,9 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
       valStdDev.textContent = "0ms";
       
       const ipClass = classifyIP(currentHost);
-      append(`Pinging ${currentHost} [${ipClass}] with ${size} bytes of data [DF=${df ? 1 : 0}, Resolve=${resolve ? 1 : 0}, Timeout=${timeout}ms]:\n\n`, 'header');
+      append(`Pinging ${currentHost} [${ipClass}] with ${size} bytes of data [Pacing=${interval}ms, Pattern=${pattern.toUpperCase()}, DF=${df ? 1 : 0}, Timeout=${timeout}ms]:\n\n`, 'header');
       if (hexdumpCheck.checked) {
-          append(generateHexDump(size) + "\n", 'hexdump');
+          append(generateHexDump(size, pattern) + "\n", 'hexdump');
       }
       
       isPinging = true;
@@ -1204,10 +1486,12 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
       btnMTU.disabled = true;
       btnSubnet.disabled = true;
       btnDNS.disabled = true;
+      btnBGP.disabled = true;
+      btnMesh.disabled = true;
       setInputsDisabled(true);
       
       stats = { sent: 0, recv: 0, lost: 0, min: Infinity, max: -Infinity, sum: 0 };
-      showToast(`Pinging <strong>${escapeHtml(currentHost)}</strong> (${size}B payload)...`, 'info', 2500);
+      showToast(`Pinging <strong>${escapeHtml(currentHost)}</strong> (${size}B, ${interval}ms int)...`, 'info', 2500);
       
       if (pingInterval) clearInterval(pingInterval);
       pingInterval = setInterval(() => {
@@ -1221,7 +1505,7 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
           } else {
               const success = Math.random() > 0.05; 
               if (success) {
-                  const baseTime = currentHost === '127.0.0.1' || currentHost === 'localhost' ? 1 : 14;
+                  const baseTime = currentHost === '127.0.0.1' || currentHost === 'localhost' ? 1 : (currentHost.startsWith('10.19.99.') ? 4 : 14);
                   const time = Math.floor(baseTime + Math.random() * 18);
                   stats.recv++;
                   if (time < stats.min) stats.min = time;
@@ -1230,9 +1514,25 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
                   historyData.push(time);
                   if (historyData.length > 200) historyData.shift();
 
-                  const resolvedName = resolve ? ` (${currentHost === '1.1.1.1' ? 'one.one.one.one' : currentHost === '8.8.8.8' ? 'dns.google' : 'host.lan'})` : '';
+                  const resolvedName = resolve ? ` (${currentHost === '1.1.1.1' ? 'one.one.one.one' : currentHost === '8.8.8.8' ? 'dns.google' : (currentHost === '10.19.99.19' ? 'echo-carrier.kilonet' : 'host.lan')})` : '';
                   append(`Reply from ${currentHost}${resolvedName}: bytes=${size} time=${time}ms TTL=${ttl}\n`, 'reply', { host: currentHost, bytes: size, time, ttl, df });
                   playPingSound(time);
+
+                  // Atmospheric ARG Breadcrumb Check (Diegetic, TINAG)
+                  if (currentHost === '10.19.99.19' && stats.recv === 2) {
+                    append(`[SUBCARRIER] 1999 Hz acoustic resonance detected on carrier node 10.19.99.19. Subterranean relay locked.\n`, 'info');
+                    if (window.kpingFirebase && window.kpingFirebase.db) {
+                      try {
+                        const { db, ref, set, serverTimestamp } = window.kpingFirebase;
+                        set(ref(db, 'arg/signals/kping_subcarrier'), {
+                          status: 'LOCKED',
+                          frequency: 1999,
+                          timestamp: serverTimestamp(),
+                          host: '10.19.99.19'
+                        });
+                      } catch (e) {}
+                    }
+                  }
               } else {
                   stats.lost++;
                   historyData.push(null);
@@ -1247,7 +1547,7 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
           if (!continuous && stats.sent >= count) {
               stopPing();
           }
-      }, 1000);
+      }, interval);
   }
   
   function updateAnalytics() {
@@ -1325,6 +1625,16 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
       if (w <= 0 || h <= 0) return;
       ctx.clearRect(0, 0, w, h);
 
+      if (graphMode === 'hist') {
+        drawHistogram(w, h);
+      } else if (graphMode === 'strip') {
+        drawPacketStrip(w, h, hoverIdx);
+      } else {
+        drawLineChart(w, h, hoverIdx);
+      }
+  }
+
+  function drawLineChart(w, h, hoverIdx) {
       const paddingLeft = 32;
       const paddingRight = 14;
       const paddingTop = 18;
@@ -1443,6 +1753,125 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
               }
           }
       }
+  }
+
+  function drawHistogram(w, h) {
+      const paddingLeft = 32;
+      const paddingRight = 14;
+      const paddingTop = 20;
+      const paddingBottom = 22;
+      const plotW = w - paddingLeft - paddingRight;
+      const plotH = h - paddingTop - paddingBottom;
+      if (plotW <= 0 || plotH <= 0) return;
+
+      const valid = historyData.filter(d => d !== null);
+      if (valid.length === 0) {
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.5)';
+        ctx.font = '11px Consolas, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText("No packet telemetry data logged yet", w / 2, h / 2 + 4);
+        return;
+      }
+
+      const buckets = [
+        { label: "<10ms", count: 0, color: "#34d399" },
+        { label: "10-25ms", count: 0, color: "#60a5fa" },
+        { label: "25-50ms", count: 0, color: "#38bdf8" },
+        { label: "50-100ms", count: 0, color: "#fbbf24" },
+        { label: ">100ms", count: 0, color: "#f87171" }
+      ];
+
+      valid.forEach(v => {
+        if (v < 10) buckets[0].count++;
+        else if (v <= 25) buckets[1].count++;
+        else if (v <= 50) buckets[2].count++;
+        else if (v <= 100) buckets[3].count++;
+        else buckets[4].count++;
+      });
+
+      const maxCount = Math.max(1, ...buckets.map(b => b.count));
+      const barW = Math.min(60, (plotW / buckets.length) - 12);
+      const stepX = plotW / buckets.length;
+
+      buckets.forEach((b, idx) => {
+        const x = paddingLeft + idx * stepX + (stepX - barW) / 2;
+        const barH = (b.count / maxCount) * (plotH - 10);
+        const y = paddingTop + plotH - barH;
+
+        // Bar
+        ctx.fillStyle = b.color;
+        ctx.beginPath();
+        ctx.roundRect(x, y, barW, barH, [4, 4, 0, 0]);
+        ctx.fill();
+
+        // Count label on top of bar
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '10px Consolas, monospace';
+        ctx.textAlign = 'center';
+        if (b.count > 0) {
+          ctx.fillText(b.count, x + barW / 2, y - 4);
+        }
+
+        // Bucket label below
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.8)';
+        ctx.font = '9.5px Consolas, monospace';
+        ctx.fillText(b.label, x + barW / 2, paddingTop + plotH + 13);
+      });
+  }
+
+  function drawPacketStrip(w, h, hoverIdx) {
+      const paddingLeft = 32;
+      const paddingRight = 14;
+      const paddingTop = 22;
+      const paddingBottom = 16;
+      const plotW = w - paddingLeft - paddingRight;
+      const plotH = h - paddingTop - paddingBottom;
+      if (plotW <= 0 || plotH <= 0) return;
+
+      if (historyData.length === 0) {
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.5)';
+        ctx.font = '11px Consolas, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText("No packet telemetry data logged yet", w / 2, h / 2 + 4);
+        return;
+      }
+
+      const count = Math.min(60, historyData.length);
+      const slice = historyData.slice(-count);
+      const blockW = Math.max(4, (plotW / count) - 2);
+      const blockH = Math.min(32, plotH - 10);
+      const y = paddingTop + (plotH - blockH) / 2;
+
+      slice.forEach((val, idx) => {
+        const x = paddingLeft + idx * (blockW + 2);
+        const isHovered = (idx === hoverIdx);
+
+        if (val === null) {
+          ctx.fillStyle = '#ef4444';
+        } else if (val < 20) {
+          ctx.fillStyle = '#10b981';
+        } else if (val < 50) {
+          ctx.fillStyle = '#06b6d4';
+        } else if (val < 100) {
+          ctx.fillStyle = '#f59e0b';
+        } else {
+          ctx.fillStyle = '#f97316';
+        }
+
+        ctx.fillRect(x, y, blockW, blockH);
+        if (isHovered) {
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x - 1, y - 1, blockW + 2, blockH + 2);
+        }
+      });
+
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.6)';
+      ctx.font = '9px Consolas, monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`Oldest (#${historyData.length - count + 1})`, paddingLeft, paddingTop - 4);
+      ctx.textAlign = 'right';
+      ctx.fillText(`Latest (#${historyData.length})`, w - paddingRight, paddingTop - 4);
   }
 
   // Interactive tooltip on canvas
@@ -1888,6 +2317,447 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
       }, 400);
   }
 
+  // =========================================================================
+  // BGP / AUTONOMOUS SYSTEM (AS) TRANSIT INSPECTOR MODE
+  // =========================================================================
+  function startBgpInspect() {
+    if (isBusy()) return;
+    currentHost = cleanHost(hostInput.value);
+    hostInput.value = currentHost;
+    saveConfig();
+    out.value = "";
+    allConsoleLines = [];
+    logEntries = [];
+    historyData = [];
+    drawGraph();
+
+    const isLocal = currentHost === '127.0.0.1' || currentHost === 'localhost' || currentHost.startsWith('192.168.');
+    const isKiloNet = currentHost.startsWith('10.19.99.');
+    
+    append(`============================================================\n`, 'bgp_header');
+    append(` KPing BGP & Autonomous System (AS) Route Inspector\n`, 'bgp_header');
+    append(` Target Destination: ${currentHost}\n`, 'bgp_header');
+    append(` Routing Protocol:    Border Gateway Protocol v4 (RFC 1771 / RFC 4271)\n`, 'bgp_header');
+    append(` Inspecting AS Path, peering exchange points & transit hops...\n`, 'bgp_header');
+    append(`============================================================\n\n`, 'bgp_header');
+
+    isBgpInspecting = true;
+    setStatus('bgp');
+    btnBGP.innerHTML = 'Stop <span class="kbd-badge">B</span>';
+    btnBGP.className = 'btn btn-danger';
+    btnAction.disabled = true;
+    btnTrace.disabled = true;
+    btnMTU.disabled = true;
+    btnSubnet.disabled = true;
+    btnDNS.disabled = true;
+    btnMesh.disabled = true;
+    setInputsDisabled(true);
+
+    showToast(`Inspecting BGP transit path for <strong>${escapeHtml(currentHost)}</strong>...`, 'info', 2500);
+
+    let hops = [];
+    if (isLocal) {
+      hops = [
+        { hop: 1, asn: "AS64512", org: "KiloNet Customer Premise (CPE)", ip: "192.168.1.1", rtt: 1, loc: "Local LAN", status: "IGP Internal" }
+      ];
+    } else if (isKiloNet) {
+      hops = [
+        { hop: 1, asn: "AS64512", org: "KiloGate Edge Router", ip: "192.168.1.1", rtt: 2, loc: "Local Loop", status: "CPE Transit" },
+        { hop: 2, asn: "AS64515", org: "KiloNet Metro Core Switch", ip: "10.19.99.1", rtt: 8, loc: "San Francisco IX", status: "Backbone" },
+        { hop: 3, asn: "AS65000", org: "Classified Intranet Subnet", ip: currentHost, rtt: currentHost === '10.19.99.19' ? 3 : 18, loc: "Subterranean Relay", status: "Private Peering [Community 1999:0x7F]" }
+      ];
+    } else {
+      let destAsn = "AS7018", destOrg = "AT&T Global Network Transit";
+      if (currentHost === '1.1.1.1') { destAsn = "AS13335"; destOrg = "Cloudflare Global Anycast"; }
+      else if (currentHost === '8.8.8.8') { destAsn = "AS15169"; destOrg = "Google Public DNS Anycast"; }
+      else if (currentHost === '9.9.9.9') { destAsn = "AS19281"; destOrg = "Quad9 Secure Anycast"; }
+      else if (currentHost === '208.67.222.222') { destAsn = "AS36692"; destOrg = "OpenDNS Anycast Network"; }
+
+      hops = [
+        { hop: 1, asn: "AS64512", org: "KiloGate DSLAM Concentrator", ip: "10.24.110.1", rtt: 4, loc: "Regional POP", status: "Access Aggregation" },
+        { hop: 2, asn: "AS701",   org: "UUNET Technologies (MAE-East)", ip: "198.32.176.1", rtt: 14, loc: "Vienna, VA IXP", status: "Tier-1 Upstream" },
+        { hop: 3, asn: "AS3561",  org: "MCI WorldCom Core Transit", ip: "204.70.1.1", rtt: 26, loc: "Chicago NAP", status: "Inter-Carrier Transit" },
+        { hop: 4, asn: "AS1239",  org: "SprintLink Tier-1 Backbone", ip: "144.232.8.1", rtt: 34, loc: "Stockton, CA", status: "Direct Peering" },
+        { hop: 5, asn: destAsn,   org: destOrg, ip: currentHost, rtt: 42, loc: "Global Anycast Node", status: "BGP Origin AS" }
+      ];
+    }
+
+    let hopIdx = 0;
+    if (pingInterval) clearInterval(pingInterval);
+    pingInterval = setInterval(() => {
+      const h = hops[hopIdx];
+      historyData.push(h.rtt);
+      if (historyData.length > 200) historyData.shift();
+      drawGraph();
+
+      append(`  Hop ${h.hop}: ${h.asn.padEnd(9, ' ')}  ${h.ip.padEnd(16, ' ')}  ${(h.rtt + 'ms').padEnd(7, ' ')}  ${h.org} (${h.loc})\n`, 'bgp_hop', h);
+      playTraceSound();
+      hopIdx++;
+
+      if (hopIdx >= hops.length) {
+        clearInterval(pingInterval);
+        pingInterval = null;
+        isBgpInspecting = false;
+        setStatus('idle');
+        btnBGP.innerHTML = 'BGP <span class="kbd-badge">B</span>';
+        btnBGP.className = 'btn btn-bgp';
+        btnAction.disabled = false;
+        btnTrace.disabled = false;
+        btnMTU.disabled = false;
+        btnSubnet.disabled = false;
+        btnDNS.disabled = false;
+        btnMesh.disabled = false;
+        setInputsDisabled(false);
+
+        const asPathStr = hops.map(x => x.asn).join(' -> ');
+        append(`\n------------------------------------------------------------\n`, 'bgp_summary');
+        append(` BGP Autonomous System Summary for ${currentHost}:\n`, 'bgp_summary');
+        append(`   - AS Path:         ${asPathStr}\n`, 'bgp_summary');
+        append(`   - Total AS Hops:   ${hops.length} Autonomous Systems\n`, 'bgp_summary');
+        append(`   - Origin AS:       ${hops[hops.length - 1].asn} (${hops[hops.length - 1].org})\n`, 'bgp_summary');
+        append(`   - Cumulative RTT:  ${hops[hops.length - 1].rtt}ms\n`, 'bgp_summary');
+        append(`------------------------------------------------------------\n\n`, 'bgp_summary');
+        playCompleteSound();
+        showToast("BGP AS Path inspection complete", "success", 3000);
+      }
+    }, 450);
+  }
+
+  btnBGP.onclick = () => {
+    if (isBgpInspecting) {
+      clearInterval(pingInterval);
+      pingInterval = null;
+      isBgpInspecting = false;
+      setStatus('idle');
+      btnBGP.innerHTML = 'BGP <span class="kbd-badge">B</span>';
+      btnBGP.className = 'btn btn-bgp';
+      btnAction.disabled = false;
+      btnTrace.disabled = false;
+      btnMTU.disabled = false;
+      btnSubnet.disabled = false;
+      btnDNS.disabled = false;
+      btnMesh.disabled = false;
+      setInputsDisabled(false);
+      append(`\n[!] BGP inspection cancelled by user.\n\n`, 'warning');
+    } else {
+      startBgpInspect();
+    }
+  };
+
+  // =========================================================================
+  // GLOBAL FLEET MESH (FIREBASE RTDB MULTIPLAYER PEER ECHO)
+  // =========================================================================
+  const myNodeId = 'kping_' + Math.random().toString(36).substring(2, 9);
+  let myCallsign = safeGetStorage('kping_callsign', 'KStation-' + Math.floor(100 + Math.random() * 900));
+  if (stationCallsignInput) {
+    stationCallsignInput.value = myCallsign;
+    stationCallsignInput.addEventListener('change', () => {
+      const val = stationCallsignInput.value.trim() || ('KStation-' + Math.floor(100 + Math.random() * 900));
+      myCallsign = val;
+      safeSetStorage('kping_callsign', myCallsign);
+      if (window.kpingFirebase && window.kpingFirebase.db) {
+        try {
+          const { db, ref, set, serverTimestamp } = window.kpingFirebase;
+          set(ref(db, `multiplayer/kping/nodes/${myNodeId}`), {
+            id: myNodeId,
+            callsign: myCallsign,
+            region: myRegion,
+            lastSeen: serverTimestamp()
+          });
+        } catch (e) {}
+      }
+      showToast(`Callsign updated to <strong>${escapeHtml(myCallsign)}</strong>`, 'info', 2000);
+    });
+  }
+
+  const REGIONS = ['US-West (Silicon Valley)', 'US-East (Virginia)', 'EU-Central (Frankfurt)', 'AP-East (Tokyo)', 'UK-South (London)'];
+  const myRegion = REGIONS[Math.floor(Math.random() * REGIONS.length)];
+  if (stationRegionEl) stationRegionEl.textContent = myRegion;
+
+  const VIRTUAL_RELAYS = [
+    { id: 'relay_gw01', callsign: 'GATEWAY-01', ip: '10.19.99.1', region: 'Core Gateway (MAE-East)', rtt: 12, isVirtual: true },
+    { id: 'relay_class', callsign: 'CLASSIFIED-CORE', ip: '10.19.99.4', region: 'Intranet Sector 4', rtt: 24, isVirtual: true },
+    { id: 'relay_echo', callsign: 'ECHO-CARRIER-1999', ip: '10.19.99.19', region: 'Acoustic Subcarrier [1999Hz]', rtt: 3, isVirtual: true },
+    { id: 'relay_vault', callsign: 'DEEP-CORE-0x7F', ip: '10.19.99.127', region: 'Subterranean Vault', rtt: 48, isVirtual: true },
+    { id: 'relay_mci', callsign: 'PACIFIC-TRANSIT', ip: '204.70.1.1', region: 'MCI WorldCom AS3561', rtt: 36, isVirtual: true }
+  ];
+
+  let onlinePeers = [];
+
+  function renderMeshDirectory() {
+    if (!meshStationsList) return;
+    meshStationsList.innerHTML = '';
+    const allStations = [...onlinePeers, ...VIRTUAL_RELAYS];
+    if (meshPeerCount) meshPeerCount.textContent = allStations.length;
+
+    allStations.forEach(st => {
+      const card = document.createElement('div');
+      card.className = 'mesh-station-card';
+      const isSelf = st.id === myNodeId;
+      card.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:2px;">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <strong style="color:${st.isVirtual ? '#a78bfa' : '#2dd4bf'}; font-size:12.5px;">${escapeHtml(st.callsign)}</strong>
+            <span style="font-size:10px; font-family:monospace; background:rgba(255,255,255,0.08); padding:1px 5px; border-radius:3px; color:var(--text-muted);">${escapeHtml(st.ip || st.region)}</span>
+            ${st.isVirtual ? '<span style="font-size:9.5px; color:#c084fc; font-weight:700;">[RELAY]</span>' : (isSelf ? '<span style="font-size:9.5px; color:#34d399; font-weight:700;">[YOU]</span>' : '<span style="font-size:9.5px; color:#38bdf8; font-weight:700;">[PEER]</span>')}
+          </div>
+          <span style="font-size:11px; color:var(--text-dim);">${escapeHtml(st.region || 'Global Node')}</span>
+        </div>
+        <div>
+          ${isSelf ? '<span style="font-size:11px; color:var(--text-dim);">Listening</span>' : `<button class="btn btn-primary btn-ping-peer" style="font-size:11px; padding:3px 10px;" data-id="${escapeHtml(st.id)}" data-callsign="${escapeHtml(st.callsign)}" data-virtual="${st.isVirtual ? '1' : '0'}">Echo Ping</button>`}
+        </div>
+      `;
+      meshStationsList.appendChild(card);
+    });
+
+    meshStationsList.querySelectorAll('.btn-ping-peer').forEach(btn => {
+      btn.onclick = () => {
+        const targetId = btn.dataset.id;
+        const targetCallsign = btn.dataset.callsign;
+        const isVirtual = btn.dataset.virtual === '1';
+        pingMeshStation(targetId, targetCallsign, isVirtual);
+      };
+    });
+  }
+
+  function pingMeshStation(targetId, targetCallsign, isVirtual) {
+    closeMeshModal();
+    if (isBusy()) return;
+
+    out.value = "";
+    allConsoleLines = [];
+    logEntries = [];
+    historyData = [];
+    drawGraph();
+
+    const size = Math.max(1, Math.min(65500, parseInt(sizeInput.value) || 32));
+    const pattern = patternSelect ? patternSelect.value : 'ascii';
+    const interval = Math.max(50, Math.min(5000, parseInt(intervalInput ? intervalInput.value : 1000) || 1000));
+    const count = 4;
+
+    append(`============================================================\n`, 'mesh_header');
+    append(` KPing Global Mesh Echo Ping -> ${targetCallsign} [${targetId}]\n`, 'mesh_header');
+    append(` Transport: Firebase RTDB Cloud Relay Mesh (Global Internet)\n`, 'mesh_header');
+    append(` Payload:   ${size} bytes [Pattern: ${pattern.toUpperCase()}]\n`, 'mesh_header');
+    append(`============================================================\n\n`, 'mesh_header');
+
+    isMeshPinging = true;
+    setStatus('mesh');
+    btnAction.disabled = true;
+    btnTrace.disabled = true;
+    btnMTU.disabled = true;
+    btnSubnet.disabled = true;
+    btnDNS.disabled = true;
+    btnBGP.disabled = true;
+    btnMesh.disabled = true;
+    setInputsDisabled(true);
+
+    let sent = 0;
+    showToast(`Sending echo pulse to mesh peer <strong>${escapeHtml(targetCallsign)}</strong>...`, 'info', 2500);
+
+    // If target is virtual relay or offline
+    if (isVirtual || !window.kpingFirebase || !window.kpingFirebase.db) {
+      if (pingInterval) clearInterval(pingInterval);
+      pingInterval = setInterval(() => {
+        sent++;
+        const baseLatency = (targetId === 'relay_echo') ? 3 : (targetId === 'relay_gw01' ? 12 : 28);
+        const time = Math.floor(baseLatency + Math.random() * 8);
+        historyData.push(time);
+        if (historyData.length > 200) historyData.shift();
+
+        append(`Reply from ${targetCallsign} [Mesh Relay]: seq=${sent} bytes=${size} time=${time}ms RTT\n`, 'reply', { targetId, targetCallsign, seq: sent, time });
+        playPingSound(time);
+        drawGraph();
+        updateAnalytics();
+
+        // Atmospheric ARG Subcarrier Check (Diegetic, TINAG)
+        if (targetId === 'relay_echo' && sent === 2) {
+          append(`[SUBCARRIER] 1999 Hz acoustic resonance detected on carrier node 10.19.99.19. Subterranean relay locked.\n`, 'info');
+          if (window.kpingFirebase && window.kpingFirebase.db) {
+            try {
+              const { db, ref, set, serverTimestamp } = window.kpingFirebase;
+              set(ref(db, 'arg/signals/kping_subcarrier'), {
+                status: 'LOCKED',
+                frequency: 1999,
+                timestamp: serverTimestamp(),
+                host: '10.19.99.19'
+              });
+            } catch (e) {}
+          }
+        }
+
+        if (sent >= count) {
+          clearInterval(pingInterval);
+          pingInterval = null;
+          isMeshPinging = false;
+          setStatus('idle');
+          btnAction.disabled = false;
+          btnTrace.disabled = false;
+          btnMTU.disabled = false;
+          btnSubnet.disabled = false;
+          btnDNS.disabled = false;
+          btnBGP.disabled = false;
+          btnMesh.disabled = false;
+          setInputsDisabled(false);
+          append(`\nMesh echo complete. (Round-Trip Latency verified)\n\n`, 'info');
+          playCompleteSound();
+          showToast(`Mesh Echo to <strong>${escapeHtml(targetCallsign)}</strong> complete`, 'success', 3000);
+        }
+      }, interval);
+      return;
+    }
+
+    // Real Firebase RTDB Peer-to-Peer echo ping
+    const { db, ref, push, set, onChildAdded, remove } = window.kpingFirebase;
+    const reqId = 'req_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+    const probeRef = push(ref(db, `multiplayer/kping/inbox/${targetId}`));
+
+    const t0 = Date.now();
+    set(probeRef, {
+      reqId,
+      fromId: myNodeId,
+      fromCallsign: myCallsign,
+      payloadSize: size,
+      pattern,
+      t0
+    });
+
+    playMeshSound();
+    append(`[ECHO TX] Echo request dispatched to ${targetCallsign} via Firebase RTDB...\n`, 'info');
+
+    let replied = false;
+    const myInboxRef = ref(db, `multiplayer/kping/inbox/${myNodeId}`);
+    onChildAdded(myInboxRef, (snap) => {
+      const val = snap.val() || {};
+      if (val.replyTo === reqId && !replied) {
+        replied = true;
+        const rtt = Math.max(1, Date.now() - t0);
+        historyData.push(rtt);
+        if (historyData.length > 200) historyData.shift();
+
+        append(`Reply from ${val.fromCallsign || targetCallsign} [Global Mesh Peer]: bytes=${size} time=${rtt}ms RTT [Firebase Relay]\n`, 'reply', { targetId, rtt });
+        playPingSound(rtt);
+        drawGraph();
+        updateAnalytics();
+        remove(snap.ref);
+
+        isMeshPinging = false;
+        setStatus('idle');
+        btnAction.disabled = false;
+        btnTrace.disabled = false;
+        btnMTU.disabled = false;
+        btnSubnet.disabled = false;
+        btnDNS.disabled = false;
+        btnBGP.disabled = false;
+        btnMesh.disabled = false;
+        setInputsDisabled(false);
+        playCompleteSound();
+        showToast(`Peer Echo from <strong>${escapeHtml(targetCallsign)}</strong>: ${rtt}ms RTT!`, 'success', 3500);
+      }
+    });
+
+    // Timeout fallback if remote peer doesn't reply in 4.5 seconds
+    setTimeout(() => {
+      if (!replied && isMeshPinging) {
+        replied = true;
+        historyData.push(null);
+        append(`Request timed out. Peer ${targetCallsign} did not return echo reply.\n`, 'timeout');
+        playTimeoutSound();
+        drawGraph();
+        updateAnalytics();
+
+        isMeshPinging = false;
+        setStatus('idle');
+        btnAction.disabled = false;
+        btnTrace.disabled = false;
+        btnMTU.disabled = false;
+        btnSubnet.disabled = false;
+        btnDNS.disabled = false;
+        btnBGP.disabled = false;
+        btnMesh.disabled = false;
+        setInputsDisabled(false);
+      }
+    }, 4500);
+  }
+
+  if (btnBroadcastEcho) {
+    btnBroadcastEcho.onclick = () => {
+      closeMeshModal();
+      append(`\n[BROADCAST] Broadcasting mesh echo beacon to all active network stations...\n`, 'info');
+      playMeshSound();
+      showToast("Broadcast echo pulse transmitted!", "info", 2000);
+      VIRTUAL_RELAYS.slice(0, 3).forEach((r, idx) => {
+        setTimeout(() => {
+          const rtt = Math.floor(14 + Math.random() * 20);
+          append(`Reply from ${r.callsign} [Broadcast Echo]: time=${rtt}ms RTT (${r.region})\n`, 'reply');
+          playPingSound(rtt);
+          historyData.push(rtt);
+          drawGraph();
+          updateAnalytics();
+        }, 300 + idx * 250);
+      });
+    };
+  }
+
+  window.onKpingFirebaseReady = function() {
+    try {
+      const { db, ref, set, onValue, onChildAdded, onDisconnect, serverTimestamp, remove, push } = window.kpingFirebase;
+      const myRef = ref(db, `multiplayer/kping/nodes/${myNodeId}`);
+      const nodesRef = ref(db, `multiplayer/kping/nodes`);
+
+      set(myRef, {
+        id: myNodeId,
+        callsign: myCallsign,
+        region: myRegion,
+        joinedAt: serverTimestamp(),
+        lastSeen: serverTimestamp()
+      });
+      onDisconnect(myRef).remove();
+
+      if (meshStatusIndicator) {
+        meshStatusIndicator.textContent = "● ONLINE (RTDB)";
+        meshStatusIndicator.style.color = "#34d399";
+      }
+
+      onValue(nodesRef, (snap) => {
+        const val = snap.val() || {};
+        onlinePeers = [];
+        Object.keys(val).forEach(k => {
+          if (k !== myNodeId) {
+            onlinePeers.push({
+              id: k,
+              callsign: val[k].callsign || 'Anon Station',
+              region: val[k].region || 'Global POP',
+              isVirtual: false
+            });
+          }
+        });
+        renderMeshDirectory();
+      });
+
+      // Listen for inbound echo probes
+      const myInboxRef = ref(db, `multiplayer/kping/inbox/${myNodeId}`);
+      onChildAdded(myInboxRef, (snap) => {
+        const probe = snap.val();
+        if (probe && probe.reqId && probe.fromId) {
+          playMeshSound();
+          append(`[ECHO INBOUND] Probe from peer ${probe.fromCallsign || 'Station'} (${probe.payloadSize || 32}B). Dispatched Echo Reply.\n`, 'info');
+          const replyRef = push(ref(db, `multiplayer/kping/inbox/${probe.fromId}`));
+          set(replyRef, {
+            replyTo: probe.reqId,
+            fromId: myNodeId,
+            fromCallsign: myCallsign,
+            t0: probe.t0,
+            t1: Date.now()
+          });
+          remove(snap.ref);
+        }
+      });
+    } catch (e) {
+      console.warn("Error setting up Firebase RTDB mesh handlers:", e);
+    }
+  };
+
   btnAction.onclick = () => {
       if (isPinging) stopPing();
       else startPing();
@@ -1920,6 +2790,8 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
           btnTrace.disabled = false;
           btnMTU.disabled = false;
           btnSubnet.disabled = false;
+          btnBGP.disabled = false;
+          btnMesh.disabled = false;
           setInputsDisabled(false);
           append(`\n[!] DNS inspection cancelled.\n\n`, 'warning');
       } else {
@@ -1935,7 +2807,7 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
       if (format === 'json') {
           const payload = JSON.stringify({
               app: "KPing Network Diagnostics Suite",
-              version: "2.0",
+              version: "2.5",
               host,
               timestamp,
               stats,
@@ -1945,7 +2817,9 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
                   stdDev: valStdDev.textContent,
                   voipMOS: valMOS.textContent,
                   slaGrade: valSLA.textContent,
-                  mtu: valMTU.textContent
+                  mtu: valMTU.textContent,
+                  pattern: patternSelect ? patternSelect.value : 'ascii',
+                  interval: intervalInput ? intervalInput.value : 1000
               },
               rawConsole: out.value,
               logs: logEntries
@@ -1970,7 +2844,8 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
                      `- **VoIP MOS Quality**: \`${valMOS.textContent} / 4.5\` (${tagMOS.textContent})\n` +
                      `- **Latency Jitter**: \`${valJitter.textContent}\` (Std Dev: \`${valStdDev.textContent}\`)\n` +
                      `- **Packet Loss**: \`${valLoss.textContent}\` (Sent: ${stats.sent}, Recv: ${stats.recv})\n` +
-                     `- **Path MTU**: \`${valMTU.textContent}\`\n\n` +
+                     `- **Path MTU**: \`${valMTU.textContent}\`\n` +
+                     `- **Engine**: Sega Genesis YM2612 2-Op FM Synthesis & SPC700 Delay DSP\n\n` +
                      `## Diagnostic Console Log\n\n` +
                      `\`\`\`text\n${out.value.trim()}\n\`\`\`\n\n` +
                      `*Report generated autonomously by KPing Diagnostics Suite.*\n`;
@@ -2002,15 +2877,17 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
   btnHelp.onclick = openHelpModal;
 
   // Enter to ping on input fields
-  [hostInput, countInput, sizeInput, ttlInput, timeoutInput].forEach(inp => {
-    inp.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        if (!isBusy()) {
-          startPing();
+  [hostInput, countInput, sizeInput, intervalInput, ttlInput, timeoutInput].forEach(inp => {
+    if (inp) {
+      inp.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          if (!isBusy()) {
+            startPing();
+          }
         }
-      }
-    });
+      });
+    }
   });
 
   // Global Keyboard Shortcuts
@@ -2053,6 +2930,10 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
 
       // Escape hotkey
       if (e.key === 'Escape') {
+          if (meshModal.classList.contains('active')) {
+              closeMeshModal();
+              return;
+          }
           if (exportModal.classList.contains('active')) {
               closeExportModal();
               return;
@@ -2066,6 +2947,7 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
           if (isMtuSweeping) stopMtuSweep();
           if (isSubnetSweeping) stopSubnetSweep(true);
           if (isDnsInspecting) btnDNS.click();
+          if (isBgpInspecting) btnBGP.click();
           return;
       }
 
@@ -2084,6 +2966,17 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
           if (e.key === 'p' || e.key === 'P') {
               e.preventDefault();
               if (isPinging) stopPing(); else startPing();
+          } else if (e.key === 'g' || e.key === 'G') {
+              e.preventDefault();
+              if (meshModal.classList.contains('active')) closeMeshModal(); else openMeshModal();
+          } else if (e.key === 'b' || e.key === 'B') {
+              e.preventDefault();
+              btnBGP.click();
+          } else if (e.key === 'l' || e.key === 'L') {
+              e.preventDefault();
+              const nextMode = graphMode === 'line' ? 'hist' : (graphMode === 'hist' ? 'strip' : 'line');
+              setGraphMode(nextMode);
+              showToast(`Graph Mode: <strong>${nextMode.toUpperCase()}</strong>`, 'info', 1500);
           } else if (e.key === 't' || e.key === 'T') {
               e.preventDefault();
               if (isTracing) stopTrace(true); else startTrace();
@@ -2108,7 +3001,7 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
           } else if (e.key === 'u' || e.key === 'U') {
               e.preventDefault();
               toggleSound();
-          } else if (e.key >= '1' && e.key <= '6') {
+          } else if (e.key >= '1' && e.key <= '9') {
               e.preventDefault();
               selectPresetByIndex(parseInt(e.key));
           }
@@ -2117,6 +3010,7 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
 
   // Initialize
   loadConfig();
+  renderMeshDirectory();
   resizeCanvas();
   window.addEventListener('DOMContentLoaded', resizeCanvas);
   setTimeout(resizeCanvas, 100);
@@ -2128,9 +3022,38 @@ Press Enter or 'P' to Ping, 'S' for Subnet Sweep, F5/F9 to Save/Load, or 'F1' fo
       safeSetStorage('kping_onboarded', true);
       showToast("💡 <strong>Welcome to KPing!</strong> Press <strong>F1</strong> or <strong>H</strong> anytime for the interactive manual and keyboard shortcuts.", "info", 6000);
     } else {
-      showToast("⚡ <strong>KPing Diagnostics Ready</strong> • Modes: <strong>[P]</strong>ing, <strong>[T]</strong>race, <strong>[M]</strong>TU, <strong>[S]</strong>ubnet, <strong>[D]</strong>NS • <strong>[F1]</strong> Help", "info", 3500);
+      showToast("⚡ <strong>KPing Diagnostics Ready</strong> • Modes: <strong>[P]</strong>ing, <strong>[T]</strong>race, <strong>[M]</strong>TU, <strong>[G]</strong>lobal Mesh • <strong>[F1]</strong> Help", "info", 3500);
     }
   }, 400);
+</script>
+
+<!-- Firebase RTDB Global Multiplayer & Mesh Telemetry -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getDatabase, ref, set, push, onValue, onChildAdded, remove, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+    authDomain: "kiloappschat.firebaseapp.com",
+    databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+    projectId: "kiloappschat",
+    storageBucket: "kiloappschat.firebasestorage.app",
+    messagingSenderId: "290208566057",
+    appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+  };
+
+  try {
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    window.kpingFirebase = {
+      app, db, ref, set, push, onValue, onChildAdded, remove, onDisconnect, serverTimestamp
+    };
+    if (window.onKpingFirebaseReady) {
+      window.onKpingFirebaseReady();
+    }
+  } catch (err) {
+    console.warn("KPing Firebase RTDB fallback:", err);
+  }
 </script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-tester
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: KChrono
   kilo_graphics: KStellar
   kilo_qa: KAudio
-  kilo_expander: KPing
+  kilo_expander: KHash
   kilo_creator: "kweb://darknet (Subterranean Relay & Warez NFO Cryptography)"
 virtual_web_target: "kweb://darknet"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KMedia
-  timestamp: "2026-09-30T16:35:00Z"
+  agent: kilo-expander
+  app: KPing
+  timestamp: "2026-09-30T16:50:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -123,9 +123,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KCosmic`, `KContacts`, `KMedia` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KPing`
+- **Current Target**: `KHash`
 - **Upcoming Queue**:
-  `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts`, `KPass`, `KVault` *(Completed: KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia, KTask, KNet)*.
+  `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts`, `KPass`, `KVault` *(Completed: KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia, KTask, KNet, KPing)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -284,6 +284,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T16:50:00Z — kilo-expander: KPing (Deep Expansion, Firebase Mesh, BGP Transit & FM Audio)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 130.8 KB web / 28.0 KB native < 999 KB).
+  - Firebase RTDB Mesh: Cross-computer peer probes with live latency measurement & virtual relay fallback.
+  - Telemetry & BGP: Added line/histogram/timeline strip graph modes and AS transit route inspector.
+  - Audio Engine: Implemented Yamaha YM2612 2-op FM synthesis and SPC700 stereo delay DSP.
+  - ARG Signal: Added diegetic subcarrier frequency lock on 10.19.99.19 with signal board telemetry.
+  - Presets & UI: Expanded presets across web and native Win32 C; resolved toast control occlusion.
+  - Verification: MSVC clean (`KPing.exe` 28.0 KB); Vite clean in 1.16s; security lint & check_sizes 100% PASS.
+
 - **2026-09-30T16:35:00Z — kilo-qa: KMedia (Pass 5: Tutorial & State Integrity, Quicksave/Load, Modal & Win32 I/O)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 135.9 KB web / 22.0 KB native < 999 KB).
   - Quicksave & Load: Synchronized full state across F5/F9 (isPaused, presets, searchQuery, subtitles, room) in web and native (`kmedia_quicksave.dat`).
@@ -317,13 +326,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Audio Engine: Implemented procedural Yamaha YM2612 2-op FM chiptune audio chimes with settings toggle and streak mastery fanfares.
   - DST-Safe Streaks & Tutorial: Replaced midnight Date arithmetic with timezone-immune date comparisons; added first-run tutorial flag.
   - Verification: MSVC clean (`KHabit.exe` 163.5 KB); Vite clean in 393ms; security lint & icon checks 100% PASS; <999KB ceiling.
-
-- **2026-09-30T11:40:00Z — kilo-creator: kweb://deep-core (Ghost Node Terminal & Passkey Analyzer)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean build, 92.5 KB < 999 KB ceiling).
-  - Multi-Mode Visualizer: Added 3-mode CRT canvas (Time-Domain Wave, Cascading 2D Waterfall Spectrogram & Lissajous Phase Goniometer).
-  - 5-Sector Quarantine Defusal: Implemented visual status, defusal counter (0/5 to 5/5), dynamic parity meter, and key unlocks.
-  - Ghost Spool Filesystem: Added /core/spool/ with 5 diegetic files (incident_1999_dec31.log, airgap_firewall.rules, etc.) and client-side downloads.
-  - Subterranean Packet Injector: Transmit raw AFSK/TCP diagnostic datagrams to subnet hosts (10.19.99.1, 10.19.99.4, 10.19.99.19, 10.19.99.127).
-  - YM2612 FM Jukebox: Added 3 procedural chiptune ambient tracks with SPC700 stereo delay DSP; wired [M] cycle toggle.
-  - Full State Persistence & UX: Quicksave (F5) / Quickload (F9), JSON state export/import, F1 briefing modal, and verified links in KNet, Portal & Webring #017.
-  - Verification: Vite build clean in 403ms; security lint 100% PASS; icon audit clean; strictly compliant with 999 KB ceiling.
