@@ -629,7 +629,10 @@
       <span class="blink-alert">⚠️ TOP SECRET // LEVEL 4 CLASSIFIED</span>
       <span>• INTRANET GATEWAY 10.19.99.4:1999</span>
     </div>
-    <div>CARLSBAD SKUNKWORKS RELAY [STATION 0x7F]</div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <span style="font-size:10px; color:#cbd5e1; font-weight:normal;">[1-7] Tabs &bull; [M] Audio &bull; [Space] Sniffer</span>
+      <span>CARLSBAD SKUNKWORKS RELAY [STATION 0x7F]</span>
+    </div>
   </div>
 
   <!-- Intranet Header Branding -->
@@ -661,13 +664,13 @@
 
   <!-- Navigation Tabs -->
   <nav class="tab-nav">
-    <button class="tab-btn active" onclick="switchTab('memos')">📁 Classified Memos [8]</button>
-    <button class="tab-btn" onclick="switchTab('hex')">💾 Memory Hex Inspector</button>
-    <button class="tab-btn" onclick="switchTab('signal')">📻 Signal Diagnostic &amp; RF Lab</button>
-    <button class="tab-btn" onclick="switchTab('map')">🗺️ Subnet &amp; Bunker Topology</button>
-    <button class="tab-btn" onclick="switchTab('packets')">📡 Telemetry &amp; Sniffer</button>
-    <button class="tab-btn" onclick="switchTab('terminal')">📟 Skunkworks Terminal</button>
-    <button class="tab-btn" onclick="switchTab('verify')">🔐 Hash Verification</button>
+    <button class="tab-btn active" onclick="switchTab('memos')">📁 Classified Memos [8] <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[1]</kbd></button>
+    <button class="tab-btn" onclick="switchTab('hex')">💾 Memory Hex Inspector <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[2]</kbd></button>
+    <button class="tab-btn" onclick="switchTab('signal')">📻 Signal Diagnostic &amp; RF Lab <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[3]</kbd></button>
+    <button class="tab-btn" onclick="switchTab('map')">🗺️ Subnet &amp; Bunker Topology <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[4]</kbd></button>
+    <button class="tab-btn" onclick="switchTab('packets')">📡 Telemetry &amp; Sniffer <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[5]</kbd></button>
+    <button class="tab-btn" onclick="switchTab('terminal')">📟 Skunkworks Terminal <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[6]</kbd></button>
+    <button class="tab-btn" onclick="switchTab('verify')">🔐 Hash Verification <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[7]</kbd></button>
   </nav>
 
   <!-- TAB 1: CLASSIFIED MEMOS -->
@@ -725,7 +728,8 @@
       <input type="text" id="hexSearchInput" class="input-retro" placeholder="10.19.99.4" style="width:110px;" />
       <button class="btn-retro" onclick="searchHexText()">Find</button>
 
-      <div style="margin-left:auto;">
+      <div style="margin-left:auto; display:flex; gap:6px;">
+        <button class="btn-retro" onclick="exportHexText()">📄 Export Text (.TXT)</button>
         <button class="btn-retro" onclick="downloadRawSector()">💾 Download Sector (.DMP)</button>
       </div>
     </div>
@@ -2271,6 +2275,34 @@ function downloadRawSector() {
   URL.revokeObjectURL(url);
 }
 
+function exportHexText() {
+  const bytes = SECTORS[currentSectorKey];
+  if (!bytes) return;
+  const baseOffset = parseInt(currentSectorKey, 16);
+  let dump = `=== AETHEL DYNAMICS CARLSBAD SKUNKWORKS SECTOR DUMP ===\nSECTOR: ${currentSectorKey} | BASE OFFSET: 0x${baseOffset.toString(16).toUpperCase()}\nTIMESTAMP: 1999-12-28 23:59:59 UTC | CRC-32: ${calcCrc32(bytes)}\n\n`;
+  for (let row = 0; row < bytes.length; row += 16) {
+    const offStr = '0x' + (baseOffset + row).toString(16).toUpperCase().padStart(4, '0');
+    let hexStr = '';
+    let ascStr = '';
+    for (let c = 0; c < 16; c++) {
+      const idx = row + c;
+      if (idx < bytes.length) {
+        const b = bytes[idx];
+        hexStr += b.toString(16).toUpperCase().padStart(2, '0') + ' ';
+        ascStr += (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
+      }
+    }
+    dump += `${offStr}  ${hexStr.padEnd(48, ' ')}  |${ascStr}|\n`;
+  }
+  const blob = new Blob([dump], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `SECTOR_${currentSectorKey}_DUMP.TXT`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 /* =========================================================================
    4. CARLSBAD SUBTERRANEAN TOPOLOGY & SUBNET MAP
    ========================================================================= */
@@ -2758,6 +2790,12 @@ function execTermCommand(rawCmd) {
   if (cmd === 'help') {
     res += `AUTHORIZED DIRECTIVES:
   status        - Query Node 10.19.99.4 health, subcarrier sync, and memory watchdog
+  uptime        - Query system uptime and daemon load average
+  who / w       - List active skunkworks operators and daemons
+  uname -a      - Display system kernel architecture
+  netstat       - List active intranet socket connections
+  dmesg         - Display kernel hardware initialization ring buffer
+  version       - Display Carlsbad Skunkworks Intranet release
   ping <host>   - Send ICMP echo packets across intranet subnet
   traceroute    - Trace multi-hop packets to Carlsbad Bunker 0x7F
   cat <memo_id> - Display classified memo contents (e.g. 'cat memo-01' through 'memo-08')
@@ -2783,6 +2821,29 @@ function execTermCommand(rawCmd) {
   ROM INTEGRITY: 999 KB Ceiling Enforced (Zero Overflow)
   STATION:       Carlsbad Salt Vault Relay [Station 0x7F]
   GATEWAY STATE: Armed [URI: kweb://10.19.99.4/classified]`;
+  } else if (cmd === 'uptime') {
+    res += ` 23:59:59 up 1095 days, 14:22, 1 user, load average: 0.19, 0.99, 1.00\nProcesses: 6 active maintenance daemons, 1 kernel watchdog latch`;
+  } else if (cmd === 'who' || cmd === 'w') {
+    res += `USER     TTY      FROM              LOGIN@   IDLE   WHAT\ncarlsbad tty1     10.19.99.1        00:00    0.00s  skunkworks_sh\nvance_v  pts/0    10.19.99.19       14:22    12.0m  rf_synth_monitor\ndaemon01 sys      internal          00:00    0.00s  rotation_sync`;
+  } else if (cmd === 'uname') {
+    res += `Carlsbad-OS 1.99.0-echo #1 SMP PREEMPT Tue Oct 19 04:19:99 UTC 1999 i686 GNU/Linux`;
+  } else if (cmd === 'netstat') {
+    res += `Active Internet connections (servers and established)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State
+tcp        0      0 10.19.99.4:80            0.0.0.0:*               LISTEN
+tcp        0      0 10.19.99.4:1999          10.19.99.12:1999        ESTABLISHED
+tcp        0      0 10.19.99.4:432           10.19.99.19:432         ESTABLISHED
+udp        0      0 10.19.99.4:1999          0.0.0.0:*`;
+  } else if (cmd === 'dmesg') {
+    res += `[0.000000] Initializing Carlsbad Skunkworks Subterranean Station 0x7F...
+[0.001999] CPU: Intel Pentium Pro at 200 MHz, stepping 09
+[0.010199] Memory: 999 KB ceiling enforced (Sector 0x1999 locked)
+[0.041999] Yamaha YM2612 2-Operator FM engine initialized (Channel 6: 1999 Hz)
+[0.081999] SPC700 stereo delay line synchronized: 190ms / 28% feedback
+[0.101999] Halite rock salt capacitive ground array coupled: 10.19.99.0/24
+[0.199900] Airgap link armed across Salado formation lithosphere.`;
+  } else if (cmd === 'version') {
+    res += `Aethel Dynamics Carlsbad Skunkworks Intranet v1.99.4-LEAK\nProtocol: RFC-1999 (Diegetic Capacitive Ground Coupling)\nSize: <999 KB ROM compliant`;
   } else if (cmd === 'ping') {
     const target = arg || '10.19.99.4';
     res += `PING ${target} (56 bytes of data):\n64 bytes from ${target}: icmp_seq=1 ttl=64 time=1.12 ms\n64 bytes from ${target}: icmp_seq=2 ttl=64 time=0.98 ms\n64 bytes from ${target}: icmp_seq=3 ttl=64 time=1.04 ms\n--- ${target} ping statistics ---\n3 packets transmitted, 3 received, 0% packet loss, rtt avg = 1.04 ms`;
@@ -2928,10 +2989,21 @@ async function verifyFragment() {
   const hash = await computeSha256(text);
   let statusHtml = `<div><strong>Calculated SHA-256:</strong> <span style="color:var(--amber-bright); font-family:monospace;">${hash}</span></div>`;
 
-  if (text.toUpperCase() === '10.19.99.4' || text.toLowerCase() === 'kweb://10.19.99.4/classified') {
+  const upper = text.toUpperCase();
+  if (upper === '10.19.99.4' || text.toLowerCase() === 'kweb://10.19.99.4/classified') {
     statusHtml += `<div style="color:var(--green-bright); margin-top:6px; font-weight:700;">★ MATCH VERIFIED: Corporate Intranet Subnet Target Confirmed.</div>`;
-  } else if (text.toUpperCase().includes('1999') || text.toLowerCase().includes('carlsbad')) {
-    statusHtml += `<div style="color:var(--cyan-net); margin-top:6px; font-weight:700;">★ PARTIAL HARMONIC MATCH: Anomaly Sector Resonance Detected.</div>`;
+  } else if (upper.includes('999KB') || upper.includes('999 KB')) {
+    statusHtml += `<div style="color:var(--green-bright); margin-top:6px; font-weight:700;">★ WATCHDOG CONSTRAINT CONFIRMED: Physical EEPROM 999KB Partition Lock Verified.</div>`;
+  } else if (upper.includes('CARLSBAD') || upper.includes('0X7F')) {
+    statusHtml += `<div style="color:var(--cyan-net); margin-top:6px; font-weight:700;">★ SALT VAULT FACILITY SIGNATURE CONFIRMED: Subterranean Station 0x7F Verified.</div>`;
+  } else if (upper.includes('ECHO')) {
+    statusHtml += `<div style="color:var(--cyan-net); margin-top:6px; font-weight:700;">★ PROJECT ECHO SUBCARRIER COUPLING CONFIRMED: Subnet Telemetry Active.</div>`;
+  } else if (upper.includes('YM2612')) {
+    statusHtml += `<div style="color:var(--amber-bright); margin-top:6px; font-weight:700;">★ YAMAHA 2-OPERATOR FM SYNTHESIS LOCK CONFIRMED: Channel 6 1999Hz Carrier.</div>`;
+  } else if (upper.includes('HALITE') || upper.includes('SALADO')) {
+    statusHtml += `<div style="color:var(--cyan-net); margin-top:6px; font-weight:700;">★ SALADO DIELECTRIC WAVEGUIDE PROFILE CONFIRMED: Lithospheric Reflection Verified.</div>`;
+  } else if (upper.includes('1999HZ') || upper.includes('1999 HZ') || upper.includes('1999')) {
+    statusHtml += `<div style="color:var(--amber-bright); margin-top:6px; font-weight:700;">★ HARMONIC FREQUENCY LOCK CONFIRMED: 1999 Hz Subcarrier Synchronized.</div>`;
   } else {
     statusHtml += `<div style="color:var(--text-muted); margin-top:6px;">Checksum computed. No exact pre-climax directive match in current sector.</div>`;
   }
@@ -2941,7 +3013,7 @@ async function verifyFragment() {
 }
 
 /* =========================================================================
-   7. TAB NAVIGATION CONTROLLER
+   7. TAB NAVIGATION CONTROLLER & KEYBOARD SHORTCUTS
    ========================================================================= */
 function switchTab(tabId) {
   document.querySelectorAll('.tab-nav .tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -2960,6 +3032,40 @@ function switchTab(tabId) {
   playKeystrokeTone();
 }
 
+// Global Keyboard Navigation
+window.addEventListener('keydown', (e) => {
+  const tag = document.activeElement ? document.activeElement.tagName : '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+  const key = e.key;
+  if (key >= '1' && key <= '7') {
+    const tabs = ['memos', 'hex', 'signal', 'map', 'packets', 'terminal', 'verify'];
+    switchTab(tabs[parseInt(key) - 1]);
+    e.preventDefault();
+  } else if (key === 'm' || key === 'M') {
+    toggleAudio();
+    e.preventDefault();
+  } else if (key === ' ' || key === 'p' || key === 'P') {
+    toggleSniffer();
+    e.preventDefault();
+  }
+});
+
+// Periodic Incoming Subcarrier Beacon Heartbeat
+function startIncomingBeaconSimulation() {
+  setInterval(() => {
+    const demod = document.getElementById('demodConsole');
+    if (!demod) return;
+    const nowTime = new Date().toTimeString().split(' ')[0];
+    const item = document.createElement('div');
+    item.style.fontSize = '10px';
+    item.style.color = 'var(--cyan-net)';
+    item.innerHTML = `[1999-12-28 ${nowTime}] <span style="color:var(--green-bright);">⚡ INCOMING BEACON RX</span>: 10.19.99.12 -> 10.19.99.4 [1999Hz CARRIER SYNC OK]`;
+    demod.appendChild(item);
+    demod.scrollTop = demod.scrollHeight;
+  }, 42000);
+}
+
 // Initial Boot Sequence
 window.addEventListener('DOMContentLoaded', () => {
   renderMemoList();
@@ -2969,6 +3075,7 @@ window.addEventListener('DOMContentLoaded', () => {
   initTerminal();
   initBunkerMap();
   updateSectorChecksums();
+  startIncomingBeaconSimulation();
 });
 </script>
 </body>
