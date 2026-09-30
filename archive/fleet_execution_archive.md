@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T05:45:00Z — kilo-usability: KWizard (Ergonomics, Responsive Hand Layout, HiDPI & Keyboard Hotkeys)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 108.4 KB web / 33.8 KB native < 999 KB).
+  - Window & Arena Layout: Expanded window dimensions to 880x680 in KiloOS; expanded arena max-width to 880px so 7-card hand fits without overflow.
+  - HiDPI Canvas Scaling: Scaled arena canvas backing store by `devicePixelRatio` with logical coordinate transforms, ensuring razor-sharp rendering.
+  - Card Ergonomics & Hotkeys: Added [1]-[7] card badges and hotkeys, playable/dimmed states, on-screen hint bar, and [M] audio mute toggle.
+  - Native Win32 Alignment: Added 1-7 casting hotkeys, [M] audio toggle, bottom hint bar, and aligned window size to 880x680 (`KWizard.exe` 33.8 KB).
+  - Verification: MSVC clean; Vite clean in 412ms; JS syntax verified; security linter & icon checks 100% PASS.
+
 - **2026-09-30T04:45:00Z — kilo-tester: KGraph (Interactive UI Audit, Calculus Rendering, Quicksave & Audio Polish)**
   - Status: PASS ✅ (6 issues fixed, 0 regressions, 0 perimeter glints, 141.5 KB < 999 KB).
   - Taylor Series Overlay: Fixed element ID mismatch, degree parsing, expansion point, and return object handling in canvas and SVG export.
