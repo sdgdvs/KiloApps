@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T13:37:00Z — kilo-usability: KZip (UI/UX Pass, Occlusion Remediation, Grouped Actions & Window Sizing)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 123.0 KB web / 25.6 KB native < 999 KB).
+  - Window Sizing: Increased default size to 980x700 across App.jsx, kzip.html, and native Win32 C (`KZip.exe`).
+  - Toast Occlusion: Moved notifications to bottom-center with backdrop-filter, eliminating toolbar control blockage.
+  - Action Ergonomics: Organized 17 buttons into 4 semantic groups with dividers; added header quick help button.
+  - Modal Shortcuts & Fallbacks: Wired Ctrl+S and Enter in editor/comment/new-file modals; fixed binary hex fallback.
+  - Selection UX: Added live selection file and byte counters to status bar and buttons; added focused row Delete key hook.
+  - Verification: MSVC clean (`KZip.exe` 25.6 KB); Vite clean in 414ms; security lint & icon checks 100% PASS; <999KB ceiling.
+
 - **2026-09-30T12:38:00Z — kilo-tester: KHabit (Interactive UI Audit, Quicksave/Load, 1-9 Hotkeys, Undo Toast & FM Audio)**
   - Status: PASS ✅ (6 issues fixed, 0 regressions, 0 perimeter glints, 76.4 KB web / 163.5 KB native < 999 KB).
   - Quicksave & QuickLoad: Added sovereign state persistence via F5 / F9 across web and Settings modal (`khabit_quicksave`).

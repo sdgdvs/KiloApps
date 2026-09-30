@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KHex
+  kilo_tester: KImage
   kilo_usability: KChrono
   kilo_graphics: KStellar
   kilo_qa: KAudio
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://darknet"
-  timestamp: "2026-09-30T17:15:00Z"
+  agent: kilo-tester
+  app: KHex
+  timestamp: "2026-09-30T17:30:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -108,9 +108,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono`, `KFortress`, `KCosmic` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KHex`
+- **Current Target**: `KImage`
 - **Upcoming Queue**:
-  `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit)*.
+  `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KChrono`
@@ -293,6 +293,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T17:30:00Z — kilo-tester: KHex (UI Audit, Particle & Glint Purge, Toast Relocation & Accessibility)**
+  - Status: PASS ✅ (6 issues fixed, 0 regressions, 0 perimeter glints, 128.9 KB web / 30.7 KB native < 999 KB).
+  - Bloat & Shake Purge: Removed 320+ lines of background 60FPS particle loops, motes, and click screen shake, eliminating frame stuttering.
+  - Toast Occlusion: Relocated toast container to bottom-center with safe vertical animations, unblocking header toolbar controls.
+  - TINAG / Mystery Audit: Cleaned out-of-universe "Arc 1" phrasing across button titles, toolbar indicators, help, and tutorial text.
+  - Keyboard & Accessibility: Added Up/Down/Left/Right arrow cursor stepping to Hex view; added keyboard activation to inspector items & chunk cells.
+  - State Sync: Synchronized `applyByteEdit()` and `executeReplaceAll()` with text buffer and localStorage; added 0xFFFFFFFF to hotkey P presets.
+  - Verification: Clean Vite build in 301ms; headless CDP test clean (0 warnings, 110 reactive items); native MSVC clean (`KHex.exe` 30.7 KB).
+
 - **2026-09-30T17:15:00Z — kilo-creator: kweb://darknet (Subterranean Relay & Warez NFO Cryptography)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 149.4 KB < 999 KB ceiling).
   - Warez NFO Lab: CP437 ANSI viewer, hex dumper, live steganography scanner (trailing whitespace/XOR) & custom NFO injector.
@@ -326,12 +335,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Exoplanet Terraforming Art: Added dynamic atmospheric haze for barren rocks, and glacial meltwater lakes for frozen tundras.
   - Hydrosphere Balance: Added over-saturation penalty for ocean worlds (>75% water), rewarding optimal 50-70% hydrosphere targeting.
   - Verification: MSVC clean (`KCosmic.exe` 253.5 KB); Vite clean in 399ms; security lint & check_icons 100% PASS; <999KB ceiling.
-
-- **2026-09-30T13:37:00Z — kilo-usability: KZip (UI/UX Pass, Occlusion Remediation, Grouped Actions & Window Sizing)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 123.0 KB web / 25.6 KB native < 999 KB).
-  - Window Sizing: Increased default size to 980x700 across App.jsx, kzip.html, and native Win32 C (`KZip.exe`).
-  - Toast Occlusion: Moved notifications to bottom-center with backdrop-filter, eliminating toolbar control blockage.
-  - Action Ergonomics: Organized 17 buttons into 4 semantic groups with dividers; added header quick help button.
-  - Modal Shortcuts & Fallbacks: Wired Ctrl+S and Enter in editor/comment/new-file modals; fixed binary hex fallback.
-  - Selection UX: Added live selection file and byte counters to status bar and buttons; added focused row Delete key hook.
-  - Verification: MSVC clean (`KZip.exe` 25.6 KB); Vite clean in 414ms; security lint & icon checks 100% PASS; <999KB ceiling.
