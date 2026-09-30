@@ -53,6 +53,42 @@ static UINT g_uFindReplaceMsg = 0;
 static char g_szStatusToast[128] = {0};
 static BOOL g_bToastActive = FALSE;
 
+static int g_soundMuted = 0;
+
+static DWORD WINAPI SoundThread(LPVOID lpParam) {
+    int type = (int)(intptr_t)lpParam;
+    if (type == 1) { // Click / key
+        Beep(440, 20);
+    } else if (type == 2) { // Tab switch
+        Beep(660, 30);
+        Beep(880, 40);
+    } else if (type == 3) { // Bookmark set
+        Beep(587, 40);
+        Beep(880, 50);
+    } else if (type == 4) { // Bookmark jump
+        Beep(880, 40);
+        Beep(587, 50);
+    } else if (type == 8) { // Quicksave
+        Beep(523, 40);
+        Beep(659, 40);
+        Beep(784, 50);
+        Beep(1046, 80);
+    } else if (type == 9) { // Quickload
+        Beep(1046, 40);
+        Beep(784, 40);
+        Beep(659, 40);
+        Beep(880, 70);
+    } else if (type == 10) { // Toggle sound
+        Beep(700, 40);
+    }
+    return 0;
+}
+
+static void PlaySfx(int type) {
+    if (g_soundMuted) return;
+    CreateThread(NULL, 0, SoundThread, (LPVOID)(intptr_t)type, 0, NULL);
+}
+
 static const char* g_SampleCyberTitle = "Cyberpunk Manifesto.txt";
 static const char* g_SampleCyberText = 
     "THE CYBERPUNK MANIFESTO\r\n"
@@ -102,7 +138,7 @@ static const char* g_SampleKiloText =
     "desktop operating environment designed for absolute speed and modularity.\r\n\r\n"
     "## Core Principles\r\n"
     "- Sub-999KB size budget for every native and web application.\r\n"
-    "- Multi-agent coordination with continuous integration.\r\n"
+    "- Modular micro-worker pipeline with continuous integration.\r\n"
     "- Instant load times and zero unnecessary runtime bloat.\r\n\r\n"
     "## Built-in Productivity Apps\r\n"
     "1. KRead: Multi-tab document e-reader with reading statistics & bookmarks.\r\n"
@@ -114,6 +150,8 @@ static const char* g_SampleKiloText =
     "- Ctrl+T: New Tab in supported apps\r\n"
     "- Ctrl+W: Close active Tab\r\n"
     "- Ctrl+F: In-document Search\r\n"
+    "- F5 / F9: Quicksave / Quickload Snapshot\r\n"
+    "- M: Toggle Sound FX (Mute / Unmute)\r\n"
     "- F1 / H: Contextual Help";
 
 static const char* g_SampleChronosTitle = "Chronos Subcarrier Decrypt.log";
@@ -266,6 +304,7 @@ void SwitchToTab(HWND hwnd, int newIndex) {
     if (newIndex < 0 || newIndex >= g_NumTabs || newIndex == g_ActiveTab) return;
     SaveActiveTabState();
     LoadTabState(newIndex);
+    PlaySfx(2);
 }
 
 void AddNewTab(HWND hwnd, const char* title, const char* initialText) {
@@ -307,6 +346,7 @@ void AddNewTab(HWND hwnd, const char* title, const char* initialText) {
     TabCtrl_InsertItem(g_hTabCtrl, newIdx, &tie);
 
     LoadTabState(newIdx);
+    PlaySfx(2);
 }
 
 void CloseCurrentTab(HWND hwnd) {
@@ -349,6 +389,142 @@ void CloseCurrentTab(HWND hwnd) {
     if (nextIdx >= g_NumTabs) nextIdx = g_NumTabs - 1;
 
     LoadTabState(nextIdx);
+}
+
+#define QUICKSAVE_MAGIC 0x3244524B // "KRD2"
+
+void QuicksaveNative(HWND hwnd) {
+    SaveActiveTabState();
+    HANDLE hFile = CreateFileA("kread_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        ShowNativeStatus("Failed to create kread_quicksave.dat snapshot.");
+        return;
+    }
+    DWORD written = 0;
+    DWORD magic = QUICKSAVE_MAGIC;
+    WriteFile(hFile, &magic, sizeof(DWORD), &written, NULL);
+    WriteFile(hFile, &g_NumTabs, sizeof(int), &written, NULL);
+    WriteFile(hFile, &g_ActiveTab, sizeof(int), &written, NULL);
+    WriteFile(hFile, &currentFontSize, sizeof(int), &written, NULL);
+    WriteFile(hFile, currentFontFace, sizeof(currentFontFace), &written, NULL);
+    WriteFile(hFile, &g_bgColor, sizeof(COLORREF), &written, NULL);
+    WriteFile(hFile, &g_textColor, sizeof(COLORREF), &written, NULL);
+
+    for (int i = 0; i < g_NumTabs; i++) {
+        WriteFile(hFile, g_Tabs[i].szTitle, sizeof(g_Tabs[i].szTitle), &written, NULL);
+        WriteFile(hFile, &g_Tabs[i].dwBookmark, sizeof(DWORD), &written, NULL);
+        WriteFile(hFile, &g_Tabs[i].dwTextLen, sizeof(DWORD), &written, NULL);
+        if (g_Tabs[i].dwTextLen > 0 && g_Tabs[i].pszText) {
+            WriteFile(hFile, g_Tabs[i].pszText, g_Tabs[i].dwTextLen, &written, NULL);
+        }
+    }
+    CloseHandle(hFile);
+    PlaySfx(8);
+    ShowNativeStatus("Quicksave snapshot written to kread_quicksave.dat [F5]");
+}
+
+void QuickloadNative(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kread_quicksave.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        ShowNativeStatus("No quicksave snapshot found [Press F5 to save].");
+        return;
+    }
+    DWORD readBytes = 0;
+    DWORD magic = 0;
+    ReadFile(hFile, &magic, sizeof(DWORD), &readBytes, NULL);
+    if (magic != QUICKSAVE_MAGIC) {
+        CloseHandle(hFile);
+        ShowNativeStatus("Invalid quicksave snapshot file format.");
+        return;
+    }
+
+    int numTabs = 0, activeTab = 0, fontSize = 0;
+    char fontFace[32] = {0};
+    COLORREF bgCol = 0, txtCol = 0;
+    ReadFile(hFile, &numTabs, sizeof(int), &readBytes, NULL);
+    ReadFile(hFile, &activeTab, sizeof(int), &readBytes, NULL);
+    ReadFile(hFile, &fontSize, sizeof(int), &readBytes, NULL);
+    ReadFile(hFile, fontFace, sizeof(fontFace), &readBytes, NULL);
+    ReadFile(hFile, &bgCol, sizeof(COLORREF), &readBytes, NULL);
+    ReadFile(hFile, &txtCol, sizeof(COLORREF), &readBytes, NULL);
+
+    if (numTabs <= 0 || numTabs > MAX_TABS) {
+        CloseHandle(hFile);
+        ShowNativeStatus("Corrupt quicksave snapshot tab count.");
+        return;
+    }
+
+    // Free existing tabs
+    for (int i = 0; i < g_NumTabs; i++) {
+        if (g_Tabs[i].pszText) {
+            VirtualFree(g_Tabs[i].pszText, 0, MEM_RELEASE);
+            g_Tabs[i].pszText = NULL;
+        }
+    }
+    if (g_hTabCtrl) {
+        TabCtrl_DeleteAllItems(g_hTabCtrl);
+    }
+
+    g_NumTabs = numTabs;
+    g_ActiveTab = (activeTab >= 0 && activeTab < numTabs) ? activeTab : 0;
+    currentFontSize = (fontSize >= 10 && fontSize <= 40) ? fontSize : 18;
+    if (fontFace[0]) lstrcpynA(currentFontFace, fontFace, sizeof(currentFontFace));
+    g_bgColor = bgCol;
+    g_textColor = txtCol;
+
+    for (int i = 0; i < g_NumTabs; i++) {
+        ReadFile(hFile, g_Tabs[i].szTitle, sizeof(g_Tabs[i].szTitle), &readBytes, NULL);
+        ReadFile(hFile, &g_Tabs[i].dwBookmark, sizeof(DWORD), &readBytes, NULL);
+        ReadFile(hFile, &g_Tabs[i].dwTextLen, sizeof(DWORD), &readBytes, NULL);
+        g_Tabs[i].pszText = NULL;
+        if (g_Tabs[i].dwTextLen > 0) {
+            char* buf = (char*)VirtualAlloc(NULL, g_Tabs[i].dwTextLen + 1, MEM_COMMIT, PAGE_READWRITE);
+            if (buf) {
+                ReadFile(hFile, buf, g_Tabs[i].dwTextLen, &readBytes, NULL);
+                buf[g_Tabs[i].dwTextLen] = '\0';
+                g_Tabs[i].pszText = buf;
+            }
+        }
+        if (g_hTabCtrl) {
+            TCITEMA tie;
+            tie.mask = TCIF_TEXT;
+            tie.pszText = g_Tabs[i].szTitle;
+            TabCtrl_InsertItem(g_hTabCtrl, i, &tie);
+        }
+    }
+    CloseHandle(hFile);
+
+    UpdateFont(hwnd);
+    SetTheme(hwnd, g_bgColor, g_textColor);
+    LoadTabState(g_ActiveTab);
+    PlaySfx(9);
+    ShowNativeStatus("Quicksave snapshot restored from kread_quicksave.dat [F9]");
+}
+
+void CheckFirstRunTutorial(HWND hwnd) {
+    if (GetFileAttributesA("kread_tutorialSeen.dat") == INVALID_FILE_ATTRIBUTES) {
+        HANDLE hFile = CreateFileA("kread_tutorialSeen.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            DWORD written = 0;
+            WriteFile(hFile, "1", 1, &written, NULL);
+            CloseHandle(hFile);
+        }
+        const char* szTutorial = 
+            "Welcome to KRead Native E-Reader!\n\n"
+            "Quick Keyboard Shortcuts:\n"
+            "  Ctrl + O       : Open Text Document\n"
+            "  Ctrl + T / W   : New / Close Tab\n"
+            "  Ctrl + Tab     : Cycle Next Tab (Ctrl+Shift+Tab for Prev)\n"
+            "  Ctrl + 1..9    : Direct Switch to Tab 1 through 9\n"
+            "  Ctrl + B / J   : Add Bookmark / Jump to Bookmark\n"
+            "  Ctrl + F       : Find Text in Active Document\n"
+            "  F5             : Quicksave Workspace Snapshot\n"
+            "  F9             : Quickload Workspace Snapshot\n"
+            "  M              : Toggle Sound FX (Mute / Unmute)\n"
+            "  F1 or H        : Complete E-Reader Help Guide\n\n"
+            "Press OK to begin reading.";
+        MessageBoxA(hwnd, szTutorial, "Welcome to KRead", MB_OK | MB_ICONINFORMATION);
+    }
 }
 
 void ExtractFileName(const char* fullPath, char* dest, int maxLen) {
@@ -653,7 +829,10 @@ void ShowHelpDialog(HWND hwnd) {
         "  Ctrl + '+' / '-'      : Increase / Decrease Font Size\n"
         "  Ctrl + 0              : Reset Font Size to Default (18pt)\n"
         "  Alt + 1 .. 4          : Switch Theme (Light/Dark/Sepia/Contrast)\n"
-        "  Ctrl + Del            : Clear Document Content\n\n"
+        "  Ctrl + Del            : Clear Document Content\n"
+        "  F5                    : Snapshot Quicksave Workspace [kread_quicksave.dat]\n"
+        "  F9                    : Snapshot Quickload Workspace [kread_quicksave.dat]\n"
+        "  M                     : Toggle Procedural Sound FX\n\n"
         "FEATURES:\n"
         "  * Multi-Tab Sessions (up to 12 concurrent docs)\n"
         "  * Quick Document Starter Presets (Cyberpunk, Time Machine, KiloOS)\n"
@@ -699,6 +878,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hSubSamples, MF_STRING, 1043, "🛰️ Chronos '99 Telemetry");
             AppendMenuA(hSubFile, MF_POPUP, (UINT_PTR)hSubSamples, "Load Sample Document");
 
+            AppendMenuA(hSubFile, MF_SEPARATOR, 0, NULL);
+            AppendMenuA(hSubFile, MF_STRING, 1060, "Quicksave Snapshot\tF5");
+            AppendMenuA(hSubFile, MF_STRING, 1061, "Quickload Snapshot\tF9");
             AppendMenuA(hSubFile, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hSubFile, MF_STRING, 1000, "Clear Document\tCtrl+Del");
             AppendMenuA(hSubFile, MF_STRING, 1007, "Export Statistics...");
@@ -753,6 +935,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HMENU hSubView = CreatePopupMenu();
             AppendMenuA(hSubView, MF_STRING, 1003, "Reading Statistics Engine\tCtrl+S");
             AppendMenuA(hSubView, MF_SEPARATOR, 0, NULL);
+            AppendMenuA(hSubView, MF_STRING, 1062, "Toggle Sound FX\tM");
             AppendMenuA(hSubView, MF_STRING, 1008, "Help Guide\tF1 / H");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hSubView, "View");
 
@@ -1008,13 +1191,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 DWORD start = 0, end = 0;
                 SendMessageA(hEdit, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
                 g_Tabs[g_ActiveTab].dwBookmark = start;
+                PlaySfx(3);
                 ShowNativeStatus("Bookmark saved for active tab! [Ctrl+B]");
             }
             if (id == 1006) {
                 DWORD bm = g_Tabs[g_ActiveTab].dwBookmark;
                 SendMessageA(hEdit, EM_SETSEL, bm, bm);
                 SendMessageA(hEdit, EM_SCROLLCARET, 0, 0);
+                PlaySfx(4);
                 ShowNativeStatus("Jumped to saved bookmark position! [Ctrl+J]");
+            }
+
+            // Quicksave, Quickload & Sound FX
+            if (id == 1060) {
+                QuicksaveNative(hwnd);
+            }
+            if (id == 1061) {
+                QuickloadNative(hwnd);
+            }
+            if (id == 1062) {
+                g_soundMuted = !g_soundMuted;
+                ShowNativeStatus(g_soundMuted ? "Sound FX: Muted [M]" : "Sound FX: Enabled [M]");
+                PlaySfx(10);
             }
 
             // Themes
@@ -1085,6 +1283,8 @@ void __stdcall MainEntry() {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
+    CheckFirstRunTutorial(hwnd);
+
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (g_hFindDlg && IsDialogMessageA(g_hFindDlg, &msg)) {
@@ -1094,6 +1294,19 @@ void __stdcall MainEntry() {
             BOOL ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
             BOOL shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
             BOOL alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
+
+            if (msg.wParam == VK_F5) {
+                QuicksaveNative(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                QuickloadNative(hwnd);
+                continue;
+            }
+            if (!ctrl && !shift && !alt && (msg.wParam == 'M' || msg.wParam == 'm')) {
+                SendMessageA(hwnd, WM_COMMAND, 1062, 0);
+                continue;
+            }
 
             if (ctrl && (msg.wParam == 'A' || msg.wParam == 'a')) {
                 SendMessageA(hEdit, EM_SETSEL, 0, -1);

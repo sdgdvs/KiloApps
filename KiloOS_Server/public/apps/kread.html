@@ -989,6 +989,9 @@
         <option value="2.0">Line 2.0</option>
       </select>
 
+      <button class="btn" id="btnQuicksave" title="Quicksave Workspace Snapshot (F5)">💾 Save <kbd>F5</kbd></button>
+      <button class="btn" id="btnQuickload" title="Quickload Workspace Snapshot (F9)">📂 Load <kbd>F9</kbd></button>
+      <button class="btn" id="btnSoundToggle" title="Toggle Procedural YM2612 FM Audio (Shift+M)">🔊 Sound: ON</button>
       <button class="btn" id="btnStats" title="Reading Statistics Engine (Ctrl+S)">📊 Stats <kbd>Ctrl+S</kbd></button>
       <button class="btn" id="btnSession" title="Session Backup & Restore">💾 Session</button>
       <button class="btn" id="btnHelp" title="Help Guide (Press F1 / H)">❓ Help <kbd>F1</kbd></button>
@@ -1131,6 +1134,9 @@
           <li><kbd>Home</kbd> / <kbd>End</kbd> - Jump to Document Start / End</li>
           <li><kbd>Ctrl</kbd> + <kbd>S</kbd> - Open Reading Statistics</li>
           <li><kbd>+</kbd> / <kbd>-</kbd> - Zoom Font Size (or adjust auto-scroll speed)</li>
+          <li><kbd>F5</kbd> - Snapshot Quicksave Complete Workspace State</li>
+          <li><kbd>F9</kbd> - Snapshot Quickload Complete Workspace State</li>
+          <li><kbd>Shift</kbd> + <kbd>M</kbd> - Toggle Procedural YM2612 FM Audio & SPC700 Delay</li>
           <li><kbd>0</kbd> - Reset Font Size to Default (18px)</li>
           <li><kbd>Esc</kbd> - Close Panels, Drawers, & Modals / Stop Auto-Scroll</li>
         </ul>
@@ -1274,6 +1280,14 @@
       </p>
 
       <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px;">
+        <div style="display: flex; gap: 8px;">
+          <button class="btn" id="btnSessionQuicksave" style="flex: 1; padding: 10px 12px; justify-content: center; font-size: 13px;">
+            💾 Quicksave Snapshot [F5]
+          </button>
+          <button class="btn" id="btnSessionQuickload" style="flex: 1; padding: 10px 12px; justify-content: center; font-size: 13px;">
+            📂 Quickload Snapshot [F9]
+          </button>
+        </div>
         <button class="btn" id="btnExportSession" style="padding: 10px 16px; justify-content: center; font-size: 13px;">
           📥 Download Full Session Backup (.json)
         </button>
@@ -1288,6 +1302,38 @@
 
       <div style="display: flex; justify-content: flex-end;">
         <button class="btn" id="btnCloseSession">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tutorial & First-Run Welcome Modal -->
+  <div class="modal-overlay" id="tutorialModal" role="dialog" aria-modal="true" aria-labelledby="tutorialModalTitle">
+    <div class="modal-content" style="max-width: 520px;">
+      <div class="modal-title" id="tutorialModalTitle">📖 Welcome to KRead E-Reader</div>
+      <p style="font-size: 13.5px; opacity: 0.9; margin-bottom: 14px; line-height: 1.5;">
+        A high-performance retro document reader designed for instant loading, full keyboard navigation, and deep reading productivity.
+      </p>
+      <div style="font-size: 13px; line-height: 1.6; opacity: 0.9; margin-bottom: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div style="background: rgba(0,0,0,0.04); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+          <strong>📑 Multi-Tab Reading</strong>
+          <p style="font-size: 12px; opacity: 0.8; margin-top: 4px;">Open and switch multiple documents easily via <kbd>Ctrl+T</kbd> and <kbd>Ctrl+Tab</kbd>.</p>
+        </div>
+        <div style="background: rgba(0,0,0,0.04); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+          <strong>📖 Formatted Markdown</strong>
+          <p style="font-size: 12px; opacity: 0.8; margin-top: 4px;">Toggle formatted markdown and code blocks with 1-click or <kbd>M</kbd>.</p>
+        </div>
+        <div style="background: rgba(0,0,0,0.04); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+          <strong>⚡ RSVP Speed Reader</strong>
+          <p style="font-size: 12px; opacity: 0.8; margin-top: 4px;">Burst through texts at up to 900 WPM with optical fixation (<kbd>Alt+S</kbd>).</p>
+        </div>
+        <div style="background: rgba(0,0,0,0.04); padding: 10px; border-radius: 6px; border: 1px solid var(--border-color);">
+          <strong>💾 Quicksave & Restore</strong>
+          <p style="font-size: 12px; opacity: 0.8; margin-top: 4px;">Snapshot workspace state instantly with <kbd>F5</kbd> and resume with <kbd>F9</kbd>.</p>
+        </div>
+      </div>
+      <div class="modal-actions" style="display: flex; justify-content: space-between; align-items: center;">
+        <button class="btn" id="btnTutorialHelp" title="View full keyboard guide (F1)">Full Guide [F1]</button>
+        <button class="btn active" id="btnTutorialStart" style="min-width: 110px;" title="Start reading">Start Reading [Enter]</button>
       </div>
     </div>
   </div>
@@ -1444,6 +1490,14 @@
     const btnImportSessionLabel = document.getElementById('btnImportSessionLabel');
     const importSessionInp = document.getElementById('importSessionInp');
     const btnExportActiveDocHtml = document.getElementById('btnExportActiveDocHtml');
+    const btnQuicksave = document.getElementById('btnQuicksave');
+    const btnQuickload = document.getElementById('btnQuickload');
+    const btnSoundToggle = document.getElementById('btnSoundToggle');
+    const btnSessionQuicksave = document.getElementById('btnSessionQuicksave');
+    const btnSessionQuickload = document.getElementById('btnSessionQuickload');
+    const tutorialModal = document.getElementById('tutorialModal');
+    const btnTutorialStart = document.getElementById('btnTutorialStart');
+    const btnTutorialHelp = document.getElementById('btnTutorialHelp');
 
     // Search and Annotation Elements
     const btnSearchAllTabs = document.getElementById('btnSearchAllTabs');
@@ -1464,7 +1518,7 @@
       },
       kilo: {
         title: 'KiloOS System Guide.md',
-        text: `# KiloOS System Architecture & Usage Guide\n\n## Overview\nKiloOS is a lightweight, high-performance web-native and retro-compatible desktop operating environment designed for absolute speed and modularity.\n\n## Core Principles\n- Sub-999KB size budget for every native and web application.\n- Multi-agent coordination with continuous integration.\n- Instant load times and zero unnecessary runtime bloat.\n\n## Built-in Productivity Apps\n1. **KRead**: Multi-tab document e-reader with reading statistics, bookmarks, and annotation export.\n2. **KPad**: Monospace text editor with syntax highlighting.\n3. **KJournal**: Encrypted daily diary and thought logger.\n4. **KBase**: Desktop database and record organizer.\n5. **KTerm**: Cybernetic console emulator.\n\n## Shortcuts Quick Reference\n- **Ctrl+T**: New Tab in supported apps\n- **Ctrl+W**: Close active Tab\n- **Ctrl+F**: In-document Search\n- **F1 / H**: Contextual Help`
+        text: `# KiloOS System Architecture & Usage Guide\n\n## Overview\nKiloOS is a lightweight, high-performance web-native and retro-compatible desktop operating environment designed for absolute speed and modularity.\n\n## Core Principles\n- Sub-999KB size budget for every native and web application.\n- Modular micro-worker pipeline with continuous integration.\n- Instant load times and zero unnecessary runtime bloat.\n\n## Built-in Productivity Apps\n1. **KRead**: Multi-tab document e-reader with reading statistics, bookmarks, and annotation export.\n2. **KPad**: Monospace text editor with syntax highlighting.\n3. **KJournal**: Encrypted daily diary and thought logger.\n4. **KBase**: Desktop database and record organizer.\n5. **KTerm**: Cybernetic console emulator.\n\n## Shortcuts Quick Reference\n- **Ctrl+T**: New Tab in supported apps\n- **Ctrl+W**: Close active Tab\n- **Ctrl+F**: In-document Search\n- **F5 / F9**: Quicksave / Quickload Workspace Snapshot\n- **Shift+M**: Toggle Procedural YM2612 FM Audio\n- **F1 / H**: Contextual Help`
       },
       alice: {
         title: 'Alice in Wonderland Excerpt.txt',
@@ -1515,6 +1569,148 @@
     let renameTargetTabId = null;
     let pendingNoteData = null;
     let pendingConfirmCallback = null;
+
+    // Toast Occlusion Remediation Helper
+    function clearToasts() {
+      if (toastContainer) {
+        toastContainer.innerHTML = '';
+      }
+    }
+
+    // Procedural Audio Engine (Genesis YM2612 2-Operator FM & SPC700 Stereo Delay Warmth)
+    let soundEnabled = safeGetItem('kread_sound_enabled', '1') !== '0';
+    let audioCtx = null;
+    let delayNodeL = null;
+    let delayNodeR = null;
+
+    function initAudio() {
+      if (audioCtx) return audioCtx;
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
+          
+          // SNES SPC700 Warm Stereo Delay DSP
+          const delayTimeL = 0.085; // 85ms stereo slapback
+          const delayTimeR = 0.120; // 120ms stereo warmth
+          
+          delayNodeL = audioCtx.createDelay();
+          delayNodeR = audioCtx.createDelay();
+          delayNodeL.delayTime.setValueAtTime(delayTimeL, audioCtx.currentTime);
+          delayNodeR.delayTime.setValueAtTime(delayTimeR, audioCtx.currentTime);
+          
+          const feedbackL = audioCtx.createGain();
+          const feedbackR = audioCtx.createGain();
+          feedbackL.gain.setValueAtTime(0.22, audioCtx.currentTime);
+          feedbackR.gain.setValueAtTime(0.18, audioCtx.currentTime);
+          
+          const filter = audioCtx.createBiquadFilter();
+          filter.type = 'lowpass';
+          filter.frequency.setValueAtTime(3200, audioCtx.currentTime);
+          
+          delayNodeL.connect(feedbackL);
+          feedbackL.connect(filter);
+          filter.connect(delayNodeL);
+          
+          const merger = audioCtx.createChannelMerger(2);
+          delayNodeL.connect(merger, 0, 0);
+          delayNodeR.connect(merger, 0, 1);
+          merger.connect(audioCtx.destination);
+        }
+      } catch(e) {}
+      return audioCtx;
+    }
+
+    function playFM(carrierFreq, modRatio, modIndex, duration, gainVal = 0.08, sendDelay = false) {
+      if (!soundEnabled) return;
+      try {
+        const ctx = initAudio();
+        if (!ctx) return;
+        if (ctx.state === 'suspended') ctx.resume();
+        const now = ctx.currentTime;
+
+        const carrier = ctx.createOscillator();
+        const modulator = ctx.createOscillator();
+        const modGain = ctx.createGain();
+        const voiceGain = ctx.createGain();
+
+        carrier.type = 'sine';
+        modulator.type = 'sine';
+
+        carrier.frequency.setValueAtTime(carrierFreq, now);
+        modulator.frequency.setValueAtTime(carrierFreq * modRatio, now);
+
+        // YM2612 Total Level envelope modulation
+        const peakMod = modIndex * carrierFreq;
+        modGain.gain.setValueAtTime(peakMod, now);
+        modGain.gain.exponentialRampToValueAtTime(Math.max(1, peakMod * 0.04), now + duration);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+
+        // YM2612 Attack & Decay amplitude envelope
+        voiceGain.gain.setValueAtTime(0.001, now);
+        voiceGain.gain.linearRampToValueAtTime(gainVal, now + 0.008);
+        voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        carrier.connect(voiceGain);
+        voiceGain.connect(ctx.destination);
+
+        if (sendDelay && delayNodeL) {
+          const send = ctx.createGain();
+          send.gain.setValueAtTime(gainVal * 0.45, now);
+          voiceGain.connect(send);
+          send.connect(delayNodeL);
+          send.connect(delayNodeR);
+        }
+
+        modulator.start(now);
+        carrier.start(now);
+        modulator.stop(now + duration + 0.02);
+        carrier.stop(now + duration + 0.02);
+      } catch(e) {}
+    }
+
+    function playSfx(type) {
+      if (!soundEnabled) return;
+      if (type === 'tab') {
+        playFM(587.33, 2.0, 2.4, 0.12, 0.08, true); // D5 chime
+      } else if (type === 'page' || type === 'click') {
+        playFM(440.00, 1.5, 1.2, 0.06, 0.05, false); // Subtle A4 pluck
+      } else if (type === 'save') {
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+          setTimeout(() => playFM(freq, 2.0, 1.8, 0.16, 0.07, true), idx * 45);
+        });
+      } else if (type === 'load') {
+        [1046.50, 783.99, 659.25, 880.00].forEach((freq, idx) => {
+          setTimeout(() => playFM(freq, 2.0, 2.0, 0.18, 0.08, true), idx * 50);
+        });
+      } else if (type === 'bookmark') {
+        playFM(880.00, 3.0, 2.5, 0.18, 0.08, true);
+        setTimeout(() => playFM(1174.66, 2.0, 1.8, 0.22, 0.07, true), 70);
+      } else if (type === 'note') {
+        playFM(659.25, 1.75, 2.2, 0.16, 0.08, true);
+      } else if (type === 'error') {
+        playFM(130.81, 0.5, 3.0, 0.18, 0.10, false);
+      } else if (type === 'toggle') {
+        playFM(soundEnabled ? 783.99 : 440.00, 2.0, 1.5, 0.10, 0.07, true);
+      }
+    }
+
+    function updateSoundButton() {
+      if (btnSoundToggle) {
+        btnSoundToggle.textContent = soundEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+        btnSoundToggle.title = `Toggle Procedural YM2612 FM Audio (Shift+M) [Currently ${soundEnabled ? 'Enabled' : 'Muted'}]`;
+      }
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      safeSetItem('kread_sound_enabled', soundEnabled ? '1' : '0');
+      updateSoundButton();
+      playSfx('toggle');
+      showToast(soundEnabled ? '🔊 Procedural YM2612 FM Audio Enabled [Shift+M]' : '🔇 Procedural Audio Muted [Shift+M]', soundEnabled ? '🔊' : '🔇');
+    }
 
     // Non-blocking toast notification helper with click-to-dismiss [✕] button
     function showToast(msg, icon = 'ℹ️') {
@@ -1610,6 +1806,102 @@
         createNewTab(sample.title, sample.text);
       }
       showToast(`Loaded sample "${sample.title}"`, '📖');
+    }
+
+    function quicksave() {
+      saveActiveTabState();
+      saveTabsSession();
+      const snapshot = {
+        version: 1,
+        timestamp: Date.now(),
+        tabs: tabs.map(t => ({
+          id: t.id,
+          title: t.title,
+          text: t.text,
+          scroll: t.scroll || 0,
+          bookmarks: t.bookmarks ? JSON.parse(JSON.stringify(t.bookmarks)) : [],
+          notes: t.notes ? JSON.parse(JSON.stringify(t.notes)) : [],
+          timeSpent: t.timeSpent || 0
+        })),
+        activeTabId,
+        fontSize,
+        theme,
+        fontFamily,
+        lineHeight,
+        isMarkdownView,
+        autoScrollSpeed,
+        rsvpWpm,
+        soundEnabled
+      };
+      safeSetItem('kread_quicksave', JSON.stringify(snapshot));
+      playSfx('save');
+      showToast(`💾 Workspace quicksaved (${tabs.length} tabs) [F5]`, '💾');
+    }
+
+    function quickload() {
+      const raw = safeGetItem('kread_quicksave', null);
+      if (!raw) {
+        playSfx('error');
+        showToast('No quicksave snapshot found [Press F5 to save]', '⚠️');
+        return;
+      }
+      try {
+        const snapshot = JSON.parse(raw);
+        if (!snapshot.tabs || !Array.isArray(snapshot.tabs) || snapshot.tabs.length === 0) {
+          playSfx('error');
+          showToast('Quicksave data format is invalid', '⚠️');
+          return;
+        }
+        tabs = snapshot.tabs;
+        activeTabId = snapshot.activeTabId || tabs[0].id;
+        if (snapshot.fontSize) {
+          fontSize = snapshot.fontSize;
+          safeSetItem('kread_fontsize', fontSize);
+        }
+        if (snapshot.theme) {
+          theme = snapshot.theme;
+          safeSetItem('kread_theme', theme);
+        }
+        if (snapshot.fontFamily) {
+          fontFamily = snapshot.fontFamily;
+          safeSetItem('kread_fontfamily', fontFamily);
+        }
+        if (snapshot.lineHeight) {
+          lineHeight = snapshot.lineHeight;
+          safeSetItem('kread_lineheight', lineHeight);
+        }
+        if (typeof snapshot.isMarkdownView === 'boolean') {
+          isMarkdownView = snapshot.isMarkdownView;
+          safeSetItem('kread_markdown_view', isMarkdownView ? 'true' : 'false');
+        }
+        if (snapshot.autoScrollSpeed) autoScrollSpeed = snapshot.autoScrollSpeed;
+        if (snapshot.rsvpWpm) rsvpWpm = snapshot.rsvpWpm;
+        if (typeof snapshot.soundEnabled === 'boolean') {
+          soundEnabled = snapshot.soundEnabled;
+          safeSetItem('kread_sound_enabled', soundEnabled ? '1' : '0');
+          updateSoundButton();
+        }
+
+        saveTabsSession();
+        applyStylesAndTheme();
+        renderTabs();
+        renderContent();
+        
+        // Restore scroll position
+        const curTab = getActiveTab();
+        if (curTab && curTab.scroll) {
+          setTimeout(() => {
+            readerContainer.scrollTo({ top: curTab.scroll, behavior: 'instant' });
+            updateScrollProgress();
+          }, 30);
+        }
+
+        playSfx('load');
+        showToast(`📂 Restored quicksave snapshot (${tabs.length} tabs) [F9]`, '📂');
+      } catch(e) {
+        playSfx('error');
+        showToast('Error reading quicksave data', '⚠️');
+      }
     }
 
     // Load saved settings & tabs
@@ -2386,13 +2678,41 @@
     }
 
     btnStats.onclick = () => {
+      clearToasts();
       updateStats();
       formatTimeSpent();
       statsModal.classList.add('open');
+      playSfx('click');
     };
-    if (btnHelp) btnHelp.onclick = () => helpModal.classList.add('open');
-    btnCloseStats.onclick = () => statsModal.classList.remove('open');
+    if (btnHelp) {
+      btnHelp.onclick = () => {
+        clearToasts();
+        helpModal.classList.add('open');
+        playSfx('click');
+      };
+    }
+    if (btnCloseStats) btnCloseStats.onclick = () => statsModal.classList.remove('open');
     if (btnCloseHelp) btnCloseHelp.onclick = () => helpModal.classList.remove('open');
+
+    if (btnQuicksave) btnQuicksave.onclick = quicksave;
+    if (btnQuickload) btnQuickload.onclick = quickload;
+    if (btnSoundToggle) btnSoundToggle.onclick = toggleSound;
+
+    if (btnTutorialStart) {
+      btnTutorialStart.onclick = () => {
+        if (tutorialModal) tutorialModal.classList.remove('open');
+        playSfx('click');
+        showToast('📖 Welcome to KRead! Enjoy reading.', '✨');
+      };
+    }
+    if (btnTutorialHelp) {
+      btnTutorialHelp.onclick = () => {
+        if (tutorialModal) tutorialModal.classList.remove('open');
+        clearToasts();
+        if (helpModal) helpModal.classList.add('open');
+        playSfx('click');
+      };
+    }
 
     // File Open & Clear
     fileInp.onchange = (e) => {
@@ -2533,12 +2853,14 @@
         const open = outlineDrawer.classList.toggle('open');
         btnToggleOutline.classList.toggle('active', open);
         if (open) {
+          clearToasts();
           bookmarksDrawer.classList.remove('open');
           notesDrawer.classList.remove('open');
           btnToggleBookmarks.classList.remove('active');
           btnToggleNotes.classList.remove('active');
           renderOutline();
         }
+        playSfx('click');
       };
     }
     if (btnCloseOutline) {
@@ -2815,10 +3137,12 @@
       const open = bookmarksDrawer.classList.toggle('open');
       btnToggleBookmarks.classList.toggle('active', open);
       if (open) {
+        clearToasts();
         notesDrawer.classList.remove('open');
         btnToggleNotes.classList.remove('active');
         renderBookmarks();
       }
+      playSfx('click');
     };
     btnCloseBookmarks.onclick = () => {
       bookmarksDrawer.classList.remove('open');
@@ -3011,10 +3335,12 @@
       const open = notesDrawer.classList.toggle('open');
       btnToggleNotes.classList.toggle('active', open);
       if (open) {
+        clearToasts();
         bookmarksDrawer.classList.remove('open');
         btnToggleBookmarks.classList.remove('active');
         renderNotes();
       }
+      playSfx('click');
     };
     btnCloseNotes.onclick = () => {
       notesDrawer.classList.remove('open');
@@ -3023,9 +3349,11 @@
 
     // Custom Modal Management
     function openRenameModal(tabId, currentTitle) {
+      clearToasts();
       renameTargetTabId = tabId;
       renameInput.value = currentTitle || '';
       renameModal.classList.add('open');
+      playSfx('click');
       setTimeout(() => renameInput.focus(), 50);
     }
     btnCancelRename.onclick = () => renameModal.classList.remove('open');
@@ -3056,10 +3384,12 @@
     }
 
     function openNoteModal(selectedText) {
+      clearToasts();
       pendingNoteData = { text: selectedText };
       noteSelectedTextPreview.textContent = `"${selectedText}"`;
       noteInput.value = '';
       noteModal.classList.add('open');
+      playSfx('click');
       setTimeout(() => noteInput.focus(), 50);
     }
     btnCancelNote.onclick = () => {
@@ -3082,10 +3412,12 @@
     }
 
     function openConfirmModal(title, msg, onOk) {
+      clearToasts();
       confirmModalTitle.textContent = title;
       confirmModalMsg.textContent = msg;
       pendingConfirmCallback = onOk;
       confirmModal.classList.add('open');
+      playSfx('click');
     }
     btnCancelConfirm.onclick = () => confirmModal.classList.remove('open');
     btnOkConfirm.onclick = () => {
@@ -3213,6 +3545,7 @@
     }
 
     function openRsvpModal() {
+      clearToasts();
       const tab = getActiveTab();
       if (!tab || !tab.text) {
         showToast('Open a document first to use RSVP Speed Reader', '⚠️');
@@ -3236,6 +3569,7 @@
       }
       updateRsvpDisplay();
       rsvpModal.classList.add('open');
+      playSfx('click');
     }
 
     function updateRsvpDisplay() {
@@ -3474,8 +3808,26 @@
     }
 
     // Session Backup & Restore Handlers
-    if (btnSession) btnSession.onclick = () => sessionModal.classList.add('open');
+    if (btnSession) {
+      btnSession.onclick = () => {
+        clearToasts();
+        sessionModal.classList.add('open');
+        playSfx('click');
+      };
+    }
     if (btnCloseSession) btnCloseSession.onclick = () => sessionModal.classList.remove('open');
+    if (btnSessionQuicksave) {
+      btnSessionQuicksave.onclick = () => {
+        quicksave();
+        sessionModal.classList.remove('open');
+      };
+    }
+    if (btnSessionQuickload) {
+      btnSessionQuickload.onclick = () => {
+        quickload();
+        sessionModal.classList.remove('open');
+      };
+    }
 
     if (btnExportSession) {
       btnExportSession.onclick = () => {
@@ -3585,7 +3937,7 @@
     }
 
     // Modal Overlay Backdrop Dismissal
-    [helpModal, statsModal, renameModal, noteModal, confirmModal, rsvpModal, sessionModal].forEach(modal => {
+    [helpModal, statsModal, renameModal, noteModal, confirmModal, rsvpModal, sessionModal, tutorialModal].forEach(modal => {
       if (modal) {
         modal.addEventListener('click', (e) => {
           if (e.target === modal) {
@@ -3600,6 +3952,23 @@
 
     // Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
+      // Quicksave [F5] & Quickload [F9] work globally anywhere
+      if (e.key === 'F5') {
+        e.preventDefault();
+        quicksave();
+        return;
+      }
+      if (e.key === 'F9') {
+        e.preventDefault();
+        quickload();
+        return;
+      }
+      if ((e.key === 'm' || e.key === 'M') && e.shiftKey) {
+        e.preventDefault();
+        toggleSound();
+        return;
+      }
+
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
         if (e.key === 'Escape') {
           if (renameModal.classList.contains('open')) renameModal.classList.remove('open');
@@ -3609,13 +3978,14 @@
       }
       
       const ctrl = e.ctrlKey || e.metaKey;
-      const isModalOpen = helpModal.classList.contains('open') || 
-                          statsModal.classList.contains('open') || 
-                          renameModal.classList.contains('open') || 
-                          noteModal.classList.contains('open') || 
-                          confirmModal.classList.contains('open') ||
+      const isModalOpen = (helpModal && helpModal.classList.contains('open')) || 
+                          (statsModal && statsModal.classList.contains('open')) || 
+                          (renameModal && renameModal.classList.contains('open')) || 
+                          (noteModal && noteModal.classList.contains('open')) || 
+                          (confirmModal && confirmModal.classList.contains('open')) ||
                           (rsvpModal && rsvpModal.classList.contains('open')) ||
-                          (sessionModal && sessionModal.classList.contains('open'));
+                          (sessionModal && sessionModal.classList.contains('open')) ||
+                          (tutorialModal && tutorialModal.classList.contains('open'));
 
       // Dedicated RSVP Modal Keyboard Controls
       if (rsvpModal && rsvpModal.classList.contains('open')) {
@@ -3656,6 +4026,7 @@
           rsvpModal.classList.remove('open');
         }
         if (sessionModal) sessionModal.classList.remove('open');
+        if (tutorialModal) tutorialModal.classList.remove('open');
         if (autoScrollActive) toggleAutoScroll();
         selectionPopover.style.display = 'none';
         btnToggleBookmarks.classList.remove('active');
@@ -3664,6 +4035,18 @@
         pendingNoteData = null;
         pendingConfirmCallback = null;
         return;
+      }
+
+      if (tutorialModal && tutorialModal.classList.contains('open')) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (btnTutorialStart) btnTutorialStart.click();
+          return;
+        } else if (e.key === 'F1' || e.key === 'h' || e.key === 'H') {
+          e.preventDefault();
+          if (btnTutorialHelp) btnTutorialHelp.click();
+          return;
+        }
       }
 
       if (confirmModal.classList.contains('open')) {
@@ -3822,14 +4205,28 @@
 
     // Initialize
     applyStylesAndTheme();
+    updateSoundButton();
     renderTabs();
     renderContent();
     window.addEventListener('resize', updateScrollProgress);
 
-    // Welcome Startup Toast
-    setTimeout(() => {
-      showToast('📖 Welcome to KRead! Press F1 or H for help, Ctrl+T for new tab.', '✨');
-    }, 400);
+    // First-run tutorial flag & welcome flow
+    const tutorialSeen = safeGetItem('kread_tutorialSeen', '0');
+    if (tutorialSeen !== '1') {
+      safeSetItem('kread_tutorialSeen', '1');
+      setTimeout(() => {
+        clearToasts();
+        if (tutorialModal) {
+          tutorialModal.classList.add('open');
+          if (btnTutorialStart) btnTutorialStart.focus();
+        }
+      }, 350);
+    } else {
+      // Welcome Startup Toast only on returning sessions
+      setTimeout(() => {
+        showToast('📖 Welcome to KRead! Press F1 for help, F5 to quicksave, F9 to quickload.', '✨');
+      }, 400);
+    }
   </script>
 </body>
 </html>
