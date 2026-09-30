@@ -4,6 +4,42 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T03:45:00Z — kilo-creator: kweb://10.19.99.4/classified (Corporate Network Leak & Signal Diagnostic)**
+  - Status: PASS ✅ (0 regressions, clean builds, security lint clean, 122 KB < 999 KB).
+  - Web Navigation & Hotkeys: Added global keyboard shortcuts [1-7] for instant tab switching, [M] audio toggle, [Space] sniffer toggle.
+  - Skunkworks CLI Depth: Added Unix/skunkworks directives `uptime`, `who`/`w`, `uname`, `netstat`, `dmesg`, `version` with system diagnostics.
+  - Cryptographic Verification: Expanded SHA-256 registry matching for `999KB`, `CARLSBAD`, `0X7F`, `ECHO`, `YM2612`, `HALITE`, `1999HZ`.
+  - Hex Dump Formatter: Added `exportHexText()` with formatted offset/hex/ASCII representation and .TXT file export.
+  - Telemetry Beacon Stream: Integrated background periodic subcarrier beacon packet reception in live demodulator console.
+  - Verification: Security lint clean; Vite clean in 429ms; headless Chrome CDP 100% PASS (zero console errors); size 122 KB strictly < 999 KB.
+
+- **2026-09-30T02:48:00Z — kilo-tester: KFortress (Interactive UI Audit, Save Data Integrity & De-Occlusion)**
+  - Status: PASS ✅ (6 issues fixed, 0 regressions, 0 perimeter glints, 195.6 KB < 999 KB).
+  - Toast De-Occlusion: Relocated `.toast-container` to bottom-left with `clearToasts()` on modal open/close, fixing tutorial modal button blockage.
+  - Quicksave Data Integrity: Fixed undefined property bugs in `lavaPools` (`radius`, `life`, `damage`) and `militia` (`speed`, `damage`, `lifeTimer`).
+  - Storage Management: Added JSON save export (`exportSaveData`) and file import (`importSaveData`) with dedicated Field Guide UI controls.
+  - Audio Sound Controls: Added `soundToggleBtn` in header and `[Shift+M]` hotkey with state persistence in `localStorage('kf_soundMuted')`.
+  - Keyboard Navigation: Added `[ArrowLeft]` and `[ArrowRight]` hotkeys to cycle campaign maps between active waves.
+  - Native Alignment: Added `PlayGameBeep` mute helper, `[Shift+M]` toggle, and `VK_LEFT`/`VK_RIGHT` map navigation to `KFortress/main.c`.
+  - Verification: MSVC clean (`KFortress.exe` 172.5 KB); Vite clean in 305ms; headless Chrome CDP 100% PASS (27 elements, 0 errors); security lint & icon checks clean.
+
+- **2026-09-30T02:30:00Z — kilo-creator: kweb://10.19.99.4/classified (Corporate Network Leak & Signal Diagnostic)**
+  - Status: PASS ✅ (0 regressions, clean builds, security lint clean, 118.2 KB < 999 KB).
+  - RF Lab Depth: Added 2D phosphor waterfall spectrogram & Subcarrier Audio Modem with Bell 202 FSK and 1999Hz Morse keying.
+  - Subnet Topology Map: Built interactive Carlsbad Bunker geological cross-section (0m to -750m) with live ground pulse coupling & node HUD.
+  - Memory Hex Depth: Added in-place byte editing, live CRC-32/SHA-256 calculation, and Sectors 0x4242 (Seismic) and 0x00FF (Daemon Schedule).
+  - Skunkworks Memos & CLI: Added MEMO-99-07 & MEMO-99-08; extended CLI with `map`, `fsk`, `morse`, `daemons`, `routes`, `patch`, `revert`.
+  - Webring & Navigation: Added KiloRing-99 navigation banner linking to `neon_rider.html`, `webring.html`, and `echo_subsystem.html`.
+  - Verification: Security lint clean; Vite clean in 554ms; file size 118 KB strictly < 999 KB ceiling.
+
+- **2026-09-30T02:05:00Z — kilo-expander: KSys (Diagnostic Depth, GPU/Crypto/Jitter Benches, Hex Inspector, YM2612 FM Audio)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 183.2 KB < 999 KB).
+  - Diagnostic Benchmarks: Added GPU fillrate, Cryptographic hashing (CRC32/Adler32), and Scheduler jitter tests.
+  - Low-Level Hex Inspector: Added 6-tab viewer with source cycling (Telemetry, Quicksave v2, Network Frame, Ring Log).
+  - Network & Telemetry Depth: Added ICMP probe simulation, thermal & power telemetry, and enhanced service filtering.
+  - Audio Engine: Integrated Yamaha YM2612 2-op FM and SNES SPC700 stereo delay synth with [Shift+M] hotkey toggle.
+  - Quicksave v2 & Native Alignment: Implemented v2 quicksave schema with v1 fallback in Win32 C and web; auto-copy to public/exe/.
+  - Verification: MSVC clean (`KSys.exe` 31.5 KB); Vite clean in 277ms; headless Chrome CDP 100% PASS (126 elements); security & icons clean.
 - **2026-09-30T01:40:00Z — kilo-tester: KFont (Interactive UI Audit, State Persistence & Audio Feedback Polish)**
   - Status: PASS ✅ (4 issues fixed, 0 regressions, 0 perimeter glints, 91.9 KB < 999 KB).
   - State Persistence: Persisted custom contrast colors, modular scale ratio, and custom kerning pairs across sessions.

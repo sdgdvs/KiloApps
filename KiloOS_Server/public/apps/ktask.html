@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KTask Monitor</title>
+<title>KTask Monitor &amp; Diagnostic Suite</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -130,12 +130,6 @@
     flex-wrap: wrap;
   }
 
-  .input-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
   .select-ctrl, .input-ctrl {
     padding: 6px 10px;
     border-radius: 6px;
@@ -197,6 +191,31 @@
     font-size: 12px;
     color: var(--text-muted);
     cursor: pointer;
+  }
+
+  /* Process Dedicated Toolbar */
+  .process-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .toolbar-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .toolbar-divider {
+    width: 1px;
+    height: 22px;
+    background: var(--border-color);
+    margin: 0 4px;
   }
 
   /* Dashboard Metrics Bar */
@@ -298,6 +317,19 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   }
 
+  .task-card.tree-child {
+    margin-left: 28px;
+    border-left: 3px solid var(--primary);
+    background: rgba(30, 41, 59, 0.7);
+  }
+
+  .tree-glyph {
+    font-family: 'Consolas', monospace;
+    color: var(--primary);
+    font-weight: 700;
+    margin-right: 4px;
+  }
+
   .task-left {
     display: flex;
     align-items: center;
@@ -333,6 +365,9 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
   .task-meta {
@@ -343,6 +378,23 @@
     gap: 10px;
     align-items: center;
     flex-wrap: wrap;
+  }
+
+  .task-mini-meter {
+    display: inline-flex;
+    width: 44px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    overflow: hidden;
+    vertical-align: middle;
+    margin-left: 4px;
+  }
+
+  .mini-bar {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
   }
 
   .task-right {
@@ -372,6 +424,42 @@
     font-size: 10px;
     font-weight: 700;
     text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  .status-badge.status-active {
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--success);
+  }
+
+  .status-badge.status-busy {
+    background: rgba(251, 191, 36, 0.18);
+    color: var(--warning);
+  }
+
+  .status-badge.status-heavy {
+    background: rgba(168, 85, 247, 0.18);
+    color: var(--purple);
+  }
+
+  .chart-hover-tip {
+    display: none;
+    position: absolute;
+    pointer-events: none;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid var(--primary);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'Consolas', monospace;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    z-index: 10;
+  }
+
+  .task-card:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 1px;
   }
 
   .btn-kill {
@@ -645,8 +733,8 @@
 
   /* Deep Process Inspector Modal */
   .inspect-modal-box {
-    max-width: 680px;
-    height: 540px;
+    max-width: 720px;
+    height: 560px;
     display: flex;
     flex-direction: column;
     padding: 18px;
@@ -674,6 +762,7 @@
     padding: 4px;
     border-radius: 8px;
     border: 1px solid var(--border-color);
+    overflow-x: auto;
   }
 
   .inspect-tab-btn {
@@ -687,6 +776,7 @@
     font-weight: 600;
     border-radius: 6px;
     cursor: pointer;
+    white-space: nowrap;
     transition: all 0.2s ease;
   }
 
@@ -715,7 +805,7 @@
     width: 100%;
     height: 100%;
     overflow-y: auto;
-    padding: 10px;
+    padding: 12px;
   }
 
   .inspect-pane.active {
@@ -758,6 +848,8 @@
     padding: 6px 8px;
     margin-bottom: 8px;
     border-bottom: 1px solid var(--border-color);
+    gap: 8px;
+    flex-wrap: wrap;
   }
 
   .hex-dump-pre {
@@ -768,6 +860,34 @@
     color: #38bdf8;
     white-space: pre;
     overflow-x: auto;
+  }
+
+  .affinity-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .affinity-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .affinity-card:hover {
+    border-color: var(--primary);
+  }
+
+  .affinity-card.active {
+    background: var(--primary-muted);
+    border-color: var(--primary);
   }
 
   .task-card.selected {
@@ -804,6 +924,250 @@
     border-radius: 4px;
     color: var(--primary);
     font-weight: 700;
+  /* Network & Sockets Pane */
+  .network-pane-container, .sentinel-pane-container, .profiler-pane-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+    overflow-y: auto;
+    padding-bottom: 20px;
+  }
+
+  .network-table, .sentinel-table, .profiler-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+  }
+
+  .network-table th, .network-table td,
+  .sentinel-table th, .sentinel-table td,
+  .profiler-table th, .profiler-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .network-table th, .sentinel-table th, .profiler-table th {
+    background: rgba(0, 0, 0, 0.25);
+    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  .network-table tbody tr:hover,
+  .sentinel-table tbody tr:hover,
+  .profiler-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .socket-state-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .socket-state-est {
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--success);
+    border: 1px solid rgba(52, 211, 153, 0.3);
+  }
+
+  .socket-state-listen {
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--primary);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+  }
+
+  .socket-state-wait {
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--warning);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+  }
+
+  .socket-state-close {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  .socket-port-tag {
+    font-family: 'Consolas', monospace;
+    font-size: 11px;
+    color: var(--primary);
+    background: rgba(56, 189, 248, 0.1);
+    padding: 1px 4px;
+    border-radius: 4px;
+  }
+
+  /* Memory Delta Tag */
+  .mem-delta-badge {
+    font-family: 'Consolas', monospace;
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    margin-left: 5px;
+    font-weight: 600;
+  }
+
+  .mem-delta-pos {
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--warning);
+  }
+
+  .mem-delta-neg {
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--success);
+  }
+
+  .mem-delta-zero {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+  }
+
+  .leak-badge {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-weight: 700;
+    margin-left: 4px;
+    animation: pulseLeak 2s infinite;
+  }
+
+  @keyframes pulseLeak {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  /* Sentinel / Fleet Grid */
+  .sentinel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+  }
+
+  .node-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s ease;
+  }
+
+  .node-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-1px);
+  }
+
+  .node-card.self-node {
+    border-color: rgba(56, 189, 248, 0.4);
+    background: rgba(56, 189, 248, 0.04);
+  }
+
+  .node-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .node-name {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .node-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 6px var(--success);
+  }
+
+  .node-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Consolas', monospace;
+  }
+
+  /* Profiler Flamegraph Bars */
+  .flame-container {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .flame-bar-row {
+    display: flex;
+    height: 24px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .flame-segment {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    transition: width 0.3s ease;
+    overflow: hidden;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .flame-segment:hover {
+    filter: brightness(1.2);
+  }
+
+  .flame-legend {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .flame-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .flame-legend-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
   }
 </style>
 </head>
@@ -816,13 +1180,13 @@
           <line x1="8" y1="21" x2="16" y2="21"></line>
           <line x1="12" y1="17" x2="12" y2="21"></line>
         </svg>
-        KTask Monitor <span style="font-size: 11px; color: var(--text-muted); margin-left: 8px; font-weight: normal;">(Press 'H' or F1 for help)</span>
+        KTask Monitor &amp; Diagnostic Suite <span style="font-size: 11px; color: var(--text-muted); margin-left: 8px; font-weight: normal;">(F1: Help | T: Tree | A: Affinity | M: Report)</span>
       </h1>
 
       <div class="nav-tabs" role="tablist" aria-label="Navigation Tabs">
         <button class="tab-btn active" id="tab-tasks-btn" role="tab" aria-selected="true" aria-controls="pane-tasks" onclick="switchTab('tasks')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>
-          [1] Processes
+          [1] Tasks
         </button>
         <button class="tab-btn" id="tab-charts-btn" role="tab" aria-selected="false" aria-controls="pane-charts" onclick="switchTab('charts')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
@@ -832,61 +1196,27 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect></svg>
           [3] Summary
         </button>
+        <button class="tab-btn" id="tab-network-btn" role="tab" aria-selected="false" aria-controls="pane-network" onclick="switchTab('network')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          [4] Sockets
+        </button>
+        <button class="tab-btn" id="tab-sentinel-btn" role="tab" aria-selected="false" aria-controls="pane-sentinel" onclick="switchTab('sentinel')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          [5] Sentinel
+        </button>
+        <button class="tab-btn" id="tab-profiler-btn" role="tab" aria-selected="false" aria-controls="pane-profiler" onclick="switchTab('profiler')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          [6] Profiler
+        </button>
       </div>
     </div>
     
     <div class="header-actions">
-      <div class="input-group">
-        <label for="filterSelect" class="sr-only">Filter by category</label>
-        <select id="filterSelect" class="select-ctrl" aria-label="Filter tasks by state" onchange="syncFilterChips(); renderTasks();">
-          <option value="all">All Categories</option>
-          <option value="high-cpu">High CPU (&gt;2%)</option>
-          <option value="high-mem">High Memory (&gt;25MB)</option>
-          <option value="high-pri">High Priority</option>
-        </select>
-
-        <label for="sortSelect" class="sr-only">Sort tasks</label>
-        <select id="sortSelect" class="select-ctrl" aria-label="Sort tasks by" onchange="renderTasks()">
-          <option value="name">Sort by Name</option>
-          <option value="mem">Sort by Memory</option>
-          <option value="cpu">Sort by CPU</option>
-          <option value="pid">Sort by PID</option>
-        </select>
-        
-        <label for="searchInput" class="sr-only">Filter tasks</label>
-        <div style="position: relative; display: inline-flex; align-items: center;">
-          <input type="text" id="searchInput" class="input-ctrl" placeholder="Filter name or PID... (Esc: clear)" aria-label="Filter tasks" oninput="onSearchInput()">
-          <button id="searchClearBtn" onclick="clearSearch()" style="position: absolute; right: 6px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 11px; display: none; padding: 2px 4px;" title="Clear filter (Esc)">✕</button>
-        </div>
-      </div>
-
-      <button class="btn-secondary" onclick="exportCSV()" title="Export Process List to CSV (E or Ctrl+E)">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        CSV [E]
+      <button class="btn-secondary" id="btnAudioToggle" onclick="toggleAudio()" title="Sound Effects &amp; YM2612 FM Audio (Shortcut: S)" aria-label="Toggle Audio Sound Effects">
+        <span id="audioIcon">🔊</span> Sound [S]
       </button>
 
-      <button class="btn-secondary" onclick="exportJSON()" title="Export Process List to JSON (J or Ctrl+J)">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        JSON [J]
-      </button>
-
-      <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importJSON(event)">
-      <button class="btn-secondary" onclick="document.getElementById('importFileInput').click()" title="Import Process Snapshot from JSON file">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-        Import
-      </button>
-
-      <button class="btn-secondary" onclick="quickSaveState()" title="Quicksave snapshot to local storage (F5)">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-        Save [F5]
-      </button>
-
-      <button class="btn-secondary" onclick="quickLoadState()" title="Quickload snapshot from local storage (F9)">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        Load [F9]
-      </button>
-
-      <button class="btn-secondary" id="btnHelp" onclick="openHelpModal()" title="Help & Shortcuts (F1 or H)" aria-label="Open Help & Shortcuts Dialog">
+      <button class="btn-secondary" id="btnHelp" onclick="openHelpModal()" title="Help &amp; Shortcuts (F1 or H)" aria-label="Open Help &amp; Shortcuts Dialog">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
         Help [F1]
       </button>
@@ -946,13 +1276,92 @@
   <div class="tab-content">
     <!-- Tab Pane 1: Process List -->
     <div class="tab-pane active" id="pane-tasks" role="tabpanel" aria-labelledby="tab-tasks-btn">
+      <!-- Dedicated Process Toolbar -->
+      <div class="process-toolbar" role="toolbar" aria-label="Process filters and actions">
+        <div class="toolbar-group">
+          <label for="searchInput" class="sr-only">Filter tasks</label>
+          <div style="position: relative; display: inline-flex; align-items: center;">
+            <input type="text" id="searchInput" class="input-ctrl" style="min-width: 200px;" placeholder="Filter /regex/, cpu>2, pri:high... (Esc)" aria-label="Filter tasks" oninput="onSearchInput()">
+            <button id="searchClearBtn" onclick="clearSearch()" style="position: absolute; right: 6px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 11px; display: none; padding: 2px 4px;" title="Clear filter (Esc)">✕</button>
+          </div>
+
+          <label for="filterSelect" class="sr-only">Filter by category</label>
+          <select id="filterSelect" class="select-ctrl" aria-label="Filter tasks by state" onchange="syncFilterChips(); renderTasks();">
+            <option value="all">All Categories</option>
+            <option value="high-cpu">High CPU (&gt;2%)</option>
+            <option value="high-mem">High Memory (&gt;25MB)</option>
+            <option value="high-pri">High Priority</option>
+            <option value="system">System Services</option>
+            <option value="user">User Applications</option>
+          </select>
+
+          <label for="sortSelect" class="sr-only">Sort tasks</label>
+          <select id="sortSelect" class="select-ctrl" aria-label="Sort tasks by" onchange="renderTasks()">
+            <option value="name">Sort by Name</option>
+            <option value="mem">Sort by Memory</option>
+            <option value="cpu">Sort by CPU</option>
+            <option value="pid">Sort by PID</option>
+          </select>
+
+          <button class="btn-secondary" id="viewModeToggleBtn" onclick="toggleViewMode()" title="Toggle between Flat List and Process Tree Hierarchy [T]">
+            🌲 Tree [T]
+          </button>
+
+          <button class="btn-secondary" id="deltaModeBtn" onclick="toggleDeltaMode()" title="Toggle Real-Time Memory Allocation Delta Monitor [D]">
+            Δ RAM [D]
+          </button>
+
+          <button class="btn-secondary" onclick="zeroMemoryBaseline()" title="Zero Memory Baseline for Delta Leak Tracking">
+            Zero Base
+          </button>
+        </div>
+
+        <div class="toolbar-group">
+          <button class="btn-secondary" onclick="quickSaveState()" title="Quicksave snapshot to local storage (F5)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+            Save [F5]
+          </button>
+
+          <button class="btn-secondary" onclick="quickLoadState()" title="Quickload snapshot from local storage (F9)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Load [F9]
+          </button>
+
+          <div class="toolbar-divider"></div>
+
+          <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importJSON(event)">
+          <button class="btn-secondary" onclick="document.getElementById('importFileInput').click()" title="Import Process Snapshot from JSON file">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+            Import
+          </button>
+
+          <button class="btn-secondary" onclick="exportCSV()" title="Export Process List to CSV (E or Ctrl+E)">
+            CSV [E]
+          </button>
+
+          <button class="btn-secondary" onclick="exportJSON()" title="Export Process List to JSON (J or Ctrl+J)">
+            JSON [J]
+          </button>
+
+          <button class="btn-secondary" onclick="exportMarkdownAudit()" title="Export System Diagnostic &amp; Audit Report in Markdown [M]">
+            Report [M]
+          </button>
+
+          <button class="btn-secondary" onclick="exportHTMLReport()" title="Export Standalone HTML Diagnostic Report">
+            HTML
+          </button>
+        </div>
+      </div>
+
       <!-- Quick Filter Chips -->
-      <div class="filter-chips-bar" role="radiogroup" aria-label="Quick process filters" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-bottom: 4px;">
+      <div class="filter-chips-bar" role="radiogroup" aria-label="Quick process filters" style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 4px; margin-bottom: 4px;">
         <span style="font-size: 11px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Quick Filter:</span>
         <button class="chip-btn active" id="chip-all" role="radio" aria-checked="true" onclick="applyQuickFilter('all')">All Tasks</button>
         <button class="chip-btn" id="chip-cpu" role="radio" aria-checked="false" onclick="applyQuickFilter('high-cpu')">⚡ High CPU (&gt;2%)</button>
         <button class="chip-btn" id="chip-mem" role="radio" aria-checked="false" onclick="applyQuickFilter('high-mem')">💾 High RAM (&gt;25MB)</button>
         <button class="chip-btn" id="chip-pri" role="radio" aria-checked="false" onclick="applyQuickFilter('high-pri')">⭐ High Priority</button>
+        <button class="chip-btn" id="chip-sys" role="radio" aria-checked="false" onclick="applyQuickFilter('system')">🖥️ System</button>
+        <button class="chip-btn" id="chip-usr" role="radio" aria-checked="false" onclick="applyQuickFilter('user')">👤 User Apps</button>
         <button class="chip-btn chip-spawn" onclick="spawnDemoTask()" title="Add a synthetic background task for testing">＋ Spawn Demo Task</button>
       </div>
 
@@ -974,6 +1383,7 @@
           </div>
           <div class="chart-canvas-container">
             <canvas id="cpuCanvas"></canvas>
+            <div id="cpuTooltip" class="chart-hover-tip"></div>
           </div>
         </div>
 
@@ -987,6 +1397,7 @@
           </div>
           <div class="chart-canvas-container">
             <canvas id="memCanvas"></canvas>
+            <div id="memTooltip" class="chart-hover-tip"></div>
           </div>
         </div>
       </div>
@@ -1022,7 +1433,7 @@
         <div class="summary-card">
           <div class="summary-label">CPU Cores / Arch</div>
           <div class="summary-value">8 Cores (x64)</div>
-          <div class="summary-subtext">Logical processor layout</div>
+          <div class="summary-subtext">Preemptive Multitasking Kernel</div>
         </div>
 
         <div class="summary-card">
@@ -1030,6 +1441,265 @@
           <div class="summary-value" style="color: var(--success);">Preemptive</div>
           <div class="summary-subtext">High precision timer ticks</div>
         </div>
+      </div>
+    </div>
+
+    <!-- Tab Pane 4: Network Sockets & I/O Monitor -->
+    <div class="tab-pane" id="pane-network" role="tabpanel" aria-labelledby="tab-network-btn">
+      <div class="network-pane-container">
+        <!-- Network Toolbar -->
+        <div class="process-toolbar" role="toolbar" aria-label="Network filters and actions">
+          <div class="toolbar-group">
+            <input type="text" id="networkSearchInput" class="input-ctrl" style="min-width: 200px;" placeholder="Filter port, remote IP, PID... (Esc)" oninput="renderNetworkSockets()">
+            
+            <select id="netProtoSelect" class="select-ctrl" onchange="renderNetworkSockets()">
+              <option value="all">All Protocols</option>
+              <option value="tcp">TCP Only</option>
+              <option value="udp">UDP Only</option>
+            </select>
+
+            <select id="netStateSelect" class="select-ctrl" onchange="renderNetworkSockets()">
+              <option value="all">All Socket States</option>
+              <option value="established">Established</option>
+              <option value="listen">Listening</option>
+              <option value="time_wait">Time Wait</option>
+            </select>
+
+            <button class="btn-secondary" onclick="sendSocketPingProbe()" title="Send ICMP/UDP Diagnostic Ping to Selected Socket">
+              📡 Ping Probe
+            </button>
+
+            <button class="btn-secondary" onclick="resetSelectedSocket()" title="Reset Selected Active Socket Connection">
+              ⚡ Reset Connection
+            </button>
+          </div>
+
+          <div class="toolbar-group">
+            <button class="btn-secondary" onclick="exportSocketsCSV()" title="Export Sockets to CSV">
+              CSV
+            </button>
+            <button class="btn-secondary" onclick="exportSocketsJSON()" title="Export Sockets to JSON">
+              JSON
+            </button>
+          </div>
+        </div>
+
+        <!-- Network Telemetry Metric Summary Cards -->
+        <div class="summary-grid" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="summary-card">
+            <div class="summary-label">Active Sockets</div>
+            <div class="summary-value" id="net-total-sockets" style="color: var(--primary);">0</div>
+            <div class="summary-subtext">Open TCP/UDP Endpoints</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Inbound Traffic (RX)</div>
+            <div class="summary-value" id="net-rx-rate" style="color: var(--success);">0.0 KB/s</div>
+            <div class="summary-subtext">Aggregated network throughput</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Outbound Traffic (TX)</div>
+            <div class="summary-value" id="net-tx-rate" style="color: var(--purple);">0.0 KB/s</div>
+            <div class="summary-subtext">Transmitted packet rate</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Subnet Latency (Avg)</div>
+            <div class="summary-value" id="net-avg-latency" style="color: var(--warning);">18 ms</div>
+            <div class="summary-subtext">KiloNet Transit gateway</div>
+          </div>
+        </div>
+
+        <!-- Sockets Table -->
+        <table class="network-table" aria-label="Network Sockets Table">
+          <thead>
+            <tr>
+              <th>PID / Process</th>
+              <th>Proto</th>
+              <th>Local Address</th>
+              <th>Remote Address</th>
+              <th>State</th>
+              <th>RX Throughput</th>
+              <th>TX Throughput</th>
+              <th>Latency</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="network-sockets-tbody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab Pane 5: Fleet Sentinel & Remote Telemetry (Firebase RTDB) -->
+    <div class="tab-pane" id="pane-sentinel" role="tabpanel" aria-labelledby="tab-sentinel-btn">
+      <div class="sentinel-pane-container">
+        <!-- Sentinel Toolbar -->
+        <div class="process-toolbar" role="toolbar" aria-label="Sentinel telemetry controls">
+          <div class="toolbar-group">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span id="sentinelStatusBadge" class="status-badge" style="background: rgba(52, 211, 153, 0.15); color: var(--success); border: 1px solid rgba(52, 211, 153, 0.3);">
+                ● SYNC ACTIVE
+              </span>
+              <span id="sentinelNodeIdText" style="font-family: monospace; font-size: 11px; color: var(--primary);">
+                Local Node: NODE-7F4A
+              </span>
+            </div>
+
+            <button class="btn-primary" onclick="broadcastDiagnosticSignal()" title="Broadcast diagnostic telemetry heartbeat across all online KiloOS fleet nodes">
+              ⚡ Broadcast Pulse
+            </button>
+
+            <button class="btn-secondary" onclick="refreshFleetNodes()" title="Force query of remote fleet node states">
+              🔄 Sync Fleet
+            </button>
+          </div>
+
+          <div class="toolbar-group">
+            <span style="font-size: 11px; color: var(--text-muted);">
+              RTDB: <code>https://kiloappschat-default-rtdb.firebaseio.com</code>
+            </span>
+          </div>
+        </div>
+
+        <!-- Fleet Overview Cards -->
+        <div class="summary-grid" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="summary-card">
+            <div class="summary-label">Fleet Nodes Online</div>
+            <div class="summary-value" id="sentinel-node-count" style="color: var(--primary);">1</div>
+            <div class="summary-subtext">Active KiloOS terminals globally</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Mean Fleet CPU</div>
+            <div class="summary-value" id="sentinel-mean-cpu" style="color: var(--warning);">14%</div>
+            <div class="summary-subtext">Distributed compute load</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Aggregate RAM Pool</div>
+            <div class="summary-value" id="sentinel-agg-ram" style="color: var(--purple);">12.4 GB</div>
+            <div class="summary-subtext">Across connected fleet nodes</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Signal Mesh Status</div>
+            <div class="summary-value" id="sentinel-mesh-status" style="color: var(--success);">OPTIMAL</div>
+            <div class="summary-subtext">No dropped telemetry frames</div>
+          </div>
+        </div>
+
+        <!-- Fleet Nodes Table / Cards -->
+        <table class="sentinel-table" aria-label="Fleet Nodes Telemetry Table">
+          <thead>
+            <tr>
+              <th>Node ID</th>
+              <th>Host / Station</th>
+              <th>OS Kernel / Arch</th>
+              <th>Tasks</th>
+              <th>CPU Load</th>
+              <th>RAM Used</th>
+              <th>Last Heartbeat</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="sentinel-nodes-tbody">
+            <!-- Dynamically populated from RTDB or fallback -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab Pane 6: Process Profiler & Flamegraph -->
+    <div class="tab-pane" id="pane-profiler" role="tabpanel" aria-labelledby="tab-profiler-btn">
+      <div class="profiler-pane-container">
+        <!-- Profiler Toolbar -->
+        <div class="process-toolbar" role="toolbar" aria-label="Process profiler controls">
+          <div class="toolbar-group">
+            <label for="profilerProcessSelect" style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Target Process:</label>
+            <select id="profilerProcessSelect" class="select-ctrl" style="min-width: 220px;" onchange="onProfilerTargetChange()">
+              <!-- Options populated with active tasks -->
+            </select>
+
+            <button class="btn-primary" id="btnStartProfile" onclick="runProcessProfile()" title="Sample CPU instruction call stack for 3 seconds">
+              ▶ Start 3-Sec Profiler
+            </button>
+
+            <button class="btn-secondary" onclick="exportProfileReport()" title="Export Call Stack Trace (.txt / .json)">
+              📋 Export Profile
+            </button>
+          </div>
+
+          <div class="toolbar-group">
+            <div id="profileProgressContainer" style="display: none; align-items: center; gap: 8px;">
+              <span style="font-size: 11px; color: var(--warning); font-weight: 600;">Sampling Cycles...</span>
+              <div style="width: 120px; height: 10px; background: rgba(0,0,0,0.4); border-radius: 5px; overflow: hidden; border: 1px solid var(--border-color);">
+                <div id="profileProgressBar" style="width: 0%; height: 100%; background: var(--warning); transition: width 0.1s linear;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Instruction & Cache Stats -->
+        <div class="summary-grid" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="summary-card">
+            <div class="summary-label">Sampled CPU Cycles</div>
+            <div class="summary-value" id="prof-cycles" style="color: var(--primary);">0</div>
+            <div class="summary-subtext">Pentium instructions captured</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">IPC Rate</div>
+            <div class="summary-value" id="prof-ipc" style="color: var(--success);">1.82 IPC</div>
+            <div class="summary-subtext">Instructions per cycle</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">L1/L2 Cache Hit</div>
+            <div class="summary-value" id="prof-cache" style="color: var(--purple);">97.4%</div>
+            <div class="summary-subtext">Memory bus latency low</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Branch Accuracy</div>
+            <div class="summary-value" id="prof-branch" style="color: var(--warning);">98.8%</div>
+            <div class="summary-subtext">Pipeline stalls minimized</div>
+          </div>
+        </div>
+
+        <!-- Flamegraph Bar View -->
+        <div class="flame-container">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; font-size: 13px; color: var(--text-main);">CPU Subsystem Cycle Distribution (Flamegraph)</span>
+            <span id="prof-target-label" style="font-family: monospace; font-size: 11px; color: var(--text-muted);">Process: None</span>
+          </div>
+
+          <div class="flame-bar-row" id="flameBarRow">
+            <div class="flame-segment" style="width: 32%; background: #38bdf8;" title="RenderLoop_Canvas (32%)">RenderLoop (32%)</div>
+            <div class="flame-segment" style="width: 26%; background: #a855f7;" title="Win32_MsgPump (26%)">MsgPump (26%)</div>
+            <div class="flame-segment" style="width: 18%; background: #34d399;" title="Heap_Alloc (18%)">Heap_Alloc (18%)</div>
+            <div class="flame-segment" style="width: 14%; background: #fbbf24;" title="AudioDSP_YM2612 (14%)">AudioDSP (14%)</div>
+            <div class="flame-segment" style="width: 10%; background: #ef4444;" title="Socket_IO (10%)">Socket_IO (10%)</div>
+          </div>
+
+          <div class="flame-legend">
+            <div class="flame-legend-item"><div class="flame-legend-color" style="background:#38bdf8;"></div><span>RenderLoop (32%)</span></div>
+            <div class="flame-legend-item"><div class="flame-legend-color" style="background:#a855f7;"></div><span>MsgPump (26%)</span></div>
+            <div class="flame-legend-item"><div class="flame-legend-color" style="background:#34d399;"></div><span>Heap_Alloc (18%)</span></div>
+            <div class="flame-legend-item"><div class="flame-legend-color" style="background:#fbbf24;"></div><span>AudioDSP_YM2612 (14%)</span></div>
+            <div class="flame-legend-item"><div class="flame-legend-color" style="background:#ef4444;"></div><span>Socket_IO (10%)</span></div>
+          </div>
+        </div>
+
+        <!-- Function Call Table -->
+        <table class="profiler-table" aria-label="Profiler Functions Table">
+          <thead>
+            <tr>
+              <th>Subsystem / Routine</th>
+              <th>Module</th>
+              <th>Samples Count</th>
+              <th>Self CPU %</th>
+              <th>Total CPU %</th>
+              <th>Call Invocations</th>
+            </tr>
+          </thead>
+          <tbody id="profiler-functions-tbody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -1066,13 +1736,17 @@
       </div>
 
       <div class="inspect-tabs" role="tablist" aria-label="Process details tabs">
-        <button class="inspect-tab-btn active" id="itab-threads-btn" role="tab" aria-selected="true" aria-controls="ipane-threads" onclick="switchInspectTab('threads')">🧵 Threads</button>
-        <button class="inspect-tab-btn" id="itab-modules-btn" role="tab" aria-selected="false" aria-controls="ipane-modules" onclick="switchInspectTab('modules')">📦 Loaded Modules</button>
-        <button class="inspect-tab-btn" id="itab-memory-btn" role="tab" aria-selected="false" aria-controls="ipane-memory" onclick="switchInspectTab('memory')">🧠 Memory Map</button>
-        <button class="inspect-tab-btn" id="itab-hex-btn" role="tab" aria-selected="false" aria-controls="ipane-hex" onclick="switchInspectTab('hex')">💻 Hex Peek</button>
+        <button class="inspect-tab-btn active" id="itab-threads-btn" role="tab" aria-selected="true" aria-controls="ipane-threads" onclick="switchInspectTab('threads')">🧵 Threads [1]</button>
+        <button class="inspect-tab-btn" id="itab-modules-btn" role="tab" aria-selected="false" aria-controls="ipane-modules" onclick="switchInspectTab('modules')">📦 Modules [2]</button>
+        <button class="inspect-tab-btn" id="itab-memory-btn" role="tab" aria-selected="false" aria-controls="ipane-memory" onclick="switchInspectTab('memory')">🧠 Memory [3]</button>
+        <button class="inspect-tab-btn" id="itab-hex-btn" role="tab" aria-selected="false" aria-controls="ipane-hex" onclick="switchInspectTab('hex')">💻 Hex Peek [4]</button>
+        <button class="inspect-tab-btn" id="itab-env-btn" role="tab" aria-selected="false" aria-controls="ipane-env" onclick="switchInspectTab('env')">🌍 Env &amp; Exec [5]</button>
+        <button class="inspect-tab-btn" id="itab-affinity-btn" role="tab" aria-selected="false" aria-controls="ipane-affinity" onclick="switchInspectTab('affinity')">⚙️ Affinity [6]</button>
+        <button class="inspect-tab-btn" id="itab-profiler-btn" role="tab" aria-selected="false" aria-controls="ipane-profiler" onclick="switchInspectTab('profiler')">🔬 Profiler [7]</button>
       </div>
 
       <div class="inspect-body">
+        <!-- Tab 1: Threads -->
         <div class="inspect-pane active" id="ipane-threads" role="tabpanel" aria-labelledby="itab-threads-btn">
           <table class="inspect-table">
             <thead>
@@ -1082,6 +1756,7 @@
           </table>
         </div>
 
+        <!-- Tab 2: Modules -->
         <div class="inspect-pane" id="ipane-modules" role="tabpanel" aria-labelledby="itab-modules-btn">
           <table class="inspect-table">
             <thead>
@@ -1091,6 +1766,7 @@
           </table>
         </div>
 
+        <!-- Tab 3: Memory Map -->
         <div class="inspect-pane" id="ipane-memory" role="tabpanel" aria-labelledby="itab-memory-btn">
           <table class="inspect-table">
             <thead>
@@ -1100,12 +1776,103 @@
           </table>
         </div>
 
+        <!-- Tab 4: Hex Peek -->
         <div class="inspect-pane" id="ipane-hex" role="tabpanel" aria-labelledby="itab-hex-btn">
           <div class="hex-toolbar">
-            <span>Segment: <strong style="color:var(--primary); font-family:monospace;">0x00400000 (PE Header)</strong></span>
-            <span class="status-badge" style="font-size:9px;">READWRITE / EXECUTE</span>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="color:var(--text-muted);">Segment:</span>
+              <select id="hexSegmentSelect" class="select-ctrl" style="padding:3px 6px; font-size:11px;" onchange="updateHexDumpView()">
+                <option value="pe">0x00400000 (PE Header)</option>
+                <option value="text">0x00410000 (.text Code)</option>
+                <option value="data">0x00490000 (.data Initialized)</option>
+                <option value="heap">0x004B0000 (Dynamic Heap)</option>
+              </select>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <input type="text" id="hexSearchInput" class="input-ctrl" style="padding:3px 6px; font-size:11px; width:130px;" placeholder="Search ASCII..." onkeydown="if(event.key==='Enter')searchHexDump()">
+              <button class="btn-secondary" style="padding:3px 8px; font-size:11px;" onclick="searchHexDump()">Find</button>
+            </div>
           </div>
           <pre class="hex-dump-pre" id="inspect-hex-dump"></pre>
+        </div>
+
+        <!-- Tab 5: Env & Executable Context -->
+        <div class="inspect-pane" id="ipane-env" role="tabpanel" aria-labelledby="itab-env-btn">
+          <div style="display:flex; flex-direction:column; gap:10px; font-size:12px;">
+            <div style="background:rgba(0,0,0,0.2); padding:10px; border-radius:6px; border:1px solid var(--border-color); display:flex; flex-direction:column; gap:6px;">
+              <div><strong>Binary Image:</strong> <code id="env-exec-path" style="color:var(--primary); font-family:monospace;">C:\KiloApps\task.exe</code></div>
+              <div><strong>Command Line:</strong> <code id="env-cmdline" style="color:var(--text-muted); font-family:monospace;">"task.exe" --session=live</code></div>
+              <div><strong>Security Mitigation:</strong> <span style="color:var(--success);">DEP: Enabled</span> | <span style="color:var(--success);">ASLR: Relocated</span> | <span style="color:var(--success);">CFG: Enforced</span></div>
+              <div><strong>Architecture:</strong> x86_64 (64-bit Native Process)</div>
+            </div>
+
+            <div style="font-weight:600; font-size:11px; text-transform:uppercase; color:var(--text-muted);">Process Environment Variables:</div>
+            <table class="inspect-table">
+              <thead>
+                <tr><th>Variable</th><th>Value</th></tr>
+              </thead>
+              <tbody id="inspect-env-tbody">
+                <tr><td><code>KILO_ROOT</code></td><td style="color:var(--primary);">C:\KiloApps</td></tr>
+                <tr><td><code>OS</code></td><td>KiloOS / Windows_NT</td></tr>
+                <tr><td><code>PATH</code></td><td style="color:var(--text-muted);">C:\KiloApps;C:\Windows\System32;C:\KiloApps\bin</td></tr>
+                <tr><td><code>USERNAME</code></td><td>KiloUser</td></tr>
+                <tr><td><code>PROCESSOR_ARCHITECTURE</code></td><td>AMD64 (8 Cores)</td></tr>
+                <tr><td><code>TEMP</code></td><td>C:\Users\KiloUser\AppData\Local\Temp</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Tab 6: CPU Core Affinity -->
+        <div class="inspect-pane" id="ipane-affinity" role="tabpanel" aria-labelledby="itab-affinity-btn">
+          <div style="display:flex; flex-direction:column; gap:12px; font-size:12px;">
+            <div>Assign process execution to specific logical CPU cores. Core affinity mask determines thread scheduler distribution:</div>
+            <div style="display:flex; gap:8px; align-items:center;">
+              <span style="font-weight:600;">Current Bitmask:</span>
+              <span id="affinity-mask-hex" style="font-family:monospace; color:var(--primary); font-size:13px; font-weight:700;">0xFF</span>
+              <span id="affinity-mask-bin" style="font-family:monospace; color:var(--text-muted); font-size:11px;">(11111111)</span>
+              <span id="affinity-active-count" class="status-badge status-active" style="margin-left:auto;">8 Cores Active</span>
+            </div>
+
+            <div class="affinity-grid" id="affinityGrid">
+              <!-- Cores 0-7 generated here -->
+            </div>
+
+            <div style="display:flex; gap:8px; margin-top:8px;">
+              <button class="btn-secondary" onclick="setAffinityPreset('all')">All Cores (0xFF)</button>
+              <button class="btn-secondary" onclick="setAffinityPreset('core0')">Core 0 Only (0x01)</button>
+              <button class="btn-secondary" onclick="setAffinityPreset('perf')">Perf Cores 0-3 (0x0F)</button>
+              <button class="btn-secondary" onclick="setAffinityPreset('eff')">Eff Cores 4-7 (0xF0)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 7: Process Profiler & Instructions -->
+        <div class="inspect-pane" id="ipane-profiler" role="tabpanel" aria-labelledby="itab-profiler-btn">
+          <div style="display:flex; flex-direction:column; gap:12px; font-size:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div><strong>Live Instruction Sampler:</strong> Capture thread execution cycles</div>
+              <button class="btn-primary" style="padding:4px 10px; font-size:11px;" onclick="runInspectProfile()">▶ Sample 3s</button>
+            </div>
+            <div id="inspect-flame-bar" class="flame-bar-row">
+              <div class="flame-segment" style="width: 35%; background: #38bdf8;">MainLoop (35%)</div>
+              <div class="flame-segment" style="width: 25%; background: #a855f7;">Win32Msg (25%)</div>
+              <div class="flame-segment" style="width: 20%; background: #34d399;">HeapAlloc (20%)</div>
+              <div class="flame-segment" style="width: 20%; background: #fbbf24;">AudioDSP (20%)</div>
+            </div>
+            <div style="font-weight:600; font-size:11px; text-transform:uppercase; color:var(--text-muted);">Hotspot Call Stacks:</div>
+            <table class="inspect-table">
+              <thead>
+                <tr><th>Subsystem</th><th>Estimated Samples</th><th>CPU Share %</th></tr>
+              </thead>
+              <tbody id="inspect-profile-tbody">
+                <tr><td><code>Win32_MessagePump()</code></td><td>4,210 cycles</td><td style="color:var(--primary);">35.0%</td></tr>
+                <tr><td><code>RenderLoop_Canvas()</code></td><td>3,010 cycles</td><td style="color:var(--purple);">25.0%</td></tr>
+                <tr><td><code>Heap_Alloc_Paged()</code></td><td>2,408 cycles</td><td style="color:var(--success);">20.0%</td></tr>
+                <tr><td><code>AudioDSP_YM2612()</code></td><td>2,408 cycles</td><td style="color:var(--warning);">20.0%</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -1118,17 +1885,17 @@
 
   <!-- Help & Shortcuts Modal -->
   <div class="modal-overlay" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle" onclick="if(event.target===this)closeHelpModal()">
-    <div class="modal-box" style="max-width: 580px;">
+    <div class="modal-box" style="max-width: 600px;">
       <div class="modal-header" style="color: var(--primary); justify-content: space-between;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-          <h3 id="helpModalTitle">KTask Monitor Help & Shortcuts</h3>
+          <h3 id="helpModalTitle">KTask Monitor &amp; Diagnostic Suite Help</h3>
         </div>
         <button class="btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="closeHelpModal()" title="Close (Esc)">✕</button>
       </div>
       <div class="modal-body">
         <p style="margin-top:0; color:var(--text-main);">
-          KTask is a real-time system process and performance monitor. Manage active tasks, analyze resource usage, inspect process internals, and export data.
+          KTask is the advanced real-time process manager and diagnostic suite for KiloOS.
         </p>
         <table class="help-table">
           <thead>
@@ -1136,23 +1903,28 @@
           </thead>
           <tbody>
             <tr><td><span class="help-kbd">F1</span> or <span class="help-kbd">H</span></td><td>Toggle this Help Dialog</td><td>Global</td></tr>
+            <tr><td><span class="help-kbd">1</span> - <span class="help-kbd">6</span></td><td>Switch Tabs: [1] Tasks, [2] Perf, [3] Sum, [4] Net, [5] Sentinel, [6] Profiler</td><td>Global</td></tr>
+            <tr><td><span class="help-kbd">S</span></td><td>Toggle Retro YM2612 FM Audio Synthesizer SFX</td><td>Global</td></tr>
+            <tr><td><span class="help-kbd">D</span></td><td>Toggle Real-Time Memory Delta (Δ RAM) Tracking</td><td>Tasks Tab</td></tr>
             <tr><td><span class="help-kbd">F5</span></td><td>Quicksave Process Snapshot to Storage</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">F9</span></td><td>Quickload Process Snapshot from Storage</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">R</span></td><td>Live Refresh Process List from OS</td><td>Global</td></tr>
-            <tr><td><span class="help-kbd">↑</span> / <span class="help-kbd">↓</span></td><td>Navigate & Select Process Card</td><td>Processes Tab</td></tr>
-            <tr><td><span class="help-kbd">Enter</span> / <span class="help-kbd">I</span> / <span class="help-kbd">Space</span></td><td>Deep Inspect Selected Process</td><td>Processes Tab</td></tr>
-            <tr><td><span class="help-kbd">Dbl-Click</span></td><td>Deep Inspect Process Card</td><td>Processes Tab</td></tr>
-            <tr><td><span class="help-kbd">Delete</span></td><td>Terminate Selected Process</td><td>Processes Tab</td></tr>
-            <tr><td><span class="help-kbd">P</span></td><td>Cycle Priority (Normal / High / Low)</td><td>Processes Tab</td></tr>
+            <tr><td><span class="help-kbd">T</span></td><td>Toggle Process Tree Hierarchy / Flat List</td><td>Tasks Tab</td></tr>
+            <tr><td><span class="help-kbd">A</span></td><td>Cycle CPU Core Affinity Mask</td><td>Tasks Tab</td></tr>
+            <tr><td><span class="help-kbd">M</span></td><td>Export System Diagnostic Audit Report (Markdown)</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">E</span> / <span class="help-kbd">Ctrl+E</span></td><td>Export Process List to CSV</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">J</span> / <span class="help-kbd">Ctrl+J</span></td><td>Export Process List to JSON</td><td>Global</td></tr>
-            <tr><td><span class="help-kbd">1</span> / <span class="help-kbd">2</span> / <span class="help-kbd">3</span></td><td>Switch Tabs (Processes / Charts / Summary)</td><td>Global</td></tr>
-            <tr><td><span class="help-kbd">1</span> - <span class="help-kbd">4</span> / <span class="help-kbd">←</span> <span class="help-kbd">→</span></td><td>Switch Inspector Tabs (Threads/Modules/Mem/Hex)</td><td>Inspector Dialog</td></tr>
+            <tr><td><span class="help-kbd">Enter</span> / <span class="help-kbd">I</span></td><td>Deep Inspect Selected Process</td><td>Tasks Tab</td></tr>
+            <tr><td><span class="help-kbd">Delete</span></td><td>Terminate Selected Process</td><td>Tasks Tab</td></tr>
+            <tr><td><span class="help-kbd">P</span></td><td>Cycle Priority (Normal / High / Low)</td><td>Tasks Tab</td></tr>
             <tr><td><span class="help-kbd">Esc</span></td><td>Close Active Modal / Clear Filter</td><td>Global</td></tr>
           </tbody>
         </table>
         <div style="margin-top:12px; font-size:11px; color:var(--text-muted); line-height:1.5;">
-          💡 <strong>Tip:</strong> Click or use Arrow keys to select any process. Double-click or press <strong>I</strong> / <strong>Enter</strong> to inspect threads, DLLs, and memory maps in real time. Use <strong>P</strong> to adjust scheduling priority.
+          💡 <strong>Advanced Filter Syntax:</strong> In the search box, you can type:
+          <br>• Regular expressions: <code>/^k.*r$/i</code> or <code>/(pad|calc)/i</code>
+          <br>• Queries: <code>cpu&gt;2</code>, <code>cpu&lt;1</code>, <code>mem&gt;30</code>, <code>pri:high</code>, <code>pid:1420</code>
+          <br>• Or plain text to match process name or PID.
         </div>
       </div>
       <div class="modal-footer" style="justify-content: space-between;">
@@ -1164,7 +1936,7 @@
 
   <!-- Onboarding & Tutorial Modal -->
   <div class="modal-overlay" id="tutorialModal" role="dialog" aria-modal="true" aria-labelledby="tutorialModalTitle" onclick="if(event.target===this)closeTutorialModal()">
-    <div class="modal-box" style="max-width: 520px;">
+    <div class="modal-box" style="max-width: 540px;">
       <div class="modal-header" style="color: var(--primary); justify-content: space-between;">
         <div style="display: flex; align-items: center; gap: 8px;">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
@@ -1174,13 +1946,13 @@
       </div>
       <div class="modal-body" style="display: flex; flex-direction: column; gap: 10px;">
         <p style="margin: 0; color: var(--text-main); font-size: 13px; line-height: 1.5;">
-          KTask is the retro-modern process manager and diagnostic suite for KiloOS. Monitor active system processes, inspect loaded modules, and analyze system performance in real time.
+          KTask is the retro-modern process manager and diagnostic suite for KiloOS.
         </p>
         <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 14px; font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
-          <div>⚡ <strong>Interactive Inspector:</strong> Double-click any task or press <span class="help-kbd">Enter</span> / <span class="help-kbd">I</span> to view active threads, loaded DLLs, memory map segments, and live hex headers.</div>
-          <div>🎮 <strong>Keyboard Navigation:</strong> Use <span class="help-kbd">↑</span> / <span class="help-kbd">↓</span> to select tasks, <span class="help-kbd">P</span> to adjust scheduling priority, and <span class="help-kbd">Del</span> to terminate a process.</div>
-          <div>💾 <strong>Quicksave & Persistence:</strong> Press <span class="help-kbd">F5</span> to capture a local snapshot of all active processes, and <span class="help-kbd">F9</span> to reload it at any time.</div>
-          <div>📊 <strong>Exports & Imports:</strong> Export snapshots to CSV (<span class="help-kbd">E</span>) or JSON (<span class="help-kbd">J</span>), or import saved process lists using the <strong>Import</strong> button.</div>
+          <div>🌲 <strong>Process Tree Hierarchy:</strong> Press <span class="help-kbd">T</span> or click <strong>Tree</strong> to inspect parent-child execution lineages.</div>
+          <div>⚡ <strong>Interactive Inspector:</strong> Press <span class="help-kbd">I</span> or <span class="help-kbd">Enter</span> to inspect threads, modules, memory maps, ASCII memory string search, environment variables, and CPU affinity.</div>
+          <div>⚙️ <strong>CPU Core Affinity:</strong> Press <span class="help-kbd">A</span> to cycle CPU affinity masks across 8 logical processor cores.</div>
+          <div>📊 <strong>Exports &amp; Reports:</strong> Export snapshots to CSV (<span class="help-kbd">E</span>), JSON (<span class="help-kbd">J</span>), or Markdown Diagnostic Audit Reports (<span class="help-kbd">M</span>).</div>
         </div>
       </div>
       <div class="modal-footer" style="justify-content: space-between;">
@@ -1194,15 +1966,53 @@
 
   <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
 
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getDatabase, ref, set, get, push, onValue, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+      authDomain: "kiloappschat.firebaseapp.com",
+      databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+      projectId: "kiloappschat",
+      storageBucket: "kiloappschat.firebasestorage.app",
+      messagingSenderId: "290208566057",
+      appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+    };
+
+    try {
+      const fbApp = initializeApp(firebaseConfig);
+      const fbDb = getDatabase(fbApp);
+      window.fb = {
+        app: fbApp,
+        db: fbDb,
+        ref,
+        set,
+        get,
+        push,
+        onValue,
+        off,
+        serverTimestamp,
+        onDisconnect
+      };
+      if (typeof window.initFirebaseSentinel === 'function') {
+        window.initFirebaseSentinel();
+      }
+    } catch (err) {
+      console.warn('Firebase RTDB init offline or deferred:', err);
+    }
+  </script>
+
   <script>
     let reqIdCounter = 0;
     let autoRefreshInterval = null;
+    let viewMode = 'flat'; // 'flat' or 'tree'
     let defaultSystemTasks = [
-      { id: '1004', title: 'KiloOS Kernel Services' },
-      { id: '1420', title: 'KExplorer File Manager' },
-      { id: '1842', title: 'KTask Process Monitor' },
-      { id: '2105', title: 'KPad Text Editor' },
-      { id: '3290', title: 'KCalc Calculator' }
+      { id: '1004', ppid: '0', title: 'KiloOS Kernel Services' },
+      { id: '1420', ppid: '1004', title: 'KExplorer File Manager' },
+      { id: '1842', ppid: '1420', title: 'KTask Process Monitor' },
+      { id: '2105', ppid: '1420', title: 'KPad Text Editor' },
+      { id: '3290', ppid: '1420', title: 'KCalc Calculator' }
     ];
     let allTasks = [...defaultSystemTasks];
     let spawnedTasks = [];
@@ -1214,7 +2024,604 @@
     let peakCpu = 0;
     let startTime = Date.now();
 
-    // Safe LocalStorage helpers
+    // ==========================================
+    // 1. Universal Audio Architecture: Genesis YM2612 2-op FM + SPC700 Delay
+    // ==========================================
+    let audioCtx = null;
+    let audioEnabled = safeGetStorage('ktask_audio_enabled') !== '0';
+
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          audioCtx = new AudioContext();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function updateAudioButtonUI() {
+      const icon = document.getElementById('audioIcon');
+      const btn = document.getElementById('btnAudioToggle');
+      if (icon) icon.textContent = audioEnabled ? '🔊' : '🔇';
+      if (btn) btn.title = audioEnabled ? 'Sound Effects & YM2612 FM Audio Active [S]' : 'Sound Effects Muted [S]';
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      safeSetStorage('ktask_audio_enabled', audioEnabled ? '1' : '0');
+      updateAudioButtonUI();
+      if (audioEnabled) {
+        playSaveSound();
+        showToast('Sound Effects Enabled (Genesis YM2612 2-op FM) [S]');
+      } else {
+        showToast('Sound Effects Muted [S]');
+      }
+    }
+
+    function playFMSound(carrierFreq, modRatio, modIndex, duration, decayTime, gainVal = 0.12) {
+      if (!audioEnabled) return;
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+
+      try {
+        const now = ctx.currentTime;
+        const carrier = ctx.createOscillator();
+        const modulator = ctx.createOscillator();
+        const modGain = ctx.createGain();
+        const masterGain = ctx.createGain();
+
+        // 2-Operator FM modulation
+        modulator.frequency.setValueAtTime(carrierFreq * modRatio, now);
+        modulator.frequency.exponentialRampToValueAtTime(Math.max(10, carrierFreq * modRatio * 0.75), now + duration);
+
+        modGain.gain.setValueAtTime(carrierFreq * modIndex, now);
+        modGain.gain.exponentialRampToValueAtTime(0.01, now + decayTime);
+
+        carrier.frequency.setValueAtTime(carrierFreq, now);
+
+        masterGain.gain.setValueAtTime(gainVal, now);
+        masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(masterGain);
+
+        // SPC700 stereo delay warmth
+        const delay = ctx.createDelay();
+        delay.delayTime.setValueAtTime(0.08, now);
+        const delayGain = ctx.createGain();
+        delayGain.gain.setValueAtTime(0.2, now);
+
+        masterGain.connect(ctx.destination);
+        masterGain.connect(delay);
+        delay.connect(delayGain);
+        delayGain.connect(ctx.destination);
+
+        carrier.start(now);
+        modulator.start(now);
+        carrier.stop(now + duration + 0.1);
+        modulator.stop(now + duration + 0.1);
+      } catch (e) {}
+    }
+
+    function playKillSound() {
+      playFMSound(120, 2.0, 3.5, 0.35, 0.25, 0.18);
+    }
+
+    function playSpawnSound() {
+      playFMSound(520, 1.5, 2.0, 0.18, 0.15, 0.12);
+    }
+
+    function playAlarmSound() {
+      playFMSound(880, 0.5, 4.0, 0.28, 0.2, 0.14);
+    }
+
+    function playSaveSound() {
+      playFMSound(660, 2.0, 1.5, 0.15, 0.12, 0.1);
+      setTimeout(() => playFMSound(880, 2.0, 1.5, 0.2, 0.18, 0.1), 80);
+    }
+
+    function playPingSound() {
+      playFMSound(1200, 3.0, 1.2, 0.25, 0.2, 0.12);
+    }
+
+    // ==========================================
+    // 2. Memory Delta & Allocation Leak Sentinel
+    // ==========================================
+    let deltaMode = false;
+    let baselineMemory = {};
+    let consecutiveGrowthCounts = {};
+
+    function toggleDeltaMode() {
+      deltaMode = !deltaMode;
+      const btn = document.getElementById('deltaModeBtn');
+      if (btn) {
+        btn.classList.toggle('active', deltaMode);
+        btn.style.background = deltaMode ? 'var(--primary-muted)' : '';
+        btn.style.color = deltaMode ? 'var(--primary)' : '';
+      }
+      if (deltaMode && Object.keys(baselineMemory).length === 0) {
+        zeroMemoryBaseline();
+      } else {
+        renderTasks();
+      }
+      showToast(deltaMode ? 'Memory Allocation Delta Mode Active [D]' : 'Memory Delta Tracking Hidden [D]');
+    }
+
+    function zeroMemoryBaseline() {
+      baselineMemory = {};
+      allTasks.forEach(task => {
+        const id = String(task.id);
+        const memVal = parseFloat(taskStats[id]?.mem || 20.0);
+        baselineMemory[id] = memVal;
+      });
+      consecutiveGrowthCounts = {};
+      renderTasks();
+      playSaveSound();
+      showToast('Memory baseline zeroed across all active tasks');
+    }
+
+    // ==========================================
+    // 3. Network Sockets & Port Monitor Engine
+    // ==========================================
+    let defaultSockets = [
+      { pid: '1004', name: 'KiloOS Kernel Services', proto: 'TCP', local: '0.0.0.0:1999', remote: '10.19.99.4:1999', state: 'ESTABLISHED', rx: 42.8, tx: 18.4, latency: 12, packets: 1482 },
+      { pid: '1420', name: 'KExplorer File Manager', proto: 'TCP', local: '127.0.0.1:8080', remote: '127.0.0.1:5228', state: 'ESTABLISHED', rx: 14.2, tx: 6.8, latency: 2, packets: 856 },
+      { pid: '1842', name: 'KTask Process Monitor', proto: 'TCP', local: '127.0.0.1:443', remote: 'kiloapps.web.app:443', state: 'ESTABLISHED', rx: 28.5, tx: 9.1, latency: 24, packets: 2190 },
+      { pid: '1004', name: 'KiloOS Kernel Services', proto: 'UDP', local: '0.0.0.0:53', remote: '10.19.99.1:53', state: 'LISTEN', rx: 2.1, tx: 1.8, latency: 8, packets: 420 },
+      { pid: '2105', name: 'KPad Text Editor', proto: 'TCP', local: '127.0.0.1:3000', remote: '127.0.0.1:5432', state: 'TIME_WAIT', rx: 0.2, tx: 0.1, latency: 4, packets: 120 },
+      { pid: '3290', name: 'KCalc Calculator', proto: 'UDP', local: '127.0.0.1:9090', remote: '127.0.0.1:9091', state: 'LISTEN', rx: 0.0, tx: 0.0, latency: 1, packets: 45 }
+    ];
+    let activeSockets = [...defaultSockets];
+    let selectedSocketIndex = 0;
+
+    function renderNetworkSockets() {
+      const tbody = document.getElementById('network-sockets-tbody');
+      if (!tbody) return;
+
+      const search = (document.getElementById('networkSearchInput')?.value || '').toLowerCase().trim();
+      const proto = document.getElementById('netProtoSelect')?.value || 'all';
+      const state = document.getElementById('netStateSelect')?.value || 'all';
+
+      let filtered = activeSockets.filter(s => {
+        if (proto !== 'all' && s.proto.toLowerCase() !== proto) return false;
+        if (state !== 'all' && s.state.toLowerCase() !== state) return false;
+        if (search) {
+          const match = s.pid.includes(search) || s.name.toLowerCase().includes(search) ||
+                        s.local.toLowerCase().includes(search) || s.remote.toLowerCase().includes(search);
+          if (!match) return false;
+        }
+        return true;
+      });
+
+      tbody.innerHTML = '';
+      let totalRx = 0, totalTx = 0, totalLat = 0;
+
+      activeSockets.forEach(s => {
+        totalRx += s.rx;
+        totalTx += s.tx;
+        totalLat += s.latency;
+      });
+
+      const totSockEl = document.getElementById('net-total-sockets');
+      const rxRateEl = document.getElementById('net-rx-rate');
+      const txRateEl = document.getElementById('net-tx-rate');
+      const latEl = document.getElementById('net-avg-latency');
+
+      if (totSockEl) totSockEl.textContent = activeSockets.length;
+      if (rxRateEl) rxRateEl.textContent = totalRx.toFixed(1) + ' KB/s';
+      if (txRateEl) txRateEl.textContent = totalTx.toFixed(1) + ' KB/s';
+      if (latEl && activeSockets.length > 0) latEl.textContent = Math.round(totalLat / activeSockets.length) + ' ms';
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding:24px;">No sockets match current criteria.</td></tr>`;
+        return;
+      }
+
+      filtered.forEach((s, idx) => {
+        const tr = document.createElement('tr');
+        const isSelected = idx === selectedSocketIndex;
+        if (isSelected) tr.style.background = 'rgba(56, 189, 248, 0.08)';
+        tr.style.cursor = 'pointer';
+        tr.onclick = () => { selectedSocketIndex = idx; renderNetworkSockets(); };
+
+        let stateClass = 'socket-state-est';
+        if (s.state === 'LISTEN') stateClass = 'socket-state-listen';
+        else if (s.state === 'TIME_WAIT') stateClass = 'socket-state-wait';
+        else if (s.state === 'CLOSED') stateClass = 'socket-state-close';
+
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(s.name)}</strong> <span style="font-family:monospace; color:var(--text-muted);">[PID: ${s.pid}]</span></td>
+          <td><span class="socket-port-tag">${s.proto}</span></td>
+          <td style="font-family:monospace;">${escapeHtml(s.local)}</td>
+          <td style="font-family:monospace; color:${s.remote.includes('10.19.99') ? 'var(--warning)' : 'var(--text-main)'};">
+            ${escapeHtml(s.remote)} ${s.remote.includes('10.19.99') ? '🔒' : ''}
+          </td>
+          <td><span class="socket-state-badge ${stateClass}">${s.state}</span></td>
+          <td style="color:var(--success); font-family:monospace;">${s.rx.toFixed(1)} KB/s</td>
+          <td style="color:var(--purple); font-family:monospace;">${s.tx.toFixed(1)} KB/s</td>
+          <td style="font-family:monospace;">${s.latency} ms</td>
+          <td>
+            <button class="btn-secondary" style="padding:2px 6px; font-size:10px;" onclick="pingSocket('${s.remote}', event)">Ping</button>
+            <button class="btn-secondary" style="padding:2px 6px; font-size:10px; color:var(--danger);" onclick="terminateSocket(${idx}, event)">Reset</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function pingSocket(remote, event) {
+      if (event) event.stopPropagation();
+      playPingSound();
+      const rtt = Math.floor(Math.random() * 25) + 6;
+      showToast(`📡 Ping to [${remote}]: ICMP reply 64 bytes in ${rtt} ms (TTL=64)`);
+    }
+
+    function terminateSocket(idx, event) {
+      if (event) event.stopPropagation();
+      playKillSound();
+      const s = activeSockets[idx];
+      if (s) {
+        s.state = 'CLOSED';
+        s.rx = 0;
+        s.tx = 0;
+        showToast(`⚡ Socket [${s.local} <-> ${s.remote}] connection reset.`);
+        renderNetworkSockets();
+      }
+    }
+
+    function sendSocketPingProbe() {
+      const s = activeSockets[selectedSocketIndex] || activeSockets[0];
+      if (s) {
+        pingSocket(s.remote);
+      } else {
+        showToast('No active socket selected for ping probe.');
+      }
+    }
+
+    function resetSelectedSocket() {
+      if (activeSockets.length > 0) {
+        terminateSocket(selectedSocketIndex);
+      }
+    }
+
+    function exportSocketsCSV() {
+      let csv = 'PID,Process,Protocol,Local Address,Remote Address,State,RX (KB/s),TX (KB/s),Latency (ms)\n';
+      activeSockets.forEach(s => {
+        csv += `"${s.pid}","${s.name}","${s.proto}","${s.local}","${s.remote}","${s.state}",${s.rx.toFixed(1)},${s.tx.toFixed(1)},${s.latency}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      safeDownloadBlob(blob, `ktask_sockets_${Date.now()}.csv`);
+      showToast('Exported Network Sockets list to CSV.');
+    }
+
+    function exportSocketsJSON() {
+      const blob = new Blob([JSON.stringify(activeSockets, null, 2)], { type: 'application/json;charset=utf-8;' });
+      safeDownloadBlob(blob, `ktask_sockets_${Date.now()}.json`);
+      showToast('Exported Network Sockets list to JSON.');
+    }
+
+    // ==========================================
+    // 4. Fleet Sentinel Telemetry (Firebase RTDB + Solo Offline Fallback)
+    // ==========================================
+    let localNodeId = 'NODE-' + Math.floor(1000 + Math.random() * 9000).toString(16).toUpperCase();
+    let fleetNodes = [
+      { id: localNodeId, host: 'KiloStation-7F', os: 'KiloOS 1999 / x64', tasks: 5, cpu: 12, ram: '2.4 GB', latency: 0, isLocal: true, time: Date.now() },
+      { id: 'NODE-ALPHA', host: 'Gateway-10.19.99.1', os: 'KiloOS Server 1999', tasks: 18, cpu: 22, ram: '4.8 GB', latency: 14, isLocal: false, time: Date.now() - 3000 },
+      { id: 'NODE-ECHO', host: 'Echo-10.19.99.4', os: 'KiloOS Signal Core', tasks: 9, cpu: 16, ram: '3.1 GB', latency: 28, isLocal: false, time: Date.now() - 5000 }
+    ];
+
+    function initFirebaseSentinel() {
+      if (!window.fb || !window.fb.db) return;
+      const db = window.fb.db;
+      const ref = window.fb.ref;
+      const set = window.fb.set;
+      const onValue = window.fb.onValue;
+      const onDisconnect = window.fb.onDisconnect;
+
+      try {
+        const nodeRef = ref(db, `multiplayer/ktask/nodes/${localNodeId}`);
+        const myTelemetry = {
+          id: localNodeId,
+          host: 'KiloStation-' + localNodeId.slice(-4),
+          os: 'KiloOS 1999 / x64',
+          tasks: allTasks.length,
+          cpu: Math.floor(Math.random() * 20 + 8),
+          ram: (2.2 + Math.random() * 0.4).toFixed(1) + ' GB',
+          timestamp: Date.now()
+        };
+        set(nodeRef, myTelemetry);
+        onDisconnect(nodeRef).remove();
+
+        const allNodesRef = ref(db, 'multiplayer/ktask/nodes');
+        onValue(allNodesRef, (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            const nodes = [];
+            Object.keys(data).forEach(key => {
+              const item = data[key];
+              nodes.push({
+                id: item.id || key,
+                host: item.host || 'KiloStation',
+                os: item.os || 'KiloOS 1999',
+                tasks: item.tasks || 5,
+                cpu: item.cpu || 10,
+                ram: item.ram || '2.0 GB',
+                latency: item.id === localNodeId ? 0 : Math.floor(Math.random() * 40 + 10),
+                isLocal: item.id === localNodeId,
+                time: item.timestamp || Date.now()
+              });
+            });
+            if (nodes.length < 3) {
+              if (!nodes.some(n => n.id === 'NODE-ALPHA')) {
+                nodes.push({ id: 'NODE-ALPHA', host: 'Gateway-10.19.99.1', os: 'KiloOS Server 1999', tasks: 18, cpu: 22, ram: '4.8 GB', latency: 14, isLocal: false, time: Date.now() - 3000 });
+              }
+              if (!nodes.some(n => n.id === 'NODE-ECHO')) {
+                nodes.push({ id: 'NODE-ECHO', host: 'Echo-10.19.99.4', os: 'KiloOS Signal Core', tasks: 9, cpu: 16, ram: '3.1 GB', latency: 28, isLocal: false, time: Date.now() - 5000 });
+              }
+            }
+            fleetNodes = nodes;
+            renderFleetNodes();
+            const badge = document.getElementById('sentinelStatusBadge');
+            if (badge) {
+              badge.textContent = '● RTDB LIVE';
+              badge.style.color = 'var(--success)';
+            }
+          }
+        });
+
+        const signalsRef = ref(db, 'multiplayer/ktask/signals');
+        onValue(signalsRef, (snapshot) => {
+          const val = snapshot.val();
+          if (val && val.sender && val.sender !== localNodeId && Date.now() - val.time < 5000) {
+            playAlarmSound();
+            showToast(`⚡ Diagnostic pulse received from remote node [${val.sender}]`);
+          }
+        });
+      } catch (e) {
+        console.warn('Firebase telemetry registration error:', e);
+      }
+    }
+
+    window.initFirebaseSentinel = initFirebaseSentinel;
+
+    function broadcastDiagnosticSignal() {
+      playAlarmSound();
+      showToast(`⚡ Broadcasting telemetry diagnostic pulse from [${localNodeId}]...`);
+
+      if (window.fb && window.fb.db) {
+        try {
+          const ref = window.fb.ref;
+          const set = window.fb.set;
+          const signalRef = ref(window.fb.db, 'multiplayer/ktask/signals');
+          set(signalRef, { sender: localNodeId, time: Date.now(), type: 'PULSE' });
+
+          const argRef = ref(window.fb.db, `arg/signals/ktask/${localNodeId}`);
+          set(argRef, {
+            source: 'ktask',
+            node: localNodeId,
+            freq: 1999,
+            status: 'SYNCED',
+            time: Date.now()
+          });
+        } catch(e) {}
+      }
+    }
+
+    function refreshFleetNodes() {
+      playPingSound();
+      fleetNodes.forEach(node => {
+        if (!node.isLocal) {
+          node.cpu = Math.max(4, Math.min(85, node.cpu + Math.floor((Math.random() - 0.5) * 8)));
+          node.time = Date.now() - Math.floor(Math.random() * 4000);
+        }
+      });
+      renderFleetNodes();
+      showToast('Fleet node telemetry refreshed.');
+    }
+
+    function pingFleetNode(nodeId) {
+      playPingSound();
+      const node = fleetNodes.find(n => n.id === nodeId);
+      const lat = node ? (node.isLocal ? 0 : node.latency) : 18;
+      showToast(`📡 Ping to [${nodeId}]: echo response received in ${lat} ms.`);
+    }
+
+    function renderFleetNodes() {
+      const tbody = document.getElementById('sentinel-nodes-tbody');
+      if (!tbody) return;
+
+      const countEl = document.getElementById('sentinel-node-count');
+      const meanCpuEl = document.getElementById('sentinel-mean-cpu');
+      const aggRamEl = document.getElementById('sentinel-agg-ram');
+
+      if (countEl) countEl.textContent = fleetNodes.length;
+
+      let totalCpu = 0;
+      fleetNodes.forEach(n => totalCpu += n.cpu);
+      if (meanCpuEl && fleetNodes.length > 0) meanCpuEl.textContent = Math.round(totalCpu / fleetNodes.length) + '%';
+      if (aggRamEl) aggRamEl.textContent = (fleetNodes.length * 3.4).toFixed(1) + ' GB';
+
+      tbody.innerHTML = '';
+      fleetNodes.forEach(node => {
+        const tr = document.createElement('tr');
+        if (node.isLocal) tr.style.background = 'rgba(56, 189, 248, 0.08)';
+
+        tr.innerHTML = `
+          <td>
+            <strong style="color:${node.isLocal ? 'var(--primary)' : 'var(--text-main)'}; font-family:monospace;">
+              ${escapeHtml(node.id)}
+            </strong>
+            ${node.isLocal ? '<span class="status-badge" style="background:var(--primary-muted); color:var(--primary); font-size:9px; margin-left:4px;">LOCAL</span>' : ''}
+          </td>
+          <td style="font-family:monospace;">${escapeHtml(node.host)}</td>
+          <td style="color:var(--text-muted);">${escapeHtml(node.os)}</td>
+          <td style="font-family:monospace;">${node.tasks} tasks</td>
+          <td>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div style="flex:1; width:60px; height:6px; background:rgba(0,0,0,0.3); border-radius:3px; overflow:hidden;">
+                <div style="width:${node.cpu}%; height:100%; background:${node.cpu>50?'var(--warning)':'var(--success)'};"></div>
+              </div>
+              <span style="font-family:monospace; font-size:11px;">${node.cpu}%</span>
+            </div>
+          </td>
+          <td style="font-family:monospace; color:var(--purple);">${node.ram}</td>
+          <td style="color:var(--text-muted); font-size:11px;">${Math.round((Date.now() - node.time)/1000)}s ago</td>
+          <td>
+            <button class="btn-secondary" style="padding:2px 8px; font-size:10px;" onclick="pingFleetNode('${node.id}')">Ping</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ==========================================
+    // 5. Process Profiler & Flamegraph Engine
+    // ==========================================
+    let isSamplingProfile = false;
+    let profilerTargetId = '1004';
+
+    function onProfilerTargetChange() {
+      const sel = document.getElementById('profilerProcessSelect');
+      if (sel) profilerTargetId = sel.value;
+      updateProfilerUI();
+    }
+
+    function updateProfilerUI() {
+      const sel = document.getElementById('profilerProcessSelect');
+      if (sel) {
+        const curVal = sel.value || profilerTargetId;
+        sel.innerHTML = '';
+        allTasks.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.id;
+          opt.textContent = `[PID ${t.id}] ${t.title}`;
+          if (t.id === curVal) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      }
+
+      const target = allTasks.find(t => String(t.id) === String(profilerTargetId)) || allTasks[0];
+      const targetLabel = document.getElementById('prof-target-label');
+      if (targetLabel && target) {
+        targetLabel.textContent = `Process: ${target.title} (PID: ${target.id})`;
+      }
+    }
+
+    function runProcessProfile() {
+      if (isSamplingProfile) return;
+      isSamplingProfile = true;
+
+      playPingSound();
+      const progContainer = document.getElementById('profileProgressContainer');
+      const progBar = document.getElementById('profileProgressBar');
+      const btn = document.getElementById('btnStartProfile');
+
+      if (progContainer) progContainer.style.display = 'flex';
+      if (btn) btn.disabled = true;
+
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 5;
+        if (progBar) progBar.style.width = progress + '%';
+        if (progress >= 100) {
+          clearInterval(interval);
+          isSamplingProfile = false;
+          if (progContainer) progContainer.style.display = 'none';
+          if (btn) btn.disabled = false;
+          finishProfileSampling();
+        }
+      }, 150);
+    }
+
+    function finishProfileSampling() {
+      playSaveSound();
+      const target = allTasks.find(t => String(t.id) === String(profilerTargetId)) || allTasks[0];
+      const cycles = Math.floor(Math.random() * 8000000) + 12000000;
+      const ipc = (1.6 + Math.random() * 0.5).toFixed(2);
+      const cache = (95.0 + Math.random() * 4.5).toFixed(1);
+      const branch = (97.5 + Math.random() * 2.2).toFixed(1);
+
+      const cEl = document.getElementById('prof-cycles');
+      const ipcEl = document.getElementById('prof-ipc');
+      const cacheEl = document.getElementById('prof-cache');
+      const brEl = document.getElementById('prof-branch');
+
+      if (cEl) cEl.textContent = cycles.toLocaleString();
+      if (ipcEl) ipcEl.textContent = ipc + ' IPC';
+      if (cacheEl) cacheEl.textContent = cache + '%';
+      if (brEl) brEl.textContent = branch + '%';
+
+      const pct1 = Math.floor(Math.random() * 15 + 25);
+      const pct2 = Math.floor(Math.random() * 10 + 20);
+      const pct3 = Math.floor(Math.random() * 8 + 15);
+      const pct4 = Math.floor(Math.random() * 8 + 12);
+      const pct5 = 100 - (pct1 + pct2 + pct3 + pct4);
+
+      const flameRow = document.getElementById('flameBarRow');
+      if (flameRow) {
+        flameRow.innerHTML = `
+          <div class="flame-segment" style="width: ${pct1}%; background: #38bdf8;" title="RenderLoop (${pct1}%)">Render (${pct1}%)</div>
+          <div class="flame-segment" style="width: ${pct2}%; background: #a855f7;" title="Win32_MsgPump (${pct2}%)">MsgPump (${pct2}%)</div>
+          <div class="flame-segment" style="width: ${pct3}%; background: #34d399;" title="Heap_Alloc (${pct3}%)">Heap (${pct3}%)</div>
+          <div class="flame-segment" style="width: ${pct4}%; background: #fbbf24;" title="AudioDSP_YM2612 (${pct4}%)">Audio (${pct4}%)</div>
+          <div class="flame-segment" style="width: ${pct5}%; background: #ef4444;" title="Socket_IO (${pct5}%)">Socket (${pct5}%)</div>
+        `;
+      }
+
+      const tbody = document.getElementById('profiler-functions-tbody');
+      if (tbody && target) {
+        tbody.innerHTML = `
+          <tr><td><code>RenderLoop_Canvas()</code></td><td>${target.title}.exe</td><td>${Math.round(cycles * pct1 / 100).toLocaleString()}</td><td style="color:var(--primary); font-weight:700;">${pct1}.0%</td><td>${pct1}.0%</td><td>1,420</td></tr>
+          <tr><td><code>Win32_MessagePump()</code></td><td>user32.dll</td><td>${Math.round(cycles * pct2 / 100).toLocaleString()}</td><td style="color:var(--purple); font-weight:700;">${pct2}.0%</td><td>${pct2}.0%</td><td>3,890</td></tr>
+          <tr><td><code>MemoryAlloc_Heap()</code></td><td>ntdll.dll</td><td>${Math.round(cycles * pct3 / 100).toLocaleString()}</td><td style="color:var(--success); font-weight:700;">${pct3}.0%</td><td>${pct3}.0%</td><td>850</td></tr>
+          <tr><td><code>AudioDSP_YM2612()</code></td><td>winmm.dll</td><td>${Math.round(cycles * pct4 / 100).toLocaleString()}</td><td style="color:var(--warning); font-weight:700;">${pct4}.0%</td><td>${pct4}.0%</td><td>620</td></tr>
+          <tr><td><code>Socket_IO_Poll()</code></td><td>ws2_32.dll</td><td>${Math.round(cycles * pct5 / 100).toLocaleString()}</td><td style="color:var(--danger); font-weight:700;">${pct5}.0%</td><td>${pct5}.0%</td><td>210</td></tr>
+        `;
+      }
+
+      showToast(`✅ Profile sampling complete for [${target.title}] (${cycles.toLocaleString()} cycles).`);
+    }
+
+    function runInspectProfile() {
+      playPingSound();
+      setTimeout(() => {
+        playSaveSound();
+        showToast('Inspection call stack updated for selected process.');
+      }, 1000);
+    }
+
+    function exportProfileReport() {
+      const target = allTasks.find(t => String(t.id) === String(profilerTargetId)) || allTasks[0];
+      const report = {
+        target: target ? target.title : 'KTask',
+        pid: target ? target.id : '1004',
+        timestamp: new Date().toISOString(),
+        metrics: {
+          sampledCycles: document.getElementById('prof-cycles')?.textContent || '0',
+          ipc: document.getElementById('prof-ipc')?.textContent || '1.82 IPC',
+          cacheHitRate: document.getElementById('prof-cache')?.textContent || '97.4%',
+          branchAccuracy: document.getElementById('prof-branch')?.textContent || '98.8%'
+        },
+        subsystems: [
+          { name: 'RenderLoop_Canvas()', share: '32%' },
+          { name: 'Win32_MessagePump()', share: '26%' },
+          { name: 'MemoryAlloc_Heap()', share: '18%' },
+          { name: 'AudioDSP_YM2612()', share: '14%' },
+          { name: 'Socket_IO_Poll()', share: '10%' }
+        ]
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(JSON.stringify(report, null, 2));
+      }
+      showToast('📋 Profiler execution trace copied to clipboard.');
+    }
+
+    // Safe LocalStorage helpers with quota error handling
     function safeGetStorage(key) {
       try {
         return localStorage.getItem(key);
@@ -1225,8 +2632,16 @@
 
     function safeSetStorage(key, val) {
       try {
-        localStorage.setItem(key, val);
-      } catch (e) {}
+        if (val === null || val === undefined) {
+          localStorage.removeItem(key);
+        } else {
+          localStorage.setItem(key, typeof val === 'string' ? val : JSON.stringify(val));
+        }
+        return true;
+      } catch (e) {
+        console.warn('Storage quota exceeded or storage unavailable:', e);
+        return false;
+      }
     }
 
     // Persist and restore user preferences
@@ -1234,7 +2649,8 @@
       const settings = {
         autoRefresh: document.getElementById('autoRefreshToggle')?.checked ?? true,
         sort: document.getElementById('sortSelect')?.value || 'name',
-        filter: document.getElementById('filterSelect')?.value || 'all'
+        filter: document.getElementById('filterSelect')?.value || 'all',
+        viewMode: viewMode
       };
       safeSetStorage('ktask_settings', JSON.stringify(settings));
     }
@@ -1255,7 +2671,26 @@
           document.getElementById('filterSelect').value = settings.filter;
           syncFilterChips();
         }
+        if (settings.viewMode) {
+          viewMode = settings.viewMode;
+          updateViewModeButton();
+        }
       } catch (e) {}
+    }
+
+    function toggleViewMode() {
+      viewMode = viewMode === 'flat' ? 'tree' : 'flat';
+      updateViewModeButton();
+      saveUserSettings();
+      renderTasks();
+      showToast(viewMode === 'tree' ? 'Switched to Process Tree Hierarchy [T]' : 'Switched to Flat Process List [T]');
+    }
+
+    function updateViewModeButton() {
+      const btn = document.getElementById('viewModeToggleBtn');
+      if (btn) {
+        btn.textContent = viewMode === 'tree' ? '📋 Flat [T]' : '🌲 Tree [T]';
+      }
     }
 
     // Tutorial modal handlers
@@ -1267,10 +2702,7 @@
     function closeTutorialModal() {
       const modal = document.getElementById('tutorialModal');
       if (modal) modal.classList.remove('active');
-      const dontShow = document.getElementById('dontShowTutorialAgain');
-      if (dontShow && dontShow.checked) {
-        safeSetStorage('ktask_tutorialSeen', '1');
-      }
+      safeSetStorage('ktask_tutorialSeen', '1');
     }
 
     // Quicksave and Quickload snapshot handlers
@@ -1279,14 +2711,24 @@
         const payload = {
           timestamp: Date.now(),
           tasks: allTasks,
+          spawnedTasks: spawnedTasks,
           stats: taskStats,
           peakCpu: peakCpu,
+          viewMode: viewMode,
+          activeTab: activeTab,
           filter: document.getElementById('filterSelect')?.value || 'all',
-          sort: document.getElementById('sortSelect')?.value || 'name'
+          sort: document.getElementById('sortSelect')?.value || 'name',
+          searchQuery: document.getElementById('searchInput')?.value || '',
+          selectedTaskId: selectedTaskId
         };
-        safeSetStorage('ktask_quicksave', JSON.stringify(payload));
+        const ok = safeSetStorage('ktask_quicksave', JSON.stringify(payload));
+        if (!ok) {
+          showToast('Storage quota exceeded or save failed.');
+          return;
+        }
+        safeSetStorage('ktask_tutorialSeen', '1');
         const timeStr = new Date().toLocaleTimeString();
-        showToast(`Quicksave snapshot created at ${timeStr} [F5]`);
+        showToast(`★ Quicksave snapshot created at ${timeStr} [F5]`);
       } catch (err) {
         showToast('Failed to save quicksave snapshot.');
       }
@@ -1305,8 +2747,21 @@
           return;
         }
         allTasks = data.tasks;
+        if (Array.isArray(data.spawnedTasks)) {
+          spawnedTasks = data.spawnedTasks;
+        }
         if (data.stats) taskStats = data.stats;
-        if (data.peakCpu) peakCpu = data.peakCpu;
+        if (data.peakCpu != null) peakCpu = data.peakCpu;
+        if (data.viewMode) {
+          viewMode = data.viewMode;
+          updateViewModeButton();
+        }
+        if (data.activeTab && data.activeTab !== activeTab) {
+          switchTab(data.activeTab);
+        }
+        if (data.searchQuery !== undefined && document.getElementById('searchInput')) {
+          document.getElementById('searchInput').value = data.searchQuery;
+        }
         if (data.filter && document.getElementById('filterSelect')) {
           document.getElementById('filterSelect').value = data.filter;
           syncFilterChips();
@@ -1314,17 +2769,75 @@
         if (data.sort && document.getElementById('sortSelect')) {
           document.getElementById('sortSelect').value = data.sort;
         }
-        // Pause auto-refresh so user can examine the restored snapshot
         stopAutoRefresh();
         const toggle = document.getElementById('autoRefreshToggle');
         if (toggle) toggle.checked = false;
         saveUserSettings();
-        selectedTaskId = allTasks[0]?.id || null;
+        selectedTaskId = data.selectedTaskId || allTasks[0]?.id || null;
         renderTasks();
+        safeSetStorage('ktask_tutorialSeen', '1');
         const timeStr = new Date(data.timestamp || Date.now()).toLocaleTimeString();
-        showToast(`Loaded quicksave snapshot from ${timeStr} [F9] (Auto-refresh paused)`);
+        showToast(`📂 Loaded quicksave snapshot from ${timeStr} [F9] (Auto-refresh paused)`);
       } catch (err) {
         showToast('Failed to load quicksave snapshot.');
+      }
+    }
+
+    // Auto-save and restore working session state
+    function autoSaveState() {
+      try {
+        const state = {
+          tasks: allTasks,
+          spawnedTasks: spawnedTasks,
+          stats: taskStats,
+          peakCpu: peakCpu,
+          viewMode: viewMode,
+          activeTab: activeTab,
+          filter: document.getElementById('filterSelect')?.value || 'all',
+          sort: document.getElementById('sortSelect')?.value || 'name',
+          searchQuery: document.getElementById('searchInput')?.value || '',
+          selectedTaskId: selectedTaskId,
+          autoRefresh: document.getElementById('autoRefreshToggle')?.checked ?? true
+        };
+        safeSetStorage('ktask_session_state', JSON.stringify(state));
+      } catch (e) {}
+    }
+
+    function restoreSessionState() {
+      try {
+        const raw = safeGetStorage('ktask_session_state');
+        if (!raw) return false;
+        const data = JSON.parse(raw);
+        if (!Array.isArray(data.tasks) || data.tasks.length === 0) return false;
+        allTasks = data.tasks;
+        if (Array.isArray(data.spawnedTasks)) spawnedTasks = data.spawnedTasks;
+        if (data.stats) taskStats = data.stats;
+        if (data.peakCpu != null) peakCpu = data.peakCpu;
+        if (data.viewMode) {
+          viewMode = data.viewMode;
+          updateViewModeButton();
+        }
+        if (data.activeTab && data.activeTab !== 'tasks') {
+          switchTab(data.activeTab);
+        }
+        if (data.searchQuery && document.getElementById('searchInput')) {
+          document.getElementById('searchInput').value = data.searchQuery;
+        }
+        if (data.filter && document.getElementById('filterSelect')) {
+          document.getElementById('filterSelect').value = data.filter;
+          syncFilterChips();
+        }
+        if (data.sort && document.getElementById('sortSelect')) {
+          document.getElementById('sortSelect').value = data.sort;
+        }
+        if (data.selectedTaskId) selectedTaskId = data.selectedTaskId;
+        if (typeof data.autoRefresh === 'boolean') {
+          const toggle = document.getElementById('autoRefreshToggle');
+          if (toggle) toggle.checked = data.autoRefresh;
+        }
+        return true;
+      } catch (e) {
+        return false;
       }
     }
 
@@ -1342,6 +2855,7 @@
           }
           allTasks = data.map((item, idx) => ({
             id: String(item.pid || item.id || (5000 + idx)),
+            ppid: String(item.ppid || '1004'),
             title: String(item.name || item.title || 'Imported Task')
           }));
           data.forEach(item => {
@@ -1349,7 +2863,8 @@
             taskStats[id] = {
               mem: item.memoryMB != null ? String(item.memoryMB) : (item.mem != null ? String(item.mem) : '20.0'),
               cpu: item.cpuPercent != null ? String(item.cpuPercent) : (item.cpu != null ? String(item.cpu) : '1.0'),
-              priority: item.priority || 'Normal'
+              priority: item.priority || 'Normal',
+              affinity: item.affinity || '0xFF'
             };
           });
           stopAutoRefresh();
@@ -1382,66 +2897,74 @@
         .replace(/'/g, '&#39;');
     }
 
-    // Dynamic System Stats update
-    setInterval(() => {
-      if (document.hidden) return;
+    // Dynamic System Stats update with lifecycle interval control
+    let sysStatsInterval = null;
+    function startSysStatsInterval() {
+      stopSysStatsInterval();
+      sysStatsInterval = setInterval(() => {
+        if (document.hidden) return;
 
-      const cpu = Math.floor(Math.random() * 25) + 5;
-      if (cpu > peakCpu) peakCpu = cpu;
+        const cpu = Math.floor(Math.random() * 25) + 5;
+        if (cpu > peakCpu) peakCpu = cpu;
 
-      const cpuVal = document.getElementById('cpu-val');
-      const cpuFill = document.getElementById('cpu-fill');
-      if (cpuVal) cpuVal.innerText = cpu + '%';
-      if (cpuFill) {
-        cpuFill.style.width = cpu + '%';
-        cpuFill.style.backgroundColor = cpu > 80 ? 'hsl(0, 85%, 60%)' : (cpu > 50 ? 'hsl(40, 85%, 55%)' : 'hsl(200, 85%, 60%)');
-      }
-
-      const memBase = 2.2;
-      const mem = parseFloat((memBase + Math.random() * 0.5).toFixed(1));
-      const memVal = document.getElementById('mem-val');
-      const memFill = document.getElementById('mem-fill');
-      if (memVal) memVal.innerText = mem + ' GB';
-      if (memFill) memFill.style.width = Math.floor((mem / 8.0) * 100) + '%';
-
-      // Status Badge
-      const sysStatus = document.getElementById('sys-status-badge');
-      if (sysStatus) {
-        if (cpu > 75 || mem > 6.0) {
-          sysStatus.innerText = 'HIGH LOAD';
-          sysStatus.style.color = 'var(--danger)';
-        } else if (cpu > 45 || mem > 4.5) {
-          sysStatus.innerText = 'MODERATE';
-          sysStatus.style.color = 'var(--warning)';
-        } else {
-          sysStatus.innerText = 'OPTIMAL';
-          sysStatus.style.color = 'var(--success)';
+        const cpuVal = document.getElementById('cpu-val');
+        const cpuFill = document.getElementById('cpu-fill');
+        if (cpuVal) cpuVal.innerText = cpu + '%';
+        if (cpuFill) {
+          cpuFill.style.width = cpu + '%';
+          cpuFill.style.backgroundColor = cpu > 80 ? 'hsl(0, 85%, 60%)' : (cpu > 50 ? 'hsl(40, 85%, 55%)' : 'hsl(200, 85%, 60%)');
         }
+
+        const memBase = 2.2;
+        const mem = parseFloat((memBase + Math.random() * 0.5).toFixed(1));
+        const memVal = document.getElementById('mem-val');
+        const memFill = document.getElementById('mem-fill');
+        if (memVal) memVal.innerText = mem + ' GB';
+        if (memFill) memFill.style.width = Math.floor((mem / 8.0) * 100) + '%';
+
+        // Status Badge
+        const sysStatus = document.getElementById('sys-status-badge');
+        if (sysStatus) {
+          if (cpu > 75 || mem > 6.0) {
+            sysStatus.innerText = 'HIGH LOAD';
+            sysStatus.style.color = 'var(--danger)';
+          } else if (cpu > 45 || mem > 4.5) {
+            sysStatus.innerText = 'MODERATE';
+            sysStatus.style.color = 'var(--warning)';
+          } else {
+            sysStatus.innerText = 'OPTIMAL';
+            sysStatus.style.color = 'var(--success)';
+          }
+        }
+
+        // Uptime counter
+        const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+        const hrs = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
+        const mins = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
+        const secs = String(elapsedSec % 60).padStart(2, '0');
+        const uptimeVal = document.getElementById('uptime-val');
+        if (uptimeVal) uptimeVal.innerText = `Uptime: ${hrs}:${mins}:${secs}`;
+
+        // Update History Arrays
+        cpuHistory.push(cpu);
+        if (cpuHistory.length > HISTORY_LEN) cpuHistory.shift();
+
+        memHistory.push(mem);
+        if (memHistory.length > HISTORY_LEN) memHistory.shift();
+
+        if (activeTab === 'charts') {
+          drawCharts();
+        }
+        updateSummaryMetrics();
+      }, 2000);
+    }
+
+    function stopSysStatsInterval() {
+      if (sysStatsInterval) {
+        clearInterval(sysStatsInterval);
+        sysStatsInterval = null;
       }
-
-      // Uptime counter
-      const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
-      const hrs = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
-      const mins = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
-      const secs = String(elapsedSec % 60).padStart(2, '0');
-      const uptimeVal = document.getElementById('uptime-val');
-      if (uptimeVal) uptimeVal.innerText = `Uptime: ${hrs}:${mins}:${secs}`;
-
-      // Update History Arrays
-      cpuHistory.push(cpu);
-      if (cpuHistory.length > HISTORY_LEN) cpuHistory.shift();
-
-      memHistory.push(mem);
-      if (memHistory.length > HISTORY_LEN) memHistory.shift();
-
-      // Render Charts if active tab is charts
-      if (activeTab === 'charts') {
-        drawCharts();
-      }
-
-      // Update summary pane metrics
-      updateSummaryMetrics();
-    }, 2000);
+    }
 
     function switchTab(tabName) {
       activeTab = tabName;
@@ -1459,6 +2982,12 @@
 
       if (tabName === 'charts') {
         setTimeout(drawCharts, 50);
+      } else if (tabName === 'network') {
+        renderNetworkSockets();
+      } else if (tabName === 'sentinel') {
+        renderFleetNodes();
+      } else if (tabName === 'profiler') {
+        updateProfilerUI();
       }
     }
 
@@ -1470,16 +2999,9 @@
         window.parent.postMessage({ type: 'OS_LIST_TASKS', requestId: reqId }, '*');
       } catch(e) {}
       
-      // Fallback for standalone mode outside iframe
       setTimeout(() => {
         if (allTasks.length === 0) {
-          allTasks = [
-            { id: '1004', title: 'KiloOS Kernel Services' },
-            { id: '1420', title: 'KExplorer File Manager' },
-            { id: '1842', title: 'KTask Process Monitor' },
-            { id: '2105', title: 'KPad Text Editor' },
-            { id: '3290', title: 'KCalc Calculator' }
-          ];
+          allTasks = [...defaultSystemTasks];
           renderTasks();
         }
       }, 1000);
@@ -1536,20 +3058,34 @@
       syncFilterChips();
       saveUserSettings();
       renderTasks();
-      const label = cat === 'all' ? 'All Tasks' : (cat === 'high-cpu' ? 'High CPU' : (cat === 'high-mem' ? 'High Memory' : 'High Priority'));
-      showToast(`Filter applied: ${label}`);
+      const labelMap = {
+        'all': 'All Tasks',
+        'high-cpu': 'High CPU',
+        'high-mem': 'High Memory',
+        'high-pri': 'High Priority',
+        'system': 'System Services',
+        'user': 'User Applications'
+      };
+      showToast(`Filter applied: ${labelMap[cat] || cat}`);
     }
 
     function syncFilterChips() {
       const current = document.getElementById('filterSelect')?.value || 'all';
-      ['all', 'cpu', 'mem', 'pri'].forEach(key => {
+      ['all', 'cpu', 'mem', 'pri', 'sys', 'usr'].forEach(key => {
         const chip = document.getElementById(`chip-${key}`);
         if (chip) {
           chip.classList.remove('active');
           chip.setAttribute('aria-checked', 'false');
         }
       });
-      const activeMap = { 'all': 'chip-all', 'high-cpu': 'chip-cpu', 'high-mem': 'chip-mem', 'high-pri': 'chip-pri' };
+      const activeMap = {
+        'all': 'chip-all',
+        'high-cpu': 'chip-cpu',
+        'high-mem': 'chip-mem',
+        'high-pri': 'chip-pri',
+        'system': 'chip-sys',
+        'user': 'chip-usr'
+      };
       const activeId = activeMap[current];
       if (activeId) {
         const chip = document.getElementById(activeId);
@@ -1573,16 +3109,18 @@
       const name = demoNames[demoTaskCounter % demoNames.length];
       const newPid = String(4000 + (demoTaskCounter * 123) % 4900);
       demoTaskCounter++;
-      const newTask = { id: newPid, title: name };
+      const newTask = { id: newPid, ppid: '1420', title: name };
       spawnedTasks.unshift(newTask);
       allTasks.unshift(newTask);
       taskStats[newPid] = {
         mem: (Math.random() * 60 + 15).toFixed(1),
         cpu: (Math.random() * 6.5 + 0.5).toFixed(1),
-        priority: demoTaskCounter % 3 === 0 ? 'High' : 'Normal'
+        priority: demoTaskCounter % 3 === 0 ? 'High' : 'Normal',
+        affinity: '0xFF'
       };
       selectedTaskId = newPid;
       renderTasks();
+      playSpawnSound();
       showToast(`Spawned demo process: ${name} (PID: ${newPid})`);
     }
 
@@ -1630,7 +3168,6 @@
       const title = pendingKillTitle;
       closeKillModal();
 
-      // Immediately remove locally so standalone mode or slow parent reflects termination instantly
       allTasks = allTasks.filter(t => String(t.id) !== pid);
       spawnedTasks = spawnedTasks.filter(t => String(t.id) !== pid);
       delete taskStats[pid];
@@ -1638,6 +3175,7 @@
         selectedTaskId = allTasks.length > 0 ? String(allTasks[0].id) : null;
       }
       renderTasks();
+      playKillSound();
 
       const reqId = ++reqIdCounter;
       try {
@@ -1653,32 +3191,72 @@
       }
     }
 
+    function cycleAffinity(taskId) {
+      if (!taskStats[taskId]) return;
+      const cur = taskStats[taskId].affinity || '0xFF';
+      let next = '0xFF';
+      let desc = 'All Cores (0xFF)';
+      if (cur === '0xFF') {
+        next = '0x01';
+        desc = 'Core 0 Only (0x01)';
+      } else if (cur === '0x01') {
+        next = '0x03';
+        desc = 'Cores 0 & 1 (0x03)';
+      } else if (cur === '0x03') {
+        next = '0x0F';
+        desc = 'Perf Cores 0-3 (0x0F)';
+      } else {
+        next = '0xFF';
+        desc = 'All Cores (0xFF)';
+      }
+      taskStats[taskId].affinity = next;
+      renderTasks();
+      showToast(`PID ${taskId} CPU affinity mask set to ${desc}`);
+    }
+
+    const activeObjectUrls = new Set();
+    function safeDownloadBlob(blob, filename) {
+      let url = null;
+      let a = null;
+      try {
+        url = URL.createObjectURL(blob);
+        activeObjectUrls.add(url);
+        a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+      } catch (err) {
+        console.error('Download failed:', err);
+      } finally {
+        setTimeout(() => {
+          if (a && a.parentNode) document.body.removeChild(a);
+          if (url) {
+            try { URL.revokeObjectURL(url); } catch (e) {}
+            activeObjectUrls.delete(url);
+          }
+        }, 1500);
+      }
+    }
+
     function exportCSV() {
       if (!allTasks.length) {
         showToast('No active tasks to export.');
         return;
       }
 
-      let csv = 'PID,Process Name,CPU (%),Memory (MB),Priority,Status\n';
+      let csv = 'PID,PPID,Process Name,CPU (%),Memory (MB),Priority,Affinity,Status\n';
       allTasks.forEach(task => {
         const id = String(task.id || '');
+        const ppid = String(task.ppid || '0');
         const title = String(task.title || 'Untitled');
-        const stats = taskStats[id] || { mem: '15.0', cpu: '0.5', priority: 'Normal' };
-        csv += `"${id}","${title.replace(/"/g, '""')}",${stats.cpu},${stats.mem},"${stats.priority || 'Normal'}","Active"\n`;
+        const stats = taskStats[id] || { mem: '15.0', cpu: '0.5', priority: 'Normal', affinity: '0xFF' };
+        csv += `"${id}","${ppid}","${title.replace(/"/g, '""')}",${stats.cpu},${stats.mem},"${stats.priority || 'Normal'}","${stats.affinity || '0xFF'}","Active"\n`;
       });
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `ktask_processes_${Date.now()}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        if (a.parentNode) document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 1500);
-      showToast('Exported process snapshot to CSV.');
+      safeDownloadBlob(blob, `ktask_processes_${Date.now()}.csv`);
+      showToast('Exported process snapshot to CSV [E].');
     }
 
     function exportJSON() {
@@ -1689,30 +3267,116 @@
 
       const data = allTasks.map(task => {
         const id = String(task.id || '');
+        const ppid = String(task.ppid || '0');
         const title = String(task.title || 'Untitled');
-        const stats = taskStats[id] || { mem: '15.0', cpu: '0.5', priority: 'Normal' };
+        const stats = taskStats[id] || { mem: '15.0', cpu: '0.5', priority: 'Normal', affinity: '0xFF' };
         return {
           pid: id,
+          ppid: ppid,
           name: title,
           cpuPercent: parseFloat(stats.cpu),
           memoryMB: parseFloat(stats.mem),
           priority: stats.priority || 'Normal',
+          affinity: stats.affinity || '0xFF',
           status: 'Active'
         };
       });
 
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `ktask_processes_${Date.now()}.json`;
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        if (a.parentNode) document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 1500);
-      showToast('Exported process snapshot to JSON.');
+      safeDownloadBlob(blob, `ktask_processes_${Date.now()}.json`);
+      showToast('Exported process snapshot to JSON [J].');
+    }
+
+    function exportMarkdownAudit() {
+      if (!allTasks.length) {
+        showToast('No active tasks to export.');
+        return;
+      }
+      const curCpu = cpuHistory[cpuHistory.length - 1] || 12;
+      const curMem = memHistory[memHistory.length - 1] || 2.4;
+      const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+      const hrs = String(Math.floor(elapsedSec / 3600)).padStart(2, '0');
+      const mins = String(Math.floor((elapsedSec % 3600) / 60)).padStart(2, '0');
+      const secs = String(elapsedSec % 60).padStart(2, '0');
+
+      let md = `# KTask System Diagnostic & Process Audit Report\n\n`;
+      md += `- **Generated At**: ${new Date().toISOString()}\n`;
+      md += `- **System Uptime**: ${hrs}:${mins}:${secs}\n`;
+      md += `- **CPU Load**: ${curCpu}%\n`;
+      md += `- **RAM Utilization**: ${curMem} / 8.0 GB\n`;
+      md += `- **Peak CPU Recorded**: ${peakCpu}%\n`;
+      md += `- **Total Active Processes**: ${allTasks.length}\n`;
+      md += `- **Operating Environment**: KiloOS Retro Runtime (Win32 Compatible Architecture)\n\n`;
+      md += `## Active Process Inventory\n\n`;
+      md += `| PID | PPID | Process Name | CPU (%) | RAM (MB) | Priority | Affinity | Status |\n`;
+      md += `|---|---|---|---|---|---|---|---|\n`;
+
+      allTasks.forEach(task => {
+        const id = String(task.id || '');
+        const ppid = String(task.ppid || '0');
+        const title = String(task.title || 'Untitled');
+        const stats = taskStats[id] || { mem: '15.0', cpu: '0.5', priority: 'Normal', affinity: '0xFF' };
+        md += `| \`${id}\` | \`${ppid}\` | **${title.replace(/\|/g, '\\|')}** | ${stats.cpu}% | ${stats.mem} MB | ${stats.priority || 'Normal'} | \`${stats.affinity || '0xFF'}\` | Active |\n`;
+      });
+
+      md += `\n## Active Network Sockets (I/O Endpoints)\n\n`;
+      md += `| PID | Process | Proto | Local Address | Remote Address | State | RX (KB/s) | TX (KB/s) | Latency |\n`;
+      md += `|---|---|---|---|---|---|---|---|---|\n`;
+      activeSockets.forEach(s => {
+        md += `| \`${s.pid}\` | **${s.name.replace(/\|/g, '\\|')}** | \`${s.proto}\` | \`${s.local}\` | \`${s.remote}\` | \`${s.state}\` | ${s.rx.toFixed(1)} | ${s.tx.toFixed(1)} | ${s.latency} ms |\n`;
+      });
+
+      md += `\n## Fleet Sentinel Telemetry (KiloNet Mesh)\n\n`;
+      md += `- **Local Node**: \`${localNodeId}\`\n`;
+      md += `- **Online Fleet Nodes**: ${fleetNodes.length}\n`;
+      md += `- **Fleet Mean CPU Load**: ${document.getElementById('sentinel-mean-cpu')?.textContent || '14%'}\n`;
+      md += `- **Mesh Network Status**: OPTIMAL (Firebase RTDB Synchronized)\n\n`;
+
+      md += `## Diagnostics & Security Mitigations\n\n`;
+      md += `- **Core Kernel Services**: ntdll.dll, kernel32.dll, user32.dll, gdi32.dll\n`;
+      md += `- **Memory Management**: Preemptive paging, VirtualQueryEx inspection enabled\n`;
+      md += `- **Security Mitigations**: DEP Enforced, ASLR Relocated, Safe SEH Verified\n\n`;
+      md += `---\n*Generated autonomously by KTask Process Monitor & Diagnostic Suite.*\n`;
+
+      const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
+      safeDownloadBlob(blob, `ktask_audit_report_${Date.now()}.md`);
+      showToast('Exported System Diagnostic Audit Report [M].');
+    }
+
+    function exportHTMLReport() {
+      if (!allTasks.length) {
+        showToast('No active tasks to export.');
+        return;
+      }
+      const curCpu = cpuHistory[cpuHistory.length - 1] || 12;
+      const curMem = memHistory[memHistory.length - 1] || 2.4;
+
+      let html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>KTask Diagnostic Report</title><style>
+        body { font-family: monospace; background: #0f172a; color: #f8fafc; padding: 24px; }
+        h1 { color: #38bdf8; }
+        table { width: 100%; border-collapse: collapse; margin-top: 18px; font-size: 12px; }
+        th, td { border: 1px solid #334155; padding: 8px 10px; text-align: left; }
+        th { background: #1e293b; color: #38bdf8; }
+        tr:nth-child(even) { background: rgba(255,255,255,0.03); }
+        .badge { padding: 2px 6px; border-radius: 4px; background: rgba(56,189,248,0.2); color: #38bdf8; font-weight: bold; }
+      </style></head><body>
+      <h1>KTask System Diagnostic Report</h1>
+      <p>Generated: ${new Date().toLocaleString()} | Active Tasks: ${allTasks.length} | CPU: ${curCpu}% | RAM: ${curMem} GB</p>
+      <table><thead><tr><th>PID</th><th>PPID</th><th>Name</th><th>CPU</th><th>RAM</th><th>Priority</th><th>Affinity</th></tr></thead><tbody>`;
+
+      allTasks.forEach(task => {
+        const id = String(task.id || '');
+        const ppid = String(task.ppid || '0');
+        const title = String(task.title || 'Untitled');
+        const stats = taskStats[id] || { mem: '15.0', cpu: '0.5', priority: 'Normal', affinity: '0xFF' };
+        html += `<tr><td>${id}</td><td>${ppid}</td><td><strong>${escapeHtml(title)}</strong></td><td>${stats.cpu}%</td><td>${stats.mem} MB</td><td><span class="badge">${stats.priority || 'Normal'}</span></td><td><code>${stats.affinity || '0xFF'}</code></td></tr>`;
+      });
+
+      html += `</tbody></table><p style="margin-top:20px; color:#94a3b8; font-size:11px;">KiloOS System Diagnostics</p></body></html>`;
+
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+      safeDownloadBlob(blob, `ktask_diagnostic_report_${Date.now()}.html`);
+      showToast('Exported HTML Diagnostic Report.');
     }
 
     window.addEventListener('message', (e) => {
@@ -1732,8 +3396,54 @@
       list.innerHTML = '';
       
       const filterInput = document.getElementById('searchInput');
-      const filterText = (filterInput ? filterInput.value : '').trim().toLowerCase();
+      const rawQuery = (filterInput ? filterInput.value : '').trim();
       const catFilter = document.getElementById('filterSelect')?.value || 'all';
+
+      // Advanced query parsing: regex or attribute tokens
+      let isRegex = false;
+      let regexObj = null;
+      if (rawQuery.startsWith('/') && rawQuery.lastIndexOf('/') > 0) {
+        try {
+          const lastSlash = rawQuery.lastIndexOf('/');
+          const pattern = rawQuery.substring(1, lastSlash);
+          const flags = rawQuery.substring(lastSlash + 1);
+          regexObj = new RegExp(pattern, flags);
+          isRegex = true;
+        } catch (err) {
+          isRegex = false;
+        }
+      }
+
+      let cpuGt = null, cpuLt = null, memGt = null, memLt = null, priFilter = null, pidFilter = null;
+      let textFilter = rawQuery.toLowerCase();
+
+      if (!isRegex && rawQuery) {
+        const parts = rawQuery.split(/\s+/);
+        const remainingText = [];
+        parts.forEach(p => {
+          const lower = p.toLowerCase();
+          if (lower.startsWith('cpu>')) {
+            const val = parseFloat(lower.slice(4));
+            if (!isNaN(val)) cpuGt = val;
+          } else if (lower.startsWith('cpu<')) {
+            const val = parseFloat(lower.slice(4));
+            if (!isNaN(val)) cpuLt = val;
+          } else if (lower.startsWith('mem>')) {
+            const val = parseFloat(lower.slice(4));
+            if (!isNaN(val)) memGt = val;
+          } else if (lower.startsWith('mem<')) {
+            const val = parseFloat(lower.slice(4));
+            if (!isNaN(val)) memLt = val;
+          } else if (lower.startsWith('pri:')) {
+            priFilter = lower.slice(4);
+          } else if (lower.startsWith('pid:')) {
+            pidFilter = lower.slice(4);
+          } else {
+            remainingText.push(lower);
+          }
+        });
+        textFilter = remainingText.join(' ');
+      }
 
       // Memory leak cleanup: retain stats only for active tasks
       const currentTaskIds = new Set(allTasks.map(t => String(t.id || '')));
@@ -1750,24 +3460,47 @@
           taskStats[taskId] = {
             mem: (Math.random() * 45 + 12).toFixed(1),
             cpu: (Math.random() * 4.5).toFixed(1),
-            priority: 'Normal'
+            priority: 'Normal',
+            affinity: '0xFF'
           };
         } else {
           taskStats[taskId].cpu = Math.max(0, (parseFloat(taskStats[taskId].cpu) + (Math.random() - 0.5) * 1.2)).toFixed(1);
+          if (!taskStats[taskId].affinity) taskStats[taskId].affinity = '0xFF';
         }
       });
 
       let filteredTasks = allTasks.filter(t => {
-        const title = String(t.title || '').toLowerCase();
-        const id = String(t.id || '').toLowerCase();
+        const title = String(t.title || '');
+        const id = String(t.id || '');
         const stats = taskStats[id] || { mem: 0, cpu: 0, priority: 'Normal' };
+        const cpuNum = parseFloat(stats.cpu);
+        const memNum = parseFloat(stats.mem);
+        const pri = (stats.priority || 'Normal').toLowerCase();
 
-        const matchesText = title.includes(filterText) || id.includes(filterText);
-        if (!matchesText) return false;
+        // Category filter
+        if (catFilter === 'high-cpu' && cpuNum <= 2.0) return false;
+        if (catFilter === 'high-mem' && memNum <= 25.0) return false;
+        if (catFilter === 'high-pri' && pri !== 'high' && pri !== 'realtime') return false;
+        if (catFilter === 'system' && !['1004', '1420', '1842'].includes(id)) return false;
+        if (catFilter === 'user' && ['1004', '1420', '1842'].includes(id)) return false;
 
-        if (catFilter === 'high-cpu') return parseFloat(stats.cpu) > 2.0;
-        if (catFilter === 'high-mem') return parseFloat(stats.mem) > 25.0;
-        if (catFilter === 'high-pri') return stats.priority === 'High' || stats.priority === 'Realtime';
+        // Regex filter
+        if (isRegex && regexObj) {
+          return regexObj.test(title) || regexObj.test(id);
+        }
+
+        // Attribute queries
+        if (cpuGt !== null && cpuNum <= cpuGt) return false;
+        if (cpuLt !== null && cpuNum >= cpuLt) return false;
+        if (memGt !== null && memNum <= memGt) return false;
+        if (memLt !== null && memNum >= memLt) return false;
+        if (priFilter !== null && !pri.includes(priFilter)) return false;
+        if (pidFilter !== null && !id.includes(pidFilter)) return false;
+
+        // Remaining text query
+        if (textFilter) {
+          return title.toLowerCase().includes(textFilter) || id.toLowerCase().includes(textFilter);
+        }
         return true;
       });
 
@@ -1785,6 +3518,7 @@
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
             <div>${allTasks.length === 0 ? 'No running tasks found.' : 'No tasks match your search filter.'}</div>
+            ${allTasks.length > 0 ? '<button class="btn-secondary" onclick="clearSearch()" style="margin-top:6px;">Clear Search &amp; Filter (Esc)</button>' : ''}
           </div>`;
         return;
       }
@@ -1802,76 +3536,176 @@
         if (sortBy === 'pid') return idA.localeCompare(idB, undefined, { numeric: true });
         return 0;
       });
-      
-      filteredTasks.forEach(task => {
-        const taskId = String(task.id || 'N/A');
-        const taskTitle = String(task.title || 'Untitled Process');
-        const stats = taskStats[taskId] || { mem: '15.0', cpu: '0.5', priority: 'Normal' };
-        
-        const card = document.createElement('div');
-        card.className = 'task-card';
-        
-        const initial = taskTitle.charAt(0).toUpperCase() || 'P';
 
-        card.innerHTML = `
-          <div class="task-left">
-            <div class="task-icon" aria-hidden="true">${escapeHtml(initial)}</div>
-            <div class="task-info">
-              <div class="task-title"></div>
-              <div class="task-meta">
-                <span>PID: ${taskId}</span>
-                <span>Mem: ${stats.mem} MB</span>
-                <span>CPU: ${stats.cpu}%</span>
-                <span class="status-badge">Active</span>
-              </div>
+      // Render items (Flat or Tree)
+      if (viewMode === 'tree') {
+        const renderedSet = new Set();
+        const pidMap = new Map(filteredTasks.map(t => [String(t.id), t]));
+
+        filteredTasks.forEach(task => {
+          const taskId = String(task.id);
+          const ppid = String(task.ppid || '0');
+          const hasParent = pidMap.has(ppid) && ppid !== taskId;
+
+          if (!hasParent && !renderedSet.has(taskId)) {
+            renderedSet.add(taskId);
+            createTaskCardElement(task, false, list);
+
+            // Render children of this root
+            filteredTasks.forEach(child => {
+              if (String(child.ppid) === taskId && !renderedSet.has(String(child.id))) {
+                renderedSet.add(String(child.id));
+                createTaskCardElement(child, true, list);
+              }
+            });
+          }
+        });
+
+        // Any remaining tasks
+        filteredTasks.forEach(task => {
+          if (!renderedSet.has(String(task.id))) {
+            renderedSet.add(String(task.id));
+            createTaskCardElement(task, false, list);
+          }
+        });
+      } else {
+        filteredTasks.forEach(task => {
+          createTaskCardElement(task, false, list);
+        });
+      }
+    }
+
+    function createTaskCardElement(task, isTreeChild, container) {
+      const taskId = String(task.id || 'N/A');
+      const ppid = String(task.ppid || '0');
+      const taskTitle = String(task.title || 'Untitled Process');
+      const stats = taskStats[taskId] || { mem: '15.0', cpu: '0.5', priority: 'Normal', affinity: '0xFF' };
+      
+      const cpuNum = parseFloat(stats.cpu);
+      const memNum = parseFloat(stats.mem);
+      let badgeClass = 'status-active';
+      let badgeText = 'Active';
+      if (cpuNum > 2.0) {
+        badgeClass = 'status-busy';
+        badgeText = '⚡ Busy';
+      } else if (memNum > 30.0) {
+        badgeClass = 'status-heavy';
+        badgeText = '💾 Heavy';
+      }
+
+      const cpuColor = cpuNum > 5.0 ? 'var(--purple)' : (cpuNum > 2.0 ? 'var(--warning)' : 'var(--success)');
+      const cpuBarWidth = Math.min(100, Math.round(cpuNum * 12));
+      const memBarWidth = Math.min(100, Math.round((memNum / 60) * 100));
+
+      let deltaHtml = '';
+      let leakBadgeHtml = '';
+      if (deltaMode) {
+        const base = baselineMemory[taskId] != null ? baselineMemory[taskId] : memNum;
+        const delta = memNum - base;
+        const deltaStr = (delta >= 0 ? '+' : '') + delta.toFixed(1) + ' MB';
+        const deltaClass = delta > 0.1 ? 'mem-delta-pos' : (delta < -0.1 ? 'mem-delta-neg' : 'mem-delta-zero');
+        deltaHtml = `<span class="mem-delta-badge ${deltaClass}">Δ ${deltaStr}</span>`;
+
+        if (delta > 0.5) {
+          consecutiveGrowthCounts[taskId] = (consecutiveGrowthCounts[taskId] || 0) + 1;
+        } else if (delta < -0.1) {
+          consecutiveGrowthCounts[taskId] = Math.max(0, (consecutiveGrowthCounts[taskId] || 0) - 1);
+        }
+        if ((consecutiveGrowthCounts[taskId] || 0) >= 3) {
+          leakBadgeHtml = `<span class="leak-badge" title="Memory Drift Warning: Process shows continuous allocation growth">⚠️ LEAK</span>`;
+        }
+      }
+
+      const card = document.createElement('div');
+      card.className = 'task-card' + (isTreeChild ? ' tree-child' : '');
+      card.tabIndex = 0;
+      card.setAttribute('role', 'button');
+      card.setAttribute('aria-label', `${taskTitle}, PID ${taskId}, Memory ${stats.mem} MB, CPU ${stats.cpu}%`);
+      
+      const initial = taskTitle.charAt(0).toUpperCase() || 'P';
+
+      card.innerHTML = `
+        <div class="task-left">
+          ${isTreeChild ? '<span class="tree-glyph" aria-hidden="true">└──</span>' : ''}
+          <div class="task-icon" aria-hidden="true">${escapeHtml(initial)}</div>
+          <div class="task-info">
+            <div class="task-title">
+              <span>${escapeHtml(taskTitle)}</span>
+              ${isTreeChild ? `<span class="status-badge" style="background:rgba(56,189,248,0.1); color:var(--primary); font-size:9px;">PPID: ${escapeHtml(ppid)}</span>` : ''}
+            </div>
+            <div class="task-meta">
+              <span>PID: ${escapeHtml(taskId)}</span>
+              <span>
+                Mem: ${escapeHtml(stats.mem)} MB
+                ${deltaHtml}
+                <span class="task-mini-meter"><span class="mini-bar" style="width:${memBarWidth}%; background:var(--purple);"></span></span>
+              </span>
+              <span>
+                CPU: ${escapeHtml(stats.cpu)}%
+                <span class="task-mini-meter"><span class="mini-bar" style="width:${cpuBarWidth}%; background:${cpuColor};"></span></span>
+              </span>
+              <span class="status-badge" style="background:rgba(56,189,248,0.12); color:var(--primary); font-size:9px;">Core: ${escapeHtml(stats.affinity || '0xFF')}</span>
+              <span class="status-badge ${badgeClass}">${badgeText}</span>
+              ${leakBadgeHtml}
             </div>
           </div>
-          <div class="task-right">
-            <button class="btn-secondary btn-inspect" style="padding: 4px 9px; font-size: 11px;">Inspect</button>
-            <select class="priority-select">
-              <option value="Low" ${stats.priority === 'Low' ? 'selected' : ''}>Low</option>
-              <option value="Normal" ${stats.priority === 'Normal' ? 'selected' : ''}>Normal</option>
-              <option value="High" ${stats.priority === 'High' ? 'selected' : ''}>High</option>
-              <option value="Realtime" ${stats.priority === 'Realtime' ? 'selected' : ''}>Realtime</option>
-            </select>
-            <button class="btn-kill">End Task</button>
-          </div>
-        `;
+        </div>
+        <div class="task-right">
+          <button class="btn-secondary btn-inspect" style="padding: 4px 9px; font-size: 11px;">Inspect</button>
+          <button class="btn-secondary btn-affinity" style="padding: 4px 8px; font-size: 11px;" title="Cycle CPU Affinity [A]">Affinity</button>
+          <select class="priority-select">
+            <option value="Low" ${stats.priority === 'Low' ? 'selected' : ''}>Low</option>
+            <option value="Normal" ${stats.priority === 'Normal' ? 'selected' : ''}>Normal</option>
+            <option value="High" ${stats.priority === 'High' ? 'selected' : ''}>High</option>
+            <option value="Realtime" ${stats.priority === 'Realtime' ? 'selected' : ''}>Realtime</option>
+          </select>
+          <button class="btn-kill">End Task</button>
+        </div>
+      `;
 
-        card.querySelector('.task-title').textContent = taskTitle;
-        const btnInspect = card.querySelector('.btn-inspect');
-        btnInspect.setAttribute('aria-label', `Inspect task ${taskTitle}`);
-        btnInspect.onclick = () => openInspectModal(taskId, taskTitle);
+      const btnInspect = card.querySelector('.btn-inspect');
+      btnInspect.setAttribute('aria-label', `Inspect task ${taskTitle}`);
+      btnInspect.onclick = () => openInspectModal(taskId, taskTitle);
 
-        const priSel = card.querySelector('.priority-select');
-        priSel.setAttribute('aria-label', `Adjust process priority for ${taskTitle}`);
-        priSel.onchange = (e) => changePriority(taskId, e.target.value);
+      const btnAffinity = card.querySelector('.btn-affinity');
+      btnAffinity.onclick = () => cycleAffinity(taskId);
 
-        const btnKill = card.querySelector('.btn-kill');
-        btnKill.setAttribute('aria-label', `End task ${taskTitle} with PID ${taskId}`);
-        btnKill.onclick = () => promptKillTask(taskId, taskTitle);
+      const priSel = card.querySelector('.priority-select');
+      priSel.setAttribute('aria-label', `Adjust process priority for ${taskTitle}`);
+      priSel.onchange = (e) => changePriority(taskId, e.target.value);
 
-        if (selectedTaskId === taskId) {
-          card.classList.add('selected');
-        }
+      const btnKill = card.querySelector('.btn-kill');
+      btnKill.setAttribute('aria-label', `End task ${taskTitle} with PID ${taskId}`);
+      btnKill.onclick = () => promptKillTask(taskId, taskTitle);
 
-        card.dataset.taskId = taskId;
-        card.dataset.taskTitle = taskTitle;
+      if (selectedTaskId === taskId) {
+        card.classList.add('selected');
+      }
 
-        card.addEventListener('click', (e) => {
-          if (e.target.closest('button') || e.target.closest('select')) return;
-          selectedTaskId = taskId;
-          document.querySelectorAll('.task-card').forEach(c => c.classList.remove('selected'));
-          card.classList.add('selected');
-        });
+      card.dataset.taskId = taskId;
+      card.dataset.taskTitle = taskTitle;
 
-        card.addEventListener('dblclick', (e) => {
-          if (e.target.closest('button') || e.target.closest('select')) return;
-          openInspectModal(taskId, taskTitle);
-        });
-
-        list.appendChild(card);
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('button') || e.target.closest('select')) return;
+        selectedTaskId = taskId;
+        document.querySelectorAll('.task-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
       });
+
+      card.addEventListener('keydown', (e) => {
+        if (e.target.closest('button') || e.target.closest('select')) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openInspectModal(taskId, taskTitle);
+        }
+      });
+
+      card.addEventListener('dblclick', (e) => {
+        if (e.target.closest('button') || e.target.closest('select')) return;
+        openInspectModal(taskId, taskTitle);
+      });
+
+      container.appendChild(card);
     }
 
     function selectAdjacentTask(direction) {
@@ -1898,7 +3732,7 @@
     function updateSummaryMetrics() {
       let totalThreads = 0;
       let totalHandles = allTasks.length * 14 + 120;
-      allTasks.forEach(t => {
+      allTasks.forEach(() => {
         totalThreads += Math.floor(Math.random() * 4) + 2;
       });
       
@@ -1915,33 +3749,50 @@
       if (elMemUsed) elMemUsed.innerText = `${curMem} / 8.0 GB`;
     }
 
+    let hoverState = {
+      cpu: null,
+      mem: null
+    };
+
     function drawCharts() {
       const cpuCanvas = document.getElementById('cpuCanvas');
       const memCanvas = document.getElementById('memCanvas');
 
       if (cpuCanvas) {
-        renderLineChart(cpuCanvas, cpuHistory, '#38bdf8', 'rgba(56, 189, 248, 0.2)', 100);
-        document.getElementById('chart-cpu-val').innerText = cpuHistory[cpuHistory.length - 1] + '%';
+        renderLineChart(cpuCanvas, cpuHistory, '#38bdf8', 'rgba(56, 189, 248, 0.2)', 100, hoverState.cpu);
+        const curCpu = cpuHistory[cpuHistory.length - 1];
+        document.getElementById('chart-cpu-val').innerText = curCpu + '%';
       }
 
       if (memCanvas) {
-        renderLineChart(memCanvas, memHistory, '#a855f7', 'rgba(168, 85, 247, 0.2)', 8.0);
-        document.getElementById('chart-mem-val').innerText = memHistory[memHistory.length - 1] + ' GB';
+        renderLineChart(memCanvas, memHistory, '#a855f7', 'rgba(168, 85, 247, 0.2)', 8.0, hoverState.mem);
+        const curMem = memHistory[memHistory.length - 1];
+        document.getElementById('chart-mem-val').innerText = (typeof curMem === 'number' ? curMem.toFixed(1) : curMem) + ' GB';
       }
     }
 
-    function renderLineChart(canvas, data, strokeColor, fillColor, maxVal) {
+    function renderLineChart(canvas, data, strokeColor, fillColor, maxVal, hoverIndex) {
       const parent = canvas.parentElement;
       if (!parent) return;
       
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = parent.clientWidth * dpr;
-      canvas.height = parent.clientHeight * dpr;
-      const ctx = canvas.getContext('2d');
-      ctx.scale(dpr, dpr);
-      const w = parent.clientWidth;
-      const h = parent.clientHeight;
+      const rect = parent.getBoundingClientRect();
+      const w = Math.floor(rect.width);
+      const h = Math.floor(rect.height);
+      if (w <= 0 || h <= 0) return;
 
+      const dpr = window.devicePixelRatio || 1;
+      const targetW = Math.floor(w * dpr);
+      const targetH = Math.floor(h * dpr);
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+      }
+
+      const ctx = canvas.getContext('2d');
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, w, h);
 
       // Draw Gridlines
@@ -1949,7 +3800,7 @@
       ctx.lineWidth = 1;
       const rows = 4;
       for (let i = 1; i < rows; i++) {
-        const y = (h / rows) * i;
+        const y = Math.round((h / rows) * i);
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(w, y);
@@ -1959,8 +3810,9 @@
       if (data.length < 2) return;
 
       const step = w / (data.length - 1);
-      ctx.beginPath();
       
+      // Area Fill
+      ctx.beginPath();
       data.forEach((val, idx) => {
         const x = idx * step;
         const normalized = Math.min(1, Math.max(0, val / maxVal));
@@ -1968,24 +3820,99 @@
         if (idx === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       });
-
-      // Line style
-      ctx.strokeStyle = strokeColor;
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-
-      // Area Fill
       ctx.lineTo(w, h);
       ctx.lineTo(0, h);
       ctx.closePath();
       ctx.fillStyle = fillColor;
       ctx.fill();
+
+      // Line style
+      ctx.beginPath();
+      data.forEach((val, idx) => {
+        const x = idx * step;
+        const normalized = Math.min(1, Math.max(0, val / maxVal));
+        const y = h - (normalized * (h - 20)) - 10;
+        if (idx === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Interactive hover crosshair & point
+      if (hoverIndex != null && hoverIndex >= 0 && hoverIndex < data.length) {
+        const hx = hoverIndex * step;
+        const hval = data[hoverIndex];
+        const normalized = Math.min(1, Math.max(0, hval / maxVal));
+        const hy = h - (normalized * (h - 20)) - 10;
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        ctx.moveTo(hx, 0);
+        ctx.lineTo(hx, h);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.beginPath();
+        ctx.arc(hx, hy, 5, 0, Math.PI * 2);
+        ctx.fillStyle = strokeColor;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(hx, hy, 2, 0, Math.PI * 2);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+      }
+    }
+
+    function setupChartInteractivity(canvasId, type) {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const tooltip = document.getElementById(type === 'cpu' ? 'cpuTooltip' : 'memTooltip');
+
+      canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const w = rect.width;
+        if (w <= 0) return;
+        const data = type === 'cpu' ? cpuHistory : memHistory;
+        const step = w / (data.length - 1);
+        let idx = Math.round(mouseX / step);
+        if (idx < 0) idx = 0;
+        if (idx >= data.length) idx = data.length - 1;
+
+        hoverState[type] = idx;
+        drawCharts();
+
+        if (tooltip) {
+          const val = data[idx];
+          const secondsAgo = (data.length - 1 - idx) * 2;
+          const timeStr = secondsAgo === 0 ? 'Now' : `-${secondsAgo}s`;
+          const valStr = type === 'cpu' ? `${val}%` : `${parseFloat(val).toFixed(1)} GB`;
+          tooltip.textContent = `${timeStr} | ${valStr}`;
+          tooltip.style.display = 'block';
+
+          let tipX = mouseX + 12;
+          if (tipX + 110 > w) tipX = mouseX - 115;
+          tooltip.style.left = Math.max(4, tipX) + 'px';
+          tooltip.style.top = '10px';
+        }
+      });
+
+      canvas.addEventListener('mouseleave', () => {
+        hoverState[type] = null;
+        if (tooltip) tooltip.style.display = 'none';
+        drawCharts();
+      });
     }
 
     // Process Inspector Modal State & Methods
     let currentInspectPid = null;
     let currentInspectTitle = '';
     let activeInspectTab = 'threads';
+    let currentHexDumpText = '';
 
     function openInspectModal(taskId, taskTitle) {
       currentInspectPid = taskId;
@@ -2079,31 +4006,161 @@
       }
 
       // 4. Memory Hex Dump Peek
+      updateHexDumpView();
+
+      // 5. Environment & Executable Information
+      const envPath = document.getElementById('env-exec-path');
+      const envCmd = document.getElementById('env-cmdline');
+      if (envPath) envPath.textContent = `C:\\KiloApps\\${title.toLowerCase().replace(/\s+/g, '_')}.exe`;
+      if (envCmd) envCmd.textContent = `"${title.toLowerCase().replace(/\s+/g, '_')}.exe" --session=402 --kilo-mode=user --pid=${pid}`;
+
+      // 6. CPU Affinity Matrix
+      renderAffinityMatrix(pid);
+    }
+
+    function updateHexDumpView() {
       const hexDumpEl = document.getElementById('inspect-hex-dump');
-      if (hexDumpEl) {
-        let dumpText = '';
-        const baseAddr = 0x00400000;
-        const sampleBytes = [
+      const segSelect = document.getElementById('hexSegmentSelect');
+      const seg = segSelect ? segSelect.value : 'pe';
+
+      let baseAddr = 0x00400000;
+      let sampleBytes = [];
+
+      if (seg === 'pe') {
+        baseAddr = 0x00400000;
+        sampleBytes = [
           0x4D, 0x5A, 0x90, 0x00, 0x03, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0x00, 0x00,
           0xB8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
           0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x80, 0x00, 0x00, 0x00,
           0x0E, 0x1F, 0xBA, 0x0E, 0x00, 0xB4, 0x09, 0xCD, 0x21, 0xB8, 0x01, 0x4C, 0xCD, 0x21, 0x54, 0x68
         ];
-
-        for (let line = 0; line < 5; line++) {
-          const addrHex = (baseAddr + line * 16).toString(16).padStart(8, '0').toUpperCase();
-          let lineHex = '';
-          let ascii = '';
-          for (let i = 0; i < 16; i++) {
-            const byte = sampleBytes[line * 16 + i] || 0;
-            lineHex += byte.toString(16).padStart(2, '0').toUpperCase() + ' ';
-            ascii += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : '.';
-          }
-          dumpText += `${addrHex} | ${lineHex.slice(0,24)} | ${lineHex.slice(24)}| ${ascii}\n`;
-        }
-        hexDumpEl.textContent = dumpText;
+      } else if (seg === 'text') {
+        baseAddr = 0x00410000;
+        sampleBytes = [
+          0x55, 0x89, 0xE5, 0x83, 0xEC, 0x18, 0x89, 0x5D, 0xF4, 0x89, 0x75, 0xF8, 0x89, 0x7D, 0xFC, 0x8B,
+          0x45, 0x08, 0x8B, 0x4D, 0x0C, 0x8B, 0x55, 0x10, 0xE8, 0x42, 0x0F, 0x00, 0x00, 0x85, 0xC0, 0x74,
+          0x12, 0xC7, 0x04, 0x24, 0x00, 0x00, 0x00, 0x00, 0xE8, 0x78, 0x04, 0x00, 0x00, 0x83, 0xC4, 0x18,
+          0x5D, 0xC3, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90,
+          0x55, 0x89, 0xE5, 0x53, 0x57, 0x56, 0x83, 0xEC, 0x2C, 0x8B, 0x75, 0x08, 0x85, 0xF6, 0x74, 0x38
+        ];
+      } else if (seg === 'data') {
+        baseAddr = 0x00490000;
+        sampleBytes = [
+          0x4B, 0x69, 0x6C, 0x6F, 0x4F, 0x53, 0x00, 0x00, 0x52, 0x65, 0x61, 0x64, 0x79, 0x00, 0x00, 0x00,
+          0x01, 0x00, 0x00, 0x00, 0x20, 0x00, 0x00, 0x00, 0x4B, 0x54, 0x61, 0x73, 0x6B, 0x00, 0x00, 0x00,
+          0x73, 0x79, 0x73, 0x74, 0x65, 0x6D, 0x2E, 0x6C, 0x6F, 0x67, 0x00, 0x00, 0x31, 0x32, 0x37, 0x00,
+          0x00, 0x00, 0x00, 0x00, 0x10, 0x27, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF,
+          0x41, 0x70, 0x70, 0x6C, 0x69, 0x63, 0x61, 0x74, 0x69, 0x6F, 0x6E, 0x20, 0x44, 0x61, 0x74, 0x61
+        ];
+      } else {
+        baseAddr = 0x004B0000;
+        sampleBytes = [
+          0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00,
+          0x68, 0x65, 0x61, 0x70, 0x5F, 0x61, 0x6C, 0x6C, 0x6F, 0x63, 0x00, 0x00, 0x48, 0x45, 0x41, 0x50,
+          0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xCA, 0xFE, 0xBA, 0xBE,
+          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+          0x74, 0x68, 0x72, 0x65, 0x61, 0x64, 0x5F, 0x63, 0x74, 0x78, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+        ];
       }
+
+      let dumpText = '';
+      for (let line = 0; line < 5; line++) {
+        const addrHex = (baseAddr + line * 16).toString(16).padStart(8, '0').toUpperCase();
+        let lineHex = '';
+        let ascii = '';
+        for (let i = 0; i < 16; i++) {
+          const byte = sampleBytes[line * 16 + i] || 0;
+          lineHex += byte.toString(16).padStart(2, '0').toUpperCase() + ' ';
+          ascii += (byte >= 32 && byte <= 126) ? String.fromCharCode(byte) : '.';
+        }
+        dumpText += `${addrHex} | ${lineHex.slice(0,24)} | ${lineHex.slice(24)}| ${ascii}\n`;
+      }
+      currentHexDumpText = dumpText;
+      if (hexDumpEl) hexDumpEl.textContent = dumpText;
+    }
+
+    function searchHexDump() {
+      const input = document.getElementById('hexSearchInput');
+      const query = (input ? input.value : '').trim();
+      const hexDumpEl = document.getElementById('inspect-hex-dump');
+      if (!hexDumpEl || !currentHexDumpText) return;
+
+      if (!query) {
+        hexDumpEl.textContent = currentHexDumpText;
+        return;
+      }
+
+      if (currentHexDumpText.toLowerCase().includes(query.toLowerCase())) {
+        showToast(`Pattern "${query}" matched in memory segment.`);
+      } else {
+        showToast(`Pattern "${query}" not found in current 80-byte memory window.`);
+      }
+    }
+
+    function renderAffinityMatrix(pid) {
+      const grid = document.getElementById('affinityGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+
+      const stats = taskStats[pid] || { affinity: '0xFF' };
+      const currentMask = parseInt(stats.affinity || '0xFF', 16);
+
+      let activeCount = 0;
+      for (let core = 0; core < 8; core++) {
+        const isSet = (currentMask & (1 << core)) !== 0;
+        if (isSet) activeCount++;
+
+        const card = document.createElement('div');
+        card.className = 'affinity-card' + (isSet ? ' active' : '');
+        card.innerHTML = `
+          <input type="checkbox" ${isSet ? 'checked' : ''} style="cursor:pointer;">
+          <div>
+            <div style="font-weight:700; font-size:12px;">Core ${core}</div>
+            <div style="font-size:10px; color:var(--text-muted);">${core < 4 ? 'P-Core' : 'E-Core'}</div>
+          </div>
+        `;
+
+        card.onclick = (e) => {
+          if (e.target.tagName !== 'INPUT') {
+            const cb = card.querySelector('input');
+            cb.checked = !cb.checked;
+          }
+          const newMask = currentMask ^ (1 << core);
+          if (newMask !== 0) {
+            stats.affinity = '0x' + newMask.toString(16).toUpperCase().padStart(2, '0');
+            renderAffinityMatrix(pid);
+            renderTasks();
+          } else {
+            showToast('Process must be assigned to at least 1 CPU core.');
+          }
+        };
+
+        grid.appendChild(card);
+      }
+
+      const hexEl = document.getElementById('affinity-mask-hex');
+      const binEl = document.getElementById('affinity-mask-bin');
+      const countEl = document.getElementById('affinity-active-count');
+
+      if (hexEl) hexEl.textContent = '0x' + currentMask.toString(16).toUpperCase().padStart(2, '0');
+      if (binEl) binEl.textContent = '(' + currentMask.toString(2).padStart(8, '0') + ')';
+      if (countEl) countEl.textContent = `${activeCount} Cores Active`;
+    }
+
+    function setAffinityPreset(preset) {
+      if (!currentInspectPid) return;
+      const stats = taskStats[currentInspectPid];
+      if (!stats) return;
+
+      if (preset === 'all') stats.affinity = '0xFF';
+      else if (preset === 'core0') stats.affinity = '0x01';
+      else if (preset === 'perf') stats.affinity = '0x0F';
+      else if (preset === 'eff') stats.affinity = '0xF0';
+
+      renderAffinityMatrix(currentInspectPid);
+      renderTasks();
+      showToast(`Affinity preset "${preset}" applied to PID ${currentInspectPid}`);
     }
 
     function fallbackCopyText(text) {
@@ -2126,9 +4183,11 @@
 
     function exportInspectReport() {
       if (!currentInspectPid) return;
+      const stats = taskStats[currentInspectPid] || {};
       const report = `===================================================================\n` +
         `KTASK PROCESS INSPECTION REPORT: ${currentInspectTitle} (PID: ${currentInspectPid})\n` +
         `Timestamp: ${new Date().toISOString()}\n` +
+        `CPU Affinity: ${stats.affinity || '0xFF'} | Priority: ${stats.priority || 'Normal'}\n` +
         `===================================================================\n\n` +
         `[THREADS]\nActive Threads: 3\nTID: ${currentInspectPid}101 | Priority: Normal | State: Running\n\n` +
         `[MODULES]\n0x00400000 - 1,024 KB - ${currentInspectTitle}\n0x7FF8A100 - 2,048 KB - ntdll.dll\n0x7FF8A240 - 768 KB - kernel32.dll\n\n` +
@@ -2172,22 +4231,10 @@
       const confirmActive = document.getElementById('confirmModal')?.classList.contains('active');
 
       if (e.key === 'Escape') {
-        if (tutorialActive) {
-          closeTutorialModal();
-          return;
-        }
-        if (helpActive) {
-          closeHelpModal();
-          return;
-        }
-        if (inspectActive) {
-          closeInspectModal();
-          return;
-        }
-        if (confirmActive) {
-          closeKillModal();
-          return;
-        }
+        if (tutorialActive) { closeTutorialModal(); return; }
+        if (helpActive) { closeHelpModal(); return; }
+        if (inspectActive) { closeInspectModal(); return; }
+        if (confirmActive) { closeKillModal(); return; }
         const search = document.getElementById('searchInput');
         if (search && search.value) {
           search.value = '';
@@ -2197,19 +4244,26 @@
       }
 
       if (tutorialActive || helpActive || inspectActive || confirmActive) {
-        if (e.key === 'Enter') {
+        if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+          e.preventDefault();
           if (tutorialActive) closeTutorialModal();
-          else if (confirmActive) executePendingKill();
+          else if (confirmActive) {
+            if (e.key === 'Enter') executePendingKill();
+            else closeKillModal();
+          }
           else if (helpActive) closeHelpModal();
-          else if (inspectActive) closeInspectModal();
+          else if (inspectActive && e.key === 'Enter') closeInspectModal();
         } else if (inspectActive) {
           if (e.key === '1') { e.preventDefault(); switchInspectTab('threads'); }
           else if (e.key === '2') { e.preventDefault(); switchInspectTab('modules'); }
           else if (e.key === '3') { e.preventDefault(); switchInspectTab('memory'); }
           else if (e.key === '4') { e.preventDefault(); switchInspectTab('hex'); }
+          else if (e.key === '5') { e.preventDefault(); switchInspectTab('env'); }
+          else if (e.key === '6') { e.preventDefault(); switchInspectTab('affinity'); }
+          else if (e.key === '7') { e.preventDefault(); switchInspectTab('profiler'); }
           else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
             e.preventDefault();
-            const itabs = ['threads', 'modules', 'memory', 'hex'];
+            const itabs = ['threads', 'modules', 'memory', 'hex', 'env', 'affinity', 'profiler'];
             let idx = itabs.indexOf(activeInspectTab);
             if (e.key === 'ArrowLeft') idx = (idx - 1 + itabs.length) % itabs.length;
             else idx = (idx + 1) % itabs.length;
@@ -2234,7 +4288,7 @@
         return;
       }
 
-      if (e.altKey) return; // Don't hijack Alt shortcuts
+      if (e.altKey) return;
 
       if (e.key === '1') {
         e.preventDefault();
@@ -2245,12 +4299,41 @@
       } else if (e.key === '3') {
         e.preventDefault();
         switchTab('system');
+      } else if (e.key === '4') {
+        e.preventDefault();
+        switchTab('network');
+      } else if (e.key === '5') {
+        e.preventDefault();
+        switchTab('sentinel');
+      } else if (e.key === '6') {
+        e.preventDefault();
+        switchTab('profiler');
+      } else if (e.key === 's' || e.key === 'S') {
+        e.preventDefault();
+        toggleAudio();
+      } else if (e.key === 'd' || e.key === 'D') {
+        e.preventDefault();
+        toggleDeltaMode();
+      } else if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        switchTab('network');
       } else if (e.key === 'F5') {
         e.preventDefault();
         quickSaveState();
       } else if (e.key === 'F9') {
         e.preventDefault();
         quickLoadState();
+      } else if (e.key === 't' || e.key === 'T') {
+        e.preventDefault();
+        toggleViewMode();
+      } else if (e.key === 'a' || e.key === 'A') {
+        e.preventDefault();
+        if (selectedTaskId) {
+          cycleAffinity(selectedTaskId);
+        }
+      } else if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        exportMarkdownAudit();
       } else if (e.key === 'r' || e.key === 'R') {
         e.preventDefault();
         refresh();
@@ -2340,30 +4423,83 @@
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
         stopAutoRefresh();
-      } else if (document.getElementById('autoRefreshToggle')?.checked) {
-        startAutoRefresh();
+        stopSysStatsInterval();
+      } else {
+        startSysStatsInterval();
+        if (document.getElementById('autoRefreshToggle')?.checked) {
+          startAutoRefresh();
+        }
       }
+    });
+
+    let chartObserver = null;
+    function cleanupResources() {
+      stopAutoRefresh();
+      stopSysStatsInterval();
+      if (chartObserver) {
+        try { chartObserver.disconnect(); } catch (e) {}
+        chartObserver = null;
+      }
+      for (const url of activeObjectUrls) {
+        try { URL.revokeObjectURL(url); } catch (e) {}
+      }
+      activeObjectUrls.clear();
+    }
+
+    window.addEventListener('beforeunload', () => {
+      autoSaveState();
+      cleanupResources();
+    });
+
+    window.addEventListener('pagehide', () => {
+      autoSaveState();
+      cleanupResources();
     });
 
     // Initial load and settings restore
     try {
-      window.resizeTo(800, 600);
-      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 800, height: 600 }, '*');
+      window.resizeTo(920, 640);
+      window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 920, height: 640 }, '*');
     } catch(e) {}
 
     loadUserSettings();
+    restoreSessionState();
+    updateAudioButtonUI();
     renderTasks();
+    renderNetworkSockets();
+    renderFleetNodes();
+    updateProfilerUI();
+    if (typeof initFirebaseSentinel === 'function') {
+      initFirebaseSentinel();
+    }
+    setupChartInteractivity('cpuCanvas', 'cpu');
+    setupChartInteractivity('memCanvas', 'mem');
+
+    try {
+      chartObserver = new ResizeObserver(() => {
+        if (activeTab === 'charts') {
+          drawCharts();
+        }
+      });
+      document.querySelectorAll('.chart-canvas-container').forEach(el => chartObserver.observe(el));
+    } catch (e) {}
+
     setTimeout(refresh, 100);
+    startSysStatsInterval();
     const autoRefreshActive = document.getElementById('autoRefreshToggle')?.checked ?? true;
     if (autoRefreshActive) {
       startAutoRefresh();
     }
 
-    // First-run tutorial onboarding check
-    if (!safeGetStorage('ktask_tutorialSeen')) {
+    // First-run tutorial onboarding check: only on fresh sessions, never interrupting restored save states
+    const hasSeenTutorial = safeGetStorage('ktask_tutorialSeen');
+    const hasQuicksave = safeGetStorage('ktask_quicksave');
+    const hasSession = safeGetStorage('ktask_session_state');
+
+    if (!hasSeenTutorial && !hasQuicksave && !hasSession) {
       setTimeout(openTutorialModal, 400);
     } else {
-      setTimeout(() => showToast('Ready. Press "H" or F1 for help & shortcuts'), 1000);
+      setTimeout(() => showToast('Ready. Press "H" or F1 for help &amp; shortcuts'), 1000);
     }
   </script>
 </body>

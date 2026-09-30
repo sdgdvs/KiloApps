@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ECHO SUBSYSTEM ACOUSTIC RESEARCH LAB // 1999 Harmonic Decoders</title>
+<title>ECHO SUBSYSTEM ACOUSTIC RESEARCH LAB // 1999 Harmonic Decoders &amp; SIGINT Grid</title>
 <style>
   :root {
     --bg-dark: #050811;
@@ -52,7 +52,7 @@
   }
 
   .lab-wrapper {
-    max-width: 1080px;
+    max-width: 1100px;
     margin: 0 auto;
     border: 2px solid var(--border-bright);
     background: rgba(10, 17, 34, 0.98);
@@ -150,16 +150,16 @@
     border: none;
     border-right: 1px solid var(--border-dim);
     color: var(--text-muted);
-    padding: 9px 16px;
+    padding: 9px 14px;
     font-family: inherit;
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 700;
     cursor: pointer;
     transition: all 0.15s;
     white-space: nowrap;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
   }
 
   .tab-btn:hover {
@@ -189,12 +189,13 @@
     border: 1px solid var(--border-bright);
     color: #bae6fd;
     font-family: inherit;
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 700;
-    padding: 5px 12px;
+    padding: 5px 11px;
     cursor: pointer;
     border-radius: 3px;
     transition: all 0.15s;
+    user-select: none;
   }
   .btn-retro:hover {
     background: var(--border-bright);
@@ -219,6 +220,15 @@
     color: #050811;
     box-shadow: 0 0 8px var(--amber-led);
   }
+  .btn-retro.btn-purple {
+    border-color: var(--purple-spectral);
+    color: var(--purple-spectral);
+  }
+  .btn-retro.btn-purple:hover {
+    background: var(--purple-spectral);
+    color: #050811;
+    box-shadow: 0 0 8px var(--purple-spectral);
+  }
   .btn-retro.btn-active {
     background: var(--border-bright);
     color: #050811;
@@ -232,6 +242,15 @@
   }
   @media (max-width: 860px) {
     .grid-2col { grid-template-columns: 1fr; }
+  }
+
+  .grid-3col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 900px) {
+    .grid-3col { grid-template-columns: 1fr; }
   }
 
   .card-box {
@@ -312,6 +331,9 @@
   .journal-entry.anomaly {
     border-left-color: var(--green-phosphor);
   }
+  .journal-entry.sigint {
+    border-left-color: var(--purple-spectral);
+  }
   .journal-meta {
     font-size: 11px;
     color: var(--text-muted);
@@ -324,7 +346,7 @@
     gap: 6px;
   }
   .journal-title {
-    font-size: 14px;
+    font-size: 13.5px;
     font-weight: 700;
     color: #fff;
     margin-bottom: 6px;
@@ -351,6 +373,7 @@
     user-select: none;
     border-radius: 2px;
     display: inline;
+    transition: all 0.2s;
   }
   .redacted.revealed {
     background: rgba(245, 158, 11, 0.2);
@@ -376,14 +399,16 @@
   .terminal-input-row {
     display: flex;
     gap: 8px;
+    flex-wrap: wrap;
   }
   .term-input {
     flex: 1;
+    min-width: 180px;
     background: #070d1a;
     border: 1px solid var(--border-bright);
     color: var(--green-phosphor);
     font-family: inherit;
-    font-size: 13px;
+    font-size: 12.5px;
     padding: 6px 10px;
     border-radius: 3px;
     outline: none;
@@ -431,11 +456,44 @@
     color: #050811;
     box-shadow: 0 0 10px var(--green-phosphor);
   }
-  .piano-key.black-key {
-    background: #0b1324;
-    border-color: #64748b;
-    height: 54px;
-    color: #94a3b8;
+  .piano-key.special-key {
+    border-color: var(--amber-led);
+    color: var(--amber-led);
+  }
+
+  /* SIGINT Transducer Grid Cards */
+  .sigint-station-card {
+    background: #080e1d;
+    border: 1px solid var(--border-dim);
+    padding: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .sigint-station-card:hover {
+    border-color: var(--border-bright);
+    background: #0e172e;
+  }
+  .sigint-station-card.active {
+    border-color: var(--green-phosphor);
+    background: #0d1e34;
+    box-shadow: 0 0 8px rgba(0, 255, 170, 0.25);
+  }
+
+  /* Stego Glyphs & Teleprinter */
+  .teleprinter-paper {
+    background: #fdf6e2;
+    color: #1e1e1e;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.4;
+    padding: 12px;
+    border: 2px solid #c2b59b;
+    border-radius: 3px;
+    height: 150px;
+    overflow-y: auto;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.15);
   }
 
   /* Webring & Footer */
@@ -482,7 +540,7 @@
   <!-- Top Classified Bar -->
   <div class="lab-top-bar">
     <span>★ RESTRICTED ACCESS // NODE ESARL-1999 // TIER 3 ARCHIVE ★</span>
-    <span class="blink" style="color:var(--amber-led);">● SUBCARRIER BEACON: 1999.0 HZ DETECTED</span>
+    <span class="blink" style="color:var(--amber-led);">● SUBCARRIER BEACON: 1999.0 HZ LOCKED</span>
     <span id="liveTimestamp">1999-12-31 23:59:59</span>
   </div>
 
@@ -491,7 +549,7 @@
     <div>
       <h1 class="masthead-title">ECHO SUBSYSTEM ACOUSTIC RESEARCH LAB</h1>
       <div class="masthead-subtitle">
-        Division of Harmonic Signal Decoders, Precursor Audio Carriers &amp; Memory Resonances
+        Division of Harmonic Signal Decoders, Phased Beamformers &amp; Subsurface Acoustic Intelligence
       </div>
       <div style="font-size:11px; color:#64748b; margin-top:2px;">
         Station ID: <strong>SIG-1999-ECHO</strong> | Affiliation: Project Echo (Acoustic Team) | Host: <code>kweb://echo-subsystem.net</code>
@@ -515,10 +573,12 @@
     <button class="tab-btn" id="tabBtn2" onclick="switchTab('decoder')">📻 [02] HARMONIC DECODER</button>
     <button class="tab-btn" id="tabBtn3" onclick="switchTab('spectral')">📊 [03] 2D SPECTRAL SONOGRAM</button>
     <button class="tab-btn" id="tabBtn4" onclick="switchTab('filter')">🎛️ [04] PARAMETRIC FILTER</button>
-    <button class="tab-btn" id="tabBtn5" onclick="switchTab('terminal')">💻 [05] FIELD TERMINAL</button>
+    <button class="tab-btn" id="tabBtn5" onclick="switchTab('sigint')">📡 [05] SIGINT BEAMFORMER GRID</button>
+    <button class="tab-btn" id="tabBtn6" onclick="switchTab('stego')">🧩 [06] CIPHER &amp; STEGANOGRAPHY</button>
+    <button class="tab-btn" id="tabBtn7" onclick="switchTab('terminal')">💻 [07] FIELD TERMINAL</button>
   </nav>
 
-  <!-- TAB 1: RESEARCH JOURNAL -->
+  <!-- TAB 1: RESEARCH JOURNAL & OBSERVATION LOGBOOK -->
   <div id="pane-journal" class="tab-pane active">
     <div class="card-box">
       <div class="card-header">
@@ -539,6 +599,7 @@
         <button class="btn-retro" onclick="filterJournalTag('carrier')">1999Hz Subcarrier</button>
         <button class="btn-retro" onclick="filterJournalTag('memory')">Sector 0x1999</button>
         <button class="btn-retro" onclick="filterJournalTag('carlsbad')">Carlsbad Subnet</button>
+        <button class="btn-retro" onclick="filterJournalTag('sigint')">SIGINT Grid</button>
       </div>
 
       <div id="journalEntriesList">
@@ -607,7 +668,7 @@
         </article>
 
         <!-- Entry 5 -->
-        <article class="journal-entry classified" data-tags="carlsbad carrier">
+        <article class="journal-entry classified" data-tags="carlsbad carrier sigint">
           <div class="journal-meta">
             <span>LOG #99-05 // SUBNET CORRELATION</span>
             <span>DATE: 1999-04-12</span>
@@ -623,7 +684,7 @@
         </article>
 
         <!-- Entry 6 -->
-        <article class="journal-entry" data-tags="memory acoustic">
+        <article class="journal-entry" data-tags="memory acoustic sigint">
           <div class="journal-meta">
             <span>LOG #99-08 // CROSS-APPLICATION AUDIT</span>
             <span>DATE: 1999-07-04</span>
@@ -639,7 +700,7 @@
         </article>
 
         <!-- Entry 7 -->
-        <article class="journal-entry classified" data-tags="acoustic carrier memory">
+        <article class="journal-entry classified" data-tags="acoustic carrier memory sigint">
           <div class="journal-meta">
             <span>LOG #99-12 // FINAL RESEARCH CONCLUSION</span>
             <span>DATE: 1999-12-30</span>
@@ -654,10 +715,60 @@
           </div>
         </article>
       </div>
+
+      <!-- Station Field Logbook (Operator Intercept Submissions) -->
+      <div style="margin-top:20px; border-top:1px solid var(--border-dim); padding-top:14px;">
+        <div class="card-header">
+          <span>OPERATOR FIELD OBSERVATION LOGBOOK (PERSISTENT INTEL REGISTRY)</span>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-retro btn-green" onclick="exportFieldLogsToSig()">Export All Logs (.SIG)</button>
+            <button class="btn-retro btn-amber" onclick="resetDefaultFieldLogs()">Restore Defaults</button>
+          </div>
+        </div>
+        <p style="font-size:11px; color:#94a3b8; margin-bottom:10px;">
+          Submit your station observations directly into local non-volatile memory storage. Observations persist across system reboots.
+        </p>
+
+        <!-- Input Form -->
+        <div style="background:#070e1d; border:1px solid var(--border-dim); padding:10px; border-radius:4px; margin-bottom:12px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:8px;">
+            <div>
+              <label style="font-size:10px; color:#94a3b8;">CALL SIGN:</label>
+              <input type="text" id="logCallSign" class="term-input" style="width:100%; font-size:11px; padding:4px;" value="OPERATOR-99">
+            </div>
+            <div>
+              <label style="font-size:10px; color:#94a3b8;">MONITORED FREQUENCY:</label>
+              <input type="text" id="logFrequency" class="term-input" style="width:100%; font-size:11px; padding:4px;" value="1999.0 Hz">
+            </div>
+            <div>
+              <label style="font-size:10px; color:#94a3b8;">MODULATION / MODE:</label>
+              <select id="logMode" class="term-input" style="width:100%; font-size:11px; padding:4px;">
+                <option value="2-Op FM (YM2612)">2-Op FM (YM2612)</option>
+                <option value="Bell 202 FSK">Bell 202 FSK</option>
+                <option value="CW Morse Beacon">CW Morse Beacon</option>
+                <option value="VLF Infrasound">VLF Infrasound</option>
+                <option value="Steganographic Audio">Steganographic Audio</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-bottom:8px;">
+            <label style="font-size:10px; color:#94a3b8;">OBSERVATION REPORT:</label>
+            <textarea id="logNotes" class="term-input" style="width:100%; height:45px; font-size:11px; resize:vertical;" placeholder="Enter acoustic telemetry findings or bearing coordinates..."></textarea>
+          </div>
+          <div style="text-align:right;">
+            <button class="btn-retro btn-green" onclick="submitFieldLog()">Submit Observation to SIGINT Archive</button>
+          </div>
+        </div>
+
+        <!-- Rendered User Logs List -->
+        <div id="fieldLogsList" style="max-height:180px; overflow-y:auto; display:flex; flex-direction:column; gap:6px;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- TAB 2: HARMONIC DECODER -->
+  <!-- TAB 2: HARMONIC DECODER & LISSAJOUS PHASE SCOPE -->
   <div id="pane-decoder" class="tab-pane">
     <div class="grid-2col">
       <!-- Left Column: Synthesizer Controls -->
@@ -770,19 +881,22 @@
         </div>
       </div>
 
-      <!-- Right Column: Live Oscilloscope & Signal Demodulator -->
+      <!-- Right Column: Live Oscilloscope & Lissajous Goniometer -->
       <div>
         <div class="card-box">
           <div class="card-header">
-            <span>REAL-TIME CRT OSCILLOSCOPE TRACE</span>
-            <span id="scopeLockIndicator" class="journal-tag" style="color:var(--text-muted);">CARRIER: STANDBY</span>
+            <span>DUAL-MODE CRT OSCILLOSCOPE &amp; LISSAJOUS PHASE VECTOR</span>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-retro" id="btnScopeMode" onclick="toggleScopeMode()">Mode: Time-Domain</button>
+              <span id="scopeLockIndicator" class="journal-tag" style="color:var(--text-muted);">CARRIER: STANDBY</span>
+            </div>
           </div>
           <div class="canvas-box">
-            <canvas id="scopeCanvas" class="display-canvas" width="480" height="180"></canvas>
+            <canvas id="scopeCanvas" class="display-canvas" width="480" height="200"></canvas>
           </div>
           <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:11px; color:#64748b;">
-            <span>SWEEP: 50 ms/div</span>
-            <span>AMPLITUDE: 1.0 V/div</span>
+            <span id="scopeModeLabel">SWEEP: 50 ms/div</span>
+            <span id="scopeRatioLabel">RATIO: 2.00 : 1.00</span>
             <span>PHOSPHOR: P31 GREEN</span>
           </div>
         </div>
@@ -793,7 +907,7 @@
             <span>AUDIO TELEMETRY DEMODULATOR STREAM</span>
             <span id="demodSignalRate" style="font-size:11px; color:var(--green-phosphor);">RATE: 120 WPM</span>
           </div>
-          <div id="demodStream" class="terminal-feed" style="height:140px;">&gt; Awaiting subcarrier activation...
+          <div id="demodStream" class="terminal-feed" style="height:125px;">&gt; Awaiting subcarrier activation...
 &gt; Tune Carrier to 1999 Hz to unlock the telemetry beacon.</div>
         </div>
       </div>
@@ -815,7 +929,7 @@
       </p>
 
       <div class="canvas-box" style="margin-bottom:10px;">
-        <canvas id="sonogramCanvas" class="display-canvas" width="1020" height="240"></canvas>
+        <canvas id="sonogramCanvas" class="display-canvas" width="1040" height="240"></canvas>
       </div>
 
       <!-- Frequency Axis Markers -->
@@ -863,6 +977,7 @@
           <button class="btn-retro" onclick="injectSignalTest('dtmf_1999')">DTMF 1999 Tones</button>
           <button class="btn-retro" onclick="injectSignalTest('fsk_modem')">FSK 1200/2200 Modem</button>
           <button class="btn-retro btn-amber" onclick="injectSignalTest('beacon_1999')">Inject 1999Hz Beacon</button>
+          <button class="btn-retro btn-purple" onclick="switchTab('stego'); synthesizeVisualStegoText('1999');">Stamp '1999' Stego Glyph</button>
         </div>
         <div style="font-size:11px; color:#94a3b8;">
           FFT Size: <strong>1024</strong> | Smoothing: <strong>0.82</strong> | Range: <strong>-90 dB to -10 dB</strong>
@@ -981,7 +1096,190 @@
     </div>
   </div>
 
-  <!-- TAB 5: FIELD TERMINAL -->
+  <!-- TAB 5: SIGINT TRANSDUCER & BEAMFORMER GRID (NEW DEEP EXPANSION) -->
+  <div id="pane-sigint" class="tab-pane">
+    <div class="card-box">
+      <div class="card-header">
+        <span>SUBSURFACE ACOUSTIC TRANSDUCER GRID &amp; PHASED BEAMFORMER</span>
+        <div style="display:flex; gap:6px;">
+          <span class="journal-tag" style="border-color:var(--purple-spectral); color:var(--purple-spectral);">SIGINT ARRAY // 4 CHANNELS</span>
+        </div>
+      </div>
+      <p style="font-size:12px; color:#94a3b8; margin-bottom:14px;">
+        Real-time acoustic beamforming across 8 hydrophone / piezoelectric transducer elements. Align the phased beamforming azimuth dial with target bearings to achieve signal lock and filter subterranean RF transmissions from background ambient noise.
+      </p>
+
+      <div class="grid-2col">
+        <!-- Radar / Polar Beamforming Plot -->
+        <div>
+          <div class="canvas-box" style="margin-bottom:10px;">
+            <canvas id="beamCanvas" class="display-canvas" width="480" height="300"></canvas>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+              <label style="font-size:11px; color:#cbd5e1; font-weight:700;">BEAM AZIMUTH:</label>
+              <input type="range" id="beamAzimuthSlider" class="slider-control" min="0" max="359" step="1" value="199" oninput="updateBeamAzimuth(this.value)">
+              <span id="beamAzimuthBadge" class="value-badge" style="color:var(--purple-spectral);">199.9°</span>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-retro btn-purple" onclick="autoSweepBeam()">Auto 360° Sweep</button>
+              <button class="btn-retro" onclick="toggleBeamAudio()">Listen Beam Audio</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Listening Stations & Signal Intelligence Library -->
+        <div>
+          <div style="font-size:11px; font-weight:700; color:#bae6fd; margin-bottom:8px;">SELECT ACOUSTIC LISTENING STATION:</div>
+          <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
+            <!-- Station 1 -->
+            <div class="sigint-station-card active" id="stationCard-alpha" onclick="selectSigintStation('alpha')">
+              <div style="display:flex; justify-content:space-between; font-size:11.5px; font-weight:700; color:var(--green-phosphor);">
+                <span>STATION ALPHA: Carlsbad Deep Salt Cavern</span>
+                <span>BEARING: 199.9°</span>
+              </div>
+              <div style="font-size:11px; color:#94a3b8; margin-top:3px;">
+                Target: <strong>10.19.99.4/classified</strong> | Frequency: <strong>1999.0 Hz</strong> | Modulation: <strong>2-Op FM + Bell 202</strong>
+              </div>
+            </div>
+
+            <!-- Station 2 -->
+            <div class="sigint-station-card" id="stationCard-beta" onclick="selectSigintStation('beta')">
+              <div style="display:flex; justify-content:space-between; font-size:11.5px; font-weight:700; color:var(--border-bright);">
+                <span>STATION BETA: Pacific Rim MCI Cable Tap</span>
+                <span>BEARING: 285.0°</span>
+              </div>
+              <div style="font-size:11px; color:#94a3b8; margin-top:3px;">
+                Target: <strong>Submarine Fiber Concentrator</strong> | Frequency: <strong>1200 / 2200 Hz</strong> | Modulation: <strong>FSK Telemetry</strong>
+              </div>
+            </div>
+
+            <!-- Station 3 -->
+            <div class="sigint-station-card" id="stationCard-gamma" onclick="selectSigintStation('gamma')">
+              <div style="display:flex; justify-content:space-between; font-size:11.5px; font-weight:700; color:var(--amber-led);">
+                <span>STATION GAMMA: Cheyenne Mtn Infrasound Array</span>
+                <span>BEARING: 043.2°</span>
+              </div>
+              <div style="font-size:11px; color:#94a3b8; margin-top:3px;">
+                Target: <strong>Precursor Lithosphere Resonance</strong> | Frequency: <strong>43.2 Hz</strong> | Modulation: <strong>Sub-bass Rumble</strong>
+              </div>
+            </div>
+
+            <!-- Station 4 -->
+            <div class="sigint-station-card" id="stationCard-delta" onclick="selectSigintStation('delta')">
+              <div style="display:flex; justify-content:space-between; font-size:11.5px; font-weight:700; color:var(--purple-spectral);">
+                <span>STATION DELTA: Orbital Transponder Downlink</span>
+                <span>BEARING: 088.8°</span>
+              </div>
+              <div style="font-size:11px; color:#94a3b8; margin-top:3px;">
+                Target: <strong>Stratospheric Relay #016</strong> | Frequency: <strong>888.0 Hz</strong> | Modulation: <strong>Quartz Harmonic Chime</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Real-Time Telemetry Metrics -->
+          <div style="background:#060a14; border:1px solid var(--border-dim); padding:10px; border-radius:4px; font-size:11.5px;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span>PHASED ARRAY GAIN:</span>
+              <strong id="sigintArrayGain" style="color:var(--green-phosphor);">+18.4 dB (LOCKED)</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span>DOPPLER DRIFT:</span>
+              <strong id="sigintDoppler" style="color:#bae6fd;">+0.04 Hz (STABLE)</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+              <span>ESTIMATED RANGE:</span>
+              <strong id="sigintRange" style="color:var(--amber-led);">14.2 km (CARLSBAD VAULT)</strong>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+              <span>INTERCEPT LOCK:</span>
+              <strong id="sigintLockStatus" style="color:var(--green-phosphor);">100% PHASE COHERENCE</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 6: CIPHER & STEGANOGRAPHY LAB (NEW DEEP EXPANSION) -->
+  <div id="pane-stego" class="tab-pane">
+    <div class="grid-2col">
+      <!-- Left: Audio Steganography Studio -->
+      <div class="card-box">
+        <div class="card-header">
+          <span>SPECTROGRAPHIC AUDIO STEGANOGRAPHY STUDIO</span>
+          <span class="journal-tag">COAGULA MATRIX</span>
+        </div>
+        <p style="font-size:11.5px; color:#94a3b8; margin-bottom:10px;">
+          Encode visual text and glyphs directly into audio frequency spectra. When played into the 2D Waterfall Spectrogram (Tab 3), the sound paints visible text across the frequency matrix!
+        </p>
+
+        <!-- Glyph Selection / Text Input -->
+        <div style="margin-bottom:10px;">
+          <label style="font-size:11px; color:#bae6fd; font-weight:700;">PRESET GLYPHS / TRANSMISSION SEEDS:</label>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+            <button class="btn-retro btn-green" onclick="loadStegoPreset('1999')">"1999"</button>
+            <button class="btn-retro" onclick="loadStegoPreset('ECHO')">"ECHO"</button>
+            <button class="btn-retro" onclick="loadStegoPreset('SIGINT')">"SIGINT"</button>
+            <button class="btn-retro btn-amber" onclick="loadStegoPreset('CARLSBAD')">"CARLSBAD"</button>
+            <button class="btn-retro btn-purple" onclick="loadStegoPreset('0x7F')">"0x7F"</button>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <label class="control-label">Custom Stego Text (Max 12 chars):</label>
+          <input type="text" id="customStegoInput" class="term-input" style="max-width:180px; font-size:11px;" value="1999" maxlength="12" oninput="previewStegoBitmap()">
+        </div>
+
+        <!-- Bitmap Matrix Preview Canvas -->
+        <div style="margin-top:6px; margin-bottom:10px;">
+          <div style="font-size:10px; color:#64748b; margin-bottom:3px;">VISUAL SPECTROGRAM FREQUENCY ENCODING PREVIEW:</div>
+          <div class="canvas-box">
+            <canvas id="stegoPreviewCanvas" class="display-canvas" width="460" height="70"></canvas>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn-retro btn-green" onclick="playStegoAudioAndRender()">Synthesize &amp; Transmit to Sonogram</button>
+          <button class="btn-retro" onclick="downloadStegoWav()">Export Stego Audio (.WAV)</button>
+        </div>
+      </div>
+
+      <!-- Right: FSK Teleprinter & RTTY Transceiver -->
+      <div class="card-box">
+        <div class="card-header">
+          <span>BAUDOT / BELL 202 FSK TELEPRINTER (RTTY)</span>
+          <span class="journal-tag">1200 / 2200 HZ</span>
+        </div>
+        <p style="font-size:11.5px; color:#94a3b8; margin-bottom:10px;">
+          Audio frequency shift keying (Mark: 1200Hz, Space: 2200Hz). Types out messages with authentic mechanical teleprinter sound effects and live cross-hair Lissajous discriminator.
+        </p>
+
+        <!-- Teleprinter Output Paper -->
+        <div id="rttyPaper" class="teleprinter-paper">
+** ESARL MODEL 33 TELEPRINTER ON-LINE **
+STATION: SIG-1999-ECHO
+READY FOR FSK TRANSMISSION...
+        </div>
+
+        <!-- Teleprinter Input Row -->
+        <div style="margin-top:10px; display:flex; gap:6px;">
+          <input type="text" id="rttyTextInput" class="term-input" style="font-size:11.5px;" value="ECHO 1999 CARLSBAD" placeholder="Type message to print via FSK...">
+          <button class="btn-retro btn-amber" onclick="transmitRttyMessage()">Transmit FSK</button>
+          <button class="btn-retro" onclick="clearRttyPaper()">Clear</button>
+        </div>
+
+        <div style="margin-top:10px; font-size:11px; color:#64748b; display:flex; justify-content:space-between;">
+          <span>STANDARD: BELL 202 AFSK</span>
+          <span>BAUD: 45.45 / 1200</span>
+          <span>DISCRIMINATOR: QUADRATURE</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 7: FIELD TERMINAL -->
   <div id="pane-terminal" class="tab-pane">
     <div class="card-box">
       <div class="card-header">
@@ -989,7 +1287,7 @@
         <span class="journal-tag">VT100 COMPATIBLE</span>
       </div>
       <p style="font-size:12px; color:#94a3b8; margin-bottom:10px;">
-        Command-line interface to the Echo Subsystem laboratory database. Type <code>help</code>, <code>status</code>, <code>scan</code>, <code>decode 1999</code>, <code>journal 3</code>, <code>ping 10.19.99.4</code>, <code>export wav</code>, or <code>export dat</code>.
+        Command-line interface to the Echo Subsystem laboratory database. Type <code>help</code>, <code>status</code>, <code>scan</code>, <code>decode 1999</code>, <code>sigint</code>, <code>beamform 199</code>, <code>stego 1999</code>, <code>rtty [text]</code>, <code>lissajous</code>, <code>journal 3</code>, <code>ping 10.19.99.4</code>, <code>export wav</code>, or <code>export sig</code>.
       </p>
 
       <div id="termOutput" class="terminal-feed"></div>
@@ -999,6 +1297,7 @@
         <button class="btn-retro btn-green" onclick="executeTermInput()">Execute</button>
         <button class="btn-retro" onclick="downloadTelemetryBlob()">Export .DAT</button>
         <button class="btn-retro" onclick="downloadCarrierWav()">Export .WAV</button>
+        <button class="btn-retro btn-purple" onclick="exportFieldLogsToSig()">Export .SIG</button>
       </div>
     </div>
   </div>
@@ -1014,9 +1313,10 @@
     <!-- Webring Navigation -->
     <div class="webring-bar">
       <span class="webring-badge">Central KiloNet Webring Member #016</span>
-      <a href="/web/classified.html" class="webring-link">« Previous: 10.19.99.4 Classified</a> |
+      <a href="/web/classified.html" class="webring-link">« Previous: #015 Aethel Carlsbad 10.19.99.4</a> |
       <a href="/web/webring.html" class="webring-link">Webring Hub</a> |
-      <a href="/web/portal.html" class="webring-link">KiloNet 1999 Portal »</a> |
+      <a href="/web/deep_core.html" class="webring-link">Next: #017 Deep Core Ghost Node »</a> |
+      <a href="/web/portal.html" class="webring-link">KiloNet 1999 Portal</a> |
       <a href="/web/darknet.html" class="webring-link">Darknet Node 0x7F</a>
     </div>
   </footer>
@@ -1040,6 +1340,7 @@
   let morseTimeout = null;
   let currentPalette = 'phosphor';
   let isSonogramFrozen = false;
+  let scopeMode = 'time'; // 'time' or 'lissajous'
 
   function initAudioContext() {
     if (!audioCtx) {
@@ -1055,8 +1356,7 @@
 
   function setupSynthChain() {
     if (!initAudioContext()) return;
-
-    if (masterGain) return; // already set up
+    if (masterGain) return; // already initialized
 
     // Master Output & Analyser
     masterGain = audioCtx.createGain();
@@ -1109,6 +1409,7 @@
       startVisualizers();
     } else {
       stopTone();
+      stopBeamAudio();
       dot.className = "status-dot";
       text.textContent = "AUDIO: IDLE";
       text.style.color = "#94a3b8";
@@ -1197,6 +1498,9 @@
     document.getElementById('valDepth').textContent = d.toString();
     document.getElementById('valDelay').textContent = Math.round(del * 100) + "%";
 
+    const ratioLabel = document.getElementById('scopeRatioLabel');
+    if (ratioLabel) ratioLabel.textContent = `RATIO: ${r.toFixed(2)} : 1.00`;
+
     if (audioCtx) {
       const now = audioCtx.currentTime;
       if (carrierOsc) carrierOsc.frequency.setTargetAtTime(f, now, 0.05);
@@ -1237,6 +1541,15 @@
       el.textContent = "CARRIER: STANDBY";
       el.style.color = "var(--text-muted)";
     }
+  }
+
+  function toggleScopeMode() {
+    scopeMode = (scopeMode === 'time') ? 'lissajous' : 'time';
+    const btn = document.getElementById('btnScopeMode');
+    const lbl = document.getElementById('scopeModeLabel');
+    if (btn) btn.textContent = (scopeMode === 'time') ? "Mode: Time-Domain" : "Mode: Lissajous (X-Y)";
+    if (lbl) lbl.textContent = (scopeMode === 'time') ? "SWEEP: 50 ms/div" : "X: MODULATOR / Y: CARRIER";
+    logToTerminal(`>> [OSCILLOSCOPE] Switched trace to ${scopeMode.toUpperCase()} mode.`);
   }
 
   /* ============================================================
@@ -1355,6 +1668,8 @@
     if (bodeCanvas) bodeCtx = bodeCanvas.getContext('2d');
 
     drawBodePlot();
+    initBeamformer();
+    previewStegoBitmap();
   }
 
   function startVisualizers() {
@@ -1367,7 +1682,7 @@
     function renderLoop() {
       visualizerAnimId = requestAnimationFrame(renderLoop);
 
-      // 1. Oscilloscope Render
+      // 1. Oscilloscope Render (Time-Domain or Lissajous X-Y)
       if (scopeCtx && scopeCanvas) {
         const w = scopeCanvas.width;
         const h = scopeCanvas.height;
@@ -1384,33 +1699,66 @@
         for (let y = 0; y < h; y += 30) { scopeCtx.moveTo(0, y); scopeCtx.lineTo(w, y); }
         scopeCtx.stroke();
 
-        if (analyser && isAudioPowered) {
-          analyser.getByteTimeDomainData(timeDomain);
-          scopeCtx.strokeStyle = "#00ffaa";
-          scopeCtx.lineWidth = 2;
-          scopeCtx.shadowBlur = 6;
-          scopeCtx.shadowColor = "#00ffaa";
+        if (scopeMode === 'lissajous') {
+          // Lissajous Phase Scope (Modulator on X vs Carrier on Y)
+          const f = parseFloat(document.getElementById('sliderCarrier').value) || 1999;
+          const r = parseFloat(document.getElementById('sliderRatio').value) || 2.0;
+          const active = isAudioPowered && (carrierOsc !== null);
+
+          scopeCtx.strokeStyle = active ? "#00ffaa" : "rgba(56, 189, 248, 0.35)";
+          scopeCtx.lineWidth = active ? 2 : 1;
+          if (active) {
+            scopeCtx.shadowBlur = 8;
+            scopeCtx.shadowColor = "#00ffaa";
+          }
           scopeCtx.beginPath();
 
-          const sliceWidth = w / 1024;
-          let x = 0;
-          for (let i = 0; i < 1024; i++) {
-            const v = timeDomain[i] / 128.0;
-            const y = (v * h) / 2;
+          const tNow = performance.now() * 0.002;
+          const points = 360;
+          const cx = w / 2;
+          const cy = h / 2;
+          const rx = (w * 0.38);
+          const ry = (h * 0.38);
+
+          for (let i = 0; i <= points; i++) {
+            const angle = (i / points) * Math.PI * 2;
+            const x = cx + Math.sin(angle * r + tNow) * rx;
+            const y = cy + Math.sin(angle) * ry;
             if (i === 0) scopeCtx.moveTo(x, y);
             else scopeCtx.lineTo(x, y);
-            x += sliceWidth;
           }
           scopeCtx.stroke();
           scopeCtx.shadowBlur = 0;
         } else {
-          // Idle baseline
-          scopeCtx.strokeStyle = "rgba(56, 189, 248, 0.35)";
-          scopeCtx.lineWidth = 1;
-          scopeCtx.beginPath();
-          scopeCtx.moveTo(0, h / 2);
-          scopeCtx.lineTo(w, h / 2);
-          scopeCtx.stroke();
+          // Standard Time-Domain Mode
+          if (analyser && isAudioPowered) {
+            analyser.getByteTimeDomainData(timeDomain);
+            scopeCtx.strokeStyle = "#00ffaa";
+            scopeCtx.lineWidth = 2;
+            scopeCtx.shadowBlur = 6;
+            scopeCtx.shadowColor = "#00ffaa";
+            scopeCtx.beginPath();
+
+            const sliceWidth = w / 1024;
+            let x = 0;
+            for (let i = 0; i < 1024; i++) {
+              const v = timeDomain[i] / 128.0;
+              const y = (v * h) / 2;
+              if (i === 0) scopeCtx.moveTo(x, y);
+              else scopeCtx.lineTo(x, y);
+              x += sliceWidth;
+            }
+            scopeCtx.stroke();
+            scopeCtx.shadowBlur = 0;
+          } else {
+            // Idle baseline
+            scopeCtx.strokeStyle = "rgba(56, 189, 248, 0.35)";
+            scopeCtx.lineWidth = 1;
+            scopeCtx.beginPath();
+            scopeCtx.moveTo(0, h / 2);
+            scopeCtx.lineTo(w, h / 2);
+            scopeCtx.stroke();
+          }
         }
       }
 
@@ -1463,6 +1811,9 @@
           }
         }
       }
+
+      // 3. Beamformer Radar Render
+      renderBeamformer();
     }
     renderLoop();
   }
@@ -1736,7 +2087,607 @@
   }
 
   /* ============================================================
-     5. Field Terminal & Journal Management
+     5. Subsurface Acoustic Transducer Grid & Beamformer
+     ============================================================ */
+  let beamCanvas, beamCtx;
+  let currentBeamAzimuth = 199.9;
+  let isAutoSweeping = false;
+  let autoSweepId = null;
+  let beamAudioOsc = null;
+  let beamNoiseSource = null;
+  let isBeamAudioActive = false;
+
+  const SIGINT_STATIONS = {
+    alpha: {
+      id: 'alpha',
+      name: "Carlsbad Deep Salt Cavern",
+      bearing: 199.9,
+      freq: 1999.0,
+      range: "14.2 km (CARLSBAD VAULT)",
+      target: "10.19.99.4/classified",
+      color: "#00ffaa",
+      doppler: "+0.04 Hz"
+    },
+    beta: {
+      id: 'beta',
+      name: "Pacific Rim MCI Cable Tap",
+      bearing: 285.0,
+      freq: 1200.0,
+      range: "1,240 km (UNDERSEA FIBER)",
+      target: "Submarine Concentrator",
+      color: "#38bdf8",
+      doppler: "-0.12 Hz"
+    },
+    gamma: {
+      id: 'gamma',
+      name: "Cheyenne Mtn Infrasound Array",
+      bearing: 43.2,
+      freq: 43.2,
+      range: "680 km (ROCKY MTNS)",
+      target: "Precursor Resonance",
+      color: "#f59e0b",
+      doppler: "+0.00 Hz"
+    },
+    delta: {
+      id: 'delta',
+      name: "Orbital Transponder Downlink",
+      bearing: 88.8,
+      freq: 888.0,
+      range: "35,786 km (GEO-SYNC)",
+      target: "Stratospheric Relay #016",
+      color: "#a78bfa",
+      doppler: "+1.28 Hz"
+    }
+  };
+
+  let activeStationKey = 'alpha';
+
+  function initBeamformer() {
+    beamCanvas = document.getElementById('beamCanvas');
+    if (beamCanvas) beamCtx = beamCanvas.getContext('2d');
+  }
+
+  function selectSigintStation(key) {
+    activeStationKey = key;
+    const st = SIGINT_STATIONS[key];
+    if (!st) return;
+
+    // Update UI highlights
+    ['alpha', 'beta', 'gamma', 'delta'].forEach(k => {
+      const el = document.getElementById('stationCard-' + k);
+      if (el) el.className = (k === key) ? 'sigint-station-card active' : 'sigint-station-card';
+    });
+
+    // Auto align beam azimuth slider
+    updateBeamAzimuth(st.bearing);
+    const slider = document.getElementById('beamAzimuthSlider');
+    if (slider) slider.value = Math.round(st.bearing);
+
+    // Update metrics
+    document.getElementById('sigintRange').textContent = st.range;
+    document.getElementById('sigintDoppler').textContent = st.doppler;
+
+    logToTerminal(`>> [SIGINT] Station switched to ${st.name}. Bearing: ${st.bearing}°, Freq: ${st.freq}Hz.`);
+  }
+
+  function updateBeamAzimuth(val) {
+    currentBeamAzimuth = parseFloat(val);
+    const badge = document.getElementById('beamAzimuthBadge');
+    if (badge) badge.textContent = currentBeamAzimuth.toFixed(1) + "°";
+
+    const st = SIGINT_STATIONS[activeStationKey];
+    const delta = Math.abs(currentBeamAzimuth - st.bearing);
+    const circularDelta = Math.min(delta, 360 - delta);
+
+    const gainEl = document.getElementById('sigintArrayGain');
+    const lockEl = document.getElementById('sigintLockStatus');
+
+    if (circularDelta <= 5) {
+      if (gainEl) { gainEl.textContent = "+18.4 dB (LOCKED)"; gainEl.style.color = "var(--green-phosphor)"; }
+      if (lockEl) { lockEl.textContent = "100% PHASE COHERENCE"; lockEl.style.color = "var(--green-phosphor)"; }
+      if (isBeamAudioActive && beamAudioOsc) {
+        beamAudioOsc.frequency.setTargetAtTime(st.freq, audioCtx.currentTime, 0.05);
+      }
+    } else if (circularDelta <= 25) {
+      if (gainEl) { gainEl.textContent = "+6.2 dB (MARGINAL)"; gainEl.style.color = "var(--amber-led)"; }
+      if (lockEl) { lockEl.textContent = "45% PHASE DRIFT"; lockEl.style.color = "var(--amber-led)"; }
+    } else {
+      if (gainEl) { gainEl.textContent = "-12.0 dB (OFF-AXIS)"; gainEl.style.color = "#ef4444"; }
+      if (lockEl) { lockEl.textContent = "NO PHASE COHERENCE"; lockEl.style.color = "#94a3b8"; }
+    }
+  }
+
+  function renderBeamformer() {
+    if (!beamCtx || !beamCanvas) return;
+    const w = beamCanvas.width;
+    const h = beamCanvas.height;
+    const cx = w / 2;
+    const cy = h / 2;
+    const radius = Math.min(w, h) * 0.42;
+
+    // Background
+    beamCtx.fillStyle = "#02050b";
+    beamCtx.fillRect(0, 0, w, h);
+
+    // Concentric Range Rings
+    beamCtx.strokeStyle = "rgba(30, 49, 91, 0.6)";
+    beamCtx.lineWidth = 1;
+    for (let r = 0.25; r <= 1.0; r += 0.25) {
+      beamCtx.beginPath();
+      beamCtx.arc(cx, cy, radius * r, 0, Math.PI * 2);
+      beamCtx.stroke();
+    }
+
+    // Cross-hairs
+    beamCtx.beginPath();
+    beamCtx.moveTo(cx - radius, cy); beamCtx.lineTo(cx + radius, cy);
+    beamCtx.moveTo(cx, cy - radius); beamCtx.lineTo(cx, cy + radius);
+    beamCtx.stroke();
+
+    // Compass degree labels
+    beamCtx.font = "9px Consolas, monospace";
+    beamCtx.fillStyle = "#64748b";
+    beamCtx.textAlign = "center";
+    beamCtx.fillText("000° N", cx, cy - radius - 5);
+    beamCtx.fillText("090° E", cx + radius + 18, cy + 3);
+    beamCtx.fillText("180° S", cx, cy + radius + 12);
+    beamCtx.fillText("270° W", cx - radius - 18, cy + 3);
+
+    // Render 8 Circular Phased Transducer Array Elements
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const ex = cx + Math.cos(a) * (radius * 0.35);
+      const ey = cy + Math.sin(a) * (radius * 0.35);
+      beamCtx.fillStyle = "#00ffaa";
+      beamCtx.beginPath();
+      beamCtx.arc(ex, ey, 3, 0, Math.PI * 2);
+      beamCtx.fill();
+    }
+
+    // Render Targets from Station catalog
+    Object.values(SIGINT_STATIONS).forEach(st => {
+      const rad = (st.bearing - 90) * (Math.PI / 180);
+      const tx = cx + Math.cos(rad) * (radius * 0.85);
+      const ty = cy + Math.sin(rad) * (radius * 0.85);
+
+      beamCtx.fillStyle = st.color;
+      beamCtx.beginPath();
+      beamCtx.arc(tx, ty, 5, 0, Math.PI * 2);
+      beamCtx.fill();
+
+      beamCtx.fillStyle = "#bae6fd";
+      beamCtx.font = "9px Consolas, monospace";
+      beamCtx.fillText(st.bearing + "°", tx + 12, ty - 2);
+    });
+
+    // Render Main Phased Beamforming Lobe
+    const beamRad = (currentBeamAzimuth - 90) * (Math.PI / 180);
+    beamCtx.save();
+    beamCtx.translate(cx, cy);
+    beamCtx.rotate(beamRad);
+
+    // Lobe geometry
+    beamCtx.fillStyle = "rgba(167, 139, 250, 0.25)";
+    beamCtx.strokeStyle = "#a78bfa";
+    beamCtx.lineWidth = 2;
+    beamCtx.beginPath();
+    beamCtx.moveTo(0, 0);
+    beamCtx.bezierCurveTo(radius * 0.4, -radius * 0.25, radius * 0.8, -radius * 0.1, radius, 0);
+    beamCtx.bezierCurveTo(radius * 0.8, radius * 0.1, radius * 0.4, radius * 0.25, 0, 0);
+    beamCtx.fill();
+    beamCtx.stroke();
+    beamCtx.restore();
+
+    // Rotating Radar Sweep Beam
+    const sweepAngle = (performance.now() * 0.001) % (Math.PI * 2);
+    beamCtx.strokeStyle = "rgba(0, 255, 170, 0.25)";
+    beamCtx.lineWidth = 1;
+    beamCtx.beginPath();
+    beamCtx.moveTo(cx, cy);
+    beamCtx.lineTo(cx + Math.cos(sweepAngle) * radius, cy + Math.sin(sweepAngle) * radius);
+    beamCtx.stroke();
+  }
+
+  function autoSweepBeam() {
+    isAutoSweeping = !isAutoSweeping;
+    if (isAutoSweeping) {
+      logToTerminal(">> [SIGINT] 360° Phased Array Auto-Sweep started.");
+      autoSweepId = setInterval(() => {
+        let n = (currentBeamAzimuth + 2) % 360;
+        updateBeamAzimuth(n);
+        const sl = document.getElementById('beamAzimuthSlider');
+        if (sl) sl.value = Math.round(n);
+      }, 50);
+    } else {
+      clearInterval(autoSweepId);
+      autoSweepId = null;
+      logToTerminal(">> [SIGINT] Phased Array Auto-Sweep halted.");
+    }
+  }
+
+  function toggleBeamAudio() {
+    if (!isAudioPowered) toggleAudioEngine();
+    if (!audioCtx) return;
+
+    isBeamAudioActive = !isBeamAudioActive;
+    if (isBeamAudioActive) {
+      const st = SIGINT_STATIONS[activeStationKey];
+      beamAudioOsc = audioCtx.createOscillator();
+      beamAudioOsc.type = 'sine';
+      beamAudioOsc.frequency.setValueAtTime(st.freq, audioCtx.currentTime);
+
+      const g = audioCtx.createGain();
+      g.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      beamAudioOsc.connect(g);
+      g.connect(masterGain);
+      beamAudioOsc.start();
+      logToTerminal(`>> [SIGINT] Live acoustic hydrophone stream started on ${st.freq}Hz.`);
+    } else {
+      stopBeamAudio();
+      logToTerminal(">> [SIGINT] Hydrophone stream muted.");
+    }
+  }
+
+  function stopBeamAudio() {
+    if (beamAudioOsc) {
+      try { beamAudioOsc.stop(); beamAudioOsc.disconnect(); } catch (e) {}
+      beamAudioOsc = null;
+    }
+    isBeamAudioActive = false;
+  }
+
+  /* ============================================================
+     6. Spectrographic Audio Steganography & FSK Teleprinter
+     ============================================================ */
+  const FONT_5X7 = {
+    '1': [0x00, 0x22, 0x7F, 0x20, 0x00],
+    '9': [0x06, 0x49, 0x49, 0x29, 0x1E],
+    'E': [0x7F, 0x49, 0x49, 0x49, 0x41],
+    'C': [0x3E, 0x41, 0x41, 0x41, 0x22],
+    'H': [0x7F, 0x08, 0x08, 0x08, 0x7F],
+    'O': [0x3E, 0x41, 0x41, 0x41, 0x3E],
+    'S': [0x46, 0x49, 0x49, 0x49, 0x31],
+    'I': [0x00, 0x41, 0x7F, 0x41, 0x00],
+    'G': [0x3E, 0x41, 0x49, 0x49, 0x7A],
+    'N': [0x7F, 0x04, 0x08, 0x10, 0x7F],
+    'T': [0x01, 0x01, 0x7F, 0x01, 0x01],
+    'A': [0x7E, 0x11, 0x11, 0x11, 0x7E],
+    'R': [0x7F, 0x09, 0x19, 0x29, 0x46],
+    'L': [0x7F, 0x40, 0x40, 0x40, 0x40],
+    'B': [0x7F, 0x49, 0x49, 0x49, 0x36],
+    'D': [0x7F, 0x41, 0x41, 0x22, 0x1C],
+    '0': [0x3E, 0x51, 0x49, 0x45, 0x3E],
+    'X': [0x63, 0x14, 0x08, 0x14, 0x63],
+    'F': [0x7F, 0x09, 0x09, 0x09, 0x01],
+    ' ': [0x00, 0x00, 0x00, 0x00, 0x00]
+  };
+
+  let stegoCanvas, stegoCtx;
+
+  function previewStegoBitmap() {
+    stegoCanvas = document.getElementById('stegoPreviewCanvas');
+    if (!stegoCanvas) return;
+    stegoCtx = stegoCanvas.getContext('2d');
+
+    const inp = document.getElementById('customStegoInput');
+    const text = (inp ? inp.value : '1999').toUpperCase();
+
+    const w = stegoCanvas.width;
+    const h = stegoCanvas.height;
+
+    stegoCtx.fillStyle = "#02050b";
+    stegoCtx.fillRect(0, 0, w, h);
+
+    stegoCtx.fillStyle = "#00ffaa";
+    let curX = 15;
+
+    for (let c = 0; c < text.length; c++) {
+      const ch = text[c];
+      const cols = FONT_5X7[ch] || FONT_5X7[' '];
+      for (let col = 0; col < 5; col++) {
+        const val = cols[col];
+        for (let row = 0; row < 7; row++) {
+          if ((val >> row) & 1) {
+            stegoCtx.fillRect(curX + col * 6, h - (row + 1) * 8 - 6, 5, 6);
+          }
+        }
+      }
+      curX += 36;
+    }
+  }
+
+  function loadStegoPreset(txt) {
+    const inp = document.getElementById('customStegoInput');
+    if (inp) inp.value = txt;
+    previewStegoBitmap();
+  }
+
+  function playStegoAudioAndRender() {
+    if (!isAudioPowered) toggleAudioEngine();
+    if (!audioCtx) return;
+
+    const inp = document.getElementById('customStegoInput');
+    const text = (inp ? inp.value : '1999').toUpperCase();
+
+    logToTerminal(`>> [STEGANOGRAPHY] Synthesizing "${text}" into visual audio frequencies...`);
+    synthesizeVisualStegoText(text);
+  }
+
+  function synthesizeVisualStegoText(text) {
+    if (!audioCtx) return;
+    const baseFreq = 800; // Hz
+    const freqStep = 220; // Hz per pixel row (7 rows = 800 to 2120 Hz)
+    const colDuration = 0.08; // 80ms per column
+    let timeOffset = audioCtx.currentTime;
+
+    for (let c = 0; c < text.length; c++) {
+      const ch = text[c];
+      const cols = FONT_5X7[ch] || FONT_5X7[' '];
+
+      for (let col = 0; col < cols.length; col++) {
+        const colVal = cols[col];
+
+        for (let row = 0; row < 7; row++) {
+          if ((colVal >> row) & 1) {
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            const f = baseFreq + row * freqStep;
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(f, timeOffset);
+            g.gain.setValueAtTime(0.04, timeOffset);
+            g.gain.linearRampToValueAtTime(0.001, timeOffset + colDuration);
+
+            osc.connect(g);
+            g.connect(masterGain);
+            osc.start(timeOffset);
+            osc.stop(timeOffset + colDuration);
+          }
+        }
+        timeOffset += colDuration;
+      }
+      timeOffset += colDuration * 1.5; // space between letters
+    }
+
+    logToTerminal(`>> [STEGANOGRAPHY] Completed synthesis. Visual pattern displayed on Sonogram.`);
+  }
+
+  function downloadStegoWav() {
+    const inp = document.getElementById('customStegoInput');
+    const text = (inp ? inp.value : '1999').toUpperCase();
+    const sampleRate = 22050;
+    const baseFreq = 800;
+    const freqStep = 220;
+    const colDuration = 0.08;
+    const letterGap = colDuration * 1.5;
+
+    let totalDuration = 0;
+    for (let c = 0; c < text.length; c++) {
+      totalDuration += 5 * colDuration + letterGap;
+    }
+    const numSamples = Math.floor(sampleRate * totalDuration);
+    const samples = new Float32Array(numSamples);
+
+    let sampleOffset = 0;
+    for (let c = 0; c < text.length; c++) {
+      const ch = text[c];
+      const cols = FONT_5X7[ch] || FONT_5X7[' '];
+
+      for (let col = 0; col < cols.length; col++) {
+        const colVal = cols[col];
+        const colSamples = Math.floor(sampleRate * colDuration);
+
+        for (let i = 0; i < colSamples; i++) {
+          const t = i / sampleRate;
+          let sum = 0;
+          for (let row = 0; row < 7; row++) {
+            if ((colVal >> row) & 1) {
+              const f = baseFreq + row * freqStep;
+              sum += Math.sin(2 * Math.PI * f * t) * 0.12;
+            }
+          }
+          if (sampleOffset + i < numSamples) {
+            samples[sampleOffset + i] += sum;
+          }
+        }
+        sampleOffset += colSamples;
+      }
+      sampleOffset += Math.floor(sampleRate * letterGap);
+    }
+
+    const wavBlob = createWavBlob(sampleRate, samples);
+    const url = URL.createObjectURL(wavBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `stego_${text.toLowerCase().replace(/[^a-z0-9]/g, '_')}.wav`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    logToTerminal(`>> [EXPORT] Steganography audio saved to 'stego_${text.toLowerCase()}.wav'.`);
+  }
+
+  // FSK Teleprinter Logic
+  function transmitRttyMessage() {
+    if (!isAudioPowered) toggleAudioEngine();
+    const inp = document.getElementById('rttyTextInput');
+    const text = (inp ? inp.value.trim() : 'ECHO 1999').toUpperCase();
+    if (!text) return;
+
+    const paper = document.getElementById('rttyPaper');
+    paper.textContent += "\n>> TRANSMITTING FSK [BELL 202]:\n";
+
+    let idx = 0;
+    function printNext() {
+      if (idx >= text.length) {
+        paper.textContent += "\n[OVER AND OUT]\n";
+        paper.scrollTop = paper.scrollHeight;
+        return;
+      }
+      const ch = text[idx];
+      idx++;
+
+      // Play FSK Mark (1200) / Space (2200) burst
+      if (audioCtx) {
+        const now = audioCtx.currentTime;
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime((ch.charCodeAt(0) % 2 === 0) ? 1200 : 2200, now);
+        g.gain.setValueAtTime(0.12, now);
+        o.connect(g);
+        g.connect(masterGain);
+        o.start(now);
+        o.stop(now + 0.09);
+      }
+
+      paper.textContent += ch;
+      paper.scrollTop = paper.scrollHeight;
+      setTimeout(printNext, 110);
+    }
+    printNext();
+  }
+
+  function clearRttyPaper() {
+    const paper = document.getElementById('rttyPaper');
+    if (paper) paper.textContent = "** TELEPRINTER READY **\n";
+  }
+
+  /* ============================================================
+     7. Field Observations Logbook (Persistent)
+     ============================================================ */
+  const DEFAULT_FIELD_LOGS = [
+    {
+      callSign: "DR-VANCE",
+      freq: "1999.0 Hz",
+      mode: "2-Op FM (YM2612)",
+      notes: "Subcarrier phase locked to GDI frame redraw buffer. Carlsbad correlation confirmed.",
+      timestamp: "1999-12-28 14:22"
+    },
+    {
+      callSign: "CARLSBAD-TECH",
+      freq: "1200/2200 Hz",
+      mode: "Bell 202 FSK",
+      notes: "Underground salt cavern relay 10.19.99.4 transmitting encrypted diagnostic frames.",
+      timestamp: "1999-12-29 09:15"
+    },
+    {
+      callSign: "SYSOP-0x7F",
+      freq: "888.0 Hz",
+      mode: "Quartz Harmonic",
+      notes: "Crystal chime triggers automatic packet scheduling across local loop buffers.",
+      timestamp: "1999-12-30 21:40"
+    }
+  ];
+
+  function loadFieldLogs() {
+    let logs = [];
+    try {
+      const stored = localStorage.getItem('esarl_field_logs');
+      logs = stored ? JSON.parse(stored) : DEFAULT_FIELD_LOGS;
+    } catch (e) {
+      logs = DEFAULT_FIELD_LOGS;
+    }
+    renderFieldLogs(logs);
+  }
+
+  function renderFieldLogs(logs) {
+    const container = document.getElementById('fieldLogsList');
+    if (!container) return;
+    container.innerHTML = '';
+    logs.slice().reverse().forEach(log => {
+      const item = document.createElement('div');
+      item.style.background = '#0a1326';
+      item.style.border = '1px solid var(--border-dim)';
+      item.style.padding = '6px 10px';
+      item.style.borderRadius = '3px';
+      item.style.fontSize = '11px';
+      item.innerHTML = `
+        <div style="display:flex; justify-content:space-between; color:#bae6fd; font-weight:700;">
+          <span>[${log.callSign}] • ${log.freq} (${log.mode})</span>
+          <span style="color:#64748b; font-size:10px;">${log.timestamp}</span>
+        </div>
+        <div style="color:#cbd5e1; margin-top:2px;">${log.notes}</div>
+      `;
+      container.appendChild(item);
+    });
+  }
+
+  function submitFieldLog() {
+    const cs = document.getElementById('logCallSign').value.trim() || 'OPERATOR-99';
+    const fr = document.getElementById('logFrequency').value.trim() || '1999.0 Hz';
+    const md = document.getElementById('logMode').value;
+    const nt = document.getElementById('logNotes').value.trim();
+
+    if (!nt) {
+      alert("Please enter observation findings before submitting.");
+      return;
+    }
+
+    let logs = [];
+    try {
+      const stored = localStorage.getItem('esarl_field_logs');
+      logs = stored ? JSON.parse(stored) : DEFAULT_FIELD_LOGS;
+    } catch (e) { logs = DEFAULT_FIELD_LOGS; }
+
+    const now = new Date();
+    const pad = n => n.toString().padStart(2, '0');
+    const ts = `1999-12-31 ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+
+    logs.push({ callSign: cs, freq: fr, mode: md, notes: nt, timestamp: ts });
+    try {
+      localStorage.setItem('esarl_field_logs', JSON.stringify(logs));
+    } catch (e) {}
+
+    renderFieldLogs(logs);
+    document.getElementById('logNotes').value = '';
+    logToTerminal(`>> [LOGBOOK] Observation registered from ${cs} on ${fr}.`);
+  }
+
+  function resetDefaultFieldLogs() {
+    try {
+      localStorage.setItem('esarl_field_logs', JSON.stringify(DEFAULT_FIELD_LOGS));
+    } catch (e) {}
+    renderFieldLogs(DEFAULT_FIELD_LOGS);
+    logToTerminal(">> [LOGBOOK] Observation logs reset to default archive entries.");
+  }
+
+  function exportFieldLogsToSig() {
+    let logs = DEFAULT_FIELD_LOGS;
+    try {
+      const stored = localStorage.getItem('esarl_field_logs');
+      if (stored) logs = JSON.parse(stored);
+    } catch (e) {}
+
+    let content = `================================================================================
+ESARL SIGINT FIELD LOGBOOK ARCHIVE // CLASSIFIED 1999
+Host: kweb://echo-subsystem.net | Station: SIG-1999-ECHO
+================================================================================\n\n`;
+
+    logs.forEach((l, i) => {
+      content += `[LOG ENTRY #${i+1}]\n`;
+      content += `TIMESTAMP: ${l.timestamp}\n`;
+      content += `OPERATOR:  ${l.callSign}\n`;
+      content += `FREQUENCY: ${l.freq}\n`;
+      content += `MODE:      ${l.mode}\n`;
+      content += `REPORT:    ${l.notes}\n`;
+      content += `--------------------------------------------------------------------------------\n`;
+    });
+
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'esarl_sigint_intel.sig';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    logToTerminal(">> [EXPORT] Complete intelligence logbook downloaded: 'esarl_sigint_intel.sig'.");
+  }
+
+  /* ============================================================
+     8. Terminal Commands & Tab Switching
      ============================================================ */
   function logToTerminal(msg) {
     const out = document.getElementById('termOutput');
@@ -1746,7 +2697,7 @@
   }
 
   function switchTab(name) {
-    const tabs = ['journal', 'decoder', 'spectral', 'filter', 'terminal'];
+    const tabs = ['journal', 'decoder', 'spectral', 'filter', 'sigint', 'stego', 'terminal'];
     tabs.forEach((t, i) => {
       const btn = document.getElementById('tabBtn' + (i + 1));
       const pane = document.getElementById('pane-' + t);
@@ -1759,11 +2710,12 @@
       }
     });
 
-    if (name === 'spectral' || name === 'decoder' || name === 'filter') {
+    if (name === 'spectral' || name === 'decoder' || name === 'filter' || name === 'sigint') {
       initCanvases();
       if (isAudioPowered) startVisualizers();
       if (name === 'filter') drawBodePlot();
     }
+    if (name === 'stego') previewStegoBitmap();
   }
 
   function executeTermInput() {
@@ -1781,19 +2733,20 @@
 
     switch (c) {
       case 'help':
-        logToTerminal("AVAILABLE COMMANDS:\n  help            - List console commands\n  status          - Display station telemetry and memory state\n  scan            - Perform frequency scan across acoustic bands\n  decode [hz]     - Tune harmonic decoder to specific frequency\n  transmit [text] - Transmit text as 1999Hz Morse burst\n  journal [1-7]   - View specific field log entry\n  filter          - Auto-calibrate parametric filter to 1999Hz\n  ping [ip]       - Ping internal subnet address (try 10.19.99.4)\n  traceroute      - Trace routing hops to echo-subsystem.net\n  export [format] - Export station data (wav, dat, json)\n  clear           - Clear terminal output");
+        logToTerminal("AVAILABLE COMMANDS:\n  help            - List console commands\n  status          - Display station telemetry and memory state\n  scan            - Perform frequency scan across acoustic bands\n  decode [hz]     - Tune harmonic decoder to specific frequency\n  transmit [text] - Transmit text as 1999Hz Morse burst\n  sigint          - Open SIGINT beamformer array\n  beamform [deg]  - Set beam azimuth angle (0-359)\n  stego [text]    - Synthesize spectrographic audio glyph\n  rtty [text]     - Transmit message via FSK teleprinter\n  lissajous       - Toggle XY Lissajous vector scope mode\n  journal [1-7]   - View specific field log entry\n  filter          - Auto-calibrate parametric filter to 1999Hz\n  ping [ip]       - Ping internal subnet address (try 10.19.99.4)\n  traceroute      - Trace routing hops to echo-subsystem.net\n  export [format] - Export data (wav, dat, json, sig)\n  clear           - Clear terminal output");
         break;
 
       case 'status':
-        logToTerminal("STATION STATUS REPORT // SIG-1999-ECHO:\n  Host Domain: kweb://echo-subsystem.net\n  Subcarrier: 1999.0 Hz (LOCKED)\n  Operating Limits: < 999 Kilobytes (Sacred Law)\n  Active Phase: 6 (Harmonic Lock)\n  Audio Core: YM2612 2-Op FM + SPC700 Delay Buffer\n  Webring Node: #016 (Central KiloNet Consortium)");
+        logToTerminal("STATION STATUS REPORT // SIG-1999-ECHO:\n  Host Domain: kweb://echo-subsystem.net\n  Subcarrier: 1999.0 Hz (LOCKED)\n  Operating Limits: < 999 Kilobytes (Sacred Law)\n  Active Phase: 6 (Harmonic Lock)\n  Audio Core: YM2612 2-Op FM + SPC700 Delay Buffer\n  Phased Grid: 4 Stations (Alpha: Carlsbad, Beta: MCI, Gamma: Cheyenne, Delta: Orbital)\n  Webring Node: #016 (Central KiloNet Consortium)");
         break;
 
       case 'scan':
         logToTerminal("COMMENCING RF SPECTRUM SCAN (20 Hz - 4000 Hz)...");
-        setTimeout(() => logToTerminal("  [PEAK DETECTED] 432.0 Hz  (Acoustic Baseline, +8 dB)"), 200);
-        setTimeout(() => logToTerminal("  [PEAK DETECTED] 888.0 Hz  (Crystal Precursor, +12 dB)"), 400);
+        setTimeout(() => logToTerminal("  [PEAK DETECTED] 43.2 Hz   (Cheyenne Infrasound, +10 dB)"), 150);
+        setTimeout(() => logToTerminal("  [PEAK DETECTED] 432.0 Hz  (Acoustic Baseline, +8 dB)"), 300);
+        setTimeout(() => logToTerminal("  [PEAK DETECTED] 888.0 Hz  (Crystal Precursor, +12 dB)"), 450);
         setTimeout(() => logToTerminal("  [PEAK DETECTED] 1999.0 Hz (Project Echo Beacon, +24 dB) [ANOMALY]"), 600);
-        setTimeout(() => logToTerminal("SCAN COMPLETE. 1 anomalous subcarrier identified at 1999 Hz."), 800);
+        setTimeout(() => logToTerminal("SCAN COMPLETE. 1 anomalous subcarrier identified at 1999 Hz."), 750);
         break;
 
       case 'decode':
@@ -1805,6 +2758,38 @@
       case 'transmit':
         const txt = parts.slice(1).join(' ') || "ECHO 1999";
         startMorseDemodulation(txt);
+        break;
+
+      case 'sigint':
+        switchTab('sigint');
+        logToTerminal(">> Opened SIGINT Subsurface Acoustic Transducer Grid.");
+        break;
+
+      case 'beamform':
+        const deg = parseFloat(parts[1]) || 199.9;
+        updateBeamAzimuth(deg);
+        switchTab('sigint');
+        logToTerminal(`>> Beamforming azimuth steered to ${deg}°.`);
+        break;
+
+      case 'stego':
+        const stegoTxt = parts.slice(1).join(' ') || "1999";
+        loadStegoPreset(stegoTxt);
+        switchTab('stego');
+        playStegoAudioAndRender();
+        break;
+
+      case 'rtty':
+        const rttyTxt = parts.slice(1).join(' ') || "ECHO 1999 CARLSBAD";
+        switchTab('stego');
+        const rttyInp = document.getElementById('rttyTextInput');
+        if (rttyInp) rttyInp.value = rttyTxt;
+        transmitRttyMessage();
+        break;
+
+      case 'lissajous':
+        toggleScopeMode();
+        switchTab('decoder');
         break;
 
       case 'journal':
@@ -1838,6 +2823,7 @@
       case 'export':
         const fmt = parts[1] || 'dat';
         if (fmt === 'wav') downloadCarrierWav();
+        else if (fmt === 'sig') exportFieldLogsToSig();
         else if (fmt === 'json') downloadTelemetryJson();
         else downloadTelemetryBlob();
         break;
@@ -1886,7 +2872,7 @@
   }
 
   /* ============================================================
-     6. Client-Side Data & Audio Exporters (WAV, DAT, JSON)
+     9. Client-Side Data & Audio Exporters (WAV, DAT, JSON, SIG)
      ============================================================ */
   function downloadTelemetryBlob() {
     const textContent = `================================================================================
@@ -1907,6 +2893,7 @@ Decoded Telemetry: "ECHO-SUBSYSTEM.NET 10.19.99.4 1999HZ"
 - Modulation Index: 450
 - SPC700 Delay Time: 180 ms
 - Low-Pass Damping: 2200 Hz
+- Phased Beamformer Azimuth: 199.9° (Carlsbad Cavern Transducer)
 - Webring Registry: Node #016 (Central KiloNet Consortium)
 
 [DIEGETIC OBSERVATION]
@@ -1938,6 +2925,8 @@ END TRANSMISSION // ESARL 1999
       modulatorRatio: 2.0,
       fmDepth: 450,
       spcDelayMs: 180,
+      beamformingAzimuth: currentBeamAzimuth,
+      activeListeningStation: activeStationKey,
       webringNode: "#016",
       decodedTelemetry: "ECHO-SUBSYSTEM.NET 10.19.99.4 1999HZ",
       subnetCorrelation: "10.19.99.4/classified"
@@ -1955,7 +2944,6 @@ END TRANSMISSION // ESARL 1999
     logToTerminal(">> [EXPORT] Telemetry JSON exported: 'esarl_station_telemetry.json'.");
   }
 
-  // Synthesizes 2.5 seconds of 1999Hz FM + SPC700 Delay into a RIFF WAV audio file
   function downloadCarrierWav() {
     const sampleRate = 22050; // Compact 22kHz 16-bit mono
     const duration = 2.5;
@@ -1971,17 +2959,14 @@ END TRANSMISSION // ESARL 1999
 
     for (let i = 0; i < numSamples; i++) {
       const t = i / sampleRate;
-      // 2-Op FM formula: carrier + depth * sin(2*pi*mod*t)
       const mod = Math.sin(2 * Math.PI * (fCarrier * fRatio) * t) * (depth / 400.0);
       const raw = Math.sin(2 * Math.PI * fCarrier * t + mod) * 0.4;
 
-      // Simple delay tap
       const delayed = delayBuf[delayIdx];
       const mixed = raw + delayed * 0.3;
       delayBuf[delayIdx] = mixed;
       delayIdx = (delayIdx + 1) % delayTimeSamples;
 
-      // Soft envelope fade out at end
       const env = (i < numSamples - 1000) ? 1.0 : (numSamples - i) / 1000;
       samples[i] = mixed * env;
     }
@@ -2037,7 +3022,7 @@ END TRANSMISSION // ESARL 1999
   }
 
   /* ============================================================
-     7. Interactive Piano Keyboard Builder
+     10. Interactive Piano Keyboard Builder
      ============================================================ */
   const PIANO_NOTES = [
     { name: 'C3', freq: 130.81, key: 'Z' },
@@ -2062,7 +3047,7 @@ END TRANSMISSION // ESARL 1999
     bar.innerHTML = '';
     PIANO_NOTES.forEach(note => {
       const btn = document.createElement('div');
-      btn.className = 'piano-key' + (note.name === '1999' ? ' active' : '');
+      btn.className = 'piano-key' + (note.name === '1999' ? ' active' : (note.name === '432' || note.name === '888' ? ' special-key' : ''));
       btn.innerHTML = `<span>${note.name}</span><span style="font-size:9px; color:#64748b;">[${note.key}]</span>`;
       btn.onmousedown = () => playPianoNote(note.freq, btn);
       btn.onmouseup = () => releasePianoNote(btn);
@@ -2087,7 +3072,7 @@ END TRANSMISSION // ESARL 1999
   }
 
   window.addEventListener('keydown', (e) => {
-    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) return;
     const k = e.key.toUpperCase();
     const matched = PIANO_NOTES.find(n => n.key === k);
     if (matched) {
@@ -2098,7 +3083,7 @@ END TRANSMISSION // ESARL 1999
   });
 
   window.addEventListener('keyup', (e) => {
-    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) return;
     const k = e.key.toUpperCase();
     const matched = PIANO_NOTES.find(n => n.key === k);
     if (matched) {
@@ -2123,13 +3108,16 @@ END TRANSMISSION // ESARL 1999
     if (el) el.textContent = str;
   }, 1000);
 
-  // Initial terminal welcome message
+  // Initial setup on window load
   window.addEventListener('load', () => {
     logToTerminal(">> ESARL ACOUSTIC TERMINAL INITIALIZED [REV 1999.12]");
     logToTerminal(">> Memory partition: Sector 0x1999 verified clean.");
     logToTerminal(">> Carrier signature locked: 1999.0 Hz harmonic subcarrier.");
+    logToTerminal(">> SIGINT Phased Array & Beamforming Grid: 4 stations online.");
+    logToTerminal(">> Spectrographic Steganography Studio & Bell 202 FSK Teleprinter ready.");
     logToTerminal(">> Type 'help' or 'status' for station diagnostic commands.");
     renderPianoKeys();
+    loadFieldLogs();
     initCanvases();
   });
 </script>

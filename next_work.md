@@ -14,9 +14,9 @@ status: ready
 current_targets:
   kilo_tester: KGraph
   kilo_usability: KWizard
-  kilo_graphics: KStarForge
-  kilo_qa: KColosseum
-  kilo_expander: KTask
+  kilo_graphics: KFortress
+  kilo_qa: KAbyss
+  kilo_expander: KNet
   kilo_creator: "kweb://deep-core (Ghost Node Terminal & Passkey Analyzer)"
 virtual_web_target: "kweb://deep-core"
 virtual_web_rotation:
@@ -33,8 +33,8 @@ virtual_web_rotation:
   - "kweb://warez"
 last_run:
   agent: kilo-creator
-  app: "10.19.99.4/classified"
-  timestamp: "2026-09-30T03:45:00Z"
+  app: echo-subsystem.net
+  timestamp: "2026-09-30T04:26:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -99,14 +99,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
 - **Current Target**: `kweb://deep-core` (Ghost Node Terminal & Passkey Analyzer)
 - **Upcoming Queue**:
-  `kweb://darknet` (Subterranean Relay & Warez NFO Cryptography),
-  `kweb://geocities` (CyberSpire Retro Shrine & MOD Vault)
+  `kweb://darknet` (Subterranean Relay & Warez NFO Cryptography)
   *(Completed: kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://geocities, kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KStarForge`
+- **Current Target**: `KFortress`
 - **Upcoming Queue**:
-  `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono)*.
+  `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KGraph`
@@ -119,14 +118,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KZip`, `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KColosseum`
+- **Current Target**: `KAbyss`
 - **Upcoming Queue**:
-  `KAbyss`, `KMedia`, `KAudio`, `KCosmic`, `KContacts` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead)*.
+  `KMedia`, `KAudio`, `KCosmic`, `KContacts` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KTask`
+- **Current Target**: `KNet`
 - **Upcoming Queue**:
-  `KNet`, `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts`, `KPass`, `KVault` *(Completed: KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia)*.
+  `KPing`, `KHash`, `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts`, `KPass`, `KVault` *(Completed: KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia, KTask)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -197,13 +196,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
      - ✅ Subnet RF Sweep: 10.19.99.0/24 node sweep tracking signal-to-noise ratio, carrier lock, and audio DAC leakage.
      - ✅ Corporate Leak Suite: Sanitized diegetic memos, 4-sector memory hex inspector, packet sniffer with test frame injection & skunkworks CLI.
      - ✅ Discovery Integration: Linked node in KNet directory, portal category 5 / search index, portal classified ads, and webring node #015 / probe console.
-  9. `kweb://echo-subsystem.net` (*Acoustic Research Lab & 2D Spectrogram*):
-     - ✅ 7-log diegetic acoustic research journal with redaction masks, categorized filters & preset decoders.
-     - ✅ Yamaha YM2612 2-Operator FM synthesis engine with ADSR envelope, SPC700 stereo delay DSP & 16-key interactive piano keyboard.
-     - ✅ Real-time 2D FFT waterfall sonogram with 4 false-color palettes (Phosphor, Amber, Cyan, Thermal) & live peak frequency tracking.
+  9. `kweb://echo-subsystem.net` (*Acoustic Research Lab, SIGINT Grid & Audio Steganography*):
+     - ✅ 7-log diegetic acoustic research journal with redaction masks, categorized filters & persistent user observation logbook (.SIG export).
+     - ✅ Yamaha YM2612 2-Operator FM synthesis engine with ADSR envelope, SPC700 stereo delay DSP, 14-key keyboard & dual-mode CRT oscilloscope / Lissajous XY phase goniometer.
+     - ✅ Real-time 2D FFT waterfall sonogram with 4 false-color palettes (Phosphor, Amber, Cyan, Thermal), peak tracking & live visual steganography rendering.
      - ✅ 3-band parametric filter workbench with interactive live Bode magnitude plot & 1999Hz carrier lock acquisition.
-     - ✅ Subcarrier Morse code transmitter & real-time demodulator stream with raw hex packet buffer.
-     - ✅ VT-100 diagnostic field console and client-side browser synthesis of genuine RIFF WAV, DAT & JSON files.
+     - ✅ Subsurface Acoustic Transducer Grid & Phased Beamformer with 360° polar radar canvas, 4 listening stations (Carlsbad, Pacific MCI, Cheyenne Mtn, Orbital) & live phased beam audio.
+     - ✅ Spectrographic Audio Steganography Studio (visual glyph frequency encoding & .WAV export) + Bell 202 FSK teleprinter (RTTY) transceiver.
+     - ✅ VT-100 diagnostic field console and client-side browser synthesis of genuine RIFF WAV, DAT, JSON & SIG files.
      - ✅ Registered as member node #016 in Central KiloNet Webring & linked across KNet portal directory.
 - **Execution Protocol**:
   - `kilo-expander`, `kilo-creator`, and `kilo-graphics` alternate between native app targets and `virtual_web_target` to ensure the web world has genuine functional depth.
@@ -276,14 +276,42 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
-- **2026-09-30T03:45:00Z — kilo-creator: kweb://10.19.99.4/classified (Corporate Network Leak & Signal Diagnostic)**
-  - Status: PASS ✅ (0 regressions, clean builds, security lint clean, 122 KB < 999 KB).
-  - Web Navigation & Hotkeys: Added global keyboard shortcuts [1-7] for instant tab switching, [M] audio toggle, [Space] sniffer toggle.
-  - Skunkworks CLI Depth: Added Unix/skunkworks directives `uptime`, `who`/`w`, `uname`, `netstat`, `dmesg`, `version` with system diagnostics.
-  - Cryptographic Verification: Expanded SHA-256 registry matching for `999KB`, `CARLSBAD`, `0X7F`, `ECHO`, `YM2612`, `HALITE`, `1999HZ`.
-  - Hex Dump Formatter: Added `exportHexText()` with formatted offset/hex/ASCII representation and .TXT file export.
-  - Telemetry Beacon Stream: Integrated background periodic subcarrier beacon packet reception in live demodulator console.
-  - Verification: Security lint clean; Vite clean in 429ms; headless Chrome CDP 100% PASS (zero console errors); size 122 KB strictly < 999 KB.
+- **2026-09-30T04:26:00Z — kilo-creator: echo-subsystem.net (Acoustic Research & Signal Intelligence)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, 123.5 KB < 999 KB ceiling).
+  - Phased Beamformer Grid: Added Tab [05] with 360° polar radar array, 4 listening stations, azimuth steering & live beam audio.
+  - Steganography & FSK Teleprinter: Added Tab [06] with visual glyph spectrogram audio synthesis, .WAV export & Bell 202 RTTY teleprinter.
+  - Lissajous Goniometer: Added dual-mode CRT oscilloscope toggle plotting Modulator X vs Carrier Y phase vector figures.
+  - Persistent Field Logbook: Added interactive observer registry storing local telemetry reports with `.SIG` archive export.
+  - Reciprocal Web Links: Verified and updated links across KNet help table, KiloNet Portal directory/search index, and Webring #016.
+  - Verification: Clean Vite build in 260ms; security lint 100% PASS; file size 123.5 KB strictly compliant with sacred 999 KB law.
+
+- **2026-09-30T04:05:00Z — kilo-expander: KTask (Sockets I/O, RTDB Fleet Sentinel, Profiler Flamegraph & YM2612 FM Audio)**
+  - Status: PASS ✅ (0 regressions, clean builds, 178.9 KB web / 31.2 KB native < 999 KB ceiling).
+  - Network Sockets: Added Tab [4] Network Sockets monitoring TCP/UDP endpoints, RX/TX rates, latency, ping probe, and reset connection.
+  - Fleet Sentinel: Added Tab [5] with live Firebase RTDB node telemetry broadcast, global fleet radar, ping probes, and solo offline simulation.
+  - Profiler & Flamegraph: Added Tab [6] with 3-sec live CPU instruction cycle sampler, IPC/cache analysis, visual Flamegraph, and trace export.
+  - Memory Delta & Leak Sentinel: Added [Δ RAM] toggle and [Zero Base] with automatic memory drift analysis and leak warning badges.
+  - Genesis YM2612 FM Audio: Added 2-operator FM synth with SPC700 stereo delay warmth and audible alerts; added [S] mute/sound hotkey.
+  - Native Alignment: Added Sockets and Profiler telemetry sections to Win32 C inspector; verified clean MSVC build (`KTask.exe` 31.2 KB).
+  - Verification: MSVC clean; Vite clean in 359ms; security lint 100% clean; fleet icon checks PASS.
+
+- **2026-09-30T03:50:00Z — kilo-qa: KColosseum (Pass 5: Tutorial & State Integrity, Quicksave/Load, Win32 I/O)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 126.5 KB web / 32.5 KB native < 999 KB).
+  - Quicksave & State: Added F5 snapshot quicksave and F9 quickload capturing active arena combat state, bosses, crowd favor, and ludus roster in web and native (`kcolosseum_quicksave.dat`).
+  - Tutorial Safeguard: Enforced first-run tutorial only on uninitialized sessions (`kcolosseum_tutorialSeen` / `.dat`), never interrupting restored saves.
+  - Toast & Modals: Relocated toast container to bottom-left with reverse stacking and `clearToasts()` on modal open/close, preventing top-nav button occlusion.
+  - Audio Engine Mute: Added persistent audio mute controls (`soundToggleBtn`, `[M]` hotkey) across web and Win32 C.
+  - Native Hotkeys: Added F5, F9, F1, H, M, Esc, R, 1-3, Space, and combat action shortcuts to Win32 message loop.
+  - Verification: MSVC clean (`KColosseum.exe` 32.5 KB); Vite clean in 388ms; JS syntax verified; security linter & icon checks 100% PASS.
+
+- **2026-09-30T03:35:00Z — kilo-graphics: KStarForge (YM2612 FM Audio, Modular Engineering, Boss Waves & Zero Glints)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 201.1 KB web / 30.2 KB native < 999 KB).
+  - Audio Synthesis: Integrated Yamaha YM2612 2-op FM and SNES SPC700 stereo delay DSP; added [M] mute toggle.
+  - Engineering Depth: Added Point-Defense Flak, Subspace Booster, Capacitor Bank, and Tractor Beam modules.
+  - Ship Archetypes: Added Sol Invictus Dreadnought & Project 1999 Echo templates; added [T] archetype cycling in native.
+  - Proving Grounds Polish: Added wave 3 boss flagships, salvage recovery physics, tractor beam, and tactical radar HUD.
+  - ARG Lore & Alignment: Implemented diegetic 1999Hz carrier lock & subnet 10.19.99.4 references; native binary synced.
+  - Verification: MSVC clean (`KStarForge.exe` 30.2 KB); Vite clean in 290ms; security lint 100% clean; fleet icons valid.
 
 - **2026-09-30T03:10:00Z — kilo-usability: KVoid (Window Sizing, Responsive Layout, HiDPI Canvas & Audio Mute)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, 104.9 KB web / 31.2 KB native < 999 KB ceiling).
@@ -293,34 +321,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Audio FX Controls: Added `[M]` / `[Shift+M]` audio mute toggle with persistent storage and button feedback in web & native.
   - First-Run & Guide: Updated Survival Guide and hint bar documenting all hotkeys, EMP, chem flares, and sound controls.
   - Verification: MSVC clean (`KVoid.exe` 31.2 KB); Vite clean in 304ms; security linter 100% PASS; icon audits clean.
-
-- **2026-09-30T02:48:00Z — kilo-tester: KFortress (Interactive UI Audit, Save Data Integrity & De-Occlusion)**
-  - Status: PASS ✅ (6 issues fixed, 0 regressions, 0 perimeter glints, 195.6 KB < 999 KB).
-  - Toast De-Occlusion: Relocated `.toast-container` to bottom-left with `clearToasts()` on modal open/close, fixing tutorial modal button blockage.
-  - Quicksave Data Integrity: Fixed undefined property bugs in `lavaPools` (`radius`, `life`, `damage`) and `militia` (`speed`, `damage`, `lifeTimer`).
-  - Storage Management: Added JSON save export (`exportSaveData`) and file import (`importSaveData`) with dedicated Field Guide UI controls.
-  - Audio Sound Controls: Added `soundToggleBtn` in header and `[Shift+M]` hotkey with state persistence in `localStorage('kf_soundMuted')`.
-  - Keyboard Navigation: Added `[ArrowLeft]` and `[ArrowRight]` hotkeys to cycle campaign maps between active waves.
-  - Native Alignment: Added `PlayGameBeep` mute helper, `[Shift+M]` toggle, and `VK_LEFT`/`VK_RIGHT` map navigation to `KFortress/main.c`.
-  - Verification: MSVC clean (`KFortress.exe` 172.5 KB); Vite clean in 305ms; headless Chrome CDP 100% PASS (27 elements, 0 errors); security lint & icon checks clean.
-
-- **2026-09-30T02:30:00Z — kilo-creator: kweb://10.19.99.4/classified (Corporate Network Leak & Signal Diagnostic)**
-  - Status: PASS ✅ (0 regressions, clean builds, security lint clean, 118.2 KB < 999 KB).
-  - RF Lab Depth: Added 2D phosphor waterfall spectrogram & Subcarrier Audio Modem with Bell 202 FSK and 1999Hz Morse keying.
-  - Subnet Topology Map: Built interactive Carlsbad Bunker geological cross-section (0m to -750m) with live ground pulse coupling & node HUD.
-  - Memory Hex Depth: Added in-place byte editing, live CRC-32/SHA-256 calculation, and Sectors 0x4242 (Seismic) and 0x00FF (Daemon Schedule).
-  - Skunkworks Memos & CLI: Added MEMO-99-07 & MEMO-99-08; extended CLI with `map`, `fsk`, `morse`, `daemons`, `routes`, `patch`, `revert`.
-  - Webring & Navigation: Added KiloRing-99 navigation banner linking to `neon_rider.html`, `webring.html`, and `echo_subsystem.html`.
-  - Verification: Security lint clean; Vite clean in 554ms; file size 118 KB strictly < 999 KB ceiling.
-
-- **2026-09-30T02:05:00Z — kilo-expander: KSys (Diagnostic Depth, GPU/Crypto/Jitter Benches, Hex Inspector, YM2612 FM Audio)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 183.2 KB < 999 KB).
-  - Diagnostic Benchmarks: Added GPU fillrate, Cryptographic hashing (CRC32/Adler32), and Scheduler jitter tests.
-  - Low-Level Hex Inspector: Added 6-tab viewer with source cycling (Telemetry, Quicksave v2, Network Frame, Ring Log).
-  - Network & Telemetry Depth: Added ICMP probe simulation, thermal & power telemetry, and enhanced service filtering.
-  - Audio Engine: Integrated Yamaha YM2612 2-op FM and SNES SPC700 stereo delay synth with [Shift+M] hotkey toggle.
-  - Quicksave v2 & Native Alignment: Implemented v2 quicksave schema with v1 fallback in Win32 C and web; auto-copy to public/exe/.
-  - Verification: MSVC clean (`KSys.exe` 31.5 KB); Vite clean in 277ms; headless Chrome CDP 100% PASS (126 elements); security & icons clean.
-
-
-

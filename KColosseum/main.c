@@ -2,6 +2,25 @@
 #include <stdio.h>
 #include <string.h>
 
+#pragma function(memset)
+void* memset(void* dest, int c, size_t count) {
+    char* bytes = (char*)dest;
+    while (count--) {
+        *bytes++ = (char)c;
+    }
+    return dest;
+}
+
+#pragma function(memcpy)
+void* memcpy(void* dest, const void* src, size_t count) {
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    while (count--) {
+        *d++ = *s++;
+    }
+    return dest;
+}
+
 static unsigned int g_seed = 0;
 void my_srand(unsigned int seed) {
     g_seed = seed;
@@ -24,7 +43,11 @@ int FastCos(int step) {
     return g_sinTable[idx];
 }
 
+static int g_soundMuted = 0;
+static int g_tutorialSeen = 0;
+
 DWORD WINAPI SoundThread(LPVOID lpParam) {
+    if (g_soundMuted) return 0;
     int type = (int)(intptr_t)lpParam;
     if (type == 1) { Beep(800, 100); }
     else if (type == 2) { Beep(150, 200); }
@@ -35,6 +58,7 @@ DWORD WINAPI SoundThread(LPVOID lpParam) {
     return 0;
 }
 void PlaySoundAsync(int type) {
+    if (g_soundMuted) return;
     CreateThread(NULL, 0, SoundThread, (LPVOID)(intptr_t)type, 0, NULL);
 }
 
@@ -78,6 +102,34 @@ typedef struct {
     int isBehemoth;
     int isPraetorian;
 } Gladiator;
+
+#define SAVE_MAGIC 0x434F4C4F // "COLO"
+#define SAVE_VERSION 101
+
+typedef struct {
+    DWORD magic;
+    int version;
+    int funds;
+    int arenaLevel;
+    int nextId;
+    int owned_count;
+    Gladiator owned[10];
+    int market_count;
+    Gladiator market[10];
+    int inCombat;
+    int currentFighterIdx;
+    Gladiator enemyFighter;
+    int playerHp;
+    int playerMaxHp;
+    int enemyHp;
+    int enemyMaxHp;
+    int playerDefending;
+    int enemyDefending;
+    int combatOver;
+    int crowdFavor;
+    int soundMuted;
+    int tutorialSeen;
+} GameSaveData;
 
 typedef struct {
     int x, y;
@@ -306,6 +358,7 @@ void BuyGladiator(int index) {
         }
         market_count--;
         UpdateUI();
+        SaveGameToFile("kcolosseum_save.dat");
     } else if (index >= 0 && index < market_count) {
         MessageBoxA(NULL, "Not enough funds!", "Error", MB_OK | MB_ICONWARNING);
     }
@@ -376,6 +429,143 @@ void UpdateCombatUI() {
 
     wsprintfA(buf, "Crowd Favor: %d%%", crowdFavor);
     SetWindowTextA(hFavorLabel, buf);
+}
+
+int SaveGameToFile(const char* filename) {
+    GameSaveData data;
+    ZeroMemory(&data, sizeof(data));
+    data.magic = SAVE_MAGIC;
+    data.version = SAVE_VERSION;
+    data.funds = funds;
+    data.arenaLevel = arenaLevel;
+    data.nextId = nextId;
+    data.owned_count = (owned_count >= 0 && owned_count <= 10) ? owned_count : 0;
+    for (int i = 0; i < data.owned_count; i++) data.owned[i] = owned[i];
+    data.market_count = (market_count >= 0 && market_count <= 10) ? market_count : 0;
+    for (int i = 0; i < data.market_count; i++) data.market[i] = market[i];
+    data.soundMuted = g_soundMuted;
+    data.tutorialSeen = g_tutorialSeen;
+
+    if (g_currentView == 1 && currentFighter != NULL) {
+        data.inCombat = 1;
+        int idx = (int)(currentFighter - owned);
+        data.currentFighterIdx = (idx >= 0 && idx < owned_count) ? idx : 0;
+        data.enemyFighter = enemyFighter;
+        data.playerHp = playerHp;
+        data.playerMaxHp = playerMaxHp;
+        data.enemyHp = enemyHp;
+        data.enemyMaxHp = enemyMaxHp;
+        data.playerDefending = playerDefending;
+        data.enemyDefending = enemyDefending;
+        data.combatOver = combatOver;
+        data.crowdFavor = crowdFavor;
+    } else {
+        data.inCombat = 0;
+    }
+
+    HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+    DWORD written = 0;
+    BOOL res = WriteFile(hFile, &data, sizeof(data), &written, NULL);
+    CloseHandle(hFile);
+    return (res && written == sizeof(data)) ? 1 : 0;
+}
+
+int LoadGameFromFile(const char* filename) {
+    HANDLE hFile = CreateFileA(filename, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+    GameSaveData data;
+    DWORD readBytes = 0;
+    BOOL res = ReadFile(hFile, &data, sizeof(data), &readBytes, NULL);
+    CloseHandle(hFile);
+    if (!res || readBytes != sizeof(data) || data.magic != SAVE_MAGIC || data.version != SAVE_VERSION) return 0;
+
+    funds = data.funds;
+    arenaLevel = data.arenaLevel;
+    nextId = data.nextId;
+    owned_count = (data.owned_count >= 0 && data.owned_count <= 10) ? data.owned_count : 0;
+    for (int i = 0; i < owned_count; i++) owned[i] = data.owned[i];
+    market_count = (data.market_count >= 0 && data.market_count <= 10) ? data.market_count : 0;
+    for (int i = 0; i < market_count; i++) market[i] = data.market[i];
+    g_soundMuted = data.soundMuted;
+    g_tutorialSeen = 1;
+
+    for (int i = 0; i < owned_count; i++) UpdateGladiatorDesc(&owned[i]);
+    for (int i = 0; i < market_count; i++) UpdateGladiatorDesc(&market[i]);
+
+    if (data.inCombat && data.currentFighterIdx >= 0 && data.currentFighterIdx < owned_count) {
+        currentFighter = &owned[data.currentFighterIdx];
+        enemyFighter = data.enemyFighter;
+        playerHp = data.playerHp;
+        playerMaxHp = data.playerMaxHp;
+        enemyHp = data.enemyHp;
+        enemyMaxHp = data.enemyMaxHp;
+        playerDefending = data.playerDefending;
+        enemyDefending = data.enemyDefending;
+        combatOver = data.combatOver;
+        crowdFavor = data.crowdFavor;
+        UpdateCombatUI();
+        SwitchView(1);
+    } else {
+        currentFighter = NULL;
+        if (g_currentView == 1) SwitchView(0);
+        UpdateUI();
+    }
+    return 1;
+}
+
+void QuickSave() {
+    if (SaveGameToFile("kcolosseum_quicksave.dat") && SaveGameToFile("kcolosseum_save.dat")) {
+        PlaySoundAsync(6);
+        AddFloatingText("+QUICKSAVE [F5]", 135, 40, RGB(255, 215, 0));
+        if (g_currentView == 1) LogCombat("Quicksave created! [F5]");
+        else MessageBoxA(g_hWndMain, "Quicksave snapshot successfully created! [F5]", "KColosseum Quicksave", MB_OK | MB_ICONINFORMATION);
+    }
+}
+
+void QuickLoad() {
+    int ok = LoadGameFromFile("kcolosseum_quicksave.dat");
+    if (!ok) ok = LoadGameFromFile("kcolosseum_save.dat");
+    if (ok) {
+        PlaySoundAsync(3);
+        AddFloatingText("+QUICKLOAD [F9]", 135, 40, RGB(50, 205, 50));
+        if (g_currentView == 1) LogCombat("Quicksave snapshot restored! [F9]");
+        else MessageBoxA(g_hWndMain, "Quicksave snapshot successfully restored! [F9]", "KColosseum Quickload", MB_OK | MB_ICONINFORMATION);
+        InvalidateRect(g_hWndMain, NULL, TRUE);
+    } else {
+        MessageBoxA(g_hWndMain, "No previous quicksave snapshot found.", "KColosseum", MB_OK | MB_ICONWARNING);
+    }
+}
+
+int CheckTutorialSeen() {
+    HANDLE hFile = CreateFileA("kcolosseum_tutorial.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFile);
+        return 1;
+    }
+    return 0;
+}
+
+void MarkTutorialSeen() {
+    g_tutorialSeen = 1;
+    HANDLE hFile = CreateFileA("kcolosseum_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char val = '1';
+        DWORD written = 0;
+        WriteFile(hFile, &val, 1, &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+void ToggleSound() {
+    g_soundMuted = !g_soundMuted;
+    if (g_soundMuted) {
+        AddFloatingText("AUDIO MUTED [M]", 135, 40, RGB(255, 100, 100));
+    } else {
+        PlaySoundAsync(1);
+        AddFloatingText("AUDIO ON [M]", 135, 40, RGB(100, 255, 100));
+    }
+    SaveGameToFile("kcolosseum_save.dat");
 }
 
 void CheckCrowdFavor() {
@@ -487,6 +677,7 @@ void EnterArena(int index) {
     PlaySoundAsync(3);
     UpdateCombatUI();
     SwitchView(1);
+    SaveGameToFile("kcolosseum_save.dat");
 }
 
 void CombatAction(int action) {
@@ -511,6 +702,7 @@ void CombatAction(int action) {
         EnableWindow(hDefendBtn, FALSE);
         EnableWindow(hShowboatBtn, FALSE);
         EnableWindow(hFleeBtn, FALSE);
+        SaveGameToFile("kcolosseum_save.dat");
         return;
     }
 
@@ -631,6 +823,7 @@ void CombatAction(int action) {
         EnableWindow(hDefendBtn, FALSE);
         EnableWindow(hShowboatBtn, FALSE);
         EnableWindow(hFleeBtn, FALSE);
+        SaveGameToFile("kcolosseum_save.dat");
         return;
     }
 
@@ -767,6 +960,7 @@ void CombatAction(int action) {
         EnableWindow(hDefendBtn, FALSE);
         EnableWindow(hShowboatBtn, FALSE);
         EnableWindow(hFleeBtn, FALSE);
+        SaveGameToFile("kcolosseum_save.dat");
         return;
     }
 
@@ -1592,8 +1786,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         case WM_CREATE: {
             g_hWndMain = hwnd;
             my_srand(GetTickCount());
-            for (int i = 0; i < 3; i++) {
-                market[market_count++] = GenerateGladiator(0);
+            int saveLoaded = LoadGameFromFile("kcolosseum_save.dat");
+            if (!saveLoaded) {
+                for (int i = 0; i < 3; i++) {
+                    market[market_count++] = GenerateGladiator(0);
+                }
             }
 
             hTitle = CreateWindowA("STATIC", "KColosseum - Ludus Management", WS_VISIBLE | WS_CHILD | SS_CENTER,
@@ -1710,6 +1907,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             const char* helpStr = "HOW TO PLAY:\n"
                                   "Buy gladiators from the market, equip them, and train their stats.\n"
                                   "Send them to the Arena to fight and earn Denarii. Dead gladiators are lost forever!\n\n"
+                                  "KEYBOARD SHORTCUTS:\n"
+                                  "F5 / F9: Quicksave / Quickload Ludus snapshot | F1 / H: Lanista's Guide\n"
+                                  "M: Toggle Audio Mute | Esc: Dismiss Guide / Return to Ludus / Flee\n"
+                                  "A / 1: Attack | D / 2: Defend | S / 3: Showboat | F / 4: Flee | Space: Action\n"
+                                  "R: Refresh recruit market (50D) | 1, 2, 3: Quick-recruit market fighters\n\n"
                                   "COMBAT TACTICS & WEAPON MASTERY:\n"
                                   "Attack: Uses STR for damage, AGI for hit chance vs enemy AGI.\n"
                                   "Defend: Skips turn; reduces hit & dmg. Shield Defend executes Shield Bash counter!\n"
@@ -1720,14 +1922,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                   "Crowd Favor at 100% earns Emperor's Boon: Denarii showers or emergency heals!\n";
 
             hHelpText = CreateWindowA("STATIC", helpStr, WS_CHILD | SS_LEFT,
-                          20, 50, 540, 250, hwnd, NULL, NULL, NULL);
+                          20, 42, 540, 265, hwnd, NULL, NULL, NULL);
             SendMessageA(hHelpText, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hHelpBackBtn = CreateWindowA("BUTTON", "Back to Ludus", WS_CHILD,
-                          230, 310, 140, 30, hwnd, (HMENU)ID_HELP_BACK_BUTTON, NULL, NULL);
+                          230, 312, 140, 30, hwnd, (HMENU)ID_HELP_BACK_BUTTON, NULL, NULL);
             SendMessageA(hHelpBackBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             UpdateUI();
+            if (!saveLoaded && !CheckTutorialSeen()) {
+                MarkTutorialSeen();
+                SwitchView(2); // First-run guide view
+            }
             return 0;
         }
         case WM_TIMER: {
@@ -1823,6 +2029,86 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             EndPaint(hwnd, &ps);
             return 0;
         }
+        case WM_KEYDOWN: {
+            if (wParam == VK_F5) {
+                QuickSave();
+                return 0;
+            }
+            if (wParam == VK_F9) {
+                QuickLoad();
+                return 0;
+            }
+            if (wParam == VK_F1 || wParam == 'H') {
+                if (g_currentView == 2) SwitchView(0);
+                else SwitchView(2);
+                return 0;
+            }
+            if (wParam == 'M') {
+                ToggleSound();
+                return 0;
+            }
+            if (wParam == VK_ESCAPE) {
+                if (g_currentView == 2) {
+                    SwitchView(0);
+                    return 0;
+                }
+                if (g_currentView == 1) {
+                    if (combatOver) {
+                        SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_ATTACK_BUTTON, 0), 0);
+                    } else {
+                        CombatAction(2); // Flee
+                    }
+                    return 0;
+                }
+            }
+            if (g_currentView == 1) {
+                if (combatOver) {
+                    if (wParam == VK_RETURN || wParam == VK_SPACE) {
+                        SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_ATTACK_BUTTON, 0), 0);
+                        return 0;
+                    }
+                } else {
+                    if (wParam == 'A' || wParam == '1' || wParam == VK_SPACE) {
+                        CombatAction(0); // Attack
+                        return 0;
+                    } else if (wParam == 'D' || wParam == '2') {
+                        CombatAction(1); // Defend
+                        return 0;
+                    } else if (wParam == 'S' || wParam == '3') {
+                        CombatAction(3); // Showboat
+                        return 0;
+                    } else if (wParam == 'F' || wParam == '4') {
+                        CombatAction(2); // Flee
+                        return 0;
+                    }
+                }
+            } else if (g_currentView == 0) {
+                if (wParam == 'R') {
+                    if (funds >= 50) {
+                        SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_REFRESH_BUTTON, 0), 0);
+                    }
+                    return 0;
+                } else if (wParam == '1' && market_count > 0) {
+                    BuyGladiator(0);
+                    return 0;
+                } else if (wParam == '2' && market_count > 1) {
+                    BuyGladiator(1);
+                    return 0;
+                } else if (wParam == '3' && market_count > 2) {
+                    BuyGladiator(2);
+                    return 0;
+                } else if (wParam == VK_RETURN || wParam == VK_SPACE) {
+                    int sel = SendMessageA(hOwnedList, LB_GETCURSEL, 0, 0);
+                    if (sel == LB_ERR && owned_count > 0) sel = 0;
+                    if (sel != LB_ERR && sel < owned_count) {
+                        SendMessageA(hOwnedList, LB_SETCURSEL, sel, 0);
+                        SendMessageA(hwnd, WM_COMMAND, MAKEWPARAM(ID_FIGHT_BUTTON, 0), 0);
+                    }
+                    return 0;
+                }
+            }
+            break;
+        }
         case WM_COMMAND: {
             if (LOWORD(wParam) == ID_BUY_BUTTON) {
                 int sel = SendMessageA(hMarketList, LB_GETCURSEL, 0, 0);
@@ -1846,6 +2132,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         UpdateGladiatorDesc(&owned[sel]);
                         UpdateUI();
                         SendMessageA(hOwnedList, LB_SETCURSEL, sel, 0);
+                        SaveGameToFile("kcolosseum_save.dat");
                     } else {
                         MessageBoxA(hwnd, "Not enough funds to train!", "Error", MB_OK | MB_ICONWARNING);
                     }
@@ -1865,6 +2152,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         UpdateGladiatorDesc(&owned[sel]);
                         UpdateUI();
                         SendMessageA(hOwnedList, LB_SETCURSEL, sel, 0);
+                        SaveGameToFile("kcolosseum_save.dat");
                     } else {
                         MessageBoxA(hwnd, "Not enough funds to equip!", "Error", MB_OK | MB_ICONWARNING);
                     }
@@ -1879,6 +2167,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         market[market_count++] = GenerateGladiator(0);
                     }
                     UpdateUI();
+                    SaveGameToFile("kcolosseum_save.dat");
                 }
             } else if (LOWORD(wParam) == ID_HEAL_BUTTON) {
                 int sel = SendMessageA(hOwnedList, LB_GETCURSEL, 0, 0);
@@ -1890,6 +2179,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             UpdateGladiatorDesc(&owned[sel]);
                             UpdateUI();
                             SendMessageA(hOwnedList, LB_SETCURSEL, sel, 0);
+                            SaveGameToFile("kcolosseum_save.dat");
                         } else {
                             MessageBoxA(hwnd, "Not enough funds to heal fully!", "Error", MB_OK | MB_ICONWARNING);
                         }
@@ -1912,6 +2202,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                     UpdateUI();
                     SwitchView(0);
+                    SaveGameToFile("kcolosseum_save.dat");
                 } else {
                     CombatAction(0);
                 }
