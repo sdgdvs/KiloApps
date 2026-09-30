@@ -805,6 +805,7 @@
       <div class="stat-badge">
         <span>🩺 Health: <strong id="header-health" style="color: var(--accent-green);">100%</strong></span>
       </div>
+      <button class="btn btn-outline" id="btn-audio-toggle" style="padding: 4px 10px; font-size: 12px; height: 28px;" onclick="toggleAudio()" title="Toggle Yamaha YM2612 FM / SPC700 Audio (Hotkey: Shift+M)">🔊 Sound: ON</button>
       <button class="btn btn-outline" style="padding: 4px 10px; font-size: 12px; height: 28px;" onclick="showHelp()">❓ Help [F1]</button>
     </div>
   </header>
@@ -821,6 +822,7 @@
   <!-- Quick Actions Toolbar -->
   <div class="quick-actions-bar">
     <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; margin-right: 4px;">⚡ Quick Actions:</span>
+    <button class="quick-chip" id="chip-audio-toggle" onclick="toggleAudio()" title="Toggle Yamaha YM2612 / SPC700 Audio (Shift+M)">🔊 Sound: ON <kbd>[Shift+M]</kbd></button>
     <button class="quick-chip" onclick="switchTab('benchmarks'); runAllBenchmarks();" title="Run full benchmark suite (Hotkey: 2, then Space/R)">▶ Run Benchmarks <kbd>[2/R]</kbd></button>
     <button class="quick-chip" onclick="refreshActiveView()" title="Refresh live telemetry and hardware metrics (Hotkey: R)">🔄 Refresh <kbd>[R]</kbd></button>
     <button class="quick-chip" onclick="switchTab('hex')" title="Inspect diagnostic buffers in hex viewer (Hotkey: 6 or X)">🔬 Hex <kbd>[6/X]</kbd></button>
@@ -935,7 +937,22 @@
             <div class="info-item"><span class="info-label">Estimated RTT:</span><span class="info-val" id="net-rtt">--</span></div>
             <div class="info-item"><span class="info-label">Protocol Stack:</span><span class="info-val">HTTP/2 + WS/WebRTC</span></div>
             <div class="info-item"><span class="info-label">Interface MTU:</span><span class="info-val">1500 Octets</span></div>
-            <div class="info-item"><span class="info-label">Packet Drop Rate:</span><span class="info-val" style="color: var(--accent-green);">0.00% (Lossless)</span></div>
+            <div class="info-item"><span class="info-label">Packet Drop Rate:</span><span class="info-val" id="net-drop-rate" style="color: var(--accent-green);">0.00% (Lossless)</span></div>
+          </div>
+          <button class="btn btn-outline btn-sm" id="btn-net-probe" style="margin-top: 12px; width: 100%;" onclick="runNetworkProbe()" title="Probe simulated ICMP latency, jitter and socket stream">📡 Probe Gateway &amp; Sockets [G]</button>
+        </div>
+
+        <!-- Thermal & Power Telemetry Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2>🌡️ Thermal &amp; Power Telemetry</h2>
+          </div>
+          <div class="info-list">
+            <div class="info-item"><span class="info-label">CPU Package Temp:</span><span class="info-val" id="thermal-temp">36.5 °C / 97.7 °F</span></div>
+            <div class="info-item"><span class="info-label">Cooling Fan Tach:</span><span class="info-val" id="thermal-fan">1650 RPM</span></div>
+            <div class="info-item"><span class="info-label">Package TDP Load:</span><span class="info-val" id="thermal-tdp">22.8 W</span></div>
+            <div class="info-item"><span class="info-label">Thermal Headroom:</span><span class="info-val" id="thermal-headroom" style="color: var(--accent-green);">+53.5 °C</span></div>
+            <div class="info-item"><span class="info-label">Throttling State:</span><span class="info-val" id="thermal-state" style="color: var(--accent-green);">OPTIMAL (Nominal)</span></div>
           </div>
         </div>
 
@@ -1012,6 +1029,57 @@
           </div>
           <button class="btn btn-outline" style="margin-top: 16px;" onclick="runDiskBenchmark()">Test Disk I/O</button>
         </div>
+
+        <!-- GPU & Shader Fillrate Benchmark -->
+        <div class="card bench-card">
+          <div>
+            <div class="card-header">
+              <h2>🎨 GPU &amp; Shader Fillrate</h2>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+              Offscreen canvas alpha-blend rasterization &amp; particle compute shader throughput.
+            </p>
+            <div class="meter-bar"><div class="meter-fill" id="gpu-bench-progress"></div></div>
+            <div class="score-display" id="gpu-score">-- MPix/s</div>
+            <div class="info-item"><span class="info-label">Fill Throughput:</span><span class="info-val" id="gpu-fill-speed">-- MPix/s</span></div>
+            <div class="info-item"><span class="info-label">FPS Consistency:</span><span class="info-val" id="gpu-fps">-- FPS</span></div>
+          </div>
+          <button class="btn btn-outline" style="margin-top: 16px;" onclick="runGpuBenchmark()">Test GPU</button>
+        </div>
+
+        <!-- Cryptographic Hashing Throughput -->
+        <div class="card bench-card">
+          <div>
+            <div class="card-header">
+              <h2>🔐 Cryptographic Hashing</h2>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+              Bitwise CRC-32 &amp; Adler-32 memory block streaming across 16MB synthetic buffers.
+            </p>
+            <div class="meter-bar"><div class="meter-fill" id="crypto-bench-progress"></div></div>
+            <div class="score-display" id="crypto-score">-- MB/s</div>
+            <div class="info-item"><span class="info-label">CRC32 Throughput:</span><span class="info-val" id="crypto-crc-speed">-- MB/s</span></div>
+            <div class="info-item"><span class="info-label">Checksum Rate:</span><span class="info-val" id="crypto-ops">-- ops/s</span></div>
+          </div>
+          <button class="btn btn-outline" style="margin-top: 16px;" onclick="runCryptoBenchmark()">Test Crypto</button>
+        </div>
+
+        <!-- Scheduler & Microtask Jitter -->
+        <div class="card bench-card">
+          <div>
+            <div class="card-header">
+              <h2>⏱️ Scheduler &amp; Microtask Jitter</h2>
+            </div>
+            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">
+              High-resolution event loop timing variance, microtask drift, and queue latency.
+            </p>
+            <div class="meter-bar"><div class="meter-fill" id="lat-bench-progress"></div></div>
+            <div class="score-display" id="lat-score">-- µs / -- %</div>
+            <div class="info-item"><span class="info-label">Average Jitter:</span><span class="info-val" id="lat-avg-jitter">-- ms</span></div>
+            <div class="info-item"><span class="info-label">Max Interval Drift:</span><span class="info-val" id="lat-max-jitter">-- ms</span></div>
+          </div>
+          <button class="btn btn-outline" style="margin-top: 16px;" onclick="runLatencyBenchmark()">Test Latency</button>
+        </div>
       </div>
     </section>
 
@@ -1047,19 +1115,36 @@
         </div>
       </div>
 
-      <!-- Services Manager Table Card -->
+      <!-- Telemetry Flight Recorder Strip -->
+      <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 10px 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 12px; font-weight: 700; color: var(--accent-blue);">📼 Telemetry Flight Recorder:</span>
+          <button class="btn btn-outline btn-sm" id="btn-recorder-toggle" onclick="toggleFlightRecorder()">⏸ Pause Stream</button>
+          <span id="recorder-status" style="font-size: 11px; color: var(--accent-green); font-family: monospace;">● RECORDING (Live 60s Buffer)</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; flex: 1; max-width: 380px;">
+          <span style="font-size: 11px; color: var(--text-muted); font-family: monospace;">-60s</span>
+          <input type="range" id="recorder-scrub" min="0" max="59" value="59" style="flex: 1;" oninput="scrubFlightRecorder(this.value)">
+          <span style="font-size: 11px; color: var(--accent-blue); font-family: monospace;" id="recorder-scrub-label">LIVE</span>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="exportFlightLog()" title="Export 60-second telemetry snapshot as CSV">💾 Export Flight CSV</button>
+      </div>
+
+      <!-- Services & Processes Manager Table Card -->
       <div class="card">
         <div class="card-header">
-          <h2>⚙️ Windows & System Services Status Manager</h2>
-          <div style="display: flex; gap: 8px;">
-            <button class="btn btn-accent btn-sm" onclick="addCustomService()">+ Add Daemon</button>
-            <button class="btn btn-outline btn-sm" onclick="refreshServices()">🔄 Refresh Services</button>
+          <h2>⚙️ System Telemetry, Services &amp; Task Manager</h2>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <button class="quick-chip active" id="btn-view-services" onclick="switchServiceView('services')">⚙️ System Services (<span id="svc-count-badge">12</span>)</button>
+            <button class="quick-chip" id="btn-view-processes" onclick="switchServiceView('processes')">📊 Active Processes &amp; Threads (<span id="proc-count-badge">8</span>)</button>
+            <button class="btn btn-accent btn-sm" id="btn-add-daemon-top" onclick="addCustomService()">+ Add Daemon</button>
+            <button class="btn btn-outline btn-sm" onclick="refreshServices()">🔄 Refresh</button>
           </div>
         </div>
 
-        <div class="services-toolbar">
+        <div class="services-toolbar" id="services-filter-toolbar">
           <div style="display: flex; gap: 8px; flex: 1; min-width: 260px; align-items: center;">
-            <input type="text" id="svc-search-input" class="search-input" placeholder="Search services by name or binary..." oninput="renderServices()">
+            <input type="text" id="svc-search-input" class="search-input" placeholder="Search by name, binary, or syntax (e.g. cat:core status:running)..." oninput="renderServices()">
             <button class="btn btn-outline btn-sm" onclick="clearServiceSearch()" title="Clear Search Filter">✕ Clear</button>
             <label style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted); cursor: pointer; white-space: nowrap;">
               <input type="checkbox" id="svc-search-regex" onchange="renderServices()"> Regex
@@ -1081,7 +1166,7 @@
           </select>
         </div>
 
-        <div style="display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; align-items: center;">
+        <div style="display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; align-items: center;" id="services-quick-chips">
           <span style="font-size: 11px; color: var(--text-muted); font-weight: 600;">Filter:</span>
           <button class="quick-chip" onclick="setServiceFilter('ALL', 'ALL')">All Services</button>
           <button class="quick-chip" onclick="setServiceFilter('Core System', 'ALL')">Core System</button>
@@ -1093,7 +1178,7 @@
 
         <div class="services-table-container">
           <table class="services-table">
-            <thead>
+            <thead id="svc-table-head">
               <tr>
                 <th>Service Name</th>
                 <th>Display Name</th>
@@ -1180,6 +1265,8 @@
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <select id="hex-buffer-source" class="select-input" onchange="loadHexBufferSource()">
               <option value="telemetry">Active Telemetry &amp; Heap Snapshot</option>
+              <option value="network_stream">Promiscuous Network Frame Stream (Diegetic Capture)</option>
+              <option value="process_table">Process Memory Map &amp; Thread Descriptors</option>
               <option value="cpu_bench">CPU Benchmark Compute Workload Buffer</option>
               <option value="ram_bench">RAM Throughput Stress Allocation Block</option>
               <option value="event_logs">Event History Audit Trail Stream</option>
@@ -1240,8 +1327,25 @@
   let benchResults = {
     cpuScore: null,
     ramScore: null,
-    diskScore: null
+    diskScore: null,
+    gpuScore: null,
+    cryptoScore: null,
+    latencyScore: null
   };
+  let benchActive = false;
+
+  // Active Process & Thread Data Registry
+  let activeServiceView = 'services'; // 'services' or 'processes'
+  const systemProcesses = [
+    { pid: 1024, name: "KiloAgentHost.exe", threads: 16, cpu: 3.8, mem: "38 MB", prio: "High", desc: "Coordinates background autonomous agent execution and IPC channels" },
+    { pid: 1080, name: "MicrosCompositor.exe", threads: 8, cpu: 2.5, mem: "64 MB", prio: "Realtime", desc: "Hardware-accelerated window compositor and surface desktop rasterizer" },
+    { pid: 1120, name: "AudioRenderer.exe", threads: 4, cpu: 1.2, mem: "18 MB", prio: "High", desc: "Yamaha YM2612 FM synthesis & SPC700 stereo delay DSP mixing engine" },
+    { pid: 1199, name: "NetworkStack.exe", threads: 6, cpu: 0.8, mem: "14 MB", prio: "Normal", desc: "ICMP, TCP/IP, WebRTC and Promiscuous packet dispatch subsystem" },
+    { pid: 1240, name: "StorageIndexer.exe", threads: 4, cpu: 0.4, mem: "22 MB", prio: "BelowNormal", desc: "Background IndexedDB and persistent local file cataloger" },
+    { pid: 1288, name: "VRAMCompositor.exe", threads: 12, cpu: 3.1, mem: "112 MB", prio: "High", desc: "Direct2D/WebGL surface rasterizer and display controller" },
+    { pid: 1350, name: "DiagnosticWorker.exe", threads: 2, cpu: 0.5, mem: "16 MB", prio: "Normal", desc: "Hardware performance telemetry and stress calculation daemon" },
+    { pid: 1410, name: "VirtualNetRelay.exe", threads: 4, cpu: 0.6, mem: "12 MB", prio: "Normal", desc: "Virtual 1999 Web proxy and packet relay service" }
+  ];
 
   // Service Data Registry
   const systemServices = [
@@ -1289,8 +1393,10 @@
     }
   }
 
-  // Synthesized Web Audio Acoustic Feedback
+  // Universal Audio Synthesizer (Genesis YM2612 2-Op FM & SNES SPC700 Stereo Delay Warmth)
   let audioCtx = null;
+  let soundEnabled = safeGetStorage('ksys_sound', '1') === '1';
+
   function getAudioContext() {
     if (!audioCtx) {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -1302,44 +1408,259 @@
     return audioCtx;
   }
 
-  function playFeedback(type) {
+  function toggleAudio() {
+    soundEnabled = !soundEnabled;
+    safeSetStorage('ksys_sound', soundEnabled ? '1' : '0');
+    const label = soundEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+    const btnHeader = document.getElementById('btn-audio-toggle');
+    const btnChip = document.getElementById('chip-audio-toggle');
+    if (btnHeader) btnHeader.textContent = label;
+    if (btnChip) btnChip.innerHTML = `${label} <kbd>[Shift+M]</kbd>`;
+    if (soundEnabled) {
+      playYm2612Sfx('quicksave');
+      showToast('Yamaha YM2612 FM / SPC700 Audio Synthesizer: ENABLED', 'success', 2200);
+    } else {
+      showToast('Audio Synthesizer: MUTED', 'info', 2000);
+    }
+  }
+
+  function playYm2612Sfx(type) {
+    if (!soundEnabled) return;
     try {
       const ctx = getAudioContext();
       if (!ctx) return;
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
       const now = ctx.currentTime;
 
+      // Master gain
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.18, now);
+
+      // Super Nintendo SPC700 Warm Stereo Delay Network
+      const delay = ctx.createDelay();
+      delay.delayTime.setValueAtTime(0.18, now); // 180ms SPC700 echo
+      const delayFeedback = ctx.createGain();
+      delayFeedback.gain.setValueAtTime(0.28, now); // 28% echo feedback
+      const delayFilter = ctx.createBiquadFilter();
+      delayFilter.type = 'lowpass';
+      delayFilter.frequency.setValueAtTime(2200, now); // 2.2kHz warm rolloff
+
+      master.connect(delay);
+      delay.connect(delayFilter);
+      delayFilter.connect(delayFeedback);
+      delayFeedback.connect(delay);
+      delayFilter.connect(ctx.destination);
+      master.connect(ctx.destination);
+
       if (type === 'click') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(800, now);
-        osc.frequency.exponentialRampToValueAtTime(400, now + 0.05);
-        gain.gain.setValueAtTime(0.08, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-        osc.start(now);
-        osc.stop(now + 0.05);
-      } else if (type === 'success') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(523.25, now); // C5
-        osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
-        osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
-        gain.gain.setValueAtTime(0.12, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-        osc.start(now);
-        osc.stop(now + 0.3);
-      } else if (type === 'warn') {
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(320, now);
-        osc.frequency.exponentialRampToValueAtTime(220, now + 0.12);
-        gain.gain.setValueAtTime(0.09, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
-        osc.start(now);
-        osc.stop(now + 0.12);
+        const car = ctx.createOscillator();
+        const mod = ctx.createOscillator();
+        const modGain = ctx.createGain();
+        const noteGain = ctx.createGain();
+
+        car.type = 'sine'; car.frequency.setValueAtTime(780, now);
+        mod.type = 'sawtooth'; mod.frequency.setValueAtTime(1560, now);
+        modGain.gain.setValueAtTime(600, now);
+        modGain.gain.exponentialRampToValueAtTime(1, now + 0.04);
+        mod.connect(car.frequency);
+
+        noteGain.gain.setValueAtTime(0.2, now);
+        noteGain.gain.exponentialRampToValueAtTime(0.001, now + 0.045);
+        car.connect(noteGain);
+        noteGain.connect(master);
+
+        mod.start(now); car.start(now);
+        mod.stop(now + 0.05); car.stop(now + 0.05);
+      } else if (type === 'tick') {
+        const car = ctx.createOscillator();
+        const mod = ctx.createOscillator();
+        const modGain = ctx.createGain();
+        const noteGain = ctx.createGain();
+
+        car.type = 'sine'; car.frequency.setValueAtTime(440, now);
+        mod.type = 'sine'; mod.frequency.setValueAtTime(880, now);
+        modGain.gain.setValueAtTime(220, now);
+        modGain.gain.exponentialRampToValueAtTime(1, now + 0.03);
+        mod.connect(car.frequency);
+
+        noteGain.gain.setValueAtTime(0.06, now);
+        noteGain.gain.exponentialRampToValueAtTime(0.001, now + 0.035);
+        car.connect(noteGain);
+        noteGain.connect(master);
+
+        mod.start(now); car.start(now);
+        mod.stop(now + 0.04); car.stop(now + 0.04);
+      } else if (type === 'benchStart') {
+        const car = ctx.createOscillator();
+        const mod = ctx.createOscillator();
+        const modGain = ctx.createGain();
+        const noteGain = ctx.createGain();
+
+        car.type = 'sine';
+        car.frequency.setValueAtTime(320, now);
+        car.frequency.exponentialRampToValueAtTime(1280, now + 0.22);
+        mod.type = 'sawtooth';
+        mod.frequency.setValueAtTime(640, now);
+        mod.frequency.exponentialRampToValueAtTime(2560, now + 0.22);
+
+        modGain.gain.setValueAtTime(800, now);
+        modGain.gain.exponentialRampToValueAtTime(10, now + 0.22);
+        mod.connect(car.frequency);
+
+        noteGain.gain.setValueAtTime(0.22, now);
+        noteGain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+        car.connect(noteGain);
+        noteGain.connect(master);
+
+        mod.start(now); car.start(now);
+        mod.stop(now + 0.25); car.stop(now + 0.25);
+      } else if (type === 'benchPass' || type === 'success') {
+        const notes = [523.25, 659.25, 783.99];
+        notes.forEach((freq, idx) => {
+          const t = now + idx * 0.07;
+          const car = ctx.createOscillator();
+          const mod = ctx.createOscillator();
+          const modGain = ctx.createGain();
+          const noteGain = ctx.createGain();
+
+          car.type = 'sine'; car.frequency.setValueAtTime(freq, t);
+          mod.type = 'triangle'; mod.frequency.setValueAtTime(freq * 2, t);
+          modGain.gain.setValueAtTime(freq * 1.2, t);
+          modGain.gain.exponentialRampToValueAtTime(1, t + 0.2);
+          mod.connect(car.frequency);
+
+          noteGain.gain.setValueAtTime(0.18, t);
+          noteGain.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+          car.connect(noteGain);
+          noteGain.connect(master);
+
+          mod.start(t); car.start(t);
+          mod.stop(t + 0.29); car.stop(t + 0.29);
+        });
+      } else if (type === 'benchComplete') {
+        const notes = [261.63, 392.00, 523.25, 659.25];
+        notes.forEach((freq, idx) => {
+          const t = now + idx * 0.08;
+          const car = ctx.createOscillator();
+          const mod = ctx.createOscillator();
+          const modGain = ctx.createGain();
+          const noteGain = ctx.createGain();
+
+          car.type = 'sine'; car.frequency.setValueAtTime(freq, t);
+          mod.type = 'sawtooth'; mod.frequency.setValueAtTime(freq * 2, t);
+          modGain.gain.setValueAtTime(freq * 1.5, t);
+          modGain.gain.exponentialRampToValueAtTime(1, t + 0.25);
+          mod.connect(car.frequency);
+
+          noteGain.gain.setValueAtTime(0.2, t);
+          noteGain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+          car.connect(noteGain);
+          noteGain.connect(master);
+
+          mod.start(t); car.start(t);
+          mod.stop(t + 0.36); car.stop(t + 0.36);
+        });
+      } else if (type === 'serviceToggle') {
+        const car = ctx.createOscillator();
+        const mod = ctx.createOscillator();
+        const modGain = ctx.createGain();
+        const noteGain = ctx.createGain();
+
+        car.type = 'sine'; car.frequency.setValueAtTime(587.33, now);
+        mod.type = 'square'; mod.frequency.setValueAtTime(1174.66, now);
+        modGain.gain.setValueAtTime(450, now);
+        modGain.gain.exponentialRampToValueAtTime(1, now + 0.1);
+        mod.connect(car.frequency);
+
+        noteGain.gain.setValueAtTime(0.18, now);
+        noteGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+        car.connect(noteGain);
+        noteGain.connect(master);
+
+        mod.start(now); car.start(now);
+        mod.stop(now + 0.13); car.stop(now + 0.13);
+      } else if (type === 'warn' || type === 'error') {
+        const car = ctx.createOscillator();
+        const mod = ctx.createOscillator();
+        const modGain = ctx.createGain();
+        const noteGain = ctx.createGain();
+
+        car.type = 'sawtooth'; car.frequency.setValueAtTime(330, now);
+        car.frequency.exponentialRampToValueAtTime(220, now + 0.14);
+        mod.type = 'square'; mod.frequency.setValueAtTime(792, now);
+        modGain.gain.setValueAtTime(650, now);
+        modGain.gain.exponentialRampToValueAtTime(5, now + 0.14);
+        mod.connect(car.frequency);
+
+        noteGain.gain.setValueAtTime(0.18, now);
+        noteGain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        car.connect(noteGain);
+        noteGain.connect(master);
+
+        mod.start(now); car.start(now);
+        mod.stop(now + 0.16); car.stop(now + 0.16);
+      } else if (type === 'quicksave') {
+        const car = ctx.createOscillator();
+        const mod = ctx.createOscillator();
+        const modGain = ctx.createGain();
+        const noteGain = ctx.createGain();
+
+        car.type = 'sine'; car.frequency.setValueAtTime(1046.5, now);
+        car.frequency.exponentialRampToValueAtTime(1318.5, now + 0.16);
+        mod.type = 'triangle'; mod.frequency.setValueAtTime(2093.0, now);
+        modGain.gain.setValueAtTime(800, now);
+        modGain.gain.exponentialRampToValueAtTime(1, now + 0.18);
+        mod.connect(car.frequency);
+
+        noteGain.gain.setValueAtTime(0.2, now);
+        noteGain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+        car.connect(noteGain);
+        noteGain.connect(master);
+
+        mod.start(now); car.start(now);
+        mod.stop(now + 0.23); car.stop(now + 0.23);
+      } else if (type === 'quickload') {
+        const car = ctx.createOscillator();
+        const mod = ctx.createOscillator();
+        const modGain = ctx.createGain();
+        const noteGain = ctx.createGain();
+
+        car.type = 'sine'; car.frequency.setValueAtTime(783.99, now);
+        car.frequency.exponentialRampToValueAtTime(523.25, now + 0.16);
+        mod.type = 'sine'; mod.frequency.setValueAtTime(1567.98, now);
+        modGain.gain.setValueAtTime(500, now);
+        modGain.gain.exponentialRampToValueAtTime(1, now + 0.18);
+        mod.connect(car.frequency);
+
+        noteGain.gain.setValueAtTime(0.2, now);
+        noteGain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+        car.connect(noteGain);
+        noteGain.connect(master);
+
+        mod.start(now); car.start(now);
+        mod.stop(now + 0.23); car.stop(now + 0.23);
+      } else if (type === 'hexSeek') {
+        const car = ctx.createOscillator();
+        const mod = ctx.createOscillator();
+        const modGain = ctx.createGain();
+        const noteGain = ctx.createGain();
+
+        car.type = 'sine'; car.frequency.setValueAtTime(1200, now);
+        mod.type = 'sawtooth'; mod.frequency.setValueAtTime(2400, now);
+        modGain.gain.setValueAtTime(400, now);
+        modGain.gain.exponentialRampToValueAtTime(1, now + 0.02);
+        mod.connect(car.frequency);
+
+        noteGain.gain.setValueAtTime(0.12, now);
+        noteGain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+        car.connect(noteGain);
+        noteGain.connect(master);
+
+        mod.start(now); car.start(now);
+        mod.stop(now + 0.03); car.stop(now + 0.03);
       }
     } catch(e) {}
   }
+  function playFeedback(type) { playYm2612Sfx(type); }
 
   // Telemetry Sparkline Data History
   const cpuHistory = new Array(30).fill(10);
@@ -1449,7 +1770,13 @@
     });
   }
 
+  function clearToasts() {
+    const container = document.getElementById('toast-container');
+    if (container) container.innerHTML = '';
+  }
+
   function showHelp() {
+    clearToasts();
     const hm = document.getElementById('help-modal');
     if (!hm) return;
     hm.style.display = 'flex';
@@ -1495,11 +1822,12 @@
       const logFilter = document.getElementById('log-filter-level');
       const hexSource = document.getElementById('hex-buffer-source');
       const snapshot = {
-        version: 1,
+        version: 2,
         savedAt: new Date().toISOString(),
         benchResults: { ...benchResults },
         customServices: systemServices.filter(s => s.id.startsWith('custom_')),
         serviceStates: systemServices.map(s => ({ id: s.id, status: s.status, mem: s.mem })),
+        processes: systemProcesses.map(p => ({ pid: p.pid, prio: p.prio, status: p.status, cpu: p.cpu })),
         eventLogs: eventLogs.slice(0, 50),
         activeTab: activeTabId,
         serviceFilterStatus: svcFilter ? svcFilter.value : 'all',
@@ -1510,7 +1838,7 @@
       safeSetStorage('ksys_tutorialSeen', '1');
       logEvent('INFO', `[QUICKSAVE] Diagnostics snapshot saved (Tab: ${activeTabId}, ${snapshot.customServices.length} custom daemons)`);
       showToast('💾 Diagnostics snapshot quicksaved! [F5]', 'success', 2500);
-      playFeedback('click');
+      playYm2612Sfx('quicksave');
     } catch(err) {
       logEvent('ERROR', `Quicksave failed: ${err.message}`);
       showToast('Storage quota exceeded or save failed.', 'error', 3000);
@@ -1528,7 +1856,7 @@
       safeSetStorage('ksys_tutorialSeen', '1');
       logEvent('INFO', `[QUICKLOAD] Diagnostics snapshot restored from ${new Date(snapshot.savedAt).toLocaleTimeString()}`);
       showToast('📂 Diagnostics snapshot quickloaded! [F9]', 'success', 2500);
-      playFeedback('click');
+      playYm2612Sfx('quickload');
     } catch(err) {
       logEvent('ERROR', `Quickload failed: ${err.message}`);
       showToast('Failed to quickload snapshot.', 'error', 3000);
@@ -1543,12 +1871,38 @@
       if (benchResults.cpuScore) document.getElementById('cpu-score').textContent = benchResults.cpuScore;
       if (benchResults.ramScore) document.getElementById('ram-score').textContent = benchResults.ramScore.includes('MB/s') ? benchResults.ramScore : benchResults.ramScore + ' MB/s';
       if (benchResults.diskScore) document.getElementById('disk-score').textContent = benchResults.diskScore.includes('MB/s') ? benchResults.diskScore : benchResults.diskScore + ' MB/s';
+      if (benchResults.gpuScore) {
+        document.getElementById('gpu-score').textContent = benchResults.gpuScore;
+        const gProg = document.getElementById('gpu-bench-progress');
+        if (gProg) gProg.style.width = '100%';
+      }
+      if (benchResults.cryptoScore) {
+        document.getElementById('crypto-score').textContent = benchResults.cryptoScore;
+        const cProg = document.getElementById('crypto-bench-progress');
+        if (cProg) cProg.style.width = '100%';
+      }
+      if (benchResults.latencyScore) {
+        document.getElementById('lat-score').textContent = benchResults.latencyScore;
+        const lProg = document.getElementById('lat-bench-progress');
+        if (lProg) lProg.style.width = '100%';
+      }
       const cpuProg = document.getElementById('cpu-bench-progress');
       if (cpuProg && benchResults.cpuScore) cpuProg.style.width = '100%';
       const ramProg = document.getElementById('ram-bench-progress');
       if (ramProg && benchResults.ramScore) ramProg.style.width = '100%';
       const diskProg = document.getElementById('disk-bench-progress');
       if (diskProg && benchResults.diskScore) diskProg.style.width = '100%';
+    }
+
+    if (Array.isArray(snapshot.processes)) {
+      snapshot.processes.forEach(sp => {
+        const p = systemProcesses.find(item => item.pid === sp.pid);
+        if (p) {
+          if (sp.prio) p.prio = sp.prio;
+          if (sp.status) p.status = sp.status;
+          if (sp.cpu !== undefined) p.cpu = sp.cpu;
+        }
+      });
     }
 
     if (Array.isArray(snapshot.customServices)) {
@@ -1751,6 +2105,13 @@
       return;
     }
 
+    // Shift+M: Audio Mute / Unmute
+    if (e.shiftKey && (e.key === 'M' || e.key === 'm')) {
+      e.preventDefault();
+      toggleAudio();
+      return;
+    }
+
     // Guard all shortcuts against browser modifier keys (Ctrl/Alt/Meta)
     if (!e.ctrlKey && !e.altKey && !e.metaKey) {
       if (e.key === '1') { switchTab('inspector'); return; }
@@ -1760,6 +2121,17 @@
       if (e.key === '5') { switchTab('export'); return; }
       if (e.key === '6') { switchTab('hex'); return; }
       if (e.key.toLowerCase() === 'x') { switchTab('hex'); return; }
+      if (e.key.toLowerCase() === 'g') { runNetworkProbe(); return; }
+      if (e.key.toLowerCase() === 'p') {
+        const activeTab = getActiveTabId();
+        if (activeTab === 'services') {
+          switchServiceView(activeServiceView === 'processes' ? 'services' : 'processes');
+        } else {
+          switchTab('services');
+          switchServiceView('processes');
+        }
+        return;
+      }
       if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
         if (e.key === 'F1') e.preventDefault();
         showHelp();
@@ -1953,6 +2325,8 @@
   // Navigation
   const TAB_ORDER = ['inspector', 'benchmarks', 'services', 'logs', 'export', 'hex'];
   function switchTab(tabId) {
+    if (typeof clearToasts === 'function') clearToasts();
+    if (typeof playYm2612Sfx === 'function') playYm2612Sfx('tick');
     document.querySelectorAll('.tab-btn').forEach(btn => {
       btn.classList.remove('active');
       btn.setAttribute('aria-selected', 'false');
@@ -2371,37 +2745,371 @@
     });
   }
 
+  async function runGpuBenchmark() {
+    logEvent('BENCH', 'Starting GPU & Shader Fillrate benchmark...');
+    const progress = document.getElementById('gpu-bench-progress');
+    const scoreEl = document.getElementById('gpu-score');
+    if (progress) progress.style.width = '20%';
+    playYm2612Sfx('benchStart');
+
+    const width = 640;
+    const height = 480;
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = width;
+    offCanvas.height = height;
+    const ctx = offCanvas.getContext('2d', { willReadFrequently: false });
+
+    const totalFrames = 30;
+    const startTime = performance.now();
+    let drawnPixels = 0;
+
+    for (let f = 0; f < totalFrames; f++) {
+      if (progress && f % 6 === 0) {
+        progress.style.width = `${20 + Math.round((f / totalFrames) * 70)}%`;
+      }
+      ctx.fillStyle = `rgba(${(f * 15) % 255}, ${(f * 33) % 255}, 180, 0.25)`;
+      for (let p = 0; p < 200; p++) {
+        const x = (p * 47 + f * 11) % width;
+        const y = (p * 31 + f * 17) % height;
+        const s = 40 + (p % 60);
+        ctx.fillRect(x - s/2, y - s/2, s, s);
+        drawnPixels += (s * s);
+      }
+      if (f % 10 === 0) {
+        await new Promise(r => setTimeout(r, 0));
+      }
+    }
+
+    const elapsedSec = Math.max(0.001, (performance.now() - startTime) / 1000);
+    const mPixSec = +( (drawnPixels / 1000000) / elapsedSec ).toFixed(1);
+    const fps = Math.round(totalFrames / elapsedSec);
+
+    if (progress) progress.style.width = '100%';
+    if (scoreEl) scoreEl.textContent = `${mPixSec} MPix/s`;
+    document.getElementById('gpu-fill-speed').textContent = `${mPixSec} MPix/s`;
+    document.getElementById('gpu-fps').textContent = `${fps} FPS`;
+
+    benchResults.gpuScore = `${mPixSec} MPix/s (${fps} FPS)`;
+    logEvent('BENCH', `GPU Fillrate Benchmark Complete: ${mPixSec} MPix/s (${fps} FPS consistency)`);
+    playYm2612Sfx('benchPass');
+    showToast(`GPU Fillrate: ${mPixSec} MPix/s (${fps} FPS)`, 'success');
+  }
+
+  async function runCryptoBenchmark() {
+    logEvent('BENCH', 'Starting Cryptographic Hashing benchmark (CRC32 & Adler-32)...');
+    const progress = document.getElementById('crypto-bench-progress');
+    const scoreEl = document.getElementById('crypto-score');
+    if (progress) progress.style.width = '20%';
+    playYm2612Sfx('benchStart');
+
+    const blockSize = 16 * 1024 * 1024; // 16MB block
+    const testBytes = new Uint8Array(blockSize);
+    for (let i = 0; i < blockSize; i += 64) {
+      testBytes[i] = (i ^ 0xA5) & 0xFF;
+      testBytes[i+1] = ((i * 7) ^ 0x5A) & 0xFF;
+    }
+
+    if (progress) progress.style.width = '40%';
+    await new Promise(r => setTimeout(r, 0));
+
+    const crcTable = new Uint32Array(256);
+    for (let i = 0; i < 256; i++) {
+      let c = i;
+      for (let j = 0; j < 8; j++) {
+        c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      }
+      crcTable[i] = c;
+    }
+
+    const tStart = performance.now();
+    let crc = 0xFFFFFFFF;
+    let a1 = 1, a2 = 0;
+    const MOD_ADLER = 65521;
+
+    for (let i = 0; i < blockSize; i++) {
+      const b = testBytes[i];
+      crc = crcTable[(crc ^ b) & 0xFF] ^ (crc >>> 8);
+      a1 = (a1 + b) % MOD_ADLER;
+      a2 = (a2 + a1) % MOD_ADLER;
+    }
+    crc = (crc ^ 0xFFFFFFFF) >>> 0;
+    const adler = ((a2 << 16) | a1) >>> 0;
+
+    const elapsedSec = Math.max(0.001, (performance.now() - tStart) / 1000);
+    const mbSec = +( (blockSize / (1024 * 1024)) / elapsedSec ).toFixed(1);
+    const ops = Math.round(blockSize / elapsedSec);
+
+    if (progress) progress.style.width = '100%';
+    if (scoreEl) scoreEl.textContent = `${mbSec} MB/s`;
+    document.getElementById('crypto-crc-speed').textContent = `${mbSec} MB/s`;
+    document.getElementById('crypto-ops').textContent = `${ops.toLocaleString()} B/s`;
+
+    benchResults.cryptoScore = `${mbSec} MB/s (CRC32: 0x${crc.toString(16).toUpperCase()})`;
+    logEvent('BENCH', `Crypto Benchmark Complete: ${mbSec} MB/s (CRC: 0x${crc.toString(16).toUpperCase()})`);
+    playYm2612Sfx('benchPass');
+    showToast(`Cryptographic Hashing: ${mbSec} MB/s`, 'success');
+  }
+
+  async function runLatencyBenchmark() {
+    logEvent('BENCH', 'Starting Scheduler & Microtask Jitter benchmark...');
+    const progress = document.getElementById('lat-bench-progress');
+    const scoreEl = document.getElementById('lat-score');
+    if (progress) progress.style.width = '20%';
+    playYm2612Sfx('benchStart');
+
+    const samples = [];
+    const expectedDelay = 4; // ms
+    const totalSamples = 20;
+
+    for (let i = 0; i < totalSamples; i++) {
+      const t0 = performance.now();
+      await new Promise(resolve => setTimeout(resolve, expectedDelay));
+      const drift = Math.abs((performance.now() - t0) - expectedDelay);
+      samples.push(drift);
+      if (progress) progress.style.width = `${20 + Math.round((i / totalSamples) * 75)}%`;
+    }
+
+    const avgDrift = +(samples.reduce((a, b) => a + b, 0) / samples.length).toFixed(2);
+    const maxDrift = +(Math.max(...samples)).toFixed(2);
+    const responsivenessPct = Math.max(80, +(100 - avgDrift * 3).toFixed(1));
+
+    if (progress) progress.style.width = '100%';
+    if (scoreEl) scoreEl.textContent = `±${avgDrift} ms (${responsivenessPct}%)`;
+    document.getElementById('lat-avg-jitter').textContent = `±${avgDrift} ms`;
+    document.getElementById('lat-max-jitter').textContent = `+${maxDrift} ms`;
+
+    benchResults.latencyScore = `±${avgDrift} ms (${responsivenessPct}% UI Responsiveness)`;
+    logEvent('BENCH', `Latency Jitter Benchmark Complete: avg ±${avgDrift} ms, max +${maxDrift} ms`);
+    playYm2612Sfx('benchPass');
+    showToast(`Scheduler Latency: ±${avgDrift} ms (${responsivenessPct}%)`, 'success');
+  }
+
+  async function runNetworkProbe() {
+    logEvent('INFO', 'Initiating Promiscuous Gateway & Socket stream probe...');
+    playYm2612Sfx('benchStart');
+    showToast('Probing gateway and socket telemetry stream...', 'info', 2000);
+
+    const btn = document.getElementById('btn-net-probe');
+    if (btn) btn.disabled = true;
+
+    await new Promise(r => setTimeout(r, 350));
+    const rtts = [1.2, 0.8, 1.9, 1.1];
+    const avgRtt = +(rtts.reduce((a,b)=>a+b,0) / rtts.length).toFixed(1);
+    const jitter = 0.4;
+
+    document.getElementById('net-rtt').textContent = `${avgRtt} ms (Jitter: ±${jitter}ms)`;
+    document.getElementById('net-drop-rate').textContent = `0.00% (0/4 lost)`;
+    document.getElementById('net-status').textContent = 'Connected (Lossless Carrier Lock)';
+
+    logEvent('INFO', `Network Gateway Probe: 4 pkts transmitted, 4 received, RTT avg=${avgRtt}ms, loss=0%`);
+    playYm2612Sfx('benchPass');
+    showToast(`Gateway Probe: ${avgRtt}ms RTT • Lossless 0% • Carrier Lock OK`, 'success');
+    if (btn) btn.disabled = false;
+  }
+
   async function runAllBenchmarks() {
     const btn = document.getElementById('btn-run-all');
     btn.disabled = true;
-    document.getElementById('bench-status-text').textContent = 'Executing full diagnostic test suite...';
+    benchActive = true;
+    document.getElementById('bench-status-text').textContent = 'Executing full 6-phase diagnostic test suite...';
     showToast('Executing full diagnostic benchmark suite...', 'info');
+    playYm2612Sfx('benchStart');
 
     await runCpuBenchmark();
     await runRamBenchmark();
     await runDiskBenchmark();
+    await runGpuBenchmark();
+    await runCryptoBenchmark();
+    await runLatencyBenchmark();
 
-    document.getElementById('bench-status-text').textContent = 'All benchmarks finished successfully.';
+    benchActive = false;
+    document.getElementById('bench-status-text').textContent = 'All 6 diagnostic benchmarks finished successfully.';
     btn.disabled = false;
-    logEvent('INFO', 'Full Diagnostic Benchmark suite finished.');
-    showToast('Full Diagnostic Benchmark Suite complete!', 'success');
+    if (typeof updateSystemHealth === 'function') updateSystemHealth();
+    logEvent('INFO', 'Full 6-phase Diagnostic Benchmark suite finished.');
+    playYm2612Sfx('benchComplete');
+    showToast('Full Diagnostic Benchmark Suite complete (6/6 tests passed)!', 'success', 3500);
   }
 
   // --- SERVICES & TELEMETRY LOGIC ---
-  function renderServices() {
+  function switchServiceView(view) {
+    activeServiceView = view;
+    const btnSvc = document.getElementById('btn-view-services');
+    const btnProc = document.getElementById('btn-view-processes');
+    const head = document.getElementById('svc-table-head');
+    const addBtn = document.getElementById('btn-add-daemon-top');
+    const quickChips = document.getElementById('services-quick-chips');
+
+    if (view === 'services') {
+      if (btnSvc) btnSvc.classList.add('active');
+      if (btnProc) btnProc.classList.remove('active');
+      if (addBtn) addBtn.style.display = 'inline-flex';
+      if (quickChips) quickChips.style.display = 'flex';
+      if (head) {
+        head.innerHTML = `
+          <tr>
+            <th>Service Name</th>
+            <th>Display Name</th>
+            <th>Category</th>
+            <th>Startup</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        `;
+      }
+      renderServices();
+    } else {
+      if (btnSvc) btnSvc.classList.remove('active');
+      if (btnProc) btnProc.classList.add('active');
+      if (addBtn) addBtn.style.display = 'none';
+      if (quickChips) quickChips.style.display = 'none';
+      if (head) {
+        head.innerHTML = `
+          <tr>
+            <th>PID</th>
+            <th>Process Executable</th>
+            <th>Threads</th>
+            <th>CPU %</th>
+            <th>Memory Working Set</th>
+            <th>Priority Class</th>
+            <th>Actions</th>
+          </tr>
+        `;
+      }
+      renderProcesses();
+    }
+    playYm2612Sfx('click');
+  }
+
+  function renderProcesses() {
     const tableBody = document.getElementById('svc-table-body');
     if (!tableBody) return;
 
-    const searchTxt = document.getElementById('svc-search-input').value;
-    const filterCat = document.getElementById('svc-filter-category').value;
-    const filterStat = document.getElementById('svc-filter-status').value;
+    const searchTxt = document.getElementById('svc-search-input').value.trim();
     const isRegex = document.getElementById('svc-search-regex')?.checked;
     const isCase = document.getElementById('svc-search-case')?.checked;
 
     let regex = null;
     if (isRegex && searchTxt) {
+      try { regex = new RegExp(searchTxt, isCase ? '' : 'i'); } catch(e) {}
+    }
+
+    const filtered = systemProcesses.filter(p => {
+      if (!searchTxt) return true;
+      if (regex) {
+        return regex.test(p.name) || regex.test(String(p.pid)) || regex.test(p.prio);
+      }
+      const q = isCase ? searchTxt : searchTxt.toLowerCase();
+      const n = isCase ? p.name : p.name.toLowerCase();
+      const prio = isCase ? p.prio : p.prio.toLowerCase();
+      return n.includes(q) || String(p.pid).includes(q) || prio.includes(q);
+    });
+
+    const badge = document.getElementById('proc-count-badge');
+    if (badge) badge.textContent = String(systemProcesses.length);
+
+    tableBody.innerHTML = '';
+    if (filtered.length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 18px;">No processes match search query "${escapeHtml(searchTxt)}".</td></tr>`;
+      return;
+    }
+
+    filtered.forEach(p => {
+      const tr = document.createElement('tr');
+      const isTerminated = p.status === 'TERMINATED';
+      tr.innerHTML = `
+        <td style="font-family: monospace; font-weight: 700; color: var(--accent-blue);">#${p.pid}</td>
+        <td>
+          <div style="font-weight: 600; color: var(--text-main);">${escapeHtml(p.name)}</div>
+          <div style="font-size: 11px; color: var(--text-muted);">${escapeHtml(p.desc)}</div>
+        </td>
+        <td style="font-family: monospace;">${p.threads}</td>
+        <td style="font-family: monospace; color: ${p.cpu > 2 ? 'var(--accent-amber)' : 'var(--text-main)'};">${isTerminated ? '0.0%' : p.cpu.toFixed(1) + '%'}</td>
+        <td style="font-family: monospace;">${isTerminated ? '0 MB' : p.mem}</td>
+        <td>
+          <select class="select-input" style="padding: 2px 6px; font-size: 11px;" ${isTerminated ? 'disabled' : ''} onchange="changeProcessPriority(${p.pid}, this.value)">
+            <option value="Realtime" ${p.prio === 'Realtime' ? 'selected' : ''}>Realtime</option>
+            <option value="High" ${p.prio === 'High' ? 'selected' : ''}>High</option>
+            <option value="Normal" ${p.prio === 'Normal' ? 'selected' : ''}>Normal</option>
+            <option value="BelowNormal" ${p.prio === 'BelowNormal' ? 'selected' : ''}>BelowNormal</option>
+            <option value="Idle" ${p.prio === 'Idle' ? 'selected' : ''}>Idle</option>
+          </select>
+        </td>
+        <td>
+          ${isTerminated ? 
+            `<button class="btn btn-outline btn-sm" style="color: var(--accent-green);" onclick="reviveProcess(${p.pid})">Restart</button>` :
+            `<button class="btn btn-danger btn-sm" onclick="terminateProcess(${p.pid})">Kill</button>`
+          }
+        </td>
+      `;
+      tableBody.appendChild(tr);
+    });
+  }
+
+  function changeProcessPriority(pid, newPrio) {
+    const p = systemProcesses.find(item => item.pid === pid);
+    if (!p) return;
+    p.prio = newPrio;
+    if (newPrio === 'Realtime') p.cpu = Math.min(15, p.cpu * 1.5);
+    else if (newPrio === 'High') p.cpu = Math.min(10, p.cpu * 1.2);
+    else if (newPrio === 'BelowNormal') p.cpu = Math.max(0.1, p.cpu * 0.7);
+    else if (newPrio === 'Idle') p.cpu = 0.1;
+    logEvent('INFO', `Process #${pid} (${p.name}) priority set to [${newPrio}]`);
+    playYm2612Sfx('serviceToggle');
+    showToast(`Process #${pid} priority changed to ${newPrio}`, 'info');
+    renderProcesses();
+  }
+
+  function terminateProcess(pid) {
+    const p = systemProcesses.find(item => item.pid === pid);
+    if (!p) return;
+    p.status = 'TERMINATED';
+    logEvent('WARN', `Process #${pid} (${p.name}) terminated by operator`);
+    playYm2612Sfx('warn');
+    showToast(`Process #${pid} (${p.name}) terminated.`, 'warn');
+    renderProcesses();
+  }
+
+  function reviveProcess(pid) {
+    const p = systemProcesses.find(item => item.pid === pid);
+    if (!p) return;
+    p.status = 'RUNNING';
+    logEvent('INFO', `Process #${pid} (${p.name}) restarted`);
+    playYm2612Sfx('serviceToggle');
+    showToast(`Process #${pid} (${p.name}) restarted.`, 'success');
+    renderProcesses();
+  }
+
+  function renderServices() {
+    if (activeServiceView === 'processes') {
+      renderProcesses();
+      return;
+    }
+
+    const tableBody = document.getElementById('svc-table-body');
+    if (!tableBody) return;
+
+    const rawSearch = document.getElementById('svc-search-input').value.trim();
+    const filterCat = document.getElementById('svc-filter-category').value;
+    const filterStat = document.getElementById('svc-filter-status').value;
+    const isRegex = document.getElementById('svc-search-regex')?.checked;
+    const isCase = document.getElementById('svc-search-case')?.checked;
+
+    // Advanced search syntax extraction: cat:value, status:value, !term
+    let syntaxCat = null, syntaxStatus = null, cleanSearch = rawSearch;
+    if (rawSearch.toLowerCase().includes('cat:')) {
+      const match = rawSearch.match(/cat:([^\s]+)/i);
+      if (match) { syntaxCat = match[1]; cleanSearch = cleanSearch.replace(match[0], '').trim(); }
+    }
+    if (rawSearch.toLowerCase().includes('status:')) {
+      const match = rawSearch.match(/status:([^\s]+)/i);
+      if (match) { syntaxStatus = match[1].toUpperCase(); cleanSearch = cleanSearch.replace(match[0], '').trim(); }
+    }
+
+    let regex = null;
+    if (isRegex && cleanSearch) {
       try {
-        regex = new RegExp(searchTxt, isCase ? '' : 'i');
+        regex = new RegExp(cleanSearch, isCase ? '' : 'i');
       } catch(e) {}
     }
 
@@ -2414,19 +3122,19 @@
       if (s.status === 'RUNNING') runningCount++;
 
       let matchSearch = true;
-      if (searchTxt) {
+      if (cleanSearch) {
         if (regex) {
           matchSearch = regex.test(s.name) || regex.test(s.disp) || regex.test(s.bin);
         } else {
-          const q = isCase ? searchTxt : searchTxt.toLowerCase();
+          const q = isCase ? cleanSearch : cleanSearch.toLowerCase();
           const name = isCase ? s.name : s.name.toLowerCase();
           const disp = isCase ? s.disp : s.disp.toLowerCase();
           const bin = isCase ? s.bin : s.bin.toLowerCase();
           matchSearch = name.includes(q) || disp.includes(q) || bin.includes(q);
         }
       }
-      const matchCat = (filterCat === 'ALL' || s.cat === filterCat);
-      const matchStat = (filterStat === 'ALL' || s.status === filterStat);
+      const matchCat = (filterCat === 'ALL' || s.cat === filterCat) && (!syntaxCat || s.cat.toLowerCase().includes(syntaxCat.toLowerCase()));
+      const matchStat = (filterStat === 'ALL' || s.status === filterStat) && (!syntaxStatus || s.status.includes(syntaxStatus));
 
       if (matchSearch && matchCat && matchStat) {
         const tr = document.createElement('tr');
@@ -2454,6 +3162,8 @@
     // Update Telemetry Service Summary Counters
     document.getElementById('telem-svc-ratio').textContent = `${runningCount} / ${totalCount}`;
     document.getElementById('telem-svc-val').textContent = `${runningCount} Active`;
+    const badge = document.getElementById('svc-count-badge');
+    if (badge) badge.textContent = String(systemServices.length);
     const pct = Math.round((runningCount / Math.max(1, totalCount)) * 100);
     document.getElementById('svc-active-bar').style.width = pct + '%';
   }
@@ -2602,6 +3312,113 @@
     renderServices();
   }
 
+  // Thermal Telemetry & Cooling Simulation Model
+  function getThermalMetrics() {
+    const cpuPct = parseFloat(document.getElementById('telem-cpu-val')?.textContent || '12') || 12;
+    const isBench = benchActive;
+    const tempC = +(32 + (cpuPct * 0.42) + (isBench ? 22 : 0) + (Math.sin(Date.now() / 4000) * 1.2)).toFixed(1);
+    const tempF = +((tempC * 9/5) + 32).toFixed(1);
+    const fanRpm = Math.min(5200, Math.max(1200, Math.round(1200 + (tempC - 30) * 65)));
+    const tdpW = +(15 + (cpuPct * 0.58) + (isBench ? 35 : 0)).toFixed(1);
+    const headroom = +(95.0 - tempC).toFixed(1);
+    const throttling = tempC >= 90;
+    return { tempC, tempF, fanRpm, tdpW, headroom, throttling };
+  }
+
+  // Telemetry Flight Recorder (60-second circular buffer)
+  const flightRecorderBuffer = [];
+  let isFlightRecording = true;
+
+  function pushFlightRecorderFrame() {
+    if (!isFlightRecording) return;
+    const cpuVal = parseFloat(document.getElementById('telem-cpu-val')?.textContent || '12') || 12;
+    const memVal = parseInt(document.getElementById('telem-mem-val')?.textContent || '24') || 24;
+    const activeSvcs = systemServices.filter(s => s.status === 'RUNNING').length;
+    const therm = getThermalMetrics();
+
+    flightRecorderBuffer.push({
+      time: new Date().toLocaleTimeString(),
+      cpu: cpuVal,
+      mem: memVal,
+      services: activeSvcs,
+      tempC: therm.tempC,
+      fanRpm: therm.fanRpm,
+      tdpW: therm.tdpW
+    });
+    if (flightRecorderBuffer.length > 60) flightRecorderBuffer.shift();
+
+    const slider = document.getElementById('recorder-scrub');
+    if (slider && isFlightRecording) {
+      slider.value = flightRecorderBuffer.length - 1;
+      const label = document.getElementById('recorder-scrub-label');
+      if (label) label.textContent = 'LIVE';
+    }
+  }
+
+  function toggleFlightRecorder() {
+    isFlightRecording = !isFlightRecording;
+    const btn = document.getElementById('btn-recorder-toggle');
+    const status = document.getElementById('recorder-status');
+    if (isFlightRecording) {
+      if (btn) btn.textContent = '⏸ Pause Stream';
+      if (status) {
+        status.textContent = '● RECORDING (Live 60s Buffer)';
+        status.style.color = 'var(--accent-green)';
+      }
+      showToast('Flight recorder resumed: capturing live telemetry.', 'info');
+    } else {
+      if (btn) btn.textContent = '▶ Resume Live';
+      if (status) {
+        status.textContent = '⏸ PAUSED (Scrubbing Active)';
+        status.style.color = 'var(--accent-amber)';
+      }
+      showToast('Flight recorder paused. Drag slider to inspect historical frames.', 'warn');
+    }
+    playYm2612Sfx('click');
+  }
+
+  function scrubFlightRecorder(val) {
+    const idx = parseInt(val, 10);
+    if (isNaN(idx) || idx < 0 || idx >= flightRecorderBuffer.length) return;
+    isFlightRecording = false;
+    const btn = document.getElementById('btn-recorder-toggle');
+    const status = document.getElementById('recorder-status');
+    if (btn) btn.textContent = '▶ Resume Live';
+    if (status) {
+      status.textContent = '⏸ PAUSED (Scrubbing Active)';
+      status.style.color = 'var(--accent-amber)';
+    }
+
+    const frame = flightRecorderBuffer[idx];
+    const diffSec = flightRecorderBuffer.length - 1 - idx;
+    const label = document.getElementById('recorder-scrub-label');
+    if (label) label.textContent = diffSec === 0 ? 'LIVE' : `-${diffSec}s (${frame.time})`;
+
+    // Display scrubbed historical metrics
+    document.getElementById('telem-cpu-val').textContent = `${frame.cpu.toFixed(1)}%`;
+    document.getElementById('telem-cpu-pct').textContent = `${Math.round(frame.cpu)}%`;
+    document.getElementById('telem-mem-val').textContent = `${frame.mem} MB`;
+    const tempEl = document.getElementById('thermal-temp');
+    if (tempEl) tempEl.textContent = `${frame.tempC} °C / ${((frame.tempC * 9/5) + 32).toFixed(1)} °F`;
+    const fanEl = document.getElementById('thermal-fan');
+    if (fanEl) fanEl.textContent = `${frame.fanRpm} RPM`;
+    playYm2612Sfx('tick');
+  }
+
+  function exportFlightLog() {
+    if (flightRecorderBuffer.length === 0) {
+      showToast('No flight recorder frames logged yet.', 'warn');
+      return;
+    }
+    let csv = "Time,CPU_Percent,Memory_MB,Active_Services,Temp_C,Fan_RPM,Package_TDP_W\n";
+    flightRecorderBuffer.forEach(f => {
+      csv += `"${f.time}",${f.cpu},${f.mem},${f.services},${f.tempC},${f.fanRpm},${f.tdpW}\n`;
+    });
+    downloadBlob(csv, 'ksys_telemetry_flight_recorder.csv', 'text/csv');
+    logEvent('INFO', `Exported ${flightRecorderBuffer.length} flight recorder frames to CSV`);
+    showToast(`Exported ${flightRecorderBuffer.length} frames to ksys_telemetry_flight_recorder.csv`, 'success');
+  }
+
   // Live Telemetry Loop (Sparklines + CPU Load Sensing)
   function updateTelemetrySparklines() {
     const now = performance.now();
@@ -2634,6 +3451,32 @@
 
     memHistory.shift();
     memHistory.push(heapUsedMB || 24);
+
+    // Update Thermal Telemetry Card
+    const therm = getThermalMetrics();
+    const tTemp = document.getElementById('thermal-temp');
+    if (tTemp) tTemp.textContent = `${therm.tempC} °C / ${therm.tempF} °F`;
+    const tFan = document.getElementById('thermal-fan');
+    if (tFan) tFan.textContent = `${therm.fanRpm} RPM`;
+    const tTdp = document.getElementById('thermal-tdp');
+    if (tTdp) tTdp.textContent = `${therm.tdpW} W`;
+    const tHead = document.getElementById('thermal-headroom');
+    if (tHead) tHead.textContent = `+${therm.headroom} °C`;
+    const tState = document.getElementById('thermal-state');
+    if (tState) {
+      if (therm.throttling) {
+        tState.textContent = 'CRITICAL (Thermal Throttling Active)';
+        tState.style.color = 'var(--accent-red)';
+      } else if (therm.tempC > 70) {
+        tState.textContent = 'WARM (Active Dissipation)';
+        tState.style.color = 'var(--accent-amber)';
+      } else {
+        tState.textContent = 'OPTIMAL (Nominal)';
+        tState.style.color = 'var(--accent-green)';
+      }
+    }
+
+    pushFlightRecorderFrame();
 
     drawSparkline('cpu-sparkline', cpuHistory, '#38bdf8');
     drawSparkline('mem-sparkline', memHistory, '#c084fc');
@@ -2711,18 +3554,24 @@
     r += `Timezone          : ${Intl.DateTimeFormat().resolvedOptions().timeZone}\n\n`;
 
     r += `-----------------------------------------------------------------\n`;
-    r += `2. REAL-TIME SYSTEM TELEMETRY & SERVICES STATUS                  \n`;
+    r += `2. REAL-TIME SYSTEM TELEMETRY, SERVICES & PROCESSES              \n`;
     r += `-----------------------------------------------------------------\n`;
-    r += `Total Monitored Services: ${systemServices.length}\n`;
-    r += `Active Running Services : ${activeSvcs}\n`;
-    r += `Stopped Services        : ${systemServices.length - activeSvcs}\n\n`;
+    const therm = getThermalMetrics();
+    r += `CPU Package Temp  : ${therm.tempC} °C / ${therm.tempF} °F (${therm.throttling ? 'THROTTLING' : 'OPTIMAL'})\n`;
+    r += `Cooling Fan Speed : ${therm.fanRpm} RPM\n`;
+    r += `Package TDP Power : ${therm.tdpW} W\n`;
+    r += `Total Services    : ${systemServices.length} Monitored (${activeSvcs} Running)\n`;
+    r += `Active Processes  : ${systemProcesses.length} Managed Tasks (${systemProcesses.reduce((a,p)=>a+p.threads,0)} Threads)\n\n`;
 
     r += `-----------------------------------------------------------------\n`;
-    r += `3. DIAGNOSTIC BENCHMARK RESULTS                                 \n`;
+    r += `3. DIAGNOSTIC BENCHMARK RESULTS (6-SUITE EVALUATION)             \n`;
     r += `-----------------------------------------------------------------\n`;
     r += `CPU Benchmark     : ${benchResults.cpuScore || 'Not Executed'}\n`;
     r += `RAM Throughput    : ${benchResults.ramScore || 'Not Executed'}\n`;
-    r += `Disk I/O Speed    : ${benchResults.diskScore || 'Not Executed'}\n\n`;
+    r += `Disk I/O Speed    : ${benchResults.diskScore || 'Not Executed'}\n`;
+    r += `GPU Fillrate      : ${benchResults.gpuScore || 'Not Executed'}\n`;
+    r += `Crypto Hashing    : ${benchResults.cryptoScore || 'Not Executed'}\n`;
+    r += `Scheduler Latency : ${benchResults.latencyScore || 'Not Executed'}\n\n`;
 
     r += `-----------------------------------------------------------------\n`;
     r += `4. EVENT HISTORY LOG SNAPSHOT (${eventLogs.length} Entries)                    \n`;
@@ -2742,6 +3591,7 @@
 
   function downloadReport(format) {
     const reportText = generateReportText();
+    const therm = getThermalMetrics();
 
     if (format === 'txt') {
       downloadBlob(reportText, 'ksys_system_report.txt', 'text/plain');
@@ -2753,9 +3603,15 @@
       csv += `Hardware,LogicalCores,${navigator.hardwareConcurrency || 'Unknown'}\n`;
       csv += `Hardware,DeviceMemoryGB,${navigator.deviceMemory || 'Restricted'}\n`;
       csv += `Hardware,ScreenResolution,"${window.screen.width}x${window.screen.height}"\n`;
+      csv += `Thermal,TempC,${therm.tempC}\n`;
+      csv += `Thermal,FanRPM,${therm.fanRpm}\n`;
+      csv += `Thermal,TDP_W,${therm.tdpW}\n`;
       csv += `Benchmarks,CPU,"${(benchResults.cpuScore || 'Not Executed').replace(/"/g, '""')}"\n`;
       csv += `Benchmarks,RAM,"${(benchResults.ramScore || 'Not Executed').replace(/"/g, '""')}"\n`;
-      csv += `Benchmarks,DiskIO,"${(benchResults.diskScore || 'Not Executed').replace(/"/g, '""')}"\n\n`;
+      csv += `Benchmarks,DiskIO,"${(benchResults.diskScore || 'Not Executed').replace(/"/g, '""')}"\n`;
+      csv += `Benchmarks,GPU,"${(benchResults.gpuScore || 'Not Executed').replace(/"/g, '""')}"\n`;
+      csv += `Benchmarks,Crypto,"${(benchResults.cryptoScore || 'Not Executed').replace(/"/g, '""')}"\n`;
+      csv += `Benchmarks,Latency,"${(benchResults.latencyScore || 'Not Executed').replace(/"/g, '""')}"\n\n`;
       csv += "ServiceName,DisplayName,Category,Startup,Status,Memory\n";
       systemServices.forEach(s => {
         csv += `"${s.name.replace(/"/g, '""')}","${s.disp.replace(/"/g, '""')}","${s.cat}","${s.start}","${s.status}","${s.mem}"\n`;
@@ -2766,17 +3622,22 @@
       md += `**Generated On:** ${new Date().toLocaleString()}  \n`;
       md += `**Session Uptime:** ${document.getElementById('header-uptime')?.textContent || ''}  \n`;
       md += `**Host Platform:** \`${navigator.platform}\`  \n\n`;
-      md += "## Hardware Specifications\n\n";
-      md += "| Component | Specification / Value |\n|---|---|\n";
+      md += "## Hardware & Thermal Specifications\n\n";
+      md += "| Component / Metric | Specification / Value |\n|---|---|\n";
       md += `| **Processor Cores** | ${navigator.hardwareConcurrency || 'Unknown'} Logical Cores |\n`;
       md += `| **Estimated Memory** | ~${navigator.deviceMemory || 4} GB |\n`;
       md += `| **Screen Resolution** | ${window.screen.width} x ${window.screen.height} (${window.screen.colorDepth}-bit) |\n`;
-      md += `| **Network Status** | ${navigator.onLine ? 'Connected (Online)' : 'Offline'} |\n\n`;
+      md += `| **CPU Package Temp** | ${therm.tempC} °C / ${therm.tempF} °F |\n`;
+      md += `| **Cooling Fan** | ${therm.fanRpm} RPM |\n`;
+      md += `| **Package TDP** | ${therm.tdpW} W |\n\n`;
       md += "## Diagnostic Benchmark Suite\n\n";
       md += "| Test Suite | Result / Throughput |\n|---|---|\n";
       md += `| **CPU Multi-thread Stress** | \`${benchResults.cpuScore || 'Not Executed'}\` |\n`;
       md += `| **RAM Bandwidth Test** | \`${benchResults.ramScore || 'Not Executed'}\` |\n`;
-      md += `| **Storage I/O Speed** | \`${benchResults.diskScore || 'Not Executed'}\` |\n\n`;
+      md += `| **Storage I/O Speed** | \`${benchResults.diskScore || 'Not Executed'}\` |\n`;
+      md += `| **GPU Fillrate Test** | \`${benchResults.gpuScore || 'Not Executed'}\` |\n`;
+      md += `| **Cryptographic Hashing** | \`${benchResults.cryptoScore || 'Not Executed'}\` |\n`;
+      md += `| **Scheduler Latency Jitter** | \`${benchResults.latencyScore || 'Not Executed'}\` |\n\n`;
       md += "## Monitored System Services\n\n";
       md += "| Service Name | Display Name | Category | Status | Footprint |\n|---|---|---|---|---|\n";
       systemServices.forEach(s => {
@@ -3015,6 +3876,39 @@
       for (let i = 20; i < buf.length; i++) {
         buf[i] = (i * 37 + (i ^ 0x5A)) & 0xFF;
       }
+    } else if (source === 'network_stream') {
+      const view = new DataView(buf.buffer);
+      // Frame 0: Broadcast ARP packet
+      buf.set([0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x50, 0x56, 0xC0, 0x00, 0x08, 0x08, 0x06], 0);
+      // Frame 1: Promiscuous Stream Packet (10.19.99.4 -> 10.19.99.255, Port 1999)
+      const pktHeader = "ECHO-PKT-99: SUBNET_PROBE_10.19.99.4: CARRIER_LOCK_1999HZ: CRC32_19990F7E: STATUS_NOMINAL";
+      const enc = new TextEncoder();
+      const pktBytes = enc.encode(pktHeader);
+      const offset = 48;
+      buf[offset] = 0x45; buf[offset+1] = 0x00; // IPv4
+      buf[offset+12] = 10; buf[offset+13] = 19; buf[offset+14] = 99; buf[offset+15] = 4; // 10.19.99.4
+      buf[offset+16] = 10; buf[offset+17] = 19; buf[offset+18] = 99; buf[offset+19] = 255;
+      view.setUint16(offset+20, 1999, false);
+      view.setUint16(offset+22, 1999, false);
+      buf.set(pktBytes, offset + 28);
+      for (let i = offset + 28 + pktBytes.length; i < buf.length; i++) {
+        buf[i] = (i * 13 + (i ^ 0x3C)) & 0xFF;
+      }
+    } else if (source === 'process_table') {
+      const view = new DataView(buf.buffer);
+      view.setUint32(0, 0x50524F43, true); // 'PROC'
+      view.setUint16(4, systemProcesses.length, true);
+      let pOff = 8;
+      systemProcesses.forEach(p => {
+        if (pOff + 32 < buf.length) {
+          view.setUint32(pOff, p.pid, true);
+          view.setUint16(pOff + 4, p.threads, true);
+          view.setFloat32(pOff + 6, p.cpu, true);
+          const nameBytes = new TextEncoder().encode(p.name);
+          buf.set(nameBytes.subarray(0, 16), pOff + 10);
+          pOff += 32;
+        }
+      });
     } else if (source === 'cpu_bench') {
       const view = new DataView(buf.buffer);
       view.setUint32(0, 0x43505542, true); // 'CPUB'

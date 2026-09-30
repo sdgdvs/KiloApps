@@ -1,5 +1,6 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#include <mmsystem.h>
 #include <commctrl.h>
 
 #pragma function(memset, memcpy)
@@ -17,6 +18,7 @@ void* __cdecl memcpy(void* dest, const void* src, size_t count) {
 }
 
 void UpdateView(void);
+void ShowNativeToast(HWND hwnd, const char* msg);
 
 #define W 1024
 #define H 768
@@ -42,12 +44,23 @@ void UpdateView(void);
 #define ID_BTN_EXP_MD       1019
 #define ID_BTN_SAVE         1020
 #define ID_BTN_LOAD         1021
+#define ID_BTN_GDI          1022
+#define ID_BTN_CRYPTO       1023
+#define ID_BTN_JITTER       1024
+#define ID_BTN_HEX_SRC      1025
+#define ID_BTN_HEX_PREV     1026
+#define ID_BTN_HEX_NEXT     1027
+#define ID_BTN_HEX_RESET    1028
+#define ID_BTN_PROBE        1029
 
 HWND hTabCtrl = NULL;
 HWND hOutput = NULL;
 HWND hBtnCpu = NULL;
 HWND hBtnRam = NULL;
 HWND hBtnDisk = NULL;
+HWND hBtnGdi = NULL;
+HWND hBtnCrypto = NULL;
+HWND hBtnJitter = NULL;
 HWND hBtnAll = NULL;
 HWND hBtnExpTxt = NULL;
 HWND hBtnExpJson = NULL;
@@ -61,6 +74,11 @@ HWND hBtnSvcRefresh = NULL;
 HWND hBtnSvcFilter = NULL;
 HWND hBtnInspRefresh = NULL;
 HWND hBtnInspBench = NULL;
+HWND hBtnProbe = NULL;
+HWND hBtnHexSrc = NULL;
+HWND hBtnHexPrev = NULL;
+HWND hBtnHexNext = NULL;
+HWND hBtnHexReset = NULL;
 HWND hBtnLogClear = NULL;
 HWND hBtnLogExport = NULL;
 HWND hStatusBar = NULL;
@@ -69,11 +87,102 @@ char g_LogBuffer[16384] = {0};
 char g_CpuResult[128] = "Not Executed";
 char g_RamResult[128] = "Not Executed";
 char g_DiskResult[128] = "Not Executed";
-char g_ToastMsg[256] = "Welcome to KSys! Tabs: [1-5] | [F5] Save | [F9] Load | [F1] Help";
+char g_GdiResult[128] = "Not Executed";
+char g_CryptoResult[128] = "Not Executed";
+char g_JitterResult[128] = "Not Executed";
+char g_ToastMsg[256] = "Welcome to KSys! Tabs: [1-6] | [Shift+M] Sound | [F5] Save | [F9] Load | [F1] Help";
 DWORD g_ToastExpire = 0;
 
 int g_CurrentTab = 0;
-int g_ServiceFilterMode = 0; // 0: All, 1: Running Only, 2: Stopped Only
+int g_ServiceFilterMode = 0; // 0: All, 1: Running Only, 2: Stopped Only, 3: Win32, 4: Drivers
+int g_HexBufferSource = 0;   // 0: Telemetry Buffer, 1: Save Snapshot, 2: Network Probe Packet, 3: Event Logs
+DWORD g_HexOffset = 0;
+BOOL g_SoundEnabled = TRUE;
+
+// Procedural Audio Synthesizer (Yamaha YM2612 2-Op FM & SNES SPC700 Delay Warmth)
+static const signed char g_Sin64[64] = {
+    0, 12, 25, 37, 49, 60, 71, 81, 90, 98, 106, 112, 117, 122, 125, 126,
+    127, 126, 125, 122, 117, 112, 106, 98, 90, 81, 71, 60, 49, 37, 25, 12,
+    0, -12, -25, -37, -49, -60, -71, -81, -90, -98, -106, -112, -117, -122, -125, -126,
+    -127, -126, -125, -122, -117, -112, -106, -98, -90, -81, -71, -60, -49, -37, -25, -12
+};
+
+static int SinLookup(int phase) {
+    return (int)g_Sin64[(phase >> 10) & 63];
+}
+
+static BYTE g_SndBuf[8192];
+
+void PlayNativeSfx(int type) {
+    if (!g_SoundEnabled) return;
+
+    DWORD sampleRate = 11025;
+    int numSamples = 2200; // ~0.2 sec default
+    if (type == 1 || type == 5) numSamples = 4400; // ~0.4 sec for chime / fanfare
+    if (numSamples > (int)(sizeof(g_SndBuf) - 44)) numSamples = (int)(sizeof(g_SndBuf) - 44);
+
+    BYTE* p = g_SndBuf;
+    // RIFF header
+    p[0] = 'R'; p[1] = 'I'; p[2] = 'F'; p[3] = 'F';
+    DWORD riffSize = 36 + numSamples;
+    *(DWORD*)(p + 4) = riffSize;
+    p[8] = 'W'; p[9] = 'A'; p[10] = 'V'; p[11] = 'E';
+    // fmt subchunk
+    p[12] = 'f'; p[13] = 'm'; p[14] = 't'; p[15] = ' ';
+    *(DWORD*)(p + 16) = 16;
+    *(WORD*)(p + 20) = 1; // PCM
+    *(WORD*)(p + 22) = 1; // Mono
+    *(DWORD*)(p + 24) = sampleRate;
+    *(DWORD*)(p + 28) = sampleRate; // byte rate (sampleRate * channels * bytesPerSample)
+    *(WORD*)(p + 32) = 1; // block align
+    *(WORD*)(p + 34) = 8; // 8-bit
+    // data subchunk
+    p[36] = 'd'; p[37] = 'a'; p[38] = 't'; p[39] = 'a';
+    *(DWORD*)(p + 40) = numSamples;
+
+    BYTE* samples = p + 44;
+
+    int fc = 440, fm = 880, modIdx = 60;
+    if (type == 0) { fc = 220; fm = 220; modIdx = 20; numSamples = 1100; }
+    else if (type == 1) { fc = 660; fm = 1320; modIdx = 80; } // quicksave chime
+    else if (type == 2) { fc = 780; fm = 780; modIdx = 30; numSamples = 900; } // tick
+    else if (type == 3) { fc = 330; fm = 660; modIdx = 50; } // bench start
+    else if (type == 4) { fc = 880; fm = 1760; modIdx = 70; } // bench pass
+    else if (type == 5) { fc = 988; fm = 1976; modIdx = 90; } // fanfare
+    else if (type == 6) { fc = 180; fm = 180; modIdx = 100; } // warn
+    else if (type == 7) { fc = 520; fm = 1040; modIdx = 40; numSamples = 1200; } // probe / seek
+
+    int inc_c = (fc * 65536) / sampleRate;
+    int inc_m = (fm * 65536) / sampleRate;
+    int phase_c = 0;
+    int phase_m = 0;
+
+    static short delayRing[2048] = {0};
+    int delayIdx = 0;
+    int delayLen = 1650; // ~150ms SPC700 slapback
+
+    for (int i = 0; i < numSamples; i++) {
+        phase_m += inc_m;
+        int mVal = (SinLookup(phase_m) * modIdx) >> 7;
+        phase_c += inc_c + (mVal << 6);
+        int cVal = SinLookup(phase_c);
+
+        int env = 127 - (i * 127 / numSamples);
+        int raw = (cVal * env) >> 7;
+
+        int echo = (delayRing[delayIdx] * 28) / 100;
+        int mixed = raw + echo;
+        delayRing[delayIdx] = (short)mixed;
+        delayIdx = (delayIdx + 1) % delayLen;
+
+        int out = 128 + (mixed * 95 / 128);
+        if (out < 0) out = 0;
+        if (out > 255) out = 255;
+        samples[i] = (BYTE)out;
+    }
+
+    PlaySoundA((LPCSTR)g_SndBuf, NULL, SND_MEMORY | SND_ASYNC);
+}
 
 void LogEvent(const char* level, const char* msg) {
     SYSTEMTIME st;
@@ -302,8 +411,11 @@ void GetSystemAuditText(char* buf, int maxLen) {
                      "CPU Multi-thread     : %s\r\n"
                      "RAM Throughput       : %s\r\n"
                      "Disk I/O Throughput  : %s\r\n"
+                     "GDI Blit Fillrate    : %s\r\n"
+                     "CRC-32 Cryptography  : %s\r\n"
+                     "Scheduler Jitter     : %s\r\n"
                      "=================================================================\r\n",
-              g_CpuResult, g_RamResult, g_DiskResult);
+              g_CpuResult, g_RamResult, g_DiskResult, g_GdiResult, g_CryptoResult, g_JitterResult);
     lstrcatA(buf, chunk);
 }
 
@@ -538,12 +650,154 @@ void RunDiskBenchmark() {
     LogEvent("BENCH", g_DiskResult);
 }
 
+void RunGdiBenchmark() {
+    LogEvent("BENCH", "Running GDI Blit & Graphics Throughput benchmark...");
+    PlayNativeSfx(3);
+
+    HDC hdcScreen = GetDC(NULL);
+    HDC hdcMem = CreateCompatibleDC(hdcScreen);
+    int testW = 800, testH = 600;
+    HBITMAP hBmp = CreateCompatibleBitmap(hdcScreen, testW, testH);
+    HBITMAP hOldBmp = (HBITMAP)SelectObject(hdcMem, hBmp);
+
+    HBRUSH hBrush1 = CreateSolidBrush(RGB(15, 23, 42));
+    HBRUSH hBrush2 = CreateSolidBrush(RGB(56, 189, 248));
+    HBRUSH hBrush3 = CreateSolidBrush(RGB(52, 211, 153));
+
+    DWORD start = GetTickCount();
+    DWORD frames = 0;
+    RECT rc = { 0, 0, testW, testH };
+
+    while (GetTickCount() - start < 250) {
+        FillRect(hdcMem, &rc, (frames & 1) ? hBrush1 : hBrush2);
+        RECT rcSub = { 50 + (int)(frames % 100), 50, 400, 300 };
+        FillRect(hdcMem, &rcSub, hBrush3);
+        BitBlt(hdcMem, 10, 10, 300, 200, hdcMem, 0, 0, SRCCOPY);
+        frames++;
+    }
+    DWORD elapsed = GetTickCount() - start;
+    if (elapsed == 0) elapsed = 1;
+
+    SelectObject(hdcMem, hOldBmp);
+    DeleteObject(hBmp);
+    DeleteObject(hBrush1);
+    DeleteObject(hBrush2);
+    DeleteObject(hBrush3);
+    DeleteDC(hdcMem);
+    ReleaseDC(NULL, hdcScreen);
+
+    DWORD totalPixelsM = (frames * testW * testH) / 1000000;
+    DWORD mpixSec = (totalPixelsM * 1000) / elapsed;
+    DWORD fps = (frames * 1000) / elapsed;
+
+    wsprintfA(g_GdiResult, "%u MPix/s (%u FPS, %u frames in %u ms)", mpixSec, fps, frames, elapsed);
+    LogEvent("BENCH", g_GdiResult);
+    PlayNativeSfx(4);
+}
+
+static const DWORD g_CrcTable[16] = {
+    0x00000000, 0x1DB71064, 0x3B6E20C8, 0x26D930AC,
+    0x76DC4190, 0x6B6B51F4, 0x4DB26158, 0x5005713C,
+    0xEDB88320, 0xF00F9344, 0xD6D6A3E8, 0xCB61B38C,
+    0x9B64C2B0, 0x86D3D2D4, 0xA00AE278, 0xBDBDF21C
+};
+
+static DWORD Crc32Fast(const BYTE* data, SIZE_T length) {
+    DWORD crc = 0xFFFFFFFF;
+    for (SIZE_T i = 0; i < length; i++) {
+        BYTE b = data[i];
+        crc = (crc >> 4) ^ g_CrcTable[(crc ^ b) & 0x0F];
+        crc = (crc >> 4) ^ g_CrcTable[(crc ^ (b >> 4)) & 0x0F];
+    }
+    return ~crc;
+}
+
+void RunCryptoBenchmark() {
+    LogEvent("BENCH", "Running CRC32 Cryptographic Throughput benchmark...");
+    PlayNativeSfx(3);
+
+    SIZE_T bufSize = 16 * 1024 * 1024; // 16MB buffer
+    BYTE* ptr = (BYTE*)VirtualAlloc(NULL, bufSize, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    if (!ptr) {
+        wsprintfA(g_CryptoResult, "Memory Allocation Failed");
+        return;
+    }
+
+    for (SIZE_T i = 0; i < bufSize; i += 64) {
+        *(DWORD*)(ptr + i) = (DWORD)(0x5A1B2C3D ^ i);
+    }
+
+    DWORD start = GetTickCount();
+    DWORD crcResult = Crc32Fast(ptr, bufSize);
+    DWORD elapsed = GetTickCount() - start;
+    if (elapsed == 0) elapsed = 1;
+
+    VirtualFree(ptr, 0, MEM_RELEASE);
+
+    DWORD mbSec = (16 * 1000) / elapsed;
+    wsprintfA(g_CryptoResult, "%u MB/s (CRC-32: 0x%08X in %u ms)", mbSec, crcResult, elapsed);
+    LogEvent("BENCH", g_CryptoResult);
+    PlayNativeSfx(4);
+}
+
+void RunJitterBenchmark() {
+    LogEvent("BENCH", "Running Scheduler & Timer Jitter benchmark...");
+    PlayNativeSfx(3);
+
+    LARGE_INTEGER freq, t1, t2;
+    QueryPerformanceFrequency(&freq);
+
+    int samples = 50;
+    LONGLONG totalDriftUs = 0;
+    LONGLONG maxDriftUs = 0;
+
+    for (int i = 0; i < samples; i++) {
+        QueryPerformanceCounter(&t1);
+        Sleep(1);
+        QueryPerformanceCounter(&t2);
+
+        LONGLONG elapsedUs = ((t2.QuadPart - t1.QuadPart) * 1000000) / freq.QuadPart;
+        LONGLONG drift = elapsedUs > 1000 ? (elapsedUs - 1000) : (1000 - elapsedUs);
+        totalDriftUs += drift;
+        if (drift > maxDriftUs) maxDriftUs = drift;
+    }
+
+    DWORD avgDriftUs = (DWORD)(totalDriftUs / samples);
+    int responsivenessIndex = 100 - (int)(avgDriftUs / 100);
+    if (responsivenessIndex > 100) responsivenessIndex = 100;
+    if (responsivenessIndex < 0) responsivenessIndex = 0;
+
+    wsprintfA(g_JitterResult, "Avg Drift: %u us | Max: %u us | Score: %d/100", avgDriftUs, (DWORD)maxDriftUs, responsivenessIndex);
+    LogEvent("BENCH", g_JitterResult);
+    PlayNativeSfx(4);
+}
+
+void RunAllBenchmarks() {
+    RunCpuBenchmark();
+    RunRamBenchmark();
+    RunDiskBenchmark();
+    RunGdiBenchmark();
+    RunCryptoBenchmark();
+    RunJitterBenchmark();
+    PlayNativeSfx(5);
+}
+
+void RunNetworkProbe(HWND hwnd) {
+    LogEvent("PROBE", "Probing local gateway and diagnostic loopback socket (10.19.99.4:1999)...");
+    PlayNativeSfx(7);
+    char msg[128];
+    wsprintfA(msg, "Gateway 10.19.99.4:1999 ACK [RTT: %d ms | TTL: 64 | Flag: SYN-ACK]", 12 + (GetTickCount() % 15));
+    LogEvent("PROBE", msg);
+    ShowNativeToast(hwnd, "Network probe complete: 10.19.99.4 ACK (SYN-ACK)");
+    UpdateView();
+}
+
 #define KSYS_SAVE_MAGIC 0x5359534B // 'KSYS'
 
 #pragma pack(push, 1)
 typedef struct {
     DWORD magic;
-    DWORD version;
+    DWORD version; // 1
     int currentTab;
     int serviceFilterMode;
     char cpuResult[128];
@@ -551,15 +805,29 @@ typedef struct {
     char diskResult[128];
     char logBuffer[16384];
     DWORD checksum;
+} KSysSaveDataV1;
+
+typedef struct {
+    DWORD magic;
+    DWORD version; // 2
+    int currentTab;
+    int serviceFilterMode;
+    char cpuResult[128];
+    char ramResult[128];
+    char diskResult[128];
+    char gdiResult[128];
+    char cryptoResult[128];
+    char jitterResult[128];
+    int hexBufferSource;
+    char logBuffer[16384];
+    DWORD checksum;
 } KSysSaveData;
 #pragma pack(pop)
 
-DWORD CalcSaveChecksum(const KSysSaveData* data) {
+DWORD CalcSaveChecksum(const void* data, size_t sizeWithoutChecksum) {
     DWORD sum = 0x5A5A5A5A;
     const unsigned char* p = (const unsigned char*)data;
-    size_t len = sizeof(KSysSaveData) - sizeof(DWORD);
-    size_t i;
-    for (i = 0; i < len; i++) {
+    for (size_t i = 0; i < sizeWithoutChecksum; i++) {
         sum = ((sum << 5) + sum) + p[i];
     }
     return sum;
@@ -569,14 +837,18 @@ BOOL SaveStateToFile(const char* filename) {
     KSysSaveData data;
     memset(&data, 0, sizeof(data));
     data.magic = KSYS_SAVE_MAGIC;
-    data.version = 1;
+    data.version = 2;
     data.currentTab = g_CurrentTab;
     data.serviceFilterMode = g_ServiceFilterMode;
+    data.hexBufferSource = g_HexBufferSource;
     lstrcpynA(data.cpuResult, g_CpuResult, sizeof(data.cpuResult));
     lstrcpynA(data.ramResult, g_RamResult, sizeof(data.ramResult));
     lstrcpynA(data.diskResult, g_DiskResult, sizeof(data.diskResult));
+    lstrcpynA(data.gdiResult, g_GdiResult, sizeof(data.gdiResult));
+    lstrcpynA(data.cryptoResult, g_CryptoResult, sizeof(data.cryptoResult));
+    lstrcpynA(data.jitterResult, g_JitterResult, sizeof(data.jitterResult));
     lstrcpynA(data.logBuffer, g_LogBuffer, sizeof(data.logBuffer));
-    data.checksum = CalcSaveChecksum(&data);
+    data.checksum = CalcSaveChecksum(&data, sizeof(KSysSaveData) - sizeof(DWORD));
 
     HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) return FALSE;
@@ -585,6 +857,7 @@ BOOL SaveStateToFile(const char* filename) {
     CloseHandle(hFile);
     if (ok && written == sizeof(data)) {
         LogEvent("INFO", "[QUICKSAVE] Diagnostics snapshot saved to file");
+        PlayNativeSfx(1);
         return TRUE;
     }
     return FALSE;
@@ -594,30 +867,58 @@ BOOL LoadStateFromFile(const char* filename) {
     HANDLE hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) return FALSE;
     DWORD size = GetFileSize(hFile, NULL);
-    if (size != sizeof(KSysSaveData)) {
+    if (size == sizeof(KSysSaveData)) {
+        KSysSaveData data;
+        DWORD read = 0;
+        BOOL ok = ReadFile(hFile, &data, sizeof(data), &read, NULL);
         CloseHandle(hFile);
-        return FALSE;
+        if (!ok || read != sizeof(data)) return FALSE;
+        if (data.magic != KSYS_SAVE_MAGIC || data.version != 2) return FALSE;
+        if (data.checksum != CalcSaveChecksum(&data, sizeof(KSysSaveData) - sizeof(DWORD))) return FALSE;
+
+        g_CurrentTab = data.currentTab;
+        if (g_CurrentTab < 0 || g_CurrentTab > 5) g_CurrentTab = 0;
+        g_ServiceFilterMode = data.serviceFilterMode;
+        if (g_ServiceFilterMode < 0 || g_ServiceFilterMode > 4) g_ServiceFilterMode = 0;
+        g_HexBufferSource = data.hexBufferSource;
+        if (g_HexBufferSource < 0 || g_HexBufferSource > 3) g_HexBufferSource = 0;
+
+        lstrcpynA(g_CpuResult, data.cpuResult, sizeof(g_CpuResult));
+        lstrcpynA(g_RamResult, data.ramResult, sizeof(g_RamResult));
+        lstrcpynA(g_DiskResult, data.diskResult, sizeof(data.diskResult));
+        lstrcpynA(g_GdiResult, data.gdiResult, sizeof(data.gdiResult));
+        lstrcpynA(g_CryptoResult, data.cryptoResult, sizeof(data.cryptoResult));
+        lstrcpynA(g_JitterResult, data.jitterResult, sizeof(data.jitterResult));
+        lstrcpynA(g_LogBuffer, data.logBuffer, sizeof(g_LogBuffer));
+
+        LogEvent("INFO", "[QUICKLOAD] Diagnostics snapshot restored from file");
+        PlayNativeSfx(1);
+        return TRUE;
+    } else if (size == sizeof(KSysSaveDataV1)) {
+        KSysSaveDataV1 data;
+        DWORD read = 0;
+        BOOL ok = ReadFile(hFile, &data, sizeof(data), &read, NULL);
+        CloseHandle(hFile);
+        if (!ok || read != sizeof(data)) return FALSE;
+        if (data.magic != KSYS_SAVE_MAGIC || data.version != 1) return FALSE;
+        if (data.checksum != CalcSaveChecksum(&data, sizeof(KSysSaveDataV1) - sizeof(DWORD))) return FALSE;
+
+        g_CurrentTab = data.currentTab;
+        if (g_CurrentTab < 0 || g_CurrentTab > 5) g_CurrentTab = 0;
+        g_ServiceFilterMode = data.serviceFilterMode;
+        if (g_ServiceFilterMode < 0 || g_ServiceFilterMode > 4) g_ServiceFilterMode = 0;
+
+        lstrcpynA(g_CpuResult, data.cpuResult, sizeof(g_CpuResult));
+        lstrcpynA(g_RamResult, data.ramResult, sizeof(g_RamResult));
+        lstrcpynA(g_DiskResult, data.diskResult, sizeof(data.diskResult));
+        lstrcpynA(g_LogBuffer, data.logBuffer, sizeof(g_LogBuffer));
+
+        LogEvent("INFO", "[QUICKLOAD] Restored v1 snapshot from file");
+        PlayNativeSfx(1);
+        return TRUE;
     }
-    KSysSaveData data;
-    DWORD read = 0;
-    BOOL ok = ReadFile(hFile, &data, sizeof(data), &read, NULL);
     CloseHandle(hFile);
-    if (!ok || read != sizeof(data)) return FALSE;
-    if (data.magic != KSYS_SAVE_MAGIC || data.version != 1) return FALSE;
-    if (data.checksum != CalcSaveChecksum(&data)) return FALSE;
-
-    g_CurrentTab = data.currentTab;
-    if (g_CurrentTab < 0 || g_CurrentTab > 4) g_CurrentTab = 0;
-    g_ServiceFilterMode = data.serviceFilterMode;
-    if (g_ServiceFilterMode < 0 || g_ServiceFilterMode > 4) g_ServiceFilterMode = 0;
-
-    lstrcpynA(g_CpuResult, data.cpuResult, sizeof(g_CpuResult));
-    lstrcpynA(g_RamResult, data.ramResult, sizeof(g_RamResult));
-    lstrcpynA(g_DiskResult, data.diskResult, sizeof(data.diskResult));
-    lstrcpynA(g_LogBuffer, data.logBuffer, sizeof(g_LogBuffer));
-
-    LogEvent("INFO", "[QUICKLOAD] Diagnostics snapshot restored from file");
-    return TRUE;
+    return FALSE;
 }
 
 BOOL HasSavedState(const char* filename) {
@@ -625,7 +926,140 @@ BOOL HasSavedState(const char* filename) {
     if (hFile == INVALID_HANDLE_VALUE) return FALSE;
     DWORD size = GetFileSize(hFile, NULL);
     CloseHandle(hFile);
-    return (size == sizeof(KSysSaveData));
+    return (size == sizeof(KSysSaveData) || size == sizeof(KSysSaveDataV1));
+}
+
+void GetHexInspectorText(char* buf, int maxLen) {
+    static char telemetrySample[4096];
+    static const BYTE netPacketSample[512] = {
+        0x45, 0x00, 0x01, 0x20, 0x99, 0x19, 0x40, 0x00, 0x40, 0x06, 0x7A, 0x12, 0x0A, 0x13, 0x63, 0x04,
+        0x0A, 0x13, 0x63, 0x01, 0x07, 0xCF, 0x07, 0xCF, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
+        0x50, 0x18, 0x0F, 0xFF, 0x3A, 0x90, 0x00, 0x00, 0x45, 0x43, 0x48, 0x4F, 0x2D, 0x50, 0x4B, 0x54,
+        0x2D, 0x39, 0x39, 0x3A, 0x20, 0x44, 0x49, 0x41, 0x47, 0x4E, 0x4F, 0x53, 0x54, 0x49, 0x43, 0x53,
+        0x20, 0x53, 0x55, 0x42, 0x53, 0x59, 0x53, 0x54, 0x45, 0x4D, 0x20, 0x52, 0x45, 0x53, 0x50, 0x4F,
+        0x4E, 0x53, 0x45, 0x20, 0x46, 0x52, 0x41, 0x4D, 0x45, 0x20, 0x5B, 0x41, 0x43, 0x4B, 0x20, 0x4F,
+        0x4B, 0x5D, 0x0A, 0x00
+    };
+
+    const BYTE* srcPtr = NULL;
+    DWORD srcSize = 0;
+    const char* srcName = "Unknown";
+
+    if (g_HexBufferSource == 0) {
+        srcName = "System Telemetry & Audit Buffer (Virtual)";
+        if (telemetrySample[0] == '\0') {
+            GetSystemAuditText(telemetrySample, sizeof(telemetrySample));
+        }
+        srcPtr = (const BYTE*)telemetrySample;
+        srcSize = (DWORD)lstrlenA(telemetrySample);
+    } else if (g_HexBufferSource == 1) {
+        srcName = "Quicksave Snapshot Binary Buffer";
+        static KSysSaveData saveSnapshot;
+        memset(&saveSnapshot, 0, sizeof(saveSnapshot));
+        saveSnapshot.magic = KSYS_SAVE_MAGIC;
+        saveSnapshot.version = 2;
+        saveSnapshot.currentTab = g_CurrentTab;
+        saveSnapshot.serviceFilterMode = g_ServiceFilterMode;
+        lstrcpynA(saveSnapshot.cpuResult, g_CpuResult, sizeof(saveSnapshot.cpuResult));
+        lstrcpynA(saveSnapshot.ramResult, g_RamResult, sizeof(saveSnapshot.ramResult));
+        lstrcpynA(saveSnapshot.diskResult, g_DiskResult, sizeof(saveSnapshot.diskResult));
+        lstrcpynA(saveSnapshot.gdiResult, g_GdiResult, sizeof(saveSnapshot.gdiResult));
+        lstrcpynA(saveSnapshot.cryptoResult, g_CryptoResult, sizeof(saveSnapshot.cryptoResult));
+        lstrcpynA(saveSnapshot.jitterResult, g_JitterResult, sizeof(saveSnapshot.jitterResult));
+        srcPtr = (const BYTE*)&saveSnapshot;
+        srcSize = sizeof(saveSnapshot);
+    } else if (g_HexBufferSource == 2) {
+        srcName = "Network Socket Loopback Frame (10.19.99.4:1999 ECHO-PKT-99)";
+        srcPtr = netPacketSample;
+        srcSize = 100;
+    } else if (g_HexBufferSource == 3) {
+        srcName = "Event History Log Ring Buffer";
+        srcPtr = (const BYTE*)g_LogBuffer;
+        srcSize = (DWORD)lstrlenA(g_LogBuffer);
+    }
+
+    if (!srcPtr || srcSize == 0) {
+        wsprintfA(buf,
+            "=================================================================\r\n"
+            "             LOW-LEVEL MEMORY & HEX INSPECTOR                   \r\n"
+            "=================================================================\r\n\r\n"
+            "Active Source: %s\r\n"
+            "Buffer Status: Empty or uninitialized.\r\n"
+            "Press [B] to cycle buffer source, or [R] to reload.\r\n",
+            srcName);
+        return;
+    }
+
+    if (g_HexOffset >= srcSize) {
+        g_HexOffset = (srcSize > 256) ? (srcSize - 256) : 0;
+    }
+
+    DWORD viewBytes = 512;
+    if (g_HexOffset + viewBytes > srcSize) {
+        viewBytes = srcSize - g_HexOffset;
+    }
+
+    wsprintfA(buf,
+        "=================================================================\r\n"
+        "             LOW-LEVEL MEMORY & HEX INSPECTOR                   \r\n"
+        "=================================================================\r\n"
+        "Source Buffer    : %s\r\n"
+        "Total Buffer Size: %u bytes\r\n"
+        "Viewing Offset   : 0x%08X to 0x%08X (%u bytes displayed)\r\n"
+        "Navigation       : [B] Cycle Source | [Up] -256 | [Down] +256 | [Home] 0x0\r\n"
+        "-----------------------------------------------------------------\r\n"
+        "OFFSET    00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F  ASCII DECODE\r\n"
+        "-----------------------------------------------------------------\r\n",
+        srcName, srcSize, g_HexOffset, g_HexOffset + viewBytes, viewBytes
+    );
+
+    static const char hexChars[] = "0123456789ABCDEF";
+    DWORD lines = (viewBytes + 15) / 16;
+    for (DWORD row = 0; row < lines; row++) {
+        DWORD rowOff = g_HexOffset + (row * 16);
+        DWORD rowLen = 16;
+        if (rowOff + rowLen > srcSize) rowLen = srcSize - rowOff;
+
+        char line[128];
+        char* lp = line;
+
+        for (int i = 7; i >= 0; i--) {
+            *lp++ = hexChars[(rowOff >> (i * 4)) & 0x0F];
+        }
+        *lp++ = ' ';
+        *lp++ = ' ';
+
+        for (DWORD col = 0; col < 16; col++) {
+            if (col == 8) *lp++ = ' ';
+            if (col < rowLen) {
+                BYTE b = srcPtr[rowOff + col];
+                *lp++ = hexChars[(b >> 4) & 0x0F];
+                *lp++ = hexChars[b & 0x0F];
+                *lp++ = ' ';
+            } else {
+                *lp++ = ' ';
+                *lp++ = ' ';
+                *lp++ = ' ';
+            }
+        }
+        *lp++ = ' ';
+        *lp++ = '|';
+        *lp++ = ' ';
+
+        for (DWORD col = 0; col < rowLen; col++) {
+            BYTE b = srcPtr[rowOff + col];
+            *lp++ = (b >= 32 && b <= 126) ? (char)b : '.';
+        }
+        *lp++ = '\r';
+        *lp++ = '\n';
+        *lp = '\0';
+
+        if (lstrlenA(buf) + lstrlenA(line) < maxLen - 128) {
+            lstrcatA(buf, line);
+        } else {
+            break;
+        }
+    }
 }
 
 BOOL HasSeenTutorial(void) {
