@@ -154,6 +154,16 @@
             box-shadow: 0 0 14px #b0d0ff, inset 0 0 8px rgba(176, 208, 255, 0.4);
             animation: phenom-pulse 3s ease-in-out infinite;
         }
+        .phenom-alienmonolith {
+            border: 2px solid #00ff88;
+            box-shadow: 0 0 14px #00ff88, inset 0 0 10px rgba(0, 255, 136, 0.4);
+            animation: phenom-pulse 2.2s ease-in-out infinite;
+        }
+        .phenom-ionstorm {
+            border: 2px solid #33aaff;
+            box-shadow: 0 0 14px #33aaff, inset 0 0 10px rgba(51, 170, 255, 0.4);
+            animation: phenom-pulse 1.8s ease-in-out infinite;
+        }
         @keyframes phenom-pulse { 0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.95); } 50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); } }
 
         /* Commodity badges */
@@ -195,6 +205,7 @@
                 <button id="manual-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#ffff00; color:#ffff00;" onclick="openManual()">📖 MANUAL (M)</button>
                 <button id="audio-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="toggleAudio()">🔊 AUDIO: ON</button>
                 <button id="drone-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px;" onclick="toggleDrone()">🌌 DRONE: ON</button>
+                <button id="music-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#ff00ff; color:#ff00ff;" onclick="toggleFmMusic()" title="Toggle Genesis YM2612 FM Music">🎵 FM BGM: OFF</button>
             </div>
         </div>
         <div id="toast" style="display:none; position:fixed; bottom:20px; right:20px; background:rgba(0,30,45,0.95); border:1px solid #00ffcc; color:#00ffcc; padding:10px 18px; border-radius:4px; font-size:13px; font-weight:bold; z-index:9999; box-shadow:0 0 15px rgba(0,255,204,0.5); pointer-events:none; transition:opacity 0.3s;"></div>
@@ -265,13 +276,21 @@
     </div>
 
     <script>
-        // --- Web Audio Synthesizer & Sound Effects System ---
+        // --- Sega Genesis Yamaha YM2612 2-Operator FM Synthesizer & SNES SPC700 Delay DSP ---
         let audioCtx = null;
         let soundEnabled = localStorage.getItem('kstellar_soundEnabled') !== 'false';
         let droneEnabled = localStorage.getItem('kstellar_droneEnabled') !== 'false';
+        let fmMusicEnabled = localStorage.getItem('kstellar_fmMusicEnabled') === 'true';
         let droneGain = null;
         let droneOsc1 = null;
         let droneOsc2 = null;
+
+        let spcDelayNodeL = null;
+        let spcDelayNodeR = null;
+        let spcFeedback = null;
+        let spcFilter = null;
+        let fmMusicTimer = null;
+        let fmStep = 0;
 
         function initAudio() {
             if (!audioCtx) {
@@ -283,9 +302,83 @@
             if (audioCtx && audioCtx.state === 'suspended') {
                 audioCtx.resume();
             }
-            if (audioCtx && soundEnabled && droneEnabled && !droneOsc1) {
-                startAmbientDrone();
+            if (audioCtx && !spcDelayNodeL) {
+                try {
+                    // SNES SPC700 Stereo Delay DSP Line (180ms / 240ms ping-pong warmth)
+                    spcDelayNodeL = audioCtx.createDelay();
+                    spcDelayNodeR = audioCtx.createDelay();
+                    spcDelayNodeL.delayTime.setValueAtTime(0.18, audioCtx.currentTime);
+                    spcDelayNodeR.delayTime.setValueAtTime(0.24, audioCtx.currentTime);
+
+                    spcFilter = audioCtx.createBiquadFilter();
+                    spcFilter.type = 'lowpass';
+                    spcFilter.frequency.setValueAtTime(2400, audioCtx.currentTime);
+
+                    spcFeedback = audioCtx.createGain();
+                    spcFeedback.gain.setValueAtTime(0.28, audioCtx.currentTime);
+
+                    const merger = audioCtx.createChannelMerger(2);
+                    spcDelayNodeL.connect(spcFilter);
+                    spcDelayNodeR.connect(spcFilter);
+                    spcFilter.connect(spcFeedback);
+                    spcFeedback.connect(spcDelayNodeL);
+
+                    spcDelayNodeL.connect(merger, 0, 0);
+                    spcDelayNodeR.connect(merger, 0, 1);
+                    merger.connect(audioCtx.destination);
+                } catch(e) {}
             }
+            if (audioCtx && soundEnabled) {
+                if (droneEnabled && !droneOsc1) startAmbientDrone();
+                if (fmMusicEnabled && !fmMusicTimer) startFmMusic();
+            }
+        }
+
+        // Yamaha YM2612 2-Operator FM Synthesizer Voice Generator
+        function playFM(carrierFreq, modRatio = 2.0, modIndex = 2.5, duration = 0.2, gainVal = 0.18, sendDelay = true) {
+            if (!soundEnabled || !audioCtx) return;
+            try {
+                const now = audioCtx.currentTime;
+                const carrier = audioCtx.createOscillator();
+                const modulator = audioCtx.createOscillator();
+                const modGain = audioCtx.createGain();
+                const voiceGain = audioCtx.createGain();
+
+                carrier.type = 'sine';
+                modulator.type = 'sine';
+
+                carrier.frequency.setValueAtTime(carrierFreq, now);
+                modulator.frequency.setValueAtTime(carrierFreq * modRatio, now);
+
+                // YM2612 Modulation Index decay envelope
+                const peakMod = modIndex * carrierFreq;
+                modGain.gain.setValueAtTime(peakMod, now);
+                modGain.gain.exponentialRampToValueAtTime(Math.max(1, peakMod * 0.05), now + duration);
+
+                modulator.connect(modGain);
+                modGain.connect(carrier.frequency);
+
+                // YM2612 Attack & Total Level Decay envelope
+                voiceGain.gain.setValueAtTime(0.001, now);
+                voiceGain.gain.linearRampToValueAtTime(gainVal, now + 0.006);
+                voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+                carrier.connect(voiceGain);
+                voiceGain.connect(audioCtx.destination);
+
+                if (sendDelay && spcDelayNodeL) {
+                    const send = audioCtx.createGain();
+                    send.gain.setValueAtTime(0.25, now);
+                    voiceGain.connect(send);
+                    send.connect(spcDelayNodeL);
+                    send.connect(spcDelayNodeR);
+                }
+
+                carrier.start(now);
+                modulator.start(now);
+                carrier.stop(now + duration);
+                modulator.stop(now + duration);
+            } catch(e) {}
         }
 
         function startAmbientDrone() {
@@ -338,10 +431,12 @@
             if (soundEnabled) {
                 initAudio();
                 if (droneEnabled) startAmbientDrone();
+                if (fmMusicEnabled) startFmMusic();
                 if (btn) btn.innerText = "🔊 AUDIO: ON";
                 playBlip();
             } else {
                 stopAmbientDrone();
+                stopFmMusic();
                 if (btn) btn.innerText = "🔇 AUDIO: OFF";
             }
         };
@@ -361,24 +456,65 @@
             }
         };
 
+        // Procedural Genesis YM2612 FM Ambient Space Melody ("Stellar Voyager FM")
+        const FM_MELODY = [
+            [293.66, 2.0, 2.8, 0.50, 0.12], // D4
+            [349.23, 2.0, 2.2, 0.40, 0.10], // F4
+            [440.00, 2.0, 3.0, 0.55, 0.12], // A4
+            [523.25, 2.0, 2.4, 0.40, 0.10], // C5
+            [587.33, 2.0, 3.2, 0.65, 0.14], // D5
+            [440.00, 2.0, 2.2, 0.45, 0.10], // A4
+            [392.00, 1.5, 2.6, 0.50, 0.11], // G4
+            [349.23, 2.0, 2.0, 0.55, 0.10]  // F4
+        ];
+
+        function stepFmMusic() {
+            if (!soundEnabled || !fmMusicEnabled || !audioCtx) return;
+            const note = FM_MELODY[fmStep % FM_MELODY.length];
+            fmStep++;
+            playFM(note[0], note[1], note[2], note[3], note[4], true);
+        }
+
+        function startFmMusic() {
+            if (!audioCtx || !soundEnabled || !fmMusicEnabled) return;
+            if (fmMusicTimer) clearInterval(fmMusicTimer);
+            stepFmMusic();
+            fmMusicTimer = setInterval(stepFmMusic, 1400);
+        }
+
+        function stopFmMusic() {
+            if (fmMusicTimer) {
+                clearInterval(fmMusicTimer);
+                fmMusicTimer = null;
+            }
+        }
+
+        window.toggleFmMusic = function() {
+            fmMusicEnabled = !fmMusicEnabled;
+            localStorage.setItem('kstellar_fmMusicEnabled', fmMusicEnabled);
+            const btn = document.getElementById('music-toggle-btn');
+            if (fmMusicEnabled) {
+                initAudio();
+                startFmMusic();
+                if (btn) {
+                    btn.innerText = "🎵 FM BGM: ON";
+                    btn.style.color = "#00ffcc";
+                    btn.style.borderColor = "#00ffcc";
+                }
+                showToast("🎵 Genesis YM2612 FM Music: ACTIVE");
+            } else {
+                stopFmMusic();
+                if (btn) {
+                    btn.innerText = "🎵 FM BGM: OFF";
+                    btn.style.color = "#ff00ff";
+                    btn.style.borderColor = "#ff00ff";
+                }
+                showToast("🔇 Genesis YM2612 FM Music: OFF");
+            }
+        };
+
         function playBlip() {
-            if (!soundEnabled) return;
-            initAudio();
-            if (!audioCtx) return;
-            try {
-                const now = audioCtx.currentTime;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(900, now);
-                osc.frequency.exponentialRampToValueAtTime(1200, now + 0.04);
-                gain.gain.setValueAtTime(0.12, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + 0.04);
-            } catch(e) {}
+            playFM(1200, 2.0, 1.2, 0.05, 0.14, false);
         }
 
         function playWarp() {
@@ -386,41 +522,11 @@
             initAudio();
             if (!audioCtx) return;
             try {
-                const now = audioCtx.currentTime;
-                const osc = audioCtx.createOscillator();
-                const oscSub = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                const filter = audioCtx.createBiquadFilter();
-
-                osc.type = 'sawtooth';
-                oscSub.type = 'sine';
-                filter.type = 'lowpass';
-
-                osc.frequency.setValueAtTime(80, now);
-                osc.frequency.exponentialRampToValueAtTime(550, now + 0.5);
-                osc.frequency.exponentialRampToValueAtTime(120, now + 0.9);
-
-                oscSub.frequency.setValueAtTime(45, now);
-                oscSub.frequency.exponentialRampToValueAtTime(280, now + 0.5);
-                oscSub.frequency.exponentialRampToValueAtTime(60, now + 0.9);
-
-                filter.frequency.setValueAtTime(200, now);
-                filter.frequency.exponentialRampToValueAtTime(1800, now + 0.5);
-                filter.frequency.exponentialRampToValueAtTime(250, now + 0.9);
-
-                gain.gain.setValueAtTime(0.05, now);
-                gain.gain.linearRampToValueAtTime(0.25, now + 0.4);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
-
-                osc.connect(filter);
-                oscSub.connect(filter);
-                filter.connect(gain);
-                gain.connect(audioCtx.destination);
-
-                osc.start(now);
-                oscSub.start(now);
-                osc.stop(now + 0.9);
-                oscSub.stop(now + 0.9);
+                // Dual operator hyperspace spool with resonant frequency ascent
+                playFM(90, 1.5, 4.0, 0.85, 0.28, true);
+                setTimeout(() => playFM(220, 2.0, 3.5, 0.65, 0.24, true), 120);
+                setTimeout(() => playFM(480, 2.5, 3.0, 0.55, 0.22, true), 280);
+                setTimeout(() => playFM(140, 0.5, 5.0, 0.70, 0.30, true), 500);
             } catch(e) {}
         }
 
@@ -431,16 +537,31 @@
             try {
                 const now = audioCtx.currentTime;
                 const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
+                const mod = audioCtx.createOscillator();
+                const mGain = audioCtx.createGain();
+                const vGain = audioCtx.createGain();
+
                 osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(950, now);
-                osc.frequency.exponentialRampToValueAtTime(120, now + 0.18);
-                gain.gain.setValueAtTime(0.2, now);
-                gain.gain.exponentialRampToValueAtTime(0.005, now + 0.18);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
+                mod.type = 'sine';
+                osc.frequency.setValueAtTime(980, now);
+                osc.frequency.exponentialRampToValueAtTime(140, now + 0.16);
+                mod.frequency.setValueAtTime(490, now);
+                mod.frequency.exponentialRampToValueAtTime(70, now + 0.16);
+
+                mGain.gain.setValueAtTime(600, now);
+                mGain.gain.exponentialRampToValueAtTime(20, now + 0.16);
+                mod.connect(mGain);
+                mGain.connect(osc.frequency);
+
+                vGain.gain.setValueAtTime(0.22, now);
+                vGain.gain.exponentialRampToValueAtTime(0.005, now + 0.16);
+
+                osc.connect(vGain);
+                vGain.connect(audioCtx.destination);
                 osc.start(now);
-                osc.stop(now + 0.18);
+                mod.start(now);
+                osc.stop(now + 0.16);
+                mod.stop(now + 0.16);
             } catch(e) {}
         }
 
@@ -451,39 +572,54 @@
             try {
                 const now = audioCtx.currentTime;
                 const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
+                const mod = audioCtx.createOscillator();
+                const mGain = audioCtx.createGain();
+                const vGain = audioCtx.createGain();
+
                 osc.type = 'square';
-                osc.frequency.setValueAtTime(420, now);
-                osc.frequency.exponentialRampToValueAtTime(70, now + 0.22);
-                gain.gain.setValueAtTime(0.18, now);
-                gain.gain.exponentialRampToValueAtTime(0.005, now + 0.22);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
+                mod.type = 'sine';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.exponentialRampToValueAtTime(60, now + 0.22);
+                mod.frequency.setValueAtTime(220, now);
+
+                mGain.gain.setValueAtTime(500, now);
+                mGain.gain.exponentialRampToValueAtTime(30, now + 0.22);
+                mod.connect(mGain);
+                mGain.connect(osc.frequency);
+
+                vGain.gain.setValueAtTime(0.20, now);
+                vGain.gain.exponentialRampToValueAtTime(0.005, now + 0.22);
+
+                osc.connect(vGain);
+                vGain.connect(audioCtx.destination);
                 osc.start(now);
+                mod.start(now);
                 osc.stop(now + 0.22);
+                mod.stop(now + 0.22);
             } catch(e) {}
         }
 
         function playUpgrade() {
-            if (!soundEnabled) return;
-            initAudio();
-            if (!audioCtx) return;
-            try {
-                const notes = [523.25, 659.25, 783.99, 1046.50];
-                notes.forEach((freq, idx) => {
-                    const now = audioCtx.currentTime + idx * 0.08;
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(freq, now);
-                    gain.gain.setValueAtTime(0.18, now);
-                    gain.gain.exponentialRampToValueAtTime(0.005, now + 0.15);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start(now);
-                    osc.stop(now + 0.15);
-                });
-            } catch(e) {}
+            // Ascending 4-chord YM2612 FM chime
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((freq, idx) => {
+                setTimeout(() => playFM(freq, 2.0, 2.2, 0.24, 0.18, true), idx * 75);
+            });
+        }
+
+        function playVictory() {
+            // 4-chord YM2612 triumphant fanfare with SPC700 stereo warmth
+            const chords = [
+                [523.25, 659.25, 783.99],
+                [587.33, 739.99, 880.00],
+                [659.25, 830.61, 987.77],
+                [1046.50, 1318.51, 1567.98]
+            ];
+            chords.forEach((chord, step) => {
+                setTimeout(() => {
+                    chord.forEach(freq => playFM(freq, 2.0, 2.0, 0.45, 0.14, true));
+                }, step * 140);
+            });
         }
 
         function playExplosion() {
@@ -491,107 +627,31 @@
             initAudio();
             if (!audioCtx) return;
             try {
-                const now = audioCtx.currentTime;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(140, now);
-                osc.frequency.exponentialRampToValueAtTime(30, now + 0.4);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.exponentialRampToValueAtTime(0.005, now + 0.4);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + 0.4);
+                playFM(110, 0.5, 6.0, 0.45, 0.35, true);
+                setTimeout(() => playFM(55, 0.5, 8.0, 0.55, 0.30, true), 60);
             } catch(e) {}
         }
 
         function playPhenom() {
-            if (!soundEnabled) return;
-            initAudio();
-            if (!audioCtx) return;
-            try {
-                const notes = [440, 554, 659, 880, 1108];
-                notes.forEach((freq, idx) => {
-                    const now = audioCtx.currentTime + idx * 0.07;
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(freq, now);
-                    gain.gain.setValueAtTime(0.18, now);
-                    gain.gain.exponentialRampToValueAtTime(0.005, now + 0.3);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start(now);
-                    osc.stop(now + 0.3);
-                });
-            } catch(e) {}
+            // Ethereal 5-note pentatonic YM2612 FM arpeggio with SPC700 delay
+            const freqs = [440, 554.37, 659.25, 880, 1108.73];
+            freqs.forEach((f, idx) => {
+                setTimeout(() => playFM(f, 3.0, 2.5, 0.35, 0.16, true), idx * 70);
+            });
         }
 
         function playHeal() {
-            if (!soundEnabled) return;
-            initAudio();
-            if (!audioCtx) return;
-            try {
-                const now = audioCtx.currentTime;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.exponentialRampToValueAtTime(900, now + 0.25);
-                gain.gain.setValueAtTime(0.18, now);
-                gain.gain.exponentialRampToValueAtTime(0.005, now + 0.25);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + 0.25);
-            } catch(e) {}
+            playFM(440, 2.5, 1.8, 0.20, 0.18, true);
+            setTimeout(() => playFM(880, 2.0, 1.5, 0.30, 0.18, true), 90);
         }
 
         function playTransaction() {
-            if (!soundEnabled) return;
-            initAudio();
-            if (!audioCtx) return;
-            try {
-                const now = audioCtx.currentTime;
-                const osc1 = audioCtx.createOscillator();
-                const osc2 = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc1.type = 'triangle';
-                osc2.type = 'sine';
-                osc1.frequency.setValueAtTime(587.33, now); // D5
-                osc1.frequency.setValueAtTime(880.00, now + 0.05); // A5
-                osc2.frequency.setValueAtTime(1174.66, now + 0.05); // D6
-                gain.gain.setValueAtTime(0.12, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
-                osc1.connect(gain);
-                osc2.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc1.start(now);
-                osc2.start(now + 0.05);
-                osc1.stop(now + 0.22);
-                osc2.stop(now + 0.22);
-            } catch(e) {}
+            playFM(587.33, 2.0, 2.0, 0.18, 0.16, true);
+            setTimeout(() => playFM(1174.66, 2.0, 1.8, 0.25, 0.16, true), 70);
         }
 
         function playShieldImpact() {
-            if (!soundEnabled) return;
-            initAudio();
-            if (!audioCtx) return;
-            try {
-                const now = audioCtx.currentTime;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sine';
-                osc.frequency.setValueAtTime(320, now);
-                osc.frequency.exponentialRampToValueAtTime(80, now + 0.15);
-                gain.gain.setValueAtTime(0.18, now);
-                gain.gain.exponentialRampToValueAtTime(0.005, now + 0.15);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start(now);
-                osc.stop(now + 0.15);
-            } catch(e) {}
+            playFM(340, 1.414, 4.5, 0.16, 0.22, true);
         }
 
         document.addEventListener('click', () => {
@@ -629,7 +689,7 @@
                 let baseMed = 60 + Math.floor(Math.random() * 25);
                 let phenom = "None";
                 if (i % 3 === 0) {
-                    const pList = ["Black Hole", "Solar Flare", "Derelict Salvage"];
+                    const pList = ["Black Hole", "Solar Flare", "Derelict Salvage", "Alien Monolith", "Ion Storm"];
                     phenom = pList[Math.floor((i / 3)) % pList.length];
                 }
                 systems.push({
@@ -694,11 +754,48 @@
             });
         }
 
+        // Deep space cosmic nebulae for starmap canvas atmosphere
+        const nebulae = [
+            { x: 0.22, y: 0.28, rx: 0.28, ry: 0.20, color1: 'rgba(0, 180, 240, 0.08)', color2: 'rgba(0, 60, 120, 0)' },
+            { x: 0.72, y: 0.68, rx: 0.30, ry: 0.24, color1: 'rgba(180, 0, 220, 0.07)', color2: 'rgba(70, 0, 110, 0)' },
+            { x: 0.35, y: 0.75, rx: 0.24, ry: 0.18, color1: 'rgba(0, 220, 140, 0.06)', color2: 'rgba(0, 90, 50, 0)' },
+            { x: 0.80, y: 0.25, rx: 0.26, ry: 0.20, color1: 'rgba(230, 140, 0, 0.05)', color2: 'rgba(100, 50, 0, 0)' }
+        ];
+
         // Particle System for Combat & Visual FX
         const particles = [];
         const projectiles = [];
+        const floatingTexts = [];
+        const shieldRipples = [];
         let combatScreenShake = 0;
         let animFrameTime = 0;
+
+        function addFloatingText(x, y, text, color = '#00ffff', scale = 1.0) {
+            floatingTexts.push({
+                x: x,
+                y: y,
+                text: text,
+                color: color,
+                scale: scale,
+                alpha: 1.0,
+                vy: -1.2,
+                life: 50,
+                maxLife: 50
+            });
+        }
+
+        function addShieldRipple(x, y, radius, color = '#00ffff') {
+            shieldRipples.push({
+                x: x,
+                y: y,
+                radius: radius,
+                maxRadius: radius + 26,
+                color: color,
+                alpha: 0.9,
+                life: 18,
+                maxLife: 18
+            });
+        }
 
         function addParticleBurst(x, y, color, count, speedMax, type) {
             for (let i = 0; i < count; i++) {
@@ -1279,7 +1376,8 @@
         const ENEMY_CLASSES = [
             { id: 'interceptor', name: 'Corsair Interceptor', hullMult: 0.65, dmgMult: 0.8, hitChance: 0.9, color: '#ff6633', speed: 20, desc: 'High-speed raider with evasion thrusters.' },
             { id: 'marauder', name: 'Corsair Marauder', hullMult: 1.0, dmgMult: 1.0, hitChance: 0.85, color: '#cc2222', speed: 15, desc: 'Armored pirate cruiser with twin prow fangs.' },
-            { id: 'dreadnought', name: 'Syndicate Dreadnought', hullMult: 1.5, dmgMult: 1.35, hitChance: 0.80, color: '#990000', speed: 12, desc: 'Heavy capital flagship with triple engine array.' }
+            { id: 'dreadnought', name: 'Syndicate Dreadnought', hullMult: 1.5, dmgMult: 1.35, hitChance: 0.80, color: '#990000', speed: 12, desc: 'Heavy capital flagship with triple engine array.' },
+            { id: 'infiltrator', name: 'Syndicate Stealth Infiltrator', hullMult: 0.85, dmgMult: 1.15, hitChance: 0.90, color: '#aa33ff', speed: 22, desc: 'High-speed cloaked strike craft equipped with phase blasters.' }
         ];
         let currentEnemyClass = ENEMY_CLASSES[1];
         let playerShipState = { x: 180, y: 120, targetX: 180, targetY: 120, tilt: 0, shieldGlow: 0, flash: 0 };
@@ -1292,10 +1390,12 @@
             combatEnding = false;
             
             let classIdx = 1;
-            if (currentSystemId <= 8 && Math.random() < 0.65) {
+            if (currentSystemId <= 6 && Math.random() < 0.60) {
                 classIdx = 0; // Interceptor in earlier sectors
-            } else if (currentSystemId > 16 || Math.random() < 0.35) {
+            } else if (currentSystemId > 16 && Math.random() < 0.35) {
                 classIdx = 2; // Dreadnought in dangerous deep space
+            } else if (Math.random() < 0.30) {
+                classIdx = 3; // Stealth Infiltrator
             } else if (Math.random() < 0.45) {
                 classIdx = 0;
             }
@@ -1348,13 +1448,19 @@
                 enemyHull -= dmg;
                 enemyShipState.flash = 10;
                 addParticleBurst(enemyShipState.x, enemyShipState.y, '#ff4444', 16, 4, 'shard');
-                let aidText = repFed >= 15 ? " (Federation escort aids attack!)" : "";
+                addFloatingText(enemyShipState.x, enemyShipState.y - 20, `-${dmg} HULL`, '#ff5555', 1.2);
+                let aidText = "";
+                if (repFed >= 15) {
+                    aidText = " (Federation escort aids attack!)";
+                    addFloatingText(enemyShipState.x, enemyShipState.y - 38, "FED ESCORT BONUS!", "#00ffff", 0.95);
+                }
                 logCombat(`You fire pulse blasters and deal ${dmg} damage!${aidText}`);
             } else if (action === 'evade') {
                 playBlip();
                 playerEvading = true;
                 playerShipState.shieldGlow = 25;
                 playerShipState.y = 80 + Math.random() * 80;
+                addFloatingText(playerShipState.x, playerShipState.y - 20, "EVASION THRUSTERS", "#00ff88", 1.0);
                 logCombat(`You engage high-G evasive thrusters and raise deflector shields.`);
             } else if (action === 'tech') {
                 if (cargo.tech > 0) {
@@ -1364,7 +1470,9 @@
                     playHeal();
                     // EMP shockwave effect
                     playerShipState.shieldGlow = 35;
+                    addShieldRipple(playerShipState.x, playerShipState.y, 45, '#00ffcc');
                     addParticleBurst(playerShipState.x, playerShipState.y, '#00ffcc', 24, 6, 'star');
+                    addFloatingText(playerShipState.x, playerShipState.y - 20, `+${heal} HULL (EMP)`, '#00ffcc', 1.2);
                     logCombat(`Used 1 Tech cargo to discharge EMP and repair ${heal} hull.`);
                 } else {
                     playBlip();
@@ -1375,11 +1483,13 @@
                 if (Math.random() < 0.5 + (engineLevel * 0.1)) {
                     combatEnding = true;
                     playWarp();
+                    addFloatingText(playerShipState.x, playerShipState.y - 20, "WARP DISENGAGE!", "#ffaa00", 1.2);
                     logCombat(`★ Hyperdrive overcharged! Successfully escaped pirate encounter.`);
                     setTimeout(endCombat, 1500);
                     return;
                 } else {
                     playBlip();
+                    addFloatingText(playerShipState.x, playerShipState.y - 20, "LOCK PREVENTED ESCAPE", "#ff4444", 0.95);
                     logCombat(`Sub-light burn failed to break pirate weapon lock!`);
                 }
             }
@@ -1387,9 +1497,11 @@
             if (enemyHull <= 0) {
                 combatEnding = true;
                 playExplosion();
-                triggerScreenShake(12);
+                playVictory();
+                triggerScreenShake(14);
                 addParticleBurst(enemyShipState.x, enemyShipState.y, '#ff9900', 35, 7, 'spark');
                 addParticleBurst(enemyShipState.x, enemyShipState.y, '#ff3300', 25, 5, 'debris');
+                addFloatingText(enemyShipState.x, enemyShipState.y - 25, `★ TARGET DESTROYED!`, '#ffcc00', 1.3);
                 
                 let bounty = Math.round((100 + currentSystemId * 50) * (currentEnemyClass.hullMult || 1.0));
                 credits += bounty;
@@ -1418,7 +1530,11 @@
                 let absorbed = 0;
                 if (playerShipState.shieldGlow > 0 || shieldLevel > 1) {
                     absorbed = Math.min(rawDmg - 1, Math.round(shieldLevel * 3));
-                    if (absorbed > 0) playShieldImpact();
+                    if (absorbed > 0) {
+                        playShieldImpact();
+                        addShieldRipple(playerShipState.x, playerShipState.y, 38, '#00ffff');
+                        addFloatingText(playerShipState.x, playerShipState.y - 36, `-${absorbed} ABSORBED`, '#00ffff', 0.95);
+                    }
                 }
                 let eDmg = Math.max(1, rawDmg - absorbed);
                 hull -= eDmg;
@@ -1432,9 +1548,11 @@
                     color: currentEnemyClass ? currentEnemyClass.color : '#ff3333', speed: 16, isPlayer: false
                 });
                 addParticleBurst(playerShipState.x, playerShipState.y, '#ff8800', 14, 4, 'spark');
+                addFloatingText(playerShipState.x, playerShipState.y - 18, `-${eDmg} HULL`, '#ff3333', 1.1);
                 let absorbText = absorbed > 0 ? ` (${absorbed} absorbed by shields)` : "";
                 logCombat(`${currentEnemyClass.name} strikes your hull for ${eDmg} damage!${absorbText}`);
             } else {
+                addFloatingText(playerShipState.x, playerShipState.y - 18, 'SALVO EVADED!', '#00ff88', 1.0);
                 logCombat(`${currentEnemyClass.name} disruptor salvo missed your vessel!`);
             }
             
@@ -1556,7 +1674,7 @@
             selectedSystem = sys.id;
             let phenomBadge = "";
             if (sys.phenomenon && sys.phenomenon !== "None") {
-                let pColor = sys.phenomenon === "Black Hole" ? "#ff00ff" : (sys.phenomenon === "Solar Flare" ? "#ffaa00" : "#aaccff");
+                let pColor = sys.phenomenon === "Black Hole" ? "#ff00ff" : (sys.phenomenon === "Solar Flare" ? "#ffaa00" : (sys.phenomenon === "Alien Monolith" ? "#00ff88" : (sys.phenomenon === "Ion Storm" ? "#33aaff" : "#aaccff")));
                 phenomBadge = `<div style="margin: 8px 0; padding: 6px; border: 1px dashed ${pColor}; color: ${pColor}; background: rgba(0,0,0,0.5); font-size: 13px;">
                     <strong>[★ PHENOMENON DETECTED]</strong><br>${sys.phenomenon.toUpperCase()}
                 </div>`;
@@ -1595,8 +1713,8 @@
             } else {
                 let phenomAction = "";
                 if (sys.phenomenon && sys.phenomenon !== "None") {
-                    let pColor = sys.phenomenon === "Black Hole" ? "#ff00ff" : (sys.phenomenon === "Solar Flare" ? "#ffaa00" : "#aaccff");
-                    let btnText = sys.phenomenon === "Black Hole" ? "PROBE EVENT HORIZON" : (sys.phenomenon === "Solar Flare" ? "HARVEST SOLAR PLASMA" : "SALVAGE DERELICT STARSHIP");
+                    let pColor = sys.phenomenon === "Black Hole" ? "#ff00ff" : (sys.phenomenon === "Solar Flare" ? "#ffaa00" : (sys.phenomenon === "Alien Monolith" ? "#00ff88" : (sys.phenomenon === "Ion Storm" ? "#33aaff" : "#aaccff")));
+                    let btnText = sys.phenomenon === "Black Hole" ? "PROBE EVENT HORIZON" : (sys.phenomenon === "Solar Flare" ? "HARVEST SOLAR PLASMA" : (sys.phenomenon === "Alien Monolith" ? "DECRYPT ALIEN MONOLITH" : (sys.phenomenon === "Ion Storm" ? "SAMPLE IONIC PLASMA VORTEX" : "SALVAGE DERELICT STARSHIP")));
                     phenomAction = `
                     <p style="color:${pColor}; font-weight:bold; margin-bottom:5px; margin-top:15px;">Phenomenon Operations</p>
                     <button class="action-btn" style="margin:0; padding:10px; border-color:${pColor}; color:${pColor}; width:100%;" onclick="investigatePhenomenon()">${btnText}</button>
@@ -1802,13 +1920,34 @@
                 hull = Math.min(maxHull, hull + hullRepair);
                 let cargoMsg = "No free cargo space for raw parts.";
                 if (getCargoUsed() + 2 <= cargoMax) {
-                    cargo.tech++;
-                    cargo.minerals++;
+                    cargo.tech = (cargo.tech || 0) + 1;
+                    cargo.minerals = (cargo.minerals || 0) + 1;
                     cargoMsg = "Recovered 1 ton of Tech and 1 ton of Minerals!";
                 }
                 adjustRep(-2, 1, 5);
                 title = "DERELICT BOARDING OPERATION";
                 details = `Your salvage crew boarded the derelict starship hull.\nRecovered ₭${reward} in salvageable components.\nRestored +${hullRepair} Hull using structural plating.\n${cargoMsg}\nReputation changed: +5 Pirates, +1 Traders, -2 Federation.`;
+            } else if (sys.phenomenon === "Alien Monolith") {
+                let reward = Math.floor(Math.random() * 250) + 700;
+                credits += reward;
+                let cargoMsg = "";
+                if (getCargoUsed() < cargoMax) {
+                    cargo.tech = (cargo.tech || 0) + 1;
+                    cargoMsg = " Encrypted alien datacubes synthesized 1 ton of advanced Tech cargo!";
+                }
+                adjustRep(6, 4, 2);
+                title = "ALIEN MONOLITH DECRYPTION";
+                details = `Sensors linked with the ancient obsidian obelisk.\nCryptographic pulses broadcasted interstellar starcharts into your memory core!\nScience institutions paid ₭${reward} for telemetry.${cargoMsg}\nDiplomatic standing improved with all civilized factions (+6 Fed, +4 Traders, +2 Pirates).`;
+            } else if (sys.phenomenon === "Ion Storm") {
+                let fuelDrain = 15;
+                fuel = Math.max(5, fuel - fuelDrain);
+                let shieldCharge = 40;
+                hull = Math.min(maxHull, hull + shieldCharge);
+                let reward = Math.floor(Math.random() * 120) + 380;
+                credits += reward;
+                adjustRep(0, 3, 0);
+                title = "ION STORM HARVEST OPERATION";
+                details = `Your vessel dove through hyper-charged atmospheric plasma.\nStatic drain consumed ${fuelDrain}% reactor fuel.\nHowever, ionic absorption supercharged deflector shields (+${shieldCharge} Hull) and synthesized ion gas worth ₭${reward}!\nTraders Guild standing increased (+3 Traders).`;
             }
 
             sys.phenomenon = "None";
@@ -1835,7 +1974,7 @@
             systems.forEach(sys => {
                 if (sys.phenomenon && sys.phenomenon !== "None") {
                     const ring = document.createElement('div');
-                    let pClass = sys.phenomenon === "Black Hole" ? "phenom-blackhole" : (sys.phenomenon === "Solar Flare" ? "phenom-solarflare" : "phenom-derelict");
+                    let pClass = sys.phenomenon === "Black Hole" ? "phenom-blackhole" : (sys.phenomenon === "Solar Flare" ? "phenom-solarflare" : (sys.phenomenon === "Alien Monolith" ? "phenom-alienmonolith" : (sys.phenomenon === "Ion Storm" ? "phenom-ionstorm" : "phenom-derelict")));
                     ring.className = `phenom-ring ${pClass}`;
                     ring.style.left = sys.x + '%';
                     ring.style.top = sys.y + '%';
@@ -1896,6 +2035,44 @@
 
             mapCtx.clearRect(0, 0, mw, mh);
 
+            // Draw atmospheric deep space nebulae
+            nebulae.forEach(neb => {
+                const cx = neb.x * mw;
+                const cy = neb.y * mh;
+                const rx = neb.rx * mw;
+                const ry = neb.ry * mh;
+                const grad = mapCtx.createRadialGradient(cx, cy, 0, cx, cy, Math.max(rx, ry));
+                grad.addColorStop(0, neb.color1);
+                grad.addColorStop(1, neb.color2);
+                mapCtx.save();
+                mapCtx.fillStyle = grad;
+                mapCtx.beginPath();
+                mapCtx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+                mapCtx.fill();
+                mapCtx.restore();
+            });
+
+            // Draw celestial grid & sector labels
+            mapCtx.save();
+            mapCtx.strokeStyle = 'rgba(0, 255, 204, 0.04)';
+            mapCtx.lineWidth = 1;
+            for (let gx = 0; gx <= 100; gx += 20) {
+                const x = gx * mw / 100;
+                mapCtx.beginPath(); mapCtx.moveTo(x, 0); mapCtx.lineTo(x, mh); mapCtx.stroke();
+            }
+            for (let gy = 0; gy <= 100; gy += 20) {
+                const y = gy * mh / 100;
+                mapCtx.beginPath(); mapCtx.moveTo(0, y); mapCtx.lineTo(mw, y); mapCtx.stroke();
+            }
+            mapCtx.font = "11px 'Courier New', monospace";
+            mapCtx.fillStyle = "rgba(0, 255, 204, 0.12)";
+            mapCtx.fillText("SECTOR ALPHA // CORE", mw * 0.04, mh * 0.06);
+            mapCtx.fillText("SECTOR BETA // MINING", mw * 0.58, mh * 0.06);
+            mapCtx.fillText("SECTOR GAMMA // INDUSTRIAL", mw * 0.04, mh * 0.54);
+            mapCtx.fillText("SECTOR DELTA // TECH", mw * 0.58, mh * 0.54);
+            mapCtx.fillText("SECTOR OMEGA // RIM", mw * 0.35, mh * 0.94);
+            mapCtx.restore();
+
             // Draw deep space starfield
             backgroundStars.forEach(star => {
                 const tw = Math.sin(animFrameTime * 3 + star.twinkle) * 0.3 + 0.7;
@@ -1919,6 +2096,52 @@
                     }
                 }
             }
+
+            // Draw glowing stellar coronas and targeting reticle brackets
+            systems.forEach(sys => {
+                const sx = sys.x * mw / 100;
+                const sy = sys.y * mh / 100;
+                const coronaColor = sys.id === 1 ? 'rgba(255, 220, 80, 0.25)' : 
+                    (sys.economy === 'Agricultural' ? 'rgba(80, 255, 120, 0.18)' :
+                    (sys.economy === 'Mining' ? 'rgba(255, 160, 60, 0.18)' :
+                    (sys.economy === 'Industrial' ? 'rgba(255, 80, 60, 0.18)' :
+                    (sys.economy === 'Tech Hub' ? 'rgba(0, 230, 255, 0.22)' : 'rgba(255, 80, 255, 0.18)'))));
+
+                const coronaGrad = mapCtx.createRadialGradient(sx, sy, 2, sx, sy, 16);
+                coronaGrad.addColorStop(0, coronaColor);
+                coronaGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                mapCtx.fillStyle = coronaGrad;
+                mapCtx.beginPath();
+                mapCtx.arc(sx, sy, 16, 0, Math.PI * 2);
+                mapCtx.fill();
+
+                // Targeted HUD Reticle Brackets for selected system
+                if (sys.id === selectedSystem) {
+                    mapCtx.save();
+                    mapCtx.strokeStyle = '#00ffff';
+                    mapCtx.lineWidth = 1.5;
+                    const bSize = 12;
+                    mapCtx.beginPath();
+                    // Top-left
+                    mapCtx.moveTo(sx - bSize, sy - bSize + 5);
+                    mapCtx.lineTo(sx - bSize, sy - bSize);
+                    mapCtx.lineTo(sx - bSize + 5, sy - bSize);
+                    // Top-right
+                    mapCtx.moveTo(sx + bSize - 5, sy - bSize);
+                    mapCtx.lineTo(sx + bSize, sy - bSize);
+                    mapCtx.lineTo(sx + bSize, sy - bSize + 5);
+                    // Bottom-left
+                    mapCtx.moveTo(sx - bSize, sy + bSize - 5);
+                    mapCtx.lineTo(sx - bSize, sy + bSize);
+                    mapCtx.lineTo(sx - bSize + 5, sy + bSize);
+                    // Bottom-right
+                    mapCtx.moveTo(sx + bSize - 5, sy + bSize);
+                    mapCtx.lineTo(sx + bSize, sy + bSize);
+                    mapCtx.lineTo(sx + bSize, sy + bSize - 5);
+                    mapCtx.stroke();
+                    mapCtx.restore();
+                }
+            });
 
             // Draw Hyperspace Course Line from current to selected
             if (selectedSystem !== currentSystemId) {
@@ -2081,6 +2304,42 @@
                     cCtx.globalAlpha = 1.0;
 
                     if (pt.life <= 0) particles.splice(i, 1);
+                }
+
+                // Update & Draw Shield Ripples
+                for (let i = shieldRipples.length - 1; i >= 0; i--) {
+                    const sr = shieldRipples[i];
+                    sr.radius += (sr.maxRadius - sr.radius) * 0.18;
+                    sr.alpha = sr.life / sr.maxLife;
+                    sr.life--;
+                    cCtx.save();
+                    cCtx.strokeStyle = sr.color;
+                    cCtx.globalAlpha = Math.max(0, sr.alpha);
+                    cCtx.lineWidth = 2.5;
+                    cCtx.shadowColor = sr.color;
+                    cCtx.shadowBlur = 10;
+                    cCtx.beginPath();
+                    cCtx.ellipse(sr.x, sr.y, sr.radius * 1.3, sr.radius, 0, 0, Math.PI * 2);
+                    cCtx.stroke();
+                    cCtx.restore();
+                    if (sr.life <= 0) shieldRipples.splice(i, 1);
+                }
+
+                // Update & Draw Floating Combat Text
+                for (let i = floatingTexts.length - 1; i >= 0; i--) {
+                    const ft = floatingTexts[i];
+                    ft.y += ft.vy;
+                    ft.alpha = ft.life / ft.maxLife;
+                    ft.life--;
+                    cCtx.save();
+                    cCtx.fillStyle = ft.color;
+                    cCtx.globalAlpha = Math.max(0, ft.alpha);
+                    cCtx.font = `bold ${Math.round(13 * ft.scale)}px 'Courier New', monospace`;
+                    cCtx.shadowColor = ft.color;
+                    cCtx.shadowBlur = 8;
+                    cCtx.fillText(ft.text, ft.x, ft.y);
+                    cCtx.restore();
+                    if (ft.life <= 0) floatingTexts.splice(i, 1);
                 }
 
                 // DRAW PLAYER STARSHIP SPRITE
@@ -2252,6 +2511,39 @@
                     cCtx.fillRect(-22, -6, 12, 3);
                     cCtx.fillRect(-22, 3, 12, 3);
 
+                } else if (currentEnemyClass && currentEnemyClass.id === 'infiltrator') {
+                    // --- SYNDICATE STEALTH INFILTRATOR SPRITE ---
+                    const eFlmLen = 15 + Math.random() * 8;
+                    cCtx.fillStyle = '#aa00ff';
+                    cCtx.beginPath();
+                    cCtx.moveTo(22, 0); cCtx.lineTo(22 + eFlmLen, 0); cCtx.lineTo(22, 2); cCtx.fill();
+
+                    if (enemyShipState.flash <= 0) cCtx.fillStyle = '#551188';
+                    // Sleek dagger wing stealth fuselage
+                    cCtx.beginPath();
+                    cCtx.moveTo(-36, 0);      // Dagger nose
+                    cCtx.lineTo(-10, -6);     // Upper chine
+                    cCtx.lineTo(18, -26);     // Swept stealth wing
+                    cCtx.lineTo(8, -12);      // Trailing notch
+                    cCtx.lineTo(22, -6);      // Aft nacelle
+                    cCtx.lineTo(16, 0);       // Center keel
+                    cCtx.lineTo(22, 6);       // Lower nacelle
+                    cCtx.lineTo(8, 12);       // Trailing notch
+                    cCtx.lineTo(18, 26);      // Lower swept wing
+                    cCtx.lineTo(-10, 6);      // Lower chine
+                    cCtx.closePath();
+                    cCtx.fill();
+
+                    cCtx.strokeStyle = '#cc66ff';
+                    cCtx.lineWidth = 1.5;
+                    cCtx.stroke();
+
+                    // Violet sensor slit
+                    cCtx.fillStyle = '#ff00ff';
+                    cCtx.shadowColor = '#ff00ff';
+                    cCtx.shadowBlur = 8;
+                    cCtx.fillRect(-16, -2, 10, 4);
+
                 } else {
                     // --- CORSAIR MARAUDER SPRITE (Standard) ---
                     const eFlmLen = 12 + Math.random() * 7;
@@ -2385,6 +2677,7 @@
                         <li><strong style="color:#ff8800;">Corsair Interceptor:</strong> Nimble light raider. Features high evasive thrusters and rapid blasters, but possesses lighter hull armor (~65% HP).</li>
                         <li><strong style="color:#cc2222;">Corsair Marauder:</strong> Balanced raider warship. Mounts twin ramming prow blades and heavy burst cannons (~100% HP).</li>
                         <li><strong style="color:#ff3333;">Syndicate Dreadnought:</strong> Heavily armored capital flagship encountered in outer sectors or high-value bounties. High hull (~150% HP), devastating plasma torpedoes, and pays 1.5x bounty credits upon defeat!</li>
+                        <li><strong style="color:#aa33ff;">Syndicate Stealth Infiltrator:</strong> Cloaked elite strike craft. High evasion and rapid phase disruptors; drops high salvage bounties upon neutralization.</li>
                     </ul>
                     <h3 style="color:#00ffcc;">TACTICAL COMBAT ACTIONS</h3>
                     <ul style="padding-left:20px;">
@@ -2436,6 +2729,8 @@
                         <li><strong style="color:#ff00ff;">Black Hole (Purple Ring):</strong> Deploy deep-graviton scientific probes into the event horizon. Yields <strong>₭600-800 Credits</strong> and +5 Federation reputation, but gravitational shear inflicts hull damage (mitigated by Shield Level).</li>
                         <li><strong style="color:#ffaa00;">Solar Flare (Orange Ring):</strong> Extend magnetic collector scoops into coronal ejections. Harvests <strong>+35% Fuel</strong> and synthesizes plasma cells worth <strong>₭350-450 Credits</strong> (+4 Traders Guild rep), with minor radiation hull damage.</li>
                         <li><strong style="color:#88ccff;">Derelict Ship (Cyan Ring):</strong> Send an EVA salvage boarding party. Recovers <strong>₭400-550 Credits</strong>, restores <strong>+30 Hull</strong>, and retrieves <strong>1 ton of Tech + 1 ton of Minerals</strong> (+5 Pirates rep, +1 Traders rep, -2 Fed).</li>
+                        <li><strong style="color:#00ff88;">Alien Monolith (Green Ring):</strong> Intercept alien resonance pulses from an ancient monolith. Yields <strong>₭700-950 Credits</strong>, synthesized Tech cargo, and improves reputation across all factions.</li>
+                        <li><strong style="color:#33aaff;">Ion Storm (Blue Ring):</strong> Navigate charged plasma clouds. Ionic energy supercharges deflector shields (+40 Hull) and produces valuable ion gas (+₭380-500 Credits), while consuming 15% reactor fuel.</li>
                     </ul>
                     <h3 style="color:#00ffcc;">SHIPYARD UPGRADE MATRIX</h3>
                     <ul style="padding-left:20px;">
@@ -2591,6 +2886,12 @@
         if (audioBtn) audioBtn.innerText = soundEnabled ? "🔊 AUDIO: ON" : "🔇 AUDIO: OFF";
         const droneBtn = document.getElementById('drone-toggle-btn');
         if (droneBtn) droneBtn.innerText = droneEnabled ? "🌌 DRONE: ON" : "🌌 DRONE: OFF";
+        const musicBtn = document.getElementById('music-toggle-btn');
+        if (musicBtn) {
+            musicBtn.innerText = fmMusicEnabled ? "🎵 FM BGM: ON" : "🎵 FM BGM: OFF";
+            musicBtn.style.color = fmMusicEnabled ? "#00ffcc" : "#667788";
+            musicBtn.style.borderColor = fmMusicEnabled ? "#00ffcc" : "#334455";
+        }
 
         // Restore saved game if present
         let restored = false;

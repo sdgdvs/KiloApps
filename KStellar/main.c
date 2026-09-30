@@ -18,7 +18,8 @@ typedef struct {
     int food_price;
     int minerals_price;
     int tech_price;
-    int phenomenon; // 0=None, 1=Black Hole, 2=Solar Flare, 3=Derelict Ship
+    int medicine_price;
+    int phenomenon; // 0=None, 1=Black Hole, 2=Solar Flare, 3=Derelict Ship, 4=Alien Monolith, 5=Ion Storm
 } System;
 
 System systems[MAX_SYSTEMS];
@@ -28,6 +29,7 @@ typedef struct {
     float food;
     float min;
     float tech;
+    float med;
 } EconomyType;
 
 void GenerateGalaxy() {
@@ -36,11 +38,11 @@ void GenerateGalaxy() {
     const char* suffixes[] = {"Prime", "Secundus", "Tertius", "Minor", "Major", "Station", "Outpost", "Belt"};
 
     EconomyType economies[] = {
-        {"Agricultural", 0.5f, 1.5f, 1.8f},
-        {"Mining", 1.5f, 0.5f, 1.5f},
-        {"Industrial", 1.3f, 1.2f, 0.8f},
-        {"Tech Hub", 1.5f, 1.5f, 0.5f},
-        {"Trading Hub", 1.0f, 1.0f, 1.0f}
+        {"Agricultural", 0.5f, 1.5f, 1.8f, 0.6f},
+        {"Mining", 1.5f, 0.5f, 1.5f, 1.6f},
+        {"Industrial", 1.3f, 1.2f, 0.8f, 1.0f},
+        {"Tech Hub", 1.5f, 1.5f, 0.5f, 0.7f},
+        {"Trading Hub", 1.0f, 1.0f, 1.0f, 1.0f}
     };
 
     systems[0].id = 1;
@@ -53,6 +55,7 @@ void GenerateGalaxy() {
     systems[0].food_price = 20;
     systems[0].minerals_price = 40;
     systems[0].tech_price = 150;
+    systems[0].medicine_price = 60;
     systems[0].phenomenon = 0;
 
     for (int i = 1; i < MAX_SYSTEMS; i++) {
@@ -72,11 +75,13 @@ void GenerateGalaxy() {
         int bFood = 20 + (rand() % 10);
         int bMin = 40 + (rand() % 20);
         int bTech = 100 + (rand() % 50);
+        int bMed = 60 + (rand() % 25);
         
         systems[i].food_price = (int)(bFood * economies[ecoIdx].food);
         systems[i].minerals_price = (int)(bMin * economies[ecoIdx].min);
         systems[i].tech_price = (int)(bTech * economies[ecoIdx].tech);
-        systems[i].phenomenon = (i % 3 == 0) ? (((i / 3) % 3) + 1) : 0;
+        systems[i].medicine_price = (int)(bMed * economies[ecoIdx].med);
+        systems[i].phenomenon = (i % 3 == 0) ? (((i / 3) % 5) + 1) : 0;
     }
 }
 
@@ -86,10 +91,14 @@ void GenerateGalaxy() {
 #define ID_BTN_SELL_MINERALS 105
 #define ID_BTN_BUY_TECH 106
 #define ID_BTN_SELL_TECH 107
-#define ID_BTN_UPG_ENGINE 108
-#define ID_BTN_UPG_CARGO 109
-#define ID_BTN_UPG_WEAPON 110
-#define ID_BTN_UPG_SHIELD 111
+#define ID_BTN_BUY_MED 108
+#define ID_BTN_SELL_MED 109
+#define ID_BTN_REPAIR 110
+#define ID_BTN_REFUEL 111
+#define ID_BTN_UPG_ENGINE 112
+#define ID_BTN_UPG_CARGO 113
+#define ID_BTN_UPG_WEAPON 114
+#define ID_BTN_UPG_SHIELD 115
 
 #define ID_BTN_COMBAT_ATTACK 120
 #define ID_BTN_COMBAT_EVADE 121
@@ -210,7 +219,8 @@ typedef struct {
 } Mission;
 
 HWND hMapArea, hInfoArea, hBtnCourse, hFuelText, hCreditsText, hCargoText, hHullText, hMissionText, hFactionText;
-HWND hBtnBuyFood, hBtnSellFood, hBtnBuyMinerals, hBtnSellMinerals, hBtnBuyTech, hBtnSellTech;
+HWND hBtnBuyFood, hBtnSellFood, hBtnBuyMinerals, hBtnSellMinerals, hBtnBuyTech, hBtnSellTech, hBtnBuyMed, hBtnSellMed;
+HWND hBtnRepair, hBtnRefuel;
 HWND hBtnUpgEngine, hBtnUpgCargo, hBtnUpgWeapon, hBtnUpgShield;
 HWND hBtnCombatAttack, hBtnCombatEvade, hBtnCombatUseTech, hBtnCombatFlee;
 HWND hBtnMissions, hBtnMissionAccept1, hBtnMissionAccept2, hBtnMissionAbandon, hBtnMissionBack;
@@ -293,6 +303,7 @@ int credits = 1000;
 int cargoFood = 0;
 int cargoMinerals = 0;
 int cargoTech = 0;
+int cargoMedicine = 0;
 int cargoMax = 50;
 
 int engineLevel = 1;
@@ -304,7 +315,7 @@ int hull = 100;
 int maxHull = 100;
 int enemyHull = 0;
 int enemyMaxHull = 0;
-int enemyClass = 1; // 0=Interceptor, 1=Marauder, 2=Dreadnought
+int enemyClass = 1; // 0=Interceptor, 1=Marauder, 2=Dreadnought, 3=Infiltrator
 int inCombat = 0;
 char combatLog[1024] = "";
 
@@ -320,6 +331,7 @@ typedef struct {
     int cargoFood;
     int cargoMinerals;
     int cargoTech;
+    int cargoMedicine;
     int cargoMax;
     int engineLevel;
     int cargoLevel;
@@ -372,6 +384,7 @@ int SaveGame() {
     d.cargoFood = cargoFood;
     d.cargoMinerals = cargoMinerals;
     d.cargoTech = cargoTech;
+    d.cargoMedicine = cargoMedicine;
     d.cargoMax = cargoMax;
     d.engineLevel = engineLevel;
     d.cargoLevel = cargoLevel;
@@ -410,6 +423,7 @@ int LoadGame() {
     cargoFood = d.cargoFood;
     cargoMinerals = d.cargoMinerals;
     cargoTech = d.cargoTech;
+    cargoMedicine = d.cargoMedicine;
     cargoMax = (d.cargoMax > 0) ? d.cargoMax : 50;
     engineLevel = (d.engineLevel > 0) ? d.engineLevel : 1;
     cargoLevel = (d.cargoLevel > 0) ? d.cargoLevel : 1;
@@ -722,6 +736,48 @@ void DrawPirateShipSprite(HDC hdc, int cx, int cy, int size) {
         DeleteObject(hBodyBrush);
         DeleteObject(hBodyPen);
 
+    } else if (enemyClass == 3) {
+        // --- SYNDICATE STEALTH INFILTRATOR (Cloaked strike craft) ---
+        HBRUSH hBodyBrush = CreateSolidBrush(RGB(65, 15, 95));
+        HPEN hBodyPen = CreatePen(PS_SOLID, 1, RGB(180, 70, 240));
+        HGDIOBJ oldBrush = SelectObject(hdc, hBodyBrush);
+        HGDIOBJ oldPen = SelectObject(hdc, hBodyPen);
+
+        POINT pts[10];
+        pts[0].x = cx - size*5/4;  pts[0].y = cy;
+        pts[1].x = cx - size/3;    pts[1].y = cy - size/4;
+        pts[2].x = cx + size/2;    pts[2].y = cy - size*4/5;
+        pts[3].x = cx + size/4;    pts[3].y = cy - size/3;
+        pts[4].x = cx + size*3/4;  pts[4].y = cy - size/5;
+        pts[5].x = cx + size/2;    pts[5].y = cy;
+        pts[6].x = cx + size*3/4;  pts[6].y = cy + size/5;
+        pts[7].x = cx + size/4;    pts[7].y = cy + size/3;
+        pts[8].x = cx + size/2;    pts[8].y = cy + size*4/5;
+        pts[9].x = cx - size/3;    pts[9].y = cy + size/4;
+        Polygon(hdc, pts, 10);
+
+        // Violet sensor slit
+        HBRUSH hEye = CreateSolidBrush(RGB(240, 50, 255));
+        SelectObject(hdc, hEye);
+        RECT rcEye = {cx - size/2, cy - size/10, cx - size/4, cy + size/10};
+        FillRect(hdc, &rcEye, hEye);
+        DeleteObject(hEye);
+
+        // Violet/cyan ion thruster
+        int flameLen = (size/2) + (((animTick + 1) % 4) * 2);
+        HPEN hFlamePen = CreatePen(PS_SOLID, 2, RGB(180, 50, 255));
+        SelectObject(hdc, hFlamePen);
+        MoveToEx(hdc, cx + size*3/4, cy - size/6, NULL);
+        LineTo(hdc, cx + size*3/4 + flameLen, cy - size/6);
+        MoveToEx(hdc, cx + size*3/4, cy + size/6, NULL);
+        LineTo(hdc, cx + size*3/4 + flameLen, cy + size/6);
+        DeleteObject(hFlamePen);
+
+        SelectObject(hdc, oldBrush);
+        SelectObject(hdc, oldPen);
+        DeleteObject(hBodyBrush);
+        DeleteObject(hBodyPen);
+
     } else {
         // --- CORSAIR MARAUDER (Standard Cruiser) ---
         HBRUSH hBodyBrush = CreateSolidBrush(RGB(110, 15, 25));
@@ -771,7 +827,7 @@ void UpdateDashboard() {
     SetWindowText(hFuelText, buf);
     sprintf(buf, "CREDITS: %d", credits);
     SetWindowText(hCreditsText, buf);
-    int used = cargoFood + cargoMinerals + cargoTech;
+    int used = cargoFood + cargoMinerals + cargoTech + cargoMedicine;
     sprintf(buf, "CARGO: %d/%d TONS", used, cargoMax);
     SetWindowText(hCargoText, buf);
 
@@ -852,21 +908,24 @@ void ShowManualView(HWND hwnd, int tab) {
     } else if (tab == 1) {
         strcpy(infoText, "--- 2. COMMODITY TRADING ---\n\n"
                          "Economies & Multipliers:\n"
-                         "- Agri: Food 0.5x, Min 1.5x, Tech 1.8x\n"
-                         "- Mining: Min 0.5x, Food 1.5x, Tech 1.5x\n"
-                         "- Ind: Tech 0.8x, Food 1.3x, Min 1.2x\n"
-                         "- Tech Hub: Tech 0.5x, Food 1.5x, Min 1.5x\n"
+                         "- Agri: Food 0.5x, Med 0.6x, Min 1.5x, Tech 1.8x\n"
+                         "- Mining: Min 0.5x, Med 1.6x, Food 1.5x, Tech 1.5x\n"
+                         "- Ind: Tech 0.8x, Med 1.0x, Food 1.3x, Min 1.2x\n"
+                         "- Tech Hub: Tech 0.5x, Med 0.7x, Food 1.5x, Min 1.5x\n"
                          "- Sol: Baseline 1.0x on all goods.\n\n"
-                         "Pro Tip: Buy Tech at Tech Hubs (~50C),\n"
-                         "sell at Agri worlds (~200C) for 300% profit!");
+                         "Pro Tip: Buy Medicine at Agri (~35C) & sell at\n"
+                         "Mining worlds (~120C) for huge margins!");
     } else if (tab == 2) {
         strcpy(infoText, "--- 3. TACTICAL COMBAT ---\n\n"
-                         "Pirate ambushes: 25% on warp jumps.\n\n"
+                         "Hostile ambushes: 25% on warp jumps.\n"
+                         "Enemy Classes:\n"
+                         "- Interceptor: Fast raider, light armor.\n"
+                         "- Marauder: Balanced cruiser.\n"
+                         "- Dreadnought: Flagship, heavy armor (1.5x pay).\n"
+                         "- Stealth Infiltrator: Cloaked, high bounty!\n\n"
                          "- Attack: Blasters (15-30 + 10/WpnLvl).\n"
-                         "  +20% dmg with Fed friendly alliance.\n"
-                         "- Evade: Halves damage + 35% counter.\n"
-                         "- Use Tech: EMP pulse. Costs 1 Tech or\n"
-                         "  5% fuel. Deals 30-55 armor-pierce dmg!\n"
+                         "- Evade: Halves damage + counter.\n"
+                         "- Use Tech: EMP pulse (1 Tech or 5% fuel).\n"
                          "- Flee: Sub-light burn (50% + 10%*Eng).");
     } else if (tab == 3) {
         strcpy(infoText, "--- 4. FACTIONS & DIPLOMACY ---\n\n"
@@ -882,9 +941,12 @@ void ShowManualView(HWND hwnd, int tab) {
                          "Stellar Phenomena:\n"
                          "- Black Hole: 600-800C, +5 Fed (hull dmg).\n"
                          "- Solar Flare: +35% Fuel, 350-450C, +4 Trd.\n"
-                         "- Derelict: 400-550C, +30 Hull, 1T+1M, +5 Pir.\n\n"
-                         "Shipyard: Upgrade Engine (fuel eff),\n"
-                         "Cargo (+50t), Weapons (+dmg), Shields (+Hull).");
+                         "- Derelict: 400-550C, +30 Hull, 1T+1M, +5 Pir.\n"
+                         "- Monolith: 700-950C, Alien Tech, +4 All Rep.\n"
+                         "- Ion Storm: +40 Hull, 380-500C, -15% Fuel.\n\n"
+                         "Shipyard & Station Maintenance:\n"
+                         "- Repair Hull plate damage & Refuel reactor.\n"
+                         "- Upgrade Engine, Cargo, Weapons, Shields.");
     }
     SetWindowText(hInfoArea, infoText);
 }
@@ -914,6 +976,21 @@ void ShowStationView(HWND hwnd) {
     ShowWindow(hBtnSellMinerals, SW_SHOW);
     ShowWindow(hBtnBuyTech, SW_SHOW);
     ShowWindow(hBtnSellTech, SW_SHOW);
+    ShowWindow(hBtnBuyMed, SW_SHOW);
+    ShowWindow(hBtnSellMed, SW_SHOW);
+
+    int repCost = (maxHull - hull) * 4;
+    char repBuf[32];
+    sprintf(repBuf, "Repair (%d)", repCost);
+    SetWindowText(hBtnRepair, repBuf);
+    ShowWindow(hBtnRepair, SW_SHOW);
+
+    int refCost = (int)ceil((100 - fuel) * 1.5);
+    char refBuf[32];
+    sprintf(refBuf, "Refuel (%d)", refCost);
+    SetWindowText(hBtnRefuel, refBuf);
+    ShowWindow(hBtnRefuel, SW_SHOW);
+
     ShowWindow(hBtnUpgEngine, SW_SHOW);
     ShowWindow(hBtnUpgCargo, SW_SHOW);
     ShowWindow(hBtnUpgWeapon, SW_SHOW);
@@ -933,16 +1010,24 @@ void ShowStationView(HWND hwnd) {
         strcpy(phenomStr, "\n[★ PHENOMENON: Derelict Ship]");
         SetWindowText(hBtnInvestigate, "Salvage");
         ShowWindow(hBtnInvestigate, SW_SHOW);
+    } else if (sys->phenomenon == 4) {
+        strcpy(phenomStr, "\n[★ PHENOMENON: Alien Monolith]");
+        SetWindowText(hBtnInvestigate, "Monolith");
+        ShowWindow(hBtnInvestigate, SW_SHOW);
+    } else if (sys->phenomenon == 5) {
+        strcpy(phenomStr, "\n[★ PHENOMENON: Ion Storm]");
+        SetWindowText(hBtnInvestigate, "Ion Storm");
+        ShowWindow(hBtnInvestigate, SW_SHOW);
     } else {
         ShowWindow(hBtnInvestigate, SW_HIDE);
     }
 
     char infoText[512];
-    sprintf(infoText, "%s (DOCKED)%s\nSec: %s | Eco: %s\nBuy: F:%d M:%d T:%d\nSel: F:%d M:%d T:%d\nInv: F:%d M:%d T:%d\nE:%d/₭%d C:%d/₭%d\nW:%d/₭%d S:%d/₭%d", 
+    sprintf(infoText, "%s (DOCKED)%s\nSec:%s | Eco:%s\nBuy: F:%d M:%d T:%d Med:%d\nSel: F:%d M:%d T:%d Med:%d\nInv: F:%d M:%d T:%d Med:%d\nE:%d/₭%d C:%d/₭%d W:%d/₭%d S:%d/₭%d", 
         sys->name, phenomStr, sys->sector, sys->economy,
-        GetBuyPrice(sys->food_price), GetBuyPrice(sys->minerals_price), GetBuyPrice(sys->tech_price),
-        GetSellPrice(sys->food_price), GetSellPrice(sys->minerals_price), GetSellPrice(sys->tech_price),
-        cargoFood, cargoMinerals, cargoTech,
+        GetBuyPrice(sys->food_price), GetBuyPrice(sys->minerals_price), GetBuyPrice(sys->tech_price), GetBuyPrice(sys->medicine_price),
+        GetSellPrice(sys->food_price), GetSellPrice(sys->minerals_price), GetSellPrice(sys->tech_price), GetSellPrice(sys->medicine_price),
+        cargoFood, cargoMinerals, cargoTech, cargoMedicine,
         engineLevel, 1000*engineLevel, cargoLevel, 1500*cargoLevel,
         weaponLevel, 2000*weaponLevel, shieldLevel, 2000*shieldLevel);
     SetWindowText(hInfoArea, infoText);
@@ -964,6 +1049,10 @@ void ShowMissionsView(HWND hwnd) {
     ShowWindow(hBtnSellMinerals, SW_HIDE);
     ShowWindow(hBtnBuyTech, SW_HIDE);
     ShowWindow(hBtnSellTech, SW_HIDE);
+    ShowWindow(hBtnBuyMed, SW_HIDE);
+    ShowWindow(hBtnSellMed, SW_HIDE);
+    ShowWindow(hBtnRepair, SW_HIDE);
+    ShowWindow(hBtnRefuel, SW_HIDE);
     ShowWindow(hBtnUpgEngine, SW_HIDE);
     ShowWindow(hBtnUpgCargo, SW_HIDE);
     ShowWindow(hBtnUpgWeapon, SW_HIDE);
@@ -1025,6 +1114,10 @@ void ShowFactionsView(HWND hwnd) {
     ShowWindow(hBtnSellMinerals, SW_HIDE);
     ShowWindow(hBtnBuyTech, SW_HIDE);
     ShowWindow(hBtnSellTech, SW_HIDE);
+    ShowWindow(hBtnBuyMed, SW_HIDE);
+    ShowWindow(hBtnSellMed, SW_HIDE);
+    ShowWindow(hBtnRepair, SW_HIDE);
+    ShowWindow(hBtnRefuel, SW_HIDE);
     ShowWindow(hBtnUpgEngine, SW_HIDE);
     ShowWindow(hBtnUpgCargo, SW_HIDE);
     ShowWindow(hBtnUpgWeapon, SW_HIDE);
@@ -1114,27 +1207,33 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             hDroneThread = CreateThread(NULL, 0, AmbientDroneThread, NULL, 0, NULL);
             
-            hInfoArea = CreateWindow("STATIC", "Select a system on the map for details.", WS_VISIBLE | WS_CHILD, 440, 85, 230, 185, hwnd, NULL, NULL, NULL);
+            hInfoArea = CreateWindow("STATIC", "Select a system on the map for details.", WS_VISIBLE | WS_CHILD, 440, 80, 230, 120, hwnd, NULL, NULL, NULL);
             SendMessage(hInfoArea, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            hBtnBuyFood = CreateWindow("BUTTON", "Buy Food", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 280, 95, 25, hwnd, (HMENU)ID_BTN_BUY_FOOD, NULL, NULL);
-            hBtnSellFood = CreateWindow("BUTTON", "Sell Food", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 280, 95, 25, hwnd, (HMENU)ID_BTN_SELL_FOOD, NULL, NULL);
+            hBtnBuyFood = CreateWindow("BUTTON", "Buy Food", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 205, 95, 22, hwnd, (HMENU)ID_BTN_BUY_FOOD, NULL, NULL);
+            hBtnSellFood = CreateWindow("BUTTON", "Sell Food", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 205, 95, 22, hwnd, (HMENU)ID_BTN_SELL_FOOD, NULL, NULL);
             
-            hBtnBuyMinerals = CreateWindow("BUTTON", "Buy Min", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 310, 95, 25, hwnd, (HMENU)ID_BTN_BUY_MINERALS, NULL, NULL);
-            hBtnSellMinerals = CreateWindow("BUTTON", "Sell Min", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 310, 95, 25, hwnd, (HMENU)ID_BTN_SELL_MINERALS, NULL, NULL);
+            hBtnBuyMinerals = CreateWindow("BUTTON", "Buy Min", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 230, 95, 22, hwnd, (HMENU)ID_BTN_BUY_MINERALS, NULL, NULL);
+            hBtnSellMinerals = CreateWindow("BUTTON", "Sell Min", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 230, 95, 22, hwnd, (HMENU)ID_BTN_SELL_MINERALS, NULL, NULL);
             
-            hBtnBuyTech = CreateWindow("BUTTON", "Buy Tech", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 340, 95, 25, hwnd, (HMENU)ID_BTN_BUY_TECH, NULL, NULL);
-            hBtnSellTech = CreateWindow("BUTTON", "Sell Tech", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 340, 95, 25, hwnd, (HMENU)ID_BTN_SELL_TECH, NULL, NULL);
+            hBtnBuyTech = CreateWindow("BUTTON", "Buy Tech", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 255, 95, 22, hwnd, (HMENU)ID_BTN_BUY_TECH, NULL, NULL);
+            hBtnSellTech = CreateWindow("BUTTON", "Sell Tech", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 255, 95, 22, hwnd, (HMENU)ID_BTN_SELL_TECH, NULL, NULL);
 
-            hBtnCourse = CreateWindow("BUTTON", "Set Course", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 380, 195, 30, hwnd, (HMENU)ID_BTN_SET_COURSE, NULL, NULL);
-            hBtnMissions = CreateWindow("BUTTON", "MISSIONS", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 440, 95, 25, hwnd, (HMENU)ID_BTN_MISSIONS, NULL, NULL);
-            hBtnFactions = CreateWindow("BUTTON", "FACTIONS", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 440, 95, 25, hwnd, (HMENU)ID_BTN_FACTIONS, NULL, NULL);
-            hBtnInvestigate = CreateWindow("BUTTON", "Anomaly", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 470, 195, 25, hwnd, (HMENU)ID_BTN_INVESTIGATE, NULL, NULL);
-            
-            hBtnUpgEngine = CreateWindow("BUTTON", "Upg Eng", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 375, 95, 25, hwnd, (HMENU)ID_BTN_UPG_ENGINE, NULL, NULL);
-            hBtnUpgCargo = CreateWindow("BUTTON", "Upg Cargo", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 375, 95, 25, hwnd, (HMENU)ID_BTN_UPG_CARGO, NULL, NULL);
-            hBtnUpgWeapon = CreateWindow("BUTTON", "Upg Wpn", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 405, 95, 25, hwnd, (HMENU)ID_BTN_UPG_WEAPON, NULL, NULL);
-            hBtnUpgShield = CreateWindow("BUTTON", "Upg Shld", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 405, 95, 25, hwnd, (HMENU)ID_BTN_UPG_SHIELD, NULL, NULL);
+            hBtnBuyMed = CreateWindow("BUTTON", "Buy Med", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 280, 95, 22, hwnd, (HMENU)ID_BTN_BUY_MED, NULL, NULL);
+            hBtnSellMed = CreateWindow("BUTTON", "Sell Med", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 280, 95, 22, hwnd, (HMENU)ID_BTN_SELL_MED, NULL, NULL);
+
+            hBtnRepair = CreateWindow("BUTTON", "Repair", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 305, 95, 22, hwnd, (HMENU)ID_BTN_REPAIR, NULL, NULL);
+            hBtnRefuel = CreateWindow("BUTTON", "Refuel", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 305, 95, 22, hwnd, (HMENU)ID_BTN_REFUEL, NULL, NULL);
+
+            hBtnUpgEngine = CreateWindow("BUTTON", "Upg Eng", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 330, 95, 22, hwnd, (HMENU)ID_BTN_UPG_ENGINE, NULL, NULL);
+            hBtnUpgCargo = CreateWindow("BUTTON", "Upg Cargo", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 330, 95, 22, hwnd, (HMENU)ID_BTN_UPG_CARGO, NULL, NULL);
+            hBtnUpgWeapon = CreateWindow("BUTTON", "Upg Wpn", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 355, 95, 22, hwnd, (HMENU)ID_BTN_UPG_WEAPON, NULL, NULL);
+            hBtnUpgShield = CreateWindow("BUTTON", "Upg Shld", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 355, 95, 22, hwnd, (HMENU)ID_BTN_UPG_SHIELD, NULL, NULL);
+
+            hBtnMissions = CreateWindow("BUTTON", "MISSIONS", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 380, 95, 24, hwnd, (HMENU)ID_BTN_MISSIONS, NULL, NULL);
+            hBtnFactions = CreateWindow("BUTTON", "FACTIONS", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 380, 95, 24, hwnd, (HMENU)ID_BTN_FACTIONS, NULL, NULL);
+            hBtnInvestigate = CreateWindow("BUTTON", "Anomaly", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 408, 195, 24, hwnd, (HMENU)ID_BTN_INVESTIGATE, NULL, NULL);
+            hBtnCourse = CreateWindow("BUTTON", "Set Course", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 440, 195, 30, hwnd, (HMENU)ID_BTN_SET_COURSE, NULL, NULL);
 
             hBtnCombatAttack = CreateWindow("BUTTON", "Attack", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 440, 280, 95, 25, hwnd, (HMENU)ID_BTN_COMBAT_ATTACK, NULL, NULL);
             hBtnCombatEvade = CreateWindow("BUTTON", "Evade", WS_VISIBLE | WS_CHILD | BS_OWNERDRAW, 540, 280, 95, 25, hwnd, (HMENU)ID_BTN_COMBAT_EVADE, NULL, NULL);
@@ -1171,6 +1270,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             ShowWindow(hBtnSellMinerals, SW_HIDE);
             ShowWindow(hBtnBuyTech, SW_HIDE);
             ShowWindow(hBtnSellTech, SW_HIDE);
+            ShowWindow(hBtnBuyMed, SW_HIDE);
+            ShowWindow(hBtnSellMed, SW_HIDE);
+            ShowWindow(hBtnRepair, SW_HIDE);
+            ShowWindow(hBtnRefuel, SW_HIDE);
             ShowWindow(hBtnUpgEngine, SW_HIDE);
             ShowWindow(hBtnUpgCargo, SW_HIDE);
             ShowWindow(hBtnUpgWeapon, SW_HIDE);
