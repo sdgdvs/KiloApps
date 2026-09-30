@@ -541,6 +541,63 @@
     box-shadow: 0 0 8px var(--amber-glow);
   }
 
+  /* Waterfall Spectrogram */
+  .waterfall-box {
+    background: #010307;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px;
+    margin-top: 12px;
+  }
+  .scope-canvas-waterfall {
+    width: 100%;
+    height: 110px;
+    background: #010307;
+    border: 1px solid #1e293b;
+    border-radius: 3px;
+    display: block;
+  }
+
+  /* Modem & Audio Telemetry */
+  .modem-box {
+    background: #040813;
+    border: 1px solid var(--border-amber);
+    padding: 12px;
+    border-radius: 4px;
+    margin-top: 14px;
+  }
+
+  /* Subnet Map & Bunker Topology */
+  .map-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 16px;
+  }
+  @media (max-width: 900px) {
+    .map-layout { grid-template-columns: 1fr; }
+  }
+
+  .node-hud-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px;
+    font-size: 12px;
+  }
+
+  /* Webring 1999 Banner */
+  .webring-box {
+    background: #070d18;
+    border-top: 1px solid var(--border-amber);
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 11px;
+  }
+
   /* Footer Navigation */
   .intranet-footer {
     border-top: 1px solid var(--border-amber);
@@ -604,9 +661,10 @@
 
   <!-- Navigation Tabs -->
   <nav class="tab-nav">
-    <button class="tab-btn active" onclick="switchTab('memos')">📁 Classified Memos [6]</button>
+    <button class="tab-btn active" onclick="switchTab('memos')">📁 Classified Memos [8]</button>
     <button class="tab-btn" onclick="switchTab('hex')">💾 Memory Hex Inspector</button>
     <button class="tab-btn" onclick="switchTab('signal')">📻 Signal Diagnostic &amp; RF Lab</button>
+    <button class="tab-btn" onclick="switchTab('map')">🗺️ Subnet &amp; Bunker Topology</button>
     <button class="tab-btn" onclick="switchTab('packets')">📡 Telemetry &amp; Sniffer</button>
     <button class="tab-btn" onclick="switchTab('terminal')">📟 Skunkworks Terminal</button>
     <button class="tab-btn" onclick="switchTab('verify')">🔐 Hash Verification</button>
@@ -653,6 +711,8 @@
         <option value="0x0024">Sector 0x0024 (Packet Header Offset &amp; Gateway Socket)</option>
         <option value="0x7F00">Sector 0x7F00 (Carlsbad Relay Buffer &amp; Telemetry)</option>
         <option value="0x2000">Sector 0x2000 (Y2K Quarantine &amp; Millennium Watchdog)</option>
+        <option value="0x4242">Sector 0x4242 (Lithospheric Seismic Array &amp; Waveguide)</option>
+        <option value="0x00FF">Sector 0x00FF (Fleet Daemon Duty Rotation Schedule)</option>
       </select>
 
       <span style="color:var(--border);">|</span>
@@ -673,13 +733,23 @@
     <!-- Hex Grid -->
     <div class="hex-grid-container" id="hexGrid"></div>
 
-    <!-- Selected Byte Detail Inspector -->
+    <!-- Selected Byte Detail Inspector & In-Place Editor -->
     <div class="inspector-card" id="byteInspector">
       <div><strong>Offset:</strong> <span id="inspOffset">0x0000 (0)</span></div>
       <div><strong>Hex / Dec:</strong> <span id="inspHex">0x00 / 0</span></div>
       <div><strong>Binary:</strong> <span id="inspBin">00000000</span></div>
       <div><strong>ASCII:</strong> <span id="inspAscii">'.'</span></div>
       <div><strong>x86 Disassembly:</strong> <span id="inspAsm" style="color:var(--amber-bright);">NOP</span></div>
+      <div style="grid-column: 1 / -1; display:flex; align-items:center; gap:8px; flex-wrap:wrap; border-top:1px dashed var(--border); padding-top:8px; margin-top:4px;">
+        <span style="font-weight:700; color:var(--amber-bright);">Patch Byte:</span>
+        <input type="text" id="hexByteEditInput" class="input-retro" placeholder="FF" style="width:45px; text-transform:uppercase;" maxlength="2" />
+        <button class="btn-retro" onclick="applyByteEdit()">✏️ Write Byte</button>
+        <button class="btn-retro" onclick="revertSector()">🔄 Revert Sector</button>
+        <span style="color:var(--border);">|</span>
+        <span>CRC-32: <strong id="sectorCrc32" style="color:var(--cyan-net); font-family:monospace;">--</strong></span>
+        <span>Modifications: <strong id="sectorModCount" style="color:var(--amber-bright);">0</strong></span>
+        <span id="sectorWatchdogStatus" style="color:var(--green-bright); font-weight:bold;">● WATCHDOG: 999KB CEILING OK</span>
+      </div>
     </div>
   </div>
 
@@ -712,6 +782,14 @@
           <canvas class="scope-canvas-large" id="scopeFrequencyFft" width="700" height="130"></canvas>
         </div>
 
+        <div class="scope-box" style="margin-top:12px;">
+          <div class="scope-header">
+            <span>2D REAL-TIME WATERFALL SPECTROGRAM (0 Hz - 4000 Hz)</span>
+            <span id="scopeWaterfallRate">RATE: 60 FPS PHOSPHOR</span>
+          </div>
+          <canvas class="scope-canvas-waterfall" id="scopeWaterfall" width="700" height="110"></canvas>
+        </div>
+
         <!-- Demodulator Output Log -->
         <div style="margin-top:12px;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
@@ -722,6 +800,30 @@
             [1999-12-28 00:00:01] SUBCARRIER DEMODULATOR LOCKED TO 1999 HZ (YM2612 OP1:OP2 = 1:1)<br>
             [1999-12-28 00:00:03] PACKET STREAM SYNCHRONIZED ACROSS GATEWAY SOCKET 10.19.99.4:1999<br>
             [1999-12-28 00:00:07] DECODING HARMONIC BURST: "PKT.10.19.99.4 [SUB:1999Hz] CARLSBAD_RELAY_0x7F ACTIVE"
+          </div>
+        </div>
+
+        <!-- Subcarrier Audio Modem -->
+        <div class="modem-box">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <strong style="color:var(--cyan-net); font-size:12px;">📟 SUBCARRIER AUDIO MODEM &amp; TELEMETRY ENCODER</strong>
+            <span style="font-size:11px; color:var(--green-bright);" id="modemStatus">IDLE / CARRIER SYNCHRONIZED</span>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+            <select id="modemModeSelect" class="input-retro" style="font-size:11px;">
+              <option value="fsk">Bell 202 FSK (1200 / 2200 Hz)</option>
+              <option value="morse">1999Hz Subcarrier Morse</option>
+              <option value="litho">432Hz Lithospheric Waveguide</option>
+            </select>
+            <input type="text" id="modemTextInput" class="input-retro" placeholder="Enter message to modulate..." value="10.19.99.4 ECHO_RECOVERY ACK" style="flex:1; min-width:180px;" />
+            <button class="btn-retro" onclick="transmitModemMessage()">⚡ Transmit Burst</button>
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+            <span style="font-size:11px; color:var(--text-muted);">Presets:</span>
+            <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="setModemPreset('10.19.99.4 ECHO_SYNC')">10.19.99.4 ECHO</button>
+            <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="setModemPreset('CARLSBAD_0x7F AIRGAP_ACK')">CARLSBAD 0x7F</button>
+            <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="setModemPreset('CEILING_999KB WATCHDOG_OK')">CEILING 999KB</button>
+            <button class="btn-retro" style="font-size:10px; padding:2px 6px;" onclick="setModemPreset('YM2612_CH6 HARMONIC_LOCK')">YM2612 LOCK</button>
           </div>
         </div>
       </div>
@@ -850,7 +952,48 @@
     </div>
   </div>
 
-  <!-- TAB 4: TELEMETRY & PACKET SNIFFER -->
+  <!-- TAB 4: SUBNET & BUNKER TOPOLOGY -->
+  <div id="tab-map" class="tab-pane">
+    <div style="background:#090e1a; border:1px solid var(--border); padding:10px 14px; margin-bottom:14px; border-radius:4px; font-size:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <div>
+        <strong style="color:var(--amber-bright);">CARLSBAD SUBTERRANEAN STATION 0x7F GEOLOGICAL TOPOLOGY:</strong>
+        <p style="color:var(--text-muted); margin-top:2px;">
+          Halite salt formation lithospheric cross-section &amp; 10.19.99.0/24 subnet capacitive RF waveguide.
+        </p>
+      </div>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-retro" onclick="testGroundWaveCoupling()">⚡ Pulse Ground Wave</button>
+        <button class="btn-retro" onclick="resetMapSelection()">🔄 Reset View</button>
+      </div>
+    </div>
+
+    <div class="map-layout">
+      <!-- Canvas Geological Cross Section -->
+      <div style="background:#02050b; border:1px solid var(--border-amber); border-radius:4px; padding:10px; position:relative;">
+        <canvas id="bunkerMapCanvas" width="700" height="380" style="width:100%; height:380px; display:block; cursor:crosshair;"></canvas>
+        <div style="position:absolute; bottom:14px; left:16px; font-size:10px; color:var(--text-muted); background:rgba(4,7,14,0.85); padding:4px 8px; border-radius:3px; border:1px solid var(--border);">
+          Depth: 0m (Surface) to -750m (Deep Airgap Vault) &bull; Click any node to query telemetry
+        </div>
+      </div>
+
+      <!-- Node Engineering Details HUD -->
+      <div class="node-hud-card">
+        <h4 style="color:var(--cyan-net); border-bottom:1px solid var(--border); padding-bottom:6px; margin-bottom:10px;" id="nodeHudTitle">
+          SELECTED NODE: 10.19.99.4
+        </h4>
+        <div style="display:flex; flex-direction:column; gap:8px;" id="nodeHudDetails">
+          <!-- Populated dynamically -->
+        </div>
+        <div style="margin-top:14px; padding-top:10px; border-top:1px dashed var(--border); display:flex; flex-direction:column; gap:6px;">
+          <button class="btn-retro" onclick="pingSelectedNode()">📡 Ping Host across Subnet</button>
+          <button class="btn-retro" onclick="traceRouteToSelectedNode()">🛤️ Trace Kernel Route</button>
+          <button class="btn-retro" onclick="probeSelectedNodeCarrier()">📻 Probe RF Subcarrier</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 5: TELEMETRY & PACKET SNIFFER -->
   <div id="tab-packets" class="tab-pane">
     <div class="sniffer-toolbar">
       <button class="btn-retro" id="btnSnifferToggle" onclick="toggleSniffer()">⏸️ Pause Stream</button>
@@ -898,7 +1041,7 @@
     </div>
   </div>
 
-  <!-- TAB 5: SKUNKWORKS TERMINAL -->
+  <!-- TAB 6: SKUNKWORKS TERMINAL -->
   <div id="tab-terminal" class="tab-pane">
     <div class="term-container">
       <div class="term-logs" id="termLogs"></div>
@@ -909,7 +1052,7 @@
     </div>
   </div>
 
-  <!-- TAB 6: CRYPTOGRAPHIC HASH VERIFICATION -->
+  <!-- TAB 7: CRYPTOGRAPHIC HASH VERIFICATION -->
   <div id="tab-verify" class="tab-pane">
     <div style="background:var(--bg-card); border:1px solid var(--border); padding:16px; border-radius:4px; margin-bottom:14px;">
       <h3 style="color:var(--amber-bright); margin-bottom:8px;">★ Subnet Cryptographic Checksum Registry ★</h3>
@@ -945,6 +1088,21 @@
           <td style="padding:6px; font-family:monospace; color:#cbd5e1;">8f2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b...</td>
         </tr>
       </table>
+    </div>
+  </div>
+
+  <!-- Webring 1999 Navigation Banner -->
+  <div class="webring-box">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <span style="background:var(--amber-primary); color:#000; font-weight:bold; padding:2px 6px; border-radius:2px; font-size:10px;">KILORING '99</span>
+      <span style="color:var(--text-main);">Node <strong>10.19.99.4/classified</strong> is a linked station in the <strong>KiloRing-99 Hypermedia Webring</strong>.</span>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center;">
+      <a href="/web/users/neon_rider.html" style="color:var(--cyan-net); text-decoration:none;">« [Prev: ~neon_rider]</a>
+      <span style="color:var(--border);">|</span>
+      <a href="/web/webring.html" style="color:var(--amber-bright); text-decoration:none;">[Webring Hub]</a>
+      <span style="color:var(--border);">|</span>
+      <a href="/web/echo_subsystem.html" style="color:var(--cyan-net); text-decoration:none;">[Next: Echo Subsystem] »</a>
     </div>
   </div>
 
@@ -1307,6 +1465,34 @@ function startVisualizers() {
         peakEl.textContent = `PEAK: ${peakFreq} Hz [${Math.round((maxVal / 255) * -40)} dB]`;
       }
     }
+
+    // 2D Real-time Waterfall Spectrogram
+    const canvasWaterfall = document.getElementById('scopeWaterfall');
+    if (canvasWaterfall && analyserNode) {
+      analyserNode.getByteFrequencyData(freqData);
+      const ctxW = canvasWaterfall.getContext('2d');
+      const w = canvasWaterfall.width;
+      const h = canvasWaterfall.height;
+
+      // Shift previous rows down by 1 pixel
+      ctxW.drawImage(canvasWaterfall, 0, 0, w, h - 1, 0, 1, w, h - 1);
+
+      // Render new scanline row at top
+      const step = w / bufferLength;
+      for (let i = 0; i < bufferLength; i++) {
+        const val = freqData[i];
+        let color = '#010307';
+        if (val > 190) color = '#ffffff';
+        else if (val > 150) color = '#38bdf8';
+        else if (val > 100) color = '#34d399';
+        else if (val > 50) color = '#fbbf24';
+        else if (val > 15) color = '#f59e0b';
+        else if (val > 4) color = '#1e293b';
+
+        ctxW.fillStyle = color;
+        ctxW.fillRect(i * step, 0, step + 1, 1);
+      }
+    }
   }
 
   drawMini();
@@ -1325,6 +1511,152 @@ function stopVisualizers() {
     ctx.fillStyle = '#020408';
     ctx.fillRect(0, 0, canvasMini.width, canvasMini.height);
   }
+  const canvasWaterfall = document.getElementById('scopeWaterfall');
+  if (canvasWaterfall) {
+    const ctx = canvasWaterfall.getContext('2d');
+    ctx.fillStyle = '#010307';
+    ctx.fillRect(0, 0, canvasWaterfall.width, canvasWaterfall.height);
+  }
+}
+
+/* =========================================================================
+   SUBCARRIER AUDIO MODEM & TELEMETRY ENCODER
+   ========================================================================= */
+let isModemBusy = false;
+
+function setModemPreset(txt) {
+  const inp = document.getElementById('modemTextInput');
+  if (inp) inp.value = txt;
+}
+
+async function transmitModemMessage() {
+  if (isModemBusy) return;
+  const inputEl = document.getElementById('modemTextInput');
+  const modeEl = document.getElementById('modemModeSelect');
+  const statusEl = document.getElementById('modemStatus');
+  const msg = (inputEl ? inputEl.value : '').trim().toUpperCase();
+  const mode = modeEl ? modeEl.value : 'fsk';
+
+  if (!msg) return;
+
+  initAudio();
+  if (audioCtx && audioCtx.state === 'suspended') {
+    await audioCtx.resume();
+  }
+
+  isModemBusy = true;
+  if (statusEl) {
+    statusEl.textContent = `TRANSMITTING [${mode.toUpperCase()}]...`;
+    statusEl.style.color = 'var(--amber-bright)';
+  }
+
+  const demod = document.getElementById('demodConsole');
+  const nowTime = new Date().toTimeString().split(' ')[0];
+  const burstDiv = document.createElement('div');
+  burstDiv.innerHTML = `[1999-12-28 ${nowTime}] <span style="color:var(--cyan-net);">📡 MODEM TX [${mode.toUpperCase()}]:</span> "<strong>${msg}</strong>"`;
+  demod.appendChild(burstDiv);
+
+  if (mode === 'fsk') {
+    // Bell 202 FSK: Mark 1200Hz, Space 2200Hz
+    const bitDuration = 0.045; // ~22 baud simulation for audible clarity
+    for (let c = 0; c < msg.length; c++) {
+      const charCode = msg.charCodeAt(c);
+      // 1 start bit (0), 8 data bits, 1 stop bit (1)
+      const bits = [0];
+      for (let b = 0; b < 8; b++) {
+        bits.push((charCode >> b) & 1);
+      }
+      bits.push(1);
+
+      for (let bit of bits) {
+        const freq = bit === 1 ? 1200 : 2200;
+        playModemTone(freq, bitDuration);
+        await new Promise(r => setTimeout(r, bitDuration * 1000));
+      }
+
+      // Log character to demodulator
+      const charSpan = document.createElement('span');
+      charSpan.textContent = msg[c];
+      charSpan.style.color = 'var(--green-bright)';
+      charSpan.style.fontWeight = 'bold';
+      burstDiv.appendChild(charSpan);
+      demod.scrollTop = demod.scrollHeight;
+    }
+  } else if (mode === 'morse') {
+    // 1999Hz Subcarrier Morse
+    const MORSE_MAP = {
+      'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
+      'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+      'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
+      'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+      'Y': '-.--', 'Z': '--..', '0': '-----', '1': '.----', '2': '..---',
+      '3': '...--', '4': '....-', '5': '.....', '6': '-....', '7': '--...',
+      '8': '---..', '9': '----.', ' ': '/', '.': '.-.-.-', ':': '---...',
+      '-': '-....-', '_': '..--.-'
+    };
+    const dotDuration = 0.06;
+    for (let c = 0; c < msg.length; c++) {
+      const char = msg[c];
+      const morse = MORSE_MAP[char] || '?';
+      for (let m = 0; m < morse.length; m++) {
+        if (morse[m] === '.') {
+          playModemTone(1999, dotDuration);
+          await new Promise(r => setTimeout(r, (dotDuration + 0.02) * 1000));
+        } else if (morse[m] === '-') {
+          playModemTone(1999, dotDuration * 3);
+          await new Promise(r => setTimeout(r, (dotDuration * 3 + 0.02) * 1000));
+        } else if (morse[m] === '/') {
+          await new Promise(r => setTimeout(r, dotDuration * 4 * 1000));
+        }
+      }
+      await new Promise(r => setTimeout(r, dotDuration * 2 * 1000));
+      const charSpan = document.createElement('span');
+      charSpan.textContent = char;
+      charSpan.style.color = 'var(--amber-bright)';
+      burstDiv.appendChild(charSpan);
+      demod.scrollTop = demod.scrollHeight;
+    }
+  } else {
+    // 432Hz Lithospheric Waveguide
+    for (let c = 0; c < msg.length; c++) {
+      playModemTone(432 + (msg.charCodeAt(c) % 8) * 54, 0.09);
+      await new Promise(r => setTimeout(r, 95));
+      const charSpan = document.createElement('span');
+      charSpan.textContent = msg[c];
+      charSpan.style.color = 'var(--cyan-net)';
+      burstDiv.appendChild(charSpan);
+      demod.scrollTop = demod.scrollHeight;
+    }
+  }
+
+  const confirmMsg = document.createElement('div');
+  confirmMsg.style.fontSize = '10px';
+  confirmMsg.style.color = 'var(--green-bright)';
+  confirmMsg.innerHTML = `↳ [BURST COMPLETED &bull; 10.19.99.4 CARRIER ACK RECEIVED &bull; CHECKSUM OK]`;
+  demod.appendChild(confirmMsg);
+  demod.scrollTop = demod.scrollHeight;
+
+  isModemBusy = false;
+  if (statusEl) {
+    statusEl.textContent = 'IDLE / CARRIER SYNCHRONIZED';
+    statusEl.style.color = 'var(--green-bright)';
+  }
+}
+
+function playModemTone(freq, duration) {
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(freq, now);
+  g.gain.setValueAtTime(0.06, now);
+  g.gain.exponentialRampToValueAtTime(0.001, now + duration);
+  osc.connect(g);
+  g.connect(audioCtx.destination);
+  if (delayNode) g.connect(delayNode);
+  osc.start(now);
+  osc.stop(now + duration);
 }
 
 function runSubnetSweep() {
@@ -1514,6 +1846,57 @@ Because physical copper cabling to the surface was severed in Phase II, data pac
 
 3. INTEGRITY PROTOCOL
 Do not interrupt the 1999Hz subcarrier tone. If the carrier fades, the airgap bridge will decouple, isolating the subterranean vault from the KNet webring.`
+  },
+  {
+    id: 'MEMO-99-07',
+    title: 'Lithospheric Ground Loop Antenna & Halite Waveguide Analysis',
+    author: 'E. Thorne & Dr. V. Vance, Carlsbad RF Directorate',
+    recipient: 'Subterranean Infrastructure Operations',
+    date: '1999-12-26',
+    security: 'SECRET // WAVEGUIDE CLEARANCE',
+    digest: '3344556677889900aabbccddeeff001122334455',
+    snippet: 'Electromagnetic propagation across halite rock salt beds establishing non-radiating airgap coupling at 1999Hz.',
+    body: `TECHNICAL DIRECTIVE: CR-WAVE-99-07
+FROM: E. Thorne & Dr. V. Vance, Carlsbad RF Directorate
+TO: Subterranean Infrastructure Operations
+DATE: December 26, 1999
+SUBJECT: Bedded Halite Waveguide & Subcarrier Coupling
+
+1. WAVEGUIDE PHENOMENON
+The Salado formation consists of bedded halite salt with ultra-low moisture conductivity (&lt;10^-8 S/m). This geological layer behaves as a natural dielectric waveguide. RF energy injected into the grounding array at <span class="redacted" data-secret="1999 Hz">1999 Hz</span> reflects off the overlying Rustler anhydrite boundary, channeling packets directly between the surface gateway (10.19.99.1) and station vault (10.19.99.4).
+
+2. SPECTROGRAPHIC PROFILE
+Spectral analysis demonstrates a razor-sharp peak at exactly 1999.00 Hz with harmonic sidebands at 19.99 Hz intervals. The signal is immune to atmospheric lightning bursts and electromagnetic pulses.
+
+3. AIRGAP BRIDGE MAINTENANCE
+Operators must monitor the 2D waterfall spectrogram. Any drift beyond &plusmn;0.5 Hz indicates thermal expansion in the rock salt array requiring immediate capacitive trim calibration.`
+  },
+  {
+    id: 'MEMO-99-08',
+    title: 'Y2K Watchdog Microcode & Millennium Roll-Over Quarantine',
+    author: 'SecOps Officer T. Sterling, Systems Integrity Bureau',
+    recipient: 'All Carlsbad Infrastructure Nodes',
+    date: '1999-12-29',
+    security: 'TOP SECRET // WATCHDOG ENFORCEMENT',
+    digest: '6677889900aabbccddeeff001122334455667788',
+    snippet: 'Hard quarantine protocol locking the 999KB ROM boundary against 32-bit timestamp rollover anomalies.',
+    body: `INCIDENT PRECAUTION: AD-WATCHDOG-99-08
+FROM: SecOps Officer T. Sterling, Systems Integrity Bureau
+TO: All Carlsbad Infrastructure Nodes
+DATE: December 29, 1999
+SUBJECT: Y2K Watchdog Microcode & Sector Latch-Up Mitigation
+
+1. THREAT VECTOR
+At 23:59:59 UTC on December 31, 1999, legacy RTC chipsets risk emitting non-monotonic timestamp cascades. If an application attempts to buffer past its allocated memory boundary, corrupt pointers could cascade across the Carlsbad grounding grid.
+
+2. WATCHDOG LATCH-UP SYSTEM
+To safeguard the repository, Sector 0x2000 has been configured with an autonomous hardware watchdog:
+  &bull; HARD CEILING: Strictly enforced at <span class="redacted" data-secret="999 KB (1,022,976 Bytes)">999 KB</span>.
+  &bull; WATCHDOG ACTION: Any memory write attempting to allocate byte 1,022,977 triggers an immediate kernel latch-up, rejecting the payload.
+  &bull; PRESERVATION: The 999KB constraint guarantees clean, bloat-free system recovery under all post-millennium conditions.
+
+3. AUTONOMOUS ROTATION
+When human presence concludes on midnight, the six maintenance daemons will assume rotating watchdog cycles in perpetual succession.`
   }
 ];
 
@@ -1641,14 +2024,106 @@ function exportActiveMemo() {
 }
 
 /* =========================================================================
-   3. MEMORY HEX INSPECTOR (SECTORS 0x1999, 0x0024, 0x7F00, 0x2000)
+   3. MEMORY HEX INSPECTOR (SECTORS 0x1999, 0x0024, 0x7F00, 0x2000, 0x4242, 0x00FF)
    ========================================================================= */
 const SECTORS = {
   '0x1999': generateSectorData('0x1999', 'KERNEL_ECHO_CORE\x0010.19.99.4\x00CEILING_999KB\x00CARLSBAD_0x7F\x001999HZ_SUB_LOCK\x00PERPETUAL_ROTATIONAL_SYNC'),
   '0x0024': generateSectorData('0x0024', 'IP_10.19.99.4:1999\x00URI:kweb://10.19.99.4/classified [GATEWAY_ARMED]\x00AIRGAP_BYPASS_ACK'),
   '0x7F00': generateSectorData('0x7F00', 'BEACON_STATION_0x7F\x00LITHOSPHERE_WAVEGUIDE\x00CARLSBAD_SALT_VAULT\x00HASH_VERIFY_ACTIVE'),
-  '0x2000': generateSectorData('0x2000', 'Y2K_QUARANTINE_SECTOR\x00MILLENNIUM_WATCHDOG_ARMED\x00PREVENT_MEMORY_CASCADE\x00HALT_ENTROPY')
+  '0x2000': generateSectorData('0x2000', 'Y2K_QUARANTINE_SECTOR\x00MILLENNIUM_WATCHDOG_ARMED\x00PREVENT_MEMORY_CASCADE\x00HALT_ENTROPY'),
+  '0x4242': generateSectorData('0x4242', 'LITHOSPHERE_SEISMIC_REGISTER\x00GROUND_LOOP_ROD_COUPLING\x00HALITE_CAVERN_0x7F\x00RESONANCE_432HZ_1999HZ'),
+  '0x00FF': generateSectorData('0x00FF', 'FLEET_MODULE_SCHEDULE\x00ALPHA_GENESIS\x00BETA_VISUAL_AUDIO\x00GAMMA_VERIFY\x00DELTA_ERGONOMICS\x00EPSILON_WATCHDOG\x00ZETA_EXPAND')
 };
+
+const ORIGINAL_SECTORS = {};
+for (const k in SECTORS) {
+  ORIGINAL_SECTORS[k] = new Uint8Array(SECTORS[k]);
+}
+let sectorModCount = 0;
+
+const CRC_TABLE = (() => {
+  let c;
+  const table = [];
+  for (let n = 0; n < 256; n++) {
+    c = n;
+    for (let k = 0; k < 8; k++) {
+      c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+    }
+    table[n] = c;
+  }
+  return table;
+})();
+
+function calcCrc32(bytes) {
+  let crc = 0 ^ (-1);
+  for (let i = 0; i < bytes.length; i++) {
+    crc = (crc >>> 8) ^ CRC_TABLE[(crc ^ bytes[i]) & 0xFF];
+  }
+  return ((crc ^ (-1)) >>> 0).toString(16).toUpperCase().padStart(8, '0');
+}
+
+function updateSectorChecksums() {
+  const bytes = SECTORS[currentSectorKey];
+  if (!bytes) return;
+  const crcEl = document.getElementById('sectorCrc32');
+  const modEl = document.getElementById('sectorModCount');
+  if (crcEl) crcEl.textContent = calcCrc32(bytes);
+  if (modEl) modEl.textContent = sectorModCount;
+}
+
+function checkSectorWatchdog() {
+  const bytes = SECTORS[currentSectorKey];
+  const wdEl = document.getElementById('sectorWatchdogStatus');
+  if (!wdEl || !bytes) return;
+
+  let str = '';
+  for (let i = 0; i < bytes.length; i++) {
+    str += String.fromCharCode(bytes[i]);
+  }
+  if (!str.includes('999KB') && currentSectorKey === '0x1999') {
+    wdEl.textContent = '⚠️ WATCHDOG: 999KB CONSTRAINT ALTERED [MONITORING]';
+    wdEl.style.color = 'var(--red-alert)';
+  } else if (!str.includes('1999HZ') && currentSectorKey === '0x1999') {
+    wdEl.textContent = '⚠️ WATCHDOG: 1999HZ CARRIER LOCK DESYNC';
+    wdEl.style.color = 'var(--amber-bright)';
+  } else {
+    wdEl.textContent = '● WATCHDOG: 999KB CEILING OK';
+    wdEl.style.color = 'var(--green-bright)';
+  }
+}
+
+function applyByteEdit() {
+  const inp = document.getElementById('hexByteEditInput');
+  if (!inp) return;
+  const hexStr = inp.value.trim();
+  const val = parseInt(hexStr, 16);
+  if (isNaN(val) || val < 0 || val > 255) {
+    alert('Please enter a valid 2-digit hex byte (e.g. 00 to FF).');
+    return;
+  }
+  const bytes = SECTORS[currentSectorKey];
+  if (!bytes) return;
+
+  bytes[selectedByteOffset] = val;
+  sectorModCount++;
+  renderHexGrid();
+  inspectByte(selectedByteOffset);
+  updateSectorChecksums();
+  checkSectorWatchdog();
+  playKeystrokeTone();
+}
+
+function revertSector() {
+  if (ORIGINAL_SECTORS[currentSectorKey]) {
+    SECTORS[currentSectorKey] = new Uint8Array(ORIGINAL_SECTORS[currentSectorKey]);
+    sectorModCount = 0;
+    renderHexGrid();
+    inspectByte(selectedByteOffset);
+    updateSectorChecksums();
+    checkSectorWatchdog();
+    playKeystrokeTone();
+  }
+}
 
 let currentSectorKey = '0x1999';
 let selectedByteOffset = 0;
@@ -1670,6 +2145,8 @@ function loadSector(sectorKey) {
   currentSectorKey = sectorKey;
   renderHexGrid();
   inspectByte(0);
+  updateSectorChecksums();
+  checkSectorWatchdog();
 }
 
 function renderHexGrid() {
@@ -1741,6 +2218,10 @@ function inspectByte(idx) {
 
   document.querySelectorAll('.hex-byte.selected').forEach(el => el.classList.remove('selected'));
   document.querySelectorAll(`.hex-byte[data-idx="${idx}"]`).forEach(el => el.classList.add('selected'));
+  
+  const editInput = document.getElementById('hexByteEditInput');
+  if (editInput) editInput.value = b.toString(16).toUpperCase().padStart(2, '0');
+
   playKeystrokeTone();
 }
 
@@ -1791,7 +2272,302 @@ function downloadRawSector() {
 }
 
 /* =========================================================================
-   4. TELEMETRY & PACKET SNIFFER
+   4. CARLSBAD SUBTERRANEAN TOPOLOGY & SUBNET MAP
+   ========================================================================= */
+const BUNKER_NODES = [
+  {
+    id: '10.19.99.1',
+    name: 'Carlsbad Surface Backbone Gateway',
+    depth: '0m [Surface]',
+    x: 350,
+    y: 40,
+    mac: '00:60:97:19:99:01',
+    arch: 'Cisco 7206VXR / MicroOS Router v1.99',
+    carrier: '1000 Hz Clock Sync',
+    snr: '38.4 dB',
+    status: 'SYNCHRONIZED',
+    statusColor: 'var(--green-bright)',
+    desc: 'Surface microwave dish & T1 backbone uplink to KNet surface portal and public routing mesh.'
+  },
+  {
+    id: '10.19.99.12',
+    name: 'Subcarrier RF Telemetry Beacon',
+    depth: '-400m [Rustler Formation]',
+    x: 230,
+    y: 160,
+    mac: '00:20:AF:19:99:12',
+    arch: 'DEC Alpha 21264 667MHz',
+    carrier: '1999 Hz Harmonic Repeater',
+    snr: '41.0 dB',
+    status: 'HARMONIC COUPLING',
+    statusColor: 'var(--cyan-net)',
+    desc: 'Lithospheric beacon repeater maintaining capacitive RF synchronization between surface rods and bunker array.'
+  },
+  {
+    id: '10.19.99.4',
+    name: 'Project Echo Corporate Repository',
+    depth: '-650m [Salado Halite Bed]',
+    x: 470,
+    y: 250,
+    mac: '00:80:C8:19:99:04',
+    arch: 'Dual Pentium Pro 200MHz / MicroOS Server',
+    carrier: '1999 Hz Audio Bleed (Active)',
+    snr: '46.2 dB',
+    status: 'ACTIVE HOST [999KB PARTITION]',
+    statusColor: 'var(--amber-bright)',
+    desc: 'Classified intranet skunkworks archive, memory hex inspector, and primary capacitive ground circuit anchor.'
+  },
+  {
+    id: '10.19.99.19',
+    name: 'Echo Subsystem Acoustic Lab',
+    depth: '-650m [Adjacent Halite Cavern]',
+    x: 180,
+    y: 260,
+    mac: '00:00:E8:19:99:19',
+    arch: 'SGI Octane R12000 (echo-subsystem.net)',
+    carrier: '432 Hz / 1999 Hz Dual Monitor',
+    snr: '34.5 dB',
+    status: 'STANDBY MONITORING',
+    statusColor: 'var(--text-muted)',
+    desc: 'Research laboratory monitoring acoustic subcarriers, Morse bursts, and lithospheric resonance.'
+  },
+  {
+    id: '10.19.99.127',
+    name: 'Carlsbad Salt Vault Core Airgap',
+    depth: '-750m [Deep Halite Vault]',
+    x: 350,
+    y: 330,
+    mac: '00:00:00:19:99:7F',
+    arch: 'Radiation-Hardened MIPS R4400 Airgap Core',
+    carrier: 'Airgapped [Offset 0x7F Gateway]',
+    snr: '12.8 dB',
+    status: 'AIRGAPPED [NODE 0x7F]',
+    statusColor: 'var(--red-alert)',
+    desc: 'Subterranean airgap core protected by 100-meter halite shielding. Accessible only via capacitive ground loop induction.'
+  }
+];
+
+let selectedNodeId = '10.19.99.4';
+let groundPulseProgress = -1;
+let groundPulseTimer = null;
+
+function initBunkerMap() {
+  const canvas = document.getElementById('bunkerMapCanvas');
+  if (!canvas) return;
+
+  canvas.addEventListener('click', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const mx = (e.clientX - rect.left) * scaleX;
+    const my = (e.clientY - rect.top) * scaleY;
+
+    let closest = null;
+    let minDist = 36;
+    BUNKER_NODES.forEach(n => {
+      const d = Math.hypot(n.x - mx, n.y - my);
+      if (d < minDist) {
+        minDist = d;
+        closest = n;
+      }
+    });
+
+    if (closest) {
+      selectBunkerNode(closest.id);
+      playKeystrokeTone();
+    }
+  });
+
+  selectBunkerNode('10.19.99.4');
+  drawBunkerMap();
+}
+
+function selectBunkerNode(nodeId) {
+  selectedNodeId = nodeId;
+  const node = BUNKER_NODES.find(n => n.id === nodeId);
+  if (!node) return;
+
+  const titleEl = document.getElementById('nodeHudTitle');
+  if (titleEl) titleEl.textContent = `SELECTED NODE: ${node.id} (${node.name.split(' ')[0]})`;
+
+  const detailsEl = document.getElementById('nodeHudDetails');
+  if (detailsEl) {
+    detailsEl.innerHTML = `
+      <div><span style="color:var(--text-muted);">Hostname:</span> <strong>${node.name}</strong></div>
+      <div><span style="color:var(--text-muted);">Physical Depth:</span> <strong style="color:var(--cyan-net);">${node.depth}</strong></div>
+      <div><span style="color:var(--text-muted);">Hardware Arch:</span> <code>${node.arch}</code></div>
+      <div><span style="color:var(--text-muted);">MAC Address:</span> <code>${node.mac}</code></div>
+      <div><span style="color:var(--text-muted);">Carrier Link:</span> <strong style="color:var(--amber-bright);">${node.carrier}</strong></div>
+      <div><span style="color:var(--text-muted);">Signal-to-Noise:</span> <strong>${node.snr}</strong></div>
+      <div><span style="color:var(--text-muted);">Operational Status:</span> <strong style="color:${node.statusColor};">${node.status}</strong></div>
+      <div style="font-size:11px; color:#94a3b8; margin-top:4px; line-height:1.4;">${node.desc}</div>
+    `;
+  }
+  drawBunkerMap();
+}
+
+function drawBunkerMap() {
+  const canvas = document.getElementById('bunkerMapCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  // Background
+  ctx.fillStyle = '#02050b';
+  ctx.fillRect(0, 0, w, h);
+
+  // Layer 1: Surface (y=0 to y=60)
+  ctx.fillStyle = '#060a14';
+  ctx.fillRect(0, 0, w, 60);
+
+  // Ground line
+  ctx.strokeStyle = '#475569';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, 60);
+  ctx.lineTo(w, 60);
+  ctx.stroke();
+
+  // Layer 2: Alluvium (-150m, y=60 to y=120)
+  ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+  ctx.fillRect(0, 60, w, 60);
+
+  // Layer 3: Rustler Formation (-400m, y=120 to y=200)
+  ctx.fillStyle = 'rgba(17, 24, 39, 0.95)';
+  ctx.fillRect(0, 120, w, 80);
+
+  // Layer 4: Salado Bedded Halite Rock Salt (-650m, y=200 to y=300)
+  ctx.fillStyle = 'rgba(8, 14, 28, 0.98)';
+  ctx.fillRect(0, 200, w, 100);
+
+  // Layer 5: Deep Salt Vault Airgap (-750m, y=300 to y=380)
+  ctx.fillStyle = '#03060d';
+  ctx.fillRect(0, 300, w, 80);
+
+  // Strata boundary text
+  ctx.font = '10px Consolas, monospace';
+  ctx.fillStyle = '#64748b';
+  ctx.fillText('SURFACE 0m [DESERT TERRAIN & GATEWAY TOWER]', 12, 52);
+  ctx.fillText('ALLUVIAL SEDIMENT [-150m] (GROUND ROD GRID)', 12, 112);
+  ctx.fillText('RUSTLER ANHYDRITE [-400m] (BEACON REPEATER)', 12, 192);
+  ctx.fillText('SALADO HALITE ROCK SALT [-650m] (WAVEGUIDE BED)', 12, 292);
+  ctx.fillText('CARLSBAD DEEP AIRGAP VAULT [-750m] (NODE 0x7F CORE)', 12, 372);
+
+  // Draw capacitive grounding connection line
+  ctx.strokeStyle = 'rgba(245, 158, 11, 0.35)';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 4]);
+
+  const n1 = BUNKER_NODES[0];
+  const n12 = BUNKER_NODES[1];
+  const n4 = BUNKER_NODES[2];
+  const n19 = BUNKER_NODES[3];
+  const n127 = BUNKER_NODES[4];
+
+  ctx.beginPath();
+  ctx.moveTo(n1.x, n1.y);
+  ctx.lineTo(n12.x, n12.y);
+  ctx.lineTo(n4.x, n4.y);
+  ctx.lineTo(n127.x, n127.y);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(n4.x, n4.y);
+  ctx.lineTo(n19.x, n19.y);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Ground pulse wave
+  if (groundPulseProgress >= 0) {
+    const pulseY = 60 + groundPulseProgress * 280;
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.7)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(w / 2, pulseY, 60 + groundPulseProgress * 80, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Draw nodes
+  BUNKER_NODES.forEach(n => {
+    const isSel = n.id === selectedNodeId;
+
+    if (isSel) {
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.25)';
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, 18, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.fillStyle = isSel ? '#f59e0b' : '#0f172a';
+    ctx.strokeStyle = isSel ? '#ffffff' : (n.id === '10.19.99.4' ? '#f59e0b' : '#38bdf8');
+    ctx.lineWidth = isSel ? 2 : 1.5;
+    ctx.beginPath();
+    ctx.arc(n.x, n.y, 9, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = isSel ? 'bold 11px Consolas, monospace' : '10px Consolas, monospace';
+    ctx.fillStyle = isSel ? '#ffffff' : '#cbd5e1';
+    ctx.fillText(n.id, n.x + 14, n.y - 2);
+
+    ctx.font = '9px Consolas, monospace';
+    ctx.fillStyle = '#94a3b8';
+    ctx.fillText(n.name.split(' ')[0], n.x + 14, n.y + 10);
+  });
+}
+
+function testGroundWaveCoupling() {
+  playKeystrokeTone();
+  groundPulseProgress = 0;
+  if (groundPulseTimer) clearInterval(groundPulseTimer);
+
+  groundPulseTimer = setInterval(() => {
+    groundPulseProgress += 0.04;
+    drawBunkerMap();
+    if (groundPulseProgress >= 1.0) {
+      clearInterval(groundPulseTimer);
+      groundPulseProgress = -1;
+      drawBunkerMap();
+    }
+  }, 35);
+
+  const demod = document.getElementById('demodConsole');
+  if (demod) {
+    const nowTime = new Date().toTimeString().split(' ')[0];
+    const logP = document.createElement('div');
+    logP.innerHTML = `[1999-12-28 ${nowTime}] <span style="color:var(--cyan-net);">⚡ GROUND WAVE INDUCTION PULSE:</span> 1999Hz coupling across Salado halite formation -> 10.19.99.4 latency = 0.88ms [AIRGAP REFLECTION VERIFIED]`;
+    demod.appendChild(logP);
+    demod.scrollTop = demod.scrollHeight;
+  }
+}
+
+function resetMapSelection() {
+  selectBunkerNode('10.19.99.4');
+}
+
+function pingSelectedNode() {
+  playKeystrokeTone();
+  const node = BUNKER_NODES.find(n => n.id === selectedNodeId);
+  const target = node ? node.id : '10.19.99.4';
+  switchTab('terminal');
+  execTermCommand(`ping ${target}`);
+}
+
+function traceRouteToSelectedNode() {
+  playKeystrokeTone();
+  switchTab('terminal');
+  execTermCommand('traceroute');
+}
+
+function probeSelectedNodeCarrier() {
+  playKeystrokeTone();
+  switchTab('signal');
+  transmitProbeBurst();
+}
+
+/* =========================================================================
+   5. TELEMETRY & PACKET SNIFFER
    ========================================================================= */
 let snifferActive = true;
 let snifferFilterVal = 'ALL';
@@ -1984,11 +2760,19 @@ function execTermCommand(rawCmd) {
   status        - Query Node 10.19.99.4 health, subcarrier sync, and memory watchdog
   ping <host>   - Send ICMP echo packets across intranet subnet
   traceroute    - Trace multi-hop packets to Carlsbad Bunker 0x7F
-  cat <memo_id> - Display classified memo contents (e.g. 'cat memo-01')
+  cat <memo_id> - Display classified memo contents (e.g. 'cat memo-01' through 'memo-08')
   dump 0x1999   - Stream Sector 0x1999 memory contents to terminal
   scan          - Probe active nodes across 10.19.99.0/24 subnet
   sweep         - Execute full RF subcarrier signal sweep
-  audio <mode>  - Toggle audio subcarrier (on, off, 1999hz, 432hz)
+  map           - Display ASCII depth cross-section schematic of Carlsbad Station 0x7F
+  fsk <msg>     - Modulate and transmit Bell 202 FSK audio burst across carrier
+  morse <msg>   - Modulate and transmit 1999Hz Morse audio telemetry
+  daemons       - Query telemetry on the six rotating maintenance daemons
+  routes        - Display kernel routing table for 10.19.99.0/24 subnet
+  patch <off> <hex> - Write byte to active memory sector (e.g. 'patch 0x10 FF')
+  revert        - Revert active sector to pristine factory ROM state
+  download      - Download active sector raw image as .DMP binary
+  audio <mode>  - Toggle audio subcarrier (on, off, 1999hz, 432hz, slapbass, spc_echo)
   matrix        - Probe gateway socket for residual anomalous packets
   clear         - Flush terminal display buffer`;
   } else if (cmd === 'status') {
@@ -2012,7 +2796,7 @@ function execTermCommand(rawCmd) {
     if (match) {
       res += `=== ${match.id}: ${match.title} ===\n${match.body.replace(/<[^>]+>/g, '')}`;
     } else {
-      res += `File not found. Try 'cat memo-01' through 'cat memo-06'.`;
+      res += `File not found. Try 'cat memo-01' through 'cat memo-08'.`;
     }
   } else if (cmd === 'dump') {
     res += `0x1999:0000  4B 45 52 4E 45 4C 5F 45  43 48 4F 5F 43 4F 52 45  KERNEL_ECHO_CORE\n` +
@@ -2025,6 +2809,79 @@ function execTermCommand(rawCmd) {
   } else if (cmd === 'sweep') {
     runSubnetSweep();
     res += `RF sweep dispatched across subnet 10.19.99.0/24. Check Signal Diagnostic tab for spectral readings.`;
+  } else if (cmd === 'map') {
+    res += `===================================================================
+CARLSBAD STATION 0x7F GEOLOGICAL DEPTH SCHEMATIC (ASCII TELEMETRY)
+===================================================================
+SURFACE (0m)       [DESERT TERRAIN]  ====== 10.19.99.1 [GATEWAY ROUTER]
+                   |                       | (Microwave Uplink to KNet)
+-150m SEDIMENT     |  Ground Rod Grid  === [CAPACITIVE COUPLING ARRAY]
+                   |                       |
+-400m RUSTLER      |  Anhydrite Bed    === 10.19.99.12 [BEACON 1999Hz]
+                   |                       | (Halite Waveguide Reflex)
+-650m SALADO       |  Halite Rock Salt === 10.19.99.4 [PROJECT ECHO CORE]
+                   |                       | 10.19.99.19 [ACOUSTIC LAB]
+-750m VAULT CORE   |  Bedded Salt Dome === 10.19.99.127 [AIRGAP 0x7F]
+===================================================================`;
+  } else if (cmd === 'fsk') {
+    const fskMsg = arg || '10.19.99.4 ECHO_BURST';
+    setModemPreset(fskMsg);
+    document.getElementById('modemModeSelect').value = 'fsk';
+    transmitModemMessage();
+    res += `Transmitting Bell 202 FSK audio burst: "${fskMsg}" across carrier line.`;
+  } else if (cmd === 'morse') {
+    const morseMsg = arg || '10.19.99.4 ECHO';
+    setModemPreset(morseMsg);
+    document.getElementById('modemModeSelect').value = 'morse';
+    transmitModemMessage();
+    res += `Transmitting 1999Hz Morse audio telemetry: "${morseMsg}".`;
+  } else if (cmd === 'daemons') {
+    res += `CARLSBAD MAINTENANCE SUBSYSTEM ROTATION STATUS:
+  [MODULE 1: GENESIS]     IDLE   - Standby for new hypermedia/world nodes
+  [MODULE 2: VISUAL/AUD]  ACTIVE - YM2612 Ch6 carrier locked at 1999Hz
+  [MODULE 3: VERIFY]      ACTIVE - Sector CRC-32 & checksum engine armed
+  [MODULE 4: ERGONOMICS]  IDLE   - Win32 GDI bounding boxes calibrated
+  [MODULE 5: WATCHDOG]    ACTIVE - 999KB hard ROM ceiling enforced
+  [MODULE 6: EXPANSION]   ACTIVE - Subcarrier FSK/Morse modem synchronized
+ROTATION PROTOCOL: Sequential single-app execution cycle.`;
+  } else if (cmd === 'routes') {
+    res += `KERNEL IP ROUTING TABLE (10.19.99.0/24):
+  Destination     Gateway         Genmask         Flags Metric Iface
+  10.19.99.0      0.0.0.0         255.255.255.0   U     0      eth0
+  10.19.99.1      10.19.99.1      255.255.255.255 UGH   1      eth0 (Surface)
+  10.19.99.4      127.0.0.1       255.255.255.255 UH    0      lo   (Intranet)
+  10.19.99.12     10.19.99.4      255.255.255.255 UGH   2      rf0  (1999Hz Beacon)
+  10.19.99.19     10.19.99.4      255.255.255.255 UGH   2      rf0  (Acoustic Lab)
+  10.19.99.127    10.19.99.4      255.255.255.255 UGH   3      ground0 (Airgap Core)`;
+  } else if (cmd === 'patch') {
+    const pParts = arg.split(' ');
+    if (pParts.length >= 2) {
+      const off = parseInt(pParts[0], 16);
+      const val = parseInt(pParts[1], 16);
+      if (!isNaN(off) && off >= 0 && off < 256 && !isNaN(val) && val >= 0 && val <= 255) {
+        selectedByteOffset = off;
+        const bytes = SECTORS[currentSectorKey];
+        if (bytes) {
+          bytes[off] = val;
+          sectorModCount++;
+          renderHexGrid();
+          inspectByte(off);
+          updateSectorChecksums();
+          checkSectorWatchdog();
+          res += `Byte at 0x${off.toString(16).toUpperCase().padStart(2, '0')} patched to 0x${val.toString(16).toUpperCase().padStart(2, '0')}. CRC-32 recalculated.`;
+        }
+      } else {
+        res += `Usage: patch <offset_hex> <byte_hex> (e.g. 'patch 0x10 FF')`;
+      }
+    } else {
+      res += `Usage: patch <offset_hex> <byte_hex> (e.g. 'patch 0x10 FF')`;
+    }
+  } else if (cmd === 'revert') {
+    revertSector();
+    res += `Active sector ${currentSectorKey} reverted to pristine factory ROM.`;
+  } else if (cmd === 'download') {
+    downloadRawSector();
+    res += `Exporting raw sector ${currentSectorKey} image as .DMP binary.`;
   } else if (cmd === 'matrix') {
     res += `[RESIDUAL SOCKET TRACE DETECTED]\n>> Sector 0x1999: Destination resolves to Node #100 ('KMatrix').\n>> Passkey fragment verified: Passkey format requires 3 hyphenated sections.\n>> Seek KMatrix terminal to conclude the convergence.`;
   } else if (cmd === 'audio') {
@@ -2096,6 +2953,10 @@ function switchTab(tabId) {
   const pane = document.getElementById(`tab-${tabId}`);
   if (pane) pane.classList.add('active');
 
+  if (tabId === 'map') {
+    drawBunkerMap();
+  }
+
   playKeystrokeTone();
 }
 
@@ -2106,6 +2967,8 @@ window.addEventListener('DOMContentLoaded', () => {
   loadSector('0x1999');
   startSniffer();
   initTerminal();
+  initBunkerMap();
+  updateSectorChecksums();
 });
 </script>
 </body>
