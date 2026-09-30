@@ -29,6 +29,15 @@ float custom_cosf(float x) {
 #define TIMER_ID 1
 #define TIMER_INTERVAL 33 // ~30 FPS
 
+static BOOL g_soundMuted = FALSE;
+static void PlayGameBeep(DWORD dwFreq, DWORD dwDuration) {
+    if (!g_soundMuted) {
+        Beep(dwFreq, dwDuration);
+    }
+}
+#undef Beep
+#define Beep PlayGameBeep
+
 // Colors
 #define BG_COLOR RGB(10, 12, 16)
 #define CARD_BG RGB(30, 34, 42)
@@ -3131,7 +3140,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         if (wParam == 'm' || wParam == 'M') {
+            if (GetKeyState(VK_SHIFT) & 0x8000) {
+                g_soundMuted = !g_soundMuted;
+                ShowNativeToast(g_soundMuted ? "Sound: MUTED [Shift+M]" : "Sound: ON [Shift+M]", TEXT_GOLD, 75);
+                InvalidateRect(hwnd, NULL, FALSE);
+                break;
+            }
             g_showMutators = !g_showMutators;
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
+        if (wParam == VK_LEFT && !g_waveActive) {
+            g_currentMap = (g_currentMap - 1 + MAX_MAPS) % MAX_MAPS;
+            InitGameState();
+            ShowNativeToast(g_maps[g_currentMap].name, TEXT_GOLD, 60);
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        }
+        if (wParam == VK_RIGHT && !g_waveActive) {
+            g_currentMap = (g_currentMap + 1) % MAX_MAPS;
+            InitGameState();
+            ShowNativeToast(g_maps[g_currentMap].name, TEXT_GOLD, 60);
             InvalidateRect(hwnd, NULL, FALSE);
             break;
         }

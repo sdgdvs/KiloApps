@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KFortress
+  kilo_tester: KGraph
   kilo_usability: KVoid
   kilo_graphics: KStarForge
   kilo_qa: KColosseum
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "10.19.99.4/classified"
-  timestamp: "2026-09-30T02:30:00Z"
+  agent: kilo-tester
+  app: KFortress
+  timestamp: "2026-09-30T02:48:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KFortress`, `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KFortress`
+- **Current Target**: `KGraph`
 - **Upcoming Queue**:
-  `KGraph`, `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont)*.
+  `KHabit`, `KHex`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KVoid`
@@ -276,6 +276,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T02:48:00Z — kilo-tester: KFortress (Interactive UI Audit, Save Data Integrity & De-Occlusion)**
+  - Status: PASS ✅ (6 issues fixed, 0 regressions, 0 perimeter glints, 195.6 KB < 999 KB).
+  - Toast De-Occlusion: Relocated `.toast-container` to bottom-left with `clearToasts()` on modal open/close, fixing tutorial modal button blockage.
+  - Quicksave Data Integrity: Fixed undefined property bugs in `lavaPools` (`radius`, `life`, `damage`) and `militia` (`speed`, `damage`, `lifeTimer`).
+  - Storage Management: Added JSON save export (`exportSaveData`) and file import (`importSaveData`) with dedicated Field Guide UI controls.
+  - Audio Sound Controls: Added `soundToggleBtn` in header and `[Shift+M]` hotkey with state persistence in `localStorage('kf_soundMuted')`.
+  - Keyboard Navigation: Added `[ArrowLeft]` and `[ArrowRight]` hotkeys to cycle campaign maps between active waves.
+  - Native Alignment: Added `PlayGameBeep` mute helper, `[Shift+M]` toggle, and `VK_LEFT`/`VK_RIGHT` map navigation to `KFortress/main.c`.
+  - Verification: MSVC clean (`KFortress.exe` 172.5 KB); Vite clean in 305ms; headless Chrome CDP 100% PASS (27 elements, 0 errors); security lint & icon checks clean.
+
 - **2026-09-30T02:30:00Z — kilo-creator: kweb://10.19.99.4/classified (Corporate Network Leak & Signal Diagnostic)**
   - Status: PASS ✅ (0 regressions, clean builds, security lint clean, 118.2 KB < 999 KB).
   - RF Lab Depth: Added 2D phosphor waterfall spectrogram & Subcarrier Audio Modem with Bell 202 FSK and 1999Hz Morse keying.
@@ -309,14 +319,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Audio Engine: Integrated Yamaha YM2612 2-op FM and SNES SPC700 stereo delay warmth sound engine with [Shift+M] / [M].
   - Toast & UX Polish: Added `clearToasts()` de-occlusion on modal and drawer triggers; wired Esc and backdrop dismissals.
   - Verification: MSVC clean (`KRead.exe` 29.5 KB); Vite clean in 330ms; Chrome CDP 100% PASS (79 elements, 0 errors); security/icons clean.
-
-- **2026-09-30T01:15:00Z — kilo-graphics: KChrono (YM2612 FM Audio & SPC700 Delay, Zero Glints, Scenario 6 Balance & Native Alignment)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 176 KB < 999 KB).
-  - Audio Engine: Integrated Yamaha YM2612 2-op FM synthesis and SNES SPC700 stereo delay warmth with [M] hotkey and header/footer toggle.
-  - Specular & Perimeter Audit: 0 rotating specular glints, 0 traveling border dots across web canvas and Win32 GDI.
-  - Scenario Balance & Content: Fixed Scenario 6 causality requiring Echo Ghost biometric hold; added diegetic 1999Hz telemetry log to Chrono-Locker.
-  - Native Alignment: Updated `main.c` with 'M' audio mute toggle and synchronized Scenario 6 plate rule; `build.bat` auto-copies `KChrono.exe`.
-  - Verification: MSVC clean (`KChrono.exe` 23.0 KB); Vite clean in 272ms; headless Chrome CDP 100% PASS (64 interactive elements, 0 errors); icon and security audits clean.
 
 
 

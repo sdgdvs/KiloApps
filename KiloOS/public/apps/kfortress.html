@@ -268,15 +268,15 @@
 
     .toast-container {
       position: absolute;
-      bottom: 16px;
-      left: 50%;
-      transform: translateX(-50%);
+      bottom: 20px;
+      left: 20px;
       display: flex;
       flex-direction: column-reverse;
       gap: 8px;
-      z-index: 1000;
+      z-index: 1500;
       pointer-events: none;
-      align-items: center;
+      align-items: flex-start;
+      max-width: 360px;
     }
 
     .toast {
@@ -294,7 +294,7 @@
       gap: 8px;
       animation: slideInToast 0.25s cubic-bezier(0.16, 1, 0.3, 1);
       transition: opacity 0.3s ease, transform 0.3s ease;
-      max-width: 440px;
+      max-width: 360px;
       line-height: 1.4;
     }
 
@@ -304,7 +304,7 @@
     .toast-info { border-color: var(--blue-color); box-shadow: 0 4px 20px rgba(0,0,0,0.7), 0 0 10px rgba(59, 130, 246, 0.5); }
 
     @keyframes slideInToast {
-      from { opacity: 0; transform: translateY(20px); }
+      from { opacity: 0; transform: translateY(14px); }
       to { opacity: 1; transform: translateY(0); }
     }
   </style>
@@ -317,6 +317,7 @@
       <h1>KFORTRESS</h1>
       <span>Castle Defense & Siege</span>
       <button class="btn" id="helpBtn" style="padding:3px 8px; font-size:11px; margin-left:8px; background:var(--blue-color); color:#fff; border:none; letter-spacing:0.5px;">GUIDE [F1/H]</button>
+      <button class="btn" id="soundToggleBtn" style="padding:3px 8px; font-size:11px; margin-left:6px; background:#1e293b; color:var(--gold-color); border:1px solid var(--border-color); letter-spacing:0.5px;" title="Hotkey: Shift+M">🔊 SOUND: ON</button>
     </div>
     <div class="hud-stats">
       <div class="stat-badge stat-mut" id="hudMutatorBtn">⚡ Mutators [M]: <span id="hudMutCount">0</span></div>
@@ -366,6 +367,8 @@
         <div><b style="color:var(--gold-color);">[B]</b> Cast Blizzard (80g)</div>
         <div><b style="color:var(--gold-color);">[A]</b> Toggle Research Academy</div>
         <div><b style="color:var(--gold-color);">[M]</b> Toggle Challenge Mutators</div>
+        <div><b style="color:var(--gold-color);">[Shift+M]</b> Toggle Audio Sound Effects</div>
+        <div><b style="color:var(--gold-color);">[◀ / ▶]</b> Cycle Maps (Between Waves)</div>
         <div><b style="color:var(--gold-color);">[F5]</b> Quicksave Battle State</div>
         <div><b style="color:var(--gold-color);">[F9]</b> Quickload Battle State</div>
         <div><b style="color:var(--gold-color);">[H] / [F1]</b> Toggle Field Guide</div>
@@ -395,6 +398,13 @@
         <li><b>Meteor Tempest:</b> Sky meteor strikes periodically rain down on the battlefield.</li>
         <li><b>Phase Shift:</b> Enemies have 25% phase dodge chance vs standard attacks, +75% gold reward.</li>
       </ul>
+
+      <h3 style="color:var(--gold-color); margin-top:12px; border-bottom:1px solid var(--border-color); padding-bottom:4px;">💾 SAVE DATA BACKUP & RESTORE</h3>
+      <div style="display:flex; gap:10px; margin-top:8px;">
+        <button class="btn btn-primary" id="btnExportJson" style="flex:1; padding:8px; font-size:11px;">EXPORT SAVE [JSON]</button>
+        <button class="btn" id="btnImportJson" style="flex:1; padding:8px; font-size:11px; background:var(--blue-color); color:#fff; border:none;">IMPORT SAVE [JSON]</button>
+        <input type="file" id="importFileInput" accept=".json" style="display:none;">
+      </div>
       
       <div style="display:flex; justify-content:center; margin-top:18px;">
         <button class="btn btn-primary" id="closeHelpBtn" style="width:180px; padding:8px;">UNDERSTOOD [Esc]</button>
@@ -536,7 +546,31 @@
 
   <script>
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    let soundMuted = localStorage.getItem('kf_soundMuted') === 'true';
+
+    function toggleSound() {
+      soundMuted = !soundMuted;
+      try { localStorage.setItem('kf_soundMuted', soundMuted ? 'true' : 'false'); } catch(e){}
+      updateSoundUI();
+      if (!soundMuted) {
+        playBeep(660, 0.1, 'sine', 0.2);
+        showToast("Sound Unmuted", "Audio sound effects enabled [Shift+M]", "info", 2000);
+      } else {
+        showToast("Sound Muted", "Audio sound effects disabled [Shift+M]", "warning", 2000);
+      }
+    }
+
+    function updateSoundUI() {
+      const btn = document.getElementById('soundToggleBtn');
+      if (btn) {
+        btn.textContent = soundMuted ? '🔇 SOUND: OFF' : '🔊 SOUND: ON';
+        btn.style.borderColor = soundMuted ? 'var(--red-color)' : 'var(--border-color)';
+        btn.style.color = soundMuted ? 'var(--text-muted)' : 'var(--gold-color)';
+      }
+    }
+
     function playBeep(freq, duration, type='sine', gainVal=0.1) {
+      if (soundMuted) return;
       try {
         if (audioCtx.state === 'suspended') audioCtx.resume();
         const osc = audioCtx.createOscillator();
@@ -551,6 +585,7 @@
     }
 
     function playSfx(type) {
+      if (soundMuted) return;
       try {
         if (audioCtx.state === 'suspended') audioCtx.resume();
         const now = audioCtx.currentTime;
@@ -657,23 +692,31 @@
       } catch(e){}
     }
 
-    function showToast(title, message, type='info', duration=4500) {
+    function clearToasts() {
+      const container = document.getElementById('toastContainer');
+      if (container) container.innerHTML = '';
+    }
+
+    function showToast(title, message, type='info', duration=3500) {
       const container = document.getElementById('toastContainer');
       if (!container) return;
+      while (container.children.length >= 2) {
+        container.removeChild(container.firstChild);
+      }
       const toast = document.createElement('div');
       toast.className = `toast toast-${type}`;
       toast.innerHTML = `<span style="font-size:15px;">${type === 'success' ? '✨' : type === 'warning' ? '⚡' : type === 'danger' ? '🛡️' : '⚔️'}</span><div><b>${title}</b>${message ? `<div style="color:var(--text-muted); font-size:10px; margin-top:2px;">${message}</div>` : ''}</div>`;
       toast.onclick = () => {
         toast.style.opacity = '0';
-        toast.style.transform = 'translateX(40px)';
-        setTimeout(() => toast.remove(), 300);
+        toast.style.transform = 'translateX(-30px)';
+        setTimeout(() => toast.remove(), 250);
       };
       container.appendChild(toast);
       setTimeout(() => {
         if (toast.parentElement) {
           toast.style.opacity = '0';
-          toast.style.transform = 'translateX(40px)';
-          setTimeout(() => toast.remove(), 300);
+          toast.style.transform = 'translateX(-30px)';
+          setTimeout(() => toast.remove(), 250);
         }
       }, duration);
     }
@@ -1107,42 +1150,73 @@
     }
 
     document.getElementById('hudMutatorBtn').addEventListener('click', () => {
+      clearToasts();
       document.getElementById('mutatorsModal').style.display = 'flex';
       updateMutatorUI();
     });
     document.getElementById('btnMutatorsModal').addEventListener('click', () => {
+      clearToasts();
       document.getElementById('mutatorsModal').style.display = 'flex';
       updateMutatorUI();
     });
     document.getElementById('closeMutatorsBtn').addEventListener('click', (e) => {
       e.stopPropagation();
       document.getElementById('mutatorsModal').style.display = 'none';
+      clearToasts();
     });
     document.getElementById('mutatorsModal').addEventListener('click', () => {
       document.getElementById('mutatorsModal').style.display = 'none';
+      clearToasts();
     });
 
     document.getElementById('academyBtn').addEventListener('click', () => {
+      clearToasts();
       document.getElementById('academyModal').style.display = 'flex';
       updateAcademyUI();
     });
     document.getElementById('closeAcademyBtn').addEventListener('click', (e) => {
       e.stopPropagation();
       document.getElementById('academyModal').style.display = 'none';
+      clearToasts();
     });
     document.getElementById('academyModal').addEventListener('click', () => {
       document.getElementById('academyModal').style.display = 'none';
+      clearToasts();
     });
 
     document.getElementById('helpBtn').addEventListener('click', () => {
+      clearToasts();
       document.getElementById('helpModal').style.display = 'flex';
     });
     document.getElementById('closeHelpBtn').addEventListener('click', (e) => {
       e.stopPropagation();
       document.getElementById('helpModal').style.display = 'none';
+      clearToasts();
     });
     document.getElementById('helpModal').addEventListener('click', () => {
       document.getElementById('helpModal').style.display = 'none';
+      clearToasts();
+    });
+
+    const soundBtnEl = document.getElementById('soundToggleBtn');
+    if (soundBtnEl) {
+      soundBtnEl.addEventListener('click', toggleSound);
+      updateSoundUI();
+    }
+
+    document.getElementById('btnExportJson').addEventListener('click', (e) => {
+      e.stopPropagation();
+      exportSaveData();
+    });
+    document.getElementById('btnImportJson').addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.getElementById('importFileInput').click();
+    });
+    document.getElementById('importFileInput').addEventListener('change', (e) => {
+      if (e.target.files && e.target.files[0]) {
+        importSaveData(e.target.files[0]);
+        e.target.value = '';
+      }
     });
 
     function castHeal() {
@@ -1296,16 +1370,19 @@
           })),
           lavaPools: lavaPools.map(l => ({
             x: l.x, y: l.y,
-            r: l.r,
-            timer: l.timer,
-            maxTimer: l.maxTimer
+            radius: l.radius || 65,
+            life: l.life || 180,
+            damage: l.damage || 18
           })),
           militia: militia.map(m => ({
             x: m.x, y: m.y,
-            targetX: m.targetX, targetY: m.targetY,
+            targetX: m.targetX || m.x, targetY: m.targetY || m.y,
             hp: m.hp, maxHp: m.maxHp,
-            attackCd: m.attackCd, maxAttackCd: m.maxAttackCd,
-            dmg: m.dmg, range: m.range
+            speed: m.speed || 1.8,
+            damage: m.damage || m.dmg || 18,
+            attackCd: m.attackCd || 0,
+            maxAttackCd: m.maxAttackCd || 25,
+            lifeTimer: m.lifeTimer || 450
           })),
           enemies: enemies.map(e => ({
             id: e.id,
@@ -1334,6 +1411,47 @@
       } catch (err) {
         showToast("Quicksave Failed", "Storage quota exceeded or restricted.", "danger", 3000);
       }
+    }
+
+    function exportSaveData() {
+      try {
+        quickSaveGame();
+        const raw = localStorage.getItem('kfortress_quicksave');
+        if (!raw) return;
+        const blob = new Blob([raw], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `kfortress_save_wave${wave}_${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("Save Exported", "Downloaded JSON backup of your battlefield state!", "success", 3000);
+      } catch (e) {
+        showToast("Export Failed", e.message || "Failed to create JSON backup.", "danger", 3000);
+      }
+    }
+
+    function importSaveData(file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const content = e.target.result;
+          const parsed = JSON.parse(content);
+          if (!parsed || typeof parsed.wave !== 'number') {
+            throw new Error("Invalid or corrupt save file structure.");
+          }
+          localStorage.setItem('kfortress_quicksave', content);
+          quickLoadGame();
+          document.getElementById('helpModal').style.display = 'none';
+          showToast("Save Imported", `Loaded Wave ${parsed.wave} on ${campaignMaps[parsed.currentMapIndex || 0].name}!`, "success", 3500);
+        } catch (err) {
+          showToast("Import Failed", err.message || "Invalid JSON save file.", "danger", 3500);
+        }
+      };
+      reader.readAsText(file);
     }
 
     function quickLoadGame() {
@@ -1382,13 +1500,27 @@
         }
 
         traps = Array.isArray(data.traps) ? data.traps.map(t => ({ ...t })) : [];
-        lavaPools = Array.isArray(data.lavaPools) ? data.lavaPools.map(l => ({ ...l })) : [];
+        lavaPools = Array.isArray(data.lavaPools) ? data.lavaPools.map(l => ({
+          x: l.x, y: l.y,
+          radius: l.radius || l.r || 65,
+          life: l.life || l.timer || 180,
+          damage: l.damage || 18
+        })) : [];
 
         if (data.hero) {
           Object.assign(hero, data.hero);
         }
 
-        militia = Array.isArray(data.militia) ? data.militia.map(m => ({ ...m })) : [];
+        militia = Array.isArray(data.militia) ? data.militia.map(m => ({
+          x: m.x, y: m.y,
+          targetX: m.targetX || m.x, targetY: m.targetY || m.y,
+          hp: m.hp, maxHp: m.maxHp,
+          speed: m.speed || 1.8,
+          damage: m.damage || m.dmg || 18,
+          attackCd: m.attackCd || 0,
+          maxAttackCd: m.maxAttackCd || 25,
+          lifeTimer: m.lifeTimer || 450
+        })) : [];
         enemies = Array.isArray(data.enemies) ? data.enemies.map(e => ({ ...e })) : [];
         spawnQueue = Array.isArray(data.spawnQueue) ? [...data.spawnQueue] : [];
         spawnTimer = data.spawnTimer || 0;
@@ -1446,8 +1578,8 @@
         try {
           localStorage.setItem('kfortress_tutorialSeen', 'true');
         } catch (e) {}
+        clearToasts();
         document.getElementById('helpModal').style.display = 'flex';
-        showToast("Welcome Commander!", "First-run tutorial activated. Read the Field Guide & Shortcuts, then click UNDERSTOOD [Esc] to begin!", "warning", 6000);
       }
     }
     
@@ -1457,6 +1589,7 @@
         document.getElementById('academyModal').style.display = 'none';
         document.getElementById('mutatorsModal').style.display = 'none';
         document.getElementById('helpModal').style.display = 'none';
+        clearToasts();
         return;
       }
 
@@ -1464,6 +1597,14 @@
       if (document.getElementById('helpModal').style.display === 'flex' && (e.key === 'Enter' || e.code === 'Space')) {
         e.preventDefault();
         document.getElementById('helpModal').style.display = 'none';
+        clearToasts();
+        return;
+      }
+
+      // Audio Mute Toggle [Shift+M]
+      if (e.shiftKey && (e.key.toLowerCase() === 'm' || e.code === 'KeyM')) {
+        e.preventDefault();
+        toggleSound();
         return;
       }
 
@@ -1494,12 +1635,14 @@
         document.getElementById('helpModal').style.display === 'flex';
 
       if (e.key.toLowerCase() === 'a') {
+        clearToasts();
         const modal = document.getElementById('academyModal');
         modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
         if (modal.style.display === 'flex') updateAcademyUI();
         return;
       }
       if (e.key.toLowerCase() === 'm') {
+        clearToasts();
         const modal = document.getElementById('mutatorsModal');
         modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
         if (modal.style.display === 'flex') updateMutatorUI();
@@ -1507,12 +1650,27 @@
       }
       if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
         if(e.key === 'F1') e.preventDefault();
+        clearToasts();
         const modal = document.getElementById('helpModal');
         modal.style.display = modal.style.display === 'none' ? 'flex' : 'none';
         return;
       }
 
       if (anyModalOpen) return;
+
+      // Map switching hotkeys between waves
+      if (!waveInProgress) {
+        if (e.key === 'ArrowLeft') {
+          e.preventDefault();
+          document.getElementById('prevMapBtn').click();
+          return;
+        }
+        if (e.key === 'ArrowRight') {
+          e.preventDefault();
+          document.getElementById('nextMapBtn').click();
+          return;
+        }
+      }
 
       // Space to start wave
       if (e.code === 'Space') {
