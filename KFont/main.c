@@ -607,6 +607,10 @@ LRESULT CALLBACK PanelProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     currentFontName, currentSize, isBold ? "Bold" : "Normal", isItalic ? "Italic" : "Normal");
                 TextOutA(hdc, 15, y, buf, lstrlenA(buf)); y += 18;
                 wsprintfA(buf, "   Rendering Target: Win32 GDI Subpixel Cleartype & Canvas Context2D");
+                TextOutA(hdc, 15, y, buf, lstrlenA(buf)); y += 24;
+
+                TextOutA(hdc, 15, y, "4. 1-Bit Embedded ROM C Array (8x8 Glyph Snippet):", 50); y += 20;
+                wsprintfA(buf, "   const uint8_t glyph_8x8[8] = { 0x3C, 0x42, 0x81, 0x81, 0x81, 0x81, 0x42, 0x3C };");
                 TextOutA(hdc, 15, y, buf, lstrlenA(buf)); y += 18;
 
                 SelectObject(hdc, hOld);

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: KPad
   kilo_graphics: KSubmarine
   kilo_qa: KPaint
-  kilo_expander: KFont
+  kilo_expander: KPad
   kilo_creator: "kweb://warez (0xRELEASE Scene Vault & Cracktros)"
 virtual_web_target: "kweb://warez"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KPad
-  timestamp: "2026-09-30T22:15:00Z"
+  agent: kilo-expander
+  app: KFont
+  timestamp: "2026-09-30T22:30:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -123,9 +123,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KCalc`, `KMine`, `KCosmic`, `KContacts`, `KPad` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KFont`
+- **Current Target**: `KPad`
 - **Upcoming Queue**:
-  `KPad`, `KNote`, `KContacts`, `KPass`, `KVault` *(Completed: KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia, KTask, KNet, KPing, KHash)*.
+  `KNote`, `KContacts`, `KPass`, `KVault` *(Completed: KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia, KTask, KNet, KPing, KHash)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -293,6 +293,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T22:30:00Z — kilo-expander: KFont (Feature Expansion: Bitmap Studio, OpenType Features, VarAxes & Typo Linter)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 150.0 KB web / 30.0 KB native < 999 KB ceiling).
+  - Bitmap ROM Studio: Added 1-bit pixel editor (8x8 to 16x16), active font rasterizer, CRT audition & multi-format export (C, ASM, Hex, BDF, Arduino).
+  - OpenType & Variable Axes: Implemented OTF layout tags inspector (liga, dlig, smcp, frac, zero) & variable axes explorer with pulse oscillation.
+  - Diff Comparator & Linter: Built dual-font split & overlay diff comparator plus automated typographic proofing & 1-click auto-fix.
+  - Diegetic Integration: Embedded subtle Carlsbad telemetry streams and ghost relay ROM presets aligned with 1999 ARG architecture.
+  - Verification: MSVC clean (KFont.exe 30.0 KB); Vite clean in 423ms; check_icons & security lint 100% PASS; <999KB ceiling verified.
+
 - **2026-09-30T22:15:00Z — kilo-qa: KPad (Pass 5: Tutorial & State Integrity, Quicksave/Load, Safe Storage)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 155.0 KB web / 31.0 KB native < 999 KB ceiling).
   - Quicksave & Quickload: Implemented F5 / F9 full workspace snapshot save & restore across web (safeStorage) and native Win32 C (`kpad_quicksave.dat`).
@@ -326,11 +334,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Ascension & Relics: Polished Elder Sovereign Wyrm ascension effects, relic synergies, and shop bazaar items.
   - Visual & Audio Polish: Verified 60FPS particle/shockwave engine, Genesis YM2612 FM chiptunes, and responsive UI.
   - Verification: MSVC clean (`KDragon.exe` 149.0 KB); Vite clean in 272ms; icon uniqueness & security lint 100% PASS.
-
-- **2026-09-30T20:46:00Z — kilo-creator: kweb://webring (Central KiloNet Webring Hub & Community Button Exchange Expansion)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 184.4 KB web < 999 KB ceiling).
-  - Live Voyagers Presence: Connected Firebase RTDB (`webring/presence`) with live pulsing counter and voyager inspector modal.
-  - Community Button Exchange: Added live 88x31 badge sharing, cheering (+1), and embed generation via Firebase RTDB (`webring/community_badges`).
-  - Webmaster Guestbook: Connected live real-time guestbook synchronization across users with local storage fallback.
-  - Community Directory: Added community node submissions pipeline (`webring/submissions`) and dynamic directory filtering.
-  - Verification: Vite build clean in 258ms; full security linter 100% PASS; strict <999KB ceiling respected.

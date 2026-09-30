@@ -116,6 +116,22 @@
   :focus-visible { outline: 2px solid #3b82f6; outline-offset: 1px; }
   .tab-btn:focus-visible { outline: 2px solid #3b82f6; outline-offset: -2px; }
 
+
+  /* Bitmap Studio & Canvas Editor */
+  .bmp-editor-container { position: relative; border: 2px solid #334155; border-radius: 6px; overflow: hidden; background: #111; user-select: none; box-shadow: 0 3px 12px rgba(0,0,0,0.15); }
+  .bmp-prev-box { background: #0b0f17; border: 1px solid #1e293b; border-radius: 6px; padding: 12px; display: flex; align-items: center; justify-content: center; }
+  
+  /* Multi-Font Diff Overlay */
+  .diff-overlay-box { position: relative; width: 100%; min-height: 120px; border: 1px solid #334155; border-radius: 6px; padding: 18px; background: #0a0e14; overflow: hidden; }
+  .diff-layer-a { position: absolute; top: 18px; left: 18px; right: 18px; color: #00e5ff; mix-blend-mode: screen; pointer-events: none; }
+  .diff-layer-b { position: absolute; top: 18px; left: 18px; right: 18px; color: #ff007f; mix-blend-mode: screen; pointer-events: none; }
+  
+  /* Typographic Linter Badges */
+  .flaw-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .flaw-warn { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+  .flaw-ok { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+  .flaw-info { background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; }
+
   @media (max-width: 768px) {
     .header { padding: 8px 12px; gap: 8px; }
     .main { flex-direction: column; }
@@ -199,6 +215,18 @@
       <button class="tab-btn" id="tab-sample" role="tab" aria-selected="false" data-target="panel-sample">
         <span>Live Sample &amp; Run</span>
         <span class="tab-badge">8</span>
+      </button>
+      <button class="tab-btn" id="tab-bitmap" role="tab" aria-selected="false" data-target="panel-bitmap">
+        <span>Bitmap &amp; ROM Studio</span>
+        <span class="tab-badge">9</span>
+      </button>
+      <button class="tab-btn" id="tab-opentype" role="tab" aria-selected="false" data-target="panel-opentype">
+        <span>OpenType &amp; Variables</span>
+        <span class="tab-badge">10</span>
+      </button>
+      <button class="tab-btn" id="tab-compare" role="tab" aria-selected="false" data-target="panel-compare">
+        <span>Compare &amp; Typo Lint</span>
+        <span class="tab-badge">11</span>
       </button>
     </div>
     
@@ -372,6 +400,287 @@
         </div>
       </div>
       
+
+      <!-- 9. Bitmap Font ROM & Pixel Matrix Studio -->
+      <div id="panel-bitmap" class="panel" role="tabpanel">
+        <h2>Bitmap Font ROM &amp; Pixel Matrix Studio</h2>
+        <p>Design, rasterize, edit, and export 1-bit monochrome bitmap font glyphs (8x8, 8x12, 16x16) for embedded microcontrollers, DOS CP437 font ROMs, Win32 monochrome icon masks, and retro game engines.</p>
+        
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:14px; background:#f8fafc; padding:10px 14px; border-radius:6px; border:1px solid #e2e8f0;">
+          <label for="bitmapGridSize" style="font-size:13px; font-weight:600;">Matrix Dimensions:</label>
+          <select id="bitmapGridSize" style="padding:5px 8px; border:1px solid #cbd5e1; border-radius:4px; font-size:13px;">
+            <option value="8x8" selected>8x8 (VGA / C64 / BIOS)</option>
+            <option value="8x12">8x12 (EGA Text Mode)</option>
+            <option value="8x16">8x16 (VGA Standard ROM)</option>
+            <option value="16x16">16x16 (Hi-Res Glyphs &amp; Icons)</option>
+          </select>
+
+          <button id="btnRasterizeActive" class="action-btn" style="background:#0284c7;">⚡ Rasterize Active Glyph</button>
+          
+          <label style="display:flex; align-items:center; gap:5px; font-size:12px; color:#475569;">
+            Threshold:
+            <input type="range" id="bitmapThreshold" min="10" max="90" value="50" style="width:70px;">
+            <span id="thresholdDisplay" style="font-family:monospace; font-weight:600;">50%</span>
+          </label>
+
+          <div style="display:flex; gap:5px; flex-wrap:wrap; margin-left:auto;">
+            <button class="chip-btn" id="btnBmpInvert" title="Invert Pixels [X]">Invert [X]</button>
+            <button class="chip-btn" id="btnBmpClear" title="Clear Grid" style="color:#d9534f;">Clear</button>
+            <button class="chip-btn" id="btnBmpFlipH" title="Flip Horizontal">Flip H</button>
+            <button class="chip-btn" id="btnBmpFlipV" title="Flip Vertical">Flip V</button>
+            <button class="chip-btn" id="btnBmpShiftUp" title="Shift Up">↑</button>
+            <button class="chip-btn" id="btnBmpShiftDown" title="Shift Down">↓</button>
+            <button class="chip-btn" id="btnBmpShiftLeft" title="Shift Left">←</button>
+            <button class="chip-btn" id="btnBmpShiftRight" title="Shift Right">→</button>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:14px;">
+          <span style="font-size:12px; font-weight:600; color:#64748b;">Classic ROM Presets:</span>
+          <button class="chip-btn" data-bmp-preset="cp437_smiley">CP437 Smiley (0x01)</button>
+          <button class="chip-btn" data-bmp-preset="cp437_heart">CP437 Heart (0x03)</button>
+          <button class="chip-btn" data-bmp-preset="music_note">Note (0x0E)</button>
+          <button class="chip-btn" data-bmp-preset="ghost_relay">Ghost Relay (0x7F)</button>
+          <button class="chip-btn" data-bmp-preset="space_invader">Invader</button>
+          <button class="chip-btn" data-bmp-preset="retro_cursor">Cursor</button>
+          <button class="chip-btn" data-bmp-preset="sword">Sword</button>
+        </div>
+
+        <div style="display:flex; gap:20px; flex-wrap:wrap;">
+          <!-- Interactive Canvas Grid -->
+          <div style="flex:1; min-width:280px; max-width:400px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span style="font-size:12px; font-weight:600; color:#334155;">Interactive Pixel Matrix Editor</span>
+              <span id="bitmapCoordInfo" style="font-size:11px; font-family:monospace; color:#64748b;">X: - , Y: -</span>
+            </div>
+            <div class="bmp-editor-container">
+              <canvas id="bitmapEditorCanvas" width="320" height="320" style="display:block; width:100%; cursor:crosshair;"></canvas>
+            </div>
+            <div style="font-size:11px; color:#64748b; margin-top:6px; display:flex; justify-content:space-between;">
+              <span>Left Click / Drag: Draw</span>
+              <span>Right Click / Shift+Drag: Erase</span>
+            </div>
+          </div>
+
+          <!-- Scaled Previews & CRT Simulation -->
+          <div style="flex:1; min-width:300px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+              <span style="font-size:12px; font-weight:600; color:#334155;">CRT &amp; LCD Hardware Audition</span>
+              <div style="display:flex; gap:6px;">
+                <select id="bitmapPreviewTheme" style="font-size:11px; padding:2px 6px; border:1px solid #cbd5e1; border-radius:3px;">
+                  <option value="mono">Classic 1-Bit Mono</option>
+                  <option value="green" selected>P1 Phosphor Green CRT</option>
+                  <option value="amber">P3 Phosphor Amber CRT</option>
+                  <option value="lcd">1989 Dot Matrix LCD</option>
+                </select>
+              </div>
+            </div>
+            
+            <!-- Previews Box -->
+            <div id="bitmapPreviewContainer" style="background:#0a0e14; border:1px solid #222b38; border-radius:6px; padding:16px; display:flex; gap:16px; align-items:center; justify-content:space-around; flex-wrap:wrap; min-height:110px;">
+              <div style="text-align:center;">
+                <div style="font-size:10px; color:#64748b; margin-bottom:4px;">1x Native</div>
+                <canvas id="prev1x" width="16" height="16" style="background:#000; border:1px solid #333; image-rendering:pixelated;"></canvas>
+              </div>
+              <div style="text-align:center;">
+                <div style="font-size:10px; color:#64748b; margin-bottom:4px;">2x</div>
+                <canvas id="prev2x" width="32" height="32" style="background:#000; border:1px solid #333; image-rendering:pixelated;"></canvas>
+              </div>
+              <div style="text-align:center;">
+                <div style="font-size:10px; color:#64748b; margin-bottom:4px;">4x Scale</div>
+                <canvas id="prev4x" width="64" height="64" style="background:#000; border:1px solid #333; image-rendering:pixelated;"></canvas>
+              </div>
+              <div style="text-align:center;">
+                <div style="font-size:10px; color:#64748b; margin-bottom:4px;">8x Scanlines</div>
+                <canvas id="prev8x" width="128" height="128" style="background:#000; border:1px solid #333; image-rendering:pixelated;"></canvas>
+              </div>
+            </div>
+
+            <!-- Live Code Exporter -->
+            <div style="margin-top:14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <label for="bitmapExportFormat" style="font-size:12px; font-weight:600; color:#334155;">Export Format:</label>
+                  <select id="bitmapExportFormat" style="font-size:12px; padding:3px 6px; border:1px solid #cbd5e1; border-radius:4px;">
+                    <option value="c_array">C/C++ uint8_t Array</option>
+                    <option value="x86_asm">x86 Assembly (db ...h)</option>
+                    <option value="hex_stream">Raw Hex Stream</option>
+                    <option value="bdf">Adobe BDF Chunk</option>
+                    <option value="arduino">Arduino PROGMEM Bitmap</option>
+                    <option value="binary_bits">Binary (0b00111100)</option>
+                  </select>
+                </div>
+                <div style="display:flex; gap:6px;">
+                  <button class="action-btn" id="btnCopyBitmapCode" style="font-size:11px; padding:4px 8px;">Copy Code</button>
+                  <button class="action-btn" id="btnDownloadBitmapHeader" style="font-size:11px; padding:4px 8px; background:#10b981;">Download .h</button>
+                </div>
+              </div>
+              <pre id="bitmapExportCode" class="code-block" style="border-radius:4px; max-height:160px;"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 10. OpenType & Variables -->
+      <div id="panel-opentype" class="panel" role="tabpanel">
+        <h2>OpenType Layout Features &amp; Variable Font Axes</h2>
+        <p>Inspect advanced OpenType typographic layout features (ligatures, small caps, oldstyle/tabular figures, diagonal fractions, slashed zero) and explore multi-axis variable font variations with live animated oscillation.</p>
+
+        <h3>1. OpenType Layout Feature Tags Matrix</h3>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; align-items:center;">
+          <span style="font-size:12px; font-weight:600; color:#64748b;">Feature Presets:</span>
+          <button class="chip-btn" id="btnOtfPresetLigatures">Ligatures Suite</button>
+          <button class="chip-btn" id="btnOtfPresetNumbers">Tabular &amp; Slashed Zero</button>
+          <button class="chip-btn" id="btnOtfPresetSmallCaps">Editorial Small Caps</button>
+          <button class="chip-btn" id="btnOtfPresetFractions">Fractions &amp; Superscripts</button>
+          <button class="chip-btn" id="btnOtfPresetReset" style="color:#d9534f;">Reset All OFF</button>
+        </div>
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:10px; margin-bottom:16px; background:#f8fafc; padding:12px 16px; border-radius:6px; border:1px solid #e2e8f0;">
+          <label class="checkbox-label"><input type="checkbox" id="otf_liga" checked> <strong>liga</strong>: Standard Ligatures</label>
+          <label class="checkbox-label"><input type="checkbox" id="otf_dlig"> <strong>dlig</strong>: Discretionary Ligatures</label>
+          <label class="checkbox-label"><input type="checkbox" id="otf_smcp"> <strong>smcp</strong>: Small Capitals</label>
+          <label class="checkbox-label"><input type="checkbox" id="otf_c2sc"> <strong>c2sc</strong>: Caps to Small Caps</label>
+          <label class="checkbox-label"><input type="checkbox" id="otf_onum"> <strong>onum</strong>: Oldstyle Figures</label>
+          <label class="checkbox-label"><input type="checkbox" id="otf_tnum"> <strong>tnum</strong>: Tabular Figures</label>
+          <label class="checkbox-label"><input type="checkbox" id="otf_pnum"> <strong>pnum</strong>: Proportional Figures</label>
+          <label class="checkbox-label"><input type="checkbox" id="otf_frac"> <strong>frac</strong>: Diagonal Fractions</label>
+          <label class="checkbox-label"><input type="checkbox" id="otf_zero"> <strong>zero</strong>: Slashed / Dotted Zero</label>
+          <label class="checkbox-label"><input type="checkbox" id="otf_swsh"> <strong>swsh</strong>: Swash Flourishes</label>
+          <label class="checkbox-label"><input type="checkbox" id="otf_ss01"> <strong>ss01</strong>: Stylistic Set 1</label>
+          <label class="checkbox-label"><input type="checkbox" id="otf_ss02"> <strong>ss02</strong>: Stylistic Set 2</label>
+        </div>
+
+        <!-- Side-by-Side Comparison (Feature OFF vs Feature ON) -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:16px;">
+          <div>
+            <div style="font-size:12px; font-weight:600; color:#64748b; margin-bottom:4px;">Feature Settings: OFF (Standard Fallback)</div>
+            <div id="otfPreviewOff" contenteditable="true" style="padding:14px; border:1px solid #cbd5e1; border-radius:6px; min-height:90px; font-size:20px; background:#fff; font-feature-settings: normal; line-height:1.4;">The difficult flight of fifteen flamingoes. Total: $1,234.50 vs $9,876.00 with 1/2 and 3/4 fractions. ZERO: 0O0O.</div>
+          </div>
+          <div>
+            <div style="font-size:12px; font-weight:600; color:#0284c7; margin-bottom:4px;">Feature Settings: ACTIVE (OpenType Features Applied)</div>
+            <div id="otfPreviewOn" contenteditable="true" style="padding:14px; border:2px solid #0284c7; border-radius:6px; min-height:90px; font-size:20px; background:#f0f9ff; line-height:1.4;">The difficult flight of fifteen flamingoes. Total: $1,234.50 vs $9,876.00 with 1/2 and 3/4 fractions. ZERO: 0O0O.</div>
+          </div>
+        </div>
+
+        <div class="code-block-container" style="margin-bottom:24px;">
+          <div class="code-block-header">
+            <span>Generated CSS font-feature-settings</span>
+            <button class="code-copy-btn" id="btnCopyOtfCss">Copy CSS Declaration</button>
+          </div>
+          <pre class="code-block" id="otfCssCodeBlock"></pre>
+        </div>
+
+        <h3>2. Variable Font Axes Explorer &amp; Dynamic Interpolation</h3>
+        <p>Adjust multi-dimensional font variation axes (OpenType Font Variations) or trigger hypnotic typographic oscillation mode.</p>
+
+        <div style="background:#f8fafc; padding:14px 18px; border-radius:6px; border:1px solid #e2e8f0; margin-bottom:16px;">
+          <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px;">
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:4px;">
+                <span>Weight ('wght')</span>
+                <span id="varWeightVal" style="font-family:monospace; color:#0284c7;">400</span>
+              </div>
+              <input type="range" id="varWeight" min="100" max="900" step="10" value="400" style="width:100%;">
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:4px;">
+                <span>Width ('wdth')</span>
+                <span id="varWidthVal" style="font-family:monospace; color:#0284c7;">100%</span>
+              </div>
+              <input type="range" id="varWidth" min="50" max="150" step="1" value="100" style="width:100%;">
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:4px;">
+                <span>Slant ('slnt')</span>
+                <span id="varSlantVal" style="font-family:monospace; color:#0284c7;">0°</span>
+              </div>
+              <input type="range" id="varSlant" min="-20" max="0" step="1" value="0" style="width:100%;">
+            </div>
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:4px;">
+                <span>Optical Size ('opsz')</span>
+                <span id="varOpszVal" style="font-family:monospace; color:#0284c7;">16pt</span>
+              </div>
+              <input type="range" id="varOpsz" min="6" max="72" step="1" value="16" style="width:100%;">
+            </div>
+          </div>
+
+          <div style="margin-top:14px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <button id="btnToggleOscillation" class="action-btn" style="background:#7c3aed;">▶ Start Typographic Pulse / Breath Mode</button>
+            <button class="chip-btn" id="btnVarReset">Reset Default Axes</button>
+            <span style="font-size:11px; color:#64748b;">(Note: Variable axes interpolate dynamically when supported by active font family)</span>
+          </div>
+        </div>
+
+        <div id="varFontPreviewBox" contenteditable="true" style="padding:18px; border:1px solid #cbd5e1; border-radius:6px; font-size:36px; min-height:90px; background:#fff; line-height:1.3; margin-bottom:16px;">
+          Interpolating Typography &amp; Dynamic Glyphs 1999
+        </div>
+
+        <div class="code-block-container">
+          <div class="code-block-header">
+            <span>Generated CSS font-variation-settings &amp; @supports</span>
+            <button class="code-copy-btn" id="btnCopyVarCss">Copy CSS Spec</button>
+          </div>
+          <pre class="code-block" id="varCssCodeBlock"></pre>
+        </div>
+      </div>
+
+      <!-- 11. Comparison & Typo Lint -->
+      <div id="panel-compare" class="panel" role="tabpanel">
+        <h2>Multi-Font Diff Comparator &amp; Typographic Linter</h2>
+        <p>Compare anatomical metrics and visual outlines between two fonts side-by-side or overlaid in difference blend mode, and proof text runs with automated typographic rule linting.</p>
+
+        <h3>1. Side-by-Side &amp; Overlay Diff Comparator</h3>
+        <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-bottom:14px; background:#f8fafc; padding:10px 14px; border-radius:6px; border:1px solid #e2e8f0;">
+          <div>
+            <span style="font-size:12px; font-weight:600; color:#475569;">Font A (Active):</span>
+            <strong id="compFontAName" style="font-size:13px; color:#0f172a; margin-left:4px;">Arial</strong>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <label for="compFontBSelect" style="font-size:12px; font-weight:600; color:#475569;">Font B (Comparison):</label>
+            <select id="compFontBSelect" style="font-size:13px; padding:4px 8px; border:1px solid #cbd5e1; border-radius:4px;">
+              <option value="Georgia" selected>Georgia</option>
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Consolas">Consolas</option>
+              <option value="Courier New">Courier New</option>
+              <option value="Segoe UI">Segoe UI</option>
+              <option value="Tahoma">Tahoma</option>
+              <option value="Trebuchet MS">Trebuchet MS</option>
+              <option value="Verdana">Verdana</option>
+              <option value="Impact">Impact</option>
+            </select>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <span style="font-size:12px; font-weight:600; color:#475569;">Display Mode:</span>
+            <label class="checkbox-label"><input type="radio" name="compViewMode" value="split" checked> Side-by-Side</label>
+            <label class="checkbox-label"><input type="radio" name="compViewMode" value="overlay"> Difference Overlay</label>
+          </div>
+        </div>
+
+        <div style="margin-bottom:14px;">
+          <input type="text" id="compTestString" value="Hamburgevons 1999 &amp; Qg" style="width:100%; padding:8px 12px; font-size:15px; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box;">
+        </div>
+
+        <div id="compRenderContainer" style="margin-bottom:18px;"></div>
+        <div class="metric-grid" id="compMetricsGrid" style="margin-bottom:24px;"></div>
+
+        <h3>2. Typographic Linter &amp; Typesetting Proofing Engine</h3>
+        <p>Automated diagnostics detecting straight vs curly quotation marks, improper hyphens/dashes, fake ellipses, double spaces, and missing non-breaking spaces.</p>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; align-items:center;">
+          <span style="font-size:12px; font-weight:600; color:#64748b;">Sample Presets:</span>
+          <button class="chip-btn" id="btnLintPresetFlawed">Load Flawed Manuscript</button>
+          <button class="chip-btn" id="btnLintPresetClean">Load Clean Typeset</button>
+          <button class="chip-btn" id="btnLintPresetCarlsbad">Load Carlsbad Telemetry Stream</button>
+          <button class="action-btn" id="btnApplyTypoFix" style="margin-left:auto; background:#10b981;">✨ Apply Typographic Polish (Auto-Fix All)</button>
+        </div>
+
+        <textarea id="typoLintInput" style="width:100%; height:110px; padding:10px 12px; font-size:13px; font-family:'Segoe UI', sans-serif; border:1px solid #cbd5e1; border-radius:4px; box-sizing:border-box; line-height:1.5; resize:vertical;"></textarea>
+
+        <div id="lintFlawDashboard" style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;"></div>
+      </div>
+
       <!-- 8. Live Sample & String Run Dissector -->
       <div id="panel-sample" class="panel" role="tabpanel">
         <h2>Live Free Sample &amp; String Run Dissector</h2>
@@ -464,7 +773,8 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       </ul>
       <p><strong>Keyboard Shortcuts:</strong></p>
       <ul style="font-size:12px; color:#475569;">
-        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">1</kbd>–<kbd style="background:#eee; padding:1px 5px; border-radius:3px;">8</kbd> : Switch inspector tabs</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">1</kbd>–<kbd style="background:#eee; padding:1px 5px; border-radius:3px;">9</kbd>, <kbd style="background:#eee; padding:1px 5px; border-radius:3px;">0</kbd>, <kbd style="background:#eee; padding:1px 5px; border-radius:3px;">-</kbd> : Switch inspector tabs (Tabs 1–11)</li>
+        <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">X</kbd> : Invert active pixel matrix in Bitmap Studio</li>
         <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">F5</kbd> : Quicksave complete workspace snapshot</li>
         <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">F9</kbd> : Quickload snapshot from storage</li>
         <li><kbd style="background:#eee; padding:1px 5px; border-radius:3px;">M</kbd> : Toggle Sega Genesis FM / SNES audio feedback</li>
@@ -633,6 +943,42 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
           gain.connect(ctx.destination);
           osc.start(now);
           osc.stop(now + 0.15);
+        } else if (type === 'rasterize') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.exponentialRampToValueAtTime(140, now + 0.12);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.13);
+        } else if (type === 'pixel') {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(920, now);
+          gain.gain.setValueAtTime(0.04, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.025);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.03);
+        } else if (type === 'lint') {
+          [659.25, 987.77].forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+            gain.gain.setValueAtTime(0.07, now + idx * 0.06);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.18);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.06);
+            osc.stop(now + idx * 0.06 + 0.20);
+          });
         }
       } catch (e) {}
     }
@@ -676,6 +1022,8 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         customBg: customBg.value,
         customKern: customKernInput.value,
         sampleText: sampleOutput.innerText,
+        bitmapGrid: (typeof bmpGrid !== 'undefined') ? bmpGrid : [],
+        bitmapSize: (typeof bmpW !== 'undefined') ? `${bmpW}x${bmpH}` : '8x8',
         activeTab: document.querySelector('.tab-btn.active')?.dataset.target || 'panel-metrics',
         soundEnabled: soundEnabled,
         savedAt: new Date().toISOString()
@@ -727,6 +1075,14 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       if (state.sampleText !== undefined) {
         sampleOutput.innerText = state.sampleText;
         safeSetStorage('kfont_sample', state.sampleText);
+      }
+      if (Array.isArray(state.bitmapGrid) && state.bitmapGrid.length > 0) {
+        bmpGrid = [...state.bitmapGrid];
+        if (state.bitmapSize) {
+          const [w, h] = state.bitmapSize.split('x').map(Number);
+          bmpW = w; bmpH = h;
+          if (document.getElementById('bitmapGridSize')) document.getElementById('bitmapGridSize').value = state.bitmapSize;
+        }
       }
       if (typeof state.soundEnabled === 'boolean') {
         soundEnabled = state.soundEnabled;
@@ -1444,6 +1800,813 @@ body {
       updateDissectorTable();
     }
     
+
+    /* =========================================================================
+       MODULE 1: BITMAP FONT ROM & PIXEL MATRIX STUDIO (TAB 9)
+       ========================================================================= */
+    let bmpW = 8;
+    let bmpH = 8;
+    let bmpGrid = new Array(bmpW * bmpH).fill(0);
+    let isBmpDrawing = false;
+    let bmpDrawVal = 1;
+
+    const bmpPresets = {
+      cp437_smiley: { w: 8, h: 8, rows: [0x3C, 0x42, 0xA5, 0x81, 0xA5, 0x99, 0x42, 0x3C] },
+      cp437_heart:  { w: 8, h: 8, rows: [0x00, 0x66, 0xFF, 0xFF, 0x7E, 0x3C, 0x18, 0x00] },
+      music_note:   { w: 8, h: 8, rows: [0x06, 0x0E, 0x0E, 0x06, 0x76, 0xFE, 0xEE, 0x00] },
+      ghost_relay:  { w: 8, h: 8, rows: [0x18, 0x5A, 0x99, 0x3C, 0x18, 0x18, 0x3C, 0x7E] }, // 1999 subterranean RF relay breadcrumb
+      space_invader:{ w: 8, h: 8, rows: [0x18, 0x3C, 0x7E, 0xDB, 0xFF, 0x24, 0x5A, 0x81] },
+      retro_cursor: { w: 8, h: 8, rows: [0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xDC, 0x8E, 0x06] },
+      sword:        { w: 8, h: 8, rows: [0x01, 0x02, 0x04, 0x08, 0x10, 0x38, 0x54, 0x02] }
+    };
+
+    function loadBmpPreset(key) {
+      const preset = bmpPresets[key];
+      if (!preset) return;
+      document.getElementById('bitmapGridSize').value = `${preset.w}x${preset.h}`;
+      bmpW = preset.w;
+      bmpH = preset.h;
+      bmpGrid = new Array(bmpW * bmpH).fill(0);
+      for (let y = 0; y < preset.h; y++) {
+        const rowVal = preset.rows[y] || 0;
+        for (let x = 0; x < preset.w; x++) {
+          const bit = (rowVal >> (preset.w - 1 - x)) & 1;
+          bmpGrid[y * bmpW + x] = bit;
+        }
+      }
+      renderBitmapAll();
+      playSound('load');
+      showToast(`Loaded ROM Preset: ${key.replace('_', ' ').toUpperCase()}`);
+    }
+
+    function initBitmapStudio() {
+      const canvas = document.getElementById('bitmapEditorCanvas');
+      if (!canvas) return;
+
+      loadBmpPreset('cp437_smiley');
+
+      document.getElementById('bitmapGridSize').onchange = (e) => {
+        const [w, h] = e.target.value.split('x').map(Number);
+        const oldGrid = [...bmpGrid];
+        const oldW = bmpW, oldH = bmpH;
+        bmpW = w;
+        bmpH = h;
+        bmpGrid = new Array(bmpW * bmpH).fill(0);
+        for (let y = 0; y < Math.min(oldH, bmpH); y++) {
+          for (let x = 0; x < Math.min(oldW, bmpW); x++) {
+            bmpGrid[y * bmpW + x] = oldGrid[y * oldW + x] || 0;
+          }
+        }
+        renderBitmapAll();
+        playSound('click');
+        showToast(`Matrix resized to ${bmpW}x${bmpH}`);
+      };
+
+      document.getElementById('bitmapThreshold').oninput = (e) => {
+        document.getElementById('thresholdDisplay').textContent = `${e.target.value}%`;
+      };
+
+      document.getElementById('btnRasterizeActive').onclick = rasterizeActiveGlyph;
+      document.getElementById('btnBmpInvert').onclick = () => {
+        for (let i = 0; i < bmpGrid.length; i++) bmpGrid[i] = bmpGrid[i] ? 0 : 1;
+        renderBitmapAll();
+        playSound('pixel');
+      };
+      document.getElementById('btnBmpClear').onclick = () => {
+        bmpGrid.fill(0);
+        renderBitmapAll();
+        playSound('click');
+        showToast("Cleared pixel matrix");
+      };
+      document.getElementById('btnBmpFlipH').onclick = () => {
+        const next = new Array(bmpW * bmpH).fill(0);
+        for (let y = 0; y < bmpH; y++) {
+          for (let x = 0; x < bmpW; x++) {
+            next[y * bmpW + (bmpW - 1 - x)] = bmpGrid[y * bmpW + x];
+          }
+        }
+        bmpGrid = next;
+        renderBitmapAll();
+        playSound('pixel');
+      };
+      document.getElementById('btnBmpFlipV').onclick = () => {
+        const next = new Array(bmpW * bmpH).fill(0);
+        for (let y = 0; y < bmpH; y++) {
+          for (let x = 0; x < bmpW; x++) {
+            next[(bmpH - 1 - y) * bmpW + x] = bmpGrid[y * bmpW + x];
+          }
+        }
+        bmpGrid = next;
+        renderBitmapAll();
+        playSound('pixel');
+      };
+      document.getElementById('btnBmpShiftUp').onclick = () => shiftBitmap(0, -1);
+      document.getElementById('btnBmpShiftDown').onclick = () => shiftBitmap(0, 1);
+      document.getElementById('btnBmpShiftLeft').onclick = () => shiftBitmap(-1, 0);
+      document.getElementById('btnBmpShiftRight').onclick = () => shiftBitmap(1, 0);
+
+      document.querySelectorAll('[data-bmp-preset]').forEach(btn => {
+        btn.onclick = () => loadBmpPreset(btn.getAttribute('data-bmp-preset'));
+      });
+
+      document.getElementById('bitmapPreviewTheme').onchange = () => {
+        renderBitmapPreviews();
+        playSound('click');
+      };
+
+      document.getElementById('bitmapExportFormat').onchange = () => {
+        updateBitmapExport();
+        playSound('click');
+      };
+
+      document.getElementById('btnCopyBitmapCode').onclick = () => {
+        copyToClipboard(document.getElementById('bitmapExportCode').textContent, "Copied bitmap code to clipboard!");
+      };
+
+      document.getElementById('btnDownloadBitmapHeader').onclick = downloadBitmapHeader;
+
+      // Mouse drag handlers on canvas
+      function getCanvasCell(e) {
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.clientX;
+        const clientY = e.clientY;
+        const x = Math.floor(((clientX - rect.left) / rect.width) * bmpW);
+        const y = Math.floor(((clientY - rect.top) / rect.height) * bmpH);
+        return {
+          x: Math.max(0, Math.min(bmpW - 1, x)),
+          y: Math.max(0, Math.min(bmpH - 1, y))
+        };
+      }
+
+      canvas.onmousedown = (e) => {
+        isBmpDrawing = true;
+        const cell = getCanvasCell(e);
+        const isRightClick = e.button === 2;
+        const current = bmpGrid[cell.y * bmpW + cell.x];
+        bmpDrawVal = (isRightClick || e.shiftKey) ? 0 : (current ? 0 : 1);
+        bmpGrid[cell.y * bmpW + cell.x] = bmpDrawVal;
+        renderBitmapAll();
+        playSound('pixel');
+      };
+
+      canvas.onmousemove = (e) => {
+        const cell = getCanvasCell(e);
+        document.getElementById('bitmapCoordInfo').textContent = `X: ${cell.x} , Y: ${cell.y}`;
+        if (isBmpDrawing) {
+          if (bmpGrid[cell.y * bmpW + cell.x] !== bmpDrawVal) {
+            bmpGrid[cell.y * bmpW + cell.x] = bmpDrawVal;
+            renderBitmapAll();
+            playSound('pixel');
+          }
+        }
+      };
+
+      window.addEventListener('mouseup', () => { isBmpDrawing = false; });
+      canvas.onmouseleave = () => {
+        document.getElementById('bitmapCoordInfo').textContent = `X: - , Y: -`;
+      };
+      canvas.oncontextmenu = (e) => e.preventDefault();
+    }
+
+    function shiftBitmap(dx, dy) {
+      const next = new Array(bmpW * bmpH).fill(0);
+      for (let y = 0; y < bmpH; y++) {
+        for (let x = 0; x < bmpW; x++) {
+          const nx = (x + dx + bmpW) % bmpW;
+          const ny = (y + dy + bmpH) % bmpH;
+          next[ny * bmpW + nx] = bmpGrid[y * bmpW + x];
+        }
+      }
+      bmpGrid = next;
+      renderBitmapAll();
+      playSound('pixel');
+    }
+
+    function rasterizeActiveGlyph() {
+      const char = (anatomyInput.value || 'A').trim().charAt(0) || 'A';
+      const off = document.createElement('canvas');
+      off.width = bmpW;
+      off.height = bmpH;
+      const ctx = off.getContext('2d');
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, bmpW, bmpH);
+
+      const fontSize = Math.floor(bmpH * 0.85);
+      const fontFam = fontList.value.replace(/["\]/g, '');
+      const weight = boldCheck.checked ? 'bold' : 'normal';
+      const style = italicCheck.checked ? 'italic' : 'normal';
+      ctx.font = `${style} ${weight} ${fontSize}px "${fontFam}", sans-serif`;
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(char, bmpW / 2, bmpH / 2);
+
+      const imgData = ctx.getImageData(0, 0, bmpW, bmpH);
+      const threshold = parseInt(document.getElementById('bitmapThreshold').value, 10) * 2.55;
+      for (let y = 0; y < bmpH; y++) {
+        for (let x = 0; x < bmpW; x++) {
+          const idx = (y * bmpW + x) * 4;
+          const lum = imgData.data[idx] * 0.299 + imgData.data[idx + 1] * 0.587 + imgData.data[idx + 2] * 0.114;
+          bmpGrid[y * bmpW + x] = (lum >= threshold && imgData.data[idx + 3] > 50) ? 1 : 0;
+        }
+      }
+      renderBitmapAll();
+      playSound('rasterize');
+      showToast(`Rasterized "${char}" from ${fontFam} (${bmpW}x${bmpH})`);
+    }
+
+    function renderBitmapEditor() {
+      const canvas = document.getElementById('bitmapEditorCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      const cellW = w / bmpW;
+      const cellH = h / bmpH;
+
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(0, 0, w, h);
+
+      for (let y = 0; y < bmpH; y++) {
+        for (let x = 0; x < bmpW; x++) {
+          const val = bmpGrid[y * bmpW + x];
+          if (val) {
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(x * cellW, y * cellH, cellW, cellH);
+          }
+          // Grid lines
+          ctx.strokeStyle = '#1e293b';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(x * cellW, y * cellH, cellW, cellH);
+        }
+      }
+    }
+
+    function renderBitmapPreviews() {
+      const theme = document.getElementById('bitmapPreviewTheme')?.value || 'green';
+      let fg = '#33ff33', bg = '#061206';
+      if (theme === 'mono') { fg = '#ffffff'; bg = '#000000'; }
+      else if (theme === 'amber') { fg = '#ffb000'; bg = '#120c00'; }
+      else if (theme === 'lcd') { fg = '#1e2d14'; bg = '#9bbc0f'; }
+
+      const previews = [
+        { id: 'prev1x', scale: 1, scanlines: false },
+        { id: 'prev2x', scale: 2, scanlines: false },
+        { id: 'prev4x', scale: 4, scanlines: false },
+        { id: 'prev8x', scale: 8, scanlines: true }
+      ];
+
+      previews.forEach(p => {
+        const can = document.getElementById(p.id);
+        if (!can) return;
+        can.width = bmpW * p.scale;
+        can.height = bmpH * p.scale;
+        const ctx = can.getContext('2d');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, can.width, can.height);
+
+        ctx.fillStyle = fg;
+        for (let y = 0; y < bmpH; y++) {
+          for (let x = 0; x < bmpW; x++) {
+            if (bmpGrid[y * bmpW + x]) {
+              ctx.fillRect(x * p.scale, y * p.scale, p.scale, p.scale);
+            }
+          }
+        }
+
+        if (p.scanlines) {
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.35)';
+          for (let y = 0; y < can.height; y += 2) {
+            ctx.fillRect(0, y, can.width, 1);
+          }
+        }
+      });
+    }
+
+    function updateBitmapExport() {
+      const fmt = document.getElementById('bitmapExportFormat')?.value || 'c_array';
+      const codeEl = document.getElementById('bitmapExportCode');
+      if (!codeEl) return;
+
+      const bytesPerRow = Math.ceil(bmpW / 8);
+      const rowHex = [];
+      const rowAsm = [];
+      const rawHexList = [];
+      const binaryBits = [];
+
+      for (let y = 0; y < bmpH; y++) {
+        const rowBytes = [];
+        for (let b = 0; b < bytesPerRow; b++) {
+          let byteVal = 0;
+          let bitStr = '';
+          for (let bit = 0; bit < 8; bit++) {
+            const x = b * 8 + bit;
+            const bitVal = (x < bmpW) ? (bmpGrid[y * bmpW + x] || 0) : 0;
+            byteVal = (byteVal << 1) | bitVal;
+            bitStr += bitVal ? '1' : '0';
+          }
+          const hex = '0x' + byteVal.toString(16).toUpperCase().padStart(2, '0');
+          const hexAsm = byteVal.toString(16).toUpperCase().padStart(2, '0') + 'h';
+          rowBytes.push(hex);
+          rawHexList.push(hex);
+          rowAsm.push(hexAsm);
+          binaryBits.push(`0b${bitStr}`);
+        }
+        rowHex.push(`    ${rowBytes.join(', ')}`);
+      }
+
+      let output = '';
+      if (fmt === 'c_array') {
+        output = `/* KFont 1-Bit Bitmap Glyph: ${bmpW}x${bmpH} */
+` +
+                 `const uint8_t glyph_${bmpW}x${bmpH}[${bmpH * bytesPerRow}] = {
+` +
+                 rowHex.join(',
+') + '
+};
+';
+      } else if (fmt === 'x86_asm') {
+        output = `; KFont 1-Bit Bitmap Glyph: ${bmpW}x${bmpH}
+` +
+                 `glyph_${bmpW}x${bmpH}:
+` +
+                 `    db ` + rowAsm.join(', ') + '
+';
+      } else if (fmt === 'hex_stream') {
+        output = rawHexList.join(', ');
+      } else if (fmt === 'bdf') {
+        const bdfRows = [];
+        for (let y = 0; y < bmpH; y++) {
+          let byteVal = 0;
+          for (let x = 0; x < Math.min(8, bmpW); x++) {
+            byteVal = (byteVal << 1) | (bmpGrid[y * bmpW + x] || 0);
+          }
+          bdfRows.push(byteVal.toString(16).toUpperCase().padStart(2, '0'));
+        }
+        output = `STARTCHAR glyph_${bmpW}x${bmpH}
+` +
+                 `ENCODING 65
+` +
+                 `SWIDTH 1000 0
+` +
+                 `DWIDTH ${bmpW} 0
+` +
+                 `BBX ${bmpW} ${bmpH} 0 0
+` +
+                 `BITMAP
+` +
+                 bdfRows.join('
+') + '
+' +
+                 `ENDCHAR
+`;
+      } else if (fmt === 'arduino') {
+        output = `// Adafruit GFX compatible bitmap (${bmpW}x${bmpH})
+` +
+                 `const unsigned char PROGMEM glyph_${bmpW}x${bmpH}[] = {
+` +
+                 rowHex.join(',
+') + '
+};
+';
+      } else if (fmt === 'binary_bits') {
+        output = binaryBits.join(',
+');
+      }
+
+      codeEl.textContent = output;
+    }
+
+    function renderBitmapAll() {
+      renderBitmapEditor();
+      renderBitmapPreviews();
+      updateBitmapExport();
+    }
+
+    function downloadBitmapHeader() {
+      const code = document.getElementById('bitmapExportCode').textContent;
+      const blob = new Blob([code], { type: 'text/x-c' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kfont_glyph_${bmpW}x${bmpH}.h`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      playSound('copy');
+      showToast(`Downloaded kfont_glyph_${bmpW}x${bmpH}.h`);
+    }
+
+    /* =========================================================================
+       MODULE 2: OPENTYPE & VARIABLE FONT AXES (TAB 10)
+       ========================================================================= */
+    const otfTags = ['liga', 'dlig', 'smcp', 'c2sc', 'onum', 'tnum', 'pnum', 'frac', 'zero', 'swsh', 'ss01', 'ss02'];
+    let isOscillating = false;
+    let oscAngle = 0;
+
+    function getActiveOtfSettings() {
+      const active = [];
+      otfTags.forEach(t => {
+        const el = document.getElementById(`otf_${t}`);
+        if (el && el.checked) active.push(`"${t}" 1`);
+      });
+      return active.length > 0 ? active.join(', ') : 'normal';
+    }
+
+    function updateOtfPreview() {
+      const settings = getActiveOtfSettings();
+      const safeFont = fontList.value.replace(/["\]/g, '');
+      const weight = boldCheck.checked ? 'bold' : 'normal';
+      const style = italicCheck.checked ? 'italic' : 'normal';
+
+      const pOff = document.getElementById('otfPreviewOff');
+      const pOn = document.getElementById('otfPreviewOn');
+      if (pOff && pOn) {
+        pOff.style.fontFamily = `"${safeFont}", sans-serif`;
+        pOff.style.fontWeight = weight;
+        pOff.style.fontStyle = style;
+        pOff.style.fontFeatureSettings = 'normal';
+
+        pOn.style.fontFamily = `"${safeFont}", sans-serif`;
+        pOn.style.fontWeight = weight;
+        pOn.style.fontStyle = style;
+        pOn.style.fontFeatureSettings = settings;
+      }
+
+      const cssEl = document.getElementById('otfCssCodeBlock');
+      if (cssEl) {
+        cssEl.textContent = `/* OpenType Feature Settings Declaration */
+` +
+          `.typography-advanced {
+` +
+          `  font-family: "${safeFont}", sans-serif;
+` +
+          `  font-feature-settings: ${settings};
+` +
+          `  -webkit-font-feature-settings: ${settings};
+` +
+          `  font-variant-ligatures: ${document.getElementById('otf_dlig')?.checked ? 'discretionary-ligatures' : 'normal'};
+` +
+          `  font-variant-numeric: ${document.getElementById('otf_tnum')?.checked ? 'tabular-nums' : 'normal'} ${document.getElementById('otf_frac')?.checked ? 'diagonal-fractions' : ''} ${document.getElementById('otf_zero')?.checked ? 'slashed-zero' : ''};
+` +
+          `}`;
+      }
+    }
+
+    function updateVarPreview() {
+      const wght = document.getElementById('varWeight')?.value || 400;
+      const wdth = document.getElementById('varWidth')?.value || 100;
+      const slnt = document.getElementById('varSlant')?.value || 0;
+      const opsz = document.getElementById('varOpsz')?.value || 16;
+      const safeFont = fontList.value.replace(/["\]/g, '');
+
+      const box = document.getElementById('varFontPreviewBox');
+      if (box) {
+        box.style.fontFamily = `"${safeFont}", sans-serif`;
+        box.style.fontVariationSettings = `'wght' ${wght}, 'wdth' ${wdth}, 'slnt' ${slnt}, 'opsz' ${opsz}`;
+      }
+
+      const cssEl = document.getElementById('varCssCodeBlock');
+      if (cssEl) {
+        cssEl.textContent = `/* Variable Font Axes CSS Declaration */
+` +
+          `@supports (font-variation-settings: 'wght' ${wght}) {
+` +
+          `  .variable-type {
+` +
+          `    font-family: "${safeFont}", sans-serif;
+` +
+          `    font-variation-settings: 'wght' ${wght}, 'wdth' ${wdth}, 'slnt' ${slnt}, 'opsz' ${opsz};
+` +
+          `    font-weight: ${wght};
+` +
+          `    font-stretch: ${wdth}%;
+` +
+          `  }
+` +
+          `}`;
+      }
+    }
+
+    function runOscillation() {
+      if (!isOscillating) return;
+      oscAngle += 0.045;
+      const w = Math.round(500 + Math.sin(oscAngle) * 360);
+      const wd = Math.round(100 + Math.cos(oscAngle * 0.7) * 35);
+      const wEl = document.getElementById('varWeight');
+      const wdEl = document.getElementById('varWidth');
+      if (wEl && wdEl) {
+        wEl.value = w;
+        document.getElementById('varWeightVal').textContent = w;
+        wdEl.value = wd;
+        document.getElementById('varWidthVal').textContent = `${wd}%`;
+        updateVarPreview();
+      }
+      requestAnimationFrame(runOscillation);
+    }
+
+    function initOpenTypeStudio() {
+      otfTags.forEach(t => {
+        const el = document.getElementById(`otf_${t}`);
+        if (el) el.onchange = () => { updateOtfPreview(); playSound('click'); };
+      });
+
+      // Synchronize text editing across both comparison boxes
+      const pOff = document.getElementById('otfPreviewOff');
+      const pOn = document.getElementById('otfPreviewOn');
+      if (pOff && pOn) {
+        pOff.oninput = () => { pOn.innerText = pOff.innerText; };
+        pOn.oninput = () => { pOff.innerText = pOn.innerText; };
+      }
+
+      document.getElementById('btnOtfPresetLigatures').onclick = () => {
+        otfTags.forEach(t => {
+          const el = document.getElementById(`otf_${t}`);
+          if (el) el.checked = (t === 'liga' || t === 'dlig');
+        });
+        updateOtfPreview();
+        playSound('tab');
+        showToast("Active Preset: Ligatures Suite");
+      };
+
+      document.getElementById('btnOtfPresetNumbers').onclick = () => {
+        otfTags.forEach(t => {
+          const el = document.getElementById(`otf_${t}`);
+          if (el) el.checked = (t === 'tnum' || t === 'zero');
+        });
+        updateOtfPreview();
+        playSound('tab');
+        showToast("Active Preset: Tabular & Slashed Zero");
+      };
+
+      document.getElementById('btnOtfPresetSmallCaps').onclick = () => {
+        otfTags.forEach(t => {
+          const el = document.getElementById(`otf_${t}`);
+          if (el) el.checked = (t === 'smcp' || t === 'c2sc');
+        });
+        updateOtfPreview();
+        playSound('tab');
+        showToast("Active Preset: Small Caps Editorial");
+      };
+
+      document.getElementById('btnOtfPresetFractions').onclick = () => {
+        otfTags.forEach(t => {
+          const el = document.getElementById(`otf_${t}`);
+          if (el) el.checked = (t === 'frac');
+        });
+        updateOtfPreview();
+        playSound('tab');
+        showToast("Active Preset: Diagonal Fractions");
+      };
+
+      document.getElementById('btnOtfPresetReset').onclick = () => {
+        otfTags.forEach(t => {
+          const el = document.getElementById(`otf_${t}`);
+          if (el) el.checked = false;
+        });
+        updateOtfPreview();
+        playSound('click');
+        showToast("Reset all OpenType features OFF");
+      };
+
+      document.getElementById('btnCopyOtfCss').onclick = () => {
+        copyToClipboard(document.getElementById('otfCssCodeBlock').textContent, "Copied OpenType CSS declaration!");
+      };
+
+      // Variable Axes Handlers
+      ['varWeight', 'varWidth', 'varSlant', 'varOpsz'].forEach(id => {
+        const el = document.getElementById(id);
+        const valEl = document.getElementById(`${id}Val`);
+        if (el && valEl) {
+          el.oninput = () => {
+            valEl.textContent = id === 'varWidth' ? `${el.value}%` : (id === 'varSlant' ? `${el.value}°` : (id === 'varOpsz' ? `${el.value}pt` : el.value));
+            updateVarPreview();
+          };
+        }
+      });
+
+      document.getElementById('btnToggleOscillation').onclick = () => {
+        isOscillating = !isOscillating;
+        const btn = document.getElementById('btnToggleOscillation');
+        btn.textContent = isOscillating ? '⏹ Stop Typographic Pulse' : '▶ Start Typographic Pulse / Breath Mode';
+        btn.style.background = isOscillating ? '#dc2626' : '#7c3aed';
+        if (isOscillating) {
+          playSound('tab');
+          runOscillation();
+        }
+      };
+
+      document.getElementById('btnVarReset').onclick = () => {
+        isOscillating = false;
+        document.getElementById('btnToggleOscillation').textContent = '▶ Start Typographic Pulse / Breath Mode';
+        document.getElementById('btnToggleOscillation').style.background = '#7c3aed';
+        document.getElementById('varWeight').value = 400; document.getElementById('varWeightVal').textContent = '400';
+        document.getElementById('varWidth').value = 100; document.getElementById('varWidthVal').textContent = '100%';
+        document.getElementById('varSlant').value = 0; document.getElementById('varSlantVal').textContent = '0°';
+        document.getElementById('varOpsz').value = 16; document.getElementById('varOpszVal').textContent = '16pt';
+        updateVarPreview();
+        playSound('click');
+      };
+
+      document.getElementById('btnCopyVarCss').onclick = () => {
+        copyToClipboard(document.getElementById('varCssCodeBlock').textContent, "Copied Variable Font CSS declaration!");
+      };
+
+      updateOtfPreview();
+      updateVarPreview();
+    }
+
+    /* =========================================================================
+       MODULE 3: MULTI-FONT COMPARATOR & TYPOGRAPHIC LINTER (TAB 11)
+       ========================================================================= */
+    function updateComparison() {
+      const fontA = fontList.value;
+      const fontB = document.getElementById('compFontBSelect')?.value || 'Georgia';
+      const mode = document.querySelector('input[name="compViewMode"]:checked')?.value || 'split';
+      const str = document.getElementById('compTestString')?.value || 'Hamburgevons 1999 & Qg';
+      const container = document.getElementById('compRenderContainer');
+      const metricsGrid = document.getElementById('compMetricsGrid');
+      const fontANameEl = document.getElementById('compFontAName');
+      if (fontANameEl) fontANameEl.textContent = fontA;
+
+      const safeA = fontA.replace(/["\]/g, '');
+      const safeB = fontB.replace(/["\]/g, '');
+      const weight = boldCheck.checked ? 'bold' : 'normal';
+      const style = italicCheck.checked ? 'italic' : 'normal';
+
+      // Optical Metric Deltas using Canvas
+      const can = document.getElementById('canvasMetrics');
+      const ctx = can.getContext('2d');
+      ctx.font = `${style} ${weight} 32px "${safeA}", sans-serif`;
+      const wA = ctx.measureText(str).width;
+      const ascA = ctx.measureText('H').actualBoundingBoxAscent || 24;
+      const xhA = ctx.measureText('x').actualBoundingBoxAscent || 16;
+
+      ctx.font = `${style} ${weight} 32px "${safeB}", sans-serif`;
+      const wB = ctx.measureText(str).width;
+      const ascB = ctx.measureText('H').actualBoundingBoxAscent || 24;
+      const xhB = ctx.measureText('x').actualBoundingBoxAscent || 16;
+
+      const deltaW = wB - wA;
+      const deltaPercent = ((deltaW / (wA || 1)) * 100);
+
+      if (mode === 'split') {
+        container.innerHTML = `
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+            <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:16px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span style="font-size:12px; font-weight:700; color:#0284c7;">Font A: ${escapeHtml(fontA)}</span>
+                <span style="font-size:11px; font-family:monospace; color:#64748b;">Width: ${wA.toFixed(1)}px</span>
+              </div>
+              <div style="font-family:'${safeA}', sans-serif; font-size:32px; font-weight:${weight}; font-style:${style}; line-height:1.3; word-break:break-all; color:#0f172a;">
+                ${escapeHtml(str)}
+              </div>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:16px;">
+              <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                <span style="font-size:12px; font-weight:700; color:#e11d48;">Font B: ${escapeHtml(fontB)}</span>
+                <span style="font-size:11px; font-family:monospace; color:#64748b;">Width: ${wB.toFixed(1)}px</span>
+              </div>
+              <div style="font-family:'${safeB}', sans-serif; font-size:32px; font-weight:${weight}; font-style:${style}; line-height:1.3; word-break:break-all; color:#0f172a;">
+                ${escapeHtml(str)}
+              </div>
+            </div>
+          </div>
+        `;
+      } else { // Difference Overlay Blend Mode
+        container.innerHTML = `
+          <div class="diff-overlay-box">
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:11px; opacity:0.8;">
+              <span style="color:#00e5ff;">Cyan Layer: ${escapeHtml(fontA)}</span>
+              <span style="color:#ff007f;">Magenta Layer: ${escapeHtml(fontB)}</span>
+              <span style="color:#fff;">White Intersection: Exact Match</span>
+            </div>
+            <div style="position:relative; min-height:80px; font-size:36px; font-weight:${weight}; font-style:${style}; line-height:1.3;">
+              <div class="diff-layer-a" style="font-family:'${safeA}', sans-serif;">${escapeHtml(str)}</div>
+              <div class="diff-layer-b" style="font-family:'${safeB}', sans-serif;">${escapeHtml(str)}</div>
+            </div>
+          </div>
+        `;
+      }
+
+      // Populate comparison metrics
+      const compFields = [
+        { name: `Advance Width (${safeA})`, val: `${wA.toFixed(1)} px` },
+        { name: `Advance Width (${safeB})`, val: `${wB.toFixed(1)} px` },
+        { name: "Width Delta (B - A)", val: `${deltaW > 0 ? '+' : ''}${deltaW.toFixed(1)} px (${deltaPercent > 0 ? '+' : ''}${deltaPercent.toFixed(1)}%)` },
+        { name: "x-Height Delta (H/x)", val: `${(xhA / (ascA || 1)).toFixed(2)} vs ${(xhB / (ascB || 1)).toFixed(2)}` },
+        { name: "Optical Alignment", val: Math.abs(deltaPercent) < 5 ? "Closely Matched" : (deltaPercent > 0 ? "Font B is Wider" : "Font B is More Condensed") }
+      ];
+
+      metricsGrid.innerHTML = compFields.map(f => `
+        <div class="metric-card">
+          <div class="metric-title">${escapeHtml(f.name)}</div>
+          <div class="metric-value" style="font-size:16px;">${escapeHtml(f.val)}</div>
+        </div>
+      `).join('');
+    }
+
+    function runTypoLinter() {
+      const text = document.getElementById('typoLintInput')?.value || '';
+      const dashboard = document.getElementById('lintFlawDashboard');
+      if (!dashboard) return;
+
+      const straightQuotes = (text.match(/["']/g) || []).length;
+      const doubleSpaces = (text.match(/  +/g) || []).length;
+      const hyphensAsDashes = (text.match(/(?:--|\s+-\s+)/g) || []).length;
+      const dotsAsEllipsis = (text.match(/\.\.\./g) || []).length;
+      const missingNbsp = (text.match(/\d+\s+(?:px|em|rem|pt|%|kb|mb|hz|mhz)/gi) || []).length;
+      const asciiMult = (text.match(/\d+\s*x\s*\d+/gi) || []).length;
+
+      const totalFlaws = straightQuotes + doubleSpaces + hyphensAsDashes + dotsAsEllipsis + missingNbsp + asciiMult;
+
+      let html = '';
+      if (totalFlaws === 0) {
+        html = `<div class="flaw-badge flaw-ok">✓ Publication Grade: 0 Typographic Flaws Detected</div>`;
+      } else {
+        html += `<div class="flaw-badge flaw-warn" style="font-weight:700;">⚠️ ${totalFlaws} Typographic Flaw${totalFlaws > 1 ? 's' : ''} Detected:</div>`;
+        if (straightQuotes > 0) html += `<div class="flaw-badge flaw-warn">${straightQuotes} Straight Quote${straightQuotes>1?'s':''} (" / ')</div>`;
+        if (doubleSpaces > 0) html += `<div class="flaw-badge flaw-warn">${doubleSpaces} Double Space${doubleSpaces>1?'s':''}</div>`;
+        if (hyphensAsDashes > 0) html += `<div class="flaw-badge flaw-warn">${hyphensAsDashes} Hyphen-as-Dash (--)</div>`;
+        if (dotsAsEllipsis > 0) html += `<div class="flaw-badge flaw-warn">${dotsAsEllipsis} Triple-Dot Ellipsis (...)</div>`;
+        if (missingNbsp > 0) html += `<div class="flaw-badge flaw-warn">${missingNbsp} Missing &amp;nbsp; before unit</div>`;
+        if (asciiMult > 0) html += `<div class="flaw-badge flaw-warn">${asciiMult} ASCII 'x' multiplication</div>`;
+      }
+      dashboard.innerHTML = html;
+    }
+
+    function applyTypoPolish() {
+      let text = document.getElementById('typoLintInput')?.value || '';
+      if (!text) return;
+
+      // 1. Triple dots to real ellipsis
+      text = text.replace(/\.\.\./g, '…');
+
+      // 2. Hyphens as em-dashes
+      text = text.replace(/--/g, '—').replace(/\s+-\s+/g, ' — ');
+
+      // 3. ASCII x multiplication to multiplication symbol
+      text = text.replace(/(\d+)\s*x\s*(\d+)/gi, '$1×$2');
+
+      // 4. Double spaces to single
+      text = text.replace(/  +/g, ' ');
+
+      // 5. Straight double quotes to curly quotes: opening “ and closing ”
+      text = text.replace(/(^|[\s(\[{<])"/g, '$1“').replace(/"/g, '”');
+
+      // 6. Straight single quotes / apostrophes to curly: ‘ and ’
+      text = text.replace(/(^|[\s(\[{<])'/g, '$1‘').replace(/'/g, '’');
+
+      // 7. Non-breaking spaces before units (encoded as standard  )
+      text = text.replace(/(\d+)\s+(px|em|rem|pt|%|kb|mb|hz|mhz)/gi, '$1\u00A0$2');
+
+      document.getElementById('typoLintInput').value = text;
+      runTypoLinter();
+      playSound('lint');
+      copyToClipboard(text, "Applied typographic polish & copied to clipboard!");
+    }
+
+    function initComparisonAndLint() {
+      document.getElementById('compFontBSelect').onchange = () => { updateComparison(); playSound('click'); };
+      document.querySelectorAll('input[name="compViewMode"]').forEach(r => {
+        r.onchange = () => { updateComparison(); playSound('click'); };
+      });
+      document.getElementById('compTestString').oninput = updateComparison;
+
+      const lintInput = document.getElementById('typoLintInput');
+      if (lintInput) {
+        lintInput.value = `"The quick brown fox" jumps -- fast... It measured 1920x1080 at 60 hz with  double spaces.`;
+        lintInput.oninput = runTypoLinter;
+      }
+
+      document.getElementById('btnLintPresetFlawed').onclick = () => {
+        lintInput.value = `"It's a "classic" typography test -- don't forget the 1920x1080 resolution...  It is 100 % compliant at 60 hz.`;
+        runTypoLinter();
+        playSound('click');
+        showToast("Loaded Flawed Manuscript");
+      };
+
+      document.getElementById('btnLintPresetClean').onclick = () => {
+        lintInput.value = `“It’s a ‘classic’ typography test — don’t forget the 1920×1080 resolution… It is 100\u00A0% compliant at 60\u00A0Hz.”`;
+        runTypoLinter();
+        playSound('click');
+        showToast("Loaded Clean Typeset");
+      };
+
+      document.getElementById('btnLintPresetCarlsbad').onclick = () => {
+        lintInput.value = `[CARLSBAD TELEMETRY 1999-12-31] CARRIER LOCK: 1999Hz -- SECTOR OFFSET: 0x00402000... RELAY MESH: 10.19.99.4/classified -- SHANNON ENTROPY: 7.92 bits -- PACIFIC MCI TRANSIT: ACTIVE`;
+        runTypoLinter();
+        playSound('tab');
+        showToast("Loaded Carlsbad Telemetry Stream");
+      };
+
+      document.getElementById('btnApplyTypoFix').onclick = applyTypoPolish;
+
+      updateComparison();
+      runTypoLinter();
+    }
+
     function updateAll() {
       updateMetrics();
       updateGlyphs();
@@ -1453,6 +2616,11 @@ body {
       updateContrast();
       updateSpecAndCode();
       updateSample();
+      if (typeof renderBitmapAll === 'function') renderBitmapAll();
+      if (typeof updateOtfPreview === 'function') updateOtfPreview();
+      if (typeof updateVarPreview === 'function') updateVarPreview();
+      if (typeof updateComparison === 'function') updateComparison();
+      if (typeof runTypoLinter === 'function') runTypoLinter();
     }
     
     function switchToTab(targetId) {
@@ -1473,6 +2641,9 @@ body {
       else if (targetId === 'panel-spec') updateSpecAndCode();
       else if (targetId === 'panel-sample') updateSample();
       else if (targetId === 'panel-glyphs') updateGlyphs();
+      else if (targetId === 'panel-bitmap') renderBitmapAll();
+      else if (targetId === 'panel-opentype') { updateOtfPreview(); updateVarPreview(); }
+      else if (targetId === 'panel-compare') { updateComparison(); runTypoLinter(); }
     }
 
     const tabBtns = Array.from(document.querySelectorAll('.tab-btn'));
@@ -1822,6 +2993,9 @@ body {
       switchToTab(savedTab);
     }
     
+    initBitmapStudio();
+    initOpenTypeStudio();
+    initComparisonAndLint();
     updateAll();
     updateSoundBtn();
 
@@ -1925,15 +3099,27 @@ body {
           updateSoundBtn();
           if (soundEnabled) playSound('save');
           showToast(`Sound FX: ${soundEnabled ? 'Enabled' : 'Muted'}`);
-        } else if (e.key >= '1' && e.key <= '8') {
+        } else if (e.key >= '1' && e.key <= '9') {
           const tabMap = [
             'panel-metrics', 'panel-glyphs', 'panel-diagnostics', 'panel-anatomy',
-            'panel-waterfall', 'panel-contrast', 'panel-spec', 'panel-sample'
+            'panel-waterfall', 'panel-contrast', 'panel-spec', 'panel-sample',
+            'panel-bitmap'
           ];
           const target = tabMap[parseInt(e.key, 10) - 1];
           if (target) {
             playSound('tab');
             switchToTab(target);
+          }
+        } else if (e.key === '0') {
+          playSound('tab');
+          switchToTab('panel-opentype');
+        } else if (e.key === '-' || e.key === '_') {
+          playSound('tab');
+          switchToTab('panel-compare');
+        } else if (e.key.toLowerCase() === 'x') {
+          const activePanel = document.querySelector('.panel.active');
+          if (activePanel && activePanel.id === 'panel-bitmap') {
+            document.getElementById('btnBmpInvert').click();
           }
         } else if (e.key.toLowerCase() === 'b') {
           boldCheck.checked = !boldCheck.checked;
