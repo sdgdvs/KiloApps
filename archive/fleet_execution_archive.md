@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T22:38:00Z — kilo-graphics: KStarship (Superweapon Forge Art, Zero Glints, Stellar Wind Ramscoop & Action Consistency)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 154.2 KB < 999 KB).
+  - Superweapon Forge: Added dedicated cyclotron particle accelerator & antimatter crucible vector art in web & Win32 C (`main.c`).
+  - Specular Glint & Border Audit: Replaced corner dot blocks with crisp double-bracket reticles in HUD; verified 0 perimeter glints/dots.
+  - Tactical Combat Key Alignment: Aligned 4-key combat array (1:Laser, 2:Flee, 3:Superweapon, 4:Shield Boost) with persistent hotkeys.
+  - Ramscoop Balance Pass: Added passive stellar wind fuel trickle (+0.25 fuel/frame) when navigating within 120px of star systems.
+  - Audio & Forge Feedback: Added YM2612 FM chime & alarm feedback and capacitive status notifications to weaponsmith forge.
+  - Verification: MSVC clean (`KStarship.exe` 151 KB); Vite clean in 391ms (`kstarship.html` 154.2 KB); icon check & security lint 100% PASS.
+
 - **2026-09-29T22:25:00Z — kilo-expander: KVault (TOTP 2FA Engine, Generator Studio, Security Audit & Multi-Format Suite)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 143.7 KB < 999 KB).
   - TOTP Authenticator: Added live RFC 6238 Base32 HMAC-SHA1 2FA code generator with 30s countdown wheel and 1-click copy.

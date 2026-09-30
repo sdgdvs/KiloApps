@@ -14,6 +14,7 @@
     --accent-green: #22c55e;
     --accent-red: #ef4444;
     --accent-purple: #a855f7;
+    --accent-amber: #f59e0b;
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
     --border-color: #334155;
@@ -121,8 +122,8 @@
     border-color: var(--accent-blue);
   }
 
-  .search-input { width: 160px; }
-  .password-input { width: 130px; }
+  .search-input { width: 140px; }
+  .password-input { width: 120px; }
 
   .actions-row {
     display: flex;
@@ -135,14 +136,14 @@
     background-color: var(--bg-secondary);
     color: var(--text-main);
     border: 1px solid var(--border-color);
-    padding: 6px 12px;
-    font-size: 13px;
+    padding: 6px 11px;
+    font-size: 12px;
     font-weight: 500;
     border-radius: 6px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 4px;
     transition: all 0.2s ease;
   }
 
@@ -223,6 +224,7 @@
     font-weight: 600;
   }
   .badge-rle { background-color: rgba(168, 85, 247, 0.2); color: var(--accent-purple); border: 1px solid rgba(168, 85, 247, 0.4); }
+  .badge-deflate { background-color: rgba(34, 197, 94, 0.2); color: var(--accent-green); border: 1px solid rgba(34, 197, 94, 0.4); }
   .badge-store { background-color: rgba(56, 189, 248, 0.2); color: var(--accent-blue); border: 1px solid rgba(56, 189, 248, 0.4); }
 
   .status-footer {
@@ -234,11 +236,11 @@
     color: var(--text-muted);
   }
 
-  /* Modal */
+  /* Modal Base */
   .modal-overlay {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(0, 0, 0, 0.75);
     display: none;
     align-items: center;
     justify-content: center;
@@ -250,10 +252,10 @@
     background-color: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: 10px;
-    width: 480px;
-    max-width: 90%;
+    width: 500px;
+    max-width: 92%;
     padding: 16px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.6);
   }
 
   .modal-header {
@@ -265,7 +267,7 @@
   }
 
   .modal-body {
-    max-height: 250px;
+    max-height: 320px;
     overflow-y: auto;
     font-size: 12px;
     background: var(--bg-primary);
@@ -282,79 +284,129 @@
     border-bottom: 1px solid rgba(255,255,255,0.05);
   }
 
-    .pass-text { color: var(--accent-green); font-weight: bold; }
-    .fail-text { color: var(--accent-red); font-weight: bold; }
+  .pass-text { color: var(--accent-green); font-weight: bold; }
+  .fail-text { color: var(--accent-red); font-weight: bold; }
 
-    /* Toast Notification */
-    .toast {
-      position: fixed;
-      top: 54px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-8px);
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid var(--accent-blue);
-      color: #fff;
-      padding: 7px 18px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 500;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.6);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.25s ease, transform 0.25s ease;
-      z-index: 200;
-      white-space: nowrap;
-      cursor: pointer;
-    }
-    .toast.toast-error {
-      border-color: var(--accent-red);
-      color: #fca5a5;
-    }
-    .toast.visible {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translateX(-50%) translateY(0);
-    }
-    .shortcut-tag {
-      font-size: 10px;
-      opacity: 0.8;
-      background: rgba(255, 255, 255, 0.12);
-      padding: 1px 4px;
-      border-radius: 4px;
-      margin-left: 3px;
-      font-family: monospace;
-      font-weight: 600;
-    }
-    .quick-chip {
-      background: var(--bg-primary);
-      border: 1px solid var(--border-color);
-      color: var(--accent-blue);
-      font-size: 12px;
-      padding: 5px 12px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-weight: 500;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-    }
-    .quick-chip:hover {
-      background: var(--item-hover);
-      border-color: var(--accent-blue);
-      color: #fff;
-      transform: translateY(-1px);
-    }
-    th.sortable {
-      cursor: pointer;
-      user-select: none;
-      transition: color 0.15s;
-    }
-    th.sortable:hover {
-      color: var(--text-main);
-      background-color: var(--item-hover);
-    }
-  </style>
+  /* Toast Notification */
+  .toast {
+    position: fixed;
+    top: 54px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid var(--accent-blue);
+    color: #fff;
+    padding: 7px 18px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    z-index: 200;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .toast.toast-error {
+    border-color: var(--accent-red);
+    color: #fca5a5;
+  }
+  .toast.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  .shortcut-tag {
+    font-size: 10px;
+    opacity: 0.8;
+    background: rgba(255, 255, 255, 0.12);
+    padding: 1px 4px;
+    border-radius: 4px;
+    margin-left: 2px;
+    font-family: monospace;
+    font-weight: 600;
+  }
+
+  .quick-chip {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--accent-blue);
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .quick-chip:hover {
+    background: var(--item-hover);
+    border-color: var(--accent-blue);
+    color: #fff;
+    transform: translateY(-1px);
+  }
+
+  th.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.15s;
+  }
+  th.sortable:hover {
+    color: var(--text-main);
+    background-color: var(--item-hover);
+  }
+
+  /* Diagnostics & Analysis Grid */
+  .analysis-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .analysis-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .analysis-card-title {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .analysis-card-val {
+    font-size: 15px;
+    font-weight: bold;
+    color: var(--accent-blue);
+  }
+
+  .editor-textarea {
+    width: 100%;
+    height: 250px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    background: var(--bg-primary);
+    color: var(--text-main);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+    resize: vertical;
+    white-space: pre;
+    outline: none;
+  }
+  .editor-textarea:focus {
+    border-color: var(--accent-blue);
+  }
+</style>
 </head>
 <body>
 
@@ -363,7 +415,10 @@
     <div class="app-icon" aria-hidden="true">KZ</div>
     <h1 class="app-title">KZip Archiver Studio</h1>
   </div>
-  <div class="stats-pill" id="statsPill" aria-live="polite">0 Files | 0 B</div>
+  <div style="display: flex; align-items: center; gap: 8px;">
+    <button id="btnSoundToggle" style="font-size: 11px; padding: 3px 8px;" title="Toggle procedural YM2612 FM / SPC700 audio (M)">🔊 Sound: ON</button>
+    <div class="stats-pill" id="statsPill" aria-live="polite">0 Files | 0 B</div>
+  </div>
 </header>
 
 <div class="toolbar" role="toolbar" aria-label="Archive Controls">
@@ -377,40 +432,57 @@
   </div>
 
   <div class="toolbar-group">
+    <label for="archiveFormat" class="toolbar-label">Format:</label>
+    <select id="archiveFormat" aria-label="Archive container format">
+      <option value="kza">KZA (KZip Archive)</option>
+      <option value="zip">ZIP (PKZIP 2.0)</option>
+      <option value="tar">TAR (POSIX ustar)</option>
+    </select>
+  </div>
+
+  <div class="toolbar-group">
     <label for="compMethod" class="toolbar-label">Method:</label>
     <select id="compMethod" aria-label="Compression method">
       <option value="1">RLE Fast (Run-Length)</option>
+      <option value="2">Deflate (PKZIP LZ77)</option>
       <option value="0">Store (Uncompressed)</option>
     </select>
   </div>
 
   <div class="toolbar-group">
     <label for="passwordInput" class="toolbar-label">Password:</label>
-    <input type="password" id="passwordInput" class="password-input" placeholder="Optional password" aria-label="Archive password">
+    <input type="password" id="passwordInput" class="password-input" placeholder="Optional (KZA)" aria-label="Archive password">
   </div>
 
   <div class="toolbar-group" style="margin-left: auto;">
-    <button id="btnDemoFiles" style="font-size: 12px; padding: 4px 10px; background: rgba(56, 189, 248, 0.15); border-color: var(--accent-blue);" title="Load 3 sample demo files (D)">✨ Demo [D]</button>
+    <button id="btnComment" style="font-size: 11px; padding: 4px 8px;" title="View or edit archive comment">💬 Comment</button>
+    <button id="btnDemoFiles" style="font-size: 11px; padding: 4px 8px; background: rgba(56, 189, 248, 0.15); border-color: var(--accent-blue);" title="Load sample demo files (D)">✨ Demo [D]</button>
   </div>
 </div>
 
 <div class="actions-row" role="region" aria-label="Archive Operations">
-  <button id="btnOpen" aria-label="Open KZA archive" title="Open archive (Ctrl+O)">📂 Open <span class="shortcut-tag">[Ctrl+O]</span></button>
+  <button id="btnOpen" aria-label="Open archive" title="Open archive (Ctrl+O)">📂 Open <span class="shortcut-tag">[Ctrl+O]</span></button>
   <button id="btnAdd" aria-label="Add file to archive" title="Add file (Ctrl+N)">➕ Add File <span class="shortcut-tag">[Ctrl+N]</span></button>
+  <button id="btnNewText" aria-label="New text file" title="Create new text file in archive (Alt+N)">📝 New File <span class="shortcut-tag">[Alt+N]</span></button>
+  <button id="btnEditFile" aria-label="View or edit text file" title="View or edit selected text file (E)">✏️ Edit <span class="shortcut-tag">[E]</span></button>
+  <button id="btnRenameFile" aria-label="Rename selected file" title="Rename selected file (F2)">🏷️ Rename <span class="shortcut-tag">[F2]</span></button>
   <button id="btnRemove" class="btn-danger" aria-label="Remove selected files" title="Remove selected (Delete)">🗑️ Remove <span class="shortcut-tag">[Del]</span></button>
-  <button id="btnPack" class="btn-primary" aria-label="Pack archive to KZA file" title="Pack archive (Ctrl+S)">📦 Pack <span class="shortcut-tag">[Ctrl+S]</span></button>
+  <button id="btnPack" class="btn-primary" aria-label="Pack archive file" title="Pack archive (Ctrl+S)">📦 Pack <span class="shortcut-tag">[Ctrl+S]</span></button>
   <button id="btnExtractSel" aria-label="Extract selected files" title="Extract selected (X)">🎯 Ext. Sel <span class="shortcut-tag">[X]</span></button>
   <button id="btnExtractAll" aria-label="Extract all files" title="Extract all (Ctrl+E)">⚡ Ext. All <span class="shortcut-tag">[Ctrl+E]</span></button>
   <button id="btnBatchExtract" aria-label="Batch Extract" title="Batch extract (B)">📑 Batch <span class="shortcut-tag">[B]</span></button>
   <button id="btnVerify" aria-label="Verify CRC32 integrity" title="Verify CRC32 (V)">🛡️ Verify <span class="shortcut-tag">[V]</span></button>
   <button id="btnPreview" aria-label="Deep Preview" title="Preview selected (P or Enter)">🔍 Preview <span class="shortcut-tag">[P]</span></button>
+  <button id="btnAnalysis" aria-label="Archive Entropy Analysis" title="Diagnostics & Entropy Analysis (Alt+A)">📊 Analysis <span class="shortcut-tag">[Alt+A]</span></button>
+  <button id="btnManifest" aria-label="Archive Manifest Report" title="Generate inventory manifest (Ctrl+M)">📋 Manifest <span class="shortcut-tag">[Ctrl+M]</span></button>
   <button id="btnQuickSave" aria-label="Quicksave snapshot" title="Quicksave state (F5)">💾 Save <span class="shortcut-tag">[F5]</span></button>
   <button id="btnQuickLoad" aria-label="Quickload snapshot" title="Quickload state (F9)">⚡ Load <span class="shortcut-tag">[F9]</span></button>
   <button id="btnHelpApp" aria-label="Help (F1)" title="Help (F1 or H)">❓ Help <span class="shortcut-tag">[F1]</span></button>
 </div>
-<input type="file" id="batchInput" multiple accept=".kza" style="display:none">
+
+<input type="file" id="batchInput" multiple accept=".kza,.zip,.tar" style="display:none">
 <input type="file" id="localFileInput" multiple style="display:none">
-<input type="file" id="kzaFileInput" accept=".kza" style="display:none">
+<input type="file" id="archiveFileInput" accept=".kza,.zip,.tar" style="display:none">
 
 <div class="table-container" id="dropZone" tabindex="0" aria-label="Archive file list. Press Delete to remove selected files.">
   <table>
@@ -421,6 +493,7 @@
         <th scope="col" class="sortable" onclick="sortBy('uncompSize')" title="Click to sort by original size">Original Size <span id="sort_uncompSize"></span></th>
         <th scope="col" class="sortable" onclick="sortBy('compSize')" title="Click to sort by packed size">Packed Size <span id="sort_compSize"></span></th>
         <th scope="col" class="sortable" onclick="sortBy('savings')" title="Click to sort by compression savings">Savings <span id="sort_savings"></span></th>
+        <th scope="col" class="sortable" onclick="sortBy('entropy')" title="Click to sort by Shannon entropy">Entropy (H) <span id="sort_entropy"></span></th>
         <th scope="col" class="sortable" onclick="sortBy('crc32')" title="Click to sort by CRC32">CRC32 <span id="sort_crc32"></span></th>
         <th scope="col" class="sortable" onclick="sortBy('method')" title="Click to sort by method">Method <span id="sort_method"></span></th>
       </tr>
@@ -462,8 +535,120 @@
       <div id="chunkViz" style="background: var(--bg-secondary); padding: 8px; border-radius: 4px; display: flex; flex-direction: column; gap: 4px;"></div>
       <div id="hexView" style="font-family: monospace; white-space: pre-wrap; overflow-y: auto; background: var(--bg-primary); padding: 8px; border: 1px solid var(--border-color); height: 200px;"></div>
     </div>
-    <div style="display: flex; justify-content: flex-end;">
+    <div style="display: flex; justify-content: flex-end; gap: 8px;">
+      <button id="btnPreviewToEdit">Edit Text File</button>
       <button class="btn-primary" id="btnOkPreview">Close Preview</button>
+    </div>
+  </div>
+</div>
+
+<!-- In-Archive Text Editor Modal -->
+<div class="modal-overlay" id="editorModal" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
+  <div class="modal-box" style="width: 720px; max-width: 95%;">
+    <div class="modal-header">
+      <span id="editorTitle">In-Archive Text Editor</span>
+      <button style="padding: 2px 8px;" id="btnCloseEditor" aria-label="Close editor">✕</button>
+    </div>
+    <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;" id="editorStats"></div>
+    <textarea id="editorTextarea" class="editor-textarea" spellcheck="false" placeholder="File content..."></textarea>
+    <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;">
+      <button id="btnCancelEditor">Cancel</button>
+      <button class="btn-primary" id="btnSaveEditor">💾 Update in Archive</button>
+    </div>
+  </div>
+</div>
+
+<!-- Diagnostics & Entropy Analysis Modal -->
+<div class="modal-overlay" id="analysisModal" role="dialog" aria-modal="true" aria-labelledby="analysisTitle">
+  <div class="modal-box" style="width: 640px; max-width: 95%;">
+    <div class="modal-header">
+      <span id="analysisTitle">Archive Diagnostics & Entropy Analysis</span>
+      <button style="padding: 2px 8px;" id="btnCloseAnalysis" aria-label="Close analysis">✕</button>
+    </div>
+    <div class="modal-body" id="analysisBody" style="max-height: 380px;">
+    </div>
+    <div style="display: flex; justify-content: flex-end;">
+      <button class="btn-primary" id="btnOkAnalysis">Close Analysis</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rename Modal -->
+<div class="modal-overlay" id="renameModal" role="dialog" aria-modal="true" aria-labelledby="renameTitle">
+  <div class="modal-box" style="width: 400px;">
+    <div class="modal-header">
+      <span id="renameTitle">Rename File</span>
+      <button style="padding: 2px 8px;" id="btnCloseRename" aria-label="Close">✕</button>
+    </div>
+    <div style="margin-bottom: 12px;">
+      <label for="renameInput" style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">New filename:</label>
+      <input type="text" id="renameInput" style="width: 100%;" placeholder="filename.ext">
+    </div>
+    <div style="display: flex; justify-content: flex-end; gap: 8px;">
+      <button id="btnCancelRename">Cancel</button>
+      <button class="btn-primary" id="btnConfirmRename">Rename</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Text File Modal -->
+<div class="modal-overlay" id="newFileModal" role="dialog" aria-modal="true" aria-labelledby="newFileTitle">
+  <div class="modal-box" style="width: 480px;">
+    <div class="modal-header">
+      <span id="newFileTitle">Create New Text File</span>
+      <button style="padding: 2px 8px;" id="btnCloseNewFile" aria-label="Close">✕</button>
+    </div>
+    <div style="margin-bottom: 10px;">
+      <label for="newFileNameInput" style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">Filename:</label>
+      <input type="text" id="newFileNameInput" style="width: 100%;" value="notes.txt">
+    </div>
+    <div style="margin-bottom: 12px;">
+      <label for="newFileContentInput" style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">Initial Content:</label>
+      <textarea id="newFileContentInput" class="editor-textarea" style="height: 120px;" placeholder="Type text here..."></textarea>
+    </div>
+    <div style="display: flex; justify-content: flex-end; gap: 8px;">
+      <button id="btnCancelNewFile">Cancel</button>
+      <button class="btn-primary" id="btnConfirmNewFile">Create File</button>
+    </div>
+  </div>
+</div>
+
+<!-- Archive Comment Modal -->
+<div class="modal-overlay" id="commentModal" role="dialog" aria-modal="true" aria-labelledby="commentTitle">
+  <div class="modal-box" style="width: 480px;">
+    <div class="modal-header">
+      <span id="commentTitle">Archive Header Comment</span>
+      <button style="padding: 2px 8px;" id="btnCloseComment" aria-label="Close">✕</button>
+    </div>
+    <div style="margin-bottom: 12px;">
+      <textarea id="commentTextarea" class="editor-textarea" style="height: 120px;" placeholder="Enter archive comment (saved in KZA and PKZIP archives)..."></textarea>
+    </div>
+    <div style="display: flex; justify-content: flex-end; gap: 8px;">
+      <button id="btnCancelComment">Cancel</button>
+      <button class="btn-primary" id="btnSaveComment">Save Comment</button>
+    </div>
+  </div>
+</div>
+
+<!-- Manifest Modal -->
+<div class="modal-overlay" id="manifestModal" role="dialog" aria-modal="true" aria-labelledby="manifestTitle">
+  <div class="modal-box" style="width: 650px; max-width: 95%;">
+    <div class="modal-header">
+      <span id="manifestTitle">Archive Inventory Manifest</span>
+      <button style="padding: 2px 8px;" id="btnCloseManifest" aria-label="Close">✕</button>
+    </div>
+    <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+      <button id="btnManifestCsv" style="font-size: 11px;">CSV Format</button>
+      <button id="btnManifestJson" style="font-size: 11px;">JSON Format</button>
+      <button id="btnManifestTxt" style="font-size: 11px;">ASCII Report</button>
+    </div>
+    <textarea id="manifestTextarea" class="editor-textarea" style="height: 220px;" readonly></textarea>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+      <button id="btnCopyManifest">📋 Copy to Clipboard</button>
+      <div style="display: flex; gap: 8px;">
+        <button id="btnDownloadManifest">⬇️ Download File</button>
+        <button class="btn-primary" id="btnOkManifest">Close</button>
+      </div>
     </div>
   </div>
 </div>
@@ -472,44 +657,49 @@
 <div class="modal-overlay" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
   <div class="modal-box">
     <div class="modal-header">
-      <span id="helpTitle">KZip Archiver Studio - Help</span>
+      <span id="helpTitle">KZip Archiver Studio - Help & Shortcuts</span>
       <button style="padding: 2px 8px;" id="btnCloseHelp" aria-label="Close help window">✕</button>
     </div>
     <div class="modal-body" style="line-height: 1.6;">
+      <p style="margin-bottom: 8px;"><strong>Container Formats & Compression:</strong></p>
+      <ul style="margin-left: 20px; margin-bottom: 12px;">
+        <li><strong>KZA:</strong> Micro-archiver format with RLE, Store, and password cipher.</li>
+        <li><strong>ZIP:</strong> Standard PKZIP 2.0 container compatible with Windows/WinZip/7-Zip.</li>
+        <li><strong>TAR:</strong> Standard POSIX ustar tape archive format.</li>
+      </ul>
       <p style="margin-bottom: 8px;"><strong>Archive Operations:</strong></p>
       <ul style="margin-left: 20px; margin-bottom: 12px;">
-        <li><strong>Open [Ctrl+O]:</strong> Load an existing compressed archive (.kza).</li>
-        <li><strong>Add File [Ctrl+N]:</strong> Add files into archive (or drag & drop).</li>
-        <li><strong>Remove [Del]:</strong> Remove selected files from archive.</li>
-        <li><strong>Pack [Ctrl+S]:</strong> Compress and download current archive.</li>
+        <li><strong>Open [Ctrl+O]:</strong> Load .kza, .zip, or .tar archive.</li>
+        <li><strong>Add File [Ctrl+N]:</strong> Add files to archive (or drag & drop).</li>
+        <li><strong>New File [Alt+N]:</strong> Create new text file directly inside archive.</li>
+        <li><strong>Edit File [E]:</strong> In-archive text editor for documents and code.</li>
+        <li><strong>Rename [F2]:</strong> Rename selected file in archive.</li>
+        <li><strong>Remove [Del]:</strong> Remove selected files.</li>
+        <li><strong>Pack [Ctrl+S]:</strong> Compress and download archive (.kza, .zip, .tar).</li>
         <li><strong>Extract Selected [X]:</strong> Extract selected files to disk.</li>
         <li><strong>Extract All [Ctrl+E]:</strong> Extract all files to disk.</li>
-        <li><strong>Batch Extract [B]:</strong> Unpack multiple .kza archives in batch.</li>
+        <li><strong>Batch Extract [B]:</strong> Unpack multiple archives in batch.</li>
         <li><strong>Verify CRC32 [V]:</strong> Test data checksums against corruption.</li>
-        <li><strong>Preview [P or Enter]:</strong> Inspect file header, RLE savings & hex dump.</li>
-        <li><strong>Save State [F5]:</strong> Quicksave full archive snapshot to storage.</li>
+        <li><strong>Preview [P or Enter]:</strong> Deep hex inspector, chunk view, and entropy.</li>
+        <li><strong>Analysis [Alt+A]:</strong> Shannon entropy and compression diagnostics.</li>
+        <li><strong>Manifest [Ctrl+M]:</strong> Generate inventory report (CSV, JSON, ASCII).</li>
+        <li><strong>Save State [F5]:</strong> Quicksave full archive workspace snapshot.</li>
         <li><strong>Load State [F9]:</strong> Restore quicksaved archive workspace snapshot.</li>
-        <li><strong>Demo [D]:</strong> Load 3 sample files for instant testing.</li>
+        <li><strong>Sound [M]:</strong> Toggle procedural Genesis/SNES audio synthesizer.</li>
+        <li><strong>Demo [D]:</strong> Load sample files bundle.</li>
       </ul>
-      <p style="margin-bottom: 8px;"><strong>Keyboard Shortcuts:</strong></p>
+      <p style="margin-bottom: 8px;"><strong>Keyboard Accelerators:</strong></p>
       <ul style="margin-left: 20px;">
-        <li><strong>F1</strong> or <strong>H</strong>: Toggle this Help dialog</li>
-        <li><strong>F5</strong>: Quicksave archive state to storage</li>
-        <li><strong>F9</strong>: Quickload archive state from storage</li>
-        <li><strong>Ctrl+O</strong>: Open archive</li>
-        <li><strong>Ctrl+S</strong>: Pack archive to .kza</li>
-        <li><strong>Ctrl+E</strong>: Extract all files</li>
-        <li><strong>X</strong>: Extract selected files</li>
-        <li><strong>Ctrl+N</strong>: Add file to archive</li>
-        <li><strong>Ctrl+A</strong>: Select / Deselect all files</li>
-        <li><strong>Delete</strong>: Remove selected files</li>
-        <li><strong>Enter / Double-Click / P</strong>: Deep preview selected file</li>
-        <li><strong>Arrow Up / Down</strong>: Navigate table rows (Shift+Arrow to select)</li>
-        <li><strong>Space</strong>: Toggle selection on focused row</li>
-        <li><strong>V</strong>: Verify CRC32 checksums</li>
-        <li><strong>B</strong>: Batch extract</li>
-        <li><strong>D</strong>: Load demo files bundle</li>
-        <li><strong>Escape</strong>: Close active modal or clear search filter</li>
+        <li><strong>F1 / H:</strong> Toggle Help dialog</li>
+        <li><strong>F2:</strong> Rename selected file</li>
+        <li><strong>F5 / F9:</strong> Quicksave / Quickload workspace</li>
+        <li><strong>Ctrl+O / Ctrl+S:</strong> Open / Pack archive</li>
+        <li><strong>Ctrl+N / Alt+N:</strong> Add file / New text file</li>
+        <li><strong>Ctrl+E / X:</strong> Extract all / Extract selected</li>
+        <li><strong>Ctrl+M / Alt+A:</strong> Inventory manifest / Entropy analysis</li>
+        <li><strong>E / P / V / B / D / M:</strong> Edit / Preview / Verify / Batch / Demo / Sound</li>
+        <li><strong>Delete:</strong> Remove selected file</li>
+        <li><strong>Escape:</strong> Close active modal or clear search</li>
       </ul>
     </div>
     <div style="display: flex; justify-content: flex-end;">
@@ -526,6 +716,9 @@
   let currentReqId = 0;
   const callbacks = {};
   const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB max per file
+  let archiveComment = '';
+  let activeEditingFile = null;
+  let activeRenamingFile = null;
 
   // Safe localStorage Helpers
   function safeGetStorage(key, fallback = null) {
@@ -545,9 +738,181 @@
     }
   }
 
+  // Universal Audio Synthesizer (Genesis YM2612 2-op FM & SNES SPC700 stereo delay warmth)
+  let audioCtx = null;
+  let soundEnabled = safeGetStorage('kzip_sound', '1') === '1';
+
+  function getAudioCtx() {
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        audioCtx = new AudioContextClass();
+      }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    return audioCtx;
+  }
+
+  function playSfx(type) {
+    if (!soundEnabled) return;
+    try {
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      const now = ctx.currentTime;
+
+      // Master gain
+      const master = ctx.createGain();
+      master.gain.setValueAtTime(0.2, now);
+
+      // Stereo delay echo (SNES SPC700 warmth)
+      const delay = ctx.createDelay();
+      delay.delayTime.setValueAtTime(0.06, now);
+      const delayGain = ctx.createGain();
+      delayGain.gain.setValueAtTime(0.25, now);
+      master.connect(delay);
+      delay.connect(delayGain);
+      delayGain.connect(delay);
+      delayGain.connect(ctx.destination);
+      master.connect(ctx.destination);
+
+      if (type === 'pack') {
+        // 4-note ascending FM arpeggio (C4, E4, G4, C5)
+        const notes = [261.63, 329.63, 392.00, 523.25];
+        notes.forEach((freq, idx) => {
+          const t = now + idx * 0.07;
+          const carrier = ctx.createOscillator();
+          const mod = ctx.createOscillator();
+          const modGain = ctx.createGain();
+          const noteGain = ctx.createGain();
+
+          carrier.type = 'sine';
+          carrier.frequency.setValueAtTime(freq, t);
+          mod.type = 'sawtooth';
+          mod.frequency.setValueAtTime(freq * 2, t);
+
+          modGain.gain.setValueAtTime(freq * 1.5, t);
+          modGain.gain.exponentialRampToValueAtTime(1, t + 0.18);
+
+          noteGain.gain.setValueAtTime(0.18, t);
+          noteGain.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+
+          mod.connect(carrier.frequency);
+          carrier.connect(noteGain);
+          noteGain.connect(master);
+
+          mod.start(t);
+          carrier.start(t);
+          mod.stop(t + 0.22);
+          carrier.stop(t + 0.22);
+        });
+      } else if (type === 'extract') {
+        // Bright dual chime (G4 -> C5)
+        [392.00, 523.25].forEach((freq, idx) => {
+          const t = now + idx * 0.08;
+          const osc = ctx.createOscillator();
+          const g = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, t);
+          g.gain.setValueAtTime(0.25, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.25);
+          osc.connect(g);
+          g.connect(master);
+          osc.start(t);
+          osc.stop(t + 0.25);
+        });
+      } else if (type === 'add' || type === 'new') {
+        // Fast FM blip
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(660, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.06);
+        g.gain.setValueAtTime(0.2, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        osc.connect(g);
+        g.connect(master);
+        osc.start(now);
+        osc.stop(now + 0.08);
+      } else if (type === 'remove') {
+        // Low tone
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(260, now);
+        osc.frequency.exponentialRampToValueAtTime(130, now + 0.12);
+        g.gain.setValueAtTime(0.25, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+        osc.connect(g);
+        g.connect(master);
+        osc.start(now);
+        osc.stop(now + 0.14);
+      } else if (type === 'verify_pass') {
+        // Major victory triad (C5, E5, G5)
+        [523.25, 659.25, 783.99].forEach((freq) => {
+          const osc = ctx.createOscillator();
+          const g = ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now);
+          g.gain.setValueAtTime(0.18, now);
+          g.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+          osc.connect(g);
+          g.connect(master);
+          osc.start(now);
+          osc.stop(now + 0.35);
+        });
+      } else if (type === 'verify_fail') {
+        // Discord buzz
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(120, now);
+        g.gain.setValueAtTime(0.3, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+        osc.connect(g);
+        g.connect(master);
+        osc.start(now);
+        osc.stop(now + 0.28);
+      } else {
+        // Subtle micro click
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(1200, now);
+        g.gain.setValueAtTime(0.12, now);
+        g.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+        osc.connect(g);
+        g.connect(master);
+        osc.start(now);
+        osc.stop(now + 0.03);
+      }
+    } catch (e) {
+      // Audio fallback silent
+    }
+  }
+
+  const btnSoundToggle = document.getElementById('btnSoundToggle');
+  function updateSoundButton() {
+    if (btnSoundToggle) {
+      btnSoundToggle.textContent = soundEnabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+    }
+  }
+  function toggleSound() {
+    soundEnabled = !soundEnabled;
+    safeSetStorage('kzip_sound', soundEnabled ? '1' : '0');
+    updateSoundButton();
+    showToast(soundEnabled ? 'Retro sound synthesis enabled' : 'Sound muted');
+    if (soundEnabled) playSfx('add');
+  }
+  if (btnSoundToggle) btnSoundToggle.onclick = toggleSound;
+  updateSoundButton();
+
+  // DOM Elements
   const fileTableBody = document.getElementById('fileTableBody');
   const searchInput = document.getElementById('searchInput');
   const regexCheck = document.getElementById('regexCheck');
+  const archiveFormat = document.getElementById('archiveFormat');
   const compMethod = document.getElementById('compMethod');
   const passwordInput = document.getElementById('passwordInput');
   const statsPill = document.getElementById('statsPill');
@@ -558,6 +923,9 @@
 
   const btnOpen = document.getElementById('btnOpen');
   const btnAdd = document.getElementById('btnAdd');
+  const btnNewText = document.getElementById('btnNewText');
+  const btnEditFile = document.getElementById('btnEditFile');
+  const btnRenameFile = document.getElementById('btnRenameFile');
   const btnRemove = document.getElementById('btnRemove');
   const btnPack = document.getElementById('btnPack');
   const btnExtractSel = document.getElementById('btnExtractSel');
@@ -566,24 +934,93 @@
   const batchInput = document.getElementById('batchInput');
   const btnVerify = document.getElementById('btnVerify');
   const btnPreview = document.getElementById('btnPreview');
+  const btnAnalysis = document.getElementById('btnAnalysis');
+  const btnManifest = document.getElementById('btnManifest');
   const btnQuickSave = document.getElementById('btnQuickSave');
   const btnQuickLoad = document.getElementById('btnQuickLoad');
   const btnClearSearch = document.getElementById('btnClearSearch');
   const btnDemoFiles = document.getElementById('btnDemoFiles');
+  const btnComment = document.getElementById('btnComment');
 
+  const localFileInput = document.getElementById('localFileInput');
+  const archiveFileInput = document.getElementById('archiveFileInput');
+
+  // Modals
   const verifyModal = document.getElementById('verifyModal');
   const modalReport = document.getElementById('modalReport');
   const btnCloseModal = document.getElementById('btnCloseModal');
   const btnOkModal = document.getElementById('btnOkModal');
-  const localFileInput = document.getElementById('localFileInput');
-  const kzaFileInput = document.getElementById('kzaFileInput');
+
+  const previewModal = document.getElementById('previewModal');
+  const btnClosePreview = document.getElementById('btnClosePreview');
+  const btnOkPreview = document.getElementById('btnOkPreview');
+  const btnPreviewToEdit = document.getElementById('btnPreviewToEdit');
+
+  const editorModal = document.getElementById('editorModal');
+  const editorTitle = document.getElementById('editorTitle');
+  const editorStats = document.getElementById('editorStats');
+  const editorTextarea = document.getElementById('editorTextarea');
+  const btnCloseEditor = document.getElementById('btnCloseEditor');
+  const btnCancelEditor = document.getElementById('btnCancelEditor');
+  const btnSaveEditor = document.getElementById('btnSaveEditor');
+
+  const analysisModal = document.getElementById('analysisModal');
+  const analysisBody = document.getElementById('analysisBody');
+  const btnCloseAnalysis = document.getElementById('btnCloseAnalysis');
+  const btnOkAnalysis = document.getElementById('btnOkAnalysis');
+
+  const renameModal = document.getElementById('renameModal');
+  const renameInput = document.getElementById('renameInput');
+  const btnCloseRename = document.getElementById('btnCloseRename');
+  const btnCancelRename = document.getElementById('btnCancelRename');
+  const btnConfirmRename = document.getElementById('btnConfirmRename');
+
+  const newFileModal = document.getElementById('newFileModal');
+  const newFileNameInput = document.getElementById('newFileNameInput');
+  const newFileContentInput = document.getElementById('newFileContentInput');
+  const btnCloseNewFile = document.getElementById('btnCloseNewFile');
+  const btnCancelNewFile = document.getElementById('btnCancelNewFile');
+  const btnConfirmNewFile = document.getElementById('btnConfirmNewFile');
+
+  const commentModal = document.getElementById('commentModal');
+  const commentTextarea = document.getElementById('commentTextarea');
+  const btnCloseComment = document.getElementById('btnCloseComment');
+  const btnCancelComment = document.getElementById('btnCancelComment');
+  const btnSaveComment = document.getElementById('btnSaveComment');
+
+  const manifestModal = document.getElementById('manifestModal');
+  const manifestTextarea = document.getElementById('manifestTextarea');
+  const btnCloseManifest = document.getElementById('btnCloseManifest');
+  const btnOkManifest = document.getElementById('btnOkManifest');
+  const btnManifestCsv = document.getElementById('btnManifestCsv');
+  const btnManifestJson = document.getElementById('btnManifestJson');
+  const btnManifestTxt = document.getElementById('btnManifestTxt');
+  const btnCopyManifest = document.getElementById('btnCopyManifest');
+  const btnDownloadManifest = document.getElementById('btnDownloadManifest');
+
+  const helpModal = document.getElementById('helpModal');
+  const btnCloseHelp = document.getElementById('btnCloseHelp');
+  const btnOkHelp = document.getElementById('btnOkHelp');
+  const btnHelpApp = document.getElementById('btnHelpApp');
+
+  const allModals = [verifyModal, previewModal, editorModal, analysisModal, renameModal, newFileModal, commentModal, manifestModal, helpModal];
+
+  // Clear toasts immediately when modals open to prevent control occlusion
+  function clearToasts() {
+    const toast = document.getElementById('toastNotification');
+    if (toast) {
+      toast.classList.remove('visible');
+    }
+  }
 
   // Restore stored preferences
   if (compMethod) {
     compMethod.value = safeGetStorage('kzip_method', '1');
-    compMethod.onchange = () => {
-      safeSetStorage('kzip_method', compMethod.value);
-    };
+    compMethod.onchange = () => safeSetStorage('kzip_method', compMethod.value);
+  }
+  if (archiveFormat) {
+    archiveFormat.value = safeGetStorage('kzip_format', 'kza');
+    archiveFormat.onchange = () => safeSetStorage('kzip_format', archiveFormat.value);
   }
   if (regexCheck) {
     regexCheck.checked = safeGetStorage('kzip_regex', '0') === '1';
@@ -621,6 +1058,7 @@
     };
   }
 
+  // Sorting
   let sortColumn = null;
   let sortAsc = true;
 
@@ -631,7 +1069,7 @@
       sortColumn = col;
       sortAsc = true;
     }
-    ['name', 'uncompSize', 'compSize', 'savings', 'crc32', 'method'].forEach(c => {
+    ['name', 'uncompSize', 'compSize', 'savings', 'entropy', 'crc32', 'method'].forEach(c => {
       const el = document.getElementById('sort_' + c);
       if (el) el.textContent = (c === sortColumn) ? (sortAsc ? ' ▲' : ' ▼') : '';
     });
@@ -651,116 +1089,6 @@
     renderTable();
   }
 
-  function addSampleFile(name, contentStr) {
-    const encoder = new TextEncoder();
-    const rawBytes = encoder.encode(contentStr);
-    const crc = calculateCRC32(rawBytes);
-    const method = parseInt(compMethod.value);
-
-    let packedBytes = rawBytes;
-    let compSize = rawBytes.length;
-    let actualMethod = 0;
-
-    if (method === 1 && rawBytes.length > 0) {
-      const rleBytes = compressRLE(rawBytes);
-      if (rleBytes.length < rawBytes.length) {
-        packedBytes = rleBytes;
-        compSize = rleBytes.length;
-        actualMethod = 1;
-      }
-    }
-
-    files.push({
-      name: sanitizeFilename(name),
-      uncompSize: rawBytes.length,
-      compSize: compSize,
-      crc32: crc,
-      method: actualMethod,
-      rawBytes: rawBytes,
-      packedBytes: packedBytes
-    });
-    renderTable();
-    showToast(`Added '${name}'`);
-  }
-
-  function addSampleText() {
-    addSampleFile('README.md', '# KZip Archiver Studio\\n\\nHigh performance micro-archiver for KiloOS.\\nSupports RLE compression, CRC32 integrity verification, password cipher encryption, and instant hex inspection.\\n');
-  }
-
-  function addSampleJson() {
-    addSampleFile('config.json', JSON.stringify({
-      app: "KZip Archiver",
-      version: "2.1.0",
-      defaultMethod: "RLE Fast",
-      maxFileSizeMB: 100,
-      theme: "cyber-slate"
-    }, null, 2));
-  }
-
-  function addSampleRLE() {
-    const pattern = "KILOAPPS-KZIP-RLE-TEST-CHUNK-################################################\\n".repeat(60);
-    addSampleFile('pattern_test.log', pattern);
-  }
-
-  function loadDemoArchive() {
-    files = [];
-    selectedFiles.clear();
-    addSampleText();
-    addSampleJson();
-    addSampleRLE();
-    showToast("Demo bundle loaded with 3 sample files!");
-  }
-
-  if (btnDemoFiles) {
-    btnDemoFiles.onclick = () => loadDemoArchive();
-  }
-
-  if (localFileInput) {
-    localFileInput.onchange = (e) => {
-      if (!e.target.files || e.target.files.length === 0) return;
-      Array.from(e.target.files).forEach(file => {
-        if (file.size > MAX_FILE_SIZE) {
-          showToast(`File ${file.name} exceeds max size limit of 100MB.`, true);
-          return;
-        }
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-          const rawBytes = new Uint8Array(evt.target.result);
-          const crc = calculateCRC32(rawBytes);
-          const method = parseInt(compMethod.value);
-
-          let packedBytes = rawBytes;
-          let compSize = rawBytes.length;
-          let actualMethod = 0;
-
-          if (method === 1 && rawBytes.length > 0) {
-            const rleBytes = compressRLE(rawBytes);
-            if (rleBytes.length < rawBytes.length) {
-              packedBytes = rleBytes;
-              compSize = rleBytes.length;
-              actualMethod = 1;
-            }
-          }
-
-          files.push({
-            name: sanitizeFilename(file.name),
-            uncompSize: rawBytes.length,
-            compSize: compSize,
-            crc32: crc,
-            method: actualMethod,
-            rawBytes: rawBytes,
-            packedBytes: packedBytes
-          });
-
-          renderTable();
-          showToast(`Added '${file.name}'`);
-        };
-        reader.readAsArrayBuffer(file);
-      });
-      localFileInput.value = '';
-    };
-  }
-
   // HTML Security Escaping
   function escapeHtml(str) {
     if (!str) return '';
@@ -772,42 +1100,13 @@
       .replace(/'/g, '&#039;');
   }
 
-  // Safe Filename Extraction (Preserves valid dotfiles while blocking path traversal)
+  // Safe Filename Extraction
   function sanitizeFilename(filename) {
     if (!filename) return 'unnamed_file';
     let safeName = filename.replace(/^.*[\\\/]/, '').trim();
     if (safeName === '.' || safeName === '..' || safeName === '') return 'unnamed_file';
     safeName = safeName.replace(/[<>:"|?*\x00-\x1f]/g, '_');
     return safeName || 'unnamed_file';
-  }
-
-  window.addEventListener('message', (e) => {
-    const msg = e.data;
-    if (msg && callbacks[msg.requestId]) {
-      callbacks[msg.requestId](msg);
-      delete callbacks[msg.requestId];
-    }
-  });
-
-  function sendToOS(msg) {
-    return new Promise((resolve, reject) => {
-      const id = ++currentReqId;
-      const timer = setTimeout(() => {
-        delete callbacks[id];
-        reject(new Error("OS communication timeout"));
-      }, 2500);
-      callbacks[id] = (res) => {
-        clearTimeout(timer);
-        resolve(res);
-      };
-      try {
-        window.parent.postMessage({ ...msg, requestId: id }, '*');
-      } catch (err) {
-        clearTimeout(timer);
-        delete callbacks[id];
-        reject(err);
-      }
-    });
   }
 
   // Standalone Direct File Download Helper
@@ -836,6 +1135,22 @@
     return ((crc ^ 0xFFFFFFFF) >>> 0).toString(16).toUpperCase().padStart(8, '0');
   }
 
+  // Shannon Entropy Calculation (Bits per Byte, 0.00 to 8.00)
+  function calculateEntropy(bytes) {
+    if (!bytes || bytes.length === 0) return 0;
+    const counts = new Uint32Array(256);
+    for (let i = 0; i < bytes.length; i++) counts[bytes[i]]++;
+    let entropy = 0;
+    const len = bytes.length;
+    for (let i = 0; i < 256; i++) {
+      if (counts[i] > 0) {
+        const p = counts[i] / len;
+        entropy -= p * (Math.log(p) / Math.LN2);
+      }
+    }
+    return entropy;
+  }
+
   // RLE Compression
   function compressRLE(bytes) {
     if (!bytes) return new Uint8Array(0);
@@ -858,7 +1173,7 @@
     return new Uint8Array(out);
   }
 
-  // RLE Decompression with strict bounds checking
+  // RLE Decompression
   function decompressRLE(bytes, targetSize) {
     if (!bytes || !targetSize || targetSize <= 0) return new Uint8Array(0);
     if (targetSize > MAX_FILE_SIZE) throw new Error("Decompressed size exceeds safety limit.");
@@ -878,6 +1193,68 @@
       }
     }
     return out;
+  }
+
+  // Deflate Raw Async Compression
+  async function compressDeflate(bytes) {
+    if (typeof CompressionStream !== 'undefined') {
+      try {
+        const cs = new CompressionStream('deflate-raw');
+        const writer = cs.writable.getWriter();
+        writer.write(bytes);
+        writer.close();
+        const reader = cs.readable.getReader();
+        const chunks = [];
+        let total = 0;
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          total += value.length;
+        }
+        const out = new Uint8Array(total);
+        let pos = 0;
+        for (const c of chunks) {
+          out.set(c, pos);
+          pos += c.length;
+        }
+        return out;
+      } catch (err) {
+        console.warn("Deflate compression fallback to Store:", err);
+      }
+    }
+    return bytes;
+  }
+
+  // Deflate Raw Async Decompression
+  async function decompressDeflate(bytes) {
+    if (typeof DecompressionStream !== 'undefined') {
+      try {
+        const ds = new DecompressionStream('deflate-raw');
+        const writer = ds.writable.getWriter();
+        writer.write(bytes);
+        writer.close();
+        const reader = ds.readable.getReader();
+        const chunks = [];
+        let total = 0;
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          total += value.length;
+        }
+        const out = new Uint8Array(total);
+        let pos = 0;
+        for (const c of chunks) {
+          out.set(c, pos);
+          pos += c.length;
+        }
+        return out;
+      } catch (err) {
+        console.warn("Deflate decompression error:", err);
+      }
+    }
+    return bytes;
   }
 
   // XOR Cipher Stream
@@ -918,6 +1295,465 @@
     const sizes = ['B', 'KB', 'MB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
+
+  function isTextBytes(bytes) {
+    if (!bytes || bytes.length === 0) return true;
+    const sampleLen = Math.min(bytes.length, 1024);
+    for (let i = 0; i < sampleLen; i++) {
+      if (bytes[i] === 0) return false; // null byte indicates binary
+    }
+    return true;
+  }
+
+  // =========================================================================
+  // Container Engines: POSIX TAR & PKZIP 2.0
+  // =========================================================================
+
+  function createTar(filesToPack) {
+    const blocks = [];
+    const encoder = new TextEncoder();
+
+    for (const f of filesToPack) {
+      const data = f.rawBytes;
+      const header = new Uint8Array(512);
+
+      // Name (0..99)
+      const nameBytes = encoder.encode(f.name);
+      header.set(nameBytes.subarray(0, 99), 0);
+
+      // Mode: 0000644\0 (100..107)
+      header.set(encoder.encode('0000644\0'), 100);
+      // UID: 0000000\0 (108..115)
+      header.set(encoder.encode('0000000\0'), 108);
+      // GID: 0000000\0 (116..123)
+      header.set(encoder.encode('0000000\0'), 116);
+      // Size: 11 octal digits + space (124..135)
+      const sizeStr = data.length.toString(8).padStart(11, '0') + ' ';
+      header.set(encoder.encode(sizeStr), 124);
+      // MTime: 11 octal digits + space (136..147)
+      const mtimeStr = Math.floor(Date.now() / 1000).toString(8).padStart(11, '0') + ' ';
+      header.set(encoder.encode(mtimeStr), 136);
+
+      // Fill checksum area (148..155) with 8 spaces
+      for (let i = 148; i < 156; i++) header[i] = 0x20;
+
+      // Typeflag: '0' for regular file (156)
+      header[156] = 0x30;
+
+      // Magic: "ustar\0" (257..262)
+      header.set(encoder.encode('ustar\0'), 257);
+      // Version: "00" (263..264)
+      header.set(encoder.encode('00'), 263);
+      // UName: "kzip\0" (265..270)
+      header.set(encoder.encode('kzip\0'), 265);
+      // GName: "kzip\0" (297..302)
+      header.set(encoder.encode('kzip\0'), 297);
+
+      // Compute Checksum
+      let sum = 0;
+      for (let i = 0; i < 512; i++) sum += header[i];
+      const sumStr = sum.toString(8).padStart(6, '0') + '\0 ';
+      header.set(encoder.encode(sumStr), 148);
+
+      blocks.push(header);
+      blocks.push(data);
+
+      const padLen = (512 - (data.length % 512)) % 512;
+      if (padLen > 0) {
+        blocks.push(new Uint8Array(padLen));
+      }
+    }
+
+    // Two 512-byte zero blocks at EOF (1024 bytes)
+    blocks.push(new Uint8Array(1024));
+
+    let totalLen = blocks.reduce((acc, b) => acc + b.length, 0);
+    const out = new Uint8Array(totalLen);
+    let offset = 0;
+    for (const b of blocks) {
+      out.set(b, offset);
+      offset += b.length;
+    }
+    return out;
+  }
+
+  function readTar(bytes) {
+    const extracted = [];
+    let offset = 0;
+    const decoder = new TextDecoder('utf-8');
+
+    while (offset + 512 <= bytes.length) {
+      // Check for two 512-byte all-zero blocks
+      let allZero = true;
+      for (let i = 0; i < 512; i++) {
+        if (bytes[offset + i] !== 0) { allZero = false; break; }
+      }
+      if (allZero) break;
+
+      // Verify ustar magic
+      let ustar = '';
+      for (let i = 0; i < 5; i++) ustar += String.fromCharCode(bytes[offset + 257 + i]);
+      if (ustar !== 'ustar') break;
+
+      // Read filename (bytes 0..99)
+      let nameEnd = 0;
+      while (nameEnd < 100 && bytes[offset + nameEnd] !== 0) nameEnd++;
+      const name = decoder.decode(bytes.subarray(offset, offset + nameEnd));
+
+      // Read size (bytes 124..135, octal string)
+      let sizeEnd = 0;
+      while (sizeEnd < 12 && bytes[offset + 124 + sizeEnd] !== 0 && bytes[offset + 124 + sizeEnd] !== 0x20) sizeEnd++;
+      const sizeStr = decoder.decode(bytes.subarray(offset + 124, offset + 124 + sizeEnd)).trim();
+      const size = parseInt(sizeStr, 8) || 0;
+
+      if (offset + 512 + size > bytes.length) break;
+
+      const fileData = bytes.slice(offset + 512, offset + 512 + size);
+      const crc = calculateCRC32(fileData);
+      const entropy = calculateEntropy(fileData);
+
+      extracted.push({
+        name: sanitizeFilename(name),
+        uncompSize: fileData.length,
+        compSize: fileData.length,
+        crc32: crc,
+        method: 0,
+        entropy: entropy,
+        rawBytes: fileData,
+        packedBytes: fileData
+      });
+
+      offset += 512 + (Math.ceil(size / 512) || 0) * 512;
+    }
+    return extracted;
+  }
+
+  async function createZip(filesToPack, comment = '', forceMethod = null) {
+    const encoder = new TextEncoder();
+    const parts = [];
+    const cdEntries = [];
+    let currentOffset = 0;
+
+    for (const f of filesToPack) {
+      const nameBytes = encoder.encode(f.name);
+      let payload = f.rawBytes;
+      let methodVal = 0; // Store
+
+      if (forceMethod === 2 || (forceMethod === null && compMethod.value === '2')) {
+        const defBytes = await compressDeflate(f.rawBytes);
+        if (defBytes.length < f.rawBytes.length) {
+          payload = defBytes;
+          methodVal = 8; // Deflate
+        }
+      }
+
+      const crcNum = parseInt(calculateCRC32(f.rawBytes), 16);
+      const localHeader = new Uint8Array(30);
+      const view = new DataView(localHeader.buffer);
+
+      view.setUint32(0, 0x04034b50, true); // Local header signature
+      view.setUint16(4, 20, true);         // Version needed
+      view.setUint16(6, 0, true);          // Flags
+      view.setUint16(8, methodVal, true);  // Method (0=Store, 8=Deflate)
+      view.setUint16(10, 0x4800, true);    // MS-DOS time
+      view.setUint16(12, 0x2721, true);    // MS-DOS date (1999-09-01)
+      view.setUint32(14, crcNum, true);    // CRC32
+      view.setUint32(18, payload.length, true); // CompSize
+      view.setUint32(22, f.rawBytes.length, true); // UncompSize
+      view.setUint16(26, nameBytes.length, true);
+      view.setUint16(28, 0, true);         // Extra field length
+
+      cdEntries.push({
+        offset: currentOffset,
+        nameBytes,
+        compSize: payload.length,
+        uncompSize: f.rawBytes.length,
+        crcNum,
+        methodVal
+      });
+
+      parts.push(localHeader, nameBytes, payload);
+      currentOffset += 30 + nameBytes.length + payload.length;
+    }
+
+    const cdStart = currentOffset;
+    for (const cd of cdEntries) {
+      const cdHeader = new Uint8Array(46);
+      const view = new DataView(cdHeader.buffer);
+
+      view.setUint32(0, 0x02014b50, true); // Central directory signature
+      view.setUint16(4, 20, true);         // Version made by
+      view.setUint16(6, 20, true);         // Version needed
+      view.setUint16(8, 0, true);          // Flags
+      view.setUint16(10, cd.methodVal, true);
+      view.setUint16(12, 0x4800, true);
+      view.setUint16(14, 0x2721, true);
+      view.setUint32(16, cd.crcNum, true);
+      view.setUint32(20, cd.compSize, true);
+      view.setUint32(24, cd.uncompSize, true);
+      view.setUint16(28, cd.nameBytes.length, true);
+      view.setUint16(30, 0, true);         // Extra field
+      view.setUint16(32, 0, true);         // Comment
+      view.setUint16(34, 0, true);         // Disk start
+      view.setUint16(36, 0, true);         // Internal attr
+      view.setUint32(38, 0x00000020, true);// External attr (archive bit)
+      view.setUint32(42, cd.offset, true); // Local header relative offset
+
+      parts.push(cdHeader, cd.nameBytes);
+      currentOffset += 46 + cd.nameBytes.length;
+    }
+
+    const cdLength = currentOffset - cdStart;
+    const commentBytes = encoder.encode(comment || '');
+    const eocd = new Uint8Array(22);
+    const view = new DataView(eocd.buffer);
+
+    view.setUint32(0, 0x06054b50, true); // EOCD signature
+    view.setUint16(4, 0, true);          // Disk num
+    view.setUint16(6, 0, true);          // Start disk
+    view.setUint16(8, filesToPack.length, true); // Disk entries
+    view.setUint16(10, filesToPack.length, true);// Total entries
+    view.setUint32(12, cdLength, true);  // Central dir size
+    view.setUint32(16, cdStart, true);   // Central dir offset
+    view.setUint16(20, commentBytes.length, true);
+
+    parts.push(eocd, commentBytes);
+
+    let totalLen = parts.reduce((acc, p) => acc + p.length, 0);
+    const out = new Uint8Array(totalLen);
+    let off = 0;
+    for (const p of parts) {
+      out.set(p, off);
+      off += p.length;
+    }
+    return out;
+  }
+
+  async function readZip(bytes) {
+    const extracted = [];
+    let offset = 0;
+    const decoder = new TextDecoder('utf-8');
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+
+    while (offset + 30 <= bytes.length) {
+      const sig = view.getUint32(offset, true);
+      if (sig === 0x02014b50 || sig === 0x06054b50) break; // Reached Central Directory
+      if (sig !== 0x04034b50) {
+        offset++;
+        continue;
+      }
+
+      const methodVal = view.getUint16(offset + 8, true);
+      const crcNum = view.getUint32(offset + 14, true);
+      const compSize = view.getUint32(offset + 18, true);
+      const uncompSize = view.getUint32(offset + 22, true);
+      const nameLen = view.getUint16(offset + 26, true);
+      const extraLen = view.getUint16(offset + 28, true);
+
+      const nameBytes = bytes.subarray(offset + 30, offset + 30 + nameLen);
+      const name = decoder.decode(nameBytes);
+      const dataStart = offset + 30 + nameLen + extraLen;
+      const dataEnd = dataStart + compSize;
+
+      if (dataEnd > bytes.length) break;
+
+      const payload = bytes.subarray(dataStart, dataEnd);
+      let raw = payload;
+
+      if (methodVal === 8) {
+        raw = await decompressDeflate(payload);
+      }
+
+      const crc = calculateCRC32(raw);
+      const entropy = calculateEntropy(raw);
+
+      extracted.push({
+        name: sanitizeFilename(name),
+        uncompSize: raw.length,
+        compSize: payload.length,
+        crc32: crc,
+        method: methodVal === 8 ? 2 : 0,
+        entropy: entropy,
+        rawBytes: raw,
+        packedBytes: payload
+      });
+
+      offset = dataEnd;
+    }
+    return extracted;
+  }
+
+  // =========================================================================
+  // Archive Operations & UI Wiring
+  // =========================================================================
+
+  function addSampleFile(name, contentStr) {
+    const encoder = new TextEncoder();
+    const rawBytes = encoder.encode(contentStr);
+    const crc = calculateCRC32(rawBytes);
+    const entropy = calculateEntropy(rawBytes);
+    const method = parseInt(compMethod.value);
+
+    let packedBytes = rawBytes;
+    let compSize = rawBytes.length;
+    let actualMethod = 0;
+
+    if (method === 1 && rawBytes.length > 0) {
+      const rleBytes = compressRLE(rawBytes);
+      if (rleBytes.length < rawBytes.length) {
+        packedBytes = rleBytes;
+        compSize = rleBytes.length;
+        actualMethod = 1;
+      }
+    }
+
+    files.push({
+      name: sanitizeFilename(name),
+      uncompSize: rawBytes.length,
+      compSize: compSize,
+      crc32: crc,
+      method: actualMethod,
+      entropy: entropy,
+      rawBytes: rawBytes,
+      packedBytes: packedBytes
+    });
+    renderTable();
+    showToast(`Added '${name}'`);
+  }
+
+  function addSampleText() {
+    addSampleFile('README.md', '# KZip Archiver Studio\n\nHigh performance micro-archiver for KiloOS.\nSupports KZA, PKZIP 2.0 (.zip), and POSIX TAR (.tar) containers, RLE & Deflate compression, Shannon entropy diagnostics, CRC32 integrity verification, in-archive text editing, and password cipher encryption.\n');
+  }
+
+  function addSampleJson() {
+    addSampleFile('config.json', JSON.stringify({
+      app: "KZip Archiver",
+      version: "2.5.0",
+      defaultMethod: "RLE Fast",
+      supportedContainers: ["KZA", "ZIP", "TAR"],
+      maxFileSizeMB: 100,
+      soundSynthesis: "Yamaha YM2612 / SPC700"
+    }, null, 2));
+  }
+
+  function addSampleRLE() {
+    const pattern = "KILOAPPS-KZIP-RLE-TEST-CHUNK-################################################\n".repeat(60);
+    addSampleFile('pattern_test.log', pattern);
+  }
+
+  function addSampleDiegeticLog() {
+    const log = `[KiloNet Transit Log - Concentrator #04]
+Interface: tap0 (Promiscuous) - Subnet 10.19.99.0/24
+Timestamp: 1999-12-14 03:14:07.822 EST
+Carrier status: LOCKED @ 1999Hz
+Anomalous packet sequence captured:
+SRC: 10.19.99.4:1999 -> DST: 10.19.99.1:80
+SIGNATURE: 0x4B 0x4E 0x45 0x54 ('KNET')
+OFFSET: 0x00402000
+PAYLOAD: Subcarrier telemetry heartbeat.
+Note: Internal relay packets observed without routing table entry.
+Refer to acoustic diagnostics at echo-subsystem.net.
+`;
+    addSampleFile('net_telemetry_199912.log', log);
+  }
+
+  function loadDemoArchive() {
+    files = [];
+    selectedFiles.clear();
+    addSampleText();
+    addSampleJson();
+    addSampleRLE();
+    addSampleDiegeticLog();
+    playSfx('add');
+    showToast("Demo bundle loaded with 4 sample files!");
+  }
+
+  if (btnDemoFiles) btnDemoFiles.onclick = () => loadDemoArchive();
+
+  async function processAddedFiles(fileList) {
+    if (!fileList || fileList.length === 0) return;
+    for (const file of fileList) {
+      if (file.size > MAX_FILE_SIZE) {
+        showToast(`File ${file.name} exceeds max size limit of 100MB.`, true);
+        continue;
+      }
+      const rawBuf = await file.arrayBuffer();
+      const rawBytes = new Uint8Array(rawBuf);
+      const crc = calculateCRC32(rawBytes);
+      const entropy = calculateEntropy(rawBytes);
+      const method = parseInt(compMethod.value);
+
+      let packedBytes = rawBytes;
+      let compSize = rawBytes.length;
+      let actualMethod = 0;
+
+      if (method === 1 && rawBytes.length > 0) {
+        const rleBytes = compressRLE(rawBytes);
+        if (rleBytes.length < rawBytes.length) {
+          packedBytes = rleBytes;
+          compSize = rleBytes.length;
+          actualMethod = 1;
+        }
+      } else if (method === 2 && rawBytes.length > 0) {
+        const defBytes = await compressDeflate(rawBytes);
+        if (defBytes.length < rawBytes.length) {
+          packedBytes = defBytes;
+          compSize = defBytes.length;
+          actualMethod = 2;
+        }
+      }
+
+      files.push({
+        name: sanitizeFilename(file.name),
+        uncompSize: rawBytes.length,
+        compSize: compSize,
+        crc32: crc,
+        method: actualMethod,
+        entropy: entropy,
+        rawBytes: rawBytes,
+        packedBytes: packedBytes
+      });
+      playSfx('add');
+      showToast(`Added '${file.name}'`);
+    }
+    renderTable();
+  }
+
+  if (localFileInput) {
+    localFileInput.onchange = (e) => {
+      processAddedFiles(e.target.files);
+      localFileInput.value = '';
+    };
+  }
+
+  window.addEventListener('message', (e) => {
+    const msg = e.data;
+    if (msg && callbacks[msg.requestId]) {
+      callbacks[msg.requestId](msg);
+      delete callbacks[msg.requestId];
+    }
+  });
+
+  function sendToOS(msg) {
+    return new Promise((resolve, reject) => {
+      const id = ++currentReqId;
+      const timer = setTimeout(() => {
+        delete callbacks[id];
+        reject(new Error("OS communication timeout"));
+      }, 2500);
+      callbacks[id] = (res) => {
+        clearTimeout(timer);
+        resolve(res);
+      };
+      try {
+        window.parent.postMessage({ ...msg, requestId: id }, '*');
+      } catch (err) {
+        clearTimeout(timer);
+        delete callbacks[id];
+        reject(err);
+      }
+    });
   }
 
   function renderTable(focusIdxToRestore) {
@@ -962,7 +1798,11 @@
       tr.ondblclick = () => {
         selectedFiles.clear();
         selectedFiles.add(f);
-        btnPreview.click();
+        if (isTextBytes(f.rawBytes)) {
+          openEditor(f);
+        } else {
+          btnPreview.click();
+        }
       };
 
       tr.onclick = (e) => {
@@ -1011,12 +1851,21 @@
           e.preventDefault();
           selectedFiles.clear();
           selectedFiles.add(f);
-          btnPreview.click();
+          if (isTextBytes(f.rawBytes)) {
+            openEditor(f);
+          } else {
+            btnPreview.click();
+          }
         }
       };
 
       const ratio = f.uncompSize > 0 ? Math.max(0, Math.round(100 - (f.compSize * 100 / f.uncompSize))) : 0;
       const safeName = escapeHtml(f.name);
+      const entStr = (f.entropy !== undefined) ? f.entropy.toFixed(2) : '0.00';
+
+      let methodBadge = '<span class="badge badge-store">Store</span>';
+      if (f.method === 1) methodBadge = '<span class="badge badge-rle">RLE</span>';
+      else if (f.method === 2) methodBadge = '<span class="badge badge-deflate">Deflate</span>';
 
       tr.innerHTML = `
         <td><input type="checkbox" ${selectedFiles.has(f) ? 'checked' : ''} aria-label="Select ${safeName}"></td>
@@ -1024,8 +1873,9 @@
         <td>${formatBytes(f.uncompSize)}</td>
         <td>${formatBytes(f.compSize)}</td>
         <td style="color: ${ratio > 0 ? 'var(--accent-green)' : 'var(--text-muted)'}">${ratio}%</td>
+        <td style="font-family: monospace; color: var(--accent-blue);">${entStr} b/B</td>
         <td style="font-family: monospace;">0x${escapeHtml(f.crc32)}</td>
-        <td><span class="badge ${f.method === 1 ? 'badge-rle' : 'badge-store'}">${f.method === 1 ? 'RLE' : 'Store'}</span></td>
+        <td>${methodBadge}</td>
       `;
 
       const cb = tr.querySelector('input[type="checkbox"]');
@@ -1048,15 +1898,15 @@
     if (files.length === 0) {
       const emptyTr = document.createElement('tr');
       emptyTr.innerHTML = `
-        <td colspan="7" style="text-align: center; padding: 36px 16px; color: var(--text-muted);">
+        <td colspan="8" style="text-align: center; padding: 36px 16px; color: var(--text-muted);">
           <div style="font-size: 38px; margin-bottom: 8px;">📦</div>
           <div style="font-size: 15px; font-weight: 600; color: var(--text-main); margin-bottom: 4px;">Archive is empty</div>
-          <div style="font-size: 13px; margin-bottom: 14px;">Drag and drop files or <code>.kza</code> archives here, or click <strong>Add File...</strong></div>
+          <div style="font-size: 13px; margin-bottom: 14px;">Drag and drop files, <code>.kza</code>, <code>.zip</code>, or <code>.tar</code> archives here, or click <strong>Add File...</strong></div>
           <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 14px;">
             <button class="quick-chip" onclick="addSampleText()" title="Add markdown documentation">📄 Sample Readme</button>
             <button class="quick-chip" onclick="addSampleJson()" title="Add structured configuration JSON">📊 Config JSON</button>
             <button class="quick-chip" onclick="addSampleRLE()" title="Add repetitive log file testing 95% RLE savings">🗜️ RLE Compress Test (95% Savings)</button>
-            <button class="quick-chip" onclick="loadDemoArchive()" title="Load full demo bundle with 3 files">📦 Load Demo Bundle</button>
+            <button class="quick-chip" onclick="loadDemoArchive()" title="Load full demo bundle with 4 files">📦 Load Demo Bundle</button>
           </div>
           <div style="font-size: 11px; opacity: 0.75;">Shortcuts: <strong>Ctrl+O</strong> Open | <strong>Ctrl+S</strong> Pack | <strong>Ctrl+E</strong> Extract All | <strong>F1 / H</strong> Help</div>
         </td>
@@ -1065,7 +1915,7 @@
     } else if (visibleCount === 0) {
       const noMatchTr = document.createElement('tr');
       noMatchTr.innerHTML = `
-        <td colspan="7" style="text-align: center; padding: 32px 16px; color: var(--text-muted); font-size: 13px;">
+        <td colspan="8" style="text-align: center; padding: 32px 16px; color: var(--text-muted); font-size: 13px;">
           🔍 No files match the filter "<strong>${escapeHtml(filterText)}</strong>". Press Esc in filter to clear.
         </td>
       `;
@@ -1110,6 +1960,7 @@
     files = files.filter(f => !selectedFiles.has(f));
     selectedFiles.clear();
     if (selectAll) selectAll.checked = false;
+    playSfx('remove');
     renderTable();
     showToast(`Removed ${count} file(s).`);
   };
@@ -1133,6 +1984,7 @@
           }
 
           const crc = calculateCRC32(rawBytes);
+          const entropy = calculateEntropy(rawBytes);
           const method = parseInt(compMethod.value);
 
           let packedBytes = rawBytes;
@@ -1146,6 +1998,13 @@
               compSize = rleBytes.length;
               actualMethod = 1;
             }
+          } else if (method === 2 && rawBytes.length > 0) {
+            const defBytes = await compressDeflate(rawBytes);
+            if (defBytes.length < rawBytes.length) {
+              packedBytes = defBytes;
+              compSize = defBytes.length;
+              actualMethod = 2;
+            }
           }
 
           files.push({
@@ -1154,10 +2013,12 @@
             compSize: compSize,
             crc32: crc,
             method: actualMethod,
+            entropy: entropy,
             rawBytes: rawBytes,
             packedBytes: packedBytes
           });
 
+          playSfx('add');
           renderTable();
           showToast(`Added '${filename}'`);
           return;
@@ -1169,68 +2030,151 @@
     }
   };
 
+  // Pack archive according to chosen container format (KZA, ZIP, TAR)
   btnPack.onclick = async () => {
     if (files.length === 0) return showToast("Archive is empty - nothing to pack!", true);
+    clearToasts();
+
+    const format = archiveFormat.value;
     const pass = passwordInput.value;
     const pwdHashNum = pass ? parseInt(calculateCRC32(new TextEncoder().encode(pass)), 16) : 0;
 
-    const exportFiles = files.map(f => {
-      let payload = f.packedBytes;
-      if (pwdHashNum) {
-        payload = cryptXOR(payload, pwdHashNum);
+    let outBlob = null;
+    let outFilename = 'archive.' + format;
+
+    if (format === 'zip') {
+      try {
+        const zipBytes = await createZip(files, archiveComment);
+        outBlob = new Blob([zipBytes], { type: 'application/zip' });
+      } catch (e) {
+        return showToast("Failed to create ZIP: " + e.message, true);
       }
-      return {
-        name: sanitizeFilename(f.name),
-        uncompSize: f.uncompSize,
-        compSize: f.compSize,
-        crc32: f.crc32,
-        method: f.method,
-        data: uint8ToBase64(payload)
+    } else if (format === 'tar') {
+      try {
+        const tarBytes = createTar(files);
+        outBlob = new Blob([tarBytes], { type: 'application/x-tar' });
+      } catch (e) {
+        return showToast("Failed to create TAR: " + e.message, true);
+      }
+    } else {
+      // Default KZA2 JSON format
+      const exportFiles = files.map(f => {
+        let payload = f.packedBytes;
+        if (pwdHashNum) {
+          payload = cryptXOR(payload, pwdHashNum);
+        }
+        return {
+          name: sanitizeFilename(f.name),
+          uncompSize: f.uncompSize,
+          compSize: f.compSize,
+          crc32: f.crc32,
+          method: f.method,
+          entropy: f.entropy,
+          data: uint8ToBase64(payload)
+        };
+      });
+
+      const archiveData = {
+        magic: 'KZA2',
+        flags: pwdHashNum ? 1 : 0,
+        pwdHash: pwdHashNum,
+        comment: archiveComment,
+        files: exportFiles
       };
-    });
 
-    const archiveData = {
-      magic: 'KZA2',
-      flags: pwdHashNum ? 1 : 0,
-      pwdHash: pwdHashNum,
-      files: exportFiles
-    };
-
-    const jsonStr = JSON.stringify(archiveData);
+      const jsonStr = JSON.stringify(archiveData);
+      outBlob = new Blob([jsonStr], { type: 'application/json' });
+    }
 
     if (window.parent !== window) {
       try {
         const res = await sendToOS({ type: 'VFS_SHOW_SAVE' });
         if (res && res.path) {
           let path = res.path;
-          if (!path.endsWith('.kza')) path += '.kza';
-          const jsonBytes = new TextEncoder().encode(jsonStr);
-          const b64 = 'data:application/json;base64,' + uint8ToBase64(jsonBytes);
+          if (!path.endsWith('.' + format)) path += '.' + format;
+          const arrayBuf = await outBlob.arrayBuffer();
+          const b64 = 'data:application/octet-stream;base64,' + uint8ToBase64(new Uint8Array(arrayBuf));
           await sendToOS({ type: 'VFS_WRITE', path: path, data: b64 });
+          playSfx('pack');
           showToast("Packed archive successfully to " + path);
           return;
         }
-        if (res) return; // User cancelled OS save dialog
+        if (res) return;
       } catch (err) {
         // Fallback to standalone direct download
       }
     }
 
     try {
-      const blob = new Blob([jsonStr], { type: 'application/json' });
-      downloadBlob(blob, 'archive.kza');
-      showToast("Packed and downloaded archive.kza");
+      downloadBlob(outBlob, outFilename);
+      playSfx('pack');
+      showToast(`Packed and downloaded ${outFilename}`);
     } catch (e) {
       showToast("Failed to pack archive: " + e.message, true);
     }
   };
 
-  function loadArchiveData(parsed) {
-    if (!parsed || (parsed.magic !== 'KZA2' && !Array.isArray(parsed))) {
-      showToast("Invalid archive format: expected KZA archive.", true);
-      return;
+  // Universal Archive Parser (KZA, PKZIP, TAR)
+  async function loadArchiveBuffer(arrayBuffer, filenameHint = '') {
+    const bytes = new Uint8Array(arrayBuffer);
+
+    // 1. Detect PKZIP 2.0 (magic 0x04034b50)
+    if (bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4B && bytes[2] === 0x03 && bytes[3] === 0x04) {
+      try {
+        const extracted = await readZip(bytes);
+        if (extracted.length > 0) {
+          files = extracted;
+          selectedFiles.clear();
+          archiveFormat.value = 'zip';
+          renderTable();
+          playSfx('extract');
+          showToast(`Loaded PKZIP archive (${files.length} file(s))`);
+          return true;
+        }
+      } catch (e) {
+        console.warn("PKZIP parse error:", e);
+      }
     }
 
+    // 2. Detect POSIX TAR (ustar magic at offset 257)
+    if (bytes.length >= 512) {
+      const ustarCheck = new TextDecoder().decode(bytes.subarray(257, 262));
+      if (ustarCheck === 'ustar' || (bytes.length % 512 === 0 && filenameHint.endsWith('.tar'))) {
+        try {
+          const extracted = readTar(bytes);
+          if (extracted.length > 0) {
+            files = extracted;
+            selectedFiles.clear();
+            archiveFormat.value = 'tar';
+            renderTable();
+            playSfx('extract');
+            showToast(`Loaded POSIX TAR archive (${files.length} file(s))`);
+            return true;
+          }
+        } catch (e) {
+          console.warn("TAR parse error:", e);
+        }
+      }
+    }
+
+    // 3. Fallback: Parse KZA JSON format
+    try {
+      const jsonStr = new TextDecoder().decode(bytes);
+      const parsed = JSON.parse(jsonStr);
+      if (parsed && (parsed.magic === 'KZA2' || Array.isArray(parsed))) {
+        loadKzaJson(parsed);
+        archiveFormat.value = 'kza';
+        return true;
+      }
+    } catch (e) {
+      // Not JSON
+    }
+
+    showToast("Unrecognized archive format. Expected .kza, .zip, or .tar.", true);
+    return false;
+  }
+
+  function loadKzaJson(parsed) {
     const newFiles = [];
 
     if (parsed.magic === 'KZA2') {
@@ -1238,6 +2182,7 @@
         showToast("Corrupted KZA archive: missing files list.", true);
         return;
       }
+      archiveComment = parsed.comment || '';
       const pwdHashNum = parsed.pwdHash || 0;
       let userHashNum = 0;
 
@@ -1274,6 +2219,7 @@
           compSize: f.compSize,
           crc32: f.crc32,
           method: f.method,
+          entropy: f.entropy !== undefined ? f.entropy : calculateEntropy(raw),
           rawBytes: raw,
           packedBytes: payload
         });
@@ -1290,6 +2236,7 @@
           compSize: raw.length,
           crc32: crc,
           method: 0,
+          entropy: calculateEntropy(raw),
           rawBytes: raw,
           packedBytes: raw
         });
@@ -1298,24 +2245,17 @@
     files = newFiles;
     selectedFiles.clear();
     renderTable();
+    playSfx('extract');
     showToast(`Loaded archive (${files.length} file(s))`);
   }
 
-  if (kzaFileInput) {
-    kzaFileInput.onchange = (e) => {
+  if (archiveFileInput) {
+    archiveFileInput.onchange = async (e) => {
       if (!e.target.files || e.target.files.length === 0) return;
       const file = e.target.files[0];
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        try {
-          const parsed = JSON.parse(evt.target.result);
-          loadArchiveData(parsed);
-        } catch (err) {
-          showToast("Failed to parse archive: " + err.message, true);
-        }
-      };
-      reader.readAsText(file);
-      kzaFileInput.value = '';
+      const buf = await file.arrayBuffer();
+      await loadArchiveBuffer(buf, file.name.toLowerCase());
+      archiveFileInput.value = '';
     };
   }
 
@@ -1327,18 +2267,16 @@
           const readRes = await sendToOS({ type: 'VFS_READ', path: res.path });
           if (readRes && readRes.data) {
             const rawBytes = base64ToUint8(readRes.data);
-            const jsonStr = new TextDecoder().decode(rawBytes);
-            const parsed = JSON.parse(jsonStr);
-            loadArchiveData(parsed);
+            await loadArchiveBuffer(rawBytes.buffer, res.path.toLowerCase());
             return;
           }
         }
-        if (res) return; // User cancelled OS open dialog
+        if (res) return;
       } catch (e) {
-        // Fallback to local file input
+        // Fallback to local input
       }
     }
-    if (kzaFileInput) kzaFileInput.click();
+    if (archiveFileInput) archiveFileInput.click();
   };
 
   btnExtractSel.onclick = async () => {
@@ -1359,6 +2297,7 @@
       downloadBlob(blob, safeName);
       count++;
     }
+    playSfx('extract');
     showToast(`Extracted ${count} selected file(s)!`);
   };
 
@@ -1380,11 +2319,13 @@
       downloadBlob(blob, safeName);
       count++;
     }
+    playSfx('extract');
     showToast(`Extracted ${count} file(s)!`);
   };
 
   btnVerify.onclick = () => {
     if (files.length === 0) return showToast("No files in archive to verify.", true);
+    clearToasts();
     modalReport.innerHTML = '';
     let passCount = 0;
     let failCount = 0;
@@ -1412,37 +2353,42 @@
     summaryDiv.innerHTML = `Summary: ${passCount} Passed, ${failCount} Failed. Status: ${failCount === 0 ? '<span class="pass-text">ARCHIVE INTEGRITY VERIFIED</span>' : '<span class="fail-text">CORRUPTION DETECTED</span>'}`;
     modalReport.appendChild(summaryDiv);
 
+    if (failCount === 0) playSfx('verify_pass');
+    else playSfx('verify_fail');
+
     verifyModal.classList.add('active');
     btnOkModal.focus();
   };
 
-  function closeModal() {
-    verifyModal.classList.remove('active');
-  }
-
-  btnCloseModal.onclick = closeModal;
-  btnOkModal.onclick = closeModal;
+  btnCloseModal.onclick = () => verifyModal.classList.remove('active');
+  btnOkModal.onclick = () => verifyModal.classList.remove('active');
 
   btnPreview.onclick = () => {
     if (selectedFiles.size !== 1) return showToast("Select exactly one file to preview.", true);
+    clearToasts();
     const f = Array.from(selectedFiles)[0];
     
-    // Header & Metadata
     document.getElementById('previewTitle').textContent = `File Preview: ${f.name}`;
+    const entVal = (f.entropy !== undefined) ? f.entropy.toFixed(3) : calculateEntropy(f.rawBytes).toFixed(3);
+
+    let methodStr = 'Store (Uncompressed)';
+    if (f.method === 1) methodStr = 'RLE Fast Compression';
+    else if (f.method === 2) methodStr = 'Deflate LZ77 Compression';
+
     document.getElementById('deepMetadata').innerHTML = `
       <div><strong>Offset (Internal):</strong> 0x${f.offset ? f.offset.toString(16).toUpperCase() : '0000'}</div>
       <div><strong>Original Size:</strong> ${formatBytes(f.uncompSize)} (${f.uncompSize} B)</div>
       <div><strong>Compressed Size:</strong> ${formatBytes(f.compSize)} (${f.compSize} B)</div>
-      <div><strong>Method:</strong> ${f.method === 1 ? 'RLE Fast Compression' : 'Store (Uncompressed)'}</div>
+      <div><strong>Shannon Entropy:</strong> ${entVal} bits/byte (${entVal < 4.0 ? 'Highly Compressible' : (entVal < 7.0 ? 'Medium Entropy' : 'High Entropy / Compressed')})</div>
+      <div><strong>Method:</strong> ${methodStr}</div>
       <div><strong>CRC32 Checksum:</strong> 0x${escapeHtml(f.crc32)}</div>
     `;
 
-    // Chunk Viz (RLE)
     const viz = document.getElementById('chunkViz');
-    if (f.method === 1 && f.uncompSize > 0) {
+    if (f.uncompSize > 0) {
       const ratio = (f.compSize / f.uncompSize) * 100;
       viz.innerHTML = `
-        <div style="font-size:11px;">RLE Deflate/Inflate Ratio: ${ratio.toFixed(1)}%</div>
+        <div style="font-size:11px;">Compression Space Footprint: ${ratio.toFixed(1)}% of original</div>
         <div style="width: 100%; height: 12px; background: var(--bg-primary); border: 1px solid var(--border-color); display: flex;">
           <div style="width: ${Math.min(ratio, 100)}%; background: var(--accent-blue); height: 100%;"></div>
         </div>
@@ -1451,7 +2397,6 @@
       viz.innerHTML = `<div style="font-size:11px;">Stored (No Compression Chunking)</div>`;
     }
 
-    // Hex Generator
     const raw = f.rawBytes || new Uint8Array(0);
     let hexOut = '';
     const maxPreview = 512; 
@@ -1474,86 +2419,441 @@
         }
         hexOut += hex + ' |' + escapeHtml(ascii) + '|\n';
       }
-      if (raw.length > len) hexOut += '\n... (truncated)';
+      if (raw.length > len) hexOut += '\n... (truncated to 512 bytes)';
     }
     
     document.getElementById('hexView').innerHTML = hexOut;
-    document.getElementById('previewModal').classList.add('active');
-    document.getElementById('btnOkPreview').focus();
+    btnPreviewToEdit.style.display = isTextBytes(f.rawBytes) ? 'inline-block' : 'none';
+    previewModal.classList.add('active');
+    btnOkPreview.focus();
   };
 
-  document.getElementById('btnClosePreview').onclick = () => document.getElementById('previewModal').classList.remove('active');
-  document.getElementById('btnOkPreview').onclick = () => document.getElementById('previewModal').classList.remove('active');
+  btnPreviewToEdit.onclick = () => {
+    previewModal.classList.remove('active');
+    if (selectedFiles.size === 1) {
+      openEditor(Array.from(selectedFiles)[0]);
+    }
+  };
+
+  btnClosePreview.onclick = () => previewModal.classList.remove('active');
+  btnOkPreview.onclick = () => previewModal.classList.remove('active');
+
+  // =========================================================================
+  // In-Archive Text Editor
+  // =========================================================================
+
+  function openEditor(file) {
+    if (!isTextBytes(file.rawBytes)) {
+      return showToast("Selected file contains binary data. Opening Hex Preview instead.", true);
+    }
+    clearToasts();
+    activeEditingFile = file;
+    editorTitle.textContent = `In-Archive Text Editor: ${file.name}`;
+    const textContent = new TextDecoder('utf-8').decode(file.rawBytes);
+    editorTextarea.value = textContent;
+
+    const lineCount = textContent.split('\n').length;
+    editorStats.textContent = `Size: ${formatBytes(file.uncompSize)} | Lines: ${lineCount} | Chars: ${textContent.length} | CRC32: 0x${file.crc32}`;
+
+    editorTextarea.oninput = () => {
+      const val = editorTextarea.value;
+      const lines = val.split('\n').length;
+      editorStats.textContent = `Size: ${formatBytes(val.length)} | Lines: ${lines} | Chars: ${val.length} (Unsaved Changes)`;
+    };
+
+    editorModal.classList.add('active');
+    editorTextarea.focus();
+  }
+
+  btnEditFile.onclick = () => {
+    if (selectedFiles.size !== 1) return showToast("Select exactly one file to edit.", true);
+    openEditor(Array.from(selectedFiles)[0]);
+  };
+
+  btnSaveEditor.onclick = async () => {
+    if (!activeEditingFile) return;
+    const text = editorTextarea.value;
+    const encoder = new TextEncoder();
+    const rawBytes = encoder.encode(text);
+    const crc = calculateCRC32(rawBytes);
+    const entropy = calculateEntropy(rawBytes);
+
+    let packedBytes = rawBytes;
+    let compSize = rawBytes.length;
+    let actualMethod = 0;
+
+    if (activeEditingFile.method === 1 && rawBytes.length > 0) {
+      const rle = compressRLE(rawBytes);
+      if (rle.length < rawBytes.length) {
+        packedBytes = rle;
+        compSize = rle.length;
+        actualMethod = 1;
+      }
+    } else if (activeEditingFile.method === 2 && rawBytes.length > 0) {
+      const def = await compressDeflate(rawBytes);
+      if (def.length < rawBytes.length) {
+        packedBytes = def;
+        compSize = def.length;
+        actualMethod = 2;
+      }
+    }
+
+    activeEditingFile.rawBytes = rawBytes;
+    activeEditingFile.packedBytes = packedBytes;
+    activeEditingFile.uncompSize = rawBytes.length;
+    activeEditingFile.compSize = compSize;
+    activeEditingFile.crc32 = crc;
+    activeEditingFile.entropy = entropy;
+    activeEditingFile.method = actualMethod;
+
+    editorModal.classList.remove('active');
+    playSfx('add');
+    renderTable();
+    showToast(`Saved changes to '${activeEditingFile.name}'!`);
+    activeEditingFile = null;
+  };
+
+  btnCloseEditor.onclick = () => { editorModal.classList.remove('active'); activeEditingFile = null; };
+  btnCancelEditor.onclick = () => { editorModal.classList.remove('active'); activeEditingFile = null; };
+
+  // =========================================================================
+  // Rename File In-Archive
+  // =========================================================================
+
+  function openRename(file) {
+    clearToasts();
+    activeRenamingFile = file;
+    renameInput.value = file.name;
+    renameModal.classList.add('active');
+    renameInput.focus();
+    renameInput.select();
+  }
+
+  btnRenameFile.onclick = () => {
+    if (selectedFiles.size !== 1) return showToast("Select exactly one file to rename.", true);
+    openRename(Array.from(selectedFiles)[0]);
+  };
+
+  btnConfirmRename.onclick = () => {
+    if (!activeRenamingFile) return;
+    const newName = sanitizeFilename(renameInput.value);
+    if (!newName || newName === 'unnamed_file') {
+      return showToast("Please enter a valid filename.", true);
+    }
+    const oldName = activeRenamingFile.name;
+    activeRenamingFile.name = newName;
+    renameModal.classList.remove('active');
+    playSfx('add');
+    renderTable();
+    showToast(`Renamed '${oldName}' to '${newName}'`);
+    activeRenamingFile = null;
+  };
+
+  renameInput.onkeydown = (e) => {
+    if (e.key === 'Enter') btnConfirmRename.click();
+    else if (e.key === 'Escape') btnCancelRename.click();
+  };
+
+  btnCloseRename.onclick = () => { renameModal.classList.remove('active'); activeRenamingFile = null; };
+  btnCancelRename.onclick = () => { renameModal.classList.remove('active'); activeRenamingFile = null; };
+
+  // =========================================================================
+  // New Text File In-Archive
+  // =========================================================================
+
+  btnNewText.onclick = () => {
+    clearToasts();
+    newFileNameInput.value = 'notes_' + (files.length + 1) + '.txt';
+    newFileContentInput.value = '';
+    newFileModal.classList.add('active');
+    newFileNameInput.focus();
+  };
+
+  btnConfirmNewFile.onclick = () => {
+    const filename = sanitizeFilename(newFileNameInput.value);
+    if (!filename) return showToast("Please enter a valid filename.", true);
+    const content = newFileContentInput.value;
+    addSampleFile(filename, content);
+    newFileModal.classList.remove('active');
+  };
+
+  btnCloseNewFile.onclick = () => newFileModal.classList.remove('active');
+  btnCancelNewFile.onclick = () => newFileModal.classList.remove('active');
+
+  // =========================================================================
+  // Archive Comment
+  // =========================================================================
+
+  btnComment.onclick = () => {
+    clearToasts();
+    commentTextarea.value = archiveComment;
+    commentModal.classList.add('active');
+    commentTextarea.focus();
+  };
+
+  btnSaveComment.onclick = () => {
+    archiveComment = commentTextarea.value.trim();
+    commentModal.classList.remove('active');
+    playSfx('add');
+    showToast("Archive comment saved.");
+  };
+
+  btnCloseComment.onclick = () => commentModal.classList.remove('active');
+  btnCancelComment.onclick = () => commentModal.classList.remove('active');
+
+  // =========================================================================
+  // Diagnostics & Shannon Entropy Analysis
+  // =========================================================================
+
+  btnAnalysis.onclick = () => {
+    if (files.length === 0) return showToast("No files loaded in archive for analysis.", true);
+    clearToasts();
+
+    let totalRaw = 0;
+    let totalPacked = 0;
+    let totalEntropyWeighted = 0;
+    const globalCounts = new Uint32Array(256);
+
+    files.forEach(f => {
+      totalRaw += f.uncompSize;
+      totalPacked += f.compSize;
+      const ent = (f.entropy !== undefined) ? f.entropy : calculateEntropy(f.rawBytes);
+      totalEntropyWeighted += ent * (f.uncompSize || 1);
+      if (f.rawBytes) {
+        for (let i = 0; i < f.rawBytes.length; i++) globalCounts[f.rawBytes[i]]++;
+      }
+    });
+
+    const avgEntropy = totalRaw > 0 ? (totalEntropyWeighted / totalRaw) : 0;
+    const totalSavings = totalRaw > 0 ? Math.max(0, Math.round(100 - (totalPacked * 100 / totalRaw))) : 0;
+
+    let compressibilityRating = 'Low Entropy (Highly Compressible with RLE / Deflate)';
+    if (avgEntropy > 7.2) compressibilityRating = 'High Entropy (Pre-compressed or Encrypted Data)';
+    else if (avgEntropy > 5.0) compressibilityRating = 'Medium Entropy (Standard Structured Text / Code)';
+
+    // Find top 5 byte values
+    const bytePairs = [];
+    for (let i = 0; i < 256; i++) {
+      if (globalCounts[i] > 0) bytePairs.push({ byte: i, count: globalCounts[i] });
+    }
+    bytePairs.sort((a, b) => b.count - a.count);
+    const top5 = bytePairs.slice(0, 5);
+
+    let top5Html = top5.map(bp => {
+      const pct = totalRaw > 0 ? ((bp.count / totalRaw) * 100).toFixed(1) : 0;
+      const charRep = (bp.byte >= 32 && bp.byte <= 126) ? `'${String.fromCharCode(bp.byte)}'` : '0x' + bp.byte.toString(16).toUpperCase().padStart(2, '0');
+      return `
+        <div style="margin-bottom: 6px;">
+          <div style="display:flex; justify-content:space-between; font-size:11px;">
+            <span>Byte <strong>${charRep}</strong> (0x${bp.byte.toString(16).toUpperCase().padStart(2, '0')}): ${bp.count} occurrences</span>
+            <span>${pct}%</span>
+          </div>
+          <div class="spectrum-bar">
+            <div class="spectrum-fill" style="width: ${Math.min(pct * 2, 100)}%;"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    analysisBody.innerHTML = `
+      <div class="analysis-grid">
+        <div class="analysis-card">
+          <span class="analysis-card-title">Total Files</span>
+          <span class="analysis-card-val">${files.length}</span>
+        </div>
+        <div class="analysis-card">
+          <span class="analysis-card-title">Original Size</span>
+          <span class="analysis-card-val">${formatBytes(totalRaw)}</span>
+        </div>
+        <div class="analysis-card">
+          <span class="analysis-card-title">Packed Size</span>
+          <span class="analysis-card-val">${formatBytes(totalPacked)}</span>
+        </div>
+        <div class="analysis-card">
+          <span class="analysis-card-title">Total Savings</span>
+          <span class="analysis-card-val" style="color:var(--accent-green);">${totalSavings}%</span>
+        </div>
+        <div class="analysis-card">
+          <span class="analysis-card-title">Avg Entropy</span>
+          <span class="analysis-card-val" style="color:var(--accent-purple);">${avgEntropy.toFixed(2)} b/B</span>
+        </div>
+        <div class="analysis-card">
+          <span class="analysis-card-title">Active Container</span>
+          <span class="analysis-card-val">${archiveFormat.value.toUpperCase()}</span>
+        </div>
+      </div>
+      <div style="background:var(--bg-secondary); padding:10px; border-radius:6px; margin-bottom:12px; border:1px solid var(--border-color);">
+        <div style="font-weight:600; margin-bottom:4px;">Compressibility Assessment:</div>
+        <div style="color:var(--accent-blue); font-size:12px;">${compressibilityRating}</div>
+        ${archiveComment ? `<div style="margin-top:6px; font-size:11px; color:var(--text-muted);">Comment: "${escapeHtml(archiveComment)}"</div>` : ''}
+      </div>
+      <div style="font-weight:600; margin-bottom:8px;">Byte Frequency Spectrum (Top Occurrences):</div>
+      <div>${top5Html || '<span style="color:var(--text-muted);">No byte data</span>'}</div>
+    `;
+
+    analysisModal.classList.add('active');
+    btnOkAnalysis.focus();
+  };
+
+  btnCloseAnalysis.onclick = () => analysisModal.classList.remove('active');
+  btnOkAnalysis.onclick = () => analysisModal.classList.remove('active');
+
+  // =========================================================================
+  // Inventory Manifest Report
+  // =========================================================================
+
+  let currentManifestFormat = 'csv';
+
+  function generateManifestText(fmt) {
+    currentManifestFormat = fmt;
+    if (fmt === 'json') {
+      const payload = {
+        archiveSummary: {
+          container: archiveFormat.value.toUpperCase(),
+          totalFiles: files.length,
+          totalUncompBytes: files.reduce((acc, f) => acc + f.uncompSize, 0),
+          totalCompBytes: files.reduce((acc, f) => acc + f.compSize, 0),
+          comment: archiveComment || null,
+          generatedAt: new Date().toISOString()
+        },
+        files: files.map(f => ({
+          filename: f.name,
+          originalSize: f.uncompSize,
+          packedSize: f.compSize,
+          savingsPercent: f.uncompSize > 0 ? Math.max(0, Math.round(100 - (f.compSize * 100 / f.uncompSize))) : 0,
+          entropy: f.entropy !== undefined ? parseFloat(f.entropy.toFixed(3)) : 0,
+          crc32: '0x' + f.crc32,
+          method: f.method === 1 ? 'RLE' : (f.method === 2 ? 'Deflate' : 'Store')
+        }))
+      };
+      return JSON.stringify(payload, null, 2);
+    } else if (fmt === 'txt') {
+      let out = `================================================================================\n`;
+      out += `KZip Archiver Studio - Archive Inventory Report\n`;
+      out += `Generated: ${new Date().toLocaleString()} | Container: ${archiveFormat.value.toUpperCase()}\n`;
+      if (archiveComment) out += `Archive Comment: ${archiveComment}\n`;
+      out += `================================================================================\n\n`;
+      out += `FILENAME                        | ORIGINAL     | PACKED       | RATIO | ENTROPY | CRC32\n`;
+      out += `--------------------------------+--------------+--------------+-------+---------+-----------\n`;
+      files.forEach(f => {
+        const ratio = f.uncompSize > 0 ? Math.max(0, Math.round(100 - (f.compSize * 100 / f.uncompSize))) : 0;
+        const namePad = f.name.padEnd(31).substring(0, 31);
+        const origPad = (f.uncompSize + ' B').padStart(12);
+        const packPad = (f.compSize + ' B').padStart(12);
+        const ratioPad = (ratio + '%').padStart(5);
+        const entPad = ((f.entropy || 0).toFixed(2) + ' b').padStart(7);
+        out += `${namePad} | ${origPad} | ${packPad} | ${ratioPad} | ${entPad} | 0x${f.crc32}\n`;
+      });
+      out += `--------------------------------+--------------+--------------+-------+---------+-----------\n`;
+      const totOrig = files.reduce((acc, f) => acc + f.uncompSize, 0);
+      const totPack = files.reduce((acc, f) => acc + f.compSize, 0);
+      const totRatio = totOrig > 0 ? Math.max(0, Math.round(100 - (totPack * 100 / totOrig))) : 0;
+      out += `TOTAL: ${files.length} files               | ${(totOrig + ' B').padStart(12)} | ${(totPack + ' B').padStart(12)} | ${(totRatio + '%').padStart(5)} |\n`;
+      return out;
+    } else {
+      // CSV
+      let out = `Filename,OriginalSizeBytes,PackedSizeBytes,SavingsPercent,EntropyBitsPerByte,CRC32,Method\n`;
+      files.forEach(f => {
+        const ratio = f.uncompSize > 0 ? Math.max(0, Math.round(100 - (f.compSize * 100 / f.uncompSize))) : 0;
+        const methodStr = f.method === 1 ? 'RLE' : (f.method === 2 ? 'Deflate' : 'Store');
+        out += `"${f.name.replace(/"/g, '""')}",${f.uncompSize},${f.compSize},${ratio},${(f.entropy || 0).toFixed(3)},0x${f.crc32},${methodStr}\n`;
+      });
+      return out;
+    }
+  }
+
+  btnManifest.onclick = () => {
+    if (files.length === 0) return showToast("Archive is empty - no inventory to generate.", true);
+    clearToasts();
+    manifestTextarea.value = generateManifestText('csv');
+    manifestModal.classList.add('active');
+    btnOkManifest.focus();
+  };
+
+  btnManifestCsv.onclick = () => { manifestTextarea.value = generateManifestText('csv'); };
+  btnManifestJson.onclick = () => { manifestTextarea.value = generateManifestText('json'); };
+  btnManifestTxt.onclick = () => { manifestTextarea.value = generateManifestText('txt'); };
+
+  btnCopyManifest.onclick = async () => {
+    try {
+      await navigator.clipboard.writeText(manifestTextarea.value);
+      showToast("Manifest copied to clipboard!");
+    } catch (e) {
+      manifestTextarea.select();
+      document.execCommand('copy');
+      showToast("Manifest copied to clipboard!");
+    }
+  };
+
+  btnDownloadManifest.onclick = () => {
+    const ext = currentManifestFormat === 'json' ? 'json' : (currentManifestFormat === 'txt' ? 'txt' : 'csv');
+    const blob = new Blob([manifestTextarea.value], { type: 'text/plain;charset=utf-8' });
+    downloadBlob(blob, `archive_manifest.${ext}`);
+    showToast(`Downloaded archive_manifest.${ext}`);
+  };
+
+  btnCloseManifest.onclick = () => manifestModal.classList.remove('active');
+  btnOkManifest.onclick = () => manifestModal.classList.remove('active');
+
+  // =========================================================================
+  // Batch Extract
+  // =========================================================================
 
   btnBatchExtract.onclick = () => batchInput.click();
   batchInput.onchange = async (e) => {
     let count = 0;
     const isVfs = (window.parent !== window);
     for (const file of e.target.files) {
-      if (!file.name.toLowerCase().endsWith('.kza')) continue;
-      const jsonStr = await file.text();
-      try {
-        const parsed = JSON.parse(jsonStr);
-        if (parsed.magic === 'KZA2' && Array.isArray(parsed.files)) {
-           const pwdHashNum = parsed.pwdHash || 0;
-           let userHashNum = 0;
-           if (parsed.flags & 1) {
-             const userPass = passwordInput.value || prompt(`Archive ${file.name} is password protected! Enter Password:`);
-             if (userPass) userHashNum = parseInt(calculateCRC32(new TextEncoder().encode(userPass)), 16);
-             if (userHashNum !== pwdHashNum) {
-               showToast(`Incorrect password for ${file.name}. Skipping.`, true);
-               continue;
-             }
-           }
-           for (const f of parsed.files) {
-              let payload = base64ToUint8(f.data);
-              if (pwdHashNum) payload = cryptXOR(payload, pwdHashNum);
-              let raw = payload;
-              if (f.method === 1) raw = decompressRLE(payload, f.uncompSize);
-              const safeName = sanitizeFilename(f.name);
-              if (isVfs) {
-                try {
-                  const b64 = 'data:application/octet-stream;base64,' + uint8ToBase64(raw);
-                  await sendToOS({ type: 'VFS_WRITE', path: '/' + safeName, data: b64 });
-                  count++;
-                  continue;
-                } catch(vfsErr) {}
-              }
-              const blob = new Blob([raw], { type: 'application/octet-stream' });
-              downloadBlob(blob, safeName);
-              count++;
-           }
-        } else if (Array.isArray(parsed)) {
-           for (const f of parsed) {
-              const raw = base64ToUint8(f.data);
-              const safeName = sanitizeFilename(f.name);
-              if (isVfs) {
-                try {
-                  const b64 = 'data:application/octet-stream;base64,' + uint8ToBase64(raw);
-                  await sendToOS({ type: 'VFS_WRITE', path: '/' + safeName, data: b64 });
-                  count++;
-                  continue;
-                } catch(vfsErr) {}
-              }
-              const blob = new Blob([raw], { type: 'application/octet-stream' });
-              downloadBlob(blob, safeName);
-              count++;
-           }
+      const nameLower = file.name.toLowerCase();
+      const buf = await file.arrayBuffer();
+      const bytes = new Uint8Array(buf);
+      let batchFiles = [];
+
+      if (nameLower.endsWith('.zip') || (bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4B)) {
+        batchFiles = await readZip(bytes);
+      } else if (nameLower.endsWith('.tar') || (bytes.length >= 512 && bytes[257] === 0x75)) {
+        batchFiles = readTar(bytes);
+      } else if (nameLower.endsWith('.kza')) {
+        try {
+          const jsonStr = new TextDecoder().decode(bytes);
+          const parsed = JSON.parse(jsonStr);
+          if (parsed && parsed.magic === 'KZA2') {
+            for (const f of parsed.files) {
+              let p = base64ToUint8(f.data);
+              let raw = p;
+              if (f.method === 1) raw = decompressRLE(p, f.uncompSize);
+              batchFiles.push({ name: sanitizeFilename(f.name), rawBytes: raw });
+            }
+          }
+        } catch (err) {}
+      }
+
+      for (const bf of batchFiles) {
+        const safeName = sanitizeFilename(bf.name);
+        if (isVfs) {
+          try {
+            const b64 = 'data:application/octet-stream;base64,' + uint8ToBase64(bf.rawBytes);
+            await sendToOS({ type: 'VFS_WRITE', path: '/' + safeName, data: b64 });
+            count++;
+            continue;
+          } catch (vfsErr) {}
         }
-      } catch(err) {
-        console.error("Batch extract failed for", file.name, err);
+        const blob = new Blob([bf.rawBytes], { type: 'application/octet-stream' });
+        downloadBlob(blob, safeName);
+        count++;
       }
     }
     batchInput.value = '';
-    showToast(`Batch extraction complete: ${count} files extracted.`);
+    playSfx('extract');
+    showToast(`Batch extraction complete: ${count} file(s) extracted.`);
   };
 
-  const helpModal = document.getElementById('helpModal');
-  const btnCloseHelp = document.getElementById('btnCloseHelp');
-  const btnOkHelp = document.getElementById('btnOkHelp');
-  const btnHelpApp = document.getElementById('btnHelpApp');
-  
+  // =========================================================================
+  // Help Modal & Tutorial Onboarding
+  // =========================================================================
+
   function toggleHelp() {
+    clearToasts();
     helpModal.classList.toggle('active');
     if (helpModal.classList.contains('active')) {
       safeSetStorage('kzip_tutorialSeen', '1');
@@ -1565,21 +2865,27 @@
   btnOkHelp.onclick = () => helpModal.classList.remove('active');
   if (btnHelpApp) btnHelpApp.onclick = toggleHelp;
 
+  // =========================================================================
   // Full State Persistence: Quicksave & Quickload
+  // =========================================================================
+
   function quickSaveState() {
     try {
       const payload = {
         timestamp: Date.now(),
+        format: archiveFormat ? archiveFormat.value : 'kza',
         method: compMethod ? compMethod.value : '1',
         regex: regexCheck ? regexCheck.checked : false,
         search: searchInput ? searchInput.value : '',
         password: passwordInput ? passwordInput.value : '',
+        comment: archiveComment,
         files: files.map(f => ({
           name: f.name,
           uncompSize: f.uncompSize,
           compSize: f.compSize,
           crc32: f.crc32,
           method: f.method,
+          entropy: f.entropy,
           rawBytesB64: uint8ToBase64(f.rawBytes),
           packedBytesB64: uint8ToBase64(f.packedBytes)
         }))
@@ -1590,6 +2896,7 @@
         showToast("Quicksave failed: storage quota exceeded.", true);
         return;
       }
+      playSfx('add');
       showToast(`Quicksave saved (${files.length} file(s)) [F5]`);
     } catch (err) {
       console.error("Quicksave failed:", err);
@@ -1607,6 +2914,10 @@
       if (!state || !Array.isArray(state.files)) {
         return showToast("Corrupted quicksave data.", true);
       }
+      if (archiveFormat && state.format !== undefined) {
+        archiveFormat.value = state.format;
+        safeSetStorage('kzip_format', archiveFormat.value);
+      }
       if (compMethod && state.method !== undefined) {
         compMethod.value = state.method;
         safeSetStorage('kzip_method', compMethod.value);
@@ -1621,6 +2932,9 @@
       if (searchInput && state.search !== undefined) {
         searchInput.value = state.search;
       }
+      if (state.comment !== undefined) {
+        archiveComment = state.comment;
+      }
       files = state.files.map(f => {
         const raw = base64ToUint8(f.rawBytesB64);
         const packed = f.packedBytesB64 ? base64ToUint8(f.packedBytesB64) : raw;
@@ -1630,12 +2944,14 @@
           compSize: f.compSize !== undefined ? f.compSize : packed.length,
           crc32: f.crc32 || calculateCRC32(raw),
           method: f.method !== undefined ? f.method : 0,
+          entropy: f.entropy !== undefined ? f.entropy : calculateEntropy(raw),
           rawBytes: raw,
           packedBytes: packed
         };
       });
       selectedFiles.clear();
       renderTable();
+      playSfx('extract');
       showToast(`Quicksave loaded (${files.length} file(s)) [F9]`);
     } catch (err) {
       console.error("Quickload failed:", err);
@@ -1647,7 +2963,7 @@
   if (btnQuickLoad) btnQuickLoad.onclick = quickLoadState;
 
   // Modal Backdrop Click Dismissals
-  [verifyModal, document.getElementById('previewModal'), helpModal].forEach(m => {
+  allModals.forEach(m => {
     if (m) {
       m.onclick = (e) => {
         if (e.target === m) m.classList.remove('active');
@@ -1655,15 +2971,19 @@
     }
   });
 
-  // Global Keyboard Shortcuts
+  // Global Keyboard Accelerators
   window.addEventListener('keydown', (e) => {
-    const inInput = (document.activeElement === searchInput || document.activeElement === passwordInput);
+    const inInput = (document.activeElement === searchInput || document.activeElement === passwordInput || document.activeElement === editorTextarea || document.activeElement === renameInput || document.activeElement === newFileNameInput || document.activeElement === newFileContentInput || document.activeElement === commentTextarea || document.activeElement === manifestTextarea);
     const isCtrl = e.ctrlKey || e.metaKey;
+    const isAlt = e.altKey;
 
-    // Check active modal first to prevent background hotkey triggering
-    const activeModal = [verifyModal, document.getElementById('previewModal'), helpModal].find(m => m && m.classList.contains('active'));
+    // Check active modal first
+    const activeModal = allModals.find(m => m && m.classList.contains('active'));
     if (activeModal) {
-      if (e.key === 'Escape' || e.key === 'Enter') {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        activeModal.classList.remove('active');
+      } else if (e.key === 'Enter' && !inInput) {
         e.preventDefault();
         activeModal.classList.remove('active');
       }
@@ -1680,6 +3000,22 @@
       quickLoadState();
       return;
     }
+    if (e.key === 'F2') {
+      e.preventDefault();
+      btnRenameFile.click();
+      return;
+    }
+
+    if (isAlt) {
+      if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        btnNewText.click();
+      } else if (e.key === 'a' || e.key === 'A') {
+        e.preventDefault();
+        btnAnalysis.click();
+      }
+      return;
+    }
 
     if (isCtrl) {
       if (e.key === 'o' || e.key === 'O') {
@@ -1694,6 +3030,9 @@
       } else if (e.key === 'n' || e.key === 'N') {
         e.preventDefault();
         btnAdd.click();
+      } else if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        btnManifest.click();
       } else if ((e.key === 'a' || e.key === 'A') && !inInput) {
         e.preventDefault();
         if (selectAll) {
@@ -1715,6 +3054,8 @@
       } else if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
         if (e.key === 'F1') e.preventDefault();
         toggleHelp();
+      } else if (e.key === 'e' || e.key === 'E') {
+        btnEditFile.click();
       } else if (e.key === 'v' || e.key === 'V') {
         btnVerify.click();
       } else if (e.key === 'p' || e.key === 'P') {
@@ -1725,75 +3066,48 @@
         btnBatchExtract.click();
       } else if (e.key === 'd' || e.key === 'D') {
         loadDemoArchive();
+      } else if (e.key === 'm' || e.key === 'M') {
+        toggleSound();
       } else if (e.key === 'Enter') {
-        if (selectedFiles.size === 1) btnPreview.click();
-        else if (selectedFiles.size > 1) btnExtractSel.click();
+        if (selectedFiles.size === 1) {
+          const f = Array.from(selectedFiles)[0];
+          if (isTextBytes(f.rawBytes)) openEditor(f);
+          else btnPreview.click();
+        } else if (selectedFiles.size > 1) {
+          btnExtractSel.click();
+        }
       }
     }
   });
 
-  function handleDroppedFiles(fileList) {
+  // Drag and Drop Handling
+  async function handleDroppedFiles(fileList) {
     if (!fileList || fileList.length === 0) return;
-    Array.from(fileList).forEach(file => {
-      if (file.size > MAX_FILE_SIZE) {
-        showToast(`File ${file.name} exceeds max size limit of 100MB.`, true);
-        return;
+    const archivesToLoad = [];
+    const regularFiles = [];
+
+    Array.from(fileList).forEach(f => {
+      const name = f.name.toLowerCase();
+      if (name.endsWith('.kza') || name.endsWith('.zip') || name.endsWith('.tar')) {
+        archivesToLoad.push(f);
+      } else {
+        regularFiles.push(f);
       }
-      if (file.name.toLowerCase().endsWith('.kza')) {
-        const textReader = new FileReader();
-        textReader.onload = (evt) => {
-          try {
-            const parsed = JSON.parse(evt.target.result);
-            loadArchiveData(parsed);
-            showToast(`Loaded archive '${file.name}'`);
-          } catch(err) {
-            showToast("Failed to load archive: " + err.message, true);
-          }
-        };
-        textReader.readAsText(file);
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (evt) => {
-        const rawBytes = new Uint8Array(evt.target.result);
-        const crc = calculateCRC32(rawBytes);
-        const method = parseInt(compMethod.value);
-
-        let packedBytes = rawBytes;
-        let compSize = rawBytes.length;
-        let actualMethod = 0;
-
-        if (method === 1 && rawBytes.length > 0) {
-          const rleBytes = compressRLE(rawBytes);
-          if (rleBytes.length < rawBytes.length) {
-            packedBytes = rleBytes;
-            compSize = rleBytes.length;
-            actualMethod = 1;
-          }
-        }
-
-        files.push({
-          name: sanitizeFilename(file.name),
-          uncompSize: rawBytes.length,
-          compSize: compSize,
-          crc32: crc,
-          method: actualMethod,
-          rawBytes: rawBytes,
-          packedBytes: packedBytes
-        });
-
-        renderTable();
-        showToast(`Added '${file.name}'`);
-      };
-      reader.readAsArrayBuffer(file);
     });
+
+    if (archivesToLoad.length > 0) {
+      const arch = archivesToLoad[0];
+      const buf = await arch.arrayBuffer();
+      await loadArchiveBuffer(buf, arch.name.toLowerCase());
+      return;
+    }
+
+    if (regularFiles.length > 0) {
+      await processAddedFiles(regularFiles);
+    }
   }
 
-  // Prevent default window drag/drop to avoid browser navigating away
-  window.addEventListener('dragover', (e) => {
-    e.preventDefault();
-  });
+  window.addEventListener('dragover', (e) => e.preventDefault());
   window.addEventListener('drop', (e) => {
     e.preventDefault();
     if (e.dataTransfer && e.dataTransfer.files.length > 0) {
@@ -1805,11 +3119,7 @@
     e.preventDefault();
     dropZone.classList.add('drag-over');
   });
-
-  dropZone.addEventListener('dragleave', () => {
-    dropZone.classList.remove('drag-over');
-  });
-
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
   dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
     dropZone.classList.remove('drag-over');
@@ -1836,4 +3146,3 @@
 </script>
 </body>
 </html>
-
