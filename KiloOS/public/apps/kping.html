@@ -141,6 +141,8 @@
   .btn-mesh:hover { background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(13, 148, 136, 0.4); }
   .btn-bgp { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; font-weight: 700; }
   .btn-bgp:hover { background: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); }
+  .btn-bloat { background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); color: #0b0f19; font-weight: 700; }
+  .btn-bloat:hover { background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4); color: #000; }
   .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
   
   .terminal-container {
@@ -169,6 +171,7 @@
   .status-badge.dns { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; }
   .status-badge.mesh { background: rgba(13, 148, 136, 0.25); color: #2dd4bf; }
   .status-badge.bgp { background: rgba(99, 102, 241, 0.25); color: #a5b4fc; }
+  .status-badge.bloat { background: rgba(245, 158, 11, 0.25); color: #fbbf24; }
   .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
   .filter-bar {
@@ -341,6 +344,16 @@
           <option value="entropy">High Entropy</option>
         </select>
       </div>
+      <div class="input-group dscp-group" style="width: 104px;">
+        <label for="dscpSelect">QoS / DSCP</label>
+        <select id="dscpSelect" title="IP Differentiated Services Code Point (DSCP) traffic classification">
+          <option value="0">CS0 (Best Effort)</option>
+          <option value="46">EF (VoIP 0x2E)</option>
+          <option value="34">AF41 (Video 0x22)</option>
+          <option value="32">CS4 (Gaming 0x20)</option>
+          <option value="48">CS6 (Routing 0x30)</option>
+        </select>
+      </div>
       <div class="input-group ttl-group">
         <label for="ttl">TTL</label>
         <input type="number" id="ttl" value="115" min="1" max="255" title="Time-To-Live hop limit">
@@ -377,6 +390,7 @@
         <button id="btnSubnet" class="btn btn-subnet" title="Subnet LAN Discovery Sweep [S]">Subnet <span class="kbd-badge">S</span></button>
         <button id="btnDNS" class="btn btn-dns" title="DNS & IP Inspector [D]">DNS <span class="kbd-badge">D</span></button>
         <button id="btnBGP" class="btn btn-bgp" title="BGP AS Route Transit Inspector [B]">BGP <span class="kbd-badge">B</span></button>
+        <button id="btnBloat" class="btn btn-bloat" title="Bufferbloat & AQM Latency Under Load Audit [Q]">Bloat <span class="kbd-badge">Q</span></button>
         <button id="btnMesh" class="btn btn-mesh" title="Global Peer Mesh & Real-Time Echo [G]">Mesh <span class="kbd-badge">G</span></button>
       </div>
       <div class="actions-divider"></div>
@@ -569,6 +583,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
         <br>• <strong>Subnet [S]:</strong> Fast CIDR LAN discovery sweep scanning active nodes on the local subnet.
         <br>• <strong>DNS [D]:</strong> Reverse PTR resolution and RFC IP classification (RFC 1918, RFC 1122, RFC 3927, CGNAT).
         <br>• <strong>BGP [B]:</strong> Autonomous System transit path inspector (AS701 UUNET, AS3561 MCI, AS1239 SprintLink).
+        <br>• <strong>Bufferbloat [Q]:</strong> RFC 8290 AQM audit evaluating unloaded vs loaded delay, buffer bloat grade, and TCP BDP.
         <br>• <strong>Global Mesh [G]:</strong> Real-time cross-computer peer echo via Firebase Realtime Database.
       </div>
 
@@ -595,6 +610,11 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
             <td><span class="shortcut-key">B</span></td>
             <td><strong>BGP Route</strong></td>
             <td>Inspect Autonomous System transit path & peering points</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">Q</span></td>
+            <td><strong>Bufferbloat</strong></td>
+            <td>Evaluate queue latency under saturation & TCP BDP tuning</td>
           </tr>
           <tr>
             <td><span class="shortcut-key">T</span></td>
@@ -713,6 +733,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
   const sizeInput = document.getElementById('size');
   const intervalInput = document.getElementById('interval');
   const patternSelect = document.getElementById('patternSelect');
+  const dscpSelect = document.getElementById('dscpSelect');
   const ttlInput = document.getElementById('ttl');
   const timeoutInput = document.getElementById('timeout');
   const continuousCheck = document.getElementById('continuous');
@@ -726,6 +747,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
   const btnSubnet = document.getElementById('btnSubnet');
   const btnDNS = document.getElementById('btnDNS');
   const btnBGP = document.getElementById('btnBGP');
+  const btnBloat = document.getElementById('btnBloat');
   const btnMesh = document.getElementById('btnMesh');
   const btnExport = document.getElementById('btnExport');
   const btnCopy = document.getElementById('btnCopy');
@@ -783,6 +805,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
   let isSubnetSweeping = false;
   let isDnsInspecting = false;
   let isBgpInspecting = false;
+  let isBloatTesting = false;
   let isMeshPinging = false;
   let stats = { sent: 0, recv: 0, lost: 0, min: Infinity, max: -Infinity, sum: 0 };
   let currentHost = '';
@@ -964,6 +987,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       if (typeof cfg.size === 'number') sizeInput.value = Math.max(1, Math.min(65500, cfg.size));
       if (typeof cfg.interval === 'number' && intervalInput) intervalInput.value = Math.max(50, Math.min(5000, cfg.interval));
       if (typeof cfg.pattern === 'string' && patternSelect) patternSelect.value = cfg.pattern;
+      if (typeof cfg.dscp === 'string' && dscpSelect) dscpSelect.value = cfg.dscp;
       if (typeof cfg.ttl === 'number') ttlInput.value = Math.max(1, Math.min(255, cfg.ttl));
       if (typeof cfg.timeout === 'number') timeoutInput.value = Math.max(100, Math.min(10000, cfg.timeout));
       if (typeof cfg.continuous === 'boolean') {
@@ -986,6 +1010,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       size: parseInt(sizeInput.value) || 32,
       interval: parseInt(intervalInput.value) || 1000,
       pattern: patternSelect.value || 'ascii',
+      dscp: dscpSelect ? dscpSelect.value : '0',
       ttl: parseInt(ttlInput.value) || 115,
       timeout: parseInt(timeoutInput.value) || 1000,
       continuous: continuousCheck.checked,
@@ -995,7 +1020,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
     });
   }
 
-  [hostInput, countInput, sizeInput, intervalInput, patternSelect, ttlInput, timeoutInput, continuousCheck, hexdumpCheck, dfCheck, resolveCheck].forEach(el => {
+  [hostInput, countInput, sizeInput, intervalInput, patternSelect, dscpSelect, ttlInput, timeoutInput, continuousCheck, hexdumpCheck, dfCheck, resolveCheck].forEach(el => {
     if (el) el.addEventListener('change', saveConfig);
   });
 
@@ -1014,6 +1039,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       size: parseInt(sizeInput.value) || 32,
       interval: parseInt(intervalInput.value) || 1000,
       pattern: patternSelect.value || 'ascii',
+      dscp: dscpSelect ? dscpSelect.value : '0',
       ttl: parseInt(ttlInput.value) || 115,
       timeout: parseInt(timeoutInput.value) || 1000,
       continuous: continuousCheck.checked,
@@ -1037,6 +1063,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
     if (saved.size) sizeInput.value = saved.size;
     if (saved.interval && intervalInput) intervalInput.value = saved.interval;
     if (saved.pattern && patternSelect) patternSelect.value = saved.pattern;
+    if (saved.dscp && dscpSelect) dscpSelect.value = saved.dscp;
     if (saved.ttl) ttlInput.value = saved.ttl;
     if (saved.timeout) timeoutInput.value = saved.timeout;
     continuousCheck.checked = !!saved.continuous;
@@ -1092,6 +1119,9 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
     } else if (mode === 'bgp') {
       statusBadge.classList.add('bgp');
       statusText.textContent = 'BGP AS ROUTE';
+    } else if (mode === 'bloat') {
+      statusBadge.classList.add('bloat');
+      statusText.textContent = 'BUFFERBLOAT';
     } else if (mode === 'mesh') {
       statusBadge.classList.add('mesh');
       statusText.textContent = 'GLOBAL MESH';
@@ -1413,6 +1443,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       sizeInput.disabled = disabled;
       if (intervalInput) intervalInput.disabled = disabled;
       if (patternSelect) patternSelect.disabled = disabled;
+      if (dscpSelect) dscpSelect.disabled = disabled;
       ttlInput.disabled = disabled;
       timeoutInput.disabled = disabled;
       continuousCheck.disabled = disabled;
@@ -1423,7 +1454,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
   }
 
   function isBusy() {
-      return isPinging || isTracing || isMtuSweeping || isSubnetSweeping || isDnsInspecting || isBgpInspecting || isMeshPinging;
+      return isPinging || isTracing || isMtuSweeping || isSubnetSweeping || isDnsInspecting || isBgpInspecting || isBloatTesting || isMeshPinging;
   }
 
   function classifyIP(ip) {
@@ -1462,6 +1493,16 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       const continuous = continuousCheck.checked;
       const df = dfCheck.checked;
       const resolve = resolveCheck.checked;
+      const dscp = dscpSelect ? dscpSelect.value : '0';
+      const dscpMap = {
+        '0': 'CS0 (Best Effort)',
+        '46': 'EF (Expedited Fwd)',
+        '34': 'AF41 (Video Conf)',
+        '32': 'CS4 (Realtime)',
+        '48': 'CS6 (Network Ctrl)'
+      };
+      const dscpName = dscpMap[dscp] || `DSCP ${dscp}`;
+      const isLowJitter = (dscp === '46' || dscp === '48');
       
       out.value = "";
       allConsoleLines = [];
@@ -1473,7 +1514,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       valStdDev.textContent = "0ms";
       
       const ipClass = classifyIP(currentHost);
-      append(`Pinging ${currentHost} [${ipClass}] with ${size} bytes of data [Pacing=${interval}ms, Pattern=${pattern.toUpperCase()}, DF=${df ? 1 : 0}, Timeout=${timeout}ms]:\n\n`, 'header');
+      append(`Pinging ${currentHost} [${ipClass}] with ${size} bytes of data [Pacing=${interval}ms, Pattern=${pattern.toUpperCase()}, DSCP=${dscpName}, DF=${df ? 1 : 0}, Timeout=${timeout}ms]:\n\n`, 'header');
       if (hexdumpCheck.checked) {
           append(generateHexDump(size, pattern) + "\n", 'hexdump');
       }
@@ -1487,6 +1528,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       btnSubnet.disabled = true;
       btnDNS.disabled = true;
       btnBGP.disabled = true;
+      if (btnBloat) btnBloat.disabled = true;
       btnMesh.disabled = true;
       setInputsDisabled(true);
       
@@ -1506,7 +1548,8 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
               const success = Math.random() > 0.05; 
               if (success) {
                   const baseTime = currentHost === '127.0.0.1' || currentHost === 'localhost' ? 1 : (currentHost.startsWith('10.19.99.') ? 4 : 14);
-                  const time = Math.floor(baseTime + Math.random() * 18);
+                  const jitterRange = isLowJitter ? 4 : 18;
+                  const time = Math.floor(baseTime + Math.random() * jitterRange);
                   stats.recv++;
                   if (time < stats.min) stats.min = time;
                   if (time > stats.max) stats.max = time;
@@ -1515,7 +1558,8 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
                   if (historyData.length > 200) historyData.shift();
 
                   const resolvedName = resolve ? ` (${currentHost === '1.1.1.1' ? 'one.one.one.one' : currentHost === '8.8.8.8' ? 'dns.google' : (currentHost === '10.19.99.19' ? 'echo-carrier.kilonet' : 'host.lan')})` : '';
-                  append(`Reply from ${currentHost}${resolvedName}: bytes=${size} time=${time}ms TTL=${ttl}\n`, 'reply', { host: currentHost, bytes: size, time, ttl, df });
+                  const dscpTagShort = dscpMap[dscp] ? dscpMap[dscp].split(' ')[0] : `0x${parseInt(dscp).toString(16)}`;
+                  append(`Reply from ${currentHost}${resolvedName}: bytes=${size} time=${time}ms TTL=${ttl} DSCP=${dscpTagShort}\n`, 'reply', { host: currentHost, bytes: size, time, ttl, df, dscp: dscpName });
                   playPingSound(time);
 
                   // Atmospheric ARG Breadcrumb Check (Diegetic, TINAG)
@@ -1936,6 +1980,9 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       btnMTU.disabled = false;
       btnSubnet.disabled = false;
       btnDNS.disabled = false;
+      if (btnBGP) btnBGP.disabled = false;
+      if (btnBloat) btnBloat.disabled = false;
+      if (btnMesh) btnMesh.disabled = false;
       setInputsDisabled(false);
       
       const lossPercent = stats.sent > 0 ? Math.round((stats.lost / stats.sent) * 100) : 0;
@@ -1982,6 +2029,9 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       btnTrace.disabled = true;
       btnSubnet.disabled = true;
       btnDNS.disabled = true;
+      if (btnBGP) btnBGP.disabled = true;
+      if (btnBloat) btnBloat.disabled = true;
+      if (btnMesh) btnMesh.disabled = true;
       setInputsDisabled(true);
 
       const probeSizes = [548, 1000, 1400, 1452, 1460, 1472, 1492, 1500];
@@ -2027,6 +2077,9 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       btnTrace.disabled = false;
       btnSubnet.disabled = false;
       btnDNS.disabled = false;
+      if (btnBGP) btnBGP.disabled = false;
+      if (btnBloat) btnBloat.disabled = false;
+      if (btnMesh) btnMesh.disabled = false;
       setInputsDisabled(false);
 
       const calculatedMTU = maxPass > 0 ? (maxPass + 28) : 0;
@@ -2062,6 +2115,9 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       btnTrace.disabled = false;
       btnSubnet.disabled = false;
       btnDNS.disabled = false;
+      if (btnBGP) btnBGP.disabled = false;
+      if (btnBloat) btnBloat.disabled = false;
+      if (btnMesh) btnMesh.disabled = false;
       setInputsDisabled(false);
       append(`\n[!] Path MTU Discovery cancelled by user.\n\n`, 'warning');
       showToast("Path MTU Discovery cancelled", "warning", 2500);
@@ -2090,6 +2146,9 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       btnMTU.disabled = true;
       btnSubnet.disabled = true;
       btnDNS.disabled = true;
+      if (btnBGP) btnBGP.disabled = true;
+      if (btnBloat) btnBloat.disabled = true;
+      if (btnMesh) btnMesh.disabled = true;
       setInputsDisabled(true);
       showToast(`Tracing route to <strong>${escapeHtml(currentHost)}</strong>...`, 'info', 2500);
       
@@ -2139,6 +2198,9 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       btnMTU.disabled = false;
       btnSubnet.disabled = false;
       btnDNS.disabled = false;
+      if (btnBGP) btnBGP.disabled = false;
+      if (btnBloat) btnBloat.disabled = false;
+      if (btnMesh) btnMesh.disabled = false;
       setInputsDisabled(false);
       if (manual) {
           append(`\n[!] Route trace cancelled by user.\n\n`, 'warning');
@@ -2180,6 +2242,9 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       btnTrace.disabled = true;
       btnMTU.disabled = true;
       btnDNS.disabled = true;
+      if (btnBGP) btnBGP.disabled = true;
+      if (btnBloat) btnBloat.disabled = true;
+      if (btnMesh) btnMesh.disabled = true;
       setInputsDisabled(true);
 
       let nodeIdx = 1;
@@ -2225,6 +2290,9 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       btnTrace.disabled = false;
       btnMTU.disabled = false;
       btnDNS.disabled = false;
+      if (btnBGP) btnBGP.disabled = false;
+      if (btnBloat) btnBloat.disabled = false;
+      if (btnMesh) btnMesh.disabled = false;
       setInputsDisabled(false);
 
       if (manual) {
@@ -2271,6 +2339,9 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       btnTrace.disabled = true;
       btnMTU.disabled = true;
       btnSubnet.disabled = true;
+      if (btnBGP) btnBGP.disabled = true;
+      if (btnBloat) btnBloat.disabled = true;
+      if (btnMesh) btnMesh.disabled = true;
       setInputsDisabled(true);
 
       showToast(`Inspecting DNS & address space for <strong>${escapeHtml(currentHost)}</strong>...`, 'info', 2500);
@@ -2302,6 +2373,9 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
               btnTrace.disabled = false;
               btnMTU.disabled = false;
               btnSubnet.disabled = false;
+              if (btnBGP) btnBGP.disabled = false;
+              if (btnBloat) btnBloat.disabled = false;
+              if (btnMesh) btnMesh.disabled = false;
               setInputsDisabled(false);
 
               append(`\n------------------------------------------------------------\n`, 'dns_summary');
@@ -2350,6 +2424,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
     btnMTU.disabled = true;
     btnSubnet.disabled = true;
     btnDNS.disabled = true;
+    if (btnBloat) btnBloat.disabled = true;
     btnMesh.disabled = true;
     setInputsDisabled(true);
 
@@ -2406,6 +2481,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
         btnMTU.disabled = false;
         btnSubnet.disabled = false;
         btnDNS.disabled = false;
+        if (btnBloat) btnBloat.disabled = false;
         btnMesh.disabled = false;
         setInputsDisabled(false);
 
@@ -2436,6 +2512,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       btnMTU.disabled = false;
       btnSubnet.disabled = false;
       btnDNS.disabled = false;
+      if (btnBloat) btnBloat.disabled = false;
       btnMesh.disabled = false;
       setInputsDisabled(false);
       append(`\n[!] BGP inspection cancelled by user.\n\n`, 'warning');
@@ -2443,6 +2520,169 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       startBgpInspect();
     }
   };
+
+  // =========================================================================
+  // BUFFERBLOAT & ACTIVE QUEUE MANAGEMENT (AQM) AUDIT MODE (RFC 8290)
+  // =========================================================================
+  function startBufferbloat() {
+    if (isBusy()) return;
+    currentHost = cleanHost(hostInput.value);
+    hostInput.value = currentHost;
+    saveConfig();
+    out.value = "";
+    allConsoleLines = [];
+    logEntries = [];
+    historyData = [];
+    drawGraph();
+
+    append(`============================================================\n`, 'bloat_header');
+    append(` KPing Bufferbloat & Active Queue Management (AQM) Audit\n`, 'bloat_header');
+    append(` Target Destination: ${currentHost}\n`, 'bloat_header');
+    append(` Specification:      RFC 8290 (FQ-CoDel) / RFC 8033 Latency Assessment\n`, 'bloat_header');
+    append(` Benchmarking unloaded baseline RTT vs congested queue delay...\n`, 'bloat_header');
+    append(`============================================================\n\n`, 'bloat_header');
+
+    isBloatTesting = true;
+    setStatus('bloat');
+    btnBloat.innerHTML = 'Stop <span class="kbd-badge">Q</span>';
+    btnBloat.className = 'btn btn-danger';
+    btnAction.disabled = true;
+    btnTrace.disabled = true;
+    btnMTU.disabled = true;
+    btnSubnet.disabled = true;
+    btnDNS.disabled = true;
+    btnBGP.disabled = true;
+    btnMesh.disabled = true;
+    setInputsDisabled(true);
+
+    showToast(`Benchmarking bufferbloat for <strong>${escapeHtml(currentHost)}</strong>...`, 'info', 2500);
+
+    let stage = 1;
+    let probeIdx = 0;
+    const baselineTimes = [];
+    const loadedTimes = [];
+
+    const isLocal = currentHost === '127.0.0.1' || currentHost === 'localhost';
+    const isKiloNet = currentHost.startsWith('10.19.99.');
+    const baseLatency = isLocal ? 1 : (isKiloNet ? 4 : 16);
+
+    append(`[Phase 1] Measuring Unloaded Baseline Round-Trip Latency (5 Probes)...\n`, 'info');
+
+    if (pingInterval) clearInterval(pingInterval);
+    pingInterval = setInterval(() => {
+      probeIdx++;
+      if (stage === 1) {
+        const lat = Math.floor(baseLatency + Math.random() * 6);
+        baselineTimes.push(lat);
+        historyData.push(lat);
+        if (historyData.length > 200) historyData.shift();
+        drawGraph();
+        append(`  [Baseline Probe ${probeIdx}/5] Echo RTT: ${lat}ms  (Queue: 0 bytes queued)\n`, 'reply', { stage: 1, probe: probeIdx, rtt: lat });
+        playPingSound(lat);
+
+        if (probeIdx >= 5) {
+          stage = 2;
+          probeIdx = 0;
+          append(`\n[Phase 2] Simulating Saturated TCP Ingress Burst & Queue Influx (10 Probes)...\n`, 'info');
+        }
+      } else {
+        const queueInflux = isLocal ? 0 : Math.floor(18 + probeIdx * 14 + Math.random() * 25);
+        const lat = Math.floor(baseLatency + queueInflux);
+        loadedTimes.push(lat);
+        historyData.push(lat);
+        if (historyData.length > 200) historyData.shift();
+        drawGraph();
+        append(`  [Loaded Probe ${probeIdx}/10] Queue Latency: ${lat}ms  (+${lat - (baselineTimes[0] || baseLatency)}ms delta)\n`, 'reply', { stage: 2, probe: probeIdx, rtt: lat });
+        playPingSound(lat);
+
+        if (probeIdx >= 10) {
+          finishBufferbloat(baselineTimes, loadedTimes);
+        }
+      }
+    }, 450);
+  }
+
+  function finishBufferbloat(baselineTimes, loadedTimes) {
+    clearInterval(pingInterval);
+    pingInterval = null;
+    isBloatTesting = false;
+    setStatus('idle');
+    btnBloat.innerHTML = 'Bloat <span class="kbd-badge">Q</span>';
+    btnBloat.className = 'btn btn-bloat';
+    btnAction.disabled = false;
+    btnTrace.disabled = false;
+    btnMTU.disabled = false;
+    btnSubnet.disabled = false;
+    btnDNS.disabled = false;
+    btnBGP.disabled = false;
+    btnMesh.disabled = false;
+    setInputsDisabled(false);
+
+    const avgBase = baselineTimes.length ? Math.round(baselineTimes.reduce((a,b) => a+b, 0) / baselineTimes.length) : 10;
+    const avgLoaded = loadedTimes.length ? Math.round(loadedTimes.reduce((a,b) => a+b, 0) / loadedTimes.length) : 30;
+    const delta = Math.max(0, avgLoaded - avgBase);
+
+    let grade = "F";
+    let assessment = "Severe Bufferbloat";
+    if (delta <= 5) { grade = "A+"; assessment = "Negligible Bloat (Exceptional FQ-CoDel / CAKE AQM)"; }
+    else if (delta <= 30) { grade = "A"; assessment = "Minimal Buffer Accumulation (Low Latency)"; }
+    else if (delta <= 60) { grade = "B"; assessment = "Acceptable Under Normal Interactive Loads"; }
+    else if (delta <= 150) { grade = "C"; assessment = "Noticeable Degradation (VoIP / Gaming Stutter)"; }
+    else if (delta <= 300) { grade = "D"; assessment = "Severe Bottleneck Buffer Tail Latency"; }
+    else { grade = "F"; assessment = "Unmanaged Tail-Drop Queue (RFC 8290 Remediation Urgently Needed)"; }
+
+    // Bandwidth-Delay Product (BDP) TCP Window Sizing: (Bandwidth bps * RTT s) / 8 bytes
+    const bdp56k = Math.max(1, Math.round((56 * avgLoaded) / 8));
+    const bdpT1 = Math.max(1, Math.round((1544 * avgLoaded) / 8));
+    const bdp10M = Math.max(1, Math.round((10000 * avgLoaded) / 8));
+    const bdp100M = Math.max(1, Math.round((100000 * avgLoaded) / 8));
+
+    append(`\n------------------------------------------------------------\n`, 'bloat_summary');
+    append(` Bufferbloat & Active Queue Management (AQM) Audit Report:\n`, 'bloat_summary');
+    append(`   - Target Host:             ${currentHost}\n`, 'bloat_summary');
+    append(`   - Unloaded Baseline RTT:   ${avgBase}ms\n`, 'bloat_summary');
+    append(`   - Saturated Loaded RTT:    ${avgLoaded}ms\n`, 'bloat_summary');
+    append(`   - Latency Delay Delta:     +${delta}ms queue accumulation\n`, 'bloat_summary');
+    append(`   - Bufferbloat Grade:       [ ${grade} ] - ${assessment}\n`, 'bloat_summary');
+    append(`\n Bandwidth-Delay Product (BDP) TCP Window Sizing:\n`, 'bloat_summary');
+    append(`   - 56k Dial-Up V.90:        ${bdp56k} bytes\n`, 'bloat_summary');
+    append(`   - T1 Trunk (1.544 Mbps):   ${bdpT1} bytes\n`, 'bloat_summary');
+    append(`   - 10BASE-T Ethernet:       ${bdp10M} bytes\n`, 'bloat_summary');
+    append(`   - 100BASE-TX Fast Eth:     ${bdp100M} bytes\n`, 'bloat_summary');
+    append(`------------------------------------------------------------\n\n`, 'bloat_summary', { avgBase, avgLoaded, delta, grade, assessment, bdp56k, bdpT1, bdp10M, bdp100M });
+
+    playCompleteSound();
+    showToast(`Bufferbloat Audit Complete: Grade <strong>${grade}</strong> (+${delta}ms)`, grade.startsWith('A') ? 'success' : (grade === 'B' ? 'info' : 'warning'), 4000);
+  }
+
+  function stopBufferbloat(manual = true) {
+    if (!isBloatTesting) return;
+    clearInterval(pingInterval);
+    pingInterval = null;
+    isBloatTesting = false;
+    setStatus('idle');
+    btnBloat.innerHTML = 'Bloat <span class="kbd-badge">Q</span>';
+    btnBloat.className = 'btn btn-bloat';
+    btnAction.disabled = false;
+    btnTrace.disabled = false;
+    btnMTU.disabled = false;
+    btnSubnet.disabled = false;
+    btnDNS.disabled = false;
+    btnBGP.disabled = false;
+    btnMesh.disabled = false;
+    setInputsDisabled(false);
+    if (manual) {
+      append(`\n[!] Bufferbloat audit cancelled by user.\n\n`, 'warning');
+      showToast("Bufferbloat test cancelled", "warning", 2000);
+    }
+  }
+
+  if (btnBloat) {
+    btnBloat.onclick = () => {
+      if (isBloatTesting) stopBufferbloat(true);
+      else startBufferbloat();
+    };
+  }
 
   // =========================================================================
   // GLOBAL FLEET MESH (FIREBASE RTDB MULTIPLAYER PEER ECHO)
@@ -2549,6 +2789,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
     btnSubnet.disabled = true;
     btnDNS.disabled = true;
     btnBGP.disabled = true;
+    if (btnBloat) btnBloat.disabled = true;
     btnMesh.disabled = true;
     setInputsDisabled(true);
 
@@ -2597,6 +2838,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
           btnSubnet.disabled = false;
           btnDNS.disabled = false;
           btnBGP.disabled = false;
+          if (btnBloat) btnBloat.disabled = false;
           btnMesh.disabled = false;
           setInputsDisabled(false);
           append(`\nMesh echo complete. (Round-Trip Latency verified)\n\n`, 'info');
@@ -2649,6 +2891,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
         btnSubnet.disabled = false;
         btnDNS.disabled = false;
         btnBGP.disabled = false;
+        if (btnBloat) btnBloat.disabled = false;
         btnMesh.disabled = false;
         setInputsDisabled(false);
         playCompleteSound();
@@ -2674,6 +2917,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
         btnSubnet.disabled = false;
         btnDNS.disabled = false;
         btnBGP.disabled = false;
+        if (btnBloat) btnBloat.disabled = false;
         btnMesh.disabled = false;
         setInputsDisabled(false);
       }
@@ -2790,8 +3034,9 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
           btnTrace.disabled = false;
           btnMTU.disabled = false;
           btnSubnet.disabled = false;
-          btnBGP.disabled = false;
-          btnMesh.disabled = false;
+          if (btnBGP) btnBGP.disabled = false;
+          if (btnBloat) btnBloat.disabled = false;
+          if (btnMesh) btnMesh.disabled = false;
           setInputsDisabled(false);
           append(`\n[!] DNS inspection cancelled.\n\n`, 'warning');
       } else {
@@ -2803,6 +3048,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       closeExportModal();
       const host = currentHost || hostInput.value.trim() || '127.0.0.1';
       const timestamp = new Date().toISOString();
+      const dscpClass = dscpSelect ? dscpSelect.options[dscpSelect.selectedIndex].text : 'CS0 (Best Effort)';
 
       if (format === 'json') {
           const payload = JSON.stringify({
@@ -2818,6 +3064,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
                   voipMOS: valMOS.textContent,
                   slaGrade: valSLA.textContent,
                   mtu: valMTU.textContent,
+                  dscp: dscpClass,
                   pattern: patternSelect ? patternSelect.value : 'ascii',
                   interval: intervalInput ? intervalInput.value : 1000
               },
@@ -2845,6 +3092,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
                      `- **Latency Jitter**: \`${valJitter.textContent}\` (Std Dev: \`${valStdDev.textContent}\`)\n` +
                      `- **Packet Loss**: \`${valLoss.textContent}\` (Sent: ${stats.sent}, Recv: ${stats.recv})\n` +
                      `- **Path MTU**: \`${valMTU.textContent}\`\n` +
+                     `- **QoS / DSCP Class**: \`${dscpClass}\`\n` +
                      `- **Engine**: Sega Genesis YM2612 2-Op FM Synthesis & SPC700 Delay DSP\n\n` +
                      `## Diagnostic Console Log\n\n` +
                      `\`\`\`text\n${out.value.trim()}\n\`\`\`\n\n` +
@@ -2948,6 +3196,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
           if (isSubnetSweeping) stopSubnetSweep(true);
           if (isDnsInspecting) btnDNS.click();
           if (isBgpInspecting) btnBGP.click();
+          if (isBloatTesting) stopBufferbloat(true);
           return;
       }
 
@@ -2972,6 +3221,9 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
           } else if (e.key === 'b' || e.key === 'B') {
               e.preventDefault();
               btnBGP.click();
+          } else if (e.key === 'q' || e.key === 'Q') {
+              e.preventDefault();
+              if (btnBloat) btnBloat.click();
           } else if (e.key === 'l' || e.key === 'L') {
               e.preventDefault();
               const nextMode = graphMode === 'line' ? 'hist' : (graphMode === 'hist' ? 'strip' : 'line');
@@ -3022,7 +3274,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       safeSetStorage('kping_onboarded', true);
       showToast("💡 <strong>Welcome to KPing!</strong> Press <strong>F1</strong> or <strong>H</strong> anytime for the interactive manual and keyboard shortcuts.", "info", 6000);
     } else {
-      showToast("⚡ <strong>KPing Diagnostics Ready</strong> • Modes: <strong>[P]</strong>ing, <strong>[T]</strong>race, <strong>[M]</strong>TU, <strong>[G]</strong>lobal Mesh • <strong>[F1]</strong> Help", "info", 3500);
+      showToast("⚡ <strong>KPing Diagnostics Ready</strong> • Modes: <strong>[P]</strong>ing, <strong>[T]</strong>race, <strong>[M]</strong>TU, <strong>[B]</strong>GP, <strong>[Q]</strong> Bloat • <strong>[F1]</strong> Help", "info", 3500);
     }
   }, 400);
 </script>
