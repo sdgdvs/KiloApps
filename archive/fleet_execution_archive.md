@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T16:35:00Z — kilo-qa: KMedia (Pass 5: Tutorial & State Integrity, Quicksave/Load, Modal & Win32 I/O)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 135.9 KB web / 22.0 KB native < 999 KB).
+  - Quicksave & Load: Synchronized full state across F5/F9 (isPaused, presets, searchQuery, subtitles, room) in web and native (`kmedia_quicksave.dat`).
+  - First-Run Tutorial: Fixed tutorial checkbox and flags (`kmedia_tutorialSeen` / `kmedia_tutorial.dat`), preventing interruption on saved states.
+  - Interactive Overlays: Added Space/Enter/Esc dismissal to Help guide; verified non-occluding bottom-center toast and drop HUD.
+  - Verification: MSVC clean (`KMedia.exe` 22.0 KB); Vite clean in 402ms; security lint & check_icons 100% PASS; <999KB ceiling.
+
 - **2026-09-30T13:37:00Z — kilo-usability: KZip (UI/UX Pass, Occlusion Remediation, Grouped Actions & Window Sizing)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 123.0 KB web / 25.6 KB native < 999 KB).
   - Window Sizing: Increased default size to 980x700 across App.jsx, kzip.html, and native Win32 C (`KZip.exe`).

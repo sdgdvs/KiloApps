@@ -1,11 +1,11 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
-  - kilo-graphics
   - kilo-qa
   - kilo-expander
   - kilo-creator
+  - kilo-graphics
   - kilo-tester
   - kilo-usability
 model: gemini-3.8-flash-high
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KImage
   kilo_usability: KTask
-  kilo_graphics: KStellar
+  kilo_graphics: KSanctuary
   kilo_qa: KAudio
   kilo_expander: KHash
   kilo_creator: "kweb://portal (KiloNet Central 1999 Directory)"
@@ -32,10 +32,10 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KChrono
-  timestamp: "2026-09-30T17:45:00Z"
-last_planner_run: "2026-09-29T18:05:00Z"
+  agent: kilo-graphics
+  app: KStellar
+  timestamp: "2026-09-30T18:03:00Z"
+last_planner_run: "2026-09-30T18:21:42Z"
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -103,9 +103,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://geocities, kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KStellar`
+- **Current Target**: `KSanctuary`
 - **Upcoming Queue**:
-  `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono`, `KFortress`, `KCosmic` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic)*.
+  `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono`, `KFortress`, `KCosmic` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KImage`
@@ -120,7 +120,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KAudio`
 - **Upcoming Queue**:
-  `KCosmic`, `KContacts`, `KMedia` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia)*.
+  `KRadio`, `KPad`, `KPaint`, `KCalc`, `KMine`, `KCosmic`, `KContacts` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KHash`
@@ -129,8 +129,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://cybercafe` (`KiloOS/public/web/cybercafe.html`)
-  - *Next in Rotation*: `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple`.
+- **Current Active Target**: `kweb://portal` (`KiloOS/public/web/portal.html`)
+  - *Next in Rotation*: `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet`.
 - **Anti-Potemkin Directive & Content Mandates**:
   0. `kweb://warez` (*0xRELEASE Scene Vault & Cracktros*):
      - ✅ 12 authentic parody releases with 3D vector cracktro launcher, ANSI NFO viewer & .diz/.nfo downloads.
@@ -293,6 +293,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T18:03:00Z — kilo-graphics: KStellar (Graphics & Economy Pass, Medicine/Repair/Refuel, Glint Purge & Balance)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 151.6 KB web / 154.5 KB native < 999 KB).
+  - Economy & Trading: Added Medicine commodity, Repair dock, and Refuel station across web and Win32 C (`main.c`).
+  - UI & Viewport: Aligned HUD controls, improved layout spacing, and added hotkeys for new trade operations.
+  - Specular Glint Purge: Ensured static starfield rendering with zero traveling perimeter dots or orbital comets.
+  - Verification: MSVC clean (`KStellar.exe` 154.5 KB); Vite clean in 278ms; security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T17:45:00Z — kilo-usability: KChrono (UI/UX Usability Pass, Responsive Controls, Toast Relocation & Hover Reticle)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 182.4 KB web / 22.5 KB native < 999 KB).
   - Responsive Controls: Added `.btn-text` collapse breakpoints to header actions and compact epoch badges, eliminating button clipping on <=1120px viewports.
@@ -329,10 +336,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - ARG Signal: Added diegetic subcarrier frequency lock on 10.19.99.19 with signal board telemetry.
   - Presets & UI: Expanded presets across web and native Win32 C; resolved toast control occlusion.
   - Verification: MSVC clean (`KPing.exe` 28.0 KB); Vite clean in 1.16s; security lint & check_sizes 100% PASS.
-
-- **2026-09-30T16:35:00Z — kilo-qa: KMedia (Pass 5: Tutorial & State Integrity, Quicksave/Load, Modal & Win32 I/O)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 135.9 KB web / 22.0 KB native < 999 KB).
-  - Quicksave & Load: Synchronized full state across F5/F9 (isPaused, presets, searchQuery, subtitles, room) in web and native (`kmedia_quicksave.dat`).
-  - First-Run Tutorial: Fixed tutorial checkbox and flags (`kmedia_tutorialSeen` / `kmedia_tutorial.dat`), preventing interruption on saved states.
-  - Interactive Overlays: Added Space/Enter/Esc dismissal to Help guide; verified non-occluding bottom-center toast and drop HUD.
-  - Verification: MSVC clean (`KMedia.exe` 22.0 KB); Vite clean in 402ms; security lint & check_icons 100% PASS; <999KB ceiling.
