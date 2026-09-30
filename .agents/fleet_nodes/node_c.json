@@ -16,9 +16,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 42,
+  "turns_executed": 43,
   "last_turn_timestamp": "2026-09-30T00:26:00Z",
-  "last_heartbeat": "2026-09-30T19:01:07.104920+00:00",
-  "current_target": "KHash",
+  "last_heartbeat": "2026-09-30T19:16:08.547429+00:00",
+  "current_target": "kweb://portal (KiloNet Central 1999 Directory)",
   "remote_command": "none"
 }

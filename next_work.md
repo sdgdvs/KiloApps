@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KImage
   kilo_usability: KTask
-  kilo_graphics: KSanctuary
+  kilo_graphics: KDragon
   kilo_qa: KRadio
   kilo_expander: KRSS
   kilo_creator: "kweb://webring (Central KiloNet Webring Hub & Badge Studio)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://portal"
-  timestamp: "2026-09-30T19:15:00Z"
+  agent: kilo-graphics
+  app: KSanctuary
+  timestamp: "2026-09-30T19:30:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -103,9 +103,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://geocities, kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KSanctuary`
+- **Current Target**: `KDragon`
 - **Upcoming Queue**:
-  `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono`, `KFortress`, `KCosmic` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar)*.
+  `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono`, `KFortress`, `KCosmic`, `KSanctuary` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KSanctuary)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KImage`
@@ -293,6 +293,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T19:30:00Z — kilo-graphics: KSanctuary (Graphics & Content Pass, Facility SVGs/Sprites, Dynamic Weather & Turrets)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 423.4 KB web / 262.1 KB native < 999 KB ceiling).
+  - Facility Visuals: Added distinct SVGs and Win32 C sprites for all 14 blueprint room types across web and native.
+  - Cutaway Polish: Added dynamic surface weather (acid rain, rad static, cold frost, heat shimmer) and multi-turrets with overclock sights.
+  - Atmosphere: Added airlock caravan pack-cart and brownout emergency strobe alert on non-essential sectors during blackout.
+  - Specular Glint Purge: Confirmed static retro-terminal corner brackets with zero rotating glints or perimeter border dots.
+  - Verification: MSVC clean (`KSanctuary.exe` 262.1 KB); Vite clean in 264ms; check_icons & security lint 100% PASS.
+
 - **2026-09-30T19:15:00Z — kilo-creator: kweb://portal (RealAudio Radio, News Wire '99, Yellow Pages, Modem Soundboard & ARG)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean build in 296ms, 240.5 KB web < 999 KB ceiling).
   - RealAudio Radio: Added 4-channel procedural YM2612 FM + SPC700 stereo delay streaming player with animated 16-band peak LED visualizer.
@@ -325,12 +333,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - UI & Viewport: Aligned HUD controls, improved layout spacing, and added hotkeys for new trade operations.
   - Specular Glint Purge: Ensured static starfield rendering with zero traveling perimeter dots or orbital comets.
   - Verification: MSVC clean (`KStellar.exe` 154.5 KB); Vite clean in 278ms; security lint 100% PASS; <999KB ceiling.
-
-- **2026-09-30T17:45:00Z — kilo-usability: KChrono (UI/UX Usability Pass, Responsive Controls, Toast Relocation & Hover Reticle)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 182.4 KB web / 22.5 KB native < 999 KB).
-  - Responsive Controls: Added `.btn-text` collapse breakpoints to header actions and compact epoch badges, eliminating button clipping on <=1120px viewports.
-  - Toast Occlusion: Relocated HUD toast to bottom-center with safe non-blocking `pointer-events: none` across web and native Win32 C (`main.c`).
-  - Interactive Reticle: Added mouse/touch hover reticle tracking on canvas showing clear contextual feedback for move, act, and inspection targets.
-  - Performance & 60 FPS: Implemented state-caching in `updateUI()`, eliminating full DOM reconstruction of deck slots and buttons on every frame.
-  - Window & App Registration: Tuned default window dimensions to 1100x680 in `App.jsx` and bound direct native binary path (`/exe/KChrono.exe`).
-  - Verification: MSVC clean (`KChrono.exe` 22.5 KB); Vite clean in 335ms; security lint 100% PASS; <999KB ceiling.

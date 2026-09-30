@@ -3312,6 +3312,135 @@
                     <path d="M24 9 L12 21 M23 9 L25 11 L23 13 L21 11 Z" stroke="${cyan}" stroke-width="1.5"/>
                     <circle cx="18" cy="15" r="1.5" fill="#fef08a"/>
                 </svg>`;
+            } else if (facId === 'gen_sub') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="5" y="6" width="10" height="23" rx="2" fill="#1b1207" stroke="${amber}" stroke-width="1.2"/>
+                    <rect x="21" y="6" width="10" height="23" rx="2" fill="#1b1207" stroke="${amber}" stroke-width="1.2"/>
+                    <rect x="7" y="11" width="6" height="13" fill="${active ? '#f59e0b' : '#78350f'}" opacity="${active ? '0.9' : '0.4'}"/>
+                    <rect x="23" y="11" width="6" height="13" fill="${active ? '#f59e0b' : '#78350f'}" opacity="${active ? '0.9' : '0.4'}"/>
+                    <line x1="15" y1="17" x2="21" y2="17" stroke="${amber}" stroke-width="2"/>
+                    <circle cx="10" cy="9" r="1.5" fill="#fef3c7"/>
+                    <circle cx="26" cy="9" r="1.5" fill="#fef3c7"/>
+                    <line x1="8" y1="29" x2="28" y2="29" stroke="${stroke}" stroke-width="1.5"/>
+                </svg>`;
+            } else if (facId === 'bp_fusion') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="3" width="30" height="30" rx="3" fill="#081524" stroke="${cyan}" stroke-width="1.5"/>
+                    <circle cx="18" cy="18" r="10" stroke="${cyan}" stroke-width="2" stroke-dasharray="4 2"/>
+                    <circle cx="18" cy="18" r="6" fill="${active ? '#38bdf8' : '#0369a1'}" opacity="${active ? '0.85' : '0.4'}"/>
+                    <circle cx="18" cy="18" r="2.5" fill="#ffffff"/>
+                    <path d="M18 5 L18 8 M18 28 L18 31 M5 18 L8 18 M28 18 L31 18" stroke="${amber}" stroke-width="2"/>
+                </svg>`;
+            } else if (facId === 'bp_solar') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <polygon points="5,26 12,8 31,8 24,26" fill="#0c2340" stroke="${cyan}" stroke-width="1.5"/>
+                    <line x1="14" y1="8" x2="9" y2="26" stroke="${cyan}" stroke-width="1"/>
+                    <line x1="22" y1="8" x2="16" y2="26" stroke="${cyan}" stroke-width="1"/>
+                    <line x1="8" y1="17" x2="27" y2="17" stroke="${cyan}" stroke-width="1"/>
+                    <circle cx="26" cy="12" r="1.5" fill="#fef08a"/>
+                    <line x1="14" y1="26" x2="14" y2="31" stroke="${stroke}" stroke-width="2"/>
+                </svg>`;
+            } else if (facId === 'water_deep') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="4" width="28" height="28" rx="2" fill="#051b24" stroke="${cyan}" stroke-width="1.5"/>
+                    <line x1="18" y1="6" x2="18" y2="30" stroke="${cyan}" stroke-width="3"/>
+                    <polygon points="14,14 22,14 18,7" fill="#64748b"/>
+                    <polygon points="12,28 24,28 18,32" fill="${amber}"/>
+                    <circle cx="11" cy="20" r="2.5" fill="${cyan}" opacity="0.6"/>
+                    <circle cx="25" cy="20" r="2.5" fill="${cyan}" opacity="0.6"/>
+                    <line x1="11" y1="20" x2="25" y2="20" stroke="${stroke}" stroke-width="1"/>
+                </svg>`;
+            } else if (facId === 'bp_adv_water') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="6" width="8" height="23" rx="1.5" fill="#082f49" stroke="${cyan}" stroke-width="1.2"/>
+                    <rect x="14" y="6" width="8" height="23" rx="1.5" fill="#082f49" stroke="${cyan}" stroke-width="1.2"/>
+                    <rect x="24" y="6" width="8" height="23" rx="1.5" fill="#082f49" stroke="${cyan}" stroke-width="1.2"/>
+                    <rect x="5.5" y="14" width="5" height="13" fill="${cyan}" opacity="0.7"/>
+                    <rect x="15.5" y="11" width="5" height="16" fill="${cyan}" opacity="0.7"/>
+                    <rect x="25.5" y="8" width="5" height="19" fill="${cyan}" opacity="0.7"/>
+                    <line x1="4" y1="17" x2="32" y2="17" stroke="${stroke}" stroke-width="1.5"/>
+                    <circle cx="18" cy="4" r="1.5" fill="#38bdf8"/>
+                </svg>`;
+            } else if (facId === 'farm_aero') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="5" width="28" height="26" rx="2" fill="#0c1d10" stroke="${accent}" stroke-width="1.5"/>
+                    <line x1="6" y1="13" x2="30" y2="13" stroke="#c026d3" stroke-width="1.5"/>
+                    <line x1="6" y1="22" x2="30" y2="22" stroke="#c026d3" stroke-width="1.5"/>
+                    <path d="M9 13 C9 9 12 8 13 6 C13 9 10 11 9 13 Z" fill="${accent}"/>
+                    <path d="M19 13 C19 9 22 8 23 6 C23 9 20 11 19 13 Z" fill="${accent}"/>
+                    <path d="M9 22 C9 18 12 17 13 15 C13 18 10 20 9 22 Z" fill="${accent}"/>
+                    <path d="M19 22 C19 18 22 17 23 15 C23 18 20 20 19 22 Z" fill="${accent}"/>
+                    <circle cx="28" cy="9" r="1" fill="#a855f7"/>
+                    <circle cx="28" cy="18" r="1" fill="#a855f7"/>
+                </svg>`;
+            } else if (facId === 'bp_genevault') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="7" y="4" width="22" height="28" rx="3" fill="#0a1a12" stroke="${accent}" stroke-width="1.5"/>
+                    <rect x="11" y="8" width="14" height="20" rx="2" fill="#052e16" stroke="#16a34a" stroke-width="1"/>
+                    <path d="M14 11 Q18 14 14 17 Q18 20 14 23 Q18 26 14 27" stroke="${accent}" stroke-width="1.5" fill="none"/>
+                    <path d="M22 11 Q18 14 22 17 Q18 20 22 23 Q18 26 22 27" stroke="#4ade80" stroke-width="1.5" fill="none"/>
+                    <line x1="14" y1="14" x2="22" y2="14" stroke="#86efac" stroke-width="1"/>
+                    <line x1="14" y1="20" x2="22" y2="20" stroke="#86efac" stroke-width="1"/>
+                </svg>`;
+            } else if (facId === 'bp_hydro_tower') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="10" y="4" width="16" height="28" rx="2" fill="#062013" stroke="${accent}" stroke-width="1.5"/>
+                    <line x1="18" y1="5" x2="18" y2="31" stroke="#15803d" stroke-width="1.5"/>
+                    <circle cx="14" cy="10" r="2.5" fill="#22c55e"/>
+                    <circle cx="22" cy="15" r="2.5" fill="#22c55e"/>
+                    <circle cx="14" cy="20" r="2.5" fill="#22c55e"/>
+                    <circle cx="22" cy="25" r="2.5" fill="#22c55e"/>
+                    <line x1="6" y1="31" x2="30" y2="31" stroke="${stroke}" stroke-width="2"/>
+                </svg>`;
+            } else if (facId === 'bp_medsurge') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="5" width="28" height="26" rx="2" fill="#1f0e0e" stroke="${red}" stroke-width="1.5"/>
+                    <rect x="8" y="21" width="20" height="7" rx="1" fill="#334155" stroke="${stroke}" stroke-width="1"/>
+                    <path d="M22 8 L22 14 L14 16 L14 19" stroke="${cyan}" stroke-width="2" stroke-linecap="round"/>
+                    <circle cx="22" cy="8" r="2" fill="${amber}"/>
+                    <circle cx="14" cy="19" r="1.5" fill="${red}"/>
+                    <line x1="14" y1="19" x2="14" y2="21" stroke="${accent}" stroke-width="1.5" stroke-dasharray="1 1"/>
+                    <rect x="7" y="8" width="5" height="5" fill="${red}"/>
+                </svg>`;
+            } else if (facId === 'smelter') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="5" y="7" width="26" height="23" rx="2" fill="#1c0f07" stroke="${amber}" stroke-width="1.5"/>
+                    <rect x="9" y="15" width="18" height="11" rx="1" fill="#78350f"/>
+                    <path d="M11 24 C14 18 16 18 18 24 C20 19 22 19 25 24 Z" fill="${active ? '#f59e0b' : '#92400e'}"/>
+                    <circle cx="18" cy="22" r="2" fill="#fef08a"/>
+                    <rect x="13" y="4" width="10" height="4" fill="#475569"/>
+                    <line x1="7" y1="11" x2="29" y2="11" stroke="${stroke}" stroke-width="1.2"/>
+                </svg>`;
+            } else if (facId === 'security') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="5" width="28" height="26" rx="2" fill="#0f1912" stroke="${accent}" stroke-width="1.5"/>
+                    <path d="M18 8 L27 12 V19 C27 24 18 28 18 28 C18 28 9 24 9 19 V12 Z" fill="#1e293b" stroke="${accent}" stroke-width="1.2"/>
+                    <line x1="18" y1="13" x2="18" y2="23" stroke="${red}" stroke-width="1.5"/>
+                    <line x1="13" y1="18" x2="23" y2="18" stroke="${red}" stroke-width="1.5"/>
+                    <circle cx="18" cy="18" r="3" stroke="${accent}" stroke-width="1"/>
+                </svg>`;
+            } else if (facId === 'bp_radshield' || facId === 'bp_bunker') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="4" width="28" height="28" rx="2" fill="#141a12" stroke="${amber}" stroke-width="1.5"/>
+                    <polygon points="6,6 12,6 8,10 6,10" fill="${amber}"/>
+                    <polygon points="16,6 22,6 18,10 12,10" fill="${amber}"/>
+                    <polygon points="26,6 30,6 26,10 22,10" fill="${amber}"/>
+                    <circle cx="18" cy="19" r="6" stroke="${amber}" stroke-width="1.5"/>
+                    <circle cx="18" cy="19" r="2" fill="${amber}"/>
+                    <polygon points="18,15 15,11 21,11" fill="${amber}"/>
+                    <polygon points="15,22 11,24 13,28" fill="${amber}"/>
+                    <polygon points="21,22 25,24 23,28" fill="${amber}"/>
+                </svg>`;
+            } else if (facId === 'bp_heavy_bastion') {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="4" y="6" width="28" height="24" rx="2" fill="#151d16" stroke="${stroke}" stroke-width="1.5"/>
+                    <rect x="10" y="15" width="16" height="13" rx="1" fill="#334155" stroke="${accent}" stroke-width="1.2"/>
+                    <line x1="12" y1="8" x2="12" y2="15" stroke="${stroke}" stroke-width="2"/>
+                    <line x1="18" y1="6" x2="18" y2="15" stroke="${stroke}" stroke-width="2.5"/>
+                    <line x1="24" y1="8" x2="24" y2="15" stroke="${stroke}" stroke-width="2"/>
+                    <circle cx="18" cy="21" r="2.5" fill="${red}"/>
+                    <rect x="7" y="27" width="22" height="3" fill="#1e293b"/>
+                </svg>`;
             } else {
                 return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="5" y="5" width="26" height="26" rx="2" fill="#111827" stroke="${stroke}" stroke-width="1.5"/>
@@ -3641,31 +3770,78 @@
             ctx.moveTo(74, 7); ctx.lineTo(79, 5);
             ctx.stroke();
 
+            // Atmospheric surface weather effects
+            if (wType === 3) { // Toxic Rain
+                ctx.strokeStyle = 'rgba(74, 222, 128, 0.45)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                for (let r = 0; r < 12; r++) {
+                    const rx = (r * 53 + Math.floor(t * 80)) % w;
+                    const ry = ((r * 17 + Math.floor(t * 120)) % 14);
+                    ctx.moveTo(rx, ry);
+                    ctx.lineTo(rx - 2, ry + 4);
+                }
+                ctx.stroke();
+            } else if (wType === 1) { // Rad Storm gamma static
+                if (Math.sin(t * 8) > 0.3) {
+                    ctx.fillStyle = 'rgba(52, 211, 153, 0.08)';
+                    ctx.fillRect(0, 0, w, 14);
+                }
+            } else if (wType === 4) { // Cold Snap frost
+                ctx.fillStyle = 'rgba(224, 242, 254, 0.6)';
+                for (let s = 0; s < 10; s++) {
+                    const sx = (s * 67 + Math.floor(t * 25)) % w;
+                    const sy = (s * 19 + Math.floor(t * 30)) % 13;
+                    ctx.fillRect(sx, sy, 1.5, 1.5);
+                }
+            } else if (wType === 2) { // Drought heat shimmer
+                ctx.strokeStyle = 'rgba(245, 158, 11, 0.3)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                for (let dh = 0; dh < 3; dh++) {
+                    const dy = 4 + dh * 3;
+                    const wave = Math.sin(t * 4 + dh) * 2;
+                    ctx.moveTo(20 + wave, dy); ctx.lineTo(100 + wave, dy);
+                    ctx.moveTo(220 + wave, dy); ctx.lineTo(310 + wave, dy);
+                }
+                ctx.stroke();
+            }
+
             // Surface Perimeter Barricades & Sentry Turrets
             ctx.fillStyle = '#475569';
             ctx.fillRect(105, 7, 24, 5);
-            ctx.fillStyle = '#f59e0b';
+            ctx.fillStyle = (state.barricadeHp < 50) ? '#ef4444' : '#f59e0b';
             ctx.fillRect(107, 9, 3, 2);
             ctx.fillRect(113, 9, 3, 2);
             ctx.fillRect(119, 9, 3, 2);
             ctx.fillRect(125, 9, 3, 2);
-            ctx.strokeStyle = '#64748b';
+            ctx.strokeStyle = (state.barricadeMaxHp > 100) ? '#38bdf8' : '#64748b';
             ctx.lineWidth = 1;
             ctx.strokeRect(105, 7, 24, 5);
 
-            if (state.turretCount && state.turretCount > 0) {
-                const turX = 145;
+            // Sentry Turret Array (1 to 3 turrets based on turretCount)
+            const turretsToDraw = Math.min(3, Math.max(1, state.turretCount || 1));
+            for (let ti = 0; ti < turretsToDraw; ti++) {
+                const turX = 142 + ti * 20;
                 ctx.fillStyle = '#334155';
                 ctx.fillRect(turX, 8, 14, 4);
                 ctx.fillStyle = '#64748b';
                 ctx.fillRect(turX + 3, 5, 8, 4);
-                const aimAng = Math.sin(t * 1.5) * 0.25 - 0.2;
-                ctx.strokeStyle = '#94a3b8';
+                const aimAng = Math.sin(t * 1.5 + ti * 1.2) * 0.25 - 0.2;
+                ctx.strokeStyle = state.turretOverclock ? '#f87171' : '#94a3b8';
                 ctx.lineWidth = 1.5;
                 ctx.beginPath();
                 ctx.moveTo(turX + 7, 6);
                 ctx.lineTo(turX + 7 + Math.cos(aimAng) * 8, 6 + Math.sin(aimAng) * 8);
                 ctx.stroke();
+                if (state.turretOverclock) {
+                    ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+                    ctx.lineWidth = 0.8;
+                    ctx.beginPath();
+                    ctx.moveTo(turX + 7 + Math.cos(aimAng) * 8, 6 + Math.sin(aimAng) * 8);
+                    ctx.lineTo(turX + 7 + Math.cos(aimAng) * 22, 6 + Math.sin(aimAng) * 22);
+                    ctx.stroke();
+                }
                 ctx.fillStyle = state.turretOverclock ? '#ef4444' : '#10b981';
                 ctx.fillRect(turX + 5, 5, 2, 2);
             }
@@ -3701,6 +3877,20 @@
             ctx.fillStyle = '#10b981';
             ctx.fillRect(72, 38, 2, 14);
 
+            // Nomadic Trader Caravan pack-cart docked at airlock
+            if (state.caravan && state.caravan.present) {
+                ctx.fillStyle = '#451a03';
+                ctx.fillRect(40, 44, 16, 7);
+                ctx.fillStyle = '#ca8a04';
+                ctx.fillRect(42, 41, 6, 4);
+                ctx.fillRect(49, 42, 5, 3);
+                ctx.fillStyle = '#78350f';
+                ctx.fillRect(42, 51, 4, 2);
+                ctx.fillRect(50, 51, 4, 2);
+                ctx.fillStyle = '#10b981';
+                ctx.fillRect(38, 42, 2, 2); // merchant beacon
+            }
+
             // Elevator Shaft
             ctx.fillStyle = '#090d0b';
             ctx.fillRect(480, 16, 35, 116);
@@ -3732,16 +3922,24 @@
             ctx.fillRect(503, elevY + 5, 2, 14);
 
             // Rooms
+            const isBlackout = state.powerGen < state.powerLoad;
             for (const r of VAULT_ROOM_SPECS) {
                 ctx.fillStyle = '#0e1610';
                 ctx.fillRect(r.x, r.y, r.w, r.h);
+
+                // Brownout emergency strobe on non-essential sectors
+                if (isBlackout && r.id !== 'cmd' && r.id !== 'gen') {
+                    ctx.fillStyle = (Math.floor(t * 3) % 2 === 0) ? 'rgba(239, 68, 68, 0.12)' : 'rgba(153, 27, 27, 0.04)';
+                    ctx.fillRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2);
+                }
+
                 ctx.strokeStyle = (vaultHoverRoom && vaultHoverRoom.id === r.id) ? 'var(--border-corner)' : '#1f2e21';
                 ctx.lineWidth = 1;
                 ctx.strokeRect(r.x, r.y, r.w, r.h);
 
                 ctx.fillStyle = 'rgba(26, 37, 27, 0.7)';
                 ctx.fillRect(r.x + 1, r.y + 1, r.w - 2, 8);
-                ctx.fillStyle = r.color;
+                ctx.fillStyle = (isBlackout && r.id !== 'cmd' && r.id !== 'gen') ? '#ef4444' : r.color;
                 ctx.font = 'bold 6px monospace';
                 ctx.textAlign = 'left';
                 ctx.fillText(r.name, r.x + 4, r.y + 7);

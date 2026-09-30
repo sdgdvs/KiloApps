@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T17:45:00Z — kilo-usability: KChrono (UI/UX Usability Pass, Responsive Controls, Toast Relocation & Hover Reticle)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 182.4 KB web / 22.5 KB native < 999 KB).
+  - Responsive Controls: Added `.btn-text` collapse breakpoints to header actions and compact epoch badges, eliminating button clipping on <=1120px viewports.
+  - Toast Occlusion: Relocated HUD toast to bottom-center with safe non-blocking `pointer-events: none` across web and native Win32 C (`main.c`).
+  - Interactive Reticle: Added mouse/touch hover reticle tracking on canvas showing clear contextual feedback for move, act, and inspection targets.
+  - Performance & 60 FPS: Implemented state-caching in `updateUI()`, eliminating full DOM reconstruction of deck slots and buttons on every frame.
+  - Window & App Registration: Tuned default window dimensions to 1100x680 in `App.jsx` and bound direct native binary path (`/exe/KChrono.exe`).
+  - Verification: MSVC clean (`KChrono.exe` 22.5 KB); Vite clean in 335ms; security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T17:15:00Z — kilo-creator: kweb://darknet (Subterranean Relay & Warez NFO Cryptography)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 149.4 KB < 999 KB ceiling).
   - Warez NFO Lab: CP437 ANSI viewer, hex dumper, live steganography scanner (trailing whitespace/XOR) & custom NFO injector.

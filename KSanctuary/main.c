@@ -2587,6 +2587,113 @@ static void DrawFacilitySprite(HDC hdc, int x, int y, const char* facId, int act
         FillSolidRect(hdc, x + 6, y + 13, 18, 2, RGB(180, 180, 190));
         FillSolidRect(hdc, x + 14, y + 8, 2, 12, RGB(180, 180, 190));
         FillSolidRect(hdc, x + 14, y + 13, 2, 2, RGB(255, 40, 40));
+    } else if (strcmp(facId, "gen_sub") == 0) {
+        // Bio-Turbine Sub-Station: Dual vertical cylindrical generator pods with yellow conduit
+        FillSolidRect(hdc, x + 5, y + 7, 8, 17, RGB(35, 40, 45));
+        FillSolidRect(hdc, x + 17, y + 7, 8, 17, RGB(35, 40, 45));
+        DrawBoxBorder(hdc, x + 5, y + 7, 8, 17, RGB(90, 85, 80));
+        DrawBoxBorder(hdc, x + 17, y + 7, 8, 17, RGB(90, 85, 80));
+        COLORREF subCore = active ? RGB(245, 160, 20) : RGB(100, 70, 20);
+        FillSolidRect(hdc, x + 7, y + 12, 4, 7, subCore);
+        FillSolidRect(hdc, x + 19, y + 12, 4, 7, subCore);
+        FillSolidRect(hdc, x + 13, y + 14, 4, 3, RGB(220, 180, 40));
+        FillSolidRect(hdc, x + 7, y + 4, 4, 3, RGB(70, 70, 75));
+        FillSolidRect(hdc, x + 19, y + 4, 4, 3, RGB(70, 70, 75));
+    } else if (strcmp(facId, "water_deep") == 0) {
+        // Deep Well Purifier: High-pressure deep drill bore with descending suction shaft
+        FillSolidRect(hdc, x + 12, y + 4, 6, 22, RGB(40, 60, 80));
+        DrawBoxBorder(hdc, x + 12, y + 4, 6, 22, RGB(70, 130, 190));
+        FillSolidRect(hdc, x + 6, y + 16, 18, 5, RGB(30, 50, 70));
+        FillSolidRect(hdc, x + 14, y + 10, 2, 14, active ? RGB(40, 220, 255) : RGB(20, 90, 130));
+        FillSolidRect(hdc, x + 8, y + 21, 14, 5, RGB(20, 35, 50));
+    } else if (strcmp(facId, "farm_aero") == 0) {
+        // Aeroponic Green Bay: Multi-tier vertical growing shelves with mist spray
+        FillSolidRect(hdc, x + 4, y + 5, 22, 2, RGB(180, 50, 210));
+        FillSolidRect(hdc, x + 4, y + 13, 22, 2, RGB(180, 50, 210));
+        FillSolidRect(hdc, x + 4, y + 21, 22, 4, RGB(50, 40, 30));
+        FillSolidRect(hdc, x + 6, y + 8, 4, 5, RGB(40, 200, 80));
+        FillSolidRect(hdc, x + 13, y + 8, 4, 5, RGB(40, 200, 80));
+        FillSolidRect(hdc, x + 20, y + 8, 4, 5, RGB(40, 200, 80));
+        FillSolidRect(hdc, x + 6, y + 16, 4, 5, RGB(50, 230, 100));
+        FillSolidRect(hdc, x + 13, y + 16, 4, 5, RGB(50, 230, 100));
+        FillSolidRect(hdc, x + 20, y + 16, 4, 5, RGB(50, 230, 100));
+    } else if (strcmp(facId, "smelter") == 0) {
+        // Scrap Smelter: Blast furnace with molten steel crucible
+        FillSolidRect(hdc, x + 5, y + 6, 20, 18, RGB(50, 45, 45));
+        DrawBoxBorder(hdc, x + 5, y + 6, 20, 18, RGB(100, 90, 85));
+        FillSolidRect(hdc, x + 8, y + 14, 14, 8, active ? RGB(245, 120, 20) : RGB(120, 60, 15));
+        FillSolidRect(hdc, x + 10, y + 17, 10, 4, active ? RGB(255, 230, 80) : RGB(160, 90, 30));
+        FillSolidRect(hdc, x + 11, y + 3, 8, 3, RGB(70, 70, 75));
+    } else if (strcmp(facId, "bp_fusion") == 0) {
+        // Fusion Micro-Reactor: Toroidal tokamak ring with glowing plasma core
+        FillSolidRect(hdc, x + 4, y + 4, 22, 22, RGB(15, 20, 30));
+        DrawBoxBorder(hdc, x + 4, y + 4, 22, 22, RGB(50, 100, 160));
+        FillSolidRect(hdc, x + 8, y + 8, 14, 14, RGB(20, 40, 70));
+        COLORREF plasCol = active ? RGB(80, 240, 255) : RGB(30, 90, 120);
+        FillSolidRect(hdc, x + 11, y + 11, 8, 8, plasCol);
+        FillSolidRect(hdc, x + 13, y + 13, 4, 4, RGB(255, 255, 255));
+        FillSolidRect(hdc, x + 13, y + 5, 4, 3, RGB(245, 180, 20));
+        FillSolidRect(hdc, x + 13, y + 22, 4, 3, RGB(245, 180, 20));
+    } else if (strcmp(facId, "bp_solar") == 0) {
+        // Surface Solar Array: Photovoltaic grid panel
+        FillSolidRect(hdc, x + 4, y + 6, 22, 18, RGB(20, 45, 80));
+        DrawBoxBorder(hdc, x + 4, y + 6, 22, 18, RGB(80, 130, 200));
+        FillSolidRect(hdc, x + 4, y + 12, 22, 1, RGB(100, 160, 240));
+        FillSolidRect(hdc, x + 4, y + 18, 22, 1, RGB(100, 160, 240));
+        FillSolidRect(hdc, x + 11, y + 6, 1, 18, RGB(100, 160, 240));
+        FillSolidRect(hdc, x + 18, y + 6, 1, 18, RGB(100, 160, 240));
+        FillSolidRect(hdc, x + 6, y + 8, 2, 2, RGB(250, 230, 100));
+    } else if (strcmp(facId, "bp_medsurge") == 0) {
+        // Automated Surgery Wing: Robotic surgical arm & scanning bed
+        FillSolidRect(hdc, x + 5, y + 16, 20, 8, RGB(40, 50, 55));
+        FillSolidRect(hdc, x + 7, y + 18, 16, 4, RGB(220, 230, 240));
+        FillSolidRect(hdc, x + 18, y + 6, 3, 10, RGB(90, 100, 110));
+        FillSolidRect(hdc, x + 11, y + 6, 8, 2, RGB(90, 100, 110));
+        FillSolidRect(hdc, x + 11, y + 8, 2, 4, active ? RGB(255, 50, 50) : RGB(120, 50, 50));
+        FillSolidRect(hdc, x + 6, y + 7, 5, 5, RGB(30, 180, 80));
+    } else if (strcmp(facId, "bp_radshield") == 0 || strcmp(facId, "bp_bunker") == 0) {
+        // Rad-Shield Airlock Gate: Lead hazard door with chevrons
+        FillSolidRect(hdc, x + 4, y + 4, 22, 22, RGB(40, 45, 40));
+        DrawBoxBorder(hdc, x + 4, y + 4, 22, 22, RGB(160, 140, 30));
+        FillSolidRect(hdc, x + 7, y + 7, 4, 4, RGB(245, 180, 20));
+        FillSolidRect(hdc, x + 15, y + 7, 4, 4, RGB(245, 180, 20));
+        FillSolidRect(hdc, x + 11, y + 13, 8, 8, RGB(20, 25, 20));
+        FillSolidRect(hdc, x + 13, y + 15, 4, 4, active ? RGB(50, 230, 100) : RGB(200, 50, 50));
+    } else if (strcmp(facId, "bp_genevault") == 0) {
+        // Hydroponic Gene-Vault: Cryo DNA incubator capsule
+        FillSolidRect(hdc, x + 7, y + 4, 16, 22, RGB(20, 35, 30));
+        DrawBoxBorder(hdc, x + 7, y + 4, 16, 22, RGB(40, 160, 100));
+        FillSolidRect(hdc, x + 10, y + 8, 10, 14, active ? RGB(30, 90, 60) : RGB(15, 40, 25));
+        FillSolidRect(hdc, x + 12, y + 10, 2, 3, RGB(100, 255, 140));
+        FillSolidRect(hdc, x + 16, y + 13, 2, 3, RGB(100, 255, 140));
+        FillSolidRect(hdc, x + 12, y + 16, 2, 3, RGB(100, 255, 140));
+    } else if (strcmp(facId, "bp_adv_water") == 0) {
+        // Deep Filtration Reservoir: Multi-column ion filters
+        FillSolidRect(hdc, x + 4, y + 6, 6, 19, RGB(15, 35, 55));
+        FillSolidRect(hdc, x + 12, y + 6, 6, 19, RGB(15, 35, 55));
+        FillSolidRect(hdc, x + 20, y + 6, 6, 19, RGB(15, 35, 55));
+        DrawBoxBorder(hdc, x + 4, y + 6, 6, 19, RGB(40, 140, 220));
+        DrawBoxBorder(hdc, x + 12, y + 6, 6, 19, RGB(40, 140, 220));
+        DrawBoxBorder(hdc, x + 20, y + 6, 6, 19, RGB(40, 140, 220));
+        FillSolidRect(hdc, x + 6, y + 10, 2, 11, RGB(60, 210, 255));
+        FillSolidRect(hdc, x + 14, y + 12, 2, 9, RGB(60, 210, 255));
+        FillSolidRect(hdc, x + 22, y + 8, 2, 13, RGB(60, 210, 255));
+    } else if (strcmp(facId, "bp_hydro_tower") == 0) {
+        // Vertical Hydroponic Tower: Tall green spire
+        FillSolidRect(hdc, x + 9, y + 4, 12, 23, RGB(25, 40, 30));
+        DrawBoxBorder(hdc, x + 9, y + 4, 12, 23, RGB(50, 140, 80));
+        FillSolidRect(hdc, x + 12, y + 7, 6, 3, RGB(50, 230, 100));
+        FillSolidRect(hdc, x + 12, y + 13, 6, 3, RGB(50, 230, 100));
+        FillSolidRect(hdc, x + 12, y + 19, 6, 3, RGB(50, 230, 100));
+        FillSolidRect(hdc, x + 6, y + 23, 18, 3, RGB(60, 50, 40));
+    } else if (strcmp(facId, "bp_heavy_bastion") == 0) {
+        // Heavy Vulcan Bastion: Rotary autocannon bunker
+        FillSolidRect(hdc, x + 5, y + 12, 20, 13, RGB(40, 50, 45));
+        DrawBoxBorder(hdc, x + 5, y + 12, 20, 13, RGB(80, 110, 95));
+        FillSolidRect(hdc, x + 8, y + 6, 3, 9, RGB(160, 165, 175));
+        FillSolidRect(hdc, x + 14, y + 5, 3, 10, RGB(160, 165, 175));
+        FillSolidRect(hdc, x + 19, y + 6, 3, 9, RGB(160, 165, 175));
+        FillSolidRect(hdc, x + 12, y + 18, 6, 4, active ? RGB(255, 40, 40) : RGB(100, 30, 30));
     } else {
         FillSolidRect(hdc, x + 6, y + 6, 18, 18, RGB(30, 40, 35));
         DrawBoxBorder(hdc, x + 6, y + 6, 18, 18, COL_BORDER_HI);
