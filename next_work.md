@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KImage
   kilo_usability: KTask
   kilo_graphics: KSanctuary
-  kilo_qa: KAudio
+  kilo_qa: KRadio
   kilo_expander: KHash
   kilo_creator: "kweb://portal (KiloNet Central 1999 Directory)"
 virtual_web_target: "kweb://portal"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KStellar
-  timestamp: "2026-09-30T18:03:00Z"
+  agent: kilo-qa
+  app: KAudio
+  timestamp: "2026-09-30T18:43:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -118,9 +118,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KAudio`
+- **Current Target**: `KRadio`
 - **Upcoming Queue**:
-  `KRadio`, `KPad`, `KPaint`, `KCalc`, `KMine`, `KCosmic`, `KContacts` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia)*.
+  `KPad`, `KPaint`, `KCalc`, `KMine`, `KCosmic`, `KContacts` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KHash`
@@ -293,6 +293,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T18:43:00Z — kilo-qa: KAudio (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Relocation & DSP Graph Sync)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 121.8 KB web / 23.0 KB native < 999 KB).
+  - Quicksave & Load: Synchronized full state across F5/F9 (engine, soundbank, fmPreset, adsr, filter, effects, sequence grid, recordedEvents) with live DSP updates.
+  - First-Run Tutorial: Verified tutorial flags (`kaudio_tutorialSeen` / `kaudio_tutorial.dat`), preventing interruption on restored save states.
+  - Interactive Overlays: Added backdrop click dismissal and Escape hotkey to jam room modal; prevented spacebar trigger while modals open.
+  - Toast Occlusion: Relocated toast notifications to bottom-center safe zone, unblocking header toolbar and quicksave/load buttons.
+  - Verification: MSVC clean (`KAudio.exe` 23.0 KB); Vite clean in 274ms; check_icons & security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T18:03:00Z — kilo-graphics: KStellar (Graphics & Economy Pass, Medicine/Repair/Refuel, Glint Purge & Balance)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 151.6 KB web / 154.5 KB native < 999 KB).
   - Economy & Trading: Added Medicine commodity, Repair dock, and Refuel station across web and Win32 C (`main.c`).
@@ -309,6 +317,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Window & App Registration: Tuned default window dimensions to 1100x680 in `App.jsx` and bound direct native binary path (`/exe/KChrono.exe`).
   - Verification: MSVC clean (`KChrono.exe` 22.5 KB); Vite clean in 335ms; security lint 100% PASS; <999KB ceiling.
 
+- **2026-09-30T17:45:00Z — kilo-expander: KPing (Bufferbloat Audit, DSCP QoS & Audio Telemetry)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 146.5 KB web / 38.9 KB native < 999 KB).
+  - Bufferbloat Diagnostic: Added loaded vs unloaded ping measurement, SLA bufferbloat grading (A+ to F), and BDP window calculation.
+  - QoS / DSCP Telemetry: Implemented DSCP class selection and packet tagging in telemetry output.
+  - Audio Telemetry: Added audio chimes with mute toggle [U] and hotkeys across web and native Win32 C.
+  - Verification: MSVC clean (`KPing.exe` 38.9 KB); Vite clean in 452ms; security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T17:30:00Z — kilo-tester: KHex (UI Audit, Particle & Glint Purge, Toast Relocation & Accessibility)**
   - Status: PASS ✅ (6 issues fixed, 0 regressions, 0 perimeter glints, 128.9 KB web / 30.7 KB native < 999 KB).
   - Bloat & Shake Purge: Removed 320+ lines of background 60FPS particle loops, motes, and click screen shake, eliminating frame stuttering.
@@ -317,20 +332,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Keyboard & Accessibility: Added Up/Down/Left/Right arrow cursor stepping to Hex view; added keyboard activation to inspector items & chunk cells.
   - State Sync: Synchronized `applyByteEdit()` and `executeReplaceAll()` with text buffer and localStorage; added 0xFFFFFFFF to hotkey P presets.
   - Verification: Clean Vite build in 301ms; headless CDP test clean (0 warnings, 110 reactive items); native MSVC clean (`KHex.exe` 30.7 KB).
-
-- **2026-09-30T17:15:00Z — kilo-creator: kweb://darknet (Subterranean Relay & Warez NFO Cryptography)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 149.4 KB < 999 KB ceiling).
-  - Warez NFO Lab: CP437 ANSI viewer, hex dumper, live steganography scanner (trailing whitespace/XOR) & custom NFO injector.
-  - Scene Releases & Hashes: 5 parody releases (*Surreal '99*, *Tremor III*, *Half-Cycle*, *Machina Ex*) & CRC32/MD5 anomaly scanner.
-  - Gated Middle-Game Relay: Sector 0x7F sequential cross-node artifact gating unlocking memo fragments converging on Deep Core.
-  - Signal Mesh: Real-time Firebase RTDB collaborative pulse broadcasting with instant local salt-vault solo loopback fallback.
-  - Packet Decoder & Sniffer: 14-algorithm decoder (Shannon entropy, CW audio) & Bell 202 AFSK crafting injector on 10.19.99.0/24.
-  - RF Spectrum & Chiptunes: Dual 60FPS oscilloscope/waterfall, 144.39MHz/1999Hz tuner & 3 YM2612 FM / SPC700 delay tracks.
-  - Verification: Clean Vite build in 309ms; security lint & icon uniqueness 100% PASS; linked in KNet/Portal/Webring #018.
-
-- **2026-09-30T17:45:00Z — kilo-expander: KPing (Bufferbloat Audit, DSCP QoS & Audio Telemetry)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 146.5 KB web / 38.9 KB native < 999 KB).
-  - Bufferbloat Diagnostic: Added loaded vs unloaded ping measurement, SLA bufferbloat grading (A+ to F), and BDP window calculation.
-  - QoS / DSCP Telemetry: Implemented DSCP class selection and packet tagging in telemetry output.
-  - Audio Telemetry: Added audio chimes with mute toggle [U] and hotkeys across web and native Win32 C.
-  - Verification: MSVC clean (`KPing.exe` 38.9 KB); Vite clean in 452ms; security lint 100% PASS; <999KB ceiling.

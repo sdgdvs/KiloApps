@@ -434,17 +434,19 @@
     outline-offset: 1px;
   }
 
-  /* Toast Notification Container */
+  /* Toast Notification Container (Bottom-Center Safe Zone) */
   .toast-container {
     position: fixed;
-    top: 16px;
-    right: 20px;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 10000;
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     gap: 8px;
     pointer-events: none;
-    max-width: 380px;
+    max-width: 440px;
+    width: 90%;
   }
   .toast {
     background: rgba(15, 23, 42, 0.95);
@@ -472,7 +474,7 @@
   .toast.toast-warning { border-color: rgba(245, 158, 11, 0.6); box-shadow: 0 0 15px rgba(245, 158, 11, 0.25); color: #fde047; }
   .toast.toast-danger { border-color: rgba(244, 63, 94, 0.6); box-shadow: 0 0 15px rgba(244, 63, 94, 0.25); color: #fda4af; }
   @keyframes toastSlideIn {
-    from { opacity: 0; transform: translateY(-12px) scale(0.95); }
+    from { opacity: 0; transform: translateY(14px) scale(0.95); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 </style>
@@ -910,14 +912,14 @@
     toast.title = 'Click to dismiss';
     toast.onclick = () => {
       toast.style.opacity = '0';
-      toast.style.transform = 'translateY(-10px) scale(0.95)';
+      toast.style.transform = 'translateY(12px) scale(0.95)';
       setTimeout(() => { if (toast.parentNode) toast.remove(); }, 150);
     };
     container.appendChild(toast);
     setTimeout(() => {
       if (toast.parentNode) {
         toast.style.opacity = '0';
-        toast.style.transform = 'translateY(-10px) scale(0.95)';
+        toast.style.transform = 'translateY(12px) scale(0.95)';
         setTimeout(() => { if (toast.parentNode) toast.remove(); }, 250);
       }
     }, duration);
@@ -927,7 +929,13 @@
     try { return localStorage.getItem(key); } catch (e) { return null; }
   }
   function safeSetStorage(key, val) {
-    try { localStorage.setItem(key, val); } catch (e) {}
+    try {
+      localStorage.setItem(key, val);
+      return true;
+    } catch (e) {
+      console.warn('Storage quota exceeded or unavailable', e);
+      return false;
+    }
   }
 
   function quicksaveState() {
@@ -935,6 +943,7 @@
     const raw = safeGetStorage('kaudio_state');
     if (raw) {
       safeSetStorage('kaudio_quicksave', raw);
+      safeSetStorage('kaudio_tutorialSeen', '1');
       showToast('⚡ Quicksave successful! [F5]', 'success', 2200);
     }
   }
@@ -946,23 +955,31 @@
       return;
     }
     safeSetStorage('kaudio_state', raw);
+    safeSetStorage('kaudio_tutorialSeen', '1');
     loadAudioState();
     showToast('🔄 Quickload restored session! [F9]', 'success', 2200);
   }
 
   function toggleHelp() {
     const m = document.getElementById('helpModal');
+    if (!m) return;
     m.style.display = (m.style.display === 'none' || !m.style.display) ? 'flex' : 'none';
     if (m.style.display === 'none') {
       safeSetStorage('kaudio_tutorialSeen', '1');
     }
   }
 
-  // Dismiss help modal when clicking backdrop
-  document.getElementById('helpModal').addEventListener('click', (e) => {
+  // Dismiss modals when clicking backdrop
+  document.getElementById('helpModal')?.addEventListener('click', (e) => {
     if (e.target === document.getElementById('helpModal')) {
       document.getElementById('helpModal').style.display = 'none';
       safeSetStorage('kaudio_tutorialSeen', '1');
+    }
+  });
+
+  document.getElementById('jamModal')?.addEventListener('click', (e) => {
+    if (e.target === document.getElementById('jamModal')) {
+      document.getElementById('jamModal').style.display = 'none';
     }
   });
   // Audio Context & Nodes Initialization
@@ -1058,6 +1075,8 @@
   function saveAudioState() {
     const state = {
       engine: synthEngine ? synthEngine.value : 'subtractive',
+      soundbank: soundbankSelect ? soundbankSelect.value : 'custom',
+      fmPreset: fmPresetSelect ? fmPresetSelect.value : '',
       waveType: waveSelect ? waveSelect.value : 'square',
       fm: {
         ratio: fmRatio ? fmRatio.value : '1.0',
@@ -1089,7 +1108,8 @@
       octaveShift: octaveShift,
       masterVol: masterVol ? masterVol.value : '0.3',
       bpm: (typeof seqBpmEl !== 'undefined' && seqBpmEl) ? seqBpmEl.value : '120',
-      tracks: (typeof seqTracks !== 'undefined' && seqTracks) ? seqTracks.map(t => ({ name: t.name, grid: t.grid })) : []
+      tracks: (typeof seqTracks !== 'undefined' && seqTracks) ? seqTracks.map(t => ({ name: t.name, grid: t.grid })) : [],
+      recordedEvents: recordedEvents || []
     };
     safeSetStorage('kaudio_state', JSON.stringify(state));
   }
@@ -2310,6 +2330,8 @@
     // Function keys and Modal Controls
     const helpModalEl = document.getElementById('helpModal');
     const isHelpOpen = helpModalEl && (helpModalEl.style.display === 'flex' || helpModalEl.offsetParent !== null);
+    const jamModalEl = document.getElementById('jamModal');
+    const isJamOpen = jamModalEl && (jamModalEl.style.display === 'flex' || jamModalEl.offsetParent !== null);
 
     if (e.key === 'F1' || e.key === '?' || (e.key === '/' && e.shiftKey)) {
       e.preventDefault();
@@ -2317,17 +2339,29 @@
       return;
     }
 
-    if (e.key === 'Escape' || (isHelpOpen && (e.key === 'h' || e.key === 'H'))) {
+    if (e.key === 'Escape') {
       if (isHelpOpen) {
         e.preventDefault();
         helpModalEl.style.display = 'none';
         safeSetStorage('kaudio_tutorialSeen', '1');
         return;
       }
+      if (isJamOpen) {
+        e.preventDefault();
+        jamModalEl.style.display = 'none';
+        return;
+      }
     }
 
-    // Spacebar toggles sequencer Play/Pause (when not focused on a button or input)
-    if (e.code === 'Space' && document.activeElement?.tagName !== 'BUTTON') {
+    if (isHelpOpen && (e.key === 'h' || e.key === 'H')) {
+      e.preventDefault();
+      helpModalEl.style.display = 'none';
+      safeSetStorage('kaudio_tutorialSeen', '1');
+      return;
+    }
+
+    // Spacebar toggles sequencer Play/Pause (when not focused on a button or input, and no modals open)
+    if (!isHelpOpen && !isJamOpen && e.code === 'Space' && document.activeElement?.tagName !== 'BUTTON') {
       e.preventDefault();
       btnSeqPlay.click();
       return;
@@ -2816,6 +2850,12 @@
         if (subtractiveControls) subtractiveControls.style.display = (data.engine === 'ym2612') ? 'none' : 'block';
         if (fmControls) fmControls.style.display = (data.engine === 'ym2612') ? 'flex' : 'none';
       }
+      if (data.soundbank && soundbankSelect) {
+        soundbankSelect.value = data.soundbank;
+      }
+      if (data.fmPreset && fmPresetSelect) {
+        fmPresetSelect.value = data.fmPreset;
+      }
       if (data.fm) {
         if (data.fm.ratio && fmRatio) fmRatio.value = data.fm.ratio;
         if (data.fm.depth && fmDepth && valFmDepth) {
@@ -2860,6 +2900,11 @@
           filterQ.value = data.filter.q;
           valQ.textContent = parseFloat(data.filter.q).toFixed(1);
         }
+        if (filterNode && ctx) {
+          filterNode.type = data.filter.type;
+          filterNode.frequency.setValueAtTime(parseFloat(data.filter.cutoff), ctx.currentTime);
+          filterNode.Q.setValueAtTime(parseFloat(data.filter.q), ctx.currentTime);
+        }
       }
       if (data.effects) {
         if (typeof data.effects.delay !== 'undefined' && chkDelay) {
@@ -2876,6 +2921,15 @@
             delayMix.value = data.effects.delayMix;
             valDelayMix.textContent = Math.round(parseFloat(delayMix.value) * 100) + '%';
           }
+          if (delayNode && ctx) {
+            delayNode.delayTime.setValueAtTime(parseFloat(delayTime.value), ctx.currentTime);
+          }
+          if (delayFeedbackNode && ctx) {
+            delayFeedbackNode.gain.setValueAtTime(parseFloat(delayFeedback.value), ctx.currentTime);
+          }
+          if (delayWetGainNode && ctx) {
+            delayWetGainNode.gain.setValueAtTime(chkDelay.checked ? parseFloat(delayMix.value) : 0, ctx.currentTime);
+          }
         }
         if (typeof data.effects.snesDamp !== 'undefined' && chkSnesDamp) {
           chkSnesDamp.checked = !!data.effects.snesDamp;
@@ -2883,13 +2937,19 @@
             snesDampCutoff.value = data.effects.snesDampCutoff;
             valSnesDamp.textContent = data.effects.snesDampCutoff + 'Hz';
           }
-          if (chkSnesDamp.onchange) chkSnesDamp.onchange();
+          if (delayDampFilter && ctx) {
+            let dampCut = chkSnesDamp.checked ? parseFloat(snesDampCutoff.value) : 20000;
+            delayDampFilter.frequency.setValueAtTime(dampCut, ctx.currentTime);
+          }
         }
         if (typeof data.effects.drive !== 'undefined' && chkDrive) {
           chkDrive.checked = !!data.effects.drive;
           if (data.effects.driveAmount && driveAmount && valDriveAmount) {
             driveAmount.value = data.effects.driveAmount;
             valDriveAmount.textContent = driveAmount.value + 'x';
+          }
+          if (driveNode) {
+            driveNode.curve = chkDrive.checked ? makeDistortionCurve(parseFloat(driveAmount.value)) : null;
           }
         }
       }
@@ -2916,6 +2976,12 @@
           }
         });
         buildSequencerGrid();
+      }
+      if (Array.isArray(data.recordedEvents)) {
+        recordedEvents = data.recordedEvents;
+        if (recStatus && recordedEvents.length > 0) {
+          recStatus.textContent = `Saved (${recordedEvents.length} evs) [X]`;
+        }
       }
       return true;
     } catch (e) {

@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T17:15:00Z — kilo-creator: kweb://darknet (Subterranean Relay & Warez NFO Cryptography)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 149.4 KB < 999 KB ceiling).
+  - Warez NFO Lab: CP437 ANSI viewer, hex dumper, live steganography scanner (trailing whitespace/XOR) & custom NFO injector.
+  - Scene Releases & Hashes: 5 parody releases (*Surreal '99*, *Tremor III*, *Half-Cycle*, *Machina Ex*) & CRC32/MD5 anomaly scanner.
+  - Gated Middle-Game Relay: Sector 0x7F sequential cross-node artifact gating unlocking memo fragments converging on Deep Core.
+  - Signal Mesh: Real-time Firebase RTDB collaborative pulse broadcasting with instant local salt-vault solo loopback fallback.
+  - Packet Decoder & Sniffer: 14-algorithm decoder (Shannon entropy, CW audio) & Bell 202 AFSK crafting injector on 10.19.99.0/24.
+  - RF Spectrum & Chiptunes: Dual 60FPS oscilloscope/waterfall, 144.39MHz/1999Hz tuner & 3 YM2612 FM / SPC700 delay tracks.
+  - Verification: Clean Vite build in 309ms; security lint & icon uniqueness 100% PASS; linked in KNet/Portal/Webring #018.
+
 - **2026-09-30T16:50:00Z — kilo-expander: KPing (Deep Expansion, Firebase Mesh, BGP Transit & FM Audio)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 130.8 KB web / 28.0 KB native < 999 KB).
   - Firebase RTDB Mesh: Cross-computer peer probes with live latency measurement & virtual relay fallback.
