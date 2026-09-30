@@ -383,14 +383,16 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 12px;
+            gap: 8px;
             padding-top: 2px;
+            flex-wrap: wrap;
         }
 
         .playback-btns {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            flex-wrap: wrap;
         }
 
         .btn-play {
@@ -398,13 +400,13 @@
             color: #0b1220;
             border: none;
             border-radius: 8px;
-            padding: 8px 16px;
+            padding: 8px 14px;
             font-size: 12px;
             font-weight: 700;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             transition: all 0.2s;
             box-shadow: 0 2px 8px var(--accent-glow);
         }
@@ -419,13 +421,13 @@
             color: var(--text-main);
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            padding: 8px 14px;
+            padding: 8px 11px;
             font-size: 12px;
             font-weight: 600;
             cursor: pointer;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             transition: all 0.2s;
         }
 
@@ -433,6 +435,27 @@
             background: rgba(239, 68, 68, 0.15);
             border-color: var(--danger);
             color: var(--danger);
+        }
+
+        .btn-save, .btn-load {
+            background: var(--bg-input);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 10px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+
+        .btn-save:hover, .btn-load:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--accent);
+            color: var(--accent);
         }
 
         /* Volume Controls */
@@ -512,14 +535,14 @@
         /* Non-Occluding Toast System */
         .toast-container {
             position: fixed;
-            bottom: 36px;
+            bottom: 18px;
             left: 50%;
             transform: translateX(-50%);
             display: flex;
             flex-direction: column;
             align-items: center;
             gap: 6px;
-            z-index: 1000;
+            z-index: 1200;
             pointer-events: none;
             width: max-content;
             max-width: 90%;
@@ -605,6 +628,8 @@
             box-shadow: 0 20px 30px rgba(0, 0, 0, 0.6);
             width: 100%;
             max-width: 430px;
+            max-height: calc(100vh - 40px);
+            overflow-y: auto;
             padding: 18px;
             display: flex;
             flex-direction: column;
@@ -775,6 +800,16 @@
                     <span>Stop</span>
                     <span class="key-badge">S</span>
                 </button>
+                <button class="btn-save" id="btnSave" title="Quicksave Player State [F5]">
+                    <span>💾</span>
+                    <span>Save</span>
+                    <span class="key-badge">F5</span>
+                </button>
+                <button class="btn-load" id="btnLoad" title="Quickload Restored State [F9]">
+                    <span>📂</span>
+                    <span>Load</span>
+                    <span class="key-badge">F9</span>
+                </button>
             </div>
 
             <div class="volume-group">
@@ -788,9 +823,10 @@
         <footer class="footer-hint">
             <span>[Space] Play</span>
             <span>[1-6] Presets</span>
-            <span>[←/→] Prev/Next</span>
+            <span>[F5] Save</span>
+            <span>[F9] Load</span>
             <span>[M] Mute</span>
-            <span>[V] Visualizer</span>
+            <span>[V] Viz</span>
             <span>[F1] Help</span>
         </footer>
     </div>
@@ -823,6 +859,14 @@
                         <td>Stop audio stream</td>
                     </tr>
                     <tr>
+                        <td>F5</td>
+                        <td>Quicksave active station & playback state</td>
+                    </tr>
+                    <tr>
+                        <td>F9</td>
+                        <td>Quickload restored session & playback</td>
+                    </tr>
+                    <tr>
                         <td>1 – 6</td>
                         <td>Quick tune station preset</td>
                     </tr>
@@ -851,7 +895,7 @@
                         <td>Toggle this Help guide</td>
                     </tr>
                     <tr>
-                        <td>Esc</td>
+                        <td>Esc / Space / Enter</td>
                         <td>Dismiss Help guide</td>
                     </tr>
                 </table>
@@ -883,6 +927,8 @@
         const playIcon = document.getElementById('playIcon');
         const playLabel = document.getElementById('playLabel');
         const btnStop = document.getElementById('btnStop');
+        const btnSave = document.getElementById('btnSave');
+        const btnLoad = document.getElementById('btnLoad');
         const btnTune = document.getElementById('btnTune');
         const btnClearUrl = document.getElementById('btnClearUrl');
         const btnHelp = document.getElementById('btnHelp');
@@ -1122,12 +1168,104 @@
             });
         }
 
+        // Storage Helpers (Catching quota errors gracefully)
+        function safeGetStorage(key) {
+            try { return localStorage.getItem(key); } catch (e) { return null; }
+        }
+        function safeSetStorage(key, val) {
+            try {
+                localStorage.setItem(key, val);
+                return true;
+            } catch (e) {
+                console.warn('Storage quota exceeded or unavailable', e);
+                return false;
+            }
+        }
+
+        // Full App State Persistence (Pass 5: Quicksave F5 & Quickload F9)
+        function quicksaveState() {
+            const state = {
+                activePresetIndex: activePresetIndex,
+                stationUrl: stationUrl.value,
+                displayStation: displayStation.textContent,
+                stationTag: stationTag.textContent,
+                displayBitrate: displayBitrate.textContent,
+                volume: parseInt(volumeSlider.value, 10),
+                isMuted: isMuted,
+                vizMode: vizMode,
+                isPlaying: isPlaying || isSubcarrierActive,
+                timestamp: Date.now()
+            };
+            const ok = safeSetStorage('kradio_quicksave', JSON.stringify(state));
+            safeSetStorage('kradio_tutorialSeen', '1');
+            if (ok) {
+                showToast('⚡ Quicksave successful! [F5]', 'success', 2200);
+            } else {
+                showToast('⚠️ Quicksave failed: storage full', 'warning', 2500);
+            }
+        }
+
+        function quickloadState() {
+            const raw = safeGetStorage('kradio_quicksave');
+            if (!raw) {
+                showToast('⚠️ No quicksave data found! [F5 to save]', 'warning', 2500);
+                return;
+            }
+            try {
+                const state = JSON.parse(raw);
+                safeSetStorage('kradio_tutorialSeen', '1');
+
+                // Restore visualizer mode
+                if (typeof state.vizMode === 'number' && state.vizMode >= 0 && state.vizMode < VIZ_MODES.length) {
+                    vizMode = state.vizMode;
+                    btnVizMode.textContent = VIZ_MODES[vizMode];
+                    safeSetStorage('kradio_viz_mode', String(vizMode));
+                }
+
+                // Restore volume
+                if (typeof state.volume === 'number') {
+                    updateVolume(state.volume);
+                }
+                if (state.isMuted) {
+                    isMuted = true;
+                    btnMute.textContent = '🔇';
+                    audio.volume = 0;
+                    volumePercent.textContent = '0%';
+                }
+
+                // Restore preset or custom URL
+                if (typeof state.activePresetIndex === 'number' && state.activePresetIndex >= 0 && state.activePresetIndex < PRESETS.length) {
+                    selectPreset(state.activePresetIndex, false);
+                } else {
+                    activePresetIndex = -1;
+                    renderPresets();
+                    stationUrl.value = state.stationUrl || '';
+                    displayStation.textContent = state.displayStation || 'Custom Stream';
+                    stationTag.textContent = state.stationTag || 'DIRECT';
+                    displayBitrate.textContent = state.displayBitrate || 'Direct URL';
+                    safeSetStorage('kradio_active_preset', '-1');
+                    if (state.stationUrl) safeSetStorage('kradio_station_url', state.stationUrl);
+                }
+
+                // Restore playback
+                if (state.isPlaying) {
+                    playStream();
+                } else {
+                    stopStream(false);
+                }
+
+                showToast('🔄 Quickload restored session! [F9]', 'success', 2200);
+            } catch (e) {
+                console.error('Quickload error', e);
+                showToast('❌ Corrupted quicksave data', 'error', 2500);
+            }
+        }
+
         // Non-Occluding Toast Notification System
         function showToast(message, type = 'info', duration = 2800) {
-            // Dismiss prior toast immediately so toasts never stack or occlude buttons
-            const existing = toastContainer.querySelector('.toast');
-            if (existing) {
-                existing.remove();
+            // Dismiss prior toasts immediately so toasts never stack or occlude buttons
+            while (toastContainer.firstChild) {
+                toastContainer.removeChild(toastContainer.firstChild);
             }
 
             const toast = document.createElement('div');
@@ -1184,10 +1322,8 @@
             stationTag.textContent = preset.genre;
             displayBitrate.textContent = 'Live Preset';
             
-            try {
-                localStorage.setItem('kradio_active_preset', String(index));
-                localStorage.setItem('kradio_station_url', preset.url);
-            } catch (e) {}
+            safeSetStorage('kradio_active_preset', String(index));
+            safeSetStorage('kradio_station_url', preset.url);
 
             renderPresets();
             showToast(`Station [${preset.id}]: ${preset.name} (${preset.genre})`, 'info', 1800);
@@ -1351,14 +1487,14 @@
 
         function closeHelp() {
             helpModal.classList.remove('active');
-            try {
-                localStorage.setItem('kradio_tutorialSeen', '1');
-            } catch (e) {}
+            safeSetStorage('kradio_tutorialSeen', '1');
         }
 
         // Event Listeners
         btnPlay.addEventListener('click', togglePlay);
         btnStop.addEventListener('click', () => stopStream(true));
+        btnSave.addEventListener('click', quicksaveState);
+        btnLoad.addEventListener('click', quickloadState);
 
         btnClearUrl.addEventListener('click', () => {
             stationUrl.value = '';
@@ -1372,9 +1508,7 @@
                 showToast('Please enter a valid stream URL', 'warning');
                 return;
             }
-            try {
-                localStorage.setItem('kradio_station_url', url);
-            } catch (e) {}
+            safeSetStorage('kradio_station_url', url);
 
             const matchedIndex = PRESETS.findIndex(p => p.url === url);
             if (matchedIndex !== -1) {
@@ -1385,9 +1519,7 @@
                 displayStation.textContent = 'Custom Stream';
                 stationTag.textContent = 'DIRECT';
                 displayBitrate.textContent = 'Direct URL';
-                try {
-                    localStorage.setItem('kradio_active_preset', '-1');
-                } catch (e) {}
+                safeSetStorage('kradio_active_preset', '-1');
                 playStream();
             }
         });
@@ -1434,21 +1566,42 @@
         window.addEventListener('keydown', (e) => {
             const isInputFocused = document.activeElement === stationUrl;
 
-            // Global modal handling: F1 always works; ? / h / H only when not typing in URL box
-            if (e.key === 'F1' || (!isInputFocused && (e.key === '?' || e.key === 'h' || e.key === 'H'))) {
-                e.preventDefault();
-                if (helpModal.classList.contains('active')) {
+            // Global modal handling: Esc, Enter, Space dismisses Help modal
+            if (helpModal.classList.contains('active')) {
+                if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                    e.preventDefault();
                     closeHelp();
-                } else {
-                    openHelp();
+                    return;
+                }
+                if (e.key === 'F1' || (!isInputFocused && (e.key === '?' || e.key === 'h' || e.key === 'H'))) {
+                    e.preventDefault();
+                    closeHelp();
+                    return;
                 }
                 return;
             }
 
+            // Quicksave (F5) & Quickload (F9)
+            if (e.key === 'F5') {
+                e.preventDefault();
+                quicksaveState();
+                return;
+            }
+            if (e.key === 'F9') {
+                e.preventDefault();
+                quickloadState();
+                return;
+            }
+
+            // Help guide shortcut
+            if (e.key === 'F1' || (!isInputFocused && (e.key === '?' || e.key === 'h' || e.key === 'H'))) {
+                e.preventDefault();
+                openHelp();
+                return;
+            }
+
             if (e.key === 'Escape') {
-                if (helpModal.classList.contains('active')) {
-                    closeHelp();
-                } else if (isInputFocused) {
+                if (isInputFocused) {
                     stationUrl.blur();
                 }
                 return;
@@ -1502,54 +1655,57 @@
             }
         });
 
+        // Clean resource teardown on unload
+        window.addEventListener('beforeunload', () => {
+            stopSubcarrier();
+            if (audio) {
+                audio.pause();
+                audio.removeAttribute('src');
+            }
+        });
+
         // App Initialization
         window.addEventListener('DOMContentLoaded', () => {
             resizeCanvas();
             drawVisualizer();
 
             // Restore saved visualizer mode
-            try {
-                const savedMode = localStorage.getItem('kradio_viz_mode');
-                if (savedMode !== null) {
-                    const parsed = parseInt(savedMode, 10);
-                    if (!isNaN(parsed) && parsed >= 0 && parsed < VIZ_MODES.length) {
-                        vizMode = parsed;
-                        btnVizMode.textContent = VIZ_MODES[vizMode];
-                    }
+            const savedMode = safeGetStorage('kradio_viz_mode');
+            if (savedMode !== null) {
+                const parsed = parseInt(savedMode, 10);
+                if (!isNaN(parsed) && parsed >= 0 && parsed < VIZ_MODES.length) {
+                    vizMode = parsed;
+                    btnVizMode.textContent = VIZ_MODES[vizMode];
                 }
-            } catch (e) {}
+            }
 
             // Restore volume preference
             let savedVolume = 80;
-            try {
-                const storedVol = localStorage.getItem('kradio_volume');
-                if (storedVol !== null) {
-                    const parsed = parseInt(storedVol, 10);
-                    if (!isNaN(parsed) && parsed >= 0 && parsed <= 100) {
-                        savedVolume = parsed;
-                    }
+            const storedVol = safeGetStorage('kradio_volume');
+            if (storedVol !== null) {
+                const parsed = parseInt(storedVol, 10);
+                if (!isNaN(parsed) && parsed >= 0 && parsed <= 100) {
+                    savedVolume = parsed;
                 }
-            } catch (e) {}
+            }
             updateVolume(savedVolume);
 
             // Restore station / preset preference
             let presetIdx = 0;
-            try {
-                const storedPreset = localStorage.getItem('kradio_active_preset');
-                const storedUrl = localStorage.getItem('kradio_station_url');
-                if (storedPreset !== null) {
-                    const parsedPreset = parseInt(storedPreset, 10);
-                    if (parsedPreset >= 0 && parsedPreset < PRESETS.length) {
-                        presetIdx = parsedPreset;
-                    } else if (parsedPreset === -1 && storedUrl) {
-                        activePresetIndex = -1;
-                        stationUrl.value = storedUrl;
-                        displayStation.textContent = 'Custom Stream';
-                        stationTag.textContent = 'DIRECT';
-                        displayBitrate.textContent = 'Direct URL';
-                    }
+            const storedPreset = safeGetStorage('kradio_active_preset');
+            const storedUrl = safeGetStorage('kradio_station_url');
+            if (storedPreset !== null) {
+                const parsedPreset = parseInt(storedPreset, 10);
+                if (parsedPreset >= 0 && parsedPreset < PRESETS.length) {
+                    presetIdx = parsedPreset;
+                } else if (parsedPreset === -1 && storedUrl) {
+                    activePresetIndex = -1;
+                    stationUrl.value = storedUrl;
+                    displayStation.textContent = 'Custom Stream';
+                    stationTag.textContent = 'DIRECT';
+                    displayBitrate.textContent = 'Direct URL';
                 }
-            } catch (e) {}
+            }
 
             if (activePresetIndex !== -1) {
                 selectPreset(presetIdx, false);
@@ -1557,10 +1713,11 @@
                 renderPresets();
             }
 
-            // First-run tutorial onboarding or welcome toast
+            // First-run tutorial onboarding (only on fresh sessions, never interrupts restored states)
             try {
-                const tutorialSeen = localStorage.getItem('kradio_tutorialSeen');
-                if (!tutorialSeen) {
+                const tutorialSeen = safeGetStorage('kradio_tutorialSeen');
+                const hasQuicksave = !!safeGetStorage('kradio_quicksave');
+                if (!tutorialSeen && !hasQuicksave) {
                     openHelp();
                 } else {
                     showToast('📻 Tuned to preset. Press [Space] to play, [1-6] for stations, or [F1] for help.', 'info', 3200);

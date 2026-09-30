@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T19:02:00Z — kilo-expander: KHash (Forensic Lab, Shannon Entropy, SAC Avalanche & CRC16/Murmur3/xxHash)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 137.8 KB web / 17.9 KB native < 999 KB).
+  - Algorithmic Expansion: Added pure C & JS CRC16 (CCITT/IBM), MurmurHash3 (32-bit), xxHash32, and HMAC-MD5.
+  - Forensic Lab & Entropy: Implemented Shannon entropy H(X) bits/B, 256-bin byte frequency histogram, and Chi-Square metric.
+  - SAC & Avalanche: Added 1-bit perturbation simulator, Hamming distance counter, and bit-level diff matrix.
+  - Reverse Identifier: Added hash type detector with 1999 test vector reverse dictionary and diegetic carrier lock.
+  - Manifests & Verification: Added .sha1, BSD format, JSON, and CSV manifest generation and verification.
+  - Verification: MSVC clean (`KHash.exe` 17.9 KB); Vite clean in 296ms; security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T18:43:00Z — kilo-qa: KAudio (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Relocation & DSP Graph Sync)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 121.8 KB web / 23.0 KB native < 999 KB).
   - Quicksave & Load: Synchronized full state across F5/F9 (engine, soundbank, fmPreset, adsr, filter, effects, sequence grid, recordedEvents) with live DSP updates.

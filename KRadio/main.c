@@ -17,6 +17,8 @@ void* __cdecl memset(void* dest, int c, size_t count) {
 #define ID_BTN_PLAY     1
 #define ID_BTN_STOP     2
 #define ID_BTN_HELP     3
+#define ID_BTN_SAVE     4
+#define ID_BTN_LOAD     5
 #define ID_PRESET_1     101
 #define ID_PRESET_2     102
 #define ID_PRESET_3     103
@@ -29,6 +31,13 @@ typedef struct {
     const char* genre;
     const char* url;
 } StationPreset;
+
+typedef struct {
+    DWORD magic;        // 0x4441524B ('KRAD')
+    int activePreset;   // 0-5, or -1 for custom
+    BOOL isPlaying;     // TRUE or FALSE
+    char url[512];      // URL string
+} KRadioState;
 
 static const StationPreset g_presets[6] = {
     { "Subspace",     "Synthwave",    "https://radio.erb.pw/public/subspace" },
@@ -45,6 +54,8 @@ HWND hEditUrl = NULL;
 HWND hBtnPlay = NULL;
 HWND hBtnStop = NULL;
 HWND hBtnHelp = NULL;
+HWND hBtnSave = NULL;
+HWND hBtnLoad = NULL;
 HWND hBtnPresets[6] = {0};
 HWND hStatus = NULL;
 HWND hHint = NULL;
@@ -63,6 +74,8 @@ void ShowHelpDialog(HWND hwnd) {
         "  - [Space / P] Play: Tune into the current URL\n"
         "  - [S] Stop: Stop active audio stream\n"
         "  - [Enter]: Tune to stream when typing in URL field\n"
+        "  - [F5] Quicksave: Save active station & playback state\n"
+        "  - [F9] Quickload: Restore saved station & playback state\n"
         "  - [F1 / H]: Show this Help reference\n\n"
         "Station Presets:\n"
         "  [1] Subspace (Synthwave / Retrowave)\n"
@@ -114,6 +127,80 @@ void SelectPreset(int index) {
     PlayStream(g_hwndMain);
 }
 
+void QuicksaveState(HWND hwnd) {
+    KRadioState state;
+    memset(&state, 0, sizeof(state));
+    state.magic = 0x4441524B;
+    GetWindowTextA(hEditUrl, state.url, sizeof(state.url));
+    state.activePreset = -1;
+    for (int i = 0; i < 6; i++) {
+        const char* s1 = state.url;
+        const char* s2 = g_presets[i].url;
+        int match = 1;
+        while (*s1 || *s2) {
+            if (*s1 != *s2) { match = 0; break; }
+            s1++; s2++;
+        }
+        if (match) {
+            state.activePreset = i;
+            break;
+        }
+    }
+    state.isPlaying = g_isPlaying;
+
+    HANDLE hFile = CreateFileA("kradio_save.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, &state, sizeof(state), &written, NULL);
+        CloseHandle(hFile);
+
+        HANDLE hTut = CreateFileA("kradio_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTut != INVALID_HANDLE_VALUE) {
+            char d = '1';
+            WriteFile(hTut, &d, 1, &written, NULL);
+            CloseHandle(hTut);
+        }
+
+        if (hStatus) SetWindowTextA(hStatus, "Status: Quicksave saved [F5]");
+    } else {
+        if (hStatus) SetWindowTextA(hStatus, "Status: Error saving state");
+    }
+}
+
+void QuickloadState(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kradio_save.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        if (hStatus) SetWindowTextA(hStatus, "Status: No quicksave found [F5 to save]");
+        return;
+    }
+
+    KRadioState state;
+    memset(&state, 0, sizeof(state));
+    DWORD read = 0;
+    BOOL ok = ReadFile(hFile, &state, sizeof(state), &read, NULL);
+    CloseHandle(hFile);
+
+    if (ok && read == sizeof(state) && state.magic == 0x4441524B) {
+        SetWindowTextA(hEditUrl, state.url);
+        HANDLE hTut = CreateFileA("kradio_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTut != INVALID_HANDLE_VALUE) {
+            char d = '1';
+            DWORD written = 0;
+            WriteFile(hTut, &d, 1, &written, NULL);
+            CloseHandle(hTut);
+        }
+
+        if (state.isPlaying) {
+            PlayStream(hwnd);
+        } else {
+            StopStream();
+        }
+        if (hStatus) SetWindowTextA(hStatus, "Status: Quickload restored [F9]");
+    } else {
+        if (hStatus) SetWindowTextA(hStatus, "Status: Corrupt quicksave file");
+    }
+}
+
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == WM_KEYDOWN) {
         if (wParam == VK_RETURN) {
@@ -126,6 +213,14 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         }
         if (wParam == VK_F1) {
             ShowHelpDialog(GetParent(hwnd));
+            return 0;
+        }
+        if (wParam == VK_F5) {
+            QuicksaveState(GetParent(hwnd));
+            return 0;
+        }
+        if (wParam == VK_F9) {
+            QuickloadState(GetParent(hwnd));
             return 0;
         }
     }
@@ -214,15 +309,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hBtnPresets[5], WM_SETFONT, (WPARAM)hFontNormal, TRUE);
 
             // Playback Action Buttons
-            hBtnPlay = CreateWindowEx(0, "BUTTON", "Play [Space/P]",
+            hBtnPlay = CreateWindowEx(0, "BUTTON", "Play [Space]",
                 WS_CHILD | WS_VISIBLE,
-                16, 206, 130, 36, hwnd, (HMENU)ID_BTN_PLAY, NULL, NULL);
+                16, 206, 108, 36, hwnd, (HMENU)ID_BTN_PLAY, NULL, NULL);
             SendMessage(hBtnPlay, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             
             hBtnStop = CreateWindowEx(0, "BUTTON", "Stop [S]",
                 WS_CHILD | WS_VISIBLE,
-                154, 206, 110, 36, hwnd, (HMENU)ID_BTN_STOP, NULL, NULL);
+                130, 206, 82, 36, hwnd, (HMENU)ID_BTN_STOP, NULL, NULL);
             SendMessage(hBtnStop, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+
+            hBtnSave = CreateWindowEx(0, "BUTTON", "Save [F5]",
+                WS_CHILD | WS_VISIBLE,
+                218, 206, 110, 36, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
+            SendMessage(hBtnSave, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+
+            hBtnLoad = CreateWindowEx(0, "BUTTON", "Load [F9]",
+                WS_CHILD | WS_VISIBLE,
+                334, 206, 114, 36, hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
+            SendMessage(hBtnLoad, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             
             // Status Display
             hStatus = CreateWindowEx(0, "STATIC", "Status: Ready",
@@ -231,7 +336,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hStatus, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             
             // Shortcut Hint
-            hHint = CreateWindowEx(0, "STATIC", "Hotkeys: [1-6] Presets | [Space/P] Play | [S] Stop | [Enter] Tune | [F1] Help",
+            hHint = CreateWindowEx(0, "STATIC", "Hotkeys: [1-6] Presets | [Space] Play | [S] Stop | [F5] Save | [F9] Load | [F1] Help",
                 WS_CHILD | WS_VISIBLE,
                 16, 282, W - 32, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hHint, WM_SETFONT, (WPARAM)hFontSmall, TRUE);
@@ -243,6 +348,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_KEYDOWN: {
             if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
                 ShowHelpDialog(hwnd);
+            } else if (wParam == VK_F5) {
+                QuicksaveState(hwnd);
+            } else if (wParam == VK_F9) {
+                QuickloadState(hwnd);
             } else if (wParam >= '1' && wParam <= '6') {
                 SelectPreset((int)(wParam - '1'));
             } else if (wParam == VK_SPACE || wParam == 'P' || wParam == 'p') {
@@ -261,6 +370,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 StopStream();
             } else if (id == ID_BTN_HELP) {
                 ShowHelpDialog(hwnd);
+            } else if (id == ID_BTN_SAVE) {
+                QuicksaveState(hwnd);
+            } else if (id == ID_BTN_LOAD) {
+                QuickloadState(hwnd);
             } else if (id >= ID_PRESET_1 && id <= ID_PRESET_6) {
                 SelectPreset(id - ID_PRESET_1);
             }
@@ -307,12 +420,34 @@ void MainEntry() {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
+    // First-run tutorial check (only fires on fresh sessions, never interrupts restored states)
+    DWORD tutAttr = GetFileAttributesA("kradio_tutorial.dat");
+    DWORD saveAttr = GetFileAttributesA("kradio_save.dat");
+    if (tutAttr == INVALID_FILE_ATTRIBUTES && saveAttr == INVALID_FILE_ATTRIBUTES) {
+        ShowHelpDialog(hwnd);
+        HANDLE hTut = CreateFileA("kradio_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTut != INVALID_HANDLE_VALUE) {
+            char d = '1';
+            DWORD written = 0;
+            WriteFile(hTut, &d, 1, &written, NULL);
+            CloseHandle(hTut);
+        }
+    }
+
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         // Intercept global hotkeys before standard edit control dispatching
         if (msg.message == WM_KEYDOWN) {
             if (msg.wParam == VK_F1) {
                 ShowHelpDialog(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F5) {
+                QuicksaveState(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                QuickloadState(hwnd);
                 continue;
             }
             // If focus is NOT the edit control, process general accelerators

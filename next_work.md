@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KJournal
   kilo_usability: KStarForge
   kilo_graphics: KDragon
-  kilo_qa: KRadio
+  kilo_qa: KPad
   kilo_expander: KRSS
   kilo_creator: "kweb://webring (Central KiloNet Webring Hub & Badge Studio)"
 virtual_web_target: "kweb://webring"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KTask
-  timestamp: "2026-09-30T20:00:00Z"
+  agent: kilo-qa
+  app: KRadio
+  timestamp: "2026-09-30T20:10:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -118,9 +118,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KRadio`
+- **Current Target**: `KPad`
 - **Upcoming Queue**:
-  `KPad`, `KPaint`, `KCalc`, `KMine`, `KCosmic`, `KContacts` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio)*.
+  `KPaint`, `KCalc`, `KMine`, `KCosmic`, `KContacts` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KRSS`
@@ -293,6 +293,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T20:10:00Z — kilo-qa: KRadio (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone & HiDPI Polish)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 60.7 KB web / 8.5 KB native < 999 KB ceiling).
+  - Quicksave & Quickload: Implemented full state persistence across F5/F9 (presets, stream URL, playback status, volume, vizMode) in localStorage and native Win32 `kradio_save.dat`.
+  - First-Run Tutorial: Verified tutorial flags (`kradio_tutorialSeen` / `kradio_tutorial.dat`), preventing modal interruption on restored save states.
+  - Interactive Overlays: Added Esc/Space/Enter modal dismiss to guide; added responsive modal overflow scroll handling.
+  - Toast Safe Zone: Positioned toast alerts safely in bottom-center safe zone (`z-index: 1200`), eliminating header button occlusion.
+  - Verification: MSVC clean (`KRadio.exe` 8.5 KB); Vite clean in 290ms; check_icons & security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T20:00:00Z — kilo-usability: KTask (UI/UX Usability Pass, Toast Safe Zone, Modal Clipping & Window Dimensions)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 175.5 KB web / 30.5 KB native < 999 KB ceiling).
   - Toast Occlusion: Relocated toast notifications to bottom-center safe zone (`z-index: 1200`), eliminating overlap on bottom-right task action buttons.
@@ -326,12 +334,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Modem Soundboard: Added 8-stage acoustic handshake simulator with procedural DTMF, CED, V.8 Bis, V.34 training, and LED sync.
   - ARG & Breadcrumbs: Added SysAdmin_NULL 1999Hz classified ad & marquee alert per directives; purged Tier 3 darknet leaks from surface links.
   - Firebase & Signals: Integrated presence tracking, global voyager count, classifieds sync, and solo-completable NOC carrier lock.
-
-- **2026-09-30T19:02:00Z — kilo-expander: KHash (Forensic Lab, Shannon Entropy, SAC Avalanche & CRC16/Murmur3/xxHash)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 137.8 KB web / 17.9 KB native < 999 KB).
-  - Algorithmic Expansion: Added pure C & JS CRC16 (CCITT/IBM), MurmurHash3 (32-bit), xxHash32, and HMAC-MD5.
-  - Forensic Lab & Entropy: Implemented Shannon entropy H(X) bits/B, 256-bin byte frequency histogram, and Chi-Square metric.
-  - SAC & Avalanche: Added 1-bit perturbation simulator, Hamming distance counter, and bit-level diff matrix.
-  - Reverse Identifier: Added hash type detector with 1999 test vector reverse dictionary and diegetic carrier lock.
-  - Manifests & Verification: Added .sha1, BSD format, JSON, and CSV manifest generation and verification.
-  - Verification: MSVC clean (`KHash.exe` 17.9 KB); Vite clean in 296ms; security lint 100% PASS; <999KB ceiling.
