@@ -18,7 +18,7 @@
   "timer_enabled": false,
   "turns_executed": 47,
   "last_turn_timestamp": "2026-09-30T00:26:00Z",
-  "last_heartbeat": "2026-09-30T20:10:00+00:00",
-  "current_target": "KPad",
+  "last_heartbeat": "2026-09-30T20:10:15.918534+00:00",
+  "current_target": "KRadio",
   "remote_command": "none"
 }

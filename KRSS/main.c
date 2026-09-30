@@ -50,6 +50,9 @@ static int k_strcmp(const char* s1, const char* s2) {
 #define ID_BTN_SAVE         109
 #define ID_BTN_LOAD         110
 #define ID_STATUS_BAR       111
+#define ID_BTN_FILTER       112
+#define ID_BTN_EXPORT_CSV   113
+#define ID_BTN_EXPORT_TXT   114
 
 // Data Structures
 #define MAX_FEEDS 8
@@ -82,6 +85,7 @@ static int g_articleCount = 0;
 
 static int g_selectedFeed = 0;
 static int g_selectedArticle = -1;
+static int g_filterMode = 0; // 0 = All, 1 = Unread, 2 = Starred
 
 // Colors
 static COLORREF COLOR_BG = RGB(11, 15, 25);
@@ -109,7 +113,10 @@ static HWND g_hEditViewer = NULL;
 static HWND g_hBtnRefresh = NULL;
 static HWND g_hBtnMarkRead = NULL;
 static HWND g_hBtnStar = NULL;
+static HWND g_hBtnFilter = NULL;
 static HWND g_hBtnOpml = NULL;
+static HWND g_hBtnExportCsv = NULL;
+static HWND g_hBtnExportTxt = NULL;
 static HWND g_hBtnHelp = NULL;
 static HWND g_hBtnSave = NULL;
 static HWND g_hBtnLoad = NULL;
@@ -258,6 +265,9 @@ static void UpdateArticlesUI(void) {
     int itemIdx = 0;
     for (int i = 0; i < g_articleCount; i++) {
         if (g_articles[i].feedId == curFeedId) {
+            if (g_filterMode == 1 && g_articles[i].isRead) continue;
+            if (g_filterMode == 2 && !g_articles[i].isStarred) continue;
+
             char line[256];
             line[0] = 0;
             if (g_articles[i].isStarred) k_strcat(line, "[*] ");
@@ -424,23 +434,112 @@ static void ExportOPML(void) {
     }
 }
 
+static void ExportCSV(void) {
+    HANDLE hFile = CreateFileA("articles.csv", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char header[] = "ID,Feed,Category,Title,Date,Author,URL,Status\r\n";
+        DWORD written = 0;
+        WriteFile(hFile, header, (DWORD)k_strlen(header), &written, NULL);
+
+        for (int i = 0; i < g_articleCount; i++) {
+            char entry[512];
+            entry[0] = 0;
+            char idStr[16];
+            idStr[0] = '0' + (g_articles[i].id % 10);
+            idStr[1] = 0;
+            k_strcat(entry, "\"");
+            k_strcat(entry, idStr);
+            k_strcat(entry, "\",\"");
+            const char* feedTitle = "Syndicated";
+            const char* feedCat = "General";
+            for (int f = 0; f < g_feedCount; f++) {
+                if (g_feeds[f].id == g_articles[i].feedId) {
+                    feedTitle = g_feeds[f].title;
+                    feedCat = g_feeds[f].category;
+                    break;
+                }
+            }
+            k_strcat(entry, feedTitle);
+            k_strcat(entry, "\",\"");
+            k_strcat(entry, feedCat);
+            k_strcat(entry, "\",\"");
+            k_strcat(entry, g_articles[i].title);
+            k_strcat(entry, "\",\"");
+            k_strcat(entry, g_articles[i].date);
+            k_strcat(entry, "\",\"");
+            k_strcat(entry, g_articles[i].author);
+            k_strcat(entry, "\",\"");
+            k_strcat(entry, g_articles[i].url);
+            k_strcat(entry, "\",\"");
+            k_strcat(entry, g_articles[i].isRead ? "Read" : "Unread");
+            if (g_articles[i].isStarred) k_strcat(entry, " [Starred]");
+            k_strcat(entry, "\"\r\n");
+            WriteFile(hFile, entry, (DWORD)k_strlen(entry), &written, NULL);
+        }
+        CloseHandle(hFile);
+        MessageBoxA(g_hwnd, "Exported articles database to articles.csv successfully!", "CSV Export", MB_OK | MB_ICONINFORMATION);
+    }
+}
+
+static void ExportActiveArticleTxt(void) {
+    if (g_selectedArticle < 0 || g_selectedArticle >= g_articleCount) {
+        MessageBoxA(g_hwnd, "Please select an article before exporting text.", "Export Notice", MB_OK | MB_ICONWARNING);
+        return;
+    }
+    HANDLE hFile = CreateFileA("article_export.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        RSSArticle* a = &g_articles[g_selectedArticle];
+        char buffer[2048];
+        buffer[0] = 0;
+        k_strcat(buffer, "KRSS DISPATCH EXPORT\r\n====================\r\n\r\nTITLE: ");
+        k_strcat(buffer, a->title);
+        k_strcat(buffer, "\r\nAUTHOR: ");
+        k_strcat(buffer, a->author);
+        k_strcat(buffer, " | DATE: ");
+        k_strcat(buffer, a->date);
+        k_strcat(buffer, "\r\nURL: ");
+        k_strcat(buffer, a->url);
+        k_strcat(buffer, "\r\nSTATUS: ");
+        k_strcat(buffer, a->isStarred ? "[STARRED]" : "[STANDARD]");
+        k_strcat(buffer, "\r\n\r\nCONTENT:\r\n--------\r\n");
+        k_strcat(buffer, a->content);
+        k_strcat(buffer, "\r\n");
+
+        DWORD written = 0;
+        WriteFile(hFile, buffer, (DWORD)k_strlen(buffer), &written, NULL);
+        CloseHandle(hFile);
+        MessageBoxA(g_hwnd, "Active article exported to article_export.txt!", "Article Export", MB_OK | MB_ICONINFORMATION);
+    }
+}
+
 static void ShowHelpDialog(void) {
     MessageBoxA(g_hwnd,
-        "KRSS - Retro RSS & Atom Reader v1.0.0\n"
+        "KRSS - Retro RSS & Atom Reader v1.1.0\n"
         "---------------------------------------\n"
         "Navigation & Controls:\n"
         "• Left Pane: Select RSS Feed Channels\n"
         "• Top Right: Article Headlines (Click to read)\n"
         "• Lower Right: Full Article Viewing Pane\n\n"
+        "Toolbar & Exports:\n"
+        "• Fetch: Poll feeds and refresh display\n"
+        "• Mark Read: Mark active article as read (M)\n"
+        "• Star: Toggle Bookmark / Favorite (S)\n"
+        "• Filter: Cycle All / Unread / Starred (F)\n"
+        "• OPML: Export subscriptions.opml\n"
+        "• CSV: Export articles.csv database (C)\n"
+        "• Export TXT: Export article_export.txt (T)\n\n"
         "Keyboard Shortcuts:\n"
         "• F1 or H: Show this Help dialog\n"
         "• F5: Quicksave state (krss.dat)\n"
         "• F9: Quickload state (krss.dat)\n"
+        "• F: Cycle headline view filter\n"
+        "• C: Export articles to CSV\n"
+        "• T: Export active article to TXT\n"
         "• M: Mark active article as read\n"
         "• S: Toggle Star / Bookmark\n"
         "• R: Refresh / Fetch feeds\n"
-        "• Esc: Close active dialog or exit\n\n"
-        "Includes Project Echo classified leaks and vintage 1999 feeds.",
+        "• Esc: Exit application\n\n"
+        "Includes Project Echo telemetry and vintage 1999 feeds.",
         "KRSS Help & Documentation",
         MB_OK | MB_ICONINFORMATION);
 }
@@ -459,20 +558,26 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             g_hFontMono = CreateFontA(12, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "Consolas");
 
             // Toolbar Buttons
-            g_hBtnRefresh = CreateWindowA("BUTTON", "Fetch/Refresh", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                10, 10, 100, 26, hwnd, (HMENU)ID_BTN_REFRESH, NULL, NULL);
+            g_hBtnRefresh = CreateWindowA("BUTTON", "Fetch", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                10, 10, 65, 26, hwnd, (HMENU)ID_BTN_REFRESH, NULL, NULL);
             g_hBtnMarkRead = CreateWindowA("BUTTON", "Mark Read", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                116, 10, 90, 26, hwnd, (HMENU)ID_BTN_MARKREAD, NULL, NULL);
-            g_hBtnStar = CreateWindowA("BUTTON", "Star/Bookmark", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                212, 10, 105, 26, hwnd, (HMENU)ID_BTN_STAR, NULL, NULL);
-            g_hBtnOpml = CreateWindowA("BUTTON", "Export OPML", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                323, 10, 95, 26, hwnd, (HMENU)ID_BTN_EXPORT_OPML, NULL, NULL);
+                80, 10, 80, 26, hwnd, (HMENU)ID_BTN_MARKREAD, NULL, NULL);
+            g_hBtnStar = CreateWindowA("BUTTON", "Star", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                165, 10, 60, 26, hwnd, (HMENU)ID_BTN_STAR, NULL, NULL);
+            g_hBtnFilter = CreateWindowA("BUTTON", "Filter: All", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                230, 10, 95, 26, hwnd, (HMENU)ID_BTN_FILTER, NULL, NULL);
+            g_hBtnOpml = CreateWindowA("BUTTON", "OPML", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                330, 10, 65, 26, hwnd, (HMENU)ID_BTN_EXPORT_OPML, NULL, NULL);
+            g_hBtnExportCsv = CreateWindowA("BUTTON", "CSV", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                400, 10, 55, 26, hwnd, (HMENU)ID_BTN_EXPORT_CSV, NULL, NULL);
+            g_hBtnExportTxt = CreateWindowA("BUTTON", "Export TXT", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                460, 10, 85, 26, hwnd, (HMENU)ID_BTN_EXPORT_TXT, NULL, NULL);
             g_hBtnSave = CreateWindowA("BUTTON", "Save (F5)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                424, 10, 80, 26, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
+                550, 10, 75, 26, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
             g_hBtnLoad = CreateWindowA("BUTTON", "Load (F9)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                510, 10, 80, 26, hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
-            g_hBtnHelp = CreateWindowA("BUTTON", "Help (F1/H)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                596, 10, 90, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+                630, 10, 75, 26, hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
+            g_hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                710, 10, 75, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
             // Left Pane: Feeds Listbox
             g_hListFeeds = CreateWindowA("LISTBOX", NULL,
@@ -495,6 +600,16 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 10, 572, 900, 20, hwnd, (HMENU)ID_STATUS_BAR, NULL, NULL);
 
             // Set Fonts
+            SendMessage(g_hBtnRefresh, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessage(g_hBtnMarkRead, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessage(g_hBtnStar, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessage(g_hBtnFilter, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessage(g_hBtnOpml, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessage(g_hBtnExportCsv, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessage(g_hBtnExportTxt, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessage(g_hBtnSave, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessage(g_hBtnLoad, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
+            SendMessage(g_hBtnHelp, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
             SendMessage(g_hListFeeds, WM_SETFONT, (WPARAM)g_hFontNormal, TRUE);
             SendMessage(g_hListArticles, WM_SETFONT, (WPARAM)g_hFontBold, TRUE);
             SendMessage(g_hEditViewer, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
@@ -528,8 +643,19 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     UpdateArticlesUI();
                     DisplaySelectedArticle();
                 }
+            } else if (wmId == ID_BTN_FILTER) {
+                g_filterMode = (g_filterMode + 1) % 3;
+                if (g_filterMode == 0) SetWindowTextA(g_hBtnFilter, "Filter: All");
+                else if (g_filterMode == 1) SetWindowTextA(g_hBtnFilter, "Filter: Unread");
+                else SetWindowTextA(g_hBtnFilter, "Filter: Star");
+                UpdateArticlesUI();
+                DisplaySelectedArticle();
             } else if (wmId == ID_BTN_EXPORT_OPML) {
                 ExportOPML();
+            } else if (wmId == ID_BTN_EXPORT_CSV) {
+                ExportCSV();
+            } else if (wmId == ID_BTN_EXPORT_TXT) {
+                ExportActiveArticleTxt();
             } else if (wmId == ID_BTN_SAVE) {
                 SaveState();
             } else if (wmId == ID_BTN_LOAD) {
@@ -564,6 +690,15 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 return 0;
             } else if (wParam == VK_F9) {
                 LoadState();
+                return 0;
+            } else if (wParam == 'F' || wParam == 'f') {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_FILTER, 0), 0);
+                return 0;
+            } else if (wParam == 'C' || wParam == 'c') {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_EXPORT_CSV, 0), 0);
+                return 0;
+            } else if (wParam == 'T' || wParam == 't') {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_EXPORT_TXT, 0), 0);
                 return 0;
             } else if (wParam == 'M' || wParam == 'm') {
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_MARKREAD, 0), 0);

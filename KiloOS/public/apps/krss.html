@@ -836,29 +836,152 @@
       font-size: 12px;
     }
 
-    /* Toast Notification */
+    /* Toast Notification (Bottom-Center Safe Zone) */
     .toast {
       position: fixed;
-      top: 48px;
-      right: 20px;
+      bottom: 28px;
+      left: 50%;
       background: var(--card-bg);
       border: 1px solid var(--border-focus);
       color: var(--text);
-      padding: 8px 14px;
+      padding: 8px 16px;
       border-radius: 4px;
       font-size: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.6);
       z-index: 2000;
       pointer-events: auto;
       cursor: pointer;
       opacity: 0;
-      transform: translateY(-8px);
+      transform: translateX(-50%) translateY(8px);
       transition: opacity 0.2s, transform 0.2s;
     }
 
     .toast.show {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Presence Badge */
+    .presence-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-family: var(--font-mono);
+      padding: 2px 8px;
+      border-radius: 12px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid var(--success);
+      color: var(--success);
+      cursor: pointer;
+    }
+    .presence-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 5px var(--success);
+    }
+
+    /* Reading Progress Bar */
+    .reading-progress-track {
+      width: 100%;
+      height: 3px;
+      background: var(--border);
+      position: relative;
+      flex-shrink: 0;
+    }
+    .reading-progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      transition: width 0.1s ease-out;
+    }
+
+    /* Tags Bar & Chips */
+    .article-tags-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .tag-pill {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      padding: 2px 7px;
+      border-radius: 3px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .tag-pill:hover {
+      border-color: var(--accent);
+      background: var(--surface-hover);
+    }
+    .tag-btn-add {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      border: 1px dashed var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+    .tag-btn-add:hover {
+      color: var(--text);
+      border-color: var(--primary);
+    }
+
+    /* Research Scrapbook Clip Cards */
+    .scrapbook-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .scrapbook-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .scrapbook-quote {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text);
+      background: var(--surface);
+      padding: 6px 8px;
+      border-left: 3px solid var(--accent);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* Community Catalog Items */
+    .catalog-feed-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      gap: 10px;
+    }
+    .catalog-feed-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
     }
 
     /* Clean Themed Scrollbars */
@@ -923,6 +1046,42 @@
       }
     }
   </style>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+    const firebaseConfig = {
+      apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+      authDomain: "kiloappschat.firebaseapp.com",
+      databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+      projectId: "kiloappschat",
+      storageBucket: "kiloappschat.firebasestorage.app",
+      messagingSenderId: "290208566057",
+      appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+    };
+    try {
+      const fbApp = initializeApp(firebaseConfig);
+      const fbDb = getDatabase(fbApp);
+      window.fb = {
+        app: fbApp,
+        db: fbDb,
+        ref,
+        set,
+        get,
+        push,
+        onValue,
+        onChildAdded,
+        off,
+        serverTimestamp,
+        onDisconnect
+      };
+      if (window.initCommunityWire) {
+        window.initCommunityWire();
+      }
+    } catch (err) {
+      console.warn("Firebase initialization skipped or offline:", err);
+    }
+  </script>
 </head>
 <body>
 
@@ -932,16 +1091,20 @@
       <div class="brand-icon">📡</div>
       <div class="brand-title">
         <span>KRSS</span>
-        <span class="brand-badge">v1.0.0</span>
+        <span class="brand-badge">v1.1.0</span>
       </div>
+      <div class="presence-badge" id="netPresenceBadge" title="Live Global Readers on KiloNet"><span class="presence-dot"></span><span id="onlineCount">1</span> Online</div>
     </div>
 
     <div class="header-actions">
       <button class="btn btn-sm" id="btnToggleSidebar" title="Toggle Feeds Sidebar (B)">📂 Feeds</button>
       <button class="btn btn-primary btn-sm" id="btnRefresh" title="Fetch / Poll Feeds (R)">🔄 Fetch All</button>
       <button class="btn btn-sm" id="btnAddFeedModal" title="Subscribe to Feed (A)">➕ Add Feed</button>
+      <button class="btn btn-sm" id="btnBroadcastModal" title="Broadcast Dispatch to Global Wire (W)">📣 Broadcast</button>
+      <button class="btn btn-sm" id="btnCatalogModal" title="Browse Global Syndicate Catalog">🌐 Catalog</button>
+      <button class="btn btn-sm" id="btnScrapbookModal" title="View Research Scrapbook / Clips (C)">✂️ Clips</button>
       <button class="btn btn-sm" id="btnMarkAllRead" title="Mark Current View Read (Shift+M)">✓ Mark Read</button>
-      <button class="btn btn-sm" id="btnOpmlModal" title="OPML Import / Export">📁 OPML</button>
+      <button class="btn btn-sm" id="btnOpmlModal" title="Data Hub: OPML, JSON Feed & CSV">📁 Data Hub</button>
       <button class="btn btn-sm" id="btnSaveState" title="Quicksave State (F5)">💾 Save [F5]</button>
       <button class="btn btn-sm" id="btnLoadState" title="Quickload State (F9)">📂 Load [F9]</button>
 
@@ -979,10 +1142,13 @@
           <span style="margin-right: 6px; font-size: 11px;">🔍</span>
           <input type="text" id="inputSearch" placeholder="Filter headlines & content...">
         </div>
+        <select id="selectTagFilter" class="btn btn-sm" style="padding: 2px 4px; font-size: 11px; max-width: 105px;">
+          <option value="">All Tags</option>
+        </select>
         <div class="filter-pills">
           <button class="filter-pill active" data-filter="all">All</button>
-          <button class="filter-pill" data-filter="unread">Unread Only</button>
-          <button class="filter-pill" data-filter="starred">★ Starred</button>
+          <button class="filter-pill" data-filter="unread">Unread</button>
+          <button class="filter-pill" data-filter="starred">★ Star</button>
         </div>
       </div>
 
@@ -997,10 +1163,15 @@
         <div class="reader-toolbar-group">
           <button class="btn btn-sm" id="btnPrevArticle" title="Previous Article (K / Up)">◀ Prev</button>
           <button class="btn btn-sm" id="btnNextArticle" title="Next Article (J / Down)">Next ▶</button>
-          <button class="btn btn-sm" id="btnToggleRead" title="Toggle Read Status (M)">✓ Toggle Read</button>
-          <button class="btn btn-sm" id="btnToggleStar" title="Toggle Bookmark (S)">★ Bookmark</button>
-          <button class="btn btn-sm" id="btnOpenInKNet" title="Open Link in Simulated Web (O)">🌐 Open in KNet</button>
-          <button class="btn btn-sm" id="btnExportMarkdown" title="Export Article as Markdown">📝 Export MD</button>
+          <button class="btn btn-sm" id="btnToggleRead" title="Toggle Read Status (M)">✓ Read</button>
+          <button class="btn btn-sm" id="btnToggleStar" title="Toggle Bookmark (S)">★ Star</button>
+          <button class="btn btn-sm" id="btnSpeakArticle" title="Read Aloud via Synthesizer (P)">🗣️ Speak</button>
+          <button class="btn btn-sm" id="btnClipArticle" title="Clip Quote to Scrapbook (C)">✂️ Clip</button>
+          <button class="btn btn-sm" id="btnOpenInKNet" title="Open Link in Simulated Web (O)">🌐 KNet</button>
+          <button class="btn btn-sm" id="btnExportMarkdown" title="Export Article as Markdown">📝 MD</button>
+          <button class="btn btn-sm" id="btnExportCsv" title="Export Articles to CSV">📊 CSV</button>
+          <button class="btn btn-sm" id="btnExportJsonFeed" title="Export as JSON Feed 1.1">📜 JSON</button>
+          <button class="btn btn-sm" id="btnExportHtml" title="Export Standalone HTML Article">📄 HTML</button>
         </div>
         <div class="reader-toolbar-group">
           <button class="btn btn-sm btn-icon" id="btnZoomOut" title="Decrease font size (-)">A-</button>
@@ -1009,6 +1180,10 @@
           <button class="btn btn-sm btn-icon" id="btnZoomIn" title="Increase font size (+)">A+</button>
           <button class="btn btn-sm btn-icon" id="btnCopyText" title="Copy article text">📋 Copy</button>
         </div>
+      </div>
+
+      <div class="reading-progress-track">
+        <div class="reading-progress-bar" id="readingProgressBar"></div>
       </div>
 
       <div class="reader-content-scroll" id="readerScroll">
@@ -1027,8 +1202,10 @@
               <span class="reader-meta-item" id="articleFeedBadge">📡 <b id="articleFeedName"></b></span>
               <span class="reader-meta-item">✍️ <span id="articleAuthor"></span></span>
               <span class="reader-meta-item">🕒 <span id="articleDate"></span></span>
+              <span class="reader-meta-item">⏱️ <span id="articleReadingMetrics">1 min read</span></span>
               <span class="reader-meta-item">🔗 <a href="#" id="articleLink" target="_blank" rel="noopener noreferrer">Original Link</a></span>
             </div>
+            <div class="article-tags-bar" id="articleTagsBar"></div>
           </div>
           <div class="reader-body" id="articleBody"></div>
         </div>
@@ -1053,28 +1230,28 @@
   <div class="modal-overlay" id="modalSplash">
     <div class="modal-box splash-card">
       <div class="splash-logo">📡</div>
-      <div class="splash-title">KRSS v1.0.0</div>
+      <div class="splash-title">KRSS v1.1.0</div>
       <div class="splash-desc">
-        Sovereign Web 1.0 RSS, Atom & OPML Syndication Terminal.<br>
-        Aggregating retro dispatches, classified system telemetry, and live feeds within KiloOS.
+        Sovereign Web 1.0 RSS, Atom, JSON Feed & OPML Syndication Terminal.<br>
+        Aggregating retro dispatches, classified telemetry, and live peer wire within KiloOS.
       </div>
 
       <div class="splash-features">
         <div class="splash-feature-item">
           <div class="splash-feature-title">⚡ Multi-Standard Parsing</div>
-          <div>Deterministic XML/JSON parsing for RSS 0.91, 1.0, 2.0, and Atom 1.0 streams.</div>
+          <div>Deterministic XML & JSON parsing for RSS 0.91/2.0, Atom 1.0, and JSON Feed 1.1.</div>
         </div>
         <div class="splash-feature-item">
-          <div class="splash-feature-title">📁 OPML Subscription Hub</div>
-          <div>Full round-trip import and export of OPML 2.0 subscription trees and JSON feeds.</div>
+          <div class="splash-feature-title">🌐 KiloNet Community Wire</div>
+          <div>Live global dispatches and peer feed syndication powered by Firebase Realtime Database.</div>
         </div>
         <div class="splash-feature-item">
-          <div class="splash-feature-title">🌌 Project Echo Intercepts</div>
-          <div>Preloaded classified intercepts connecting to KMatrix, KHex, KSynth, and KNet.</div>
+          <div class="splash-feature-title">📁 Data Hub & Multi-Export</div>
+          <div>Round-trip OPML 2.0, JSON Feed 1.1, CSV database exports, and research notebooks.</div>
         </div>
         <div class="splash-feature-item">
-          <div class="splash-feature-title">💾 Sovereign Persistence</div>
-          <div>F5 Quicksave, F9 Quickload, customizable vintage themes, and audio synthesizer cues.</div>
+          <div class="splash-feature-title">✂️ Scrapbook & Voice Synthesizer</div>
+          <div>Clipping notebook, speech synthesis reader, reading time metrics, and tag taxonomy.</div>
         </div>
       </div>
 
@@ -1102,7 +1279,7 @@
       </div>
       <div class="modal-body">
         <div class="form-group">
-          <label for="inputFeedUrl">Feed URL (RSS / Atom / JSON Feed)</label>
+          <label for="inputFeedUrl">Feed URL (RSS / Atom / JSON Feed / kweb://)</label>
           <input type="text" id="inputFeedUrl" class="form-control" placeholder="https://... or kweb://...">
         </div>
         <div class="form-group">
@@ -1113,6 +1290,7 @@
           <label for="selectFeedCategory">Category Folder</label>
           <select id="selectFeedCategory" class="form-control">
             <option value="Tech & Computing">Tech & Computing</option>
+            <option value="Global Syndicate">Global Syndicate</option>
             <option value="Fleet Dispatches">Fleet Dispatches</option>
             <option value="Signal Intercepts">Signal Intercepts</option>
             <option value="Gaming & Demos">Gaming & Demos</option>
@@ -1121,11 +1299,16 @@
           </select>
         </div>
 
+        <div style="display:flex; align-items:center; gap:6px; margin: 4px 0;">
+          <input type="checkbox" id="checkShareToCatalog" checked>
+          <label for="checkShareToCatalog" style="font-size:11px; cursor:pointer;">Publish and share this feed to the Global Community Catalog</label>
+        </div>
+
         <div style="border-top: 1px dashed var(--border); margin: 6px 0;"></div>
 
         <div class="form-group">
-          <label for="inputRawXml">Or Paste Raw RSS/Atom XML (Offline / Test Mode)</label>
-          <textarea id="inputRawXml" class="form-control" placeholder="<rss version='2.0'><channel>..."></textarea>
+          <label for="inputRawXml">Or Paste Raw RSS/Atom XML / JSON Feed (Offline Mode)</label>
+          <textarea id="inputRawXml" class="form-control" placeholder="<rss version='2.0'>... or JSON Feed {...}"></textarea>
         </div>
       </div>
       <div class="modal-footer">
@@ -1135,39 +1318,138 @@
     </div>
   </div>
 
-  <!-- MODAL: OPML Import/Export -->
+  <!-- MODAL: Data Hub / OPML / JSON / CSV -->
   <div class="modal-overlay" id="modalOpml">
-    <div class="modal-box">
+    <div class="modal-box" style="max-width: 620px;">
       <div class="modal-header">
-        <div class="modal-title">📁 OPML Subscription Manager</div>
+        <div class="modal-title">📁 Data Hub: OPML, JSON Feed & CSV</div>
         <button class="modal-close" id="btnCloseOpml">✕</button>
       </div>
       <div class="modal-body">
         <div>
-          <b>Import Subscriptions or State:</b> Paste OPML XML or JSON below, or load a file from disk.
+          <b>Import Subscriptions or Feeds:</b> Paste OPML XML, JSON Feed 1.1, or state JSON below, or choose a file.
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
           <input type="file" id="fileOpmlInput" accept=".opml,.xml" style="display: none;">
-          <button class="btn btn-sm" id="btnBrowseOpml">📂 Choose OPML File...</button>
+          <button class="btn btn-sm" id="btnBrowseOpml">📂 Choose OPML/XML File...</button>
           <input type="file" id="fileJsonInput" accept=".json" style="display: none;">
-          <button class="btn btn-sm" id="btnBrowseJson">📂 Import JSON State...</button>
+          <button class="btn btn-sm" id="btnBrowseJson">📂 Import JSON Feed / State...</button>
           <button class="btn btn-sm btn-primary" id="btnParsePastedOpml">Import Pasted Content</button>
         </div>
-        <textarea id="textOpml" class="form-control" style="min-height: 120px;" placeholder="<opml version='2.0'>... or paste exported state JSON"></textarea>
+        <textarea id="textOpml" class="form-control" style="min-height: 110px;" placeholder="<opml version='2.0'>... or JSON Feed 1.1 {...} or state backup"></textarea>
 
         <div style="border-top: 1px dashed var(--border); margin: 6px 0;"></div>
 
         <div>
-          <b>Export Subscriptions & State:</b> Generate OPML manifest or download full state snapshot.
+          <b>Export Subscriptions & Databases:</b> Generate OPML manifest, JSON Feed 1.1, or CSV spreadsheet.
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button class="btn btn-sm" id="btnGenerateOpml">Generate OPML Manifest</button>
-          <button class="btn btn-sm" id="btnDownloadOpml">💾 Download .opml File</button>
-          <button class="btn btn-sm" id="btnExportJson">💾 Export State JSON</button>
+          <button class="btn btn-sm" id="btnGenerateOpml">Generate OPML</button>
+          <button class="btn btn-sm" id="btnDownloadOpml">💾 Download .opml</button>
+          <button class="btn btn-sm" id="btnGenerateJsonFeed">Generate JSON Feed</button>
+          <button class="btn btn-sm" id="btnDownloadJsonFeed">💾 Download .json Feed</button>
+          <button class="btn btn-sm" id="btnExportCsvAll">📊 Export Articles CSV</button>
+          <button class="btn btn-sm" id="btnExportJson">💾 Export Full State JSON</button>
         </div>
       </div>
       <div class="modal-footer">
         <button class="btn" id="btnCloseOpmlModal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Broadcast to Wire -->
+  <div class="modal-overlay" id="modalBroadcast">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">📣 Broadcast Dispatch to Global Wire</div>
+        <button class="modal-close" id="btnCloseBroadcast">✕</button>
+      </div>
+      <div class="modal-body">
+        <div>
+          <b>Transmit live news across KiloNet:</b> Your dispatch will propagate in real time to connected readers worldwide via Firebase Realtime Database.
+        </div>
+        <div class="form-group">
+          <label for="inputWireTitle">Headline Title</label>
+          <input type="text" id="inputWireTitle" class="form-control" placeholder="e.g. FLASH: New Subcarrier Telemetry Detected...">
+        </div>
+        <div style="display:flex; gap:8px;">
+          <div class="form-group" style="flex:1;">
+            <label for="inputWireAuthor">Author Handle</label>
+            <input type="text" id="inputWireAuthor" class="form-control" placeholder="Netizen_1999">
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label for="selectWireCategory">Category</label>
+            <select id="selectWireCategory" class="form-control">
+              <option value="Global Syndicate">Global Syndicate</option>
+              <option value="Signal Intercepts">Signal Intercepts</option>
+              <option value="Tech & Computing">Tech & Computing</option>
+              <option value="Gaming & Demos">Gaming & Demos</option>
+              <option value="Culture & News">Culture & News</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="inputWireTags">Tags (Comma-separated)</label>
+          <input type="text" id="inputWireTags" class="form-control" placeholder="wire, telemetry, retro, y2k">
+        </div>
+        <div class="form-group">
+          <label for="inputWireUrl">Source Link (Optional)</label>
+          <input type="text" id="inputWireUrl" class="form-control" placeholder="kweb://... or https://...">
+        </div>
+        <div class="form-group">
+          <label for="inputWireContent">Dispatch Content</label>
+          <textarea id="inputWireContent" class="form-control" style="min-height:90px;" placeholder="Write your retro dispatch or news bulletin here..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="btnCancelBroadcast">Cancel</button>
+        <button class="btn btn-primary" id="btnConfirmBroadcast">📡 Transmit Dispatch</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Community Catalog -->
+  <div class="modal-overlay" id="modalCatalog">
+    <div class="modal-box" style="max-width: 620px;">
+      <div class="modal-header">
+        <div class="modal-title">🌐 Global Syndicate Feed Catalog</div>
+        <button class="modal-close" id="btnCloseCatalog">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span><b>Community Feeds:</b> Discover channels shared by retro netizens.</span>
+          <button class="btn btn-sm" id="btnShareSubscriptionsToCatalog">📤 Share My Feeds</button>
+        </div>
+        <div id="catalogListContainer" style="display:flex; flex-direction:column; gap:8px; max-height:300px; overflow-y:auto;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="btnCloseCatalogModal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Research Scrapbook -->
+  <div class="modal-overlay" id="modalScrapbook">
+    <div class="modal-box" style="max-width: 640px;">
+      <div class="modal-header">
+        <div class="modal-title">✂️ Research Scrapbook & Notebook</div>
+        <button class="modal-close" id="btnCloseScrapbook">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+          <input type="text" id="inputScrapbookSearch" class="form-control" placeholder="Search saved clippings..." style="flex:1;">
+          <button class="btn btn-sm" id="btnExportScrapbookMd">💾 Export Notebook (.md)</button>
+          <button class="btn btn-sm" id="btnClearScrapbook">🗑️ Clear All</button>
+        </div>
+        <div id="scrapbookListContainer" style="display:flex; flex-direction:column; gap:8px; max-height:320px; overflow-y:auto;">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" id="btnCloseScrapbookModal">Close</button>
       </div>
     </div>
   </div>
@@ -1191,6 +1473,10 @@
           <div><b>S</b></div><div>Toggle Starred / Bookmark</div>
           <div><b>R</b></div><div>Poll / Fetch all feeds</div>
           <div><b>A</b></div><div>Open Add Feed dialog</div>
+          <div><b>W</b></div><div>Open Broadcast Wire dialog</div>
+          <div><b>C</b></div><div>Open Research Scrapbook</div>
+          <div><b>P</b></div><div>Read aloud via voice synthesizer</div>
+          <div><b>T</b></div><div>Add custom tag to active article</div>
           <div><b>O</b></div><div>Open article in KNet virtual browser</div>
           <div><b>+ / -</b></div><div>Zoom font size in / out (0 to reset)</div>
           <div><b>F5</b></div><div>Quicksave workstation state</div>
@@ -1204,8 +1490,9 @@
           • <b>RSS 0.91 & 2.0</b>: Standard XML channel format with &lt;item&gt; nodes.<br>
           • <b>RSS 1.0 (RDF)</b>: Dublin Core metadata and RDF item nodes.<br>
           • <b>Atom 1.0</b>: IETF RFC 4287 standard with &lt;entry&gt; and &lt;summary&gt; nodes.<br>
+          • <b>JSON Feed 1.1</b>: Modern jsonfeed.org format with full round-trip export.<br>
           • <b>OPML 2.0</b>: Outlines format for subscription aggregation and export.<br>
-          • <b>Virtual 1999 Web</b>: Interoperability with <code>kweb://</code> internal simulated URLs.
+          • <b>KiloNet Live Wire</b>: Real-time global syndication mesh over Firebase RTDB.
         </div>
 
         <div style="display:flex; align-items:center; gap:6px; margin-top:8px;">
@@ -1292,11 +1579,20 @@
 
     let feeds = [];
     let articles = [];
-    let activeFeedId = 'all'; // 'all', 'unread', 'starred', or numeric feed ID
+    let activeFeedId = 'all'; // 'all', 'unread', 'starred', or numeric/string feed ID
     let activeFilter = 'all'; // 'all', 'unread', 'starred'
     let selectedArticleId = null;
+    let selectedTag = '';
     let searchQuery = '';
     let zoomLevel = 14; // pixels
+    let isSpeaking = false;
+    let currentUtterance = null;
+    let sessionId = 'reader_' + Math.random().toString(36).substring(2, 9);
+    let onlineCount = 1;
+    let wireSubscribed = false;
+    let catalogSubscribed = false;
+    let globalCatalogFeeds = [];
+    const SCRAPBOOK_KEY = 'krss_scrapbook';
 
     // --- Default Preloaded Retro Feeds & Telemetry Transmissions ---
     const DEFAULT_FEEDS = [
@@ -1306,6 +1602,14 @@
         category: "Fleet Dispatches",
         url: "kweb://portal/rss/fleet.xml",
         icon: "🚀",
+        custom: false
+      },
+      {
+        id: "community_wire",
+        title: "🌐 KiloNet Community Wire",
+        category: "Global Syndicate",
+        url: "kweb://portal/syndicate/global_wire",
+        icon: "🌐",
         custom: false
       },
       {
@@ -1352,6 +1656,21 @@
 
     const DEFAULT_ARTICLES = [
       {
+        id: 901,
+        feedId: "community_wire",
+        title: "COMMUNITY WIRE: Welcome to KiloNet Live Syndication Mesh",
+        author: "Sysop_Mesh",
+        date: "1999-10-24 12:00",
+        url: "kweb://portal/syndicate/welcome",
+        snippet: "The global community wire connects active terminals worldwide via Firebase Realtime Database...",
+        content: `<h3>Welcome to the KiloNet Live Syndicate Wire!</h3>
+<p>This channel receives real-time broadcasts submitted by operators connecting to <code>kiloapps.web.app</code> across the world.</p>
+<p>Click <b>'📣 Broadcast'</b> in the top command bar to transmit your own news bulletins, scene releases, or radio observations directly onto the global wire.</p>`,
+        isRead: false,
+        isStarred: true,
+        tags: ["wire", "community", "mesh", "global"]
+      },
+      {
         id: 101,
         feedId: 1,
         title: "KiloOS Kernel Bulletin: Sub-Megabyte Architecture Verified Across Workstations",
@@ -1369,7 +1688,8 @@
 </ul>
 <p><i>System diagnostics report nominal bus activity across all operational sectors.</i></p>`,
         isRead: false,
-        isStarred: true
+        isStarred: true,
+        tags: ["kernel", "sub-megabyte", "compliance"]
       },
       {
         id: 102,
@@ -1390,7 +1710,8 @@
   <li><b>Native Win32 Parity:</b> Matching standalone Win32 C executable (KRSS.exe) compiled at just 17.5 KB!</li>
 </ul>`,
         isRead: true,
-        isStarred: false
+        isStarred: false,
+        tags: ["krss", "syndication", "xml", "atom"]
       },
       {
         id: 201,
@@ -1410,7 +1731,8 @@
 <p>Diagnostics indicate low-frequency acoustic harmonics matching <code>432 Hz</code> coupled with non-standard interrupt requests on IRQ 7. Subterranean relay nodes appear to be synchronizing.</p>
 <p>Further analysis requires cross-referencing memory offsets with diagnostic utilities.</p>`,
         isRead: false,
-        isStarred: true
+        isStarred: true,
+        tags: ["telemetry", "echo", "432hz", "anomaly"]
       },
       {
         id: 202,
@@ -1430,7 +1752,8 @@
 </ul>
 <p>Ensure your cryptographic checksums match <code>KHash</code> values before executing unauthorized binaries.</p>`,
         isRead: false,
-        isStarred: false
+        isStarred: false,
+        tags: ["darknet", "knet", "0x7f", "khash"]
       },
       {
         id: 301,
@@ -1444,7 +1767,8 @@
 <p><b>From the SlashNet desk:</b> Linus Torvalds announced the immediate availability of Linux kernel 2.2.13. This point release delivers key stability updates for TCP/IP stack windowing, NFS v3 locking improvements, and heightened Y2K audit verifications.</p>
 <p>With only 72 days remaining until the December 31 rollover, IT administrators are scrambling to verify BIOS firmware and database date fields. The consensus on IRC appears to be: <i>'Stock up on caffeinated sodas and ensure your tape backups are verified.'</i></p>`,
         isRead: false,
-        isStarred: false
+        isStarred: false,
+        tags: ["linux", "kernel", "y2k", "unix"]
       },
       {
         id: 302,
@@ -1458,7 +1782,8 @@
 <p>The Mozilla open source initiative, born from Netscape's historic source code release last year, has unveiled a new testing milestone of Gecko (formerly code-named NGLayout).</p>
 <p>Engineers report blistering layout speeds, full CSS level 1 compliance, and an architecture that avoids the bloat of proprietary HTML extensions. Early testing against the W3C test suite demonstrates unprecedented fidelity.</p>`,
         isRead: true,
-        isStarred: false
+        isStarred: false,
+        tags: ["gecko", "standards", "css1", "mozilla"]
       },
       {
         id: 401,
@@ -1472,7 +1797,8 @@
 <p><b>CAMBRIDGE, Mass. &mdash;</b> Across university campuses from MIT to Stanford, university network administrators are installing packet shapers and bandwidth quotas. The reason? A 19-year-old developer's software known as Trapster.</p>
 <p>By enabling direct peer-to-peer indexing of MP3 audio files, Trapster has turned every college dorm room into a localized broadcast station. Combined with portable hardware like the Diamond Rio PMP300, consumer listening habits are permanently shifting away from physical CD jewel cases.</p>`,
         isRead: false,
-        isStarred: false
+        isStarred: false,
+        tags: ["mp3", "trapster", "p2p", "audio"]
       },
       {
         id: 402,
@@ -1486,7 +1812,8 @@
 <p>With three months to go before the Year 2000, consumer interest in self-sufficient, disconnected computing has reached a fever pitch.</p>
 <p>From survivalist retreats in Montana to suburban basements, hobbyists are building isolated 486 workstations capable of running word processors, spreadsheets, and radio telemetry entirely off battery arrays and solar inverters.</p>`,
         isRead: true,
-        isStarred: false
+        isStarred: false,
+        tags: ["y2k", "hardware", "solar", "offline"]
       },
       {
         id: 501,
@@ -1505,7 +1832,8 @@
 </ul>
 <p>Whichever title you install, 3dfx Glide and OpenGL drivers are performing at their absolute historical peak.</p>`,
         isRead: false,
-        isStarred: true
+        isStarred: true,
+        tags: ["fps", "deathmatch", "tremor3", "surreal"]
       },
       {
         id: 601,
@@ -1519,7 +1847,8 @@
 <p><b>PEORIA, IL &mdash;</b> Local resident Arthur Pendelton announced Thursday that he has fewer than 75 days to finish designing a website that sells artisanal rubber bands over dial-up modems.</p>
 <p>"If I don't secure venture capital by Thanksgiving, someone in Silicon Valley will beat me to the punch," Pendelton remarked while adding a third animated flame GIF to his index.html page. "The 21st century waits for no man."</p>`,
         isRead: false,
-        isStarred: false
+        isStarred: false,
+        tags: ["dotcom", "culture", "humor", "1999"]
       }
     ];
 
@@ -1542,6 +1871,11 @@
           if (parsed.activeFeedId !== undefined) activeFeedId = parsed.activeFeedId;
           if (parsed.activeFilter !== undefined) activeFilter = parsed.activeFilter;
           if (parsed.selectedArticleId !== undefined) selectedArticleId = parsed.selectedArticleId;
+          if (parsed.selectedTag !== undefined) {
+            selectedTag = parsed.selectedTag;
+            const tagSelect = document.getElementById('selectTagFilter');
+            if (tagSelect) tagSelect.value = selectedTag;
+          }
           if (parsed.searchQuery !== undefined) {
             searchQuery = parsed.searchQuery;
             const searchInput = document.getElementById('inputSearch');
@@ -1601,13 +1935,14 @@
       try {
         const pane = document.querySelector('.pane-feeds');
         const payload = {
-          version: "1.0.0",
+          version: "1.1.0",
           timestamp: new Date().toISOString(),
           feeds: feeds,
           articles: articles,
           activeFeedId: activeFeedId,
           activeFilter: activeFilter,
           selectedArticleId: selectedArticleId,
+          selectedTag: selectedTag,
           searchQuery: searchQuery,
           soundEnabled: soundEnabled,
           theme: document.body.getAttribute('data-theme') || 'dark',
@@ -1813,6 +2148,624 @@
                 .replace(/'/g, "&apos;");
     }
 
+    // --- JSON Feed 1.1 Specification Engine ---
+    function parseJsonFeed(jsonString, sourceUrl = "") {
+      const data = JSON.parse(jsonString);
+      if (!data || (!data.items && !data.version)) {
+        throw new Error("Invalid JSON Feed structure");
+      }
+      const feedMeta = {
+        title: data.title || "Untitled JSON Feed",
+        description: data.description || "",
+        link: data.home_page_url || data.feed_url || sourceUrl
+      };
+      const items = (data.items || []).map((item, idx) => {
+        const title = item.title || "Untitled Post";
+        const content = item.content_html || item.content_text || `<p>${title}</p>`;
+        const tmp = document.createElement('div');
+        tmp.innerHTML = content;
+        const snippet = item.summary || (tmp.textContent.trim().slice(0, 140) + "...");
+        return {
+          id: Date.now() + idx + Math.floor(Math.random() * 1000),
+          title: title,
+          link: item.url || item.external_url || sourceUrl,
+          author: (item.author && item.author.name) ? item.author.name : (item.authors && item.authors[0] && item.authors[0].name ? item.authors[0].name : "JSON Contributor"),
+          date: item.date_published ? new Date(item.date_published).toLocaleDateString() : new Date().toLocaleDateString(),
+          snippet: snippet,
+          content: content,
+          isRead: false,
+          isStarred: false,
+          tags: Array.isArray(item.tags) ? item.tags : []
+        };
+      });
+      return { meta: feedMeta, items: items };
+    }
+
+    function parseFeedInput(inputString, sourceUrl = "") {
+      const trimmed = inputString.trim();
+      if (trimmed.startsWith('{')) {
+        return parseJsonFeed(trimmed, sourceUrl);
+      } else {
+        return parseFeedXml(trimmed, sourceUrl);
+      }
+    }
+
+    function generateJsonFeed(all = false) {
+      const list = all ? articles : getFilteredArticles();
+      const payload = {
+        version: "https://jsonfeed.org/version/1.1",
+        title: "KRSS Syndicate Export",
+        home_page_url: "kweb://portal/rss",
+        feed_url: "kweb://portal/rss/feed.json",
+        description: "Curated retro dispatches from KiloOS KRSS Workstation",
+        items: list.map(art => {
+          const feed = feeds.find(f => f.id === art.feedId) || { title: "Syndicated" };
+          return {
+            id: String(art.id),
+            url: art.url || "kweb://portal/article/" + art.id,
+            title: art.title,
+            content_html: art.content || `<p>${escapeXml(art.title)}</p>`,
+            summary: art.snippet || "",
+            date_published: art.date ? new Date(art.date).toISOString() : new Date().toISOString(),
+            author: { name: art.author || "Unknown" },
+            tags: art.tags || []
+          };
+        })
+      };
+      return JSON.stringify(payload, null, 2);
+    }
+
+    // --- CSV & Standalone HTML Article Exports ---
+    function exportArticlesCsv(all = false) {
+      const list = all ? articles : getFilteredArticles();
+      const headers = ["ID", "Feed", "Title", "Author", "Date", "Tags", "URL", "Snippet", "IsRead", "IsStarred"];
+      
+      const rows = list.map(art => {
+        const feed = feeds.find(f => f.id === art.feedId) || { title: "Syndicated" };
+        const tagsStr = (art.tags || []).join('; ');
+        const cleanSnippet = (art.snippet || '').replace(/[\r\n]+/g, ' ');
+        return [
+          art.id,
+          feed.title,
+          art.title,
+          art.author || '',
+          art.date || '',
+          tagsStr,
+          art.url || '',
+          cleanSnippet,
+          art.isRead ? "1" : "0",
+          art.isStarred ? "1" : "0"
+        ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(',');
+      });
+
+      const csvContent = "\uFEFF" + [headers.join(','), ...rows].join('\r\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `krss-articles-${all ? 'all' : 'filtered'}.csv`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast(`Exported ${list.length} articles to CSV! 📊`);
+    }
+
+    function exportArticleHtml() {
+      if (!selectedArticleId) return;
+      const art = articles.find(a => a.id === selectedArticleId);
+      if (!art) return;
+      const feed = feeds.find(f => f.id === art.feedId) || { title: "Syndicated" };
+
+      const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>${escapeXml(art.title)}</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; max-width: 800px; margin: 40px auto; padding: 0 20px; line-height: 1.6; background: #0f172a; color: #f8fafc; }
+    h1 { color: #f97316; border-bottom: 2px solid #334155; padding-bottom: 8px; }
+    .meta { font-size: 13px; color: #94a3b8; margin-bottom: 24px; }
+    .tags { margin-top: 10px; }
+    .tag { display: inline-block; background: #1e293b; color: #38bdf8; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-right: 6px; }
+    .content { background: #1e293b; padding: 20px; border-radius: 6px; border: 1px solid #334155; }
+    blockquote { border-left: 3px solid #f97316; margin: 0; padding-left: 12px; color: #cbd5e1; }
+    a { color: #38bdf8; }
+  </style>
+</head>
+<body>
+  <h1>${escapeXml(art.title)}</h1>
+  <div class="meta">
+    <span><b>Source:</b> ${escapeXml(feed.title)}</span> &bull; 
+    <span><b>Author:</b> ${escapeXml(art.author || 'Unknown')}</span> &bull; 
+    <span><b>Date:</b> ${escapeXml(art.date || 'Undated')}</span> &bull; 
+    <span><b>Link:</b> <a href="${art.url || '#'}">${escapeXml(art.url || 'Internal')}</a></span>
+    <div class="tags">
+      ${(art.tags || []).map(t => `<span class="tag">#${escapeXml(t)}</span>`).join(' ')}
+    </div>
+  </div>
+  <div class="content">
+    ${sanitizeArticleHtml(art.content || `<p>${escapeXml(art.title)}</p>`)}
+  </div>
+</body>
+</html>`;
+
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${art.title.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 32)}.html`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast("Article exported as standalone HTML! 📄");
+    }
+
+    function exportSingleArticleJsonFeed() {
+      if (!selectedArticleId) return;
+      const art = articles.find(a => a.id === selectedArticleId);
+      if (!art) return;
+      const feed = feeds.find(f => f.id === art.feedId) || { title: "Syndicated" };
+      const itemJson = {
+        version: "https://jsonfeed.org/version/1.1",
+        title: feed.title,
+        items: [{
+          id: String(art.id),
+          url: art.url || "",
+          title: art.title,
+          content_html: art.content || "",
+          summary: art.snippet || "",
+          date_published: art.date || "",
+          author: { name: art.author || "Unknown" },
+          tags: art.tags || []
+        }]
+      };
+      const blob = new Blob([JSON.stringify(itemJson, null, 2)], { type: 'application/json;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${art.title.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 32)}-feed.json`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast("Exported single article JSON Feed! 📜");
+    }
+
+    // --- Research Scrapbook & Notebook Engine ---
+    function loadScrapbook() {
+      try {
+        const raw = localStorage.getItem(SCRAPBOOK_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveScrapbook(clips) {
+      try {
+        localStorage.setItem(SCRAPBOOK_KEY, JSON.stringify(clips));
+      } catch (e) {}
+    }
+
+    function clipCurrentArticle() {
+      if (!selectedArticleId) {
+        showToast("Select an article first to clip quotes.", "warning");
+        return;
+      }
+      const art = articles.find(a => a.id === selectedArticleId);
+      if (!art) return;
+      const feed = feeds.find(f => f.id === art.feedId) || { title: "Syndicated" };
+
+      let quote = window.getSelection ? window.getSelection().toString().trim() : '';
+      if (!quote) {
+        quote = art.snippet || (art.content ? art.content.replace(/<[^>]+>/g, ' ').slice(0, 180) + '...' : art.title);
+      }
+
+      const clips = loadScrapbook();
+      const newClip = {
+        id: Date.now(),
+        articleId: art.id,
+        articleTitle: art.title,
+        feedTitle: feed.title,
+        url: art.url || '',
+        quote: quote,
+        timestamp: new Date().toLocaleString(),
+        tags: art.tags || []
+      };
+
+      clips.unshift(newClip);
+      saveScrapbook(clips);
+      playSoundEffect('save');
+      showToast("Clipped quote to Research Scrapbook! ✂️");
+      renderScrapbookList();
+    }
+
+    function renderScrapbookList(query = '') {
+      const container = document.getElementById('scrapbookListContainer');
+      if (!container) return;
+      container.innerHTML = '';
+      const clips = loadScrapbook();
+
+      const filtered = query.trim() 
+        ? clips.filter(c => c.quote.toLowerCase().includes(query.toLowerCase()) || c.articleTitle.toLowerCase().includes(query.toLowerCase()))
+        : clips;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:12px;">No research clippings yet. Highlight article text and click <b>'✂️ Clip'</b> or press <b>C</b> to save quotes!</div>`;
+        return;
+      }
+
+      filtered.forEach(clip => {
+        const card = document.createElement('div');
+        card.className = 'scrapbook-card';
+        card.innerHTML = `
+          <div class="scrapbook-card-header">
+            <span><b>${escapeXml(clip.articleTitle)}</b> &bull; ${escapeXml(clip.feedTitle)}</span>
+            <span>${clip.timestamp}</span>
+          </div>
+          <div class="scrapbook-quote">"${escapeXml(clip.quote)}"</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px;">
+            <div>
+              ${(clip.tags || []).map(t => `<span class="tag-pill" style="font-size:10px;">#${escapeXml(t)}</span>`).join(' ')}
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn btn-sm btn-copy-clip" style="font-size:10px;">📋 Copy</button>
+              <button class="btn btn-sm btn-del-clip" style="font-size:10px; color:var(--danger);">✕ Delete</button>
+            </div>
+          </div>
+        `;
+
+        card.querySelector('.btn-copy-clip').onclick = () => {
+          navigator.clipboard.writeText(`"${clip.quote}" — ${clip.articleTitle} (${clip.feedTitle})`).then(() => {
+            showToast("Clip copied to clipboard!");
+          });
+        };
+
+        card.querySelector('.btn-del-clip').onclick = () => {
+          const updated = clips.filter(c => c.id !== clip.id);
+          saveScrapbook(updated);
+          playSoundEffect('click');
+          renderScrapbookList(query);
+          showToast("Clip deleted.");
+        };
+
+        container.appendChild(card);
+      });
+    }
+
+    function exportScrapbookMarkdown() {
+      const clips = loadScrapbook();
+      if (clips.length === 0) {
+        showToast("Scrapbook is empty.", "warning");
+        return;
+      }
+      let md = `# KRSS Research Scrapbook & Notebook\n\nGenerated: ${new Date().toLocaleString()}\nTotal Clips: ${clips.length}\n\n---\n\n`;
+      clips.forEach((c, idx) => {
+        md += `### ${idx + 1}. ${c.articleTitle}\n`;
+        md += `**Source:** ${c.feedTitle}  \n`;
+        if (c.url) md += `**Link:** [${c.url}](${c.url})  \n`;
+        md += `**Date Clipped:** ${c.timestamp}  \n`;
+        if (c.tags && c.tags.length > 0) md += `**Tags:** ${c.tags.map(t => `#${t}`).join(', ')}  \n`;
+        md += `\n> ${c.quote.replace(/\n/g, '\n> ')}\n\n---\n\n`;
+      });
+
+      const blob = new Blob([md], { type: 'text/markdown;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'krss-research-scrapbook.md';
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast("Exported Research Scrapbook to Markdown! 📝");
+    }
+
+    // --- Firebase Realtime Database: Community Wire & Global Catalog ---
+    window.initCommunityWire = function() {
+      if (!window.fb || !window.fb.db) return;
+      const db = window.fb.db;
+      const ref = window.fb.ref;
+      const set = window.fb.set;
+      const onValue = window.fb.onValue;
+      const onChildAdded = window.fb.onChildAdded;
+      const serverTimestamp = window.fb.serverTimestamp;
+      const onDisconnect = window.fb.onDisconnect;
+
+      try {
+        // Presence tracking
+        const myPresenceRef = ref(db, `multiplayer/krss/presence/${sessionId}`);
+        set(myPresenceRef, {
+          active: true,
+          joined: serverTimestamp ? serverTimestamp() : Date.now(),
+          client: "KRSS v1.1.0"
+        });
+        if (onDisconnect) {
+          onDisconnect(myPresenceRef).remove();
+        }
+
+        const presenceListRef = ref(db, 'multiplayer/krss/presence');
+        onValue(presenceListRef, (snapshot) => {
+          if (snapshot.exists()) {
+            onlineCount = Object.keys(snapshot.val()).length;
+          } else {
+            onlineCount = 1;
+          }
+          const badge = document.getElementById('onlineCount');
+          if (badge) badge.textContent = onlineCount;
+        });
+
+        // Wire dispatches stream
+        if (!wireSubscribed) {
+          wireSubscribed = true;
+          const dispatchesRef = ref(db, 'multiplayer/krss/dispatches');
+          onChildAdded(dispatchesRef, (snapshot) => {
+            const val = snapshot.val();
+            if (!val) return;
+            const remoteId = 'wire_' + snapshot.key;
+            if (!articles.find(a => a.id === remoteId || (a.title === val.title && a.date === val.date))) {
+              articles.unshift({
+                id: remoteId,
+                feedId: "community_wire",
+                title: val.title || "Untitled Wire Dispatch",
+                author: val.author || "Anonymous Netizen",
+                date: val.date || new Date().toLocaleString(),
+                url: val.url || "kweb://portal/syndicate/wire",
+                snippet: (val.content || '').slice(0, 140) + '...',
+                content: `<p><b>[GLOBAL WIRE BROADCAST]</b></p><p>${escapeXml(val.content || '')}</p>`,
+                isRead: false,
+                isStarred: false,
+                tags: Array.isArray(val.tags) ? val.tags : (typeof val.tags === 'string' ? val.tags.split(',').map(t => t.trim().toLowerCase()) : ['wire'])
+              });
+              renderFeedsList();
+              renderArticlesList();
+              populateTagFilterOptions();
+            }
+          });
+        }
+
+        // Global feed catalog stream
+        if (!catalogSubscribed) {
+          catalogSubscribed = true;
+          const catalogRef = ref(db, 'multiplayer/krss/catalog');
+          onValue(catalogRef, (snapshot) => {
+            if (snapshot.exists()) {
+              const val = snapshot.val();
+              globalCatalogFeeds = Object.values(val);
+              renderCatalogList();
+            }
+          });
+        }
+
+        // Diegetic ARG signal heartbeat
+        set(ref(db, 'arg/signals/krss'), {
+          lastSeen: Date.now(),
+          freq: "432Hz",
+          node: "0x10199904",
+          status: "ONLINE"
+        });
+
+      } catch (err) {
+        console.warn("Community wire connection error:", err);
+      }
+    };
+
+    function broadcastWireDispatch() {
+      const titleInput = document.getElementById('inputWireTitle');
+      const authorInput = document.getElementById('inputWireAuthor');
+      const categoryInput = document.getElementById('selectWireCategory');
+      const tagsInput = document.getElementById('inputWireTags');
+      const urlInput = document.getElementById('inputWireUrl');
+      const contentInput = document.getElementById('inputWireContent');
+
+      const title = titleInput ? titleInput.value.trim() : '';
+      const author = authorInput ? authorInput.value.trim() : 'Anonymous Netizen';
+      const category = categoryInput ? categoryInput.value : 'Global Syndicate';
+      const rawTags = tagsInput ? tagsInput.value.trim() : '';
+      const sourceUrl = urlInput ? urlInput.value.trim() : 'kweb://portal/syndicate/wire';
+      const content = contentInput ? contentInput.value.trim() : '';
+
+      if (!title || !content) {
+        showToast("Please enter both a Headline Title and Content.", "warning");
+        return;
+      }
+
+      const tagsArray = rawTags ? rawTags.split(',').map(t => t.trim().toLowerCase()).filter(Boolean) : ['wire'];
+
+      const dispatchObj = {
+        title: title,
+        author: author || 'Anonymous Netizen',
+        category: category,
+        tags: tagsArray,
+        url: sourceUrl,
+        content: content,
+        date: new Date().toLocaleString(),
+        timestamp: Date.now()
+      };
+
+      // Push to Firebase RTDB if available
+      if (window.fb && window.fb.db && window.fb.push) {
+        try {
+          const dispatchesRef = window.fb.ref(window.fb.db, 'multiplayer/krss/dispatches');
+          window.fb.push(dispatchesRef, dispatchObj);
+        } catch (e) {
+          console.warn("Firebase push failed:", e);
+        }
+      }
+
+      // Add to local articles immediately
+      articles.unshift({
+        id: 'wire_local_' + Date.now(),
+        feedId: "community_wire",
+        title: dispatchObj.title,
+        author: dispatchObj.author,
+        date: dispatchObj.date,
+        url: dispatchObj.url,
+        snippet: dispatchObj.content.slice(0, 140) + '...',
+        content: `<p><b>[GLOBAL WIRE BROADCAST]</b></p><p>${escapeXml(dispatchObj.content)}</p>`,
+        isRead: false,
+        isStarred: true,
+        tags: tagsArray
+      });
+
+      saveWorkstationState(true);
+      closeModal('modalBroadcast');
+      renderFeedsList();
+      renderArticlesList();
+      populateTagFilterOptions();
+      playSoundEffect('toast');
+      showToast("Dispatch transmitted to KiloNet Global Wire! 📡");
+
+      if (titleInput) titleInput.value = '';
+      if (contentInput) contentInput.value = '';
+      if (tagsInput) tagsInput.value = '';
+    }
+
+    function renderCatalogList() {
+      const container = document.getElementById('catalogListContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (!globalCatalogFeeds || globalCatalogFeeds.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:12px;">No community feeds indexed yet. Be the first to share subscriptions!</div>`;
+        return;
+      }
+
+      globalCatalogFeeds.forEach(item => {
+        const exists = feeds.some(f => f.url && f.url.toLowerCase() === (item.url || '').toLowerCase());
+        const card = document.createElement('div');
+        card.className = 'catalog-feed-item';
+        card.innerHTML = `
+          <div class="catalog-feed-info">
+            <span style="font-weight:700; color:var(--text); font-size:12px;">${item.icon || '📡'} ${escapeXml(item.title)}</span>
+            <span style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono);">${escapeXml(item.url)}</span>
+            <span style="font-size:10px; color:var(--accent);">${escapeXml(item.category || 'Global Syndicate')}</span>
+          </div>
+          <div>
+            ${exists 
+              ? `<button class="btn btn-sm" disabled style="opacity:0.6; font-size:11px;">Subscribed ✓</button>`
+              : `<button class="btn btn-sm btn-primary btn-sub-catalog" style="font-size:11px;">+ Subscribe</button>`
+            }
+          </div>
+        `;
+
+        const subBtn = card.querySelector('.btn-sub-catalog');
+        if (subBtn) {
+          subBtn.onclick = () => {
+            feeds.push({
+              id: Date.now() + Math.floor(Math.random() * 1000),
+              title: item.title,
+              category: item.category || 'Global Syndicate',
+              url: item.url,
+              icon: item.icon || '📡',
+              custom: true
+            });
+            saveWorkstationState(true);
+            renderFeedsList();
+            renderCatalogList();
+            playSoundEffect('star');
+            showToast(`Subscribed to '${item.title}' from Global Catalog!`);
+          };
+        }
+
+        container.appendChild(card);
+      });
+    }
+
+    function shareSubscriptionsToCatalog() {
+      if (!window.fb || !window.fb.db || !window.fb.set) {
+        showToast("Community Wire is currently offline or connecting.", "warning");
+        return;
+      }
+
+      try {
+        const sharable = feeds.filter(f => f.custom || f.id === 1 || f.id === 3 || f.id === 4);
+        sharable.forEach(f => {
+          const key = (f.title || 'feed').replace(/[^a-zA-Z0-9_-]/g, '_');
+          window.fb.set(window.fb.ref(window.fb.db, `multiplayer/krss/catalog/${key}`), {
+            title: f.title,
+            category: f.category,
+            url: f.url,
+            icon: f.icon || '📡',
+            sharedAt: Date.now()
+          });
+        });
+        showToast("Shared subscription feeds to Global Syndicate Catalog! 🌐");
+      } catch (err) {
+        showToast("Sharing error: " + err.message, "danger");
+      }
+    }
+
+    // --- Web Speech API Synthesizer ---
+    function toggleSpeech() {
+      if (isSpeaking) {
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        isSpeaking = false;
+        updateSpeechButton();
+        showToast("Speech stopped.");
+        return;
+      }
+      if (!selectedArticleId) {
+        showToast("Select an article first.", "warning");
+        return;
+      }
+      const art = articles.find(a => a.id === selectedArticleId);
+      if (!art) return;
+
+      if (!('speechSynthesis' in window)) {
+        showToast("Web Speech API not supported in this browser.", "warning");
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+      const rawBody = (art.content || art.snippet || '').replace(/<[^>]+>/g, ' ');
+      const speechText = `${art.title}. From ${art.author || 'syndicated dispatch'}. ${rawBody}`;
+
+      currentUtterance = new SpeechSynthesisUtterance(speechText);
+      currentUtterance.rate = 1.0;
+      currentUtterance.pitch = 1.0;
+
+      currentUtterance.onstart = () => {
+        isSpeaking = true;
+        updateSpeechButton();
+      };
+      currentUtterance.onend = () => {
+        isSpeaking = false;
+        updateSpeechButton();
+      };
+      currentUtterance.onerror = () => {
+        isSpeaking = false;
+        updateSpeechButton();
+      };
+
+      window.speechSynthesis.speak(currentUtterance);
+      showToast("Speech Synthesizer reading article... (Press P to pause)");
+    }
+
+    function updateSpeechButton() {
+      const btn = document.getElementById('btnSpeakArticle');
+      if (btn) {
+        btn.textContent = isSpeaking ? '⏹️ Stop' : '🗣️ Speak';
+        btn.classList.toggle('active', isSpeaking);
+      }
+    }
+
+    // --- Tag Taxonomy & Filtering ---
+    function populateTagFilterOptions() {
+      const select = document.getElementById('selectTagFilter');
+      if (!select) return;
+      const allTags = new Set();
+      articles.forEach(a => {
+        if (Array.isArray(a.tags)) {
+          a.tags.forEach(t => allTags.add(t));
+        }
+      });
+      const sorted = [...allTags].sort();
+      const current = select.value || selectedTag;
+      select.innerHTML = '<option value="">All Tags</option>';
+      sorted.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t;
+        opt.textContent = `#${t}`;
+        if (t === current) opt.selected = true;
+        select.appendChild(opt);
+      });
+    }
+
     // --- UI Renderers ---
 
     function getUnreadCount(feedId = null) {
@@ -1925,6 +2878,11 @@
         list = list.filter(a => !a.isRead);
       } else if (activeFilter === 'starred') {
         list = list.filter(a => a.isStarred);
+      }
+
+      // Filter by tag selection
+      if (selectedTag) {
+        list = list.filter(a => Array.isArray(a.tags) && a.tags.includes(selectedTag));
       }
 
       // Filter by search query
@@ -2062,6 +3020,58 @@
 
       const readBtn = document.getElementById('btnToggleRead');
       readBtn.textContent = art.isRead ? '✓ Mark Unread' : '✓ Mark Read';
+
+      // Update reading metrics
+      const rawText = (art.content || art.snippet || '').replace(/<[^>]+>/g, ' ');
+      const words = rawText.trim().split(/\s+/).filter(Boolean).length;
+      const readMin = Math.max(1, Math.ceil(words / 180));
+      const metricsEl = document.getElementById('articleReadingMetrics');
+      if (metricsEl) metricsEl.textContent = `${readMin} min read (${words} words)`;
+
+      // Tags rendering
+      const tagsBar = document.getElementById('articleTagsBar');
+      if (tagsBar) {
+        tagsBar.innerHTML = '';
+        const currentTags = Array.isArray(art.tags) ? art.tags : [];
+        currentTags.forEach(tag => {
+          const pill = document.createElement('span');
+          pill.className = 'tag-pill';
+          pill.textContent = `#${tag}`;
+          pill.title = `Filter by #${tag}`;
+          pill.onclick = () => {
+            selectedTag = (selectedTag === tag) ? '' : tag;
+            const sel = document.getElementById('selectTagFilter');
+            if (sel) sel.value = selectedTag;
+            renderArticlesList();
+          };
+          tagsBar.appendChild(pill);
+        });
+        const addBtn = document.createElement('button');
+        addBtn.className = 'tag-btn-add';
+        addBtn.textContent = '+ Add Tag';
+        addBtn.title = 'Add tag to article';
+        addBtn.onclick = () => {
+          const newTag = prompt("Enter tag name (e.g. tech, retro, hardware):");
+          if (newTag && newTag.trim()) {
+            const clean = newTag.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+            if (clean) {
+              if (!art.tags) art.tags = [];
+              if (!art.tags.includes(clean)) {
+                art.tags.push(clean);
+                saveWorkstationState(true);
+                populateTagFilterOptions();
+                renderReadingPane(art);
+                showToast(`Tag #${clean} added.`);
+              }
+            }
+          }
+        };
+        tagsBar.appendChild(addBtn);
+      }
+
+      // Reset reading progress bar
+      const pBar = document.getElementById('readingProgressBar');
+      if (pBar) pBar.style.width = '0%';
 
       // Sanitize and set content safely
       const bodyEl = document.getElementById('articleBody');
@@ -2284,6 +3294,23 @@
       document.getElementById('btnMarkAllRead').onclick = markCurrentViewRead;
       document.getElementById('btnAddFeedModal').onclick = () => openModal('modalAddFeed');
       document.getElementById('btnAddFeedQuick').onclick = () => openModal('modalAddFeed');
+      document.getElementById('btnBroadcastModal').onclick = () => openModal('modalBroadcast');
+      document.getElementById('btnCatalogModal').onclick = () => {
+        renderCatalogList();
+        openModal('modalCatalog');
+      };
+      document.getElementById('btnScrapbookModal').onclick = () => {
+        renderScrapbookList();
+        openModal('modalScrapbook');
+      };
+      const presenceBadge = document.getElementById('netPresenceBadge');
+      if (presenceBadge) {
+        presenceBadge.onclick = () => {
+          renderCatalogList();
+          openModal('modalCatalog');
+        };
+      }
+
       document.getElementById('btnOpmlModal').onclick = () => {
         document.getElementById('textOpml').value = generateOpmlXml();
         openModal('modalOpml');
@@ -2323,14 +3350,40 @@
         renderArticlesList();
       };
 
+      // Tag filter dropdown
+      const tagSelect = document.getElementById('selectTagFilter');
+      if (tagSelect) {
+        tagSelect.onchange = (e) => {
+          selectedTag = e.target.value;
+          saveWorkstationState(true);
+          renderArticlesList();
+        };
+      }
+
       // Reading Toolbar
       document.getElementById('btnPrevArticle').onclick = () => navigateArticles(-1);
       document.getElementById('btnNextArticle').onclick = () => navigateArticles(1);
       document.getElementById('btnToggleRead').onclick = toggleReadStatus;
       document.getElementById('btnToggleStar').onclick = toggleStarStatus;
+      document.getElementById('btnSpeakArticle').onclick = toggleSpeech;
+      document.getElementById('btnClipArticle').onclick = clipCurrentArticle;
       document.getElementById('btnOpenInKNet').onclick = openArticleInKNet;
       document.getElementById('btnExportMarkdown').onclick = exportArticleMarkdown;
+      document.getElementById('btnExportCsv').onclick = () => exportArticlesCsv(false);
+      document.getElementById('btnExportJsonFeed').onclick = exportSingleArticleJsonFeed;
+      document.getElementById('btnExportHtml').onclick = exportArticleHtml;
       document.getElementById('btnCopyText').onclick = copyArticleText;
+
+      // Reading scroll listener for reading progress bar
+      const rScroll = document.getElementById('readerScroll');
+      if (rScroll) {
+        rScroll.onscroll = () => {
+          const maxScroll = rScroll.scrollHeight - rScroll.clientHeight;
+          const pct = maxScroll > 0 ? (rScroll.scrollTop / maxScroll) * 100 : 0;
+          const bar = document.getElementById('readingProgressBar');
+          if (bar) bar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+        };
+      }
 
       function setZoom(newZoom) {
         zoomLevel = Math.max(10, Math.min(26, newZoom));
@@ -2376,14 +3429,16 @@
         const customTitle = document.getElementById('inputFeedTitle').value.trim();
         const category = document.getElementById('selectFeedCategory').value;
         const rawXml = document.getElementById('inputRawXml').value.trim();
+        const shareToCatalog = document.getElementById('checkShareToCatalog') && document.getElementById('checkShareToCatalog').checked;
 
         if (rawXml) {
           try {
-            const parsed = parseFeedXml(rawXml, url || "custom-offline");
+            const parsed = parseFeedInput(rawXml, url || "custom-offline");
             const newFeedId = Date.now();
+            const feedTitle = customTitle || parsed.meta.title || "Custom Feed";
             feeds.push({
               id: newFeedId,
-              title: customTitle || parsed.meta.title || "Custom XML Feed",
+              title: feedTitle,
               category: category,
               url: url || "kweb://custom/feed.xml",
               icon: "📄",
@@ -2393,37 +3448,59 @@
               item.feedId = newFeedId;
               articles.unshift(item);
             });
+            if (shareToCatalog && window.fb && window.fb.db && window.fb.set) {
+              const key = feedTitle.replace(/[^a-zA-Z0-9_-]/g, '_');
+              window.fb.set(window.fb.ref(window.fb.db, `multiplayer/krss/catalog/${key}`), {
+                title: feedTitle,
+                category: category,
+                url: url || "kweb://custom/feed.xml",
+                icon: "📄",
+                sharedAt: Date.now()
+              });
+            }
             saveWorkstationState(true);
             closeModal('modalAddFeed');
             renderFeedsList();
             renderArticlesList();
-            showToast(`Added feed '${customTitle || parsed.meta.title}' with ${parsed.items.length} articles!`);
+            populateTagFilterOptions();
+            showToast(`Added feed '${feedTitle}' with ${parsed.items.length} articles!`);
             document.getElementById('inputFeedUrl').value = '';
             document.getElementById('inputFeedTitle').value = '';
             document.getElementById('inputRawXml').value = '';
             return;
           } catch (e) {
-            showToast("Raw XML Parse Error: " + e.message, "danger");
+            showToast("Raw Feed Parse Error: " + e.message, "danger");
             return;
           }
         }
 
         if (!url) {
-          showToast("Please enter a valid Feed URL or paste raw XML.", "warning");
+          showToast("Please enter a valid Feed URL or paste raw XML / JSON.", "warning");
           return;
         }
 
         // Add URL-based feed
         const newFeedId = Date.now();
+        const feedTitle = customTitle || url.replace(/^https?:\/\//, '').split('/')[0];
         const newFeed = {
           id: newFeedId,
-          title: customTitle || url.replace(/^https?:\/\//, '').split('/')[0],
+          title: feedTitle,
           category: category,
           url: url,
           icon: "📡",
           custom: true
         };
         feeds.push(newFeed);
+        if (shareToCatalog && window.fb && window.fb.db && window.fb.set) {
+          const key = feedTitle.replace(/[^a-zA-Z0-9_-]/g, '_');
+          window.fb.set(window.fb.ref(window.fb.db, `multiplayer/krss/catalog/${key}`), {
+            title: feedTitle,
+            category: category,
+            url: url,
+            icon: "📡",
+            sharedAt: Date.now()
+          });
+        }
         saveWorkstationState(true);
         closeModal('modalAddFeed');
         renderFeedsList();
@@ -2435,28 +3512,69 @@
         pollFeeds();
       };
 
-      // OPML & JSON State Handlers
+      // OPML, JSON Feed & CSV Data Hub Handlers
       document.getElementById('btnCloseOpml').onclick = () => closeModal('modalOpml');
       document.getElementById('btnCloseOpmlModal').onclick = () => closeModal('modalOpml');
       document.getElementById('btnGenerateOpml').onclick = () => {
         document.getElementById('textOpml').value = generateOpmlXml();
         showToast("Generated current subscriptions OPML!");
       };
+      document.getElementById('btnGenerateJsonFeed').onclick = () => {
+        document.getElementById('textOpml').value = generateJsonFeed(true);
+        showToast("Generated JSON Feed 1.1!");
+      };
+      document.getElementById('btnDownloadJsonFeed').onclick = () => {
+        const json = generateJsonFeed(true);
+        const blob = new Blob([json], { type: 'application/json;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'krss-feed.json';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        showToast("Downloaded krss-feed.json.");
+      };
+      document.getElementById('btnExportCsvAll').onclick = () => exportArticlesCsv(true);
+
       document.getElementById('btnParsePastedOpml').onclick = () => {
         const text = document.getElementById('textOpml').value.trim();
         if (!text) {
-          showToast("Please paste OPML XML or JSON content first.", "warning");
+          showToast("Please paste OPML XML, JSON Feed 1.1, or state content first.", "warning");
           return;
         }
         if (text.startsWith('{')) {
           try {
             const data = JSON.parse(text);
-            if (Array.isArray(data.feeds)) {
+            if (Array.isArray(data.items)) {
+              // JSON Feed 1.1
+              const parsed = parseJsonFeed(text);
+              const newFeedId = Date.now();
+              feeds.push({
+                id: newFeedId,
+                title: parsed.meta.title || "Imported JSON Feed",
+                category: "Imported Subscriptions",
+                url: parsed.meta.link || "kweb://imported/feed.json",
+                icon: "📜",
+                custom: true
+              });
+              parsed.items.forEach(item => {
+                item.feedId = newFeedId;
+                articles.unshift(item);
+              });
+              saveWorkstationState(true);
+              renderFeedsList();
+              renderArticlesList();
+              populateTagFilterOptions();
+              showToast(`Imported JSON Feed '${parsed.meta.title}' with ${parsed.items.length} articles!`);
+              closeModal('modalOpml');
+              return;
+            } else if (Array.isArray(data.feeds)) {
               feeds = data.feeds;
               if (Array.isArray(data.articles)) articles = data.articles;
               saveWorkstationState(true);
               renderFeedsList();
               renderArticlesList();
+              populateTagFilterOptions();
               showToast(`Imported state JSON (${feeds.length} feeds, ${articles.length} articles)!`);
               closeModal('modalOpml');
               return;
@@ -2503,16 +3621,38 @@
         reader.onload = (evt) => {
           try {
             const data = JSON.parse(evt.target.result);
-            if (Array.isArray(data.feeds)) {
+            if (Array.isArray(data.items)) {
+              const parsed = parseJsonFeed(evt.target.result);
+              const newFeedId = Date.now();
+              feeds.push({
+                id: newFeedId,
+                title: parsed.meta.title || file.name,
+                category: "Imported Subscriptions",
+                url: parsed.meta.link || "kweb://imported/feed.json",
+                icon: "📜",
+                custom: true
+              });
+              parsed.items.forEach(item => {
+                item.feedId = newFeedId;
+                articles.unshift(item);
+              });
+              saveWorkstationState(true);
+              renderFeedsList();
+              renderArticlesList();
+              populateTagFilterOptions();
+              showToast(`Imported JSON Feed '${parsed.meta.title}' (${parsed.items.length} items)!`);
+              closeModal('modalOpml');
+            } else if (Array.isArray(data.feeds)) {
               feeds = data.feeds;
               if (Array.isArray(data.articles)) articles = data.articles;
               saveWorkstationState(true);
               renderFeedsList();
               renderArticlesList();
+              populateTagFilterOptions();
               showToast(`Restored state from ${file.name} (${feeds.length} feeds, ${articles.length} articles)!`);
               closeModal('modalOpml');
             } else {
-              showToast("Invalid state JSON structure.", "danger");
+              showToast("Invalid JSON Feed or State structure.", "danger");
             }
           } catch (err) {
             showToast("JSON Parse Error: " + err.message, "danger");
@@ -2535,7 +3675,7 @@
 
       document.getElementById('btnExportJson').onclick = () => {
         const payload = {
-          version: "1.0.0",
+          version: "1.1.0",
           exportDate: new Date().toISOString(),
           feeds: feeds,
           articles: articles
@@ -2549,6 +3689,32 @@
         setTimeout(() => URL.revokeObjectURL(url), 1000);
         showToast("Exported krss-state.json.");
       };
+
+      // Broadcast Modal Handlers
+      document.getElementById('btnCloseBroadcast').onclick = () => closeModal('modalBroadcast');
+      document.getElementById('btnCancelBroadcast').onclick = () => closeModal('modalBroadcast');
+      document.getElementById('btnConfirmBroadcast').onclick = broadcastWireDispatch;
+
+      // Catalog Modal Handlers
+      document.getElementById('btnCloseCatalog').onclick = () => closeModal('modalCatalog');
+      document.getElementById('btnCloseCatalogModal').onclick = () => closeModal('modalCatalog');
+      document.getElementById('btnShareSubscriptionsToCatalog').onclick = shareSubscriptionsToCatalog;
+
+      // Scrapbook Modal Handlers
+      document.getElementById('btnCloseScrapbook').onclick = () => closeModal('modalScrapbook');
+      document.getElementById('btnCloseScrapbookModal').onclick = () => closeModal('modalScrapbook');
+      document.getElementById('btnExportScrapbookMd').onclick = exportScrapbookMarkdown;
+      document.getElementById('btnClearScrapbook').onclick = () => {
+        if (confirm("Clear all clippings in Research Scrapbook?")) {
+          saveScrapbook([]);
+          renderScrapbookList();
+          showToast("Scrapbook cleared.");
+        }
+      };
+      const sbSearch = document.getElementById('inputScrapbookSearch');
+      if (sbSearch) {
+        sbSearch.oninput = (e) => renderScrapbookList(e.target.value);
+      }
 
       // Help Modal
       document.getElementById('btnCloseHelp').onclick = () => closeModal('modalHelp');
@@ -2668,6 +3834,23 @@
         } else if (e.key === 'a' || e.key === 'A') {
           e.preventDefault();
           openAddFeed();
+        } else if (e.key === 'w' || e.key === 'W') {
+          e.preventDefault();
+          openModal('modalBroadcast');
+        } else if (e.shiftKey && (e.key === 'C' || e.key === 'c')) {
+          e.preventDefault();
+          renderScrapbookList();
+          openModal('modalScrapbook');
+        } else if (e.key === 'c' || e.key === 'C') {
+          e.preventDefault();
+          clipCurrentArticle();
+        } else if (e.key === 'p' || e.key === 'P') {
+          e.preventDefault();
+          toggleSpeech();
+        } else if (e.key === 't' || e.key === 'T') {
+          e.preventDefault();
+          const sel = document.getElementById('selectTagFilter');
+          if (sel) sel.focus();
         } else if (e.key === 'o' || e.key === 'O') {
           e.preventDefault();
           openArticleInKNet();
@@ -2701,7 +3884,11 @@
       setupEventListeners();
       renderFeedsList();
       renderArticlesList();
+      populateTagFilterOptions();
       checkFirstRunSplash();
+      if (window.fb) {
+        window.initCommunityWire();
+      }
     });
 
   </script>

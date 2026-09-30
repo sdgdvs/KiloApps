@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: KStarForge
   kilo_graphics: KDragon
   kilo_qa: KPad
-  kilo_expander: KRSS
+  kilo_expander: KFont
   kilo_creator: "kweb://webring (Central KiloNet Webring Hub & Badge Studio)"
 virtual_web_target: "kweb://webring"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KRadio
-  timestamp: "2026-09-30T20:10:00Z"
+  agent: kilo-expander
+  app: KRSS
+  timestamp: "2026-09-30T20:31:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -123,9 +123,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPaint`, `KCalc`, `KMine`, `KCosmic`, `KContacts` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KRSS`
+- **Current Target**: `KFont`
 - **Upcoming Queue**:
-  `KFont`, `KPad`, `KNote`, `KContacts`, `KPass`, `KVault` *(Completed: KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia, KTask, KNet, KPing, KHash)*.
+  `KPad`, `KNote`, `KContacts`, `KPass`, `KVault` *(Completed: KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia, KTask, KNet, KPing, KHash)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -292,6 +292,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+ 
+- **2026-09-30T20:31:00Z — kilo-expander: KRSS (Feature Expansion: JSON Feed 1.1, CSV Export, Research Scrapbook, Firebase Wire & TTS)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 148.1 KB web / 21.5 KB native < 999 KB ceiling).
+  - Multi-Format Syndication: Added JSON Feed 1.1 parsing & generation, RFC 4180 CSV database export, and standalone HTML export.
+  - Research Scrapbook: Built research clippings notebook with quote selection, tag taxonomy, search, and Markdown notebook export.
+  - KiloNet Community Wire: Added live peer dispatch broadcasts, presence counter, and catalog sync via Firebase RTDB with offline fallback.
+  - Reader Ergonomics & Audio: Integrated Web Speech API synthesizer, live reading time metrics, tag pills, and scroll progress tracking.
+  - Native Win32 Parity: Expanded `KRSS.exe` with view filter toggles, CSV articles export, text dump, and keyboard accelerators ('F', 'C', 'T').
+  - Verification: MSVC clean (`KRSS.exe` 21.5 KB); Vite clean in 236ms; security lint 100% PASS; bottom-center toast safe zone.
 
 - **2026-09-30T20:10:00Z — kilo-qa: KRadio (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone & HiDPI Polish)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 60.7 KB web / 8.5 KB native < 999 KB ceiling).
@@ -325,12 +334,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Atmosphere: Added airlock caravan pack-cart and brownout emergency strobe alert on non-essential sectors during blackout.
   - Specular Glint Purge: Confirmed static retro-terminal corner brackets with zero rotating glints or perimeter border dots.
   - Verification: MSVC clean (`KSanctuary.exe` 262.1 KB); Vite clean in 264ms; check_icons & security lint 100% PASS.
-
-- **2026-09-30T19:15:00Z — kilo-creator: kweb://portal (RealAudio Radio, News Wire '99, Yellow Pages, Modem Soundboard & ARG)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean build in 296ms, 240.5 KB web < 999 KB ceiling).
-  - RealAudio Radio: Added 4-channel procedural YM2612 FM + SPC700 stereo delay streaming player with animated 16-band peak LED visualizer.
-  - News Wire '99: Implemented interactive AP/Reuters newsroom with 8 authentic articles, reader comments, category filters, and .TXT export.
-  - Yellow Pages '99: Added searchable 1999 webmaster directory with custom profile registration and local/Firebase persistence.
-  - Modem Soundboard: Added 8-stage acoustic handshake simulator with procedural DTMF, CED, V.8 Bis, V.34 training, and LED sync.
-  - ARG & Breadcrumbs: Added SysAdmin_NULL 1999Hz classified ad & marquee alert per directives; purged Tier 3 darknet leaks from surface links.
-  - Firebase & Signals: Integrated presence tracking, global voyager count, classifieds sync, and solo-completable NOC carrier lock.
