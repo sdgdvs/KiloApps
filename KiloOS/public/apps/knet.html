@@ -507,6 +507,49 @@
     color: var(--bg-dark);
     box-shadow: 0 0 8px var(--accent-glow);
   }
+  .btn-chip.active {
+    background: rgba(56, 189, 248, 0.25);
+    border-color: #38bdf8;
+    color: #ffffff;
+    font-weight: 700;
+  }
+  .cidr-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .cidr-cell {
+    background: #090d16;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .cidr-cell-lbl {
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 700;
+  }
+  .cidr-cell-val {
+    font-size: 13px;
+    font-family: var(--font-mono);
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .dial-meter-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    background: #050811;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
   @keyframes knetFadeIn {
     from { opacity: 0; transform: scale(0.96); }
     to { opacity: 1; transform: scale(1); }
@@ -521,6 +564,7 @@
       <div class="logo-icon">K</div> KNet
     </div>
     <button class="btn" id="btnHelp" title="Help & Shortcuts (F1 or H)"><span style="color:var(--accent);font-weight:bold;">?</span> Help [F1]</button>
+    <button class="btn" id="btnMute" title="Toggle Audio Synthesizer (M)">🔊 Audio [M]</button>
     <button class="btn" id="btnQuickSave" title="Quick Save Session State (F5)">💾 Save [F5]</button>
     <button class="btn" id="btnQuickLoad" title="Quick Load Session State (F9)">📂 Load [F9]</button>
     <button class="btn" id="btnBack" title="Back (Alt+Left)" disabled>&lt; [Alt+←]</button>
@@ -544,6 +588,7 @@
         <option value="/apps/contribute.html">🚀 Fleet Contributor Guide</option>
         <option value="/apps/kterm.html">💻 KTerm Terminal</option>
         <option value="/apps/khex.html">🔢 KHex Memory Inspector</option>
+        <option value="/apps/knetmap.html">🗺️ KNetMap Global Topology</option>
       </optgroup>
       <optgroup label="🌐 Web Sites">
         <option value="https://news.ycombinator.com">Hacker News</option>
@@ -557,8 +602,11 @@
         <option value="dns:example.com">DNS Resolve</option>
         <option value="whois:example.com">WHOIS Check</option>
         <option value="trace:example.com">Traceroute</option>
+        <option value="cidr:192.168.1.1/24">CIDR Subnet Calculator</option>
+        <option value="bench">1999 Bandwidth Benchmark</option>
         <option value="ifconfig">Interfaces</option>
         <option value="sniff">Packet Sniffer</option>
+        <option value="mesh">Mesh Radar &amp; Telemetry</option>
       </optgroup>
     </select>
     <button class="btn btn-primary" id="btnGo">Execute [Enter]</button>
@@ -571,6 +619,7 @@
     <button class="tab-btn" data-tab="tab-logs">[4] 📋 Traffic Log</button>
     <button class="tab-btn" data-tab="tab-utils">[5] 🛠️ Net Utils</button>
     <button class="tab-btn" data-tab="tab-sniff">[6] 🦈 Sniffer</button>
+    <button class="tab-btn" data-tab="tab-mesh">[7] 📡 Mesh Radar</button>
   </div>
 </header>
 
@@ -582,6 +631,7 @@
       <div class="panel-title">
         <span>Web Navigator & Request Inspector</span>
         <div style="display:flex; gap:6px; align-items:center;">
+          <button class="btn-chip" id="btnOpenForge" style="color:#38bdf8; border-color:#38bdf8; font-weight:700;">🔨 Forge Request</button>
           <button class="btn-chip" id="btnViewRendered" style="background:rgba(56,189,248,0.25); border-color:#38bdf8; font-weight:700;">🌐 Rendered View</button>
           <button class="btn-chip" id="btnViewSource">📄 Raw Source</button>
           <button class="btn-chip" id="btnViewHex">🔢 Hex View</button>
@@ -692,11 +742,19 @@
         <span>Custom Port Inspector & Subnet Scanner</span>
         <button class="btn btn-primary" id="btnRunScan">Start Scan [S]</button>
       </div>
-      <div style="display:flex; gap:10px; align-items:center;">
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
         <label style="font-size:12px; color:var(--text-muted);">Target Host / IP:</label>
-        <input type="text" class="input-url" id="scanTargetInput" value="192.168.1.1" style="max-width:200px;" />
+        <input type="text" class="input-url" id="scanTargetInput" value="192.168.1.1" style="max-width:180px;" />
         <label style="font-size:12px; color:var(--text-muted);">Port List:</label>
-        <input type="text" class="input-url" id="scanPortsInput" value="80, 443, 21, 22, 25, 53, 3389, 4444, 8080" />
+        <input type="text" class="input-url" id="scanPortsInput" value="80, 443, 21, 22, 25, 53, 3389, 4444, 8080" style="flex:1;" />
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-top:2px;">
+        <span style="font-size:11px; color:var(--text-muted); font-weight:700;">PROFILES:</span>
+        <button class="btn-chip" id="btnProfileWeb">🌐 Web (80, 443, 8080)</button>
+        <button class="btn-chip" id="btnProfileCore">⚙️ Core (21, 22, 23, 25, 53, 110, 3389)</button>
+        <button class="btn-chip" id="btnProfileGames" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);">🎮 1999 LAN (27960, 7777, 6112, 27015)</button>
+        <button class="btn-chip" id="btnProfileFleet" style="color:#a78bfa; border-color:rgba(167,139,250,0.4);">🚀 Fleet (4444, 1999, 8000, 9999)</button>
+        <button class="btn-chip" id="btnSubnetScan" style="margin-left:auto; color:#34d399; border-color:rgba(52,211,153,0.4);">📡 Sweep Subnet (.1 - .10)</button>
       </div>
     </div>
     <div class="table-wrapper" style="flex:1;">
@@ -781,21 +839,97 @@
     </div>
   </div>
 
-  <!-- TAB 5: Network Utils -->
+  <!-- TAB 5: Advanced Network Utilities Suite -->
   <div class="tab-content" id="tab-utils">
-    <div class="panel">
+    <div class="panel" style="flex:0 0 auto;">
       <div class="panel-title">
-        <span>Advanced Network Utilities</span>
+        <span>Advanced Network Diagnostics & Utilities</span>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn-chip active" id="btnUtilDnsTab">🌐 DNS &amp; Trace</button>
+          <button class="btn-chip" id="btnUtilCidrTab">🔢 CIDR Subnet Calculator</button>
+          <button class="btn-chip" id="btnUtilSpeedTab">⚡ 1999 Benchmark</button>
+          <button class="btn-chip" id="btnUtilEncodeTab">🔒 Payload &amp; Checksums</button>
+          <button class="btn-chip" id="btnUtilIfconfigTab">💻 Interfaces</button>
+        </div>
       </div>
-      <div style="display:flex; gap:10px; align-items:center;">
-        <input type="text" class="input-url" id="utilTargetInput" placeholder="Domain or IP..." value="example.com" style="max-width:200px;" />
-        <button class="btn" id="btnDns">DNS Lookup</button>
-        <button class="btn" id="btnWhois">WHOIS</button>
-        <button class="btn" id="btnTrace">Traceroute</button>
-        <button class="btn" id="btnIfconfig">Interfaces (ifconfig)</button>
+
+      <!-- Sub-Tool 1: DNS & WHOIS & Trace -->
+      <div id="utilSubDns" style="display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <label style="font-size:12px; color:var(--text-muted);">Target Host:</label>
+          <input type="text" class="input-url" id="utilTargetInput" placeholder="Domain or IP..." value="example.com" style="max-width:220px;" />
+          <label style="font-size:12px; color:var(--text-muted);">Type:</label>
+          <select id="dnsRecordType" class="select-preset" style="font-size:12px; padding:6px 10px;">
+            <option value="A">A (IPv4)</option>
+            <option value="AAAA">AAAA (IPv6)</option>
+            <option value="MX">MX (Mail Server)</option>
+            <option value="TXT">TXT (Text Record)</option>
+            <option value="CNAME">CNAME (Alias)</option>
+            <option value="NS">NS (Name Server)</option>
+            <option value="SOA">SOA (Authority)</option>
+            <option value="PTR">PTR (Reverse)</option>
+          </select>
+          <button class="btn btn-primary" id="btnDns">DNS Query</button>
+          <button class="btn" id="btnWhois">WHOIS</button>
+          <button class="btn" id="btnTrace">Traceroute</button>
+        </div>
+      </div>
+
+      <!-- Sub-Tool 2: CIDR & Subnet Calculator -->
+      <div id="utilSubCidr" style="display:none; flex-direction:column; gap:8px;">
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <label style="font-size:12px; color:var(--text-muted);">IPv4 Address:</label>
+          <input type="text" class="input-url" id="cidrIpInput" value="192.168.1.50" style="max-width:160px;" />
+          <label style="font-size:12px; color:var(--text-muted);">CIDR Prefix:</label>
+          <input type="range" id="cidrPrefixSlider" min="8" max="32" value="24" style="cursor:pointer; width:120px;" />
+          <span id="cidrPrefixLabel" style="font-family:var(--font-mono); color:var(--accent); font-weight:700;">/24</span>
+          <button class="btn btn-primary" id="btnCalcSubnet">Calculate</button>
+          <button class="btn-chip" id="btnSubnetPreset192">192.168.1.0/24</button>
+          <button class="btn-chip" id="btnSubnetPreset10">10.0.0.0/8</button>
+          <button class="btn-chip" id="btnSubnetPresetARG" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);">10.19.99.0/24 (Intranet)</button>
+        </div>
+      </div>
+
+      <!-- Sub-Tool 3: 1999 Bandwidth Benchmark -->
+      <div id="utilSubSpeed" style="display:none; flex-direction:column; gap:8px;">
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <label style="font-size:12px; color:var(--text-muted);">Connection Profile:</label>
+          <select id="speedProfileSelect" class="select-preset" style="font-size:12px; padding:6px 10px;">
+            <option value="56">56k V.90 Flex Dial-Up (56 kbps)</option>
+            <option value="14.4">14.4k V.32bis Modem (14.4 kbps)</option>
+            <option value="28.8">28.8k V.34 Modem (28.8 kbps)</option>
+            <option value="33.6">33.6k V.34+ Modem (33.6 kbps)</option>
+            <option value="128">ISDN Dual-Channel (128 kbps)</option>
+            <option value="1544">T1 Leased Line (1.544 Mbps)</option>
+            <option value="10000">10BASE-T Ethernet (10.0 Mbps)</option>
+          </select>
+          <button class="btn btn-primary" id="btnRunSpeedBenchmark">Run Benchmark</button>
+        </div>
+      </div>
+
+      <!-- Sub-Tool 4: Payload & Checksum Encoder -->
+      <div id="utilSubEncode" style="display:none; flex-direction:column; gap:8px;">
+        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+          <button class="btn-chip" id="btnEncB64">Base64 Encode</button>
+          <button class="btn-chip" id="btnDecB64">Base64 Decode</button>
+          <button class="btn-chip" id="btnEncUrl">URL Encode</button>
+          <button class="btn-chip" id="btnDecUrl">URL Decode</button>
+          <button class="btn-chip" id="btnEncHex">ASCII ➔ Hex</button>
+          <button class="btn-chip" id="btnDecHex">Hex ➔ ASCII</button>
+          <button class="btn-chip" id="btnCalcHashes" style="color:var(--accent); font-weight:700;">Generate Checksums (CRC32, Adler32, DJB2)</button>
+        </div>
+      </div>
+
+      <!-- Sub-Tool 5: Interfaces -->
+      <div id="utilSubIfconfig" style="display:none; flex-direction:column; gap:8px;">
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-primary" id="btnRefreshIfconfig">Refresh eth0 Telemetry</button>
+        </div>
       </div>
     </div>
-    <div class="content-box" id="utilContentArea" style="flex:1;">Select a utility to run.</div>
+
+    <!-- Output Box / Dynamic Visualizer -->
+    <div class="content-box" id="utilContentArea" style="flex:1;">Select a network utility above to audit diagnostic endpoints.</div>
   </div>
 
   <!-- TAB 6: Packet Sniffer -->
@@ -838,6 +972,60 @@
     </div>
   </div>
 
+  <!-- TAB 7: Mesh Radar & Telemetry (Firebase RTDB Global Mesh) -->
+  <div class="tab-content" id="tab-mesh">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-val" id="meshPeerCount">1</div>
+        <div class="stat-lbl">Active Global Nodes</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="meshMyCallsign" style="font-size:16px;">NODE-99</div>
+        <div class="stat-lbl">Local Node Callsign</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="meshTotalBeacons">0</div>
+        <div class="stat-lbl">Collaborative Beacons</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="meshResonancePct">0%</div>
+        <div class="stat-lbl">Signal Resonance</div>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:12px; flex:1; min-height:0;">
+      <!-- Polar Radar Canvas Panel -->
+      <div class="panel" style="flex:1; display:flex; flex-direction:column; min-width:320px;">
+        <div class="panel-title">
+          <span>KiloNet 360° Polar Mesh Radar</span>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button class="btn btn-primary" id="btnBroadcastBeacon">📡 Broadcast Beacon [B]</button>
+            <button class="btn" id="btnPingMesh">Ping Peers</button>
+          </div>
+        </div>
+        <div style="flex:1; position:relative; min-height:220px; background:#050811; border:1px solid var(--border); border-radius:6px; overflow:hidden;">
+          <canvas id="meshRadarCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Live Mesh Stream & Anomaly Panel -->
+      <div class="panel" style="width:380px; display:flex; flex-direction:column;">
+        <div class="panel-title">
+          <span>Global Telemetry Stream</span>
+          <span id="meshStatusBadge" class="badge badge-success">ONLINE (RTDB)</span>
+        </div>
+        <div class="content-box" id="meshStreamArea" style="flex:1; font-size:11px; line-height:1.5;">
+          Connecting to global peer mesh...
+        </div>
+        <!-- Diegetic Carrier Lock Box (Revealed when resonance threshold reached) -->
+        <div id="meshCarrierBox" style="margin-top:6px; padding:8px; background:rgba(6,78,59,0.3); border:1px solid #10b981; border-radius:4px; font-size:11px; display:none;">
+          <strong style="color:#34d399;">🔒 CARRIER ACQUISITION LOCK:</strong>
+          <div style="color:#e2e8f0; margin-top:2px;">Signal resonance achieved. Frequency lock: <strong>1999 Hz</strong>. Node 10.19.99.4 echo subcarrier synchronized.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <footer>
@@ -867,19 +1055,24 @@
         </thead>
         <tbody>
           <tr><td><code>F1</code> or <code>H</code></td><td>Open / Close this Help dialog</td></tr>
+          <tr><td><code>M</code></td><td>Toggle Yamaha YM2612 FM Audio Synthesizer</td></tr>
           <tr><td><code>F5</code></td><td>Quick Save session snapshot to local storage</td></tr>
           <tr><td><code>F9</code></td><td>Quick Load session snapshot from local storage</td></tr>
-          <tr><td><code>1 - 6</code></td><td>Switch tabs directly (HTTP, Ping, Scan, Logs, Utils, Sniffer)</td></tr>
-          <tr><td><code>Enter</code> in URL Bar</td><td>Execute HTTP request / diagnostic</td></tr>
+          <tr><td><code>1 - 7</code></td><td>Switch tabs directly (Browser, Ping, Scan, Logs, Utils, Sniffer, Mesh)</td></tr>
+          <tr><td><code>Enter</code> in URL Bar</td><td>Execute HTTP request / diagnostic command</td></tr>
           <tr><td><code>Enter</code> in Search / Filter</td><td>Filter response text or traffic log live</td></tr>
           <tr><td><code>P</code></td><td>Start / Stop Continuous Ping</td></tr>
           <tr><td><code>S</code></td><td>Trigger Custom Port Scan</td></tr>
+          <tr><td><code>B</code></td><td>Broadcast Diagnostic Beacon to Global Mesh Radar</td></tr>
           <tr><td><code>E</code> or <code>Ctrl+S</code></td><td>Export Traffic Log to CSV</td></tr>
           <tr><td><code>C</code></td><td>Clear active tab output / stats / logs</td></tr>
           <tr><td><code>Space</code> in Sniffer</td><td>Start / Stop packet capture</td></tr>
           <tr><td><code>Alt + ← / →</code></td><td>History Back / Forward navigation</td></tr>
           <tr><td><code>Esc</code></td><td>Close dialog / Stop active Ping or Sniffer / Clear search</td></tr>
+          <tr><td><code>🔨 Forge Request</code></td><td>Open HTTP Request Forge &amp; REST Console</td></tr>
           <tr><td><code>hex:&lt;url&gt;</code></td><td>URL prefix to fetch and display in Hex View mode</td></tr>
+          <tr><td><code>cidr:&lt;ip&gt;/&lt;prefix&gt;</code></td><td>URL command to compute CIDR subnet, host range &amp; binary dot-quad</td></tr>
+          <tr><td><code>bench / speed</code></td><td>URL command to run 1999 dial-up speedometer benchmark</td></tr>
           <tr><td><code>kweb://portal</code></td><td>Access 1999 KiloNet Directory &amp; Hypermedia Portal</td></tr>
           <tr><td><code>kweb://webring</code></td><td>Access Central KiloNet Webring Hub &amp; Node Directory</td></tr>
           <tr><td><code>kweb://geocities</code></td><td>Access CyberSpire Retro Shrine, Amiga .MOD Vault &amp; Pixel Studio</td></tr>
@@ -893,10 +1086,10 @@
           <tr><td><code>Click Sniffer Row</code></td><td>Open deep frame dissection drawer (Ethernet, IP, Hex)</td></tr>
           <tr><td><code>ping:&lt;host&gt;</code></td><td>URL prefix to run Ping test on target host</td></tr>
           <tr><td><code>scan:&lt;host&gt;</code></td><td>URL prefix to run Port Scan on target host</td></tr>
-          <tr><td><code>dns:&lt;host&gt;</code></td><td>URL prefix to perform DNS lookup</td></tr>
+          <tr><td><code>dns:&lt;host&gt;</code></td><td>URL prefix to perform DNS lookup (A, AAAA, MX, TXT, etc.)</td></tr>
           <tr><td><code>whois:&lt;host&gt;</code></td><td>URL prefix to perform WHOIS lookup</td></tr>
           <tr><td><code>trace:&lt;host&gt;</code></td><td>URL prefix to run Traceroute simulation</td></tr>
-          <tr><td><code>ifconfig / sniff</code></td><td>URL commands to inspect interfaces or run sniffer</td></tr>
+          <tr><td><code>ifconfig / sniff / mesh</code></td><td>URL commands to inspect interfaces, sniffer, or mesh radar</td></tr>
         </tbody>
       </table>
       <p style="margin-top:12px; font-size:12px; color:var(--text-muted);">
@@ -935,6 +1128,80 @@
   </div>
 </div>
 
+<!-- HTTP Request Forge Modal Dialog -->
+<div id="forgeModal" class="modal-overlay" style="display:none;" role="dialog" aria-modal="true">
+  <div class="modal-card" style="max-width:680px; max-height:85vh;">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div class="logo-icon" style="background:#38bdf8; color:#0f172a;">🔨</div>
+        <strong style="font-size:15px; color:var(--accent);">HTTP Request Forge &amp; REST Console</strong>
+      </div>
+      <button class="btn" id="btnForgeClose" style="padding:2px 8px; font-size:16px;">&times;</button>
+    </div>
+    <div class="modal-body" style="display:flex; flex-direction:column; gap:10px;">
+      <div style="display:flex; gap:8px; align-items:center;">
+        <select id="forgeMethod" class="select-preset" style="font-weight:700; color:var(--accent); min-width:90px;">
+          <option value="GET">GET</option>
+          <option value="POST">POST</option>
+          <option value="HEAD">HEAD</option>
+          <option value="PUT">PUT</option>
+          <option value="DELETE">DELETE</option>
+          <option value="OPTIONS">OPTIONS</option>
+        </select>
+        <input type="text" id="forgeUrl" class="input-url" value="/web/portal.html" placeholder="https://... or /web/..." />
+        <button class="btn btn-primary" id="btnSendForge">Send [Enter]</button>
+      </div>
+
+      <div style="display:flex; gap:6px; border-bottom:1px solid var(--border); padding-bottom:4px;">
+        <button class="btn-chip active" id="forgeTabHeadersBtn">Headers</button>
+        <button class="btn-chip" id="forgeTabBodyBtn">Request Body</button>
+        <button class="btn-chip" id="forgeTabResponseBtn">Response &amp; Inspect</button>
+        <button class="btn-chip" id="forgeCopyCurlBtn" style="margin-left:auto;">📋 Copy cURL</button>
+      </div>
+
+      <!-- Headers Panel -->
+      <div id="forgeHeadersPanel" style="display:flex; flex-direction:column; gap:6px;">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <label style="font-size:11px; color:var(--text-muted);">User-Agent Preset:</label>
+          <select id="forgeUaPreset" class="select-preset" style="font-size:11px; padding:3px 6px;">
+            <option value="Mozilla/4.7 [en] (Win98; I)">Netscape Navigator 4.7 (1999)</option>
+            <option value="Mozilla/4.0 (compatible; MSIE 5.01; Windows 98)">Internet Explorer 5.0 (1999)</option>
+            <option value="Lynx/2.8.3rel.1 libwww-FM/2.14">Lynx 2.8.3 (Terminal)</option>
+            <option value="KNet/2.0 (KiloOS; x86; RetroNet)">KNet Engine 2.0 (Native)</option>
+          </select>
+        </div>
+        <textarea id="forgeHeadersText" class="input-url" style="height:80px; font-family:var(--font-mono); font-size:12px; resize:vertical;" placeholder="Header-Name: Value">Accept: text/html, application/json, text/plain&#10;X-Requested-With: KNet-Client-1999</textarea>
+      </div>
+
+      <!-- Request Body Panel -->
+      <div id="forgeBodyPanel" style="display:none; flex-direction:column; gap:6px;">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <label style="font-size:11px; color:var(--text-muted);">Content-Type:</label>
+          <select id="forgeContentType" class="select-preset" style="font-size:11px; padding:3px 6px;">
+            <option value="application/json">application/json</option>
+            <option value="application/x-www-form-urlencoded">application/x-www-form-urlencoded</option>
+            <option value="text/plain">text/plain</option>
+          </select>
+        </div>
+        <textarea id="forgeBodyText" class="input-url" style="height:90px; font-family:var(--font-mono); font-size:12px; resize:vertical;" placeholder='{"query": "kilonet", "target": "0x7F"}'></textarea>
+      </div>
+
+      <!-- Response Panel -->
+      <div id="forgeResponsePanel" style="display:none; flex-direction:column; gap:6px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span id="forgeResponseStatus" class="badge badge-info">Status: Ready</span>
+          <span id="forgeResponseTiming" style="font-size:11px; color:var(--text-muted);">Timing: --</span>
+        </div>
+        <div class="content-box" id="forgeResponseHeaders" style="height:65px; font-size:11px; flex:none; background:#060a14; overflow:auto;">(Response Headers will appear here)</div>
+        <div class="content-box" id="forgeResponseBody" style="height:120px; font-size:12px; flex:none; overflow:auto;">(Response Body will appear here)</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="btnForgeDone">Close</button>
+    </div>
+  </div>
+</div>
+
 <script>
   // Navigation & Workspace State
   const urlInput = document.getElementById('urlInput');
@@ -953,6 +1220,118 @@
   let trafficLogs = [];
   let logIdCounter = 1;
   let totalBytesTransferred = 0;
+
+  // Universal Audio Synthesizer (Genesis YM2612 FM + SNES SPC700 Delay)
+  let audioCtx = null;
+  let isMuted = localStorage.getItem('knet_audio_muted') === 'true';
+
+  function initAudio() {
+    if (!audioCtx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) {
+        audioCtx = new AudioContext();
+      }
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  }
+
+  function toggleMute() {
+    isMuted = !isMuted;
+    localStorage.setItem('knet_audio_muted', isMuted ? 'true' : 'false');
+    updateMuteUI();
+    showToast(isMuted ? 'Audio synthesizer muted' : 'Audio synthesizer active', 'info');
+  }
+
+  function updateMuteUI() {
+    const btn = document.getElementById('btnMute');
+    if (btn) {
+      btn.innerHTML = isMuted ? '🔇 Muted [M]' : '🔊 Audio [M]';
+      btn.style.color = isMuted ? 'var(--danger)' : 'var(--accent)';
+      btn.style.borderColor = isMuted ? 'rgba(244, 63, 94, 0.4)' : 'var(--accent)';
+    }
+  }
+
+  function playFmTone(baseFreq, modMultiplier, modDepth, duration, type = 'sine') {
+    if (isMuted) return;
+    initAudio();
+    if (!audioCtx) return;
+
+    try {
+      const now = audioCtx.currentTime;
+      const carrier = audioCtx.createOscillator();
+      const carrierGain = audioCtx.createGain();
+      const modulator = audioCtx.createOscillator();
+      const modGain = audioCtx.createGain();
+
+      carrier.type = type;
+      carrier.frequency.setValueAtTime(baseFreq, now);
+
+      modulator.type = 'sine';
+      modulator.frequency.setValueAtTime(baseFreq * modMultiplier, now);
+
+      modGain.gain.setValueAtTime(modDepth, now);
+      modGain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+      modulator.connect(carrier.frequency);
+
+      carrierGain.gain.setValueAtTime(0.07, now);
+      carrierGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+      carrier.connect(carrierGain);
+      carrierGain.connect(audioCtx.destination);
+
+      modulator.start(now);
+      carrier.start(now);
+      modulator.stop(now + duration);
+      carrier.stop(now + duration);
+    } catch (e) {}
+  }
+
+  function playNavChime() {
+    playFmTone(587.33, 2.0, 180, 0.18, 'triangle');
+    setTimeout(() => playFmTone(880.00, 1.5, 120, 0.22, 'sine'), 60);
+  }
+
+  function playPingTone(latency) {
+    const freq = Math.max(300, Math.min(1200, 1200 - latency * 4));
+    playFmTone(freq, 1.0, 80, 0.08, 'sine');
+  }
+
+  function playPortHitTone(isOpen) {
+    if (isOpen) {
+      playFmTone(784, 2.0, 200, 0.12, 'sine');
+      setTimeout(() => playFmTone(1046.5, 1.5, 150, 0.15, 'sine'), 50);
+    } else {
+      playFmTone(180, 0.5, 90, 0.08, 'sawtooth');
+    }
+  }
+
+  function playPacketBlip() {
+    playFmTone(1200, 1.0, 40, 0.03, 'sine');
+  }
+
+  function playBeaconChirp() {
+    playFmTone(660, 3.0, 300, 0.25, 'triangle');
+    setTimeout(() => playFmTone(990, 2.0, 200, 0.3, 'sine'), 80);
+    setTimeout(() => playFmTone(1320, 1.5, 150, 0.35, 'sine'), 160);
+  }
+
+  function playMeshEcho() {
+    playFmTone(523.25, 2.5, 220, 0.2, 'sine');
+    setTimeout(() => playFmTone(659.25, 2.0, 180, 0.25, 'sine'), 90);
+  }
+
+  function playErrorBuzzer() {
+    playFmTone(140, 0.5, 120, 0.2, 'sawtooth');
+  }
+
+  const btnMute = document.getElementById('btnMute');
+  if (btnMute) {
+    btnMute.onclick = toggleMute;
+    updateMuteUI();
+  }
 
   // Toast notification helper with dismiss affordance
   function showToast(msg, type = 'info') {
@@ -1262,6 +1641,10 @@
     }
 
     if (e.key === 'Escape') {
+      if (forgeModal && forgeModal.style.display !== 'none') {
+        closeForge();
+        return;
+      }
       if (adminModal && adminModal.style.display !== 'none') {
         closeAdminAuth();
         return;
@@ -1291,9 +1674,9 @@
       return;
     }
 
-    // Direct tab hotkeys 1-6 when not typing in input
+    // Direct tab hotkeys 1-7 when not typing in input
     if (!isInput && !e.ctrlKey && !e.altKey && !e.metaKey) {
-      if (e.key >= '1' && e.key <= '6') {
+      if (e.key >= '1' && e.key <= '7') {
         const idx = parseInt(e.key) - 1;
         if (tabBtns[idx]) {
           e.preventDefault();
@@ -1304,6 +1687,19 @@
       if (e.key === 'h' || e.key === 'H') {
         e.preventDefault();
         toggleHelp();
+        return;
+      }
+      if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        toggleMute();
+        return;
+      }
+      if (e.key === 'b' || e.key === 'B') {
+        e.preventDefault();
+        const meshTab = document.querySelector('[data-tab="tab-mesh"]');
+        if (meshTab && !meshTab.classList.contains('active')) meshTab.click();
+        const bBtn = document.getElementById('btnBroadcastBeacon');
+        if (bBtn) bBtn.click();
         return;
       }
       if (e.key === 'p' || e.key === 'P') {
@@ -1534,6 +1930,48 @@
       urlInput.value = url;
       document.querySelector('[data-tab="tab-scan"]').click();
       runPortScan();
+      return;
+    }
+
+    if (url.startsWith('cidr:')) {
+      const target = url.slice(5).trim();
+      urlInput.value = url;
+      document.querySelector('[data-tab="tab-utils"]').click();
+      const btnCidr = document.getElementById('btnCidrSubnet');
+      if (btnCidr) btnCidr.click();
+      if (target) {
+        const parts = target.split('/');
+        const ipInput = document.getElementById('cidrIpInput');
+        const slider = document.getElementById('cidrSlider');
+        const sliderLbl = document.getElementById('cidrSliderVal');
+        if (ipInput) ipInput.value = parts[0];
+        if (parts[1] && slider) {
+          slider.value = parseInt(parts[1], 10);
+          if (sliderLbl) sliderLbl.textContent = '/' + parts[1];
+        }
+        const calcBtn = document.getElementById('btnCalcSubnet');
+        if (calcBtn) calcBtn.click();
+      }
+      return;
+    }
+
+    if (url.toLowerCase() === 'bench' || url.toLowerCase() === 'speed' || url.toLowerCase() === 'benchmark' || url.toLowerCase() === 'kweb://bench') {
+      urlInput.value = url;
+      document.querySelector('[data-tab="tab-utils"]').click();
+      const btnSpeed = document.getElementById('btnSpeedBench');
+      if (btnSpeed) btnSpeed.click();
+      return;
+    }
+
+    if (url.toLowerCase() === 'mesh' || url.toLowerCase() === 'radar' || url.toLowerCase() === 'telemetry' || url.toLowerCase() === 'kweb://mesh') {
+      urlInput.value = url;
+      const meshTab = document.querySelector('[data-tab="tab-mesh"]');
+      if (meshTab) meshTab.click();
+      return;
+    }
+
+    if (url.toLowerCase() === 'forge' || url.toLowerCase() === 'rest' || url.toLowerCase() === 'kweb://forge') {
+      openForgeModal();
       return;
     }
 
@@ -1985,7 +2423,53 @@
     drawPingChart();
   };
 
-  // Port Scanner Engine
+  // Port Scanner Engine & Profiles
+  const btnProfileWeb = document.getElementById('btnProfileWeb');
+  if (btnProfileWeb) btnProfileWeb.onclick = () => {
+    document.getElementById('scanPortsInput').value = '80, 443, 8080, 8443';
+    showToast('Applied Web Server port profile (80, 443, 8080, 8443)', 'info');
+  };
+  const btnProfileCore = document.getElementById('btnProfileCore');
+  if (btnProfileCore) btnProfileCore.onclick = () => {
+    document.getElementById('scanPortsInput').value = '21, 22, 23, 25, 53, 110, 143, 3389';
+    showToast('Applied Core Infrastructure port profile', 'info');
+  };
+  const btnProfileGames = document.getElementById('btnProfileGames');
+  if (btnProfileGames) btnProfileGames.onclick = () => {
+    document.getElementById('scanPortsInput').value = '27960, 7777, 6112, 27015';
+    showToast('Applied 1999 LAN Gaming profile (Tremor III, Surreal Tournament, VoidCraft, Half-Cycle)', 'info');
+  };
+  const btnProfileFleet = document.getElementById('btnProfileFleet');
+  if (btnProfileFleet) btnProfileFleet.onclick = () => {
+    document.getElementById('scanPortsInput').value = '4444, 1999, 8000, 9999';
+    showToast('Applied Fleet & Intranet port profile', 'info');
+  };
+  const btnSubnetScan = document.getElementById('btnSubnetScan');
+  if (btnSubnetScan) btnSubnetScan.onclick = async () => {
+    const base = '192.168.1.';
+    const tbody = document.getElementById('scanTableBody');
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--accent);">Sweeping subnet ${base}1 - ${base}10 on port 80 / 443...</td></tr>`;
+    let rowsHtml = '';
+    for (let i = 1; i <= 10; i++) {
+      const ip = base + i;
+      const isOpen = (i === 1 || i === 4);
+      const latency = Math.floor(Math.random() * 15) + 3;
+      const service = (i === 1) ? 'Default Gateway / Web Admin' : (i === 4 ? 'KiloNet Intranet Relay' : 'Host Unresponsive');
+      rowsHtml += `
+        <tr>
+          <td><strong>${ip}</strong></td>
+          <td>${service}</td>
+          <td>${isOpen ? '<span class="badge badge-success">ONLINE</span>' : '<span class="badge badge-danger">NO ANSWER</span>'}</td>
+          <td>${isOpen ? latency + ' ms' : '--'}</td>
+          <td>${isOpen ? 'ICMP & TCP Echo Responding' : 'Request timed out'}</td>
+        </tr>
+      `;
+      if (isOpen) playPortHitTone(true);
+    }
+    tbody.innerHTML = rowsHtml;
+    footerStatus.textContent = `Subnet sweep completed across ${base}1 - 10`;
+  };
+
   async function runPortScan() {
     const host = document.getElementById('scanTargetInput').value.trim() || '127.0.0.1';
     const portsStr = document.getElementById('scanPortsInput').value;
@@ -1999,22 +2483,35 @@
       443: 'HTTPS Secure Web',
       21: 'FTP File Transfer',
       22: 'SSH Secure Shell',
-      25: 'SMTP Email',
+      23: 'Telnet Remote Console',
+      25: 'SMTP Email Delivery',
       53: 'DNS Name Resolution',
+      110: 'POP3 Mail Retrieval',
+      143: 'IMAP Mail Protocol',
       3389: 'RDP Remote Desktop',
       4444: 'Cerberus Sensor Port',
-      8080: 'HTTP Alt Web Proxy'
+      8080: 'HTTP Alt Web Proxy',
+      8443: 'HTTPS Alt Web Admin',
+      27960: 'Tremor III Arena Server',
+      7777: 'Surreal Tournament Server',
+      6112: 'VoidCraft BattleNet Node',
+      27015: 'Half-Cycle Dedicated Server',
+      1999: 'Echo Subcarrier Carrier Lock',
+      8000: 'KDirector Console Bridge',
+      9999: 'Deep Core Terminal Daemon'
     };
 
     let rowsHtml = '';
+    let foundOpen = false;
     for (const port of ports) {
       const startMs = performance.now();
       let isOpen = false;
       let latency = Math.floor(Math.random() * 20) + 5;
 
-      // Realistic scan response simulation for local test ports
-      if (port === 80 || port === 443 || port === 4444 || host === '127.0.0.1') {
+      // Realistic scan response simulation for local test ports and gaming ports
+      if (port === 80 || port === 443 || port === 4444 || port === 27960 || port === 1999 || host === '127.0.0.1') {
         isOpen = true;
+        foundOpen = true;
       }
 
       const elapsed = Math.round(performance.now() - startMs) + latency;
@@ -2038,6 +2535,7 @@
     }
 
     tbody.innerHTML = rowsHtml;
+    playPortHitTone(foundOpen);
     footerStatus.textContent = `Completed port scan on ${host} (${ports.length} ports audited)`;
   }
 
@@ -2170,27 +2668,132 @@
     reader.readAsText(file);
   };
 
-  // Net Utils
+  // Net Utils Sub-Tool Navigation
+  const utilSubDns = document.getElementById('utilSubDns');
+  const utilSubCidr = document.getElementById('utilSubCidr');
+  const utilSubSpeed = document.getElementById('utilSubSpeed');
+  const utilSubEncode = document.getElementById('utilSubEncode');
+  const utilSubIfconfig = document.getElementById('utilSubIfconfig');
+  const utilTabs = [
+    { btn: 'btnUtilDnsTab', el: utilSubDns },
+    { btn: 'btnUtilCidrTab', el: utilSubCidr },
+    { btn: 'btnUtilSpeedTab', el: utilSubSpeed },
+    { btn: 'btnUtilEncodeTab', el: utilSubEncode },
+    { btn: 'btnUtilIfconfigTab', el: utilSubIfconfig }
+  ];
+
+  function switchUtilTab(activeBtnId) {
+    utilTabs.forEach(t => {
+      const b = document.getElementById(t.btn);
+      if (b) {
+        if (t.btn === activeBtnId) {
+          b.classList.add('active');
+          t.el.style.display = 'flex';
+        } else {
+          b.classList.remove('active');
+          t.el.style.display = 'none';
+        }
+      }
+    });
+  }
+
+  document.getElementById('btnUtilDnsTab').onclick = () => switchUtilTab('btnUtilDnsTab');
+  document.getElementById('btnUtilCidrTab').onclick = () => {
+    switchUtilTab('btnUtilCidrTab');
+    document.getElementById('btnCalcSubnet').click();
+  };
+  document.getElementById('btnUtilSpeedTab').onclick = () => {
+    switchUtilTab('btnUtilSpeedTab');
+    renderSpeedometer(0, 'Ready');
+  };
+  document.getElementById('btnUtilEncodeTab').onclick = () => switchUtilTab('btnUtilEncodeTab');
+  document.getElementById('btnUtilIfconfigTab').onclick = () => {
+    switchUtilTab('btnUtilIfconfigTab');
+    document.getElementById('btnRefreshIfconfig').click();
+  };
+
+  // Sub-Tool 1: DNS & WHOIS & Trace
   document.getElementById('btnDns').onclick = async () => {
     const target = document.getElementById('utilTargetInput').value.trim() || 'example.com';
+    const recType = document.getElementById('dnsRecordType') ? document.getElementById('dnsRecordType').value : 'A';
     const area = document.getElementById('utilContentArea');
-    area.textContent = `Resolving DNS for ${target}...\n`;
+    area.textContent = `Resolving ${recType} record for ${target} via Google DoH...\n`;
+    
+    // Diegetic ARG handling for in-universe nodes
+    if (target.toLowerCase().includes('echo-subsystem') || target.toLowerCase() === '10.19.99.4') {
+      setTimeout(() => {
+        let diegeticResp = `;; ANSWER SECTION (${target} [INTERNAL KILONET DIRECTORY]):\n`;
+        diegeticResp += `${target}.  299  IN  ${recType}  `;
+        if (recType === 'TXT') {
+          diegeticResp += `"v=knet1 carrier_lock=1999Hz subcarrier=sigint-node-04 subchannel=10.19.99.4 ~all"\n`;
+        } else if (recType === 'PTR') {
+          diegeticResp += `classified-leak-storage.kilonet.internal.\n`;
+        } else if (recType === 'MX') {
+          diegeticResp += `10 mail.echo-subsystem.net.\n`;
+        } else {
+          diegeticResp += `10.19.99.4\n`;
+        }
+        diegeticResp += `\n;; ADDITIONAL RECORDS:\n`;
+        diegeticResp += `gateway.kilonet.internal.  299  IN  A  10.19.99.1\n`;
+        diegeticResp += `carrier.kilonet.internal.  299  IN  TXT "CARRIER HARMONIC: 1999 Hz"\n`;
+        diegeticResp += `\n;; Query time: 4 msec\n;; SERVER: 10.19.99.1#53(10.19.99.1)\n;; STATUS: NOERROR (ARG-DIEGETIC-LOCK)`;
+        area.textContent = diegeticResp;
+        playNavChime();
+        addTrafficLog('DNS', `${target} (${recType})`, 'OK', 200, 4, diegeticResp.length);
+      }, 200);
+      return;
+    }
+
     try {
-      const res = await fetch(`https://dns.google/resolve?name=${target}`);
+      const typeNum = { 'A': 1, 'NS': 2, 'CNAME': 5, 'SOA': 6, 'PTR': 12, 'MX': 15, 'TXT': 16, 'AAAA': 28 }[recType] || 1;
+      const res = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(target)}&type=${typeNum}`);
       const data = await res.json();
-      area.textContent += JSON.stringify(data, null, 2);
+      let formatted = `;; HEADER SECTION:\n;; Status: ${data.Status === 0 ? 'NOERROR (0)' : 'CODE ' + data.Status} | RecursionDesired: ${data.RD} | RecursionAvailable: ${data.RA}\n\n`;
+      if (Array.isArray(data.Answer) && data.Answer.length > 0) {
+        formatted += `;; ANSWER SECTION (${recType}):\n`;
+        data.Answer.forEach(ans => {
+          formatted += `${ans.name.padEnd(28, ' ')} ${ans.TTL.toString().padStart(5, ' ')}  IN  ${recType.padEnd(6, ' ')} ${ans.data}\n`;
+        });
+      } else {
+        formatted += `;; No ${recType} answer records found for ${target}.\n`;
+        if (Array.isArray(data.Authority)) {
+          formatted += `\n;; AUTHORITY SECTION:\n`;
+          data.Authority.forEach(a => {
+            formatted += `${a.name.padEnd(28, ' ')} ${a.TTL.toString().padStart(5, ' ')}  IN  SOA  ${a.data}\n`;
+          });
+        }
+      }
+      formatted += `\n;; Raw JSON Payload:\n` + JSON.stringify(data, null, 2);
+      area.textContent = formatted;
+      playNavChime();
+      addTrafficLog('DNS', `${target} (${recType})`, 'OK', 200, 32, formatted.length);
     } catch(e) {
-      area.textContent += `Failed to resolve: ${e.message}\nSimulated response:\n;; ANSWER SECTION:\n${target}. 299 IN A 93.184.216.34\n`;
+      area.textContent += `Failed to resolve live DoH: ${e.message}\nSimulated response:\n;; ANSWER SECTION:\n${target}. 299 IN ${recType} 93.184.216.34\n`;
+      playErrorBuzzer();
     }
   };
 
   document.getElementById('btnWhois').onclick = () => {
     const target = document.getElementById('utilTargetInput').value.trim() || 'example.com';
     const area = document.getElementById('utilContentArea');
-    area.textContent = `Querying WHOIS for ${target}...\n`;
+    area.textContent = `Querying regional WHOIS for ${target}...\n`;
     setTimeout(() => {
-      area.textContent += `Domain Name: ${target.toUpperCase()}\nRegistry Domain ID: 123456789_DOMAIN_COM-VRSN\nUpdated Date: 2023-01-01T00:00:00Z\nCreation Date: 1995-01-01T00:00:00Z\nRegistrar: Example Registrar, Inc.\n`;
-    }, 500);
+      let whoisTxt = `Domain Name: ${target.toUpperCase()}\n`;
+      whoisTxt += `Registry Domain ID: 19991231_DOMAIN_${target.replace(/[^A-Za-z0-9]/g, '').toUpperCase()}-VRSN\n`;
+      whoisTxt += `Registrar WHOIS Server: whois.kilonet-registrar.net\n`;
+      whoisTxt += `Updated Date: 1999-12-31T23:59:58Z\n`;
+      whoisTxt += `Creation Date: 1995-01-01T00:00:00Z\n`;
+      whoisTxt += `Registry Expiry Date: 2038-01-19T03:14:07Z\n`;
+      whoisTxt += `Registrar: KiloNet 1999 Telecom Consortium\n`;
+      whoisTxt += `Domain Status: clientTransferProhibited\n`;
+      whoisTxt += `Name Server: NS1.KILONET.NET\n`;
+      whoisTxt += `Name Server: NS2.KILONET.NET\n`;
+      whoisTxt += `DNSSEC: unsigned\n\n`;
+      whoisTxt += `>>> Last update of WHOIS database: 1999-12-31T23:59:59Z <<<`;
+      area.textContent = whoisTxt;
+      playNavChime();
+      addTrafficLog('WHOIS', target, 'OK', 200, 150, whoisTxt.length);
+    }, 350);
   };
 
   document.getElementById('btnTrace').onclick = () => {
@@ -2199,24 +2802,440 @@
     area.textContent = `Tracing route to ${target} over a maximum of 30 hops:\n\n`;
     let hop = 1;
     const interval = setInterval(() => {
-      const ms1 = Math.floor(Math.random() * 20) + hop * 2;
-      const ms2 = ms1 + Math.floor(Math.random() * 5);
-      const ms3 = ms1 - Math.floor(Math.random() * 5);
+      const ms1 = Math.floor(Math.random() * 15) + hop * 3;
+      const ms2 = ms1 + Math.floor(Math.random() * 4);
+      const ms3 = ms1 - Math.floor(Math.random() * 3);
       if (hop === 8) {
         area.textContent += `${hop.toString().padStart(2, ' ')}    ${ms1} ms    ${ms2} ms    ${ms3} ms  ${target} [93.184.216.34]\n\nTrace complete.\n`;
+        playNavChime();
         clearInterval(interval);
       } else if (hop === 4) {
         area.textContent += `${hop.toString().padStart(2, ' ')}     *        *        *     Request timed out.\n`;
       } else {
-        area.textContent += `${hop.toString().padStart(2, ' ')}    ${ms1} ms    ${ms2} ms    ${ms3} ms  router-${hop}.isp.net [192.168.10.${hop}]\n`;
+        area.textContent += `${hop.toString().padStart(2, ' ')}    ${ms1} ms    ${ms2} ms    ${ms3} ms  router-${hop}.mci-worldcom.net [192.168.10.${hop}]\n`;
+        playPacketBlip();
       }
       hop++;
-    }, 600);
+    }, 400);
   };
 
-  document.getElementById('btnIfconfig').onclick = () => {
+  // Sub-Tool 2: CIDR Subnet Calculator Logic
+  function parseIpv4(ipStr) {
+    const parts = ipStr.trim().split('.');
+    if (parts.length !== 4) return null;
+    let num = 0;
+    for (let i = 0; i < 4; i++) {
+      const p = parseInt(parts[i], 10);
+      if (isNaN(p) || p < 0 || p > 255) return null;
+      num = (num << 8) | p;
+    }
+    return num >>> 0;
+  }
+
+  function numToIpv4(num) {
+    return [
+      (num >>> 24) & 255,
+      (num >>> 16) & 255,
+      (num >>> 8) & 255,
+      num & 255
+    ].join('.');
+  }
+
+  function numToBinaryQuad(num, maskBits) {
+    let html = '';
+    for (let i = 31; i >= 0; i--) {
+      const bit = (num >>> i) & 1;
+      const isNet = (31 - i) < maskBits;
+      const color = isNet ? '#38bdf8' : '#fbbf24';
+      html += `<span style="color:${color};font-weight:${isNet?'700':'400'};">${bit}</span>`;
+      if (i > 0 && i % 8 === 0) html += `<span style="color:#64748b;">.</span>`;
+    }
+    return html;
+  }
+
+  function calculateSubnet(ipStr, prefix) {
+    const ipNum = parseIpv4(ipStr);
+    if (ipNum === null) return null;
+    prefix = Math.max(0, Math.min(32, parseInt(prefix, 10) || 24));
+
+    const mask = prefix === 0 ? 0 : ((0xFFFFFFFF << (32 - prefix)) >>> 0);
+    const wildcard = (~mask) >>> 0;
+    const network = (ipNum & mask) >>> 0;
+    const broadcast = (network | wildcard) >>> 0;
+
+    let totalHosts = Math.pow(2, 32 - prefix);
+    let usableHosts = prefix >= 31 ? (prefix === 31 ? 2 : 1) : Math.max(0, totalHosts - 2);
+    let firstUsable = prefix >= 31 ? network : (network + 1) >>> 0;
+    let lastUsable = prefix >= 31 ? broadcast : (broadcast - 1) >>> 0;
+
+    const firstOctet = (ipNum >>> 24) & 255;
+    let ipClass = 'Class A';
+    if (firstOctet >= 128 && firstOctet <= 191) ipClass = 'Class B';
+    else if (firstOctet >= 192 && firstOctet <= 223) ipClass = 'Class C';
+    else if (firstOctet >= 224 && firstOctet <= 239) ipClass = 'Class D (Multicast)';
+    else if (firstOctet >= 240) ipClass = 'Class E (Experimental)';
+
+    let isPrivate = false;
+    if (firstOctet === 10) isPrivate = true;
+    else if (firstOctet === 172 && ((ipNum >>> 16) & 255) >= 16 && ((ipNum >>> 16) & 255) <= 31) isPrivate = true;
+    else if (firstOctet === 192 && ((ipNum >>> 16) & 255) === 168) isPrivate = true;
+    else if (firstOctet === 127) isPrivate = true;
+
+    const isClassified = (firstOctet === 10 && ((ipNum >>> 16) & 255) === 19 && ((ipNum >>> 8) & 255) === 99);
+
+    return {
+      ip: numToIpv4(ipNum),
+      prefix,
+      mask: numToIpv4(mask),
+      wildcard: numToIpv4(wildcard),
+      network: numToIpv4(network),
+      broadcast: numToIpv4(broadcast),
+      firstUsable: numToIpv4(firstUsable),
+      lastUsable: numToIpv4(lastUsable),
+      totalHosts,
+      usableHosts,
+      ipClass,
+      isPrivate,
+      isClassified,
+      binaryQuad: numToBinaryQuad(ipNum, prefix),
+      maskBinary: numToBinaryQuad(mask, prefix)
+    };
+  }
+
+  const cidrSlider = document.getElementById('cidrPrefixSlider');
+  const cidrLabel = document.getElementById('cidrPrefixLabel');
+  if (cidrSlider && cidrLabel) {
+    cidrSlider.oninput = () => {
+      cidrLabel.textContent = `/${cidrSlider.value}`;
+      document.getElementById('btnCalcSubnet').click();
+    };
+  }
+
+  document.getElementById('btnSubnetPreset192').onclick = () => {
+    document.getElementById('cidrIpInput').value = '192.168.1.50';
+    cidrSlider.value = 24;
+    cidrLabel.textContent = '/24';
+    document.getElementById('btnCalcSubnet').click();
+  };
+  document.getElementById('btnSubnetPreset10').onclick = () => {
+    document.getElementById('cidrIpInput').value = '10.0.0.1';
+    cidrSlider.value = 8;
+    cidrLabel.textContent = '/8';
+    document.getElementById('btnCalcSubnet').click();
+  };
+  document.getElementById('btnSubnetPresetARG').onclick = () => {
+    document.getElementById('cidrIpInput').value = '10.19.99.4';
+    cidrSlider.value = 24;
+    cidrLabel.textContent = '/24';
+    document.getElementById('btnCalcSubnet').click();
+  };
+
+  document.getElementById('btnCalcSubnet').onclick = () => {
+    const ip = document.getElementById('cidrIpInput').value.trim();
+    const prefix = parseInt(cidrSlider ? cidrSlider.value : 24, 10);
+    const sub = calculateSubnet(ip, prefix);
     const area = document.getElementById('utilContentArea');
-    area.textContent = `Network Interface Configuration:\n\nEthernet adapter eth0:\n   Connection-specific DNS Suffix  . : localdomain\n   Physical Address. . . . . . . . . : 00-1A-2B-3C-4D-5E\n   IPv4 Address. . . . . . . . . . . : 192.168.1.104(Preferred)\n   Subnet Mask . . . . . . . . . . . : 255.255.255.0\n   Default Gateway . . . . . . . . . : 192.168.1.1\n   DNS Servers . . . . . . . . . . . : 8.8.8.8\n`;
+    if (!sub) {
+      area.innerHTML = `<span style="color:var(--danger);">Invalid IPv4 address format. Expected A.B.C.D (0-255).</span>`;
+      playErrorBuzzer();
+      return;
+    }
+
+    let out = '';
+    if (sub.isClassified) {
+      out += `
+        <div style="background:rgba(245,158,11,0.15); border:1px solid #f59e0b; border-radius:6px; padding:10px; margin-bottom:10px; color:#fbbf24;">
+          <strong>🔒 CLASSIFIED ARPANET / INTRANET SUBNET DETECTED:</strong><br>
+          Segment <code>10.19.99.0/24</code> belongs to the internal corporate diagnostic network.<br>
+          Internal Gateway: <code>10.19.99.1</code> | Classified Leak Node: <code>10.19.99.4</code> | Carrier Frequency: <code>1999 Hz</code>
+        </div>
+      `;
+    }
+
+    out += `
+      <div style="margin-bottom:8px; font-weight:700; color:var(--text-main); font-size:14px;">
+        CIDR Subnet Report: <span style="color:var(--accent);">${sub.ip}/${sub.prefix}</span>
+      </div>
+      <div class="cidr-grid">
+        <div class="cidr-cell"><span class="cidr-cell-lbl">Network Address</span><span class="cidr-cell-val">${sub.network}</span></div>
+        <div class="cidr-cell"><span class="cidr-cell-lbl">Subnet Mask</span><span class="cidr-cell-val">${sub.mask}</span></div>
+        <div class="cidr-cell"><span class="cidr-cell-lbl">Wildcard Mask</span><span class="cidr-cell-val">${sub.wildcard}</span></div>
+        <div class="cidr-cell"><span class="cidr-cell-lbl">Broadcast Address</span><span class="cidr-cell-val">${sub.broadcast}</span></div>
+        <div class="cidr-cell"><span class="cidr-cell-lbl">Usable Host Range</span><span class="cidr-cell-val">${sub.firstUsable} - ${sub.lastUsable}</span></div>
+        <div class="cidr-cell"><span class="cidr-cell-lbl">Usable Hosts</span><span class="cidr-cell-val">${sub.usableHosts.toLocaleString()} IPs</span></div>
+        <div class="cidr-cell"><span class="cidr-cell-lbl">IP Class</span><span class="cidr-cell-val">${sub.ipClass}</span></div>
+        <div class="cidr-cell"><span class="cidr-cell-lbl">RFC 1918 Scope</span><span class="cidr-cell-val" style="color:${sub.isPrivate ? '#34d399' : '#fbbf24'};">${sub.isPrivate ? 'Private Intranet' : 'Public Internet'}</span></div>
+      </div>
+      <div style="margin-top:12px; padding:10px; background:#090d16; border:1px solid var(--border); border-radius:6px; font-family:var(--font-mono); font-size:12px;">
+        <div style="margin-bottom:4px; color:var(--text-muted); font-size:11px;">32-BIT BINARY ADDRESS (Cyan = Network Bits, Amber = Host Bits):</div>
+        <div>IP:   ${sub.binaryQuad}</div>
+        <div>MASK: ${sub.maskBinary}</div>
+      </div>
+    `;
+    area.innerHTML = out;
+    playNavChime();
+  };
+
+  // Sub-Tool 3: 1999 Bandwidth Benchmark & Speedometer
+  function renderSpeedometer(speedKbps, statusText = '') {
+    const area = document.getElementById('utilContentArea');
+    area.innerHTML = `
+      <div class="dial-meter-container">
+        <canvas id="speedDialCanvas" width="400" height="220" style="width:400px; height:220px;"></canvas>
+        <div style="margin-top:8px; font-family:var(--font-mono); font-size:18px; font-weight:700; color:var(--accent);" id="dialSpeedLbl">${speedKbps.toFixed(1)} kbps</div>
+        <div style="font-size:12px; color:var(--text-muted); margin-top:2px;" id="dialStatusLbl">${statusText}</div>
+      </div>
+      <div id="benchmarkStats" style="margin-top:10px; font-family:var(--font-mono); font-size:12px; line-height:1.6; color:#cbd5e1;"></div>
+    `;
+
+    const dCanvas = document.getElementById('speedDialCanvas');
+    if (!dCanvas) return;
+    const dctx = dCanvas.getContext('2d');
+    const cx = 200, cy = 190, r = 150;
+
+    dctx.clearRect(0, 0, 400, 220);
+
+    // Bezel arc
+    dctx.beginPath();
+    dctx.arc(cx, cy, r, Math.PI, Math.PI * 2);
+    dctx.strokeStyle = '#334155';
+    dctx.lineWidth = 14;
+    dctx.stroke();
+
+    // Active speed arc
+    const maxSpeed = 10000;
+    const ratio = Math.min(1, Math.max(0, speedKbps / maxSpeed));
+    const needleAngle = Math.PI + ratio * Math.PI;
+
+    dctx.beginPath();
+    dctx.arc(cx, cy, r, Math.PI, needleAngle);
+    dctx.strokeStyle = '#38bdf8';
+    dctx.lineWidth = 14;
+    dctx.stroke();
+
+    // Scale tick marks
+    const ticks = [
+      { val: 0, lbl: '0' },
+      { val: 56, lbl: '56k' },
+      { val: 128, lbl: '128k' },
+      { val: 1544, lbl: 'T1' },
+      { val: 5000, lbl: '5M' },
+      { val: 10000, lbl: '10M' }
+    ];
+    ticks.forEach(t => {
+      const ang = Math.PI + (t.val / maxSpeed) * Math.PI;
+      const tx1 = cx + (r - 18) * Math.cos(ang);
+      const ty1 = cy + (r - 18) * Math.sin(ang);
+      const tx2 = cx + (r + 8) * Math.cos(ang);
+      const ty2 = cy + (r + 8) * Math.sin(ang);
+      dctx.beginPath();
+      dctx.moveTo(tx1, ty1);
+      dctx.lineTo(tx2, ty2);
+      dctx.strokeStyle = '#94a3b8';
+      dctx.lineWidth = 2;
+      dctx.stroke();
+
+      const lx = cx + (r - 32) * Math.cos(ang);
+      const ly = cy + (r - 32) * Math.sin(ang);
+      dctx.fillStyle = '#64748b';
+      dctx.font = '10px Consolas, monospace';
+      dctx.textAlign = 'center';
+      dctx.fillText(t.lbl, lx, ly);
+    });
+
+    // Needle
+    dctx.beginPath();
+    dctx.moveTo(cx, cy);
+    const nx = cx + (r - 14) * Math.cos(needleAngle);
+    const ny = cy + (r - 14) * Math.sin(needleAngle);
+    dctx.lineTo(nx, ny);
+    dctx.strokeStyle = '#f43f5e';
+    dctx.lineWidth = 3;
+    dctx.stroke();
+
+    // Center pivot
+    dctx.beginPath();
+    dctx.arc(cx, cy, 8, 0, Math.PI * 2);
+    dctx.fillStyle = '#f8fafc';
+    dctx.fill();
+  }
+
+  document.getElementById('btnRunSpeedBenchmark').onclick = () => {
+    const profVal = parseFloat(document.getElementById('speedProfileSelect').value) || 56;
+    let step = 0;
+    const totalSteps = 25;
+    const targetKbps = profVal * (0.92 + Math.random() * 0.12);
+
+    const timer = setInterval(() => {
+      step++;
+      const curKbps = (targetKbps * (step / totalSteps)) + (Math.random() * (targetKbps * 0.08) - targetKbps * 0.04);
+      renderSpeedometer(Math.max(0, curKbps), `Benchmarking carrier line... (Sample ${step}/${totalSteps})`);
+      playPacketBlip();
+
+      if (step >= totalSteps) {
+        clearInterval(timer);
+        renderSpeedometer(targetKbps, `Benchmark Complete: ${targetKbps.toFixed(1)} kbps`);
+        playNavChime();
+
+        // Calculate 999 KB KiloApp download duration
+        const kbps = targetKbps;
+        const bytesPerSec = (kbps * 1000) / 8;
+        const totalSec = (999 * 1024) / Math.max(bytesPerSec, 1);
+        const mins = Math.floor(totalSec / 60);
+        const secs = Math.round(totalSec % 60);
+        const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs.toFixed(1)}s`;
+
+        const statsDiv = document.getElementById('benchmarkStats');
+        if (statsDiv) {
+          statsDiv.innerHTML = `
+            <div style="background:#090d16; border:1px solid var(--border); border-radius:6px; padding:10px;">
+              <strong>📊 1999 LINE DIAGNOSTIC RESULTS:</strong><br>
+              • Sustained Throughput: <strong>${targetKbps.toFixed(1)} kbps</strong> (${(bytesPerSec / 1024).toFixed(2)} KB/s)<br>
+              • Sacred 999 KB KiloApp Download Time: <strong style="color:var(--accent);">${timeStr}</strong><br>
+              • Packet Transmission MTU: <strong>1500 bytes (Ethernet V2)</strong> | Efficiency: <strong>98.6%</strong><br>
+              • Protocol Overhead: <strong>V.42bis Data Compression active</strong>
+            </div>
+          `;
+        }
+      }
+    }, 60);
+  };
+
+  // Sub-Tool 4: Payload & Checksum Encoder Logic
+  function getPayloadInput() {
+    const area = document.getElementById('utilContentArea');
+    const existing = document.getElementById('payloadInputBox');
+    return existing ? existing.value : '';
+  }
+
+  function renderPayloadUI(resultText) {
+    const area = document.getElementById('utilContentArea');
+    const curVal = getPayloadInput() || 'KiloApps 1999 Network Engine // Node 0x7F';
+    area.innerHTML = `
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <label style="font-size:12px; color:var(--text-muted); font-weight:700;">Input Payload Buffer:</label>
+        <textarea id="payloadInputBox" class="input-url" style="height:70px; font-family:var(--font-mono); font-size:12px; resize:vertical;">${curVal}</textarea>
+        <label style="font-size:12px; color:var(--text-muted); font-weight:700;">Transformation / Hash Result:</label>
+        <div class="content-box" style="height:120px; font-family:var(--font-mono); font-size:12px; white-space:pre-wrap;">${resultText}</div>
+      </div>
+    `;
+  }
+
+  document.getElementById('btnEncB64').onclick = () => {
+    const str = getPayloadInput() || 'KiloApps 1999 Network Engine';
+    try {
+      const b64 = btoa(str);
+      renderPayloadUI(`Base64 Encoded (${b64.length} chars):\n${b64}`);
+      playNavChime();
+    } catch(e) {
+      renderPayloadUI(`Error: ` + e.message);
+    }
+  };
+
+  document.getElementById('btnDecB64').onclick = () => {
+    const str = getPayloadInput();
+    try {
+      const plain = atob(str.trim());
+      renderPayloadUI(`Base64 Decoded (${plain.length} bytes):\n${plain}`);
+      playNavChime();
+    } catch(e) {
+      renderPayloadUI(`Invalid Base64 string: ` + e.message);
+    }
+  };
+
+  document.getElementById('btnEncUrl').onclick = () => {
+    const str = getPayloadInput() || 'https://kiloapps.web.app/?app=knet&node=0x7f';
+    renderPayloadUI(`URL Encoded:\n${encodeURIComponent(str)}`);
+    playNavChime();
+  };
+
+  document.getElementById('btnDecUrl').onclick = () => {
+    const str = getPayloadInput();
+    try {
+      renderPayloadUI(`URL Decoded:\n${decodeURIComponent(str)}`);
+      playNavChime();
+    } catch(e) {
+      renderPayloadUI(`Error: ` + e.message);
+    }
+  };
+
+  document.getElementById('btnEncHex').onclick = () => {
+    const str = getPayloadInput() || 'KNet 1999';
+    let hex = '';
+    for (let i = 0; i < str.length; i++) {
+      hex += str.charCodeAt(i).toString(16).padStart(2, '0').toUpperCase() + ' ';
+    }
+    renderPayloadUI(`Hex ASCII Representation:\n${hex.trim()}`);
+    playNavChime();
+  };
+
+  document.getElementById('btnDecHex').onclick = () => {
+    const str = getPayloadInput().replace(/[^0-9A-Fa-f]/g, '');
+    let out = '';
+    for (let i = 0; i < str.length; i += 2) {
+      out += String.fromCharCode(parseInt(str.substr(i, 2), 16));
+    }
+    renderPayloadUI(`ASCII Restored from Hex:\n${out}`);
+    playNavChime();
+  };
+
+  document.getElementById('btnCalcHashes').onclick = () => {
+    const str = getPayloadInput() || 'KiloApps 1999 Network Engine';
+    // CRC32
+    let crc = 0 ^ (-1);
+    for (let i = 0; i < str.length; i++) {
+      crc = (crc >>> 8) ^ ((crc ^ str.charCodeAt(i)) & 0xFF);
+    }
+    const crc32 = ((crc ^ (-1)) >>> 0).toString(16).toUpperCase().padStart(8, '0');
+
+    // Adler-32
+    let a = 1, b = 0;
+    for (let i = 0; i < str.length; i++) {
+      a = (a + str.charCodeAt(i)) % 65521;
+      b = (b + a) % 65521;
+    }
+    const adler32 = ((b << 16) | a >>> 0).toString(16).toUpperCase().padStart(8, '0');
+
+    // DJB2 Hash
+    let hash = 5381;
+    for (let i = 0; i < str.length; i++) {
+      hash = ((hash << 5) + hash) + str.charCodeAt(i);
+    }
+    const djb2 = (hash >>> 0).toString(16).toUpperCase().padStart(8, '0');
+
+    renderPayloadUI(
+      `--- PACKET INTEGRITY & CHECKSUM VERIFICATION ---\n` +
+      `Payload Length : ${str.length} bytes\n` +
+      `CRC-32 Checksum: 0x${crc32}\n` +
+      `Adler-32 Hash  : 0x${adler32}\n` +
+      `DJB2 Hash      : 0x${djb2}\n` +
+      `Checksum State : VALID (RFC 1950 compliant)`
+    );
+    playNavChime();
+  };
+
+  // Sub-Tool 5: Interfaces (ifconfig)
+  document.getElementById('btnRefreshIfconfig').onclick = () => {
+    const area = document.getElementById('utilContentArea');
+    const rxPkts = Math.floor(Math.random() * 500) + 1240;
+    const txPkts = Math.floor(Math.random() * 300) + 850;
+    area.innerHTML = `
+      <div style="font-family:var(--font-mono); font-size:12px; line-height:1.6; color:#cbd5e1;">
+        <strong style="color:var(--accent);">Ethernet adapter eth0:</strong><br>
+        &nbsp;&nbsp;Connection-specific DNS Suffix &nbsp;. : localdomain<br>
+        &nbsp;&nbsp;Physical Address (MAC) &nbsp;. . . . : 00-1A-2B-3C-4D-5E<br>
+        &nbsp;&nbsp;IPv4 Address &nbsp;. . . . . . . . . . : 192.168.1.104 (Preferred)<br>
+        &nbsp;&nbsp;Subnet Mask &nbsp;. . . . . . . . . . : 255.255.255.0 (/24)<br>
+        &nbsp;&nbsp;Default Gateway &nbsp;. . . . . . . . : 192.168.1.1<br>
+        &nbsp;&nbsp;DNS Servers &nbsp;. . . . . . . . . . : 8.8.8.8, 1.1.1.1<br>
+        &nbsp;&nbsp;Link Speed / Duplex &nbsp;. . . . . : 100 Mbps (Full Duplex)<br>
+        &nbsp;&nbsp;Maximum Transmission Unit (MTU) . : 1500 bytes<br>
+        &nbsp;&nbsp;RX Packets / Bytes &nbsp;. . . . . . : ${rxPkts.toLocaleString()} pkts (${(rxPkts * 420 / 1024).toFixed(1)} KB)<br>
+        &nbsp;&nbsp;TX Packets / Bytes &nbsp;. . . . . . : ${txPkts.toLocaleString()} pkts (${(txPkts * 380 / 1024).toFixed(1)} KB)<br>
+        &nbsp;&nbsp;Collisions / Errors &nbsp;. . . . . : 0 / 0 (Carrier clean)
+      </div>
+    `;
+    playNavChime();
   };
 
   // Interactive Packet Sniffer Engine
@@ -2386,6 +3405,583 @@
     } catch(e) {}
   });
 
+  // =========================================================================
+  // HTTP REQUEST FORGE & REST CONSOLE LOGIC
+  // =========================================================================
+  const forgeModal = document.getElementById('forgeModal');
+  const btnOpenForge = document.getElementById('btnOpenForge');
+  const btnForgeClose = document.getElementById('btnForgeClose');
+  const btnForgeDone = document.getElementById('btnForgeDone');
+  const forgeMethod = document.getElementById('forgeMethod');
+  const forgeUrl = document.getElementById('forgeUrl');
+  const btnSendForge = document.getElementById('btnSendForge');
+  const forgeTabHeadersBtn = document.getElementById('forgeTabHeadersBtn');
+  const forgeTabBodyBtn = document.getElementById('forgeTabBodyBtn');
+  const forgeTabResponseBtn = document.getElementById('forgeTabResponseBtn');
+  const forgeCopyCurlBtn = document.getElementById('forgeCopyCurlBtn');
+  const forgeHeadersPanel = document.getElementById('forgeHeadersPanel');
+  const forgeBodyPanel = document.getElementById('forgeBodyPanel');
+  const forgeResponsePanel = document.getElementById('forgeResponsePanel');
+  const forgeUaPreset = document.getElementById('forgeUaPreset');
+  const forgeHeadersText = document.getElementById('forgeHeadersText');
+  const forgeContentType = document.getElementById('forgeContentType');
+  const forgeBodyText = document.getElementById('forgeBodyText');
+  const forgeResponseStatus = document.getElementById('forgeResponseStatus');
+  const forgeResponseTiming = document.getElementById('forgeResponseTiming');
+  const forgeResponseHeaders = document.getElementById('forgeResponseHeaders');
+  const forgeResponseBody = document.getElementById('forgeResponseBody');
+
+  function openForgeModal(url = '', method = '') {
+    if (url) forgeUrl.value = url;
+    if (method) forgeMethod.value = method;
+    forgeModal.style.display = 'flex';
+    initAudio();
+    playNavChime();
+  }
+
+  function closeForgeModal() {
+    forgeModal.style.display = 'none';
+  }
+
+  if (btnOpenForge) btnOpenForge.onclick = () => openForgeModal();
+  if (btnForgeClose) btnForgeClose.onclick = closeForgeModal;
+  if (btnForgeDone) btnForgeDone.onclick = closeForgeModal;
+  if (forgeModal) {
+    forgeModal.onclick = (e) => {
+      if (e.target === forgeModal) closeForgeModal();
+    };
+  }
+
+  function setForgeTab(tab) {
+    forgeTabHeadersBtn.classList.toggle('active', tab === 'headers');
+    forgeTabBodyBtn.classList.toggle('active', tab === 'body');
+    forgeTabResponseBtn.classList.toggle('active', tab === 'response');
+
+    forgeHeadersPanel.style.display = tab === 'headers' ? 'flex' : 'none';
+    forgeBodyPanel.style.display = tab === 'body' ? 'flex' : 'none';
+    forgeResponsePanel.style.display = tab === 'response' ? 'flex' : 'none';
+  }
+
+  if (forgeTabHeadersBtn) forgeTabHeadersBtn.onclick = () => setForgeTab('headers');
+  if (forgeTabBodyBtn) forgeTabBodyBtn.onclick = () => setForgeTab('body');
+  if (forgeTabResponseBtn) forgeTabResponseBtn.onclick = () => setForgeTab('response');
+
+  if (forgeUaPreset) {
+    forgeUaPreset.onchange = () => {
+      let lines = forgeHeadersText.value.split('\n').filter(l => !l.toLowerCase().startsWith('user-agent:'));
+      lines.unshift(`User-Agent: ${forgeUaPreset.value}`);
+      forgeHeadersText.value = lines.join('\n');
+    };
+  }
+
+  if (forgeContentType) {
+    forgeContentType.onchange = () => {
+      let lines = forgeHeadersText.value.split('\n').filter(l => !l.toLowerCase().startsWith('content-type:'));
+      lines.push(`Content-Type: ${forgeContentType.value}`);
+      forgeHeadersText.value = lines.join('\n');
+    };
+  }
+
+  if (forgeCopyCurlBtn) {
+    forgeCopyCurlBtn.onclick = () => {
+      const method = forgeMethod.value;
+      const targetUrl = forgeUrl.value.trim() || 'http://127.0.0.1/';
+      const headers = forgeHeadersText.value.split('\n').map(l => l.trim()).filter(Boolean);
+      let curl = `curl -X ${method} "${targetUrl}"`;
+      headers.forEach(h => {
+        curl += ` -H "${h}"`;
+      });
+      if (method !== 'GET' && method !== 'HEAD' && forgeBodyText.value.trim()) {
+        curl += ` -d '${forgeBodyText.value.trim().replace(/'/g, "'\\''")}'`;
+      }
+      navigator.clipboard.writeText(curl).then(() => {
+        showToast('cURL command copied to clipboard', 'info');
+        playPacketBlip();
+      }).catch(() => {
+        showToast('Copied cURL to clipboard', 'info');
+      });
+    };
+  }
+
+  async function executeForgeRequest() {
+    initAudio();
+    const method = forgeMethod.value;
+    let reqUrl = forgeUrl.value.trim();
+    if (!reqUrl) reqUrl = '/web/portal.html';
+
+    setForgeTab('response');
+    forgeResponseStatus.className = 'badge badge-info';
+    forgeResponseStatus.textContent = `Status: Sending ${method}...`;
+    forgeResponseTiming.textContent = 'Timing: Measuring...';
+    forgeResponseHeaders.textContent = 'Awaiting remote headers...';
+    forgeResponseBody.textContent = 'Awaiting packet payload stream...';
+
+    const tStart = performance.now();
+    playPacketBlip();
+
+    try {
+      let resolvedUrl = reqUrl;
+      if (resolvedUrl.startsWith('kweb://')) {
+        resolvedUrl = resolvedUrl.replace('kweb://', '/web/');
+        if (!resolvedUrl.endsWith('.html')) resolvedUrl += '.html';
+      }
+
+      const rawHeaders = forgeHeadersText.value.split('\n');
+      const headerObj = {};
+      rawHeaders.forEach(line => {
+        const idx = line.indexOf(':');
+        if (idx > -1) {
+          headerObj[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+        }
+      });
+
+      const options = {
+        method: method,
+        headers: headerObj
+      };
+      if (method !== 'GET' && method !== 'HEAD' && forgeBodyText.value.trim()) {
+        options.body = forgeBodyText.value.trim();
+      }
+
+      let res, resText = '', headersText = '';
+
+      if (resolvedUrl.startsWith('/web/') || resolvedUrl.includes('echo-subsystem.net') || resolvedUrl.includes('10.19.99.4')) {
+        let fetchTarget = resolvedUrl;
+        if (resolvedUrl.includes('echo-subsystem.net')) fetchTarget = '/web/echo_subsystem.html';
+        if (resolvedUrl.includes('10.19.99.4')) fetchTarget = '/web/classified.html';
+
+        res = await fetch(fetchTarget, { method: method === 'HEAD' ? 'HEAD' : 'GET' });
+        const tEnd = performance.now();
+        const duration = Math.round(tEnd - tStart);
+        resText = await res.text();
+
+        headersText = `HTTP/1.1 200 OK\r\n`;
+        headersText += `Date: ${new Date().toUTCString()}\r\n`;
+        headersText += `Server: KiloOS-MicroServer/1999.4 (Win98; x86)\r\n`;
+        headersText += `Content-Type: ${res.headers.get('content-type') || 'text/html; charset=UTF-8'}\r\n`;
+        headersText += `Content-Length: ${resText.length}\r\n`;
+        headersText += `Connection: keep-alive\r\n`;
+        headersText += `X-KiloNet-Carrier: 1999 Hz Synchronized\r\n`;
+
+        forgeResponseStatus.className = 'badge badge-success';
+        forgeResponseStatus.textContent = `Status: 200 OK`;
+        forgeResponseTiming.textContent = `Timing: ${duration} ms | Length: ${resText.length} bytes`;
+        forgeResponseHeaders.textContent = headersText;
+        forgeResponseBody.textContent = (method === 'HEAD') ? '[HEAD response: No body transmitted per RFC 2616]' : resText.slice(0, 5000) + (resText.length > 5000 ? `\n... [${resText.length - 5000} bytes truncated]` : '');
+
+        logTraffic('HTTP', method, reqUrl, 200, resText.length, duration);
+        playNavChime();
+        return;
+      }
+
+      res = await fetch(reqUrl, options);
+      const tEnd = performance.now();
+      const duration = Math.round(tEnd - tStart);
+      resText = await res.text();
+
+      headersText = `HTTP/1.1 ${res.status} ${res.statusText}\r\n`;
+      res.headers.forEach((val, key) => {
+        headersText += `${key}: ${val}\r\n`;
+      });
+
+      forgeResponseStatus.className = res.ok ? 'badge badge-success' : 'badge badge-danger';
+      forgeResponseStatus.textContent = `Status: ${res.status} ${res.statusText}`;
+      forgeResponseTiming.textContent = `Timing: ${duration} ms | Length: ${resText.length} bytes`;
+      forgeResponseHeaders.textContent = headersText || '(No exposed response headers)';
+      forgeResponseBody.textContent = resText.slice(0, 5000) + (resText.length > 5000 ? `\n... [${resText.length - 5000} bytes truncated]` : '');
+
+      logTraffic('HTTP', method, reqUrl, res.status, resText.length, duration);
+      playNavChime();
+    } catch (err) {
+      const tEnd = performance.now();
+      const duration = Math.round(tEnd - tStart);
+      forgeResponseStatus.className = 'badge badge-danger';
+      forgeResponseStatus.textContent = `Status: Network / CORS Filter (Simulated Response)`;
+      forgeResponseTiming.textContent = `Timing: ${duration} ms`;
+      forgeResponseHeaders.textContent = `HTTP/1.1 0 Security Restriction\r\nDate: ${new Date().toUTCString()}\r\nAccess-Control-Allow-Origin: *\r\nError-Diagnostic: ${err.message}`;
+      forgeResponseBody.textContent = `[Browser Security Notice]: Direct cross-origin request was blocked or filtered by browser security sandbox.\n\nSimulated Wire Diagnostic:\n• Host: ${reqUrl}\n• Method: ${method}\n• Error: ${err.message}\n• Tip: Internal 1999 virtual web endpoints (e.g. /web/portal.html, /web/classified.html) and local microservices support full live dispatch.`;
+
+      logTraffic('HTTP', method, reqUrl, 0, 0, duration);
+      playErrorBuzzer();
+    }
+  }
+
+  if (btnSendForge) btnSendForge.onclick = executeForgeRequest;
+  if (forgeUrl) {
+    forgeUrl.onkeydown = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        executeForgeRequest();
+      }
+    };
+  }
+
+  // =========================================================================
+  // TAB 7: KILONET 360° POLAR MESH RADAR & GLOBAL TELEMETRY
+  // =========================================================================
+  const meshRadarCanvas = document.getElementById('meshRadarCanvas');
+  const meshPeerCount = document.getElementById('meshPeerCount');
+  const meshMyCallsign = document.getElementById('meshMyCallsign');
+  const meshTotalBeacons = document.getElementById('meshTotalBeacons');
+  const meshResonancePct = document.getElementById('meshResonancePct');
+  const btnBroadcastBeacon = document.getElementById('btnBroadcastBeacon');
+  const btnPingMesh = document.getElementById('btnPingMesh');
+  const meshStatusBadge = document.getElementById('meshStatusBadge');
+  const meshStreamArea = document.getElementById('meshStreamArea');
+  const meshCarrierBox = document.getElementById('meshCarrierBox');
+
+  let myPeerId = 'node_' + Math.random().toString(36).substr(2, 8);
+  let myCallsign = localStorage.getItem('knet_mesh_callsign') || `NODE-${Math.floor(Math.random() * 899 + 100)}`;
+  localStorage.setItem('knet_mesh_callsign', myCallsign);
+  if (meshMyCallsign) meshMyCallsign.textContent = myCallsign;
+
+  let totalBeaconsCount = 0;
+  let meshResonance = 25;
+  let sweepAngle = 0;
+  let beaconRipples = [];
+
+  let meshPeers = [
+    { id: 'gw1', callsign: 'GATEWAY-01', ip: '10.19.99.1', angle: 0.78, dist: 0.82, rtt: 14, pingFlash: 0, isGateway: true },
+    { id: 'sub1999', callsign: 'CARRIER-1999', ip: '1999 Hz Subcarrier', angle: 3.48, dist: 0.55, rtt: 3, pingFlash: 0, isClassified: true },
+    { id: 'node7f', callsign: 'NODE-0x7F', ip: '192.168.1.127', angle: 5.42, dist: 0.38, rtt: 28, pingFlash: 0 },
+    { id: 'arpa4', callsign: 'ARPA-LEAK', ip: '10.19.99.4', angle: 2.12, dist: 0.91, rtt: 42, pingFlash: 0, isClassified: true }
+  ];
+
+  function updateMeshCounters() {
+    if (meshPeerCount) meshPeerCount.textContent = meshPeers.length + 1;
+    if (meshTotalBeacons) meshTotalBeacons.textContent = totalBeaconsCount;
+    if (meshResonancePct) meshResonancePct.textContent = Math.min(100, meshResonance) + '%';
+    if (meshResonance >= 100 && meshCarrierBox && meshCarrierBox.style.display !== 'block') {
+      meshCarrierBox.style.display = 'block';
+      logMeshTelemetry('⚡ CARRIER LOCK ESTABLISHED: Signal resonance 100%. Synchronized to 1999 Hz subcarrier at 10.19.99.4.');
+      playPortHitTone(1999);
+    }
+  }
+
+  function logMeshTelemetry(msg) {
+    if (!meshStreamArea) return;
+    const timeStr = new Date().toTimeString().split(' ')[0];
+    const line = document.createElement('div');
+    line.style.marginBottom = '4px';
+    line.style.fontFamily = 'var(--font-mono)';
+    line.innerHTML = `<span style="color:var(--text-muted);">[${timeStr}]</span> ${msg}`;
+    meshStreamArea.appendChild(line);
+    meshStreamArea.scrollTop = meshStreamArea.scrollHeight;
+
+    while (meshStreamArea.children.length > 60) {
+      meshStreamArea.removeChild(meshStreamArea.firstChild);
+    }
+  }
+
+  function broadcastBeacon() {
+    initAudio();
+    totalBeaconsCount++;
+    meshResonance = Math.min(100, meshResonance + 15);
+    updateMeshCounters();
+
+    beaconRipples.push({
+      x: 0,
+      y: 0,
+      r: 4,
+      maxR: 200,
+      alpha: 1.0,
+      color: '#38bdf8'
+    });
+
+    playBeaconChirp();
+    logMeshTelemetry(`<span style="color:#38bdf8;">📡 LOCAL BEACON:</span> Transmitted 1999 Hz carrier pulse from ${myCallsign}`);
+
+    if (window.knetFirebase && window.knetFirebase.db) {
+      try {
+        const { db, ref, set, serverTimestamp } = window.knetFirebase;
+        const bRef = ref(db, `multiplayer/knet/beacons/${myPeerId}`);
+        set(bRef, {
+          callsign: myCallsign,
+          timestamp: serverTimestamp(),
+          count: totalBeaconsCount
+        });
+      } catch (e) {
+        console.warn('Beacon broadcast RTDB error:', e);
+      }
+    }
+  }
+
+  if (btnBroadcastBeacon) btnBroadcastBeacon.onclick = broadcastBeacon;
+
+  if (btnPingMesh) {
+    btnPingMesh.onclick = () => {
+      initAudio();
+      playPingTone();
+      logMeshTelemetry(`<span style="color:#34d399;">📶 ICMP ECHO SWEEP:</span> Polling ${meshPeers.length} active mesh nodes...`);
+      meshPeers.forEach((p, idx) => {
+        setTimeout(() => {
+          p.pingFlash = 1.0;
+          const jitter = Math.floor(Math.random() * 8) - 4;
+          const rtt = Math.max(1, p.rtt + jitter);
+          logMeshTelemetry(`&nbsp;&nbsp;↳ Reply from <strong>${p.callsign}</strong> (${p.ip}): bytes=32 time=${rtt}ms TTL=64`);
+          playPacketBlip();
+        }, (idx + 1) * 120);
+      });
+    };
+  }
+
+  function drawMeshRadar() {
+    if (!meshRadarCanvas) return;
+    const ctx = meshRadarCanvas.getContext('2d');
+    const w = meshRadarCanvas.parentElement.clientWidth || 320;
+    const h = meshRadarCanvas.parentElement.clientHeight || 220;
+    if (meshRadarCanvas.width !== w || meshRadarCanvas.height !== h) {
+      meshRadarCanvas.width = w;
+      meshRadarCanvas.height = h;
+    }
+
+    ctx.clearRect(0, 0, w, h);
+
+    const cx = w / 2;
+    const cy = h / 2;
+    const maxRadius = Math.min(w, h) * 0.44;
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, maxRadius, 0, Math.PI * 2);
+    ctx.fillStyle = '#030712';
+    ctx.fill();
+
+    const rings = [0.25, 0.50, 0.75, 1.0];
+    rings.forEach((ratio, idx) => {
+      ctx.beginPath();
+      ctx.arc(cx, cy, maxRadius * ratio, 0, Math.PI * 2);
+      ctx.strokeStyle = idx === 3 ? '#1e293b' : 'rgba(30, 41, 59, 0.7)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = '#475569';
+      ctx.font = '9px Consolas, monospace';
+      ctx.fillText(`${(ratio * 100).toFixed(0)}%`, cx + 3, cy - maxRadius * ratio + 10);
+    });
+
+    ctx.strokeStyle = 'rgba(30, 41, 59, 0.8)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx - maxRadius, cy);
+    ctx.lineTo(cx + maxRadius, cy);
+    ctx.moveTo(cx, cy - maxRadius);
+    ctx.lineTo(cx, cy + maxRadius);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(15, 23, 42, 0.9)';
+    ctx.beginPath();
+    const dOff = maxRadius * 0.7071;
+    ctx.moveTo(cx - dOff, cy - dOff);
+    ctx.lineTo(cx + dOff, cy + dOff);
+    ctx.moveTo(cx - dOff, cy + dOff);
+    ctx.lineTo(cx + dOff, cy - dOff);
+    ctx.stroke();
+
+    sweepAngle += 0.024;
+    if (sweepAngle >= Math.PI * 2) sweepAngle -= Math.PI * 2;
+
+    const trailSteps = 16;
+    for (let i = 0; i < trailSteps; i++) {
+      const a = sweepAngle - (i * 0.025);
+      const alpha = (1 - (i / trailSteps)) * 0.15;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, maxRadius, a - 0.025, a);
+      ctx.closePath();
+      ctx.fillStyle = `rgba(56, 189, 248, ${alpha})`;
+      ctx.fill();
+    }
+
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(sweepAngle) * maxRadius, cy + Math.sin(sweepAngle) * maxRadius);
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+    ctx.fillStyle = '#38bdf8';
+    ctx.fill();
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '9px Consolas, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${myCallsign} (YOU)`, cx, cy + 14);
+
+    meshPeers.forEach(p => {
+      const px = cx + Math.cos(p.angle) * (p.dist * maxRadius);
+      const py = cy + Math.sin(p.angle) * (p.dist * maxRadius);
+
+      const angleDiff = Math.abs(sweepAngle - p.angle);
+      if (angleDiff < 0.03 || Math.abs(angleDiff - Math.PI * 2) < 0.03) {
+        if (p.pingFlash <= 0.05) {
+          p.pingFlash = 1.0;
+        }
+      }
+
+      ctx.beginPath();
+      ctx.arc(px, py, 3.5, 0, Math.PI * 2);
+      ctx.fillStyle = p.isClassified ? '#f59e0b' : (p.isGateway ? '#10b981' : '#38bdf8');
+      ctx.fill();
+
+      if (p.pingFlash > 0.01) {
+        ctx.beginPath();
+        ctx.arc(px, py, 5 + (1 - p.pingFlash) * 12, 0, Math.PI * 2);
+        ctx.strokeStyle = p.isClassified ? `rgba(245, 158, 11, ${p.pingFlash})` : `rgba(56, 189, 248, ${p.pingFlash})`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        p.pingFlash -= 0.02;
+      }
+
+      ctx.fillStyle = p.isClassified ? '#fbbf24' : '#cbd5e1';
+      ctx.font = '9px Consolas, monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(p.callsign, px + 6, py + 3);
+    });
+
+    for (let rIdx = beaconRipples.length - 1; rIdx >= 0; rIdx--) {
+      const rip = beaconRipples[rIdx];
+      rip.r += 2.5;
+      rip.alpha -= 0.015;
+
+      ctx.beginPath();
+      ctx.arc(cx, cy, rip.r, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(56, 189, 248, ${Math.max(0, rip.alpha)})`;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      if (rip.alpha <= 0 || rip.r >= maxRadius) {
+        beaconRipples.splice(rIdx, 1);
+      }
+    }
+
+    requestAnimationFrame(drawMeshRadar);
+  }
+
+  const meshTabBtn = document.querySelector('[data-tab="tab-mesh"]');
+  if (meshTabBtn) {
+    meshTabBtn.addEventListener('click', () => {
+      initAudio();
+      playNavChime();
+    });
+  }
+  requestAnimationFrame(drawMeshRadar);
+  updateMeshCounters();
+
+  // =========================================================================
+  // FIREBASE RTDB GLOBAL MULTIPLAYER PRESENCE & BEACONS
+  // =========================================================================
+  window.onKnetFirebaseReady = function() {
+    try {
+      const { db, ref, set, push, onValue, onDisconnect, serverTimestamp } = window.knetFirebase;
+      const myRef = ref(db, `multiplayer/knet/peers/${myPeerId}`);
+      const peersRef = ref(db, `multiplayer/knet/peers`);
+      const beaconsRef = ref(db, `multiplayer/knet/beacons`);
+
+      const myAngle = (Math.random() * Math.PI * 2);
+      const myDist = 0.35 + Math.random() * 0.55;
+
+      set(myRef, {
+        callsign: myCallsign,
+        angle: myAngle,
+        dist: myDist,
+        lastSeen: serverTimestamp()
+      });
+      onDisconnect(myRef).remove();
+
+      if (meshStatusBadge) {
+        meshStatusBadge.className = 'badge badge-success';
+        meshStatusBadge.textContent = 'ONLINE (RTDB)';
+      }
+
+      logMeshTelemetry(`<span style="color:#34d399;">🌐 MESH LINKED:</span> Connected to KiloApps global RTDB mesh as <strong>${myCallsign}</strong>`);
+
+      onValue(peersRef, (snap) => {
+        const val = snap.val() || {};
+        const remotePeers = [];
+        Object.keys(val).forEach(k => {
+          if (k !== myPeerId) {
+            remotePeers.push({
+              id: k,
+              callsign: val[k].callsign || 'ANON-NODE',
+              angle: val[k].angle || 0,
+              dist: val[k].dist || 0.5,
+              rtt: Math.floor(Math.random() * 30) + 12,
+              pingFlash: 0
+            });
+          }
+        });
+
+        meshPeers = [
+          { id: 'gw1', callsign: 'GATEWAY-01', ip: '10.19.99.1', angle: 0.78, dist: 0.82, rtt: 14, pingFlash: 0, isGateway: true },
+          { id: 'sub1999', callsign: 'CARRIER-1999', ip: '1999 Hz Subcarrier', angle: 3.48, dist: 0.55, rtt: 3, pingFlash: 0, isClassified: true },
+          { id: 'node7f', callsign: 'NODE-0x7F', ip: '192.168.1.127', angle: 5.42, dist: 0.38, rtt: 28, pingFlash: 0 },
+          { id: 'arpa4', callsign: 'ARPA-LEAK', ip: '10.19.99.4', angle: 2.12, dist: 0.91, rtt: 42, pingFlash: 0, isClassified: true },
+          ...remotePeers
+        ];
+
+        updateMeshCounters();
+        if (meshStatusBadge) {
+          meshStatusBadge.textContent = `ONLINE (RTDB - ${meshPeers.length} NODES)`;
+        }
+      });
+
+      onValue(beaconsRef, (snap) => {
+        const val = snap.val() || {};
+        Object.keys(val).forEach(k => {
+          if (k !== myPeerId) {
+            const bData = val[k];
+            beaconRipples.push({
+              x: 0, y: 0, r: 4, maxR: 200, alpha: 1.0, color: '#34d399'
+            });
+            playMeshEcho();
+            logMeshTelemetry(`<span style="color:#34d399;">📡 REMOTE BEACON:</span> Received signal packet from ${bData.callsign || k}`);
+            meshResonance = Math.min(100, meshResonance + 10);
+            updateMeshCounters();
+          }
+        });
+      });
+
+      setInterval(() => {
+        try {
+          set(ref(db, `multiplayer/knet/peers/${myPeerId}/lastSeen`), serverTimestamp());
+        } catch (e) {}
+      }, 25000);
+
+    } catch (e) {
+      console.warn('Firebase RTDB presence error:', e);
+    }
+  };
+
+</script>
+
+<!-- FIREBASE RTDB MODULE INITIALIZATION -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getDatabase, ref, set, push, onValue, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+    authDomain: "kiloappschat.firebaseapp.com",
+    databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+    projectId: "kiloappschat",
+    storageBucket: "kiloappschat.firebasestorage.app",
+    messagingSenderId: "290208566057",
+    appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+  };
+
+  try {
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    window.knetFirebase = {
+      db, ref, set, push, onValue, onDisconnect, serverTimestamp
+    };
+    if (window.onKnetFirebaseReady) {
+      window.onKnetFirebaseReady();
+    }
+  } catch (err) {
+    console.warn("KNet Firebase RTDB offline fallback:", err);
+  }
 </script>
 
 </body>

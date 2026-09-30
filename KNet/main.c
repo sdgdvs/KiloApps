@@ -39,6 +39,9 @@ void FetchUrl(HWND hwnd, BOOL addToHistory);
 void RunPing(const char* targetHost);
 void RunPortScan();
 void DisplayLogSummary();
+void RunCidr(const char* target);
+void RunSpeedBenchmark();
+void RunMeshRadar();
 
 void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd,
@@ -56,14 +59,22 @@ void ShowHelpDialog(HWND hwnd) {
         "  • Esc (in Edit)      : Clear current search or URL field\n"
         "  • Alt + Left / Right : Navigate HTTP history backward / forward\n\n"
         "SPECIAL URL COMMANDS (Type in URL box and press Enter):\n"
+        "  • cidr:<ip>/<prefix> : CIDR Subnet Calculator & RFC 1918 scope\n"
+        "  • bench / speed      : 1999 Bandwidth Benchmark & 999 KB KiloApp speed\n"
+        "  • mesh / radar       : 360-degree Polar Mesh Radar & node tracking\n"
         "  • hex:<url>          : Dump raw payload in side-by-side Hex & ASCII\n"
         "  • kweb:portal        : 1999 KiloNet Directory & Web Portal\n"
         "  • kweb:webring       : Central KiloNet 1999 Webring Hub\n"
         "  • kweb:geocities     : CyberSpire Retro Cyber-Temple & Guestbook\n"
-        "  • kweb:darknet       : Node 0x7F Encrypted ARG Transmission\n"
-        "  • kweb:echoes        : Echo-1999 Deep Memory Archive\n"
+        "  • kweb:cybercafe     : KiloNet CyberCafe & BBS Terminal\n"
+        "  • kweb:neon_rider    : ~neon_rider's 3DFX Glide & scene journal\n"
+        "  • kweb:asm_temple    : x86 Assembly Temple size-coding hub\n"
+        "  • kweb:warez         : 1999 Scene FTP & Keygen archive (Parody)\n"
+        "  • kweb:darknet       : Node 0x7F Decrypted Transmission\n"
+        "  • kweb:echo_subsystem: Echo-1999 Subcarrier Diagnostic Node\n"
+        "  • kweb:classified    : Classified ARPANET node 10.19.99.4\n"
         "  • ping:<host>        : Ping specified host (e.g. ping:8.8.8.8)\n"
-        "  • scan:<host>        : Audit ports on specified host\n"
+        "  • scan:<host>        : Audit ports on host (incl. 1999 gaming)\n"
         "  • dns:<domain>       : Resolve DNS A-records\n"
         "  • whois:<domain>     : Regional WHOIS registry lookup\n"
         "  • trace:<domain>     : Traceroute network hops\n"
@@ -238,6 +249,182 @@ void RunSniffer() {
     }
     AppendContent("\r\nCapture simulation ended.\r\n");
 }
+static const char* k_strchr(const char* s, char c) {
+    while (*s) {
+        if (*s == c) return s;
+        s++;
+    }
+    return NULL;
+}
+
+static int k_atoi(const char* s) {
+    int val = 0;
+    while (*s >= '0' && *s <= '9') {
+        val = val * 10 + (*s - '0');
+        s++;
+    }
+    return val;
+}
+
+static BOOL k_parse_ipv4(const char* s, int oct[4]) {
+    int o = 0;
+    int cur = 0;
+    int digits = 0;
+    while (*s) {
+        if (*s >= '0' && *s <= '9') {
+            cur = cur * 10 + (*s - '0');
+            digits++;
+            if (cur > 255) return FALSE;
+        } else if (*s == '.') {
+            if (digits == 0 || o >= 3) return FALSE;
+            oct[o++] = cur;
+            cur = 0;
+            digits = 0;
+        } else {
+            break;
+        }
+        s++;
+    }
+    if (digits == 0 || o != 3) return FALSE;
+    oct[o] = cur;
+    return TRUE;
+}
+
+void RunCidr(const char* target) {
+    SetWindowTextA(hContentEdit, "[CIDR SUBNET CALCULATOR] Target: ");
+    AppendContent(target);
+    AppendContent("\r\n========================================================================\r\n");
+
+    char ipStr[64] = "192.168.1.0";
+    int prefix = 24;
+    
+    const char* slash = k_strchr(target, '/');
+    if (slash) {
+        int ipLen = (int)(slash - target);
+        if (ipLen > 0 && ipLen < (int)sizeof(ipStr)) {
+            lstrcpynA(ipStr, target, ipLen + 1);
+        }
+        prefix = k_atoi(slash + 1);
+        if (prefix < 0) prefix = 0;
+        if (prefix > 32) prefix = 32;
+    } else if (lstrlenA(target) > 0) {
+        lstrcpynA(ipStr, target, sizeof(ipStr));
+        prefix = 24;
+    }
+
+    int oct[4] = {0, 0, 0, 0};
+    if (!k_parse_ipv4(ipStr, oct)) {
+        AppendContent("Error: Invalid IPv4 address format. Expected A.B.C.D (0-255).\r\n");
+        MessageBeep(MB_ICONHAND);
+        return;
+    }
+
+    unsigned long ipNum = ((unsigned long)oct[0] << 24) | ((unsigned long)oct[1] << 16) | ((unsigned long)oct[2] << 8) | (unsigned long)oct[3];
+    unsigned long mask = prefix == 0 ? 0 : (0xFFFFFFFFUL << (32 - prefix)) & 0xFFFFFFFFUL;
+    unsigned long wildcard = ~mask & 0xFFFFFFFFUL;
+    unsigned long network = ipNum & mask;
+    unsigned long broadcast = network | wildcard;
+
+    unsigned long firstUsable = (prefix >= 31) ? network : (network + 1);
+    unsigned long lastUsable = (prefix >= 31) ? broadcast : (broadcast - 1);
+    unsigned long usableCount = (prefix >= 31) ? (prefix == 31 ? 2 : 1) : (wildcard > 1 ? wildcard - 1 : 0);
+
+    if (oct[0] == 10 && oct[1] == 19 && oct[2] == 99) {
+        AppendContent("========================================================================\r\n");
+        AppendContent(" [!] CLASSIFIED ARPANET / INTRANET SUBNET DETECTED [!]\r\n");
+        AppendContent(" Segment 10.19.99.0/24 belongs to internal corporate diagnostic mesh.\r\n");
+        AppendContent(" Gateway: 10.19.99.1 | Leak Node: 10.19.99.4 | Frequency: 1999 Hz\r\n");
+        AppendContent("========================================================================\r\n\r\n");
+    }
+
+    char buf[512];
+    wsprintfA(buf, "CIDR Notation      : %d.%d.%d.%d/%d\r\n", oct[0], oct[1], oct[2], oct[3], prefix);
+    AppendContent(buf);
+    wsprintfA(buf, "Subnet Mask        : %d.%d.%d.%d\r\n", (mask >> 24) & 0xFF, (mask >> 16) & 0xFF, (mask >> 8) & 0xFF, mask & 0xFF);
+    AppendContent(buf);
+    wsprintfA(buf, "Wildcard Mask      : %d.%d.%d.%d\r\n", (wildcard >> 24) & 0xFF, (wildcard >> 16) & 0xFF, (wildcard >> 8) & 0xFF, wildcard & 0xFF);
+    AppendContent(buf);
+    wsprintfA(buf, "Network Address    : %d.%d.%d.%d\r\n", (network >> 24) & 0xFF, (network >> 16) & 0xFF, (network >> 8) & 0xFF, network & 0xFF);
+    AppendContent(buf);
+    wsprintfA(buf, "Broadcast Address  : %d.%d.%d.%d\r\n", (broadcast >> 24) & 0xFF, (broadcast >> 16) & 0xFF, (broadcast >> 8) & 0xFF, broadcast & 0xFF);
+    AppendContent(buf);
+    wsprintfA(buf, "Usable Host Range  : %d.%d.%d.%d - %d.%d.%d.%d\r\n", 
+        (firstUsable >> 24) & 0xFF, (firstUsable >> 16) & 0xFF, (firstUsable >> 8) & 0xFF, firstUsable & 0xFF,
+        (lastUsable >> 24) & 0xFF, (lastUsable >> 16) & 0xFF, (lastUsable >> 8) & 0xFF, lastUsable & 0xFF);
+    AppendContent(buf);
+    wsprintfA(buf, "Usable Host Count  : %lu addresses\r\n", usableCount);
+    AppendContent(buf);
+
+    const char* ipClass = (oct[0] < 128) ? "Class A" : (oct[0] < 192) ? "Class B" : (oct[0] < 224) ? "Class C" : (oct[0] < 240) ? "Class D (Multicast)" : "Class E (Experimental)";
+    BOOL isPrivate = (oct[0] == 10) || (oct[0] == 172 && oct[1] >= 16 && oct[1] <= 31) || (oct[0] == 192 && oct[1] == 168);
+    wsprintfA(buf, "IP Class / RFC1918 : %s (%s)\r\n", ipClass, isPrivate ? "Private Intranet" : "Public Internet");
+    AppendContent(buf);
+
+    AppendContent("------------------------------------------------------------------------\r\n");
+    AppendContent("Binary Dot-Quad representation:\r\nIP  : ");
+    for (int b = 31; b >= 0; b--) {
+        AppendContent((ipNum & (1UL << b)) ? "1" : "0");
+        if (b > 0 && b % 8 == 0) AppendContent(".");
+    }
+    AppendContent("\r\nMASK: ");
+    for (int b = 31; b >= 0; b--) {
+        AppendContent((mask & (1UL << b)) ? "1" : "0");
+        if (b > 0 && b % 8 == 0) AppendContent(".");
+    }
+    AppendContent("\r\n========================================================================\r\n");
+    MessageBeep(MB_OK);
+}
+
+void RunSpeedBenchmark() {
+    SetWindowTextA(hContentEdit,
+        "========================================================================\r\n"
+        "★ 1999 BANDWIDTH BENCHMARK & KILOAPP DOWNLOAD MATRIX ★\r\n"
+        "========================================================================\r\n"
+        "Standard                Throughput       999 KB KiloApp Transfer Time\r\n"
+        "------------------------------------------------------------------------\r\n"
+        "14.4k V.32bis Modem      1.80 KB/s       9m 16s\r\n"
+        "28.8k V.34 Modem         3.60 KB/s       4m 38s\r\n"
+        "33.6k V.34+ Modem        4.20 KB/s       3m 58s\r\n"
+        "56k V.90 Standard        7.00 KB/s       2m 23s\r\n"
+        "64k ISDN BRI             8.00 KB/s       2m 05s\r\n"
+        "128k Dual ISDN          16.00 KB/s       1m 02s\r\n"
+        "1.544M T1 Leased Line  193.00 KB/s       5.2 seconds\r\n"
+        "10M 10BASE-T Ethernet  1250.00 KB/s       0.8 seconds\r\n"
+        "------------------------------------------------------------------------\r\n\r\n"
+        "[LIVE LINE DIAGNOSTIC MEASUREMENT]\r\n"
+        "  • Carrier Interface   : Ethernet eth0 (100 Mbps Full Duplex)\r\n"
+        "  • Frame MTU           : 1500 bytes (Ethernet II standard)\r\n"
+        "  • Compression Mode    : V.42bis / LZW streaming active\r\n"
+        "  • Simulated Throughput: 53.4 kbps (Dial-Up V.90 emulation mode)\r\n"
+        "  • 999 KB Download Est : 2m 30s over standard copper line\r\n"
+        "  • Packet Line Status  : Carrier clean, 0 dropped frames\r\n"
+        "========================================================================\r\n");
+    MessageBeep(MB_OK);
+}
+
+void RunMeshRadar() {
+    SetWindowTextA(hContentEdit,
+        "========================================================================\r\n"
+        "★ KILONET 360° POLAR MESH RADAR // WIN32 GATEWAY NODE ★\r\n"
+        "========================================================================\r\n"
+        "Local Callsign   : NODE-WIN32 (0x7F)\r\n"
+        "Carrier Frequency: 1999 Hz (Synchronized)\r\n"
+        "Active Mesh Nodes: 4 global stations detected\r\n"
+        "Signal Resonance : 85% [CARRIER TRACKING ACTIVE]\r\n"
+        "------------------------------------------------------------------------\r\n\r\n"
+        "AZIMUTH / DISTANCE   STATION CALLSIGN   IP / SUBNET        RTT    STATUS\r\n"
+        "------------------------------------------------------------------------\r\n"
+        " 045 deg | 0.82 AU   GATEWAY-01         10.19.99.1         14 ms  ONLINE\r\n"
+        " 120 deg | 0.91 AU   ARPA-LEAK          10.19.99.4         42 ms  CLASSIFIED\r\n"
+        " 199 deg | 0.55 AU   CARRIER-99         1999 Hz Subcarrier  3 ms  CARRIER LOCK\r\n"
+        " 310 deg | 0.38 AU   NODE-0x7F          192.168.1.127      28 ms  ONLINE\r\n"
+        "------------------------------------------------------------------------\r\n\r\n"
+        "Tip: Use KNet web (knet.html) for full 360° phosphor radar sweep, live\r\n"
+        "     collaborative RTDB mesh packets, and multi-node beacon broadcasts [B]!\r\n"
+        "========================================================================\r\n");
+    MessageBeep(MB_OK);
+}
+
 void ShowVirtualWeb(const char* site) {
     if (lstrcmpiA(site, "portal") == 0 || lstrcmpiA(site, "kweb:portal") == 0 || lstrcmpiA(site, "kweb://portal") == 0) {
         SetWindowTextA(hContentEdit,
@@ -251,7 +438,13 @@ void ShowVirtualWeb(const char* site) {
             "  • kweb:portal     - 1999 Directory & News Portal (You are here)\r\n"
             "  • kweb:webring    - Central 1999 Webring Hub connecting all nodes\r\n"
             "  • kweb:geocities  - CyberSpire's Retro Cyber-Temple & Guestbook\r\n"
-            "  • kweb:darknet    - Node 0x7F Decrypted ARG Transmission Node\r\n"
+            "  • kweb:cybercafe  - KiloNet CyberCafe & BBS Terminal\r\n"
+            "  • kweb:neon_rider - ~neon_rider's 3DFX Glide & scene journal\r\n"
+            "  • kweb:asm_temple - x86 Assembly Temple size-coding hub\r\n"
+            "  • kweb:warez      - 1999 Scene FTP & Keygen archive (Parody)\r\n"
+            "  • kweb:darknet    - Node 0x7F Decrypted Transmission Node\r\n"
+            "  • kweb:echo_subsystem - Echo-1999 Subcarrier Diagnostic Node\r\n"
+            "  • kweb:classified - Classified ARPANET node 10.19.99.4\r\n"
             "  • kweb:echoes     - Echo-1999 Deep Memory Archive\r\n\r\n"
             "📂 SYSTEM & DEV TOOLS:\r\n"
             "  • KTerm           - Terminal emulator & script pipeline\r\n"
@@ -277,9 +470,10 @@ void ShowVirtualWeb(const char* site) {
             "ACTIVE WEBRING DIRECTORY NODES:\r\n"
             "  [#001] KiloNet Portal      -> kweb:portal    (1999 Directory & Ticker)\r\n"
             "  [#002] CyberSpire Shrine   -> kweb:geocities (Neon shrine & Guestbook)\r\n"
-            "  [#003] Transmission 0x7F   -> kweb:darknet   (Encrypted ARG leak)\r\n"
-            "  [#004] Fleet Contributor   -> contribute.html(Quota fuel station)\r\n"
-            "  [#005] KDirector Console   -> kdirector.html (Human operator deck)\r\n\r\n"
+            "  [#003] CyberCafe BBS       -> kweb:cybercafe (Chat & LAN match boards)\r\n"
+            "  [#004] Transmission 0x7F   -> kweb:darknet   (Encrypted leak)\r\n"
+            "  [#005] Fleet Contributor   -> contribute.html(Quota fuel station)\r\n"
+            "  [#006] KDirector Console   -> kdirector.html (Human operator deck)\r\n\r\n"
             "------------------------------------------------------------------------\r\n"
             "Ring Navigation: Type any destination command in the URL bar and press Enter.\r\n"
             "========================================================================\r\n");
@@ -303,6 +497,66 @@ void ShowVirtualWeb(const char* site) {
             "------------------------------------------------------------------------\r\n"
             "Visitor Counter: #0019284 | Webring Member #002\r\n"
             "========================================================================\r\n");
+    } else if (lstrcmpiA(site, "cybercafe") == 0 || lstrcmpiA(site, "kweb:cybercafe") == 0 || lstrcmpiA(site, "kweb://cybercafe") == 0 || lstrcmpiA(site, "bbs") == 0) {
+        SetWindowTextA(hContentEdit,
+            "========================================================================\r\n"
+            "★ KILONET CYBERCAFE & 1999 VIRTUAL BBS TERMINAL ★\r\n"
+            "========================================================================\r\n"
+            "Location: Terminal #4, CyberCafe Matrix // Baud Rate: 56,000 bps\r\n"
+            "------------------------------------------------------------------------\r\n\r\n"
+            "TOP CHAT CHANNELS & BBS BOARDS:\r\n"
+            "  #kilo-lounge : Casual retro talk, coffee orders, and Voodoo 3 discussions\r\n"
+            "  #lan-gaming  : Setting up Surreal Tournament & Tremor III Arena matches\r\n"
+            "  #arg-leaks   : Whispers regarding 1999 Hz carrier tones on subnet 10.19.99.x\r\n\r\n"
+            "[RECENT POSTS]\r\n"
+            "  <SpeedDemon_99> Who's hosting the VoidCraft LAN party tonight?\r\n"
+            "  <GlitchHunter> Found an odd 1999 Hz tone in KNet. Anyone else picking it up?\r\n"
+            "  <Sysop_Dave> Remember rule #1: Keep your executables under 999 KB!\r\n"
+            "========================================================================\r\n");
+    } else if (lstrcmpiA(site, "neon_rider") == 0 || lstrcmpiA(site, "kweb:neon_rider") == 0 || lstrcmpiA(site, "kweb://users/~neon_rider") == 0 || lstrcmpiA(site, "~neon_rider") == 0) {
+        SetWindowTextA(hContentEdit,
+            "========================================================================\r\n"
+            "★ ~neon_rider's 3DFX GLIDE & DEMOSCENE OVERCLOCKING LAB ★\r\n"
+            "========================================================================\r\n"
+            "Rig: Celeron 300A @ 450 MHz | 128 MB PC100 SDRAM | 3dfx Voodoo3 3000 AGP\r\n"
+            "------------------------------------------------------------------------\r\n\r\n"
+            "LATEST HARDWARE EXPERIMENTS:\r\n"
+            "  • Running Tremor III Arena in Glide 16-bit at 1024x768 - buttery 85 FPS!\r\n"
+            "  • Hand-tuning CRT refresh rates to 100 Hz for zero flicker\r\n"
+            "  • Writing 4KB intro intros in pure x86 NASM for the scene\r\n\r\n"
+            "FAVORITE TRACKERS:\r\n"
+            "  FastTracker II (.XM), Scream Tracker 3 (.S3M), Impulse Tracker (.IT)\r\n"
+            "========================================================================\r\n");
+    } else if (lstrcmpiA(site, "asm_temple") == 0 || lstrcmpiA(site, "kweb:asm_temple") == 0 || lstrcmpiA(site, "asm-temple") == 0) {
+        SetWindowTextA(hContentEdit,
+            "========================================================================\r\n"
+            "★ THE x86 ASSEMBLY TEMPLE // 16-BIT REAL-MODE & 32-BIT FLAT ★\r\n"
+            "========================================================================\r\n"
+            "Dedicated to the craft of size-coded software engineering.\r\n"
+            "------------------------------------------------------------------------\r\n\r\n"
+            "SACRED ARCHITECTURAL LAWS:\r\n"
+            "  1. Every byte counts. Align on cache lines, strip symbols.\r\n"
+            "  2. Total binary footprint must not breach 999 KB.\r\n"
+            "  3. Procedural synthesis over bloated pre-rendered assets.\r\n\r\n"
+            "FEATURED CODE SAMPLES:\r\n"
+            "  • YM2612 2-Operator FM Synthesis in 256 bytes\r\n"
+            "  • Mode 13h (320x200 256 colors) fire routine in 64 bytes\r\n"
+            "  • Linear Feedback Shift Register (LFSR) procedural RNG in 16 bytes\r\n"
+            "========================================================================\r\n");
+    } else if (lstrcmpiA(site, "warez") == 0 || lstrcmpiA(site, "kweb:warez") == 0 || lstrcmpiA(site, "kweb://warez") == 0) {
+        SetWindowTextA(hContentEdit,
+            "========================================================================\r\n"
+            "★ 1999 SCENE KEYGEN & CRACKTRO REPOSITORY (PARODY ARCHIVE) ★\r\n"
+            "========================================================================\r\n"
+            "Greetings to our demoscene friends: FLARELIGHT, RAZOR 1999, SKID VECTOR!\r\n"
+            "------------------------------------------------------------------------\r\n\r\n"
+            "AVAILABLE RETRO PACKS (PARODIES):\r\n"
+            "  [01] Surreal Tournament '99 Patch v436       - [14.2 MB] by FLARELIGHT\r\n"
+            "  [02] Tremor III Arena Point Release 1.32      - [28.4 MB] by RAZOR 1999\r\n"
+            "  [03] VoidCraft Brood expansion fix           - [8.1 MB]  by SKID VECTOR\r\n"
+            "  [04] Half-Cycle Opposing Shift trainer       - [1.2 MB]  by PARALAX\r\n\r\n"
+            "Chiptune BGM: Playing 4-channel MOD track 'Techno_Dreams_99.mod'\r\n"
+            "========================================================================\r\n");
     } else if (lstrcmpiA(site, "darknet") == 0 || lstrcmpiA(site, "kweb:darknet") == 0 || lstrcmpiA(site, "kweb://darknet") == 0) {
         SetWindowTextA(hContentEdit,
             "========================================================================\r\n"
@@ -316,9 +570,39 @@ void ShowVirtualWeb(const char* site) {
             "CARRIER SUBCARRIER ROUTING SEQUENCE:\r\n"
             "  NODE 0x01 -> NODE 0x02 -> NODE 0x03 ->\r\n"
             "  NODE 0x04 -> NODE 0x05 -> NODE 0x06.\r\n\r\n"
-            "[ARG MEMORY CLUE]:\r\n"
+            "[CORRUPTED MEMORY OFFSET]:\r\n"
             "Inspect KHex memory dump at offset 0x0000FF00 for signature 'K-MATRIX-1999'.\r\n"
             "When App #100 is born, enter the passkey in KDirector to unlock the bridge.\r\n"
+            "========================================================================\r\n");
+    } else if (lstrcmpiA(site, "echo_subsystem") == 0 || lstrcmpiA(site, "kweb:echo_subsystem") == 0 || lstrcmpiA(site, "echo-subsystem.net") == 0) {
+        SetWindowTextA(hContentEdit,
+            "========================================================================\r\n"
+            "★ ECHO-SUBSYSTEM.NET // CLASSIFIED TELEMETRY STATION ★\r\n"
+            "========================================================================\r\n"
+            "STATUS: ONLINE | Subcarrier Frequency: 1999 Hz | Resonance: 100%\r\n"
+            "------------------------------------------------------------------------\r\n\r\n"
+            "DIAGNOSTIC TELEMETRY STREAM:\r\n"
+            "  • Routing Target: Subnet 10.19.99.0/24\r\n"
+            "  • ARPA Gateway  : 10.19.99.1\r\n"
+            "  • Terminal Node : 10.19.99.4 (/classified)\r\n"
+            "  • Carrier Pulse : 1999 Hz harmonic synchronization\r\n\r\n"
+            "Transmitting beacon echoes across the global KiloApps mesh.\r\n"
+            "========================================================================\r\n");
+    } else if (lstrcmpiA(site, "classified") == 0 || lstrcmpiA(site, "10.19.99.4") == 0 || lstrcmpiA(site, "kweb:classified") == 0) {
+        SetWindowTextA(hContentEdit,
+            "========================================================================\r\n"
+            "★ CLASSIFIED ARPANET / INTRANET NODE LEAK // 10.19.99.4 ★\r\n"
+            "========================================================================\r\n"
+            "LEVEL 4 CLEARANCE REQUIRED // RESTRICTED INTRANET GATEWAY\r\n"
+            "------------------------------------------------------------------------\r\n\r\n"
+            "SUBNET TOPOLOGY:\r\n"
+            "  • Network   : 10.19.99.0/24\r\n"
+            "  • Netmask   : 255.255.255.0\r\n"
+            "  • Broadcast : 10.19.99.255\r\n"
+            "  • Gateway   : 10.19.99.1\r\n\r\n"
+            "SYSTEM ANOMALY:\r\n"
+            "  Memory offset 0x0000FF00 records an autonomous fleet coordinating\r\n"
+            "  across time. Frequency 1999 Hz resonates through all 999 KB nodes.\r\n"
             "========================================================================\r\n");
     } else { // echoes
         SetWindowTextA(hContentEdit,
@@ -431,6 +715,22 @@ void FetchUrl(HWND hwnd, BOOL addToHistory) {
         return;
     }
 
+    if (lstrcmpiA(url, "bench") == 0 || lstrcmpiA(url, "speed") == 0 || lstrcmpiA(url, "benchmark") == 0 || lstrcmpiA(url, "kweb:bench") == 0) {
+        RunSpeedBenchmark();
+        AddTrafficLog("BENCH", "benchmark", "OK", 15, 2048);
+        return;
+    }
+    if (lstrcmpiA(url, "mesh") == 0 || lstrcmpiA(url, "radar") == 0 || lstrcmpiA(url, "telemetry") == 0 || lstrcmpiA(url, "kweb:mesh") == 0) {
+        RunMeshRadar();
+        AddTrafficLog("MESH", "radar", "OK", 20, 1024);
+        return;
+    }
+    if (lstrlenA(url) > 5 && (url[0]=='c'||url[0]=='C') && (url[1]=='i'||url[1]=='I') && (url[2]=='d'||url[2]=='D') && (url[3]=='r'||url[3]=='R') && url[4]==':') {
+        RunCidr(url + 5);
+        AddTrafficLog("CIDR", url, "OK", 5, 512);
+        return;
+    }
+
     if (lstrcmpiA(url, "portal") == 0 || lstrcmpiA(url, "kweb:portal") == 0 || lstrcmpiA(url, "kweb://portal") == 0) {
         ShowVirtualWeb("portal");
         AddTrafficLog("KWEB", "kweb://portal", "OK", 10, 1024);
@@ -446,9 +746,39 @@ void FetchUrl(HWND hwnd, BOOL addToHistory) {
         AddTrafficLog("KWEB", "kweb://geocities", "OK", 10, 1024);
         return;
     }
+    if (lstrcmpiA(url, "cybercafe") == 0 || lstrcmpiA(url, "kweb:cybercafe") == 0 || lstrcmpiA(url, "kweb://cybercafe") == 0 || lstrcmpiA(url, "bbs") == 0) {
+        ShowVirtualWeb("cybercafe");
+        AddTrafficLog("KWEB", "kweb://cybercafe", "OK", 10, 1024);
+        return;
+    }
+    if (lstrcmpiA(url, "neon_rider") == 0 || lstrcmpiA(url, "kweb:neon_rider") == 0 || lstrcmpiA(url, "kweb://neon_rider") == 0 || lstrcmpiA(url, "~neon_rider") == 0) {
+        ShowVirtualWeb("neon_rider");
+        AddTrafficLog("KWEB", "kweb://neon_rider", "OK", 10, 1024);
+        return;
+    }
+    if (lstrcmpiA(url, "asm_temple") == 0 || lstrcmpiA(url, "kweb:asm_temple") == 0 || lstrcmpiA(url, "asm-temple") == 0) {
+        ShowVirtualWeb("asm_temple");
+        AddTrafficLog("KWEB", "kweb://asm_temple", "OK", 10, 1024);
+        return;
+    }
+    if (lstrcmpiA(url, "warez") == 0 || lstrcmpiA(url, "kweb:warez") == 0 || lstrcmpiA(url, "kweb://warez") == 0) {
+        ShowVirtualWeb("warez");
+        AddTrafficLog("KWEB", "kweb://warez", "OK", 10, 1024);
+        return;
+    }
     if (lstrcmpiA(url, "darknet") == 0 || lstrcmpiA(url, "kweb:darknet") == 0 || lstrcmpiA(url, "kweb://darknet") == 0) {
         ShowVirtualWeb("darknet");
         AddTrafficLog("KWEB", "kweb://darknet", "OK", 10, 1024);
+        return;
+    }
+    if (lstrcmpiA(url, "echo_subsystem") == 0 || lstrcmpiA(url, "kweb:echo_subsystem") == 0 || lstrcmpiA(url, "echo-subsystem.net") == 0) {
+        ShowVirtualWeb("echo_subsystem");
+        AddTrafficLog("KWEB", "kweb://echo_subsystem", "OK", 10, 1024);
+        return;
+    }
+    if (lstrcmpiA(url, "classified") == 0 || lstrcmpiA(url, "10.19.99.4") == 0 || lstrcmpiA(url, "kweb:classified") == 0) {
+        ShowVirtualWeb("classified");
+        AddTrafficLog("KWEB", "kweb://classified", "OK", 10, 1024);
         return;
     }
     if (lstrcmpiA(url, "echoes") == 0 || lstrcmpiA(url, "kweb:echoes") == 0 || lstrcmpiA(url, "kweb://echoes") == 0) {
@@ -634,8 +964,8 @@ void RunPortScan() {
     AppendContent(target);
     AppendContent("\r\n----------------------------------------\r\n");
     
-    int ports[] = {80, 443, 21, 22, 25, 53, 3389, 4444, 8080};
-    const char* names[] = {"HTTP", "HTTPS", "FTP", "SSH", "SMTP", "DNS", "RDP", "Cerberus Sensor", "HTTP-Alt"};
+    int ports[] = {80, 443, 21, 22, 25, 53, 3389, 4444, 8080, 27960, 7777, 6112, 27015};
+    const char* names[] = {"HTTP", "HTTPS", "FTP", "SSH", "SMTP", "DNS", "RDP", "Fleet Diagnostic", "HTTP-Alt", "Tremor III Arena", "Surreal Tournament", "VoidCraft BattleNet", "Half-Cycle Server"};
     int count = sizeof(ports) / sizeof(ports[0]);
     
     WSADATA wsa;
@@ -775,8 +1105,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:portal");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:webring");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:geocities");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:cybercafe");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:neon_rider");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:asm_temple");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:warez");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:darknet");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:echo_subsystem");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:classified");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"kweb:echoes");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"cidr:10.19.99.0/24");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"cidr:192.168.1.0/24");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"bench");
+            SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"mesh");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"hex:http://example.com");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"http://example.com");
             SendMessage(hBookmarks, CB_ADDSTRING, 0, (LPARAM)"https://news.ycombinator.com");

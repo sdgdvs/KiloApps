@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 9,
+  "turns_executed": 13,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-09-30T05:44:42.892380+00:00",
-  "current_target": "KWizard",
+  "last_heartbeat": "2026-09-30T09:45:04.857473+00:00",
+  "current_target": "KNet",
   "remote_command": "none"
 }
