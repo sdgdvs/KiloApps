@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T22:15:00Z — kilo-qa: KPad (Pass 5: Tutorial & State Integrity, Quicksave/Load, Safe Storage)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 155.0 KB web / 31.0 KB native < 999 KB ceiling).
+  - Quicksave & Quickload: Implemented F5 / F9 full workspace snapshot save & restore across web (safeStorage) and native Win32 C (`kpad_quicksave.dat`).
+  - Shortcut Ergonomics: Reassigned Date/Time to F7 in menus and key handlers; added Quicksave [F5] & Quickload [F9] to File menu & toolbar.
+  - Tutorial & State Integrity: Enforced `kpad_tutorialSeen` / `kpad_tutorial.dat` flags to prevent onboarding interruption on restored sessions.
+  - Modal Navigation: Added Enter and Space key dismissals across modals and prompts; safeStorage error handling prevents quota crashes.
+  - Verification: MSVC clean (`KPad.exe` 31.0 KB); Vite clean in 274ms; check_icons & security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T21:56:00Z — kilo-usability: KStarForge (Usability & Layout Pass, High-DPI Scaling & Touch Controls)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 218.5 KB web / 30.2 KB native < 999 KB ceiling).
   - Responsive Layout & Window Sizing: Optimized KiloOS window dimensions to 1160x720; added adaptive media queries and flex overflow handling.
