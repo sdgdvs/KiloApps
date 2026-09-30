@@ -1017,10 +1017,11 @@
         /* Non-occluding Retro Toast Notifications */
         #toast-container {
             position: fixed;
-            top: 48px;
-            right: 18px;
+            bottom: 24px;
+            left: calc((100% - 330px) / 2);
+            transform: translateX(-50%);
             display: flex;
-            flex-direction: column;
+            flex-direction: column-reverse;
             gap: 6px;
             z-index: 2000;
             pointer-events: none;
@@ -1573,6 +1574,65 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; border-top:1px solid #1e293b; padding-top:8px; font-size:10px; color:var(--text-dim);">
                     <span>Shortcuts: [1..8] Buy/Sell Item | [Tab / S] Switch Buy/Sell | [ESC / M] Close Market</span>
                     <button id="btnMerchantCloseBtm" class="btn-action" style="font-size:11px; padding:3px 12px;">Close Market [ESC]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Phase 15: Game Over & Victory Overlay Modals -->
+    <div class="modal-backdrop" id="modalGameOver">
+        <div class="modal-card" style="width: 520px; border-color: #ef4444; box-shadow: 0 0 24px rgba(239, 68, 68, 0.45);">
+            <div class="modal-header" style="background:#1a0505; border-bottom:1px solid #dc2626;">
+                <div class="modal-title" style="color:#ef4444; display:flex; align-items:center; gap:8px;">
+                    <span>💀 DELVER SLAIN IN THE ABYSS</span>
+                </div>
+                <button class="modal-close" id="modalGameOverClose">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 16px; display:flex; flex-direction:column; gap:12px;">
+                <div style="font-size:12px; color:#cbd5e1; line-height:1.5;">
+                    Your life essence dissolves into the freezing subterranean depths. The abyss claims another delver's soul.
+                </div>
+                <div style="background:#0b0d14; border:1px solid #334155; border-radius:4px; padding:12px; font-size:11px; display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+                    <div>Depth Reached: <strong id="goDepth" style="color:#f59e0b;">B1</strong></div>
+                    <div>Turns Survived: <strong id="goTurns" style="color:#38bdf8;">1</strong></div>
+                    <div>Delver Level: <strong id="goLevel" style="color:#a855f7;">1</strong></div>
+                    <div>Essence Gathered: <strong id="goEssence" style="color:#fbbf24;">0</strong></div>
+                    <div style="grid-column: span 2;">Cause of Death: <strong id="goCause" style="color:#f43f5e;">Abyssal Horror</strong></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                    <button id="btnGameOverLoad" class="btn-action" style="padding:6px 14px; font-size:11px; border-color:#0284c7; color:#38bdf8;">📂 Load Quicksave [F9]</button>
+                    <button id="btnGameOverRestart" class="btn-primary" style="padding:6px 18px; font-size:12px; background:#7f1d1d; border-color:#ef4444; color:#fff;">⚔️ Descend Anew [Enter / Space]</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-backdrop" id="modalVictory">
+        <div class="modal-card" style="width: 540px; border-color: #a855f7; box-shadow: 0 0 24px rgba(168, 85, 247, 0.45);">
+            <div class="modal-header" style="background:#13091e; border-bottom:1px solid #9333ea;">
+                <div class="modal-title" style="color:#c084fc; display:flex; align-items:center; gap:8px;">
+                    <span>✦ PRIMORDIAL ABYSS CONQUERED ✦</span>
+                </div>
+                <button class="modal-close" id="modalVictoryClose">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 16px; display:flex; flex-direction:column; gap:12px;">
+                <div style="font-size:12px; color:#cbd5e1; line-height:1.5;">
+                    The colossal Void Monarch collapses into silent cosmic ashes. From the dimensional rupture, you extract the glowing <strong style="color:#38bdf8;">Precursor Relic Glyph</strong>.
+                </div>
+                <div style="background:#090d16; border:1px solid #7c3aed; border-radius:4px; padding:12px; font-size:11px; color:#c084fc;">
+                    Faint phosphor telemetry burns upon the obsidian surface:
+                    <div style="font-family:monospace; color:#38bdf8; font-weight:bold; margin-top:4px;">[ECHO-1999 // NODE 10.19.99.4 // kweb://echo-subsystem.net]</div>
+                    The subterranean network registers your survival.
+                </div>
+                <div style="background:#0b0d14; border:1px solid #334155; border-radius:4px; padding:10px; font-size:11px; display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+                    <div>Final Depth: <strong id="vicDepth" style="color:#f59e0b;">B10</strong></div>
+                    <div>Turns Taken: <strong id="vicTurns" style="color:#38bdf8;">100</strong></div>
+                    <div>Hero Level: <strong id="vicLevel" style="color:#a855f7;">10</strong></div>
+                    <div>Essence: <strong id="vicEssence" style="color:#fbbf24;">500 Gold</strong></div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                    <button id="btnVictoryQuicksave" class="btn-action" style="padding:6px 14px; font-size:11px; border-color:#059669; color:#34d399;">💾 Quicksave Triumph [F5]</button>
+                    <button id="btnVictoryContinue" class="btn-primary" style="padding:6px 18px; font-size:12px; background:#4c1d95; border-color:#a855f7; color:#fff;">Continue Delving [Space / Enter]</button>
                 </div>
             </div>
         </div>
@@ -5282,6 +5342,7 @@
                         player.hasPrecursorGlyph = true;
                         addItem('REL_PRECURSOR_GLYPH', 1);
                         logMessage('✦ PRECURSOR RELIC GLYPH RECOVERED: The Void Monarch yields an ancient precursor tablet: [ECHO-1999 // 10.19.99.4 // kweb://echo-subsystem.net]!', 'relic');
+                        openVictoryModal();
                     }
                 } else if (m.type === 'SKELETON') {
                     if (dropRoll < 0.45) droppedItem = 'ING_BRIMSTONE';
@@ -5586,7 +5647,7 @@
                         }
 
                         if (player.hp <= 0) {
-                            logMessage('💀 You have fallen to the abyssal horrors. Click [New Descent] to rise again.', 'important');
+                            handlePlayerDeath(m.name);
                         }
                     } else if (m.type === 'DREAD_LICH' && dist <= 5 && hasLOS) {
                         // Death Coil ranged attack
@@ -5603,6 +5664,7 @@
                             if (typeof AudioSys.playDeathCoil === 'function') AudioSys.playDeathCoil();
                             spawnCombatText(player.x, player.y, `-${netDmg} DEATH`, '#f43f5e');
                             logMessage(`💀 DEATH COIL: The Dread Lich fires a screaming necrotic skull for ${netDmg} DMG (-4 Sanity)!`, 'important');
+                            if (player.hp <= 0) handlePlayerDeath('The Dread Lich (Death Coil)');
                         }
                     } else if (m.type === 'ABYSSAL_WYRM' && dist <= 5 && hasLOS) {
                         // Caustic Acid Spit
@@ -5618,6 +5680,7 @@
                             AudioSys.playPlayerHurt();
                             spawnCombatText(player.x, player.y, `-${netDmg} ACID`, '#10b981');
                             logMessage(`🧪 CAUSTIC BILE: Abyssal Wyrm spews corrosive venom for ${netDmg} Acid DMG, dissolving provisions (-8 Hunger)!`, 'combat');
+                            if (player.hp <= 0) handlePlayerDeath('The Abyssal Wyrm (Caustic Bile)');
                         }
                         spellEffects.push({ type: 'frost', x: player.x, y: player.y, radius: 12, duration: 8 });
                     } else if (m.type === 'VOID_MONARCH' && dist <= 6 && hasLOS) {
@@ -5633,6 +5696,7 @@
                             AudioSys.playPlayerHurt();
                             spawnCombatText(player.x, player.y, `-${netDmg} VOID`, '#c084fc');
                             logMessage(`🌌 COSMIC COLLAPSE: The Void Monarch unleashes an astral beam for ${netDmg} Void DMG!`, 'combat');
+                            if (player.hp <= 0) handlePlayerDeath('The Void Monarch (Cosmic Beam)');
                         }
                         spellEffects.push({ type: 'void', x: player.x, y: player.y, radius: 14, duration: 8 });
                     } else if (m.type === 'ACOLYTE' && dist <= 4 && hasLOS) {
@@ -5663,6 +5727,7 @@
                             AudioSys.playPlayerHurt();
                             spawnCombatText(player.x, player.y, `-${netDmg} SHADOW`, '#a855f7');
                             logMessage(`🔮 ${m.name} casts necrotic Shadow Bolt for ${netDmg} DMG!`, 'combat');
+                            if (player.hp <= 0) handlePlayerDeath(`${m.name} (Shadow Bolt)`);
                         } else {
                             logMessage(`🛡️ Aegis Ward deflects ${m.name}'s Shadow Bolt!`, 'magic');
                         }
@@ -7188,6 +7253,7 @@
         ];
 
         function advanceTurn() {
+            if (isGameOver) return;
             turn++;
             const zIdx = getZone(depthLevel);
             const zInfo = ZONE_INFO[zIdx];
@@ -7209,10 +7275,11 @@
             if (player.hunger <= 0) {
                 player.hunger = 0;
                 if (turn % 3 === 0) {
-                    player.hp = Math.max(1, player.hp - 2);
+                    player.hp = Math.max(0, player.hp - 2);
                     logMessage('STARVATION! Your body wastes away from hunger (-2 HP)!', 'important');
                     spawnCombatText(player.x, player.y, '-2 STARVE', '#ef4444');
                     AudioSys.playHit();
+                    if (player.hp <= 0) handlePlayerDeath('Starvation');
                 }
             }
 
@@ -7281,10 +7348,11 @@
             if (player.sanity <= 0) {
                 player.sanity = 0;
                 if (turn % 6 === 0) {
-                    player.hp = Math.max(1, player.hp - 3);
+                    player.hp = Math.max(0, player.hp - 3);
                     logMessage('PSYCHIC COLLAPSE! Total madness wracks your mind (-3 HP)!', 'important');
                     spawnCombatText(player.x, player.y, '-3 MADNESS', '#ef4444');
                     AudioSys.playHit();
+                    if (player.hp <= 0) handlePlayerDeath('Total Madness');
                 }
             }
 
@@ -7348,6 +7416,7 @@
         }
 
         function movePlayer(dx, dy) {
+            if (isGameOver) return;
             const nx = player.x + dx;
             const ny = player.y + dy;
 
@@ -7501,6 +7570,7 @@
         }
 
         function restTurn() {
+            if (isGameOver) return;
             if (player.hunger <= 0) {
                 logMessage('You are starving and cannot regenerate strength by resting! Eat food rations.', 'important');
                 AudioSys.playHit();
@@ -7523,6 +7593,7 @@
         }
 
         function searchArea() {
+            if (isGameOver) return;
             logMessage('You carefully search the surrounding stonework for runes, glyphs, and traps...', 'magic');
             let found = false;
             for (let dy = -2; dy <= 2; dy++) {
@@ -7570,6 +7641,7 @@
         }
 
         function interactStairs() {
+            if (isGameOver) return;
             const current = dungeon[player.y][player.x];
             if (current === TILE.STAIRS_DOWN) {
                 depthLevel++;
@@ -7655,6 +7727,7 @@
 
         // --- Relic & Ancient Rune Magic Spellcasting System ---
         function castSpellFromSocket(socketIdx) {
+            if (isGameOver) return;
             AudioSys.init();
             if (socketIdx < 0 || socketIdx >= player.staffSockets.length) return;
             const runeKey = player.staffSockets[socketIdx];
@@ -8559,6 +8632,83 @@
         }
 
         // --- Delve Save & State Persistence ---
+        let isGameOver = false;
+
+        function handlePlayerDeath(cause = 'Abyssal Horrors') {
+            if (isGameOver) return;
+            isGameOver = true;
+            player.hp = 0;
+            updateHUD();
+            AudioSys.playPlayerHurt();
+            AudioSys.playMonsterDeath();
+            logMessage(`💀 SLAIN IN THE ABYSS: Fallen to ${cause} at Depth B${depthLevel} (Turn ${turn}).`, 'important');
+            showToast(`DELVER SLAIN // DEPTH B${depthLevel}`, 'error');
+            openGameOverModal(cause);
+        }
+
+        function openGameOverModal(cause) {
+            const m = document.getElementById('modalGameOver');
+            if (!m) return;
+            const zName = ZONE_INFO[getZone(depthLevel)] ? ZONE_INFO[getZone(depthLevel)].shortName : 'Abyss';
+            const depthEl = document.getElementById('goDepth');
+            if (depthEl) depthEl.innerText = `B${depthLevel} (${zName})`;
+            const turnsEl = document.getElementById('goTurns');
+            if (turnsEl) turnsEl.innerText = turn;
+            const lvlEl = document.getElementById('goLevel');
+            if (lvlEl) lvlEl.innerText = player.level;
+            const essEl = document.getElementById('goEssence');
+            if (essEl) essEl.innerText = `${player.essence} Gold`;
+            const causeEl = document.getElementById('goCause');
+            if (causeEl) causeEl.innerText = cause;
+            m.style.display = 'flex';
+        }
+
+        function closeGameOverModal() {
+            const m = document.getElementById('modalGameOver');
+            if (m) m.style.display = 'none';
+        }
+
+        function openVictoryModal() {
+            const m = document.getElementById('modalVictory');
+            if (!m) return;
+            const depthEl = document.getElementById('vicDepth');
+            if (depthEl) depthEl.innerText = `Depth B${depthLevel}`;
+            const turnsEl = document.getElementById('vicTurns');
+            if (turnsEl) turnsEl.innerText = turn;
+            const lvlEl = document.getElementById('vicLevel');
+            if (lvlEl) lvlEl.innerText = player.level;
+            const essEl = document.getElementById('vicEssence');
+            if (essEl) essEl.innerText = `${player.essence} Gold`;
+            m.style.display = 'flex';
+            AudioSys.playAegis();
+        }
+
+        function closeVictoryModal() {
+            const m = document.getElementById('modalVictory');
+            if (m) m.style.display = 'none';
+        }
+
+        function restartDescent() {
+            isGameOver = false;
+            closeGameOverModal();
+            closeVictoryModal();
+            depthLevel = 1;
+            turn = 1;
+            player.hp = player.maxHp;
+            player.sanity = player.maxSanity;
+            player.aether = player.maxAether;
+            player.shield = 0;
+            player.hunger = 100;
+            player.torchFuel = 120;
+            player.torchLit = true;
+            player.curse = CURSES.NONE;
+            player.curseTurns = 0;
+            generateDungeon(1);
+            render();
+            logMessage('⚔️ A new delver steps into the dusty Catacombs Depth B1.', 'important');
+            showToast('NEW DESCENT BEGUN // DEPTH B1', 'info');
+        }
+
         function getSavePayload() {
             return {
                 version: 1,
@@ -8641,6 +8791,15 @@
             torchParticles = [];
             spellEffects = [];
 
+            isGameOver = false;
+            closeGameOverModal();
+            closeVictoryModal();
+            try {
+                localStorage.setItem('kabyss_tutorialSeen', '1');
+                const mHelp = document.getElementById('modalHelp');
+                if (mHelp) mHelp.style.display = 'none';
+            } catch (e) {}
+
             const zoneIdx = getZone(depthLevel);
             AudioSys.updateAmbienceZone(zoneIdx);
 
@@ -8654,6 +8813,10 @@
         }
 
         function quicksaveGame() {
+            if (isGameOver) {
+                showToast('CANNOT SAVE WHILE FALLEN', 'warn');
+                return;
+            }
             try {
                 AudioSys.init();
                 const payload = JSON.stringify(getSavePayload());
@@ -8679,6 +8842,8 @@
                 }
                 const parsed = JSON.parse(raw);
                 if (restoreGameFromPayload(parsed)) {
+                    isGameOver = false;
+                    closeGameOverModal();
                     AudioSys.playAegis();
                     showToast(`QUICKSAVE RESTORED // DEPTH B${depthLevel} TURN ${turn}`, 'success');
                     logMessage(`📂 DELVER STATE RESTORED: Resumed delve at Depth B${depthLevel} (Turn ${turn}).`, 'heal');
@@ -8740,6 +8905,44 @@
                 quickloadGame();
                 return;
             }
+
+            // Game Over Modal active shortcuts
+            const mGameOver = document.getElementById('modalGameOver');
+            if (mGameOver && mGameOver.style.display === 'flex') {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    restartDescent();
+                    return;
+                }
+                if (e.key === 'F9') {
+                    e.preventDefault();
+                    quickloadGame();
+                    return;
+                }
+                if (e.key === 'Escape') {
+                    closeGameOverModal();
+                    return;
+                }
+                return;
+            }
+
+            // Victory Modal active shortcuts
+            const mVictory = document.getElementById('modalVictory');
+            if (mVictory && mVictory.style.display === 'flex') {
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'Escape') {
+                    e.preventDefault();
+                    closeVictoryModal();
+                    return;
+                }
+                if (e.key === 'F5') {
+                    e.preventDefault();
+                    quicksaveGame();
+                    return;
+                }
+                return;
+            }
+
+            if (isGameOver) return;
 
             if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
                 e.preventDefault();
@@ -8832,6 +9035,8 @@
                 closeCauldronModal();
                 closeEnchantModal();
                 closeMerchantModal();
+                closeGameOverModal();
+                closeVictoryModal();
                 const mHelp = document.getElementById('modalHelp');
                 if (mHelp) mHelp.style.display = 'none';
                 return;
@@ -9018,14 +9223,30 @@
         document.getElementById('gearAmuletSlot')?.addEventListener('click', () => unequipSlot('amulet'));
 
         document.getElementById('btnNewRun')?.addEventListener('click', () => {
-            depthLevel = 1;
-            turn = 1;
-            player.hp = player.maxHp;
-            player.sanity = player.maxSanity;
-            player.aether = player.maxAether;
-            player.shield = 0;
-            generateDungeon(1);
+            restartDescent();
         });
+
+        // Game Over Modal Event Listeners
+        document.getElementById('modalGameOverClose')?.addEventListener('click', closeGameOverModal);
+        document.getElementById('btnGameOverRestart')?.addEventListener('click', restartDescent);
+        document.getElementById('btnGameOverLoad')?.addEventListener('click', quickloadGame);
+        const modalGameOverEl = document.getElementById('modalGameOver');
+        if (modalGameOverEl) {
+            modalGameOverEl.addEventListener('click', (e) => {
+                if (e.target === modalGameOverEl) closeGameOverModal();
+            });
+        }
+
+        // Victory Modal Event Listeners
+        document.getElementById('modalVictoryClose')?.addEventListener('click', closeVictoryModal);
+        document.getElementById('btnVictoryContinue')?.addEventListener('click', closeVictoryModal);
+        document.getElementById('btnVictoryQuicksave')?.addEventListener('click', quicksaveGame);
+        const modalVictoryEl = document.getElementById('modalVictory');
+        if (modalVictoryEl) {
+            modalVictoryEl.addEventListener('click', (e) => {
+                if (e.target === modalVictoryEl) closeVictoryModal();
+            });
+        }
 
         document.getElementById('btnRest')?.addEventListener('click', () => {
             restTurn();

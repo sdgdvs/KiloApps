@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KHabit
   kilo_usability: KZip
   kilo_graphics: KCosmic
-  kilo_qa: KAbyss
+  kilo_qa: KMedia
   kilo_expander: KNet
   kilo_creator: "kweb://deep-core (Ghost Node Terminal & Passkey Analyzer)"
 virtual_web_target: "kweb://deep-core"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KFortress
-  timestamp: "2026-09-30T06:40:00Z"
+  agent: kilo-qa
+  app: KAbyss
+  timestamp: "2026-09-30T08:40:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -118,9 +118,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KAbyss`
+- **Current Target**: `KMedia`
 - **Upcoming Queue**:
-  `KMedia`, `KAudio`, `KCosmic`, `KContacts` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum)*.
+  `KAudio`, `KCosmic`, `KContacts` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KNet`
@@ -276,6 +276,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T08:40:00Z — kilo-qa: KAbyss (Pass 5: Tutorial & State Integrity, Quicksave/Load, Modals & Win32 I/O)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 449.8 KB web / 246.2 KB native < 999 KB).
+  - Quicksave & Load: Added full state persistence via F5 / F9 across web and native binary (`kabyss_quicksave.dat`).
+  - First-Run Tutorial: Added tutorial flags (`kabyss_tutorialSeen` / `kabyss_tutorial.dat`) preventing interruption on save restore.
+  - Interactive Modals: Wired Game Over and Victory modal dialogues with stat breakdown, retry, and quickload/quicksave hotkeys.
+  - Toast Occlusion: Repositioned toast container to bottom-center with reverse stacking, eliminating HUD and button obstruction.
+  - Diegetic ARG Touchstone: Preserved subtle node reference `[ECHO-1999 // NODE 10.19.99.4 // kweb://echo-subsystem.net]`.
+  - Verification: MSVC clean (`KAbyss.exe` 246.2 KB); Vite clean in 440ms; security lint 100% PASS; icon audit clean.
+
 - **2026-09-30T06:40:00Z — kilo-graphics: KFortress (Visual Polish, Specular Glint Purge & YM2612 FM Audio)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 201.9 KB web / 182.8 KB native < 999 KB).
   - Glint Purge & Citadel Masonry: Purged roof specular sheen; added ashlar stone courses, portcullis grating, and warm sconces.
@@ -310,13 +319,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Persistent Field Logbook: Added interactive observer registry storing local telemetry reports with `.SIG` archive export.
   - Reciprocal Web Links: Verified and updated links across KNet help table, KiloNet Portal directory/search index, and Webring #016.
   - Verification: Clean Vite build in 260ms; security lint 100% PASS; file size 123.5 KB strictly compliant with sacred 999 KB law.
-
-- **2026-09-30T04:05:00Z — kilo-expander: KTask (Sockets I/O, RTDB Fleet Sentinel, Profiler Flamegraph & YM2612 FM Audio)**
-  - Status: PASS ✅ (0 regressions, clean builds, 178.9 KB web / 31.2 KB native < 999 KB ceiling).
-  - Network Sockets: Added Tab [4] Network Sockets monitoring TCP/UDP endpoints, RX/TX rates, latency, ping probe, and reset connection.
-  - Fleet Sentinel: Added Tab [5] with live Firebase RTDB node telemetry broadcast, global fleet radar, ping probes, and solo offline simulation.
-  - Profiler & Flamegraph: Added Tab [6] with 3-sec live CPU instruction cycle sampler, IPC/cache analysis, visual Flamegraph, and trace export.
-  - Memory Delta & Leak Sentinel: Added [Δ RAM] toggle and [Zero Base] with automatic memory drift analysis and leak warning badges.
-  - Genesis YM2612 FM Audio: Added 2-operator FM synth with SPC700 stereo delay warmth and audible alerts; added [S] mute/sound hotkey.
-  - Native Alignment: Added Sockets and Profiler telemetry sections to Win32 C inspector; verified clean MSVC build (`KTask.exe` 31.2 KB).
-  - Verification: MSVC clean; Vite clean in 359ms; security lint 100% clean; fleet icon checks PASS.

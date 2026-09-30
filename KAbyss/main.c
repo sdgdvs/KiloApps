@@ -365,7 +365,7 @@ static const ItemDef g_itemDefs[NUM_ITEM_DEFS] = {
     { ITEM_ARM_WYRMSCALE, "Wyrmscale Carapace", ITEM_TYPE_EQUIPMENT, SLOT_ARMOR, "[", RGB(16,185,129), "+9 Warding, +40 Max HP, +2 Might. Impervious to acid.", 2,9,0,0, 40,0,0 },
     { ITEM_REL_SOUL_PHYLACTERY, "Soul Phylactery", ITEM_TYPE_EQUIPMENT, SLOT_RELIC, "o", RGB(239,68,68), "+12 Max Aether, +20 Max Sanity, +4 Arcana, +2 Warding. Pulsing necrotic relic.", 0,2,4,8, 0,12,20 },
     { ITEM_REL_MONARCH_CROWN, "Crown of Void Monarch", ITEM_TYPE_EQUIPMENT, SLOT_RELIC, "o", RGB(192,132,252), "+10 Light, +35 Max Aether, +35 Max Sanity, +5 Arcana.", 0,2,5,10, 0,35,35 },
-    { ITEM_REL_PRECURSOR_GLYPH, "Precursor Relic Glyph", ITEM_TYPE_EQUIPMENT, SLOT_RELIC, "X", RGB(56,189,248), "+11 Light, +25 Max Aether, +25 Max Sanity, +4 Arcana. [Arc 2: 10.19.99.4]", 0,1,4,11, 0,25,25 }
+    { ITEM_REL_PRECURSOR_GLYPH, "Precursor Relic Glyph", ITEM_TYPE_EQUIPMENT, SLOT_RELIC, "X", RGB(56,189,248), "+11 Light, +25 Max MP, +25 Sanity, +4 Arcana. [10.19.99.4 | echo-subsystem.net]", 0,1,4,11, 0,25,25 }
 };
 
 #define NUM_RECIPES 6
@@ -534,8 +534,31 @@ static int g_helpTab = 0; // 0=Tactics, 1=Bestiary, 2=Grimoire, 3=Runes, 4=Alche
 static BOOL g_showEnchantModal = FALSE;
 static BOOL g_showMerchantModal = FALSE;
 static int g_merchantMode = 0; // 0=Buy, 1=Sell
+static BOOL g_isGameOver = FALSE;
+static BOOL g_showVictoryModal = FALSE;
+static char g_deathReason[128] = "Slain in the dark abyss";
 static float g_animFlicker = 0.0f;
 static int g_frameCount = 0;
+
+#define ABYSS_SAVE_MAGIC 0x41425953
+#define ABYSS_SAVE_VERSION 1
+
+typedef struct {
+    unsigned int magic;
+    unsigned int version;
+    int depthLevel;
+    int turn;
+    BOOL hasPrecursorGlyph;
+    Delver player;
+    int dungeon[MAP_HEIGHT][MAP_WIDTH];
+    BOOL explored[MAP_HEIGHT][MAP_WIDTH];
+    int numChests;
+    Chest chests[MAX_CHESTS];
+    int numTorches;
+    Torch torches[MAX_TORCHES];
+    int numMonsters;
+    Monster monsters[MAX_MONSTERS];
+} AbyssSaveData;
 
 // Procedural Dungeon Audio & Atmospheric Soundscape System [Phase 13]
 typedef enum {
@@ -676,6 +699,9 @@ void SpawnEmber(float x, float y, BOOL isTorch);
 void UpdateEmbers(void);
 void CastSpell(int socketIdx);
 void SocketRune(int socketIdx, int runeIdx);
+BOOL QuicksaveGame(void);
+BOOL QuickloadGame(void);
+void HandlePlayerDeath(const char* cause);
 void UnsocketRune(int socketIdx);
 BOOL CheckLOS(int x0, int y0, int x1, int y1);
 void SpawnCombatText(float x, float y, const char* text, COLORREF color);
@@ -1454,7 +1480,8 @@ void DamageMonster(int idx, int dmg, const char* dmgType, BOOL isCrit) {
             if (!g_hasPrecursorGlyph) {
                 g_hasPrecursorGlyph = TRUE;
                 AddPackItem(ITEM_REL_PRECURSOR_GLYPH, 1);
-                AddLog("✦ PRECURSOR RELIC GLYPH RECOVERED: The Void Monarch yields an ancient ARG tablet [10.19.99.4 | echo-subsystem.net]!", RGB(56, 189, 248));
+                g_showVictoryModal = TRUE;
+                AddLog("✦ PRECURSOR RELIC GLYPH RECOVERED: The Void Monarch yields an ancient precursor tablet [10.19.99.4 | echo-subsystem.net]!", RGB(56, 189, 248));
             }
             AddLog("Spoils of the Void: Discovered Crown of Void Monarch (+10 Light, +35 MP/SAN)!", COLOR_TEXT_GOLD);
         } else if (m->type == MONSTER_GHOUL) {
@@ -1650,6 +1677,7 @@ void UpdateMonsters(void) {
                     snprintf(aBuf, sizeof(aBuf), "%s strikes you for %d DMG! (%d/%d HP)", md->name, netDmg, g_player.hp, g_player.max_hp);
                     AddLog(aBuf, COLOR_ACCENT_RED);
                     Beep(180, 40);
+                    if (g_player.hp <= 0) HandlePlayerDeath(md->name);
                 }
 
                 if (mon->type == MONSTER_WRAITH) {
@@ -1743,7 +1771,7 @@ void UpdateMonsters(void) {
                 }
 
                 if (g_player.hp <= 0) {
-                    AddLog("You have fallen in the Abyss! Press F2 / Ctrl+N to descend anew.", COLOR_ACCENT_RED);
+                    HandlePlayerDeath(md->name);
                 }
             } else if (mon->type == MONSTER_DREAD_LICH && dist <= 5.0f && hasLOS) {
                 // Death Coil ranged attack
@@ -1765,6 +1793,7 @@ void UpdateMonsters(void) {
                     snprintf(bBuf, sizeof(bBuf), "DEATH COIL: %s fires a necrotic skull for %d DMG (-4 Sanity)!", md->name, netDmg);
                     AddLog(bBuf, RGB(239, 68, 68));
                     Beep(260, 40);
+                    if (g_player.hp <= 0) HandlePlayerDeath("The Dread Lich (Death Coil)");
                 }
             } else if (mon->type == MONSTER_ABYSSAL_WYRM && dist <= 5.0f && hasLOS) {
                 // Caustic Acid Spit
@@ -1786,6 +1815,7 @@ void UpdateMonsters(void) {
                     snprintf(bBuf, sizeof(bBuf), "CAUSTIC BILE: %s spews acid for %d DMG (-8 Hunger)!", md->name, netDmg);
                     AddLog(bBuf, COLOR_ACCENT_GREEN);
                     Beep(210, 40);
+                    if (g_player.hp <= 0) HandlePlayerDeath("The Abyssal Wyrm (Caustic Bile)");
                 }
             } else if (mon->type == MONSTER_VOID_MONARCH && dist <= 6.0f && hasLOS) {
                 // Cosmic Collapse Beam
@@ -1806,6 +1836,7 @@ void UpdateMonsters(void) {
                     snprintf(bBuf, sizeof(bBuf), "COSMIC COLLAPSE: %s channels astral annihilation for %d DMG!", md->name, netDmg);
                     AddLog(bBuf, COLOR_ACCENT_PURPLE);
                     Beep(160, 60);
+                    if (g_player.hp <= 0) HandlePlayerDeath("The Void Monarch (Cosmic Beam)");
                 }
             } else if (mon->type == MONSTER_ACOLYTE && dist <= 4.0f && hasLOS) {
                 // Ranged Shadow Bolt
@@ -1834,6 +1865,7 @@ void UpdateMonsters(void) {
                     snprintf(bBuf, sizeof(bBuf), "%s casts Shadow Bolt for %d DMG!", md->name, netDmg);
                     AddLog(bBuf, COLOR_ACCENT_RED);
                     Beep(260, 40);
+                    if (g_player.hp <= 0) HandlePlayerDeath("Crypt Acolyte (Shadow Bolt)");
                 }
             } else {
                 // Gravitational Singularity for Void Monarch
@@ -2975,6 +3007,7 @@ static const char* g_eldritchWhispers[8] = {
 };
 
 void AdvanceTurn(void) {
+    if (g_isGameOver) return;
     g_turn++;
 
     // 1. Hunger processing (Balanced delver metabolic rate for 48x36 maps)
@@ -2993,7 +3026,10 @@ void AdvanceTurn(void) {
         g_player.hunger = 0;
         if (g_turn % 3 == 0) {
             g_player.hp -= 2;
-            if (g_player.hp < 1) g_player.hp = 1;
+            if (g_player.hp <= 0) {
+                g_player.hp = 0;
+                HandlePlayerDeath("Starvation");
+            }
             AddLog("STARVATION! Your body wastes away from hunger (-2 HP)!", COLOR_ACCENT_RED);
             SpawnCombatText((float)g_player.x, (float)g_player.y, "-2 STARVE", COLOR_ACCENT_RED);
             Beep(180, 60);
@@ -3067,7 +3103,10 @@ void AdvanceTurn(void) {
         g_player.sanity = 0;
         if (g_turn % 6 == 0) {
             g_player.hp -= 3;
-            if (g_player.hp < 1) g_player.hp = 1;
+            if (g_player.hp <= 0) {
+                g_player.hp = 0;
+                HandlePlayerDeath("Total Madness");
+            }
             AddLog("PSYCHIC COLLAPSE! Total madness wracks your mind (-3 HP)!", COLOR_ACCENT_RED);
             SpawnCombatText((float)g_player.x, (float)g_player.y, "-3 MADNESS", COLOR_ACCENT_PURPLE);
             PlayAudioAsync(SND_HURT);
@@ -3108,6 +3147,7 @@ void AdvanceTurn(void) {
 }
 
 void MovePlayer(int dx, int dy) {
+    if (g_isGameOver) return;
     int nx = g_player.x + dx;
     int ny = g_player.y + dy;
 
@@ -3288,6 +3328,7 @@ void MovePlayer(int dx, int dy) {
 }
 
 void RestTurn(void) {
+    if (g_isGameOver) return;
     if (g_player.hunger <= 0) {
         AddLog("You are starving and cannot regenerate strength by resting! Eat food rations.", COLOR_ACCENT_RED);
         Beep(180, 50);
@@ -3353,6 +3394,7 @@ void RekindleTorch(void) {
 
 // --- Relic & Ancient Rune Magic Spellcasting System ---
 void CastSpell(int socketIdx) {
+    if (g_isGameOver) return;
     if (socketIdx < 0 || socketIdx >= g_staffDefs[g_player.equippedStaff].maxSockets) return;
     int runeIdx = g_player.staffSockets[socketIdx];
     if (runeIdx < 0 || runeIdx >= NUM_RUNES) {
@@ -6433,6 +6475,161 @@ void RenderGame(HDC hdc, HWND hwnd) {
                  "Shortcuts: [1..8] Trade Item  |  [S/TAB] Switch Buy/Sell  |  [ESC / M] Close Market", 83);
     }
 
+    // 5d. GAME OVER MODAL (Delver Slain)
+    if (g_isGameOver) {
+        int mWidth = 520;
+        int mHeight = 240;
+        RECT modalRect = {width / 2 - mWidth / 2, height / 2 - mHeight / 2, width / 2 + mWidth / 2, height / 2 + mHeight / 2};
+        HBRUSH modalBg = CreateSolidBrush(RGB(16, 8, 10));
+        FillRect(memDC, &modalRect, modalBg);
+        DeleteObject(modalBg);
+
+        HPEN redPen = CreatePen(PS_SOLID, 2, RGB(239, 68, 68));
+        HPEN oldP = (HPEN)SelectObject(memDC, redPen);
+        SelectObject(memDC, GetStockObject(NULL_BRUSH));
+        Rectangle(memDC, modalRect.left, modalRect.top, modalRect.right, modalRect.bottom);
+        SelectObject(memDC, oldP);
+        DeleteObject(redPen);
+
+        SelectObject(memDC, fontTitle);
+        SetTextColor(memDC, RGB(239, 68, 68));
+        TextOutA(memDC, modalRect.left + 24, modalRect.top + 16, "DELVER SLAIN IN THE ABYSS", 25);
+
+        SelectObject(memDC, fontSmall);
+        SetTextColor(memDC, RGB(203, 213, 225));
+        TextOutA(memDC, modalRect.left + 24, modalRect.top + 46, "Your life essence dissolves into the freezing subterranean depths.", 66);
+
+        // Stats Box
+        RECT sBox = {modalRect.left + 20, modalRect.top + 70, modalRect.right - 20, modalRect.top + 160};
+        HBRUSH sBoxBg = CreateSolidBrush(RGB(11, 13, 20));
+        FillRect(memDC, &sBox, sBoxBg);
+        DeleteObject(sBoxBg);
+        FrameRect(memDC, &sBox, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+
+        SelectObject(memDC, fontBold);
+        char statBuf[128];
+        DepthZone z = GetDepthZone(g_depthLevel);
+        const ZoneTheme* zt = &g_zoneThemes[z];
+
+        SetTextColor(memDC, COLOR_ACCENT_AMBER);
+        snprintf(statBuf, sizeof(statBuf), "Depth Reached: B%d (%s)", g_depthLevel, zt->name);
+        TextOutA(memDC, sBox.left + 14, sBox.top + 12, statBuf, (int)strlen(statBuf));
+
+        SetTextColor(memDC, COLOR_ACCENT_CYAN);
+        snprintf(statBuf, sizeof(statBuf), "Turns Survived: %d", g_turn);
+        TextOutA(memDC, sBox.left + 260, sBox.top + 12, statBuf, (int)strlen(statBuf));
+
+        SetTextColor(memDC, RGB(168, 85, 247));
+        snprintf(statBuf, sizeof(statBuf), "Delver Level: %d", g_player.level);
+        TextOutA(memDC, sBox.left + 14, sBox.top + 36, statBuf, (int)strlen(statBuf));
+
+        SetTextColor(memDC, COLOR_TEXT_GOLD);
+        snprintf(statBuf, sizeof(statBuf), "Essence: %d Gold", g_player.essence);
+        TextOutA(memDC, sBox.left + 260, sBox.top + 36, statBuf, (int)strlen(statBuf));
+
+        SetTextColor(memDC, RGB(244, 63, 94));
+        snprintf(statBuf, sizeof(statBuf), "Cause of Death: %s", g_deathReason);
+        TextOutA(memDC, sBox.left + 14, sBox.top + 60, statBuf, (int)strlen(statBuf));
+
+        // Action Buttons
+        RECT btnLoad = {modalRect.left + 20, modalRect.bottom - 54, modalRect.left + 230, modalRect.bottom - 18};
+        HBRUSH bLBg = CreateSolidBrush(RGB(12, 30, 48));
+        FillRect(memDC, &btnLoad, bLBg);
+        DeleteObject(bLBg);
+        FrameRect(memDC, &btnLoad, (HBRUSH)GetStockObject(GRAY_BRUSH));
+        SetTextColor(memDC, COLOR_ACCENT_CYAN);
+        TextOutA(memDC, btnLoad.left + 16, btnLoad.top + 8, "[F9] Load Quicksave", 19);
+
+        RECT btnDesc = {modalRect.right - 240, modalRect.bottom - 54, modalRect.right - 20, modalRect.bottom - 18};
+        HBRUSH bDBg = CreateSolidBrush(RGB(64, 16, 16));
+        FillRect(memDC, &btnDesc, bDBg);
+        DeleteObject(bDBg);
+        FrameRect(memDC, &btnDesc, (HBRUSH)GetStockObject(GRAY_BRUSH));
+        SetTextColor(memDC, RGB(255, 255, 255));
+        TextOutA(memDC, btnDesc.left + 14, btnDesc.top + 8, "[F2 / Space] Descend Anew", 25);
+    }
+
+    // 5e. VICTORY MODAL (Void Monarch Defeated)
+    if (g_showVictoryModal) {
+        int mWidth = 540;
+        int mHeight = 250;
+        RECT modalRect = {width / 2 - mWidth / 2, height / 2 - mHeight / 2, width / 2 + mWidth / 2, height / 2 + mHeight / 2};
+        HBRUSH modalBg = CreateSolidBrush(RGB(19, 9, 30));
+        FillRect(memDC, &modalRect, modalBg);
+        DeleteObject(modalBg);
+
+        HPEN purpPen = CreatePen(PS_SOLID, 2, RGB(168, 85, 247));
+        HPEN oldP = (HPEN)SelectObject(memDC, purpPen);
+        SelectObject(memDC, GetStockObject(NULL_BRUSH));
+        Rectangle(memDC, modalRect.left, modalRect.top, modalRect.right, modalRect.bottom);
+        SelectObject(memDC, oldP);
+        DeleteObject(purpPen);
+
+        SelectObject(memDC, fontTitle);
+        SetTextColor(memDC, RGB(192, 132, 252));
+        TextOutA(memDC, modalRect.left + 24, modalRect.top + 16, "✦ PRIMORDIAL ABYSS CONQUERED ✦", 32);
+
+        SelectObject(memDC, fontSmall);
+        SetTextColor(memDC, RGB(203, 213, 225));
+        TextOutA(memDC, modalRect.left + 24, modalRect.top + 46, "The Void Monarch collapses into silent cosmic ashes. Precursor Relic Glyph recovered!", 85);
+
+        // Telemetry note
+        RECT tBox = {modalRect.left + 20, modalRect.top + 68, modalRect.right - 20, modalRect.top + 114};
+        HBRUSH tBoxBg = CreateSolidBrush(RGB(9, 13, 22));
+        FillRect(memDC, &tBox, tBoxBg);
+        DeleteObject(tBoxBg);
+        FrameRect(memDC, &tBox, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+
+        SelectObject(memDC, fontSmall);
+        SetTextColor(memDC, RGB(192, 132, 252));
+        TextOutA(memDC, tBox.left + 12, tBox.top + 6, "Faint phosphor telemetry burns upon the obsidian surface:", 58);
+        SelectObject(memDC, fontBold);
+        SetTextColor(memDC, COLOR_ACCENT_CYAN);
+        TextOutA(memDC, tBox.left + 12, tBox.top + 24, "[ECHO-1999 // NODE 10.19.99.4 // kweb://echo-subsystem.net]", 59);
+
+        // Stats summary
+        RECT sBox = {modalRect.left + 20, modalRect.top + 122, modalRect.right - 20, modalRect.top + 180};
+        HBRUSH sBoxBg = CreateSolidBrush(RGB(11, 13, 20));
+        FillRect(memDC, &sBox, sBoxBg);
+        DeleteObject(sBoxBg);
+        FrameRect(memDC, &sBox, (HBRUSH)GetStockObject(DKGRAY_BRUSH));
+
+        SelectObject(memDC, fontBold);
+        char statBuf[128];
+        SetTextColor(memDC, COLOR_ACCENT_AMBER);
+        snprintf(statBuf, sizeof(statBuf), "Final Depth: B%d", g_depthLevel);
+        TextOutA(memDC, sBox.left + 14, sBox.top + 10, statBuf, (int)strlen(statBuf));
+
+        SetTextColor(memDC, COLOR_ACCENT_CYAN);
+        snprintf(statBuf, sizeof(statBuf), "Turns: %d", g_turn);
+        TextOutA(memDC, sBox.left + 150, sBox.top + 10, statBuf, (int)strlen(statBuf));
+
+        SetTextColor(memDC, RGB(168, 85, 247));
+        snprintf(statBuf, sizeof(statBuf), "Hero Level: %d", g_player.level);
+        TextOutA(memDC, sBox.left + 260, sBox.top + 10, statBuf, (int)strlen(statBuf));
+
+        SetTextColor(memDC, COLOR_TEXT_GOLD);
+        snprintf(statBuf, sizeof(statBuf), "Essence: %d Gold", g_player.essence);
+        TextOutA(memDC, sBox.left + 380, sBox.top + 10, statBuf, (int)strlen(statBuf));
+
+        // Action Buttons
+        RECT btnSave = {modalRect.left + 20, modalRect.bottom - 54, modalRect.left + 230, modalRect.bottom - 18};
+        HBRUSH bSBg = CreateSolidBrush(RGB(6, 44, 30));
+        FillRect(memDC, &btnSave, bSBg);
+        DeleteObject(bSBg);
+        FrameRect(memDC, &btnSave, (HBRUSH)GetStockObject(GRAY_BRUSH));
+        SetTextColor(memDC, RGB(52, 211, 153));
+        TextOutA(memDC, btnSave.left + 18, btnSave.top + 8, "[F5] Quicksave Triumph", 22);
+
+        RECT btnCont = {modalRect.right - 240, modalRect.bottom - 54, modalRect.right - 20, modalRect.bottom - 18};
+        HBRUSH bCBg = CreateSolidBrush(RGB(48, 16, 72));
+        FillRect(memDC, &btnCont, bCBg);
+        DeleteObject(bCBg);
+        FrameRect(memDC, &btnCont, (HBRUSH)GetStockObject(GRAY_BRUSH));
+        SetTextColor(memDC, RGB(255, 255, 255));
+        TextOutA(memDC, btnCont.left + 14, btnCont.top + 8, "[Space / ESC] Continue", 22);
+    }
+
     // 6. BOTTOM FOOTER (0..width, height-24..height)
     RECT footerRect = {0, height - 24, width, height};
     FillRect(memDC, &footerRect, panelDarkBrush);
@@ -6440,7 +6637,7 @@ void RenderGame(HDC hdc, HWND hwnd) {
 
     SelectObject(memDC, fontSmall);
     SetTextColor(memDC, COLOR_TEXT_DIM);
-    TextOutA(memDC, 14, height - 18, "WASD/Arrows: Move | Space: Rest | E: Interact | R/X: Search | C: CRT | F: FOV | H: Manual", 89);
+    TextOutA(memDC, 14, height - 18, "WASD: Move | Space: Rest | E: Interact | F5: Save | F9: Load | C: CRT | F: FOV | H: Manual", 89);
     TextOutA(memDC, width - 240, height - 18, "KAbyss Native Engine v0.4", 25);
 
     // Cleanup GDI objects
@@ -6460,7 +6657,120 @@ void RenderGame(HDC hdc, HWND hwnd) {
     DeleteDC(memDC);
 }
 
+void HandlePlayerDeath(const char* cause) {
+    if (g_isGameOver) return;
+    g_isGameOver = TRUE;
+    g_player.hp = 0;
+    if (cause && cause[0]) {
+        strncpy(g_deathReason, cause, sizeof(g_deathReason) - 1);
+        g_deathReason[sizeof(g_deathReason) - 1] = '\0';
+    } else {
+        strcpy(g_deathReason, "Slain in the subterranean abyss");
+    }
+    char buf[160];
+    snprintf(buf, sizeof(buf), "DELVER FALLEN: Slain by %s at Depth B%d. [F9] Load Quicksave  |  [F2/Space] Descend Anew", g_deathReason, g_depthLevel);
+    AddLog(buf, COLOR_ACCENT_RED);
+    PlayAudioAsync(SND_HURT);
+}
+
+BOOL QuicksaveGame(void) {
+    if (g_isGameOver) {
+        AddLog("CANNOT SAVE WHILE FALLEN: Delver is slain!", COLOR_ACCENT_RED);
+        return FALSE;
+    }
+    FILE* fp = fopen("kabyss_quicksave.dat", "wb");
+    if (!fp) {
+        AddLog("FAILED TO SAVE: Unable to open kabyss_quicksave.dat for writing.", COLOR_ACCENT_RED);
+        return FALSE;
+    }
+
+    AbyssSaveData data;
+    memset(&data, 0, sizeof(data));
+    data.magic = ABYSS_SAVE_MAGIC;
+    data.version = ABYSS_SAVE_VERSION;
+    data.depthLevel = g_depthLevel;
+    data.turn = g_turn;
+    data.hasPrecursorGlyph = g_hasPrecursorGlyph;
+    data.player = g_player;
+    memcpy(data.dungeon, g_dungeon, sizeof(g_dungeon));
+    memcpy(data.explored, g_explored, sizeof(g_explored));
+    data.numChests = g_numChests;
+    memcpy(data.chests, g_chests, sizeof(g_chests));
+    data.numTorches = g_numTorches;
+    memcpy(data.torches, g_torches, sizeof(g_torches));
+    data.numMonsters = g_numMonsters;
+    memcpy(data.monsters, g_monsters, sizeof(g_monsters));
+
+    size_t written = fwrite(&data, sizeof(data), 1, fp);
+    fclose(fp);
+
+    if (written != 1) {
+        AddLog("FAILED TO WRITE: Error writing quicksave data.", COLOR_ACCENT_RED);
+        return FALSE;
+    }
+
+    char buf[128];
+    snprintf(buf, sizeof(buf), "QUICKSAVE STORED: Depth B%d (Turn %d) archived to kabyss_quicksave.dat.", g_depthLevel, g_turn);
+    AddLog(buf, COLOR_ACCENT_GREEN);
+    PlayAudioAsync(SND_EQUIP);
+    return TRUE;
+}
+
+BOOL QuickloadGame(void) {
+    FILE* fp = fopen("kabyss_quicksave.dat", "rb");
+    if (!fp) {
+        AddLog("NO QUICKSAVE ARCHIVE: kabyss_quicksave.dat not found. Press F5 to save.", COLOR_ACCENT_RED);
+        return FALSE;
+    }
+
+    AbyssSaveData data;
+    size_t readCount = fread(&data, sizeof(data), 1, fp);
+    fclose(fp);
+
+    if (readCount != 1 || data.magic != ABYSS_SAVE_MAGIC || data.version != ABYSS_SAVE_VERSION) {
+        AddLog("CORRUPT ARCHIVE: kabyss_quicksave.dat version mismatch or corrupted.", COLOR_ACCENT_RED);
+        return FALSE;
+    }
+
+    g_depthLevel = data.depthLevel;
+    g_turn = data.turn;
+    g_hasPrecursorGlyph = data.hasPrecursorGlyph;
+    g_player = data.player;
+    memcpy(g_dungeon, data.dungeon, sizeof(g_dungeon));
+    memcpy(g_explored, data.explored, sizeof(g_explored));
+    g_numChests = data.numChests;
+    memcpy(g_chests, data.chests, sizeof(g_chests));
+    g_numTorches = data.numTorches;
+    memcpy(g_torches, data.torches, sizeof(g_torches));
+    g_numMonsters = data.numMonsters;
+    memcpy(g_monsters, data.monsters, sizeof(g_monsters));
+
+    g_isGameOver = FALSE;
+    g_showVictoryModal = FALSE;
+    g_showHelpModal = FALSE;
+    g_showEnchantModal = FALSE;
+    g_showMerchantModal = FALSE;
+
+    // Mark tutorial seen flag so restored game is never interrupted
+    FILE* tfp = fopen("kabyss_tutorial.dat", "w");
+    if (tfp) {
+        fputs("1\n", tfp);
+        fclose(tfp);
+    }
+
+    RecalcPlayerStats();
+    ComputeFOV();
+
+    char buf[128];
+    snprintf(buf, sizeof(buf), "QUICKSAVE RESTORED: Delver resumed at Depth B%d (Turn %d).", g_depthLevel, g_turn);
+    AddLog(buf, COLOR_ACCENT_CYAN);
+    PlayAudioAsync(SND_SPELL_AEGIS);
+    return TRUE;
+}
+
 void ResetPlayerRun(void) {
+    g_isGameOver = FALSE;
+    g_showVictoryModal = FALSE;
     g_player.base_max_hp = 100;
     g_player.base_max_sanity = 100;
     g_player.base_max_aether = 50;
@@ -6517,6 +6827,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         ResetPlayerRun();
         InitGame(1);
         SetTimer(hwnd, TIMER_ID, TIMER_INTERVAL, NULL);
+        {
+            FILE* tfp = fopen("kabyss_tutorial.dat", "r");
+            if (!tfp) {
+                g_showHelpModal = TRUE;
+                FILE* wfp = fopen("kabyss_tutorial.dat", "w");
+                if (wfp) {
+                    fputs("1\n", wfp);
+                    fclose(wfp);
+                }
+            } else {
+                fclose(tfp);
+            }
+        }
         break;
 
 
@@ -6606,6 +6929,41 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 CloseMerchantShop();
             }
             InvalidateRect(hwnd, NULL, FALSE);
+            return 0;
+        }
+
+        if (g_isGameOver) {
+            if (wParam == VK_F9) {
+                QuickloadGame();
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (wParam == VK_F2 || wParam == VK_RETURN || wParam == VK_SPACE || wParam == 'N') {
+                ResetPlayerRun();
+                InitGame(1);
+                AddLog("Embarking on a brand new descent into the Abyss.", COLOR_ACCENT_AMBER);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (wParam == VK_ESCAPE) {
+                g_isGameOver = FALSE;
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            return 0;
+        }
+
+        if (g_showVictoryModal) {
+            if (wParam == VK_F5) {
+                QuicksaveGame();
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (wParam == VK_ESCAPE || wParam == VK_RETURN || wParam == VK_SPACE) {
+                g_showVictoryModal = FALSE;
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
             return 0;
         }
 
@@ -6814,6 +7172,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AddLog("Embarking on a brand new descent into the Abyss.", COLOR_ACCENT_AMBER);
             break;
 
+        case VK_F5:
+            QuicksaveGame();
+            break;
+
+        case VK_F9:
+            QuickloadGame();
+            break;
+
         case VK_F1:
             g_showHelpModal = !g_showHelpModal;
             break;
@@ -6834,6 +7200,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (g_showHelpModal) g_showHelpModal = FALSE;
             if (g_showEnchantModal) g_showEnchantModal = FALSE;
             if (g_showMerchantModal) g_showMerchantModal = FALSE;
+            if (g_isGameOver) g_isGameOver = FALSE;
+            if (g_showVictoryModal) g_showVictoryModal = FALSE;
             break;
         }
 
@@ -6843,6 +7211,57 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     case WM_LBUTTONDOWN: {
         int mouseX = LOWORD(lParam);
         int mouseY = HIWORD(lParam);
+
+        if (g_isGameOver) {
+            RECT clientRect;
+            GetClientRect(hwnd, &clientRect);
+            int width = clientRect.right - clientRect.left;
+            int height = clientRect.bottom - clientRect.top;
+            int mWidth = 520;
+            int mHeight = 240;
+            RECT modalRect = {width / 2 - mWidth / 2, height / 2 - mHeight / 2, width / 2 + mWidth / 2, height / 2 + mHeight / 2};
+
+            RECT btnLoad = {modalRect.left + 20, modalRect.bottom - 54, modalRect.left + 230, modalRect.bottom - 18};
+            RECT btnDesc = {modalRect.right - 240, modalRect.bottom - 54, modalRect.right - 20, modalRect.bottom - 18};
+
+            if (mouseX >= btnLoad.left && mouseX <= btnLoad.right && mouseY >= btnLoad.top && mouseY <= btnLoad.bottom) {
+                QuickloadGame();
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (mouseX >= btnDesc.left && mouseX <= btnDesc.right && mouseY >= btnDesc.top && mouseY <= btnDesc.bottom) {
+                ResetPlayerRun();
+                InitGame(1);
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            return 0;
+        }
+
+        if (g_showVictoryModal) {
+            RECT clientRect;
+            GetClientRect(hwnd, &clientRect);
+            int width = clientRect.right - clientRect.left;
+            int height = clientRect.bottom - clientRect.top;
+            int mWidth = 540;
+            int mHeight = 250;
+            RECT modalRect = {width / 2 - mWidth / 2, height / 2 - mHeight / 2, width / 2 + mWidth / 2, height / 2 + mHeight / 2};
+
+            RECT btnSave = {modalRect.left + 20, modalRect.bottom - 54, modalRect.left + 230, modalRect.bottom - 18};
+            RECT btnCont = {modalRect.right - 240, modalRect.bottom - 54, modalRect.right - 20, modalRect.bottom - 18};
+
+            if (mouseX >= btnSave.left && mouseX <= btnSave.right && mouseY >= btnSave.top && mouseY <= btnSave.bottom) {
+                QuicksaveGame();
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            if (mouseX >= btnCont.left && mouseX <= btnCont.right && mouseY >= btnCont.top && mouseY <= btnCont.bottom) {
+                g_showVictoryModal = FALSE;
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+            return 0;
+        }
 
         if (g_showHelpModal) {
             RECT clientRect;

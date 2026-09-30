@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T04:05:00Z — kilo-expander: KTask (Sockets I/O, RTDB Fleet Sentinel, Profiler Flamegraph & YM2612 FM Audio)**
+  - Status: PASS ✅ (0 regressions, clean builds, 178.9 KB web / 31.2 KB native < 999 KB ceiling).
+  - Network Sockets: Added Tab [4] Network Sockets monitoring TCP/UDP endpoints, RX/TX rates, latency, ping probe, and reset connection.
+  - Fleet Sentinel: Added Tab [5] with live Firebase RTDB node telemetry broadcast, global fleet radar, ping probes, and solo offline simulation.
+  - Profiler & Flamegraph: Added Tab [6] with 3-sec live CPU instruction cycle sampler, IPC/cache analysis, visual Flamegraph, and trace export.
+  - Memory Delta & Leak Sentinel: Added [Δ RAM] toggle and [Zero Base] with automatic memory drift analysis and leak warning badges.
+  - Genesis YM2612 FM Audio: Added 2-operator FM synth with SPC700 stereo delay warmth and audible alerts; added [S] mute/sound hotkey.
+  - Native Alignment: Added Sockets and Profiler telemetry sections to Win32 C inspector; verified clean MSVC build (`KTask.exe` 31.2 KB).
+  - Verification: MSVC clean; Vite clean in 359ms; security lint 100% clean; fleet icon checks PASS.
+
 - **2026-09-30T03:50:00Z — kilo-qa: KColosseum (Pass 5: Tutorial & State Integrity, Quicksave/Load, Win32 I/O)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 126.5 KB web / 32.5 KB native < 999 KB).
   - Quicksave & State: Added F5 snapshot quicksave and F9 quickload capturing active arena combat state, bosses, crowd favor, and ludus roster in web and native (`kcolosseum_quicksave.dat`).
