@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: KTask
   kilo_graphics: KSanctuary
   kilo_qa: KRadio
-  kilo_expander: KHash
+  kilo_expander: KRSS
   kilo_creator: "kweb://portal (KiloNet Central 1999 Directory)"
 virtual_web_target: "kweb://portal"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KAudio
-  timestamp: "2026-09-30T18:43:00Z"
+  agent: kilo-expander
+  app: KHash
+  timestamp: "2026-09-30T19:02:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -123,9 +123,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPad`, `KPaint`, `KCalc`, `KMine`, `KCosmic`, `KContacts` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KHash`
+- **Current Target**: `KRSS`
 - **Upcoming Queue**:
-  `KRSS`, `KFont`, `KPad`, `KNote`, `KContacts`, `KPass`, `KVault` *(Completed: KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia, KTask, KNet, KPing)*.
+  `KFont`, `KPad`, `KNote`, `KContacts`, `KPass`, `KVault` *(Completed: KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia, KTask, KNet, KPing, KHash)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -293,6 +293,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T19:02:00Z — kilo-expander: KHash (Forensic Lab, Shannon Entropy, SAC Avalanche & CRC16/Murmur3/xxHash)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 137.8 KB web / 17.9 KB native < 999 KB).
+  - Algorithmic Expansion: Added pure C & JS CRC16 (CCITT/IBM), MurmurHash3 (32-bit), xxHash32, and HMAC-MD5.
+  - Forensic Lab & Entropy: Implemented Shannon entropy H(X) bits/B, 256-bin byte frequency histogram, and Chi-Square metric.
+  - SAC & Avalanche: Added 1-bit perturbation simulator, Hamming distance counter, and bit-level diff matrix.
+  - Reverse Identifier: Added hash type detector with 1999 test vector reverse dictionary and diegetic carrier lock.
+  - Manifests & Verification: Added .sha1, BSD format, JSON, and CSV manifest generation and verification.
+  - Verification: MSVC clean (`KHash.exe` 17.9 KB); Vite clean in 296ms; security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T18:43:00Z — kilo-qa: KAudio (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Relocation & DSP Graph Sync)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 121.8 KB web / 23.0 KB native < 999 KB).
   - Quicksave & Load: Synchronized full state across F5/F9 (engine, soundbank, fmPreset, adsr, filter, effects, sequence grid, recordedEvents) with live DSP updates.
@@ -323,12 +332,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - QoS / DSCP Telemetry: Implemented DSCP class selection and packet tagging in telemetry output.
   - Audio Telemetry: Added audio chimes with mute toggle [U] and hotkeys across web and native Win32 C.
   - Verification: MSVC clean (`KPing.exe` 38.9 KB); Vite clean in 452ms; security lint 100% PASS; <999KB ceiling.
-
-- **2026-09-30T17:30:00Z — kilo-tester: KHex (UI Audit, Particle & Glint Purge, Toast Relocation & Accessibility)**
-  - Status: PASS ✅ (6 issues fixed, 0 regressions, 0 perimeter glints, 128.9 KB web / 30.7 KB native < 999 KB).
-  - Bloat & Shake Purge: Removed 320+ lines of background 60FPS particle loops, motes, and click screen shake, eliminating frame stuttering.
-  - Toast Occlusion: Relocated toast container to bottom-center with safe vertical animations, unblocking header toolbar controls.
-  - TINAG / Mystery Audit: Cleaned out-of-universe "Arc 1" phrasing across button titles, toolbar indicators, help, and tutorial text.
-  - Keyboard & Accessibility: Added Up/Down/Left/Right arrow cursor stepping to Hex view; added keyboard activation to inspector items & chunk cells.
-  - State Sync: Synchronized `applyByteEdit()` and `executeReplaceAll()` with text buffer and localStorage; added 0xFFFFFFFF to hotkey P presets.
-  - Verification: Clean Vite build in 301ms; headless CDP test clean (0 warnings, 110 reactive items); native MSVC clean (`KHex.exe` 30.7 KB).

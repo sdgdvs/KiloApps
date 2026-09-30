@@ -848,33 +848,101 @@
       margin-bottom: 3px;
     }
 
-    /* Toast Notification */
+    /* Forensic Lab & Entropy Styles */
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .metric-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 8px 10px;
+    }
+
+    .metric-title {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .metric-val {
+      font-size: 18px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      margin: 2px 0;
+    }
+
+    .metric-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .bit-matrix {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2px;
+      padding: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      max-height: 80px;
+      overflow-y: auto;
+    }
+
+    .bit-cell {
+      width: 10px;
+      height: 10px;
+      border-radius: 1px;
+      font-size: 0px;
+      transition: background 0.15s ease;
+    }
+
+    .bit-cell.match {
+      background: rgba(16, 185, 129, 0.25);
+      border: 1px solid rgba(16, 185, 129, 0.5);
+    }
+
+    .bit-cell.flipped {
+      background: var(--danger);
+      box-shadow: 0 0 4px rgba(239, 68, 68, 0.6);
+      border: 1px solid #f87171;
+    }
+
+    /* Toast Notification (Bottom Safe Zone) */
     .toast {
       position: fixed;
-      top: 48px;
-      right: 20px;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
       background: var(--surface);
       border: 1px solid var(--primary);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
       color: var(--text);
-      padding: 8px 16px;
+      padding: 8px 18px;
       border-radius: 4px;
       font-size: 12px;
+      font-weight: 600;
       display: none;
       z-index: 2000;
       cursor: pointer;
       user-select: none;
       max-width: calc(100vw - 40px);
-      animation: fadeIn 0.2s ease;
+      animation: toastSlideUp 0.2s ease;
+      pointer-events: auto;
     }
 
     .toast.show {
       display: block;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes toastSlideUp {
+      from { opacity: 0; transform: translate(-50%, 12px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
     }
 
     /* Custom Sleek Scrollbars */
@@ -972,6 +1040,7 @@
     <button class="tab-btn" data-tab="tabVerify">⚖️ [3] Integrity Verifier</button>
     <button class="tab-btn" data-tab="tabManifest">📜 [4] Manifests (.sfv / .md5 / .sha256)</button>
     <button class="tab-btn" data-tab="tabBenchmark">⏱️ [5] Benchmarks</button>
+    <button class="tab-btn" data-tab="tabForensics">🔬 [6] Forensic Lab & Entropy</button>
   </nav>
 
   <!-- Format & Config Bar -->
@@ -988,6 +1057,7 @@
         <div class="radio-opt active" data-val="hex">Raw Hex</div>
         <div class="radio-opt" data-val="spaced">Spaced</div>
         <div class="radio-opt" data-val="base64">Base64</div>
+        <div class="radio-opt" data-val="binary">Binary</div>
         <div class="radio-opt" data-val="carray">C Array</div>
       </div>
     </div>
@@ -1017,7 +1087,7 @@
               <option value="hex">Hex Bytes (e.g. 48 65 6c 6c 6f)</option>
               <option value="base64">Base64 Encoded</option>
             </select>
-            <button class="btn btn-sm" id="btnPresetEcho">⚡ Echo Lore</button>
+            <button class="btn btn-sm" id="btnPresetEcho" title="Load diegetic internal packet frame">📡 Echo Subcarrier</button>
             <button class="btn btn-sm" id="btnPresetFox">🦊 Quick Fox</button>
           </div>
         </div>
@@ -1098,7 +1168,11 @@
           <div style="display:flex; gap:6px; flex-wrap:wrap;">
             <button class="btn btn-sm btn-primary" id="btnGenSfv">Export .sfv (CRC32)</button>
             <button class="btn btn-sm btn-primary" id="btnGenMd5">Export .md5</button>
+            <button class="btn btn-sm btn-primary" id="btnGenSha1">Export .sha1</button>
             <button class="btn btn-sm btn-primary" id="btnGenSha256">Export .sha256</button>
+            <button class="btn btn-sm btn-primary" id="btnGenBsd">Export BSD-Style</button>
+            <button class="btn btn-sm" id="btnGenJson">Export .json</button>
+            <button class="btn btn-sm" id="btnGenCsv">Export .csv</button>
             <button class="btn btn-sm" id="btnCopyManifest" title="Copy manifest text to clipboard">📋 Copy Manifest</button>
           </div>
         </div>
@@ -1143,6 +1217,154 @@
         </div>
       </div>
     </div>
+
+    <!-- TAB 6: Forensic Lab & Entropy -->
+    <div class="tab-pane" id="tabForensics">
+      <!-- Row 1: Shannon Entropy & Randomness Telemetry -->
+      <div class="card">
+        <div class="card-title">
+          <span>Shannon Entropy & Byte Distribution Analysis</span>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button class="btn btn-sm" id="btnSyncPayloadToEntropy">Sync with Text Payload</button>
+            <span class="algo-tag tag-crypto" id="entropyRatingBadge">MODERATE ENTROPY</span>
+          </div>
+        </div>
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">
+          Calculates information density H(X) = -Σ p_i log2(p_i) bits per byte (0.0 to 8.0). Quantifies compression, encryption, or structured language.
+        </div>
+
+        <!-- Gauge Bar -->
+        <div style="background:var(--surface); border:1px solid var(--border); border-radius:3px; padding:3px; margin-bottom:10px;">
+          <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted); margin-bottom:3px;">
+            <span>0.0 (Uniform)</span>
+            <span>3.5 (Plaintext)</span>
+            <span>5.5 (Executable Code)</span>
+            <span>7.2+ (Encrypted/Compressed)</span>
+            <span>8.0 (Pure Random)</span>
+          </div>
+          <div style="height:12px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden; position:relative;">
+            <div id="entropyBarFill" style="height:100%; width:0%; background:linear-gradient(90deg, var(--primary), var(--success), var(--warning), var(--danger)); transition:width 0.25s ease;"></div>
+          </div>
+        </div>
+
+        <!-- 4 Metric Cards -->
+        <div class="metric-grid">
+          <div class="metric-box">
+            <div class="metric-title">Shannon Entropy (H)</div>
+            <div class="metric-val" style="color:var(--primary);" id="valShannonH">0.0000 b/B</div>
+            <div class="metric-sub" id="valShannonPercent">0.0% of theoretical max</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-title">Information Redundancy</div>
+            <div class="metric-val" style="color:var(--accent);" id="valRedundancy">100.0%</div>
+            <div class="metric-sub">Compressibility estimate</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-title">Chi-Square (χ²) Variance</div>
+            <div class="metric-val" style="color:var(--text);" id="valChiSquare">0.00</div>
+            <div class="metric-sub" id="valChiSignificance">Structured non-uniform</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-title">Monte Carlo Pi Approx</div>
+            <div class="metric-val" style="color:var(--success);" id="valMonteCarloPi">0.00%</div>
+            <div class="metric-sub">Random pair diffusion</div>
+          </div>
+        </div>
+
+        <!-- Byte Distribution Canvas -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <span style="font-size:11px; font-weight:600; color:var(--text-muted);">256-Bin Byte Frequency Histogram (0x00 – 0xFF)</span>
+          <span style="font-size:10px; color:var(--text-muted);">Colors: Controls (Green) | ASCII (Sky Blue) | High Binary (Indigo)</span>
+        </div>
+        <canvas id="entropyCanvas" width="760" height="80" style="width:100%; height:80px; background:var(--surface); border:1px solid var(--border); border-radius:3px;"></canvas>
+      </div>
+
+      <!-- Row 2: Strict Avalanche Criterion (SAC) & Bit-Flip Simulator -->
+      <div class="card">
+        <div class="card-title">
+          <span>Strict Avalanche Criterion (SAC) & Bit-Flip Simulator</span>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <select id="avalancheAlgoSelect" class="k-select" style="padding:2px 6px; font-size:11px;">
+              <option value="crc16ccitt">CRC-16-CCITT (16-bit)</option>
+              <option value="crc32">CRC32 (Linear 32-bit)</option>
+              <option value="adler32">Adler-32 (Additive 32-bit)</option>
+              <option value="fnv1a32">FNV-1a 32-bit</option>
+              <option value="murmur3">MurmurHash3 (32-bit)</option>
+              <option value="xxhash32">xxHash32 (32-bit)</option>
+              <option value="md5" selected>MD5 (Cryptographic 128-bit)</option>
+              <option value="sha1">SHA-1 (Cryptographic 160-bit)</option>
+              <option value="sha256">SHA-256 (NIST 256-bit)</option>
+            </select>
+            <button class="btn btn-sm btn-primary" id="btnTestBitFlip">Invert Bit 0</button>
+          </div>
+        </div>
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">
+          Inverts exactly 1 bit in the input payload and measures output diffusion. Ideal cryptographic hashes satisfy the Strict Avalanche Criterion (~50% output bits flip).
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; font-family:var(--font-mono); font-size:11px;">
+            <div style="background:var(--surface); padding:6px 10px; border-radius:3px; border:1px solid var(--border);">
+              <div style="color:var(--text-muted); font-size:10px;">ORIGINAL DIGEST</div>
+              <div id="sacOriginalHash" style="word-break:break-all; color:var(--text); margin-top:2px;">-</div>
+            </div>
+            <div style="background:var(--surface); padding:6px 10px; border-radius:3px; border:1px solid var(--border);">
+              <div style="color:var(--text-muted); font-size:10px;">PERTURBED DIGEST (1-bit flipped)</div>
+              <div id="sacPerturbedHash" style="word-break:break-all; color:var(--primary); margin-top:2px;">-</div>
+            </div>
+          </div>
+
+          <!-- SAC Diffusion Metrics -->
+          <div style="display:flex; justify-content:space-between; align-items:center; background:var(--surface); padding:8px 12px; border-radius:3px; border:1px solid var(--border);">
+            <div style="display:flex; gap:16px;">
+              <div>Flipped Bits: <span id="sacFlippedBits" style="font-weight:700; color:var(--danger); font-family:var(--font-mono);">0</span> / <span id="sacTotalBits">0</span></div>
+              <div>Hamming Distance: <span id="sacHammingDist" style="font-weight:700; color:var(--accent); font-family:var(--font-mono);">0</span></div>
+              <div>Avalanche Ratio: <span id="sacRatioPct" style="font-weight:700; color:var(--success); font-family:var(--font-mono);">0.0%</span> (Target: ~50%)</div>
+            </div>
+            <span id="sacAssessment" class="algo-tag tag-checksum">Linear Dispersion</span>
+          </div>
+
+          <!-- Bit Difference Matrix Visualizer -->
+          <div>
+            <div style="font-size:10px; color:var(--text-muted); margin-bottom:3px;">BIT-LEVEL DIFF MATRIX (Red = Flipped Bit, Subtle Green = Unchanged):</div>
+            <div id="sacBitMatrix" class="bit-matrix">
+              <!-- Bit squares rendered dynamically -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 3: Forensic Hash Identifier & Reverse Lookup -->
+      <div class="card">
+        <div class="card-title">
+          <span>Forensic Hash Type Identifier & Reverse Dictionary</span>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-sm" id="btnIdentifyFromExpected">Use Expected Hash</button>
+            <button class="btn btn-sm btn-primary" id="btnRunIdentification">🔎 Analyze Hash</button>
+          </div>
+        </div>
+        <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">
+          Inspects an unknown hash digest to identify candidate hash functions, bitness, salt encoding, collision vulnerability, and checks against standard retro passwords and diegetic keys.
+        </div>
+        <div style="display:flex; gap:8px; margin-bottom:8px;">
+          <input type="text" id="identInputHash" class="input-box" style="min-height:initial; padding:6px 8px; flex:1;" placeholder="Enter mystery hash (e.g. 5d41402abc4b2a76b9719d911017c592, e3b0c44298fc1c14...)...">
+        </div>
+        <div id="identResultsContainer" style="display:flex; flex-direction:column; gap:6px;">
+          <!-- Results injected dynamically -->
+        </div>
+      </div>
+
+      <!-- Diegetic Telemetry / Subcarrier Signal Lock Panel -->
+      <div class="card" id="diegeticLockCard" style="display:none; border-color:var(--primary); background:rgba(56, 189, 248, 0.05);">
+        <div class="card-title" style="color:var(--primary);">
+          <span>📡 Subterranean Carrier Lock // Subnet 10.19.99.4 Frame</span>
+          <span class="algo-tag tag-crypto">REDUNDANCY 100%</span>
+        </div>
+        <div id="diegeticLockText" style="font-family:var(--font-mono); font-size:11px; color:var(--text); line-height:1.5;">
+          <!-- Diegetic telemetry stream -->
+        </div>
+      </div>
+    </div>
   </main>
 
   <!-- Footer -->
@@ -1151,8 +1373,8 @@
       <span id="statusMsg">KHash Workstation Ready.</span>
     </div>
     <div class="status-right">
-      <span id="statusAlgoCount">9 Engines Active</span>
-      <span>[F1/H] Help | [F5] Save | [F9] Load | [1-5] Tabs</span>
+      <span id="statusAlgoCount">13 Engines Active</span>
+      <span>[F1/H] Help | [F5] Save | [F9] Load | [1-6] Tabs</span>
     </div>
   </footer>
 
@@ -1168,20 +1390,20 @@
 
       <div class="splash-features">
         <div class="splash-feature-item">
-          <div class="splash-feature-title">⚡ 9 Algorithmic Engines</div>
-          <div>CRC32, Adler-32, FNV-1a (32/64), MD5, SHA-1, SHA-256, SHA-384, SHA-512 & HMAC.</div>
+          <div class="splash-feature-title">⚡ 13 Algorithmic Engines</div>
+          <div>CRC16 (CCITT/IBM), CRC32, Adler-32, FNV-1a (32/64), Murmur3, xxHash32, MD5, SHA-1, SHA-256/384/512 & HMAC.</div>
+        </div>
+        <div class="splash-feature-item">
+          <div class="splash-feature-title">🔬 Forensic Lab & Entropy</div>
+          <div>Shannon entropy (bits/B), 256-bin byte histogram, Strict Avalanche Criterion (SAC) diffusion, & reverse dictionary.</div>
         </div>
         <div class="splash-feature-item">
           <div class="splash-feature-title">📁 File Streaming Inspector</div>
-          <div>Non-blocking chunked stream hashing for single or batch files of any size.</div>
-        </div>
-        <div class="splash-feature-item">
-          <div class="splash-feature-title">🎯 Instant Diff Verification</div>
-          <div>Real-time character-by-character mismatch detection with algorithm length heuristics.</div>
+          <div>Non-blocking chunked stream hashing for single or batch files of any size with side-by-side verification.</div>
         </div>
         <div class="splash-feature-item">
           <div class="splash-feature-title">📜 Manifests & Benchmarks</div>
-          <div>Generate/verify .sfv, .md5, .sha256 manifests and benchmark raw throughput (MB/s).</div>
+          <div>Generate/verify .sfv, .md5, .sha1, .sha256, BSD, JSON, and CSV manifests and benchmark raw throughput (MB/s).</div>
         </div>
       </div>
 
@@ -1206,7 +1428,7 @@
       <div class="modal-body">
         <div style="font-weight:bold; color:var(--accent);">⌨️ Keyboard Shortcuts</div>
         <div style="display:grid; grid-template-columns:120px 1fr; gap:6px; font-family:var(--font-mono); font-size:11px;">
-          <div><b>1 – 5</b></div><div>Switch tabs (Text, File, Verify, Manifest, Benchmarks)</div>
+          <div><b>1 – 6</b></div><div>Switch tabs (Text, File, Verify, Manifest, Benchmarks, Forensics)</div>
           <div><b>F1 / ? / H</b></div><div>Toggle this Help & Reference modal</div>
           <div><b>F5</b></div><div>Quicksave state to local storage</div>
           <div><b>F9</b></div><div>Quickload state from local storage</div>
@@ -1216,12 +1438,14 @@
 
         <div style="font-weight:bold; color:var(--accent); margin-top:8px;">🛡️ Algorithm Reference</div>
         <div style="font-size:11px; color:var(--text-muted); line-height:1.6;">
+          • <b>CRC16 (CCITT / IBM)</b>: 16-bit telecom and floppy sector cyclic redundancy check.<br>
           • <b>CRC32</b>: IEEE 802.3 32-bit cyclic redundancy check. Standard for ZIP/SFV transfers.<br>
           • <b>Adler-32</b>: 32-bit zlib checksum optimizing speed over dispersion.<br>
-          • <b>FNV-1a</b>: Fowler–Noll–Vo non-cryptographic fast hash with high dispersion.<br>
+          • <b>FNV-1a / Murmur3 / xxHash32</b>: Ultra-fast non-cryptographic hash algorithms with high dispersion.<br>
           • <b>MD5</b>: RFC 1321 128-bit digest. Legacy fingerprinting and integrity verification.<br>
           • <b>SHA-1</b>: NIST 160-bit digest. Common in legacy Git and SSL manifests.<br>
-          • <b>SHA-256 / SHA-512</b>: NIST FIPS PUB 180-4 cryptographic standard. Collision-resistant.
+          • <b>SHA-256 / SHA-512</b>: NIST FIPS PUB 180-4 cryptographic standard. Collision-resistant.<br>
+          • <b>Forensic Lab</b>: Computes Shannon entropy (0-8 bits/B) and evaluates Strict Avalanche bit flips.
         </div>
 
         <div style="display:flex; align-items:center; gap:6px; margin-top:8px;">
@@ -1317,6 +1541,147 @@
     }
 
     // --- Pure JavaScript Checksum Engines ---
+
+    // CRC-16-CCITT (poly 0x1021, init 0xFFFF)
+    function calcCRC16CCITT(bytes) {
+      let crc = 0xFFFF;
+      for (let i = 0; i < bytes.length; i++) {
+        crc ^= (bytes[i] << 8);
+        for (let j = 0; j < 8; j++) {
+          if (crc & 0x8000) {
+            crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
+          } else {
+            crc = (crc << 1) & 0xFFFF;
+          }
+        }
+      }
+      return (crc >>> 0).toString(16).padStart(4, '0');
+    }
+
+    // CRC-16-IBM / ANSI (poly 0x8005, reversed 0xA001)
+    function calcCRC16IBM(bytes) {
+      let crc = 0x0000;
+      for (let i = 0; i < bytes.length; i++) {
+        crc ^= bytes[i];
+        for (let j = 0; j < 8; j++) {
+          if (crc & 1) {
+            crc = (crc >>> 1) ^ 0xA001;
+          } else {
+            crc = crc >>> 1;
+          }
+        }
+      }
+      return (crc >>> 0).toString(16).padStart(4, '0');
+    }
+
+    // MurmurHash3 (32-bit x86)
+    function calcMurmur3(bytes, seed = 0) {
+      let h1 = seed >>> 0;
+      const c1 = 0xcc9e2d51;
+      const c2 = 0x1b873593;
+      const len = bytes.length;
+      const nblocks = Math.floor(len / 4);
+
+      for (let i = 0; i < nblocks; i++) {
+        const idx = i * 4;
+        let k1 = (bytes[idx]) | (bytes[idx + 1] << 8) | (bytes[idx + 2] << 16) | (bytes[idx + 3] << 24);
+        k1 = Math.imul(k1, c1) >>> 0;
+        k1 = ((k1 << 15) | (k1 >>> 17)) >>> 0;
+        k1 = Math.imul(k1, c2) >>> 0;
+
+        h1 ^= k1;
+        h1 = ((h1 << 13) | (h1 >>> 19)) >>> 0;
+        h1 = (Math.imul(h1, 5) + 0xe6546b64) >>> 0;
+      }
+
+      const tailIdx = nblocks * 4;
+      let k1 = 0;
+      switch (len & 3) {
+        case 3: k1 ^= bytes[tailIdx + 2] << 16;
+        case 2: k1 ^= bytes[tailIdx + 1] << 8;
+        case 1:
+          k1 ^= bytes[tailIdx];
+          k1 = Math.imul(k1, c1) >>> 0;
+          k1 = ((k1 << 15) | (k1 >>> 17)) >>> 0;
+          k1 = Math.imul(k1, c2) >>> 0;
+          h1 ^= k1;
+      }
+
+      h1 ^= len;
+      h1 ^= h1 >>> 16;
+      h1 = Math.imul(h1, 0x85ebca6b) >>> 0;
+      h1 ^= h1 >>> 13;
+      h1 = Math.imul(h1, 0xc2b2ae35) >>> 0;
+      h1 ^= h1 >>> 16;
+
+      return (h1 >>> 0).toString(16).padStart(8, '0');
+    }
+
+    // xxHash32 (32-bit standard)
+    function calcXXHash32(bytes, seed = 0) {
+      const PRIME32_1 = 0x9E3779B1 >>> 0;
+      const PRIME32_2 = 0x85EBCA77 >>> 0;
+      const PRIME32_3 = 0xC2B2AE3D >>> 0;
+      const PRIME32_4 = 0x27D4EB2F >>> 0;
+      const PRIME32_5 = 0x165667B1 >>> 0;
+
+      function rotl(x, r) {
+        return ((x << r) | (x >>> (32 - r))) >>> 0;
+      }
+
+      const len = bytes.length;
+      let h32 = 0;
+      let offset = 0;
+
+      if (len >= 16) {
+        const limit = len - 16;
+        let v1 = (seed + PRIME32_1 + PRIME32_2) >>> 0;
+        let v2 = (seed + PRIME32_2) >>> 0;
+        let v3 = (seed + 0) >>> 0;
+        let v4 = (seed - PRIME32_1) >>> 0;
+
+        while (offset <= limit) {
+          let read32 = (bytes[offset] | (bytes[offset+1]<<8) | (bytes[offset+2]<<16) | (bytes[offset+3]<<24)) >>> 0;
+          v1 = Math.imul(rotl((v1 + Math.imul(read32, PRIME32_2)) >>> 0, 13), PRIME32_1) >>> 0;
+          offset += 4;
+          read32 = (bytes[offset] | (bytes[offset+1]<<8) | (bytes[offset+2]<<16) | (bytes[offset+3]<<24)) >>> 0;
+          v2 = Math.imul(rotl((v2 + Math.imul(read32, PRIME32_2)) >>> 0, 13), PRIME32_1) >>> 0;
+          offset += 4;
+          read32 = (bytes[offset] | (bytes[offset+1]<<8) | (bytes[offset+2]<<16) | (bytes[offset+3]<<24)) >>> 0;
+          v3 = Math.imul(rotl((v3 + Math.imul(read32, PRIME32_2)) >>> 0, 13), PRIME32_1) >>> 0;
+          offset += 4;
+          read32 = (bytes[offset] | (bytes[offset+1]<<8) | (bytes[offset+2]<<16) | (bytes[offset+3]<<24)) >>> 0;
+          v4 = Math.imul(rotl((v4 + Math.imul(read32, PRIME32_2)) >>> 0, 13), PRIME32_1) >>> 0;
+          offset += 4;
+        }
+        h32 = (rotl(v1, 1) + rotl(v2, 7) + rotl(v3, 12) + rotl(v4, 18)) >>> 0;
+      } else {
+        h32 = (seed + PRIME32_5) >>> 0;
+      }
+
+      h32 = (h32 + len) >>> 0;
+
+      while (offset <= len - 4) {
+        const read32 = (bytes[offset] | (bytes[offset+1]<<8) | (bytes[offset+2]<<16) | (bytes[offset+3]<<24)) >>> 0;
+        h32 = (h32 + Math.imul(read32, PRIME32_3)) >>> 0;
+        h32 = Math.imul(rotl(h32, 17), PRIME32_4) >>> 0;
+        offset += 4;
+      }
+
+      while (offset < len) {
+        h32 = (h32 + Math.imul(bytes[offset], PRIME32_5)) >>> 0;
+        h32 = Math.imul(rotl(h32, 11), PRIME32_1) >>> 0;
+        offset++;
+      }
+
+      h32 ^= h32 >>> 15;
+      h32 = Math.imul(h32, PRIME32_2) >>> 0;
+      h32 ^= h32 >>> 13;
+      h32 = Math.imul(h32, PRIME32_3) >>> 0;
+      h32 ^= h32 >>> 16;
+
+      return (h32 >>> 0).toString(16).padStart(8, '0');
+    }
 
     // CRC32 (IEEE 802.3 standard)
     const CRC_TABLE = new Uint32Array(256);
@@ -1484,6 +1849,30 @@
       return rhex(a) + rhex(b) + rhex(c) + rhex(d);
     }
 
+    // Pure JS HMAC-MD5 (RFC 2104)
+    function calcHmacMD5(keyBytes, dataBytes) {
+      let key = keyBytes;
+      if (key.length > 64) {
+        const md5Hex = calcMD5(key);
+        key = new Uint8Array(16);
+        for (let i = 0; i < 16; i++) key[i] = parseInt(md5Hex.substr(i*2, 2), 16);
+      }
+      const kPad = new Uint8Array(64);
+      kPad.set(key);
+      const iPad = new Uint8Array(64 + dataBytes.length);
+      const oPad = new Uint8Array(64 + 16);
+      for (let i = 0; i < 64; i++) {
+        iPad[i] = kPad[i] ^ 0x36;
+        oPad[i] = kPad[i] ^ 0x5c;
+      }
+      iPad.set(dataBytes, 64);
+      const innerHex = calcMD5(iPad);
+      for (let i = 0; i < 16; i++) {
+        oPad[64 + i] = parseInt(innerHex.substr(i*2, 2), 16);
+      }
+      return calcMD5(oPad);
+    }
+
     // Cryptographic Hashes via Web Crypto API (Async Buffer)
     async function calcWebCrypto(algorithmName, bytes) {
       try {
@@ -1527,6 +1916,14 @@
         }
         return btoa(String.fromCharCode.apply(null, bytes));
       }
+      if (formatMode === 'binary') {
+        const binParts = [];
+        for (let i = 0; i < hexLower.length; i += 2) {
+          const val = parseInt(hexLower.substr(i, 2), 16);
+          binParts.push(isNaN(val) ? '00000000' : val.toString(2).padStart(8, '0'));
+        }
+        return binParts.join(' ');
+      }
       if (formatMode === 'carray') {
         const bytes = hex.match(/.{1,2}/g) || [];
         return '{ ' + bytes.map(b => '0x' + b).join(', ') + ' }';
@@ -1537,7 +1934,7 @@
     // --- State & App Management ---
     const APP_STATE = {
       hexCase: 'lower',        // 'lower' | 'upper'
-      formatMode: 'hex',       // 'hex' | 'spaced' | 'base64' | 'carray'
+      formatMode: 'hex',       // 'hex' | 'spaced' | 'base64' | 'binary' | 'carray'
       hmacEnabled: false,
       hmacKey: '',
       textPayload: '',
@@ -1548,10 +1945,14 @@
     };
 
     const ALGO_METADATA = [
+      { id: 'crc16ccitt', name: 'CRC-16-CCITT', tag: 'retro', tagClass: 'tag-checksum', bits: 16 },
+      { id: 'crc16ibm', name: 'CRC-16-IBM', tag: 'retro', tagClass: 'tag-checksum', bits: 16 },
       { id: 'crc32', name: 'CRC32', tag: 'checksum', tagClass: 'tag-checksum', bits: 32 },
       { id: 'adler32', name: 'Adler-32', tag: 'checksum', tagClass: 'tag-checksum', bits: 32 },
       { id: 'fnv1a32', name: 'FNV-1a 32-bit', tag: 'checksum', tagClass: 'tag-checksum', bits: 32 },
       { id: 'fnv1a64', name: 'FNV-1a 64-bit', tag: 'checksum', tagClass: 'tag-checksum', bits: 64 },
+      { id: 'murmur3', name: 'MurmurHash3', tag: 'fast', tagClass: 'tag-checksum', bits: 32 },
+      { id: 'xxhash32', name: 'xxHash32', tag: 'fast', tagClass: 'tag-checksum', bits: 32 },
       { id: 'md5', name: 'MD5', tag: 'legacy', tagClass: 'tag-legacy', bits: 128 },
       { id: 'sha1', name: 'SHA-1', tag: 'legacy', tagClass: 'tag-legacy', bits: 160 },
       { id: 'sha256', name: 'SHA-256', tag: 'crypto', tagClass: 'tag-crypto', bits: 256 },
@@ -1595,6 +1996,10 @@
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id === tabId));
       APP_STATE.currentTab = tabId;
+      if (tabId === 'tabForensics') {
+        if (typeof renderEntropyAnalysis === 'function') renderEntropyAnalysis();
+        if (typeof runAvalancheTest === 'function') runAvalancheTest();
+      }
       setStatus(`Switched to ${tabId.replace('tab', '')} view.`);
     }
 
@@ -1740,26 +2145,32 @@
       if (bytes.length === 0) {
         APP_STATE.calculatedDigests = {};
         refreshTextDigestUI();
+        if (typeof renderEntropyAnalysis === 'function') renderEntropyAnalysis();
         return;
       }
 
       // Synchronous Checksums
+      APP_STATE.calculatedDigests['crc16ccitt'] = calcCRC16CCITT(bytes);
+      APP_STATE.calculatedDigests['crc16ibm'] = calcCRC16IBM(bytes);
       APP_STATE.calculatedDigests['crc32'] = calcCRC32(bytes);
       APP_STATE.calculatedDigests['adler32'] = calcAdler32(bytes);
       APP_STATE.calculatedDigests['fnv1a32'] = calcFNV1a32(bytes);
       APP_STATE.calculatedDigests['fnv1a64'] = calcFNV1a64(bytes);
-      APP_STATE.calculatedDigests['md5'] = calcMD5(bytes);
+      APP_STATE.calculatedDigests['murmur3'] = calcMurmur3(bytes);
+      APP_STATE.calculatedDigests['xxhash32'] = calcXXHash32(bytes);
 
-      refreshTextDigestUI();
-
-      // Async Web Crypto
       if (APP_STATE.hmacEnabled && APP_STATE.hmacKey) {
         const keyBytes = new TextEncoder().encode(APP_STATE.hmacKey);
+        APP_STATE.calculatedDigests['md5'] = calcHmacMD5(keyBytes, bytes);
         APP_STATE.calculatedDigests['sha1'] = await calcHMAC('SHA-1', keyBytes, bytes);
         APP_STATE.calculatedDigests['sha256'] = await calcHMAC('SHA-256', keyBytes, bytes);
         APP_STATE.calculatedDigests['sha384'] = await calcHMAC('SHA-384', keyBytes, bytes);
         APP_STATE.calculatedDigests['sha512'] = await calcHMAC('SHA-512', keyBytes, bytes);
       } else {
+        APP_STATE.calculatedDigests['md5'] = calcMD5(bytes);
+        refreshTextDigestUI();
+
+        // Async Web Crypto
         APP_STATE.calculatedDigests['sha1'] = await calcWebCrypto('SHA-1', bytes);
         APP_STATE.calculatedDigests['sha256'] = await calcWebCrypto('SHA-256', bytes);
         APP_STATE.calculatedDigests['sha384'] = await calcWebCrypto('SHA-384', bytes);
@@ -1767,6 +2178,8 @@
       }
 
       refreshTextDigestUI();
+      if (typeof renderEntropyAnalysis === 'function') renderEntropyAnalysis();
+      if (typeof runAvalancheTest === 'function') runAvalancheTest();
     }
 
     function refreshTextDigestUI() {
@@ -1912,7 +2325,9 @@
         const uint8 = new Uint8Array(fileData);
 
         // Compute hashes
+        const crc16 = calcCRC16CCITT(uint8);
         const crc32 = calcCRC32(uint8);
+        const murmur = calcMurmur3(uint8);
         const md5 = calcMD5(uint8);
         const sha1 = await calcWebCrypto('SHA-1', uint8);
         const sha256 = await calcWebCrypto('SHA-256', uint8);
@@ -1920,7 +2335,9 @@
         const record = {
           name: file.name,
           size: file.size,
+          crc16,
           crc32,
+          murmur,
           md5,
           sha1,
           sha256
@@ -1930,9 +2347,17 @@
         // Render file hash results
         const resDiv = document.getElementById(`${fileCardId}_results`);
         resDiv.innerHTML = `
+          <div class="algo-card file-algo-card" style="padding:6px 8px; cursor:pointer;" title="Click to copy CRC-16">
+            <div class="algo-header"><span class="algo-name">CRC-16</span><span class="algo-tag tag-checksum">16-BIT</span></div>
+            <div class="algo-val">${crc16}</div>
+          </div>
           <div class="algo-card file-algo-card" style="padding:6px 8px; cursor:pointer;" title="Click to copy CRC32">
             <div class="algo-header"><span class="algo-name">CRC32</span><span class="algo-tag tag-checksum">SFV</span></div>
             <div class="algo-val">${crc32}</div>
+          </div>
+          <div class="algo-card file-algo-card" style="padding:6px 8px; cursor:pointer;" title="Click to copy Murmur3">
+            <div class="algo-header"><span class="algo-name">Murmur3</span><span class="algo-tag tag-checksum">32-BIT</span></div>
+            <div class="algo-val">${murmur}</div>
           </div>
           <div class="algo-card file-algo-card" style="padding:6px 8px; cursor:pointer;" title="Click to copy MD5">
             <div class="algo-header"><span class="algo-name">MD5</span><span class="algo-tag tag-legacy">MD5</span></div>
@@ -2219,6 +2644,78 @@
       showToast('Exported checksums.sha256');
     });
 
+    const btnGenSha1 = document.getElementById('btnGenSha1');
+    if (btnGenSha1) {
+      btnGenSha1.addEventListener('click', () => {
+        sfxClick();
+        if (APP_STATE.filesAnalyzed.length === 0) {
+          showToast('Please analyze files in Tab 2 first');
+          return;
+        }
+        let lines = [];
+        APP_STATE.filesAnalyzed.forEach(f => {
+          lines.push(`${f.sha1} *${f.name}`);
+        });
+        const text = lines.join('\r\n');
+        document.getElementById('manifestOutput').value = text;
+        downloadTextFile('checksums.sha1', text);
+        showToast('Exported checksums.sha1');
+      });
+    }
+
+    const btnGenBsd = document.getElementById('btnGenBsd');
+    if (btnGenBsd) {
+      btnGenBsd.addEventListener('click', () => {
+        sfxClick();
+        if (APP_STATE.filesAnalyzed.length === 0) {
+          showToast('Please analyze files in Tab 2 first');
+          return;
+        }
+        let lines = [];
+        APP_STATE.filesAnalyzed.forEach(f => {
+          lines.push(`SHA256 (${f.name}) = ${f.sha256}`);
+        });
+        const text = lines.join('\r\n');
+        document.getElementById('manifestOutput').value = text;
+        downloadTextFile('checksums.bsd', text);
+        showToast('Exported BSD-style manifest');
+      });
+    }
+
+    const btnGenJson = document.getElementById('btnGenJson');
+    if (btnGenJson) {
+      btnGenJson.addEventListener('click', () => {
+        sfxClick();
+        if (APP_STATE.filesAnalyzed.length === 0) {
+          showToast('Please analyze files in Tab 2 first');
+          return;
+        }
+        const text = JSON.stringify(APP_STATE.filesAnalyzed, null, 2);
+        document.getElementById('manifestOutput').value = text;
+        downloadTextFile('checksums.json', text);
+        showToast('Exported checksums.json');
+      });
+    }
+
+    const btnGenCsv = document.getElementById('btnGenCsv');
+    if (btnGenCsv) {
+      btnGenCsv.addEventListener('click', () => {
+        sfxClick();
+        if (APP_STATE.filesAnalyzed.length === 0) {
+          showToast('Please analyze files in Tab 2 first');
+          return;
+        }
+        let lines = ['FileName,SizeBytes,CRC16,CRC32,Murmur3,MD5,SHA1,SHA256'];
+        APP_STATE.filesAnalyzed.forEach(f => {
+          lines.push(`"${f.name}",${f.size},"${f.crc16 || ''}","${f.crc32}","${f.murmur || ''}","${f.md5}","${f.sha1}","${f.sha256}"`);
+        });
+        const text = lines.join('\r\n');
+        document.getElementById('manifestOutput').value = text;
+        downloadTextFile('checksums.csv', text);
+        showToast('Exported checksums.csv');
+      });
+    }
+
     const btnCopyManifest = document.getElementById('btnCopyManifest');
     if (btnCopyManifest) {
       btnCopyManifest.addEventListener('click', () => {
@@ -2307,7 +2804,8 @@
             item.textContent = `⚠️ [MISSING] ${manifestFile} (Expected: ${expectedHash})`;
           } else {
             let actual = '';
-            if (expectedHash.length === 8) actual = matchFile.crc32.toLowerCase();
+            if (expectedHash.length === 4) actual = (matchFile.crc16 || '').toLowerCase();
+            else if (expectedHash.length === 8) actual = matchFile.crc32.toLowerCase();
             else if (expectedHash.length === 32) actual = matchFile.md5.toLowerCase();
             else if (expectedHash.length === 40) actual = matchFile.sha1.toLowerCase();
             else if (expectedHash.length === 64) actual = matchFile.sha256.toLowerCase();
@@ -2352,9 +2850,12 @@
 
         container.innerHTML = '';
         const algorithms = [
+          { name: 'CRC-16-CCITT', fn: () => calcCRC16CCITT(buffer) },
           { name: 'CRC32', fn: () => calcCRC32(buffer) },
           { name: 'Adler-32', fn: () => calcAdler32(buffer) },
           { name: 'FNV-1a 32', fn: () => calcFNV1a32(buffer) },
+          { name: 'MurmurHash3', fn: () => calcMurmur3(buffer) },
+          { name: 'xxHash32', fn: () => calcXXHash32(buffer) },
           { name: 'MD5 (pure JS)', fn: () => calcMD5(buffer) },
           { name: 'SHA-1', fn: async () => await calcWebCrypto('SHA-1', buffer) },
           { name: 'SHA-256', fn: async () => await calcWebCrypto('SHA-256', buffer) },
@@ -2395,6 +2896,456 @@
         btnRunBench.textContent = '🚀 Run Benchmark';
       }
     });
+
+    // --- Tab 6: Forensic Lab & Entropy Analysis ---
+    function renderEntropyAnalysis() {
+      const bytes = getPayloadBytes();
+      const valShannonH = document.getElementById('valShannonH');
+      const valShannonPercent = document.getElementById('valShannonPercent');
+      const valRedundancy = document.getElementById('valRedundancy');
+      const valChiSquare = document.getElementById('valChiSquare');
+      const valChiSignificance = document.getElementById('valChiSignificance');
+      const valMonteCarloPi = document.getElementById('valMonteCarloPi');
+      const entropyBarFill = document.getElementById('entropyBarFill');
+      const entropyRatingBadge = document.getElementById('entropyRatingBadge');
+      const diegeticLockCard = document.getElementById('diegeticLockCard');
+      const diegeticLockText = document.getElementById('diegeticLockText');
+
+      if (!valShannonH) return;
+
+      const N = bytes.length;
+      if (N === 0) {
+        valShannonH.textContent = '0.0000 b/B';
+        valShannonPercent.textContent = '0.0% of theoretical max';
+        valRedundancy.textContent = '100.0%';
+        valChiSquare.textContent = '0.00';
+        valChiSignificance.textContent = 'Zero payload data';
+        valMonteCarloPi.textContent = 'N/A';
+        entropyBarFill.style.width = '0%';
+        entropyRatingBadge.textContent = 'ZERO DATA';
+        entropyRatingBadge.className = 'algo-tag tag-checksum';
+        drawHistogram(new Uint32Array(256), 0);
+        if (diegeticLockCard) diegeticLockCard.style.display = 'none';
+        return;
+      }
+
+      // Count byte frequencies
+      const counts = new Uint32Array(256);
+      for (let i = 0; i < N; i++) {
+        counts[bytes[i]]++;
+      }
+
+      // Shannon Entropy: H = -sum(p_i * log2(p_i))
+      let H = 0;
+      for (let i = 0; i < 256; i++) {
+        if (counts[i] > 0) {
+          const p = counts[i] / N;
+          H -= p * (Math.log(p) / Math.LN2);
+        }
+      }
+
+      const shannonPercent = (H / 8.0) * 100;
+      const redundancy = Math.max(0, (1 - (H / 8.0)) * 100);
+
+      // Chi-Square Test against uniform distribution
+      const expected = N / 256;
+      let chiSquare = 0;
+      for (let i = 0; i < 256; i++) {
+        const diff = counts[i] - expected;
+        chiSquare += (diff * diff) / expected;
+      }
+
+      let chiSig = 'Structured text / biased';
+      if (chiSquare < 220) {
+        chiSig = 'Extremely uniform (Cryptographic / White Noise)';
+      } else if (chiSquare < 360) {
+        chiSig = 'High Dispersion (Compressed / Random)';
+      } else if (chiSquare < 1000) {
+        chiSig = 'Structured Variance (Executable Binary)';
+      }
+
+      // Monte Carlo Pi estimation from consecutive byte pairs
+      let piText = 'N/A (Need ≥ 4 bytes)';
+      if (N >= 4) {
+        const pairs = Math.floor(N / 2);
+        let inCircle = 0;
+        for (let i = 0; i < pairs; i++) {
+          const x = bytes[i * 2] / 255.0;
+          const y = bytes[i * 2 + 1] / 255.0;
+          if (x * x + y * y <= 1.0) inCircle++;
+        }
+        const piEst = (4.0 * inCircle) / pairs;
+        const errPct = Math.abs((piEst - Math.PI) / Math.PI) * 100;
+        piText = `π ≈ ${piEst.toFixed(3)} (Δ ${errPct.toFixed(1)}%)`;
+      }
+
+      // Update UI elements
+      valShannonH.textContent = `${H.toFixed(4)} b/B`;
+      valShannonPercent.textContent = `${shannonPercent.toFixed(1)}% of max (8.00 b/B)`;
+      valRedundancy.textContent = `${redundancy.toFixed(1)}%`;
+      valChiSquare.textContent = chiSquare.toFixed(2);
+      valChiSignificance.textContent = chiSig;
+      valMonteCarloPi.textContent = piText;
+      entropyBarFill.style.width = `${Math.min(100, Math.max(2, shannonPercent))}%`;
+
+      if (H < 2.5) {
+        entropyRatingBadge.textContent = 'LOW ENTROPY (REDUNDANT)';
+        entropyRatingBadge.className = 'algo-tag tag-checksum';
+      } else if (H < 5.0) {
+        entropyRatingBadge.textContent = 'MODERATE (PLAINTEXT)';
+        entropyRatingBadge.className = 'algo-tag tag-standard';
+      } else if (H < 7.2) {
+        entropyRatingBadge.textContent = 'STRUCTURED CODE / BINARY';
+        entropyRatingBadge.className = 'algo-tag tag-crypto';
+      } else {
+        entropyRatingBadge.textContent = 'HIGH ENTROPY (RANDOM / ENCRYPTED)';
+        entropyRatingBadge.className = 'algo-tag tag-crypto';
+      }
+
+      drawHistogram(counts, N);
+
+      // Check diegetic carrier lock condition
+      const rawText = document.getElementById('textPayload').value || '';
+      if (diegeticLockCard && diegeticLockText) {
+        if (rawText.includes('10.19.99.') || rawText.includes('CARRIER_LOCK') || rawText.includes('ARCHITECT_DIRECTIVE')) {
+          diegeticLockCard.style.display = 'block';
+          diegeticLockText.innerHTML = `
+            <div><b>[CARRIER_SYNC]:</b> Frequency 1999Hz detected. Non-routable internal transit frame.</div>
+            <div><b>[PAYLOAD_INTEGRITY]:</b> H(X) = ${H.toFixed(4)} b/B | Redundancy: ${redundancy.toFixed(1)}%. Micro-kernel beacon verified.</div>
+            <div><b>[TELEMETRY_STATUS]:</b> Memory segment 0x00402000 validated against KiloApps fleet backbone.</div>
+          `;
+        } else {
+          diegeticLockCard.style.display = 'none';
+        }
+      }
+    }
+
+    function drawHistogram(counts, total) {
+      const canvas = document.getElementById('entropyCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+
+      if (total === 0) return;
+
+      let maxCount = 0;
+      for (let i = 0; i < 256; i++) {
+        if (counts[i] > maxCount) maxCount = counts[i];
+      }
+      if (maxCount === 0) maxCount = 1;
+
+      const barWidth = w / 256;
+      for (let i = 0; i < 256; i++) {
+        const count = counts[i];
+        if (count === 0) continue;
+        const barHeight = Math.max(2, (count / maxCount) * (h - 4));
+        const x = i * barWidth;
+        const y = h - barHeight;
+
+        if (i < 32 || i === 127) {
+          ctx.fillStyle = '#10b981'; // Controls (Green)
+        } else if (i >= 32 && i <= 126) {
+          ctx.fillStyle = '#38bdf8'; // Printable ASCII (Sky Blue)
+        } else {
+          ctx.fillStyle = '#a855f7'; // High binary (Purple)
+        }
+        ctx.fillRect(x, y, Math.max(1, barWidth - 0.5), barHeight);
+      }
+    }
+
+    async function getAlgorithmRawBytes(algoKey, bytes) {
+      if (algoKey === 'crc16ccitt') {
+        const v = calcCRC16CCITT(bytes);
+        return new Uint8Array([(v >> 8) & 0xFF, v & 0xFF]);
+      } else if (algoKey === 'crc32') {
+        const v = calcCRC32(bytes);
+        return new Uint8Array([(v >>> 24) & 0xFF, (v >>> 16) & 0xFF, (v >>> 8) & 0xFF, v & 0xFF]);
+      } else if (algoKey === 'adler32') {
+        const v = calcAdler32(bytes);
+        return new Uint8Array([(v >>> 24) & 0xFF, (v >>> 16) & 0xFF, (v >>> 8) & 0xFF, v & 0xFF]);
+      } else if (algoKey === 'fnv1a32') {
+        const v = calcFNV1a32(bytes);
+        return new Uint8Array([(v >>> 24) & 0xFF, (v >>> 16) & 0xFF, (v >>> 8) & 0xFF, v & 0xFF]);
+      } else if (algoKey === 'murmur3') {
+        const v = calcMurmur3(bytes);
+        return new Uint8Array([(v >>> 24) & 0xFF, (v >>> 16) & 0xFF, (v >>> 8) & 0xFF, v & 0xFF]);
+      } else if (algoKey === 'xxhash32') {
+        const v = calcXXHash32(bytes);
+        return new Uint8Array([(v >>> 24) & 0xFF, (v >>> 16) & 0xFF, (v >>> 8) & 0xFF, v & 0xFF]);
+      } else if (algoKey === 'md5') {
+        const hex = calcMD5(bytes);
+        const out = new Uint8Array(16);
+        for (let i = 0; i < 16; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
+        return out;
+      } else if (algoKey === 'sha1') {
+        const hex = await calcWebCrypto('SHA-1', bytes);
+        const out = new Uint8Array(20);
+        for (let i = 0; i < 20; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
+        return out;
+      } else if (algoKey === 'sha256') {
+        const hex = await calcWebCrypto('SHA-256', bytes);
+        const out = new Uint8Array(32);
+        for (let i = 0; i < 32; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
+        return out;
+      }
+      return new Uint8Array(0);
+    }
+
+    async function runAvalancheTest() {
+      let origBytes = getPayloadBytes();
+      if (origBytes.length === 0) {
+        origBytes = new TextEncoder().encode('KiloOS Checksum & Integrity Engine');
+      }
+
+      // Invert bit 0 of the first byte
+      const perturbedBytes = new Uint8Array(origBytes.length);
+      perturbedBytes.set(origBytes);
+      perturbedBytes[0] ^= 0x01;
+
+      const algo = document.getElementById('avalancheAlgoSelect').value || 'md5';
+      const hash1 = await getAlgorithmRawBytes(algo, origBytes);
+      const hash2 = await getAlgorithmRawBytes(algo, perturbedBytes);
+
+      const sacOriginalHash = document.getElementById('sacOriginalHash');
+      const sacPerturbedHash = document.getElementById('sacPerturbedHash');
+      const sacFlippedBits = document.getElementById('sacFlippedBits');
+      const sacTotalBits = document.getElementById('sacTotalBits');
+      const sacHammingDist = document.getElementById('sacHammingDist');
+      const sacRatioPct = document.getElementById('sacRatioPct');
+      const sacAssessment = document.getElementById('sacAssessment');
+      const sacBitMatrix = document.getElementById('sacBitMatrix');
+
+      if (!sacOriginalHash) return;
+
+      const hex1 = Array.from(hash1).map(b => b.toString(16).padStart(2, '0')).join('');
+      const hex2 = Array.from(hash2).map(b => b.toString(16).padStart(2, '0')).join('');
+      sacOriginalHash.textContent = hex1;
+      sacPerturbedHash.textContent = hex2;
+
+      const totalBits = hash1.length * 8;
+      let flippedCount = 0;
+      const bitResults = [];
+
+      for (let byteIdx = 0; byteIdx < hash1.length; byteIdx++) {
+        const b1 = hash1[byteIdx];
+        const b2 = hash2[byteIdx];
+        const diff = b1 ^ b2;
+        for (let bitIdx = 7; bitIdx >= 0; bitIdx--) {
+          const isFlipped = (diff & (1 << bitIdx)) !== 0;
+          if (isFlipped) flippedCount++;
+          bitResults.push(isFlipped);
+        }
+      }
+
+      const ratio = totalBits > 0 ? ((flippedCount / totalBits) * 100).toFixed(1) : '0.0';
+      sacFlippedBits.textContent = flippedCount;
+      sacTotalBits.textContent = totalBits;
+      sacHammingDist.textContent = flippedCount;
+      sacRatioPct.textContent = `${ratio}%`;
+
+      const numRatio = parseFloat(ratio);
+      if (Math.abs(numRatio - 50.0) <= 12.0) {
+        sacAssessment.textContent = 'Strict Avalanche Criterion Met (~50%)';
+        sacAssessment.className = 'algo-tag tag-crypto';
+      } else if (numRatio >= 20.0 && numRatio <= 80.0) {
+        sacAssessment.textContent = 'Moderate Non-Linear Diffusion';
+        sacAssessment.className = 'algo-tag tag-standard';
+      } else {
+        sacAssessment.textContent = 'Linear / Low Diffusion (<20% or >80%)';
+        sacAssessment.className = 'algo-tag tag-checksum';
+      }
+
+      // Render bit diff matrix
+      sacBitMatrix.innerHTML = '';
+      bitResults.forEach((flipped, idx) => {
+        const dot = document.createElement('div');
+        dot.className = 'bit-cell ' + (flipped ? 'flipped' : 'same');
+        dot.title = `Bit ${idx}: ${flipped ? 'FLIPPED' : 'UNCHANGED'}`;
+        sacBitMatrix.appendChild(dot);
+      });
+    }
+
+    // Common 1999 test vectors, passwords, and diegetic system keys
+    const COMMON_HASH_DICTIONARY = [
+      '',
+      'admin',
+      'password',
+      '123456',
+      'root',
+      'guest',
+      'test',
+      'system',
+      'kiloos',
+      'kilonet',
+      'echo1999',
+      '10.19.99.4',
+      'subcarrier',
+      'The quick brown fox jumps over the lazy dog',
+      'KiloOS Checksum & Integrity Engine'
+    ];
+
+    async function runIdentification() {
+      sfxClick();
+      const input = (document.getElementById('identInputHash').value || '').trim();
+      const container = document.getElementById('identResultsContainer');
+      container.innerHTML = '';
+
+      if (!input) {
+        container.innerHTML = '<div style="font-size:12px; color:var(--text-muted);">Please enter a hash digest to analyze.</div>';
+        return;
+      }
+
+      // Clean hex / delimiters
+      const cleanHex = input.replace(/[\s\:\-]+/g, '').toLowerCase();
+      const isHex = /^[0-9a-f]+$/i.test(cleanHex);
+      const isBase64 = /^[A-Za-z0-9+/=]+$/.test(input) && input.length % 4 === 0;
+
+      let identified = [];
+      const len = cleanHex.length;
+
+      if (isHex) {
+        if (len === 4) {
+          identified.push({ name: 'CRC-16 (CCITT / IBM)', bits: 16, tag: 'Checksum', sec: 'Non-cryptographic error detection' });
+        } else if (len === 8) {
+          identified.push({ name: 'CRC32 / Adler-32 / Murmur3 / xxHash32', bits: 32, tag: 'Checksum / Fast Hash', sec: 'Non-cryptographic (Instant collisions)' });
+        } else if (len === 16) {
+          identified.push({ name: 'FNV-1a 64 / MySQL323 / CRC64', bits: 64, tag: 'Checksum', sec: 'Non-cryptographic fast hash' });
+        } else if (len === 32) {
+          identified.push({ name: 'MD5 (RFC 1321) / MD4 / NTLM', bits: 128, tag: 'Cryptographic (Legacy)', sec: 'Vulnerable to practical collision attacks' });
+        } else if (len === 40) {
+          identified.push({ name: 'SHA-1 / RIPEMD-160', bits: 160, tag: 'Cryptographic (Deprecated)', sec: 'Theoretical / practical collision demonstrated' });
+        } else if (len === 56) {
+          identified.push({ name: 'SHA-224 / SHA3-224', bits: 224, tag: 'Cryptographic', sec: 'High security margin (NIST standard)' });
+        } else if (len === 64) {
+          identified.push({ name: 'SHA-256 / SHA3-256 / BLAKE2s', bits: 256, tag: 'Cryptographic Standard', sec: 'Industry standard collision resistance' });
+        } else if (len === 96) {
+          identified.push({ name: 'SHA-384 / SHA3-384', bits: 384, tag: 'High Security', sec: 'Post-collision resistant standard' });
+        } else if (len === 128) {
+          identified.push({ name: 'SHA-512 / SHA3-512 / Whirlpool', bits: 512, tag: 'High Security', sec: 'Maximum entropy digest standard' });
+        } else {
+          identified.push({ name: `Unknown Hex Digest (${len * 4}-bit)`, bits: len * 4, tag: 'Custom / Truncated', sec: 'Unusual length for standard RFC hash' });
+        }
+      } else if (isBase64) {
+        identified.push({ name: 'Base64 Encoded Binary Digest', bits: input.length * 6, tag: 'Encoding', sec: 'Decode to hex for algorithm identification' });
+      } else {
+        identified.push({ name: 'Malformed or Unrecognized Digest Format', bits: 0, tag: 'Error', sec: 'Input contains non-hexadecimal characters' });
+      }
+
+      // Check reverse dictionary match
+      let dictHit = null;
+      if (isHex && (len === 8 || len === 32 || len === 40 || len === 64)) {
+        for (const candidate of COMMON_HASH_DICTIONARY) {
+          const cBytes = new TextEncoder().encode(candidate);
+          if (len === 8) {
+            const cCrc32 = calcCRC32(cBytes).toString(16).padStart(8, '0');
+            const cMurmur = (calcMurmur3(cBytes) >>> 0).toString(16).padStart(8, '0');
+            if (cCrc32 === cleanHex) { dictHit = { word: candidate, algo: 'CRC32' }; break; }
+            if (cMurmur === cleanHex) { dictHit = { word: candidate, algo: 'MurmurHash3' }; break; }
+          } else if (len === 32) {
+            const cMd5 = calcMD5(cBytes);
+            if (cMd5 === cleanHex) { dictHit = { word: candidate, algo: 'MD5' }; break; }
+          } else if (len === 40) {
+            const cSha1 = await calcWebCrypto('SHA-1', cBytes);
+            if (cSha1 === cleanHex) { dictHit = { word: candidate, algo: 'SHA-1' }; break; }
+          } else if (len === 64) {
+            const cSha256 = await calcWebCrypto('SHA-256', cBytes);
+            if (cSha256 === cleanHex) { dictHit = { word: candidate, algo: 'SHA-256' }; break; }
+          }
+        }
+      }
+
+      // Render cards
+      identified.forEach(idItem => {
+        const row = document.createElement('div');
+        row.style.background = 'var(--surface)';
+        row.style.border = '1px solid var(--border)';
+        row.style.borderRadius = '3px';
+        row.style.padding = '8px 12px';
+        row.innerHTML = `
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="font-weight:700; color:var(--text);">${idItem.name}</span>
+            <span class="algo-tag tag-crypto">${idItem.bits}-bit • ${idItem.tag}</span>
+          </div>
+          <div style="font-size:11px; color:var(--text-muted);">${idItem.sec}</div>
+        `;
+        container.appendChild(row);
+      });
+
+      const reverseCard = document.createElement('div');
+      reverseCard.style.padding = '8px 12px';
+      reverseCard.style.borderRadius = '3px';
+      reverseCard.style.border = '1px solid var(--border)';
+      if (dictHit) {
+        reverseCard.style.background = 'rgba(16, 185, 129, 0.15)';
+        reverseCard.style.borderColor = 'var(--success)';
+        reverseCard.innerHTML = `
+          <div style="font-weight:700; color:var(--success); margin-bottom:2px;">🔓 REVERSE DICTIONARY HIT [${dictHit.algo}]</div>
+          <div style="font-size:12px; color:var(--text); font-family:var(--font-mono);">Plaintext: <b>"${dictHit.word || '(empty string)'}"</b></div>
+        `;
+      } else {
+        reverseCard.style.background = 'var(--surface)';
+        reverseCard.innerHTML = `
+          <div style="font-size:11px; color:var(--text-muted);">🔒 Reverse Dictionary: No plaintext match in standard 1999 vector set.</div>
+        `;
+      }
+      container.appendChild(reverseCard);
+      setStatus(`Analyzed hash: ${cleanHex.length} characters.`);
+    }
+
+    // Bind Tab 6 events
+    const btnSyncPayloadToEntropy = document.getElementById('btnSyncPayloadToEntropy');
+    if (btnSyncPayloadToEntropy) {
+      btnSyncPayloadToEntropy.addEventListener('click', () => {
+        sfxClick();
+        renderEntropyAnalysis();
+        runAvalancheTest();
+        showToast('Entropy analysis synced with payload');
+      });
+    }
+
+    const btnTestBitFlip = document.getElementById('btnTestBitFlip');
+    if (btnTestBitFlip) {
+      btnTestBitFlip.addEventListener('click', () => {
+        sfxClick();
+        runAvalancheTest();
+      });
+    }
+
+    const avalancheAlgoSelect = document.getElementById('avalancheAlgoSelect');
+    if (avalancheAlgoSelect) {
+      avalancheAlgoSelect.addEventListener('change', () => {
+        sfxClick();
+        runAvalancheTest();
+      });
+    }
+
+    const btnRunIdentification = document.getElementById('btnRunIdentification');
+    if (btnRunIdentification) {
+      btnRunIdentification.addEventListener('click', runIdentification);
+    }
+
+    const identInputHash = document.getElementById('identInputHash');
+    if (identInputHash) {
+      identInputHash.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') runIdentification();
+      });
+    }
+
+    const btnIdentifyFromExpected = document.getElementById('btnIdentifyFromExpected');
+    if (btnIdentifyFromExpected) {
+      btnIdentifyFromExpected.addEventListener('click', () => {
+        sfxClick();
+        const expected = document.getElementById('verifyExpected').value.trim();
+        if (expected) {
+          document.getElementById('identInputHash').value = expected;
+          runIdentification();
+        } else {
+          showToast('Tab 3 Expected hash is empty');
+        }
+      });
+    }
 
     // --- State Persistence (F5 Quicksave / F9 Quickload & JSON File Backup) ---
     function getFullStateSnapshot() {
@@ -2593,13 +3544,14 @@
         }
       }
 
-      // 1-5 Tab shortcuts when not typing in text areas
+      // 1-6 Tab shortcuts when not typing in text areas
       if (!isEditing) {
         if (e.key === '1') switchTab('tabText');
         if (e.key === '2') switchTab('tabFile');
         if (e.key === '3') switchTab('tabVerify');
         if (e.key === '4') switchTab('tabManifest');
         if (e.key === '5') switchTab('tabBenchmark');
+        if (e.key === '6') switchTab('tabForensics');
       }
     });
 

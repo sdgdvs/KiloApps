@@ -40,6 +40,8 @@ static int k_strlen(const char* s) {
 #define ID_BTN_SAVE         114
 #define ID_BTN_LOAD         115
 #define ID_BTN_CLEAR        116
+#define ID_EDIT_CRC16       117
+#define ID_EDIT_MURMUR      118
 
 // Colors
 static COLORREF COLOR_BG = RGB(11, 15, 25);
@@ -66,9 +68,11 @@ static HWND g_hEditInput = NULL;
 static HWND g_hEditFile = NULL;
 static HWND g_hBtnBrowse = NULL;
 static HWND g_hBtnCompute = NULL;
+static HWND g_hEditCRC16 = NULL;
 static HWND g_hEditCRC32 = NULL;
 static HWND g_hEditAdler32 = NULL;
 static HWND g_hEditFNV1a = NULL;
+static HWND g_hEditMurmur = NULL;
 static HWND g_hEditMD5 = NULL;
 static HWND g_hEditSHA1 = NULL;
 static HWND g_hEditSHA256 = NULL;
@@ -81,9 +85,11 @@ static HWND g_hBtnClear = NULL;
 static HWND g_hStatusLabel = NULL;
 
 static char g_szStatus[256] = "KHash Ready. Enter payload, browse file, or press [F1] for Help.";
+static char g_szCrc16[16] = "0000";
 static char g_szCrc32[16] = "00000000";
 static char g_szAdler32[16] = "00000001";
 static char g_szFnv1a[16] = "811C9DC5";
+static char g_szMurmur[16] = "00000000";
 static char g_szMd5[64] = "D41D8CD98F00B204E9800998ECF8427E";
 static char g_szSha1[64] = "DA39A3EE5E6B4B0D3255BFEF95601890AFD80709";
 static char g_szSha256[128] = "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855";
@@ -132,6 +138,85 @@ static DWORD ComputeFNV1a32(const BYTE* data, DWORD len) {
     return hash;
 }
 
+static WORD ComputeCRC16CCITT(const BYTE* data, DWORD len) {
+    WORD crc = 0xFFFF;
+    for (DWORD i = 0; i < len; i++) {
+        crc ^= (WORD)(data[i] << 8);
+        for (int j = 0; j < 8; j++) {
+            if (crc & 0x8000) {
+                crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
+            } else {
+                crc = (crc << 1) & 0xFFFF;
+            }
+        }
+    }
+    return crc;
+}
+
+static DWORD ComputeMurmur3(const BYTE* data, DWORD len) {
+    DWORD h = 0;
+    const DWORD c1 = 0xcc9e2d51;
+    const DWORD c2 = 0x1b873593;
+    DWORD nblocks = len / 4;
+    for (DWORD i = 0; i < nblocks; i++) {
+        DWORD k1 = data[i*4] | (data[i*4+1]<<8) | (data[i*4+2]<<16) | (data[i*4+3]<<24);
+        k1 *= c1;
+        k1 = (k1 << 15) | (k1 >> 17);
+        k1 *= c2;
+        h ^= k1;
+        h = (h << 13) | (h >> 19);
+        h = h * 5 + 0xe6546b64;
+    }
+    DWORD tail = nblocks * 4;
+    DWORD k1 = 0;
+    switch (len & 3) {
+        case 3: k1 ^= (DWORD)data[tail + 2] << 16;
+        case 2: k1 ^= (DWORD)data[tail + 1] << 8;
+        case 1: k1 ^= (DWORD)data[tail];
+                k1 *= c1;
+                k1 = (k1 << 15) | (k1 >> 17);
+                k1 *= c2;
+                h ^= k1;
+    }
+    h ^= len;
+    h ^= h >> 16;
+    h *= 0x85ebca6b;
+    h ^= h >> 13;
+    h *= 0xc2b2ae35;
+    h ^= h >> 16;
+    return h;
+}
+
+static DWORD IntLog2Milli(DWORD val) {
+    if (val <= 1) return 0;
+    DWORD integer = 0;
+    DWORD v = val;
+    while (v > 1) { v >>= 1; integer++; }
+    DWORD lower = (DWORD)1 << integer;
+    DWORD frac = ((val - lower) * 1000) / lower;
+    return integer * 1000 + frac;
+}
+
+static DWORD ComputeShannonEntropyMilli(const BYTE* data, DWORD len) {
+    if (len == 0) return 0;
+    DWORD counts[256];
+    memset(counts, 0, sizeof(counts));
+    for (DWORD i = 0; i < len; i++) {
+        counts[data[i]]++;
+    }
+    DWORD logLen = IntLog2Milli(len);
+    DWORD totalMilli = 0;
+    for (int i = 0; i < 256; i++) {
+        if (counts[i] > 0) {
+            DWORD c = counts[i];
+            DWORD logC = IntLog2Milli(c);
+            DWORD diff = (logLen > logC) ? (logLen - logC) : 0;
+            totalMilli += (c * diff) / len;
+        }
+    }
+    return totalMilli;
+}
+
 static void BinToHex(const BYTE* data, DWORD len, char* outHex, int uppercase) {
     static const char hexCharsLower[] = "0123456789abcdef";
     static const char hexCharsUpper[] = "0123456789ABCDEF";
@@ -167,6 +252,10 @@ static BOOL ComputeCryptoApiHash(ALG_ID algId, const BYTE* data, DWORD len, char
 
 // Compute all checksums on in-memory buffer
 static void ComputeAllChecksums(const BYTE* buf, DWORD len) {
+    WORD crc16 = ComputeCRC16CCITT(buf, len);
+    wsprintfA(g_szCrc16, "%04X", crc16);
+    SetWindowTextA(g_hEditCRC16, g_szCrc16);
+
     DWORD crc = ComputeCRC32(buf, len);
     wsprintfA(g_szCrc32, "%08X", crc);
     SetWindowTextA(g_hEditCRC32, g_szCrc32);
@@ -178,6 +267,10 @@ static void ComputeAllChecksums(const BYTE* buf, DWORD len) {
     DWORD fnv = ComputeFNV1a32(buf, len);
     wsprintfA(g_szFnv1a, "%08X", fnv);
     SetWindowTextA(g_hEditFNV1a, g_szFnv1a);
+
+    DWORD murmur = ComputeMurmur3(buf, len);
+    wsprintfA(g_szMurmur, "%08X", murmur);
+    SetWindowTextA(g_hEditMurmur, g_szMurmur);
 
     // CryptoAPI Hashes
     if (!ComputeCryptoApiHash(CALG_MD5, buf, len, g_szMd5)) {
@@ -195,7 +288,8 @@ static void ComputeAllChecksums(const BYTE* buf, DWORD len) {
     }
     SetWindowTextA(g_hEditSHA256, g_szSha256);
 
-    wsprintfA(g_szStatus, "Computed 6 algorithmic checksums on %d bytes.", len);
+    DWORD entropyMilli = ComputeShannonEntropyMilli(buf, len);
+    wsprintfA(g_szStatus, "Computed 8 checksums on %d bytes. Entropy: %d.%03d bits/byte.", len, entropyMilli / 1000, entropyMilli % 1000);
     SetWindowTextA(g_hStatusLabel, g_szStatus);
 }
 
@@ -283,9 +377,11 @@ static void VerifyIntegrity(void) {
     BOOL bMatch = FALSE;
     const char* matchedAlgo = "";
 
-    if (lstrcmpiA(cleanExp, g_szCrc32) == 0) { bMatch = TRUE; matchedAlgo = "CRC32"; }
+    if (lstrcmpiA(cleanExp, g_szCrc16) == 0) { bMatch = TRUE; matchedAlgo = "CRC-16-CCITT"; }
+    else if (lstrcmpiA(cleanExp, g_szCrc32) == 0) { bMatch = TRUE; matchedAlgo = "CRC32"; }
     else if (lstrcmpiA(cleanExp, g_szAdler32) == 0) { bMatch = TRUE; matchedAlgo = "Adler-32"; }
     else if (lstrcmpiA(cleanExp, g_szFnv1a) == 0) { bMatch = TRUE; matchedAlgo = "FNV-1a"; }
+    else if (lstrcmpiA(cleanExp, g_szMurmur) == 0) { bMatch = TRUE; matchedAlgo = "MurmurHash3"; }
     else if (lstrcmpiA(cleanExp, g_szMd5) == 0) { bMatch = TRUE; matchedAlgo = "MD5"; }
     else if (lstrcmpiA(cleanExp, g_szSha1) == 0) { bMatch = TRUE; matchedAlgo = "SHA-1"; }
     else if (lstrcmpiA(cleanExp, g_szSha256) == 0) { bMatch = TRUE; matchedAlgo = "SHA-256"; }
@@ -353,9 +449,10 @@ static void CheckFirstRunTutorial(HWND hwnd) {
 
     // Fresh session: display guide
     const char* splashText =
-        "Welcome to KHash Workstation v1.0!\r\n\r\n"
-        "Multi-algorithm cryptographic checksum and verification tool.\r\n"
-        "Engines: CRC32, Adler-32, FNV-1a, MD5, SHA-1, SHA-256.\r\n\r\n"
+        "Welcome to KHash Workstation v1.1!\r\n\r\n"
+        "Multi-algorithm cryptographic checksum and forensic verification tool.\r\n"
+        "Engines: CRC16, CRC32, Adler-32, FNV-1a, Murmur3, MD5, SHA-1, SHA-256.\r\n"
+        "Features: Shannon entropy measurement (bits/byte) & integrity auditing.\r\n\r\n"
         "Keyboard Shortcuts:\r\n"
         "  [F1] Help Manual   |   [F5] Quicksave   |   [F9] Quickload\r\n"
         "  [Enter] Compute / Verify   |   [Esc] Clear fields\r\n\r\n"
@@ -374,11 +471,11 @@ static void ShowHelp(HWND hwnd) {
     const char* helpText =
         "KHASH - MULTI-ALGORITHM CHECKSUM WORKSTATION\r\n"
         "============================================\r\n\r\n"
-        "CORE FEATURES:\r\n"
-        "  - Text Payload Hashing: Real-time calculation on arbitrary text strings.\r\n"
-        "  - File Checksumming: Inspect and verify any file via Open Dialog.\r\n"
-        "  - Multi-Engine: CRC32, Adler-32, FNV-1a, MD5, SHA-1, SHA-256.\r\n"
-        "  - Integrity Verification: Compare against vendor or expected checksum.\r\n\r\n"
+        "CORE ENGINES & FORENSIC SUITE:\r\n"
+        "  - Checksums: CRC-16-CCITT, CRC32, Adler-32, FNV-1a 32, MurmurHash3.\r\n"
+        "  - Cryptographic: MD5 (RFC 1321), SHA-1 (FIPS 180-1), SHA-256 (FIPS 180-4).\r\n"
+        "  - Shannon Entropy: Quantifies randomness and information density (0-8 bits/B).\r\n"
+        "  - Integrity Verification: Rapid character matching against expected hashes.\r\n\r\n"
         "KEYBOARD SHORTCUTS:\r\n"
         "  [F1]        Open this Help & Reference manual\r\n"
         "  [F5]        Quicksave active state to khash.dat\r\n"
@@ -429,33 +526,39 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int h = 24;
             int gap = 28;
 
-            CreateWindowExA(0, "STATIC", "CRC32 (IEEE):", WS_CHILD | WS_VISIBLE, 16, y, 100, 20, hwnd, NULL, NULL, NULL);
-            g_hEditCRC32 = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", g_szCrc32, WS_CHILD | WS_VISIBLE | ES_READONLY, 120, y, 160, h, hwnd, (HMENU)ID_EDIT_CRC32, NULL, NULL);
+            CreateWindowExA(0, "STATIC", "CRC-16 (CCITT):", WS_CHILD | WS_VISIBLE, 16, y, 100, 20, hwnd, NULL, NULL, NULL);
+            g_hEditCRC16 = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", g_szCrc16, WS_CHILD | WS_VISIBLE | ES_READONLY, 120, y, 110, h, hwnd, (HMENU)ID_EDIT_CRC16, NULL, NULL);
 
-            CreateWindowExA(0, "STATIC", "Adler-32:", WS_CHILD | WS_VISIBLE, 300, y, 80, 20, hwnd, NULL, NULL, NULL);
-            g_hEditAdler32 = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", g_szAdler32, WS_CHILD | WS_VISIBLE | ES_READONLY, 380, y, 160, h, hwnd, (HMENU)ID_EDIT_ADLER32, NULL, NULL);
+            CreateWindowExA(0, "STATIC", "CRC32 (IEEE):", WS_CHILD | WS_VISIBLE, 245, y, 85, 20, hwnd, NULL, NULL, NULL);
+            g_hEditCRC32 = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", g_szCrc32, WS_CHILD | WS_VISIBLE | ES_READONLY, 335, y, 120, h, hwnd, (HMENU)ID_EDIT_CRC32, NULL, NULL);
 
-            CreateWindowExA(0, "STATIC", "FNV-1a 32:", WS_CHILD | WS_VISIBLE, 555, y, 75, 20, hwnd, NULL, NULL, NULL);
-            g_hEditFNV1a = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", g_szFnv1a, WS_CHILD | WS_VISIBLE | ES_READONLY, 635, y, 140, h, hwnd, (HMENU)ID_EDIT_FNV1A, NULL, NULL);
+            CreateWindowExA(0, "STATIC", "Adler-32:", WS_CHILD | WS_VISIBLE, 470, y, 65, 20, hwnd, NULL, NULL, NULL);
+            g_hEditAdler32 = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", g_szAdler32, WS_CHILD | WS_VISIBLE | ES_READONLY, 540, y, 110, h, hwnd, (HMENU)ID_EDIT_ADLER32, NULL, NULL);
+
+            CreateWindowExA(0, "STATIC", "FNV-1a 32:", WS_CHILD | WS_VISIBLE, 665, y, 70, 20, hwnd, NULL, NULL, NULL);
+            g_hEditFNV1a = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", g_szFnv1a, WS_CHILD | WS_VISIBLE | ES_READONLY, 740, y, 110, h, hwnd, (HMENU)ID_EDIT_FNV1A, NULL, NULL);
 
             y += gap;
-            CreateWindowExA(0, "STATIC", "MD5 (128-bit):", WS_CHILD | WS_VISIBLE, 16, y, 100, 20, hwnd, NULL, NULL, NULL);
-            g_hEditMD5 = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", g_szMd5, WS_CHILD | WS_VISIBLE | ES_READONLY, 120, y, 420, h, hwnd, (HMENU)ID_EDIT_MD5, NULL, NULL);
+            CreateWindowExA(0, "STATIC", "MurmurHash3:", WS_CHILD | WS_VISIBLE, 16, y, 100, 20, hwnd, NULL, NULL, NULL);
+            g_hEditMurmur = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", g_szMurmur, WS_CHILD | WS_VISIBLE | ES_READONLY, 120, y, 110, h, hwnd, (HMENU)ID_EDIT_MURMUR, NULL, NULL);
+
+            CreateWindowExA(0, "STATIC", "MD5 (128-bit):", WS_CHILD | WS_VISIBLE, 245, y, 85, 20, hwnd, NULL, NULL, NULL);
+            g_hEditMD5 = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", g_szMd5, WS_CHILD | WS_VISIBLE | ES_READONLY, 335, y, 515, h, hwnd, (HMENU)ID_EDIT_MD5, NULL, NULL);
 
             y += gap;
             CreateWindowExA(0, "STATIC", "SHA-1 (160-bit):", WS_CHILD | WS_VISIBLE, 16, y, 100, 20, hwnd, NULL, NULL, NULL);
-            g_hEditSHA1 = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", g_szSha1, WS_CHILD | WS_VISIBLE | ES_READONLY, 120, y, 520, h, hwnd, (HMENU)ID_EDIT_SHA1, NULL, NULL);
+            g_hEditSHA1 = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", g_szSha1, WS_CHILD | WS_VISIBLE | ES_READONLY, 120, y, 730, h, hwnd, (HMENU)ID_EDIT_SHA1, NULL, NULL);
 
             y += gap;
-            CreateWindowExA(0, "STATIC", "SHA-256 (256-bit):", WS_CHILD | WS_VISIBLE, 16, y, 100, 20, hwnd, NULL, NULL, NULL);
-            g_hEditSHA256 = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", g_szSha256, WS_CHILD | WS_VISIBLE | ES_READONLY, 120, y, 655, h, hwnd, (HMENU)ID_EDIT_SHA256, NULL, NULL);
+            CreateWindowExA(0, "STATIC", "SHA-256 (256):", WS_CHILD | WS_VISIBLE, 16, y, 100, 20, hwnd, NULL, NULL, NULL);
+            g_hEditSHA256 = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", g_szSha256, WS_CHILD | WS_VISIBLE | ES_READONLY, 120, y, 730, h, hwnd, (HMENU)ID_EDIT_SHA256, NULL, NULL);
 
             // Verification Section
             y += gap + 8;
             CreateWindowExA(0, "STATIC", "Expected Hash (Compare / Verify):", WS_CHILD | WS_VISIBLE, 16, y, 220, 20, hwnd, NULL, NULL, NULL);
             y += 20;
-            g_hEditExpected = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE, 16, y, 650, 24, hwnd, (HMENU)ID_EDIT_EXPECTED, NULL, NULL);
-            g_hBtnVerify = CreateWindowExA(0, "BUTTON", "⚖️ Verify", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 676, y - 1, 100, 26, hwnd, (HMENU)ID_BTN_VERIFY, NULL, NULL);
+            g_hEditExpected = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE, 16, y, 725, 24, hwnd, (HMENU)ID_EDIT_EXPECTED, NULL, NULL);
+            g_hBtnVerify = CreateWindowExA(0, "BUTTON", "⚖️ Verify", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 750, y - 1, 100, 26, hwnd, (HMENU)ID_BTN_VERIFY, NULL, NULL);
 
             // Quick Toolbar Buttons
             y += 36;
@@ -465,14 +568,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Status Bar Label
             y += 36;
-            g_hStatusLabel = CreateWindowExA(0, "STATIC", g_szStatus, WS_CHILD | WS_VISIBLE, 16, y, 760, 20, hwnd, NULL, NULL, NULL);
+            g_hStatusLabel = CreateWindowExA(0, "STATIC", g_szStatus, WS_CHILD | WS_VISIBLE, 16, y, 830, 20, hwnd, NULL, NULL, NULL);
 
             // Apply Monospace Font to Hashes and Inputs
             SendMessageA(g_hEditInput, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
             SendMessageA(g_hEditFile, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
+            SendMessageA(g_hEditCRC16, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
             SendMessageA(g_hEditCRC32, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
             SendMessageA(g_hEditAdler32, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
             SendMessageA(g_hEditFNV1a, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
+            SendMessageA(g_hEditMurmur, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
             SendMessageA(g_hEditMD5, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
             SendMessageA(g_hEditSHA1, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
             SendMessageA(g_hEditSHA256, WM_SETFONT, (WPARAM)g_hFontMono, TRUE);
@@ -564,7 +669,7 @@ void __cdecl MainEntry(void) {
         "KHashWndClass",
         "KHash - Multi-Algorithm Checksum Workstation",
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
-        CW_USEDEFAULT, CW_USEDEFAULT, 820, 480,
+        CW_USEDEFAULT, CW_USEDEFAULT, 880, 520,
         NULL, NULL, hInstance, NULL
     );
 
