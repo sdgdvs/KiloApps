@@ -76,7 +76,10 @@ static DWORD WINAPI SoundThread(LPVOID lpParam) {
     return 0;
 }
 
+static int g_soundMuted = 0;
+
 static void PlaySfx(int type) {
+    if (g_soundMuted) return;
     CreateThread(NULL, 0, SoundThread, (LPVOID)(intptr_t)type, 0, NULL);
 }
 
@@ -256,6 +259,7 @@ typedef struct {
     int toastTimer;
     int flightWave;
     int waveCountdown;
+    int currentTemplate;
 } GameContext;
 
 static GameContext g_game;
@@ -264,6 +268,7 @@ static HWND g_hwnd = NULL;
 /* Forward Declarations */
 static void RecalculateStats();
 static void ResetShipGrid();
+static void LoadArchetypeTemplate(int idx);
 static void InitFlightSim();
 static void StepFlightSim();
 static void SetToast(const char* msg);
@@ -278,33 +283,171 @@ static void SetToast(const char* msg) {
     g_game.toastTimer = 50;
 }
 
-static void ResetShipGrid() {
+static void LoadArchetypeTemplate(int idx) {
     for (int y = 0; y < GRID_SZ; y++) {
         for (int x = 0; x < GRID_SZ; x++) {
             g_game.grid[y][x] = MOD_EMPTY;
         }
     }
-    /* Default Vanguard Corvette layout */
     int mid = GRID_SZ / 2;
-    g_game.grid[2][mid - 1] = MOD_BRIDGE;
-    g_game.grid[2][mid] = MOD_BRIDGE;
-    g_game.grid[3][mid - 1] = MOD_HULL_ARMOR;
-    g_game.grid[3][mid] = MOD_HULL_ARMOR;
-    g_game.grid[4][mid - 2] = MOD_WEAPON_CANNON;
-    g_game.grid[4][mid - 1] = MOD_HULL_BASIC;
-    g_game.grid[4][mid] = MOD_HULL_BASIC;
-    g_game.grid[4][mid + 1] = MOD_WEAPON_CANNON;
-    g_game.grid[5][mid - 2] = MOD_RADIATOR;
-    g_game.grid[5][mid - 1] = MOD_REACTOR_FISSION;
-    g_game.grid[5][mid] = MOD_REACTOR_FISSION;
-    g_game.grid[5][mid + 1] = MOD_RADIATOR;
-    g_game.grid[6][mid - 1] = MOD_SHIELD;
-    g_game.grid[6][mid] = MOD_CARGO;
-    g_game.grid[7][mid - 2] = MOD_THRUSTER_CHEM;
-    g_game.grid[7][mid - 1] = MOD_THRUSTER_PLASMA;
-    g_game.grid[7][mid] = MOD_THRUSTER_PLASMA;
-    g_game.grid[7][mid + 1] = MOD_THRUSTER_CHEM;
+    if (idx == 0) {
+        /* Vanguard Corvette */
+        g_game.grid[2][mid - 1] = MOD_BRIDGE;
+        g_game.grid[2][mid] = MOD_BRIDGE;
+        g_game.grid[3][mid - 1] = MOD_HULL_ARMOR;
+        g_game.grid[3][mid] = MOD_HULL_ARMOR;
+        g_game.grid[4][mid - 2] = MOD_WEAPON_CANNON;
+        g_game.grid[4][mid - 1] = MOD_HULL_BASIC;
+        g_game.grid[4][mid] = MOD_HULL_BASIC;
+        g_game.grid[4][mid + 1] = MOD_WEAPON_CANNON;
+        g_game.grid[5][mid - 2] = MOD_RADIATOR;
+        g_game.grid[5][mid - 1] = MOD_REACTOR_FISSION;
+        g_game.grid[5][mid] = MOD_REACTOR_FISSION;
+        g_game.grid[5][mid + 1] = MOD_RADIATOR;
+        g_game.grid[6][mid - 1] = MOD_SHIELD;
+        g_game.grid[6][mid] = MOD_CARGO;
+        g_game.grid[7][mid - 2] = MOD_THRUSTER_CHEM;
+        g_game.grid[7][mid - 1] = MOD_THRUSTER_PLASMA;
+        g_game.grid[7][mid] = MOD_THRUSTER_PLASMA;
+        g_game.grid[7][mid + 1] = MOD_THRUSTER_CHEM;
+        SetToast("LOADED: VANGUARD CORVETTE [TEMPLATE 1/6]");
+    } else if (idx == 1) {
+        /* Aegis Defense Escort */
+        g_game.grid[2][mid - 1] = MOD_BRIDGE;
+        g_game.grid[2][mid] = MOD_BRIDGE;
+        g_game.grid[3][mid - 2] = MOD_WEAPON_CANNON;
+        g_game.grid[3][mid - 1] = MOD_HULL_ARMOR;
+        g_game.grid[3][mid] = MOD_HULL_ARMOR;
+        g_game.grid[3][mid + 1] = MOD_WEAPON_CANNON;
+        g_game.grid[4][mid - 2] = MOD_WEAPON_PLASMA;
+        g_game.grid[4][mid - 1] = MOD_HULL_ARMOR;
+        g_game.grid[4][mid] = MOD_HULL_ARMOR;
+        g_game.grid[4][mid + 1] = MOD_WEAPON_PLASMA;
+        g_game.grid[5][mid - 2] = MOD_SHIELD;
+        g_game.grid[5][mid - 1] = MOD_REACTOR_FUSION;
+        g_game.grid[5][mid] = MOD_REACTOR_FUSION;
+        g_game.grid[5][mid + 1] = MOD_SHIELD;
+        g_game.grid[6][mid - 2] = MOD_RADIATOR;
+        g_game.grid[6][mid - 1] = MOD_HULL_ARMOR;
+        g_game.grid[6][mid] = MOD_HULL_ARMOR;
+        g_game.grid[6][mid + 1] = MOD_RADIATOR;
+        g_game.grid[7][mid - 2] = MOD_THRUSTER_CHEM;
+        g_game.grid[7][mid - 1] = MOD_THRUSTER_PLASMA;
+        g_game.grid[7][mid] = MOD_THRUSTER_PLASMA;
+        g_game.grid[7][mid + 1] = MOD_THRUSTER_CHEM;
+        SetToast("LOADED: AEGIS ESCORT [TEMPLATE 2/6]");
+    } else if (idx == 2) {
+        /* Prospector Mining Rig */
+        g_game.grid[2][mid - 1] = MOD_BRIDGE;
+        g_game.grid[2][mid] = MOD_BRIDGE;
+        g_game.grid[3][mid - 2] = MOD_MINING_BEAM;
+        g_game.grid[3][mid - 1] = MOD_HULL_BASIC;
+        g_game.grid[3][mid] = MOD_HULL_BASIC;
+        g_game.grid[3][mid + 1] = MOD_MINING_BEAM;
+        g_game.grid[4][mid - 2] = MOD_CARGO;
+        g_game.grid[4][mid - 1] = MOD_CARGO;
+        g_game.grid[4][mid] = MOD_CARGO;
+        g_game.grid[4][mid + 1] = MOD_CARGO;
+        g_game.grid[5][mid - 2] = MOD_CARGO;
+        g_game.grid[5][mid - 1] = MOD_REACTOR_FISSION;
+        g_game.grid[5][mid] = MOD_REACTOR_FISSION;
+        g_game.grid[5][mid + 1] = MOD_CARGO;
+        g_game.grid[6][mid - 2] = MOD_RADIATOR;
+        g_game.grid[6][mid - 1] = MOD_HULL_BASIC;
+        g_game.grid[6][mid] = MOD_HULL_BASIC;
+        g_game.grid[6][mid + 1] = MOD_RADIATOR;
+        g_game.grid[7][mid - 2] = MOD_THRUSTER_CHEM;
+        g_game.grid[7][mid - 1] = MOD_THRUSTER_PLASMA;
+        g_game.grid[7][mid] = MOD_THRUSTER_PLASMA;
+        g_game.grid[7][mid + 1] = MOD_THRUSTER_CHEM;
+        SetToast("LOADED: PROSPECTOR MINING RIG [TEMPLATE 3/6]");
+    } else if (idx == 3) {
+        /* Orion Heavy Gunship */
+        g_game.grid[2][mid - 1] = MOD_BRIDGE;
+        g_game.grid[2][mid] = MOD_BRIDGE;
+        g_game.grid[3][mid - 2] = MOD_WEAPON_RAILGUN;
+        g_game.grid[3][mid - 1] = MOD_HULL_ARMOR;
+        g_game.grid[3][mid] = MOD_HULL_ARMOR;
+        g_game.grid[3][mid + 1] = MOD_WEAPON_RAILGUN;
+        g_game.grid[4][mid - 2] = MOD_RADIATOR;
+        g_game.grid[4][mid - 1] = MOD_SHIELD;
+        g_game.grid[4][mid] = MOD_SHIELD;
+        g_game.grid[4][mid + 1] = MOD_RADIATOR;
+        g_game.grid[5][mid - 2] = MOD_RADIATOR;
+        g_game.grid[5][mid - 1] = MOD_REACTOR_FUSION;
+        g_game.grid[5][mid] = MOD_REACTOR_FUSION;
+        g_game.grid[5][mid + 1] = MOD_RADIATOR;
+        g_game.grid[6][mid - 2] = MOD_THRUSTER_PLASMA;
+        g_game.grid[6][mid - 1] = MOD_THRUSTER_PLASMA;
+        g_game.grid[6][mid] = MOD_THRUSTER_PLASMA;
+        g_game.grid[6][mid + 1] = MOD_THRUSTER_PLASMA;
+        SetToast("LOADED: ORION HEAVY GUNSHIP [TEMPLATE 4/6]");
+    } else if (idx == 4) {
+        /* Sol Invictus Dreadnought */
+        g_game.grid[1][mid - 1] = MOD_HULL_ARMOR;
+        g_game.grid[1][mid] = MOD_HULL_ARMOR;
+        g_game.grid[2][mid - 2] = MOD_WEAPON_RAILGUN;
+        g_game.grid[2][mid - 1] = MOD_BRIDGE;
+        g_game.grid[2][mid] = MOD_BRIDGE;
+        g_game.grid[2][mid + 1] = MOD_WEAPON_RAILGUN;
+        g_game.grid[3][mid - 3] = MOD_WEAPON_CANNON;
+        g_game.grid[3][mid - 2] = MOD_HULL_ARMOR;
+        g_game.grid[3][mid - 1] = MOD_HULL_ARMOR;
+        g_game.grid[3][mid] = MOD_HULL_ARMOR;
+        g_game.grid[3][mid + 1] = MOD_HULL_ARMOR;
+        g_game.grid[3][mid + 2] = MOD_WEAPON_CANNON;
+        g_game.grid[4][mid - 3] = MOD_WEAPON_PLASMA;
+        g_game.grid[4][mid - 2] = MOD_SHIELD;
+        g_game.grid[4][mid - 1] = MOD_REACTOR_FUSION;
+        g_game.grid[4][mid] = MOD_REACTOR_FUSION;
+        g_game.grid[4][mid + 1] = MOD_SHIELD;
+        g_game.grid[4][mid + 2] = MOD_WEAPON_PLASMA;
+        g_game.grid[5][mid - 2] = MOD_RADIATOR;
+        g_game.grid[5][mid - 1] = MOD_REACTOR_FUSION;
+        g_game.grid[5][mid] = MOD_REACTOR_FUSION;
+        g_game.grid[5][mid + 1] = MOD_RADIATOR;
+        g_game.grid[6][mid - 2] = MOD_CARGO;
+        g_game.grid[6][mid - 1] = MOD_HULL_ARMOR;
+        g_game.grid[6][mid] = MOD_HULL_ARMOR;
+        g_game.grid[6][mid + 1] = MOD_CARGO;
+        g_game.grid[7][mid - 3] = MOD_THRUSTER_PLASMA;
+        g_game.grid[7][mid - 2] = MOD_THRUSTER_PLASMA;
+        g_game.grid[7][mid - 1] = MOD_THRUSTER_PLASMA;
+        g_game.grid[7][mid] = MOD_THRUSTER_PLASMA;
+        g_game.grid[7][mid + 1] = MOD_THRUSTER_PLASMA;
+        g_game.grid[7][mid + 2] = MOD_THRUSTER_PLASMA;
+        SetToast("LOADED: SOL INVICTUS DREADNOUGHT [TEMPLATE 5/6]");
+    } else {
+        /* Project 1999 Echo Prototype */
+        g_game.grid[1][mid - 1] = MOD_BRIDGE;
+        g_game.grid[1][mid] = MOD_BRIDGE;
+        g_game.grid[2][mid - 2] = MOD_WEAPON_RAILGUN;
+        g_game.grid[2][mid - 1] = MOD_HULL_ARMOR;
+        g_game.grid[2][mid] = MOD_HULL_ARMOR;
+        g_game.grid[2][mid + 1] = MOD_WEAPON_RAILGUN;
+        g_game.grid[3][mid - 2] = MOD_WEAPON_PLASMA;
+        g_game.grid[3][mid - 1] = MOD_SHIELD;
+        g_game.grid[3][mid] = MOD_SHIELD;
+        g_game.grid[3][mid + 1] = MOD_WEAPON_PLASMA;
+        g_game.grid[4][mid - 2] = MOD_SHIELD;
+        g_game.grid[4][mid - 1] = MOD_REACTOR_FUSION;
+        g_game.grid[4][mid] = MOD_REACTOR_FUSION;
+        g_game.grid[4][mid + 1] = MOD_SHIELD;
+        g_game.grid[5][mid - 2] = MOD_RADIATOR;
+        g_game.grid[5][mid - 1] = MOD_CARGO;
+        g_game.grid[5][mid] = MOD_CARGO;
+        g_game.grid[5][mid + 1] = MOD_RADIATOR;
+        g_game.grid[6][mid - 2] = MOD_THRUSTER_PLASMA;
+        g_game.grid[6][mid - 1] = MOD_THRUSTER_PLASMA;
+        g_game.grid[6][mid] = MOD_THRUSTER_PLASMA;
+        g_game.grid[6][mid + 1] = MOD_THRUSTER_PLASMA;
+        SetToast("LOADED: PROJECT 1999 ECHO [TEMPLATE 6/6]");
+    }
     RecalculateStats();
+}
+
+static void ResetShipGrid() {
+    LoadArchetypeTemplate(g_game.currentTemplate % 6);
 }
 
 static void RecalculateStats() {
@@ -361,6 +504,7 @@ static void InitGame() {
     g_game.toastTimer = 0;
     g_game.flightWave = 1;
     g_game.waveCountdown = 0;
+    g_game.currentTemplate = 0;
 
     ResetShipGrid();
 }
@@ -911,8 +1055,9 @@ static void DrawGame(HDC hdc, RECT* rc) {
         SetTextColor(memDC, RGB(220, 220, 220));
         TextOutA(memDC, px + 15, ty + 115, tBuf, lstrlenA(tBuf));
 
-        char sModeBuf[64];
-        wsprintfA(sModeBuf, "[S] Symmetry: %s | [R] Reset | [SPACE] To Drydock", g_game.symmetryMode ? "ON" : "OFF");
+        char sModeBuf[128];
+        wsprintfA(sModeBuf, "[S] Sym: %s | [T] Archetype (%d/6) | [M] Audio | [R] Reset | [SPACE] Drydock",
+            g_game.symmetryMode ? "ON" : "OFF", g_game.currentTemplate + 1);
         SetTextColor(memDC, RGB(120, 160, 200));
         TextOutA(memDC, px + 15, ty + 140, sModeBuf, lstrlenA(sModeBuf));
     }
@@ -1293,7 +1438,7 @@ static void DrawGame(HDC hdc, RECT* rc) {
             "4. DRYDOCK: Gantry fabricates your design layer by layer.",
             "5. SHAKEDOWN PROVING RANGE: Pilot your ship in live space! Mine ore and fight pirates.",
             "6. CONTRACTS: Fulfill faction commissions to earn credits and fleet reputation.",
-            "7. SHORTCUTS: [F1/H] Manual, [F5] Quicksave, [F9] Quickload, [1-6] Tabs, [S] Symmetry, [ESC] Back."
+            "7. SHORTCUTS: [F1/H] Manual, [T] Templates, [M] Mute, [S] Symmetry, [R] Reset, [F5] Save, [F9] Load."
         };
         int my = 135;
         SetTextColor(memDC, RGB(200, 220, 240));
@@ -1309,7 +1454,8 @@ static void DrawGame(HDC hdc, RECT* rc) {
     FillRect(memDC, &statRc, statBrush);
     DeleteObject(statBrush);
     SetTextColor(memDC, RGB(100, 140, 180));
-    TextOutA(memDC, 12, rc->bottom - 18, "[F1/H] Manual  [1-6] Tabs  [S] Symmetry  [R] Reset  [F5] Save  [F9] Load  [LMB] Place  [RMB] Erase", 94);
+    const char* statusBarText = "[F1/H] Manual  [T] Templates  [M] Mute  [S] Sym  [R] Reset  [F5] Save  [F9] Load  [LMB] Place  [RMB] Erase";
+    TextOutA(memDC, 12, rc->bottom - 18, statusBarText, lstrlenA(statusBarText));
 
     /* Onscreen Toast */
     if (g_game.toastTimer > 0) {
@@ -1356,6 +1502,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 SaveGame();
             } else if (wParam == VK_F9) {
                 LoadGame();
+            } else if (wParam == 'M') {
+                g_soundMuted = !g_soundMuted;
+                SetToast(g_soundMuted ? "AUDIO: MUTED" : "AUDIO: ACTIVE");
+                PlaySfx(1);
+            } else if (wParam == 'T' && g_game.state == STATE_BLUEPRINT) {
+                g_game.currentTemplate = (g_game.currentTemplate + 1) % 6;
+                LoadArchetypeTemplate(g_game.currentTemplate);
+                PlaySfx(1);
             } else if (wParam == '1') {
                 g_game.state = STATE_SPLASH;
                 PlaySfx(1);
