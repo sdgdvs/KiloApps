@@ -489,33 +489,34 @@
         
         .notification {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            left: auto;
-            transform: translateY(20px);
+            bottom: 24px;
+            left: 50%;
+            right: auto;
+            transform: translate(-50%, 20px);
             background: var(--primary-accent);
             color: white;
-            padding: 12px 20px;
+            padding: 11px 22px;
             border-radius: 10px;
             font-size: 13px;
             font-weight: 500;
             opacity: 0;
-            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition: opacity 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
             pointer-events: none;
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
             border: 1px solid rgba(255, 255, 255, 0.18);
             display: flex;
             align-items: center;
             gap: 8px;
-            z-index: 3000;
-            max-width: min(400px, calc(100vw - 40px));
-            text-align: left;
+            z-index: 1500;
+            max-width: min(500px, calc(100vw - 40px));
+            text-align: center;
+            justify-content: center;
             user-select: none;
         }
         
         .notification.show {
             opacity: 1;
-            transform: translateY(0);
+            transform: translate(-50%, 0);
             pointer-events: auto;
             cursor: pointer;
         }
@@ -537,6 +538,78 @@
             background: var(--warning-color);
             color: #2c1a00;
             box-shadow: 0 8px 24px rgba(255, 165, 2, 0.4);
+        }
+
+        /* Usability Status Bar */
+        .statusbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 14px;
+            margin-top: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+            flex-wrap: wrap;
+            gap: 8px;
+            user-select: none;
+            flex-shrink: 0;
+        }
+
+        .status-col {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--danger-accent);
+            display: inline-block;
+            box-shadow: 0 0 6px var(--danger-accent);
+        }
+
+        .status-dot.active {
+            background: var(--success-color);
+            box-shadow: 0 0 6px var(--success-color);
+        }
+
+        .hotkeys-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .hotkey-item kbd {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            padding: 1px 5px;
+            font-family: inherit;
+            font-size: 10px;
+            color: var(--text-color);
+        }
+
+        .status-sound-btn {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-color);
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-size: 11px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .status-sound-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.25);
         }
 
         /* Security Audit Studio Modal / Cards */
@@ -692,6 +765,7 @@
                 <button class="btn secondary" onclick="quicksaveState()" title="Quicksave Snapshot [F5]" aria-label="Quicksave Snapshot">💾 Save [F5]</button>
                 <button class="btn secondary" onclick="quickloadState()" title="Restore Quicksaved Snapshot [F9]" aria-label="Quickload Snapshot">📂 Load [F9]</button>
                 <button class="btn secondary" onclick="openGeneratorModal()" title="Password & Diceware Generator [Ctrl+G]" aria-label="Password Generator">🎲 Gen [Ctrl+G]</button>
+                <button class="btn secondary" id="header-sound-btn" onclick="toggleSound()" title="Toggle Web Audio [M]" aria-label="Toggle Sound">🔊 Audio [M]</button>
                 <button class="btn secondary" onclick="showHelp()" aria-label="Open Help Dialog">Help [F1]</button>
                 <div id="auth-controls" style="display:none; align-items:center; gap:8px; flex-wrap:wrap;">
                     <select id="theme-select" onchange="updateTheme()" aria-label="Select Color Theme" style="padding:7px 10px; font-size:13px;">
@@ -896,6 +970,28 @@
                         <button class="btn" id="save-secret-btn" style="flex:1" onclick="saveNewSecret()">Save to Vault</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Usability Status & Hotkey Bar -->
+        <div class="statusbar" id="statusbar" role="contentinfo" aria-label="KVault Status & Hotkeys">
+            <div class="status-col" id="status-security-indicator">
+                <span class="status-dot" id="status-dot"></span>
+                <span id="status-vault-mode">🔒 Vault Locked</span>
+            </div>
+            <div class="status-col hotkeys-bar">
+                <span class="hotkey-item"><kbd>F1/H</kbd> Help</span>
+                <span class="hotkey-item"><kbd>F5</kbd> Quicksave</span>
+                <span class="hotkey-item"><kbd>F9</kbd> Quickload</span>
+                <span class="hotkey-item"><kbd>Ctrl+G</kbd> Gen</span>
+                <span class="hotkey-item"><kbd>Ctrl+L</kbd> Lock</span>
+                <span class="hotkey-item"><kbd>M</kbd> Sound</span>
+            </div>
+            <div class="status-col status-right">
+                <button id="statusbar-sound-btn" class="status-sound-btn" onclick="toggleSound()" title="Toggle Web Audio (M)" aria-label="Toggle Sound">
+                    🔊 Sound ON [M]
+                </button>
+                <span id="status-active-count" style="font-size:11px; opacity:0.8;">0 secrets</span>
             </div>
         </div>
     </div>
@@ -1107,7 +1203,7 @@
                 <li><strong>Security Audit:</strong> Click <strong>🛡️ Audit</strong> to assess overall vault health, detect weak or reused credentials, and identify missing 2FA.</li>
                 <li><strong>Quicksave & Quickload:</strong> Press <strong>F5</strong> to save an instant snapshot of your vault state to localStorage, and <strong>F9</strong> to restore it.</li>
                 <li><strong>Auto-Lock & Wipe:</strong> Automatically locks and clears the operating system clipboard after inactivity.</li>
-                <li><strong>Shortcuts:</strong> <code>[F5]</code> Quicksave, <code>[F9]</code> Quickload, <code>[F1 / H]</code> Help, <code>[Ctrl+S]</code> Save/Export, <code>[Ctrl+L]</code> Lock instantly, <code>[Ctrl+F]</code> Find, <code>[Ctrl+G]</code> Generator, <code>[Esc]</code> Close modals / Return.</li>
+                <li><strong>Shortcuts:</strong> <code>[F5]</code> Quicksave, <code>[F9]</code> Quickload, <code>[F1 / H]</code> Help, <code>[M]</code> Toggle Sound, <code>[Ctrl+S]</code> Save/Export, <code>[Ctrl+L]</code> Lock instantly, <code>[Ctrl+F]</code> Find, <code>[Ctrl+G]</code> Generator, <code>[Esc]</code> Close modals / Return.</li>
             </ul>
             <button class="btn close-modal" onclick="closeHelp()">Got it (Esc / Enter)</button>
         </div>
@@ -1123,7 +1219,7 @@
                 <div style="margin-top: 6px;">⏱️ <strong>Live TOTP 2FA:</strong> Generate time-based 2FA tokens directly inside vault entries.</div>
                 <div style="margin-top: 6px;">💾 <strong>State & Quicksave:</strong> Press <strong>F5</strong> anytime to snapshot vault state, and <strong>F9</strong> to restore.</div>
                 <div style="margin-top: 6px;">🛡️ <strong>Security Audit:</strong> Identify reused, weak, or aging passwords with 1-click filters.</div>
-                <div style="margin-top: 6px;">⌨️ <strong>Hotkeys:</strong> [F1/H] Help &middot; [F5] Quicksave &middot; [F9] Quickload &middot; [Ctrl+L] Lock &middot; [Ctrl+G] Generator.</div>
+                <div style="margin-top: 6px;">⌨️ <strong>Hotkeys:</strong> [F1/H] Help &middot; [F5] Quicksave &middot; [F9] Quickload &middot; [Ctrl+L] Lock &middot; [Ctrl+G] Generator &middot; [M] Audio.</div>
             </div>
             <div style="display:flex; gap:10px; margin-top:20px;">
                 <button class="btn secondary close-modal" style="flex:1; margin-top:0;" onclick="dismissTutorial()">Skip (Esc)</button>
@@ -1187,6 +1283,7 @@
             if (notif) notif.classList.remove('show');
             if (window.notifTimeout) clearTimeout(window.notifTimeout);
         }
+        const clearToasts = dismissNotification;
 
         function showNotification(msg, type='success') {
             const notif = document.getElementById('notification');
@@ -1197,6 +1294,199 @@
             window.notifTimeout = setTimeout(() => {
                 notif.classList.remove('show');
             }, 3200);
+        }
+
+        // --- Sega Genesis YM2612 2-Op FM & SNES SPC700 Audio Engine ---
+        let audioCtx = null;
+        let soundEnabled = safeStorageGet('kvault_sound_enabled', '1') === '1';
+
+        function getAudioContext() {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) {
+                    audioCtx = new AudioContextClass();
+                }
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function playSound(type, param) {
+            if (!soundEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                if (!ctx) return;
+                const now = ctx.currentTime;
+
+                if (type === 'click') {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(540, now);
+                    osc.frequency.exponentialRampToValueAtTime(180, now + 0.04);
+                    gain.gain.setValueAtTime(0.06, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'unlock') {
+                    // YM2612 2-Operator FM rising chime
+                    const carrier = ctx.createOscillator();
+                    const modulator = ctx.createOscillator();
+                    const modGain = ctx.createGain();
+                    const masterGain = ctx.createGain();
+
+                    modulator.frequency.setValueAtTime(320, now);
+                    modulator.frequency.exponentialRampToValueAtTime(880, now + 0.22);
+                    modGain.gain.setValueAtTime(450, now);
+                    modGain.gain.exponentialRampToValueAtTime(40, now + 0.22);
+
+                    carrier.frequency.setValueAtTime(440, now);
+                    carrier.frequency.exponentialRampToValueAtTime(880, now + 0.22);
+
+                    modulator.connect(modGain);
+                    modGain.connect(carrier.frequency);
+
+                    masterGain.gain.setValueAtTime(0.08, now);
+                    masterGain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+
+                    carrier.connect(masterGain);
+                    masterGain.connect(ctx.destination);
+
+                    modulator.start(now);
+                    carrier.start(now);
+                    modulator.stop(now + 0.25);
+                    carrier.stop(now + 0.25);
+                } else if (type === 'lock') {
+                    // Descending security latch
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.exponentialRampToValueAtTime(110, now + 0.16);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.19);
+                } else if (type === 'copy') {
+                    // Crisp dual-tone ping
+                    [880, 1318.51].forEach((freq, i) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now + i * 0.05);
+                        gain.gain.setValueAtTime(0.07, now + i * 0.05);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.12);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + i * 0.05);
+                        osc.stop(now + i * 0.05 + 0.14);
+                    });
+                } else if (type === 'generate') {
+                    // High entropy dice sweep
+                    [440, 587.33, 739.99, 880].forEach((freq, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.025);
+                        gain.gain.setValueAtTime(0.05, now + idx * 0.025);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.025 + 0.06);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + idx * 0.025);
+                        osc.stop(now + idx * 0.025 + 0.08);
+                    });
+                } else if (type === 'save') {
+                    // 4-note ascending major arpeggio
+                    [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.045);
+                        gain.gain.setValueAtTime(0.07, now + idx * 0.045);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.045 + 0.15);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + idx * 0.045);
+                        osc.stop(now + idx * 0.045 + 0.16);
+                    });
+                } else if (type === 'load') {
+                    // 4-note descending major arpeggio
+                    [1046.50, 783.99, 659.25, 523.25].forEach((freq, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.045);
+                        gain.gain.setValueAtTime(0.07, now + idx * 0.045);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.045 + 0.16);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + idx * 0.045);
+                        osc.stop(now + idx * 0.045 + 0.18);
+                    });
+                } else if (type === 'error') {
+                    // Dissonant low buzz
+                    [180, 130].forEach((freq, idx) => {
+                        const osc = ctx.createOscillator();
+                        const gain = ctx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+                        gain.gain.setValueAtTime(0.08, now + idx * 0.06);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.14);
+                        osc.connect(gain);
+                        gain.connect(ctx.destination);
+                        osc.start(now + idx * 0.06);
+                        osc.stop(now + idx * 0.06 + 0.16);
+                    });
+                }
+            } catch(e) {}
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            safeStorageSet('kvault_sound_enabled', soundEnabled ? '1' : '0');
+            updateSoundUI();
+            if (soundEnabled) {
+                playSound('save');
+                showNotification("🔊 Audio feedback enabled [M]");
+            } else {
+                showNotification("🔇 Audio feedback muted [M]");
+            }
+        }
+
+        function updateSoundUI() {
+            const headerBtn = document.getElementById('header-sound-btn');
+            const statusBtn = document.getElementById('statusbar-sound-btn');
+            const label = soundEnabled ? "🔊 Audio [M]" : "🔇 Muted [M]";
+            const statusLabel = soundEnabled ? "🔊 Sound ON [M]" : "🔇 Sound OFF [M]";
+            if (headerBtn) headerBtn.textContent = label;
+            if (statusBtn) statusBtn.textContent = statusLabel;
+        }
+
+        function updateStatusBar(isUnlocked) {
+            const dot = document.getElementById('status-dot');
+            const mode = document.getElementById('status-vault-mode');
+            const count = document.getElementById('status-active-count');
+            if (dot) {
+                if (isUnlocked) dot.classList.add('active');
+                else dot.classList.remove('active');
+            }
+            if (mode) {
+                mode.textContent = isUnlocked ? "🟢 AES-256-GCM Active" : "🔒 Vault Locked";
+            }
+            if (count) {
+                if (!isUnlocked) {
+                    count.textContent = "Locked";
+                } else {
+                    const activeCount = vaultData.filter(s => !s.trash).length;
+                    count.textContent = `${activeCount} secret${activeCount === 1 ? '' : 's'}`;
+                }
+            }
         }
 
         // --- Safe Storage Helpers ---
@@ -1466,6 +1756,9 @@
                 if (sel) sel.value = autoLockTimeout;
             }
 
+            updateSoundUI();
+            updateStatusBar(false);
+
             let stored = null;
             try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
             if (stored) {
@@ -1492,6 +1785,7 @@
         async function handleAuth() {
             const pwd = document.getElementById('master-password').value;
             if (!pwd) {
+                playSound('error');
                 showNotification("Please enter a master password", "error");
                 return;
             }
@@ -1505,6 +1799,7 @@
                 try {
                     const parsed = JSON.parse(stored);
                     if (!parsed || !parsed.salt || !parsed.vault || !Array.isArray(parsed.salt) || !parsed.vault.iv || !parsed.vault.data) {
+                        playSound('error');
                         if (errElem) {
                             errElem.textContent = "Corrupted vault file in storage. Please re-import backup.";
                             errElem.style.display = 'block';
@@ -1515,6 +1810,7 @@
                     const key = await deriveKey(pwd, salt);
                     const testDecrypt = await decryptData(parsed.vault, key);
                     if (testDecrypt === null) {
+                        playSound('error');
                         if (errElem) {
                             errElem.textContent = "Incorrect password. Please try again.";
                             errElem.style.display = 'block';
@@ -1529,8 +1825,10 @@
                     checkStrength();
                     showVault();
                     startTotpTicker();
+                    playSound('unlock');
                     showNotification("Vault unlocked successfully");
                 } catch(e) {
+                    playSound('error');
                     if (errElem) {
                         errElem.textContent = "Incorrect password or decryption failure.";
                         errElem.style.display = 'block';
@@ -1545,6 +1843,7 @@
                 checkStrength();
                 showVault();
                 startTotpTicker();
+                playSound('unlock');
                 showNotification("Vault initialized successfully");
             }
         }
@@ -1640,7 +1939,9 @@
             if (authControls) authControls.style.display = 'none';
             initAuthView();
             clearAppClipboard(true);
+            updateStatusBar(false);
             if (!silent) {
+                playSound('lock');
                 showNotification("Vault locked & clipboard wiped");
             }
             resetIdleTimer();
@@ -1656,11 +1957,13 @@
             switchView('view-vault');
             document.getElementById('auth-controls').style.display = 'flex';
             renderSecrets();
+            updateStatusBar(true);
             resetIdleTimer();
         }
 
         // --- Category Filters & Badges ---
         function setCategoryFilter(cat) {
+            playSound('click');
             activeCategoryFilter = cat;
             currentAuditFilter = null;
             document.querySelectorAll('#category-filter-bar .pill-btn').forEach(btn => {
@@ -1908,6 +2211,8 @@
 
         let pendingConfirmAction = null;
         function showConfirmModal(msg, onConfirm) {
+            clearToasts();
+            playSound('click');
             pendingConfirmAction = onConfirm;
             const modal = document.getElementById('confirm-modal');
             const msgElem = document.getElementById('confirm-message');
@@ -1919,6 +2224,7 @@
         }
 
         function closeConfirmModal() {
+            clearToasts();
             pendingConfirmAction = null;
             const modal = document.getElementById('confirm-modal');
             if (modal) {
@@ -2215,6 +2521,7 @@
 
         function copySecret(val, msg = "Copied to clipboard!") {
             if (!val) return;
+            playSound('copy');
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(val).then(() => {
                     showNotification(msg);
@@ -2256,6 +2563,8 @@
         let currentGenTab = 'random';
 
         function openGeneratorModal(isForForm = false) {
+            clearToasts();
+            playSound('click');
             genTargetIsForm = isForForm;
             const modal = document.getElementById('generator-modal');
             const applyBtn = document.getElementById('gen-apply-btn');
@@ -2270,6 +2579,7 @@
         }
 
         function closeGeneratorModal() {
+            clearToasts();
             const modal = document.getElementById('generator-modal');
             if (modal) {
                 modal.classList.remove('active');
@@ -2278,6 +2588,8 @@
         }
 
         function switchGenTab(tab) {
+            clearToasts();
+            playSound('click');
             currentGenTab = tab;
             document.getElementById('tab-gen-random').classList.toggle('active', tab === 'random');
             document.getElementById('tab-gen-diceware').classList.toggle('active', tab === 'diceware');
@@ -2394,6 +2706,8 @@
 
         // --- Security Audit Studio ---
         function openAuditModal() {
+            clearToasts();
+            playSound('click');
             runSecurityAudit();
             const modal = document.getElementById('audit-modal');
             if (modal) {
@@ -2403,6 +2717,7 @@
         }
 
         function closeAuditModal() {
+            clearToasts();
             const modal = document.getElementById('audit-modal');
             if (modal) {
                 modal.classList.remove('active');
@@ -2510,6 +2825,8 @@
 
         // --- Export Multi-Format Suite ---
         function openExportModal() {
+            clearToasts();
+            playSound('click');
             const modal = document.getElementById('export-modal');
             if (modal) {
                 modal.style.display = 'flex';
@@ -2518,6 +2835,7 @@
         }
 
         function closeExportModal() {
+            clearToasts();
             const modal = document.getElementById('export-modal');
             if (modal) {
                 modal.classList.remove('active');
@@ -2646,6 +2964,8 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
 
         // --- Smart CSV & JSON Import ---
         function openImportModal() {
+            clearToasts();
+            playSound('click');
             const modal = document.getElementById('import-modal');
             if (modal) {
                 modal.style.display = 'flex';
@@ -2654,6 +2974,7 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
         }
 
         function closeImportModal() {
+            clearToasts();
             const modal = document.getElementById('import-modal');
             if (modal) {
                 modal.classList.remove('active');
@@ -2850,6 +3171,7 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
                 } : null
             };
             if (safeStorageSet('kvault_quicksave', snapshot)) {
+                playSound('save');
                 showNotification("💾 Vault snapshot quicksaved [F5]");
             }
         }
@@ -2857,6 +3179,7 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
         async function quickloadState() {
             const snapshot = safeStorageGetJSON('kvault_quicksave', null);
             if (!snapshot) {
+                playSound('error');
                 showNotification("⚠️ No quicksave snapshot found [Press F5 to save]", "error");
                 return;
             }
@@ -2896,6 +3219,7 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
                                     if (searchInput) searchInput.value = snapshot.searchQuery;
                                 }
                                 showVault();
+                                playSound('load');
                                 showNotification("📂 Vault snapshot restored [F9]");
                                 return;
                             }
@@ -2904,14 +3228,18 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
                 }
 
                 lockVault(true);
+                playSound('load');
                 showNotification("📂 Vault snapshot restored [F9]. Please unlock.");
             } catch(err) {
+                playSound('error');
                 showNotification("Failed to restore quicksave data", "error");
             }
         }
 
         // --- Modals Management ---
         function showHelp() {
+            clearToasts();
+            playSound('click');
             const modal = document.getElementById('help-modal');
             if (modal) {
                 modal.style.display = 'flex';
@@ -2919,6 +3247,7 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
             }
         }
         function closeHelp() {
+            clearToasts();
             const modal = document.getElementById('help-modal');
             if (modal) {
                 modal.classList.remove('active');
@@ -2927,6 +3256,8 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
         }
 
         function showTutorial() {
+            clearToasts();
+            playSound('click');
             const modal = document.getElementById('tutorial-modal');
             if (modal) {
                 modal.style.display = 'flex';
@@ -2934,6 +3265,7 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
             }
         }
         function dismissTutorial() {
+            clearToasts();
             const modal = document.getElementById('tutorial-modal');
             if (modal) {
                 modal.classList.remove('active');
@@ -2948,6 +3280,7 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
         document.querySelectorAll('.modal-overlay').forEach(modal => {
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) {
+                    clearToasts();
                     modal.classList.remove('active');
                     setTimeout(() => modal.style.display = 'none', 250);
                 }
@@ -2960,14 +3293,25 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
             if (activeModal) {
                 if (e.key === 'Escape') {
                     e.preventDefault();
+                    clearToasts();
                     activeModal.classList.remove('active');
                     setTimeout(() => activeModal.style.display = 'none', 250);
                     return;
                 }
-                if (e.key === 'Enter' && activeModal.id === 'confirm-modal') {
-                    e.preventDefault();
-                    executePendingConfirm();
-                    return;
+                if (e.key === 'Enter') {
+                    if (activeModal.id === 'confirm-modal') {
+                        e.preventDefault();
+                        executePendingConfirm();
+                        return;
+                    } else if (activeModal.id === 'help-modal') {
+                        e.preventDefault();
+                        closeHelp();
+                        return;
+                    } else if (activeModal.id === 'tutorial-modal') {
+                        e.preventDefault();
+                        dismissTutorial();
+                        return;
+                    }
                 }
             }
 
@@ -3013,11 +3357,14 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
                 } else if (e.key === 'F9') {
                     e.preventDefault();
                     quickloadState();
+                } else if (e.key.toLowerCase() === 'm' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    toggleSound();
                 } else if (e.key.toLowerCase() === 'h' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
                     e.preventDefault();
                     showHelp();
                 } else if (e.key === 'Escape') {
-                    dismissNotification();
+                    clearToasts();
                     const activeView = document.querySelector('.view-section.active');
                     if (activeView && activeView.id === 'view-add' && masterKey) {
                         showVault();

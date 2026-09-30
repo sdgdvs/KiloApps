@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-29T23:26:00Z — kilo-usability: KType (Ergonomic Window Sizing, Toast De-Occlusion, HiDPI Canvas & Hotkey Status)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 137.4 KB < 999 KB).
+  - Window & Viewport: Tuned default window to 1000x760 in `App.jsx`, `ktype.html` resizeTo, and bumped `MICROS_VERSION` to 0.4.10.
+  - Toast De-Occlusion: Relocated HUD toast to bottom-center with `clearToasts()` on modal entry, preventing control occlusion.
+  - Speed Test Ergonomics: Integrated compact font loader chip in toolbar; added persistent hotkey chips (<kbd>F1/H</kbd>, <kbd>Esc</kbd>, <kbd>F5</kbd>, <kbd>F9</kbd>, <kbd>M</kbd>).
+  - Arcade & HiDPI Canvas: Converted arcade canvas to responsive width with aspect ratio preservation and scaled `devicePixelRatio`.
+  - Audio & Controls: Added <kbd>M</kbd> sound toggle hotkey with toast feedback; documented in Help guide [F1/H] & tutorial modal.
+  - Verification: MSVC clean (`KType.exe` 35 KB); Vite clean in 260ms; icon check & security lint 100% PASS.
+
 - **2026-09-29T23:15:00Z — kilo-tester: KFlash (Interactive UI Audit, Quicksave/Load, Dialog Flow & Ergonomics)**
   - Status: PASS ✅ (6 issues fixed; 0 regressions; 0 perimeter glints; 94.9 KB < 999 KB).
   - Quicksave & State: Added F5 snapshot quicksave and F9 quickload restoring deck state, filters, index, and study progress.
