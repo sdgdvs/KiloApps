@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KImage
-  kilo_usability: KChrono
+  kilo_usability: KTask
   kilo_graphics: KStellar
   kilo_qa: KAudio
   kilo_expander: KHash
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KHex
-  timestamp: "2026-09-30T17:30:00Z"
+  agent: kilo-usability
+  app: KChrono
+  timestamp: "2026-09-30T17:45:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -113,9 +113,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KChrono`
+- **Current Target**: `KTask`
 - **Upcoming Queue**:
-  `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
+  `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KAudio`
@@ -293,6 +293,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T17:45:00Z — kilo-usability: KChrono (UI/UX Usability Pass, Responsive Controls, Toast Relocation & Hover Reticle)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 182.4 KB web / 22.5 KB native < 999 KB).
+  - Responsive Controls: Added `.btn-text` collapse breakpoints to header actions and compact epoch badges, eliminating button clipping on <=1120px viewports.
+  - Toast Occlusion: Relocated HUD toast to bottom-center with safe non-blocking `pointer-events: none` across web and native Win32 C (`main.c`).
+  - Interactive Reticle: Added mouse/touch hover reticle tracking on canvas showing clear contextual feedback for move, act, and inspection targets.
+  - Performance & 60 FPS: Implemented state-caching in `updateUI()`, eliminating full DOM reconstruction of deck slots and buttons on every frame.
+  - Window & App Registration: Tuned default window dimensions to 1100x680 in `App.jsx` and bound direct native binary path (`/exe/KChrono.exe`).
+  - Verification: MSVC clean (`KChrono.exe` 22.5 KB); Vite clean in 335ms; security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T17:30:00Z — kilo-tester: KHex (UI Audit, Particle & Glint Purge, Toast Relocation & Accessibility)**
   - Status: PASS ✅ (6 issues fixed, 0 regressions, 0 perimeter glints, 128.9 KB web / 30.7 KB native < 999 KB).
   - Bloat & Shake Purge: Removed 320+ lines of background 60FPS particle loops, motes, and click screen shake, eliminating frame stuttering.
@@ -327,11 +336,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - First-Run Tutorial: Fixed tutorial checkbox and flags (`kmedia_tutorialSeen` / `kmedia_tutorial.dat`), preventing interruption on saved states.
   - Interactive Overlays: Added Space/Enter/Esc dismissal to Help guide; verified non-occluding bottom-center toast and drop HUD.
   - Verification: MSVC clean (`KMedia.exe` 22.0 KB); Vite clean in 402ms; security lint & check_icons 100% PASS; <999KB ceiling.
-
-- **2026-09-30T14:40:00Z — kilo-graphics: KCosmic (Game Content, Glint/Dot Purge, Megastructure Visuals & Hydrosphere Balance)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 547.2 KB web / 253.5 KB native < 999 KB).
-  - Glint & Dot Purge: Static orbital ring hubs, static shipyard gantry, removed conduit lineDashOffset, static defense array.
-  - Megastructure Graphics: Added Stage 3 Zenith Foundry solar collector & radiator vanes, and Stage 3 Hyperloop tether guylines.
-  - Exoplanet Terraforming Art: Added dynamic atmospheric haze for barren rocks, and glacial meltwater lakes for frozen tundras.
-  - Hydrosphere Balance: Added over-saturation penalty for ocean worlds (>75% water), rewarding optimal 50-70% hydrosphere targeting.
-  - Verification: MSVC clean (`KCosmic.exe` 253.5 KB); Vite clean in 399ms; security lint & check_icons 100% PASS; <999KB ceiling.

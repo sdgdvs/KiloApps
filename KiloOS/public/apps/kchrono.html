@@ -181,14 +181,16 @@
         .header-controls {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            flex-shrink: 1;
+            min-width: 0;
         }
 
         .btn-ctrl {
             background: var(--bg-card);
             border: 1px solid var(--border-dim);
             color: var(--text-normal);
-            padding: 4px 9px;
+            padding: 4px 8px;
             border-radius: 4px;
             cursor: pointer;
             font-family: inherit;
@@ -196,7 +198,9 @@
             display: flex;
             align-items: center;
             gap: 4px;
+            white-space: nowrap;
             transition: all 0.15s ease;
+            flex-shrink: 0;
         }
         .btn-ctrl:hover {
             background: var(--bg-card-hover);
@@ -274,6 +278,8 @@
         }
 
         canvas#simCanvas {
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
             image-rendering: pixelated;
             cursor: crosshair;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
@@ -348,6 +354,9 @@
         canvas#chronographCanvas {
             width: 100%;
             height: 100%;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
         }
 
         /* Causal Node Inspector */
@@ -452,26 +461,37 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 4px 14px;
+            padding: 4px 12px;
             background: var(--bg-panel-dark);
             border-top: 1px solid var(--border-dim);
             height: 32px;
             font-size: 11px;
             color: var(--text-dim);
             z-index: 10;
+            overflow: hidden;
         }
 
         .status-left {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 10px;
+            min-width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .status-left span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .status-right {
             display: flex;
             align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
+            gap: 6px;
+            flex-shrink: 0;
         }
 
         .footer-badge-btn {
@@ -675,29 +695,73 @@
             color: var(--border-bright);
         }
 
-        /* HUD Floating Notification */
+        /* HUD Floating Notification (Bottom-Center, Non-Occluding) */
         .toast {
             position: fixed;
-            top: 52px;
-            right: 18px;
+            bottom: 42px;
+            left: 50%;
+            transform: translateX(-50%) translateY(8px);
             background: rgba(12, 18, 34, 0.95);
             border: 1px solid var(--border-bright);
-            padding: 8px 18px;
+            padding: 7px 18px;
             border-radius: 4px;
             font-size: 12px;
             font-weight: bold;
             color: var(--text-bright);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
-            pointer-events: auto;
-            cursor: pointer;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.85), 0 0 10px rgba(56, 189, 248, 0.3);
+            pointer-events: none;
             opacity: 0;
-            transform: translateY(-8px);
             transition: opacity 0.2s ease, transform 0.2s ease;
             z-index: 1000;
+            white-space: nowrap;
         }
         .toast.visible {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Responsive Usability Breakpoints */
+        @media (max-width: 1120px) {
+            .header-controls .btn-text {
+                display: none;
+            }
+            .header-controls {
+                gap: 4px;
+            }
+            .btn-ctrl {
+                padding: 4px 7px;
+            }
+        }
+
+        @media (max-width: 880px) {
+            .header-epoch-badges .epoch-year {
+                display: none;
+            }
+            .header-title span:last-child {
+                display: none;
+            }
+            .sidebar {
+                width: 270px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .workspace {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid var(--border-dim);
+                max-height: 220px;
+                overflow-y: auto;
+            }
+            .canvas-wrapper {
+                min-height: 260px;
+            }
+            .status-right .footer-badge-btn:not(#footBtnHelp):not(#footBtnUndo):not(#footBtnWait) {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -716,47 +780,47 @@
         <!-- Epoch Jump Switcher -->
         <div class="header-epoch-badges">
             <button class="epoch-btn" data-epoch="alpha" id="btnEpochAlpha" title="Switch to Epoch Alpha (1984 - Past) [Key 1]">
-                <span>●</span> EPOCH ALPHA (1984)
+                <span>●</span> <span class="epoch-label">ALPHA</span><span class="epoch-year"> '84</span>
             </button>
             <button class="epoch-btn active" data-epoch="beta" id="btnEpochBeta" title="Switch to Epoch Beta (2042 - Present) [Key 2]">
-                <span>●</span> EPOCH BETA (2042)
+                <span>●</span> <span class="epoch-label">BETA</span><span class="epoch-year"> '42</span>
             </button>
             <button class="epoch-btn" data-epoch="gamma" id="btnEpochGamma" title="Switch to Epoch Gamma (2188 - Future) [Key 3]">
-                <span>●</span> EPOCH GAMMA (2188)
+                <span>●</span> <span class="epoch-label">GAMMA</span><span class="epoch-year"> '88</span>
             </button>
         </div>
 
         <!-- Action Controls -->
         <div class="header-controls">
             <button class="btn-ctrl" id="btnInteract" title="Interact with terminal / switch or wait 1 turn [Space]">
-                <span>⚡</span> Wait / Act
+                <span>⚡</span> <span class="btn-text">Wait / Act</span>
             </button>
             <button class="btn-ctrl" id="btnRecordEcho" title="Record movements for temporal ghost echo [R]">
-                <span>⏺</span> Record Echo
+                <span>⏺</span> <span class="btn-text">Record Echo</span>
             </button>
             <button class="btn-ctrl" id="btnPlayEcho" title="Execute recorded ghost sequence alongside you [P]">
-                <span>▶</span> Execute Echo
+                <span>▶</span> <span class="btn-text">Execute Echo</span>
             </button>
             <button class="btn-ctrl" id="btnRewind" title="Rewind one temporal turn [Z]">
-                <span>↺</span> Rewind Turn
+                <span>↺</span> <span class="btn-text">Rewind</span>
             </button>
             <button class="btn-ctrl" id="btnQuicksave" title="Quicksave game state [F5]">
-                <span>💾</span> F5 Save
+                <span>💾</span> <span class="btn-text">F5 Save</span>
             </button>
             <button class="btn-ctrl" id="btnQuickload" title="Quickload game state [F9]">
-                <span>📂</span> F9 Load
+                <span>📂</span> <span class="btn-text">F9 Load</span>
             </button>
             <button class="btn-ctrl" id="btnScenarios" title="Select mission scenario">
-                <span>📋</span> Scenarios
+                <span>📋</span> <span class="btn-text">Scenarios</span>
             </button>
             <button class="btn-ctrl" id="btnHelp" title="Field Manual & Causal Codex [F1 / H]">
-                <span>❓</span> Help [F1/H]
+                <span>❓</span> <span class="btn-text">Help [F1]</span>
             </button>
             <button class="btn-ctrl" id="btnAudioToggle" title="Toggle Yamaha YM2612 FM / SPC700 Audio [M]">
-                <span id="audioIcon">🔊</span> <span id="audioLabel">FM Audio [M]</span>
+                <span id="audioIcon">🔊</span> <span id="audioLabel" class="btn-text">FM Audio [M]</span>
             </button>
             <button class="btn-ctrl" id="btnSettings" title="Configure audio & CRT settings">
-                <span>⚙</span> Settings
+                <span>⚙</span> <span class="btn-text">Settings</span>
             </button>
         </div>
     </header>
@@ -2447,6 +2511,32 @@
                 drawGhost(ctx, engine.echoGhost.x * TILE_SIZE, engine.echoGhost.y * TILE_SIZE, engine.echoGhost.facing || 'down', now);
             }
 
+            // Render Interactive Mouse Hover Reticle
+            if (hoverTile && hoverTile.x >= 0 && hoverTile.x < GRID_W && hoverTile.y >= 0 && hoverTile.y < GRID_H) {
+                const hx = hoverTile.x * TILE_SIZE;
+                const hy = hoverTile.y * TILE_SIZE;
+                const dx = hoverTile.x - engine.player.x;
+                const dy = hoverTile.y - engine.player.y;
+                const isAdjacent = Math.abs(dx) + Math.abs(dy) === 1;
+                const isSelf = dx === 0 && dy === 0;
+
+                ctx.save();
+                if (isAdjacent) {
+                    ctx.strokeStyle = "rgba(56, 189, 248, 0.75)";
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(hx + 1, hy + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+                } else if (isSelf) {
+                    ctx.strokeStyle = "rgba(16, 185, 129, 0.75)";
+                    ctx.lineWidth = 1.5;
+                    ctx.strokeRect(hx + 1, hy + 1, TILE_SIZE - 2, TILE_SIZE - 2);
+                } else {
+                    ctx.strokeStyle = "rgba(148, 163, 184, 0.35)";
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(hx + 0.5, hy + 0.5, TILE_SIZE - 1, TILE_SIZE - 1);
+                }
+                ctx.restore();
+            }
+
             // Render Player
             drawPlayer(ctx, engine.player.x * TILE_SIZE, engine.player.y * TILE_SIZE, engine.currentEpoch, engine.player.facing || 'down', now);
 
@@ -3075,106 +3165,153 @@
             chronoCtx.restore();
         }
 
-        function updateUI() {
-            // Epoch Buttons
-            document.querySelectorAll('.epoch-btn').forEach(btn => {
-                if (btn.dataset.epoch === engine.currentEpoch) {
-                    btn.classList.add('active');
-                } else {
-                    btn.classList.remove('active');
-                }
-            });
+        let prevEpoch = null;
+        let prevTurn = -1;
+        let prevPosX = -1, prevPosY = -1;
+        let prevEchoState = "";
+        let prevStrain = -1;
+        let prevScenarioName = "", prevObjective = "";
+        let prevIsRecording = null;
+        let prevIsPlaying = null;
+        let prevInvHash = null;
+        let prevAudioMuted = null;
 
-            // Epoch banner
-            const descEl = document.getElementById('epochDesc');
-            if (engine.currentEpoch === 'alpha') {
-                descEl.textContent = "EPOCH ALPHA (1984) — Precursor Sub-Basement Facility";
-                descEl.style.color = "var(--epoch-alpha)";
-            } else if (engine.currentEpoch === 'beta') {
-                descEl.textContent = "EPOCH BETA (2042) — Chrono-Station Prime Reality";
-                descEl.style.color = "var(--epoch-beta)";
-            } else {
-                descEl.textContent = "EPOCH GAMMA (2188) — Singularity & Decayed Ruins";
-                descEl.style.color = "var(--epoch-gamma)";
+        function updateUI() {
+            // Epoch Buttons & Banner
+            if (engine.currentEpoch !== prevEpoch) {
+                prevEpoch = engine.currentEpoch;
+                document.querySelectorAll('.epoch-btn').forEach(btn => {
+                    if (btn.dataset.epoch === engine.currentEpoch) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+
+                const descEl = document.getElementById('epochDesc');
+                if (engine.currentEpoch === 'alpha') {
+                    descEl.textContent = "EPOCH ALPHA (1984) — Precursor Sub-Basement Facility";
+                    descEl.style.color = "var(--epoch-alpha)";
+                } else if (engine.currentEpoch === 'beta') {
+                    descEl.textContent = "EPOCH BETA (2042) — Chrono-Station Prime Reality";
+                    descEl.style.color = "var(--epoch-beta)";
+                } else {
+                    descEl.textContent = "EPOCH GAMMA (2188) — Singularity & Decayed Ruins";
+                    descEl.style.color = "var(--epoch-gamma)";
+                }
             }
 
             // Stats
-            document.getElementById('turnCounter').textContent = `Turn: ${engine.turn}`;
-            document.getElementById('posCoords').textContent = `Pos: (${engine.player.x}, ${engine.player.y})`;
-            document.getElementById('echoStatus').textContent = engine.isRecordingEcho ? "Echo: RECORDING" : engine.isPlayingEcho ? "Echo: PLAYING" : "Echo: Idle";
+            if (engine.turn !== prevTurn) {
+                prevTurn = engine.turn;
+                document.getElementById('turnCounter').textContent = `Turn: ${engine.turn}`;
+            }
+            if (engine.player.x !== prevPosX || engine.player.y !== prevPosY) {
+                prevPosX = engine.player.x;
+                prevPosY = engine.player.y;
+                document.getElementById('posCoords').textContent = `Pos: (${engine.player.x}, ${engine.player.y})`;
+            }
+            const echoStateStr = engine.isRecordingEcho ? "Echo: RECORDING" : engine.isPlayingEcho ? "Echo: PLAYING" : "Echo: Idle";
+            if (echoStateStr !== prevEchoState) {
+                prevEchoState = echoStateStr;
+                document.getElementById('echoStatus').textContent = echoStateStr;
+            }
 
             // Paradox Bar
-            const bar = document.getElementById('strainBar');
-            bar.style.width = `${engine.paradoxStrain}%`;
-            document.getElementById('strainPercent').textContent = `${engine.paradoxStrain}%`;
-            if (engine.paradoxStrain > 75) {
-                document.getElementById('strainPercent').style.color = "var(--accent-red)";
-            } else if (engine.paradoxStrain > 40) {
-                document.getElementById('strainPercent').style.color = "var(--accent-amber)";
-            } else {
-                document.getElementById('strainPercent').style.color = "var(--accent-green)";
+            if (engine.paradoxStrain !== prevStrain) {
+                prevStrain = engine.paradoxStrain;
+                const bar = document.getElementById('strainBar');
+                bar.style.width = `${engine.paradoxStrain}%`;
+                const strainEl = document.getElementById('strainPercent');
+                strainEl.textContent = `${engine.paradoxStrain}%`;
+                if (engine.paradoxStrain > 75) {
+                    strainEl.style.color = "var(--accent-red)";
+                } else if (engine.paradoxStrain > 40) {
+                    strainEl.style.color = "var(--accent-amber)";
+                } else {
+                    strainEl.style.color = "var(--accent-green)";
+                }
             }
 
             // Scenario info
-            document.getElementById('scenarioName').textContent = `Scenario: ${engine.currentScenario.name}`;
-            document.getElementById('objectiveText').textContent = `Objective: ${engine.currentScenario.objective}`;
+            if (engine.currentScenario.name !== prevScenarioName) {
+                prevScenarioName = engine.currentScenario.name;
+                document.getElementById('scenarioName').textContent = `Scenario: ${engine.currentScenario.name}`;
+            }
+            if (engine.currentScenario.objective !== prevObjective) {
+                prevObjective = engine.currentScenario.objective;
+                document.getElementById('objectiveText').textContent = `Objective: ${engine.currentScenario.objective}`;
+            }
 
             // Button states
             const recBtn = document.getElementById('btnRecordEcho');
-            if (engine.isRecordingEcho) {
-                recBtn.classList.add('recording');
-                recBtn.innerHTML = "<span>⏹</span> Stop Record";
-            } else {
-                recBtn.classList.remove('recording');
-                recBtn.innerHTML = "<span>⏺</span> Record Echo";
+            if (recBtn && engine.isRecordingEcho !== prevIsRecording) {
+                prevIsRecording = engine.isRecordingEcho;
+                if (engine.isRecordingEcho) {
+                    recBtn.classList.add('recording');
+                    recBtn.innerHTML = "<span>⏹</span> <span class='btn-text'>Stop Rec</span>";
+                } else {
+                    recBtn.classList.remove('recording');
+                    recBtn.innerHTML = "<span>⏺</span> <span class='btn-text'>Record Echo</span>";
+                }
             }
 
             const playBtn = document.getElementById('btnPlayEcho');
-            if (engine.isPlayingEcho) {
-                playBtn.classList.add('echo-active');
-                playBtn.innerHTML = "<span>⏹</span> Halt Echo";
-            } else {
-                playBtn.classList.remove('echo-active');
-                playBtn.innerHTML = "<span>▶</span> Execute Echo";
+            if (playBtn && engine.isPlayingEcho !== prevIsPlaying) {
+                prevIsPlaying = engine.isPlayingEcho;
+                if (engine.isPlayingEcho) {
+                    playBtn.classList.add('echo-active');
+                    playBtn.innerHTML = "<span>⏹</span> <span class='btn-text'>Halt Echo</span>";
+                } else {
+                    playBtn.classList.remove('echo-active');
+                    playBtn.innerHTML = "<span>▶</span> <span class='btn-text'>Execute Echo</span>";
+                }
             }
 
             // Inventory Chrono-Deck rendering
-            const deckCountEl = document.getElementById('deckCount');
-            if (deckCountEl) {
-                deckCountEl.textContent = `${engine.inventory.length} / 4`;
-            }
-            const slots = document.querySelectorAll('.deck-slot');
-            slots.forEach((slot, idx) => {
-                const item = engine.inventory[idx];
-                if (item) {
-                    slot.classList.add('filled');
-                    slot.innerHTML = `<span class="deck-slot-icon">${item.icon}</span><span style="font-size: 8px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60px;">${item.name}</span>`;
-                    slot.title = `[Slot ${idx + 1}] ${item.name}: Click or press ${idx + 4} to discharge.`;
-                } else {
-                    slot.classList.remove('filled');
-                    slot.innerHTML = `<span class="deck-slot-icon">∅</span><span>Empty</span>`;
-                    slot.title = `Slot ${idx + 1} Empty`;
+            const invHash = engine.inventory.map(it => it ? it.id : 'empty').join(',');
+            if (invHash !== prevInvHash) {
+                prevInvHash = invHash;
+                const deckCountEl = document.getElementById('deckCount');
+                if (deckCountEl) {
+                    deckCountEl.textContent = `${engine.inventory.length} / 4`;
                 }
-            });
+                const slots = document.querySelectorAll('.deck-slot');
+                slots.forEach((slot, idx) => {
+                    const item = engine.inventory[idx];
+                    if (item) {
+                        slot.classList.add('filled');
+                        slot.innerHTML = `<span class="deck-slot-icon">${item.icon}</span><span style="font-size: 8px; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60px;">${item.name}</span>`;
+                        slot.title = `[Slot ${idx + 1}] ${item.name}: Click or press ${idx + 4} to discharge.`;
+                    } else {
+                        slot.classList.remove('filled');
+                        slot.innerHTML = `<span class="deck-slot-icon">∅</span><span>Empty</span>`;
+                        slot.title = `Slot ${idx + 1} Empty`;
+                    }
+                });
+            }
 
             // Audio button states
-            const audioBtn = document.getElementById('btnAudioToggle');
-            if (audioBtn) {
-                const icon = document.getElementById('audioIcon');
-                const label = document.getElementById('audioLabel');
-                if (audio.muted) {
-                    if (icon) icon.textContent = '🔇';
-                    if (label) label.textContent = 'Muted [M]';
-                    audioBtn.style.borderColor = 'var(--accent-red)';
-                } else {
-                    if (icon) icon.textContent = '🔊';
-                    if (label) label.textContent = 'YM2612 [M]';
-                    audioBtn.style.borderColor = 'var(--border-bright)';
+            if (audio.muted !== prevAudioMuted) {
+                prevAudioMuted = audio.muted;
+                const audioBtn = document.getElementById('btnAudioToggle');
+                if (audioBtn) {
+                    const icon = document.getElementById('audioIcon');
+                    const label = document.getElementById('audioLabel');
+                    if (audio.muted) {
+                        if (icon) icon.textContent = '🔇';
+                        if (label) label.textContent = 'Muted [M]';
+                        audioBtn.style.borderColor = 'var(--accent-red)';
+                    } else {
+                        if (icon) icon.textContent = '🔊';
+                        if (label) label.textContent = 'FM Audio [M]';
+                        audioBtn.style.borderColor = 'var(--border-bright)';
+                    }
                 }
-            }
-            const footAudioBtn = document.getElementById('footBtnAudio');
-            if (footAudioBtn) {
-                footAudioBtn.textContent = audio.muted ? '🔇 [M] Muted' : '🔊 [M] YM2612';
+                const footAudioBtn = document.getElementById('footBtnAudio');
+                if (footAudioBtn) {
+                    footAudioBtn.textContent = audio.muted ? '🔇 [M] Muted' : '🔊 [M] YM2612';
+                }
             }
         }
 
@@ -3374,12 +3511,21 @@
             }
         });
 
-        // Hover tile inspection
+        let hoverTile = null;
+
+        // Hover tile inspection & reticle tracking
         canvas.addEventListener('mousemove', (e) => {
             const coords = getCanvasTileCoords(e.clientX, e.clientY);
             if (coords.x >= 0 && coords.x < GRID_W && coords.y >= 0 && coords.y < GRID_H) {
+                hoverTile = { x: coords.x, y: coords.y };
                 inspectTileAt(coords.x, coords.y);
+            } else {
+                hoverTile = null;
             }
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            hoverTile = null;
         });
 
         // Touch handling

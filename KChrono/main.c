@@ -1228,10 +1228,10 @@ static void DrawGame(HDC hdc, RECT* rcClient) {
         }
         g_particleCount = alive;
 
-        // Toast Notification
+        // Toast Notification (Bottom-Center, Non-Occluding)
         if (g_toastTimer > 0) {
-            int tw = 210, th = 26;
-            int tx = w - tw - 16, ty = 50;
+            int tw = 220, th = 26;
+            int tx = (w - tw) / 2, ty = h - th - 36;
             HBRUSH bgBrush = CreateSolidBrush(RGB(12, 18, 34));
             HPEN borderPen = CreatePen(PS_SOLID, 1, RGB(56, 189, 248));
             HGDIOBJ oldBrush = SelectObject(memDC, bgBrush);
