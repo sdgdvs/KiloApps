@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T21:56:00Z — kilo-usability: KStarForge (Usability & Layout Pass, High-DPI Scaling & Touch Controls)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 218.5 KB web / 30.2 KB native < 999 KB ceiling).
+  - Responsive Layout & Window Sizing: Optimized KiloOS window dimensions to 1160x720; added adaptive media queries and flex overflow handling.
+  - High-DPI Coordinate Alignment: Fixed high-DPI scaling boundary calculation across Proving Grounds canvas so screen wrap and radar align.
+  - Ergonomics & Erase Mode: Added dedicated Place/Erase tool toggle [X] and continuous touch-drag support for tablet/trackpad design.
+  - Touch HUD & Mobile Flight: Added responsive virtual D-pad and action HUD for touchscreens with toggleable display.
+  - First-Run Onboarding & Help: Added dedicated Quick Reference & Controls Guide modal [F1/H] with ESC/backdrop dismissals and manual return.
+  - Verification: MSVC clean (`KStarForge.exe` 30.2 KB); Vite clean in 251ms; security lint 100% PASS; <999KB ceiling verified.
+
 - **2026-09-30T21:35:00Z — kilo-tester: KJournal (UI Audit, Quicksave/Load, Toast Safe Zone & Modal Clipping)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 128.2 KB web / 200.7 KB native < 999 KB ceiling).
   - Quicksave & Quickload: Implemented F5 / F9 session snapshot save & restore across localStorage with visual toast confirmations.

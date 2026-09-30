@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KMail
+  kilo_tester: KMandel
   kilo_usability: KPad
   kilo_graphics: KStarDredge
   kilo_qa: KPaint
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KSubmarine
-  timestamp: "2026-09-30T22:56:00Z"
+  agent: kilo-tester
+  app: KMail
+  timestamp: "2026-09-30T23:10:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -108,9 +108,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono`, `KFortress`, `KCosmic`, `KSanctuary`, `KDragon` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KSanctuary, KDragon, KSubmarine)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KMail`
+- **Current Target**: `KMandel`
 - **Upcoming Queue**:
-  `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal)*.
+  `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KPad`
@@ -294,6 +294,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T23:10:00Z — kilo-tester: KMail (Interactive UI Audit, Quicksave/Load, Toast Safe Zone & Action Wiring)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 117.1 KB web / 504.0 KB native < 999 KB ceiling).
+  - Quicksave & Quickload: Implemented F5 / F9 mailbox snapshot save & restore across localStorage with audio & toast feedback.
+  - Toast Occlusion: Moved toast container to bottom-right (`bottom: 34px; right: 20px`), clearing pane action buttons & tabs.
+  - Action Wiring: Connected orphan `flushOutbox` to UI and sidebar; added `forwardEmail` [F] and Trash `restoreEmail` actions.
+  - Decrypted State Integrity: Preserved decrypted plaintext on email instance for accurate Reply, Forward, Print, and EML export.
+  - Accessibility & Fixes: Added keyboard handlers to preset tag chips and export cards; fixed missing outbox folder in `importJson`.
+  - Verification: MSVC clean (`KMail.exe` 504.0 KB); Vite clean in 242ms; check_icons & security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T22:56:00Z — kilo-graphics: KSubmarine (Game Content, Visual Polish & Balance Pass)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 450.0 KB web / 257.5 KB native < 999 KB ceiling).
   - Specular Glint & Dot Audit: Verified 100% absence of rotating specular glints or traveling perimeter border dots in web & Win32 C.
@@ -327,12 +336,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Tutorial & State Integrity: Enforced `kpad_tutorialSeen` / `kpad_tutorial.dat` flags to prevent onboarding interruption on restored sessions.
   - Modal Navigation: Added Enter and Space key dismissals across modals and prompts; safeStorage error handling prevents quota crashes.
   - Verification: MSVC clean (`KPad.exe` 31.0 KB); Vite clean in 274ms; check_icons & security lint 100% PASS; <999KB ceiling.
-
-- **2026-09-30T21:56:00Z — kilo-usability: KStarForge (Usability & Layout Pass, High-DPI Scaling & Touch Controls)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 218.5 KB web / 30.2 KB native < 999 KB ceiling).
-  - Responsive Layout & Window Sizing: Optimized KiloOS window dimensions to 1160x720; added adaptive media queries and flex overflow handling.
-  - High-DPI Coordinate Alignment: Fixed high-DPI scaling boundary calculation across Proving Grounds canvas so screen wrap and radar align.
-  - Ergonomics & Erase Mode: Added dedicated Place/Erase tool toggle [X] and continuous touch-drag support for tablet/trackpad design.
-  - Touch HUD & Mobile Flight: Added responsive virtual D-pad and action HUD for touchscreens with toggleable display.
-  - First-Run Onboarding & Help: Added dedicated Quick Reference & Controls Guide modal [F1/H] with ESC/backdrop dismissals and manual return.
-  - Verification: MSVC clean (`KStarForge.exe` 30.2 KB); Vite clean in 251ms; security lint 100% PASS; <999KB ceiling verified.

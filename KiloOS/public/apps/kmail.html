@@ -463,11 +463,11 @@
   /* Toast Notification System */
   #toast-container {
     position: fixed;
-    top: 18px;
-    right: 18px;
+    bottom: 34px;
+    right: 20px;
     z-index: 9999;
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     gap: 8px;
     pointer-events: none;
   }
@@ -494,12 +494,12 @@
   .toast.toast-warning { border-left-color: var(--gold); }
   .toast.toast-error { border-left-color: var(--danger); }
   @keyframes toastIn {
-    from { transform: translateY(-16px); opacity: 0; }
+    from { transform: translateY(16px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
   }
   @keyframes toastOut {
     from { transform: translateY(0); opacity: 1; }
-    to { transform: translateY(-16px); opacity: 0; }
+    to { transform: translateY(16px); opacity: 0; }
   }
 
   /* Modal Dialogs */
@@ -956,6 +956,17 @@
         <span id="side-net-label">🌐 Network Mail</span>
         <kbd>F4</kbd>
       </button>
+      <button class="side-action-btn" onclick="quickSave()" aria-label="Quicksave Mailbox" title="Quicksave Mailbox (F5)">
+        <span>💾 Quicksave</span>
+        <kbd>F5</kbd>
+      </button>
+      <button class="side-action-btn" onclick="quickLoad()" aria-label="Quickload Mailbox" title="Quickload Mailbox (F9)">
+        <span>📂 Quickload</span>
+        <kbd>F9</kbd>
+      </button>
+      <button class="side-action-btn" id="side-outbox-btn" style="display:none; color:#93c5fd;" onclick="flushOutbox()" aria-label="Dispatch All Outbox Messages" title="Dispatch all queued outbox emails">
+        <span>🚀 Flush Outbox</span>
+      </button>
       <button class="side-action-btn" onclick="showModal('export-modal')" aria-label="Export Mailbox" title="Export MBOX, CSV, or JSON (O)">
         <span>📤 Export Mail</span>
         <kbd>O</kbd>
@@ -999,6 +1010,8 @@
     <span><kbd>U</kbd> Read/Unread</span>
     <span><kbd>R</kbd> Reply</span>
     <span><kbd>F3</kbd> Rules</span>
+    <span><kbd>F5</kbd> Save</span>
+    <span><kbd>F9</kbd> Load</span>
     <button id="sfx-toggle" onclick="toggleAudio()" style="background:none; border:none; color:var(--text-sec); cursor:pointer; font-size:11px; padding:2px 4px; font-family:inherit;" title="Toggle Retro Sound Effects">🔊 SFX: On</button>
   </div>
   <div class="status-right" id="status-storage-info" style="cursor:pointer;" onclick="showModal('network-modal')" title="Click for Network Mail Settings">🟢 KiloNet: user@kilo.os</div>
@@ -1027,6 +1040,7 @@
         <tr><td><kbd>S</kbd></td><td>Toggle Star priority on active email</td></tr>
         <tr><td><kbd>U</kbd></td><td>Toggle Read / Unread status on active email</td></tr>
         <tr><td><kbd>R</kbd></td><td>Reply to selected email</td></tr>
+        <tr><td><kbd>F</kbd></td><td>Forward selected email</td></tr>
         <tr><td><kbd>T</kbd></td><td>Add / remove tags on active email</td></tr>
         <tr><td><kbd>P</kbd></td><td>Print or preview active email</td></tr>
         <tr><td><kbd>Del</kbd></td><td>Move selected email to Trash / Delete</td></tr>
@@ -1036,6 +1050,7 @@
         <tr><td><kbd>I</kbd></td><td>Import Mailbox from JSON</td></tr>
         <tr><td><kbd>F3</kbd></td><td>Automated Mail Rules & Filters Wizard</td></tr>
         <tr><td><kbd>F4</kbd></td><td>KiloNet Global Mail Delivery Settings</td></tr>
+        <tr><td><kbd>F5</kbd> / <kbd>F9</kbd></td><td>Quicksave / Quickload Mailbox Snapshot</td></tr>
         <tr><td><kbd>Ctrl</kbd> + <kbd>S</kbd></td><td>Save draft in compose mode</td></tr>
         <tr><td><kbd>Ctrl</kbd> + <kbd>Enter</kbd></td><td>Send email in compose mode</td></tr>
         <tr><td><kbd>Ctrl</kbd> + <kbd>W</kbd></td><td>Close active tab</td></tr>
@@ -1060,14 +1075,14 @@
       <div style="margin-bottom:12px;">
         <label style="font-size:12px; color:var(--text-sec); display:block; margin-bottom:6px;">Quick Presets:</label>
         <div>
-          <span class="tag-preset-chip" onclick="applyTag('Urgent')">🔥 Urgent</span>
-          <span class="tag-preset-chip" onclick="applyTag('Work')">💼 Work</span>
-          <span class="tag-preset-chip" onclick="applyTag('Personal')">👤 Personal</span>
-          <span class="tag-preset-chip" onclick="applyTag('News')">📰 News</span>
-          <span class="tag-preset-chip" onclick="applyTag('Finance')">💰 Finance</span>
-          <span class="tag-preset-chip" onclick="applyTag('Follow-up')">📌 Follow-up</span>
-          <span class="tag-preset-chip" onclick="applyTag('Network')">🌐 Network</span>
-          <span class="tag-preset-chip" onclick="applyTag('System')">⚙️ System</span>
+          <span class="tag-preset-chip" role="button" tabindex="0" onclick="applyTag('Urgent')" onkeydown="if(event.key==='Enter'||event.key===' ')applyTag('Urgent')">🔥 Urgent</span>
+          <span class="tag-preset-chip" role="button" tabindex="0" onclick="applyTag('Work')" onkeydown="if(event.key==='Enter'||event.key===' ')applyTag('Work')">💼 Work</span>
+          <span class="tag-preset-chip" role="button" tabindex="0" onclick="applyTag('Personal')" onkeydown="if(event.key==='Enter'||event.key===' ')applyTag('Personal')">👤 Personal</span>
+          <span class="tag-preset-chip" role="button" tabindex="0" onclick="applyTag('News')" onkeydown="if(event.key==='Enter'||event.key===' ')applyTag('News')">📰 News</span>
+          <span class="tag-preset-chip" role="button" tabindex="0" onclick="applyTag('Finance')" onkeydown="if(event.key==='Enter'||event.key===' ')applyTag('Finance')">💰 Finance</span>
+          <span class="tag-preset-chip" role="button" tabindex="0" onclick="applyTag('Follow-up')" onkeydown="if(event.key==='Enter'||event.key===' ')applyTag('Follow-up')">📌 Follow-up</span>
+          <span class="tag-preset-chip" role="button" tabindex="0" onclick="applyTag('Network')" onkeydown="if(event.key==='Enter'||event.key===' ')applyTag('Network')">🌐 Network</span>
+          <span class="tag-preset-chip" role="button" tabindex="0" onclick="applyTag('System')" onkeydown="if(event.key==='Enter'||event.key===' ')applyTag('System')">⚙️ System</span>
         </div>
       </div>
       <div>
@@ -1133,7 +1148,7 @@
           </div>
           <div>
             <label style="font-size: 11px; color: var(--text-sec); display:block; margin-bottom: 3px;">Match Text:</label>
-            <input type="text" id="new-rule-val" placeholder="e.g. boss" style="width: 100%; background: #1e293b; border: 1px solid var(--border); color: white; padding: 5px 8px; border-radius: 5px; font-size: 12px;">
+            <input type="text" id="new-rule-val" placeholder="e.g. boss" style="width: 100%; background: #1e293b; border: 1px solid var(--border); color: white; padding: 5px 8px; border-radius: 5px; font-size: 12px;" onkeydown="if(event.key==='Enter') addNewRule()">
           </div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
@@ -1148,7 +1163,7 @@
           </div>
           <div>
             <label style="font-size: 11px; color: var(--text-sec); display:block; margin-bottom: 3px;">Tag / Folder Param:</label>
-            <input type="text" id="new-rule-param" placeholder="e.g. Work or trash" style="width: 100%; background: #1e293b; border: 1px solid var(--border); color: white; padding: 5px 8px; border-radius: 5px; font-size: 12px;">
+            <input type="text" id="new-rule-param" placeholder="e.g. Work or trash" style="width: 100%; background: #1e293b; border: 1px solid var(--border); color: white; padding: 5px 8px; border-radius: 5px; font-size: 12px;" onkeydown="if(event.key==='Enter') addNewRule()">
           </div>
         </div>
         <button class="modal-btn primary" style="margin-top: 10px; width: 100%; padding: 6px;" onclick="addNewRule()">Add Rule</button>
@@ -1176,7 +1191,7 @@
       <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:8px; padding:14px; margin-bottom:14px;">
         <label style="font-size:12px; color:var(--text-sec); display:block; margin-bottom:6px;">Your KiloNet Email Address:</label>
         <div style="display:flex; gap:8px;">
-          <input type="text" id="net-address-input" value="user@kilo.os" style="flex:1; background:#0f172a; border:1px solid var(--border); color:white; padding:8px 10px; border-radius:6px; font-size:13px; font-family:monospace;">
+          <input type="text" id="net-address-input" value="user@kilo.os" style="flex:1; background:#0f172a; border:1px solid var(--border); color:white; padding:8px 10px; border-radius:6px; font-size:13px; font-family:monospace;" onkeydown="if(event.key==='Enter') saveNetAddress()">
           <button class="modal-btn" onclick="saveNetAddress()">Save</button>
         </div>
         <span style="font-size:11px; color:#64748b; margin-top:4px; display:block;">Tip: Set a custom handle (e.g. neo@kilo.os) so peers can email you directly.</span>
@@ -1210,7 +1225,7 @@
     <div class="modal-content">
       <p style="margin-top:0; color:#94a3b8; font-size:12.5px;">Select an export standard to archive or migrate your KMail data:</p>
       
-      <div class="export-card" onclick="exportMbox(); closeModal('export-modal');">
+      <div class="export-card" role="button" tabindex="0" onclick="exportMbox(); closeModal('export-modal');" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault(); exportMbox(); closeModal('export-modal');}">
         <div>
           <div style="font-weight:600; color:#fff; font-size:13px;">📄 Unix Mailbox Archive (.MBOX)</div>
           <div style="font-size:11.5px; color:var(--text-sec);">Standard RFC 4155 format for Thunderbird, Apple Mail & Pine.</div>
@@ -1218,7 +1233,7 @@
         <kbd>.MBOX</kbd>
       </div>
 
-      <div class="export-card" onclick="exportCsv(); closeModal('export-modal');">
+      <div class="export-card" role="button" tabindex="0" onclick="exportCsv(); closeModal('export-modal');" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault(); exportCsv(); closeModal('export-modal');}">
         <div>
           <div style="font-weight:600; color:#fff; font-size:13px;">📊 Spreadsheet Index (.CSV)</div>
           <div style="font-size:11.5px; color:var(--text-sec);">Tabular CSV table of IDs, senders, subjects, dates, tags & sizes.</div>
@@ -1226,7 +1241,7 @@
         <kbd>.CSV</kbd>
       </div>
 
-      <div class="export-card" onclick="exportJson(); closeModal('export-modal');">
+      <div class="export-card" role="button" tabindex="0" onclick="exportJson(); closeModal('export-modal');" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault(); exportJson(); closeModal('export-modal');}">
         <div>
           <div style="font-weight:600; color:#fff; font-size:13px;">💾 Full JSON Mailbox Backup (.JSON)</div>
           <div style="font-size:11.5px; color:var(--text-sec);">Complete raw structured archive for full mailbox restore in KMail.</div>
@@ -1824,6 +1839,8 @@
     const bOutbox = document.getElementById('b-outbox');
     if (bOutbox) bOutbox.textContent = outboxCount;
     document.getElementById('b-trash').textContent = trashCount;
+    const sideOutboxBtn = document.getElementById('side-outbox-btn');
+    if (sideOutboxBtn) sideOutboxBtn.style.display = outboxCount > 0 ? 'flex' : 'none';
   }
 
   let activeQuickFilter = 'all';
@@ -1964,6 +1981,13 @@
       return;
     }
 
+    if (currentFolder === 'outbox' && filtered.length > 0) {
+      let obHeader = document.createElement('div');
+      obHeader.style.cssText = 'padding: 8px 12px; background: rgba(59,130,246,0.15); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;';
+      obHeader.innerHTML = `<span style="font-size:12px; font-weight:600; color:#93c5fd;">Outbox Queue (${filtered.length})</span><button class="modal-btn primary" style="padding:3px 8px; font-size:11px;" onclick="flushOutbox()">🚀 Send All</button>`;
+      list.appendChild(obHeader);
+    }
+
     filtered.forEach(em => {
       let d = document.createElement('div');
       let isSelected = activeTabId && tabs.find(t => t.id === activeTabId && ((t.type === 'read' && t.emailId === em.id) || (t.type === 'compose' && t.draftId === em.id)));
@@ -2089,7 +2113,8 @@
     let tid = 't_' + Date.now();
     let to = replyToEm ? (replyToEm.folder === 'sent' ? replyToEm.sender : replyToEm.sender) : '';
     let sub = replyToEm ? (replyToEm.subject.startsWith('Re:') ? replyToEm.subject : 'Re: ' + replyToEm.subject) : '';
-    let body = replyToEm ? `\n\n--- Original Message ---\n${replyToEm.body}` : '';
+    let replyBody = replyToEm ? ((replyToEm.encrypted && replyToEm._decryptedBody) ? replyToEm._decryptedBody : replyToEm.body) : '';
+    let body = replyToEm ? `\n\n--- Original Message ---\n${replyBody}` : '';
     
     tabs.push({ id: tid, type: 'compose', title: sub || 'New Message', draftId: null, data: { to, sub, body, encrypted: false, password: '' } });
     activeTabId = tid;
@@ -2178,6 +2203,7 @@
       let actionsHtml = `<button onclick="toggleStar(${em.id})" class="${em.starred ? 'btn-star-active' : ''}" title="Star/Unstar email (S)"><span>${em.starred ? '★ Starred' : '☆ Star'}</span> <kbd>S</kbd></button>`;
       actionsHtml += `<button onclick="toggleUnread(${em.id})" title="Toggle Read/Unread status (U)"><span>${em.unread ? '✓ Mark Read' : '✉ Mark Unread'}</span> <kbd>U</kbd></button>`;
       actionsHtml += `<button onclick="newComposeTab(emails.find(e=>e.id==${em.id}))" title="Reply to sender (R)"><span>↩️ Reply</span> <kbd>R</kbd></button>`;
+      actionsHtml += `<button onclick="forwardEmail(${em.id})" title="Forward message (F)"><span>⏩ Forward</span> <kbd>F</kbd></button>`;
       actionsHtml += `<button onclick="openTagModal(${em.id})" title="Add/remove tags (T)"><span>🏷️ Tag</span> <kbd>T</kbd></button>`;
       actionsHtml += `<button onclick="printEmail(${em.id})" title="Print or preview email (P)"><span>🖨️ Print</span> <kbd>P</kbd></button>`;
       actionsHtml += `<button onclick="exportSingleEml(${em.id})" title="Export as .EML (E)"><span>📄 .EML</span> <kbd>E</kbd></button>`;
@@ -2185,7 +2211,10 @@
       if (em.folder === 'outbox') {
         actionsHtml += `<button class="modal-btn primary" style="padding:4px 10px;" onclick="sendEmailNowFromOutbox(${em.id})" title="Send this outbox email now"><span>🚀 Dispatch</span></button>`;
       }
-      actionsHtml += `<button class="del-btn" onclick="deleteEmail(${em.id})" title="Delete / Move to Trash (Del)"><span>🗑️ Delete</span> <kbd>Del</kbd></button>`;
+      if (em.folder === 'trash') {
+        actionsHtml += `<button class="modal-btn" style="padding:4px 10px;" onclick="restoreEmail(${em.id})" title="Restore email to Inbox"><span>♻️ Restore</span></button>`;
+      }
+      actionsHtml += `<button class="del-btn" onclick="deleteEmail(${em.id})" title="${em.folder==='trash' ? 'Permanently Delete' : 'Move to Trash (Del)'}"><span>🗑️ Delete</span> <kbd>Del</kbd></button>`;
 
       let bodyHtml = escapeHTML(em.body);
       if (em.encrypted) {
@@ -2531,6 +2560,7 @@
   window.printEmail = function(eid) {
     let em = emails.find(e => e.id === eid);
     if (!em) return;
+    const bodyContent = (em.encrypted && em._decryptedBody) ? em._decryptedBody : em.body;
     const printWin = window.open('', '_blank', 'width=700,height=600');
     if (printWin) {
       printWin.document.write(`
@@ -2541,7 +2571,7 @@
         <div><strong>From:</strong> ${escapeHTML(em.sender)}</div>
         <div><strong>Folder:</strong> ${escapeHTML(em.folder)} | <strong>Tags:</strong> ${escapeHTML((em.tags||[]).join(', '))}</div>
         <hr>
-        <pre>${escapeHTML(em.body)}</pre>
+        <pre>${escapeHTML(bodyContent)}</pre>
         <script>window.print();<\/script>
         </body></html>
       `);
@@ -2561,6 +2591,7 @@
     }
     let dec = await decryptText(em.body, pass);
     if(dec !== null) {
+      em._decryptedBody = dec;
       let resDiv = document.getElementById(`dec-res-${eid}`);
       resDiv.style.display = 'block';
       resDiv.innerHTML = `<strong style="color:#93c5fd;">🔓 Decrypted Content:</strong><br><br>${escapeHTML(dec).replace(/\n/g, '<br>')}`;
@@ -2569,6 +2600,33 @@
     } else {
       showToast("Incorrect password or corrupted data.", "error");
     }
+  };
+
+  window.restoreEmail = function(eid) {
+    let em = emails.find(e => e.id === eid);
+    if (!em) return;
+    em.folder = 'inbox';
+    safeSaveEmails();
+    AudioEngine.playClick();
+    renderList();
+    renderPane();
+    showToast("Email restored to Inbox.", "success");
+  };
+
+  window.forwardEmail = function(eid) {
+    let em = emails.find(e => e.id === eid);
+    if (!em) return;
+    let tid = 't_' + Date.now();
+    let sub = em.subject.startsWith('Fwd:') ? em.subject : 'Fwd: ' + em.subject;
+    let bodyContent = (em.encrypted && em._decryptedBody) ? em._decryptedBody : em.body;
+    let body = `\n\n--- Forwarded Message ---\nFrom: ${em.sender}\nSubject: ${em.subject}\n\n${bodyContent}`;
+    tabs.push({ id: tid, type: 'compose', title: sub, draftId: null, data: { to: '', sub, body, encrypted: false, password: '' } });
+    activeTabId = tid;
+    renderTabs();
+    setTimeout(() => {
+      const inputTo = document.getElementById(`c-to-${tid}`);
+      if (inputTo) inputTo.focus();
+    }, 50);
   };
 
   window.deleteEmail = function(eid) {
@@ -2591,7 +2649,8 @@
   window.exportSingleEml = function(eid) {
     let em = emails.find(e => e.id === eid);
     if (!em) return;
-    const emlContent = `From: ${em.sender}\nTo: me@kilo.os\nSubject: ${em.subject}\nDate: ${new Date().toUTCString()}\nX-Tags: ${(em.tags||[]).join(', ')}\nX-Starred: ${em.starred ? 'yes' : 'no'}\nMIME-Version: 1.0\nContent-Type: text/plain; charset=utf-8\n\n${em.body}`;
+    const bodyContent = (em.encrypted && em._decryptedBody) ? em._decryptedBody : em.body;
+    const emlContent = `From: ${em.sender}\nTo: ${userAddress}\nSubject: ${em.subject}\nDate: ${new Date().toUTCString()}\nX-Tags: ${(em.tags||[]).join(', ')}\nX-Starred: ${em.starred ? 'yes' : 'no'}\nMIME-Version: 1.0\nContent-Type: text/plain; charset=utf-8\n\n${bodyContent}`;
     const blob = new Blob([emlContent], { type: 'message/rfc822' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -2607,7 +2666,8 @@
   window.exportSingleMd = function(eid) {
     let em = emails.find(e => e.id === eid);
     if (!em) return;
-    const mdContent = `# ${em.subject}\n\n- **From:** ${em.sender}\n- **Folder:** ${em.folder}\n- **Tags:** ${(em.tags||[]).join(', ') || 'none'}\n- **Starred:** ${em.starred ? 'Yes' : 'No'}\n\n---\n\n${em.body}\n`;
+    const bodyContent = (em.encrypted && em._decryptedBody) ? em._decryptedBody : em.body;
+    const mdContent = `# ${em.subject}\n\n- **From:** ${em.sender}\n- **Folder:** ${em.folder}\n- **Tags:** ${(em.tags||[]).join(', ') || 'none'}\n- **Starred:** ${em.starred ? 'Yes' : 'No'}\n\n---\n\n${bodyContent}\n`;
     const blob = new Blob([mdContent], { type: 'text/markdown' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -2633,6 +2693,76 @@
     showToast("Exported mailbox backup JSON.", "success");
   };
 
+  const QUICKSAVE_KEY = 'kmail_quicksave_snapshot';
+
+  window.quickSave = function() {
+    try {
+      const snapshot = {
+        emails,
+        rules,
+        userAddress,
+        currentFolder,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(QUICKSAVE_KEY, JSON.stringify(snapshot));
+      AudioEngine.playClick();
+      showToast(`Quicksave complete [F5] (${emails.length} emails, ${rules.length} rules).`, 'success');
+    } catch(err) {
+      console.warn('Quicksave failed:', err);
+      showToast('Quicksave failed: storage quota exceeded.', 'error');
+    }
+  };
+
+  window.quickLoad = function() {
+    try {
+      const data = localStorage.getItem(QUICKSAVE_KEY);
+      if (!data) {
+        showToast('No quicksave snapshot found. Press F5 to save one.', 'warning');
+        return;
+      }
+      const snapshot = JSON.parse(data);
+      if (Array.isArray(snapshot.emails)) {
+        emails = snapshot.emails.map((m, idx) => ({
+          id: typeof m.id === 'number' ? m.id : idx + 1,
+          folder: ['inbox', 'starred', 'sent', 'drafts', 'outbox', 'trash'].includes(m.folder) ? m.folder : 'inbox',
+          subject: typeof m.subject === 'string' ? m.subject : '(No Subject)',
+          sender: typeof m.sender === 'string' ? m.sender : 'unknown@kilo.os',
+          body: typeof m.body === 'string' ? m.body : '',
+          unread: !!m.unread,
+          tags: Array.isArray(m.tags) ? m.tags.filter(t => typeof t === 'string') : [],
+          encrypted: !!m.encrypted,
+          starred: !!m.starred,
+          timestamp: typeof m.timestamp === 'number' ? m.timestamp : Date.now()
+        }));
+        nextId = emails.reduce((max, m) => Math.max(max, m.id), 0) + 1;
+        safeSaveEmails();
+      }
+      if (Array.isArray(snapshot.rules)) {
+        rules = snapshot.rules;
+        safeSaveRules();
+      }
+      if (snapshot.userAddress && typeof snapshot.userAddress === 'string') {
+        userAddress = snapshot.userAddress;
+        localStorage.setItem('kmail_net_address', userAddress);
+      }
+      if (snapshot.currentFolder && ['inbox', 'starred', 'sent', 'drafts', 'outbox', 'trash'].includes(snapshot.currentFolder)) {
+        currentFolder = snapshot.currentFolder;
+        document.querySelectorAll('.folder').forEach(f => f.classList.remove('active'));
+        const fEl = document.getElementById(`f-${currentFolder}`);
+        if (fEl) fEl.classList.add('active');
+      }
+      renderList();
+      renderTabs();
+      updateNetworkUI();
+      updateFolderBadges();
+      AudioEngine.playReceive();
+      showToast(`Quickload complete [F9] (${emails.length} emails restored).`, 'success');
+    } catch(err) {
+      console.warn('Quickload failed:', err);
+      showToast('Failed to parse quicksave data.', 'error');
+    }
+  };
+
   window.importJson = function(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -2644,7 +2774,7 @@
         if(Array.isArray(imported)) {
           emails = imported.slice(0, 1000).map((m, idx) => ({
             id: typeof m.id === 'number' ? m.id : idx + 1,
-            folder: ['inbox', 'starred', 'sent', 'drafts', 'trash'].includes(m.folder) ? m.folder : 'inbox',
+            folder: ['inbox', 'starred', 'sent', 'drafts', 'outbox', 'trash'].includes(m.folder) ? m.folder : 'inbox',
             subject: typeof m.subject === 'string' ? m.subject : '(No Subject)',
             sender: typeof m.sender === 'string' ? m.sender : 'unknown@kilo.os',
             body: typeof m.body === 'string' ? m.body : '',
@@ -2760,6 +2890,20 @@
       return;
     }
 
+    // F5: Quicksave Mailbox Snapshot
+    if (e.key === 'F5') {
+      e.preventDefault();
+      quickSave();
+      return;
+    }
+
+    // F9: Quickload Mailbox Snapshot
+    if (e.key === 'F9') {
+      e.preventDefault();
+      quickLoad();
+      return;
+    }
+
     if (!hasModifier && e.key === '/') {
       e.preventDefault();
       const sb = document.getElementById('search-box');
@@ -2831,6 +2975,11 @@
           if (e.key === 'r' || e.key === 'R') {
             e.preventDefault();
             newComposeTab(em);
+            return;
+          }
+          if (e.key === 'f' || e.key === 'F') {
+            e.preventDefault();
+            forwardEmail(em.id);
             return;
           }
           if (e.key === 't' || e.key === 'T') {
