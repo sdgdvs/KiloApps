@@ -2600,6 +2600,21 @@ function spawnParticles(pileIdx, type) {
   }
 }
 
+let cachedBoardEl = null;
+function getBoardEl() {
+  if (!cachedBoardEl) cachedBoardEl = document.getElementById('board');
+  return cachedBoardEl;
+}
+let cachedBoardRect = null;
+function getBoardRect() {
+  if (!cachedBoardRect) {
+    const boardEl = getBoardEl();
+    if (boardEl) cachedBoardRect = boardEl.getBoundingClientRect();
+  }
+  return cachedBoardRect;
+}
+window.addEventListener('resize', () => { cachedBoardRect = null; }, { passive: true });
+
 function fxLoop(timestamp) {
   if (!fxCtx || !fxCanvas) {
     requestAnimationFrame(fxLoop);
@@ -2612,7 +2627,7 @@ function fxLoop(timestamp) {
 
   fxCtx.clearRect(0, 0, w, h);
 
-  // 1. Render Atmospheric Velvet Dust Motes
+  // 1. Render Atmospheric Velvet Dust Motes (fast alpha, zero shadowBlur)
   for (let i = 0; i < fxMotes.length; i++) {
     let m = fxMotes[i];
     m.x += m.vx + Math.sin(time * 2.0 + m.phase) * 0.25;
@@ -2630,23 +2645,17 @@ function fxLoop(timestamp) {
     fxCtx.save();
     fxCtx.globalAlpha = Math.max(0, Math.min(1, m.alpha));
     fxCtx.fillStyle = m.color;
-    fxCtx.shadowColor = m.color;
-    fxCtx.shadowBlur = 6;
     fxCtx.beginPath();
     fxCtx.arc(m.x, m.y, m.radius, 0, Math.PI * 2);
     fxCtx.fill();
     fxCtx.restore();
   }
 
-  // 2. Render Ornate Luxury HUD Corner Filigree L-Brackets on Board
-  let boardEl = document.getElementById('board');
-  if (boardEl) {
-    let bRect = boardEl.getBoundingClientRect();
-    if (bRect.width > 0 && bRect.height > 0) {
-      drawOrnateHUDCorners(fxCtx, bRect, time);
-      drawPerimeterInlay(fxCtx, bRect, time);
-      drawDiagonalSheenSweeps(fxCtx, bRect, time);
-    }
+  // 2. Render Ornate Luxury HUD Corner Filigree L-Brackets on Board (Cached Rect)
+  const bRect = getBoardRect();
+  if (bRect && bRect.width > 0 && bRect.height > 0) {
+    drawOrnateHUDCorners(fxCtx, bRect, time);
+    drawPerimeterInlay(fxCtx, bRect, time);
   }
 
   // 3. Render Shockwaves (Dual-Tier Concentric Ripple Rings)
@@ -2667,8 +2676,6 @@ function fxLoop(timestamp) {
     fxCtx.strokeStyle = sw.color;
     fxCtx.globalAlpha = sw.alpha * 0.45;
     fxCtx.lineWidth = 4;
-    fxCtx.shadowColor = sw.color;
-    fxCtx.shadowBlur = 12;
     fxCtx.stroke();
 
     // Inner high-speed compression wave
@@ -2704,8 +2711,6 @@ function fxLoop(timestamp) {
       fxCtx.globalAlpha = p.life;
       fxCtx.strokeStyle = p.color;
       fxCtx.lineWidth = 2;
-      fxCtx.shadowColor = p.color;
-      fxCtx.shadowBlur = 8;
       fxCtx.beginPath();
       if (p.trail.length > 1) {
         fxCtx.moveTo(p.trail[0].x, p.trail[0].y);
@@ -2776,8 +2781,6 @@ function fxLoop(timestamp) {
       fxCtx.rotate(p.rot);
       fxCtx.scale(starScale, starScale);
       fxCtx.fillStyle = p.color;
-      fxCtx.shadowColor = '#ffd700';
-      fxCtx.shadowBlur = 10;
       draw4PointStar(fxCtx, 0, 0, p.size, p.size * 0.35);
       fxCtx.fill();
       fxCtx.restore();
@@ -2785,6 +2788,7 @@ function fxLoop(timestamp) {
   }
 
   // 5. Procedural Screen Shake Decay (Quadratic physics & rotational damping)
+  const boardEl = getBoardEl();
   if (screenShakeAmp > 0.1) {
     let decay = screenShakeAmp;
     let dx = (Math.random() * 2 - 1) * decay;
@@ -2817,7 +2821,7 @@ function draw4PointStar(ctx, cx, cy, outerRadius, innerRadius) {
   ctx.closePath();
 }
 
-// Ornate HUD Corner Filigree L-Brackets with Gold Rivet Detailing
+// Ornate HUD Corner Filigree L-Brackets with Gold Rivet Detailing (Fast vector paths, zero shadowBlur)
 function drawOrnateHUDCorners(ctx, rect, time) {
   const pad = 6;
   const arm = 28;
@@ -2829,8 +2833,6 @@ function drawOrnateHUDCorners(ctx, rect, time) {
   ctx.save();
   ctx.strokeStyle = '#ffd700';
   ctx.lineWidth = 2.5;
-  ctx.shadowColor = 'rgba(255,215,0,0.5)';
-  ctx.shadowBlur = 6;
 
   // Top-Left
   ctx.beginPath();
@@ -2862,7 +2864,6 @@ function drawOrnateHUDCorners(ctx, rect, time) {
 
   // Gold Rivet Stud Accents
   ctx.fillStyle = '#ffd700';
-  ctx.shadowBlur = 8;
   const drawRivet = (rx, ry) => {
     ctx.beginPath();
     ctx.arc(rx, ry, 3.0, 0, Math.PI * 2);
@@ -2876,7 +2877,7 @@ function drawOrnateHUDCorners(ctx, rect, time) {
   ctx.restore();
 }
 
-// Pulsating Gold Energy Perimeter Inlay Border with Traveling Specular Glint
+// Clean Static Gold Perimeter Inlay Border (Glueless, 0 Traveling Comets)
 function drawPerimeterInlay(ctx, rect, time) {
   const pad = 3;
   const x = rect.left - pad;
@@ -2884,29 +2885,10 @@ function drawPerimeterInlay(ctx, rect, time) {
   const w = rect.width + pad * 2;
   const h = rect.height + pad * 2;
 
-  const pulse = Math.sin(time * 3.0) * 0.25 + 0.75;
   ctx.save();
-  ctx.strokeStyle = `rgba(255, 215, 0, ${(0.35 * pulse).toFixed(3)})`;
+  ctx.strokeStyle = 'rgba(255, 215, 0, 0.35)';
+  ctx.lineWidth = 1;
   ctx.strokeRect(x, y, w, h);
-  ctx.restore();
-}
-
-// Diagonal Traveling Specular Sheen Sweeps
-function drawDiagonalSheenSweeps(ctx, rect, time) {
-  const sweepPhase = (time * 0.4) % 1.0;
-  const sweepX = rect.left + rect.width * (sweepPhase * 1.6 - 0.3);
-
-  ctx.save();
-  ctx.beginPath();
-  ctx.rect(rect.left, rect.top, rect.width, rect.height);
-  ctx.clip();
-
-  let grad = ctx.createLinearGradient(sweepX - 50, rect.top, sweepX + 50, rect.bottom);
-  grad.addColorStop(0, 'rgba(255,255,255,0)');
-  grad.addColorStop(0.5, 'rgba(255,255,255,0.08)');
-  grad.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(rect.left, rect.top, rect.width, rect.height);
   ctx.restore();
 }
 

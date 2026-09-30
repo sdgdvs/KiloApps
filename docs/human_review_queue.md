@@ -25,7 +25,7 @@
 | [KCHAT](gallery/screenshots/kchat.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kchat.html) | 60 FPS | 17ms | 90.5 KB | 🟢 Active |
 | [KCHATSERVER](gallery/screenshots/kchatserver.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kchatserver.html) | 60 FPS | 17ms | 3.4 KB | 🟢 Active |
 | [KCHESS](gallery/screenshots/kchess.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kchess.html) | 60 FPS | 17ms | 150.4 KB | 🔒 Locked (Mature 5+) |
-| [KCHRONO](gallery/screenshots/kchrono.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kchrono.html) | 45 FPS | 33ms | 178.1 KB | ⚠️ Lag/Stutter |
+| [KCHRONO](gallery/screenshots/kchrono.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kchrono.html) | 60 FPS | 17ms | 178.6 KB | 🟢 Active |
 | [KCIPHER](gallery/screenshots/kcipher.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kcipher.html) | 60 FPS | 17ms | 105 KB | 🟢 Active |
 | [KCLIP](gallery/screenshots/kclip.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kclip.html) | 60 FPS | 17ms | 102.1 KB | 🟢 Active |
 | [KCLOCK](gallery/screenshots/kclock.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kclock.html) | 60 FPS | 17ms | 82.2 KB | 🔒 Locked (Mature 5+) |
@@ -53,7 +53,7 @@
 | [KHABIT](gallery/screenshots/khabit.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\khabit.html) | 54 FPS | 33ms | 76.6 KB | ⚠️ Lag/Stutter |
 | [KHANGMAN](gallery/screenshots/khangman.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\khangman.html) | 60 FPS | 17ms | 92.5 KB | 🔒 Locked (Mature 5+) |
 | [KHASH](gallery/screenshots/khash.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\khash.html) | 60 FPS | 17ms | 134.6 KB | 🟢 Active |
-| [KHEX](gallery/screenshots/khex.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\khex.html) | 55 FPS | 33ms | 125.9 KB | ⚠️ Lag/Stutter |
+| [KHEX](gallery/screenshots/khex.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\khex.html) | 60 FPS | 17ms | 128 KB | 🟢 Active |
 | [KIMAGE](gallery/screenshots/kimage.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kimage.html) | 60 FPS | 17ms | 132.2 KB | 🟢 Active |
 | [KJOURNAL](gallery/screenshots/kjournal.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kjournal.html) | 60 FPS | 17ms | 121.3 KB | 🟢 Active |
 | [KMAIL](gallery/screenshots/kmail.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kmail.html) | 60 FPS | 17ms | 106.3 KB | 🟢 Active |
@@ -75,7 +75,7 @@
 | [KPASS](gallery/screenshots/kpass.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kpass.html) | 60 FPS | 17ms | 116.3 KB | 🟢 Active |
 | [KPING](gallery/screenshots/kping.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kping.html) | 54 FPS | 33ms | 143.1 KB | ⚠️ Lag/Stutter |
 | [KPOMODORO](gallery/screenshots/kpomodoro.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kpomodoro.html) | 60 FPS | 17ms | 78.1 KB | 🟢 Active |
-| [KPONG](gallery/screenshots/kpong.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kpong.html) | 54 FPS | 33ms | 88.5 KB | ⚠️ Lag/Stutter |
+| [KPONG](gallery/screenshots/kpong.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kpong.html) | 60 FPS | 17ms | 88.6 KB | 🟢 Active |
 | [KQUARANTINE](gallery/screenshots/kquarantine.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kquarantine.html) | 60 FPS | 17ms | 27.9 KB | 🟢 Active |
 | [KQUEST](gallery/screenshots/kquest.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kquest.html) | 60 FPS | 17ms | 283.3 KB | 🟢 Active |
 | [KRADIO](gallery/screenshots/kradio.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kradio.html) | 60 FPS | 17ms | 53.2 KB | 🟢 Active |
@@ -88,7 +88,7 @@
 | [KSETTINGS](gallery/screenshots/ksettings.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\ksettings.html) | 60 FPS | 17ms | 3.7 KB | 🟢 Active |
 | [KSIMON](gallery/screenshots/ksimon.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\ksimon.html) | 60 FPS | 17ms | 68.1 KB | 🔒 Locked (Mature 5+) |
 | [KSNAKE](gallery/screenshots/ksnake.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\ksnake.html) | 60 FPS | 17ms | 218.8 KB | 🟢 Active |
-| [KSOLITAIRE](gallery/screenshots/ksolitaire.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\ksolitaire.html) | 43 FPS | 33ms | 116.3 KB | ⚠️ Lag/Stutter |
+| [KSOLITAIRE](gallery/screenshots/ksolitaire.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\ksolitaire.html) | 60 FPS | 17ms | 115.6 KB | 🟢 Active |
 | [KSPACE](gallery/screenshots/kspace.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kspace.html) | 60 FPS | 17ms | 143.3 KB | 🟢 Active |
 | [KSTARDREDGE](gallery/screenshots/kstardredge.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kstardredge.html) | 57 FPS | 33ms | 477 KB | 🟢 Active |
 | [KSTARFORGE](gallery/screenshots/kstarforge.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kstarforge.html) | 60 FPS | 17ms | 196.4 KB | 🟢 Active |
@@ -107,8 +107,8 @@
 | [KTODO](gallery/screenshots/ktodo.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\ktodo.html) | 60 FPS | 17ms | 127.3 KB | 🟢 Active |
 | [KTOWERS](gallery/screenshots/ktowers.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\ktowers.html) | 60 FPS | 17ms | 93.9 KB | 🔒 Locked (Mature 5+) |
 | [KTRADER](gallery/screenshots/ktrader.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\ktrader.html) | 60 FPS | 17ms | 83.9 KB | 🟢 Active |
-| [KTYPE](gallery/screenshots/ktype.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\ktype.html) | 42 FPS | 33ms | 134.2 KB | ⚠️ Lag/Stutter |
-| [KVAULT](gallery/screenshots/kvault.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kvault.html) | 46 FPS | 33ms | 155.1 KB | ⚠️ Lag/Stutter |
+| [KTYPE](gallery/screenshots/ktype.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\ktype.html) | 60 FPS | 17ms | 134.2 KB | 🟢 Active |
+| [KVAULT](gallery/screenshots/kvault.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kvault.html) | 60 FPS | 17ms | 155.3 KB | 🟢 Active |
 | [KVOID](gallery/screenshots/kvoid.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kvoid.html) | 60 FPS | 17ms | 102.4 KB | 🟢 Active |
 | [KWIZARD](gallery/screenshots/kwizard.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kwizard.html) | 60 FPS | 17ms | 105.9 KB | 🟢 Active |
 | [KWORDS](gallery/screenshots/kwords.png) | [Launch](file:///C:\Users\M\Documents\antigravity\peaceful-carson\KiloOS\public\apps\kwords.html) | 60 FPS | 17ms | 87.5 KB | 🔒 Locked (Mature 5+) |

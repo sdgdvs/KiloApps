@@ -70,8 +70,7 @@
 
   /* Header / Nav */
   header {
-    background: rgba(11, 13, 20, 0.85);
-    backdrop-filter: blur(12px);
+    background: rgba(11, 13, 20, 0.95);
     border-bottom: 1px solid var(--border-color);
     padding: 10px 18px;
     display: flex;
@@ -206,7 +205,6 @@
     border: 1px solid var(--border-color);
     border-radius: 16px;
     padding: 20px;
-    backdrop-filter: blur(10px);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 
@@ -410,8 +408,7 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.85);
     z-index: 1000;
     display: flex;
     justify-content: center;
@@ -2762,33 +2759,35 @@ function arcadeLoop() {
   if (!arcadeRunning || currentTab !== 'arcade') return;
 
   const canvas = document.getElementById('arcade-canvas');
+  if (!canvas) return;
   const ctx = canvas.getContext('2d');
   
   const dpr = window.devicePixelRatio || 1;
   const logicalW = 600;
   const logicalH = 450;
   
-  if (canvas.style.maxWidth !== `${logicalW}px`) {
+  const targetW = Math.floor(logicalW * dpr);
+  const targetH = Math.floor(logicalH * dpr);
+  if (canvas.width !== targetW || canvas.height !== targetH) {
     canvas.style.maxWidth = `${logicalW}px`;
     canvas.style.width = '100%';
     canvas.style.height = 'auto';
-  }
-
-  if (canvas.width !== Math.floor(logicalW * dpr) || canvas.height !== Math.floor(logicalH * dpr)) {
-    canvas.width = Math.floor(logicalW * dpr);
-    canvas.height = Math.floor(logicalH * dpr);
+    canvas.width = targetW;
+    canvas.height = targetH;
   }
   
   ctx.save();
   ctx.scale(dpr, dpr);
   ctx.clearRect(0, 0, logicalW, logicalH);
 
-  // Background grid
+  // Background grid (single batch stroke)
   ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
   ctx.lineWidth = 1;
+  ctx.beginPath();
   for (let x = 0; x < logicalW; x += 40) {
-    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, logicalH); ctx.stroke();
+    ctx.moveTo(x, 0); ctx.lineTo(x, logicalH);
   }
+  ctx.stroke();
 
   // Update & Draw Words
   ctx.font = 'bold 22px Consolas';

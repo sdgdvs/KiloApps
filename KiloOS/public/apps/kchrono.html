@@ -522,8 +522,7 @@
             position: fixed;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
-            background: rgba(3, 6, 15, 0.88);
-            backdrop-filter: blur(5px);
+            background: rgba(3, 6, 15, 0.92);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -3100,10 +3099,21 @@
             }
         }
 
+        let cachedChronoW = 300;
+        let cachedChronoH = 90;
+        function updateChronoSize() {
+            if (typeof chronoCanvas !== 'undefined' && chronoCanvas) {
+                const r = chronoCanvas.getBoundingClientRect();
+                if (r.width > 0) cachedChronoW = r.width;
+                if (r.height > 0) cachedChronoH = r.height;
+            }
+        }
+        window.addEventListener('resize', updateChronoSize, { passive: true });
+
         function renderChronograph() {
-            const chronoRect = chronoCanvas.getBoundingClientRect();
-            const w = chronoRect.width > 0 ? chronoRect.width : 300;
-            const h = chronoRect.height > 0 ? chronoRect.height : 90;
+            if (cachedChronoW === 300 && typeof chronoCanvas !== 'undefined' && chronoCanvas) updateChronoSize();
+            const w = cachedChronoW;
+            const h = cachedChronoH;
 
             chronoCtx.save();
             chronoCtx.scale(dpr, dpr);

@@ -2071,13 +2071,9 @@
   updateBadge();
   updateSoundUI();
   resetBalls();
-  let lastTime = 0;
   function gameLoop(timestamp) {
-      if (timestamp - lastTime >= 30) {
-          update();
-          draw();
-          lastTime = timestamp;
-      }
+      update();
+      draw();
       requestAnimationFrame(gameLoop);
   }
   requestAnimationFrame(gameLoop);

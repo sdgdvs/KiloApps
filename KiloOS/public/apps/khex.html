@@ -54,7 +54,6 @@
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 10px;
-    backdrop-filter: blur(16px);
     box-shadow: var(--shadow-main);
   }
 
@@ -171,7 +170,6 @@
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 16px;
-    backdrop-filter: blur(12px);
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -598,7 +596,6 @@
     color: var(--text-primary);
     font-size: 0.85rem;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(12px);
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
@@ -1067,7 +1064,7 @@
     <span style="color: var(--accent-cyan);">Press F1 or 'h' for Help</span>
   </div>
 
-  <div id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:9999; justify-content:center; align-items:center; backdrop-filter:blur(6px);" onclick="if(event.target===this) toggleHelp()">
+  <div id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; justify-content:center; align-items:center;" onclick="if(event.target===this) toggleHelp()">
     <div class="panel" style="max-width: 640px; width: 90%; max-height: 85vh; overflow-y: auto; position: relative; border: 1px solid var(--accent-cyan); box-shadow: 0 0 30px rgba(6, 182, 212, 0.3);">
       <div class="panel-title" style="margin-bottom: 12px;">
         <div class="title-left" id="helpModalTitle" style="font-size: 1.1rem; color: var(--accent-cyan);">
@@ -1114,7 +1111,7 @@
   </div>
 
   <!-- First-Run Onboarding Tutorial Modal -->
-  <div id="tutorialModal" role="dialog" aria-modal="true" aria-labelledby="tutTitle" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9998; justify-content:center; align-items:center; backdrop-filter:blur(6px);" onclick="if(event.target===this) dismissTutorial()">
+  <div id="tutorialModal" role="dialog" aria-modal="true" aria-labelledby="tutTitle" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9998; justify-content:center; align-items:center;" onclick="if(event.target===this) dismissTutorial()">
     <div class="panel" style="max-width: 600px; width: 92%; max-height: 85vh; overflow-y: auto; border: 1px solid var(--accent-cyan); box-shadow: 0 0 35px rgba(6, 182, 212, 0.4);">
       <div class="panel-title" style="margin-bottom: 12px;">
         <div class="title-left" id="tutTitle" style="font-size: 1.15rem; color: var(--accent-cyan);">
@@ -2087,30 +2084,89 @@
     e.target.value = '';
   }
 
+  const HEX_ROW_HEIGHT = 28;
+  let activeHighlightRange = null;
+  let isHexScrolling = false;
+
+  function initHexVirtualScroll() {
+    const container = document.getElementById('hexViewContainer');
+    if (!container || container.dataset.vscrollInit) return;
+    container.dataset.vscrollInit = 'true';
+    container.addEventListener('scroll', () => {
+      if (!isHexScrolling) {
+        isHexScrolling = true;
+        requestAnimationFrame(() => {
+          renderHexVisibleWindow();
+          isHexScrolling = false;
+        });
+      }
+    }, { passive: true });
+  }
+
   function renderHexView(highlightRange = null) {
     const container = document.getElementById('hexViewContainer');
-    const prevScroll = container ? container.scrollTop : 0;
-    container.innerHTML = '';
+    if (!container) return;
+    initHexVirtualScroll();
+
+    activeHighlightRange = highlightRange;
+    const prevScroll = container.scrollTop;
+
     document.getElementById('bufferSizeLabel').innerText = 'Buffer Size: ' + binaryBuffer.length + ' Bytes';
     document.getElementById('statusLength').innerText = 'Total Length: ' + binaryBuffer.length + ' Bytes';
 
     if (binaryBuffer.length === 0) {
-      container.innerText = 'Buffer is empty.';
+      container.innerHTML = '<div style="padding:12px; color:var(--text-secondary);">Buffer is empty.</div>';
       return;
     }
 
-    const MAX_RENDER_BYTES = 16384; // 16 KB max render to prevent DOM overload
-    let bytesToRender = Math.min(binaryBuffer.length, MAX_RENDER_BYTES);
-    let rows = Math.ceil(bytesToRender / 16);
+    const totalRows = Math.ceil(binaryBuffer.length / 16);
+    const totalHeight = totalRows * HEX_ROW_HEIGHT;
 
-    if (binaryBuffer.length > MAX_RENDER_BYTES) {
-      let warnRow = document.createElement('div');
-      warnRow.style.color = 'var(--accent-amber)';
-      warnRow.style.padding = '4px';
-      warnRow.innerText = '--- View truncated to first 16KB for performance. Export/Search still operate on full buffer. ---';
-      container.appendChild(warnRow);
+    let spacer = container.querySelector('.hex-scroll-spacer');
+    if (!spacer) {
+      container.innerHTML = `
+        <div class="hex-scroll-spacer" style="position:relative; width:100%; min-width:max-content; height:${totalHeight}px;">
+          <div class="hex-virtual-window" style="position:absolute; top:0; left:0; right:0;"></div>
+        </div>
+      `;
+    } else {
+      spacer.style.height = totalHeight + 'px';
     }
-    for (let r = 0; r < rows; r++) {
+
+    if (highlightRange) {
+      const targetRow = Math.floor(highlightRange.start / 16);
+      container.scrollTop = Math.max(0, targetRow * HEX_ROW_HEIGHT - 48);
+    } else if (prevScroll > 0) {
+      container.scrollTop = prevScroll;
+    }
+
+    renderHexVisibleWindow();
+  }
+
+  function renderHexVisibleWindow() {
+    const container = document.getElementById('hexViewContainer');
+    if (!container) return;
+    const windowEl = container.querySelector('.hex-virtual-window');
+    if (!windowEl) return;
+
+    const totalRows = Math.ceil(binaryBuffer.length / 16);
+    if (totalRows === 0) {
+      windowEl.innerHTML = '';
+      return;
+    }
+
+    const scrollTop = container.scrollTop;
+    const clientHeight = container.clientHeight || 360;
+    const bufferPadding = 4;
+
+    const startRow = Math.max(0, Math.floor(scrollTop / HEX_ROW_HEIGHT) - bufferPadding);
+    const endRow = Math.min(totalRows, Math.ceil((scrollTop + clientHeight) / HEX_ROW_HEIGHT) + bufferPadding);
+
+    windowEl.style.transform = `translateY(${startRow * HEX_ROW_HEIGHT}px)`;
+
+    let fragment = document.createDocumentFragment();
+
+    for (let r = startRow; r < endRow; r++) {
       let rowEl = document.createElement('div');
       rowEl.className = 'hex-row';
 
@@ -2142,10 +2198,11 @@
         if (idx < binaryBuffer.length) {
           let b = binaryBuffer[idx];
           bEl.innerText = b.toString(16).padStart(2, '0').toUpperCase();
+          bEl.dataset.idx = idx;
           bEl.onclick = () => selectByte(idx);
 
           if (selectedOffset === idx) bEl.classList.add('selected');
-          if (highlightRange && idx >= highlightRange.start && idx < highlightRange.end) {
+          if (activeHighlightRange && idx >= activeHighlightRange.start && idx < activeHighlightRange.end) {
             bEl.classList.add('highlight');
           }
 
@@ -2166,19 +2223,28 @@
       asciiEl.innerText = asciiStr;
       rowEl.appendChild(asciiEl);
 
-      container.appendChild(rowEl);
+      fragment.appendChild(rowEl);
     }
-    if (highlightRange && container) {
-      let targetRow = Math.floor(highlightRange.start / 16);
-      container.scrollTop = Math.max(0, targetRow * 24 - 48);
-    } else if (prevScroll > 0) {
-      container.scrollTop = prevScroll;
-    }
+
+    windowEl.innerHTML = '';
+    windowEl.appendChild(fragment);
   }
 
   function selectByte(idx) {
     if (idx < 0 || idx >= binaryBuffer.length) return;
     selectedOffset = idx;
+    const prevSel = document.querySelector('.hex-byte.selected');
+    if (prevSel) prevSel.classList.remove('selected');
+
+    // Highlight in virtual window if currently visible
+    const allVisibleBytes = document.querySelectorAll('.hex-byte');
+    for (let el of allVisibleBytes) {
+      if (el.innerText && parseInt(el.dataset?.idx || -1) === idx) {
+        el.classList.add('selected');
+        break;
+      }
+    }
+
     let b = binaryBuffer[idx];
     let bHex = b.toString(16).padStart(2, '0').toUpperCase();
     let bAsc = (b >= 32 && b <= 126) ? "'" + String.fromCharCode(b) + "'" : "·";

@@ -50,8 +50,6 @@
             width: 100%;
             height: 100%;
             background: var(--glass-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--glass-border);
             padding: 24px;
             box-sizing: border-box;
@@ -707,8 +705,7 @@
         /* Modals */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.65); backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
+            background: rgba(0,0,0,0.85);
             display: none; justify-content: center; align-items: center; z-index: 2000;
             opacity: 0; transition: opacity 0.25s ease;
             padding: 16px;
@@ -2335,6 +2332,12 @@
             empty.style.display = 'none';
             list.style.display = 'grid';
 
+            // Calculate TOTP in parallel to prevent sequential WebCrypto blocking
+            const totpPromises = filtered.map(s => s.totpKey ? calculateTOTP(s.totpKey) : Promise.resolve(null));
+            const totpResults = await Promise.all(totpPromises);
+
+            const fragment = document.createDocumentFragment();
+
             for (let i = 0; i < filtered.length; i++) {
                 const s = filtered[i];
                 const card = document.createElement('div');
@@ -2345,7 +2348,6 @@
                 const safeCat = escapeHtml(s.category || 'General');
                 const safeUser = escapeHtml(s.username || '');
                 const safeUrl = escapeHtml(s.url || '');
-                const hasTotp = !!s.totpKey;
                 const isTrash = !!s.trash;
 
                 // Tags HTML
@@ -2436,15 +2438,15 @@
 
                 // TOTP Live Box
                 let totpHtml = '';
-                if (hasTotp) {
-                    const totpRes = await calculateTOTP(s.totpKey);
-                    const codeStr = totpRes ? totpRes.formatted : '--- ---';
-                    const remainingStr = totpRes ? `${totpRes.remaining}s` : '30s';
-                    const progressVal = totpRes ? totpRes.progress : 100;
+                const totpRes = totpResults[i];
+                if (s.totpKey && totpRes) {
+                    const codeStr = totpRes.formatted || '--- ---';
+                    const remainingStr = `${totpRes.remaining}s`;
+                    const progressVal = totpRes.progress;
                     const strokeOffset = 56.5 - (56.5 * progressVal / 100);
 
                     totpHtml = `
-                        <div class="totp-box" data-totp-key="${escapeHtml(s.totpKey)}" onclick="copySecret('${totpRes ? totpRes.raw : ''}', 'Copied 2FA code!')" title="Click to copy 2FA token">
+                        <div class="totp-box" data-totp-key="${escapeHtml(s.totpKey)}" onclick="copySecret('${totpRes.raw || ''}', 'Copied 2FA code!')" title="Click to copy 2FA token">
                             <div>
                                 <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase; font-weight:700;">2FA AUTHENTICATOR CODE</div>
                                 <div class="totp-code">${codeStr}</div>
@@ -2491,8 +2493,10 @@
                     <div class="secret-actions">${actionBtns}</div>
                 `;
 
-                list.appendChild(card);
+                fragment.appendChild(card);
             }
+
+            list.appendChild(fragment);
         }
 
         function toggleMask(elemId, actualValue, maskedValue) {
