@@ -16,9 +16,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 33,
+  "turns_executed": 34,
   "last_turn_timestamp": "2026-09-30T00:26:00Z",
-  "last_heartbeat": "2026-09-30T04:03:04.673660+00:00",
-  "current_target": "KTask",
+  "last_heartbeat": "2026-09-30T04:27:24.318079+00:00",
+  "current_target": "kweb://echo-subsystem.net (Acoustic Research & Signal Intelligence)",
   "remote_command": "none"
 }
