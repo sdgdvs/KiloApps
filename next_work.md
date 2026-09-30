@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -17,8 +17,8 @@ current_targets:
   kilo_graphics: KStellar
   kilo_qa: KAudio
   kilo_expander: KHash
-  kilo_creator: "kweb://darknet (Subterranean Relay & Warez NFO Cryptography)"
-virtual_web_target: "kweb://darknet"
+  kilo_creator: "kweb://portal (KiloNet Central 1999 Directory)"
+virtual_web_target: "kweb://portal"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-expander
-  app: KPing
-  timestamp: "2026-09-30T16:50:00Z"
+  agent: kilo-creator
+  app: "kweb://darknet"
+  timestamp: "2026-09-30T17:15:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -97,9 +97,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://darknet` (Subterranean Relay & Warez NFO Cryptography)
+- **Current Target**: `kweb://portal` (KiloNet Central 1999 Directory)
 - **Upcoming Queue**:
-  `kweb://portal` (KiloNet Central 1999 Directory)
+  `kweb://webring` (Central KiloNet Webring Hub)
   *(Completed: kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://geocities, kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
@@ -189,8 +189,17 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
      - ✅ Underground IRC terminal client (mIRC style) with 4 channels, slash commands, interactive CafeBot & real-time Firebase RTDB sync.
      - ✅ Procedural Genesis YM2612 2-operator FM synthesis & SNES SPC700 stereo delay audio jukebox with 3 tracks & 14-band LED CRT visualizer.
      - ✅ Terminal booth station telemetry, 56k V.90 throughput benchmark, cafe kiosk with downloadable thermal receipts & hardware vault NFOs.
-  7. `kweb://darknet` (*Node 0x7F Transmission Subsystem*):
-     - ✅ Tier 3 Ghost Node: VT-100 terminal with virtual spool filesystem, 13-algorithm cryptic decoder suite (Atbash, Morse audio, Binary, XOR), Bell 202 AFSK packet crafting & transmission injector with live responses, dual RF oscilloscope & cascading 2D waterfall spectrogram, downloadable client-side generated assets (.asc, .asm, .conf, .bin, .log) & Central KiloNet Webring #012.
+  7. `kweb://darknet` (*Node 0x7F Subterranean Relay & Warez NFO Cryptography*):
+     - ✅ Tier 3 Ghost Node: VT-100 terminal shell with 17 directives & virtual spool filesystem (`routes.conf`, `transponder.log`, `precursor_cipher.nfo`, `fleet_heartbeat.hex`, `hardware.cfg`).
+     - ✅ Warez NFO Steganography Lab: CP437 ANSI viewer, hex dumper, live steganography scanner (trailing whitespace / XOR-0x7F) & custom NFO injector with 5 scene releases (*Surreal Tournament '99 [FLT]*, *Tremor III Arena [RZR]*, *Half-Cycle 1.1 [PDX]*, *Machina Ex Preview [SKD]*, *Carlsbad Bedrock Relay*).
+     - ✅ CRC32 & MD5 hash calculator with anomaly detection matching subterranean ARG relay seeds.
+     - ✅ 14-algorithm packet decoder suite (Hex, XOR, Rot13, Base64, Polybius, Atbash, CW Morse audio, Whitespace Stego) with Shannon entropy.
+     - ✅ Subnet 10.19.99.0/24 packet monitor & Bell 202 AFSK frame crafting/injector with destination node replies.
+     - ✅ Dual 60FPS RF oscilloscope & cascading 2D waterfall spectrogram with 4 phosphor palettes, 144.39MHz / 1999Hz tuner & S-meter.
+     - ✅ Gated Middle-Game Puzzle Relay (Sector 0x7F) validating sequential cross-node artifacts (acoustic carrier, sector 03, warez checksum) and converging on Deep Core (10.19.99.127).
+     - ✅ Collaborative Subterranean Signal Mesh via Firebase RTDB (`arg/signals/subterranean_darknet`) with instant Carlsbad salt-vault solo loopback fallback.
+     - ✅ Universal procedural audio engine: Genesis YM2612 2-op FM synthesis + SNES SPC700 stereo delay across 3 chiptune tracks + procedural SFX.
+     - ✅ Client-side asset synthesis & download (.asc, .asm, .nfo, .rom, .conf, .log) & Central KiloNet Webring #012 interconnect.
   8. `kweb://10.19.99.4/classified` (*Corporate Network Leak & Signal Diagnostic*):
      - ✅ Signal Diagnostic Lab with dual-display time-domain oscilloscope & FFT frequency spectrum, tunable YM2612 FM / SPC700 stereo delay DSP controls & live subcarrier demodulator.
      - ✅ Subnet RF Sweep: 10.19.99.0/24 node sweep tracking signal-to-noise ratio, carrier lock, and audio DAC leakage.
@@ -284,6 +293,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T17:15:00Z — kilo-creator: kweb://darknet (Subterranean Relay & Warez NFO Cryptography)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 149.4 KB < 999 KB ceiling).
+  - Warez NFO Lab: CP437 ANSI viewer, hex dumper, live steganography scanner (trailing whitespace/XOR) & custom NFO injector.
+  - Scene Releases & Hashes: 5 parody releases (*Surreal '99*, *Tremor III*, *Half-Cycle*, *Machina Ex*) & CRC32/MD5 anomaly scanner.
+  - Gated Middle-Game Relay: Sector 0x7F sequential cross-node artifact gating unlocking memo fragments converging on Deep Core.
+  - Signal Mesh: Real-time Firebase RTDB collaborative pulse broadcasting with instant local salt-vault solo loopback fallback.
+  - Packet Decoder & Sniffer: 14-algorithm decoder (Shannon entropy, CW audio) & Bell 202 AFSK crafting injector on 10.19.99.0/24.
+  - RF Spectrum & Chiptunes: Dual 60FPS oscilloscope/waterfall, 144.39MHz/1999Hz tuner & 3 YM2612 FM / SPC700 delay tracks.
+  - Verification: Clean Vite build in 309ms; security lint & icon uniqueness 100% PASS; linked in KNet/Portal/Webring #018.
+
 - **2026-09-30T16:50:00Z — kilo-expander: KPing (Deep Expansion, Firebase Mesh, BGP Transit & FM Audio)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 130.8 KB web / 28.0 KB native < 999 KB).
   - Firebase RTDB Mesh: Cross-computer peer probes with live latency measurement & virtual relay fallback.
@@ -316,13 +335,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Modal Shortcuts & Fallbacks: Wired Ctrl+S and Enter in editor/comment/new-file modals; fixed binary hex fallback.
   - Selection UX: Added live selection file and byte counters to status bar and buttons; added focused row Delete key hook.
   - Verification: MSVC clean (`KZip.exe` 25.6 KB); Vite clean in 414ms; security lint & icon checks 100% PASS; <999KB ceiling.
-
-- **2026-09-30T12:38:00Z — kilo-tester: KHabit (Interactive UI Audit, Quicksave/Load, 1-9 Hotkeys, Undo Toast & FM Audio)**
-  - Status: PASS ✅ (6 issues fixed, 0 regressions, 0 perimeter glints, 76.4 KB web / 163.5 KB native < 999 KB).
-  - Quicksave & QuickLoad: Added sovereign state persistence via F5 / F9 across web and Settings modal (`khabit_quicksave`).
-  - Keyboard Hotkeys: Added [1]-[9] habit selection hotkeys with card badges, [E] inline edit, [Space] check, and [Delete] key hooks.
-  - Interactive Modals: Added habit Edit modal, compact 2-column shortcuts grid, '✕' dismiss buttons, and eliminated double-modal stacking.
-  - Toast & Undo System: Added bottom-center non-blocking toast notifications with instant 1-click Undo for deleted habits.
-  - Audio Engine: Implemented procedural Yamaha YM2612 2-op FM chiptune audio chimes with settings toggle and streak mastery fanfares.
-  - DST-Safe Streaks & Tutorial: Replaced midnight Date arithmetic with timezone-immune date comparisons; added first-run tutorial flag.
-  - Verification: MSVC clean (`KHabit.exe` 163.5 KB); Vite clean in 393ms; security lint & icon checks 100% PASS; <999KB ceiling.

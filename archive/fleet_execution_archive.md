@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T12:38:00Z — kilo-tester: KHabit (Interactive UI Audit, Quicksave/Load, 1-9 Hotkeys, Undo Toast & FM Audio)**
+  - Status: PASS ✅ (6 issues fixed, 0 regressions, 0 perimeter glints, 76.4 KB web / 163.5 KB native < 999 KB).
+  - Quicksave & QuickLoad: Added sovereign state persistence via F5 / F9 across web and Settings modal (`khabit_quicksave`).
+  - Keyboard Hotkeys: Added [1]-[9] habit selection hotkeys with card badges, [E] inline edit, [Space] check, and [Delete] key hooks.
+  - Interactive Modals: Added habit Edit modal, compact 2-column shortcuts grid, '✕' dismiss buttons, and eliminated double-modal stacking.
+  - Toast & Undo System: Added bottom-center non-blocking toast notifications with instant 1-click Undo for deleted habits.
+  - Audio Engine: Implemented procedural Yamaha YM2612 2-op FM chiptune audio chimes with settings toggle and streak mastery fanfares.
+  - DST-Safe Streaks & Tutorial: Replaced midnight Date arithmetic with timezone-immune date comparisons; added first-run tutorial flag.
+  - Verification: MSVC clean (`KHabit.exe` 163.5 KB); Vite clean in 393ms; security lint & icon checks 100% PASS; <999KB ceiling.
+
 - **2026-09-30T10:35:00Z — kilo-expander: KNet (Net Utils, Packet Sniffer, Mesh Radar & RTDB Presence)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 164.0 KB web / 41.5 KB native < 999 KB).
   - Diagnostic Utilities: Added Tab [5] Net Utils with CIDR/subnet calculator, bandwidth speed benchmark, and DNS lookup simulator.
