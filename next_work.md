@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KMail
   kilo_usability: KPad
-  kilo_graphics: KSubmarine
+  kilo_graphics: KStarDredge
   kilo_qa: KPaint
   kilo_expander: KPad
   kilo_creator: "kweb://geocities (CyberSpire Retro Shrine & MOD Vault)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://warez"
-  timestamp: "2026-09-30T22:45:00Z"
+  agent: kilo-graphics
+  app: KSubmarine
+  timestamp: "2026-09-30T22:56:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -103,9 +103,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://geocities, kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KSubmarine`
+- **Current Target**: `KStarDredge`
 - **Upcoming Queue**:
-  `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono`, `KFortress`, `KCosmic`, `KSanctuary`, `KDragon` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KSanctuary, KDragon)*.
+  `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono`, `KFortress`, `KCosmic`, `KSanctuary`, `KDragon` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KSanctuary, KDragon, KSubmarine)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KMail`
@@ -294,6 +294,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T22:56:00Z — kilo-graphics: KSubmarine (Game Content, Visual Polish & Balance Pass)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 450.0 KB web / 257.5 KB native < 999 KB ceiling).
+  - Specular Glint & Dot Audit: Verified 100% absence of rotating specular glints or traveling perimeter border dots in web & Win32 C.
+  - Native C Visual Polish: Added drifting marine snow motes on Sonar Radar, forward searchlight illuminator cone, and GDI leak fix.
+  - Custom Sprite Rendering: Implemented dedicated octagonal combat drone, streamlined torpedo with wake, and pulsing decoy sprites in C.
+  - Web Radar & Anomaly Polish: Added depth-tinted strata vignette, Sector 2 hydrothermal smoker plume, and bio-scan holographic wave animation.
+  - Balance & Emergency FX: Polished ballast blow cavitation blast, tuned torpedo homing guidance and threat attack parameters.
+  - Verification: MSVC clean (`KSubmarine.exe` 257.5 KB); Vite clean in 262ms (`ksubmarine.html` 450.0 KB); icons & security lint 100% PASS.
+
 - **2026-09-30T22:45:00Z — kilo-creator: kweb://warez (0xRELEASE Scene Vault & x86 Reverse Engineering Lab Expansion)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 150.0 KB web < 999 KB ceiling).
   - x86 Crack Sandbox: Built SoftICE-style disassembler, register stepper, NOP/invert patchers & downloadable cracked PE32 stub builder.
@@ -327,12 +336,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Touch HUD & Mobile Flight: Added responsive virtual D-pad and action HUD for touchscreens with toggleable display.
   - First-Run Onboarding & Help: Added dedicated Quick Reference & Controls Guide modal [F1/H] with ESC/backdrop dismissals and manual return.
   - Verification: MSVC clean (`KStarForge.exe` 30.2 KB); Vite clean in 251ms; security lint 100% PASS; <999KB ceiling verified.
-
-- **2026-09-30T21:35:00Z — kilo-tester: KJournal (UI Audit, Quicksave/Load, Toast Safe Zone & Modal Clipping)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 128.2 KB web / 200.7 KB native < 999 KB ceiling).
-  - Quicksave & Quickload: Implemented F5 / F9 session snapshot save & restore across localStorage with visual toast confirmations.
-  - Toast Occlusion: Relocated toast notifications to bottom-center safe zone (`z-index: 1200`), eliminating header button & date occlusion.
-  - Modal Clipping: Added `max-height: calc(100vh - 40px)` across modals preventing overflow on constrained viewports.
-  - Dialog & PIN Navigation: Added Enter key handler to trigger confirmModal and complete 4-digit PIN unlock.
-  - State & Documentation: Added `kjournal_tutorialSeen` flag to prevent toast spam; updated Help modal & Settings with guide shortcuts.
-  - Verification: MSVC clean (`KJournal.exe` 200.7 KB); Vite clean in 432ms; check_icons & security lint 100% PASS; <999KB ceiling.

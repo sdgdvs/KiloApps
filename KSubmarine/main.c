@@ -836,6 +836,15 @@ static HFONT g_hFontNormal = NULL;
 static HFONT g_hFontSmall = NULL;
 static HFONT g_hFontBold = NULL;
 
+typedef struct {
+    float x, y;
+    float speed;
+    int size;
+} MarineSnowMote;
+
+#define MARINE_SNOW_COUNT 36
+static MarineSnowMote g_marineSnow[MARINE_SNOW_COUNT];
+
 void PlaySoundAsync(DWORD freq, DWORD duration);
 void PlayLeviathanHarmonic(void);
 void PlayClawServo(void);
@@ -1474,6 +1483,13 @@ void InitSubmarineState(void) {
     AddLog("Bulkhead damage control & flood isolation manifolds ready.", g_themes[THEME_ABYSS].accentSonar);
     AddLog("Torpedo fire-control, acoustic decoys & threat matrix active.", g_themes[THEME_ABYSS].accentAmber);
     AddLog("Captain's Submersible Operating Manual [H] loaded in firmware.", g_themes[THEME_ABYSS].accentEmerald);
+
+    for (int i = 0; i < MARINE_SNOW_COUNT; i++) {
+        g_marineSnow[i].x = ((float)(rand() % 2000) / 1000.0f) - 1.0f;
+        g_marineSnow[i].y = ((float)(rand() % 2000) / 1000.0f) - 1.0f;
+        g_marineSnow[i].speed = 0.002f + ((float)(rand() % 100) / 25000.0f);
+        g_marineSnow[i].size = (rand() % 2 == 0) ? 1 : 2;
+    }
 }
 
 const char* GetZoneName(float depth) {
@@ -2190,6 +2206,15 @@ void UpdateSimulation(float dt) {
             g_sub.explosionCount--;
         }
     }
+
+    // Marine Snow & Plankton Drift Update
+    for (int i = 0; i < MARINE_SNOW_COUNT; i++) {
+        g_marineSnow[i].y += g_marineSnow[i].speed * dt * 30.0f;
+        if (g_marineSnow[i].y > 1.0f) {
+            g_marineSnow[i].y = -1.0f;
+            g_marineSnow[i].x = ((float)(rand() % 2000) / 1000.0f) - 1.0f;
+        }
+    }
 }
 
 void FireTorpedoTube(int tubeIdx) {
@@ -2521,6 +2546,32 @@ static void DrawSubmarineVesselSprite(HDC hdc, int cx, int cy, float headingDeg,
     Ellipse(hdc, vpX - 2, vpY - 2, vpX + 3, vpY + 3);
     DeleteObject(hBrVp);
 
+    // Forward Searchlight Illuminator Cone (High-Lux Optics)
+    if (g_sub.searchlights) {
+        POINT beamPts[4] = {
+            { RotPointX(cx, 10.0f, -2.0f, fx, fy), RotPointY(cy, 10.0f, -2.0f, fx, fy) },
+            { RotPointX(cx, 38.0f, -15.0f, fx, fy), RotPointY(cy, 38.0f, -15.0f, fx, fy) },
+            { RotPointX(cx, 38.0f, 15.0f, fx, fy), RotPointY(cy, 38.0f, 15.0f, fx, fy) },
+            { RotPointX(cx, 10.0f, 2.0f, fx, fy), RotPointY(cy, 10.0f, 2.0f, fx, fy) }
+        };
+        HPEN hPenBeam = CreatePen(PS_DOT, 1, RGB(0, 210, 255));
+        HBRUSH hBrBeam = CreateSolidBrush(RGB(2, 35, 48));
+        HPEN hOldPBeam = (HPEN)SelectObject(hdc, hPenBeam);
+        HBRUSH hOldBBeam = (HBRUSH)SelectObject(hdc, hBrBeam);
+        Polygon(hdc, beamPts, 4);
+
+        // Core bright forward beam ray
+        HPEN hPenCore = CreatePen(PS_SOLID, 1, RGB(180, 245, 255));
+        SelectObject(hdc, hPenCore);
+        MoveToEx(hdc, RotPointX(cx, 10.0f, 0.0f, fx, fy), RotPointY(cy, 10.0f, 0.0f, fx, fy), NULL);
+        LineTo(hdc, RotPointX(cx, 36.0f, 0.0f, fx, fy), RotPointY(cy, 36.0f, 0.0f, fx, fy));
+        SelectObject(hdc, hOldPBeam);
+        SelectObject(hdc, hOldBBeam);
+        DeleteObject(hPenCore);
+        DeleteObject(hBrBeam);
+        DeleteObject(hPenBeam);
+    }
+
     // Propeller spinning blade
     DWORD tick = GetTickCount();
     float propPhase = tick * 0.015f * (1.0f + fabsf(speed) * 2.0f);
@@ -2540,13 +2591,14 @@ static void DrawSubmarineVesselSprite(HDC hdc, int cx, int cy, float headingDeg,
     // Trailing cavitation bubble dots if moving
     if (fabsf(speed) > 0.3f) {
         HPEN hPenBubble = CreatePen(PS_SOLID, 1, RGB(180, 240, 255));
-        SelectObject(hdc, hPenBubble);
+        HPEN hOldPBub = (HPEN)SelectObject(hdc, hPenBubble);
         int b1X = RotPointX(cx, -18.0f, (float)((tick / 40) % 3 - 1), fx, fy);
         int b1Y = RotPointY(cy, -18.0f, (float)((tick / 40) % 3 - 1), fx, fy);
         int b2X = RotPointX(cx, -23.0f, (float)((tick / 60) % 5 - 2), fx, fy);
         int b2Y = RotPointY(cy, -23.0f, (float)((tick / 60) % 5 - 2), fx, fy);
         SetPixel(hdc, b1X, b1Y, RGB(224, 242, 254));
         SetPixel(hdc, b2X, b2Y, RGB(186, 230, 253));
+        SelectObject(hdc, hOldPBub);
         DeleteObject(hPenBubble);
     }
 
@@ -2752,6 +2804,126 @@ static void DrawSalvageNodeSprite(HDC hdc, int x, int y, COLORREF clr, BOOL isSw
     SelectObject(hdc, hBrOld);
     DeleteObject(hPen);
     DeleteObject(hBr);
+}
+
+// 7. Combat Drone Sprite (Armored Octagonal Hull with Thruster Pods)
+static void DrawCombatDroneSprite(HDC hdc, int tX, int tY, COLORREF thrClr, int state, float stunTimer, BOOL isLocked) {
+    COLORREF aggroColor = (state == 2) ? RGB(239, 68, 68) : ((stunTimer > 0.0f) ? RGB(0, 240, 255) : RGB(245, 158, 11));
+    COLORREF bodyFill = (state == 2) ? RGB(65, 18, 24) : ((stunTimer > 0.0f) ? RGB(10, 42, 58) : RGB(30, 41, 59));
+
+    // Octagonal Armored Drone Core
+    POINT oct[8];
+    for (int a = 0; a < 8; a++) {
+        float ang = (float)(a * 45) * 0.01745329f;
+        oct[a].x = tX + (int)(cosf(ang) * 7.0f);
+        oct[a].y = tY + (int)(sinf(ang) * 7.0f);
+    }
+
+    HBRUSH hBrBody = CreateSolidBrush(bodyFill);
+    HPEN hPenBody = CreatePen(PS_SOLID, 1, aggroColor);
+    HPEN hOldP = (HPEN)SelectObject(hdc, hPenBody);
+    HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hBrBody);
+    Polygon(hdc, oct, 8);
+
+    // Lateral ducted thruster pods (Port and Starboard)
+    HBRUSH hBrPod = CreateSolidBrush(RGB(15, 23, 42));
+    SelectObject(hdc, hBrPod);
+    RECT rcPodL = { tX - 9, tY - 3, tX - 6, tY + 4 };
+    RECT rcPodR = { tX + 7, tY - 3, tX + 10, tY + 4 };
+    FillRect(hdc, &rcPodL, hBrPod);
+    FillRect(hdc, &rcPodR, hBrPod);
+    FrameRect(hdc, &rcPodL, hBrBody);
+    FrameRect(hdc, &rcPodR, hBrBody);
+    DeleteObject(hBrPod);
+
+    // Central active sensor lens eye
+    HBRUSH hBrLens = CreateSolidBrush(aggroColor);
+    SelectObject(hdc, hBrLens);
+    Ellipse(hdc, tX - 2, tY - 2, tX + 3, tY + 3);
+    DeleteObject(hBrLens);
+
+    SelectObject(hdc, hOldP);
+    SelectObject(hdc, hOldB);
+    DeleteObject(hPenBody);
+    DeleteObject(hBrBody);
+}
+
+// 8. Torpedo Sprite with Cavitation Wake Bubbles
+static void DrawTorpedoSprite(HDC hdc, int tpX, int tpY, float tAng, int type, DWORD tick) {
+    COLORREF tClr = RGB(0, 240, 255);
+    if (type == 1) tClr = RGB(16, 185, 129);
+    else if (type == 2) tClr = RGB(239, 68, 68);
+
+    float fx = cosf(tAng);
+    float fy = sinf(tAng);
+
+    POINT torpPts[5] = {
+        { RotPointX(tpX, 7.0f, 0.0f, fx, fy), RotPointY(tpY, 7.0f, 0.0f, fx, fy) },
+        { RotPointX(tpX, 2.0f, -2.5f, fx, fy), RotPointY(tpY, 2.0f, -2.5f, fx, fy) },
+        { RotPointX(tpX, -6.0f, -2.0f, fx, fy), RotPointY(tpY, -6.0f, -2.0f, fx, fy) },
+        { RotPointX(tpX, -6.0f, 2.0f, fx, fy), RotPointY(tpY, -6.0f, 2.0f, fx, fy) },
+        { RotPointX(tpX, 2.0f, 2.5f, fx, fy), RotPointY(tpY, 2.0f, 2.5f, fx, fy) }
+    };
+
+    HBRUSH hBrTorp = CreateSolidBrush(tClr);
+    HPEN hPenTorp = CreatePen(PS_SOLID, 1, tClr);
+    HPEN hOldP = (HPEN)SelectObject(hdc, hPenTorp);
+    HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hBrTorp);
+    Polygon(hdc, torpPts, 5);
+
+    // Stabilizer Stern Fins
+    HPEN hPenFin = CreatePen(PS_SOLID, 1, RGB(241, 245, 249));
+    SelectObject(hdc, hPenFin);
+    MoveToEx(hdc, RotPointX(tpX, -4.0f, -3.5f, fx, fy), RotPointY(tpY, -4.0f, -3.5f, fx, fy), NULL);
+    LineTo(hdc, RotPointX(tpX, -6.0f, -2.0f, fx, fy), RotPointY(tpY, -6.0f, -2.0f, fx, fy));
+    MoveToEx(hdc, RotPointX(tpX, -4.0f, 3.5f, fx, fy), RotPointY(tpY, -4.0f, 3.5f, fx, fy), NULL);
+    LineTo(hdc, RotPointX(tpX, -6.0f, 2.0f, fx, fy), RotPointY(tpY, -6.0f, 2.0f, fx, fy));
+    DeleteObject(hPenFin);
+
+    // Cavitation micro-bubble wake dots
+    for (int b = 1; b <= 3; b++) {
+        float bDist = -7.0f - (float)b * 4.0f;
+        float bOff = sinf((float)tick * 0.02f + (float)b) * 1.5f;
+        int bx = RotPointX(tpX, bDist, bOff, fx, fy);
+        int by = RotPointY(tpY, bDist, bOff, fx, fy);
+        COLORREF bubClr = (b == 1) ? RGB(224, 242, 254) : ((b == 2) ? RGB(186, 230, 253) : RGB(125, 211, 252));
+        SetPixel(hdc, bx, by, bubClr);
+    }
+
+    SelectObject(hdc, hOldP);
+    SelectObject(hdc, hOldB);
+    DeleteObject(hPenTorp);
+    DeleteObject(hBrTorp);
+}
+
+// 9. Acoustic Decoy Beacon Sprite with Radiating Sonar Waves
+static void DrawDecoySprite(HDC hdc, int dX, int dY, float life, DWORD tick) {
+    int pulseR = (int)((tick % 800) / 800.0f * 16.0f) + 3;
+    HPEN hPenPulse = CreatePen(PS_DOT, 1, RGB(168, 85, 247));
+    HPEN hOldP = (HPEN)SelectObject(hdc, hPenPulse);
+    HBRUSH hBrNull = (HBRUSH)GetStockObject(NULL_BRUSH);
+    HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hBrNull);
+    Ellipse(hdc, dX - pulseR, dY - pulseR, dX + pulseR, dY + pulseR);
+
+    int pulseR2 = ((pulseR + 8) % 18) + 2;
+    Ellipse(hdc, dX - pulseR2, dY - pulseR2, dX + pulseR2, dY + pulseR2);
+
+    HBRUSH hBrDec = CreateSolidBrush(RGB(192, 132, 252));
+    HPEN hPenDec = CreatePen(PS_SOLID, 1, RGB(147, 51, 234));
+    SelectObject(hdc, hPenDec);
+    SelectObject(hdc, hBrDec);
+    RECT rcDec = { dX - 3, dY - 4, dX + 4, dY + 5 };
+    FillRect(hdc, &rcDec, hBrDec);
+    FrameRect(hdc, &rcDec, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+    COLORREF strobeClr = ((tick / 200) % 2 == 0) ? RGB(255, 255, 255) : RGB(126, 34, 206);
+    SetPixel(hdc, dX, dY, strobeClr);
+
+    SelectObject(hdc, hOldP);
+    SelectObject(hdc, hOldB);
+    DeleteObject(hPenDec);
+    DeleteObject(hBrDec);
+    DeleteObject(hPenPulse);
 }
 
 void DrawNavMapChart(HDC hdc, int cx, int cy, int mapW, int mapH, const SubmarineTheme* th) {
@@ -4714,6 +4886,20 @@ void DrawUI(HDC hdc, RECT* rcClient) {
         FillRect(hdc, &rcRadar, hBrRadar);
         DeleteObject(hBrRadar);
 
+        // Ambient Marine Snow & Plankton Motes
+        for (int i = 0; i < MARINE_SNOW_COUNT; i++) {
+            float distNorm = sqrtf(g_marineSnow[i].x * g_marineSnow[i].x + g_marineSnow[i].y * g_marineSnow[i].y);
+            if (distNorm <= 0.98f) {
+                int mx = scx + (int)(g_marineSnow[i].x * (float)sRadius);
+                int my = scy + (int)(g_marineSnow[i].y * (float)sRadius);
+                COLORREF snowClr = (i % 3 == 0) ? RGB(0, 180, 220) : ((i % 3 == 1) ? RGB(14, 116, 144) : RGB(8, 64, 86));
+                SetPixel(hdc, mx, my, snowClr);
+                if (g_marineSnow[i].size > 1) {
+                    SetPixel(hdc, mx + 1, my, snowClr);
+                }
+            }
+        }
+
         HPEN hPenRing = CreatePen(PS_SOLID, 1, th->radarRing);
         HPEN hPenOld = (HPEN)SelectObject(hdc, hPenRing);
         HBRUSH hBrNull = (HBRUSH)GetStockObject(NULL_BRUSH);
@@ -4742,6 +4928,27 @@ void DrawUI(HDC hdc, RECT* rcClient) {
             int pr = (int)min((float)sRadius, g_sub.pingRadius);
             Ellipse(hdc, scx - pr, scy - pr, scx + pr, scy + pr);
             DeleteObject(hPenPing);
+        }
+
+        // Hydrothermal Smoker Vent on Sonar Radar if within range
+        float vRelX = (-5.5f - g_sub.posX) / 2.0f;
+        float vRelY = (-6.0f - g_sub.posY) / 2.0f;
+        float vDist = sqrtf(vRelX * vRelX + vRelY * vRelY);
+        if (vDist <= 1.05f) {
+            int vx = scx + (int)(vRelX * (float)sRadius);
+            int vy = scy + (int)(vRelY * (float)sRadius);
+            HPEN hPenVent = CreatePen(PS_DOT, 1, RGB(239, 68, 68));
+            HPEN hOldP = (HPEN)SelectObject(hdc, hPenVent);
+            HBRUSH hBrVent = CreateSolidBrush(RGB(45, 12, 16));
+            HBRUSH hOldB = (HBRUSH)SelectObject(hdc, hBrVent);
+            Ellipse(hdc, vx - 12, vy - 12, vx + 13, vy + 13);
+            SelectObject(hdc, hOldP);
+            SelectObject(hdc, hOldB);
+            DeleteObject(hBrVent);
+            DeleteObject(hPenVent);
+
+            SetTextColor(hdc, RGB(248, 113, 113));
+            TextOutA(hdc, vx + 8, vy - 6, "♨ HYDROTHERMAL VENT", 19);
         }
 
         // Submarine Bathyscaphe Vessel Sprite
@@ -4809,6 +5016,20 @@ void DrawUI(HDC hdc, RECT* rcClient) {
                 MoveToEx(hdc, fcx - bs, fcy + bs - 3, NULL); LineTo(hdc, fcx - bs, fcy + bs); LineTo(hdc, fcx - bs + 3, fcy + bs);
                 MoveToEx(hdc, fcx + bs - 3, fcy + bs, NULL); LineTo(hdc, fcx + bs, fcy + bs); LineTo(hdc, fcx + bs, fcy + bs - 3);
 
+                // Bio-Acoustic Scan Holographic Wave Ring
+                if (g_sub.isScanningTarget) {
+                    DWORD tick = GetTickCount();
+                    int sRad = (int)((tick % 600) / 600.0f * 18.0f) + 6;
+                    HPEN hPenScan = CreatePen(PS_DOT, 1, RGB(16, 185, 129));
+                    HPEN hOldPScan = (HPEN)SelectObject(hdc, hPenScan);
+                    HBRUSH hBrNullScan = (HBRUSH)GetStockObject(NULL_BRUSH);
+                    HBRUSH hOldBScan = (HBRUSH)SelectObject(hdc, hBrNullScan);
+                    Ellipse(hdc, fcx - sRad, fcy - sRad, fcx + sRad, fcy + sRad);
+                    SelectObject(hdc, hOldPScan);
+                    SelectObject(hdc, hOldBScan);
+                    DeleteObject(hPenScan);
+                }
+
                 // Dotted course line from center
                 HPEN hPenVec = CreatePen(PS_DOT, 1, c->isSalvage ? RGB(251, 191, 36) : th->textPrimary);
                 SelectObject(hdc, hPenVec);
@@ -4844,17 +5065,7 @@ void DrawUI(HDC hdc, RECT* rcClient) {
             if (thr->type == 1) {
                 DrawLeviathanSprite(hdc, tX, tY, thrClr, isSwept || isThreatLocked);
             } else {
-                HBRUSH hBrDr = CreateSolidBrush(thr->state == 2 ? RGB(185, 28, 28) : RGB(30, 41, 59));
-                HPEN hPenDr = CreatePen(PS_SOLID, 1, thrClr);
-                HPEN hPenDrOld = (HPEN)SelectObject(hdc, hPenDr);
-                HBRUSH hBrDrOld = (HBRUSH)SelectObject(hdc, hBrDr);
-                POINT drPts[4] = { { tX, tY - 6 }, { tX + 6, tY }, { tX, tY + 6 }, { tX - 6, tY } };
-                Polygon(hdc, drPts, 4);
-                SetPixel(hdc, tX, tY, thrClr);
-                SelectObject(hdc, hPenDrOld);
-                SelectObject(hdc, hBrDrOld);
-                DeleteObject(hBrDr);
-                DeleteObject(hPenDr);
+                DrawCombatDroneSprite(hdc, tX, tY, thrClr, thr->state, thr->stunTimer, isThreatLocked);
             }
 
             if (isSwept || isThreatLocked) {
@@ -4897,25 +5108,12 @@ void DrawUI(HDC hdc, RECT* rcClient) {
             int dY = scy + (int)(relY * sRadius);
 
             DWORD tick = GetTickCount();
-            int pulseR = (int)((tick % 1000) / 1000.0f * 14.0f) + 2;
-            HPEN hPenPulse = CreatePen(PS_DOT, 1, RGB(168, 85, 247));
-            HPEN hOldPen = (HPEN)SelectObject(hdc, hPenPulse);
-            HBRUSH hBrNull = (HBRUSH)GetStockObject(NULL_BRUSH);
-            HBRUSH hOldBr = (HBRUSH)SelectObject(hdc, hBrNull);
-            Ellipse(hdc, dX - pulseR, dY - pulseR, dX + pulseR, dY + pulseR);
-            SelectObject(hdc, hOldPen);
-            SelectObject(hdc, hOldBr);
-            DeleteObject(hPenPulse);
-
-            HBRUSH hBrDec = CreateSolidBrush(RGB(192, 132, 252));
-            RECT rcDec = { dX - 3, dY - 4, dX + 4, dY + 5 };
-            FillRect(hdc, &rcDec, hBrDec);
-            DeleteObject(hBrDec);
+            DrawDecoySprite(hdc, dX, dY, dec->life, tick);
 
             SetTextColor(hdc, RGB(192, 132, 252));
             char dLabel[32];
             snprintf(dLabel, sizeof(dLabel), "DECOY %.0fs", dec->life);
-            TextOutA(hdc, dX + 6, dY - 5, dLabel, (int)strlen(dLabel));
+            TextOutA(hdc, dX + 8, dY - 5, dLabel, (int)strlen(dLabel));
         }
 
         // --- DRAW ACTIVE TORPEDOES ON SONAR RADAR ---
@@ -4926,25 +5124,9 @@ void DrawUI(HDC hdc, RECT* rcClient) {
             int tpX = scx + (int)(relX * sRadius);
             int tpY = scy + (int)(relY * sRadius);
 
-            COLORREF tClr = RGB(0, 240, 255);
-            if (torp->type == 1) tClr = RGB(16, 185, 129);
-            else if (torp->type == 2) tClr = RGB(239, 68, 68);
-
-            HPEN hPenTorp = CreatePen(PS_SOLID, 2, tClr);
-            HPEN hOldPen = (HPEN)SelectObject(hdc, hPenTorp);
-
             float tAng = atan2f(torp->vy, torp->vx);
-            int noseX = tpX + (int)(cosf(tAng) * 5.0f);
-            int noseY = tpY + (int)(sinf(tAng) * 5.0f);
-            int tailX = tpX - (int)(cosf(tAng) * 4.0f);
-            int tailY = tpY - (int)(sinf(tAng) * 4.0f);
-
-            MoveToEx(hdc, tailX, tailY, NULL);
-            LineTo(hdc, noseX, noseY);
-            SelectObject(hdc, hOldPen);
-            DeleteObject(hPenTorp);
-
-            SetPixel(hdc, tailX - (int)(cosf(tAng) * 2.0f), tailY - (int)(sinf(tAng) * 2.0f), RGB(224, 242, 254));
+            DWORD tick = GetTickCount();
+            DrawTorpedoSprite(hdc, tpX, tpY, tAng, torp->type, tick);
         }
 
         // --- DRAW UNDERWATER EXPLOSIONS ON SONAR RADAR ---

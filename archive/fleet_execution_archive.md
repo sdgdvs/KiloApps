@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T21:35:00Z — kilo-tester: KJournal (UI Audit, Quicksave/Load, Toast Safe Zone & Modal Clipping)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 128.2 KB web / 200.7 KB native < 999 KB ceiling).
+  - Quicksave & Quickload: Implemented F5 / F9 session snapshot save & restore across localStorage with visual toast confirmations.
+  - Toast Occlusion: Relocated toast notifications to bottom-center safe zone (`z-index: 1200`), eliminating header button & date occlusion.
+  - Modal Clipping: Added `max-height: calc(100vh - 40px)` across modals preventing overflow on constrained viewports.
+  - Dialog & PIN Navigation: Added Enter key handler to trigger confirmModal and complete 4-digit PIN unlock.
+  - State & Documentation: Added `kjournal_tutorialSeen` flag to prevent toast spam; updated Help modal & Settings with guide shortcuts.
+  - Verification: MSVC clean (`KJournal.exe` 200.7 KB); Vite clean in 432ms; check_icons & security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T21:25:00Z — kilo-graphics: KDragon (Game Content, Visual Polish & Balance Pass, Glint Ban Verified)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 173.3 KB web / 149.0 KB native < 999 KB ceiling).
   - Specular Glint & Dot Purge: Verified 0 traveling perimeter dots or rotating specular glints in web or Win32 C.
