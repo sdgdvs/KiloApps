@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KMail
-  kilo_usability: KStarForge
+  kilo_usability: KPad
   kilo_graphics: KSubmarine
   kilo_qa: KPad
   kilo_expander: KFont
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KJournal
-  timestamp: "2026-09-30T21:35:00Z"
+  agent: kilo-usability
+  app: KStarForge
+  timestamp: "2026-09-30T21:56:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -113,9 +113,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KStarForge`
+- **Current Target**: `KPad`
 - **Upcoming Queue**:
-  `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask)*.
+  `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KPad`
@@ -293,6 +293,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T21:56:00Z — kilo-usability: KStarForge (Usability & Layout Pass, High-DPI Scaling & Touch Controls)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 218.5 KB web / 30.2 KB native < 999 KB ceiling).
+  - Responsive Layout & Window Sizing: Optimized KiloOS window dimensions to 1160x720; added adaptive media queries and flex overflow handling.
+  - High-DPI Coordinate Alignment: Fixed high-DPI scaling boundary calculation across Proving Grounds canvas so screen wrap and radar align.
+  - Ergonomics & Erase Mode: Added dedicated Place/Erase tool toggle [X] and continuous touch-drag support for tablet/trackpad design.
+  - Touch HUD & Mobile Flight: Added responsive virtual D-pad and action HUD for touchscreens with toggleable display.
+  - First-Run Onboarding & Help: Added dedicated Quick Reference & Controls Guide modal [F1/H] with ESC/backdrop dismissals and manual return.
+  - Verification: MSVC clean (`KStarForge.exe` 30.2 KB); Vite clean in 251ms; security lint 100% PASS; <999KB ceiling verified.
+
 - **2026-09-30T21:35:00Z — kilo-tester: KJournal (UI Audit, Quicksave/Load, Toast Safe Zone & Modal Clipping)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 128.2 KB web / 200.7 KB native < 999 KB ceiling).
   - Quicksave & Quickload: Implemented F5 / F9 session snapshot save & restore across localStorage with visual toast confirmations.
@@ -326,12 +335,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Audio: Added 1999Hz harmonic chime SFX across web (Web Audio API) and Win32 C native procedural synthesizer.
   - UI & Balance: Integrated Pre-War Relic Vault showcase, updated survival manual, and verified clean F5/F9 state persistence.
   - Verification: MSVC clean (`KSanctuary.exe` 268.8 KB); Vite clean in 440ms; check_icons & security lint 100% PASS.
-
-- **2026-09-30T20:31:00Z — kilo-expander: KRSS (Feature Expansion: JSON Feed 1.1, CSV Export, Research Scrapbook, Firebase Wire & TTS)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 148.1 KB web / 21.5 KB native < 999 KB ceiling).
-  - Multi-Format Syndication: Added JSON Feed 1.1 parsing & generation, RFC 4180 CSV database export, and standalone HTML export.
-  - Research Scrapbook: Built research clippings notebook with quote selection, tag taxonomy, search, and Markdown notebook export.
-  - KiloNet Community Wire: Added live peer dispatch broadcasts, presence counter, and catalog sync via Firebase RTDB with offline fallback.
-  - Reader Ergonomics & Audio: Integrated Web Speech API synthesizer, live reading time metrics, tag pills, and scroll progress tracking.
-  - Native Win32 Parity: Expanded `KRSS.exe` with view filter toggles, CSV articles export, text dump, and keyboard accelerators ('F', 'C', 'T').
-  - Verification: MSVC clean (`KRSS.exe` 21.5 KB); Vite clean in 236ms; security lint 100% PASS; bottom-center toast safe zone.

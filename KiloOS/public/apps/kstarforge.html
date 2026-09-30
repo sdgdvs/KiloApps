@@ -233,6 +233,9 @@
         #blueprint-view {
             display: flex;
             flex-direction: row;
+            overflow: auto;
+            width: 100%;
+            height: 100%;
         }
 
         .blueprint-sidebar-left {
@@ -270,6 +273,18 @@
             gap: 12px;
             overflow-y: auto;
             flex-shrink: 0;
+        }
+
+        @media (max-width: 1140px) {
+            .blueprint-sidebar-left {
+                width: 230px;
+            }
+            .blueprint-sidebar-right {
+                width: 260px;
+            }
+            .blueprint-center {
+                min-width: 520px;
+            }
         }
 
         .section-header {
@@ -453,6 +468,9 @@
             background: #070c18;
             padding: 20px;
             position: relative;
+            overflow: auto;
+            width: 100%;
+            height: 100%;
         }
 
         #drydock-canvas {
@@ -460,6 +478,9 @@
             background: #091020;
             box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
             border-radius: 4px;
+            max-width: 100%;
+            max-height: 56vh;
+            object-fit: contain;
         }
 
         .drydock-controls {
@@ -542,13 +563,60 @@
             pointer-events: none;
             display: flex;
             gap: 16px;
+            white-space: nowrap;
+        }
+
+        /* Virtual Touch Flight Controls */
+        .flight-touch-controls {
+            position: absolute;
+            bottom: 46px;
+            left: 0;
+            width: 100%;
+            display: none;
+            justify-content: space-between;
+            padding: 0 16px;
+            pointer-events: none;
+            z-index: 20;
+        }
+
+        .flight-touch-dpad, .flight-touch-actions {
+            display: flex;
+            align-items: center;
+            pointer-events: auto;
+            gap: 6px;
+        }
+
+        .touch-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 6px;
+            background: rgba(13, 21, 39, 0.88);
+            border: 1px solid var(--accent-cyan);
+            color: var(--text-bright);
+            font-family: var(--font-mono);
+            font-size: 10px;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            touch-action: none;
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.25);
+            cursor: pointer;
+        }
+
+        .touch-btn:active, .touch-btn.touch-active {
+            background: #0284c7;
+            color: #fff;
+            transform: scale(0.95);
         }
 
         /* Contracts View */
         #contracts-view {
             display: flex;
             flex-direction: column;
-            padding: 20px 40px;
+            padding: 16px clamp(16px, 3vw, 40px);
             overflow-y: auto;
             gap: 16px;
             background: #090f1d;
@@ -637,7 +705,7 @@
 
         /* Manual View */
         #manual-view {
-            padding: 30px 60px;
+            padding: 20px clamp(16px, 4vw, 50px);
             overflow-y: auto;
             background: #080d19;
             display: flex;
@@ -969,6 +1037,7 @@
                 </div>
 
                 <div class="blueprint-toolbar">
+                    <button class="btn btn-active" id="btn-tool-mode" title="Toggle Placement or Erase Tool [X]">✏️ Tool: Place [X]</button>
                     <button class="btn" id="btn-symmetry" title="Toggle Bilateral Symmetry Placement [S]">⇋ Symmetry: ON</button>
                     <button class="btn" id="btn-clear-grid" title="Clear Grid">🗑 Clear</button>
                     <button class="btn" id="btn-template-select">📋 Templates ▼</button>
@@ -1128,17 +1197,39 @@
                 <div>REACTOR HEAT: <span id="flight-hud-heat" style="font-weight: bold; color: #38bdf8;">0%</span></div>
                 <div>SPEED: <span id="flight-hud-speed" style="font-weight: bold; color: #fff;">0 m/s</span></div>
                 <div>ORE IN CARGO: <span id="flight-hud-cargo" style="font-weight: bold; color: #f59e0b;">0 TONS</span></div>
-                <button class="btn btn-primary" id="btn-flight-dock" style="pointer-events: auto; margin-top: 4px; padding: 3px 8px; font-size: 11px;">⮐ Dock at Station [ESC]</button>
+                <div style="display: flex; gap: 6px; margin-top: 4px;">
+                    <button class="btn btn-primary" id="btn-flight-dock" style="pointer-events: auto; padding: 3px 8px; font-size: 11px;">⮐ Dock [ESC]</button>
+                    <button class="btn" id="btn-toggle-flight-touch" style="pointer-events: auto; padding: 3px 8px; font-size: 11px;" title="Toggle On-Screen Touch Controls">🎮 Touch HUD</button>
+                </div>
             </div>
 
             <div class="flight-instructions">
-                <span>[W/S] Thrust / Retro</span>
+                <span>[W/S] Thrust/Retro</span>
                 <span>[A/D] Steering Yaw</span>
-                <span>[SPACE] Fire Primaries</span>
+                <span>[SPACE] Primaries</span>
                 <span>[E] Mining Beam</span>
-                <span>[SHIFT] Afterburner</span>
-                <span>[C] Coolant Vent</span>
-                <span>[ESC] Dock at Station</span>
+                <span>[SHIFT] Boost</span>
+                <span>[C] Coolant</span>
+                <span>[H/F1] Help</span>
+                <span>[ESC] Dock</span>
+            </div>
+
+            <!-- Virtual Touch HUD for Mobile/Tablets -->
+            <div class="flight-touch-controls" id="flight-touch-controls">
+                <div class="flight-touch-dpad">
+                    <button class="touch-btn" id="tbtn-yaw-l">◀<span style="font-size: 8px;">YAW</span></button>
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                        <button class="touch-btn" id="tbtn-thrust">▲<span style="font-size: 8px;">THR</span></button>
+                        <button class="touch-btn" id="tbtn-brake">▼<span style="font-size: 8px;">BRK</span></button>
+                    </div>
+                    <button class="touch-btn" id="tbtn-yaw-r">▶<span style="font-size: 8px;">YAW</span></button>
+                </div>
+                <div class="flight-touch-actions">
+                    <button class="touch-btn" id="tbtn-fire" style="border-color: #ef4444; color: #fca5a5;">💥<span style="font-size: 8px;">FIRE</span></button>
+                    <button class="touch-btn" id="tbtn-mine" style="border-color: #38bdf8; color: #bae6fd;">⚡<span style="font-size: 8px;">MINE</span></button>
+                    <button class="touch-btn" id="tbtn-boost" style="border-color: #f59e0b; color: #fde68a;">🚀<span style="font-size: 8px;">BOOST</span></button>
+                    <button class="touch-btn" id="tbtn-cool" style="border-color: #10b981; color: #a7f3d0;">❄️<span style="font-size: 8px;">COOL</span></button>
+                </div>
             </div>
         </div>
 
@@ -1156,6 +1247,10 @@
 
         <!-- 5. Operations Manual View -->
         <div class="view-panel" id="manual-view">
+            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-card); padding: 10px 16px; border: 1px solid var(--border-dim); border-radius: 4px;">
+                <div style="font-weight: bold; color: var(--accent-cyan); font-size: 13px;">ORBITAL OPERATIONS MANUAL // STARFORGE IX</div>
+                <button class="btn btn-primary" id="btn-manual-return-top">⮐ Return to Yard [ESC]</button>
+            </div>
             <div class="manual-section">
                 <h3>1. SHIP ARCHITECTURE & BLUEPRINT BAY</h3>
                 <p>Welcome, Yardmaster. You oversee the deep-space fabrication facility StarForge IX. Every vessel begins on the 14x14 Blueprint Grid.</p>
@@ -1213,13 +1308,14 @@
     <footer id="app-footer">
         <div class="footer-left">
             <span class="footer-badge" id="footer-status">READY // YARD OPERATIONAL</span>
-            <span class="footer-hint" id="footer-tool-hint">Selected: Titanium Hull [H] | [L-Click] Place | [R-Click] Erase</span>
+            <span class="footer-hint" id="footer-tool-hint">Selected: Titanium Hull [H] | [L-Click/Tap] Place | [R-Click/X] Erase</span>
         </div>
         <div class="footer-right">
-            <span class="footer-shortcut"><kbd>F1</kbd> Manual</span>
+            <span class="footer-shortcut"><kbd>F1 / H</kbd> Help</span>
+            <span class="footer-shortcut"><kbd>X</kbd> Tool</span>
             <span class="footer-shortcut"><kbd>S</kbd> Symmetry</span>
             <span class="footer-shortcut"><kbd>1-5</kbd> Views</span>
-            <span class="footer-shortcut"><kbd>F5</kbd>/<kbd>F9</kbd> Quick</span>
+            <span class="footer-shortcut"><kbd>F5</kbd>/<kbd>F9</kbd> Save/Load</span>
             <span class="footer-shortcut"><kbd>ESC</kbd> Return</span>
         </div>
     </footer>
@@ -1395,6 +1491,61 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-primary" id="btn-settings-done">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Help & Controls Guide Modal -->
+    <div class="modal-overlay" id="quick-help-modal" style="display: none;">
+        <div class="modal-box" style="width: 660px;">
+            <div class="modal-header">
+                <span class="modal-title">STARFORGE IX // QUICK REFERENCE & CONTROLS</span>
+                <button class="btn" id="btn-help-close" style="padding: 2px 6px;">✕</button>
+            </div>
+            <div class="modal-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div style="background: rgba(8, 14, 28, 0.6); padding: 10px; border: 1px solid var(--border-dim); border-radius: 4px;">
+                        <h4 style="color: var(--accent-cyan); font-size: 11px; margin-bottom: 8px;">NAV & WORKSPACE KEYS</h4>
+                        <ul style="list-style: none; display: flex; flex-direction: column; gap: 4px; font-size: 11px;">
+                            <li><kbd>1 - 5</kbd> : Blueprint, Drydock, Proving, Contracts, Manual</li>
+                            <li><kbd>S</kbd> : Toggle Bilateral Symmetry</li>
+                            <li><kbd>X</kbd> : Toggle Place / Erase Tool</li>
+                            <li><kbd>F1 / H</kbd> : Open this Quick Reference</li>
+                            <li><kbd>F5 / F9</kbd> : Quicksave / Quickload</li>
+                            <li><kbd>M</kbd> : Mute / Unmute Synthesizer Audio</li>
+                            <li><kbd>ESC</kbd> : Close Modals / Return to Yard / Dock</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(8, 14, 28, 0.6); padding: 10px; border: 1px solid var(--border-dim); border-radius: 4px;">
+                        <h4 style="color: var(--accent-cyan); font-size: 11px; margin-bottom: 8px;">FLIGHT & WEAPONS</h4>
+                        <ul style="list-style: none; display: flex; flex-direction: column; gap: 4px; font-size: 11px;">
+                            <li><kbd>W / Up</kbd> : Main Sublight Thruster</li>
+                            <li><kbd>A / D</kbd> : RCS Yaw Steering</li>
+                            <li><kbd>S / Down</kbd> : Retro Brakes</li>
+                            <li><kbd>Space</kbd> : Fire Primary Cannons / Railgun</li>
+                            <li><kbd>E</kbd> : High-Yield Mining Beam</li>
+                            <li><kbd>Shift</kbd> : Afterburner Boost</li>
+                            <li><kbd>C</kbd> : Emergency Cryo-Coolant Vent</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div style="background: rgba(8, 14, 28, 0.6); padding: 10px; border: 1px solid var(--border-dim); border-radius: 4px;">
+                    <h4 style="color: var(--accent-cyan); font-size: 11px; margin-bottom: 6px;">ENGINEERING GOLDEN RULES</h4>
+                    <p style="font-size: 11px; line-height: 1.5; color: var(--text-normal);">
+                        • <strong>Power Surplus:</strong> Total reactor generation (MW) must exceed module draws to avoid brownouts.<br>
+                        • <strong>Thermal Dissipation:</strong> Ensure Radiator Fins / Coolers dissipate heat faster than reactors & weapons generate it.<br>
+                        • <strong>TWR (Thrust-to-Weight):</strong> Install adequate thrusters so your ship can maneuver quickly.<br>
+                        • <strong>Mouse & Touch:</strong> Left-click / tap places module, Right-click (or Erase tool [X]) removes module. Touch drag allows continuous painting.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between;">
+                <button class="btn" id="btn-help-replay-tut">🎓 Replay Tutorial</button>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-primary" id="btn-help-view-manual">📖 Full Operations Manual</button>
+                    <button class="btn" id="btn-help-done">Dismiss [ESC]</button>
+                </div>
             </div>
         </div>
     </div>
@@ -1653,6 +1804,8 @@
                 this.completedContracts = {};
                 this.drydockProgress = 0;
                 this.isFabricating = false;
+                this.activeTool = 'place';
+                this.previousView = 'blueprint-view';
                 this.stats = {};
             }
 
@@ -2131,7 +2284,8 @@
             const { gx, gy } = getGridCoordinates(e);
             if (gx < 0 || gx >= GRID_SIZE || gy < 0 || gy >= GRID_SIZE) return;
 
-            if (e.button === 2 || isRightClick) {
+            const shouldErase = (e.button === 2 || isRightClick || state.activeTool === 'erase');
+            if (shouldErase) {
                 // Erase
                 state.grid[gy][gx] = 0;
                 if (state.symmetryMode) {
@@ -2183,6 +2337,50 @@
 
         window.addEventListener('mouseup', () => {
             isMouseDown = false;
+        });
+
+        bpCanvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            audio.init();
+            isMouseDown = true;
+            isRightClick = false;
+            if (e.touches && e.touches.length > 0) {
+                const touch = e.touches[0];
+                const { gx, gy } = getGridCoordinates(touch);
+                hoverX = gx;
+                hoverY = gy;
+                handleGridClick({ clientX: touch.clientX, clientY: touch.clientY, button: 0 });
+            }
+        }, { passive: false });
+
+        bpCanvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (e.touches && e.touches.length > 0) {
+                const touch = e.touches[0];
+                const { gx, gy } = getGridCoordinates(touch);
+                hoverX = gx;
+                hoverY = gy;
+                if (isMouseDown) {
+                    handleGridClick({ clientX: touch.clientX, clientY: touch.clientY, button: 0 });
+                } else {
+                    renderBlueprintGrid();
+                }
+            }
+        }, { passive: false });
+
+        bpCanvas.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            isMouseDown = false;
+            hoverX = -1;
+            hoverY = -1;
+            renderBlueprintGrid();
+        }, { passive: false });
+
+        bpCanvas.addEventListener('touchcancel', () => {
+            isMouseDown = false;
+            hoverX = -1;
+            hoverY = -1;
+            renderBlueprintGrid();
         });
 
         bpCanvas.addEventListener('contextmenu', (e) => e.preventDefault());
@@ -2260,19 +2458,36 @@
 
             // Symmetry button state
             const symBtn = document.getElementById('btn-symmetry');
-            symBtn.textContent = state.symmetryMode ? '⇋ Symmetry: ON' : '⇋ Symmetry: OFF';
-            if (state.symmetryMode) symBtn.classList.add('btn-active');
-            else symBtn.classList.remove('btn-active');
+            if (symBtn) {
+                symBtn.textContent = state.symmetryMode ? '⇋ Symmetry: ON' : '⇋ Symmetry: OFF';
+                if (state.symmetryMode) symBtn.classList.add('btn-active');
+                else symBtn.classList.remove('btn-active');
+            }
+
+            // Tool mode button state
+            const toolBtn = document.getElementById('btn-tool-mode');
+            if (toolBtn) {
+                toolBtn.textContent = state.activeTool === 'erase' ? '🧹 Tool: Erase [X]' : '✏️ Tool: Place [X]';
+                if (state.activeTool === 'erase') {
+                    toolBtn.classList.add('btn-active');
+                    toolBtn.style.borderColor = 'var(--accent-red)';
+                    toolBtn.style.color = '#fca5a5';
+                } else {
+                    toolBtn.classList.add('btn-active');
+                    toolBtn.style.borderColor = 'var(--accent-cyan)';
+                    toolBtn.style.color = '#38bdf8';
+                }
+            }
 
             // Update Footer Status Bar
             const activeMod = MODULE_DEFS[state.selectedModuleId];
             const footerHint = document.getElementById('footer-tool-hint');
             if (footerHint && activeMod) {
-                footerHint.textContent = `Selected: ${activeMod.name} [${activeMod.badge}] (${activeMod.costCr}$C) | [LMB] Place | [RMB] Erase | [S] Symmetry: ${state.symmetryMode ? 'ON' : 'OFF'}`;
+                footerHint.textContent = `Tool: ${state.activeTool.toUpperCase()} [X] | Selected: ${activeMod.name} [${activeMod.badge}] (${activeMod.costCr}$C) | [LMB/Tap] Action | [RMB] Erase | [S] Symmetry: ${state.symmetryMode ? 'ON' : 'OFF'}`;
             }
             const footerStatus = document.getElementById('footer-status');
             if (footerStatus) {
-                footerStatus.textContent = state.symmetryMode ? 'READY // SYMMETRY ACTIVE' : 'READY // MANUAL PLACEMENT';
+                footerStatus.textContent = state.activeTool === 'erase' ? 'ERASE MODE ACTIVE' : (state.symmetryMode ? 'READY // SYMMETRY ACTIVE' : 'READY // MANUAL PLACEMENT');
             }
 
             // Render contracts checklist
@@ -2510,6 +2725,8 @@
             const parent = flightCanvas.parentElement;
             const cssW = parent ? (parent.clientWidth || 800) : 800;
             const cssH = parent ? (parent.clientHeight || 600) : 600;
+            flightSim.simW = cssW;
+            flightSim.simH = cssH;
             flightCanvas.width = Math.round(cssW * dpr);
             flightCanvas.height = Math.round(cssH * dpr);
             flightCanvas.style.width = `${cssW}px`;
@@ -3079,10 +3296,20 @@
                     updateUI();
                     renderBlueprintGrid();
                 }
-            } else if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H') && !flightSim.active && (!document.activeElement || document.activeElement.tagName !== 'INPUT'))) {
+            } else if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H') && (!document.activeElement || document.activeElement.tagName !== 'INPUT'))) {
                 e.preventDefault();
-                document.querySelector('.nav-btn[data-target="manual-view"]')?.click();
-                showToast('YARD OPERATIONS MANUAL [F1]');
+                const helpModal = document.getElementById('quick-help-modal');
+                if (helpModal) {
+                    if (helpModal.style.display !== 'none') {
+                        helpModal.style.display = 'none';
+                    } else {
+                        helpModal.style.display = 'flex';
+                    }
+                }
+            } else if ((e.key === 'x' || e.key === 'X') && (!document.activeElement || document.activeElement.tagName !== 'INPUT') && !flightSim.active) {
+                state.activeTool = (state.activeTool === 'place' ? 'erase' : 'place');
+                updateUI();
+                showToast(state.activeTool === 'erase' ? 'TOOL: ERASE MODULES [X]' : 'TOOL: PLACE MODULES [X]');
             } else if (e.key === 's' || e.key === 'S') {
                 if (document.getElementById('blueprint-view').classList.contains('active')) {
                     state.symmetryMode = !state.symmetryMode;
@@ -3099,7 +3326,7 @@
                 localStorage.setItem('kstarforge_soundMuted', audio.muted ? '1' : '0');
             } else if (e.key === 'Escape') {
                 let closedModal = false;
-                ['splash-modal', 'tutorial-modal', 'template-modal', 'settings-modal'].forEach(id => {
+                ['quick-help-modal', 'splash-modal', 'tutorial-modal', 'template-modal', 'settings-modal'].forEach(id => {
                     const el = document.getElementById(id);
                     if (el && el.style.display !== 'none') {
                         el.style.display = 'none';
@@ -3109,12 +3336,19 @@
                         }
                     }
                 });
-                if (!closedModal && flightSim.active) {
-                    document.querySelector('.nav-btn[data-target="drydock-view"]')?.click();
-                    showToast('DOCKED AT STATION // RETURNED TO DRYDOCK');
+                if (!closedModal) {
+                    if (flightSim.active) {
+                        document.querySelector('.nav-btn[data-target="drydock-view"]')?.click();
+                        showToast('DOCKED AT STATION // RETURNED TO DRYDOCK');
+                    } else if (document.getElementById('manual-view').classList.contains('active')) {
+                        const prevTarget = state.previousView || 'blueprint-view';
+                        document.querySelector(`.nav-btn[data-target="${prevTarget}"]`)?.click();
+                    }
                 }
             } else if (e.key === 'Enter') {
-                if (document.getElementById('splash-modal').style.display !== 'none') {
+                if (document.getElementById('quick-help-modal') && document.getElementById('quick-help-modal').style.display !== 'none') {
+                    document.getElementById('btn-help-done')?.click();
+                } else if (document.getElementById('splash-modal').style.display !== 'none') {
                     document.getElementById('btn-splash-start')?.click();
                 } else if (document.getElementById('tutorial-modal').style.display !== 'none') {
                     document.getElementById('btn-tut-next')?.click();
@@ -3198,20 +3432,22 @@
             p.vy *= 0.99;
 
             // Screen wrap
-            if (p.x < 0) p.x = flightCanvas.width;
-            if (p.x > flightCanvas.width) p.x = 0;
-            if (p.y < 0) p.y = flightCanvas.height;
-            if (p.y > flightCanvas.height) p.y = 0;
+            const bW = flightSim.simW || 800;
+            const bH = flightSim.simH || 600;
+            if (p.x < 0) p.x = bW;
+            if (p.x > bW) p.x = 0;
+            if (p.y < 0) p.y = bH;
+            if (p.y > bH) p.y = 0;
 
             // Rotate asteroids
             flightSim.asteroids.forEach(ast => {
                 if (ast.rotSpeed) ast.rot += ast.rotSpeed;
                 ast.x += ast.vx;
                 ast.y += ast.vy;
-                if (ast.x < 0) ast.x = flightCanvas.width;
-                if (ast.x > flightCanvas.width) ast.x = 0;
-                if (ast.y < 0) ast.y = flightCanvas.height;
-                if (ast.y > flightCanvas.height) ast.y = 0;
+                if (ast.x < 0) ast.x = bW;
+                if (ast.x > bW) ast.x = 0;
+                if (ast.y < 0) ast.y = bH;
+                if (ast.y > bH) ast.y = 0;
             });
 
             // Point-Defense Flak, Shield Booster, & Tractor Beam Module Detection
@@ -3916,6 +4152,12 @@
             btn.addEventListener('click', () => {
                 audio.init();
                 audio.playClick();
+
+                const currentActivePanel = document.querySelector('.view-panel.active');
+                if (currentActivePanel && currentActivePanel.id !== 'manual-view') {
+                    state.previousView = currentActivePanel.id;
+                }
+
                 document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
 
@@ -3932,6 +4174,21 @@
                     renderBlueprintGrid();
                 }
             });
+        });
+
+        // Return button from manual view top bar
+        document.getElementById('btn-manual-return-top')?.addEventListener('click', () => {
+            audio.playClick();
+            const prevTarget = state.previousView || 'blueprint-view';
+            document.querySelector(`.nav-btn[data-target="${prevTarget}"]`)?.click();
+        });
+
+        // Tool mode button
+        document.getElementById('btn-tool-mode')?.addEventListener('click', () => {
+            audio.playClick();
+            state.activeTool = (state.activeTool === 'place' ? 'erase' : 'place');
+            updateUI();
+            showToast(state.activeTool === 'erase' ? 'TOOL: ERASE MODULES [X]' : 'TOOL: PLACE MODULES [X]');
         });
 
         // Symmetry button
@@ -4249,10 +4506,88 @@
             localStorage.setItem('kstarforge_volume', audio.volume.toString());
         });
 
-        document.getElementById('btn-help-open').addEventListener('click', () => {
+        const openHelpModal = () => {
             audio.playClick();
+            document.getElementById('quick-help-modal').style.display = 'flex';
+        };
+        document.getElementById('btn-help-open').addEventListener('click', openHelpModal);
+        document.getElementById('btn-help-close')?.addEventListener('click', () => {
+            audio.playClick();
+            document.getElementById('quick-help-modal').style.display = 'none';
+        });
+        document.getElementById('btn-help-done')?.addEventListener('click', () => {
+            audio.playClick();
+            document.getElementById('quick-help-modal').style.display = 'none';
+        });
+        document.getElementById('btn-help-view-manual')?.addEventListener('click', () => {
+            audio.playClick();
+            document.getElementById('quick-help-modal').style.display = 'none';
             document.querySelector('.nav-btn[data-target="manual-view"]').click();
         });
+        document.getElementById('btn-help-replay-tut')?.addEventListener('click', () => {
+            audio.playClick();
+            document.getElementById('quick-help-modal').style.display = 'none';
+            showTutorialStep(0);
+        });
+
+        // Virtual Touch Flight Controls binding
+        const initFlightTouchControls = () => {
+            const touchControls = document.getElementById('flight-touch-controls');
+            const toggleBtn = document.getElementById('btn-toggle-flight-touch');
+
+            const hasTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+            const savedTouchPref = localStorage.getItem('kstarforge_touchControls');
+            let showTouch = savedTouchPref !== null ? (savedTouchPref === '1') : hasTouch;
+
+            const applyTouchVisibility = () => {
+                if (touchControls) {
+                    touchControls.style.display = showTouch ? 'flex' : 'none';
+                }
+                if (toggleBtn) {
+                    toggleBtn.style.color = showTouch ? 'var(--accent-cyan)' : 'var(--text-dim)';
+                }
+            };
+            applyTouchVisibility();
+
+            toggleBtn?.addEventListener('click', () => {
+                audio.playClick();
+                showTouch = !showTouch;
+                localStorage.setItem('kstarforge_touchControls', showTouch ? '1' : '0');
+                applyTouchVisibility();
+                showToast(showTouch ? 'TOUCH HUD: ENABLED' : 'TOUCH HUD: HIDDEN');
+            });
+
+            const bindTouchBtn = (id, keyName) => {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+                const activate = (e) => {
+                    e.preventDefault();
+                    btn.classList.add('touch-active');
+                    if (keyName) flightSim.keys[keyName] = true;
+                };
+                const deactivate = (e) => {
+                    e.preventDefault();
+                    btn.classList.remove('touch-active');
+                    if (keyName) flightSim.keys[keyName] = false;
+                };
+                btn.addEventListener('touchstart', activate, { passive: false });
+                btn.addEventListener('touchend', deactivate, { passive: false });
+                btn.addEventListener('touchcancel', deactivate, { passive: false });
+                btn.addEventListener('mousedown', activate);
+                btn.addEventListener('mouseup', deactivate);
+                btn.addEventListener('mouseleave', deactivate);
+            };
+
+            bindTouchBtn('tbtn-yaw-l', 'a');
+            bindTouchBtn('tbtn-yaw-r', 'd');
+            bindTouchBtn('tbtn-thrust', 'w');
+            bindTouchBtn('tbtn-brake', 's');
+            bindTouchBtn('tbtn-fire', ' ');
+            bindTouchBtn('tbtn-mine', 'e');
+            bindTouchBtn('tbtn-boost', 'shift');
+            bindTouchBtn('tbtn-cool', 'c');
+        };
+        initFlightTouchControls();
 
         // Replay Tutorial hooks
         const replayTutorial = () => {

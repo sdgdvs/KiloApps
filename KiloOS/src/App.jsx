@@ -108,7 +108,7 @@ const APPS = [
   { id: 'kabyss', title: 'KAbyss', url: '/apps/kabyss.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kabyss.ico', w: 920, h: 680, folder: 'Games' },
   { id: 'kcosmic', title: 'KCosmic', url: '/apps/kcosmic.html', exeUrl: '/exe/KApps.zip', icon: '/assets/icons/kcosmic.ico', w: 940, h: 680, folder: 'Games' },
   { id: 'kchrono', title: 'KChrono', url: '/apps/kchrono.html', exeUrl: '/exe/KChrono.exe', icon: '/assets/icons/kchrono.ico', w: 1100, h: 680, folder: 'Games' },
-  { id: 'kstarforge', title: 'KStarForge', url: '/apps/kstarforge.html', exeUrl: '/exe/KStarForge.exe', icon: '/assets/icons/kstarforge.ico', w: 1200, h: 780, folder: 'Games' },
+  { id: 'kstarforge', title: 'KStarForge', url: '/apps/kstarforge.html', exeUrl: '/exe/KStarForge.exe', icon: '/assets/icons/kstarforge.ico', w: 1160, h: 720, folder: 'Games' },
   { id: 'kpomodoro', title: 'KPomodoro', url: '/apps/kpomodoro.html', exeUrl: '/exe/KPomodoro.exe', icon: '/assets/icons/kpomodoro.ico', w: 960, h: 700, folder: 'Office' },
   { id: 'kbookmark', title: 'KBookmark', url: '/apps/kbookmark.html', exeUrl: '/exe/KBookmark.exe', icon: '/assets/icons/kbookmark.ico', w: 980, h: 700, folder: 'Office' },
   { id: 'khash', title: 'KHash', url: '/apps/khash.html', exeUrl: '/exe/KHash.exe', icon: '/assets/icons/khash.ico', w: 960, h: 700, folder: 'System' },
