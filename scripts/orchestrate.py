@@ -134,35 +134,25 @@ def clean_task_triggers_boundary(task_name: str = TASK_NAME):
 
 
 def ensure_continuous_scheduler(node_id: str):
-    """Ensures local machine runs in continuous mode with no auto-stop timer unless explicitly enabled."""
+    """Respects session limits when user_managed is set; only auto-heals if explicitly in continuous mode."""
     if SESSION_FILE.exists():
         try:
             s_data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
-            if s_data.get("session_limit_enabled") is not True:
+            # If the session is user-managed (quota-controlled), do NOT override limits
+            if s_data.get("user_managed", False):
+                log("[SESSION] User-managed quota mode active. Skipping continuous self-healing.")
+                return
+            # Only auto-heal if session_limit_enabled is explicitly False (legacy continuous mode)
+            if s_data.get("session_limit_enabled") is False and not s_data.get("user_managed", False):
                 needs_save = False
-                if s_data.get("session_end") is not None:
-                    s_data["session_end"] = None
-                    needs_save = True
-                if s_data.get("session_limit_enabled") is not False:
-                    s_data["session_limit_enabled"] = False
-                    needs_save = True
-                if s_data.get("timer_enabled") is not False:
-                    s_data["timer_enabled"] = False
-                    needs_save = True
-                if s_data.get("duration_hours") != 0:
-                    s_data["duration_hours"] = 0
-                    needs_save = True
                 if s_data.get("status") == "expired":
                     s_data["status"] = "active"
                     needs_save = True
                 if needs_save:
                     SESSION_FILE.write_text(json.dumps(s_data, indent=2), encoding="utf-8")
-                    log("[MIGRATION] Neutralized auto-stop timer in scheduler_session.json (session_end: null, status: active).")
+                    log("[MIGRATION] Reset expired status to active (continuous mode, no user quota).")
         except Exception as e:
             log(f"Warning verifying session continuous state: {e}")
-
-    # Remove EndBoundary and RepetitionDuration from Windows Scheduled Task
-    clean_task_triggers_boundary(TASK_NAME)
 
 
 def check_session_timer() -> bool:
@@ -212,17 +202,52 @@ def check_session_timer() -> bool:
 
 
 def record_turn_in_session():
-    """Increments turns_executed in session file upon successful turn."""
+    """Increments turns_executed and turns_today in session file upon successful turn."""
     if not SESSION_FILE.exists():
         return
     try:
         data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
         data["turns_executed"] = data.get("turns_executed", 0) + 1
+        data["turns_today"] = data.get("turns_today", 0) + 1
         data["last_turn_timestamp"] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        data["last_turn_date"] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
         SESSION_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
-        log(f"[SESSION] Turn #{data['turns_executed']} recorded in session timer state.")
+        log(f"[SESSION] Turn #{data['turns_executed']} recorded (today: {data['turns_today']}).")
     except Exception as e:
         log(f"Warning: Failed to update session timer turn count: {e}")
+
+
+def check_daily_turn_cap() -> bool:
+    """Checks if daily turn cap has been reached. Resets counter at midnight UTC."""
+    if not SESSION_FILE.exists():
+        return True
+    try:
+        data = json.loads(SESSION_FILE.read_text(encoding="utf-8-sig"))
+        max_per_day = data.get("max_turns_per_day", 0)
+        if max_per_day <= 0:
+            return True  # No cap configured
+
+        today_str = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
+        last_date = data.get("last_turn_date", "")
+
+        # Reset daily counter at midnight UTC
+        if last_date != today_str:
+            data["turns_today"] = 0
+            data["last_turn_date"] = today_str
+            SESSION_FILE.write_text(json.dumps(data, indent=2), encoding="utf-8")
+            log(f"[QUOTA] Daily counter reset for {today_str}.")
+
+        turns_today = data.get("turns_today", 0)
+        if turns_today >= max_per_day:
+            log(f"[QUOTA] Daily turn cap reached ({turns_today}/{max_per_day}). Skipping dispatch until tomorrow.")
+            return False
+
+        remaining = max_per_day - turns_today
+        log(f"[QUOTA] Daily budget: {turns_today}/{max_per_day} used, {remaining} remaining.")
+        return True
+    except Exception as e:
+        log(f"Warning: Failed to check daily turn cap: {e}")
+        return True
 
 
 def get_current_node_id() -> str:
@@ -749,6 +774,11 @@ def main():
         # 5. Enforce session limit (Continuous mode by default unless explicitly configured)
         if not args.ignore_session and not check_session_timer():
             broadcast_node_heartbeat(node_id, status="expired")
+            return
+
+        # 5b. Enforce daily turn cap (quota management)
+        if not args.ignore_session and not check_daily_turn_cap():
+            broadcast_node_heartbeat(node_id, status="quota_paused")
             return
 
         # 6. Enforce collision-free window guard for this specific node
