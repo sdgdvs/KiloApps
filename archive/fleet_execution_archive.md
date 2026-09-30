@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T03:10:00Z — kilo-usability: KVoid (Window Sizing, Responsive Layout, HiDPI Canvas & Audio Mute)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, 104.9 KB web / 31.2 KB native < 999 KB ceiling).
+  - Window Ergonomics: Tuned default dimensions to 780x710 in `App.jsx`, eliminating vertical clipping and scrollbars.
+  - Layout & Scrolling: Removed flex center clipping; added responsive 4:3 canvas aspect ratio and flexible stats layout.
+  - HiDPI Rendering: Added `window.devicePixelRatio` canvas backing store scaling for crisp high-density display output.
+  - Audio FX Controls: Added `[M]` / `[Shift+M]` audio mute toggle with persistent storage and button feedback in web & native.
+  - First-Run & Guide: Updated Survival Guide and hint bar documenting all hotkeys, EMP, chem flares, and sound controls.
+  - Verification: MSVC clean (`KVoid.exe` 31.2 KB); Vite clean in 304ms; security linter 100% PASS; icon audits clean.
+
 - **2026-09-30T03:45:00Z — kilo-creator: kweb://10.19.99.4/classified (Corporate Network Leak & Signal Diagnostic)**
   - Status: PASS ✅ (0 regressions, clean builds, security lint clean, 122 KB < 999 KB).
   - Web Navigation & Hotkeys: Added global keyboard shortcuts [1-7] for instant tab switching, [M] audio toggle, [Space] sniffer toggle.

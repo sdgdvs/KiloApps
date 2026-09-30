@@ -1217,13 +1217,18 @@
       }
     }
 
+    function updateMuteUI() {
+      const icon = audioMuted ? '🔇' : '🔊';
+      const btnHeader = document.getElementById('btnAudioMute');
+      if (btnHeader) btnHeader.innerText = icon;
+      const btnTool = document.getElementById('toolBtnMute');
+      if (btnTool) btnTool.innerText = icon;
+    }
+
     function toggleMute() {
       audioMuted = !audioMuted;
       localStorage.setItem('kgraph_muted', audioMuted ? 'true' : 'false');
-      const btnHeader = document.getElementById('btnAudioMute');
-      if (btnHeader) btnHeader.innerText = audioMuted ? '🔇' : '🔊';
-      const btnTool = document.getElementById('toolBtnMute');
-      if (btnTool) btnTool.innerText = audioMuted ? '🔇' : '🔊';
+      updateMuteUI();
       showToast(audioMuted ? '🔇 Sound muted' : '🔊 Sound enabled (Yamaha YM2612 FM / SPC700 Delay)');
     }
 
@@ -1296,6 +1301,12 @@
       } else if (type === 'preset') {
         playFmTone(392.00, 0.09, 2.0, 180, 0.12);
         setTimeout(() => playFmTone(587.33, 0.14, 2.5, 220, 0.14), 60);
+      } else if (type === 'save') {
+        playFmTone(523.25, 0.08, 1.5, 150, 0.12);
+        setTimeout(() => playFmTone(783.99, 0.14, 2.0, 200, 0.14), 60);
+      } else if (type === 'load') {
+        playFmTone(783.99, 0.08, 2.0, 200, 0.12);
+        setTimeout(() => playFmTone(523.25, 0.14, 1.5, 150, 0.14), 60);
       } else if (type === 'export') {
         playFmTone(440.00, 0.08, 1.5, 120, 0.10);
         setTimeout(() => playFmTone(880.00, 0.16, 2.0, 240, 0.14), 70);
@@ -1306,6 +1317,7 @@
       showTangent = !showTangent;
       const chk = document.getElementById('showTangentLine');
       if (chk) chk.checked = showTangent;
+      playSfx('click');
       showToast(showTangent ? '📐 Tangent & Normal lines enabled [T]' : 'Tangent visualizer hidden');
       drawGraph();
     }
@@ -1578,6 +1590,7 @@
       document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
       document.getElementById('modeBtn_' + mode).classList.add('active');
       
+      playSfx('mode');
       buildModeControls();
       replotAll();
       showToast(`Switched to ${mode.toUpperCase()} plotting mode.`);
@@ -1585,9 +1598,12 @@
 
     // --- Modal Handlers ---
     function openHelpModal() {
+      hideToast();
+      playSfx('click');
       document.getElementById('helpModal').classList.add('active');
     }
     function closeHelpModal() {
+      playSfx('click');
       document.getElementById('helpModal').classList.remove('active');
     }
 
@@ -1752,6 +1768,7 @@
     }
 
     function resetDefaultFuncs() {
+      playSfx('click');
       if (currentMode === 'cartesian') {
         cartesianFuncs = [
           { expr: 'sin(x)', enabled: true, showDeriv: false },
@@ -1778,6 +1795,7 @@
     }
 
     function enableAllFuncs(enabled) {
+      playSfx('click');
       if (currentMode === 'cartesian') {
         cartesianFuncs.forEach(f => { if (f.expr && f.expr.trim()) f.enabled = enabled; });
       } else if (currentMode === 'polar') {
@@ -1791,6 +1809,7 @@
     }
 
     function clearAllFuncs() {
+      playSfx('click');
       if (currentMode === 'cartesian') {
         cartesianFuncs.forEach(f => { f.expr = ''; f.enabled = false; });
       } else if (currentMode === 'polar') {
@@ -1910,6 +1929,7 @@
     }
     
     function loadCartesianPreset(expr) {
+      playSfx('preset');
       setPlotMode('cartesian');
       cartesianFuncs.forEach((f, i) => {
         if (i === 0) { f.expr = expr; f.enabled = true; }
@@ -1922,6 +1942,7 @@
     }
 
     function loadPolarPreset(expr) {
+      playSfx('preset');
       setPlotMode('polar');
       polarFuncs.forEach((f, i) => {
         if (i === 0) { f.expr = expr; f.enabled = true; }
@@ -1934,6 +1955,7 @@
     }
 
     function loadParametricPreset(exprX, exprY) {
+      playSfx('preset');
       setPlotMode('parametric');
       parametricCurves.forEach((c, i) => {
         if (i === 0) { c.exprX = exprX; c.exprY = exprY; c.enabled = true; }
@@ -1946,6 +1968,7 @@
     }
     
     function switchTab(tabId) {
+      playSfx('click');
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       
@@ -2121,6 +2144,7 @@
       if (computedRoots.length === 0) {
         container.innerHTML = `<div style="color:#94a3b8; font-size:12px; margin-top:8px;">No roots found in current view.</div>`;
       } else {
+        playSfx('root');
         let html = `<table class="result-table"><thead><tr><th>#</th><th>Root (x)</th><th>y(x)</th></tr></thead><tbody>`;
         computedRoots.forEach((r, i) => {
           html += `<tr onclick="focusPoint(${r.x}, ${r.y})"><td>${i+1}</td><td>${r.x.toFixed(5)}</td><td>${r.y.toFixed(5)}</td></tr>`;
@@ -2187,6 +2211,7 @@
       if (computedIntersections.length === 0) {
         container.innerHTML = `<div style="color:#94a3b8; font-size:12px; margin-top:8px;">No intersections found in view.</div>`;
       } else {
+        playSfx('root');
         let html = `<table class="result-table"><thead><tr><th>Pair</th><th>x</th><th>y</th></tr></thead><tbody>`;
         computedIntersections.forEach((pt) => {
           html += `<tr onclick="focusPoint(${pt.x}, ${pt.y})">
@@ -2203,6 +2228,7 @@
     }
     
     function focusPoint(x, y) {
+      playSfx('root');
       view_cx = x;
       view_cy = y;
       drawGraph();
@@ -2409,7 +2435,7 @@
             const pxR = toScreenX(xR, width);
             const rw = pxR - pxL;
             
-            if (rMethod === 'trap') {
+            if (rMethod === 'trap' || rMethod === 'trapezoid') {
               const yL = targetFn(xL);
               const yR = targetFn(xR);
               if (!isNaN(yL) && !isNaN(yR) && isFinite(yL) && isFinite(yR)) {
@@ -2427,7 +2453,7 @@
             } else {
               let sampleX = xL;
               if (rMethod === 'right') sampleX = xR;
-              else if (rMethod === 'mid') sampleX = xL + dx / 2;
+              else if (rMethod === 'mid' || rMethod === 'midpoint') sampleX = xL + dx / 2;
               const sampleY = targetFn(sampleX);
               if (!isNaN(sampleY) && isFinite(sampleY)) {
                 const py = toScreenY(sampleY, height);
@@ -2503,53 +2529,55 @@
         });
 
         // Taylor Polynomial Approximation Overlay
-        const showTaylor = document.getElementById('showTaylor')?.checked;
+        const showTaylor = document.getElementById('showTaylorOverlay')?.checked;
         if (showTaylor && targetFn && cartesianFuncs[targetIdx].enabled) {
-          const tOrder = Math.max(1, Math.min(5, parseInt(document.getElementById('taylorOrder')?.value) || 3));
-          const tCenter = parseFloat(document.getElementById('taylorCenter')?.value) || 0;
-          const coeffs = computeTaylorSeries(targetFn, tCenter, tOrder);
-          
-          ctx.strokeStyle = '#f59e0b';
-          ctx.lineWidth = 2;
-          ctx.setLineDash([5, 3]);
-          ctx.beginPath();
-          let tFirst = true;
-          for (let px = 0; px <= width; px += 2) {
-            const x = toWorldX(px, width);
-            const dx = x - tCenter;
-            let y = 0;
-            let pwr = 1;
-            for (let k = 0; k <= tOrder; k++) {
-              y += coeffs[k] * pwr;
-              pwr *= dx;
-            }
-            if (isNaN(y) || !isFinite(y) || Math.abs(y) > view_scale * 8) {
-              tFirst = true;
-              continue;
-            }
-            const py = toScreenY(y, height);
-            if (tFirst) {
-              ctx.moveTo(px, py);
-              tFirst = false;
-            } else {
-              ctx.lineTo(px, py);
-            }
-          }
-          ctx.stroke();
-          ctx.setLineDash([]);
-          
-          // Center Point Marker
-          const cY = targetFn(tCenter);
-          if (!isNaN(cY) && isFinite(cY)) {
-            const cPx = toScreenX(tCenter, width);
-            const cPy = toScreenY(cY, height);
-            ctx.fillStyle = '#f59e0b';
+          const tOrder = Math.max(1, Math.min(5, parseInt(document.getElementById('taylorDegree')?.value) || 3));
+          const tCenter = parseFloat(document.getElementById('calcX0')?.value) || 0;
+          const tRes = computeTaylorSeries(targetFn, tCenter, tOrder);
+          if (tRes && tRes.coeffs) {
+            const coeffs = tRes.coeffs;
+            ctx.strokeStyle = '#f59e0b';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 3]);
             ctx.beginPath();
-            ctx.arc(cPx, cPy, 4.5, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.strokeStyle = '#0f172a';
-            ctx.lineWidth = 1.2;
+            let tFirst = true;
+            for (let px = 0; px <= width; px += 2) {
+              const x = toWorldX(px, width);
+              const dx = x - tCenter;
+              let y = 0;
+              let pwr = 1;
+              for (let k = 0; k < coeffs.length; k++) {
+                y += coeffs[k] * pwr;
+                pwr *= dx;
+              }
+              if (isNaN(y) || !isFinite(y) || Math.abs(y) > view_scale * 8) {
+                tFirst = true;
+                continue;
+              }
+              const py = toScreenY(y, height);
+              if (tFirst) {
+                ctx.moveTo(px, py);
+                tFirst = false;
+              } else {
+                ctx.lineTo(px, py);
+              }
+            }
             ctx.stroke();
+            ctx.setLineDash([]);
+            
+            // Center Point Marker
+            const cY = targetFn(tCenter);
+            if (!isNaN(cY) && isFinite(cY)) {
+              const cPx = toScreenX(tCenter, width);
+              const cPy = toScreenY(cY, height);
+              ctx.fillStyle = '#f59e0b';
+              ctx.beginPath();
+              ctx.arc(cPx, cPy, 4.5, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.strokeStyle = '#0f172a';
+              ctx.lineWidth = 1.5;
+              ctx.stroke();
+            }
           }
         }
 
@@ -2955,6 +2983,7 @@
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      playSfx('export');
       showToast('📷 PNG snapshot exported!');
     }
 
@@ -3036,6 +3065,43 @@
             svg += `  <path d="${pathD}" fill="none" stroke="${FUNC_COLORS[idx]}" stroke-width="2.5" />\n`;
           }
         });
+
+        // Taylor Polynomial in SVG
+        const showTaylor = document.getElementById('showTaylorOverlay')?.checked;
+        if (showTaylor && targetFn && cartesianFuncs[targetIdx].enabled) {
+          const tOrder = Math.max(1, Math.min(5, parseInt(document.getElementById('taylorDegree')?.value) || 3));
+          const tCenter = parseFloat(document.getElementById('calcX0')?.value) || 0;
+          const tRes = computeTaylorSeries(targetFn, tCenter, tOrder);
+          if (tRes && tRes.coeffs) {
+            const coeffs = tRes.coeffs;
+            let tPathD = '';
+            let tFirst = true;
+            for (let px = 0; px <= width; px += 2) {
+              const x = minX + (px / width) * (2 * view_scale);
+              const dx = x - tCenter;
+              let y = 0;
+              let pwr = 1;
+              for (let k = 0; k < coeffs.length; k++) {
+                y += coeffs[k] * pwr;
+                pwr *= dx;
+              }
+              if (isNaN(y) || !isFinite(y) || Math.abs(y) > view_scale * 10) {
+                tFirst = true;
+                continue;
+              }
+              const py = height - ((y - minY) / view_h) * height;
+              if (tFirst) {
+                tPathD += `M ${px.toFixed(1)} ${py.toFixed(1)} `;
+                tFirst = false;
+              } else {
+                tPathD += `L ${px.toFixed(1)} ${py.toFixed(1)} `;
+              }
+            }
+            if (tPathD) {
+              svg += `  <path d="${tPathD}" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="5,3" />\n`;
+            }
+          }
+        }
       } else if (currentMode === 'polar') {
         polarFuncs.forEach((f, idx) => {
           if (!f.enabled) return;
@@ -3096,6 +3162,7 @@
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 1000);
+      playSfx('export');
       showToast('📐 SVG vector graphics exported!');
     }
     
@@ -3166,10 +3233,13 @@
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 1000);
+      playSfx('export');
       showToast('📊 CSV data points exported!');
     }
     
     function exportJSON() {
+      const targetIdx = parseInt(document.getElementById('calcTargetFunc')?.value) || 0;
+      const rootTargetIdx = parseInt(document.getElementById('rootTargetFunc')?.value) || 0;
       const config = {
         mode: currentMode,
         cartesianFuncs: cartesianFuncs,
@@ -3182,7 +3252,22 @@
         paramMaxT: paramMaxT,
         view_cx: view_cx,
         view_cy: view_cy,
-        view_scale: view_scale
+        view_scale: view_scale,
+        calcTargetFunc: targetIdx,
+        rootTargetFunc: rootTargetIdx,
+        intA: parseFloat(document.getElementById('intA')?.value) || 0,
+        intB: parseFloat(document.getElementById('intB')?.value) || 3.14159,
+        calcX0: parseFloat(document.getElementById('calcX0')?.value) || 1.0,
+        isShade: document.getElementById('shadeIntegral')?.checked ?? true,
+        showRiemann: document.getElementById('showRiemann')?.checked ?? false,
+        riemannN: parseInt(document.getElementById('riemannN')?.value) || 10,
+        riemannMethod: document.getElementById('riemannMethod')?.value || 'midpoint',
+        showTaylor: document.getElementById('showTaylorOverlay')?.checked ?? false,
+        taylorDegree: parseInt(document.getElementById('taylorDegree')?.value) || 3,
+        showTangent: showTangent,
+        showCoordsHUD: isReadoutVisible,
+        audioMuted: audioMuted,
+        savedAt: Date.now()
       };
       const json = JSON.stringify(config, null, 2);
       const blob = new Blob([json], { type: 'application/json' });
@@ -3194,6 +3279,7 @@
       a.click();
       document.body.removeChild(a);
       setTimeout(() => URL.revokeObjectURL(url), 1000);
+      playSfx('save');
       showToast('💾 Graph configuration saved to JSON!');
     }
     
@@ -3204,20 +3290,82 @@
       reader.onload = function(e) {
         try {
           const config = JSON.parse(e.target.result);
-          if (config.cartesianFuncs) cartesianFuncs = config.cartesianFuncs;
-          if (config.polarFuncs) polarFuncs = config.polarFuncs;
-          if (config.parametricCurves) parametricCurves = config.parametricCurves;
+          if (config.cartesianFuncs && Array.isArray(config.cartesianFuncs)) cartesianFuncs = config.cartesianFuncs;
+          if (config.polarFuncs && Array.isArray(config.polarFuncs)) polarFuncs = config.polarFuncs;
+          if (config.parametricCurves && Array.isArray(config.parametricCurves)) parametricCurves = config.parametricCurves;
           if (config.polarMinTh !== undefined) polarMinTh = config.polarMinTh;
           if (config.polarMaxTh !== undefined) polarMaxTh = config.polarMaxTh;
           if (config.showPolarGrid !== undefined) showPolarGrid = config.showPolarGrid;
           if (config.paramMinT !== undefined) paramMinT = config.paramMinT;
           if (config.paramMaxT !== undefined) paramMaxT = config.paramMaxT;
           if (config.mode) currentMode = config.mode;
-          if (config.view_cx !== undefined) view_cx = config.view_cx;
-          if (config.view_cy !== undefined) view_cy = config.view_cy;
-          if (config.view_scale !== undefined) view_scale = config.view_scale;
+          if (config.view_cx !== undefined && !isNaN(config.view_cx)) view_cx = config.view_cx;
+          if (config.view_cy !== undefined && !isNaN(config.view_cy)) view_cy = config.view_cy;
+          if (config.view_scale !== undefined && !isNaN(config.view_scale) && config.view_scale > 0) view_scale = config.view_scale;
+
+          if (config.calcTargetFunc !== undefined) {
+            const el = document.getElementById('calcTargetFunc');
+            if (el) el.value = config.calcTargetFunc;
+          }
+          if (config.rootTargetFunc !== undefined) {
+            const el = document.getElementById('rootTargetFunc');
+            if (el) el.value = config.rootTargetFunc;
+          }
+          if (config.intA !== undefined) {
+            const el = document.getElementById('intA');
+            if (el) el.value = config.intA;
+          }
+          if (config.intB !== undefined) {
+            const el = document.getElementById('intB');
+            if (el) el.value = config.intB;
+          }
+          if (config.calcX0 !== undefined) {
+            const el = document.getElementById('calcX0');
+            if (el) el.value = config.calcX0;
+          }
+          if (config.isShade !== undefined) {
+            const el = document.getElementById('shadeIntegral');
+            if (el) el.checked = !!config.isShade;
+          }
+          if (config.showRiemann !== undefined) {
+            const el = document.getElementById('showRiemann');
+            if (el) el.checked = !!config.showRiemann;
+          }
+          if (config.riemannN !== undefined) {
+            const el = document.getElementById('riemannN');
+            if (el) el.value = config.riemannN;
+          }
+          if (config.riemannMethod !== undefined) {
+            const el = document.getElementById('riemannMethod');
+            if (el) el.value = config.riemannMethod;
+          }
+          if (config.showTaylor !== undefined) {
+            const el = document.getElementById('showTaylorOverlay');
+            if (el) el.checked = !!config.showTaylor;
+          }
+          if (config.taylorDegree !== undefined) {
+            const el = document.getElementById('taylorDegree');
+            if (el) el.value = config.taylorDegree;
+          }
+          if (config.showTangent !== undefined) {
+            showTangent = !!config.showTangent;
+            const el = document.getElementById('showTangentLine');
+            if (el) el.checked = showTangent;
+          }
+          if (config.showCoordsHUD !== undefined && config.showCoordsHUD !== isReadoutVisible) {
+            toggleReadout();
+          }
+          if (config.audioMuted !== undefined) {
+            audioMuted = !!config.audioMuted;
+            localStorage.setItem('kgraph_muted', audioMuted ? 'true' : 'false');
+            updateMuteUI();
+          }
           
           setPlotMode(currentMode);
+          updateCalcResults();
+          replotAll();
+          drawGraph();
+          playSfx('load');
           showToast('📂 Configuration imported successfully!');
         } catch(err) {
           showToast('⚠️ Invalid JSON file format');
@@ -3246,25 +3394,24 @@
           view_scale: view_scale,
           calcTargetFunc: targetIdx,
           rootTargetFunc: rootTargetIdx,
-          intA: typeof intA !== 'undefined' ? intA : -2,
-          intB: typeof intB !== 'undefined' ? intB : 2,
-          isShade: typeof isShade !== 'undefined' ? isShade : true,
-          showRiemann: typeof showRiemann !== 'undefined' ? showRiemann : false,
-          riemannN: typeof riemannN !== 'undefined' ? riemannN : 10,
-          riemannMethod: typeof riemannMethod !== 'undefined' ? riemannMethod : 'midpoint',
-          showTaylor: typeof showTaylor !== 'undefined' ? showTaylor : false,
-          tCenter: typeof tCenter !== 'undefined' ? tCenter : 0,
-          tOrder: typeof tOrder !== 'undefined' ? tOrder : 4,
-          showTangent: typeof showTangent !== 'undefined' ? showTangent : false,
-          tangentX: typeof tangentX !== 'undefined' ? tangentX : 1,
-          showGrid: typeof showGrid !== 'undefined' ? showGrid : true,
-          showCoordsHUD: typeof showCoordsHUD !== 'undefined' ? showCoordsHUD : true,
-          audioMuted: typeof audioMuted !== 'undefined' ? audioMuted : false,
+          intA: parseFloat(document.getElementById('intA')?.value) || 0,
+          intB: parseFloat(document.getElementById('intB')?.value) || 3.14159,
+          calcX0: parseFloat(document.getElementById('calcX0')?.value) || 1.0,
+          isShade: document.getElementById('shadeIntegral')?.checked ?? true,
+          showRiemann: document.getElementById('showRiemann')?.checked ?? false,
+          riemannN: parseInt(document.getElementById('riemannN')?.value) || 10,
+          riemannMethod: document.getElementById('riemannMethod')?.value || 'midpoint',
+          showTaylor: document.getElementById('showTaylorOverlay')?.checked ?? false,
+          taylorDegree: parseInt(document.getElementById('taylorDegree')?.value) || 3,
+          showTangent: showTangent,
+          showCoordsHUD: isReadoutVisible,
+          audioMuted: audioMuted,
           savedAt: Date.now()
         };
         localStorage.setItem('kgraph_quicksave', JSON.stringify(config));
         localStorage.setItem('kgraph_tutorialSeen', 'true');
         localStorage.setItem('kgraph_firstRunSeen', 'true');
+        playSfx('save');
         showToast('💾 State QuickSaved to storage! [F5]');
         return true;
       } catch (err) {
@@ -3293,28 +3440,74 @@
         if (config.view_cx !== undefined && !isNaN(config.view_cx)) view_cx = config.view_cx;
         if (config.view_cy !== undefined && !isNaN(config.view_cy)) view_cy = config.view_cy;
         if (config.view_scale !== undefined && !isNaN(config.view_scale) && config.view_scale > 0) view_scale = config.view_scale;
-        if (config.intA !== undefined && typeof intA !== 'undefined') intA = config.intA;
-        if (config.intB !== undefined && typeof intB !== 'undefined') intB = config.intB;
-        if (config.isShade !== undefined && typeof isShade !== 'undefined') isShade = config.isShade;
-        if (config.showRiemann !== undefined && typeof showRiemann !== 'undefined') showRiemann = config.showRiemann;
-        if (config.riemannN !== undefined && typeof riemannN !== 'undefined') riemannN = config.riemannN;
-        if (config.riemannMethod !== undefined && typeof riemannMethod !== 'undefined') riemannMethod = config.riemannMethod;
-        if (config.showTaylor !== undefined && typeof showTaylor !== 'undefined') showTaylor = config.showTaylor;
-        if (config.tCenter !== undefined && typeof tCenter !== 'undefined') tCenter = config.tCenter;
-        if (config.tOrder !== undefined && typeof tOrder !== 'undefined') tOrder = config.tOrder;
-        if (config.showTangent !== undefined && typeof showTangent !== 'undefined') showTangent = config.showTangent;
-        if (config.tangentX !== undefined && typeof tangentX !== 'undefined') tangentX = config.tangentX;
-        if (config.showGrid !== undefined && typeof showGrid !== 'undefined') showGrid = config.showGrid;
-        if (config.showCoordsHUD !== undefined && typeof showCoordsHUD !== 'undefined') showCoordsHUD = config.showCoordsHUD;
-        if (config.audioMuted !== undefined && typeof audioMuted !== 'undefined') audioMuted = config.audioMuted;
+
+        // Restore DOM controls
+        if (config.calcTargetFunc !== undefined) {
+          const el = document.getElementById('calcTargetFunc');
+          if (el) el.value = config.calcTargetFunc;
+        }
+        if (config.rootTargetFunc !== undefined) {
+          const el = document.getElementById('rootTargetFunc');
+          if (el) el.value = config.rootTargetFunc;
+        }
+        if (config.intA !== undefined) {
+          const el = document.getElementById('intA');
+          if (el) el.value = config.intA;
+        }
+        if (config.intB !== undefined) {
+          const el = document.getElementById('intB');
+          if (el) el.value = config.intB;
+        }
+        if (config.calcX0 !== undefined) {
+          const el = document.getElementById('calcX0');
+          if (el) el.value = config.calcX0;
+        }
+        if (config.isShade !== undefined) {
+          const el = document.getElementById('shadeIntegral');
+          if (el) el.checked = !!config.isShade;
+        }
+        if (config.showRiemann !== undefined) {
+          const el = document.getElementById('showRiemann');
+          if (el) el.checked = !!config.showRiemann;
+        }
+        if (config.riemannN !== undefined) {
+          const el = document.getElementById('riemannN');
+          if (el) el.value = config.riemannN;
+        }
+        if (config.riemannMethod !== undefined) {
+          const el = document.getElementById('riemannMethod');
+          if (el) el.value = config.riemannMethod;
+        }
+        if (config.showTaylor !== undefined) {
+          const el = document.getElementById('showTaylorOverlay');
+          if (el) el.checked = !!config.showTaylor;
+        }
+        if (config.taylorDegree !== undefined) {
+          const el = document.getElementById('taylorDegree');
+          if (el) el.value = config.taylorDegree;
+        }
+        if (config.showTangent !== undefined) {
+          showTangent = !!config.showTangent;
+          const el = document.getElementById('showTangentLine');
+          if (el) el.checked = showTangent;
+        }
+        if (config.showCoordsHUD !== undefined && config.showCoordsHUD !== isReadoutVisible) {
+          toggleReadout();
+        }
+        if (config.audioMuted !== undefined) {
+          audioMuted = !!config.audioMuted;
+          localStorage.setItem('kgraph_muted', audioMuted ? 'true' : 'false');
+          updateMuteUI();
+        }
 
         localStorage.setItem('kgraph_tutorialSeen', 'true');
         localStorage.setItem('kgraph_firstRunSeen', 'true');
 
         setPlotMode(currentMode);
-        if (typeof updateCalcUI === 'function') updateCalcUI();
+        updateCalcResults();
         replotAll();
         drawGraph();
+        playSfx('load');
         showToast('📂 State QuickLoaded successfully! [F9]');
         return true;
       } catch (err) {
@@ -3349,6 +3542,7 @@
 
     // Initialization
     try { window.resizeTo(1024, 768); } catch(e) {}
+    updateMuteUI();
     replotAll();
     buildModeControls();
     buildPresets();

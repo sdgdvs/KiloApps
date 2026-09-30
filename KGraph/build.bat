@@ -8,3 +8,7 @@ if exist app.res (
 ) else (
     link /nologo /ENTRY:MainEntry /SUBSYSTEM:WINDOWS main.obj kernel32.lib user32.lib gdi32.lib advapi32.lib comdlg32.lib shell32.lib winmm.lib ws2_32.lib comctl32.lib libcmt.lib ucrt.lib /OUT:KGraph.exe
 )
+if exist KGraph.exe (
+    copy /Y KGraph.exe ..\KiloOS\public\exe\KGraph.exe >nul
+    if exist ..\KiloOS_Server\public\exe copy /Y KGraph.exe ..\KiloOS_Server\public\exe\KGraph.exe >nul
+)
