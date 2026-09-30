@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T02:05:00Z — kilo-expander: KSys (Diagnostic Depth, GPU/Crypto/Jitter Benches, Hex Inspector, YM2612 FM Audio)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 183.2 KB < 999 KB).
+  - Diagnostic Benchmarks: Added GPU fillrate, Cryptographic hashing (CRC32/Adler32), and Scheduler jitter tests.
+  - Low-Level Hex Inspector: Added 6-tab viewer with source cycling (Telemetry, Quicksave v2, Network Frame, Ring Log).
+  - Network & Telemetry Depth: Added ICMP probe simulation, thermal & power telemetry, and enhanced service filtering.
+  - Audio Engine: Integrated Yamaha YM2612 2-op FM and SNES SPC700 stereo delay synth with [Shift+M] hotkey toggle.
+  - Quicksave v2 & Native Alignment: Implemented v2 quicksave schema with v1 fallback in Win32 C and web; auto-copy to public/exe/.
+  - Verification: MSVC clean (`KSys.exe` 31.5 KB); Vite clean in 277ms; headless Chrome CDP 100% PASS (126 elements); security & icons clean.
+
 - **2026-09-30T01:40:00Z — kilo-tester: KFont (Interactive UI Audit, State Persistence & Audio Feedback Polish)**
   - Status: PASS ✅ (4 issues fixed, 0 regressions, 0 perimeter glints, 91.9 KB < 999 KB).
   - State Persistence: Persisted custom contrast colors, modular scale ratio, and custom kerning pairs across sessions.

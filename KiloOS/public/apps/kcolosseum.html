@@ -123,13 +123,14 @@
   }
   #toast-container {
     position: fixed;
-    top: 14px;
-    right: 14px;
+    bottom: 16px;
+    left: 16px;
     z-index: 2500;
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     gap: 8px;
     pointer-events: none;
+    max-width: 340px;
   }
   .toast {
     background: #2b0808;
@@ -155,7 +156,7 @@
     border-color: #2ecc71;
   }
   @keyframes toastIn {
-    from { opacity: 0; transform: translateY(-8px); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
   .modal-backdrop {
@@ -177,6 +178,7 @@
   <div class="top-nav">
     <div class="top-nav-title">🏛️ KCOLOSSEUM (1999)</div>
     <div class="top-nav-btns">
+      <button id="soundToggleBtn" onclick="toggleSound()" title="Toggle Sound [M]">🔊 Audio: ON</button>
       <button onclick="quickSave()" title="Quicksave Ludus State [F5]">💾 Save [F5]</button>
       <button onclick="quickLoad()" title="Quickload Ludus State [F9]">📂 Load [F9]</button>
       <button onclick="showExportModal()" title="Backup & Restore JSON Save">📜 Backup</button>
@@ -241,6 +243,7 @@
         <ul style="list-style-type:disc; padding-left:20px;">
           <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>F5 / F9:</strong>&nbsp;Quicksave / Quickload Ludus snapshot</li>
           <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>F1 / H / ?:</strong>&nbsp;Open / close this Lanista's Guide</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>M:</strong>&nbsp;Toggle audio sound effects on/off</li>
           <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>R:</strong>&nbsp;Refresh recruit market (50D)</li>
           <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>1, 2, 3:</strong>&nbsp;Quick-recruit market fighter 1, 2, or 3</li>
           <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Space / Enter:</strong>&nbsp;Attack in combat / Enter arena with ready fighter / Dismiss modals</li>
@@ -348,12 +351,36 @@
 
   <script>
     // --- YAMAHA YM2612 2-OPERATOR FM SYNTHESIS & SPC700 DELAY AUDIO ENGINE ---
+    let soundMuted = false;
+    try {
+      soundMuted = localStorage.getItem('kcolosseum_soundMuted') === '1';
+    } catch (e) {}
+
+    function toggleSound() {
+      soundMuted = !soundMuted;
+      try {
+        localStorage.setItem('kcolosseum_soundMuted', soundMuted ? '1' : '0');
+      } catch (e) {}
+      updateSoundButton();
+      showToast(soundMuted ? '🔇 Audio muted [M]' : '🔊 Audio unmuted [M]', 'info');
+      if (!soundMuted) playTone(523.25, 'triangle', 0.1, 0.25);
+    }
+
+    function updateSoundButton() {
+      const btn = document.getElementById('soundToggleBtn');
+      if (btn) {
+        btn.innerHTML = soundMuted ? '🔇 Audio: OFF' : '🔊 Audio: ON';
+        btn.title = soundMuted ? 'Unmute Audio [M]' : 'Mute Audio [M]';
+      }
+    }
+
     let audioCtx = null;
     let spcDelay = null;
     let spcFeedback = null;
     let spcDamp = null;
 
     function initAudio() {
+      if (soundMuted) return null;
       if (audioCtx) {
         if (audioCtx.state === 'suspended') audioCtx.resume();
         return audioCtx;
@@ -2831,11 +2858,17 @@
     }
 
     // --- MODAL CONTROLS & ERGONOMICS ---
+    function clearToasts() {
+      const container = document.getElementById('toast-container');
+      if (container) container.innerHTML = '';
+    }
+
     function closeAllModals() {
       ['helpModal', 'tutorialModal', 'exportModal', 'victoryModal'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.display = 'none';
       });
+      clearToasts();
     }
 
     function showHelp() {
@@ -2914,12 +2947,46 @@
 
     // --- STATE PERSISTENCE & BACKUP ---
     function getSavePayload() {
+      const arenaOpen = document.getElementById('arenaPanel') && document.getElementById('arenaPanel').style.display !== 'none';
+      let combatState = null;
+      if (arenaOpen && currentFighter && enemyFighter) {
+        combatState = {
+          inCombat: true,
+          fighterId: currentFighter.id,
+          fighterHp: currentFighter.hp,
+          fighterMaxHp: currentFighter.maxHp,
+          fighterDamageTaken: currentFighter.damageTaken,
+          enemyFighter: {
+            name: enemyFighter.name,
+            str: enemyFighter.str,
+            agi: enemyFighter.agi,
+            vit: enemyFighter.vit,
+            weapon: enemyFighter.weapon,
+            armor: enemyFighter.armor,
+            shield: enemyFighter.shield,
+            hp: enemyFighter.hp,
+            maxHp: enemyFighter.maxHp,
+            desc: enemyFighter.desc,
+            isBeast: !!enemyFighter.isBeast,
+            isTwins: !!enemyFighter.isTwins,
+            isBehemoth: !!enemyFighter.isBehemoth,
+            isPraetorian: !!enemyFighter.isPraetorian,
+            skinTone: enemyFighter.skinTone
+          },
+          crowdFavor,
+          playerDefending,
+          enemyDefending,
+          combatOver,
+          combatLogHtml: document.getElementById('combatLog') ? document.getElementById('combatLog').innerHTML : ''
+        };
+      }
       return {
-        version: '1.0',
+        version: '1.1',
         timestamp: Date.now(),
         funds,
         arenaLevel,
         nextId,
+        soundMuted,
         owned: owned.map(g => ({
           id: g.id,
           name: g.name,
@@ -2945,7 +3012,8 @@
           shield: g.shield,
           damageTaken: typeof g.damageTaken === 'number' ? g.damageTaken : 0,
           skinTone: g.skinTone
-        }))
+        })),
+        combatState
       };
     }
 
@@ -2975,6 +3043,10 @@
       if (typeof data.funds === 'number') funds = data.funds;
       if (typeof data.arenaLevel === 'number') arenaLevel = data.arenaLevel;
       if (typeof data.nextId === 'number') nextId = data.nextId;
+      if (typeof data.soundMuted === 'boolean') {
+        soundMuted = data.soundMuted;
+        updateSoundButton();
+      }
       if (Array.isArray(data.owned)) {
         owned.length = 0;
         data.owned.forEach(g => {
@@ -2991,8 +3063,56 @@
           market.push(g);
         });
       }
-      if (document.getElementById('arenaPanel').style.display !== 'none') {
-        exitArena();
+
+      try {
+        localStorage.setItem('kcolosseum_tutorialSeen', '1');
+      } catch (e) {}
+
+      if (data.combatState && data.combatState.inCombat) {
+        const found = owned.find(g => g.id === data.combatState.fighterId);
+        if (found) {
+          currentFighter = found;
+          currentFighter.maxHp = typeof data.combatState.fighterMaxHp === 'number' ? data.combatState.fighterMaxHp : getEffVit(currentFighter) * 10;
+          currentFighter.hp = typeof data.combatState.fighterHp === 'number' ? data.combatState.fighterHp : currentFighter.maxHp - currentFighter.damageTaken;
+          currentFighter.damageTaken = typeof data.combatState.fighterDamageTaken === 'number' ? data.combatState.fighterDamageTaken : Math.max(0, currentFighter.maxHp - currentFighter.hp);
+
+          enemyFighter = data.combatState.enemyFighter;
+          crowdFavor = typeof data.combatState.crowdFavor === 'number' ? data.combatState.crowdFavor : 0;
+          playerDefending = !!data.combatState.playerDefending;
+          enemyDefending = !!data.combatState.enemyDefending;
+          combatOver = !!data.combatState.combatOver;
+          combatBusy = false;
+
+          document.getElementById('dashboard').style.display = 'none';
+          document.getElementById('arenaPanel').style.display = 'block';
+
+          if (data.combatState.combatLogHtml && document.getElementById('combatLog')) {
+            document.getElementById('combatLog').innerHTML = data.combatState.combatLogHtml;
+            document.getElementById('combatLog').scrollTop = document.getElementById('combatLog').scrollHeight;
+          }
+
+          updateCombatUI();
+          if (combatOver) {
+            document.getElementById('btnAttack').innerText = 'Continue [Enter]';
+            document.getElementById('btnDefend').disabled = true;
+            document.getElementById('btnShowboat').disabled = true;
+            document.getElementById('btnFlee').disabled = true;
+          } else {
+            document.getElementById('btnAttack').innerText = '⚔️ Attack [A]';
+            document.getElementById('btnDefend').disabled = false;
+            document.getElementById('btnShowboat').disabled = false;
+            document.getElementById('btnFlee').disabled = false;
+          }
+
+          if (animId) cancelAnimationFrame(animId);
+          animId = requestAnimationFrame(renderArenaLoop);
+        } else {
+          exitArena();
+        }
+      } else {
+        if (document.getElementById('arenaPanel').style.display !== 'none') {
+          exitArena();
+        }
       }
       updateUI();
       return true;
@@ -3156,6 +3276,12 @@
         return;
       }
 
+      if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        toggleSound();
+        return;
+      }
+
       if (e.key === 'F5') {
         e.preventDefault();
         quickSave();
@@ -3229,8 +3355,10 @@
     });
 
     loadGame();
+    updateSoundButton();
     updateUI();
-    if (!localStorage.getItem('kcolosseum_tutorialSeen')) {
+    const hasExistingSave = localStorage.getItem('kcolosseum_save') || localStorage.getItem('kcolosseum_quicksave');
+    if (!localStorage.getItem('kcolosseum_tutorialSeen') && (!hasExistingSave || (funds === 1000 && owned.length === 0 && arenaLevel === 1))) {
       setTimeout(showTutorial, 400);
     }
   </script>
