@@ -948,6 +948,112 @@
     text-align: right;
   }
 
+  /* Live Presence & Community Button Exchange Styles */
+  .presence-dot {
+    display: inline-block;
+    color: var(--green-bright);
+    animation: presencePulse 1.8s ease-in-out infinite;
+  }
+  @keyframes presencePulse {
+    0%, 100% { opacity: 0.4; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1.15); filter: drop-shadow(0 0 5px var(--green-bright)); }
+  }
+
+  .community-badges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .community-badge-card {
+    background: #090d18;
+    border: 1px solid var(--border-med);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    position: relative;
+    border-radius: 2px;
+  }
+  .community-badge-card:hover {
+    border-color: var(--cyan);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.25);
+  }
+  .community-badge-img {
+    width: 88px;
+    height: 31px;
+    image-rendering: pixelated;
+    border: 1px solid #000;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  }
+  .community-badge-meta {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    text-align: center;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .community-badge-actions {
+    display: flex;
+    gap: 4px;
+    width: 100%;
+    justify-content: center;
+  }
+  .btn-cheer {
+    background: #1e293b;
+    border: 1px solid var(--border-med);
+    color: var(--magenta);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 6px;
+    cursor: pointer;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    transition: all 0.12s;
+  }
+  .btn-cheer:hover {
+    background: var(--magenta);
+    color: #fff;
+    border-color: #f472b6;
+    box-shadow: 0 0 8px rgba(236, 72, 153, 0.4);
+  }
+  .btn-copy-embed {
+    background: #1e293b;
+    border: 1px solid var(--border-med);
+    color: var(--cyan);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 2px 6px;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.12s;
+  }
+  .btn-copy-embed:hover {
+    background: var(--cyan);
+    color: #000;
+  }
+
+  .voyager-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    background: #090d18;
+    border: 1px solid var(--border-med);
+    margin-bottom: 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+  }
+
   /* Footer */
   footer {
     border-top: 1px solid var(--border-med);
@@ -992,6 +1098,10 @@
       <div class="counter-box">
         <div class="counter-label">ACTIVE NODES</div>
         <div class="counter-odometer" id="activeNodesCount" style="color:var(--cyan);">18</div>
+      </div>
+      <div class="counter-box" id="presenceCounterBox" onclick="openVoyagerModal()" style="cursor:pointer;" title="Click to view live Web Voyagers cruising the Ring">
+        <div class="counter-label">VOYAGERS ONLINE</div>
+        <div class="counter-odometer" id="liveVoyagerCount" style="color:var(--green-bright);"><span class="presence-dot">●</span> <span id="voyagerCountNum">1</span></div>
       </div>
       <button class="sound-btn" id="btnAudioToggle" onclick="toggleAudioSystem()">
         <span id="soundIcon">🔇</span> <span id="soundText">SOUND: OFF</span>
@@ -1070,6 +1180,7 @@
           <button class="pill-btn" data-cat="demoscene" onclick="filterRingNodes('demoscene')">Demoscene &amp; Hacker (<span id="countDemoscene">4</span>)</button>
           <button class="pill-btn" data-cat="tools" onclick="filterRingNodes('tools')">Tools &amp; Portals (<span id="countTools">8</span>)</button>
           <button class="pill-btn" data-cat="apps" onclick="filterRingNodes('apps')">Fleet Highlights (<span id="countApps">4</span>)</button>
+          <button class="pill-btn" data-cat="community_submissions" onclick="filterRingNodes('community_submissions')">🌐 Community Submissions (<span id="countSubmissions">0</span>)</button>
         </div>
         <div class="search-wrap">
           <input type="text" class="search-input" id="ringSearchInput" placeholder="Filter by title, tag, or webmaster..." oninput="handleSearchNodes(this.value)">
@@ -1287,6 +1398,9 @@
             </button>
             <button class="btn-action" onclick="copyBadgeCss()" style="padding:6px; font-size:11px;">
               <span>📋</span> Copy Pure CSS Button
+            </button>
+            <button class="btn-teleport" onclick="openPublishBadgeModal()" style="grid-column: span 2; background:linear-gradient(180deg, #10b981 0%, #059669 100%); border-color:#34d399;">
+              <span>🌐</span> Publish to Live Community Button Exchange
             </button>
           </div>
         </div>
@@ -1547,8 +1661,11 @@ Click 'Run Full Ring Diagnostic' to probe all 18 active ring nodes.</div>
         <div class="panel-title">
           <span>💬</span> Webmaster Guestbook &amp; Ring Shoutbox
         </div>
-        <div style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono);">
-          1999 Ringmaster Dispatch • Moderated CGI Storage
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span id="gbSyncBadge" style="font-family:var(--font-mono); font-size:10px; padding:2px 6px; border-radius:2px; background:#064e3b; color:#34d399; border:1px solid #10b981;"><span class="presence-dot">●</span> RTDB SYNCED</span>
+          <span style="font-size:11px; color:var(--text-muted); font-family:var(--font-mono);">
+            1999 Ringmaster Dispatch • Moderated Global Storage
+          </span>
         </div>
       </div>
       <div class="panel-desc">
@@ -1655,6 +1772,28 @@ Click 'Run Full Ring Diagnostic' to probe all 18 active ring nodes.</div>
     </div>
   </div>
 
+  <!-- Live Community 88x31 Button Exchange Panel -->
+  <div class="panel-box" style="margin-top:14px;">
+    <div class="panel-header">
+      <div class="panel-title">
+        <span>🌐</span> Live Community 88x31 Button Exchange &amp; Showcase
+      </div>
+      <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+        <span class="presence-dot">●</span>
+        <span style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);" id="communityBadgeCountText">Loading Live Community Badges...</span>
+        <button class="pill-btn active" id="btnFilterBadgeAll" onclick="filterCommunityBadges('all')">All</button>
+        <button class="pill-btn" id="btnFilterBadgePopular" onclick="filterCommunityBadges('popular')">🔥 Top Cheered</button>
+        <button class="pill-btn" id="btnFilterBadgeRecent" onclick="filterCommunityBadges('recent')">Recent</button>
+      </div>
+    </div>
+    <div class="panel-desc">
+      Real-time button exchange network synchronized across all voyagers via Firebase Realtime Database. Design custom 88x31 badges in Tab [3], publish them directly to this exchange, cheer fellow webmasters, or copy HTML embed snippets for your own retro site.
+    </div>
+    <div class="community-badges-grid" id="communityBadgesGrid">
+      <!-- Generated dynamically -->
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer>
     Central KiloNet Webring Consortium • Established 1999 • All Ring Sites Verified Clean &amp; &lt;999KB<br>
@@ -1680,6 +1819,143 @@ Click 'Run Full Ring Diagnostic' to probe all 18 active ring nodes.</div>
     </div>
   </div>
 </div>
+
+<!-- Modal: Publish Badge to Community Exchange -->
+<div class="modal-backdrop" id="publishBadgeModal" onclick="closeModalOnBackdrop(event)">
+  <div class="modal-window">
+    <div class="modal-head">
+      <div class="modal-title"><span>🌐</span> Publish to Community Button Exchange</div>
+      <button class="btn-close" onclick="closePublishBadgeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="text-align:center; margin-bottom:12px;">
+        <canvas id="publishBadgePreviewCanvas" width="88" height="31" style="image-rendering:pixelated; width:176px; height:62px; border:2px outset #38bdf8; box-shadow:0 0 12px rgba(56,189,248,0.4);"></canvas>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="pubAuthor">YOUR WEBMASTER CALLSIGN *</label>
+        <input type="text" class="form-control" id="pubAuthor" placeholder="e.g. ~neon_rider" maxlength="20">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="pubTitle">BUTTON TITLE / SITE NAME *</label>
+        <input type="text" class="form-control" id="pubTitle" placeholder="e.g. CyberMOD Vault '99" maxlength="32">
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="pubUrl">TARGET URL (kweb:// or /web/ or /apps/)</label>
+        <input type="text" class="form-control" id="pubUrl" placeholder="e.g. kweb://users/~neon_rider">
+      </div>
+      <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted); margin-top:8px;">
+        ★ Your 88x31 button will be synchronized instantly to the live Firebase Realtime Database and shown to all visitors.
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-teleport" onclick="confirmPublishBadge()" style="background:linear-gradient(180deg, #10b981 0%, #059669 100%); border-color:#34d399;">
+        <span>🚀</span> Broadcast Live to Exchange
+      </button>
+      <button class="btn-teleport alt" onclick="closePublishBadgeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Live Voyagers Online -->
+<div class="modal-backdrop" id="voyagerModal" onclick="closeModalOnBackdrop(event)">
+  <div class="modal-window">
+    <div class="modal-head">
+      <div class="modal-title"><span>🟢</span> Active Web Voyagers Online</div>
+      <button class="btn-close" onclick="closeVoyagerModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:#090d18; border:1px solid var(--border-med); padding:10px; margin-bottom:12px;">
+        <label class="form-label" for="voyagerHandleInput">YOUR VOYAGER CALLSIGN</label>
+        <div style="display:flex; gap:8px;">
+          <input type="text" class="form-control" id="voyagerHandleInput" placeholder="Enter your callsign..." maxlength="20">
+          <button class="btn-teleport" onclick="saveVoyagerCallsign()" style="padding:4px 10px; font-size:11px;">Save</button>
+        </div>
+      </div>
+      <div style="font-family:var(--font-mono); font-size:11px; font-weight:bold; color:var(--cyan); margin-bottom:6px;">
+        VOYAGERS CURRENTLY CRUISING THE RING:
+      </div>
+      <div id="voyagerListContainer" style="max-height:220px; overflow-y:auto;">
+        <!-- Filled dynamically -->
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-teleport alt" onclick="closeVoyagerModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Community Badge Inspector -->
+<div class="modal-backdrop" id="communityBadgeModal" onclick="closeModalOnBackdrop(event)">
+  <div class="modal-window">
+    <div class="modal-head">
+      <div class="modal-title" id="commBadgeTitle">Community Badge Inspector</div>
+      <button class="btn-close" onclick="closeCommunityBadgeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div style="text-align:center; margin-bottom:12px;">
+        <img id="commBadgeZoomImg" src="" style="image-rendering:pixelated; width:176px; height:62px; border:2px outset #38bdf8; box-shadow:0 0 14px rgba(56,189,248,0.4);" alt="Badge Zoom">
+      </div>
+      <div style="background:#090d18; border:1px solid var(--border-med); padding:10px; font-family:var(--font-mono); font-size:11px; margin-bottom:10px;">
+        <div><strong>Creator:</strong> <span id="commBadgeAuthor" style="color:var(--cyan);"></span></div>
+        <div><strong>Target URL:</strong> <a id="commBadgeLink" href="#" style="color:var(--amber-bright);" target="_top"></a></div>
+        <div><strong>Total Cheers:</strong> <span id="commBadgeCheers" style="color:var(--magenta); font-weight:bold;">0</span></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">HTML EMBED SNIPPET</label>
+        <textarea class="code-output" id="commBadgeEmbedSnippet" readonly style="height:60px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-cheer" id="btnModalCheer" onclick="cheerCurrentModalBadge()" style="padding:6px 12px; font-size:11px;">
+        <span>❤️</span> Cheer (+1)
+      </button>
+      <button class="btn-teleport" onclick="copyCommBadgeEmbed()">
+        <span>📋</span> Copy Embed HTML
+      </button>
+      <button class="btn-teleport alt" onclick="closeCommunityBadgeModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase Realtime Database Integration -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, remove, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+    authDomain: "kiloappschat.firebaseapp.com",
+    databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+    projectId: "kiloappschat",
+    storageBucket: "kiloappschat.firebasestorage.app",
+    messagingSenderId: "290208566057",
+    appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+  };
+
+  try {
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    window.fb = {
+      app,
+      db,
+      ref,
+      set,
+      get,
+      push,
+      onValue,
+      onChildAdded,
+      off,
+      remove,
+      serverTimestamp,
+      onDisconnect
+    };
+    if (typeof window.onFirebaseReady === 'function') {
+      window.onFirebaseReady();
+    }
+  } catch (err) {
+    console.warn("Firebase RTDB init error:", err);
+  }
+</script>
 
 <script>
 /* =========================================================================
@@ -2198,6 +2474,10 @@ function switchTab(targetId) {
     }
   });
 
+  if (typeof updateVoyagerPresenceTab === 'function') {
+    updateVoyagerPresenceTab(targetId);
+  }
+
   if (targetId === 'tab-teleport') {
     startWarpStarfield();
   }
@@ -2219,6 +2499,9 @@ window.addEventListener('keydown', (e) => {
     switchTab(tabMap[e.key]);
   } else if (e.key === 'Escape') {
     closeNodeModal();
+    if (typeof closePublishBadgeModal === 'function') closePublishBadgeModal();
+    if (typeof closeVoyagerModal === 'function') closeVoyagerModal();
+    if (typeof closeCommunityBadgeModal === 'function') closeCommunityBadgeModal();
   }
 });
 
@@ -2231,6 +2514,7 @@ function loadCustomSubmittedNodes() {
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed)) {
+        parsed.forEach(p => { p.isCommunity = true; });
         ringNodes = [...DEFAULT_RING_NODES, ...parsed];
       }
     }
@@ -2247,7 +2531,9 @@ function renderDirectoryTable() {
   const query = currentSearchQuery.toLowerCase().trim();
 
   const filtered = ringNodes.filter(node => {
-    const matchesCat = (activeCategoryFilter === 'all') || (node.category === activeCategoryFilter);
+    const matchesCat = (activeCategoryFilter === 'all') || 
+      (node.category === activeCategoryFilter) || 
+      (activeCategoryFilter === 'community_submissions' && (node.isCommunity || node.category === 'community_submission' || node.category === 'submission'));
     const matchesQuery = !query || 
       node.name.toLowerCase().includes(query) ||
       node.handle.toLowerCase().includes(query) ||
@@ -2588,6 +2874,7 @@ function updateDirectoryCounts() {
   const demo = ringNodes.filter(n => n.category === 'demoscene').length;
   const tools = ringNodes.filter(n => n.category === 'tools').length;
   const apps = ringNodes.filter(n => n.category === 'apps').length;
+  const subs = ringNodes.filter(n => n.isCommunity || n.category === 'community_submission' || n.category === 'submission').length;
 
   const elAll = document.getElementById('countAll');
   if (elAll) elAll.textContent = total;
@@ -2599,6 +2886,8 @@ function updateDirectoryCounts() {
   if (elTools) elTools.textContent = tools;
   const elApps = document.getElementById('countApps');
   if (elApps) elApps.textContent = apps;
+  const elSubs = document.getElementById('countSubmissions');
+  if (elSubs) elSubs.textContent = subs;
 
   const activeCount = document.getElementById('activeNodesCount');
   if (activeCount) activeCount.textContent = total;
@@ -3784,6 +4073,7 @@ function submitRingApplication() {
     tech: "HTML 4.01 / Member Node",
     badgeLabel: btnLabel,
     latency: 28,
+    isCommunity: true,
     tags: `${cat},community,member,submission`
   };
 
@@ -3794,6 +4084,14 @@ function submitRingApplication() {
     localStorage.setItem('knet_webring_custom_nodes', JSON.stringify(customList));
   } catch (e) {
     console.warn("Could not save to localStorage:", e);
+  }
+
+  if (window.fb && window.fb.db && window.fb.ref && window.fb.push) {
+    try {
+      window.fb.push(window.fb.ref(window.fb.db, 'webring/submissions'), newNode);
+    } catch (fbErr) {
+      console.warn("Firebase submissions push error:", fbErr);
+    }
   }
 
   ringNodes.push(newNode);
@@ -3912,6 +4210,14 @@ function submitGuestbookPost() {
     console.warn("Could not save guestbook post:", e);
   }
 
+  if (window.fb && window.fb.db && window.fb.ref && window.fb.push) {
+    try {
+      window.fb.push(window.fb.ref(window.fb.db, 'webring/guestbook'), newPost);
+    } catch (fbErr) {
+      console.warn("Firebase guestbook push error:", fbErr);
+    }
+  }
+
   document.getElementById('gbMsg').value = '';
   renderGuestbook();
   showNoticeToast("Guestbook entry recorded!");
@@ -3997,13 +4303,556 @@ function closeNodeModal() {
 }
 
 function closeModalOnBackdrop(e) {
-  if (e.target.id === 'nodeModal') {
-    closeNodeModal();
+  if (e.target.classList && e.target.classList.contains('modal-backdrop')) {
+    e.target.classList.remove('open');
   }
 }
 
 /* =========================================================================
-   14. UTILITIES & TOASTS
+   14. COMMUNITY 88x31 BUTTON EXCHANGE & FIREBASE REALTIME ENGINE
+   ========================================================================= */
+let communityBadges = [];
+let activeBadgeFilter = 'all';
+let currentModalBadgeId = null;
+let activeVoyagers = [];
+let userCallsign = localStorage.getItem('knet_webring_callsign') || ('Voyager_' + Math.floor(1000 + Math.random() * 9000));
+let clientId = localStorage.getItem('knet_webring_client_id') || ('client_' + Math.random().toString(16).slice(2, 10));
+try {
+  localStorage.setItem('knet_webring_client_id', clientId);
+  localStorage.setItem('knet_webring_callsign', userCallsign);
+} catch (e) {}
+
+const DEFAULT_COMMUNITY_BADGES = [
+  {
+    id: "comm_1",
+    title: "NEON VOYAGER '99",
+    author: "~vapor_scout",
+    url: "/web/users/neon_rider.html",
+    topText: "SURF THE",
+    bottomText: "NEON RING",
+    glyph: "bolt",
+    palette: "cyan",
+    bevel: "neon",
+    cheers: 34,
+    createdAt: Date.now() - 3600000 * 24
+  },
+  {
+    id: "comm_2",
+    title: "DIAL-UP WARRIOR",
+    author: "Baud_Master",
+    url: "/apps/kbbs.html",
+    topText: "CONNECT AT",
+    bottomText: "56K V.90",
+    glyph: "pc",
+    palette: "amber",
+    bevel: "raised",
+    cheers: 28,
+    createdAt: Date.now() - 3600000 * 18
+  },
+  {
+    id: "comm_3",
+    title: "MADE WITH NOTEPAD",
+    author: "ASCII_Surfer",
+    url: "/apps/kpad.html",
+    topText: "WRITTEN IN",
+    bottomText: "NOTEPAD",
+    glyph: "floppy",
+    palette: "win95",
+    bevel: "inset",
+    cheers: 45,
+    createdAt: Date.now() - 3600000 * 12
+  },
+  {
+    id: "comm_4",
+    title: "AMIGA MOD VAULT",
+    author: "ProTracker_99",
+    url: "/web/geocities.html",
+    topText: "PROTRACKER",
+    bottomText: "MOD SOUND",
+    glyph: "cd",
+    palette: "purple",
+    bevel: "dotted",
+    cheers: 51,
+    createdAt: Date.now() - 3600000 * 6
+  },
+  {
+    id: "comm_5",
+    title: "Y2K COMPLIANT '99",
+    author: "HexSurfer",
+    url: "/web/asm_temple.html",
+    topText: "Y2K TESTED",
+    bottomText: "CERTIFIED",
+    glyph: "lock",
+    palette: "green",
+    bevel: "neon",
+    cheers: 39,
+    createdAt: Date.now() - 3600000 * 2
+  }
+];
+
+function generateSeedBadgeDataUrl(b) {
+  const c = document.createElement('canvas');
+  c.width = 88;
+  c.height = 31;
+  const ctx = c.getContext('2d');
+  const pal = BADGE_PALETTES[b.palette] || BADGE_PALETTES.cyan;
+  ctx.fillStyle = pal.bgDark;
+  ctx.fillRect(0, 0, 88, 31);
+  ctx.fillStyle = pal.bgLight;
+  ctx.fillRect(0, 15, 88, 16);
+  ctx.fillStyle = pal.border;
+  ctx.fillRect(0, 15, 88, 1);
+  if (b.bevel === 'raised') {
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, 88, 1); ctx.fillRect(0, 0, 1, 31);
+    ctx.fillStyle = '#000000'; ctx.fillRect(0, 30, 88, 1); ctx.fillRect(87, 0, 1, 31);
+  } else {
+    ctx.strokeStyle = pal.accent; ctx.strokeRect(0.5, 0.5, 87, 30);
+  }
+  const char = GLYPH_CHARS[b.glyph] || "🌐";
+  ctx.font = '10px "Segoe UI Emoji", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(char, 11, 16);
+  ctx.font = "bold 8px 'Courier New', monospace";
+  ctx.textAlign = 'center';
+  ctx.fillStyle = pal.textTop;
+  ctx.fillText((b.topText || "").slice(0, 12), 52, 9);
+  ctx.fillStyle = pal.textBottom;
+  ctx.fillText((b.bottomText || "").slice(0, 12), 52, 24);
+  return c.toDataURL('image/png');
+}
+
+function loadInitialCommunityBadges() {
+  try {
+    const saved = localStorage.getItem('knet_webring_community_badges');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        communityBadges = parsed;
+        renderCommunityBadges();
+        return;
+      }
+    }
+  } catch (e) {
+    console.warn("Could not load community badges from storage:", e);
+  }
+
+  communityBadges = DEFAULT_COMMUNITY_BADGES.map(b => {
+    return {
+      ...b,
+      dataUrl: generateSeedBadgeDataUrl(b)
+    };
+  });
+  renderCommunityBadges();
+}
+
+function renderCommunityBadges() {
+  const grid = document.getElementById('communityBadgesGrid');
+  const countText = document.getElementById('communityBadgeCountText');
+  if (!grid) return;
+
+  let list = [...communityBadges];
+  if (activeBadgeFilter === 'popular') {
+    list.sort((a, b) => (b.cheers || 0) - (a.cheers || 0));
+  } else if (activeBadgeFilter === 'recent') {
+    list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  }
+
+  if (countText) {
+    countText.textContent = `${list.length} Badges in Exchange`;
+  }
+
+  grid.innerHTML = '';
+  if (list.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:16px; color:var(--text-muted);">No community badges found. Design one in Tab [3] and be the first to publish!</div>';
+    return;
+  }
+
+  list.forEach(badge => {
+    const card = document.createElement('div');
+    card.className = 'community-badge-card';
+    card.innerHTML = `
+      <img class="community-badge-img" src="${badge.dataUrl}" alt="${escapeHtml(badge.title)}" onclick="openCommunityBadgeModal('${badge.id}')" title="Click to inspect &amp; copy embed code">
+      <div class="community-badge-meta">
+        <strong style="color:var(--text-primary); font-size:11px;">${escapeHtml(badge.title)}</strong><br>
+        by <span style="color:var(--cyan);">${escapeHtml(badge.author)}</span>
+      </div>
+      <div class="community-badge-actions">
+        <button class="btn-cheer" onclick="cheerCommunityBadge('${badge.id}', event)" title="Cheer this button!">
+          <span>❤️</span> <span>${badge.cheers || 0}</span>
+        </button>
+        <button class="btn-copy-embed" onclick="copyBadgeEmbedFromCard('${badge.id}', event)" title="Copy HTML embed snippet">
+          <span>📋</span> Embed
+        </button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function filterCommunityBadges(type) {
+  playSfx('click');
+  activeBadgeFilter = type;
+  ['btnFilterBadgeAll', 'btnFilterBadgePopular', 'btnFilterBadgeRecent'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  if (type === 'all' && document.getElementById('btnFilterBadgeAll')) document.getElementById('btnFilterBadgeAll').classList.add('active');
+  if (type === 'popular' && document.getElementById('btnFilterBadgePopular')) document.getElementById('btnFilterBadgePopular').classList.add('active');
+  if (type === 'recent' && document.getElementById('btnFilterBadgeRecent')) document.getElementById('btnFilterBadgeRecent').classList.add('active');
+  renderCommunityBadges();
+}
+
+function openPublishBadgeModal() {
+  playSfx('click');
+  const canvas88 = document.getElementById('badge88Canvas');
+  const previewCanvas = document.getElementById('publishBadgePreviewCanvas');
+  if (canvas88 && previewCanvas) {
+    const pctx = previewCanvas.getContext('2d');
+    pctx.imageSmoothingEnabled = false;
+    pctx.clearRect(0, 0, 88, 31);
+    pctx.drawImage(canvas88, 0, 0, 88, 31);
+  }
+  const authorInput = document.getElementById('pubAuthor');
+  if (authorInput) authorInput.value = userCallsign;
+  const titleInput = document.getElementById('pubTitle');
+  const botText = (document.getElementById('badge88BottomText').value || "RETRO BUTTON").toUpperCase();
+  if (titleInput) titleInput.value = botText;
+  const modal = document.getElementById('publishBadgeModal');
+  if (modal) modal.classList.add('open');
+}
+
+function closePublishBadgeModal() {
+  playSfx('click');
+  const modal = document.getElementById('publishBadgeModal');
+  if (modal) modal.classList.remove('open');
+}
+
+function confirmPublishBadge() {
+  const author = document.getElementById('pubAuthor').value.trim() || userCallsign;
+  const title = document.getElementById('pubTitle').value.trim() || "COMMUNITY BADGE";
+  const url = document.getElementById('pubUrl').value.trim() || "/web/webring.html";
+
+  const canvas88 = document.getElementById('badge88Canvas');
+  if (!canvas88) return;
+  const dataUrl = canvas88.toDataURL('image/png');
+
+  const badgeObj = {
+    id: 'comm_' + Date.now() + '_' + Math.random().toString(16).slice(2, 6),
+    title: title,
+    author: author,
+    url: url,
+    dataUrl: dataUrl,
+    cheers: 1,
+    createdAt: Date.now()
+  };
+
+  communityBadges.unshift(badgeObj);
+  try {
+    localStorage.setItem('knet_webring_community_badges', JSON.stringify(communityBadges));
+  } catch (e) {
+    console.warn("Could not save to localStorage:", e);
+  }
+
+  if (window.fb && window.fb.db && window.fb.ref && window.fb.push) {
+    try {
+      window.fb.push(window.fb.ref(window.fb.db, 'webring/community_badges'), badgeObj);
+    } catch (err) {
+      console.warn("Firebase community_badges push error:", err);
+    }
+  }
+
+  playSfx('submit');
+  renderCommunityBadges();
+  closePublishBadgeModal();
+  showNoticeToast("Badge Published to Live Community Exchange!");
+}
+
+function cheerCommunityBadge(badgeId, e) {
+  if (e) e.stopPropagation();
+  playSfx('badge');
+  const badge = communityBadges.find(b => b.id === badgeId);
+  if (!badge) return;
+  badge.cheers = (badge.cheers || 0) + 1;
+
+  if (window.fb && window.fb.db && window.fb.ref && window.fb.set) {
+    try {
+      window.fb.set(window.fb.ref(window.fb.db, `webring/community_badges/${badgeId}/cheers`), badge.cheers);
+    } catch (err) {
+      console.warn("Could not sync cheers to Firebase:", err);
+    }
+  }
+  try {
+    localStorage.setItem('knet_webring_community_badges', JSON.stringify(communityBadges));
+  } catch (e) {}
+
+  renderCommunityBadges();
+  showNoticeToast(`Cheered ${badge.title}! (+1)`);
+}
+
+function copyBadgeEmbedFromCard(badgeId, e) {
+  if (e) e.stopPropagation();
+  playSfx('click');
+  const badge = communityBadges.find(b => b.id === badgeId);
+  if (!badge) return;
+  const snippet = `<a href="${badge.url || '/web/webring.html'}" target="_top" title="${escapeHtml(badge.title)}"><img src="${badge.dataUrl}" width="88" height="31" alt="${escapeHtml(badge.title)}" style="image-rendering:pixelated; border:0;"></a>`;
+  navigator.clipboard.writeText(snippet).then(() => {
+    showNoticeToast("HTML Embed Code Copied!");
+  }).catch(() => {
+    showNoticeToast("Copy error. View badge to copy.");
+  });
+}
+
+function openCommunityBadgeModal(badgeId) {
+  playSfx('click');
+  const badge = communityBadges.find(b => b.id === badgeId);
+  if (!badge) return;
+  currentModalBadgeId = badgeId;
+
+  document.getElementById('commBadgeTitle').textContent = `Community Badge: ${badge.title}`;
+  document.getElementById('commBadgeZoomImg').src = badge.dataUrl;
+  document.getElementById('commBadgeAuthor').textContent = badge.author;
+  const linkEl = document.getElementById('commBadgeLink');
+  linkEl.href = badge.url || '#';
+  linkEl.textContent = badge.url || 'None';
+  document.getElementById('commBadgeCheers').textContent = badge.cheers || 0;
+  document.getElementById('commBadgeEmbedSnippet').value = `<a href="${badge.url || '/web/webring.html'}" target="_top" title="${escapeHtml(badge.title)}"><img src="${badge.dataUrl}" width="88" height="31" alt="${escapeHtml(badge.title)}" style="image-rendering:pixelated; border:0;"></a>`;
+
+  const modal = document.getElementById('communityBadgeModal');
+  if (modal) modal.classList.add('open');
+}
+
+function closeCommunityBadgeModal() {
+  playSfx('click');
+  const modal = document.getElementById('communityBadgeModal');
+  if (modal) modal.classList.remove('open');
+}
+
+function cheerCurrentModalBadge() {
+  if (!currentModalBadgeId) return;
+  cheerCommunityBadge(currentModalBadgeId);
+  const badge = communityBadges.find(b => b.id === currentModalBadgeId);
+  if (badge) {
+    document.getElementById('commBadgeCheers').textContent = badge.cheers || 0;
+  }
+}
+
+function copyCommBadgeEmbed() {
+  playSfx('click');
+  const snippetEl = document.getElementById('commBadgeEmbedSnippet');
+  if (!snippetEl) return;
+  snippetEl.select();
+  navigator.clipboard.writeText(snippetEl.value).then(() => {
+    showNoticeToast("HTML Embed Snippet Copied!");
+  }).catch(() => {
+    showNoticeToast("Snippet highlighted! Press Ctrl+C.");
+  });
+}
+
+/* Voyager Presence Functions */
+function openVoyagerModal() {
+  playSfx('click');
+  const handleInput = document.getElementById('voyagerHandleInput');
+  if (handleInput) handleInput.value = userCallsign;
+  renderVoyagersList();
+  const modal = document.getElementById('voyagerModal');
+  if (modal) modal.classList.add('open');
+}
+
+function closeVoyagerModal() {
+  playSfx('click');
+  const modal = document.getElementById('voyagerModal');
+  if (modal) modal.classList.remove('open');
+}
+
+function saveVoyagerCallsign() {
+  playSfx('submit');
+  const input = document.getElementById('voyagerHandleInput');
+  if (!input) return;
+  const val = input.value.trim();
+  if (!val) return;
+  userCallsign = val;
+  try {
+    localStorage.setItem('knet_webring_callsign', val);
+  } catch (e) {}
+  updateVoyagerPresenceTab(document.querySelector('.tab-pane.active') ? document.querySelector('.tab-pane.active').id : 'tab-directory');
+  showNoticeToast(`Voyager Callsign updated to "${val}"!`);
+  renderVoyagersList();
+}
+
+function renderVoyagersList() {
+  const container = document.getElementById('voyagerListContainer');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (activeVoyagers.length === 0) {
+    container.innerHTML = `
+      <div class="voyager-item">
+        <div><span class="presence-dot">●</span> <strong>${escapeHtml(userCallsign)}</strong> <span style="color:var(--cyan);">(You)</span></div>
+        <div style="color:var(--text-dim);">Tab: Directory</div>
+      </div>
+    `;
+    return;
+  }
+
+  activeVoyagers.forEach(v => {
+    const isSelf = v.id === clientId || v.handle === userCallsign;
+    const div = document.createElement('div');
+    div.className = 'voyager-item';
+    div.innerHTML = `
+      <div>
+        <span class="presence-dot">●</span> 
+        <strong>${escapeHtml(v.handle || 'Anonymous_Voyager')}</strong> 
+        ${isSelf ? '<span style="color:var(--cyan); font-size:10px;">(You)</span>' : ''}
+      </div>
+      <div style="color:var(--text-dim); font-size:10px;">
+        Browsing: ${escapeHtml((v.tab || 'tab-directory').replace('tab-', '').toUpperCase())}
+      </div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function updateVoyagerPresenceTab(tabId) {
+  if (window.fb && window.fb.db && window.fb.ref && window.fb.set) {
+    try {
+      const presenceRef = window.fb.ref(window.fb.db, `webring/presence/${clientId}`);
+      window.fb.set(presenceRef, {
+        id: clientId,
+        handle: userCallsign,
+        tab: tabId,
+        updatedAt: Date.now()
+      });
+    } catch (e) {
+      console.warn("Could not update presence tab:", e);
+    }
+  }
+}
+
+/* Firebase RTDB Initialization Hook */
+window.onFirebaseReady = function() {
+  if (!window.fb) return;
+  console.log("[KiloNet Webring] Firebase RTDB Online. Binding presence & community channels...");
+  const { db, ref, set, onValue, onDisconnect } = window.fb;
+
+  // 1. Presence setup
+  try {
+    const myPresenceRef = ref(db, `webring/presence/${clientId}`);
+    set(myPresenceRef, {
+      id: clientId,
+      handle: userCallsign,
+      tab: document.querySelector('.tab-pane.active') ? document.querySelector('.tab-pane.active').id : 'tab-directory',
+      connectedAt: Date.now()
+    });
+    onDisconnect(myPresenceRef).remove();
+
+    const presenceListRef = ref(db, 'webring/presence');
+    onValue(presenceListRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data && typeof data === 'object') {
+        activeVoyagers = Object.values(data);
+      } else {
+        activeVoyagers = [{ id: clientId, handle: userCallsign, tab: 'tab-directory' }];
+      }
+      const countNum = document.getElementById('voyagerCountNum');
+      if (countNum) countNum.textContent = Math.max(1, activeVoyagers.length);
+      renderVoyagersList();
+    });
+  } catch (err) {
+    console.warn("Presence registration error:", err);
+  }
+
+  // 2. Guestbook live sync
+  try {
+    const gbRef = ref(db, 'webring/guestbook');
+    onValue(gbRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data && typeof data === 'object') {
+        const cloudEntries = Object.values(data);
+        const local = getGuestbookEntries();
+        const combined = [...cloudEntries, ...local];
+        const unique = [];
+        const seen = new Set();
+        combined.forEach(entry => {
+          const key = `${entry.handle}_${entry.time}_${entry.msg}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            unique.push(entry);
+          }
+        });
+        unique.sort((a, b) => (b.time || "").localeCompare(a.time || ""));
+        const container = document.getElementById('guestbookStream');
+        if (container) {
+          container.innerHTML = '';
+          unique.forEach(entry => {
+            const div = document.createElement('div');
+            div.className = 'guestbook-entry';
+            div.innerHTML = `
+              <div class="entry-header">
+                <span class="entry-author">${escapeHtml(entry.handle)} ${entry.site ? `<span style="font-weight:normal; font-size:10px; color:var(--text-dim);">(${escapeHtml(entry.site)})</span>` : ''}</span>
+                <span class="entry-time">${escapeHtml(entry.time)}</span>
+              </div>
+              <div class="entry-body">${escapeHtml(entry.msg)}</div>
+            `;
+            container.appendChild(div);
+          });
+        }
+      }
+    });
+  } catch (err) {
+    console.warn("Guestbook live sync error:", err);
+  }
+
+  // 3. Community Badges live sync
+  try {
+    const badgeListRef = ref(db, 'webring/community_badges');
+    onValue(badgeListRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data && typeof data === 'object') {
+        const cloudBadges = Object.keys(data).map(key => ({
+          id: key,
+          ...data[key]
+        }));
+        const seedMap = {};
+        DEFAULT_COMMUNITY_BADGES.forEach(b => {
+          seedMap[b.id] = { ...b, dataUrl: generateSeedBadgeDataUrl(b) };
+        });
+        cloudBadges.forEach(b => {
+          seedMap[b.id] = b;
+        });
+        communityBadges = Object.values(seedMap);
+        renderCommunityBadges();
+      }
+    });
+  } catch (err) {
+    console.warn("Community badges live sync error:", err);
+  }
+
+  // 4. Community Node Submissions sync
+  try {
+    const subRef = ref(db, 'webring/submissions');
+    onValue(subRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data && typeof data === 'object') {
+        const subList = Object.values(data);
+        subList.forEach(item => {
+          item.isCommunity = true;
+          if (!ringNodes.some(n => n.url === item.url || n.name === item.name)) {
+            ringNodes.push(item);
+          }
+        });
+        renderDirectoryTable();
+        updateDirectoryCounts();
+        initTracerouteTargets();
+      }
+    });
+  } catch (err) {
+    console.warn("Submissions sync error:", err);
+  }
+};
+
+/* =========================================================================
+   15. UTILITIES & TOASTS
    ========================================================================= */
 function escapeHtml(text) {
   const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
@@ -4037,10 +4886,11 @@ function showNoticeToast(msg) {
 }
 
 /* =========================================================================
-   15. INITIALIZATION ON PAGE LOAD
+   16. INITIALIZATION ON PAGE LOAD
    ========================================================================= */
 window.addEventListener('DOMContentLoaded', () => {
   loadCustomSubmittedNodes();
+  loadInitialCommunityBadges();
   updateDirectoryCounts();
   renderDirectoryTable();
   renderBadgesWall();
@@ -4052,6 +4902,10 @@ window.addEventListener('DOMContentLoaded', () => {
   initBaudBenchmark();
   initTopologyMap();
   drawAudioVisualizer();
+
+  if (window.fb && typeof window.onFirebaseReady === 'function') {
+    window.onFirebaseReady();
+  }
 
   // Check URL parameters for direct random warp trigger
   const urlParams = new URLSearchParams(window.location.search);
