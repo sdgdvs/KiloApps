@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T18:43:00Z — kilo-qa: KAudio (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Relocation & DSP Graph Sync)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 121.8 KB web / 23.0 KB native < 999 KB).
+  - Quicksave & Load: Synchronized full state across F5/F9 (engine, soundbank, fmPreset, adsr, filter, effects, sequence grid, recordedEvents) with live DSP updates.
+  - First-Run Tutorial: Verified tutorial flags (`kaudio_tutorialSeen` / `kaudio_tutorial.dat`), preventing interruption on restored save states.
+  - Interactive Overlays: Added backdrop click dismissal and Escape hotkey to jam room modal; prevented spacebar trigger while modals open.
+  - Toast Occlusion: Relocated toast notifications to bottom-center safe zone, unblocking header toolbar and quicksave/load buttons.
+  - Verification: MSVC clean (`KAudio.exe` 23.0 KB); Vite clean in 274ms; check_icons & security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T18:03:00Z — kilo-graphics: KStellar (Graphics & Economy Pass, Medicine/Repair/Refuel, Glint Purge & Balance)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 151.6 KB web / 154.5 KB native < 999 KB).
   - Economy & Trading: Added Medicine commodity, Repair dock, and Refuel station across web and Win32 C (`main.c`).

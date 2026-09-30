@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KJournal
-  kilo_usability: KTask
+  kilo_usability: KStarForge
   kilo_graphics: KDragon
   kilo_qa: KRadio
   kilo_expander: KRSS
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KImage
-  timestamp: "2026-09-30T19:46:00Z"
+  agent: kilo-usability
+  app: KTask
+  timestamp: "2026-09-30T20:00:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -113,9 +113,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KTask`
+- **Current Target**: `KStarForge`
 - **Upcoming Queue**:
-  `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono)*.
+  `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KRadio`
@@ -293,6 +293,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T20:00:00Z — kilo-usability: KTask (UI/UX Usability Pass, Toast Safe Zone, Modal Clipping & Window Dimensions)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 175.5 KB web / 30.5 KB native < 999 KB ceiling).
+  - Toast Occlusion: Relocated toast notifications to bottom-center safe zone (`z-index: 1200`), eliminating overlap on bottom-right task action buttons.
+  - Modal Clipping: Added `max-height: calc(100vh - 40px)` and scroll handling to modals preventing overflow on lower display viewports.
+  - Window Dimensions: Tuned default window to 1040x700 in `App.jsx`, bound standalone `/exe/KTask.exe`, and bumped `MICROS_VERSION` to 0.4.14.
+  - Navigation & Hotkeys: Added `↑ / ↓` and `0 / Z` to Help dialog and keydown handler; scoped input typing to prevent accidental hotkey firing.
+  - Verification: MSVC clean (`KTask.exe` 30.5 KB); Vite clean in 291ms; check_icons & security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T19:46:00Z — kilo-tester: KImage (UI Audit & Inline Fixes, JSON Session Import/Export, Non-Destructive Restore & Hotkey Scope)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 142.5 KB web / 25.5 KB native < 999 KB ceiling).
   - UI Hotkey Scope: Excluded TEXTAREA/contenteditable from global hotkeys, preventing space/crop/del triggers when typing secret stego messages.
@@ -327,11 +335,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Reverse Identifier: Added hash type detector with 1999 test vector reverse dictionary and diegetic carrier lock.
   - Manifests & Verification: Added .sha1, BSD format, JSON, and CSV manifest generation and verification.
   - Verification: MSVC clean (`KHash.exe` 17.9 KB); Vite clean in 296ms; security lint 100% PASS; <999KB ceiling.
-
-- **2026-09-30T18:43:00Z — kilo-qa: KAudio (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Relocation & DSP Graph Sync)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 121.8 KB web / 23.0 KB native < 999 KB).
-  - Quicksave & Load: Synchronized full state across F5/F9 (engine, soundbank, fmPreset, adsr, filter, effects, sequence grid, recordedEvents) with live DSP updates.
-  - First-Run Tutorial: Verified tutorial flags (`kaudio_tutorialSeen` / `kaudio_tutorial.dat`), preventing interruption on restored save states.
-  - Interactive Overlays: Added backdrop click dismissal and Escape hotkey to jam room modal; prevented spacebar trigger while modals open.
-  - Toast Occlusion: Relocated toast notifications to bottom-center safe zone, unblocking header toolbar and quicksave/load buttons.
-  - Verification: MSVC clean (`KAudio.exe` 23.0 KB); Vite clean in 274ms; check_icons & security lint 100% PASS; <999KB ceiling.

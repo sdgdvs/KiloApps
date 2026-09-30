@@ -1470,8 +1470,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_GETMINMAXINFO: {
             MINMAXINFO* mmi = (MINMAXINFO*)lParam;
-            mmi->ptMinTrackSize.x = 480;
-            mmi->ptMinTrackSize.y = 300;
+            mmi->ptMinTrackSize.x = 580;
+            mmi->ptMinTrackSize.y = 360;
             return 0;
         }
         case WM_CREATE: {

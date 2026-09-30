@@ -606,6 +606,8 @@
     border-radius: 12px;
     width: 90%;
     max-width: 420px;
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
     padding: 20px;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
     transform: scale(0.95);
@@ -662,29 +664,30 @@
 
   .toast {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(12px);
     background: #1e293b;
     border: 1px solid rgba(56, 189, 248, 0.4);
     color: #fff;
-    padding: 10px 16px;
+    padding: 10px 18px;
     border-radius: 8px;
     font-size: 13px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
     opacity: 0;
-    transform: translateY(12px);
     transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: none;
-    z-index: 1100;
+    z-index: 1200;
     display: flex;
     align-items: center;
     gap: 10px;
     cursor: pointer;
+    max-width: 90vw;
   }
 
   .toast.show {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
     pointer-events: auto;
   }
 
@@ -735,6 +738,7 @@
   .inspect-modal-box {
     max-width: 720px;
     height: 560px;
+    max-height: calc(100vh - 40px);
     display: flex;
     flex-direction: column;
     padding: 18px;
@@ -1789,7 +1793,7 @@
               </select>
             </div>
             <div style="display:flex; align-items:center; gap:6px;">
-              <input type="text" id="hexSearchInput" class="input-ctrl" style="padding:3px 6px; font-size:11px; width:130px;" placeholder="Search ASCII..." onkeydown="if(event.key==='Enter')searchHexDump()">
+              <input type="text" id="hexSearchInput" class="input-ctrl" style="padding:3px 6px; font-size:11px; width:130px;" placeholder="Search ASCII... (Esc)" onkeydown="if(event.key==='Enter')searchHexDump(); if(event.key==='Escape'){event.preventDefault(); this.blur(); closeInspectModal();}">
               <button class="btn-secondary" style="padding:3px 8px; font-size:11px;" onclick="searchHexDump()">Find</button>
             </div>
           </div>
@@ -1915,6 +1919,8 @@
             <tr><td><span class="help-kbd">E</span> / <span class="help-kbd">Ctrl+E</span></td><td>Export Process List to CSV</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">J</span> / <span class="help-kbd">Ctrl+J</span></td><td>Export Process List to JSON</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">Enter</span> / <span class="help-kbd">I</span></td><td>Deep Inspect Selected Process</td><td>Tasks Tab</td></tr>
+            <tr><td><span class="help-kbd">↑</span> / <span class="help-kbd">↓</span></td><td>Select Previous / Next Process in List</td><td>Tasks Tab</td></tr>
+            <tr><td><span class="help-kbd">0</span> / <span class="help-kbd">Z</span></td><td>Zero Baseline Memory for Delta Leak Tracking</td><td>Tasks Tab</td></tr>
             <tr><td><span class="help-kbd">Delete</span></td><td>Terminate Selected Process</td><td>Tasks Tab</td></tr>
             <tr><td><span class="help-kbd">P</span></td><td>Cycle Priority (Normal / High / Low)</td><td>Tasks Tab</td></tr>
             <tr><td><span class="help-kbd">Esc</span></td><td>Close Active Modal / Clear Filter</td><td>Global</td></tr>
@@ -4223,7 +4229,7 @@
 
     // Keyboard Shortcuts & Visibility Listener
     document.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
 
       const tutorialActive = document.getElementById('tutorialModal')?.classList.contains('active');
       const helpActive = document.getElementById('helpModal')?.classList.contains('active');
@@ -4314,6 +4320,11 @@
       } else if (e.key === 'd' || e.key === 'D') {
         e.preventDefault();
         toggleDeltaMode();
+      } else if (e.key === 'z' || e.key === 'Z' || e.key === '0') {
+        if (activeTab === 'tasks') {
+          e.preventDefault();
+          zeroMemoryBaseline();
+        }
       } else if (e.key === 'n' || e.key === 'N') {
         e.preventDefault();
         switchTab('network');
