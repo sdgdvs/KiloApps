@@ -956,6 +956,11 @@
               <input type="range" id="sliderQuality" min="10" max="100" value="90">
             </div>
             <button id="btnExportDownload" class="primary" style="margin-top:12px;">Download Image</button>
+            <div class="row" style="margin-top:8px;">
+              <button id="btnExportSession" style="flex:1; font-size:11.5px; padding:6px 4px;" title="Export full project session to JSON">Export .JSON</button>
+              <button id="btnImportSession" style="flex:1; font-size:11.5px; padding:6px 4px;" title="Import project session from JSON">Import .JSON</button>
+            </div>
+            <input type="file" id="jsonFileInput" accept=".json,application/json" style="display:none;">
           </div>
 
           <div class="control-group" style="margin-top:20px; border-top:1px solid var(--glass-border); padding-top:12px;">
@@ -1164,6 +1169,7 @@
             <div class="shortcut-item"><span>Export / Save</span><kbd>Ctrl+S</kbd></div>
             <div class="shortcut-item"><span>Quicksave Snapshot</span><kbd>F5</kbd></div>
             <div class="shortcut-item"><span>Quickload Snapshot</span><kbd>F9</kbd></div>
+            <div class="shortcut-item"><span>Session Project</span><kbd>.JSON</kbd></div>
             <div class="shortcut-item"><span>Remove Current Image</span><kbd>X</kbd></div>
             <div class="shortcut-item"><span>Toggle Crop Tool</span><kbd>C</kbd></div>
             <div class="shortcut-item"><span>Toggle Annotation Brush</span><kbd>D</kbd></div>
@@ -1411,6 +1417,13 @@
 
   document.getElementById('btnClearPlaylist')?.addEventListener('click', () => {
     if (state.playlist.length === 0) return;
+    if (state.slideshow.playing) {
+      cancelAnimationFrame(state.slideshow.animFrame);
+      state.slideshow.playing = false;
+      btnPlayPause.textContent = '▶ Play';
+      ui.slideshowProgress.classList.add('hidden');
+      ui.slideshowBar.style.width = '0%';
+    }
     state.playlist = [];
     state.currentIndex = -1;
     updatePlaylistUI();
@@ -1456,7 +1469,7 @@
 
   // Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
     const ctrl = e.ctrlKey || e.metaKey;
 
     if (e.key === 'Escape') {
@@ -1695,6 +1708,13 @@
     if (idx < 0 || idx >= state.playlist.length) return;
     state.playlist.splice(idx, 1);
     if (state.playlist.length === 0) {
+      if (state.slideshow.playing) {
+        cancelAnimationFrame(state.slideshow.animFrame);
+        state.slideshow.playing = false;
+        btnPlayPause.textContent = '▶ Play';
+        ui.slideshowProgress.classList.add('hidden');
+        ui.slideshowBar.style.width = '0%';
+      }
       state.currentIndex = -1;
       updatePlaylistUI();
       showToast("Playlist cleared", "info");
@@ -1746,17 +1766,25 @@
     }
   }
 
-  function selectImage(idx) {
+  function selectImage(idx, preserveState = false) {
     if (idx < 0 || idx >= state.playlist.length) return;
     state.currentIndex = idx;
-    state.rotation = 0;
-    state.flipH = 1;
-    state.flipV = 1;
-    state.zoom = 1;
-    state.panX = 0;
-    state.panY = 0;
-    state.draw.paths = [];
-    resetAdjustments();
+    if (state.crop.active) {
+      state.crop.active = false;
+      document.getElementById('btnToggleCrop')?.classList.remove('primary');
+      document.getElementById('cropControls')?.classList.add('hidden');
+      ui.cropOverlay.style.display = 'none';
+    }
+    if (!preserveState) {
+      state.rotation = 0;
+      state.flipH = 1;
+      state.flipV = 1;
+      state.zoom = 1;
+      state.panX = 0;
+      state.panY = 0;
+      state.draw.paths = [];
+      resetAdjustments();
+    }
     
     updatePlaylistUI();
     const item = state.playlist[idx];
@@ -2002,6 +2030,11 @@
       }
     };
   }
+  [...kernelInputs, document.getElementById('kernelDivisor'), document.getElementById('kernelBias')].forEach(el => {
+    el?.addEventListener('input', () => {
+      if (kernelPresetSelect) kernelPresetSelect.value = 'custom';
+    });
+  });
 
   document.getElementById('btnAutoDivisor').onclick = () => {
     let sum = 0;
@@ -2144,13 +2177,23 @@
     }
     const item = state.playlist[state.currentIndex];
     try {
+      const off = document.createElement('canvas');
+      off.width = item.img.width;
+      off.height = item.img.height;
+      off.getContext('2d').drawImage(item.img, 0, 0);
+      const baseData = off.toDataURL('image/png');
+
       const snap = {
         name: item.name || 'snapshot.png',
-        imgData: ui.mainCanvas.toDataURL('image/png'),
+        type: item.type || 'image/png',
+        baseData,
         rotation: state.rotation,
         flipH: state.flipH,
         flipV: state.flipV,
         adjustments: { ...state.adjustments },
+        drawPaths: JSON.parse(JSON.stringify(state.draw.paths)),
+        stegoSecret: document.getElementById('stegoInput')?.value || '',
+        exif: item.exif || {},
         timestamp: Date.now()
       };
       localStorage.setItem('kimage_quicksave', JSON.stringify(snap));
@@ -2168,34 +2211,174 @@
         return;
       }
       const snap = JSON.parse(raw);
+      const dataSrc = snap.baseData || snap.imgData;
+      if (!dataSrc) {
+        showToast("Quicksave data corrupted", "error");
+        return;
+      }
       const img = new Image();
       img.onload = () => {
         const snapItem = {
-          file: { name: snap.name, size: snap.imgData.length, type: 'image/png' },
+          file: { name: snap.name, size: Math.round(dataSrc.length * 0.75), type: snap.type || 'image/png' },
           img,
-          origSrc: snap.imgData,
+          origSrc: dataSrc,
           name: snap.name || 'restored_snapshot.png',
-          size: formatBytes(Math.round(snap.imgData.length * 0.75)),
-          type: 'image/png',
-          exif: { camera: 'KImage Quicksave Restore', date: new Date(snap.timestamp).toLocaleDateString(), exposure: 'N/A', aperture: 'N/A', iso: 'N/A', software: 'KImage Pro v2.1' }
+          size: formatBytes(Math.round(dataSrc.length * 0.75)),
+          type: snap.type || 'image/png',
+          exif: snap.exif || { camera: 'KImage Quicksave Restore', date: new Date(snap.timestamp).toLocaleDateString(), exposure: 'N/A', aperture: 'N/A', iso: 'N/A', software: 'KImage Pro v2.1' }
         };
         state.playlist = [snapItem];
         state.currentIndex = 0;
         state.rotation = snap.rotation || 0;
         state.flipH = snap.flipH || 1;
         state.flipV = snap.flipV || 1;
+        state.zoom = 1;
+        state.panX = 0;
+        state.panY = 0;
         state.adjustments = snap.adjustments || { brightness: 0, contrast: 0, blur: 0, saturation: 0, preset: 'none' };
-        updatePlaylistUI();
-        selectImage(0);
+        state.draw.paths = snap.drawPaths || [];
+        if (snap.stegoSecret && document.getElementById('stegoInput')) {
+          document.getElementById('stegoInput').value = snap.stegoSecret;
+        }
+
+        // Synchronize UI sliders and preset buttons
+        document.getElementById('sliderBrightness').value = state.adjustments.brightness;
+        document.getElementById('valBrightness').textContent = state.adjustments.brightness;
+        document.getElementById('sliderContrast').value = state.adjustments.contrast;
+        document.getElementById('valContrast').textContent = state.adjustments.contrast;
+        document.getElementById('sliderBlur').value = state.adjustments.blur;
+        document.getElementById('valBlur').textContent = state.adjustments.blur + 'px';
+        document.getElementById('sliderSaturation').value = state.adjustments.saturation;
+        document.getElementById('valSaturation').textContent = state.adjustments.saturation;
+        document.querySelectorAll('.preset-grid button').forEach(b => b.classList.remove('active'));
+        const presetKey = state.adjustments.preset || 'none';
+        const cap = presetKey.charAt(0).toUpperCase() + presetKey.slice(1);
+        document.getElementById(`btnFilter${cap}`)?.classList.add('active');
+
+        selectImage(0, true);
         showToast("Restored quicksaved session snapshot [F9]!", "success");
       };
-      img.src = snap.imgData;
+      img.src = dataSrc;
     } catch (_) {
       showToast("Failed to restore quicksave snapshot", "error");
     }
   }
   document.getElementById('btnQuickSave')?.addEventListener('click', quickSaveState);
   document.getElementById('btnQuickLoad')?.addEventListener('click', quickLoadState);
+
+  // Project Session JSON Export & Import
+  function exportSessionJson() {
+    if (state.playlist.length === 0 || state.currentIndex === -1) {
+      showToast("No image loaded to export session", "warning");
+      return;
+    }
+    const item = state.playlist[state.currentIndex];
+    const off = document.createElement('canvas');
+    off.width = item.img.width;
+    off.height = item.img.height;
+    off.getContext('2d').drawImage(item.img, 0, 0);
+    const baseData = off.toDataURL('image/png');
+
+    const sessionObj = {
+      app: "KImage Pro",
+      version: "2.1",
+      timestamp: Date.now(),
+      image: {
+        name: item.name || 'image.png',
+        type: item.type || 'image/png',
+        baseData,
+        rotation: state.rotation,
+        flipH: state.flipH,
+        flipV: state.flipV,
+        adjustments: { ...state.adjustments },
+        drawPaths: state.draw.paths,
+        stegoSecret: document.getElementById('stegoInput')?.value || '',
+        exif: item.exif || {}
+      }
+    };
+
+    const blob = new Blob([JSON.stringify(sessionObj, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const baseName = (item.name || 'session').split('.')[0];
+    link.download = `${baseName}_session.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    showToast("Exported project session (.json)!", "success");
+  }
+
+  function importSessionJson(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const session = JSON.parse(e.target.result);
+        const dataSrc = session.image?.baseData || session.image?.imgData;
+        if (!dataSrc) {
+          showToast("Invalid KImage session file (missing image data)", "error");
+          return;
+        }
+        const img = new Image();
+        img.onload = () => {
+          const snapItem = {
+            file: { name: session.image.name, size: Math.round(dataSrc.length * 0.75), type: session.image.type || 'image/png' },
+            img,
+            origSrc: dataSrc,
+            name: session.image.name || 'imported_session.png',
+            size: formatBytes(Math.round(dataSrc.length * 0.75)),
+            type: session.image.type || 'image/png',
+            exif: session.image.exif || { camera: 'KImage Session Import', date: new Date().toLocaleDateString(), exposure: 'N/A', aperture: 'N/A', iso: 'N/A', software: 'KImage Pro v2.1' }
+          };
+          state.playlist = [snapItem];
+          state.currentIndex = 0;
+          state.rotation = session.image.rotation || 0;
+          state.flipH = session.image.flipH || 1;
+          state.flipV = session.image.flipV || 1;
+          state.zoom = 1;
+          state.panX = 0;
+          state.panY = 0;
+          state.adjustments = session.image.adjustments || { brightness: 0, contrast: 0, blur: 0, saturation: 0, preset: 'none' };
+          state.draw.paths = session.image.drawPaths || [];
+          if (session.image.stegoSecret && document.getElementById('stegoInput')) {
+            document.getElementById('stegoInput').value = session.image.stegoSecret;
+          }
+
+          // Sync sliders
+          document.getElementById('sliderBrightness').value = state.adjustments.brightness;
+          document.getElementById('valBrightness').textContent = state.adjustments.brightness;
+          document.getElementById('sliderContrast').value = state.adjustments.contrast;
+          document.getElementById('valContrast').textContent = state.adjustments.contrast;
+          document.getElementById('sliderBlur').value = state.adjustments.blur;
+          document.getElementById('valBlur').textContent = state.adjustments.blur + 'px';
+          document.getElementById('sliderSaturation').value = state.adjustments.saturation;
+          document.getElementById('valSaturation').textContent = state.adjustments.saturation;
+          document.querySelectorAll('.preset-grid button').forEach(b => b.classList.remove('active'));
+          const p = state.adjustments.preset || 'none';
+          const cap = p.charAt(0).toUpperCase() + p.slice(1);
+          document.getElementById(`btnFilter${cap}`)?.classList.add('active');
+
+          selectImage(0, true);
+          showToast("Imported session project (.json) successfully!", "success");
+        };
+        img.src = dataSrc;
+      } catch (err) {
+        showToast("Failed to parse session JSON file", "error");
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  document.getElementById('btnExportSession')?.addEventListener('click', exportSessionJson);
+  const jsonFileInput = document.getElementById('jsonFileInput');
+  document.getElementById('btnImportSession')?.addEventListener('click', () => jsonFileInput?.click());
+  jsonFileInput?.addEventListener('change', (e) => {
+    if (e.target.files && e.target.files.length) {
+      importSessionJson(e.target.files[0]);
+      e.target.value = '';
+    }
+  });
 
   // Retro Hardware Palettes & Dithering Engine
   const RETRO_PALETTES = {
@@ -2619,13 +2802,38 @@
   }
   document.getElementById('btnGenerateAscii')?.addEventListener('click', generateAsciiArt);
 
+  function copyToClipboard(text, successMsg) {
+    if (!text) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(successMsg, "success");
+      }).catch(() => {
+        fallbackCopyText(text, successMsg);
+      });
+    } else {
+      fallbackCopyText(text, successMsg);
+    }
+  }
+
+  function fallbackCopyText(text, successMsg) {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast(successMsg, "success");
+    } catch (_) {
+      showToast("Clipboard access denied", "error");
+    }
+  }
+
   document.getElementById('btnCopyAscii')?.addEventListener('click', () => {
     const text = document.getElementById('asciiPreview')?.textContent;
-    if (text) {
-      navigator.clipboard.writeText(text).then(() => {
-        showToast("ASCII text copied to clipboard!", "success");
-      });
-    }
+    if (text) copyToClipboard(text, "ASCII text copied to clipboard!");
   });
 
   document.getElementById('btnDownloadAscii')?.addEventListener('click', () => {
@@ -2758,9 +2966,7 @@
   document.getElementById('btnCopyStego')?.addEventListener('click', () => {
     const text = document.getElementById('stegoOutput')?.value;
     if (text && !text.startsWith('[')) {
-      navigator.clipboard.writeText(text).then(() => {
-        showToast("Secret payload copied to clipboard!", "success");
-      });
+      copyToClipboard(text, "Secret payload copied to clipboard!");
     }
   });
 
@@ -2791,10 +2997,52 @@
   document.getElementById('tabBtnStego')?.addEventListener('click', () => switchRightTab('stego'));
 
   // Transformations
-  document.getElementById('btnRotateCCW').onclick = () => { state.rotation = (state.rotation - 90 + 360) % 360; renderCanvas(); showToast("Rotated -90°", "info"); };
-  document.getElementById('btnRotateCW').onclick = () => { state.rotation = (state.rotation + 90) % 360; renderCanvas(); showToast("Rotated +90°", "info"); };
-  document.getElementById('btnFlipH').onclick = () => { state.flipH *= -1; renderCanvas(); showToast("Flipped horizontally", "info"); };
-  document.getElementById('btnFlipV').onclick = () => { state.flipV *= -1; renderCanvas(); showToast("Flipped vertically", "info"); };
+  document.getElementById('btnRotateCCW').onclick = () => {
+    if (state.playlist.length === 0 || state.currentIndex === -1) return;
+    const curW = ui.mainCanvas.width || 1;
+    state.draw.paths.forEach(p => p.points.forEach(pt => {
+      const nx = pt.y;
+      const ny = curW - pt.x;
+      pt.x = nx;
+      pt.y = ny;
+    }));
+    state.rotation = (state.rotation - 90 + 360) % 360;
+    renderCanvas();
+    showToast("Rotated -90°", "info");
+  };
+  document.getElementById('btnRotateCW').onclick = () => {
+    if (state.playlist.length === 0 || state.currentIndex === -1) return;
+    const curH = ui.mainCanvas.height || 1;
+    state.draw.paths.forEach(p => p.points.forEach(pt => {
+      const nx = curH - pt.y;
+      const ny = pt.x;
+      pt.x = nx;
+      pt.y = ny;
+    }));
+    state.rotation = (state.rotation + 90) % 360;
+    renderCanvas();
+    showToast("Rotated +90°", "info");
+  };
+  document.getElementById('btnFlipH').onclick = () => {
+    if (state.playlist.length === 0 || state.currentIndex === -1) return;
+    const curW = ui.mainCanvas.width || 1;
+    state.draw.paths.forEach(p => p.points.forEach(pt => {
+      pt.x = curW - pt.x;
+    }));
+    state.flipH *= -1;
+    renderCanvas();
+    showToast("Flipped horizontally", "info");
+  };
+  document.getElementById('btnFlipV').onclick = () => {
+    if (state.playlist.length === 0 || state.currentIndex === -1) return;
+    const curH = ui.mainCanvas.height || 1;
+    state.draw.paths.forEach(p => p.points.forEach(pt => {
+      pt.y = curH - pt.y;
+    }));
+    state.flipV *= -1;
+    renderCanvas();
+    showToast("Flipped vertically", "info");
+  };
 
   // Zoom & Pan Handlers
   ui.btnZoomIn.onclick = () => {
@@ -3394,11 +3642,6 @@
     const divisor = gcd(w, h);
     return `${w / divisor}:${h / divisor}`;
   }
-
-  // Startup Welcome Notification
-  setTimeout(() => {
-    showToast("Welcome to KImage Pro! Press H or F1 for Help.", "info", 5000);
-  }, 350);
 </script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KImage
+  kilo_tester: KJournal
   kilo_usability: KTask
   kilo_graphics: KDragon
   kilo_qa: KRadio
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KSanctuary
-  timestamp: "2026-09-30T19:30:00Z"
+  agent: kilo-tester
+  app: KImage
+  timestamp: "2026-09-30T19:46:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -108,9 +108,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono`, `KFortress`, `KCosmic`, `KSanctuary` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KSanctuary)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KImage`
+- **Current Target**: `KJournal`
 - **Upcoming Queue**:
-  `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex)*.
+  `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KTask`
@@ -293,6 +293,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T19:46:00Z — kilo-tester: KImage (UI Audit & Inline Fixes, JSON Session Import/Export, Non-Destructive Restore & Hotkey Scope)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 142.5 KB web / 25.5 KB native < 999 KB ceiling).
+  - UI Hotkey Scope: Excluded TEXTAREA/contenteditable from global hotkeys, preventing space/crop/del triggers when typing secret stego messages.
+  - Quicksave / Quickload: Upgraded F5/F9 to non-destructive restore of base pixel data, adjustments, rotation, and vector drawing paths with live slider sync.
+  - Session Persistence: Added full project session export and import (.JSON) supporting offline backup, annotations, and stego payloads.
+  - Animation & Crop Hygiene: Added automated slideshow loop teardown on empty/cleared playlist; auto-cleared crop overlay when switching images.
+  - Drawing & Clipboard: Transformed vector annotations alongside 90° rotations and flips; added execCommand fallback for secure clipboard copying.
+  - Verification: MSVC clean (`KImage.exe` 25.5 KB); Vite clean in 291ms; check_icons & security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T19:30:00Z — kilo-graphics: KSanctuary (Graphics & Content Pass, Facility SVGs/Sprites, Dynamic Weather & Turrets)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 423.4 KB web / 262.1 KB native < 999 KB ceiling).
   - Facility Visuals: Added distinct SVGs and Win32 C sprites for all 14 blueprint room types across web and native.
@@ -326,10 +335,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interactive Overlays: Added backdrop click dismissal and Escape hotkey to jam room modal; prevented spacebar trigger while modals open.
   - Toast Occlusion: Relocated toast notifications to bottom-center safe zone, unblocking header toolbar and quicksave/load buttons.
   - Verification: MSVC clean (`KAudio.exe` 23.0 KB); Vite clean in 274ms; check_icons & security lint 100% PASS; <999KB ceiling.
-
-- **2026-09-30T18:03:00Z — kilo-graphics: KStellar (Graphics & Economy Pass, Medicine/Repair/Refuel, Glint Purge & Balance)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 151.6 KB web / 154.5 KB native < 999 KB).
-  - Economy & Trading: Added Medicine commodity, Repair dock, and Refuel station across web and Win32 C (`main.c`).
-  - UI & Viewport: Aligned HUD controls, improved layout spacing, and added hotkeys for new trade operations.
-  - Specular Glint Purge: Ensured static starfield rendering with zero traveling perimeter dots or orbital comets.
-  - Verification: MSVC clean (`KStellar.exe` 154.5 KB); Vite clean in 278ms; security lint 100% PASS; <999KB ceiling.

@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T18:03:00Z — kilo-graphics: KStellar (Graphics & Economy Pass, Medicine/Repair/Refuel, Glint Purge & Balance)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 151.6 KB web / 154.5 KB native < 999 KB).
+  - Economy & Trading: Added Medicine commodity, Repair dock, and Refuel station across web and Win32 C (`main.c`).
+  - UI & Viewport: Aligned HUD controls, improved layout spacing, and added hotkeys for new trade operations.
+  - Specular Glint Purge: Ensured static starfield rendering with zero traveling perimeter dots or orbital comets.
+  - Verification: MSVC clean (`KStellar.exe` 154.5 KB); Vite clean in 278ms; security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T17:45:00Z — kilo-usability: KChrono (UI/UX Usability Pass, Responsive Controls, Toast Relocation & Hover Reticle)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 182.4 KB web / 22.5 KB native < 999 KB).
   - Responsive Controls: Added `.btn-text` collapse breakpoints to header actions and compact epoch badges, eliminating button clipping on <=1120px viewports.
