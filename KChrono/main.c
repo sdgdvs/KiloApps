@@ -77,7 +77,10 @@ static DWORD WINAPI SoundThread(LPVOID lpParam) {
     return 0;
 }
 
+static int g_soundMuted = 0;
+
 static void PlaySfx(int type) {
+    if (g_soundMuted) return;
     CreateThread(NULL, 0, SoundThread, (LPVOID)(intptr_t)type, 0, NULL);
 }
 
@@ -306,7 +309,7 @@ static void PropagateCausality(int notify) {
             if (g_game.entities[EPOCH_BETA][i].type == 1 && g_game.entities[EPOCH_BETA][i].x == 5 && g_game.entities[EPOCH_BETA][i].y == 5) plate = 1;
         }
 
-        if (plate || g_game.precursorRepaired) {
+        if (plate) {
             if (g_game.grids[EPOCH_BETA][7][12] == TILE_GATE) {
                 g_game.grids[EPOCH_BETA][7][12] = TILE_FLOOR;
                 g_game.grids[EPOCH_BETA][8][12] = TILE_FLOOR;
@@ -1246,7 +1249,7 @@ static void DrawGame(HDC hdc, RECT* rcClient) {
 
         // Bottom Controls Hint
         SetTextColor(memDC, RGB(148, 163, 184));
-        TextOutA(memDC, 20, h - 30, "[WASD/Arrows] Move  [Space] Wait  [1/2/3/Tab] Epoch  [R] Rec  [P] Echo  [F1/H] Help  [F5/F9] Save/Load  [Esc] Menu", 108);
+        TextOutA(memDC, 20, h - 30, "[WASD] Move  [Space] Wait  [1/2/3/Tab] Epoch  [R] Rec  [P] Echo  [M] Audio  [F1/H] Help  [F5/F9] Save/Load", 103);
 
         // Victory Overlay
         if (g_appState == STATE_VICTORY) {
@@ -1338,6 +1341,16 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                 else if (wParam == 'P') TogglePlayEcho();
                 else if (wParam == VK_F5) Quicksave();
                 else if (wParam == VK_F9) Quickload();
+                else if (wParam == 'M' || wParam == 'm') {
+                    g_soundMuted = !g_soundMuted;
+                    g_toastTimer = 60;
+                    if (g_soundMuted) {
+                        lstrcpyA(g_toastMsg, "AUDIO MUTED (M)");
+                    } else {
+                        lstrcpyA(g_toastMsg, "AUDIO ENABLED (M)");
+                        PlaySfx(1);
+                    }
+                }
                 else if (wParam == 'H' || wParam == 'h' || wParam == VK_F1 || wParam == 0xBF) g_appState = STATE_TUTORIAL;
                 else if (wParam == VK_ESCAPE) g_appState = STATE_SPLASH;
             } else if (g_appState == STATE_VICTORY) {

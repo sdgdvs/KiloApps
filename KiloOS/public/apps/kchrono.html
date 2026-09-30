@@ -752,6 +752,9 @@
             <button class="btn-ctrl" id="btnHelp" title="Field Manual & Causal Codex [F1 / H]">
                 <span>❓</span> Help [F1/H]
             </button>
+            <button class="btn-ctrl" id="btnAudioToggle" title="Toggle Yamaha YM2612 FM / SPC700 Audio [M]">
+                <span id="audioIcon">🔊</span> <span id="audioLabel">FM Audio [M]</span>
+            </button>
             <button class="btn-ctrl" id="btnSettings" title="Configure audio & CRT settings">
                 <span>⚙</span> Settings
             </button>
@@ -855,6 +858,7 @@
             <button class="footer-badge-btn" id="footBtnRecord" title="Record Echo sequence [R]">⏺ [R] Rec</button>
             <button class="footer-badge-btn" id="footBtnPlay" title="Execute Echo sequence [P]">▶ [P] Echo</button>
             <button class="footer-badge-btn" id="footBtnUndo" title="Rewind turn [Z]">↺ [Z] Undo</button>
+            <button class="footer-badge-btn" id="footBtnAudio" title="Toggle Sega Genesis YM2612 FM / SNES Delay Audio [M]">🔊 [M] YM2612</button>
         </div>
     </footer>
 
@@ -992,6 +996,8 @@
                 <p>• <b>R</b>: Start/Stop Echo Recording</p>
                 <p>• <b>P</b>: Execute recorded Echo ghost</p>
                 <p>• <b>Z / U</b>: Undo turn</p>
+                <p>• <b>M</b>: Toggle Sega Genesis YM2612 FM / SNES Delay Audio</p>
+                <p>• <b>F1 / H</b>: Field Manual & Causal Codex</p>
                 <p>• <b>F5 / F9</b>: Quicksave / Quickload</p>
                 <p>• <b>Esc</b>: Open Menu / Dismiss Dialog</p>
             </div>
@@ -1093,16 +1099,21 @@
 
     <!-- Script Implementation -->
     <script>
-        /* --- Audio Synthesizer (Web Audio API) --- */
+        /* --- Audio Synthesizer (Yamaha YM2612 2-Operator FM & SNES SPC700 Stereo Delay) --- */
         class TachyonAudio {
             constructor() {
                 this.ctx = null;
                 this.sfxEnabled = true;
                 this.droneEnabled = true;
+                this.muted = localStorage.getItem('kchrono_muted') === 'true';
                 this.masterVol = 0.7;
-                this.droneOsc1 = null;
-                this.droneOsc2 = null;
+                this.droneCarrier = null;
+                this.droneModulator = null;
                 this.droneGain = null;
+                this.delayNodeL = null;
+                this.delayNodeR = null;
+                this.delayFeedback = null;
+                this.delayFilter = null;
             }
 
             init() {
@@ -1115,124 +1126,241 @@
                 const AudioCtx = window.AudioContext || window.webkitAudioContext;
                 if (!AudioCtx) return;
                 this.ctx = new AudioCtx();
+
+                // Build SNES SPC700 Stereo Delay network with warm 2400Hz filter
+                try {
+                    this.delayNodeL = this.ctx.createDelay();
+                    this.delayNodeL.delayTime.value = 0.11; // 110ms left tap
+                    this.delayNodeR = this.ctx.createDelay();
+                    this.delayNodeR.delayTime.value = 0.22; // 220ms right tap
+
+                    this.delayFilter = this.ctx.createBiquadFilter();
+                    this.delayFilter.type = 'lowpass';
+                    this.delayFilter.frequency.value = 2400; // Warm 16-bit rolloff
+
+                    this.delayFeedback = this.ctx.createGain();
+                    this.delayFeedback.gain.value = 0.26; // Soft musical feedback
+
+                    // Delay routing loop
+                    this.delayNodeL.connect(this.delayFilter);
+                    this.delayNodeR.connect(this.delayFilter);
+                    this.delayFilter.connect(this.delayFeedback);
+                    this.delayFeedback.connect(this.delayNodeL);
+                    this.delayFeedback.connect(this.delayNodeR);
+
+                    const delayMaster = this.ctx.createGain();
+                    delayMaster.gain.value = 0.35;
+                    this.delayFilter.connect(delayMaster);
+                    delayMaster.connect(this.ctx.destination);
+                } catch (e) {
+                    console.warn("SPC700 delay setup error:", e);
+                }
+
                 this.startAmbientDrone();
+            }
+
+            toggleMute() {
+                this.muted = !this.muted;
+                localStorage.setItem('kchrono_muted', this.muted ? 'true' : 'false');
+                this.setVolume(this.masterVol);
+                return !this.muted;
             }
 
             setVolume(val) {
                 this.masterVol = Math.max(0, Math.min(1, val));
                 if (this.droneGain && this.ctx) {
-                    this.droneGain.gain.setValueAtTime(this.droneEnabled ? 0.08 * this.masterVol : 0, this.ctx.currentTime);
+                    const effectiveVol = (!this.muted && this.droneEnabled) ? 0.08 * this.masterVol : 0;
+                    this.droneGain.gain.setValueAtTime(effectiveVol, this.ctx.currentTime);
                 }
             }
 
             startAmbientDrone() {
-                if (!this.ctx || this.droneOsc1) return;
+                if (!this.ctx || this.droneCarrier) return;
                 try {
                     this.droneGain = this.ctx.createGain();
-                    this.droneGain.gain.setValueAtTime(this.droneEnabled ? 0.08 * this.masterVol : 0, this.ctx.currentTime);
+                    const effectiveVol = (!this.muted && this.droneEnabled) ? 0.08 * this.masterVol : 0;
+                    this.droneGain.gain.setValueAtTime(effectiveVol, this.ctx.currentTime);
                     this.droneGain.connect(this.ctx.destination);
 
-                    this.droneOsc1 = this.ctx.createOscillator();
-                    this.droneOsc1.type = 'sine';
-                    this.droneOsc1.frequency.setValueAtTime(55, this.ctx.currentTime); // A1
+                    // YM2612 2-Op FM Drone: Modulator modulates carrier frequency
+                    const droneModGain = this.ctx.createGain();
+                    droneModGain.gain.setValueAtTime(40, this.ctx.currentTime);
 
-                    this.droneOsc2 = this.ctx.createOscillator();
-                    this.droneOsc2.type = 'triangle';
-                    this.droneOsc2.frequency.setValueAtTime(110, this.ctx.currentTime); // A2
+                    this.droneModulator = this.ctx.createOscillator();
+                    this.droneModulator.type = 'sine';
+                    this.droneModulator.frequency.setValueAtTime(55, this.ctx.currentTime);
+                    this.droneModulator.connect(droneModGain);
 
-                    this.droneOsc1.connect(this.droneGain);
-                    this.droneOsc2.connect(this.droneGain);
-                    this.droneOsc1.start();
-                    this.droneOsc2.start();
+                    this.droneCarrier = this.ctx.createOscillator();
+                    this.droneCarrier.type = 'sine';
+                    this.droneCarrier.frequency.setValueAtTime(55, this.ctx.currentTime);
+                    droneModGain.connect(this.droneCarrier.frequency);
+
+                    this.droneCarrier.connect(this.droneGain);
+                    if (this.delayNodeL) {
+                        this.droneCarrier.connect(this.delayNodeL);
+                    }
+
+                    this.droneModulator.start();
+                    this.droneCarrier.start();
                 } catch (e) {
                     console.warn("Drone audio error:", e);
                 }
             }
 
             setEpochDrone(epoch) {
-                if (!this.ctx || !this.droneOsc1) return;
+                if (!this.ctx || !this.droneCarrier) return;
                 const now = this.ctx.currentTime;
-                if (epoch === 'alpha') {
-                    this.droneOsc1.frequency.exponentialRampToValueAtTime(45, now + 0.6);
-                    this.droneOsc2.frequency.exponentialRampToValueAtTime(90, now + 0.6);
-                } else if (epoch === 'beta') {
-                    this.droneOsc1.frequency.exponentialRampToValueAtTime(55, now + 0.6);
-                    this.droneOsc2.frequency.exponentialRampToValueAtTime(110, now + 0.6);
-                } else if (epoch === 'gamma') {
-                    this.droneOsc1.frequency.exponentialRampToValueAtTime(68, now + 0.6);
-                    this.droneOsc2.frequency.exponentialRampToValueAtTime(136, now + 0.6);
-                }
-            }
+                let freq = 55;
+                if (epoch === 'alpha') freq = 45;       // Low precursor amber hum
+                else if (epoch === 'beta') freq = 55;   // Prime cyan resonance
+                else if (epoch === 'gamma') freq = 68;  // High entropic violet shimmer
 
-            playTone(freq, duration = 0.1, type = 'sine', gainVal = 0.2) {
-                if (!this.sfxEnabled || !this.ctx) return;
                 try {
-                    const now = this.ctx.currentTime;
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = type;
-                    osc.frequency.setValueAtTime(freq, now);
-                    gain.gain.setValueAtTime(gainVal * this.masterVol, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start(now);
-                    osc.stop(now + duration);
+                    this.droneCarrier.frequency.exponentialRampToValueAtTime(freq, now + 0.6);
+                    if (this.droneModulator) {
+                        this.droneModulator.frequency.exponentialRampToValueAtTime(freq * 1.5, now + 0.6);
+                    }
                 } catch(e) {}
             }
 
-            playEpochWarp(direction = 1) {
-                if (!this.sfxEnabled || !this.ctx) return;
+            // Core Sega Genesis YM2612 2-Operator FM Synthesizer Voice with SPC700 Delay Send
+            playFM(carrierFreq, modRatio = 2.0, modIndex = 2.5, duration = 0.15, gainVal = 0.2, sendDelay = true) {
+                if (!this.sfxEnabled || this.muted || !this.ctx) return;
                 try {
                     const now = this.ctx.currentTime;
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = 'sawtooth';
-                    const startFreq = direction > 0 ? 150 : 600;
-                    const endFreq = direction > 0 ? 600 : 150;
-                    osc.frequency.setValueAtTime(startFreq, now);
-                    osc.frequency.exponentialRampToValueAtTime(endFreq, now + 0.3);
-                    gain.gain.setValueAtTime(0.18 * this.masterVol, now);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start(now);
-                    osc.stop(now + 0.32);
-                } catch(e) {}
-            }
+                    const carrier = this.ctx.createOscillator();
+                    const modulator = this.ctx.createOscillator();
+                    const modGain = this.ctx.createGain();
+                    const voiceGain = this.ctx.createGain();
 
-            playCausalRipple() {
-                if (!this.sfxEnabled || !this.ctx) return;
-                // Harmonic arpeggio
-                const notes = [440, 554, 659, 880];
-                notes.forEach((freq, idx) => {
-                    setTimeout(() => {
-                        this.playTone(freq, 0.25, 'sine', 0.15);
-                    }, idx * 60);
-                });
+                    carrier.type = 'sine';
+                    modulator.type = 'sine';
+
+                    carrier.frequency.setValueAtTime(carrierFreq, now);
+                    modulator.frequency.setValueAtTime(carrierFreq * modRatio, now);
+
+                    // Modulation index envelope (YM2612 Total Level decay)
+                    const peakMod = modIndex * carrierFreq;
+                    modGain.gain.setValueAtTime(peakMod, now);
+                    modGain.gain.exponentialRampToValueAtTime(Math.max(1, peakMod * 0.05), now + duration);
+
+                    modulator.connect(modGain);
+                    modGain.connect(carrier.frequency);
+
+                    // Amplitude envelope (YM2612 Attack & Decay)
+                    const peakVol = gainVal * this.masterVol;
+                    voiceGain.gain.setValueAtTime(0.001, now);
+                    voiceGain.gain.linearRampToValueAtTime(peakVol, now + 0.006);
+                    voiceGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+                    carrier.connect(voiceGain);
+                    voiceGain.connect(this.ctx.destination);
+
+                    if (sendDelay && this.delayNodeL) {
+                        const send = this.ctx.createGain();
+                        send.gain.value = 0.45;
+                        voiceGain.connect(send);
+                        send.connect(this.delayNodeL);
+                        send.connect(this.delayNodeR);
+                    }
+
+                    modulator.start(now);
+                    carrier.start(now);
+                    modulator.stop(now + duration + 0.05);
+                    carrier.stop(now + duration + 0.05);
+                } catch (e) {}
             }
 
             playStep() {
-                this.playTone(180, 0.05, 'triangle', 0.08);
+                // Soft FM footstep click
+                this.playFM(180, 0.5, 1.2, 0.04, 0.07, false);
+            }
+
+            playEpochWarp(direction = 1) {
+                if (!this.sfxEnabled || this.muted || !this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const carrier = this.ctx.createOscillator();
+                    const modulator = this.ctx.createOscillator();
+                    const modGain = this.ctx.createGain();
+                    const voiceGain = this.ctx.createGain();
+
+                    const startF = direction > 0 ? 140 : 640;
+                    const endF = direction > 0 ? 640 : 140;
+
+                    carrier.type = 'sawtooth';
+                    carrier.frequency.setValueAtTime(startF, now);
+                    carrier.frequency.exponentialRampToValueAtTime(endF, now + 0.28);
+
+                    modulator.type = 'sine';
+                    modulator.frequency.setValueAtTime(startF * 1.5, now);
+                    modulator.frequency.exponentialRampToValueAtTime(endF * 1.5, now + 0.28);
+
+                    modGain.gain.setValueAtTime(250, now);
+                    modGain.gain.exponentialRampToValueAtTime(20, now + 0.28);
+
+                    modulator.connect(modGain);
+                    modGain.connect(carrier.frequency);
+
+                    voiceGain.gain.setValueAtTime(0.18 * this.masterVol, now);
+                    voiceGain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+
+                    carrier.connect(voiceGain);
+                    voiceGain.connect(this.ctx.destination);
+                    if (this.delayNodeL) voiceGain.connect(this.delayNodeL);
+
+                    modulator.start(now);
+                    carrier.start(now);
+                    modulator.stop(now + 0.32);
+                    carrier.stop(now + 0.32);
+                } catch (e) {}
+            }
+
+            playCausalRipple() {
+                // 4-voice FM resonant arpeggio (C#5, E5, G#5, B5) with SPC700 stereo delay
+                const notes = [554.37, 659.25, 830.61, 987.77];
+                notes.forEach((freq, idx) => {
+                    setTimeout(() => {
+                        this.playFM(freq, 3.5, 4.0, 0.35, 0.16, true);
+                    }, idx * 65);
+                });
             }
 
             playSwitch() {
-                this.playTone(850, 0.08, 'square', 0.12);
-                setTimeout(() => this.playTone(600, 0.08, 'square', 0.1), 40);
+                // Dual-operator mechanical plate click
+                this.playFM(780, 2.0, 3.0, 0.08, 0.14, false);
+                setTimeout(() => this.playFM(520, 1.5, 2.0, 0.08, 0.12, false), 35);
             }
 
             playDoorOpen() {
-                this.playTone(120, 0.35, 'sawtooth', 0.2);
+                // Heavy hydraulic blast gate release
+                this.playFM(95, 0.5, 3.5, 0.42, 0.22, true);
             }
 
             playAlarm() {
-                this.playTone(900, 0.15, 'sawtooth', 0.25);
-                setTimeout(() => this.playTone(720, 0.15, 'sawtooth', 0.25), 160);
+                // Piercing dual-tone FM klaxon
+                this.playFM(880, 1.414, 5.0, 0.14, 0.24, true);
+                setTimeout(() => this.playFM(660, 1.414, 5.0, 0.14, 0.24, true), 150);
             }
 
             playVictory() {
-                const chord = [523.25, 659.25, 783.99, 1046.50];
-                chord.forEach(f => this.playTone(f, 0.8, 'sine', 0.2));
+                // 4-chord YM2612 fanfare with SPC700 stereo warmth
+                const chords = [
+                    [523.25, 659.25, 783.99],
+                    [587.33, 739.99, 880.00],
+                    [659.25, 830.61, 987.77],
+                    [1046.50, 1318.51, 1567.98]
+                ];
+                chords.forEach((chord, step) => {
+                    setTimeout(() => {
+                        chord.forEach(freq => this.playFM(freq, 2.0, 2.5, 0.6, 0.15, true));
+                    }, step * 160);
+                });
+            }
+
+            playTone(freq, duration = 0.1, type = 'sine', gainVal = 0.2) {
+                this.playFM(freq, 1.5, 2.0, duration, gainVal, true);
             }
         }
 
@@ -1615,7 +1743,7 @@
                 // Rule 6: Scenario 6 Dual Pressure & Coolant Cascade
                 if (this.currentScenario.id === 6) {
                     const plateActive = this.isPlatePressed(5, 5, 'beta');
-                    if (plateActive || this.flags.precursorRepaired) {
+                    if (plateActive) {
                         if (this.grids.beta[7][12] === TILES.BLAST_GATE) {
                             this.grids.beta[7][12] = TILES.FLOOR;
                             this.grids.beta[8][12] = TILES.FLOOR;
@@ -1977,6 +2105,7 @@
                 if (!this.flags.lockerItem) {
                     if (!this.flags.lockerDiscovered) {
                         this.flags.lockerDiscovered = true;
+                        this.logEvent("[MEM_TELEMETRY 0x1999] Ghost telemetry dated 1999-12-31 23:59:58 UTC logged at 10.19.99.4/classified. Carrier resonance at 1999Hz.", "warn");
                         if (this.currentEpoch === 'alpha') {
                             const item = {
                                 id: 'cell_alpha',
@@ -2809,7 +2938,7 @@
             c.ellipse(x + 16, y + 28, 9, 4, 0, 0, Math.PI * 2);
             c.fill();
 
-            // Pulsing Chronal Field Orbit Ring
+            // Chronal Field Containment Aura (Glint-Free, Zero Traveling Dots)
             const auraPulse = Math.sin(now / 200) * 1.5;
             c.strokeStyle = epochColor;
             c.lineWidth = 1;
@@ -3027,6 +3156,26 @@
                     slot.title = `Slot ${idx + 1} Empty`;
                 }
             });
+
+            // Audio button states
+            const audioBtn = document.getElementById('btnAudioToggle');
+            if (audioBtn) {
+                const icon = document.getElementById('audioIcon');
+                const label = document.getElementById('audioLabel');
+                if (audio.muted) {
+                    if (icon) icon.textContent = '🔇';
+                    if (label) label.textContent = 'Muted [M]';
+                    audioBtn.style.borderColor = 'var(--accent-red)';
+                } else {
+                    if (icon) icon.textContent = '🔊';
+                    if (label) label.textContent = 'YM2612 [M]';
+                    audioBtn.style.borderColor = 'var(--border-bright)';
+                }
+            }
+            const footAudioBtn = document.getElementById('footBtnAudio');
+            if (footAudioBtn) {
+                footAudioBtn.textContent = audio.muted ? '🔇 [M] Muted' : '🔊 [M] YM2612';
+            }
         }
 
         let toastTimeout = null;
@@ -3069,6 +3218,15 @@
                     help.classList.add('active');
                 }
                 return;
+            }
+            if (e.key === 'm' || e.key === 'M') {
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT' && e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                    const unmuted = audio.toggleMute();
+                    showToast(unmuted ? "🔊 FM Audio Active (Yamaha YM2612 / SPC700)" : "🔇 Audio Muted");
+                    updateUI();
+                    return;
+                }
             }
 
             // If splash is active, handle splash menu hotkeys
@@ -3395,6 +3553,12 @@
         document.getElementById('btnQuicksave').addEventListener('click', () => { audio.init(); engine.quicksave(); });
         document.getElementById('btnQuickload').addEventListener('click', () => { audio.init(); engine.quickload(); });
         document.getElementById('btnClearLog').addEventListener('click', () => { document.getElementById('eventLog').innerHTML = ''; });
+        document.getElementById('btnAudioToggle').addEventListener('click', () => {
+            audio.init();
+            const unmuted = audio.toggleMute();
+            showToast(unmuted ? "🔊 FM Audio Active (Yamaha YM2612 / SPC700)" : "🔇 Audio Muted");
+            updateUI();
+        });
 
         // Footer badge button bindings
         document.getElementById('footBtnHelp').addEventListener('click', () => { audio.init(); document.getElementById('helpOverlay').classList.add('active'); });
@@ -3407,6 +3571,12 @@
         document.getElementById('footBtnRecord').addEventListener('click', () => { audio.init(); engine.toggleRecordEcho(); });
         document.getElementById('footBtnPlay').addEventListener('click', () => { audio.init(); engine.togglePlayEcho(); });
         document.getElementById('footBtnUndo').addEventListener('click', () => { audio.init(); engine.undo(); });
+        document.getElementById('footBtnAudio').addEventListener('click', () => {
+            audio.init();
+            const unmuted = audio.toggleMute();
+            showToast(unmuted ? "🔊 FM Audio Active (Yamaha YM2612 / SPC700)" : "🔇 Audio Muted");
+            updateUI();
+        });
 
         // Splash Buttons
         document.getElementById('btnSplashNew').addEventListener('click', () => {

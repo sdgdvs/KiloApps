@@ -8,3 +8,5 @@ if exist app.res (
 ) else (
     link /nologo /ENTRY:MainEntry /SUBSYSTEM:WINDOWS main.obj kernel32.lib user32.lib gdi32.lib advapi32.lib comdlg32.lib shell32.lib winmm.lib ws2_32.lib comctl32.lib /OUT:KChrono.exe
 )
+if exist KChrono.exe copy /y KChrono.exe ..\KiloOS\public\exe\KChrono.exe >nul
+
