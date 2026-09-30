@@ -688,6 +688,82 @@
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
           osc.connect(gain); gain.connect(audioCtx.destination);
           osc.start(now); osc.stop(now + 0.12);
+        } else if (type === 'solarbeam') {
+          // Yamaha YM2612 2-Operator FM Synthesis: Radiant Focused Laser Beam
+          const carrier = audioCtx.createOscillator();
+          const mod = audioCtx.createOscillator();
+          const modGain = audioCtx.createGain();
+          const gain = audioCtx.createGain();
+          carrier.type = 'sine';
+          carrier.frequency.setValueAtTime(880, now);
+          carrier.frequency.linearRampToValueAtTime(660, now + 0.08);
+          mod.type = 'sawtooth';
+          mod.frequency.setValueAtTime(440, now);
+          modGain.gain.setValueAtTime(380, now);
+          modGain.gain.exponentialRampToValueAtTime(10, now + 0.08);
+          mod.connect(carrier.frequency);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          carrier.connect(gain); gain.connect(audioCtx.destination);
+          mod.start(now); mod.stop(now + 0.08);
+          carrier.start(now); carrier.stop(now + 0.08);
+        } else if (type === 'inferno') {
+          // Heavy Sub-Bass Volcanic Magma Detonation
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(65, now);
+          osc.frequency.exponentialRampToValueAtTime(22, now + 0.42);
+          gain.gain.setValueAtTime(0.35, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.42);
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.start(now); osc.stop(now + 0.42);
+        } else if (type === 'superconductor') {
+          // Cryo-Electric Dual FM Arc Discharge
+          const osc1 = audioCtx.createOscillator();
+          const osc2 = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc1.type = 'sawtooth'; osc1.frequency.setValueAtTime(520, now);
+          osc1.frequency.exponentialRampToValueAtTime(1300, now + 0.09);
+          osc2.type = 'triangle'; osc2.frequency.setValueAtTime(1040, now);
+          gain.gain.setValueAtTime(0.14, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+          osc1.connect(gain); osc2.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc1.start(now); osc1.stop(now + 0.09);
+          osc2.start(now); osc2.stop(now + 0.09);
+        } else if (type === 'trap') {
+          // Mechanical Iron Spring & Caltrop Concussion
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(920, now);
+          osc.frequency.exponentialRampToValueAtTime(160, now + 0.07);
+          gain.gain.setValueAtTime(0.18, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.start(now); osc.stop(now + 0.07);
+        } else if (type === 'breach') {
+          // Citadel Stone Impact & Warning Siren
+          const bass = audioCtx.createOscillator();
+          const bassGain = audioCtx.createGain();
+          bass.type = 'triangle';
+          bass.frequency.setValueAtTime(80, now);
+          bass.frequency.exponentialRampToValueAtTime(28, now + 0.28);
+          bassGain.gain.setValueAtTime(0.35, now);
+          bassGain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+          bass.connect(bassGain); bassGain.connect(audioCtx.destination);
+          bass.start(now); bass.stop(now + 0.28);
+
+          const alarm = audioCtx.createOscillator();
+          const alarmGain = audioCtx.createGain();
+          alarm.type = 'sawtooth';
+          alarm.frequency.setValueAtTime(440, now + 0.04);
+          alarm.frequency.exponentialRampToValueAtTime(330, now + 0.22);
+          alarmGain.gain.setValueAtTime(0.14, now + 0.04);
+          alarmGain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+          alarm.connect(alarmGain); alarmGain.connect(audioCtx.destination);
+          alarm.start(now + 0.04); alarm.stop(now + 0.22);
         }
       } catch(e){}
     }
@@ -3864,7 +3940,7 @@
         ctx.strokeStyle = '#c084fc'; ctx.lineWidth = 1.5;
         ctx.strokeRect(-5, -5, 10, 10);
       } else if (p.type === 'Cannon') {
-        // Heavy iron cannonball with specular shine
+        // Heavy iron cannonball with metallic highlight
         ctx.fillStyle = '#0f172a';
         ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI * 2); ctx.fill();
         ctx.strokeStyle = '#475569'; ctx.lineWidth = 1.2; ctx.stroke();
@@ -4282,18 +4358,55 @@
         ctx.fillRect(castleP.x + bx, castleP.y - 30, 7, 5);
       }
 
-      // Specular Sheen across castle roof
-      const sheenPos = (globalFrame * 2) % 120 - 40;
+      // Detailed Citadel Stonework & Warm Torchlight (Clean Static Architecture - No Traveling Glints)
       ctx.save();
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 1;
+      // Stone course mortar lines
       ctx.beginPath();
-      ctx.rect(castleP.x - 24, castleP.y - 24, 48, 48);
-      ctx.clip();
-      ctx.fillStyle = 'rgba(255,255,255,0.12)';
+      ctx.moveTo(castleP.x - 20, castleP.y - 12); ctx.lineTo(castleP.x + 20, castleP.y - 12);
+      ctx.moveTo(castleP.x - 20, castleP.y + 4); ctx.lineTo(castleP.x + 20, castleP.y + 4);
+      ctx.moveTo(castleP.x - 20, castleP.y + 18); ctx.lineTo(castleP.x + 20, castleP.y + 18);
+      // Vertical stone seams
+      ctx.moveTo(castleP.x - 8, castleP.y - 24); ctx.lineTo(castleP.x - 8, castleP.y - 12);
+      ctx.moveTo(castleP.x + 8, castleP.y - 24); ctx.lineTo(castleP.x + 8, castleP.y - 12);
+      ctx.moveTo(castleP.x, castleP.y - 12); ctx.lineTo(castleP.x, castleP.y + 4);
+      ctx.moveTo(castleP.x - 10, castleP.y + 4); ctx.lineTo(castleP.x - 10, castleP.y + 18);
+      ctx.moveTo(castleP.x + 10, castleP.y + 4); ctx.lineTo(castleP.x + 10, castleP.y + 18);
+      ctx.stroke();
+
+      // Heavy Portcullis Grating
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(castleP.x - 7, castleP.y + 12, 14, 14);
+      ctx.strokeStyle = '#64748b'; ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(castleP.x - 30 + sheenPos, castleP.y - 30);
-      ctx.lineTo(castleP.x - 10 + sheenPos, castleP.y - 30);
-      ctx.lineTo(castleP.x - 30 + sheenPos, castleP.y + 30);
-      ctx.fill();
+      ctx.moveTo(castleP.x - 3, castleP.y + 12); ctx.lineTo(castleP.x - 3, castleP.y + 26);
+      ctx.moveTo(castleP.x + 3, castleP.y + 12); ctx.lineTo(castleP.x + 3, castleP.y + 26);
+      ctx.moveTo(castleP.x - 7, castleP.y + 18); ctx.lineTo(castleP.x + 7, castleP.y + 18);
+      ctx.stroke();
+
+      // Warm Amber Sconce Lanterns
+      ctx.fillStyle = '#f59e0b';
+      ctx.beginPath(); ctx.arc(castleP.x - 11, castleP.y + 16, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(castleP.x + 11, castleP.y + 16, 2, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fef08a';
+      ctx.beginPath(); ctx.arc(castleP.x - 11, castleP.y + 16, 1, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(castleP.x + 11, castleP.y + 16, 1, 0, Math.PI * 2); ctx.fill();
+
+      // Mounted Citadel Defense Ballistas (Ramparts)
+      if (techSiegeEng > 0) {
+        [-24, 24].forEach(bx => {
+          ctx.save();
+          ctx.translate(castleP.x + bx, castleP.y - 24);
+          ctx.fillStyle = '#78350f';
+          ctx.fillRect(-2, -2, 4, 4);
+          ctx.strokeStyle = '#fbbf24'; ctx.lineWidth = 1.6;
+          ctx.beginPath(); ctx.arc(-2, 0, 5, -Math.PI * 0.6, Math.PI * 0.6); ctx.stroke();
+          ctx.strokeStyle = '#f8fafc'; ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.moveTo(-4, 0); ctx.lineTo(5, 0); ctx.stroke();
+          ctx.restore();
+        });
+      }
       ctx.restore();
 
       // Royal Gold & Azure Banner Fluttering

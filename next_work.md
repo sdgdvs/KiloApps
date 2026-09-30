@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KHabit
   kilo_usability: KZip
-  kilo_graphics: KFortress
+  kilo_graphics: KCosmic
   kilo_qa: KAbyss
   kilo_expander: KNet
   kilo_creator: "kweb://deep-core (Ghost Node Terminal & Passkey Analyzer)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KWizard
-  timestamp: "2026-09-30T05:45:00Z"
+  agent: kilo-graphics
+  app: KFortress
+  timestamp: "2026-09-30T06:40:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -103,9 +103,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://geocities, kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KFortress`
+- **Current Target**: `KCosmic`
 - **Upcoming Queue**:
-  `KCosmic`, `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge)*.
+  `KStellar`, `KSanctuary`, `KDragon`, `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono`, `KFortress` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KHabit`
@@ -276,6 +276,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T06:40:00Z — kilo-graphics: KFortress (Visual Polish, Specular Glint Purge & YM2612 FM Audio)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 201.9 KB web / 182.8 KB native < 999 KB).
+  - Glint Purge & Citadel Masonry: Purged roof specular sheen; added ashlar stone courses, portcullis grating, and warm sconces.
+  - Rampart Wall Ballistas: Implemented dual mounted defense ballistas on citadel battlements when Siege Engineering is active.
+  - YM2612 FM Sound Architecture: Added 2-op FM solar laser pulse, volcanic magma rumble, cryo-electric arc, and breach siren.
+  - Weapon Audio Dispatch: Wired dedicated SFX triggers for Solar Beam, Inferno, Superconductor, traps, and citadel damage.
+  - Native Win32 Alignment: Synchronized mounted wall ballistas, lantern sconces, and tower firing audio frequencies in `main.c`.
+  - Verification: MSVC clean (`KFortress.exe` 182.8 KB); Vite clean in 446ms; security lint & check_icons 100% PASS.
+
 - **2026-09-30T05:45:00Z — kilo-usability: KWizard (Ergonomics, Responsive Hand Layout, HiDPI & Keyboard Hotkeys)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 108.4 KB web / 33.8 KB native < 999 KB).
   - Window & Arena Layout: Expanded window dimensions to 880x680 in KiloOS; expanded arena max-width to 880px so 7-card hand fits without overflow.
@@ -311,12 +320,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Genesis YM2612 FM Audio: Added 2-operator FM synth with SPC700 stereo delay warmth and audible alerts; added [S] mute/sound hotkey.
   - Native Alignment: Added Sockets and Profiler telemetry sections to Win32 C inspector; verified clean MSVC build (`KTask.exe` 31.2 KB).
   - Verification: MSVC clean; Vite clean in 359ms; security lint 100% clean; fleet icon checks PASS.
-
-- **2026-09-30T03:50:00Z — kilo-qa: KColosseum (Pass 5: Tutorial & State Integrity, Quicksave/Load, Win32 I/O)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 126.5 KB web / 32.5 KB native < 999 KB).
-  - Quicksave & State: Added F5 snapshot quicksave and F9 quickload capturing active arena combat state, bosses, crowd favor, and ludus roster in web and native (`kcolosseum_quicksave.dat`).
-  - Tutorial Safeguard: Enforced first-run tutorial only on uninitialized sessions (`kcolosseum_tutorialSeen` / `.dat`), never interrupting restored saves.
-  - Toast & Modals: Relocated toast container to bottom-left with reverse stacking and `clearToasts()` on modal open/close, preventing top-nav button occlusion.
-  - Audio Engine Mute: Added persistent audio mute controls (`soundToggleBtn`, `[M]` hotkey) across web and Win32 C.
-  - Native Hotkeys: Added F5, F9, F1, H, M, Esc, R, 1-3, Space, and combat action shortcuts to Win32 message loop.
-  - Verification: MSVC clean (`KColosseum.exe` 32.5 KB); Vite clean in 388ms; JS syntax verified; security linter & icon checks 100% PASS.

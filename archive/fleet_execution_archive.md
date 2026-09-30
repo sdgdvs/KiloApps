@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T03:50:00Z — kilo-qa: KColosseum (Pass 5: Tutorial & State Integrity, Quicksave/Load, Win32 I/O)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 126.5 KB web / 32.5 KB native < 999 KB).
+  - Quicksave & State: Added F5 snapshot quicksave and F9 quickload capturing active arena combat state, bosses, crowd favor, and ludus roster in web and native (`kcolosseum_quicksave.dat`).
+  - Tutorial Safeguard: Enforced first-run tutorial only on uninitialized sessions (`kcolosseum_tutorialSeen` / `.dat`), never interrupting restored saves.
+  - Toast & Modals: Relocated toast container to bottom-left with reverse stacking and `clearToasts()` on modal open/close, preventing top-nav button occlusion.
+  - Audio Engine Mute: Added persistent audio mute controls (`soundToggleBtn`, `[M]` hotkey) across web and Win32 C.
+  - Native Hotkeys: Added F5, F9, F1, H, M, Esc, R, 1-3, Space, and combat action shortcuts to Win32 message loop.
+  - Verification: MSVC clean (`KColosseum.exe` 32.5 KB); Vite clean in 388ms; JS syntax verified; security linter & icon checks 100% PASS.
+
 - **2026-09-30T03:35:00Z — kilo-graphics: KStarForge (YM2612 FM Audio, Modular Engineering, Boss Waves & Zero Glints)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 201.1 KB web / 30.2 KB native < 999 KB).
   - Audio Synthesis: Integrated Yamaha YM2612 2-op FM and SNES SPC700 stereo delay DSP; added [M] mute toggle.

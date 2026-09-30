@@ -1635,8 +1635,11 @@ void UpdateGameLogic() {
                         else if (g_slots[i].towerType == TOWER_POISON) g_projectiles[p].speed = 8.0f;
                         else g_projectiles[p].speed = 9.0f;
 
-                        if (g_slots[i].towerType == TOWER_CANNON || g_slots[i].towerType == TOWER_INFERNO) Beep(180, 20);
+                        if (g_slots[i].towerType == TOWER_INFERNO) Beep(110, 25);
+                        else if (g_slots[i].towerType == TOWER_CANNON) Beep(180, 20);
                         else if (g_slots[i].towerType == TOWER_MAGE) Beep(600, 20);
+                        else if (g_slots[i].towerType == TOWER_BALLISTA) Beep(300, 20);
+                        else if (g_slots[i].towerType == TOWER_POISON || g_slots[i].towerType == TOWER_VENOMSPITE) Beep(350, 20);
                         else Beep(450, 20);
                         break;
                     }
@@ -1883,7 +1886,7 @@ static void DrawTrapSprite(HDC memDC, int tx, int ty, int trr, int type, float h
         SelectObject(memDC, oB); SelectObject(memDC, oP);
         DeleteObject(baseB); DeleteObject(baseP); DeleteObject(spkB); DeleteObject(spkP);
     } else if (type == TRAP_OIL) {
-        // Dark swirling oil puddle with iridescent sheen rings
+        // Dark swirling oil puddle with iridescent rings
         HBRUSH oilB = CreateSolidBrush(RGB(15, 23, 42));
         HPEN oilP = CreatePen(PS_SOLID, 1, RGB(51, 65, 85));
         HBRUSH oB = (HBRUSH)SelectObject(memDC, oilB);
@@ -2393,6 +2396,21 @@ void Render(HDC hdc, HWND hwnd) {
     DrawRoundedRect(memDC, cx - 10, cy + 10, cx + 14, cy + 34, RGB(15, 23, 42), RGB(100, 116, 139), 4);
     for (int bx = -30; bx < 32; bx += 12) {
         DrawRoundedRect(memDC, cx + bx, cy - 34, cx + bx + 7, cy - 28, RGB(100, 116, 139), TEXT_GOLD, 1);
+    }
+    // Warm Amber Lantern Sconces
+    HBRUSH torchB = CreateSolidBrush(RGB(245, 158, 11));
+    HBRUSH oTB = (HBRUSH)SelectObject(memDC, torchB);
+    Ellipse(memDC, cx - 14, cy + 18, cx - 10, cy + 22);
+    Ellipse(memDC, cx + 10, cy + 18, cx + 14, cy + 22);
+    SelectObject(memDC, oTB); DeleteObject(torchB);
+
+    // Mounted Citadel Wall Ballistas (Ramparts)
+    if (g_techSiegeEng > 0) {
+        HPEN bowP = CreatePen(PS_SOLID, 2, TEXT_GOLD);
+        HPEN oBP = (HPEN)SelectObject(memDC, bowP);
+        MoveToEx(memDC, cx - 31, cy - 30, NULL); LineTo(memDC, cx - 23, cy - 34); LineTo(memDC, cx - 23, cy - 26);
+        MoveToEx(memDC, cx + 27, cy - 30, NULL); LineTo(memDC, cx + 35, cy - 34); LineTo(memDC, cx + 35, cy - 26);
+        SelectObject(memDC, oBP); DeleteObject(bowP);
     }
     int banWave = (int)(custom_sinf(g_globalFrame * 0.25f) * 3.0f);
     HPEN poleP = CreatePen(PS_SOLID, 2, RGB(217, 119, 6));
