@@ -506,6 +506,35 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     const quickloadBtn = document.getElementById('quickloadBtn');
     const exportModalBtn = document.getElementById('exportModalBtn');
 
+    function safeGetStorage(key, fallback) {
+      try {
+        const val = localStorage.getItem(key);
+        return val !== null ? val : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+
+    function safeSetStorage(key, val) {
+      try {
+        localStorage.setItem(key, val);
+      } catch (e) {}
+    }
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeAttr(str) {
+      return escapeHtml(str);
+    }
+
     let soundEnabled = safeGetStorage('kfont_sound_enabled', '1') === '1';
     let audioCtx = null;
 
@@ -630,35 +659,6 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       toastNotification._timer = setTimeout(() => {
         toastNotification.style.display = 'none';
       }, 2200);
-    }
-
-    function safeGetStorage(key, fallback) {
-      try {
-        const val = localStorage.getItem(key);
-        return val !== null ? val : fallback;
-      } catch (e) {
-        return fallback;
-      }
-    }
-
-    function safeSetStorage(key, val) {
-      try {
-        localStorage.setItem(key, val);
-      } catch (e) {}
-    }
-
-    function escapeHtml(str) {
-      if (str === null || str === undefined) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    function escapeAttr(str) {
-      return escapeHtml(str);
     }
 
     function getWorkspaceState() {
@@ -952,12 +952,14 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
 
     function updateCustomPair() {
       const pair = (customKernInput.value || '').trim();
+      safeSetStorage('kfont_custom_kern', pair);
       const resEl = document.getElementById('customKernResult');
-      if (pair.length < 2) {
+      const chars = Array.from(pair);
+      if (chars.length < 2) {
         resEl.innerHTML = '<span style="color:#64748b;">Type 2 characters above to test optical kerning pair.</span>';
         return;
       }
-      const c1 = pair[0], c2 = pair[1];
+      const c1 = chars[0], c2 = chars[1];
       const canvas = document.getElementById('canvasMetrics');
       const ctx = canvas.getContext('2d');
       ctx.font = getFontString(null, "48px");
@@ -1289,6 +1291,7 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         card.onclick = () => {
           customFg.value = card.getAttribute('data-fg');
           customBg.value = card.getAttribute('data-bg');
+          playSound('click');
           updateCustomContrast();
           showToast(`Loaded "${card.getAttribute('data-name')}" into Custom Calculator`);
         };
@@ -1301,6 +1304,8 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     function updateCustomContrast() {
       const fg = customFg.value;
       const bg = customBg.value;
+      safeSetStorage('kfont_custom_fg', fg);
+      safeSetStorage('kfont_custom_bg', bg);
       const ratio = getContrastRatio(fg, bg);
       const passAA = ratio >= 4.5;
       const passAAA = ratio >= 7.0;
@@ -1467,11 +1472,15 @@ body {
       else if (targetId === 'panel-contrast') updateContrast();
       else if (targetId === 'panel-spec') updateSpecAndCode();
       else if (targetId === 'panel-sample') updateSample();
+      else if (targetId === 'panel-glyphs') updateGlyphs();
     }
 
     const tabBtns = Array.from(document.querySelectorAll('.tab-btn'));
     tabBtns.forEach((btn, idx) => {
-      btn.onclick = () => switchToTab(btn.dataset.target);
+      btn.onclick = () => {
+        playSound('tab');
+        switchToTab(btn.dataset.target);
+      };
       btn.onkeydown = (e) => {
         if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
           e.preventDefault();
@@ -1508,11 +1517,14 @@ body {
       updateGlyphs();
     };
     scaleRatio.onchange = () => {
+      safeSetStorage('kfont_scale_ratio', scaleRatio.value);
       updateWaterfall();
       updateSpecAndCode();
     };
     customFg.oninput = updateCustomContrast;
+    customFg.onchange = updateCustomContrast;
     customBg.oninput = updateCustomContrast;
+    customBg.onchange = updateCustomContrast;
     customKernInput.oninput = updateCustomPair;
 
     anatomyInput.oninput = () => {
@@ -1534,11 +1546,13 @@ body {
       btn.onclick = () => {
         anatomyInput.value = btn.getAttribute('data-char');
         safeSetStorage('kfont_anatomy_char', anatomyInput.value);
+        playSound('glyph', anatomyInput.value.codePointAt(0));
         updateAnatomy();
       };
     });
 
     function copyToClipboard(text, msg) {
+      playSound('copy');
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(() => showToast(msg)).catch(() => fallbackCopy(text, msg));
       } else {

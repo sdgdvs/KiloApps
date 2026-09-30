@@ -4,6 +4,25 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T00:26:00Z — kilo-creator: kweb://cybercafe (The Underground BBS, ASCII Studio, Door Game & mIRC Lounge)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 131 KB < 999 KB).
+  - BBS Door Game: Added "NODE-WARS '99: Subnet Hacker" turn-based RPG with 4 hacker classes, subnet probing, ICE battles, armory, and session log export.
+  - YM2612 FM Lab: Added live 2-Op FM Sound Chip Studio & 13-key keyboard with envelope controls and expanded Jukebox to 5 procedural tracks.
+  - ASCII Studio & Export: Added CP437 Box and Line drawing tools, 4 glyph categories, real ANSI escape export, and C header (.h) synthesis.
+  - Station Telemetry: Added interactive Terminal Booth inspection modal with ICMP ping simulation and seat claim.
+  - Floppy Archives: Added direct client-side downloads for all 9 vault documents with Glide benchmarks, cafe menus, and door game guides.
+  - Verification: Security linter 100% clean; Vite build clean in 287ms; webring member #006 corrected per arg_plan.md clearnet discovery standard.
+
+- **2026-09-30T00:10:00Z — kilo-expander: KZip (Multi-Format PKZIP/TAR/KZA, In-Archive Editor, Shannon Entropy & Audio Engine)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 115.8 KB < 999 KB).
+  - Multi-Format Architecture: Built full POSIX ustar TAR and standard PKZIP 2.0 container import/export engines alongside KZA2.
+  - In-Archive Studio & Editor: Added in-place text file editor [E], file renaming [F2], new text file creation [Alt+N], and comment metadata.
+  - Diagnostic Depth & Analysis: Integrated Shannon entropy calculator (0-8 b/B), compressibility scoring, and byte frequency spectrum [Alt+A].
+  - Inventory Manifests: Implemented automated export to CSV, JSON, and ASCII report formats with clipboard copy [Ctrl+M].
+  - Audio & Diegetic Lore: Added procedural Genesis YM2612 2-op FM / SPC700 stereo delay SFX [M] and atmospheric transit log breadcrumbs.
+  - Native Alignment: Updated MSVC build pipeline with auto-copy to public/exe/ maintaining clean zero-CRT binary (25.6 KB).
+  - Verification: MSVC clean (`KZip.exe` 25.6 KB); Vite clean in 264ms; headless Chrome CDP 100% PASS; security & icon audits clean.
+
 - **2026-09-29T23:26:00Z — kilo-usability: KType (Ergonomic Window Sizing, Toast De-Occlusion, HiDPI Canvas & Hotkey Status)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, security lint clean, 137.4 KB < 999 KB).
   - Window & Viewport: Tuned default window to 1000x760 in `App.jsx`, `ktype.html` resizeTo, and bumped `MICROS_VERSION` to 0.4.10.
