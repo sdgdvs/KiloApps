@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KJournal
+  kilo_tester: KMail
   kilo_usability: KStarForge
   kilo_graphics: KSubmarine
   kilo_qa: KPad
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KDragon
-  timestamp: "2026-09-30T21:25:00Z"
+  agent: kilo-tester
+  app: KJournal
+  timestamp: "2026-09-30T21:35:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -108,9 +108,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono`, `KFortress`, `KCosmic`, `KSanctuary`, `KDragon` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KSanctuary, KDragon)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KJournal`
+- **Current Target**: `KMail`
 - **Upcoming Queue**:
-  `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage)*.
+  `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KStarForge`
@@ -292,7 +292,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
- 
+
+- **2026-09-30T21:35:00Z — kilo-tester: KJournal (UI Audit, Quicksave/Load, Toast Safe Zone & Modal Clipping)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 128.2 KB web / 200.7 KB native < 999 KB ceiling).
+  - Quicksave & Quickload: Implemented F5 / F9 session snapshot save & restore across localStorage with visual toast confirmations.
+  - Toast Occlusion: Relocated toast notifications to bottom-center safe zone (`z-index: 1200`), eliminating header button & date occlusion.
+  - Modal Clipping: Added `max-height: calc(100vh - 40px)` across modals preventing overflow on constrained viewports.
+  - Dialog & PIN Navigation: Added Enter key handler to trigger confirmModal and complete 4-digit PIN unlock.
+  - State & Documentation: Added `kjournal_tutorialSeen` flag to prevent toast spam; updated Help modal & Settings with guide shortcuts.
+  - Verification: MSVC clean (`KJournal.exe` 200.7 KB); Vite clean in 432ms; check_icons & security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T21:25:00Z — kilo-graphics: KDragon (Game Content, Visual Polish & Balance Pass, Glint Ban Verified)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 173.3 KB web / 149.0 KB native < 999 KB ceiling).
   - Specular Glint & Dot Purge: Verified 0 traveling perimeter dots or rotating specular glints in web or Win32 C.
@@ -309,6 +318,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Community Directory: Added community node submissions pipeline (`webring/submissions`) and dynamic directory filtering.
   - Verification: Vite build clean in 258ms; full security linter 100% PASS; strict <999KB ceiling respected.
 
+- **2026-09-30T20:45:00Z — kilo-graphics: KSanctuary (Graphics, Relic Vault, Landmark Sprites & Audio Polish)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 427.8 KB web / 262.5 KB native < 999 KB ceiling).
+  - Pre-War Relics: Added 5 discoverable relics (Echo Holo-Tape #704, Geiger MK-II, Auto-Suture Kit, Chobham Mantlet, Cryo Seed Bank).
+  - Landmark Art: Overhauled wasteland landmark sprites/SVGs (Supermarket, Substation, Hospital, Armory, Vault 811).
+  - Visual Feedback: Animated audio waveform on Overseer monitor and golden-emerald crop heads in farm cutaway.
+  - Audio: Added 1999Hz harmonic chime SFX across web (Web Audio API) and Win32 C native procedural synthesizer.
+  - UI & Balance: Integrated Pre-War Relic Vault showcase, updated survival manual, and verified clean F5/F9 state persistence.
+  - Verification: MSVC clean (`KSanctuary.exe` 268.8 KB); Vite clean in 440ms; check_icons & security lint 100% PASS.
+
 - **2026-09-30T20:31:00Z — kilo-expander: KRSS (Feature Expansion: JSON Feed 1.1, CSV Export, Research Scrapbook, Firebase Wire & TTS)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 148.1 KB web / 21.5 KB native < 999 KB ceiling).
   - Multi-Format Syndication: Added JSON Feed 1.1 parsing & generation, RFC 4180 CSV database export, and standalone HTML export.
@@ -317,19 +335,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Reader Ergonomics & Audio: Integrated Web Speech API synthesizer, live reading time metrics, tag pills, and scroll progress tracking.
   - Native Win32 Parity: Expanded `KRSS.exe` with view filter toggles, CSV articles export, text dump, and keyboard accelerators ('F', 'C', 'T').
   - Verification: MSVC clean (`KRSS.exe` 21.5 KB); Vite clean in 236ms; security lint 100% PASS; bottom-center toast safe zone.
-
-- **2026-09-30T20:10:00Z — kilo-qa: KRadio (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone & HiDPI Polish)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 60.7 KB web / 8.5 KB native < 999 KB ceiling).
-  - Quicksave & Quickload: Implemented full state persistence across F5/F9 (presets, stream URL, playback status, volume, vizMode) in localStorage and native Win32 `kradio_save.dat`.
-  - First-Run Tutorial: Verified tutorial flags (`kradio_tutorialSeen` / `kradio_tutorial.dat`), preventing modal interruption on restored save states.
-  - Interactive Overlays: Added Esc/Space/Enter modal dismiss to guide; added responsive modal overflow scroll handling.
-  - Toast Safe Zone: Positioned toast alerts safely in bottom-center safe zone (`z-index: 1200`), eliminating header button occlusion.
-  - Verification: MSVC clean (`KRadio.exe` 8.5 KB); Vite clean in 290ms; check_icons & security lint 100% PASS; <999KB ceiling.
-
-- **2026-09-30T20:00:00Z — kilo-usability: KTask (UI/UX Usability Pass, Toast Safe Zone, Modal Clipping & Window Dimensions)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 175.5 KB web / 30.5 KB native < 999 KB ceiling).
-  - Toast Occlusion: Relocated toast notifications to bottom-center safe zone (`z-index: 1200`), eliminating overlap on bottom-right task action buttons.
-  - Modal Clipping: Added `max-height: calc(100vh - 40px)` and scroll handling to modals preventing overflow on lower display viewports.
-  - Window Dimensions: Tuned default window to 1040x700 in `App.jsx`, bound standalone `/exe/KTask.exe`, and bumped `MICROS_VERSION` to 0.4.14.
-  - Navigation & Hotkeys: Added `↑ / ↓` and `0 / Z` to Help dialog and keydown handler; scoped input typing to prevent accidental hotkey firing.
-  - Verification: MSVC clean (`KTask.exe` 30.5 KB); Vite clean in 291ms; check_icons & security lint 100% PASS; <999KB ceiling.

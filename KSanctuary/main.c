@@ -157,6 +157,7 @@ static int g_crtScanlines = 1;
 #define SFX_TURRET       12
 #define SFX_SIREN        13
 #define SFX_REPAIR       14
+#define SFX_RELIC        15
 
 static int g_soundEnabled = 1;
 
@@ -220,6 +221,9 @@ static DWORD WINAPI SoundThreadProc(LPVOID lpParam) {
             Beep(450, 30); Sleep(10);
             Beep(600, 30); Sleep(20);
             Beep(300, 60);
+            break;
+        case SFX_RELIC: // 15: Acoustic relic resonance with 1999Hz harmonic chime
+            Beep(659, 50); Beep(988, 60); Beep(1318, 70); Beep(1999, 140);
             break;
         default:
             Beep(500, 30);
@@ -440,12 +444,48 @@ typedef struct {
     int currentTab; // 0: Facilities, 1: Survivors, 2: Expeditions, 3: Defense, 4: Research, 5: Hazards, 6: Caravan, 7: Directives, 8: Manual
     int manualSubTab; // 0: Basics, 1: Facilities, 2: Expeditions, 3: Hazards, 4: Controls
     
+    // Wasteland Expedition Relics (5 Pre-Collapse Artifacts)
+    int relicsFound[5]; // 0: Holo-Tape #704, 1: Geiger MK-II, 2: Auto-Suture Kit, 3: Chobham Mantlet, 4: Cryo Seeds
+
     int autoRun;
     int showTutorialModal;
     int tutorialSeen;
 } GameState;
 
 static GameState g_state;
+
+// Wasteland Pre-Collapse Relic Metadata
+static const char* g_relicNames[5] = {
+    "Echo Holo-Tape #704",
+    "Geiger Counter MK-II",
+    "Auto-Suture Trauma Kit",
+    "Chobham Alloy Mantlet",
+    "Vault Cryo Seed Bank"
+};
+
+static const char* g_relicOrigins[5] = {
+    "Vault 811 Tech Archive",
+    "Derelict Power Substation",
+    "County Hospital Complex",
+    "Military Armory Wreckage",
+    "Old Supermarket Ruins"
+};
+
+static const char* g_relicPerks[5] = {
+    "+10 Morale & +1/cyc",
+    "-25% Scout Rad Trauma",
+    "Infirmary +10 HP Triage",
+    "+25 Barricade & +10 Def",
+    "+20% Farm Crop Yield"
+};
+
+static const COLORREF g_relicColors[5] = {
+    RGB(110, 231, 183),
+    RGB(245, 158, 11),
+    RGB(239, 68, 68),
+    RGB(56, 189, 248),
+    RGB(132, 204, 22)
+};
 
 // Caravan Faction Info
 typedef struct {
@@ -866,6 +906,7 @@ static void DoResearch(int techId) {
 static int CalculateTotalDefense() {
     int baseHull = 10;
     if (g_state.techReinforcedDef) baseHull += 15;
+    if (g_state.relicsFound[3]) baseHull += 10; // Chobham Alloy Mantlet
     int maxBar = (g_state.barricadeMaxHp > 0) ? g_state.barricadeMaxHp : 100;
     int barDef = (g_state.barricadeHp * 25) / maxBar;
     int turDef = g_state.turretCount * 18 + (g_state.turretOverclock ? 12 : 0);
@@ -940,6 +981,9 @@ static void CalculateTotals(float* foodProd, float* foodNeed, float* waterProd, 
     }
     if (g_state.techHydroponics) {
         *foodProd *= 1.25f;
+    }
+    if (g_state.relicsFound[4]) {
+        *foodProd *= 1.20f; // Vault Cryo Seed Bank: +20% Farm Crop Yield
     }
     if (g_state.techSolarArrays) {
         *powerGen += 10;
@@ -1458,6 +1502,10 @@ static void ProcessNewDay() {
     if (g_state.policyWater == 0 && g_state.water > 0.0f && g_state.waterPurity >= 80.0f) {
         g_state.morale += 2.0f;
         if (g_state.morale > 100.0f) g_state.morale = 100.0f;
+    }
+    if (g_state.relicsFound[0]) {
+        g_state.morale += 1.0f; // Echo Holo-Tape #704: +1 morale/cycle from ambient 1999Hz harmonic broadcast
+        if (g_state.morale > 100.0f) g_state.morale = 100.0f;
     } else if (g_state.policyWater == 1) {
         g_state.morale -= 3.0f;
         if (g_state.morale < 10.0f) g_state.morale = 10.0f;
@@ -1566,6 +1614,9 @@ static void ProcessNewDay() {
                 // Hazard damage & rads
                 int baseDmg = (exp->riskLevel == 4) ? (30 + rand() % 25) : ((exp->riskLevel == 3) ? (20 + rand() % 20) : ((exp->riskLevel == 2) ? (12 + rand() % 15) : (5 + rand() % 10)));
                 int baseRads = (exp->riskLevel == 4) ? 35 : ((exp->riskLevel == 3) ? 22 : ((exp->riskLevel == 2) ? 12 : 5));
+                if (g_state.relicsFound[1]) {
+                    baseRads = (baseRads * 3) / 4; // Geiger Counter MK-II: -25% scout radiation trauma
+                }
                 int dmg = baseDmg - str * 2 - (int)(agi * 1.5f);
                 if (dmg < 0) dmg = 0;
                 int stimUsed = 0;
@@ -1601,13 +1652,35 @@ static void ProcessNewDay() {
                     }
                 }
 
+                // Pre-Collapse Wasteland Relic recovery roll
+                char relicMsg[96] = "";
+                int relicMap[5] = { 4, 1, 2, 3, 0 }; // 0->Seeds, 1->Geiger, 2->Trauma, 3->Mantlet, 4->HoloTape
+                int rIdx = relicMap[i];
+                if (!g_state.relicsFound[rIdx]) {
+                    int rRoll = rand() % 100;
+                    int rChance = 35 + inte * 5 + (g_state.techDeepSensors ? 25 : 0);
+                    if (rRoll <= rChance || exp->riskLevel >= 4) {
+                        g_state.relicsFound[rIdx] = 1;
+                        if (rIdx == 3) {
+                            g_state.barricadeMaxHp += 25;
+                            g_state.barricadeHp += 25;
+                        } else if (rIdx == 0) {
+                            g_state.morale += 10.0f;
+                            if (g_state.morale > 100.0f) g_state.morale = 100.0f;
+                        }
+                        sprintf(relicMsg, " * RELIC: [%s] recovered!", g_relicNames[rIdx]);
+                        ShowToast(relicMsg, g_relicColors[rIdx]);
+                        PlaySfx(SFX_RELIC);
+                    }
+                }
+
                 exp->assignedScout[0] = '\0';
                 exp->hasStimpack = 0;
 
-                char buf[160];
-                sprintf(buf, "%s returned from %s! Salvaged: +%d Food, +%d Scrap, +%d Meds. [-%d HP, +%d Rads]%s%s", scout ? scout->name : "Scout", exp->name, fFound, sFound, mFound, dmg, baseRads, stimUsed ? " (Stimpack stabilized)" : "", bpMsg);
-                AddLog(buf, strlen(bpMsg) > 0 ? 3 : 4);
-                PlaySfx(strlen(bpMsg) > 0 ? 2 : 4);
+                char buf[256];
+                sprintf(buf, "%s returned from %s! Salvaged: +%d Food, +%d Scrap, +%d Meds. [-%d HP, +%d Rads]%s%s%s", scout ? scout->name : "Scout", exp->name, fFound, sFound, mFound, dmg, baseRads, stimUsed ? " (Stimpack stabilized)" : "", bpMsg, relicMsg);
+                AddLog(buf, (strlen(relicMsg) > 0 || strlen(bpMsg) > 0) ? 3 : 4);
+                if (strlen(relicMsg) == 0) PlaySfx(strlen(bpMsg) > 0 ? 2 : 4);
             }
         }
     }
@@ -1628,9 +1701,11 @@ static void ProcessNewDay() {
         }
         if (treatedCount > 0 && (g_state.meds > 0 || hasSurg)) {
             if (!hasSurg && g_state.meds > 0) g_state.meds--;
+            int healAmt = (hasSurg ? 25 : 15);
+            if (g_state.relicsFound[2]) healAmt += 10; // Auto-Suture Trauma Kit: +10 HP extra triage healing
             for (int s = 0; s < g_state.numSurvivors; s++) {
                 if (g_state.survivors[s].health < 90 || g_state.survivors[s].rads > 20) {
-                    g_state.survivors[s].health += (hasSurg ? 25 : 15);
+                    g_state.survivors[s].health += healAmt;
                     if (g_state.survivors[s].health > 100) g_state.survivors[s].health = 100;
                     g_state.survivors[s].rads -= (hasSurg ? 20 : 10);
                     if (g_state.survivors[s].rads < 0) g_state.survivors[s].rads = 0;
@@ -2307,6 +2382,7 @@ static void InitGameState() {
     g_state.caravanRepLevel = 1;
     g_state.caravanTradesCount = 0;
     for (int k = 0; k < 5; k++) g_state.caravanRareBought[k] = 0;
+    for (int r = 0; r < 5; r++) g_state.relicsFound[r] = 0;
 
     g_state.manualSubTab = 0;
     g_state.logCount = 0;
@@ -2706,36 +2782,73 @@ static void DrawWastelandLocationSprite(HDC hdc, int x, int y, int locIdx) {
     DrawBoxBorder(hdc, x, y, 32, 32, COL_BORDER);
 
     if (locIdx == 0) {
-        // Ruined Supermarket
+        // Ruined Supermarket: Grocery storefront, red awning, collapsed brick entryway & supply cart
         FillSolidRect(hdc, x + 4, y + 10, 24, 16, RGB(45, 38, 30));
         DrawBoxBorder(hdc, x + 4, y + 10, 24, 16, RGB(90, 75, 60));
-        FillSolidRect(hdc, x + 10, y + 5, 12, 5, RGB(180, 60, 40));
-        FillSolidRect(hdc, x + 7, y + 18, 6, 6, RGB(20, 18, 15));
+        FillSolidRect(hdc, x + 5, y + 6, 22, 5, RGB(180, 50, 40));
+        FillSolidRect(hdc, x + 7, y + 6, 3, 5, RGB(220, 220, 210));
+        FillSolidRect(hdc, x + 13, y + 6, 3, 5, RGB(220, 220, 210));
+        FillSolidRect(hdc, x + 19, y + 6, 3, 5, RGB(220, 220, 210));
+        FillSolidRect(hdc, x + 7, y + 17, 6, 7, RGB(20, 18, 15));
+        FillSolidRect(hdc, x + 17, y + 16, 8, 8, RGB(90, 70, 45)); // crate
+        DrawBoxBorder(hdc, x + 17, y + 16, 8, 8, RGB(140, 110, 70));
     } else if (locIdx == 1) {
-        // Radio Relay Tower
-        FillSolidRect(hdc, x + 14, y + 4, 4, 22, RGB(140, 145, 150));
-        FillSolidRect(hdc, x + 9, y + 22, 14, 4, RGB(100, 105, 110));
-        FillSolidRect(hdc, x + 8, y + 6, 2, 3, RGB(245, 160, 20));
-        FillSolidRect(hdc, x + 22, y + 6, 2, 3, RGB(245, 160, 20));
-        FillSolidRect(hdc, x + 5, y + 4, 2, 5, RGB(245, 160, 20));
-        FillSolidRect(hdc, x + 25, y + 4, 2, 5, RGB(245, 160, 20));
+        // Derelict Power Substation: High-voltage transformer towers, ceramic insulators & capacitor arc
+        FillSolidRect(hdc, x + 6, y + 16, 20, 11, RGB(45, 50, 55));
+        DrawBoxBorder(hdc, x + 6, y + 16, 20, 11, RGB(90, 95, 105));
+        // Twin insulator pylons
+        FillSolidRect(hdc, x + 8, y + 6, 4, 10, RGB(130, 135, 140));
+        FillSolidRect(hdc, x + 20, y + 6, 4, 10, RGB(130, 135, 140));
+        FillSolidRect(hdc, x + 7, y + 7, 6, 2, RGB(70, 75, 80));
+        FillSolidRect(hdc, x + 7, y + 11, 6, 2, RGB(70, 75, 80));
+        FillSolidRect(hdc, x + 19, y + 7, 6, 2, RGB(70, 75, 80));
+        FillSolidRect(hdc, x + 19, y + 11, 6, 2, RGB(70, 75, 80));
+        // High voltage electric discharge arc
+        FillSolidRect(hdc, x + 10, y + 5, 2, 2, RGB(255, 240, 120));
+        FillSolidRect(hdc, x + 20, y + 5, 2, 2, RGB(255, 240, 120));
+        FillSolidRect(hdc, x + 12, y + 4, 8, 2, RGB(80, 220, 255));
+        FillSolidRect(hdc, x + 15, y + 3, 2, 3, RGB(255, 255, 255));
+        // Cooling vents & danger panel
+        FillSolidRect(hdc, x + 10, y + 19, 12, 2, RGB(20, 25, 30));
+        FillSolidRect(hdc, x + 10, y + 23, 12, 2, RGB(20, 25, 30));
+        FillSolidRect(hdc, x + 13, y + 18, 6, 4, RGB(245, 160, 20));
     } else if (locIdx == 2) {
-        // Deep Underground Cavern
-        FillSolidRect(hdc, x + 4, y + 4, 24, 24, RGB(25, 20, 18));
-        FillSolidRect(hdc, x + 8, y + 4, 3, 8, RGB(65, 55, 50));
-        FillSolidRect(hdc, x + 16, y + 4, 4, 11, RGB(65, 55, 50));
-        FillSolidRect(hdc, x + 23, y + 4, 3, 7, RGB(65, 55, 50));
-        FillSolidRect(hdc, x + 10, y + 21, 4, 4, RGB(80, 240, 90));
-        FillSolidRect(hdc, x + 18, y + 19, 5, 5, RGB(80, 240, 90));
+        // County Hospital Complex: Ruined surgical wing with emergency cross & triage clinic
+        FillSolidRect(hdc, x + 4, y + 7, 24, 20, RGB(40, 45, 50));
+        DrawBoxBorder(hdc, x + 4, y + 7, 24, 20, RGB(85, 95, 105));
+        // Hospital roof clinic structure
+        FillSolidRect(hdc, x + 8, y + 4, 16, 4, RGB(55, 60, 65));
+        // Emergency Red Cross on white square
+        FillSolidRect(hdc, x + 7, y + 10, 8, 8, RGB(230, 235, 240));
+        FillSolidRect(hdc, x + 9, y + 12, 4, 4, RGB(239, 68, 68));
+        FillSolidRect(hdc, x + 10, y + 11, 2, 6, RGB(239, 68, 68));
+        FillSolidRect(hdc, x + 8, y + 13, 6, 2, RGB(239, 68, 68));
+        // Broken surgical ward windows
+        FillSolidRect(hdc, x + 18, y + 10, 4, 3, RGB(40, 160, 220));
+        FillSolidRect(hdc, x + 23, y + 10, 3, 3, RGB(25, 80, 110));
+        FillSolidRect(hdc, x + 18, y + 15, 8, 3, RGB(30, 100, 140));
+        // Triage ground entrance
+        FillSolidRect(hdc, x + 13, y + 21, 6, 6, RGB(15, 20, 25));
+        FillSolidRect(hdc, x + 6, y + 23, 4, 4, RGB(80, 70, 60)); // collapsed rubble
     } else if (locIdx == 3) {
-        // Abandoned Military Silo
-        FillSolidRect(hdc, x + 6, y + 14, 20, 14, RGB(55, 60, 55));
-        FillSolidRect(hdc, x + 11, y + 6, 10, 8, RGB(70, 75, 70));
-        FillSolidRect(hdc, x + 8, y + 22, 4, 3, RGB(240, 180, 20));
-        FillSolidRect(hdc, x + 14, y + 22, 4, 3, RGB(240, 180, 20));
-        FillSolidRect(hdc, x + 20, y + 22, 4, 3, RGB(240, 180, 20));
+        // Military Armory Wreckage: Reinforced armor bunker, tank turret cannon & blast barricade
+        FillSolidRect(hdc, x + 4, y + 12, 24, 15, RGB(45, 50, 45));
+        DrawBoxBorder(hdc, x + 4, y + 12, 24, 15, RGB(80, 95, 80));
+        // Armored turret cupola
+        FillSolidRect(hdc, x + 10, y + 7, 12, 6, RGB(60, 70, 60));
+        DrawBoxBorder(hdc, x + 10, y + 7, 12, 6, RGB(110, 125, 110));
+        // Autocannon barrel
+        FillSolidRect(hdc, x + 2, y + 9, 9, 2, RGB(160, 165, 170));
+        FillSolidRect(hdc, x + 1, y + 8, 2, 4, RGB(120, 125, 130)); // muzzle brake
+        // Warning hazard stripes along lower glacis
+        FillSolidRect(hdc, x + 6, y + 21, 20, 4, RGB(220, 180, 20));
+        FillSolidRect(hdc, x + 8, y + 21, 3, 4, RGB(20, 20, 20));
+        FillSolidRect(hdc, x + 14, y + 21, 3, 4, RGB(20, 20, 20));
+        FillSolidRect(hdc, x + 20, y + 21, 3, 4, RGB(20, 20, 20));
+        // Ammo crate
+        FillSolidRect(hdc, x + 22, y + 14, 5, 5, RGB(85, 75, 50));
     } else {
-        // Vault 811 Tech Archive
+        // Vault 811 Tech Archive: Massive circular cog hatch stamped 811 & glowing archive terminal
         FillSolidRect(hdc, x + 3, y + 6, 26, 22, RGB(18, 22, 28));
         DrawBoxBorder(hdc, x + 3, y + 6, 26, 22, RGB(60, 90, 130));
         // Cog blast hatch
@@ -3620,8 +3733,8 @@ static void DrawExpeditionsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int 
     TextOutA(hdc, x, y + 18, "Scout wasteland ruins for Scrap, Food, Meds, and Lost Room Blueprints. Higher hazards yield richer rewards.", 107);
 
     int startY = y + 36;
-    int cardH = 82;
-    int gap = 6;
+    int cardH = 74;
+    int gap = 5;
     int unassigned = GetUnassignedCount();
 
     for (int i = 0; i < g_state.numExpeditions; i++) {
@@ -3636,29 +3749,29 @@ static void DrawExpeditionsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int 
         // Name & Hazard Badge
         SelectObject(hdc, hFontBold);
         SetTextColor(hdc, COL_TEXT_BRIGHT);
-        TextOutA(hdc, x + 44, cy + 6, exp->name, (int)strlen(exp->name));
+        TextOutA(hdc, x + 44, cy + 5, exp->name, (int)strlen(exp->name));
 
         SelectObject(hdc, hFontSmall);
         COLORREF riskCol = (exp->riskLevel == 1) ? COL_GREEN : ((exp->riskLevel == 2) ? COL_AMBER : COL_RED);
         SetTextColor(hdc, riskCol);
         char rBuf[48];
         sprintf(rBuf, "[ %s - TIER %d ]", exp->risk, exp->riskLevel);
-        TextOutA(hdc, x + 250, cy + 6, rBuf, (int)strlen(rBuf));
+        TextOutA(hdc, x + 250, cy + 5, rBuf, (int)strlen(rBuf));
 
         SetTextColor(hdc, COL_TEXT_DIM);
         char durBuf[32];
         sprintf(durBuf, "Duration: %d Cycle(s)", exp->duration);
-        TextOutA(hdc, x + 390, cy + 6, durBuf, (int)strlen(durBuf));
+        TextOutA(hdc, x + 390, cy + 5, durBuf, (int)strlen(durBuf));
 
         // Desc
         SetTextColor(hdc, COL_TEXT_MAIN);
-        TextOutA(hdc, x + 44, cy + 24, exp->desc, (int)strlen(exp->desc));
+        TextOutA(hdc, x + 44, cy + 21, exp->desc, (int)strlen(exp->desc));
 
         // Yields & Blueprint
         char yldBuf[80];
         sprintf(yldBuf, "Yields: ~%d Food, ~%d Scrap, ~%d Meds", exp->potentialFood, exp->potentialScrap, exp->potentialMeds);
         SetTextColor(hdc, COL_TEXT_BRIGHT);
-        TextOutA(hdc, x + 44, cy + 42, yldBuf, (int)strlen(yldBuf));
+        TextOutA(hdc, x + 44, cy + 37, yldBuf, (int)strlen(yldBuf));
 
         if (strlen(exp->blueprintReward) > 0) {
             int isUnlocked = 0;
@@ -3676,7 +3789,7 @@ static void DrawExpeditionsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int 
                 sprintf(bpBuf, "[ARCHIVE TECH: %s]", exp->blueprintReward);
                 SetTextColor(hdc, COL_AMBER);
             }
-            TextOutA(hdc, x + 8, cy + 60, bpBuf, (int)strlen(bpBuf));
+            TextOutA(hdc, x + 44, cy + 53, bpBuf, (int)strlen(bpBuf));
         }
 
         // Action / Status Controls (Right side)
@@ -3690,28 +3803,55 @@ static void DrawExpeditionsView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int 
             }
             char progBuf[48];
             sprintf(progBuf, "EXPLORING (%dd left)", exp->daysRemaining);
-            DrawStyledBox(hdc, x + w - 215, cy + 10, 205, 30, COL_PANEL_BG, COL_AMBER);
+            DrawStyledBox(hdc, x + w - 215, cy + 8, 205, 28, COL_PANEL_BG, COL_AMBER);
             SelectObject(hdc, hFontBold);
             SetTextColor(hdc, COL_AMBER);
-            RECT rc = { x + w - 215, cy + 10, x + w - 10, cy + 40 };
+            RECT rc = { x + w - 215, cy + 8, x + w - 10, cy + 36 };
             DrawTextA(hdc, progBuf, -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             SelectObject(hdc, hFontSmall);
             SetTextColor(hdc, COL_TEXT_DIM);
             char scBuf[64];
             sprintf(scBuf, "Scout: %s%s", scout ? scout->name : "Scout", exp->hasStimpack ? " (+Stim)" : "");
-            TextOutA(hdc, x + w - 215, cy + 46, scBuf, (int)strlen(scBuf));
+            TextOutA(hdc, x + w - 215, cy + 42, scBuf, (int)strlen(scBuf));
         } else {
             // Stimpack toggle button
             COLORREF stimBg = exp->hasStimpack ? RGB(25, 45, 30) : COL_DARK_CARD;
             COLORREF stimTxt = exp->hasStimpack ? COL_GREEN : COL_TEXT_DIM;
             COLORREF stimBdr = exp->hasStimpack ? COL_GREEN : COL_BORDER;
-            DrawButtonControl(hdc, hFontSmall, x + w - 220, cy + 24, 75, 28, exp->hasStimpack ? "STIM: ON" : "STIM: OFF", stimTxt, stimBg, stimBdr, BTN_EXP_STIM_TOGGLE, i, 0);
+            DrawButtonControl(hdc, hFontSmall, x + w - 220, cy + 20, 75, 28, exp->hasStimpack ? "STIM: ON" : "STIM: OFF", stimTxt, stimBg, stimBdr, BTN_EXP_STIM_TOGGLE, i, 0);
 
             // Dispatch Button
             COLORREF btnBg = (unassigned > 0) ? RGB(25, 45, 30) : COL_DARK_CARD;
             COLORREF btnTxt = (unassigned > 0) ? COL_TEXT_BRIGHT : COL_TEXT_DIM;
-            DrawButtonControl(hdc, hFontBold, x + w - 140, cy + 24, 130, 28, "DISPATCH SCOUT", btnTxt, btnBg, unassigned > 0 ? COL_GREEN : COL_BORDER, BTN_DISPATCH_SCOUT, i, 0);
+            DrawButtonControl(hdc, hFontBold, x + w - 140, cy + 20, 130, 28, "DISPATCH SCOUT", btnTxt, btnBg, unassigned > 0 ? COL_GREEN : COL_BORDER, BTN_DISPATCH_SCOUT, i, 0);
+        }
+    }
+
+    // Pre-War Expedition Relic Vault Showcase Panel
+    int rvY = startY + g_state.numExpeditions * (cardH + gap) + 4;
+    DrawStyledBox(hdc, x, rvY, w, 58, RGB(8, 12, 10), COL_BORDER);
+    SelectObject(hdc, hFontBold);
+    SetTextColor(hdc, COL_AMBER);
+    TextOutA(hdc, x + 8, rvY + 5, "★ PRE-WAR EXPEDITION RELIC VAULT // RECOVERED ANOMALOUS WASTELAND ARTIFACTS", 75);
+
+    int rColW = (w - 16) / 5;
+    SelectObject(hdc, hFontSmall);
+    for (int r = 0; r < 5; r++) {
+        int rx = x + 8 + r * rColW;
+        SetTextColor(hdc, g_state.relicsFound[r] ? COL_TEXT_BRIGHT : RGB(100, 110, 105));
+        TextOutA(hdc, rx, rvY + 22, g_relicNames[r], (int)strlen(g_relicNames[r]));
+
+        if (g_state.relicsFound[r]) {
+            SetTextColor(hdc, g_relicColors[r]);
+            char bBuf[64];
+            sprintf(bBuf, "[ACTIVE: %s]", g_relicPerks[r]);
+            TextOutA(hdc, rx, rvY + 38, bBuf, (int)strlen(bBuf));
+        } else {
+            SetTextColor(hdc, RGB(90, 85, 80));
+            char lBuf[64];
+            sprintf(lBuf, "[LOCKED // %s]", g_relicOrigins[r]);
+            TextOutA(hdc, rx, rvY + 38, lBuf, (int)strlen(lBuf));
         }
     }
 }
@@ -4760,6 +4900,7 @@ static void DrawManualView(HDC hdc, HFONT hFontBold, HFONT hFontSmall, int x, in
         TextOutA(hdc, x + 16, curY, "* Hospital Wing (2d, Med Risk 35%): +4 Medpacks, chance for Surgery Wing Blueprint.", 83); curY += lineH;
         TextOutA(hdc, x + 16, curY, "* Military Armory (3d, High Risk 55%): +40 Scrap, +2 Meds, Turret Bastion Blueprint.", 84); curY += lineH;
         TextOutA(hdc, x + 16, curY, "* Vault 811 Archive (4d, Extreme 70%): +55 Scrap, +3 Meds, Fusion Reactor Blueprint.", 84); curY += lineH;
+        TextOutA(hdc, x + 16, curY, "* Pre-War Relics: 5 rare permanent artifacts can be unearthed (Echo Holo-Tape, Geiger MK-II, Mantlet, etc).", 108); curY += lineH;
         TextOutA(hdc, x + 16, curY, "* Stimpack Protection: Equipping a Medpack before sortie guarantees survival if ambushed!", 89); curY += lineH + 4;
 
         SelectObject(hdc, hFontBold);

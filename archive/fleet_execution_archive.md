@@ -4,6 +4,22 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T20:10:00Z — kilo-qa: KRadio (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone & HiDPI Polish)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 60.7 KB web / 8.5 KB native < 999 KB ceiling).
+  - Quicksave & Quickload: Implemented full state persistence across F5/F9 (presets, stream URL, playback status, volume, vizMode) in localStorage and native Win32 `kradio_save.dat`.
+  - First-Run Tutorial: Verified tutorial flags (`kradio_tutorialSeen` / `kradio_tutorial.dat`), preventing modal interruption on restored save states.
+  - Interactive Overlays: Added Esc/Space/Enter modal dismiss to guide; added responsive modal overflow scroll handling.
+  - Toast Safe Zone: Positioned toast alerts safely in bottom-center safe zone (`z-index: 1200`), eliminating header button occlusion.
+  - Verification: MSVC clean (`KRadio.exe` 8.5 KB); Vite clean in 290ms; check_icons & security lint 100% PASS; <999KB ceiling.
+
+- **2026-09-30T20:00:00Z — kilo-usability: KTask (UI/UX Usability Pass, Toast Safe Zone, Modal Clipping & Window Dimensions)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 175.5 KB web / 30.5 KB native < 999 KB ceiling).
+  - Toast Occlusion: Relocated toast notifications to bottom-center safe zone (`z-index: 1200`), eliminating overlap on bottom-right task action buttons.
+  - Modal Clipping: Added `max-height: calc(100vh - 40px)` and scroll handling to modals preventing overflow on lower display viewports.
+  - Window Dimensions: Tuned default window to 1040x700 in `App.jsx`, bound standalone `/exe/KTask.exe`, and bumped `MICROS_VERSION` to 0.4.14.
+  - Navigation & Hotkeys: Added `↑ / ↓` and `0 / Z` to Help dialog and keydown handler; scoped input typing to prevent accidental hotkey firing.
+  - Verification: MSVC clean (`KTask.exe` 30.5 KB); Vite clean in 291ms; check_icons & security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T19:46:00Z — kilo-tester: KImage (UI Audit & Inline Fixes, JSON Session Import/Export, Non-Destructive Restore & Hotkey Scope)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 142.5 KB web / 25.5 KB native < 999 KB ceiling).
   - UI Hotkey Scope: Excluded TEXTAREA/contenteditable from global hotkeys, preventing space/crop/del triggers when typing secret stego messages.
@@ -12,6 +28,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - Animation & Crop Hygiene: Added automated slideshow loop teardown on empty/cleared playlist; auto-cleared crop overlay when switching images.
   - Drawing & Clipboard: Transformed vector annotations alongside 90° rotations and flips; added execCommand fallback for secure clipboard copying.
   - Verification: MSVC clean (`KImage.exe` 25.5 KB); Vite clean in 291ms; check_icons & security lint 100% PASS; <999KB ceiling.
+
+- **2026-09-30T19:30:00Z — kilo-graphics: KSanctuary (Graphics & Content Pass, Facility SVGs/Sprites, Dynamic Weather & Turrets)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 423.4 KB web / 262.1 KB native < 999 KB ceiling).
+  - Facility Visuals: Added distinct SVGs and Win32 C sprites for all 14 blueprint room types across web and native.
+  - Cutaway Polish: Added dynamic surface weather (acid rain, rad static, cold frost, heat shimmer) and multi-turrets with overclock sights.
+  - Atmosphere: Added airlock caravan pack-cart and brownout emergency strobe alert on non-essential sectors during blackout.
+  - Specular Glint Purge: Confirmed static retro-terminal corner brackets with zero rotating glints or perimeter border dots.
+  - Verification: MSVC clean (`KSanctuary.exe` 262.1 KB); Vite clean in 264ms; check_icons & security lint 100% PASS.
 
 - **2026-09-30T19:02:00Z — kilo-expander: KHash (Forensic Lab, Shannon Entropy, SAC Avalanche & CRC16/Murmur3/xxHash)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 137.8 KB web / 17.9 KB native < 999 KB).

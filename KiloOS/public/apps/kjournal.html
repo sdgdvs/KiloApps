@@ -291,7 +291,7 @@
   .modal-backdrop.active { display: flex; }
   .modal-card {
     background: var(--bg-secondary); border: 1px solid var(--border-color);
-    border-radius: 12px; width: 500px; max-width: 90vw; max-height: 85vh;
+    border-radius: 12px; width: 500px; max-width: 90vw; max-height: calc(100vh - 40px);
     display: flex; flex-direction: column; box-shadow: var(--card-shadow);
   }
   .modal-header {
@@ -657,14 +657,14 @@
     font-weight: 500;
   }
 
-  /* Notification Toast (Non-occluding centered top bar) */
+  /* Notification Toast (Non-occluding bottom-center safe zone) */
   #toast {
-    position: fixed; top: 16px; left: 50%;
-    transform: translateX(-50%) translateY(-35px);
+    position: fixed; bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(40px);
     background: var(--accent-gold); color: #111; font-weight: 600;
     padding: 8px 16px 8px 18px; border-radius: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.45);
     opacity: 0; pointer-events: none; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 2500; display: flex; align-items: center; gap: 10px; max-width: 90vw;
+    z-index: 1200; display: flex; align-items: center; gap: 10px; max-width: 90vw;
     cursor: pointer;
   }
   #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
@@ -1042,6 +1042,16 @@
       <hr style="border:none; border-top:1px solid var(--border-color); margin: 16px 0;">
 
       <div class="form-group">
+        <label><strong>Quick Guide & Keyboard Reference</strong></label>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">
+          Review keyboard shortcuts, markdown formatting tips, and productivity features.
+        </p>
+        <button class="btn" onclick="closeModal('settingsModal'); openModal('helpModal');">📖 Open Help & Shortcuts Guide (F1)</button>
+      </div>
+
+      <hr style="border:none; border-top:1px solid var(--border-color); margin: 16px 0;">
+
+      <div class="form-group">
         <label><strong>Storage Information</strong></label>
         <p style="font-size:12px; color:var(--text-muted);" id="storageInfo">
           All data is stored privately inside browser LocalStorage.
@@ -1128,6 +1138,8 @@
       <ul style="margin-left: 20px; margin-bottom: 12px; color: var(--text-muted);">
         <li><strong style="color:var(--text-bright);">F1</strong> or <strong style="color:var(--text-bright);">H</strong> — Open this Help guide</li>
         <li><strong style="color:var(--text-bright);">F2</strong> or <strong style="color:var(--text-bright);">Alt + S</strong> — Toggle Sidebar / Zen Focus Mode (Distraction-Free)</li>
+        <li><strong style="color:var(--text-bright);">F5</strong> — Quicksave journal state / entry snapshot</li>
+        <li><strong style="color:var(--text-bright);">F9</strong> — Quickload last saved journal snapshot</li>
         <li><strong style="color:var(--text-bright);">Alt + [</strong> / <strong style="color:var(--text-bright);">Alt + ]</strong> — Decrease / Increase editor font size (12px - 26px)</li>
         <li><strong style="color:var(--text-bright);">Ctrl + S</strong> — Save current journal entry immediately</li>
         <li><strong style="color:var(--text-bright);">Ctrl + N</strong> — Jump to today's entry</li>
@@ -1141,6 +1153,7 @@
         <li><strong style="color:var(--text-bright);">Ctrl + F</strong> — Focus Search & Hashtag filter bar</li>
         <li><strong style="color:var(--text-bright);">Alt + 1..6</strong> (or <strong style="color:var(--text-bright);">1..6</strong>) — Select Mood (Happy, Calm, Neutral, Sad, Energetic, Focused)</li>
         <li><strong style="color:var(--text-bright);">Delete</strong> — Delete current entry (when editor is unfocused)</li>
+        <li><strong style="color:var(--text-bright);">Enter</strong> — Confirm action in confirmation dialog</li>
         <li><strong style="color:var(--text-bright);">Esc</strong> — Close active dialog, exit Zen mode, or clear search</li>
       </ul>
       <p><strong>Core Features:</strong></p>
@@ -1573,9 +1586,13 @@
     renderEntryList();
     loadSelectedEntry();
 
-    setTimeout(() => {
-      showToast("📖 Welcome to KJournal! Press 'H' or F1 for Help | Ctrl+S to Save");
-    }, 450);
+    const tutorialSeen = localStorage.getItem('kjournal_tutorialSeen');
+    if (!tutorialSeen) {
+      localStorage.setItem('kjournal_tutorialSeen', '1');
+      setTimeout(() => {
+        showToast("📖 Welcome to KJournal! Press 'H' or F1 for Help | Ctrl+S to Save");
+      }, 450);
+    }
   }
 
   // Local Storage Data Handling
@@ -1609,6 +1626,68 @@
       localStorage.setItem('kjournal_data', JSON.stringify(entries));
     } catch (e) {
       showToast('Storage limit reached! Cannot save data.');
+    }
+  }
+
+  // Quicksave & Quickload (F5 / F9)
+  function quicksaveSession() {
+    if (isDirty) {
+      saveEntry(false);
+    }
+    const currentText = document.getElementById('journalArea').value;
+    const catSel = document.getElementById('entryCategorySelect');
+    const snapshot = {
+      selectedDate: selectedDate,
+      text: currentText,
+      mood: selectedMood || '😊',
+      category: catSel ? catSel.value : 'personal',
+      calYear: calCurrentYear,
+      calMonth: calCurrentMonth,
+      editorMode: editorMode,
+      timestamp: Date.now()
+    };
+    try {
+      localStorage.setItem('kjournal_quicksave', JSON.stringify(snapshot));
+      saveEntriesToStorage();
+      saveSettingsToStorage();
+      showToast('💾 Quicksave: Journal session saved [F5]');
+    } catch (e) {
+      showToast('Storage error during quicksave');
+    }
+  }
+
+  function quickloadSession() {
+    try {
+      const raw = localStorage.getItem('kjournal_quicksave');
+      loadSettings();
+      loadEntries();
+      if (raw) {
+        const snapshot = JSON.parse(raw);
+        if (snapshot && snapshot.selectedDate) {
+          selectedDate = snapshot.selectedDate;
+          if (snapshot.calYear) calCurrentYear = snapshot.calYear;
+          if (typeof snapshot.calMonth === 'number') calCurrentMonth = snapshot.calMonth;
+          if (snapshot.editorMode) setEditorMode(snapshot.editorMode);
+          if (snapshot.mood) selectMood(snapshot.mood, false);
+          loadSelectedEntry();
+          if (snapshot.text !== undefined && (!entries[selectedDate] || !entries[selectedDate].text)) {
+            document.getElementById('journalArea').value = snapshot.text;
+            onEditorInput();
+          }
+          renderCalendar();
+          renderTagCloud();
+          renderEntryList();
+          showToast('📂 Quickload: Journal session restored [F9]');
+          return;
+        }
+      }
+      loadSelectedEntry();
+      renderCalendar();
+      renderTagCloud();
+      renderEntryList();
+      showToast('📂 Quickload: State reloaded from storage [F9]');
+    } catch (e) {
+      showToast('Failed to quickload session');
     }
   }
 
@@ -2862,6 +2941,13 @@
         backspacePin();
         return;
       }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (pinBuffer.length === 4) {
+          handlePinComplete();
+        }
+        return;
+      }
       if (e.key === 'Escape') {
         e.preventDefault();
         if (pinMode === 'create_1' || pinMode === 'create_2') {
@@ -2895,7 +2981,30 @@
       }
     }
 
+    // Enter in Confirmation Dialog
+    const confirmModalEl = document.getElementById('confirmModal');
+    if (confirmModalEl && confirmModalEl.classList.contains('active')) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const btn = document.getElementById('confirmModalBtn');
+        if (btn) btn.click();
+        return;
+      }
+    }
+
     if (anyModalOpen) {
+      return;
+    }
+
+    // F5 Quicksave & F9 Quickload
+    if (e.key === 'F5') {
+      e.preventDefault();
+      quicksaveSession();
+      return;
+    }
+    if (e.key === 'F9') {
+      e.preventDefault();
+      quickloadSession();
       return;
     }
 

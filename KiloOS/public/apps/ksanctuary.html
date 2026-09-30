@@ -1102,6 +1102,69 @@
             border-color: var(--panel-border);
         }
 
+        /* Relic Vault Styling */
+        .relic-vault-panel {
+            background: rgba(10, 16, 12, 0.7);
+            border: 1px solid var(--panel-border);
+            padding: 8px 10px;
+            border-radius: 2px;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .relic-vault-panel::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: -1px;
+            width: 6px; height: 6px;
+            border-top: 2px solid var(--border-corner);
+            border-left: 2px solid var(--border-corner);
+            pointer-events: none;
+        }
+
+        .relic-vault-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--text-bright);
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(47, 69, 48, 0.4);
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+        }
+
+        .relic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+            gap: 6px;
+        }
+
+        .relic-badge {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--panel-border);
+            padding: 6px 8px;
+            border-radius: 2px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            font-size: 9px;
+            line-height: 1.3;
+            transition: all 0.15s;
+        }
+
+        .relic-badge.discovered {
+            border-color: rgba(52, 211, 153, 0.5);
+            background: rgba(6, 78, 59, 0.2);
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.08);
+        }
+
+        .relic-badge.undiscovered {
+            opacity: 0.55;
+            border-style: dashed;
+        }
+
         /* Defense & Raider Security styling */
         .def-overview-grid {
             display: grid;
@@ -1984,6 +2047,7 @@
                 <div style="font-size:11px; color:var(--text-dim); margin-bottom:8px; line-height:1.4;">
                     Dispatch scouts into irradiated ruins across the wasteland to salvage food, tech scrap, medical supplies, and lost facility blueprints. Scout attributes influence outcomes: <strong>STR</strong> mitigates ruin combat wounds, <strong>AGI</strong> increases loot yields and hazard evasion, and <strong>INT</strong> unlocks technology blueprints.
                 </div>
+                <div id="relics-vault-container"></div>
                 <div class="scavenge-grid" id="scavenge-grid">
                     <!-- Injected by JavaScript -->
                 </div>
@@ -2745,6 +2809,15 @@
                         <tr><td><strong>Vault 811 Tech Archive</strong></td><td>4 Days</td><td>EXTREME (70%)</td><td>+55 Scrap, +3 Meds, Fusion Reactor BP</td></tr>
                     </table>
                     <p style="margin-top:4px; font-size:10px; color:var(--text-dim);">&bull; Equipping a Medical Stimpack before dispatch guarantees scout survival if a mortal wound is sustained!</p>
+                    <div style="margin-top:6px; padding:6px; background:rgba(0,0,0,0.3); border:1px solid var(--panel-border); border-radius:2px;">
+                        <strong style="color:var(--accent-amber);">PRE-WAR EXPEDITION RELICS:</strong>
+                        <p style="margin:2px 0 0 0; font-size:10px; color:var(--text-main); line-height:1.4;">Scouts exploring ruined wasteland landmarks have a 30% chance to unearth permanent pre-war artifacts:
+                        <strong style="color:#6ee7b7;">Echo Holo-Tape #704</strong> (+10 Morale & +1/cyc), 
+                        <strong style="color:#f59e0b;">Geiger Counter MK-II</strong> (-25% Scout Rad Infiltration), 
+                        <strong style="color:#ef4444;">Auto-Suture Trauma Kit</strong> (+10 HP Triage Healing), 
+                        <strong style="color:#60a5fa;">Chobham Alloy Mantlet</strong> (+25 Barricade & +10 Vault Def), and 
+                        <strong style="color:#34d399;">Vault Cryo Seed Bank</strong> (+20% Farm Crop Yield).</p>
+                    </div>
                 </div>
 
                 <div class="guide-card">
@@ -3059,6 +3132,30 @@
             }
         }
 
+        function playRelicChime() {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                if (!audioCtx) return;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const now = audioCtx.currentTime;
+                // Harmonic 1999Hz resonant chime arpeggio
+                const freqs = [659.25, 987.77, 1318.51, 1999.0];
+                freqs.forEach((freq, idx) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = idx === 3 ? 'sine' : 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    gain.gain.setValueAtTime(0.08, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.08 + (idx === 3 ? 0.65 : 0.35));
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + (idx === 3 ? 0.65 : 0.35));
+                });
+            } catch (e) {}
+        }
+
         function playSound(type) {
             if (!soundEnabled) return;
             try {
@@ -3068,7 +3165,10 @@
 
                 const now = audioCtx.currentTime;
 
-                if (type === 'geiger') {
+                if (type === 'relic') {
+                    playRelicChime();
+                    return;
+                } else if (type === 'geiger') {
                     playGeigerBurst(6);
                     return;
                 } else if (type === 'construction') {
@@ -3573,43 +3673,66 @@
 
         function getExpeditionLandmarkSvg(expId, riskLevel = 1) {
             const stroke = riskLevel <= 1 ? 'var(--accent-green)' : (riskLevel <= 2 ? 'var(--accent-amber)' : 'var(--danger-red)');
-            const fill = riskLevel <= 1 ? 'rgba(16,185,129,0.1)' : (riskLevel <= 2 ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)');
+            const fill = riskLevel <= 1 ? 'rgba(16,185,129,0.12)' : (riskLevel <= 2 ? 'rgba(245,158,11,0.12)' : 'rgba(239,68,68,0.12)');
 
             if (expId === 'exp1') {
+                // Old Supermarket Ruins: Red awning, storefront brickwork, shattered glass, supply cart
                 return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="4" y="10" width="28" height="20" rx="1" fill="${fill}" stroke="${stroke}" stroke-width="1.2"/>
-                    <rect x="8" y="5" width="14" height="6" fill="#78350f" stroke="${stroke}" stroke-width="1"/>
-                    <path d="M10 24 L14 18 H22 L24 24" stroke="${stroke}" stroke-width="1.2"/>
-                    <line x1="18" y1="20" x2="18" y2="28" stroke="${stroke}" stroke-width="1"/>
-                    <line x1="26" y1="14" x2="30" y2="18" stroke="var(--danger-red)" stroke-width="1.5"/>
+                    <path d="M4 10 L7 5 H29 L32 10 Z" fill="#b91c1c" stroke="${stroke}" stroke-width="1"/>
+                    <line x1="12" y1="5" x2="12" y2="10" stroke="#fef08a" stroke-width="1.2"/>
+                    <line x1="20" y1="5" x2="20" y2="10" stroke="#fef08a" stroke-width="1.2"/>
+                    <line x1="28" y1="5" x2="28" y2="10" stroke="#fef08a" stroke-width="1.2"/>
+                    <rect x="8" y="18" width="8" height="12" fill="#1e293b" stroke="${stroke}" stroke-width="1"/>
+                    <line x1="20" y1="20" x2="28" y2="20" stroke="var(--accent-amber)" stroke-width="1.5"/>
+                    <line x1="20" y1="24" x2="28" y2="24" stroke="var(--accent-amber)" stroke-width="1.5"/>
+                    <rect x="21" y="23" width="7" height="6" fill="#78350f" stroke="${stroke}" stroke-width="0.8"/>
                 </svg>`;
             } else if (expId === 'exp2') {
+                // Derelict Power Substation: Twin high-voltage insulator towers & capacitor electrical arc
                 return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M18 4 L11 30 H25 Z" fill="${fill}" stroke="${stroke}" stroke-width="1.2"/>
-                    <line x1="14" y1="16" x2="22" y2="16" stroke="${stroke}" stroke-width="1"/>
-                    <line x1="12" y1="23" x2="24" y2="23" stroke="${stroke}" stroke-width="1"/>
-                    <circle cx="18" cy="4" r="2" fill="${stroke}"/>
-                    <path d="M12 6 C10 8 10 11 12 13 M24 6 C26 8 26 11 24 13" stroke="${stroke}" stroke-width="1.2"/>
+                    <rect x="6" y="20" width="24" height="11" rx="1" fill="${fill}" stroke="${stroke}" stroke-width="1.2"/>
+                    <line x1="10" y1="7" x2="10" y2="20" stroke="${stroke}" stroke-width="2"/>
+                    <line x1="26" y1="7" x2="26" y2="20" stroke="${stroke}" stroke-width="2"/>
+                    <rect x="7" y="10" width="6" height="2" fill="#64748b" stroke="${stroke}" stroke-width="0.8"/>
+                    <rect x="7" y="14" width="6" height="2" fill="#64748b" stroke="${stroke}" stroke-width="0.8"/>
+                    <rect x="23" y="10" width="6" height="2" fill="#64748b" stroke="${stroke}" stroke-width="0.8"/>
+                    <rect x="23" y="14" width="6" height="2" fill="#64748b" stroke="${stroke}" stroke-width="0.8"/>
+                    <circle cx="10" cy="6" r="2" fill="var(--accent-amber)"/>
+                    <circle cx="26" cy="6" r="2" fill="var(--accent-amber)"/>
+                    <path d="M12 6 L17 4 L19 8 L24 6" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round"/>
+                    <line x1="11" y1="24" x2="25" y2="24" stroke="var(--text-dim)" stroke-width="1"/>
+                    <line x1="11" y1="27" x2="25" y2="27" stroke="var(--text-dim)" stroke-width="1"/>
                 </svg>`;
             } else if (expId === 'exp3') {
+                // County Hospital Complex: Multi-floor medical surgical wing with bold emergency red cross
                 return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="4" y="6" width="28" height="24" rx="1" fill="#150f0c" stroke="${stroke}" stroke-width="1.2"/>
-                    <path d="M8 6 L10 16 L12 6 L16 19 L19 6 L24 17 L27 6" fill="#2d1e18" stroke="${stroke}" stroke-width="1"/>
-                    <circle cx="12" cy="25" r="2" fill="#22c55e"/>
-                    <circle cx="22" cy="24" r="3" fill="#22c55e"/>
+                    <rect x="5" y="8" width="26" height="23" rx="1" fill="${fill}" stroke="${stroke}" stroke-width="1.2"/>
+                    <rect x="11" y="4" width="14" height="4" fill="#334155" stroke="${stroke}" stroke-width="1"/>
+                    <rect x="8" y="12" width="10" height="10" rx="1" fill="#f8fafc" stroke="#64748b" stroke-width="0.8"/>
+                    <path d="M13 14 V20 M10 17 H16" stroke="#ef4444" stroke-width="2.5" stroke-linecap="square"/>
+                    <rect x="22" y="12" width="6" height="4" fill="#0284c7" stroke="${stroke}" stroke-width="0.8"/>
+                    <rect x="22" y="18" width="6" height="4" fill="#0369a1" stroke="${stroke}" stroke-width="0.8"/>
+                    <rect x="15" y="24" width="6" height="7" fill="#0f172a" stroke="${stroke}" stroke-width="0.8"/>
                 </svg>`;
             } else if (expId === 'exp4') {
+                // Military Armory Wreckage: Heavy concrete pillbox, tank turret cannon & hazard stripes
                 return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect x="6" y="14" width="24" height="16" rx="2" fill="${fill}" stroke="${stroke}" stroke-width="1.2"/>
-                    <path d="M13 14 V7 C13 5 23 5 23 7 V14 Z" fill="#334155" stroke="${stroke}" stroke-width="1"/>
-                    <line x1="8" y1="24" x2="28" y2="24" stroke="var(--accent-amber)" stroke-width="2" stroke-dasharray="3 3"/>
+                    <rect x="5" y="14" width="26" height="17" rx="1" fill="${fill}" stroke="${stroke}" stroke-width="1.2"/>
+                    <path d="M12 14 V8 C12 6 24 6 24 8 V14 Z" fill="#334155" stroke="${stroke}" stroke-width="1.2"/>
+                    <line x1="3" y1="10" x2="13" y2="10" stroke="#94a3b8" stroke-width="2.5" stroke-linecap="round"/>
+                    <rect x="2" y="9" width="3" height="3" fill="#cbd5e1"/>
+                    <line x1="8" y1="26" x2="28" y2="26" stroke="var(--accent-amber)" stroke-width="3" stroke-dasharray="3 3"/>
+                    <rect x="23" y="17" width="5" height="5" fill="#78350f" stroke="${stroke}" stroke-width="0.8"/>
                 </svg>`;
             } else {
+                // Vault 811 Tech Archive: Heavy circular cog door with 811 designation & cyan data terminal
                 return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <circle cx="18" cy="18" r="14" fill="${fill}" stroke="${stroke}" stroke-width="1.2"/>
                     <circle cx="18" cy="18" r="9" fill="#1e293b" stroke="${stroke}" stroke-width="1"/>
-                    <path d="M18 4 V8 M18 28 V32 M4 18 H8 M28 18 H32 M8 8 L11 11 M25 25 L28 28 M8 28 L11 25 M25 11 L28 8" stroke="${stroke}" stroke-width="1.2"/>
+                    <path d="M18 4 V7 M18 29 V32 M4 18 H7 M29 18 H32 M8 8 L10 10 M26 26 L28 28 M8 28 L10 26 M26 10 L28 8" stroke="${stroke}" stroke-width="1.5"/>
                     <text x="18" y="21" font-size="7" font-weight="bold" fill="var(--accent-amber)" text-anchor="middle" font-family="monospace">811</text>
+                    <rect x="22" y="12" width="6" height="4" fill="#064e3b" stroke="#10b981" stroke-width="0.8"/>
                 </svg>`;
             }
         }
@@ -3973,6 +4096,19 @@
                     ctx.fillRect(r.x + 86, r.y + 22, 12, 10);
                     ctx.fillStyle = '#6ee7b7';
                     ctx.fillRect(r.x + 88, r.y + 24, 8, 6);
+                    if (state.relics && state.relics.holotape) {
+                        ctx.fillStyle = '#064e3b';
+                        ctx.fillRect(r.x + 88, r.y + 24, 8, 6);
+                        ctx.strokeStyle = '#34d399';
+                        ctx.lineWidth = 0.8;
+                        ctx.beginPath();
+                        for (let px = 0; px < 8; px++) {
+                            const py = r.y + 27 + Math.sin(t * 6 + px * 1.2) * 1.8;
+                            if (px === 0) ctx.moveTo(r.x + 88 + px, py);
+                            else ctx.lineTo(r.x + 88 + px, py);
+                        }
+                        ctx.stroke();
+                    }
                 } else if (r.id === 'farm') {
                     ctx.fillStyle = '#701a75';
                     ctx.fillRect(r.x + 10, r.y + 10, r.w - 20, 3);
@@ -3985,12 +4121,17 @@
                     ctx.fill();
                     ctx.fillStyle = '#291809';
                     ctx.fillRect(r.x + 8, r.y + 38, r.w - 16, 8);
-                    ctx.fillStyle = '#22c55e';
+                    ctx.fillStyle = (state.relics && state.relics.seeds) ? '#34d399' : '#22c55e';
                     for (let c = 0; c < 8; c++) {
                         const cx = r.x + 14 + c * 14;
                         const sway = Math.sin(t * 3 + c) * 1.5;
                         ctx.fillRect(cx + sway, r.y + 26, 2, 12);
                         ctx.fillRect(cx - 2 + sway, r.y + 26, 6, 4);
+                        if (state.relics && state.relics.seeds) {
+                            ctx.fillStyle = '#fde047';
+                            ctx.fillRect(cx - 1 + sway, r.y + 23, 4, 3);
+                            ctx.fillStyle = '#34d399';
+                        }
                     }
                 } else if (r.id === 'quarters') {
                     ctx.fillStyle = '#1e3a8a';
@@ -4227,6 +4368,13 @@
             fortifiedRationsDays: 0,
             communalFeastDays: 0,
             addressCooldown: 0,
+            relics: {
+                holotape: false,
+                geiger: false,
+                trauma: false,
+                mantlet: false,
+                seeds: false
+            },
             policies: {
                 food: 'normal',   // feast, normal, half, starve
                 water: 'normal',  // normal, half, minimal
@@ -4989,6 +5137,13 @@
                     if (s.rads === undefined) s.rads = 0;
                 });
             }
+            if (!state.relics) {
+                state.relics = JSON.parse(JSON.stringify(defaultState.relics));
+            } else {
+                Object.keys(defaultState.relics).forEach(k => {
+                    if (state.relics[k] === undefined) state.relics[k] = false;
+                });
+            }
         }
 
         function quickloadGame() {
@@ -5146,6 +5301,9 @@
             if (state.researched && state.researched.hydroponics) {
                 totalFoodProd = Math.round(totalFoodProd * 1.25);
             }
+            if (state.relics && state.relics.seeds) {
+                totalFoodProd = Math.round(totalFoodProd * 1.20); // Vault Cryo Seed Bank: +20% Farm Crop Yield
+            }
             if (state.researched && state.researched.solar_arrays) {
                 totalPowerGen += 10;
             }
@@ -5210,6 +5368,9 @@
             let baseHull = 10;
             if (state.researched && state.researched.reinforced_def) {
                 baseHull += 15;
+            }
+            if (state.relics && state.relics.mantlet) {
+                baseHull += 10; // Chobham Alloy Mantlet: +10 Base Defense
             }
             const maxBar = state.barricadeMaxHp || 100;
             const barricadeDef = Math.floor(((state.barricadeHp !== undefined ? state.barricadeHp : 100) / maxBar) * 25);
@@ -7084,7 +7245,52 @@
             updateAll();
         }
 
+        function renderRelicVault() {
+            const container = document.getElementById('relics-vault-container');
+            if (!container) return;
+            const relicList = [
+                { id: 'holotape', name: 'Echo Holo-Tape #704', origin: 'Vault 811 Tech Archive', perk: '+10 Morale & +1 Morale / Cycle', icon: '📼', color: '#6ee7b7' },
+                { id: 'geiger', name: 'Geiger Counter MK-II', origin: 'Derelict Power Substation', perk: '-25% Scout Rad Infiltration', icon: '📻', color: '#f59e0b' },
+                { id: 'trauma', name: 'Auto-Suture Trauma Kit', origin: 'County Hospital Complex', perk: 'Infirmary Triage +10 HP Healing', icon: '💉', color: '#ef4444' },
+                { id: 'mantlet', name: 'Chobham Alloy Mantlet', origin: 'Military Armory Wreckage', perk: '+25 Barricade & +10 Vault Def', icon: '🛡️', color: '#60a5fa' },
+                { id: 'seeds', name: 'Vault Cryo Seed Bank', origin: 'Old Supermarket Ruins', perk: '+20% Hydroponic Crop Yield', icon: '🌱', color: '#34d399' }
+            ];
+
+            let discoveredCount = 0;
+            const cardsHtml = relicList.map(r => {
+                const isFound = !!(state.relics && state.relics[r.id]);
+                if (isFound) discoveredCount++;
+                return `
+                    <div class="relic-badge ${isFound ? 'discovered' : 'undiscovered'}">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-weight:bold; color:${isFound ? r.color : 'var(--text-dim)'}; font-size:10px;">
+                                ${r.icon} ${r.name}
+                            </span>
+                            <span style="font-size:8px; font-weight:bold; color:${isFound ? 'var(--accent-green)' : 'var(--text-dim)'};">
+                                ${isFound ? 'ACTIVE' : 'LOCKED'}
+                            </span>
+                        </div>
+                        <div style="font-size:9px; color:var(--text-bright);">${isFound ? r.perk : 'Lost at: ' + r.origin}</div>
+                        <div style="font-size:8px; color:var(--text-dim);">${isFound ? 'Origin: ' + r.origin : 'Scout destination ruin to recover'}</div>
+                    </div>
+                `;
+            }).join('');
+
+            container.innerHTML = `
+                <div class="relic-vault-panel">
+                    <div class="relic-vault-title">
+                        <span>PRE-WAR EXPEDITION RELIC VAULT</span>
+                        <span style="font-size:9px; color:var(--text-dim);">Artifacts Unearthed: <strong style="color:var(--accent-amber);">${discoveredCount} / 5</strong></span>
+                    </div>
+                    <div class="relic-grid">
+                        ${cardsHtml}
+                    </div>
+                </div>
+            `;
+        }
+
         function renderExpeditions() {
+            renderRelicVault();
             const grid = document.getElementById('scavenge-grid');
             if (!grid) return;
             grid.innerHTML = '';
@@ -7711,6 +7917,9 @@
 
             if (state.policies.water === 'normal' && state.water > 0 && state.waterPurity >= 80) {
                 state.morale = Math.min(100, state.morale + 2);
+            }
+            if (state.relics && state.relics.holotape) {
+                state.morale = Math.min(100, state.morale + 1); // Echo Holo-Tape #704: +1 morale/cycle from ambient 1999Hz harmonics
             } else if (state.policies.water === 'half') {
                 state.morale = Math.max(10, state.morale - 3);
             } else if (state.policies.water === 'minimal') {
@@ -7795,6 +8004,9 @@
                         if (exp.riskLevel === 2) { baseDmg = 12 + Math.floor(Math.random() * 15); baseRads = 12; }
                         else if (exp.riskLevel === 3) { baseDmg = 20 + Math.floor(Math.random() * 20); baseRads = 22; }
                         else if (exp.riskLevel === 4) { baseDmg = 30 + Math.floor(Math.random() * 25); baseRads = 35; }
+                        if (state.relics && state.relics.geiger) {
+                            baseRads = Math.round(baseRads * 0.75); // Geiger Counter MK-II: -25% scout radiation trauma
+                        }
 
                         let dmg = Math.max(0, baseDmg - str * 2 - Math.floor(agi * 1.5));
                         let stimUsed = false;
@@ -7825,12 +8037,42 @@
                             }
                         }
 
+                        // Pre-Collapse Wasteland Relic recovery roll
+                        const relicMap = { exp1: 'seeds', exp2: 'geiger', exp3: 'trauma', exp4: 'mantlet', exp5: 'holotape' };
+                        const relicKey = relicMap[exp.id];
+                        let relicMsg = '';
+                        if (relicKey && (!state.relics || !state.relics[relicKey])) {
+                            if (!state.relics) state.relics = { holotape: false, geiger: false, trauma: false, mantlet: false, seeds: false };
+                            const rRoll = Math.random() * 100;
+                            const sensorBonus = (state.researched && state.researched.deep_sensors) ? 25 : 0;
+                            const rChance = 35 + intVal * 5 + sensorBonus;
+                            if (rRoll <= rChance || exp.riskLevel >= 4) {
+                                state.relics[relicKey] = true;
+                                const relicNames = {
+                                    holotape: 'Echo Holo-Tape #704 (+10 Morale, 1999Hz Harmonics)',
+                                    geiger: 'Geiger Counter MK-II (-25% Scout Radiation Trauma)',
+                                    trauma: 'Auto-Suture Trauma Kit (Infirmary +10 HP Extra Triage)',
+                                    mantlet: 'Chobham Alloy Turret Mantlet (+25 Barricade & +10 Defense)',
+                                    seeds: 'Vault Cryo Seed Bank (+20% Farm Crop Yield)'
+                                };
+                                if (relicKey === 'mantlet') {
+                                    state.barricadeMaxHp = (state.barricadeMaxHp || 100) + 25;
+                                    state.barricadeHp = (state.barricadeHp || 100) + 25;
+                                } else if (relicKey === 'holotape') {
+                                    state.morale = Math.min(100, (state.morale || 85) + 10);
+                                }
+                                relicMsg = ` ★ RELIC RECOVERED: [${relicNames[relicKey]}]!`;
+                                showRetroToast(`★ RELIC DISCOVERED: ${relicNames[relicKey]}!`, 'success');
+                                playSound('relic');
+                            }
+                        }
+
                         exp.assignedScout = null;
                         exp.hasStimpack = false;
 
                         const dmgMsg = dmg > 0 ? ` [Sustained -${dmg} HP trauma & +${baseRads} Rads${stimUsed ? ', stabilized by Stimpack' : ''}]` : ' [No injuries sustained]';
-                        logEvent(`EXPEDITION RETURN: ${scoutName} returned from ${exp.name}! Salvaged: +${foodFound} Food, +${scrapFound} Scrap, +${medsFound} Meds.${dmgMsg}${bpMsg}`, bpMsg ? 'cycle' : 'scout');
-                        playSound(bpMsg ? 'cycle' : 'scout');
+                        logEvent(`EXPEDITION RETURN: ${scoutName} returned from ${exp.name}! Salvaged: +${foodFound} Food, +${scrapFound} Scrap, +${medsFound} Meds.${dmgMsg}${bpMsg}${relicMsg}`, (relicMsg || bpMsg) ? 'cycle' : 'scout');
+                        if (!relicMsg) playSound(bpMsg ? 'cycle' : 'scout');
                     }
                 }
             });
@@ -7843,8 +8085,10 @@
                 const wounded = state.survivors.filter(s => s.health < 90 || (s.rads || 0) > 20);
                 if (wounded.length > 0 && ((state.meds || 0) > 0 || hasSurgWing)) {
                     if (!hasSurgWing && state.meds > 0) state.meds--;
+                    let healAmt = (hasSurgWing ? 25 : 15);
+                    if (state.relics && state.relics.trauma) healAmt += 10; // Auto-Suture Trauma Kit: +10 HP extra triage healing
                     wounded.forEach(w => {
-                        w.health = Math.min(100, w.health + (hasSurgWing ? 25 : 15));
+                        w.health = Math.min(100, w.health + healAmt);
                         w.rads = Math.max(0, (w.rads || 0) - (hasSurgWing ? 20 : 10));
                     });
                     logEvent(`MED-LAB: Triage & radiation decontamination administered to ${wounded.length} dweller(s).`, 'info');
