@@ -32,10 +32,12 @@ char* my_strrchr(const char* str, int ch) {
 #define W 950
 #define H 700
 #define MAX_TRACKS 256
+#define QUICKSAVE_FILE "kmedia_quicksave.dat"
+#define TUTORIAL_FLAG_FILE "kmedia_tutorial.dat"
 
 HWND g_hwndMain;
 HWND hTitle, hEditSearch, hBtnOpen, hBtnPlay, hBtnStop, hBtnPrev, hBtnNext, hBtnRem, hBtnClear, hBtnMode, hBtnSpeed, hBtnExport, hListBox, hSubText, hBtnHelp;
-HWND hBtnSeekBack, hBtnSeekFwd, hTimeStatus;
+HWND hBtnSeekBack, hBtnSeekFwd, hTimeStatus, hBtnSave, hBtnLoad;
 
 HFONT g_hFont = NULL;
 HFONT g_hSubFont = NULL;
@@ -488,6 +490,8 @@ void ShowHelpDialog(HWND hwnd) {
         "  U                Toggle Mute / Unmute\n"
         "  M                Cycle Playback Mode\n"
         "  E / Ctrl+E       Export Video Frame to BMP\n"
+        "  F5               Quicksave State (Snapshot playlist, volume & position)\n"
+        "  F9               Quickload State (Restore saved workspace)\n"
         "  Del              Remove Selected Track\n"
         "  Enter (Search)   Focus and play matching track\n"
         "  Esc (Search)     Clear search filter\n"
@@ -495,6 +499,180 @@ void ShowHelpDialog(HWND hwnd) {
         "  Drag & Drop      Drop audio, video, or subtitles\n"
         "  Double Click     Play track from playlist\n",
         "KMedia Help", MB_OK | MB_ICONINFORMATION);
+}
+
+BOOL QuickSaveState(HWND hwnd) {
+    HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        MessageBoxA(hwnd, "Failed to create quicksave file (kmedia_quicksave.dat).", "KMedia Error", MB_OK | MB_ICONERROR);
+        return FALSE;
+    }
+
+    DWORD magic = 0x53514D4B; // 'KMQS'
+    DWORD written = 0;
+    WriteFile(hFile, &magic, sizeof(DWORD), &written, NULL);
+
+    int curPos = 0;
+    if (currentFile[0] != '\0') {
+        char posStr[64] = {0};
+        mciSendStringA("status myMedia position", posStr, sizeof(posStr), NULL);
+        curPos = str_to_int(posStr);
+    }
+
+    WriteFile(hFile, &g_playbackMode, sizeof(int), &written, NULL);
+    WriteFile(hFile, &g_speedIndex, sizeof(int), &written, NULL);
+    WriteFile(hFile, &g_volume, sizeof(int), &written, NULL);
+    WriteFile(hFile, &g_currentIndex, sizeof(int), &written, NULL);
+    WriteFile(hFile, &curPos, sizeof(int), &written, NULL);
+
+    char searchBuf[128] = {0};
+    GetWindowTextA(hEditSearch, searchBuf, sizeof(searchBuf));
+    DWORD searchLen = (DWORD)lstrlenA(searchBuf) + 1;
+    WriteFile(hFile, &searchLen, sizeof(DWORD), &written, NULL);
+    WriteFile(hFile, searchBuf, searchLen, &written, NULL);
+
+    WriteFile(hFile, &g_trackCount, sizeof(int), &written, NULL);
+    for (int i = 0; i < g_trackCount; i++) {
+        DWORD pathLen = (DWORD)lstrlenA(g_tracks[i]) + 1;
+        WriteFile(hFile, &pathLen, sizeof(DWORD), &written, NULL);
+        WriteFile(hFile, g_tracks[i], pathLen, &written, NULL);
+    }
+
+    int isPlaying = 0;
+    if (currentFile[0] != '\0') {
+        char modeStr[64] = {0};
+        mciSendStringA("status myMedia mode", modeStr, sizeof(modeStr), NULL);
+        if (lstrcmpA(modeStr, "playing") == 0) isPlaying = 1;
+    }
+    WriteFile(hFile, &isPlaying, sizeof(int), &written, NULL);
+
+    CloseHandle(hFile);
+    char msg[128];
+    wsprintfA(msg, "Player state quicksaved (%d tracks) to %s [F5]", g_trackCount, QUICKSAVE_FILE);
+    SetWindowTextA(hTimeStatus, msg);
+    return TRUE;
+}
+
+BOOL QuickLoadState(HWND hwnd) {
+    HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        MessageBoxA(hwnd, "No quicksave snapshot found (kmedia_quicksave.dat).\nPress F5 to save snapshot.", "KMedia", MB_OK | MB_ICONINFORMATION);
+        return FALSE;
+    }
+
+    DWORD magic = 0;
+    DWORD read = 0;
+    ReadFile(hFile, &magic, sizeof(DWORD), &read, NULL);
+    if (magic != 0x53514D4B || read != sizeof(DWORD)) {
+        CloseHandle(hFile);
+        MessageBoxA(hwnd, "Invalid or corrupted quicksave file (kmedia_quicksave.dat).", "KMedia Error", MB_OK | MB_ICONERROR);
+        return FALSE;
+    }
+
+    int loadedMode = 0, loadedSpeed = 0, loadedVol = 1000, loadedIdx = -1, loadedPos = 0;
+    ReadFile(hFile, &loadedMode, sizeof(int), &read, NULL);
+    ReadFile(hFile, &loadedSpeed, sizeof(int), &read, NULL);
+    ReadFile(hFile, &loadedVol, sizeof(int), &read, NULL);
+    ReadFile(hFile, &loadedIdx, sizeof(int), &read, NULL);
+    ReadFile(hFile, &loadedPos, sizeof(int), &read, NULL);
+
+    char searchBuf[128] = {0};
+    DWORD searchLen = 0;
+    ReadFile(hFile, &searchLen, sizeof(DWORD), &read, NULL);
+    if (searchLen > 0 && searchLen <= sizeof(searchBuf)) {
+        ReadFile(hFile, searchBuf, searchLen, &read, NULL);
+        SetWindowTextA(hEditSearch, searchBuf);
+        lstrcpyA(g_searchQuery, searchBuf);
+    } else {
+        SetWindowTextA(hEditSearch, "");
+        g_searchQuery[0] = '\0';
+    }
+
+    int count = 0;
+    ReadFile(hFile, &count, sizeof(int), &read, NULL);
+    if (count > MAX_TRACKS) count = MAX_TRACKS;
+    g_trackCount = 0;
+    for (int i = 0; i < count; i++) {
+        DWORD pathLen = 0;
+        ReadFile(hFile, &pathLen, sizeof(DWORD), &read, NULL);
+        if (pathLen > 0 && pathLen <= MAX_PATH) {
+            ReadFile(hFile, g_tracks[i], pathLen, &read, NULL);
+            g_trackCount++;
+        }
+    }
+
+    int isPlaying = 1;
+    DWORD bytesRead = 0;
+    if (ReadFile(hFile, &isPlaying, sizeof(int), &bytesRead, NULL) && bytesRead == sizeof(int)) {
+        // successfully read isPlaying
+    }
+    CloseHandle(hFile);
+
+    if (loadedMode >= 0 && loadedMode < 4) {
+        g_playbackMode = loadedMode;
+        SetWindowTextA(hBtnMode, g_modeLabels[g_playbackMode]);
+    }
+    if (loadedSpeed >= 0 && loadedSpeed < 5) {
+        g_speedIndex = loadedSpeed;
+        SetWindowTextA(hBtnSpeed, g_speedLabels[g_speedIndex]);
+    }
+    SetVolume(loadedVol);
+
+    RefilterPlaylist();
+
+    if (loadedIdx >= 0 && loadedIdx < g_trackCount) {
+        PlayTrackByIndex(loadedIdx);
+        if (loadedPos > 0) {
+            if (isPlaying) {
+                wsprintfA(mciCmd, "play myMedia from %d notify", loadedPos);
+                mciSendStringA(mciCmd, NULL, 0, g_hwndMain);
+            } else {
+                wsprintfA(mciCmd, "seek myMedia to %d", loadedPos);
+                mciSendStringA(mciCmd, NULL, 0, NULL);
+                mciSendStringA("pause myMedia", NULL, 0, NULL);
+                SetWindowTextA(hBtnPlay, "Play [Space]");
+            }
+        } else if (!isPlaying) {
+            mciSendStringA("pause myMedia", NULL, 0, NULL);
+            SetWindowTextA(hBtnPlay, "Play [Space]");
+        }
+    }
+
+    char msg[128];
+    wsprintfA(msg, "Quicksave loaded (%d tracks) [F9]", g_trackCount);
+    SetWindowTextA(hTimeStatus, msg);
+    return TRUE;
+}
+
+void CheckFirstRunTutorial(HWND hwnd) {
+    HANDLE hFlag = CreateFileA(TUTORIAL_FLAG_FILE, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (hFlag != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFlag);
+        return;
+    }
+
+    HANDLE hSave = CreateFileA(QUICKSAVE_FILE, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (hSave != INVALID_HANDLE_VALUE) {
+        CloseHandle(hSave);
+        HANDLE hNewFlag = CreateFileA(TUTORIAL_FLAG_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hNewFlag != INVALID_HANDLE_VALUE) {
+            BYTE b = 1;
+            DWORD w = 0;
+            WriteFile(hNewFlag, &b, 1, &w, NULL);
+            CloseHandle(hNewFlag);
+        }
+        return;
+    }
+
+    HANDLE hNewFlag = CreateFileA(TUTORIAL_FLAG_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hNewFlag != INVALID_HANDLE_VALUE) {
+        BYTE b = 1;
+        DWORD w = 0;
+        WriteFile(hNewFlag, &b, 1, &w, NULL);
+        CloseHandle(hNewFlag);
+    }
+
+    ShowHelpDialog(hwnd);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -574,17 +752,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Row 3 controls (y=124)
             hBtnMode = CreateWindowEx(0, "BUTTON", "Mode: Normal [M]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                10, 124, 155, 26, hwnd, (HMENU)9, NULL, NULL);
+                10, 124, 140, 26, hwnd, (HMENU)9, NULL, NULL);
             SendMessage(hBtnMode, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
             hBtnExport = CreateWindowEx(0, "BUTTON", "Export Frame [E]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                170, 124, 155, 26, hwnd, (HMENU)12, NULL, NULL);
+                155, 124, 125, 26, hwnd, (HMENU)12, NULL, NULL);
             SendMessage(hBtnExport, WM_SETFONT, (WPARAM)g_hFont, TRUE);
+
+            hBtnSave = CreateWindowEx(0, "BUTTON", "Save [F5]",
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+                285, 124, 85, 26, hwnd, (HMENU)16, NULL, NULL);
+            SendMessage(hBtnSave, WM_SETFONT, (WPARAM)g_hFont, TRUE);
+
+            hBtnLoad = CreateWindowEx(0, "BUTTON", "Load [F9]",
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+                375, 124, 85, 26, hwnd, (HMENU)17, NULL, NULL);
+            SendMessage(hBtnLoad, WM_SETFONT, (WPARAM)g_hFont, TRUE);
 
             hBtnHelp = CreateWindowEx(0, "BUTTON", "Help [F1]",
                 WS_CHILD | WS_VISIBLE | WS_TABSTOP,
-                330, 124, 170, 26, hwnd, (HMENU)13, NULL, NULL);
+                465, 124, 85, 26, hwnd, (HMENU)13, NULL, NULL);
             SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)g_hFont, TRUE);
             
             // ListBox
@@ -710,6 +898,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 RefilterPlaylist();
             } else if (LOWORD(wParam) == 12) {
                 ExportFrameToBMP();
+            } else if (LOWORD(wParam) == 16) {
+                QuickSaveState(g_hwndMain);
+            } else if (LOWORD(wParam) == 17) {
+                QuickLoadState(g_hwndMain);
             } else if (LOWORD(wParam) == 13) {
                 ShowHelpDialog(g_hwndMain);
             } else if (LOWORD(wParam) == 14) {
@@ -777,11 +969,20 @@ void MainEntry() {
 
     ShowWindow(g_hwndMain, SW_SHOW);
     UpdateWindow(g_hwndMain);
+    CheckFirstRunTutorial(g_hwndMain);
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         if (msg.message == WM_KEYDOWN) {
             HWND hFocus = GetFocus();
+            if (msg.wParam == VK_F5) {
+                QuickSaveState(g_hwndMain);
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                QuickLoadState(g_hwndMain);
+                continue;
+            }
             if (msg.wParam == VK_F1 || ((msg.wParam == 'H' || msg.wParam == 'h') && hFocus != hEditSearch)) {
                 ShowHelpDialog(g_hwndMain);
                 continue;

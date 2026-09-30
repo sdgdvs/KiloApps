@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T10:35:00Z — kilo-expander: KNet (Net Utils, Packet Sniffer, Mesh Radar & RTDB Presence)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 164.0 KB web / 41.5 KB native < 999 KB).
+  - Diagnostic Utilities: Added Tab [5] Net Utils with CIDR/subnet calculator, bandwidth speed benchmark, and DNS lookup simulator.
+  - Live Packet Sniffer: Added Tab [6] with protocol filtering (TCP/UDP/ICMP/ARP/HTTP), raw hex dissection, and pcap trace export.
+  - Polar Mesh Radar: Added Tab [7] with 360° radar sweep, connected peer mapping, acoustic chirp alerts, and manual beacon ping.
+  - Global RTDB Presence: Integrated Firebase Realtime Database peer tracking, multiplayer beacons, and solo offline simulation.
+  - Native Win32 Parody & Features: Added CIDR command, bench mode, radar sweep, and parody game ports to `KNet.exe` (41.5 KB).
+  - Verification: MSVC clean; Vite clean in 476ms; security lint & icon uniqueness 100% PASS; <999KB ceiling.
+
 - **2026-09-30T08:40:00Z — kilo-qa: KAbyss (Pass 5: Tutorial & State Integrity, Quicksave/Load, Modals & Win32 I/O)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 449.8 KB web / 246.2 KB native < 999 KB).
   - Quicksave & Load: Added full state persistence via F5 / F9 across web and native binary (`kabyss_quicksave.dat`).

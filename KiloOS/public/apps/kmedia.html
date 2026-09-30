@@ -753,27 +753,30 @@
     gap: 10px;
   }
 
-  /* Non-occluding top-right toast */
+  /* Non-occluding bottom-center toast */
   #toast {
     display: none;
     position: fixed;
-    top: 14px;
-    right: 16px;
-    background: #182619;
+    bottom: 22px;
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    background: rgba(24, 38, 25, 0.95);
     color: #a5d6a7;
     border: 1px solid #2e7d32;
-    padding: 7px 14px;
+    padding: 8px 18px;
     border-radius: 4px;
     font-size: 11px;
     font-weight: 500;
     z-index: 10000;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.7);
     pointer-events: auto;
     cursor: pointer;
     transition: opacity 0.2s ease, transform 0.2s ease;
     opacity: 0;
-    transform: translateY(-4px);
     user-select: none;
+    backdrop-filter: blur(4px);
+    max-width: 90vw;
+    text-align: center;
   }
 
   input[type="file"] { display: none; }
@@ -803,6 +806,8 @@
     <button id="btnVisMode" class="secondary" title="Cycle visualizer mode [V]">Vis: Bars [V]</button>
     <button id="btnCue" class="secondary" title="Add Bookmark / Cue Point at current timestamp [B]">📍 Cue [B]</button>
     <button id="btnExport" class="secondary" title="Export current frame [Ctrl+E]">Export [E]</button>
+    <button id="btnQuickSave" class="secondary" title="Quicksave full player state [F5]">💾 Save [F5]</button>
+    <button id="btnQuickLoad" class="secondary" title="Quickload saved player state [F9]">📂 Load [F9]</button>
     <button id="btnHelp" class="secondary" title="Help and shortcuts [F1]">Help [F1]</button>
   </div>
   <div class="seek-bar-container">
@@ -1064,8 +1069,11 @@
 
 <!-- Help / First-Run Modal -->
 <div id="helpOverlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
-  <div class="help-box" id="helpBox">
-    <h2 id="helpTitle"><span>🎬 KMedia Quick Guide &amp; Shortcuts</span></h2>
+  <div class="help-box" id="helpBox" style="position:relative;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <h2 id="helpTitle" style="margin:0;"><span>🎬 KMedia Quick Guide &amp; Shortcuts</span></h2>
+      <button id="btnHelpCloseX" style="background:transparent; border:none; color:#aaa; font-size:16px; cursor:pointer; padding:2px 6px; line-height:1;" title="Close (Esc)">✕</button>
+    </div>
     <div style="font-size:11px; color:#aaa; margin-bottom:8px;">
       Welcome to KMedia! The 999KB multimedia player with Yamaha YM2612 FM synthesis, SNES SPC700 stereo delay, 5-mode visualizers, and real-time Firebase Watch Party sync.
     </div>
@@ -1085,6 +1093,8 @@
       <tr><td>L</td><td>Toggle A-B Repeat Loop</td></tr>
       <tr><td>{ / }</td><td>Shift Subtitle Offset (-0.5s / +0.5s)</td></tr>
       <tr><td>F</td><td>Toggle Fullscreen Mode</td></tr>
+      <tr><td>F5</td><td>Quicksave State (Snapshot full workspace, playlist &amp; DSP)</td></tr>
+      <tr><td>F9</td><td>Quickload State (Restore saved workspace, playlist &amp; DSP)</td></tr>
       <tr><td>Ctrl+O</td><td>Open Media Files, Playlists (.m3u) or Subtitles</td></tr>
       <tr><td>Ctrl+E / E</td><td>Export Video Snapshot to PNG</td></tr>
       <tr><td>H / F1</td><td>Toggle this Guide / Shortcuts</td></tr>
@@ -1101,7 +1111,7 @@
   </div>
 </div>
 
-<!-- Non-occluding top-right toast -->
+<!-- Non-occluding bottom-center toast -->
 <div id="toast" role="status" aria-live="polite"></div>
 
 <!-- Firebase Realtime Database Integration for Watch Party '99 -->
@@ -1162,6 +1172,8 @@
     btnVisMode: document.getElementById('btnVisMode'),
     btnExport: document.getElementById('btnExport'),
     btnExportVideo: document.getElementById('btnExportVideo'),
+    btnQuickSave: document.getElementById('btnQuickSave'),
+    btnQuickLoad: document.getElementById('btnQuickLoad'),
     btnHelp: document.getElementById('btnHelp'),
     btnMute: document.getElementById('btnMute'),
     volValue: document.getElementById('volValue'),
@@ -1249,7 +1261,11 @@
   function safeSetStorage(key, val) {
     try {
       localStorage.setItem(key, val);
-    } catch (e) {}
+      return true;
+    } catch (e) {
+      console.warn("Storage quota exceeded or storage unavailable:", e);
+      return false;
+    }
   }
 
   let playlist = [];
@@ -1309,27 +1325,33 @@
     cyber: { low: 10, mid: -4, high: 6 }
   };
 
-  // Toast Notification (safe top-right positioning)
-  function showToast(msg) {
+  // Non-occluding bottom-center toast notification
+  function showToast(msg, isError = false) {
     const toast = document.getElementById('toast');
+    if (!toast) return;
     toast.textContent = msg;
     toast.title = "Click to dismiss";
+    toast.style.borderColor = isError ? '#ff5252' : '#2e7d32';
+    toast.style.color = isError ? '#ff8a80' : '#a5d6a7';
+    toast.style.background = isError ? 'rgba(40, 16, 16, 0.95)' : 'rgba(24, 38, 25, 0.95)';
     toast.style.display = 'block';
     requestAnimationFrame(() => {
       toast.style.opacity = '1';
-      toast.style.transform = 'translateY(0)';
+      toast.style.transform = 'translateX(-50%) translateY(0)';
     });
     clearTimeout(toastTimer);
     toastTimer = setTimeout(dismissToast, 2800);
   }
   function dismissToast() {
     const toast = document.getElementById('toast');
+    if (!toast) return;
     clearTimeout(toastTimer);
     toast.style.opacity = '0';
-    toast.style.transform = 'translateY(-4px)';
+    toast.style.transform = 'translateX(-50%) translateY(4px)';
     setTimeout(() => { toast.style.display = 'none'; }, 200);
   }
-  document.getElementById('toast').onclick = dismissToast;
+  const toastEl = document.getElementById('toast');
+  if (toastEl) toastEl.onclick = dismissToast;
 
   // --- Synthetic Demo WAV Generator (Yamaha YM2612 2-Operator FM + SNES SPC700 Delay) ---
   function createWavBlob(samples, sampleRate) {
@@ -3021,21 +3043,366 @@
   UI.btnReactBoost.onclick = () => sendPartyChat('🔊 Crank It Up');
   UI.btnReactChill.onclick = () => sendPartyChat('☕ Chill Beats');
 
-  // --- Help & Quickstart Dialog ---
-  const helpOverlay = document.getElementById('helpOverlay');
-  const chkDoNotShow = document.getElementById('chkDoNotShow');
-
-  function openHelp() {
-    helpOverlay.style.display = 'flex';
+  // Feedback chime
+  function playChime(freq, dur = 0.12) {
+    try {
+      const ctx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(0.08, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + dur);
+    } catch(e) {}
   }
-  function closeHelp() {
-    helpOverlay.style.display = 'none';
-    if (chkDoNotShow.checked) {
-      safeSetStorage('kmedia_welcomed', '1');
+
+  // --- Quicksave (F5) & Quickload (F9) State Persistence ---
+  function quickSaveState() {
+    try {
+      const state = {
+        version: 1,
+        timestamp: Date.now(),
+        playlist: playlist.map(item => ({
+          name: item.name,
+          durationStr: item.durationStr || '',
+          demoIndex: item.demoIndex !== undefined ? item.demoIndex : null
+        })),
+        currentIndex: currentIndex,
+        currentTime: (UI.mediaPlayer && isFinite(UI.mediaPlayer.currentTime)) ? UI.mediaPlayer.currentTime : 0,
+        isPaused: UI.mediaPlayer ? UI.mediaPlayer.paused : false,
+        volume: UI.mediaPlayer ? UI.mediaPlayer.volume : lastVolume,
+        muted: UI.mediaPlayer ? UI.mediaPlayer.muted : false,
+        playbackMode: currentModeIndex,
+        playbackSpeed: currentSpeedIndex,
+        visualizerMode: currentVisMode,
+        specPaletteMode: specPaletteMode,
+        cuePoints: cuePoints.map(cp => ({ id: cp.id, time: cp.time, trackName: cp.trackName })),
+        loop: {
+          pointA: pointA,
+          pointB: pointB,
+          isLoopAB: isLoopAB
+        },
+        subtitleOffsetSecs: subtitleOffsetSecs,
+        subtitles: (subtitles && subtitles.length > 0) ? subtitles.slice(0, 250).map(s => ({ start: s.start, end: s.end, text: s.text })) : [],
+        dsp: {
+          eqPreset: (UI.eqPreset && UI.eqPreset.value) ? UI.eqPreset.value : 'flat',
+          eqLow: UI.eqLow.value,
+          eqMid: UI.eqMid.value,
+          eqHigh: UI.eqHigh.value,
+          spcDelayTime: UI.spcDelayTime.value,
+          spcFeedback: UI.spcFeedback.value,
+          spcWet: UI.spcWet.value,
+          pan: UI.panSlider.value,
+          preamp: UI.preampSlider.value
+        },
+        video: {
+          videoPreset: (UI.videoPreset && UI.videoPreset.value) ? UI.videoPreset.value : 'normal',
+          bright: UI.fBright.value,
+          cont: UI.fCont.value,
+          sat: UI.fSat.value,
+          fit: UI.videoFit.value,
+          crt: crtEnabled
+        },
+        searchQuery: (UI.searchInput && UI.searchInput.value) ? UI.searchInput.value : '',
+        partyRoom: (UI.partyRoomInput && UI.partyRoomInput.value) ? UI.partyRoomInput.value : 'lounge'
+      };
+
+      const ok = safeSetStorage('kmedia_quicksave', JSON.stringify(state));
+      if (!ok) {
+        showToast("Quicksave failed: storage quota exceeded.", true);
+        return;
+      }
+      playChime(660, 0.12);
+      const trackName = (currentIndex >= 0 && playlist[currentIndex]) ? playlist[currentIndex].name : 'No track active';
+      showToast(`State quicksaved [F5] (${playlist.length} track(s) - ${trackName.slice(0, 22)})`);
+    } catch (e) {
+      console.error("Quicksave error:", e);
+      showToast("Quicksave failed: " + e.message, true);
     }
   }
 
+  function quickLoadState() {
+    try {
+      const raw = safeGetStorage('kmedia_quicksave');
+      if (!raw) {
+        showToast("No quicksave found. Press F5 to save snapshot.", true);
+        return;
+      }
+      const state = JSON.parse(raw);
+      if (!state || typeof state !== 'object') {
+        showToast("Corrupted quicksave data.", true);
+        return;
+      }
+
+      // Revoke any existing playlist object URLs
+      playlist.forEach(item => {
+        if (item.url) {
+          try { URL.revokeObjectURL(item.url); } catch(e) {}
+        }
+      });
+      playlist = [];
+
+      // Restore playlist items
+      if (Array.isArray(state.playlist)) {
+        state.playlist.forEach(item => {
+          let url = '';
+          if (item.demoIndex !== null && item.demoIndex !== undefined) {
+            try {
+              const blob = generateDemoTrack(item.demoIndex);
+              url = URL.createObjectURL(blob);
+            } catch(e) {}
+          }
+          playlist.push({
+            name: item.name || 'Untitled Track',
+            durationStr: item.durationStr || '--:--',
+            demoIndex: (item.demoIndex !== null && item.demoIndex !== undefined) ? item.demoIndex : undefined,
+            url: url
+          });
+        });
+      }
+
+      // Restore DSP / Audio Settings
+      if (state.dsp) {
+        if (state.dsp.eqPreset && UI.eqPreset) {
+          UI.eqPreset.value = state.dsp.eqPreset;
+        }
+        if (state.dsp.eqLow !== undefined) {
+          UI.eqLow.value = state.dsp.eqLow;
+          safeSetStorage('kmedia_eq_low', state.dsp.eqLow);
+        }
+        if (state.dsp.eqMid !== undefined) {
+          UI.eqMid.value = state.dsp.eqMid;
+          safeSetStorage('kmedia_eq_mid', state.dsp.eqMid);
+        }
+        if (state.dsp.eqHigh !== undefined) {
+          UI.eqHigh.value = state.dsp.eqHigh;
+          safeSetStorage('kmedia_eq_high', state.dsp.eqHigh);
+        }
+        updateAudioEQ();
+
+        if (state.dsp.spcDelayTime !== undefined) {
+          UI.spcDelayTime.value = state.dsp.spcDelayTime;
+          safeSetStorage('kmedia_spc_delay', state.dsp.spcDelayTime);
+        }
+        if (state.dsp.spcFeedback !== undefined) {
+          UI.spcFeedback.value = state.dsp.spcFeedback;
+          safeSetStorage('kmedia_spc_fb', state.dsp.spcFeedback);
+        }
+        if (state.dsp.spcWet !== undefined) {
+          UI.spcWet.value = state.dsp.spcWet;
+          safeSetStorage('kmedia_spc_wet', state.dsp.spcWet);
+        }
+        updateSpcDelay();
+
+        if (state.dsp.pan !== undefined) {
+          UI.panSlider.value = state.dsp.pan;
+          safeSetStorage('kmedia_pan', state.dsp.pan);
+          const p = parseFloat(state.dsp.pan) || 0;
+          UI.vPan.textContent = p === 0 ? 'Center' : p < 0 ? `L ${Math.abs(Math.round(p*100))}%` : `R ${Math.round(p*100)}%`;
+          if (pannerNode && pannerNode.pan) pannerNode.pan.value = p;
+        }
+
+        if (state.dsp.preamp !== undefined) {
+          UI.preampSlider.value = state.dsp.preamp;
+          safeSetStorage('kmedia_preamp', state.dsp.preamp);
+          const pr = parseFloat(state.dsp.preamp) || 1.0;
+          UI.vPreamp.textContent = pr.toFixed(1) + 'x';
+          if (preampGainNode) preampGainNode.gain.value = pr;
+        }
+      }
+
+      // Restore Video Settings
+      if (state.video) {
+        if (state.video.videoPreset && UI.videoPreset) {
+          UI.videoPreset.value = state.video.videoPreset;
+        }
+        if (state.video.bright !== undefined) {
+          UI.fBright.value = state.video.bright;
+          safeSetStorage('kmedia_f_bright', state.video.bright);
+        }
+        if (state.video.cont !== undefined) {
+          UI.fCont.value = state.video.cont;
+          safeSetStorage('kmedia_f_cont', state.video.cont);
+        }
+        if (state.video.sat !== undefined) {
+          UI.fSat.value = state.video.sat;
+          safeSetStorage('kmedia_f_sat', state.video.sat);
+        }
+        updateVideoFilters();
+
+        if (state.video.fit !== undefined) {
+          updateVideoFit(state.video.fit);
+          safeSetStorage('kmedia_fit', state.video.fit);
+        }
+
+        if (state.video.crt !== undefined) {
+          crtEnabled = !!state.video.crt;
+          applyCrtState();
+          safeSetStorage('kmedia_crt', crtEnabled ? '1' : '0');
+        }
+      }
+
+      // Restore Search Query
+      if (typeof state.searchQuery === 'string' && UI.searchInput) {
+        UI.searchInput.value = state.searchQuery;
+      }
+
+      // Restore Watch Party Room
+      if (state.partyRoom && UI.partyRoomInput) {
+        UI.partyRoomInput.value = state.partyRoom;
+      }
+
+      // Restore Mode & Speed
+      if (typeof state.playbackMode === 'number') {
+        currentModeIndex = state.playbackMode % modes.length;
+        UI.btnMode.textContent = 'Mode: ' + modes[currentModeIndex] + ' [M]';
+        safeSetStorage('kmedia_mode', currentModeIndex);
+      }
+      if (typeof state.playbackSpeed === 'number') {
+        currentSpeedIndex = state.playbackSpeed % speeds.length;
+        UI.mediaPlayer.playbackRate = speeds[currentSpeedIndex];
+        UI.btnSpeed.textContent = speeds[currentSpeedIndex].toFixed(1) + 'x';
+        safeSetStorage('kmedia_speed', currentSpeedIndex);
+      }
+
+      // Restore Visualizer Mode & Palette
+      if (typeof state.visualizerMode === 'number') {
+        currentVisMode = state.visualizerMode;
+        safeSetStorage('kmedia_vismode', currentVisMode);
+      }
+      if (state.specPaletteMode) {
+        specPaletteMode = state.specPaletteMode;
+        if (UI.specPalette) UI.specPalette.value = specPaletteMode;
+        safeSetStorage('kmedia_spec_palette', specPaletteMode);
+      }
+      updateVisualizerUI();
+
+      // Restore Volume
+      if (typeof state.volume === 'number') {
+        updateVolume(state.volume);
+      }
+      if (state.muted !== undefined) {
+        UI.mediaPlayer.muted = !!state.muted;
+        if (UI.mediaPlayer.muted) {
+          UI.btnMute.textContent = '🔇 Mute';
+          UI.volValue.textContent = '0%';
+        }
+      }
+
+      // Restore A-B Loop
+      if (state.loop) {
+        pointA = state.loop.pointA !== undefined ? state.loop.pointA : null;
+        pointB = state.loop.pointB !== undefined ? state.loop.pointB : null;
+        isLoopAB = !!state.loop.isLoopAB;
+        if (UI.lblPointA) UI.lblPointA.textContent = pointA !== null ? formatTime(pointA) : '--:--';
+        if (UI.lblPointB) UI.lblPointB.textContent = pointB !== null ? formatTime(pointB) : '--:--';
+        if (UI.btnToggleLoopAB) UI.btnToggleLoopAB.textContent = isLoopAB ? '🔁 Loop: ON' : '🔁 Loop: OFF';
+        if (UI.abLoopHud) {
+          UI.abLoopHud.style.display = isLoopAB && pointA !== null && pointB !== null ? 'block' : 'none';
+          if (UI.abRange) UI.abRange.textContent = `${formatTime(pointA||0)} - ${formatTime(pointB||0)}`;
+        }
+      }
+
+      // Restore Cue Points
+      if (Array.isArray(state.cuePoints)) {
+        cuePoints = state.cuePoints.map(cp => ({ id: cp.id, time: cp.time, trackName: cp.trackName }));
+      }
+      renderCuePoints();
+
+      // Restore Subtitles & Subtitle Offset
+      if (typeof state.subtitleOffsetSecs === 'number') {
+        subtitleOffsetSecs = state.subtitleOffsetSecs;
+      }
+      if (Array.isArray(state.subtitles) && state.subtitles.length > 0) {
+        subtitles = state.subtitles.map(s => ({ start: s.start, end: s.end, text: s.text }));
+      }
+
+      // Render playlist
+      renderPlaylist();
+
+      // Restore active track & seek position
+      if (playlist.length > 0 && typeof state.currentIndex === 'number' && state.currentIndex >= 0 && state.currentIndex < playlist.length) {
+        const trk = playlist[state.currentIndex];
+        if (trk.url) {
+          playTrack(state.currentIndex);
+          const targetTime = (typeof state.currentTime === 'number' && state.currentTime > 0) ? state.currentTime : 0;
+          if (targetTime > 0) {
+            const applySeek = () => {
+              try {
+                UI.mediaPlayer.currentTime = targetTime;
+                if (state.isPaused) {
+                  UI.mediaPlayer.pause();
+                  UI.btnPlay.textContent = '▶ Play [Space]';
+                  UI.btnPlay.classList.add('secondary');
+                }
+              } catch(e) {}
+            };
+            UI.mediaPlayer.addEventListener('loadedmetadata', applySeek, { once: true });
+            setTimeout(applySeek, 120);
+          } else if (state.isPaused) {
+            setTimeout(() => {
+              try {
+                UI.mediaPlayer.pause();
+                UI.btnPlay.textContent = '▶ Play [Space]';
+                UI.btnPlay.classList.add('secondary');
+              } catch(e) {}
+            }, 60);
+          }
+        } else {
+          currentIndex = state.currentIndex;
+          renderPlaylist();
+          UI.title.textContent = trk.name + " (Press 'H' or F1 for help)";
+        }
+      } else {
+        currentIndex = -1;
+        renderPlaylist();
+      }
+
+      playChime(880, 0.15);
+      showToast(`Quicksave loaded [F9] (${playlist.length} track(s))`);
+    } catch (e) {
+      console.error("Quickload failed:", e);
+      showToast("Failed to load quicksave: " + e.message, true);
+    }
+  }
+
+  if (UI.btnQuickSave) UI.btnQuickSave.onclick = quickSaveState;
+  if (UI.btnQuickLoad) UI.btnQuickLoad.onclick = quickLoadState;
+
+  // --- Help & Quickstart Dialog ---
+  const helpOverlay = document.getElementById('helpOverlay');
+  const chkDoNotShow = document.getElementById('chkDoNotShow');
+  const btnHelpCloseX = document.getElementById('btnHelpCloseX');
+
+  function openHelp() {
+    helpOverlay.style.display = 'flex';
+    if (chkDoNotShow) {
+      chkDoNotShow.checked = safeGetStorage('kmedia_tutorialSeen', '0') === '1';
+    }
+  }
+  function closeHelp() {
+    helpOverlay.style.display = 'none';
+    safeSetStorage('kmedia_welcomed', '1');
+    if (chkDoNotShow) {
+      safeSetStorage('kmedia_tutorialSeen', chkDoNotShow.checked ? '1' : '0');
+    } else {
+      safeSetStorage('kmedia_tutorialSeen', '1');
+    }
+  }
+
+  if (chkDoNotShow) {
+    chkDoNotShow.onchange = () => {
+      safeSetStorage('kmedia_tutorialSeen', chkDoNotShow.checked ? '1' : '0');
+    };
+  }
+
   document.getElementById('btnCloseHelp').onclick = closeHelp;
+  if (btnHelpCloseX) btnHelpCloseX.onclick = closeHelp;
   helpOverlay.onclick = (e) => {
     if (e.target === helpOverlay) closeHelp();
   };
@@ -3081,15 +3448,25 @@
       return;
     }
 
-    if (e.key === 'Escape') {
-      if (helpOverlay.style.display === 'flex') {
+    if (e.key === 'F5') {
+      quickSaveState();
+      e.preventDefault();
+      return;
+    }
+
+    if (e.key === 'F9') {
+      quickLoadState();
+      e.preventDefault();
+      return;
+    }
+
+    if (helpOverlay.style.display === 'flex') {
+      if (e.key === 'Escape' || e.key === 'Enter' || e.code === 'Space') {
         closeHelp();
         e.preventDefault();
       }
       return;
     }
-
-    if (helpOverlay.style.display === 'flex') return;
 
     if (e.altKey && e.key === 'ArrowUp') {
       moveTrack(-1);
@@ -3223,7 +3600,9 @@
   }
 
   // First-run tutorial onboarding or welcome toast
-  if (safeGetStorage('kmedia_welcomed', '0') === '0') {
+  const tutorialSeen = (safeGetStorage('kmedia_tutorialSeen', '0') === '1') || (safeGetStorage('kmedia_welcomed', '0') === '1');
+  const hasQuicksave = !!safeGetStorage('kmedia_quicksave', null);
+  if (!tutorialSeen && !hasQuicksave) {
     setTimeout(openHelp, 300);
   } else {
     setTimeout(() => {

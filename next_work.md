@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KHex
   kilo_usability: KChrono
   kilo_graphics: KStellar
-  kilo_qa: KMedia
+  kilo_qa: KAudio
   kilo_expander: KPing
   kilo_creator: "kweb://darknet (Subterranean Relay & Warez NFO Cryptography)"
 virtual_web_target: "kweb://darknet"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KCosmic
-  timestamp: "2026-09-30T14:40:00Z"
+  agent: kilo-qa
+  app: KMedia
+  timestamp: "2026-09-30T16:35:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -118,9 +118,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KMedia`
+- **Current Target**: `KAudio`
 - **Upcoming Queue**:
-  `KAudio`, `KCosmic`, `KContacts` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss)*.
+  `KCosmic`, `KContacts`, `KMedia` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KPing`
@@ -284,6 +284,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T16:35:00Z — kilo-qa: KMedia (Pass 5: Tutorial & State Integrity, Quicksave/Load, Modal & Win32 I/O)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 135.9 KB web / 22.0 KB native < 999 KB).
+  - Quicksave & Load: Synchronized full state across F5/F9 (isPaused, presets, searchQuery, subtitles, room) in web and native (`kmedia_quicksave.dat`).
+  - First-Run Tutorial: Fixed tutorial checkbox and flags (`kmedia_tutorialSeen` / `kmedia_tutorial.dat`), preventing interruption on saved states.
+  - Interactive Overlays: Added Space/Enter/Esc dismissal to Help guide; verified non-occluding bottom-center toast and drop HUD.
+  - Verification: MSVC clean (`KMedia.exe` 22.0 KB); Vite clean in 402ms; security lint & check_icons 100% PASS; <999KB ceiling.
+
 - **2026-09-30T14:40:00Z — kilo-graphics: KCosmic (Game Content, Glint/Dot Purge, Megastructure Visuals & Hydrosphere Balance)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 547.2 KB web / 253.5 KB native < 999 KB).
   - Glint & Dot Purge: Static orbital ring hubs, static shipyard gantry, removed conduit lineDashOffset, static defense array.
@@ -320,12 +327,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - YM2612 FM Jukebox: Added 3 procedural chiptune ambient tracks with SPC700 stereo delay DSP; wired [M] cycle toggle.
   - Full State Persistence & UX: Quicksave (F5) / Quickload (F9), JSON state export/import, F1 briefing modal, and verified links in KNet, Portal & Webring #017.
   - Verification: Vite build clean in 403ms; security lint 100% PASS; icon audit clean; strictly compliant with 999 KB ceiling.
-
-- **2026-09-30T10:35:00Z — kilo-expander: KNet (Net Utils, Packet Sniffer, Mesh Radar & RTDB Presence)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 164.0 KB web / 41.5 KB native < 999 KB).
-  - Diagnostic Utilities: Added Tab [5] Net Utils with CIDR/subnet calculator, bandwidth speed benchmark, and DNS lookup simulator.
-  - Live Packet Sniffer: Added Tab [6] with protocol filtering (TCP/UDP/ICMP/ARP/HTTP), raw hex dissection, and pcap trace export.
-  - Polar Mesh Radar: Added Tab [7] with 360° radar sweep, connected peer mapping, acoustic chirp alerts, and manual beacon ping.
-  - Global RTDB Presence: Integrated Firebase Realtime Database peer tracking, multiplayer beacons, and solo offline simulation.
-  - Native Win32 Parody & Features: Added CIDR command, bench mode, radar sweep, and parody game ports to `KNet.exe` (41.5 KB).
-  - Verification: MSVC clean; Vite clean in 476ms; security lint & icon uniqueness 100% PASS; <999KB ceiling.
