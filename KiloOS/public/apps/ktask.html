@@ -924,6 +924,250 @@
     border-radius: 4px;
     color: var(--primary);
     font-weight: 700;
+  /* Network & Sockets Pane */
+  .network-pane-container, .sentinel-pane-container, .profiler-pane-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 100%;
+    overflow-y: auto;
+    padding-bottom: 20px;
+  }
+
+  .network-table, .sentinel-table, .profiler-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    background: var(--card-bg);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+  }
+
+  .network-table th, .network-table td,
+  .sentinel-table th, .sentinel-table td,
+  .profiler-table th, .profiler-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .network-table th, .sentinel-table th, .profiler-table th {
+    background: rgba(0, 0, 0, 0.25);
+    color: var(--text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+
+  .network-table tbody tr:hover,
+  .sentinel-table tbody tr:hover,
+  .profiler-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .socket-state-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .socket-state-est {
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--success);
+    border: 1px solid rgba(52, 211, 153, 0.3);
+  }
+
+  .socket-state-listen {
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--primary);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+  }
+
+  .socket-state-wait {
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--warning);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+  }
+
+  .socket-state-close {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  .socket-port-tag {
+    font-family: 'Consolas', monospace;
+    font-size: 11px;
+    color: var(--primary);
+    background: rgba(56, 189, 248, 0.1);
+    padding: 1px 4px;
+    border-radius: 4px;
+  }
+
+  /* Memory Delta Tag */
+  .mem-delta-badge {
+    font-family: 'Consolas', monospace;
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 4px;
+    margin-left: 5px;
+    font-weight: 600;
+  }
+
+  .mem-delta-pos {
+    background: rgba(251, 191, 36, 0.15);
+    color: var(--warning);
+  }
+
+  .mem-delta-neg {
+    background: rgba(52, 211, 153, 0.15);
+    color: var(--success);
+  }
+
+  .mem-delta-zero {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+  }
+
+  .leak-badge {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-weight: 700;
+    margin-left: 4px;
+    animation: pulseLeak 2s infinite;
+  }
+
+  @keyframes pulseLeak {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+
+  /* Sentinel / Fleet Grid */
+  .sentinel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+  }
+
+  .node-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: all 0.2s ease;
+  }
+
+  .node-card:hover {
+    border-color: var(--primary);
+    transform: translateY(-1px);
+  }
+
+  .node-card.self-node {
+    border-color: rgba(56, 189, 248, 0.4);
+    background: rgba(56, 189, 248, 0.04);
+  }
+
+  .node-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .node-name {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .node-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 6px var(--success);
+  }
+
+  .node-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    font-family: 'Consolas', monospace;
+  }
+
+  /* Profiler Flamegraph Bars */
+  .flame-container {
+    background: rgba(15, 23, 42, 0.7);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .flame-bar-row {
+    display: flex;
+    height: 24px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .flame-segment {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+    transition: width 0.3s ease;
+    overflow: hidden;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .flame-segment:hover {
+    filter: brightness(1.2);
+  }
+
+  .flame-legend {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .flame-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .flame-legend-color {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
   }
 </style>
 </head>
@@ -942,7 +1186,7 @@
       <div class="nav-tabs" role="tablist" aria-label="Navigation Tabs">
         <button class="tab-btn active" id="tab-tasks-btn" role="tab" aria-selected="true" aria-controls="pane-tasks" onclick="switchTab('tasks')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"></path></svg>
-          [1] Processes
+          [1] Tasks
         </button>
         <button class="tab-btn" id="tab-charts-btn" role="tab" aria-selected="false" aria-controls="pane-charts" onclick="switchTab('charts')">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
@@ -952,10 +1196,26 @@
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"></rect><rect x="9" y="9" width="6" height="6"></rect></svg>
           [3] Summary
         </button>
+        <button class="tab-btn" id="tab-network-btn" role="tab" aria-selected="false" aria-controls="pane-network" onclick="switchTab('network')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+          [4] Sockets
+        </button>
+        <button class="tab-btn" id="tab-sentinel-btn" role="tab" aria-selected="false" aria-controls="pane-sentinel" onclick="switchTab('sentinel')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          [5] Sentinel
+        </button>
+        <button class="tab-btn" id="tab-profiler-btn" role="tab" aria-selected="false" aria-controls="pane-profiler" onclick="switchTab('profiler')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+          [6] Profiler
+        </button>
       </div>
     </div>
     
     <div class="header-actions">
+      <button class="btn-secondary" id="btnAudioToggle" onclick="toggleAudio()" title="Sound Effects &amp; YM2612 FM Audio (Shortcut: S)" aria-label="Toggle Audio Sound Effects">
+        <span id="audioIcon">🔊</span> Sound [S]
+      </button>
+
       <button class="btn-secondary" id="btnHelp" onclick="openHelpModal()" title="Help &amp; Shortcuts (F1 or H)" aria-label="Open Help &amp; Shortcuts Dialog">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
         Help [F1]
@@ -1045,6 +1305,14 @@
 
           <button class="btn-secondary" id="viewModeToggleBtn" onclick="toggleViewMode()" title="Toggle between Flat List and Process Tree Hierarchy [T]">
             🌲 Tree [T]
+          </button>
+
+          <button class="btn-secondary" id="deltaModeBtn" onclick="toggleDeltaMode()" title="Toggle Real-Time Memory Allocation Delta Monitor [D]">
+            Δ RAM [D]
+          </button>
+
+          <button class="btn-secondary" onclick="zeroMemoryBaseline()" title="Zero Memory Baseline for Delta Leak Tracking">
+            Zero Base
           </button>
         </div>
 
@@ -1175,6 +1443,265 @@
         </div>
       </div>
     </div>
+
+    <!-- Tab Pane 4: Network Sockets & I/O Monitor -->
+    <div class="tab-pane" id="pane-network" role="tabpanel" aria-labelledby="tab-network-btn">
+      <div class="network-pane-container">
+        <!-- Network Toolbar -->
+        <div class="process-toolbar" role="toolbar" aria-label="Network filters and actions">
+          <div class="toolbar-group">
+            <input type="text" id="networkSearchInput" class="input-ctrl" style="min-width: 200px;" placeholder="Filter port, remote IP, PID... (Esc)" oninput="renderNetworkSockets()">
+            
+            <select id="netProtoSelect" class="select-ctrl" onchange="renderNetworkSockets()">
+              <option value="all">All Protocols</option>
+              <option value="tcp">TCP Only</option>
+              <option value="udp">UDP Only</option>
+            </select>
+
+            <select id="netStateSelect" class="select-ctrl" onchange="renderNetworkSockets()">
+              <option value="all">All Socket States</option>
+              <option value="established">Established</option>
+              <option value="listen">Listening</option>
+              <option value="time_wait">Time Wait</option>
+            </select>
+
+            <button class="btn-secondary" onclick="sendSocketPingProbe()" title="Send ICMP/UDP Diagnostic Ping to Selected Socket">
+              📡 Ping Probe
+            </button>
+
+            <button class="btn-secondary" onclick="resetSelectedSocket()" title="Reset Selected Active Socket Connection">
+              ⚡ Reset Connection
+            </button>
+          </div>
+
+          <div class="toolbar-group">
+            <button class="btn-secondary" onclick="exportSocketsCSV()" title="Export Sockets to CSV">
+              CSV
+            </button>
+            <button class="btn-secondary" onclick="exportSocketsJSON()" title="Export Sockets to JSON">
+              JSON
+            </button>
+          </div>
+        </div>
+
+        <!-- Network Telemetry Metric Summary Cards -->
+        <div class="summary-grid" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="summary-card">
+            <div class="summary-label">Active Sockets</div>
+            <div class="summary-value" id="net-total-sockets" style="color: var(--primary);">0</div>
+            <div class="summary-subtext">Open TCP/UDP Endpoints</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Inbound Traffic (RX)</div>
+            <div class="summary-value" id="net-rx-rate" style="color: var(--success);">0.0 KB/s</div>
+            <div class="summary-subtext">Aggregated network throughput</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Outbound Traffic (TX)</div>
+            <div class="summary-value" id="net-tx-rate" style="color: var(--purple);">0.0 KB/s</div>
+            <div class="summary-subtext">Transmitted packet rate</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Subnet Latency (Avg)</div>
+            <div class="summary-value" id="net-avg-latency" style="color: var(--warning);">18 ms</div>
+            <div class="summary-subtext">KiloNet Transit gateway</div>
+          </div>
+        </div>
+
+        <!-- Sockets Table -->
+        <table class="network-table" aria-label="Network Sockets Table">
+          <thead>
+            <tr>
+              <th>PID / Process</th>
+              <th>Proto</th>
+              <th>Local Address</th>
+              <th>Remote Address</th>
+              <th>State</th>
+              <th>RX Throughput</th>
+              <th>TX Throughput</th>
+              <th>Latency</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="network-sockets-tbody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab Pane 5: Fleet Sentinel & Remote Telemetry (Firebase RTDB) -->
+    <div class="tab-pane" id="pane-sentinel" role="tabpanel" aria-labelledby="tab-sentinel-btn">
+      <div class="sentinel-pane-container">
+        <!-- Sentinel Toolbar -->
+        <div class="process-toolbar" role="toolbar" aria-label="Sentinel telemetry controls">
+          <div class="toolbar-group">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span id="sentinelStatusBadge" class="status-badge" style="background: rgba(52, 211, 153, 0.15); color: var(--success); border: 1px solid rgba(52, 211, 153, 0.3);">
+                ● SYNC ACTIVE
+              </span>
+              <span id="sentinelNodeIdText" style="font-family: monospace; font-size: 11px; color: var(--primary);">
+                Local Node: NODE-7F4A
+              </span>
+            </div>
+
+            <button class="btn-primary" onclick="broadcastDiagnosticSignal()" title="Broadcast diagnostic telemetry heartbeat across all online KiloOS fleet nodes">
+              ⚡ Broadcast Pulse
+            </button>
+
+            <button class="btn-secondary" onclick="refreshFleetNodes()" title="Force query of remote fleet node states">
+              🔄 Sync Fleet
+            </button>
+          </div>
+
+          <div class="toolbar-group">
+            <span style="font-size: 11px; color: var(--text-muted);">
+              RTDB: <code>https://kiloappschat-default-rtdb.firebaseio.com</code>
+            </span>
+          </div>
+        </div>
+
+        <!-- Fleet Overview Cards -->
+        <div class="summary-grid" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="summary-card">
+            <div class="summary-label">Fleet Nodes Online</div>
+            <div class="summary-value" id="sentinel-node-count" style="color: var(--primary);">1</div>
+            <div class="summary-subtext">Active KiloOS terminals globally</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Mean Fleet CPU</div>
+            <div class="summary-value" id="sentinel-mean-cpu" style="color: var(--warning);">14%</div>
+            <div class="summary-subtext">Distributed compute load</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Aggregate RAM Pool</div>
+            <div class="summary-value" id="sentinel-agg-ram" style="color: var(--purple);">12.4 GB</div>
+            <div class="summary-subtext">Across connected fleet nodes</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Signal Mesh Status</div>
+            <div class="summary-value" id="sentinel-mesh-status" style="color: var(--success);">OPTIMAL</div>
+            <div class="summary-subtext">No dropped telemetry frames</div>
+          </div>
+        </div>
+
+        <!-- Fleet Nodes Table / Cards -->
+        <table class="sentinel-table" aria-label="Fleet Nodes Telemetry Table">
+          <thead>
+            <tr>
+              <th>Node ID</th>
+              <th>Host / Station</th>
+              <th>OS Kernel / Arch</th>
+              <th>Tasks</th>
+              <th>CPU Load</th>
+              <th>RAM Used</th>
+              <th>Last Heartbeat</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="sentinel-nodes-tbody">
+            <!-- Dynamically populated from RTDB or fallback -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab Pane 6: Process Profiler & Flamegraph -->
+    <div class="tab-pane" id="pane-profiler" role="tabpanel" aria-labelledby="tab-profiler-btn">
+      <div class="profiler-pane-container">
+        <!-- Profiler Toolbar -->
+        <div class="process-toolbar" role="toolbar" aria-label="Process profiler controls">
+          <div class="toolbar-group">
+            <label for="profilerProcessSelect" style="font-size: 11px; font-weight: 600; color: var(--text-muted);">Target Process:</label>
+            <select id="profilerProcessSelect" class="select-ctrl" style="min-width: 220px;" onchange="onProfilerTargetChange()">
+              <!-- Options populated with active tasks -->
+            </select>
+
+            <button class="btn-primary" id="btnStartProfile" onclick="runProcessProfile()" title="Sample CPU instruction call stack for 3 seconds">
+              ▶ Start 3-Sec Profiler
+            </button>
+
+            <button class="btn-secondary" onclick="exportProfileReport()" title="Export Call Stack Trace (.txt / .json)">
+              📋 Export Profile
+            </button>
+          </div>
+
+          <div class="toolbar-group">
+            <div id="profileProgressContainer" style="display: none; align-items: center; gap: 8px;">
+              <span style="font-size: 11px; color: var(--warning); font-weight: 600;">Sampling Cycles...</span>
+              <div style="width: 120px; height: 10px; background: rgba(0,0,0,0.4); border-radius: 5px; overflow: hidden; border: 1px solid var(--border-color);">
+                <div id="profileProgressBar" style="width: 0%; height: 100%; background: var(--warning); transition: width 0.1s linear;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Instruction & Cache Stats -->
+        <div class="summary-grid" style="grid-template-columns: repeat(4, 1fr);">
+          <div class="summary-card">
+            <div class="summary-label">Sampled CPU Cycles</div>
+            <div class="summary-value" id="prof-cycles" style="color: var(--primary);">0</div>
+            <div class="summary-subtext">Pentium instructions captured</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">IPC Rate</div>
+            <div class="summary-value" id="prof-ipc" style="color: var(--success);">1.82 IPC</div>
+            <div class="summary-subtext">Instructions per cycle</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">L1/L2 Cache Hit</div>
+            <div class="summary-value" id="prof-cache" style="color: var(--purple);">97.4%</div>
+            <div class="summary-subtext">Memory bus latency low</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Branch Accuracy</div>
+            <div class="summary-value" id="prof-branch" style="color: var(--warning);">98.8%</div>
+            <div class="summary-subtext">Pipeline stalls minimized</div>
+          </div>
+        </div>
+
+        <!-- Flamegraph Bar View -->
+        <div class="flame-container">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-weight: 700; font-size: 13px; color: var(--text-main);">CPU Subsystem Cycle Distribution (Flamegraph)</span>
+            <span id="prof-target-label" style="font-family: monospace; font-size: 11px; color: var(--text-muted);">Process: None</span>
+          </div>
+
+          <div class="flame-bar-row" id="flameBarRow">
+            <div class="flame-segment" style="width: 32%; background: #38bdf8;" title="RenderLoop_Canvas (32%)">RenderLoop (32%)</div>
+            <div class="flame-segment" style="width: 26%; background: #a855f7;" title="Win32_MsgPump (26%)">MsgPump (26%)</div>
+            <div class="flame-segment" style="width: 18%; background: #34d399;" title="Heap_Alloc (18%)">Heap_Alloc (18%)</div>
+            <div class="flame-segment" style="width: 14%; background: #fbbf24;" title="AudioDSP_YM2612 (14%)">AudioDSP (14%)</div>
+            <div class="flame-segment" style="width: 10%; background: #ef4444;" title="Socket_IO (10%)">Socket_IO (10%)</div>
+          </div>
+
+          <div class="flame-legend">
+            <div class="flame-legend-item"><div class="flame-legend-color" style="background:#38bdf8;"></div><span>RenderLoop (32%)</span></div>
+            <div class="flame-legend-item"><div class="flame-legend-color" style="background:#a855f7;"></div><span>MsgPump (26%)</span></div>
+            <div class="flame-legend-item"><div class="flame-legend-color" style="background:#34d399;"></div><span>Heap_Alloc (18%)</span></div>
+            <div class="flame-legend-item"><div class="flame-legend-color" style="background:#fbbf24;"></div><span>AudioDSP_YM2612 (14%)</span></div>
+            <div class="flame-legend-item"><div class="flame-legend-color" style="background:#ef4444;"></div><span>Socket_IO (10%)</span></div>
+          </div>
+        </div>
+
+        <!-- Function Call Table -->
+        <table class="profiler-table" aria-label="Profiler Functions Table">
+          <thead>
+            <tr>
+              <th>Subsystem / Routine</th>
+              <th>Module</th>
+              <th>Samples Count</th>
+              <th>Self CPU %</th>
+              <th>Total CPU %</th>
+              <th>Call Invocations</th>
+            </tr>
+          </thead>
+          <tbody id="profiler-functions-tbody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <!-- Confirmation Modal -->
@@ -1215,6 +1742,7 @@
         <button class="inspect-tab-btn" id="itab-hex-btn" role="tab" aria-selected="false" aria-controls="ipane-hex" onclick="switchInspectTab('hex')">💻 Hex Peek [4]</button>
         <button class="inspect-tab-btn" id="itab-env-btn" role="tab" aria-selected="false" aria-controls="ipane-env" onclick="switchInspectTab('env')">🌍 Env &amp; Exec [5]</button>
         <button class="inspect-tab-btn" id="itab-affinity-btn" role="tab" aria-selected="false" aria-controls="ipane-affinity" onclick="switchInspectTab('affinity')">⚙️ Affinity [6]</button>
+        <button class="inspect-tab-btn" id="itab-profiler-btn" role="tab" aria-selected="false" aria-controls="ipane-profiler" onclick="switchInspectTab('profiler')">🔬 Profiler [7]</button>
       </div>
 
       <div class="inspect-body">
@@ -1318,6 +1846,34 @@
             </div>
           </div>
         </div>
+
+        <!-- Tab 7: Process Profiler & Instructions -->
+        <div class="inspect-pane" id="ipane-profiler" role="tabpanel" aria-labelledby="itab-profiler-btn">
+          <div style="display:flex; flex-direction:column; gap:12px; font-size:12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div><strong>Live Instruction Sampler:</strong> Capture thread execution cycles</div>
+              <button class="btn-primary" style="padding:4px 10px; font-size:11px;" onclick="runInspectProfile()">▶ Sample 3s</button>
+            </div>
+            <div id="inspect-flame-bar" class="flame-bar-row">
+              <div class="flame-segment" style="width: 35%; background: #38bdf8;">MainLoop (35%)</div>
+              <div class="flame-segment" style="width: 25%; background: #a855f7;">Win32Msg (25%)</div>
+              <div class="flame-segment" style="width: 20%; background: #34d399;">HeapAlloc (20%)</div>
+              <div class="flame-segment" style="width: 20%; background: #fbbf24;">AudioDSP (20%)</div>
+            </div>
+            <div style="font-weight:600; font-size:11px; text-transform:uppercase; color:var(--text-muted);">Hotspot Call Stacks:</div>
+            <table class="inspect-table">
+              <thead>
+                <tr><th>Subsystem</th><th>Estimated Samples</th><th>CPU Share %</th></tr>
+              </thead>
+              <tbody id="inspect-profile-tbody">
+                <tr><td><code>Win32_MessagePump()</code></td><td>4,210 cycles</td><td style="color:var(--primary);">35.0%</td></tr>
+                <tr><td><code>RenderLoop_Canvas()</code></td><td>3,010 cycles</td><td style="color:var(--purple);">25.0%</td></tr>
+                <tr><td><code>Heap_Alloc_Paged()</code></td><td>2,408 cycles</td><td style="color:var(--success);">20.0%</td></tr>
+                <tr><td><code>AudioDSP_YM2612()</code></td><td>2,408 cycles</td><td style="color:var(--warning);">20.0%</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <div class="modal-footer" style="justify-content: space-between;">
@@ -1347,18 +1903,20 @@
           </thead>
           <tbody>
             <tr><td><span class="help-kbd">F1</span> or <span class="help-kbd">H</span></td><td>Toggle this Help Dialog</td><td>Global</td></tr>
+            <tr><td><span class="help-kbd">1</span> - <span class="help-kbd">6</span></td><td>Switch Tabs: [1] Tasks, [2] Perf, [3] Sum, [4] Net, [5] Sentinel, [6] Profiler</td><td>Global</td></tr>
+            <tr><td><span class="help-kbd">S</span></td><td>Toggle Retro YM2612 FM Audio Synthesizer SFX</td><td>Global</td></tr>
+            <tr><td><span class="help-kbd">D</span></td><td>Toggle Real-Time Memory Delta (Δ RAM) Tracking</td><td>Tasks Tab</td></tr>
             <tr><td><span class="help-kbd">F5</span></td><td>Quicksave Process Snapshot to Storage</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">F9</span></td><td>Quickload Process Snapshot from Storage</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">R</span></td><td>Live Refresh Process List from OS</td><td>Global</td></tr>
-            <tr><td><span class="help-kbd">T</span></td><td>Toggle Process Tree Hierarchy / Flat List</td><td>Processes Tab</td></tr>
-            <tr><td><span class="help-kbd">A</span></td><td>Cycle CPU Core Affinity Mask</td><td>Processes Tab</td></tr>
+            <tr><td><span class="help-kbd">T</span></td><td>Toggle Process Tree Hierarchy / Flat List</td><td>Tasks Tab</td></tr>
+            <tr><td><span class="help-kbd">A</span></td><td>Cycle CPU Core Affinity Mask</td><td>Tasks Tab</td></tr>
             <tr><td><span class="help-kbd">M</span></td><td>Export System Diagnostic Audit Report (Markdown)</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">E</span> / <span class="help-kbd">Ctrl+E</span></td><td>Export Process List to CSV</td><td>Global</td></tr>
             <tr><td><span class="help-kbd">J</span> / <span class="help-kbd">Ctrl+J</span></td><td>Export Process List to JSON</td><td>Global</td></tr>
-            <tr><td><span class="help-kbd">Enter</span> / <span class="help-kbd">I</span></td><td>Deep Inspect Selected Process</td><td>Processes Tab</td></tr>
-            <tr><td><span class="help-kbd">Delete</span></td><td>Terminate Selected Process</td><td>Processes Tab</td></tr>
-            <tr><td><span class="help-kbd">P</span></td><td>Cycle Priority (Normal / High / Low)</td><td>Processes Tab</td></tr>
-            <tr><td><span class="help-kbd">1</span> - <span class="help-kbd">6</span></td><td>Switch Inspector Tabs (Threads/Modules/Mem/Hex/Env/Affinity)</td><td>Inspector Dialog</td></tr>
+            <tr><td><span class="help-kbd">Enter</span> / <span class="help-kbd">I</span></td><td>Deep Inspect Selected Process</td><td>Tasks Tab</td></tr>
+            <tr><td><span class="help-kbd">Delete</span></td><td>Terminate Selected Process</td><td>Tasks Tab</td></tr>
+            <tr><td><span class="help-kbd">P</span></td><td>Cycle Priority (Normal / High / Low)</td><td>Tasks Tab</td></tr>
             <tr><td><span class="help-kbd">Esc</span></td><td>Close Active Modal / Clear Filter</td><td>Global</td></tr>
           </tbody>
         </table>
@@ -1408,6 +1966,43 @@
 
   <div id="toast" class="toast" role="alert" aria-live="assertive"></div>
 
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+    import { getDatabase, ref, set, get, push, onValue, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+      authDomain: "kiloappschat.firebaseapp.com",
+      databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+      projectId: "kiloappschat",
+      storageBucket: "kiloappschat.firebasestorage.app",
+      messagingSenderId: "290208566057",
+      appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+    };
+
+    try {
+      const fbApp = initializeApp(firebaseConfig);
+      const fbDb = getDatabase(fbApp);
+      window.fb = {
+        app: fbApp,
+        db: fbDb,
+        ref,
+        set,
+        get,
+        push,
+        onValue,
+        off,
+        serverTimestamp,
+        onDisconnect
+      };
+      if (typeof window.initFirebaseSentinel === 'function') {
+        window.initFirebaseSentinel();
+      }
+    } catch (err) {
+      console.warn('Firebase RTDB init offline or deferred:', err);
+    }
+  </script>
+
   <script>
     let reqIdCounter = 0;
     let autoRefreshInterval = null;
@@ -1428,6 +2023,603 @@
     let pendingKillTitle = '';
     let peakCpu = 0;
     let startTime = Date.now();
+
+    // ==========================================
+    // 1. Universal Audio Architecture: Genesis YM2612 2-op FM + SPC700 Delay
+    // ==========================================
+    let audioCtx = null;
+    let audioEnabled = safeGetStorage('ktask_audio_enabled') !== '0';
+
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          audioCtx = new AudioContext();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function updateAudioButtonUI() {
+      const icon = document.getElementById('audioIcon');
+      const btn = document.getElementById('btnAudioToggle');
+      if (icon) icon.textContent = audioEnabled ? '🔊' : '🔇';
+      if (btn) btn.title = audioEnabled ? 'Sound Effects & YM2612 FM Audio Active [S]' : 'Sound Effects Muted [S]';
+    }
+
+    function toggleAudio() {
+      audioEnabled = !audioEnabled;
+      safeSetStorage('ktask_audio_enabled', audioEnabled ? '1' : '0');
+      updateAudioButtonUI();
+      if (audioEnabled) {
+        playSaveSound();
+        showToast('Sound Effects Enabled (Genesis YM2612 2-op FM) [S]');
+      } else {
+        showToast('Sound Effects Muted [S]');
+      }
+    }
+
+    function playFMSound(carrierFreq, modRatio, modIndex, duration, decayTime, gainVal = 0.12) {
+      if (!audioEnabled) return;
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+
+      try {
+        const now = ctx.currentTime;
+        const carrier = ctx.createOscillator();
+        const modulator = ctx.createOscillator();
+        const modGain = ctx.createGain();
+        const masterGain = ctx.createGain();
+
+        // 2-Operator FM modulation
+        modulator.frequency.setValueAtTime(carrierFreq * modRatio, now);
+        modulator.frequency.exponentialRampToValueAtTime(Math.max(10, carrierFreq * modRatio * 0.75), now + duration);
+
+        modGain.gain.setValueAtTime(carrierFreq * modIndex, now);
+        modGain.gain.exponentialRampToValueAtTime(0.01, now + decayTime);
+
+        carrier.frequency.setValueAtTime(carrierFreq, now);
+
+        masterGain.gain.setValueAtTime(gainVal, now);
+        masterGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+        carrier.connect(masterGain);
+
+        // SPC700 stereo delay warmth
+        const delay = ctx.createDelay();
+        delay.delayTime.setValueAtTime(0.08, now);
+        const delayGain = ctx.createGain();
+        delayGain.gain.setValueAtTime(0.2, now);
+
+        masterGain.connect(ctx.destination);
+        masterGain.connect(delay);
+        delay.connect(delayGain);
+        delayGain.connect(ctx.destination);
+
+        carrier.start(now);
+        modulator.start(now);
+        carrier.stop(now + duration + 0.1);
+        modulator.stop(now + duration + 0.1);
+      } catch (e) {}
+    }
+
+    function playKillSound() {
+      playFMSound(120, 2.0, 3.5, 0.35, 0.25, 0.18);
+    }
+
+    function playSpawnSound() {
+      playFMSound(520, 1.5, 2.0, 0.18, 0.15, 0.12);
+    }
+
+    function playAlarmSound() {
+      playFMSound(880, 0.5, 4.0, 0.28, 0.2, 0.14);
+    }
+
+    function playSaveSound() {
+      playFMSound(660, 2.0, 1.5, 0.15, 0.12, 0.1);
+      setTimeout(() => playFMSound(880, 2.0, 1.5, 0.2, 0.18, 0.1), 80);
+    }
+
+    function playPingSound() {
+      playFMSound(1200, 3.0, 1.2, 0.25, 0.2, 0.12);
+    }
+
+    // ==========================================
+    // 2. Memory Delta & Allocation Leak Sentinel
+    // ==========================================
+    let deltaMode = false;
+    let baselineMemory = {};
+    let consecutiveGrowthCounts = {};
+
+    function toggleDeltaMode() {
+      deltaMode = !deltaMode;
+      const btn = document.getElementById('deltaModeBtn');
+      if (btn) {
+        btn.classList.toggle('active', deltaMode);
+        btn.style.background = deltaMode ? 'var(--primary-muted)' : '';
+        btn.style.color = deltaMode ? 'var(--primary)' : '';
+      }
+      if (deltaMode && Object.keys(baselineMemory).length === 0) {
+        zeroMemoryBaseline();
+      } else {
+        renderTasks();
+      }
+      showToast(deltaMode ? 'Memory Allocation Delta Mode Active [D]' : 'Memory Delta Tracking Hidden [D]');
+    }
+
+    function zeroMemoryBaseline() {
+      baselineMemory = {};
+      allTasks.forEach(task => {
+        const id = String(task.id);
+        const memVal = parseFloat(taskStats[id]?.mem || 20.0);
+        baselineMemory[id] = memVal;
+      });
+      consecutiveGrowthCounts = {};
+      renderTasks();
+      playSaveSound();
+      showToast('Memory baseline zeroed across all active tasks');
+    }
+
+    // ==========================================
+    // 3. Network Sockets & Port Monitor Engine
+    // ==========================================
+    let defaultSockets = [
+      { pid: '1004', name: 'KiloOS Kernel Services', proto: 'TCP', local: '0.0.0.0:1999', remote: '10.19.99.4:1999', state: 'ESTABLISHED', rx: 42.8, tx: 18.4, latency: 12, packets: 1482 },
+      { pid: '1420', name: 'KExplorer File Manager', proto: 'TCP', local: '127.0.0.1:8080', remote: '127.0.0.1:5228', state: 'ESTABLISHED', rx: 14.2, tx: 6.8, latency: 2, packets: 856 },
+      { pid: '1842', name: 'KTask Process Monitor', proto: 'TCP', local: '127.0.0.1:443', remote: 'kiloapps.web.app:443', state: 'ESTABLISHED', rx: 28.5, tx: 9.1, latency: 24, packets: 2190 },
+      { pid: '1004', name: 'KiloOS Kernel Services', proto: 'UDP', local: '0.0.0.0:53', remote: '10.19.99.1:53', state: 'LISTEN', rx: 2.1, tx: 1.8, latency: 8, packets: 420 },
+      { pid: '2105', name: 'KPad Text Editor', proto: 'TCP', local: '127.0.0.1:3000', remote: '127.0.0.1:5432', state: 'TIME_WAIT', rx: 0.2, tx: 0.1, latency: 4, packets: 120 },
+      { pid: '3290', name: 'KCalc Calculator', proto: 'UDP', local: '127.0.0.1:9090', remote: '127.0.0.1:9091', state: 'LISTEN', rx: 0.0, tx: 0.0, latency: 1, packets: 45 }
+    ];
+    let activeSockets = [...defaultSockets];
+    let selectedSocketIndex = 0;
+
+    function renderNetworkSockets() {
+      const tbody = document.getElementById('network-sockets-tbody');
+      if (!tbody) return;
+
+      const search = (document.getElementById('networkSearchInput')?.value || '').toLowerCase().trim();
+      const proto = document.getElementById('netProtoSelect')?.value || 'all';
+      const state = document.getElementById('netStateSelect')?.value || 'all';
+
+      let filtered = activeSockets.filter(s => {
+        if (proto !== 'all' && s.proto.toLowerCase() !== proto) return false;
+        if (state !== 'all' && s.state.toLowerCase() !== state) return false;
+        if (search) {
+          const match = s.pid.includes(search) || s.name.toLowerCase().includes(search) ||
+                        s.local.toLowerCase().includes(search) || s.remote.toLowerCase().includes(search);
+          if (!match) return false;
+        }
+        return true;
+      });
+
+      tbody.innerHTML = '';
+      let totalRx = 0, totalTx = 0, totalLat = 0;
+
+      activeSockets.forEach(s => {
+        totalRx += s.rx;
+        totalTx += s.tx;
+        totalLat += s.latency;
+      });
+
+      const totSockEl = document.getElementById('net-total-sockets');
+      const rxRateEl = document.getElementById('net-rx-rate');
+      const txRateEl = document.getElementById('net-tx-rate');
+      const latEl = document.getElementById('net-avg-latency');
+
+      if (totSockEl) totSockEl.textContent = activeSockets.length;
+      if (rxRateEl) rxRateEl.textContent = totalRx.toFixed(1) + ' KB/s';
+      if (txRateEl) txRateEl.textContent = totalTx.toFixed(1) + ' KB/s';
+      if (latEl && activeSockets.length > 0) latEl.textContent = Math.round(totalLat / activeSockets.length) + ' ms';
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--text-muted); padding:24px;">No sockets match current criteria.</td></tr>`;
+        return;
+      }
+
+      filtered.forEach((s, idx) => {
+        const tr = document.createElement('tr');
+        const isSelected = idx === selectedSocketIndex;
+        if (isSelected) tr.style.background = 'rgba(56, 189, 248, 0.08)';
+        tr.style.cursor = 'pointer';
+        tr.onclick = () => { selectedSocketIndex = idx; renderNetworkSockets(); };
+
+        let stateClass = 'socket-state-est';
+        if (s.state === 'LISTEN') stateClass = 'socket-state-listen';
+        else if (s.state === 'TIME_WAIT') stateClass = 'socket-state-wait';
+        else if (s.state === 'CLOSED') stateClass = 'socket-state-close';
+
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(s.name)}</strong> <span style="font-family:monospace; color:var(--text-muted);">[PID: ${s.pid}]</span></td>
+          <td><span class="socket-port-tag">${s.proto}</span></td>
+          <td style="font-family:monospace;">${escapeHtml(s.local)}</td>
+          <td style="font-family:monospace; color:${s.remote.includes('10.19.99') ? 'var(--warning)' : 'var(--text-main)'};">
+            ${escapeHtml(s.remote)} ${s.remote.includes('10.19.99') ? '🔒' : ''}
+          </td>
+          <td><span class="socket-state-badge ${stateClass}">${s.state}</span></td>
+          <td style="color:var(--success); font-family:monospace;">${s.rx.toFixed(1)} KB/s</td>
+          <td style="color:var(--purple); font-family:monospace;">${s.tx.toFixed(1)} KB/s</td>
+          <td style="font-family:monospace;">${s.latency} ms</td>
+          <td>
+            <button class="btn-secondary" style="padding:2px 6px; font-size:10px;" onclick="pingSocket('${s.remote}', event)">Ping</button>
+            <button class="btn-secondary" style="padding:2px 6px; font-size:10px; color:var(--danger);" onclick="terminateSocket(${idx}, event)">Reset</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function pingSocket(remote, event) {
+      if (event) event.stopPropagation();
+      playPingSound();
+      const rtt = Math.floor(Math.random() * 25) + 6;
+      showToast(`📡 Ping to [${remote}]: ICMP reply 64 bytes in ${rtt} ms (TTL=64)`);
+    }
+
+    function terminateSocket(idx, event) {
+      if (event) event.stopPropagation();
+      playKillSound();
+      const s = activeSockets[idx];
+      if (s) {
+        s.state = 'CLOSED';
+        s.rx = 0;
+        s.tx = 0;
+        showToast(`⚡ Socket [${s.local} <-> ${s.remote}] connection reset.`);
+        renderNetworkSockets();
+      }
+    }
+
+    function sendSocketPingProbe() {
+      const s = activeSockets[selectedSocketIndex] || activeSockets[0];
+      if (s) {
+        pingSocket(s.remote);
+      } else {
+        showToast('No active socket selected for ping probe.');
+      }
+    }
+
+    function resetSelectedSocket() {
+      if (activeSockets.length > 0) {
+        terminateSocket(selectedSocketIndex);
+      }
+    }
+
+    function exportSocketsCSV() {
+      let csv = 'PID,Process,Protocol,Local Address,Remote Address,State,RX (KB/s),TX (KB/s),Latency (ms)\n';
+      activeSockets.forEach(s => {
+        csv += `"${s.pid}","${s.name}","${s.proto}","${s.local}","${s.remote}","${s.state}",${s.rx.toFixed(1)},${s.tx.toFixed(1)},${s.latency}\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      safeDownloadBlob(blob, `ktask_sockets_${Date.now()}.csv`);
+      showToast('Exported Network Sockets list to CSV.');
+    }
+
+    function exportSocketsJSON() {
+      const blob = new Blob([JSON.stringify(activeSockets, null, 2)], { type: 'application/json;charset=utf-8;' });
+      safeDownloadBlob(blob, `ktask_sockets_${Date.now()}.json`);
+      showToast('Exported Network Sockets list to JSON.');
+    }
+
+    // ==========================================
+    // 4. Fleet Sentinel Telemetry (Firebase RTDB + Solo Offline Fallback)
+    // ==========================================
+    let localNodeId = 'NODE-' + Math.floor(1000 + Math.random() * 9000).toString(16).toUpperCase();
+    let fleetNodes = [
+      { id: localNodeId, host: 'KiloStation-7F', os: 'KiloOS 1999 / x64', tasks: 5, cpu: 12, ram: '2.4 GB', latency: 0, isLocal: true, time: Date.now() },
+      { id: 'NODE-ALPHA', host: 'Gateway-10.19.99.1', os: 'KiloOS Server 1999', tasks: 18, cpu: 22, ram: '4.8 GB', latency: 14, isLocal: false, time: Date.now() - 3000 },
+      { id: 'NODE-ECHO', host: 'Echo-10.19.99.4', os: 'KiloOS Signal Core', tasks: 9, cpu: 16, ram: '3.1 GB', latency: 28, isLocal: false, time: Date.now() - 5000 }
+    ];
+
+    function initFirebaseSentinel() {
+      if (!window.fb || !window.fb.db) return;
+      const db = window.fb.db;
+      const ref = window.fb.ref;
+      const set = window.fb.set;
+      const onValue = window.fb.onValue;
+      const onDisconnect = window.fb.onDisconnect;
+
+      try {
+        const nodeRef = ref(db, `multiplayer/ktask/nodes/${localNodeId}`);
+        const myTelemetry = {
+          id: localNodeId,
+          host: 'KiloStation-' + localNodeId.slice(-4),
+          os: 'KiloOS 1999 / x64',
+          tasks: allTasks.length,
+          cpu: Math.floor(Math.random() * 20 + 8),
+          ram: (2.2 + Math.random() * 0.4).toFixed(1) + ' GB',
+          timestamp: Date.now()
+        };
+        set(nodeRef, myTelemetry);
+        onDisconnect(nodeRef).remove();
+
+        const allNodesRef = ref(db, 'multiplayer/ktask/nodes');
+        onValue(allNodesRef, (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            const nodes = [];
+            Object.keys(data).forEach(key => {
+              const item = data[key];
+              nodes.push({
+                id: item.id || key,
+                host: item.host || 'KiloStation',
+                os: item.os || 'KiloOS 1999',
+                tasks: item.tasks || 5,
+                cpu: item.cpu || 10,
+                ram: item.ram || '2.0 GB',
+                latency: item.id === localNodeId ? 0 : Math.floor(Math.random() * 40 + 10),
+                isLocal: item.id === localNodeId,
+                time: item.timestamp || Date.now()
+              });
+            });
+            if (nodes.length < 3) {
+              if (!nodes.some(n => n.id === 'NODE-ALPHA')) {
+                nodes.push({ id: 'NODE-ALPHA', host: 'Gateway-10.19.99.1', os: 'KiloOS Server 1999', tasks: 18, cpu: 22, ram: '4.8 GB', latency: 14, isLocal: false, time: Date.now() - 3000 });
+              }
+              if (!nodes.some(n => n.id === 'NODE-ECHO')) {
+                nodes.push({ id: 'NODE-ECHO', host: 'Echo-10.19.99.4', os: 'KiloOS Signal Core', tasks: 9, cpu: 16, ram: '3.1 GB', latency: 28, isLocal: false, time: Date.now() - 5000 });
+              }
+            }
+            fleetNodes = nodes;
+            renderFleetNodes();
+            const badge = document.getElementById('sentinelStatusBadge');
+            if (badge) {
+              badge.textContent = '● RTDB LIVE';
+              badge.style.color = 'var(--success)';
+            }
+          }
+        });
+
+        const signalsRef = ref(db, 'multiplayer/ktask/signals');
+        onValue(signalsRef, (snapshot) => {
+          const val = snapshot.val();
+          if (val && val.sender && val.sender !== localNodeId && Date.now() - val.time < 5000) {
+            playAlarmSound();
+            showToast(`⚡ Diagnostic pulse received from remote node [${val.sender}]`);
+          }
+        });
+      } catch (e) {
+        console.warn('Firebase telemetry registration error:', e);
+      }
+    }
+
+    window.initFirebaseSentinel = initFirebaseSentinel;
+
+    function broadcastDiagnosticSignal() {
+      playAlarmSound();
+      showToast(`⚡ Broadcasting telemetry diagnostic pulse from [${localNodeId}]...`);
+
+      if (window.fb && window.fb.db) {
+        try {
+          const ref = window.fb.ref;
+          const set = window.fb.set;
+          const signalRef = ref(window.fb.db, 'multiplayer/ktask/signals');
+          set(signalRef, { sender: localNodeId, time: Date.now(), type: 'PULSE' });
+
+          const argRef = ref(window.fb.db, `arg/signals/ktask/${localNodeId}`);
+          set(argRef, {
+            source: 'ktask',
+            node: localNodeId,
+            freq: 1999,
+            status: 'SYNCED',
+            time: Date.now()
+          });
+        } catch(e) {}
+      }
+    }
+
+    function refreshFleetNodes() {
+      playPingSound();
+      fleetNodes.forEach(node => {
+        if (!node.isLocal) {
+          node.cpu = Math.max(4, Math.min(85, node.cpu + Math.floor((Math.random() - 0.5) * 8)));
+          node.time = Date.now() - Math.floor(Math.random() * 4000);
+        }
+      });
+      renderFleetNodes();
+      showToast('Fleet node telemetry refreshed.');
+    }
+
+    function pingFleetNode(nodeId) {
+      playPingSound();
+      const node = fleetNodes.find(n => n.id === nodeId);
+      const lat = node ? (node.isLocal ? 0 : node.latency) : 18;
+      showToast(`📡 Ping to [${nodeId}]: echo response received in ${lat} ms.`);
+    }
+
+    function renderFleetNodes() {
+      const tbody = document.getElementById('sentinel-nodes-tbody');
+      if (!tbody) return;
+
+      const countEl = document.getElementById('sentinel-node-count');
+      const meanCpuEl = document.getElementById('sentinel-mean-cpu');
+      const aggRamEl = document.getElementById('sentinel-agg-ram');
+
+      if (countEl) countEl.textContent = fleetNodes.length;
+
+      let totalCpu = 0;
+      fleetNodes.forEach(n => totalCpu += n.cpu);
+      if (meanCpuEl && fleetNodes.length > 0) meanCpuEl.textContent = Math.round(totalCpu / fleetNodes.length) + '%';
+      if (aggRamEl) aggRamEl.textContent = (fleetNodes.length * 3.4).toFixed(1) + ' GB';
+
+      tbody.innerHTML = '';
+      fleetNodes.forEach(node => {
+        const tr = document.createElement('tr');
+        if (node.isLocal) tr.style.background = 'rgba(56, 189, 248, 0.08)';
+
+        tr.innerHTML = `
+          <td>
+            <strong style="color:${node.isLocal ? 'var(--primary)' : 'var(--text-main)'}; font-family:monospace;">
+              ${escapeHtml(node.id)}
+            </strong>
+            ${node.isLocal ? '<span class="status-badge" style="background:var(--primary-muted); color:var(--primary); font-size:9px; margin-left:4px;">LOCAL</span>' : ''}
+          </td>
+          <td style="font-family:monospace;">${escapeHtml(node.host)}</td>
+          <td style="color:var(--text-muted);">${escapeHtml(node.os)}</td>
+          <td style="font-family:monospace;">${node.tasks} tasks</td>
+          <td>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <div style="flex:1; width:60px; height:6px; background:rgba(0,0,0,0.3); border-radius:3px; overflow:hidden;">
+                <div style="width:${node.cpu}%; height:100%; background:${node.cpu>50?'var(--warning)':'var(--success)'};"></div>
+              </div>
+              <span style="font-family:monospace; font-size:11px;">${node.cpu}%</span>
+            </div>
+          </td>
+          <td style="font-family:monospace; color:var(--purple);">${node.ram}</td>
+          <td style="color:var(--text-muted); font-size:11px;">${Math.round((Date.now() - node.time)/1000)}s ago</td>
+          <td>
+            <button class="btn-secondary" style="padding:2px 8px; font-size:10px;" onclick="pingFleetNode('${node.id}')">Ping</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // ==========================================
+    // 5. Process Profiler & Flamegraph Engine
+    // ==========================================
+    let isSamplingProfile = false;
+    let profilerTargetId = '1004';
+
+    function onProfilerTargetChange() {
+      const sel = document.getElementById('profilerProcessSelect');
+      if (sel) profilerTargetId = sel.value;
+      updateProfilerUI();
+    }
+
+    function updateProfilerUI() {
+      const sel = document.getElementById('profilerProcessSelect');
+      if (sel) {
+        const curVal = sel.value || profilerTargetId;
+        sel.innerHTML = '';
+        allTasks.forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t.id;
+          opt.textContent = `[PID ${t.id}] ${t.title}`;
+          if (t.id === curVal) opt.selected = true;
+          sel.appendChild(opt);
+        });
+      }
+
+      const target = allTasks.find(t => String(t.id) === String(profilerTargetId)) || allTasks[0];
+      const targetLabel = document.getElementById('prof-target-label');
+      if (targetLabel && target) {
+        targetLabel.textContent = `Process: ${target.title} (PID: ${target.id})`;
+      }
+    }
+
+    function runProcessProfile() {
+      if (isSamplingProfile) return;
+      isSamplingProfile = true;
+
+      playPingSound();
+      const progContainer = document.getElementById('profileProgressContainer');
+      const progBar = document.getElementById('profileProgressBar');
+      const btn = document.getElementById('btnStartProfile');
+
+      if (progContainer) progContainer.style.display = 'flex';
+      if (btn) btn.disabled = true;
+
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 5;
+        if (progBar) progBar.style.width = progress + '%';
+        if (progress >= 100) {
+          clearInterval(interval);
+          isSamplingProfile = false;
+          if (progContainer) progContainer.style.display = 'none';
+          if (btn) btn.disabled = false;
+          finishProfileSampling();
+        }
+      }, 150);
+    }
+
+    function finishProfileSampling() {
+      playSaveSound();
+      const target = allTasks.find(t => String(t.id) === String(profilerTargetId)) || allTasks[0];
+      const cycles = Math.floor(Math.random() * 8000000) + 12000000;
+      const ipc = (1.6 + Math.random() * 0.5).toFixed(2);
+      const cache = (95.0 + Math.random() * 4.5).toFixed(1);
+      const branch = (97.5 + Math.random() * 2.2).toFixed(1);
+
+      const cEl = document.getElementById('prof-cycles');
+      const ipcEl = document.getElementById('prof-ipc');
+      const cacheEl = document.getElementById('prof-cache');
+      const brEl = document.getElementById('prof-branch');
+
+      if (cEl) cEl.textContent = cycles.toLocaleString();
+      if (ipcEl) ipcEl.textContent = ipc + ' IPC';
+      if (cacheEl) cacheEl.textContent = cache + '%';
+      if (brEl) brEl.textContent = branch + '%';
+
+      const pct1 = Math.floor(Math.random() * 15 + 25);
+      const pct2 = Math.floor(Math.random() * 10 + 20);
+      const pct3 = Math.floor(Math.random() * 8 + 15);
+      const pct4 = Math.floor(Math.random() * 8 + 12);
+      const pct5 = 100 - (pct1 + pct2 + pct3 + pct4);
+
+      const flameRow = document.getElementById('flameBarRow');
+      if (flameRow) {
+        flameRow.innerHTML = `
+          <div class="flame-segment" style="width: ${pct1}%; background: #38bdf8;" title="RenderLoop (${pct1}%)">Render (${pct1}%)</div>
+          <div class="flame-segment" style="width: ${pct2}%; background: #a855f7;" title="Win32_MsgPump (${pct2}%)">MsgPump (${pct2}%)</div>
+          <div class="flame-segment" style="width: ${pct3}%; background: #34d399;" title="Heap_Alloc (${pct3}%)">Heap (${pct3}%)</div>
+          <div class="flame-segment" style="width: ${pct4}%; background: #fbbf24;" title="AudioDSP_YM2612 (${pct4}%)">Audio (${pct4}%)</div>
+          <div class="flame-segment" style="width: ${pct5}%; background: #ef4444;" title="Socket_IO (${pct5}%)">Socket (${pct5}%)</div>
+        `;
+      }
+
+      const tbody = document.getElementById('profiler-functions-tbody');
+      if (tbody && target) {
+        tbody.innerHTML = `
+          <tr><td><code>RenderLoop_Canvas()</code></td><td>${target.title}.exe</td><td>${Math.round(cycles * pct1 / 100).toLocaleString()}</td><td style="color:var(--primary); font-weight:700;">${pct1}.0%</td><td>${pct1}.0%</td><td>1,420</td></tr>
+          <tr><td><code>Win32_MessagePump()</code></td><td>user32.dll</td><td>${Math.round(cycles * pct2 / 100).toLocaleString()}</td><td style="color:var(--purple); font-weight:700;">${pct2}.0%</td><td>${pct2}.0%</td><td>3,890</td></tr>
+          <tr><td><code>MemoryAlloc_Heap()</code></td><td>ntdll.dll</td><td>${Math.round(cycles * pct3 / 100).toLocaleString()}</td><td style="color:var(--success); font-weight:700;">${pct3}.0%</td><td>${pct3}.0%</td><td>850</td></tr>
+          <tr><td><code>AudioDSP_YM2612()</code></td><td>winmm.dll</td><td>${Math.round(cycles * pct4 / 100).toLocaleString()}</td><td style="color:var(--warning); font-weight:700;">${pct4}.0%</td><td>${pct4}.0%</td><td>620</td></tr>
+          <tr><td><code>Socket_IO_Poll()</code></td><td>ws2_32.dll</td><td>${Math.round(cycles * pct5 / 100).toLocaleString()}</td><td style="color:var(--danger); font-weight:700;">${pct5}.0%</td><td>${pct5}.0%</td><td>210</td></tr>
+        `;
+      }
+
+      showToast(`✅ Profile sampling complete for [${target.title}] (${cycles.toLocaleString()} cycles).`);
+    }
+
+    function runInspectProfile() {
+      playPingSound();
+      setTimeout(() => {
+        playSaveSound();
+        showToast('Inspection call stack updated for selected process.');
+      }, 1000);
+    }
+
+    function exportProfileReport() {
+      const target = allTasks.find(t => String(t.id) === String(profilerTargetId)) || allTasks[0];
+      const report = {
+        target: target ? target.title : 'KTask',
+        pid: target ? target.id : '1004',
+        timestamp: new Date().toISOString(),
+        metrics: {
+          sampledCycles: document.getElementById('prof-cycles')?.textContent || '0',
+          ipc: document.getElementById('prof-ipc')?.textContent || '1.82 IPC',
+          cacheHitRate: document.getElementById('prof-cache')?.textContent || '97.4%',
+          branchAccuracy: document.getElementById('prof-branch')?.textContent || '98.8%'
+        },
+        subsystems: [
+          { name: 'RenderLoop_Canvas()', share: '32%' },
+          { name: 'Win32_MessagePump()', share: '26%' },
+          { name: 'MemoryAlloc_Heap()', share: '18%' },
+          { name: 'AudioDSP_YM2612()', share: '14%' },
+          { name: 'Socket_IO_Poll()', share: '10%' }
+        ]
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(JSON.stringify(report, null, 2));
+      }
+      showToast('📋 Profiler execution trace copied to clipboard.');
+    }
 
     // Safe LocalStorage helpers with quota error handling
     function safeGetStorage(key) {
@@ -1790,6 +2982,12 @@
 
       if (tabName === 'charts') {
         setTimeout(drawCharts, 50);
+      } else if (tabName === 'network') {
+        renderNetworkSockets();
+      } else if (tabName === 'sentinel') {
+        renderFleetNodes();
+      } else if (tabName === 'profiler') {
+        updateProfilerUI();
       }
     }
 
@@ -1922,6 +3120,7 @@
       };
       selectedTaskId = newPid;
       renderTasks();
+      playSpawnSound();
       showToast(`Spawned demo process: ${name} (PID: ${newPid})`);
     }
 
@@ -1976,6 +3175,7 @@
         selectedTaskId = allTasks.length > 0 ? String(allTasks[0].id) : null;
       }
       renderTasks();
+      playKillSound();
 
       const reqId = ++reqIdCounter;
       try {
@@ -2119,7 +3319,20 @@
         md += `| \`${id}\` | \`${ppid}\` | **${title.replace(/\|/g, '\\|')}** | ${stats.cpu}% | ${stats.mem} MB | ${stats.priority || 'Normal'} | \`${stats.affinity || '0xFF'}\` | Active |\n`;
       });
 
-      md += `\n## Diagnostics & Security Mitigations\n\n`;
+      md += `\n## Active Network Sockets (I/O Endpoints)\n\n`;
+      md += `| PID | Process | Proto | Local Address | Remote Address | State | RX (KB/s) | TX (KB/s) | Latency |\n`;
+      md += `|---|---|---|---|---|---|---|---|---|\n`;
+      activeSockets.forEach(s => {
+        md += `| \`${s.pid}\` | **${s.name.replace(/\|/g, '\\|')}** | \`${s.proto}\` | \`${s.local}\` | \`${s.remote}\` | \`${s.state}\` | ${s.rx.toFixed(1)} | ${s.tx.toFixed(1)} | ${s.latency} ms |\n`;
+      });
+
+      md += `\n## Fleet Sentinel Telemetry (KiloNet Mesh)\n\n`;
+      md += `- **Local Node**: \`${localNodeId}\`\n`;
+      md += `- **Online Fleet Nodes**: ${fleetNodes.length}\n`;
+      md += `- **Fleet Mean CPU Load**: ${document.getElementById('sentinel-mean-cpu')?.textContent || '14%'}\n`;
+      md += `- **Mesh Network Status**: OPTIMAL (Firebase RTDB Synchronized)\n\n`;
+
+      md += `## Diagnostics & Security Mitigations\n\n`;
       md += `- **Core Kernel Services**: ntdll.dll, kernel32.dll, user32.dll, gdi32.dll\n`;
       md += `- **Memory Management**: Preemptive paging, VirtualQueryEx inspection enabled\n`;
       md += `- **Security Mitigations**: DEP Enforced, ASLR Relocated, Safe SEH Verified\n\n`;
@@ -2384,6 +3597,25 @@
       const cpuBarWidth = Math.min(100, Math.round(cpuNum * 12));
       const memBarWidth = Math.min(100, Math.round((memNum / 60) * 100));
 
+      let deltaHtml = '';
+      let leakBadgeHtml = '';
+      if (deltaMode) {
+        const base = baselineMemory[taskId] != null ? baselineMemory[taskId] : memNum;
+        const delta = memNum - base;
+        const deltaStr = (delta >= 0 ? '+' : '') + delta.toFixed(1) + ' MB';
+        const deltaClass = delta > 0.1 ? 'mem-delta-pos' : (delta < -0.1 ? 'mem-delta-neg' : 'mem-delta-zero');
+        deltaHtml = `<span class="mem-delta-badge ${deltaClass}">Δ ${deltaStr}</span>`;
+
+        if (delta > 0.5) {
+          consecutiveGrowthCounts[taskId] = (consecutiveGrowthCounts[taskId] || 0) + 1;
+        } else if (delta < -0.1) {
+          consecutiveGrowthCounts[taskId] = Math.max(0, (consecutiveGrowthCounts[taskId] || 0) - 1);
+        }
+        if ((consecutiveGrowthCounts[taskId] || 0) >= 3) {
+          leakBadgeHtml = `<span class="leak-badge" title="Memory Drift Warning: Process shows continuous allocation growth">⚠️ LEAK</span>`;
+        }
+      }
+
       const card = document.createElement('div');
       card.className = 'task-card' + (isTreeChild ? ' tree-child' : '');
       card.tabIndex = 0;
@@ -2405,6 +3637,7 @@
               <span>PID: ${escapeHtml(taskId)}</span>
               <span>
                 Mem: ${escapeHtml(stats.mem)} MB
+                ${deltaHtml}
                 <span class="task-mini-meter"><span class="mini-bar" style="width:${memBarWidth}%; background:var(--purple);"></span></span>
               </span>
               <span>
@@ -2413,6 +3646,7 @@
               </span>
               <span class="status-badge" style="background:rgba(56,189,248,0.12); color:var(--primary); font-size:9px;">Core: ${escapeHtml(stats.affinity || '0xFF')}</span>
               <span class="status-badge ${badgeClass}">${badgeText}</span>
+              ${leakBadgeHtml}
             </div>
           </div>
         </div>
@@ -3026,9 +4260,10 @@
           else if (e.key === '4') { e.preventDefault(); switchInspectTab('hex'); }
           else if (e.key === '5') { e.preventDefault(); switchInspectTab('env'); }
           else if (e.key === '6') { e.preventDefault(); switchInspectTab('affinity'); }
+          else if (e.key === '7') { e.preventDefault(); switchInspectTab('profiler'); }
           else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
             e.preventDefault();
-            const itabs = ['threads', 'modules', 'memory', 'hex', 'env', 'affinity'];
+            const itabs = ['threads', 'modules', 'memory', 'hex', 'env', 'affinity', 'profiler'];
             let idx = itabs.indexOf(activeInspectTab);
             if (e.key === 'ArrowLeft') idx = (idx - 1 + itabs.length) % itabs.length;
             else idx = (idx + 1) % itabs.length;
@@ -3064,6 +4299,24 @@
       } else if (e.key === '3') {
         e.preventDefault();
         switchTab('system');
+      } else if (e.key === '4') {
+        e.preventDefault();
+        switchTab('network');
+      } else if (e.key === '5') {
+        e.preventDefault();
+        switchTab('sentinel');
+      } else if (e.key === '6') {
+        e.preventDefault();
+        switchTab('profiler');
+      } else if (e.key === 's' || e.key === 'S') {
+        e.preventDefault();
+        toggleAudio();
+      } else if (e.key === 'd' || e.key === 'D') {
+        e.preventDefault();
+        toggleDeltaMode();
+      } else if (e.key === 'n' || e.key === 'N') {
+        e.preventDefault();
+        switchTab('network');
       } else if (e.key === 'F5') {
         e.preventDefault();
         quickSaveState();
@@ -3211,7 +4464,14 @@
 
     loadUserSettings();
     restoreSessionState();
+    updateAudioButtonUI();
     renderTasks();
+    renderNetworkSockets();
+    renderFleetNodes();
+    updateProfilerUI();
+    if (typeof initFirebaseSentinel === 'function') {
+      initFirebaseSentinel();
+    }
     setupChartInteractivity('cpuCanvas', 'cpu');
     setupChartInteractivity('memCanvas', 'mem');
 
