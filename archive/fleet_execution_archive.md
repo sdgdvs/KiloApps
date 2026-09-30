@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T19:46:00Z — kilo-tester: KImage (UI Audit & Inline Fixes, JSON Session Import/Export, Non-Destructive Restore & Hotkey Scope)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 142.5 KB web / 25.5 KB native < 999 KB ceiling).
+  - UI Hotkey Scope: Excluded TEXTAREA/contenteditable from global hotkeys, preventing space/crop/del triggers when typing secret stego messages.
+  - Quicksave / Quickload: Upgraded F5/F9 to non-destructive restore of base pixel data, adjustments, rotation, and vector drawing paths with live slider sync.
+  - Session Persistence: Added full project session export and import (.JSON) supporting offline backup, annotations, and stego payloads.
+  - Animation & Crop Hygiene: Added automated slideshow loop teardown on empty/cleared playlist; auto-cleared crop overlay when switching images.
+  - Drawing & Clipboard: Transformed vector annotations alongside 90° rotations and flips; added execCommand fallback for secure clipboard copying.
+  - Verification: MSVC clean (`KImage.exe` 25.5 KB); Vite clean in 291ms; check_icons & security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T19:02:00Z — kilo-expander: KHash (Forensic Lab, Shannon Entropy, SAC Avalanche & CRC16/Murmur3/xxHash)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 137.8 KB web / 17.9 KB native < 999 KB).
   - Algorithmic Expansion: Added pure C & JS CRC16 (CCITT/IBM), MurmurHash3 (32-bit), xxHash32, and HMAC-MD5.

@@ -217,14 +217,17 @@
 
         #toast-container {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 9999;
             display: flex;
             flex-direction: column-reverse;
+            align-items: center;
             gap: 8px;
             pointer-events: none;
-            max-width: 320px;
+            max-width: 440px;
+            width: 90%;
         }
         .toast {
             background: linear-gradient(135deg, rgba(42, 23, 4, 0.95), rgba(74, 40, 10, 0.95));
@@ -251,6 +254,26 @@
         @keyframes toastIn {
             from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        .relic-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(212, 175, 55, 0.2);
+            border: 1px solid #d4af37;
+            padding: 2px 7px;
+            border-radius: 4px;
+            color: #fff8db;
+            font-size: 11px;
+            font-family: monospace;
+            cursor: help;
+            transition: all 0.2s ease;
+        }
+        .relic-badge:hover {
+            background: rgba(212, 175, 55, 0.4);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4);
         }
 
         .guide-table {
@@ -318,6 +341,8 @@
         <h1>KDragon</h1>
         <div id="game-screen" style="display: none;">
             <div class="stats">
+                <div class="stat">Stage: <span id="stat-stage" style="color: #d4af37;">Hatchling</span></div>
+                <div class="stat">Mood: <span id="stat-mood">🙂 Content</span></div>
                 <div class="stat">Hunger: <span id="stat-hunger">0</span>/100</div>
                 <div class="stat">Happiness: <span id="stat-happiness">0</span>/100</div>
                 <div class="stat">Energy: <span id="stat-energy">0</span>/100</div>
@@ -466,6 +491,61 @@
                     </svg><br>
                     <button id="btn-shop-spd"><span class="btn-badge">4</span> Boots (50g)</button>
                 </div>
+                <div class="shop-card">
+                    <svg width="48" height="48" viewBox="0 0 48 48">
+                        <defs>
+                            <linearGradient id="vialGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#38d9a9"/>
+                                <stop offset="50%" stop-color="#20c997"/>
+                                <stop offset="100%" stop-color="#099268"/>
+                            </linearGradient>
+                        </defs>
+                        <!-- Dragon Nectar Potion Vial -->
+                        <rect x="21" y="6" width="6" height="5" fill="#ced4da" stroke="#495057" stroke-width="1"/>
+                        <rect x="20" y="4" width="8" height="3" fill="#8d5b4c"/>
+                        <path d="M21 11 L14 22 C12 26 12 36 16 40 C20 44 28 44 32 40 C36 36 36 26 34 22 L27 11 Z" fill="url(#vialGrad)" stroke="#087f5b" stroke-width="1.5"/>
+                        <circle cx="21" cy="28" r="2" fill="#ffffff" opacity="0.7"/>
+                        <circle cx="27" cy="33" r="1.5" fill="#ffffff" opacity="0.7"/>
+                        <ellipse cx="24" cy="22" rx="6" ry="2" fill="#a9e34b" opacity="0.6"/>
+                    </svg><br>
+                    <button id="btn-shop-nectar"><span class="btn-badge">5</span> Nectar (40g)</button>
+                </div>
+                <div class="shop-card">
+                    <svg width="48" height="48" viewBox="0 0 48 48">
+                        <defs>
+                            <linearGradient id="crownGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#ffe066"/>
+                                <stop offset="50%" stop-color="#fcc419"/>
+                                <stop offset="100%" stop-color="#e67700"/>
+                            </linearGradient>
+                        </defs>
+                        <!-- Crown of Fealty -->
+                        <path d="M10 32 L38 32 L36 18 L29 25 L24 14 L19 25 L12 18 Z" fill="url(#crownGrad)" stroke="#aa7c11" stroke-width="1.5"/>
+                        <rect x="10" y="32" width="28" height="5" fill="#aa7c11"/>
+                        <circle cx="24" cy="14" r="2.5" fill="#74c0fc"/>
+                        <circle cx="12" cy="18" r="2" fill="#ff6b6b"/>
+                        <circle cx="36" cy="18" r="2" fill="#ff6b6b"/>
+                        <circle cx="24" cy="34" r="2" fill="#ff6b6b"/>
+                    </svg><br>
+                    <button id="btn-shop-crown"><span class="btn-badge">6</span> Crown (60g)</button>
+                </div>
+                <div class="shop-card">
+                    <svg width="48" height="48" viewBox="0 0 48 48">
+                        <defs>
+                            <linearGradient id="polishGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#ffd43b"/>
+                                <stop offset="70%" stop-color="#f59f00"/>
+                                <stop offset="100%" stop-color="#d9480f"/>
+                            </linearGradient>
+                        </defs>
+                        <!-- Ancient Scale Polish Urn -->
+                        <path d="M14 16 L34 16 L38 36 L10 36 Z" fill="url(#polishGrad)" stroke="#7f1d1d" stroke-width="1.5"/>
+                        <ellipse cx="24" cy="16" rx="10" ry="4" fill="#ffec99" stroke="#aa7c11"/>
+                        <path d="M20 22 L24 18 L28 22 L24 26 Z" fill="#ffffff" opacity="0.9"/>
+                        <circle cx="24" cy="30" r="3" fill="#ffe066"/>
+                    </svg><br>
+                    <button id="btn-shop-polish"><span class="btn-badge">7</span> Polish (75g)</button>
+                </div>
                 <div class="shop-card" style="display:flex; align-items:center; justify-content:center;">
                     <button id="btn-shop-back" style="margin-top: 15px;"><span class="btn-badge">Esc</span> Back</button>
                 </div>
@@ -537,21 +617,46 @@
                     <li><b>Speed Reflex Test:</b> Press <span class="kbd-chip">Space</span> or <span class="kbd-chip">Enter</span> immediately when signaled.</li>
                     <li><b>Loyalty Cup Guess:</b> Press <span class="kbd-chip">1</span>, <span class="kbd-chip">2</span>, or <span class="kbd-chip">3</span> to choose box.</li>
                     <li><b>Battle Arena:</b> <span class="kbd-chip">1</span> Attack, <span class="kbd-chip">2</span> Defend, <span class="kbd-chip">3</span> Special, <span class="kbd-chip">4</span> Flee.</li>
-                    <li><b>Shop Items:</b> <span class="kbd-chip">1</span> Meat, <span class="kbd-chip">2</span> Toy, <span class="kbd-chip">3</span> Bracer, <span class="kbd-chip">4</span> Boots.</li>
+                    <li><b>Shop Items:</b> <span class="kbd-chip">1</span> Meat (20g), <span class="kbd-chip">2</span> Toy (30g), <span class="kbd-chip">3</span> Bracer (50g), <span class="kbd-chip">4</span> Boots (50g), <span class="kbd-chip">5</span> Nectar (40g), <span class="kbd-chip">6</span> Crown (60g), <span class="kbd-chip">7</span> Polish (75g).</li>
                 </ul>
 
-                <h3>Stats & Evolution</h3>
+                <h3>Stats, Moods &amp; Evolutions</h3>
                 <ul>
-                    <li><b>Hunger / Happiness / Energy:</b> Core needs. Keep them above 0!</li>
-                    <li><b>Strength (Str):</b> Increases battle strike power and minigame rewards.</li>
-                    <li><b>Speed (Spd):</b> Increases hit rate and evasion against enemies.</li>
-                    <li><b>Loyalty (Loy):</b> Amplifies special healing and elemental power.</li>
-                    <li><b>Evolution at Age 10:</b>
+                    <li><b>Hunger / Happiness / Energy:</b> Core needs. Keep them above 20 to avoid exhaustion or hunger pangs!</li>
+                    <li><b>Mood &amp; Temperament:</b> 
                         <ul>
-                            <li>Mostly Fed &rarr; <b>Earth Dragon</b> (Earthquake slow)</li>
-                            <li>Mostly Played &rarr; <b>Fire Dragon</b> (Devastating Fireball)</li>
-                            <li>Mostly Slept &rarr; <b>Water Dragon</b> (Healing Stream)</li>
-                            <li>Trained Rigorously (Str &amp; Spd &ge; 10 or Loy &ge; 12) &rarr; <b>Astral Dragon</b> (Starfall cosmic strike)</li>
+                            <li><b>✨ Ecstatic:</b> Happiness &ge; 80, Hunger &ge; 60, Energy &ge; 50 (+15% Critical hit chance &amp; minigame surge).</li>
+                            <li><b>🙂 Content:</b> Steady vitals; balanced performance.</li>
+                            <li><b>🥱 Exhausted:</b> Energy &lt; 20; dragon refuses strenuous training.</li>
+                            <li><b>🍖 Ravenous:</b> Hunger &lt; 20; needs nourishing food.</li>
+                            <li><b>😢 Melancholy:</b> Happiness &lt; 20; requires play or affection.</li>
+                        </ul>
+                    </li>
+                    <li><b>Strength (Str):</b> Increases battle strike power and minigame rewards.</li>
+                    <li><b>Speed (Spd):</b> Increases hit rate, reflex minigames, and evasion against enemies.</li>
+                    <li><b>Loyalty (Loy):</b> Amplifies special healing and elemental power.</li>
+                    <li><b>Evolution at Age 10 (Adult Stage):</b>
+                        <ul>
+                            <li>Mostly Fed &rarr; <b>Earth Drake</b> (Earthquake slow &amp; armor crush)</li>
+                            <li>Mostly Played &rarr; <b>Fire Drake</b> (Devastating Fireball)</li>
+                            <li>Mostly Slept &rarr; <b>Water Drake</b> (Healing Stream)</li>
+                            <li>Trained Rigorously (Str &amp; Spd &ge; 10 or Loy &ge; 12) &rarr; <b>Astral Drake</b> (Starfall cosmic strike)</li>
+                        </ul>
+                    </li>
+                    <li><b>Ascension at Age 20+ (Elder Sovereign Stage):</b>
+                        <ul>
+                            <li>At Age 20+ (or with all 6 Relics), Adult dragons ascend into majestic <b>Elder Sovereigns</b> (Infernal Overlord, Abyssal Sovereign, Titan Colossus, Empyrean Astral Dragon) featuring expansive wings, crown horns, and cataclysmic combat specials!</li>
+                        </ul>
+                    </li>
+                    <li><b>Active Hoard Relic Perks:</b>
+                        <ul>
+                            <li><b>🛡️ Shiny Scale:</b> +20 Max Battle HP &amp; +15% Critical strike rate.</li>
+                            <li><b>💎 Gemstone:</b> +50% Expedition Gold yield &amp; +5 extra Happiness.</li>
+                            <li><b>🦴 Old Bone:</b> +1 Bonus Stat point on every training exercise.</li>
+                            <li><b>🥚 Mystery Eggshell:</b> 20% Gold discount on all Merchant Shop items.</li>
+                            <li><b>🦷 Dragon Fang:</b> +4 Piercing Attack damage in battles.</li>
+                            <li><b>⭐ Star Fragment:</b> +25% Elemental Special attack power.</li>
+                            <li><b>👑 Complete Hoard (6/6):</b> Sovereign Aura grants +10 to all stats and unlocks immediate Elder Ascension!</li>
                         </ul>
                     </li>
                     <li><b>Elemental Affinities:</b>
@@ -559,10 +664,9 @@
                             <li><b>Fire</b> deals +40% vs Frost/Ice beasts.</li>
                             <li><b>Water</b> deals +40% vs Fire/Magma drakes.</li>
                             <li><b>Earth</b> deals +30% vs Physical/Ground foes.</li>
-                            <li><b>Astral</b> deals +50% vs Shadow creatures.</li>
+                            <li><b>Astral</b> deals +50% vs Shadow &amp; Void creatures.</li>
                         </ul>
                     </li>
-                    <li><b>Sacred Hoard Relics:</b> Collect all 6 rare artifacts on expeditions to achieve Treasure Sovereign status!</li>
                 </ul>
                 <div style="text-align: center; margin-top: 20px;">
                     <button id="btn-close-help-bottom" style="padding: 10px 24px; font-size: 15px;"><span class="btn-badge">Esc</span> Got It / Return to Game</button>
@@ -1011,7 +1115,55 @@
                     [440, 392, 349.23, 311.13, 261.63].forEach((f, idx) => {
                         setTimeout(() => this.playFM(f, 1.5, 1.0, 0.35, 'triangle', false, 0.16), idx * 130);
                     });
+                } else if (name === 'lightning') {
+                    this.playFM(650, 4.2, 5.0, 0.22, 'sawtooth', false, 0.24);
+                    setTimeout(() => this.playFM(920, 2.5, 3.0, 0.25, 'sawtooth', true, 0.2), 60);
+                } else if (name === 'supernova') {
+                    this.playFM(120, 1.25, 6.0, 0.7, 'sawtooth', true, 0.32);
+                    setTimeout(() => this.playFM(60, 0.5, 7.0, 0.8, 'triangle', true, 0.3), 120);
+                } else if (name === 'relic') {
+                    [587.33, 739.99, 880.0, 1174.66, 1479.98].forEach((f, idx) => {
+                        setTimeout(() => this.playFM(f, 3.0, 1.0, 0.3, 'sine', true, 0.15), idx * 70);
+                    });
+                } else if (name === 'perk') {
+                    this.playFM(1046.5, 3.5, 1.5, 0.15, 'sine', true, 0.16);
+                    setTimeout(() => this.playFM(1567.98, 3.5, 1.2, 0.28, 'sine', true, 0.18), 80);
                 }
+            }
+        };
+
+        const RELIC_DATA = {
+            "Shiny Scale": {
+                icon: "🛡️",
+                desc: "+20 Max Battle HP & +15% Critical strike rate",
+                hpBonus: 20,
+                critBonus: 0.15
+            },
+            "Gemstone": {
+                icon: "💎",
+                desc: "+50% Expedition Gold yield & +5 extra Happiness",
+                goldMultiplier: 1.5,
+                extraHappy: 5
+            },
+            "Old Bone": {
+                icon: "🦴",
+                desc: "+1 Bonus Stat point on every training exercise",
+                trainBonus: 1
+            },
+            "Mystery Eggshell": {
+                icon: "🥚",
+                desc: "20% Gold discount on all Merchant Shop items",
+                discount: 0.20
+            },
+            "Dragon Fang": {
+                icon: "🦷",
+                desc: "+4 Piercing Attack damage in battles",
+                atkBonus: 4
+            },
+            "Star Fragment": {
+                icon: "⭐",
+                desc: "+25% Elemental Special attack power",
+                specialMultiplier: 1.25
             }
         };
 
@@ -1062,6 +1214,21 @@
                 specialName: 'Lava Torrent'
             },
             {
+                id: 'thunder',
+                name: 'Thunderbird Wyvern',
+                title: 'Storm Sovereign',
+                element: 'Lightning',
+                color: '#fcc419',
+                palette1: 'rgb(180,140,10)',
+                palette2: 'rgb(255,230,70)',
+                minAge: 6,
+                bonusGold: 30,
+                strMod: 2,
+                spdMod: 6,
+                hpMod: -5,
+                specialName: 'Thunderbolt Tempest'
+            },
+            {
                 id: 'golem',
                 name: 'Ironclad Stone Golem',
                 title: 'Ancient Sentinel',
@@ -1092,6 +1259,21 @@
                 specialName: 'Shadow Claw'
             },
             {
+                id: 'leviathan',
+                name: 'Abyssal Leviathan',
+                title: 'Trench Tyrant',
+                element: 'Water',
+                color: '#15aabf',
+                palette1: 'rgb(10,70,110)',
+                palette2: 'rgb(30,160,210)',
+                minAge: 10,
+                bonusGold: 45,
+                strMod: 4,
+                spdMod: -2,
+                hpMod: 45,
+                specialName: 'Maelstrom Surge'
+            },
+            {
                 id: 'titan',
                 name: 'Ancient Titan Drake',
                 title: 'Apex Sovereign',
@@ -1105,6 +1287,21 @@
                 spdMod: 4,
                 hpMod: 60,
                 specialName: 'Celestial Cataclysm'
+            },
+            {
+                id: 'void',
+                name: 'Void Dreadnought',
+                title: 'Cosmic Devourer',
+                element: 'Astral',
+                color: '#be4bdb',
+                palette1: 'rgb(80,10,110)',
+                palette2: 'rgb(190,60,230)',
+                minAge: 15,
+                bonusGold: 75,
+                strMod: 7,
+                spdMod: 5,
+                hpMod: 70,
+                specialName: 'Antimatter Singularity'
             }
         ];
 
@@ -1144,7 +1341,72 @@
             minigameTimeout: null,
             minigameValue: 0,
             battleState: null,
-            eventTimeout: null,
+            hasRelic(name) {
+                return !!(this.stats.relics && this.stats.relics.includes(name));
+            },
+
+            getItemPrice(type) {
+                const basePrices = {
+                    food: 20,
+                    toy: 30,
+                    str: 50,
+                    spd: 50,
+                    nectar: 40,
+                    crown: 60,
+                    polish: 75
+                };
+                const base = basePrices[type] || 50;
+                return this.hasRelic("Mystery Eggshell") ? Math.round(base * 0.8) : base;
+            },
+
+            getMood() {
+                if (this.state === 'egg') return { label: 'Dormant', icon: '🥚', color: '#ffd700' };
+                if (this.stats.hunger < 20) return { label: 'Ravenous', icon: '🍖', color: '#ff6b6b' };
+                if (this.stats.energy < 20) return { label: 'Exhausted', icon: '🥱', color: '#ffa94d' };
+                if (this.stats.happiness < 20) return { label: 'Melancholy', icon: '😢', color: '#74c0fc' };
+                if (this.stats.happiness >= 80 && this.stats.hunger >= 60 && this.stats.energy >= 50) {
+                    return { label: 'Ecstatic', icon: '✨', color: '#ffd700' };
+                }
+                return { label: 'Content', icon: '🙂', color: '#69db7c' };
+            },
+
+            getStageTitle() {
+                if (this.state === 'egg') return 'Mystic Egg';
+                if (this.state === 'dragon') return 'Hatchling';
+                if (this.state === 'adult') {
+                    return `${this.element} Drake`;
+                }
+                if (this.state === 'elder') {
+                    const titles = {
+                        Fire: 'Infernal Overlord',
+                        Water: 'Abyssal Sovereign',
+                        Earth: 'Titan Colossus',
+                        Astral: 'Empyrean Dragon'
+                    };
+                    return titles[this.element] || 'Elder Sovereign';
+                }
+                return 'Dragon';
+            },
+
+            refreshShopUI() {
+                const hasDiscount = this.hasRelic("Mystery Eggshell");
+                const pFood = this.getItemPrice('food');
+                const pToy = this.getItemPrice('toy');
+                const pStr = this.getItemPrice('str');
+                const pSpd = this.getItemPrice('spd');
+                const pNectar = this.getItemPrice('nectar');
+                const pCrown = this.getItemPrice('crown');
+                const pPolish = this.getItemPrice('polish');
+
+                const disc = hasDiscount ? ' 🏷️' : '';
+                document.getElementById('btn-shop-food').innerHTML = `<span class="btn-badge">1</span> Meat (${pFood}g)${disc}`;
+                document.getElementById('btn-shop-toy').innerHTML = `<span class="btn-badge">2</span> Toy (${pToy}g)${disc}`;
+                document.getElementById('btn-shop-str').innerHTML = `<span class="btn-badge">3</span> Bracer (${pStr}g)${disc}`;
+                document.getElementById('btn-shop-spd').innerHTML = `<span class="btn-badge">4</span> Boots (${pSpd}g)${disc}`;
+                document.getElementById('btn-shop-nectar').innerHTML = `<span class="btn-badge">5</span> Nectar (${pNectar}g)${disc}`;
+                document.getElementById('btn-shop-crown').innerHTML = `<span class="btn-badge">6</span> Crown (${pCrown}g)${disc}`;
+                document.getElementById('btn-shop-polish').innerHTML = `<span class="btn-badge">7</span> Polish (${pPolish}g)${disc}`;
+            },
             
             showToast(text, type = 'info', duration = 3500) {
                 let tc = document.getElementById('toast-container');
@@ -1408,6 +1670,7 @@
                 document.getElementById('btn-shop').addEventListener('click', () => {
                     if (this.state === 'egg') return;
                     this.isBusy = true;
+                    this.refreshShopUI();
                     document.getElementById('controls').style.display = 'none';
                     document.getElementById('shop-controls').style.display = 'flex';
                 });
@@ -1538,7 +1801,10 @@
                         else if (e.key === '2') { e.preventDefault(); this.buyItem('toy'); }
                         else if (e.key === '3') { e.preventDefault(); this.buyItem('str'); }
                         else if (e.key === '4') { e.preventDefault(); this.buyItem('spd'); }
-                        else if (e.key === '5' || e.key.toLowerCase() === 'b') { e.preventDefault(); document.getElementById('btn-shop-back').click(); }
+                        else if (e.key === '5') { e.preventDefault(); this.buyItem('nectar'); }
+                        else if (e.key === '6') { e.preventDefault(); this.buyItem('crown'); }
+                        else if (e.key === '7') { e.preventDefault(); this.buyItem('polish'); }
+                        else if (e.key === '8' || e.key.toLowerCase() === 'b') { e.preventDefault(); document.getElementById('btn-shop-back').click(); }
                         return;
                     }
                     if (document.getElementById('train-controls').style.display === 'flex') {
@@ -1588,6 +1854,9 @@
                 document.getElementById('btn-shop-toy').addEventListener('click', () => this.buyItem('toy'));
                 document.getElementById('btn-shop-str').addEventListener('click', () => this.buyItem('str'));
                 document.getElementById('btn-shop-spd').addEventListener('click', () => this.buyItem('spd'));
+                document.getElementById('btn-shop-nectar')?.addEventListener('click', () => this.buyItem('nectar'));
+                document.getElementById('btn-shop-crown')?.addEventListener('click', () => this.buyItem('crown'));
+                document.getElementById('btn-shop-polish')?.addEventListener('click', () => this.buyItem('polish'));
                 
                 document.getElementById('btn-battle-attack').addEventListener('click', () => this.battleTurn('attack'));
                 document.getElementById('btn-battle-defend').addEventListener('click', () => this.battleTurn('defend'));
@@ -1640,10 +1909,26 @@
                 document.getElementById('stat-loyalty').innerText = this.stats.loyalty;
                 document.getElementById('stat-gold').innerText = this.stats.gold;
 
+                const stageEl = document.getElementById('stat-stage');
+                if (stageEl) stageEl.innerText = this.getStageTitle();
+
+                const mood = this.getMood();
+                const moodEl = document.getElementById('stat-mood');
+                if (moodEl) {
+                    moodEl.innerHTML = `<span style="color:${mood.color}; font-weight:bold;">${mood.icon} ${mood.label}</span>`;
+                }
+
                 const relicsEl = document.getElementById('relics-list');
                 if (relicsEl) {
                     if (this.stats.relics && this.stats.relics.length > 0) {
-                        relicsEl.innerHTML = this.stats.relics.map(r => `<span style="background:rgba(212,175,55,0.25); border:1px solid #d4af37; padding:1px 6px; border-radius:3px; color:#fff8db; margin-right:4px;">✨ ${r}</span>`).join('');
+                        let html = this.stats.relics.map(r => {
+                            const data = RELIC_DATA[r] || { icon: '✨', desc: 'Ancient Relic' };
+                            return `<span class="relic-badge" title="${r}: ${data.desc}">${data.icon} ${r}</span>`;
+                        }).join(' ');
+                        if (this.stats.relics.length === 6) {
+                            html += ` <span class="relic-badge" style="border-color:#ffd700; color:#ffd700; font-weight:bold;" title="👑 Complete Hoard: Sovereign Aura Active! Unlocks Elder Ascension at Age 20.">👑 SOVEREIGN AURA</span>`;
+                        }
+                        relicsEl.innerHTML = html;
                     } else {
                         relicsEl.innerText = '(None discovered yet — Send expeditions!)';
                     }
@@ -1731,7 +2016,7 @@
   <rect x="9" y="12" width="2" height="1" fill="rgb(30,100,30)" />
 </svg>`;
                 } else if (this.state === 'adult') {
-                    playerSvg = `<svg id="player-svg" class="bobbing" width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                    let adultBaseSvg = `<svg id="player-svg" class="bobbing" width="128" height="128" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
   <rect x="5" y="1" width="2" height="1" fill="rgb(180,30,30)" />
   <rect x="4" y="2" width="1" height="1" fill="rgb(180,30,30)" />
   <rect x="5" y="2" width="2" height="1" fill="rgb(220,60,60)" />
@@ -1778,11 +2063,66 @@
   <rect x="9" y="13" width="4" height="1" fill="rgb(180,30,30)" />
 </svg>`;
                     if (this.element === 'Water') {
-                        playerSvg = playerSvg.replace(/rgb\(180,30,30\)/g, "rgb(30,60,180)").replace(/rgb\(220,60,60\)/g, "rgb(60,120,220)");
+                        playerSvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(30,60,180)").replace(/rgb\(220,60,60\)/g, "rgb(60,120,220)");
                     } else if (this.element === 'Earth') {
-                        playerSvg = playerSvg.replace(/rgb\(180,30,30\)/g, "rgb(100,60,30)").replace(/rgb\(220,60,60\)/g, "rgb(150,100,60)");
+                        playerSvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(100,60,30)").replace(/rgb\(220,60,60\)/g, "rgb(150,100,60)");
                     } else if (this.element === 'Astral') {
-                        playerSvg = playerSvg.replace(/rgb\(180,30,30\)/g, "rgb(180,130,20)").replace(/rgb\(220,60,60\)/g, "rgb(255,215,60)");
+                        playerSvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(180,130,20)").replace(/rgb\(220,60,60\)/g, "rgb(255,215,60)");
+                    } else {
+                        playerSvg = adultBaseSvg;
+                    }
+                } else if (this.state === 'elder') {
+                    let elderBaseSvg = `<svg id="player-svg" class="bobbing" width="136" height="136" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <rect x="2" y="0" width="1" height="2" fill="rgb(255,215,60)" />
+  <rect x="13" y="0" width="1" height="2" fill="rgb(255,215,60)" />
+  <rect x="3" y="1" width="1" height="2" fill="rgb(180,30,30)" />
+  <rect x="12" y="1" width="1" height="2" fill="rgb(180,30,30)" />
+  <rect x="4" y="2" width="2" height="1" fill="rgb(220,60,60)" />
+  <rect x="7" y="1" width="2" height="1" fill="rgb(255,215,60)" />
+  <rect x="10" y="2" width="2" height="1" fill="rgb(220,60,60)" />
+  <rect x="4" y="3" width="8" height="2" fill="rgb(220,60,60)" />
+  <rect x="3" y="3" width="1" height="3" fill="rgb(180,30,30)" />
+  <rect x="12" y="3" width="1" height="3" fill="rgb(180,30,30)" />
+  <rect x="5" y="4" width="1" height="1" fill="rgb(255,255,255)" />
+  <rect x="6" y="4" width="1" height="1" fill="rgb(255,230,80)" />
+  <rect x="9" y="4" width="1" height="1" fill="rgb(255,230,80)" />
+  <rect x="10" y="4" width="1" height="1" fill="rgb(255,255,255)" />
+  <rect x="6" y="5" width="4" height="1" fill="rgb(180,30,30)" />
+  <rect x="7" y="5" width="2" height="1" fill="rgb(255,255,230)" />
+  <rect x="0" y="4" width="2" height="1" fill="rgb(180,30,30)" />
+  <rect x="14" y="4" width="2" height="1" fill="rgb(180,30,30)" />
+  <rect x="0" y="5" width="3" height="1" fill="rgb(220,60,60)" />
+  <rect x="13" y="5" width="3" height="1" fill="rgb(220,60,60)" />
+  <rect x="1" y="6" width="3" height="2" fill="rgb(220,60,60)" />
+  <rect x="12" y="6" width="3" height="2" fill="rgb(220,60,60)" />
+  <rect x="0" y="6" width="1" height="2" fill="rgb(180,30,30)" />
+  <rect x="15" y="6" width="1" height="2" fill="rgb(180,30,30)" />
+  <rect x="4" y="6" width="8" height="5" fill="rgb(220,60,60)" />
+  <rect x="5" y="6" width="6" height="1" fill="rgb(255,100,80)" />
+  <rect x="7" y="7" width="2" height="2" fill="rgb(255,230,80)" />
+  <rect x="7" y="8" width="2" height="1" fill="rgb(255,255,255)" />
+  <rect x="5" y="9" width="6" height="1" fill="rgb(180,30,30)" />
+  <rect x="6" y="10" width="4" height="1" fill="rgb(180,30,30)" />
+  <rect x="3" y="10" width="3" height="2" fill="rgb(180,30,30)" />
+  <rect x="10" y="10" width="3" height="2" fill="rgb(180,30,30)" />
+  <rect x="4" y="11" width="8" height="2" fill="rgb(220,60,60)" />
+  <rect x="2" y="13" width="3" height="2" fill="rgb(180,30,30)" />
+  <rect x="11" y="13" width="3" height="2" fill="rgb(180,30,30)" />
+  <rect x="2" y="15" width="1" height="1" fill="rgb(255,215,60)" />
+  <rect x="4" y="15" width="1" height="1" fill="rgb(255,215,60)" />
+  <rect x="11" y="15" width="1" height="1" fill="rgb(255,215,60)" />
+  <rect x="13" y="15" width="1" height="1" fill="rgb(255,215,60)" />
+  <rect x="7" y="13" width="2" height="2" fill="rgb(180,30,30)" />
+  <rect x="7" y="15" width="2" height="1" fill="rgb(255,100,80)" />
+</svg>`;
+                    if (this.element === 'Water') {
+                        playerSvg = elderBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(20,60,160)").replace(/rgb\(220,60,60\)/g, "rgb(50,130,230)").replace(/rgb\(255,100,80\)/g, "rgb(100,200,255)").replace(/rgb\(255,215,60\)/g, "rgb(120,230,255)");
+                    } else if (this.element === 'Earth') {
+                        playerSvg = elderBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(90,50,20)").replace(/rgb\(220,60,60\)/g, "rgb(150,90,40)").replace(/rgb\(255,100,80\)/g, "rgb(200,140,80)").replace(/rgb\(255,215,60\)/g, "rgb(212,175,55)");
+                    } else if (this.element === 'Astral') {
+                        playerSvg = elderBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(140,40,180)").replace(/rgb\(220,60,60\)/g, "rgb(200,90,240)").replace(/rgb\(255,100,80\)/g, "rgb(255,215,80)").replace(/rgb\(255,215,60\)/g, "rgb(255,255,180)");
+                    } else {
+                        playerSvg = elderBaseSvg;
                     }
                 }
                 
@@ -1835,26 +2175,16 @@
 </svg>`;
                     const p1 = this.battleState.enemy?.palette1 || "rgb(128,0,128)";
                     const p2 = this.battleState.enemy?.palette2 || "rgb(180,50,180)";
-                    const enemySvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, p1).replace(/rgb\(220,60,60\)/g, p2).replace('id="player-svg"', 'id="enemy-svg"');
-
-                    if (this.element === 'Water') {
-                        playerSvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(30,60,180)").replace(/rgb\(220,60,60\)/g, "rgb(60,120,220)");
-                    } else if (this.element === 'Earth') {
-                        playerSvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(100,60,30)").replace(/rgb\(220,60,60\)/g, "rgb(150,100,60)");
-                    } else if (this.element === 'Astral') {
-                        playerSvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, "rgb(180,130,20)").replace(/rgb\(220,60,60\)/g, "rgb(255,215,60)");
-                    } else {
-                        playerSvg = adultBaseSvg;
-                    }
+                    let enemySvg = adultBaseSvg.replace(/rgb\(180,30,30\)/g, p1).replace(/rgb\(220,60,60\)/g, p2).replace('id="player-svg"', 'id="enemy-svg"');
 
                     const playerPct = Math.max(0, Math.min(100, Math.round((this.battleState.playerHp / this.battleState.playerMaxHp) * 100)));
                     const enemyPct = Math.max(0, Math.min(100, Math.round((this.battleState.enemyHp / this.battleState.enemyMaxHp) * 100)));
 
                     document.getElementById('entity-art').innerHTML = `
-                        <div style="display:flex; flex-direction:column; align-items:center; gap:8px; width:100%;">
+                        <div style="display:flex; flex-direction:column; align-items:center; gap:8px; width:100%; position:relative;">
                             <div style="display:flex; justify-content:space-between; width:380px; align-items:flex-end;">
                                 <div style="display:flex; flex-direction:column; align-items:center;">
-                                    <span style="font-size:12px; font-weight:bold; color:#f7e0b5; margin-bottom:2px;">Your Dragon (${this.element})</span>
+                                    <span style="font-size:12px; font-weight:bold; color:#f7e0b5; margin-bottom:2px;">${this.getStageTitle()} (${this.element})</span>
                                     ${playerSvg}
                                 </div>
                                 <div style="font-weight:900; color:#ff4444; font-size:26px; font-family:'Cinzel',serif; text-shadow:0 0 8px rgba(255,0,0,0.6); margin-bottom:40px;">VS</div>
@@ -1949,10 +2279,12 @@
                     this.updateUI();
                     
                     setTimeout(() => {
-                        let foundGold = Math.floor(Math.random() * 20) + 10;
+                        let baseGold = Math.floor(Math.random() * 20) + 10;
+                        let foundGold = this.hasRelic("Gemstone") ? Math.floor(baseGold * 1.5) : baseGold;
                         this.stats.gold += foundGold;
-                        this.stats.happiness = Math.min(100, this.stats.happiness + 5);
-                        this.log(`Dragon returned with ${foundGold} gold!`);
+                        let extraHappy = this.hasRelic("Gemstone") ? 5 : 0;
+                        this.stats.happiness = Math.min(100, this.stats.happiness + 5 + extraHappy);
+                        this.log(`Dragon returned with ${foundGold} gold!${this.hasRelic("Gemstone") ? ' (Gemstone +50% hoard bonus)' : ''}`);
                         this.showToast(`🗺️ Expedition success! Found +${foundGold} gold.`, "gold");
                         AudioEngine.playPreset('gold');
                         VFX.addFloatingText(width / 2, height / 2 - 50, `+${foundGold} Gold`, "#ffd700", 18);
@@ -2013,6 +2345,8 @@
                         clearInterval(this.minigameInterval);
                         document.getElementById('btn-str-hit').onclick = null;
                         let gain = Math.floor(this.minigameValue / 20);
+                        if (this.hasRelic("Old Bone")) gain += 1;
+                        if (this.getMood() === 'Ecstatic') gain += 1;
                         this.stats.strength += gain;
                         this.log(`You hit with power ${this.minigameValue}! Strength +${gain}`);
                         this.showToast(`⚔️ Power Strike: ${this.minigameValue}! Strength +${gain}`, "gold");
@@ -2057,6 +2391,8 @@
                             document.getElementById('btn-spd-react').onclick = null;
                             let time = Date.now() - this.minigameValue;
                             let gain = time < 300 ? 5 : (time < 500 ? 3 : 1);
+                            if (this.hasRelic("Old Bone")) gain += 1;
+                            if (this.getMood() === 'Ecstatic') gain += 1;
                             this.stats.speed += gain;
                             this.log(`Reaction time: ${time}ms! Speed +${gain}`);
                             this.showToast(`⚡ Reaction: ${time}ms! Speed +${gain}`, "gold");
@@ -2076,17 +2412,19 @@
                             pickedDone = true;
                             let picked = parseInt(btn.getAttribute('data-box'));
                             if (picked === correctBox) {
-                                this.stats.loyalty += 5;
-                                this.log("You found the treat! Loyalty +5");
-                                this.showToast("🎉 You found the treat! Loyalty +5", "gold");
+                                let gain = 5 + (this.hasRelic("Old Bone") ? 1 : 0) + (this.getMood() === 'Ecstatic' ? 1 : 0);
+                                this.stats.loyalty += gain;
+                                this.log(`You found the treat! Loyalty +${gain}`);
+                                this.showToast(`🎉 You found the treat! Loyalty +${gain}`, "gold");
                                 AudioEngine.playPreset('gold');
-                                VFX.addFloatingText(width / 2, height / 2 - 40, "+5 Loyalty", "#69db7c", 20);
+                                VFX.addFloatingText(width / 2, height / 2 - 40, `+${gain} Loyalty`, "#69db7c", 20);
                             } else {
-                                this.stats.loyalty += 1;
-                                this.log("Empty box. Loyalty +1");
-                                this.showToast("Empty box. Loyalty +1", "info");
+                                let gain = 1 + (this.hasRelic("Old Bone") ? 1 : 0);
+                                this.stats.loyalty += gain;
+                                this.log(`Empty box. Loyalty +${gain}`);
+                                this.showToast(`Empty box. Loyalty +${gain}`, "info");
                                 AudioEngine.playPreset('click');
-                                VFX.addFloatingText(width / 2, height / 2 - 40, "+1 Loyalty", "#8ce99a", 16);
+                                VFX.addFloatingText(width / 2, height / 2 - 40, `+${gain} Loyalty`, "#8ce99a", 16);
                             }
                             this.endMinigame('loy');
                         };
@@ -2096,11 +2434,12 @@
             
             buyItem(type) {
                 if (type === 'food') {
-                    if (this.stats.gold >= 20) {
-                        this.stats.gold -= 20;
+                    const price = this.getItemPrice(20);
+                    if (this.stats.gold >= price) {
+                        this.stats.gold -= price;
                         this.stats.hunger = Math.min(100, this.stats.hunger + 50);
                         this.stats.energy = Math.min(100, this.stats.energy + 20);
-                        this.log("Bought Premium Meat! Hunger +50, Energy +20.");
+                        this.log(`Bought Premium Meat (${price}g)! Hunger +50, Energy +20.`);
                         this.showToast("🍖 Bought Premium Meat! (+50 Hunger, +20 Energy)", "success");
                         AudioEngine.playPreset('munch');
                         VFX.addFloatingText(width / 2, height / 2 - 50, "+50 Hunger", "#ff6b6b", 16);
@@ -2110,11 +2449,12 @@
                         AudioEngine.playPreset('click');
                     }
                 } else if (type === 'toy') {
-                    if (this.stats.gold >= 30) {
-                        this.stats.gold -= 30;
+                    const price = this.getItemPrice(30);
+                    if (this.stats.gold >= price) {
+                        this.stats.gold -= price;
                         this.stats.happiness = Math.min(100, this.stats.happiness + 50);
                         this.stats.energy = Math.min(100, this.stats.energy + 10);
-                        this.log("Bought Mystery Toy! Happiness +50, Energy +10.");
+                        this.log(`Bought Mystery Toy (${price}g)! Happiness +50, Energy +10.`);
                         this.showToast("🔮 Bought Mystery Toy! (+50 Happiness, +10 Energy)", "success");
                         AudioEngine.playPreset('gold');
                         VFX.addFloatingText(width / 2, height / 2 - 50, "+50 Happiness", "#ffd43b", 16);
@@ -2124,10 +2464,11 @@
                         AudioEngine.playPreset('click');
                     }
                 } else if (type === 'str') {
-                    if (this.stats.gold >= 50) {
-                        this.stats.gold -= 50;
+                    const price = this.getItemPrice(50);
+                    if (this.stats.gold >= price) {
+                        this.stats.gold -= price;
                         this.stats.strength += 5;
-                        this.log("Bought Power Bracer! Strength +5.");
+                        this.log(`Bought Power Bracer (${price}g)! Strength +5.`);
                         this.showToast("🛡️ Bought Power Bracer! (+5 Strength)", "gold");
                         AudioEngine.playPreset('clash');
                         VFX.addFloatingText(width / 2, height / 2 - 50, "+5 Strength", "#ffd700", 18);
@@ -2137,10 +2478,11 @@
                         AudioEngine.playPreset('click');
                     }
                 } else if (type === 'spd') {
-                    if (this.stats.gold >= 50) {
-                        this.stats.gold -= 50;
+                    const price = this.getItemPrice(50);
+                    if (this.stats.gold >= price) {
+                        this.stats.gold -= price;
                         this.stats.speed += 5;
-                        this.log("Bought Swift Boots! Speed +5.");
+                        this.log(`Bought Swift Boots (${price}g)! Speed +5.`);
                         this.showToast("🥾 Bought Swift Boots! (+5 Speed)", "gold");
                         AudioEngine.playPreset('starfall');
                         VFX.addFloatingText(width / 2, height / 2 - 50, "+5 Speed", "#74c0fc", 18);
@@ -2149,8 +2491,58 @@
                         this.showToast("Not enough gold!", "warn");
                         AudioEngine.playPreset('click');
                     }
+                } else if (type === 'nectar') {
+                    const price = this.getItemPrice(40);
+                    if (this.stats.gold >= price) {
+                        this.stats.gold -= price;
+                        this.stats.energy = 100;
+                        this.stats.hunger = Math.min(100, this.stats.hunger + 30);
+                        this.stats.happiness = Math.min(100, this.stats.happiness + 20);
+                        this.log(`Consumed Dragon Nectar (${price}g)! Energy restored to MAX (100).`);
+                        this.showToast("🍯 Consumed Dragon Nectar! (Energy 100%, +30 Hunger)", "success");
+                        AudioEngine.playPreset('heal');
+                        VFX.addFloatingText(width / 2, height / 2 - 50, "ENERGY MAX", "#74c0fc", 20);
+                        this.spawnParticles('#74c0fc', 20);
+                    } else {
+                        this.log("Not enough gold.");
+                        this.showToast("Not enough gold!", "warn");
+                        AudioEngine.playPreset('click');
+                    }
+                } else if (type === 'crown') {
+                    const price = this.getItemPrice(60);
+                    if (this.stats.gold >= price) {
+                        this.stats.gold -= price;
+                        this.stats.loyalty += 8;
+                        this.stats.happiness = 100;
+                        this.log(`Gifted Crown of Fealty (${price}g)! Loyalty +8, Happiness MAX.`);
+                        this.showToast("👑 Gifted Crown of Fealty! (+8 Loyalty, Happiness 100%)", "gold");
+                        AudioEngine.playPreset('gold');
+                        VFX.addFloatingText(width / 2, height / 2 - 50, "+8 Loyalty / MAX Happy", "#ffd700", 20);
+                        this.spawnParticles('#ffd700', 25);
+                    } else {
+                        this.log("Not enough gold.");
+                        this.showToast("Not enough gold!", "warn");
+                        AudioEngine.playPreset('click');
+                    }
+                } else if (type === 'polish') {
+                    const price = this.getItemPrice(75);
+                    if (this.stats.gold >= price) {
+                        this.stats.gold -= price;
+                        this.stats.strength += 4;
+                        this.stats.speed += 4;
+                        this.log(`Applied Scale Polish (${price}g)! Strength +4, Speed +4.`);
+                        this.showToast("✨ Applied Scale Polish! (+4 Strength, +4 Speed)", "gold");
+                        AudioEngine.playPreset('starfall');
+                        VFX.addFloatingText(width / 2, height / 2 - 50, "+4 Str / +4 Spd", "#e599f7", 20);
+                        this.spawnParticles('#e599f7', 25);
+                    } else {
+                        this.log("Not enough gold.");
+                        this.showToast("Not enough gold!", "warn");
+                        AudioEngine.playPreset('click');
+                    }
                 }
                 this.updateUI();
+                this.refreshShopUI();
             },
             
             startBattle() {
@@ -2169,15 +2561,19 @@
                 const enemySpd = Math.max(4, this.stats.speed + enemy.spdMod + Math.floor(Math.random() * 4));
                 const enemyMaxHp = Math.max(50, 100 + enemyStr * 5 + enemy.hpMod);
 
+                let playerMaxHp = 100 + this.stats.strength * 5;
+                if (this.hasRelic("Shiny Scale")) playerMaxHp += 20;
+                if (this.state === 'elder') playerMaxHp += 50;
+
                 this.battleState = {
-                    playerMaxHp: 100 + this.stats.strength * 5,
+                    playerMaxHp,
+                    playerHp: playerMaxHp,
                     enemyStr,
                     enemySpd,
                     enemyMaxHp,
                     enemyHp: enemyMaxHp,
                     enemy
                 };
-                this.battleState.playerHp = this.battleState.playerMaxHp;
                 
                 this.log(`⚔️ Confronting ${enemy.name} (${enemy.title})! (HP: ${enemyMaxHp}, Element: ${enemy.element})`);
                 this.showToast(`⚔️ <b>Battle!</b> Confronting <b>${enemy.name}</b> (${enemy.element})`, "warn");
@@ -2222,23 +2618,39 @@
                     let hitChance = 0.8 + (this.stats.speed - this.battleState.enemySpd) * 0.05;
                     if (Math.random() < hitChance) {
                         let dmg = Math.max(1, this.stats.strength * 2 + Math.floor(Math.random() * 5));
+                        if (this.hasRelic("Dragon Fang")) dmg += 4;
+                        if (this.state === 'elder') dmg += 3;
+                        let isCrit = false;
+                        if (this.hasRelic("Shiny Scale") && Math.random() < 0.20) {
+                            dmg = Math.floor(dmg * 1.6);
+                            isCrit = true;
+                        }
                         if (enemyDefending) dmg = Math.floor(dmg / 2);
                         this.battleState.enemyHp -= dmg;
-                        this.log(`You hit ${enemy.name} for ${dmg} damage! (Enemy HP: ${Math.max(0, this.battleState.enemyHp)}/${this.battleState.enemyMaxHp})`);
-                        AudioEngine.playPreset('clash');
+                        this.log(`You hit ${enemy.name} for ${dmg} damage!${isCrit ? ' (CRITICAL STRIKE!)' : ''} (Enemy HP: ${Math.max(0, this.battleState.enemyHp)}/${this.battleState.enemyMaxHp})`);
+                        if (isCrit) {
+                            AudioEngine.playPreset('perk');
+                            VFX.addShockwave(eX, eY, '#ffd700', 80);
+                            VFX.addFloatingText(eX, eY - 45, "CRITICAL HIT!", '#ffd700', 16);
+                        } else {
+                            AudioEngine.playPreset('clash');
+                        }
                         this.triggerAnim('player', 'attacking');
-                        VFX.addFloatingText(eX, eY - 20, `-${dmg}`, '#ff4444', 18);
+                        VFX.addFloatingText(eX, eY - 20, `-${dmg}`, isCrit ? '#ffd700' : '#ff4444', isCrit ? 22 : 18);
                         setTimeout(() => {
                             this.triggerAnim('enemy', 'shaking');
-                            this.spawnParticles('#ff0000', 10, 'enemy');
+                            this.spawnParticles(isCrit ? '#ffd700' : '#ff0000', 12, 'enemy');
                         }, 150);
                     } else {
                         this.log("You missed!");
                         VFX.addFloatingText(eX, eY - 20, "MISS", "#adb5bd", 14);
                     }
                 } else if (action === 'special') {
+                    const starBonus = this.hasRelic("Star Fragment") ? 1.25 : 1.0;
                     if (this.element === 'Fire') {
-                        let dmg = Math.max(1, this.stats.strength * 3 + 10);
+                        let isElder = (this.state === 'elder');
+                        let baseDmg = isElder ? (this.stats.strength * 4 + 25) : (this.stats.strength * 3 + 10);
+                        let dmg = Math.max(1, Math.round(baseDmg * starBonus));
                         if (enemy.element === 'Water') {
                             dmg = Math.floor(dmg * 1.4);
                             this.log(`🔥 ELEMENTAL ADVANTAGE! Fire scorched ${enemy.name}!`);
@@ -2249,66 +2661,85 @@
                         }
                         if (enemyDefending) dmg = Math.floor(dmg / 2);
                         this.battleState.enemyHp -= dmg;
-                        this.log(`You unleashed Fireball! Dealt ${dmg} damage. (Enemy HP: ${Math.max(0, this.battleState.enemyHp)}/${this.battleState.enemyMaxHp})`);
-                        AudioEngine.playPreset('fireball');
+                        const attackName = isElder ? "CATACLYSMIC SUPERNOVA" : "Fireball";
+                        this.log(`You unleashed ${attackName}! Dealt ${dmg} damage.${this.hasRelic("Star Fragment") ? ' (Star Fragment +25%)' : ''} (Enemy HP: ${Math.max(0, this.battleState.enemyHp)}/${this.battleState.enemyMaxHp})`);
+                        AudioEngine.playPreset(isElder ? 'supernova' : 'fireball');
                         this.triggerAnim('player', 'attacking');
-                        VFX.addShake(6);
-                        VFX.addFloatingText(eX, eY - 20, `-${dmg}`, '#ff922b', 22);
+                        VFX.addShake(isElder ? 14 : 6);
+                        if (isElder) VFX.addShockwave(eX, eY, '#ff4400', 120);
+                        VFX.addFloatingText(eX, eY - 20, `-${dmg}`, '#ff922b', isElder ? 26 : 22);
                         setTimeout(() => {
                             this.triggerAnim('enemy', 'shaking');
-                            this.spawnParticles('#ffaa00', 25, 'enemy');
+                            this.spawnParticles('#ff5500', isElder ? 35 : 25, 'enemy');
                         }, 150);
                     } else if (this.element === 'Water') {
-                        let heal = 30 + this.stats.loyalty;
+                        let isElder = (this.state === 'elder');
+                        let baseHeal = isElder ? (55 + this.stats.loyalty * 2) : (30 + this.stats.loyalty);
+                        let heal = Math.round(baseHeal * starBonus);
                         this.battleState.playerHp = Math.min(this.battleState.playerMaxHp, this.battleState.playerHp + heal);
-                        if (enemy.element === 'Fire') {
-                            let splashDmg = Math.floor(this.stats.strength * 1.5 + 8);
+                        let splashDmg = isElder ? Math.floor(this.stats.strength * 2.2 + 18) : (enemy.element === 'Fire' ? Math.floor(this.stats.strength * 1.5 + 8) : 0);
+                        if (enemy.element === 'Fire') splashDmg = Math.floor(splashDmg * 1.4);
+                        if (splashDmg > 0) {
+                            if (enemyDefending) splashDmg = Math.floor(splashDmg / 2);
                             this.battleState.enemyHp -= splashDmg;
-                            this.log(`🌊 ELEMENTAL ADVANTAGE! Torrent quenched ${enemy.name} for ${splashDmg} damage!`);
                             VFX.addFloatingText(eX, eY - 20, `-${splashDmg}`, '#74c0fc', 18);
+                            setTimeout(() => {
+                                this.triggerAnim('enemy', 'shaking');
+                                this.spawnParticles('#38d9a9', 20, 'enemy');
+                            }, 150);
                         }
-                        this.log(`You used Healing Stream! Restored ${heal} HP.`);
-                        AudioEngine.playPreset('heal');
-                        VFX.addFloatingText(pX, pY - 20, `+${heal} HP`, '#38d9a9', 18);
-                        this.spawnParticles('#00ffff', 20, 'player');
+                        const attackName = isElder ? "MAELSTROM TSUNAMI" : "Healing Stream";
+                        this.log(`You used ${attackName}! Restored ${heal} HP${splashDmg > 0 ? ` and battered enemy for ${splashDmg} damage` : ''}.`);
+                        AudioEngine.playPreset(isElder ? 'supernova' : 'heal');
+                        VFX.addFloatingText(pX, pY - 20, `+${heal} HP`, '#38d9a9', isElder ? 22 : 18);
+                        if (isElder) VFX.addShockwave(pX, pY, '#00e1ff', 90);
+                        this.spawnParticles('#00ffff', isElder ? 30 : 20, 'player');
                     } else if (this.element === 'Earth') {
-                        let dmg = Math.max(1, this.stats.strength * 2 + 6);
+                        let isElder = (this.state === 'elder');
+                        let baseDmg = isElder ? (this.stats.strength * 3.5 + 16) : (this.stats.strength * 2 + 6);
+                        let dmg = Math.max(1, Math.round(baseDmg * starBonus));
                         if (enemy.element === 'Earth') {
                             dmg = Math.floor(dmg * 1.3);
-                            this.log(`🌍 ELEMENTAL ADVANTAGE! Earthquake shattered ${enemy.name}'s rocky defense!`);
+                            this.log(`🌍 ELEMENTAL ADVANTAGE! Tremor shattered ${enemy.name}'s defense!`);
                             VFX.addFloatingText(eX, eY - 45, "SUPER EFFECTIVE!", "#a9e34b", 14);
                         }
                         if (enemyDefending) dmg = Math.floor(dmg / 2);
                         this.battleState.enemyHp -= dmg;
-                        this.battleState.enemySpd = Math.max(1, this.battleState.enemySpd - 5);
-                        this.log(`You used Earthquake! Dealt ${dmg} damage and slowed enemy. (Enemy HP: ${Math.max(0, this.battleState.enemyHp)}/${this.battleState.enemyMaxHp})`);
+                        const slowAmt = isElder ? 8 : 5;
+                        this.battleState.enemySpd = Math.max(1, this.battleState.enemySpd - slowAmt);
+                        const attackName = isElder ? "TECTONIC RUPTURE" : "Earthquake";
+                        this.log(`You unleashed ${attackName}! Dealt ${dmg} damage and slowed enemy speed by ${slowAmt}. (Enemy HP: ${Math.max(0, this.battleState.enemyHp)}/${this.battleState.enemyMaxHp})`);
                         AudioEngine.playPreset('earthquake');
                         this.triggerAnim('player', 'attacking');
-                        VFX.addShake(8);
-                        VFX.addFloatingText(eX, eY - 20, `-${dmg}`, '#a9e34b', 20);
+                        VFX.addShake(isElder ? 14 : 8);
+                        if (isElder) VFX.addShockwave(eX, eY, '#8b4513', 100);
+                        VFX.addFloatingText(eX, eY - 20, `-${dmg}`, '#a9e34b', isElder ? 24 : 20);
                         setTimeout(() => {
                             this.triggerAnim('enemy', 'shaking');
-                            this.spawnParticles('#8b4513', 25, 'enemy');
+                            this.spawnParticles('#8b4513', isElder ? 35 : 25, 'enemy');
                         }, 150);
                     } else if (this.element === 'Astral') {
-                        let dmg = Math.max(1, this.stats.strength * 3 + this.stats.speed * 2 + 12);
-                        if (enemy.element === 'Shadow') {
+                        let isElder = (this.state === 'elder');
+                        let baseDmg = isElder ? (this.stats.strength * 4 + this.stats.speed * 3 + 24) : (this.stats.strength * 3 + this.stats.speed * 2 + 12);
+                        let dmg = Math.max(1, Math.round(baseDmg * starBonus));
+                        if (enemy.element === 'Shadow' || enemy.element === 'Void') {
                             dmg = Math.floor(dmg * 1.5);
-                            this.log(`⭐ COSMIC DISRUPTION! Starfall banished ${enemy.name}'s shadows!`);
+                            this.log(`⭐ COSMIC DISRUPTION! Astral radiance banished ${enemy.name}'s darkness!`);
                             VFX.addFloatingText(eX, eY - 45, "SUPER EFFECTIVE!", "#ffd43b", 14);
                         }
                         if (enemyDefending) dmg = Math.floor(dmg / 2);
                         this.battleState.enemyHp -= dmg;
-                        this.battleState.enemySpd = Math.max(1, this.battleState.enemySpd - 3);
-                        this.log(`You invoked STARFALL! Dealt ${dmg} cosmic damage and suppressed enemy speed.`);
-                        AudioEngine.playPreset('starfall');
+                        this.battleState.enemySpd = Math.max(1, this.battleState.enemySpd - (isElder ? 6 : 3));
+                        const attackName = isElder ? "COSMIC SINGULARITY" : "STARFALL";
+                        this.log(`You invoked ${attackName}! Dealt ${dmg} cosmic damage and suppressed enemy speed.`);
+                        AudioEngine.playPreset(isElder ? 'lightning' : 'starfall');
                         this.triggerAnim('player', 'attacking');
-                        VFX.addShake(10);
-                        VFX.addShockwave(eX, eY, '#ffd700', 100);
-                        VFX.addFloatingText(eX, eY - 20, `-${dmg}`, '#ffd700', 24);
+                        VFX.addShake(isElder ? 16 : 10);
+                        VFX.addShockwave(eX, eY, '#ffd700', isElder ? 140 : 100);
+                        VFX.addFloatingText(eX, eY - 20, `-${dmg}`, '#ffd700', isElder ? 28 : 24);
                         setTimeout(() => {
                             this.triggerAnim('enemy', 'shaking');
-                            this.spawnParticles('#ffd700', 30, 'enemy', true);
+                            this.spawnParticles('#ffd700', isElder ? 40 : 30, 'enemy', true);
                         }, 150);
                     }
                 } else if (action === 'defend') {
@@ -2427,7 +2858,7 @@
                                 this.stats.happiness = Math.min(100, this.stats.happiness + 10);
                                 this.log("Your dragon roared and scared it away!");
                                 this.showToast("🦁 Dragon roared and scared the beast away!", "gold");
-                                this.playSound('roar');
+                                AudioEngine.playPreset('roar');
                             } else {
                                 this.stats.energy = Math.max(0, this.stats.energy - 20);
                                 this.stats.happiness = Math.max(0, this.stats.happiness - 10);
@@ -2459,6 +2890,58 @@
                         },
                         act2: () => {
                             this.log("You ignored the merchant.");
+                        }
+                    },
+                    {
+                        text: "A sparkling meteor shower illuminates the night sky!",
+                        opt1: "Chase star dust [1]",
+                        opt2: "Watch together [2]",
+                        act1: () => {
+                            this.stats.energy = Math.max(0, this.stats.energy - 15);
+                            this.stats.speed += 2;
+                            this.log("Dragon chased the falling celestial sparks! Speed +2.");
+                            this.showToast("🌠 Chased star dust! Speed +2 (-15 Energy)", "gold");
+                            AudioEngine.playPreset('starfall');
+                            VFX.addFloatingText(width / 2, height / 2 - 40, "+2 Speed", "#ffd700", 18);
+                            if (Math.random() < 0.35 && !this.hasRelic("Star Fragment")) {
+                                if (!this.stats.relics) this.stats.relics = [];
+                                this.stats.relics.push("Star Fragment");
+                                this.showToast("💎 <b>STAR FRAGMENT DISCOVERED!</b>", "gold", 5000);
+                            }
+                        },
+                        act2: () => {
+                            this.stats.happiness = Math.min(100, this.stats.happiness + 20);
+                            this.stats.loyalty += 2;
+                            this.log("You watched the meteors in peaceful silence. Happiness +20, Loyalty +2.");
+                            this.showToast("🌌 Watched meteor shower (+20 Happiness, +2 Loyalty)", "info");
+                            AudioEngine.playPreset('heal');
+                        }
+                    },
+                    {
+                        text: "You discover the Forgotten Altar of an Ancient Dragon Sovereign.",
+                        opt1: "Offer Tribute (25g) [1]",
+                        opt2: "Study Ancient Runes [2]",
+                        act1: () => {
+                            if (this.stats.gold >= 25) {
+                                this.stats.gold -= 25;
+                                this.stats.loyalty += 5;
+                                this.stats.happiness = Math.min(100, this.stats.happiness + 15);
+                                this.log("The altar glowed warm amber! Loyalty +5, Happiness +15.");
+                                this.showToast("🏛️ Altar glowed warm! (+5 Loyalty, +15 Happiness)", "gold");
+                                AudioEngine.playPreset('gold');
+                                VFX.addFloatingText(width / 2, height / 2 - 40, "+5 Loyalty", "#ffd700", 18);
+                            } else {
+                                this.log("You could not afford a tribute for the altar.");
+                                this.showToast("Not enough gold for tribute.", "warn");
+                            }
+                        },
+                        act2: () => {
+                            this.stats.strength += 2;
+                            this.stats.speed += 2;
+                            this.log("Deciphering the ancient draconic glyphs honed your skills! Strength +2, Speed +2.");
+                            this.showToast("📜 Ancient runes deciphered! (+2 Strength, +2 Speed)", "gold");
+                            AudioEngine.playPreset('evolution');
+                            VFX.addFloatingText(width / 2, height / 2 - 40, "+2 Str / +2 Spd", "#74c0fc", 18);
                         }
                     }
                 ];
@@ -2514,6 +2997,12 @@
                     this.showToast(`✨ <b>EVOLUTION!</b> Baby dragon evolved into an <b>ADULT ${this.element.toUpperCase()} DRAGON</b>!`, "gold", 7000);
                     AudioEngine.playPreset('evolution');
                     this.spawnParticles('#ffd700', 40, 'player', true);
+                } else if (this.state === 'adult' && (this.stats.age >= 20 || (this.stats.relics && this.stats.relics.length === 6))) {
+                    this.state = 'elder';
+                    this.log(`👑 ASCENSION! Your ${this.element} Dragon has ascended into an ELDER SOVEREIGN WYRM!`);
+                    this.showToast(`👑 <b>ELDER ASCENSION!</b> Dragon evolved into an <b>ELDER SOVEREIGN WYRM</b>!`, "gold", 8000);
+                    AudioEngine.playPreset('evolution');
+                    this.spawnParticles('#ffd700', 50, 'player', true);
                 }
                 this.updateUI();
             }

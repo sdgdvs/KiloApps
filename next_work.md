@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KJournal
   kilo_usability: KStarForge
-  kilo_graphics: KDragon
+  kilo_graphics: KSubmarine
   kilo_qa: KPad
   kilo_expander: KFont
   kilo_creator: "kweb://warez (0xRELEASE Scene Vault & Cracktros)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://webring"
-  timestamp: "2026-09-30T20:46:00Z"
+  agent: kilo-graphics
+  app: KDragon
+  timestamp: "2026-09-30T21:25:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -103,9 +103,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://geocities, kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://warez, kweb://webring)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KDragon`
+- **Current Target**: `KSubmarine`
 - **Upcoming Queue**:
-  `KSubmarine`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono`, `KFortress`, `KCosmic`, `KSanctuary` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KSanctuary)*.
+  `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono`, `KFortress`, `KCosmic`, `KSanctuary`, `KDragon` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KSanctuary, KDragon)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KJournal`
@@ -293,6 +293,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
  
+- **2026-09-30T21:25:00Z — kilo-graphics: KDragon (Game Content, Visual Polish & Balance Pass, Glint Ban Verified)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 173.3 KB web / 149.0 KB native < 999 KB ceiling).
+  - Specular Glint & Dot Purge: Verified 0 traveling perimeter dots or rotating specular glints in web or Win32 C.
+  - Gameplay & Boss Depth: Balanced encounter scaling across 8 archetypes + Titan Drake, added elemental counters.
+  - Ascension & Relics: Polished Elder Sovereign Wyrm ascension effects, relic synergies, and shop bazaar items.
+  - Visual & Audio Polish: Verified 60FPS particle/shockwave engine, Genesis YM2612 FM chiptunes, and responsive UI.
+  - Verification: MSVC clean (`KDragon.exe` 149.0 KB); Vite clean in 272ms; icon uniqueness & security lint 100% PASS.
+
 - **2026-09-30T20:46:00Z — kilo-creator: kweb://webring (Central KiloNet Webring Hub & Community Button Exchange Expansion)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 184.4 KB web < 999 KB ceiling).
   - Live Voyagers Presence: Connected Firebase RTDB (`webring/presence`) with live pulsing counter and voyager inspector modal.
@@ -325,12 +333,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Window Dimensions: Tuned default window to 1040x700 in `App.jsx`, bound standalone `/exe/KTask.exe`, and bumped `MICROS_VERSION` to 0.4.14.
   - Navigation & Hotkeys: Added `↑ / ↓` and `0 / Z` to Help dialog and keydown handler; scoped input typing to prevent accidental hotkey firing.
   - Verification: MSVC clean (`KTask.exe` 30.5 KB); Vite clean in 291ms; check_icons & security lint 100% PASS; <999KB ceiling.
-
-- **2026-09-30T19:46:00Z — kilo-tester: KImage (UI Audit & Inline Fixes, JSON Session Import/Export, Non-Destructive Restore & Hotkey Scope)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 142.5 KB web / 25.5 KB native < 999 KB ceiling).
-  - UI Hotkey Scope: Excluded TEXTAREA/contenteditable from global hotkeys, preventing space/crop/del triggers when typing secret stego messages.
-  - Quicksave / Quickload: Upgraded F5/F9 to non-destructive restore of base pixel data, adjustments, rotation, and vector drawing paths with live slider sync.
-  - Session Persistence: Added full project session export and import (.JSON) supporting offline backup, annotations, and stego payloads.
-  - Animation & Crop Hygiene: Added automated slideshow loop teardown on empty/cleared playlist; auto-cleared crop overlay when switching images.
-  - Drawing & Clipboard: Transformed vector annotations alongside 90° rotations and flips; added execCommand fallback for secure clipboard copying.
-  - Verification: MSVC clean (`KImage.exe` 25.5 KB); Vite clean in 291ms; check_icons & security lint 100% PASS; <999KB ceiling.

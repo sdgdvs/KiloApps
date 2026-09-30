@@ -70,19 +70,23 @@ int log_count = 0;
 #define BTN_SAVE      30
 #define BTN_LOAD      31
 #define BTN_START_LOAD 32
+#define BTN_SHP_NECTAR 33
+#define BTN_SHP_CROWN  34
+#define BTN_SHP_POLISH 35
 
 HWND btn_incubate, btn_feed, btn_play, btn_sleep, btn_train, btn_hoard, btn_battle, btn_shop, btn_help;
 HWND btn_save, btn_load, btn_start_load;
 HWND btn_tr_str, btn_tr_spd, btn_tr_loy, btn_tr_back;
 HWND btn_str_hit, btn_spd_react, btn_loy_1, btn_loy_2, btn_loy_3;
 HWND btn_bat_atk, btn_bat_def, btn_bat_spec, btn_bat_flee;
-HWND btn_shp_food, btn_shp_toy, btn_shp_str, btn_shp_spd, btn_shp_back;
+HWND btn_shp_food, btn_shp_toy, btn_shp_str, btn_shp_spd, btn_shp_nectar, btn_shp_crown, btn_shp_polish, btn_shp_back;
 HWND btn_evt_opt1, btn_evt_opt2;
 HFONT hFontNormal, hFontLarge, hFontTitle, hFontSmall;
 HBRUSH bgBrush;
 
 int current_event_id = 0;
 int relics_mask = 0;
+int elder_ascension_done = 0;
 const char* relic_names[6] = { "Shiny Scale", "Gemstone", "Old Bone", "Mystery Eggshell", "Dragon Fang", "Star Fragment" };
 int count_relics(void) {
     int c = 0;
@@ -90,6 +94,25 @@ int count_relics(void) {
         if (relics_mask & (1 << i)) c++;
     }
     return c;
+}
+
+int is_elder(void) {
+    return (state == 2 && (age >= 20 || count_relics() >= 6));
+}
+
+const char* get_mood_str(void) {
+    if (energy < 20) return "Fatigued";
+    if (hunger < 25) return "Ravenous";
+    if (happiness < 25) return "Melancholy";
+    if (happiness >= 80 && hunger >= 60 && energy >= 60) return "Ecstatic";
+    return "Content";
+}
+
+int get_item_price(int base) {
+    if (relics_mask & (1 << 3)) { // Mystery Eggshell 20% discount
+        return base * 80 / 100;
+    }
+    return base;
 }
 
 // === VISUAL EFFECTS & KINEMATIC PARTICLE ENGINE ===
@@ -273,6 +296,25 @@ COLORREF adult_dragon_pixels[16][16] = {
     {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
 };
 
+COLORREF elder_dragon_pixels[16][16] = {
+    {-1, -1, RGB(255,215,60), -1, -1, -1, -1, RGB(255,215,60), RGB(255,215,60), -1, -1, -1, -1, RGB(255,215,60), -1, -1},
+    {-1, -1, -1, RGB(180,30,30), -1, RGB(180,30,30), RGB(180,30,30), -1, -1, -1, -1, -1, RGB(180,30,30), -1, -1, -1},
+    {-1, -1, -1, -1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), -1, -1, -1, RGB(180,30,30), -1, -1, -1, -1},
+    {RGB(180,30,30), RGB(220,60,60), -1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), -1, -1, RGB(180,30,30), RGB(220,60,60), RGB(180,30,30), -1, -1, -1},
+    {RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), RGB(220,60,60), RGB(255,255,255), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), -1, -1, -1},
+    {-1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), RGB(180,30,30), RGB(180,30,30), -1, -1, -1, -1},
+    {-1, -1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(255,215,60), RGB(255,215,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), RGB(180,30,30), -1, -1, -1, -1, -1},
+    {-1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(255,215,60), RGB(255,255,255), RGB(255,215,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), -1, -1, -1, -1, -1, -1},
+    {-1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(255,215,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), -1, -1, -1, -1, -1, -1},
+    {-1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), RGB(180,30,30), RGB(180,30,30), -1, -1, -1, -1},
+    {-1, -1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), -1, -1, -1},
+    {-1, -1, -1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), RGB(180,30,30), -1, -1},
+    {-1, -1, -1, RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), RGB(180,30,30), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(220,60,60), RGB(180,30,30), -1, -1},
+    {-1, -1, -1, RGB(180,30,30), RGB(180,30,30), RGB(180,30,30), RGB(180,30,30), -1, -1, RGB(180,30,30), RGB(180,30,30), RGB(180,30,30), RGB(180,30,30), -1, -1, -1},
+    {-1, -1, RGB(255,215,60), -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, RGB(255,215,60), -1, -1},
+    {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
+};
+
 void DrawPixelArt(HDC hdc, int x, int y, int scale, COLORREF pixels[16][16], int element_type, int is_flipped, int flash_white) {
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 16; j++) {
@@ -283,14 +325,17 @@ void DrawPixelArt(HDC hdc, int x, int y, int scale, COLORREF pixels[16][16], int
                     c = RGB(255, 255, 255);
                 } else {
                     if (element_type == 4) { // Water
-                        if (c == RGB(180,30,30)) c = RGB(30,60,180);
-                        else if (c == RGB(220,60,60)) c = RGB(60,120,220);
+                        if (c == RGB(180,30,30)) c = RGB(20,60,160);
+                        else if (c == RGB(220,60,60)) c = RGB(50,130,230);
+                        else if (c == RGB(255,215,60)) c = RGB(120,230,255);
                     } else if (element_type == 3) { // Earth
-                        if (c == RGB(180,30,30)) c = RGB(100,60,30);
-                        else if (c == RGB(220,60,60)) c = RGB(150,100,60);
+                        if (c == RGB(180,30,30)) c = RGB(90,50,20);
+                        else if (c == RGB(220,60,60)) c = RGB(150,90,40);
+                        else if (c == RGB(255,215,60)) c = RGB(212,175,55);
                     } else if (element_type == 6) { // Astral
-                        if (c == RGB(180,30,30)) c = RGB(180,130,20);
-                        else if (c == RGB(220,60,60)) c = RGB(255,215,60);
+                        if (c == RGB(180,30,30)) c = RGB(140,40,180);
+                        else if (c == RGB(220,60,60)) c = RGB(200,90,240);
+                        else if (c == RGB(255,215,60)) c = RGB(255,255,180);
                     } else if (element_type == 5) { // Enemy
                         if (bat_enemy_type == 0) { // Cave Goblin (Green)
                             if (c == RGB(180,30,30)) c = RGB(40,110,40);
@@ -307,6 +352,15 @@ void DrawPixelArt(HDC hdc, int x, int y, int scale, COLORREF pixels[16][16], int
                         } else if (bat_enemy_type == 4) { // Shadow Drake (Purple)
                             if (c == RGB(180,30,30)) c = RGB(128,0,128);
                             else if (c == RGB(220,60,60)) c = RGB(180,50,180);
+                        } else if (bat_enemy_type == 6) { // Thunderbird Wyvern (Electric Yellow)
+                            if (c == RGB(180,30,30)) c = RGB(180,140,20);
+                            else if (c == RGB(220,60,60)) c = RGB(255,230,50);
+                        } else if (bat_enemy_type == 7) { // Abyssal Leviathan (Deep Ocean Teal/Navy)
+                            if (c == RGB(180,30,30)) c = RGB(10,50,110);
+                            else if (c == RGB(220,60,60)) c = RGB(20,130,160);
+                        } else if (bat_enemy_type == 8) { // Void Dreadnought (Deep Violet/Void)
+                            if (c == RGB(180,30,30)) c = RGB(70,10,90);
+                            else if (c == RGB(220,60,60)) c = RGB(150,30,180);
                         } else { // Ancient Titan Drake (Golden/Celestial)
                             if (c == RGB(180,30,30)) c = RGB(180,130,20);
                             else if (c == RGB(220,60,60)) c = RGB(255,220,60);
@@ -557,6 +611,9 @@ void QuickLoadNative(HWND hwnd) {
                 ShowWindow(btn_shp_toy, SW_HIDE);
                 ShowWindow(btn_shp_str, SW_HIDE);
                 ShowWindow(btn_shp_spd, SW_HIDE);
+                ShowWindow(btn_shp_nectar, SW_HIDE);
+                ShowWindow(btn_shp_crown, SW_HIDE);
+                ShowWindow(btn_shp_polish, SW_HIDE);
                 ShowWindow(btn_shp_back, SW_HIDE);
                 ShowWindow(btn_evt_opt1, SW_HIDE);
                 ShowWindow(btn_evt_opt2, SW_HIDE);
@@ -631,6 +688,17 @@ void CheckFirstRunTutorial(HWND hwnd) {
     }
 }
 
+void UpdateShopButtons(void) {
+    char b[64];
+    sprintf(b, "Meat %dg [1]", get_item_price(20)); SetWindowText(btn_shp_food, b);
+    sprintf(b, "Toy %dg [2]", get_item_price(30)); SetWindowText(btn_shp_toy, b);
+    sprintf(b, "Str %dg [3]", get_item_price(50)); SetWindowText(btn_shp_str, b);
+    sprintf(b, "Spd %dg [4]", get_item_price(50)); SetWindowText(btn_shp_spd, b);
+    sprintf(b, "Nectar %dg [5]", get_item_price(40)); SetWindowText(btn_shp_nectar, b);
+    sprintf(b, "Crown %dg [6]", get_item_price(60)); SetWindowText(btn_shp_crown, b);
+    sprintf(b, "Polish %dg [7]", get_item_price(75)); SetWindowText(btn_shp_polish, b);
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch(msg) {
         case WM_CREATE: {
@@ -690,11 +758,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             btn_bat_flee = CreateWindow("BUTTON", "Flee [4]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON,
                                         430, 270, 110, 40, hwnd, (HMENU)BTN_BAT_FLEE, NULL, NULL);
 
-            btn_shp_food = CreateWindow("BUTTON", "Meat 20g [1]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 25, 260, 100, 40, hwnd, (HMENU)BTN_SHP_FOOD, NULL, NULL);
-            btn_shp_toy = CreateWindow("BUTTON", "Toy 30g [2]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 130, 260, 100, 40, hwnd, (HMENU)BTN_SHP_TOY, NULL, NULL);
-            btn_shp_str = CreateWindow("BUTTON", "Str 50g [3]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 235, 260, 100, 40, hwnd, (HMENU)BTN_SHP_STR, NULL, NULL);
-            btn_shp_spd = CreateWindow("BUTTON", "Spd 50g [4]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 340, 260, 100, 40, hwnd, (HMENU)BTN_SHP_SPD, NULL, NULL);
-            btn_shp_back = CreateWindow("BUTTON", "Back [Esc]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 445, 260, 100, 40, hwnd, (HMENU)BTN_SHP_BACK, NULL, NULL);
+            btn_shp_food = CreateWindow("BUTTON", "Meat 20g [1]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 25, 215, 125, 36, hwnd, (HMENU)BTN_SHP_FOOD, NULL, NULL);
+            btn_shp_toy = CreateWindow("BUTTON", "Toy 30g [2]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 165, 215, 125, 36, hwnd, (HMENU)BTN_SHP_TOY, NULL, NULL);
+            btn_shp_str = CreateWindow("BUTTON", "Str 50g [3]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 305, 215, 125, 36, hwnd, (HMENU)BTN_SHP_STR, NULL, NULL);
+            btn_shp_spd = CreateWindow("BUTTON", "Spd 50g [4]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 445, 215, 125, 36, hwnd, (HMENU)BTN_SHP_SPD, NULL, NULL);
+            btn_shp_nectar = CreateWindow("BUTTON", "Nectar 40g [5]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 25, 260, 125, 36, hwnd, (HMENU)BTN_SHP_NECTAR, NULL, NULL);
+            btn_shp_crown = CreateWindow("BUTTON", "Crown 60g [6]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 165, 260, 125, 36, hwnd, (HMENU)BTN_SHP_CROWN, NULL, NULL);
+            btn_shp_polish = CreateWindow("BUTTON", "Polish 75g [7]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 305, 260, 125, 36, hwnd, (HMENU)BTN_SHP_POLISH, NULL, NULL);
+            btn_shp_back = CreateWindow("BUTTON", "Back [Esc]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 445, 260, 125, 36, hwnd, (HMENU)BTN_SHP_BACK, NULL, NULL);
 
             btn_evt_opt1 = CreateWindow("BUTTON", "Opt 1 [1]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 130, 270, 160, 40, hwnd, (HMENU)BTN_EVT_OPT1, NULL, NULL);
             btn_evt_opt2 = CreateWindow("BUTTON", "Opt 2 [2]", WS_TABSTOP | WS_CHILD | BS_DEFPUSHBUTTON, 310, 270, 160, 40, hwnd, (HMENU)BTN_EVT_OPT2, NULL, NULL);
@@ -748,6 +819,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(btn_shp_toy, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_shp_str, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_shp_spd, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_shp_nectar, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_shp_crown, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
+            SendMessage(btn_shp_polish, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_shp_back, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_evt_opt1, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
             SendMessage(btn_evt_opt2, WM_SETFONT, (WPARAM)hFontNormal, TRUE);
@@ -882,6 +956,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (LOWORD(wParam) == BTN_STR_HIT) {
                 KillTimer(hwnd, 2);
                 int gain = minigame_val / 20;
+                if (relics_mask & (1 << 2)) gain++; // Old Bone perk
+                if (strcmp(get_mood_str(), "Ecstatic") == 0) gain++; // Mood bonus
                 strength += gain;
                 char logMsg[128];
                 sprintf(logMsg, "You hit with power %d! Strength +%d", minigame_val, gain);
@@ -900,6 +976,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else {
                     DWORD time = GetTickCount() - minigame_start_time;
                     int gain = time < 300 ? 5 : (time < 500 ? 3 : 1);
+                    if (relics_mask & (1 << 2)) gain++; // Old Bone perk
+                    if (strcmp(get_mood_str(), "Ecstatic") == 0) gain++; // Mood bonus
                     speed += gain;
                     char logMsg[128];
                     sprintf(logMsg, "Reaction time: %dms! Speed +%d", (int)time, gain);
@@ -915,13 +993,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (LOWORD(wParam) >= BTN_LOY_1 && LOWORD(wParam) <= BTN_LOY_3) {
                 int picked = LOWORD(wParam) - BTN_LOY_1;
                 if (picked == minigame_val) {
-                    loyalty += 5;
-                    add_log("You found the treat! Loyalty +5");
+                    int gain = 5 + ((relics_mask & (1 << 2)) ? 1 : 0) + ((strcmp(get_mood_str(), "Ecstatic") == 0) ? 1 : 0);
+                    loyalty += gain;
+                    char logMsg[128]; sprintf(logMsg, "You found the treat! Loyalty +%d", gain);
+                    add_log(logMsg);
                     trigger_screen_shake(4.0f);
                     spawn_particles_ext(190 + picked * 110, 280, RGB(255,215,0), 20, 3);
                 } else {
-                    loyalty += 1;
-                    add_log("Empty box. Loyalty +1");
+                    int gain = 1 + ((relics_mask & (1 << 2)) ? 1 : 0);
+                    loyalty += gain;
+                    char logMsg[128]; sprintf(logMsg, "Empty box. Loyalty +%d", gain);
+                    add_log(logMsg);
                 }
                 ShowWindow(btn_loy_1, SW_HIDE); ShowWindow(btn_loy_2, SW_HIDE); ShowWindow(btn_loy_3, SW_HIDE);
                 ShowMainControls(1);
@@ -948,9 +1030,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 } else {
                     energy -= 20;
                     hunger -= 10; if (hunger < 0) hunger = 0;
-                    bat_player_max = 100 + strength * 5;
+                    int base_hp = 100 + strength * 5;
+                    if (relics_mask & (1 << 0)) base_hp += 20; // Shiny Scale perk
+                    if (is_elder()) base_hp += 50; // Elder Vigor
+                    bat_player_max = base_hp;
                     bat_player_hp = bat_player_max;
-                    if (age >= 10 && (rand() % 4 == 0)) {
+                    
+                    if (age >= 15 && (rand() % 3 == 0)) {
+                        int r = rand() % 3;
+                        if (r == 0) bat_enemy_type = 6;
+                        else if (r == 1) bat_enemy_type = 7;
+                        else bat_enemy_type = 8;
+                    } else if (age >= 10 && (rand() % 4 == 0)) {
                         bat_enemy_type = 5;
                     } else {
                         bat_enemy_type = rand() % 5;
@@ -981,13 +1072,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         bat_enemy_str = strength + (rand() % 4); if (bat_enemy_str < 6) bat_enemy_str = 6;
                         bat_enemy_spd = speed + 2 + (rand() % 4); if (bat_enemy_spd < 7) bat_enemy_spd = 7;
                         shockColor = RGB(180, 50, 220);
+                    } else if (bat_enemy_type == 6) {
+                        strcpy(bat_enemy_name, "Thunderbird Wyvern");
+                        bat_enemy_str = strength + 3 + (rand() % 4); if (bat_enemy_str < 10) bat_enemy_str = 10;
+                        bat_enemy_spd = speed + 4 + (rand() % 4); if (bat_enemy_spd < 12) bat_enemy_spd = 12;
+                        shockColor = RGB(255, 230, 50);
+                    } else if (bat_enemy_type == 7) {
+                        strcpy(bat_enemy_name, "Abyssal Leviathan");
+                        bat_enemy_str = strength + 5 + (rand() % 4); if (bat_enemy_str < 12) bat_enemy_str = 12;
+                        bat_enemy_spd = speed + (rand() % 3); if (bat_enemy_spd < 8) bat_enemy_spd = 8;
+                        shockColor = RGB(20, 140, 200);
+                    } else if (bat_enemy_type == 8) {
+                        strcpy(bat_enemy_name, "Void Dreadnought");
+                        bat_enemy_str = strength + 6 + (rand() % 5); if (bat_enemy_str < 14) bat_enemy_str = 14;
+                        bat_enemy_spd = speed + 3 + (rand() % 4); if (bat_enemy_spd < 11) bat_enemy_spd = 11;
+                        shockColor = RGB(160, 40, 220);
                     } else {
                         strcpy(bat_enemy_name, "Ancient Titan Drake");
                         bat_enemy_str = strength + 4 + (rand() % 4); if (bat_enemy_str < 12) bat_enemy_str = 12;
                         bat_enemy_spd = speed + 2 + (rand() % 3); if (bat_enemy_spd < 10) bat_enemy_spd = 10;
                         shockColor = RGB(255, 215, 60);
                     }
-                    bat_enemy_max = (bat_enemy_type == 5) ? (140 + bat_enemy_str * 5) : (100 + bat_enemy_str * 5);
+                    int hp_bonus = (bat_enemy_type >= 6) ? 50 : ((bat_enemy_type == 5) ? 40 : 0);
+                    bat_enemy_max = 100 + bat_enemy_str * 5 + hp_bonus;
                     bat_enemy_hp = bat_enemy_max;
                     
                     char msg[128];
@@ -1027,85 +1134,118 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int hitChance = 80 + (speed - bat_enemy_spd) * 5;
                         if ((rand() % 100) < hitChance) {
                             int dmg = strength * 2 + (rand() % 5);
+                            if (relics_mask & (1 << 4)) dmg += 4; // Dragon Fang perk
+                            if (is_elder()) dmg += 3; // Elder power
+                            int is_crit = 0;
+                            if ((relics_mask & (1 << 0)) && (rand() % 100 < 20)) { // Shiny Scale perk
+                                dmg = dmg * 8 / 5;
+                                is_crit = 1;
+                            }
                             if (dmg < 1) dmg = 1;
                             if (e_def) dmg /= 2;
                             bat_enemy_hp -= dmg;
-                            char m[128]; sprintf(m, "You hit %s for %d damage!", bat_enemy_name, dmg); add_log(m);
+                            char m[128];
+                            if (is_crit) {
+                                sprintf(m, "CRITICAL HIT! You strike %s for %d damage!", bat_enemy_name, dmg);
+                                add_shockwave(410, 150, 70.0f, RGB(255, 215, 0));
+                            } else {
+                                sprintf(m, "You hit %s for %d damage!", bat_enemy_name, dmg);
+                            }
+                            add_log(m);
                             Beep(800, 50); Beep(100, 50);
                             player_attack_offset = 24;
                             enemy_damage_flash = 6;
-                            trigger_screen_shake(6.0f);
-                            add_shockwave(410, 150, 50.0f, RGB(255, 80, 80));
-                            spawn_particles_ext(410, 150, RGB(255,0,0), 16, 0);
+                            trigger_screen_shake(is_crit ? 8.0f : 6.0f);
+                            spawn_particles_ext(410, 150, is_crit ? RGB(255,215,0) : RGB(255,0,0), 16, 0);
                             spawn_particles_ext(410, 150, RGB(180,50,180), 8, 2);
                         } else {
                             add_log("You missed!");
                         }
                     } else if (action == 2) {
+                        float star_mult = (relics_mask & (1 << 5)) ? 1.25f : 1.0f;
                         if (element == 2) { // Fire
-                            int dmg = strength * 3 + 10;
+                            int base_dmg = is_elder() ? (strength * 4 + 25) : (strength * 3 + 10);
+                            int dmg = (int)(base_dmg * star_mult);
                             if (bat_enemy_type == 1) { // Frost Wyrm weakness
                                 dmg = (int)(dmg * 1.4f);
                                 add_log("CRITICAL WEAKNESS! Fire scorched Frost Wyrm!");
                             }
                             if (e_def) dmg /= 2;
                             bat_enemy_hp -= dmg;
-                            char m[128]; sprintf(m, "You used Fireball! Dealt %d damage.", dmg); add_log(m);
+                            char m[128];
+                            sprintf(m, is_elder() ? "CATACLYSMIC SUPERNOVA! Dealt %d fire damage." : "You used Fireball! Dealt %d damage.", dmg);
+                            add_log(m);
                             player_attack_offset = 24;
                             enemy_damage_flash = 8;
-                            trigger_screen_shake(8.0f);
-                            add_shockwave(410, 150, 70.0f, RGB(255, 140, 0));
+                            trigger_screen_shake(is_elder() ? 12.0f : 8.0f);
+                            add_shockwave(410, 150, is_elder() ? 100.0f : 70.0f, RGB(255, 140, 0));
                             spawn_particles_ext(410, 150, RGB(255,140,0), 20, 0);
                             spawn_particles_ext(410, 150, RGB(255,50,0), 12, 1);
                         } else if (element == 4) { // Water
-                            int heal = 30 + loyalty;
+                            int base_heal = is_elder() ? (55 + loyalty * 2) : (30 + loyalty);
+                            int heal = (int)(base_heal * star_mult);
                             bat_player_hp += heal;
                             if (bat_player_hp > bat_player_max) bat_player_hp = bat_player_max;
-                            if (bat_enemy_type == 2) { // Magma Drake weakness
-                                int splash = strength + 8;
+                            int splash = is_elder() ? (strength * 2 + 18) : (bat_enemy_type == 2 ? (strength + 8) : 0);
+                            if (bat_enemy_type == 2) splash = (int)(splash * 1.4f);
+                            if (splash > 0) {
+                                if (e_def) splash /= 2;
                                 bat_enemy_hp -= splash;
-                                char sm[128]; sprintf(sm, "Torrent quenched Magma Drake for %d damage!", splash); add_log(sm);
                             }
-                            char m[128]; sprintf(m, "You used Healing Stream! Restored %d HP.", heal); add_log(m);
-                            add_shockwave(180, 150, 60.0f, RGB(0, 220, 255));
+                            char m[128];
+                            if (is_elder()) {
+                                sprintf(m, "MAELSTROM TSUNAMI! Healed %d HP and smashed enemy for %d damage!", heal, splash);
+                            } else {
+                                sprintf(m, "You used Healing Stream! Restored %d HP.", heal);
+                            }
+                            add_log(m);
+                            add_shockwave(180, 150, is_elder() ? 90.0f : 60.0f, RGB(0, 220, 255));
                             spawn_particles_ext(180, 150, RGB(0,255,255), 20, 0);
                             spawn_particles_ext(180, 150, RGB(150,220,255), 10, 1);
                         } else if (element == 3) { // Earth
-                            int dmg = strength * 2 + 6;
+                            int base_dmg = is_elder() ? (strength * 7 / 2 + 16) : (strength * 2 + 6);
+                            int dmg = (int)(base_dmg * star_mult);
                             if (bat_enemy_type == 3 || bat_enemy_type == 0) { // Stone Golem / Goblin rock resonance
                                 dmg = (int)(dmg * 1.3f);
-                                add_log("ELEMENTAL ADVANTAGE! Earthquake shattered enemy defense!");
+                                add_log("ELEMENTAL ADVANTAGE! Tremor shattered enemy defense!");
                             }
                             if (dmg < 1) dmg = 1;
                             if (e_def) dmg /= 2;
                             bat_enemy_hp -= dmg;
-                            bat_enemy_spd -= 5;
+                            int slow_amt = is_elder() ? 8 : 5;
+                            bat_enemy_spd -= slow_amt;
                             if (bat_enemy_spd < 1) bat_enemy_spd = 1;
-                            char m[128]; sprintf(m, "You used Earthquake! Dealt %d damage and slowed enemy.", dmg); add_log(m);
+                            char m[128];
+                            sprintf(m, is_elder() ? "TECTONIC RUPTURE! Dealt %d damage and slowed enemy by %d." : "You used Earthquake! Dealt %d damage and slowed enemy.", dmg, slow_amt);
+                            add_log(m);
                             player_attack_offset = 24;
                             enemy_damage_flash = 8;
-                            trigger_screen_shake(9.0f);
-                            add_shockwave(410, 150, 80.0f, RGB(140, 90, 40));
+                            trigger_screen_shake(is_elder() ? 13.0f : 9.0f);
+                            add_shockwave(410, 150, is_elder() ? 100.0f : 80.0f, RGB(140, 90, 40));
                             spawn_particles_ext(410, 150, RGB(140,90,40), 20, 2);
                         } else if (element == 6) { // Astral
-                            int dmg = strength * 3 + speed * 2 + 12;
-                            if (bat_enemy_type == 4) { // Shadow Stalker weakness
+                            int base_dmg = is_elder() ? (strength * 4 + speed * 3 + 24) : (strength * 3 + speed * 2 + 12);
+                            int dmg = (int)(base_dmg * star_mult);
+                            if (bat_enemy_type == 4 || bat_enemy_type == 8) { // Shadow Stalker / Void Dreadnought weakness
                                 dmg = (int)(dmg * 1.5f);
-                                add_log("CRITICAL DISRUPTION! Starfall banished the shadow beast!");
+                                add_log("CRITICAL DISRUPTION! Starlight banished shadow darkness!");
                             } else if (bat_enemy_type == 5) { // Titan Drake celestial clash
                                 dmg = (int)(dmg * 1.25f);
-                                add_log("CELESTIAL DUEL! Astral Starfall clashes with the Titan!");
+                                add_log("CELESTIAL DUEL! Astral burst clashes with the Titan!");
                             }
                             if (e_def) dmg /= 2;
                             bat_enemy_hp -= dmg;
-                            bat_enemy_spd -= 4;
+                            int slow_amt = is_elder() ? 6 : 4;
+                            bat_enemy_spd -= slow_amt;
                             if (bat_enemy_spd < 1) bat_enemy_spd = 1;
-                            char m[128]; sprintf(m, "You used Starfall! Dealt %d cosmic damage.", dmg); add_log(m);
+                            char m[128];
+                            sprintf(m, is_elder() ? "COSMIC SINGULARITY! Dealt %d cosmic damage." : "You used Starfall! Dealt %d cosmic damage.", dmg);
+                            add_log(m);
                             Beep(900, 60); Beep(1200, 80); Beep(1500, 100);
                             player_attack_offset = 24;
                             enemy_damage_flash = 8;
-                            trigger_screen_shake(10.0f);
-                            add_shockwave(410, 150, 90.0f, RGB(255, 215, 60));
+                            trigger_screen_shake(is_elder() ? 15.0f : 10.0f);
+                            add_shockwave(410, 150, is_elder() ? 120.0f : 90.0f, RGB(255, 215, 60));
                             spawn_particles_ext(410, 150, RGB(255,215,60), 25, 3);
                         }
                     } else if (action == 1) {
@@ -1154,7 +1294,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 if (battle_ended) {
                     if (won) {
-                        int g = 20 + (rand() % 20) + ((bat_enemy_type == 5) ? 40 : (bat_enemy_type * 3));
+                        int g = 20 + (rand() % 20) + ((bat_enemy_type >= 6) ? 50 : ((bat_enemy_type == 5) ? 40 : (bat_enemy_type * 3)));
                         gold += g;
                         happiness += 10; if (happiness > 100) happiness = 100;
                         char m[128]; sprintf(m, "You won the battle and earned %d gold!", g); add_log(m);
@@ -1175,11 +1315,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (LOWORD(wParam) == BTN_SHOP) {
                 if (state == 0) return 0;
                 ShowMainControls(0);
-                
+                UpdateShopButtons();
                 ShowWindow(btn_shp_food, SW_SHOW);
                 ShowWindow(btn_shp_toy, SW_SHOW);
                 ShowWindow(btn_shp_str, SW_SHOW);
                 ShowWindow(btn_shp_spd, SW_SHOW);
+                ShowWindow(btn_shp_nectar, SW_SHOW);
+                ShowWindow(btn_shp_crown, SW_SHOW);
+                ShowWindow(btn_shp_polish, SW_SHOW);
                 ShowWindow(btn_shp_back, SW_SHOW);
                 
                 prev_state = state;
@@ -1189,7 +1332,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (LOWORD(wParam) == BTN_SHP_BACK) {
                 ShowWindow(btn_shp_food, SW_HIDE); ShowWindow(btn_shp_toy, SW_HIDE);
                 ShowWindow(btn_shp_str, SW_HIDE); ShowWindow(btn_shp_spd, SW_HIDE);
-                ShowWindow(btn_shp_back, SW_HIDE);
+                ShowWindow(btn_shp_nectar, SW_HIDE); ShowWindow(btn_shp_crown, SW_HIDE);
+                ShowWindow(btn_shp_polish, SW_HIDE); ShowWindow(btn_shp_back, SW_HIDE);
                 
                 ShowMainControls(1);
                 
@@ -1197,41 +1341,79 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 InvalidateRect(hwnd, NULL, FALSE);
             }
             else if (LOWORD(wParam) == BTN_SHP_FOOD) {
-                if (gold >= 20) {
-                    gold -= 20;
+                int p = get_item_price(20);
+                if (gold >= p) {
+                    gold -= p;
                     hunger += 50; if (hunger > 100) hunger = 100;
                     energy += 20; if (energy > 100) energy = 100;
-                    add_log("Bought Premium Meat! Hunger +50, Energy +20.");
+                    char m[128]; sprintf(m, "Bought Premium Meat (%dg)! Hunger +50, Energy +20.", p); add_log(m);
                     Beep(400, 50); Beep(600, 50);
                     spawn_particles_ext(75, 230, RGB(255,100,100), 16, 0);
                 } else { add_log("Not enough gold."); }
                 InvalidateRect(hwnd, NULL, FALSE);
             }
             else if (LOWORD(wParam) == BTN_SHP_TOY) {
-                if (gold >= 30) {
-                    gold -= 30;
+                int p = get_item_price(30);
+                if (gold >= p) {
+                    gold -= p;
                     happiness += 50; if (happiness > 100) happiness = 100;
                     energy += 10; if (energy > 100) energy = 100;
-                    add_log("Bought Mystery Toy! Happiness +50, Energy +10.");
+                    char m[128]; sprintf(m, "Bought Mystery Toy (%dg)! Happiness +50, Energy +10.", p); add_log(m);
                     spawn_particles_ext(165, 230, RGB(50,150,255), 16, 3);
                 } else { add_log("Not enough gold."); }
                 InvalidateRect(hwnd, NULL, FALSE);
             }
             else if (LOWORD(wParam) == BTN_SHP_STR) {
-                if (gold >= 50) {
-                    gold -= 50;
+                int p = get_item_price(50);
+                if (gold >= p) {
+                    gold -= p;
                     strength += 5;
-                    add_log("Bought Power Bracer! Strength +5.");
+                    char m[128]; sprintf(m, "Bought Power Bracer (%dg)! Strength +5.", p); add_log(m);
                     spawn_particles_ext(255, 230, RGB(255,215,0), 20, 3);
                 } else { add_log("Not enough gold."); }
                 InvalidateRect(hwnd, NULL, FALSE);
             }
             else if (LOWORD(wParam) == BTN_SHP_SPD) {
-                if (gold >= 50) {
-                    gold -= 50;
+                int p = get_item_price(50);
+                if (gold >= p) {
+                    gold -= p;
                     speed += 5;
-                    add_log("Bought Swift Boots! Speed +5.");
+                    char m[128]; sprintf(m, "Bought Swift Boots (%dg)! Speed +5.", p); add_log(m);
                     spawn_particles_ext(345, 230, RGB(100,255,200), 20, 3);
+                } else { add_log("Not enough gold."); }
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            else if (LOWORD(wParam) == BTN_SHP_NECTAR) {
+                int p = get_item_price(40);
+                if (gold >= p) {
+                    gold -= p;
+                    energy = 100;
+                    hunger += 30; if (hunger > 100) hunger = 100;
+                    happiness += 20; if (happiness > 100) happiness = 100;
+                    char m[128]; sprintf(m, "Drank Dragon Nectar (%dg)! Energy MAX (100).", p); add_log(m);
+                    spawn_particles_ext(75, 260, RGB(100,200,255), 20, 0);
+                } else { add_log("Not enough gold."); }
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            else if (LOWORD(wParam) == BTN_SHP_CROWN) {
+                int p = get_item_price(60);
+                if (gold >= p) {
+                    gold -= p;
+                    loyalty += 8;
+                    happiness = 100;
+                    char m[128]; sprintf(m, "Gifted Crown of Fealty (%dg)! Loyalty +8, Happiness MAX.", p); add_log(m);
+                    spawn_particles_ext(165, 260, RGB(255,215,0), 25, 3);
+                } else { add_log("Not enough gold."); }
+                InvalidateRect(hwnd, NULL, FALSE);
+            }
+            else if (LOWORD(wParam) == BTN_SHP_POLISH) {
+                int p = get_item_price(75);
+                if (gold >= p) {
+                    gold -= p;
+                    strength += 4;
+                    speed += 4;
+                    char m[128]; sprintf(m, "Applied Scale Polish (%dg)! Strength +4, Speed +4.", p); add_log(m);
+                    spawn_particles_ext(305, 260, RGB(220,150,255), 25, 3);
                 } else { add_log("Not enough gold."); }
                 InvalidateRect(hwnd, NULL, FALSE);
             }
@@ -1284,6 +1466,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     } else {
                         add_log("You ignored the merchant.");
                     }
+                } else if (current_event_id == 3) {
+                    if (opt == 1) {
+                        energy -= 15; if (energy < 0) energy = 0;
+                        speed += 2;
+                        add_log("Dragon chased celestial star sparks! Speed +2 (-15 Energy).");
+                        if ((rand() % 100 < 35) && !(relics_mask & (1 << 5))) {
+                            relics_mask |= (1 << 5);
+                            add_log("NEW RELIC: Star Fragment recovered!");
+                        }
+                        spawn_particles_ext(300, 150, RGB(255,215,60), 25, 3);
+                    } else {
+                        happiness += 20; if (happiness > 100) happiness = 100;
+                        loyalty += 2;
+                        add_log("You watched the meteor shower together. Happiness +20, Loyalty +2.");
+                    }
+                } else if (current_event_id == 4) {
+                    if (opt == 1) {
+                        if (gold >= 25) {
+                            gold -= 25;
+                            loyalty += 5;
+                            happiness += 15; if (happiness > 100) happiness = 100;
+                            add_log("Altar glowed warm amber! Loyalty +5, Happiness +15.");
+                            spawn_particles_ext(300, 150, RGB(255,180,50), 25, 3);
+                        } else {
+                            add_log("Not enough gold for altar tribute.");
+                        }
+                    } else {
+                        strength += 2;
+                        speed += 2;
+                        add_log("Ancient runes deciphered! Strength +2, Speed +2.");
+                        spawn_particles_ext(300, 150, RGB(100,200,255), 25, 0);
+                    }
                 }
                 
                 ShowWindow(btn_evt_opt1, SW_HIDE);
@@ -1294,7 +1508,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             else if (LOWORD(wParam) == BTN_HELP) {
                 MessageBox(hwnd, 
-                    "Dragon Master's Guide & Shortcuts\n\n"
+                    "Dragon Master's Guide & Sanctuary Manual\n\n"
                     "=== CONTROLS & SHORTCUTS ===\n"
                     "[F1] or [H]  : Open this Guide\n"
                     "[F5]         : Quicksave Sanctuary State\n"
@@ -1314,18 +1528,30 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "- Speed Reflex: [Space] or [Enter] to React on Signal\n"
                     "- Mystery Box: [1], [2], [3] to Pick Box\n"
                     "- Battle: [1] Attack, [2] Defend, [3] Special, [4] Flee\n"
-                    "- Shop: [1] Meat, [2] Toy, [3] Bracer, [4] Boots, [Esc] Back\n"
+                    "- Shop: [1] Meat, [2] Toy, [3] Bracer, [4] Boots, [5] Nectar, [6] Crown, [7] Polish, [Esc] Back\n"
                     "- Events: [1] Option 1, [2] Option 2\n\n"
-                    "=== STATS & EVOLUTION ===\n"
-                    "- Hunger / Happiness / Energy: Core vitals (Keep above 0!)\n"
-                    "- Strength (Str): Attack damage in battles & training\n"
-                    "- Speed (Spd): Hit chance & dodge rate\n"
-                    "- Loyalty (Loy): Potency of special abilities & treats\n"
-                    "- Age: Baby dragon evolves at Age 10 based on care:\n"
-                    "   * High Str/Spd/Loy -> Astral Dragon (Starfall)\n"
-                    "   * Mostly Fed       -> Earth Dragon (Earthquake)\n"
-                    "   * Mostly Played    -> Fire Dragon (Fireball)\n"
-                    "   * Mostly Slept     -> Water Dragon (Healing Stream)", 
+                    "=== DRAGON MOODS & CARE ===\n"
+                    "- Ecstatic: (Hap>=80, Hngr>=60, Egy>=60) -> +1 bonus stat during training!\n"
+                    "- Fatigued / Ravenous / Melancholy: Keep vitals high to thrive!\n\n"
+                    "=== EVOLUTION & ELDER ASCENSION ===\n"
+                    "- Age 10: Baby dragon evolves into Adult (Fire, Water, Earth, or Astral)\n"
+                    "- Age 20+ (or 6 Relics): Ascends into ELDER SOVEREIGN WYRM!\n"
+                    "   * +50 Max HP in Arena, Cataclysmic specials, and massive aura!\n\n"
+                    "=== ACTIVE RELIC ARTIFACTS ===\n"
+                    "- Shiny Scale: +20 Arena Max HP & 25% Critical Strike chance\n"
+                    "- Gemstone: +50% Gold and +5 Happiness on Hoard Expeditions\n"
+                    "- Old Bone: +1 additional Stat gain on all Training mini-games\n"
+                    "- Mystery Eggshell: 20% discount on all Merchant Bazaar items\n"
+                    "- Dragon Fang: Defense-piercing strikes in Battle Arena\n"
+                    "- Star Fragment: +25% Elemental Special Damage in Arena\n\n"
+                    "=== BAZAAR SHOP WARES ===\n"
+                    "- Prime Meat (20g): +35 Hunger, +10 Energy\n"
+                    "- Glowing Orb (30g): +50 Happiness, +10 Energy\n"
+                    "- Power Bracer (50g): Permanently adds +5 Strength\n"
+                    "- Swift Boots (50g): Permanently adds +5 Speed\n"
+                    "- Dragon Nectar (40g): Maxes Energy (100), +30 Hunger, +20 Happiness\n"
+                    "- Crown of Fealty (60g): Permanently adds +8 Loyalty & Max Happiness\n"
+                    "- Scale Polish (75g): Permanently adds +4 Strength & +4 Speed", 
                     "Dragon Master's Guide", MB_OK | MB_ICONINFORMATION);
             }
             break;
@@ -1353,7 +1579,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 if (state == 1 || state == 2) {
                     if ((rand() % 100) < 10) {
-                        current_event_id = rand() % 3;
+                        current_event_id = rand() % 5;
                         ShowMainControls(0);
                         ShowWindow(btn_evt_opt1, SW_SHOW);
                         ShowWindow(btn_evt_opt2, SW_SHOW);
@@ -1367,6 +1593,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         } else if (current_event_id == 2) {
                             SetWindowText(btn_evt_opt1, "Buy Shell 10g [1]");
                             SetWindowText(btn_evt_opt2, "Ignore [2]");
+                        } else if (current_event_id == 3) {
+                            SetWindowText(btn_evt_opt1, "Catch Shard [1]");
+                            SetWindowText(btn_evt_opt2, "Seek Cover [2]");
+                        } else if (current_event_id == 4) {
+                            SetWindowText(btn_evt_opt1, "Tribute 25g [1]");
+                            SetWindowText(btn_evt_opt2, "Commune [2]");
                         }
                         
                         prev_state = state;
@@ -1408,6 +1640,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     add_shockwave(300, 150, 100.0f, evoColor);
                     spawn_particles_ext(300, 150, evoColor, 35, 0);
                     spawn_particles_ext(300, 150, RGB(255,215,0), 20, 3);
+                } else if (state == 2 && age == 20) {
+                    add_log("A celestial roar echoes! Dragon ascended to an ELDER SOVEREIGN WYRM!");
+                    trigger_screen_shake(12.0f);
+                    add_shockwave(300, 150, 120.0f, RGB(255, 230, 90));
+                    spawn_particles_ext(300, 150, RGB(255, 215, 0), 40, 3);
                 }
                 
                 InvalidateRect(hwnd, NULL, FALSE);
@@ -1433,6 +1670,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (wParam == 4) { // expedition timer
                 KillTimer(hwnd, 4);
                 int found_gold = 10 + (GetTickCount() % 20);
+                if (relics_mask & (1 << 1)) { // Gemstone: +50% gold & happiness
+                    found_gold = found_gold * 150 / 100;
+                    happiness += 5;
+                }
                 gold += found_gold;
                 happiness += 5; if (happiness > 100) happiness = 100;
                 char logMsg[128];
@@ -1446,6 +1687,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     relics_mask |= (1 << rIdx);
                     sprintf(logMsg, "Dragon also found a rare relic: %s!", relic_names[rIdx]);
                     add_log(logMsg);
+                    if (count_relics() == 6 && state == 2) {
+                        add_log("All 6 relics assembled! Dragon ascended to an ELDER SOVEREIGN WYRM!");
+                        trigger_screen_shake(12.0f);
+                        add_shockwave(300, 150, 120.0f, RGB(255, 230, 90));
+                        spawn_particles_ext(300, 150, RGB(255, 215, 0), 40, 3);
+                    }
                 }
                 
                 state = prev_state;
@@ -1588,16 +1835,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 
                 char buf1[128];
                 char buf2[128];
-                const char* type_str = "None";
-                if (element == 2) type_str = "Fire";
-                else if (element == 3) type_str = "Earth";
-                else if (element == 4) type_str = "Water";
-                else if (element == 6) type_str = "Astral";
+                const char* stage_str = (state == 1) ? "Hatchling" : (is_elder() ? "Elder Sovereign Wyrm" : "Adult");
+                const char* mood_str = get_mood_str();
                 
-                sprintf(buf1, "Hunger: %d/100  |  Happiness: %d/100  |  Energy: %d/100  |  Age: %d", 
-                        hunger, happiness, energy, age);
-                sprintf(buf2, "Type: %s  |  Str: %d  |  Spd: %d  |  Loy: %d  |  Gold: %dg  |  Relics: %d/6", 
-                        type_str, strength, speed, loyalty, gold, count_relics());
+                sprintf(buf1, "Stage: %s  |  Mood: %s  |  Age: %d  |  Gold: %dg  |  Relics: %d/6", 
+                        stage_str, mood_str, age, gold, count_relics());
+                sprintf(buf2, "Hngr: %d/100 | Hap: %d/100 | Egy: %d/100 | Str: %d | Spd: %d | Loy: %d", 
+                        hunger, happiness, energy, strength, speed, loyalty);
                 
                 RECT r1 = {20 + shake_dx, 42 + shake_dy, 580 + shake_dx, 60 + shake_dy};
                 RECT r2 = {20 + shake_dx, 60 + shake_dy, 580 + shake_dx, 80 + shake_dy};
@@ -1615,7 +1859,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (state == 1 || (state > 2 && prev_state == 1)) {
                     DrawPixelArt(hdc, player_x + p_dx, 88 + anim_bob + shake_dy, 8, dragon_pixels, 0, 0, player_damage_flash);
                 } else if (state == 2 || (state > 2 && prev_state == 2)) {
-                    DrawPixelArt(hdc, player_x + p_dx, 88 + anim_bob + shake_dy, 8, adult_dragon_pixels, element, 0, player_damage_flash);
+                    if (is_elder()) {
+                        DrawPixelArt(hdc, player_x + p_dx, 88 + anim_bob + shake_dy, 8, elder_dragon_pixels, element, 0, player_damage_flash);
+                    } else {
+                        DrawPixelArt(hdc, player_x + p_dx, 88 + anim_bob + shake_dy, 8, adult_dragon_pixels, element, 0, player_damage_flash);
+                    }
                 }
                 
                 if (state == 4) { // Strength minigame
@@ -1685,15 +1933,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     // Enemy Obsidian Dragon Sprite (Flipped)
                     DrawPixelArt(hdc, 360 + e_dx, 88 + anim_bob + shake_dy, 8, adult_dragon_pixels, 5, 1, enemy_damage_flash);
                 } else if (state == 9) { // Shop mode
-                    DrawShopItemCard(hdc, 32 + shake_dx, 215 + shake_dy, 0, 0);
-                    DrawShopItemCard(hdc, 122 + shake_dx, 215 + shake_dy, 1, 0);
-                    DrawShopItemCard(hdc, 212 + shake_dx, 215 + shake_dy, 2, 0);
-                    DrawShopItemCard(hdc, 302 + shake_dx, 215 + shake_dy, 3, 0);
+                    const char* shpTitle = "=== MERCHANT BAZAAR ===";
+                    SelectObject(hdc, hFontTitle);
+                    SetTextColor(hdc, RGB(180, 50, 10));
+                    RECT shpR = {20 + shake_dx, 182 + shake_dy, 580 + shake_dx, 208 + shake_dy};
+                    DrawText(hdc, shpTitle, strlen(shpTitle), &shpR, DT_CENTER | DT_TOP);
+                    SetTextColor(hdc, RGB(42, 23, 4));
+                    SelectObject(hdc, hFontNormal);
                 } else if (state == 10) { // Random event
                     const char* text = "";
                     if (current_event_id == 0) text = "Your dragon looks sick and feverish! What will you do?";
                     else if (current_event_id == 1) text = "A wild predator beast is approaching the lair!";
                     else if (current_event_id == 2) text = "A wandering mystic merchant offers a legendary eggshell!";
+                    else if (current_event_id == 3) text = "A glittering meteor shower falls! Astral shards rain down!";
+                    else if (current_event_id == 4) text = "You discover the ancient Forgotten Dragon Altar in the mists!";
                     SetTextColor(hdc, RGB(180, 40, 20));
                     RECT evtR = {20 + shake_dx, 235 + shake_dy, 580 + shake_dx, 260 + shake_dy};
                     DrawText(hdc, text, strlen(text), &evtR, DT_CENTER | DT_TOP);
@@ -1941,7 +2194,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 } else if (wParam == '4') {
                     SendMessage(hwnd, WM_COMMAND, BTN_SHP_SPD, 0);
                     continue;
-                } else if (wParam == VK_ESCAPE || wParam == '5' || wParam == 'B' || wParam == 'b') {
+                } else if (wParam == '5') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_SHP_NECTAR, 0);
+                    continue;
+                } else if (wParam == '6') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_SHP_CROWN, 0);
+                    continue;
+                } else if (wParam == '7') {
+                    SendMessage(hwnd, WM_COMMAND, BTN_SHP_POLISH, 0);
+                    continue;
+                } else if (wParam == VK_ESCAPE || wParam == '8' || wParam == 'B' || wParam == 'b') {
                     SendMessage(hwnd, WM_COMMAND, BTN_SHP_BACK, 0);
                     continue;
                 }
