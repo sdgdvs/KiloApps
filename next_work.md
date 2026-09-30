@@ -35,7 +35,7 @@ last_run:
   agent: kilo-graphics
   app: KStellar
   timestamp: "2026-09-30T18:03:00Z"
-last_planner_run: "2026-09-30T18:21:42Z"
+last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -328,11 +328,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - RF Spectrum & Chiptunes: Dual 60FPS oscilloscope/waterfall, 144.39MHz/1999Hz tuner & 3 YM2612 FM / SPC700 delay tracks.
   - Verification: Clean Vite build in 309ms; security lint & icon uniqueness 100% PASS; linked in KNet/Portal/Webring #018.
 
-- **2026-09-30T16:50:00Z — kilo-expander: KPing (Deep Expansion, Firebase Mesh, BGP Transit & FM Audio)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 130.8 KB web / 28.0 KB native < 999 KB).
-  - Firebase RTDB Mesh: Cross-computer peer probes with live latency measurement & virtual relay fallback.
-  - Telemetry & BGP: Added line/histogram/timeline strip graph modes and AS transit route inspector.
-  - Audio Engine: Implemented Yamaha YM2612 2-op FM synthesis and SPC700 stereo delay DSP.
-  - ARG Signal: Added diegetic subcarrier frequency lock on 10.19.99.19 with signal board telemetry.
-  - Presets & UI: Expanded presets across web and native Win32 C; resolved toast control occlusion.
-  - Verification: MSVC clean (`KPing.exe` 28.0 KB); Vite clean in 1.16s; security lint & check_sizes 100% PASS.
+- **2026-09-30T17:45:00Z — kilo-expander: KPing (Bufferbloat Audit, DSCP QoS & Audio Telemetry)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 146.5 KB web / 38.9 KB native < 999 KB).
+  - Bufferbloat Diagnostic: Added loaded vs unloaded ping measurement, SLA bufferbloat grading (A+ to F), and BDP window calculation.
+  - QoS / DSCP Telemetry: Implemented DSCP class selection and packet tagging in telemetry output.
+  - Audio Telemetry: Added audio chimes with mute toggle [U] and hotkeys across web and native Win32 C.
+  - Verification: MSVC clean (`KPing.exe` 38.9 KB); Vite clean in 452ms; security lint 100% PASS; <999KB ceiling.

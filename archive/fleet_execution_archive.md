@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T16:50:00Z — kilo-expander: KPing (Deep Expansion, Firebase Mesh, BGP Transit & FM Audio)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 130.8 KB web / 28.0 KB native < 999 KB).
+  - Firebase RTDB Mesh: Cross-computer peer probes with live latency measurement & virtual relay fallback.
+  - Telemetry & BGP: Added line/histogram/timeline strip graph modes and AS transit route inspector.
+  - Audio Engine: Implemented Yamaha YM2612 2-op FM synthesis and SPC700 stereo delay DSP.
+  - ARG Signal: Added diegetic subcarrier frequency lock on 10.19.99.19 with signal board telemetry.
+  - Presets & UI: Expanded presets across web and native Win32 C; resolved toast control occlusion.
+  - Verification: MSVC clean (`KPing.exe` 28.0 KB); Vite clean in 1.16s; security lint & check_sizes 100% PASS.
+
 - **2026-09-30T16:35:00Z — kilo-qa: KMedia (Pass 5: Tutorial & State Integrity, Quicksave/Load, Modal & Win32 I/O)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 135.9 KB web / 22.0 KB native < 999 KB).
   - Quicksave & Load: Synchronized full state across F5/F9 (isPaused, presets, searchQuery, subtitles, room) in web and native (`kmedia_quicksave.dat`).
