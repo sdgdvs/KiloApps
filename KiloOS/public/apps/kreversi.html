@@ -509,6 +509,7 @@
     </div>
     <input type="file" id="import-file-input" style="display: none;" accept=".json" onchange="handleImportFile(event)">
 
+    <script src="../assets/js/retro_multiplayer.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
         import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
@@ -668,6 +669,27 @@
         let activeLobbyListener = null;
         let localLastMoveTs = 0;
         let localLastChatTs = 0;
+        let soloFallbackTimer = null;
+
+        function startSoloFallbackTimer(code) {
+            clearSoloFallbackTimer();
+            soloFallbackTimer = setTimeout(() => {
+                if (isOnlineGame && currentRoomStatus === 'waiting' && currentRoomId === code) {
+                    showToast("⏱️ No opponent joined in 25s. Engaging Subnet AI Cyber-Bot...", "warning");
+                    leaveOnlineGame(false);
+                    gameMode = 'skirmish';
+                    initGame();
+                    showToast("🎮 Subnet Cyber-Bot engaged! Your turn (Black).", "info");
+                }
+            }, 25000);
+        }
+
+        function clearSoloFallbackTimer() {
+            if (soloFallbackTimer) {
+                clearTimeout(soloFallbackTimer);
+                soloFallbackTimer = null;
+            }
+        }
 
         function escapeHtml(str) {
             if (!str) return '';
@@ -888,6 +910,10 @@
 
                 closeMultiplayerModal();
                 attachRoomListener(code);
+                startSoloFallbackTimer(code);
+                if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+                    window.history.replaceState(null, '', '#room=' + code);
+                }
 
                 const onlineBar = document.getElementById('onlineBar');
                 if (onlineBar) onlineBar.style.display = 'flex';
@@ -895,7 +921,7 @@
                 document.getElementById('onlineRoleText').textContent = 'You: Black (P1)';
                 document.getElementById('onlineSizeText').textContent = `${chosenSize}x${chosenSize} Reversi`;
                 document.getElementById('onlineOpponentIndicator').textContent = '🟡';
-                document.getElementById('onlineOpponentText').textContent = 'Waiting for opponent to join...';
+                document.getElementById('onlineOpponentText').textContent = 'Waiting for opponent to join (or AI in 25s)...';
                 document.getElementById('onlineRematchBtn').style.display = 'none';
 
                 showToast(`🌐 Room ${code} created! Waiting for Player 2...`, 'success');
@@ -984,6 +1010,9 @@
 
                 closeMultiplayerModal();
                 attachRoomListener(code);
+                if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+                    window.history.replaceState(null, '', '#room=' + code);
+                }
 
                 const onlineBar = document.getElementById('onlineBar');
                 if (onlineBar) onlineBar.style.display = 'flex';
@@ -1044,6 +1073,10 @@
                     showToast(`🥋 ${opponentName} joined the match! Game on!`, 'success');
                     playSound('join');
                 }
+            }
+
+            if (room.status === 'playing' || (room.p2 && room.p2.connected)) {
+                clearSoloFallbackTimer();
             }
 
             if (room.size && room.size !== boardWidth) {
@@ -1170,9 +1203,10 @@
 
         function copyOnlineRoomLink() {
             if (!currentRoomId) return;
+            const url = window.location.origin + window.location.pathname + '#room=' + currentRoomId;
             try {
-                navigator.clipboard.writeText(currentRoomId).then(() => {
-                    showToast(`📋 Room Code "${currentRoomId}" copied to clipboard!`, 'success');
+                navigator.clipboard.writeText(url).then(() => {
+                    showToast(`📋 Room invite link copied! (${currentRoomId})`, 'success');
                 }).catch(() => {
                     showToast(`Room Code: ${currentRoomId}`, 'info');
                 });
@@ -1182,6 +1216,7 @@
         }
 
         function leaveOnlineGame(confirmPrompt = true) {
+            clearSoloFallbackTimer();
             if (confirmPrompt && isOnlineGame && currentRoomStatus === 'playing') {
                 if (!confirm('Leave this active online match? This will concede the match to your opponent.')) return;
                 if (window.fb && currentRoomId) {
@@ -1211,6 +1246,11 @@
             currentRoomId = null;
             currentRoomStatus = 'none';
             myPlayerNum = 0;
+
+            if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+                const cleanUrl = window.location.pathname + window.location.search;
+                window.history.replaceState(null, '', cleanUrl);
+            }
 
             const onlineBar = document.getElementById('onlineBar');
             if (onlineBar) onlineBar.style.display = 'none';
@@ -2758,6 +2798,37 @@
         loadPrefs();
         loadStats();
         changeGameMode();
+
+        function checkUrlAutoJoin() {
+            try {
+                let room = null;
+                const params = new URLSearchParams(window.location.search);
+                room = params.get('room') || params.get('join');
+                if (!room && window.location.hash) {
+                    const h = window.location.hash.replace(/^#/, '');
+                    if (h.startsWith('room=')) room = h.split('=')[1];
+                    else if (h.includes('?room=')) room = new URLSearchParams(h.split('?')[1]).get('room');
+                    else if (/^[A-Za-z0-9_-]{3,10}$/.test(h)) room = h;
+                }
+                if (room && window.fb) {
+                    setTimeout(() => {
+                        joinOnlineRoom(room);
+                    }, 400);
+                }
+            } catch(e) {}
+        }
+
+        window.onFirebaseLoaded = function() {
+            checkUrlAutoJoin();
+            const modal = document.getElementById('multiplayer-modal');
+            if (modal && modal.style.display === 'flex') {
+                subscribeLobby();
+            }
+        };
+
+        if (window.fb) {
+            window.onFirebaseLoaded();
+        }
     </script>
 
     <div id="help-modal" class="modal" onclick="if(event.target===this) closeHelp()">

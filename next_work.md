@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KMandel
   kilo_usability: KBookmark
   kilo_graphics: KStarDredge
-  kilo_qa: KPaint
+  kilo_qa: KCalc
   kilo_expander: KPad
   kilo_creator: "kweb://geocities (CyberSpire Retro Shrine & MOD Vault)"
 virtual_web_target: "kweb://geocities"
@@ -33,8 +33,8 @@ virtual_web_rotation:
   - "kweb://warez"
 last_run:
   agent: kilo-expander
-  app: "Multiplayer (RFMS Standard: KConnect4 & KChess)"
-  timestamp: "2026-09-30T23:45:00Z"
+  app: "Retro Firebase Multiplayer Expansion (KReversi, KGo, KDarts)"
+  timestamp: "2026-09-30T23:59:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -80,8 +80,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
     - All agents (especially `kilo-graphics` and `kilo-usability`) MUST systematically remove rotating/traveling specular glint comets and moving perimeter border dots from both web (HTML) and native (C) on all app passes.
     - These moving dots are annoying, look like distracting projectiles/balls, and clutter gameplay across apps. Replace with clean, static, or period-accurate borders without traveling dots or orbital glint particles. NEVER add new perimeter traveling glints.
 12. **Seamless Online Multiplayer via Firebase (DIRECTOR MANDATE - CRITICAL)**:
-    - `kilo-creator` and `kilo-expander` must concentrate on adding online multiplayer features that work seamlessly through Firebase Realtime Database (`https://kiloappschat-default-rtdb.firebaseio.com`).
+    - `kilo-creator` and `kilo-expander` must concentrate on adding online multiplayer features that work seamlessly through Firebase Realtime Database (`https://kiloappschat-default-rtdb.firebaseio.com`) using the standardized RFMS service [`KiloOS/public/assets/js/retro_multiplayer.js`](KiloOS/public/assets/js/retro_multiplayer.js) (spec: [`docs/RFMS_SPEC.md`](docs/RFMS_SPEC.md)).
     - Players from different computers anywhere on the internet visiting `kiloapps.web.app` who are not otherwise communicating must be able to play together in real-time without needing custom servers, shared LANs, or external communication tools—identical to how KChat connects global users in the `#general` room.
+    - **Mandatory 25s Solo AI Fallback**: If waiting for a peer and none joins within 25 seconds, app automatically engages local AI cyber-bot.
     - Priority focus: turn-based board & strategy games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KBattleship*), competitive arcade duel modes (*KTetris*, *K2048*, *KSnake*), and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*). Always preserve offline/solo/vs-AI mode as a graceful fallback.
 13. **🎨 Daily App Icon Uniqueness Audit (DIRECTOR MANDATE - CRITICAL)**:
     - Every application in `KiloOS/src/App.jsx` MUST possess a unique, visually distinctive 32x32 `.ico` file in `KiloOS/public/assets/icons/`. Reusing icons or copying existing `.ico` files (e.g. copying `kpass.ico` or pointing multiple apps to `knet.ico`) is strictly prohibited.
@@ -118,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KPaint`
+- **Current Target**: `KCalc`
 - **Upcoming Queue**:
-  `KCalc`, `KMine`, `KCosmic`, `KContacts`, `KPad` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad)*.
+  `KMine`, `KCosmic`, `KContacts`, `KPad`, `KPaint` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KPad`
@@ -294,6 +295,22 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T23:59:00Z — kilo-expander: Retro Firebase Multiplayer Service (RFMS Expansion to KReversi, KGo, KDarts)**
+  - RFMS Spec & Agent Guidance: Created `docs/RFMS_SPEC.md`; updated `kilo-expander` and `kilo-creator` skills with standard snippets.
+  - Direction 3 Retrofits: Upgraded `KReversi`, `KGo`, and `KDarts` to full RFMS compliance with room codes and deep links.
+  - Mandate Rule 12 Solo Fallback: Wired 25-second auto-fallback to Subnet AI bots on all lobbies to guarantee instant solo play.
+  - URL Hash Sync: Implemented bidirectional `#room=CODE` deep linking, auto-joining on load, and clean URL hash cleanup on exit.
+  - Verification: Headless Chrome 60 FPS verified (0 frame drops, 0 errors); security lint & test_arg_flow 100% PASS; build clean.
+
+- **2026-09-30T23:55:00Z — kilo-qa: KPaint (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 148.1 KB web / 29.2 KB native < 999 KB ceiling).
+  - Quicksave & Quickload: Added F5 / F9 full multi-layer snapshot persistence with quota safety across web and Win32 C.
+  - Tutorial & State Integrity: Enforced `kpaint_tutorialSeen` / `.dat` flags to prevent onboarding popup on restored sessions.
+  - Modal Navigation & Ergonomics: Added Enter key confirmation to stamp text and collab inputs; Escape dismisses all modals.
+  - Toast Occlusion Remediation: Moved notifications to bottom-right safe zone to prevent canvas and control overlap.
+  - TINAG ARG Audit: Purged non-diegetic tags and comments, ensuring period-accurate in-universe lore consistency.
+  - Verification: MSVC clean (`KPaint.exe` 29.2 KB); Vite clean in 433ms; check_icons & security lint 100% PASS.
+
 - **2026-09-30T23:45:00Z — kilo-expander: Retro Firebase Multiplayer Service (RFMS Standard on KConnect4 & KChess)**
   - Standardized RFMS Module: Deployed `KiloOS/public/assets/js/retro_multiplayer.js` (<20 KB, zero bundler dependencies).
   - Ephemeral Matchmaking & Presence: Standardized room codes, lobby discovery, moves, rematch & `onDisconnect` presence.
@@ -319,21 +336,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - KChrono: Eliminated per-frame backdrop-filter CPU gaussian blurs and cached chronograph dimensions.
   - KType & KVault: Removed heavy backdrop-filter blurs and parallelized WebCrypto TOTP calculation.
   - Results: All 6 apps verified at locked 60 FPS (17ms max delta, 0 stutters); Vite clean; security lint & ARG test 100% PASS.
-
-- **2026-09-30T23:10:00Z — kilo-tester: KMail (Interactive UI Audit, Quicksave/Load, Toast Safe Zone & Action Wiring)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 117.1 KB web / 504.0 KB native < 999 KB ceiling).
-  - Quicksave & Quickload: Implemented F5 / F9 mailbox snapshot save & restore across localStorage with audio & toast feedback.
-  - Toast Occlusion: Moved toast container to bottom-right (`bottom: 34px; right: 20px`), clearing pane action buttons & tabs.
-  - Action Wiring: Connected orphan `flushOutbox` to UI and sidebar; added `forwardEmail` [F] and Trash `restoreEmail` actions.
-  - Decrypted State Integrity: Preserved decrypted plaintext on email instance for accurate Reply, Forward, Print, and EML export.
-  - Accessibility & Fixes: Added keyboard handlers to preset tag chips and export cards; fixed missing outbox folder in `importJson`.
-  - Verification: MSVC clean (`KMail.exe` 504.0 KB); Vite clean in 242ms; check_icons & security lint 100% PASS; <999KB ceiling.
-
-- **2026-09-30T22:56:00Z — kilo-graphics: KSubmarine (Game Content, Visual Polish & Balance Pass)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 450.0 KB web / 257.5 KB native < 999 KB ceiling).
-  - Specular Glint & Dot Audit: Verified 100% absence of rotating specular glints or traveling perimeter border dots in web & Win32 C.
-  - Native C Visual Polish: Added drifting marine snow motes on Sonar Radar, forward searchlight illuminator cone, and GDI leak fix.
-  - Custom Sprite Rendering: Implemented dedicated octagonal combat drone, streamlined torpedo with wake, and pulsing decoy sprites in C.
-  - Web Radar & Anomaly Polish: Added depth-tinted strata vignette, Sector 2 hydrothermal smoker plume, and bio-scan holographic wave animation.
-  - Balance & Emergency FX: Polished ballast blow cavitation blast, tuned torpedo homing guidance and threat attack parameters.
-  - Verification: MSVC clean (`KSubmarine.exe` 257.5 KB); Vite clean in 262ms (`ksubmarine.html` 450.0 KB); icons & security lint 100% PASS.

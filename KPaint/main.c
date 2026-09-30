@@ -45,12 +45,24 @@ HWND hBtnBlack, hBtnRed, hBtnGreen, hBtnBlue, hBtnYellow, hBtnPurple, hBtnEraser
 HWND hBtnSizeSmall, hBtnSizeMed, hBtnSizeLarge, hBtnShapeToggle, hBtnMirror;
 HWND hBtnFreehand, hBtnLine, hBtnRect, hBtnEllipse, hBtnSpray, hBtnFill, hBtnPipette;
 HWND hBtnUndo, hBtnRedo, hBtnInvert, hBtnGray, hBtnBright, hBtnDark, hBtnFlipH, hBtnFlipV, hBtnRotate90, hBtnRotateCCW;
-HWND hBtnClear, hBtnSave, hBtnOpen, hBtnHelp, hBtnDemoArt;
+HWND hBtnClear, hBtnSave, hBtnOpen, hBtnQuickSave, hBtnQuickLoad, hBtnHelp, hBtnDemoArt;
 HWND hBtnEdge, hBtnSharpen, hBtnEmboss, hBtnDither, hBtnScanlines;
 int mirrorMode = 0; // 0 = Normal, 1 = Horizontal Mirror
 
 HFONT hFont = NULL;
 static HBITMAP hbmStockOld = NULL;
+
+#define QUICKSAVE_BMP "kpaint_quicksave.bmp"
+#define QUICKSAVE_DAT "kpaint_quicksave.dat"
+
+typedef struct {
+    DWORD magic; // 0x4B504153 'KPAS'
+    COLORREF curColor;
+    int curSize;
+    int brushShape;
+    int currentTool;
+    int mirrorMode;
+} KPaintQuickState;
 
 void PushUndo();
 void PerformUndo();
@@ -60,6 +72,8 @@ void UpdateTitleStatus(HWND hwnd);
 void GenerateDemoArtwork(HWND hwnd);
 void FilterDither1Bit();
 void FilterScanlines();
+void QuicksaveState(HWND hwnd);
+void QuickloadState(HWND hwnd);
 
 void UpdatePen() {
     if (hPen) DeleteObject(hPen);
@@ -88,8 +102,8 @@ void UpdatePen() {
 void UpdateTitleStatus(HWND hwnd) {
     const char* toolNames[] = {"Brush", "Line", "Rect", "Circle", "Spray", "Eraser", "Fill", "Pick"};
     const char* toolName = (currentTool >= 0 && currentTool <= 7) ? toolNames[currentTool] : "Brush";
-    char title[220];
-    wsprintfA(title, "KPaint Pro - Tool: %s | Size: %dpx (%s) | Color: #%02X%02X%02X | Mirror: %s [M] | F1 Help, D Demo",
+    char title[260];
+    wsprintfA(title, "KPaint Pro - Tool: %s | %dpx (%s) | #%02X%02X%02X | Mirror: %s | F5 QSave, F9 QLoad, F1 Help",
         toolName, curSize, brushShape ? "Square" : "Round",
         GetRValue(curColor), GetGValue(curColor), GetBValue(curColor),
         mirrorMode ? "ON" : "OFF");
@@ -528,6 +542,78 @@ void LoadBitmapFile(HWND hwnd, const char* path) {
     }
 }
 
+void QuicksaveState(HWND hwnd) {
+    if (!hdcMem || !hbmCanvas) return;
+    if (!SaveBitmap(QUICKSAVE_BMP, hbmCanvas)) {
+        MessageBoxA(hwnd, "Failed to save quicksave canvas snapshot.", "KPaint Error", MB_OK | MB_ICONERROR);
+        return;
+    }
+    KPaintQuickState st;
+    st.magic = 0x4B504153;
+    st.curColor = curColor;
+    st.curSize = curSize;
+    st.brushShape = brushShape;
+    st.currentTool = currentTool;
+    st.mirrorMode = mirrorMode;
+
+    HANDLE hFile = CreateFileA(QUICKSAVE_DAT, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD dwWritten = 0;
+        WriteFile(hFile, &st, sizeof(st), &dwWritten, NULL);
+        CloseHandle(hFile);
+    }
+
+    HANDLE hTut = CreateFileA("kpaint_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hTut != INVALID_HANDLE_VALUE) {
+        DWORD dw = 0;
+        WriteFile(hTut, "1", 1, &dw, NULL);
+        CloseHandle(hTut);
+    }
+
+    SetWindowTextA(hwnd, "KPaint Pro - Quicksave Snapshot Saved! [F5] | Press F9 to Restore");
+    MessageBeep(MB_OK);
+}
+
+void QuickloadState(HWND hwnd) {
+    DWORD attrBmp = GetFileAttributesA(QUICKSAVE_BMP);
+    if (attrBmp == INVALID_FILE_ATTRIBUTES) {
+        MessageBoxA(hwnd, "No quicksave snapshot found. Press F5 to Quicksave.", "KPaint Pro", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+
+    LoadBitmapFile(hwnd, QUICKSAVE_BMP);
+
+    DWORD attrDat = GetFileAttributesA(QUICKSAVE_DAT);
+    if (attrDat != INVALID_FILE_ATTRIBUTES) {
+        HANDLE hFile = CreateFileA(QUICKSAVE_DAT, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            KPaintQuickState st = {0};
+            DWORD dwRead = 0;
+            if (ReadFile(hFile, &st, sizeof(st), &dwRead, NULL) && dwRead == sizeof(st) && st.magic == 0x4B504153) {
+                curColor = st.curColor;
+                curSize = st.curSize;
+                brushShape = st.brushShape;
+                currentTool = st.currentTool;
+                mirrorMode = st.mirrorMode;
+                UpdatePen();
+                if (hBtnMirror) SetWindowTextA(hBtnMirror, mirrorMode ? "Mirror ON" : "Mirror [M]");
+            }
+            CloseHandle(hFile);
+        }
+    }
+
+    HANDLE hTut = CreateFileA("kpaint_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hTut != INVALID_HANDLE_VALUE) {
+        DWORD dw = 0;
+        WriteFile(hTut, "1", 1, &dw, NULL);
+        CloseHandle(hTut);
+    }
+
+    UpdateTitleStatus(hwnd);
+    InvalidateRect(hwnd, NULL, FALSE);
+    MessageBeep(MB_OK);
+}
+
 void GenerateDemoArtwork(HWND hwnd) {
     if (!hdcMem) return;
     PushUndo();
@@ -713,9 +799,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnRedo = CreateWindowA("BUTTON", "Redo ^Y", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 413, 58, 22, hwnd, (HMENU)602, NULL, NULL);
             hBtnOpen = CreateWindowA("BUTTON", "Open ^O", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 438, 58, 22, hwnd, (HMENU)303, NULL, NULL);
             hBtnSave = CreateWindowA("BUTTON", "Save ^S", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 438, 58, 22, hwnd, (HMENU)302, NULL, NULL);
-            hBtnClear = CreateWindowA("BUTTON", "Clear Canvas", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 463, 121, 22, hwnd, (HMENU)301, NULL, NULL);
-            hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 488, 121, 22, hwnd, (HMENU)701, NULL, NULL);
-            hBtnDemoArt = CreateWindowA("BUTTON", "Demo Art (D)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 513, 121, 22, hwnd, (HMENU)304, NULL, NULL);
+            hBtnQuickSave = CreateWindowA("BUTTON", "QSave F5", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 463, 58, 22, hwnd, (HMENU)305, NULL, NULL);
+            hBtnQuickLoad = CreateWindowA("BUTTON", "QLoad F9", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 68, 463, 58, 22, hwnd, (HMENU)306, NULL, NULL);
+            hBtnClear = CreateWindowA("BUTTON", "Clear Canvas", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 488, 121, 22, hwnd, (HMENU)301, NULL, NULL);
+            hBtnHelp = CreateWindowA("BUTTON", "Help (F1)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 513, 121, 22, hwnd, (HMENU)701, NULL, NULL);
+            hBtnDemoArt = CreateWindowA("BUTTON", "Demo Art (D)", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 5, 538, 121, 22, hwnd, (HMENU)304, NULL, NULL);
 
             HWND controls[] = {
                 hBtnBlack, hBtnRed, hBtnGreen, hBtnBlue, hBtnYellow, hBtnPurple, hBtnCustomColor,
@@ -723,7 +811,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 hBtnSizeSmall, hBtnSizeMed, hBtnSizeLarge, hBtnShapeToggle, hBtnMirror,
                 hBtnInvert, hBtnGray, hBtnBright, hBtnDark, hBtnFlipH, hBtnFlipV, hBtnRotate90, hBtnRotateCCW,
                 hBtnEdge, hBtnSharpen, hBtnEmboss, hBtnDither, hBtnScanlines,
-                hBtnUndo, hBtnRedo, hBtnOpen, hBtnSave, hBtnClear, hBtnHelp, hBtnDemoArt
+                hBtnUndo, hBtnRedo, hBtnOpen, hBtnSave, hBtnQuickSave, hBtnQuickLoad, hBtnClear, hBtnHelp, hBtnDemoArt
             };
             for (int i = 0; i < sizeof(controls)/sizeof(controls[0]); i++) {
                 SendMessage(controls[i], WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -815,6 +903,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     LoadBitmapFile(hwnd, file);
                 }
             }
+            if (id == 305) { QuicksaveState(hwnd); }
+            if (id == 306) { QuickloadState(hwnd); }
             
             if (id == 401) { currentTool = 0; UpdatePen(); UpdateTitleStatus(hwnd); }
             if (id == 402) { currentTool = 1; UpdatePen(); UpdateTitleStatus(hwnd); }
@@ -865,7 +955,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "  [+]  +Brightness     [-] -Brightness\n"
                     "  Edge Detect, Sharpen, Emboss, Dither (1-Bit), CRT Lines\n"
                     "  Flip H/V, Rotate CW/CCW\n\n"
-                    "Quick Starter & Actions:\n"
+                    "State & File Actions:\n"
+                    "  [F5] Quicksave Snapshot\n"
+                    "  [F9] Quickload Snapshot\n"
                     "  [D]  Generate Demo Artwork (Mountain Sunset)\n"
                     "  Ctrl+Z  Undo          Ctrl+Y  Redo\n"
                     "  Ctrl+S  Save BMP      Ctrl+O  Open BMP\n"
@@ -894,6 +986,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(701, 0), 0);
+            } else if (wParam == VK_F5) {
+                QuicksaveState(hwnd);
+            } else if (wParam == VK_F9) {
+                QuickloadState(hwnd);
             } else if (wParam == 'B' || wParam == 'b') {
                 currentTool = 0; UpdatePen(); UpdateTitleStatus(hwnd);
             } else if (wParam == 'L' || wParam == 'l') {
@@ -1177,6 +1273,25 @@ void __stdcall MainEntry() {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
+    DWORD attrTut = GetFileAttributesA("kpaint_tutorial.dat");
+    DWORD attrQuick = GetFileAttributesA(QUICKSAVE_DAT);
+    if (attrTut == INVALID_FILE_ATTRIBUTES && attrQuick == INVALID_FILE_ATTRIBUTES) {
+        HANDLE hTut = CreateFileA("kpaint_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTut != INVALID_HANDLE_VALUE) {
+            DWORD dw = 0;
+            WriteFile(hTut, "1", 1, &dw, NULL);
+            CloseHandle(hTut);
+        }
+        MessageBoxA(hwnd,
+            "Welcome to KPaint Pro!\n\n"
+            "Quick Tips:\n"
+            "- [B] Brush, [E] Eraser, [L] Line, [R] Rect, [C] Circle, [G] Fill\n"
+            "- [F5] Quicksave Snapshot, [F9] Quickload Snapshot\n"
+            "- [D] Load Demo Artwork, [F1] / [H] Full Help Guide\n"
+            "- Drag & drop any BMP onto the canvas to open!",
+            "KPaint Pro - Quick Guide", MB_OK | MB_ICONINFORMATION);
+    }
+
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
@@ -1205,6 +1320,12 @@ void __stdcall MainEntry() {
             } else {
                 if (wParam == VK_F1 || wParam == 'H' || wParam == 'h') {
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(701, 0), 0);
+                    continue;
+                } else if (wParam == VK_F5) {
+                    QuicksaveState(hwnd);
+                    continue;
+                } else if (wParam == VK_F9) {
+                    QuickloadState(hwnd);
                     continue;
                 } else if (wParam == 'B' || wParam == 'b') {
                     currentTool = 0; UpdatePen(); UpdateTitleStatus(hwnd);

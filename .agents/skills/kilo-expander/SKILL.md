@@ -44,24 +44,24 @@ This skill deepens functional utility and capabilities on exactly ONE applicatio
      - *Turn-Based Board & Strategy Games*: *KChess, KConnect4, KGo, KReversi, KDarts, KCheckers, KBattleship, KCards*. Implement shared room state (`multiplayer/<app>/rooms/<roomId>`), real-time move synchronization via RTDB `push`/`onValue`, turn alternation, spectator view, and global public matchmaking (`multiplayer/<app>/lobby`).
      - *Collaborative Tools*: *KDraw, KPaint, KSynth (collaborative jam), KPad (shared live text)*. Sync canvas draw strokes or text buffers in real-time between connected peers.
      - *Competitive Arcade Duels*: Real-time high-score races, side-by-side split screens, attack line sending (e.g. *KTetris*, *K2048*, *KSnake* dual arenas).
-   - **Technical Standard**:
-     - Load Firebase via ES modules directly from Google CDN (adds 0 bytes to git build, strictly preserving <999 KB):
+   - **Technical Standard (Retro Firebase Multiplayer Service - RFMS)**:
+     - All multiplayer retrofits MUST use the standardized RFMS client module [`KiloOS/public/assets/js/retro_multiplayer.js`](../../KiloOS/public/assets/js/retro_multiplayer.js) (spec: [`docs/RFMS_SPEC.md`](../../docs/RFMS_SPEC.md)).
+     - Include `<script src="../assets/js/retro_multiplayer.js"></script>` in the app's HTML.
+     - **Mandate Rule 12 Compliance (CRITICAL)**: Always wire `onSoloFallback` or a 25-second timer (`soloTimeoutMs: 25000`) so lone players automatically transition to an active local AI opponent if no peer connects.
+     - **Dual Link Sharing**: Support both `#room=CODE` (preferred for KiloOS iframe embed) and `?room=CODE` query formats with automatic `history.replaceState` sync.
+     - Standard Usage Pattern:
        ```javascript
-       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-       import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
-       const firebaseConfig = {
-           apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
-           authDomain: "kiloappschat.firebaseapp.com",
-           databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
-           projectId: "kiloappschat",
-           storageBucket: "kiloappschat.firebasestorage.app",
-           messagingSenderId: "290208566057",
-           appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
-       };
-       const app = initializeApp(firebaseConfig);
-       const db = getDatabase(app);
+       const mp = new RetroMultiplayer({
+           gameId: '<app>',
+           prefix: '<3-letter-prefix>',
+           soloTimeoutMs: 25000,
+           onMove: (data) => applyRemoteMove(data),
+           onSoloFallback: () => startLocalAiGame(),
+           onStatusMsg: (msg, type) => showToast(msg, type)
+       });
+       await mp.init();
        ```
-     - Handle room joining, player presence (`onDisconnect()`), clean unmounting (`off()`), and always preserve local / solo / AI play as a default fallback.
+     - Handle player presence with automatic `onDisconnect()` cleanup and maintain 100% offline functionality.
 
 ## Verification
 1. Verify web app build: `cd KiloOS && npm run build`.

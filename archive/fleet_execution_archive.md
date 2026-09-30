@@ -4,6 +4,24 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T23:10:00Z — kilo-tester: KMail (Interactive UI Audit, Quicksave/Load, Toast Safe Zone & Action Wiring)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 117.1 KB web / 504.0 KB native < 999 KB ceiling).
+  - Quicksave & Quickload: Implemented F5 / F9 mailbox snapshot save & restore across localStorage with audio & toast feedback.
+  - Toast Occlusion: Moved toast container to bottom-right (`bottom: 34px; right: 20px`), clearing pane action buttons & tabs.
+  - Action Wiring: Connected orphan `flushOutbox` to UI and sidebar; added `forwardEmail` [F] and Trash `restoreEmail` actions.
+  - Decrypted State Integrity: Preserved decrypted plaintext on email instance for accurate Reply, Forward, Print, and EML export.
+  - Accessibility & Fixes: Added keyboard handlers to preset tag chips and export cards; fixed missing outbox folder in `importJson`.
+  - Verification: MSVC clean (`KMail.exe` 504.0 KB); Vite clean in 242ms; check_icons & security lint 100% PASS; <999KB ceiling.
+
+- **2026-09-30T22:56:00Z — kilo-graphics: KSubmarine (Game Content, Visual Polish & Balance Pass)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 450.0 KB web / 257.5 KB native < 999 KB ceiling).
+  - Specular Glint & Dot Audit: Verified 100% absence of rotating specular glints or traveling perimeter border dots in web & Win32 C.
+  - Native C Visual Polish: Added drifting marine snow motes on Sonar Radar, forward searchlight illuminator cone, and GDI leak fix.
+  - Custom Sprite Rendering: Implemented dedicated octagonal combat drone, streamlined torpedo with wake, and pulsing decoy sprites in C.
+  - Web Radar & Anomaly Polish: Added depth-tinted strata vignette, Sector 2 hydrothermal smoker plume, and bio-scan holographic wave animation.
+  - Balance & Emergency FX: Polished ballast blow cavitation blast, tuned torpedo homing guidance and threat attack parameters.
+  - Verification: MSVC clean (`KSubmarine.exe` 257.5 KB); Vite clean in 262ms (`ksubmarine.html` 450.0 KB); icons & security lint 100% PASS.
+
 - **2026-09-30T22:30:00Z — kilo-expander: KFont (Feature Expansion: Bitmap Studio, OpenType Features, VarAxes & Typo Linter)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 150.0 KB web / 30.0 KB native < 999 KB ceiling).
   - Bitmap ROM Studio: Added 1-bit pixel editor (8x8 to 16x16), active font rasterizer, CRT audition & multi-format export (C, ASM, Hex, BDF, Arduino).

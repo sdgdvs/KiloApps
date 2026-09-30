@@ -536,9 +536,10 @@
   /* Toast Notification */
   .toast-notification {
     position: fixed;
-    bottom: 38px;
-    left: 50%;
-    transform: translateX(-50%) translateY(12px);
+    bottom: 36px;
+    right: 24px;
+    left: auto;
+    transform: translateY(12px);
     background: rgba(24, 27, 40, 0.96);
     border: 1px solid var(--primary);
     color: var(--text-main);
@@ -558,7 +559,7 @@
   }
   .toast-notification.show {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
   }
 
   /* Peer Cursors & Collaborative Studio Styles */
@@ -627,6 +628,14 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
         Save [Ctrl+S]
       </button>
+      <button class="btn btn-accent" onclick="quickSave()" title="Quicksave Snapshot (F5)" aria-label="Quicksave Snapshot">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        QSave [F5]
+      </button>
+      <button class="btn btn-accent" onclick="quickLoad()" title="Quickload Snapshot (F9)" aria-label="Quickload Snapshot">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        QLoad [F9]
+      </button>
       <button class="btn btn-accent" onclick="showHelp()" title="Help &amp; Shortcuts (F1 or H)" aria-label="Help and Shortcuts">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
         Help [F1]
@@ -682,6 +691,8 @@
           <div class="shortcut-item"><kbd>O</kbd><span>Collaborative Studio</span></div>
           <div class="shortcut-item"><kbd>M</kbd><span>Symmetry Mirror Mode</span></div>
           <div class="shortcut-item"><kbd>T</kbd><span>Text Stamp Tool</span></div>
+          <div class="shortcut-item"><kbd>F5</kbd><span>Quicksave Snapshot</span></div>
+          <div class="shortcut-item"><kbd>F9</kbd><span>Quickload Snapshot</span></div>
           <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>S</kbd><span>Save to OS / File</span></div>
           <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>O</kbd><span>Open Image</span></div>
           <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>Z</kbd><span>Undo</span></div>
@@ -734,20 +745,20 @@
         <div>
           <label style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Studio Room Code</label>
           <div style="display: flex; gap: 6px;">
-            <input type="text" id="collab-room-input" value="studio-99" maxlength="32" placeholder="room-code" style="flex: 1; padding: 7px 10px; background: var(--btn-bg); border: 1px solid var(--panel-border); border-radius: 6px; color: var(--text-main); font-family: monospace; font-size: 13px;">
+            <input type="text" id="collab-room-input" value="studio-99" maxlength="32" placeholder="room-code" onkeydown="if(event.key === 'Enter') joinCollabRoom()" style="flex: 1; padding: 7px 10px; background: var(--btn-bg); border: 1px solid var(--panel-border); border-radius: 6px; color: var(--text-main); font-family: monospace; font-size: 13px;">
           </div>
           <div style="display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;">
             <span style="font-size: 10px; color: var(--text-muted); line-height: 22px;">Quick Rooms:</span>
             <button class="btn" style="padding: 2px 8px; font-size: 10px;" onclick="setCollabRoomCode('studio-99')">#studio-99</button>
             <button class="btn" style="padding: 2px 8px; font-size: 10px;" onclick="setCollabRoomCode('pixel-jam')">#pixel-jam</button>
             <button class="btn" style="padding: 2px 8px; font-size: 10px;" onclick="setCollabRoomCode('retro-art')">#retro-art</button>
-            <button class="btn" style="padding: 2px 8px; font-size: 10px;" onclick="setCollabRoomCode('arg-signal')">#arg-signal</button>
+            <button class="btn" style="padding: 2px 8px; font-size: 10px;" onclick="setCollabRoomCode('sub-signal')">#sub-signal</button>
           </div>
         </div>
 
         <div>
           <label style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Your Artist Handle</label>
-          <input type="text" id="collab-nick-input" value="Artist_1999" maxlength="20" placeholder="Your handle" style="width: 100%; padding: 7px 10px; background: var(--btn-bg); border: 1px solid var(--panel-border); border-radius: 6px; color: var(--text-main); font-family: inherit; font-size: 13px;">
+          <input type="text" id="collab-nick-input" value="Artist_1999" maxlength="20" placeholder="Your handle" onkeydown="if(event.key === 'Enter') joinCollabRoom()" style="width: 100%; padding: 7px 10px; background: var(--btn-bg); border: 1px solid var(--panel-border); border-radius: 6px; color: var(--text-main); font-family: inherit; font-size: 13px;">
         </div>
 
         <div style="display: flex; gap: 8px;">
@@ -788,7 +799,7 @@
       <div class="modal-body" style="display: flex; flex-direction: column; gap: 12px;">
         <div>
           <label style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Text String</label>
-          <input type="text" id="stamp-text-input" value="KPaint '99" placeholder="Enter text..." style="width: 100%; padding: 8px 10px; background: var(--btn-bg); border: 1px solid var(--panel-border); border-radius: 6px; color: var(--text-main); font-size: 14px;">
+          <input type="text" id="stamp-text-input" value="KPaint '99" placeholder="Enter text..." onkeydown="if(event.key === 'Enter') confirmStampText()" style="width: 100%; padding: 8px 10px; background: var(--btn-bg); border: 1px solid var(--panel-border); border-radius: 6px; color: var(--text-main); font-size: 14px;">
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
           <div>
@@ -1008,7 +1019,7 @@
       <span>Tool: <strong id="lbl-tool">Brush</strong></span>
     </div>
     <div style="display: flex; align-items: center; gap: 12px;">
-      <span class="status-hints"><strong>Ctrl+Z</strong> Undo | <strong>B</strong> Brush | <strong>E</strong> Eraser | <strong>G</strong> Fill | <strong>I</strong> Pick | <strong>O</strong> Collab | <strong>M</strong> Symmetry | <strong>F1/H</strong> Help</span>
+      <span class="status-hints"><strong>Ctrl+Z</strong> Undo | <strong>F5</strong> QuickSave | <strong>F9</strong> QuickLoad | <strong>B</strong> Brush | <strong>E</strong> Eraser | <strong>G</strong> Fill | <strong>I</strong> Pick | <strong>O</strong> Collab | <strong>M</strong> Symmetry | <strong>F1/H</strong> Help</span>
       <div class="zoom-controls" role="group" aria-label="Zoom Controls">
         <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out (Ctrl -)" aria-label="Zoom Out">−</button>
         <span id="lbl-zoom" onclick="resetZoom()" title="Click to Reset Zoom (Ctrl 0)" style="cursor:pointer; min-width:34px; text-align:center; font-weight:600;">100%</span>
@@ -2938,7 +2949,7 @@
       showToast('Loaded 8-Bit Sprite template!');
     }
 
-    // 1999 Subterranean Signal Spectrogram Template (ARG Lore & Audio Spectrum Art)
+    // 1999 Subterranean Signal Spectrogram Template (Audio Spectrum Art)
     function loadSignalAnomalyTemplate() {
       ctx.fillStyle = '#060a14';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -3446,8 +3457,10 @@
       try {
         if (dontShow) {
           localStorage.setItem('kpaint_tutorial_seen', '1');
+          localStorage.setItem('kpaint_tutorialSeen', '1');
         } else {
           localStorage.removeItem('kpaint_tutorial_seen');
+          localStorage.removeItem('kpaint_tutorialSeen');
         }
       } catch (_) {}
     }
@@ -3457,7 +3470,7 @@
       if (m) m.classList.add('show');
       const chk = document.getElementById('chk-tutorial');
       if (chk) {
-        chk.checked = localStorage.getItem('kpaint_tutorial_seen') === '1';
+        chk.checked = localStorage.getItem('kpaint_tutorial_seen') === '1' || localStorage.getItem('kpaint_tutorialSeen') === '1';
       }
     }
 
@@ -3466,13 +3479,167 @@
       if (m) m.classList.remove('show');
       const chk = document.getElementById('chk-tutorial');
       if (chk && chk.checked) {
-        try { localStorage.setItem('kpaint_tutorial_seen', '1'); } catch (_) {}
+        try {
+          localStorage.setItem('kpaint_tutorial_seen', '1');
+          localStorage.setItem('kpaint_tutorialSeen', '1');
+        } catch (_) {}
       }
     }
 
     function handleBackdropClick(e) {
       if (e.target.id === 'help-modal') closeHelp();
     }
+
+    // Pass 5 Quicksave & Quickload State Persistence
+    const QUICKSAVE_KEY = 'kpaint_quicksave_snapshot';
+
+    function quickSave() {
+      try {
+        const snapLayers = layers.map((l, idx) => ({
+          id: l.id !== undefined ? l.id : idx,
+          visible: l.visible !== false,
+          blend: l.blend || 'source-over',
+          dataUrl: l.canvas.toDataURL('image/png')
+        }));
+
+        const snapshot = {
+          version: 1,
+          timestamp: Date.now(),
+          w: layers[0].canvas.width,
+          h: layers[0].canvas.height,
+          activeLayerIndex: activeLayerIndex || 0,
+          currentColor: currentColor || '#000000',
+          currentSize: parseInt(document.getElementById('brush-size').value, 10) || 6,
+          brushShape: brushShape || 'round',
+          currentTool: currentTool || 'freehand',
+          currentSymmetry: currentSymmetry || 'none',
+          currentZoom: currentZoom || 1,
+          palettePreset: document.getElementById('palette-preset') ? document.getElementById('palette-preset').value : 'classic',
+          layers: snapLayers
+        };
+
+        const serialized = JSON.stringify(snapshot);
+        localStorage.setItem(QUICKSAVE_KEY, serialized);
+
+        try {
+          localStorage.setItem('kpaint_tutorial_seen', '1');
+          localStorage.setItem('kpaint_tutorialSeen', '1');
+        } catch (_) {}
+
+        showToast(`Quicksave complete [F5] (${snapshot.w}x${snapshot.h}, ${snapLayers.length} layer${snapLayers.length === 1 ? '' : 's'}).`);
+      } catch (err) {
+        console.warn('Quicksave error:', err);
+        showToast("⚠️ Quicksave failed: Storage quota exceeded or disabled.", 4000);
+      }
+    }
+    window.quickSave = quickSave;
+
+    function quickLoad() {
+      try {
+        const raw = localStorage.getItem(QUICKSAVE_KEY);
+        if (!raw) {
+          showToast("No quicksave snapshot found. Press F5 to save one.", 3500);
+          return;
+        }
+
+        const snapshot = JSON.parse(raw);
+        if (!snapshot || !Array.isArray(snapshot.layers) || snapshot.layers.length === 0) {
+          showToast("Quicksave data corrupted or empty.", 3500);
+          return;
+        }
+
+        try {
+          localStorage.setItem('kpaint_tutorial_seen', '1');
+          localStorage.setItem('kpaint_tutorialSeen', '1');
+        } catch (_) {}
+
+        const targetW = snapshot.w || 800;
+        const targetH = snapshot.h || 600;
+
+        if (layers[0].canvas.width !== targetW || layers[0].canvas.height !== targetH) {
+          layers.forEach(l => { if (l.canvas.id !== 'canvas') l.canvas.remove(); });
+          layers[0].canvas.width = targetW;
+          layers[0].canvas.height = targetH;
+          previewCanvas.width = targetW;
+          previewCanvas.height = targetH;
+          selCanvas.width = targetW;
+          selCanvas.height = targetH;
+          wrapper.style.width = targetW + 'px';
+          wrapper.style.height = targetH + 'px';
+          document.getElementById('lbl-dim').innerText = `${targetW} x ${targetH}`;
+          layers = [{ id: 0, canvas: document.getElementById('canvas'), ctx: document.getElementById('canvas').getContext('2d', { willReadFrequently: true }), visible: true, blend: 'source-over' }];
+        }
+
+        while (layers.length > snapshot.layers.length) {
+          layers[layers.length - 1].canvas.remove();
+          layers.pop();
+        }
+        while (layers.length < snapshot.layers.length) {
+          const c = document.createElement('canvas');
+          c.width = targetW; c.height = targetH;
+          c.style.position = 'absolute'; c.style.top = '0'; c.style.left = '0'; c.style.pointerEvents = 'none';
+          document.getElementById('canvas-wrapper').insertBefore(c, previewCanvas);
+          layers.push({ id: 0, canvas: c, ctx: c.getContext('2d', { willReadFrequently: true }), visible: true, blend: 'source-over' });
+        }
+
+        let loadedCount = 0;
+        const totalLayers = snapshot.layers.length;
+
+        snapshot.layers.forEach((sl, idx) => {
+          layers[idx].id = sl.id !== undefined ? sl.id : idx;
+          layers[idx].visible = sl.visible !== false;
+          layers[idx].blend = sl.blend || 'source-over';
+          layers[idx].canvas.style.display = layers[idx].visible ? 'block' : 'none';
+          layers[idx].canvas.style.mixBlendMode = layers[idx].blend;
+
+          const img = new Image();
+          img.onload = () => {
+            layers[idx].ctx.clearRect(0, 0, targetW, targetH);
+            layers[idx].ctx.drawImage(img, 0, 0);
+            loadedCount++;
+            if (loadedCount === totalLayers) {
+              if (snapshot.currentColor) selectColor(snapshot.currentColor);
+              if (snapshot.currentSize) {
+                const sld = document.getElementById('brush-size');
+                if (sld) { sld.value = snapshot.currentSize; updateBrushSettings(); }
+              }
+              if (snapshot.brushShape) {
+                brushShape = snapshot.brushShape;
+                updateBrushSettings();
+              }
+              if (snapshot.currentTool) setTool(snapshot.currentTool);
+              if (snapshot.currentSymmetry) {
+                setSymmetry(snapshot.currentSymmetry);
+              }
+              if (snapshot.palettePreset && document.getElementById('palette-preset')) {
+                document.getElementById('palette-preset').value = snapshot.palettePreset;
+                loadPalettePreset();
+              }
+              activeLayerIndex = Math.min(snapshot.activeLayerIndex || 0, layers.length - 1);
+              canvas = layers[activeLayerIndex].canvas;
+              ctx = layers[activeLayerIndex].ctx;
+              updateLayersUI();
+              saveState();
+              const dateStr = new Date(snapshot.timestamp || Date.now()).toLocaleTimeString();
+              showToast(`Quickload complete [F9] (restored state from ${dateStr}).`);
+            }
+          };
+          img.onerror = () => {
+            loadedCount++;
+            if (loadedCount === totalLayers) {
+              updateLayersUI();
+              saveState();
+              showToast("Quickload loaded with partial layer warnings.", 3500);
+            }
+          };
+          img.src = sl.dataUrl;
+        });
+      } catch (err) {
+        console.warn('Quickload error:', err);
+        showToast("⚠️ Failed to parse quicksave data.", 3500);
+      }
+    }
+    window.quickLoad = quickLoad;
 
     // Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
@@ -3481,6 +3648,18 @@
       if (e.key === 'F1') {
         e.preventDefault();
         toggleHelp();
+        return;
+      }
+
+      if (e.key === 'F5') {
+        e.preventDefault();
+        quickSave();
+        return;
+      }
+
+      if (e.key === 'F9') {
+        e.preventDefault();
+        quickLoad();
         return;
       }
 
@@ -3572,15 +3751,19 @@
         const path = window.location.hash.substring(1);
         if (path) loadVFSFile(path);
       }
-      const tutorialSeen = localStorage.getItem('kpaint_tutorial_seen');
-      if (!tutorialSeen && !window.location.hash) {
+      const tutorialSeen = localStorage.getItem('kpaint_tutorial_seen') === '1' || localStorage.getItem('kpaint_tutorialSeen') === '1';
+      const hasQuicksave = !!localStorage.getItem(QUICKSAVE_KEY);
+      if (!tutorialSeen && !window.location.hash && !hasQuicksave) {
         setTimeout(() => {
           showHelp();
-          try { localStorage.setItem('kpaint_tutorial_seen', '1'); } catch (_) {}
+          try {
+            localStorage.setItem('kpaint_tutorial_seen', '1');
+            localStorage.setItem('kpaint_tutorialSeen', '1');
+          } catch (_) {}
         }, 350);
       } else {
         setTimeout(() => {
-          showToast("Welcome to KPaint Pro! Press F1 for Help | Try Quick Starters & Collab [O]", 3500);
+          showToast("Welcome to KPaint Pro! Press F1 for Help | F5 QuickSave | F9 QuickLoad", 3500);
         }, 300);
       }
     };

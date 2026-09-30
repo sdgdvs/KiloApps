@@ -427,6 +427,7 @@
     </div>
   </div>
 
+  <script src="../assets/js/retro_multiplayer.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
     import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
@@ -627,6 +628,27 @@ let activeRoomListener = null;
 let localLastDartTs = 0;
 let localLastChatTs = 0;
 let localLastTurnTs = 0;
+let soloFallbackTimer = null;
+
+function startSoloFallbackTimer(code) {
+    clearSoloFallbackTimer();
+    soloFallbackTimer = setTimeout(() => {
+        if (isOnlineGame && currentRoomStatus === 'waiting' && currentRoomId === code) {
+            showToast("⏱️ No opponent joined in 25s. Engaging Subnet Cyber-Darter AI...", "warning");
+            leaveOnlineGame(false);
+            aiDifficulty = 'Medium';
+            setMode(gameMode || '501');
+            showToast("🎯 Subnet Cyber-Darter AI engaged! Step up to the oche.", "info");
+        }
+    }, 25000);
+}
+
+function clearSoloFallbackTimer() {
+    if (soloFallbackTimer) {
+        clearTimeout(soloFallbackTimer);
+        soloFallbackTimer = null;
+    }
+}
 
 function showToast(msg, type = 'info') {
     const container = document.getElementById('toast-container');
@@ -857,6 +879,10 @@ async function createCustomRoom(isPublic = true, customMode = null) {
 
         closeMultiplayerModal();
         attachRoomListener(code);
+        startSoloFallbackTimer(code);
+        if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', '#room=' + code);
+        }
 
         const onlineBar = document.getElementById('onlineBar');
         if (onlineBar) onlineBar.style.display = 'flex';
@@ -967,6 +993,14 @@ async function joinOnlineRoom(roomId) {
 
         closeMultiplayerModal();
         attachRoomListener(code);
+        if (room.status === 'waiting' || !room.p2) {
+            startSoloFallbackTimer(code);
+        } else {
+            clearSoloFallbackTimer();
+        }
+        if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', '#room=' + code);
+        }
 
         const onlineBar = document.getElementById('onlineBar');
         if (onlineBar) onlineBar.style.display = 'flex';
@@ -1006,6 +1040,10 @@ function attachRoomListener(roomId) {
 function handleRoomUpdate(room) {
     const prevStatus = currentRoomStatus;
     currentRoomStatus = room.status || 'waiting';
+
+    if (room.status === 'playing' || room.p2) {
+        clearSoloFallbackTimer();
+    }
 
     const roleStr = myPlayerNum === 1 ? 'You: Player 1 (Host)' : (myPlayerNum === 2 ? 'You: Player 2 (Guest)' : 'You: Spectator');
     const roleEl = document.getElementById('onlineRoleText');
@@ -1194,18 +1232,26 @@ function requestOnlineRematch() {
 
 function copyOnlineRoomLink() {
     if (!currentRoomId) return;
+    const link = window.location.origin + window.location.pathname + '#room=' + currentRoomId;
     if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(currentRoomId).then(() => {
-            showToast(`📋 Room Code "${currentRoomId}" copied to clipboard!`, 'success');
+        navigator.clipboard.writeText(link).then(() => {
+            showToast(`📋 Room invite link copied: ${currentRoomId}`, 'success');
         }).catch(() => {
-            prompt('Room Code:', currentRoomId);
+            prompt('Room Link:', link);
         });
     } else {
-        prompt('Room Code:', currentRoomId);
+        prompt('Room Link:', link);
     }
 }
 
 function leaveOnlineGame(confirmPrompt = true) {
+    clearSoloFallbackTimer();
+    try {
+        if (window.location.hash.includes('room=')) {
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+    } catch(e) {}
+
     if (confirmPrompt && isOnlineGame && currentRoomStatus === 'playing') {
         if (!confirm('Leave this active online match? This will concede the match to your opponent.')) return;
         if (window.fb && currentRoomId) {
@@ -1245,7 +1291,25 @@ function leaveOnlineGame(confirmPrompt = true) {
 
 window.onFirebaseLoaded = () => {
     refreshLobbyList();
+    try {
+        let room = null;
+        const params = new URLSearchParams(window.location.search);
+        room = params.get('room') || params.get('join');
+        if (!room && window.location.hash) {
+            const m = window.location.hash.match(/room=([A-Za-z0-9_-]+)/i);
+            if (m) room = m[1];
+        }
+        if (room) {
+            setTimeout(() => {
+                showToast(`🔗 Auto-joining room ${room} from link...`, 'info');
+                joinOnlineRoom(room);
+            }, 500);
+        }
+    } catch(e) {}
 };
+if (window.fb && window.onFirebaseLoaded) {
+    window.onFirebaseLoaded();
+}
 
 // Global FX state
 let particles = [];
