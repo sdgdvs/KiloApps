@@ -938,6 +938,9 @@
       <div class="dropdown">
         <div onclick="newTab()"><span>New Tab</span><span class="shortcut">Ctrl+T</span></div>
         <div class="divider"></div>
+        <div onclick="quicksaveSnapshot()"><span>Quicksave Snapshot</span><span class="shortcut">F5</span></div>
+        <div onclick="quickloadSnapshot()"><span>Quickload Snapshot</span><span class="shortcut">F9</span></div>
+        <div class="divider"></div>
         <div onclick="openVFS()"><span>Open (VFS)</span></div>
         <div onclick="saveVFS()"><span>Save (VFS)</span><span class="shortcut">Ctrl+S</span></div>
         <div class="divider"></div>
@@ -984,7 +987,7 @@
         <div class="divider"></div>
         <div onclick="promptCsvToMarkdown()"><span>Convert CSV to Markdown Table...</span></div>
         <div onclick="convertMarkdownTableToCsv()"><span>Convert Markdown Table to CSV</span></div>
-        <div onclick="insertDateTime()"><span>Insert Time/Date</span><span class="shortcut">F5</span></div>
+        <div onclick="insertDateTime()"><span>Insert Time/Date</span><span class="shortcut">F7</span></div>
       </div>
     </div>
 
@@ -1052,6 +1055,12 @@
   <!-- Quick Action & Templates Toolbar -->
   <div class="quick-toolbar">
     <div class="quick-group">
+      <button class="quick-btn" onclick="quicksaveSnapshot()" title="Quicksave workspace snapshot to local storage (F5)">
+        💾 Quicksave <span class="kbd-hint">F5</span>
+      </button>
+      <button class="quick-btn" onclick="quickloadSnapshot()" title="Restore quicksaved workspace snapshot (F9)">
+        📂 Quickload <span class="kbd-hint">F9</span>
+      </button>
       <button class="quick-btn" onclick="copyAllDocument()" title="Copy entire document to clipboard (Alt+C / Ctrl+Shift+C)">
         📋 Copy All <span class="kbd-hint">Alt+C</span>
       </button>
@@ -1244,6 +1253,26 @@
       matchCase: false,
       regex: false
     };
+
+    // --- Safe Storage Utilities ---
+    function safeSetStorage(key, val) {
+      try {
+        localStorage.setItem(key, val);
+        return true;
+      } catch (e) {
+        console.warn('Storage operation failed:', e);
+        return false;
+      }
+    }
+
+    function safeGetStorage(key, fallback = null) {
+      try {
+        const val = localStorage.getItem(key);
+        return val !== null ? val : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
 
     // --- Toast Notification System ---
     function showToast(msg, type = 'info', duration = 3500) {
@@ -2619,7 +2648,7 @@
       highlightPre.style.wordWrap = wordWrap ? 'break-word' : 'normal';
       const btn = document.getElementById('btn-quick-wrap');
       if (btn) btn.classList.toggle('active', wordWrap);
-      try { localStorage.setItem('kpad_wordwrap', wordWrap ? '1' : '0'); } catch (e) {}
+      safeSetStorage('kpad_wordwrap', wordWrap ? '1' : '0');
       showToast(`Word wrap ${wordWrap ? 'enabled' : 'disabled'}`, 'info', 1800);
       updateEditor();
     }
@@ -2647,7 +2676,7 @@
       gutter.style.fontSize = currentFontSize + 'px';
       const badge = document.getElementById('zoom-badge');
       if (badge) badge.innerText = currentFontSize + 'px';
-      try { localStorage.setItem('kpad_fontsize', currentFontSize); } catch (e) {}
+      safeSetStorage('kpad_fontsize', String(currentFontSize));
       showToast(`Font size: ${currentFontSize}px`, 'info', 1500);
     }
 
@@ -2658,7 +2687,7 @@
       gutter.style.fontSize = '14px';
       const badge = document.getElementById('zoom-badge');
       if (badge) badge.innerText = '14px';
-      try { localStorage.setItem('kpad_fontsize', '14'); } catch (e) {}
+      safeSetStorage('kpad_fontsize', '14');
       showToast('Font size reset to 14px', 'info', 1500);
     }
 
@@ -2750,7 +2779,7 @@
 
     function setTheme(theme) {
       document.documentElement.setAttribute('data-theme', theme);
-      try { localStorage.setItem('kpad_theme', theme); } catch (e) {}
+      safeSetStorage('kpad_theme', theme);
       showToast(`Theme changed to ${theme.toUpperCase()}`, 'info', 1800);
     }
 
@@ -3330,15 +3359,15 @@
           tags: t.tags || [],
           isPinned: Boolean(t.isPinned)
         }));
-        localStorage.setItem('kpad_session_tabs', JSON.stringify(sessionData));
-        localStorage.setItem('kpad_session_active', activeTabIndex);
+        safeSetStorage('kpad_session_tabs', JSON.stringify(sessionData));
+        safeSetStorage('kpad_session_active', String(activeTabIndex));
       } catch (e) {}
     }
 
     function loadSession() {
       try {
-        const raw = localStorage.getItem('kpad_session_tabs');
-        const active = parseInt(localStorage.getItem('kpad_session_active') || '0', 10);
+        const raw = safeGetStorage('kpad_session_tabs');
+        const active = parseInt(safeGetStorage('kpad_session_active') || '0', 10);
         if (raw) {
           const savedTabs = JSON.parse(raw);
           if (Array.isArray(savedTabs) && savedTabs.length > 0) {
@@ -3351,6 +3380,94 @@
       return false;
     }
 
+    // --- Quicksave (F5) & Quickload (F9) Snapshots ---
+    function quicksaveSnapshot() {
+      try {
+        if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
+          tabs[activeTabIndex].content = editor.value;
+        }
+        const sessionData = tabs.map(t => ({
+          name: t.name,
+          content: t.content,
+          path: t.path,
+          language: t.language,
+          tags: t.tags || [],
+          isPinned: Boolean(t.isPinned)
+        }));
+        const snapshot = {
+          timestamp: new Date().toISOString(),
+          tabs: sessionData,
+          activeTabIndex: activeTabIndex,
+          theme: document.documentElement.getAttribute('data-theme') || 'default',
+          wordWrap: wordWrap,
+          fontSize: currentFontSize
+        };
+        if (safeSetStorage('kpad_quicksave', JSON.stringify(snapshot))) {
+          showToast('★ Full workspace & tabs snapshot quicksaved [F5]', 'success', 3000);
+          return true;
+        } else {
+          showToast('⚠️ Storage quota exceeded during quicksave!', 'error', 3500);
+          return false;
+        }
+      } catch (e) {
+        showToast('⚠️ Failed to quicksave workspace: ' + e.message, 'error', 3500);
+        return false;
+      }
+    }
+
+    function quickloadSnapshot() {
+      const raw = safeGetStorage('kpad_quicksave');
+      if (!raw) {
+        showToast('⚠️ No quicksave snapshot found [Press F5 to save first]', 'warning', 3500);
+        return false;
+      }
+      try {
+        const snap = JSON.parse(raw);
+        if (!snap || !Array.isArray(snap.tabs) || snap.tabs.length === 0) {
+          showToast('⚠️ Corrupted quicksave snapshot data', 'error', 3500);
+          return false;
+        }
+
+        // Close all existing tabs
+        tabs = [];
+        const tabsBar = document.getElementById('tabs-bar');
+        if (tabsBar) tabsBar.innerHTML = '';
+
+        // Recreate tabs from snapshot
+        snap.tabs.forEach(t => {
+          createTab(t.name, t.content, t.path, t.language, t.tags || [], Boolean(t.isPinned));
+        });
+
+        const targetIdx = (typeof snap.activeTabIndex === 'number' && snap.activeTabIndex >= 0 && snap.activeTabIndex < tabs.length)
+          ? snap.activeTabIndex : 0;
+        switchTab(targetIdx);
+
+        // Restore theme
+        if (snap.theme) {
+          setTheme(snap.theme);
+        }
+        // Restore word wrap
+        if (typeof snap.wordWrap === 'boolean' && snap.wordWrap !== wordWrap) {
+          toggleWordWrap();
+        }
+        // Restore font size
+        if (typeof snap.fontSize === 'number' && snap.fontSize >= 10 && snap.fontSize <= 32 && snap.fontSize !== currentFontSize) {
+          changeFontSize(snap.fontSize - currentFontSize);
+        }
+
+        saveSession();
+        renderTagBar();
+        safeSetStorage('kpad_tutorialSeen', '1');
+
+        const timeStr = snap.timestamp ? new Date(snap.timestamp).toLocaleTimeString() : '';
+        showToast(`★ Quicksaved workspace restored [F9]${timeStr ? ' (' + timeStr + ')' : ''}`, 'success', 3500);
+        return true;
+      } catch (e) {
+        showToast('⚠️ Error loading quicksave: ' + e.message, 'error', 3500);
+        return false;
+      }
+    }
+
     function openModal(titleHTML, bodyHTML, showDefaultFooter = true) {
       document.getElementById('modal-title').innerHTML = titleHTML;
       document.getElementById('modal-body').innerHTML = bodyHTML;
@@ -3360,6 +3477,10 @@
     }
 
     function closeModal() {
+      const tourCb = document.getElementById('dont-show-tour');
+      if (tourCb) {
+        safeSetStorage('kpad_tutorialSeen', '1');
+      }
       document.getElementById('app-modal').classList.remove('active');
       editor.focus();
     }
@@ -3367,6 +3488,8 @@
     function showHelp() {
       const fileShortcuts = [
         { label: 'New Tab / Document', key: 'Ctrl + T / Ctrl + N' },
+        { label: 'Quicksave Snapshot', key: 'F5' },
+        { label: 'Quickload Snapshot', key: 'F9' },
         { label: 'Close Active Tab', key: 'Ctrl + W' },
         { label: 'Switch Tab (1-9)', key: 'Ctrl + 1..9' },
         { label: 'Previous / Next Tab', key: 'Ctrl + PgUp / PgDn' },
@@ -3389,7 +3512,7 @@
         { label: 'Clear Document', key: 'Alt + X' },
         { label: 'Toggle Word Wrap', key: 'Alt + Z' },
         { label: 'Zoom In / Out / Reset', key: 'Ctrl++ / Ctrl+- / Ctrl+0' },
-        { label: 'Insert Date & Time', key: 'F5' }
+        { label: 'Insert Date & Time', key: 'F7' }
       ];
 
       const securityShortcuts = [
@@ -3531,7 +3654,7 @@
     }
 
     function showOnboarding(force = false) {
-      if (!force && localStorage.getItem('kpad_tutorialSeen')) return;
+      if (!force && safeGetStorage('kpad_tutorialSeen')) return;
 
       const html = `
         <div style="padding: 4px 0;">
@@ -3544,6 +3667,10 @@
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 10px; font-size: 12px; margin-bottom: 16px;">
+            <div style="display:flex; gap:10px; align-items:flex-start;">
+              <span style="font-size:16px;">💾</span>
+              <div><strong>Quicksave & Quickload:</strong> Full session snapshots via <code class="shortcut-key">F5</code> to save and <code class="shortcut-key">F9</code> to restore across tabs, settings, and themes.</div>
+            </div>
             <div style="display:flex; gap:10px; align-items:flex-start;">
               <span style="font-size:16px;">📁</span>
               <div><strong>Multi-Tab Sessions:</strong> Work across multiple tabs (<code class="shortcut-key">Ctrl+T</code>, <code class="shortcut-key">Ctrl+W</code>, <code class="shortcut-key">Ctrl+1..9</code>, <code class="shortcut-key">Ctrl+PgUp/PgDn</code>, or middle-click tab to close).</div>
@@ -3579,8 +3706,8 @@
 
     function finishOnboarding() {
       const cb = document.getElementById('dont-show-tour');
-      if (cb && cb.checked) {
-        try { localStorage.setItem('kpad_tutorialSeen', '1'); } catch (e) {}
+      if (!cb || cb.checked) {
+        safeSetStorage('kpad_tutorialSeen', '1');
       }
       closeModal();
       showToast('Welcome to KPad Pro! Press F1 anytime for help.', 'success', 3000);
@@ -3615,6 +3742,23 @@
           if (footer && footer.style.display !== 'none') {
             e.preventDefault();
             closeModal();
+          } else {
+            const startBtn = modal.querySelector('button[onclick*="finishOnboarding"]');
+            if (startBtn) {
+              e.preventDefault();
+              finishOnboarding();
+            }
+          }
+        }
+      }
+      if (e.key === ' ' || e.key === 'Spacebar') {
+        const modal = document.getElementById('app-modal');
+        if (modal && modal.classList.contains('active')) {
+          const startBtn = modal.querySelector('button[onclick*="finishOnboarding"]');
+          const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
+          if (startBtn && !isInput) {
+            e.preventDefault();
+            finishOnboarding();
           }
         }
       }
@@ -3661,7 +3805,9 @@
       if (e.ctrlKey && (e.key === '=' || e.key === '+')) { e.preventDefault(); changeFontSize(1); }
       if (e.ctrlKey && (e.key === '-' || e.key === '_')) { e.preventDefault(); changeFontSize(-1); }
       if (e.ctrlKey && e.key === '0') { e.preventDefault(); resetFontSize(); }
-      if (e.key === 'F5') { e.preventDefault(); insertDateTime(); }
+      if (e.key === 'F5') { e.preventDefault(); quicksaveSnapshot(); }
+      if (e.key === 'F9') { e.preventDefault(); quickloadSnapshot(); }
+      if (e.key === 'F7') { e.preventDefault(); insertDateTime(); }
       if (e.key === 'F1' || (e.altKey && (e.key === 'h' || e.key === 'H'))) { e.preventDefault(); showHelp(); }
       if ((e.key === '?' || e.key === 'h' || e.key === 'H') && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
         e.preventDefault();
@@ -3722,17 +3868,17 @@
     // Startup Initialization
     window.onload = () => {
       try {
-        const savedTheme = localStorage.getItem('kpad_theme');
+        const savedTheme = safeGetStorage('kpad_theme');
         if (savedTheme) {
           document.documentElement.setAttribute('data-theme', savedTheme);
           const sel = document.getElementById('theme-selector');
           if (sel) sel.value = savedTheme;
         }
-        const savedWrap = localStorage.getItem('kpad_wordwrap');
+        const savedWrap = safeGetStorage('kpad_wordwrap');
         if (savedWrap === '1') {
           toggleWordWrap();
         }
-        const savedSize = parseInt(localStorage.getItem('kpad_fontsize'), 10);
+        const savedSize = parseInt(safeGetStorage('kpad_fontsize') || '14', 10);
         if (savedSize && savedSize >= 10 && savedSize <= 32 && savedSize !== 14) {
           changeFontSize(savedSize - 14);
         }
@@ -3742,11 +3888,12 @@
         const path = window.location.hash.substring(1);
         if (path) { loadVFSFile(path); return; }
       }
-      if (!loadSession()) {
-        createTab("Welcome.md", "# Welcome to KPad Pro\n\nHigh-performance multi-tab text and code workstation.\n\n## Quick Features\n- 🏷️ **Tab Tags & Pinning:** Organize documents with tags (Alt+T) and pin essential tabs.\n- 🌐 **Global Tab Search:** Search across all open tabs instantly (Ctrl+Shift+F).\n- 👁️ **Live Markdown Preview:** Real-time side-by-side preview (Alt+P).\n- 📊 **Table Interoperability:** Convert CSV to Markdown tables and back.\n- 🔒 **AES-256 Security:** Military-grade document lock and .kpad.enc containers.\n- 📦 **Workspace Snapshots:** Full session export/restore (Ctrl+Shift+S).\n\nPress F1 anytime for the full shortcuts and user guide!\n", null, "markdown", ["welcome", "notes"]);
+      const hasRestored = loadSession();
+      if (!hasRestored) {
+        createTab("Welcome.md", "# Welcome to KPad Pro\n\nHigh-performance multi-tab text and code workstation.\n\n## Quick Shortcuts\n- 💾 **Quicksave & Quickload:** Instant full session snapshots via F5 / F9.\n- 🏷️ **Tab Tags & Pinning:** Organize documents with tags (Alt+T) and pin essential tabs.\n- 🌐 **Global Tab Search:** Search across all open tabs instantly (Ctrl+Shift+F).\n- 👁️ **Live Markdown Preview:** Real-time side-by-side preview (Alt+P).\n- 📊 **Table Interoperability:** Convert CSV to Markdown tables and back.\n- 🔒 **AES-256 Security:** Military-grade document lock and .kpad.enc containers.\n- 📦 **Workspace Snapshots:** Full session export/restore (Ctrl+Shift+S).\n\nPress F1 anytime for the full shortcuts and user guide!\n", null, "markdown", ["welcome", "notes"]);
       }
       renderTagBar();
-      if (!localStorage.getItem('kpad_tutorialSeen')) {
+      if (!hasRestored && !safeGetStorage('kpad_tutorialSeen')) {
         setTimeout(() => showOnboarding(false), 250);
       } else {
         showToast("💡 Welcome to KPad Pro! Press F1 or click Help for shortcuts & guide.", "info", 4000);

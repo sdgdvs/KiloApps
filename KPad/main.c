@@ -71,6 +71,8 @@ BOOL g_bWordWrap = FALSE;
 #define ID_EDIT_GOTOLINE    9035
 #define ID_FILE_EXPORT_MD   9036
 #define ID_EDIT_REVERSE     9037
+#define ID_FILE_QUICKSAVE   9040
+#define ID_FILE_QUICKLOAD   9041
 void UpdateStatusBar(void);
 void UpdateTabTitle(int index);
 void AddTab(const char* name, const char* path);
@@ -78,6 +80,8 @@ void SwitchTab(int index);
 void DoGoToLineNative(void);
 void ExportMarkdownNative(void);
 void ReverseLinesNative(void);
+void QuickSaveNative(void);
+void QuickLoadNative(void);
 
 int g_nFontSizePt = 12;
 char g_szCustomStatus[128] = {0};
@@ -468,6 +472,142 @@ void SaveFileNative(BOOL saveAs) {
         }
         CloseHandle(hFile);
     }
+}
+
+#define SNAPSHOT_MAGIC 0x4B504144 // "KPAD"
+
+typedef struct {
+    DWORD magic;
+    DWORD version;
+    int numTabs;
+    int activeTab;
+    int fontSizePt;
+    BOOL wordWrap;
+} SNAPSHOT_HEADER;
+
+void QuickSaveNative(void) {
+    HANDLE hFile = CreateFileA("kpad_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        ShowNativeStatus("⚠ Failed to create quicksave file (kpad_quicksave.dat)");
+        return;
+    }
+
+    SNAPSHOT_HEADER hdr;
+    hdr.magic = SNAPSHOT_MAGIC;
+    hdr.version = 1;
+    hdr.numTabs = g_NumTabs;
+    hdr.activeTab = g_ActiveTab;
+    hdr.fontSizePt = g_nFontSizePt;
+    hdr.wordWrap = g_bWordWrap;
+
+    DWORD written = 0;
+    WriteFile(hFile, &hdr, sizeof(hdr), &written, NULL);
+
+    for (int i = 0; i < g_NumTabs; i++) {
+        WriteFile(hFile, g_Tabs[i].szTitle, sizeof(g_Tabs[i].szTitle), &written, NULL);
+        WriteFile(hFile, g_Tabs[i].szPath, sizeof(g_Tabs[i].szPath), &written, NULL);
+        WriteFile(hFile, &g_Tabs[i].isModified, sizeof(BOOL), &written, NULL);
+
+        int len = 0;
+        if (g_Tabs[i].hEdit) {
+            len = GetWindowTextLengthA(g_Tabs[i].hEdit);
+        }
+        WriteFile(hFile, &len, sizeof(int), &written, NULL);
+        if (len > 0 && g_Tabs[i].hEdit) {
+            char* pBuf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len + 1);
+            if (pBuf) {
+                GetWindowTextA(g_Tabs[i].hEdit, pBuf, len + 1);
+                WriteFile(hFile, pBuf, len, &written, NULL);
+                HeapFree(GetProcessHeap(), 0, pBuf);
+            }
+        }
+    }
+
+    CloseHandle(hFile);
+    ShowNativeStatus("★ Quicksaved workspace snapshot to kpad_quicksave.dat [F5]");
+}
+
+void QuickLoadNative(void) {
+    HANDLE hFile = CreateFileA("kpad_quicksave.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        ShowNativeStatus("⚠ No quicksave snapshot found (kpad_quicksave.dat) [F5 to save]");
+        return;
+    }
+
+    SNAPSHOT_HEADER hdr;
+    DWORD bytesRead = 0;
+    if (!ReadFile(hFile, &hdr, sizeof(hdr), &bytesRead, NULL) || bytesRead != sizeof(hdr) || hdr.magic != SNAPSHOT_MAGIC) {
+        CloseHandle(hFile);
+        ShowNativeStatus("⚠ Corrupted quicksave snapshot file");
+        return;
+    }
+
+    // Destroy existing tab edit windows and clear tabs
+    for (int i = 0; i < g_NumTabs; i++) {
+        if (g_Tabs[i].hEdit) {
+            DestroyWindow(g_Tabs[i].hEdit);
+            g_Tabs[i].hEdit = NULL;
+        }
+    }
+    SendMessage(g_hTabCtrl, TCM_DELETEALLITEMS, 0, 0);
+    g_NumTabs = 0;
+    g_ActiveTab = 0;
+
+    // Restore word wrap
+    if (hdr.wordWrap != g_bWordWrap) {
+        g_bWordWrap = hdr.wordWrap;
+    }
+
+    // Restore font size
+    if (hdr.fontSizePt >= 8 && hdr.fontSizePt <= 36) {
+        g_nFontSizePt = hdr.fontSizePt;
+        ApplyGlobalFont();
+    }
+
+    int tabsToLoad = hdr.numTabs;
+    if (tabsToLoad > MAX_TABS) tabsToLoad = MAX_TABS;
+
+    for (int i = 0; i < tabsToLoad; i++) {
+        char szTitle[64] = {0};
+        char szPath[MAX_PATH] = {0};
+        BOOL isMod = FALSE;
+        int len = 0;
+
+        ReadFile(hFile, szTitle, sizeof(szTitle), &bytesRead, NULL);
+        ReadFile(hFile, szPath, sizeof(szPath), &bytesRead, NULL);
+        ReadFile(hFile, &isMod, sizeof(BOOL), &bytesRead, NULL);
+        ReadFile(hFile, &len, sizeof(int), &bytesRead, NULL);
+
+        char* pText = NULL;
+        if (len > 0) {
+            pText = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len + 1);
+            if (pText) {
+                ReadFile(hFile, pText, len, &bytesRead, NULL);
+                pText[len] = 0;
+            }
+        }
+
+        AddTab(szTitle[0] ? szTitle : "Untitled", szPath[0] ? szPath : NULL);
+        if (pText && g_Tabs[i].hEdit) {
+            SetWindowTextA(g_Tabs[i].hEdit, pText);
+            HeapFree(GetProcessHeap(), 0, pText);
+        }
+        g_Tabs[i].isModified = isMod;
+        UpdateTabTitle(i);
+    }
+
+    CloseHandle(hFile);
+
+    if (g_NumTabs == 0) {
+        AddTab("Untitled 1", NULL);
+    }
+
+    int targetActive = hdr.activeTab;
+    if (targetActive < 0 || targetActive >= g_NumTabs) targetActive = 0;
+    SwitchTab(targetActive);
+    UpdateStatusBar();
+
+    ShowNativeStatus("★ Quicksaved workspace restored from kpad_quicksave.dat [F9]");
 }
 
 void DoFindReplace(BOOL isReplace) {
@@ -1247,6 +1387,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hFileMenu, MF_STRING, ID_FILE_SAVE, "Save\tCtrl+S");
             AppendMenuA(hFileMenu, MF_STRING, ID_FILE_SAVEAS, "Save As...");
             AppendMenuA(hFileMenu, MF_SEPARATOR, 0, NULL);
+            AppendMenuA(hFileMenu, MF_STRING, ID_FILE_QUICKSAVE, "Quicksave Snapshot\tF5");
+            AppendMenuA(hFileMenu, MF_STRING, ID_FILE_QUICKLOAD, "Quickload Snapshot\tF9");
+            AppendMenuA(hFileMenu, MF_SEPARATOR, 0, NULL);
 
             HMENU hTplMenu = CreatePopupMenu();
             AppendMenuA(hTplMenu, MF_STRING, ID_TPL_MARKDOWN, "Markdown Notes (.md)");
@@ -1277,7 +1420,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_GOTOLINE, "Go to Line...\tCtrl+G");
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_ENCRYPT, "Encrypt Buffer (Password Lock)...\tCtrl+E");
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_DECRYPT, "Decrypt Buffer (Unlock)...\tCtrl+D");
-            AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_TIME_DATE, "Time/Date\tF5");
+            AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_TIME_DATE, "Time/Date\tF7");
             AppendMenuA(hEditMenu, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_UPPERCASE, "Convert UPPERCASE");
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_LOWERCASE, "Convert lowercase");
@@ -1320,9 +1463,38 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             ApplyGlobalFont();
 
-            AddTab("Welcome", NULL);
-            SetWindowTextA(g_Tabs[0].hEdit, "Welcome to KPad Pro!\r\n\r\nPress F1 for Help to view keyboard shortcuts.\r\n");
+            AddTab("Welcome.md", NULL);
+            SetWindowTextA(g_Tabs[0].hEdit,
+                "# Welcome to KPad Pro\r\n\r\n"
+                "High-performance multi-tab text and code workstation.\r\n\r\n"
+                "## Quick Shortcuts\r\n"
+                "  • F1                  : Help & Keyboard Shortcuts\r\n"
+                "  • F5                  : Quicksave Snapshot (kpad_quicksave.dat)\r\n"
+                "  • F9                  : Quickload Snapshot\r\n"
+                "  • F7                  : Insert Date & Time\r\n"
+                "  • Ctrl+N / Ctrl+T     : New Document / Tab\r\n"
+                "  • Ctrl+O / Ctrl+S     : Open / Save Document\r\n"
+                "  • Ctrl+1 .. 9         : Switch to Tab 1-9\r\n"
+                "  • Ctrl+Tab / PgUp/PgDn: Next / Previous Tab Cycle\r\n"
+                "  • Ctrl+F / Ctrl+H     : Find / Replace in Buffer\r\n"
+                "  • Ctrl+G              : Go to Line Number\r\n"
+                "  • Ctrl+Shift+C / Alt+C: Copy All Document\r\n"
+                "  • Alt+Z               : Toggle Word Wrap\r\n"
+                "  • Ctrl+E / Ctrl+D     : Encrypt / Decrypt Document (AES/RC4)\r\n\r\n"
+                "Press F1 anytime for the full shortcuts guide!\r\n");
             g_Tabs[0].isModified = FALSE;
+
+            DWORD dwTutAttr = GetFileAttributesA("kpad_tutorial.dat");
+            if (dwTutAttr == INVALID_FILE_ATTRIBUTES) {
+                HANDLE hTut = CreateFileA("kpad_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hTut != INVALID_HANDLE_VALUE) {
+                    const char* tutTxt = "KPad Pro Tutorial Flag\r\n";
+                    DWORD wr;
+                    WriteFile(hTut, tutTxt, lstrlenA(tutTxt), &wr, NULL);
+                    CloseHandle(hTut);
+                }
+                ShowNativeStatus("Welcome to KPad Pro! Press F1 for Help, F5 to Quicksave, F9 to Quickload.");
+            }
             break;
         }
 
@@ -1366,6 +1538,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 case ID_FILE_SAVEAS:
                     SaveFileNative(TRUE);
+                    break;
+                case ID_FILE_QUICKSAVE:
+                    QuickSaveNative();
+                    break;
+                case ID_FILE_QUICKLOAD:
+                    QuickLoadNative();
                     break;
                 case ID_FILE_EXPORT_ENC:
                     ExportEncryptedFile();
@@ -1487,7 +1665,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         "  • Alt+Z               : Toggle Word Wrap\n"
                         "  • Ctrl++ / Ctrl+-     : Zoom In / Out\n"
                         "  • Ctrl+0              : Reset Zoom (100%)\n"
-                        "  • F5                  : Insert Date & Time\n\n"
+                        "  • F5                  : Quicksave Snapshot (kpad_quicksave.dat)\n"
+                        "  • F9                  : Quickload Snapshot\n"
+                        "  • F7                  : Insert Date & Time\n\n"
                         "SECURITY & TEMPLATES:\n"
                         "  • File -> Templates   : MD, C, HTML5, JSON\n"
                         "  • Ctrl+E              : Encrypt Document\n"
@@ -1632,6 +1812,14 @@ void MainEntry() {
                 continue;
             }
             if (msg.wParam == VK_F5) {
+                SendMessage(hwnd, WM_COMMAND, ID_FILE_QUICKSAVE, 0);
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                SendMessage(hwnd, WM_COMMAND, ID_FILE_QUICKLOAD, 0);
+                continue;
+            }
+            if (msg.wParam == VK_F7) {
                 SendMessage(hwnd, WM_COMMAND, ID_EDIT_TIME_DATE, 0);
                 continue;
             }
