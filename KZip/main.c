@@ -7,8 +7,8 @@
 #define ES_AUTOHSCRAWL 0x0080L
 #endif
 
-#define W 900
-#define H 650
+#define W 980
+#define H 700
 #define MAX_FILES 100
 #define MAX_FILE_SIZE (100 * 1024 * 1024) // 100MB limit per file
 

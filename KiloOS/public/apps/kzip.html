@@ -177,7 +177,7 @@
     background-color: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    overflow-y: auto;
+    overflow: auto;
     position: relative;
   }
 
@@ -290,23 +290,24 @@
   /* Toast Notification */
   .toast {
     position: fixed;
-    top: 54px;
+    bottom: 36px;
     left: 50%;
-    transform: translateX(-50%) translateY(-8px);
-    background: rgba(15, 23, 42, 0.95);
+    transform: translateX(-50%) translateY(12px);
+    background: rgba(15, 23, 42, 0.96);
     border: 1px solid var(--accent-blue);
     color: #fff;
-    padding: 7px 18px;
+    padding: 8px 20px;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 500;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.65);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.25s ease, transform 0.25s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease;
     z-index: 200;
     white-space: nowrap;
     cursor: pointer;
+    backdrop-filter: blur(4px);
   }
   .toast.toast-error {
     border-color: var(--accent-red);
@@ -406,6 +407,32 @@
   .editor-textarea:focus {
     border-color: var(--accent-blue);
   }
+
+  .btn-group {
+    display: inline-flex;
+    gap: 4px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .btn-sep {
+    width: 1px;
+    height: 22px;
+    background: var(--border-color);
+    margin: 0 3px;
+  }
+
+  @media (max-width: 900px) {
+    .shortcut-tag { display: none; }
+    .btn-sep { display: none; }
+  }
+
+  @media (max-width: 720px) {
+    .col-entropy, .col-crc32 { display: none; }
+    .search-input { width: 110px; }
+    .password-input { width: 90px; }
+    .header { flex-direction: column; align-items: flex-start; gap: 8px; }
+  }
 </style>
 </head>
 <body>
@@ -417,6 +444,7 @@
   </div>
   <div style="display: flex; align-items: center; gap: 8px;">
     <button id="btnSoundToggle" style="font-size: 11px; padding: 3px 8px;" title="Toggle procedural YM2612 FM / SPC700 audio (M)">🔊 Sound: ON</button>
+    <button id="btnHeaderHelp" style="font-size: 11px; padding: 3px 8px;" title="Toggle Help & Shortcuts dialog (F1 or H)">❓ Help [F1]</button>
     <div class="stats-pill" id="statsPill" aria-live="polite">0 Files | 0 B</div>
   </div>
 </header>
@@ -461,23 +489,34 @@
 </div>
 
 <div class="actions-row" role="region" aria-label="Archive Operations">
-  <button id="btnOpen" aria-label="Open archive" title="Open archive (Ctrl+O)">📂 Open <span class="shortcut-tag">[Ctrl+O]</span></button>
-  <button id="btnAdd" aria-label="Add file to archive" title="Add file (Ctrl+N)">➕ Add File <span class="shortcut-tag">[Ctrl+N]</span></button>
-  <button id="btnNewText" aria-label="New text file" title="Create new text file in archive (Alt+N)">📝 New File <span class="shortcut-tag">[Alt+N]</span></button>
-  <button id="btnEditFile" aria-label="View or edit text file" title="View or edit selected text file (E)">✏️ Edit <span class="shortcut-tag">[E]</span></button>
-  <button id="btnRenameFile" aria-label="Rename selected file" title="Rename selected file (F2)">🏷️ Rename <span class="shortcut-tag">[F2]</span></button>
-  <button id="btnRemove" class="btn-danger" aria-label="Remove selected files" title="Remove selected (Delete)">🗑️ Remove <span class="shortcut-tag">[Del]</span></button>
-  <button id="btnPack" class="btn-primary" aria-label="Pack archive file" title="Pack archive (Ctrl+S)">📦 Pack <span class="shortcut-tag">[Ctrl+S]</span></button>
-  <button id="btnExtractSel" aria-label="Extract selected files" title="Extract selected (X)">🎯 Ext. Sel <span class="shortcut-tag">[X]</span></button>
-  <button id="btnExtractAll" aria-label="Extract all files" title="Extract all (Ctrl+E)">⚡ Ext. All <span class="shortcut-tag">[Ctrl+E]</span></button>
-  <button id="btnBatchExtract" aria-label="Batch Extract" title="Batch extract (B)">📑 Batch <span class="shortcut-tag">[B]</span></button>
-  <button id="btnVerify" aria-label="Verify CRC32 integrity" title="Verify CRC32 (V)">🛡️ Verify <span class="shortcut-tag">[V]</span></button>
-  <button id="btnPreview" aria-label="Deep Preview" title="Preview selected (P or Enter)">🔍 Preview <span class="shortcut-tag">[P]</span></button>
-  <button id="btnAnalysis" aria-label="Archive Entropy Analysis" title="Diagnostics & Entropy Analysis (Alt+A)">📊 Analysis <span class="shortcut-tag">[Alt+A]</span></button>
-  <button id="btnManifest" aria-label="Archive Manifest Report" title="Generate inventory manifest (Ctrl+M)">📋 Manifest <span class="shortcut-tag">[Ctrl+M]</span></button>
-  <button id="btnQuickSave" aria-label="Quicksave snapshot" title="Quicksave state (F5)">💾 Save <span class="shortcut-tag">[F5]</span></button>
-  <button id="btnQuickLoad" aria-label="Quickload snapshot" title="Quickload state (F9)">⚡ Load <span class="shortcut-tag">[F9]</span></button>
-  <button id="btnHelpApp" aria-label="Help (F1)" title="Help (F1 or H)">❓ Help <span class="shortcut-tag">[F1]</span></button>
+  <div class="btn-group" aria-label="Archive Commands">
+    <button id="btnOpen" aria-label="Open archive" title="Open archive (Ctrl+O)">📂 Open <span class="shortcut-tag">[Ctrl+O]</span></button>
+    <button id="btnPack" class="btn-primary" aria-label="Pack archive file" title="Pack archive (Ctrl+S)">📦 Pack <span class="shortcut-tag">[Ctrl+S]</span></button>
+    <button id="btnExtractAll" aria-label="Extract all files" title="Extract all (Ctrl+E)">⚡ Ext. All <span class="shortcut-tag">[Ctrl+E]</span></button>
+  </div>
+  <div class="btn-sep" aria-hidden="true"></div>
+  <div class="btn-group" aria-label="File Operations">
+    <button id="btnAdd" aria-label="Add file to archive" title="Add file (Ctrl+N)">➕ Add File <span class="shortcut-tag">[Ctrl+N]</span></button>
+    <button id="btnNewText" aria-label="New text file" title="Create new text file in archive (Alt+N)">📝 New File <span class="shortcut-tag">[Alt+N]</span></button>
+    <button id="btnEditFile" aria-label="View or edit text file" title="View or edit selected text file (E)">✏️ Edit <span class="shortcut-tag">[E]</span></button>
+    <button id="btnRenameFile" aria-label="Rename selected file" title="Rename selected file (F2)">🏷️ Rename <span class="shortcut-tag">[F2]</span></button>
+    <button id="btnRemove" class="btn-danger" aria-label="Remove selected files" title="Remove selected (Delete)">🗑️ Remove <span class="shortcut-tag">[Del]</span></button>
+    <button id="btnExtractSel" aria-label="Extract selected files" title="Extract selected (X)">🎯 Ext. Sel <span class="shortcut-tag">[X]</span></button>
+  </div>
+  <div class="btn-sep" aria-hidden="true"></div>
+  <div class="btn-group" aria-label="Diagnostics & Inspection">
+    <button id="btnPreview" aria-label="Deep Preview" title="Preview selected (P or Enter)">🔍 Preview <span class="shortcut-tag">[P]</span></button>
+    <button id="btnVerify" aria-label="Verify CRC32 integrity" title="Verify CRC32 (V)">🛡️ Verify <span class="shortcut-tag">[V]</span></button>
+    <button id="btnAnalysis" aria-label="Archive Entropy Analysis" title="Diagnostics & Entropy Analysis (Alt+A)">📊 Analysis <span class="shortcut-tag">[Alt+A]</span></button>
+    <button id="btnManifest" aria-label="Archive Manifest Report" title="Generate inventory manifest (Ctrl+M)">📋 Manifest <span class="shortcut-tag">[Ctrl+M]</span></button>
+    <button id="btnBatchExtract" aria-label="Batch Extract" title="Batch extract (B)">📑 Batch <span class="shortcut-tag">[B]</span></button>
+  </div>
+  <div class="btn-sep" aria-hidden="true"></div>
+  <div class="btn-group" aria-label="Session & Help">
+    <button id="btnQuickSave" aria-label="Quicksave snapshot" title="Quicksave state (F5)">💾 Save <span class="shortcut-tag">[F5]</span></button>
+    <button id="btnQuickLoad" aria-label="Quickload snapshot" title="Quickload state (F9)">⚡ Load <span class="shortcut-tag">[F9]</span></button>
+    <button id="btnHelpApp" aria-label="Help (F1)" title="Help (F1 or H)">❓ Help <span class="shortcut-tag">[F1]</span></button>
+  </div>
 </div>
 
 <input type="file" id="batchInput" multiple accept=".kza,.zip,.tar" style="display:none">
@@ -493,8 +532,8 @@
         <th scope="col" class="sortable" onclick="sortBy('uncompSize')" title="Click to sort by original size">Original Size <span id="sort_uncompSize"></span></th>
         <th scope="col" class="sortable" onclick="sortBy('compSize')" title="Click to sort by packed size">Packed Size <span id="sort_compSize"></span></th>
         <th scope="col" class="sortable" onclick="sortBy('savings')" title="Click to sort by compression savings">Savings <span id="sort_savings"></span></th>
-        <th scope="col" class="sortable" onclick="sortBy('entropy')" title="Click to sort by Shannon entropy">Entropy (H) <span id="sort_entropy"></span></th>
-        <th scope="col" class="sortable" onclick="sortBy('crc32')" title="Click to sort by CRC32">CRC32 <span id="sort_crc32"></span></th>
+        <th scope="col" class="sortable col-entropy" onclick="sortBy('entropy')" title="Click to sort by Shannon entropy">Entropy (H) <span id="sort_entropy"></span></th>
+        <th scope="col" class="sortable col-crc32" onclick="sortBy('crc32')" title="Click to sort by CRC32">CRC32 <span id="sort_crc32"></span></th>
         <th scope="col" class="sortable" onclick="sortBy('method')" title="Click to sort by method">Method <span id="sort_method"></span></th>
       </tr>
     </thead>
@@ -1002,6 +1041,7 @@
   const btnCloseHelp = document.getElementById('btnCloseHelp');
   const btnOkHelp = document.getElementById('btnOkHelp');
   const btnHelpApp = document.getElementById('btnHelpApp');
+  const btnHeaderHelp = document.getElementById('btnHeaderHelp');
 
   const allModals = [verifyModal, previewModal, editorModal, analysisModal, renameModal, newFileModal, commentModal, manifestModal, helpModal];
 
@@ -1856,6 +1896,10 @@ Refer to acoustic diagnostics at echo-subsystem.net.
           } else {
             btnPreview.click();
           }
+        } else if (e.key === 'Delete') {
+          e.preventDefault();
+          if (selectedFiles.size === 0) selectedFiles.add(f);
+          btnRemove.click();
         }
       };
 
@@ -1873,8 +1917,8 @@ Refer to acoustic diagnostics at echo-subsystem.net.
         <td>${formatBytes(f.uncompSize)}</td>
         <td>${formatBytes(f.compSize)}</td>
         <td style="color: ${ratio > 0 ? 'var(--accent-green)' : 'var(--text-muted)'}">${ratio}%</td>
-        <td style="font-family: monospace; color: var(--accent-blue);">${entStr} b/B</td>
-        <td style="font-family: monospace;">0x${escapeHtml(f.crc32)}</td>
+        <td class="col-entropy" style="font-family: monospace; color: var(--accent-blue);">${entStr} b/B</td>
+        <td class="col-crc32" style="font-family: monospace;">0x${escapeHtml(f.crc32)}</td>
         <td>${methodBadge}</td>
       `;
 
@@ -1934,10 +1978,20 @@ Refer to acoustic diagnostics at echo-subsystem.net.
     const overallRatio = totalRaw > 0 ? Math.max(0, Math.round(100 - (totalPacked * 100 / totalRaw))) : 0;
     overallSavings.textContent = `Total Savings: ${overallRatio}%`;
     
+    const selCount = selectedFiles.size;
+    const selBytes = Array.from(selectedFiles).reduce((acc, f) => acc + (f.uncompSize || 0), 0);
     if (files.length === 0) {
       statusMessage.textContent = `Ready. Archive is empty (Drag & drop files or click 'Add [Ctrl+N]' or 'Demo [D]'). Press F1 for Help.`;
     } else {
-      statusMessage.textContent = `Archive loaded: ${files.length} file(s) present. (Press 'H' or F1 for Help)`;
+      const selText = selCount > 0 ? ` (${selCount} selected, ${formatBytes(selBytes)})` : '';
+      statusMessage.textContent = `Archive loaded: ${files.length} file(s)${selText}. Press 'H' or F1 for Help.`;
+    }
+
+    if (btnRemove) {
+      btnRemove.innerHTML = `🗑️ Remove ${selCount > 0 ? `(${selCount})` : ''} <span class="shortcut-tag">[Del]</span>`;
+    }
+    if (btnExtractSel) {
+      btnExtractSel.innerHTML = `🎯 Ext. Sel ${selCount > 0 ? `(${selCount})` : ''} <span class="shortcut-tag">[X]</span>`;
     }
   }
 
@@ -1945,7 +1999,21 @@ Refer to acoustic diagnostics at echo-subsystem.net.
 
   selectAll.onchange = (e) => {
     if (e.target.checked) {
-      files.forEach(f => selectedFiles.add(f));
+      const filterText = searchInput ? searchInput.value.toLowerCase().trim() : '';
+      const isRegex = regexCheck ? regexCheck.checked : false;
+      let re = null;
+      if (isRegex && filterText) {
+        try { re = new RegExp(filterText, 'i'); } catch(err) {}
+      }
+      files.forEach(f => {
+        if (!filterText) {
+          selectedFiles.add(f);
+        } else if (re) {
+          if (re.test(f.name)) selectedFiles.add(f);
+        } else {
+          if (f.name.toLowerCase().includes(filterText)) selectedFiles.add(f);
+        }
+      });
     } else {
       selectedFiles.clear();
     }
@@ -2444,7 +2512,12 @@ Refer to acoustic diagnostics at echo-subsystem.net.
 
   function openEditor(file) {
     if (!isTextBytes(file.rawBytes)) {
-      return showToast("Selected file contains binary data. Opening Hex Preview instead.", true);
+      showToast("Selected file contains binary data. Opening Hex Preview instead.", false);
+      selectedFiles.clear();
+      selectedFiles.add(file);
+      renderTable();
+      btnPreview.click();
+      return;
     }
     clearToasts();
     activeEditingFile = file;
@@ -2459,6 +2532,13 @@ Refer to acoustic diagnostics at echo-subsystem.net.
       const val = editorTextarea.value;
       const lines = val.split('\n').length;
       editorStats.textContent = `Size: ${formatBytes(val.length)} | Lines: ${lines} | Chars: ${val.length} (Unsaved Changes)`;
+    };
+
+    editorTextarea.onkeydown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        btnSaveEditor.click();
+      }
     };
 
     editorModal.classList.add('active');
@@ -2580,6 +2660,22 @@ Refer to acoustic diagnostics at echo-subsystem.net.
   btnCloseNewFile.onclick = () => newFileModal.classList.remove('active');
   btnCancelNewFile.onclick = () => newFileModal.classList.remove('active');
 
+  newFileNameInput.onkeydown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      btnConfirmNewFile.click();
+    } else if (e.key === 'Escape') {
+      btnCancelNewFile.click();
+    }
+  };
+
+  newFileContentInput.onkeydown = (e) => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'Enter' || e.key === 's' || e.key === 'S')) {
+      e.preventDefault();
+      btnConfirmNewFile.click();
+    }
+  };
+
   // =========================================================================
   // Archive Comment
   // =========================================================================
@@ -2596,6 +2692,13 @@ Refer to acoustic diagnostics at echo-subsystem.net.
     commentModal.classList.remove('active');
     playSfx('add');
     showToast("Archive comment saved.");
+  };
+
+  commentTextarea.onkeydown = (e) => {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'Enter' || e.key === 's' || e.key === 'S')) {
+      e.preventDefault();
+      btnSaveComment.click();
+    }
   };
 
   btnCloseComment.onclick = () => commentModal.classList.remove('active');
@@ -2864,6 +2967,7 @@ Refer to acoustic diagnostics at echo-subsystem.net.
   btnCloseHelp.onclick = () => helpModal.classList.remove('active');
   btnOkHelp.onclick = () => helpModal.classList.remove('active');
   if (btnHelpApp) btnHelpApp.onclick = toggleHelp;
+  if (btnHeaderHelp) btnHeaderHelp.onclick = toggleHelp;
 
   // =========================================================================
   // Full State Persistence: Quicksave & Quickload
@@ -3049,8 +3153,14 @@ Refer to acoustic diagnostics at echo-subsystem.net.
         renderTable();
       }
     } else if (!inInput) {
-      if (e.key === 'Delete' && selectedFiles.size > 0) {
-        btnRemove.click();
+      if (e.key === 'Delete') {
+        if (selectedFiles.size === 0 && document.activeElement && document.activeElement.hasAttribute('data-idx')) {
+          const idx = parseInt(document.activeElement.getAttribute('data-idx'));
+          if (files[idx]) selectedFiles.add(files[idx]);
+        }
+        if (selectedFiles.size > 0) {
+          btnRemove.click();
+        }
       } else if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
         if (e.key === 'F1') e.preventDefault();
         toggleHelp();
@@ -3129,7 +3239,7 @@ Refer to acoustic diagnostics at echo-subsystem.net.
   });
 
   // Set appropriate auto-opening size
-  window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 900, height: 650 }, '*');
+  window.parent.postMessage({ type: 'OS_SET_WINDOW_SIZE', width: 980, height: 700 }, '*');
 
   renderTable();
 

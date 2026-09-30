@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-qa
 agent_rotation:
   - kilo-graphics
   - kilo-qa
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KHex
-  kilo_usability: KZip
+  kilo_usability: KChrono
   kilo_graphics: KCosmic
   kilo_qa: KMedia
   kilo_expander: KPing
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KHabit
-  timestamp: "2026-09-30T12:38:00Z"
+  agent: kilo-usability
+  app: KZip
+  timestamp: "2026-09-30T13:37:00Z"
 last_planner_run: "2026-09-29T18:05:00Z"
 ---
 
@@ -113,9 +113,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KImage`, `KJournal`, `KMail`, `KMandel`, `KMech`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KZip`
+- **Current Target**: `KChrono`
 - **Upcoming Queue**:
-  `KChrono`, `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard)*.
+  `KTask`, `KStarForge`, `KPad`, `KBookmark`, `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KMedia`
@@ -284,6 +284,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-09-30T13:37:00Z — kilo-usability: KZip (UI/UX Pass, Occlusion Remediation, Grouped Actions & Window Sizing)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 123.0 KB web / 25.6 KB native < 999 KB).
+  - Window Sizing: Increased default size to 980x700 across App.jsx, kzip.html, and native Win32 C (`KZip.exe`).
+  - Toast Occlusion: Moved notifications to bottom-center with backdrop-filter, eliminating toolbar control blockage.
+  - Action Ergonomics: Organized 17 buttons into 4 semantic groups with dividers; added header quick help button.
+  - Modal Shortcuts & Fallbacks: Wired Ctrl+S and Enter in editor/comment/new-file modals; fixed binary hex fallback.
+  - Selection UX: Added live selection file and byte counters to status bar and buttons; added focused row Delete key hook.
+  - Verification: MSVC clean (`KZip.exe` 25.6 KB); Vite clean in 414ms; security lint & icon checks 100% PASS; <999KB ceiling.
+
 - **2026-09-30T12:38:00Z — kilo-tester: KHabit (Interactive UI Audit, Quicksave/Load, 1-9 Hotkeys, Undo Toast & FM Audio)**
   - Status: PASS ✅ (6 issues fixed, 0 regressions, 0 perimeter glints, 76.4 KB web / 163.5 KB native < 999 KB).
   - Quicksave & QuickLoad: Added sovereign state persistence via F5 / F9 across web and Settings modal (`khabit_quicksave`).
@@ -321,12 +330,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast Occlusion: Repositioned toast container to bottom-center with reverse stacking, eliminating HUD and button obstruction.
   - Diegetic ARG Touchstone: Preserved subtle node reference `[ECHO-1999 // NODE 10.19.99.4 // kweb://echo-subsystem.net]`.
   - Verification: MSVC clean (`KAbyss.exe` 246.2 KB); Vite clean in 440ms; security lint 100% PASS; icon audit clean.
-
-- **2026-09-30T06:40:00Z — kilo-graphics: KFortress (Visual Polish, Specular Glint Purge & YM2612 FM Audio)**
-  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 201.9 KB web / 182.8 KB native < 999 KB).
-  - Glint Purge & Citadel Masonry: Purged roof specular sheen; added ashlar stone courses, portcullis grating, and warm sconces.
-  - Rampart Wall Ballistas: Implemented dual mounted defense ballistas on citadel battlements when Siege Engineering is active.
-  - YM2612 FM Sound Architecture: Added 2-op FM solar laser pulse, volcanic magma rumble, cryo-electric arc, and breach siren.
-  - Weapon Audio Dispatch: Wired dedicated SFX triggers for Solar Beam, Inferno, Superconductor, traps, and citadel damage.
-  - Native Win32 Alignment: Synchronized mounted wall ballistas, lantern sconces, and tower firing audio frequencies in `main.c`.
-  - Verification: MSVC clean (`KFortress.exe` 182.8 KB); Vite clean in 446ms; security lint & check_icons 100% PASS.
