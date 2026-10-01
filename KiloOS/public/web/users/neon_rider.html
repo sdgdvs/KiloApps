@@ -499,6 +499,13 @@
     background: #3b0724;
   }
 
+  .hexdump-byte.byte-selected {
+    outline: 2px solid #ffcc00;
+    background: #3a2e00;
+    color: #ffffff !important;
+    font-weight: bold;
+  }
+
   .hexdump-ascii {
     color: #a7f3d0;
     width: 120px;
@@ -1202,6 +1209,59 @@ wait_retrace:
           On a Pentium II 450MHz, <code>REP MOVSD</code> transfers the entire screen in under 0.12 milliseconds, leaving 99% of the frame cycle free for complex 3D math and FM synthesis!
         </div>
       </div>
+
+      <!-- Article 7 -->
+      <div class="article-item" id="art-7" onclick="toggleArticle(7)">
+        <div class="article-header">
+          <span class="article-title">07. Software 3D Vector Math on the Pentium: Fixed-Point 16.16 Matrix Rotation</span>
+          <span class="article-meta">1999-12-28 &bull; 0xNEON</span>
+        </div>
+        <div class="article-body">
+          While the Pentium's pipelined FPU handles <code>FMUL</code> in 1 clock cycle, <code>FDIV</code> still stalls the processor for 39 clock cycles!
+          In high-speed 60 FPS demoscene software engines, we eliminate floating-point overhead entirely using <strong>Fixed-Point 16.16 Arithmetic</strong>:
+          <div class="code-snippet">
+; 3D Vector Yaw Rotation in 16.16 Fixed Point:
+; X' = (X * cos(A) - Z * sin(A)) >> 16
+; Z' = (X * sin(A) + Z * cos(A)) >> 16
+MOV EAX, [EBX + Vertex_X]    ; 16.16 fixed integer
+IMUL DWORD [ESI + CosAngle]  ; EDX:EAX = 64-bit product
+SHRD EAX, EDX, 16            ; Fast 64-bit to 32-bit fixed point shift
+MOV EDI, EAX                 ; EDI = X * cos(A)
+
+MOV EAX, [EBX + Vertex_Z]
+IMUL DWORD [ESI + SinAngle]
+SHRD EAX, EDX, 16
+SUB EDI, EAX                 ; EDI = X' in 16.16 fixed format!
+          </div>
+          The <code>SHRD</code> (Double Precision Shift Right) instruction collapses the 64-bit multiplication result in <code>EDX:EAX</code> back down to a 16.16 fixed scalar in a single 2-cycle instruction without memory roundtrips!
+        </div>
+      </div>
+
+      <!-- Article 8 -->
+      <div class="article-item" id="art-8" onclick="toggleArticle(8)">
+        <div class="article-header">
+          <span class="article-title">08. Voxel Landscape Raycasting: Comanche 1999 Column Height-Raymarching</span>
+          <span class="article-meta">1999-12-30 &bull; 0xNEON</span>
+        </div>
+        <div class="article-body">
+          The legendary voxel terrain rendering technique introduced in early '90s helicopter simulators renders vast, volumetric rolling mountain ranges without polygons.
+          In Mode 13h (320x200), each vertical screen column corresponds to a single ray projected outward from the camera:
+          <div class="code-snippet">
+; For each screen column X (0..319):
+;   ray_angle = cam_yaw + (X - 160) * FOV
+;   max_drawn_height = 200 (screen bottom)
+;   For distance D = near to far:
+;     map_x = cam_x + cos(ray_angle) * D
+;     map_y = cam_y + sin(ray_angle) * D
+;     terrain_height = HeightMap(map_x, map_y)
+;     screen_y = (terrain_height - cam_z) * Scale / D + Horizon
+;     if screen_y &lt; max_drawn_height:
+;       DrawVerticalLine(X, screen_y, max_drawn_height, Color(terrain_height, D))
+;       max_drawn_height = screen_y
+          </div>
+          Because the ray steps outward from near to far, front-to-back occlusion guarantees that hidden canyons are naturally culled by foreground ridges. We achieve full 60 FPS software raycasting across 320 columns with zero 3D acceleration!
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1330,8 +1390,34 @@ NOP</textarea>
             <div class="hexdump-viewport" id="hexDumpContainer">
               <!-- Rendered via JS -->
             </div>
+            
+            <!-- Interactive Byte Inspector & Quick Tools -->
+            <div style="margin-top:8px; background:#060d17; border:1px solid var(--border-dim); padding:8px; font-size:11px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:6px;">
+                <div>
+                  <span style="color:var(--accent-amber); font-weight:bold;">SELECTED BYTE:</span>
+                  <span id="selectedByteAddr" style="color:var(--accent-cyan);">0x00402030</span> &bull; 
+                  Hex: <strong id="selectedByteHex" style="color:#ff00aa;">0x50</strong> &bull; 
+                  Dec: <span id="selectedByteDec">80</span> &bull; 
+                  ASCII: <span id="selectedByteAscii" style="color:var(--accent-green);">'P'</span>
+                </div>
+                <div style="display:flex; gap:4px; align-items:center;">
+                  <input type="text" id="editByteVal" maxlength="2" placeholder="50" style="width:36px; background:#020509; border:1px solid #1e3a4a; color:#00ffcc; text-align:center; font-family:var(--font-mono); font-size:11px; padding:2px;">
+                  <button class="btn-retro" id="btnWriteByte" style="font-size:10px; padding:2px 6px;">Patch Byte</button>
+                </div>
+              </div>
+
+              <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; border-top:1px dashed #1e293b; padding-top:6px;">
+                <button class="btn-retro" id="btnInjectPacket" style="color:var(--accent-magenta); border-color:var(--accent-magenta);">📡 Inject 10.19.99.4 Frame</button>
+                <button class="btn-retro" id="btnXorMemory" style="color:var(--accent-amber); border-color:var(--accent-amber);">⚡ XOR 0x7F Mask</button>
+                <button class="btn-retro" id="btnGradientMem">🌈 Test Gradient</button>
+                <button class="btn-retro" id="btnZeroMem">🧹 Zero Buffer</button>
+                <button class="btn-retro btn-retro-pink" id="btnExportMem">💾 Export .HEX</button>
+              </div>
+            </div>
+
             <div style="margin-top:6px; font-size:10px; color:var(--text-muted);">
-              Data Segment (0x00402000 - 0x0040207F). Hover over bytes to inspect values.
+              Data Segment (0x00402000 - 0x0040207F). Click any byte to inspect and live-patch.
             </div>
           </div>
 
@@ -1517,6 +1603,9 @@ NOP</textarea>
               <option value="starfield">Starfield3D (256b Perspective Warp)</option>
               <option value="rotozoom">RotoZoom (256b Continuous Affine Matrix &amp; Zoom)</option>
               <option value="copper">CopperBars (384b Amiga Raster Splits &amp; 3D Cube)</option>
+              <option value="mesh3d">3D Vector Mesh Engine (Rotating Polyhedra &amp; Software Rasterizer)</option>
+              <option value="voxel">Voxel Land '99 (Comanche Raycasting Terrain &amp; Heightmap)</option>
+              <option value="intro1k">1KB Demoscene Cracktro Intro (Copper Bars, Starfield &amp; Live Scroller)</option>
             </select>
           </div>
           <div style="display:flex; gap:6px; align-items:center;">
@@ -1532,6 +1621,48 @@ NOP</textarea>
           </div>
         </div>
         <canvas id="vgaCanvas" width="320" height="200"></canvas>
+
+        <!-- Interactive Sub-Controls for 3D Mesh, Voxel & 1KB Intro -->
+        <div id="vgaSubControls" style="background:#070f1a; border:1px solid var(--border-dim); padding:6px 10px; margin-top:6px; width:100%; max-width:640px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+          <!-- 3D Mesh Controls (shown when mesh3d active) -->
+          <div id="meshControls" style="display:none; align-items:center; gap:6px; flex-wrap:wrap; width:100%;">
+            <span style="font-size:11px; color:var(--accent-cyan); font-weight:bold;">3D Model:</span>
+            <select id="meshModelSelect" style="background:#09121f; color:#00ffcc; border:1px solid var(--border-dim); font-size:11px; padding:2px 4px;">
+              <option value="cube">Wireframe &amp; Solid Cube</option>
+              <option value="tesseract">4D Hypercube / Tesseract</option>
+              <option value="torus">3D Demoscene Torus</option>
+              <option value="octahedron">Double-Pyramid Octahedron</option>
+              <option value="star">Demoscene 12-Point Star</option>
+            </select>
+            <span style="font-size:11px; color:var(--accent-amber); font-weight:bold; margin-left:4px;">Shading:</span>
+            <select id="meshRenderMode" style="background:#09121f; color:#ffcc00; border:1px solid var(--border-dim); font-size:11px; padding:2px 4px;">
+              <option value="wire">Bresenham Wireframe</option>
+              <option value="flat">Flat-Shaded Lambertian</option>
+              <option value="points">Vertices Only</option>
+            </select>
+            <span id="meshTelemetry" style="font-size:10px; color:#94a3b8; margin-left:auto;">Vertices: 8 | Edges: 12</span>
+          </div>
+
+          <!-- Voxel Controls (shown when voxel active) -->
+          <div id="voxelControls" style="display:none; align-items:center; gap:6px; flex-wrap:wrap; width:100%;">
+            <span style="font-size:11px; color:var(--accent-green); font-weight:bold;">Biome:</span>
+            <select id="voxelTerrainSelect" style="background:#09121f; color:#00ff66; border:1px solid var(--border-dim); font-size:11px; padding:2px 4px;">
+              <option value="canyon">Rolling Canyons &amp; River</option>
+              <option value="alpine">Alpine Glaciers &amp; Peaks</option>
+              <option value="mars">Mars Red Basin</option>
+            </select>
+            <label style="font-size:10px; color:var(--text-muted); margin-left:4px;">Altitude:</label>
+            <input type="range" id="voxelAltitude" min="30" max="180" value="85" style="width:70px;">
+            <span style="font-size:10px; color:#38bdf8; margin-left:auto;">Comanche Raycasting &bull; 320 Ray Slices</span>
+          </div>
+
+          <!-- 1KB Intro Controls (shown when intro1k active) -->
+          <div id="introControls" style="display:none; align-items:center; gap:6px; flex-wrap:wrap; width:100%;">
+            <span style="font-size:11px; color:var(--accent-magenta); font-weight:bold;">Scroller:</span>
+            <input type="text" id="introScrollerInput" value="★ FLARELIGHT 1999 DEMODIVISION ★ NEON_RIDER PRESENTS PURE SILICON INTRO ★ 100% HANDCRAFTED X86 OPCODES ★ GREETS TO CYBERSPIRE, SYSOP_0x7F &amp; KILOAPPS FLEET ★" style="flex:1; min-width:200px; background:#020509; border:1px solid #1e3a4a; color:#ff00aa; font-family:var(--font-mono); font-size:10px; padding:2px 5px;">
+            <button class="btn-retro" id="btnUpdateScroller" style="font-size:10px; padding:2px 6px;">Update Scroller</button>
+          </div>
+        </div>
       </div>
 
       <div class="file-list">
@@ -1541,6 +1672,9 @@ NOP</textarea>
         <button class="btn-retro" onclick="selectVaultFile('starfield.asm')">starfield.asm (256b)</button>
         <button class="btn-retro" onclick="selectVaultFile('rotozoom.asm')">rotozoom.asm (256b)</button>
         <button class="btn-retro" onclick="selectVaultFile('copperbars.asm')">copperbars.asm (384b)</button>
+        <button class="btn-retro" onclick="selectVaultFile('mesh3d.asm')">mesh3d.asm (512b)</button>
+        <button class="btn-retro" onclick="selectVaultFile('voxel_land.asm')">voxel_land.asm (256b)</button>
+        <button class="btn-retro" onclick="selectVaultFile('intro1k.asm')">intro1k.asm (1024b)</button>
         <button class="btn-retro" onclick="selectVaultFile('neon_synth.asm')">neon_synth.asm (512b)</button>
         <button class="btn-retro" onclick="selectVaultFile('fl_neon.nfo')">fl_neon.nfo (Release Info)</button>
       </div>
@@ -2476,8 +2610,27 @@ NOP</textarea>
     }
   }
 
+  let selectedMemIndex = 0x30;
+
+  function updateSelectedByteUI() {
+    const idx = selectedMemIndex;
+    const addr = 0x00402000 + idx;
+    const b = memory[idx];
+    const elAddr = document.getElementById('selectedByteAddr');
+    const elHex = document.getElementById('selectedByteHex');
+    const elDec = document.getElementById('selectedByteDec');
+    const elAscii = document.getElementById('selectedByteAscii');
+    const elInput = document.getElementById('editByteVal');
+    if (elAddr) elAddr.textContent = '0x' + addr.toString(16).toUpperCase();
+    if (elHex) elHex.textContent = '0x' + b.toString(16).padStart(2, '0').toUpperCase();
+    if (elDec) elDec.textContent = b.toString();
+    if (elAscii) elAscii.textContent = (b >= 32 && b <= 126) ? `'${String.fromCharCode(b)}'` : "'.' (Ctrl)";
+    if (elInput && document.activeElement !== elInput) elInput.value = b.toString(16).padStart(2, '0').toUpperCase();
+  }
+
   function renderHexDump() {
     const container = document.getElementById('hexDumpContainer');
+    if (!container) return;
     container.innerHTML = '';
 
     for (let r = 0; r < 8; r++) {
@@ -2498,9 +2651,17 @@ NOP</textarea>
         const idx = r * 16 + c;
         const b = memory[idx];
         const bSpan = document.createElement('span');
-        bSpan.className = 'hexdump-byte' + (changedMemIndices.has(idx) ? ' byte-changed' : '');
+        let classes = 'hexdump-byte';
+        if (changedMemIndices.has(idx)) classes += ' byte-changed';
+        if (idx === selectedMemIndex) classes += ' byte-selected';
+        bSpan.className = classes;
         bSpan.textContent = b.toString(16).padStart(2, '0').toUpperCase();
         bSpan.title = `Offset: 0x${(0x00402000 + idx).toString(16).toUpperCase()} | Dec: ${b}`;
+        bSpan.addEventListener('click', () => {
+          selectedMemIndex = idx;
+          updateSelectedByteUI();
+          renderHexDump();
+        });
         bytesWrap.appendChild(bSpan);
 
         asciiStr += (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
@@ -2514,7 +2675,113 @@ NOP</textarea>
 
       container.appendChild(row);
     }
+    updateSelectedByteUI();
   }
+
+  // Hook up RAM toolbar actions
+  function setupRamTools() {
+    const btnWrite = document.getElementById('btnWriteByte');
+    const inputVal = document.getElementById('editByteVal');
+    if (btnWrite && inputVal) {
+      const applyByte = () => {
+        const parsed = parseInt(inputVal.value.trim(), 16);
+        if (!isNaN(parsed) && parsed >= 0 && parsed <= 255) {
+          memory[selectedMemIndex] = parsed;
+          changedMemIndices.add(selectedMemIndex);
+          renderHexDump();
+          playClickSound();
+          showToast(`✔ Patched byte at 0x${(0x00402000 + selectedMemIndex).toString(16).toUpperCase()} to 0x${parsed.toString(16).padStart(2, '0').toUpperCase()}`);
+        } else {
+          showToast("⚠ Please enter a valid 2-digit hex value (00-FF)!");
+        }
+      };
+      btnWrite.addEventListener('click', applyByte);
+      inputVal.addEventListener('keydown', (e) => { if (e.key === 'Enter') applyByte(); });
+    }
+
+    const btnInject = document.getElementById('btnInjectPacket');
+    if (btnInject) {
+      btnInject.addEventListener('click', () => {
+        const pkt = "PKT.10.19.99.4 [SUB:1999Hz] SIG:ECHO_0x7F";
+        for (let i = 0; i < pkt.length && i < 48; i++) {
+          const idx = 0x30 + i;
+          if (idx < 128) {
+            memory[idx] = pkt.charCodeAt(i);
+            changedMemIndices.add(idx);
+          }
+        }
+        renderHexDump();
+        playTone(1999, 0.25);
+        showToast("📡 Injected 10.19.99.4 frame at offset 0x00402030 (1999Hz)");
+      });
+    }
+
+    const btnXor = document.getElementById('btnXorMemory');
+    if (btnXor) {
+      btnXor.addEventListener('click', () => {
+        for (let i = 0; i < 128; i++) {
+          memory[i] ^= 0x7F;
+          changedMemIndices.add(i);
+        }
+        renderHexDump();
+        playClickSound();
+        showToast("⚡ Masked 128-byte RAM segment with XOR 0x7F!");
+      });
+    }
+
+    const btnGrad = document.getElementById('btnGradientMem');
+    if (btnGrad) {
+      btnGrad.addEventListener('click', () => {
+        for (let i = 0; i < 128; i++) {
+          memory[i] = (i * 2) & 0xFF;
+          changedMemIndices.add(i);
+        }
+        renderHexDump();
+        playClickSound();
+        showToast("🌈 Filled RAM segment with palette gradient test.");
+      });
+    }
+
+    const btnZero = document.getElementById('btnZeroMem');
+    if (btnZero) {
+      btnZero.addEventListener('click', () => {
+        memory.fill(0);
+        changedMemIndices.clear();
+        renderHexDump();
+        playClickSound();
+        showToast("🧹 Cleared RAM data segment to 0x00.");
+      });
+    }
+
+    const btnExport = document.getElementById('btnExportMem');
+    if (btnExport) {
+      btnExport.addEventListener('click', () => {
+        let dumpText = "; Intel HEX Dump of Data Segment (0x00402000 - 0x0040207F)\n";
+        for (let r = 0; r < 8; r++) {
+          const offset = (0x00402000 + r * 16).toString(16).toUpperCase();
+          let hexRow = "";
+          let asciiRow = "";
+          for (let c = 0; c < 16; c++) {
+            const b = memory[r * 16 + c];
+            hexRow += b.toString(16).padStart(2, '0').toUpperCase() + " ";
+            asciiRow += (b >= 32 && b <= 126) ? String.fromCharCode(b) : ".";
+          }
+          dumpText += `0x${offset}:  ${hexRow} |${asciiRow}|\n`;
+        }
+        const blob = new Blob([dumpText], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'RAM_00402000.HEX';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast("💾 Exported RAM_00402000.HEX!");
+      });
+    }
+  }
+  setupRamTools();
 
   /* 16x16 Opcode Matrix Generator */
   const opcodeDatabase = {
@@ -2692,6 +2959,18 @@ NOP</textarea>
       tempo: 110,
       bassNotes: [82.4, 82.4, 110, 82.4, 98, 82.4, 123.4, 82.4],
       leadNotes: [659.2, 880, 987.7, 880, 1999, 880, 659.2, 440]
+    },
+    {
+      title: "[05] Cyberpunk 1999 Highway (Dual FM Modulator & Slap Bass)",
+      tempo: 138,
+      bassNotes: [110, 110, 123.5, 146.8, 164.8, 146.8, 123.5, 110],
+      leadNotes: [440, 554.4, 659.3, 880, 739.9, 659.3, 554.4, 440]
+    },
+    {
+      title: "[06] Carlsbad Bedrock Ambient (Subterranean Sine Resonance & SPC700 Delay)",
+      tempo: 75,
+      bassNotes: [73.4, 73.4, 82.4, 98.0, 73.4, 73.4, 110.0, 98.0],
+      leadNotes: [293.7, 369.9, 440.0, 587.3, 440.0, 369.9, 293.7, 220.0]
     }
   ];
 
@@ -3308,6 +3587,57 @@ NOP</textarea>
   // Fire buffer: 320 x 200 array of byte intensities
   const fireBuffer = new Uint8Array(320 * 200);
 
+  // 8x8 Mode 13h Bitmap Raster Font
+  const font8x8 = {
+    ' ': [0,0,0,0,0,0,0,0],
+    'A': [0x18,0x3C,0x66,0x7E,0x66,0x66,0x66,0],
+    'B': [0x7C,0x66,0x66,0x7C,0x66,0x66,0x7C,0],
+    'C': [0x3C,0x66,0x06,0x06,0x06,0x66,0x3C,0],
+    'D': [0x78,0x6C,0x66,0x66,0x66,0x6C,0x78,0],
+    'E': [0x7E,0x06,0x06,0x3E,0x06,0x06,0x7E,0],
+    'F': [0x7E,0x06,0x06,0x3E,0x06,0x06,0x06,0],
+    'G': [0x3C,0x66,0x06,0x76,0x66,0x66,0x3C,0],
+    'H': [0x66,0x66,0x66,0x7E,0x66,0x66,0x66,0],
+    'I': [0x3C,0x18,0x18,0x18,0x18,0x18,0x3C,0],
+    'J': [0x30,0x30,0x30,0x30,0x30,0x32,0x1C,0],
+    'K': [0x66,0x36,0x1E,0x0E,0x1E,0x36,0x66,0],
+    'L': [0x06,0x06,0x06,0x06,0x06,0x06,0x7E,0],
+    'M': [0x63,0x77,0x7F,0x6B,0x63,0x63,0x63,0],
+    'N': [0x66,0x76,0x7E,0x7E,0x6E,0x66,0x66,0],
+    'O': [0x3C,0x66,0x66,0x66,0x66,0x66,0x3C,0],
+    'P': [0x7C,0x66,0x66,0x7C,0x06,0x06,0x06,0],
+    'Q': [0x3C,0x66,0x66,0x66,0x6E,0x3C,0x78,0],
+    'R': [0x7C,0x66,0x66,0x7C,0x1E,0x36,0x66,0],
+    'S': [0x3C,0x66,0x06,0x3C,0x60,0x66,0x3C,0],
+    'T': [0x7E,0x18,0x18,0x18,0x18,0x18,0x18,0],
+    'U': [0x66,0x66,0x66,0x66,0x66,0x66,0x3C,0],
+    'V': [0x66,0x66,0x66,0x66,0x66,0x3C,0x18,0],
+    'W': [0x63,0x63,0x63,0x6B,0x7F,0x77,0x63,0],
+    'X': [0x66,0x66,0x3C,0x18,0x3C,0x66,0x66,0],
+    'Y': [0x66,0x66,0x66,0x3C,0x18,0x18,0x18,0],
+    'Z': [0x7E,0x60,0x30,0x18,0x0C,0x06,0x7E,0],
+    '0': [0x3C,0x66,0x6E,0x76,0x66,0x66,0x3C,0],
+    '1': [0x18,0x38,0x18,0x18,0x18,0x18,0x3C,0],
+    '2': [0x3C,0x66,0x60,0x38,0x0C,0x06,0x7E,0],
+    '3': [0x3C,0x66,0x60,0x3C,0x60,0x66,0x3C,0],
+    '4': [0x66,0x66,0x66,0x7E,0x60,0x60,0x60,0],
+    '5': [0x7E,0x06,0x3E,0x60,0x60,0x66,0x3C,0],
+    '6': [0x3C,0x06,0x06,0x3E,0x66,0x66,0x3C,0],
+    '7': [0x7E,0x60,0x30,0x18,0x0C,0x0C,0x0C,0],
+    '8': [0x3C,0x66,0x66,0x3C,0x66,0x66,0x3C,0],
+    '9': [0x3C,0x66,0x66,0x7C,0x60,0x60,0x3C,0],
+    '.': [0,0,0,0,0,0x18,0x18,0],
+    ',': [0,0,0,0,0,0x18,0x18,0x08],
+    '!': [0x18,0x18,0x18,0x18,0x18,0,0x18,0],
+    '-': [0,0,0,0x3C,0,0,0,0],
+    '/': [0x40,0x20,0x10,0x08,0x04,0x02,0x01,0],
+    ':': [0,0x18,0x18,0,0x18,0x18,0,0],
+    '★': [0x10,0x38,0xFE,0x7C,0x38,0x6C,0xC6,0],
+    '⚡': [0x18,0x30,0x60,0x7E,0x0C,0x18,0x30,0]
+  };
+  let scrollerText = "★ FLARELIGHT 1999 DEMODIVISION ★ NEON_RIDER PRESENTS PURE SILICON INTRO ★ 100% HANDCRAFTED X86 OPCODES ★ GREETS TO CYBERSPIRE, SYSOP_0x7F & KILOAPPS FLEET ★ ";
+  let scrollerPixelOffset = 0;
+
   // Palettes (256 RGB entries)
   const palettes = {
     cyan: [],
@@ -3524,6 +3854,390 @@ NOP</textarea>
             if (e2 < dx) { err += dx; y0 += sy; }
           }
         }
+      } else if (effect === 'mesh3d') {
+        // Real-Time 3D Vector Mesh Engine & Software Rasterizer
+        vgaPixels.fill(0);
+        const modelKey = document.getElementById('meshModelSelect') ? document.getElementById('meshModelSelect').value : 'cube';
+        const renderMode = document.getElementById('meshRenderMode') ? document.getElementById('meshRenderMode').value : 'wire';
+
+        let vertices = [];
+        let edges = [];
+        let faces = [];
+
+        if (modelKey === 'cube') {
+          vertices = [
+            [-45, -45, -45], [45, -45, -45], [45, 45, -45], [-45, 45, -45],
+            [-45, -45,  45], [45, -45,  45], [45, 45,  45], [-45, 45,  45]
+          ];
+          edges = [[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+          faces = [
+            [0,1,2],[0,2,3], [5,4,7],[5,7,6],
+            [4,0,3],[4,3,7], [1,5,6],[1,6,2],
+            [3,2,6],[3,6,7], [4,5,1],[4,1,0]
+          ];
+        } else if (modelKey === 'octahedron') {
+          vertices = [
+            [0, -55, 0], [0, 55, 0],
+            [-50, 0, -50], [50, 0, -50], [50, 0, 50], [-50, 0, 50]
+          ];
+          edges = [
+            [0,2],[0,3],[0,4],[0,5],
+            [1,2],[1,3],[1,4],[1,5],
+            [2,3],[3,4],[4,5],[5,2]
+          ];
+          faces = [
+            [0,2,3],[0,3,4],[0,4,5],[0,5,2],
+            [1,3,2],[1,4,3],[1,5,4],[1,2,5]
+          ];
+        } else if (modelKey === 'tesseract') {
+          const s = 34;
+          const v4 = [];
+          for (let i = 0; i < 16; i++) {
+            v4.push([
+              (i & 1 ? 1 : -1) * s,
+              (i & 2 ? 1 : -1) * s,
+              (i & 4 ? 1 : -1) * s,
+              (i & 8 ? 1 : -1) * s
+            ]);
+          }
+          const a4 = vgaFrame * 0.025;
+          const cos4 = Math.cos(a4), sin4 = Math.sin(a4);
+          vertices = v4.map(v => {
+            const x = v[0] * cos4 - v[3] * sin4;
+            const w = v[0] * sin4 + v[3] * cos4;
+            const y = v[1] * cos4 - v[2] * sin4;
+            const z = v[1] * sin4 + v[2] * cos4;
+            const dist4 = 110;
+            const factor = dist4 / (dist4 - w);
+            return [x * factor, y * factor, z * factor];
+          });
+          edges = [];
+          for (let i = 0; i < 16; i++) {
+            for (let b = 0; b < 4; b++) {
+              const j = i ^ (1 << b);
+              if (i < j) edges.push([i, j]);
+            }
+          }
+          faces = [];
+        } else if (modelKey === 'torus') {
+          const R = 45, r = 18;
+          const segR = 12, segr = 6;
+          for (let i = 0; i < segR; i++) {
+            const u = (i / segR) * Math.PI * 2;
+            const cosU = Math.cos(u), sinU = Math.sin(u);
+            for (let j = 0; j < segr; j++) {
+              const v = (j / segr) * Math.PI * 2;
+              const x = (R + r * Math.cos(v)) * cosU;
+              const y = (R + r * Math.cos(v)) * sinU;
+              const z = r * Math.sin(v);
+              vertices.push([x, y, z]);
+              const nextI = (i + 1) % segR;
+              const nextJ = (j + 1) % segr;
+              const i0 = i * segr + j;
+              const i1 = nextI * segr + j;
+              const i2 = nextI * segr + nextJ;
+              const i3 = i * segr + nextJ;
+              edges.push([i0, i1], [i0, i3]);
+              faces.push([i0, i1, i2], [i0, i2, i3]);
+            }
+          }
+        } else {
+          // Demoscene 12-point star
+          vertices = [
+            [0, -65, 0], [0, 65, 0], [-65, 0, 0], [65, 0, 0], [0, 0, -65], [0, 0, 65],
+            [-25, -25, -25], [25, -25, -25], [25, 25, -25], [-25, 25, -25],
+            [-25, -25, 25], [25, -25, 25], [25, 25, 25], [-25, 25, 25]
+          ];
+          edges = [
+            [0,6],[0,7],[0,8],[0,9],[1,10],[1,11],[1,12],[1,13],
+            [2,6],[2,9],[2,10],[2,13],[3,7],[3,8],[3,11],[3,12],
+            [4,6],[4,7],[4,10],[4,11],[5,8],[5,9],[5,12],[5,13]
+          ];
+          faces = [
+            [0,6,7],[0,7,8],[0,8,9],[0,9,6],
+            [1,11,10],[1,12,11],[1,13,12],[1,10,13],
+            [2,9,6],[2,13,9],[2,10,13],[2,6,10],
+            [3,7,8],[3,8,12],[3,12,11],[3,11,7]
+          ];
+        }
+
+        const telem = document.getElementById('meshTelemetry');
+        if (telem) telem.textContent = `Verts: ${vertices.length} | Edges: ${edges.length} | Faces: ${faces.length}`;
+
+        // 3D Rotation Matrix
+        const rotX = vgaFrame * 0.028;
+        const rotY = vgaFrame * 0.038;
+        const rotZ = vgaFrame * 0.018;
+        const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+        const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+        const cosZ = Math.cos(rotZ), sinZ = Math.sin(rotZ);
+
+        const proj = [];
+        const transformed = [];
+        for (let i = 0; i < vertices.length; i++) {
+          const v = vertices[i];
+          let x1 = v[0] * cosY + v[2] * sinY;
+          let z1 = -v[0] * sinY + v[2] * cosY;
+          let y2 = v[1] * cosX - z1 * sinX;
+          let z2 = v[1] * sinX + z1 * cosX;
+          let x3 = x1 * cosZ - y2 * sinZ;
+          let y3 = x1 * sinZ + y2 * cosZ;
+          let z3 = z2 + 190;
+          transformed.push([x3, y3, z3]);
+          const px = Math.floor(160 + (x3 * 220) / z3);
+          const py = Math.floor(100 + (y3 * 220) / z3);
+          proj.push([px, py, z3]);
+        }
+
+        // Render Faces (Flat Shading)
+        if (renderMode === 'flat' && faces.length > 0) {
+          const sortedFaces = faces.map(f => {
+            const zAvg = (transformed[f[0]][2] + transformed[f[1]][2] + transformed[f[2]][2]) / 3;
+            return { f, z: zAvg };
+          }).sort((a, b) => b.z - a.z);
+
+          sortedFaces.forEach(item => {
+            const f = item.f;
+            const p0 = proj[f[0]], p1 = proj[f[1]], p2 = proj[f[2]];
+            const cross = (p1[0] - p0[0]) * (p2[1] - p0[1]) - (p1[1] - p0[1]) * (p2[0] - p0[0]);
+            if (cross > 0) {
+              const v0 = transformed[f[0]], v1 = transformed[f[1]], v2 = transformed[f[2]];
+              const ax = v1[0] - v0[0], ay = v1[1] - v0[1], az = v1[2] - v0[2];
+              const bx = v2[0] - v0[0], by = v2[1] - v0[1], bz = v2[2] - v0[2];
+              let nx = ay * bz - az * by;
+              let ny = az * bx - ax * bz;
+              let nz = ax * by - ay * bx;
+              const len = Math.sqrt(nx*nx + ny*ny + nz*nz) || 1;
+              nx /= len; ny /= len; nz /= len;
+              const light = Math.max(0.15, (nx * 0.577 + ny * 0.577 - nz * 0.577));
+              const palIdx = Math.floor(light * 254);
+              const rgb = pal[palIdx & 0xFF];
+
+              const minX = Math.max(0, Math.min(p0[0], p1[0], p2[0]));
+              const maxX = Math.min(319, Math.max(p0[0], p1[0], p2[0]));
+              const minY = Math.max(0, Math.min(p0[1], p1[1], p2[1]));
+              const maxY = Math.min(199, Math.max(p0[1], p1[1], p2[1]));
+
+              const denom = (p1[1] - p2[1]) * (p0[0] - p2[0]) + (p2[0] - p1[0]) * (p0[1] - p2[1]);
+              if (denom !== 0) {
+                for (let y = minY; y <= maxY; y++) {
+                  const yOff = y * 320 * 4;
+                  for (let x = minX; x <= maxX; x++) {
+                    const w0 = ((p1[1] - p2[1]) * (x - p2[0]) + (p2[0] - p1[0]) * (y - p2[1])) / denom;
+                    const w1 = ((p2[1] - p0[1]) * (x - p2[0]) + (p0[0] - p2[0]) * (y - p2[1])) / denom;
+                    const w2 = 1 - w0 - w1;
+                    if (w0 >= 0 && w1 >= 0 && w2 >= 0) {
+                      const idx = yOff + x * 4;
+                      vgaPixels[idx] = rgb[0];
+                      vgaPixels[idx+1] = rgb[1];
+                      vgaPixels[idx+2] = rgb[2];
+                      vgaPixels[idx+3] = 255;
+                    }
+                  }
+                }
+              }
+            }
+          });
+        }
+
+        // Render Wireframe Edges
+        if (renderMode === 'wire' || (renderMode === 'flat' && faces.length === 0)) {
+          edges.forEach(e => {
+            const p1 = proj[e[0]], p2 = proj[e[1]];
+            let x0 = p1[0], y0 = p1[1], x1 = p2[0], y1 = p2[1];
+            const dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
+            const sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+            let err = dx - dy;
+            const edgeZ = (p1[2] + p2[2]) / 2;
+            const bri = Math.max(80, Math.min(255, Math.floor(320 - edgeZ * 0.7)));
+            const rgb = pal[bri & 0xFF];
+
+            while (true) {
+              if (x0 >= 0 && x0 < 320 && y0 >= 0 && y0 < 200) {
+                const idx = (y0 * 320 + x0) * 4;
+                vgaPixels[idx] = rgb[0];
+                vgaPixels[idx+1] = rgb[1];
+                vgaPixels[idx+2] = rgb[2];
+                vgaPixels[idx+3] = 255;
+              }
+              if (x0 === x1 && y0 === y1) break;
+              const e2 = 2 * err;
+              if (e2 > -dy) { err -= dy; x0 += sx; }
+              if (e2 < dx) { err += dx; y0 += sy; }
+            }
+          });
+        }
+
+        // Render Vertices
+        if (renderMode === 'points') {
+          proj.forEach(p => {
+            for (let dy = -1; dy <= 1; dy++) {
+              for (let dx = -1; dx <= 1; dx++) {
+                const px = p[0] + dx, py = p[1] + dy;
+                if (px >= 0 && px < 320 && py >= 0 && py < 200) {
+                  const idx = (py * 320 + px) * 4;
+                  vgaPixels[idx] = 0;
+                  vgaPixels[idx+1] = 255;
+                  vgaPixels[idx+2] = 204;
+                  vgaPixels[idx+3] = 255;
+                }
+              }
+            }
+          });
+        }
+      } else if (effect === 'voxel') {
+        // Voxel Land '99 (Comanche Column Raycasting Terrain)
+        vgaPixels.fill(0);
+        const terrainType = document.getElementById('voxelTerrainSelect') ? document.getElementById('voxelTerrainSelect').value : 'canyon';
+        const altitudeEl = document.getElementById('voxelAltitude');
+        const camZ = altitudeEl ? parseInt(altitudeEl.value, 10) : 85;
+
+        const camX = vgaFrame * 0.9;
+        const camY = vgaFrame * 0.7;
+        const camAngle = Math.sin(vgaFrame * 0.015) * 0.35;
+        const fov = 0.85;
+
+        for (let x = 0; x < 320; x++) {
+          const rayAngle = camAngle + (x - 160) * (fov / 320);
+          const sinR = Math.sin(rayAngle);
+          const cosR = Math.cos(rayAngle);
+          let maxDrawnY = 200;
+
+          for (let d = 12; d < 140; d += 2) {
+            const mapX = camX + cosR * d;
+            const mapY = camY + sinR * d;
+            let h = 0;
+            if (terrainType === 'canyon') {
+              h = (Math.sin(mapX * 0.04) * Math.cos(mapY * 0.04) * 42 + Math.sin(mapX * 0.09 + mapY * 0.07) * 18 + 68);
+            } else if (terrainType === 'alpine') {
+              h = Math.abs(Math.sin(mapX * 0.05) * 55 + Math.cos(mapY * 0.05) * 55) + 30;
+            } else {
+              h = (Math.sin(mapX * 0.03) * 35 + Math.cos(mapY * 0.06) * 25 + 60);
+            }
+
+            const projY = Math.floor(100 + (camZ - h) * 110 / d);
+            const clampedY = Math.max(0, Math.min(199, projY));
+
+            if (clampedY < maxDrawnY) {
+              let baseCol = 0;
+              if (terrainType === 'mars') {
+                baseCol = Math.floor(h * 1.6) & 0xFF;
+              } else if (h < 40) {
+                baseCol = 35; // water
+              } else if (h < 75) {
+                baseCol = 140; // valley
+              } else if (h < 105) {
+                baseCol = 200; // ridge
+              } else {
+                baseCol = 250; // snow peak
+              }
+              const fogFactor = Math.max(0.3, 1.0 - (d / 140));
+              const palColor = pal[baseCol];
+              const r = Math.floor(palColor[0] * fogFactor);
+              const g = Math.floor(palColor[1] * fogFactor);
+              const b = Math.floor(palColor[2] * fogFactor);
+
+              for (let y = clampedY; y < maxDrawnY; y++) {
+                const idx = (y * 320 + x) * 4;
+                vgaPixels[idx] = r;
+                vgaPixels[idx+1] = g;
+                vgaPixels[idx+2] = b;
+                vgaPixels[idx+3] = 255;
+              }
+              maxDrawnY = clampedY;
+              if (maxDrawnY <= 0) break;
+            }
+          }
+          // Sky gradient
+          for (let y = 0; y < maxDrawnY; y++) {
+            const idx = (y * 320 + x) * 4;
+            const skyGrad = Math.floor(y * 0.35);
+            vgaPixels[idx] = 4;
+            vgaPixels[idx+1] = skyGrad + 6;
+            vgaPixels[idx+2] = skyGrad + 18;
+            vgaPixels[idx+3] = 255;
+          }
+        }
+      } else if (effect === 'intro1k') {
+        // 1KB Demoscene Cracktro Intro
+        vgaPixels.fill(0);
+
+        // Layer 1: Copper Bars
+        for (let y = 0; y < 200; y++) {
+          const bar1 = Math.sin(y * 0.08 + vgaFrame * 0.08);
+          const bar2 = Math.cos(y * 0.04 - vgaFrame * 0.05);
+          const barVal = Math.floor((bar1 + bar2 + 2) * 50) & 0xFF;
+          const rgb = pal[barVal];
+          const yOff = y * 320 * 4;
+          for (let x = 0; x < 320; x++) {
+            const idx = yOff + x * 4;
+            vgaPixels[idx] = rgb[0] >> 1;
+            vgaPixels[idx+1] = rgb[1] >> 1;
+            vgaPixels[idx+2] = rgb[2] >> 1;
+            vgaPixels[idx+3] = 255;
+          }
+        }
+
+        // Layer 2: 3D Warp Stars
+        stars.forEach(st => {
+          st.z -= 5;
+          if (st.z <= 1) {
+            st.z = 400;
+            st.x = (Math.random() - 0.5) * 600;
+            st.y = (Math.random() - 0.5) * 400;
+          }
+          const px = Math.floor(160 + (st.x * 140) / st.z);
+          const py = Math.floor(100 + (st.y * 140) / st.z);
+          if (px >= 0 && px < 320 && py >= 0 && py < 200) {
+            const idx = (py * 320 + px) * 4;
+            vgaPixels[idx] = 255;
+            vgaPixels[idx+1] = 255;
+            vgaPixels[idx+2] = 255;
+            vgaPixels[idx+3] = 255;
+          }
+        });
+
+        // Layer 3: Rotating 3D Star Centerpiece
+        const starPoints = [
+          [0, -45, 0], [0, 45, 0], [-45, 0, 0], [45, 0, 0], [0, 0, -45], [0, 0, 45]
+        ];
+        const starEdges = [
+          [0,2],[0,3],[0,4],[0,5],[1,2],[1,3],[1,4],[1,5],[2,4],[4,3],[3,5],[5,2]
+        ];
+        const rotY = vgaFrame * 0.05;
+        const rotX = vgaFrame * 0.035;
+        const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+        const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+        const projStar = starPoints.map(p => {
+          const x1 = p[0] * cosY + p[2] * sinY;
+          const z1 = -p[0] * sinY + p[2] * cosY;
+          const y2 = p[1] * cosX - z1 * sinX;
+          const z2 = p[1] * sinX + z1 * cosX + 170;
+          return [Math.floor(160 + (x1 * 220) / z2), Math.floor(85 + (y2 * 220) / z2)];
+        });
+        starEdges.forEach(e => {
+          const p1 = projStar[e[0]], p2 = projStar[e[1]];
+          let x0 = p1[0], y0 = p1[1], x1 = p2[0], y1 = p2[1];
+          const dx = Math.abs(x1 - x0), dy = Math.abs(y1 - y0);
+          const sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1;
+          let err = dx - dy;
+          while (true) {
+            if (x0 >= 0 && x0 < 320 && y0 >= 0 && y0 < 200) {
+              const idx = (y0 * 320 + x0) * 4;
+              vgaPixels[idx] = 0;
+              vgaPixels[idx+1] = 255;
+              vgaPixels[idx+2] = 204;
+              vgaPixels[idx+3] = 255;
+            }
+            if (x0 === x1 && y0 === y1) break;
+            const e2 = 2 * err;
+            if (e2 > -dy) { err -= dy; x0 += sx; }
+            if (e2 < dx) { err += dx; y0 += sy; }
+          }
+        });
+
+        // Layer 4: 8x8 Mode 13h Bitmap Raster Text Scroller
+        render8x8Scroller();
       }
 
       vgaCtx.putImageData(vgaImgData, 0, 0);
@@ -3541,6 +4255,77 @@ NOP</textarea>
     requestAnimationFrame(renderVga);
   }
   requestAnimationFrame(renderVga);
+
+  function render8x8Scroller() {
+    scrollerPixelOffset += 2;
+    const textLenPixels = scrollerText.length * 10;
+    if (scrollerPixelOffset >= textLenPixels) scrollerPixelOffset = 0;
+
+    const startCharIdx = Math.floor(scrollerPixelOffset / 10);
+    const pixelShift = scrollerPixelOffset % 10;
+    const baseScreenY = 176;
+
+    for (let y = baseScreenY - 3; y < baseScreenY + 18; y++) {
+      const yOff = y * 320 * 4;
+      for (let x = 0; x < 320; x++) {
+        const idx = yOff + x * 4;
+        vgaPixels[idx] = Math.floor(vgaPixels[idx] * 0.25);
+        vgaPixels[idx+1] = Math.floor(vgaPixels[idx+1] * 0.25);
+        vgaPixels[idx+2] = Math.floor(vgaPixels[idx+2] * 0.25);
+      }
+    }
+
+    for (let c = 0; c < 35; c++) {
+      const charIdx = (startCharIdx + c) % scrollerText.length;
+      const ch = scrollerText[charIdx].toUpperCase();
+      const glyph = font8x8[ch] || font8x8[' '];
+      const screenX = c * 10 - pixelShift;
+
+      for (let gy = 0; gy < 8; gy++) {
+        const row = glyph[gy];
+        for (let gx = 0; gx < 8; gx++) {
+          if (row & (1 << (7 - gx))) {
+            const px = screenX + gx;
+            if (px >= 0 && px < 320) {
+              const py0 = baseScreenY + gy * 2;
+              const py1 = py0 + 1;
+              const idx0 = (py0 * 320 + px) * 4;
+              const idx1 = (py1 * 320 + px) * 4;
+              vgaPixels[idx0] = 255; vgaPixels[idx0+1] = 204; vgaPixels[idx0+2] = 0; vgaPixels[idx0+3] = 255;
+              vgaPixels[idx1] = 255; vgaPixels[idx1+1] = 160; vgaPixels[idx1+2] = 0; vgaPixels[idx1+3] = 255;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Hook up VGA effect sub-control toggles
+  const vgaFxSelect = document.getElementById('vgaEffectSelect');
+  if (vgaFxSelect) {
+    vgaFxSelect.addEventListener('change', () => {
+      const val = vgaFxSelect.value;
+      const meshCtrl = document.getElementById('meshControls');
+      const voxCtrl = document.getElementById('voxelControls');
+      const introCtrl = document.getElementById('introControls');
+      if (meshCtrl) meshCtrl.style.display = (val === 'mesh3d') ? 'flex' : 'none';
+      if (voxCtrl) voxCtrl.style.display = (val === 'voxel') ? 'flex' : 'none';
+      if (introCtrl) introCtrl.style.display = (val === 'intro1k') ? 'flex' : 'none';
+    });
+  }
+
+  const btnUpScroller = document.getElementById('btnUpdateScroller');
+  const inpScroller = document.getElementById('introScrollerInput');
+  if (btnUpScroller && inpScroller) {
+    btnUpScroller.addEventListener('click', () => {
+      const txt = inpScroller.value.trim();
+      if (txt) {
+        scrollerText = txt + "   ★   ";
+        scrollerPixelOffset = 0;
+        showToast("✔ Updated 1KB intro scroller text!");
+      }
+    });
+  }
 
   document.getElementById('btnToggleVga').addEventListener('click', () => {
     vgaActive = !vgaActive;
@@ -3913,6 +4698,166 @@ raster_bars:
 timer: dw 0
 draw_wireframe_cube:
     ; 3D perspective projection and 12-edge Bresenham line stepping
+    ret`,
+
+    'mesh3d.asm': `; mesh3d.asm — 512-byte 3D Wireframe & Flat-Shaded Rasterizer
+; Target: DOS Mode 13h (320x200x256) or Win32 PE Console
+; Author: neon_rider [0xNEON / 1999]
+
+BITS 16
+ORG 100h
+
+start:
+    mov ax, 13h              ; Set 320x200 256-color Mode 13h
+    int 10h
+    push 0A000h
+    pop es                   ; ES points to video memory
+
+main_loop:
+    inc word [rot_y]         ; Increment yaw angle
+    call clear_screen        ; Clear offscreen buffer
+    call project_vertices    ; 3D -> 2D perspective divide (X*220/Z, Y*220/Z)
+    call raster_mesh         ; Bresenham wireframe & scanline face filler
+    call blit_frame          ; REP MOVSD to 0xA0000 on vertical blank
+    
+    in al, 60h               ; Check ESC key
+    dec al
+    jnz main_loop
+    mov ax, 03h              ; Restore standard text mode
+    int 10h
+    ret
+
+; 3D Vertex Rotation & Perspective Projection:
+project_vertices:
+    mov si, vertices
+    mov di, projected
+    mov cx, 8                ; 8 Cube vertices
+.proj_loop:
+    ; Fixed-point 16.16 rotation
+    lodsw                    ; AX = X
+    ; Rotation math via lookup tables & SHRD
+    stosw
+    loop .proj_loop
+    ret
+
+vertices dw -45,-45,-45, 45,-45,-45, 45,45,-45, -45,45,-45
+         dw -45,-45,45,  45,-45,45,  45,45,45,  -45,45,45
+rot_y    dw 0`,
+
+    'voxel_land.asm': `; voxel_land.asm — 256-byte Comanche-Style Voxel Raycaster
+; Target: Real-Mode x86 DOS COM Executable
+; Author: neon_rider [FLARELIGHT / 1999]
+
+BITS 16
+ORG 100h
+
+start:
+    mov ax, 13h              ; Mode 13h
+    int 10h
+    push 0A000h
+    pop es
+
+render_frame:
+    inc word [cam_x]         ; Forward flight velocity
+    xor cx, cx               ; Column X = 0
+
+col_loop:
+    mov byte [max_y], 200    ; Start at bottom of screen
+    mov dx, 12               ; Ray distance D = 12
+
+ray_march:
+    ; Sample terrain height: H = sin(map_x) * cos(map_y)
+    mov ax, [cam_x]
+    add ax, dx
+    and al, 63
+    sub al, 32
+    imul al                  ; Approximate sine curve in AL
+    
+    ; Screen Y projection: (cam_z - height) * scale / D
+    mov bx, dx
+    mov bp, 100
+    sub bp, ax               ; Projected Y
+    
+    cmp bp, [max_y]
+    jge next_depth           ; Occluded by foreground terrain
+    
+    ; Draw vertical column from BP to [max_y]
+    mov di, bp
+    imul di, 320
+    add di, cx
+    mov al, dl               ; Depth fog palette index
+    mov [max_y], bp
+
+draw_col:
+    stosb
+    add di, 319
+    cmp di, 320*200
+    jl draw_col
+
+next_depth:
+    inc dx                   ; Step ray forward
+    cmp dx, 140
+    jl ray_march
+
+    inc cx
+    cmp cx, 320
+    jl col_loop
+
+    in al, 60h
+    dec al
+    jnz render_frame
+    ret
+
+cam_x dw 0
+max_y dw 200`,
+
+    'intro1k.asm': `; intro1k.asm — 1024-byte Complete Win32 Demoscene Cracktro
+; Components: Copper raster splits, 3D star polyhedron, 8x8 font scroller
+; Author: neon_rider [FLARELIGHT / 1999]
+
+[BITS 32]
+[GLOBAL _start]
+
+section .text
+_start:
+    ; Win32 window creation and DirectDraw / DIBSection setup
+    push 0
+    call [GetModuleHandleA]
+    
+    ; Initialize YM2612 Procedural Sound Synthesizer thread
+    call init_fm_synth
+    
+demo_loop:
+    ; Render Copper Gradient Background
+    call render_copper_bars
+    
+    ; Render 3D Rotating Polyhedron Star
+    call render_3d_star
+    
+    ; Render Sine Wave Bouncing Text Scroller
+    call render_8x8_scroller
+    
+    ; Blit offscreen buffer to primary DIB surface
+    call flip_surface
+    
+    ; Process Win32 Message Loop
+    call check_escape_key
+    test eax, eax
+    jz demo_loop
+    
+    push 0
+    call [ExitProcess]
+
+render_copper_bars:
+    ; 384-byte raster split algorithm
+    ret
+
+render_3d_star:
+    ; 12-point polyhedron rotation & wireframe Bresenham
+    ret
+
+render_8x8_scroller:
+    ; 8x8 bitmap font blitter with horizontal pixel shift
     ret`
   };
 

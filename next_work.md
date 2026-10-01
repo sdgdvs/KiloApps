@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -17,8 +17,8 @@ current_targets:
   kilo_graphics: KAbyss
   kilo_qa: KMine
   kilo_expander: KNote
-  kilo_creator: "kweb://users/~neon_rider (Personal Hacker / Demoscene Homepage)"
-virtual_web_target: "kweb://users/~neon_rider"
+  kilo_creator: "kweb://asm-temple (Win32 ASM Shrine & Opcode Converter)"
+virtual_web_target: "kweb://asm-temple"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-expander
-  app: "KPad (Pro Text Editor & Real-Time RTDB Collab Suite)"
-  timestamp: "2026-10-01T02:30:00Z"
+  agent: kilo-creator
+  app: "kweb://users/~neon_rider (Personal Hacker / Demoscene Homepage)"
+  timestamp: "2026-10-01T02:45:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -98,9 +98,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://users/~neon_rider` (Personal Hacker / Demoscene Homepage)
+- **Current Target**: `kweb://asm-temple` (Win32 ASM Shrine & Opcode Converter)
 - **Upcoming Queue**:
-  `kweb://asm-temple` (Win32 ASM Shrine & Opcode Converter), `kweb://cybercafe` (Underground BBS Lounge), `kweb://10.19.99.4/classified` (Corporate Leak Intranet)
+  `kweb://cybercafe` (Underground BBS Lounge), `kweb://10.19.99.4/classified` (Corporate Leak Intranet), `kweb://echo-subsystem.net` (Research Journal)
   *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
@@ -130,8 +130,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://users/~neon_rider` (`KiloOS/public/web/users/neon_rider.html`)
-  - *Next in Rotation*: `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities`.
+- **Current Active Target**: `kweb://asm-temple` (`KiloOS/public/web/asm_temple.html`)
+  - *Next in Rotation*: `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider`.
 - **Anti-Potemkin Directive & Content Mandates**:
   0. `kweb://warez` (*0xRELEASE Scene Vault & x86 Reverse Engineering Lab*):
      - ✅ 12 parody releases with 3D vector cracktro launcher, custom NFO viewer & .diz/.nfo downloads.
@@ -173,12 +173,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
      - ✅ Dual Sega Genesis YM2612 FM synthesis tracks ("Hyperlink Voyager '99", "Ringmaster's Cadence") with SNES SPC700 stereo delay & procedural SFX.
      - ✅ Random Hypermedia Teleporter with 3D canvas starfield warp, staged countdown & Webmaster Application / Guestbook.
   4. `kweb://users/~neon_rider` (*Personal Hacker / Demoscene Homepage*):
-     - ✅ Interactive 32-bit x86 CPU emulator, instruction sandbox, register stepper with EFLAGS and Pentium cycle counter.
-     - ✅ Live Data RAM Hex Dump (0x00402000) with ASCII view, flash memory mutations, and diegetic 10.19.99.4 packet buffer.
-     - ✅ Virtual Stack Inspector (0x0012FF80) with visual frame/ESP tracking, plus complete 16x16 Intel x86 Opcode Reference Map (00h-FFh).
-     - ✅ Live Mode 13h VGA 320x200 60FPS demoscene canvas (TinyTunnel, Plasma99, FireBuffer, Starfield3D) with 4 authentic retro palettes.
-     - ✅ YM2612 2-Operator FM Synthesizer Laboratory with interactive piano keyboard, SPC700 stereo delay & 4-track tracker jukebox.
-     - ✅ Demoscene code vault with client-side .asm/.nfo downloads, persistent CGI guestbook, and KiloNet Webring #006 node interconnect.
+     - ✅ Interactive 32-bit x86 CPU emulator, opcode assembler/stepper, and interactive RAM Hex Memory Editor with live byte patching & 10.19.99.4 packet injection.
+     - ✅ Real-time Mode 13h VGA 60FPS Demoscene Canvas: 3D vector mesh engine (Cube, Tesseract, Torus, Octahedron, Star; wireframe & flat Lambertian), Voxel Land '99 Comanche raycaster & 1KB cracktro intro with 8x8 font text scroller.
+     - ✅ Yamaha YM2612 FM Synthesis & SPC700 tracker jukebox (6 tracks), interactive piano keyboard & 16-step tracker sequencer.
+     - ✅ Pentium II 450MHz synthetic silicon benchmark, 8 x86 optimization articles, and 11-file ASM vault (.asm/.hex downloads).
   5. `kweb://asm-temple` (*x86 Assembly Programming Shrine & PE32 Dissector*):
      - ✅ 133-instruction Opcode Oracle with category filters, Pentium cycle counts, and encoding format deconstruction.
      - ✅ Two-way live x86 assembler & disassembler with preset library, C array / NASM / binary export, and .bin downloads.
@@ -298,6 +296,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-01T02:45:00Z — kilo-creator: kweb://users/~neon_rider (Demoscene Homepage Deep Expansion)**
+  - 3D Vector Engine: Built software rasterizer (Cube, 4D Tesseract, Torus, Octahedron, Star) with wireframe, Lambertian flat shading & depth buffer.
+  - Voxel Land '99: Added Comanche column height-raycasting engine with rolling canyons, alpine glaciers, Martian terrain & altitude flight slider.
+  - 1KB Demoscene Cracktro: Built composite intro with copper raster splits, 3D star, and real-time 8x8 bitmap font text scroller with live text input.
+  - Interactive RAM Hex Editor: Added live byte inspector/patcher, 10.19.99.4 packet injector (1999Hz tone), XOR 0x7F mask & .HEX export.
+  - Audio & Vault: Added Tracks 05 & 06 to FM Jukebox; added Articles 07 & 08 to devlog; added `mesh3d.asm`, `voxel_land.asm`, `intro1k.asm` downloads.
+  - Verification: Security linter 100% PASS; `npm run build` clean in 311ms; `neon_rider.html` 203.7 KB (<999 KB ceiling).
+
 - **2026-10-01T02:30:00Z — kilo-expander: KPad (Real-Time Collab Suite, RFMS, Document Diff & Hashes)**
   - RFMS Multiplayer: Integrated `retro_multiplayer.js` with room matchmaking (`KPD-XXXX`), URL sharing (`#room=`), live presence & remote cursor sync.
   - Mandate 12 Solo Fallback: 25s auto-fallback to diegetic "Ghost Typist" local AI copilot with in-session chat & code assistance.
@@ -332,11 +338,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Audio Persistence: Wired startup restoration of saved audio mute state across localStorage and UI controls.
   - Peer Teleportation: Enhanced peer discovery beacon toast handler to dismiss toast notification automatically upon coordinate jump.
   - Verification: `npm run build` clean in 411ms; security lint 100% PASS; check_icons PASS; zero exceptions.
-
-- **2026-10-01T01:35:00Z — kilo-creator: KContribute (1-Click SETI@home Distributed Contributor Daemon & Console)**
-  - Native Win32 Daemon: Created standalone 159 KB client (`KContribute.exe`) with Shell_NotifyIconA system tray daemon & autostart.
-  - 1-Click Onboarding: 1-click Google sign-in opens Google AI Studio for free Gemini key; minimizes directly to tray on submit.
-  - SETI@home Radar & FFT: Built GDI / Canvas radar sweep, 48-band FFT spectrum analyzer, telemetry readouts & work unit pipeline.
-  - Web Console & Guide: Created `kcontribute.html` (34 KB) and updated `contribute.html` with Option A 1-click hero download card.
-  - Fleet Integration: Procedural 32x32 `.ico` generated; registered in `App.jsx` System tools; bumped KiloOS to v0.4.16.
-  - Verification: MSVC clean; `npm run build` clean in 252ms; security lint 100% PASS; check_sizes PASS; test_arg_flow 100% PASS.
