@@ -11,7 +11,7 @@
 #define W 920
 #define H 640
 
-HWND hEdit, hList, hBtnNew, hBtnDel, hStatus, hSearch, hBtnPin, hBtnExportMd, hBtnExportCsv, hBtnExportJson, hBtnImport, hBtnLock, hTab, hBtnHelp;
+HWND hEdit, hList, hBtnNew, hBtnDel, hStatus, hSearch, hBtnPin, hBtnExportMd, hBtnExportCsv, hBtnExportJson, hBtnImport, hBtnLock, hTab, hBtnHelp, hBtnClone, hBtnStats, hBtnTmpl;
 HBRUSH bgBrush, sidebarBrush, g_hbrClass;
 HFONT hFont;
 
@@ -29,6 +29,9 @@ HFONT hFont;
 #define ID_TIMER_SAVE 9016
 #define ID_BTN_HELP 9017
 #define ID_BTN_EXPORT_CSV 9018
+#define ID_BTN_CLONE 9019
+#define ID_BTN_STATS 9020
+#define ID_BTN_TMPL 9021
 
 char notes[100][8192] = {0};
 int pinned[100] = {0};
@@ -489,6 +492,92 @@ void RefreshList() {
     }
 }
 
+void DuplicateActiveNote() {
+    if (activeNote < 0 || numNotes >= 100) return;
+    SaveToMemory();
+    int newIdx = activeNote + 1;
+    for (int i = numNotes; i > newIdx; i--) {
+        lstrcpyA(notes[i], notes[i - 1]);
+        pinned[i] = pinned[i - 1];
+        encrypted[i] = encrypted[i - 1];
+        lstrcpyA(unlockedNotes[i], unlockedNotes[i - 1]);
+    }
+    lstrcpyA(notes[newIdx], encrypted[activeNote] ? (unlockedNotes[activeNote][0] ? unlockedNotes[activeNote] : notes[activeNote]) : notes[activeNote]);
+    pinned[newIdx] = 0;
+    encrypted[newIdx] = 0;
+    unlockedNotes[newIdx][0] = 0;
+    numNotes++;
+    OpenTab(newIdx);
+    RefreshList();
+    isDirty = 1;
+    SetWindowTextA(hStatus, "  Note duplicated successfully.");
+}
+
+void ShowNoteStats(HWND hwnd) {
+    if (activeNote < 0) return;
+    SaveToMemory();
+    const char* txt = (encrypted[activeNote] && unlockedNotes[activeNote][0]) ? unlockedNotes[activeNote] : notes[activeNote];
+    int chars = lstrlenA(txt);
+    int words = 0;
+    int lines = (chars > 0) ? 1 : 0;
+    int paras = (chars > 0) ? 1 : 0;
+    int inWord = 0;
+    for (int i = 0; txt[i]; i++) {
+        if (txt[i] == '\n') {
+            lines++;
+            if (txt[i+1] == '\r' || txt[i+1] == '\n') paras++;
+        }
+        if ((unsigned char)txt[i] > 32) {
+            if (!inWord) { words++; inWord = 1; }
+        } else {
+            inWord = 0;
+        }
+    }
+    int readMin = (words + 199) / 200;
+    if (readMin < 1) readMin = 1;
+    char msgBuf[512];
+    wsprintfA(msgBuf,
+        "KNote Document Analysis & Statistics\r\n"
+        "====================================\r\n\r\n"
+        "Lines: %d\r\n"
+        "Words: %d\r\n"
+        "Characters: %d\r\n"
+        "Paragraphs: %d\r\n\r\n"
+        "Estimated Silent Reading Time: ~%d min (@ 200 WPM)\r\n"
+        "Estimated Speaking Time: ~%d min (@ 130 WPM)\r\n",
+        lines, words, chars, paras, readMin, (words + 129) / 130);
+    MessageBoxA(hwnd, msgBuf, "Document Statistics [F3]", MB_OK | MB_ICONINFORMATION);
+}
+
+void InsertTemplatePrompt(HWND hwnd) {
+    if (activeNote < 0) return;
+    int choice = MessageBoxA(hwnd,
+        "Choose a Template to insert:\r\n\r\n"
+        "[YES]   : Meeting Minutes & Action Items\r\n"
+        "[NO]    : Daily Standup & Priorities Checklist\r\n"
+        "[CANCEL]: Subnet Cyber-Memo (Classified Echo Dispatch)",
+        "Insert Template [F4]", MB_YESNOCANCEL | MB_ICONQUESTION);
+    const char* tmpl = NULL;
+    if (choice == IDYES) {
+        tmpl = "\r\n\r\n# Meeting Minutes\r\n**Goal:** \r\n**Attendees:** \r\n\r\n## Agenda\r\n1. Project Status\r\n2. Blockers\r\n\r\n## Actions\r\n- [ ] Priority deliverable #todo\r\n";
+    } else if (choice == IDNO) {
+        tmpl = "\r\n\r\n# Daily Standup\r\n## Yesterday\r\n- Component review\r\n\r\n## Today\r\n- [ ] Ship deliverable #priorities\r\n\r\n## Blockers\r\n- None\r\n";
+    } else if (choice == IDCANCEL) {
+        tmpl = "\r\n\r\nCLASSIFIED INTRANET DISPATCH\r\nNODE: 10.19.99.4/classified | ECHO SUBSYSTEM\r\nCHECKSUM: 0x7F1999AA\r\nSubcarrier carrier frequency 1999Hz verified.\r\nMaintain snapshot persistence.\r\n-- END DISPATCH --\r\n";
+    }
+    if (tmpl) {
+        int len = GetWindowTextLengthA(hEdit);
+        if (len + lstrlenA(tmpl) < 5900) {
+            SendMessageA(hEdit, EM_SETSEL, len, len);
+            SendMessageA(hEdit, EM_REPLACESEL, TRUE, (LPARAM)tmpl);
+            isDirty = 1;
+            UpdateStats();
+        } else {
+            MessageBoxA(hwnd, "Note character limit reached.", "Warning", MB_OK);
+        }
+    }
+}
+
 void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd,
         "KNote - Personal Notepad & Organizer\r\n"
@@ -497,6 +586,9 @@ void ShowHelpDialog(HWND hwnd) {
         "  - Ctrl+N        : Create new note\r\n"
         "  - Ctrl+F        : Focus search & tags box\r\n"
         "  - Ctrl+P        : Pin / unpin current note\r\n"
+        "  - Ctrl+Shift+D  : Clone / Duplicate active note\r\n"
+        "  - F3            : Document Analysis & Word Statistics\r\n"
+        "  - F4            : Insert Structured Template (Meeting, Standup, Memo)\r\n"
         "  - Ctrl+S / F5   : Save notes immediately / snapshot\r\n"
         "  - F9            : Reload / restore saved notes\r\n"
         "  - Ctrl+W        : Close active tab\r\n"
@@ -553,13 +645,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Search tags... (Ctrl+F, Esc clear)");
             hList = CreateWindowEx(0, "LISTBOX", NULL, WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_VSCROLL|LBS_NOTIFY, 0, 48, 200, H-48, hwnd, (HMENU)ID_LIST, NULL, NULL);
             
-            hBtnPin = CreateWindow("BUTTON", "Pin [^P]", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 200, 0, 55, 26, hwnd, (HMENU)ID_BTN_PIN, NULL, NULL);
-            hBtnLock = CreateWindow("BUTTON", "Lock", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 255, 0, 55, 26, hwnd, (HMENU)ID_BTN_LOCK, NULL, NULL);
-            hBtnExportMd = CreateWindow("BUTTON", "Exp MD", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 310, 0, 65, 26, hwnd, (HMENU)ID_BTN_EXPORT_MD, NULL, NULL);
-            hBtnExportCsv = CreateWindow("BUTTON", "Exp CSV", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 375, 0, 65, 26, hwnd, (HMENU)ID_BTN_EXPORT_CSV, NULL, NULL);
-            hBtnExportJson = CreateWindow("BUTTON", "Exp JSON", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 440, 0, 70, 26, hwnd, (HMENU)ID_BTN_EXPORT_JSON, NULL, NULL);
-            hBtnImport = CreateWindow("BUTTON", "Imp JSON", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 510, 0, 70, 26, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
-            hBtnHelp = CreateWindow("BUTTON", "Help [F1]", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 580, 0, 60, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            hBtnPin = CreateWindow("BUTTON", "Pin [^P]", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 200, 0, 50, 26, hwnd, (HMENU)ID_BTN_PIN, NULL, NULL);
+            hBtnLock = CreateWindow("BUTTON", "Lock", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 250, 0, 50, 26, hwnd, (HMENU)ID_BTN_LOCK, NULL, NULL);
+            hBtnClone = CreateWindow("BUTTON", "Clone", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 300, 0, 52, 26, hwnd, (HMENU)ID_BTN_CLONE, NULL, NULL);
+            hBtnStats = CreateWindow("BUTTON", "Stats [F3]", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 352, 0, 65, 26, hwnd, (HMENU)ID_BTN_STATS, NULL, NULL);
+            hBtnTmpl = CreateWindow("BUTTON", "Tmpl [F4]", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 417, 0, 65, 26, hwnd, (HMENU)ID_BTN_TMPL, NULL, NULL);
+            hBtnExportMd = CreateWindow("BUTTON", "Exp MD", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 482, 0, 60, 26, hwnd, (HMENU)ID_BTN_EXPORT_MD, NULL, NULL);
+            hBtnExportCsv = CreateWindow("BUTTON", "Exp CSV", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 542, 0, 60, 26, hwnd, (HMENU)ID_BTN_EXPORT_CSV, NULL, NULL);
+            hBtnExportJson = CreateWindow("BUTTON", "Exp JSON", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 602, 0, 65, 26, hwnd, (HMENU)ID_BTN_EXPORT_JSON, NULL, NULL);
+            hBtnImport = CreateWindow("BUTTON", "Imp", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 667, 0, 45, 26, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
+            hBtnHelp = CreateWindow("BUTTON", "Help [F1]", WS_CHILD|WS_VISIBLE|WS_TABSTOP|BS_PUSHBUTTON, 712, 0, 62, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
             g_oldSearchEditProc = (WNDPROC)SetWindowLongPtrA(hSearch, GWLP_WNDPROC, (LONG_PTR)SearchEditProc);
 
@@ -568,13 +663,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hEdit = CreateWindowEx(0, "EDIT", "", WS_CHILD|WS_VISIBLE|WS_TABSTOP|WS_VSCROLL|ES_MULTILINE|ES_WANTRETURN|ES_AUTOVSCROLL,
                 200, 50, W-200, H-70, hwnd, NULL, NULL, NULL);
             SendMessage(hEdit, EM_LIMITTEXT, 6000, 0);
-            hStatus = CreateWindowEx(0, "STATIC", "  Ready. Press F1 or H for Help. | Lines: 0 | Words: 0 | Chars: 0 / 6,000", WS_CHILD|WS_VISIBLE, 200, H-20, W-200, 20, hwnd, (HMENU)ID_STATUS, NULL, NULL);
+            hStatus = CreateWindowEx(0, "STATIC", "  Ready. Press F1 for Help | F3: Stats | F4: Tmpl | Lines: 0 | Words: 0 | Chars: 0 / 6,000", WS_CHILD|WS_VISIBLE, 200, H-20, W-200, 20, hwnd, (HMENU)ID_STATUS, NULL, NULL);
                 
             SendMessage(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hSearch, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnNew, WM_SETFONT, (WPARAM)hFont, TRUE); SendMessage(hBtnDel, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnPin, WM_SETFONT, (WPARAM)hFont, TRUE); SendMessage(hBtnLock, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnClone, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnStats, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnTmpl, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnExportMd, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnExportCsv, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnExportJson, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -604,6 +702,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (LOWORD(wParam) == ID_BTN_HELP) {
                 ShowHelpDialog(hwnd);
             }
+            else if (LOWORD(wParam) == ID_BTN_CLONE) { DuplicateActiveNote(); }
+            else if (LOWORD(wParam) == ID_BTN_STATS) { ShowNoteStats(hwnd); }
+            else if (LOWORD(wParam) == ID_BTN_TMPL) { InsertTemplatePrompt(hwnd); }
             else if (LOWORD(wParam) == ID_BTN_EXPORT_MD) { ExportNoteMD(); }
             else if (LOWORD(wParam) == ID_BTN_EXPORT_CSV) { ExportCSV(); }
             else if (LOWORD(wParam) == ID_BTN_EXPORT_JSON) { ExportJSON(); RefreshList(); RenderTabs(); }
@@ -681,13 +782,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MoveWindow(hBtnNew, 0, 0, 100, topH, TRUE); MoveWindow(hBtnDel, 100, 0, 100, topH, TRUE);
             MoveWindow(hSearch, 0, topH, sideW, 22, TRUE); MoveWindow(hList, 0, topH + 22, sideW, nh - (topH + 22), TRUE);
             int bx = sideW;
-            MoveWindow(hBtnPin, bx, 0, 55, topH, TRUE); bx += 55;
-            MoveWindow(hBtnLock, bx, 0, 55, topH, TRUE); bx += 55;
-            MoveWindow(hBtnExportMd, bx, 0, 65, topH, TRUE); bx += 65;
-            MoveWindow(hBtnExportCsv, bx, 0, 65, topH, TRUE); bx += 65;
-            MoveWindow(hBtnExportJson, bx, 0, 70, topH, TRUE); bx += 70;
-            MoveWindow(hBtnImport, bx, 0, 70, topH, TRUE); bx += 70;
-            MoveWindow(hBtnHelp, bx, 0, 60, topH, TRUE);
+            MoveWindow(hBtnPin, bx, 0, 50, topH, TRUE); bx += 50;
+            MoveWindow(hBtnLock, bx, 0, 50, topH, TRUE); bx += 50;
+            MoveWindow(hBtnClone, bx, 0, 52, topH, TRUE); bx += 52;
+            MoveWindow(hBtnStats, bx, 0, 65, topH, TRUE); bx += 65;
+            MoveWindow(hBtnTmpl, bx, 0, 65, topH, TRUE); bx += 65;
+            MoveWindow(hBtnExportMd, bx, 0, 60, topH, TRUE); bx += 60;
+            MoveWindow(hBtnExportCsv, bx, 0, 60, topH, TRUE); bx += 60;
+            MoveWindow(hBtnExportJson, bx, 0, 65, topH, TRUE); bx += 65;
+            MoveWindow(hBtnImport, bx, 0, 45, topH, TRUE); bx += 45;
+            MoveWindow(hBtnHelp, bx, 0, 62, topH, TRUE);
             MoveWindow(hTab, sideW, topH, nw - sideW, 24, TRUE);
             MoveWindow(hEdit, sideW, topH + 24, nw - sideW, nh - topH - 44, TRUE);
             MoveWindow(hStatus, sideW, nh - 20, nw - sideW, 20, TRUE);
@@ -753,6 +857,10 @@ void MainEntry() {
                 if (lstrcmpiA(cls, "EDIT") == 0) isEdit = 1;
             }
             if (GetKeyState(VK_CONTROL) & 0x8000) {
+                if ((GetKeyState(VK_SHIFT) & 0x8000) && (msg.wParam == 'D' || msg.wParam == 'd')) {
+                    DuplicateActiveNote();
+                    continue;
+                }
                 if (msg.wParam == 'N' || msg.wParam == 'n') {
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_NEW, BN_CLICKED), (LPARAM)hBtnNew);
                     continue;
@@ -797,6 +905,14 @@ void MainEntry() {
             }
             if (msg.wParam == VK_DELETE && hFocus == hList) {
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DEL, BN_CLICKED), (LPARAM)hBtnDel);
+                continue;
+            }
+            if (msg.wParam == VK_F3) {
+                ShowNoteStats(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F4) {
+                InsertTemplatePrompt(hwnd);
                 continue;
             }
             if (msg.wParam == VK_F5) {

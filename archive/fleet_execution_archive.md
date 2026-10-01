@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-01T02:45:00Z — kilo-creator: kweb://users/~neon_rider (Demoscene Homepage Deep Expansion)**
+  - 3D Vector Engine: Built software rasterizer (Cube, 4D Tesseract, Torus, Octahedron, Star) with wireframe, Lambertian flat shading & depth buffer.
+  - Voxel Land '99: Added Comanche column height-raycasting engine with rolling canyons, alpine glaciers, Martian terrain & altitude flight slider.
+  - 1KB Demoscene Cracktro: Built composite intro with copper raster splits, 3D star, and real-time 8x8 bitmap font text scroller with live text input.
+  - Interactive RAM Hex Editor: Added live byte inspector/patcher, 10.19.99.4 packet injector (1999Hz tone), XOR 0x7F mask & .HEX export.
+  - Audio & Vault: Added Tracks 05 & 06 to FM Jukebox; added Articles 07 & 08 to devlog; added `mesh3d.asm`, `voxel_land.asm`, `intro1k.asm` downloads.
+  - Verification: Security linter 100% PASS; `npm run build` clean in 311ms; `neon_rider.html` 203.7 KB (<999 KB ceiling).
+
 - **2026-10-01T02:30:00Z — kilo-expander: KPad (Real-Time Collab Suite, RFMS, Document Diff & Hashes)**
   - RFMS Multiplayer: Integrated `retro_multiplayer.js` with room matchmaking (`KPD-XXXX`), URL sharing (`#room=`), live presence & remote cursor sync.
   - Mandate 12 Solo Fallback: 25s auto-fallback to diegetic "Ghost Typist" local AI copilot with in-session chat & code assistance.

@@ -747,7 +747,130 @@
     border-bottom: 1px solid #eee;
   }
   .trash-item:last-child { border-bottom: none; }
+
+  /* Live Collaboration Elements */
+  .collab-btn {
+    border-color: #3b82f6;
+    color: #1d4ed8;
+    background: #eff6ff;
+  }
+  .collab-btn:hover {
+    background: #dbeafe;
+    border-color: #2563eb;
+  }
+  .collab-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #9ca3af;
+    display: inline-block;
+    transition: background 0.2s;
+  }
+  .collab-dot.online { background: #22c55e; }
+  .collab-dot.waiting { background: #eab308; }
+  .collab-dot.solo { background: #f97316; }
+  .collab-badge {
+    background: #e2e8f0;
+    color: #475569;
+    font-size: 10px;
+    padding: 1px 5px;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+  .collab-status-card {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 10px 12px;
+  }
+  .collab-chat-msg {
+    margin-bottom: 4px;
+    line-height: 1.4;
+  }
+  .collab-chat-sender {
+    font-weight: 600;
+    color: #1e40af;
+  }
+
+  /* Document Outline Flyout */
+  .outline-pane {
+    width: 230px;
+    background: var(--bg-sidebar);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    font-size: 12px;
+    user-select: none;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    position: relative;
+    z-index: 10;
+  }
+  .outline-header {
+    padding: 8px 10px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(0,0,0,0.03);
+  }
+  .outline-item {
+    padding: 5px 8px;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(224, 224, 160, 0.4);
+    transition: background 0.1s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .outline-item:hover { background: var(--bg-hover); }
+  .outline-item.lvl-1 { font-weight: 600; padding-left: 8px; color: #111; }
+  .outline-item.lvl-2 { padding-left: 16px; color: #333; }
+  .outline-item.lvl-3 { padding-left: 24px; color: #555; }
+  .outline-item.lvl-4 { padding-left: 32px; color: #777; font-style: italic; }
+
+  /* Readability & Statistics Grid */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .stat-card {
+    background: #fdfdf9;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .stat-val {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a1a;
+  }
+  .stat-lbl {
+    font-size: 11px;
+    color: #666;
+    margin-top: 2px;
+  }
+  .keyword-pill {
+    background: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #bae6fd;
+    border-radius: 10px;
+    padding: 2px 7px;
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin: 2px;
+  }
 </style>
+<script src="../assets/js/retro_multiplayer.js"></script>
 </head>
 <body>
 
@@ -778,6 +901,10 @@
       <button id="lockBtn" title="Encrypt/Decrypt with Password" aria-label="Lock or unlock note">🔒 Lock</button>
       <button id="viewToggleBtn" title="Toggle Preview (Ctrl+E)" aria-label="Toggle preview mode">👁 Preview [Ctrl+E]</button>
       <button id="findToggleBtn" title="Find & Replace in note (Ctrl+H)" aria-label="Find and replace">🔍 Find [Ctrl+H]</button>
+      <button id="collabBtn" title="Online Live Collaboration via Firebase RTDB" aria-label="Collaborate live" class="collab-btn"><span class="collab-dot" id="collabStatusDot"></span> 👥 Collab <span id="collabBadge" class="collab-badge">Offline</span></button>
+      <button id="outlineBtn" title="Document Outline & Table of Contents (Alt+O)" aria-label="Table of contents">📑 Outline</button>
+      <button id="statsBtn" title="Word & Readability Statistics (Alt+T)" aria-label="Statistics">📊 Stats</button>
+      <button id="duplicateBtn" title="Duplicate active note (Ctrl+Shift+D)" aria-label="Duplicate note">📋 Clone</button>
       <select id="colorSelect" title="Note paper tint" aria-label="Note theme color" style="padding: 4px 6px; font-size: 12px; border: 1px solid var(--border-dark); border-radius: 4px; background: #fff; outline: none; cursor: pointer;">
         <option value="yellow">📄 Manila</option>
         <option value="mint">🌿 Mint</option>
@@ -841,16 +968,38 @@
       <button type="button" class="speed-btn" id="fmtDateBtn" title="Insert Timestamp (Alt+D)">📅 Date</button>
       <button type="button" class="speed-btn" id="fmtTableBtn" title="Insert Table template">📋 Table</button>
       <button type="button" class="speed-btn" id="fmtTagBtn" title="Insert #tag">🏷 Tag</button>
+      <select id="transformSelect" title="Transform selected text" style="padding: 2px 6px; font-size: 11px; border: 1px dashed var(--border-dark); border-radius: 4px; background: #fff; cursor: pointer;">
+        <option value="" disabled selected>⚡ Transform ▾</option>
+        <option value="upper">UPPERCASE [Ctrl+Shift+U]</option>
+        <option value="lower">lowercase [Ctrl+Shift+L]</option>
+        <option value="title">Title Case</option>
+        <option value="sort">Sort Lines (A-Z)</option>
+        <option value="dedup">Remove Duplicate Lines</option>
+        <option value="trim">Trim Trailing Spaces</option>
+      </select>
       <div class="divider-v"></div>
       <span style="font-weight: 600; color: #665;">Templates:</span>
       <button type="button" class="template-chip" data-tmpl="todo">☑ To-Do</button>
       <button type="button" class="template-chip" data-tmpl="meeting">📅 Meeting</button>
+      <button type="button" class="template-chip" data-tmpl="standup">🎯 Standup</button>
       <button type="button" class="template-chip" data-tmpl="idea">💡 Pitch</button>
+      <button type="button" class="template-chip" data-tmpl="cornell">📐 Cornell</button>
+      <button type="button" class="template-chip" data-tmpl="incident">🛠️ Bug</button>
       <button type="button" class="template-chip" data-tmpl="code">💻 Code</button>
       <button type="button" class="template-chip" data-tmpl="guide">📖 Cheatsheet</button>
+      <button type="button" class="template-chip" data-tmpl="memo">💾 Cyber-Memo</button>
     </div>
-    <textarea id="noteArea" spellcheck="false" maxlength="6000" placeholder="Start typing your note here... Tip: use #tags for quick organization!" aria-label="Note content"></textarea>
-    <div class="preview-pane" id="previewPane" aria-label="Note Markdown preview"></div>
+    <div class="editor-body" style="display: flex; flex: 1; min-height: 0; position: relative;">
+      <textarea id="noteArea" spellcheck="false" maxlength="6000" placeholder="Start typing your note here... Tip: use #tags for quick organization!" aria-label="Note content"></textarea>
+      <div class="preview-pane" id="previewPane" aria-label="Note Markdown preview"></div>
+      <div class="outline-pane" id="outlinePane" style="display: none;">
+        <div class="outline-header">
+          <span>📑 Note Outline</span>
+          <button type="button" class="modal-close" id="outlineCloseBtn" title="Close Outline">✕</button>
+        </div>
+        <div class="outline-list" id="outlineList" style="flex: 1; overflow-y: auto;"></div>
+      </div>
+    </div>
     <div class="locked-overlay" id="lockedOverlay">
       <div style="font-size: 36px;">🔒</div>
       <div style="font-weight: 600; font-size: 16px;">This Note is Password Encrypted</div>
@@ -863,7 +1012,9 @@
   <footer class="status-bar" id="statusBar" role="status" aria-live="polite">
     <div style="display: flex; gap: 14px; align-items: center;">
       <span id="statCursor">Ln 1, Col 1</span>
-      <span id="statCounts">Lines: 0 | Words: 0 | Chars: 0 / 6,000 | ~1 min read</span>
+      <span id="statCounts" style="cursor: pointer;" title="Click to view Readability & Document Statistics [Alt+T]">Lines: 0 | Words: 0 | Chars: 0 / 6,000 | ~1 min read</span>
+      <span id="statPeerCursor" style="display: none; color: #2563eb; font-weight: 500; font-size: 11px;">👥 Peer: Ln 1, Col 1</span>
+      <span id="statCollabSync" style="display: none; font-size: 11px; color: #16a34a; font-weight: 600;">🟢 Synced</span>
     </div>
     <div style="display: flex; gap: 10px; align-items: center;">
       <span id="statDate" style="font-size: 11px; color: #888;"></span>
@@ -952,12 +1103,19 @@
         <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">E</span></td><td>Toggle Markdown Preview</td></tr>
         <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">S</span></td><td>Save notes immediately</td></tr>
         <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">D</span></td><td>Move note to Trash (instant Undo)</td></tr>
+        <tr><td><span class="kbd">Ctrl</span> + <span class="kbd">Shift</span> + <span class="kbd">D</span></td><td>Clone / Duplicate active note</td></tr>
+        <tr><td><span class="kbd">Alt</span> + <span class="kbd">O</span></td><td>Toggle Document Outline & Headings</td></tr>
+        <tr><td><span class="kbd">Alt</span> + <span class="kbd">T</span></td><td>Document Statistics & Readability</td></tr>
+        <tr><td><span class="kbd">Alt</span> + <span class="kbd">J</span></td><td>Subnet Copilot / Ghost Typist continuation</td></tr>
         <tr><td><span class="kbd">Tab</span></td><td>Indent 2 spaces (Shift+Tab to dedent)</td></tr>
         <tr><td><span class="kbd">F1</span> or <span class="kbd">H</span></td><td>Open this Help manual</td></tr>
         <tr><td><span class="kbd">Esc</span></td><td>Close dialogs, find bar, or clear search</td></tr>
       </table>
       <p style="margin-top: 14px; font-size: 12px; color: #555;">
         <strong>Features & Data Interoperability:</strong><br>
+        • <strong>Live Real-Time Collaboration:</strong> Connect and edit notes in real time across computers worldwide powered by Retro Firebase Multiplayer (RFMS) with live peer cursors and 25-second Solo Fallback AI Copilot.<br>
+        • <strong>Document Outline:</strong> Live hierarchical heading inspector with instant 1-click section jumps.<br>
+        • <strong>Readability Analysis:</strong> Flesch Reading Ease score, reading time, speaking time, and lexical richness metrics.<br>
         • <strong>Snapshot Persistence:</strong> Press F5 to capture an instant state snapshot, and F9 to restore anytime.<br>
         • <strong>Distraction-Free Mode:</strong> Press Alt+S or click ◀ Sidebar to toggle full editor width.<br>
         • <strong>Multi-Tab Sessions:</strong> Open and edit multiple notes simultaneously in tabbed workspace.<br>
@@ -970,6 +1128,74 @@
     </div>
     <div class="modal-footer">
       <button id="helpOkBtn" class="primary">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Live Collaboration Modal -->
+<div class="modal-backdrop" id="collabModal" role="dialog" aria-modal="true" aria-labelledby="collabModalTitle">
+  <div class="modal" style="max-width: 520px;">
+    <div class="modal-header">
+      <span id="collabModalTitle">👥 KNote Live Real-Time Collaboration</span>
+      <button class="modal-close" id="collabModalClose" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="margin-top: 0; color: #555; font-size: 12px;">
+        Collaborate on notes in real time across computers worldwide powered by Retro Firebase Multiplayer (RFMS).
+      </p>
+      <div class="collab-status-card" id="collabStatusCard">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="font-weight: 600; font-size: 13px;" id="collabStatusText">Status: Local / Offline Mode</div>
+          <span class="badge" id="collabRoomBadge" style="background:#e2e8f0; color:#334155; font-size:11px; padding:2px 8px; border-radius:10px; font-weight:600;">No Room</span>
+        </div>
+        <div id="collabFallbackNotice" style="display:none; margin-top: 8px; font-size: 11px; color: #92400e; background: #fef3c7; border: 1px solid #fde68a; padding: 6px 10px; border-radius: 4px;">
+          🤖 <strong>Subnet Ghost Typist (Local AI Copilot)</strong> engaged! Press <span class="kbd">Alt+J</span> in note editor for smart continuation.
+        </div>
+      </div>
+
+      <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+        <button id="createRoomBtn" class="primary" type="button">🌐 Create New Session</button>
+        <button id="leaveRoomBtn" class="danger" type="button" style="display: none;">Leave Session</button>
+        <button id="copyShareLinkBtn" type="button" style="display: none;">📋 Copy Share Link</button>
+      </div>
+
+      <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border);">
+        <label style="font-weight: 600; font-size: 12px; color: #444;">Join Session with Room Code or URL:</label>
+        <div style="display: flex; gap: 6px; margin-top: 5px;">
+          <input type="text" id="joinCodeInput" placeholder="e.g. KNT-7X9P or paste invite link" style="margin: 0; flex: 1; text-transform: uppercase;">
+          <button id="joinRoomBtn" class="primary" type="button">Join Room</button>
+        </div>
+      </div>
+
+      <div style="margin-top: 14px; padding-top: 10px; border-top: 1px solid var(--border);">
+        <div style="font-weight: 600; font-size: 12px; color: #444; margin-bottom: 5px;">Collaborator In-Room Memos:</div>
+        <div id="collabChatList" style="height: 100px; overflow-y: auto; background: #fff; border: 1px solid var(--border); border-radius: 4px; padding: 6px 8px; font-size: 12px; font-family: monospace;">
+          <div style="color: #888; font-style: italic;">No session messages yet.</div>
+        </div>
+        <div style="display: flex; gap: 6px; margin-top: 6px;">
+          <input type="text" id="collabChatInput" placeholder="Type quick memo to peer..." style="margin: 0; flex: 1;">
+          <button id="collabChatSendBtn" class="primary" type="button">Send</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button id="collabCloseBtn" class="primary" type="button">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Document Statistics Modal -->
+<div class="modal-backdrop" id="statsModal" role="dialog" aria-modal="true" aria-labelledby="statsModalTitle">
+  <div class="modal" style="max-width: 520px;">
+    <div class="modal-header">
+      <span id="statsModalTitle">📊 Document Analysis & Readability Statistics</span>
+      <button class="modal-close" id="statsModalClose" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body" id="statsModalBody">
+      <!-- Dynamic Stats Grid inserted via JS -->
+    </div>
+    <div class="modal-footer">
+      <button id="statsCloseBtn" class="primary" type="button">Close</button>
     </div>
   </div>
 </div>
@@ -1068,6 +1294,44 @@
   const helpModalClose = document.getElementById('helpModalClose');
   const helpOkBtn = document.getElementById('helpOkBtn');
 
+  // Live Collaboration Elements
+  const collabBtn = document.getElementById('collabBtn');
+  const collabStatusDot = document.getElementById('collabStatusDot');
+  const collabBadge = document.getElementById('collabBadge');
+  const statPeerCursor = document.getElementById('statPeerCursor');
+  const statCollabSync = document.getElementById('statCollabSync');
+  const collabModal = document.getElementById('collabModal');
+  const collabModalClose = document.getElementById('collabModalClose');
+  const collabCloseBtn = document.getElementById('collabCloseBtn');
+  const collabStatusText = document.getElementById('collabStatusText');
+  const collabRoomBadge = document.getElementById('collabRoomBadge');
+  const collabFallbackNotice = document.getElementById('collabFallbackNotice');
+  const createRoomBtn = document.getElementById('createRoomBtn');
+  const leaveRoomBtn = document.getElementById('leaveRoomBtn');
+  const copyShareLinkBtn = document.getElementById('copyShareLinkBtn');
+  const joinCodeInput = document.getElementById('joinCodeInput');
+  const joinRoomBtn = document.getElementById('joinRoomBtn');
+  const collabChatList = document.getElementById('collabChatList');
+  const collabChatInput = document.getElementById('collabChatInput');
+  const collabChatSendBtn = document.getElementById('collabChatSendBtn');
+
+  // Outline Elements
+  const outlineBtn = document.getElementById('outlineBtn');
+  const outlinePane = document.getElementById('outlinePane');
+  const outlineCloseBtn = document.getElementById('outlineCloseBtn');
+  const outlineList = document.getElementById('outlineList');
+
+  // Statistics Elements
+  const statsBtn = document.getElementById('statsBtn');
+  const statsModal = document.getElementById('statsModal');
+  const statsModalClose = document.getElementById('statsModalClose');
+  const statsCloseBtn = document.getElementById('statsCloseBtn');
+  const statsModalBody = document.getElementById('statsModalBody');
+
+  // Clone & Transform Elements
+  const duplicateBtn = document.getElementById('duplicateBtn');
+  const transformSelect = document.getElementById('transformSelect');
+
   // State
   let notes = [];
   let trashNotes = [];
@@ -1080,6 +1344,20 @@
   let toastActionCallback = null;
   let reencryptTimer = null;
   let activeTagFilter = null;
+
+  // Collaboration State (RFMS)
+  let mp = null;
+  let collabState = {
+    active: false,
+    roomId: null,
+    peerName: null,
+    peerCursor: null,
+    isSyncing: false,
+    lastLocalRev: 0,
+    ghostTypistActive: false
+  };
+  let syncThrottleTimer = null;
+  let cursorThrottleTimer = null;
 
   // Safe Storage
   function safeGetStorage(key) {
@@ -1710,6 +1988,10 @@
     renderTabs();
     updateStats();
     renderList();
+    updateOutline();
+    if (collabState && collabState.active) {
+      queueNoteSync();
+    }
     if (findReplaceBar.style.display === 'flex') updateFindMatches();
   }
 
@@ -1737,16 +2019,25 @@
     updateStats();
     renderTabs();
     renderList();
+    updateOutline();
+    queueNoteSync();
     if (findReplaceBar.style.display === 'flex') updateFindMatches();
   });
 
   noteArea.addEventListener('focus', dismissToastIfActive);
-  noteArea.addEventListener('keyup', updateCursorPos);
+  noteArea.addEventListener('keyup', () => {
+    updateCursorPos();
+    throttleBroadcastCursor();
+  });
   noteArea.addEventListener('click', () => {
     dismissToastIfActive();
     updateCursorPos();
+    throttleBroadcastCursor();
   });
-  noteArea.addEventListener('select', updateCursorPos);
+  noteArea.addEventListener('select', () => {
+    updateCursorPos();
+    throttleBroadcastCursor();
+  });
 
   // Tab key indentation support in editor
   noteArea.addEventListener('keydown', (e) => {
@@ -2776,9 +3067,13 @@
   const TEMPLATES = {
     todo: "# Tasks Checklist\n\n- [ ] High-priority deliverable #todo\n- [ ] Review documentation\n- [ ] Multi-tab session test\n- [x] Workspace initialized\n\n#work #tasks",
     meeting: "# Meeting Notes - " + new Date().toISOString().slice(0, 10) + "\n\n**Attendees:** \n**Goal:** \n\n## Agenda\n1. Project Status\n2. Blockers & Risks\n3. Next Steps\n\n## Action Items\n- [ ] Follow up on deliverables #action\n\n#meeting",
+    standup: "# Daily Standup - " + new Date().toISOString().slice(0, 10) + "\n\n## 🎯 Yesterday\n- Completed core component integration\n- Reviewed bug queue\n\n## 🚀 Today's Priorities\n- [ ] Ship deliverable #priorities\n- [ ] Regression verification & build check\n- [ ] Sync documentation\n\n## ⚠️ Blockers\n- None\n\n#standup #priorities",
     idea: "# Project Pitch: [Name]\n\n## Executive Summary\nA brief 1-2 sentence overview of the project concept.\n\n## Problem & Solution\n- **Problem:** Existing workflow limitations.\n- **Solution:** Streamlined personal organizer.\n\n## Key Milestones\n- [ ] Phase 1: Prototype\n- [ ] Phase 2: User Validation\n\n#ideas #projects",
+    cornell: "# Cornell Notes: [Topic / Subject]\n\n**Date:** " + new Date().toISOString().slice(0, 10) + " | **Subject:** [Domain]\n\n---\n\n### 💡 Cues & Questions\n- What is the primary architecture?\n- How does the state machine handle failure?\n\n### 📝 Notes & Details\n- Key concept 1: Single source of truth\n- Implementation detail: Event-driven pub/sub\n- Performance budget: <999 KB ceiling\n\n### 📌 Summary\nIn 2-3 sentences, summarize the core takeaway from this session.\n\n#study #cornell #reference",
+    incident: "# Incident / Bug Report\n\n**Incident ID:** INC-" + Math.floor(1000 + Math.random() * 9000) + "\n**Severity:** P2 - Medium\n**Status:** Under Investigation\n\n## Description\nClear explanation of the observed issue vs expected behavior.\n\n## Steps to Reproduce\n1. Launch application in multi-tab mode\n2. Open second note session\n3. Observe telemetry sync\n\n## Root Cause Analysis\nPending diagnostic memory trace.\n\n## Action Items\n- [ ] Patch edge case condition #bugfix\n- [ ] Add regression test case\n\n#bug #incident",
     code: "# Code Snippet: [Title]\n\nStack: JavaScript / Web Crypto\n\n```js\n// Implementation\nfunction solveProblem() {\n  return 'optimal';\n}\n```\n\n#snippets #dev",
-    guide: "# Markdown Cheatsheet\n\n# Heading 1\n## Heading 2\n### Heading 3\n\nFormatting: **bold**, *italic*, `inline code`\n\n- List item 1\n- List item 2\n\n> Blockquote insight\n\n| Feature | Status |\n|---|---|\n| Multi-tab | Active |\n\nTags: #reference #cheatsheet"
+    guide: "# Markdown Cheatsheet\n\n# Heading 1\n## Heading 2\n### Heading 3\n\nFormatting: **bold**, *italic*, `inline code`\n\n- List item 1\n- List item 2\n\n> Blockquote insight\n\n| Feature | Status |\n|---|---|\n| Multi-tab | Active |\n\nTags: #reference #cheatsheet",
+    memo: "CLASSIFIED INTRANET DISPATCH\nNODE: 10.19.99.4/classified | SUBSYSTEM: K-OS ECHO\nDATE: " + new Date().toISOString().slice(0, 10) + "\nCHECKSUM: 0x7F1999AA\n\n--- MEMORANDUM ---\nTO: Subnet Operators\nFROM: Dispatcher Node 0x7F\nSUBJECT: Telemetry Synchronization\n\nSubcarrier carrier frequency lock verified at 1999Hz.\nAll node communications routed through secure peer protocol.\nMaintain local snapshot integrity.\n\n-- TRANSMISSION CONCLUDED --\n\n#memo #classified #echo"
   };
 
   document.querySelectorAll('.template-chip').forEach(btn => {
@@ -2808,6 +3103,8 @@
       updateStats();
       renderTabs();
       renderList();
+      updateOutline();
+      queueNoteSync();
       if (isPreviewMode) {
         previewPane.innerHTML = renderMarkdown(cur.encrypted ? cur.unlockedText : cur.text);
       } else {
@@ -2890,12 +3187,714 @@
   if (snapshotSaveBtn) snapshotSaveBtn.addEventListener('click', quicksaveSnapshot);
   if (snapshotLoadBtn) snapshotLoadBtn.addEventListener('click', quickloadSnapshot);
 
+  // Helper
+  function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // --- Retro Firebase Multiplayer Service (RFMS) Engine ---
+  async function initCollabSystem() {
+    if (typeof RetroMultiplayer === 'undefined') {
+      console.warn("[KNote] RetroMultiplayer not loaded.");
+      return;
+    }
+
+    mp = new RetroMultiplayer({
+      gameId: 'knote',
+      prefix: 'KNT',
+      soloTimeoutMs: 25000,
+      onMove: (moveData, lastMove) => {
+        handleRemoteCollabMove(moveData, lastMove);
+      },
+      onOpponentJoin: ({ slot, name }) => {
+        collabState.peerName = name || 'Collaborator';
+        collabState.ghostTypistActive = false;
+        updateCollabUI();
+        showToast(`👥 Collaborator ${collabState.peerName} connected! Live editing active.`, 4000);
+        appendCollabChatMessage('System', `${collabState.peerName} joined the room.`);
+        if (mp.isHost) {
+          broadcastNoteSync(true);
+        }
+      },
+      onOpponentLeave: ({ slot, name }) => {
+        showToast(`👥 Collaborator ${name || 'Peer'} disconnected.`, 3500);
+        appendCollabChatMessage('System', `${name || 'Peer'} disconnected.`);
+        collabState.peerName = null;
+        collabState.peerCursor = null;
+        updateCollabUI();
+      },
+      onSoloFallback: ({ reason }) => {
+        // Mandate Rule 12: 25s Solo Fallback
+        collabState.ghostTypistActive = true;
+        updateCollabUI();
+        showToast("🤖 No peer joined within 25s — Engaging Subnet Ghost Typist (Local AI Copilot)!", 4500);
+        appendCollabChatMessage('GhostTypist', 'Subnet Copilot active. Press Alt+J in note to trigger smart AI completion.');
+      },
+      onChat: (chat) => {
+        appendCollabChatMessage(chat.name || 'Peer', chat.text);
+        showToast(`💬 ${chat.name || 'Peer'}: ${chat.text}`, 3000);
+      },
+      onStatusMsg: (msg, type) => {
+        showToast(msg, 2500);
+      }
+    });
+
+    try {
+      const { onlineAvailable, inviteCode } = await mp.init();
+      if (inviteCode) {
+        showToast(`Joining session [${inviteCode}]...`, 2500);
+        await joinCollabRoom(inviteCode);
+      }
+    } catch (e) {
+      console.warn("[KNote] Multiplayer init exception:", e);
+    }
+    updateCollabUI();
+  }
+
+  function updateCollabUI() {
+    if (!collabStatusDot || !collabBadge) return;
+    if (collabState.peerName) {
+      collabStatusDot.className = 'collab-dot online';
+      collabBadge.textContent = 'Connected (2)';
+      collabBadge.style.background = '#dcfce7';
+      collabBadge.style.color = '#15803d';
+      if (collabStatusText) collabStatusText.textContent = `Status: Connected with ${collabState.peerName}`;
+      if (collabRoomBadge) {
+        collabRoomBadge.textContent = collabState.roomId || 'Active';
+        collabRoomBadge.style.background = '#dcfce7';
+        collabRoomBadge.style.color = '#15803d';
+      }
+      if (collabFallbackNotice) collabFallbackNotice.style.display = 'none';
+      if (createRoomBtn) createRoomBtn.style.display = 'none';
+      if (leaveRoomBtn) leaveRoomBtn.style.display = 'inline-flex';
+      if (copyShareLinkBtn) copyShareLinkBtn.style.display = 'inline-flex';
+    } else if (collabState.active) {
+      collabStatusDot.className = collabState.ghostTypistActive ? 'collab-dot solo' : 'collab-dot waiting';
+      collabBadge.textContent = collabState.ghostTypistActive ? 'Subnet AI' : 'Waiting...';
+      collabBadge.style.background = collabState.ghostTypistActive ? '#ffedd5' : '#fef9c3';
+      collabBadge.style.color = collabState.ghostTypistActive ? '#c2410c' : '#854d0e';
+      if (collabStatusText) {
+        collabStatusText.textContent = collabState.ghostTypistActive
+          ? `Status: Solo Session (Ghost Typist Copilot Active)`
+          : `Status: Waiting for peer... (Solo AI in 25s)`;
+      }
+      if (collabRoomBadge) {
+        collabRoomBadge.textContent = collabState.roomId || 'Connecting';
+        collabRoomBadge.style.background = '#fef9c3';
+        collabRoomBadge.style.color = '#854d0e';
+      }
+      if (collabFallbackNotice) collabFallbackNotice.style.display = collabState.ghostTypistActive ? 'block' : 'none';
+      if (createRoomBtn) createRoomBtn.style.display = 'none';
+      if (leaveRoomBtn) leaveRoomBtn.style.display = 'inline-flex';
+      if (copyShareLinkBtn) copyShareLinkBtn.style.display = 'inline-flex';
+    } else {
+      collabStatusDot.className = 'collab-dot';
+      collabBadge.textContent = 'Offline';
+      collabBadge.style.background = '#e2e8f0';
+      collabBadge.style.color = '#475569';
+      if (collabStatusText) collabStatusText.textContent = 'Status: Local / Offline Mode';
+      if (collabRoomBadge) {
+        collabRoomBadge.textContent = 'No Room';
+        collabRoomBadge.style.background = '#e2e8f0';
+        collabRoomBadge.style.color = '#475569';
+      }
+      if (collabFallbackNotice) collabFallbackNotice.style.display = 'none';
+      if (createRoomBtn) createRoomBtn.style.display = 'inline-flex';
+      if (leaveRoomBtn) leaveRoomBtn.style.display = 'none';
+      if (copyShareLinkBtn) copyShareLinkBtn.style.display = 'none';
+      if (statPeerCursor) statPeerCursor.style.display = 'none';
+      if (statCollabSync) statCollabSync.style.display = 'none';
+    }
+  }
+
+  async function startCollabHost() {
+    if (!mp) await initCollabSystem();
+    if (!mp) { showToast("Multiplayer service unavailable."); return; }
+    showToast("Creating real-time collaborative session...", 2000);
+    const room = await mp.createRoom();
+    if (room && room.roomId) {
+      collabState.active = true;
+      collabState.roomId = room.roomId;
+      updateCollabUI();
+      appendCollabChatMessage('System', `Room ${room.roomId} created. Waiting for collaborator...`);
+      showToast(`Room created: ${room.roomId}. Share code with your peer!`, 4000);
+      broadcastNoteSync(true);
+    }
+  }
+
+  async function joinCollabRoom(code) {
+    if (!code || !code.trim()) return;
+    const cleanCode = code.trim().toUpperCase();
+    if (!mp) await initCollabSystem();
+    if (!mp) { showToast("Multiplayer service unavailable."); return; }
+    showToast(`Connecting to room ${cleanCode}...`, 2000);
+    const res = await mp.joinRoom(cleanCode);
+    if (res && res.roomId) {
+      collabState.active = true;
+      collabState.roomId = res.roomId;
+      updateCollabUI();
+      appendCollabChatMessage('System', `Joined room ${res.roomId}.`);
+      showToast(`Joined session: ${res.roomId}!`, 3000);
+    } else {
+      showToast("Could not join session. Verify room code.", 3000);
+    }
+  }
+
+  async function leaveCollabSession() {
+    if (mp) {
+      await mp.leaveRoom();
+    }
+    collabState.active = false;
+    collabState.roomId = null;
+    collabState.peerName = null;
+    collabState.peerCursor = null;
+    collabState.ghostTypistActive = false;
+    updateCollabUI();
+    showToast("Left collaborative session.", 2000);
+  }
+
+  function copyCollabInviteLink() {
+    if (!mp || !collabState.roomId) {
+      showToast("No active room to copy link from.");
+      return;
+    }
+    const shareUrl = mp.getShareUrl('hash') || window.location.href;
+    try {
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        showToast(`📋 Share link copied: #room=${collabState.roomId}`, 3000);
+      });
+    } catch (e) {
+      showToast(`Room Code: ${collabState.roomId}`, 4000);
+    }
+  }
+
+  function broadcastNoteSync(immediate = false) {
+    if (!collabState.active || !mp || collabState.isSyncing) return;
+    const cur = notes[activeIndex];
+    if (!cur || (cur.encrypted && !cur.unlockedText)) return;
+    const content = cur.encrypted ? cur.unlockedText : cur.text;
+    const payload = {
+      type: 'text_sync',
+      text: content,
+      cursor: { start: noteArea.selectionStart, end: noteArea.selectionEnd },
+      sender: mp.playerName,
+      color: cur.color || 'yellow',
+      rev: ++collabState.lastLocalRev
+    };
+    mp.sendMove(payload);
+  }
+
+  function queueNoteSync() {
+    if (!collabState.active || !mp || collabState.isSyncing) return;
+    if (statCollabSync) {
+      statCollabSync.style.display = 'inline-flex';
+      statCollabSync.textContent = '🟡 Syncing...';
+      statCollabSync.style.color = '#ca8a04';
+    }
+    if (syncThrottleTimer) clearTimeout(syncThrottleTimer);
+    syncThrottleTimer = setTimeout(() => {
+      syncThrottleTimer = null;
+      broadcastNoteSync();
+      if (statCollabSync) {
+        statCollabSync.textContent = '🟢 Synced';
+        statCollabSync.style.color = '#16a34a';
+      }
+    }, 180);
+  }
+
+  function throttleBroadcastCursor() {
+    if (!collabState.active || !mp || collabState.isSyncing) return;
+    if (cursorThrottleTimer) return;
+    cursorThrottleTimer = setTimeout(() => {
+      cursorThrottleTimer = null;
+      if (collabState.active && mp) {
+        mp.sendMove({
+          type: 'cursor',
+          start: noteArea.selectionStart,
+          end: noteArea.selectionEnd,
+          sender: mp.playerName
+        });
+      }
+    }, 200);
+  }
+
+  function handleRemoteCollabMove(data, lastMove) {
+    if (!data) return;
+    if (data.type === 'text_sync') {
+      const cur = notes[activeIndex];
+      if (!cur) return;
+      const currentText = cur.encrypted ? cur.unlockedText : cur.text;
+      if (data.text !== currentText) {
+        collabState.isSyncing = true;
+        const oldStart = noteArea.selectionStart;
+        const oldEnd = noteArea.selectionEnd;
+        if (cur.encrypted && cur.unlockedText !== null) {
+          cur.unlockedText = data.text;
+          noteArea.value = data.text;
+          scheduleReencryption(cur);
+        } else {
+          cur.text = data.text;
+          noteArea.value = data.text;
+          saveNotes();
+        }
+        if (data.color && data.color !== cur.color) {
+          cur.color = data.color;
+          colorSelect.value = data.color;
+          mainContainer.className = 'main tint-' + cur.color;
+        }
+        const maxLen = noteArea.value.length;
+        noteArea.setSelectionRange(Math.min(oldStart, maxLen), Math.min(oldEnd, maxLen));
+        updateStats();
+        renderTabs();
+        renderList();
+        updateOutline();
+        if (isPreviewMode) {
+          previewPane.innerHTML = renderMarkdown(noteArea.value);
+        }
+        collabState.isSyncing = false;
+        if (statCollabSync) {
+          statCollabSync.style.display = 'inline-flex';
+          statCollabSync.textContent = '🟢 Synced';
+          statCollabSync.style.color = '#16a34a';
+        }
+      }
+      if (data.cursor) {
+        updatePeerCursorUI(data.cursor, data.sender || collabState.peerName);
+      }
+    } else if (data.type === 'cursor') {
+      updatePeerCursorUI(data, data.sender || collabState.peerName);
+    }
+  }
+
+  function updatePeerCursorUI(cursor, name) {
+    if (!cursor || typeof cursor.start !== 'number' || !statPeerCursor) return;
+    collabState.peerCursor = cursor;
+    const text = noteArea.value;
+    const linesBefore = text.substr(0, cursor.start).split('\n');
+    const line = linesBefore.length;
+    const col = linesBefore[linesBefore.length - 1].length + 1;
+    statPeerCursor.style.display = 'inline-flex';
+    statPeerCursor.textContent = `👥 ${name || 'Peer'}: Ln ${line}, Col ${col}`;
+  }
+
+  function appendCollabChatMessage(sender, text) {
+    if (!collabChatList) return;
+    if (collabChatList.querySelector('div[style*="italic"]')) {
+      collabChatList.innerHTML = '';
+    }
+    const msgEl = document.createElement('div');
+    msgEl.className = 'collab-chat-msg';
+    const isSys = sender === 'System' || sender === 'GhostTypist';
+    msgEl.innerHTML = `<span class="collab-chat-sender" style="${isSys ? 'color:#b45309;' : ''}">${escapeHtml(sender)}:</span> ${escapeHtml(text)}`;
+    collabChatList.appendChild(msgEl);
+    collabChatList.scrollTop = collabChatList.scrollHeight;
+  }
+
+  function sendCollabChatMessage() {
+    if (!collabChatInput || !collabChatInput.value.trim() || !mp) return;
+    const text = collabChatInput.value.trim();
+    mp.sendChat(text);
+    appendCollabChatMessage('You', text);
+    collabChatInput.value = '';
+  }
+
+  function invokeGhostTypist() {
+    const cur = notes[activeIndex];
+    if (!cur || (cur.encrypted && !cur.unlockedText)) {
+      showToast("Unlock encrypted note before invoking Copilot!");
+      return;
+    }
+    const text = noteArea.value;
+    const selStart = noteArea.selectionStart;
+    const beforeCursor = text.substring(0, selStart);
+    let suggestion = "";
+
+    if (beforeCursor.match(/- \[[ x]\][^\n]*$/m) || beforeCursor.includes("#todo") || beforeCursor.includes("#tasks")) {
+      suggestion = "\n- [ ] Automated regression verification & snapshot check\n- [ ] Document schema telemetry and deploy";
+    } else if (beforeCursor.includes("Meeting") || beforeCursor.includes("Agenda")) {
+      suggestion = "\n\n### Next Steps & Action Items\n- [ ] Circulate meeting minutes to fleet operators\n- [ ] Lock milestone targets for next sprint";
+    } else if (beforeCursor.includes("```")) {
+      suggestion = "\n  // Validate input parameters\n  if (!payload || typeof payload !== 'object') return false;\n  return true;";
+    } else if (beforeCursor.includes("CLASSIFIED") || beforeCursor.includes("Subsystem") || cur.color === 'dark') {
+      suggestion = "\n\n[10.19.99.4 INTERCEPT] Node 0x7F telemetry confirmed. Carrier locked at 1999Hz. No packet loss.";
+    } else {
+      suggestion = "\n\n---\n### 💡 Key Takeaway & Next Actions\n- Reviewed and structured for long-term persistence.\n- [ ] Follow up on outstanding inquiries #action";
+    }
+
+    const afterCursor = text.substring(selStart);
+    noteArea.value = beforeCursor + suggestion + afterCursor;
+    const newPos = selStart + suggestion.length;
+    noteArea.setSelectionRange(newPos, newPos);
+    noteArea.focus();
+
+    cur.updated_at = new Date().toISOString();
+    if (cur.encrypted && cur.unlockedText !== null) {
+      cur.unlockedText = noteArea.value;
+      scheduleReencryption(cur);
+    } else {
+      cur.text = noteArea.value;
+      saveNotes();
+    }
+    updateStats();
+    renderTabs();
+    renderList();
+    updateOutline();
+    if (isPreviewMode) previewPane.innerHTML = renderMarkdown(noteArea.value);
+    queueNoteSync();
+    showToast("🤖 Subnet Ghost Typist Copilot inserted continuation! [Alt+J]", 2500);
+  }
+
+  // --- Document Outline & Headings TOC ---
+  function extractHeadings(text) {
+    if (!text) return [];
+    const lines = text.split('\n');
+    const headings = [];
+    lines.forEach((line, lineIdx) => {
+      const match = line.match(/^(#{1,4})\s+(.+)$/);
+      if (match) {
+        headings.push({
+          level: match[1].length,
+          text: match[2].trim(),
+          lineIdx: lineIdx
+        });
+      }
+    });
+    return headings;
+  }
+
+  function updateOutline() {
+    if (!outlinePane || outlinePane.style.display === 'none') return;
+    const cur = notes[activeIndex];
+    const text = (cur && cur.encrypted && !cur.unlockedText) ? '' : noteArea.value;
+    const headings = extractHeadings(text);
+    if (headings.length === 0) {
+      outlineList.innerHTML = '<div style="padding: 12px; color: #888; font-style: italic;">No headings (# Heading) found in active note.</div>';
+      return;
+    }
+    outlineList.innerHTML = headings.map(h => `
+      <div class="outline-item lvl-${h.level}" data-line="${h.lineIdx}" title="Jump to line ${h.lineIdx + 1}">
+        <span style="opacity: 0.6; font-size: 10px;">${'#'.repeat(h.level)}</span>
+        <span style="overflow: hidden; text-overflow: ellipsis;">${escapeHtml(h.text)}</span>
+      </div>
+    `).join('');
+  }
+
+  function toggleOutline(force = null) {
+    if (!outlinePane) return;
+    const show = force !== null ? force : outlinePane.style.display === 'none';
+    outlinePane.style.display = show ? 'flex' : 'none';
+    if (show) {
+      updateOutline();
+      outlineBtn.style.background = '#fff9c4';
+      outlineBtn.style.borderColor = 'var(--accent-dark)';
+    } else {
+      outlineBtn.style.background = '';
+      outlineBtn.style.borderColor = '';
+    }
+  }
+
+  if (outlineList) {
+    outlineList.addEventListener('click', (e) => {
+      const item = e.target.closest('.outline-item');
+      if (!item) return;
+      const lineIdx = parseInt(item.getAttribute('data-line'), 10);
+      if (isNaN(lineIdx)) return;
+      const lines = noteArea.value.split('\n');
+      let charPos = 0;
+      for (let i = 0; i < lineIdx && i < lines.length; i++) {
+        charPos += lines[i].length + 1;
+      }
+      noteArea.focus();
+      noteArea.setSelectionRange(charPos, charPos + lines[lineIdx].length);
+      const lineHeight = 24;
+      noteArea.scrollTop = Math.max(0, lineIdx * lineHeight - 60);
+      if (isPreviewMode) {
+        viewToggleBtn.click();
+      }
+    });
+  }
+  if (outlineCloseBtn) outlineCloseBtn.addEventListener('click', () => toggleOutline(false));
+  if (outlineBtn) outlineBtn.addEventListener('click', () => toggleOutline());
+
+  // --- Document Analysis & Readability Statistics ---
+  function calculateDetailedStats(text) {
+    if (!text) text = '';
+    const trimmed = text.trim();
+    const charsTotal = text.length;
+    const charsNoSpaces = text.replace(/\s/g, '').length;
+    const lines = trimmed ? text.split('\n').length : 0;
+    const wordsArray = trimmed.match(/\b[A-Za-z0-9_'-]+\b/g) || [];
+    const wordsTotal = wordsArray.length;
+    const paragraphs = text.split(/\n\s*\n/).filter(p => p.trim().length > 0).length || (trimmed.length > 0 ? 1 : 0);
+    const sentences = (text.match(/[.!?]+(?:\s|$)/g) || []).length || (wordsTotal > 0 ? 1 : 0);
+    const avgWordsPerSentence = sentences > 0 ? (wordsTotal / sentences).toFixed(1) : '0';
+
+    const readMinutes = Math.ceil(wordsTotal / 200) || 1;
+    const speakMinutes = (wordsTotal / 130).toFixed(1);
+
+    let syllables = 0;
+    wordsArray.forEach(w => {
+      let word = w.toLowerCase().replace(/[^a-z]/g, '');
+      if (word.length <= 3) { syllables += 1; return; }
+      word = word.replace(/(?:[^laeiouy]|ed|es|e)$/, '');
+      word = word.replace(/^y/, '');
+      const m = word.match(/[aeiouy]{1,2}/g);
+      syllables += m ? m.length : 1;
+    });
+
+    let fleschScore = 0;
+    let gradeLevel = "N/A";
+    let easeDesc = "Standard";
+    if (wordsTotal > 0 && sentences > 0) {
+      fleschScore = Math.max(0, Math.min(100, Math.round(206.835 - 1.015 * (wordsTotal / sentences) - 84.6 * (syllables / wordsTotal))));
+      const fkgl = (0.39 * (wordsTotal / sentences) + 11.8 * (syllables / wordsTotal) - 15.59);
+      gradeLevel = fkgl > 0 ? `Grade ${Math.round(fkgl)}` : "Elementary";
+      if (fleschScore >= 90) easeDesc = "Very Easy (5th grade)";
+      else if (fleschScore >= 80) easeDesc = "Easy (6th grade)";
+      else if (fleschScore >= 70) easeDesc = "Fairly Easy (7th grade)";
+      else if (fleschScore >= 60) easeDesc = "Standard (8th-9th grade)";
+      else if (fleschScore >= 50) easeDesc = "Fairly Difficult (High School)";
+      else if (fleschScore >= 30) easeDesc = "Difficult (College)";
+      else easeDesc = "Very Difficult (Graduate)";
+    }
+
+    const wordFreq = {};
+    const stopWords = new Set(['the','be','to','of','and','a','in','that','have','i','it','for','not','on','with','he','as','you','do','at','this','but','his','by','from','they','we','say','her','she','or','an','will','my','one','all','would','there','their','what','so','up','out','if','about','who','get','which','go','me','is','are','was','were']);
+    wordsArray.forEach(w => {
+      const clean = w.toLowerCase();
+      if (clean.length > 2 && !stopWords.has(clean)) {
+        wordFreq[clean] = (wordFreq[clean] || 0) + 1;
+      }
+    });
+    const uniqueWords = Object.keys(wordFreq).length;
+    const lexicalDiversity = wordsTotal > 0 ? ((new Set(wordsArray.map(w => w.toLowerCase())).size / wordsTotal) * 100).toFixed(1) : 0;
+    const topKeywords = Object.entries(wordFreq)
+      .sort((a,b) => b[1] - a[1])
+      .slice(0, 6);
+
+    return {
+      charsTotal,
+      charsNoSpaces,
+      lines,
+      wordsTotal,
+      paragraphs,
+      sentences,
+      avgWordsPerSentence,
+      readMinutes,
+      speakMinutes,
+      fleschScore,
+      gradeLevel,
+      easeDesc,
+      uniqueWords,
+      lexicalDiversity,
+      topKeywords
+    };
+  }
+
+  function openStatsModal() {
+    const cur = notes[activeIndex];
+    const text = (cur && cur.encrypted && !cur.unlockedText) ? '' : noteArea.value;
+    const s = calculateDetailedStats(text);
+
+    let kwHtml = s.topKeywords.map(([kw, count]) => `<span class="keyword-pill">#${escapeHtml(kw)} (${count})</span>`).join('') || '<em>No prominent keywords</em>';
+
+    statsModalBody.innerHTML = `
+      <div style="font-weight: 600; font-size: 13px; color: #333;">Active Note: ${escapeHtml(getNoteTitle(cur || {}))}</div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-val">${s.wordsTotal}</div>
+          <div class="stat-lbl">Total Words</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">${s.charsTotal}</div>
+          <div class="stat-lbl">Characters (${s.charsNoSpaces} no spaces)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">${s.lines}</div>
+          <div class="stat-lbl">Lines (${s.paragraphs} paragraphs)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">${s.sentences}</div>
+          <div class="stat-lbl">Sentences (${s.avgWordsPerSentence} w/s)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">~${s.readMinutes} min</div>
+          <div class="stat-lbl">Silent Reading (@ 200 wpm)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val">~${s.speakMinutes} min</div>
+          <div class="stat-lbl">Speaking Time (@ 130 wpm)</div>
+        </div>
+      </div>
+
+      <div style="margin-top: 14px; padding: 10px 12px; background: #f8fafc; border: 1px solid var(--border); border-radius: 6px;">
+        <div style="font-weight: 600; font-size: 12px; color: #1e293b; margin-bottom: 4px;">Flesch Reading Ease & Complexity</div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 18px; font-weight: 700; color: #2563eb;">${s.fleschScore} / 100</span>
+          <span style="font-size: 12px; font-weight: 600; color: #475569;">${s.gradeLevel} (${s.easeDesc})</span>
+        </div>
+        <div style="margin-top: 6px; font-size: 11px; color: #64748b;">
+          Lexical Diversity: <strong>${s.lexicalDiversity}%</strong> (${s.uniqueWords} unique vocabulary words)
+        </div>
+      </div>
+
+      <div style="margin-top: 12px;">
+        <div style="font-weight: 600; font-size: 12px; color: #333; margin-bottom: 4px;">Top Keyword Density:</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 4px;">${kwHtml}</div>
+      </div>
+    `;
+
+    statsModal.style.display = 'flex';
+    statsCloseBtn.focus();
+  }
+
+  function closeStatsModal() {
+    statsModal.style.display = 'none';
+  }
+
+  if (statsBtn) statsBtn.addEventListener('click', openStatsModal);
+  if (statCounts) statCounts.addEventListener('click', openStatsModal);
+  if (statsCloseBtn) statsCloseBtn.addEventListener('click', closeStatsModal);
+  if (statsModalClose) statsModalClose.addEventListener('click', closeStatsModal);
+
+  // --- Clone Note & Text Transformations ---
+  function duplicateActiveNote() {
+    const cur = notes[activeIndex];
+    if (!cur) return;
+    if (cur.encrypted && !cur.unlockedText) {
+      showToast("Unlock encrypted note before cloning!");
+      return;
+    }
+    const content = cur.encrypted ? cur.unlockedText : cur.text;
+    const newNote = {
+      id: 'note_' + Date.now(),
+      text: content,
+      pinned: false,
+      encrypted: false,
+      unlockedText: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      color: cur.color || 'yellow'
+    };
+    notes.splice(activeIndex + 1, 0, newNote);
+    saveNotes();
+    openTab(activeIndex + 1);
+    renderList();
+    showToast("📋 Note cloned successfully!");
+  }
+
+  if (duplicateBtn) duplicateBtn.addEventListener('click', duplicateActiveNote);
+
+  function applyTextTransform(mode) {
+    const start = noteArea.selectionStart;
+    const end = noteArea.selectionEnd;
+    const val = noteArea.value;
+    const hasSelection = start !== end;
+    const targetText = hasSelection ? val.substring(start, end) : val;
+    let transformed = targetText;
+
+    switch (mode) {
+      case 'upper':
+        transformed = targetText.toUpperCase();
+        break;
+      case 'lower':
+        transformed = targetText.toLowerCase();
+        break;
+      case 'title':
+        transformed = targetText.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+        break;
+      case 'sort':
+        transformed = targetText.split('\n').sort((a, b) => a.localeCompare(b)).join('\n');
+        break;
+      case 'dedup': {
+        const seen = new Set();
+        transformed = targetText.split('\n').filter(line => {
+          if (seen.has(line)) return false;
+          seen.add(line);
+          return true;
+        }).join('\n');
+        break;
+      }
+      case 'trim':
+        transformed = targetText.split('\n').map(l => l.trimEnd()).join('\n');
+        break;
+      default:
+        return;
+    }
+
+    if (hasSelection) {
+      noteArea.value = val.substring(0, start) + transformed + val.substring(end);
+      noteArea.setSelectionRange(start, start + transformed.length);
+    } else {
+      noteArea.value = transformed;
+      noteArea.setSelectionRange(start, start);
+    }
+
+    const cur = notes[activeIndex];
+    if (cur) {
+      cur.updated_at = new Date().toISOString();
+      if (cur.encrypted && cur.unlockedText !== null) {
+        cur.unlockedText = noteArea.value;
+        scheduleReencryption(cur);
+      } else {
+        cur.text = noteArea.value;
+        saveNotes();
+      }
+      updateStats();
+      renderTabs();
+      renderList();
+      updateOutline();
+      if (isPreviewMode) previewPane.innerHTML = renderMarkdown(noteArea.value);
+      queueNoteSync();
+    }
+    showToast(`Transform applied: ${mode}`);
+  }
+
+  if (transformSelect) {
+    transformSelect.addEventListener('change', () => {
+      const mode = transformSelect.value;
+      if (mode) {
+        applyTextTransform(mode);
+        transformSelect.selectedIndex = 0;
+      }
+    });
+  }
+
+  // Collab Modal Event Listeners
+  if (collabBtn) collabBtn.addEventListener('click', () => {
+    updateCollabUI();
+    collabModal.style.display = 'flex';
+  });
+  if (collabCloseBtn) collabCloseBtn.addEventListener('click', () => { collabModal.style.display = 'none'; });
+  if (collabModalClose) collabModalClose.addEventListener('click', () => { collabModal.style.display = 'none'; });
+  if (createRoomBtn) createRoomBtn.addEventListener('click', startCollabHost);
+  if (leaveRoomBtn) leaveRoomBtn.addEventListener('click', leaveCollabSession);
+  if (copyShareLinkBtn) copyShareLinkBtn.addEventListener('click', copyCollabInviteLink);
+  if (joinRoomBtn) joinRoomBtn.addEventListener('click', () => {
+    if (joinCodeInput && joinCodeInput.value.trim()) {
+      joinCollabRoom(joinCodeInput.value.trim());
+      joinCodeInput.value = '';
+    }
+  });
+  if (collabChatSendBtn) collabChatSendBtn.addEventListener('click', sendCollabChatMessage);
+  if (collabChatInput) {
+    collabChatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendCollabChatMessage();
+      }
+    });
+  }
+
   // Global Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
     const modalOpen = passModal.style.display === 'flex' ||
                       deleteModal.style.display === 'flex' ||
                       trashModal.style.display === 'flex' ||
-                      helpModal.style.display === 'flex';
+                      helpModal.style.display === 'flex' ||
+                      (collabModal && collabModal.style.display === 'flex') ||
+                      (statsModal && statsModal.style.display === 'flex');
 
     // Escape closes modals, toasts, find bar, or clears search
     if (e.key === 'Escape') {
@@ -2912,6 +3911,12 @@
       } else if (helpModal.style.display === 'flex') {
         helpModal.style.display = 'none';
         helpBtn.focus();
+      } else if (collabModal && collabModal.style.display === 'flex') {
+        collabModal.style.display = 'none';
+      } else if (statsModal && statsModal.style.display === 'flex') {
+        closeStatsModal();
+      } else if (outlinePane && outlinePane.style.display === 'flex') {
+        toggleOutline(false);
       } else if (findReplaceBar.style.display === 'flex') {
         toggleFindReplace(false);
       } else if (searchInput.value) {
@@ -2963,6 +3968,27 @@
       return;
     }
 
+    // Alt+O: Toggle Outline & Table of Contents
+    if (e.altKey && (e.key === 'o' || e.key === 'O')) {
+      e.preventDefault();
+      toggleOutline();
+      return;
+    }
+
+    // Alt+T: Open Document Statistics & Readability Modal
+    if (e.altKey && (e.key === 't' || e.key === 'T')) {
+      e.preventDefault();
+      openStatsModal();
+      return;
+    }
+
+    // Alt+J: Subnet Ghost Typist Copilot
+    if (e.altKey && (e.key === 'j' || e.key === 'J')) {
+      e.preventDefault();
+      invokeGhostTypist();
+      return;
+    }
+
     // Ctrl+Tab / Ctrl+Shift+Tab: Cycle open tabs
     if (e.ctrlKey && e.key === 'Tab') {
       e.preventDefault();
@@ -2980,6 +4006,27 @@
 
     // Guard modifier-based shortcuts
     if (!e.ctrlKey || e.altKey || e.metaKey) return;
+
+    // Ctrl+Shift+D: Clone / Duplicate Active Note
+    if (e.shiftKey && (e.key === 'D' || e.key === 'd')) {
+      e.preventDefault();
+      duplicateActiveNote();
+      return;
+    }
+
+    // Ctrl+Shift+U: Transform UPPERCASE
+    if (e.shiftKey && (e.key === 'U' || e.key === 'u')) {
+      e.preventDefault();
+      applyTextTransform('upper');
+      return;
+    }
+
+    // Ctrl+Shift+L: Transform lowercase
+    if (e.shiftKey && (e.key === 'L' || e.key === 'l')) {
+      e.preventDefault();
+      applyTextTransform('lower');
+      return;
+    }
 
     // Ctrl+1 through Ctrl+9: Switch to tab directly
     if (e.key >= '1' && e.key <= '9') {
@@ -3078,6 +4125,7 @@
   // Initialize
   loadNotes();
   loadActive();
+  initCollabSystem();
 
   if (safeGetStorage('knote_sidebar_visible') === '0') {
     toggleSidebar(false);

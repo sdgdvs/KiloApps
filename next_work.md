@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -16,7 +16,7 @@ current_targets:
   kilo_usability: KRSS
   kilo_graphics: KColosseum
   kilo_qa: KCosmic
-  kilo_expander: KNote
+  kilo_expander: KContacts
   kilo_creator: "kweb://asm-temple (Win32 ASM Shrine & Opcode Converter)"
 virtual_web_target: "kweb://asm-temple"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KMine
-  timestamp: "2026-10-01T03:45:00Z"
+  agent: kilo-expander
+  app: KNote
+  timestamp: "2026-10-01T03:55:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KContacts`, `KPad`, `KPaint`, `KMine` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KNote`
+- **Current Target**: `KContacts`
 - **Upcoming Queue**:
-  `KContacts`, `KPass`, `KVault` *(Completed: KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia, KTask, KNet, KPing, KHash, KPad)*.
+  `KPass`, `KVault` *(Completed: KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia, KTask, KNet, KPing, KHash, KPad)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -296,6 +296,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-01T03:55:00Z — kilo-expander: KNote (Real-Time Collab Suite, RFMS, Document Outline, Readability & ARG)**
+  - RFMS Multiplayer: Integrated `retro_multiplayer.js` with session rooms (`KNT-XXXX`), live text sync, peer presence & chat.
+  - Mandate 12 Solo Fallback: 25s auto-fallback engaging diegetic "Ghost Typist" AI copilot with Alt+J smart continuation.
+  - Document Outline & Nav: Built dynamic AST heading parser and jump flyout pane (Alt+O) for H1-H4 navigation.
+  - Analytics & Readability: Added metrics modal (Alt+T, native F3) with reading time, sentence density & keyword frequency.
+  - Productivity Templates: Added Standup, Cornell Notes, Bug Incident, and Cyber-Memo presets (F4 in native).
+  - Note Operations: Implemented instant note duplication (Ctrl+Shift+D) and seeded diegetic `system_recovery_1999.log`.
+  - Verification: MSVC clean (`KNote.exe` 24.5 KB); Vite clean in 383ms; security lint & check_icons 100% PASS (<999KB ceiling).
+
 - **2026-10-01T03:45:00Z — kilo-qa: KMine (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone)**
   - State Persistence: Audited and verified full F5 / F9 quicksave/load capturing grid, timers, flags, and move logs.
   - First-run Tutorial Integrity: Implemented `kmine_tutorialSeen` / `kmine_tutorial.dat` flags; never interrupts restored saves.
@@ -327,10 +336,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Balance & Bestiary: Balanced Zone 4 encounters; added Voidfang Dagger & Void Dust loot; updated sidebar and tome bestiaries.
   - Verification: MSVC clean (`KAbyss.exe` 236 KB); Vite clean in 373ms; security lint & check_icons 100% PASS (<999KB ceiling).
 
-- **2026-10-01T02:45:00Z — kilo-creator: kweb://users/~neon_rider (Demoscene Homepage Deep Expansion)**
-  - 3D Vector Engine: Built software rasterizer (Cube, 4D Tesseract, Torus, Octahedron, Star) with wireframe, Lambertian flat shading & depth buffer.
-  - Voxel Land '99: Added Comanche column height-raycasting engine with rolling canyons, alpine glaciers, Martian terrain & altitude flight slider.
-  - 1KB Demoscene Cracktro: Built composite intro with copper raster splits, 3D star, and real-time 8x8 bitmap font text scroller with live text input.
-  - Interactive RAM Hex Editor: Added live byte inspector/patcher, 10.19.99.4 packet injector (1999Hz tone), XOR 0x7F mask & .HEX export.
-  - Audio & Vault: Added Tracks 05 & 06 to FM Jukebox; added Articles 07 & 08 to devlog; added `mesh3d.asm`, `voxel_land.asm`, `intro1k.asm` downloads.
-  - Verification: Security linter 100% PASS; `npm run build` clean in 311ms; `neon_rider.html` 203.7 KB (<999 KB ceiling).
