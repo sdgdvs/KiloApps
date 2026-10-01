@@ -17,8 +17,8 @@ current_targets:
   kilo_graphics: KStarDredge
   kilo_qa: KCalc
   kilo_expander: KPad
-  kilo_creator: "kweb://geocities (CyberSpire Retro Shrine & MOD Vault)"
-virtual_web_target: "kweb://geocities"
+  kilo_creator: "kweb://users/~neon_rider (Personal Hacker / Demoscene Homepage)"
+virtual_web_target: "kweb://users/~neon_rider"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -33,8 +33,8 @@ virtual_web_rotation:
   - "kweb://warez"
 last_run:
   agent: kilo-creator
-  app: "Diegetic In-OS ARG Bridge (KiloSearch, Webring, KNet)"
-  timestamp: "2026-10-01T00:30:00Z"
+  app: "kweb://geocities (CyberSpire Retro Shrine & MOD Vault)"
+  timestamp: "2026-10-01T00:40:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -98,10 +98,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://geocities` (CyberSpire Retro Shrine & MOD Vault)
+- **Current Target**: `kweb://users/~neon_rider` (Personal Hacker / Demoscene Homepage)
 - **Upcoming Queue**:
-  `kweb://users/~neon_rider` (Personal Hacker / Demoscene Homepage)
-  *(Completed: kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://geocities, kweb://portal, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
+  `kweb://asm-temple` (Win32 ASM Shrine & Opcode Converter), `kweb://cybercafe` (Underground BBS Lounge), `kweb://10.19.99.4/classified` (Corporate Leak Intranet)
+  *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **Current Target**: `KStarDredge`
@@ -130,8 +130,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://geocities` (`KiloOS/public/web/geocities.html`)
-  - *Next in Rotation*: `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez`.
+- **Current Active Target**: `kweb://users/~neon_rider` (`KiloOS/public/web/users/neon_rider.html`)
+  - *Next in Rotation*: `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities`.
 - **Anti-Potemkin Directive & Content Mandates**:
   0. `kweb://warez` (*0xRELEASE Scene Vault & x86 Reverse Engineering Lab*):
      - ✅ 12 parody releases with 3D vector cracktro launcher, custom NFO viewer & .diz/.nfo downloads.
@@ -147,6 +147,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
      - ✅ Web Audio 16-bit tracker MIDI jukebox with 4 demoscene/MOD tracks and dancing LED equalizer.
      - ✅ Amiga ProTracker (.MOD) File Dissector & Pattern Matrix Analyzer with 31-sample table & PCM waveform audition.
      - ✅ YM2612 2-Operator FM Synthesizer & Instrument Laboratory with 18-key interactive keyboard, oscilloscope & 8 presets.
+     - ✅ Demoscene Real-Time Visual FX Laboratory (Amiga Copper sine bars with scroller, 256-color sine plasma, Doom fire, 3D warp starfield, phosphor rain, PNG snapshot).
+     - ✅ 8-bit Amiga PCM Chip-Sample Sculptor & Audio Waveform Lab (interactive canvas drawing, 8 presets, normalize, 4-bit crush, smooth, reverse, loop points, C-2..C-5 pitches, RIFF/WAV & C array export).
+     - ✅ 1999 Cyber Voyagers Web Survey & Millennial Poll (3 interactive questions with animated progress bars, localStorage persistence, and live Firebase RTDB sync).
      - ✅ Retro Web 1.0 GIF & Banner Studio (468x60 / 88x31 canvas badge generator, PNG download, HTML embed).
      - ✅ Webmaster Acolyte Workbench (1999 GeoCities personal page builder with live Netscape CRT preview & index.html download).
      - ✅ Live Firebase Realtime Database Shoutbox & Cyber Voyagers Presence with quick-stamps and local storage fallback.
@@ -295,6 +298,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-01T00:40:00Z — kilo-creator: kweb://geocities (CyberSpire Retro Shrine & MOD Vault Deep Expansion)**
+  - Demoscene Visual FX Lab: Added real-time Amiga Copper sine bars, 256-color cycling plasma, Doom fire simulation, 3D warp starfield & phosphor rain.
+  - 8-Bit Amiga PCM Sample Sculptor: Interactive canvas drawing, 8 procedural presets, DSP bitcrush/normalize, loop boundaries & RIFF/WAV export.
+  - 1999 Cyber Survey & Millennial Poll: 3-question survey with animated progress bars, localStorage caching & live Firebase RTDB sync.
+  - Directory & Webring Linking: Updated kweb://geocities descriptions in KNet, portal.html, and webring.html directory entries.
+  - Verification: Security linter 100% PASS; JS syntax clean; Vite build clean in 336ms; geocities.html 249 KB (<999KB ceiling).
+
 - **2026-10-01T00:30:00Z — kilo-creator: Diegetic In-OS ARG Bridge (KiloSearch, Webring, KNet)**
   - KiloSearch Portal: Wired 7 classified intranet search hooks (1999Hz, Carlsbad, ECHO, 0x7F1999) with live hints and cards.
   - Webring Backbone & Topology: Added Node #019 (Anomalous Carrier), 1999Hz subcarrier probe, and 5-hop traceroute to 10.19.99.4.
@@ -324,11 +334,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast Occlusion Remediation: Moved notifications to bottom-right safe zone to prevent canvas and control overlap.
   - TINAG ARG Audit: Purged non-diegetic tags and comments, ensuring period-accurate in-universe lore consistency.
   - Verification: MSVC clean (`KPaint.exe` 29.2 KB); Vite clean in 433ms; check_icons & security lint 100% PASS.
-
-- **2026-09-30T23:45:00Z — kilo-expander: Retro Firebase Multiplayer Service (RFMS Standard on KConnect4 & KChess)**
-  - Standardized RFMS Module: Deployed `KiloOS/public/assets/js/retro_multiplayer.js` (<20 KB, zero bundler dependencies).
-  - Ephemeral Matchmaking & Presence: Standardized room codes, lobby discovery, moves, rematch & `onDisconnect` presence.
-  - Mandate Rule 12 Solo Fallback: Wired mandatory 25-second auto-fallback to engage local AI cyber-bots if no peer connects.
-  - Dual Link Sharing: Added direct support for `#room=CODE` and `?room=CODE` URL formats for seamless web/iframe sharing.
-  - Flagship Retrofits: Updated `KConnect4` & `KChess` as reference implementations with live HUD, hash sync, and clean leaves.
-  - Verification: Web benchmarks 60 FPS (0 stutters); security lint & test_arg_flow 100% PASS; Vite clean; <999KB ceiling verified.

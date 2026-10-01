@@ -5241,6 +5241,896 @@ function applyQuickStamp(text) {
 }
 
 
+// ============================================================================
+// DEMOSCENE REAL-TIME VISUAL FX LABORATORY (AMIGA COPPER, PLASMA, FIRE, 3D WARP)
+// ============================================================================
+let fxMode = 'copper';
+let fxSpeed = 1.0;
+let fxTheme = 'rainbow';
+let isFxPaused = false;
+let fxTime = 0;
+let fxAnimFrame = null;
+let fxScrollerPos = 480;
+let fxScrollerMessage = "CYBERSPIRE RETRO SHRINE ★ 1999 DEMOSCENE FOREVER ★ AMIGA 500 / YM2612 / PROTRACKER ★ GREETINGS TO FLARELIGHT & RAZOR 1999 ★ SURFING THE 999KB CYBERSPHERE ★";
+
+let fireW = 160;
+let fireH = 80;
+let fireBuffer = new Uint8Array(fireW * fireH);
+const firePalette = [];
+for (let i = 0; i < 64; i++) {
+  let r = 0, g = 0, b = 0;
+  if (i < 16) {
+    r = Math.floor((i / 16) * 255);
+  } else if (i < 32) {
+    r = 255;
+    g = Math.floor(((i - 16) / 16) * 220);
+  } else if (i < 48) {
+    r = 255;
+    g = 220 + Math.floor(((i - 32) / 16) * 35);
+    b = Math.floor(((i - 32) / 16) * 180);
+  } else {
+    r = 255;
+    g = 255;
+    b = 180 + Math.floor(((i - 48) / 16) * 75);
+  }
+  firePalette.push([r, g, b]);
+}
+
+const STAR_COUNT = 320;
+const stars = [];
+for (let i = 0; i < STAR_COUNT; i++) {
+  stars.push({
+    x: (Math.random() - 0.5) * 800,
+    y: (Math.random() - 0.5) * 600,
+    z: Math.random() * 800 + 1,
+    pz: 0
+  });
+}
+
+const MATRIX_COLS = 50;
+const matrixStreams = [];
+const MATRIX_CHARS = "0123456789ABCDEFｦｱｳｴｵｶｷｹｺｻｼｽｾｿﾀﾂﾃﾅﾆﾇﾈﾊﾋﾎﾏﾐﾑﾒﾓﾔﾕﾗﾘﾜ";
+for (let i = 0; i < MATRIX_COLS; i++) {
+  matrixStreams.push({
+    x: i * 10,
+    y: Math.random() * -300,
+    speed: 2 + Math.random() * 4,
+    chars: Array.from({ length: 22 }, () => MATRIX_CHARS[Math.floor(Math.random() * MATRIX_CHARS.length)])
+  });
+}
+
+let fxOffCanvas = null;
+let fxOffCtx = null;
+
+function getFxOffscreen(w, h) {
+  if (!fxOffCanvas) {
+    fxOffCanvas = document.createElement('canvas');
+  }
+  if (fxOffCanvas.width !== w || fxOffCanvas.height !== h) {
+    fxOffCanvas.width = w;
+    fxOffCanvas.height = h;
+    fxOffCtx = fxOffCanvas.getContext('2d');
+  }
+  return { canvas: fxOffCanvas, ctx: fxOffCtx };
+}
+
+function setFxMode(mode) {
+  playUiBeep(1200, 0.04);
+  fxMode = mode;
+  ['btnFxCopper', 'btnFxPlasma', 'btnFxFire', 'btnFxStarfield', 'btnFxMatrix'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  const activeBtn = document.getElementById('btnFx' + mode.charAt(0).toUpperCase() + mode.slice(1));
+  if (activeBtn) activeBtn.classList.add('active');
+
+  const scrollerRow = document.getElementById('fxScrollerInputRow');
+  if (scrollerRow) {
+    scrollerRow.style.display = (mode === 'copper') ? 'flex' : 'none';
+  }
+}
+
+function setFxTheme(th) {
+  fxTheme = th;
+}
+
+function updateFxSpeed(val) {
+  fxSpeed = parseFloat(val);
+  const lbl = document.getElementById('fxSpeedVal');
+  if (lbl) lbl.textContent = fxSpeed.toFixed(1) + 'x';
+}
+
+function setFxResolution(resStr) {
+  const canvas = document.getElementById('demosceneFxCanvas');
+  if (!canvas) return;
+  const [w, h] = resStr.split('x').map(x => parseInt(x));
+  canvas.width = w;
+  canvas.height = h;
+  fireW = Math.max(80, Math.floor(w / 3));
+  fireH = Math.max(40, Math.floor(h / 3));
+  fireBuffer = new Uint8Array(fireW * fireH);
+}
+
+function toggleFxPause() {
+  isFxPaused = !isFxPaused;
+  const btn = document.getElementById('btnFxPause');
+  if (btn) btn.textContent = isFxPaused ? "▶ Resume" : "⏸ Pause";
+  playUiBeep(isFxPaused ? 700 : 1300, 0.05);
+}
+
+function saveFxSnapshot() {
+  playUiBeep(1500, 0.08);
+  const canvas = document.getElementById('demosceneFxCanvas');
+  if (!canvas) return;
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `CyberSpire_Demoscene_${fxMode}_${Date.now()}.png`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+}
+
+function updateFxScrollerText(txt) {
+  fxScrollerMessage = txt || "CYBERSPIRE RETRO SHRINE";
+}
+
+function renderCopperBars(ctx, w, h) {
+  ctx.fillStyle = '#00040a';
+  ctx.fillRect(0, 0, w, h);
+
+  const numBars = 16;
+  const barHeight = Math.max(6, Math.floor(h / 24));
+
+  for (let b = 0; b < numBars; b++) {
+    const yOsc = (h / 2) + Math.sin(fxTime * 1.6 + b * 0.28) * (h * 0.36) + Math.cos(fxTime * 0.9 + b * 0.16) * (h * 0.14);
+    const grad = ctx.createLinearGradient(0, yOsc - barHeight, 0, yOsc + barHeight);
+
+    let col1 = '#00ffff', col2 = '#ff00aa', col3 = '#ffffff';
+    if (fxTheme === 'rainbow') {
+      const hue1 = (fxTime * 40 + b * 22) % 360;
+      const hue2 = (hue1 + 60) % 360;
+      col1 = `hsl(${hue1}, 100%, 25%)`;
+      col2 = `hsl(${hue1}, 100%, 65%)`;
+      col3 = `hsl(${hue2}, 100%, 90%)`;
+    } else if (fxTheme === 'fire') {
+      col1 = '#440000'; col2 = '#ff4400'; col3 = '#ffff88';
+    } else if (fxTheme === 'matrix') {
+      col1 = '#002200'; col2 = '#00ff44'; col3 = '#ccffcc';
+    } else if (fxTheme === 'gold') {
+      col1 = '#332200'; col2 = '#ffcc00'; col3 = '#ffffee';
+    }
+
+    grad.addColorStop(0, col1);
+    grad.addColorStop(0.5, col3);
+    grad.addColorStop(1, col1);
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, yOsc - barHeight, w, barHeight * 2);
+  }
+
+  // Draw 1999 Demoscene Marquee Scroller in center
+  ctx.save();
+  ctx.font = 'bold 15px "Courier New", monospace';
+  const textWidth = ctx.measureText(fxScrollerMessage).width;
+
+  fxScrollerPos -= 2.2 * fxSpeed;
+  if (fxScrollerPos < -textWidth) {
+    fxScrollerPos = w;
+  }
+
+  // Drop shadow
+  ctx.fillStyle = '#000000';
+  ctx.fillText(fxScrollerMessage, fxScrollerPos + 2, h / 2 + 7);
+  // Foreground neon text
+  ctx.fillStyle = '#ffff00';
+  ctx.shadowColor = '#ff00aa';
+  ctx.shadowBlur = 8;
+  ctx.fillText(fxScrollerMessage, fxScrollerPos, h / 2 + 5);
+  ctx.restore();
+}
+
+function renderPlasma(ctx, w, h) {
+  const pw = 120;
+  const ph = 60;
+  const { canvas: offC, ctx: offCtx } = getFxOffscreen(pw, ph);
+  const imgData = offCtx.createImageData(pw, ph);
+  const data = imgData.data;
+
+  const t = fxTime * 1.5;
+  const tSin = Math.sin(t * 0.4);
+
+  let ptr = 0;
+  for (let y = 0; y < ph; y++) {
+    const yTerm = Math.sin(y * 0.12 + t);
+    for (let x = 0; x < pw; x++) {
+      const v1 = Math.sin(x * 0.08 + t);
+      const v2 = yTerm;
+      const v3 = Math.sin((x + y) * 0.06 + t);
+      const cx = pw / 2 + tSin * 20;
+      const cy = ph / 2;
+      const dist = Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+      const v4 = Math.sin(dist * 0.12 - t);
+
+      const sum = (v1 + v2 + v3 + v4 + 4) * 32;
+
+      let r = 0, g = 0, b = 0;
+      if (fxTheme === 'rainbow') {
+        r = Math.floor(Math.sin(sum * 0.05 + 0) * 127 + 128);
+        g = Math.floor(Math.sin(sum * 0.05 + 2) * 127 + 128);
+        b = Math.floor(Math.sin(sum * 0.05 + 4) * 127 + 128);
+      } else if (fxTheme === 'fire') {
+        r = Math.floor(sum);
+        g = Math.floor(sum * 0.6);
+        b = Math.floor(sum * 0.1);
+      } else if (fxTheme === 'matrix') {
+        r = Math.floor(sum * 0.1);
+        g = Math.floor(sum);
+        b = Math.floor(sum * 0.3);
+      } else if (fxTheme === 'gold') {
+        r = Math.floor(sum);
+        g = Math.floor(sum * 0.85);
+        b = Math.floor(sum * 0.2);
+      } else {
+        r = Math.floor(Math.sin(sum * 0.06) * 120 + 130);
+        g = Math.floor(Math.cos(sum * 0.04) * 100 + 120);
+        b = 255;
+      }
+
+      data[ptr] = r;
+      data[ptr + 1] = g;
+      data[ptr + 2] = b;
+      data[ptr + 3] = 255;
+      ptr += 4;
+    }
+  }
+
+  offCtx.putImageData(imgData, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(offC, 0, 0, w, h);
+}
+
+function renderFire(ctx, w, h) {
+  const fw = fireW;
+  const fh = fireH;
+  const { canvas: offC, ctx: offCtx } = getFxOffscreen(fw, fh);
+  const imgData = offCtx.createImageData(fw, fh);
+  const data = imgData.data;
+
+  const bottomOffset = (fh - 1) * fw;
+  for (let x = 0; x < fw; x++) {
+    fireBuffer[bottomOffset + x] = Math.random() > 0.45 ? 63 : 0;
+  }
+
+  for (let y = 0; y < fh - 1; y++) {
+    for (let x = 0; x < fw; x++) {
+      const idx = y * fw + x;
+      const below = (y + 1) * fw;
+      const left = (x - 1 + fw) % fw;
+      const right = (x + 1) % fw;
+
+      const p1 = fireBuffer[below + x];
+      const p2 = fireBuffer[below + left];
+      const p3 = fireBuffer[below + right];
+      const p4 = fireBuffer[(Math.min(fh - 1, y + 2)) * fw + x];
+
+      const decay = Math.floor(Math.random() * 2.2);
+      const avg = Math.max(0, Math.floor((p1 + p2 + p3 + p4) / 4) - decay);
+      fireBuffer[idx] = avg;
+    }
+  }
+
+  let ptr = 0;
+  for (let i = 0; i < fw * fh; i++) {
+    const val = Math.min(63, fireBuffer[i]);
+    const rgb = firePalette[val] || [0, 0, 0];
+    data[ptr] = rgb[0];
+    data[ptr + 1] = rgb[1];
+    data[ptr + 2] = rgb[2];
+    data[ptr + 3] = 255;
+    ptr += 4;
+  }
+
+  offCtx.putImageData(imgData, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  ctx.drawImage(offC, 0, 0, w, h);
+}
+
+function renderStarfield(ctx, w, h) {
+  ctx.fillStyle = 'rgba(0, 4, 10, 0.3)';
+  ctx.fillRect(0, 0, w, h);
+
+  const cx = w / 2;
+  const cy = h / 2;
+  const fov = 180;
+
+  for (let i = 0; i < stars.length; i++) {
+    const s = stars[i];
+    s.pz = s.z;
+    s.z -= 6 * fxSpeed;
+
+    if (s.z <= 0) {
+      s.x = (Math.random() - 0.5) * w * 1.5;
+      s.y = (Math.random() - 0.5) * h * 1.5;
+      s.z = 800;
+      s.pz = 800;
+    }
+
+    const sx = cx + (s.x / s.z) * fov;
+    const sy = cy + (s.y / s.z) * fov;
+    const px = cx + (s.x / s.pz) * fov;
+    const py = cy + (s.y / s.pz) * fov;
+
+    if (sx >= 0 && sx < w && sy >= 0 && sy < h) {
+      const b = Math.min(1, Math.max(0.1, 1 - (s.z / 800)));
+      ctx.beginPath();
+      ctx.strokeStyle = fxTheme === 'matrix' ? `rgba(0, 255, 100, ${b})` : (fxTheme === 'fire' ? `rgba(255, 180, 0, ${b})` : `rgba(0, 255, 255, ${b})`);
+      ctx.lineWidth = Math.max(1, (1 - s.z / 800) * 3);
+      ctx.moveTo(px, py);
+      ctx.lineTo(sx, sy);
+      ctx.stroke();
+    }
+  }
+}
+
+function renderMatrixRain(ctx, w, h) {
+  ctx.fillStyle = 'rgba(0, 8, 4, 0.2)';
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.font = '11px monospace';
+
+  for (let i = 0; i < matrixStreams.length; i++) {
+    const stream = matrixStreams[i];
+    stream.y += stream.speed * fxSpeed;
+
+    if (stream.y > h + 180) {
+      stream.y = Math.random() * -120;
+      stream.speed = 2 + Math.random() * 4;
+    }
+
+    for (let c = 0; c < stream.chars.length; c++) {
+      const charY = stream.y - c * 12;
+      if (charY < 0 || charY > h) continue;
+
+      if (c === 0) {
+        ctx.fillStyle = '#ffffff';
+        ctx.shadowColor = '#00ff66';
+        ctx.shadowBlur = 6;
+      } else if (c < 3) {
+        ctx.fillStyle = '#aaffaa';
+        ctx.shadowBlur = 0;
+      } else {
+        const alpha = Math.max(0.1, 1 - (c / stream.chars.length));
+        ctx.fillStyle = `rgba(0, 255, 80, ${alpha})`;
+        ctx.shadowBlur = 0;
+      }
+
+      ctx.fillText(stream.chars[c], stream.x % w, charY);
+    }
+    ctx.shadowBlur = 0;
+  }
+}
+
+function renderDemosceneFx() {
+  fxAnimFrame = requestAnimationFrame(renderDemosceneFx);
+  if (isFxPaused) return;
+
+  const canvas = document.getElementById('demosceneFxCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  fxTime += 0.025 * fxSpeed;
+
+  if (fxMode === 'copper') {
+    renderCopperBars(ctx, w, h);
+  } else if (fxMode === 'plasma') {
+    renderPlasma(ctx, w, h);
+  } else if (fxMode === 'fire') {
+    renderFire(ctx, w, h);
+  } else if (fxMode === 'starfield') {
+    renderStarfield(ctx, w, h);
+  } else if (fxMode === 'matrix') {
+    renderMatrixRain(ctx, w, h);
+  }
+}
+
+// ============================================================================
+// 8-BIT AMIGA PCM CHIP-SAMPLE SCULPTOR & AUDIO WAVEFORM LAB
+// ============================================================================
+let sampleLength = 256;
+let sampleData = new Int8Array(1024);
+let isDrawingSample = false;
+let sampleLoopStart = 0;
+let sampleLoopLength = 256;
+let isSampleLooping = true;
+let activeSampleSource = null;
+
+// Initialize with a classic ProTracker Sawtooth Wave
+for (let i = 0; i < 256; i++) {
+  sampleData[i] = Math.round(((i / 256) * 2 - 1) * 127);
+}
+
+function sculptPreset(type) {
+  playUiBeep(1100, 0.04);
+  const len = sampleLength;
+  for (let i = 0; i < len; i++) {
+    const ph = (i / len) * Math.PI * 2;
+    if (type === 'sine') {
+      sampleData[i] = Math.round(Math.sin(ph) * 127);
+    } else if (type === 'square') {
+      sampleData[i] = (i < len / 2) ? 120 : -120;
+    } else if (type === 'pulse') {
+      sampleData[i] = (i < len * 0.15) ? 124 : -60;
+    } else if (type === 'saw') {
+      sampleData[i] = Math.round(((i / len) * 2 - 1) * 127);
+    } else if (type === 'triangle') {
+      sampleData[i] = Math.round((Math.asin(Math.sin(ph)) / (Math.PI / 2)) * 127);
+    } else if (type === 'noise') {
+      const decay = 1 - (i / len);
+      sampleData[i] = Math.round((Math.random() * 2 - 1) * 127 * decay);
+    } else if (type === 'kick') {
+      const decay = Math.exp(-i / (len * 0.25));
+      const freqSweep = Math.sin((i / len) * Math.PI * 14 * decay);
+      sampleData[i] = Math.round(freqSweep * 127 * decay);
+    } else if (type === 'acid') {
+      const saw = ((i / (len / 4)) % 1) * 2 - 1;
+      const res = Math.sin(ph * 6) * Math.exp(-i / (len * 0.5));
+      sampleData[i] = Math.max(-128, Math.min(127, Math.round((saw * 0.6 + res * 0.7) * 127)));
+    }
+  }
+  drawSampleWaveform();
+  renderSampleCArray();
+}
+
+function changeSampleLength(newLen) {
+  sampleLength = newLen;
+  const startSlider = document.getElementById('sampleLoopStartSlider');
+  const lenSlider = document.getElementById('sampleLoopLenSlider');
+  if (startSlider) {
+    startSlider.max = (newLen - 4);
+    startSlider.value = 0;
+  }
+  if (lenSlider) {
+    lenSlider.max = newLen;
+    lenSlider.value = newLen;
+  }
+  sampleLoopStart = 0;
+  sampleLoopLength = newLen;
+  sculptPreset('saw');
+}
+
+function drawSampleWaveform() {
+  const canvas = document.getElementById('sampleWaveCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  // Background
+  ctx.fillStyle = '#000812';
+  ctx.fillRect(0, 0, w, h);
+
+  // Grid lines
+  ctx.strokeStyle = '#002233';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < w; x += 40) {
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, h);
+    ctx.stroke();
+  }
+  for (let y = 0; y < h; y += 35) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+  }
+
+  // Zero-axis
+  ctx.strokeStyle = '#005577';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(0, h / 2);
+  ctx.lineTo(w, h / 2);
+  ctx.stroke();
+
+  // Highlight Loop Region
+  if (isSampleLooping) {
+    const xStart = (sampleLoopStart / sampleLength) * w;
+    const xEnd = ((sampleLoopStart + sampleLoopLength) / sampleLength) * w;
+    ctx.fillStyle = 'rgba(0, 255, 204, 0.08)';
+    ctx.fillRect(xStart, 0, xEnd - xStart, h);
+
+    // Loop bounds markers
+    ctx.strokeStyle = '#00ffcc';
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(xStart, 0); ctx.lineTo(xStart, h);
+    ctx.moveTo(xEnd, 0); ctx.lineTo(xEnd, h);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  // Draw PCM Waveform
+  ctx.strokeStyle = '#ffff00';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+
+  const step = w / sampleLength;
+  for (let i = 0; i < sampleLength; i++) {
+    const val = sampleData[i];
+    const x = i * step;
+    const y = (h / 2) - (val / 128) * (h * 0.44);
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Peak and metadata info
+  let minV = 0, maxV = 0;
+  for (let i = 0; i < sampleLength; i++) {
+    if (sampleData[i] < minV) minV = sampleData[i];
+    if (sampleData[i] > maxV) maxV = sampleData[i];
+  }
+  const meta = document.getElementById('sampleMetaInfo');
+  if (meta) {
+    meta.textContent = `${sampleLength} Bytes • Peak: +${maxV}/${minV} • Loop: [${sampleLoopStart}..${sampleLoopStart + sampleLoopLength}]`;
+  }
+}
+
+function initSampleCanvasEvents() {
+  const canvas = document.getElementById('sampleWaveCanvas');
+  if (!canvas) return;
+
+  function updatePointFromPointer(e) {
+    const rect = canvas.getBoundingClientRect();
+    const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+    const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+    const x = (clientX - rect.left) / rect.width;
+    const y = (clientY - rect.top) / rect.height;
+
+    const idx = Math.max(0, Math.min(sampleLength - 1, Math.floor(x * sampleLength)));
+    const val = Math.max(-128, Math.min(127, Math.round(((0.5 - y) / 0.44) * 128)));
+    sampleData[idx] = val;
+
+    if (idx > 0 && Math.abs(sampleData[idx] - sampleData[idx - 1]) > 50) {
+      sampleData[idx - 1] = Math.round((sampleData[idx - 1] + val) / 2);
+    }
+    if (idx < sampleLength - 1 && Math.abs(sampleData[idx] - sampleData[idx + 1]) > 50) {
+      sampleData[idx + 1] = Math.round((sampleData[idx + 1] + val) / 2);
+    }
+
+    drawSampleWaveform();
+  }
+
+  canvas.addEventListener('pointerdown', (e) => {
+    isDrawingSample = true;
+    canvas.setPointerCapture(e.pointerId);
+    updatePointFromPointer(e);
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    if (isDrawingSample) updatePointFromPointer(e);
+  });
+  const stopDraw = () => {
+    if (isDrawingSample) {
+      isDrawingSample = false;
+      renderSampleCArray();
+    }
+  };
+  canvas.addEventListener('pointerup', stopDraw);
+  canvas.addEventListener('pointercancel', stopDraw);
+}
+
+function dspNormalize() {
+  playUiBeep(1200, 0.05);
+  let maxAbs = 0;
+  for (let i = 0; i < sampleLength; i++) {
+    const a = Math.abs(sampleData[i]);
+    if (a > maxAbs) maxAbs = a;
+  }
+  if (maxAbs === 0) return;
+  const factor = 127.0 / maxAbs;
+  for (let i = 0; i < sampleLength; i++) {
+    sampleData[i] = Math.max(-128, Math.min(127, Math.round(sampleData[i] * factor)));
+  }
+  drawSampleWaveform();
+  renderSampleCArray();
+}
+
+function dspBitcrush(bits = 4) {
+  playUiBeep(800, 0.05);
+  const step = 256 / Math.pow(2, bits);
+  for (let i = 0; i < sampleLength; i++) {
+    const v = sampleData[i] + 128;
+    const crushed = Math.floor(v / step) * step;
+    sampleData[i] = Math.max(-128, Math.min(127, crushed - 128));
+  }
+  drawSampleWaveform();
+  renderSampleCArray();
+}
+
+function dspSmooth() {
+  playUiBeep(950, 0.05);
+  const copy = new Int8Array(sampleData);
+  for (let i = 0; i < sampleLength; i++) {
+    const prev = copy[(i - 1 + sampleLength) % sampleLength];
+    const curr = copy[i];
+    const next = copy[(i + 1) % sampleLength];
+    sampleData[i] = Math.round((prev + curr * 2 + next) / 4);
+  }
+  drawSampleWaveform();
+  renderSampleCArray();
+}
+
+function dspReverse() {
+  playUiBeep(1100, 0.05);
+  sampleData.subarray(0, sampleLength).reverse();
+  drawSampleWaveform();
+  renderSampleCArray();
+}
+
+function dspInvert() {
+  playUiBeep(1000, 0.05);
+  for (let i = 0; i < sampleLength; i++) {
+    sampleData[i] = Math.max(-128, Math.min(127, -sampleData[i]));
+  }
+  drawSampleWaveform();
+  renderSampleCArray();
+}
+
+function dspAddGrit() {
+  playUiBeep(600, 0.05);
+  for (let i = 0; i < sampleLength; i++) {
+    const grit = (Math.random() * 20 - 10);
+    sampleData[i] = Math.max(-128, Math.min(127, Math.round(sampleData[i] + grit)));
+  }
+  drawSampleWaveform();
+  renderSampleCArray();
+}
+
+function toggleSampleLoop(val) {
+  isSampleLooping = val;
+  drawSampleWaveform();
+}
+
+function updateSampleLoopBounds() {
+  const startEl = document.getElementById('sampleLoopStartSlider');
+  const lenEl = document.getElementById('sampleLoopLenSlider');
+  if (startEl && lenEl) {
+    sampleLoopStart = parseInt(startEl.value);
+    sampleLoopLength = Math.min(sampleLength - sampleLoopStart, parseInt(lenEl.value));
+    document.getElementById('valLoopStart').textContent = sampleLoopStart + ' B';
+    document.getElementById('valLoopLen').textContent = sampleLoopLength + ' B';
+    drawSampleWaveform();
+  }
+}
+
+function auditionSamplePitch(freqRate = 8287) {
+  stopSampleAudition();
+  playUiBeep(1400, 0.04);
+  try {
+    initAudioCtx();
+    const buf = audioCtx.createBuffer(1, sampleLength, freqRate);
+    const ch = buf.getChannelData(0);
+    for (let i = 0; i < sampleLength; i++) {
+      ch[i] = sampleData[i] / 128.0;
+    }
+
+    const src = audioCtx.createBufferSource();
+    src.buffer = buf;
+    if (isSampleLooping && sampleLoopLength > 2) {
+      src.loop = true;
+      src.loopStart = sampleLoopStart / freqRate;
+      src.loopEnd = (sampleLoopStart + sampleLoopLength) / freqRate;
+    }
+
+    const gain = audioCtx.createGain();
+    gain.gain.setValueAtTime(0.28, audioCtx.currentTime);
+
+    src.connect(gain);
+    gain.connect(masterGain);
+    if (delayNode) gain.connect(delayNode);
+
+    src.start();
+    activeSampleSource = src;
+    if (!src.loop) {
+      setTimeout(() => { if (activeSampleSource === src) activeSampleSource = null; }, (sampleLength / freqRate) * 1000 + 100);
+    }
+  } catch(e) {
+    console.error("Audition sample error:", e);
+  }
+}
+
+function stopSampleAudition() {
+  if (activeSampleSource) {
+    try { activeSampleSource.stop(); } catch(e) {}
+    activeSampleSource = null;
+  }
+}
+
+function downloadSampleWav() {
+  playUiBeep(1300, 0.08);
+  const sampleRate = 8287;
+  const wavLen = 44 + sampleLength;
+  const buf = new Uint8Array(wavLen);
+  const view = new DataView(buf.buffer);
+
+  buf.set([0x52, 0x49, 0x46, 0x46], 0);
+  view.setUint32(4, 36 + sampleLength, true);
+  buf.set([0x57, 0x41, 0x56, 0x45], 8);
+  buf.set([0x66, 0x6D, 0x74, 0x20], 12);
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate, true);
+  view.setUint16(32, 1, true);
+  view.setUint16(34, 8, true);
+  buf.set([0x64, 0x61, 0x74, 0x61], 36);
+  view.setUint32(40, sampleLength, true);
+
+  for (let i = 0; i < sampleLength; i++) {
+    buf[44 + i] = (sampleData[i] + 128) & 0xFF;
+  }
+
+  const blob = new Blob([buf], { type: 'audio/wav' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `CyberSpire_PCM_${sampleLength}B.wav`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function downloadSampleRaw() {
+  playUiBeep(1200, 0.08);
+  const buf = new Uint8Array(sampleLength);
+  for (let i = 0; i < sampleLength; i++) {
+    buf[i] = (sampleData[i] + 256) & 0xFF;
+  }
+  const blob = new Blob([buf], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `CyberSpire_Sample.smp`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function renderSampleCArray() {
+  let str = `/* CyberSpire 8-Bit Amiga Signed PCM Sample (${sampleLength} Bytes) */\n`;
+  str += `const int8_t sample_data[${sampleLength}] = {\n  `;
+  for (let i = 0; i < sampleLength; i++) {
+    const v = sampleData[i];
+    str += (v >= 0 ? " " : "") + v + (i < sampleLength - 1 ? ", " : "");
+    if ((i + 1) % 16 === 0 && i < sampleLength - 1) str += "\n  ";
+  }
+  str += "\n};\n";
+  const el = document.getElementById('sampleCArrayOutput');
+  if (el) el.value = str;
+}
+
+function copySampleCArray() {
+  const el = document.getElementById('sampleCArrayOutput');
+  if (el) {
+    navigator.clipboard.writeText(el.value);
+    playUiBeep(1400, 0.05);
+    alert("C PCM sample array copied to clipboard!");
+  }
+}
+
+// ============================================================================
+// 1999 CYBER VOYAGERS WEB SURVEY & MILLENNIAL POLL
+// ============================================================================
+const POLL_DATA = {
+  q1: {
+    title: "Primary 1999 Web Browser",
+    options: [
+      { key: "netscape", label: "Netscape Communicator 4.7", votes: 412 },
+      { key: "ie", label: "Internet Explorer 5.0", votes: 389 },
+      { key: "opera", label: "Opera 3.6 (Fastest Browser)", votes: 94 },
+      { key: "lynx", label: "Lynx (Text-Only Terminal)", votes: 47 }
+    ]
+  },
+  q2: {
+    title: "Cyberspace Connection Speed",
+    options: [
+      { key: "modem56k", label: "56k V.90 Dial-Up Modem", votes: 541 },
+      { key: "isdn", label: "128k Dual-Channel ISDN", votes: 168 },
+      { key: "dsl", label: "Cable Modem / Early ADSL", votes: 142 },
+      { key: "t1", label: "T1 / DS1 Leased Line (1.54M)", votes: 85 }
+    ]
+  },
+  q3: {
+    title: "Supreme 16-Bit Audio Hardware",
+    options: [
+      { key: "paula", label: "Amiga Paula (4-CH DMA)", votes: 488 },
+      { key: "awe64", label: "Sound Blaster AWE64 Gold", votes: 310 },
+      { key: "gus", label: "Gravis UltraSound (1MB)", votes: 215 },
+      { key: "sc55", label: "Roland Sound Canvas SC-55", votes: 122 },
+      { key: "ym2612", label: "Sega Genesis YM2612 FM", votes: 295 }
+    ]
+  }
+};
+
+function getSavedPollVotes() {
+  try {
+    return JSON.parse(localStorage.getItem('cyberspire_poll_votes') || '{}');
+  } catch(e) {
+    return {};
+  }
+}
+
+function renderPollQuestions() {
+  const savedVotes = getSavedPollVotes();
+
+  ['q1', 'q2', 'q3'].forEach(qId => {
+    const q = POLL_DATA[qId];
+    const container = document.getElementById('pollOptions' + qId.toUpperCase());
+    const statsEl = document.getElementById('pollStats' + qId.toUpperCase());
+    if (!container) return;
+
+    let totalVotes = q.options.reduce((sum, opt) => sum + opt.votes, 0);
+    const userVote = savedVotes[qId];
+
+    container.innerHTML = q.options.map(opt => {
+      const pct = totalVotes > 0 ? Math.round((opt.votes / totalVotes) * 100) : 0;
+      const isChecked = userVote === opt.key;
+      return `
+        <div style="margin-bottom:6px;">
+          <label class="poll-radio-label">
+            <input type="radio" name="poll_${qId}" value="${opt.key}" ${isChecked ? 'checked' : ''} onchange="castPollVote('${qId}', '${opt.key}')">
+            <span>${escapeHtml(opt.label)}</span>
+            <span style="font-size:10px; color:#ffff00; margin-left:auto;">${opt.votes} (${pct}%)</span>
+          </label>
+          <div class="poll-bar-track">
+            <div class="poll-bar-fill" style="width:${pct}%;"></div>
+            <div class="poll-bar-text">${pct}%</div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    if (statsEl) {
+      statsEl.textContent = `Total votes cast: ${totalVotes}${userVote ? ' • [Vote recorded]' : ''}`;
+    }
+  });
+}
+
+function castPollVote(qId, optKey) {
+  playUiBeep(1350, 0.06);
+  const q = POLL_DATA[qId];
+  if (!q) return;
+
+  const saved = getSavedPollVotes();
+  const oldVote = saved[qId];
+  if (oldVote === optKey) return;
+
+  if (oldVote) {
+    const prevOpt = q.options.find(o => o.key === oldVote);
+    if (prevOpt && prevOpt.votes > 0) prevOpt.votes--;
+  }
+  const currOpt = q.options.find(o => o.key === optKey);
+  if (currOpt) currOpt.votes++;
+
+  saved[qId] = optKey;
+  localStorage.setItem('cyberspire_poll_votes', JSON.stringify(saved));
+  renderPollQuestions();
+
+  if (window.submitPollVoteToFirebase) {
+    window.submitPollVoteToFirebase(qId, optKey, oldVote);
+  }
+}
+
 // Initialize Everything
 setNeighborhood(currentNeighborhood);
 renderSwatches();
@@ -5255,6 +6145,11 @@ drawFmOscilloscope();
 applyBannerPreset("hazard");
 updatePagePreview();
 loadGuestbook();
+renderDemosceneFx();
+initSampleCanvasEvents();
+drawSampleWaveform();
+renderSampleCArray();
+renderPollQuestions();
 
 // Auto-unlock audio context on user interaction
 document.body.addEventListener('click', () => {
@@ -5271,7 +6166,7 @@ document.body.addEventListener('click', () => {
 // FIREBASE REALTIME DATABASE SHOUTBOX & PRESENCE STREAM
 // ============================================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-import { getDatabase, ref, set, push, onValue, onChildAdded, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+import { getDatabase, ref, set, push, onValue, onChildAdded, serverTimestamp, onDisconnect, runTransaction } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
@@ -5326,12 +6221,34 @@ try {
     }
   });
 
+  // Live poll sync stream
+  const pollRef = ref(db, 'virtual_web/geocities/poll');
+  onValue(pollRef, (snapshot) => {
+    const data = snapshot.val();
+    if (data) {
+      ['q1', 'q2', 'q3'].forEach(qId => {
+        if (data[qId] && POLL_DATA[qId]) {
+          POLL_DATA[qId].options.forEach(opt => {
+            if (typeof data[qId][opt.key] === 'number') {
+              opt.votes = Math.max(opt.votes, data[qId][opt.key]);
+            }
+          });
+        }
+      });
+      renderPollQuestions();
+    }
+  });
+
   const badgeEl = document.getElementById('shoutboxStatusBadge');
   if (badgeEl) badgeEl.textContent = '[LIVE RTDB CONNECTED]';
+  const pollBadgeEl = document.getElementById('pollSyncBadge');
+  if (pollBadgeEl) pollBadgeEl.textContent = '[LIVE RTDB CONNECTED]';
 } catch(err) {
   console.warn("Firebase RTDB offline or blocked, falling back to localStorage:", err);
   const badgeEl = document.getElementById('shoutboxStatusBadge');
   if (badgeEl) badgeEl.textContent = '[LOCAL STORAGE MODE]';
+  const pollBadgeEl = document.getElementById('pollSyncBadge');
+  if (pollBadgeEl) pollBadgeEl.textContent = '[LOCAL STORAGE MODE]';
 }
 
 function prependLiveGuestbookEntry(e) {
@@ -5370,6 +6287,26 @@ window.submitGuestbookToFirebase = function(entry) {
       });
     } catch(err) {
       console.warn("Error pushing to Firebase:", err);
+    }
+  }
+};
+
+// Window export for castPollVote to sync with Firebase
+window.submitPollVoteToFirebase = function(qId, newOptKey, oldOptKey) {
+  if (db) {
+    try {
+      const itemRef = ref(db, `virtual_web/geocities/poll/${qId}/${newOptKey}`);
+      runTransaction(itemRef, (currentVotes) => {
+        return (currentVotes || 0) + 1;
+      });
+      if (oldOptKey) {
+        const oldRef = ref(db, `virtual_web/geocities/poll/${qId}/${oldOptKey}`);
+        runTransaction(oldRef, (currentVotes) => {
+          return Math.max(0, (currentVotes || 1) - 1);
+        });
+      }
+    } catch(err) {
+      console.warn("Error updating poll vote in Firebase:", err);
     }
   }
 };

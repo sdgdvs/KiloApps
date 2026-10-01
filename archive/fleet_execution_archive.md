@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T23:45:00Z — kilo-expander: Retro Firebase Multiplayer Service (RFMS Standard on KConnect4 & KChess)**
+  - Standardized RFMS Module: Deployed `KiloOS/public/assets/js/retro_multiplayer.js` (<20 KB, zero bundler dependencies).
+  - Ephemeral Matchmaking & Presence: Standardized room codes, lobby discovery, moves, rematch & `onDisconnect` presence.
+  - Mandate Rule 12 Solo Fallback: Wired mandatory 25-second auto-fallback to engage local AI cyber-bots if no peer connects.
+  - Dual Link Sharing: Added direct support for `#room=CODE` and `?room=CODE` URL formats for seamless web/iframe sharing.
+  - Flagship Retrofits: Updated `KConnect4` & `KChess` as reference implementations with live HUD, hash sync, and clean leaves.
+  - Verification: Web benchmarks 60 FPS (0 stutters); security lint & test_arg_flow 100% PASS; Vite clean; <999KB ceiling verified.
+
 - **2026-09-30T23:30:00Z — kilo-usability: KPad (Usability & Layout Pass, Draggable Splitter, Searchable Help & Responsive Toolbars)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 169.5 KB web / 31.7 KB native < 999 KB ceiling).
   - Window Sizing: Optimized KiloOS window dimensions to 1000x680 across App.jsx and Win32 C (`KPad.exe`).
