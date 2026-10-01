@@ -2,20 +2,20 @@
   "node_id": "pc_a",
   "name": "PC A (sdgdvs)",
   "account": "sdgdvs",
-  "hostname": "PC-A",
+  "hostname": "P10700",
   "model_tier": "Gemini Pro",
   "cadence": "1 turn/hour",
   "status": "active",
   "schedule_minutes": [
     12
   ],
-  "session_start": null,
+  "session_start": "2026-09-30T21:38:33.3521704Z",
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 0,
+  "turns_executed": 6,
   "last_turn_timestamp": "2026-09-28T18:42:51Z",
-  "last_heartbeat": "2026-09-28T18:42:51Z",
-  "current_target": "idle",
+  "last_heartbeat": "2026-10-01T01:27:08.815105+00:00",
+  "current_target": "kweb://users/~neon_rider (Personal Hacker / Demoscene Homepage)",
   "remote_command": "none"
 }

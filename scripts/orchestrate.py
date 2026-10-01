@@ -910,11 +910,16 @@ def main():
                     unpushed_count = int(rev_res.stdout.strip())
                     if unpushed_count > 0:
                         log(f"Detected {unpushed_count} unpushed commit(s). Pushing to origin/main...")
+                        push_env = os.environ.copy()
+                        push_env["GIT_TERMINAL_PROMPT"] = "0"
+                        push_env["GCM_INTERACTIVE"] = "never"
                         push_res = subprocess.run(
                             ["git", "push", "origin", "main"],
                             cwd=str(REPO_ROOT),
                             capture_output=True,
                             text=True,
+                            timeout=60,
+                            env=push_env,
                         )
                         if push_res.returncode == 0:
                             log("Unpushed commit(s) successfully pushed to origin/main.")
