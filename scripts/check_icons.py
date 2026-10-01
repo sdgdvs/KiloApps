@@ -404,6 +404,34 @@ def generate_distinctive_icon(app_id: str, out_path: Path):
                 img[y][x] = color
                 img[y][x + 1] = color
 
+    elif app_id == "kcontribute":
+        # SETI@home voluntary compute radio dish & broadcast arcs
+        draw_rect(img, 2, 2, 29, 29, (10, 15, 30, 255))
+        draw_frame(img, 2, 2, 29, 29, CYAN, 1)
+        # Deep space stars
+        img[5][6] = WHITE
+        img[8][10] = GOLD
+        img[4][25] = LIGHT_CYAN
+        # Parabolic dish arc
+        draw_circle(img, 14, 18, 9, GREEN, fill=False)
+        draw_rect(img, 3, 3, 28, 17, (10, 15, 30, 255))
+        draw_line(img, 5, 18, 23, 18, GREEN)
+        # Tripod mount
+        draw_line(img, 14, 19, 10, 26, GRAY)
+        draw_line(img, 14, 19, 18, 26, GRAY)
+        draw_line(img, 8, 26, 20, 26, DARK_GRAY)
+        # Feed horn arm
+        draw_line(img, 14, 18, 20, 11, GOLD)
+        draw_circle(img, 20, 11, 2, LIGHT_GOLD, fill=True)
+        # Concentric signal radio arcs
+        draw_circle(img, 20, 11, 5, CYAN, fill=False)
+        draw_circle(img, 20, 11, 8, LIGHT_CYAN, fill=False)
+        # Clean up any arc bleed below dish
+        draw_rect(img, 3, 19, 28, 28, (10, 15, 30, 255))
+        draw_line(img, 14, 19, 10, 26, GRAY)
+        draw_line(img, 14, 19, 18, 26, GRAY)
+        draw_line(img, 8, 26, 20, 26, DARK_GRAY)
+
     else:
         # Fallback procedural icon: colored tile with border and app initials
         draw_rect(img, 3, 3, 28, 28, (30, 41, 59, 255))

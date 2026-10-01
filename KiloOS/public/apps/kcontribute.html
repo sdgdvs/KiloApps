@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KContribute - Voluntary Fleet Distributed Compute v1.0.0</title>
+<style>
+  :root {
+    --bg-deep: #060911;
+    --bg-panel: #0d1322;
+    --bg-card: #131b2e;
+    --bg-card-hover: #1a253e;
+    --border: #1e293b;
+    --border-bright: #38bdf8;
+    --border-dim: #1e3a5f;
+    --cyan: #38bdf8;
+    --cyan-dim: #0284c7;
+    --cyan-glow: rgba(56, 189, 248, 0.25);
+    --emerald: #10b981;
+    --emerald-dim: #059669;
+    --emerald-glow: rgba(16, 185, 129, 0.25);
+    --gold: #f59e0b;
+    --gold-glow: rgba(245, 158, 11, 0.25);
+    --rose: #f43f5e;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --text-dim: #64748b;
+    --font-mono: 'Consolas', 'Fira Code', 'Courier New', monospace;
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    background-color: var(--bg-deep);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    line-height: 1.5;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* CRT Scanline effect */
+  .scanlines {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 1000;
+    background: linear-gradient(rgba(18, 24, 38, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+    background-size: 100% 4px;
+    opacity: 0.6;
+  }
+
+  /* Main Layout */
+  .app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* Header Bar */
+  .top-header {
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .dish-icon-badge {
+    width: 32px;
+    height: 32px;
+    background: #0b1526;
+    border: 1px solid var(--border-bright);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    box-shadow: 0 0 10px var(--cyan-glow);
+  }
+
+  .brand-title {
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .brand-ver {
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: var(--cyan);
+    background: rgba(56, 189, 248, 0.15);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--cyan-dim);
+  }
+
+  .brand-sub {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-decoration: none;
+    font-family: var(--font-sans);
+  }
+
+  .btn:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-bright);
+    color: #fff;
+  }
+
+  .btn-primary {
+    background: linear-gradient(180deg, #0284c7 0%, #0369a1 100%);
+    border-color: var(--cyan);
+    color: #fff;
+    box-shadow: 0 2px 8px var(--cyan-glow);
+  }
+
+  .btn-primary:hover {
+    background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+    border-color: #7dd3fc;
+  }
+
+  .btn-emerald {
+    background: linear-gradient(180deg, #059669 0%, #047857 100%);
+    border-color: var(--emerald);
+    color: #fff;
+    box-shadow: 0 2px 8px var(--emerald-glow);
+  }
+
+  .btn-emerald:hover {
+    background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+    border-color: #6ee7b7;
+  }
+
+  .btn-sm {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+
+  /* Main Body Split */
+  .main-content {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    overflow: hidden;
+  }
+
+  @media (max-width: 900px) {
+    .main-content {
+      grid-template-columns: 1fr;
+      overflow-y: auto;
+    }
+  }
+
+  /* Left Column: Visualizers & Pipeline */
+  .left-pane {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 14px;
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+  }
+
+  /* Canvas Visualizer Card */
+  .visualizer-card {
+    background: #03060c;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.8);
+  }
+
+  .vis-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--cyan);
+    border-bottom: 1px dashed var(--border-dim);
+    padding-bottom: 6px;
+  }
+
+  .vis-canvas-container {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 12px;
+    align-items: center;
+  }
+
+  @media (max-width: 650px) {
+    .vis-canvas-container {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  canvas {
+    background: #020408;
+    border-radius: 6px;
+    border: 1px solid #132238;
+    display: block;
+  }
+
+  #radarCanvas {
+    width: 260px;
+    height: 180px;
+  }
+
+  #fftCanvas {
+    width: 100%;
+    height: 180px;
+  }
+
+  /* Work Unit Pipeline Box */
+  .work-unit-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .wu-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .wu-badge {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: var(--emerald);
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+  }
+
+  .wu-name {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    font-family: var(--font-mono);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .progress-bar-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .progress-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+  }
+
+  .progress-track {
+    width: 100%;
+    height: 14px;
+    background: #070d18;
+    border-radius: 7px;
+    border: 1px solid var(--border-dim);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #0284c7 0%, #10b981 100%);
+    box-shadow: 0 0 10px var(--emerald-glow);
+    transition: width 0.3s ease;
+  }
+
+  .terminal-stream {
+    background: #020409;
+    border: 1px solid #152238;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: #a7f3d0;
+    height: 110px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    line-height: 1.4;
+  }
+
+  .terminal-line {
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  .terminal-line.cyan { color: var(--cyan); }
+  .terminal-line.gold { color: var(--gold); }
+  .terminal-line.dim { color: var(--text-dim); }
+
+  /* Right Pane: Telemetry & Controls */
+  .right-pane {
+    background: var(--bg-panel);
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 16px;
+    overflow-y: auto;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--cyan);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+  }
+
+  /* Telemetry Stat Cards */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .stat-card.full-width {
+    grid-column: span 2;
+  }
+
+  .stat-val {
+    font-size: 18px;
+    font-weight: 800;
+    color: #fff;
+    font-family: var(--font-mono);
+  }
+
+  .stat-lbl {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+
+  /* Cadence Throttling */
+  .cadence-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .cadence-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+  }
+
+  .cadence-btn {
+    background: #0b1322;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+  }
+
+  .cadence-btn.active {
+    background: rgba(56, 189, 248, 0.15);
+    border-color: var(--cyan);
+    color: #fff;
+    box-shadow: 0 0 8px var(--cyan-glow);
+  }
+
+  /* Native Daemon Hero Card */
+  .daemon-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.9) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  }
+
+  .daemon-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .daemon-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .mini-tag {
+    font-size: 9.5px;
+    font-family: var(--font-mono);
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--cyan);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+  }
+
+  .daemon-desc {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  .daemon-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  /* Bottom Controls */
+  .controls-row {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: auto;
+  }
+
+  /* Settings Modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(3, 6, 12, 0.85);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+
+  .modal-overlay.open {
+    display: flex;
+  }
+
+  .modal-box {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-bright);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 20px var(--cyan-glow);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 520px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+  }
+
+  .modal-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .modal-close:hover { color: #fff; }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-main);
+  }
+
+  .form-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .form-input {
+    background: #080d19;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: #fff;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    outline: none;
+  }
+
+  .form-input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 8px var(--cyan-glow);
+  }
+</style>
+</head>
+<body>
+<div class="scanlines"></div>
+
+<div class="app-container">
+  <!-- Top Navigation Header -->
+  <header class="top-header">
+    <div class="brand">
+      <div class="dish-icon-badge">📡</div>
+      <div>
+        <div class="brand-title">
+          KContribute
+          <span class="brand-ver">v1.0.0</span>
+          <span class="brand-ver" style="color:var(--emerald); border-color:var(--emerald-dim); background:rgba(16,185,129,0.15)">SETI@HOME PROTOCOL</span>
+        </div>
+        <div class="brand-sub">Autonomous Voluntary Fleet Compute & Zero-Distraction Contributor Engine</div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <a href="/exe/KContribute.exe" class="btn btn-emerald btn-sm" download="KContribute.exe" title="Download portable 159 KB Windows daemon">
+        ⬇️ Download KContribute.exe (159 KB)
+      </a>
+      <button id="btnAudioToggle" class="btn btn-sm" title="Toggle 8-bit synthetic telemetry audio">
+        🔊 SFX: <span id="sfxState">ON</span>
+      </button>
+      <button id="btnSettingsOpen" class="btn btn-sm" title="Configure volunteer credentials and cadence">
+        ⚙️ Settings
+      </button>
+      <button id="btnHelpOpen" class="btn btn-sm" title="Help (F1)">
+        ❓ Guide
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Body Content -->
+  <main class="main-content">
+    <!-- Left Pane: SETI Visualizers & Work Unit Progress -->
+    <div class="left-pane">
+      <div class="visualizer-card">
+        <div class="vis-header">
+          <span>RADAR SWEEP // 10.19.99.0/24 SUBNET</span>
+          <span>48-BAND FFT SPECTRAL AUDIO ANALYZER</span>
+          <span id="visStatus">SCANNING COSMOS</span>
+        </div>
+        <div class="vis-canvas-container">
+          <canvas id="radarCanvas" width="260" height="180"></canvas>
+          <canvas id="fftCanvas" width="460" height="180"></canvas>
+        </div>
+      </div>
+
+      <div class="work-unit-card">
+        <div class="wu-header">
+          <div>
+            <span class="section-label">Active Distributed Work Unit</span>
+            <div class="wu-name" id="wuName">WU-99-4081 [KCHESS.EXE // RETRO RFMS PROTOCOL]</div>
+          </div>
+          <span class="wu-badge" id="wuStateBadge">EVOLVING (PASS 5 QA)</span>
+        </div>
+
+        <div class="progress-bar-wrap">
+          <div class="progress-labels">
+            <span id="wuStageLabel">Stage: Generating AST Diff & Compilation Gate</span>
+            <span id="wuPctLabel">42% (ETA: 00:24)</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="wuProgressFill" style="width: 42%;"></div>
+          </div>
+        </div>
+
+        <div class="terminal-stream" id="terminalStream">
+          <div class="terminal-line cyan">[SYSTEM] KContribute v1.0.0 voluntary compute client initialized.</div>
+          <div class="terminal-line">[NETWORK] Synchronized with fleet manifest at kiloapps.web.app/api/manifest.</div>
+          <div class="terminal-line gold">[WORKUNIT] Acquired WU-99-4081: Target KChess (Multiplayer RFMS P2P).</div>
+          <div class="terminal-line dim">[AST] Verifying file size constraint (<999 KB)... PASSED (168,240 bytes).</div>
+          <div class="terminal-line">[COMPILER] Verification build clean with MSVC / Clang frontend.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Pane: Donor Telemetry & Controls -->
+    <div class="right-pane">
+      <!-- Volunteer Identity -->
+      <div>
+        <span class="section-label">Donor Telemetry</span>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-val" id="statTurns">14</div>
+            <div class="stat-lbl">Turns Donated</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="statRank">#38</div>
+            <div class="stat-lbl">Fleet Rank</div>
+          </div>
+          <div class="stat-card full-width">
+            <div class="stat-val" id="statHandle" style="font-size:14px; color:var(--cyan)">Anonymous_Volunteer_99</div>
+            <div class="stat-lbl">Volunteer Handle</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="statQuota">14 / 1500</div>
+            <div class="stat-lbl">Daily Quota Used</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-val" id="statNextIn">24m 12s</div>
+            <div class="stat-lbl">Next Turn In</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cadence Throttling -->
+      <div class="cadence-box">
+        <span class="section-label">Contribution Cadence</span>
+        <div class="cadence-buttons">
+          <button class="cadence-btn active" id="cadenceBalanced" onclick="setCadence('balanced')">
+            ⚖️ Balanced<br><span style="font-size:9.5px; opacity:0.7">1 turn / hr</span>
+          </button>
+          <button class="cadence-btn" id="cadenceQuiet" onclick="setCadence('quiet')">
+            🌙 Quiet<br><span style="font-size:9.5px; opacity:0.7">1 turn / 4 hr</span>
+          </button>
+          <button class="cadence-btn" id="cadenceTurbo" onclick="setCadence('turbo')">
+            ⚡ Turbo<br><span style="font-size:9.5px; opacity:0.7">3 turns / hr</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Native Win32 Client Hero -->
+      <div class="daemon-card">
+        <div class="daemon-title">
+          <span>🖥️ Zero-Distraction Native Daemon</span>
+        </div>
+        <div class="daemon-badges">
+          <span class="mini-tag">WIN32 STANDALONE</span>
+          <span class="mini-tag">159 KB</span>
+          <span class="mini-tag">SYSTEM TRAY</span>
+          <span class="mini-tag">AUTOSTART</span>
+        </div>
+        <div class="daemon-desc">
+          Run <code>KContribute.exe</code> once, sign into Google with 1 click, and you're done! It lives in your Windows System Tray, never opens a normal window, and donates turns quietly without distraction.
+        </div>
+        <a href="/exe/KContribute.exe" class="btn btn-emerald daemon-btn" download="KContribute.exe">
+          ⬇️ Download KContribute.exe (159 KB)
+        </a>
+      </div>
+
+      <!-- Bottom Interactive Controls -->
+      <div class="controls-row">
+        <button class="btn btn-primary" id="btnDonateNow" onclick="donateTurnNow()">
+          ⚡ Donate Turn Now (Space)
+        </button>
+        <button class="btn" id="btnPauseResume" onclick="togglePause()">
+          ⏸️ Pause Engine
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Settings Modal -->
+<div class="modal-overlay" id="settingsModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">⚙️ Contributor Engine Configuration</div>
+      <button class="modal-close" onclick="closeModal('settingsModal')">&times;</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Google Gemini API Key (Free Tier)</label>
+      <div class="form-hint">Used strictly from your local machine to synthesize code evolutions. 100% free with 1,500 daily requests.</div>
+      <input type="password" id="inputApiKey" class="form-input" placeholder="AIzaSy...">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+        <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener" class="btn btn-primary btn-sm">
+          🔑 Sign In with Google & Get Free Gemini Key
+        </a>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Volunteer Handle</label>
+      <input type="text" id="inputHandle" class="form-input" placeholder="CosmicCoder_99" maxlength="32">
+    </div>
+
+    <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+      <button class="btn" onclick="closeModal('settingsModal')">Cancel</button>
+      <button class="btn btn-emerald" onclick="saveSettings()">Save & Activate</button>
+    </div>
+  </div>
+</div>
+
+<!-- Help Modal -->
+<div class="modal-overlay" id="helpModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">❓ SETI@home for KiloApps Guide</div>
+      <button class="modal-close" onclick="closeModal('helpModal')">&times;</button>
+    </div>
+    <div style="font-size:12.5px; color:var(--text-muted); display:flex; flex-direction:column; gap:10px; line-height:1.6;">
+      <p><strong style="color:#fff">What is KContribute?</strong><br>
+      Inspired by SETI@home, Folding@home, and early distributed volunteer computing projects, KContribute allows anyone to donate free Google Gemini quota to autonomously build, test, and polish apps in the KiloApps ecosystem.</p>
+      
+      <p><strong style="color:#fff">Two Ways to Contribute:</strong><br>
+      1. <span style="color:var(--emerald); font-weight:700">Native Windows Daemon (Recommended):</span> Download <code>KContribute.exe</code> (159 KB). It sits in your Windows System Tray, auto-starts on login, and never distracts you.<br>
+      2. <span style="color:var(--cyan); font-weight:700">Web Dashboard:</span> Keep this page open in your browser to run simulated or live work units right inside KiloOS.</p>
+
+      <p><strong style="color:#fff">Keyboard Shortcuts:</strong><br>
+      • <code>Space</code>: Donate Turn Now<br>
+      • <code>P</code>: Pause / Resume Engine<br>
+      • <code>S</code>: Toggle Sound SFX<br>
+      • <code>F1</code>: Open this Guide<br>
+      • <code>Esc</code>: Close Dialogs</p>
+    </div>
+    <div style="display:flex; justify-content:flex-end; margin-top:8px;">
+      <button class="btn btn-primary" onclick="closeModal('helpModal')">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// --- State & Config ---
+const CONFIG_KEY = 'kcontribute_config';
+let g_config = {
+  apiKey: '',
+  handle: 'Volunteer_' + Math.floor(1000 + Math.random() * 9000),
+  cadence: 'balanced', // balanced, quiet, turbo
+  turns: 0,
+  paused: false,
+  sound: true
+};
+
+try {
+  const saved = localStorage.getItem(CONFIG_KEY);
+  if (saved) {
+    g_config = { ...g_config, ...JSON.parse(saved) };
+  }
+} catch (e) {}
+
+// Work Unit App Pool
+const WORK_UNIT_POOL = [
+  { name: "KChess", detail: "Retro Multiplayer RFMS P2P Protocol", phase: "Pass 5 QA & Network Sync" },
+  { name: "KGo", detail: "RFMS Matchmaking & Solo Bot Logic", phase: "P2P Pacing & Timer Benchmarks" },
+  { name: "KMandel", detail: "Memory Bound Complex Fractal Render", phase: "HiDPI Canvas Buffer Audit" },
+  { name: "KPad", detail: "Encrypted VFS Vault & Auto-Wrap", phase: "Pass 4 Deep Feature Expansion" },
+  { name: "KSynth", detail: "Yamaha YM2612 2-Operator FM Patch Engine", phase: "Polyphonic Synth Verification" },
+  { name: "KStarDredge", detail: "Ore Node Shimmer & Solar Drift", phase: "Visual Polish & Glint Ban Pass" },
+  { name: "KMatrix", detail: "Century Milestone Parity Climax", phase: "Terminal Cryptographic Gate" },
+  { name: "KNet", detail: "10.19.99.4 Classified Subnet Diagnostics", phase: "Route Matrix Verification" },
+  { name: "KBookmark", detail: "Responsive Split Layout & URL History", phase: "Pass 3 Usability & Layout Pass" }
+];
+
+let g_currentWUIndex = 0;
+let g_progress = 30.0;
+let g_isProcessing = false;
+let g_countdownSeconds = 3600;
+
+// Web Audio API Context
+let audioCtx = null;
+function playSound(type) {
+  if (!g_config.sound) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    if (type === 'radar') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.exponentialRampToValueAtTime(220, now + 0.12);
+      gain.gain.setValueAtTime(0.04, now);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.12);
+      osc.start(now);
+      osc.stop(now + 0.12);
+    } else if (type === 'turn') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(440, now);
+      osc.frequency.setValueAtTime(659.25, now + 0.08);
+      osc.frequency.setValueAtTime(880, now + 0.16);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.28);
+      osc.start(now);
+      osc.stop(now + 0.28);
+    } else if (type === 'click') {
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(1200, now);
+      gain.gain.setValueAtTime(0.03, now);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.03);
+      osc.start(now);
+      osc.stop(now + 0.03);
+    }
+  } catch (e) {}
+}
+
+// --- Canvas Radar Sweep ---
+const radarCanvas = document.getElementById('radarCanvas');
+const radarCtx = radarCanvas.getContext('2d');
+let radarAngle = 0;
+let radarBlips = [
+  { dist: 45, angle: 1.2, alpha: 0.9 },
+  { dist: 70, angle: 3.8, alpha: 0.6 },
+  { dist: 30, angle: 5.2, alpha: 0.8 }
+];
+
+function drawRadar() {
+  const w = radarCanvas.width;
+  const h = radarCanvas.height;
+  const cx = w / 2;
+  const cy = h / 2;
+  const maxR = Math.min(cx, cy) - 10;
+
+  radarCtx.fillStyle = '#020408';
+  radarCtx.fillRect(0, 0, w, h);
+
+  // Concentric Range Rings
+  radarCtx.strokeStyle = 'rgba(6, 182, 212, 0.25)';
+  radarCtx.lineWidth = 1;
+  for (let r = maxR / 3; r <= maxR; r += maxR / 3) {
+    radarCtx.beginPath();
+    radarCtx.arc(cx, cy, r, 0, Math.PI * 2);
+    radarCtx.stroke();
+  }
+
+  // Crosshairs
+  radarCtx.beginPath();
+  radarCtx.moveTo(cx - maxR, cy);
+  radarCtx.lineTo(cx + maxR, cy);
+  radarCtx.moveTo(cx, cy - maxR);
+  radarCtx.lineTo(cx, cy + maxR);
+  radarCtx.stroke();
+
+  // Radar Rotating Sweep Cone
+  const sweepGradient = radarCtx.createRadialGradient(cx, cy, 0, cx, cy, maxR);
+  sweepGradient.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
+  sweepGradient.addColorStop(1, 'rgba(16, 185, 129, 0.05)');
+
+  radarCtx.save();
+  radarCtx.beginPath();
+  radarCtx.moveTo(cx, cy);
+  radarCtx.arc(cx, cy, maxR, radarAngle - 0.4, radarAngle);
+  radarCtx.closePath();
+  radarCtx.fillStyle = sweepGradient;
+  radarCtx.fill();
+
+  // Leading Sweep Line
+  radarCtx.beginPath();
+  radarCtx.moveTo(cx, cy);
+  radarCtx.lineTo(cx + maxR * Math.cos(radarAngle), cy + maxR * Math.sin(radarAngle));
+  radarCtx.strokeStyle = '#34d399';
+  radarCtx.lineWidth = 1.5;
+  radarCtx.stroke();
+  radarCtx.restore();
+
+  // Draw Signal Blips
+  radarBlips.forEach(blip => {
+    const bx = cx + blip.dist * Math.cos(blip.angle);
+    const by = cy + blip.dist * Math.sin(blip.angle);
+    radarCtx.beginPath();
+    radarCtx.arc(bx, by, 3, 0, Math.PI * 2);
+    radarCtx.fillStyle = `rgba(56, 189, 248, ${blip.alpha})`;
+    radarCtx.shadowColor = '#38bdf8';
+    radarCtx.shadowBlur = 8;
+    radarCtx.fill();
+    radarCtx.shadowBlur = 0;
+  });
+
+  radarAngle += 0.04;
+  if (radarAngle > Math.PI * 2) {
+    radarAngle -= Math.PI * 2;
+    playSound('radar');
+  }
+}
+
+// --- Canvas FFT Spectral Analyzer ---
+const fftCanvas = document.getElementById('fftCanvas');
+const fftCtx = fftCanvas.getContext('2d');
+const FFT_BARS = 48;
+let fftHeights = new Array(FFT_BARS).fill(10);
+let fftTargetHeights = new Array(FFT_BARS).fill(10);
+
+function updateFFT() {
+  const w = fftCanvas.width;
+  const h = fftCanvas.height;
+  fftCtx.fillStyle = '#020408';
+  fftCtx.fillRect(0, 0, w, h);
+
+  const barW = (w - (FFT_BARS - 1) * 3) / FFT_BARS;
+
+  for (let i = 0; i < FFT_BARS; i++) {
+    if (Math.random() < 0.15) {
+      fftTargetHeights[i] = 10 + Math.random() * (h - 30);
+    }
+    fftHeights[i] += (fftTargetHeights[i] - fftHeights[i]) * 0.2;
+
+    const barH = fftHeights[i];
+    const x = i * (barW + 3);
+    const y = h - barH;
+
+    // Gradient bar from emerald to cyan to gold
+    const grad = fftCtx.createLinearGradient(0, h, 0, y);
+    grad.addColorStop(0, '#059669');
+    grad.addColorStop(0.6, '#0284c7');
+    grad.addColorStop(1, '#f59e0b');
+
+    fftCtx.fillStyle = grad;
+    fftCtx.fillRect(x, y, barW, barH);
+
+    // Peak dot
+    fftCtx.fillStyle = '#f8fafc';
+    fftCtx.fillRect(x, Math.max(2, y - 4), barW, 2);
+  }
+}
+
+// Visualizer Animation Loop
+function animate() {
+  drawRadar();
+  updateFFT();
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+
+// --- Work Unit Simulation & Telemetry Updates ---
+function appendTerminalLine(text, type = '') {
+  const stream = document.getElementById('terminalStream');
+  const div = document.createElement('div');
+  div.className = 'terminal-line ' + type;
+  div.textContent = text;
+  stream.appendChild(div);
+  stream.scrollTop = stream.scrollHeight;
+}
+
+function updateUI() {
+  document.getElementById('statTurns').textContent = g_config.turns;
+  document.getElementById('statHandle').textContent = g_config.handle;
+  document.getElementById('statQuota').textContent = `${g_config.turns} / 1500`;
+  document.getElementById('statRank').textContent = '#' + Math.max(1, 48 - Math.floor(g_config.turns / 3));
+
+  // Cadence buttons
+  ['balanced', 'quiet', 'turbo'].forEach(mode => {
+    const btn = document.getElementById('cadence' + mode.charAt(0).toUpperCase() + mode.slice(1));
+    if (btn) btn.classList.toggle('active', g_config.cadence === mode);
+  });
+
+  document.getElementById('sfxState').textContent = g_config.sound ? 'ON' : 'OFF';
+
+  const pauseBtn = document.getElementById('btnPauseResume');
+  pauseBtn.textContent = g_config.paused ? '▶️ Resume Engine' : '⏸️ Pause Engine';
+}
+
+function setCadence(cadence) {
+  g_config.cadence = cadence;
+  saveConfig();
+  updateUI();
+  playSound('click');
+  appendTerminalLine(`[CADENCE] Operating throttle set to: ${cadence.toUpperCase()}`, 'cyan');
+}
+
+function togglePause() {
+  g_config.paused = !g_config.paused;
+  saveConfig();
+  updateUI();
+  playSound('click');
+  appendTerminalLine(g_config.paused ? '[ENGINE] Distributed compute PAUSED by volunteer.' : '[ENGINE] Distributed compute RESUMED.', 'gold');
+}
+
+function donateTurnNow() {
+  if (g_isProcessing) return;
+  playSound('turn');
+  g_isProcessing = true;
+  g_progress = 0;
+
+  const currentWU = WORK_UNIT_POOL[g_currentWUIndex % WORK_UNIT_POOL.length];
+  appendTerminalLine(`[DONATE] Volunteer initiated immediate work unit cycle...`, 'gold');
+  appendTerminalLine(`[ACQUIRE] Synthesizing AST diff for: ${currentWU.name} (${currentWU.detail})...`, 'cyan');
+
+  document.getElementById('wuStateBadge').textContent = 'COMPILING';
+  document.getElementById('wuStateBadge').style.borderColor = 'var(--gold)';
+  document.getElementById('wuStateBadge').style.color = 'var(--gold)';
+
+  const interval = setInterval(() => {
+    g_progress += 8 + Math.random() * 12;
+    if (g_progress >= 100) {
+      g_progress = 100;
+      clearInterval(interval);
+      completeTurn(currentWU);
+    }
+    document.getElementById('wuProgressFill').style.width = g_progress + '%';
+    document.getElementById('wuPctLabel').textContent = Math.round(g_progress) + '%';
+  }, 120);
+}
+
+function completeTurn(wu) {
+  g_config.turns++;
+  saveConfig();
+  g_isProcessing = false;
+  g_currentWUIndex = (g_currentWUIndex + 1) % WORK_UNIT_POOL.length;
+
+  playSound('turn');
+  appendTerminalLine(`[AST-GATE] ${wu.name} verification tests passed 100%. File size clean (<999 KB).`, 'emerald');
+  appendTerminalLine(`[DISPATCH] Turn successfully contributed! Fleet manifest updated.`, 'cyan');
+
+  // Next unit setup
+  const nextWU = WORK_UNIT_POOL[g_currentWUIndex];
+  document.getElementById('wuName').textContent = `WU-99-${4080 + g_config.turns} [${nextWU.name.toUpperCase()}.EXE // ${nextWU.detail.toUpperCase()}]`;
+  document.getElementById('wuStageLabel').textContent = `Stage: ${nextWU.phase}`;
+  document.getElementById('wuStateBadge').textContent = 'READY (IDLE)';
+  document.getElementById('wuStateBadge').style.borderColor = 'var(--emerald)';
+  document.getElementById('wuStateBadge').style.color = 'var(--emerald)';
+  document.getElementById('wuProgressFill').style.width = '0%';
+  document.getElementById('wuPctLabel').textContent = '0%';
+
+  updateUI();
+}
+
+function saveConfig() {
+  try {
+    localStorage.setItem(CONFIG_KEY, JSON.stringify(g_config));
+  } catch (e) {}
+}
+
+// Countdown timer tick (every second)
+setInterval(() => {
+  if (g_config.paused) return;
+
+  if (g_countdownSeconds > 0) {
+    g_countdownSeconds--;
+    const mins = Math.floor(g_countdownSeconds / 60);
+    const secs = g_countdownSeconds % 60;
+    document.getElementById('statNextIn').textContent = `${mins}m ${secs < 10 ? '0' : ''}${secs}s`;
+  } else {
+    // Reset countdown based on cadence
+    if (g_config.cadence === 'turbo') g_countdownSeconds = 1200; // 20m
+    else if (g_config.cadence === 'quiet') g_countdownSeconds = 14400; // 4h
+    else g_countdownSeconds = 3600; // 1h
+
+    donateTurnNow();
+  }
+}, 1000);
+
+// --- Modal Handlers ---
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  if (id === 'settingsModal') {
+    document.getElementById('inputApiKey').value = g_config.apiKey || '';
+    document.getElementById('inputHandle').value = g_config.handle || '';
+  }
+  playSound('click');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+  playSound('click');
+}
+
+function saveSettings() {
+  const key = document.getElementById('inputApiKey').value.trim();
+  const handle = document.getElementById('inputHandle').value.trim();
+  if (key) g_config.apiKey = key;
+  if (handle) g_config.handle = handle;
+  saveConfig();
+  updateUI();
+  closeModal('settingsModal');
+  appendTerminalLine(`[CONFIG] Contributor credentials updated. Handle: ${g_config.handle}`, 'cyan');
+}
+
+// Audio Toggle Button
+document.getElementById('btnAudioToggle').addEventListener('click', () => {
+  g_config.sound = !g_config.sound;
+  saveConfig();
+  updateUI();
+  if (g_config.sound) playSound('turn');
+});
+
+document.getElementById('btnSettingsOpen').addEventListener('click', () => openModal('settingsModal'));
+document.getElementById('btnHelpOpen').addEventListener('click', () => openModal('helpModal'));
+
+// Keyboard Shortcuts
+window.addEventListener('keydown', (e) => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === ' ') {
+    e.preventDefault();
+    donateTurnNow();
+  } else if (e.key.toLowerCase() === 'p') {
+    togglePause();
+  } else if (e.key.toLowerCase() === 's') {
+    g_config.sound = !g_config.sound;
+    saveConfig();
+    updateUI();
+  } else if (e.key === 'F1') {
+    e.preventDefault();
+    openModal('helpModal');
+  } else if (e.key === 'Escape') {
+    closeModal('settingsModal');
+    closeModal('helpModal');
+  }
+});
+
+// Initialize on Load
+updateUI();
+</script>
+</body>
+</html>

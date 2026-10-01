@@ -229,6 +229,95 @@
     color: #000;
   }
 
+  /* 1-Click Client Hero Card */
+  .client-hero-card {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(15, 23, 42, 0.95) 100%);
+    border: 2px solid var(--emerald);
+    border-radius: 16px;
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    box-shadow: 0 10px 30px rgba(16, 185, 129, 0.15);
+  }
+
+  .client-hero-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .client-hero-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .client-flow-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin: 8px 0;
+  }
+
+  .client-flow-step {
+    background: rgba(9, 13, 22, 0.7);
+    border: 1px solid rgba(56, 189, 248, 0.2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .client-flow-num {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--emerald);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .client-flow-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .client-flow-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  .btn-download-hero {
+    background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 800;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);
+    transition: all 0.2s;
+    width: fit-content;
+  }
+
+  .btn-download-hero:hover {
+    background: linear-gradient(180deg, #34d399 0%, #10b981 100%);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+    transform: translateY(-1px);
+    color: #000;
+  }
+
   /* Interactive Calculator */
   .calculator-card {
     background: linear-gradient(135deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%);
@@ -341,8 +430,54 @@
     </p>
   </div>
 
-  <!-- Step-by-Step Guide -->
-  <h2 class="section-title">🚀 4 Steps to Donate a Turn</h2>
+  <!-- Option A: 1-Click Zero-Distraction Client (Recommended) -->
+  <div class="client-hero-card">
+    <div class="client-hero-header">
+      <div class="client-hero-title">
+        <span>⚡ Option A: The 1-Click Zero-Distraction Client (Recommended)</span>
+      </div>
+      <div class="badges">
+        <span class="badge badge-free">SETI@home Style</span>
+        <span class="badge badge-tech">Windows Win32 • 159 KB</span>
+      </div>
+    </div>
+    
+    <p style="font-size:14.5px; color:#cbd5e1; line-height:1.6;">
+      Just like <strong>SETI@home</strong>, <strong>Folding@home</strong>, or background mining clients, contributing to KiloApps shouldn't require complex terminal git setups. 
+      Download <code>KContribute.exe</code>, sign into Google once, and you're done. It auto-starts with Windows and runs silently in the system tray with zero nag screens or popups.
+    </p>
+
+    <div class="client-flow-steps">
+      <div class="client-flow-step">
+        <span class="client-flow-num">Step 1</span>
+        <div class="client-flow-title">1. Download Client</div>
+        <div class="client-flow-desc">Portable 159 KB standalone executable. Zero installer, zero bloat, zero dependencies.</div>
+      </div>
+      <div class="client-flow-step">
+        <span class="client-flow-num">Step 2</span>
+        <div class="client-flow-title">2. Sign In with Google</div>
+        <div class="client-flow-desc">Click the 1-Click button to get your free Gemini API key (1,500 daily requests, no credit card).</div>
+      </div>
+      <div class="client-flow-step">
+        <span class="client-flow-num">Step 3</span>
+        <div class="client-flow-title">3. Done! Zero Distraction</div>
+        <div class="client-flow-desc">KContribute hides directly in your System Tray. It never opens a window or distracts you again unless summoned.</div>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-top:6px;">
+      <a href="/exe/KContribute.exe" class="btn-download-hero" download="KContribute.exe">
+        ⬇️ Download KContribute.exe (159 KB)
+      </a>
+      <a href="/apps/kcontribute.html" class="btn-link" style="padding:10px 18px; font-size:13px;">
+        📡 Open Web Compute Console ↗
+      </a>
+      <span style="font-size:12px; color:var(--text-muted);">Supports Windows 7 / 8 / 10 / 11</span>
+    </div>
+  </div>
+
+  <!-- Option B: Developer GitHub Fork & Terminal Guide -->
+  <h2 class="section-title" style="margin-top:10px;">🛠️ Option B: Developer Manual Git Fork (No Native Client)</h2>
   
   <div class="steps-list">
     <!-- Step 1 -->
