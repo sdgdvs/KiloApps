@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-01T12:20:00Z — kilo-qa: KCosmic (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 547.4 KB web / 254.5 KB native < 999 KB ceiling).
+  - State Persistence: Audited & fixed F5/F9 state serialization; ensured planet telemetry flushes on save and splash dismisses on restore.
+  - Interactive Overlays: Implemented click handlers for native splash buttons, interactive tutorial steps, codex tabs, and F5/F9 nav buttons.
+  - Keyboard & Modal Isolation: Added Enter/Space/Arrow navigation for onboarding tutorial, prevented background key bleed during modals.
+  - Toast Occlusion Remediation: Relocated toast notifications to bottom-center safe zone, clearing all sidebar inputs and action buttons.
+  - Onboarding Integrity: Fixed tutorialSeen flags to prevent onboarding interruption when resuming from quicksave or JSON payloads.
+  - Verification: MSVC clean (`KCosmic.exe` 254.5 KB); Vite clean in 373ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-01T11:15:00Z — kilo-usability: KRSS (Draggable Splitters, J/K Article Navigation, Category Badges & Shortcuts)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 153.7 KB web / 21.5 KB native < 999 KB ceiling).
   - Layout & Splitters: Added interactive draggable splitters between feeds/articles/reader panes with double-click reset and saved widths.

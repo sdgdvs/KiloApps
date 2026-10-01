@@ -264,12 +264,13 @@
         }
         #toast-bar {
             position: fixed;
-            bottom: 38px;
-            right: 20px;
+            bottom: 36px;
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
             background: rgba(18, 16, 12, 0.96);
             border: 1px solid #d4af37;
             color: #ffe899;
-            padding: 8px 16px;
+            padding: 8px 20px;
             border-radius: 4px;
             font-size: 12px;
             letter-spacing: 0.5px;
@@ -281,11 +282,12 @@
             opacity: 0;
             white-space: pre-line;
             text-align: center;
-            max-width: 320px;
+            max-width: 440px;
         }
         #toast-bar.visible {
             opacity: 1;
             pointer-events: auto;
+            transform: translateX(-50%) translateY(0);
         }
         .clue-item-clickable {
             cursor: pointer;
@@ -314,6 +316,9 @@
             <button id="music-toggle-btn" onclick="toggleMusic()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Toggle procedural 16-bit noir jazz audio">♫ Music: ON</button>
             <button onclick="quickSave()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Quicksave game state [F5]">Save [F5]</button>
             <button onclick="quickLoad()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Quickload game state [F9]">Load [F9]</button>
+            <button onclick="exportCase()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Export case file to JSON [Ctrl+S]">Export [.json]</button>
+            <button onclick="document.getElementById('case-import-input').click()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Import case file from JSON [Ctrl+O]">Import [.json]</button>
+            <input type="file" id="case-import-input" accept=".json" style="display:none;" onchange="importCaseFile(event)">
             <button onclick="toggleHelp()" class="btn-gold" style="font-size:11px; padding:5px 9px;" title="Detective manual and hotkeys [F1 / H]">Help [F1/H]</button>
         </div>
     </div>
@@ -334,6 +339,8 @@
                 <div><b style="color:#d4af37;">[F1] / [H]</b>: Help / Manual</div>
                 <div><b style="color:#d4af37;">[F5]</b>: Quicksave Case</div>
                 <div><b style="color:#d4af37;">[F9]</b>: Quickload Case</div>
+                <div><b style="color:#d4af37;">[Ctrl+S]</b>: Export Case JSON</div>
+                <div><b style="color:#d4af37;">[Ctrl+O]</b>: Import Case JSON</div>
                 <div><b style="color:#d4af37;">[S]</b>: Search for Clues</div>
                 <div><b style="color:#d4af37;">[L]</b>: Forensic Lab</div>
                 <div><b style="color:#d4af37;">[I]</b>: Interrogate Suspect</div>
@@ -390,13 +397,14 @@
                 <label for="difficulty" style="color: #d4af37; margin-right: 8px;">Case Difficulty:</label>
                 <select id="difficulty" style="background:#18181c; color:#dfd8c8; border:1px solid #5a4828; padding:6px 10px; font-family:inherit; border-radius:3px;">
                     <option value="Easy">Easy (3 suspects, 16h)</option>
-                    <option value="Medium">Medium (4 suspects, 12h)</option>
-                    <option value="Hard">Hard (5 suspects, 8h)</option>
+                    <option value="Medium">Medium (4 suspects, 14h)</option>
+                    <option value="Hard">Hard (5 suspects, 12h)</option>
                 </select>
             </div>
             <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
                 <button onclick="startGame()" class="btn-gold" style="font-size: 15px; padding: 10px 24px; font-weight: bold;">Begin Investigation</button>
                 <button id="resume-btn" onclick="quickLoad()" class="btn-gold hidden" style="font-size: 15px; padding: 10px 24px; font-weight: bold;" title="Resume saved case [F9]">Resume Saved Case [F9]</button>
+                <button onclick="document.getElementById('case-import-input').click()" class="btn-gold" style="font-size: 15px; padding: 10px 20px; font-weight: bold;" title="Import case file from JSON [Ctrl+O]">Import Case File</button>
             </div>
             <div style="margin-top: 12px; font-size: 12px; color: #9c9586;">
                 Press <b style="color:#d4af37;">[H]</b> or <b style="color:#d4af37;">[F1]</b> anytime for Detective Manual & Controls
@@ -496,7 +504,7 @@
     </div>
     
     <div id="hotkey-footer" style="padding: 6px 16px; background: #0c0b0f; border-top: 1px solid #3a3222; font-size: 11px; color: #8e8574; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; z-index: 5;">
-        <span><b>Hotkeys:</b> <span style="color:#d4af37;">[F1/H]</span> Help · <span style="color:#d4af37;">[F5]</span> Save · <span style="color:#d4af37;">[F9]</span> Load · <span style="color:#d4af37;">[S]</span> Search · <span style="color:#d4af37;">[L]</span> Lab · <span style="color:#d4af37;">[I]</span> Question · <span style="color:#d4af37;">[A]</span> Accuse · <span style="color:#d4af37;">[1-5]</span> Travel</span>
+        <span><b>Hotkeys:</b> <span style="color:#d4af37;">[F1/H]</span> Help · <span style="color:#d4af37;">[F5]</span> Save · <span style="color:#d4af37;">[F9]</span> Load · <span style="color:#d4af37;">[Ctrl+S]</span> Export · <span style="color:#d4af37;">[Ctrl+O]</span> Import · <span style="color:#d4af37;">[S]</span> Search · <span style="color:#d4af37;">[L]</span> Lab · <span style="color:#d4af37;">[I]</span> Question · <span style="color:#d4af37;">[A]</span> Accuse · <span style="color:#d4af37;">[1-5]</span> Travel</span>
         <span style="color:#b0a898;">Inspect verified clues in notebook to view forensic sketches 🔍</span>
     </div>
 
@@ -915,6 +923,11 @@
                 closeDossier();
                 return true;
             }
+            const gameOverArea = document.getElementById('game-over-area');
+            if (gameOverArea && !gameOverArea.classList.contains('hidden')) {
+                returnToTitle();
+                return true;
+            }
             const accArea = document.getElementById('accusation-area');
             if (accArea && !accArea.classList.contains('hidden')) {
                 cancelAccusation();
@@ -944,7 +957,7 @@
             return false;
         }
 
-        // Quicksave / Quickload
+        // Quicksave / Quickload & JSON Case File Management
         function quickSave() {
             try {
                 if (document.getElementById('game-screen').classList.contains('hidden')) {
@@ -959,6 +972,7 @@
                 const isAccusing = !document.getElementById('accusation-area').classList.contains('hidden');
                 state.inAccusation = isAccusing;
                 const saveData = {
+                    app: 'KMystery',
                     version: 1,
                     timestamp: Date.now(),
                     state: JSON.parse(JSON.stringify(state)),
@@ -975,6 +989,53 @@
                 updateStatsUI();
             } catch (err) {
                 showToast("⚠️ Quicksave failed: " + err.message);
+            }
+        }
+
+        function loadCaseData(data) {
+            noirAudio.init();
+            noirAudio.resume();
+            Object.assign(state, data.state);
+            const savedAnalysisState = data.analysisState ? JSON.parse(JSON.stringify(data.analysisState)) : null;
+            const savedAnalyzingIdx = state.analyzingIdx;
+            if (data.difficulty) {
+                const diffSelect = document.getElementById('difficulty');
+                if (diffSelect) diffSelect.value = data.difficulty;
+            }
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('game-over-area').classList.add('hidden');
+            document.getElementById('accusation-area').classList.add('hidden');
+            document.getElementById('time-left').textContent = state.timeLeft;
+            updateLocation();
+            updateNotebook();
+
+            if (state.inAccusation) {
+                startAccusation();
+            } else if (state.inLab) {
+                state.currentInterrogation = null;
+                document.getElementById('action-area').classList.add('hidden');
+                document.getElementById('travel-container').classList.add('hidden');
+                document.getElementById('interrogation-area').classList.add('hidden');
+                document.getElementById('lab-area').classList.remove('hidden');
+                if (savedAnalyzingIdx >= 0 && savedAnalysisState) {
+                    state.analyzingIdx = savedAnalyzingIdx;
+                    analysisState = savedAnalysisState;
+                    document.getElementById('lab-list').innerHTML = '';
+                    document.getElementById('scanner-game').classList.remove('hidden');
+                    updateScannerUI();
+                } else {
+                    renderLabList();
+                }
+            } else if (state.currentInterrogation) {
+                document.getElementById('action-area').classList.add('hidden');
+                document.getElementById('travel-container').classList.add('hidden');
+                document.getElementById('lab-area').classList.add('hidden');
+                renderInterrogationUI(state.currentInterrogation, '"What do you want, Detective?"');
+            } else {
+                closeLab();
+                endInterrogation();
+                cancelAccusation();
             }
         }
 
@@ -996,55 +1057,89 @@
                     showToast("⚠️ Corrupt quicksave data.");
                     return;
                 }
-                noirAudio.init();
-                noirAudio.resume();
-                Object.assign(state, data.state);
-                const savedAnalysisState = data.analysisState ? JSON.parse(JSON.stringify(data.analysisState)) : null;
-                const savedAnalyzingIdx = state.analyzingIdx;
-                if (data.difficulty) {
-                    const diffSelect = document.getElementById('difficulty');
-                    if (diffSelect) diffSelect.value = data.difficulty;
-                }
-                document.getElementById('start-screen').classList.add('hidden');
-                document.getElementById('game-screen').classList.remove('hidden');
-                document.getElementById('game-over-area').classList.add('hidden');
-                document.getElementById('accusation-area').classList.add('hidden');
-                document.getElementById('time-left').textContent = state.timeLeft;
-                updateLocation();
-                updateNotebook();
-
-                if (state.inAccusation) {
-                    startAccusation();
-                } else if (state.inLab) {
-                    state.currentInterrogation = null;
-                    document.getElementById('action-area').classList.add('hidden');
-                    document.getElementById('travel-container').classList.add('hidden');
-                    document.getElementById('interrogation-area').classList.add('hidden');
-                    document.getElementById('lab-area').classList.remove('hidden');
-                    if (savedAnalyzingIdx >= 0 && savedAnalysisState) {
-                        state.analyzingIdx = savedAnalyzingIdx;
-                        analysisState = savedAnalysisState;
-                        document.getElementById('lab-list').innerHTML = '';
-                        document.getElementById('scanner-game').classList.remove('hidden');
-                        updateScannerUI();
-                    } else {
-                        renderLabList();
-                    }
-                } else if (state.currentInterrogation) {
-                    document.getElementById('action-area').classList.add('hidden');
-                    document.getElementById('travel-container').classList.add('hidden');
-                    document.getElementById('lab-area').classList.add('hidden');
-                    renderInterrogationUI(state.currentInterrogation, '"What do you want, Detective?"');
-                } else {
-                    closeLab();
-                    endInterrogation();
-                    cancelAccusation();
-                }
+                loadCaseData(data);
                 showToast("📂 Case File Restored! [F9]");
                 noirAudio.playTypewriter();
             } catch (err) {
                 showToast("⚠️ Quickload failed: " + err.message);
             }
+        }
+
+        function exportCase() {
+            try {
+                let exportData = null;
+                if (!document.getElementById('game-screen').classList.contains('hidden')) {
+                    const gameOverArea = document.getElementById('game-over-area');
+                    if (gameOverArea && !gameOverArea.classList.contains('hidden')) {
+                        showToast("⚠️ Cannot export concluded case. Start a new case.");
+                        return;
+                    }
+                    const isAccusing = !document.getElementById('accusation-area').classList.contains('hidden');
+                    state.inAccusation = isAccusing;
+                    exportData = {
+                        app: 'KMystery',
+                        version: 1,
+                        timestamp: Date.now(),
+                        difficulty: document.getElementById('difficulty').value,
+                        state: JSON.parse(JSON.stringify(state)),
+                        analysisState: analysisState ? JSON.parse(JSON.stringify(analysisState)) : null
+                    };
+                } else {
+                    const raw = safeGetStorage('kmystery_quicksave');
+                    if (raw) {
+                        try {
+                            exportData = JSON.parse(raw);
+                        } catch (e) {}
+                    }
+                    if (!exportData || !exportData.state) {
+                        showToast("ℹ️ Start an investigation or quicksave first to export.");
+                        return;
+                    }
+                }
+
+                const jsonStr = JSON.stringify(exportData, null, 2);
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                const d = new Date();
+                const stamp = `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`;
+                a.href = url;
+                a.download = `kmystery_case_${stamp}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+                showToast("📁 Case file exported successfully!");
+                noirAudio.playTypewriter();
+            } catch (err) {
+                showToast("⚠️ Export failed: " + err.message);
+            }
+        }
+
+        function importCaseFile(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const text = e.target.result;
+                    const data = JSON.parse(text);
+                    if (!data || !data.state || !data.state.solution || !data.state.locations) {
+                        showToast("⚠️ Invalid case file format.");
+                        return;
+                    }
+                    safeSetStorage('kmystery_quicksave', JSON.stringify(data));
+                    loadCaseData(data);
+                    showToast("📂 Case File Imported & Loaded!");
+                    noirAudio.playTypewriter();
+                    updateStatsUI();
+                } catch (err) {
+                    showToast("⚠️ Import failed: " + err.message);
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsText(file);
         }
 
         document.addEventListener('click', (e) => {
@@ -1158,14 +1253,24 @@
             state.currentInterrogation = null;
             state.interrogationMood = 'normal';
             state.inLab = false;
+            state.analyzingIdx = -1;
+            state.inAccusation = false;
+            analysisState = null;
         }
 
         function startGame() {
-            startRain();
+            noirAudio.init();
+            noirAudio.resume();
             generateMystery();
             
             document.getElementById('start-screen').classList.add('hidden');
             document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('game-over-area').classList.add('hidden');
+            document.getElementById('accusation-area').classList.add('hidden');
+            document.getElementById('interrogation-area').classList.add('hidden');
+            document.getElementById('lab-area').classList.add('hidden');
+            document.getElementById('action-area').classList.remove('hidden');
+            document.getElementById('travel-container').classList.remove('hidden');
             
             state.initialTime = state.timeLeft;
             state.failedCalibrations = 0;
@@ -1236,7 +1341,7 @@
             document.getElementById('time-left').textContent = state.timeLeft;
             if (state.timeLeft <= 0) {
                 triggerScreenShake(20);
-                playDramaticChord();
+                noirAudio.playDramaticChord();
                 showGameOver("Time Expired", "Time's up! The killer has slipped into the shadows and escaped.\nThe trail has gone cold. (Case Failed)");
                 return true;
             }
@@ -1952,6 +2057,17 @@
         }
 
         window.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                exportCase();
+                return;
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') {
+                e.preventDefault();
+                const fileInput = document.getElementById('case-import-input');
+                if (fileInput) fileInput.click();
+                return;
+            }
             if (e.key === 'F5') {
                 e.preventDefault();
                 quickSave();
@@ -1976,34 +2092,44 @@
             const dossierModal = document.getElementById('dossier-modal');
             const gameOverArea = document.getElementById('game-over-area');
             const startScreen = document.getElementById('start-screen');
+            const accArea = document.getElementById('accusation-area');
+
             if (helpModal && !helpModal.classList.contains('hidden')) {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     hideHelp();
-                    return;
                 }
+                return;
             }
             if (dossierModal && !dossierModal.classList.contains('hidden')) {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     closeDossier();
-                    return;
                 }
+                return;
             }
             if (gameOverArea && !gameOverArea.classList.contains('hidden')) {
                 if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     returnToTitle();
-                    return;
                 }
+                return;
             }
             if (startScreen && !startScreen.classList.contains('hidden')) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     startGame();
-                    return;
                 }
+                return;
             }
+            if (accArea && !accArea.classList.contains('hidden')) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    submitAccusation();
+                }
+                return;
+            }
+
             if (!document.getElementById('game-screen').classList.contains('hidden') && !isInputFocused()) {
                 const scannerGame = document.getElementById('scanner-game');
                 const labArea = document.getElementById('lab-area');

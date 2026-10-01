@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KMystery
+  kilo_tester: KNet
   kilo_usability: KClip
   kilo_graphics: KStarship
   kilo_qa: KPad
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KContacts
-  timestamp: "2026-10-01T16:38:00Z"
+  agent: kilo-tester
+  app: KMystery
+  timestamp: "2026-10-01T17:22:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KChrono`, `KFortress`, `KCosmic`, `KSanctuary`, `KDragon`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KSanctuary, KDragon, KSubmarine, KStarDredge)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KMystery`
+- **Current Target**: `KNet`
 - **Upcoming Queue**:
-  `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia)*.
+  `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KClip`
@@ -297,6 +297,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-01T17:22:00Z — kilo-tester: KMystery (Interactive UI Audit, Audio Fixes, JSON Case Export/Import & Key Isolation)**
+  - Status: PASS ✅ (4 issues found, 4 fixed, 0 regressions, clean builds, 151.9 KB web / 40.4 KB native < 999 KB ceiling).
+  - Runtime Fixes: Fixed undefined `startRain()` in `startGame()` and missing `noirAudio.` in `advanceTime()` chord trigger.
+  - Modal Key Isolation: Blocked background game hotkey bleed (`s`, `l`, `i`, `a`, `1-5`) during help, dossier, and game-over modals.
+  - Grand Jury Controls: Bound Enter to deliver indictment and Esc to cancel in accusation view; isolated from map travel keys.
+  - Storage & Persistence: Added JSON Case File export (`exportCase`) and import (`importCaseFile`) with header/start buttons and `[Ctrl+S]`/`[Ctrl+O]`.
+  - Toast Safe Zone: Repositioned `#toast-bar` to bottom-center safe zone clearing notebook panel and evidence dossier sketches.
+  - Verification: MSVC clean (`KMystery.exe` 40.4 KB); Vite clean in 1.12s; check_icons & security_lint 100% PASS.
+
 - **2026-10-01T16:38:00Z — kilo-qa: KContacts (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 143.1 KB web / 29.2 KB native < 999 KB ceiling).
   - State Persistence: Fixed uncommitted edit flush prior to F5 serialization in web and Win32 C (`KContacts.exe`).
@@ -331,13 +340,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Responsive Mobile Nav: Built single-pane sliding navigation for viewports <=768px with feeds/articles/reader back buttons.
   - Native Parity: Added 1-9 instant headline jump hotkeys and updated help reference in Win32 KRSS.exe.
   - Verification: MSVC clean (`KRSS.exe` 21.5 KB); Vite clean in 442ms; check_icons & security_lint 100% PASS.
-
-- **2026-10-01T12:20:00Z — kilo-qa: KCosmic (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 547.4 KB web / 254.5 KB native < 999 KB ceiling).
-  - State Persistence: Audited & fixed F5/F9 state serialization; ensured planet telemetry flushes on save and splash dismisses on restore.
-  - Interactive Overlays: Implemented click handlers for native splash buttons, interactive tutorial steps, codex tabs, and F5/F9 nav buttons.
-  - Keyboard & Modal Isolation: Added Enter/Space/Arrow navigation for onboarding tutorial, prevented background key bleed during modals.
-  - Toast Occlusion Remediation: Relocated toast notifications to bottom-center safe zone, clearing all sidebar inputs and action buttons.
-  - Onboarding Integrity: Fixed tutorialSeen flags to prevent onboarding interruption when resuming from quicksave or JSON payloads.
-  - Verification: MSVC clean (`KCosmic.exe` 254.5 KB); Vite clean in 373ms; check_icons & security_lint 100% PASS.
 
