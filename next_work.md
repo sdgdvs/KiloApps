@@ -12,13 +12,13 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://10.19.99.4/classified (Corporate Leak Intranet)"
+  kilo_creator: "kweb://echo-subsystem.net (Acoustic Research Lab & SIGINT Grid)"
   kilo_graphics: KStarship
   kilo_tester: KNet
   kilo_usability: KHex
   kilo_qa: KBase
   kilo_expander: KSnake
-virtual_web_target: "kweb://10.19.99.4/classified"
+virtual_web_target: "kweb://echo-subsystem.net"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -35,7 +35,7 @@ last_run:
   agent: kilo-usability
   app: KClip
   timestamp: "2026-10-01T18:25:00Z"
-last_planner_run: "2026-10-01T19:15:00Z"
+last_planner_run: "2026-10-01T19:32:00Z"
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -98,9 +98,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://10.19.99.4/classified` (Corporate Leak Intranet)
+- **Current Target**: `kweb://echo-subsystem.net` (Acoustic Research Lab & SIGINT Grid)
 - **Upcoming Queue**:
-  `kweb://echo-subsystem.net` (Research Journal), `kweb://deep-core` (Deep Core Node), `kweb://darknet` (Encrypted Underground Relay)
+  `kweb://deep-core` (Deep Core Node), `kweb://darknet` (Encrypted Underground Relay), `kweb://portal` (KiloNet Central Directory), `kweb://webring` (Central Webring Hub)
   *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
@@ -111,12 +111,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KNet`
 - **Upcoming Queue**:
-  `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery)*.
+  `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KHex`
 - **Upcoming Queue**:
-  `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KHash` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip)*.
+  `KAudio`, `KPing`, `KHabit`, `KFarm`, `KPaint`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KBase`
@@ -126,12 +126,12 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KSnake`
 - **Upcoming Queue**:
-  `KPaint`, `KSynth`, `KPass`, `KVault` *(Completed: KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia, KTask, KNet, KPing, KHash, KPad)*.
+  `KPaint`, `KPad`, `KSynth`, `KVault` *(Completed: KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia, KTask, KNet, KPing, KHash, KPad)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://10.19.99.4/classified` (`KiloOS/public/web/classified.html`)
-  - *Next in Rotation*: `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe`.
+- **Current Active Target**: `kweb://echo-subsystem.net` (`KiloOS/public/web/echo_subsystem.html`)
+  - *Next in Rotation*: `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified`.
 - **Anti-Potemkin Directive & Content Mandates**:
   0. `kweb://warez` (*0xRELEASE Scene Vault & x86 Reverse Engineering Lab*):
      - ✅ 16 parody releases with 3D vector cracktro launcher, custom NFO viewer & .diz/.nfo downloads.
@@ -297,13 +297,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
-- **2026-10-01T19:15:00Z — kilo-planner: Fleet Planning & Queue Rebalancing (24h Tick)**
+- **2026-10-01T19:32:00Z — kilo-planner: Fleet Planning & Queue Rebalancing (24h Tick)**
   - Status: PASS ✅ (Fleet health 100%, 105 apps icon audit 100% PASS, 0 glints, all builds clean).
   - Rotation Schedule: Set 6-skill cycle (creator ➔ graphics ➔ tester ➔ usability ➔ qa ➔ expander).
-  - Queue Rebalance: Rotated locked KCalc out of usability queue to KHex; queued fresh Pass 5 target KBase for qa.
-  - Multiplayer Focus: Directed expander to KSnake (1v1 competitive arena duel mode via RFMS / retro_multiplayer.js).
-  - Virtual Web & ARG: Advanced virtual web target to kweb://10.19.99.4/classified; focusing middle-game puzzle chain gating.
-  - Log Compaction: Archived oldest entry (cybercafe) to archive/fleet_execution_archive.md; retained 5 active entries.
+  - Queue Rebalance: Purged locked KHangman from tester queue; prioritized stutter apps (KAudio, KPing, KHabit) in usability.
+  - Multiplayer Focus: Targeted KSnake for 1v1 arena duel mode via RFMS; queued KPaint/KPad for collaborative canvas.
+  - Virtual Web & ARG: Advanced virtual web target to kweb://echo-subsystem.net; focusing middle-game puzzle chain gating.
+  - Log Hygiene: Retained 5 active logs; verified zero compiler errors, clean Vite build, and 0 lint failures.
 
 - **2026-10-01T18:25:00Z — kilo-usability: KClip (Draggable Splitter, Mobile Sliding View, Font Zoom, Wrap & Native Keys)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 118.0 KB web / 16.9 KB native < 999 KB ceiling).
