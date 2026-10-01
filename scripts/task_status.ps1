@@ -13,9 +13,25 @@ Write-Host "============================================================" -Foreg
 Write-Host " KiloApps Fleet Task & Session Status" -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
 
+if (-not $PSBoundParameters.ContainsKey('TaskName') -and (Test-Path $SessionFile)) {
+    try {
+        $sessObj = Get-Content $SessionFile -Raw -Encoding UTF8 | ConvertFrom-Json
+        if ($sessObj.task_name) {
+            $TaskName = $sessObj.task_name
+        }
+    } catch {}
+}
+
 # 1. Check Scheduled Task
 try {
-    $Task = Get-ScheduledTask -TaskName $TaskName -ErrorAction Stop
+    $Task = Get-ScheduledTask -TaskName $TaskName -ErrorAction SilentlyContinue
+    if (-not $Task -and $TaskName -notmatch "-User$") {
+        $Task = Get-ScheduledTask -TaskName "$TaskName-User" -ErrorAction SilentlyContinue
+        if ($Task) { $TaskName = "$TaskName-User" }
+    }
+    if (-not $Task) {
+        throw "No scheduled task found matching '$TaskName'."
+    }
     $TaskInfo = Get-ScheduledTaskInfo -TaskName $TaskName -ErrorAction Stop
 
     $StateColor = "Red"
