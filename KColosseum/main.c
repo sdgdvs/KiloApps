@@ -84,6 +84,7 @@ void PlaySoundAsync(int type) {
 #define ID_FAVOR_LABEL 120
 #define ID_HELP_BUTTON 121
 #define ID_HELP_BACK_BUTTON 122
+#define ID_EQ_SICA 123
 
 typedef struct {
     int id;
@@ -259,7 +260,7 @@ int owned_count = 0;
 int funds = 1000;
 
 HWND hTitle, hFundsLabel, hL1, hRefreshButton, hMarketList, hBuyButton, hL2, hOwnedList, hTrainStrBtn, hTrainAgiBtn, hTrainVitBtn, hFightBtn;
-HWND hEqGladiusBtn, hEqTridentBtn, hEqArmorBtn, hEqShieldBtn, hHealBtn;
+HWND hEqGladiusBtn, hEqTridentBtn, hEqSicaBtn, hEqArmorBtn, hEqShieldBtn, hHealBtn;
 HWND hCombatTitle, hCombatPlayer, hCombatEnemy, hAttackBtn, hDefendBtn, hShowboatBtn, hFleeBtn, hCombatLog, hFavorLabel;
 HWND hHelpBtn, hHelpTitle, hHelpText, hHelpBackBtn;
 
@@ -387,6 +388,7 @@ void SwitchView(int view) {
     ShowWindow(hOwnedList, cmdDash);
     ShowWindow(hEqGladiusBtn, cmdDash);
     ShowWindow(hEqTridentBtn, cmdDash);
+    ShowWindow(hEqSicaBtn, cmdDash);
     ShowWindow(hEqArmorBtn, cmdDash);
     ShowWindow(hEqShieldBtn, cmdDash);
     ShowWindow(hTrainStrBtn, cmdDash);
@@ -752,7 +754,10 @@ void CombatAction(int action) {
         
         if ((my_rand() % 100) < hitChance) {
             int dmg = GetEffStr(currentFighter) + (my_rand() % 4);
-            if (enemyDefending) dmg -= (enemyFighter.shield == 1 ? 5 : 3);
+            if (enemyDefending) {
+                if (currentFighter->weapon == 3) dmg -= (enemyFighter.shield == 1 ? 3 : 1);
+                else dmg -= (enemyFighter.shield == 1 ? 5 : 3);
+            }
             if (dmg < 1) dmg = 1;
 
             int rendActive = (currentFighter->weapon == 1 && (my_rand() % 100) < 20);
@@ -760,6 +765,14 @@ void CombatAction(int action) {
 
             int entangleActive = (currentFighter->weapon == 2 && (my_rand() % 100) < 20);
             if (entangleActive) g_enemyStaggered = 1;
+
+            int flurryActive = (currentFighter->weapon == 3 && (my_rand() % 100) < 28);
+            if (flurryActive) {
+                int fDmg = (GetEffStr(currentFighter) * 65) / 100 + (my_rand() % 3);
+                if (enemyDefending) fDmg -= (enemyFighter.shield == 1 ? 2 : 1);
+                if (fDmg < 1) fDmg = 1;
+                dmg += fDmg;
+            }
 
             if (currentFighter->weapon == 0) {
                 crowdFavor += 6;
@@ -777,6 +790,11 @@ void CombatAction(int action) {
                 wsprintfA(buf, "%s ENTANGLES the foe for %d damage!", currentFighter->name, dmg);
                 AddFloatingText("ENTANGLED!", 415, 50, RGB(255, 215, 0));
                 SpawnParticles(415, 95, 14, 0, RGB(255, 215, 0));
+            } else if (flurryActive) {
+                wsprintfA(buf, "%s strikes with a TWIN-BLADE FLURRY for %d damage!", currentFighter->name, dmg);
+                AddFloatingText("FLURRY!", 415, 50, RGB(190, 210, 255));
+                SpawnParticles(415, 95, 18, 0, RGB(190, 210, 255));
+                SpawnParticles(415, 95, 12, 5, RGB(160, 20, 20));
             } else {
                 wsprintfA(buf, "%s hits for %d damage!", currentFighter->name, dmg);
             }
@@ -1181,6 +1199,12 @@ void DrawGladiatorGDI(HDC hdc, int x, int y, Gladiator* g, int isEnemy, int stan
             MoveToEx(hdc, drawX - 34, drawY + 28, NULL);
             LineTo(hdc, drawX - 10, drawY + 24);
             DeleteObject(hpenShaft);
+        } else if (g->weapon == 3) { // Crossed Twin Sica on sand
+            HPEN hpenSicaD = CreatePen(PS_SOLID, 2, RGB(230, 230, 245));
+            SelectObject(hdc, hpenSicaD);
+            MoveToEx(hdc, drawX - 26, drawY + 22, NULL); LineTo(hdc, drawX - 12, drawY + 30);
+            MoveToEx(hdc, drawX - 26, drawY + 30, NULL); LineTo(hdc, drawX - 12, drawY + 22);
+            DeleteObject(hpenSicaD);
         }
 
         // Dropped Shield face-up in sand
@@ -1365,6 +1389,36 @@ void DrawGladiatorGDI(HDC hdc, int x, int y, Gladiator* g, int isEnemy, int stan
             MoveToEx(hdc, weaponX, weaponY - 28, NULL); LineTo(hdc, weaponX + dir * 25, weaponY - 28);
             DeleteObject(hpenThrust);
         }
+    } else if (g->weapon == 3) { // Twin Curved Sica
+        HPEN hpenSica = CreatePen(PS_SOLID, 2, RGB(240, 240, 255));
+        SelectObject(hdc, hpenSica);
+        if (stance == 1) { // Dual crossing slash
+            int dir = isEnemy ? -1 : 1;
+            MoveToEx(hdc, weaponX, weaponY, NULL);
+            LineTo(hdc, weaponX + dir * 18, weaponY - 14);
+            MoveToEx(hdc, weaponX, weaponY - 14, NULL);
+            LineTo(hdc, weaponX + dir * 18, weaponY);
+            // Crossing slash trails
+            HPEN hpenSlash = CreatePen(PS_SOLID, 1, RGB(200, 220, 255));
+            SelectObject(hdc, hpenSlash);
+            MoveToEx(hdc, weaponX - 4, weaponY - 18, NULL);
+            LineTo(hdc, weaponX + dir * 24, weaponY + 6);
+            MoveToEx(hdc, weaponX - 4, weaponY + 6, NULL);
+            LineTo(hdc, weaponX + dir * 24, weaponY - 18);
+            DeleteObject(hpenSlash);
+            SelectObject(hdc, hpenSica);
+        } else {
+            // Forward curved Sica
+            MoveToEx(hdc, weaponX, weaponY, NULL);
+            LineTo(hdc, weaponX - 2, weaponY - 14);
+            LineTo(hdc, weaponX - 6, weaponY - 18);
+            // Reverse grip off-hand Sica
+            int offX = isEnemy ? drawX + 16 : drawX - 16;
+            MoveToEx(hdc, offX, weaponY, NULL);
+            LineTo(hdc, offX + 2, weaponY + 12);
+            LineTo(hdc, offX + 5, weaponY + 15);
+        }
+        DeleteObject(hpenSica);
     }
 
     // Restore
@@ -2021,16 +2075,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessageA(hOwnedList, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hEqGladiusBtn = CreateWindowA("BUTTON", "Glad(50)", WS_VISIBLE | WS_CHILD,
-                          290, 240, 65, 30, hwnd, (HMENU)ID_EQ_GLADIUS, NULL, NULL);
+                          290, 240, 52, 30, hwnd, (HMENU)ID_EQ_GLADIUS, NULL, NULL);
             SendMessageA(hEqGladiusBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             hEqTridentBtn = CreateWindowA("BUTTON", "Trid(50)", WS_VISIBLE | WS_CHILD,
-                          358, 240, 65, 30, hwnd, (HMENU)ID_EQ_TRIDENT, NULL, NULL);
+                          345, 240, 52, 30, hwnd, (HMENU)ID_EQ_TRIDENT, NULL, NULL);
             SendMessageA(hEqTridentBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
+            hEqSicaBtn = CreateWindowA("BUTTON", "Sica(75)", WS_VISIBLE | WS_CHILD,
+                          400, 240, 52, 30, hwnd, (HMENU)ID_EQ_SICA, NULL, NULL);
+            SendMessageA(hEqSicaBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             hEqArmorBtn = CreateWindowA("BUTTON", "Armr(50)", WS_VISIBLE | WS_CHILD,
-                          426, 240, 65, 30, hwnd, (HMENU)ID_EQ_ARMOR, NULL, NULL);
+                          455, 240, 52, 30, hwnd, (HMENU)ID_EQ_ARMOR, NULL, NULL);
             SendMessageA(hEqArmorBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
             hEqShieldBtn = CreateWindowA("BUTTON", "Shld(30)", WS_VISIBLE | WS_CHILD,
-                          494, 240, 65, 30, hwnd, (HMENU)ID_EQ_SHIELD, NULL, NULL);
+                          510, 240, 50, 30, hwnd, (HMENU)ID_EQ_SHIELD, NULL, NULL);
             SendMessageA(hEqShieldBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hTrainStrBtn = CreateWindowA("BUTTON", "+STR (20D)", WS_VISIBLE | WS_CHILD,
@@ -2105,11 +2162,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                   "R: Refresh recruit market (50D) | 1, 2, 3: Quick-recruit market fighters\n\n"
                                   "COMBAT TACTICS & WEAPON MASTERY:\n"
                                   "Attack: Uses STR for damage, AGI for hit chance vs enemy AGI.\n"
+                                  "Gladius: Rend bleed (+4) | Trident: Entangle | Twin Sica: 28% Flurry strike!\n"
                                   "Defend: Skips turn; reduces hit & dmg. Shield Defend executes Shield Bash counter!\n"
                                   "Showboat: Skips turn to build Crowd Favor. Bare fists generate double Favor!\n"
                                   "Flee: Saves your gladiator, but you drop an Arena Level.\n\n"
                                   "SPECIAL FOES & LEGENDS:\n"
-                                  "Lions, Chariots, Twins, Gallic Behemoth, and Praetorian Champions (Lvl 6+).\n"
+                                  "Lions, Chariots, Twins, Gallic Behemoth, Praetorians, and Thracian Executioners.\n"
                                   "Crowd Favor at 100% earns Emperor's Boon: Denarii showers or emergency heals!\n";
 
             hHelpText = CreateWindowA("STATIC", helpStr, WS_CHILD | SS_LEFT,
@@ -2332,14 +2390,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 } else {
                     MessageBoxA(hwnd, "Select a gladiator to train.", "Info", MB_OK | MB_ICONINFORMATION);
                 }
-            } else if (LOWORD(wParam) >= ID_EQ_GLADIUS && LOWORD(wParam) <= ID_EQ_SHIELD) {
+            } else if ((LOWORD(wParam) >= ID_EQ_GLADIUS && LOWORD(wParam) <= ID_EQ_SHIELD) || LOWORD(wParam) == ID_EQ_SICA) {
                 int sel = SendMessageA(hOwnedList, LB_GETCURSEL, 0, 0);
                 if (sel != LB_ERR) {
-                    int cost = (LOWORD(wParam) == ID_EQ_SHIELD) ? 30 : 50;
+                    int cost = (LOWORD(wParam) == ID_EQ_SHIELD) ? 30 : ((LOWORD(wParam) == ID_EQ_SICA) ? 75 : 50);
                     if (funds >= cost) {
                         funds -= cost;
                         if (LOWORD(wParam) == ID_EQ_GLADIUS) owned[sel].weapon = 1;
                         if (LOWORD(wParam) == ID_EQ_TRIDENT) owned[sel].weapon = 2;
+                        if (LOWORD(wParam) == ID_EQ_SICA) owned[sel].weapon = 3;
                         if (LOWORD(wParam) == ID_EQ_ARMOR) owned[sel].armor = 1;
                         if (LOWORD(wParam) == ID_EQ_SHIELD) owned[sel].shield = 1;
                         UpdateGladiatorDesc(&owned[sel]);

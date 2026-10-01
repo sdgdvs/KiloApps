@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-01T03:45:00Z — kilo-qa: KMine (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone)**
+  - State Persistence: Audited and verified full F5 / F9 quicksave/load capturing grid, timers, flags, and move logs.
+  - First-run Tutorial Integrity: Implemented `kmine_tutorialSeen` / `kmine_tutorial.dat` flags; never interrupts restored saves.
+  - Toast Occlusion Remediation: Relocated toast notifications to bottom safe zone (24px), clearing all top toolbar controls.
+  - Overlays & Ergonomics: Added Enter/Space modal dismissals, safe storage quota guards, and native Win32 F5/F9 menu items.
+  - Resource Cleanliness: Eliminated 36 GDI brush allocations/sec in native loop and ensured timer teardown on destroy.
+  - Verification: MSVC clean (`KMine.exe` 27.1 KB); Vite clean in 307ms; security lint & check_icons 100% PASS (<999 KB ceiling).
+
 - **2026-10-01T03:30:00Z — kilo-usability: KHash (Window Sizing, HiDPI Canvas, Toast Safe Zone & Tab Cycling)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 140.5 KB web / 17.5 KB native < 999 KB ceiling).
   - Window & Layout: Expanded App.jsx default dimensions to 1040x720, eliminating horizontal tab overflow on launch.
