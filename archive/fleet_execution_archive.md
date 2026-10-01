@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-01T03:30:00Z — kilo-usability: KHash (Window Sizing, HiDPI Canvas, Toast Safe Zone & Tab Cycling)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 140.5 KB web / 17.5 KB native < 999 KB ceiling).
+  - Window & Layout: Expanded App.jsx default dimensions to 1040x720, eliminating horizontal tab overflow on launch.
+  - Tab Ergonomics: Streamlined tab titles with tooltips, ARIA roles, and added ArrowLeft/ArrowRight tab cycling.
+  - Canvas Crispness: Refactored entropy histogram with window.devicePixelRatio scaling and auto-redraw on resize.
+  - Toast Occlusion Remediation: Relocated toast notifications to 34px bottom safe zone, clearing footer status text.
+  - Controls & Help: Added F1/H hotkey support across web and Win32 C message loop with explicit status bar hints.
+  - Verification: MSVC clean (`KHash.exe` 17.5 KB); Vite clean in 325ms; security lint & check_icons 100% PASS.
+
 - **2026-10-01T02:45:00Z — kilo-creator: kweb://users/~neon_rider (Demoscene Homepage Deep Expansion)**
   - 3D Vector Engine: Built software rasterizer (Cube, 4D Tesseract, Torus, Octahedron, Star) with wireframe, Lambertian flat shading & depth buffer.
   - Voxel Land '99: Added Comanche column height-raycasting engine with rolling canyons, alpine glaciers, Martian terrain & altitude flight slider.

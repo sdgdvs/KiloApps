@@ -871,10 +871,11 @@
         </div>
         <div class="playlist-subbar">
           <div style="display:flex; gap:4px;">
-            <button id="btnExportM3u" class="secondary" title="Export playlist as .m3u file">💾 Export M3U</button>
-            <button id="btnExportCue" class="secondary" title="Export cue points sheet">📍 Export CUE</button>
+            <button id="btnExportM3u" class="secondary" title="Export playlist as .m3u file">💾 M3U</button>
+            <button id="btnExportCue" class="secondary" title="Export cue points sheet">📍 CUE</button>
+            <button id="btnExportJson" class="secondary" title="Export full playlist and DSP state as .json file">📋 JSON</button>
           </div>
-          <button id="btnLoopTrack" class="secondary" title="Toggle A-B Repeat [L]">🔁 A-B [L]</button>
+          <button id="btnLoopTrack" class="secondary" title="Cycle A-B Repeat (Point A -> Point B -> Clear) [L]">🔁 A-B [L]</button>
         </div>
         <div class="search-box-wrap">
           <input type="text" id="searchInput" class="search-box" placeholder="Filter playlist... (Esc to clear)" aria-label="Search playlist" />
@@ -1085,18 +1086,19 @@
       <tr><td>U</td><td>Toggle Mute / Unmute</td></tr>
       <tr><td>P / N</td><td>Previous / Next Track</td></tr>
       <tr><td>Alt + Up / Down</td><td>Move Track Up / Down in Playlist</td></tr>
+      <tr><td>1 - 4</td><td>Switch Sidebar Tabs (Playlist, DSP, Video, Party)</td></tr>
       <tr><td>Del</td><td>Remove Selected Track from Playlist</td></tr>
       <tr><td>S</td><td>Stop Playback &amp; Rewind</td></tr>
       <tr><td>M</td><td>Cycle Playback Mode (Normal/Repeat/Shuffle)</td></tr>
       <tr><td>V</td><td>Cycle Visualizer Mode (Bars/Osc/VU/Sonogram/Radial)</td></tr>
       <tr><td>B</td><td>Add Bookmark / Cue Point at Current Timestamp</td></tr>
-      <tr><td>L</td><td>Toggle A-B Repeat Loop</td></tr>
+      <tr><td>L</td><td>Cycle A-B Repeat Loop (A -> B -> Off)</td></tr>
       <tr><td>{ / }</td><td>Shift Subtitle Offset (-0.5s / +0.5s)</td></tr>
       <tr><td>F</td><td>Toggle Fullscreen Mode</td></tr>
       <tr><td>F5</td><td>Quicksave State (Snapshot full workspace, playlist &amp; DSP)</td></tr>
       <tr><td>F9</td><td>Quickload State (Restore saved workspace, playlist &amp; DSP)</td></tr>
-      <tr><td>Ctrl+O</td><td>Open Media Files, Playlists (.m3u) or Subtitles</td></tr>
-      <tr><td>Ctrl+E / E</td><td>Export Video Snapshot to PNG</td></tr>
+      <tr><td>Ctrl+O</td><td>Open Media Files, Playlists (.m3u), CUE, or JSON</td></tr>
+      <tr><td>Ctrl+E / E</td><td>Export Video Snapshot or Visualizer to PNG</td></tr>
       <tr><td>H / F1</td><td>Toggle this Guide / Shortcuts</td></tr>
       <tr><td>Esc</td><td>Close Dialog / Clear Search Filter</td></tr>
       <tr><td>Mouse Wheel</td><td>Adjust Volume over Video or Slider</td></tr>
@@ -1166,6 +1168,7 @@
     btnMoveDown: document.getElementById('btnMoveDown'),
     btnExportM3u: document.getElementById('btnExportM3u'),
     btnExportCue: document.getElementById('btnExportCue'),
+    btnExportJson: document.getElementById('btnExportJson'),
     btnLoopTrack: document.getElementById('btnLoopTrack'),
     btnMode: document.getElementById('btnMode'),
     btnSpeed: document.getElementById('btnSpeed'),
@@ -1912,6 +1915,9 @@
       } else if (lowerName.endsWith('.cue')) {
         const text = await f.text();
         parseCueSheet(text);
+      } else if (lowerName.endsWith('.json')) {
+        const text = await f.text();
+        loadStateFromJson(text);
       } else {
         if (playlist.length < 500) {
           playlist.push({ name: f.name, url: URL.createObjectURL(f) });
@@ -2048,6 +2054,11 @@
     if (index >= 0 && index < playlist.length) {
       currentIndex = index;
       const track = playlist[index];
+      if (!track.url) {
+        showToast(`Track "${track.name}" has no loaded audio data (reference). Drop or Add media file.`, true);
+        renderPlaylist();
+        return;
+      }
       UI.title.textContent = track.name + " (Press 'H' or F1 for help)";
       UI.mediaPlayer.src = track.url;
       UI.mediaPlayer.playbackRate = speeds[currentSpeedIndex];
@@ -2286,6 +2297,7 @@
   }
 
   UI.volumeSlider.oninput = () => updateVolume(UI.volumeSlider.value);
+  UI.volumeSlider.ondblclick = () => { updateVolume(1.0); showToast('Volume reset to 100%'); };
 
   UI.btnMute.onclick = () => {
     if (UI.mediaPlayer.volume > 0) {
@@ -2399,6 +2411,9 @@
     cuePoints.forEach((cp, idx) => {
       const li = document.createElement('li');
       li.className = 'cue-item';
+      li.setAttribute('tabindex', '0');
+      li.setAttribute('role', 'button');
+      li.setAttribute('aria-label', `Cue ${idx + 1} at ${formatTime(cp.time)}`);
       li.innerHTML = `<span>📍 #${idx+1} [${formatTime(cp.time)}] ${escapeHtml(cp.trackName.slice(0, 20))}</span><span style="color:#ff5252; cursor:pointer;" title="Delete">✕</span>`;
       li.onclick = (e) => {
         if (e.target.textContent === '✕') {
@@ -2408,6 +2423,18 @@
         } else {
           UI.mediaPlayer.currentTime = cp.time;
           showToast(`Jumped to ${formatTime(cp.time)}`);
+        }
+      };
+      li.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          UI.mediaPlayer.currentTime = cp.time;
+          showToast(`Jumped to ${formatTime(cp.time)}`);
+          e.preventDefault();
+        } else if (e.key === 'Delete') {
+          cuePoints.splice(idx, 1);
+          renderCuePoints();
+          showToast('Cue point removed');
+          e.preventDefault();
         }
       };
       UI.cueList.appendChild(li);
@@ -2469,9 +2496,17 @@
   function parseM3u(text) {
     const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
     let count = 0;
+    let pendingTitle = '';
     lines.forEach(l => {
-      if (!l.startsWith('#')) {
-        playlist.push({ name: l, url: '' });
+      if (l.startsWith('#EXTINF:')) {
+        const commaIdx = l.indexOf(',');
+        if (commaIdx !== -1) {
+          pendingTitle = l.slice(commaIdx + 1).trim();
+        }
+      } else if (!l.startsWith('#')) {
+        const title = pendingTitle || l;
+        playlist.push({ name: title, url: '' });
+        pendingTitle = '';
         count++;
       }
     });
@@ -2480,8 +2515,101 @@
   }
 
   function parseCueSheet(text) {
-    showToast('Loaded CUE sheet');
+    if (!text || typeof text !== 'string') return;
+    const lines = text.split('\n').map(l => l.trim());
+    let currentTrackTitle = 'Cue Point';
+    let addedCount = 0;
+    for (let line of lines) {
+      if (line.startsWith('TRACK')) {
+        currentTrackTitle = 'Track ' + (cuePoints.length + addedCount + 1);
+      } else if (line.startsWith('TITLE')) {
+        const titleMatch = line.match(/TITLE\s+"?([^"]+)"?/i);
+        if (titleMatch) currentTrackTitle = titleMatch[1];
+      } else if (line.startsWith('INDEX 01')) {
+        const indexMatch = line.match(/INDEX\s+01\s+(\d+):(\d+):(\d+)/i);
+        if (indexMatch) {
+          const m = parseInt(indexMatch[1], 10);
+          const s = parseInt(indexMatch[2], 10);
+          const f = parseInt(indexMatch[3], 10);
+          const t = m * 60 + s + (f / 75.0);
+          cuePoints.push({ time: t, trackName: currentTrackTitle });
+          addedCount++;
+        }
+      }
+    }
+    if (addedCount > 0) {
+      renderCuePoints();
+      showToast(`Loaded ${addedCount} cue point(s) from CUE sheet`);
+    } else {
+      showToast('No valid cue points found in CUE sheet', true);
+    }
   }
+
+  // Export & Import Player State JSON
+  function exportStateJson() {
+    try {
+      const state = {
+        app: "KMedia",
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        playlist: playlist.map(item => ({
+          name: item.name,
+          durationStr: item.durationStr || '',
+          demoIndex: item.demoIndex !== undefined ? item.demoIndex : null
+        })),
+        currentIndex: currentIndex,
+        currentTime: (UI.mediaPlayer && isFinite(UI.mediaPlayer.currentTime)) ? UI.mediaPlayer.currentTime : 0,
+        volume: UI.mediaPlayer ? UI.mediaPlayer.volume : lastVolume,
+        playbackMode: currentModeIndex,
+        playbackSpeed: currentSpeedIndex,
+        visualizerMode: currentVisMode,
+        cuePoints: cuePoints,
+        loop: { pointA, pointB, isLoopAB },
+        dsp: {
+          eqPreset: (UI.eqPreset && UI.eqPreset.value) ? UI.eqPreset.value : 'flat',
+          eqLow: UI.eqLow.value,
+          eqMid: UI.eqMid.value,
+          eqHigh: UI.eqHigh.value,
+          spcDelayTime: UI.spcDelayTime.value,
+          spcFeedback: UI.spcFeedback.value,
+          spcWet: UI.spcWet.value,
+          pan: UI.panSlider.value,
+          preamp: UI.preampSlider.value
+        },
+        video: {
+          videoPreset: (UI.videoPreset && UI.videoPreset.value) ? UI.videoPreset.value : 'normal',
+          bright: UI.fBright.value,
+          cont: UI.fCont.value,
+          sat: UI.fSat.value,
+          fit: UI.videoFit.value,
+          crt: crtEnabled
+        }
+      };
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `kmedia_state_${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('Exported player state to JSON');
+    } catch(e) {
+      showToast('Failed to export JSON: ' + e.message, true);
+    }
+  }
+
+  function loadStateFromJson(text) {
+    try {
+      const state = JSON.parse(text);
+      if (!state || typeof state !== 'object') throw new Error("Invalid JSON structure");
+      safeSetStorage('kmedia_quicksave', JSON.stringify(state));
+      quickLoadState();
+      showToast("Imported player state from JSON file");
+    } catch(e) {
+      showToast("JSON Import Error: " + e.message, true);
+    }
+  }
+  if (UI.btnExportJson) UI.btnExportJson.onclick = exportStateJson;
 
   // --- A-B Looping Controls ---
   function updateABDisplay() {
@@ -2501,30 +2629,51 @@
     }
   }
 
+  function cycleLoopAB() {
+    const cur = UI.mediaPlayer.currentTime || 0;
+    if (pointA === null) {
+      pointA = cur;
+      pointB = null;
+      isLoopAB = false;
+      updateABDisplay();
+      showToast(`Point A set at ${formatTime(pointA)}. Press again to set Point B.`);
+    } else if (pointB === null) {
+      if (cur <= pointA) {
+        pointB = Math.max(pointA + 1, (UI.mediaPlayer.duration || pointA + 5));
+      } else {
+        pointB = cur;
+      }
+      isLoopAB = true;
+      updateABDisplay();
+      showToast(`A-B Loop ON: ${formatTime(pointA)} - ${formatTime(pointB)}`);
+    } else {
+      pointA = null;
+      pointB = null;
+      isLoopAB = false;
+      updateABDisplay();
+      showToast('A-B Loop cleared');
+    }
+  }
+
   UI.btnSetA.onclick = () => {
     pointA = UI.mediaPlayer.currentTime || 0;
+    if (pointB !== null && pointA >= pointB) pointB = null;
     updateABDisplay();
     showToast(`Set Point A: ${formatTime(pointA)}`);
   };
   UI.btnSetB.onclick = () => {
-    pointB = UI.mediaPlayer.currentTime || 0;
-    if (pointA !== null && pointB <= pointA) {
-      showToast('Point B must be after Point A');
+    const cur = UI.mediaPlayer.currentTime || 0;
+    if (pointA === null) pointA = 0;
+    if (cur <= pointA) {
+      showToast('Point B must be after Point A', true);
       return;
     }
+    pointB = cur;
     updateABDisplay();
     showToast(`Set Point B: ${formatTime(pointB)}`);
   };
-  UI.btnToggleLoopAB.onclick = () => {
-    if (pointA === null || pointB === null) {
-      showToast('Set both Point A and Point B first');
-      return;
-    }
-    isLoopAB = !isLoopAB;
-    updateABDisplay();
-    showToast('A-B Loop: ' + (isLoopAB ? 'ON' : 'OFF'));
-  };
-  UI.btnLoopTrack.onclick = UI.btnToggleLoopAB.onclick;
+  UI.btnToggleLoopAB.onclick = cycleLoopAB;
+  UI.btnLoopTrack.onclick = cycleLoopAB;
   UI.btnClearAB.onclick = () => {
     pointA = null;
     pointB = null;
@@ -2650,6 +2799,9 @@
   UI.spcDelayTime.oninput = updateSpcDelay;
   UI.spcFeedback.oninput = updateSpcDelay;
   UI.spcWet.oninput = updateSpcDelay;
+  UI.spcDelayTime.ondblclick = () => { UI.spcDelayTime.value = 320; updateSpcDelay(); showToast('Delay reset to 320ms'); };
+  UI.spcFeedback.ondblclick = () => { UI.spcFeedback.value = 0.35; updateSpcDelay(); showToast('Feedback reset to 35%'); };
+  UI.spcWet.ondblclick = () => { UI.spcWet.value = 0; updateSpcDelay(); showToast('Delay wet mix reset to 0%'); };
 
   // Spatial Panner & Preamp updates
   UI.panSlider.oninput = () => {
@@ -2658,6 +2810,7 @@
     if (pannerNode && pannerNode.pan) pannerNode.pan.value = val;
     safeSetStorage('kmedia_pan', val.toString());
   };
+  UI.panSlider.ondblclick = () => { UI.panSlider.value = 0; UI.panSlider.oninput(); showToast('Pan reset to Center'); };
 
   UI.preampSlider.oninput = () => {
     const val = parseFloat(UI.preampSlider.value) || 1.0;
@@ -2665,6 +2818,7 @@
     if (preampGainNode) preampGainNode.gain.value = val;
     safeSetStorage('kmedia_preamp', val.toString());
   };
+  UI.preampSlider.ondblclick = () => { UI.preampSlider.value = 1.0; UI.preampSlider.oninput(); showToast('Preamp reset to 1.0x'); };
 
   // --- Video Fit & CRT Scanlines ---
   function updateVideoFit(mode) {
@@ -2743,6 +2897,9 @@
   UI.fBright.oninput = updateVideoFilters;
   UI.fCont.oninput = updateVideoFilters;
   UI.fSat.oninput = updateVideoFilters;
+  UI.fBright.ondblclick = () => { UI.fBright.value = 1; updateVideoFilters(); showToast('Brightness reset to 1.0'); };
+  UI.fCont.ondblclick = () => { UI.fCont.value = 1; updateVideoFilters(); showToast('Contrast reset to 1.0'); };
+  UI.fSat.ondblclick = () => { UI.fSat.value = 1; updateVideoFilters(); showToast('Saturation reset to 1.0'); };
 
   UI.videoPreset.onchange = (e) => {
     const p = VIDEO_PRESETS[e.target.value] || VIDEO_PRESETS.normal;
@@ -2797,55 +2954,64 @@
     showToast('Equalizer reset to Flat');
   };
 
-  // --- Frame Export ---
+  // --- Frame & Visualizer Export ---
   function exportVideoFrame() {
-    if (UI.mediaPlayer.readyState < 2) {
-      showToast('No video ready to export.');
-      return;
-    }
-    const vc = document.createElement('canvas');
-    vc.width = UI.mediaPlayer.videoWidth;
-    vc.height = UI.mediaPlayer.videoHeight;
-    if (vc.width === 0 || vc.height === 0) {
-      showToast('Cannot export frame (audio-only or unloaded).');
-      return;
-    }
-    const vctx = vc.getContext('2d');
-    vctx.filter = UI.mediaPlayer.style.filter || 'none';
-    vctx.drawImage(UI.mediaPlayer, 0, 0, vc.width, vc.height);
-    
-    // Burn subtitles into snapshot if present
-    if (UI.subText.style.display !== 'none' && UI.subText.textContent.trim()) {
-      const fontSize = Math.max(20, Math.round(vc.height * 0.04));
-      vctx.font = `bold ${fontSize}px sans-serif`;
-      vctx.fillStyle = '#ffeb3b';
-      vctx.textAlign = 'center';
-      vctx.shadowColor = 'black';
-      vctx.shadowBlur = 4;
-      vctx.shadowOffsetX = 2;
-      vctx.shadowOffsetY = 2;
+    if (UI.mediaPlayer.videoWidth > 0 && UI.mediaPlayer.videoHeight > 0) {
+      const vc = document.createElement('canvas');
+      vc.width = UI.mediaPlayer.videoWidth;
+      vc.height = UI.mediaPlayer.videoHeight;
+      const vctx = vc.getContext('2d');
+      vctx.filter = UI.mediaPlayer.style.filter || 'none';
+      vctx.drawImage(UI.mediaPlayer, 0, 0, vc.width, vc.height);
       
-      const rawLines = UI.subText.innerHTML.split(/<br\s*\/?>/i);
-      const lineHeight = fontSize * 1.3;
-      const startY = vc.height * 0.85 - ((rawLines.length - 1) * lineHeight) / 2;
-      rawLines.forEach((line, idx) => {
-        const div = document.createElement('div');
-        div.innerHTML = line;
-        vctx.fillText(div.textContent || '', vc.width / 2, startY + idx * lineHeight);
-      });
-    }
-    
-    try {
-      const dataURL = vc.toDataURL('image/png');
-      const a = document.createElement('a');
-      a.href = dataURL;
-      a.download = `kmedia_frame_${Date.now()}.png`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      showToast('Frame exported as PNG');
-    } catch (e) {
-      showToast('Export restricted (CORS/security restriction).');
+      // Burn subtitles into snapshot if present
+      if (UI.subText.style.display !== 'none' && UI.subText.textContent.trim()) {
+        const fontSize = Math.max(20, Math.round(vc.height * 0.04));
+        vctx.font = `bold ${fontSize}px sans-serif`;
+        vctx.fillStyle = '#ffeb3b';
+        vctx.textAlign = 'center';
+        vctx.shadowColor = 'black';
+        vctx.shadowBlur = 4;
+        vctx.shadowOffsetX = 2;
+        vctx.shadowOffsetY = 2;
+        
+        const rawLines = UI.subText.innerHTML.split(/<br\s*\/?>/i);
+        const lineHeight = fontSize * 1.3;
+        const startY = vc.height * 0.85 - ((rawLines.length - 1) * lineHeight) / 2;
+        rawLines.forEach((line, idx) => {
+          const div = document.createElement('div');
+          div.innerHTML = line;
+          vctx.fillText(div.textContent || '', vc.width / 2, startY + idx * lineHeight);
+        });
+      }
+      
+      try {
+        const dataURL = vc.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = dataURL;
+        a.download = `kmedia_frame_${Date.now()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast('Video frame exported as PNG');
+      } catch (e) {
+        showToast('Export restricted (CORS/security restriction).', true);
+      }
+    } else if (UI.waveform && UI.waveform.width > 0 && UI.waveform.height > 0) {
+      try {
+        const dataURL = UI.waveform.toDataURL('image/png');
+        const a = document.createElement('a');
+        a.href = dataURL;
+        a.download = `kmedia_visualizer_${Date.now()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        showToast('Visualizer snapshot exported as PNG');
+      } catch (e) {
+        showToast('Visualizer export failed: ' + e.message, true);
+      }
+    } else {
+      showToast('No active video or visualizer to export.', true);
     }
   }
 
@@ -2987,14 +3153,20 @@
   }
 
   function sendPartyChat(text) {
-    if (!text || !text.trim() || !window.kmedia_fb || !roomChatRef) return;
-    const { push } = window.kmedia_fb;
+    if (!text || !text.trim()) return;
+    const cleanText = text.trim().slice(0, 140);
     const payload = {
       sender: myUserId,
-      text: text.trim().slice(0, 140),
+      text: cleanText,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     };
-    push(roomChatRef, payload).catch(() => {});
+    if (window.kmedia_fb && roomChatRef) {
+      const { push } = window.kmedia_fb;
+      push(roomChatRef, payload).catch(() => {});
+    } else {
+      appendPartyChatMessage(payload);
+      showToast('Message sent (Local mode)');
+    }
     UI.partyChatInput.value = '';
   }
 
@@ -3299,13 +3471,7 @@
         pointA = state.loop.pointA !== undefined ? state.loop.pointA : null;
         pointB = state.loop.pointB !== undefined ? state.loop.pointB : null;
         isLoopAB = !!state.loop.isLoopAB;
-        if (UI.lblPointA) UI.lblPointA.textContent = pointA !== null ? formatTime(pointA) : '--:--';
-        if (UI.lblPointB) UI.lblPointB.textContent = pointB !== null ? formatTime(pointB) : '--:--';
-        if (UI.btnToggleLoopAB) UI.btnToggleLoopAB.textContent = isLoopAB ? '🔁 Loop: ON' : '🔁 Loop: OFF';
-        if (UI.abLoopHud) {
-          UI.abLoopHud.style.display = isLoopAB && pointA !== null && pointB !== null ? 'block' : 'none';
-          if (UI.abRange) UI.abRange.textContent = `${formatTime(pointA||0)} - ${formatTime(pointB||0)}`;
-        }
+        updateABDisplay();
       }
 
       // Restore Cue Points
@@ -3384,15 +3550,17 @@
     if (chkDoNotShow) {
       chkDoNotShow.checked = safeGetStorage('kmedia_tutorialSeen', '0') === '1';
     }
+    const closeBtn = document.getElementById('btnCloseHelp');
+    if (closeBtn) closeBtn.focus();
   }
   function closeHelp() {
     helpOverlay.style.display = 'none';
-    safeSetStorage('kmedia_welcomed', '1');
     if (chkDoNotShow) {
       safeSetStorage('kmedia_tutorialSeen', chkDoNotShow.checked ? '1' : '0');
     } else {
       safeSetStorage('kmedia_tutorialSeen', '1');
     }
+    if (UI.btnHelp) UI.btnHelp.focus();
   }
 
   if (chkDoNotShow) {
@@ -3480,6 +3648,24 @@
     }
 
     if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+    if (e.key === '1') {
+      switchTab(0);
+      e.preventDefault();
+      return;
+    } else if (e.key === '2') {
+      switchTab(1);
+      e.preventDefault();
+      return;
+    } else if (e.key === '3') {
+      switchTab(2);
+      e.preventDefault();
+      return;
+    } else if (e.key === '4') {
+      switchTab(3);
+      e.preventDefault();
+      return;
+    }
 
     if (e.code === 'Space') {
       UI.btnPlay.click();
@@ -3600,7 +3786,7 @@
   }
 
   // First-run tutorial onboarding or welcome toast
-  const tutorialSeen = (safeGetStorage('kmedia_tutorialSeen', '0') === '1') || (safeGetStorage('kmedia_welcomed', '0') === '1');
+  const tutorialSeen = safeGetStorage('kmedia_tutorialSeen', '0') === '1';
   const hasQuicksave = !!safeGetStorage('kmedia_quicksave', null);
   if (!tutorialSeen && !hasQuicksave) {
     setTimeout(openHelp, 300);
