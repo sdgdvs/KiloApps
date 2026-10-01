@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -12,7 +12,7 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_tester: KMech
+  kilo_tester: KMedia
   kilo_usability: KHash
   kilo_graphics: KColosseum
   kilo_qa: KMine
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KAbyss
-  timestamp: "2026-10-01T03:00:00Z"
+  agent: kilo-tester
+  app: KMech
+  timestamp: "2026-10-01T03:15:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KWizard`, `KStarship`, `KChrono`, `KFortress`, `KCosmic`, `KSanctuary`, `KDragon`, `KStarDredge`, `KAbyss` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KSanctuary, KDragon, KSubmarine, KStarDredge)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KMech`
+- **Current Target**: `KMedia`
 - **Upcoming Queue**:
-  `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel)*.
+  `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KHash`
@@ -296,6 +296,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-01T03:15:00Z — kilo-tester: KMech (Interactive UI Audit, Telemetry JSON Modal, Safe Toast Zone & Audio Toggle)**
+  - Status: PASS ✅ (3 issues fixed: toast occlusion, missing telemetry JSON export/import, sound toggle).
+  - Toast Occlusion Remediation: Relocated toast notifications to top safe zone, clearing all garage & battle action buttons.
+  - Telemetry & Save Backup: Built interactive modal with JSON export, copy-to-clipboard, file download & schema-validated import.
+  - Controls & Ergonomics: Added F2 backup hotkey, Escape dismissal, backdrop click, input focus guard, and M audio mute toggle.
+  - Verification: Vite build clean (278ms); security lint & check_icons 100% PASS; `kmech.html` 128.9 KB (<999 KB ceiling).
+
 - **2026-10-01T03:00:00Z — kilo-graphics: KAbyss (Glint Ban, Void Stalker, Combat Decals & Balance)**
   - Glint & Comet Ban: Removed rotating rune ward orbital glint nodes from delver shield; replaced with static inner aura ring.
   - Enemy Depth: Added 10th enemy `Void Stalker` (chasm predator, mana drain, scythe claws, amethyst carapace) in web and native.
@@ -327,12 +334,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast Occlusion Remediation: Relocated toast notifications to bottom-center safe zone, clearing all keypad and formula inputs.
   - Keyboard & Modal Audit: Verified Esc/Enter dismissals, mode shortcuts (1-5), and updated shortcuts documentation in help dialog.
   - Verification: MSVC clean (`KCalc.exe` 28.7 KB); Vite clean in 351ms; security lint & check_icons 100% PASS (<999KB ceiling).
-
-- **2026-10-01T02:00:00Z — kilo-usability: KBookmark (UX & Usability Ergonomics Pass)**
-  - Protocol Launching: Integrated intelligent scheme dispatcher resolving `internal:<app>` and `kweb://<site>` in web & native.
-  - Card URL Links: Converted raw anchor navigations into safe in-app launches preventing broken browser scheme errors.
-  - Category Ergonomics: Added [1]-[8] hotkey badges and tooltips to category items for fast keyboard switching.
-  - Drag & Drop Import: Added visual drop overlay & drag-and-drop file ingestion for Netscape HTML and JSON vaults.
-  - Onboarding & Modals: Added startup checkbox to splash screen, synced tutorial flags, and added status pulse feedback.
-  - Lore & TINAG: Replaced ARG Secrets with diegetic Subcarrier Relays in native C and web HTML.
-  - Verification: MSVC clean (`KBookmark.exe` 22.5 KB); Vite clean in 289ms; security lint 100% PASS; check_icons PASS.

@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-01T02:00:00Z — kilo-usability: KBookmark (UX & Usability Ergonomics Pass)**
+  - Protocol Launching: Integrated intelligent scheme dispatcher resolving `internal:<app>` and `kweb://<site>` in web & native.
+  - Card URL Links: Converted raw anchor navigations into safe in-app launches preventing broken browser scheme errors.
+  - Category Ergonomics: Added [1]-[8] hotkey badges and tooltips to category items for fast keyboard switching.
+  - Drag & Drop Import: Added visual drop overlay & drag-and-drop file ingestion for Netscape HTML and JSON vaults.
+  - Onboarding & Modals: Added startup checkbox to splash screen, synced tutorial flags, and added status pulse feedback.
+  - Lore & TINAG: Replaced ARG Secrets with diegetic Subcarrier Relays in native C and web HTML.
+  - Verification: MSVC clean (`KBookmark.exe` 22.5 KB); Vite clean in 289ms; security lint 100% PASS; check_icons PASS.
+
 - **2026-10-01T01:35:00Z — kilo-creator: KContribute (1-Click SETI@home Distributed Contributor Daemon & Console)**
   - Native Win32 Daemon: Created standalone 159 KB client (`KContribute.exe`) with Shell_NotifyIconA system tray daemon & autostart.
   - 1-Click Onboarding: 1-click Google sign-in opens Google AI Studio for free Gemini key; minimizes directly to tray on submit.

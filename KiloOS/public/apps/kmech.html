@@ -440,15 +440,15 @@
             animation: anim-damage 0.45s;
         }
 
-        /* Toast Notifications */
+        /* Toast Notifications - Top Safe Zone (Clears action buttons) */
         #toast-container {
             position: absolute;
-            bottom: 14px;
+            top: 44px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 1000;
+            z-index: 1500;
             display: flex;
-            flex-direction: column-reverse;
+            flex-direction: column;
             align-items: center;
             gap: 6px;
             pointer-events: none;
@@ -480,12 +480,92 @@
             box-shadow: 0 0 10px rgba(255, 50, 50, 0.5);
         }
         @keyframes toastIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(-10px); }
             to { opacity: 1; transform: translateY(0); }
         }
         @keyframes toastOut {
             from { opacity: 1; transform: translateY(0); }
-            to { opacity: 0; transform: translateY(10px); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+
+        /* Modal Dialog Styles */
+        .modal-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 12, 6, 0.88);
+            backdrop-filter: blur(2px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .modal-window {
+            background: linear-gradient(180deg, #021a0c 0%, #010d06 100%);
+            border: 2px solid #00ff88;
+            box-shadow: 0 0 25px rgba(0, 255, 100, 0.4), inset 0 0 15px rgba(0, 255, 100, 0.12);
+            border-radius: 6px;
+            width: 100%;
+            max-width: 520px;
+            max-height: 90%;
+            display: flex;
+            flex-direction: column;
+            padding: 14px;
+            position: relative;
+            color: #00ff88;
+            font-family: inherit;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #00aa55;
+            padding-bottom: 6px;
+            margin-bottom: 10px;
+        }
+        .modal-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: #00ffaa;
+            margin: 0;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .telemetry-textarea {
+            width: 100%;
+            height: 140px;
+            background: rgba(0, 20, 10, 0.95);
+            border: 1px solid #007733;
+            color: #aaffcc;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 14px;
+            padding: 8px;
+            resize: vertical;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .telemetry-textarea:focus {
+            outline: none;
+            border-color: #00ffaa;
+            box-shadow: 0 0 8px rgba(0, 255, 170, 0.4);
+        }
+        .modal-btn-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+            justify-content: flex-end;
         }
 
         /* Help screen */
@@ -525,15 +605,17 @@
         <div id="screen-garage" class="screen active">
             <div class="header-bar">
                 <h1>⚡ KMech Garage</h1>
-                <div style="display:flex; gap:5px;">
-                    <button class="btn-help-top" onclick="quickSave()">[F5] Save</button>
-                    <button class="btn-help-top" onclick="quickLoad()">[F9] Load</button>
-                    <button class="btn-help-top" onclick="showScreen('help')">[F1] Manual</button>
+                <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
+                    <button class="btn-help-top btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound [M]">🔊 Audio</button>
+                    <button class="btn-help-top" onclick="openTelemetryModal()" title="Telemetry Save & Backup [F2]">[F2] Backup</button>
+                    <button class="btn-help-top" onclick="quickSave()" title="Quicksave [F5]">[F5] Save</button>
+                    <button class="btn-help-top" onclick="quickLoad()" title="Quickload [F9]">[F9] Load</button>
+                    <button class="btn-help-top" onclick="showScreen('help')" title="Manual [F1]">[F1] Manual</button>
                 </div>
             </div>
             
             <div class="quick-hint">
-                [D/Enter] Deploy | [R] Repair | [U] Salvage | [S] Sell | [1-4] Gear | [F5] Save | [F9] Load | [F1] Manual
+                [D/Enter] Deploy | [R] Repair | [U] Salvage | [S] Sell | [1-4] Gear | [F2] Backup | [F5] Save | [F9] Load | [M] Audio | [F1] Manual
             </div>
 
             <div style="text-align: center; margin-bottom: 6px; font-weight: bold; font-size: 12px;">
@@ -618,10 +700,12 @@
         <div id="screen-battle" class="screen">
             <div class="header-bar">
                 <h2>⚔️ Combat Zone</h2>
-                <div style="display:flex; gap:5px;">
-                    <button class="btn-help-top" onclick="quickSave()">[F5] Save</button>
-                    <button class="btn-help-top" onclick="quickLoad()">[F9] Load</button>
-                    <button class="btn-help-top" onclick="showScreen('help')">[F1] Manual</button>
+                <div style="display:flex; gap:4px; flex-wrap:wrap; align-items:center;">
+                    <button class="btn-help-top btn-sound-toggle" onclick="toggleSound()" title="Toggle Sound [M]">🔊 Audio</button>
+                    <button class="btn-help-top" onclick="openTelemetryModal()" title="Telemetry Save & Backup [F2]">[F2] Backup</button>
+                    <button class="btn-help-top" onclick="quickSave()" title="Quicksave [F5]">[F5] Save</button>
+                    <button class="btn-help-top" onclick="quickLoad()" title="Quickload [F9]">[F9] Load</button>
+                    <button class="btn-help-top" onclick="showScreen('help')" title="Manual [F1]">[F1] Manual</button>
                 </div>
             </div>
 
@@ -685,6 +769,8 @@
                     <tr><td>Cycle Weapon / Armor / Sink / Special</td><td><span class="shortcut-key">1 / 2 / 3 / 4</span></td><td>Garage</td></tr>
                     <tr><td>Quicksave Mission State</td><td><span class="shortcut-key">F5</span></td><td>Anywhere</td></tr>
                     <tr><td>Quickload Mission State</td><td><span class="shortcut-key">F9</span></td><td>Anywhere</td></tr>
+                    <tr><td>Telemetry Backup & Save Records</td><td><span class="shortcut-key">F2</span></td><td>Anywhere</td></tr>
+                    <tr><td>Toggle Sound (Mute/Unmute)</td><td><span class="shortcut-key">M</span></td><td>Anywhere</td></tr>
                     <tr><td>Attack</td><td><span class="shortcut-key">A / Space / 1</span></td><td>Combat</td></tr>
                     <tr><td>Defend & Vent Heat</td><td><span class="shortcut-key">D / 2</span></td><td>Combat</td></tr>
                     <tr><td>Cycle Target Limb</td><td><span class="shortcut-key">T</span></td><td>Combat</td></tr>
@@ -730,6 +816,29 @@
                 <button class="btn" onclick="returnFromHelp()"><span class="key-badge">Esc / Enter</span> Back</button>
             </div>
         </div>
+
+        <!-- Telemetry & Save Backup Modal -->
+        <div id="modal-telemetry" class="modal-backdrop" onclick="if(event.target===this)closeTelemetryModal()" style="display: none;">
+            <div class="modal-window">
+                <div class="modal-header">
+                    <h3 class="modal-title">📡 Mission Telemetry & Save Records</h3>
+                    <button class="btn-help-top" onclick="closeTelemetryModal()">[Esc] Close</button>
+                </div>
+                <div class="modal-body">
+                    <p style="margin: 0; font-size: 11px; color: #8cfaab; line-height: 14px;">
+                        Export pilot career telemetry to backup JSON, download save file, or restore mission state.
+                    </p>
+                    <textarea id="telemetry-textarea" class="telemetry-textarea" placeholder="Paste KMech telemetry JSON here..."></textarea>
+                    <input type="file" id="telemetry-file-input" accept=".json" style="display:none;" onchange="handleTelemetryFileSelect(event)">
+                </div>
+                <div class="modal-btn-row">
+                    <button class="btn-help-top" onclick="copyTelemetryToClipboard()">📋 Copy JSON</button>
+                    <button class="btn-help-top" onclick="downloadTelemetryFile()">💾 Download File</button>
+                    <button class="btn-help-top" onclick="importTelemetryFromFile()">📂 Load File</button>
+                    <button class="btn-help-top" style="background:#003311; border-color:#00ff88;" onclick="importTelemetryFromTextarea()">📥 Import JSON</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -768,8 +877,28 @@
             return audioCtx;
         }
 
+        let soundEnabled = safeGetStorage('kmech_sound', '1') === '1';
+
+        function updateSoundButton() {
+            const btns = document.querySelectorAll('.btn-sound-toggle');
+            btns.forEach(btn => {
+                btn.innerText = soundEnabled ? '🔊 Audio' : '🔇 Muted';
+                btn.title = soundEnabled ? 'Toggle Sound [M]' : 'Unmute Sound [M]';
+                btn.style.opacity = soundEnabled ? '1' : '0.6';
+            });
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            safeSetStorage('kmech_sound', soundEnabled ? '1' : '0');
+            updateSoundButton();
+            showToast(soundEnabled ? '🔊 Audio Synthesizer: ONLINE' : '🔇 Audio Synthesizer: MUTED', 1800);
+            if (soundEnabled) playSound('click');
+        }
+
         // Sega Genesis YM2612 2-Operator Frequency Modulation Voice
         function playFM(carrierFreq, modRatio, modIndex, duration, vol = 0.22, carrierType = 'sine', modType = 'sine') {
+            if (!soundEnabled) return;
             const ctx = initAudio();
             if (!ctx) return;
             const t = ctx.currentTime;
@@ -806,6 +935,7 @@
         }
 
         function playSound(type) {
+            if (!soundEnabled) return;
             try {
                 const ctx = initAudio();
                 if (!ctx) return;
@@ -877,9 +1007,17 @@
             } catch(e) {}
         }
 
+        function clearToasts() {
+            const container = document.getElementById('toast-container');
+            if (container) container.innerHTML = '';
+        }
+
         function showToast(msg, duration = 3000, type = 'info') {
             const container = document.getElementById('toast-container');
             if (!container) return;
+            while (container.children.length >= 2) {
+                container.removeChild(container.firstChild);
+            }
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
             toast.innerText = msg;
@@ -977,29 +1115,108 @@
             {name: 'Legs', chance: 0.5, mult: 1.2}
         ];
 
+        function getSavePayload() {
+            const inBattle = getCurrentScreen() === 'battle';
+            return {
+                version: "1.0",
+                app: "KMech",
+                timestamp: new Date().toISOString(),
+                credits,
+                salvage,
+                battleCount,
+                playerLevel,
+                playerXp,
+                equipWpn,
+                equipArm,
+                equipSink,
+                equipSpec,
+                playerHp: playerStats.hp,
+                playerHeat: playerStats.heat,
+                inBattle,
+                enemyStats: inBattle ? {
+                    maxHp: enemyStats.maxHp,
+                    hp: enemyStats.hp,
+                    atk: enemyStats.atk,
+                    def: enemyStats.def,
+                    maxHeat: enemyStats.maxHeat,
+                    heat: enemyStats.heat
+                } : null,
+                currentTargetLimb,
+                playerLimbDamage: [...playerLimbDamage],
+                playerLegEvadeBoost,
+                isDefending,
+                enemyIsDefending
+            };
+        }
+
+        function restoreSavePayload(d) {
+            if (!d || typeof d !== 'object') return false;
+            credits = typeof d.credits === 'number' ? Math.max(0, Math.floor(d.credits)) : 100;
+            salvage = typeof d.salvage === 'number' ? Math.max(0, Math.floor(d.salvage)) : 0;
+            battleCount = typeof d.battleCount === 'number' ? Math.max(1, Math.floor(d.battleCount)) : 1;
+            playerLevel = typeof d.playerLevel === 'number' ? Math.max(1, Math.min(20, Math.floor(d.playerLevel))) : 1;
+            playerXp = typeof d.playerXp === 'number' ? Math.max(0, Math.floor(d.playerXp)) : 0;
+            equipWpn = (typeof d.equipWpn === 'number' ? Math.floor(d.equipWpn) : 0) % weapons.length;
+            if (equipWpn < 0) equipWpn = 0;
+            equipArm = (typeof d.equipArm === 'number' ? Math.floor(d.equipArm) : 0) % armors.length;
+            if (equipArm < 0) equipArm = 0;
+            equipSink = (typeof d.equipSink === 'number' ? Math.floor(d.equipSink) : 0) % heatSinks.length;
+            if (equipSink < 0) equipSink = 0;
+            equipSpec = (typeof d.equipSpec === 'number' ? Math.floor(d.equipSpec) : 0) % specials.length;
+            if (equipSpec < 0) equipSpec = 0;
+
+            playerStats.atk = weapons[equipWpn].atk;
+            playerHeatGen = weapons[equipWpn].heatGen;
+            playerStats.def = armors[equipArm].def;
+            playerStats.maxHp = armors[equipArm].maxHp;
+            playerStats.maxHeat = heatSinks[equipSink].maxHeat;
+            playerCooling = heatSinks[equipSink].cooling;
+            playerStats.hp = (typeof d.playerHp === 'number' && d.playerHp > 0) ? Math.min(d.playerHp, playerStats.maxHp) : playerStats.maxHp;
+            playerStats.heat = (typeof d.playerHeat === 'number') ? Math.max(0, Math.min(d.playerHeat, playerStats.maxHeat)) : 0;
+
+            safeSetStorage('kmech_tutorialSeen', '1');
+
+            if (d.inBattle && d.enemyStats && typeof d.enemyStats.hp === 'number' && d.enemyStats.hp > 0 && playerStats.hp > 0) {
+                enemyStats = {
+                    maxHp: typeof d.enemyStats.maxHp === 'number' ? d.enemyStats.maxHp : 80,
+                    hp: d.enemyStats.hp,
+                    atk: typeof d.enemyStats.atk === 'number' ? d.enemyStats.atk : 12,
+                    def: typeof d.enemyStats.def === 'number' ? d.enemyStats.def : 3,
+                    maxHeat: typeof d.enemyStats.maxHeat === 'number' ? d.enemyStats.maxHeat : 100,
+                    heat: typeof d.enemyStats.heat === 'number' ? d.enemyStats.heat : 0
+                };
+                currentTargetLimb = (typeof d.currentTargetLimb === 'number') ? Math.abs(Math.floor(d.currentTargetLimb)) % limbs.length : 1;
+                if (Array.isArray(d.playerLimbDamage) && d.playerLimbDamage.length === 5) {
+                    playerLimbDamage = [...d.playerLimbDamage];
+                }
+                playerLegEvadeBoost = typeof d.playerLegEvadeBoost === 'number' ? d.playerLegEvadeBoost : 0;
+                isDefending = !!d.isDefending;
+                enemyIsDefending = !!d.enemyIsDefending;
+                isProcessingTurn = false;
+                const bActions = document.getElementById('battle-actions');
+                const pbActions = document.getElementById('post-battle-actions');
+                if (bActions) bActions.style.display = 'flex';
+                if (pbActions) pbActions.style.display = 'none';
+                const tgtName = limbs[currentTargetLimb].name;
+                const btnTgt = document.getElementById('btn-target');
+                if (btnTgt) btnTgt.innerHTML = `<span class="key-badge">T</span> TGT: ${tgtName}`;
+                logMsg(`Combat telemetry resumed: ${getPilotRank(playerLevel)} (Battle #${battleCount})`);
+                updateBattle();
+                showScreen('battle');
+            } else {
+                isProcessingTurn = false;
+                isDefending = false;
+                playerLegEvadeBoost = 0;
+                playerStats.heat = 0;
+                updateGarage();
+                showScreen('garage');
+            }
+            return true;
+        }
+
         function quickSave(silent = false) {
             try {
-                const inBattle = getCurrentScreen() === 'battle';
-                const savePayload = {
-                    credits, salvage, battleCount, playerLevel, playerXp,
-                    equipWpn, equipArm, equipSink, equipSpec,
-                    playerHp: playerStats.hp,
-                    playerHeat: playerStats.heat,
-                    inBattle,
-                    enemyStats: inBattle ? {
-                        maxHp: enemyStats.maxHp,
-                        hp: enemyStats.hp,
-                        atk: enemyStats.atk,
-                        def: enemyStats.def,
-                        maxHeat: enemyStats.maxHeat,
-                        heat: enemyStats.heat
-                    } : null,
-                    currentTargetLimb,
-                    playerLimbDamage: [...playerLimbDamage],
-                    playerLegEvadeBoost,
-                    isDefending,
-                    enemyIsDefending
-                };
+                const savePayload = getSavePayload();
                 if (!safeSetStorage('kmech_save', JSON.stringify(savePayload))) {
                     throw new Error("QuotaExceeded");
                 }
@@ -1021,60 +1238,111 @@
                     return;
                 }
                 const d = JSON.parse(raw);
-                credits = d.credits ?? 100;
-                salvage = d.salvage ?? 0;
-                battleCount = d.battleCount ?? 1;
-                playerLevel = d.playerLevel ?? 1;
-                playerXp = d.playerXp ?? 0;
-                equipWpn = (d.equipWpn ?? 0) % weapons.length;
-                equipArm = (d.equipArm ?? 0) % armors.length;
-                equipSink = (d.equipSink ?? 0) % heatSinks.length;
-                equipSpec = (d.equipSpec ?? 0) % specials.length;
-                
-                playerStats.atk = weapons[equipWpn].atk;
-                playerHeatGen = weapons[equipWpn].heatGen;
-                playerStats.def = armors[equipArm].def;
-                playerStats.maxHp = armors[equipArm].maxHp;
-                playerStats.maxHeat = heatSinks[equipSink].maxHeat;
-                playerCooling = heatSinks[equipSink].cooling;
-                playerStats.hp = (d.playerHp !== undefined && d.playerHp > 0) ? Math.min(d.playerHp, playerStats.maxHp) : playerStats.maxHp;
-                playerStats.heat = (d.playerHeat !== undefined) ? Math.min(d.playerHeat, playerStats.maxHeat) : 0;
-
-                safeSetStorage('kmech_tutorialSeen', '1');
-
-                if (d.inBattle && d.enemyStats && d.enemyStats.hp > 0 && playerStats.hp > 0) {
-                    enemyStats = { ...d.enemyStats };
-                    currentTargetLimb = (d.currentTargetLimb !== undefined) ? d.currentTargetLimb % limbs.length : 1;
-                    if (Array.isArray(d.playerLimbDamage) && d.playerLimbDamage.length === 5) {
-                        playerLimbDamage = [...d.playerLimbDamage];
-                    }
-                    playerLegEvadeBoost = d.playerLegEvadeBoost ?? 0;
-                    isDefending = !!d.isDefending;
-                    enemyIsDefending = !!d.enemyIsDefending;
-                    isProcessingTurn = false;
-                    const bActions = document.getElementById('battle-actions');
-                    const pbActions = document.getElementById('post-battle-actions');
-                    if (bActions) bActions.style.display = 'flex';
-                    if (pbActions) pbActions.style.display = 'none';
-                    const tgtName = limbs[currentTargetLimb].name;
-                    const btnTgt = document.getElementById('btn-target');
-                    if (btnTgt) btnTgt.innerHTML = `<span class="key-badge">T</span> TGT: ${tgtName}`;
-                    logMsg(`Combat telemetry resumed: ${getPilotRank(playerLevel)} (Battle #${battleCount}) [F9]`);
-                    updateBattle();
-                    showScreen('battle');
+                if (restoreSavePayload(d)) {
+                    showToast(`📂 Telemetry restored: ${getPilotRank(playerLevel)} (Battle #${battleCount}) [F9]`, 3500, 'info');
+                    playSound('victory');
                 } else {
-                    isProcessingTurn = false;
-                    isDefending = false;
-                    playerLegEvadeBoost = 0;
-                    playerStats.heat = 0;
-                    updateGarage();
-                    showScreen('garage');
+                    showToast("⚠️ Failed to load telemetry data structure.", 3000, 'danger');
                 }
-
-                showToast(`📂 Telemetry restored: ${getPilotRank(playerLevel)} (Battle #${battleCount}) [F9]`, 3500, 'info');
-                playSound('victory');
             } catch(e) {
-                showToast("Failed to load telemetry", 3000, 'danger');
+                showToast("⚠️ Failed to parse saved telemetry.", 3000, 'danger');
+            }
+        }
+
+        function openTelemetryModal() {
+            const modal = document.getElementById('modal-telemetry');
+            if (!modal) return;
+            const payload = getSavePayload();
+            const ta = document.getElementById('telemetry-textarea');
+            if (ta) {
+                ta.value = JSON.stringify(payload, null, 2);
+            }
+            modal.style.display = 'flex';
+            playSound('click');
+        }
+
+        function closeTelemetryModal() {
+            const modal = document.getElementById('modal-telemetry');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function copyTelemetryToClipboard() {
+            const ta = document.getElementById('telemetry-textarea');
+            if (!ta) return;
+            try {
+                navigator.clipboard.writeText(ta.value).then(() => {
+                    showToast('📋 Telemetry copied to clipboard!', 2000, 'info');
+                }).catch(() => {
+                    ta.select();
+                    document.execCommand('copy');
+                    showToast('📋 Telemetry copied to clipboard!', 2000, 'info');
+                });
+            } catch (e) {
+                ta.select();
+                document.execCommand('copy');
+                showToast('📋 Telemetry copied to clipboard!', 2000, 'info');
+            }
+            playSound('click');
+        }
+
+        function downloadTelemetryFile() {
+            const payload = getSavePayload();
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(payload, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `kmech_telemetry_b${battleCount}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
+            showToast('💾 Telemetry file downloaded!', 2500, 'info');
+            playSound('click');
+        }
+
+        function importTelemetryFromFile() {
+            const fileInput = document.getElementById('telemetry-file-input');
+            if (fileInput) {
+                fileInput.value = '';
+                fileInput.click();
+            }
+        }
+
+        function handleTelemetryFileSelect(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                const text = evt.target.result;
+                const ta = document.getElementById('telemetry-textarea');
+                if (ta) ta.value = text;
+                applyImportedTelemetry(text);
+            };
+            reader.readAsText(file);
+        }
+
+        function importTelemetryFromTextarea() {
+            const ta = document.getElementById('telemetry-textarea');
+            if (!ta) return;
+            applyImportedTelemetry(ta.value.trim());
+        }
+
+        function applyImportedTelemetry(rawJson) {
+            if (!rawJson) {
+                showToast('⚠️ Telemetry input is empty.', 2500, 'warning');
+                return;
+            }
+            try {
+                const d = JSON.parse(rawJson);
+                const restored = restoreSavePayload(d);
+                if (restored) {
+                    safeSetStorage('kmech_save', JSON.stringify(getSavePayload()));
+                    closeTelemetryModal();
+                    showToast(`✅ Telemetry restored: ${getPilotRank(playerLevel)} (Battle #${battleCount})`, 3500, 'info');
+                    playSound('victory');
+                } else {
+                    showToast('⚠️ Invalid telemetry data structure.', 3000, 'danger');
+                }
+            } catch (e) {
+                showToast('⚠️ JSON parsing error in telemetry.', 3000, 'danger');
             }
         }
 
@@ -1777,6 +2045,8 @@
         }
 
         function showScreen(id) {
+            closeTelemetryModal();
+            clearToasts();
             const current = getCurrentScreen();
             if (current !== 'help') previousScreen = current;
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -2295,13 +2565,14 @@
         }
 
         updateGarage();
+        updateSoundButton();
 
         // Welcome prompt on fresh startup only (Pass 5 tutorial integrity)
         const seenTutorial = safeGetStorage('kmech_tutorialSeen');
         const hasSavedGame = safeGetStorage('kmech_save');
         if (!seenTutorial && !hasSavedGame) {
             setTimeout(() => {
-                showToast("🤖 PILOT ONLINE: Systems nominal. Press [F1] for Pilot's Manual, [F5] Save, [D] to deploy.", 4500);
+                showToast("🤖 PILOT ONLINE: Systems nominal. Press [F1] for Pilot's Manual, [F2] Backup, [F5] Save, [D] to deploy.", 4500);
                 safeSetStorage('kmech_tutorialSeen', '1');
             }, 300);
         }
@@ -2309,8 +2580,41 @@
         // Comprehensive keyboard navigation
         window.addEventListener('keydown', (e) => {
             if (e.ctrlKey || e.altKey || e.metaKey) return;
+            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeTelemetryModal();
+                }
+                return;
+            }
+
             const screen = getCurrentScreen();
             const key = e.key.toLowerCase();
+            const teleModal = document.getElementById('modal-telemetry');
+            const teleModalOpen = teleModal && teleModal.style.display === 'flex';
+
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                if (teleModalOpen) {
+                    closeTelemetryModal();
+                    return;
+                }
+                if (screen === 'help') {
+                    returnFromHelp();
+                } else if (screen === 'battle' && document.getElementById('post-battle-actions').style.display !== 'none') {
+                    returnToGarage();
+                }
+                return;
+            }
+
+            if (e.key === 'F2') {
+                e.preventDefault();
+                if (teleModalOpen) closeTelemetryModal();
+                else openTelemetryModal();
+                return;
+            }
+
+            if (teleModalOpen) return;
 
             if (e.key === 'F1' || key === 'h' || key === '?') {
                 e.preventDefault();
@@ -2319,6 +2623,12 @@
                 } else {
                     showScreen('help');
                 }
+                return;
+            }
+
+            if (key === 'm') {
+                e.preventDefault();
+                toggleSound();
                 return;
             }
 
@@ -2331,16 +2641,6 @@
             if (e.key === 'F9') {
                 e.preventDefault();
                 quickLoad();
-                return;
-            }
-
-            if (e.key === 'Escape') {
-                e.preventDefault();
-                if (screen === 'help') {
-                    returnFromHelp();
-                } else if (screen === 'battle' && document.getElementById('post-battle-actions').style.display !== 'none') {
-                    returnToGarage();
-                }
                 return;
             }
 
