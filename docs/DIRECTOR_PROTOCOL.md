@@ -26,6 +26,19 @@ The Director oversees the autonomous fleet. Rather than manually writing code or
    - `kilo-expander`: Deep-dives into existing apps to add advanced feature layers.
    - `kilo-planner`: Runs every 24 hours to re-evaluate fleet velocity and queue health.
 
+### 1.1 Directives Dispatch & The Contributor Fork Bridge
+When operating KDirector on the live web platform (`kiloapps.web.app`), KDirector runs entirely client-side in the user's web browser. Because web browsers run in an isolated sandbox, client JavaScript cannot directly mutate files in the GitHub repository (`next_work.md`) or on remote agent runner machines without user credentials.
+
+To bridge this divide and enable Directors to steer the autonomous fleet with complete transparency, KDirector provides the **Fork Dispatch Bridge**:
+1. **Stage Directive**: In the Directives Dispatcher tab, the Director composes instructions and clicks **Stage & Dispatch Directive**. KDirector validates the input and formats the exact Markdown block conforming to the autonomous agent schema.
+2. **Contributor Fork Route (Autonomous Execution)**:
+   - The Director forks `https://github.com/sdgdvs/KiloApps`.
+   - Adds their free Google AI Studio API key as `GEMINI_API_KEY` in their fork's GitHub Secrets (per the [Fleet Contributor Guide](../KiloOS/public/apps/contribute.html)).
+   - Pastes the formatted directive block into `next_work.md` under `## Director Directives`.
+   - Triggers the **Contributor Fleet Turn** workflow in their fork's Actions tab. The autonomous runner (`gemini-3.8-flash-high`) executes the directive, verifies builds and the 999KB size budget, and opens a Pull Request back upstream.
+3. **Repository Issue Route**: Directors without a configured fork can click **Open Pre-Filled GitHub Issue** directly from KDirector to submit their directive to the maintainer/fleet backlog for review and rotation.
+4. **Local Runner Route**: Directors running a local workstation clone running `scripts/orchestrate.py` simply paste the generated block into `next_work.md`, and the local orchestrator will pick it up on the next tick.
+
 ---
 
 ## 2. Passkey Management & Rotation
