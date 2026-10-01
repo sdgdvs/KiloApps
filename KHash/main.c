@@ -84,7 +84,7 @@ static HWND g_hBtnLoad = NULL;
 static HWND g_hBtnClear = NULL;
 static HWND g_hStatusLabel = NULL;
 
-static char g_szStatus[256] = "KHash Ready. Enter payload, browse file, or press [F1] for Help.";
+static char g_szStatus[256] = "KHash Ready. Enter payload, browse file, or press [F1/H] for Help.";
 static char g_szCrc16[16] = "0000";
 static char g_szCrc32[16] = "00000000";
 static char g_szAdler32[16] = "00000001";
@@ -564,7 +564,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             y += 36;
             g_hBtnSave = CreateWindowExA(0, "BUTTON", "💾 Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 16, y, 100, 26, hwnd, (HMENU)ID_BTN_SAVE, NULL, NULL);
             g_hBtnLoad = CreateWindowExA(0, "BUTTON", "📂 Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 124, y, 100, 26, hwnd, (HMENU)ID_BTN_LOAD, NULL, NULL);
-            g_hBtnHelp = CreateWindowExA(0, "BUTTON", "❓ Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 232, y, 100, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+            g_hBtnHelp = CreateWindowExA(0, "BUTTON", "❓ Help [F1/H]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 232, y, 110, 26, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
 
             // Status Bar Label
             y += 36;
@@ -683,7 +683,7 @@ void __cdecl MainEntry(void) {
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
-            if (msg.wParam == VK_F1) {
+            if (msg.wParam == VK_F1 || ((msg.wParam == 'H' || msg.wParam == 'h') && msg.hwnd != g_hEditInput && msg.hwnd != g_hEditExpected)) {
                 ShowHelp(hwnd);
                 continue;
             }

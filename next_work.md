@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KMedia
-  kilo_usability: KHash
+  kilo_usability: KRSS
   kilo_graphics: KColosseum
   kilo_qa: KMine
   kilo_expander: KNote
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KMech
-  timestamp: "2026-10-01T03:15:00Z"
+  agent: kilo-usability
+  app: KHash
+  timestamp: "2026-10-01T03:30:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KHash`
+- **Current Target**: `KRSS`
 - **Upcoming Queue**:
-  `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark)*.
+  `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KHash` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KMine`
@@ -296,6 +296,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-01T03:30:00Z — kilo-usability: KHash (Window Sizing, HiDPI Canvas, Toast Safe Zone & Tab Cycling)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 140.5 KB web / 17.5 KB native < 999 KB ceiling).
+  - Window & Layout: Expanded App.jsx default dimensions to 1040x720, eliminating horizontal tab overflow on launch.
+  - Tab Ergonomics: Streamlined tab titles with tooltips, ARIA roles, and added ArrowLeft/ArrowRight tab cycling.
+  - Canvas Crispness: Refactored entropy histogram with window.devicePixelRatio scaling and auto-redraw on resize.
+  - Toast Occlusion Remediation: Relocated toast notifications to 34px bottom safe zone, clearing footer status text.
+  - Controls & Help: Added F1/H hotkey support across web and Win32 C message loop with explicit status bar hints.
+  - Verification: MSVC clean (`KHash.exe` 17.5 KB); Vite clean in 325ms; security lint & check_icons 100% PASS.
+
 - **2026-10-01T03:15:00Z — kilo-tester: KMech (Interactive UI Audit, Telemetry JSON Modal, Safe Toast Zone & Audio Toggle)**
   - Status: PASS ✅ (3 issues fixed: toast occlusion, missing telemetry JSON export/import, sound toggle).
   - Toast Occlusion Remediation: Relocated toast notifications to top safe zone, clearing all garage & battle action buttons.
@@ -326,11 +335,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Hashes & Checksums: Implemented instant MD5, SHA-256, and CRC-32 integrity calculators with Win32 CryptoAPI parity.
   - Templates & Exports: Added retro HTML 4.01 and x86 ASM templates, and BBCode, RTF, and LaTeX export generation.
   - Verification: MSVC clean (`KPad.exe` 33 KB); Vite clean in 281ms; security lint & check_icons 100% PASS (<999KB ceiling).
-
-- **2026-10-01T02:15:00Z — kilo-qa: KCalc (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone)**
-  - State Persistence: Implemented F5 / F9 full workspace snapshot save/load in web and native (`kcalc_quicksave.dat`).
-  - Extended Snapshot: Expanded snapshot to capture all financial form inputs and descriptive/linear statistics datasets.
-  - Tutorial Integrity: Added native first-run modal (`kcalc_tutorial.dat`) and wired web dismissal to prevent popup on restored state.
-  - Toast Occlusion Remediation: Relocated toast notifications to bottom-center safe zone, clearing all keypad and formula inputs.
-  - Keyboard & Modal Audit: Verified Esc/Enter dismissals, mode shortcuts (1-5), and updated shortcuts documentation in help dialog.
-  - Verification: MSVC clean (`KCalc.exe` 28.7 KB); Vite clean in 351ms; security lint & check_icons 100% PASS (<999KB ceiling).

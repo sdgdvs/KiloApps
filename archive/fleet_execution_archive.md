@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-01T02:15:00Z — kilo-qa: KCalc (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone)**
+  - State Persistence: Implemented F5 / F9 full workspace snapshot save/load in web and native (`kcalc_quicksave.dat`).
+  - Extended Snapshot: Expanded snapshot to capture all financial form inputs and descriptive/linear statistics datasets.
+  - Tutorial Integrity: Added native first-run modal (`kcalc_tutorial.dat`) and wired web dismissal to prevent popup on restored state.
+  - Toast Occlusion Remediation: Relocated toast notifications to bottom-center safe zone, clearing all keypad and formula inputs.
+  - Keyboard & Modal Audit: Verified Esc/Enter dismissals, mode shortcuts (1-5), and updated shortcuts documentation in help dialog.
+  - Verification: MSVC clean (`KCalc.exe` 28.7 KB); Vite clean in 351ms; security lint & check_icons 100% PASS (<999KB ceiling).
+
 - **2026-10-01T02:00:00Z — kilo-usability: KBookmark (UX & Usability Ergonomics Pass)**
   - Protocol Launching: Integrated intelligent scheme dispatcher resolving `internal:<app>` and `kweb://<site>` in web & native.
   - Card URL Links: Converted raw anchor navigations into safe in-app launches preventing broken browser scheme errors.

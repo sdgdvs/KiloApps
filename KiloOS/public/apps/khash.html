@@ -913,10 +913,10 @@
       border: 1px solid #f87171;
     }
 
-    /* Toast Notification (Bottom Safe Zone) */
+    /* Toast Notification (Bottom Safe Zone - Clears Footer) */
     .toast {
       position: fixed;
-      bottom: 24px;
+      bottom: 34px;
       left: 50%;
       transform: translateX(-50%);
       background: var(--surface);
@@ -934,6 +934,12 @@
       max-width: calc(100vw - 40px);
       animation: toastSlideUp 0.2s ease;
       pointer-events: auto;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .toast:hover {
+      background: var(--surface-hover);
+      border-color: var(--accent);
     }
 
     .toast.show {
@@ -1029,18 +1035,18 @@
       <button class="btn btn-sm" id="btnExportJson" title="Export State as JSON File">📤 Export</button>
       <button class="btn btn-sm" id="btnImportJson" title="Import State from JSON File">📥 Import</button>
       <input type="file" id="stateFileInput" accept=".json,application/json" style="display:none;">
-      <button class="btn btn-sm btn-primary" id="btnHelp" title="Quick Reference & Tour (F1)">❓ Help</button>
+      <button class="btn btn-sm btn-primary" id="btnHelp" title="Quick Reference & Tour (F1 or H)">❓ Help [F1/H]</button>
     </div>
   </header>
 
   <!-- Navigation Tabs -->
-  <nav class="k-tabs">
-    <button class="tab-btn active" data-tab="tabText">🔤 [1] Text Digest</button>
-    <button class="tab-btn" data-tab="tabFile">📁 [2] File Inspector</button>
-    <button class="tab-btn" data-tab="tabVerify">⚖️ [3] Integrity Verifier</button>
-    <button class="tab-btn" data-tab="tabManifest">📜 [4] Manifests (.sfv / .md5 / .sha256)</button>
-    <button class="tab-btn" data-tab="tabBenchmark">⏱️ [5] Benchmarks</button>
-    <button class="tab-btn" data-tab="tabForensics">🔬 [6] Forensic Lab & Entropy</button>
+  <nav class="k-tabs" role="tablist" aria-label="KHash Workstation Sections">
+    <button class="tab-btn active" role="tab" aria-selected="true" data-tab="tabText">🔤 [1] Text Digest</button>
+    <button class="tab-btn" role="tab" aria-selected="false" data-tab="tabFile">📁 [2] File Inspector</button>
+    <button class="tab-btn" role="tab" aria-selected="false" data-tab="tabVerify">⚖️ [3] Integrity Verifier</button>
+    <button class="tab-btn" role="tab" aria-selected="false" data-tab="tabManifest" title="Checksum Manifests (.sfv / .md5 / .sha1 / .sha256)">📜 [4] Manifests</button>
+    <button class="tab-btn" role="tab" aria-selected="false" data-tab="tabBenchmark">⏱️ [5] Benchmarks</button>
+    <button class="tab-btn" role="tab" aria-selected="false" data-tab="tabForensics">🔬 [6] Forensic Lab & Entropy</button>
   </nav>
 
   <!-- Format & Config Bar -->
@@ -1993,12 +1999,17 @@
     });
 
     function switchTab(tabId) {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabId));
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        const isActive = (b.dataset.tab === tabId);
+        b.classList.toggle('active', isActive);
+        b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id === tabId));
       APP_STATE.currentTab = tabId;
       if (tabId === 'tabForensics') {
         if (typeof renderEntropyAnalysis === 'function') renderEntropyAnalysis();
         if (typeof runAvalancheTest === 'function') runAvalancheTest();
+        if (typeof drawHistogram === 'function') drawHistogram();
       }
       setStatus(`Switched to ${tabId.replace('tab', '')} view.`);
     }
@@ -3020,15 +3031,42 @@
       }
     }
 
+    let lastHistogramCounts = null;
+    let lastHistogramTotal = 0;
+
     function drawHistogram(counts, total) {
+      if (counts) {
+        lastHistogramCounts = counts;
+        lastHistogramTotal = total;
+      } else {
+        counts = lastHistogramCounts;
+        total = lastHistogramTotal;
+      }
       const canvas = document.getElementById('entropyCanvas');
       if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      const w = canvas.width;
-      const h = canvas.height;
-      ctx.clearRect(0, 0, w, h);
 
-      if (total === 0) return;
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const displayWidth = Math.round(rect.width) || 760;
+      const displayHeight = Math.round(rect.height) || 80;
+
+      const targetWidth = Math.round(displayWidth * dpr);
+      const targetHeight = Math.round(displayHeight * dpr);
+
+      if (canvas.width !== targetWidth || canvas.height !== targetHeight) {
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+      }
+
+      const ctx = canvas.getContext('2d');
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, displayWidth, displayHeight);
+
+      if (!counts || total === 0) {
+        ctx.restore();
+        return;
+      }
 
       let maxCount = 0;
       for (let i = 0; i < 256; i++) {
@@ -3036,13 +3074,13 @@
       }
       if (maxCount === 0) maxCount = 1;
 
-      const barWidth = w / 256;
+      const barWidth = displayWidth / 256;
       for (let i = 0; i < 256; i++) {
         const count = counts[i];
         if (count === 0) continue;
-        const barHeight = Math.max(2, (count / maxCount) * (h - 4));
+        const barHeight = Math.max(2, (count / maxCount) * (displayHeight - 4));
         const x = i * barWidth;
-        const y = h - barHeight;
+        const y = displayHeight - barHeight;
 
         if (i < 32 || i === 127) {
           ctx.fillStyle = '#10b981'; // Controls (Green)
@@ -3053,6 +3091,7 @@
         }
         ctx.fillRect(x, y, Math.max(1, barWidth - 0.5), barHeight);
       }
+      ctx.restore();
     }
 
     async function getAlgorithmRawBytes(algoKey, bytes) {
@@ -3544,7 +3583,7 @@
         }
       }
 
-      // 1-6 Tab shortcuts when not typing in text areas
+      // 1-6 Tab shortcuts and Arrow key cycling when not typing in text areas
       if (!isEditing) {
         if (e.key === '1') switchTab('tabText');
         if (e.key === '2') switchTab('tabFile');
@@ -3552,6 +3591,29 @@
         if (e.key === '4') switchTab('tabManifest');
         if (e.key === '5') switchTab('tabBenchmark');
         if (e.key === '6') switchTab('tabForensics');
+
+        const tabList = ['tabText', 'tabFile', 'tabVerify', 'tabManifest', 'tabBenchmark', 'tabForensics'];
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+          const focusedInTabs = document.activeElement && document.activeElement.classList.contains('tab-btn');
+          const isAlt = e.altKey;
+          if (focusedInTabs || isAlt) {
+            e.preventDefault();
+            const currIdx = tabList.indexOf(APP_STATE.currentTab);
+            let nextIdx = (e.key === 'ArrowRight') ? currIdx + 1 : currIdx - 1;
+            if (nextIdx >= tabList.length) nextIdx = 0;
+            if (nextIdx < 0) nextIdx = tabList.length - 1;
+            switchTab(tabList[nextIdx]);
+            const targetBtn = document.querySelector(`.tab-btn[data-tab="${tabList[nextIdx]}"]`);
+            if (targetBtn) targetBtn.focus();
+          }
+        }
+      }
+    });
+
+    // Window resize handler for HiDPI canvas redraw
+    window.addEventListener('resize', () => {
+      if (APP_STATE.currentTab === 'tabForensics' && typeof drawHistogram === 'function') {
+        drawHistogram();
       }
     });
 
