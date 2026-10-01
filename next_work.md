@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KMystery
   kilo_usability: KClip
   kilo_graphics: KWizard
-  kilo_qa: KCosmic
+  kilo_qa: KContacts
   kilo_expander: KContacts
   kilo_creator: "kweb://cybercafe (Underground BBS Lounge)"
 virtual_web_target: "kweb://cybercafe"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KRSS
-  timestamp: "2026-10-01T11:15:00Z"
+  agent: kilo-qa
+  app: KCosmic
+  timestamp: "2026-10-01T12:20:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KHash` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KCosmic`
+- **Current Target**: `KContacts`
 - **Upcoming Queue**:
-  `KContacts`, `KPad`, `KPaint`, `KMine` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine)*.
+  `KPad`, `KPaint`, `KMine`, `KCosmic` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KContacts`
@@ -297,6 +297,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-01T12:20:00Z — kilo-qa: KCosmic (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 547.4 KB web / 254.5 KB native < 999 KB ceiling).
+  - State Persistence: Audited & fixed F5/F9 state serialization; ensured planet telemetry flushes on save and splash dismisses on restore.
+  - Interactive Overlays: Implemented click handlers for native splash buttons, interactive tutorial steps, codex tabs, and F5/F9 nav buttons.
+  - Keyboard & Modal Isolation: Added Enter/Space/Arrow navigation for onboarding tutorial, prevented background key bleed during modals.
+  - Toast Occlusion Remediation: Relocated toast notifications to bottom-center safe zone, clearing all sidebar inputs and action buttons.
+  - Onboarding Integrity: Fixed tutorialSeen flags to prevent onboarding interruption when resuming from quicksave or JSON payloads.
+  - Verification: MSVC clean (`KCosmic.exe` 254.5 KB); Vite clean in 373ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-01T11:15:00Z — kilo-usability: KRSS (Draggable Splitters, J/K Article Navigation, Category Badges & Shortcuts)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 153.7 KB web / 21.5 KB native < 999 KB ceiling).
   - Layout & Splitters: Added interactive draggable splitters between feeds/articles/reader panes with double-click reset and saved widths.
@@ -332,13 +341,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Audio Engine: Added YM2612 FM Cornu war horn fanfare and rapid dual metallic blade clash sound effects.
   - Native Parity: Full C Win32 GDI rendering, stat scaling, and save persistence in KColosseum.exe.
   - Verification: MSVC clean (36.3 KB); Vite clean in 375ms; check_icons & security_lint 100% PASS.
-
-- **2026-10-01T07:45:00Z — kilo-creator: kweb://warez (0xRELEASE Scene Vault & Cracktros Deep Expansion)**
-  - NFO Stego Lab: Built trailing whitespace (SNOW) binary extractor, XOR-0x7F byte analyzer, CRC32/MD5 hash calculator, and 1999Hz waterfall spectrum CRT canvas.
-  - 4-Channel Tracker Composer: 16-step pattern matrix (YM2612 FM lead, slap bass, SPC700 pad, drums), 4 presets, BPM slider, C/NASM/JSON export & 8 SFX trigger pads.
-  - x86 Reverse Engineering Sandbox: Added sun99.exe & everrealm.exe targets, F9 breakpoint management, Run-to-Breakpoint (F5), and live hex opcode patcher.
-  - 3D Cracktro Workbench: Expanded to 12 demoscene shaders/geometries (Tesseract 4D, Copper Rainbow Bars, Sine Plasma, 3D Warp Starfield, CRT Glitch HUD).
-  - Catalog & Audio: Expanded catalog to 16 scene releases; expanded Jukebox to 8 tracks with procedural YM2612 FM & SPC700 delay.
-  - Diegetic ARG Seeds: Embedded Carlsbad salt vault relay, 1999Hz subcarrier tone, and sector 01 heap offset 0x007F1999 clues.
-  - Verification: Node.js AST check PASS; security lint PASS; Vite build clean in 3.81s; `warez.html` 222 KB (<999 KB ceiling).
 

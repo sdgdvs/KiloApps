@@ -1926,17 +1926,19 @@
             resize: vertical;
         }
 
-        /* Toast Notifications (Bottom-Right Non-Occluding Anchor) */
+        /* Toast Notifications (Bottom-Center Safe Anchor) */
         #toastContainer {
             position: fixed;
-            bottom: 44px;
-            right: 20px;
+            bottom: 42px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
             flex-direction: column-reverse;
             gap: 8px;
             z-index: 2000;
             pointer-events: none;
-            max-width: 340px;
+            max-width: 440px;
+            width: max-content;
         }
         .toast-item {
             background: rgba(10, 17, 32, 0.95);
@@ -10694,6 +10696,8 @@
                 return;
             }
             if (restoreState(saved)) {
+                splashOverlay.classList.remove('active');
+                localStorage.setItem(TUTORIAL_KEY, 'true');
                 showToast(`EXPEDITION RESTORED [F9] • Cycle ${sim.cycle.toFixed(2)}`, 'success');
                 logMsg(`📂 Telemetry restored from storage bank: Cycle ${sim.cycle.toFixed(2)}, Habitability ${sim.habitability}%.`);
                 playSound('success');
@@ -11028,7 +11032,7 @@
                     splashBtnNew.click();
                     return;
                 }
-                if (key === 'c' && !splashBtnContinue.disabled) {
+                if ((key === 'c' || e.key === 'F9') && !splashBtnContinue.disabled) {
                     splashBtnContinue.click();
                     return;
                 }

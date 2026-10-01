@@ -605,6 +605,7 @@ static int g_tutorialActive = 0;
 static int g_tutorialStep = 0;
 static int g_tutorialSeen = 0;
 static void CalculateHabitability(void);
+static void SyncSimToActivePlanet(void);
 
 
 // --- Phase 14: Binary Save & Load State Persistence ---
@@ -623,6 +624,7 @@ typedef struct {
 } SaveStateHeader;
 
 static int SaveGameState(const char* filename) {
+    SyncSimToActivePlanet();
     FILE* f = fopen(filename, "wb");
     if (!f) return 0;
     SaveStateHeader hdr;
@@ -656,6 +658,7 @@ static int LoadGameState(const char* filename) {
     memcpy(fleet, hdr.fleet, sizeof(fleet));
     memcpy(g_tradeRoutes, hdr.tradeRoutes, sizeof(g_tradeRoutes));
     g_tutorialSeen = hdr.tutorialSeen;
+    g_showSplash = 0;
     CalculateHabitability();
     return 1;
 }
@@ -6261,11 +6264,85 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             int mx = LOWORD(lParam);
             int my = HIWORD(lParam);
 
-            // Check button clicks first
-            for (int i = 0; i < g_buttonCount; i++) {
+            // Check button clicks first (reverse order so top overlays have priority)
+            for (int i = g_buttonCount - 1; i >= 0; i--) {
                 if (PtInRect(&g_buttons[i].rect, (POINT){mx, my})) {
                     int bid = g_buttons[i].id;
-                    if (bid >= BID_TAB_TERRA && bid <= BID_TAB_ECONOMY) {
+                    if (bid == BID_SPLASH_START) {
+                        g_showSplash = 0;
+                        if (!g_tutorialSeen) { g_tutorialActive = 1; g_tutorialStep = 0; }
+                        PlaySoundFx(SFX_DEPLOY);
+                    } else if (bid == BID_SPLASH_RESUME) {
+                        if (LoadGameState(SAVE_FILE)) {
+                            g_showSplash = 0;
+                            SetLogMsg("Resumed mission from quicksave.", 0);
+                            PlaySoundFx(SFX_SUCCESS);
+                        } else {
+                            SetLogMsg("No saved expedition found to resume.", 1);
+                            PlaySoundFx(SFX_WARN);
+                        }
+                    } else if (bid == BID_SPLASH_CODEX) {
+                        g_showCodex = 1;
+                        g_codexTab = 0;
+                        PlaySoundFx(SFX_CLICK);
+                    } else if (bid == BID_SPLASH_AUDIO) {
+                        g_crtTheme = (g_crtTheme + 1) % 4;
+                        PlaySoundFx(SFX_CLICK);
+                    } else if (bid == BID_TUT_NEXT) {
+                        if (g_tutorialStep < 5) {
+                            g_tutorialStep++;
+                            PlaySoundFx(SFX_CLICK);
+                        } else {
+                            g_tutorialActive = 0;
+                            g_tutorialSeen = 1;
+                            SetLogMsg("Fleet onboarding complete. All systems at your command!", 0);
+                            PlaySoundFx(SFX_SUCCESS);
+                        }
+                    } else if (bid == BID_TUT_BACK) {
+                        if (g_tutorialStep > 0) {
+                            g_tutorialStep--;
+                            PlaySoundFx(SFX_CLICK);
+                        }
+                    } else if (bid == BID_TUT_SKIP) {
+                        g_tutorialActive = 0;
+                        g_tutorialSeen = 1;
+                        PlaySoundFx(SFX_CLICK);
+                    } else if (bid == BID_OPEN_CODEX) {
+                        g_showCodex = !g_showCodex;
+                        if (g_showCodex) g_codexTab = 0;
+                        PlaySoundFx(SFX_CLICK);
+                    } else if (bid == BID_CODEX_CLOSE) {
+                        g_showCodex = 0;
+                        PlaySoundFx(SFX_CLICK);
+                    } else if (bid >= BID_CODEX_TAB_0 && bid <= BID_CODEX_TAB_4) {
+                        g_codexTab = bid - BID_CODEX_TAB_0;
+                        PlaySoundFx(SFX_CLICK);
+                    } else if (bid == BID_CODEX_TUTORIAL) {
+                        g_showCodex = 0;
+                        g_tutorialActive = 1;
+                        g_tutorialStep = 0;
+                        PlaySoundFx(SFX_CLICK);
+                    } else if (bid == BID_QUICKSAVE) {
+                        if (SaveGameState(SAVE_FILE)) {
+                            char qb[96];
+                            sprintf(qb, "Expedition quicksaved [F5] (Cycle %.2f).", sim.cycle);
+                            SetLogMsg(qb, 0);
+                            PlaySoundFx(SFX_DEPLOY);
+                        } else {
+                            SetLogMsg("Quicksave failed: Could not write file.", 1);
+                            PlaySoundFx(SFX_WARN);
+                        }
+                    } else if (bid == BID_QUICKLOAD) {
+                        if (LoadGameState(SAVE_FILE)) {
+                            char qb[96];
+                            sprintf(qb, "Expedition quickloaded [F9] (Cycle %.2f).", sim.cycle);
+                            SetLogMsg(qb, 0);
+                            PlaySoundFx(SFX_SUCCESS);
+                        } else {
+                            SetLogMsg("Quickload failed: No save file found.", 1);
+                            PlaySoundFx(SFX_WARN);
+                        }
+                    } else if (bid >= BID_TAB_TERRA && bid <= BID_TAB_ECONOMY) {
                         sim.activeTab = bid - BID_TAB_TERRA;
                         PlaySoundFx(SFX_CLICK);
                     } else if (bid == BID_FOCUS_PLANET) {
@@ -6438,6 +6515,27 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                 }
             }
 
+            // If a modal or splash screen is open, block viewport interaction
+            if (g_showSplash || g_showCodex) {
+                InvalidateRect(hwnd, NULL, FALSE);
+                return 0;
+            }
+
+            // If tutorial is active, clicking within its card shouldn't drag viewport
+            if (g_tutorialActive) {
+                int tutW = 860;
+                int tutH = 110;
+                if (tutW > winW - 40) tutW = winW - 40;
+                int tx = (winW - 380 - tutW) / 2;
+                if (tx < 10) tx = 10;
+                int ty = winH - tutH - 45;
+                RECT tutRect = { tx, ty, tx + tutW, ty + tutH };
+                if (PtInRect(&tutRect, (POINT){mx, my})) {
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+            }
+
             // Check if clicked in Viewport
             if (mx < winW - 380 && my >= 46 && my < winH - 34) {
                 // Check Ships
@@ -6535,11 +6633,14 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     InvalidateRect(hwnd, NULL, FALSE);
                     return 0;
                 }
-                if (wParam == 'C' || wParam == 'c') {
+                if (wParam == 'C' || wParam == 'c' || wParam == VK_F9) {
                     if (LoadGameState(SAVE_FILE)) {
                         g_showSplash = 0;
                         SetLogMsg("Resumed mission from quicksave.", 0);
                         PlaySoundFx(SFX_SUCCESS);
+                    } else {
+                        SetLogMsg("No saved expedition found to resume.", 1);
+                        PlaySoundFx(SFX_WARN);
                     }
                     InvalidateRect(hwnd, NULL, FALSE);
                     return 0;
@@ -6551,9 +6652,36 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     InvalidateRect(hwnd, NULL, FALSE);
                     return 0;
                 }
+                return 0;
             }
 
-            // If in Codex modal, 1-5 changes tab
+            // If in Onboarding Tutorial
+            if (g_tutorialActive) {
+                if (wParam == VK_RIGHT || wParam == VK_RETURN || wParam == VK_SPACE) {
+                    if (g_tutorialStep < 5) {
+                        g_tutorialStep++;
+                        PlaySoundFx(SFX_CLICK);
+                    } else {
+                        g_tutorialActive = 0;
+                        g_tutorialSeen = 1;
+                        SetLogMsg("Fleet onboarding complete. All systems at your command!", 0);
+                        PlaySoundFx(SFX_SUCCESS);
+                    }
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                if (wParam == VK_LEFT) {
+                    if (g_tutorialStep > 0) {
+                        g_tutorialStep--;
+                        PlaySoundFx(SFX_CLICK);
+                    }
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                return 0;
+            }
+
+            // If in Codex modal, 1-5 or arrow keys change tab, Space/Return closes
             if (g_showCodex) {
                 if (wParam >= '1' && wParam <= '5') {
                     g_codexTab = (int)(wParam - '1');
@@ -6561,6 +6689,25 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
                     InvalidateRect(hwnd, NULL, FALSE);
                     return 0;
                 }
+                if (wParam == VK_LEFT) {
+                    if (g_codexTab > 0) g_codexTab--;
+                    PlaySoundFx(SFX_CLICK);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                if (wParam == VK_RIGHT) {
+                    if (g_codexTab < 4) g_codexTab++;
+                    PlaySoundFx(SFX_CLICK);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                if (wParam == VK_SPACE || wParam == VK_RETURN) {
+                    g_showCodex = 0;
+                    PlaySoundFx(SFX_CLICK);
+                    InvalidateRect(hwnd, NULL, FALSE);
+                    return 0;
+                }
+                return 0;
             }
 
             // Quicksave & Quickload
