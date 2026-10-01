@@ -1376,6 +1376,11 @@
                             <div style="color:var(--text-dim); font-size:10px;">Fires necrotic Shadow Bolts 4 tiles away. Vulnerable in close melee.</div>
                         </div>
                         <div style="background:#090d16; padding:6px; border:1px solid #1e293b; border-radius:4px;">
+                            <strong style="color:#a855f7;">🦂 Void Stalker (B8+)</strong>
+                            <div style="color:var(--text-bright); font-size:10px;">HP: 65+ | ATK: 20+ | Shadow Stalker</div>
+                            <div style="color:var(--text-dim); font-size:10px;">Chasm predator formed of pure void. Drains -3 Aether on strike. <span style="color:#f97316;">Vulnerable to Pyre Blast (+50% DMG).</span></div>
+                        </div>
+                        <div style="background:#090d16; padding:6px; border:1px solid #1e293b; border-radius:4px;">
                             <strong style="color:#f43f5e;">🐙 Abyssal Leviathan (B10+)</strong>
                             <div style="color:var(--text-bright); font-size:10px;">HP: 95+ | ATK: 24+ | Apex Behemoth</div>
                             <div style="color:var(--text-dim); font-size:10px;">Colossal void horror. Devastating crush attacks. <span style="color:#06b6d4;">Vulnerable to Glacial Nova (2-turn Freeze).</span></div>
@@ -1389,6 +1394,11 @@
                             <strong style="color:#34d399;">🐉 Abyssal Wyrm (Boss B6)</strong>
                             <div style="color:var(--text-bright); font-size:10px;">HP: 380+ | ATK: 36+ | Sovereign of Sunken Grotto</div>
                             <div style="color:var(--text-dim); font-size:10px;">Spits caustic acid venom (dissolves hunger & HP) and surges through stone. Constricting coils drain sanity. <span style="color:#06b6d4;">Vulnerable to Glacial Frost (ᚦ Cryo).</span></div>
+                        </div>
+                        <div style="background:#1a0b12; padding:6px; border:1px solid #dc2626; border-radius:4px;">
+                            <strong style="color:#f87171;">💀🔮 The Dread Lich (Boss B9)</strong>
+                            <div style="color:var(--text-bright); font-size:10px;">HP: 450+ | ATK: 40+ | Sovereign of Forgotten Crypt</div>
+                            <div style="color:var(--text-dim); font-size:10px;">Necrotic arch-sorcerer. Hurls piercing death coils, inflicts soul rot (-4 Sanity, -6 Aether), and summons crypt legions. <span style="color:#f97316;">Disrupted by Pyre & Tempest.</span></div>
                         </div>
                         <div style="background:#160924; padding:6px; border:1px solid #a855f7; border-radius:4px;">
                             <strong style="color:#c084fc;">👁️🌌 The Void Monarch (Boss B10+)</strong>
@@ -1726,6 +1736,11 @@
                                 <span class="tome-badge badge-frost">Weak to Melee rush & ᚦ Frost lock</span> • Drops: Aether Blossoms, Arcane Scrolls.
                             </div>
                             <div class="tome-item-row">
+                                <strong>🦂 Void Stalker</strong> (HP: 65 | ATK: 16-22 | DEF: 4)<br>
+                                Ambush predator lurking in chasm shadows. Siphons Aether with astral pincers.<br>
+                                <span class="tome-badge badge-fire">Weak to ᚠ Fire (+50% DMG)</span> • Drops: Void Dust, Voidfang Dagger, Void Talisman.
+                            </div>
+                            <div class="tome-item-row">
                                 <strong>🐙 Abyssal Leviathan</strong> (HP: 90 | ATK: 16-24 | DEF: 6)<br>
                                 Colossal subterranean apex titan with crushing blows.<br>
                                 <span class="tome-badge badge-frost">Weak to ᚦ Glacial Nova (2-turn Freeze)</span> • Drops: Panacea of the Deep, Aegis Armor.
@@ -1747,6 +1762,13 @@
                                 • <strong>Tactics:</strong> Slithers through submerged depths; spews caustic acid venom up to 5 tiles away (inflicts severe acid burn & -20 Hunger). Lunges 2 paces forward.<br>
                                 • <strong>Weakness:</strong> <span class="tome-badge badge-frost">ᚦ Glacial Nova & Frostbite (freezes scales & disables acid glands)</span>.<br>
                                 • <strong>Legendary Drops:</strong> <em>Wyrmscale Carapace</em> (+9 Warding, +40 Max HP, +2 Might) and Panacea of the Deep!
+                            </div>
+                            <div class="tome-item-row">
+                                <strong>💀🔮 The Dread Lich (Depth B9 Boss)</strong><br>
+                                • <strong>Stats:</strong> 450 HP | 36-44 ATK | Necrotic Phylactery.<br>
+                                • <strong>Tactics:</strong> Casts piercing Death Coils (range 5), curses delvers with Soul Rot (-4 Sanity, -6 Aether), and summons crypt legions.<br>
+                                • <strong>Weakness:</strong> <span class="tome-badge badge-fire">ᚠ Pyre Blast (+50% DMG)</span> & <span class="tome-badge badge-frost">⚡ Tempest (disrupts phylactery)</span>.<br>
+                                • <strong>Legendary Drops:</strong> <em>Soul Phylactery</em> (+8 Arcana, +4 Warding, +30 Max Aether) and Ancient Runic Key!
                             </div>
                             <div class="tome-item-row">
                                 <strong>👁️🌌 The Void Monarch (Depth B10+ Sovereign)</strong><br>
@@ -2040,6 +2062,7 @@
         let combatTexts = [];
         let torchParticles = [];
         let spellEffects = [];
+        let decals = [];
 
         let fovEnabled = true;
         let crtEnabled = true;
@@ -2122,6 +2145,21 @@
                 behavior: 'Apex Behemoth',
                 desc: 'Cosmic monstrosity from the bottomless deep. Crushes all in its path.',
                 weakness: 'Susceptible to Glacial Nova (Freeze skips turns).'
+            },
+            VOID_STALKER: {
+                id: 'VOID_STALKER',
+                name: 'Void Stalker',
+                symbol: '🦂',
+                color: '#a855f7',
+                baseHp: 65,
+                hpScale: 7,
+                baseAtk: 20,
+                atkScale: 3,
+                exp: 60,
+                essence: 50,
+                behavior: 'Shadow Lunge & Mana Drain',
+                desc: 'Predatory chimera formed of condensed abyssal shadow. Lurks in chasms and strikes with dual astral claws.',
+                weakness: 'Vulnerable to Fire (ᚠ Pyre deals +50% DMG; illuminated delvers spot them earlier).'
             },
             CRYPT_KEEPER: {
                 id: 'CRYPT_KEEPER',
@@ -4467,6 +4505,7 @@
             lightMap = [];
             torches = [];
             chests = [];
+            decals = [];
 
             const initialTile = (zoneIdx === ZONE.VOID_ABYSS) ? TILE.CHASM : TILE.WALL;
             for (let y = 0; y < MAP_HEIGHT; y++) {
@@ -4474,6 +4513,7 @@
                 explored[y] = [];
                 visible[y] = [];
                 lightMap[y] = [];
+                decals[y] = [];
                 for (let x = 0; x < MAP_WIDTH; x++) {
                     // Borders are always solid WALL to constrain the level
                     if (x === 0 || x === MAP_WIDTH - 1 || y === 0 || y === MAP_HEIGHT - 1) {
@@ -5160,8 +5200,9 @@
                 if (level >= 5) types.push('ACOLYTE');
             } else if (zone === ZONE.FORGOTTEN_CRYPT) {
                 types = ['SKELETON', 'WRAITH', 'ACOLYTE', 'WRAITH'];
+                if (level >= 8) types.push('VOID_STALKER');
             } else {
-                types = ['WRAITH', 'WRAITH', 'LEVIATHAN'];
+                types = ['WRAITH', 'VOID_STALKER', 'VOID_STALKER', 'LEVIATHAN'];
             }
 
             const numToSpawn = 5 + Math.floor(level * 0.8) + Math.floor(Math.random() * 3);
@@ -5323,6 +5364,30 @@
                     logMessage(`✦ Bestiary Spoils: ${m.name} yielded ${RUNES[newRune].name} (${RUNES[newRune].symbol})! Inscribe in Tab [3].`, 'magic');
                 }
 
+                // Place permanent floor combat residue decal
+                if (!decals[m.y]) decals[m.y] = [];
+                let decalType = 'splatter';
+                let decalColor = 'rgba(185, 28, 28, 0.7)';
+                let decalDim = '#450a0a';
+                if (m.type === 'SKELETON' || m.type === 'CRYPT_KEEPER') {
+                    decalType = 'bones';
+                    decalColor = 'rgba(203, 213, 225, 0.75)';
+                    decalDim = '#334155';
+                } else if (m.type === 'GHOUL') {
+                    decalType = 'ichor';
+                    decalColor = 'rgba(13, 148, 136, 0.75)';
+                    decalDim = '#115e59';
+                } else if (m.type === 'WRAITH' || m.type === 'VOID_STALKER' || m.type === 'VOID_MONARCH') {
+                    decalType = 'ashes';
+                    decalColor = 'rgba(168, 85, 247, 0.75)';
+                    decalDim = '#581c87';
+                } else if (m.type === 'DREAD_LICH' || m.type === 'ACOLYTE') {
+                    decalType = 'ashes';
+                    decalColor = 'rgba(239, 68, 68, 0.75)';
+                    decalDim = '#450a0a';
+                }
+                decals[m.y][m.x] = { type: decalType, color: decalColor, dimColor: decalDim };
+
                 // Monster drops ingredients, potions, or rare gear
                 const dropRoll = Math.random();
                 let droppedItem = null;
@@ -5356,6 +5421,10 @@
                     if (dropRoll < 0.50) droppedItem = 'ING_VOID_DUST';
                     else if (dropRoll < 0.75) droppedItem = 'WPN_VOID_DAGGER';
                     else if (dropRoll < 0.90) droppedItem = 'AMU_VOID';
+                } else if (m.type === 'VOID_STALKER') {
+                    if (dropRoll < 0.55) droppedItem = 'ING_VOID_DUST';
+                    else if (dropRoll < 0.80) droppedItem = 'WPN_VOID_DAGGER';
+                    else if (dropRoll < 0.92) droppedItem = 'AMU_VOID';
                 } else if (m.type === 'ACOLYTE') {
                     if (dropRoll < 0.50) droppedItem = 'ING_AETHER_BLOSSOM';
                     else if (dropRoll < 0.75) droppedItem = 'AETHER_PHIAL';
@@ -5563,6 +5632,9 @@
                             player.sanity = Math.max(0, player.sanity - 3);
                             player.aether = Math.max(0, player.aether - 4);
                             logMessage(`👻 Void Wraith drains your mind & spirit (-3 Sanity, -4 Aether)!`, 'important');
+                        } else if (m.type === 'VOID_STALKER') {
+                            player.aether = Math.max(0, player.aether - 3);
+                            logMessage(`🦂 Void Stalker's shadow pincers siphon your mana (-3 Aether)!`, 'important');
                         } else if (m.type === 'LEVIATHAN') {
                             player.sanity = Math.max(0, player.sanity - 2);
                             logMessage(`🐙 Abyssal Leviathan's crushing slam rattles your skull (-2 Sanity)!`, 'important');
@@ -5975,14 +6047,12 @@
                 ctx.beginPath();
                 ctx.arc(cx, cy, 14 + shieldPulse, 0, Math.PI * 2);
                 ctx.stroke();
-                // Rotating rune ward nodes
-                for (let r = 0; r < 3; r++) {
-                    const ang = animTime * 3 + (r * Math.PI * 2 / 3);
-                    const rx = cx + Math.cos(ang) * (14 + shieldPulse);
-                    const ry = cy + Math.sin(ang) * (14 + shieldPulse);
-                    ctx.fillStyle = '#e0f2fe';
-                    ctx.fillRect(rx - 1.5, ry - 1.5, 3, 3);
-                }
+                // Static subtle inner ward aura ring (no traveling orbital dots)
+                ctx.beginPath();
+                ctx.arc(cx, cy, 11, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
                 ctx.restore();
             }
 
@@ -6250,6 +6320,65 @@
                 ctx.fillRect(cx - 1, by + 3, 1, 1.5);
                 ctx.fillRect(cx + 1, by + 3, 1, 1.5);
                 ctx.fillRect(cx + 3, by + 3, 1, 1.5);
+
+            } else if (type === 'VOID_STALKER') {
+                const sBob = Math.sin(animTime * 4 + m.x) * 1.5;
+                const sy = cy + sBob;
+
+                // Shadow Miasma Aura
+                ctx.fillStyle = 'rgba(168, 85, 247, 0.2)';
+                ctx.beginPath();
+                ctx.ellipse(cx, sy, 13, 10, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Dark Chitin Carapace
+                ctx.fillStyle = '#1e112a';
+                ctx.beginPath();
+                ctx.ellipse(cx, sy, 9, 7, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Amethyst Armor Plates
+                ctx.fillStyle = '#6b21a8';
+                ctx.beginPath();
+                ctx.ellipse(cx, sy - 1, 6, 4, 0, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Spindly Shadow Legs
+                ctx.strokeStyle = '#3b0764';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(cx - 5, sy); ctx.lineTo(cx - 12, sy - 4); ctx.lineTo(cx - 14, sy + 3);
+                ctx.moveTo(cx - 5, sy + 3); ctx.lineTo(cx - 13, sy + 4); ctx.lineTo(cx - 11, sy + 9);
+                ctx.moveTo(cx + 5, sy); ctx.lineTo(cx + 12, sy - 4); ctx.lineTo(cx + 14, sy + 3);
+                ctx.moveTo(cx + 5, sy + 3); ctx.lineTo(cx + 13, sy + 4); ctx.lineTo(cx + 11, sy + 9);
+                ctx.stroke();
+
+                // Curved Astral Scythe Claws
+                ctx.strokeStyle = '#c084fc';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(cx - 5, sy - 3); ctx.lineTo(cx - 10, sy - 8); ctx.lineTo(cx - 7, sy - 12);
+                ctx.moveTo(cx + 5, sy - 3); ctx.lineTo(cx + 10, sy - 8); ctx.lineTo(cx + 7, sy - 12);
+                ctx.stroke();
+
+                // Segmented Barbed Tail
+                const tailWiggle = Math.sin(animTime * 5) * 2;
+                ctx.strokeStyle = '#a855f7';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(cx, sy + 6);
+                ctx.quadraticCurveTo(cx + tailWiggle, sy + 11, cx + 1, sy + 14);
+                ctx.stroke();
+                ctx.fillStyle = '#e879f9';
+                ctx.fillRect(cx, sy + 13, 2, 2);
+
+                // Cluster of 4 Glowing Violet Eyes
+                const vPulse = Math.sin(animTime * 6) * 0.3 + 0.7;
+                ctx.fillStyle = `rgba(232, 121, 249, ${vPulse})`;
+                ctx.fillRect(cx - 4, sy - 3, 2, 2);
+                ctx.fillRect(cx + 2, sy - 3, 2, 2);
+                ctx.fillRect(cx - 2, sy - 5, 1.5, 1.5);
+                ctx.fillRect(cx + 0.5, sy - 5, 1.5, 1.5);
 
             } else if (type === 'CRYPT_KEEPER') {
                 const bHover = Math.sin(animTime * 3) * 1.5;
@@ -6971,6 +7100,30 @@
                         // Cobblestone dot
                         ctx.fillStyle = isVisible ? `rgba(${zInfo.wallRgb}, ${light * 0.6})` : '#0b101b';
                         ctx.fillRect(screenX + 14, screenY + 14, 4, 4);
+
+                        // Floor combat residue decals (bone chips, dark ichor, ashes)
+                        if (decals[y] && decals[y][x]) {
+                            const d = decals[y][x];
+                            ctx.fillStyle = isVisible ? d.color : (d.dimColor || '#1e293b');
+                            if (d.type === 'bones') {
+                                ctx.fillRect(screenX + 8, screenY + 10, 3, 2);
+                                ctx.fillRect(screenX + 18, screenY + 14, 2, 3);
+                                ctx.fillRect(screenX + 12, screenY + 22, 4, 2);
+                            } else if (d.type === 'ichor') {
+                                ctx.beginPath();
+                                ctx.arc(screenX + 14, screenY + 16, 4, 0, Math.PI * 2);
+                                ctx.arc(screenX + 20, screenY + 20, 2.5, 0, Math.PI * 2);
+                                ctx.fill();
+                            } else if (d.type === 'ashes') {
+                                ctx.fillRect(screenX + 10, screenY + 12, 5, 3);
+                                ctx.fillRect(screenX + 16, screenY + 18, 4, 4);
+                                ctx.fillRect(screenX + 22, screenY + 13, 3, 2);
+                            } else {
+                                ctx.beginPath();
+                                ctx.arc(screenX + 16, screenY + 16, 3, 0, Math.PI * 2);
+                                ctx.fill();
+                            }
+                        }
 
                         if (tile === TILE.RUBBLE) {
                             ctx.fillStyle = isVisible ? '#94a3b8' : '#334155';
@@ -7788,7 +7941,7 @@
                 const targetM = monsters.find(m => m.alive && m.x === tx && m.y === ty);
                 if (targetM) {
                     let dmg = 35 + Math.floor(player.arcana * 0.8);
-                    if (targetM.type === 'SKELETON') dmg = Math.floor(dmg * 1.5);
+                    if (targetM.type === 'SKELETON' || targetM.type === 'VOID_STALKER') dmg = Math.floor(dmg * 1.5);
                     damageMonster(targetM, dmg, 'FIRE');
                 }
 

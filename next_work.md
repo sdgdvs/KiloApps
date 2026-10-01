@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_tester: KMech
   kilo_usability: KHash
-  kilo_graphics: KAbyss
+  kilo_graphics: KColosseum
   kilo_qa: KMine
   kilo_expander: KNote
   kilo_creator: "kweb://asm-temple (Win32 ASM Shrine & Opcode Converter)"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://users/~neon_rider (Personal Hacker / Demoscene Homepage)"
-  timestamp: "2026-10-01T02:45:00Z"
+  agent: kilo-graphics
+  app: KAbyss
+  timestamp: "2026-10-01T03:00:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -104,9 +104,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KAbyss`
+- **Current Target**: `KColosseum`
 - **Upcoming Queue**:
-  `KColosseum`, `KWizard`, `KStarship`, `KChrono`, `KFortress`, `KCosmic`, `KSanctuary`, `KDragon`, `KStarDredge` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KSanctuary, KDragon, KSubmarine, KStarDredge)*.
+  `KWizard`, `KStarship`, `KChrono`, `KFortress`, `KCosmic`, `KSanctuary`, `KDragon`, `KStarDredge`, `KAbyss` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KSanctuary, KDragon, KSubmarine, KStarDredge)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KMech`
@@ -296,6 +296,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-01T03:00:00Z — kilo-graphics: KAbyss (Glint Ban, Void Stalker, Combat Decals & Balance)**
+  - Glint & Comet Ban: Removed rotating rune ward orbital glint nodes from delver shield; replaced with static inner aura ring.
+  - Enemy Depth: Added 10th enemy `Void Stalker` (chasm predator, mana drain, scythe claws, amethyst carapace) in web and native.
+  - Floor Decals: Built combat residue system rendering bone chips, ichor, and void dust on explored dungeon tiles.
+  - Balance & Bestiary: Balanced Zone 4 encounters; added Voidfang Dagger & Void Dust loot; updated sidebar and tome bestiaries.
+  - Verification: MSVC clean (`KAbyss.exe` 236 KB); Vite clean in 373ms; security lint & check_icons 100% PASS (<999KB ceiling).
+
 - **2026-10-01T02:45:00Z — kilo-creator: kweb://users/~neon_rider (Demoscene Homepage Deep Expansion)**
   - 3D Vector Engine: Built software rasterizer (Cube, 4D Tesseract, Torus, Octahedron, Star) with wireframe, Lambertian flat shading & depth buffer.
   - Voxel Land '99: Added Comanche column height-raycasting engine with rolling canyons, alpine glaciers, Martian terrain & altitude flight slider.
@@ -329,12 +336,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Onboarding & Modals: Added startup checkbox to splash screen, synced tutorial flags, and added status pulse feedback.
   - Lore & TINAG: Replaced ARG Secrets with diegetic Subcarrier Relays in native C and web HTML.
   - Verification: MSVC clean (`KBookmark.exe` 22.5 KB); Vite clean in 289ms; security lint 100% PASS; check_icons PASS.
-
-- **2026-10-01T01:45:00Z — kilo-tester: KMandel (Interactive UI Audit & Inline Repairs)**
-  - Status: PASS ✅ (6 issues, 6 fixed, 0 perimeter glints, 121.9 KB < 999 KB ceiling).
-  - Navigation & History: Replaced shadowed history array with viewHistory stack, fixing coordinate URL link sharing and clipboard write.
-  - Modal Dismissals: Added backdrop click dismissal to import dialog; fixed Escape key to close modal even when textarea is focused.
-  - State & Bookmarks: Handled prompt cancel gracefully in bookmarking; added array guard to bookmarks storage; fixed Perp Ship bounds.
-  - Audio Persistence: Wired startup restoration of saved audio mute state across localStorage and UI controls.
-  - Peer Teleportation: Enhanced peer discovery beacon toast handler to dismiss toast notification automatically upon coordinate jump.
-  - Verification: `npm run build` clean in 411ms; security lint 100% PASS; check_icons PASS; zero exceptions.

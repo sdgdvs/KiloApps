@@ -462,11 +462,12 @@ static int g_logCount = 0;
 #define MONSTER_WRAITH        2
 #define MONSTER_ACOLYTE       3
 #define MONSTER_LEVIATHAN     4
-#define MONSTER_CRYPT_KEEPER  5
-#define MONSTER_ABYSSAL_WYRM  6
-#define MONSTER_DREAD_LICH    7
-#define MONSTER_VOID_MONARCH  8
-#define NUM_MONSTER_TYPES     9
+#define MONSTER_VOID_STALKER  5
+#define MONSTER_CRYPT_KEEPER  6
+#define MONSTER_ABYSSAL_WYRM  7
+#define MONSTER_DREAD_LICH    8
+#define MONSTER_VOID_MONARCH  9
+#define NUM_MONSTER_TYPES     10
 
 typedef struct {
     const char* name;
@@ -488,6 +489,7 @@ static const MonsterDef g_monsterDefs[NUM_MONSTER_TYPES] = {
     { "Void Wraith", "W", RGB(192, 132, 252), 46, 6, 15, 3, 42, 35, "Phases through walls; drains Sanity & Aether.", "Vulnerable to Aegis barrier" },
     { "Crypt Acolyte", "N", RGB(234, 179, 8), 36, 4, 14, 2, 35, 30, "Necromancer hurling long-range Shadow Bolts.", "Weak in close melee" },
     { "Abyssal Leviathan", "L", RGB(244, 63, 94), 95, 12, 24, 4, 80, 75, "Colossal horror with crushing slams.", "Susceptible to Glacial Nova (2-turn Freeze)" },
+    { "Void Stalker", "V", RGB(168, 85, 247), 65, 7, 20, 3, 60, 50, "Chasm predator lurking in shadows; siphons mana.", "Weak to Fire (Pyre x1.5)" },
     { "The Crypt Keeper", "K", RGB(245, 158, 11), 280, 25, 28, 4, 250, 220, "Catacombs Lord. Bone plating, tomb cleaves, summons skeletons.", "Weak to Sacred Fire (Pyre x1.75)" },
     { "Abyssal Wyrm", "Y", RGB(16, 185, 129), 380, 35, 36, 5, 400, 350, "Sunken Grotto Sovereign. Spits caustic acid, coils & burrows.", "Weak to Glacial Frost (Cryo Freeze)" },
     { "The Dread Lich", "D", RGB(239, 68, 68), 450, 40, 42, 5, 520, 420, "Forgotten Crypt Sovereign. Necrotic curses, soul rot, death coils.", "Weak to Sacred Fire & Tempest Shock" },
@@ -522,6 +524,16 @@ typedef struct {
 #define MAX_COMBAT_TEXTS 16
 static CombatText g_combatTexts[MAX_COMBAT_TEXTS];
 static int g_numCombatTexts = 0;
+
+typedef struct {
+    int x, y;
+    COLORREF color;
+    int type; // 0=bones, 1=ichor, 2=ashes
+} Decal;
+
+#define MAX_DECALS 64
+static Decal g_decals[MAX_DECALS];
+static int g_numDecals = 0;
 
 static Delver g_player;
 static int g_depthLevel = 1;
@@ -1275,7 +1287,7 @@ void SpawnCombatText(float x, float y, const char* text, COLORREF color) {
 void SpawnMonsters(int level) {
     g_numMonsters = 0;
     DepthZone zone = GetDepthZone(level);
-    int types[6];
+    int types[8];
     int numTypes = 0;
 
     if (zone == ZONE_CATACOMBS) {
@@ -1292,9 +1304,11 @@ void SpawnMonsters(int level) {
         types[numTypes++] = MONSTER_WRAITH;
         types[numTypes++] = MONSTER_ACOLYTE;
         types[numTypes++] = MONSTER_WRAITH;
+        if (level >= 8) types[numTypes++] = MONSTER_VOID_STALKER;
     } else { // ZONE_VOID_ABYSS
         types[numTypes++] = MONSTER_WRAITH;
-        types[numTypes++] = MONSTER_WRAITH;
+        types[numTypes++] = MONSTER_VOID_STALKER;
+        types[numTypes++] = MONSTER_VOID_STALKER;
         types[numTypes++] = MONSTER_LEVIATHAN;
     }
 
@@ -1333,7 +1347,7 @@ void SpawnMonsters(int level) {
                         g_monsters[g_numMonsters].essence = md->essence + level * 2;
                         g_monsters[g_numMonsters].state = 0;
                         g_monsters[g_numMonsters].freezeTurns = 0;
-                        g_monsters[g_numMonsters].alertRange = (tIdx == MONSTER_LEVIATHAN ? 10 : (tIdx == MONSTER_WRAITH ? 9 : 7));
+                        g_monsters[g_numMonsters].alertRange = (tIdx == MONSTER_LEVIATHAN ? 10 : (tIdx == MONSTER_VOID_STALKER ? 8 : (tIdx == MONSTER_WRAITH ? 9 : 7)));
                         g_monsters[g_numMonsters].isBoss = FALSE;
                         g_monsters[g_numMonsters].bonePlated = FALSE;
                         g_monsters[g_numMonsters].alive = TRUE;
@@ -1461,6 +1475,26 @@ void DamageMonster(int idx, int dmg, const char* dmgType, BOOL isCrit) {
             Beep(880, 50); Beep(1175, 70);
         }
 
+        // Spawn floor decal residue
+        if (g_numDecals < MAX_DECALS) {
+            g_decals[g_numDecals].x = m->x;
+            g_decals[g_numDecals].y = m->y;
+            if (m->type == MONSTER_SKELETON || m->type == MONSTER_CRYPT_KEEPER) {
+                g_decals[g_numDecals].type = 0; // bones
+                g_decals[g_numDecals].color = RGB(203, 213, 225);
+            } else if (m->type == MONSTER_GHOUL) {
+                g_decals[g_numDecals].type = 1; // ichor
+                g_decals[g_numDecals].color = RGB(13, 148, 136);
+            } else if (m->type == MONSTER_VOID_STALKER || m->type == MONSTER_WRAITH || m->type == MONSTER_VOID_MONARCH) {
+                g_decals[g_numDecals].type = 2; // ashes / void dust
+                g_decals[g_numDecals].color = RGB(168, 85, 247);
+            } else {
+                g_decals[g_numDecals].type = 2; // ashes
+                g_decals[g_numDecals].color = RGB(185, 28, 28);
+            }
+            g_numDecals++;
+        }
+
         // Boss drops
         if (m->type == MONSTER_CRYPT_KEEPER) {
             AddPackItem(ITEM_WPN_CRYPT_GREATSWORD, 1);
@@ -1493,6 +1527,9 @@ void DamageMonster(int idx, int dmg, const char* dmgType, BOOL isCrit) {
         } else if (m->type == MONSTER_WRAITH) {
             if (RandInt(0, 100) < 60) { AddPackItem(ITEM_ING_VOID_DUST, 1); AddLog("Collected Void Dust from the dissipating wraith.", RGB(168, 85, 247)); }
             if (RandInt(0, 100) < 30) { AddPackItem(ITEM_AETHER_PHIAL, 1); AddLog("Found glowing Aether Phial in the ethereal residue.", COLOR_ACCENT_CYAN); }
+        } else if (m->type == MONSTER_VOID_STALKER) {
+            if (RandInt(0, 100) < 65) { AddPackItem(ITEM_ING_VOID_DUST, 1); AddLog("Harvested Void Dust from the stalker's remains.", RGB(168, 85, 247)); }
+            if (RandInt(0, 100) < 30) { AddPackItem(ITEM_WPN_VOID_DAGGER, 1); AddLog("Salvaged Voidfang Dagger (+7 Might, +3 Arcana)!", COLOR_TEXT_RUNE); }
         } else if (m->type == MONSTER_ACOLYTE) {
             if (RandInt(0, 100) < 50) { AddPackItem(ITEM_ING_BLOOD_LOTUS, 1); AddLog("Harvested Blood Lotus from the acolyte's pouch.", RGB(244, 63, 94)); }
             if (RandInt(0, 100) < 30) { AddPackItem(ITEM_LUCID_DRAUGHT, 1); AddLog("Found Draught of Lucid Mind on the acolyte.", COLOR_BORDER_GLOW); }
@@ -1684,6 +1721,9 @@ void UpdateMonsters(void) {
                     g_player.sanity = (g_player.sanity > 3) ? (g_player.sanity - 3) : 0;
                     g_player.aether = (g_player.aether > 4) ? (g_player.aether - 4) : 0;
                     AddLog("Void Wraith drains your mind & spirit (-3 Sanity, -4 Aether)!", COLOR_ACCENT_PURPLE);
+                } else if (mon->type == MONSTER_VOID_STALKER) {
+                    g_player.aether = (g_player.aether > 3) ? (g_player.aether - 3) : 0;
+                    AddLog("Void Stalker's shadow pincers siphon your mana (-3 Aether)!", COLOR_ACCENT_PURPLE);
                 } else if (mon->type == MONSTER_LEVIATHAN) {
                     g_player.sanity = (g_player.sanity > 2) ? (g_player.sanity - 2) : 0;
                     AddLog("Abyssal Leviathan's crushing slam shakes the floor (-2 Sanity)!", COLOR_ACCENT_AMBER);
@@ -2592,6 +2632,7 @@ void InitGame(int depth) {
     g_numTorches = 0;
     g_numChests = 0;
     g_numEmbers = 0;
+    g_numDecals = 0;
 
     DepthZone z = GetDepthZone(depth);
     const ZoneTheme* zt = &g_zoneThemes[z];
@@ -3441,7 +3482,7 @@ void CastSpell(int socketIdx) {
             for (int m = 0; m < g_numMonsters; m++) {
                 if (g_monsters[m].alive && g_monsters[m].x == tx && g_monsters[m].y == ty) {
                     int dmg = 35 + (int)(g_player.arcana * 0.8f);
-                    if (g_monsters[m].type == MONSTER_SKELETON) dmg = (int)(dmg * 1.5f);
+                    if (g_monsters[m].type == MONSTER_SKELETON || g_monsters[m].type == MONSTER_VOID_STALKER) dmg = (int)(dmg * 1.5f);
                     DamageMonster(m, dmg, "FIRE", FALSE);
                 }
             }
@@ -4121,6 +4162,52 @@ static void DrawMonsterSprite(HDC hdc, int x, int y, int type, int frame, int st
         MoveToEx(hdc, cx + 3, by + 3, NULL); LineTo(hdc, cx + 3, by + 5);
         SelectObject(hdc, nullPen);
         DeleteObject(fangPen);
+
+    } else if (type == MONSTER_VOID_STALKER) {
+        int sBob = (int)(sinf((float)frame * 0.25f) * 1.5f);
+        int sy = cy + sBob;
+
+        // Dark chitin body
+        HBRUSH bodyBr = CreateSolidBrush(RGB(30, 17, 42));
+        SelectObject(hdc, bodyBr);
+        HPEN chitinPen = CreatePen(PS_SOLID, 1, RGB(107, 33, 168));
+        SelectObject(hdc, chitinPen);
+        Ellipse(hdc, cx - 8, sy - 6, cx + 8, sy + 6);
+        SelectObject(hdc, nullPen);
+        DeleteObject(chitinPen);
+        DeleteObject(bodyBr);
+
+        // Spindly shadow legs
+        HPEN legPen = CreatePen(PS_SOLID, 1, RGB(59, 7, 100));
+        SelectObject(hdc, legPen);
+        MoveToEx(hdc, cx - 5, sy, NULL); LineTo(hdc, cx - 11, sy - 3); LineTo(hdc, cx - 13, sy + 3);
+        MoveToEx(hdc, cx - 5, sy + 2, NULL); LineTo(hdc, cx - 12, sy + 4); LineTo(hdc, cx - 10, sy + 8);
+        MoveToEx(hdc, cx + 5, sy, NULL); LineTo(hdc, cx + 11, sy - 3); LineTo(hdc, cx + 13, sy + 3);
+        MoveToEx(hdc, cx + 5, sy + 2, NULL); LineTo(hdc, cx + 12, sy + 4); LineTo(hdc, cx + 10, sy + 8);
+        SelectObject(hdc, nullPen);
+        DeleteObject(legPen);
+
+        // Curved astral scythe claws
+        HPEN clawPen = CreatePen(PS_SOLID, 2, RGB(192, 132, 252));
+        SelectObject(hdc, clawPen);
+        MoveToEx(hdc, cx - 4, sy - 3, NULL); LineTo(hdc, cx - 9, sy - 8); LineTo(hdc, cx - 6, sy - 11);
+        MoveToEx(hdc, cx + 4, sy - 3, NULL); LineTo(hdc, cx + 9, sy - 8); LineTo(hdc, cx + 6, sy - 11);
+        SelectObject(hdc, nullPen);
+        DeleteObject(clawPen);
+
+        // Tail
+        HPEN tailPen = CreatePen(PS_SOLID, 1, RGB(168, 85, 247));
+        SelectObject(hdc, tailPen);
+        MoveToEx(hdc, cx, sy + 5, NULL); LineTo(hdc, cx + 2, sy + 9); LineTo(hdc, cx, sy + 13);
+        SelectObject(hdc, nullPen);
+        DeleteObject(tailPen);
+
+        // Violet eyes
+        COLORREF vEye = RGB(232, 121, 249);
+        SetPixel(hdc, cx - 3, sy - 2, vEye);
+        SetPixel(hdc, cx + 2, sy - 2, vEye);
+        SetPixel(hdc, cx - 1, sy - 4, vEye);
+        SetPixel(hdc, cx + 1, sy - 4, vEye);
 
     } else if (type == MONSTER_CRYPT_KEEPER) {
         int ky = cy + (int)(sinf((float)frame * 0.2f) * 1.5f);
@@ -4918,6 +5005,28 @@ void RenderGame(HDC hdc, HWND hwnd) {
                 LineTo(memDC, scrX + TILE_SIZE - 4, scrY + 22);
                 SelectObject(memDC, oldBrPen);
                 DeleteObject(brickPen);
+            } else if ((tile == TILE_FLOOR || tile == TILE_RUBBLE) && isVisible) {
+                for (int d = 0; d < g_numDecals; d++) {
+                    if (g_decals[d].x == x && g_decals[d].y == y) {
+                        COLORREF decCol = g_decals[d].color;
+                        if (g_decals[d].type == 0) { // bones
+                            SetPixel(memDC, scrX + 10, scrY + 12, decCol);
+                            SetPixel(memDC, scrX + 11, scrY + 12, decCol);
+                            SetPixel(memDC, scrX + 18, scrY + 16, decCol);
+                            SetPixel(memDC, scrX + 14, scrY + 22, decCol);
+                        } else if (g_decals[d].type == 1) { // ichor
+                            SetPixel(memDC, scrX + 14, scrY + 14, decCol);
+                            SetPixel(memDC, scrX + 15, scrY + 14, decCol);
+                            SetPixel(memDC, scrX + 14, scrY + 15, decCol);
+                            SetPixel(memDC, scrX + 20, scrY + 18, decCol);
+                        } else { // ashes
+                            SetPixel(memDC, scrX + 12, scrY + 14, decCol);
+                            SetPixel(memDC, scrX + 16, scrY + 18, decCol);
+                            SetPixel(memDC, scrX + 20, scrY + 14, decCol);
+                        }
+                        break;
+                    }
+                }
             } else if (tile == TILE_WATER && isVisible) {
                 SelectObject(memDC, fontSmall);
                 SetTextColor(memDC, RGB(56, 189, 248));
@@ -5753,7 +5862,7 @@ void RenderGame(HDC hdc, HWND hwnd) {
         int bY = contentY + 46;
         for (int b = 0; b < NUM_MONSTER_TYPES && bY < contentY + 295; b++) {
             const MonsterDef* md = &g_monsterDefs[b];
-            BOOL isLord = (b >= 5);
+            BOOL isLord = (b >= 6);
             int rowH = isLord ? 30 : 25;
             RECT bRect = {sbX + 14, bY, sbX + sbW - 14, bY + rowH};
             HBRUSH bBr = CreateSolidBrush(isLord ? RGB(26, 16, 32) : RGB(14, 18, 28));
