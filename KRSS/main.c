@@ -530,6 +530,7 @@ static void ShowHelpDialog(void) {
         "• Export TXT: Export article_export.txt (T)\n\n"
         "Keyboard Shortcuts:\n"
         "• F1 or H: Show this Help dialog\n"
+        "• J or K: Next / Previous headline\n"
         "• F5: Quicksave state (krss.dat)\n"
         "• F9: Quickload state (krss.dat)\n"
         "• F: Cycle headline view filter\n"
@@ -709,6 +710,21 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
             } else if (wParam == 'R' || wParam == 'r') {
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_REFRESH, 0), 0);
                 return 0;
+            } else if (wParam == 'J' || wParam == 'j') {
+                int cur = (int)SendMessage(g_hListArticles, LB_GETCURSEL, 0, 0);
+                int count = (int)SendMessage(g_hListArticles, LB_GETCOUNT, 0, 0);
+                if (cur != LB_ERR && cur + 1 < count) {
+                    SendMessage(g_hListArticles, LB_SETCURSEL, cur + 1, 0);
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_LIST_ARTICLES, LBN_SELCHANGE), (LPARAM)g_hListArticles);
+                }
+                return 0;
+            } else if (wParam == 'K' || wParam == 'k') {
+                int cur = (int)SendMessage(g_hListArticles, LB_GETCURSEL, 0, 0);
+                if (cur != LB_ERR && cur > 0) {
+                    SendMessage(g_hListArticles, LB_SETCURSEL, cur - 1, 0);
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_LIST_ARTICLES, LBN_SELCHANGE), (LPARAM)g_hListArticles);
+                }
+                return 0;
             } else if (wParam == VK_ESCAPE) {
                 PostMessage(hwnd, WM_CLOSE, 0, 0);
                 return 0;
@@ -763,7 +779,7 @@ void MainEntry(void) {
     g_hwnd = CreateWindowExA(
         0,
         "KRSSMainWindowClass",
-        "KRSS - Retro Feed Reader v1.0.0",
+        "KRSS - Retro Feed Reader v1.1.0",
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
         CW_USEDEFAULT, CW_USEDEFAULT, 940, 640,
         NULL, NULL, hInstance, NULL

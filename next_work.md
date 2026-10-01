@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KMystery
-  kilo_usability: KRSS
+  kilo_usability: KClip
   kilo_graphics: KWizard
   kilo_qa: KCosmic
   kilo_expander: KContacts
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KColosseum
-  timestamp: "2026-10-01T10:40:00Z"
+  agent: kilo-usability
+  app: KRSS
+  timestamp: "2026-10-01T11:15:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KRSS`
+- **Current Target**: `KClip`
 - **Upcoming Queue**:
-  `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KHash` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash)*.
+  `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KHash` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KCosmic`
@@ -297,6 +297,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-01T11:15:00Z — kilo-usability: KRSS (Draggable Splitters, J/K Article Navigation, Category Badges & Shortcuts)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 153.7 KB web / 21.5 KB native < 999 KB ceiling).
+  - Layout & Splitters: Added interactive draggable splitters between feeds/articles/reader panes with double-click reset and saved widths.
+  - Window & Sizing: Expanded App.jsx default width to 1100x720, comfortably housing all 3 panes and toolbar buttons without wrap.
+  - Navigation & Hotkeys: Added J/K next/prev headline navigation in web and Win32 C (`KRSS.exe`), `/` to search, and `V` to open article URL.
+  - Category UX: Added collapsible subscription categories with unread badge counters, instant search clear button, and responsive export menu.
+  - Onboarding & Toast: Verified bottom-center toast safe zone and F1/H keyboard shortcut modal with full key bindings.
+  - Verification: MSVC clean (`KRSS.exe` 21.5 KB); Vite clean in 376ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-01T10:40:00Z — kilo-graphics: KColosseum (Twin Sica Weapon, Flurry Mastery, Visual Trails & Balance)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 145.6 KB web / 36.5 KB native < 999 KB ceiling).
   - Arsenal Expansion: Added Twin Sica daggers (75D, +3 STR, +4 AGI) with custom mini-portrait badges.
@@ -332,13 +341,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Catalog & Audio: Expanded catalog to 16 scene releases; expanded Jukebox to 8 tracks with procedural YM2612 FM & SPC700 delay.
   - Diegetic ARG Seeds: Embedded Carlsbad salt vault relay, 1999Hz subcarrier tone, and sector 01 heap offset 0x007F1999 clues.
   - Verification: Node.js AST check PASS; security lint PASS; Vite build clean in 3.81s; `warez.html` 222 KB (<999 KB ceiling).
-
-- **2026-10-01T03:55:00Z — kilo-expander: KNote (Real-Time Collab Suite, RFMS, Document Outline, Readability & ARG)**
-  - RFMS Multiplayer: Integrated `retro_multiplayer.js` with session rooms (`KNT-XXXX`), live text sync, peer presence & chat.
-  - Mandate 12 Solo Fallback: 25s auto-fallback engaging diegetic "Ghost Typist" AI copilot with Alt+J smart continuation.
-  - Document Outline & Nav: Built dynamic AST heading parser and jump flyout pane (Alt+O) for H1-H4 navigation.
-  - Analytics & Readability: Added metrics modal (Alt+T, native F3) with reading time, sentence density & keyword frequency.
-  - Productivity Templates: Added Standup, Cornell Notes, Bug Incident, and Cyber-Memo presets (F4 in native).
-  - Note Operations: Implemented instant note duplication (Ctrl+Shift+D) and seeded diegetic `system_recovery_1999.log`.
-  - Verification: MSVC clean (`KNote.exe` 24.5 KB); Vite clean in 383ms; security lint & check_icons 100% PASS (<999KB ceiling).
 

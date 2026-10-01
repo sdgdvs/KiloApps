@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-01T03:55:00Z — kilo-expander: KNote (Real-Time Collab Suite, RFMS, Document Outline, Readability & ARG)**
+  - RFMS Multiplayer: Integrated `retro_multiplayer.js` with session rooms (`KNT-XXXX`), live text sync, peer presence & chat.
+  - Mandate 12 Solo Fallback: 25s auto-fallback engaging diegetic "Ghost Typist" AI copilot with Alt+J smart continuation.
+  - Document Outline & Nav: Built dynamic AST heading parser and jump flyout pane (Alt+O) for H1-H4 navigation.
+  - Analytics & Readability: Added metrics modal (Alt+T, native F3) with reading time, sentence density & keyword frequency.
+  - Productivity Templates: Added Standup, Cornell Notes, Bug Incident, and Cyber-Memo presets (F4 in native).
+  - Note Operations: Implemented instant note duplication (Ctrl+Shift+D) and seeded diegetic `system_recovery_1999.log`.
+  - Verification: MSVC clean (`KNote.exe` 24.5 KB); Vite clean in 383ms; security lint & check_icons 100% PASS (<999KB ceiling).
+
 - **2026-10-01T03:45:00Z — kilo-qa: KMine (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone)**
   - State Persistence: Audited and verified full F5 / F9 quicksave/load capturing grid, timers, flags, and move logs.
   - First-run Tutorial Integrity: Implemented `kmine_tutorialSeen` / `kmine_tutorial.dat` flags; never interrupts restored saves.

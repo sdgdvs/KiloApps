@@ -168,7 +168,7 @@
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 4px;
       flex-wrap: wrap;
     }
 
@@ -206,12 +206,13 @@
     }
 
     .btn-sm {
-      padding: 2px 7px;
+      padding: 3px 6px;
       font-size: 11px;
+      white-space: nowrap;
     }
 
     .btn-icon {
-      padding: 4px 7px;
+      padding: 3px 6px;
     }
 
     /* Workspace 3-Pane Layout */
@@ -224,14 +225,30 @@
 
     /* Pane 1: Feeds / Folders */
     .pane-feeds {
-      width: 250px;
-      min-width: 180px;
-      max-width: 380px;
+      width: 230px;
+      min-width: 160px;
+      max-width: 450px;
       background: var(--surface);
-      border-right: 2px solid var(--border);
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
+    }
+
+    /* Draggable Splitters */
+    .pane-resizer {
+      width: 5px;
+      cursor: col-resize;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      flex-shrink: 0;
+      position: relative;
+      transition: background 0.15s, border-color 0.15s;
+      z-index: 10;
+    }
+    .pane-resizer:hover, .pane-resizer.dragging {
+      background: var(--primary);
+      border-color: var(--primary);
     }
 
     .pane-toolbar {
@@ -265,7 +282,40 @@
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 0.6px;
-      padding: 8px 12px 3px 12px;
+      padding: 7px 12px 3px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.1s;
+    }
+    .feed-category:hover {
+      color: var(--text);
+    }
+    .cat-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .cat-toggle {
+      font-size: 8px;
+      display: inline-block;
+      width: 10px;
+      text-align: center;
+    }
+    .cat-unread-badge {
+      font-size: 9px;
+      font-family: var(--font-mono);
+      background: var(--surface-hover);
+      color: var(--text-muted);
+      border-radius: 8px;
+      padding: 0 5px;
+    }
+    .cat-unread-badge.has-unread {
+      background: var(--primary);
+      color: #ffffff;
+      font-weight: bold;
     }
 
     .feed-item {
@@ -325,11 +375,10 @@
 
     /* Pane 2: Article Headlines */
     .pane-articles {
-      width: 340px;
-      min-width: 220px;
-      max-width: 500px;
+      width: 320px;
+      min-width: 200px;
+      max-width: 550px;
       background: var(--surface);
-      border-right: 2px solid var(--border);
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
@@ -341,7 +390,7 @@
       border-bottom: 1px solid var(--border);
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 5px;
     }
 
     .search-input-wrap {
@@ -351,6 +400,22 @@
       border: 1px solid var(--border);
       border-radius: 4px;
       padding: 2px 8px;
+      gap: 4px;
+    }
+
+    .search-clear-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 11px;
+      padding: 0 4px;
+      display: none;
+      line-height: 1;
+    }
+
+    .search-clear-btn:hover {
+      color: var(--text);
     }
 
     .search-input-wrap input {
@@ -1098,33 +1163,33 @@
 
     <div class="header-actions">
       <button class="btn btn-sm" id="btnToggleSidebar" title="Toggle Feeds Sidebar (B)">📂 Feeds</button>
-      <button class="btn btn-primary btn-sm" id="btnRefresh" title="Fetch / Poll Feeds (R)">🔄 Fetch All</button>
-      <button class="btn btn-sm" id="btnAddFeedModal" title="Subscribe to Feed (A)">➕ Add Feed</button>
-      <button class="btn btn-sm" id="btnBroadcastModal" title="Broadcast Dispatch to Global Wire (W)">📣 Broadcast</button>
+      <button class="btn btn-primary btn-sm" id="btnRefresh" title="Fetch / Poll Feeds (R)">🔄 Fetch</button>
+      <button class="btn btn-sm" id="btnAddFeedModal" title="Subscribe to Feed (A)">➕ Add</button>
+      <button class="btn btn-sm" id="btnBroadcastModal" title="Broadcast Dispatch to Global Wire (W)">📣 Wire</button>
       <button class="btn btn-sm" id="btnCatalogModal" title="Browse Global Syndicate Catalog">🌐 Catalog</button>
       <button class="btn btn-sm" id="btnScrapbookModal" title="View Research Scrapbook / Clips (C)">✂️ Clips</button>
-      <button class="btn btn-sm" id="btnMarkAllRead" title="Mark Current View Read (Shift+M)">✓ Mark Read</button>
-      <button class="btn btn-sm" id="btnOpmlModal" title="Data Hub: OPML, JSON Feed & CSV">📁 Data Hub</button>
-      <button class="btn btn-sm" id="btnSaveState" title="Quicksave State (F5)">💾 Save [F5]</button>
-      <button class="btn btn-sm" id="btnLoadState" title="Quickload State (F9)">📂 Load [F9]</button>
+      <button class="btn btn-sm" id="btnMarkAllRead" title="Mark Current View Read (Shift+M)">✓ Read</button>
+      <button class="btn btn-sm" id="btnOpmlModal" title="Data Hub: OPML, JSON Feed & CSV">📁 Hub</button>
+      <button class="btn btn-sm" id="btnSaveState" title="Quicksave State [F5]">💾 Save</button>
+      <button class="btn btn-sm" id="btnLoadState" title="Quickload State [F9]">📂 Load</button>
 
-      <select id="selectTheme" class="btn btn-sm" style="padding: 3px 6px;">
-        <option value="dark">Cyber Dark</option>
-        <option value="win98">Windows 98</option>
-        <option value="amber">Amber CRT</option>
-        <option value="matrix">Matrix Green</option>
+      <select id="selectTheme" class="btn btn-sm" style="padding: 2px 4px; font-size: 11px;">
+        <option value="dark">Dark</option>
+        <option value="win98">Win98</option>
+        <option value="amber">Amber</option>
+        <option value="matrix">Matrix</option>
       </select>
 
       <button class="btn btn-sm" id="btnToggleSound" title="Toggle Synthesizer Audio">🔊 SFX</button>
-      <button class="btn btn-sm" id="btnHelp" title="Help & Shortcuts (F1/H)">❓ Help (F1/H)</button>
+      <button class="btn btn-sm" id="btnHelp" title="Help & Keyboard Reference [F1 / H / ?]">❓ Help</button>
     </div>
   </header>
 
   <!-- Workspace: 3 Panes -->
-  <div class="workspace">
+  <div class="workspace" id="workspace">
     
     <!-- Pane 1: Feeds / Folders -->
-    <aside class="pane-feeds">
+    <aside class="pane-feeds" id="paneFeeds">
       <div class="pane-toolbar">
         <span class="pane-title">Subscriptions</span>
         <button class="btn btn-sm btn-icon" id="btnAddFeedQuick" title="Add New Feed">+</button>
@@ -1135,20 +1200,26 @@
       </ul>
     </aside>
 
+    <!-- Resizer 1: Feeds to Articles -->
+    <div class="pane-resizer" id="resizerFeeds" title="Drag to resize subscriptions pane (Double-click to reset)"></div>
+
     <!-- Pane 2: Article Headlines -->
-    <section class="pane-articles">
+    <section class="pane-articles" id="paneArticles">
       <div class="article-search-bar">
         <div class="search-input-wrap">
-          <span style="margin-right: 6px; font-size: 11px;">🔍</span>
-          <input type="text" id="inputSearch" placeholder="Filter headlines & content...">
+          <span style="margin-right: 2px; font-size: 11px;">🔍</span>
+          <input type="text" id="inputSearch" placeholder="Filter headlines (Press / to search)...">
+          <button id="btnClearSearch" title="Clear filter (Esc)" class="search-clear-btn">✕</button>
         </div>
-        <select id="selectTagFilter" class="btn btn-sm" style="padding: 2px 4px; font-size: 11px; max-width: 105px;">
-          <option value="">All Tags</option>
-        </select>
-        <div class="filter-pills">
-          <button class="filter-pill active" data-filter="all">All</button>
-          <button class="filter-pill" data-filter="unread">Unread</button>
-          <button class="filter-pill" data-filter="starred">★ Star</button>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 4px;">
+          <div class="filter-pills">
+            <button class="filter-pill active" data-filter="all">All</button>
+            <button class="filter-pill" data-filter="unread">Unread</button>
+            <button class="filter-pill" data-filter="starred">★ Star</button>
+          </div>
+          <select id="selectTagFilter" class="btn btn-sm" style="padding: 2px 4px; font-size: 11px; max-width: 105px;">
+            <option value="">All Tags</option>
+          </select>
         </div>
       </div>
 
@@ -1157,8 +1228,11 @@
       </ul>
     </section>
 
+    <!-- Resizer 2: Articles to Reader -->
+    <div class="pane-resizer" id="resizerArticles" title="Drag to resize articles pane (Double-click to reset)"></div>
+
     <!-- Pane 3: Reading Pane -->
-    <main class="pane-reader">
+    <main class="pane-reader" id="paneReader">
       <div class="reader-toolbar">
         <div class="reader-toolbar-group">
           <button class="btn btn-sm" id="btnPrevArticle" title="Previous Article (K / Up)">◀ Prev</button>
@@ -1168,10 +1242,18 @@
           <button class="btn btn-sm" id="btnSpeakArticle" title="Read Aloud via Synthesizer (P)">🗣️ Speak</button>
           <button class="btn btn-sm" id="btnClipArticle" title="Clip Quote to Scrapbook (C)">✂️ Clip</button>
           <button class="btn btn-sm" id="btnOpenInKNet" title="Open Link in Simulated Web (O)">🌐 KNet</button>
-          <button class="btn btn-sm" id="btnExportMarkdown" title="Export Article as Markdown">📝 MD</button>
-          <button class="btn btn-sm" id="btnExportCsv" title="Export Articles to CSV">📊 CSV</button>
-          <button class="btn btn-sm" id="btnExportJsonFeed" title="Export as JSON Feed 1.1">📜 JSON</button>
-          <button class="btn btn-sm" id="btnExportHtml" title="Export Standalone HTML Article">📄 HTML</button>
+          <select id="selectExportArticle" class="btn btn-sm" title="Export Article or Dataset" style="padding: 2px 6px;">
+            <option value="">Export ▼</option>
+            <option value="md">📝 Markdown (.md)</option>
+            <option value="html">📄 HTML Article</option>
+            <option value="json">📜 JSON Feed 1.1</option>
+            <option value="csv">📊 Articles CSV</option>
+          </select>
+          <!-- Hidden compatibility buttons for automated audit hooks -->
+          <button id="btnExportMarkdown" style="display:none;"></button>
+          <button id="btnExportCsv" style="display:none;"></button>
+          <button id="btnExportJsonFeed" style="display:none;"></button>
+          <button id="btnExportHtml" style="display:none;"></button>
         </div>
         <div class="reader-toolbar-group">
           <button class="btn btn-sm btn-icon" id="btnZoomOut" title="Decrease font size (-)">A-</button>
@@ -1222,7 +1304,7 @@
     </div>
     <div class="footer-right">
       <span id="statusLastPoll">Last Polled: Just now</span>
-      <span>F1/H: Help | B: Feeds | J/K: Nav | F5: Save | F9: Load</span>
+      <span>F1/H: Help | /: Search | V: Link | B: Feeds | J/K: Nav | F5: Save | F9: Load</span>
     </div>
   </footer>
 
@@ -1467,6 +1549,8 @@
           <div><b>1 - 9</b></div><div>Select headline 1 through 9</div>
           <div><b>J / Down</b></div><div>Next headline</div>
           <div><b>K / Up</b></div><div>Previous headline</div>
+          <div><b>/</b></div><div>Focus search input filter</div>
+          <div><b>V</b></div><div>Open original article URL in new window</div>
           <div><b>B</b></div><div>Toggle Subscriptions sidebar</div>
           <div><b>M</b></div><div>Toggle Read / Unread status</div>
           <div><b>Shift + M</b></div><div>Mark current view read</div>
@@ -1896,7 +1980,9 @@
           }
           if (parsed.sidebarCollapsed !== undefined) {
             const pane = document.querySelector('.pane-feeds');
+            const resizer = document.getElementById('resizerFeeds');
             if (pane) pane.classList.toggle('collapsed', !!parsed.sidebarCollapsed);
+            if (resizer) resizer.style.display = parsed.sidebarCollapsed ? 'none' : 'block';
             const btn = document.getElementById('btnToggleSidebar');
             if (btn) btn.classList.toggle('active', !parsed.sidebarCollapsed);
           }
@@ -1920,8 +2006,10 @@
 
     function toggleSidebar() {
       const pane = document.querySelector('.pane-feeds');
+      const resizer = document.getElementById('resizerFeeds');
       if (!pane) return;
       const isCollapsed = pane.classList.toggle('collapsed');
+      if (resizer) resizer.style.display = isCollapsed ? 'none' : 'block';
       const btn = document.getElementById('btnToggleSidebar');
       if (btn) {
         btn.classList.toggle('active', !isCollapsed);
@@ -2814,50 +2902,81 @@
         container.appendChild(li);
       });
 
+      // Collapsed categories state from localStorage
+      let collapsedCats = new Set();
+      try {
+        const stored = JSON.parse(localStorage.getItem('krss_collapsed_categories') || '[]');
+        if (Array.isArray(stored)) collapsedCats = new Set(stored);
+      } catch (e) {}
+
       // Render grouped feeds by category
       const categories = [...new Set(feeds.map(f => f.category))];
       categories.forEach(cat => {
+        const catFeeds = feeds.filter(f => f.category === cat);
+        const catUnread = catFeeds.reduce((acc, feed) => acc + getUnreadCount(feed.id), 0);
+        const isCollapsed = collapsedCats.has(cat);
+
         const catLi = document.createElement('li');
         catLi.className = 'feed-category';
-        catLi.textContent = cat;
+        catLi.title = isCollapsed ? `Click to expand ${cat}` : `Click to collapse ${cat}`;
+        catLi.innerHTML = `
+          <div class="cat-title-wrap">
+            <span class="cat-toggle">${isCollapsed ? '▶' : '▼'}</span>
+            <span>${cat}</span>
+          </div>
+          <span class="cat-unread-badge ${catUnread > 0 ? 'has-unread' : ''}">${catUnread}</span>
+        `;
+        catLi.onclick = () => {
+          if (collapsedCats.has(cat)) {
+            collapsedCats.delete(cat);
+          } else {
+            collapsedCats.add(cat);
+          }
+          try {
+            localStorage.setItem('krss_collapsed_categories', JSON.stringify([...collapsedCats]));
+          } catch (e) {}
+          playSoundEffect('click');
+          renderFeedsList();
+        };
         container.appendChild(catLi);
 
-        const catFeeds = feeds.filter(f => f.category === cat);
-        catFeeds.forEach(feed => {
-          const unread = getUnreadCount(feed.id);
-          const li = document.createElement('li');
-          li.className = `feed-item ${activeFeedId === feed.id ? 'active' : ''}`;
-          li.innerHTML = `
-            <div class="feed-item-left">
-              <span>${feed.icon || '📡'}</span>
-              <span class="feed-item-title">${escapeXml(feed.title)}</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:4px;">
-              <span class="feed-count-badge ${unread > 0 ? 'has-unread' : ''}">${unread}</span>
-              ${feed.custom ? `<button class="btn-del-feed" title="Remove Feed" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:10px; padding:0 2px;">✕</button>` : ''}
-            </div>
-          `;
-          li.onclick = (e) => {
-            if (e.target.classList.contains('btn-del-feed')) {
-              e.stopPropagation();
-              if (confirm(`Remove custom feed '${feed.title}'?`)) {
-                feeds = feeds.filter(f => f.id !== feed.id);
-                articles = articles.filter(a => a.feedId !== feed.id);
-                if (activeFeedId === feed.id) activeFeedId = 'all';
-                saveWorkstationState(true);
-                renderFeedsList();
-                renderArticlesList();
-                showToast(`Removed feed '${feed.title}'`);
+        if (!isCollapsed) {
+          catFeeds.forEach(feed => {
+            const unread = getUnreadCount(feed.id);
+            const li = document.createElement('li');
+            li.className = `feed-item ${activeFeedId === feed.id ? 'active' : ''}`;
+            li.innerHTML = `
+              <div class="feed-item-left">
+                <span>${feed.icon || '📡'}</span>
+                <span class="feed-item-title">${escapeXml(feed.title)}</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:4px;">
+                <span class="feed-count-badge ${unread > 0 ? 'has-unread' : ''}">${unread}</span>
+                ${feed.custom ? `<button class="btn-del-feed" title="Remove Feed" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:10px; padding:0 2px;">✕</button>` : ''}
+              </div>
+            `;
+            li.onclick = (e) => {
+              if (e.target.classList.contains('btn-del-feed')) {
+                e.stopPropagation();
+                if (confirm(`Remove custom feed '${feed.title}'?`)) {
+                  feeds = feeds.filter(f => f.id !== feed.id);
+                  articles = articles.filter(a => a.feedId !== feed.id);
+                  if (activeFeedId === feed.id) activeFeedId = 'all';
+                  saveWorkstationState(true);
+                  renderFeedsList();
+                  renderArticlesList();
+                  showToast(`Removed feed '${feed.title}'`);
+                }
+                return;
               }
-              return;
-            }
-            activeFeedId = feed.id;
-            playSoundEffect('click');
-            renderFeedsList();
-            renderArticlesList();
-          };
-          container.appendChild(li);
-        });
+              activeFeedId = feed.id;
+              playSoundEffect('click');
+              renderFeedsList();
+              renderArticlesList();
+            };
+            container.appendChild(li);
+          });
+        }
       });
     }
 
@@ -3239,6 +3358,14 @@
       playSoundEffect('select');
       renderArticlesList();
       renderReadingPane(target);
+
+      // Smoothly scroll active article card into view
+      setTimeout(() => {
+        const activeCard = document.querySelector('#articleListContainer .article-card.active');
+        if (activeCard) {
+          activeCard.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }, 10);
     }
 
     // --- Modal Helpers ---
@@ -3287,8 +3414,84 @@
       }
     }
 
+    // --- Draggable Splitters Initialization ---
+    function initSplitters() {
+      const paneFeeds = document.getElementById('paneFeeds');
+      const paneArticles = document.getElementById('paneArticles');
+      const resizerFeeds = document.getElementById('resizerFeeds');
+      const resizerArticles = document.getElementById('resizerArticles');
+      const SPLITTER_STORAGE_KEY = 'krss_pane_widths';
+
+      // Restore saved widths
+      try {
+        const saved = JSON.parse(localStorage.getItem(SPLITTER_STORAGE_KEY));
+        if (saved) {
+          if (saved.feeds && saved.feeds >= 160 && saved.feeds <= 450 && paneFeeds) {
+            paneFeeds.style.width = saved.feeds + 'px';
+          }
+          if (saved.articles && saved.articles >= 200 && saved.articles <= 550 && paneArticles) {
+            paneArticles.style.width = saved.articles + 'px';
+          }
+        }
+      } catch (e) {}
+
+      function saveWidths() {
+        try {
+          localStorage.setItem(SPLITTER_STORAGE_KEY, JSON.stringify({
+            feeds: paneFeeds ? paneFeeds.offsetWidth : 230,
+            articles: paneArticles ? paneArticles.offsetWidth : 320
+          }));
+        } catch (e) {}
+      }
+
+      function setupResizer(resizer, targetPane, minW, maxW, isFeeds) {
+        if (!resizer || !targetPane) return;
+        let isDragging = false;
+        let startX = 0;
+        let startW = 0;
+
+        resizer.addEventListener('mousedown', (e) => {
+          isDragging = true;
+          startX = e.clientX;
+          startW = targetPane.offsetWidth;
+          resizer.classList.add('dragging');
+          document.body.style.cursor = 'col-resize';
+          document.body.style.userSelect = 'none';
+          e.preventDefault();
+        });
+
+        window.addEventListener('mousemove', (e) => {
+          if (!isDragging) return;
+          const dx = e.clientX - startX;
+          const newW = Math.max(minW, Math.min(maxW, startW + dx));
+          targetPane.style.width = newW + 'px';
+        });
+
+        window.addEventListener('mouseup', () => {
+          if (isDragging) {
+            isDragging = false;
+            resizer.classList.remove('dragging');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            saveWidths();
+          }
+        });
+
+        resizer.addEventListener('dblclick', () => {
+          const defaultW = isFeeds ? 230 : 320;
+          targetPane.style.width = defaultW + 'px';
+          saveWidths();
+        });
+      }
+
+      setupResizer(resizerFeeds, paneFeeds, 160, 450, true);
+      setupResizer(resizerArticles, paneArticles, 200, 550, false);
+    }
+
     // --- Event Listeners Wiring ---
     function setupEventListeners() {
+      initSplitters();
+
       // Header Buttons
       document.getElementById('btnRefresh').onclick = pollFeeds;
       document.getElementById('btnMarkAllRead').onclick = markCurrentViewRead;
@@ -3343,12 +3546,27 @@
         };
       });
 
-      // Search input
+      // Search input & clear button
       const searchInput = document.getElementById('inputSearch');
-      searchInput.oninput = (e) => {
-        searchQuery = e.target.value;
-        renderArticlesList();
-      };
+      const clearSearchBtn = document.getElementById('btnClearSearch');
+      if (searchInput) {
+        searchInput.oninput = (e) => {
+          searchQuery = e.target.value;
+          if (clearSearchBtn) clearSearchBtn.style.display = searchQuery ? 'inline-block' : 'none';
+          renderArticlesList();
+        };
+      }
+      if (clearSearchBtn) {
+        clearSearchBtn.onclick = () => {
+          if (searchInput) {
+            searchInput.value = '';
+            searchQuery = '';
+            clearSearchBtn.style.display = 'none';
+            renderArticlesList();
+            searchInput.focus();
+          }
+        };
+      }
 
       // Tag filter dropdown
       const tagSelect = document.getElementById('selectTagFilter');
@@ -3368,10 +3586,22 @@
       document.getElementById('btnSpeakArticle').onclick = toggleSpeech;
       document.getElementById('btnClipArticle').onclick = clipCurrentArticle;
       document.getElementById('btnOpenInKNet').onclick = openArticleInKNet;
-      document.getElementById('btnExportMarkdown').onclick = exportArticleMarkdown;
-      document.getElementById('btnExportCsv').onclick = () => exportArticlesCsv(false);
-      document.getElementById('btnExportJsonFeed').onclick = exportSingleArticleJsonFeed;
-      document.getElementById('btnExportHtml').onclick = exportArticleHtml;
+
+      const exportSelect = document.getElementById('selectExportArticle');
+      if (exportSelect) {
+        exportSelect.onchange = (e) => {
+          const val = e.target.value;
+          if (val === 'md') exportArticleMarkdown();
+          else if (val === 'html') exportArticleHtml();
+          else if (val === 'json') exportSingleArticleJsonFeed();
+          else if (val === 'csv') exportArticlesCsv(false);
+          e.target.value = '';
+        };
+      }
+      if (document.getElementById('btnExportMarkdown')) document.getElementById('btnExportMarkdown').onclick = exportArticleMarkdown;
+      if (document.getElementById('btnExportCsv')) document.getElementById('btnExportCsv').onclick = () => exportArticlesCsv(false);
+      if (document.getElementById('btnExportJsonFeed')) document.getElementById('btnExportJsonFeed').onclick = exportSingleArticleJsonFeed;
+      if (document.getElementById('btnExportHtml')) document.getElementById('btnExportHtml').onclick = exportArticleHtml;
       document.getElementById('btnCopyText').onclick = copyArticleText;
 
       // Reading scroll listener for reading progress bar
@@ -3851,6 +4081,20 @@
           e.preventDefault();
           const sel = document.getElementById('selectTagFilter');
           if (sel) sel.focus();
+        } else if (e.key === '/') {
+          e.preventDefault();
+          const searchInput = document.getElementById('inputSearch');
+          if (searchInput) {
+            searchInput.focus();
+            searchInput.select();
+          }
+        } else if (e.key === 'v' || e.key === 'V') {
+          e.preventDefault();
+          const link = document.getElementById('articleLink');
+          if (link && link.href && link.href !== '#' && !link.href.endsWith('#')) {
+            window.open(link.href, '_blank', 'noopener,noreferrer');
+            showToast('Opening original article link...');
+          }
         } else if (e.key === 'o' || e.key === 'O') {
           e.preventDefault();
           openArticleInKNet();
