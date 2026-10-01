@@ -955,6 +955,130 @@
     gap: 8px;
   }
 
+  /* ------------------- CYBER DUEL MULTIPLAYER (RFMS) ------------------- */
+  .duel-mode-nav {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+  }
+
+  .duel-tab-btn {
+    background: #0d1527;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: bold;
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.15s;
+  }
+
+  .duel-tab-btn:hover {
+    color: #fff;
+    border-color: var(--border-bright);
+  }
+
+  .duel-tab-btn.active {
+    background: #052e16;
+    color: #4ade80;
+    border-color: #22c55e;
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
+  }
+
+  .duel-lobby-card {
+    background: #060b13;
+    border: 1px solid #1e293b;
+    padding: 12px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+  }
+
+  .duel-arena {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  @media (max-width: 640px) {
+    .duel-arena { grid-template-columns: 1fr; }
+  }
+
+  .duel-player-card {
+    background: #08101e;
+    border: 1px solid var(--border);
+    padding: 10px;
+    border-radius: 4px;
+  }
+
+  .duel-player-card.active-turn {
+    border-color: #22c55e;
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.35);
+  }
+
+  .duel-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    font-weight: bold;
+    margin-top: 5px;
+    margin-bottom: 2px;
+  }
+
+  .duel-meter {
+    height: 8px;
+    background: #111827;
+    border: 1px solid #374151;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .duel-meter-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+  }
+
+  .duel-meter-fill.hp { background: #22c55e; }
+  .duel-meter-fill.shield { background: #38bdf8; }
+  .duel-meter-fill.cycles { background: #f59e0b; }
+
+  .duel-turn-banner {
+    padding: 8px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 12px;
+    margin-bottom: 10px;
+    border-radius: 3px;
+    background: #0d1b2a;
+    border: 1px solid var(--border-bright);
+    color: var(--cyan-bright);
+  }
+
+  .duel-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .hex-dump-box {
+    background: #000;
+    color: #4ade80;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    padding: 8px;
+    border: 1px solid #16a34a;
+    border-radius: 3px;
+    margin-top: 8px;
+    max-height: 140px;
+    overflow-y: auto;
+    white-space: pre;
+  }
+
   /* ------------------- ARCHIVE TAB ------------------- */
   .vault-table {
     width: 100%;
@@ -1439,25 +1563,33 @@ Select an item above to vend voucher.</div>
     </div>
   </section>
 
-  <!-- PANE 5: BBS DOOR GAME (NODE-WARS '99: Subnet Hacker) -->
+  <!-- PANE 5: BBS DOOR GAME (NODE-WARS '99: Subnet Hacker & Cyber Duel) -->
   <section id="tab-game" class="pane-content">
     <div class="section-title">
       <span>⚔️ BBS DOOR GAME // NODE-WARS '99: SUBTERRANEAN HACKER</span>
       <span style="font-size:11px; color:var(--green-bright);">DIAL-UP DOOR PROTOCOL ACTIVE (PORT 1999)</span>
     </div>
 
-    <div class="game-crt-wrap">
-      <!-- Player Status Bar -->
-      <div class="game-status-bar" id="gameStatusBar">
-        <span>OPERATOR: UNREGISTERED</span>
-        <span>CLASS: NONE</span>
-        <span>BUFFER: 100/100</span>
-        <span>CREDITS: 0 CR</span>
-        <span>TURNS: 25/25</span>
-      </div>
+    <!-- Mode Selector Navigation -->
+    <div class="duel-mode-nav">
+      <button class="duel-tab-btn active" id="btnModeSolo" onclick="switchDoorGameMode('solo')">💻 SOLO SUBNET RUN (CLASSIC BBS)</button>
+      <button class="duel-tab-btn" id="btnModeDuel" onclick="switchDoorGameMode('duel')">⚔️ 1v1 CYBER DUEL (ONLINE RFMS MULTIPLAYER)</button>
+    </div>
 
-      <!-- Main CRT Screen -->
-      <div class="game-screen" id="gameScreenOutput">
+    <!-- SUB-PANE 1: SOLO SUBNET RUN -->
+    <div id="doorGameSoloWrap">
+      <div class="game-crt-wrap">
+        <!-- Player Status Bar -->
+        <div class="game-status-bar" id="gameStatusBar">
+          <span>OPERATOR: UNREGISTERED</span>
+          <span>CLASS: NONE</span>
+          <span>BUFFER: 100/100</span>
+          <span>CREDITS: 0 CR</span>
+          <span>TURNS: 25/25</span>
+        </div>
+
+        <!-- Main CRT Screen -->
+        <div class="game-screen" id="gameScreenOutput">
 ========================================================================
              * * *   N O D E - W A R S   ' 9 9   * * *
                Subterranean Dial-Up Hacker Door Game
@@ -1470,16 +1602,135 @@ accumulate BBS credits, upgrade your rig at the armory, and etch your
 handle into the Hall of Fame.
 
 Choose an option below to initialize your carrier!
+        </div>
+
+        <!-- Interactive Game Control Buttons -->
+        <div class="game-controls-grid" id="gameControlsBar">
+          <button class="btn-retro green" onclick="doorGameAction('new_game')">▶ NEW GAME / ENTER</button>
+          <button class="btn-retro" onclick="doorGameAction('scan')">📡 PROBE SUBNET</button>
+          <button class="btn-retro amber" onclick="doorGameAction('armory')">🛒 RIG ARMORY</button>
+          <button class="btn-retro" onclick="doorGameAction('tavern')">🍺 SYSOP TAVERN</button>
+          <button class="btn-retro" onclick="doorGameAction('hall_of_fame')">🏆 HALL OF FAME</button>
+          <button class="btn-retro" onclick="downloadDoorGameLog()">💾 SAVE LOG (.LOG)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUB-PANE 2: 1v1 CYBER DUEL (ONLINE MULTIPLAYER) -->
+    <div id="doorGameDuelWrap" style="display:none;">
+      <!-- Lobby Card -->
+      <div class="duel-lobby-card" id="duelLobbyCard">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:10px;">
+          <span style="font-size:12px; font-weight:bold; color:var(--amber-bright);">🌐 1v1 CYBERSPACE DUEL // RETRO FIREBASE MULTIPLAYER</span>
+          <span id="duelConnBadge" style="font-size:10px; color:var(--green-bright); font-weight:bold;">● RFMS CARRIER READY</span>
+        </div>
+        <p style="font-size:11px; color:var(--text-muted); margin-bottom:10px;">
+          Challenge an operator anywhere on the web to a synchronous hacker duel.
+          If no remote player joins within 25 seconds, your cyberdeck automatically relays to local daemon AI (<span style="color:var(--cyan-bright);">Daemon_AI_0x7F</span>).
+        </p>
+
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px;">
+          <button class="btn-retro green" id="btnHostDuel" onclick="hostCyberDuel()">📡 HOST CYBER DUEL</button>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <input type="text" id="duelRoomInput" class="form-input" style="width:120px; text-transform:uppercase;" placeholder="CYB-XXXX" maxlength="8">
+            <button class="btn-retro amber" onclick="joinCyberDuelInput()">🔗 JOIN DUEL</button>
+          </div>
+          <button class="btn-retro" onclick="startLocalAiDuel()">🤖 INSTANT VS DAEMON AI</button>
+        </div>
+
+        <!-- Shareable Link & Countdown Box -->
+        <div id="duelShareBox" style="display:none; background:#040912; border:1px dashed var(--border-bright); padding:10px; border-radius:3px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-size:11px; color:var(--cyan-bright); font-weight:bold;">ROOM CODE: <span id="duelRoomCodeDisplay" style="color:var(--amber-bright); font-size:13px;"></span></span>
+            <span id="duelFallbackTimer" style="font-size:11px; color:var(--pink); font-weight:bold;">SOLO FALLBACK IN: 25s</span>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <input type="text" id="duelShareUrl" class="form-input" style="flex:1; font-size:11px;" readonly>
+            <button class="btn-retro" onclick="copyDuelInviteLink()">📋 COPY LINK</button>
+          </div>
+        </div>
       </div>
 
-      <!-- Interactive Game Control Buttons -->
-      <div class="game-controls-grid" id="gameControlsBar">
-        <button class="btn-retro green" onclick="doorGameAction('new_game')">▶ NEW GAME / ENTER</button>
-        <button class="btn-retro" onclick="doorGameAction('scan')">📡 PROBE SUBNET</button>
-        <button class="btn-retro amber" onclick="doorGameAction('armory')">🛒 RIG ARMORY</button>
-        <button class="btn-retro" onclick="doorGameAction('tavern')">🍺 SYSOP TAVERN</button>
-        <button class="btn-retro" onclick="doorGameAction('hall_of_fame')">🏆 HALL OF FAME</button>
-        <button class="btn-retro" onclick="downloadDoorGameLog()">💾 SAVE LOG (.LOG)</button>
+      <!-- Active Duel Arena (Hidden until match starts) -->
+      <div id="duelArenaWrap" style="display:none;" class="game-crt-wrap">
+        <!-- Turn Status Banner -->
+        <div id="duelTurnBanner" class="duel-turn-banner">[ SYNCHRONIZING CARRIER CHANNELS... ]</div>
+
+        <!-- Player Cards Grid -->
+        <div class="duel-arena">
+          <!-- P1 Card -->
+          <div class="duel-player-card" id="cardP1">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span id="duelP1Name" style="color:var(--green-bright); font-weight:bold;">Operator 1</span>
+              <span id="duelP1RoleBadge" style="font-size:9px; background:rgba(34,197,94,0.2); padding:1px 6px; border-radius:2px; color:#4ade80;">YOU</span>
+            </div>
+            <div class="duel-bar-label">
+              <span>BUFFER INTEGRITY</span>
+              <span id="duelP1HpText">100 / 100 HP</span>
+            </div>
+            <div class="duel-meter"><div id="duelP1HpBar" class="duel-meter-fill hp" style="width:100%;"></div></div>
+
+            <div class="duel-bar-label">
+              <span>FIREWALL SHIELD</span>
+              <span id="duelP1ShieldText">30 / 50</span>
+            </div>
+            <div class="duel-meter"><div id="duelP1ShieldBar" class="duel-meter-fill shield" style="width:60%;"></div></div>
+
+            <div class="duel-bar-label">
+              <span>CPU CYCLES</span>
+              <span id="duelP1CyclesText">100 / 100</span>
+            </div>
+            <div class="duel-meter"><div id="duelP1CyclesBar" class="duel-meter-fill cycles" style="width:100%;"></div></div>
+          </div>
+
+          <!-- P2 Card -->
+          <div class="duel-player-card" id="cardP2">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span id="duelP2Name" style="color:var(--pink); font-weight:bold;">Opponent</span>
+              <span id="duelP2RoleBadge" style="font-size:9px; background:rgba(236,72,153,0.2); padding:1px 6px; border-radius:2px; color:var(--pink);">PEER</span>
+            </div>
+            <div class="duel-bar-label">
+              <span>BUFFER INTEGRITY</span>
+              <span id="duelP2HpText">100 / 100 HP</span>
+            </div>
+            <div class="duel-meter"><div id="duelP2HpBar" class="duel-meter-fill hp" style="width:100%;"></div></div>
+
+            <div class="duel-bar-label">
+              <span>FIREWALL SHIELD</span>
+              <span id="duelP2ShieldText">30 / 50</span>
+            </div>
+            <div class="duel-meter"><div id="duelP2ShieldBar" class="duel-meter-fill shield" style="width:60%;"></div></div>
+
+            <div class="duel-bar-label">
+              <span>CPU CYCLES</span>
+              <span id="duelP2CyclesText">100 / 100</span>
+            </div>
+            <div class="duel-meter"><div id="duelP2CyclesBar" class="duel-meter-fill cycles" style="width:100%;"></div></div>
+          </div>
+        </div>
+
+        <!-- Tactical Action Buttons -->
+        <div class="duel-actions-grid" id="duelActionButtons">
+          <button class="btn-retro green" id="btnActionAttack" onclick="transmitDuelMove('attack')">⚔️ BUFFER OVERFLOW (20 Cy)</button>
+          <button class="btn-retro amber" id="btnActionTrojan" onclick="transmitDuelMove('trojan')">💉 TROJAN INJECT (35 Cy)</button>
+          <button class="btn-retro" id="btnActionShield" onclick="transmitDuelMove('shield')">🛡️ PATCH SHIELD (15 Cy)</button>
+          <button class="btn-retro pink" id="btnActionJammer" onclick="transmitDuelMove('jammer')">⚡ PACKET JAM (25 Cy)</button>
+          <button class="btn-retro" id="btnActionLogicBomb" onclick="transmitDuelMove('bomb')">💣 LOGIC BOMB (40 Cy)</button>
+          <button class="btn-retro" onclick="leaveCyberDuel()">🏃 SURRENDER / DROP</button>
+        </div>
+
+        <!-- Combat CRT Screen Log -->
+        <div class="game-screen" id="duelScreenOutput" style="min-height:160px; max-height:220px;">[CYBERSPACE DUEL INITIALIZED] Waiting for transmission sequence...</div>
+
+        <!-- Match Chat & Quips -->
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:8px;">
+          <input type="text" id="duelChatInput" class="form-input" style="flex:1; min-width:180px;" placeholder="Send quip to opponent..." onkeydown="if(event.key==='Enter')sendDuelChat()">
+          <button class="btn-retro amber" onclick="sendDuelChat()">TRANSMIT</button>
+          <button class="btn-retro" onclick="sendDuelQuip('GG!')">GG!</button>
+          <button class="btn-retro" onclick="sendDuelQuip('Dropping packets?')">Lag?</button>
+          <button class="btn-retro" onclick="sendDuelQuip('Voodoo3 overdrive!')">Voodoo3!</button>
+          <button class="btn-retro green" id="duelRematchBtn" style="display:none;" onclick="requestDuelRematch()">🔄 REMATCH</button>
+        </div>
       </div>
     </div>
   </section>
@@ -1569,6 +1820,20 @@ Choose an option below to initialize your carrier!
           <td>BBS Gaming</td>
           <td><button class="btn-retro" onclick="viewVaultFile('DOOR_GUIDE')">VIEW</button></td>
         </tr>
+        <tr>
+          <td><strong>CARRIER_FREQUENCY_1999HZ.DISPATCH</strong></td>
+          <td>2.4 KB</td>
+          <td>1999-11-24</td>
+          <td>Acoustic Phreak</td>
+          <td><button class="btn-retro" onclick="viewVaultFile('CARRIER_DISPATCH')">VIEW</button></td>
+        </tr>
+        <tr>
+          <td><strong>LAN_PARTY_RULES_1999.TXT</strong></td>
+          <td>1.9 KB</td>
+          <td>1999-11-25</td>
+          <td>Tournaments</td>
+          <td><button class="btn-retro" onclick="viewVaultFile('LAN_RULES')">VIEW</button></td>
+        </tr>
       </tbody>
     </table>
 
@@ -1593,8 +1858,11 @@ Choose an option below to initialize your carrier!
         <button class="btn-retro" style="padding:2px 8px;" onclick="closeBoothModal()">[X]</button>
       </div>
       <div id="boothModalBody" style="font-size:11px; line-height:1.5; color:var(--text); margin-bottom:12px;"></div>
-      <div style="display:flex; justify-content:flex-end; gap:8px;">
+      <div id="boothHexDump" class="hex-dump-box" style="display:none;"></div>
+      <div style="display:flex; justify-content:flex-end; flex-wrap:wrap; gap:8px; margin-top:10px;">
         <button class="btn-retro" id="boothPingBtn" onclick="pingBoothStation()">📡 PING ICMP (0.4ms)</button>
+        <button class="btn-retro" id="boothHexBtn" onclick="toggleBoothHexDump()">💾 MEMORY HEX DUMP</button>
+        <button class="btn-retro" id="boothBenchBtn" onclick="runBoothGlideBenchmark()">⚡ GLIDE BENCHMARK</button>
         <button class="btn-retro amber" id="boothClaimBtn" onclick="claimBoothStation()">🪑 CLAIM BOOTH</button>
         <button class="btn-retro" onclick="closeBoothModal()">CLOSE</button>
       </div>
@@ -1623,6 +1891,7 @@ Choose an option below to initialize your carrier!
 
 </div>
 
+<script src="../assets/js/retro_multiplayer.js"></script>
 <script>
 /* =========================================================================
    1. PROCEDURAL SOUND ENGINE (Genesis YM2612 FM + SNES SPC700 Stereo Delay)
@@ -2110,6 +2379,34 @@ function claimBoothStation() {
   }
 }
 
+function toggleBoothHexDump() {
+  playKeyClick();
+  const box = document.getElementById('boothHexDump');
+  if (!box) return;
+  if (box.style.display === 'block') {
+    box.style.display = 'none';
+    return;
+  }
+  const booth = BOOTHS_DATA.find(b => b.id === selectedBoothId) || BOOTHS_DATA[0];
+  const octet = String(booth.ip).split('.').pop().padStart(2, '0');
+  box.textContent = 
+`[PHYSICAL MEMORY DUMP: STATION #${booth.id} // ${booth.ip}]
+0000: 4B 4E 45 54 2D 53 54 41 54 49 4F 4E 30 30 ${octet} 00 | KNET-STATION..
+0010: 0A 13 63 ${octet} 07 CF 19 99 22 15 00 00 00 00 00 00 | ..c.....".......
+0020: 53 55 42 43 41 52 52 49 45 52 3D 31 39 39 39 48 | SUBCARRIER=1999H
+0030: 5A 20 48 41 52 4D 4F 4E 49 43 20 4C 4F 43 4B 00 | Z HARMONIC LOCK.
+0040: 10 19 99 04 2F 63 6C 61 73 73 69 66 69 65 64 00 | ..../classified.`;
+  box.style.display = 'block';
+  playChime(660, 0.1);
+}
+
+function runBoothGlideBenchmark() {
+  playFmTone(440, 2.0, 3.5, 0.25, 0.15, true);
+  const booth = BOOTHS_DATA.find(b => b.id === selectedBoothId) || BOOTHS_DATA[0];
+  const fps = (68.5 + Math.random() * 8.2).toFixed(1);
+  alert(`[3DFX GLIDE 3.x TIMEDEMO: STATION #${booth.id}]\nHardware: 3dfx Voodoo3 3000 AGP (166MHz Core / 16MB SDRAM)\nEngine: Tremor III Arena Timedemo 1 (1024x768 16-bit)\nAverage Framerate: ${fps} FPS\nPacing Variance: 0.12ms\nResult: 100% Glide Acceleration Verified!`);
+}
+
 function orderItem(name, price, perk) {
   playModemChirp();
   const receipt = document.getElementById('receiptOutput');
@@ -2252,6 +2549,30 @@ const DEFAULT_THREADS = [
         body: 'I inspected offset 0x0024 in the memory dump from KHex. It maps to the same subnet. Almost as if a subsystem inside the OS itself is trying to communicate across the KNet browser sockets. If anyone has the directory keys, check kweb://10.19.99.4/classified.'
       }
     ]
+  },
+  {
+    id: 5,
+    category: 'Echoes',
+    title: 'Has anyone else heard the signal on the line?',
+    author: 'DialUpGhost',
+    date: '1999-11-23 03:14',
+    posts: [
+      {
+        author: 'DialUpGhost',
+        date: '1999-11-23 03:14',
+        body: 'Every night at precisely 03:14:02 EST, when booth #4 connects to the cafe proxy, the modem speaker emits a distinct acoustic subcarrier at 1999Hz. Not normal dialup V.90 handshake white noise—it is a pure, synthetic pulse. Tracing route hops: 10.19.99.1 -> 10.19.99.12 -> 10.19.99.4. Has anyone captured the payload?'
+      },
+      {
+        author: 'SysOp_0x7F',
+        date: '1999-11-23 03:28',
+        body: 'Checked the patch panel behind booth #4. All twisted-pair Cat5 cabling is intact. The carrier is coming from within the machine controller bus itself. We logged it in SUBNET_ANOMALY_101999.LOG in the Floppy Archives.'
+      },
+      {
+        author: 'PacketWanderer',
+        date: '1999-11-23 03:42',
+        body: 'In IRC #cybercafe-99, someone whispered that typing !signal or querying the echo-subsystem on the cafe terminal reveals harmonic coordinates...'
+      }
+    ]
   }
 ];
 
@@ -2263,12 +2584,18 @@ function loadForumData() {
   const saved = localStorage.getItem('kweb_cybercafe_threads');
   if (saved) {
     try {
-      forumThreads = JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      // Merge any missing default threads by id
+      const existingIds = new Set(parsed.map(t => t.id));
+      DEFAULT_THREADS.forEach(dt => {
+        if (!existingIds.has(dt.id)) parsed.push(dt);
+      });
+      forumThreads = parsed;
     } catch (e) {
-      forumThreads = DEFAULT_THREADS;
+      forumThreads = [...DEFAULT_THREADS];
     }
   } else {
-    forumThreads = DEFAULT_THREADS;
+    forumThreads = [...DEFAULT_THREADS];
   }
   renderThreadsList();
 }
@@ -2985,7 +3312,8 @@ const IRC_CHANNELS = {
       { time: '23:39', nick: '@SysOp_0x7F', text: 'Terminal stations 1-8 are running low latency 10Base-T.' },
       { time: '23:40', nick: '+PixelGoddess', text: 'Just finished drawing the new skull in the ASCII Studio!' },
       { time: '23:41', nick: 'FragKing_99', text: 'Tremor III rocket jumps feel crisp with the new mousepad.' },
-      { time: '23:42', nick: 'CafeBot', text: 'CyberCafe Kiosk is open: type !menu or !quote for entertainment.' }
+      { time: '23:42', nick: 'CafeBot', text: 'CyberCafe Kiosk is open: type !menu or !quote for entertainment.' },
+      { time: '23:43', nick: 'PhreakMaster_99', text: 'heads up: keep seeing ghost packets from 10.19.99.4 flooding gateway socket 1999. traceroute terminates at internal memory bus' }
     ]
   },
   '#phreak-scene': {
@@ -2994,7 +3322,8 @@ const IRC_CHANNELS = {
     messages: [
       { time: '22:15', type: 'sys', text: '*** Topic for #phreak-scene: Telecom routing & classified carrier frequencies' },
       { time: '22:18', nick: '@DarkFiber', text: 'Carrier tone detected at 1999Hz on intranet gateway 10.19.99.4.' },
-      { time: '22:20', nick: '+SilverBox', text: 'That frequency matches the memory controller sync pulse in KHex.' }
+      { time: '22:20', nick: '+SilverBox', text: 'That frequency matches the memory controller sync pulse in KHex.' },
+      { time: '22:24', nick: 'FreqHunter', text: 'has anyone else heard the signal on the line? 1999Hz tone carrier every night at 03:14:02' }
     ]
   },
   '#hardware-oc': {
@@ -3180,7 +3509,15 @@ function clearIrcLog() {
 function handleBotTriggers(text, timeStr) {
   const lower = text.toLowerCase();
   setTimeout(() => {
-    if (lower.startsWith('!menu')) {
+    if (lower.startsWith('!signal') || lower.startsWith('!carrier')) {
+      addLocalIrcMessage({ time: timeStr, nick: 'EchoDaemon', text: '*** [CARRIER LOCK] Frequency 1999Hz verified. Gateway 10.19.99.4 online. Decoded header: "FACILITY=CARLSBAD OFFSET=0x0040". Access terminal: kweb://10.19.99.4/classified' });
+      playFmTone(999.5, 2.0, 4.0, 0.4, 0.15, true);
+      localStorage.setItem('kweb_cybercafe_deaddrop_unlocked', 'true');
+    } else if (lower.includes('subcarrier-litho') || lower.includes('echo-harmonic')) {
+      addLocalIrcMessage({ time: timeStr, nick: 'SysAdmin_NULL', text: '*** [DEAD-DROP CONFIRMED] Passphrase recognized. Memory sector 0x7F unlocked. For acoustic sweep, tune KRadio to 1999Hz and inspect memory in KHex.' });
+      playChime(880, 0.25);
+      localStorage.setItem('kweb_cybercafe_deaddrop_unlocked', 'true');
+    } else if (lower.startsWith('!menu')) {
       addLocalIrcMessage({ time: timeStr, nick: 'CafeBot', text: 'CAFE MENU: Jolt Cola ($2.25), Baud Roast ($1.75), Surge ($1.50), Bawls Guarana ($2.50), Hot Pocket ($2.00). Use the Lounge tab to vend!' });
       playChime(600, 0.08);
     } else if (lower.startsWith('!booths')) {
@@ -3661,6 +3998,559 @@ function downloadDoorGameLog() {
 }
 
 /* =========================================================================
+   10B. 1v1 CYBERSPACE DUEL (RETRO FIREBASE MULTIPLAYER SERVICE - RFMS)
+   ========================================================================= */
+let doorGameMode = 'solo'; // 'solo' | 'duel'
+let cyberMultiplayer = null;
+let duelFallbackCountdownInterval = null;
+let duelFallbackRemaining = 25;
+
+let duelState = {
+  active: false,
+  isAiMatch: false,
+  mySlot: 'p1', // 'p1' | 'p2'
+  turn: 'p1',   // 'p1' | 'p2'
+  round: 1,
+  p1: { name: 'Operator 1', hp: 100, maxHp: 100, shield: 30, maxShield: 50, cycles: 100, maxCycles: 100, bomb: 0 },
+  p2: { name: 'Daemon_AI_0x7F', hp: 100, maxHp: 100, shield: 30, maxShield: 50, cycles: 100, maxCycles: 100, bomb: 0 }
+};
+
+function switchDoorGameMode(mode) {
+  playKeyClick();
+  doorGameMode = mode;
+  document.getElementById('btnModeSolo').classList.toggle('active', mode === 'solo');
+  document.getElementById('btnModeDuel').classList.toggle('active', mode === 'duel');
+  document.getElementById('doorGameSoloWrap').style.display = (mode === 'solo') ? 'block' : 'none';
+  document.getElementById('doorGameDuelWrap').style.display = (mode === 'duel') ? 'block' : 'none';
+}
+
+async function initCyberDuelMultiplayer() {
+  if (typeof RetroMultiplayer === 'undefined') {
+    const badge = document.getElementById('duelConnBadge');
+    if (badge) badge.textContent = '● LOCAL DAEMON READY';
+    return;
+  }
+
+  cyberMultiplayer = new RetroMultiplayer({
+    gameId: 'cyberduel',
+    prefix: 'CYB',
+    playerName: userNick,
+    soloTimeoutMs: 25000,
+    onOpponentJoin: ({ slot, name }) => {
+      stopDuelFallbackTimer();
+      duelState.p2.name = name || 'Remote Operator';
+      duelState.isAiMatch = false;
+      logDuelPrint(`[CARRIER SYNC] Remote operator "${duelState.p2.name}" connected on carrier socket!`);
+      playChime(880, 0.2);
+      startDuelMatch();
+    },
+    onOpponentLeave: ({ slot, name }) => {
+      logDuelPrint(`[DISCONNECT] Peer "${name || 'Operator'}" dropped carrier.`);
+      playChime(260, 0.15);
+      if (duelState.active) {
+        duelState.turn = duelState.mySlot;
+        updateDuelUI();
+        document.getElementById('duelTurnBanner').textContent = '[ PEER DISCONNECTED - CARRIER LOST ]';
+      }
+    },
+    onSoloFallback: ({ reason }) => {
+      // Mandate Rule 12 Solo Fallback
+      stopDuelFallbackTimer();
+      logDuelPrint(`[SOLO RELAY ACTIVATED] No remote operator joined in 25s. Engaging Subnet AI: Daemon_AI_0x7F!`);
+      duelState.p2.name = 'Daemon_AI_0x7F';
+      duelState.isAiMatch = true;
+      playFmTone(540, 2.0, 3.5, 0.3, 0.15, true);
+      startDuelMatch();
+    },
+    onMove: (moveData) => {
+      handleRemoteDuelMove(moveData);
+    },
+    onChat: (chat) => {
+      logDuelPrint(`[CHAT] <${escapeHtml(chat.name || 'Peer')}> ${escapeHtml(chat.text)}`);
+      playKeyClick();
+    },
+    onRematch: () => {
+      logDuelPrint(`[REMATCH] Opponent accepted rematch! Resetting buffers...`);
+      playChime(920, 0.2);
+      resetDuelStats();
+      updateDuelUI();
+    },
+    onStatusMsg: (msg, type) => {
+      const badge = document.getElementById('duelConnBadge');
+      if (badge) badge.textContent = `● ${msg}`;
+    }
+  });
+
+  const { onlineAvailable, inviteCode } = await cyberMultiplayer.init();
+  if (inviteCode) {
+    switchTab('tab-game');
+    switchDoorGameMode('duel');
+    joinCyberDuel(inviteCode);
+  }
+}
+
+async function hostCyberDuel() {
+  playModemChirp();
+  if (!cyberMultiplayer) {
+    startLocalAiDuel();
+    return;
+  }
+  document.getElementById('btnHostDuel').disabled = true;
+  document.getElementById('btnHostDuel').textContent = 'CONNECTING...';
+
+  try {
+    const room = await cyberMultiplayer.hostRoom();
+    document.getElementById('duelRoomCodeDisplay').textContent = room.code;
+    const shareUrl = `${window.location.origin}${window.location.pathname}#room=${room.code}`;
+    document.getElementById('duelShareUrl').value = shareUrl;
+    document.getElementById('duelShareBox').style.display = 'block';
+
+    duelState.isHost = true;
+    duelState.mySlot = 'p1';
+    duelState.p1.name = userNick;
+    duelState.p2.name = 'Searching...';
+
+    startDuelFallbackTimer(25);
+  } catch (err) {
+    console.warn("Host duel fallback:", err);
+    startLocalAiDuel();
+  }
+}
+
+function startDuelFallbackTimer(seconds) {
+  stopDuelFallbackTimer();
+  duelFallbackRemaining = seconds;
+  const timerEl = document.getElementById('duelFallbackTimer');
+  if (timerEl) timerEl.textContent = `SOLO FALLBACK IN: ${duelFallbackRemaining}s`;
+
+  duelFallbackCountdownInterval = setInterval(() => {
+    duelFallbackRemaining--;
+    if (timerEl) timerEl.textContent = `SOLO FALLBACK IN: ${duelFallbackRemaining}s`;
+    if (duelFallbackRemaining <= 0) {
+      stopDuelFallbackTimer();
+      if (!duelState.active) {
+        cyberMultiplayer?.handleSoloFallback('timeout');
+      }
+    }
+  }, 1000);
+}
+
+function stopDuelFallbackTimer() {
+  if (duelFallbackCountdownInterval) {
+    clearInterval(duelFallbackCountdownInterval);
+    duelFallbackCountdownInterval = null;
+  }
+}
+
+function copyDuelInviteLink() {
+  const urlEl = document.getElementById('duelShareUrl');
+  if (urlEl) {
+    urlEl.select();
+    navigator.clipboard?.writeText(urlEl.value);
+    playChime(750, 0.1);
+    alert('Cyber Duel invite link copied to clipboard!\nShare this with a friend or open in another tab.');
+  }
+}
+
+function joinCyberDuelInput() {
+  const code = (document.getElementById('duelRoomInput').value || '').trim().toUpperCase();
+  if (!code) {
+    alert('Please enter a room code (e.g. CYB-XXXX)');
+    return;
+  }
+  joinCyberDuel(code);
+}
+
+async function joinCyberDuel(code) {
+  playModemChirp();
+  if (!cyberMultiplayer) {
+    startLocalAiDuel();
+    return;
+  }
+  try {
+    const success = await cyberMultiplayer.joinRoom(code);
+    if (success) {
+      duelState.isHost = false;
+      duelState.mySlot = 'p2';
+      duelState.p1.name = cyberMultiplayer.opponent?.name || 'Host Operator';
+      duelState.p2.name = userNick;
+      duelState.isAiMatch = false;
+      document.getElementById('duelShareBox').style.display = 'none';
+      startDuelMatch();
+    } else {
+      alert(`Could not join room [${code}]. Room may be full or expired.`);
+    }
+  } catch (e) {
+    alert('Connection failed. Starting local daemon duel.');
+    startLocalAiDuel();
+  }
+}
+
+function startLocalAiDuel() {
+  playChime(680, 0.15);
+  stopDuelFallbackTimer();
+  document.getElementById('duelShareBox').style.display = 'none';
+  duelState.isHost = true;
+  duelState.mySlot = 'p1';
+  duelState.p1.name = userNick;
+  duelState.p2.name = 'Daemon_AI_0x7F';
+  duelState.isAiMatch = true;
+  startDuelMatch();
+}
+
+function startDuelMatch() {
+  duelState.active = true;
+  resetDuelStats();
+  document.getElementById('duelLobbyCard').style.display = 'none';
+  document.getElementById('duelArenaWrap').style.display = 'block';
+  document.getElementById('duelRematchBtn').style.display = 'none';
+  document.getElementById('duelScreenOutput').textContent = 
+`========================================================================
+[CARRIER LOCKED] Cyberspace Duel Initialized
+Operator 1: ${duelState.p1.name} (Socket 1999/TCP)
+Operator 2: ${duelState.p2.name} (Socket 1999/TCP)
+Subnet Routing: 10Base-T Fast Ethernet • Collision Domain: 0
+========================================================================
+Prepare your intrusion scripts! First operator to deplete enemy buffer wins.`;
+  updateDuelUI();
+  playFmTone(587.33, 2.0, 3.0, 0.2, 0.15, true);
+}
+
+function resetDuelStats() {
+  duelState.round = 1;
+  duelState.turn = 'p1';
+  duelState.p1.hp = 100; duelState.p1.shield = 30; duelState.p1.cycles = 100; duelState.p1.bomb = 0;
+  duelState.p2.hp = 100; duelState.p2.shield = 30; duelState.p2.cycles = 100; duelState.p2.bomb = 0;
+}
+
+function logDuelPrint(text) {
+  const scr = document.getElementById('duelScreenOutput');
+  if (scr) {
+    scr.textContent += '\n' + text;
+    scr.scrollTop = scr.scrollHeight;
+  }
+}
+
+function updateDuelUI() {
+  // Names
+  document.getElementById('duelP1Name').textContent = duelState.p1.name;
+  document.getElementById('duelP2Name').textContent = duelState.p2.name;
+
+  // Roles
+  document.getElementById('duelP1RoleBadge').textContent = (duelState.mySlot === 'p1') ? 'YOU' : 'PEER';
+  document.getElementById('duelP2RoleBadge').textContent = (duelState.mySlot === 'p2') ? 'YOU' : (duelState.isAiMatch ? 'LOCAL AI' : 'PEER');
+
+  // P1 Meters
+  document.getElementById('duelP1HpText').textContent = `${Math.max(0, duelState.p1.hp)} / ${duelState.p1.maxHp} HP`;
+  document.getElementById('duelP1HpBar').style.width = `${Math.max(0, (duelState.p1.hp / duelState.p1.maxHp) * 100)}%`;
+  document.getElementById('duelP1ShieldText').textContent = `${Math.max(0, duelState.p1.shield)} / ${duelState.p1.maxShield}`;
+  document.getElementById('duelP1ShieldBar').style.width = `${Math.max(0, (duelState.p1.shield / duelState.p1.maxShield) * 100)}%`;
+  document.getElementById('duelP1CyclesText').textContent = `${Math.max(0, duelState.p1.cycles)} / ${duelState.p1.maxCycles}`;
+  document.getElementById('duelP1CyclesBar').style.width = `${Math.max(0, (duelState.p1.cycles / duelState.p1.maxCycles) * 100)}%`;
+
+  // P2 Meters
+  document.getElementById('duelP2HpText').textContent = `${Math.max(0, duelState.p2.hp)} / ${duelState.p2.maxHp} HP`;
+  document.getElementById('duelP2HpBar').style.width = `${Math.max(0, (duelState.p2.hp / duelState.p2.maxHp) * 100)}%`;
+  document.getElementById('duelP2ShieldText').textContent = `${Math.max(0, duelState.p2.shield)} / ${duelState.p2.maxShield}`;
+  document.getElementById('duelP2ShieldBar').style.width = `${Math.max(0, (duelState.p2.shield / duelState.p2.maxShield) * 100)}%`;
+  document.getElementById('duelP2CyclesText').textContent = `${Math.max(0, duelState.p2.cycles)} / ${duelState.p2.maxCycles}`;
+  document.getElementById('duelP2CyclesBar').style.width = `${Math.max(0, (duelState.p2.cycles / duelState.p2.maxCycles) * 100)}%`;
+
+  // Active Card Highlight
+  document.getElementById('cardP1').classList.toggle('active-turn', duelState.turn === 'p1');
+  document.getElementById('cardP2').classList.toggle('active-turn', duelState.turn === 'p2');
+
+  // Turn Banner & Button enable/disable
+  const isMyTurn = (duelState.turn === duelState.mySlot);
+  const banner = document.getElementById('duelTurnBanner');
+  const actionBtns = document.querySelectorAll('#duelActionButtons button');
+
+  if (!duelState.active) {
+    actionBtns.forEach(b => b.disabled = true);
+    return;
+  }
+
+  if (isMyTurn) {
+    banner.textContent = `★ YOUR TURN // TRANSMIT INTRUSION EXPLOIT ★`;
+    banner.style.color = 'var(--green-bright)';
+    banner.style.borderColor = 'var(--green)';
+    actionBtns.forEach(b => b.disabled = false);
+  } else {
+    const oppName = (duelState.mySlot === 'p1') ? duelState.p2.name : duelState.p1.name;
+    banner.textContent = `[ ${oppName.toUpperCase()} IS PROCESSING EXPLOIT... ]`;
+    banner.style.color = 'var(--text-muted)';
+    banner.style.borderColor = 'var(--border)';
+    actionBtns.forEach(b => b.disabled = true);
+  }
+}
+
+function transmitDuelMove(move) {
+  if (!duelState.active || duelState.turn !== duelState.mySlot) return;
+
+  const me = duelState[duelState.mySlot];
+  const targetSlot = (duelState.mySlot === 'p1') ? 'p2' : 'p1';
+  const target = duelState[targetSlot];
+
+  let cost = 0;
+  if (move === 'attack') cost = 20;
+  else if (move === 'trojan') cost = 35;
+  else if (move === 'shield') cost = 15;
+  else if (move === 'jammer') cost = 25;
+  else if (move === 'bomb') cost = 40;
+
+  if (me.cycles < cost) {
+    alert(`Insufficient CPU Cycles! You need ${cost} Cycles (Current: ${me.cycles}).`);
+    return;
+  }
+
+  me.cycles -= cost;
+  playKeyClick();
+
+  let logMsg = '';
+  let dmgDealt = 0;
+
+  if (move === 'attack') {
+    let rawDmg = Math.floor(22 + Math.random() * 10);
+    if (target.shield > 0) {
+      const absorbed = Math.min(target.shield, Math.floor(rawDmg * 0.5));
+      target.shield -= absorbed;
+      dmgDealt = rawDmg - absorbed;
+      target.hp -= dmgDealt;
+      logMsg = `[EXPLOIT] Sent Buffer Overflow! ${target.name}'s firewall absorbed ${absorbed}, took ${dmgDealt} HP dmg!`;
+    } else {
+      dmgDealt = rawDmg;
+      target.hp -= dmgDealt;
+      logMsg = `[EXPLOIT] Direct Buffer Overflow hit! ${target.name} took ${dmgDealt} HP damage!`;
+    }
+    playFmTone(520, 2.5, 3.5, 0.12, 0.12, false);
+  } else if (move === 'trojan') {
+    if (Math.random() > 0.25) {
+      dmgDealt = Math.floor(40 + Math.random() * 18);
+      target.hp -= dmgDealt;
+      logMsg = `[CRITICAL] Trojan Rootkit executed! Bypassed firewall for ${dmgDealt} massive damage!`;
+      playFmTone(880, 4.0, 5.0, 0.18, 0.15, true);
+    } else {
+      logMsg = `[BLOCKED] Sentinel ICE filtered your Trojan payload! 0 damage dealt.`;
+      playChime(250, 0.1);
+    }
+  } else if (move === 'shield') {
+    const heal = 25;
+    me.shield = Math.min(me.maxShield, me.shield + heal);
+    logMsg = `[DEFENSE] Patched firewall sockets! Restored +${heal} Shield integrity.`;
+    playChime(640, 0.12);
+  } else if (move === 'jammer') {
+    const drained = Math.min(target.cycles, 30);
+    target.cycles -= drained;
+    logMsg = `[JAMMER] Transmitted noise burst! Drained ${drained} of ${target.name}'s CPU Cycles!`;
+    playFmTone(320, 1.5, 4.0, 0.15, 0.1, false);
+  } else if (move === 'bomb') {
+    me.bomb = 1;
+    logMsg = `[TRAP] Planted Logic Bomb daemon in subnet! Detonation armed for next cycle.`;
+    playChime(780, 0.1);
+  }
+
+  logDuelPrint(`<${me.name}> ${logMsg}`);
+
+  // Regain base cycles on round step
+  me.cycles = Math.min(me.maxCycles, me.cycles + 15);
+
+  // Check victory
+  if (target.hp <= 0) {
+    target.hp = 0;
+    finishDuelMatch(duelState.mySlot);
+    if (!duelState.isAiMatch && cyberMultiplayer) {
+      cyberMultiplayer.sendMove({ move, logMsg, p1: duelState.p1, p2: duelState.p2, winner: duelState.mySlot });
+    }
+    return;
+  }
+
+  // Switch turn
+  duelState.turn = targetSlot;
+  updateDuelUI();
+
+  // Send move if multiplayer
+  if (!duelState.isAiMatch && cyberMultiplayer) {
+    cyberMultiplayer.sendMove({ move, logMsg, p1: duelState.p1, p2: duelState.p2 });
+  }
+
+  // If vs Local AI, trigger AI move
+  if (duelState.isAiMatch && duelState.turn === 'p2') {
+    setTimeout(executeAiDuelTurn, 1200);
+  }
+}
+
+function handleRemoteDuelMove(data) {
+  if (!data || !duelState.active) return;
+  if (data.p1) duelState.p1 = data.p1;
+  if (data.p2) duelState.p2 = data.p2;
+
+  if (data.logMsg) {
+    logDuelPrint(data.logMsg);
+    playFmTone(350, 2.0, 3.0, 0.1, 0.1, false);
+  }
+
+  if (data.winner) {
+    finishDuelMatch(data.winner);
+    return;
+  }
+
+  duelState.turn = duelState.mySlot;
+  updateDuelUI();
+}
+
+function executeAiDuelTurn() {
+  if (!duelState.active || duelState.turn !== 'p2') return;
+
+  const ai = duelState.p2;
+  const player = duelState.p1;
+
+  // Smart Tactical AI selection
+  let move = 'attack';
+  if (ai.cycles >= 35 && (player.hp <= 45 || Math.random() < 0.4)) {
+    move = 'trojan';
+  } else if (ai.cycles >= 25 && player.cycles >= 40 && Math.random() < 0.35) {
+    move = 'jammer';
+  } else if (ai.shield <= 10 && ai.cycles >= 15 && Math.random() < 0.5) {
+    move = 'shield';
+  } else if (ai.cycles >= 40 && ai.bomb === 0 && Math.random() < 0.25) {
+    move = 'bomb';
+  } else if (ai.cycles < 20) {
+    ai.cycles = Math.min(ai.maxCycles, ai.cycles + 25);
+    logDuelPrint(`<Daemon_AI_0x7F> [IDLE] Recharging power bus (+25 Cycles).`);
+    duelState.turn = 'p1';
+    updateDuelUI();
+    return;
+  }
+
+  let cost = 20;
+  if (move === 'trojan') cost = 35;
+  else if (move === 'shield') cost = 15;
+  else if (move === 'jammer') cost = 25;
+  else if (move === 'bomb') cost = 40;
+
+  ai.cycles -= cost;
+  let logMsg = '';
+
+  if (move === 'attack') {
+    let rawDmg = Math.floor(20 + Math.random() * 10);
+    if (player.shield > 0) {
+      const absorbed = Math.min(player.shield, Math.floor(rawDmg * 0.5));
+      player.shield -= absorbed;
+      const dmg = rawDmg - absorbed;
+      player.hp -= dmg;
+      logMsg = `[COUNTER] Daemon_AI sent Buffer Overflow! Shield absorbed ${absorbed}, took ${dmg} HP dmg!`;
+    } else {
+      player.hp -= rawDmg;
+      logMsg = `[COUNTER] Daemon_AI sent Buffer Overflow direct hit! Player took ${rawDmg} HP damage!`;
+    }
+    playFmTone(240, 1.8, 3.2, 0.12, 0.12, false);
+  } else if (move === 'trojan') {
+    if (Math.random() > 0.3) {
+      const dmg = Math.floor(38 + Math.random() * 16);
+      player.hp -= dmg;
+      logMsg = `[COUNTER] Daemon_AI Trojan Exploit executed! Player took ${dmg} massive damage!`;
+      playFmTone(200, 3.0, 4.0, 0.15, 0.15, false);
+    } else {
+      logMsg = `[FILTERED] Your firewall filtered Daemon_AI's Trojan payload!`;
+      playChime(350, 0.08);
+    }
+  } else if (move === 'shield') {
+    ai.shield = Math.min(ai.maxShield, ai.shield + 25);
+    logMsg = `[DEFENSE] Daemon_AI patched internal firewall (+25 Shield).`;
+    playChime(550, 0.1);
+  } else if (move === 'jammer') {
+    const drained = Math.min(player.cycles, 30);
+    player.cycles -= drained;
+    logMsg = `[JAMMER] Daemon_AI jammed your baud line! Drained ${drained} Cycles!`;
+    playFmTone(280, 1.5, 3.0, 0.12, 0.1, false);
+  } else if (move === 'bomb') {
+    ai.bomb = 1;
+    logMsg = `[TRAP] Daemon_AI planted Logic Bomb! Detonating next turn.`;
+  }
+
+  logDuelPrint(`<Daemon_AI_0x7F> ${logMsg}`);
+  ai.cycles = Math.min(ai.maxCycles, ai.cycles + 15);
+
+  if (player.hp <= 0) {
+    player.hp = 0;
+    finishDuelMatch('p2');
+    return;
+  }
+
+  duelState.turn = 'p1';
+  updateDuelUI();
+}
+
+function finishDuelMatch(winnerSlot) {
+  duelState.active = false;
+  const isWinner = (winnerSlot === duelState.mySlot);
+  const banner = document.getElementById('duelTurnBanner');
+
+  if (isWinner) {
+    banner.textContent = `🏆 VICTORY! ENEMY BUFFER OVERWHELMED! 🏆`;
+    banner.style.color = 'var(--amber-bright)';
+    banner.style.borderColor = 'var(--amber)';
+    logDuelPrint(`\n★ ★ ★ DUEL VICTORY! Opponent disconnected with 0 HP. Victory recorded in BBS Log! ★ ★ ★`);
+    playChime(987.77, 0.35);
+  } else {
+    banner.textContent = `💀 SYSTEM CRASH! BUFFER INTEGRITY COMPROMISED 💀`;
+    banner.style.color = 'var(--pink)';
+    banner.style.borderColor = 'var(--pink)';
+    logDuelPrint(`\n[FATAL] Your buffer was depleted. Emergency safe mode engaged.`);
+    playFmTone(150, 1.5, 4.0, 0.3, 0.18, false);
+  }
+
+  document.getElementById('duelRematchBtn').style.display = 'inline-block';
+  updateDuelUI();
+}
+
+function requestDuelRematch() {
+  playChime(750, 0.15);
+  resetDuelStats();
+  startDuelMatch();
+  if (!duelState.isAiMatch && cyberMultiplayer) {
+    cyberMultiplayer.requestRematch();
+  }
+}
+
+function sendDuelChat() {
+  const input = document.getElementById('duelChatInput');
+  const txt = (input.value || '').trim();
+  if (!txt) return;
+  input.value = '';
+  sendDuelQuip(txt);
+}
+
+function sendDuelQuip(text) {
+  logDuelPrint(`[YOU] ${text}`);
+  playKeyClick();
+  if (!duelState.isAiMatch && cyberMultiplayer) {
+    cyberMultiplayer.sendChat(text);
+  } else if (duelState.isAiMatch) {
+    setTimeout(() => {
+      const quips = ['"Nice try, human."', '"My Voodoo3 runs at 183MHz."', '"Dropping packets yet?"', '"Hack the planet."'];
+      const q = quips[Math.floor(Math.random() * quips.length)];
+      logDuelPrint(`<Daemon_AI_0x7F> ${q}`);
+      playKeyClick();
+    }, 800);
+  }
+}
+
+function leaveCyberDuel() {
+  if (confirm('Drop carrier and return to CyberCafe Lobby?')) {
+    duelState.active = false;
+    stopDuelFallbackTimer();
+    if (cyberMultiplayer) cyberMultiplayer.leaveRoom();
+    document.getElementById('duelArenaWrap').style.display = 'none';
+    document.getElementById('duelLobbyCard').style.display = 'block';
+    document.getElementById('duelShareBox').style.display = 'none';
+    document.getElementById('btnHostDuel').disabled = false;
+    document.getElementById('btnHostDuel').textContent = '📡 HOST CYBER DUEL';
+    playChime(350, 0.1);
+  }
+}
+
+/* =========================================================================
    11. VAULT FILE VIEWER & DIRECT DOWNLOADER
    ========================================================================= */
 const VAULT_FILES = {
@@ -3769,7 +4659,48 @@ STATION HOURLY RATES:
 2. Monitor your daily turn meter. Don't waste turns probing when low HP.
 3. Visit the Armory early: 128MB SDRAM upgrade gives you buffer headroom.
 4. Stop by the SysOp Tavern if you need emergency turns (+5 Baud Roast).
-5. Listen for anomalous packets on 10.19.99.4 for secret lore coordinates!`
+5. Listen for anomalous packets on 10.19.99.4 for secret lore coordinates!`,
+
+  CARRIER_DISPATCH: `[PHREAK DISPATCH: CARRIER_FREQUENCY_1999HZ.DISPATCH // 1999-11-24]
+========================================================================
+TELECOM PHREAKING DISPATCH: ACOUSTIC COUPLER HARMONICS ON 10.19.99.x
+Author: FreqHunter & SilverBox // Underground Telephony Guild
+========================================================================
+While monitoring late-night carrier signals across local dial-up loops,
+our frequency counter registered consistent acoustic anomalies on gateway
+router 10.19.99.4:
+
+1. FREQUENCY: 1999Hz fundamental (±0.04Hz), modulated with a 432Hz subcarrier.
+2. TIMING: Synchronous pulses trigger at 03:14:02 EST nightly.
+3. PROTOCOL: Responds to standard Bell 212A / V.22bis handshake sequences.
+4. TELEMETRY: Embedded memory sector tags reference "0x0040" and "CARLSBAD".
+
+SysOp claims no server exists at 10.19.99.4, but the acoustic resonance
+proves an internal device controller is actively transmitting.
+If dialed into the lounge terminal, enter '!signal' in IRC or inspect
+hex memory offset 0x0040. Access classified node via kweb://10.19.99.4/classified.`,
+
+  LAN_RULES: `[TOURNAMENT: LAN_PARTY_RULES_1999.TXT // 1999-11-25]
+========================================================================
+CYBERCAFE '99 // OFFICIAL LAN DEATHMATCH RULES & PROTOCOLS
+========================================================================
+1. EQUIPMENT: All stations are equipped with Pentium III 500MHz processors
+   and 3dfx Voodoo3 3000 AGP 16MB accelerators. Bring your own PS/2 mouse
+   if preferred; driver diskettes must be checked at the counter.
+
+2. TOURNAMENTS:
+   - Tremor III Arena: 1v1 Rocket Arena, 5-frag limit per round.
+   - Surreal Tournament: 5v5 CTF on Facing Worlds (CTF-Face).
+   - VoidCraft: 1v1 Brood War rules on Lost Temple.
+
+3. NETWORK DISCIPLINE:
+   - Packet sniffers and cheat hooks result in instant terminal ban.
+   - Unroutable network traffic to 10.19.99.4 is strictly prohibited
+     during tournament hours.
+
+4. REFRESHMENTS:
+   - Baud Roast Coffee and Jolt Cola must remain in cup holders.
+   - Hot Pocket grease must be wiped from keyboard keycaps before station handover.`
 };
 
 let currentVaultKey = null;
@@ -3819,6 +4750,7 @@ window.addEventListener('DOMContentLoaded', () => {
   renderIrc();
   initDoorGame();
   initFirebaseIrc();
+  initCyberDuelMultiplayer();
 
   // Attach Piano key clicks
   document.querySelectorAll('.piano-key').forEach(k => {
