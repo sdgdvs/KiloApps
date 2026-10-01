@@ -71,8 +71,13 @@ BOOL g_bWordWrap = FALSE;
 #define ID_EDIT_GOTOLINE    9035
 #define ID_FILE_EXPORT_MD   9036
 #define ID_EDIT_REVERSE     9037
+#define ID_EDIT_TITLECASE   9038
+#define ID_EDIT_ROT13       9039
 #define ID_FILE_QUICKSAVE   9040
 #define ID_FILE_QUICKLOAD   9041
+#define ID_TPL_HTML4        9042
+#define ID_TPL_ASM          9043
+#define ID_VIEW_HASHES      9044
 void UpdateStatusBar(void);
 void UpdateTabTitle(int index);
 void AddTab(const char* name, const char* path);
@@ -82,6 +87,8 @@ void ExportMarkdownNative(void);
 void ReverseLinesNative(void);
 void QuickSaveNative(void);
 void QuickLoadNative(void);
+void TransformCaseExtended(int mode);
+void ShowChecksumsDialog(void);
 
 int g_nFontSizePt = 12;
 char g_szCustomStatus[128] = {0};
@@ -180,6 +187,12 @@ void InsertTemplateNative(int type) {
     } else if (type == 3) {
         title = "config.json";
         text = "{\r\n  \"name\": \"kpad-project\",\r\n  \"version\": \"1.4.0\",\r\n  \"settings\": {\r\n    \"wordWrap\": false,\r\n    \"tabSize\": 4\r\n  }\r\n}\r\n";
+    } else if (type == 4) {
+        title = "classic.html";
+        text = "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01 Transitional//EN\">\r\n<html>\r\n<head>\r\n  <title>KiloNet 1999 Classic Document</title>\r\n  <meta http-equiv=\"Content-Type\" content=\"text/html; charset=iso-8859-1\">\r\n</head>\r\n<body bgcolor=\"#000080\" text=\"#FFFFFF\" link=\"#FFFF00\" vlink=\"#00FFFF\">\r\n  <h2>Welcome to the 1999 Subnet</h2>\r\n  <hr size=\"2\" color=\"#FFCC00\">\r\n  <p>Ultra-compact static retro document prepared in KPad Pro.</p>\r\n</body>\r\n</html>\r\n";
+    } else if (type == 5) {
+        title = "kernel.asm";
+        text = "; KiloOS Native x86 Skeleton\r\n[BITS 32]\r\nsection .text\r\nglobal _start\r\n\r\n_start:\r\n    xor eax, eax\r\n    mov ebx, 0x1999\r\n    ret\r\n";
     }
 
     HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
@@ -628,7 +641,7 @@ void DoFindReplace(BOOL isReplace) {
     }
 }
 
-void TransformCase(BOOL uppercase) {
+void TransformCaseExtended(int mode) {
     HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
     DWORD start, end;
     SendMessageA(hEdit, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
@@ -638,17 +651,37 @@ void TransformCase(BOOL uppercase) {
     char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len + 1);
     if (buf) {
         GetWindowTextA(hEdit, buf, len + 1);
+        BOOL newWord = TRUE;
         for (DWORD i = start; i < end && i < (DWORD)len; i++) {
-            if (uppercase) {
-                if (buf[i] >= 'a' && buf[i] <= 'z') buf[i] -= 32;
-            } else {
-                if (buf[i] >= 'A' && buf[i] <= 'Z') buf[i] += 32;
+            unsigned char c = (unsigned char)buf[i];
+            if (mode == 0) { // UPPERCASE
+                if (c >= 'a' && c <= 'z') buf[i] = (char)(c - 32);
+            } else if (mode == 1) { // lowercase
+                if (c >= 'A' && c <= 'Z') buf[i] = (char)(c + 32);
+            } else if (mode == 2) { // Title Case
+                if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) {
+                    if (newWord) {
+                        if (c >= 'a' && c <= 'z') buf[i] = (char)(c - 32);
+                        newWord = FALSE;
+                    } else {
+                        if (c >= 'A' && c <= 'Z') buf[i] = (char)(c + 32);
+                    }
+                } else {
+                    newWord = TRUE;
+                }
+            } else if (mode == 3) { // ROT13
+                if (c >= 'a' && c <= 'z') buf[i] = (char)('a' + (c - 'a' + 13) % 26);
+                else if (c >= 'A' && c <= 'Z') buf[i] = (char)('A' + (c - 'A' + 13) % 26);
             }
         }
         SetWindowTextA(hEdit, buf);
         SendMessageA(hEdit, EM_SETSEL, start, end);
         HeapFree(GetProcessHeap(), 0, buf);
     }
+}
+
+void TransformCase(BOOL uppercase) {
+    TransformCaseExtended(uppercase ? 0 : 1);
 }
 
 void ShowStatsDialog() {
@@ -1082,6 +1115,50 @@ void ShowDetailedDiagnostics() {
     MessageBoxA(g_hMainWnd, msg, "Document Diagnostics - KPad Pro", MB_OK | MB_ICONINFORMATION);
 }
 
+void ShowChecksumsDialog(void) {
+    if (g_NumTabs == 0) return;
+    HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
+    int len = GetWindowTextLengthA(hEdit);
+    char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len + 1);
+    unsigned int crc = 0;
+    char md5Str[64] = "Unavailable";
+
+    if (buf) {
+        GetWindowTextA(hEdit, buf, len + 1);
+        crc = CalculateCRC32((const unsigned char*)buf, len);
+
+        HCRYPTPROV hProv = 0;
+        HCRYPTHASH hHash = 0;
+        if (CryptAcquireContextA(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
+            if (CryptCreateHash(hProv, CALG_MD5, 0, 0, &hHash)) {
+                CryptHashData(hHash, (const BYTE*)buf, len, 0);
+                BYTE hashVal[16];
+                DWORD hashLen = sizeof(hashVal);
+                if (CryptGetHashParam(hHash, HP_HASHVAL, hashVal, &hashLen, 0)) {
+                    char* p = md5Str;
+                    for (DWORD i = 0; i < hashLen; i++) {
+                        wsprintfA(p, "%02x", hashVal[i]);
+                        p += 2;
+                    }
+                }
+                CryptDestroyHash(hHash);
+            }
+            CryptReleaseContext(hProv, 0);
+        }
+        HeapFree(GetProcessHeap(), 0, buf);
+    }
+
+    char msg[512];
+    wsprintfA(msg, "Document Cryptographic Checksums:\n\n"
+                   "• CRC32  : 0x%08X\n"
+                   "• MD5    : %s\n"
+                   "• Size   : %d bytes\n"
+                   "• File   : %s",
+              crc, md5Str, len,
+              g_Tabs[g_ActiveTab].szPath[0] ? g_Tabs[g_ActiveTab].szPath : "Untitled (Unsaved)");
+    MessageBoxA(g_hMainWnd, msg, "Checksums & Hashes - KPad Pro", MB_OK | MB_ICONINFORMATION);
+}
+
 void EncryptBufferAction() {
     if (g_NumTabs == 0) return;
     HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
@@ -1395,6 +1472,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hTplMenu, MF_STRING, ID_TPL_MARKDOWN, "Markdown Notes (.md)");
             AppendMenuA(hTplMenu, MF_STRING, ID_TPL_C, "C Program Skeleton (.c)");
             AppendMenuA(hTplMenu, MF_STRING, ID_TPL_HTML, "HTML5 Starter (.html)");
+            AppendMenuA(hTplMenu, MF_STRING, ID_TPL_HTML4, "Retro HTML 4.01 (.html)");
+            AppendMenuA(hTplMenu, MF_STRING, ID_TPL_ASM, "x86 Assembly (.asm)");
             AppendMenuA(hTplMenu, MF_STRING, ID_TPL_JSON, "JSON Configuration (.json)");
             AppendMenuA(hFileMenu, MF_POPUP, (UINT_PTR)hTplMenu, "Insert Template");
 
@@ -1424,6 +1503,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hEditMenu, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_UPPERCASE, "Convert UPPERCASE");
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_LOWERCASE, "Convert lowercase");
+            AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_TITLECASE, "Convert Title Case");
+            AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_ROT13, "Apply ROT13 Cipher");
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_REVERSE, "Reverse Line Order");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hEditMenu, "Edit");
 
@@ -1435,6 +1516,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HMENU hViewMenu = CreatePopupMenu();
             AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_STATS, "Document Stats...");
             AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_DIAGNOSTICS, "Detailed Diagnostics & Integrity...");
+            AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_HASHES, "Cryptographic Checksums (MD5/CRC32)...");
             AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_WRAP, "Toggle Word Wrap\tAlt+Z");
             AppendMenuA(hViewMenu, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_ZOOMIN, "Zoom In\tCtrl++");
@@ -1602,10 +1684,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 }
                 case ID_EDIT_UPPERCASE:
-                    TransformCase(TRUE);
+                    TransformCaseExtended(0);
                     break;
                 case ID_EDIT_LOWERCASE:
-                    TransformCase(FALSE);
+                    TransformCaseExtended(1);
+                    break;
+                case ID_EDIT_TITLECASE:
+                    TransformCaseExtended(2);
+                    break;
+                case ID_EDIT_ROT13:
+                    TransformCaseExtended(3);
                     break;
                 case ID_EDIT_REVERSE:
                     ReverseLinesNative();
@@ -1615,6 +1703,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 case ID_VIEW_DIAGNOSTICS:
                     ShowDetailedDiagnostics();
+                    break;
+                case ID_VIEW_HASHES:
+                    ShowChecksumsDialog();
                     break;
                 case ID_VIEW_WRAP:
                     g_bWordWrap = !g_bWordWrap;
@@ -1646,6 +1737,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 case ID_TPL_JSON:
                     InsertTemplateNative(3);
+                    break;
+                case ID_TPL_HTML4:
+                    InsertTemplateNative(4);
+                    break;
+                case ID_TPL_ASM:
+                    InsertTemplateNative(5);
                     break;
                 case ID_HELP_SHORTCUTS:
                     MessageBoxA(hwnd,

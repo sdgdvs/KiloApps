@@ -393,6 +393,152 @@
     font-family: monospace;
   }
 
+  /* Collab & Multiplayer Badges */
+  .collab-badge-solo {
+    background: rgba(148, 163, 184, 0.2);
+    color: #94a3b8;
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 600;
+  }
+  .collab-badge-waiting {
+    background: rgba(245, 158, 11, 0.2);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 600;
+    animation: pulseCollab 1.5s infinite;
+  }
+  .collab-badge-connected {
+    background: rgba(16, 185, 129, 0.25);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.5);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 600;
+  }
+  .collab-badge-ghost {
+    background: rgba(217, 70, 239, 0.25);
+    color: #f0abfc;
+    border: 1px solid rgba(217, 70, 239, 0.4);
+    padding: 1px 5px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 600;
+  }
+  @keyframes pulseCollab {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  .collab-hub-box {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .collab-room-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid var(--border-active);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 15px;
+    font-family: monospace;
+    font-weight: bold;
+    color: #38bdf8;
+    letter-spacing: 1px;
+  }
+  .collab-chat-log {
+    max-height: 160px;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid var(--border-glass);
+    border-radius: 6px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11px;
+  }
+  .collab-chat-msg {
+    display: flex;
+    gap: 6px;
+    align-items: baseline;
+  }
+  .collab-chat-author {
+    font-weight: bold;
+    color: var(--accent-hover);
+  }
+  .collab-chat-time {
+    color: var(--text-muted);
+    font-size: 10px;
+  }
+
+  /* Document Diff Viewer Styles */
+  .diff-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-family: 'Consolas', monospace;
+    font-size: 12px;
+  }
+  .diff-stats-bar {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.35);
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-glass);
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+  .diff-stat-add { color: #34d399; font-weight: bold; }
+  .diff-stat-del { color: #f43f5e; font-weight: bold; }
+  .diff-stat-same { color: var(--text-muted); }
+  .diff-viewer {
+    max-height: 380px;
+    overflow-y: auto;
+    background: #090d16;
+    border: 1px solid var(--border-glass);
+    border-radius: 6px;
+    padding: 8px;
+    line-height: 1.5;
+  }
+  .diff-line {
+    display: flex;
+    gap: 8px;
+    white-space: pre-wrap;
+    word-break: break-all;
+    padding: 1px 4px;
+    border-radius: 2px;
+  }
+  .diff-line-num {
+    color: var(--text-muted);
+    min-width: 38px;
+    text-align: right;
+    user-select: none;
+    opacity: 0.6;
+  }
+  .diff-line.diff-add {
+    background: rgba(16, 185, 129, 0.15);
+    color: #86efac;
+    border-left: 3px solid #10b981;
+  }
+  .diff-line.diff-del {
+    background: rgba(244, 63, 94, 0.15);
+    color: #fda4af;
+    border-left: 3px solid #f43f5e;
+  }
+  .diff-line.diff-same {
+    color: var(--text-secondary);
+  }
+
   /* Find & Replace Floating Panel */
   .find-replace-panel {
     display: none;
@@ -1046,13 +1192,20 @@
         <div onclick="loadTemplate('markdown')"><span>Insert Template: Notes (.md)</span></div>
         <div onclick="loadTemplate('js')"><span>Insert Template: JavaScript (.js)</span></div>
         <div onclick="loadTemplate('html')"><span>Insert Template: HTML5 (.html)</span></div>
+        <div onclick="loadTemplate('retro-html')"><span>Insert Template: Retro HTML 4.01 (.html)</span></div>
         <div onclick="loadTemplate('c')"><span>Insert Template: C / C++ (.c)</span></div>
+        <div onclick="loadTemplate('win32-c')"><span>Insert Template: Win32 GUI (.c)</span></div>
+        <div onclick="loadTemplate('python')"><span>Insert Template: Python Script (.py)</span></div>
         <div onclick="loadTemplate('json')"><span>Insert Template: JSON (.json)</span></div>
+        <div onclick="loadTemplate('classified-log')"><span>Insert Template: Subnet Telemetry Log</span></div>
         <div class="divider"></div>
         <div onclick="exportDocument('txt')"><span>Export Plain Text (.txt)</span></div>
         <div onclick="exportDocument('md')"><span>Export Markdown Notes (.md)</span></div>
         <div onclick="exportDocument('html')"><span>Export HTML (.html)</span></div>
         <div onclick="exportDocument('html-styled')"><span>Export Styled Print Sheet (.html)</span></div>
+        <div onclick="exportDocument('bbcode')"><span>Export BBCode (.txt)</span></div>
+        <div onclick="exportDocument('rtf')"><span>Export Rich Text (.rtf)</span></div>
+        <div onclick="exportDocument('tex')"><span>Export LaTeX Article (.tex)</span></div>
         <div onclick="exportDocument('csv')"><span>Export CSV Line Rows (.csv)</span></div>
         <div onclick="exportDocument('json')"><span>Export Session (.json)</span></div>
         <div onclick="exportDocument('workspace')"><span>Export Workspace Snapshot (.json)</span><span class="shortcut">Ctrl+Shift+S</span></div>
@@ -1089,12 +1242,20 @@
 
     <div class="menu-btn">Tools
       <div class="dropdown">
+        <div onclick="openDiffModal()"><span>📊 Compare / Diff Documents...</span><span class="shortcut">Ctrl+Shift+D</span></div>
+        <div class="divider"></div>
         <div onclick="promptEncryptDocument()"><span>🔒 Encrypt Document (Password Lock)...</span><span class="shortcut">Ctrl+E</span></div>
         <div onclick="promptDecryptDocument()"><span>🔓 Decrypt Document (Unlock)...</span><span class="shortcut">Ctrl+D</span></div>
         <div class="divider"></div>
         <div onclick="transformText('upper')"><span>UPPERCASE</span></div>
         <div onclick="transformText('lower')"><span>lowercase</span></div>
         <div onclick="transformText('title')"><span>Title Case</span></div>
+        <div onclick="transformText('camel')"><span>camelCase</span></div>
+        <div onclick="transformText('snake')"><span>snake_case</span></div>
+        <div onclick="transformText('kebab')"><span>kebab-case</span></div>
+        <div onclick="transformText('pascal')"><span>PascalCase</span></div>
+        <div onclick="transformText('rot13')"><span>ROT13 Caesar Cipher</span></div>
+        <div onclick="transformText('invert')"><span>Invert Case</span></div>
         <div class="divider"></div>
         <div onclick="sortLines('asc')"><span>Sort Lines (Ascending A-Z)</span></div>
         <div onclick="sortLines('desc')"><span>Sort Lines (Descending Z-A)</span></div>
@@ -1115,6 +1276,7 @@
         <div onclick="formatJSON()"><span>Format JSON</span></div>
         <div class="divider"></div>
         <div onclick="showDiagnostics()"><span>📊 Document Diagnostics & Hash</span></div>
+        <div onclick="showHashChecksums()"><span>🔐 Calculate Hashes (MD5 / SHA-256 / CRC32)...</span></div>
       </div>
     </div>
 
@@ -1129,6 +1291,22 @@
         <div onclick="changeFontSize(1)"><span>Increase Font Size</span><span class="shortcut">Ctrl++</span></div>
         <div onclick="changeFontSize(-1)"><span>Decrease Font Size</span><span class="shortcut">Ctrl+-</span></div>
         <div onclick="resetFontSize()"><span>Reset Font Size</span><span class="shortcut">Ctrl+0</span></div>
+      </div>
+    </div>
+
+    <!-- Multiplayer & Collaborative Editing Menu -->
+    <div class="menu-btn" id="menu-collab-btn">👥 Collab
+      <div class="dropdown">
+        <div onclick="openCollabCenter()"><span>🌐 Collab Hub / Session Info...</span><span class="shortcut">Alt+M</span></div>
+        <div onclick="hostCollabRoom()"><span>⚡ Host Real-Time Session</span></div>
+        <div onclick="promptJoinCollabRoom()"><span>🔗 Join Session by Code...</span></div>
+        <div onclick="quickMatchCollab()"><span>📡 Quick Matchmaking</span></div>
+        <div class="divider"></div>
+        <div onclick="copyCollabLink()"><span>📋 Copy Session Link (#room=...)</span></div>
+        <div onclick="toggleGhostTypist()"><span>🤖 Toggle Ghost Typist (Copilot)</span><span class="shortcut">Alt+J</span></div>
+        <div onclick="openCollabChat()"><span>💬 Collab Chat & Notes...</span></div>
+        <div class="divider"></div>
+        <div onclick="leaveCollabRoom()"><span>🚪 Disconnect / Solo Mode</span></div>
       </div>
     </div>
 
@@ -1151,6 +1329,12 @@
   <!-- Quick Action & Templates Toolbar -->
   <div class="quick-toolbar">
     <div class="quick-group">
+      <button class="quick-btn" id="btn-collab" onclick="openCollabCenter()" title="Multiplayer Real-Time Collaboration (RFMS) / Solo Copilot (Alt+M)">
+        👥 Collab <span id="collab-badge" class="collab-badge-solo">Solo</span>
+      </button>
+      <button class="quick-btn" id="btn-diff" onclick="openDiffModal()" title="Compare & Diff Documents (Tabs vs Quicksave vs Clipboard) [Ctrl+Shift+D]">
+        📊 Diff
+      </button>
       <button class="quick-btn" onclick="quicksaveSnapshot()" title="Quicksave workspace snapshot to local storage (F5)">
         💾 Quicksave <span class="kbd-hint">F5</span>
       </button>
@@ -1193,7 +1377,9 @@
       <button class="quick-chip" onclick="loadTemplate('markdown')" title="Markdown Notes (.md)">📝 Notes</button>
       <button class="quick-chip" onclick="loadTemplate('js')" title="JavaScript Sandbox (.js)">⚡ JS</button>
       <button class="quick-chip" onclick="loadTemplate('html')" title="HTML5 Starter (.html)">🌐 HTML5</button>
+      <button class="quick-chip" onclick="loadTemplate('retro-html')" title="Retro Netscape HTML 4.01 (.html)">🌐 RetroWeb</button>
       <button class="quick-chip" onclick="loadTemplate('c')" title="C/C++ Skeleton (.c)">⚙️ C/C++</button>
+      <button class="quick-chip" onclick="loadTemplate('python')" title="Python CLI Script (.py)">🐍 Python</button>
       <button class="quick-chip" onclick="loadTemplate('json')" title="JSON Config (.json)">📦 JSON</button>
     </div>
   </div>
@@ -1229,6 +1415,7 @@
       <input type="text" class="find-input" id="find-input" placeholder="Find..." aria-label="Find input" oninput="findNext(false)" onkeydown="if(event.key==='Enter') findNext(event.shiftKey)">
       <button class="find-toggle" id="btn-match-case" onclick="toggleFindOpt('matchCase')" title="Match Case (Aa)">Aa</button>
       <button class="find-toggle" id="btn-regex" onclick="toggleFindOpt('regex')" title="Regular Expression (.*)">.*</button>
+      <button class="find-toggle" id="btn-whole-word" onclick="toggleFindOpt('wholeWord')" title="Match Whole Word (\b)">\b</button>
       <span class="find-stats" id="find-stats">0 of 0</span>
       <button class="find-btn" onclick="findNext(true)" title="Previous (Shift+Enter)">▲</button>
       <button class="find-btn" onclick="findNext(false)" title="Next (Enter)">▼</button>
@@ -1270,6 +1457,12 @@
       <div class="status-item" id="file-path">Untitled 1</div>
       <div class="status-item" id="file-status">Ready</div>
       <div class="status-item status-clickable" id="stat-autosave" style="color: #34d399; font-size:10px;" onclick="triggerManualAutoSave()" title="Click to trigger manual autosave & sync snapshot">● Auto-Saved</div>
+      <div class="status-item status-clickable" id="stat-collab" onclick="openCollabCenter()" title="Collab Session Status (Click for Collab Hub [Alt+M])">
+        👥 Collab: Solo
+      </div>
+      <div class="status-item" id="stat-peer-cursor" style="display:none; color:#38bdf8;" title="Remote collaborator's cursor position">
+        👥 Peer: Ln 1, Col 1
+      </div>
     </div>
     <div class="status-right">
       <div class="status-item status-clickable" style="font-weight:bold; color:var(--accent-hover);" onclick="showHelp()" title="Help & Shortcuts Guide (F1 / Alt+H)">
@@ -1336,6 +1529,9 @@
   <!-- Toast Notification Container -->
   <div class="toast-container" id="toast-container"></div>
 
+  <!-- Retro Firebase Multiplayer Service (RFMS) -->
+  <script src="../assets/js/retro_multiplayer.js"></script>
+
   <script>
     const editor = document.getElementById('editor');
     const highlightCode = document.getElementById('highlight-code');
@@ -1351,8 +1547,28 @@
 
     let findOpts = {
       matchCase: false,
-      regex: false
+      regex: false,
+      wholeWord: false
     };
+
+    // --- Multiplayer & Collaborative State (RFMS) ---
+    let mp = null;
+    let collabState = {
+      active: false,
+      roomId: null,
+      role: 'solo',
+      peerName: null,
+      peerCursor: null,
+      isSyncing: false,
+      lastLocalRev: 0,
+      lastRemoteRev: 0,
+      ghostTypistActive: false,
+      chatMessages: [
+        { sender: 'System', time: 'Startup', text: 'KPad Pro Collab Engine online. Host or Join a room to edit with others in real-time.' }
+      ]
+    };
+    let collabDebounceTimer = null;
+    let cursorThrottleTimer = null;
 
     // --- Safe Storage Utilities ---
     function safeSetStorage(key, val) {
@@ -1976,6 +2192,14 @@
           renderTabs();
         }
       }
+
+      // Queue Collaborative Document Synchronization if connected
+      if (collabState && collabState.active && mp && !collabState.isSyncing) {
+        if (collabDebounceTimer) clearTimeout(collabDebounceTimer);
+        collabDebounceTimer = setTimeout(() => {
+          broadcastDocumentSync(false);
+        }, 140);
+      }
     }
 
     function goToLineDirect(lineNum) {
@@ -1998,8 +2222,18 @@
     });
 
     editor.addEventListener('input', updateEditor);
-    editor.addEventListener('keyup', updateEditor);
-    editor.addEventListener('click', updateEditor);
+    editor.addEventListener('keyup', () => {
+      updateEditor();
+      if (collabState && collabState.active && mp && !collabState.isSyncing) {
+        throttleBroadcastCursor();
+      }
+    });
+    editor.addEventListener('click', () => {
+      updateEditor();
+      if (collabState && collabState.active && mp && !collabState.isSyncing) {
+        throttleBroadcastCursor();
+      }
+    });
     editor.addEventListener('mouseup', updateEditor);
 
     // --- Find & Replace Engine ---
@@ -2020,8 +2254,9 @@
 
     function toggleFindOpt(opt) {
       findOpts[opt] = !findOpts[opt];
-      document.getElementById(opt === 'matchCase' ? 'btn-match-case' : 'btn-regex')
-              .classList.toggle('active', findOpts[opt]);
+      let btnId = opt === 'matchCase' ? 'btn-match-case' : (opt === 'regex' ? 'btn-regex' : 'btn-whole-word');
+      const btn = document.getElementById(btnId);
+      if (btn) btn.classList.toggle('active', findOpts[opt]);
       findNext(false);
     }
 
@@ -2035,12 +2270,11 @@
       const text = editor.value;
       let regex;
       try {
-        if (findOpts.regex) {
-          regex = new RegExp(query, findOpts.matchCase ? 'g' : 'gi');
-        } else {
-          const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-          regex = new RegExp(escaped, findOpts.matchCase ? 'g' : 'gi');
+        let pattern = findOpts.regex ? query : query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (findOpts.wholeWord) {
+          pattern = '\\b(?:' + pattern + ')\\b';
         }
+        regex = new RegExp(pattern, findOpts.matchCase ? 'g' : 'gi');
       } catch (e) {
         document.getElementById('find-stats').innerText = "Invalid Regex";
         return;
@@ -2083,7 +2317,8 @@
       let isMatch = false;
       try {
         const flags = findOpts.matchCase ? '' : 'i';
-        const pattern = findOpts.regex ? query : query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        let pattern = findOpts.regex ? query : query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (findOpts.wholeWord) pattern = '\\b(?:' + pattern + ')\\b';
         const rx = new RegExp('^(?:' + pattern + ')$', flags);
         isMatch = rx.test(selectedText);
       } catch (e) {}
@@ -2104,7 +2339,9 @@
 
       try {
         const flags = findOpts.matchCase ? 'g' : 'gi';
-        const regex = findOpts.regex ? new RegExp(query, flags) : new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+        let pattern = findOpts.regex ? query : query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        if (findOpts.wholeWord) pattern = '\\b(?:' + pattern + ')\\b';
+        const regex = new RegExp(pattern, flags);
         const count = (editor.value.match(regex) || []).length;
         editor.value = editor.value.replace(regex, replaceStr);
         updateEditor();
@@ -2132,8 +2369,27 @@
 
       let res = sel;
       if (type === 'upper') res = sel.toUpperCase();
-      if (type === 'lower') res = sel.toLowerCase();
-      if (type === 'title') res = sel.replace(/\b\w/g, c => c.toUpperCase());
+      else if (type === 'lower') res = sel.toLowerCase();
+      else if (type === 'title') res = sel.replace(/\b\w/g, c => c.toUpperCase());
+      else if (type === 'camel') {
+        res = sel.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, (match, index) => {
+          if (+match === 0) return "";
+          return index === 0 ? match.toLowerCase() : match.toUpperCase();
+        }).replace(/[^a-zA-Z0-9]/g, '');
+      } else if (type === 'snake') {
+        res = sel.replace(/\s+/g, '_').replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase();
+      } else if (type === 'kebab') {
+        res = sel.replace(/\s+/g, '-').replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase();
+      } else if (type === 'pascal') {
+        res = sel.replace(/(?:^\w|[A-Z]|\b\w|\s+)/g, (match) => {
+          if (+match === 0) return "";
+          return match.toUpperCase();
+        }).replace(/[^a-zA-Z0-9]/g, '');
+      } else if (type === 'rot13') {
+        res = sel.replace(/[a-zA-Z]/g, c => String.fromCharCode((c <= 'Z' ? 90 : 122) >= (c = c.charCodeAt(0) + 13) ? c : c - 26));
+      } else if (type === 'invert') {
+        res = sel.split('').map(c => c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase()).join('');
+      }
 
       if (start !== end) {
         editor.value = val.substring(0, start) + res + val.substring(end);
@@ -2928,7 +3184,27 @@
       json: {
         name: "config.json",
         lang: "json",
-        content: `{\n  "appName": "KPad Pro",\n  "version": "1.4.0",\n  "settings": {\n    "theme": "dark",\n    "wordWrap": false,\n    "tabSize": 4,\n    "autoSave": true\n  },\n  "features": [\n    "tabs",\n    "encryption",\n    "diagnostics",\n    "templates"\n  ]\n}\n`
+        content: `{\n  "appName": "KPad Pro",\n  "version": "2.0.0",\n  "settings": {\n    "theme": "dark",\n    "wordWrap": false,\n    "tabSize": 4,\n    "autoSave": true,\n    "collabMultiplayer": true\n  },\n  "features": [\n    "tabs",\n    "encryption",\n    "diagnostics",\n    "templates",\n    "realtime-collab",\n    "diff-tool"\n  ]\n}\n`
+      },
+      "retro-html": {
+        name: "index.html",
+        lang: "html",
+        content: `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n<html>\n<head>\n  <title>Underground Station '99</title>\n  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">\n  <style type="text/css">\n    body { background-color: #000000; color: #00FF66; font-family: "Courier New", monospace; margin: 20px; }\n    table { border: 2px ridge #38bdf8; background: #0f172a; }\n    th { background: #1e293b; color: #38bdf8; padding: 6px; }\n    td { padding: 8px; border-bottom: 1px dotted #334155; }\n    a { color: #f43f5e; text-decoration: underline; }\n  </style>\n</head>\n<body>\n  <center>\n    <h1>&#171; CYBER VAULT '99 &#187;</h1>\n    <p><marquee width="60%">[+++ NETSCAPE 4.7 &amp; IE 5.0 COMPLIANT &bull; OPTIMIZED FOR 800x600 &bull; TRANSMISSION LOCK ACTIVE +++]</marquee></p>\n    <table width="560" cellpadding="4" cellspacing="0">\n      <tr><th>NODE ID</th><th>FREQUENCY</th><th>STATUS</th></tr>\n      <tr><td>PACIFIC_GATEWAY</td><td>144.39 MHz</td><td>ONLINE</td></tr>\n      <tr><td>CARLSBAD_SALT</td><td>1999 Hz</td><td>SUBCARRIER DETECTED</td></tr>\n      <tr><td>SUBNET_ROUTER</td><td>10.19.99.4</td><td>STANDBY</td></tr>\n    </table>\n    <p><small>&copy; 1999 KiloNet Underground Ring &bull; Member Node #008</small></p>\n  </center>\n</body>\n</html>\n`
+      },
+      "win32-c": {
+        name: "win32_app.c",
+        lang: "c",
+        content: `#define WIN32_LEAN_AND_MEAN\n#include <windows.h>\n\nLRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {\n    switch (msg) {\n        case WM_PAINT: {\n            PAINTSTRUCT ps;\n            HDC hdc = BeginPaint(hwnd, &ps);\n            SetBkMode(hdc, TRANSPARENT);\n            SetTextColor(hdc, RGB(56, 189, 248));\n            TextOutA(hdc, 20, 20, "KiloApps Win32 Native Application (1999)", 40);\n            EndPaint(hwnd, &ps);\n            return 0;\n        }\n        case WM_DESTROY:\n            PostQuitMessage(0);\n            return 0;\n    }\n    return DefWindowProc(hwnd, msg, wParam, lParam);\n}\n\nint WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmd, int nShow) {\n    WNDCLASS wc = {0};\n    wc.lpfnWndProc = WndProc;\n    wc.hInstance = hInst;\n    wc.lpszClassName = "KiloAppClass";\n    wc.hbrBackground = CreateSolidBrush(RGB(15, 23, 42));\n    RegisterClass(&wc);\n\n    HWND hwnd = CreateWindowEx(0, "KiloAppClass", "KiloApp", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 640, 480, NULL, NULL, hInst, NULL);\n    ShowWindow(hwnd, nShow);\n    UpdateWindow(hwnd);\n\n    MSG msg;\n    while (GetMessage(&msg, NULL, 0, 0)) {\n        TranslateMessage(&msg);\n        DispatchMessage(&msg);\n    }\n    return (int)msg.wParam;\n}\n`
+      },
+      python: {
+        name: "tool.py",
+        lang: "python",
+        content: `#!/usr/bin/env python3\n"""\nKiloOS Utility Tool\nUltra-compact, zero-dependency processing script.\n"""\nimport sys\nimport os\n\ndef process_stream(data: str) -> dict:\n    lines = data.strip().split('\\n') if data else []\n    words = data.split() if data else []\n    return {\n        "lines": len(lines),\n        "words": len(words),\n        "bytes": len(data.encode('utf-8'))\n    }\n\ndef main():\n    print("KiloOS Python Script Engine Initialized.")\n    sample = "Hello from KPad Pro! High performance text and code workstation."\n    stats = process_stream(sample)\n    print(f"Sample Stats: {stats}")\n\nif __name__ == '__main__':\n    main()\n`
+      },
+      "classified-log": {
+        name: "subnet_telemetry.log",
+        lang: "plaintext",
+        content: `[KILONET INTRANET DIAGNOSTIC DUMP]\nDATE: 1999-10-24 03:14:08 UTC\nNODE: GATEWAY-07 (Subnet 10.19.99.0/24)\nSTATUS: SUBCARRIER ANOMALY DETECTED\n------------------------------------------------------------\n0x00402000: 45 43 48 4F 2D 53 55 42  53 59 53 54 45 4D 00 00  | ECHO-SUBSYSTEM..\n0x00402010: 31 39 39 39 48 7A 20 4C  4F 43 4B 20 41 43 51 00  | 1999Hz LOCK ACQ.\n0x00402020: 31 30 2E 31 39 2E 39 39  2E 34 2F 63 6C 61 73 73  | 10.19.99.4/class\n------------------------------------------------------------\nTRAFFIC LOG:\n- Packet ID #4819: Frame header matched Bell 202 AFSK format.\n- Transponder response received from Carlsbad salt-vault relay.\n- Local buffer synchronized. No packet corruption observed.\n`
       }
     };
 
@@ -3289,6 +3565,28 @@
         const lines = content.split('\n');
         const linesHtml = lines.map((l, i) => `<div class="ln"><span class="num">${i + 1}</span><span class="code">${escapeHtml(l) || ' '}</span></div>`).join('');
         content = `<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<title>${escapeHtml(tab.name || 'Document')} - KPad Pro</title>\n<style>\nbody { font-family: 'Consolas', monospace; background: #0b0f19; color: #f8fafc; padding: 2rem; margin: 0; line-height: 1.6; }\n.header { border-bottom: 2px solid #3b82f6; padding-bottom: 12px; margin-bottom: 20px; font-family: system-ui, sans-serif; }\nh1 { margin: 0 0 6px 0; font-size: 20px; color: #38bdf8; }\n.meta { font-size: 12px; color: #94a3b8; }\n.content { background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 16px; overflow-x: auto; }\n.ln { display: flex; font-size: 13px; }\n.num { width: 48px; color: #475569; user-select: none; text-align: right; padding-right: 14px; flex-shrink: 0; }\n.code { white-space: pre-wrap; word-break: break-all; color: #e2e8f0; }\n@media print { body { background: #fff; color: #000; padding: 0; } .header { border-bottom-color: #000; } h1 { color: #000; } .content { background: #fff; border: 1px solid #ccc; } .num { color: #888; } .code { color: #000; } }\n</style>\n</head>\n<body>\n<div class="header">\n  <h1>${escapeHtml(tab.name || 'Document')}</h1>\n  <div class="meta">Exported from KPad Pro • ${new Date().toLocaleString()} • ${content.length} chars • ${lines.length} lines</div>\n</div>\n<div class="content">\n${linesHtml}\n</div>\n</body>\n</html>`;
+      } else if (format === 'bbcode') {
+        filename += '.bbcode.txt';
+        mime = 'text/plain';
+        content = content
+          .replace(/^### (.*$)/gim, '[b][u]$1[/u][/b]')
+          .replace(/^## (.*$)/gim, '[b][size=14]$1[/size][/b]')
+          .replace(/^# (.*$)/gim, '[b][size=18]$1[/size][/b]')
+          .replace(/\*\*([^*]+)\*\*/g, '[b]$1[/b]')
+          .replace(/\*([^*]+)\*/g, '[i]$1[/i]')
+          .replace(/```([a-zA-Z0-9]*)\n([\s\S]*?)```/g, '[code]$2[/code]')
+          .replace(/`([^`]+)`/g, '[font=monospace]$1[/font]')
+          .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '[url=$2]$1[/url]');
+      } else if (format === 'rtf') {
+        filename += '.rtf';
+        mime = 'application/rtf';
+        const escaped = content.replace(/\\/g, '\\\\').replace(/{/g, '\\{').replace(/}/g, '\\}').replace(/\n/g, '\\par\n');
+        content = `{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Consolas;}}\\fs20\\f0 ${escaped}}`;
+      } else if (format === 'tex') {
+        filename += '.tex';
+        mime = 'application/x-tex';
+        const escaped = content.replace(/\\/g, '\\textbackslash{}').replace(/[%&$#_{}~^]/g, '\\$&').replace(/\n/g, '\n\n');
+        content = `\\documentclass{article}\n\\usepackage[utf8]{inputenc}\n\\title{${tab.name || 'Document'}}\n\\begin{document}\n\\maketitle\n\n${escaped}\n\n\\end{document}`;
       } else if (format === 'csv') {
         filename += '.csv';
         mime = 'text/csv';
@@ -3365,6 +3663,911 @@
         }
       };
       input.click();
+    }
+
+    // --- Hash & Checksums Calculator ---
+    function computeCRC32(str) {
+      let table = window._crcTable;
+      if (!table) {
+        table = new Uint32Array(256);
+        for (let i = 0; i < 256; i++) {
+          let c = i;
+          for (let k = 0; k < 8; k++) {
+            c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+          }
+          table[i] = c;
+        }
+        window._crcTable = table;
+      }
+      const bytes = new TextEncoder().encode(str);
+      let crc = 0 ^ (-1);
+      for (let i = 0; i < bytes.length; i++) {
+        crc = (crc >>> 8) ^ table[(crc ^ bytes[i]) & 0xFF];
+      }
+      return ((crc ^ (-1)) >>> 0).toString(16).padStart(8, '0').toUpperCase();
+    }
+
+    function computeMD5(string) {
+      function md5_RotateLeft(lValue, iShiftBits) {
+        return (lValue << iShiftBits) | (lValue >>> (32 - iShiftBits));
+      }
+      function md5_AddUnsigned(lX, lY) {
+        var lX4, lY4, lX8, lY8, lResult;
+        lX8 = (lX & 0x80000000);
+        lY8 = (lY & 0x80000000);
+        lX4 = (lX & 0x40000000);
+        lY4 = (lY & 0x40000000);
+        lResult = (lX & 0x3FFFFFFF) + (lY & 0x3FFFFFFF);
+        if (lX4 & lY4) return (lResult ^ 0x80000000 ^ lX8 ^ lY8);
+        if (lX4 | lY4) {
+          if (lResult & 0x40000000) return (lResult ^ 0xC0000000 ^ lX8 ^ lY8);
+          else return (lResult ^ 0x40000000 ^ lX8 ^ lY8);
+        } else return (lResult ^ lX8 ^ lY8);
+      }
+      function md5_F(x,y,z) { return (x & y) | ((~x) & z); }
+      function md5_G(x,y,z) { return (x & z) | (y & (~z)); }
+      function md5_H(x,y,z) { return (x ^ y ^ z); }
+      function md5_I(x,y,z) { return (y ^ (x | (~z))); }
+      function md5_FF(a,b,c,d,x,s,ac) {
+        a = md5_AddUnsigned(a, md5_AddUnsigned(md5_AddUnsigned(md5_F(b, c, d), x), ac));
+        return md5_AddUnsigned(md5_RotateLeft(a, s), b);
+      }
+      function md5_GG(a,b,c,d,x,s,ac) {
+        a = md5_AddUnsigned(a, md5_AddUnsigned(md5_AddUnsigned(md5_G(b, c, d), x), ac));
+        return md5_AddUnsigned(md5_RotateLeft(a, s), b);
+      }
+      function md5_HH(a,b,c,d,x,s,ac) {
+        a = md5_AddUnsigned(a, md5_AddUnsigned(md5_AddUnsigned(md5_H(b, c, d), x), ac));
+        return md5_AddUnsigned(md5_RotateLeft(a, s), b);
+      }
+      function md5_II(a,b,c,d,x,s,ac) {
+        a = md5_AddUnsigned(a, md5_AddUnsigned(md5_AddUnsigned(md5_I(b, c, d), x), ac));
+        return md5_AddUnsigned(md5_RotateLeft(a, s), b);
+      }
+      function md5_ConvertToWordArray(str) {
+        var lWordCount;
+        var lMessageLength = str.length;
+        var lNumberOfWords_temp1 = lMessageLength + 8;
+        var lNumberOfWords_temp2 = (lNumberOfWords_temp1 - (lNumberOfWords_temp1 % 64)) / 64;
+        var lNumberOfWords = (lNumberOfWords_temp2 + 1) * 16;
+        var lWordArray = Array(lNumberOfWords - 1);
+        var lBytePosition = 0;
+        var lByteCount = 0;
+        while (lByteCount < lMessageLength) {
+          lWordCount = (lByteCount - (lByteCount % 4)) / 4;
+          lBytePosition = (lByteCount % 4) * 8;
+          lWordArray[lWordCount] = (lWordArray[lWordCount] | (str.charCodeAt(lByteCount) << lBytePosition));
+          lByteCount++;
+        }
+        lWordCount = (lByteCount - (lByteCount % 4)) / 4;
+        lBytePosition = (lByteCount % 4) * 8;
+        lWordArray[lWordCount] = lWordArray[lWordCount] | (0x80 << lBytePosition);
+        lWordArray[lNumberOfWords - 2] = lMessageLength << 3;
+        lWordArray[lNumberOfWords - 1] = lMessageLength >>> 29;
+        return lWordArray;
+      }
+      function md5_WordToHex(lValue) {
+        var WordToHexValue = "", WordToHexValue_temp = "", lByte, lCount;
+        for (lCount = 0; lCount <= 3; lCount++) {
+          lByte = (lValue >>> (lCount * 8)) & 255;
+          WordToHexValue_temp = "0" + lByte.toString(16);
+          WordToHexValue = WordToHexValue + WordToHexValue_temp.substr(WordToHexValue_temp.length - 2, 2);
+        }
+        return WordToHexValue;
+      }
+      var x = md5_ConvertToWordArray(string);
+      var a = 0x67452301, b = 0xEFCDAB89, c = 0x98BADCFE, d = 0x10325476;
+      var S11=7, S12=12, S13=17, S14=22;
+      var S21=5, S22=9, S23=14, S24=20;
+      var S31=4, S32=11, S33=16, S34=23;
+      var S41=6, S42=10, S43=15, S44=21;
+      for (var k = 0; k < x.length; k += 16) {
+        var AA = a, BB = b, CC = c, DD = d;
+        a = md5_FF(a,b,c,d,x[k+0], S11,0xD76AA478);
+        d = md5_FF(d,a,b,c,x[k+1], S12,0xE8C7B756);
+        c = md5_FF(c,d,a,b,x[k+2], S13,0x242070DB);
+        b = md5_FF(b,c,d,a,x[k+3], S14,0xC1BDCEEE);
+        a = md5_FF(a,b,c,d,x[k+4], S11,0xF57C0FAF);
+        d = md5_FF(d,a,b,c,x[k+5], S12,0x4787C62A);
+        c = md5_FF(c,d,a,b,x[k+6], S13,0xA8304613);
+        b = md5_FF(b,c,d,a,x[k+7], S14,0xFD469501);
+        a = md5_FF(a,b,c,d,x[k+8], S11,0x698098D8);
+        d = md5_FF(d,a,b,c,x[k+9], S12,0x8B44F7AF);
+        c = md5_FF(c,d,a,b,x[k+10],S13,0xFFFF5BB1);
+        b = md5_FF(b,c,d,a,x[k+11],S14,0x895CD7BE);
+        a = md5_FF(a,b,c,d,x[k+12],S11,0x6B901122);
+        d = md5_FF(d,a,b,c,x[k+13],S12,0xFD987193);
+        c = md5_FF(c,d,a,b,x[k+14],S13,0xA679438E);
+        b = md5_FF(b,c,d,a,x[k+15],S14,0x49B40821);
+        a = md5_GG(a,b,c,d,x[k+1], S21,0xF61E2562);
+        d = md5_GG(d,a,b,c,x[k+6], S22,0xC040B340);
+        c = md5_GG(c,d,a,b,x[k+11],S23,0x265E5A51);
+        b = md5_GG(b,c,d,a,x[k+0], S24,0xE9B6C7AA);
+        a = md5_GG(a,b,c,d,x[k+5], S21,0xD62F105D);
+        d = md5_GG(d,a,b,c,x[k+10],S22,0x02441453);
+        c = md5_GG(c,d,a,b,x[k+15],S23,0xD8A1E681);
+        b = md5_GG(b,c,d,a,x[k+4], S24,0xE7D3FBC8);
+        a = md5_GG(a,b,c,d,x[k+9], S21,0x21E1CDE6);
+        d = md5_GG(d,a,b,c,x[k+14],S22,0xC33707D6);
+        c = md5_GG(c,d,a,b,x[k+3], S23,0xF4D50D87);
+        b = md5_GG(b,c,d,a,x[k+8], S24,0x455A14ED);
+        a = md5_GG(a,b,c,d,x[k+13],S21,0xA9E3E905);
+        d = md5_GG(d,a,b,c,x[k+2], S22,0xFCEFA3F8);
+        c = md5_GG(c,d,a,b,x[k+7], S23,0x676F02D9);
+        b = md5_GG(b,c,d,a,x[k+12],S24,0x8D2A4C8A);
+        a = md5_HH(a,b,c,d,x[k+5], S31,0xFFFA3942);
+        d = md5_HH(d,a,b,c,x[k+8], S32,0x8771F681);
+        c = md5_HH(c,d,a,b,x[k+11],S33,0x6D9D6122);
+        b = md5_HH(b,c,d,a,x[k+14],S34,0xFDE5380C);
+        a = md5_HH(a,b,c,d,x[k+1], S31,0xA4BEEA44);
+        d = md5_HH(d,a,b,c,x[k+4], S32,0x4BDECFA9);
+        c = md5_HH(c,d,a,b,x[k+7], S33,0xF6BB4B60);
+        b = md5_HH(b,c,d,a,x[k+10],S34,0xBEBFBC70);
+        a = md5_HH(a,b,c,d,x[k+13],S31,0x289B7EC6);
+        d = md5_HH(d,a,b,c,x[k+0], S32,0xEAA127FA);
+        c = md5_HH(c,d,a,b,x[k+3], S33,0xD4EF3085);
+        b = md5_HH(b,c,d,a,x[k+6], S34,0x04881D05);
+        a = md5_HH(a,b,c,d,x[k+9], S31,0xD9D4D039);
+        d = md5_HH(d,a,b,c,x[k+12],S32,0xE6DB99E5);
+        c = md5_HH(c,d,a,b,x[k+15],S33,0x1FA27CF8);
+        b = md5_HH(b,c,d,a,x[k+2], S34,0xC4AC5665);
+        a = md5_II(a,b,c,d,x[k+0], S41,0xF4292244);
+        d = md5_II(d,a,b,c,x[k+7], S42,0x432AFF97);
+        c = md5_II(c,d,a,b,x[k+14],S43,0xAB9423A7);
+        b = md5_II(b,c,d,a,x[k+5], S44,0xFC93A039);
+        a = md5_II(a,b,c,d,x[k+12],S41,0x655B59C3);
+        d = md5_II(d,a,b,c,x[k+3], S42,0x8F0CCC92);
+        c = md5_II(c,d,a,b,x[k+10],S43,0xFFEFF47D);
+        b = md5_II(b,c,d,a,x[k+1], S44,0x85845DD1);
+        a = md5_II(a,b,c,d,x[k+8], S41,0x6FA87E4F);
+        d = md5_II(d,a,b,c,x[k+15],S42,0xFE2CE6E0);
+        c = md5_II(c,d,a,b,x[k+6], S43,0xA3014314);
+        b = md5_II(b,c,d,a,x[k+13],S44,0x4E0811A1);
+        a = md5_II(a,b,c,d,x[k+4], S41,0xF7537E82);
+        d = md5_II(d,a,b,c,x[k+11],S42,0xBD3AF235);
+        c = md5_II(c,d,a,b,x[k+2], S43,0x2AD7D2BB);
+        b = md5_II(b,c,d,a,x[k+9], S44,0xEB86D391);
+        a = md5_AddUnsigned(a,AA);
+        b = md5_AddUnsigned(b,BB);
+        c = md5_AddUnsigned(c,CC);
+        d = md5_AddUnsigned(d,DD);
+      }
+      return (md5_WordToHex(a) + md5_WordToHex(b) + md5_WordToHex(c) + md5_WordToHex(d)).toLowerCase();
+    }
+
+    async function showHashChecksums() {
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const fullText = editor.value;
+      const hasSel = start !== end;
+      const target = hasSel ? fullText.substring(start, end) : fullText;
+      const targetDesc = hasSel ? `Selected Text (${target.length} chars)` : `Entire Document (${target.length} chars)`;
+
+      if (!target) {
+        showToast('Document buffer is empty', 'warning', 1800);
+        return;
+      }
+
+      const encoder = new TextEncoder();
+      const rawBytes = encoder.encode(target);
+
+      // SHA-256
+      const sha256Buf = await window.crypto.subtle.digest('SHA-256', rawBytes);
+      const sha256Hex = Array.from(new Uint8Array(sha256Buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+      // SHA-1
+      const sha1Buf = await window.crypto.subtle.digest('SHA-1', rawBytes);
+      const sha1Hex = Array.from(new Uint8Array(sha1Buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+      // MD5
+      const md5Hex = computeMD5(target);
+
+      // CRC32
+      const crc32Hex = computeCRC32(target);
+
+      const copySnippet = (val, name) => {
+        navigator.clipboard.writeText(val);
+        showToast(`Copied ${name} to clipboard!`, 'success', 2000);
+      };
+      window.copySnippet = copySnippet;
+
+      const html = `
+        <div style="display:flex; flex-direction:column; gap:12px; font-size:12px;">
+          <div style="color:var(--text-muted); font-size:11px;">Calculated for: <strong>${escapeHtml(targetDesc)}</strong></div>
+          
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+              <span style="font-weight:600; color:var(--accent-hover);">SHA-256 (FIPS 180-4)</span>
+              <button class="quick-btn" onclick="copySnippet('${sha256Hex}', 'SHA-256')">📋 Copy</button>
+            </div>
+            <div style="background:rgba(0,0,0,0.5); padding:6px 8px; border-radius:4px; font-family:monospace; font-size:11px; word-break:break-all; border:1px solid var(--border-glass);">${sha256Hex}</div>
+          </div>
+
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+              <span style="font-weight:600; color:#38bdf8;">SHA-1 (Legacy)</span>
+              <button class="quick-btn" onclick="copySnippet('${sha1Hex}', 'SHA-1')">📋 Copy</button>
+            </div>
+            <div style="background:rgba(0,0,0,0.5); padding:6px 8px; border-radius:4px; font-family:monospace; font-size:11px; word-break:break-all; border:1px solid var(--border-glass);">${sha1Hex}</div>
+          </div>
+
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+              <span style="font-weight:600; color:#34d399;">MD5 Digest</span>
+              <button class="quick-btn" onclick="copySnippet('${md5Hex}', 'MD5')">📋 Copy</button>
+            </div>
+            <div style="background:rgba(0,0,0,0.5); padding:6px 8px; border-radius:4px; font-family:monospace; font-size:11px; word-break:break-all; border:1px solid var(--border-glass);">${md5Hex}</div>
+          </div>
+
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;">
+              <span style="font-weight:600; color:#fbbf24;">CRC-32 Checksum</span>
+              <button class="quick-btn" onclick="copySnippet('${crc32Hex}', 'CRC-32')">📋 Copy</button>
+            </div>
+            <div style="background:rgba(0,0,0,0.5); padding:6px 8px; border-radius:4px; font-family:monospace; font-size:11px; word-break:break-all; border:1px solid var(--border-glass);">0x${crc32Hex}</div>
+          </div>
+        </div>
+      `;
+      openModal('🔐 Cryptographic Hashes & Checksums', html, true);
+    }
+
+    // --- Document Diff & Comparison Suite ---
+    let lastDiffResult = null;
+
+    function computeLineDiff(textA, textB) {
+      const linesA = textA.split('\n');
+      const linesB = textB.split('\n');
+      const maxL = 1200;
+      const a = linesA.slice(0, maxL);
+      const b = linesB.slice(0, maxL);
+      const N = a.length;
+      const M = b.length;
+
+      const dp = [];
+      for (let i = 0; i <= N; i++) {
+        dp[i] = new Uint16Array(M + 1);
+      }
+
+      for (let i = 1; i <= N; i++) {
+        for (let j = 1; j <= M; j++) {
+          if (a[i - 1] === b[j - 1]) {
+            dp[i][j] = dp[i - 1][j - 1] + 1;
+          } else {
+            dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+          }
+        }
+      }
+
+      let i = N, j = M;
+      const chunks = [];
+      while (i > 0 || j > 0) {
+        if (i > 0 && j > 0 && a[i - 1] === b[j - 1]) {
+          chunks.push({ type: 'same', text: a[i - 1], lineA: i, lineB: j });
+          i--; j--;
+        } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+          chunks.push({ type: 'add', text: b[j - 1], lineA: null, lineB: j });
+          j--;
+        } else if (i > 0 && (j === 0 || dp[i][j - 1] < dp[i - 1][j])) {
+          chunks.push({ type: 'del', text: a[i - 1], lineA: i, lineB: null });
+          i--;
+        }
+      }
+      chunks.reverse();
+
+      let additions = 0, deletions = 0, unchanged = 0;
+      chunks.forEach(c => {
+        if (c.type === 'add') additions++;
+        else if (c.type === 'del') deletions++;
+        else unchanged++;
+      });
+
+      return { chunks, additions, deletions, unchanged, totalA: linesA.length, totalB: linesB.length, fullTextB: textB };
+    }
+
+    function openDiffModal() {
+      const activeTab = tabs[activeTabIndex] || { name: 'Active Document' };
+      const quicksaveRaw = safeGetStorage('kpad_quicksave_snapshot');
+      const hasQuicksave = Boolean(quicksaveRaw);
+
+      let tabOptionsHtml = '';
+      tabs.forEach((t, idx) => {
+        if (idx !== activeTabIndex) {
+          tabOptionsHtml += `<option value="tab_${idx}">Tab ${idx + 1}: ${escapeHtml(t.name)}</option>`;
+        }
+      });
+      if (hasQuicksave) {
+        tabOptionsHtml += `<option value="quicksave">💾 Quicksave Snapshot (F5)</option>`;
+      }
+      tabOptionsHtml += `<option value="clipboard">📋 Custom / Pasteboard Text</option>`;
+
+      const bodyHtml = `
+        <div class="diff-container">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+            <div style="font-size:12px;">
+              <strong>Base:</strong> <span style="color:#38bdf8;">${escapeHtml(activeTab.name)}</span> (Active Tab)
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <label for="diff-target-select" style="font-size:11px; color:var(--text-muted);">Compare against:</label>
+              <select class="form-input" id="diff-target-select" style="padding:3px 8px; font-size:11px; max-width:230px;" onchange="runDiffComparison()">
+                ${tabOptionsHtml}
+              </select>
+              <button class="quick-btn" onclick="runDiffComparison()">⚡ Compare</button>
+            </div>
+          </div>
+
+          <div id="diff-custom-input-box" style="display:none; flex-direction:column; gap:4px;">
+            <label class="form-label" for="diff-custom-text">Paste Comparison Text:</label>
+            <textarea class="form-input" id="diff-custom-text" style="height:70px; font-family:monospace; font-size:11px;" placeholder="Paste text here to compare against active tab..." oninput="runDiffComparison()"></textarea>
+          </div>
+
+          <div id="diff-output-area">
+            <div style="text-align:center; padding:30px 10px; color:var(--text-muted); font-size:12px;">
+              Select a target above to calculate side-by-side differences...
+            </div>
+          </div>
+        </div>
+      `;
+
+      openModal('📊 Document Comparison & Diff Tool', bodyHtml, true, true);
+      setTimeout(runDiffComparison, 50);
+    }
+
+    function runDiffComparison() {
+      const select = document.getElementById('diff-target-select');
+      const customBox = document.getElementById('diff-custom-input-box');
+      const output = document.getElementById('diff-output-area');
+      if (!select || !output) return;
+
+      const targetVal = select.value;
+      if (customBox) {
+        customBox.style.display = targetVal === 'clipboard' ? 'flex' : 'none';
+      }
+
+      let textB = '';
+      let targetName = '';
+
+      if (targetVal.startsWith('tab_')) {
+        const idx = parseInt(targetVal.split('_')[1], 10);
+        if (tabs[idx]) {
+          textB = tabs[idx].content || '';
+          targetName = tabs[idx].name;
+        }
+      } else if (targetVal === 'quicksave') {
+        const raw = safeGetStorage('kpad_quicksave_snapshot');
+        if (raw) {
+          try {
+            const data = JSON.parse(raw);
+            const savedTabs = Array.isArray(data) ? data : (data.tabs || []);
+            const match = savedTabs.find(t => t.name === tabs[activeTabIndex]?.name) || savedTabs[0];
+            textB = match ? match.content : '';
+            targetName = 'Quicksave Snapshot';
+          } catch (e) {
+            textB = '';
+          }
+        }
+      } else if (targetVal === 'clipboard') {
+        const customArea = document.getElementById('diff-custom-text');
+        textB = customArea ? customArea.value : '';
+        targetName = 'Custom Text';
+      }
+
+      const textA = editor.value;
+      const diff = computeLineDiff(textA, textB);
+      lastDiffResult = diff;
+
+      let linesHtml = '';
+      diff.chunks.forEach(c => {
+        if (c.type === 'add') {
+          linesHtml += `<div class="diff-line diff-add"><span class="diff-line-num">+${c.lineB}</span><span>${escapeHtml(c.text)}</span></div>`;
+        } else if (c.type === 'del') {
+          linesHtml += `<div class="diff-line diff-del"><span class="diff-line-num">-${c.lineA}</span><span>${escapeHtml(c.text)}</span></div>`;
+        } else {
+          linesHtml += `<div class="diff-line diff-same"><span class="diff-line-num">${c.lineA}</span><span>${escapeHtml(c.text)}</span></div>`;
+        }
+      });
+
+      output.innerHTML = `
+        <div class="diff-stats-bar">
+          <span>Target: <strong>${escapeHtml(targetName)}</strong></span>
+          <span class="diff-stat-add">+${diff.additions} additions</span>
+          <span class="diff-stat-del">-${diff.deletions} deletions</span>
+          <span class="diff-stat-same">${diff.unchanged} unchanged</span>
+          <div style="margin-left:auto; display:flex; gap:6px;">
+            <button class="quick-btn" onclick="copyDiffPatch()">📋 Copy Patch</button>
+            <button class="quick-btn" onclick="applyComparedToActive()">🔄 Replace with Compared</button>
+          </div>
+        </div>
+        <div class="diff-viewer">
+          ${linesHtml || '<div style="color:var(--text-muted); padding:10px;">Documents are identical! Zero differences found.</div>'}
+        </div>
+      `;
+    }
+
+    function copyDiffPatch() {
+      if (!lastDiffResult || !lastDiffResult.chunks) {
+        showToast('No diff result to copy', 'warning');
+        return;
+      }
+      let patch = `--- a/${tabs[activeTabIndex]?.name || 'current'}\n+++ b/target\n`;
+      lastDiffResult.chunks.forEach(c => {
+        if (c.type === 'add') patch += `+ ${c.text}\n`;
+        else if (c.type === 'del') patch += `- ${c.text}\n`;
+        else patch += `  ${c.text}\n`;
+      });
+      navigator.clipboard.writeText(patch);
+      showToast('Unified diff patch copied to clipboard!', 'success', 2200);
+    }
+
+    function applyComparedToActive() {
+      if (!lastDiffResult || typeof lastDiffResult.fullTextB !== 'string') {
+        showToast('No compared document available', 'warning');
+        return;
+      }
+      editor.value = lastDiffResult.fullTextB;
+      if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
+        tabs[activeTabIndex].content = lastDiffResult.fullTextB;
+        tabs[activeTabIndex].isModified = true;
+        renderTabs();
+      }
+      updateEditor();
+      closeModal();
+      showToast('Replaced active tab with compared document version!', 'success', 3000);
+    }
+
+    // --- Retro Firebase Multiplayer Service (RFMS) Engine ---
+
+    async function initCollabSystem() {
+      if (typeof RetroMultiplayer === 'undefined') {
+        console.warn("[KPad] RetroMultiplayer not loaded.");
+        return;
+      }
+
+      mp = new RetroMultiplayer({
+        gameId: 'kpad',
+        prefix: 'KPD',
+        soloTimeoutMs: 25000,
+        onMove: (moveData, lastMove) => {
+          handleRemoteCollabMove(moveData, lastMove);
+        },
+        onOpponentJoin: ({ slot, name }) => {
+          collabState.peerName = name || 'Collaborator';
+          collabState.ghostTypistActive = false;
+          collabState.role = mp.mySlot;
+          updateCollabUI();
+          showToast(`👥 Collaborator ${collabState.peerName} connected! Live editing active.`, 'success', 4000);
+          appendCollabChatMessage('System', `${collabState.peerName} joined the room.`);
+          if (mp.isHost) {
+            broadcastDocumentSync(true);
+          }
+        },
+        onOpponentLeave: ({ slot, name }) => {
+          showToast(`👥 Collaborator ${name || 'Peer'} disconnected.`, 'warning', 3500);
+          appendCollabChatMessage('System', `${name || 'Peer'} disconnected.`);
+          collabState.peerName = null;
+          collabState.peerCursor = null;
+          updateCollabUI();
+        },
+        onSoloFallback: ({ reason }) => {
+          // Mandate Rule 12: 25s Solo Fallback
+          collabState.ghostTypistActive = true;
+          updateCollabUI();
+          showToast(`🤖 No peer joined within 25s — Engaging Ghost Typist (Local AI Copilot)!`, 'info', 4500);
+          appendCollabChatMessage('GhostTypist', 'Subnet Copilot active. Press Alt+J for code assistance or templates.');
+        },
+        onChat: (chat) => {
+          appendCollabChatMessage(chat.name || 'Peer', chat.text);
+          showToast(`💬 ${chat.name || 'Peer'}: ${chat.text}`, 'info', 3000);
+        },
+        onStatusMsg: (msg, type) => {
+          showToast(msg, type);
+        }
+      });
+
+      const { onlineAvailable, inviteCode } = await mp.init();
+      if (inviteCode) {
+        showToast(`Joining collaborative session [${inviteCode}]...`, 'info', 2500);
+        await joinCollabRoom(inviteCode);
+      }
+    }
+
+    function updateCollabUI() {
+      const badge = document.getElementById('collab-badge');
+      const statCollab = document.getElementById('stat-collab');
+      const peerCursorEl = document.getElementById('stat-peer-cursor');
+
+      if (collabState.peerName) {
+        if (badge) {
+          badge.className = 'collab-badge-connected';
+          badge.innerText = `2 Peers [${collabState.roomId}]`;
+        }
+        if (statCollab) {
+          statCollab.innerText = `🟢 Collab: 2 Peers [${collabState.roomId}]`;
+          statCollab.style.color = '#34d399';
+        }
+        if (peerCursorEl && collabState.peerCursor) {
+          peerCursorEl.style.display = 'inline-flex';
+        }
+      } else if (collabState.ghostTypistActive) {
+        if (badge) {
+          badge.className = 'collab-badge-ghost';
+          badge.innerText = 'Ghost Typist';
+        }
+        if (statCollab) {
+          statCollab.innerText = '🤖 Collab: Ghost Typist Active';
+          statCollab.style.color = '#f0abfc';
+        }
+        if (peerCursorEl) peerCursorEl.style.display = 'none';
+      } else if (collabState.active) {
+        if (badge) {
+          badge.className = 'collab-badge-waiting';
+          badge.innerText = `Waiting [${collabState.roomId}]`;
+        }
+        if (statCollab) {
+          statCollab.innerText = `⏳ Collab: Waiting [${collabState.roomId}]`;
+          statCollab.style.color = '#f59e0b';
+        }
+        if (peerCursorEl) peerCursorEl.style.display = 'none';
+      } else {
+        if (badge) {
+          badge.className = 'collab-badge-solo';
+          badge.innerText = 'Solo';
+        }
+        if (statCollab) {
+          statCollab.innerText = '👥 Collab: Solo';
+          statCollab.style.color = 'var(--text-secondary)';
+        }
+        if (peerCursorEl) peerCursorEl.style.display = 'none';
+      }
+    }
+
+    async function hostCollabRoom() {
+      if (!mp) await initCollabSystem();
+      if (!mp || !mp.isOnline()) {
+        showToast('Firebase connection unavailable. Switching to Ghost Typist mode.', 'warning', 3000);
+        collabState.ghostTypistActive = true;
+        updateCollabUI();
+        return;
+      }
+      showToast('Opening real-time collaborative room...', 'info', 2000);
+      const res = await mp.createRoom({
+        title: tabs[activeTabIndex]?.name || 'Untitled',
+        content: editor.value
+      }, true);
+
+      if (res && res.success) {
+        collabState.active = true;
+        collabState.roomId = res.roomId;
+        collabState.role = 'p1';
+        collabState.peerName = null;
+        updateCollabUI();
+        appendCollabChatMessage('System', `Hosted session [${res.roomId}]. Waiting for peer...`);
+        showToast(`🎉 Room [${res.roomId}] opened! Share code or link.`, 'success', 3500);
+      }
+    }
+
+    function promptJoinCollabRoom() {
+      const bodyHtml = `
+        <div class="form-group">
+          <label class="form-label" for="join-room-code-input">Enter 4-Character Room Code or Session URL:</label>
+          <input type="text" class="form-input" id="join-room-code-input" placeholder="e.g. KPD-8921 or #room=KPD-8921" onkeydown="if(event.key==='Enter') executeJoinFromModal()">
+          <div class="form-hint">Paste an invite link or enter the 4-digit code provided by your peer</div>
+        </div>
+        <div class="modal-btn-row">
+          <button class="modal-btn-cancel" onclick="closeModal()">Cancel</button>
+          <button class="modal-btn" onclick="executeJoinFromModal()">🔗 Join Session</button>
+        </div>
+      `;
+      openModal('🔗 Join Collaborative Editing Session', bodyHtml, false);
+      setTimeout(() => document.getElementById('join-room-code-input')?.focus(), 50);
+    }
+
+    async function executeJoinFromModal() {
+      const input = document.getElementById('join-room-code-input');
+      if (!input || !input.value.trim()) return;
+      let raw = input.value.trim();
+      if (raw.includes('#room=')) raw = raw.split('#room=')[1];
+      else if (raw.includes('room=')) raw = raw.split('room=')[1].split('&')[0];
+      closeModal();
+      await joinCollabRoom(raw);
+    }
+
+    async function joinCollabRoom(code) {
+      if (!mp) await initCollabSystem();
+      if (!mp || !mp.isOnline()) {
+        showToast('Firebase connection unavailable. Switching to Ghost Typist mode.', 'warning', 3000);
+        collabState.ghostTypistActive = true;
+        updateCollabUI();
+        return;
+      }
+      showToast(`Connecting to room [${code}]...`, 'info', 2500);
+      const res = await mp.joinRoom(code);
+      if (res && res.success) {
+        collabState.active = true;
+        collabState.roomId = res.roomId;
+        collabState.role = res.slot;
+        collabState.peerName = mp.opponent;
+        updateCollabUI();
+        appendCollabChatMessage('System', `Connected to session [${res.roomId}] with ${collabState.peerName || 'Peer'}.`);
+        showToast(`Connected to ${collabState.peerName || 'collaborator'} in [${res.roomId}]!`, 'success', 3500);
+      }
+    }
+
+    async function quickMatchCollab() {
+      if (!mp) await initCollabSystem();
+      if (!mp || !mp.isOnline()) {
+        showToast('Firebase connection unavailable. Switching to Ghost Typist mode.', 'warning', 3000);
+        collabState.ghostTypistActive = true;
+        updateCollabUI();
+        return;
+      }
+      showToast('Scanning subnet for open collaborative sessions...', 'info', 2000);
+      const res = await mp.quickMatch({
+        title: tabs[activeTabIndex]?.name || 'Untitled',
+        content: editor.value
+      });
+      if (res && res.success) {
+        collabState.active = true;
+        collabState.roomId = res.roomId;
+        collabState.role = res.slot;
+        collabState.peerName = mp.opponent;
+        updateCollabUI();
+      }
+    }
+
+    function leaveCollabRoom() {
+      if (mp) {
+        mp.leaveRoom(false);
+      }
+      collabState.active = false;
+      collabState.roomId = null;
+      collabState.role = 'solo';
+      collabState.peerName = null;
+      collabState.peerCursor = null;
+      collabState.ghostTypistActive = false;
+      updateCollabUI();
+      if (window.history && window.history.replaceState) {
+        window.history.replaceState(null, '', window.location.pathname + window.location.search);
+      }
+      showToast('Switched to solo local editing session.', 'info', 2500);
+    }
+
+    function copyCollabLink() {
+      if (!collabState.roomId) {
+        showToast('No active room to copy. Host or join a session first!', 'warning');
+        return;
+      }
+      const url = window.location.origin + window.location.pathname + '#room=' + collabState.roomId;
+      navigator.clipboard.writeText(url);
+      showToast(`📋 Invite link copied: #room=${collabState.roomId}`, 'success', 2500);
+    }
+
+    async function broadcastDocumentSync(immediate = false) {
+      if (!collabState.active || !mp || collabState.isSyncing) return;
+      const text = editor.value;
+      const tabTitle = tabs[activeTabIndex]?.name || 'Document';
+      const payload = {
+        type: 'text_sync',
+        text: text,
+        title: tabTitle,
+        cursor: { start: editor.selectionStart, end: editor.selectionEnd },
+        sender: mp.playerName,
+        rev: ++collabState.lastLocalRev
+      };
+      await mp.sendMove(payload);
+    }
+
+    function throttleBroadcastCursor() {
+      if (!collabState.active || !mp || collabState.isSyncing) return;
+      if (cursorThrottleTimer) return;
+      cursorThrottleTimer = setTimeout(() => {
+        cursorThrottleTimer = null;
+        if (collabState.active && mp) {
+          mp.sendMove({
+            type: 'cursor',
+            start: editor.selectionStart,
+            end: editor.selectionEnd,
+            sender: mp.playerName
+          });
+        }
+      }, 250);
+    }
+
+    function handleRemoteCollabMove(data, lastMove) {
+      if (!data) return;
+      if (data.type === 'text_sync') {
+        if (data.text !== editor.value) {
+          collabState.isSyncing = true;
+          const oldStart = editor.selectionStart;
+          const oldEnd = editor.selectionEnd;
+          editor.value = data.text;
+          if (activeTabIndex >= 0 && activeTabIndex < tabs.length) {
+            tabs[activeTabIndex].content = data.text;
+            if (data.title && tabs[activeTabIndex].name === 'Untitled') {
+              tabs[activeTabIndex].name = data.title;
+              renderTabs();
+            }
+          }
+          const maxLen = editor.value.length;
+          editor.setSelectionRange(Math.min(oldStart, maxLen), Math.min(oldEnd, maxLen));
+          updateEditor();
+          collabState.isSyncing = false;
+          showToast(`✏️ Remote edit from ${data.sender || collabState.peerName || 'Peer'}`, 'info', 1200);
+        }
+        if (data.cursor) {
+          updatePeerCursorUI(data.cursor, data.sender || collabState.peerName);
+        }
+      } else if (data.type === 'cursor') {
+        updatePeerCursorUI(data, data.sender || collabState.peerName);
+      }
+    }
+
+    function updatePeerCursorUI(cursor, name) {
+      if (!cursor || typeof cursor.start !== 'number') return;
+      collabState.peerCursor = cursor;
+      const text = editor.value;
+      const linesBefore = text.substr(0, cursor.start).split('\n');
+      const line = linesBefore.length;
+      const col = linesBefore[linesBefore.length - 1].length + 1;
+      const el = document.getElementById('stat-peer-cursor');
+      if (el) {
+        el.style.display = 'inline-flex';
+        el.innerText = `👥 ${name || 'Peer'}: Ln ${line}, Col ${col}`;
+      }
+    }
+
+    function toggleGhostTypist() {
+      collabState.ghostTypistActive = !collabState.ghostTypistActive;
+      updateCollabUI();
+      if (collabState.ghostTypistActive) {
+        showToast('🤖 Ghost Typist (Local AI Copilot) online! Press Alt+J for assistance.', 'success', 3500);
+        appendCollabChatMessage('GhostTypist', 'AI Copilot standby. Ask for boilerplate, summaries, or completions.');
+      } else {
+        showToast('Ghost Typist placed on standby.', 'info', 2000);
+      }
+    }
+
+    function invokeGhostTypist(action) {
+      collabState.ghostTypistActive = true;
+      updateCollabUI();
+      const lang = document.getElementById('lang-selector')?.value || 'plaintext';
+
+      if (action === 'autocomplete') {
+        let snippet = '';
+        if (lang === 'javascript') {
+          snippet = `\n// [GhostTypist Suggestion]\nfunction handleDataPipeline(items) {\n  return items.filter(Boolean).map(x => String(x).trim());\n}\n`;
+        } else if (lang === 'html') {
+          snippet = `\n<!-- [GhostTypist Retro Container] -->\n<div style="border: 2px ridge #38bdf8; padding: 12px; background: #0f172a;">\n  <h3>Subnet Component</h3>\n  <p>Telemetry sync verified.</p>\n</div>\n`;
+        } else if (lang === 'c') {
+          snippet = `\n// [GhostTypist Win32 Safe Handler]\nBOOL ValidateBuffer(const char* buf, int maxLen) {\n    return (buf && maxLen > 0 && maxLen < 1048576);\n}\n`;
+        } else {
+          snippet = `\n## [GhostTypist Architecture Section]\n- Priority: High throughput, 999KB size ceiling\n- Verification: 100% clean builds\n- Status: Active\n`;
+        }
+        const pos = editor.selectionEnd;
+        editor.value = editor.value.substring(0, pos) + snippet + editor.value.substring(pos);
+        editor.setSelectionRange(pos + snippet.length, pos + snippet.length);
+        updateEditor();
+        showToast('🤖 Ghost Typist inserted smart completion!', 'success', 2500);
+        appendCollabChatMessage('GhostTypist', `Inserted ${lang.toUpperCase()} completion snippet at cursor.`);
+      } else if (action === 'summary') {
+        const text = editor.value;
+        const words = text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
+        const lines = text.split('\n').length;
+        const chars = text.length;
+        const readMin = Math.max(1, Math.ceil(words / 200));
+        const summaryBlock = `\n/* =========================================================\n * EXECUTIVE SUMMARY (Ghost Typist Telemetry)\n * Lines: ${lines} | Words: ${words} | Characters: ${chars}\n * Estimated Reading Time: ~${readMin} minute(s)\n * Generated: ${new Date().toISOString()}\n * ========================================================= */\n`;
+        editor.value = summaryBlock + editor.value;
+        editor.setSelectionRange(0, 0);
+        updateEditor();
+        showToast('🤖 Ghost Typist generated document summary header!', 'success', 3000);
+        appendCollabChatMessage('GhostTypist', 'Document summary header generated.');
+      } else if (action === 'hackermemo') {
+        loadTemplate('classified-log');
+      } else {
+        loadTemplate('js');
+      }
+    }
+
+    function appendCollabChatMessage(sender, text) {
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      collabState.chatMessages.push({ sender, time, text });
+      const log = document.getElementById('collab-chat-log');
+      if (log) {
+        const msgEl = document.createElement('div');
+        msgEl.className = 'collab-chat-msg';
+        msgEl.innerHTML = `<span class="collab-chat-time">[${time}]</span> <span class="collab-chat-author">${escapeHtml(sender)}:</span> <span>${escapeHtml(text)}</span>`;
+        log.appendChild(msgEl);
+        log.scrollTop = log.scrollHeight;
+      }
+    }
+
+    async function sendCollabChatMessage(text) {
+      const msg = (text || '').trim();
+      if (!msg) return;
+      const myName = mp ? mp.playerName : 'Me';
+      appendCollabChatMessage(myName, msg);
+      if (collabState.active && mp) {
+        await mp.sendChat(msg);
+      }
+      if (collabState.ghostTypistActive && !collabState.peerName) {
+        setTimeout(() => {
+          const replies = [
+            "Copilot acknowledge: buffer checksum is valid.",
+            "Analyzing context: syntax highlighting and indentation match standards.",
+            "Remember: press F5 to quicksave full snapshot anytime!",
+            "Subnet packet loopback ping: 12ms. Ready for next block."
+          ];
+          const pick = replies[Math.floor(Math.random() * replies.length)];
+          appendCollabChatMessage('GhostTypist', pick);
+        }, 800);
+      }
+    }
+
+    function openCollabCenter() {
+      const isConnected = Boolean(collabState.peerName);
+      const isWaiting = collabState.active && !collabState.peerName;
+      const roomCode = collabState.roomId || 'NONE';
+
+      let chatLogHtml = '';
+      collabState.chatMessages.forEach(m => {
+        chatLogHtml += `<div class="collab-chat-msg"><span class="collab-chat-time">[${m.time}]</span> <span class="collab-chat-author">${escapeHtml(m.sender)}:</span> <span>${escapeHtml(m.text)}</span></div>`;
+      });
+
+      const bodyHtml = `
+        <div class="collab-hub-box">
+          <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:8px 12px; border-radius:6px; border:1px solid var(--border-glass);">
+            <div>
+              <div style="font-size:11px; color:var(--text-muted);">Current Session State:</div>
+              <div style="font-size:14px; font-weight:bold; color:${isConnected ? '#34d399' : (isWaiting ? '#f59e0b' : 'var(--text-secondary)')};">
+                ${isConnected ? `🟢 Connected with ${escapeHtml(collabState.peerName)}` : (isWaiting ? `⏳ Waiting for Collaborator` : (collabState.ghostTypistActive ? `🤖 Ghost Typist (Local AI) Active` : `Solo Local Editing`))}
+              </div>
+            </div>
+            <div class="collab-room-badge">${roomCode}</div>
+          </div>
+
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            ${!collabState.active ? `
+              <button class="modal-btn" onclick="closeModal(); hostCollabRoom();">⚡ Host Collab Room</button>
+              <button class="quick-btn" onclick="closeModal(); promptJoinCollabRoom();">🔗 Join by Code...</button>
+              <button class="quick-btn" onclick="closeModal(); quickMatchCollab();">📡 Quick Match</button>
+            ` : `
+              <button class="quick-btn" onclick="copyCollabLink()">📋 Copy Session Link</button>
+              <button class="quick-btn" style="color:#ef4444; border-color:rgba(239,68,68,0.4);" onclick="leaveCollabRoom(); runCollabCenterRefresh();">🚪 Disconnect</button>
+            `}
+            <button class="quick-btn" onclick="toggleGhostTypist(); runCollabCenterRefresh();">
+              ${collabState.ghostTypistActive ? 'Disable Ghost Typist' : '🤖 Enable Ghost Typist (Copilot)'}
+            </button>
+          </div>
+
+          <div style="background:rgba(255,255,255,0.02); border:1px solid var(--border-glass); border-radius:6px; padding:10px;">
+            <div style="font-weight:600; font-size:11px; color:var(--accent-hover); margin-bottom:6px;">🤖 Ghost Typist Copilot Commands:</div>
+            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+              <button class="quick-btn" onclick="closeModal(); invokeGhostTypist('autocomplete');">✨ Smart Complete Block</button>
+              <button class="quick-btn" onclick="closeModal(); invokeGhostTypist('summary');">📊 Generate Summary Header</button>
+              <button class="quick-btn" onclick="closeModal(); invokeGhostTypist('hackermemo');">💾 Insert Subnet Memo</button>
+            </div>
+          </div>
+
+          <div>
+            <div style="font-weight:600; font-size:11px; color:var(--text-secondary); margin-bottom:4px;">💬 In-Session Chat & Feed:</div>
+            <div class="collab-chat-log" id="collab-chat-log">${chatLogHtml}</div>
+            <div style="display:flex; gap:6px; margin-top:6px;">
+              <input type="text" class="find-input" id="collab-chat-input" placeholder="Type a note to your collaborator..." onkeydown="if(event.key==='Enter'){ sendCollabChatMessage(this.value); this.value=''; }">
+              <button class="find-btn" onclick="const el=document.getElementById('collab-chat-input'); sendCollabChatMessage(el.value); el.value='';">Send</button>
+            </div>
+            <div style="display:flex; gap:4px; margin-top:4px;">
+              <span class="tag-preset-chip" onclick="sendCollabChatMessage('Checking line 1...')">Review line 1</span>
+              <span class="tag-preset-chip" onclick="sendCollabChatMessage('LGTM! Ready to build.')">LGTM</span>
+              <span class="tag-preset-chip" onclick="sendCollabChatMessage('Saved workspace snapshot.')">Saved</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      openModal('👥 Real-Time Multiplayer Collaboration (RFMS)', bodyHtml, true);
+    }
+
+    function runCollabCenterRefresh() {
+      openCollabCenter();
     }
 
     // Drag & Drop File Import
@@ -3701,6 +4904,15 @@
       { cat: 'edit', label: 'Insert Current Date & Time', key: 'F7' },
       { cat: 'edit', label: 'Format & Pretty-Print JSON', key: 'Tools > Format JSON' },
 
+      // Real-Time Collaboration & Diff Suite
+      { cat: 'collab', label: 'Open Collaboration Center', key: 'Alt + M' },
+      { cat: 'collab', label: 'Toggle Ghost Typist (Local AI)', key: 'Alt + J' },
+      { cat: 'collab', label: 'Document Diff & Comparator', key: 'Ctrl + Shift + D' },
+      { cat: 'collab', label: 'Host Retro Room (KPD-XXXX)', key: 'Collab > Host Room' },
+      { cat: 'collab', label: 'Join Room by Invite Code', key: 'Collab > Join Room' },
+      { cat: 'collab', label: 'Copy Room Share Link', key: 'Collab > Copy Link' },
+      { cat: 'collab', label: 'Cryptographic Hashes (MD5/CRC/SHA)', key: 'Tools > Hash Checksums' },
+
       // Security & Shortcuts
       { cat: 'sec', label: 'Encrypt Document (AES-256)', key: 'Ctrl + E' },
       { cat: 'sec', label: 'Decrypt Document (Unlock)', key: 'Ctrl + D' },
@@ -3732,6 +4944,7 @@
       const categories = [
         { id: 'files', name: '📁 Files & Tabs' },
         { id: 'edit', name: '✏️ Editing, Navigation & Formatting' },
+        { id: 'collab', name: '👥 Collaboration & Diff Suite' },
         { id: 'sec', name: '🔒 Security & Tools' }
       ];
 
@@ -3758,7 +4971,7 @@
 
     function filterHelpCategory(cat) {
       activeHelpCat = cat;
-      ['all', 'files', 'edit', 'sec'].forEach(c => {
+      ['all', 'files', 'edit', 'collab', 'sec'].forEach(c => {
         const el = document.getElementById(`chip-help-${c}`);
         if (el) el.classList.toggle('active', c === cat);
       });
@@ -3771,12 +4984,13 @@
       const html = `
         <div style="display:flex; flex-direction:column; gap:10px;">
           <div>
-            <input type="text" id="help-search-input" class="find-input" style="width:100%; box-sizing:border-box; padding:8px 12px; font-size:12px;" placeholder="🔍 Filter shortcuts or actions (e.g. save, find, wrap, tab, enc, comment)..." oninput="renderHelpShortcuts(this.value)">
+            <input type="text" id="help-search-input" class="find-input" style="width:100%; box-sizing:border-box; padding:8px 12px; font-size:12px;" placeholder="🔍 Filter shortcuts or actions (e.g. save, find, wrap, tab, enc, comment, collab)..." oninput="renderHelpShortcuts(this.value)">
           </div>
           <div class="help-filter-bar">
             <button class="help-cat-chip active" id="chip-help-all" onclick="filterHelpCategory('all')">All Shortcuts</button>
             <button class="help-cat-chip" id="chip-help-files" onclick="filterHelpCategory('files')">📁 Files & Tabs</button>
             <button class="help-cat-chip" id="chip-help-edit" onclick="filterHelpCategory('edit')">✏️ Editing</button>
+            <button class="help-cat-chip" id="chip-help-collab" onclick="filterHelpCategory('collab')">👥 Collab & Diff</button>
             <button class="help-cat-chip" id="chip-help-sec" onclick="filterHelpCategory('sec')">🔒 Security & Tools</button>
           </div>
           <div id="help-shortcuts-list" style="max-height:55vh; overflow-y:auto; padding-right:4px;"></div>
@@ -4029,6 +5243,9 @@
       }
       if (e.ctrlKey && e.shiftKey && (e.key === 'f' || e.key === 'F')) { e.preventDefault(); openGlobalTabSearch(); }
       if (e.ctrlKey && e.shiftKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); exportDocument('workspace'); }
+      if (e.ctrlKey && e.shiftKey && (e.key === 'd' || e.key === 'D')) { e.preventDefault(); openDiffModal(); }
+      if (e.altKey && (e.key === 'm' || e.key === 'M')) { e.preventDefault(); openCollabCenter(); }
+      if (e.altKey && (e.key === 'j' || e.key === 'J')) { e.preventDefault(); toggleGhostTypist(); }
       if (e.altKey && (e.key === 'p' || e.key === 'P')) { e.preventDefault(); togglePreview(); }
       if (e.altKey && (e.key === 't' || e.key === 'T')) { e.preventDefault(); promptAddTag(); }
       if (e.ctrlKey && (e.key === 'f' || e.key === 'F')) { e.preventDefault(); openFind(false); }
@@ -4130,19 +5347,29 @@
 
       initSplitter();
 
+      let isRoomInvite = false;
       if (window.location.hash) {
-        const path = window.location.hash.substring(1);
-        if (path) { loadVFSFile(path); return; }
+        const hash = window.location.hash.substring(1);
+        if (hash.startsWith('room=') || /^[A-Za-z0-9_-]{3,10}$/.test(hash)) {
+          isRoomInvite = true;
+        } else if (hash) {
+          loadVFSFile(hash);
+          initCollabSystem();
+          return;
+        }
       }
       const hasRestored = loadSession();
       if (!hasRestored) {
-        createTab("Welcome.md", "# Welcome to KPad Pro\n\nHigh-performance multi-tab text and code workstation.\n\n## Quick Shortcuts\n- 💾 **Quicksave & Quickload:** Instant full session snapshots via F5 / F9.\n- 🏷️ **Tab Tags & Pinning:** Organize documents with tags (Alt+T) and pin essential tabs.\n- 🌐 **Global Tab Search:** Search across all open tabs instantly (Ctrl+Shift+F).\n- 👁️ **Live Markdown Preview:** Real-time side-by-side preview (Alt+P).\n- 📊 **Table Interoperability:** Convert CSV to Markdown tables and back.\n- 🔒 **AES-256 Security:** Military-grade document lock and .kpad.enc containers.\n- 📦 **Workspace Snapshots:** Full session export/restore (Ctrl+Shift+S).\n\nPress F1 anytime for the full shortcuts and user guide!\n", null, "markdown", ["welcome", "notes"]);
+        createTab("Welcome.md", "# Welcome to KPad Pro\n\nHigh-performance multi-tab text and code workstation.\n\n## Quick Shortcuts\n- 💾 **Quicksave & Quickload:** Instant full session snapshots via F5 / F9.\n- 👥 **Real-Time Collaboration:** Retro Firebase room sync & live cursors (Alt+M).\n- 🤖 **Solo Fallback / AI Copilot:** 25s auto-fallback to Ghost Typist (Alt+J).\n- 📊 **Document Diff & Comparator:** Line-by-line Myers/LCS diff viewer (Ctrl+Shift+D).\n- 🏷️ **Tab Tags & Pinning:** Organize documents with tags (Alt+T) and pin essential tabs.\n- 🌐 **Global Tab Search:** Search across all open tabs instantly (Ctrl+Shift+F).\n- 👁️ **Live Markdown Preview:** Real-time side-by-side preview (Alt+P).\n- 📊 **Table Interoperability:** Convert CSV to Markdown tables and back.\n- 🔒 **AES-256 Security:** Military-grade document lock and .kpad.enc containers.\n- 📦 **Workspace Snapshots:** Full session export/restore (Ctrl+Shift+S).\n\nPress F1 anytime for the full shortcuts and user guide!\n", null, "markdown", ["welcome", "notes"]);
       }
       renderTagBar();
+      initCollabSystem();
       if (!hasRestored && !safeGetStorage('kpad_tutorialSeen')) {
         setTimeout(() => showOnboarding(false), 250);
+      } else if (isRoomInvite) {
+        showToast("🌐 Collaborative session invite detected! Connecting to room...", "info", 3500);
       } else {
-        showToast("💡 Welcome to KPad Pro! Press F1 or click Help for shortcuts & guide.", "info", 4000);
+        showToast("💡 Welcome to KPad Pro! Press F1 for guide or Alt+M for real-time collaboration.", "info", 4000);
       }
     };
   </script>
