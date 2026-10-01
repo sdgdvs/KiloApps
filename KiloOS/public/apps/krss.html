@@ -1075,7 +1075,33 @@
     }
 
     .pane-feeds.collapsed {
-      display: none;
+      display: none !important;
+    }
+
+    .pane-articles.collapsed {
+      display: none !important;
+    }
+
+    /* Distraction-free Focus / Zen Reading Mode */
+    .workspace.zen-mode .pane-feeds,
+    .workspace.zen-mode #resizerFeeds,
+    .workspace.zen-mode .pane-articles,
+    .workspace.zen-mode #resizerArticles {
+      display: none !important;
+    }
+    .workspace.zen-mode .pane-reader {
+      width: 100% !important;
+    }
+    .workspace.zen-mode .reader-body {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .workspace.zen-mode .reader-header {
+      max-width: 760px;
+      margin: 0 auto 20px auto;
+    }
+    .workspace.zen-mode .reader-content-scroll {
+      padding: 32px 48px;
     }
 
     @media (max-width: 900px) {
@@ -1092,15 +1118,49 @@
       }
     }
 
-    @media (max-width: 720px) {
+    /* Small Screen / Responsive Mobile Workspace Navigation */
+    @media (max-width: 768px) {
       .workspace {
         position: relative;
+        overflow: hidden;
       }
-      .pane-feeds {
-        width: 180px;
+      .pane-resizer {
+        display: none !important;
       }
-      .pane-articles {
-        width: 240px;
+      .mobile-nav-btn {
+        display: inline-flex !important;
+      }
+      .workspace[data-mobile-view="feeds"] .pane-feeds {
+        display: flex !important;
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+      .workspace[data-mobile-view="feeds"] .pane-articles,
+      .workspace[data-mobile-view="feeds"] .pane-reader {
+        display: none !important;
+      }
+
+      .workspace[data-mobile-view="articles"] .pane-articles {
+        display: flex !important;
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+      .workspace[data-mobile-view="articles"] .pane-feeds,
+      .workspace[data-mobile-view="articles"] .pane-reader {
+        display: none !important;
+      }
+
+      .workspace[data-mobile-view="reader"] .pane-reader {
+        display: flex !important;
+        width: 100% !important;
+      }
+      .workspace[data-mobile-view="reader"] .pane-feeds,
+      .workspace[data-mobile-view="reader"] .pane-articles {
+        display: none !important;
+      }
+
+      .reader-content-scroll {
+        padding: 14px 16px;
       }
       .header-actions {
         gap: 4px;
@@ -1206,6 +1266,7 @@
     <!-- Pane 2: Article Headlines -->
     <section class="pane-articles" id="paneArticles">
       <div class="article-search-bar">
+        <button class="btn btn-sm mobile-nav-btn" id="btnMobileBackToFeeds" style="display:none; align-self: flex-start; margin-bottom: 2px;" title="Back to Subscriptions">◀ Feeds</button>
         <div class="search-input-wrap">
           <span style="margin-right: 2px; font-size: 11px;">🔍</span>
           <input type="text" id="inputSearch" placeholder="Filter headlines (Press / to search)...">
@@ -1235,6 +1296,7 @@
     <main class="pane-reader" id="paneReader">
       <div class="reader-toolbar">
         <div class="reader-toolbar-group">
+          <button class="btn btn-sm mobile-nav-btn" id="btnMobileBackToArticles" style="display:none;" title="Back to Headlines">◀ Headlines</button>
           <button class="btn btn-sm" id="btnPrevArticle" title="Previous Article (K / Up)">◀ Prev</button>
           <button class="btn btn-sm" id="btnNextArticle" title="Next Article (J / Down)">Next ▶</button>
           <button class="btn btn-sm" id="btnToggleRead" title="Toggle Read Status (M)">✓ Read</button>
@@ -1256,6 +1318,7 @@
           <button id="btnExportHtml" style="display:none;"></button>
         </div>
         <div class="reader-toolbar-group">
+          <button class="btn btn-sm" id="btnToggleZen" title="Toggle Distraction-free Focus / Zen Mode (Z)">📖 Focus</button>
           <button class="btn btn-sm btn-icon" id="btnZoomOut" title="Decrease font size (-)">A-</button>
           <span id="zoomDisplay" style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); min-width: 28px; text-align: center;">14px</span>
           <button class="btn btn-sm btn-icon" id="btnZoomReset" title="Reset font size (0)">A</button>
@@ -1562,6 +1625,9 @@
           <div><b>P</b></div><div>Read aloud via voice synthesizer</div>
           <div><b>T</b></div><div>Add custom tag to active article</div>
           <div><b>O</b></div><div>Open article in KNet virtual browser</div>
+          <div><b>Z</b></div><div>Toggle Focus / Zen reader mode</div>
+          <div><b>Space</b></div><div>Page reader down / advance to next</div>
+          <div><b>Shift + Space</b></div><div>Page reader up</div>
           <div><b>+ / -</b></div><div>Zoom font size in / out (0 to reset)</div>
           <div><b>F5</b></div><div>Quicksave workstation state</div>
           <div><b>F9</b></div><div>Quickload workstation state</div>
@@ -2017,6 +2083,31 @@
       }
       playSoundEffect('click');
       saveWorkstationState(true);
+    }
+
+    let isZenMode = false;
+    function toggleZenMode(force) {
+      const ws = document.getElementById('workspace');
+      const btn = document.getElementById('btnToggleZen');
+      if (!ws) return;
+      isZenMode = force !== undefined ? !!force : !ws.classList.contains('zen-mode');
+      ws.classList.toggle('zen-mode', isZenMode);
+      if (btn) {
+        btn.classList.toggle('active', isZenMode);
+        btn.textContent = isZenMode ? '📖 Normal' : '📖 Focus';
+        btn.title = isZenMode ? 'Exit Distraction-free Focus / Zen Mode (Z / Esc)' : 'Toggle Distraction-free Focus / Zen Mode (Z)';
+      }
+      playSoundEffect('click');
+      showToast(isZenMode ? 'Focus Mode active (Press Z or Esc to restore sidebars)' : 'Normal workstation layout restored');
+    }
+
+    let currentMobileView = 'feeds';
+    function setMobileView(view) {
+      currentMobileView = view;
+      const ws = document.getElementById('workspace');
+      if (ws) {
+        ws.setAttribute('data-mobile-view', view);
+      }
     }
 
     function saveWorkstationState(silent = false) {
@@ -2895,6 +2986,7 @@
         `;
         li.onclick = () => {
           activeFeedId = sf.id;
+          if (window.innerWidth <= 768) setMobileView('articles');
           playSoundEffect('click');
           renderFeedsList();
           renderArticlesList();
@@ -2970,6 +3062,7 @@
                 return;
               }
               activeFeedId = feed.id;
+              if (window.innerWidth <= 768) setMobileView('articles');
               playSoundEffect('click');
               renderFeedsList();
               renderArticlesList();
@@ -3079,6 +3172,7 @@
             return;
           }
           selectedArticleId = art.id;
+          if (window.innerWidth <= 768) setMobileView('reader');
           if (!art.isRead) {
             art.isRead = true;
             renderFeedsList();
@@ -3350,6 +3444,7 @@
       }
       const target = filtered[nextIdx];
       selectedArticleId = target.id;
+      if (window.innerWidth <= 768) setMobileView('reader');
       if (!target.isRead) {
         target.isRead = true;
         saveWorkstationState(true);
@@ -3450,24 +3545,23 @@
         let startX = 0;
         let startW = 0;
 
-        resizer.addEventListener('mousedown', (e) => {
+        function startDrag(clientX) {
           isDragging = true;
-          startX = e.clientX;
+          startX = clientX;
           startW = targetPane.offsetWidth;
           resizer.classList.add('dragging');
           document.body.style.cursor = 'col-resize';
           document.body.style.userSelect = 'none';
-          e.preventDefault();
-        });
+        }
 
-        window.addEventListener('mousemove', (e) => {
+        function moveDrag(clientX) {
           if (!isDragging) return;
-          const dx = e.clientX - startX;
+          const dx = clientX - startX;
           const newW = Math.max(minW, Math.min(maxW, startW + dx));
           targetPane.style.width = newW + 'px';
-        });
+        }
 
-        window.addEventListener('mouseup', () => {
+        function endDrag() {
           if (isDragging) {
             isDragging = false;
             resizer.classList.remove('dragging');
@@ -3475,7 +3569,34 @@
             document.body.style.userSelect = '';
             saveWidths();
           }
+        }
+
+        resizer.addEventListener('mousedown', (e) => {
+          startDrag(e.clientX);
+          e.preventDefault();
         });
+
+        window.addEventListener('mousemove', (e) => {
+          moveDrag(e.clientX);
+        });
+
+        window.addEventListener('mouseup', endDrag);
+
+        resizer.addEventListener('touchstart', (e) => {
+          if (e.touches && e.touches.length > 0) {
+            startDrag(e.touches[0].clientX);
+            e.preventDefault();
+          }
+        }, { passive: false });
+
+        window.addEventListener('touchmove', (e) => {
+          if (isDragging && e.touches && e.touches.length > 0) {
+            moveDrag(e.touches[0].clientX);
+            e.preventDefault();
+          }
+        }, { passive: false });
+
+        window.addEventListener('touchend', endDrag);
 
         resizer.addEventListener('dblclick', () => {
           const defaultW = isFeeds ? 230 : 320;
@@ -3576,6 +3697,45 @@
           saveWorkstationState(true);
           renderArticlesList();
         };
+      }
+
+      // Mobile Nav Back Buttons
+      const btnBackFeeds = document.getElementById('btnMobileBackToFeeds');
+      if (btnBackFeeds) {
+        btnBackFeeds.onclick = () => {
+          setMobileView('feeds');
+          playSoundEffect('click');
+        };
+      }
+      const btnBackArticles = document.getElementById('btnMobileBackToArticles');
+      if (btnBackArticles) {
+        btnBackArticles.onclick = () => {
+          setMobileView('articles');
+          playSoundEffect('click');
+        };
+      }
+
+      // Zen Focus Button
+      const btnZen = document.getElementById('btnToggleZen');
+      if (btnZen) {
+        btnZen.onclick = () => toggleZenMode();
+      }
+
+      // Responsive Mobile View sync on window resize
+      window.addEventListener('resize', () => {
+        const ws = document.getElementById('workspace');
+        if (ws) {
+          if (window.innerWidth <= 768) {
+            if (!ws.hasAttribute('data-mobile-view')) {
+              setMobileView(selectedArticleId ? 'reader' : 'feeds');
+            }
+          } else {
+            ws.removeAttribute('data-mobile-view');
+          }
+        }
+      });
+      if (window.innerWidth <= 768) {
+        setMobileView('feeds');
       }
 
       // Reading Toolbar
@@ -4000,7 +4160,28 @@
           if (splash && splash.classList.contains('active')) {
             dismissSplash(false);
           }
+          if (isZenMode) {
+            toggleZenMode(false);
+          }
           closeAllModals();
+        } else if (e.key === 'z' || e.key === 'Z') {
+          e.preventDefault();
+          toggleZenMode();
+        } else if (e.key === ' ') {
+          const scrollEl = document.getElementById('readerScroll');
+          if (scrollEl && selectedArticleId) {
+            e.preventDefault();
+            if (e.shiftKey) {
+              scrollEl.scrollBy({ top: -scrollEl.clientHeight * 0.75, behavior: 'smooth' });
+            } else {
+              const atBottom = scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 25;
+              if (atBottom) {
+                navigateArticles(1);
+              } else {
+                scrollEl.scrollBy({ top: scrollEl.clientHeight * 0.75, behavior: 'smooth' });
+              }
+            }
+          }
         } else if (e.key === 'F1' || e.key === '?' || e.key === 'h' || e.key === 'H') {
           e.preventDefault();
           const helpEl = document.getElementById('modalHelp');
