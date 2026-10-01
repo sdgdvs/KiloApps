@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KMedia
   kilo_usability: KRSS
   kilo_graphics: KColosseum
-  kilo_qa: KMine
+  kilo_qa: KCosmic
   kilo_expander: KNote
   kilo_creator: "kweb://asm-temple (Win32 ASM Shrine & Opcode Converter)"
 virtual_web_target: "kweb://asm-temple"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KHash
-  timestamp: "2026-10-01T03:30:00Z"
+  agent: kilo-qa
+  app: KMine
+  timestamp: "2026-10-01T03:45:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KHash` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KMine`
+- **Current Target**: `KCosmic`
 - **Upcoming Queue**:
-  `KCosmic`, `KContacts`, `KPad`, `KPaint` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc)*.
+  `KContacts`, `KPad`, `KPaint`, `KMine` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KNote`
@@ -296,6 +296,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-01T03:45:00Z — kilo-qa: KMine (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone)**
+  - State Persistence: Audited and verified full F5 / F9 quicksave/load capturing grid, timers, flags, and move logs.
+  - First-run Tutorial Integrity: Implemented `kmine_tutorialSeen` / `kmine_tutorial.dat` flags; never interrupts restored saves.
+  - Toast Occlusion Remediation: Relocated toast notifications to bottom safe zone (24px), clearing all top toolbar controls.
+  - Overlays & Ergonomics: Added Enter/Space modal dismissals, safe storage quota guards, and native Win32 F5/F9 menu items.
+  - Resource Cleanliness: Eliminated 36 GDI brush allocations/sec in native loop and ensured timer teardown on destroy.
+  - Verification: MSVC clean (`KMine.exe` 27.1 KB); Vite clean in 307ms; security lint & check_icons 100% PASS (<999 KB ceiling).
+
 - **2026-10-01T03:30:00Z — kilo-usability: KHash (Window Sizing, HiDPI Canvas, Toast Safe Zone & Tab Cycling)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 140.5 KB web / 17.5 KB native < 999 KB ceiling).
   - Window & Layout: Expanded App.jsx default dimensions to 1040x720, eliminating horizontal tab overflow on launch.
@@ -326,12 +334,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interactive RAM Hex Editor: Added live byte inspector/patcher, 10.19.99.4 packet injector (1999Hz tone), XOR 0x7F mask & .HEX export.
   - Audio & Vault: Added Tracks 05 & 06 to FM Jukebox; added Articles 07 & 08 to devlog; added `mesh3d.asm`, `voxel_land.asm`, `intro1k.asm` downloads.
   - Verification: Security linter 100% PASS; `npm run build` clean in 311ms; `neon_rider.html` 203.7 KB (<999 KB ceiling).
-
-- **2026-10-01T02:30:00Z — kilo-expander: KPad (Real-Time Collab Suite, RFMS, Document Diff & Hashes)**
-  - RFMS Multiplayer: Integrated `retro_multiplayer.js` with room matchmaking (`KPD-XXXX`), URL sharing (`#room=`), live presence & remote cursor sync.
-  - Mandate 12 Solo Fallback: 25s auto-fallback to diegetic "Ghost Typist" local AI copilot with in-session chat & code assistance.
-  - Document Diff Suite: Built line-by-line Myers/LCS visual document comparator across tabs, snapshots, and clipboard.
-  - Text Transforms: Added Title Case, ROT13 cipher, camelCase, snake_case, kebab-case, and invert casing in web and native.
-  - Hashes & Checksums: Implemented instant MD5, SHA-256, and CRC-32 integrity calculators with Win32 CryptoAPI parity.
-  - Templates & Exports: Added retro HTML 4.01 and x86 ASM templates, and BBCode, RTF, and LaTeX export generation.
-  - Verification: MSVC clean (`KPad.exe` 33 KB); Vite clean in 281ms; security lint & check_icons 100% PASS (<999KB ceiling).

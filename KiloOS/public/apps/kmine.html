@@ -171,14 +171,14 @@
     border-radius: 6px; 
   }
 
-  /* Toast Notification System */
+  /* Toast Notification System - Safe Bottom Zone (Eliminates Controls Occlusion) */
   #toast-container {
     position: fixed;
-    top: 20px;
-    right: 20px;
+    bottom: 24px;
+    right: 24px;
     z-index: 9999;
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     gap: 8px;
     pointer-events: none;
   }
@@ -207,11 +207,11 @@
   .toast.toast-error { border-left-color: #f85149; }
   .toast.fade-out {
     opacity: 0;
-    transform: translateX(30px);
+    transform: translateY(15px);
   }
   @keyframes toastSlideIn {
-    from { opacity: 0; transform: translateX(40px); }
-    to { opacity: 1; transform: translateX(0); }
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 
   /* Cyber Modal Dialog */
@@ -351,7 +351,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn-accent" onclick="toggleHelpModal(false)">Got It [Esc]</button>
+      <button class="btn-accent" id="helpModalOkBtn" onclick="toggleHelpModal(false)">Got It [Esc / Enter]</button>
     </div>
   </div>
 </div>
@@ -418,6 +418,27 @@
   let startRealTime = 0;
   let quickSaveData = null;
   
+  // Safe Storage Helpers with Quota Guard
+  function safeGetStorage(key, fallback = null) {
+    try {
+      const val = localStorage.getItem(key);
+      return val !== null ? val : fallback;
+    } catch (e) {
+      return fallback;
+    }
+  }
+
+  function safeSetStorage(key, val) {
+    try {
+      localStorage.setItem(key, val);
+      return true;
+    } catch (e) {
+      console.warn("Storage quota exceeded or disabled:", e);
+      showToast("⚠️ Storage quota exceeded or disabled.", "warn");
+      return false;
+    }
+  }
+
   // Toast Notifications System
   function showToast(message, type = 'info', duration = 3500) {
     const container = document.getElementById('toast-container');
@@ -445,8 +466,11 @@
     const modal = document.getElementById('helpModal');
     if (show) {
       modal.classList.add('active');
+      const okBtn = document.getElementById('helpModalOkBtn');
+      if (okBtn) okBtn.focus();
     } else {
       modal.classList.remove('active');
+      safeSetStorage('kmine_tutorialSeen', '1');
     }
   }
 
@@ -591,12 +615,12 @@
   }
 
   function loadStats() {
-    let s = localStorage.getItem('kmine_best');
-    if(s) { try { bestTimes = JSON.parse(s); } catch(e){} }
+    let s = safeGetStorage('kmine_best');
+    if (s) { try { bestTimes = JSON.parse(s); } catch(e){} }
     updateBestTimeDisplay();
   }
   function saveStats() {
-    localStorage.setItem('kmine_best', JSON.stringify(bestTimes));
+    safeSetStorage('kmine_best', JSON.stringify(bestTimes));
     updateBestTimeDisplay();
   }
   function updateBestTimeDisplay() {
@@ -926,12 +950,13 @@
       diff: document.getElementById('diff').value,
       timeOffset: Date.now() - startRealTime
     };
-    localStorage.setItem('kmine_quicksave', JSON.stringify(quickSaveData));
-    showToast("💾 Game quicksaved successfully!", "success");
+    if (safeSetStorage('kmine_quicksave', JSON.stringify(quickSaveData))) {
+      showToast("💾 Game quicksaved successfully!", "success");
+    }
   }
 
   function quickLoad() {
-    let s = localStorage.getItem('kmine_quicksave');
+    let s = safeGetStorage('kmine_quicksave');
     if (!s) { 
       showToast("⚠️ No quicksave found in storage.", "warn"); 
       return; 
@@ -948,6 +973,7 @@
       startRealTime = Date.now() - d.timeOffset;
       stopTimer(); startTimer();
       updateStatus(); updateBestTimeDisplay();
+      safeSetStorage('kmine_tutorialSeen', '1');
       showToast("📂 Game quickloaded!", "info");
     } catch(e) { 
       showToast("❌ Failed to quickload save state.", "error"); 
@@ -1353,6 +1379,17 @@
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
     if (e.ctrlKey || e.altKey || e.metaKey) return;
 
+    const modal = document.getElementById('helpModal');
+    const isModalOpen = modal && modal.classList.contains('active');
+
+    if (isModalOpen) {
+      if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleHelpModal(false);
+        return;
+      }
+    }
+
     if (e.key === 'h' || e.key === 'H') {
       giveHint();
     } else if (e.key === 'F1' || e.key === '?') {
@@ -1393,10 +1430,19 @@
   initGame();
   requestAnimationFrame(animLoop);
 
-  // Startup welcome toast
-  setTimeout(() => {
-    showToast("💣 KMine Ready! L-Click: Reveal | R-Click: Flag | F1: Guide", "info", 4500);
-  }, 300);
+  // First-run Tutorial Integrity: Show interactive guide only on fresh session
+  const tutorialSeen = safeGetStorage('kmine_tutorialSeen') === '1';
+  const hasQuicksave = !!safeGetStorage('kmine_quicksave');
+  if (!tutorialSeen && !hasQuicksave) {
+    setTimeout(() => {
+      toggleHelpModal(true);
+      showToast("👋 Welcome to KMine! Review the rules to begin.", "info", 5000);
+    }, 250);
+  } else {
+    setTimeout(() => {
+      showToast("💣 KMine Ready! L-Click: Reveal | R-Click: Flag | F1: Guide", "info", 4000);
+    }, 300);
+  }
 </script>
 </body>
 </html>

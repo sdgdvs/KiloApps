@@ -409,6 +409,8 @@ void UpdateTitle(HWND hwnd) {
 #define IDM_IMPORT_STATS 1006
 #define IDM_WATCH_REPLAY 1007
 #define IDM_HELP 1008
+#define IDM_QUICKSAVE 1009
+#define IDM_QUICKLOAD 1010
 
 HMENU hMenu, hSubMenu;
 
@@ -734,6 +736,15 @@ void QuickLoad(HWND hwnd) {
     SetTimer(hwnd, 1, 1000, NULL);
     UpdateTitle(hwnd);
     InvalidateRect(hwnd, NULL, TRUE);
+
+    // Ensure tutorial flag is marked so restored saves are never interrupted by first-run prompts
+    HANDLE hTut = CreateFileA("kmine_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hTut != INVALID_HANDLE_VALUE) {
+        char flag = 1;
+        DWORD w;
+        WriteFile(hTut, &flag, 1, &w, NULL);
+        CloseHandle(hTut);
+    }
 }
 
 void StartReplay(HWND hwnd) {
@@ -839,7 +850,7 @@ void DrawCornerFiligreeGDI(HDC hdc, int x, int y, int size, int flipX, int flipY
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
-        case WM_CREATE:
+        case WM_CREATE: {
             LoadStats();
             hMenu = CreateMenu();
             hSubMenu = CreatePopupMenu();
@@ -848,6 +859,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hSubMenu, MF_STRING, IDM_BEGINNER, "Beginner (10x10)\t1");
             AppendMenuA(hSubMenu, MF_STRING, IDM_INTERMEDIATE, "Intermediate (16x16)\t2");
             AppendMenuA(hSubMenu, MF_STRING, IDM_EXPERT, "Expert (30x16)\t3");
+            AppendMenuA(hSubMenu, MF_SEPARATOR, 0, NULL);
+            AppendMenuA(hSubMenu, MF_STRING, IDM_QUICKSAVE, "Quick Save\tF5");
+            AppendMenuA(hSubMenu, MF_STRING, IDM_QUICKLOAD, "Quick Load\tF9");
             AppendMenuA(hSubMenu, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hSubMenu, MF_STRING, IDM_HINT, "Safe Move Hint\tH");
             AppendMenuA(hSubMenu, MF_STRING, IDM_HELP, "Help & Shortcuts...\tF1");
@@ -859,7 +873,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetMenu(hwnd, hMenu);
             SetDifficulty(hwnd, 1);
             SetTimer(hwnd, 3, 30, NULL);
+
+            // First-run Tutorial Integrity: Check kmine_tutorial.dat flag
+            HANDLE hTut = CreateFileA("kmine_tutorial.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+            if (hTut == INVALID_HANDLE_VALUE) {
+                HANDLE hNewTut = CreateFileA("kmine_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (hNewTut != INVALID_HANDLE_VALUE) {
+                    char flag = 1;
+                    DWORD written;
+                    WriteFile(hNewTut, &flag, 1, &written, NULL);
+                    CloseHandle(hNewTut);
+                }
+                ShowHelpDialog(hwnd);
+            } else {
+                CloseHandle(hTut);
+            }
             break;
+        }
         case WM_COMMAND:
             if (LOWORD(wParam) == IDM_RESTART) {
                 InitGame(hwnd, 0);
@@ -870,6 +900,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetDifficulty(hwnd, 1);
             } else if (LOWORD(wParam) == IDM_EXPERT) {
                 SetDifficulty(hwnd, 2);
+            } else if (LOWORD(wParam) == IDM_QUICKSAVE) {
+                QuickSave(hwnd);
+            } else if (LOWORD(wParam) == IDM_QUICKLOAD) {
+                QuickLoad(hwnd);
             } else if (LOWORD(wParam) == IDM_HINT) {
                 GiveHint(hwnd);
             } else if (LOWORD(wParam) == IDM_HELP) {
@@ -1032,15 +1066,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             DeleteObject(bg);
 
             // Ambient Dust Motes
+            HBRUSH dustBrush = CreateSolidBrush(RGB(30, 60, 90));
             for (int i = 0; i < MAX_DUST; i++) {
                 int dx = (int)dustMotes[i].x;
                 int dy = (int)dustMotes[i].y;
                 int sz = (int)dustMotes[i].size;
-                HBRUSH dustBrush = CreateSolidBrush(RGB(30, 60, 90));
                 RECT dr = { dx - sz, dy - sz, dx + sz + 1, dy + sz + 1 };
                 FillRect(memDC, &dr, dustBrush);
-                DeleteObject(dustBrush);
             }
+            DeleteObject(dustBrush);
             
             int fontHeight = -MulDiv(15, g_dpi, 72);
             HFONT hFont = CreateFontA(fontHeight, 0, 0, 0, FW_BOLD, 0, 0, 0, DEFAULT_CHARSET, 0, 0, CLEARTYPE_QUALITY, DEFAULT_PITCH, "Segoe UI");
@@ -1331,6 +1365,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_DESTROY:
+            KillTimer(hwnd, 1);
+            KillTimer(hwnd, 2);
+            KillTimer(hwnd, 3);
             PostQuitMessage(0);
             break;
         default:
