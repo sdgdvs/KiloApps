@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://deep-core (Deep Core Node & Quarantine Defusal)"
-  kilo_graphics: KStarship
+  kilo_graphics: KChrono
   kilo_tester: KNet
   kilo_usability: KHex
   kilo_qa: KBase
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://10.19.99.4/classified"
-  timestamp: "2026-10-01T20:19:00Z"
+  agent: kilo-graphics
+  app: KStarship
+  timestamp: "2026-10-01T21:18:00Z"
 last_planner_run: "2026-10-01T19:32:00Z"
 ---
 
@@ -104,9 +104,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KStarship`
+- **Current Target**: `KChrono`
 - **Upcoming Queue**:
-  `KChrono`, `KFortress`, `KCosmic`, `KSanctuary`, `KDragon`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KSanctuary, KDragon, KSubmarine, KStarDredge)*.
+  `KFortress`, `KCosmic`, `KSanctuary`, `KDragon`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KSanctuary, KDragon, KSubmarine, KStarDredge)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KNet`
@@ -297,6 +297,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-01T21:18:00Z — kilo-graphics: KStarship (Glint Audit, Static Vector Station & Precursor Halos, Shore Leave)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 151.7 KB web / 148.5 KB native < 999 KB ceiling).
+  - Glint & Comet Ban: Removed rotating perimeter dots in Station and Precursor Ruin modal previews across web & native.
+  - Vector Visual Polish: Built static blueprint vector habitat torus, docking rails, clamps, and Precursor containment halos.
+  - Station Shore Leave: Added crew shore leave service (75C, +30 Morale) with audio feedback in web and Win32 C (`KStarship.exe`).
+  - Key Parity: Bound key 0 to station shore leave in Win32 C; verified full 1-9 & Space modal navigation parity.
+  - Verification: MSVC clean (`KStarship.exe` 148.5 KB); Vite clean in 385ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-01T20:19:00Z — kilo-creator: kweb://10.19.99.4/classified (Corporate Leak Intranet Deep Expansion)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 177.0 KB < 999 KB ceiling).
   - Dual-Presence Resonance: Implemented Firebase RTDB station presence + local Salado halite loopback yielding transponder key `CARLSBAD-TRANSPONDER-SYNCHRONIZED-0x7F`.
@@ -332,13 +340,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Storage & Persistence: Added JSON Case File export (`exportCase`) and import (`importCaseFile`) with header/start buttons and `[Ctrl+S]`/`[Ctrl+O]`.
   - Toast Safe Zone: Repositioned `#toast-bar` to bottom-center safe zone clearing notebook panel and evidence dossier sketches.
   - Verification: MSVC clean (`KMystery.exe` 40.4 KB); Vite clean in 1.12s; check_icons & security_lint 100% PASS.
-
-- **2026-10-01T16:38:00Z — kilo-qa: KContacts (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 143.1 KB web / 29.2 KB native < 999 KB ceiling).
-  - State Persistence: Fixed uncommitted edit flush prior to F5 serialization in web and Win32 C (`KContacts.exe`).
-  - Modal & Overlays: Handled auto-closing open dialogs on F9 restore and cleared dirty indicator cleanly.
-  - Toast Occlusion Remediation: Relocated toast notifications to bottom-center safe zone clearing details action buttons.
-  - Tutorial & Quota Integrity: Verified tutorialSeen flag guards, quota catch safety, and object URL revocation.
-  - Verification: MSVC clean (`KContacts.exe` 29.2 KB); Vite clean in 400ms; check_icons & security_lint 100% PASS.
 
 

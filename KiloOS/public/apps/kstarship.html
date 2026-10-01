@@ -956,28 +956,34 @@
       } else if (type === 'Station') {
         pCtx.save();
         pCtx.translate(cx, cy);
-        let rot = time * 0.001;
 
-        pCtx.save();
-        pCtx.rotate(rot);
+        // Static Vector Habitat Torus & Docking Rails (Zero rotating dots / comets)
         pCtx.strokeStyle = '#00d4d4';
         pCtx.lineWidth = 3;
         pCtx.beginPath();
         pCtx.arc(0, 0, 34, 0, Math.PI * 2);
         pCtx.stroke();
 
-        pCtx.fillStyle = '#ffffff';
-        for (let i=0; i<6; i++) {
-          let a = (i/6) * Math.PI * 2;
-          pCtx.fillRect(Math.cos(a)*34 - 3, Math.sin(a)*34 - 3, 6, 6);
-        }
-        pCtx.strokeStyle = 'rgba(0, 255, 255, 0.5)';
+        pCtx.strokeStyle = 'rgba(0, 255, 255, 0.4)';
+        pCtx.lineWidth = 1;
+        pCtx.beginPath();
+        pCtx.arc(0, 0, 38, 0, Math.PI * 2);
+        pCtx.stroke();
+
+        // 4 Static Docking Berth Pylons & Clamp Braces
+        pCtx.strokeStyle = 'rgba(0, 255, 255, 0.6)';
         pCtx.lineWidth = 1.5;
         pCtx.beginPath();
         pCtx.moveTo(-34, 0); pCtx.lineTo(34, 0);
         pCtx.moveTo(0, -34); pCtx.lineTo(0, 34);
         pCtx.stroke();
-        pCtx.restore();
+
+        // Static Cardinal Docking Clamps
+        pCtx.fillStyle = '#00ffff';
+        pCtx.fillRect(-38, -3, 5, 6);
+        pCtx.fillRect(33, -3, 5, 6);
+        pCtx.fillRect(-3, -38, 6, 5);
+        pCtx.fillRect(-3, 33, 6, 5);
 
         pCtx.fillStyle = '#004488';
         pCtx.strokeStyle = '#00ffff';
@@ -1242,30 +1248,29 @@
       } else if (type === 'PrecursorRuin') {
         pCtx.save();
         pCtx.translate(cx, cy);
-        let rot = time * 0.001;
 
-        // Rotating Runic Orbit Rings
-        pCtx.save();
-        pCtx.rotate(rot);
-        pCtx.strokeStyle = 'rgba(6, 182, 212, 0.6)';
+        // Static Precursor Containment Field Halos (Zero rotating dots / comets)
+        pCtx.strokeStyle = 'rgba(6, 182, 212, 0.7)';
         pCtx.lineWidth = 1.5;
         pCtx.beginPath();
         pCtx.arc(0, 0, 42, 0, Math.PI * 2);
         pCtx.stroke();
-        for (let i = 0; i < 4; i++) {
-          let a = (i / 4) * Math.PI * 2;
-          pCtx.fillStyle = '#22d3ee';
-          pCtx.fillRect(Math.cos(a) * 42 - 2, Math.sin(a) * 42 - 2, 5, 5);
-        }
-        pCtx.restore();
 
-        pCtx.save();
-        pCtx.rotate(-rot * 1.4);
-        pCtx.strokeStyle = 'rgba(168, 85, 247, 0.5)';
+        pCtx.strokeStyle = 'rgba(168, 85, 247, 0.6)';
+        pCtx.lineWidth = 1.2;
         pCtx.beginPath();
         pCtx.arc(0, 0, 32, 0, Math.PI * 2);
         pCtx.stroke();
-        pCtx.restore();
+
+        // Static Runic Alignment Cross-Brackets
+        pCtx.strokeStyle = 'rgba(34, 211, 238, 0.6)';
+        pCtx.lineWidth = 1.5;
+        pCtx.beginPath();
+        pCtx.moveTo(0, -46); pCtx.lineTo(0, -28);
+        pCtx.moveTo(0, 46); pCtx.lineTo(0, 28);
+        pCtx.moveTo(-46, 0); pCtx.lineTo(-28, 0);
+        pCtx.moveTo(46, 0); pCtx.lineTo(28, 0);
+        pCtx.stroke();
 
         // Hovering Monolithic Pyramid
         let pyGrad = pCtx.createLinearGradient(-20, -30, 20, 25);
@@ -2750,6 +2755,20 @@
                         state.crew.push({ name: firstNames[Math.floor(Math.random() * firstNames.length)], role: 0, level: 1, xp: 0 });
                         updateUI();
                         updateStationBtns('main');
+                    }
+                });
+                addBtn(`Crew Shore Leave (75C, +30 Morale)`, () => {
+                    if (state.resources.credits >= 75 && state.resources.morale < 100) {
+                        state.resources.credits -= 75;
+                        state.resources.morale = Math.min(100, state.resources.morale + 30);
+                        playChime();
+                        showToast('Crew enjoyed station shore leave (+30 Morale)!');
+                        updateUI();
+                        updateStationBtns('main');
+                    } else if (state.resources.morale >= 100) {
+                        showToast('Crew morale is already at 100%.');
+                    } else {
+                        showToast('Insufficient credits (75C needed).');
                     }
                 });
                 addBtn('Leave Station', () => {

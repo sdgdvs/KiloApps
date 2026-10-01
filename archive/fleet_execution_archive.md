@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-01T16:38:00Z — kilo-qa: KContacts (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 143.1 KB web / 29.2 KB native < 999 KB ceiling).
+  - State Persistence: Fixed uncommitted edit flush prior to F5 serialization in web and Win32 C (`KContacts.exe`).
+  - Modal & Overlays: Handled auto-closing open dialogs on F9 restore and cleared dirty indicator cleanly.
+  - Toast Occlusion Remediation: Relocated toast notifications to bottom-center safe zone clearing details action buttons.
+  - Tutorial & Quota Integrity: Verified tutorialSeen flag guards, quota catch safety, and object URL revocation.
+  - Verification: MSVC clean (`KContacts.exe` 29.2 KB); Vite clean in 400ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-01T16:26:00Z — kilo-graphics: KWizard (Nature Purification, 6 Native Archetype Presets & Projectile Polish)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 132.4 KB web / 12.9 KB native < 999 KB ceiling).
   - Archetype Presets: Added 6 1-click deckbuilder archetype presets (Pyro, Cryo, Arcane, Druid, Venom, Storm) to Win32 C (`KWizard.exe`).

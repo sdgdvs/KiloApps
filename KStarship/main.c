@@ -882,16 +882,32 @@ void DrawEncounterTacticalView(HDC memDC, int cx, int cy, int enc_type) {
         DeleteObject(cBrush);
     }
     else if (enc_type == 4) {
-        // Orbital Space Station
-        int rot = (time / 20) % 360;
-        float a = rot * (float)M_PI / 180.0f;
-
-        // Rotating Habitat Ring
+        // Orbital Space Station - Static Concentric Rings & Docking Rails (Zero rotating dots / comets)
         HPEN ringPen = CreatePen(PS_SOLID, 2, RGB(0, 220, 220));
         SelectObject(memDC, ringPen);
         SelectObject(memDC, GetStockObject(NULL_BRUSH));
         Ellipse(memDC, cx - 30, cy - 30 - 20, cx + 30, cy + 30 - 20);
         DeleteObject(ringPen);
+
+        HPEN railPen = CreatePen(PS_SOLID, 1, RGB(0, 140, 160));
+        SelectObject(memDC, railPen);
+        Ellipse(memDC, cx - 36, cy - 36 - 20, cx + 36, cy + 36 - 20);
+        DeleteObject(railPen);
+
+        // 4 Static Docking Spoke Pylons
+        HPEN spokePen = CreatePen(PS_SOLID, 1, RGB(0, 200, 220));
+        SelectObject(memDC, spokePen);
+        MoveToEx(memDC, cx - 36, cy - 20, NULL); LineTo(memDC, cx + 36, cy - 20);
+        MoveToEx(memDC, cx, cy - 20 - 36, NULL); LineTo(memDC, cx, cy - 20 + 36);
+        DeleteObject(spokePen);
+
+        // Static Cardinal Docking Clamps
+        HBRUSH cBrush = CreateSolidBrush(RGB(0, 255, 255));
+        RECT cr1 = { cx - 37, cy - 20 - 2, cx - 33, cy - 20 + 3 }; FillRect(memDC, &cr1, cBrush);
+        RECT cr2 = { cx + 33, cy - 20 - 2, cx + 37, cy - 20 + 3 }; FillRect(memDC, &cr2, cBrush);
+        RECT cr3 = { cx - 2, cy - 20 - 37, cx + 3, cy - 20 - 33 }; FillRect(memDC, &cr3, cBrush);
+        RECT cr4 = { cx - 2, cy - 20 + 33, cx + 3, cy - 20 + 37 }; FillRect(memDC, &cr4, cBrush);
+        DeleteObject(cBrush);
 
         // Hub Core
         HBRUSH hubBrush = CreateSolidBrush(RGB(20, 35, 50));
@@ -1060,11 +1076,25 @@ void DrawEncounterTacticalView(HDC memDC, int cx, int cy, int enc_type) {
         DeleteObject(rBrush);
     }
     else if (enc_type == 21) {
-        // Precursor Monolith Guardian
-        HPEN rPen1 = CreatePen(PS_SOLID, 1, RGB(34, 211, 238));
+        // Precursor Monolith Guardian - Static Containment Halos (Zero rotating dots / comets)
+        HPEN rPen1 = CreatePen(PS_SOLID, 2, RGB(34, 211, 238));
         SelectObject(memDC, rPen1); SelectObject(memDC, GetStockObject(NULL_BRUSH));
-        Ellipse(memDC, cx - 36, cy - 20 - 36, cx + 36, cy - 20 + 36);
+        Ellipse(memDC, cx - 38, cy - 20 - 38, cx + 38, cy - 20 + 38);
         DeleteObject(rPen1);
+
+        HPEN rPen2 = CreatePen(PS_SOLID, 1, RGB(168, 85, 247));
+        SelectObject(memDC, rPen2);
+        Ellipse(memDC, cx - 28, cy - 20 - 28, cx + 28, cy - 20 + 28);
+        DeleteObject(rPen2);
+
+        // Static Runic Alignment Cross-Brackets
+        HPEN brkPen = CreatePen(PS_SOLID, 1, RGB(56, 189, 248));
+        SelectObject(memDC, brkPen);
+        MoveToEx(memDC, cx, cy - 20 - 42, NULL); LineTo(memDC, cx, cy - 20 - 24);
+        MoveToEx(memDC, cx, cy - 20 + 24, NULL); LineTo(memDC, cx, cy - 20 + 42);
+        MoveToEx(memDC, cx - 42, cy - 20, NULL); LineTo(memDC, cx - 24, cy - 20);
+        MoveToEx(memDC, cx + 24, cy - 20, NULL); LineTo(memDC, cx + 42, cy - 20);
+        DeleteObject(brkPen);
 
         POINT pyPts[4] = {
             {cx, cy - 20 - 26}, {cx + 22, cy - 20 + 16}, {cx, cy - 20 + 24}, {cx - 22, cy - 20 + 16}
@@ -1823,7 +1853,7 @@ void Draw(HDC hdc, RECT* rect) {
         else if (modal_enc_type == 9) { title = "ANCIENT RUINS"; desc = "Scanners detect ancient ruins.\r\n1: Explore (Risk Crew, Gain Tech)\r\n2: Leave"; }
         else if (modal_enc_type == 2) { title = "DEEP SPACE ANOMALY"; desc = "A swirling rift in space.\r\n1: Scan (Risk Hull, Gain Tech)\r\n2: Harvest (Risk Crew, Gain Fuel)\r\nSPACE: Leave"; }
         else if (modal_enc_type == 3) { title = "TRADER ENCOUNTER"; desc = "A wandering trader offers help.\r\n1 crew member joins\r\nyour ship."; }
-        else if (modal_enc_type == 4) { title = "STATION"; desc = "1: Buy Fuel(50) 2: Rep Hull(100)\r\n3: Buy Min(100) 4: Sell Min(80)\r\n5: Buy Tech(300) 6: Sell Tech(250)\r\n7: Shipyard 8: Recruit(100C)\r\n9: Superweapon Bay  SPACE: Leave"; }
+        else if (modal_enc_type == 4) { title = "STATION"; desc = "1: Buy Fuel(50) 2: Rep Hull(100)\r\n3: Buy Min(100) 4: Sell Min(80)\r\n5: Buy Tech(300) 6: Sell Tech(250)\r\n7: Shipyard 8: Recruit(100C)\r\n9: Superweapon 0: Shore Leave(75C)\r\nSPACE: Leave Station"; }
         else if (modal_enc_type == 5) { 
             title = "SHIPYARD & MODULE FABRICATION"; 
             wsprintfA(desc_buf, "1: Wpn(%dC) 2: Shd(%dC) 3: Eng(%dC) 4: Cargo(%dC)\r\n"
@@ -1890,7 +1920,7 @@ void Draw(HDC hdc, RECT* rect) {
         if (res_hull <= 0) {
             DrawTextA(memDC, HasSavedGame() ? "[ F9: Reload | R: Restart | SPACE: Exit ]" : "[ R: Restart | SPACE: Exit ]", -1, &bRect, DT_CENTER);
         } else if (modal_enc_type == 4) {
-            DrawTextA(memDC, "[ 1-9 OR SPACE ]", -1, &bRect, DT_CENTER);
+            DrawTextA(memDC, "[ 0-9 OR SPACE ]", -1, &bRect, DT_CENTER);
         } else if (modal_enc_type == 5) {
             DrawTextA(memDC, "[ 1-7 OR SPACE ]", -1, &bRect, DT_CENTER);
         } else if (modal_enc_type == 6) {
@@ -2518,6 +2548,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         roster_count++;
                     }
                     if (wParam == '9') { modal_enc_type = 18; }
+                    if (wParam == '0' && res_credits >= 75 && res_morale < 100) { res_credits -= 75; res_morale += 30; if (res_morale > 100) res_morale = 100; }
                     if (wParam == VK_SPACE) { modal_open = 0; }
                 } else if (modal_enc_type == 6) {
                     if (wParam == '1') CycleOfficer(1);
