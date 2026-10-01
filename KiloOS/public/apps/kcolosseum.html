@@ -278,6 +278,7 @@
           <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Twin Gladiators:</strong>&nbsp;Dual-fighter tag team executing coordinated flanking strikes.</li>
           <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Gallic Behemoth:</strong>&nbsp;Colossal barbarian titan with spiked war maul and earth-shattering slams.</li>
           <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Praetorian Champion (Level 6+):</strong>&nbsp;Imperial elite in gilded lorica squamata with purple cape, Roman scutum bulwark, and spatha thrusts. Grants massive Denarii and +35 Favor!</li>
+          <li style="border:none; padding:3px 0; background:transparent; justify-content:flex-start;"><strong>Thracian Executioner (Level 7+):</strong>&nbsp;Legendary Dimachaerus wielding twin curved Sica blades. Features rapid Twin-Blade Flurries, cleaves through shield defenses, and yields huge Denarii (+180D) and +40 Favor!</li>
         </ul>
 
         <div style="display:flex; justify-content:space-between; margin-top:20px; flex-wrap:wrap; gap:10px;">
@@ -538,6 +539,19 @@
       });
     }
 
+    function playWarHorn() {
+      // Imperial Cornu / War Horn using YM2612 2-op FM with brass swell
+      playFM(146.83, 1.0, 340, 0.45, 0.38, 'sawtooth');
+      setTimeout(() => {
+        playFM(220.00, 1.0, 480, 0.65, 0.42, 'sawtooth');
+      }, 150);
+    }
+
+    function playDualSlash() {
+      playClash();
+      setTimeout(() => playClash(), 110);
+    }
+
     function playVictory() {
       playTrumpetFanfare();
       setTimeout(() => playCheer(), 250);
@@ -571,9 +585,13 @@
     function generateGladiator(forArena = false) {
       const name = firstNames[Math.floor(Math.random() * firstNames.length)] + 
                    (Math.random() > 0.4 ? " " + epithets[Math.floor(Math.random() * epithets.length)] : "");
-      const str = Math.floor(Math.random() * 10) + 1;
-      const agi = Math.floor(Math.random() * 10) + 1;
-      const vit = Math.floor(Math.random() * 10) + 1;
+      let bonus = 0;
+      if (!forArena && arenaLevel > 2) {
+        bonus = Math.floor((arenaLevel - 1) * 0.5);
+      }
+      const str = Math.floor(Math.random() * 10) + 1 + (bonus > 0 ? Math.floor(Math.random() * (bonus + 1)) : 0);
+      const agi = Math.floor(Math.random() * 10) + 1 + (bonus > 0 ? Math.floor(Math.random() * (bonus + 1)) : 0);
+      const vit = Math.floor(Math.random() * 10) + 1 + (bonus > 0 ? Math.floor(Math.random() * (bonus + 1)) : 0);
       let weapon = 0, armor = 0, shield = 0;
       if (forArena || Math.random() < 0.3) {
           if (Math.random() < 0.35) weapon = Math.floor(Math.random() * 2) + 1;
@@ -586,14 +604,15 @@
       return g;
     }
 
-    function getEffStr(g) { return g.str + (g.weapon === 1 ? 3 : 0); }
-    function getEffAgi(g) { return g.agi + (g.weapon === 2 ? 3 : 0); }
+    function getEffStr(g) { return g.str + (g.weapon === 1 ? 3 : (g.weapon === 3 ? 3 : 0)); }
+    function getEffAgi(g) { return g.agi + (g.weapon === 2 ? 3 : (g.weapon === 3 ? 4 : 0)); }
     function getEffVit(g) { return g.vit + (g.armor === 1 ? 5 : 0); }
 
     function updateDesc(g) {
       let eqStr = "";
       if (g.weapon === 1) eqStr += " [Glad]";
       else if (g.weapon === 2) eqStr += " [Trid]";
+      else if (g.weapon === 3) eqStr += " [Sica]";
       if (g.armor === 1) eqStr += " [Armr]";
       if (g.shield === 1) eqStr += " [Shld]";
       let maxHp = getEffVit(g) * 10;
@@ -2040,33 +2059,312 @@
       ctx.restore();
     }
 
+    function drawDimachaerusVisual(ctx, x, y, state, time) {
+      ctx.save();
+      
+      if (state.flash > 0) {
+        ctx.shadowColor = '#c0c0ff';
+        ctx.shadowBlur = 16;
+      }
+
+      let bob = Math.sin(time * 5) * 2;
+      let lungeX = state.lunge || 0;
+      let drawX = x - lungeX;
+      let drawY = y + (state.stance === 'dead' ? 24 : bob);
+
+      if (state.stance === 'dead') {
+        // Slumped Thracian defeat pose on sand
+        ctx.fillStyle = 'rgba(25, 10, 10, 0.45)';
+        ctx.beginPath();
+        ctx.ellipse(drawX, drawY + 20, 36, 10, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Bloodstain pooling in sand
+        ctx.fillStyle = 'rgba(90, 15, 15, 0.35)';
+        ctx.beginPath();
+        ctx.ellipse(drawX - 4, drawY + 22, 28, 9, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Slumped warrior body
+        ctx.fillStyle = '#c89065';
+        ctx.fillRect(drawX - 14, drawY + 8, 20, 10);
+        ctx.fillStyle = '#5c3317';
+        ctx.fillRect(drawX - 12, drawY + 12, 18, 5);
+
+        // Fallen Thracian Griffin Helmet
+        ctx.fillStyle = '#b8860b';
+        ctx.beginPath();
+        ctx.arc(drawX - 22, drawY + 14, 9, 0, Math.PI * 2);
+        ctx.fill();
+        // Griffin crest beak
+        ctx.strokeStyle = '#ffd700';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(drawX - 26, drawY + 12);
+        ctx.quadraticCurveTo(drawX - 32, drawY + 8, drawX - 30, drawY + 4);
+        ctx.stroke();
+        // Fallen side feather
+        ctx.strokeStyle = '#cc0000';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(drawX - 22, drawY + 8); ctx.lineTo(drawX - 16, drawY + 2);
+        ctx.stroke();
+
+        // Crossed dropped twin Sica blades in the sand
+        ctx.save();
+        ctx.translate(drawX + 8, drawY + 18);
+        ctx.rotate(-0.4);
+        ctx.fillStyle = '#e8e8f0';
+        ctx.beginPath();
+        ctx.moveTo(-2, 0); ctx.lineTo(2, 0); ctx.lineTo(2, -22); ctx.quadraticCurveTo(0, -28, -6, -30); ctx.lineTo(-2, -22); ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#b8860b';
+        ctx.fillRect(-4, 0, 8, 3);
+        ctx.rotate(0.8);
+        ctx.fillStyle = '#f0f0fa';
+        ctx.beginPath();
+        ctx.moveTo(-2, 0); ctx.lineTo(2, 0); ctx.lineTo(2, -22); ctx.quadraticCurveTo(0, -28, -6, -30); ctx.lineTo(-2, -22); ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#b8860b';
+        ctx.fillRect(-4, 0, 8, 3);
+        ctx.restore();
+
+        ctx.restore();
+        return;
+      }
+
+      // Ground Shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      ctx.beginPath();
+      ctx.ellipse(x - lungeX * 0.6, y + 42, 26, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // High Bronze Greaves (Ocreae) on BOTH legs & Caligae bindings
+      ctx.fillStyle = '#8b4513';
+      ctx.fillRect(drawX - 9, drawY + 18, 6, 22);
+      ctx.fillRect(drawX + 3, drawY + 18, 6, 22);
+      ctx.fillStyle = '#cd7f32';
+      ctx.strokeStyle = '#d4af37';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(drawX - 10, drawY + 20, 7, 18, 2);
+      ctx.roundRect(drawX + 2, drawY + 20, 7, 18, 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Subligaculum (Crimson Loincloth & Leather Belt)
+      ctx.fillStyle = '#8b0000';
+      ctx.beginPath();
+      ctx.moveTo(drawX - 12, drawY + 12);
+      ctx.lineTo(drawX + 12, drawY + 12);
+      ctx.lineTo(drawX + 10, drawY + 22);
+      ctx.lineTo(drawX - 10, drawY + 22);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#5c3317';
+      ctx.fillRect(drawX - 12, drawY + 11, 24, 4);
+
+      // Muscular Tanned Torso with Crossed Leather Harness
+      ctx.fillStyle = '#c89065';
+      ctx.beginPath();
+      ctx.moveTo(drawX - 12, drawY + 2);
+      ctx.lineTo(drawX + 12, drawY + 2);
+      ctx.lineTo(drawX + 10, drawY + 16);
+      ctx.lineTo(drawX - 10, drawY + 16);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = '#4a250a';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(drawX - 10, drawY + 2); ctx.lineTo(drawX + 10, drawY + 14);
+      ctx.moveTo(drawX + 10, drawY + 2); ctx.lineTo(drawX - 10, drawY + 14);
+      ctx.stroke();
+      ctx.fillStyle = '#d4af37';
+      ctx.beginPath();
+      ctx.arc(drawX, drawY + 8, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Armored Bronze Manicae on BOTH arms
+      ctx.fillStyle = '#b8860b';
+      for (let s = 0; s < 4; s++) {
+        ctx.fillRect(drawX - 16, drawY + 4 + s * 3, 5, 2.5);
+        ctx.fillRect(drawX + 11, drawY + 4 + s * 3, 5, 2.5);
+      }
+
+      // Head & Skin
+      ctx.fillStyle = '#c89065';
+      ctx.beginPath();
+      ctx.arc(drawX, drawY - 12, 10, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Thracian Griffin-Crested Helmet
+      ctx.fillStyle = '#b8860b';
+      ctx.strokeStyle = '#8b6508';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(drawX, drawY - 14, 11, Math.PI * 0.85, Math.PI * 2.15);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#111';
+      ctx.fillRect(drawX - 6, drawY - 11, 12, 3);
+
+      // Griffin Beak / Curved Forward Crest
+      ctx.strokeStyle = '#ffd700';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(drawX - 6, drawY - 20);
+      ctx.quadraticCurveTo(drawX - 14, drawY - 28, drawX - 10, drawY - 34);
+      ctx.stroke();
+
+      // Twin Side Feathers (Red & Gold plumes)
+      ctx.strokeStyle = '#cc0000';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(drawX + 7, drawY - 16);
+      ctx.quadraticCurveTo(drawX + 16, drawY - 24, drawX + 14, drawY - 32);
+      ctx.stroke();
+      ctx.strokeStyle = '#ffd700';
+      ctx.beginPath();
+      ctx.moveTo(drawX - 7, drawY - 16);
+      ctx.quadraticCurveTo(drawX - 16, drawY - 24, drawX - 14, drawY - 32);
+      ctx.stroke();
+
+      // Defensive Cross-Parry Stance Aura
+      if (state.stance === 'defend') {
+        ctx.save();
+        ctx.strokeStyle = '#d4af37';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#ffd700';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.moveTo(drawX - 16, drawY - 8); ctx.lineTo(drawX + 16, drawY + 16);
+        ctx.moveTo(drawX + 16, drawY - 8); ctx.lineTo(drawX - 16, drawY + 16);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Attack Crossing Slash Trails
+      if (state.stance === 'attack') {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 230, 140, 0.85)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(drawX - 32, drawY - 18); ctx.lineTo(drawX - 4, drawY + 22);
+        ctx.moveTo(drawX - 4, drawY - 18); ctx.lineTo(drawX - 32, drawY + 22);
+        ctx.stroke();
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(drawX - 18, drawY + 2, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Twin Curved Sica Daggers in Hands
+      // 1. Right Hand (Front) - Forward grip curved Sica
+      let rightBladeAngle = (state.stance === 'attack') ? -1.5 : -0.3;
+      let rightBladeX = drawX - 12;
+      let rightBladeY = drawY + 6;
+      if (state.stance === 'attack') {
+        rightBladeX = drawX - 22;
+        rightBladeY = drawY + 4;
+      }
+      ctx.save();
+      ctx.translate(rightBladeX, rightBladeY);
+      ctx.rotate(rightBladeAngle);
+      ctx.fillStyle = '#f0f0fa';
+      ctx.strokeStyle = '#888899';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-2, 0); ctx.lineTo(2, 0); ctx.lineTo(2, -20);
+      ctx.quadraticCurveTo(0, -28, -7, -32);
+      ctx.lineTo(-2, -20);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#b8860b';
+      ctx.fillRect(-4, 0, 8, 3);
+      ctx.beginPath(); ctx.arc(0, 5, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+
+      // 2. Left Hand (Back) - Reverse grip curved Sica
+      let leftBladeAngle = (state.stance === 'attack') ? -0.8 : 0.6;
+      let leftBladeX = drawX + 12;
+      let leftBladeY = drawY + 6;
+      if (state.stance === 'defend') {
+        leftBladeAngle = -0.4;
+        leftBladeX = drawX + 4;
+      }
+      ctx.save();
+      ctx.translate(leftBladeX, leftBladeY);
+      ctx.rotate(leftBladeAngle);
+      ctx.fillStyle = '#e8e8f2';
+      ctx.strokeStyle = '#888899';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-2, 0); ctx.lineTo(2, 0); ctx.lineTo(2, 20);
+      ctx.quadraticCurveTo(0, 28, -7, 32);
+      ctx.lineTo(-2, 20);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#b8860b';
+      ctx.fillRect(-4, -1, 8, 3);
+      ctx.beginPath(); ctx.arc(0, -4, 2.5, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+
+      ctx.restore();
+    }
+
     function drawArenaEnvironment(ctx, width, height, time) {
-      // Sky / Colosseum Upper Tier Gradient
+      // Sky / Upper Wall Gradient based on Arena League
       const skyGrad = ctx.createLinearGradient(0, 0, 0, height * 0.55);
-      skyGrad.addColorStop(0, '#1a0c02');
-      skyGrad.addColorStop(0.5, '#3a1f0a');
-      skyGrad.addColorStop(1, '#5c3314');
+      if (arenaLevel <= 2) { // Local Pits: Earthy clay and wood
+        skyGrad.addColorStop(0, '#221004');
+        skyGrad.addColorStop(0.5, '#3d1e0a');
+        skyGrad.addColorStop(1, '#572d12');
+      } else if (arenaLevel <= 5) { // Provincial Arena: Travertine stone
+        skyGrad.addColorStop(0, '#1a0c02');
+        skyGrad.addColorStop(0.5, '#3a1f0a');
+        skyGrad.addColorStop(1, '#5c3314');
+      } else if (arenaLevel <= 8) { // Capital Amphitheatre: Crimson stone & amber
+        skyGrad.addColorStop(0, '#260a12');
+        skyGrad.addColorStop(0.5, '#421622');
+        skyGrad.addColorStop(1, '#662835');
+      } else { // The Grand Colosseum / Champion of Rome: Regal Imperial Night & Gilded Stone
+        skyGrad.addColorStop(0, '#120516');
+        skyGrad.addColorStop(0.5, '#2a0c28');
+        skyGrad.addColorStop(1, '#48183c');
+      }
       ctx.fillStyle = skyGrad;
       ctx.fillRect(0, 0, width, height * 0.55);
 
       // Colosseum Stone Arches & Columns in Background
-      ctx.fillStyle = '#7a4e28';
+      const pillarColor = (arenaLevel <= 2) ? '#5c3a1e' : ((arenaLevel <= 5) ? '#7a4e28' : ((arenaLevel <= 8) ? '#8a5a32' : '#9c6f3d'));
+      const archInner = (arenaLevel >= 9) ? '#180616' : '#220e03';
+      ctx.fillStyle = pillarColor;
       for (let x = 20; x < width; x += 65) {
         ctx.beginPath();
         ctx.roundRect(x, 18, 48, 70, [20, 20, 0, 0]);
         ctx.fill();
         // Inner dark archway opening
-        ctx.fillStyle = '#220e03';
+        ctx.fillStyle = archInner;
         ctx.beginPath();
         ctx.roundRect(x + 6, 24, 36, 64, [16, 16, 0, 0]);
         ctx.fill();
-        ctx.fillStyle = '#7a4e28';
+        ctx.fillStyle = pillarColor;
+
+        // Gilded Column Capitals for Grand Colosseum (Levels 9-10)
+        if (arenaLevel >= 9) {
+          ctx.fillStyle = '#ffd700';
+          ctx.fillRect(x, 16, 48, 4);
+          ctx.fillStyle = pillarColor;
+        }
       }
 
       // Center Imperial Aquila Roman Eagle Motif
       const centerArchX = width * 0.5;
       ctx.save();
-      ctx.fillStyle = '#d4af37';
+      ctx.fillStyle = (arenaLevel >= 9) ? '#ffd700' : '#d4af37';
       ctx.strokeStyle = '#8b6508';
       ctx.lineWidth = 1;
       ctx.beginPath();
@@ -2091,27 +2389,27 @@
       // Atmospheric God Rays angling through stone arches
       ctx.save();
       const beamGrad = ctx.createLinearGradient(0, 0, width * 0.7, height);
-      beamGrad.addColorStop(0, 'rgba(255, 235, 170, 0.10)');
-      beamGrad.addColorStop(0.5, 'rgba(255, 220, 140, 0.04)');
-      beamGrad.addColorStop(1, 'rgba(255, 210, 120, 0)');
+      if (arenaLevel >= 9) {
+        beamGrad.addColorStop(0, 'rgba(255, 215, 120, 0.14)');
+        beamGrad.addColorStop(0.5, 'rgba(255, 180, 80, 0.05)');
+        beamGrad.addColorStop(1, 'rgba(255, 150, 50, 0)');
+      } else {
+        beamGrad.addColorStop(0, 'rgba(255, 235, 170, 0.10)');
+        beamGrad.addColorStop(0.5, 'rgba(255, 220, 140, 0.04)');
+        beamGrad.addColorStop(1, 'rgba(255, 210, 120, 0)');
+      }
       ctx.fillStyle = beamGrad;
       ctx.beginPath();
-      ctx.moveTo(40, 0);
-      ctx.lineTo(160, 0);
-      ctx.lineTo(width * 0.55, height);
-      ctx.lineTo(width * 0.28, height);
+      ctx.moveTo(40, 0); ctx.lineTo(160, 0); ctx.lineTo(width * 0.55, height); ctx.lineTo(width * 0.28, height);
       ctx.closePath();
       ctx.fill();
       ctx.beginPath();
-      ctx.moveTo(190, 0);
-      ctx.lineTo(320, 0);
-      ctx.lineTo(width * 0.85, height);
-      ctx.lineTo(width * 0.62, height);
+      ctx.moveTo(190, 0); ctx.lineTo(320, 0); ctx.lineTo(width * 0.85, height); ctx.lineTo(width * 0.62, height);
       ctx.closePath();
       ctx.fill();
 
-      // Atmospheric Dust Motes drifting peacefully in Sunbeams
-      ctx.fillStyle = 'rgba(255, 230, 160, 0.45)';
+      // Atmospheric Dust Motes drifting in Sunbeams
+      ctx.fillStyle = (arenaLevel >= 9) ? 'rgba(255, 220, 120, 0.55)' : 'rgba(255, 230, 160, 0.45)';
       for (let m = 0; m < 16; m++) {
         let mx = (40 + m * 42 + Math.sin(time * 0.6 + m * 1.7) * 16 + time * 8) % (width * 0.88);
         let my = (15 + (m * 21 + time * 14) % (height * 0.82));
@@ -2143,8 +2441,10 @@
       }
 
       // Imperial Velarium Banners with Gold Laurels
+      const bannerBg = (arenaLevel >= 9) ? '#4a0e2e' : ((arenaLevel <= 2) ? '#5c2211' : '#8b0000');
+      const bannerText = (arenaLevel >= 9) ? 'ROMA' : ((arenaLevel <= 2) ? 'LEGIO' : 'SPQR');
       for (let bx of [60, width - 85]) {
-        ctx.fillStyle = '#8b0000';
+        ctx.fillStyle = bannerBg;
         ctx.strokeStyle = '#d4af37';
         ctx.lineWidth = 1.5;
         ctx.beginPath();
@@ -2156,13 +2456,13 @@
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
-        // Gold SPQR / Laurel
+        // Gold SPQR / ROMA / Laurel
         ctx.fillStyle = '#ffd700';
         ctx.font = 'bold 8px serif';
-        ctx.fillText('SPQR', bx + 3, 38);
+        ctx.fillText(bannerText, bx + (arenaLevel >= 9 ? 3 : (arenaLevel <= 2 ? 1 : 3)), 38);
       }
 
-      // Flickering Torches
+      // Flickering Torches & Braziers
       for (let tx of [130, width - 145]) {
         ctx.fillStyle = '#4a2c0f';
         ctx.fillRect(tx, 55, 4, 25);
@@ -2211,7 +2511,7 @@
       ctx.ellipse(width * 0.72, height * 0.78, 28, 8, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      // Ornate Golden L-Bracket Corner Filigree
+      // Ornate Golden L-Bracket Corner Filigree (Strictly Static & Period-Accurate)
       ctx.strokeStyle = '#d4af37';
       ctx.lineWidth = 3;
       const margin = 8;
@@ -2291,6 +2591,8 @@
           drawBehemothVisual(arenaCtx, enemyX, enemyY, enemyState, time);
         } else if (enemyFighter.isPraetorian) {
           drawPraetorianVisual(arenaCtx, enemyX, enemyY, enemyState, time);
+        } else if (enemyFighter.isDimachaerus) {
+          drawDimachaerusVisual(arenaCtx, enemyX, enemyY, enemyState, time);
         } else {
           drawGladiatorVisual(arenaCtx, enemyX, enemyY, enemyFighter, true, enemyState, time);
         }
@@ -2414,7 +2716,7 @@
       
       let isSpecial = (arenaLevel > 2 && Math.random() < 0.35);
       if (isSpecial) {
-        let maxEvents = (arenaLevel >= 6) ? 5 : ((arenaLevel >= 4) ? 4 : 3);
+        let maxEvents = (arenaLevel >= 7) ? 6 : ((arenaLevel >= 6) ? 5 : ((arenaLevel >= 4) ? 4 : 3));
         let eventType = Math.floor(Math.random() * maxEvents);
         if (eventType === 0) {
           enemyFighter.name = "Ferocious Lion";
@@ -2440,7 +2742,7 @@
           enemyFighter.agi = Math.max(2, enemyFighter.agi - 1);
           enemyFighter.armor = 1;
           enemyFighter.isBehemoth = true;
-        } else {
+        } else if (eventType === 4) {
           enemyFighter.name = "Praetorian Champion";
           enemyFighter.vit += Math.floor(arenaLevel * 3.0);
           enemyFighter.str += Math.floor(arenaLevel * 2.0);
@@ -2449,6 +2751,15 @@
           enemyFighter.shield = 1;
           enemyFighter.weapon = 1;
           enemyFighter.isPraetorian = true;
+        } else {
+          enemyFighter.name = "Thracian Executioner";
+          enemyFighter.vit += Math.floor(arenaLevel * 2.8);
+          enemyFighter.str += Math.floor(arenaLevel * 2.4);
+          enemyFighter.agi += Math.floor(arenaLevel * 3.0);
+          enemyFighter.armor = 1;
+          enemyFighter.shield = 0;
+          enemyFighter.weapon = 3;
+          enemyFighter.isDimachaerus = true;
         }
       } else {
         enemyFighter.str += Math.floor(arenaLevel * 1.5);
@@ -2481,8 +2792,13 @@
       const log = document.getElementById('combatLog');
       log.innerHTML = `<em>Match starts! <strong>${currentFighter.name}</strong> vs <strong>${enemyFighter.name}</strong></em><br>`;
       
-      playTrumpetFanfare();
-      setTimeout(playCheer, 200);
+      if (enemyFighter.isPraetorian || enemyFighter.isDimachaerus) {
+        playWarHorn();
+        setTimeout(playCheer, 250);
+      } else {
+        playTrumpetFanfare();
+        setTimeout(playCheer, 200);
+      }
       setCombatButtonsDisabled(false);
       updateCombatUI();
 
@@ -2655,12 +2971,16 @@
         enemyState.stance = 'dead';
         updateCombatUI();
         let reward = 100 + (arenaLevel * 50);
-        if (enemyFighter.isBeast || enemyFighter.isTwins || enemyFighter.name === "Armed Chariot" || enemyFighter.isBehemoth || enemyFighter.isPraetorian) {
+        if (enemyFighter.isBeast || enemyFighter.isTwins || enemyFighter.name === "Armed Chariot" || enemyFighter.isBehemoth || enemyFighter.isPraetorian || enemyFighter.isDimachaerus) {
             reward += 100 + (arenaLevel * 25);
         }
         if (enemyFighter.isPraetorian) {
           reward += 150;
           crowdFavor = Math.min(100, crowdFavor + 35);
+          playTrumpetFanfare();
+        } else if (enemyFighter.isDimachaerus) {
+          reward += 180;
+          crowdFavor = Math.min(100, crowdFavor + 40);
           playTrumpetFanfare();
         }
         logCombat(`<strong>${enemyFighter.name} is defeated! You win ${reward} Denarii!</strong>`);
@@ -2700,7 +3020,7 @@
       setTimeout(() => {
         if (combatOver) return;
 
-        enemyDefending = Math.random() < (enemyFighter.isPraetorian ? 0.40 : 0.25);
+        enemyDefending = Math.random() < (enemyFighter.isPraetorian ? 0.40 : (enemyFighter.isDimachaerus ? 0.20 : 0.25));
         if (enemyDefending) {
           logCombat(`${enemyFighter.name} takes a defensive stance.`);
           enemyState.stance = 'defend';
@@ -2719,6 +3039,10 @@
             addScreenShake(8);
             spawnParticles(eX, eY, 16, 'sparks', '#ffd700');
             logCombat(`<em>The Praetorian Champion executes a disciplined imperial thrust!</em>`);
+          } else if (enemyFighter.isDimachaerus) {
+            addScreenShake(8);
+            spawnParticles(eX, eY, 16, 'sparks', '#c0c0ff');
+            logCombat(`<em>The Thracian Executioner lunges with whistling twin Sica blades!</em>`);
           }
 
           let hitChance = 75 + (getEffAgi(enemyFighter) - getEffAgi(currentFighter)) * 5;
@@ -2726,7 +3050,13 @@
           
           if (Math.random() * 100 < hitChance) {
             let dmg = Math.max(1, getEffStr(enemyFighter) + Math.floor(Math.random() * 4));
-            if (playerDefending) dmg = Math.max(1, dmg - (currentFighter.shield === 1 ? 5 : 3));
+            if (playerDefending) {
+              if (enemyFighter.isDimachaerus) {
+                dmg = Math.max(1, dmg - (currentFighter.shield === 1 ? 3 : 1));
+              } else {
+                dmg = Math.max(1, dmg - (currentFighter.shield === 1 ? 5 : 3));
+              }
+            }
             if (enemyStaggered) {
               dmg = Math.max(1, Math.floor(dmg * 0.5));
               logCombat(`<em>${enemyFighter.name} is entangled and strikes weakly!</em>`);
@@ -2795,13 +3125,46 @@
               }
               updateCombatUI();
             }, 350);
+          } else if (enemyFighter.isDimachaerus && currentFighter.hp > 0 && Math.random() < 0.45) {
+            setTimeout(() => {
+              if (combatOver) return;
+              enemyState.lunge = 45;
+              let flurryHit = Math.random() * 100 < hitChance;
+              if (flurryHit) {
+                let fDmg = Math.max(1, Math.floor(getEffStr(enemyFighter) * 0.65) + Math.floor(Math.random() * 3));
+                if (playerDefending) fDmg = Math.max(1, fDmg - (currentFighter.shield === 1 ? 2 : 1));
+                currentFighter.hp -= fDmg;
+                currentFighter.damageTaken += fDmg;
+                logCombat(`<strong>${enemyFighter.name}</strong> unleashes a <strong>Twin-Blade Flurry</strong> for <span style="color:#8b0000;">${fDmg} damage</span>!`);
+                playDualSlash();
+                playerState.flash = 12;
+                addScreenShake(7);
+                spawnParticles(pX, pY, 16, 'sparks', '#ffd700');
+                spawnParticles(pX, pY, 10, 'blood');
+                addFloatingText(`FLURRY -${fDmg}`, pX, pY - 30, '#ff1111');
+              } else {
+                logCombat(`<strong>${enemyFighter.name} (Flurry)</strong> misses!`);
+                playMiss();
+                addFloatingText("MISS!", pX, pY - 30, '#aaaaaa');
+              }
+              if (currentFighter.hp <= 0) {
+                checkPlayerDeath();
+              } else if (!combatOver) {
+                setCombatButtonsDisabled(false);
+              }
+              updateCombatUI();
+            }, 320);
           }
         }
         
         if (currentFighter.hp <= 0) {
           checkPlayerDeath();
-        } else if (!enemyFighter.isTwins && !combatOver) {
+        } else if (!enemyFighter.isTwins && !enemyFighter.isDimachaerus && !combatOver) {
           setCombatButtonsDisabled(false);
+        } else if (enemyFighter.isDimachaerus && !combatOver) {
+          setTimeout(() => {
+            if (!combatOver && currentFighter.hp > 0) setCombatButtonsDisabled(false);
+          }, 360);
         }
         updateCombatUI();
       }, 350);
@@ -2971,6 +3334,7 @@
             isTwins: !!enemyFighter.isTwins,
             isBehemoth: !!enemyFighter.isBehemoth,
             isPraetorian: !!enemyFighter.isPraetorian,
+            isDimachaerus: !!enemyFighter.isDimachaerus,
             skinTone: enemyFighter.skinTone
           },
           crowdFavor,
