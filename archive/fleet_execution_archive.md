@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-01T00:30:00Z — Director Console: KDirector Fork Dispatch Bridge & Transparency Architecture**
+  - Web Sandbox Transparency: Replaced misleading dispatch claims with honest, explicit client-side sandbox explanation.
+  - 4-Step Contributor Protocol: Integrated in-page workflow connecting staged directives directly to `/apps/contribute.html`.
+  - Dispatch Bridge Modal: Added interactive modal with 1-click Markdown copy, pre-filled GitHub Issue link, and fork guide.
+  - Target Scope Expansion: Prepend special scopes (`[ALL_APPS]`, `[VIRTUAL_WEB]`, `[ARG]`, `[MULTIPLAYER]`) to app selector.
+  - Docs & Protocol Alignment: Updated `docs/DIRECTOR_PROTOCOL.md` and Rule 7 to fully document the fork dispatch route.
+  - Verification: `npm run build` clean in 243ms; security lint 100% PASS; test_arg_flow 100% PASS; headless test PASS; 76 KB (<999KB).
+
 - **2026-10-01T00:40:00Z — kilo-creator: kweb://geocities (CyberSpire Retro Shrine & MOD Vault Deep Expansion)**
   - Demoscene Visual FX Lab: Added real-time Amiga Copper sine bars, 256-color cycling plasma, Doom fire simulation, 3D warp starfield & phosphor rain.
   - 8-Bit Amiga PCM Sample Sculptor: Interactive canvas drawing, 8 procedural presets, DSP bitcrush/normalize, loop boundaries & RIFF/WAV export.

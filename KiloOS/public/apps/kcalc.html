@@ -781,15 +781,16 @@
   /* Toast Notification */
   .toast-container {
     position: fixed;
-    top: 58px;
-    right: 18px;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
     gap: 8px;
     z-index: 3000;
     pointer-events: none;
-    max-width: min(380px, calc(100vw - 36px));
+    max-width: min(420px, calc(100vw - 36px));
   }
 
   .toast {
@@ -806,7 +807,7 @@
     align-items: center;
     gap: 8px;
     opacity: 0;
-    transform: translateY(-8px) scale(0.96);
+    transform: translateY(8px) scale(0.96);
     transition: opacity 0.2s ease, transform 0.2s ease;
     pointer-events: auto;
     cursor: pointer;
@@ -828,7 +829,7 @@
     .header { flex-direction: column; align-items: stretch; }
     .mode-tabs { overflow-x: auto; }
     .mem-reg-grid { grid-template-columns: 1fr; }
-    .toast-container { top: 12px; right: 12px; max-width: calc(100vw - 24px); }
+    .toast-container { bottom: 16px; left: 50%; transform: translateX(-50%); max-width: calc(100vw - 24px); }
   }
 </style>
 </head>
@@ -1473,6 +1474,8 @@
     calcFV(true);
     calcMargin(true);
     calcCAGR(true);
+    calc1VarStats(true);
+    calc2VarRegression(true);
 
     const hasSeenTutorial = localStorage.getItem('kcalc_tutorialSeen') === 'true';
     if (!hasSeenTutorial) {
@@ -1757,6 +1760,7 @@
   }
 
   // Session & Workspace Persistence
+  // Session & Workspace Persistence
   function autoSaveSession() {
     try {
       const state = {
@@ -1765,7 +1769,26 @@
         memoryStore,
         multiMemory: { ...multiMemory },
         isDeg,
-        activeViewName
+        activeViewName,
+        finInputs: {
+          pmtPrincipal: document.getElementById('pmt-principal')?.value || '',
+          pmtRate: document.getElementById('pmt-rate')?.value || '',
+          pmtYears: document.getElementById('pmt-years')?.value || '',
+          fvPrincipal: document.getElementById('fv-principal')?.value || '',
+          fvRate: document.getElementById('fv-rate')?.value || '',
+          fvYears: document.getElementById('fv-years')?.value || '',
+          fvMonthly: document.getElementById('fv-monthly')?.value || '',
+          marginCost: document.getElementById('margin-cost')?.value || '',
+          marginSell: document.getElementById('margin-sell')?.value || '',
+          cagrStart: document.getElementById('cagr-start')?.value || '',
+          cagrEnd: document.getElementById('cagr-end')?.value || '',
+          cagrYears: document.getElementById('cagr-years')?.value || ''
+        },
+        statsInputs: {
+          stat1Var: document.getElementById('stat-1var-input')?.value || '',
+          stat2Var: document.getElementById('stat-2var-input')?.value || '',
+          regPredX: document.getElementById('reg-pred-x')?.value || ''
+        }
       };
       localStorage.setItem('kcalc_session', JSON.stringify(state));
     } catch {}
@@ -1793,6 +1816,25 @@
           if (btn) { btn.textContent = isDeg ? 'DEG' : 'RAD'; btn.classList.toggle('active', isDeg); }
           if (chip) { chip.textContent = isDeg ? 'DEG' : 'RAD'; chip.classList.toggle('highlight', isDeg); }
         }
+        if (s.finInputs && typeof s.finInputs === 'object') {
+          if (document.getElementById('pmt-principal') && s.finInputs.pmtPrincipal !== undefined) document.getElementById('pmt-principal').value = s.finInputs.pmtPrincipal;
+          if (document.getElementById('pmt-rate') && s.finInputs.pmtRate !== undefined) document.getElementById('pmt-rate').value = s.finInputs.pmtRate;
+          if (document.getElementById('pmt-years') && s.finInputs.pmtYears !== undefined) document.getElementById('pmt-years').value = s.finInputs.pmtYears;
+          if (document.getElementById('fv-principal') && s.finInputs.fvPrincipal !== undefined) document.getElementById('fv-principal').value = s.finInputs.fvPrincipal;
+          if (document.getElementById('fv-rate') && s.finInputs.fvRate !== undefined) document.getElementById('fv-rate').value = s.finInputs.fvRate;
+          if (document.getElementById('fv-years') && s.finInputs.fvYears !== undefined) document.getElementById('fv-years').value = s.finInputs.fvYears;
+          if (document.getElementById('fv-monthly') && s.finInputs.fvMonthly !== undefined) document.getElementById('fv-monthly').value = s.finInputs.fvMonthly;
+          if (document.getElementById('margin-cost') && s.finInputs.marginCost !== undefined) document.getElementById('margin-cost').value = s.finInputs.marginCost;
+          if (document.getElementById('margin-sell') && s.finInputs.marginSell !== undefined) document.getElementById('margin-sell').value = s.finInputs.marginSell;
+          if (document.getElementById('cagr-start') && s.finInputs.cagrStart !== undefined) document.getElementById('cagr-start').value = s.finInputs.cagrStart;
+          if (document.getElementById('cagr-end') && s.finInputs.cagrEnd !== undefined) document.getElementById('cagr-end').value = s.finInputs.cagrEnd;
+          if (document.getElementById('cagr-years') && s.finInputs.cagrYears !== undefined) document.getElementById('cagr-years').value = s.finInputs.cagrYears;
+        }
+        if (s.statsInputs && typeof s.statsInputs === 'object') {
+          if (document.getElementById('stat-1var-input') && s.statsInputs.stat1Var !== undefined) document.getElementById('stat-1var-input').value = s.statsInputs.stat1Var;
+          if (document.getElementById('stat-2var-input') && s.statsInputs.stat2Var !== undefined) document.getElementById('stat-2var-input').value = s.statsInputs.stat2Var;
+          if (document.getElementById('reg-pred-x') && s.statsInputs.regPredX !== undefined) document.getElementById('reg-pred-x').value = s.statsInputs.regPredX;
+        }
         if (s.activeViewName && s.activeViewName !== 'scientific') {
           switchView(s.activeViewName);
         }
@@ -1811,7 +1853,26 @@
       isDeg: isDeg,
       activeViewName: activeViewName,
       historyTape: [...historyTape],
-      subDisp: document.getElementById('subDisp')?.textContent || ''
+      subDisp: document.getElementById('subDisp')?.textContent || '',
+      finInputs: {
+        pmtPrincipal: document.getElementById('pmt-principal')?.value || '',
+        pmtRate: document.getElementById('pmt-rate')?.value || '',
+        pmtYears: document.getElementById('pmt-years')?.value || '',
+        fvPrincipal: document.getElementById('fv-principal')?.value || '',
+        fvRate: document.getElementById('fv-rate')?.value || '',
+        fvYears: document.getElementById('fv-years')?.value || '',
+        fvMonthly: document.getElementById('fv-monthly')?.value || '',
+        marginCost: document.getElementById('margin-cost')?.value || '',
+        marginSell: document.getElementById('margin-sell')?.value || '',
+        cagrStart: document.getElementById('cagr-start')?.value || '',
+        cagrEnd: document.getElementById('cagr-end')?.value || '',
+        cagrYears: document.getElementById('cagr-years')?.value || ''
+      },
+      statsInputs: {
+        stat1Var: document.getElementById('stat-1var-input')?.value || '',
+        stat2Var: document.getElementById('stat-2var-input')?.value || '',
+        regPredX: document.getElementById('reg-pred-x')?.value || ''
+      }
     };
   }
 
@@ -1841,6 +1902,31 @@
     }
     if (snap.subDisp && document.getElementById('subDisp')) {
       document.getElementById('subDisp').textContent = snap.subDisp;
+    }
+    if (snap.finInputs && typeof snap.finInputs === 'object') {
+      if (document.getElementById('pmt-principal') && snap.finInputs.pmtPrincipal !== undefined) document.getElementById('pmt-principal').value = snap.finInputs.pmtPrincipal;
+      if (document.getElementById('pmt-rate') && snap.finInputs.pmtRate !== undefined) document.getElementById('pmt-rate').value = snap.finInputs.pmtRate;
+      if (document.getElementById('pmt-years') && snap.finInputs.pmtYears !== undefined) document.getElementById('pmt-years').value = snap.finInputs.pmtYears;
+      if (document.getElementById('fv-principal') && snap.finInputs.fvPrincipal !== undefined) document.getElementById('fv-principal').value = snap.finInputs.fvPrincipal;
+      if (document.getElementById('fv-rate') && snap.finInputs.fvRate !== undefined) document.getElementById('fv-rate').value = snap.finInputs.fvRate;
+      if (document.getElementById('fv-years') && snap.finInputs.fvYears !== undefined) document.getElementById('fv-years').value = snap.finInputs.fvYears;
+      if (document.getElementById('fv-monthly') && snap.finInputs.fvMonthly !== undefined) document.getElementById('fv-monthly').value = snap.finInputs.fvMonthly;
+      if (document.getElementById('margin-cost') && snap.finInputs.marginCost !== undefined) document.getElementById('margin-cost').value = snap.finInputs.marginCost;
+      if (document.getElementById('margin-sell') && snap.finInputs.marginSell !== undefined) document.getElementById('margin-sell').value = snap.finInputs.marginSell;
+      if (document.getElementById('cagr-start') && snap.finInputs.cagrStart !== undefined) document.getElementById('cagr-start').value = snap.finInputs.cagrStart;
+      if (document.getElementById('cagr-end') && snap.finInputs.cagrEnd !== undefined) document.getElementById('cagr-end').value = snap.finInputs.cagrEnd;
+      if (document.getElementById('cagr-years') && snap.finInputs.cagrYears !== undefined) document.getElementById('cagr-years').value = snap.finInputs.cagrYears;
+      calcPMT(true);
+      calcFV(true);
+      calcMargin(true);
+      calcCAGR(true);
+    }
+    if (snap.statsInputs && typeof snap.statsInputs === 'object') {
+      if (document.getElementById('stat-1var-input') && snap.statsInputs.stat1Var !== undefined) document.getElementById('stat-1var-input').value = snap.statsInputs.stat1Var;
+      if (document.getElementById('stat-2var-input') && snap.statsInputs.stat2Var !== undefined) document.getElementById('stat-2var-input').value = snap.statsInputs.stat2Var;
+      if (document.getElementById('reg-pred-x') && snap.statsInputs.regPredX !== undefined) document.getElementById('reg-pred-x').value = snap.statsInputs.regPredX;
+      calc1VarStats(true);
+      calc2VarRegression(true);
     }
     if (snap.activeViewName) {
       switchView(snap.activeViewName);
@@ -1872,6 +1958,9 @@
       }
       const snap = JSON.parse(raw);
       if (restoreFullStateSnapshot(snap)) {
+        if (tutorialActive) {
+          closeTutorialModal();
+        }
         showToast('★ Restored quicksaved workspace [F9]', 'success', 2500);
         return true;
       }
@@ -2261,11 +2350,11 @@
       .map(s => parseFloat(s));
   }
 
-  function calc1VarStats() {
+  function calc1VarStats(silent = false) {
     const raw = document.getElementById('stat-1var-input').value;
     const nums = parseNumbersList(raw);
     if (nums.length === 0) {
-      showToast('Please enter valid numeric data values.', 'error');
+      if (!silent) showToast('Please enter valid numeric data values.', 'error');
       return;
     }
 
@@ -2330,11 +2419,13 @@
     document.getElementById('stat-svar').textContent = sampleVar.toFixed(4);
     document.getElementById('stat-stderr').textContent = stdErr.toFixed(4);
 
-    addHistoryEntry(`1-Var Stats (N=${n})`, `Mean=${mean.toFixed(4)}, s=${sampleStdDev.toFixed(4)}`);
-    showToast(`Descriptive Stats Computed (N=${n}, Mean=${mean.toFixed(2)})`, 'success');
+    if (!silent) {
+      addHistoryEntry(`1-Var Stats (N=${n})`, `Mean=${mean.toFixed(4)}, s=${sampleStdDev.toFixed(4)}`);
+      showToast(`Descriptive Stats Computed (N=${n}, Mean=${mean.toFixed(2)})`, 'success');
+    }
   }
 
-  function calc2VarRegression() {
+  function calc2VarRegression(silent = false) {
     const raw = document.getElementById('stat-2var-input').value;
     const lines = raw.split(/[\n;\r]+/);
     const points = [];
@@ -2351,7 +2442,7 @@
     }
 
     if (points.length < 2) {
-      showToast('Please enter at least 2 valid (x, y) data pairs.', 'error');
+      if (!silent) showToast('Please enter at least 2 valid (x, y) data pairs.', 'error');
       return;
     }
 
@@ -2368,7 +2459,7 @@
 
     const denomM = (n * sumX2 - sumX * sumX);
     if (denomM === 0) {
-      showToast('Cannot compute vertical line slope (identical X values).', 'warning');
+      if (!silent) showToast('Cannot compute vertical line slope (identical X values).', 'warning');
       return;
     }
 
@@ -2389,8 +2480,10 @@
     document.getElementById('reg-r2').textContent = r2.toFixed(4);
 
     predictRegressionY();
-    addHistoryEntry(`LinReg (N=${n})`, `y=${m.toFixed(4)}x${sign}${Math.abs(b).toFixed(4)}, r=${r.toFixed(4)}`);
-    showToast(`Linear Model Computed: y = ${m.toFixed(2)}x ${sign} ${Math.abs(b).toFixed(2)}`, 'success');
+    if (!silent) {
+      addHistoryEntry(`LinReg (N=${n})`, `y=${m.toFixed(4)}x${sign}${Math.abs(b).toFixed(4)}, r=${r.toFixed(4)}`);
+      showToast(`Linear Model Computed: y = ${m.toFixed(2)}x ${sign} ${Math.abs(b).toFixed(2)}`, 'success');
+    }
   }
 
   function predictRegressionY() {

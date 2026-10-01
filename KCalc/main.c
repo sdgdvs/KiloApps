@@ -220,8 +220,9 @@ void ShowHelpDialog(HWND hwnd) {
         "  Enter or =    : Calculate result / evaluate form\n"
         "  Backspace     : Delete last character\n"
         "  Esc           : Clear all / Reset\n"
+        "  F5            : Quicksave complete workspace state\n"
+        "  F9            : Quickload saved workspace state\n"
         "  D             : Toggle DEG / RAD mode\n"
-        "  F9            : Toggle +/- sign\n"
         "  Ctrl+C        : Copy display to clipboard\n"
         "  Ctrl+V        : Paste number from clipboard\n"
         "  F1 or H       : Open this Help Guide\n"
@@ -243,11 +244,11 @@ void FormatDisplay(double val) {
 }
 
 void UpdateStatusText() {
-    char statusBuf[80];
+    char statusBuf[128];
     if (memoryStore != 0.0) {
-        m_sprintf(statusBuf, "[%s] [M: %.6g] [Ctrl+C: Copy] | F1: Help", isDeg ? "DEG" : "RAD", memoryStore);
+        m_sprintf(statusBuf, "[%s] [M: %.6g] [F5:Save F9:Load] [F1:Help]", isDeg ? "DEG" : "RAD", memoryStore);
     } else {
-        m_sprintf(statusBuf, "[%s] [Ctrl+C: Copy] | Press 'H' / F1 for Help", isDeg ? "DEG" : "RAD");
+        m_sprintf(statusBuf, "[%s] [F5:Save F9:Load] [Ctrl+C:Copy] [F1:Help]", isDeg ? "DEG" : "RAD");
     }
     SetWindowTextA(hStatusText, statusBuf);
 }
@@ -467,6 +468,159 @@ void ExportHistoryToFile() {
         }
         CloseHandle(hFile);
         MessageBoxA(NULL, "History exported to kcalc_history.txt!", "KCalc", MB_OK | MB_ICONINFORMATION);
+    }
+}
+
+#pragma pack(push, 1)
+typedef struct {
+    DWORD magic; // 0x4B43414C ('KCAL')
+    DWORD version; // 1
+    double operand1;
+    int operator;
+    double memoryStore;
+    int isNewOperand;
+    int currentMode;
+    int isDeg;
+    double statLastMean;
+    double statLastSlope;
+    char displayBuffer[64];
+    char subDisplayBuffer[64];
+    char finPmtPrincipal[32];
+    char finPmtRate[32];
+    char finPmtYears[32];
+    char finMarginCost[32];
+    char finMarginSell[32];
+    char stat1VarData[128];
+    char stat2VarData[128];
+    int historyCount;
+    HistoryEntry historyTape[50];
+} KCalcSaveState;
+#pragma pack(pop)
+
+void QuicksaveState(HWND hwnd) {
+    KCalcSaveState s;
+    memset(&s, 0, sizeof(s));
+    s.magic = 0x4B43414C;
+    s.version = 1;
+    s.operand1 = operand1;
+    s.operator = operator;
+    s.memoryStore = memoryStore;
+    s.isNewOperand = isNewOperand;
+    s.currentMode = currentMode;
+    s.isDeg = isDeg;
+    s.statLastMean = statLastMean;
+    s.statLastSlope = statLastSlope;
+    my_strcpy(s.displayBuffer, displayBuffer);
+    my_strcpy(s.subDisplayBuffer, subDisplayBuffer);
+    
+    GetWindowTextA(hFinControls[1], s.finPmtPrincipal, 32);
+    GetWindowTextA(hFinControls[3], s.finPmtRate, 32);
+    GetWindowTextA(hFinControls[5], s.finPmtYears, 32);
+    GetWindowTextA(hFinControls[9], s.finMarginCost, 32);
+    GetWindowTextA(hFinControls[11], s.finMarginSell, 32);
+    GetWindowTextA(hStatsControls[1], s.stat1VarData, 128);
+    GetWindowTextA(hStatsControls[6], s.stat2VarData, 128);
+
+    s.historyCount = historyCount;
+    for (int i = 0; i < historyCount && i < 50; i++) {
+        my_strcpy(s.historyTape[i].expr, historyTape[i].expr);
+        my_strcpy(s.historyTape[i].res, historyTape[i].res);
+    }
+
+    HANDLE hFile = CreateFileA("kcalc_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, &s, sizeof(s), &written, NULL);
+        CloseHandle(hFile);
+        SetWindowTextA(hStatusText, "[F5] Workspace State Saved (kcalc_quicksave.dat)");
+    } else {
+        SetWindowTextA(hStatusText, "[F5] Error: Could not write quicksave");
+    }
+}
+
+void QuickloadState(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kcalc_quicksave.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        SetWindowTextA(hStatusText, "[F9] No quicksave found (Press F5 to save first)");
+        return;
+    }
+
+    KCalcSaveState s;
+    DWORD readBytes = 0;
+    BOOL ok = ReadFile(hFile, &s, sizeof(s), &readBytes, NULL);
+    CloseHandle(hFile);
+
+    if (!ok || readBytes < sizeof(s) || s.magic != 0x4B43414C) {
+        SetWindowTextA(hStatusText, "[F9] Error: Corrupted quicksave file");
+        return;
+    }
+
+    operand1 = s.operand1;
+    operator = s.operator;
+    memoryStore = s.memoryStore;
+    isNewOperand = s.isNewOperand;
+    isDeg = s.isDeg;
+    statLastMean = s.statLastMean;
+    statLastSlope = s.statLastSlope;
+    my_strcpy(displayBuffer, s.displayBuffer);
+    my_strcpy(subDisplayBuffer, s.subDisplayBuffer);
+
+    SetWindowTextA(hDisplay, displayBuffer);
+    SetWindowTextA(hSubDisplay, subDisplayBuffer);
+
+    if (s.finPmtPrincipal[0]) SetWindowTextA(hFinControls[1], s.finPmtPrincipal);
+    if (s.finPmtRate[0]) SetWindowTextA(hFinControls[3], s.finPmtRate);
+    if (s.finPmtYears[0]) SetWindowTextA(hFinControls[5], s.finPmtYears);
+    if (s.finMarginCost[0]) SetWindowTextA(hFinControls[9], s.finMarginCost);
+    if (s.finMarginSell[0]) SetWindowTextA(hFinControls[11], s.finMarginSell);
+    if (s.stat1VarData[0]) SetWindowTextA(hStatsControls[1], s.stat1VarData);
+    if (s.stat2VarData[0]) SetWindowTextA(hStatsControls[6], s.stat2VarData);
+
+    historyCount = s.historyCount;
+    if (historyCount > 50) historyCount = 50;
+    for (int i = 0; i < historyCount; i++) {
+        my_strcpy(historyTape[i].expr, s.historyTape[i].expr);
+        my_strcpy(historyTape[i].res, s.historyTape[i].res);
+    }
+
+    SendMessageA(hHistControls[0], LB_RESETCONTENT, 0, 0);
+    for (int i = 0; i < historyCount; i++) {
+        char itemText[128];
+        m_sprintf(itemText, "[%d] %s = %s", i + 1, historyTape[i].expr, historyTape[i].res);
+        SendMessageA(hHistControls[0], LB_ADDSTRING, 0, (LPARAM)itemText);
+    }
+
+    SetViewMode(s.currentMode >= 0 && s.currentMode <= 4 ? s.currentMode : 0);
+    UpdateStatusText();
+    SetWindowTextA(hStatusText, "[F9] Quicksaved Workspace Restored");
+}
+
+void CheckFirstRunTutorial(HWND hwnd) {
+    DWORD dwAttrib = GetFileAttributesA("kcalc_tutorial.dat");
+    if (dwAttrib == INVALID_FILE_ATTRIBUTES) {
+        MessageBoxA(hwnd,
+            "Welcome to KCalc Pro!\n\n"
+            "Quick Start Guide:\n"
+            "  * 5 Calculator Environments:\n"
+            "      [1] Scientific Calculator with Keypad\n"
+            "      [2] Financial Suite (PMT Loans, Margin)\n"
+            "      [3] Statistics & Linear Regression\n"
+            "      [4] Scientific Constants Library\n"
+            "      [5] Calculation History Tape\n\n"
+            "  * Workspace Quicksave & Quickload:\n"
+            "      Press F5 to save your entire workspace snapshot\n"
+            "      Press F9 to instantly restore your workspace\n\n"
+            "  * Help & Shortcuts:\n"
+            "      Press F1 or 'H' anytime to view the full shortcuts list.\n\n"
+            "Click OK to begin.",
+            "Welcome to KCalc Pro", MB_OK | MB_ICONINFORMATION);
+        HANDLE hFile = CreateFileA("kcalc_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            char seen[] = "1";
+            DWORD written = 0;
+            WriteFile(hFile, seen, 1, &written, NULL);
+            CloseHandle(hFile);
+        }
     }
 }
 
@@ -878,6 +1032,8 @@ void __stdcall MainEntry() {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
+    CheckFirstRunTutorial(hwnd);
+
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
@@ -889,6 +1045,16 @@ void __stdcall MainEntry() {
             int key = msg.wParam;
             if (key == VK_F1 || ((key == 'H' || key == 'h') && !isEditFocused)) {
                 ShowHelpDialog(hwnd);
+                continue;
+            }
+
+            if (key == VK_F5) {
+                QuicksaveState(hwnd);
+                continue;
+            }
+
+            if (key == VK_F9) {
+                QuickloadState(hwnd);
                 continue;
             }
 
@@ -926,7 +1092,7 @@ void __stdcall MainEntry() {
                 }
             }
 
-            if (key == VK_F9 && !isEditFocused && currentMode == 0) {
+            if (key == VK_F8 && !isEditFocused && currentMode == 0) {
                 SendMessageA(hwnd, WM_COMMAND, 1008, 0); // +/- negate
                 continue;
             }

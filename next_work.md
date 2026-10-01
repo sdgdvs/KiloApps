@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -15,7 +15,7 @@ current_targets:
   kilo_tester: KMech
   kilo_usability: KHash
   kilo_graphics: KAbyss
-  kilo_qa: KCalc
+  kilo_qa: KMine
   kilo_expander: KPad
   kilo_creator: "kweb://users/~neon_rider (Personal Hacker / Demoscene Homepage)"
 virtual_web_target: "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: "KBookmark (Categorized Link Vault)"
-  timestamp: "2026-10-01T02:00:00Z"
+  agent: kilo-qa
+  app: "KCalc (Pro Scientific & Financial Suite)"
+  timestamp: "2026-10-01T02:15:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KCalc`
+- **Current Target**: `KMine`
 - **Upcoming Queue**:
-  `KMine`, `KCosmic`, `KContacts`, `KPad`, `KPaint` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint)*.
+  `KCosmic`, `KContacts`, `KPad`, `KPaint` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KPad`
@@ -298,6 +298,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-01T02:15:00Z — kilo-qa: KCalc (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone)**
+  - State Persistence: Implemented F5 / F9 full workspace snapshot save/load in web and native (`kcalc_quicksave.dat`).
+  - Extended Snapshot: Expanded snapshot to capture all financial form inputs and descriptive/linear statistics datasets.
+  - Tutorial Integrity: Added native first-run modal (`kcalc_tutorial.dat`) and wired web dismissal to prevent popup on restored state.
+  - Toast Occlusion Remediation: Relocated toast notifications to bottom-center safe zone, clearing all keypad and formula inputs.
+  - Keyboard & Modal Audit: Verified Esc/Enter dismissals, mode shortcuts (1-5), and updated shortcuts documentation in help dialog.
+  - Verification: MSVC clean (`KCalc.exe` 28.7 KB); Vite clean in 351ms; security lint & check_icons 100% PASS (<999KB ceiling).
+
 - **2026-10-01T02:00:00Z — kilo-usability: KBookmark (UX & Usability Ergonomics Pass)**
   - Protocol Launching: Integrated intelligent scheme dispatcher resolving `internal:<app>` and `kweb://<site>` in web & native.
   - Card URL Links: Converted raw anchor navigations into safe in-app launches preventing broken browser scheme errors.
@@ -331,11 +339,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Mineral Shimmer: Added static crystalline cross-reticles to scanned asteroid ore nodes for lock precision.
   - Economy & Balance: Tuned deep-space ore yields (Void Quartz & Dark Geode) to reward hazardous sectors.
   - Verification: MSVC clean (`KStarDredge.exe` 282 KB); Vite clean in 661ms; icons & security lint 100% PASS.
-
-- **2026-10-01T00:30:00Z — Director Console: KDirector Fork Dispatch Bridge & Transparency Architecture**
-  - Web Sandbox Transparency: Replaced misleading dispatch claims with honest, explicit client-side sandbox explanation.
-  - 4-Step Contributor Protocol: Integrated in-page workflow connecting staged directives directly to `/apps/contribute.html`.
-  - Dispatch Bridge Modal: Added interactive modal with 1-click Markdown copy, pre-filled GitHub Issue link, and fork guide.
-  - Target Scope Expansion: Prepend special scopes (`[ALL_APPS]`, `[VIRTUAL_WEB]`, `[ARG]`, `[MULTIPLAYER]`) to app selector.
-  - Docs & Protocol Alignment: Updated `docs/DIRECTOR_PROTOCOL.md` and Rule 7 to fully document the fork dispatch route.
-  - Verification: `npm run build` clean in 243ms; security lint 100% PASS; test_arg_flow 100% PASS; headless test PASS; 76 KB (<999KB).
