@@ -928,6 +928,72 @@
     box-shadow: 0 0 6px #10b981;
   }
 
+  /* Tab 6 & 7 Styles: Stego & Composer */
+  .stego-results-box {
+    background: #02050b;
+    border: 1px solid #1e3a29;
+    border-radius: 4px;
+    padding: 10px;
+    font-family: 'Consolas', monospace;
+  }
+  .stego-bit-tag {
+    display: inline-block;
+    padding: 1px 4px;
+    margin: 1px;
+    border-radius: 2px;
+    font-size: 10px;
+  }
+  .stego-bit-0 { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+  .stego-bit-1 { background: rgba(56, 189, 248, 0.2); color: #38bdf8; font-weight: bold; }
+
+  .composer-table td {
+    padding: 4px 6px;
+    border: 1px solid #111d2e;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.1s;
+  }
+  .composer-table tr.active-row td {
+    background: rgba(0, 255, 102, 0.18) !important;
+    border-color: var(--accent-green) !important;
+  }
+  .composer-table td:hover {
+    background: rgba(0, 240, 255, 0.15);
+  }
+  .sfx-pad-btn {
+    background: #0a1424;
+    border: 1px solid #1e3a29;
+    color: #38bdf8;
+    padding: 8px 6px;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: bold;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: all 0.1s;
+    text-align: center;
+  }
+  .sfx-pad-btn:hover {
+    background: #112845;
+    border-color: var(--accent-cyan);
+    box-shadow: 0 0 8px rgba(0, 240, 255, 0.4);
+  }
+  .sfx-pad-btn:active {
+    background: var(--accent-green);
+    color: #05080c;
+    box-shadow: 0 0 12px rgba(0, 255, 102, 0.8);
+  }
+  .inst-breakpoint {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 4px;
+    background: #ef4444;
+    box-shadow: 0 0 6px #ef4444;
+  }
+
   footer {
     margin-top: 30px;
     padding: 14px 10px;
@@ -969,6 +1035,8 @@
     <button class="tab-btn" onclick="switchMainTab('jukebox', this)">[ 🔊 CHIPTUNE JUKEBOX &amp; TRACKER ]</button>
     <button class="tab-btn" onclick="switchMainTab('workbench', this)">[ ⚡ CRACKTRO WORKBENCH ]</button>
     <button class="tab-btn" onclick="switchMainTab('generator', this)">[ 📜 ANSI / NFO STUDIO ]</button>
+    <button class="tab-btn" onclick="switchMainTab('stego', this)">[ 🔍 NFO STEGO FORENSICS ]</button>
+    <button class="tab-btn" onclick="switchMainTab('composer', this)">[ 🎹 TRACKER COMPOSER ]</button>
     <button class="tab-btn" onclick="switchMainTab('charts', this)">[ 🏆 SCENE CHARTS &amp; CHALLENGE ]</button>
     <button class="tab-btn" onclick="switchMainTab('shoutbox', this)">[ 💬 UNDERGROUND SHOUTBOX ]</button>
   </div>
@@ -1051,18 +1119,28 @@
             <option value="MachinaEx.exe">MachinaEx.exe (Safedisc + Ring-0)</option>
             <option value="glitch2.exe">glitch2.exe (LaserLock CD Check)</option>
             <option value="voidcraft.exe">voidcraft.exe (BattleNet Auth Check)</option>
+            <option value="sun99.exe">sun99.exe (SecuROM CD-ROM Check)</option>
+            <option value="everrealm.exe">everrealm.exe (Packet Relay CRC Auth)</option>
           </select>
           <span id="sandboxStatusBadge" style="padding:2px 8px; border-radius:3px; font-size:10px; font-weight:bold; background:rgba(239, 68, 68, 0.15); color:#ef4444; border:1px solid #dc2626;">
             [PROTECTED: CD-CHECK ACTIVE]
           </span>
         </div>
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
-          <button class="btn-filter" onclick="sandboxStepInstruction()">[ ▶ STEP (F8) ]</button>
+          <button class="btn-filter" style="border-color:#10b981; color:#34d399;" onclick="sandboxRunToBreakpoint()">[ ▶ RUN (F5) ]</button>
+          <button class="btn-filter" onclick="sandboxStepInstruction()">[ ⏭ STEP (F8) ]</button>
+          <button class="btn-filter" style="border-color:#ef4444; color:#fca5a5;" onclick="sandboxToggleBreakpoint()">[ ● BREAKPOINT (F9) ]</button>
           <button class="btn-filter" style="border-color:#ca8a04; color:#facc15;" onclick="sandboxApplyNopPatch()">[ ⚡ NOP JUMP (0x90 0x90) ]</button>
           <button class="btn-filter" style="border-color:#38bdf8; color:#38bdf8;" onclick="sandboxInvertJump()">[ 🔄 INVERT (JZ -> JNZ) ]</button>
           <button class="btn-filter" style="border-color:#a855f7; color:#c084fc;" onclick="sandboxForceLicense()">[ 🔑 FORCE LICENSE (EAX=1) ]</button>
           <button class="btn-filter" style="border-color:#e11d48; color:#fda4af;" onclick="sandboxReset()">[ ↺ RESET ]</button>
         </div>
+      </div>
+      <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px; background:#071220; padding:6px 10px; border-radius:4px; border:1px solid #14243b; flex-wrap:wrap;">
+        <span style="font-size:11px; color:#38bdf8; font-weight:bold;">⚡ LIVE BYTE PATCHER:</span>
+        <input type="text" id="sandboxPatchHexInput" class="search-input" style="width:170px; font-size:11px; padding:3px 6px;" placeholder="Hex bytes e.g. 90 90..." />
+        <button class="btn-filter" style="border-color:#34d399; color:#34d399;" onclick="sandboxPatchCustomHex()">[ PATCH OPCODES AT EIP ]</button>
+        <span style="font-size:10px; color:#64748b;">(Click any instruction in disassembly to set EIP or toggle Breakpoint)</span>
       </div>
 
       <div class="sandbox-grid">
@@ -1307,6 +1385,21 @@
               <option value="icosahedron">Dual Icosahedron (12 Vertices / 30 Edges)</option>
               <option value="helix">Double DNA Helix (32 Vertices / 48 Edges)</option>
               <option value="wavegrid">Oscillating Wave Grid (36 Vertices / 60 Edges)</option>
+              <option value="tesseract">4D Hypercube Tesseract (16 Vertices / 32 Edges)</option>
+              <option value="copper">Amiga Copper Sine Rainbow Bars</option>
+              <option value="plasma">Real-Time 256-Color Amiga Sine Plasma</option>
+              <option value="starfield">3D Warp Starfield (500 Stars in Motion)</option>
+              <option value="waterfall">Subterranean 1999Hz Acoustic Waterfall &amp; CRT Glitch</option>
+            </select>
+          </div>
+
+          <div class="field-row">
+            <div class="field-label"><span>Render &amp; Shading Style</span></div>
+            <select id="wbShadingSelect" class="field-select" onchange="changeWorkbenchShading(this.value)">
+              <option value="wireframe">Wireframe Perspective Lines</option>
+              <option value="flat">Lambertian Flat-Shaded Polygons</option>
+              <option value="points">Neon Glow Vertices</option>
+              <option value="glitch">Phosphor Glitch &amp; Subcarrier Residue</option>
             </select>
           </div>
 
@@ -1422,7 +1515,179 @@ Tested clean on Windows 98 SE and DOS 7.1.</textarea>
   </div>
 
   <!-- ================================================================= -->
-  <!-- TAB 6: 1999 SCENE CHARTS & CHALLENGE -->
+  <!-- TAB 6: NFO STEGANOGRAPHY & CHECKSUM FORENSICS -->
+  <!-- ================================================================= -->
+  <div id="tab-stego" class="tab-content">
+    <div class="section-box">
+      <div class="section-title">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span>UNDERGROUND NFO STEGANOGRAPHY &amp; FORENSICS LAB</span>
+          <span style="font-size:10px; color:#38bdf8;">SNOW / XOR-0x7F / CRC32 / 1999Hz SUBCARRIER</span>
+        </div>
+        <span style="font-size:10px; color:#10b981;">STATUS: ONLINE</span>
+      </div>
+
+      <div class="control-bar" style="margin-bottom:12px;">
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <span style="font-size:11px; color:#94a3b8; font-weight:bold;">TARGET NFO:</span>
+          <select id="stegoTargetSelect" class="field-select" style="width:260px;" onchange="loadStegoPreset(this.value)">
+            <option value="flt_ut99">FLARELIGHT - Surreal Tournament (flt_ut99.nfo)</option>
+            <option value="rzr_q3a">RAZOR 1999 - Tremor III Arena (rzr_q3a.nfo)</option>
+            <option value="pdx_hl">PARALAX - Half-Cycle 1.1 (pdx_hl.nfo)</option>
+            <option value="carlsbad_relay">COURIER DISPATCH - Carlsbad Salt Vault (carlsbad.nfo)</option>
+            <option value="custom">-- Custom Scener NFO Buffer --</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn-filter" style="border-color:#38bdf8; color:#38bdf8;" onclick="scanWhitespaceStego()">[ 🔍 SCAN TRAILING SPACES ]</button>
+          <button class="btn-filter" style="border-color:#c084fc; color:#c084fc;" onclick="scanXorStego()">[ ⚡ XOR-0x7F SCAN ]</button>
+          <button class="btn-filter" style="border-color:#facc15; color:#facc15;" onclick="verifyChecksums()">[ 🧮 VERIFY CRC32 &amp; MD5 ]</button>
+          <button class="btn-filter" style="border-color:#e11d48; color:#fda4af;" onclick="audit1999HzSubcarrier()">[ 📡 AUDIT 1999Hz SUBCARRIER ]</button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px;">
+        <!-- Left: Raw NFO Source View / Editor -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="font-size:11px; color:#94a3b8;">NFO TEXT BUFFER (TRAILING WHITESPACE DETECTOR):</span>
+            <span id="stegoLineStats" style="font-size:10px; color:#38bdf8;">LINES: 42 • BYTES: 1840</span>
+          </div>
+          <textarea id="stegoNfoInput" class="field-input" rows="18" style="font-family:'Consolas', monospace; font-size:10px; line-height:1.25; background:#02050b; color:#34d399; white-space:pre; resize:vertical;" oninput="updateStegoStats()"></textarea>
+          
+          <div style="margin-top:10px; background:#08101d; border:1px solid #14243b; padding:10px; border-radius:4px;">
+            <span style="font-size:11px; color:var(--accent-yellow); font-weight:bold;">🔏 STEGANOGRAPHY INJECTOR:</span>
+            <div style="font-size:10px; color:#94a3b8; margin:4px 0 8px 0;">
+              Conceal secret underground messages into trailing spaces/tabs without changing ANSI rendering.
+            </div>
+            <div style="display:flex; gap:8px;">
+              <input type="text" id="stegoPayloadInput" class="search-input" style="flex:1;" placeholder="Secret plaintext payload..." value="SECTOR-01 HEAP AT 0x007F1999" />
+              <button class="btn-gen" onclick="encodeStegoNfo()">[ INJECT ]</button>
+              <button class="btn-filter" onclick="downloadStegoNfo()">[ 💾 DOWNLOAD ]</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Forensic Analysis Output & Waterfall -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <span style="font-size:11px; color:#94a3b8;">FORENSIC ANALYSIS &amp; DECODED BITSTREAM:</span>
+            <span id="stegoStatusBadge" style="font-size:10px; color:#64748b;">AWAITING SCAN</span>
+          </div>
+          <div id="stegoAnalysisOutput" class="stego-results-box" style="height:260px; overflow-y:auto; background:#02050b; border:1px solid #1e3a29; border-radius:4px; padding:10px; font-size:11px; line-height:1.45; color:#cbd5e1; font-family:'Consolas', monospace;">
+            <div style="color:#64748b;">Select an NFO release above and execute a scan routine to inspect hidden whitespace encodings, XOR masks, anomalous hashes, or 1999Hz acoustic carrier residues.</div>
+          </div>
+
+          <!-- Subcarrier Waterfall Spectrum Canvas -->
+          <div style="margin-top:10px; background:#040912; border:1px solid #14243b; padding:8px; border-radius:4px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-size:10px; color:var(--accent-cyan); font-weight:bold;">ACOUSTIC SPECTRUM &amp; SUBCARRIER WATERFALL (1999Hz FOCUS)</span>
+              <span id="stegoAudioStatus" style="font-size:10px; color:#64748b;">CARRIER IDLE</span>
+            </div>
+            <canvas id="stegoWaterfallCanvas" width="460" height="90" style="width:100%; display:block; background:#000; border:1px solid #0f241a;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- TAB 7: 4-CHANNEL CHIPTUNE PATTERN COMPOSER -->
+  <!-- ================================================================= -->
+  <div id="tab-composer" class="tab-content">
+    <div class="section-box">
+      <div class="section-title">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span>INTERACTIVE 4-CHANNEL TRACKER &amp; CHIPTUNE COMPOSER</span>
+          <span style="font-size:10px; color:#facc15;">PROTRACKER / FASTTRACKER II x86 STYLE</span>
+        </div>
+        <span id="composerPlayingBadge" style="font-size:10px; color:#64748b;">STOPPED</span>
+      </div>
+
+      <div class="control-bar" style="margin-bottom:12px;">
+        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+          <button class="btn-gen" id="btnComposerPlay" onclick="toggleComposerPlay()">▶ PLAY PATTERN</button>
+          <button class="btn-filter" onclick="stopComposer()">■ STOP</button>
+          <button class="btn-filter" onclick="composerStepForward()">⏭ STEP</button>
+          <button class="btn-filter" style="border-color:#ca8a04; color:#facc15;" onclick="clearComposerPattern()">CLEAR</button>
+          <button class="btn-filter" style="border-color:#a855f7; color:#c084fc;" onclick="randomizeComposerPattern()">RANDOMIZE</button>
+        </div>
+
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <span style="font-size:11px; color:#94a3b8;">PRESET:</span>
+          <select id="composerPresetSelect" class="field-select" style="width:180px;" onchange="loadComposerPreset(this.value)">
+            <option value="megadrive">Mega Drive Anthem (140 BPM)</option>
+            <option value="echo1999">Subterranean 1999Hz (128 BPM)</option>
+            <option value="cyber">Cybernetic Highway (136 BPM)</option>
+            <option value="snes">SPC700 Ambient Dream (120 BPM)</option>
+          </select>
+          <span style="font-size:11px; color:#94a3b8;">TEMPO: <strong id="lblComposerBpm" style="color:var(--accent-cyan);">132 BPM</strong></span>
+          <input type="range" min="90" max="180" value="132" id="rngComposerBpm" class="field-input" style="width:90px;" oninput="updateComposerBpm(this.value)" />
+        </div>
+
+        <div style="display:flex; gap:6px;">
+          <button class="btn-filter" style="font-size:10px; padding:3px 6px;" onclick="exportComposerC()">[ 💾 EXPORT C ]</button>
+          <button class="btn-filter" style="font-size:10px; padding:3px 6px;" onclick="exportComposerNasm()">[ 📄 EXPORT NASM ]</button>
+          <button class="btn-filter" style="font-size:10px; padding:3px 6px;" onclick="exportComposerJson()">[ 🎵 EXPORT JSON ]</button>
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 2fr 1fr; gap:16px;">
+        <!-- Pattern Matrix -->
+        <div style="background:#02050b; border:1px solid #1e3a29; border-radius:4px; padding:8px; overflow-x:auto;">
+          <table class="composer-table" id="composerTable" style="width:100%; border-collapse:collapse; font-size:11px; font-family:'Consolas', monospace;">
+            <thead>
+              <tr style="border-bottom:2px solid #1e3a29; color:var(--accent-cyan); text-align:center;">
+                <th style="padding:4px 6px; width:45px;">ROW</th>
+                <th style="padding:4px 6px; color:#38bdf8;">CH1: LEAD (YM2612)</th>
+                <th style="padding:4px 6px; color:#34d399;">CH2: BASS (SLAP FM)</th>
+                <th style="padding:4px 6px; color:#c084fc;">CH3: PAD (SPC700)</th>
+                <th style="padding:4px 6px; color:#facc15;">CH4: DRUM (16-BIT)</th>
+              </tr>
+            </thead>
+            <tbody id="composerTableBody">
+              <!-- 16 Rows populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Right: 8 Demoscene SFX Trigger Pads & Timbre Inspector -->
+        <div>
+          <div style="background:#060f1c; border:1px solid #14243b; border-radius:4px; padding:10px; margin-bottom:12px;">
+            <div style="font-size:11px; color:var(--accent-cyan); font-weight:bold; margin-bottom:8px; border-bottom:1px dashed #14243b; padding-bottom:4px;">
+              ⚡ 8 DEMOSCENE REAL-TIME HARDWARE SFX PADS
+            </div>
+            <div class="sfx-pad-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:6px;">
+              <button class="sfx-pad-btn" onclick="playDemosceneSfx('laser')">⚡ LASER ZAP</button>
+              <button class="sfx-pad-btn" onclick="playDemosceneSfx('bass')">🎸 FM SLAP BASS</button>
+              <button class="sfx-pad-btn" onclick="playDemosceneSfx('bell')">🔔 CRYSTAL BELL</button>
+              <button class="sfx-pad-btn" style="border-color:#e11d48; color:#fda4af;" onclick="playDemosceneSfx('carrier')">📡 1999Hz PING</button>
+              <button class="sfx-pad-btn" onclick="playDemosceneSfx('snare')">🥁 NOISE SNARE</button>
+              <button class="sfx-pad-btn" onclick="playDemosceneSfx('arp')">✨ GLITCH ARP</button>
+              <button class="sfx-pad-btn" onclick="playDemosceneSfx('degauss')">📺 CRT DEGAUSS</button>
+              <button class="sfx-pad-btn" onclick="playDemosceneSfx('brass')">🎺 SCENE BRASS</button>
+            </div>
+          </div>
+
+          <div style="background:#060f1c; border:1px solid #14243b; border-radius:4px; padding:10px;">
+            <div style="font-size:11px; color:var(--accent-green); font-weight:bold; margin-bottom:6px;">
+              HARDWARE SYNTHESIS SPECIFICATION:
+            </div>
+            <div style="font-size:10px; color:#94a3b8; line-height:1.5;">
+              • <strong>Channel 1:</strong> Yamaha YM2612 2-Op FM Synthesis with 2.0x frequency ratio.<br>
+              • <strong>Channel 2:</strong> FM Slap Bass with exponential modulation index decay.<br>
+              • <strong>Channel 3:</strong> Super Nintendo SPC700 stereo delay warmth (180ms slapback).<br>
+              • <strong>Channel 4:</strong> Procedural white noise burst &amp; swept low-pass kick drum.<br>
+              • <strong>Storage Ceiling:</strong> 100% procedural Web Audio API within &lt;999 KB.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- TAB 8: 1999 SCENE CHARTS & CHALLENGE -->
   <!-- ================================================================= -->
   <div id="tab-charts" class="tab-content">
     <div class="section-box">
@@ -1783,10 +2048,70 @@ const RELEASES = [
     shape: "torus",
     scrollerText: "CYBRID >> HOMEWARD FLEET COMMAND >> 3D SPACE FLIGHT UNLEASHED >> RESPECT THE DEMOSCENE! >>",
     nfoFile: "hbd_hw.nfo"
+  },
+  {
+    id: "flt_q3point",
+    date: "1999-12-14",
+    group: "FLARELIGHT",
+    groupClass: "group-flt",
+    title: "Tremor III Arena Point Release 1.32c No-CD",
+    media: "01x1.44MB",
+    type: "crack",
+    typeName: "No-CD Crack",
+    targetExe: "tremor3.exe",
+    songIndex: 6,
+    shape: "star",
+    scrollerText: "FLARELIGHT ARENA SQUAD >> TREMOR III POINT RELEASE 1.32c NO-CD FIX >> ZERO CD POLLING IN SERVER SESSIONS >> GREETS TO ALL DEMOSCENERS >>",
+    nfoFile: "flt_q3point.nfo"
+  },
+  {
+    id: "rzr_diablo",
+    date: "2000-06-29",
+    group: "RAZOR 1999",
+    groupClass: "group-rzr",
+    title: "NetherWorld II: Lord of Terror Keymaker & Auth Patch",
+    media: "01x2.88MB",
+    type: "keygen",
+    typeName: "Keygen",
+    targetExe: "nether2.exe",
+    songIndex: 7,
+    shape: "tesseract",
+    scrollerText: "RAZOR 1999 KEYMAKER >> NETHERWORLD II LORD OF TERROR >> ENTER THE SANCTUARY >> REMEMBER: 1999Hz IS THE KEY >>",
+    nfoFile: "rzr_nether.nfo"
+  },
+  {
+    id: "pdx_roller",
+    date: "1999-03-31",
+    group: "PARALAX",
+    groupClass: "group-pdx",
+    title: "RollerCoaster Tycoon Gold Patch & Infinite Park Funds",
+    media: "01x1.44MB",
+    type: "trainer",
+    typeName: "Trainer",
+    targetExe: "rct.exe",
+    songIndex: 6,
+    shape: "helix",
+    scrollerText: "PARALAX ENTERTAINMENT >> ROLLERCOASTER TYCOON TRAINER >> BUILD WITHOUT LIMITS >> GREETS TO FLARELIGHT, TRSI, KALISTO >>",
+    nfoFile: "pdx_rct.nfo"
+  },
+  {
+    id: "skd_carmag",
+    date: "1998-11-20",
+    group: "SKID VECTOR",
+    groupClass: "group-skd",
+    title: "DeathRace 2000 3DFX Glide Wrapper & Uncut Patch",
+    media: "01x1.44MB",
+    type: "crack",
+    typeName: "Glide Patch",
+    targetExe: "deathrace.exe",
+    songIndex: 7,
+    shape: "wavegrid",
+    scrollerText: "SKID VECTOR >> DEATHRACE 2000 3DFX GLIDE WRAPPER >> FULL SPEED DEMOLITION >> RESPECT THE 1999 SCENE >>",
+    nfoFile: "skd_carmag.nfo"
   }
 ];
 
-// 6 Procedural Compositions
+// 8 Procedural Compositions
 const SONGS = [
   {
     name: "Mega Drive FM Rush",
@@ -1823,6 +2148,18 @@ const SONGS = [
     bpm: 136,
     desc: "Crystalline FM Bell Harmonics + Pulsing 16-Bit Drive",
     style: "void_fantasy"
+  },
+  {
+    name: "Subterranean Carlsbad 1999Hz",
+    bpm: 128,
+    desc: "Dark FM Ambient with 1999Hz Subcarrier Resonance + Low Drone",
+    style: "carlsbad_1999"
+  },
+  {
+    name: "Amiga Copper Skyline '99",
+    bpm: 136,
+    desc: "ProTracker High-Speed Arpeggio Lead + SPC700 Warm Delay",
+    style: "amiga_copper"
   }
 ];
 
@@ -1846,6 +2183,10 @@ function switchMainTab(tabId, btn) {
     if (!sandboxActiveTarget) loadSandboxTarget('SurrealTournament.exe');
   } else if (tabId === 'charts') {
     initChallenge();
+  } else if (tabId === 'stego') {
+    initStego();
+  } else if (tabId === 'composer') {
+    initComposer();
   }
 }
 
@@ -2171,6 +2512,50 @@ function scheduleSongNotes() {
       if (!channelMuted[1] && bass[step % 16]) {
         playYm2612Fm(mtof(bass[step % 16]), 2.0, 3.2, 0.18, nextNoteTime, 0.25);
         ch2Note = noteNumToString(bass[step % 16]);
+      }
+    } else if (song.style === 'carlsbad_1999') {
+      // Subterranean drone with 1999Hz acoustic subcarrier
+      const subNotes = [24, 24, 36, 24, 22, 22, 34, 22, 20, 20, 32, 20, 27, 25, 24, 22];
+      const carrierPings = [0, 0, 1999, 0, 0, 0, 0, 1999, 0, 1999, 0, 0, 0, 0, 1999, 0];
+
+      if (!channelMuted[0] && carrierPings[step % 16]) {
+        // Direct 1999Hz subcarrier synthesis
+        playYm2612Fm(1999.0, 1.0, 1.5, 0.12, nextNoteTime, 0.18, true);
+        ch1Note = "1999Hz";
+      } else if (!channelMuted[0] && step % 4 === 0) {
+        const lead = 60 + ((step * 3) % 15);
+        playYm2612Fm(mtof(lead), 2.0, 1.8, 0.2, nextNoteTime, 0.15, true);
+        ch1Note = noteNumToString(lead);
+      }
+
+      if (!channelMuted[1]) {
+        const b = subNotes[step % 16];
+        playYm2612Fm(mtof(b), 1.5, 5.0, 0.22, nextNoteTime, 0.28);
+        ch2Note = noteNumToString(b);
+      }
+
+      if (!channelMuted[2] && step % 8 === 0) {
+        playSnesPad(mtof(48 + ((step % 16) === 0 ? 0 : 3)), 2.0, nextNoteTime, 0.18);
+        ch3Note = noteNumToString(48 + ((step % 16) === 0 ? 0 : 3));
+      }
+    } else if (song.style === 'amiga_copper') {
+      // ProTracker style high-speed arpeggio & slap bass
+      const arp = [60, 63, 67, 72, 63, 67, 72, 75, 58, 62, 65, 70, 62, 65, 70, 74];
+      const slap = [36, 48, 36, 48, 34, 46, 34, 46, 32, 44, 32, 44, 31, 43, 31, 43];
+
+      if (!channelMuted[0]) {
+        const a = arp[step % arp.length];
+        playYm2612Fm(mtof(a), 3.0, 2.2, 0.06, nextNoteTime, 0.16, true);
+        ch1Note = noteNumToString(a);
+      }
+      if (!channelMuted[1]) {
+        const s = slap[step % slap.length];
+        playYm2612Fm(mtof(s), 2.0, 4.0, 0.1, nextNoteTime, 0.2);
+        ch2Note = noteNumToString(s);
+      }
+      if (!channelMuted[2] && step % 4 === 0) {
+        playSnesPad(mtof(48 + (step % 12)), 1.4, nextNoteTime, 0.15);
+        ch3Note = noteNumToString(48 + (step % 12));
       }
     } else {
       // Fast arpeggiated demoscene tracks
@@ -2625,6 +3010,34 @@ const GEOMETRIES = {
       }
       return e;
     })()
+  },
+  tesseract: {
+    vertices: (function() {
+      const v = [];
+      const s1 = 55, s2 = 28;
+      for (let x of [-s1, s1]) {
+        for (let y of [-s1, s1]) {
+          for (let z of [-s1, s1]) {
+            v.push([x, y, z]);
+          }
+        }
+      }
+      for (let x of [-s2, s2]) {
+        for (let y of [-s2, s2]) {
+          for (let z of [-s2, s2]) {
+            v.push([x, y, z]);
+          }
+        }
+      }
+      return v;
+    })(),
+    edges: [
+      [0,1],[1,3],[3,2],[2,0],[4,5],[5,7],[7,6],[6,4],
+      [0,4],[1,5],[2,6],[3,7],
+      [8,9],[9,11],[11,10],[10,8],[12,13],[13,15],[15,14],[14,12],
+      [8,12],[9,13],[10,14],[11,15],
+      [0,8],[1,9],[2,10],[3,11],[4,12],[5,13],[6,14],[7,15]
+    ]
   }
 };
 
@@ -3218,6 +3631,50 @@ const SANDBOX_TARGETS = {
       "56 6F 69 64 43 72 61 66  74 20 42 72 6F 6F 64 20",
       "4B 4C 41 53 53 20 4E 45  54 20 4C 4F 41 44 45 52"
     ]
+  },
+  "sun99.exe": {
+    name: "sun99.exe",
+    protection: "SecuROM v2.5 CD-Check",
+    checkAddr: "00401024",
+    instructions: [
+      { addr: "00401018", bytes: "55", inst: "PUSH EBP", comment: "" },
+      { addr: "00401019", bytes: "89 E5", inst: "MOV EBP, ESP", comment: "" },
+      { addr: "0040101B", bytes: "E8 B0 02 00 00", inst: "CALL SecuRomSubcarrierPoll", comment: "; CD sector poll" },
+      { addr: "00401020", bytes: "85 C0", inst: "TEST EAX, EAX", comment: "" },
+      { addr: "00401022", bytes: "74 0A", inst: "JZ loc_sun_reject", comment: "; Tiberius CD missing", isJump: true, target: "0040102E" },
+      { addr: "00401024", bytes: "B8 01 00 00 00", inst: "MOV EAX, 0x01", comment: "; GDI / Nod unlocked" },
+      { addr: "00401029", bytes: "5D", inst: "POP EBP", comment: "" },
+      { addr: "0040102A", bytes: "C3", inst: "RET", comment: "" },
+      { addr: "0040102E", bytes: "C3", inst: "RET", comment: "; loc_sun_reject" }
+    ],
+    initialHex: [
+      "55 89 E5 E8 B0 02 00 00  85 C0 74 0A B8 01 00 00",
+      "00 5D C3 C3 90 90 90 90  90 90 90 90 90 90 90 90",
+      "53 75 6E 20 6F 66 20 54  69 62 65 72 69 75 73 00",
+      "52 41 5A 4F 52 20 31 39  39 39 20 49 53 4F 20 00"
+    ]
+  },
+  "everrealm.exe": {
+    name: "everrealm.exe",
+    protection: "Packet Relay CRC Check",
+    checkAddr: "00401024",
+    instructions: [
+      { addr: "00401018", bytes: "55", inst: "PUSH EBP", comment: "" },
+      { addr: "00401019", bytes: "89 E5", inst: "MOV EBP, ESP", comment: "" },
+      { addr: "0040101B", bytes: "E8 55 01 00 00", inst: "CALL VerifyRelayChecksum", comment: "; Intranet packet check" },
+      { addr: "00401020", bytes: "3D 42 99 19 7F", inst: "CMP EAX, 0x7F199942", comment: "; Check 1999Hz carrier seed!" },
+      { addr: "00401025", bytes: "75 08", inst: "JNZ loc_relay_fail", comment: "; Reject mismatched seed", isJump: true, target: "0040102F" },
+      { addr: "00401027", bytes: "B8 01 00 00 00", inst: "MOV EAX, 0x01", comment: "; Kunark world server connected" },
+      { addr: "0040102C", bytes: "5D", inst: "POP EBP", comment: "" },
+      { addr: "0040102D", bytes: "C3", inst: "RET", comment: "" },
+      { addr: "0040102F", bytes: "C3", inst: "RET", comment: "; loc_relay_fail" }
+    ],
+    initialHex: [
+      "55 89 E5 E8 55 01 00 00  3D 42 99 19 7F 75 08 B8",
+      "01 00 00 00 5D C3 C3 90  90 90 90 90 90 90 90 90",
+      "45 76 65 72 52 65 61 6C  6D 20 53 4B 49 44 20 00",
+      "31 30 2E 31 39 2E 39 39  2E 31 32 37 3A 31 39 39"
+    ]
   }
 };
 
@@ -3226,6 +3683,59 @@ let sandboxInstructions = [];
 let sandboxHex = [];
 let sandboxCurrentLineIdx = 0;
 let sandboxIsCracked = false;
+let sandboxBreakpoints = new Set();
+
+function sandboxToggleBreakpoint(idx) {
+  const targetIdx = (idx !== undefined) ? idx : sandboxCurrentLineIdx;
+  if (sandboxBreakpoints.has(targetIdx)) {
+    sandboxBreakpoints.delete(targetIdx);
+  } else {
+    sandboxBreakpoints.add(targetIdx);
+    initAudio();
+    playYm2612Fm(987, 1.0, 1.0, 0.05, audioCtx.currentTime, 0.1);
+  }
+  renderSandboxUI();
+}
+
+function sandboxRunToBreakpoint() {
+  initAudio();
+  playYm2612Fm(659, 2.0, 1.5, 0.06, audioCtx.currentTime, 0.15);
+  
+  let steps = 0;
+  const maxSteps = 32;
+  const interval = setInterval(() => {
+    sandboxStepInstruction();
+    steps++;
+    if (sandboxBreakpoints.has(sandboxCurrentLineIdx) || steps >= maxSteps || sandboxIsCracked) {
+      clearInterval(interval);
+      playYm2612Fm(1318, 2.0, 2.0, 0.1, audioCtx.currentTime, 0.2);
+    }
+  }, 90);
+}
+
+function sandboxPatchCustomHex() {
+  const input = document.getElementById('sandboxPatchHexInput');
+  if (!input || !input.value.trim()) return;
+  const rawBytes = input.value.trim().toUpperCase();
+  const curr = sandboxInstructions[sandboxCurrentLineIdx];
+  if (!curr) return;
+
+  initAudio();
+  playYm2612Fm(880, 2.0, 3.0, 0.15, audioCtx.currentTime, 0.25);
+
+  curr.bytes = rawBytes;
+  curr.inst = `USER_PATCH [${rawBytes}]`;
+  curr.comment = "; Manually patched by scener";
+  curr.isPatched = true;
+  if (rawBytes.startsWith("90") || rawBytes.includes("B8 01") || !curr.isJump) {
+    curr.isJump = false;
+    sandboxIsCracked = true;
+  }
+  sandboxHex[0] = rawBytes + " " + sandboxHex[0].substring(Math.min(rawBytes.length + 1, sandboxHex[0].length));
+  const crcEl = document.getElementById('sandboxCrcLabel');
+  if (crcEl) crcEl.textContent = "CRC32: USER" + Math.floor(Math.random() * 9000 + 1000);
+  renderSandboxUI();
+}
 
 function loadSandboxFromRelease(relId) {
   const rel = RELEASES.find(r => r.id === relId);
@@ -3245,6 +3755,7 @@ function loadSandboxTarget(exeName) {
   sandboxHex = [...target.initialHex];
   sandboxCurrentLineIdx = 0;
   sandboxIsCracked = false;
+  sandboxBreakpoints.clear();
 
   renderSandboxUI();
 }
@@ -3260,12 +3771,14 @@ function renderSandboxUI() {
     body.innerHTML = sandboxInstructions.map((inst, idx) => {
       const isCurrent = idx === sandboxCurrentLineIdx;
       const isPatched = inst.isPatched;
+      const hasBp = sandboxBreakpoints.has(idx);
       let cls = "asm-line";
       if (isCurrent) cls += " current-eip";
       if (isPatched) cls += " patched-line";
 
       return `
         <div class="${cls}" onclick="sandboxSetEip(${idx})">
+          <span style="display:inline-block; width:14px; text-align:center; cursor:pointer;" title="Click to toggle Breakpoint" onclick="event.stopPropagation(); sandboxToggleBreakpoint(${idx})">${hasBp ? '<span class="inst-breakpoint"></span>' : ' '}</span>
           <span class="asm-addr">${inst.addr}</span>
           <span class="asm-bytes">${inst.bytes.padEnd(12, ' ')}</span>
           <span class="asm-inst">${inst.inst}</span>
@@ -3485,6 +3998,8 @@ function startWorkbenchAnimation() {
   wbCtx = wbCanvas.getContext('2d');
   wbScrollerOffset = wbCanvas.width;
 
+  let wbShadingMode = 'wireframe';
+
   function renderWb() {
     const w = wbCanvas.width;
     const h = wbCanvas.height;
@@ -3498,73 +4013,143 @@ function startWorkbenchAnimation() {
     wbCtx.fillStyle = '#010307';
     wbCtx.fillRect(0, 0, w, h);
 
-    // Grid Floor
-    wbCtx.strokeStyle = '#081a2e';
-    wbCtx.lineWidth = 1;
-    for (let x = -200; x <= 200; x += 40) {
-      wbCtx.beginPath();
-      wbCtx.moveTo(cx + x * 1.5, cy + 50);
-      wbCtx.lineTo(cx + x * 3.5, h);
-      wbCtx.stroke();
-    }
-
-    // 3D Geometry
-    const geo = GEOMETRIES[wbCurrentGeo] || GEOMETRIES.cube;
-    const ax = wbAnimTime * 0.9;
-    const ay = wbAnimTime * 1.2;
-    const az = wbAnimTime * 0.5;
-
-    const cosX = Math.cos(ax), sinX = Math.sin(ax);
-    const cosY = Math.cos(ay), sinY = Math.sin(ay);
-    const cosZ = Math.cos(az), sinZ = Math.sin(az);
-
-    const proj = [];
-    for (let i = 0; i < geo.vertices.length; i++) {
-      let [vx, vy, vz] = geo.vertices[i];
-      if (wbCurrentGeo === 'wavegrid') {
-        vy = Math.sin(wbAnimTime * 3.0 + vx * 0.08) * 14;
-      }
-
-      let x1 = vx * cosY + vz * sinY;
-      let y1 = vy;
-      let z1 = -vx * sinY + vz * cosY;
-
-      let x2 = x1;
-      let y2 = y1 * cosX - z1 * sinX;
-      let z2 = y1 * sinX + z1 * cosX;
-
-      let x3 = x2 * cosZ - y2 * sinZ;
-      let y3 = x2 * sinZ + y2 * cosZ;
-      let z3 = z2;
-
-      const scale = 320 / (z3 + fovDist);
-      const px = cx + x3 * scale;
-      const py = cy - 20 + y3 * scale;
-
-      proj.push({ x: px, y: py, z: z3 });
-    }
-
     let colorHex = '#00f0ff';
     if (wbCurrentColor === 'green') colorHex = '#00ff66';
     else if (wbCurrentColor === 'magenta') colorHex = '#ff0077';
     else if (wbCurrentColor === 'yellow') colorHex = '#ffdd00';
     else if (wbCurrentColor === 'purple') colorHex = '#c084fc';
 
-    wbCtx.lineWidth = 1.8;
-    wbCtx.strokeStyle = colorHex;
-    wbCtx.shadowColor = colorHex;
-    wbCtx.shadowBlur = 6;
+    if (wbCurrentGeo === 'copper') {
+      // Amiga Copper Sine Rainbow Bars
+      for (let y = 0; y < h; y += 4) {
+        const sineY = Math.sin(y * 0.03 + wbAnimTime * 3.0) * Math.cos(y * 0.015 - wbAnimTime * 1.5);
+        const hue = Math.abs(Math.sin(wbAnimTime + y * 0.01)) * 360;
+        const alpha = Math.max(0, Math.sin(y * 0.08 + wbAnimTime * 2.0));
+        wbCtx.fillStyle = `hsla(${hue}, 100%, 55%, ${0.2 + alpha * 0.6})`;
+        wbCtx.fillRect(0, y + sineY * 18, w, 3);
+      }
+    } else if (wbCurrentGeo === 'plasma') {
+      // Real-Time 256-Color Amiga Sine Plasma
+      const step = 8;
+      for (let y = 0; y < h; y += step) {
+        for (let x = 0; x < w; x += step) {
+          const v = Math.sin(x * 0.02 + wbAnimTime * 1.5) +
+                    Math.sin(y * 0.03 - wbAnimTime * 1.2) +
+                    Math.sin((x + y) * 0.02 + wbAnimTime * 2.0);
+          const hue = ((v + 3) / 6 * 360 + wbAnimTime * 50) % 360;
+          wbCtx.fillStyle = `hsl(${hue}, 90%, 50%)`;
+          wbCtx.fillRect(x, y, step, step);
+        }
+      }
+    } else if (wbCurrentGeo === 'starfield') {
+      // 3D Warp Starfield
+      wbCtx.fillStyle = '#ffffff';
+      for (let i = 0; i < STARS.length; i++) {
+        const s = STARS[i];
+        s.z -= 4.0 * speed;
+        if (s.z <= 0) s.z = 600;
+        const k = 220 / s.z;
+        const px = cx + s.x * k;
+        const py = cy + s.y * k;
+        if (px >= 0 && px <= w && py >= 0 && py <= h) {
+          const sz = Math.max(1, (1 - s.z / 600) * 3.5);
+          wbCtx.fillRect(px, py, sz, sz);
+        }
+      }
+    } else if (wbCurrentGeo === 'waterfall') {
+      // Subterranean 1999Hz Acoustic Waterfall & CRT Glitch
+      for (let y = 0; y < h - 40; y += 4) {
+        const noise = (Math.sin(y * 0.2 + wbAnimTime * 10) + 1) * 0.5;
+        const isCarrier = Math.abs(y - (h / 2 - 10)) < 12;
+        wbCtx.fillStyle = isCarrier ? "rgba(0, 255, 102, 0.9)" : `rgba(0, 240, 255, ${noise * 0.3})`;
+        const barW = isCarrier ? w * 0.8 : w * (0.2 + noise * 0.5);
+        wbCtx.fillRect(cx - barW / 2, y, barW, 2);
+      }
+      wbCtx.font = "11px Consolas, monospace";
+      wbCtx.fillStyle = "#34d399";
+      wbCtx.fillText("[1999Hz ACOUSTIC LOCK]: SUBNET 10.19.99.127:1999", 20, 30);
+      wbCtx.fillText("TRANSPONDER OFFSET: 0x007F1999 • SECTOR 01 RESIDUE", 20, 48);
+    } else {
+      // Grid Floor
+      wbCtx.strokeStyle = '#081a2e';
+      wbCtx.lineWidth = 1;
+      for (let x = -200; x <= 200; x += 40) {
+        wbCtx.beginPath();
+        wbCtx.moveTo(cx + x * 1.5, cy + 50);
+        wbCtx.lineTo(cx + x * 3.5, h);
+        wbCtx.stroke();
+      }
 
-    wbCtx.beginPath();
-    for (let i = 0; i < geo.edges.length; i++) {
-      const [p1, p2] = geo.edges[i];
-      if (proj[p1] && proj[p2]) {
-        wbCtx.moveTo(proj[p1].x, proj[p1].y);
-        wbCtx.lineTo(proj[p2].x, proj[p2].y);
+      // 3D Geometry
+      const geo = GEOMETRIES[wbCurrentGeo] || GEOMETRIES.cube;
+      const ax = wbAnimTime * 0.9;
+      const ay = wbAnimTime * 1.2;
+      const az = wbAnimTime * 0.5;
+
+      const cosX = Math.cos(ax), sinX = Math.sin(ax);
+      const cosY = Math.cos(ay), sinY = Math.sin(ay);
+      const cosZ = Math.cos(az), sinZ = Math.sin(az);
+
+      const proj = [];
+      for (let i = 0; i < geo.vertices.length; i++) {
+        let [vx, vy, vz] = geo.vertices[i];
+        if (wbCurrentGeo === 'wavegrid') {
+          vy = Math.sin(wbAnimTime * 3.0 + vx * 0.08) * 14;
+        }
+
+        let x1 = vx * cosY + vz * sinY;
+        let y1 = vy;
+        let z1 = -vx * sinY + vz * cosY;
+
+        let x2 = x1;
+        let y2 = y1 * cosX - z1 * sinX;
+        let z2 = y1 * sinX + z1 * cosX;
+
+        let x3 = x2 * cosZ - y2 * sinZ;
+        let y3 = x2 * sinZ + y2 * cosZ;
+        let z3 = z2;
+
+        const scale = 320 / (z3 + fovDist);
+        const px = cx + x3 * scale;
+        const py = cy - 20 + y3 * scale;
+
+        proj.push({ x: px, y: py, z: z3 });
+      }
+
+      if (wbShadingMode === 'points') {
+        wbCtx.fillStyle = colorHex;
+        wbCtx.shadowColor = colorHex;
+        wbCtx.shadowBlur = 8;
+        for (let i = 0; i < proj.length; i++) {
+          wbCtx.beginPath();
+          wbCtx.arc(proj[i].x, proj[i].y, 3, 0, Math.PI * 2);
+          wbCtx.fill();
+        }
+        wbCtx.shadowBlur = 0;
+      } else {
+        wbCtx.lineWidth = 1.8;
+        wbCtx.strokeStyle = colorHex;
+        wbCtx.shadowColor = colorHex;
+        wbCtx.shadowBlur = (wbShadingMode === 'glitch') ? 12 : 6;
+
+        wbCtx.beginPath();
+        for (let i = 0; i < geo.edges.length; i++) {
+          const [p1, p2] = geo.edges[i];
+          if (proj[p1] && proj[p2]) {
+            wbCtx.moveTo(proj[p1].x, proj[p1].y);
+            wbCtx.lineTo(proj[p2].x, proj[p2].y);
+          }
+        }
+        wbCtx.stroke();
+        wbCtx.shadowBlur = 0;
+
+        if (wbShadingMode === 'glitch' && Math.random() < 0.25) {
+          wbCtx.fillStyle = "rgba(0, 255, 102, 0.4)";
+          const gy = Math.random() * h;
+          wbCtx.fillRect(0, gy, w, Math.random() * 6);
+        }
       }
     }
-    wbCtx.stroke();
-    wbCtx.shadowBlur = 0;
 
     // Scroller in workbench
     const text = document.getElementById('wbScrollerText').value || "0xRELEASE 1999 DEMOSCENE CRACKTRO";
@@ -3593,6 +4178,10 @@ function startWorkbenchAnimation() {
 
 function changeWorkbenchGeometry(geo) {
   wbCurrentGeo = geo;
+}
+
+function changeWorkbenchShading(mode) {
+  wbShadingMode = mode;
 }
 
 function changeWorkbenchColors(col) {
@@ -3728,6 +4317,744 @@ function downloadCustomDiz() {
   const group = document.getElementById('nfoGroupPreset').value;
   const diz = `[ .DIZ - ${title} ]\n[ GROUP: ${group} ]\n[ SUPPLIER: 0xRELEASE SCENE ARCHIVE ]\n[ 100% RETRO CLEAN ]\n`;
   downloadBlob(diz, "file_id.diz", "text/plain");
+}
+
+// ==========================================
+// 11B. NFO STEGANOGRAPHY & ANOMALY FORENSICS
+// ==========================================
+const STEGO_PRESETS = {
+  flt_ut99: `   ______ ______ ______ ______        ______ ______ ______ ______ 
+  |  ___/|  ___/|  ___/|  ___/       |  ___/|  ___/|  ___/|  ___/ 
+  | |__  | |__  | |__  | |__         | |__  | |__  | |__  | |__   
+  |  __/ |  __/ |  __/ |  __/  [FLT] |  __/ |  __/ |  __/ |  __/  
+  | |    | |___ | |___ | |___        | |    | |___ | |___ | |___  
+  |_|    |_____/|_____/|_____/       |_|    |_____/|_____/|_____/ 
+ -----------------------------------------------------------------
+  FLARELIGHT PRESENTS: Surreal Tournament '99 v436 No-CD Patch    
+ -----------------------------------------------------------------
+  Release Date : 1999-11-23       Game Type : Fast FPS Arena      
+  Cracker      : SubCarrier       Disks     : 01 x 1.44 MB        
+ -----------------------------------------------------------------
+ [ RELEASE NOTES ]                                                
+ SafeDisc CD polling routine completely decoupled in .text segment.
+ Replaced ring-0 driver interrupt checks with NOP padding.        
+ CRC32 Verified: 0x7F199942 (Subcarrier anomaly detected).        
+ Trailing space steganography embedded for Carlsbad courier relays.
+ Greets fly out to: RAZOR 1999 * SKID VECTOR * PARALAX * KLASS    
+ -----------------------------------------------------------------
+ 01000010 01101001 01110100 01110011 00100000 01100001 01110010  
+ 01100101 00100000 01100001 01101100 01101001 01110110 01100101  `,
+  rzr_q3a: `  ██████╗  █████╗ ███████╗ ██████╗ ██████╗     ██╗ ██████╗  ██████╗  ██████╗ 
+  ██╔══██╗██╔══██╗╚══███╔╝██╔═══██╗██╔══██╗  ████║██╔════╝ ██╔════╝ ██╔════╝ 
+  ██████╔╝███████║  ███╔╝ ██║   ██║██████╔╝  ╚██║███████╗ ███████╗ ███████╗ 
+  ██╔══██╗██╔══██║ ███╔╝  ██║   ██║██╔══██╗   ██║██╔═══██╗██╔═══██╗██╔═══██╗
+  ██║  ██║██║  ██║███████╗╚██████╔╝██║  ██║   ██║╚██████╔╝╚██████╔╝╚██████╔╝
+  ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═╝  ╚═╝   ╚═╝ ╚═════╝  ╚═════╝  ╚═════╝  
+ -----------------------------------------------------------------------------
+  RAZOR 1999 CD-KEYMAKER DIVISION : Tremor III Arena v1.32 Keymaker           
+ -----------------------------------------------------------------------------
+  Author   : RazorCourier99      Protection : SecuROM CDKey Algorithm       
+  Carrier  : 1999Hz Subcarrier   Checksum   : MD5 7f199942a0b1c2d3e4f51999    
+ -----------------------------------------------------------------------------
+  Notice to subterranean couriers: anomalous packet bursts echoing at 1999Hz. 
+  Residual heap offsets point to Sector 01 heap at 0x007F1999.               
+  Do not transmit cleartext over corporate gateway 10.19.99.4.               
+ -----------------------------------------------------------------------------`,
+  pdx_hl: `  ______ ______ ______ ______ ______ ______ ______ ______ 
+ |   __ \\|   _  |   __ \\|   _  |   __ \\|   _  |   __ \\|   _  |
+ |    __/|   _  |    __/|   _  |    __/|   _  |    __/|   _  |
+ |___|   |___|__|___|   |___|__|___|   |___|__|___|   |___|__| [PDX '99]
+ -----------------------------------------------------------------
+  PARALAX GERMANY: Half-Cycle 1.1.1.0 WON Auth Bypass & Keymaker 
+ -----------------------------------------------------------------
+  WON authentication server emulated via local pipe bypass.       
+  Carrier detected: 1999Hz on European transit lines.             
+  Steganographic seed decoded at Node 0x7F subterranean relay.    
+ -----------------------------------------------------------------`,
+  carlsbad_relay: ` === [ UNDERGROUND COURIER DISPATCH // CARLSBAD SALT VAULT ] ===
+ NODE ID     : RELAY_0x7F_CARLSBAD
+ SUBNET      : 10.19.99.127:1999 -> 10.19.99.4:1999
+ CARRIER FREQ: 1999.00 Hz [PHASE-LOCKED]
+ MEM_OFFSET  : 0x007F1999 (PAGE_EXECUTE_READWRITE)
+ PAYLOAD CRC : 0x7F199942
+ 
+ MESSAGE: The autonomous living machine pulses beneath the salt.
+ Do not let clearnet spiders index Node 0x7F or Deep Core.
+ Keys must be earned through reverse engineering and acoustic locks.
+ =================================================================`
+};
+
+let stegoWaterfallAnimId = null;
+
+function initStego() {
+  loadStegoPreset('flt_ut99');
+  updateStegoStats();
+}
+
+function loadStegoPreset(key) {
+  const input = document.getElementById('stegoNfoInput');
+  const sel = document.getElementById('stegoTargetSelect');
+  if (sel) sel.value = key;
+  if (!input) return;
+  if (key === 'custom') {
+    input.value = "=== CUSTOM SCENER NFO ===\nType or paste ANSI text here...";
+  } else {
+    input.value = STEGO_PRESETS[key] || STEGO_PRESETS.flt_ut99;
+  }
+  updateStegoStats();
+  const badge = document.getElementById('stegoStatusBadge');
+  if (badge) badge.textContent = `LOADED: ${key.toUpperCase()}`;
+}
+
+function updateStegoStats() {
+  const input = document.getElementById('stegoNfoInput');
+  const stats = document.getElementById('stegoLineStats');
+  if (!input || !stats) return;
+  const lines = input.value.split('\n');
+  stats.textContent = `LINES: ${lines.length} • BYTES: ${input.value.length}`;
+}
+
+// 1. Whitespace Steganography Scanner (SNOW algorithm)
+function scanWhitespaceStego() {
+  initAudio();
+  playYm2612Fm(880, 2.0, 1.5, 0.08, audioCtx.currentTime, 0.15);
+  setTimeout(() => playYm2612Fm(1320, 2.0, 2.0, 0.1, audioCtx.currentTime, 0.2), 70);
+
+  const input = document.getElementById('stegoNfoInput').value;
+  const lines = input.split('\n');
+  const output = document.getElementById('stegoAnalysisOutput');
+  const badge = document.getElementById('stegoStatusBadge');
+
+  let bitStream = "";
+  let linesWithStego = 0;
+
+  lines.forEach((line) => {
+    const match = line.match(/[ \t]+$/);
+    if (match) {
+      linesWithStego++;
+      const trailing = match[0];
+      for (let ch of trailing) {
+        bitStream += (ch === '\t') ? '1' : '0';
+      }
+    }
+  });
+
+  let decodedText = "";
+  for (let i = 0; i + 8 <= bitStream.length; i += 8) {
+    const byteStr = bitStream.substr(i, 8);
+    const charCode = parseInt(byteStr, 2);
+    if (charCode >= 32 && charCode <= 126) {
+      decodedText += String.fromCharCode(charCode);
+    } else {
+      decodedText += ".";
+    }
+  }
+
+  badge.textContent = `SCAN COMPLETE (${bitStream.length} BITS FOUND)`;
+  badge.style.color = "#34d399";
+
+  let report = `<div style="color:var(--accent-cyan); font-weight:bold; margin-bottom:6px;">[ FORENSIC REPORT: TRAILING WHITESPACE STEGANOGRAPHY ]</div>`;
+  report += `<div>Lines Inspected: <strong>${lines.length}</strong> | Lines with Trailing Bits: <strong style="color:var(--accent-green);">${linesWithStego}</strong></div>`;
+  report += `<div>Total Extracted Bits: <strong>${bitStream.length}</strong></div>`;
+
+  if (bitStream.length > 0) {
+    const sampleBits = bitStream.substring(0, 48);
+    report += `<div style="margin-top:6px; font-size:10px; color:#94a3b8;">BITSTREAM SAMPLE:</div>`;
+    report += `<div style="background:#050d18; padding:4px 6px; border-radius:3px; word-break:break-all; font-size:10px;">${sampleBits}...</div>`;
+    report += `<div style="margin-top:8px; font-size:11px; color:#facc15; font-weight:bold;">DECODED HIDDEN PAYLOAD:</div>`;
+    report += `<div style="background:#071c12; border:1px solid #10b981; color:#34d399; padding:8px; border-radius:4px; margin-top:4px; font-weight:bold;">${decodedText || "[NO PRINTABLE ASCII IN STREAM]"}</div>`;
+
+    if (decodedText.includes("1999") || decodedText.includes("RELAY") || decodedText.includes("0x7F") || input.includes("0x7F199942")) {
+      report += `<div style="margin-top:8px; background:rgba(255,0,119,0.15); border:1px solid var(--accent-pink); padding:6px; color:#fda4af; font-size:10px;">
+        🚨 <strong>DIEGETIC CARRIER INTERCEPT:</strong> Payload correlates with Subnet 10.19.99.0/24 transponder frequency (1999Hz). Node 0x7F memory offset verified: 0x007F1999.
+      </div>`;
+    }
+  } else {
+    if (input.includes("0x7F199942") || input.includes("FLARELIGHT")) {
+      report += `<div style="margin-top:8px; color:#38bdf8;">Authentic CRC32 seed detected in header: <code>0x7F199942</code>. Hidden courier tag: <em>COURIER_CARLSBAD_LOCK_1999Hz</em>.</div>`;
+    } else {
+      report += `<div style="margin-top:8px; color:#64748b;">No trailing whitespace found. Use the Steganography Injector below to conceal secret payloads into this NFO.</div>`;
+    }
+  }
+
+  output.innerHTML = report;
+}
+
+// 2. XOR-0x7F Byte Analysis
+function scanXorStego() {
+  initAudio();
+  playYm2612Fm(784, 1.5, 2.0, 0.08, audioCtx.currentTime, 0.15);
+
+  const input = document.getElementById('stegoNfoInput').value;
+  const output = document.getElementById('stegoAnalysisOutput');
+  const badge = document.getElementById('stegoStatusBadge');
+
+  let xorMatches = [];
+  if (input.includes("0x7F") || input.includes("1999") || input.includes("SecuROM") || input.includes("CARLSBAD")) {
+    xorMatches.push({ offset: "0x007F1990", plain: "ECHO-1999-SYSTEM", mask: "0x7F" });
+    xorMatches.push({ offset: "0x007F1999", plain: "CARLSBAD_RELAY_10.19.99.127", mask: "0x7F" });
+    xorMatches.push({ offset: "0x007F19B0", plain: "SUBCARRIER_FREQ_1999Hz", mask: "0x7F" });
+  }
+
+  badge.textContent = `XOR SCAN COMPLETE (${xorMatches.length} SEED OFFSETS)`;
+  badge.style.color = "#c084fc";
+
+  let report = `<div style="color:var(--accent-purple); font-weight:bold; margin-bottom:6px;">[ FORENSIC REPORT: SCENE XOR-0x7F BYTE ANALYSIS ]</div>`;
+  report += `<div>Target Cipher Key: <code>0x7F</code> (01111111b) • Memory Space: <code>0x007F0000 - 0x007FFFFF</code></div>`;
+
+  if (xorMatches.length > 0) {
+    report += `<div style="margin-top:8px; display:flex; flex-direction:column; gap:6px;">`;
+    xorMatches.forEach(m => {
+      report += `
+        <div style="background:#09121d; border-left:3px solid var(--accent-purple); padding:6px 10px; font-size:11px;">
+          <span style="color:#facc15;">${m.offset}</span>: 
+          <span style="color:#34d399; font-weight:bold;">${m.plain}</span>
+          <span style="color:#64748b; font-size:10px;">(XOR-Key: ${m.mask})</span>
+        </div>
+      `;
+    });
+    report += `</div>`;
+    report += `<div style="margin-top:8px; color:#38bdf8; font-size:10px;">
+      Offset <strong>0x007F1999</strong> matches Sector 01 heap residue documented on Node 0x7F.
+    </div>`;
+  } else {
+    report += `<div style="color:#64748b; margin-top:8px;">Zero 0x7F XOR signatures detected in current buffer.</div>`;
+  }
+
+  output.innerHTML = report;
+}
+
+// 3. CRC32 & MD5 Checksum Verification
+const CRC_TABLE = (function() {
+  let c;
+  const table = [];
+  for (let n = 0; n < 256; n++) {
+    c = n;
+    for (let k = 0; k < 8; k++) {
+      c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+    }
+    table[n] = c;
+  }
+  return table;
+})();
+
+function verifyChecksums() {
+  initAudio();
+  playYm2612Fm(1046, 2.0, 1.5, 0.1, audioCtx.currentTime, 0.2);
+
+  const input = document.getElementById('stegoNfoInput').value;
+  const output = document.getElementById('stegoAnalysisOutput');
+  const badge = document.getElementById('stegoStatusBadge');
+
+  let crc = 0 ^ (-1);
+  for (let i = 0; i < input.length; i++) {
+    crc = (crc >>> 8) ^ CRC_TABLE[(crc ^ input.charCodeAt(i)) & 0xFF];
+  }
+  crc = (crc ^ (-1)) >>> 0;
+  const crcHex = crc.toString(16).toUpperCase().padStart(8, '0');
+
+  let md5Part = "";
+  for (let i = 0; i < 4; i++) {
+    const v = ((crc * (i + 13)) ^ 0x5A827999) >>> 0;
+    md5Part += v.toString(16).padStart(8, '0');
+  }
+
+  badge.textContent = `HASH: CRC32 0x${crcHex}`;
+  badge.style.color = "#facc15";
+
+  const isAnomalous = input.includes("0x7F199942") || crcHex.includes("7F19") || input.includes("1999Hz") || input.includes("CARLSBAD");
+
+  let report = `<div style="color:var(--accent-yellow); font-weight:bold; margin-bottom:6px;">[ FORENSIC REPORT: CHECKSUM & INTEGRITY AUDIT ]</div>`;
+  report += `<div>Calculated CRC32 : <strong style="color:var(--accent-cyan);">0x${crcHex}</strong></div>`;
+  report += `<div>Calculated MD5   : <strong style="color:#c084fc;">${md5Part}</strong></div>`;
+  report += `<div>Payload Length   : <strong>${input.length} bytes</strong> (${input.split('\n').length} lines)</div>`;
+
+  if (isAnomalous) {
+    report += `
+      <div style="margin-top:10px; background:#1e1b06; border:1px solid #eab308; padding:10px; border-radius:4px; color:#fef08a;">
+        ⚠️ <strong>AUTHENTIC CARRIER ANOMALY DETECTED:</strong><br>
+        Release checksum signature matches known Carlsbad relay seed <code>0x7F199942</code>.<br>
+        Frequency Lock: <strong>1999.00 Hz</strong> • Gateway Address: <strong>10.19.99.127:1999</strong><br>
+        Seek subterranean connection on <em>kweb://darknet</em> (Node 0x7F) or inspect hex offsets in KHex.
+      </div>
+    `;
+  } else {
+    report += `<div style="color:#34d399; margin-top:8px;">✓ Standard scene checksum verified clean. No anomalous frequency locks found in current payload.</div>`;
+  }
+
+  output.innerHTML = report;
+}
+
+// 4. Audit 1999Hz Subcarrier (Web Audio & Canvas Waterfall)
+function audit1999HzSubcarrier() {
+  initAudio();
+  const badge = document.getElementById('stegoAudioStatus');
+  if (badge) {
+    badge.textContent = "1999Hz CARRIER ACTIVE (LOCK ACQUIRED)";
+    badge.style.color = "#00ff66";
+  }
+
+  playYm2612Fm(1999.0, 1.0, 1.8, 0.4, audioCtx.currentTime, 1.2, true);
+
+  const canvas = document.getElementById('stegoWaterfallCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  let animSteps = 0;
+  if (stegoWaterfallAnimId) cancelAnimationFrame(stegoWaterfallAnimId);
+
+  function drawWaterfall() {
+    animSteps++;
+    ctx.drawImage(canvas, 0, 0, w, h - 2, 0, 2, w, h - 2);
+
+    ctx.fillStyle = "#00050b";
+    ctx.fillRect(0, 0, w, 2);
+
+    const carrierX = Math.floor(w * 0.62);
+    for (let x = 0; x < w; x += 2) {
+      const dist = Math.abs(x - carrierX);
+      let intensity = Math.random() * 0.25;
+      if (dist < 8) {
+        intensity = 0.8 + (1 - dist / 8) * 0.2;
+      }
+      ctx.fillStyle = `rgba(0, 255, 102, ${intensity})`;
+      ctx.fillRect(x, 0, 2, 2);
+    }
+
+    if (animSteps < 180) {
+      stegoWaterfallAnimId = requestAnimationFrame(drawWaterfall);
+    } else {
+      if (badge) {
+        badge.textContent = "CARRIER IDLE";
+        badge.style.color = "#64748b";
+      }
+    }
+  }
+
+  drawWaterfall();
+
+  const output = document.getElementById('stegoAnalysisOutput');
+  output.innerHTML = `
+    <div style="color:var(--accent-pink); font-weight:bold; margin-bottom:6px;">[ ACOUSTIC TELEMETRY: 1999Hz SUBCARRIER LOCKED ]</div>
+    <div>Acoustic Subcarrier Freq : <strong style="color:var(--accent-green);">1999.00 Hz (Sine Modulated FM)</strong></div>
+    <div>Modulation Type         : <strong>2-Op YM2612 Algorithm 4 (Carrier/Modulator)</strong></div>
+    <div>Transit Route           : <strong>Carlsbad Bedrock Vault -> 10.19.99.127:1999</strong></div>
+    <div>Intranet Destination    : <strong>10.19.99.4 [Classified Intranet Leak]</strong></div>
+    <div style="margin-top:8px; color:#cbd5e1;">
+      Acoustic carrier verified. This frequency is used by Node 0x7F to transmit fragmented packet bursts across the virtual corporate network.
+    </div>
+  `;
+}
+
+// 5. Inject Steganography into NFO
+function encodeStegoNfo() {
+  initAudio();
+  playYm2612Fm(659, 2.0, 2.0, 0.08, audioCtx.currentTime, 0.15);
+  setTimeout(() => playYm2612Fm(1318, 2.0, 2.0, 0.1, audioCtx.currentTime, 0.25), 80);
+
+  const payloadInput = document.getElementById('stegoPayloadInput');
+  const nfoInput = document.getElementById('stegoNfoInput');
+  if (!payloadInput || !nfoInput) return;
+
+  const payload = payloadInput.value.trim();
+  if (!payload) return;
+
+  let bits = "";
+  for (let i = 0; i < payload.length; i++) {
+    const b = payload.charCodeAt(i).toString(2).padStart(8, '0');
+    bits += b;
+  }
+
+  const lines = nfoInput.value.split('\n');
+  if (lines.length < bits.length) {
+    alert(`NFO requires at least ${bits.length} lines to encode this payload (currently ${lines.length}). Add more lines to NFO.`);
+    return;
+  }
+
+  const newLines = lines.map((line, idx) => {
+    const clean = line.replace(/[ \t]+$/, '');
+    if (idx < bits.length) {
+      const bitChar = (bits[idx] === '1') ? '\t' : ' ';
+      return clean + bitChar;
+    }
+    return clean;
+  });
+
+  nfoInput.value = newLines.join('\n');
+  updateStegoStats();
+
+  const output = document.getElementById('stegoAnalysisOutput');
+  output.innerHTML = `
+    <div style="color:var(--accent-green); font-weight:bold; margin-bottom:6px;">[ STEGANOGRAPHY INJECTED SUCCESSFULLY ]</div>
+    <div>Plaintext Message  : <strong style="color:var(--accent-yellow);">"${payload}"</strong></div>
+    <div>Encoded Length     : <strong>${bits.length} bits</strong> across ${bits.length} lines</div>
+    <div>Steganography Type : <strong>SNOW Trailing Whitespace (Space=0, Tab=1)</strong></div>
+    <div style="margin-top:8px; color:#38bdf8;">
+      The NFO will appear 100% normal in all standard ANSI and ASCII viewers! You can now download the steganographic NFO file or copy the text.
+    </div>
+  `;
+}
+
+function downloadStegoNfo() {
+  const input = document.getElementById('stegoNfoInput');
+  if (input) downloadBlob(input.value, "stego_release.nfo", "text/plain");
+}
+
+// ==========================================
+// 11C. 4-CHANNEL TRACKER PATTERN COMPOSER
+// ==========================================
+const NOTE_FREQS = {
+  "C-2": 65.41, "D-2": 73.42, "E-2": 82.41, "F-2": 87.31, "G-2": 98.00, "A-2": 110.00, "B-2": 123.47,
+  "C-3": 130.81, "D-3": 146.83, "E-3": 164.81, "F-3": 174.61, "G-3": 196.00, "A-3": 220.00, "B-3": 246.94,
+  "C-4": 261.63, "D-4": 293.66, "E-4": 329.63, "F-4": 349.23, "G-4": 392.00, "A-4": 440.00, "B-4": 493.88,
+  "C-5": 523.25, "D-5": 587.33, "E-5": 659.25, "G-5": 783.99, "A-5": 880.00, "1999Hz": 1999.00
+};
+
+const COMPOSER_PRESETS = {
+  megadrive: [
+    { ch1: "C-4", ch2: "C-2", ch3: "Am", ch4: "BD" },
+    { ch1: "---", ch2: "---", ch3: "---", ch4: "HH" },
+    { ch1: "E-4", ch2: "C-2", ch3: "---", ch4: "SD" },
+    { ch1: "---", ch2: "C-3", ch3: "---", ch4: "HH" },
+    { ch1: "G-4", ch2: "C-2", ch3: "C ", ch4: "BD" },
+    { ch1: "---", ch2: "---", ch3: "---", ch4: "HH" },
+    { ch1: "A-4", ch2: "C-2", ch3: "---", ch4: "SD" },
+    { ch1: "G-4", ch2: "D-2", ch3: "---", ch4: "HH" },
+    { ch1: "E-4", ch2: "F-2", ch3: "F ", ch4: "BD" },
+    { ch1: "---", ch2: "---", ch3: "---", ch4: "HH" },
+    { ch1: "D-4", ch2: "F-2", ch3: "---", ch4: "SD" },
+    { ch1: "---", ch2: "F-3", ch3: "---", ch4: "HH" },
+    { ch1: "C-4", ch2: "G-2", ch3: "G ", ch4: "BD" },
+    { ch1: "D-4", ch2: "G-2", ch3: "---", ch4: "HH" },
+    { ch1: "E-4", ch2: "G-3", ch3: "---", ch4: "SD" },
+    { ch1: "D-4", ch2: "G-2", ch3: "---", ch4: "HH" }
+  ],
+  echo1999: [
+    { ch1: "1999Hz", ch2: "C-2", ch3: "Am", ch4: "BD" },
+    { ch1: "---", ch2: "---", ch3: "---", ch4: "---" },
+    { ch1: "E-4", ch2: "C-2", ch3: "---", ch4: "SD" },
+    { ch1: "---", ch2: "---", ch3: "---", ch4: "HH" },
+    { ch1: "1999Hz", ch2: "A-2", ch3: "F ", ch4: "BD" },
+    { ch1: "---", ch2: "---", ch3: "---", ch4: "---" },
+    { ch1: "G-4", ch2: "A-2", ch3: "---", ch4: "SD" },
+    { ch1: "---", ch2: "---", ch3: "---", ch4: "HH" },
+    { ch1: "1999Hz", ch2: "F-2", ch3: "Dm", ch4: "BD" },
+    { ch1: "---", ch2: "---", ch3: "---", ch4: "---" },
+    { ch1: "A-4", ch2: "F-2", ch3: "---", ch4: "SD" },
+    { ch1: "---", ch2: "---", ch3: "---", ch4: "HH" },
+    { ch1: "1999Hz", ch2: "G-2", ch3: "Em", ch4: "BD" },
+    { ch1: "---", ch2: "---", ch3: "---", ch4: "---" },
+    { ch1: "B-4", ch2: "G-2", ch3: "---", ch4: "SD" },
+    { ch1: "---", ch2: "G-3", ch3: "---", ch4: "HH" }
+  ],
+  cyber: [
+    { ch1: "C-4", ch2: "C-2", ch3: "Am", ch4: "BD" },
+    { ch1: "D-4", ch2: "C-2", ch3: "---", ch4: "HH" },
+    { ch1: "E-4", ch2: "C-3", ch3: "---", ch4: "SD" },
+    { ch1: "G-4", ch2: "C-2", ch3: "---", ch4: "HH" },
+    { ch1: "C-5", ch2: "C-2", ch3: "C ", ch4: "BD" },
+    { ch1: "G-4", ch2: "C-2", ch3: "---", ch4: "HH" },
+    { ch1: "E-4", ch2: "C-3", ch3: "---", ch4: "SD" },
+    { ch1: "D-4", ch2: "C-2", ch3: "---", ch4: "HH" },
+    { ch1: "A-4", ch2: "A-2", ch3: "F ", ch4: "BD" },
+    { ch1: "C-5", ch2: "A-2", ch3: "---", ch4: "HH" },
+    { ch1: "E-4", ch2: "A-3", ch3: "---", ch4: "SD" },
+    { ch1: "C-4", ch2: "A-2", ch3: "---", ch4: "HH" },
+    { ch1: "G-4", ch2: "G-2", ch3: "G ", ch4: "BD" },
+    { ch1: "B-4", ch2: "G-2", ch3: "---", ch4: "HH" },
+    { ch1: "D-4", ch2: "G-3", ch3: "---", ch4: "SD" },
+    { ch1: "G-3", ch2: "G-2", ch3: "---", ch4: "HH" }
+  ],
+  snes: [
+    { ch1: "C-4", ch2: "C-2", ch3: "C ", ch4: "BD" },
+    { ch1: "---", ch2: "---", ch3: "---", ch4: "---" },
+    { ch1: "---", ch2: "C-2", ch3: "---", ch4: "SD" },
+    { ch1: "---", ch2: "---", ch3: "---", ch4: "HH" },
+    { ch1: "E-4", ch2: "G-2", ch3: "Em", ch4: "BD" },
+    { ch1: "---", ch2: "---", ch3: "---", ch4: "---" },
+    { ch1: "---", ch2: "G-2", ch3: "---", ch4: "SD" },
+    { ch1: "---", ch2: "---", ch3: "---", ch4: "HH" },
+    { ch1: "F-4", ch2: "F-2", ch3: "F ", ch4: "BD" },
+    { ch1: "---", ch2: "---", ch3: "---", ch4: "---" },
+    { ch1: "---", ch2: "F-2", ch3: "---", ch4: "SD" },
+    { ch1: "---", ch2: "---", ch3: "---", ch4: "HH" },
+    { ch1: "G-4", ch2: "G-2", ch3: "G ", ch4: "BD" },
+    { ch1: "---", ch2: "---", ch3: "---", ch4: "---" },
+    { ch1: "---", ch2: "G-2", ch3: "---", ch4: "SD" },
+    { ch1: "---", ch2: "G-3", ch3: "---", ch4: "HH" }
+  ]
+};
+
+let composerPattern = JSON.parse(JSON.stringify(COMPOSER_PRESETS.megadrive));
+let composerStepIdx = 0;
+let composerTimer = null;
+let isComposerPlaying = false;
+let composerBpm = 132;
+
+function initComposer() {
+  renderComposerGrid();
+}
+
+function renderComposerGrid() {
+  const tbody = document.getElementById('composerTableBody');
+  if (!tbody) return;
+
+  tbody.innerHTML = composerPattern.map((row, rIdx) => {
+    const hex = rIdx.toString(16).toUpperCase().padStart(2, '0');
+    const isAct = (rIdx === composerStepIdx && isComposerPlaying);
+    return `
+      <tr class="${isAct ? 'active-row' : ''}">
+        <td style="color:#facc15; font-weight:bold;">${hex}</td>
+        <td class="cell-note" style="color:#38bdf8;" onclick="cycleComposerNote(${rIdx}, 'ch1')">${row.ch1}</td>
+        <td class="cell-note" style="color:#34d399;" onclick="cycleComposerNote(${rIdx}, 'ch2')">${row.ch2}</td>
+        <td class="cell-note" style="color:#c084fc;" onclick="cycleComposerNote(${rIdx}, 'ch3')">${row.ch3}</td>
+        <td class="cell-note" style="color:#facc15;" onclick="cycleComposerNote(${rIdx}, 'ch4')">${row.ch4}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function cycleComposerNote(rIdx, ch) {
+  initAudio();
+  const noteList = ["---", "C-3", "D-3", "E-3", "F-3", "G-3", "A-3", "B-3", "C-4", "E-4", "G-4", "1999Hz"];
+  const bassList = ["---", "C-2", "D-2", "E-2", "F-2", "G-2", "A-2", "C-3", "F-3", "G-3"];
+  const padList  = ["---", "C ", "Am", "F ", "G ", "Dm", "Em"];
+  const drumList = ["---", "BD", "SD", "HH", "CP"];
+
+  let list = noteList;
+  if (ch === 'ch2') list = bassList;
+  else if (ch === 'ch3') list = padList;
+  else if (ch === 'ch4') list = drumList;
+
+  const curr = composerPattern[rIdx][ch];
+  const curIdx = list.indexOf(curr);
+  const nextNote = list[(curIdx + 1) % list.length];
+  composerPattern[rIdx][ch] = nextNote;
+
+  if (nextNote !== "---") {
+    if (ch === 'ch1' || ch === 'ch2') {
+      const f = NOTE_FREQS[nextNote] || 440;
+      playYm2612Fm(f, 2.0, 2.0, 0.1, audioCtx.currentTime, 0.2);
+    } else if (ch === 'ch3') {
+      playSnesPad(220, 1.0, audioCtx.currentTime, 0.2);
+    } else if (ch === 'ch4') {
+      play16BitDrum(nextNote.toLowerCase() === 'bd' ? 'kick' : 'snare', audioCtx.currentTime);
+    }
+  }
+
+  renderComposerGrid();
+}
+
+function toggleComposerPlay() {
+  if (isComposerPlaying) {
+    stopComposer();
+  } else {
+    initAudio();
+    stopSong();
+    isComposerPlaying = true;
+    composerStepIdx = 0;
+    const badge = document.getElementById('composerPlayingBadge');
+    if (badge) {
+      badge.textContent = "PLAYING (16 ROWS LOOP)";
+      badge.style.color = "#00ff66";
+    }
+    const btn = document.getElementById('btnComposerPlay');
+    if (btn) btn.textContent = "■ STOP PATTERN";
+
+    const stepMs = Math.round(60000 / (composerBpm * 4));
+    if (composerTimer) clearInterval(composerTimer);
+    composerTimer = setInterval(stepComposer, stepMs);
+  }
+}
+
+function stopComposer() {
+  if (composerTimer) {
+    clearInterval(composerTimer);
+    composerTimer = null;
+  }
+  isComposerPlaying = false;
+  const badge = document.getElementById('composerPlayingBadge');
+  if (badge) {
+    badge.textContent = "STOPPED";
+    badge.style.color = "#64748b";
+  }
+  const btn = document.getElementById('btnComposerPlay');
+  if (btn) btn.textContent = "▶ PLAY PATTERN";
+  renderComposerGrid();
+}
+
+function composerStepForward() {
+  initAudio();
+  stepComposer();
+}
+
+function stepComposer() {
+  const row = composerPattern[composerStepIdx];
+  const now = audioCtx.currentTime;
+
+  if (row.ch1 && row.ch1 !== "---") {
+    const f = NOTE_FREQS[row.ch1] || 440;
+    playYm2612Fm(f, 2.5, 2.0, 0.08, now, 0.18, true);
+  }
+  if (row.ch2 && row.ch2 !== "---") {
+    const f = NOTE_FREQS[row.ch2] || 110;
+    playYm2612Fm(f, 2.0, 4.2, 0.14, now, 0.24);
+  }
+  if (row.ch3 && row.ch3 !== "---") {
+    playSnesPad(196, 1.2, now, 0.18);
+  }
+  if (row.ch4 && row.ch4 !== "---") {
+    if (row.ch4 === "BD") play16BitDrum('kick', now);
+    else if (row.ch4 === "SD") play16BitDrum('snare', now);
+    else if (row.ch4 === "HH") play16BitDrum('hat', now);
+    else if (row.ch4 === "CP") play16BitDrum('snare', now);
+  }
+
+  composerStepIdx = (composerStepIdx + 1) % 16;
+  renderComposerGrid();
+}
+
+function clearComposerPattern() {
+  composerPattern = Array.from({ length: 16 }, () => ({
+    ch1: "---", ch2: "---", ch3: "---", ch4: "---"
+  }));
+  renderComposerGrid();
+}
+
+function randomizeComposerPattern() {
+  initAudio();
+  playYm2612Fm(880, 2.0, 3.0, 0.1, audioCtx.currentTime, 0.2);
+
+  const notes = ["---", "C-4", "D-4", "E-4", "G-4", "A-4", "1999Hz"];
+  const bass = ["---", "C-2", "C-3", "F-2", "G-2"];
+  const pads = ["---", "Am", "C ", "F ", "G "];
+  const drums = ["BD", "SD", "HH", "---"];
+
+  composerPattern = Array.from({ length: 16 }, (_, r) => ({
+    ch1: (r % 2 === 0) ? notes[Math.floor(Math.random() * notes.length)] : "---",
+    ch2: bass[Math.floor(Math.random() * bass.length)],
+    ch3: (r % 4 === 0) ? pads[Math.floor(Math.random() * pads.length)] : "---",
+    ch4: (r % 2 === 0) ? "BD" : (r % 4 === 2 ? "SD" : drums[Math.floor(Math.random() * drums.length)])
+  }));
+
+  renderComposerGrid();
+}
+
+function loadComposerPreset(key) {
+  if (COMPOSER_PRESETS[key]) {
+    composerPattern = JSON.parse(JSON.stringify(COMPOSER_PRESETS[key]));
+    if (key === 'megadrive') updateComposerBpm(140);
+    else if (key === 'echo1999') updateComposerBpm(128);
+    else if (key === 'cyber') updateComposerBpm(136);
+    else if (key === 'snes') updateComposerBpm(120);
+    renderComposerGrid();
+  }
+}
+
+function updateComposerBpm(val) {
+  composerBpm = parseInt(val, 10);
+  const lbl = document.getElementById('lblComposerBpm');
+  if (lbl) lbl.textContent = `${composerBpm} BPM`;
+  const rng = document.getElementById('rngComposerBpm');
+  if (rng) rng.value = composerBpm;
+
+  if (isComposerPlaying) {
+    const stepMs = Math.round(60000 / (composerBpm * 4));
+    if (composerTimer) clearInterval(composerTimer);
+    composerTimer = setInterval(stepComposer, stepMs);
+  }
+}
+
+function playDemosceneSfx(type) {
+  initAudio();
+  const now = audioCtx.currentTime;
+
+  if (type === 'laser') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(1400, now);
+    osc.frequency.exponentialRampToValueAtTime(120, now + 0.22);
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.linearRampToValueAtTime(0.001, now + 0.22);
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + 0.25);
+  } else if (type === 'bass') {
+    playYm2612Fm(65.41, 2.0, 5.0, 0.2, now, 0.35);
+  } else if (type === 'bell') {
+    playYm2612Fm(1046.5, 3.0, 3.5, 0.4, now, 0.6);
+  } else if (type === 'carrier') {
+    playYm2612Fm(1999.0, 1.0, 2.0, 0.3, now, 0.5, true);
+  } else if (type === 'snare') {
+    play16BitDrum('snare', now);
+  } else if (type === 'arp') {
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, idx) => {
+      playYm2612Fm(f, 2.0, 2.0, 0.05, now + idx * 0.04, 0.12, true);
+    });
+  } else if (type === 'degauss') {
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(120, now);
+    osc.frequency.exponentialRampToValueAtTime(35, now + 0.45);
+    gain.gain.setValueAtTime(0.4, now);
+    gain.gain.linearRampToValueAtTime(0.001, now + 0.45);
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + 0.5);
+  } else if (type === 'brass') {
+    playYm2612Fm(440, 2.0, 2.5, 0.25, now, 0.35);
+  }
+}
+
+function exportComposerC() {
+  const cCode = `/* 0xRELEASE 1999 CHIPTUNE PATTERN DATA */
+/* Compiled for Sega Genesis YM2612 & SNES SPC700 Engine */
+#define PATTERN_ROWS 16
+#define PATTERN_BPM  ${composerBpm}
+
+const char* scene_pattern[16][4] = {
+${composerPattern.map((r, i) => `  /* Row ${i.toString(16).toUpperCase().padStart(2,'0')} */ { "${r.ch1}", "${r.ch2}", "${r.ch3}", "${r.ch4}" }`).join(',\n')}
+};
+
+void play_scene_tick(int row) {
+    /* Trigger YM2612 FM Channel 1 & Slap Bass Channel 2 */
+}
+`;
+  downloadBlob(cCode, "chiptune_pattern.c", "text/plain");
+}
+
+function exportComposerNasm() {
+  const nasmCode = `; 0xRELEASE 1999 DEMOSCENE TRACKER ASSEMBLY
+; Target: NASM DOS 16-bit / 32-bit Protected Mode
+[bits 32]
+section .data
+align 4
+pattern_bpm dd ${composerBpm}
+pattern_rows:
+${composerPattern.map((r, i) => `  db "${r.ch1.padEnd(6,' ')}", "${r.ch2.padEnd(6,' ')}", "${r.ch3.padEnd(4,' ')}", "${r.ch4.padEnd(4,' ')}" ; Row ${i}`).join('\n')}
+
+section .text
+global _play_tracker_step
+_play_tracker_step:
+    ; Hardware AdLib / YM2612 FM register write
+    ret
+`;
+  downloadBlob(nasmCode, "chiptune_pattern.asm", "text/plain");
+}
+
+function exportComposerJson() {
+  const data = {
+    version: "1999.0xRELEASE",
+    bpm: composerBpm,
+    pattern: composerPattern
+  };
+  downloadBlob(JSON.stringify(data, null, 2), "chiptune_pattern.json", "application/json");
 }
 
 // ==========================================
@@ -4125,6 +5452,8 @@ renderFmKeyboard();
 generateCustomNfo();
 renderPolls();
 renderShouts(localShouts);
+initStego();
+initComposer();
 </script>
 
 <!-- ================================================================= -->
