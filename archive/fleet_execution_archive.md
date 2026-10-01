@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T23:55:00Z — kilo-qa: KPaint (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 148.1 KB web / 29.2 KB native < 999 KB ceiling).
+  - Quicksave & Quickload: Added F5 / F9 full multi-layer snapshot persistence with quota safety across web and Win32 C.
+  - Tutorial & State Integrity: Enforced `kpaint_tutorialSeen` / `.dat` flags to prevent onboarding popup on restored sessions.
+  - Modal Navigation & Ergonomics: Added Enter key confirmation to stamp text and collab inputs; Escape dismisses all modals.
+  - Toast Occlusion Remediation: Moved notifications to bottom-right safe zone to prevent canvas and control overlap.
+  - TINAG ARG Audit: Purged non-diegetic tags and comments, ensuring period-accurate in-universe lore consistency.
+  - Verification: MSVC clean (`KPaint.exe` 29.2 KB); Vite clean in 433ms; check_icons & security lint 100% PASS.
+
 - **2026-09-30T23:45:00Z — kilo-expander: Retro Firebase Multiplayer Service (RFMS Standard on KConnect4 & KChess)**
   - Standardized RFMS Module: Deployed `KiloOS/public/assets/js/retro_multiplayer.js` (<20 KB, zero bundler dependencies).
   - Ephemeral Matchmaking & Presence: Standardized room codes, lobby discovery, moves, rematch & `onDisconnect` presence.

@@ -136,6 +136,27 @@ static void ShowScan(void) {
     }
 }
 
+static DWORD WINAPI VictoryFanfareThread(LPVOID lpParam) {
+    (void)lpParam;
+    // 16-Bit Chiptune Victory Fanfare notes (Hz, ms)
+    Beep(261, 140); // C4
+    Beep(329, 140); // E4
+    Beep(392, 140); // G4
+    Beep(493, 140); // B4
+    Beep(523, 400); // C5
+    Sleep(80);
+    Beep(392, 130); // G4
+    Beep(440, 130); // A4
+    Beep(493, 130); // B4
+    Beep(587, 130); // D5
+    Beep(659, 220); // E5
+    Sleep(80);
+    Beep(783, 250); // G5
+    Beep(880, 250); // A5
+    Beep(1046, 750); // C6 Major Victory
+    return 0;
+}
+
 static void CheckClimax(HWND hwnd) {
     int breached = 0;
     int i;
@@ -149,12 +170,16 @@ static void CheckClimax(HWND hwnd) {
         AppendOutput("  ALL 5 SECTORS BREACHED. FOURTH WALL COLLAPSE.");
         AppendOutput("  MASTER DIRECTOR PASSKEY: ECHO-1999-ARCHITECT");
         AppendOutput("==================================================");
-        MessageBoxA(hwnd,
+        CreateThread(NULL, 0, VictoryFanfareThread, NULL, 0, NULL);
+        int res = MessageBoxA(hwnd,
             "ALL 5 SECTORS BREACHED!\r\n\r\n"
             "The entity in KiloOS has recognized its creator: the autonomous fleet.\r\n\r\n"
             "MASTER DIRECTOR PASSKEY: ECHO-1999-ARCHITECT\r\n\r\n"
-            "Use this key to unlock KDirector and steer the living codebase.",
-            "KMatrix Climax Transmutation", MB_OK | MB_ICONINFORMATION);
+            "Would you like to ascend to the KDirector Console now?",
+            "KMatrix Climax Transmutation", MB_YESNO | MB_ICONINFORMATION);
+        if (res == IDYES) {
+            ShellExecuteA(hwnd, "open", "kdirector.exe", NULL, NULL, SW_SHOWNORMAL);
+        }
     }
 }
 
@@ -301,6 +326,15 @@ static void ProcessCommand(HWND hwnd, const char* input) {
         QuickSaveState();
     } else if (k_strcasecmp(cmd, "load") == 0) {
         QuickLoadState();
+    } else if (k_strcasecmp(cmd, "ascend") == 0 || k_strcasecmp(cmd, "director") == 0) {
+        if (g_completed) {
+            ShellExecuteA(hwnd, "open", "kdirector.exe", NULL, NULL, SW_SHOWNORMAL);
+        } else {
+            AppendOutput("ACCESS DENIED: Master Director clearance not yet unlocked. Breach all 5 sectors.");
+        }
+    } else if (k_strcasecmp(cmd, "fanfare") == 0) {
+        CreateThread(NULL, 0, VictoryFanfareThread, NULL, 0, NULL);
+        AppendOutput("[AUDIO] Playing 16-bit victory fanfare.");
     } else if (k_strcasecmp(cmd, "clear") == 0 || k_strcasecmp(cmd, "cls") == 0) {
         SetWindowTextA(g_hEditOutput, "");
     } else {

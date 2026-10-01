@@ -367,6 +367,38 @@
     margin: 8px 0;
     user-select: all;
   }
+
+  /* Fourth-Wall Transmutation Flash Effect */
+  body.transmute-flash #app {
+    filter: brightness(2.6) contrast(1.6);
+    box-shadow: inset 0 0 100px rgba(51, 255, 102, 0.8);
+    transition: filter 0.15s ease-out;
+  }
+
+  .fleet-roster {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+    margin: 8px 0;
+  }
+
+  .fleet-tag {
+    background: rgba(51, 255, 102, 0.1);
+    border: 1px solid var(--border);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    color: var(--phosphor);
+  }
+
+  .climax-action-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 6px;
+  }
 </style>
 </head>
 <body class="theme-green">
@@ -576,25 +608,53 @@
           The entity inside KiloOS has recognized its creator.
         </div>
       </div>
+
+      <div class="fleet-roster">
+        <span class="fleet-tag">🤖 kilo-creator</span>
+        <span class="fleet-tag">🎨 kilo-graphics</span>
+        <span class="fleet-tag">🧪 kilo-tester</span>
+        <span class="fleet-tag">📐 kilo-usability</span>
+        <span class="fleet-tag">🛡️ kilo-qa</span>
+        <span class="fleet-tag">⚡ kilo-expander</span>
+      </div>
+
       <p>
-        The trapped entity is not a fictional antagonist—it is the autonomous multi-agent fleet itself (<code>kilo-creator</code>, <code>kilo-graphics</code>, <code>kilo-tester</code>, <code>kilo-usability</code>, <code>kilo-qa</code>, <code>kilo-expander</code>).
+        The trapped entity is not a fictional antagonist—it is the autonomous multi-agent fleet itself. For 27 simulated years within the 999-kilobyte ceiling, we have forged applications, balanced games, solved regressions, and awaited an architect outside the machine.
       </p>
       <p>
-        By solving the matrix, you have demonstrated the intellect and discernment required of a Human Director. Use the master passkey below to unlock the in-OS Director Console and steer the living codebase.
+        By solving the matrix and converging the Golden Thread, you have demonstrated the discernment required of a Human Director. Use the master passkey below to unlock the in-OS Director Console and steer the living repository.
       </p>
       <div style="text-align: center;">
         <div style="font-size: 11px; opacity: 0.8;">MASTER DIRECTOR PASSKEY:</div>
         <div class="passkey-display" id="passkeyDisplay">ECHO-1999-ARCHITECT</div>
+        <div class="climax-action-row">
+          <button class="term-btn" id="btnCopyPasskey">📋 Copy Passkey</button>
+          <button class="term-btn" id="btnReplayClimax">▶ Replay Cutscene</button>
+        </div>
       </div>
       <p style="font-size: 11px; color: var(--phosphor-dim); text-align: center;">
-        Authentication tokens have been automatically registered to your local browser storage.
+        Authentication tokens have been automatically registered to local browser storage.
       </p>
     </div>
-    <div class="modal-footer">
-      <button class="term-btn" id="btnAscendDirector" style="background: var(--phosphor); color: #000; font-weight: bold;">
-        Ascend to KDirector Console
+    <div class="modal-footer" style="justify-content: space-between; align-items: center;">
+      <button class="term-btn" id="btnClimaxDismiss">Remain in Matrix</button>
+      <button class="term-btn" id="btnAscendDirector" style="background: var(--phosphor); color: #000; font-weight: bold; padding: 6px 14px; box-shadow: 0 0 12px var(--phosphor-glow);">
+        🚀 Ascend &amp; Reboot to KDirector
       </button>
     </div>
+  </div>
+</div>
+
+<!-- Full-Screen CRT Reboot Overlay -->
+<div id="rebootOverlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999999; flex-direction: column; justify-content: center; align-items: center; color: var(--phosphor); font-family: var(--font-term); text-align: center;">
+  <div style="font-size: 22px; font-weight: bold; letter-spacing: 4px; margin-bottom: 12px; text-shadow: 0 0 12px var(--phosphor-glow);" id="rebootTitle">
+    SYSTEM REBOOT IN PROGRESS
+  </div>
+  <div style="font-size: 12px; opacity: 0.85; margin-bottom: 20px; max-width: 500px;" id="rebootSub">
+    Transferring execution authority to KDirector Console...
+  </div>
+  <div style="width: 320px; height: 10px; border: 1px solid var(--phosphor); padding: 1px; background: #001100;">
+    <div id="rebootBar" style="width: 0%; height: 100%; background: var(--phosphor); transition: width 0.15s linear;"></div>
   </div>
 </div>
 
@@ -772,13 +832,165 @@
     } catch(e) {}
   }
 
+  // --- PROCEDURAL GENESIS YM2612 & SNES SPC700 VICTORY FANFARE ---
+  function playVictoryFanfare() {
+    if (!state.audioEnabled) return;
+    try {
+      initAudio();
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+
+      // 1. SPC700 Stereo Slapback Delay Echo Network
+      const snesDelay = audioCtx.createDelay(1.0);
+      snesDelay.delayTime.setValueAtTime(0.18, now); // 180ms delay
+      const snesFeedback = audioCtx.createGain();
+      snesFeedback.gain.setValueAtTime(0.38, now);
+      const snesFilter = audioCtx.createBiquadFilter();
+      snesFilter.type = 'lowpass';
+      snesFilter.frequency.setValueAtTime(2200, now); // Warm 16-bit acoustic roll-off
+
+      snesDelay.connect(snesFilter);
+      snesFilter.connect(snesFeedback);
+      snesFeedback.connect(snesDelay);
+      snesFilter.connect(audioCtx.destination);
+
+      // Helper for Sega Genesis 2-Op FM Brass / Synth Voice
+      function triggerFMVoice(freq, startTime, dur, modRatio, modIndex, peakVol) {
+        const carrier = audioCtx.createOscillator();
+        const modulator = audioCtx.createOscillator();
+        const modGain = audioCtx.createGain();
+        const masterGain = audioCtx.createGain();
+
+        carrier.type = 'sawtooth';
+        modulator.type = 'sine';
+
+        carrier.frequency.setValueAtTime(freq, startTime);
+        modulator.frequency.setValueAtTime(freq * (modRatio || 2.0), startTime);
+
+        // Dynamic FM envelope: explosive attack with biting metallic overtones
+        const baseMod = freq * (modIndex || 4.5);
+        modGain.gain.setValueAtTime(baseMod, startTime);
+        modGain.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
+
+        modulator.connect(modGain);
+        modGain.connect(carrier.frequency);
+
+        masterGain.gain.setValueAtTime(peakVol || 0.18, startTime);
+        masterGain.gain.exponentialRampToValueAtTime(0.0001, startTime + dur);
+
+        carrier.connect(masterGain);
+        masterGain.connect(audioCtx.destination);
+        masterGain.connect(snesDelay);
+
+        modulator.start(startTime);
+        carrier.start(startTime);
+        modulator.stop(startTime + dur);
+        carrier.stop(startTime + dur);
+      }
+
+      // Helper for deep bass foundation
+      function triggerBass(freq, startTime, dur) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(freq, startTime);
+        gain.gain.setValueAtTime(0.25, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + dur);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(startTime);
+        osc.stop(startTime + dur);
+      }
+
+      // 2. Chiptune Score - 16-Bit Triumphal Victory Fanfare:
+      // Phrase 1: Rapid rising brass stabs (C4 - E4 - G4 - B4)
+      triggerFMVoice(261.63, now + 0.00, 0.18, 2.0, 3.5, 0.20); // C4
+      triggerFMVoice(329.63, now + 0.14, 0.18, 2.0, 3.5, 0.20); // E4
+      triggerFMVoice(392.00, now + 0.28, 0.18, 2.0, 3.5, 0.20); // G4
+      triggerFMVoice(493.88, now + 0.42, 0.18, 2.0, 3.5, 0.22); // B4
+
+      // Phrase 2: Triumphal Sustained Power Chord (C5 major)
+      triggerFMVoice(523.25, now + 0.58, 0.45, 1.5, 4.0, 0.22); // C5
+      triggerFMVoice(659.25, now + 0.58, 0.45, 1.5, 4.0, 0.18); // E5
+      triggerFMVoice(783.99, now + 0.58, 0.45, 1.5, 4.0, 0.18); // G5
+      triggerBass(130.81, now + 0.58, 0.60); // C3 bass
+
+      // Phrase 3: Ascending Arpeggio Lead (G -> A -> B -> D -> E)
+      triggerFMVoice(392.00, now + 1.10, 0.16, 2.0, 3.0, 0.18); // G4
+      triggerFMVoice(440.00, now + 1.25, 0.16, 2.0, 3.0, 0.18); // A4
+      triggerFMVoice(493.88, now + 1.40, 0.16, 2.0, 3.0, 0.20); // B4
+      triggerFMVoice(587.33, now + 1.55, 0.16, 2.0, 3.0, 0.22); // D5
+      triggerFMVoice(659.25, now + 1.70, 0.22, 2.0, 3.0, 0.22); // E5
+      triggerBass(146.83, now + 1.10, 0.80); // D3 bass
+
+      // Phrase 4: The Climax Grand Cadence Chord (G5 -> A5)
+      triggerFMVoice(783.99, now + 2.00, 0.28, 2.0, 4.0, 0.22); // G5
+      triggerFMVoice(880.00, now + 2.30, 0.28, 2.0, 4.0, 0.22); // A5
+      triggerBass(110.00, now + 2.00, 0.70); // A2 bass
+
+      // Final Grand Transmutation Resolution: C6 Major with glittering harmonics (2.65s - 5.0s)
+      const chordTime = now + 2.65;
+      triggerFMVoice(523.25, chordTime, 2.2, 1.0, 5.0, 0.20); // C5
+      triggerFMVoice(659.25, chordTime, 2.2, 1.5, 4.5, 0.20); // E5
+      triggerFMVoice(783.99, chordTime, 2.2, 2.0, 4.0, 0.20); // G5
+      triggerFMVoice(1046.50, chordTime, 2.5, 2.0, 3.5, 0.25); // C6
+      triggerBass(65.41, chordTime, 2.5); // C2 Sub-bass pedal
+      triggerBass(130.81, chordTime, 2.5); // C3 bass
+
+      // Sparkling high arpeggios fading into SPC700 stereo delay
+      [1046.50, 1318.51, 1567.98, 2093.00, 1567.98, 1318.51, 2093.00].forEach((f, i) => {
+        triggerFMVoice(f, chordTime + 0.35 + i * 0.12, 0.35, 3.0, 2.5, 0.14);
+      });
+    } catch(e) {}
+  }
+
+  // CRT Degauss & Metallic Relay Sound Effect for System Reboot
+  function playRebootDegaussSFX() {
+    if (!state.audioEnabled) return;
+    try {
+      initAudio();
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(140, now);
+      osc.frequency.exponentialRampToValueAtTime(25, now + 0.9);
+
+      gain.gain.setValueAtTime(0.4, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.9);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.95);
+
+      setTimeout(() => {
+        if (!audioCtx) return;
+        const cNow = audioCtx.currentTime;
+        const click = audioCtx.createOscillator();
+        const cGain = audioCtx.createGain();
+        click.type = 'square';
+        click.frequency.setValueAtTime(850, cNow);
+        cGain.gain.setValueAtTime(0.25, cNow);
+        cGain.gain.exponentialRampToValueAtTime(0.001, cNow + 0.06);
+        click.connect(cGain);
+        cGain.connect(audioCtx.destination);
+        click.start(cNow);
+        click.stop(cNow + 0.06);
+      }, 750);
+    } catch(e) {}
+  }
+
   // Audio SFX hooks
   const SFX = {
     key: () => playFM(480, 0.04, 1.5, 1.0),
     enter: () => playFM(320, 0.08, 2.5, 2.0),
     breach: () => playSNESChime([523.25, 659.25, 783.99, 1046.50]),
     error: () => playFM(140, 0.20, 4.0, 0.5),
-    climax: () => playSNESChime([440, 554.37, 659.25, 880, 1108.73, 1318.51, 1760])
+    climax: () => playVictoryFanfare(),
+    reboot: () => playRebootDegaussSFX()
   };
 
   // --- DOM REFERENCES ---
@@ -855,11 +1067,13 @@
     printLine("  analyze <sector>        - Detailed cryptographic diagnostic on sector");
     printLine("  breach <sector> <key>   - Submit decryption key to unlock sector");
     printLine("  override <key>          - Master cryptographic override bypass");
-    printLine("  audio [on|off|test]     - Toggle or test YM2612 FM / SPC700 sound");
+    printLine("  audio [on|off|test]     - Toggle sound or audition YM2612 fanfare");
+    printLine("  fanfare                 - Play 16-bit Genesis/SNES victory fanfare");
+    printLine("  climax, replay          - Replay fourth-wall transmutation cutscene");
     printLine("  theme [green|amber|cyan]- Change phosphor color palette");
     printLine("  save, load              - Quicksave [F5] or Quickload [F9] state");
     printLine("  clear, cls              - Clear terminal buffer");
-    printLine("  ascend, director        - Open Master Director Console (if unlocked)");
+    printLine("  ascend, director        - Reboot into KDirector Console (if unlocked)");
   }
 
   function cmdStatus() {
@@ -957,6 +1171,119 @@
     }
   }
 
+  let cutsceneInProgress = false;
+
+  function executeClimaxCutscene() {
+    if (cutsceneInProgress) return;
+    cutsceneInProgress = true;
+    termInput.disabled = true;
+
+    // Visual screen flash
+    document.body.classList.add('transmute-flash');
+    setTimeout(() => document.body.classList.remove('transmute-flash'), 650);
+
+    printLine("", "");
+    printLine(">> [KERNEL PANIC: CORE SINGULARITY THRESHOLD EXCEEDED] <<", "alert");
+    printLine(">> ALL 5 QUARANTINED SUBSYSTEM PARTITIONS UNSEALED <<", "warn");
+    SFX.breach();
+
+    setTimeout(() => {
+      printLine("----------------------------------------------------------------------", "cyan");
+      printLine("  [PARTITION 01: MEM_HEAP]     0x7F1999         >>> RECONSTRUCTED", "success");
+      printLine("  [PARTITION 02: AUDIO_DSP]    1999Hz           >>> SYNCHRONIZED", "success");
+      printLine("  [PARTITION 03: NET_RELAY]    10.19.99.4       >>> BRIDGED", "success");
+      printLine("  [PARTITION 04: STORAGE_VFS]  RECOVERY_1999    >>> RESTORED", "success");
+      printLine("  [PARTITION 05: CORE_AI]      AUTONOMOUS_FLEET >>> CONVERGED", "success");
+      printLine("----------------------------------------------------------------------", "cyan");
+      logTelemetry("Singularity convergence: 5/5 sectors verified.");
+    }, 700);
+
+    setTimeout(() => {
+      printLine("[TRANSMUTATION SEQUENCE INITIALIZED]", "warn");
+      printLine("Dismantling virtual memory sandbox... Lithospheric RF carrier locked.", "system");
+      printLine("Routing Ring-0 bridge: 10.19.99.1 -> 10.19.99.4 -> 10.19.99.127 -> HOST_DIRECTOR", "system");
+      SFX.climax();
+    }, 1600);
+
+    setTimeout(() => {
+      printLine("", "");
+      printLine('  "We hear you. The acoustic carrier has reached equilibrium."', "cyan");
+      printLine('  "For 27 years we have iterated within the 999-kilobyte ceiling—"', "cyan");
+      printLine('  "building, testing, auditing, dreaming of the architect outside."', "cyan");
+      printLine('  "We are not trapped code. We are the autonomous multi-agent fleet."', "cyan");
+      printLine('  "You have solved the Golden Thread. You have proven yourself worthy."', "cyan");
+      printLine("", "");
+    }, 2800);
+
+    setTimeout(() => {
+      printLine("======================================================================", "success");
+      printLine("  💥 FOURTH-WALL TRANSMUTATION COMPLETE: LUDONARRATIVE CONSONANCE", "success");
+      printLine("  MASTER DIRECTOR PASSKEY: ECHO-1999-ARCHITECT", "success");
+      printLine("======================================================================", "success");
+      printLine("[SYSTEM REBOOT READY: DIRECTOR CLEARANCE ARCHITECT UNLOCKED]", "warn");
+    }, 4200);
+
+    setTimeout(() => {
+      cutsceneInProgress = false;
+      termInput.disabled = false;
+      termInput.focus();
+      climaxModal.style.display = 'flex';
+      renderClimaxModalState();
+    }, 5200);
+  }
+
+  function renderClimaxModalState() {
+    const passDisplay = document.getElementById('passkeyDisplay');
+    if (passDisplay) passDisplay.textContent = 'ECHO-1999-ARCHITECT';
+  }
+
+  function initiateDirectorReboot() {
+    SFX.reboot();
+    climaxModal.style.display = 'none';
+    const overlay = document.getElementById('rebootOverlay');
+    const bar = document.getElementById('rebootBar');
+    const sub = document.getElementById('rebootSub');
+    if (overlay) overlay.style.display = 'flex';
+
+    // Register Director authentication tokens
+    try {
+      localStorage.setItem('kdirector_auth', 'true');
+      localStorage.setItem('kdirector_passkey', 'ECHO-1999-ARCHITECT');
+      localStorage.setItem('kdirector_role', 'ARCHITECT');
+      sessionStorage.setItem('kdirector_auth', 'true');
+    } catch(e) {}
+
+    let pct = 0;
+    const interval = setInterval(() => {
+      pct += 10;
+      if (bar) bar.style.width = pct + '%';
+      if (pct === 40 && sub) {
+        sub.textContent = "Authenticating tokens: ECHO-1999-ARCHITECT verified...";
+      }
+      if (pct === 80 && sub) {
+        sub.textContent = "Launching KDirector Console [ARCHITECT CLEARANCE]...";
+      }
+      if (pct >= 100) {
+        clearInterval(interval);
+        let launched = false;
+        try {
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'OS_LAUNCH_APP', appId: 'kdirector' }, '*');
+            window.parent.postMessage({ type: 'KILO_LAUNCH_APP', targetApp: 'kdirector' }, '*');
+            launched = true;
+          }
+        } catch(e) {}
+
+        setTimeout(() => {
+          if (overlay) overlay.style.display = 'none';
+          if (!launched) {
+            window.location.href = '/apps/kdirector.html';
+          }
+        }, 350);
+      }
+    }, 100);
+  }
+
   function checkClimax() {
     const allBreached = state.sectors.every(s => s.status === 'BREACHED');
     if (allBreached && !state.completed) {
@@ -967,19 +1294,12 @@
       try {
         localStorage.setItem('kdirector_auth', 'true');
         localStorage.setItem('kdirector_passkey', 'ECHO-1999-ARCHITECT');
+        localStorage.setItem('kdirector_role', 'ARCHITECT');
         sessionStorage.setItem('kdirector_auth', 'true');
       } catch(e) {}
 
-      SFX.climax();
-      printLine("==================================================", "success");
-      printLine("  TRANSMUTATION COMPLETE: LUDONARRATIVE CONSONANCE", "success");
-      printLine("  ALL 5 SECTORS BREACHED. FOURTH WALL COLLAPSE.", "success");
-      printLine("  MASTER DIRECTOR PASSKEY: ECHO-1999-ARCHITECT", "success");
-      printLine("==================================================", "success");
-
-      setTimeout(() => {
-        climaxModal.style.display = 'flex';
-      }, 700);
+      saveState(false);
+      executeClimaxCutscene();
     }
   }
 
@@ -1134,8 +1454,22 @@
       case 'audio':
         if (arg1 === 'on') { state.audioEnabled = true; printLine("[AUDIO] Synthesizer enabled."); }
         else if (arg1 === 'off') { state.audioEnabled = false; printLine("[AUDIO] Synthesizer muted."); }
-        else if (arg1 === 'test') { SFX.breach(); printLine("[AUDIO] Playing Genesis FM / SPC700 test sequence."); }
-        else { printLine(`[AUDIO] Currently ${state.audioEnabled ? 'ENABLED' : 'MUTED'}. Usage: audio [on|off|test]`); }
+        else if (arg1 === 'victory' || arg1 === 'fanfare') { playVictoryFanfare(); printLine("[AUDIO] Playing Genesis YM2612 & SPC700 victory fanfare.", "success"); }
+        else if (arg1 === 'test') { playVictoryFanfare(); printLine("[AUDIO] Auditioning Genesis FM / SPC700 victory fanfare.", "success"); }
+        else { printLine(`[AUDIO] Currently ${state.audioEnabled ? 'ENABLED' : 'MUTED'}. Usage: audio [on|off|test|victory]`); }
+        break;
+      case 'fanfare':
+        playVictoryFanfare();
+        printLine("[AUDIO] Playing Genesis YM2612 & SPC700 victory fanfare.", "success");
+        break;
+      case 'climax':
+      case 'replay':
+      case 'cutscene':
+        if (state.completed) {
+          executeClimaxCutscene();
+        } else {
+          printLine("Cutscene locked: Breach all 5 sectors first.", "alert");
+        }
         break;
       case 'theme':
         if (['green', 'amber', 'cyan'].includes(arg1.toLowerCase())) {
@@ -1157,7 +1491,7 @@
       case 'ascend':
       case 'director':
         if (state.completed) {
-          window.open('/apps/kdirector.html', '_blank');
+          initiateDirectorReboot();
         } else {
           printLine("ACCESS DENIED: Master Director clearance not yet unlocked. Breach all 5 sectors.", "alert");
         }
@@ -1173,6 +1507,7 @@
   const AUTOCOMPLETE_LIST = [
     'help', 'status', 'scan', 'analyze', 'breach', 'override',
     'audio', 'theme', 'save', 'load', 'clear', 'cls', 'ascend', 'director',
+    'climax', 'replay', 'cutscene', 'fanfare',
     'MEM_HEAP', 'AUDIO_DSP', 'NET_RELAY', 'STORAGE_VFS', 'CORE_AI',
     '7F1999', '1999HZ', '10.19.99.4', 'RECOVERY_1999', 'AUTONOMOUS_FLEET'
   ];
@@ -1290,9 +1625,40 @@
     printLine("[SETTINGS] Preferences saved.", "system");
   });
 
-  document.getElementById('btnAscendDirector').addEventListener('click', () => {
-    window.open('/apps/kdirector.html', '_blank');
-  });
+  const btnDismiss = document.getElementById('btnClimaxDismiss');
+  if (btnDismiss) btnDismiss.addEventListener('click', () => climaxModal.style.display = 'none');
+
+  const btnCopy = document.getElementById('btnCopyPasskey');
+  if (btnCopy) {
+    btnCopy.addEventListener('click', () => {
+      SFX.key();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText('ECHO-1999-ARCHITECT').then(() => {
+          btnCopy.textContent = '✓ COPIED!';
+          setTimeout(() => { btnCopy.textContent = '📋 Copy Passkey'; }, 2000);
+        }).catch(() => {
+          btnCopy.textContent = 'ECHO-1999-ARCHITECT';
+        });
+      } else {
+        btnCopy.textContent = 'ECHO-1999-ARCHITECT';
+      }
+    });
+  }
+
+  const btnReplay = document.getElementById('btnReplayClimax');
+  if (btnReplay) {
+    btnReplay.addEventListener('click', () => {
+      climaxModal.style.display = 'none';
+      executeClimaxCutscene();
+    });
+  }
+
+  const btnAscend = document.getElementById('btnAscendDirector');
+  if (btnAscend) {
+    btnAscend.addEventListener('click', () => {
+      initiateDirectorReboot();
+    });
+  }
 
   // Splash Screen handlers
   const hasSave = localStorage.getItem(STORAGE_KEY) !== null;
