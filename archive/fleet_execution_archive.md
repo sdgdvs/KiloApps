@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-01T18:25:00Z — kilo-usability: KClip (Draggable Splitter, Mobile Sliding View, Font Zoom, Wrap & Native Keys)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 118.0 KB web / 16.9 KB native < 999 KB ceiling).
+  - Responsive Splitter: Added mouse & touch draggable pane splitter (`#paneResizer`) with width clamping & localStorage persistence.
+  - Mobile Ergonomics: Built segmented mobile view switcher (Stack vs Editor) with auto-switch on clip tap and `← Stack` back button.
+  - Editor Controls: Added font size zoom (`A-`/`A+`, `Ctrl+=`/`Ctrl+-`), line wrap toggle (`↵ Wrap`), and live cursor tracker (`Ln/Col`).
+  - Bug Fixes: Fixed `applyViewMode` element ID reference restoring raw text and hex dump toggle functionality.
+  - Toast & Native Parity: Centered toast in non-occluding safe zone; added `H`/`C`/`P`/`Del`/`1-9` hotkeys and status messages in Win32 C (`KClip.exe`).
+  - Window Sizing: Adjusted default dimensions in `KiloOS/src/App.jsx` to 1080x720 for comfortable desktop toolbar breathing room.
+  - Verification: MSVC clean (`KClip.exe` 16.9 KB); Vite clean in 750ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-01T17:22:00Z — kilo-tester: KMystery (Interactive UI Audit, Audio Fixes, JSON Case Export/Import & Key Isolation)**
   - Status: PASS ✅ (4 issues found, 4 fixed, 0 regressions, clean builds, 151.9 KB web / 40.4 KB native < 999 KB ceiling).
   - Runtime Fixes: Fixed undefined `startRain()` in `startGame()` and missing `noirAudio.` in `advanceTime()` chord trigger.

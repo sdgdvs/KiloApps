@@ -674,6 +674,78 @@
   .hud-tr { top: -1px; right: -1px; border-width: 2px 2px 0 0; border-top-right-radius: 4px; }
   .hud-bl { bottom: -1px; left: -1px; border-width: 0 0 2px 2px; border-bottom-left-radius: 4px; }
   .hud-br { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; border-bottom-right-radius: 4px; }
+
+  /* Hex Viewer Zoom & Display Toggles */
+  .hex-container.zoom-sm {
+    font-size: 0.76rem;
+  }
+  .hex-container.zoom-sm .hex-byte {
+    width: 20px;
+    height: 19px;
+  }
+  .hex-container.zoom-sm .hex-row {
+    padding: 1px 4px;
+    line-height: 1.35;
+  }
+  .hex-container.zoom-lg {
+    font-size: 0.98rem;
+  }
+  .hex-container.zoom-lg .hex-byte {
+    width: 28px;
+    height: 26px;
+  }
+  .hex-container.zoom-lg .hex-row {
+    padding: 4px 8px;
+    line-height: 1.6;
+  }
+  .hex-container.hide-ascii .hex-ascii {
+    display: none !important;
+  }
+
+  /* Responsive Layout Ergonomics */
+  @media (max-width: 980px) {
+    .tab-btn {
+      padding: 6px 9px;
+      font-size: 0.76rem;
+      gap: 4px;
+    }
+  }
+  @media (max-width: 768px) {
+    body {
+      padding: 10px;
+      gap: 10px;
+    }
+    .header {
+      padding: 10px 14px;
+    }
+    .brand-title {
+      font-size: 1.1rem;
+    }
+    .grid-2 {
+      grid-template-columns: 1fr;
+    }
+    .status-bar {
+      flex-wrap: wrap;
+      gap: 4px 10px;
+    }
+    .hex-container {
+      max-height: 50vh;
+    }
+  }
+  @media (max-width: 480px) {
+    .header-actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+    .tab-btn {
+      padding: 5px 8px;
+      font-size: 0.72rem;
+    }
+    .hex-offset {
+      width: 80px;
+      font-size: 0.75rem;
+    }
+  }
 </style>
 </head>
 <body>
@@ -825,8 +897,11 @@
     <div class="panel">
       <div class="panel-title">
         <div class="title-left">🖥️ Hex View & Byte Editor (16 Bytes / Row)</div>
-        <div class="form-row">
+        <div class="form-row" style="gap:6px;">
           <span style="font-size:0.75rem; color:var(--text-secondary);" id="bufferSizeLabel">Buffer Size: 0 Bytes</span>
+          <button class="btn btn-sm" id="btnZoomOut" onclick="adjustHexZoom(-1)" title="Decrease Hex Font Size [Ctrl+-]">A-</button>
+          <button class="btn btn-sm" id="btnZoomIn" onclick="adjustHexZoom(1)" title="Increase Hex Font Size [Ctrl+=]">A+</button>
+          <button class="btn btn-sm" id="btnToggleAscii" onclick="toggleAsciiColumn()" title="Toggle ASCII Column Visibility [T]">ASCII</button>
         </div>
       </div>
       <!-- Hex Navigation & Goto Address Bar -->
@@ -1079,13 +1154,19 @@
         </div>
         
         <div style="background: var(--input-bg); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border-color);">
-          <div style="font-weight: 700; color: var(--accent-cyan); margin-bottom: 6px;">⌨️ Keyboard Shortcuts</div>
+          <div style="font-weight: 700; color: var(--accent-cyan); margin-bottom: 6px;">⌨️ Keyboard Shortcuts & Navigation</div>
           <table style="width: 100%; font-size: 0.8rem; border-collapse: collapse;">
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[F1]</b> or <b>[H]</b></td><td>Open / Close this Help Guide</td></tr>
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[Esc]</b></td><td>Dismiss Active Modals / Overlays</td></tr>
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[E]</b></td><td>Toggle Endianness (Little Endian ⇄ Big Endian)</td></tr>
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[P]</b></td><td>Cycle Presets (including Project Echo Sector)</td></tr>
             <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[F5] / [F9]</b></td><td>Quicksave / Quickload Workspace State</td></tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[Arrow Keys]</b></td><td>Navigate Hex Bytes (▲▼ &plusmn;16B, ◄► &plusmn;1B)</td></tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[PgUp] / [PgDn]</b></td><td>Page Jump (&plusmn;160 Bytes / 10 Rows)</td></tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[Home] / [End]</b></td><td>Jump to Line Start / Line End (Ctrl+ for Buffer Start/End)</td></tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[Ctrl+=] / [Ctrl+-]</b></td><td>Increase / Decrease Hex Font Zoom (A+ / A-)</td></tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[T]</b></td><td>Toggle ASCII Column Visibility</td></tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);"><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>Double-Click</b></td><td>Focus Hex Byte for Rapid In-Place Edit</td></tr>
             <tr><td style="padding: 4px 0; color: var(--accent-cyan); font-family: monospace;"><b>[1] - [7]</b></td><td>Quickly switch between Suite Tabs</td></tr>
           </table>
         </div>
@@ -1300,7 +1381,22 @@
     const goIn = document.getElementById('gotoOffsetInput');
     if (goIn) goIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { gotoOffset(); e.preventDefault(); } });
 
-    // Click-to-copy & keyboard copy for all inspector items
+    // Restore saved hex viewer zoom & ascii column preferences
+    try {
+      let savedZoom = localStorage.getItem('khex_hex_zoom');
+      if (savedZoom !== null) {
+        applyHexZoom(parseInt(savedZoom, 10));
+      }
+      let savedAscii = localStorage.getItem('khex_hide_ascii');
+      if (savedAscii === '1') {
+        const hc = document.getElementById('hexViewContainer');
+        if (hc) hc.classList.add('hide-ascii');
+        const btn = document.getElementById('btnToggleAscii');
+        if (btn) btn.classList.add('btn-cyan');
+      }
+    } catch(e) {}
+
+    // Click-to-copy & keyboard copy for all inspector items with fallback
     document.querySelectorAll('.inspector-item').forEach(item => {
       item.tabIndex = 0;
       item.setAttribute('role', 'button');
@@ -1309,11 +1405,29 @@
         const lblEl = item.querySelector('.inspector-label');
         if (valEl) {
           const textToCopy = valEl.innerText.trim();
-          navigator.clipboard.writeText(textToCopy).then(() => {
-            showToast('Copied to Clipboard', (lblEl ? lblEl.innerText.replace('📋', '').trim() : 'Value') + ': ' + textToCopy, 'success', 2500);
-          }).catch(() => {
-            showToast('Value Copied', textToCopy, 'info', 2000);
-          });
+          const label = lblEl ? lblEl.innerText.replace('📋', '').trim() : 'Value';
+          function fallbackCopy(s) {
+            try {
+              const ta = document.createElement('textarea');
+              ta.value = s;
+              ta.style.position = 'fixed';
+              ta.style.opacity = '0';
+              document.body.appendChild(ta);
+              ta.select();
+              document.execCommand('copy');
+              ta.remove();
+              showToast('Copied to Clipboard', label + ': ' + s, 'success', 2500);
+            } catch (err) {
+              showToast('Value Inspected', s, 'info', 2000);
+            }
+          }
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(textToCopy).then(() => {
+              showToast('Copied to Clipboard', label + ': ' + textToCopy, 'success', 2500);
+            }).catch(() => fallbackCopy(textToCopy));
+          } else {
+            fallbackCopy(textToCopy);
+          }
         }
       };
       item.addEventListener('click', copyVal);
@@ -1383,12 +1497,38 @@
       quickloadState();
       return;
     }
+    if (!isHelpOpen && !isTutOpen && (e.ctrlKey || e.metaKey)) {
+      if (e.key === '=' || e.key === '+') {
+        adjustHexZoom(1);
+        e.preventDefault();
+        return;
+      }
+      if (e.key === '-' || e.key === '_') {
+        adjustHexZoom(-1);
+        e.preventDefault();
+        return;
+      }
+    }
     if (!isHelpOpen && !isTutOpen && !e.ctrlKey && !e.altKey && !e.metaKey && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
       if (activeTab === 'editor') {
         if (e.key === 'ArrowUp') { jumpOffsetStep(-16); e.preventDefault(); return; }
         else if (e.key === 'ArrowDown') { jumpOffsetStep(16); e.preventDefault(); return; }
         else if (e.key === 'ArrowLeft') { jumpOffsetStep(-1); e.preventDefault(); return; }
         else if (e.key === 'ArrowRight') { jumpOffsetStep(1); e.preventDefault(); return; }
+        else if (e.key === 'PageUp') { jumpOffsetStep(-160); e.preventDefault(); return; }
+        else if (e.key === 'PageDown') { jumpOffsetStep(160); e.preventDefault(); return; }
+        else if (e.key === 'Home') {
+          gotoOffset(selectedOffset - (selectedOffset % 16));
+          e.preventDefault(); return;
+        }
+        else if (e.key === 'End') {
+          gotoOffset(Math.min(binaryBuffer.length - 1, selectedOffset - (selectedOffset % 16) + 15));
+          e.preventDefault(); return;
+        }
+        else if (e.key === 't' || e.key === 'T') {
+          toggleAsciiColumn();
+          e.preventDefault(); return;
+        }
       }
       if (e.key === '1') { switchTab('converter'); e.preventDefault(); }
       else if (e.key === '2') { switchTab('editor'); e.preventDefault(); }
@@ -2084,9 +2224,46 @@
     e.target.value = '';
   }
 
-  const HEX_ROW_HEIGHT = 28;
+  let currentHexRowHeight = 28;
+  let currentZoomLevel = 1; // 0: sm (22px), 1: md (28px), 2: lg (34px)
   let activeHighlightRange = null;
   let isHexScrolling = false;
+
+  function applyHexZoom(level) {
+    currentZoomLevel = Math.max(0, Math.min(2, level));
+    const container = document.getElementById('hexViewContainer');
+    if (!container) return;
+    container.classList.remove('zoom-sm', 'zoom-lg');
+    if (currentZoomLevel === 0) {
+      currentHexRowHeight = 22;
+      container.classList.add('zoom-sm');
+    } else if (currentZoomLevel === 2) {
+      currentHexRowHeight = 34;
+      container.classList.add('zoom-lg');
+    } else {
+      currentHexRowHeight = 28;
+    }
+    try { localStorage.setItem('khex_hex_zoom', currentZoomLevel.toString()); } catch(e) {}
+    renderHexView();
+  }
+
+  function adjustHexZoom(delta) {
+    applyHexZoom(currentZoomLevel + delta);
+    const names = ['Compact (A-)', 'Default', 'Enlarged (A+)'];
+    showToast('Hex Zoom', `Display size: ${names[currentZoomLevel]}`, 'info', 1500);
+  }
+
+  function toggleAsciiColumn() {
+    const container = document.getElementById('hexViewContainer');
+    if (!container) return;
+    const isHidden = container.classList.toggle('hide-ascii');
+    const btn = document.getElementById('btnToggleAscii');
+    if (btn) {
+      btn.classList.toggle('btn-cyan', isHidden);
+    }
+    try { localStorage.setItem('khex_hide_ascii', isHidden ? '1' : '0'); } catch(e) {}
+    showToast('ASCII View', isHidden ? 'ASCII preview column hidden' : 'ASCII preview column visible', 'info', 1500);
+  }
 
   function initHexVirtualScroll() {
     const container = document.getElementById('hexViewContainer');
@@ -2120,7 +2297,7 @@
     }
 
     const totalRows = Math.ceil(binaryBuffer.length / 16);
-    const totalHeight = totalRows * HEX_ROW_HEIGHT;
+    const totalHeight = totalRows * currentHexRowHeight;
 
     let spacer = container.querySelector('.hex-scroll-spacer');
     if (!spacer) {
@@ -2135,7 +2312,7 @@
 
     if (highlightRange) {
       const targetRow = Math.floor(highlightRange.start / 16);
-      container.scrollTop = Math.max(0, targetRow * HEX_ROW_HEIGHT - 48);
+      container.scrollTop = Math.max(0, targetRow * currentHexRowHeight - 48);
     } else if (prevScroll > 0) {
       container.scrollTop = prevScroll;
     }
@@ -2159,10 +2336,10 @@
     const clientHeight = container.clientHeight || 360;
     const bufferPadding = 4;
 
-    const startRow = Math.max(0, Math.floor(scrollTop / HEX_ROW_HEIGHT) - bufferPadding);
-    const endRow = Math.min(totalRows, Math.ceil((scrollTop + clientHeight) / HEX_ROW_HEIGHT) + bufferPadding);
+    const startRow = Math.max(0, Math.floor(scrollTop / currentHexRowHeight) - bufferPadding);
+    const endRow = Math.min(totalRows, Math.ceil((scrollTop + clientHeight) / currentHexRowHeight) + bufferPadding);
 
-    windowEl.style.transform = `translateY(${startRow * HEX_ROW_HEIGHT}px)`;
+    windowEl.style.transform = `translateY(${startRow * currentHexRowHeight}px)`;
 
     let fragment = document.createDocumentFragment();
 
@@ -2200,6 +2377,14 @@
           bEl.innerText = b.toString(16).padStart(2, '0').toUpperCase();
           bEl.dataset.idx = idx;
           bEl.onclick = () => selectByte(idx);
+          bEl.ondblclick = () => {
+            selectByte(idx);
+            const bhIn = document.getElementById('byteEditHexInput');
+            if (bhIn) {
+              bhIn.focus();
+              bhIn.select();
+            }
+          };
 
           if (selectedOffset === idx) bEl.classList.add('selected');
           if (activeHighlightRange && idx >= activeHighlightRange.start && idx < activeHighlightRange.end) {
@@ -2235,6 +2420,24 @@
     selectedOffset = idx;
     const prevSel = document.querySelector('.hex-byte.selected');
     if (prevSel) prevSel.classList.remove('selected');
+
+    // Auto-scroll virtual container so selected row is comfortably in view
+    const container = document.getElementById('hexViewContainer');
+    if (container) {
+      const targetRow = Math.floor(idx / 16);
+      const rowTop = targetRow * currentHexRowHeight;
+      const rowBottom = rowTop + currentHexRowHeight;
+      const viewTop = container.scrollTop;
+      const viewBottom = viewTop + container.clientHeight;
+
+      if (rowTop < viewTop) {
+        container.scrollTop = Math.max(0, rowTop - currentHexRowHeight);
+        renderHexVisibleWindow();
+      } else if (rowBottom > viewBottom) {
+        container.scrollTop = rowBottom - container.clientHeight + currentHexRowHeight;
+        renderHexVisibleWindow();
+      }
+    }
 
     // Highlight in virtual window if currently visible
     const allVisibleBytes = document.querySelectorAll('.hex-byte');

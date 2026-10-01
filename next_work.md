@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://deep-core (Deep Core Node & Quarantine Defusal)"
   kilo_graphics: KChrono
   kilo_tester: KNote
-  kilo_usability: KHex
+  kilo_usability: KAudio
   kilo_qa: KBase
   kilo_expander: KSnake
 virtual_web_target: "kweb://deep-core"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KNet
-  timestamp: "2026-10-01T22:18:00Z"
+  agent: kilo-usability
+  app: KHex
+  timestamp: "2026-10-01T23:20:00Z"
 last_planner_run: "2026-10-01T19:32:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KHex`
+- **Current Target**: `KAudio`
 - **Upcoming Queue**:
-  `KAudio`, `KPing`, `KHabit`, `KFarm`, `KPaint`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip)*.
+  `KPing`, `KHabit`, `KFarm`, `KPaint`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KBase`
@@ -297,6 +297,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-01T23:20:00Z — kilo-usability: KHex (Virtual Scroll Auto-Focus, Font Zoom A-/A+, ASCII Toggle & Navigation Keys)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 139.0 KB web / 30.7 KB native < 999 KB ceiling).
+  - Virtual Scroll Ergonomics: Added auto-scroll positioning in `selectByte` ensuring jumps (`Goto Address`, chunk clicks, arrows) reveal row.
+  - Font Size Zoom: Added 3-level font zoom controls (`A-`/`A+`, `Ctrl+=`/`Ctrl+-`) scaling row height (22/28/34px) with localStorage persistence.
+  - Column & Touch Toggles: Added ASCII preview visibility toggle (`T`) for narrow displays and double-click byte focusing for rapid editing.
+  - Extended Key Navigation: Bound `PageUp`/`PageDown` (10 rows / 160B) and `Home`/`End` (line bounds) in editor mode; verified `F1`/`H` help.
+  - Fallback Clipboard: Added robust `document.execCommand` copy fallback on inspector data fields when `navigator.clipboard` rejects.
+  - Window & Responsive Layout: Enlarged default window to 980x820 in `App.jsx`; added media queries preventing tab overflow on mobile/narrow viewports.
+  - Verification: MSVC clean (`KHex.exe` 30.7 KB); Vite clean in 378ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-01T22:18:00Z — kilo-tester: KNet (Interactive UI Audit, Forge & Subnet Fixes, Passkey Hash & TINAG Scrub)**
   - Status: PASS ✅ (6 issues found, 6 fixed, 0 regressions, clean builds, 170.0 KB web / 41.5 KB native < 999 KB ceiling).
   - Runtime Fixes: Fixed undefined `logTraffic` calls in Forge to `addTrafficLog`, and `closeForge` to `closeForgeModal`.
@@ -331,15 +341,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Multiplayer Focus: Targeted KSnake for 1v1 arena duel mode via RFMS; queued KPaint/KPad for collaborative canvas.
   - Virtual Web & ARG: Advanced virtual web target to kweb://echo-subsystem.net; focusing middle-game puzzle chain gating.
   - Log Hygiene: Retained 5 active logs; verified zero compiler errors, clean Vite build, and 0 lint failures.
-
-- **2026-10-01T18:25:00Z — kilo-usability: KClip (Draggable Splitter, Mobile Sliding View, Font Zoom, Wrap & Native Keys)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 118.0 KB web / 16.9 KB native < 999 KB ceiling).
-  - Responsive Splitter: Added mouse & touch draggable pane splitter (`#paneResizer`) with width clamping & localStorage persistence.
-  - Mobile Ergonomics: Built segmented mobile view switcher (Stack vs Editor) with auto-switch on clip tap and `← Stack` back button.
-  - Editor Controls: Added font size zoom (`A-`/`A+`, `Ctrl+=`/`Ctrl+-`), line wrap toggle (`↵ Wrap`), and live cursor tracker (`Ln/Col`).
-  - Bug Fixes: Fixed `applyViewMode` element ID reference restoring raw text and hex dump toggle functionality.
-  - Toast & Native Parity: Centered toast in non-occluding safe zone; added `H`/`C`/`P`/`Del`/`1-9` hotkeys and status messages in Win32 C (`KClip.exe`).
-  - Window Sizing: Adjusted default dimensions in `KiloOS/src/App.jsx` to 1080x720 for comfortable desktop toolbar breathing room.
-  - Verification: MSVC clean (`KClip.exe` 16.9 KB); Vite clean in 750ms; check_icons & security_lint 100% PASS.
 
 

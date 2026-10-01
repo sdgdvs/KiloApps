@@ -53,7 +53,7 @@ const APPS = [
   { id: 'kpass', title: 'KPass', url: '/apps/kpass.html', exeUrl: '/exe/KPass.exe', icon: '/assets/icons/kpass.ico', w: 540, h: 660, folder: 'System' },
   { id: 'kcipher', title: 'KCipher', url: '/apps/kcipher.html', exeUrl: '/exe/KCipher.exe', icon: '/assets/icons/kcipher.ico', w: 960, h: 680, folder: 'System' },
   { id: 'kping', title: 'KPing', url: '/apps/kping.html', exeUrl: '/exe/KPing.exe', icon: '/assets/icons/kping.ico', w: 960, h: 700, folder: 'System' },
-  { id: 'khex', title: 'KHex', url: '/apps/khex.html', exeUrl: '/exe/KHex.exe', icon: '/assets/icons/khex.ico', w: 920, h: 800, folder: 'System' },
+  { id: 'khex', title: 'KHex', url: '/apps/khex.html', exeUrl: '/exe/KHex.exe', icon: '/assets/icons/khex.ico', w: 980, h: 820, folder: 'System' },
   { id: 'ksys', title: 'KSys', url: '/apps/ksys.html', exeUrl: '/exe/KSys.exe', icon: '/assets/icons/ksys.ico', w: 1024, h: 768, folder: 'System' },
   { id: 'kmandel', title: 'KMandel', url: '/apps/kmandel.html', exeUrl: '/exe/KMandel.exe', icon: '/assets/icons/kmandel.ico', w: 1024, h: 720, folder: 'Media' },
   { id: 'ktimer', title: 'KTimer', url: '/apps/ktimer.html', exeUrl: '/exe/KTimer.exe', icon: '/assets/icons/ktimer.ico', w: 460, h: 580, folder: 'System' },
