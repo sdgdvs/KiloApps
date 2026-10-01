@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-01T17:22:00Z — kilo-tester: KMystery (Interactive UI Audit, Audio Fixes, JSON Case Export/Import & Key Isolation)**
+  - Status: PASS ✅ (4 issues found, 4 fixed, 0 regressions, clean builds, 151.9 KB web / 40.4 KB native < 999 KB ceiling).
+  - Runtime Fixes: Fixed undefined `startRain()` in `startGame()` and missing `noirAudio.` in `advanceTime()` chord trigger.
+  - Modal Key Isolation: Blocked background game hotkey bleed (`s`, `l`, `i`, `a`, `1-5`) during help, dossier, and game-over modals.
+  - Grand Jury Controls: Bound Enter to deliver indictment and Esc to cancel in accusation view; isolated from map travel keys.
+  - Storage & Persistence: Added JSON Case File export (`exportCase`) and import (`importCaseFile`) with header/start buttons and `[Ctrl+S]`/`[Ctrl+O]`.
+  - Toast Safe Zone: Repositioned `#toast-bar` to bottom-center safe zone clearing notebook panel and evidence dossier sketches.
+  - Verification: MSVC clean (`KMystery.exe` 40.4 KB); Vite clean in 1.12s; check_icons & security_lint 100% PASS.
+
 - **2026-10-01T16:38:00Z — kilo-qa: KContacts (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 143.1 KB web / 29.2 KB native < 999 KB ceiling).
   - State Persistence: Fixed uncommitted edit flush prior to F5 serialization in web and Win32 C (`KContacts.exe`).

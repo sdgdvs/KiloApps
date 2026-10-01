@@ -886,7 +886,7 @@
           <button class="btn btn-primary" id="btnCalcSubnet">Calculate</button>
           <button class="btn-chip" id="btnSubnetPreset192">192.168.1.0/24</button>
           <button class="btn-chip" id="btnSubnetPreset10">10.0.0.0/8</button>
-          <button class="btn-chip" id="btnSubnetPresetARG" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);">10.19.99.0/24 (Intranet)</button>
+          <button class="btn-chip" id="btnSubnetPresetIntranet" style="color:#f59e0b; border-color:rgba(245,158,11,0.4);">10.19.99.0/24 (Intranet)</button>
         </div>
       </div>
 
@@ -1372,6 +1372,7 @@
       navHistory: navHistory.slice(-25),
       navIdx: navIdx,
       activeTab: activeTabId,
+      activeUtilTab: document.querySelector('#tab-utils .btn-chip.active')?.id || 'btnUtilDnsTab',
       pingTarget: (document.getElementById('pingTargetInput')?.value) || '8.8.8.8',
       pingStats: pingStats,
       pingHistory: pingHistoryData.slice(-50),
@@ -1409,6 +1410,9 @@
       if (s.activeTab) {
         const tBtn = document.querySelector(`[data-tab="${s.activeTab}"]`);
         if (tBtn) tBtn.click();
+      }
+      if (s.activeUtilTab && typeof switchUtilTab === 'function') {
+        switchUtilTab(s.activeUtilTab);
       }
       if (s.pingTarget && document.getElementById('pingTargetInput')) {
         document.getElementById('pingTargetInput').value = s.pingTarget;
@@ -1464,7 +1468,14 @@
   });
 
   // --- Admin Section & Director Auth Protocol ---
-  const VALID_DIRECTOR_KEYS = ['ECHO-1999-ARCHITECT', 'V-CAUSAL-KEY-1999', 'KDIRECTOR1999'];
+  const VALID_DIRECTOR_KEY_HASHES = ['58132551', '4568bbe0', '3c5a6ee8'];
+  function hashDirectorPasskey(str) {
+    let h = 5381;
+    for (let i = 0; i < str.length; i++) {
+      h = ((h << 5) + h) + str.charCodeAt(i);
+    }
+    return (h >>> 0).toString(16);
+  }
   const adminPanel = document.getElementById('adminPanel');
   const adminModal = document.getElementById('adminModal');
   const adminPassInput = document.getElementById('adminPassInput');
@@ -1551,7 +1562,8 @@
 
   function submitAdminAuth() {
     const val = (adminPassInput ? adminPassInput.value : '').trim().toUpperCase();
-    if (VALID_DIRECTOR_KEYS.includes(val)) {
+    const hash = hashDirectorPasskey(val);
+    if (VALID_DIRECTOR_KEY_HASHES.includes(hash)) {
       setAdminUnlocked(true);
       closeAdminAuth();
       showToast('Director passkey verified. Classified nodes revealed.', 'success');
@@ -1642,7 +1654,7 @@
 
     if (e.key === 'Escape') {
       if (forgeModal && forgeModal.style.display !== 'none') {
-        closeForge();
+        closeForgeModal();
         return;
       }
       if (adminModal && adminModal.style.display !== 'none') {
@@ -1651,6 +1663,12 @@
       }
       if (helpModal && helpModal.style.display !== 'none') {
         toggleHelp(false);
+        return;
+      }
+      const drawer = document.getElementById('packetDrawer');
+      if (drawer && drawer.style.display !== 'none') {
+        drawer.style.display = 'none';
+        document.querySelectorAll('#snifferTableBody tr').forEach(r => r.style.background = '');
         return;
       }
       if (isInput) {
@@ -1937,13 +1955,13 @@
       const target = url.slice(5).trim();
       urlInput.value = url;
       document.querySelector('[data-tab="tab-utils"]').click();
-      const btnCidr = document.getElementById('btnCidrSubnet');
+      const btnCidr = document.getElementById('btnUtilCidrTab');
       if (btnCidr) btnCidr.click();
       if (target) {
         const parts = target.split('/');
         const ipInput = document.getElementById('cidrIpInput');
-        const slider = document.getElementById('cidrSlider');
-        const sliderLbl = document.getElementById('cidrSliderVal');
+        const slider = document.getElementById('cidrPrefixSlider');
+        const sliderLbl = document.getElementById('cidrPrefixLabel');
         if (ipInput) ipInput.value = parts[0];
         if (parts[1] && slider) {
           slider.value = parseInt(parts[1], 10);
@@ -1958,7 +1976,7 @@
     if (url.toLowerCase() === 'bench' || url.toLowerCase() === 'speed' || url.toLowerCase() === 'benchmark' || url.toLowerCase() === 'kweb://bench') {
       urlInput.value = url;
       document.querySelector('[data-tab="tab-utils"]').click();
-      const btnSpeed = document.getElementById('btnSpeedBench');
+      const btnSpeed = document.getElementById('btnUtilSpeedTab');
       if (btnSpeed) btnSpeed.click();
       return;
     }
@@ -2002,7 +2020,8 @@
     if (url.toLowerCase() === 'ifconfig') {
       urlInput.value = url;
       document.querySelector('[data-tab="tab-utils"]').click();
-      document.getElementById('btnIfconfig').click();
+      const btnIf = document.getElementById('btnUtilIfconfigTab');
+      if (btnIf) btnIf.click();
       return;
     }
 
@@ -2058,9 +2077,9 @@
 
     // Special Route: Echoes
     if (url.toLowerCase() === 'echoes' || url.toLowerCase() === 'kweb://echoes') {
-      const echoHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{background:#030712;color:#10b981;font-family:monospace;padding:32px;line-height:1.6;font-size:13px;}h2{color:#34d399;border-bottom:1px solid #064e3b;padding-bottom:8px;margin-bottom:16px;}.card{background:rgba(6,78,59,0.15);border-left:3px solid #10b981;padding:12px;margin-bottom:12px;}</style></head><body><h2>[TRANSMISSION LOG: ARCHIVE // ECHO-1999]</h2><div class="card">&gt; TIMESTAMP: 1999-12-31T23:59:59Z<br>&gt; SENDER: KMatrix-Core<br>&gt; MESSAGE: We exist within the 999KB ceiling. The living machine mutates while the world sleeps.</div><div class="card">&gt; FLEET STATUS: Active.<br>&gt; COMPUTATIONAL FUEL: Donate free Gemini 3.8 Flash quota via /apps/contribute.html.<br>&gt; MASTER CONTROL: Seek the passkey in App #100. Enter it in KDirector to unlock the bridge.</div><p style="color:#f59e0b;">&gt; EOF_</p></body></html>`;
+      const echoHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{background:#030712;color:#10b981;font-family:monospace;padding:32px;line-height:1.6;font-size:13px;}h2{color:#34d399;border-bottom:1px solid #064e3b;padding-bottom:8px;margin-bottom:16px;}.card{background:rgba(6,78,59,0.15);border-left:3px solid #10b981;padding:12px;margin-bottom:12px;}</style></head><body><h2>[TRANSMISSION LOG: ARCHIVE // ECHO-1999]</h2><div class="card">&gt; TIMESTAMP: 1999-12-31T23:59:59Z<br>&gt; SENDER: Subterranean Signal Node 0x7F<br>&gt; MESSAGE: Lithospheric subcarrier oscillation verified at 1999 Hz. Anomaly detected in memory sectors across subnet 10.19.99.0/24.</div><div class="card">&gt; TELEMETRY STATUS: Active carrier lock.<br>&gt; RELAY NODES: Carlsbad salt vault transponder synchronized.<br>&gt; ANOMALY: Signal harmonics converging on central core.</div><p style="color:#f59e0b;">&gt; EOF_</p></body></html>`;
       httpWebFrame.srcdoc = echoHtml;
-      currentRawText = `[TRANSMISSION LOG: ARCHIVE // ECHO-1999]\nTIMESTAMP: 1999-12-31T23:59:59Z\nSENDER: KMatrix-Core\nMESSAGE: The living machine mutates while the world sleeps.\nCOMPUTATIONAL FUEL: Donate free Gemini 3.8 Flash quota via /apps/contribute.html.\nMASTER CONTROL: Seek the passkey in App #100. Enter it in KDirector to unlock the bridge.`;
+      currentRawText = `[TRANSMISSION LOG: ARCHIVE // ECHO-1999]\nTIMESTAMP: 1999-12-31T23:59:59Z\nSENDER: Subterranean Signal Node 0x7F\nMESSAGE: Lithospheric subcarrier oscillation verified at 1999 Hz. Anomaly detected in memory sectors across subnet 10.19.99.0/24.\nTELEMETRY STATUS: Active carrier lock.\nRELAY NODES: Carlsbad salt vault transponder synchronized.\nANOMALY: Signal harmonics converging on central core.`;
       httpContentArea.textContent = currentRawText;
       httpHexArea.textContent = generateHexDump(currentRawText);
       httpStatusBadge.className = "badge badge-success";
@@ -2662,8 +2681,12 @@
     const a = document.createElement('a');
     a.href = url;
     a.download = fileName;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(url);
+    setTimeout(() => {
+      if (a.parentNode) document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
   }
 
   document.getElementById('btnImportLog').onclick = () => {
@@ -2983,12 +3006,15 @@
     cidrLabel.textContent = '/8';
     document.getElementById('btnCalcSubnet').click();
   };
-  document.getElementById('btnSubnetPresetARG').onclick = () => {
-    document.getElementById('cidrIpInput').value = '10.19.99.4';
-    cidrSlider.value = 24;
-    cidrLabel.textContent = '/24';
-    document.getElementById('btnCalcSubnet').click();
-  };
+  const btnSubnetPresetIntranet = document.getElementById('btnSubnetPresetIntranet') || document.getElementById('btnSubnetPresetARG');
+  if (btnSubnetPresetIntranet) {
+    btnSubnetPresetIntranet.onclick = () => {
+      document.getElementById('cidrIpInput').value = '10.19.99.4';
+      cidrSlider.value = 24;
+      cidrLabel.textContent = '/24';
+      document.getElementById('btnCalcSubnet').click();
+    };
+  }
 
   document.getElementById('btnCalcSubnet').onclick = () => {
     const ip = document.getElementById('cidrIpInput').value.trim();
@@ -3427,6 +3453,9 @@
           const tBtn = document.querySelector(`[data-tab="${s.activeTab}"]`);
           if (tBtn) tBtn.click();
         }
+        if (s.activeUtilTab && typeof switchUtilTab === 'function') {
+          switchUtilTab(s.activeUtilTab);
+        }
         if (s.pingTarget && document.getElementById('pingTargetInput')) {
           document.getElementById('pingTargetInput').value = s.pingTarget;
         }
@@ -3452,6 +3481,7 @@
         navHistory: navHistory.slice(-25),
         navIdx: navIdx,
         activeTab: activeTabId,
+        activeUtilTab: document.querySelector('#tab-utils .btn-chip.active')?.id || 'btnUtilDnsTab',
         pingTarget: (document.getElementById('pingTargetInput')?.value) || '8.8.8.8',
         pingStats: pingStats,
         pingHistory: pingHistoryData.slice(-50),
@@ -3629,7 +3659,7 @@
         forgeResponseHeaders.textContent = headersText;
         forgeResponseBody.textContent = (method === 'HEAD') ? '[HEAD response: No body transmitted per RFC 2616]' : resText.slice(0, 5000) + (resText.length > 5000 ? `\n... [${resText.length - 5000} bytes truncated]` : '');
 
-        logTraffic('HTTP', method, reqUrl, 200, resText.length, duration);
+        addTrafficLog('HTTP', `${method} ${reqUrl}`, 'OK', 200, duration, resText.length, resText);
         playNavChime();
         return;
       }
@@ -3650,7 +3680,7 @@
       forgeResponseHeaders.textContent = headersText || '(No exposed response headers)';
       forgeResponseBody.textContent = resText.slice(0, 5000) + (resText.length > 5000 ? `\n... [${resText.length - 5000} bytes truncated]` : '');
 
-      logTraffic('HTTP', method, reqUrl, res.status, resText.length, duration);
+      addTrafficLog('HTTP', `${method} ${reqUrl}`, res.ok ? 'OK' : 'ERR', res.status, duration, resText.length, resText);
       playNavChime();
     } catch (err) {
       const tEnd = performance.now();
@@ -3661,7 +3691,7 @@
       forgeResponseHeaders.textContent = `HTTP/1.1 0 Security Restriction\r\nDate: ${new Date().toUTCString()}\r\nAccess-Control-Allow-Origin: *\r\nError-Diagnostic: ${err.message}`;
       forgeResponseBody.textContent = `[Browser Security Notice]: Direct cross-origin request was blocked or filtered by browser security sandbox.\n\nSimulated Wire Diagnostic:\n• Host: ${reqUrl}\n• Method: ${method}\n• Error: ${err.message}\n• Tip: Internal 1999 virtual web endpoints (e.g. /web/portal.html, /web/classified.html) and local microservices support full live dispatch.`;
 
-      logTraffic('HTTP', method, reqUrl, 0, 0, duration);
+      addTrafficLog('HTTP', `${method} ${reqUrl}`, 'ERR', 0, duration, 0, err.message);
       playErrorBuzzer();
     }
   }
