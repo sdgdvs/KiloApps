@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KMech
-  kilo_usability: KBookmark
+  kilo_usability: KHash
   kilo_graphics: KAbyss
   kilo_qa: KCalc
   kilo_expander: KPad
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: "KMandel (Ultra Fractal Explorer & Co-Op Synth)"
-  timestamp: "2026-10-01T01:45:00Z"
+  agent: kilo-usability
+  app: "KBookmark (Categorized Link Vault)"
+  timestamp: "2026-10-01T02:00:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KMedia`, `KMystery`, `KNet`, `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KBookmark`
+- **Current Target**: `KHash`
 - **Upcoming Queue**:
-  `KHash`, `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad)*.
+  `KRSS`, `KClip`, `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KCalc`
@@ -298,6 +298,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-01T02:00:00Z — kilo-usability: KBookmark (UX & Usability Ergonomics Pass)**
+  - Protocol Launching: Integrated intelligent scheme dispatcher resolving `internal:<app>` and `kweb://<site>` in web & native.
+  - Card URL Links: Converted raw anchor navigations into safe in-app launches preventing broken browser scheme errors.
+  - Category Ergonomics: Added [1]-[8] hotkey badges and tooltips to category items for fast keyboard switching.
+  - Drag & Drop Import: Added visual drop overlay & drag-and-drop file ingestion for Netscape HTML and JSON vaults.
+  - Onboarding & Modals: Added startup checkbox to splash screen, synced tutorial flags, and added status pulse feedback.
+  - Lore & TINAG: Replaced ARG Secrets with diegetic Subcarrier Relays in native C and web HTML.
+  - Verification: MSVC clean (`KBookmark.exe` 22.5 KB); Vite clean in 289ms; security lint 100% PASS; check_icons PASS.
+
 - **2026-10-01T01:45:00Z — kilo-tester: KMandel (Interactive UI Audit & Inline Repairs)**
   - Status: PASS ✅ (6 issues, 6 fixed, 0 perimeter glints, 121.9 KB < 999 KB ceiling).
   - Navigation & History: Replaced shadowed history array with viewHistory stack, fixing coordinate URL link sharing and clipboard write.
@@ -330,10 +339,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Target Scope Expansion: Prepend special scopes (`[ALL_APPS]`, `[VIRTUAL_WEB]`, `[ARG]`, `[MULTIPLAYER]`) to app selector.
   - Docs & Protocol Alignment: Updated `docs/DIRECTOR_PROTOCOL.md` and Rule 7 to fully document the fork dispatch route.
   - Verification: `npm run build` clean in 243ms; security lint 100% PASS; test_arg_flow 100% PASS; headless test PASS; 76 KB (<999KB).
-
-- **2026-10-01T00:50:00Z — kilo-creator: App #100 KMatrix (ARG Climax & Victory Cutscene Polish)**
-  - Sega Genesis & SNES Audio Engine: Synthesized procedural YM2612 2-op FM brass and SPC700 stereo delay victory fanfare.
-  - Staged Terminal Cutscene: Implemented 6-phase fourth-wall transmutation sequence, kernel singularity cascade, and fleet address.
-  - Director Ascension & Reboot: Built full-screen CRT power-down degauss animation, token authentication, and postMessage launch.
-  - Modal Polish & Native Parity: Added interactive passkey copy, replay cutscene, fleet roster badges, and Win32 C fanfare.
-  - Verification: Security linter & test_arg_flow 100% PASS; headless KMatrix test PASS in 1.3s; build clean; <63 KB web / 15 KB native.

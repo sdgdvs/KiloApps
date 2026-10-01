@@ -157,7 +157,13 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .toolbar-group::-webkit-scrollbar {
+      display: none;
     }
 
     /* Buttons */
@@ -310,6 +316,56 @@
       border-radius: 10px;
       color: var(--text-muted);
       flex-shrink: 0;
+    }
+
+    .cat-hotkey {
+      font-size: 10px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      opacity: 0.6;
+      margin-left: 4px;
+      padding: 1px 4px;
+      border-radius: 3px;
+      background: rgba(0, 0, 0, 0.2);
+      flex-shrink: 0;
+      line-height: 1;
+    }
+
+    .category-item:hover .cat-hotkey, .category-item.active .cat-hotkey {
+      opacity: 1;
+      color: var(--primary);
+    }
+
+    .drop-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.88);
+      border: 3px dashed var(--primary);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 500;
+      color: var(--primary);
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: bold;
+      pointer-events: none;
+    }
+
+    .drop-overlay.active {
+      display: flex;
+    }
+
+    @keyframes statusPulse {
+      0% { color: var(--accent); }
+      50% { color: var(--primary); }
+      100% { color: var(--primary); }
+    }
+
+    .status-pulse {
+      animation: statusPulse 1s ease;
     }
 
     /* Tag Cloud */
@@ -1048,7 +1104,12 @@
   </header>
 
   <!-- Main Workspace -->
-  <div class="workspace-container">
+  <div class="workspace-container" id="workspaceContainer">
+    <div class="drop-overlay" id="dropOverlay">
+      <span style="font-size: 36px;">📥</span>
+      <span>Drop Netscape HTML or JSON Bookmarks File Here</span>
+      <span style="font-size: 11px; opacity: 0.8; font-weight: normal;">Universal automatic parser will merge into vault</span>
+    </div>
     <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
     <!-- Sidebar -->
     <aside class="vault-sidebar">
@@ -1329,6 +1390,10 @@
           ⚡ Quick Tour
         </button>
       </div>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 14px;">
+        <input type="checkbox" id="splashTutorialCheck">
+        <label for="splashTutorialCheck" style="font-size: 11px; cursor: pointer; color: var(--text-muted);">Don't show this splash screen on startup</label>
+      </div>
     </div>
   </div>
 
@@ -1433,7 +1498,7 @@
         { id: 'cat-dev', name: 'Development & Code', glyph: '💻' },
         { id: 'cat-fleet', name: 'Fleet & System', glyph: '🛰' },
         { id: 'cat-cyber', name: 'Cyberdeck & Media', glyph: '🕹' },
-        { id: 'cat-arg', name: 'Subcarrier Relays', glyph: '🗝' }
+        { id: 'cat-relays', name: 'Subcarrier Relays', glyph: '🗝' }
       ];
 
       const DEFAULT_BOOKMARKS = [
@@ -1814,6 +1879,9 @@
       function setStatus(msg) {
         if (footerStatus) {
           footerStatus.textContent = msg;
+          footerStatus.classList.remove('status-pulse');
+          void footerStatus.offsetWidth;
+          footerStatus.classList.add('status-pulse');
         }
       }
 
@@ -1845,6 +1913,28 @@
         return 'other';
       }
 
+      function resolveKWebUrl(kwebUrl) {
+        let u = (kwebUrl || '').trim();
+        const lower = u.toLowerCase();
+        if (lower === 'kweb://portal' || lower === 'kweb://portal.html') return '/web/portal.html';
+        if (lower === 'kweb://webring' || lower === 'kweb://webring.html') return '/web/webring.html';
+        if (lower === 'kweb://geocities' || lower === 'kweb://geocities.html') return '/web/geocities.html';
+        if (lower === 'kweb://cybercafe' || lower === 'kweb://cafe' || lower === 'kweb://bbs') return '/web/cybercafe.html';
+        if (lower === 'kweb://asm-temple' || lower === 'kweb://shrine') return '/web/asm_temple.html';
+        if (lower === 'kweb://warez' || lower === 'kweb://cracktro' || lower === 'kweb://scene') return '/web/warez.html';
+        if (lower === 'kweb://darknet' || lower === 'kweb://darknet.ai') return '/web/darknet.html';
+        if (lower.startsWith('kweb://echo-subsystem') || lower.includes('echo.kilocore.net/signal_99')) return '/web/echo_subsystem.html';
+        if (lower.includes('10.19.99.4') || lower.includes('classified')) return '/web/classified.html';
+        if (lower.includes('deep-core') || lower.includes('archive_1999')) return '/web/deep_core.html';
+        if (lower.startsWith('kweb://users/')) {
+          const userClean = u.slice(13).replace('~', '');
+          return '/web/users/' + userClean + (userClean.endsWith('.html') ? '' : '.html');
+        }
+        let path = u.replace(/^kweb:\/\//i, '');
+        if (!path.endsWith('.html') && !path.includes('.')) path += '.html';
+        return '/web/' + path;
+      }
+
       // Launch URL
       function openLink(url, bmId) {
         sfxOpen();
@@ -1857,17 +1947,34 @@
           }
         }
         setStatus(`Launching: ${url}`);
-        if (url.startsWith('internal:') || url.startsWith('kweb://')) {
-          // Open in KiloOS parent window or iframe if available
-          try {
-            if (window.parent && window.parent !== window) {
-              window.parent.postMessage({ type: 'KILO_OPEN_URL', url }, '*');
-            }
-          } catch(e) {}
-          window.open(url, '_blank');
-        } else {
-          window.open(url, '_blank', 'noopener,noreferrer');
+        
+        const isInIframe = (window.parent && window.parent !== window);
+        if (url.startsWith('internal:')) {
+          const appId = url.replace('internal:', '').trim().toLowerCase();
+          if (isInIframe) {
+            try {
+              window.parent.postMessage({ type: 'OS_LAUNCH_APP', appId }, '*');
+              window.parent.postMessage({ type: 'KILO_LAUNCH_APP', appId }, '*');
+            } catch(e) {}
+          } else {
+            window.open(`/apps/${appId}.html`, '_blank');
+          }
+          return;
         }
+
+        if (url.startsWith('kweb://')) {
+          if (isInIframe) {
+            try {
+              window.parent.postMessage({ type: 'OS_LAUNCH_APP', appId: 'knet', path: url }, '*');
+              window.parent.postMessage({ type: 'KILO_LAUNCH_APP', appId: 'knet', path: url }, '*');
+            } catch(e) {}
+          } else {
+            window.open(resolveKWebUrl(url), '_blank');
+          }
+          return;
+        }
+
+        window.open(url, '_blank', 'noopener,noreferrer');
       }
 
       function closeMobileSidebar() {
@@ -1891,20 +1998,22 @@
       function renderCategories() {
         categoryList.innerHTML = '';
 
-        // Built-in pseudo-categories
+        // Built-in pseudo-categories with hotkeys [1] to [3]
         const specialCats = [
-          { id: 'all', name: 'All Bookmarks', glyph: '📋', count: bookmarks.length },
-          { id: 'starred', name: 'Starred Vault', glyph: '★', count: bookmarks.filter(b => b.starred).length },
-          { id: 'recent', name: 'Recent History', glyph: '🕒', count: bookmarks.filter(b => (b.visits || 0) > 0).length }
+          { id: 'all', name: 'All Bookmarks', glyph: '📋', count: bookmarks.length, hotkey: 1 },
+          { id: 'starred', name: 'Starred Vault', glyph: '★', count: bookmarks.filter(b => b.starred).length, hotkey: 2 },
+          { id: 'recent', name: 'Recent History', glyph: '🕒', count: bookmarks.filter(b => (b.visits || 0) > 0).length, hotkey: 3 }
         ];
 
         specialCats.forEach(sc => {
           const li = document.createElement('li');
           li.className = `category-item ${activeCategory === sc.id ? 'active' : ''}`;
+          li.title = `Switch category (Hotkey [${sc.hotkey}])`;
           li.innerHTML = `
             <div class="cat-name-wrapper">
               <span class="cat-glyph">${sc.glyph}</span>
               <span class="cat-name">${sc.name}</span>
+              <span class="cat-hotkey">[${sc.hotkey}]</span>
             </div>
             <span class="cat-badge">${sc.count}</span>
           `;
@@ -1925,15 +2034,19 @@
         divLi.style.margin = '4px 10px';
         categoryList.appendChild(divLi);
 
-        // Custom categories
-        categories.forEach(c => {
+        // Custom categories with hotkeys [4] to [9]
+        categories.forEach((c, idx) => {
           const count = bookmarks.filter(b => b.category === c.name).length;
+          const hotkeyNum = idx + 4;
+          const hotkeyBadge = hotkeyNum <= 9 ? `<span class="cat-hotkey">[${hotkeyNum}]</span>` : '';
           const li = document.createElement('li');
           li.className = `category-item ${activeCategory === c.name ? 'active' : ''}`;
+          if (hotkeyNum <= 9) li.title = `Switch category (Hotkey [${hotkeyNum}])`;
           li.innerHTML = `
             <div class="cat-name-wrapper">
               <span class="cat-glyph">${c.glyph || '📁'}</span>
               <span class="cat-name">${c.name}</span>
+              ${hotkeyBadge}
             </div>
             <span class="cat-badge">${count}</span>
           `;
@@ -2099,7 +2212,7 @@
 
             <div class="bm-url-row">
               <span class="proto-badge proto-${proto}">${proto}</span>
-              <a class="bm-url-text" href="${escapeHtml(b.url)}" target="_blank" title="${escapeHtml(b.url)}">${escapeHtml(b.url)}</a>
+              <a class="bm-url-text" href="#" title="Launch ${escapeHtml(b.url)}">${escapeHtml(b.url)}</a>
               <span style="color: var(--text-muted); font-size: 10px;">👁 ${b.visits || 0}</span>
             </div>
 
@@ -2135,6 +2248,14 @@
 
           const titleEl = card.querySelector('.bm-title');
           titleEl.onclick = () => openLink(b.url, b.id);
+
+          const urlLinkEl = card.querySelector('.bm-url-text');
+          if (urlLinkEl) {
+            urlLinkEl.onclick = (e) => {
+              e.preventDefault();
+              openLink(b.url, b.id);
+            };
+          }
 
           const openBtn = card.querySelector('.btn-open');
           openBtn.onclick = () => openLink(b.url, b.id);
@@ -2976,19 +3097,26 @@
       searchClear.onclick = () => {
         searchInput.value = '';
         searchQuery = '';
+        searchInput.focus();
         renderBookmarks();
+        setStatus('Search cleared.');
       };
       filterProtocol.onchange = (e) => {
         selectedProtocol = e.target.value;
         renderBookmarks();
+        const count = getFilteredBookmarks().length;
+        setStatus(`Protocol filter set to "${selectedProtocol}" (${count} matching).`);
       };
       filterHealth.onchange = (e) => {
         selectedHealth = e.target.value;
         renderBookmarks();
+        const count = getFilteredBookmarks().length;
+        setStatus(`Health filter set to "${selectedHealth}" (${count} matching).`);
       };
       sortSelect.onchange = (e) => {
         currentSort = e.target.value;
         renderBookmarks();
+        setStatus(`Sorted by "${sortSelect.options[sortSelect.selectedIndex].text}".`);
       };
       viewCardsBtn.onclick = () => {
         sfxClick();
@@ -3054,9 +3182,20 @@
 
       document.getElementById('btnCloseHelpModal').onclick = () => modalHelp.classList.remove('active');
       document.getElementById('btnDoneHelp').onclick = () => modalHelp.classList.remove('active');
+      
+      const splashTutorialCheck = document.getElementById('splashTutorialCheck');
+      if (splashTutorialCheck) {
+        splashTutorialCheck.onchange = (e) => {
+          if (e.target.checked) localStorage.setItem('kbookmark_tutorialSeen', '1');
+          else localStorage.removeItem('kbookmark_tutorialSeen');
+          if (checkTutorialSeen) checkTutorialSeen.checked = e.target.checked;
+        };
+      }
+
       checkTutorialSeen.onchange = (e) => {
         if (e.target.checked) localStorage.setItem('kbookmark_tutorialSeen', '1');
         else localStorage.removeItem('kbookmark_tutorialSeen');
+        if (splashTutorialCheck) splashTutorialCheck.checked = e.target.checked;
       };
 
       // Splash Closers
@@ -3065,16 +3204,43 @@
         modalSplash.classList.remove('active');
         localStorage.setItem('kbookmark_tutorialSeen', '1');
         if (checkTutorialSeen) checkTutorialSeen.checked = true;
+        if (splashTutorialCheck) splashTutorialCheck.checked = true;
       };
       document.getElementById('btnSplashTour').onclick = () => {
         modalSplash.classList.remove('active');
         if (checkTutorialSeen) {
           checkTutorialSeen.checked = !!localStorage.getItem('kbookmark_tutorialSeen');
         }
+        if (splashTutorialCheck) {
+          splashTutorialCheck.checked = !!localStorage.getItem('kbookmark_tutorialSeen');
+        }
         modalHelp.classList.add('active');
       };
 
       document.getElementById('fileImporter').onchange = handleFileImport;
+
+      // Drag and Drop Import onto Workspace
+      const workspaceContainer = document.getElementById('workspaceContainer');
+      const dropOverlay = document.getElementById('dropOverlay');
+
+      if (workspaceContainer && dropOverlay) {
+        window.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          dropOverlay.classList.add('active');
+        });
+        window.addEventListener('dragleave', (e) => {
+          if (!e.relatedTarget || e.relatedTarget === document.documentElement) {
+            dropOverlay.classList.remove('active');
+          }
+        });
+        window.addEventListener('drop', (e) => {
+          e.preventDefault();
+          dropOverlay.classList.remove('active');
+          if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            handleFileImport({ target: { files: e.dataTransfer.files } });
+          }
+        });
+      }
 
       // Modal backdrop click dismissal for all overlays
       document.querySelectorAll('.modal-overlay').forEach(overlay => {
@@ -3126,6 +3292,9 @@
         const tutorialSeen = localStorage.getItem('kbookmark_tutorialSeen');
         if (checkTutorialSeen) {
           checkTutorialSeen.checked = !!tutorialSeen;
+        }
+        if (splashTutorialCheck) {
+          splashTutorialCheck.checked = !!tutorialSeen;
         }
         if (!tutorialSeen) {
           modalSplash.classList.add('active');

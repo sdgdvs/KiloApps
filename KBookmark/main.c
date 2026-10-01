@@ -96,7 +96,7 @@ static const char* g_categories[] = {
     "Development & Code",
     "Fleet & System",
     "Cyberdeck & Media",
-    "ARG Secrets"
+    "Subcarrier Relays"
 };
 #define CATEGORY_COUNT 7
 
@@ -205,9 +205,9 @@ static void InitDefaultBookmarks(void) {
     ADD_BM("KStarForge Shipyards", "internal:kstarforge", "Cyberdeck & Media", "game, sim, shipyard", "Deep-space vessel fabrication and flight testing", FALSE, 22);
     ADD_BM("KPomodoro Focus Manager", "internal:kpomodoro", "Cyberdeck & Media", "timer, focus, productivity", "Work/break interval cycle workstation", FALSE, 15);
 
-    ADD_BM("Glitched Subnet Node 0x7F", "kweb://echo.kilocore.net/signal_99.wav", "ARG Secrets", "arg, signal, audio", "Carrier wave transmission discovered in noise", TRUE, 7);
-    ADD_BM("Architect Memory Dump 0x4A", "kweb://echo.kilocore.net/archive_1999.dat", "ARG Secrets", "arg, memory, lore", "Corrupted memory cluster with passkey fragment", TRUE, 11);
-    ADD_BM("Darknet AI Gateway", "kweb://darknet.ai", "ARG Secrets", "arg, darknet, clandestine", "Tier 3 subterranean node for autonomous cluster", FALSE, 5);
+    ADD_BM("Glitched Subnet Node 0x7F", "kweb://echo.kilocore.net/signal_99.wav", "Subcarrier Relays", "telemetry, signal, audio, subcarrier", "Carrier wave transmission discovered in noise", TRUE, 7);
+    ADD_BM("Architect Memory Dump 0x4A", "kweb://echo.kilocore.net/archive_1999.dat", "Subcarrier Relays", "telemetry, memory, archive, checksum", "Corrupted memory cluster with checksum fragment", TRUE, 11);
+    ADD_BM("Darknet AI Gateway", "kweb://darknet.ai", "Subcarrier Relays", "telemetry, darknet, clandestine, gateway", "Tier 3 subterranean node for autonomous cluster", FALSE, 5);
 
     #undef ADD_BM
 }
@@ -296,6 +296,50 @@ static int GetSelectedBookmarkIndex(void) {
     return -1;
 }
 
+static void OpenUrlSmart(const char* url) {
+    if (!url || !*url) return;
+    
+    // Check for internal:<app> protocol
+    if (url[0] == 'i' && url[1] == 'n' && url[2] == 't' && url[3] == 'e' && url[4] == 'r' && url[5] == 'n' && url[6] == 'a' && url[7] == 'l' && url[8] == ':') {
+        const char* app = url + 9;
+        char exePath[64];
+        int i = 0;
+        while (app[i] && i < 40) {
+            exePath[i] = app[i];
+            i++;
+        }
+        exePath[i] = '\0';
+        if (exePath[0] >= 'a' && exePath[0] <= 'z') exePath[0] -= 32;
+        if (exePath[1] >= 'a' && exePath[1] <= 'z') exePath[1] -= 32;
+        str_cpy(exePath + i, ".exe", sizeof(exePath) - i);
+
+        if (GetFileAttributesA(exePath) != INVALID_FILE_ATTRIBUTES) {
+            ShellExecuteA(NULL, "open", exePath, NULL, NULL, SW_SHOWNORMAL);
+            return;
+        }
+        char relPath[128];
+        wsprintfA(relPath, "..\\%s\\%s", exePath, exePath);
+        if (GetFileAttributesA(relPath) != INVALID_FILE_ATTRIBUTES) {
+            ShellExecuteA(NULL, "open", relPath, NULL, NULL, SW_SHOWNORMAL);
+            return;
+        }
+    }
+    
+    // Check for kweb:// protocol
+    if (url[0] == 'k' && url[1] == 'w' && url[2] == 'e' && url[3] == 'b' && url[4] == ':' && url[5] == '/' && url[6] == '/') {
+        if (GetFileAttributesA("KNet.exe") != INVALID_FILE_ATTRIBUTES) {
+            ShellExecuteA(NULL, "open", "KNet.exe", url, NULL, SW_SHOWNORMAL);
+            return;
+        }
+        if (GetFileAttributesA("..\\KNet\\KNet.exe") != INVALID_FILE_ATTRIBUTES) {
+            ShellExecuteA(NULL, "open", "..\\KNet\\KNet.exe", url, NULL, SW_SHOWNORMAL);
+            return;
+        }
+    }
+
+    ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
+}
+
 static void OpenSelectedBookmark(void) {
     int idx = GetSelectedBookmarkIndex();
     if (idx < 0 || idx >= g_bookmarkCount) {
@@ -305,8 +349,8 @@ static void OpenSelectedBookmark(void) {
     BookmarkItem* b = &g_bookmarks[idx];
     b->visits++;
 
-    // Launch URL
-    ShellExecuteA(NULL, "open", b->url, NULL, NULL, SW_SHOWNORMAL);
+    // Launch URL smartly
+    OpenUrlSmart(b->url);
 
     char msg[256];
     wsprintfA(msg, "Launched: %s (Visits: %d)", b->url, b->visits);
