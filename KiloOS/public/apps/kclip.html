@@ -718,31 +718,32 @@
       color: var(--text-muted);
     }
 
-    /* Notification Toast (Non-occluding bottom-right dock) */
+    /* Notification Toast (Non-occluding bottom-center safe zone dock) */
     .toast {
       position: fixed;
-      bottom: 34px;
-      right: 16px;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%) translateY(12px);
       background: var(--surface);
       border: 1px solid var(--primary);
       border-left: 4px solid var(--primary);
       color: var(--text);
-      padding: 8px 16px;
+      padding: 8px 18px;
       border-radius: 4px;
       font-size: 12px;
       font-family: var(--font-mono);
-      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.7);
       z-index: 2000;
       opacity: 0;
-      transform: translateY(8px);
-      transition: all 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       cursor: pointer;
       pointer-events: auto;
       user-select: none;
+      white-space: nowrap;
     }
     .toast.show {
       opacity: 1;
-      transform: translateY(0);
+      transform: translateX(-50%) translateY(0);
     }
 
     /* Win98 Theme Custom Overrides */
@@ -795,9 +796,52 @@
       border: 2px inset #ffffff;
     }
 
+    /* Draggable Vertical Splitter */
+    .resizer-v {
+      width: 6px;
+      background: var(--border);
+      cursor: col-resize;
+      flex-shrink: 0;
+      position: relative;
+      user-select: none;
+      transition: background 0.15s ease;
+      z-index: 10;
+    }
+    .resizer-v::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 2px;
+      height: 28px;
+      background: var(--text-muted);
+      border-radius: 1px;
+      opacity: 0.6;
+    }
+    .resizer-v:hover,
+    .resizer-v.dragging {
+      background: var(--primary);
+    }
+    .resizer-v:hover::after,
+    .resizer-v.dragging::after {
+      background: #ffffff;
+      opacity: 1;
+    }
+    .clip-list-pane.collapsed + .resizer-v {
+      display: none;
+    }
+
     /* Collapsible Sidebar */
     .clip-list-pane.collapsed {
       display: none !important;
+    }
+
+    /* Editor Word-Wrap Control */
+    .clip-editor.no-wrap {
+      white-space: pre !important;
+      word-break: normal !important;
+      overflow-x: auto !important;
     }
 
     /* Status Help Pill */
@@ -825,10 +869,45 @@
       transform: translateY(1px);
     }
 
+    /* Mobile View Toggle Bar */
+    .mobile-tab-bar {
+      display: none;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 5px 8px;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+    .mobile-tab-btn {
+      flex: 1;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-family: inherit;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .mobile-tab-btn.active {
+      background: var(--primary);
+      color: #0b0f19;
+      font-weight: bold;
+      border-color: var(--primary-hover);
+    }
+    .btn-back-to-stack {
+      display: none;
+    }
+
     /* Responsive Layout & Ergonomics */
     @media (max-width: 900px) {
       .clip-list-pane {
-        width: 290px;
+        width: 300px;
       }
       .brand-tag#labelMilestone {
         display: none;
@@ -838,19 +917,37 @@
         padding: 5px 8px;
       }
       .input-wrap {
-        min-width: 200px;
+        min-width: 180px;
       }
     }
 
-    @media (max-width: 700px) {
-      .workspace {
-        flex-direction: column;
+    @media (max-width: 768px) {
+      .resizer-v {
+        display: none !important;
       }
-      .clip-list-pane {
-        width: 100%;
-        max-height: 38vh;
+      .mobile-tab-bar {
+        display: flex;
+      }
+      body[data-mobile-view="stack"] .inspector-pane {
+        display: none !important;
+      }
+      body[data-mobile-view="stack"] .clip-list-pane {
+        display: flex !important;
+        width: 100% !important;
+        flex: 1;
+        max-height: none;
         border-right: none;
-        border-bottom: 2px solid var(--border);
+      }
+      body[data-mobile-view="editor"] .clip-list-pane {
+        display: none !important;
+      }
+      body[data-mobile-view="editor"] .inspector-pane {
+        display: flex !important;
+        width: 100% !important;
+        flex: 1;
+      }
+      .btn-back-to-stack {
+        display: inline-flex;
       }
       .inspector-toolbar {
         padding: 4px 8px;
@@ -861,8 +958,12 @@
       header.k-header {
         padding: 4px 8px;
       }
-      .header-actions .btn span.btn-label-long {
-        display: none;
+      .capture-bar {
+        flex-wrap: wrap;
+        padding: 5px 8px;
+      }
+      .input-wrap {
+        min-width: 160px;
       }
     }
   </style>
@@ -937,10 +1038,16 @@
     </div>
   </section>
 
+  <!-- Mobile Mode View Switcher (<=768px) -->
+  <nav class="mobile-tab-bar" id="mobileTabBar">
+    <button class="mobile-tab-btn active" id="btnMobileTabStack">📋 Stack (<span id="mobileStackCount">5</span>)</button>
+    <button class="mobile-tab-btn" id="btnMobileTabEditor">📝 Inspector &amp; Editor</button>
+  </nav>
+
   <!-- Main Workstation Layout -->
   <main class="workspace">
     <!-- Left Column: Clips List -->
-    <aside class="clip-list-pane">
+    <aside class="clip-list-pane" id="clipListPane">
       <div class="clip-list-header">
         <span id="clipCountLabel">CLIPBOARD STACK (5 items)</span>
         <button class="btn btn-danger btn-sm" id="btnClearUnpinned" title="Clear all unpinned clips">
@@ -952,28 +1059,44 @@
       </div>
     </aside>
 
+    <!-- Draggable Vertical Splitter -->
+    <div class="resizer-v" id="paneResizer" title="Drag to resize clipboard stack"></div>
+
     <!-- Right Column: Inspector & Operations -->
     <section class="inspector-pane">
       <!-- Inspector Command Bar -->
       <div class="inspector-toolbar">
         <div class="inspector-actions">
+          <button class="btn btn-sm btn-back-to-stack" id="btnBackToStack" title="Back to Clipboard Stack">
+            ← Stack
+          </button>
           <button class="btn btn-sm" id="btnToggleSidebar" title="Toggle Clipboard Stack Sidebar (B)">
             ◨ Sidebar
           </button>
-          <button class="btn btn-primary" id="btnCopyCurrent" title="Copy active clip to clipboard (Ctrl+C or Enter)">
+          <button class="btn btn-primary btn-sm" id="btnCopyCurrent" title="Copy active clip to clipboard (Ctrl+C or Enter)">
             📋 Copy (Ctrl+C)
           </button>
-          <button class="btn" id="btnTogglePinCurrent" title="Pin or unpin active clip (P)">
+          <button class="btn btn-sm" id="btnTogglePinCurrent" title="Pin or unpin active clip (P)">
             ⭐ Pin
           </button>
-          <button class="btn" id="btnDuplicateCurrent" title="Duplicate clip in stack">
+          <button class="btn btn-sm" id="btnDuplicateCurrent" title="Duplicate clip in stack">
             📄 Duplicate
           </button>
-          <button class="btn btn-danger" id="btnDeleteCurrent" title="Delete active clip (Del)">
+          <button class="btn btn-danger btn-sm" id="btnDeleteCurrent" title="Delete active clip (Del)">
             🗑️ Delete
           </button>
-          <button class="btn" id="btnDownloadTxt" title="Save clip to local text file">
+          <button class="btn btn-sm" id="btnDownloadTxt" title="Save clip to local text file">
             💾 Save .txt
+          </button>
+          <div style="width: 1px; height: 16px; background: var(--border); margin: 0 2px;"></div>
+          <button class="btn btn-sm" id="btnFontSmaller" title="Decrease Editor Font Size (Ctrl+Minus)">
+            A-
+          </button>
+          <button class="btn btn-sm" id="btnFontBigger" title="Increase Editor Font Size (Ctrl+Plus)">
+            A+
+          </button>
+          <button class="btn btn-sm" id="btnToggleWrap" title="Toggle Line Wrap (Soft Wrap / Pre)">
+            ↵ Wrap
           </button>
         </div>
 
@@ -1015,6 +1138,7 @@
           <div class="stats-item">Chars: <span id="statChars">0</span></div>
           <div class="stats-item">Words: <span id="statWords">0</span></div>
           <div class="stats-item">Lines: <span id="statLines">0</span></div>
+          <div class="stats-item">Cursor: <span id="statCursor">Ln 1, Col 1</span></div>
           <div class="stats-item">Bytes: <span id="statBytes">0 B</span></div>
           <div class="stats-item">Type: <span id="statType">None</span></div>
         </div>
@@ -1185,6 +1309,14 @@
           <tr style="border-bottom: 1px solid var(--border);">
             <td style="padding: 4px; color: var(--gold);">Esc</td>
             <td style="padding: 4px;">Dismiss any open modal / Clear search</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 4px; color: var(--gold);">Ctrl+Plus / Minus / 0</td>
+            <td style="padding: 4px;">Zoom In / Out / Reset Editor Font Size</td>
+          </tr>
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 4px; color: var(--gold);">Drag Splitter</td>
+            <td style="padding: 4px;">Adjust stack sidebar width (persists)</td>
           </tr>
           <tr style="border-bottom: 1px solid var(--border);">
             <td style="padding: 4px; color: var(--gold);">F5</td>
@@ -1842,6 +1974,10 @@
         if (countLabel) {
           countLabel.textContent = 'CLIPBOARD STACK (' + filtered.length + ' / ' + state.clips.length + ')';
         }
+        const mobCount = document.getElementById('mobileStackCount');
+        if (mobCount) {
+          mobCount.textContent = filtered.length;
+        }
 
         if (filtered.length === 0) {
           const empty = document.createElement('div');
@@ -1908,6 +2044,13 @@
             playSoundEffect('click');
             renderClipList();
             updateInspector();
+            if (window.innerWidth <= 768) {
+              document.body.setAttribute('data-mobile-view', 'editor');
+              const btnStack = document.getElementById('btnMobileTabStack');
+              const btnEditor = document.getElementById('btnMobileTabEditor');
+              if (btnStack) btnStack.classList.remove('active');
+              if (btnEditor) btnEditor.classList.add('active');
+            }
           });
 
           container.appendChild(card);
@@ -1935,6 +2078,8 @@
           if (statBytes) statBytes.textContent = '0 B';
           if (statType) statType.textContent = 'None';
           if (statChecksum) statChecksum.textContent = '00000000';
+          const statCursor = document.getElementById('statCursor');
+          if (statCursor) statCursor.textContent = 'Ln 0, Col 0';
           if (btnPin) btnPin.innerHTML = '⭐ Pin';
           return;
         }
@@ -1955,6 +2100,7 @@
         if (statType) statType.textContent = sel.category.toUpperCase();
         if (statChecksum) statChecksum.textContent = computeCrc32(sel.content);
         if (btnPin) btnPin.innerHTML = sel.pinned ? '⭐ Unpin' : '☆ Pin';
+        if (typeof updateCursorPosition === 'function') updateCursorPosition();
       }
 
       function updateStatus() {
@@ -2168,7 +2314,7 @@
         state.viewMode = (mode === 'hex') ? 'hex' : 'text';
         const tabText = document.getElementById('tabViewText');
         const tabHex = document.getElementById('tabViewHex');
-        const editor = document.getElementById('clipEditor');
+        const editor = document.getElementById('editorClipContent');
         const hexViewer = document.getElementById('hexViewerContainer');
         if (tabText && tabHex && editor && hexViewer) {
           if (state.viewMode === 'hex') {
@@ -2339,6 +2485,179 @@
         // Capture from System
         const btnCapture = document.getElementById('btnCaptureSystem');
         if (btnCapture) btnCapture.addEventListener('click', captureFromClipboard);
+
+        // Vertical Splitter Resizing
+        const paneResizer = document.getElementById('paneResizer');
+        const clipListPane = document.getElementById('clipListPane');
+        let isDraggingSplitter = false;
+
+        // Restore saved splitter width if valid
+        try {
+          const savedSplitterW = localStorage.getItem('kclip_splitter_w');
+          if (savedSplitterW && clipListPane && window.innerWidth > 768) {
+            const w = parseInt(savedSplitterW, 10);
+            if (w >= 220 && w <= 650) {
+              clipListPane.style.width = w + 'px';
+            }
+          }
+        } catch (e) {}
+
+        function onSplitterMove(clientX) {
+          if (!isDraggingSplitter || !clipListPane) return;
+          const workspaceRect = clipListPane.parentElement.getBoundingClientRect();
+          let newW = clientX - workspaceRect.left;
+          if (newW < 220) newW = 220;
+          if (newW > workspaceRect.width - 280) newW = workspaceRect.width - 280;
+          if (newW > 650) newW = 650;
+          clipListPane.style.width = newW + 'px';
+          try {
+            localStorage.setItem('kclip_splitter_w', newW + 'px');
+          } catch (e) {}
+        }
+
+        if (paneResizer) {
+          paneResizer.addEventListener('mousedown', function(e) {
+            e.preventDefault();
+            isDraggingSplitter = true;
+            paneResizer.classList.add('dragging');
+            document.body.style.cursor = 'col-resize';
+            document.body.style.userSelect = 'none';
+          });
+          paneResizer.addEventListener('touchstart', function(e) {
+            if (e.touches && e.touches[0]) {
+              isDraggingSplitter = true;
+              paneResizer.classList.add('dragging');
+            }
+          }, { passive: true });
+        }
+
+        window.addEventListener('mousemove', function(e) {
+          if (isDraggingSplitter) onSplitterMove(e.clientX);
+        });
+        window.addEventListener('touchmove', function(e) {
+          if (isDraggingSplitter && e.touches && e.touches[0]) {
+            onSplitterMove(e.touches[0].clientX);
+          }
+        }, { passive: true });
+
+        window.addEventListener('mouseup', function() {
+          if (isDraggingSplitter) {
+            isDraggingSplitter = false;
+            paneResizer?.classList.remove('dragging');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+          }
+        });
+        window.addEventListener('touchend', function() {
+          if (isDraggingSplitter) {
+            isDraggingSplitter = false;
+            paneResizer?.classList.remove('dragging');
+          }
+        });
+
+        // Mobile View Navigation (<=768px)
+        function setMobileView(view) {
+          document.body.setAttribute('data-mobile-view', view);
+          const btnStack = document.getElementById('btnMobileTabStack');
+          const btnEditor = document.getElementById('btnMobileTabEditor');
+          if (btnStack) btnStack.classList.toggle('active', view === 'stack');
+          if (btnEditor) btnEditor.classList.toggle('active', view === 'editor');
+        }
+        setMobileView('stack');
+
+        document.getElementById('btnMobileTabStack')?.addEventListener('click', function() {
+          setMobileView('stack');
+          playSoundEffect('click');
+        });
+        document.getElementById('btnMobileTabEditor')?.addEventListener('click', function() {
+          setMobileView('editor');
+          playSoundEffect('click');
+        });
+        document.getElementById('btnBackToStack')?.addEventListener('click', function() {
+          setMobileView('stack');
+          playSoundEffect('click');
+        });
+
+        // Editor Font Size Zoom Controls
+        let editorFontSize = 13;
+        try {
+          const savedSize = parseInt(localStorage.getItem('kclip_fontsize'), 10);
+          if (savedSize >= 10 && savedSize <= 26) editorFontSize = savedSize;
+        } catch (e) {}
+
+        function applyEditorFontSize(size) {
+          editorFontSize = Math.min(26, Math.max(10, size));
+          const editor = document.getElementById('editorClipContent');
+          const hex = document.getElementById('hexViewerContainer');
+          if (editor) editor.style.fontSize = editorFontSize + 'px';
+          if (hex) hex.style.fontSize = Math.max(10, editorFontSize - 1) + 'px';
+          try {
+            localStorage.setItem('kclip_fontsize', editorFontSize);
+          } catch (e) {}
+        }
+        applyEditorFontSize(editorFontSize);
+
+        document.getElementById('btnFontSmaller')?.addEventListener('click', function() {
+          applyEditorFontSize(editorFontSize - 1);
+          playSoundEffect('click');
+          showToast('Editor Font: ' + editorFontSize + 'px');
+        });
+        document.getElementById('btnFontBigger')?.addEventListener('click', function() {
+          applyEditorFontSize(editorFontSize + 1);
+          playSoundEffect('click');
+          showToast('Editor Font: ' + editorFontSize + 'px');
+        });
+
+        // Editor Word Wrap Toggle
+        let editorWordWrap = true;
+        try {
+          if (localStorage.getItem('kclip_wordwrap') === '0') editorWordWrap = false;
+        } catch (e) {}
+
+        function applyWordWrap(wrap) {
+          editorWordWrap = wrap;
+          const editor = document.getElementById('editorClipContent');
+          const btn = document.getElementById('btnToggleWrap');
+          if (editor) {
+            editor.classList.toggle('no-wrap', !wrap);
+            editor.setAttribute('wrap', wrap ? 'soft' : 'off');
+          }
+          if (btn) {
+            btn.textContent = wrap ? '↵ Wrap: ON' : '⇥ Wrap: OFF';
+            btn.title = wrap ? 'Line wrapping enabled (click to disable)' : 'Line wrapping disabled (click to enable)';
+            btn.style.color = wrap ? 'var(--primary)' : 'var(--text-muted)';
+          }
+          try {
+            localStorage.setItem('kclip_wordwrap', wrap ? '1' : '0');
+          } catch (e) {}
+        }
+        applyWordWrap(editorWordWrap);
+
+        document.getElementById('btnToggleWrap')?.addEventListener('click', function() {
+          applyWordWrap(!editorWordWrap);
+          playSoundEffect('click');
+          showToast(editorWordWrap ? 'Line wrapping enabled' : 'Horizontal scroll mode enabled (pre)');
+        });
+
+        // Cursor Position Tracking
+        function updateCursorPosition() {
+          const editor = document.getElementById('editorClipContent');
+          const statCursor = document.getElementById('statCursor');
+          if (!editor || !statCursor) return;
+          const pos = editor.selectionStart || 0;
+          const val = editor.value || '';
+          const sub = val.substring(0, pos);
+          const lines = sub.split('\n');
+          const ln = lines.length;
+          const col = lines[lines.length - 1].length + 1;
+          statCursor.textContent = 'Ln ' + ln + ', Col ' + col;
+        }
+        const editorEl = document.getElementById('editorClipContent');
+        if (editorEl) {
+          editorEl.addEventListener('keyup', updateCursorPosition);
+          editorEl.addEventListener('click', updateCursorPosition);
+          editorEl.addEventListener('select', updateCursorPosition);
+        }
 
         // Sidebar Toggle
         const btnToggleSidebar = document.getElementById('btnToggleSidebar');
@@ -2835,6 +3154,22 @@
             e.preventDefault();
             const search = document.getElementById('inputSearch');
             if (search) search.focus();
+          } else if ((e.ctrlKey || e.metaKey) && (e.key === '=' || e.key === '+')) {
+            e.preventDefault();
+            applyEditorFontSize(editorFontSize + 1);
+            showToast('Editor Font: ' + editorFontSize + 'px');
+          } else if ((e.ctrlKey || e.metaKey) && (e.key === '-' || e.key === '_')) {
+            e.preventDefault();
+            applyEditorFontSize(editorFontSize - 1);
+            showToast('Editor Font: ' + editorFontSize + 'px');
+          } else if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+            e.preventDefault();
+            applyEditorFontSize(13);
+            showToast('Editor Font reset to 13px');
+          } else if (e.altKey && (e.key === 'w' || e.key === 'W')) {
+            e.preventDefault();
+            applyWordWrap(!editorWordWrap);
+            showToast(editorWordWrap ? 'Line wrap ON' : 'Line wrap OFF');
           }
         });
 

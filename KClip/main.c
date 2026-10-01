@@ -373,7 +373,9 @@ static void CopySelectedToClipboard(void) {
         }
     }
     CloseClipboard();
-    MessageBoxA(g_hwnd, "Copied selected clip to clipboard!", "KClip Sovereign", MB_OK | MB_ICONINFORMATION);
+    if (g_hStatusBar) {
+        SetWindowTextA(g_hStatusBar, "Copied selected clip to clipboard! [*]");
+    }
 }
 
 static void TogglePinSelected(void) {
@@ -483,10 +485,15 @@ static void ShowHelpDialog(void) {
         "- Pin Protection: Retain essential clips indefinitely\n"
         "- Text Transforms: UPPER, lower, ROT13, Trim\n"
         "- Keyboard Shortcuts:\n"
-        "  * F1: Show this Help / Quick Guide\n"
+        "  * F1 / H: Show this Help / Quick Guide\n"
         "  * F5: QuickSave current state (kclip.dat)\n"
         "  * F9: QuickLoad saved state\n"
-        "  * Arrow Keys: Navigate clip history\n\n"
+        "  * C: Copy selected clip to clipboard\n"
+        "  * P: Toggle Pin on selected clip\n"
+        "  * Del: Delete selected clip\n"
+        "  * 1 - 9: Jump to clip 1 through 9 in stack\n"
+        "  * Up / Down: Navigate clip history\n"
+        "  * Esc: Close Application\n\n"
         "(C) 1999 KiloOS Systems Suite - App #99 Milestone",
         "KClip Help & Reference",
         MB_OK | MB_ICONINFORMATION
@@ -750,6 +757,29 @@ void MainEntry(void) {
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
+            HWND hFocus = GetFocus();
+            if (hFocus != g_hEditPreview) {
+                if (msg.wParam == 'H' || msg.wParam == 'h') {
+                    ShowHelpDialog();
+                    continue;
+                } else if (msg.wParam == 'C' || msg.wParam == 'c') {
+                    CopySelectedToClipboard();
+                    continue;
+                } else if (msg.wParam == 'P' || msg.wParam == 'p') {
+                    TogglePinSelected();
+                    continue;
+                } else if (msg.wParam == VK_DELETE) {
+                    DeleteSelected();
+                    continue;
+                } else if (msg.wParam >= '1' && msg.wParam <= '9') {
+                    int idx = (int)(msg.wParam - '1');
+                    if (idx < g_clipCount) {
+                        g_selectedClip = idx;
+                        UpdateUI();
+                    }
+                    continue;
+                }
+            }
             if (msg.wParam == VK_F1) {
                 ShowHelpDialog();
                 continue;

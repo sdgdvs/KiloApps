@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-01T13:40:00Z — kilo-usability: KRSS (Zen Focus Mode, Touch Splitters, Mobile Pane Nav & Spacebar Paging)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 160.0 KB web / 21.5 KB native < 999 KB ceiling).
+  - Focus Reading: Added Distraction-free Focus/Zen mode (Z / btnToggleZen) collapsing sidebars for centered reading.
+  - Ergonomics: Implemented Space / Shift+Space reader page down/up scrolling with auto-advance on article completion.
+  - Touch Splitters: Added touch event handlers to draggable pane splitters for mobile and touchscreen displays.
+  - Responsive Mobile Nav: Built single-pane sliding navigation for viewports <=768px with feeds/articles/reader back buttons.
+  - Native Parity: Added 1-9 instant headline jump hotkeys and updated help reference in Win32 KRSS.exe.
+  - Verification: MSVC clean (`KRSS.exe` 21.5 KB); Vite clean in 442ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-01T12:20:00Z — kilo-qa: KCosmic (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 547.4 KB web / 254.5 KB native < 999 KB ceiling).
   - State Persistence: Audited & fixed F5/F9 state serialization; ensured planet telemetry flushes on save and splash dismisses on restore.

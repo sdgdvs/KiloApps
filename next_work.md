@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-qa
   - kilo-expander
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_tester: KNet
-  kilo_usability: KClip
+  kilo_usability: KCalc
   kilo_graphics: KStarship
   kilo_qa: KPad
   kilo_expander: KContacts
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KMystery
-  timestamp: "2026-10-01T17:22:00Z"
+  agent: kilo-usability
+  app: KClip
+  timestamp: "2026-10-01T18:25:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KNote`, `KPad`, `KPaint`, `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KCalc`, `KHangman`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KClip`
+- **Current Target**: `KCalc`
 - **Upcoming Queue**:
-  `KCalc`, `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KHash` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS)*.
+  `KHex`, `KContacts`, `KFarm`, `KPaint`, `KAudio`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KPing`, `KHash` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KPad`
@@ -297,6 +297,16 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-01T18:25:00Z — kilo-usability: KClip (Draggable Splitter, Mobile Sliding View, Font Zoom, Wrap & Native Keys)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 118.0 KB web / 16.9 KB native < 999 KB ceiling).
+  - Responsive Splitter: Added mouse & touch draggable pane splitter (`#paneResizer`) with width clamping & localStorage persistence.
+  - Mobile Ergonomics: Built segmented mobile view switcher (Stack vs Editor) with auto-switch on clip tap and `← Stack` back button.
+  - Editor Controls: Added font size zoom (`A-`/`A+`, `Ctrl+=`/`Ctrl+-`), line wrap toggle (`↵ Wrap`), and live cursor tracker (`Ln/Col`).
+  - Bug Fixes: Fixed `applyViewMode` element ID reference restoring raw text and hex dump toggle functionality.
+  - Toast & Native Parity: Centered toast in non-occluding safe zone; added `H`/`C`/`P`/`Del`/`1-9` hotkeys and status messages in Win32 C (`KClip.exe`).
+  - Window Sizing: Adjusted default dimensions in `KiloOS/src/App.jsx` to 1080x720 for comfortable desktop toolbar breathing room.
+  - Verification: MSVC clean (`KClip.exe` 16.9 KB); Vite clean in 750ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-01T17:22:00Z — kilo-tester: KMystery (Interactive UI Audit, Audio Fixes, JSON Case Export/Import & Key Isolation)**
   - Status: PASS ✅ (4 issues found, 4 fixed, 0 regressions, clean builds, 151.9 KB web / 40.4 KB native < 999 KB ceiling).
   - Runtime Fixes: Fixed undefined `startRain()` in `startGame()` and missing `noirAudio.` in `advanceTime()` chord trigger.
@@ -331,13 +341,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Dead-Drop Guestbook: Added secret trigger for `!signal`/`!carrier` and subcarrier passphrases yielding classified clues.
   - Diagnostics & Vault: Added station hex memory dumper, 3dfx Glide timedemo benchmark, and 2 new technical vault dispatches.
   - Verification: Node.js AST check PASS (0 syntax errors); Vite build clean in 386ms; security_lint & check_icons 100% PASS.
-
-- **2026-10-01T13:40:00Z — kilo-usability: KRSS (Zen Focus Mode, Touch Splitters, Mobile Pane Nav & Spacebar Paging)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 160.0 KB web / 21.5 KB native < 999 KB ceiling).
-  - Focus Reading: Added Distraction-free Focus/Zen mode (Z / btnToggleZen) collapsing sidebars for centered reading.
-  - Ergonomics: Implemented Space / Shift+Space reader page down/up scrolling with auto-advance on article completion.
-  - Touch Splitters: Added touch event handlers to draggable pane splitters for mobile and touchscreen displays.
-  - Responsive Mobile Nav: Built single-pane sliding navigation for viewports <=768px with feeds/articles/reader back buttons.
-  - Native Parity: Added 1-9 instant headline jump hotkeys and updated help reference in Win32 KRSS.exe.
-  - Verification: MSVC clean (`KRSS.exe` 21.5 KB); Vite clean in 442ms; check_icons & security_lint 100% PASS.
 
