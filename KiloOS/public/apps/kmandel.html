@@ -832,8 +832,8 @@
     let isJulia = false;
     let juliaCRe = 0.0, juliaCIm = 0.0;
     
-    let history = [];
-    let historyIdx = -1;
+    let viewHistory = [];
+    let viewHistoryIdx = -1;
 
     let customColor1 = [255, 0, 85];
     let customColor2 = [0, 229, 255];
@@ -1472,6 +1472,15 @@
     }
 
     // Load persisted settings
+    const savedAudioMuted = safeGetStorage('kmandel_audio_muted', false);
+    if (savedAudioMuted) {
+      audioMuted = true;
+      const btn = document.getElementById('btn-audio-mute');
+      const txt = document.getElementById('txt-audio-mute');
+      if (btn) btn.classList.remove('btn-active');
+      if (txt) txt.textContent = 'Muted';
+    }
+
     const savedTheme = safeGetStorage('kmandel_theme', null);
     if (savedTheme !== null && savedTheme >= 0 && savedTheme < themeNames.length) {
       theme = savedTheme;
@@ -1483,6 +1492,7 @@
       else if (fractalType === 2) { minRe = -2.0; maxRe = 1.0; minIm = -1.5; maxIm = 1.5; }
       else if (fractalType === 5) { minRe = -1.6; maxRe = 1.6; minIm = -1.6; maxIm = 1.6; }
       else if (fractalType === 6) { minRe = -1.5; maxRe = 1.5; minIm = -1.5; maxIm = 1.5; }
+      else if (fractalType === 7) { minRe = -1.8; maxRe = 1.0; minIm = -1.8; maxIm = 1.0; }
     }
     const savedSmooth = safeGetStorage('kmandel_smooth', true);
     smoothShading = savedSmooth;
@@ -1566,12 +1576,12 @@
         theme, fractalType, smoothShading, 
         customColor1: [...customColor1], customColor2: [...customColor2] 
       };
-      if (historyIdx < history.length - 1) {
-        history = history.slice(0, historyIdx + 1);
+      if (viewHistoryIdx < viewHistory.length - 1) {
+        viewHistory = viewHistory.slice(0, viewHistoryIdx + 1);
       }
-      history.push(state);
-      if (history.length > 256) history.shift();
-      historyIdx = history.length - 1;
+      viewHistory.push(state);
+      if (viewHistory.length > 256) viewHistory.shift();
+      viewHistoryIdx = viewHistory.length - 1;
       updateUndoRedoButtons();
     }
     
@@ -1599,8 +1609,8 @@
     }
     
     function updateUndoRedoButtons() {
-      document.getElementById('btn-undo').disabled = historyIdx <= 0;
-      document.getElementById('btn-redo').disabled = historyIdx >= history.length - 1;
+      document.getElementById('btn-undo').disabled = viewHistoryIdx <= 0;
+      document.getElementById('btn-redo').disabled = viewHistoryIdx >= viewHistory.length - 1;
       document.getElementById('btn-julia-text').textContent = isJulia ? 'Return to Formula' : 'Toggle Julia Mode';
       
       const fName = fractalNames[fractalType] || "Fractal";
@@ -1608,9 +1618,9 @@
     }
 
     function undo() {
-      if (historyIdx > 0) {
-        historyIdx--;
-        loadState(history[historyIdx]);
+      if (viewHistoryIdx > 0) {
+        viewHistoryIdx--;
+        loadState(viewHistory[viewHistoryIdx]);
         triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 4, 18);
         playSfx('zoomOut');
         requestRender();
@@ -1618,9 +1628,9 @@
     }
     
     function redo() {
-      if (historyIdx < history.length - 1) {
-        historyIdx++;
-        loadState(history[historyIdx]);
+      if (viewHistoryIdx < viewHistory.length - 1) {
+        viewHistoryIdx++;
+        loadState(viewHistory[viewHistoryIdx]);
         triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 4, 18);
         playSfx('zoomIn');
         requestRender();
@@ -2138,6 +2148,7 @@
     // CUSTOM BOOKMARKS & PRESET PERSISTENCE
     // ==========================================
     let customBookmarks = safeGetStorage('kmandel_custom_bookmarks', []);
+    if (!Array.isArray(customBookmarks)) customBookmarks = [];
 
     function refreshBookmarkSelect() {
       const select = document.getElementById('bookmark-select');
@@ -2153,9 +2164,11 @@
 
     function addBookmark() {
       const defaultName = `${fractalNames[fractalType]} @ ${(3.0 / (maxRe - minRe)).toFixed(1)}x`;
-      const name = prompt("Enter a label for this bookmark:", defaultName) || defaultName;
+      const entered = prompt("Enter a label for this bookmark:", defaultName);
+      if (entered === null) return;
+      const name = entered.trim() || defaultName;
       const bm = {
-        name: name.trim().slice(0, 32),
+        name: name.slice(0, 32),
         minRe, maxRe, minIm, maxIm, max_iter,
         isJulia, juliaCRe, juliaCIm,
         theme, fractalType, smoothShading,
@@ -2224,7 +2237,7 @@
       const zoomLevel = 3.0 / wRe;
       const hashStr = `#f=${fractalType}&re=${minRe.toFixed(6)}&mxre=${maxRe.toFixed(6)}&im=${minIm.toFixed(6)}&mxim=${maxIm.toFixed(6)}&iter=${max_iter}&j=${isJulia ? 1 : 0}&jre=${juliaCRe.toFixed(6)}&jim=${juliaCIm.toFixed(6)}&th=${theme}`;
       try {
-        history.replaceState(null, '', hashStr);
+        window.history.replaceState(null, '', hashStr);
         navigator.clipboard.writeText(window.location.href);
         playSfx('quicksave');
         showToast('🔗 Coordinate URL copied to clipboard!', 'success', 3000);
@@ -2271,6 +2284,11 @@
     });
     document.getElementById('btn-cancel-import').addEventListener('click', () => {
       document.getElementById('import-overlay').style.display = 'none';
+    });
+    document.getElementById('import-overlay').addEventListener('click', (e) => {
+      if (e.target === document.getElementById('import-overlay')) {
+        document.getElementById('import-overlay').style.display = 'none';
+      }
     });
     document.getElementById('btn-do-import').addEventListener('click', () => {
       const txt = document.getElementById('import-text').value.trim();
@@ -2356,8 +2374,11 @@
         // Clicking toast teleports to peer view
         const container = document.getElementById('toast-container');
         if (container && container.lastElementChild) {
-          container.lastElementChild.onclick = () => {
+          const toastEl = container.lastElementChild;
+          toastEl.onclick = () => {
             teleportToPeer(b);
+            toastEl.classList.add('hiding');
+            setTimeout(() => toastEl.remove(), 250);
           };
         }
       });
@@ -2537,11 +2558,11 @@
 
     document.getElementById('btn-undo').addEventListener('click', () => {
       undo();
-      showToast(`Undo (step ${historyIdx + 1}/${history.length})`, 'info', 1500);
+      showToast(`Undo (step ${viewHistoryIdx + 1}/${viewHistory.length})`, 'info', 1500);
     });
     document.getElementById('btn-redo').addEventListener('click', () => {
       redo();
-      showToast(`Redo (step ${historyIdx + 1}/${history.length})`, 'info', 1500);
+      showToast(`Redo (step ${viewHistoryIdx + 1}/${viewHistory.length})`, 'info', 1500);
     });
 
     function quicksave() {
@@ -2661,25 +2682,28 @@
     // KEYBOARD SHORTCUTS
     // ==========================================
     window.addEventListener('keydown', (e) => {
-      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) {
-        if (e.key === 'Escape') e.target.blur();
-        return;
-      }
-
-      // Handle Escape to dismiss dialogs
+      // Handle Escape to dismiss dialogs, modals, and toasts
       if (e.key === 'Escape') {
-        const hOverlay = document.getElementById('help-overlay');
-        if (hOverlay && (hOverlay.style.display === 'flex' || hOverlay.style.display === 'block')) {
-          hOverlay.style.display = 'none';
-          return;
-        }
         const iOverlay = document.getElementById('import-overlay');
         if (iOverlay && (iOverlay.style.display === 'flex' || iOverlay.style.display === 'block')) {
           iOverlay.style.display = 'none';
+          if (e.target && e.target.blur) e.target.blur();
           return;
         }
+        const hOverlay = document.getElementById('help-overlay');
+        if (hOverlay && (hOverlay.style.display === 'flex' || hOverlay.style.display === 'block')) {
+          hOverlay.style.display = 'none';
+          safeSetStorage('kmandel_tutorial_seen', true);
+          if (e.target && e.target.blur) e.target.blur();
+          return;
+        }
+        if (e.target && e.target.blur) e.target.blur();
         const toasts = document.querySelectorAll('.toast');
         toasts.forEach(t => t.remove());
+        return;
+      }
+
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) {
         return;
       }
 
