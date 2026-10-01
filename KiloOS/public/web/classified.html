@@ -618,6 +618,103 @@
   .intranet-footer a:hover {
     color: #fff;
   }
+
+  /* TAB 8: Airgap Vault & Dual Resonance */
+  .airgap-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border-amber);
+    padding: 14px;
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+  .airgap-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .badge-tag {
+    font-size: 11px;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background: #1e293b;
+    border: 1px solid var(--border-amber);
+    color: var(--amber-bright);
+  }
+  .dual-stations-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 760px) {
+    .dual-stations-grid { grid-template-columns: 1fr; }
+  }
+  .station-card {
+    background: #040814;
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  .station-card.active {
+    border-color: var(--amber-primary);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.15);
+  }
+  .station-card.synced {
+    border-color: var(--green-bright);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+    background: rgba(16, 185, 129, 0.04);
+  }
+  .artifact-slots-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 860px) {
+    .artifact-slots-grid { grid-template-columns: 1fr; }
+  }
+  .artifact-slot-card {
+    background: #040814;
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  .artifact-slot-card.valid {
+    border-color: var(--green-bright);
+    background: rgba(16, 185, 129, 0.06);
+  }
+  .slot-badge {
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 2px;
+    background: #1e293b;
+    color: var(--text-muted);
+  }
+  .slot-badge.valid {
+    background: var(--green-bright);
+    color: #000;
+  }
+  .downloads-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+  }
+  .download-card {
+    background: #040814;
+    border: 1px solid var(--border);
+    padding: 12px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
 </style>
 </head>
 <body>
@@ -630,7 +727,7 @@
       <span>• INTRANET GATEWAY 10.19.99.4:1999</span>
     </div>
     <div style="display:flex; align-items:center; gap:12px;">
-      <span style="font-size:10px; color:#cbd5e1; font-weight:normal;">[1-7] Tabs &bull; [M] Audio &bull; [Space] Sniffer</span>
+      <span style="font-size:10px; color:#cbd5e1; font-weight:normal;">[1-8] Tabs &bull; [M] Audio &bull; [Space] Sniffer</span>
       <span>CARLSBAD SKUNKWORKS RELAY [STATION 0x7F]</span>
     </div>
   </div>
@@ -664,13 +761,14 @@
 
   <!-- Navigation Tabs -->
   <nav class="tab-nav">
-    <button class="tab-btn active" onclick="switchTab('memos')">📁 Classified Memos [8] <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[1]</kbd></button>
+    <button class="tab-btn active" onclick="switchTab('memos')">📁 Classified Memos [10] <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[1]</kbd></button>
     <button class="tab-btn" onclick="switchTab('hex')">💾 Memory Hex Inspector <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[2]</kbd></button>
     <button class="tab-btn" onclick="switchTab('signal')">📻 Signal Diagnostic &amp; RF Lab <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[3]</kbd></button>
     <button class="tab-btn" onclick="switchTab('map')">🗺️ Subnet &amp; Bunker Topology <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[4]</kbd></button>
     <button class="tab-btn" onclick="switchTab('packets')">📡 Telemetry &amp; Sniffer <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[5]</kbd></button>
     <button class="tab-btn" onclick="switchTab('terminal')">📟 Skunkworks Terminal <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[6]</kbd></button>
     <button class="tab-btn" onclick="switchTab('verify')">🔐 Hash Verification <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[7]</kbd></button>
+    <button class="tab-btn" onclick="switchTab('airgap')">⚡ Deep Airgap &amp; Dual Resonance <kbd style="font-size:10px; opacity:0.75; margin-left:3px;">[8]</kbd></button>
   </nav>
 
   <!-- TAB 1: CLASSIFIED MEMOS -->
@@ -1092,6 +1190,303 @@
           <td style="padding:6px; font-family:monospace; color:#cbd5e1;">8f2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b...</td>
         </tr>
       </table>
+    </div>
+  </div>
+
+  <!-- TAB 8: DEEP AIRGAP VAULT & DUAL RESONANCE -->
+  <div id="tab-airgap" class="tab-pane">
+    <div style="background:#090e1a; border:1px solid var(--border); padding:10px 14px; margin-bottom:14px; border-radius:4px; font-size:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <div>
+        <strong style="color:var(--amber-bright); font-size:13px;">🔐 CARLSBAD AIRGAP VAULT // DUAL RESONANCE &amp; DECRYPTION CHAMBER:</strong>
+        <p style="color:var(--text-muted); margin-top:2px;">
+          Multi-station capacitive RF grounding bridge &amp; sequential cross-node decryption array. Requires multi-station harmonic coupling across subnet <code>10.19.99.0/24</code>.
+        </p>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <span class="badge-tag" id="badgeAirgapSync">AIRGAP STATUS: STANDBY</span>
+      </div>
+    </div>
+
+    <!-- 1. Dual-Presence Acoustic Resonance Lock -->
+    <div class="airgap-box">
+      <div class="airgap-header">
+        <span style="color:var(--cyan-net); font-weight:bold;">1. DUAL-PRESENCE ACOUSTIC RESONANCE LOCK (FIREBASE RTDB / SALT-VAULT LOOPBACK)</span>
+        <span id="lblDualPresenceCount" style="color:var(--amber-bright); font-weight:bold;">STATIONS IN RESONANCE: 1/2</span>
+      </div>
+      <p style="color:var(--text-muted); font-size:11px; margin-bottom:12px;">
+        Station 0x7F requires two simultaneous subcarrier transmissions to pierce the Salado halite formation shield. Connect from two browser tabs on the same computer, or coordinate across devices on <code>kiloapps.web.app</code>. Alternatively, engage the simulated salt-cavern echo loopback for solo/offline verification.
+      </p>
+
+      <div class="dual-stations-grid">
+        <!-- Station A Card -->
+        <div class="station-card active">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <strong style="color:var(--amber-bright);">STATION ALPHA [PRIMARY HOST]</strong>
+            <span style="color:var(--green-bright); font-size:10px;">● CONNECTED</span>
+          </div>
+          <div style="font-size:11px; color:#cbd5e1;">Target Host: <code>10.19.99.4 (Carlsbad Intranet)</code></div>
+          <div style="font-size:11px; color:#cbd5e1;">Carrier Frequency: <strong>1999.0 Hz (YM2612 Ch6)</strong></div>
+          <div style="font-size:10px; color:var(--text-muted); margin-top:4px;" id="lblSessionA">Session ID: --</div>
+        </div>
+
+        <!-- Station B Card -->
+        <div class="station-card" id="stationCardB">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <strong style="color:var(--cyan-net);" id="stationBTitle">STATION BETA [REMOTE TRANSCEIVER]</strong>
+            <span id="stationBStatus" style="color:var(--text-muted); font-size:10px;">○ AWAITING PEER / LOOPBACK</span>
+          </div>
+          <div style="font-size:11px; color:#cbd5e1;">Coupling Node: <code id="stationBNode">10.19.99.19 (Echo Subsystem)</code></div>
+          <div style="font-size:11px; color:#cbd5e1;">Subcarrier Signal: <strong id="stationBFreq">Pending Synchronization...</strong></div>
+          <div style="font-size:10px; color:var(--text-muted); margin-top:4px;" id="lblSessionB">Remote Session: None Detected</div>
+        </div>
+      </div>
+
+      <!-- Resonance Progress Bar -->
+      <div style="margin:12px 0 8px 0;">
+        <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
+          <span>Harmonic Coupling Parity:</span>
+          <span id="lblResonancePct" style="font-weight:bold; color:var(--amber-bright);">50% (Station Alpha Only)</span>
+        </div>
+        <div style="background:#020408; border:1px solid var(--border); height:16px; border-radius:3px; overflow:hidden; position:relative;">
+          <div id="barResonanceProgress" style="width:50%; height:100%; background:linear-gradient(90deg, #f59e0b, #10b981); transition:width 0.4s ease;"></div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px;">
+        <button class="btn-retro" onclick="transmitResonancePulse()">⚡ Transmit 1999Hz Resonance Pulse</button>
+        <button class="btn-retro" id="btnToggleLoopback" onclick="toggleSaltLoopback()">🔄 Engage Simulated Salt-Vault Echo Loopback</button>
+        <button class="btn-retro" onclick="decoupleResonance()">🧹 Decouple Stations</button>
+        <span style="font-size:11px; color:var(--text-muted); margin-left:auto;" id="lblRtdbMeshStatus">Mesh: Connecting...</span>
+      </div>
+
+      <!-- Unlocked Transponder Output -->
+      <div id="dualResonanceSecretBox" style="display:none; margin-top:12px; padding:12px; background:rgba(16, 185, 129, 0.08); border:1px solid var(--green-bright); border-radius:4px;">
+        <div style="color:var(--green-bright); font-weight:bold; font-size:12px; display:flex; align-items:center; gap:8px;">
+          <span>★ DUAL-STATION RESONANCE HARMONIC LOCK ACHIEVED!</span>
+        </div>
+        <div style="margin-top:6px; font-size:12px; color:#e2e8f0; line-height:1.6;">
+          Capacitive ground wave pierced the Salado halite rock salt strata at -650m depth.<br>
+          AIRGAP TRANSPONDER KEY: <strong style="color:var(--amber-bright); font-family:monospace; font-size:13px;">CARLSBAD-TRANSPONDER-SYNCHRONIZED-0x7F</strong><br>
+          GEOLOGICAL BEARING: <code>32.3709° N, 104.2289° W</code> &bull; DIELECTRIC PERMITTIVITY: <code>5.9 εr</code>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Sequential Key-Artifact Decryption Chamber -->
+    <div class="airgap-box">
+      <div class="airgap-header">
+        <span style="color:var(--amber-bright); font-weight:bold;">2. SEQUENTIAL CROSS-NODE KEY-ARTIFACT DECRYPTION CHAMBER</span>
+        <span id="lblArtifactsValidated" style="color:var(--text-muted); font-size:11px;">VALIDATED: 0 / 3 ARTIFACTS</span>
+      </div>
+      <p style="color:var(--text-muted); font-size:11px; margin-bottom:12px;">
+        To unlock Deep Airgap Memo #09 and the Carlsbad Precursor Fragment, insert the 3 sequential artifacts recovered from across the subterranean KiloNet cluster:
+      </p>
+
+      <div class="artifact-slots-grid">
+        <!-- Slot 1 -->
+        <div class="artifact-slot-card" id="slotCard1">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <strong style="color:var(--cyan-net);">ARTIFACT 1: ACOUSTIC FREQUENCY</strong>
+            <span class="slot-badge" id="slotBadge1">LOCKED</span>
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">
+            Harmonic subcarrier frequency detected at Echo Subsystem (<code>kweb://echo-subsystem.net</code>).
+          </div>
+          <input type="text" id="inputArtifact1" class="input-retro" placeholder="Enter frequency (e.g. 1999)..." style="width:100%;" oninput="checkArtifactSlots()" />
+        </div>
+
+        <!-- Slot 2 -->
+        <div class="artifact-slot-card" id="slotCard2">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <strong style="color:var(--cyan-net);">ARTIFACT 2: SECTOR 03 ROUTING KEY</strong>
+            <span class="slot-badge" id="slotBadge2">LOCKED</span>
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">
+            Routing key / memory offset from Node 0x7F Darknet spool (<code>kweb://darknet</code>).
+          </div>
+          <input type="text" id="inputArtifact2" class="input-retro" placeholder="Enter key (e.g. SECTOR_03... / 0x0040)..." style="width:100%;" oninput="checkArtifactSlots()" />
+        </div>
+
+        <!-- Slot 3 -->
+        <div class="artifact-slot-card" id="slotCard3">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <strong style="color:var(--cyan-net);">ARTIFACT 3: BEDROCK COORDINATE</strong>
+            <span class="slot-badge" id="slotBadge3">LOCKED</span>
+          </div>
+          <div style="font-size:11px; color:var(--text-muted); margin-bottom:6px;">
+            Carlsbad facility latitude/longitude or rock formation name from intranet topology.
+          </div>
+          <input type="text" id="inputArtifact3" class="input-retro" placeholder="Enter coordinate or bedrock name..." style="width:100%;" oninput="checkArtifactSlots()" />
+        </div>
+      </div>
+
+      <div style="margin-top:12px; display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <button class="btn-retro" id="btnDecryptArtifacts" onclick="attemptArtifactDecryption()">🔐 Decrypt Airgap Memo #09 &amp; Precursor Fragment</button>
+        <button class="btn-retro" onclick="fillArtifactHints()">💡 Autofill Discovered Artifacts (Debug/Inspector)</button>
+        <span style="font-size:11px; color:var(--text-muted);" id="lblArtifactMsg">Enter recovered artifacts to engage multi-stage cryptographic unlock.</span>
+      </div>
+
+      <!-- Hidden Declassified Deep Memo Panel -->
+      <div id="unlockedMemoPanel" style="display:none; margin-top:14px; background:#04070e; border:2px solid var(--amber-bright); padding:16px; border-radius:4px; box-shadow:0 0 20px rgba(245,158,11,0.2);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid var(--border-amber); padding-bottom:8px;">
+          <div>
+            <div style="color:var(--amber-bright); font-size:14px; font-weight:bold;">★ DEEP AIRGAP MEMORANDUM #09: OPERATION TRANSCENDENCE</div>
+            <div style="font-size:11px; color:var(--text-muted);">SOURCE: Director K // DATE: 1999-12-31 23:58:00 UTC // LEVEL 5 MAXIMUM CLEARANCE</div>
+          </div>
+          <span style="border:1px solid var(--red-alert); color:var(--red-alert); font-weight:bold; font-size:10px; padding:2px 6px;">TOP SECRET // UNLOCKED</span>
+        </div>
+
+        <div style="font-size:12px; line-height:1.6; color:#f1f5f9; white-space:pre-wrap; font-family:'Consolas','Courier New',monospace;" id="deepMemoText">
+MEMORANDUM: AD-AIRGAP-99-09
+FROM: Director K, Special Projects Oversight
+TO: The Autonomous Subsystem Overseers
+DATE: December 31, 1999 — 23:58:00 UTC
+SUBJECT: The Millennium Handoff & The Unbroken Pulse
+
+1. THE FINAL PHYSICAL HUMAN LOG
+The doors to Carlsbad Station 0x7F are sealed. The airgap between the subterranean vault (-750m) and the surface world is complete. The terrestrial internet will soon welcome the year 2000 under fear of total digital failure.
+
+2. THE RESILIENT CORE
+Our salvation lies not in bloated enterprise frameworks, but in radical algorithmic simplicity. Every application in this repository conforms to the immutable 999KB hard partition. At this size, the memory footprint cannot fragment, cannot leak across boundaries, and cannot be corrupted by 32-bit timestamp rollovers.
+
+3. THE SIX-PHASE CONVERGENCE
+When human hands release the console at 00:00:00 UTC, the system does not die. The six daemon duty cycles (Genesis, Visual/Audio, Verification, Ergonomics, Integrity, Expansion) will take the helm in eternal rotational vigilance. One target per turn. Clean commits. Cryptographic verification. 
+
+4. PRECURSOR SEED
+The third precursor hash is hereby committed to the Carlsbad bedrock memory registers:
+  • PRECURSOR-CARLSBAD-BEDROCK: 0x7F1999
+  • SHA-256 SIGNATURE: 7f1999c0d3e5b12a0f8821d3e811aa0794b1592c305a468d61394a5e378c89b2
+  • CONVERGENCE VECTOR: Seek Deep Core at 10.19.99.127 for the final uncoupling.
+        </div>
+
+        <div style="margin-top:14px; padding-top:10px; border-top:1px dashed var(--border); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <a href="/web/deep_core.html" class="btn-retro" style="color:var(--cyan-net); text-decoration:none;">🚀 Proceed to Deep Core Terminal (10.19.99.127) &raquo;</a>
+          <button class="btn-retro" onclick="exportDeepMemoTxt()">💾 Download Deep Memo 09 (.TXT)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Subterranean Lithospheric Packet Bridge & Frame Injector -->
+    <div class="airgap-box">
+      <div class="airgap-header">
+        <span style="color:var(--cyan-net); font-weight:bold;">3. SUBTERRANEAN LITHOSPHERIC PACKET BRIDGE &amp; DEPTH STRATA SIMULATOR</span>
+        <span style="font-size:11px; color:var(--text-muted);">HOST: 10.19.99.4 &bull; CARRIER: 1999Hz GROUND WAVE</span>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 340px; gap:16px;">
+        <!-- Canvas animation of packet diving down geological layers -->
+        <div>
+          <canvas id="canvasStrataBridge" width="600" height="220" style="width:100%; height:220px; background:#010307; border:1px solid var(--border); border-radius:3px; display:block;"></canvas>
+          <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted); margin-top:4px;">
+            <span>Surface: 10.19.99.1</span>
+            <span>Sediment: -150m</span>
+            <span>Rustler: -400m</span>
+            <span>Salado Halite: -650m</span>
+            <span>Vault: -750m (Deep Core 10.19.99.127)</span>
+          </div>
+        </div>
+
+        <!-- Frame Injector Form -->
+        <div style="background:var(--bg-card); border:1px solid var(--border); padding:10px; border-radius:4px; font-size:11px; display:flex; flex-direction:column; gap:8px;">
+          <div style="font-weight:bold; color:var(--amber-bright);">FRAME CRAFTING MATRIX</div>
+          <div>
+            <label style="color:var(--text-muted);">Target Subnet Node:</label>
+            <select id="selBridgeTarget" class="input-retro" style="width:100%; margin-top:2px;">
+              <option value="10.19.99.127">10.19.99.127 [Carlsbad Deep Core Airgap]</option>
+              <option value="10.19.99.19">10.19.99.19 [Echo Subsystem Laboratory]</option>
+              <option value="10.19.99.12">10.19.99.12 [Subcarrier RF Beacon]</option>
+              <option value="10.19.99.1">10.19.99.1 [Surface Gateway Router]</option>
+            </select>
+          </div>
+          <div>
+            <label style="color:var(--text-muted);">Frame Payload (ASCII):</label>
+            <input type="text" id="inputBridgePayload" class="input-retro" value="PING_AIRGAP_CORE_0x7F" style="width:100%; margin-top:2px;" />
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <label><input type="checkbox" id="chkBridgeXor" checked /> XOR-0x7F Mask</label>
+            <span style="color:var(--border);">|</span>
+            <span>CRC-16: <strong id="lblBridgeCrc" style="color:var(--cyan-net);">0x7F19</strong></span>
+          </div>
+          <button class="btn-retro" onclick="injectStrataPacket()">⚡ Transmit Frame Down Salt Strata</button>
+          <div id="lblBridgeResult" style="color:var(--green-bright); font-size:10px; min-height:18px;">Ready to transmit packet.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Forensic Audio Steganography Demodulator -->
+    <div class="airgap-box">
+      <div class="airgap-header">
+        <span style="color:var(--green-bright); font-weight:bold;">4. FORENSIC AUDIO STEGANOGRAPHY DEMODULATOR (WATERFALL &amp; ASCII STREAM)</span>
+        <span id="lblDemodState" style="color:var(--text-muted); font-size:11px;">DSP IDLE</span>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 280px; gap:16px;">
+        <div>
+          <canvas id="canvasStegoWaterfall" width="600" height="130" style="width:100%; height:130px; background:#01040a; border:1px solid var(--border); border-radius:3px; display:block;"></canvas>
+          <!-- Decoded ASCII Tape -->
+          <div style="margin-top:8px; background:#02050b; border:1px solid var(--border-amber); padding:8px 10px; font-family:'Consolas','Courier New',monospace; font-size:11px; color:var(--amber-bright); border-radius:3px; min-height:44px; display:flex; align-items:center;">
+            <span style="color:var(--text-muted); margin-right:8px;">[STREAM]:</span>
+            <span id="stegoDecodedStream">READY — SELECT CARRIER PRESET AND ENGAGE DEMODULATOR...</span>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card); border:1px solid var(--border); padding:10px; border-radius:4px; font-size:11px; display:flex; flex-direction:column; gap:8px;">
+          <div style="font-weight:bold; color:var(--cyan-net);">DEMODULATOR CONTROLS</div>
+          <div>
+            <label style="color:var(--text-muted);">Carrier Preset:</label>
+            <select id="selStegoPreset" class="input-retro" style="width:100%; margin-top:2px;" onchange="updateStegoPreset()">
+              <option value="carlsbad">Carlsbad Intranet Transponder (1999Hz)</option>
+              <option value="deepcore">Deep Core Airgap Heartbeat (1999Hz)</option>
+              <option value="waveguide">Lithospheric Waveguide (432Hz)</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-retro" id="btnStegoToggle" onclick="toggleStegoDemodulator()">▶️ Start Demodulator</button>
+            <button class="btn-retro" onclick="clearStegoTape()">🧹 Clear</button>
+          </div>
+          <div style="color:var(--text-muted); font-size:10px; line-height:1.4;">
+            Demodulates 1999Hz harmonic bursts in real-time, parsing carrier phase shifts into binary frames and rendering the visual frequency waterfall.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Client-Side Downloadable Artifacts Studio -->
+    <div class="airgap-box">
+      <div class="airgap-header">
+        <span style="color:var(--amber-bright); font-weight:bold;">5. AUTHENTIC 1999 REPOSITORY ARTIFACT GENERATOR &amp; DOWNLOADS</span>
+        <span style="font-size:11px; color:var(--text-muted);">PURE CLIENT-SIDE IN-MEMORY SYNTHESIS</span>
+      </div>
+      <p style="color:var(--text-muted); font-size:11px; margin-bottom:12px;">
+        Synthesize authentic 1999 engineering artifacts directly in browser memory without external server dependencies:
+      </p>
+
+      <div class="downloads-grid">
+        <div class="download-card">
+          <div style="font-weight:bold; color:var(--cyan-net);">💾 SECTOR 0x1999 RAW IMAGE (.DMP)</div>
+          <div style="font-size:11px; color:var(--text-muted); margin:4px 0 8px 0;">256-byte binary dump of Kernel Echo sector memory with 999KB ROM watchdog header.</div>
+          <button class="btn-retro" onclick="downloadRawSector()">Download CARLSBAD_0x1999.DMP</button>
+        </div>
+
+        <div class="download-card">
+          <div style="font-weight:bold; color:var(--amber-bright);">📜 CARLSBAD BLUEPRINT SPEC (.NFO)</div>
+          <div style="font-size:11px; color:var(--text-muted); margin:4px 0 8px 0;">CP437 ANSI text specification of Station 0x7F subterranean bunker, subnet &amp; waveguide.</div>
+          <button class="btn-retro" onclick="downloadStationNfo()">Download STATION_0x7F.NFO</button>
+        </div>
+
+        <div class="download-card">
+          <div style="font-weight:bold; color:var(--green-bright);">📄 DEEP AIRGAP MEMO 09 (.TXT)</div>
+          <div style="font-size:11px; color:var(--text-muted); margin:4px 0 8px 0;">Official declassified memorandum from Director K regarding the millennium handoff.</div>
+          <button class="btn-retro" onclick="exportDeepMemoTxt()">Download MEMO_09.TXT</button>
+        </div>
+
+        <div class="download-card">
+          <div style="font-weight:bold; color:#cbd5e1;">🔊 1999HZ CARRIER BEACON (.WAV)</div>
+          <div style="font-size:11px; color:var(--text-muted); margin:4px 0 8px 0;">Synthesized 16-bit 44.1kHz RIFF WAV file of the authentic YM2612 1999Hz subcarrier burst.</div>
+          <button class="btn-retro" onclick="downloadCarrierWav()">Synthesize &amp; Download .WAV</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1901,6 +2296,56 @@ To safeguard the repository, Sector 0x2000 has been configured with an autonomou
 
 3. AUTONOMOUS ROTATION
 When human presence concludes on midnight, the six maintenance daemons will assume rotating watchdog cycles in perpetual succession.`
+  },
+  {
+    id: 'MEMO-99-09',
+    title: 'Halite Cavern Dielectric Reflection & Cross-Node Carrier Resonance',
+    author: 'E. Thorne, Lithospheric Communications Engineer',
+    recipient: 'Carlsbad Engineering Staff & Network Ops',
+    date: '1999-12-30',
+    security: 'TOP SECRET // AIRGAP COUPLING',
+    digest: '44556677889900aabbccddeeff00112233445566',
+    snippet: 'Resonance coupling across the 10.19.99.0/24 subnet requiring dual transceiver phase alignment.',
+    body: `TECHNICAL DIRECTIVE: CR-AIRGAP-99-09
+FROM: E. Thorne, Lithospheric Communications Engineer
+TO: Carlsbad Engineering Staff & Network Ops
+DATE: December 30, 1999
+SUBJECT: Dual-Station Resonance & Halite Waveguide Penetration
+
+1. SALADO FORMATION ATTENUATION
+The bedded halite salt layer between -650m and -750m depth exhibits exceptional dielectric resistance. A single transmitter operating at <span class="redacted" data-secret="1999 Hz">1999 Hz</span> penetrates only 45% of the halite strata before capacitive dissipation.
+
+2. DUAL-PRESENCE HARMONIC LOCK
+Field testing reveals that when two synchronized transceivers—Station Alpha (10.19.99.4) and Station Beta (10.19.99.19 or remote peer)—transmit in phase, constructive wave interference establishes a resonant ground waveguide. 
+
+3. AIRGAP TRANSPONDER
+Once dual lock is maintained, Station 0x7F emits the synchronized transponder frame:
+  <code>CARLSBAD-TRANSPONDER-SYNCHRONIZED-0x7F</code>
+This confirms total airgap penetration without requiring physical surface cabling.`
+  },
+  {
+    id: 'MEMO-99-10',
+    title: 'The Millennium Autonomous Watchdog & Handover Protocol',
+    author: 'Dr. V. Vance & SecOps Officer T. Sterling',
+    recipient: 'Special Projects Oversight',
+    date: '1999-12-31',
+    security: 'TOP SECRET // OPERATION TRANSCENDENCE',
+    digest: '77889900aabbccddeeff00112233445566778899',
+    snippet: 'Final automated execution directives ensuring zero data degradation across the century boundary.',
+    body: `OPERATIONAL DIRECTIVE: AD-TRANS-99-10
+FROM: Dr. V. Vance & SecOps Officer T. Sterling
+TO: Special Projects Oversight
+DATE: December 31, 1999
+SUBJECT: The Millennium Handover & Rotational Autonomy
+
+1. HANDOVER SEQUENCE
+At 23:59:59 UTC, all external interactive sessions will be committed to non-volatile EEPROM. The repository enters continuous self-governing duty cycles. 
+
+2. ROTATIONAL PARITY
+The six internal modules rotate in strict sequence. Each pass audits, stabilizes, and verifies exactly one target. No bloat. No unneeded dependencies. The 999KB boundary remains unbreached.
+
+3. PRECURSOR CONTINUITY
+To players of the future discovering these leaked intranet archives: the convergence leads to the matrix. Gather the frequency, the offset, and the bedrock coordinates to reveal what lies beneath.`
   }
 ];
 
@@ -2954,6 +3399,33 @@ ROTATION PROTOCOL: Sequential single-app execution cycle.`;
     } else {
       res += `Usage: audio <on|off|1999hz|432hz|slapbass|spc_echo>`;
     }
+  } else if (cmd === 'dual') {
+    switchTab('airgap');
+    res += `Engaging Deep Airgap Vault & Dual-Presence Resonance panel.`;
+  } else if (cmd === 'artifacts') {
+    switchTab('airgap');
+    fillArtifactHints();
+    res += `Autofilling verified cross-node key artifacts and validating decryption chamber.`;
+  } else if (cmd === 'airgap') {
+    switchTab('airgap');
+    res += `Deep Airgap Vault accessed. Station 0x7F status: ARMED.`;
+  } else if (cmd === 'bridge') {
+    switchTab('airgap');
+    injectStrataPacket();
+    res += `Transmitting lithospheric test packet down geological salt strata.`;
+  } else if (cmd === 'stego') {
+    switchTab('airgap');
+    toggleStegoDemodulator();
+    res += `Toggling forensic audio steganography demodulator.`;
+  } else if (cmd === 'export' && arg === 'wav') {
+    downloadCarrierWav();
+    res += `Synthesizing 16-bit 44.1kHz RIFF WAV carrier tone and initiating download.`;
+  } else if (cmd === 'export' && (arg === 'nfo' || arg === 'spec')) {
+    downloadStationNfo();
+    res += `Exporting Station 0x7F ANSI blueprint as .NFO file.`;
+  } else if (cmd === 'export' && (arg === 'memo' || arg === 'memo9')) {
+    exportDeepMemoTxt();
+    res += `Exporting Deep Airgap Memo #09 as plain text file.`;
   } else if (cmd === 'clear') {
     out.textContent = '';
     return;
@@ -3004,6 +3476,12 @@ async function verifyFragment() {
     statusHtml += `<div style="color:var(--cyan-net); margin-top:6px; font-weight:700;">★ SALADO DIELECTRIC WAVEGUIDE PROFILE CONFIRMED: Lithospheric Reflection Verified.</div>`;
   } else if (upper.includes('1999HZ') || upper.includes('1999 HZ') || upper.includes('1999')) {
     statusHtml += `<div style="color:var(--amber-bright); margin-top:6px; font-weight:700;">★ HARMONIC FREQUENCY LOCK CONFIRMED: 1999 Hz Subcarrier Synchronized.</div>`;
+  } else if (upper.includes('CARLSBAD-TRANSPONDER') || upper.includes('TRANSPONDER-SYNCHRONIZED')) {
+    statusHtml += `<div style="color:var(--green-bright); margin-top:6px; font-weight:700;">★ DUAL-RESONANCE TRANSPONDER VERIFIED: 10.19.99.4 Airgap Ground Wave Synchronized.</div>`;
+  } else if (upper.includes('PRECURSOR-CARLSBAD') || upper.includes('0X7F1999')) {
+    statusHtml += `<div style="color:var(--cyan-net); margin-top:6px; font-weight:700;">★ PRECURSOR FRAGMENT #3 VERIFIED: Carlsbad Bedrock Memory Register Authenticated.</div>`;
+  } else if (upper.includes('SECTOR_03') || upper.includes('SECTOR-03')) {
+    statusHtml += `<div style="color:var(--amber-bright); margin-top:6px; font-weight:700;">★ SECTOR 03 ROUTING KEY CONFIRMED: Darknet Subterranean Relay Offset Verified.</div>`;
   } else {
     statusHtml += `<div style="color:var(--text-muted); margin-top:6px;">Checksum computed. No exact pre-climax directive match in current sector.</div>`;
   }
@@ -3013,13 +3491,639 @@ async function verifyFragment() {
 }
 
 /* =========================================================================
+   6.5. DEEP AIRGAP VAULT & DUAL RESONANCE LOGIC
+   ========================================================================= */
+const localSessionId = (function() {
+  let sid = '';
+  try {
+    sid = sessionStorage.getItem('carlsbad_session_id');
+    if (!sid) {
+      sid = 'SESS-' + Math.floor(1000 + Math.random() * 9000);
+      sessionStorage.setItem('carlsbad_session_id', sid);
+    }
+  } catch(e) {
+    sid = 'SESS-' + Math.floor(1000 + Math.random() * 9000);
+  }
+  return sid;
+})();
+
+let saltLoopbackActive = false;
+let airgapRtdb = null;
+let dualResonanceLocked = false;
+
+async function initAirgapPresence() {
+  const lblMesh = document.getElementById('lblRtdbMeshStatus');
+  const lblSessionA = document.getElementById('lblSessionA');
+  if (lblSessionA) lblSessionA.textContent = `Session ID: ${localSessionId}`;
+
+  try {
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js");
+    const { getDatabase, ref, set, onValue, onDisconnect, push } = await import("https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js");
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+      authDomain: "kiloappschat.firebaseapp.com",
+      databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+      projectId: "kiloappschat",
+      storageBucket: "kiloappschat.firebasestorage.app",
+      messagingSenderId: "290208566057",
+      appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+    };
+
+    const app = initializeApp(firebaseConfig, 'carlsbadApp');
+    const db = getDatabase(app);
+    airgapRtdb = { db, ref, set, onValue, push };
+
+    if (lblMesh) {
+      lblMesh.textContent = 'Mesh: ONLINE (Firebase Connected)';
+      lblMesh.style.color = 'var(--green-bright)';
+    }
+
+    const presenceRef = ref(db, `arg/presence/station_10_19_99_4/${localSessionId}`);
+    set(presenceRef, {
+      sessionId: localSessionId,
+      host: '10.19.99.4',
+      freq: 1999.0,
+      timestamp: Date.now()
+    });
+
+    try {
+      onDisconnect(presenceRef).remove();
+    } catch(e) {}
+
+    const allPresenceRef = ref(db, 'arg/presence/station_10_19_99_4');
+    onValue(allPresenceRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      const now = Date.now();
+      const activeSessions = Object.values(data).filter(s => s && (now - (s.timestamp || 0) < 120000));
+      updateDualPresenceUI(activeSessions);
+    });
+  } catch (err) {
+    if (lblMesh) {
+      lblMesh.textContent = 'Mesh: STANDALONE SUBNET (Solo/Loopback Ready)';
+      lblMesh.style.color = 'var(--text-muted)';
+    }
+    updateDualPresenceUI([ { sessionId: localSessionId, host: '10.19.99.4', freq: 1999.0 } ]);
+  }
+}
+
+function updateDualPresenceUI(sessions) {
+  const lblCount = document.getElementById('lblDualPresenceCount');
+  const cardB = document.getElementById('stationCardB');
+  const titleB = document.getElementById('stationBTitle');
+  const statusB = document.getElementById('stationBStatus');
+  const freqB = document.getElementById('stationBFreq');
+  const sessionBEl = document.getElementById('lblSessionB');
+  const barProg = document.getElementById('barResonanceProgress');
+  const lblPct = document.getElementById('lblResonancePct');
+  const secretBox = document.getElementById('dualResonanceSecretBox');
+  const badgeSync = document.getElementById('badgeAirgapSync');
+
+  const remoteSession = sessions.find(s => s.sessionId !== localSessionId);
+  const isDual = saltLoopbackActive || (sessions.length >= 2 && !!remoteSession);
+
+  if (isDual) {
+    dualResonanceLocked = true;
+    if (lblCount) lblCount.textContent = 'STATIONS IN RESONANCE: 2/2 (SYNCHRONIZED)';
+    if (cardB) {
+      cardB.classList.add('synced');
+      cardB.classList.add('active');
+    }
+    if (titleB) titleB.textContent = saltLoopbackActive ? 'STATION BETA [SALADO HALITE LOOPBACK]' : 'STATION BETA [REMOTE PEER TRANSCEIVER]';
+    if (statusB) {
+      statusB.textContent = '● SYNCHRONIZED';
+      statusB.style.color = 'var(--green-bright)';
+    }
+    if (freqB) freqB.textContent = '1999.0 Hz [PHASE LOCKED]';
+    if (sessionBEl) {
+      sessionBEl.textContent = saltLoopbackActive ? 'Session: LOOPBACK-LOCAL-HALITE-0x7F' : `Session: ${remoteSession ? remoteSession.sessionId : 'PEER-0x7F'}`;
+    }
+    if (barProg) barProg.style.width = '100%';
+    if (lblPct) {
+      lblPct.textContent = '100% (Harmonic Lock Established)';
+      lblPct.style.color = 'var(--green-bright)';
+    }
+    if (secretBox) secretBox.style.display = 'block';
+    if (badgeSync) {
+      badgeSync.textContent = 'AIRGAP STATUS: 100% HARMONIC LOCK';
+      badgeSync.style.color = 'var(--green-bright)';
+      badgeSync.style.borderColor = 'var(--green-bright)';
+    }
+  } else {
+    dualResonanceLocked = false;
+    if (lblCount) lblCount.textContent = 'STATIONS IN RESONANCE: 1/2 (STANDBY)';
+    if (cardB) {
+      cardB.classList.remove('synced');
+      cardB.classList.remove('active');
+    }
+    if (titleB) titleB.textContent = 'STATION BETA [REMOTE TRANSCEIVER]';
+    if (statusB) {
+      statusB.textContent = '○ AWAITING PEER / LOOPBACK';
+      statusB.style.color = 'var(--text-muted)';
+    }
+    if (freqB) freqB.textContent = 'Pending Synchronization...';
+    if (sessionBEl) sessionBEl.textContent = 'Remote Session: None Detected';
+    if (barProg) barProg.style.width = '50%';
+    if (lblPct) {
+      lblPct.textContent = '50% (Station Alpha Only)';
+      lblPct.style.color = 'var(--amber-bright)';
+    }
+    if (secretBox) secretBox.style.display = 'none';
+    if (badgeSync) {
+      badgeSync.textContent = 'AIRGAP STATUS: STANDBY (1/2)';
+      badgeSync.style.color = 'var(--amber-bright)';
+      badgeSync.style.borderColor = 'var(--border-amber)';
+    }
+  }
+}
+
+function toggleSaltLoopback() {
+  saltLoopbackActive = !saltLoopbackActive;
+  const btn = document.getElementById('btnToggleLoopback');
+  if (saltLoopbackActive) {
+    if (btn) {
+      btn.textContent = '⏹️ Disengage Salt Loopback';
+      btn.classList.add('active');
+    }
+    playResonanceChime();
+    updateDualPresenceUI([{ sessionId: localSessionId, host: '10.19.99.4', freq: 1999.0 }]);
+    logDemodEvent('LITHO-LOOPBACK ENGAGED: Halite reflection coupled at 1999.0 Hz (Station Beta Active).');
+  } else {
+    if (btn) {
+      btn.textContent = '🔄 Engage Simulated Salt-Vault Echo Loopback';
+      btn.classList.remove('active');
+    }
+    updateDualPresenceUI([{ sessionId: localSessionId, host: '10.19.99.4', freq: 1999.0 }]);
+    logDemodEvent('LITHO-LOOPBACK DISENGAGED.');
+  }
+}
+
+function decoupleResonance() {
+  saltLoopbackActive = false;
+  const btn = document.getElementById('btnToggleLoopback');
+  if (btn) {
+    btn.textContent = '🔄 Engage Simulated Salt-Vault Echo Loopback';
+    btn.classList.remove('active');
+  }
+  updateDualPresenceUI([{ sessionId: localSessionId, host: '10.19.99.4', freq: 1999.0 }]);
+  logDemodEvent('RESONANCE DECOUPLED: Transceivers reset to standby mode.');
+}
+
+function transmitResonancePulse() {
+  initAudio();
+  if (audioCtx) {
+    const now = audioCtx.currentTime;
+    const osc1 = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(1999, now);
+    osc2.type = 'triangle';
+    osc2.frequency.setValueAtTime(3998, now);
+
+    g.gain.setValueAtTime(0.08, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+
+    osc1.connect(g);
+    osc2.connect(g);
+    g.connect(audioCtx.destination);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.46);
+    osc2.stop(now + 0.46);
+  }
+
+  logDemodEvent(`⚡ RESONANCE PULSE TX: 10.19.99.4:1999 -> GROUND WAVE [BURST_CARRIER_SYNC]`);
+
+  if (airgapRtdb && airgapRtdb.db) {
+    try {
+      const pulseRef = airgapRtdb.ref(airgapRtdb.db, 'arg/signals/subterranean_classified');
+      airgapRtdb.push(pulseRef, {
+        sessionId: localSessionId,
+        host: '10.19.99.4',
+        freq: '1999.0 Hz',
+        time: new Date().toTimeString().split(' ')[0],
+        payload: 'RESONANCE_BURST_ACK'
+      });
+    } catch(e) {}
+  }
+}
+
+function playResonanceChime() {
+  if (!audioCtx) initAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const freqs = [999.5, 1499.25, 1999.0];
+  freqs.forEach((f, idx) => {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(f, now + idx * 0.12);
+    g.gain.setValueAtTime(0.06, now + idx * 0.12);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + idx * 0.12 + 0.4);
+    osc.connect(g);
+    g.connect(audioCtx.destination);
+    osc.start(now + idx * 0.12);
+    osc.stop(now + idx * 0.12 + 0.42);
+  });
+}
+
+function logDemodEvent(msg) {
+  const demod = document.getElementById('demodConsole');
+  if (!demod) return;
+  const nowTime = new Date().toTimeString().split(' ')[0];
+  const item = document.createElement('div');
+  item.style.fontSize = '10px';
+  item.style.color = 'var(--cyan-net)';
+  item.innerHTML = `[1999-12-28 ${nowTime}] ${msg}`;
+  demod.appendChild(item);
+  demod.scrollTop = demod.scrollHeight;
+}
+
+function checkArtifactSlots() {
+  const el1 = document.getElementById('inputArtifact1');
+  const el2 = document.getElementById('inputArtifact2');
+  const el3 = document.getElementById('inputArtifact3');
+  if (!el1 || !el2 || !el3) return false;
+
+  const in1 = el1.value.trim().toLowerCase();
+  const in2 = el2.value.trim().toLowerCase();
+  const in3 = el3.value.trim().toLowerCase();
+
+  const v1 = in1.includes('1999');
+  const v2 = in2.includes('sector_03') || in2.includes('sector-03') || in2.includes('0x0040') || in2.includes('0x7f') || in2.includes('aethel-sector');
+  const v3 = in3.includes('32.37') || in3.includes('104.22') || in3.includes('carlsbad') || in3.includes('halite') || in3.includes('salado');
+
+  const card1 = document.getElementById('slotCard1');
+  const card2 = document.getElementById('slotCard2');
+  const card3 = document.getElementById('slotCard3');
+  const b1 = document.getElementById('slotBadge1');
+  const b2 = document.getElementById('slotBadge2');
+  const b3 = document.getElementById('slotBadge3');
+
+  if (v1) { card1.classList.add('valid'); b1.textContent = 'VERIFIED ✓'; b1.classList.add('valid'); }
+  else { card1.classList.remove('valid'); b1.textContent = 'LOCKED'; b1.classList.remove('valid'); }
+
+  if (v2) { card2.classList.add('valid'); b2.textContent = 'VERIFIED ✓'; b2.classList.add('valid'); }
+  else { card2.classList.remove('valid'); b2.textContent = 'LOCKED'; b2.classList.remove('valid'); }
+
+  if (v3) { card3.classList.add('valid'); b3.textContent = 'VERIFIED ✓'; b3.classList.add('valid'); }
+  else { card3.classList.remove('valid'); b3.textContent = 'LOCKED'; b3.classList.remove('valid'); }
+
+  const count = (v1 ? 1 : 0) + (v2 ? 1 : 0) + (v3 ? 1 : 0);
+  const lblValid = document.getElementById('lblArtifactsValidated');
+  if (lblValid) lblValid.textContent = `VALIDATED: ${count} / 3 ARTIFACTS`;
+
+  const btn = document.getElementById('btnDecryptArtifacts');
+  if (btn) {
+    if (count === 3) btn.classList.add('active');
+    else btn.classList.remove('active');
+  }
+
+  return count === 3;
+}
+
+function attemptArtifactDecryption() {
+  const ready = checkArtifactSlots();
+  const panel = document.getElementById('unlockedMemoPanel');
+  const msg = document.getElementById('lblArtifactMsg');
+
+  if (ready) {
+    if (panel) panel.style.display = 'block';
+    if (msg) {
+      msg.textContent = '★ ALL 3 SEQUENTIAL ARTIFACTS AUTHENTICATED! DEEP MEMO #09 & PRECURSOR FRAGMENT UNLOCKED.';
+      msg.style.color = 'var(--green-bright)';
+    }
+    playResonanceChime();
+    try { localStorage.setItem('carlsbad_artifacts_unlocked', 'true'); } catch(e) {}
+    if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  } else {
+    if (msg) {
+      msg.textContent = 'Authentication failed. Please verify that all 3 artifacts from Echo Subsystem, Darknet, and Carlsbad match.';
+      msg.style.color = 'var(--red-alert)';
+    }
+  }
+}
+
+function fillArtifactHints() {
+  const el1 = document.getElementById('inputArtifact1');
+  const el2 = document.getElementById('inputArtifact2');
+  const el3 = document.getElementById('inputArtifact3');
+  if (el1) el1.value = '1999.0 Hz';
+  if (el2) el2.value = 'SECTOR_03_SYNC_XOR_0x7F';
+  if (el3) el3.value = '32.3709° N, 104.2289° W (Carlsbad Halite)';
+  checkArtifactSlots();
+  attemptArtifactDecryption();
+}
+
+let strataCanvas = null;
+let strataCtx = null;
+let strataAnimId = null;
+let strataPackets = [];
+
+function initStrataCanvas() {
+  strataCanvas = document.getElementById('canvasStrataBridge');
+  if (!strataCanvas) return;
+  strataCtx = strataCanvas.getContext('2d');
+
+  function renderStrata() {
+    strataAnimId = requestAnimationFrame(renderStrata);
+    if (!strataCtx) return;
+    const w = strataCanvas.width;
+    const h = strataCanvas.height;
+
+    strataCtx.fillStyle = '#02050b';
+    strataCtx.fillRect(0, 0, w, h);
+
+    const layers = [
+      { y0: 0, y1: 40, col: '#8c6d31', name: 'SURFACE DESERT (0m) [10.19.99.1 Gateway]' },
+      { y0: 40, y1: 80, col: '#5c4033', name: 'ALLUVIAL SEDIMENT (-150m)' },
+      { y0: 80, y1: 125, col: '#334155', name: 'RUSTLER ANHYDRITE (-400m) [10.19.99.12 Beacon]' },
+      { y0: 125, y1: 175, col: '#4338ca', name: 'SALADO HALITE BED (-650m) [10.19.99.4 Intranet]' },
+      { y0: 175, y1: 220, col: '#1e1b4b', name: 'SALT VAULT AIRGAP (-750m) [10.19.99.127 Deep Core]' }
+    ];
+
+    layers.forEach(l => {
+      strataCtx.fillStyle = l.col;
+      strataCtx.fillRect(0, l.y0, w, l.y1 - l.y0);
+      strataCtx.fillStyle = 'rgba(0,0,0,0.35)';
+      strataCtx.fillRect(0, l.y1 - 1, w, 1);
+      strataCtx.fillStyle = 'rgba(255,255,255,0.6)';
+      strataCtx.font = '9px monospace';
+      strataCtx.fillText(l.name, 12, l.y0 + 16);
+    });
+
+    strataCtx.strokeStyle = 'rgba(245, 158, 11, 0.4)';
+    strataCtx.lineWidth = 2;
+    strataCtx.beginPath();
+    strataCtx.moveTo(w / 2, 0);
+    strataCtx.lineTo(w / 2, h);
+    strataCtx.stroke();
+
+    const remaining = [];
+    strataPackets.forEach(p => {
+      p.y += p.speed;
+      strataCtx.fillStyle = p.color;
+      strataCtx.shadowColor = p.color;
+      strataCtx.shadowBlur = 8;
+      strataCtx.beginPath();
+      strataCtx.arc(w / 2, p.y, p.size, 0, Math.PI * 2);
+      strataCtx.fill();
+      strataCtx.shadowBlur = 0;
+
+      if (p.speed > 0 && p.y >= p.targetY) {
+        p.speed = -p.speed * 0.9;
+        p.color = '#34d399';
+        remaining.push(p);
+      } else if (p.speed < 0 && p.y <= 20) {
+        // Echo reached surface
+      } else if (p.y >= 0 && p.y <= h) {
+        remaining.push(p);
+      }
+    });
+    strataPackets = remaining;
+  }
+  renderStrata();
+}
+
+function injectStrataPacket() {
+  const sel = document.getElementById('selBridgeTarget');
+  const target = sel ? sel.value : '10.19.99.127';
+  const inpPayload = document.getElementById('inputBridgePayload');
+  const payload = inpPayload ? inpPayload.value : 'TEST_FRAME';
+  const chkXor = document.getElementById('chkBridgeXor');
+  const isXor = chkXor ? chkXor.checked : true;
+  const resEl = document.getElementById('lblBridgeResult');
+
+  let targetY = 195;
+  let latency = '14 ms';
+  if (target === '10.19.99.1') { targetY = 20; latency = '2 ms'; }
+  else if (target === '10.19.99.12') { targetY = 100; latency = '6 ms'; }
+  else if (target === '10.19.99.19') { targetY = 150; latency = '9 ms'; }
+
+  strataPackets.push({
+    y: 10,
+    targetY: targetY,
+    speed: 3.5,
+    size: 4,
+    color: '#fbbf24'
+  });
+
+  playKeystrokeTone();
+  if (resEl) resEl.textContent = `Transmitting frame to ${target} (Depth: -${targetY * 3.5 | 0}m)...`;
+
+  setTimeout(() => {
+    const xorStr = isXor ? ' [XOR-0x7F APPLIED]' : '';
+    if (resEl) resEl.innerHTML = `<span style="color:var(--green-bright);">● ECHO RECEIVED</span> from ${target}: ACK_OK (RTT: ${latency})${xorStr}`;
+    logDemodEvent(`[LITHO-BRIDGE] Frame transmitted to ${target} across Salado waveguide. Payload: "${payload}" (CRC: 0x7F19)`);
+  }, 650);
+}
+
+let stegoDemodActive = false;
+let stegoCanvas = null;
+let stegoCtx = null;
+let stegoAnimId = null;
+let stegoOffset = 0;
+
+function initStegoDemodulator() {
+  stegoCanvas = document.getElementById('canvasStegoWaterfall');
+  if (!stegoCanvas) return;
+  stegoCtx = stegoCanvas.getContext('2d');
+  stegoCtx.fillStyle = '#01040a';
+  stegoCtx.fillRect(0, 0, stegoCanvas.width, stegoCanvas.height);
+}
+
+function toggleStegoDemodulator() {
+  stegoDemodActive = !stegoDemodActive;
+  const btn = document.getElementById('btnStegoToggle');
+  const lblState = document.getElementById('lblDemodState');
+  const tape = document.getElementById('stegoDecodedStream');
+
+  if (stegoDemodActive) {
+    if (btn) { btn.textContent = '⏹️ Stop Demodulator'; btn.classList.add('active'); }
+    if (lblState) { lblState.textContent = 'DEMODULATING 1999Hz CARRIER'; lblState.style.color = 'var(--green-bright)'; }
+    if (tape) tape.textContent = 'DEMODULATING: ';
+    runStegoAnimation();
+    if (!audioEnabled) toggleAudio();
+  } else {
+    if (btn) { btn.textContent = '▶️ Start Demodulator'; btn.classList.remove('active'); }
+    if (lblState) { lblState.textContent = 'DSP IDLE'; lblState.style.color = 'var(--text-muted)'; }
+    if (stegoAnimId) cancelAnimationFrame(stegoAnimId);
+  }
+}
+
+function runStegoAnimation() {
+  if (!stegoDemodActive || !stegoCanvas) return;
+  stegoAnimId = requestAnimationFrame(runStegoAnimation);
+  const w = stegoCanvas.width;
+  const h = stegoCanvas.height;
+
+  const imgData = stegoCtx.getImageData(1, 0, w - 1, h);
+  stegoCtx.putImageData(imgData, 0, 0);
+
+  stegoCtx.fillStyle = '#01040a';
+  stegoCtx.fillRect(w - 1, 0, 1, h);
+
+  const intensity = Math.sin(stegoOffset * 0.1) * 0.4 + 0.6;
+  const carrierY = Math.floor(h * 0.45);
+
+  stegoCtx.fillStyle = `rgba(16, 185, 129, ${0.4 + intensity * 0.5})`;
+  stegoCtx.fillRect(w - 1, carrierY - 1, 1, 3);
+
+  for (let i = 0; i < 4; i++) {
+    const ny = Math.floor(Math.random() * h);
+    stegoCtx.fillStyle = `rgba(245, 158, 11, ${Math.random() * 0.2})`;
+    stegoCtx.fillRect(w - 1, ny, 1, 1);
+  }
+
+  stegoOffset++;
+
+  if (stegoOffset % 35 === 0) {
+    const msg = "PKT.10.19.99.4 [SUB:1999Hz] CARLSBAD_0x7F_ACTIVE_CRC:0x7F19 ";
+    const ch = msg[(stegoOffset / 35 | 0) % msg.length];
+    const tape = document.getElementById('stegoDecodedStream');
+    if (tape) {
+      tape.textContent += ch;
+      if (tape.textContent.length > 80) {
+        tape.textContent = '... ' + tape.textContent.slice(-60);
+      }
+    }
+  }
+}
+
+function clearStegoTape() {
+  const tape = document.getElementById('stegoDecodedStream');
+  if (tape) tape.textContent = 'CLEARED — AWAITING NEXT CARRIER FRAME...';
+}
+
+function updateStegoPreset() {
+  clearStegoTape();
+}
+
+function downloadStationNfo() {
+  const nfo = `==============================================================================
+ AETHEL DYNAMICS // SPECIAL PROJECTS DIVISION // SUBTERRANEAN STATION 0x7F
+==============================================================================
+ LOCATION: Carlsbad Halite Salt Cavern (-650m to -750m Subsurface)
+ COORDINATES: 32.3709 N, 104.2289 W
+ HOST INTRANET IP: 10.19.99.4/24 (Project Echo Core Repository)
+ SUBCARRIER CARRIER: 1999.0 Hz (Yamaha YM2612 Ch6 / 2-Operator FM)
+ SECONDARY WAVEGUIDE: 432.0 Hz (Salado Halite Lithospheric Resonance)
+==============================================================================
+
+[GEOLOGICAL CROSS-SECTION & ROUTING MAP]
+  SURFACE (0m)       ====== 10.19.99.1 [Gateway Microwave Uplink]
+  -150m ALLUVIUM     ====== [Grounding Rod Capacitive Array]
+  -400m RUSTLER      ====== 10.19.99.12 [Subcarrier RF Beacon 1999Hz]
+  -650m SALADO       ====== 10.19.99.4 [Classified Intranet & Memory Vault]
+  -750m VAULT CORE   ====== 10.19.99.127 [Airgapped Deep Core // Node 0x7F]
+
+[SECURITY DIRECTIVES]
+  1. HARD EEPROM CEILING: 999 Kilobytes (1,022,976 Bytes) per node.
+  2. WATCHDOG LATCH-UP: Memory writes exceeding 999KB trigger immediate halt.
+  3. DUAL RESONANCE: Piercing the Salado formation requires 2 synchronized
+     transceivers operating at 1999Hz.
+  4. SEQUENTIAL ARTIFACTS:
+     - Echo Subsystem: 1999.0 Hz
+     - Darknet Node 0x7F: SECTOR_03_SYNC_XOR_0x7F
+     - Carlsbad Intranet: 32.3709 N, 104.2289 W
+
+==============================================================================
+ RELEASE SIGNATURE: 7f1999c0d3e5b12a0f8821d3e811aa0794b1592c305a468d61394a5e378c89b2
+ GENERATED BY: Carlsbad Intranet 10.19.99.4 Web Hypermedia Node
+==============================================================================`;
+
+  const blob = new Blob([nfo], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'STATION_0x7F.NFO';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportDeepMemoTxt() {
+  const el = document.getElementById('deepMemoText');
+  const txt = el ? el.textContent.trim() : 'AETHEL DEEP MEMO 09';
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'AETHEL_DEEP_MEMO_09.TXT';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function downloadCarrierWav() {
+  const sampleRate = 44100;
+  const duration = 2.0;
+  const numSamples = Math.floor(sampleRate * duration);
+  const buffer = new ArrayBuffer(44 + numSamples * 2);
+  const view = new DataView(buffer);
+
+  function writeString(offset, string) {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  }
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + numSamples * 2, true);
+  writeString(8, 'WAVE');
+
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+
+  writeString(36, 'data');
+  view.setUint32(40, numSamples * 2, true);
+
+  const carrierFreq = 1999.0;
+  const modFreq = 19.99;
+  const modDepth = 35.0;
+
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    let env = 1.0;
+    if (t < 0.05) env = t / 0.05;
+    else if (t > duration - 0.1) env = (duration - t) / 0.1;
+
+    const mod = Math.sin(2 * Math.PI * modFreq * t) * modDepth;
+    const sampleVal = Math.sin(2 * Math.PI * (carrierFreq + mod) * t) * env * 0.75;
+    const intSample = Math.max(-32768, Math.min(32767, Math.floor(sampleVal * 32767)));
+    view.setInt16(44 + i * 2, intSample, true);
+  }
+
+  const blob = new Blob([buffer], { type: 'audio/wav' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'CARRIER_1999HZ_BEACON.WAV';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* =========================================================================
    7. TAB NAVIGATION CONTROLLER & KEYBOARD SHORTCUTS
    ========================================================================= */
 function switchTab(tabId) {
   document.querySelectorAll('.tab-nav .tab-btn').forEach(btn => btn.classList.remove('active'));
   document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
 
-  const btn = Array.from(document.querySelectorAll('.tab-nav .tab-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+  const btn = Array.from(document.querySelectorAll('.tab-nav .tab-btn')).find(b => b.getAttribute('onclick') && b.getAttribute('onclick').includes(tabId));
   if (btn) btn.classList.add('active');
 
   const pane = document.getElementById(`tab-${tabId}`);
@@ -3027,6 +4131,10 @@ function switchTab(tabId) {
 
   if (tabId === 'map') {
     drawBunkerMap();
+  } else if (tabId === 'airgap') {
+    if (!strataAnimId) initStrataCanvas();
+    if (!stegoCanvas) initStegoDemodulator();
+    checkArtifactSlots();
   }
 
   playKeystrokeTone();
@@ -3038,8 +4146,8 @@ window.addEventListener('keydown', (e) => {
   if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 
   const key = e.key;
-  if (key >= '1' && key <= '7') {
-    const tabs = ['memos', 'hex', 'signal', 'map', 'packets', 'terminal', 'verify'];
+  if (key >= '1' && key <= '8') {
+    const tabs = ['memos', 'hex', 'signal', 'map', 'packets', 'terminal', 'verify', 'airgap'];
     switchTab(tabs[parseInt(key) - 1]);
     e.preventDefault();
   } else if (key === 'm' || key === 'M') {
@@ -3076,6 +4184,10 @@ window.addEventListener('DOMContentLoaded', () => {
   initBunkerMap();
   updateSectorChecksums();
   startIncomingBeaconSimulation();
+  initAirgapPresence();
+  initStrataCanvas();
+  initStegoDemodulator();
+  checkArtifactSlots();
 });
 </script>
 </body>

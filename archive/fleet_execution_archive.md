@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-01T16:26:00Z — kilo-graphics: KWizard (Nature Purification, 6 Native Archetype Presets & Projectile Polish)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 132.4 KB web / 12.9 KB native < 999 KB ceiling).
+  - Archetype Presets: Added 6 1-click deckbuilder archetype presets (Pyro, Cryo, Arcane, Druid, Venom, Storm) to Win32 C (`KWizard.exe`).
+  - Elemental Balance: Added Nature school purification synergy (cleanses 1 poison/burn stack) with dynamic floaters & AI priority.
+  - Card Balance: Synchronized Lightning Bolt to 4 dmg with 2 shield pierce directly to HP across web and native.
+  - Visual Polish: Added custom SVG art (Tranquility, Nature's Grasp, Lifebloom, Counterspell, Polymorph, Intellect) & elemental projectile shapes.
+  - Glint Audit: Removed unused `runicAngle`; verified 0 rotating specular glints or traveling perimeter border dots.
+  - Verification: MSVC/Crinkler clean (`KWizard.exe` 12.9 KB); Vite clean in 410ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-01T14:25:00Z — kilo-creator: kweb://cybercafe (Underground BBS Lounge Deep Expansion & 1v1 RFMS Cyber Duel)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean build in 386ms, 173.4 KB < 999 KB ceiling).
   - 1v1 Cyber Duel: Integrated `retro_multiplayer.js` with rooms (`CYB-XXXX`), turn sync, combat log, and chat.

@@ -1,4 +1,4 @@
-﻿# Virtual 1999 Web — Completed Content Mandates Archive
+# Virtual 1999 Web — Completed Content Mandates Archive
 
 > Archived from next_work.md to reduce per-turn token overhead.
 > These sites are fully built. This file is historical reference only.
@@ -72,11 +72,16 @@
      - âœ… Collaborative Subterranean Signal Mesh via Firebase RTDB (`arg/signals/subterranean_darknet`) with instant Carlsbad salt-vault solo loopback fallback.
      - âœ… Universal procedural audio engine: Genesis YM2612 2-op FM synthesis + SNES SPC700 stereo delay across 3 chiptune tracks + procedural SFX.
      - âœ… Client-side asset synthesis & download (.asc, .asm, .nfo, .rom, .conf, .log) & Central KiloNet Webring #012 interconnect.
-  8. `kweb://10.19.99.4/classified` (*Corporate Network Leak & Signal Diagnostic*):
-     - âœ… Signal Diagnostic Lab with dual-display time-domain oscilloscope & FFT frequency spectrum, tunable YM2612 FM / SPC700 stereo delay DSP controls & live subcarrier demodulator.
-     - âœ… Subnet RF Sweep: 10.19.99.0/24 node sweep tracking signal-to-noise ratio, carrier lock, and audio DAC leakage.
-     - âœ… Corporate Leak Suite: Sanitized diegetic memos, 4-sector memory hex inspector, packet sniffer with test frame injection & skunkworks CLI.
-     - âœ… Discovery Integration: Linked node in KNet directory, portal category 5 / search index, portal classified ads, and webring node #015 / probe console.
+  8. `kweb://10.19.99.4/classified` (*Corporate Network Leak, Signal Diagnostic & Airgap Vault*):
+     - ✅ Signal Diagnostic Lab with dual-display time-domain oscilloscope & FFT frequency spectrum, tunable YM2612 FM / SPC700 stereo delay DSP controls & live subcarrier demodulator.
+     - ✅ Subnet RF Sweep: 10.19.99.0/24 node sweep tracking signal-to-noise ratio, carrier lock, and audio DAC leakage.
+     - ✅ Corporate Leak Suite: 10 declassified diegetic memos, 6-sector memory hex inspector, packet sniffer with test frame injection & skunkworks CLI.
+     - ✅ Dual-Presence Acoustic Resonance Lock: Firebase RTDB multi-session synchronization with local Salado loopback fallback unlocking airgap transponder `CARLSBAD-TRANSPONDER-SYNCHRONIZED-0x7F`.
+     - ✅ Sequential Key-Artifact Decryption Chamber: 3-stage validation validating Echo Subsystem (1999Hz), Darknet (Sector 03), and Carlsbad coordinates unlocking Deep Memo #09 & Precursor Fragment #3 (`PRECURSOR-CARLSBAD-BEDROCK-0x7F1999`).
+     - ✅ Lithospheric Packet Bridge & Frame Injector: Subsurface packet animator diving through geological strata to -750m with Deep Core (10.19.99.127) echo frames.
+     - ✅ Forensic Steganography Demodulator: Real-time 1999Hz audio waterfall canvas with ASCII stream decoding and phase shift parser.
+     - ✅ Client-Side Artifact Downloads: In-browser synthesis of `CARLSBAD_0x1999.DMP`, `STATION_0x7F.NFO`, `MEMO_09.TXT`, and 16-bit PCM `CARRIER_1999HZ_BEACON.WAV`.
+     - ✅ Discovery Integration: Linked node in KNet directory, portal category 5 / search index, portal classified ads, and webring node #015 / probe console.
   9. `kweb://echo-subsystem.net` (*Acoustic Research Lab, SIGINT Grid & Audio Steganography*):
      - âœ… 7-log diegetic acoustic research journal with redaction masks, categorized filters & persistent user observation logbook (.SIG export).
      - âœ… Yamaha YM2612 2-Operator FM synthesis engine with ADSR envelope, SPC700 stereo delay DSP, 14-key keyboard & dual-mode CRT oscilloscope / Lissajous XY phase goniometer.
