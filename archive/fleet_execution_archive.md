@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-01T00:15:00Z — kilo-expander: Automated Native Binaries Release Pipeline (100 Win32 C Apps)**
+  - Pipeline Automation: Built `scripts/package_native_releases.py` with PE header and <999KB size validation.
+  - Native Executables Sync: Copied all 100 compiled Win32 binaries into `KiloOS/public/exe/` and `KiloOS_Server/public/exe/`.
+  - App.jsx Direct Downloads: Synchronized 71 previously generic apps in `App.jsx` to individual `/exe/<AppName>.exe` URLs.
+  - Suite Packaging: Generated full 100-app bundle `KApps.zip` (3.4 MB) for bulk downloads; dynamic window title bar tooltips.
+  - Verification: `npm run build` clean in 246ms (v0.4.15); smoke_test_native 100/100 PASS; security & ARG lints 100% PASS.
+
 - **2026-09-30T23:55:00Z — kilo-qa: KPaint (Pass 5: Tutorial & State Integrity, Quicksave/Load, Toast Safe Zone)**
   - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 148.1 KB web / 29.2 KB native < 999 KB ceiling).
   - Quicksave & Quickload: Added F5 / F9 full multi-layer snapshot persistence with quota safety across web and Win32 C.

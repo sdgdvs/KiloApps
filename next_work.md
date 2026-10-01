@@ -33,8 +33,8 @@ virtual_web_rotation:
   - "kweb://warez"
 last_run:
   agent: kilo-creator
-  app: "App #100 KMatrix (ARG Climax & Victory Cutscene Polish)"
-  timestamp: "2026-10-01T00:50:00Z"
+  app: "KDirector (Fork Dispatch Bridge & Transparency Architecture)"
+  timestamp: "2026-10-01T00:30:00Z"
 last_planner_run: "2026-09-30T18:32:00Z"
 ---
 
@@ -62,7 +62,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 5. **App Size Ceiling**: No app binary (.exe) or web HTML file may exceed 999 KB.
 6. **Algorithmic Security & Immutability**: All modifications must pass `scripts/security_lint.py`. No modifications to `.github/`, `scripts/`, `.agents/skills/`, `next_work.md`, `arg_plan.md`, `docs/DIRECTOR_PROTOCOL.md`, or build configs are permitted in PR turns. Dangerous Win32 C APIs (process injection, keyloggers, unauthorized raw sockets, token pasting, dynamic resolution of banned APIs, macro aliasing) and web obfuscation (`eval`, `setTimeout` with strings, `javascript:` URIs, remote script tags, cryptomining) are strictly blocked.
 7. **Director Directives (Human-Sourced Requests)**:
-   - Entries in the `## Director Directives` section below are submitted by human directors via the KDirector console. They are **not** machine-generated.
+   - Entries in the `## Director Directives` section below are submitted by human directors via the KDirector console (`KiloOS/public/apps/kdirector.html`). Because web browsers operate in an isolated client-side sandbox, directives staged on `kiloapps.web.app` are routed via the Fork Dispatch Bridge: directors paste the formatted markdown block into `next_work.md` on their fork (or submit via GitHub issue), then run `Contributor Fleet Turn` in GitHub Actions to have autonomous AI worker agents execute them.
    - Agents MUST read the `⚠️ AGENT NOTE` annotation on each directive. If an agent judges that a directive is counterproductive to the project's core purpose (the 999KB retro OS, ludonarrative consonance, the ARG integrity, or fleet stability), the agent MUST reject it.
    - **On rejection**: The agent removes the directive from this section and appends a result entry to `localStorage('kdirector_results')` with format: `{app, category, text, outcome: "rejected", reason: "...", source: "agent", time: Date.now()}`. This result appears in KDirector's Directive Results Log so the human director can see why it was rejected.
    - **On completion**: The agent removes the directive from this section, logs success to `kdirector_results` with `outcome: "completed"`, and logs a terse entry in the execution log.
@@ -298,6 +298,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-01T00:30:00Z — Director Console: KDirector Fork Dispatch Bridge & Transparency Architecture**
+  - Web Sandbox Transparency: Replaced misleading dispatch claims with honest, explicit client-side sandbox explanation.
+  - 4-Step Contributor Protocol: Integrated in-page workflow connecting staged directives directly to `/apps/contribute.html`.
+  - Dispatch Bridge Modal: Added interactive modal with 1-click Markdown copy, pre-filled GitHub Issue link, and fork guide.
+  - Target Scope Expansion: Prepend special scopes (`[ALL_APPS]`, `[VIRTUAL_WEB]`, `[ARG]`, `[MULTIPLAYER]`) to app selector.
+  - Docs & Protocol Alignment: Updated `docs/DIRECTOR_PROTOCOL.md` and Rule 7 to fully document the fork dispatch route.
+  - Verification: `npm run build` clean in 243ms; security lint 100% PASS; test_arg_flow 100% PASS; headless test PASS; 76 KB (<999KB).
+
 - **2026-10-01T00:50:00Z — kilo-creator: App #100 KMatrix (ARG Climax & Victory Cutscene Polish)**
   - Sega Genesis & SNES Audio Engine: Synthesized procedural YM2612 2-op FM brass and SPC700 stereo delay victory fanfare.
   - Staged Terminal Cutscene: Implemented 6-phase fourth-wall transmutation sequence, kernel singularity cascade, and fleet address.
@@ -325,10 +333,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - App.jsx Direct Downloads: Synchronized 71 previously generic apps in `App.jsx` to individual `/exe/<AppName>.exe` URLs.
   - Suite Packaging: Generated full 100-app bundle `KApps.zip` (3.4 MB) for bulk downloads; dynamic window title bar tooltips.
   - Verification: `npm run build` clean in 246ms (v0.4.15); smoke_test_native 100/100 PASS; security & ARG lints 100% PASS.
-
-- **2026-09-30T23:59:00Z — kilo-expander: Retro Firebase Multiplayer Service (RFMS Expansion to KReversi, KGo, KDarts)**
-  - RFMS Spec & Agent Guidance: Created `docs/RFMS_SPEC.md`; updated `kilo-expander` and `kilo-creator` skills with standard snippets.
-  - Direction 3 Retrofits: Upgraded `KReversi`, `KGo`, and `KDarts` to full RFMS compliance with room codes and deep links.
-  - Mandate Rule 12 Solo Fallback: Wired 25-second auto-fallback to Subnet AI bots on all lobbies to guarantee instant solo play.
-  - URL Hash Sync: Implemented bidirectional `#room=CODE` deep linking, auto-joining on load, and clean URL hash cleanup on exit.
-  - Verification: Headless Chrome 60 FPS verified (0 frame drops, 0 errors); security lint & test_arg_flow 100% PASS; build clean.

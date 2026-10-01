@@ -2656,46 +2656,69 @@ void UpdateGame(float dt) {
         }
     }
 
-    // Steering
+    // Steering with RCS Thruster Visual Polish
     float rotAccel = engDef->rot;
-    if (g_state.turningLeft) g_state.shipAngle -= rotAccel;
-    if (g_state.turningRight) g_state.shipAngle += rotAccel;
-    
-    // Propulsion
-    float thrustPower = engDef->thrust;
-    float fuelDrainRate = 0.03f * engDef->fuelBurn;
-    if (g_state.thrusting && g_state.fuel > 0.0f) {
-        g_state.shipVx += (float)cos(g_state.shipAngle) * thrustPower;
-        g_state.shipVy += (float)sin(g_state.shipAngle) * thrustPower;
-        g_state.fuel = max(0.0f, g_state.fuel - fuelDrainRate);
-        if (rand() % 30 == 0) TriggerSound(SFX_THRUSTER_BURN);
-        
-        // Thrust sparks
-        float exAngle = g_state.shipAngle + 3.14159f + (((float)rand() / (float)RAND_MAX) - 0.5f) * 0.4f;
-        float exX = g_state.shipX - (float)cos(g_state.shipAngle) * 18.0f;
-        float exY = g_state.shipY - (float)sin(g_state.shipAngle) * 18.0f;
-        COLORREF thrusterColor = THEME_PALETTES[g_state.themeIndex].vector;
-        for (int i = 0; i < MAX_PARTICLES; i++) {
-            if (!g_state.particles[i].active) {
-                g_state.particles[i].x = exX;
-                g_state.particles[i].y = exY;
-                g_state.particles[i].vx = (float)cos(exAngle) * (2.0f + ((float)rand() / (float)RAND_MAX) * 2.0f);
-                g_state.particles[i].vy = (float)sin(exAngle) * (2.0f + ((float)rand() / (float)RAND_MAX) * 2.0f);
-                g_state.particles[i].color = thrusterColor;
-                g_state.particles[i].life = 0.8f;
-                g_state.particles[i].decay = 0.06f;
-                g_state.particles[i].size = 2.5f;
-                g_state.particles[i].active = 1;
-                break;
-            }
+    if (g_state.turningLeft) {
+        g_state.shipAngle -= rotAccel;
+        if (rand() % 4 == 0) {
+            float rcsAng = g_state.shipAngle + 1.57079f;
+            AddSparks(g_state.shipX + (float)cos(rcsAng) * 12.0f, g_state.shipY + (float)sin(rcsAng) * 12.0f, RGB(56, 189, 248), 1);
+        }
+    }
+    if (g_state.turningRight) {
+        g_state.shipAngle += rotAccel;
+        if (rand() % 4 == 0) {
+            float rcsAng = g_state.shipAngle - 1.57079f;
+            AddSparks(g_state.shipX + (float)cos(rcsAng) * 12.0f, g_state.shipY + (float)sin(rcsAng) * 12.0f, RGB(56, 189, 248), 1);
         }
     }
     
-    if (g_state.reversing && g_state.fuel > 0.0f) {
-        g_state.shipVx -= (float)cos(g_state.shipAngle) * (thrustPower * 0.5f);
-        g_state.shipVy -= (float)sin(g_state.shipAngle) * (thrustPower * 0.5f);
-        g_state.fuel = max(0.0f, g_state.fuel - fuelDrainRate * 0.5f);
-        if (rand() % 35 == 0) TriggerSound(SFX_THRUSTER_BURN);
+    // Propulsion (with Emergency Solar Auxiliary Drift Balance)
+    float thrustPower = engDef->thrust;
+    float fuelDrainRate = 0.03f * engDef->fuelBurn;
+    if (g_state.thrusting) {
+        if (g_state.fuel > 0.0f) {
+            g_state.shipVx += (float)cos(g_state.shipAngle) * thrustPower;
+            g_state.shipVy += (float)sin(g_state.shipAngle) * thrustPower;
+            g_state.fuel = max(0.0f, g_state.fuel - fuelDrainRate);
+            if (rand() % 30 == 0) TriggerSound(SFX_THRUSTER_BURN);
+            
+            // Thrust sparks
+            float exAngle = g_state.shipAngle + 3.14159f + (((float)rand() / (float)RAND_MAX) - 0.5f) * 0.4f;
+            float exX = g_state.shipX - (float)cos(g_state.shipAngle) * 18.0f;
+            float exY = g_state.shipY - (float)sin(g_state.shipAngle) * 18.0f;
+            COLORREF thrusterColor = THEME_PALETTES[g_state.themeIndex].vector;
+            for (int i = 0; i < MAX_PARTICLES; i++) {
+                if (!g_state.particles[i].active) {
+                    g_state.particles[i].x = exX;
+                    g_state.particles[i].y = exY;
+                    g_state.particles[i].vx = (float)cos(exAngle) * (2.0f + ((float)rand() / (float)RAND_MAX) * 2.0f);
+                    g_state.particles[i].vy = (float)sin(exAngle) * (2.0f + ((float)rand() / (float)RAND_MAX) * 2.0f);
+                    g_state.particles[i].color = thrusterColor;
+                    g_state.particles[i].life = 0.8f;
+                    g_state.particles[i].decay = 0.06f;
+                    g_state.particles[i].size = 2.5f;
+                    g_state.particles[i].active = 1;
+                    break;
+                }
+            }
+        } else {
+            // Emergency Solar RCS Auxiliary Drift (25% thrust: prevents soft-lock)
+            g_state.shipVx += (float)cos(g_state.shipAngle) * (thrustPower * 0.25f);
+            g_state.shipVy += (float)sin(g_state.shipAngle) * (thrustPower * 0.25f);
+        }
+    }
+    
+    if (g_state.reversing) {
+        if (g_state.fuel > 0.0f) {
+            g_state.shipVx -= (float)cos(g_state.shipAngle) * (thrustPower * 0.5f);
+            g_state.shipVy -= (float)sin(g_state.shipAngle) * (thrustPower * 0.5f);
+            g_state.fuel = max(0.0f, g_state.fuel - fuelDrainRate * 0.5f);
+            if (rand() % 35 == 0) TriggerSound(SFX_THRUSTER_BURN);
+        } else {
+            g_state.shipVx -= (float)cos(g_state.shipAngle) * (thrustPower * 0.15f);
+            g_state.shipVy -= (float)sin(g_state.shipAngle) * (thrustPower * 0.15f);
+        }
     }
     
     // Inertial Dampeners
@@ -3764,7 +3787,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     }
     
     // World Space Relative to Ship
-    // Draw Tractor Wave Cone
+    // Draw Tractor Wave Cone & Magnetic Flux Tethers
     if (g_state.tractorActive) {
         float tractorRange = 320.0f;
         float angleL = g_state.shipAngle - 0.785f;
@@ -3780,6 +3803,23 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         
         SelectObject(hdc, oldTrPen);
         DeleteObject(hPenTractor);
+
+        // Magnetic flux tether lines to active ore chunks within tractor range
+        HPEN hPenTether = CreatePen(PS_DOT, 1, RGB(56, 189, 248));
+        HGDIOBJ oldTeth = SelectObject(hdc, hPenTether);
+        for (int i = 0; i < MAX_ORE_CHUNKS; i++) {
+            if (!g_state.oreChunks[i].active) continue;
+            float cdx = g_state.oreChunks[i].x - g_state.shipX;
+            float cdy = g_state.oreChunks[i].y - g_state.shipY;
+            if (cdx * cdx + cdy * cdy < tractorRange * tractorRange) {
+                int chX = cx + (int)cdx;
+                int chY = cyCenter + (int)cdy;
+                MoveToEx(hdc, cx, cyCenter, NULL);
+                LineTo(hdc, chX, chY);
+            }
+        }
+        SelectObject(hdc, oldTeth);
+        DeleteObject(hPenTether);
     }
     
     // Draw Mining Laser Beam
@@ -3955,11 +3995,19 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         SelectObject(hdc, oldVnP);
         DeleteObject(hPenVein);
         
-        // Ore node center (crystalline mineral cluster)
+        // Ore node center (crystalline mineral cluster with static cross gleam)
         HBRUSH hBrOreNode = CreateSolidBrush(ORE_DEFS[ast->oreType].color);
         RECT rcNode = { ax - 4, ay - 4, ax + 5, ay + 5 };
         FillRect(hdc, &rcNode, hBrOreNode);
         DeleteObject(hBrOreNode);
+        if (ast->scanned) {
+            HPEN hPenCross = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+            HGDIOBJ oldCrPen = SelectObject(hdc, hPenCross);
+            MoveToEx(hdc, ax - 6, ay, NULL); LineTo(hdc, ax + 7, ay);
+            MoveToEx(hdc, ax, ay - 6, NULL); LineTo(hdc, ax, ay + 7);
+            SelectObject(hdc, oldCrPen);
+            DeleteObject(hPenCross);
+        }
         
         SelectObject(hdc, oldAstPen);
         SelectObject(hdc, oldAstBr);
@@ -4381,7 +4429,7 @@ void RenderGame(HDC hdc, RECT* clientRect) {
         }
     }
 
-    // 2. Shield Bubble
+    // 2. Shield Bubble (Clean static perimeter, zero traveling glints or perimeter dots per Mandate 11)
     if (g_state.shield > 0.0f) {
         HPEN hPenShield = CreatePen(PS_SOLID, 1, pal->vectorDim);
         HGDIOBJ oldShPen = SelectObject(hdc, hPenShield);
@@ -4589,6 +4637,31 @@ void RenderGame(HDC hdc, RECT* clientRect) {
     SelectObject(hdc, oldRdBr);
     DeleteObject(hPenRadar);
     DeleteObject(hBrRadar);
+
+    // Emergency Solar RCS / Low Fuel Alert Prompt HUD
+    if (g_state.fuel <= 0.0f || (g_state.fuel < 15.0f && !g_state.stationDocked)) {
+        int isZero = (g_state.fuel <= 0.0f);
+        int hudW = 490;
+        int hudH = 26;
+        int hudX = viewportX + (viewportW - hudW) / 2;
+        int hudY = viewportY + 12;
+
+        RECT rcAlert = { hudX, hudY, hudX + hudW, hudY + hudH };
+        HBRUSH hBrAlert = CreateSolidBrush(isZero ? RGB(65, 10, 10) : RGB(45, 25, 5));
+        FillRect(hdc, &rcAlert, hBrAlert);
+        DeleteObject(hBrAlert);
+        FrameRect(hdc, &rcAlert, (HBRUSH)GetStockObject(WHITE_BRUSH));
+
+        SelectObject(hdc, g_fontMonoBold);
+        SetTextColor(hdc, isZero ? RGB(252, 165, 165) : RGB(254, 240, 138));
+        char alertBuf[96];
+        if (isZero) {
+            sprintf(alertBuf, "⚠️ ZERO FUEL: AUXILIARY SOLAR RCS ENGAGED (25%% DRIFT) • SYNTHESIZE FUEL [R]");
+        } else {
+            sprintf(alertBuf, "⚠️ LOW FUEL (<15%%): DOCK AT SPACEPORT [D] OR REFINE WARP CELL [R]");
+        }
+        DrawTextA(hdc, alertBuf, -1, &rcAlert, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    }
     
     // Proximity Spaceport Docking HUD Prompt
     {
