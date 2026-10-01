@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 6,
+  "turns_executed": 15,
   "last_turn_timestamp": "2026-09-28T18:42:51Z",
-  "last_heartbeat": "2026-10-01T01:27:08.815105+00:00",
-  "current_target": "kweb://users/~neon_rider (Personal Hacker / Demoscene Homepage)",
+  "last_heartbeat": "2026-10-01T15:27:08.776444+00:00",
+  "current_target": "KWizard",
   "remote_command": "none"
 }

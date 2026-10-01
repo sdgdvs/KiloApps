@@ -67,6 +67,13 @@ static const char* my_strstr(const char* haystack, const char* needle) {
 #define BTN_HELP_CLOSE 112
 #define BTN_SAVE 113
 #define BTN_LOAD 114
+#define BTN_PRESET_PYRO 115
+#define BTN_PRESET_CRYO 116
+#define BTN_PRESET_ARCANE 117
+#define BTN_PRESET_DRUID 118
+#define BTN_PRESET_VENOM 119
+#define BTN_PRESET_STORM 120
+#define BTN_DECK_CLEAR 121
 #define IDT_CAMPAIGN_NEXT 1001
 #define IDT_ANIM 1002
 
@@ -81,7 +88,7 @@ typedef struct {
     int shield;
     int regen;
     int poison;
-    int type; // 0: fire, 1: ice, 2: arcane, 3: nature, 4: poison
+    int type; // 0: fire, 1: ice, 2: arcane, 3: nature, 4: poison, 5: lightning
 } CardDef;
 
 CardDef sampleCards[] = {
@@ -124,7 +131,13 @@ CardDef sampleCards[] = {
     {"Toxic Cloud", 3, "Poisons for 4 dmg over time", 0, 0, 0, 0, 0, 0, 4, 4},
     {"Noxious Mire", 5, "Deals 3 dmg, poisons 3, slows", 3, 0, 0, 1, 0, 0, 3, 4},
     {"Acid Splash", 1, "Deals 1 dmg, poisons for 1", 1, 0, 0, 0, 0, 0, 1, 4},
-    {"Viper Fang", 2, "Deals 2 dmg, heals 2, poisons 1", 2, 2, 0, 0, 0, 0, 1, 4}
+    {"Viper Fang", 2, "Deals 2 dmg, heals 2, poisons 1", 2, 2, 0, 0, 0, 0, 1, 4},
+    {"Shock", 1, "Deals 2 Lightning dmg (5 if frozen)", 2, 0, 0, 0, 0, 0, 0, 5},
+    {"Lightning Bolt", 3, "Deals 4 Lightning dmg (pierces 2 shield)", 4, 0, 0, 0, 0, 0, 0, 5},
+    {"Chain Lightning", 5, "Deals 6 Lightning dmg (9 if frozen)", 6, 0, 0, 0, 0, 0, 0, 5},
+    {"Thunderclap", 4, "Deals 3 dmg, stuns (slows 1 turn)", 3, 0, 0, 1, 0, 0, 0, 5},
+    {"Storm Shield", 3, "Gain 4 Shield; strikes back for 2 dmg", 0, 0, 0, 0, 4, 0, 0, 5},
+    {"Overcharge", 2, "Draw 1 card, gain +2 Mana next turn", 0, 0, 0, 0, 0, 0, 0, 5}
 };
 #define NUM_SAMPLE_CARDS (sizeof(sampleCards)/sizeof(CardDef))
 
@@ -160,9 +173,9 @@ MageDef mages[] = {
     {"Venomancer", 1, 40, 7, {34, 35, 36, 37, 38, 39, 22}, RGB(15, 100, 60), RGB(80, 240, 120)},
     {"Master Pyromancer", 2, 45, 8, {0, 1, 2, 3, 4, 5, 6, 7}, RGB(220, 30, 20), RGB(255, 160, 20)},
     {"Master Cryomancer", 2, 50, 7, {8, 9, 10, 11, 12, 13, 14}, RGB(10, 90, 190), RGB(120, 240, 255)},
-    {"Arcane Archon", 2, 55, 8, {15, 16, 17, 18, 19, 20, 21, 22}, RGB(130, 30, 180), RGB(240, 120, 255)},
+    {"Arcane Archon", 2, 55, 8, {15, 16, 17, 18, 19, 20, 41, 44}, RGB(130, 30, 180), RGB(240, 120, 255)},
     {"High Priest", 2, 60, 8, {16, 22, 23, 26, 27, 28, 31, 32}, RGB(180, 140, 20), RGB(255, 240, 100)},
-    {"Grand Magus", 2, 70, 40, {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39}, RGB(220, 160, 20), RGB(255, 215, 0)}
+    {"Grand Magus", 2, 70, 46, {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45}, RGB(220, 160, 20), RGB(255, 215, 0)}
 };
 
 int playerMana = 1;
@@ -172,6 +185,10 @@ int opponentMaxMana = 1;
 
 int playerBurn = 0, playerFreeze = 0, playerShield = 0, playerRegen = 0, playerPoison = 0;
 int opponentBurn = 0, opponentFreeze = 0, opponentShield = 0, opponentRegen = 0, opponentPoison = 0;
+int playerOvercharge = 0, opponentOvercharge = 0;
+int playerStormShield = 0, opponentStormShield = 0;
+float playerCastTimer = 0.0f, oppCastTimer = 0.0f;
+float playerHurtTimer = 0.0f, oppHurtTimer = 0.0f;
 
 char arenaMsg[128] = "Spells and effects go here";
 
@@ -219,9 +236,9 @@ typedef struct {
 Projectile projectiles[MAX_PROJECTILES];
 
 float screenShake = 0.0f;
-float runicAngle = 0.0f;
 
 HWND hwndDraw, hwndReset, hwndCombo, hwndDeckBtn, hwndHelpBtn, hwndSaveBtn, hwndLoadBtn, hwndAvail, hwndDeck, hwndDeckClose, hwndHelp, hwndHelpClose;
+HWND hwndPresetPyro, hwndPresetCryo, hwndPresetArcane, hwndPresetDruid, hwndPresetVenom, hwndPresetStorm, hwndDeckClear;
 
 unsigned int seed = 0;
 int my_rand() {
@@ -265,6 +282,7 @@ void SpawnExplosion(float x, float y, int type) {
     else if (type == 1) pColor = RGB(0, 220, 255);
     else if (type == 3) pColor = RGB(34, 197, 94);
     else if (type == 4) pColor = RGB(16, 185, 129);
+    else if (type == 5) pColor = RGB(250, 204, 21);
 
     SpawnShockwave(x, y, pColor);
 
@@ -363,8 +381,34 @@ void LaunchSpellVisual(int fromPlayer, CardDef* cd, int cw, int ch) {
     }
 }
 
-void DealDamageToPlayer(int dmg, int cw, int ch) {
-    if (dmg <= 0) return;
+void DealDamageToPlayer(int dmg, CardDef* cd, int cw, int ch) {
+    if (dmg <= 0 && (!cd || strcmp(cd->name, "Storm Shield") != 0)) return;
+
+    if (cd) {
+        if (cd->type == 0 && playerFreeze > 0) {
+            dmg += 3;
+            playerFreeze = 0;
+            SpawnFloater((float)cw * 0.25f, (float)ch * 0.32f, "THERMAL SHATTER! +3", RGB(255, 120, 0));
+        } else if (cd->type == 5 && playerFreeze > 0) {
+            dmg += 3;
+            SpawnFloater((float)cw * 0.25f, (float)ch * 0.32f, "CONDUCTIVE! +3", RGB(250, 204, 21));
+        }
+        if (cd->type == 0 && playerPoison > 0) {
+            dmg += 2;
+            playerBurn += 1;
+            SpawnFloater((float)cw * 0.25f, (float)ch * 0.32f, "CATALYTIC! +2", RGB(255, 180, 0));
+        }
+    }
+
+    int pierced = (cd && strcmp(cd->name, "Lightning Bolt") == 0);
+    if (playerShield > 0 && pierced) {
+        int pierce = playerShield > 2 ? 2 : playerShield;
+        playerShield -= pierce;
+        playerHp -= pierce;
+        dmg = dmg > pierce ? dmg - pierce : 0;
+        char b[32]; wsprintf(b, "PIERCED %d!", pierce);
+        SpawnFloater((float)cw * 0.25f, (float)ch * 0.40f, b, RGB(250, 204, 21));
+    }
     if (playerShield > 0) {
         if (playerShield >= dmg) {
             playerShield -= dmg;
@@ -377,18 +421,54 @@ void DealDamageToPlayer(int dmg, int cw, int ch) {
             playerShield = 0;
         }
     }
+
     if (dmg > 0) {
         playerHp -= dmg;
+        playerHurtTimer = 0.35f;
         char b[32];
         if (dmg >= 8) wsprintf(b, "CRIT -%d HP!", dmg);
         else wsprintf(b, "-%d HP", dmg);
         SpawnFloater((float)cw * 0.25f, (float)ch * 0.40f, b, dmg >= 8 ? RGB(250, 204, 21) : RGB(239, 68, 68));
+
+        if (playerStormShield > 0) {
+            opponentHp -= 2;
+            oppHurtTimer = 0.35f;
+            SpawnFloater((float)cw * 0.75f, (float)ch * 0.32f, "STORM RETALIATION -2", RGB(250, 204, 21));
+            SpawnExplosion((float)cw * 0.75f, (float)ch * 0.48f, 5);
+        }
     }
     if (playerHp < 0) playerHp = 0;
+    if (opponentHp < 0) opponentHp = 0;
 }
 
-void DealDamageToOpponent(int dmg, int cw, int ch) {
-    if (dmg <= 0) return;
+void DealDamageToOpponent(int dmg, CardDef* cd, int cw, int ch) {
+    if (dmg <= 0 && (!cd || strcmp(cd->name, "Storm Shield") != 0)) return;
+
+    if (cd) {
+        if (cd->type == 0 && opponentFreeze > 0) {
+            dmg += 3;
+            opponentFreeze = 0;
+            SpawnFloater((float)cw * 0.75f, (float)ch * 0.32f, "THERMAL SHATTER! +3", RGB(255, 120, 0));
+        } else if (cd->type == 5 && opponentFreeze > 0) {
+            dmg += 3;
+            SpawnFloater((float)cw * 0.75f, (float)ch * 0.32f, "CONDUCTIVE! +3", RGB(250, 204, 21));
+        }
+        if (cd->type == 0 && opponentPoison > 0) {
+            dmg += 2;
+            opponentBurn += 1;
+            SpawnFloater((float)cw * 0.75f, (float)ch * 0.32f, "CATALYTIC! +2", RGB(255, 180, 0));
+        }
+    }
+
+    int pierced = (cd && strcmp(cd->name, "Lightning Bolt") == 0);
+    if (opponentShield > 0 && pierced) {
+        int pierce = opponentShield > 2 ? 2 : opponentShield;
+        opponentShield -= pierce;
+        opponentHp -= pierce;
+        dmg = dmg > pierce ? dmg - pierce : 0;
+        char b[32]; wsprintf(b, "PIERCED %d!", pierce);
+        SpawnFloater((float)cw * 0.75f, (float)ch * 0.40f, b, RGB(250, 204, 21));
+    }
     if (opponentShield > 0) {
         if (opponentShield >= dmg) {
             opponentShield -= dmg;
@@ -401,18 +481,29 @@ void DealDamageToOpponent(int dmg, int cw, int ch) {
             opponentShield = 0;
         }
     }
+
     if (dmg > 0) {
         opponentHp -= dmg;
+        oppHurtTimer = 0.35f;
         char b[32];
         if (dmg >= 8) wsprintf(b, "CRIT -%d HP!", dmg);
         else wsprintf(b, "-%d HP", dmg);
         SpawnFloater((float)cw * 0.75f, (float)ch * 0.40f, b, dmg >= 8 ? RGB(250, 204, 21) : RGB(239, 68, 68));
+
+        if (opponentStormShield > 0) {
+            playerHp -= 2;
+            playerHurtTimer = 0.35f;
+            SpawnFloater((float)cw * 0.25f, (float)ch * 0.32f, "STORM RETALIATION -2", RGB(250, 204, 21));
+            SpawnExplosion((float)cw * 0.25f, (float)ch * 0.48f, 5);
+        }
     }
     if (opponentHp < 0) opponentHp = 0;
+    if (playerHp < 0) playerHp = 0;
 }
 
 const char* GetSoundType(CardDef* cd) {
     if (cd->shield > 0 && cd->damage == 0) return "shield";
+    if (cd->type == 5) return "lightning";
     if (cd->type == 4 || cd->poison > 0) return "poison";
     if (cd->type == 0) return "fire";
     if (cd->type == 1) return "ice";
@@ -424,7 +515,10 @@ static int audioMuted = 0;
 
 void PlaySoundEffect(const char* type) {
     if (audioMuted) return;
-    if (strcmp(type, "fire") == 0) {
+    if (strcmp(type, "lightning") == 0) {
+        Beep(1800, 30);
+        Beep(900, 40);
+    } else if (strcmp(type, "fire") == 0) {
         Beep(150, 40);
         Beep(100, 40);
     } else if (strcmp(type, "ice") == 0) {
@@ -481,6 +575,10 @@ void InitGame(int oppHp) {
     opponentMana = 1;
     playerBurn = 0; playerFreeze = 0; playerShield = 0; playerRegen = 0; playerPoison = 0;
     opponentBurn = 0; opponentFreeze = 0; opponentShield = 0; opponentRegen = 0; opponentPoison = 0;
+    playerStormShield = 0; opponentStormShield = 0;
+    playerOvercharge = 0; opponentOvercharge = 0;
+    playerCastTimer = 0.0f; oppCastTimer = 0.0f;
+    playerHurtTimer = 0.0f; oppHurtTimer = 0.0f;
     particleCount = 0;
     shockwaveCount = 0;
     floaterCount = 0;
@@ -645,6 +743,13 @@ static int LoadGameState(HWND hwnd) {
         ShowWindow(hwndAvail, SW_HIDE);
         ShowWindow(hwndDeck, SW_HIDE);
         ShowWindow(hwndDeckClose, SW_HIDE);
+        ShowWindow(hwndPresetPyro, SW_HIDE);
+        ShowWindow(hwndPresetCryo, SW_HIDE);
+        ShowWindow(hwndPresetArcane, SW_HIDE);
+        ShowWindow(hwndPresetDruid, SW_HIDE);
+        ShowWindow(hwndPresetVenom, SW_HIDE);
+        ShowWindow(hwndPresetStorm, SW_HIDE);
+        ShowWindow(hwndDeckClear, SW_HIDE);
         ShowWindow(hwndHelp, SW_HIDE);
         ShowWindow(hwndHelpClose, SW_HIDE);
     }
@@ -657,6 +762,27 @@ static int LoadGameState(HWND hwnd) {
     lstrcpyA(arenaMsg, "Game Quickloaded from kwizard.dat [F9]");
     if (hwnd) InvalidateRect(hwnd, NULL, FALSE);
     return 1;
+}
+
+static const int presetPyro[20] = {0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 16, 16, 22, 22};
+static const int presetCryo[20] = {8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 16, 16, 18, 18, 22, 22};
+static const int presetArcane[20] = {15, 15, 16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 0, 1, 8, 9};
+static const int presetDruid[20] = {23, 23, 24, 24, 25, 25, 26, 26, 27, 28, 28, 29, 29, 30, 30, 31, 31, 34, 35, 22};
+static const int presetVenom[20] = {34, 34, 35, 35, 36, 36, 37, 37, 38, 38, 39, 39, 16, 16, 22, 22, 23, 23, 15, 15};
+static const int presetStorm[20] = {40, 40, 41, 41, 42, 42, 43, 43, 44, 44, 45, 45, 8, 8, 9, 9, 16, 16, 22, 22};
+
+static void ApplyDeckPreset(HWND hwnd, const int* presetCards) {
+    playerDeckCount = 20;
+    for (int i = 0; i < 20; i++) {
+        playerDeck[i] = presetCards[i];
+    }
+    SendMessage(hwndDeck, LB_RESETCONTENT, 0, 0);
+    for (int i = 0; i < 20; i++) {
+        char buf[64];
+        wsprintf(buf, "%s (Mana: %d)", sampleCards[playerDeck[i]].name, sampleCards[playerDeck[i]].cost);
+        SendMessage(hwndDeck, LB_ADDSTRING, 0, (LPARAM)buf);
+    }
+    InvalidateRect(hwnd, NULL, FALSE);
 }
 
 void ResetGame() {
@@ -672,6 +798,21 @@ int EvaluateCard(CardDef* cd) {
     if (strcmp(cd->name, "Ice Lance") == 0 && playerFreeze > 0) {
         score += 30;
     }
+    if (strcmp(cd->name, "Shock") == 0 && playerFreeze > 0) {
+        score += 25;
+    }
+    if (strcmp(cd->name, "Chain Lightning") == 0 && playerFreeze > 0) {
+        score += 35;
+    }
+    if (strcmp(cd->name, "Lightning Bolt") == 0 && playerShield > 0) {
+        score += 20;
+    }
+    if (cd->type == 3 && (opponentPoison > 0 || opponentBurn > 0)) {
+        score += 18; // Cleanse strategic priority
+    }
+    if (strcmp(cd->name, "Storm Shield") == 0 && opponentShield == 0) {
+        score += 18;
+    }
     if (playerHp <= 10 && cd->damage > 0) {
         score += cd->damage * 4;
     }
@@ -680,6 +821,7 @@ int EvaluateCard(CardDef* cd) {
     }
     if (strcmp(cd->name, "Time Warp") == 0) score += 25;
     if (strcmp(cd->name, "Arcane Intellect") == 0 && opponentCount < 3) score += 15;
+    if (strcmp(cd->name, "Overcharge") == 0) score += 15;
     return score;
 }
 
@@ -723,11 +865,21 @@ void PlayOpponentTurn(int cw, int ch) {
             int dmg = cd.damage;
             if (strcmp(cd.name, "Ice Lance") == 0 && playerFreeze > 0) dmg = 3;
             
-            DealDamageToPlayer(dmg, cw, ch);
+            oppCastTimer = 0.35f;
+            DealDamageToPlayer(dmg, &cd, cw, ch);
             if (cd.heal > 0) {
                 opponentHp += cd.heal;
                 char b[32]; wsprintf(b, "+%d HP", cd.heal);
                 SpawnFloater((float)cw * 0.75f, (float)ch * 0.40f, b, RGB(74, 222, 128));
+            }
+            if (cd.type == 3 && (opponentPoison > 0 || opponentBurn > 0)) {
+                if (opponentPoison > 0) {
+                    opponentPoison--;
+                    SpawnFloater((float)cw * 0.75f, (float)ch * 0.32f, "PURIFIED POISON!", RGB(134, 239, 172));
+                } else if (opponentBurn > 0) {
+                    opponentBurn--;
+                    SpawnFloater((float)cw * 0.75f, (float)ch * 0.32f, "PURIFIED BURN!", RGB(134, 239, 172));
+                }
             }
             
             playerBurn += cd.burn;
@@ -735,6 +887,15 @@ void PlayOpponentTurn(int cw, int ch) {
             opponentShield += cd.shield;
             opponentRegen += cd.regen;
             playerPoison += cd.poison;
+
+            if (strcmp(cd.name, "Storm Shield") == 0) {
+                opponentStormShield = 1;
+                SpawnFloater((float)cw * 0.75f, (float)ch * 0.28f, "STORM CHARGE ACTIVE", RGB(250, 204, 21));
+            } else if (strcmp(cd.name, "Overcharge") == 0) {
+                opponentOvercharge += 2;
+                DrawCard(1);
+                SpawnFloater((float)cw * 0.75f, (float)ch * 0.28f, "+2 MANA NEXT TURN!", RGB(250, 204, 21));
+            }
             
             LaunchSpellVisual(0, &cd, cw, ch);
             PlaySoundEffect(GetSoundType(&cd));
@@ -803,9 +964,20 @@ void PlayOpponentTurn(int cw, int ch) {
     }
 }
 
-void DrawWizardSpriteGDI(HDC hdc, int cx, int cy, int isPlayer, COLORREF robeColor, COLORREF staffColor, float time) {
+void DrawWizardSpriteGDI(HDC hdc, int cx, int cy, int isPlayer, COLORREF robeColor, COLORREF staffColor, float time, int mageIdx) {
     int bobY = (int)(sinf(time * 4.0f + (isPlayer ? 0.0f : 3.14f)) * 4.0f);
     int y = cy + bobY;
+
+    int castThrust = 0;
+    int hurtFlinch = 0;
+    if (isPlayer) {
+        if (playerCastTimer > 0.0f) castThrust = 8;
+        if (playerHurtTimer > 0.0f) hurtFlinch = -8;
+    } else {
+        if (oppCastTimer > 0.0f) castThrust = -8;
+        if (oppHurtTimer > 0.0f) hurtFlinch = 8;
+    }
+    cx += castThrust + hurtFlinch;
 
     // Pedestal shadow
     HBRUSH shadowBrush = CreateSolidBrush(RGB(15, 6, 28));
@@ -840,24 +1012,95 @@ void DrawWizardSpriteGDI(HDC hdc, int cx, int cy, int isPlayer, COLORREF robeCol
     SetPixel(hdc, cx + 3, y - 12, eyeCol);
     SetPixel(hdc, cx + 4, y - 12, eyeCol);
 
-    // Wizard Hat Brim
-    Ellipse(hdc, cx - 16, y - 22, cx + 16, y - 14);
+    // Headgear Archetypes
+    if (mageIdx == 3) {
+        // Forest Druid: Antler prongs
+        HPEN antlerPen = CreatePen(PS_SOLID, 2, RGB(139, 90, 43));
+        HGDIOBJ opA = SelectObject(hdc, antlerPen);
+        MoveToEx(hdc, cx - 8, y - 18, NULL); LineTo(hdc, cx - 18, y - 34); LineTo(hdc, cx - 22, y - 30);
+        MoveToEx(hdc, cx - 14, y - 28, NULL); LineTo(hdc, cx - 10, y - 36);
+        MoveToEx(hdc, cx + 8, y - 18, NULL); LineTo(hdc, cx + 18, y - 34); LineTo(hdc, cx + 22, y - 30);
+        MoveToEx(hdc, cx + 14, y - 28, NULL); LineTo(hdc, cx + 10, y - 36);
+        SelectObject(hdc, opA);
+        DeleteObject(antlerPen);
+    } else if (mageIdx == 4) {
+        // Venomancer: Cobra Hood Cowl
+        HBRUSH hoodBrush = CreateSolidBrush(RGB(15, 100, 60));
+        HPEN hoodPen = CreatePen(PS_SOLID, 1, RGB(74, 222, 128));
+        HGDIOBJ obH = SelectObject(hdc, hoodBrush);
+        HGDIOBJ opH = SelectObject(hdc, hoodPen);
+        POINT hoodPts[5] = {
+            {cx - 20, y - 8},
+            {cx - 14, y - 26},
+            {cx, y - 32},
+            {cx + 14, y - 26},
+            {cx + 20, y - 8}
+        };
+        Polygon(hdc, hoodPts, 5);
+        SelectObject(hdc, obH); SelectObject(hdc, opH);
+        DeleteObject(hoodBrush); DeleteObject(hoodPen);
+    } else if (mageIdx == 8) {
+        // High Priest: Golden Sun Mitre
+        HBRUSH mitreBrush = CreateSolidBrush(RGB(220, 180, 40));
+        HPEN mitrePen = CreatePen(PS_SOLID, 2, RGB(255, 240, 100));
+        HGDIOBJ obM = SelectObject(hdc, mitreBrush);
+        HGDIOBJ opM = SelectObject(hdc, mitrePen);
+        POINT mitrePts[5] = {
+            {cx - 12, y - 18},
+            {cx - 8, y - 40},
+            {cx, y - 44},
+            {cx + 8, y - 40},
+            {cx + 12, y - 18}
+        };
+        Polygon(hdc, mitrePts, 5);
+        SelectObject(hdc, obM); SelectObject(hdc, opM);
+        DeleteObject(mitreBrush); DeleteObject(mitrePen);
+    } else if (mageIdx == 9) {
+        // Grand Magus: Triple Crown
+        HBRUSH crownBrush = CreateSolidBrush(RGB(234, 179, 8));
+        HPEN crownPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+        HGDIOBJ obC = SelectObject(hdc, crownBrush);
+        HGDIOBJ opC = SelectObject(hdc, crownPen);
+        POINT crownPts[6] = {
+            {cx - 14, y - 18},
+            {cx - 16, y - 34},
+            {cx - 6, y - 26},
+            {cx, y - 38},
+            {cx + 6, y - 26},
+            {cx + 16, y - 34}
+        };
+        Polygon(hdc, crownPts, 6);
+        SelectObject(hdc, obC); SelectObject(hdc, opC);
+        DeleteObject(crownBrush); DeleteObject(crownPen);
+    } else if (mageIdx == 1 || mageIdx == 6) {
+        // Cryomancer: Ice Crown Spikes
+        HPEN icePen = CreatePen(PS_SOLID, 2, RGB(147, 197, 253));
+        HGDIOBJ opI = SelectObject(hdc, icePen);
+        MoveToEx(hdc, cx - 12, y - 18, NULL); LineTo(hdc, cx - 14, y - 32);
+        MoveToEx(hdc, cx - 5, y - 18, NULL); LineTo(hdc, cx - 4, y - 36);
+        MoveToEx(hdc, cx + 5, y - 18, NULL); LineTo(hdc, cx + 4, y - 36);
+        MoveToEx(hdc, cx + 12, y - 18, NULL); LineTo(hdc, cx + 14, y - 32);
+        SelectObject(hdc, opI); DeleteObject(icePen);
+    } else {
+        // Classic Wizard Hat Brim & Cone
+        Ellipse(hdc, cx - 16, y - 22, cx + 16, y - 14);
 
-    // Hat Cone
-    POINT hatPts[3] = {
-        {cx - 12, y - 18},
-        {cx + (isPlayer ? 4 : -4), y - 38},
-        {cx + 12, y - 18}
-    };
-    Polygon(hdc, hatPts, 3);
+        POINT hatPts[3] = {
+            {cx - 12, y - 18},
+            {cx + (isPlayer ? 4 : -4), y - 38},
+            {cx + 12, y - 18}
+        };
+        Polygon(hdc, hatPts, 3);
 
-    // Hat brooch
-    HBRUSH goldBrush = CreateSolidBrush(RGB(255, 215, 0));
-    SelectObject(hdc, goldBrush);
-    Ellipse(hdc, cx - 3, y - 22, cx + 3, y - 16);
+        HBRUSH goldBrush = CreateSolidBrush(RGB(255, 215, 0));
+        HGDIOBJ obG = SelectObject(hdc, goldBrush);
+        Ellipse(hdc, cx - 3, y - 22, cx + 3, y - 16);
+        SelectObject(hdc, obG);
+        DeleteObject(goldBrush);
+    }
 
     // Staff
-    int staffX = isPlayer ? cx + 24 : cx - 24;
+    int staffX = isPlayer ? cx + 24 + (castThrust > 0 ? 6 : 0) : cx - 24 + (castThrust < 0 ? -6 : 0);
     HPEN staffPen = CreatePen(PS_SOLID, 3, RGB(139, 90, 43));
     SelectObject(hdc, staffPen);
     MoveToEx(hdc, staffX, y + 36, NULL);
@@ -870,13 +1113,20 @@ void DrawWizardSpriteGDI(HDC hdc, int cx, int cy, int isPlayer, COLORREF robeCol
     SelectObject(hdc, orbPen);
     Ellipse(hdc, staffX - 6, y - 38, staffX + 6, y - 26);
 
+    if (castThrust != 0) {
+        HPEN flarePen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
+        HGDIOBJ opF = SelectObject(hdc, flarePen);
+        MoveToEx(hdc, staffX - 10, y - 32, NULL); LineTo(hdc, staffX + 10, y - 32);
+        MoveToEx(hdc, staffX, y - 42, NULL); LineTo(hdc, staffX, y - 22);
+        SelectObject(hdc, opF); DeleteObject(flarePen);
+    }
+
     SelectObject(hdc, oldB);
     SelectObject(hdc, oldP);
     DeleteObject(shadowBrush);
     DeleteObject(shadowPen);
     DeleteObject(robeBrush);
     DeleteObject(headBrush);
-    DeleteObject(goldBrush);
     DeleteObject(goldPen);
     DeleteObject(staffPen);
     DeleteObject(orbBrush);
@@ -928,6 +1178,19 @@ void DrawSpellIconGDI(HDC hdc, int x, int y, int type) {
         Polygon(hdc, pts, 3);
         SelectObject(hdc, ob); SelectObject(hdc, op);
         DeleteObject(pBrush); DeleteObject(pPen);
+    } else if (type == 5) { // Lightning / Storm
+        HPEN boltPen = CreatePen(PS_SOLID, 2, RGB(250, 204, 21));
+        HGDIOBJ op = SelectObject(hdc, boltPen);
+        POINT pts[5] = {
+            {x + 2, y - 12},
+            {x - 4, y - 1},
+            {x + 2, y - 1},
+            {x - 3, y + 12},
+            {x + 4, y}
+        };
+        Polyline(hdc, pts, 5);
+        SelectObject(hdc, op);
+        DeleteObject(boltPen);
     }
 }
 
@@ -942,20 +1205,39 @@ static void CastPlayerCard(HWND hwnd, int cardIndex, int cw, int ch) {
     if (playerMana >= cd.cost) {
         playerMana -= cd.cost;
         
+        playerCastTimer = 0.35f;
         int dmg = cd.damage;
         if (strcmp(cd.name, "Ice Lance") == 0 && opponentFreeze > 0) dmg = 3;
-        DealDamageToOpponent(dmg, cw, ch);
+        DealDamageToOpponent(dmg, &cd, cw, ch);
         
         if (cd.heal > 0) {
             playerHp += cd.heal;
             char b[32]; wsprintf(b, "+%d HP", cd.heal);
             SpawnFloater((float)cw * 0.25f, (float)ch * 0.40f, b, RGB(74, 222, 128));
         }
+        if (cd.type == 3 && (playerPoison > 0 || playerBurn > 0)) {
+            if (playerPoison > 0) {
+                playerPoison--;
+                SpawnFloater((float)cw * 0.25f, (float)ch * 0.32f, "PURIFIED POISON!", RGB(134, 239, 172));
+            } else if (playerBurn > 0) {
+                playerBurn--;
+                SpawnFloater((float)cw * 0.25f, (float)ch * 0.32f, "PURIFIED BURN!", RGB(134, 239, 172));
+            }
+        }
         opponentBurn += cd.burn;
         opponentFreeze += cd.freeze;
         playerShield += cd.shield;
         playerRegen += cd.regen;
         opponentPoison += cd.poison;
+
+        if (strcmp(cd.name, "Storm Shield") == 0) {
+            playerStormShield = 1;
+            SpawnFloater((float)cw * 0.25f, (float)ch * 0.28f, "STORM CHARGE ACTIVE", RGB(250, 204, 21));
+        } else if (strcmp(cd.name, "Overcharge") == 0) {
+            playerOvercharge += 2;
+            DrawCard(0);
+            SpawnFloater((float)cw * 0.25f, (float)ch * 0.28f, "+2 MANA NEXT TURN!", RGB(250, 204, 21));
+        }
         
         LaunchSpellVisual(1, &cd, cw, ch);
         PlaySoundEffect(GetSoundType(&cd));
@@ -1071,8 +1353,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                      hwnd, (HMENU)LST_DECK, NULL, NULL);
             hwndDeckClose = CreateWindow("BUTTON", "Save & Close",
                                          WS_CHILD | BS_PUSHBUTTON,
-                                         350, 470, 100, 30,
+                                         355, 420, 90, 28,
                                          hwnd, (HMENU)BTN_DECK_CLOSE, NULL, NULL);
+
+            hwndPresetPyro = CreateWindow("BUTTON", "Pyro [Fire]", WS_CHILD | BS_PUSHBUTTON, 355, 60, 90, 24, hwnd, (HMENU)BTN_PRESET_PYRO, NULL, NULL);
+            hwndPresetCryo = CreateWindow("BUTTON", "Cryo [Ice]", WS_CHILD | BS_PUSHBUTTON, 355, 88, 90, 24, hwnd, (HMENU)BTN_PRESET_CRYO, NULL, NULL);
+            hwndPresetArcane = CreateWindow("BUTTON", "Arcane", WS_CHILD | BS_PUSHBUTTON, 355, 116, 90, 24, hwnd, (HMENU)BTN_PRESET_ARCANE, NULL, NULL);
+            hwndPresetDruid = CreateWindow("BUTTON", "Druid [Nat]", WS_CHILD | BS_PUSHBUTTON, 355, 144, 90, 24, hwnd, (HMENU)BTN_PRESET_DRUID, NULL, NULL);
+            hwndPresetVenom = CreateWindow("BUTTON", "Venom", WS_CHILD | BS_PUSHBUTTON, 355, 172, 90, 24, hwnd, (HMENU)BTN_PRESET_VENOM, NULL, NULL);
+            hwndPresetStorm = CreateWindow("BUTTON", "Storm [Zap]", WS_CHILD | BS_PUSHBUTTON, 355, 200, 90, 24, hwnd, (HMENU)BTN_PRESET_STORM, NULL, NULL);
+            hwndDeckClear = CreateWindow("BUTTON", "Clear Deck", WS_CHILD | BS_PUSHBUTTON, 355, 232, 90, 24, hwnd, (HMENU)BTN_DECK_CLEAR, NULL, NULL);
                                          
             hwndHelp = CreateWindow("LISTBOX", "",
                                     WS_CHILD | WS_BORDER | WS_VSCROLL,
@@ -1111,6 +1401,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                 if (screenShake > 0.1f) screenShake *= 0.90f;
                 else screenShake = 0.0f;
+
+                if (playerCastTimer > 0.0f) playerCastTimer -= 0.033f;
+                if (oppCastTimer > 0.0f) oppCastTimer -= 0.033f;
+                if (playerHurtTimer > 0.0f) playerHurtTimer -= 0.033f;
+                if (oppHurtTimer > 0.0f) oppHurtTimer -= 0.033f;
 
                 // Update Projectiles
                 for (int i = 0; i < MAX_PROJECTILES; i++) {
@@ -1174,11 +1469,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     if (playerFreeze > 0) playerFreeze--;
 
                     if (opponentMaxMana < 10) opponentMaxMana++;
-                    opponentMana = opponentMaxMana;
+                    opponentMana = opponentMaxMana + opponentOvercharge;
+                    if (opponentOvercharge > 0) {
+                        SpawnFloater((float)cw * 0.75f, (float)ch * 0.32f, "+OVERCHARGE!", RGB(250, 204, 21));
+                        opponentOvercharge = 0;
+                    }
                     DrawCard(1);
 
-                    if (opponentBurn > 0) { DealDamageToOpponent(opponentBurn, cw, ch); opponentBurn--; }
-                    if (opponentPoison > 0) { DealDamageToOpponent(opponentPoison, cw, ch); opponentPoison--; }
+                    if (opponentBurn > 0) { DealDamageToOpponent(opponentBurn, NULL, cw, ch); opponentBurn--; }
+                    if (opponentPoison > 0) { DealDamageToOpponent(opponentPoison, NULL, cw, ch); opponentPoison--; }
                     if (opponentRegen > 0) { opponentHp += opponentRegen; opponentRegen--; }
                     if (opponentHp > opponentMaxHp) opponentHp = opponentMaxHp;
                     
@@ -1206,11 +1505,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
                     if (gameState == 0) {
                         if (playerMaxMana < 10) playerMaxMana++;
-                        playerMana = playerMaxMana;
+                        playerMana = playerMaxMana + playerOvercharge;
+                        if (playerOvercharge > 0) {
+                            SpawnFloater((float)cw * 0.25f, (float)ch * 0.32f, "+OVERCHARGE!", RGB(250, 204, 21));
+                            playerOvercharge = 0;
+                        }
                         DrawCard(0);
                         
-                        if (playerBurn > 0) { DealDamageToPlayer(playerBurn, cw, ch); playerBurn--; }
-                        if (playerPoison > 0) { DealDamageToPlayer(playerPoison, cw, ch); playerPoison--; }
+                        if (playerBurn > 0) { DealDamageToPlayer(playerBurn, NULL, cw, ch); playerBurn--; }
+                        if (playerPoison > 0) { DealDamageToPlayer(playerPoison, NULL, cw, ch); playerPoison--; }
                         if (playerRegen > 0) { playerHp += playerRegen; playerRegen--; }
                         if (playerHp > 30) playerHp = 30;
                         if (playerHp <= 0) { playerHp = 0; if (gameState != 2) PlaySoundEffect("lose"); gameState = 2; }
@@ -1238,6 +1541,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 ShowWindow(hwndAvail, SW_SHOW);
                 ShowWindow(hwndDeck, SW_SHOW);
                 ShowWindow(hwndDeckClose, SW_SHOW);
+                ShowWindow(hwndPresetPyro, SW_SHOW);
+                ShowWindow(hwndPresetCryo, SW_SHOW);
+                ShowWindow(hwndPresetArcane, SW_SHOW);
+                ShowWindow(hwndPresetDruid, SW_SHOW);
+                ShowWindow(hwndPresetVenom, SW_SHOW);
+                ShowWindow(hwndPresetStorm, SW_SHOW);
+                ShowWindow(hwndDeckClear, SW_SHOW);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (LOWORD(wParam) == BTN_DECK_CLOSE) {
                 if (playerDeckCount != 20) {
@@ -1247,13 +1557,43 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     ShowWindow(hwndAvail, SW_HIDE);
                     ShowWindow(hwndDeck, SW_HIDE);
                     ShowWindow(hwndDeckClose, SW_HIDE);
+                    ShowWindow(hwndPresetPyro, SW_HIDE);
+                    ShowWindow(hwndPresetCryo, SW_HIDE);
+                    ShowWindow(hwndPresetArcane, SW_HIDE);
+                    ShowWindow(hwndPresetDruid, SW_HIDE);
+                    ShowWindow(hwndPresetVenom, SW_HIDE);
+                    ShowWindow(hwndPresetStorm, SW_HIDE);
+                    ShowWindow(hwndDeckClear, SW_HIDE);
                     InvalidateRect(hwnd, NULL, FALSE);
                 }
+            } else if (LOWORD(wParam) == BTN_PRESET_PYRO) {
+                ApplyDeckPreset(hwnd, presetPyro);
+            } else if (LOWORD(wParam) == BTN_PRESET_CRYO) {
+                ApplyDeckPreset(hwnd, presetCryo);
+            } else if (LOWORD(wParam) == BTN_PRESET_ARCANE) {
+                ApplyDeckPreset(hwnd, presetArcane);
+            } else if (LOWORD(wParam) == BTN_PRESET_DRUID) {
+                ApplyDeckPreset(hwnd, presetDruid);
+            } else if (LOWORD(wParam) == BTN_PRESET_VENOM) {
+                ApplyDeckPreset(hwnd, presetVenom);
+            } else if (LOWORD(wParam) == BTN_PRESET_STORM) {
+                ApplyDeckPreset(hwnd, presetStorm);
+            } else if (LOWORD(wParam) == BTN_DECK_CLEAR) {
+                playerDeckCount = 0;
+                SendMessage(hwndDeck, LB_RESETCONTENT, 0, 0);
+                InvalidateRect(hwnd, NULL, FALSE);
             } else if (LOWORD(wParam) == BTN_HELP) {
                 gameState = 4;
                 ShowWindow(hwndAvail, SW_HIDE);
                 ShowWindow(hwndDeck, SW_HIDE);
                 ShowWindow(hwndDeckClose, SW_HIDE);
+                ShowWindow(hwndPresetPyro, SW_HIDE);
+                ShowWindow(hwndPresetCryo, SW_HIDE);
+                ShowWindow(hwndPresetArcane, SW_HIDE);
+                ShowWindow(hwndPresetDruid, SW_HIDE);
+                ShowWindow(hwndPresetVenom, SW_HIDE);
+                ShowWindow(hwndPresetStorm, SW_HIDE);
+                ShowWindow(hwndDeckClear, SW_HIDE);
                 SendMessage(hwndHelp, LB_RESETCONTENT, 0, 0);
                 SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"=== HOW TO PLAY ===");
                 SendMessage(hwndHelp, LB_ADDSTRING, 0, (LPARAM)"You and your opponent take turns casting spells.");
@@ -1380,6 +1720,9 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     RECT lblA = {50, 20, 350, 50};
                     DrawText(memDC, "Available Spells (Double-click to add)", -1, &lblA, DT_CENTER | DT_SINGLELINE);
                     
+                    RECT lblP = {350, 35, 450, 55};
+                    DrawText(memDC, "Presets", -1, &lblP, DT_CENTER | DT_SINGLELINE);
+
                     char lblDStr[64];
                     wsprintf(lblDStr, "Your Deck (%d/20) (Double-click to remove)", playerDeckCount);
                     RECT lblD = {450, 20, 750, 50};
@@ -1434,9 +1777,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             float curTime = (float)GetTickCount() * 0.001f;
             COLORREF oppRobe = (campaignLevel > 0) ? mages[campaignLevel-1].robeColor : RGB(160, 30, 40);
             COLORREF oppStaff = (campaignLevel > 0) ? mages[campaignLevel-1].staffColor : RGB(255, 100, 0);
+            int oppMageIdx = (campaignLevel > 0) ? (campaignLevel - 1) : -1;
 
-            DrawWizardSpriteGDI(memDC, (int)((float)cw * 0.25f), arenaCY, 1, RGB(55, 25, 90), RGB(96, 165, 250), curTime);
-            DrawWizardSpriteGDI(memDC, (int)((float)cw * 0.75f), arenaCY, 0, oppRobe, oppStaff, curTime);
+            DrawWizardSpriteGDI(memDC, (int)((float)cw * 0.25f), arenaCY, 1, RGB(55, 25, 90), RGB(96, 165, 250), curTime, -1);
+            DrawWizardSpriteGDI(memDC, (int)((float)cw * 0.75f), arenaCY, 0, oppRobe, oppStaff, curTime, oppMageIdx);
 
             // Projectiles
             for (int i = 0; i < MAX_PROJECTILES; i++) {
@@ -1449,10 +1793,29 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     else if (projectiles[i].type == 1) projCol = RGB(0, 220, 255);
                     else if (projectiles[i].type == 3) projCol = RGB(34, 197, 94);
                     else if (projectiles[i].type == 4) projCol = RGB(16, 185, 129);
+                    else if (projectiles[i].type == 5) projCol = RGB(250, 204, 21);
 
                     HBRUSH pBr = CreateSolidBrush(projCol);
                     SelectObject(memDC, pBr);
-                    Ellipse(memDC, (int)px - 6, (int)py - 6, (int)px + 6, (int)py + 6);
+                    if (projectiles[i].type == 1) {
+                        POINT ipts[4] = {{(int)px, (int)py - 8}, {(int)px + 6, (int)py}, {(int)px, (int)py + 8}, {(int)px - 6, (int)py}};
+                        Polygon(memDC, ipts, 4);
+                    } else if (projectiles[i].type == 4) {
+                        Ellipse(memDC, (int)px - 6, (int)py - 6, (int)px + 6, (int)py + 6);
+                        Ellipse(memDC, (int)px - 9, (int)py - 2, (int)px - 3, (int)py + 4);
+                    } else {
+                        Ellipse(memDC, (int)px - 6, (int)py - 6, (int)px + 6, (int)py + 6);
+                    }
+                    if (projectiles[i].type == 5) {
+                        HPEN boltP = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+                        HGDIOBJ obp = SelectObject(memDC, boltP);
+                        MoveToEx(memDC, (int)px - 6, (int)py + 3, NULL);
+                        LineTo(memDC, (int)px - 1, (int)py - 5);
+                        LineTo(memDC, (int)px + 2, (int)py + 1);
+                        LineTo(memDC, (int)px + 6, (int)py - 5);
+                        SelectObject(memDC, obp);
+                        DeleteObject(boltP);
+                    }
                     SelectObject(memDC, oldB);
                     DeleteObject(pBr);
                 }
@@ -1588,6 +1951,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 else if (cd.type == 1) { cardBg = RGB(12, 35, 60); cardBorder = RGB(0, 180, 216); }
                 else if (cd.type == 3) { cardBg = RGB(15, 45, 22); cardBorder = RGB(34, 197, 94); }
                 else if (cd.type == 4) { cardBg = RGB(28, 15, 40); cardBorder = RGB(16, 185, 129); }
+                else if (cd.type == 5) { cardBg = RGB(45, 38, 10); cardBorder = RGB(250, 204, 21); }
 
                 HBRUSH pCardBr = CreateSolidBrush(cardBg);
                 HPEN pCardPen = CreatePen(PS_SOLID, 2, cardBorder);
@@ -1645,6 +2009,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             else lstrcpyA(oppName, "Opponent");
             int pos = wsprintf(oppLabel, "%s (HP: %d | Mana: %d/%d)", oppName, opponentHp, opponentMana, opponentMaxMana);
             if (opponentShield > 0) pos += wsprintf(oppLabel + pos, " [Shield %d]", opponentShield);
+            if (opponentStormShield > 0) pos += wsprintf(oppLabel + pos, " [Storm]");
+            if (opponentOvercharge > 0) pos += wsprintf(oppLabel + pos, " [+%d Surge]", opponentOvercharge);
             if (opponentBurn > 0) pos += wsprintf(oppLabel + pos, " [Burn %d]", opponentBurn);
             if (opponentPoison > 0) pos += wsprintf(oppLabel + pos, " [Poison %d]", opponentPoison);
             if (opponentFreeze > 0) pos += wsprintf(oppLabel + pos, " [Frozen %d]", opponentFreeze);
@@ -1655,6 +2021,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             char playerLabel[256];
             pos = wsprintf(playerLabel, "Archmage (HP: %d | Mana: %d/%d)", playerHp, playerMana, playerMaxMana);
             if (playerShield > 0) pos += wsprintf(playerLabel + pos, " [Shield %d]", playerShield);
+            if (playerStormShield > 0) pos += wsprintf(playerLabel + pos, " [Storm]");
+            if (playerOvercharge > 0) pos += wsprintf(playerLabel + pos, " [+%d Surge]", playerOvercharge);
             if (playerBurn > 0) pos += wsprintf(playerLabel + pos, " [Burn %d]", playerBurn);
             if (playerPoison > 0) pos += wsprintf(playerLabel + pos, " [Poison %d]", playerPoison);
             if (playerFreeze > 0) pos += wsprintf(playerLabel + pos, " [Frozen %d]", playerFreeze);
@@ -1711,6 +2079,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     ShowWindow(hwndAvail, SW_HIDE);
                     ShowWindow(hwndDeck, SW_HIDE);
                     ShowWindow(hwndDeckClose, SW_HIDE);
+                    ShowWindow(hwndPresetPyro, SW_HIDE);
+                    ShowWindow(hwndPresetCryo, SW_HIDE);
+                    ShowWindow(hwndPresetArcane, SW_HIDE);
+                    ShowWindow(hwndPresetDruid, SW_HIDE);
+                    ShowWindow(hwndPresetVenom, SW_HIDE);
+                    ShowWindow(hwndPresetStorm, SW_HIDE);
+                    ShowWindow(hwndDeckClear, SW_HIDE);
                     ShowWindow(hwndHelp, SW_HIDE);
                     ShowWindow(hwndHelpClose, SW_HIDE);
                     InvalidateRect(hwnd, NULL, FALSE);

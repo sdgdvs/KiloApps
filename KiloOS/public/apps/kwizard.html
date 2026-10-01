@@ -144,6 +144,10 @@
             background: linear-gradient(145deg, #271338 0%, #0f0517 100%);
             border-color: #10b981;
         }
+        .card.lightning {
+            background: linear-gradient(145deg, #3d3210 0%, #171203 100%);
+            border-color: #facc15;
+        }
         .card.opponent {
             background: linear-gradient(135deg, #2d1e16 0%, #150c08 100%);
             border-color: #784e2d;
@@ -271,6 +275,8 @@
         .badge-freeze { background: #155e75; color: #a5f3fc; border: 1px solid #06b6d4; }
         .badge-poison { background: #14532d; color: #86efac; border: 1px solid #22c55e; }
         .badge-regen { background: #713f12; color: #fde047; border: 1px solid #eab308; }
+        .badge-storm { background: #713f12; color: #fef08a; border: 1px solid #facc15; }
+        .badge-overcharge { background: #583307; color: #fef08a; border: 1px solid #facc15; }
 
         #deck-modal, #help-modal {
             display: none;
@@ -448,6 +454,7 @@
             <button id="preset-arcane-btn" style="font-size: 11px; padding: 3px 8px; border-color: #a855f7;">Arcane Preset</button>
             <button id="preset-druid-btn" style="font-size: 11px; padding: 3px 8px; border-color: #22c55e;">Druid Preset</button>
             <button id="preset-venom-btn" style="font-size: 11px; padding: 3px 8px; border-color: #10b981;">Venom Preset</button>
+            <button id="preset-storm-btn" style="font-size: 11px; padding: 3px 8px; border-color: #facc15;">Storm Preset</button>
             <button id="export-deck-btn" style="font-size: 11px; padding: 3px 8px; border-color: #60a5fa;">Export Deck</button>
             <button id="import-deck-btn" style="font-size: 11px; padding: 3px 8px; border-color: #60a5fa;">Import Deck</button>
             <button id="clear-deck-btn" style="font-size: 11px; padding: 3px 8px; border-color: #ef4444;">Clear</button>
@@ -484,13 +491,18 @@
                 <li><b>[Esc]:</b> Close Active Dialog / Grimoire / Deck Builder</li>
             </ul>
             
-            <h3>Status Effects</h3>
+            <h3>Status Effects & Elemental Synergies</h3>
             <ul>
-                <li><b>Shield:</b> Absorbs incoming damage.</li>
+                <li><b>Shield:</b> Absorbs incoming damage. Storm Shield shocks attackers for 2 damage when struck.</li>
                 <li><b>Burn:</b> Take damage at the start of your turn.</li>
                 <li><b>Poison:</b> Take damage at the start of your turn.</li>
-                <li><b>Frozen:</b> Skip your next turn or cannot cast spells this turn. Ice Lance does 3x damage to frozen targets!</li>
+                <li><b>Frozen:</b> Cannot cast spells this turn. Ice Lance deals 3x damage to frozen targets.</li>
                 <li><b>Regen:</b> Heal HP at the start of your turn.</li>
+                <li><b>Conductive Shock:</b> Lightning spells deal +3 bonus damage to Frozen targets!</li>
+                <li><b>Thermal Shatter:</b> Fire spells deal +3 bonus damage to Frozen targets and melt the ice.</li>
+                <li><b>Catalytic Combustion:</b> Fire spells ignite Poisoned targets (+2 dmg, +1 Burn).</li>
+                <li><b>Shield Piercing:</b> Lightning Bolt pierces 2 points of target shield directly to HP.</li>
+                <li><b>Overcharge:</b> Surges +2 extra Mana for your next turn and immediately draws a card.</li>
             </ul>
 
             <h3>Spell Index</h3>
@@ -632,6 +644,10 @@
                 } else if (type === 'poison') {
                     // Acidic squelching low-ratio FM wobble
                     playFM(180, 4.25, 5.0, 0.38, 0.28, 'sawtooth', true);
+                } else if (type === 'lightning') {
+                    // Crackling high-velocity FM zap + thunder discharge
+                    playFM(640, 5.2, 4.5, 0.22, 0.30, 'sawtooth', true);
+                    playNoiseBurst(0.08, 0.24);
                 } else if (type === 'damage') {
                     // Deep resonant impact punch
                     playFM(95, 1.5, 4.5, 0.22, 0.35, 'triangle', false);
@@ -701,7 +717,13 @@
             { name: "Toxic Cloud", cost: 3, effect: "Poisons for 4 dmg over time", type: "poison", damage: 0, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 4 },
             { name: "Noxious Mire", cost: 5, effect: "Deals 3 dmg, poisons 3, slows", type: "poison", damage: 3, heal: 0, burn: 0, freeze: 1, shield: 0, regen: 0, poison: 3 },
             { name: "Acid Splash", cost: 1, effect: "Deals 1 dmg, poisons for 1", type: "poison", damage: 1, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 1 },
-            { name: "Viper Fang", cost: 2, effect: "Deals 2 dmg, heals 2, poisons 1", type: "poison", damage: 2, heal: 2, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 1 }
+            { name: "Viper Fang", cost: 2, effect: "Deals 2 dmg, heals 2, poisons 1", type: "poison", damage: 2, heal: 2, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 1 },
+            { name: "Shock", cost: 1, effect: "Deals 2 Lightning damage", type: "lightning", damage: 2, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 0 },
+            { name: "Lightning Bolt", cost: 3, effect: "Deals 4 Lightning dmg (pierces 2 shield)", type: "lightning", damage: 4, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 0 },
+            { name: "Chain Lightning", cost: 5, effect: "Deals 6 Lightning dmg (9 if frozen)", type: "lightning", damage: 6, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 0 },
+            { name: "Thunderclap", cost: 4, effect: "Deals 3 dmg, dazes target for 1 turn", type: "lightning", damage: 3, heal: 0, burn: 0, freeze: 1, shield: 0, regen: 0, poison: 0 },
+            { name: "Storm Shield", cost: 3, effect: "Creates 4 shield, shocks attacker for 2", type: "lightning", damage: 0, heal: 0, burn: 0, freeze: 0, shield: 4, regen: 0, poison: 0 },
+            { name: "Overcharge", cost: 2, effect: "+2 Mana surge next turn, draw 1 card", type: "lightning", damage: 0, heal: 0, burn: 0, freeze: 0, shield: 0, regen: 0, poison: 0 }
         ];
 
         function getCardSVG(card) {
@@ -723,9 +745,22 @@
                     return `<svg viewBox="0 0 80 50"><polygon points="40,8 60,18 60,34 40,44 20,34 20,18" fill="rgba(168, 85, 247, 0.4)" stroke="#c084fc" stroke-width="2"/><circle cx="40" cy="26" r="6" fill="#e9d5ff"/></svg>`;
                 } else if (card.name === 'Time Warp') {
                     return `<svg viewBox="0 0 80 50"><polygon points="26,10 54,10 40,25 54,40 26,40 40,25" fill="none" stroke="#c084fc" stroke-width="2"/><circle cx="40" cy="25" r="3" fill="#ffd700"/></svg>`;
+                } else if (card.name === 'Counterspell') {
+                    return `<svg viewBox="0 0 80 50"><circle cx="40" cy="25" r="16" fill="rgba(168, 85, 247, 0.25)" stroke="#c084fc" stroke-width="1.5" stroke-dasharray="3,2"/><line x1="28" y1="13" x2="52" y2="37" stroke="#ef4444" stroke-width="2.5"/><line x1="52" y1="13" x2="28" y2="37" stroke="#ef4444" stroke-width="2.5"/><circle cx="40" cy="25" r="4" fill="#facc15"/></svg>`;
+                } else if (card.name === 'Polymorph') {
+                    return `<svg viewBox="0 0 80 50"><ellipse cx="40" cy="28" rx="14" ry="10" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/><circle cx="28" cy="22" r="7" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1.5"/><circle cx="26" cy="20" r="1.5" fill="#1e293b"/><path d="M22 17 Q 20 14, 18 18" stroke="#f59e0b" stroke-width="1.5" fill="none"/><line x1="34" y1="38" x2="34" y2="44" stroke="#475569" stroke-width="2"/><line x1="46" y1="38" x2="46" y2="44" stroke="#475569" stroke-width="2"/><circle cx="56" cy="16" r="2" fill="#ffd700"/><circle cx="50" cy="10" r="1.5" fill="#c084fc"/></svg>`;
+                } else if (card.name === 'Arcane Intellect') {
+                    return `<svg viewBox="0 0 80 50"><path d="M22 36 Q 40 40, 58 36 L 58 18 Q 40 22, 22 18 Z" fill="#2e1065" stroke="#c084fc" stroke-width="1.5"/><path d="M40 21 L 40 38" stroke="#a855f7" stroke-width="1.5"/><path d="M30 26 Q 40 18, 50 26 Q 40 34, 30 26 Z" fill="rgba(250, 204, 21, 0.3)" stroke="#ffd700" stroke-width="1.2"/><circle cx="40" cy="26" r="2.5" fill="#ffffff"/></svg>`;
                 }
                 return `<svg viewBox="0 0 80 50"><circle cx="28" cy="20" r="6" fill="#c084fc"/><circle cx="52" cy="20" r="6" fill="#c084fc"/><circle cx="40" cy="34" r="7" fill="#e9d5ff"/><path d="M28 20 Q 40 10, 52 20 Q 46 34, 40 34 Z" fill="none" stroke="#a855f7" stroke-width="1.5"/></svg>`;
             } else if (t === 'nature') {
+                if (card.name === 'Tranquility') {
+                    return `<svg viewBox="0 0 80 50"><circle cx="40" cy="25" r="17" fill="rgba(34, 197, 94, 0.25)" stroke="#22c55e" stroke-width="1.5"/><path d="M40 42 L 40 20 M 40 28 L 30 22 M 40 28 L 50 22 M 40 34 L 32 30 M 40 34 L 48 30" stroke="#86efac" stroke-width="2" stroke-linecap="round"/><circle cx="40" cy="14" r="6" fill="#facc15" stroke="#fef08a" stroke-width="1"/></svg>`;
+                } else if (card.name === "Nature's Grasp") {
+                    return `<svg viewBox="0 0 80 50"><path d="M22 42 Q 30 26, 32 16 Q 34 26, 42 22 Q 46 12, 48 6" fill="none" stroke="#15803d" stroke-width="2.5" stroke-linecap="round"/><path d="M36 42 Q 44 32, 54 28 Q 62 24, 60 14" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/><polygon points="28,26 24,24 28,22" fill="#84cc16"/><polygon points="46,18 50,16 46,14" fill="#84cc16"/><circle cx="48" cy="6" r="2.5" fill="#fde047"/></svg>`;
+                } else if (card.name === 'Lifebloom') {
+                    return `<svg viewBox="0 0 80 50"><path d="M40 44 L 40 28" stroke="#16a34a" stroke-width="2.5"/><path d="M40 28 C 30 22, 28 14, 40 8 C 52 14, 50 22, 40 28 Z" fill="#4ade80" stroke="#86efac" stroke-width="1.2"/><path d="M40 28 C 24 28, 20 34, 28 40 C 34 38, 38 34, 40 28 Z" fill="#22c55e"/><path d="M40 28 C 56 28, 60 34, 52 40 C 46 38, 42 34, 40 28 Z" fill="#22c55e"/><circle cx="40" cy="18" r="3.5" fill="#fef08a"/></svg>`;
+                }
                 return `<svg viewBox="0 0 80 50"><path d="M40 38 C 24 38, 20 22, 40 10 C 60 22, 56 38, 40 38 Z" fill="#22c55e"/><path d="M40 38 L40 14" stroke="#86efac" stroke-width="1.5"/><circle cx="40" cy="22" r="3" fill="#fde047"/></svg>`;
             } else if (t === 'poison') {
                 if (card.name === 'Toxic Cloud') {
@@ -738,12 +773,26 @@
                     return `<svg viewBox="0 0 80 50"><polygon points="30,10 36,32 28,30" fill="#86efac" stroke="#15803d" stroke-width="1.5"/><polygon points="50,10 52,30 44,32" fill="#86efac" stroke="#15803d" stroke-width="1.5"/><circle cx="33" cy="34" r="2" fill="#22c55e"/><circle cx="47" cy="34" r="2" fill="#22c55e"/></svg>`;
                 }
                 return `<svg viewBox="0 0 80 50"><path d="M35 12 L45 12 L47 18 L55 35 C55 42, 25 42, 25 35 L33 18 Z" fill="#15803d" stroke="#86efac" stroke-width="1.5"/><circle cx="40" cy="30" r="4" fill="#a3e635"/><circle cx="36" cy="34" r="2" fill="#a3e635"/></svg>`;
+            } else if (t === 'lightning') {
+                if (card.name === 'Storm Shield') {
+                    return `<svg viewBox="0 0 80 50"><polygon points="40,8 60,16 56,36 40,44 24,36 20,16" fill="rgba(234, 179, 8, 0.35)" stroke="#facc15" stroke-width="2"/><polygon points="41,14 34,25 41,25 36,36 48,24 41,24" fill="#fef08a"/></svg>`;
+                } else if (card.name === 'Thunderclap') {
+                    return `<svg viewBox="0 0 80 50"><path d="M22 28 C 18 20, 32 14, 40 18 C 46 12, 60 14, 62 24 C 66 26, 64 34, 58 34 L22 34 Z" fill="#475569"/><polygon points="38,26 32,36 38,36 34,46 46,34 40,34" fill="#facc15"/><circle cx="40" cy="36" r="12" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="2,2"/></svg>`;
+                } else if (card.name === 'Chain Lightning') {
+                    return `<svg viewBox="0 0 80 50"><path d="M20 10 L35 24 L28 26 L46 44 M35 24 L52 18 L48 28 L65 36" fill="none" stroke="#facc15" stroke-width="2" stroke-linecap="round"/><circle cx="20" cy="10" r="3" fill="#e0f2fe"/><circle cx="46" cy="44" r="3" fill="#e0f2fe"/><circle cx="65" cy="36" r="3" fill="#e0f2fe"/></svg>`;
+                } else if (card.name === 'Overcharge') {
+                    return `<svg viewBox="0 0 80 50"><circle cx="40" cy="25" r="14" fill="none" stroke="#eab308" stroke-width="2"/><circle cx="40" cy="25" r="8" fill="#facc15"/><polygon points="41,12 36,22 41,22 37,32 46,21 41,21" fill="#ffffff"/><circle cx="24" cy="18" r="2" fill="#38bdf8"/><circle cx="56" cy="32" r="2" fill="#38bdf8"/></svg>`;
+                } else if (card.name === 'Lightning Bolt') {
+                    return `<svg viewBox="0 0 80 50"><polygon points="45,4 26,24 39,24 31,46 56,22 41,22" fill="#fef08a" stroke="#eab308" stroke-width="2"/><polygon points="44,8 32,23 41,23 35,40 50,23 40,23" fill="#ffffff"/></svg>`;
+                }
+                return `<svg viewBox="0 0 80 50"><polygon points="42,6 30,24 40,24 34,44 54,22 42,22" fill="#facc15" stroke="#ca8a04" stroke-width="1.5"/><circle cx="42" cy="6" r="3" fill="#ffffff"/></svg>`;
             }
             return `<svg viewBox="0 0 80 50"><circle cx="40" cy="25" r="10" fill="#a855f7"/></svg>`;
         }
 
         function getSoundType(card) {
             if (card.shield > 0 && card.damage === 0) return 'shield';
+            if (card.type === 'lightning') return 'lightning';
             if (card.type === 'poison' || card.poison > 0) return 'poison';
             if (card.type === 'fire') return 'fire';
             if (card.type === 'ice') return 'ice';
@@ -766,9 +815,9 @@
             { name: "Venomancer", diff: "medium", hp: 40, deck: [34, 35, 36, 37, 38, 39, 22], color: "#10b981", staff: "#6ee7b7" },
             { name: "Master Pyromancer", diff: "hard", hp: 45, deck: [0, 1, 2, 3, 4, 5, 6, 7], color: "#dc2626", staff: "#f97316" },
             { name: "Master Cryomancer", diff: "hard", hp: 50, deck: [8, 9, 10, 11, 12, 13, 14], color: "#0284c7", staff: "#38bdf8" },
-            { name: "Arcane Archon", diff: "hard", hp: 55, deck: [15, 16, 17, 18, 19, 20, 21, 22], color: "#7c3aed", staff: "#e879f9" },
+            { name: "Arcane Archon", diff: "hard", hp: 55, deck: [15, 16, 17, 18, 19, 20, 21, 22, 40, 41, 42], color: "#7c3aed", staff: "#e879f9" },
             { name: "High Priest", diff: "hard", hp: 60, deck: [16, 22, 23, 26, 27, 28, 31, 32], color: "#eab308", staff: "#fef08a" },
-            { name: "Grand Magus", diff: "hard", hp: 70, deck: Array.from({length: 40}, (_, i) => i), color: "#f59e0b", staff: "#ffd700" }
+            { name: "Grand Magus", diff: "hard", hp: 75, deck: Array.from({length: 46}, (_, i) => i), color: "#f59e0b", staff: "#ffd700" }
         ];
 
         let playerDeck = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19];
@@ -784,6 +833,10 @@
 
         let playerBurn = 0, playerFreeze = 0, playerShield = 0, playerRegen = 0, playerPoison = 0;
         let opponentBurn = 0, opponentFreeze = 0, opponentShield = 0, opponentRegen = 0, opponentPoison = 0;
+        let playerStormShield = 0, opponentStormShield = 0;
+        let playerOvercharge = 0, opponentOvercharge = 0;
+        let playerCastTimer = 0, oppCastTimer = 0;
+        let playerHurtTimer = 0, oppHurtTimer = 0;
 
         let arenaBannerMsg = "Arcane Duel Begins!";
         let arenaBannerColor = "#ffd700";
@@ -799,7 +852,6 @@
         let particles = [];
         let shockwaves = [];
         let floaters = [];
-        let runicAngle = 0;
         let ambientMotes = [];
 
         let arenaLogicalWidth = 800;
@@ -844,6 +896,7 @@
             else if (colorType === 'ice') pColor = '#00f0ff';
             else if (colorType === 'nature' || colorType === 'heal') pColor = '#22c55e';
             else if (colorType === 'poison') pColor = '#10b981';
+            else if (colorType === 'lightning') pColor = '#facc15';
 
             spawnShockwave(x, y, pColor);
 
@@ -945,12 +998,18 @@
             });
         }
 
-        function drawWizardSprite(ctx, cx, cy, isPlayer, colorTheme, staffColor, time) {
+        function drawWizardSprite(ctx, cx, cy, isPlayer, colorTheme, staffColor, time, mageIndex = -1, isCasting = false, isHurt = false) {
             ctx.save();
             ctx.translate(cx, cy);
 
             const hoverY = Math.sin(time * 3 + (isPlayer ? 0 : Math.PI)) * 4;
-            ctx.translate(0, hoverY);
+            let recoilX = 0;
+            if (isHurt) {
+                recoilX = isPlayer ? -8 : 8;
+            } else if (isCasting) {
+                recoilX = isPlayer ? 6 : -6;
+            }
+            ctx.translate(recoilX, hoverY);
 
             // Pedestal aura
             ctx.beginPath();
@@ -965,9 +1024,9 @@
             ctx.lineTo(12, -4);
             ctx.lineTo(18, 32);
             ctx.closePath();
-            ctx.fillStyle = colorTheme || (isPlayer ? '#3b1d60' : '#601a24');
+            ctx.fillStyle = isHurt ? '#991b1b' : (colorTheme || (isPlayer ? '#3b1d60' : '#601a24'));
             ctx.fill();
-            ctx.strokeStyle = '#d4af37';
+            ctx.strokeStyle = isPlayer ? '#d4af37' : '#ffd700';
             ctx.lineWidth = 1.5;
             ctx.stroke();
 
@@ -983,7 +1042,7 @@
             // Head / Cowl
             ctx.beginPath();
             ctx.arc(0, -14, 10, 0, Math.PI * 2);
-            ctx.fillStyle = '#1e1030';
+            ctx.fillStyle = isHurt ? '#7f1d1d' : '#1e1030';
             ctx.fill();
             ctx.stroke();
 
@@ -995,53 +1054,153 @@
             ctx.fillRect(2, -15, 3, 2);
             ctx.shadowBlur = 0;
 
-            // Wizard Hat
-            ctx.beginPath();
-            ctx.ellipse(0, -18, 16, 5, 0, 0, Math.PI * 2);
-            ctx.fillStyle = colorTheme || (isPlayer ? '#24103f' : '#450a12');
-            ctx.fill();
-            ctx.stroke();
+            // Distinctive Headgear per Mage Archetype
+            if (isPlayer) {
+                // Classic Grand Archmage Hat
+                ctx.beginPath();
+                ctx.ellipse(0, -18, 16, 5, 0, 0, Math.PI * 2);
+                ctx.fillStyle = '#24103f';
+                ctx.fill(); ctx.stroke();
 
-            ctx.beginPath();
-            ctx.moveTo(-12, -18);
-            ctx.lineTo(isPlayer ? 4 : -4, -40);
-            ctx.lineTo(12, -18);
-            ctx.closePath();
-            ctx.fillStyle = colorTheme || (isPlayer ? '#3b1d60' : '#601a24');
-            ctx.fill();
-            ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(-12, -18);
+                ctx.lineTo(4, -40);
+                ctx.lineTo(12, -18);
+                ctx.closePath();
+                ctx.fillStyle = '#3b1d60';
+                ctx.fill(); ctx.stroke();
 
-            // Hat buckle / star
-            ctx.beginPath();
-            ctx.arc(0, -20, 3, 0, Math.PI * 2);
-            ctx.fillStyle = '#ffd700';
-            ctx.fill();
+                // Hat buckle star
+                ctx.beginPath();
+                ctx.arc(0, -20, 3, 0, Math.PI * 2);
+                ctx.fillStyle = '#ffd700';
+                ctx.fill();
+            } else {
+                if (mageIndex === 3) {
+                    // Forest Druid: Antlered Cowl
+                    ctx.beginPath();
+                    ctx.ellipse(0, -18, 14, 5, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = '#14532d';
+                    ctx.fill(); ctx.stroke();
+                    ctx.strokeStyle = '#854d0e';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(-8, -20); ctx.lineTo(-16, -34); ctx.lineTo(-22, -32);
+                    ctx.moveTo(-12, -26); ctx.lineTo(-10, -36);
+                    ctx.moveTo(8, -20); ctx.lineTo(16, -34); ctx.lineTo(22, -32);
+                    ctx.moveTo(12, -26); ctx.lineTo(10, -36);
+                    ctx.stroke();
+                } else if (mageIndex === 4) {
+                    // Venomancer: Cobra Hood
+                    ctx.beginPath();
+                    ctx.ellipse(0, -18, 18, 6, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = '#064e3b';
+                    ctx.fill(); ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(-14, -18); ctx.quadraticCurveTo(-22, -32, -4, -38);
+                    ctx.quadraticCurveTo(14, -32, 14, -18);
+                    ctx.closePath();
+                    ctx.fillStyle = '#047857';
+                    ctx.fill(); ctx.stroke();
+                } else if (mageIndex === 8) {
+                    // High Priest: Cathedral Sun Mitre
+                    ctx.beginPath();
+                    ctx.moveTo(-10, -18); ctx.lineTo(-12, -38); ctx.lineTo(0, -46); ctx.lineTo(12, -38); ctx.lineTo(10, -18);
+                    ctx.closePath();
+                    ctx.fillStyle = '#ca8a04';
+                    ctx.fill();
+                    ctx.strokeStyle = '#fef08a';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                    ctx.fillStyle = '#fef08a';
+                    ctx.fillRect(-2, -36, 4, 12);
+                    ctx.fillRect(-6, -32, 12, 4);
+                } else if (mageIndex === 9) {
+                    // Grand Magus: Triple-Tiered Archmage Crown
+                    ctx.beginPath();
+                    ctx.ellipse(0, -18, 16, 5, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = '#b45309';
+                    ctx.fill(); ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(-12, -18); ctx.lineTo(-10, -42); ctx.lineTo(-4, -30);
+                    ctx.lineTo(0, -45); ctx.lineTo(4, -30); ctx.lineTo(10, -42); ctx.lineTo(12, -18);
+                    ctx.closePath();
+                    ctx.fillStyle = '#f59e0b';
+                    ctx.fill();
+                    ctx.strokeStyle = '#fef08a';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                    ctx.beginPath(); ctx.arc(0, -28, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ef4444'; ctx.fill();
+                } else if (mageIndex === 1 || mageIndex === 6) {
+                    // Cryomancers: Ice Crystal Crown
+                    ctx.beginPath();
+                    ctx.ellipse(0, -18, 15, 5, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = '#0c4a6e';
+                    ctx.fill(); ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(-10, -18); ctx.lineTo(-8, -38); ctx.lineTo(-3, -25);
+                    ctx.lineTo(0, -36); ctx.lineTo(3, -25); ctx.lineTo(8, -38); ctx.lineTo(10, -18);
+                    ctx.closePath();
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.fill(); ctx.strokeStyle = '#e0f2fe'; ctx.stroke();
+                } else {
+                    // Pyromancers & Arcane Scholars: Sharp Tilted Hat
+                    ctx.beginPath();
+                    ctx.ellipse(0, -18, 16, 5, 0, 0, Math.PI * 2);
+                    ctx.fillStyle = colorTheme || '#450a12';
+                    ctx.fill(); ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(-12, -18); ctx.lineTo(-6, -40); ctx.lineTo(12, -18);
+                    ctx.closePath();
+                    ctx.fillStyle = colorTheme || '#601a24';
+                    ctx.fill(); ctx.stroke();
+                }
+            }
 
             // Magic Staff
-            const staffX = isPlayer ? 24 : -24;
+            const staffBaseX = isPlayer ? 24 : -24;
+            const staffAngle = isCasting ? (isPlayer ? -0.35 : 0.35) : 0;
+            ctx.save();
+            ctx.translate(staffBaseX, 36);
+            ctx.rotate(staffAngle);
+
             ctx.beginPath();
-            ctx.moveTo(staffX, 36);
-            ctx.lineTo(staffX, -30);
-            ctx.strokeStyle = '#8b5a2b';
+            ctx.moveTo(0, 0);
+            ctx.lineTo(0, -66);
+            ctx.strokeStyle = (mageIndex === 3) ? '#451a03' : (mageIndex === 8 || mageIndex === 9 ? '#ca8a04' : '#8b5a2b');
             ctx.lineWidth = 3;
             ctx.stroke();
 
             // Staff Crystal Orb
+            const orbY = -70;
+            const orbRad = isCasting ? 8 : 6;
             ctx.beginPath();
-            ctx.arc(staffX, -34, 6, 0, Math.PI * 2);
+            ctx.arc(0, orbY, orbRad, 0, Math.PI * 2);
             ctx.fillStyle = staffColor || (isPlayer ? '#60a5fa' : '#ef4444');
             ctx.shadowColor = ctx.fillStyle;
-            ctx.shadowBlur = 10 + Math.sin(time * 5) * 4;
+            ctx.shadowBlur = (isCasting ? 22 : 10) + Math.sin(time * 5) * 4;
             ctx.fill();
             ctx.shadowBlur = 0;
 
             // Static arcane halo around staff (zero traveling/spinning glints)
             ctx.beginPath();
-            ctx.ellipse(staffX, -34, 9, 3, 0, 0, Math.PI * 2);
+            ctx.ellipse(0, orbY, 10, 3.5, 0, 0, Math.PI * 2);
             ctx.strokeStyle = '#ffd700';
             ctx.lineWidth = 1;
             ctx.stroke();
 
+            // Casting Flare Rune at Staff Tip
+            if (isCasting) {
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(-6, orbY); ctx.lineTo(6, orbY);
+                ctx.moveTo(0, orbY - 6); ctx.lineTo(0, orbY + 6);
+                ctx.stroke();
+            }
+
+            ctx.restore();
             ctx.restore();
         }
 
@@ -1115,10 +1274,18 @@
             }
             ctx.restore();
 
+            // Decrement Animation Timers
+            const dt = 0.016;
+            if (playerCastTimer > 0) playerCastTimer -= dt;
+            if (oppCastTimer > 0) oppCastTimer -= dt;
+            if (playerHurtTimer > 0) playerHurtTimer -= dt;
+            if (oppHurtTimer > 0) oppHurtTimer -= dt;
+
             // Draw Wizards
             const oppMage = campaignLevel > 0 ? campaignMages[campaignLevel - 1] : { color: '#601a24', staff: '#ef4444' };
-            drawWizardSprite(ctx, w * 0.22, h * 0.55, true, '#3b1d60', '#60a5fa', time);
-            drawWizardSprite(ctx, w * 0.78, h * 0.55, false, oppMage.color, oppMage.staff, time);
+            const oppIdx = campaignLevel > 0 ? (campaignLevel - 1) : 0;
+            drawWizardSprite(ctx, w * 0.22, h * 0.55, true, '#3b1d60', '#60a5fa', time, -1, playerCastTimer > 0, playerHurtTimer > 0);
+            drawWizardSprite(ctx, w * 0.78, h * 0.55, false, oppMage.color, oppMage.staff, time, oppIdx, oppCastTimer > 0, oppHurtTimer > 0);
 
             // Update & Draw Projectiles
             for (let i = projectiles.length - 1; i >= 0; i--) {
@@ -1135,20 +1302,53 @@
                         vx: (Math.random() - 0.5) * 1.5,
                         vy: (Math.random() - 0.5) * 1.5,
                         size: Math.random() * 3 + 2,
-                        color: p.type === 'fire' ? '#ff7700' : (p.type === 'ice' ? '#38bdf8' : (p.type === 'nature' ? '#4ade80' : (p.type === 'poison' ? '#10b981' : '#c084fc'))),
+                        color: p.type === 'fire' ? '#ff7700' : (p.type === 'ice' ? '#38bdf8' : (p.type === 'nature' ? '#4ade80' : (p.type === 'poison' ? '#10b981' : (p.type === 'lightning' ? '#facc15' : '#c084fc')))),
                         life: 0.7,
                         decay: 0.05,
                         type: 'spark'
                     });
                 }
 
-                ctx.beginPath();
-                ctx.arc(curX, curY, 8, 0, Math.PI * 2);
-                ctx.fillStyle = p.type === 'fire' ? '#ff3700' : (p.type === 'ice' ? '#00f0ff' : (p.type === 'nature' ? '#22c55e' : (p.type === 'poison' ? '#10b981' : '#e879f9')));
+                ctx.save();
+                ctx.fillStyle = p.type === 'fire' ? '#ff3700' : (p.type === 'ice' ? '#00f0ff' : (p.type === 'nature' ? '#22c55e' : (p.type === 'poison' ? '#10b981' : (p.type === 'lightning' ? '#facc15' : '#e879f9'))));
                 ctx.shadowColor = ctx.fillStyle;
                 ctx.shadowBlur = 15;
-                ctx.fill();
-                ctx.shadowBlur = 0;
+
+                if (p.type === 'ice') {
+                    ctx.beginPath();
+                    ctx.moveTo(curX, curY - 9);
+                    ctx.lineTo(curX + 7, curY);
+                    ctx.lineTo(curX, curY + 9);
+                    ctx.lineTo(curX - 7, curY);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.moveTo(curX, curY - 5); ctx.lineTo(curX + 3, curY); ctx.lineTo(curX, curY + 5); ctx.lineTo(curX - 3, curY);
+                    ctx.fill();
+                } else if (p.type === 'poison') {
+                    ctx.beginPath();
+                    ctx.arc(curX, curY, 7, 0, Math.PI * 2);
+                    ctx.arc(curX - 4, curY - 2, 4, 0, Math.PI * 2);
+                    ctx.arc(curX + 3, curY + 3, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.beginPath();
+                    ctx.arc(curX, curY, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                if (p.type === 'lightning') {
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(curX - 8, curY + 4);
+                    ctx.lineTo(curX - 2, curY - 5);
+                    ctx.lineTo(curX + 3, curY + 2);
+                    ctx.lineTo(curX + 8, curY - 6);
+                    ctx.stroke();
+                }
+                ctx.restore();
 
                 if (p.progress >= 1.0) {
                     spawnExplosion(p.targetX, p.targetY, p.type);
@@ -1316,7 +1516,7 @@
             currDeckDiv.innerHTML = '';
             deckCountSpan.innerText = playerDeck.length;
             
-            const typeBadgeColors = { fire: '#f97316', ice: '#38bdf8', arcane: '#c084fc', nature: '#4ade80', poison: '#34d399' };
+            const typeBadgeColors = { fire: '#f97316', ice: '#38bdf8', arcane: '#c084fc', nature: '#4ade80', poison: '#34d399', lightning: '#facc15' };
             
             sampleCards.forEach((c, idx) => {
                 let el = document.createElement('div');
@@ -1430,6 +1630,12 @@
             playerDeck = [34, 34, 35, 35, 36, 36, 37, 37, 38, 38, 39, 39, 16, 16, 22, 22, 23, 23, 15, 15];
             renderDeckBuilder();
             showToast("Loaded Venomancer Preset (20 cards)", "info");
+        };
+        const presetStormBtn = document.getElementById('preset-storm-btn');
+        if (presetStormBtn) presetStormBtn.onclick = () => {
+            playerDeck = [40, 40, 41, 41, 42, 42, 43, 43, 44, 44, 45, 45, 8, 8, 9, 9, 16, 16, 22, 22];
+            renderDeckBuilder();
+            showToast("Loaded Storm Invoker Preset (20 cards)", "info");
         };
         function updateAudioUI() {
             if (!audioToggleBtn) return;
@@ -1545,6 +1751,8 @@
             const oppCont = document.getElementById('opp-status-container');
             oppCont.innerHTML = '';
             if (opponentShield > 0) oppCont.innerHTML += `<span class="hud-status-badge badge-shield">🛡️ ${opponentShield}</span>`;
+            if (opponentStormShield > 0) oppCont.innerHTML += `<span class="hud-status-badge badge-storm">⚡ Retaliate 2</span>`;
+            if (opponentOvercharge > 0) oppCont.innerHTML += `<span class="hud-status-badge badge-overcharge">⚡ +${opponentOvercharge} Surge</span>`;
             if (opponentBurn > 0) oppCont.innerHTML += `<span class="hud-status-badge badge-burn">🔥 ${opponentBurn}</span>`;
             if (opponentPoison > 0) oppCont.innerHTML += `<span class="hud-status-badge badge-poison">🧪 ${opponentPoison}</span>`;
             if (opponentFreeze > 0) oppCont.innerHTML += `<span class="hud-status-badge badge-freeze">❄️ ${opponentFreeze}</span>`;
@@ -1553,6 +1761,8 @@
             const pCont = document.getElementById('player-status-container');
             pCont.innerHTML = '';
             if (playerShield > 0) pCont.innerHTML += `<span class="hud-status-badge badge-shield">🛡️ ${playerShield}</span>`;
+            if (playerStormShield > 0) pCont.innerHTML += `<span class="hud-status-badge badge-storm">⚡ Retaliate 2</span>`;
+            if (playerOvercharge > 0) pCont.innerHTML += `<span class="hud-status-badge badge-overcharge">⚡ +${playerOvercharge} Surge</span>`;
             if (playerBurn > 0) pCont.innerHTML += `<span class="hud-status-badge badge-burn">🔥 ${playerBurn}</span>`;
             if (playerPoison > 0) pCont.innerHTML += `<span class="hud-status-badge badge-poison">🧪 ${playerPoison}</span>`;
             if (playerFreeze > 0) pCont.innerHTML += `<span class="hud-status-badge badge-freeze">❄️ ${playerFreeze}</span>`;
@@ -1572,10 +1782,41 @@
             }
         }
 
-        function dealDamageToPlayer(dmg) {
-            if (dmg <= 0) return;
+        function dealDamageToPlayer(dmg, cardData = null) {
+            if (dmg <= 0 && (!cardData || cardData.damage <= 0)) return;
             const w = arenaLogicalWidth;
             const h = arenaLogicalHeight;
+
+            // Elemental Synergies
+            if (cardData) {
+                // Conductive Shock (Lightning on Frozen player)
+                if (cardData.type === 'lightning' && playerFreeze > 0) {
+                    dmg += 3;
+                    spawnFloater(w * 0.22, h * 0.38, "CONDUCTIVE SHOCK +3!", "#facc15");
+                    playSound('lightning');
+                }
+                // Thermal Shatter (Fire on Frozen player)
+                if (cardData.type === 'fire' && playerFreeze > 0) {
+                    dmg += 3;
+                    playerFreeze = 0;
+                    spawnFloater(w * 0.22, h * 0.38, "THERMAL SHATTER +3!", "#ff7700");
+                }
+                // Catalytic Combustion (Fire on Poisoned player)
+                if (cardData.type === 'fire' && playerPoison > 0) {
+                    dmg += 2;
+                    playerBurn += 1;
+                    spawnFloater(w * 0.22, h * 0.38, "CATALYTIC BURST +2!", "#ea580c");
+                }
+                // Shield Piercing (Lightning Bolt)
+                if (cardData.name === "Lightning Bolt" && playerShield > 0) {
+                    const pierce = Math.min(2, playerShield);
+                    playerShield -= pierce;
+                    playerHp -= pierce;
+                    dmg = Math.max(0, dmg - pierce);
+                    spawnFloater(w * 0.22, h * 0.45, `PIERCED ${pierce}`, "#facc15");
+                }
+            }
+
             if (playerShield > 0) {
                 if (playerShield >= dmg) {
                     playerShield -= dmg;
@@ -1587,19 +1828,61 @@
                     playerShield = 0;
                 }
             }
+            if (playerShield <= 0) playerStormShield = 0;
+
             if (dmg > 0) {
                 playerHp -= dmg;
+                playerHurtTimer = 0.25;
                 const txt = dmg >= 8 ? `CRIT -${dmg} HP!` : `-${dmg} HP`;
                 const col = dmg >= 8 ? '#facc15' : '#ef4444';
                 spawnFloater(w * 0.22, h * 0.45, txt, col);
+
+                // Storm Shield Retaliation against opponent
+                if (playerStormShield > 0) {
+                    opponentHp = Math.max(0, opponentHp - 2);
+                    oppHurtTimer = 0.25;
+                    spawnFloater(w * 0.78, h * 0.45, "STORM RETALIATION -2 HP", "#facc15");
+                    playSound('lightning');
+                }
             }
             if (playerHp < 0) playerHp = 0;
         }
 
-        function dealDamageToOpponent(dmg) {
-            if (dmg <= 0) return;
+        function dealDamageToOpponent(dmg, cardData = null) {
+            if (dmg <= 0 && (!cardData || cardData.damage <= 0)) return;
             const w = arenaLogicalWidth;
             const h = arenaLogicalHeight;
+
+            // Elemental Synergies
+            if (cardData) {
+                // Conductive Shock (Lightning on Frozen opponent)
+                if (cardData.type === 'lightning' && opponentFreeze > 0) {
+                    dmg += 3;
+                    spawnFloater(w * 0.78, h * 0.38, "CONDUCTIVE SHOCK +3!", "#facc15");
+                    playSound('lightning');
+                }
+                // Thermal Shatter (Fire on Frozen opponent)
+                if (cardData.type === 'fire' && opponentFreeze > 0) {
+                    dmg += 3;
+                    opponentFreeze = 0;
+                    spawnFloater(w * 0.78, h * 0.38, "THERMAL SHATTER +3!", "#ff7700");
+                }
+                // Catalytic Combustion (Fire on Poisoned opponent)
+                if (cardData.type === 'fire' && opponentPoison > 0) {
+                    dmg += 2;
+                    opponentBurn += 1;
+                    spawnFloater(w * 0.78, h * 0.38, "CATALYTIC BURST +2!", "#ea580c");
+                }
+                // Shield Piercing (Lightning Bolt)
+                if (cardData.name === "Lightning Bolt" && opponentShield > 0) {
+                    const pierce = Math.min(2, opponentShield);
+                    opponentShield -= pierce;
+                    opponentHp -= pierce;
+                    dmg = Math.max(0, dmg - pierce);
+                    spawnFloater(w * 0.78, h * 0.45, `PIERCED ${pierce}`, "#facc15");
+                }
+            }
+
             if (opponentShield > 0) {
                 if (opponentShield >= dmg) {
                     opponentShield -= dmg;
@@ -1611,11 +1894,22 @@
                     opponentShield = 0;
                 }
             }
+            if (opponentShield <= 0) opponentStormShield = 0;
+
             if (dmg > 0) {
                 opponentHp -= dmg;
+                oppHurtTimer = 0.25;
                 const txt = dmg >= 8 ? `CRIT -${dmg} HP!` : `-${dmg} HP`;
                 const col = dmg >= 8 ? '#facc15' : '#ef4444';
                 spawnFloater(w * 0.78, h * 0.45, txt, col);
+
+                // Storm Shield Retaliation against player
+                if (opponentStormShield > 0) {
+                    playerHp = Math.max(0, playerHp - 2);
+                    playerHurtTimer = 0.25;
+                    spawnFloater(w * 0.22, h * 0.45, "STORM RETALIATION -2 HP", "#facc15");
+                    playSound('lightning');
+                }
             }
             if (opponentHp < 0) opponentHp = 0;
         }
@@ -1628,6 +1922,18 @@
             if (card.name === "Ice Lance" && playerFreeze > 0) {
                 score += 30;
             }
+            if (card.type === "lightning" && playerFreeze > 0) {
+                score += 26; // Prioritize conductive shock!
+            }
+            if (card.type === "fire" && playerFreeze > 0) {
+                score += 24; // Prioritize thermal shatter!
+            }
+            if (card.type === "fire" && playerPoison > 0) {
+                score += 22; // Prioritize catalytic combustion!
+            }
+            if (card.type === "nature" && (opponentPoison > 0 || opponentBurn > 0)) {
+                score += 18; // Cleanse affliction
+            }
             if (playerHp <= 10 && card.damage > 0) {
                 score += card.damage * 4;
             }
@@ -1636,6 +1942,8 @@
             }
             if (card.name === "Time Warp") score += 25;
             if (card.name === "Arcane Intellect" && opponentCards.length < 3) score += 15;
+            if (card.name === "Storm Shield") score += 18;
+            if (card.name === "Overcharge") score += 16;
             return score;
         }
 
@@ -1708,21 +2016,40 @@
                         card.onclick = null;
                         card.style.pointerEvents = 'none';
                         playerMana -= cardData.cost;
+                        playerCastTimer = 0.35;
                         
                         let dmg = cardData.damage || 0;
                         if (cardData.name === "Ice Lance" && opponentFreeze > 0) dmg = 3;
-                        dealDamageToOpponent(dmg);
+                        dealDamageToOpponent(dmg, cardData);
                         
                         const w = arenaLogicalWidth, h = arenaLogicalHeight;
                         if (cardData.heal) {
                             playerHp += cardData.heal;
                             spawnFloater(w * 0.22, h * 0.45, `+${cardData.heal} HP`, '#4ade80');
                         }
+                        if (cardData.type === 'nature' && (playerPoison > 0 || playerBurn > 0)) {
+                            if (playerPoison > 0) {
+                                playerPoison--;
+                                spawnFloater(w * 0.22, h * 0.38, "PURIFIED POISON!", "#86efac");
+                            } else if (playerBurn > 0) {
+                                playerBurn--;
+                                spawnFloater(w * 0.22, h * 0.38, "PURIFIED BURN!", "#86efac");
+                            }
+                        }
                         opponentBurn += cardData.burn || 0;
                         opponentFreeze += cardData.freeze || 0;
                         playerShield += cardData.shield || 0;
                         playerRegen += cardData.regen || 0;
                         opponentPoison += cardData.poison || 0;
+
+                        if (cardData.name === "Storm Shield") {
+                            playerStormShield = 1;
+                            spawnFloater(w * 0.22, h * 0.35, "STORM CHARGE ACTIVE", "#facc15");
+                        } else if (cardData.name === "Overcharge") {
+                            playerOvercharge += 2;
+                            drawCard(false);
+                            spawnFloater(w * 0.22, h * 0.35, "+2 MANA SURGE NEXT TURN!", "#facc15");
+                        }
                         
                         launchSpellVisual(true, cardData);
                         playSound(getSoundType(cardData));
@@ -1842,17 +2169,36 @@
                     
                     let dmg = cardData.damage || 0;
                     if (cardData.name === "Ice Lance" && playerFreeze > 0) dmg = 3;
-                    dealDamageToPlayer(dmg);
+                    dealDamageToPlayer(dmg, cardData);
+                    oppCastTimer = 0.35;
                     
                     if (cardData.heal) {
                         opponentHp += cardData.heal;
                         spawnFloater(w * 0.78, h * 0.45, `+${cardData.heal} HP`, '#4ade80');
+                    }
+                    if (cardData.type === 'nature' && (opponentPoison > 0 || opponentBurn > 0)) {
+                        if (opponentPoison > 0) {
+                            opponentPoison--;
+                            spawnFloater(w * 0.78, h * 0.38, "PURIFIED POISON!", "#86efac");
+                        } else if (opponentBurn > 0) {
+                            opponentBurn--;
+                            spawnFloater(w * 0.78, h * 0.38, "PURIFIED BURN!", "#86efac");
+                        }
                     }
                     playerBurn += cardData.burn || 0;
                     playerFreeze += cardData.freeze || 0;
                     opponentShield += cardData.shield || 0;
                     opponentRegen += cardData.regen || 0;
                     playerPoison += cardData.poison || 0;
+
+                    if (cardData.name === "Storm Shield") {
+                        opponentStormShield = 1;
+                        spawnFloater(w * 0.78, h * 0.35, "STORM CHARGE ACTIVE", "#facc15");
+                    } else if (cardData.name === "Overcharge") {
+                        opponentOvercharge += 2;
+                        drawCard(true);
+                        spawnFloater(w * 0.78, h * 0.35, "+2 MANA SURGE NEXT TURN!", "#facc15");
+                    }
                     
                     launchSpellVisual(false, cardData);
                     playSound(getSoundType(cardData));
@@ -1934,7 +2280,11 @@
                 if (playerFreeze > 0) playerFreeze--;
                 
                 if (opponentMaxMana < 10) opponentMaxMana++;
-                opponentMana = opponentMaxMana;
+                opponentMana = opponentMaxMana + opponentOvercharge;
+                if (opponentOvercharge > 0) {
+                    spawnFloater(arenaLogicalWidth * 0.78, arenaLogicalHeight * 0.35, `+${opponentOvercharge} OVERCHARGE!`, '#facc15');
+                    opponentOvercharge = 0;
+                }
                 drawCard(true);
                 
                 if (opponentBurn > 0) { dealDamageToOpponent(opponentBurn); opponentBurn--; }
@@ -1957,7 +2307,11 @@
                 
                 if (gameState === 0) {
                     if (playerMaxMana < 10) playerMaxMana++;
-                    playerMana = playerMaxMana;
+                    playerMana = playerMaxMana + playerOvercharge;
+                    if (playerOvercharge > 0) {
+                        spawnFloater(arenaLogicalWidth * 0.22, arenaLogicalHeight * 0.35, `+${playerOvercharge} OVERCHARGE!`, '#facc15');
+                        playerOvercharge = 0;
+                    }
                     drawCard(false);
                     
                     if (playerBurn > 0) { dealDamageToPlayer(playerBurn); playerBurn--; }
@@ -1989,6 +2343,10 @@
             opponentCards = [];
             playerBurn = 0; playerFreeze = 0; playerShield = 0; playerRegen = 0; playerPoison = 0;
             opponentBurn = 0; opponentFreeze = 0; opponentShield = 0; opponentRegen = 0; opponentPoison = 0;
+            playerOvercharge = 0; opponentOvercharge = 0;
+            playerStormShield = 0; opponentStormShield = 0;
+            playerCastTimer = 0; oppCastTimer = 0;
+            playerHurtTimer = 0; oppHurtTimer = 0;
             playerHand.innerHTML = '';
             opponentHand.innerHTML = '';
             if (campaignLevel > 0) {
