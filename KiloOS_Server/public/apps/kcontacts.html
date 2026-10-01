@@ -902,14 +902,15 @@
   .toast-container {
     position: fixed;
     bottom: 16px;
-    right: 16px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     flex-direction: column-reverse;
-    align-items: flex-end;
+    align-items: center;
     gap: 8px;
     z-index: 3000;
     pointer-events: none;
-    max-width: min(380px, calc(100vw - 32px));
+    max-width: min(420px, calc(100vw - 32px));
   }
 
   .toast {
@@ -3505,6 +3506,36 @@
     // Quicksave & Quickload (F5 / F9)
     function quickSave() {
       try {
+        if (selectedId && isDirty) {
+          const trimmedName = inpName.value.trim().substring(0, 100);
+          if (trimmedName) {
+            const c = contacts.find(item => item.id === selectedId);
+            if (c) {
+              c.name = trimmedName;
+              c.category = inpCategory.value;
+              c.phone = inpPhone.value.trim().substring(0, 50);
+              c.email = inpEmail.value.trim().substring(0, 100);
+              c.company = inpCompany.value.trim().substring(0, 100);
+              c.title = inpTitle.value.trim().substring(0, 100);
+              c.address = {
+                street: inpStreet.value.trim().substring(0, 120),
+                city: inpCity.value.trim().substring(0, 80),
+                state: inpState.value.trim().substring(0, 60),
+                zip: inpZip.value.trim().substring(0, 30),
+                country: inpCountry.value.trim().substring(0, 60)
+              };
+              c.website = inpWebsite.value.trim().substring(0, 150);
+              c.birthday = inpBirthday.value.trim().substring(0, 30);
+              c.customFields = activeCustomFields.filter(f => f.key.trim() || f.val.trim());
+              c.tags = parseTags(inpTags.value);
+              c.notes = inpNotes.value.trim().substring(0, 3000);
+              c.fav = inpFav.checked;
+              c.updatedAt = Date.now();
+              saveContacts();
+              clearDirty();
+            }
+          }
+        }
         const payload = {
           contacts,
           selectedId,
@@ -3515,6 +3546,9 @@
           time: Date.now()
         };
         localStorage.setItem('kcontacts_quicksave', JSON.stringify(payload));
+        try {
+          localStorage.setItem('kcontacts_tutorialSeen', '1');
+        } catch (_) {}
         showToast(`💾 Quicksaved ${contacts.length} contact(s) to snapshot [F5]`);
       } catch (e) {
         showToast('⚠️ Quicksave failed: storage quota');
@@ -3555,6 +3589,15 @@
           } else if (contacts.length > 0) {
             selectContact(contacts[0].id);
           }
+          clearDirty();
+          // Close open dialogs so restored state is immediately active
+          if (helpModal && helpModal.style.display === 'flex') closeHelp();
+          if (exportModal && exportModal.style.display === 'flex') closeExport();
+          if (printModal && printModal.style.display === 'flex') printModal.style.display = 'none';
+          if (statsModal && statsModal.style.display === 'flex') statsModal.style.display = 'none';
+          if (batchTagModal && batchTagModal.style.display === 'flex') batchTagModal.style.display = 'none';
+          if (batchCatModal && batchCatModal.style.display === 'flex') batchCatModal.style.display = 'none';
+          if (deleteModal && deleteModal.style.display === 'flex') closeDeleteModal();
           showToast(`📂 Quickloaded snapshot (${contacts.length} contacts) [F9]`);
         } else {
           showToast('⚠️ Quicksave data is invalid');

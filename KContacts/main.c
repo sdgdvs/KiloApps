@@ -90,6 +90,8 @@ int filtered_count = 0;
 HWND hList, hEdit, hBtnNew, hBtnDel, hBtnSave, hBtnMerge, hBtnExport, hBtnImport, hBtnCall, hBtnEmail, hSearch, hComboCat, hChkFav, hBtnHelp, hBtnCopy, hBtnDemo, hStatus;
 #define TIMER_STATUS 1
 HFONT hFont, hBoldFont;
+void extract_field(const char* text, const char* prefix, char* out, int out_len);
+void extract_multiline_field(const char* text, const char* prefix, char* out, int out_len);
 
 int g_dpi = 0;
 int S(int x) {
@@ -238,6 +240,28 @@ void UpdateAppTitle(HWND hwnd) {
 }
 
 void NativeQuickSave(HWND hwnd) {
+    // Flush active edits if a contact is selected
+    int list_idx = SendMessageA(hList, LB_GETCURSEL, 0, 0);
+    if (list_idx >= 0 && list_idx < filtered_count) {
+        int real_idx = filtered_indices[list_idx];
+        char buf[2048];
+        GetWindowTextA(hEdit, buf, sizeof(buf));
+        extract_field(buf, "Name: ", contacts[real_idx].name, sizeof(contacts[real_idx].name));
+        if (contacts[real_idx].name[0] == 0) {
+            my_strncpy(contacts[real_idx].name, "Unnamed Contact", sizeof(contacts[real_idx].name));
+        }
+        extract_field(buf, "Phone: ", contacts[real_idx].phone, sizeof(contacts[real_idx].phone));
+        extract_field(buf, "Email: ", contacts[real_idx].email, sizeof(contacts[real_idx].email));
+        extract_field(buf, "Category: ", contacts[real_idx].category, sizeof(contacts[real_idx].category));
+        extract_field(buf, "Company: ", contacts[real_idx].company, sizeof(contacts[real_idx].company));
+        extract_field(buf, "Address: ", contacts[real_idx].address, sizeof(contacts[real_idx].address));
+        extract_field(buf, "Birthday: ", contacts[real_idx].birthday, sizeof(contacts[real_idx].birthday));
+        extract_field(buf, "Website: ", contacts[real_idx].website, sizeof(contacts[real_idx].website));
+        extract_field(buf, "Tags: ", contacts[real_idx].tags, sizeof(contacts[real_idx].tags));
+        extract_multiline_field(buf, "Notes: ", contacts[real_idx].notes, sizeof(contacts[real_idx].notes));
+        contacts[real_idx].fav = (SendMessageA(hChkFav, BM_GETCHECK, 0, 0) == BST_CHECKED);
+    }
+
     HANDLE hFile = CreateFileA("kcontacts_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD written = 0;

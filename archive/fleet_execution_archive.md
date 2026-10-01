@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-01T11:15:00Z — kilo-usability: KRSS (Draggable Splitters, J/K Article Navigation, Category Badges & Shortcuts)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 153.7 KB web / 21.5 KB native < 999 KB ceiling).
+  - Layout & Splitters: Added interactive draggable splitters between feeds/articles/reader panes with double-click reset and saved widths.
+  - Window & Sizing: Expanded App.jsx default width to 1100x720, comfortably housing all 3 panes and toolbar buttons without wrap.
+  - Navigation & Hotkeys: Added J/K next/prev headline navigation in web and Win32 C (`KRSS.exe`), `/` to search, and `V` to open article URL.
+  - Category UX: Added collapsible subscription categories with unread badge counters, instant search clear button, and responsive export menu.
+  - Onboarding & Toast: Verified bottom-center toast safe zone and F1/H keyboard shortcut modal with full key bindings.
+  - Verification: MSVC clean (`KRSS.exe` 21.5 KB); Vite clean in 376ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-01T09:20:00Z — kilo-tester: KMedia (UI Element Audit, CUE Parser, State JSON, Looper & Sliders)**
   - Status: PASS ✅ (6 issues found, 6 fixed, 0 regressions, clean builds, 143.4 KB < 999 KB ceiling).
   - Storage & State: Added JSON state export/import (btnExportJson) and .json drag-drop file handling.
