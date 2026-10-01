@@ -1457,7 +1457,7 @@
         <a class="search-chip-link" onclick="quickFilter('Web')">🌐 Web Destinations</a>
       </div>
       <div style="font-size:11px; color:#555; margin-top:4px;">
-        💡 <em>Pro Tip: Use <code>cat:games</code>, <code>tag:multiplayer</code>, or exact quotes <code>"portal"</code> for precision 1999 querying.</em>
+        💡 <em>Pro Tip: Use <code>cat:games</code>, <code>tag:multiplayer</code>, or keywords like <code>1999Hz</code>, <code>Carlsbad</code>, or <code>echo</code> for intranet telemetry archives.</em>
       </div>
     </div>
 
@@ -3077,26 +3077,172 @@ function quickFilter(category) {
   executeSearch(category.toLowerCase());
 }
 
+function getDiegeticAnomalyCard(query) {
+  const q = (query || '').toLowerCase().trim();
+
+  // 1. Acoustic Subcarrier & 1999Hz
+  if (q.includes('1999hz') || q.includes('1999 hz') || q.includes('subcarrier') || q === '1999') {
+    return {
+      title: "KiloSearch 1.0 // Query: " + query + " [SIGINT Acoustic Telemetry Intercept]",
+      html: `
+        <div class="search-result-item" style="background:#fffcf0; border:1px solid #ffd700; border-left:5px solid #d4af37; padding:12px; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-family:'Courier New', monospace; font-weight:bold; color:#b8860b; font-size:13px;">📡 SIGINT TELEMETRY LOG: Phased Acoustic Subcarrier (1999Hz)</span>
+            <span class="result-badge badge-sys" style="background:#fff3cd; color:#856404; border:1px solid #ffeeba;">RESTRICTED INTRANET</span>
+          </div>
+          <p style="font-size:12px; margin:8px 0 4px 0; color:#222; line-height:1.5;">
+            <strong>Classification: RESTRICTED // Carlsbad Skunkworks Division</strong><br>
+            Backbone monitoring stations tap into recurring harmonic carrier locked precisely at <code>1999Hz</code>. Carrier frequency exhibits cyclic phase-shift keying matching memory heap dump signatures at hex offset <code>0x7F1999</code>.<br>
+            Diagnostic trace captures are streaming live on the real-time 2D spectrogram waterfall at <a href="/web/echo_subsystem.html"><strong>kweb://echo-subsystem.net</strong></a>. Radio operators can also tune receiver filters via <a href="/apps/kradio.html"><strong>KRadio</strong></a> or inspect packet timing in <a href="/apps/knet.html"><strong>KNet</strong></a>.
+          </p>
+          <div style="font-size:11px; color:#666; font-family:'Courier New', monospace; margin-top:6px;">
+            Target Frequency: 1999Hz • Demodulator: FSK RTTY • Ring Hop: echo-gw-07.kilonet.internal
+          </div>
+        </div>
+      `
+    };
+  }
+
+  // 2. Carlsbad & Skunkworks Gateway
+  if (q.includes('carlsbad') || q.includes('skunkworks') || q.includes('10.19.99.4')) {
+    return {
+      title: "KiloSearch 1.0 // Query: " + query + " [Carlsbad Intranet Archive Record]",
+      html: `
+        <div class="search-result-item" style="background:#f0f8ff; border:1px solid #70a0e0; border-left:5px solid #1e88e5; padding:12px; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-family:'Courier New', monospace; font-weight:bold; color:#0055aa; font-size:13px;">🏢 INTRANET ARCHIVE: Carlsbad Testing Facility Skunkworks (10.19.99.4)</span>
+            <span class="result-badge badge-net" style="background:#e3f2fd; color:#0d47a1; border:1px solid #bbdefb;">INTERNAL ARCHIVE</span>
+          </div>
+          <p style="font-size:12px; margin:8px 0 4px 0; color:#222; line-height:1.5;">
+            <strong>Network Operations Incident Report #0x1999</strong><br>
+            Backbone gateway router at private intranet IP <code>10.19.99.4</code> reports anomalous telemetry broadcasts. Clearnet proxy connections rejected with code <code>0x7F</code>. Legacy disaster recovery image <code>system_recovery_1999.log</code> located in VFS storage (<a href="/apps/knote.html"><strong>KNote</strong></a> / <a href="/apps/kpad.html"><strong>KPad</strong></a>). Physical terminal access: <a href="/web/classified.html"><strong>kweb://10.19.99.4/classified</strong></a>.
+          </p>
+          <div style="font-size:11px; color:#666; font-family:'Courier New', monospace; margin-top:6px;">
+            Gateway: 10.19.99.4/CLASSIFIED • Ring-0 Transit Bridge: STANDBY • Subnet Mask: 255.255.255.0
+          </div>
+        </div>
+      `
+    };
+  }
+
+  // 3. Echo Subsystem & Gateway
+  if (q.includes('echo') || q.includes('echo-subsystem') || q.includes('echo-gw') || q.includes('sigint')) {
+    return {
+      title: "KiloSearch 1.0 // Query: " + query + " [Acoustic Intelligence Journal]",
+      html: `
+        <div class="search-result-item" style="background:#f5f0ff; border:1px solid #b388ff; border-left:5px solid #7c4dff; padding:12px; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-family:'Courier New', monospace; font-weight:bold; color:#6200ea; font-size:13px;">📻 ACOUSTIC INTELLIGENCE: Echo Subsystem Research Facility</span>
+            <span class="result-badge badge-media" style="background:#ede7f6; color:#4a148c; border:1px solid #d1c4e9;">SIGINT FACILITY</span>
+          </div>
+          <p style="font-size:12px; margin:8px 0 4px 0; color:#222; line-height:1.5;">
+            Transit logs crossing gateway router <code>echo-gw-07.kilonet.internal</code> display non-standard framing with embedded Morse subcarriers. Audio DSP engines (<a href="/apps/ksynth.html"><strong>KSynth</strong></a> / <a href="/apps/kaudio.html"><strong>KAudio</strong></a>) detect periodic steganographic tone bursts. Full analysis available at <a href="/web/echo_subsystem.html"><strong>kweb://echo-subsystem.net</strong></a>.
+          </p>
+          <div style="font-size:11px; color:#666; font-family:'Courier New', monospace; margin-top:6px;">
+            Host: echo-gw-07.kilonet.internal • Channel: 1999Hz BPF • Filter: Phased Beamformer Grid
+          </div>
+        </div>
+      `
+    };
+  }
+
+  // 4. Memory Heap Offset 0x7F1999
+  if (q.includes('0x7f1999') || q.includes('7f1999') || q.includes('0x7f') || q.includes('heap offset') || q.includes('memory fault')) {
+    return {
+      title: "KiloSearch 1.0 // Query: " + query + " [Core Memory Fault Diagnostics]",
+      html: `
+        <div class="search-result-item" style="background:#fff2f2; border:1px solid #ff8080; border-left:5px solid #d32f2f; padding:12px; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-family:'Courier New', monospace; font-weight:bold; color:#c00; font-size:13px;">⚠️ CORE MEMORY FAULT: Hex Offset 0x7F1999 Arithmetic Overflow</span>
+            <span class="result-badge badge-sys" style="background:#ffebee; color:#b71c1c; border:1px solid #ffcdd2;">DIAGNOSTIC ADVISORY</span>
+          </div>
+          <p style="font-size:12px; margin:8px 0 4px 0; color:#222; line-height:1.5;">
+            Diagnostic memory register fault observed in 32-bit arithmetic engines (<a href="/apps/kcalc.html"><strong>KCalc</strong></a>) and byte inspectors (<a href="/apps/khex.html"><strong>KHex</strong></a>). Buffer pointer address <code>0x7F1999</code> aliases directly into Carlsbad Transponder Node <code>0x7F</code>. Raw packet injection required to bypass memory isolation.
+          </p>
+          <div style="font-size:11px; color:#666; font-family:'Courier New', monospace; margin-top:6px;">
+            Vector: MEM_OFFSET_0x7F1999 • Subterranean Relay: Node 0x7F • Ring Status: PARITY CHECK
+          </div>
+        </div>
+      `
+    };
+  }
+
+  // 5. Warez Checksum 0x7F199942 & Scene NFO
+  if (q.includes('0x7f199942') || q.includes('7f199942') || q.includes('flairlight') || q.includes('warez') || q.includes('keygen')) {
+    return {
+      title: "KiloSearch 1.0 // Query: " + query + " [Demoscene & Warez NFO Bulletin]",
+      html: `
+        <div class="search-result-item" style="background:#111; color:#00ff66; border:1px solid #00ff66; border-left:5px solid #ffd700; padding:12px; margin-bottom:12px; font-family:'Courier New', monospace;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-weight:bold; color:#ffd700; font-size:13px;">💾 UNDERGROUND SCENE RELEASE: FLARELIGHT 1999 NFO ARCHIVE</span>
+            <span class="result-badge badge-game" style="background:#003311; color:#00ff66; border:1px solid #00aa44;">0xRELEASE VAULT</span>
+          </div>
+          <p style="font-size:12px; margin:8px 0 4px 0; color:#00ff66; line-height:1.5;">
+            Anomalous scene release NFO verified with authentic CRC32 checksum <code>0x7F199942</code>. Encrypted footer contains steganographic seed for Carlsbad Transponder Node 0x7F. Warez repository accessible via underground scene vault at <a href="/web/warez.html" style="color:#00ffff; text-decoration:underline;"><strong>kweb://warez</strong></a>.
+          </p>
+          <div style="font-size:11px; color:#aaa; margin-top:6px;">
+            CRC32: 0x7F199942 • Courier Key: 0x7F199942 • Encryption: CP437 Steganography
+          </div>
+        </div>
+      `
+    };
+  }
+
+  // 6. Recovery Image & System Recovery
+  if (q.includes('recovery_1999') || q.includes('system_recovery') || q.includes('recovery.log')) {
+    return {
+      title: "KiloSearch 1.0 // Query: " + query + " [VFS Storage Restoration Transcript]",
+      html: `
+        <div class="search-result-item" style="background:#f4f6f8; border:1px solid #90a4ae; border-left:5px solid #455a64; padding:12px; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-family:'Courier New', monospace; font-weight:bold; color:#263238; font-size:13px;">📋 VFS LOG RECORD: system_recovery_1999.log</span>
+            <span class="result-badge badge-office" style="background:#cfd8dc; color:#263238; border:1px solid #b0bec5;">VFS SYSTEM LOG</span>
+          </div>
+          <p style="font-size:12px; margin:8px 0 4px 0; color:#333; line-height:1.5;">
+            Disaster recovery backup created during midnight testing cycle. Key artifact <code>RECOVERY_1999</code> unseals sector 04 storage quarantine. Plaintext transcript can be inspected in <a href="/apps/knote.html"><strong>KNote</strong></a>, <a href="/apps/kpad.html"><strong>KPad</strong></a>, or retrieved via VFS terminal commands in <a href="/apps/kterm.html"><strong>KTerm</strong></a>.
+          </p>
+          <div style="font-size:11px; color:#666; font-family:'Courier New', monospace; margin-top:6px;">
+            Path: /system_recovery_1999.log • CRC: VALID • Key: RECOVERY_1999
+          </div>
+        </div>
+      `
+    };
+  }
+
+  // 7. Subterranean Darknet & Deep Core
+  if (q.includes('darknet') || q.includes('deep-core') || q.includes('deep_core') || q.includes('10.19.99')) {
+    return {
+      title: "KiloSearch 1.0 // Query: " + query + " [Diagnostic Anomaly]",
+      html: `
+        <div class="search-result-item" style="background:#fff2f2; border:1px solid #ff9999; border-left:5px solid #d32f2f; padding:12px; margin-bottom:12px;">
+          <span style="font-family:'Courier New', monospace; font-weight:bold; color:#cc0000;">⚠️ ROUTING ADVISORY: Target non-routable on public DNS.</span><br>
+          <p style="font-size:12px; margin:8px 0 4px 0; color:#333; line-height:1.5;">
+            The requested network address (<code>${escapeHtml(query)}</code>) is isolated in private subnet space or subterranean telemetry nodes. Direct HTTP queries through clearnet directories are restricted. Use the packet sniffer in <a href="/apps/knet.html"><strong>KNet</strong></a>, inspect the subterranean terminal at <a href="/web/deep_core.html"><strong>kweb://deep-core</strong></a>, or navigate via <a href="/web/darknet.html"><strong>kweb://darknet (Node 0x7F)</strong></a>.
+          </p>
+          <div style="font-size:11px; color:#666; font-family:'Courier New', monospace; margin-top:6px;">
+            Diagnostic: Clearnet gateway rejected TCP SYN • Subnet: 10.19.99.0/24 • Node: 0x7F
+          </div>
+        </div>
+      `
+    };
+  }
+
+  return null;
+}
+
 function executeSearch(query) {
   const container = document.getElementById('searchResultsContainer');
   const listEl = document.getElementById('searchResultsList');
   const summaryEl = document.getElementById('searchResultSummary');
   const standardView = document.getElementById('standardDirectoryView');
 
-  // Handle subterranean or ARG queries playfully with TINAG flavor
-  if (query.includes('darknet') || query.includes('deep-core') || query.includes('10.19.99')) {
+  // Handle subterranean and in-universe diagnostic telemetry queries (TINAG compliant)
+  const anomalyMatch = getDiegeticAnomalyCard(query);
+  if (anomalyMatch) {
     container.style.display = 'block';
     standardView.style.display = 'none';
-    summaryEl.textContent = "KiloSearch 1.0 // Query: " + query + " (Diagnostic Anomaly)";
-    listEl.innerHTML = `
-      <div class="search-result-item" style="background:#fff2f2; border:1px solid #ff9999; padding:8px;">
-        <span style="font-family:'Courier New', monospace; font-weight:bold; color:#cc0000;">⚠️ ROUTING ADVISORY: Target non-routable on public DNS.</span><br>
-        <p style="font-size:12px; margin:4px 0;">
-          The requested network address (<code>${escapeHtml(query)}</code>) is isolated in private subnet space or subterranean telemetry nodes.
-          Direct HTTP queries through clearnet directories are restricted. Use the packet sniffer in <a href="/apps/knet.html"><strong>KNet</strong></a>, inspect the subterranean terminal at <a href="/web/deep_core.html"><strong>kweb://deep-core</strong></a>, or navigate via <a href="/web/darknet.html"><strong>kweb://darknet (Node 0x7F)</strong></a>.
-        </p>
-      </div>
-    `;
+    summaryEl.textContent = anomalyMatch.title;
+    listEl.innerHTML = anomalyMatch.html;
     return;
   }
 

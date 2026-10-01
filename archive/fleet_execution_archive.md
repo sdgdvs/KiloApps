@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-09-30T23:30:00Z — kilo-usability: KPad (Usability & Layout Pass, Draggable Splitter, Searchable Help & Responsive Toolbars)**
+  - Status: PASS ✅ (0 regressions, 0 perimeter glints, clean builds, 169.5 KB web / 31.7 KB native < 999 KB ceiling).
+  - Window Sizing: Optimized KiloOS window dimensions to 1000x680 across App.jsx and Win32 C (`KPad.exe`).
+  - Draggable Splitter & Ratio Controls: Implemented interactive divider with 30%/50%/70% quick ratios, persistent sizing & mouse/touch drag.
+  - Searchable Help & Shortcuts: Built real-time instant search input with category filter chips (Files, Editing, Security) and highlight matches.
+  - Responsive Viewports: Added adaptive toolbar and status bar rules (@media max 960px & 680px) ensuring no vertical clipping or overflow.
+  - Interactive Status Bar: Wired diagnostics dialog to word/char count and manual autosave snapshot to auto-save status indicator.
+  - Verification: MSVC clean (`KPad.exe` 31.7 KB); Vite clean in 280ms; check_icons & security lint 100% PASS; <999KB ceiling.
+
 - **2026-09-30T23:25:00Z — kilo-usability: Fleet-Wide 60 FPS Pacing Optimization Sprint**
   - Scope: Remediated rendering bottlenecks across KHex, KSolitaire, KPong, KChrono, KType, KVault.
   - KHex: Virtualized row scroller (20K DOM elements ➔ ~400 nodes); eliminated backdrop-filter blurs.

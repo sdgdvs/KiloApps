@@ -937,6 +937,172 @@
     background: #00ffcc;
     color: #000;
   }
+  /* 6. Demoscene Real-Time Visual FX Laboratory */
+  .fx-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: #020912;
+    border: 2px inset #00aaff;
+    padding: 10px;
+  }
+  .fx-canvas-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #000;
+    border: 2px outset #ff00aa;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 0 15px rgba(255, 0, 170, 0.3);
+  }
+  .fx-canvas {
+    image-rendering: pixelated;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    background: #000;
+  }
+  .fx-controls-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    justify-content: space-between;
+    background: #001525;
+    padding: 8px;
+    border: 1px solid #005577;
+  }
+  .fx-mode-btn {
+    background: #002233;
+    color: #00ffff;
+    border: 1px outset #00ffff;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .fx-mode-btn:hover {
+    background: #00ffff;
+    color: #000;
+  }
+  .fx-mode-btn.active {
+    background: #ff00aa;
+    color: #fff;
+    border-style: inset;
+    box-shadow: 0 0 8px #ff00aa;
+  }
+  .fx-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #aaffee;
+  }
+
+  /* 7. 8-Bit Amiga PCM Chip-Sample Sculptor */
+  .sample-sculptor-wrap {
+    background: #020b14;
+    border: 2px inset #00ffcc;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .sample-canvas-box {
+    background: #000810;
+    border: 2px inset #006688;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    box-shadow: inset 0 0 10px rgba(0, 255, 204, 0.2);
+  }
+  .sample-canvas {
+    width: 100%;
+    max-width: 860px;
+    height: 140px;
+    display: block;
+    cursor: crosshair;
+  }
+  .sample-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: space-between;
+    align-items: center;
+    background: #001728;
+    padding: 6px 10px;
+    border: 1px solid #005577;
+    font-size: 11px;
+  }
+  .sample-dsp-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  /* 11. 1999 Cyber Voyagers Web Survey & Millennial Poll */
+  .poll-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .poll-card {
+    background: #001220;
+    border: 2px outset #00ffcc;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .poll-q-title {
+    color: #ffff00;
+    font-size: 12px;
+    font-weight: bold;
+    border-bottom: 1px dashed rgba(0, 255, 204, 0.3);
+    padding-bottom: 4px;
+    margin-bottom: 4px;
+  }
+  .poll-option-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 6px;
+    font-size: 11px;
+  }
+  .poll-radio-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #aaffee;
+    cursor: pointer;
+  }
+  .poll-bar-track {
+    background: #000;
+    border: 1px inset #005577;
+    height: 14px;
+    position: relative;
+    overflow: hidden;
+  }
+  .poll-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff00aa, #00ffcc);
+    width: 0%;
+    transition: width 0.4s ease-out;
+  }
+  .poll-bar-text {
+    position: absolute;
+    top: 0;
+    left: 4px;
+    font-size: 9px;
+    color: #fff;
+    line-height: 14px;
+    font-weight: bold;
+    text-shadow: 1px 1px 1px #000;
+  }
 
 </style>
 </head>
@@ -977,10 +1143,13 @@
     <a href="#dissector-section" class="nav-btn">🎼 MOD Dissector</a>
     <a href="#pixel-studio" class="nav-btn">🎨 Pixel Studio</a>
     <a href="#synth-section" class="nav-btn">🎛️ FM Synth Lab</a>
+    <a href="#fx-lab-section" class="nav-btn">⚡ Demoscene FX Lab</a>
+    <a href="#sample-sculptor-section" class="nav-btn">🎚️ Sample Sculptor</a>
     <a href="#oracle-section" class="nav-btn">🔮 Silicon Oracle '99</a>
     <a href="#y2k-diagnostic" class="nav-btn">⏱️ Y2K Diagnostic</a>
     <a href="#banner-studio" class="nav-btn">🚧 Banner Studio</a>
     <a href="#page-builder" class="nav-btn">🏗️ Page Builder</a>
+    <a href="#cyber-poll-section" class="nav-btn">📊 Cyber Poll</a>
     <a href="#guestbook-section" class="nav-btn">📖 Live Shoutbox</a>
     <a href="#bookmarks-section" class="nav-btn">⭐ Bookmarks</a>
   </nav>
@@ -1447,7 +1616,174 @@
     </div>
   </div>
 
-  <!-- 6. The Silicon Oracle '99 & Y2K Diagnostic -->
+  <!-- 6. Demoscene Real-Time Visual FX Laboratory -->
+  <div class="section-box" id="fx-lab-section">
+    <div class="section-title">
+      <span>⚡ DEMOSCENE REAL-TIME VISUAL FX LABORATORY</span>
+      <span style="font-size:11px; color:#ff00ff;">[AMIGA COPPER • PALETTE PLASMA • DOOM FIRE • WARP 3D]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0;">
+      Behold the classic software rendering wizardry of the 1990s demoscene! Real-time mathematical copper bars,
+      256-color cycling plasma, convective fire cellular automata, 3D perspective warp stars, and falling matrix phosphor rain—rendered at 60 FPS in pure canvas with zero external libraries.
+    </p>
+
+    <div class="fx-container">
+      <div class="fx-controls-bar">
+        <div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center;">
+          <span style="font-size:11px; color:#ffff00; font-weight:bold;">Visual FX:</span>
+          <button class="fx-mode-btn active" id="btnFxCopper" onclick="setFxMode('copper')">🌈 Amiga Copper</button>
+          <button class="fx-mode-btn" id="btnFxPlasma" onclick="setFxMode('plasma')">🌀 Sine Plasma</button>
+          <button class="fx-mode-btn" id="btnFxFire" onclick="setFxMode('fire')">🔥 Demoscene Fire</button>
+          <button class="fx-mode-btn" id="btnFxStarfield" onclick="setFxMode('starfield')">✨ Warp Starfield</button>
+          <button class="fx-mode-btn" id="btnFxMatrix" onclick="setFxMode('matrix')">📟 Phosphor Rain</button>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button class="tool-btn" id="btnFxPause" onclick="toggleFxPause()">⏸ Pause</button>
+          <button class="tool-btn" style="background:#005577;" onclick="saveFxSnapshot()">💾 Save Frame (.PNG)</button>
+        </div>
+      </div>
+
+      <div class="fx-canvas-wrap">
+        <canvas id="demosceneFxCanvas" class="fx-canvas" width="480" height="240"></canvas>
+      </div>
+
+      <!-- FX Parameters Bar -->
+      <div class="fx-controls-bar">
+        <div class="fx-slider-row">
+          <label>Speed:</label>
+          <input type="range" id="fxSpeedSlider" min="0.2" max="3.0" step="0.1" value="1.0" oninput="updateFxSpeed(this.value)">
+          <span id="fxSpeedVal" style="color:#ffff00; width:35px;">1.0x</span>
+        </div>
+
+        <div class="fx-slider-row">
+          <label>Palette Theme:</label>
+          <select id="fxThemeSelect" onchange="setFxTheme(this.value)" style="background:#000; color:#00ffcc; border:1px solid #00ffcc; font-size:11px; padding:2px;">
+            <option value="rainbow">Amiga Rainbow Spectrum</option>
+            <option value="cyber">Cyber Neon (Pink &amp; Cyan)</option>
+            <option value="fire">Thermal Flare (Yellow/Red)</option>
+            <option value="matrix">Phosphor Matrix Green</option>
+            <option value="gold">Millennium 2000 Gold</option>
+          </select>
+        </div>
+
+        <div class="fx-slider-row">
+          <label>Resolution:</label>
+          <select id="fxResSelect" onchange="setFxResolution(this.value)" style="background:#000; color:#00ffcc; border:1px solid #00ffcc; font-size:11px; padding:2px;">
+            <option value="320x160">320x160 (Retro Chunky Mode 13h)</option>
+            <option value="480x240" selected>480x240 (VGA Crisp)</option>
+            <option value="640x320">640x320 (Hi-Res SVGA)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Scroller text input for Copper Mode -->
+      <div id="fxScrollerInputRow" style="display:flex; gap:6px; align-items:center; background:#001020; padding:6px 10px; border:1px solid #004466;">
+        <span style="font-size:11px; color:#ffff00; font-family:'Courier New', monospace; white-space:nowrap;">Copper Scroller Text:</span>
+        <input type="text" id="fxScrollerText" value="CYBERSPIRE RETRO SHRINE ★ 1999 DEMOSCENE FOREVER ★ AMIGA 500 / YM2612 / PROTRACKER ★ GREETINGS TO FLARELIGHT &amp; RAZOR 1999 ★ SURFING THE 999KB CYBERSPHERE ★" oninput="updateFxScrollerText(this.value)" style="flex:1; background:#000; color:#00ffcc; border:1px solid #0088aa; font-size:11px; padding:3px;">
+      </div>
+    </div>
+  </div>
+
+  <!-- 7. 8-Bit Amiga PCM Chip-Sample Sculptor & Audio Waveform Lab -->
+  <div class="section-box" id="sample-sculptor-section">
+    <div class="section-title">
+      <span>🎚️ 8-BIT AMIGA PCM CHIP-SAMPLE SCULPTOR &amp; WAVEFORM LAB</span>
+      <span style="font-size:11px; color:#00ffcc;">[RAW 8-BIT SIGNED PCM • RIFF/WAV • AMIGA PAULA DAC]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0;">
+      Sculpt your own custom 8-bit audio waveforms for ProTracker and native Win32 sound engines!
+      Click and drag directly on the interactive oscilloscope canvas to draw waves, apply analog bitcrushing and DSP transforms, audition at Amiga C-2..C-5 frequencies, and export client-side to authentic <strong>.WAV audio</strong>, <strong>raw .SMP</strong>, or <strong>C byte arrays</strong>.
+    </p>
+
+    <div class="sample-sculptor-wrap">
+      <!-- Top Preset Generator Toolbar -->
+      <div class="sample-toolbar">
+        <div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center;">
+          <span style="color:#ffff00; font-weight:bold;">Presets:</span>
+          <button class="tool-btn" onclick="sculptPreset('sine')">Sine Wave</button>
+          <button class="tool-btn" onclick="sculptPreset('square')">Square 50%</button>
+          <button class="tool-btn" onclick="sculptPreset('pulse')">Pulse 12%</button>
+          <button class="tool-btn" onclick="sculptPreset('saw')">Sawtooth</button>
+          <button class="tool-btn" onclick="sculptPreset('triangle')">Triangle</button>
+          <button class="tool-btn" onclick="sculptPreset('noise')">Noise Hit</button>
+          <button class="tool-btn" onclick="sculptPreset('kick')">808 Kick Zap</button>
+          <button class="tool-btn" onclick="sculptPreset('acid')">Acid 303 Sweep</button>
+        </div>
+
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span>Length:</span>
+          <select id="sampleLenSelect" onchange="changeSampleLength(parseInt(this.value))" style="background:#000; color:#00ffcc; border:1px solid #00ffcc; font-size:11px; padding:2px;">
+            <option value="128">128 Bytes (Chip-Wave)</option>
+            <option value="256" selected>256 Bytes (ProTracker Std)</option>
+            <option value="512">512 Bytes (Rich Formant)</option>
+            <option value="1024">1024 Bytes (Extended Percussion)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Waveform Canvas Box -->
+      <div class="sample-canvas-box">
+        <canvas id="sampleWaveCanvas" class="sample-canvas" width="840" height="140"></canvas>
+      </div>
+
+      <!-- DSP Operations & Loop Controls -->
+      <div class="sample-toolbar">
+        <div class="sample-dsp-grid">
+          <span style="color:#ffff00; font-weight:bold; align-self:center;">DSP Transforms:</span>
+          <button class="tool-btn" onclick="dspNormalize()">⚡ Normalize (±127)</button>
+          <button class="tool-btn" onclick="dspBitcrush(4)">🕹️ 4-Bit Crush</button>
+          <button class="tool-btn" onclick="dspSmooth()">🌊 Smooth (Lowpass)</button>
+          <button class="tool-btn" onclick="dspReverse()">🔄 Reverse</button>
+          <button class="tool-btn" onclick="dspInvert()">± Invert Phase</button>
+          <button class="tool-btn" onclick="dspAddGrit()">⚡ Add Analog Grit</button>
+        </div>
+
+        <div style="display:flex; gap:8px; align-items:center;">
+          <label><input type="checkbox" id="chkSampleLoop" checked onchange="toggleSampleLoop(this.checked)"> Sustain Loop</label>
+          <span id="sampleMetaInfo" style="color:#38bdf8; font-family:'Courier New', monospace;">256 Bytes • Peak: +127/-128</span>
+        </div>
+      </div>
+
+      <!-- Loop Boundary Sliders -->
+      <div style="display:flex; flex-wrap:wrap; gap:12px; background:#001020; padding:6px 10px; border:1px solid #004466; font-size:11px; color:#aaffee;">
+        <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:200px;">
+          <label>Loop Start:</label>
+          <input type="range" id="sampleLoopStartSlider" min="0" max="255" value="0" style="flex:1;" oninput="updateSampleLoopBounds()">
+          <span id="valLoopStart" style="color:#ffff00; width:45px;">0 B</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:6px; flex:1; min-width:200px;">
+          <label>Loop Length:</label>
+          <input type="range" id="sampleLoopLenSlider" min="4" max="256" value="256" style="flex:1;" oninput="updateSampleLoopBounds()">
+          <span id="valLoopLen" style="color:#ffff00; width:45px;">256 B</span>
+        </div>
+      </div>
+
+      <!-- Audition & Export Bar -->
+      <div class="sample-toolbar" style="background:#001e33;">
+        <div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center;">
+          <span style="color:#ffff00; font-weight:bold;">Audition Pitches:</span>
+          <button class="tool-btn" style="background:#005500;" onclick="auditionSamplePitch(4144)">▶ C-2 (4.1 kHz)</button>
+          <button class="tool-btn" style="background:#006600;" onclick="auditionSamplePitch(8287)">▶ C-3 (8.3 kHz Paula)</button>
+          <button class="tool-btn" style="background:#007700;" onclick="auditionSamplePitch(16574)">▶ C-4 (16.6 kHz)</button>
+          <button class="tool-btn" style="background:#008800;" onclick="auditionSamplePitch(33148)">▶ C-5 (33.1 kHz)</button>
+          <button class="tool-btn" style="background:#660000;" onclick="stopSampleAudition()">⏹ Stop</button>
+        </div>
+
+        <div style="display:flex; flex-wrap:wrap; gap:4px;">
+          <button class="tool-btn" style="background:#004466;" onclick="downloadSampleWav()">💾 Download .WAV</button>
+          <button class="tool-btn" style="background:#440066;" onclick="downloadSampleRaw()">💾 Download .SMP (Raw PCM)</button>
+          <button class="tool-btn" style="background:#334400;" onclick="copySampleCArray()">📋 Copy C Array</button>
+        </div>
+      </div>
+
+      <!-- C Array Output Box -->
+      <div>
+        <textarea id="sampleCArrayOutput" style="width:100%; height:48px; background:#000810; border:1px solid #004466; color:#00ff66; font-family:'Courier New', monospace; font-size:10px; padding:4px;" readonly placeholder="Exported C sample array will appear here..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 8. The Silicon Oracle '99 & Y2K Diagnostic -->
   <div class="section-box" id="oracle-section">
     <div class="section-title">
       <span>🔮 THE SILICON ORACLE '99</span>
@@ -1680,7 +2016,47 @@
     </div>
   </div>
 
-  <!-- 9. CyberSpire Bookmark Vault -->
+  <!-- 11. 1999 Cyber Voyagers Web Survey & Millennial Poll -->
+  <div class="section-box" id="cyber-poll-section">
+    <div class="section-title">
+      <span>📊 1999 CYBER VOYAGERS WEB SURVEY &amp; MILLENNIAL POLL</span>
+      <span style="font-size:11px; color:#ffff00;" id="pollSyncBadge">[LIVE RTDB CONNECTED]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0;">
+      Cast your vote on the great questions of the 1999 digital superhighway! Synced in real-time across all cyber voyagers visiting the shrine via Firebase Realtime Database.
+    </p>
+
+    <div class="poll-grid">
+      <!-- Question 1: Browser -->
+      <div class="poll-card">
+        <div class="poll-q-title">🌐 Primary 1999 Web Browser</div>
+        <div class="poll-option-row" id="pollOptionsQ1">
+          <!-- Populated dynamically with radio + bars -->
+        </div>
+        <div class="poll-stats" id="pollStatsQ1" style="font-size:10px; color:#88aacc; text-align:right;">Total votes: 0</div>
+      </div>
+
+      <!-- Question 2: Bandwidth -->
+      <div class="poll-card">
+        <div class="poll-q-title">⚡ Cyberspace Connection Speed</div>
+        <div class="poll-option-row" id="pollOptionsQ2">
+          <!-- Populated dynamically with radio + bars -->
+        </div>
+        <div class="poll-stats" id="pollStatsQ2" style="font-size:10px; color:#88aacc; text-align:right;">Total votes: 0</div>
+      </div>
+
+      <!-- Question 3: Audio Hardware -->
+      <div class="poll-card">
+        <div class="poll-q-title">🔊 Supreme 16-Bit Audio Hardware</div>
+        <div class="poll-option-row" id="pollOptionsQ3">
+          <!-- Populated dynamically with radio + bars -->
+        </div>
+        <div class="poll-stats" id="pollStatsQ3" style="font-size:10px; color:#88aacc; text-align:right;">Total votes: 0</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 12. CyberSpire Bookmark Vault -->
   <div class="section-box" id="bookmarks-section">
     <div class="section-title">⭐ CyberSpire's 1999 Cyberspace Vault</div>
     <ul style="font-size:13px; line-height:1.7; margin:0; padding-left:20px;">

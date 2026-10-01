@@ -2195,6 +2195,19 @@ const DEFAULT_RING_NODES = [
     badgeLabel: "DARKNET 0x7F",
     latency: 7,
     tags: "darknet,terminal,packet,sniffer,subterranean,forensics,hex,nfo,stego,warez"
+  },
+  {
+    id: "#019",
+    num: 19,
+    name: "Node ??? (Anomalous Carrier)",
+    handle: "UNKNOWN_BEACON",
+    category: "tools",
+    url: "#",
+    desc: "Unmapped telemetry beacon. Packets traverse echo-gw-07.kilonet.internal before returning anomalous 1999Hz subcarrier echoes.",
+    tech: "Non-Routable Subnet / RF Subcarrier / 1999Hz Harmonics",
+    badgeLabel: "??? ANOMALY",
+    latency: 1999,
+    tags: "anomaly,unknown,1999hz,subcarrier,ghost,carlsbad,echo-gw-07,telemetry"
   }
 ];
 
@@ -2828,7 +2841,7 @@ function updateTourDisplay() {
     STAMPS.forEach(s => {
       let isCollected = false;
       if (s.cat === "mystery") {
-        isCollected = history.some(id => id === "#015" || id === "#016" || id === "#017" || id === "#018");
+        isCollected = history.some(id => id === "#015" || id === "#016" || id === "#017" || id === "#018" || id === "#019");
       } else {
         isCollected = history.some(id => {
           const match = ringNodes.find(n => n.id === id);
@@ -3631,8 +3644,9 @@ function probeCustomTarget() {
 
   resEl.style.display = 'block';
 
-  // Diegetic Easter Egg: Probing 0x7F or darknet coordinates returns subtle packet telemetry
-  if (target.includes('0x7F') || target.includes('darknet') || target.includes('10.19.99')) {
+  // Diegetic Easter Egg: Probing 0x7F, 1999Hz, echo-gw, carlsbad, or darknet coordinates returns subtle packet telemetry
+  const lowerTarget = target.toLowerCase();
+  if (lowerTarget.includes('0x7f') || lowerTarget.includes('darknet') || lowerTarget.includes('10.19.99') || lowerTarget.includes('echo-gw') || lowerTarget.includes('1999hz') || lowerTarget.includes('carlsbad') || lowerTarget.includes('subcarrier')) {
     resEl.innerHTML = `
       <span style="color:var(--amber-bright);">[ANOMALOUS CARRIER DETECTED]</span><br>
       Host: non-routable subnet carrier • Frequency: 1999Hz subcarrier active<br>
@@ -3701,12 +3715,18 @@ function runTraceroute() {
   consoleEl.textContent += `Target Ring ID: ${targetNode.id} • Latency Baseline: ${targetNode.latency}ms • Max Hops: 5\n`;
   consoleEl.textContent += "--------------------------------------------------------------------------------\n";
 
+  const isAnomalous = targetNode.id === '#019' || targetNode.latency >= 1000;
   const hops = [
     { hop: 1, ip: "192.168.1.1", host: "gateway.local.net", ms: 0.8 },
     { hop: 2, ip: "10.24.112.1", host: "dialup-v90-pop3.isp.net", ms: 24.2 },
     { hop: 3, ip: "204.152.184.1", host: "core1-mci-worldcom.backbone.net", ms: 38.5 },
-    { hop: 4, ip: "198.41.0.4", host: "kilonet-transit-gw.ringmaster.org", ms: 48.1 },
-    { hop: 5, ip: `10.19.99.${targetNode.num + 10}`, host: `node-${targetNode.id.replace('#','')}.kilonet.org`, ms: targetNode.latency + Math.floor(Math.random() * 6 - 3) }
+    { hop: 4, ip: "10.19.99.1", host: "echo-gw-07.kilonet.internal", ms: 48.1 },
+    {
+      hop: 5,
+      ip: isAnomalous ? "10.19.99.4" : `10.19.99.${targetNode.num + 10}`,
+      host: isAnomalous ? "carlsbad-transponder-0x7f.internal" : `node-${targetNode.id.replace('#','')}.kilonet.org`,
+      ms: targetNode.latency + (isAnomalous ? 0 : Math.floor(Math.random() * 6 - 3))
+    }
   ];
 
   let currentHop = 0;
@@ -3717,6 +3737,10 @@ function runTraceroute() {
       consoleEl.textContent += "--------------------------------------------------------------------------------\n";
       consoleEl.textContent += `[TRACE COMPLETE] 5 hops traversed. Destination reached successfully in ${hops[4].ms}ms.\n`;
       consoleEl.textContent += `Packet integrity: 100% (0 packets dropped). MTU 1500 MSS 1460.\n`;
+      if (isAnomalous) {
+        consoleEl.textContent += `[CARRIER LOCK ACQUIRED @ 1999Hz] Non-routable subnet transponder pinged.\n`;
+        consoleEl.textContent += `Subcarrier signature: Lithospheric RF telemetry locked at offset 0x7F.\n`;
+      }
       consoleEl.scrollTop = consoleEl.scrollHeight;
       playSfx('submit');
       return;

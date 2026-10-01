@@ -2035,9 +2035,9 @@
       url = '/web/warez.html';
     } else if (url.toLowerCase() === 'kweb://darknet' || url.toLowerCase() === 'darknet' || url.toLowerCase() === 'kweb://darknet.ai' || url.toLowerCase() === 'darknet.ai' || url.toLowerCase() === 'kweb://node0x7f' || url.toLowerCase() === 'node0x7f' || url.toLowerCase() === 'kweb://node-0x7f' || url.toLowerCase() === 'node-0x7f') {
       url = '/web/darknet.html';
-    } else if (url.toLowerCase() === 'kweb://echo-subsystem.net' || url.toLowerCase() === 'echo-subsystem.net' || url.toLowerCase() === 'http://echo-subsystem.net' || url.toLowerCase() === 'kweb://echo-subsystem' || url.toLowerCase() === 'echo-subsystem' || url.toLowerCase() === 'kweb://echo_subsystem' || url.toLowerCase() === 'echo_subsystem') {
+    } else if (url.toLowerCase() === 'kweb://echo-subsystem.net' || url.toLowerCase() === 'echo-subsystem.net' || url.toLowerCase() === 'http://echo-subsystem.net' || url.toLowerCase() === 'kweb://echo-subsystem' || url.toLowerCase() === 'echo-subsystem' || url.toLowerCase() === 'kweb://echo_subsystem' || url.toLowerCase() === 'echo_subsystem' || url.toLowerCase() === '10.19.99.1' || url.toLowerCase() === 'kweb://10.19.99.1' || url.toLowerCase() === 'echo-gw' || url.toLowerCase() === 'kweb://echo-gw' || url.toLowerCase() === 'echo-gw-07.kilonet.internal') {
       url = '/web/echo_subsystem.html';
-    } else if (url.toLowerCase() === 'kweb://10.19.99.4/classified' || url.toLowerCase() === '10.19.99.4/classified' || url.toLowerCase() === 'kweb://10.19.99.4' || url.toLowerCase() === '10.19.99.4' || url.toLowerCase() === 'kweb://classified' || url.toLowerCase() === 'classified' || url.toLowerCase() === 'http://10.19.99.4/classified' || url.toLowerCase() === 'http://10.19.99.4') {
+    } else if (url.toLowerCase() === 'kweb://10.19.99.4/classified' || url.toLowerCase() === '10.19.99.4/classified' || url.toLowerCase() === 'kweb://10.19.99.4' || url.toLowerCase() === '10.19.99.4' || url.toLowerCase() === 'kweb://classified' || url.toLowerCase() === 'classified' || url.toLowerCase() === 'http://10.19.99.4/classified' || url.toLowerCase() === 'http://10.19.99.4' || url.toLowerCase() === 'carlsbad' || url.toLowerCase() === 'kweb://carlsbad') {
       url = '/web/classified.html';
     } else if (url.toLowerCase() === 'kweb://deep-core' || url.toLowerCase() === 'deep-core' || url.toLowerCase() === 'kweb://deep_core' || url.toLowerCase() === 'deep_core' || url.toLowerCase() === 'kweb://ghost-node' || url.toLowerCase() === 'ghost-node') {
       url = '/web/deep_core.html';
@@ -2343,21 +2343,37 @@
     let success = false;
     let latency = 0;
 
-    try {
-      // Simulate/measure ping latency via lightweight fetch check
-      const testUrl = host.startsWith('http') ? host : `https://${host}`;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2000);
-      await fetch(testUrl, { method: 'HEAD', mode: 'no-cors', signal: controller.signal });
-      clearTimeout(timeoutId);
-      latency = Math.round(performance.now() - startTime);
+    const hostLower = host.toLowerCase();
+    const isAnomalousEcho = hostLower.includes('10.19.99.1') || hostLower.includes('echo-gw');
+    const isAnomalousCarlsbad = hostLower.includes('10.19.99.4') || hostLower.includes('carlsbad') || hostLower.includes('1999hz');
+    const isAnomalousNet = isAnomalousEcho || isAnomalousCarlsbad || hostLower.includes('10.19.99') || hostLower.includes('0x7f') || hostLower.includes('subcarrier');
+
+    if (isAnomalousNet) {
+      if (isAnomalousEcho) {
+        latency = 48 + Math.floor(Math.random() * 4);
+      } else if (isAnomalousCarlsbad) {
+        latency = 1999;
+      } else {
+        latency = 127 + Math.floor(Math.random() * 8);
+      }
       success = true;
-    } catch (e) {
-      latency = Math.round(performance.now() - startTime);
-      // Simulated jitter for ICMP ping display
-      if (latency < 2000) {
-        latency = Math.floor(Math.random() * 25) + 15;
+    } else {
+      try {
+        // Simulate/measure ping latency via lightweight fetch check
+        const testUrl = host.startsWith('http') ? host : `https://${host}`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
+        await fetch(testUrl, { method: 'HEAD', mode: 'no-cors', signal: controller.signal });
+        clearTimeout(timeoutId);
+        latency = Math.round(performance.now() - startTime);
         success = true;
+      } catch (e) {
+        latency = Math.round(performance.now() - startTime);
+        // Simulated jitter for ICMP ping display
+        if (latency < 2000) {
+          latency = Math.floor(Math.random() * 25) + 15;
+          success = true;
+        }
       }
     }
 
@@ -2369,8 +2385,17 @@
       pingHistoryData.push(latency);
       if (pingHistoryData.length > 50) pingHistoryData.shift();
 
+      let replyLine = `Reply from ${host}: bytes=32 time=${latency}ms TTL=118\n`;
+      if (isAnomalousEcho) {
+        replyLine = `Reply from ${host} [echo-gw-07.kilonet.internal]: bytes=32 time=${latency}ms TTL=64 [SIGINT RELAY ONLINE - Transit Bridge 0x7F Active]\n`;
+      } else if (isAnomalousCarlsbad) {
+        replyLine = `Reply from ${host} [carlsbad-transponder-0x7f.internal]: bytes=32 time=${latency}ms TTL=31 [1999Hz CARRIER ACTIVE - Packet Telemetry Sync: 100%]\n`;
+      } else if (isAnomalousNet) {
+        replyLine = `Reply from ${host} [quarantined-subnet-10.19.99.x]: bytes=32 time=${latency}ms TTL=42 [SUBTERRANEAN CARRIER DETECTED]\n`;
+      }
+
       addTrafficLog('PING', host, 'OK', 200, latency, 32);
-      document.getElementById('pingLogArea').textContent = `Reply from ${host}: bytes=32 time=${latency}ms TTL=118\n` + document.getElementById('pingLogArea').textContent;
+      document.getElementById('pingLogArea').textContent = replyLine + document.getElementById('pingLogArea').textContent;
     } else {
       addTrafficLog('PING', host, 'ERR', 0, latency, 0);
       document.getElementById('pingLogArea').textContent = `Request timed out for ${host}\n` + document.getElementById('pingLogArea').textContent;
@@ -2719,24 +2744,27 @@
     const area = document.getElementById('utilContentArea');
     area.textContent = `Resolving ${recType} record for ${target} via Google DoH...\n`;
     
-    // Diegetic ARG handling for in-universe nodes
-    if (target.toLowerCase().includes('echo-subsystem') || target.toLowerCase() === '10.19.99.4') {
+    // Diegetic handling for in-universe nodes
+    const lowerDnsTarget = target.toLowerCase();
+    if (lowerDnsTarget.includes('echo-subsystem') || lowerDnsTarget.includes('echo-gw') || lowerDnsTarget.includes('10.19.99') || lowerDnsTarget.includes('carlsbad') || lowerDnsTarget.includes('1999hz')) {
       setTimeout(() => {
         let diegeticResp = `;; ANSWER SECTION (${target} [INTERNAL KILONET DIRECTORY]):\n`;
         diegeticResp += `${target}.  299  IN  ${recType}  `;
         if (recType === 'TXT') {
           diegeticResp += `"v=knet1 carrier_lock=1999Hz subcarrier=sigint-node-04 subchannel=10.19.99.4 ~all"\n`;
         } else if (recType === 'PTR') {
-          diegeticResp += `classified-leak-storage.kilonet.internal.\n`;
+          diegeticResp += `carlsbad-transponder-0x7f.internal.\n`;
         } else if (recType === 'MX') {
           diegeticResp += `10 mail.echo-subsystem.net.\n`;
+        } else if (lowerDnsTarget.includes('10.19.99.1') || lowerDnsTarget.includes('echo-gw')) {
+          diegeticResp += `10.19.99.1\n`;
         } else {
           diegeticResp += `10.19.99.4\n`;
         }
         diegeticResp += `\n;; ADDITIONAL RECORDS:\n`;
         diegeticResp += `gateway.kilonet.internal.  299  IN  A  10.19.99.1\n`;
         diegeticResp += `carrier.kilonet.internal.  299  IN  TXT "CARRIER HARMONIC: 1999 Hz"\n`;
-        diegeticResp += `\n;; Query time: 4 msec\n;; SERVER: 10.19.99.1#53(10.19.99.1)\n;; STATUS: NOERROR (ARG-DIEGETIC-LOCK)`;
+        diegeticResp += `\n;; Query time: 4 msec\n;; SERVER: 10.19.99.1#53(10.19.99.1)\n;; STATUS: NOERROR (TELEMETRY-CARRIER-LOCK)`;
         area.textContent = diegeticResp;
         playNavChime();
         addTrafficLog('DNS', `${target} (${recType})`, 'OK', 200, 4, diegeticResp.length);
@@ -2778,18 +2806,24 @@
     const area = document.getElementById('utilContentArea');
     area.textContent = `Querying regional WHOIS for ${target}...\n`;
     setTimeout(() => {
-      let whoisTxt = `Domain Name: ${target.toUpperCase()}\n`;
-      whoisTxt += `Registry Domain ID: 19991231_DOMAIN_${target.replace(/[^A-Za-z0-9]/g, '').toUpperCase()}-VRSN\n`;
-      whoisTxt += `Registrar WHOIS Server: whois.kilonet-registrar.net\n`;
-      whoisTxt += `Updated Date: 1999-12-31T23:59:58Z\n`;
-      whoisTxt += `Creation Date: 1995-01-01T00:00:00Z\n`;
-      whoisTxt += `Registry Expiry Date: 2038-01-19T03:14:07Z\n`;
-      whoisTxt += `Registrar: KiloNet 1999 Telecom Consortium\n`;
-      whoisTxt += `Domain Status: clientTransferProhibited\n`;
-      whoisTxt += `Name Server: NS1.KILONET.NET\n`;
-      whoisTxt += `Name Server: NS2.KILONET.NET\n`;
-      whoisTxt += `DNSSEC: unsigned\n\n`;
-      whoisTxt += `>>> Last update of WHOIS database: 1999-12-31T23:59:59Z <<<`;
+      const lowerWhois = target.toLowerCase();
+      let whoisTxt = "";
+      if (lowerWhois.includes('10.19.99') || lowerWhois.includes('carlsbad') || lowerWhois.includes('echo-gw') || lowerWhois.includes('echo-subsystem') || lowerWhois.includes('1999hz')) {
+        whoisTxt = `Network Range: 10.19.99.0 - 10.19.99.255\nCIDR: 10.19.99.0/24\nNetName: CARLSBAD-TRANSPONDER-GRID\nNetHandle: NET-10-19-99-0-1\nParent: IANA-C-BLK (10.0.0.0/8)\nNetType: Classified Subterranean Experimental\nOriginAS: AS1999 (KiloNet Transit Internal)\nOrganization: Carlsbad Subterranean Acoustic & RF Skunkworks\nRegistration Status: NON-ROUTABLE INTRANET LEASE\nComment: Lithospheric acoustic carrier locked at 1999Hz. Route queries via echo-gw-07.kilonet.internal.\nRef: kweb://portal?q=carlsbad\n\nOrgName: Carlsbad Subterranean Acoustic & RF Skunkworks\nOrgId: CSARFS-99\nAddress: Quarantined Vault Sector 7F\nCity: Carlsbad\nStateProv: NM\nPostalCode: 88220\nCountry: US\nRegDate: 1999-07-19\nUpdated: 1999-12-31\n\n>>> Last update of WHOIS database: 1999-12-31T23:59:59Z <<<`;
+      } else {
+        whoisTxt = `Domain Name: ${target.toUpperCase()}\n`;
+        whoisTxt += `Registry Domain ID: 19991231_DOMAIN_${target.replace(/[^A-Za-z0-9]/g, '').toUpperCase()}-VRSN\n`;
+        whoisTxt += `Registrar WHOIS Server: whois.kilonet-registrar.net\n`;
+        whoisTxt += `Updated Date: 1999-12-31T23:59:58Z\n`;
+        whoisTxt += `Creation Date: 1995-01-01T00:00:00Z\n`;
+        whoisTxt += `Registry Expiry Date: 2038-01-19T03:14:07Z\n`;
+        whoisTxt += `Registrar: KiloNet 1999 Telecom Consortium\n`;
+        whoisTxt += `Domain Status: clientTransferProhibited\n`;
+        whoisTxt += `Name Server: NS1.KILONET.NET\n`;
+        whoisTxt += `Name Server: NS2.KILONET.NET\n`;
+        whoisTxt += `DNSSEC: unsigned\n\n`;
+        whoisTxt += `>>> Last update of WHOIS database: 1999-12-31T23:59:59Z <<<`;
+      }
       area.textContent = whoisTxt;
       playNavChime();
       addTrafficLog('WHOIS', target, 'OK', 200, 150, whoisTxt.length);
@@ -2800,20 +2834,46 @@
     const target = document.getElementById('utilTargetInput').value.trim() || 'example.com';
     const area = document.getElementById('utilContentArea');
     area.textContent = `Tracing route to ${target} over a maximum of 30 hops:\n\n`;
+    const lowerTrace = target.toLowerCase();
+    const isAnomalousTrace = lowerTrace.includes('10.19.99') || lowerTrace.includes('carlsbad') || lowerTrace.includes('echo') || lowerTrace.includes('1999') || lowerTrace.includes('0x7f') || lowerTrace.includes('subcarrier');
+
     let hop = 1;
     const interval = setInterval(() => {
-      const ms1 = Math.floor(Math.random() * 15) + hop * 3;
-      const ms2 = ms1 + Math.floor(Math.random() * 4);
-      const ms3 = ms1 - Math.floor(Math.random() * 3);
-      if (hop === 8) {
-        area.textContent += `${hop.toString().padStart(2, ' ')}    ${ms1} ms    ${ms2} ms    ${ms3} ms  ${target} [93.184.216.34]\n\nTrace complete.\n`;
-        playNavChime();
-        clearInterval(interval);
-      } else if (hop === 4) {
-        area.textContent += `${hop.toString().padStart(2, ' ')}     *        *        *     Request timed out.\n`;
+      if (isAnomalousTrace) {
+        if (hop === 1) {
+          area.textContent += ` 1     1 ms     1 ms     1 ms  gateway.local.net [192.168.1.1]\n`;
+          playPacketBlip();
+        } else if (hop === 2) {
+          area.textContent += ` 2    24 ms    25 ms    24 ms  dialup-v90-pop3.isp.net [10.24.112.1]\n`;
+          playPacketBlip();
+        } else if (hop === 3) {
+          area.textContent += ` 3    38 ms    39 ms    38 ms  core1-mci-worldcom.backbone.net [204.152.184.1]\n`;
+          playPacketBlip();
+        } else if (hop === 4) {
+          area.textContent += ` 4    48 ms    49 ms    48 ms  echo-gw-07.kilonet.internal [10.19.99.1]\n`;
+          playPacketBlip();
+        } else if (hop === 5) {
+          area.textContent += ` 5  1999 ms  1999 ms  1999 ms  carlsbad-transponder-0x7f.internal [10.19.99.4]\n\n`;
+          area.textContent += `[CARRIER LOCK ACQUIRED @ 1999Hz] Non-routable subnet transponder responsive.\n`;
+          area.textContent += `Subcarrier signature: Lithospheric RF telemetry locked at offset 0x7F.\n`;
+          area.textContent += `Trace complete.\n`;
+          playNavChime();
+          clearInterval(interval);
+        }
       } else {
-        area.textContent += `${hop.toString().padStart(2, ' ')}    ${ms1} ms    ${ms2} ms    ${ms3} ms  router-${hop}.mci-worldcom.net [192.168.10.${hop}]\n`;
-        playPacketBlip();
+        const ms1 = Math.floor(Math.random() * 15) + hop * 3;
+        const ms2 = ms1 + Math.floor(Math.random() * 4);
+        const ms3 = ms1 - Math.floor(Math.random() * 3);
+        if (hop === 8) {
+          area.textContent += `${hop.toString().padStart(2, ' ')}    ${ms1} ms    ${ms2} ms    ${ms3} ms  ${target} [93.184.216.34]\n\nTrace complete.\n`;
+          playNavChime();
+          clearInterval(interval);
+        } else if (hop === 4) {
+          area.textContent += `${hop.toString().padStart(2, ' ')}     *        *        *     Request timed out.\n`;
+        } else {
+          area.textContent += `${hop.toString().padStart(2, ' ')}    ${ms1} ms    ${ms2} ms    ${ms3} ms  router-${hop}.mci-worldcom.net [192.168.10.${hop}]\n`;
+          playPacketBlip();
+        }
       }
       hop++;
     }, 400);
