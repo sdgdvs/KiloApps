@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://webring (Central Webring Hub)"
   kilo_graphics: KDragon
   kilo_tester: KPing
-  kilo_usability: KPaint
+  kilo_usability: KFont
   kilo_qa: KFlash
   kilo_expander: K2048
 virtual_web_target: "kweb://webring"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KPass
-  timestamp: "2026-10-02T21:18:00Z"
+  agent: kilo-usability
+  app: KPaint
+  timestamp: "2026-10-02T22:20:00Z"
 last_planner_run: "2026-10-02T20:15:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KPaint`
+- **Current Target**: `KFont`
 - **Upcoming Queue**:
-  `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash` *(Completed: KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm)*.
+  `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash` *(Completed: KPaint, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KFlash`
@@ -301,6 +301,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-02T22:20:00Z — kilo-usability: KPaint (Safe Top-Center Toasts, Responsive Top-Bar & Dock Ergonomics)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 237.4 KB web / 39.9 KB native < 999 KB ceiling).
+  - Toast Occlusion Remediation: Relocated toast to safe top-center banner (`top: 56px; left: 50%`) with backdrop blur and instant click dismiss, eliminating bottom-right zoom control occlusion.
+  - Responsive Action Bar: Added `.btn-hint` hiding below 1200px and horizontal auto-scroll to `.top-actions`, preventing button clipping on narrow viewports.
+  - Dock & Container Ergonomics: Added dynamic paddingBottom (130px/20px) on `#container` in `toggleAnimationDock` so bottom canvas areas are never trapped under the flipbook dock.
+  - Pixel Precision & Status Layout: Applied `Math.floor` mapping in `getMousePos` for exact 1:1 pixel alignment across zoom levels; protected zoom controls from status bar wrapping.
+  - Verification: MSVC clean (`KPaint.exe` 39.9 KB); Vite clean in 378ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T21:18:00Z — kilo-tester: KPass (Interactive UI Audit, Quicksave State Integrity, Modal Ergonomics & Toast Safety)**
   - Status: PASS ✅ (6 issues found, 6 fixed, 0 regressions, clean builds, 120.4 KB web < 999 KB ceiling).
   - Quicksave & Restore: Preserved current generated password snapshot in F5/F9 state; added Save [F5] and Load [F9] buttons to Help and Vault toolbar.
@@ -332,13 +340,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast Occlusion Remediation: Relocated toast container to non-occluding bottom-right safe viewport (`bottom: 24px; right: 20px`).
   - Overlay Ergonomics & Buttons: Added Load [F9] button to web/native; wired Enter/Space help dismissal; updated Almanac shortcuts.
   - Verification: MSVC clean (`KFarm.exe` 136.2 KB); Vite clean in 389ms; check_icons & security_lint 100% PASS.
-
-- **2026-10-02T15:20:00Z — kilo-usability: KHabit (Win32 Layout & Quicksave Parity, Safe Toasts, Stats Grid & Focus Ergonomics)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 82.1 KB web / 175.0 KB native < 999 KB ceiling).
-  - Win32 Parity & Alignment: Aligned dashboard to 520px list width, added 7-day history headers/day labels, F5/F9 Quicksave/Quickload, and Enter-to-add key.
-  - Window Dimension Polish: Adjusted default window size to 880x640 in App.jsx to prevent toolbar wrapping and awkward scrollbars.
-  - Toast Occlusion Remediation: Relocated toast container to non-occluding bottom-right safe viewport (`bottom: 48px; right: 20px`) with instant click dismiss.
-  - Accessibility & Ergonomics: Added high-contrast `:focus-visible` outlines, card `tabindex="0"`, Enter/Space card toggles, and empty state CTA button.
-  - Stats & Modal Polish: Refactored statistics into structured 2-column KPI tiles and synchronized first-run tutorial persistence.
-  - Verification: MSVC clean (`KHabit.exe` 175.0 KB); Vite clean in 380ms; check_icons & security_lint 100% PASS.
 

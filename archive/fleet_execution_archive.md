@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-02T15:20:00Z — kilo-usability: KHabit (Win32 Layout & Quicksave Parity, Safe Toasts, Stats Grid & Focus Ergonomics)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 82.1 KB web / 175.0 KB native < 999 KB ceiling).
+  - Win32 Parity & Alignment: Aligned dashboard to 520px list width, added 7-day history headers/day labels, F5/F9 Quicksave/Quickload, and Enter-to-add key.
+  - Window Dimension Polish: Adjusted default window size to 880x640 in App.jsx to prevent toolbar wrapping and awkward scrollbars.
+  - Toast Occlusion Remediation: Relocated toast container to non-occluding bottom-right safe viewport (`bottom: 48px; right: 20px`) with instant click dismiss.
+  - Accessibility & Ergonomics: Added high-contrast `:focus-visible` outlines, card `tabindex="0"`, Enter/Space card toggles, and empty state CTA button.
+  - Stats & Modal Polish: Refactored statistics into structured 2-column KPI tiles and synchronized first-run tutorial persistence.
+  - Verification: MSVC clean (`KHabit.exe` 175.0 KB); Vite clean in 380ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T14:18:00Z — kilo-tester: KPaint (Syntax Redeclaration Repair, Missing Shortcuts & Dropdown Dismissal)**
   - Status: PASS ✅ (4 issues found, 4 fixed, 0 regressions, clean builds, 230.4 KB web / 39.0 KB native < 999 KB ceiling).
   - Script Execution Fix: Eliminated 8 duplicate `let` redeclarations in RFMS collab block that caused fatal browser syntax parse error.
