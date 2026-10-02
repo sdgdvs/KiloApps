@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-02T06:19:00Z — kilo-qa: KBudget (Pass 5: Full State Persistence, First-Run Tutorial, Safe Toasts & Win32 Quicksave)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 61.9 KB web / 170.0 KB native < 999 KB ceiling).
+  - Quicksave & State Integrity: Built F5 Quicksave / F9 Quickload across Win32 C (`kbudget_quicksave.dat`) and web localStorage with full state capture.
+  - First-Run Tutorial: Enforced `kbudget_tutorial.dat` and `kbudget_tutorialSeen` flags preventing tutorial modal from interrupting restored sessions.
+  - UI & Toast Occlusion: Relocated toast notifications to non-occluding bottom-right safe viewport (`z-index: 3000`) with instant dismiss and quota safety.
+  - Overlay Ergonomics: Bound Enter/Space modal dismiss in web; verified Esc, F1/H help, and button layout across web & native.
+  - Verification: MSVC clean (`KBudget.exe` 170.0 KB); Vite clean in 387ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T05:22:00Z — kilo-usability: KAudio (Top-Center Safe Toasts, Key Offsets, Focus Rings & Layout Fit)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 123.0 KB web / 23.0 KB native < 999 KB ceiling).
   - Toast Occlusion Remediation: Relocated toast container to non-occluding top-center viewport (`top: 14px`) preventing sequencer step blockage.

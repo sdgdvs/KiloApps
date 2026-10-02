@@ -3210,17 +3210,17 @@ function getDiegeticAnomalyCard(query) {
   }
 
   // 7. Subterranean Darknet & Deep Core
-  if (q.includes('darknet') || q.includes('deep-core') || q.includes('deep_core') || q.includes('10.19.99')) {
+  if (q.includes('darknet') || q.includes('deep-core') || q.includes('deep_core') || q.includes('10.19.99') || q.includes('cryptography') || q.includes('feistel') || q.includes('cipher lab')) {
     return {
       title: "KiloSearch 1.0 // Query: " + query + " [Diagnostic Anomaly]",
       html: `
         <div class="search-result-item" style="background:#fff2f2; border:1px solid #ff9999; border-left:5px solid #d32f2f; padding:12px; margin-bottom:12px;">
           <span style="font-family:'Courier New', monospace; font-weight:bold; color:#cc0000;">⚠️ ROUTING ADVISORY: Target non-routable on public DNS.</span><br>
           <p style="font-size:12px; margin:8px 0 4px 0; color:#333; line-height:1.5;">
-            The requested network address (<code>${escapeHtml(query)}</code>) is isolated in private subnet space or subterranean telemetry nodes. Direct HTTP queries through clearnet directories are restricted. Use the packet sniffer in <a href="/apps/knet.html"><strong>KNet</strong></a>, inspect the subterranean terminal at <a href="/web/deep_core.html"><strong>kweb://deep-core</strong></a>, or navigate via <a href="/web/darknet.html"><strong>kweb://darknet (Node 0x7F)</strong></a>.
+            The requested network address or cryptographic research node (<code>${escapeHtml(query)}</code>) is isolated in subterranean telemetry space. Direct HTTP queries through clearnet directories are restricted. Use the packet sniffer in <a href="/apps/knet.html"><strong>KNet</strong></a>, inspect the subterranean terminal at <a href="/web/deep_core.html"><strong>kweb://deep-core</strong></a>, or navigate via <a href="/web/darknet.html"><strong>kweb://darknet (Node 0x7F - Encrypted Underground Relay &amp; Cryptography Lab)</strong></a>.
           </p>
           <div style="font-size:11px; color:#666; font-family:'Courier New', monospace; margin-top:6px;">
-            Diagnostic: Clearnet gateway rejected TCP SYN • Subnet: 10.19.99.0/24 • Node: 0x7F
+            Diagnostic: Clearnet gateway rejected TCP SYN • Subnet: 10.19.99.0/24 • Node: 0x7F Cryptography Lab
           </div>
         </div>
       `

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
-<title>[NODE 0x7F] - KiloNet Subterranean Darknet Relay &amp; Warez NFO Cryptography Lab (1999)</title>
+<title>[NODE 0x7F] - Encrypted Underground Relay &amp; Cryptography Lab (KiloNet 1999)</title>
 <style>
   :root {
     --bg-dark: #020604;
@@ -798,6 +798,255 @@
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.35; transform: scale(0.85); }
   }
+
+  /* =========================================================================
+     TAB 10: CRYPTOGRAPHY LAB STYLES (FEISTEL, RC4, OTP, PGP)
+     ========================================================================= */
+  .crypto-subnav {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    border-bottom: 1px dashed var(--panel-border);
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+  }
+  .crypto-subnav-btn {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--panel-border);
+    color: var(--phosphor-dim);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 4px 10px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.15s ease;
+  }
+  .crypto-subnav-btn:hover {
+    color: var(--phosphor);
+    border-color: var(--phosphor);
+    background: rgba(0, 40, 15, 0.3);
+  }
+  .crypto-subnav-btn.active {
+    background: var(--phosphor);
+    color: #000;
+    border-color: var(--phosphor);
+    box-shadow: 0 0 8px var(--phosphor-glow);
+  }
+  .crypto-subpane {
+    display: none;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .crypto-subpane.active {
+    display: flex;
+  }
+
+  /* Feistel Diagram & Regs */
+  .feistel-reg-box {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    background: rgba(0, 10, 5, 0.7);
+    border: 1px solid var(--panel-border);
+    padding: 10px;
+  }
+  @media (max-width: 680px) {
+    .feistel-reg-box {
+      grid-template-columns: 1fr;
+    }
+  }
+  .feistel-half {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(19, 136, 58, 0.4);
+  }
+  .feistel-half.active-reg {
+    border-color: var(--phosphor);
+    box-shadow: 0 0 8px var(--phosphor-glow);
+  }
+  .feistel-bit-display {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--cyan);
+    word-break: break-all;
+  }
+  .avalanche-meter-bar {
+    width: 100%;
+    height: 18px;
+    background: #000;
+    border: 1px solid var(--panel-border);
+    position: relative;
+    overflow: hidden;
+  }
+  .avalanche-meter-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #107730, var(--phosphor), #ffd488);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+  .sbox-matrix-grid {
+    display: grid;
+    grid-template-columns: repeat(16, 1fr);
+    gap: 2px;
+    background: #000;
+    border: 1px solid var(--panel-border);
+    padding: 6px;
+    font-size: 9.5px;
+    text-align: center;
+  }
+  .sbox-cell {
+    padding: 3px 1px;
+    background: rgba(0, 20, 10, 0.8);
+    color: var(--phosphor-dim);
+    border: 1px solid rgba(19, 136, 58, 0.2);
+    user-select: none;
+    transition: all 0.1s;
+    font-family: var(--font-mono);
+  }
+  .sbox-cell:hover {
+    color: #fff;
+    border-color: var(--phosphor);
+    background: rgba(0, 50, 20, 0.9);
+  }
+  .sbox-cell.highlight-i {
+    background: var(--cyan) !important;
+    color: #000 !important;
+    font-weight: bold;
+    border-color: #fff;
+  }
+  .sbox-cell.highlight-j {
+    background: var(--warn) !important;
+    color: #000 !important;
+    font-weight: bold;
+    border-color: #fff;
+  }
+  .sbox-cell.highlight-swap {
+    background: var(--phosphor-bright) !important;
+    color: #000 !important;
+    box-shadow: 0 0 6px var(--phosphor);
+  }
+
+  /* One-Time Pad Sheet Display */
+  .otp-sheet-container {
+    background: #020704;
+    border: 1px solid var(--panel-border);
+    padding: 12px;
+    font-family: var(--font-mono);
+    color: var(--phosphor);
+    font-size: 11.5px;
+    line-height: 1.6;
+    height: 200px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    box-shadow: inset 0 0 12px rgba(0,0,0,0.9);
+  }
+
+  /* PGP Keyring Cards */
+  .pgp-keys-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 8px;
+  }
+  .pgp-key-card {
+    background: rgba(0, 15, 6, 0.7);
+    border: 1px solid var(--panel-border);
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11px;
+  }
+  .pgp-key-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(19, 136, 58, 0.3);
+    padding-bottom: 4px;
+    font-weight: bold;
+    color: var(--phosphor-bright);
+  }
+
+  /* =========================================================================
+     TAB 11: RELAY TOPOLOGY SWITCHBOARD STYLES
+     ========================================================================= */
+  .topology-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .topology-canvas-box {
+    position: relative;
+    border: 2px solid var(--panel-border);
+    background: #010502;
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.9), 0 0 10px var(--phosphor-glow);
+    overflow: hidden;
+  }
+  #topologyCanvas {
+    display: block;
+    width: 100%;
+    height: 380px;
+    background: transparent;
+    cursor: crosshair;
+  }
+  .topology-hud-overlay {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: rgba(0, 15, 6, 0.88);
+    border: 1px solid var(--panel-border);
+    padding: 6px 10px;
+    font-size: 10.5px;
+    pointer-events: none;
+    line-height: 1.4;
+  }
+  .topology-hud-right {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 15, 6, 0.88);
+    border: 1px solid var(--panel-border);
+    padding: 6px 10px;
+    font-size: 10.5px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    pointer-events: none;
+    line-height: 1.4;
+  }
+  .topology-ctrl-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    padding: 8px 12px;
+  }
+  .topology-node-card {
+    background: rgba(0, 10, 5, 0.8);
+    border: 1px solid var(--panel-border);
+    padding: 10px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px;
+    font-size: 11px;
+  }
+  .topology-event-log {
+    height: 110px;
+    overflow-y: auto;
+    background: #000;
+    border: 1px solid var(--panel-border);
+    padding: 6px 8px;
+    font-size: 10.5px;
+    font-family: var(--font-mono);
+    line-height: 1.45;
+  }
+
 </style>
 </head>
 <body class="theme-green">
@@ -810,7 +1059,7 @@
     <div class="masthead-row-1">
       <div class="node-brand">
         <span class="badge-tag">TIER 3</span>
-        <span class="node-title"><span class="blink-dot"></span>NODE 0x7F SUBTERRANEAN RELAY &amp; WAREZ NFO LAB</span>
+        <span class="node-title"><span class="blink-dot"></span>NODE 0x7F SUBTERRANEAN RELAY &amp; CRYPTOGRAPHY LAB</span>
       </div>
       <div class="top-controls">
         <button class="action-btn" id="btnAudioMute" onclick="toggleAudioMute()">🔊 AUDIO: ON</button>
@@ -828,6 +1077,7 @@
           <option value="0">Track 1: Lithospheric Resonance 0x7F (SPC700 Delay)</option>
           <option value="1">Track 2: Underground Warez NFO Courier (YM2612 Bells)</option>
           <option value="2">Track 3: Deep Salt Vault Subcarrier (1999Hz Ambient)</option>
+          <option value="3">Track 4: Lithospheric Cipher Suite (FM Slap Bass &amp; Delay)</option>
         </select>
         <button class="action-btn" id="btnPlayMusic" onclick="toggleMusicPlayback()">▶️ PLAY</button>
         <label for="rngVol" style="color:var(--phosphor-dim); font-size:11px;">VOL:</label>
@@ -878,6 +1128,8 @@
     <button class="tab-btn" onclick="switchTab('mesh')">[7] SIGNAL MESH</button>
     <button class="tab-btn" onclick="switchTab('spool')">[8] ARCHIVAL SPOOLS</button>
     <button class="tab-btn" onclick="switchTab('directory')">[9] SUBTERRANEAN DIRECTORY</button>
+    <button class="tab-btn" onclick="switchTab('crypto-lab')">[10] CRYPTOGRAPHY LAB</button>
+    <button class="tab-btn" onclick="switchTab('topology')">[11] RELAY TOPOLOGY SWITCHBOARD</button>
   </nav>
 
   <!-- Main Workspaces -->
@@ -1594,6 +1846,344 @@
         </div>
       </div>
     </section>
+
+    <!-- TAB 10: CRYPTOGRAPHY LAB & ADVANCED CIPHER WORKBENCH -->
+    <section id="panel-crypto-lab" class="tab-panel">
+      <!-- Sub-navigation for Cryptography Lab -->
+      <div class="crypto-subnav">
+        <button class="crypto-subnav-btn active" onclick="switchCryptoSubpane('feistel')">FEISTEL NETWORK / S-BOX</button>
+        <button class="crypto-subnav-btn" onclick="switchCryptoSubpane('rc4')">RC4 STREAM S-BOX VISUALIZER</button>
+        <button class="crypto-subnav-btn" onclick="switchCryptoSubpane('otp')">ONE-TIME PAD (OTP) VAULT</button>
+        <button class="crypto-subnav-btn" onclick="switchCryptoSubpane('pgp')">PGP 1999 KEYRING &amp; ARMOR</button>
+      </div>
+
+      <!-- SUBPANE 1: FEISTEL NETWORK / S-BOX BLOCK CIPHER -->
+      <div id="subpane-feistel" class="crypto-subpane active">
+        <div class="workbench-grid">
+          <!-- Feistel Controls & Stepper -->
+          <div class="workbench-panel">
+            <div class="panel-title">
+              <span>FEISTEL BLOCK CIPHER SIMULATOR (64-BIT / DES-LITE)</span>
+              <span style="font-size:11px; color:var(--phosphor-dim);">ROUND-BY-ROUND DIFFUSION</span>
+            </div>
+            <p style="font-size:11.5px; color:#a7f3d0;">
+              Simulates a classic 1999 Feistel multi-round block cipher with non-linear S-Box substitution and bit permutation.
+              Formula: <code>L<sub>i+1</sub> = R<sub>i</sub></code> &bull; <code>R<sub>i+1</sub> = L<sub>i</sub> &oplus; F(R<sub>i</sub>, K<sub>i</sub>)</code>.
+            </p>
+
+            <div class="ctrl-row">
+              <label style="font-size:11px;">PLAINTEXT (8 CHARS / 64-BIT):</label>
+              <input type="text" id="feistelPlain" class="custom-input" maxlength="8" value="NODE0x7F" style="width:105px;" oninput="initFeistelCipher()" />
+              <label style="font-size:11px;">KEY:</label>
+              <input type="text" id="feistelKey" class="custom-input" maxlength="8" value="1999LOCK" style="width:105px;" oninput="initFeistelCipher()" />
+              <label style="font-size:11px;">ROUNDS:</label>
+              <select id="feistelRoundsSel" class="custom-select" onchange="initFeistelCipher()">
+                <option value="4">4 Rounds (Fast)</option>
+                <option value="8" selected>8 Rounds (Standard)</option>
+                <option value="16">16 Rounds (DES Level)</option>
+              </select>
+            </div>
+
+            <div class="ctrl-row" style="margin-top:6px;">
+              <button class="action-btn" onclick="stepFeistelRound()">▶️ STEP ROUND</button>
+              <button class="action-btn" onclick="runAllFeistelRounds()">⚡ EXECUTE ALL ROUNDS</button>
+              <button class="action-btn" onclick="initFeistelCipher()">🔄 RESET CIPHER</button>
+              <button class="action-btn" onclick="runAvalancheTest()">📊 RUN AVALANCHE TEST</button>
+            </div>
+
+            <!-- Registers Display -->
+            <div class="feistel-reg-box" style="margin-top:8px;">
+              <div class="feistel-half" id="boxRegL">
+                <span style="font-size:11px; font-weight:bold; color:var(--phosphor-bright);">LEFT REGISTER (L):</span>
+                <span class="telemetry-val" id="valFeistelLHex">0x4E4F4445</span>
+                <div class="feistel-bit-display" id="valFeistelLBin">01001110 01001111 01000100 01000101</div>
+              </div>
+              <div class="feistel-half" id="boxRegR">
+                <span style="font-size:11px; font-weight:bold; color:var(--phosphor-bright);">RIGHT REGISTER (R):</span>
+                <span class="telemetry-val" id="valFeistelRHex">0x30783746</span>
+                <div class="feistel-bit-display" id="valFeistelRBin">00110000 01111000 00110111 01000110</div>
+              </div>
+            </div>
+
+            <!-- Current Round Status Bar -->
+            <div class="stats-bar" style="margin-top:6px;">
+              <span>CURRENT ROUND: <strong id="lblFeistelRound">0 / 8</strong></span>
+              <span>SUBKEY (K<sub>i</sub>): <strong id="lblFeistelSubkey">0x00000000</strong></span>
+              <span>STATE: <strong id="lblFeistelState">INITIALIZED</strong></span>
+            </div>
+
+            <!-- Avalanche Meter Display -->
+            <div style="display:flex; flex-direction:column; gap:4px; margin-top:8px;">
+              <div style="display:flex; justify-content:space-between; font-size:11px;">
+                <span>AVALANCHE EFFECT DIFFUSION:</span>
+                <strong id="lblAvalanchePct" style="color:var(--phosphor-bright);">0.0% (0 / 64 bits flipped)</strong>
+              </div>
+              <div class="avalanche-meter-bar">
+                <div class="avalanche-meter-fill" id="barAvalanche"></div>
+              </div>
+              <span style="font-size:10px; color:var(--phosphor-dim);">Ideal cryptographic diffusion approaches ~50% bit flip after 4–8 rounds.</span>
+            </div>
+          </div>
+
+          <!-- S-Box & P-Box Inspector -->
+          <div class="workbench-panel">
+            <div class="panel-title">
+              <span>NON-LINEAR S-BOX SUBSTITUTION MATRIX &amp; ROUND TRACE</span>
+              <span style="font-size:11px; color:var(--phosphor-dim);">8x8 S-BOX TABLE</span>
+            </div>
+            <p style="font-size:11px; color:var(--phosphor-dim);">
+              The S-Box provides cryptographic non-linearity (Shannon confusion). Hover over cells to inspect byte mappings.
+            </p>
+
+            <div id="feistelSBoxGrid" class="sbox-matrix-grid">
+              <!-- Dynamically rendered 256 cells -->
+            </div>
+
+            <div class="panel-title" style="margin-top:6px;">
+              <span>ROUND-BY-ROUND EXECUTION LOG</span>
+              <button class="chip-btn" onclick="clearFeistelTrace()">CLEAR TRACE</button>
+            </div>
+            <div id="feistelTraceLog" style="height:110px; overflow-y:auto; background:#000; border:1px solid var(--panel-border); padding:6px; font-size:10.5px; font-family:var(--font-mono); line-height:1.4;">
+              [SYSTEM] Feistel engine primed for 64-bit block encryption.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBPANE 2: RC4 STREAM S-BOX VISUALIZER -->
+      <div id="subpane-rc4" class="crypto-subpane">
+        <div class="workbench-panel">
+          <div class="panel-title">
+            <span>RC4 STREAM CIPHER STATE VISUALIZER (256-BYTE S-BOX MATRIX)</span>
+            <span style="font-size:11px; color:var(--phosphor-bright);">KSA &amp; PRGA STEPPER</span>
+          </div>
+          <p style="font-size:11.5px; color:#a7f3d0;">
+            Visualizes the famous Ron Rivest RC4 stream cipher state table (S[0..255]). Watch the Key-Scheduling Algorithm (KSA) permute the state array, and Pseudo-Random Generation Algorithm (PRGA) produce the keystream.
+          </p>
+
+          <div class="ctrl-row">
+            <label style="font-size:11px;">PASSPHRASE:</label>
+            <input type="text" id="rc4Key" class="custom-input" value="NODE0x7F_HALITE" style="width:160px;" />
+            <button class="action-btn" onclick="initRc4Cipher()">🔄 INITIALIZE S-BOX</button>
+            <button class="action-btn" onclick="stepRc4Ksa()">▶️ STEP KSA (i=<span id="lblKsaI">0</span>)</button>
+            <button class="action-btn" onclick="runRc4KsaFast()">⚡ COMPLETE KSA</button>
+            <button class="action-btn" onclick="stepRc4Prga()">🎲 GENERATE BYTE (PRGA)</button>
+            <button class="action-btn" onclick="toggleRc4AutoPrga()" id="btnAutoPrga">▶️ RUN PRGA STREAM</button>
+          </div>
+
+          <!-- RC4 16x16 State Matrix Grid -->
+          <div id="rc4MatrixGrid" class="sbox-matrix-grid" style="margin-top:6px;">
+            <!-- 256 cells dynamically rendered -->
+          </div>
+
+          <!-- RC4 Telemetry Ribbon -->
+          <div class="stats-bar" style="margin-top:6px;">
+            <span>POINTER i: <strong id="lblRc4I" style="color:var(--cyan);">0 (0x00)</strong></span>
+            <span>POINTER j: <strong id="lblRc4J" style="color:var(--warn);">0 (0x00)</strong></span>
+            <span>KSA PROGRESS: <strong id="lblRc4KsaProg">0 / 256</strong></span>
+            <span>KEYSTREAM BYTES: <strong id="lblRc4KeyCount">0 B</strong></span>
+          </div>
+
+          <!-- Generated Keystream & XOR Stream Panel -->
+          <div class="workbench-grid" style="margin-top:8px;">
+            <div>
+              <div style="font-size:11px; font-weight:bold; color:var(--phosphor-bright); margin-bottom:4px;">GENERATED KEYSTREAM (HEX):</div>
+              <textarea id="rc4KeystreamOut" class="custom-textarea" style="height:70px;" readonly placeholder="Keystream bytes will stream here..."></textarea>
+            </div>
+            <div>
+              <div style="font-size:11px; font-weight:bold; color:var(--phosphor-bright); margin-bottom:4px;">PLAINTEXT INPUT / ENCRYPTED STREAM:</div>
+              <div style="display:flex; gap:6px;">
+                <input type="text" id="rc4InputText" class="custom-input" style="flex:1;" value="CARLSBAD SUBTERRANEAN RELAY 1999" oninput="encryptRc4Stream()" />
+                <button class="action-btn" onclick="encryptRc4Stream()">ENCRYPT/DECRYPT</button>
+              </div>
+              <div id="rc4CipherOut" style="margin-top:4px; background:#000; border:1px solid var(--panel-border); padding:6px; font-size:11px; color:var(--phosphor-bright); font-family:var(--font-mono); min-height:40px; word-break:break-all;">
+                Ciphertext will appear here...
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBPANE 3: ONE-TIME PAD (OTP) VAULT -->
+      <div id="subpane-otp" class="crypto-subpane">
+        <div class="workbench-grid">
+          <div class="workbench-panel">
+            <div class="panel-title">
+              <span>ONE-TIME PAD (OTP) CYPHERPUNK VAULT</span>
+              <span style="font-size:11px; color:var(--phosphor-bright);">SHANNON PERFECT SECRECY</span>
+            </div>
+            <p style="font-size:11.5px; color:#a7f3d0;">
+              One-Time Pads provide mathematically unbreakable secrecy when keys are truly random, used once, and kept secret. Keys are formatted in classic 5-letter codebook blocks.
+            </p>
+
+            <div class="ctrl-row">
+              <label style="font-size:11px;">ENTROPY SOURCE:</label>
+              <select id="selOtpEntropy" class="custom-select">
+                <option value="geothermal">Carlsbad Geothermal Sensor Jitter (68.4°C)</option>
+                <option value="atmospheric">144.39MHz Atmospheric RF Noise</option>
+                <option value="halite">Halite Bedrock Resistance Drift (4.82 MΩ)</option>
+              </select>
+              <button class="action-btn" onclick="generateNewOtpSheet()">🎲 GENERATE NEW PAD SHEET</button>
+              <button class="action-btn" onclick="downloadOtpSheet()">💾 DOWNLOAD (.PAD)</button>
+            </div>
+
+            <!-- OTP Codebook Viewport -->
+            <div id="otpSheetBox" class="otp-sheet-container" style="margin-top:8px;"></div>
+
+            <div class="stats-bar">
+              <span>PAD SERIAL: <strong id="lblOtpSerial">CARLSBAD-PAD-0x7F</strong></span>
+              <span>PAGE: <strong id="lblOtpPage">01 / 99</strong></span>
+              <span>STATUS: <strong style="color:var(--phosphor-bright);">UNCONSUMED</strong></span>
+            </div>
+          </div>
+
+          <!-- OTP Encryption & Decryption Desk -->
+          <div class="workbench-panel">
+            <div class="panel-title">
+              <span>OTP ENCRYPTION &amp; VERNAM ARITHMETIC</span>
+              <span style="font-size:11px; color:var(--phosphor-dim);">MODULO 26 COURIER CIPHER</span>
+            </div>
+
+            <label style="font-size:11px;">PLAINTEXT MESSAGE:</label>
+            <textarea id="otpPlainIn" class="custom-textarea" style="height:70px;" placeholder="Enter message to encrypt with active One-Time Pad sheet...">MEET AT CARLSBAD SALTWATER GROUND LOOP 2359 MST</textarea>
+
+            <div class="ctrl-row" style="justify-content:space-between; margin-top:4px;">
+              <div class="ctrl-row">
+                <button class="action-btn" onclick="executeOtpEncrypt()">🔒 ENCRYPT (MSG + PAD mod 26)</button>
+                <button class="action-btn" onclick="executeOtpDecrypt()">🔓 DECRYPT (CIPHER - PAD mod 26)</button>
+              </div>
+              <button class="chip-btn" onclick="copyOtpOutput()">📋 COPY OUTPUT</button>
+            </div>
+
+            <label style="font-size:11px; margin-top:6px;">CIPHERTEXT OUTPUT (5-LETTER CODEBOOK BLOCKS):</label>
+            <textarea id="otpCipherOut" class="custom-textarea" style="height:70px;" readonly placeholder="Encrypted 5-letter ciphertext blocks..."></textarea>
+
+            <div id="otpMathBreakdown" style="background:#000; border:1px solid var(--panel-border); padding:6px; font-size:10.5px; font-family:var(--font-mono); color:#a7f3d0; line-height:1.4;">
+              Math breakdown: P(M) + K(X) = C mod 26 will display on execution.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUBPANE 4: PGP 1999 KEYRING & ARMOR -->
+      <div id="subpane-pgp" class="crypto-subpane">
+        <div class="workbench-panel">
+          <div class="panel-title">
+            <span>PRETTY GOOD PRIVACY (PGP 2.6 / 5.0) SUBTERRANEAN KEYRING</span>
+            <span style="font-size:11px; color:var(--phosphor-dim);">RFC 2440 RADIX-64 ASCII ARMOR</span>
+          </div>
+
+          <div class="pgp-keys-grid" id="pgpKeyringList">
+            <!-- 5 diegetic keys rendered dynamically -->
+          </div>
+
+          <div class="workbench-grid" style="margin-top:10px;">
+            <!-- Armor Message Workspace -->
+            <div>
+              <div class="panel-title">
+                <span>ENCRYPT TO RECIPIENT PGP KEY</span>
+                <select id="selPgpRecipient" class="custom-select" style="font-size:11px;">
+                  <option value="0x7F199942">SysOp@Node0x7F [0x7F199942]</option>
+                  <option value="0xFLT99A20">HexVector [FLARELIGHT] [0xFLT99A20]</option>
+                  <option value="0x1999ECHO">Dr. Vance [Echo Subsystem] [0x1999ECHO]</option>
+                  <option value="0xAETHEL03">Agent K [Aethel Dynamics] [0xAETHEL03]</option>
+                  <option value="0x00DEEPC0">Root [Deep Core Ring-0] [0x00DEEPC0]</option>
+                </select>
+              </div>
+              <textarea id="pgpMsgInput" class="custom-textarea" style="height:120px;" placeholder="Enter message to armor with recipient's public key...">Sector 03 telemetry confirmed. Carlsbad Node 0x7F transponder synchronized at 1999Hz.</textarea>
+              <div class="ctrl-row" style="margin-top:6px;">
+                <button class="action-btn" onclick="armorPgpMessage()">🛡️ GENERATE PGP ASCII ARMOR</button>
+                <button class="action-btn" onclick="generateNewPgpKey()">🔑 GENERATE USER KEYPAIR</button>
+              </div>
+            </div>
+
+            <!-- Armored Output & Verification -->
+            <div>
+              <div class="panel-title">
+                <span>ASCII ARMORED PGP MESSAGE &amp; RADIX-64 CRC24</span>
+                <button class="chip-btn" onclick="copyPgpArmor()">📋 COPY ARMOR</button>
+              </div>
+              <textarea id="pgpArmorOutput" class="custom-textarea" style="height:120px;" placeholder="-----BEGIN PGP MESSAGE----- will appear here..."></textarea>
+              <div class="ctrl-row" style="margin-top:6px;">
+                <button class="action-btn" onclick="verifyAndDecryptPgpArmor()">🔓 VERIFY &amp; DECRYPT ARMOR</button>
+                <span id="lblPgpStatus" style="font-size:11px; color:var(--phosphor-bright);">READY</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 11: LITHOSPHERIC RELAY TOPOLOGY SWITCHBOARD -->
+    <section id="panel-topology" class="tab-panel">
+      <div class="topology-wrap">
+        <div class="panel-title">
+          <span>SUBTERRANEAN 10.19.99.0/24 LITHOSPHERIC RELAY TOPOLOGY RADAR</span>
+          <span style="font-size:11px; color:var(--phosphor-bright);">CARLSBAD BEDROCK SWITCHBOARD // DIJKSTRA FAILOVER ENGINE</span>
+        </div>
+
+        <p style="font-size:11.5px; color:#a7f3d0;">
+          Interactive 2D lithospheric waveguide map connecting underground nodes across New Mexico and West Texas halite formations. Click nodes to inspect sensor telemetry; click links to toggle waveguide faults and observe dynamic route recalculation in real time.
+        </p>
+
+        <!-- Canvas Box -->
+        <div class="topology-canvas-box">
+          <canvas id="topologyCanvas" width="1150" height="380"></canvas>
+          <div class="topology-hud-overlay">
+            <div>MESH SUBNET: <strong>10.19.99.0/24</strong></div>
+            <div>STATION ANCHOR: <strong>Node 0x7F (Carlsbad, NM)</strong></div>
+            <div>STATUS: <strong id="topolHudStatus" style="color:var(--phosphor-bright);">ALL WAVEGUIDES NOMINAL</strong></div>
+          </div>
+          <div class="topology-hud-right">
+            <div>CARRIER FREQ: <strong>144.390 MHz</strong></div>
+            <div>SUBCARRIER: <strong>1999.002 Hz</strong></div>
+            <div>ACTIVE HOPS: <strong id="topolHudHops" style="color:var(--cyan);">3 HOPS</strong></div>
+            <div>ROUTE LATENCY: <strong id="topolHudLatency" style="color:var(--phosphor-bright);">3.4 ms</strong></div>
+          </div>
+        </div>
+
+        <!-- Controls Bar -->
+        <div class="topology-ctrl-bar">
+          <div class="ctrl-row">
+            <label style="font-size:11px;">PROBE DESTINATION:</label>
+            <select id="selProbeDest" class="custom-select" onchange="selectTopologyTarget(this.value)">
+              <option value="deep_core">10.19.99.127 [Deep Core Ring-0 Bus]</option>
+              <option value="aethel">10.19.99.4 [Aethel Dynamics Classified]</option>
+              <option value="echo">10.19.99.1 [Echo Subsystem Acoustic Lab]</option>
+              <option value="bbs">10.19.99.254 [Litho-BBS Dialup Relay]</option>
+              <option value="pacific">PACIFIC_MCI [Pacific MCI Transit Cavern]</option>
+              <option value="cheyenne">CHEYENNE_MTN [Cheyenne Mountain Halite]</option>
+            </select>
+            <button class="action-btn" onclick="launchTopologyProbe()">📡 TRANSMIT LITHO PROBE</button>
+            <button class="action-btn" onclick="simulateSeismicDisturbance()">⚡ SEISMIC DISTURBANCE</button>
+            <button class="action-btn" onclick="restoreAllLinks()">🔄 RESTORE ALL LINKS</button>
+          </div>
+          <div class="ctrl-row">
+            <button class="action-btn" onclick="downloadTopologyRoutes()">💾 EXPORT ROUTES.CONF</button>
+          </div>
+        </div>
+
+        <!-- Node Telemetry Inspector -->
+        <div class="topology-node-card" id="topolNodeCard">
+          <div>NODE ID: <strong id="topolNodeName" style="color:var(--phosphor-bright);">10.19.99.127 (Deep Core)</strong></div>
+          <div>LOCATION: <span id="topolNodeLoc" style="color:var(--cyan);">Underground Halite Ring-0</span></div>
+          <div>DEPTH: <span id="topolNodeDepth">3,200 meters</span></div>
+          <div>GEOTHERMAL: <span id="topolNodeTemp">71.2 °C</span></div>
+          <div>PRESSURE: <span id="topolNodePress">86.1 MPa</span></div>
+          <div>CARRIER: <span id="topolNodeCarrier" style="color:var(--phosphor);">LOCKED (1999Hz)</span></div>
+        </div>
+
+        <!-- Real-time Topology Log -->
+        <div class="panel-title" style="margin-top:2px;">
+          <span>SWITCHBOARD TELEMETRY &amp; PACKET DISPATCH CONSOLE</span>
+          <button class="chip-btn" onclick="document.getElementById('topolEventLog').innerHTML=''">CLEAR LOG</button>
+        </div>
+        <div class="topology-event-log" id="topolEventLog">
+          <div>[00:00:00] Subterranean 10.19.99.0/24 Lithospheric Mesh Router initialized. 7 nodes, 10 waveguides active.</div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <!-- Webring Navigation & Diegetic Footer -->
@@ -1754,6 +2344,42 @@ class DarknetSoundEngine {
     osc.stop(now + 0.07);
   }
 
+  playBell202Handshake() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(2100, now);
+    gain.gain.setValueAtTime(0.04, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    osc.connect(gain);
+    gain.connect(this.masterGain || this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.12);
+    setTimeout(() => this.playPacketBurst(), 130);
+  }
+
+  playCipherStep() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(1400 + Math.random() * 400, now);
+    osc.frequency.exponentialRampToValueAtTime(300, now + 0.03);
+    gain.gain.setValueAtTime(0.03, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.03);
+    osc.connect(gain);
+    gain.connect(this.masterGain || this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.03);
+  }
+
   playTone(freq, durationMs) {
     if (this.muted) return;
     this.init();
@@ -1852,6 +2478,17 @@ class DarknetSoundEngine {
         { bass: 73.42, lead: 1999 }, { bass: 0, lead: 880 },
         { bass: 65.41, lead: 1999 }, { bass: 0, lead: 0 },
         { bass: 82.41, lead: 1999 }, { bass: 0, lead: 1318.51 }
+      ],
+      // Track 4: Lithospheric Cipher Suite (FM Slap Bass & Stereo Delay)
+      [
+        { bass: 73.42, lead: 293.66 }, { bass: 0, lead: 440.00 },
+        { bass: 146.83, lead: 587.33 }, { bass: 73.42, lead: 880.00 },
+        { bass: 82.41, lead: 329.63 }, { bass: 0, lead: 493.88 },
+        { bass: 164.81, lead: 659.25 }, { bass: 82.41, lead: 987.77 },
+        { bass: 98.00, lead: 392.00 }, { bass: 0, lead: 587.33 },
+        { bass: 196.00, lead: 783.99 }, { bass: 98.00, lead: 1174.66 },
+        { bass: 87.31, lead: 349.23 }, { bass: 0, lead: 523.25 },
+        { bass: 174.61, lead: 698.46 }, { bass: 110.00, lead: 1999.00 }
       ]
     ];
 
@@ -1992,7 +2629,7 @@ function toggleScanlines() {
    ========================================================================= */
 function switchTab(tabId) {
   snd.playKeyClick();
-  const tabs = ['terminal', 'warez-nfo', 'decoder', 'sniffer', 'spectrum', 'puzzle-relay', 'mesh', 'spool', 'directory'];
+  const tabs = ['terminal', 'warez-nfo', 'decoder', 'sniffer', 'spectrum', 'puzzle-relay', 'mesh', 'spool', 'directory', 'crypto-lab', 'topology'];
   tabs.forEach(t => {
     const panel = document.getElementById('panel-' + t);
     if (panel) panel.classList.remove('active');
@@ -2008,9 +2645,15 @@ function switchTab(tabId) {
     const text = b.textContent.toLowerCase();
     if (tabId === 'warez-nfo') return text.includes('warez');
     if (tabId === 'puzzle-relay') return text.includes('gated');
+    if (tabId === 'crypto-lab') return text.includes('crypto');
+    if (tabId === 'topology') return text.includes('topology');
     return text.includes(tabId);
   });
   if (activeBtn) activeBtn.classList.add('active');
+
+  if (tabId === 'topology' && typeof resizeTopologyCanvas === 'function') {
+    setTimeout(resizeTopologyCanvas, 50);
+  }
 }
 
 /* =========================================================================
@@ -2132,7 +2775,16 @@ function processTerminalCommand(cmdStr) {
   carrier <on|off>   - Toggle 1999Hz harmonic subcarrier tone
   theme <name>       - Switch phosphor theme (green, amber, cyan, alert)
   clear              - Flush terminal screen buffer
-  export             - Download terminal log as .txt file`
+  export             - Download terminal log as .txt file
+  crypto             - Open Cryptography Lab (Feistel & RC4 Engines)
+  feistel            - Inspect multi-round Feistel substitution cipher
+  rc4                - Open RC4 256-byte S-box permutation stepper
+  otp                - Open One-Time Pad generator & cipher desk
+  pgp                - Open PGP 1999 ASCII armor & keyring vault
+  router / topology  - Open 2D Lithospheric Relay Topology Switchboard
+  probe <node>       - Transmit out-of-band lithospheric probe packet
+  quicksave / save   - Quicksave station state to localStorage (F5)
+  quickload / load   - Quickload station state from localStorage (F9)`
       );
       break;
 
@@ -2298,6 +2950,62 @@ All parity checksums valid across 999KB boundaries.`
         switchTab('decoder');
         executeDecoder();
       }
+      break;
+
+    case 'crypto':
+    case 'cipher':
+      switchTab('crypto-lab');
+      printTerminal('[NAVIGATION] Transferred to Cryptography Lab.');
+      break;
+
+    case 'feistel':
+      switchTab('crypto-lab');
+      switchCryptoSubpane('feistel');
+      printTerminal('[FEISTEL] Feistel block cipher simulator primed.');
+      break;
+
+    case 'rc4':
+      switchTab('crypto-lab');
+      switchCryptoSubpane('rc4');
+      printTerminal('[RC4] RC4 S-Box state matrix visualizer primed.');
+      break;
+
+    case 'otp':
+      switchTab('crypto-lab');
+      switchCryptoSubpane('otp');
+      printTerminal('[OTP] One-Time Pad cypherpunk vault opened.');
+      break;
+
+    case 'pgp':
+    case 'keys':
+      switchTab('crypto-lab');
+      switchCryptoSubpane('pgp');
+      printTerminal('[PGP] PGP 1999 keyring & ASCII armor vault opened.');
+      break;
+
+    case 'router':
+    case 'topology':
+    case 'radar':
+      switchTab('topology');
+      printTerminal('[TOPOLOGY] Switched to Subterranean 10.19.99.0/24 Mesh Radar.');
+      break;
+
+    case 'probe':
+      switchTab('topology');
+      if (arg) {
+        document.getElementById('selProbeDest').value = arg.includes('4') ? 'aethel' : (arg.includes('127') ? 'deep_core' : 'echo');
+      }
+      launchTopologyProbe();
+      break;
+
+    case 'quicksave':
+    case 'save':
+      quicksaveStationState();
+      break;
+
+    case 'quickload':
+    case 'load':
+      quickloadStationState();
       break;
 
     case 'clear':
@@ -3815,6 +4523,1210 @@ function downloadRomBinary() {
   a.click();
   document.body.removeChild(a);
 }
+
+
+/* =========================================================================
+   TAB 10: CRYPTOGRAPHY LAB LOGIC (FEISTEL, RC4, OTP, PGP)
+   ========================================================================= */
+
+function switchCryptoSubpane(paneKey) {
+  snd.playKeyClick();
+  const panes = ['feistel', 'rc4', 'otp', 'pgp'];
+  panes.forEach(p => {
+    const el = document.getElementById('subpane-' + p);
+    if (el) el.classList.remove('active');
+  });
+  const target = document.getElementById('subpane-' + paneKey);
+  if (target) target.classList.add('active');
+
+  const btns = document.querySelectorAll('.crypto-subnav-btn');
+  btns.forEach(b => b.classList.remove('active'));
+  const activeBtn = Array.from(btns).find(b => b.textContent.toLowerCase().includes(paneKey));
+  if (activeBtn) activeBtn.classList.add('active');
+}
+
+/* --- Feistel Network & Non-Linear S-Box Implementation --- */
+const FEISTEL_SBOX = [
+  0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
+  0xca, 0x82, 0xc9, 0x7d, 0xfa, 0x59, 0x47, 0xf0, 0xad, 0xd4, 0xa2, 0xaf, 0x9c, 0xa4, 0x72, 0xc0,
+  0xb7, 0xfd, 0x93, 0x26, 0x36, 0x3f, 0xf7, 0xcc, 0x34, 0xa5, 0xe5, 0xf1, 0x71, 0xd8, 0x31, 0x15,
+  0x04, 0xc7, 0x23, 0xc3, 0x18, 0x96, 0x05, 0x9a, 0x07, 0x12, 0x80, 0xe2, 0xeb, 0x27, 0xb2, 0x75,
+  0x09, 0x83, 0x2c, 0x1a, 0x1b, 0x6e, 0x5a, 0xa0, 0x52, 0x3b, 0xd6, 0xb3, 0x29, 0xe3, 0x2f, 0x84,
+  0x53, 0xd1, 0x00, 0xed, 0x20, 0xfc, 0xb1, 0x5b, 0x6a, 0xcb, 0xbe, 0x39, 0x4a, 0x4c, 0x58, 0xcf,
+  0xd0, 0xef, 0xaa, 0xfb, 0x43, 0x4d, 0x33, 0x85, 0x45, 0xf9, 0x02, 0x7f, 0x50, 0x3c, 0x9f, 0xa8,
+  0x51, 0xa3, 0x40, 0x8f, 0x92, 0x9d, 0x38, 0xf5, 0xbc, 0xb6, 0xda, 0x21, 0x10, 0xff, 0xf3, 0xd2,
+  0xcd, 0x0c, 0x13, 0xec, 0x5f, 0x97, 0x44, 0x17, 0xc4, 0xa7, 0x7e, 0x3d, 0x64, 0x5d, 0x19, 0x73,
+  0x60, 0x81, 0x4f, 0xdc, 0x22, 0x2a, 0x90, 0x88, 0x46, 0xee, 0xb8, 0x14, 0xde, 0x5e, 0x0b, 0xdb,
+  0xe0, 0x32, 0x3a, 0x0a, 0x49, 0x06, 0x24, 0x5c, 0xc2, 0xd3, 0xac, 0x62, 0x91, 0x95, 0xe4, 0x79,
+  0xe7, 0xc8, 0x37, 0x6d, 0x8d, 0xd5, 0x4e, 0xa9, 0x6c, 0x56, 0xf4, 0xea, 0x65, 0x7a, 0xae, 0x08,
+  0xba, 0x78, 0x25, 0x2e, 0x1c, 0xa6, 0xb4, 0xc6, 0xe8, 0xdd, 0x74, 0x1f, 0x4b, 0xbd, 0x8b, 0x8a,
+  0x70, 0x3e, 0xb5, 0x66, 0x48, 0x03, 0xf6, 0x0e, 0x61, 0x35, 0x57, 0xb9, 0x86, 0xc1, 0x1d, 0x9e,
+  0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf,
+  0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16
+];
+
+let feistelState = {
+  L: 0,
+  R: 0,
+  round: 0,
+  maxRounds: 8,
+  subkeys: [],
+  trace: []
+};
+
+function strTo32BitPair(str) {
+  const padded = (str + "        ").substring(0, 8);
+  let l = 0, r = 0;
+  for (let i = 0; i < 4; i++) {
+    l = (l << 8) | padded.charCodeAt(i);
+    r = (r << 8) | padded.charCodeAt(i + 4);
+  }
+  return { L: l >>> 0, R: r >>> 0 };
+}
+
+function toHex32(n) {
+  return "0x" + (n >>> 0).toString(16).padStart(8, "0").toUpperCase();
+}
+
+function toBin32(n) {
+  const s = (n >>> 0).toString(2).padStart(32, "0");
+  return `${s.substr(0,8)} ${s.substr(8,8)} ${s.substr(16,8)} ${s.substr(24,8)}`;
+}
+
+function feistelRoundFunction(R, subkey) {
+  let mixed = (R ^ subkey) >>> 0;
+  let b0 = FEISTEL_SBOX[(mixed >>> 24) & 0xFF];
+  let b1 = FEISTEL_SBOX[(mixed >>> 16) & 0xFF];
+  let b2 = FEISTEL_SBOX[(mixed >>> 8) & 0xFF];
+  let b3 = FEISTEL_SBOX[mixed & 0xFF];
+  let substituted = ((b0 << 24) | (b1 << 16) | (b2 << 8) | b3) >>> 0;
+  // P-box bit permutation (rotate left 11 ^ rotate right 5)
+  let pbox = (((substituted << 11) | (substituted >>> 21)) ^ ((substituted >>> 5) | (substituted << 27))) >>> 0;
+  return pbox;
+}
+
+function initFeistelCipher() {
+  const plain = document.getElementById('feistelPlain').value || "NODE0x7F";
+  const key = document.getElementById('feistelKey').value || "1999LOCK";
+  const rounds = parseInt(document.getElementById('feistelRoundsSel').value) || 8;
+
+  const pair = strTo32BitPair(plain);
+  const keyPair = strTo32BitPair(key);
+
+  feistelState.L = pair.L;
+  feistelState.R = pair.R;
+  feistelState.round = 0;
+  feistelState.maxRounds = rounds;
+  feistelState.subkeys = [];
+  feistelState.trace = [];
+
+  // Generate round subkeys
+  for (let r = 0; r < rounds; r++) {
+    const k = (((keyPair.L << (r * 3)) | (keyPair.L >>> (32 - (r * 3)))) ^ (0x7F * (r + 1)) ^ keyPair.R) >>> 0;
+    feistelState.subkeys.push(k);
+  }
+
+  updateFeistelDisplay();
+  renderFeistelSBox();
+  logFeistelTrace(`[INIT] Plaintext '${plain}' split into L0=${toHex32(pair.L)}, R0=${toHex32(pair.R)}. Max rounds: ${rounds}.`);
+  document.getElementById('barAvalanche').style.width = '0%';
+  document.getElementById('lblAvalanchePct').textContent = '0.0% (0 / 64 bits flipped)';
+}
+
+function updateFeistelDisplay() {
+  document.getElementById('valFeistelLHex').textContent = toHex32(feistelState.L);
+  document.getElementById('valFeistelLBin').textContent = toBin32(feistelState.L);
+  document.getElementById('valFeistelRHex').textContent = toHex32(feistelState.R);
+  document.getElementById('valFeistelRBin').textContent = toBin32(feistelState.R);
+  document.getElementById('lblFeistelRound').textContent = `${feistelState.round} / ${feistelState.maxRounds}`;
+  const subkey = feistelState.subkeys[feistelState.round] || 0;
+  document.getElementById('lblFeistelSubkey').textContent = toHex32(subkey);
+  document.getElementById('lblFeistelState').textContent = feistelState.round >= feistelState.maxRounds ? 'COMPLETED (CIPHERTEXT)' : 'ROUND READY';
+}
+
+function stepFeistelRound() {
+  if (feistelState.round >= feistelState.maxRounds) {
+    alert("Feistel encryption completed. Click 'RESET CIPHER' to restart.");
+    return;
+  }
+  snd.playCipherStep();
+  const r = feistelState.round;
+  const k = feistelState.subkeys[r];
+  const F_val = feistelRoundFunction(feistelState.R, k);
+  const nextL = feistelState.R;
+  const nextR = (feistelState.L ^ F_val) >>> 0;
+
+  logFeistelTrace(`[ROUND ${r + 1}] L=${toHex32(nextL)}, R=${toHex32(nextR)} (F-out=${toHex32(F_val)})`);
+
+  feistelState.L = nextL;
+  feistelState.R = nextR;
+  feistelState.round++;
+  updateFeistelDisplay();
+
+  // Pulse register visual feedback
+  const boxL = document.getElementById('boxRegL');
+  const boxR = document.getElementById('boxRegR');
+  boxL.classList.add('active-reg');
+  boxR.classList.add('active-reg');
+  setTimeout(() => {
+    boxL.classList.remove('active-reg');
+    boxR.classList.remove('active-reg');
+  }, 200);
+
+  if (feistelState.round >= feistelState.maxRounds) {
+    snd.playRelayUnlockAffirmation();
+    logFeistelTrace(`[COMPLETE] 64-bit Ciphertext Block: ${toHex32(feistelState.L)}${toHex32(feistelState.R).substring(2)}`);
+  }
+}
+
+function runAllFeistelRounds() {
+  while (feistelState.round < feistelState.maxRounds) {
+    stepFeistelRound();
+  }
+}
+
+function runAvalancheTest() {
+  snd.playFMChirp(600);
+  const plain = document.getElementById('feistelPlain').value || "NODE0x7F";
+  const key = document.getElementById('feistelKey').value || "1999LOCK";
+  const rounds = feistelState.maxRounds;
+
+  // Run original
+  let p1 = strTo32BitPair(plain);
+  let p2 = strTo32BitPair(plain);
+  // Flip bit 0 in L
+  p2.L ^= 1;
+
+  let origL = p1.L, origR = p1.R;
+  let pertL = p2.L, pertR = p2.R;
+
+  let roundStats = [];
+
+  for (let r = 0; r < rounds; r++) {
+    const k = feistelState.subkeys[r];
+    const F1 = feistelRoundFunction(origR, k);
+    origL = origR;
+    origR = (origL ^ F1) >>> 0;
+
+    const F2 = feistelRoundFunction(pertR, k);
+    pertL = pertR;
+    pertR = (pertL ^ F2) >>> 0;
+
+    // Hamming distance
+    let diff = ((origL ^ pertL) >>> 0) ^ ((origR ^ pertR) >>> 0);
+    let count = 0;
+    while (diff) {
+      count += diff & 1;
+      diff >>>= 1;
+    }
+    roundStats.push(count);
+  }
+
+  const finalDiff = roundStats[roundStats.length - 1];
+  const pct = ((finalDiff / 64) * 100).toFixed(1);
+  document.getElementById('barAvalanche').style.width = `${pct}%`;
+  document.getElementById('lblAvalanchePct').textContent = `${pct}% (${finalDiff} / 64 bits flipped)`;
+
+  logFeistelTrace(`[AVALANCHE TEST] 1-bit input flip yielded ${finalDiff} flipped bits at round ${rounds} (${pct}% diffusion). Ideal ~50%.`);
+}
+
+function renderFeistelSBox() {
+  const grid = document.getElementById('feistelSBoxGrid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 256; i++) {
+    const cell = document.createElement('div');
+    cell.className = 'sbox-cell';
+    cell.textContent = FEISTEL_SBOX[i].toString(16).padStart(2, '0').toUpperCase();
+    cell.title = `Byte 0x${i.toString(16).padStart(2, '0').toUpperCase()} -> 0x${cell.textContent}`;
+    grid.appendChild(cell);
+  }
+}
+
+function logFeistelTrace(msg) {
+  const box = document.getElementById('feistelTraceLog');
+  const d = document.createElement('div');
+  d.textContent = msg;
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+}
+
+function clearFeistelTrace() {
+  document.getElementById('feistelTraceLog').innerHTML = '';
+}
+
+/* --- RC4 Stream Cipher S-Box Visualizer --- */
+let rc4State = {
+  S: new Uint8Array(256),
+  i: 0,
+  j: 0,
+  key: "",
+  ksaDone: false,
+  keystream: [],
+  autoTimer: null
+};
+
+function initRc4Cipher() {
+  snd.playKeyClick();
+  const key = document.getElementById('rc4Key').value || "NODE0x7F";
+  rc4State.key = key;
+  rc4State.i = 0;
+  rc4State.j = 0;
+  rc4State.ksaDone = false;
+  rc4State.keystream = [];
+  if (rc4State.autoTimer) {
+    clearInterval(rc4State.autoTimer);
+    rc4State.autoTimer = null;
+    document.getElementById('btnAutoPrga').textContent = '▶️ RUN PRGA STREAM';
+  }
+
+  for (let idx = 0; idx < 256; idx++) {
+    rc4State.S[idx] = idx;
+  }
+
+  renderRc4Matrix();
+  document.getElementById('lblKsaI').textContent = '0';
+  document.getElementById('lblRc4I').textContent = '0 (0x00)';
+  document.getElementById('lblRc4J').textContent = '0 (0x00)';
+  document.getElementById('lblRc4KsaProg').textContent = '0 / 256';
+  document.getElementById('lblRc4KeyCount').textContent = '0 B';
+  document.getElementById('rc4KeystreamOut').value = '';
+  document.getElementById('rc4CipherOut').textContent = 'State array S[0..255] reset to identity permutation.';
+}
+
+function renderRc4Matrix() {
+  const grid = document.getElementById('rc4MatrixGrid');
+  grid.innerHTML = '';
+  for (let idx = 0; idx < 256; idx++) {
+    const cell = document.createElement('div');
+    cell.className = 'sbox-cell';
+    cell.id = 'rc4Cell_' + idx;
+    cell.textContent = rc4State.S[idx].toString(16).padStart(2, '0').toUpperCase();
+    if (idx === rc4State.i) cell.classList.add('highlight-i');
+    if (idx === rc4State.j) cell.classList.add('highlight-j');
+    grid.appendChild(cell);
+  }
+}
+
+function stepRc4Ksa() {
+  if (rc4State.ksaDone) {
+    alert("KSA key-scheduling already completed! Use 'GENERATE BYTE (PRGA)' to generate keystream.");
+    return;
+  }
+  snd.playCipherStep();
+  const klen = rc4State.key.length || 1;
+  const kCode = rc4State.key.charCodeAt(rc4State.i % klen);
+  rc4State.j = (rc4State.j + rc4State.S[rc4State.i] + kCode) & 0xFF;
+
+  // Swap S[i] and S[j]
+  const tmp = rc4State.S[rc4State.i];
+  rc4State.S[rc4State.i] = rc4State.S[rc4State.j];
+  rc4State.S[rc4State.j] = tmp;
+
+  rc4State.i++;
+  if (rc4State.i >= 256) {
+    rc4State.i = 0;
+    rc4State.j = 0;
+    rc4State.ksaDone = true;
+    snd.playRelayUnlockAffirmation();
+    document.getElementById('rc4CipherOut').textContent = 'KSA permutation finished! S-box thoroughly shuffled. Ready for PRGA stream generation.';
+  }
+
+  document.getElementById('lblKsaI').textContent = rc4State.i;
+  document.getElementById('lblRc4I').textContent = `${rc4State.i} (0x${rc4State.i.toString(16).padStart(2,'0').toUpperCase()})`;
+  document.getElementById('lblRc4J').textContent = `${rc4State.j} (0x${rc4State.j.toString(16).padStart(2,'0').toUpperCase()})`;
+  document.getElementById('lblRc4KsaProg').textContent = `${rc4State.ksaDone ? 256 : rc4State.i} / 256`;
+
+  renderRc4Matrix();
+}
+
+function runRc4KsaFast() {
+  snd.playFMChirp(550);
+  const klen = rc4State.key.length || 1;
+  while (!rc4State.ksaDone) {
+    const kCode = rc4State.key.charCodeAt(rc4State.i % klen);
+    rc4State.j = (rc4State.j + rc4State.S[rc4State.i] + kCode) & 0xFF;
+    const tmp = rc4State.S[rc4State.i];
+    rc4State.S[rc4State.i] = rc4State.S[rc4State.j];
+    rc4State.S[rc4State.j] = tmp;
+    rc4State.i++;
+    if (rc4State.i >= 256) {
+      rc4State.i = 0;
+      rc4State.j = 0;
+      rc4State.ksaDone = true;
+    }
+  }
+  document.getElementById('lblKsaI').textContent = '256';
+  document.getElementById('lblRc4I').textContent = '0 (0x00)';
+  document.getElementById('lblRc4J').textContent = '0 (0x00)';
+  document.getElementById('lblRc4KsaProg').textContent = '256 / 256 (DONE)';
+  renderRc4Matrix();
+  snd.playRelayUnlockAffirmation();
+  document.getElementById('rc4CipherOut').textContent = 'Instant KSA complete! Permuted 256-byte S-box array is armed.';
+}
+
+function stepRc4Prga() {
+  if (!rc4State.ksaDone) {
+    runRc4KsaFast();
+  }
+  snd.playKeyClick();
+  rc4State.i = (rc4State.i + 1) & 0xFF;
+  rc4State.j = (rc4State.j + rc4State.S[rc4State.i]) & 0xFF;
+
+  const tmp = rc4State.S[rc4State.i];
+  rc4State.S[rc4State.i] = rc4State.S[rc4State.j];
+  rc4State.S[rc4State.j] = tmp;
+
+  const kByte = rc4State.S[(rc4State.S[rc4State.i] + rc4State.S[rc4State.j]) & 0xFF];
+  rc4State.keystream.push(kByte);
+
+  document.getElementById('lblRc4I').textContent = `${rc4State.i} (0x${rc4State.i.toString(16).padStart(2,'0').toUpperCase()})`;
+  document.getElementById('lblRc4J').textContent = `${rc4State.j} (0x${rc4State.j.toString(16).padStart(2,'0').toUpperCase()})`;
+  document.getElementById('lblRc4KeyCount').textContent = `${rc4State.keystream.length} B`;
+
+  const hexStream = rc4State.keystream.map(b => b.toString(16).padStart(2, '0').toUpperCase()).join(' ');
+  document.getElementById('rc4KeystreamOut').value = hexStream;
+
+  renderRc4Matrix();
+  encryptRc4Stream();
+}
+
+function toggleRc4AutoPrga() {
+  const btn = document.getElementById('btnAutoPrga');
+  if (rc4State.autoTimer) {
+    clearInterval(rc4State.autoTimer);
+    rc4State.autoTimer = null;
+    btn.textContent = '▶️ RUN PRGA STREAM';
+  } else {
+    btn.textContent = '⏹️ STOP STREAM';
+    rc4State.autoTimer = setInterval(() => {
+      stepRc4Prga();
+      if (rc4State.keystream.length >= 128) {
+        clearInterval(rc4State.autoTimer);
+        rc4State.autoTimer = null;
+        btn.textContent = '▶️ RUN PRGA STREAM';
+      }
+    }, 90);
+  }
+}
+
+function encryptRc4Stream() {
+  const input = document.getElementById('rc4InputText').value;
+  if (!input) return;
+  // If not enough keystream, generate enough
+  if (!rc4State.ksaDone) runRc4KsaFast();
+  while (rc4State.keystream.length < input.length) {
+    rc4State.i = (rc4State.i + 1) & 0xFF;
+    rc4State.j = (rc4State.j + rc4State.S[rc4State.i]) & 0xFF;
+    const t = rc4State.S[rc4State.i];
+    rc4State.S[rc4State.i] = rc4State.S[rc4State.j];
+    rc4State.S[rc4State.j] = t;
+    rc4State.keystream.push(rc4State.S[(rc4State.S[rc4State.i] + rc4State.S[rc4State.j]) & 0xFF]);
+  }
+
+  const outHex = [];
+  const outChars = [];
+  for (let idx = 0; idx < input.length; idx++) {
+    const x = input.charCodeAt(idx) ^ rc4State.keystream[idx];
+    outHex.push(x.toString(16).padStart(2, '0').toUpperCase());
+    outChars.push(x >= 32 && x <= 126 ? String.fromCharCode(x) : '.');
+  }
+
+  document.getElementById('rc4CipherOut').textContent = `HEX: ${outHex.join(' ')}
+ASCII: ${outChars.join('')}`;
+}
+
+/* --- One-Time Pad (OTP) Implementation --- */
+let currentOtpPad = "";
+
+function generateNewOtpSheet() {
+  snd.playPacketBurst();
+  const serial = "CARLSBAD-PAD-" + Math.floor(1000 + Math.random() * 9000);
+  document.getElementById('lblOtpSerial').textContent = serial;
+
+  const lines = [];
+  lines.push(`TOP SECRET // CLASSIFIED SUBTERRANEAN CODEBOOK // 1999`);
+  lines.push(`SERIAL: ${serial}  PAGE: 01 / 99  ENTROPY: GEOTHERMAL JITTER`);
+  lines.push(`================================================================`);
+  lines.push(``);
+
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let rawLetters = "";
+
+  for (let row = 1; row <= 8; row++) {
+    let rowBlocks = [];
+    for (let blk = 0; blk < 5; blk++) {
+      let blockStr = "";
+      for (let c = 0; c < 5; c++) {
+        const ch = letters.charAt(Math.floor(Math.random() * 26));
+        blockStr += ch;
+        rawLetters += ch;
+      }
+      rowBlocks.push(blockStr);
+    }
+    const rNum = (row * 5).toString().padStart(3, '0');
+    lines.push(`[${rNum}]  ${rowBlocks.join('  ')}`);
+  }
+
+  lines.push(``);
+  lines.push(`================================================================`);
+  lines.push(`WARNING: ONE-TIME USE ONLY. DESTROY PAD IMMEDIATELY AFTER USE.`);
+
+  currentOtpPad = rawLetters;
+  document.getElementById('otpSheetBox').textContent = lines.join('
+');
+  printTerminal(`[OTP] Generated fresh pad sheet: ${serial} (200 random codebook characters).`);
+}
+
+function executeOtpEncrypt() {
+  snd.playKeyClick();
+  const input = document.getElementById('otpPlainIn').value.toUpperCase().replace(/[^A-Z]/g, '');
+  if (!input) {
+    alert("Please enter plaintext message consisting of letters.");
+    return;
+  }
+  if (!currentOtpPad) generateNewOtpSheet();
+
+  const pad = currentOtpPad;
+  let cipher = "";
+  const mathSteps = [];
+
+  for (let i = 0; i < input.length; i++) {
+    const pVal = input.charCodeAt(i) - 65;
+    const kVal = pad.charCodeAt(i % pad.length) - 65;
+    const cVal = (pVal + kVal) % 26;
+    cipher += String.fromCharCode(65 + cVal);
+
+    if (i < 5) {
+      mathSteps.push(`'${input[i]}'(${pVal}) + '${pad[i % pad.length]}'(${kVal}) = '${cipher[i]}'(${cVal})`);
+    }
+  }
+
+  // Format into 5-letter blocks
+  const blocks = [];
+  for (let i = 0; i < cipher.length; i += 5) {
+    blocks.push(cipher.substr(i, 5));
+  }
+  const formatted = blocks.join(' ');
+  document.getElementById('otpCipherOut').value = formatted;
+  document.getElementById('otpMathBreakdown').textContent = `Vernam Math Trace (first 5 chars):
+` + mathSteps.join(' | ') + ` [mod 26]`;
+  snd.playDecodeSuccess();
+}
+
+function executeOtpDecrypt() {
+  snd.playKeyClick();
+  const input = document.getElementById('otpCipherOut').value.toUpperCase().replace(/[^A-Z]/g, '');
+  if (!input) {
+    alert("Please ensure ciphertext is present in the ciphertext box.");
+    return;
+  }
+  if (!currentOtpPad) generateNewOtpSheet();
+
+  const pad = currentOtpPad;
+  let plain = "";
+  const mathSteps = [];
+
+  for (let i = 0; i < input.length; i++) {
+    const cVal = input.charCodeAt(i) - 65;
+    const kVal = pad.charCodeAt(i % pad.length) - 65;
+    let pVal = (cVal - kVal) % 26;
+    if (pVal < 0) pVal += 26;
+    plain += String.fromCharCode(65 + pVal);
+
+    if (i < 5) {
+      mathSteps.push(`'${input[i]}'(${cVal}) - '${pad[i % pad.length]}'(${kVal}) = '${plain[i]}'(${pVal})`);
+    }
+  }
+
+  document.getElementById('otpPlainIn').value = plain;
+  document.getElementById('otpMathBreakdown').textContent = `Decryption Math Trace (first 5 chars):
+` + mathSteps.join(' | ') + ` [mod 26]`;
+  snd.playDecodeSuccess();
+}
+
+function copyOtpOutput() {
+  snd.playKeyClick();
+  const text = document.getElementById('otpCipherOut').value;
+  if (navigator.clipboard) navigator.clipboard.writeText(text);
+  printTerminal('[OTP] Ciphertext copied to clipboard.');
+}
+
+function downloadOtpSheet() {
+  snd.playKeyClick();
+  const text = document.getElementById('otpSheetBox').textContent;
+  const serial = document.getElementById('lblOtpSerial').textContent;
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${serial.toLowerCase()}.pad`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+/* --- PGP 1999 ASCII Armor & Keyring Implementation --- */
+const PGP_KEYRING = [
+  {
+    name: "SysOp@Node0x7F",
+    keyId: "0x7F199942",
+    fp: "7F19 9942 AB88 C010 33DE 0019 997F 4242",
+    algo: "RSA 1024 / IDEA",
+    role: "Carlsbad Halite Station Master",
+    created: "1999-04-12"
+  },
+  {
+    name: "HexVector [FLARELIGHT]",
+    keyId: "0xFLT99A20",
+    fp: "464C 5439 3941 3230 7F00 1999 DEAD BEEF",
+    algo: "RSA 1024 / 3DES",
+    role: "Scene Courier Lead",
+    created: "1999-07-29"
+  },
+  {
+    name: "Dr. Vance [Echo Subsystem]",
+    keyId: "0x1999ECHO",
+    fp: "1999 ECHO 4320 1999 F00D FACE 0x7F 0010",
+    algo: "RSA 1024 / CAST5",
+    role: "Acoustic SIGINT Director",
+    created: "1999-09-15"
+  },
+  {
+    name: "Agent K [Aethel Dynamics]",
+    keyId: "0xAETHEL03",
+    fp: "AE78 0300 1019 9904 0001 0203 0405 0607",
+    algo: "RSA 1024 / IDEA",
+    role: "Sector 03 Classified Security",
+    created: "1999-10-04"
+  },
+  {
+    name: "Root [Deep Core Ring-0]",
+    keyId: "0x00DEEPC0",
+    fp: "DEEP C0RE 0000 1019 997F 1270 0000 0001",
+    algo: "RSA 2048 / TWOFISH",
+    role: "Ring-0 Kernel Bus Authority",
+    created: "1999-11-20"
+  }
+];
+
+function renderPgpKeyring() {
+  const container = document.getElementById('pgpKeyringList');
+  container.innerHTML = '';
+  PGP_KEYRING.forEach(k => {
+    const card = document.createElement('div');
+    card.className = 'pgp-key-card';
+    card.innerHTML = `
+      <div class="pgp-key-header">
+        <span>${k.name}</span>
+        <span class="badge-tag" style="font-size:9px; padding:1px 4px;">${k.keyId}</span>
+      </div>
+      <div>ROLE: <span style="color:#a7f3d0;">${k.role}</span></div>
+      <div>ALGO: <span style="color:var(--cyan);">${k.algo}</span> &bull; CREATED: ${k.created}</div>
+      <div style="font-size:9.5px; color:var(--phosphor-dim); font-family:var(--font-mono);">FP: ${k.fp}</div>
+      <div class="ctrl-row" style="margin-top:2px;">
+        <button class="chip-btn" onclick="exportPgpKeyArmor('${k.keyId}')">COPY PUBLIC ARMOR</button>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function computeCrc24(dataStr) {
+  let crc = 0xB704CE;
+  for (let i = 0; i < dataStr.length; i++) {
+    crc ^= (dataStr.charCodeAt(i) << 16);
+    for (let b = 0; b < 8; b++) {
+      crc <<= 1;
+      if (crc & 0x1000000) crc ^= 0x1864CFB;
+    }
+  }
+  const c0 = (crc >> 16) & 0xFF;
+  const c1 = (crc >> 8) & 0xFF;
+  const c2 = crc & 0xFF;
+  return btoa(String.fromCharCode(c0, c1, c2));
+}
+
+function armorPgpMessage() {
+  snd.playBell202Handshake();
+  const msg = document.getElementById('pgpMsgInput').value;
+  const recipient = document.getElementById('selPgpRecipient').value;
+  if (!msg) return;
+
+  const b64Data = btoa(unescape(encodeURIComponent(`KEY_RECIPIENT:${recipient}
+TIMESTAMP:${Date.now()}
+${msg}`)));
+  const crc24 = computeCrc24(b64Data);
+
+  const armor =
+`-----BEGIN PGP MESSAGE-----
+Version: PGP 2.6.2 (KiloNet Subterranean 1999 Edition)
+Comment: Carlsbad Node 0x7F Transit Keyring: ${recipient}
+
+${b64Data}
+=${crc24}
+-----END PGP MESSAGE-----`;
+
+  document.getElementById('pgpArmorOutput').value = armor;
+  document.getElementById('lblPgpStatus').textContent = `ARMORED FOR ${recipient}`;
+  snd.playDecodeSuccess();
+}
+
+function verifyAndDecryptPgpArmor() {
+  snd.playKeyClick();
+  const raw = document.getElementById('pgpArmorOutput').value.trim();
+  const statusEl = document.getElementById('lblPgpStatus');
+  if (!raw.includes("-----BEGIN PGP MESSAGE-----")) {
+    alert("Invalid PGP armor: Missing header block.");
+    return;
+  }
+  try {
+    const lines = raw.split('
+');
+    let b64 = "";
+    let crc = "";
+    for (let l of lines) {
+      l = l.trim();
+      if (l.startsWith("=") && l.length === 5) {
+        crc = l.substr(1);
+      } else if (!l.startsWith("-----") && !l.includes(":") && l.length > 0) {
+        b64 += l;
+      }
+    }
+    const computedCrc = computeCrc24(b64);
+    const verified = (crc === computedCrc);
+
+    const decoded = decodeURIComponent(escape(atob(b64)));
+    document.getElementById('pgpMsgInput').value = decoded;
+    statusEl.textContent = verified ? "VERIFIED (CRC24 MATCH)" : "VERIFIED (CRC WARN)";
+    statusEl.style.color = verified ? "var(--phosphor-bright)" : "var(--warn)";
+    snd.playRelayUnlockAffirmation();
+  } catch (err) {
+    statusEl.textContent = "DECRYPT FAILED";
+    statusEl.style.color = "var(--alert)";
+    alert("Could not parse armored payload: " + err.message);
+  }
+}
+
+function copyPgpArmor() {
+  snd.playKeyClick();
+  const text = document.getElementById('pgpArmorOutput').value;
+  if (navigator.clipboard) navigator.clipboard.writeText(text);
+  document.getElementById('lblPgpStatus').textContent = "ARMOR COPIED TO CLIPBOARD";
+}
+
+function exportPgpKeyArmor(keyId) {
+  snd.playKeyClick();
+  const k = PGP_KEYRING.find(item => item.keyId === keyId) || PGP_KEYRING[0];
+  const dummyKey = btoa(`PGP_PUB_KEY:${k.keyId}:${k.name}:${k.fp}`);
+  const crc = computeCrc24(dummyKey);
+  const armor =
+`-----BEGIN PGP PUBLIC KEY BLOCK-----
+Version: PGP 2.6.2 (Carlsbad Node 0x7F Edition)
+Comment: KeyID ${k.keyId} (${k.name})
+
+${dummyKey}
+=${crc}
+-----END PGP PUBLIC KEY BLOCK-----`;
+
+  if (navigator.clipboard) navigator.clipboard.writeText(armor);
+  printTerminal(`[PGP] Public key armor for ${k.name} copied to clipboard.`);
+}
+
+function generateNewPgpKey() {
+  snd.playFMChirp(680);
+  const name = prompt("Enter Key Holder Identity (e.g. Courier_0x7F@kweb):", "Subterranean_Voyager_1999");
+  if (!name) return;
+  const keyId = "0x" + Math.floor(0x10000000 + Math.random() * 0xEFFFFFFF).toString(16).toUpperCase();
+  const fp = Array.from({length: 8}, () => Math.floor(0x1000 + Math.random() * 0xEFFF).toString(16).toUpperCase()).join(' ');
+  const newKey = {
+    name: name,
+    keyId: keyId,
+    fp: fp,
+    algo: "RSA 1024 / IDEA",
+    role: "User Generated Keypair",
+    created: "1999-12-31"
+  };
+  PGP_KEYRING.push(newKey);
+  renderPgpKeyring();
+  const sel = document.getElementById('selPgpRecipient');
+  const opt = document.createElement('option');
+  opt.value = keyId;
+  opt.textContent = `${name} [${keyId}]`;
+  sel.appendChild(opt);
+  sel.value = keyId;
+  printTerminal(`[PGP] Generated new RSA keypair: ${name} (${keyId}).`);
+}
+
+/* =========================================================================
+   TAB 11: LITHOSPHERIC RELAY TOPOLOGY SWITCHBOARD (2D INTERACTIVE RADAR)
+   ========================================================================= */
+
+const TOPOLOGY_NODES = {
+  carlsbad: { id: "carlsbad", name: "10.19.99.7F (Node 0x7F)", x: 220, y: 280, ip: "10.19.99.7F", depth: "3,000m", temp: "68.4 °C", press: "82.4 MPa", loc: "Carlsbad Halite Salt Vault", carrier: "LOCKED (144.39MHz / 1999Hz)" },
+  echo:     { id: "echo",     name: "10.19.99.1 (Echo Subsystem)", x: 140, y: 130, ip: "10.19.99.1",  depth: "1,200m", temp: "44.2 °C", press: "45.1 MPa", loc: "Acoustic SIGINT Subsurface Lab", carrier: "LOCKED (1999Hz Acoustic)" },
+  aethel:   { id: "aethel",   name: "10.19.99.4 (Aethel Dynamics)", x: 480, y: 110, ip: "10.19.99.4",  depth: "2,400m", temp: "62.1 °C", press: "74.8 MPa", loc: "Classified Intranet Skunkworks", carrier: "LOCKED (AFSK 1200)" },
+  deep_core:{ id: "deep_core",name: "10.19.99.127 (Deep Core)", x: 740, y: 250, ip: "10.19.99.127",depth: "3,200m", temp: "71.2 °C", press: "86.1 MPa", loc: "Ring-0 Kernel Bus Terminal", carrier: "LOCKED (Ring-0 Bus)" },
+  bbs:      { id: "bbs",      name: "10.19.99.254 (Litho-BBS)", x: 360, y: 330, ip: "10.19.99.254",depth: "1,800m", temp: "52.0 °C", press: "58.0 MPa", loc: "Underground BBS Dialup Relay", carrier: "LOCKED (V.90 / Bell 202)" },
+  pacific:  { id: "pacific",  name: "PACIFIC_MCI (Transit Repeater)", x: 90,  y: 310, ip: "10.19.99.2",  depth: "800m",   temp: "38.5 °C", press: "32.0 MPa", loc: "Pacific MCI Leased Bedrock Pipe", carrier: "SYNCHRONIZED" },
+  cheyenne: { id: "cheyenne", name: "CHEYENNE_MTN (Halite Repeater)", x: 620, y: 70,  ip: "10.19.99.3",  depth: "1,900m", temp: "56.4 °C", press: "65.3 MPa", loc: "Cheyenne Mountain Sub-Silo", carrier: "LOCKED (10.19MHz RF)" }
+};
+
+const TOPOLOGY_LINKS = [
+  { u: "carlsbad", v: "echo", active: true, latency: 1.1, weight: 1 },
+  { u: "carlsbad", v: "bbs", active: true, latency: 0.8, weight: 1 },
+  { u: "carlsbad", v: "pacific", active: true, latency: 1.4, weight: 2 },
+  { u: "echo", v: "aethel", active: true, latency: 1.5, weight: 2 },
+  { u: "bbs", v: "aethel", active: true, latency: 1.2, weight: 1 },
+  { u: "bbs", v: "deep_core", active: true, latency: 2.1, weight: 3 },
+  { u: "aethel", v: "cheyenne", active: true, latency: 1.6, weight: 2 },
+  { u: "aethel", v: "deep_core", active: true, latency: 1.1, weight: 1 },
+  { u: "cheyenne", v: "deep_core", active: true, latency: 1.3, weight: 1 },
+  { u: "pacific", v: "echo", active: true, latency: 1.8, weight: 2 }
+];
+
+let topolCanvas = null;
+let topolCtx = null;
+let topolSelectedTarget = "deep_core";
+let topolParticles = [];
+let topolProbeInFlight = null;
+
+function initTopologySwitchboard() {
+  topolCanvas = document.getElementById('topologyCanvas');
+  if (!topolCanvas) return;
+  topolCtx = topolCanvas.getContext('2d');
+
+  // Spawn ambient photon packets
+  for (let i = 0; i < 16; i++) {
+    topolParticles.push({
+      linkIdx: Math.floor(Math.random() * TOPOLOGY_LINKS.length),
+      t: Math.random(),
+      speed: 0.006 + Math.random() * 0.008,
+      forward: Math.random() > 0.5
+    });
+  }
+
+  topolCanvas.addEventListener('click', handleTopologyCanvasClick);
+  renderTopologyLoop();
+}
+
+function resizeTopologyCanvas() {
+  if (!topolCanvas) return;
+  const rect = topolCanvas.parentElement.getBoundingClientRect();
+  if (rect.width > 200) {
+    topolCanvas.width = rect.width;
+    topolCanvas.height = 380;
+  }
+}
+
+function handleTopologyCanvasClick(e) {
+  const rect = topolCanvas.getBoundingClientRect();
+  const scaleX = topolCanvas.width / rect.width;
+  const scaleY = topolCanvas.height / rect.height;
+  const clickX = (e.clientX - rect.left) * scaleX;
+  const clickY = (e.clientY - rect.top) * scaleY;
+
+  // Check node clicks
+  for (let key in TOPOLOGY_NODES) {
+    const node = TOPOLOGY_NODES[key];
+    const dx = clickX - node.x;
+    const dy = clickY - node.y;
+    if (Math.hypot(dx, dy) < 22) {
+      snd.playKeyClick();
+      selectTopologyTarget(key);
+      document.getElementById('selProbeDest').value = key;
+      return;
+    }
+  }
+
+  // Check link clicks (toggle link state)
+  for (let i = 0; i < TOPOLOGY_LINKS.length; i++) {
+    const link = TOPOLOGY_LINKS[i];
+    const u = TOPOLOGY_NODES[link.u];
+    const v = TOPOLOGY_NODES[link.v];
+    const dist = distToSegment({ x: clickX, y: clickY }, { x: u.x, y: u.y }, { x: v.x, y: v.y });
+    if (dist < 10) {
+      snd.playCipherStep();
+      link.active = !link.active;
+      logTopologyEvent(`[WAVEGUIDE] Link ${u.name.split(' ')[0]} <-> ${v.name.split(' ')[0]} is now ${link.active ? 'ONLINE' : 'SEVERED'}.`);
+      updateTopologyRouteMetrics();
+      return;
+    }
+  }
+}
+
+function distToSegment(p, v, w) {
+  const l2 = Math.hypot(v.x - w.x, v.y - w.y) ** 2;
+  if (l2 === 0) return Math.hypot(p.x - v.x, p.y - v.y);
+  let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+  t = Math.max(0, Math.min(1, t));
+  return Math.hypot(p.x - (v.x + t * (w.x - v.x)), p.y - (v.y + t * (w.y - v.y)));
+}
+
+function selectTopologyTarget(key) {
+  if (!TOPOLOGY_NODES[key]) return;
+  topolSelectedTarget = key;
+  const n = TOPOLOGY_NODES[key];
+  document.getElementById('topolNodeName').textContent = n.name;
+  document.getElementById('topolNodeLoc').textContent = n.loc;
+  document.getElementById('topolNodeDepth').textContent = n.depth;
+  document.getElementById('topolNodeTemp').textContent = n.temp;
+  document.getElementById('topolNodePress').textContent = n.press;
+  document.getElementById('topolNodeCarrier').textContent = n.carrier;
+  updateTopologyRouteMetrics();
+}
+
+function findShortestPath(startKey, endKey) {
+  // Dijkstra shortest path
+  const dist = {};
+  const prev = {};
+  const unvisited = new Set(Object.keys(TOPOLOGY_NODES));
+
+  for (let k in TOPOLOGY_NODES) dist[k] = Infinity;
+  dist[startKey] = 0;
+
+  while (unvisited.size > 0) {
+    let curr = null;
+    let minDist = Infinity;
+    for (let u of unvisited) {
+      if (dist[u] < minDist) {
+        minDist = dist[u];
+        curr = u;
+      }
+    }
+    if (curr === null || dist[curr] === Infinity) break;
+    if (curr === endKey) break;
+
+    unvisited.delete(curr);
+
+    // Neighbors
+    for (let l of TOPOLOGY_LINKS) {
+      if (!l.active) continue;
+      let neighbor = null;
+      if (l.u === curr) neighbor = l.v;
+      else if (l.v === curr) neighbor = l.u;
+
+      if (neighbor && unvisited.has(neighbor)) {
+        const alt = dist[curr] + l.latency;
+        if (alt < dist[neighbor]) {
+          dist[neighbor] = alt;
+          prev[neighbor] = curr;
+        }
+      }
+    }
+  }
+
+  const path = [];
+  let u = endKey;
+  while (u) {
+    path.unshift(u);
+    u = prev[u];
+  }
+  if (path[0] !== startKey) return { path: [], latency: Infinity };
+  return { path, latency: dist[endKey] };
+}
+
+function updateTopologyRouteMetrics() {
+  const result = findShortestPath("carlsbad", topolSelectedTarget);
+  const hopsEl = document.getElementById('topolHudHops');
+  const latEl = document.getElementById('topolHudLatency');
+  const statusEl = document.getElementById('topolHudStatus');
+
+  const severedCount = TOPOLOGY_LINKS.filter(l => !l.active).length;
+  if (severedCount === 0) {
+    statusEl.textContent = 'ALL WAVEGUIDES NOMINAL';
+    statusEl.style.color = 'var(--phosphor-bright)';
+  } else {
+    statusEl.textContent = `${severedCount} WAVEGUIDE(S) SEVERED`;
+    statusEl.style.color = 'var(--alert)';
+  }
+
+  if (result.path.length > 0) {
+    hopsEl.textContent = `${result.path.length - 1} HOP(S)`;
+    hopsEl.style.color = 'var(--cyan)';
+    latEl.textContent = `${result.latency.toFixed(1)} ms`;
+    latEl.style.color = 'var(--phosphor-bright)';
+  } else {
+    hopsEl.textContent = 'UNREACHABLE';
+    hopsEl.style.color = 'var(--alert)';
+    latEl.textContent = 'INF ms';
+    latEl.style.color = 'var(--alert)';
+  }
+}
+
+function launchTopologyProbe() {
+  const result = findShortestPath("carlsbad", topolSelectedTarget);
+  if (result.path.length === 0) {
+    snd.playTone(200, 150);
+    alert(`ROUTE ERROR: Destination '${topolSelectedTarget}' is unreachable. Restore severed waveguides.`);
+    return;
+  }
+
+  snd.playBell202Handshake();
+  logTopologyEvent(`[PROBE TRANSMIT] Injecting Bell 202 probe frame from Carlsbad to ${TOPOLOGY_NODES[topolSelectedTarget].name}...`);
+
+  topolProbeInFlight = {
+    path: result.path,
+    hopIndex: 0,
+    progress: 0,
+    speed: 0.03
+  };
+}
+
+function simulateSeismicDisturbance() {
+  snd.playTone(150, 400);
+  TOPOLOGY_LINKS[0].active = false; // carlsbad <-> echo
+  TOPOLOGY_LINKS[4].active = false; // bbs <-> aethel
+  logTopologyEvent(`[SEISMIC ALARM] Fault line rupture detected in Permian basin! Waveguides 0 & 4 severed. Recalculating mesh failover...`);
+  updateTopologyRouteMetrics();
+}
+
+function restoreAllLinks() {
+  snd.playFMChirp(600);
+  TOPOLOGY_LINKS.forEach(l => l.active = true);
+  logTopologyEvent(`[RESTORE] All subterranean halite waveguides re-established. 10/10 links nominal.`);
+  updateTopologyRouteMetrics();
+}
+
+function downloadTopologyRoutes() {
+  snd.playKeyClick();
+  let conf = `# SUBTERRANEAN 10.19.99.0/24 TOPOLOGY CONFIGURATION
+# Exported from Node 0x7F Carlsbad Switchboard
+
+`;
+  for (let l of TOPOLOGY_LINKS) {
+    conf += `LINK  ${TOPOLOGY_NODES[l.u].ip}  <->  ${TOPOLOGY_NODES[l.v].ip}  METRIC=${l.weight}  LATENCY=${l.latency}ms  STATUS=${l.active ? 'UP' : 'DOWN'}
+`;
+  }
+  const blob = new Blob([conf], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'routes_1999.conf';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+function logTopologyEvent(msg) {
+  const box = document.getElementById('topolEventLog');
+  const d = document.createElement('div');
+  const time = new Date().toTimeString().split(' ')[0];
+  d.textContent = `[${time}] ${msg}`;
+  box.appendChild(d);
+  box.scrollTop = box.scrollHeight;
+}
+
+function renderTopologyLoop() {
+  if (!topolCtx || !topolCanvas) return;
+  const w = topolCanvas.width;
+  const h = topolCanvas.height;
+
+  topolCtx.fillStyle = '#010502';
+  topolCtx.fillRect(0, 0, w, h);
+
+  // Background radar grid
+  topolCtx.strokeStyle = 'rgba(19, 136, 58, 0.15)';
+  topolCtx.lineWidth = 1;
+  for (let x = 0; x < w; x += 40) {
+    topolCtx.beginPath();
+    topolCtx.moveTo(x, 0);
+    topolCtx.lineTo(x, h);
+    topolCtx.stroke();
+  }
+  for (let y = 0; y < h; y += 40) {
+    topolCtx.beginPath();
+    topolCtx.moveTo(0, y);
+    topolCtx.lineTo(w, y);
+    topolCtx.stroke();
+  }
+
+  // Draw Links
+  for (let i = 0; i < TOPOLOGY_LINKS.length; i++) {
+    const l = TOPOLOGY_LINKS[i];
+    const u = TOPOLOGY_NODES[l.u];
+    const v = TOPOLOGY_NODES[l.v];
+
+    topolCtx.beginPath();
+    topolCtx.moveTo(u.x, u.y);
+    topolCtx.lineTo(v.x, v.y);
+
+    if (l.active) {
+      topolCtx.strokeStyle = 'rgba(34, 255, 102, 0.45)';
+      topolCtx.lineWidth = 2;
+      topolCtx.setLineDash([]);
+    } else {
+      topolCtx.strokeStyle = 'rgba(255, 51, 68, 0.7)';
+      topolCtx.lineWidth = 2;
+      topolCtx.setLineDash([4, 4]);
+    }
+    topolCtx.stroke();
+    topolCtx.setLineDash([]);
+  }
+
+  // Draw Active Route Highlight
+  const route = findShortestPath("carlsbad", topolSelectedTarget);
+  if (route.path.length > 1) {
+    topolCtx.beginPath();
+    topolCtx.strokeStyle = 'rgba(56, 189, 248, 0.75)';
+    topolCtx.lineWidth = 4;
+    topolCtx.shadowColor = '#38bdf8';
+    topolCtx.shadowBlur = 8;
+    for (let idx = 0; idx < route.path.length; idx++) {
+      const n = TOPOLOGY_NODES[route.path[idx]];
+      if (idx === 0) topolCtx.moveTo(n.x, n.y);
+      else topolCtx.lineTo(n.x, n.y);
+    }
+    topolCtx.stroke();
+    topolCtx.shadowBlur = 0;
+  }
+
+  // Draw Ambient Particles
+  topolParticles.forEach(p => {
+    const l = TOPOLOGY_LINKS[p.linkIdx];
+    if (l && l.active) {
+      const u = TOPOLOGY_NODES[l.u];
+      const v = TOPOLOGY_NODES[l.v];
+      const prog = p.forward ? p.t : (1 - p.t);
+      const px = u.x + (v.x - u.x) * prog;
+      const py = u.y + (v.y - u.y) * prog;
+
+      topolCtx.fillStyle = '#22ff66';
+      topolCtx.beginPath();
+      topolCtx.arc(px, py, 2.5, 0, Math.PI * 2);
+      topolCtx.fill();
+
+      p.t += p.speed;
+      if (p.t > 1) {
+        p.t = 0;
+        p.linkIdx = Math.floor(Math.random() * TOPOLOGY_LINKS.length);
+      }
+    }
+  });
+
+  // Draw Probe in flight
+  if (topolProbeInFlight) {
+    const p = topolProbeInFlight;
+    const uKey = p.path[p.hopIndex];
+    const vKey = p.path[p.hopIndex + 1];
+    if (uKey && vKey) {
+      const u = TOPOLOGY_NODES[uKey];
+      const v = TOPOLOGY_NODES[vKey];
+      const px = u.x + (v.x - u.x) * p.progress;
+      const py = u.y + (v.y - u.y) * p.progress;
+
+      topolCtx.fillStyle = '#ffaa00';
+      topolCtx.shadowColor = '#ffaa00';
+      topolCtx.shadowBlur = 10;
+      topolCtx.beginPath();
+      topolCtx.arc(px, py, 5, 0, Math.PI * 2);
+      topolCtx.fill();
+      topolCtx.shadowBlur = 0;
+
+      p.progress += p.speed;
+      if (p.progress >= 1) {
+        p.progress = 0;
+        p.hopIndex++;
+        snd.playPacketBurst();
+        logTopologyEvent(`[HOP] Probe packet traversed to hop: ${TOPOLOGY_NODES[vKey].name.split(' ')[0]}`);
+        if (p.hopIndex >= p.path.length - 1) {
+          topolProbeInFlight = null;
+          snd.playRelayUnlockAffirmation();
+          logTopologyEvent(`[PROBE SUCCESS] Probe reached target ${TOPOLOGY_NODES[vKey].name}. Round-trip confirmed.`);
+        }
+      }
+    } else {
+      topolProbeInFlight = null;
+    }
+  }
+
+  // Draw Nodes
+  for (let key in TOPOLOGY_NODES) {
+    const n = TOPOLOGY_NODES[key];
+    const isSelected = (key === topolSelectedTarget);
+    const isCarlsbad = (key === "carlsbad");
+
+    topolCtx.beginPath();
+    topolCtx.arc(n.x, n.y, isSelected ? 12 : 8, 0, Math.PI * 2);
+    topolCtx.fillStyle = isCarlsbad ? '#ffaa00' : (isSelected ? '#38bdf8' : '#13883a');
+    topolCtx.shadowColor = isSelected ? '#38bdf8' : '#22ff66';
+    topolCtx.shadowBlur = isSelected ? 12 : 6;
+    topolCtx.fill();
+    topolCtx.shadowBlur = 0;
+
+    topolCtx.strokeStyle = '#fff';
+    topolCtx.lineWidth = 1.5;
+    topolCtx.stroke();
+
+    // Node Label
+    topolCtx.fillStyle = isSelected ? '#ffffff' : 'var(--phosphor-bright)';
+    topolCtx.font = '10.5px Consolas, monospace';
+    topolCtx.fillText(n.name.split(' ')[0], n.x - 20, n.y - 14);
+  }
+
+  requestAnimationFrame(renderTopologyLoop);
+}
+
+/* =========================================================================
+   STATION STATE PERSISTENCE (QUICKSAVE F5 & QUICKLOAD F9)
+   ========================================================================= */
+
+function quicksaveStationState() {
+  snd.playFMChirp(650);
+  const state = {
+    relayState: RELAY_STATE,
+    themeIdx: currentThemeIdx,
+    customKeys: PGP_KEYRING,
+    feistelRounds: feistelState.maxRounds,
+    currentOtpPad: currentOtpPad,
+    savedAt: Date.now()
+  };
+  try {
+    localStorage.setItem('kweb_darknet_state', JSON.stringify(state));
+    printTerminal('[QUICKSAVE] Station telemetry & cryptographic keys stored in persistent storage (F5).');
+  } catch (e) {
+    printTerminal('[SAVE ERROR] Could not access local storage.');
+  }
+}
+
+function quickloadStationState() {
+  snd.playRelayUnlockAffirmation();
+  try {
+    const raw = localStorage.getItem('kweb_darknet_state');
+    if (!raw) {
+      printTerminal('[QUICKLOAD] No saved state found in local storage.');
+      return;
+    }
+    const state = JSON.parse(raw);
+    if (state.relayState) {
+      Object.assign(RELAY_STATE, state.relayState);
+      updateRelayProgress();
+    }
+    if (state.currentOtpPad) {
+      currentOtpPad = state.currentOtpPad;
+    }
+    printTerminal(`[QUICKLOAD] Restored station state from ${new Date(state.savedAt).toLocaleTimeString()} (F9).`);
+  } catch (e) {
+    printTerminal('[LOAD ERROR] Corrupt state buffer in local storage.');
+  }
+}
+
+// Global hotkeys (F5 Quicksave, F9 Quickload)
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'F5') {
+    e.preventDefault();
+    quicksaveStationState();
+  } else if (e.key === 'F9') {
+    e.preventDefault();
+    quickloadStationState();
+  }
+});
+
+// Initialize Lab Modules on Boot
+setTimeout(() => {
+  initFeistelCipher();
+  initRc4Cipher();
+  generateNewOtpSheet();
+  renderPgpKeyring();
+  initTopologySwitchboard();
+}, 600);
 
 </script>
 

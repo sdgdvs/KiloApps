@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://darknet (Encrypted Underground Relay & Cryptography Lab)"
+  kilo_creator: "kweb://portal (KiloNet Central Directory)"
   kilo_graphics: KCosmic
   kilo_tester: KPaint
   kilo_usability: KHabit
   kilo_qa: KFarm
   kilo_expander: KPad
-virtual_web_target: "kweb://darknet"
+virtual_web_target: "kweb://portal"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-expander
-  app: KPaint
-  timestamp: "2026-10-02T11:24:00Z"
+  agent: kilo-creator
+  app: "kweb://darknet"
+  timestamp: "2026-10-02T12:20:00Z"
 last_planner_run: "2026-10-01T19:32:00Z"
 ---
 
@@ -98,9 +98,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://darknet` (Encrypted Underground Relay & Cryptography Lab)
+- **Current Target**: `kweb://portal` (KiloNet Central Directory)
 - **Upcoming Queue**:
-  `kweb://portal` (KiloNet Central Directory), `kweb://webring` (Central Webring Hub), `kweb://warez` (Scene Vault), `kweb://geocities` (CyberSpire's Shrine)
+  `kweb://webring` (Central Webring Hub), `kweb://warez` (Scene Vault), `kweb://geocities` (CyberSpire's Shrine), `kweb://darknet` (Encrypted Underground Relay)
   *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
@@ -193,17 +193,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
      - ✅ Underground IRC terminal client (mIRC style) with 4 channels, slash commands, interactive CafeBot & real-time Firebase RTDB sync.
      - ✅ Procedural Genesis YM2612 2-operator FM synthesis & SNES SPC700 stereo delay audio jukebox with 3 tracks & 14-band LED CRT visualizer.
      - ✅ Terminal booth station telemetry, 56k V.90 throughput benchmark, cafe kiosk with downloadable thermal receipts & hardware vault NFOs.
-  7. `kweb://darknet` (*Node 0x7F Subterranean Relay & Warez NFO Cryptography*):
-     - ✅ Tier 3 Ghost Node: VT-100 terminal shell with 17 directives & virtual spool filesystem (`routes.conf`, `transponder.log`, `precursor_cipher.nfo`, `fleet_heartbeat.hex`, `hardware.cfg`).
-     - ✅ Warez NFO Steganography Lab: CP437 ANSI viewer, hex dumper, live steganography scanner (trailing whitespace / XOR-0x7F) & custom NFO injector with 5 scene releases (*Surreal Tournament '99 [FLT]*, *Tremor III Arena [RZR]*, *Half-Cycle 1.1 [PDX]*, *Machina Ex Preview [SKD]*, *Carlsbad Bedrock Relay*).
-     - ✅ CRC32 & MD5 hash calculator with anomaly detection matching subterranean ARG relay seeds.
-     - ✅ 14-algorithm packet decoder suite (Hex, XOR, Rot13, Base64, Polybius, Atbash, CW Morse audio, Whitespace Stego) with Shannon entropy.
-     - ✅ Subnet 10.19.99.0/24 packet monitor & Bell 202 AFSK frame crafting/injector with destination node replies.
-     - ✅ Dual 60FPS RF oscilloscope & cascading 2D waterfall spectrogram with 4 phosphor palettes, 144.39MHz / 1999Hz tuner & S-meter.
-     - ✅ Gated Middle-Game Puzzle Relay (Sector 0x7F) validating sequential cross-node artifacts (acoustic carrier, sector 03, warez checksum) and converging on Deep Core (10.19.99.127).
-     - ✅ Collaborative Subterranean Signal Mesh via Firebase RTDB (`arg/signals/subterranean_darknet`) with instant Carlsbad salt-vault solo loopback fallback.
-     - ✅ Universal procedural audio engine: Genesis YM2612 2-op FM synthesis + SNES SPC700 stereo delay across 3 chiptune tracks + procedural SFX.
-     - ✅ Client-side asset synthesis & download (.asc, .asm, .nfo, .rom, .conf, .log) & Central KiloNet Webring #012 interconnect.
+  7. `kweb://darknet` (*Node 0x7F Subterranean Relay & Cryptography Lab*):
+     - ✅ Cryptography Lab (Tab 10): 64-bit Feistel block cipher simulator with S-Box/P-Box bit diffusion & avalanche effect test (% bit flip).
+     - ✅ RC4 State Visualizer: 256-byte S-Box 16x16 interactive matrix with animated KSA permutation, PRGA byte stepper & keystream encryptor.
+     - ✅ OTP & PGP Vaults: Built One-Time Pad generator (geothermal entropy, 5-letter codebooks, mod 26 trace) and PGP 1999 ASCII armor/keyring.
+     - ✅ 2D Relay Topology Radar (Tab 11): Built 800x380 canvas with 7 nodes, 10 waveguides, animated photon pulses, Dijkstra routing & probe.
+     - ✅ Tier 3 Ghost Node: VT-100 terminal shell with 22 directives, virtual spool filesystem (`routes.conf`, `transponder.log`, `precursor_cipher.nfo`, `fleet_heartbeat.hex`).
+     - ✅ Warez NFO Steganography Lab, CRC32/MD5 hash calculator, 14-algorithm packet decoder, Subnet 10.19.99.0/24 packet sniffer, and RF oscilloscope.
+     - ✅ Universal audio engine: Genesis YM2612 2-op FM synthesis + SNES SPC700 stereo delay across 4 chiptune tracks + Bell 202 modem handshake & SFX.
+     - ✅ Client-side asset synthesis & download (.asc, .asm, .nfo, .rom, .conf, .log, .pad) & Central KiloNet Webring #018 interconnect.
   8. `kweb://10.19.99.4/classified` (*Corporate Network Leak & Signal Diagnostic*):
      - ✅ Signal Diagnostic Lab with dual-display time-domain oscilloscope & FFT frequency spectrum, tunable YM2612 FM / SPC700 stereo delay DSP controls & live subcarrier demodulator.
      - ✅ Subnet RF Sweep: 10.19.99.0/24 node sweep tracking signal-to-noise ratio, carrier lock, and audio DAC leakage.
@@ -300,6 +298,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-02T12:20:00Z — kilo-creator: kweb://darknet (Encrypted Underground Relay & Cryptography Lab Deep Expansion)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 226.2 KB < 999 KB ceiling).
+  - Cryptography Lab (Tab 10): Built 64-bit Feistel block cipher simulator with S-Box/P-Box bit diffusion & avalanche effect test (% bit flip).
+  - RC4 State Visualizer: Built 256-byte S-Box 16x16 interactive matrix with animated KSA permutation, PRGA byte stepper & keystream encryptor.
+  - OTP & PGP Vaults: Built One-Time Pad generator (geothermal entropy, 5-letter codebooks, mod 26 trace) and PGP 1999 ASCII armor/keyring.
+  - 2D Relay Topology Radar (Tab 11): Built 800x380 canvas with 7 nodes, 10 waveguides, animated photon pulses, Dijkstra routing & probe.
+  - Audio Engine: Added Track 4 ("Lithospheric Cipher Suite" YM2612 FM / SPC700 delay), Bell 202 modem handshake, and cipher ticks.
+  - Verification: Vite build clean in 377ms; security_lint 100% PASS; linked in KNet, portal, and webring.
+
 - **2026-10-02T11:24:00Z — kilo-expander: KPaint (PCX/ICO/ANSI/XBM Format Suite, Sprite Animation Reel, Bezier & Replace)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 230.5 KB web / 39.0 KB native < 999 KB ceiling).
   - Format Suite: Added 24-bit TrueColor RLE PCX decoder/encoder, multi-res Windows ICO (16/32/48px), ANSI art BBS modal, and XBM export.
@@ -331,14 +338,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Modal Dismissals & Input Ergonomics: Added Escape context-menu dismissal, Enter/Space modal closing, and Enter password advance.
   - Toast Occlusion Remediation: Added instant full-card click-to-dismiss ensuring notifications never occlude status controls.
   - Verification: Vite build clean in 451ms; security_lint 100% PASS; zero glints; ARG mystery guidelines intact.
-
-- **2026-10-02T06:19:00Z — kilo-qa: KBudget (Pass 5: Full State Persistence, First-Run Tutorial, Safe Toasts & Win32 Quicksave)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 61.9 KB web / 170.0 KB native < 999 KB ceiling).
-  - Quicksave & State Integrity: Built F5 Quicksave / F9 Quickload across Win32 C (`kbudget_quicksave.dat`) and web localStorage with full state capture.
-  - First-Run Tutorial: Enforced `kbudget_tutorial.dat` and `kbudget_tutorialSeen` flags preventing tutorial modal from interrupting restored sessions.
-  - UI & Toast Occlusion: Relocated toast notifications to non-occluding bottom-right safe viewport (`z-index: 3000`) with instant dismiss and quota safety.
-  - Overlay Ergonomics: Bound Enter/Space modal dismiss in web; verified Esc, F1/H help, and button layout across web & native.
-  - Verification: MSVC clean (`KBudget.exe` 170.0 KB); Vite clean in 387ms; check_icons & security_lint 100% PASS.
-
-
-
