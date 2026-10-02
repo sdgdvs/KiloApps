@@ -480,8 +480,8 @@
   /* Toast & Notification */
   .toast {
     position: fixed;
-    top: 60px;
-    right: 20px;
+    bottom: 24px;
+    right: 24px;
     background: var(--accent-green);
     color: #000;
     padding: 10px 16px;
@@ -490,7 +490,7 @@
     font-weight: 700;
     box-shadow: 0 4px 16px rgba(0,0,0,0.6);
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(10px);
     transition: all 0.25s ease;
     pointer-events: none;
     z-index: 3000;
@@ -1446,6 +1446,12 @@
 
   function closeHelpModal() {
     helpModal.classList.remove('show');
+    try {
+      const checkTutorialSeen = document.getElementById('check-tutorial-seen');
+      if (checkTutorialSeen && checkTutorialSeen.checked) {
+        localStorage.setItem('kbase_tutorialSeen', '1');
+      }
+    } catch(e) {}
   }
 
   if (btnHelpModal) btnHelpModal.addEventListener('click', openHelpModal);
@@ -2659,6 +2665,8 @@ KBASE_VALUE dq ${hexShort}
       activeTab: activeIdx >= 0 ? activeIdx : 0,
       baseDec: elDec ? elDec.value : '',
       bitboardVal: (bitboardVal & 0xFFFFFFFFFFFFFFFFn).toString(16),
+      customRadix: customRange ? parseInt(customRange.value, 10) : 36,
+      customVal: elCustom ? elCustom.value : '',
       opA: opAInput ? opAInput.value : '',
       opB: opBInput ? opBInput.value : '',
       bitwiseOp: currentBitwiseOp,
@@ -2669,6 +2677,7 @@ KBASE_VALUE dq ${hexShort}
       sliceHigh: sliceHighRange ? sliceHighRange.value : 15,
       sliceLow: sliceLowRange ? sliceLowRange.value : 8,
       strInput: strInput ? strInput.value : '',
+      strOutput: document.getElementById('str-output')?.value || '',
       history: historyLog.slice(0, 50)
     };
   }
@@ -2680,9 +2689,11 @@ KBASE_VALUE dq ${hexShort}
       localStorage.setItem('kbase_state', json);
       if (isQuicksave) {
         localStorage.setItem('kbase_quicksave', json);
-        showToast('State quicksaved (F5)');
+        showToast('State quicksaved to local storage (F5)');
       }
-    } catch(e) {}
+    } catch(e) {
+      if (isQuicksave) showToast('Storage quota exceeded / save failed');
+    }
   }
 
   function loadKBaseStateFromObj(state) {
@@ -2691,6 +2702,10 @@ KBASE_VALUE dq ${hexShort}
       historyLog.length = 0;
       state.history.forEach(item => historyLog.push(item));
       renderHistory();
+    }
+    if (state.customRadix && customRange) {
+      customRange.value = state.customRadix;
+      if (customLabel) customLabel.textContent = state.customRadix;
     }
     if (state.baseDec !== undefined && state.baseDec !== '') {
       const bigVal = parseBigIntFromBase(state.baseDec, 10);
@@ -2705,6 +2720,9 @@ KBASE_VALUE dq ${hexShort}
         renderBitboard();
         updateBasesFromValue(bitboardVal, null);
       } catch(e) {}
+    }
+    if (state.customVal && elCustom) {
+      elCustom.value = state.customVal;
     }
     if (state.opA && opAInput) opAInput.value = state.opA;
     if (state.opB && opBInput) opBInput.value = state.opB;
@@ -2723,9 +2741,17 @@ KBASE_VALUE dq ${hexShort}
       varintValInput.value = state.varintVal;
       runVarintEncode(false);
     }
+    if (state.varintHex && varintHexInput) {
+      varintHexInput.value = state.varintHex;
+      runVarintDecode(false);
+    }
     if (state.sliceHigh && sliceHighRange) sliceHighRange.value = state.sliceHigh;
     if (state.sliceLow && sliceLowRange) sliceLowRange.value = state.sliceLow;
     if (state.strInput && strInput) strInput.value = state.strInput;
+    if (state.strOutput) {
+      const strOut = document.getElementById('str-output');
+      if (strOut) strOut.value = state.strOutput;
+    }
 
     if (typeof state.activeTab === 'number' && state.activeTab >= 0 && state.activeTab < tabs.length) {
       selectTab(state.activeTab);
@@ -2737,17 +2763,17 @@ KBASE_VALUE dq ${hexShort}
     try {
       const raw = isQuickload ? (localStorage.getItem('kbase_quicksave') || localStorage.getItem('kbase_state')) : localStorage.getItem('kbase_state');
       if (!raw) {
-        if (isQuickload) showToast('No saved state found (F5 to save)');
+        if (isQuickload) showToast('No saved state found (Press F5 to quicksave)');
         return false;
       }
       const state = JSON.parse(raw);
       const ok = loadKBaseStateFromObj(state);
       if (ok && isQuickload) {
-        showToast('State quickloaded (F9)');
+        showToast('State quickloaded from local storage (F9)');
       }
       return ok;
     } catch(e) {
-      if (isQuickload) showToast('Failed to load state');
+      if (isQuickload) showToast('Failed to load state (corrupt data)');
       return false;
     }
   }
@@ -2770,10 +2796,15 @@ KBASE_VALUE dq ${hexShort}
   function downloadFile(content, fileName, contentType) {
     const a = document.createElement('a');
     const file = new Blob([content], { type: contentType });
-    a.href = URL.createObjectURL(file);
+    const url = URL.createObjectURL(file);
+    a.href = url;
     a.download = fileName;
+    document.body.appendChild(a);
     a.click();
-    URL.revokeObjectURL(a.href);
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 500);
     showToast(`Exported ${fileName}`);
   }
 
@@ -2847,8 +2878,11 @@ KBASE_VALUE dq ${hexShort}
     const checkTutorialSeen = document.getElementById('check-tutorial-seen');
     if (checkTutorialSeen) {
       try {
-        checkTutorialSeen.checked = !!localStorage.getItem('kbase_tutorialSeen');
-      } catch(e) {}
+        const seen = localStorage.getItem('kbase_tutorialSeen');
+        checkTutorialSeen.checked = seen !== null ? !!seen : true;
+      } catch(e) {
+        checkTutorialSeen.checked = true;
+      }
       checkTutorialSeen.onchange = (e) => {
         try {
           if (e.target.checked) localStorage.setItem('kbase_tutorialSeen', '1');
@@ -2896,6 +2930,16 @@ KBASE_VALUE dq ${hexShort}
     if (e.key === 'Escape') {
       closeHelpModal();
       return;
+    }
+
+    // Space or Enter closes help modal when open and focus not in input
+    const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT';
+    if (helpModal && helpModal.classList.contains('show')) {
+      if ((e.key === 'Enter' || e.key === ' ') && !isInput) {
+        e.preventDefault();
+        closeHelpModal();
+        return;
+      }
     }
 
     // F5 quicksave & F9 quickload

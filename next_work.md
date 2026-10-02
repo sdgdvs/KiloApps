@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KChrono
   kilo_tester: KNote
   kilo_usability: KAudio
-  kilo_qa: KBase
+  kilo_qa: KBudget
   kilo_expander: KSnake
 virtual_web_target: "kweb://deep-core"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KHex
-  timestamp: "2026-10-01T23:20:00Z"
+  agent: kilo-qa
+  app: KBase
+  timestamp: "2026-10-02T00:18:00Z"
 last_planner_run: "2026-10-01T19:32:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPing`, `KHabit`, `KFarm`, `KPaint`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash` *(Completed: KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KBase`
+- **Current Target**: `KBudget`
 - **Upcoming Queue**:
-  `KBudget`, `KCalendar`, `KFarm`, `KFlash`, `KFont`, `KImage`, `KJournal`, `KMail`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic)*.
+  `KCalendar`, `KFarm`, `KFlash`, `KFont`, `KImage`, `KJournal`, `KMail`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KSnake`
@@ -297,6 +297,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-02T00:18:00Z — kilo-qa: KBase (Pass 5: Full State Persistence, First-Run Tutorial, Toast & Win32 Quicksave)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 118.5 KB web / 24.5 KB native < 999 KB ceiling).
+  - Quicksave & State Integrity: Built F5 Quicksave / F9 Quickload in Win32 C (`kbase_quicksave.dat`) and web localStorage capturing all studio state.
+  - First-Run Tutorial: Enforced `kbase_tutorial.dat` and `kbase_tutorialSeen` flags preventing tutorial modal from interrupting restored sessions.
+  - UI & Toast Occlusion: Relocated toast notifications to non-occluding bottom-right viewport with instant dismiss click and timeout cleanup.
+  - Overlay Ergonomics: Bound Enter/Space modal dismiss in web and verified Esc, F1/H help, and 1-click preset buttons across web & native.
+  - Verification: MSVC clean (`KBase.exe` 24.5 KB); Vite clean in 793ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-01T23:20:00Z — kilo-usability: KHex (Virtual Scroll Auto-Focus, Font Zoom A-/A+, ASCII Toggle & Navigation Keys)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 139.0 KB web / 30.7 KB native < 999 KB ceiling).
   - Virtual Scroll Ergonomics: Added auto-scroll positioning in `selectByte` ensuring jumps (`Goto Address`, chunk clicks, arrows) reveal row.
@@ -333,13 +341,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Forensic Demodulator: Built live 1999Hz audio waterfall canvas with ASCII stream decoding and real-time phase shift parsing.
   - Client-Side Downloads: Synthesized authentic in-memory file downloads for `CARLSBAD_0x1999.DMP`, `STATION_0x7F.NFO`, `MEMO_09.TXT`, and 16-bit PCM `CARRIER_1999HZ_BEACON.WAV`.
   - Verification: Node.js/Vite clean in 1.06s; check_sizes & security_lint 100% PASS (0 syntax errors, 0 banned trademarks).
-
-- **2026-10-01T19:32:00Z — kilo-planner: Fleet Planning & Queue Rebalancing (24h Tick)**
-  - Status: PASS ✅ (Fleet health 100%, 105 apps icon audit 100% PASS, 0 glints, all builds clean).
-  - Rotation Schedule: Set 6-skill cycle (creator ➔ graphics ➔ tester ➔ usability ➔ qa ➔ expander).
-  - Queue Rebalance: Purged locked KHangman from tester queue; prioritized stutter apps (KAudio, KPing, KHabit) in usability.
-  - Multiplayer Focus: Targeted KSnake for 1v1 arena duel mode via RFMS; queued KPaint/KPad for collaborative canvas.
-  - Virtual Web & ARG: Advanced virtual web target to kweb://echo-subsystem.net; focusing middle-game puzzle chain gating.
-  - Log Hygiene: Retained 5 active logs; verified zero compiler errors, clean Vite build, and 0 lint failures.
 
 

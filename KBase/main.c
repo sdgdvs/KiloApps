@@ -323,6 +323,155 @@ static void DoLoadDemo(HWND hwnd) {
     ShowNativeStatus(hwnd, "Loaded Demo Presets: 0xDEADBEEF [D]");
 }
 
+static void DoQuicksave(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kbase_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        ShowNativeStatus(hwnd, "Failed to create kbase_quicksave.dat!");
+        return;
+    }
+
+    DWORD magic = 0x5341424B; /* 'KBAS' */
+    DWORD version = 1;
+    DWORD written = 0;
+    WriteFile(hFile, &magic, sizeof(DWORD), &written, NULL);
+    WriteFile(hFile, &version, sizeof(DWORD), &written, NULL);
+
+    /* Save Input */
+    DWORD lenInput = (DWORD)GetWindowTextLengthA(hInput);
+    WriteFile(hFile, &lenInput, sizeof(DWORD), &written, NULL);
+    if (lenInput > 0) {
+        char* buf = (char*)HeapAlloc(GetProcessHeap(), 0, lenInput + 1);
+        if (buf) {
+            GetWindowTextA(hInput, buf, lenInput + 1);
+            WriteFile(hFile, buf, lenInput, &written, NULL);
+            HeapFree(GetProcessHeap(), 0, buf);
+        }
+    }
+
+    /* Save EditA */
+    DWORD lenA = (DWORD)GetWindowTextLengthA(hEditA);
+    WriteFile(hFile, &lenA, sizeof(DWORD), &written, NULL);
+    if (lenA > 0) {
+        char bufA[256];
+        GetWindowTextA(hEditA, bufA, sizeof(bufA));
+        WriteFile(hFile, bufA, (DWORD)my_strlen(bufA), &written, NULL);
+    }
+
+    /* Save EditB */
+    DWORD lenB = (DWORD)GetWindowTextLengthA(hEditB);
+    WriteFile(hFile, &lenB, sizeof(DWORD), &written, NULL);
+    if (lenB > 0) {
+        char bufB[256];
+        GetWindowTextA(hEditB, bufB, sizeof(bufB));
+        WriteFile(hFile, bufB, (DWORD)my_strlen(bufB), &written, NULL);
+    }
+
+    /* Save BitDisplay */
+    DWORD lenBit = (DWORD)GetWindowTextLengthA(hBitDisplay);
+    WriteFile(hFile, &lenBit, sizeof(DWORD), &written, NULL);
+    if (lenBit > 0) {
+        char bufBit[256];
+        GetWindowTextA(hBitDisplay, bufBit, sizeof(bufBit));
+        WriteFile(hFile, bufBit, (DWORD)my_strlen(bufBit), &written, NULL);
+    }
+
+    /* Save Output */
+    DWORD lenOut = (DWORD)GetWindowTextLengthA(hOutput);
+    WriteFile(hFile, &lenOut, sizeof(DWORD), &written, NULL);
+    if (lenOut > 0) {
+        char* buf = (char*)HeapAlloc(GetProcessHeap(), 0, lenOut + 1);
+        if (buf) {
+            GetWindowTextA(hOutput, buf, lenOut + 1);
+            WriteFile(hFile, buf, lenOut, &written, NULL);
+            HeapFree(GetProcessHeap(), 0, buf);
+        }
+    }
+
+    CloseHandle(hFile);
+    ShowNativeStatus(hwnd, "State quicksaved to kbase_quicksave.dat [F5]");
+}
+
+static void DoQuickload(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kbase_quicksave.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        ShowNativeStatus(hwnd, "No saved state found (Press F5 to quicksave) [F9]");
+        return;
+    }
+
+    DWORD magic = 0, version = 0, readBytes = 0;
+    ReadFile(hFile, &magic, sizeof(DWORD), &readBytes, NULL);
+    ReadFile(hFile, &version, sizeof(DWORD), &readBytes, NULL);
+
+    if (magic != 0x5341424B || version != 1) {
+        CloseHandle(hFile);
+        ShowNativeStatus(hwnd, "Invalid or corrupt save file format!");
+        return;
+    }
+
+    /* Load Input */
+    DWORD lenInput = 0;
+    ReadFile(hFile, &lenInput, sizeof(DWORD), &readBytes, NULL);
+    if (lenInput > 0 && lenInput < 1048576) {
+        char* buf = (char*)HeapAlloc(GetProcessHeap(), 0, lenInput + 1);
+        if (buf) {
+            ReadFile(hFile, buf, lenInput, &readBytes, NULL);
+            buf[readBytes] = '\0';
+            SetWindowTextA(hInput, buf);
+            HeapFree(GetProcessHeap(), 0, buf);
+        }
+    } else {
+        SetWindowTextA(hInput, "");
+    }
+
+    /* Load EditA */
+    DWORD lenA = 0;
+    ReadFile(hFile, &lenA, sizeof(DWORD), &readBytes, NULL);
+    if (lenA > 0 && lenA < 256) {
+        char bufA[256];
+        ReadFile(hFile, bufA, lenA, &readBytes, NULL);
+        bufA[readBytes] = '\0';
+        SetWindowTextA(hEditA, bufA);
+    }
+
+    /* Load EditB */
+    DWORD lenB = 0;
+    ReadFile(hFile, &lenB, sizeof(DWORD), &readBytes, NULL);
+    if (lenB > 0 && lenB < 256) {
+        char bufB[256];
+        ReadFile(hFile, bufB, lenB, &readBytes, NULL);
+        bufB[readBytes] = '\0';
+        SetWindowTextA(hEditB, bufB);
+    }
+
+    /* Load BitDisplay */
+    DWORD lenBit = 0;
+    ReadFile(hFile, &lenBit, sizeof(DWORD), &readBytes, NULL);
+    if (lenBit > 0 && lenBit < 256) {
+        char bufBit[256];
+        ReadFile(hFile, bufBit, lenBit, &readBytes, NULL);
+        bufBit[readBytes] = '\0';
+        SetWindowTextA(hBitDisplay, bufBit);
+    }
+
+    /* Load Output */
+    DWORD lenOut = 0;
+    ReadFile(hFile, &lenOut, sizeof(DWORD), &readBytes, NULL);
+    if (lenOut > 0 && lenOut < 1048576) {
+        char* buf = (char*)HeapAlloc(GetProcessHeap(), 0, lenOut + 1);
+        if (buf) {
+            ReadFile(hFile, buf, lenOut, &readBytes, NULL);
+            buf[readBytes] = '\0';
+            SetWindowTextA(hOutput, buf);
+            HeapFree(GetProcessHeap(), 0, buf);
+        }
+    } else {
+        SetWindowTextA(hOutput, "");
+    }
+
+    CloseHandle(hFile);
+    ShowNativeStatus(hwnd, "State quickloaded from kbase_quicksave.dat [F9]");
+}
+
 // Multi-Width Representation Inspector
 void DoMultiWidthInspect() {
     char buf[128];
@@ -886,6 +1035,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HFONT hFont = CreateFontA(fontHeight, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET, 0, 0, 5 /* CLEARTYPE_QUALITY */, DEFAULT_PITCH, "Consolas");
             
             CreateWindowA("STATIC", "Input Buffer / Number:", WS_CHILD | WS_VISIBLE, 10, 8, 200, 18, hwnd, NULL, NULL, NULL);
+            HWND hBtnSave = CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 570, 6, 95, 24, hwnd, (HMENU)204, NULL, NULL);
+            SendMessageA(hBtnSave, WM_SETFONT, (WPARAM)hFont, 0);
+            HWND hBtnLoad = CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 675, 6, 95, 24, hwnd, (HMENU)205, NULL, NULL);
+            SendMessageA(hBtnLoad, WM_SETFONT, (WPARAM)hFont, 0);
             HWND hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 780, 6, 105, 24, hwnd, (HMENU)99, NULL, NULL);
             SendMessageA(hBtnHelp, WM_SETFONT, (WPARAM)hFont, 0);
 
@@ -993,7 +1146,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hOutput, WM_SETFONT, (WPARAM)hFont, 0);
 
             // Non-blocking Bottom Status Bar
-            hStatus = CreateWindowExA(0, "STATIC", " Ready | F1: Help | C: Copy Output | D: Demo | Enter: Convert | G: Gray/BCD | F: Float | E: Endian",
+            hStatus = CreateWindowExA(0, "STATIC", " Ready | F1: Help | F5: Save | F9: Load | C: Copy | D: Demo | Enter: Convert | G: Gray/BCD | F: Float | E: Endian",
                 WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 544, 875, 20, hwnd, (HMENU)300, NULL, NULL);
             SendMessageA(hStatus, WM_SETFONT, (WPARAM)hFont, 0);
 
@@ -1020,6 +1173,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (id == 100) DoConvertBases();
             else if (id == 201) DoCopyOutput(hwnd);
             else if (id == 202) DoLoadDemo(hwnd);
+            else if (id == 204) DoQuicksave(hwnd);
+            else if (id == 205) DoQuickload(hwnd);
             else if (id == 203) {
                 SetWindowTextA(hInput, "");
                 SetWindowTextA(hOutput, "");
@@ -1035,6 +1190,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "=== KBase Studio User Guide ===\n\n"
                     "KEYBOARD SHORTCUTS:\n"
                     "- F1 or H: Open this Help & Feature Guide\n"
+                    "- F5: Quicksave studio state to kbase_quicksave.dat\n"
+                    "- F9: Quickload studio state from kbase_quicksave.dat\n"
                     "- Enter: Live base conversion / calculate\n"
                     "- C: Copy output buffer to Windows clipboard\n"
                     "- D: Load 1-click sample demo presets (0xDEADBEEF)\n"
@@ -1102,12 +1259,52 @@ void __stdcall MainEntry() {
         
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+
+    // First-run tutorial flag check: never interrupt restored sessions
+    HANDLE hTut = CreateFileA("kbase_tutorial.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hSaveCheck = CreateFileA("kbase_quicksave.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    BOOL hasSavedState = (hSaveCheck != INVALID_HANDLE_VALUE);
+    if (hSaveCheck != INVALID_HANDLE_VALUE) CloseHandle(hSaveCheck);
+
+    if (hTut == INVALID_HANDLE_VALUE && !hasSavedState) {
+        MessageBoxA(hwnd,
+            "=== Welcome to KBase Studio ===\n\n"
+            "KBase is a 64-bit base converter, bitwise arithmetic engine,\n"
+            "IEEE-754 floating-point, varint, and binary diagnostic suite.\n\n"
+            "KEYBOARD SHORTCUTS:\n"
+            "- F1 or H: Open the full Help & Feature Guide\n"
+            "- F5: Quicksave studio state to kbase_quicksave.dat\n"
+            "- F9: Quickload studio state from kbase_quicksave.dat\n"
+            "- Enter: Recalculate / live base conversion\n"
+            "- C: Copy output result to Windows clipboard\n"
+            "- D: Load demo presets (0xDEADBEEF)\n"
+            "- X: Clear inputs and output buffer\n"
+            "- V, I, S, G, F, E, K: Fast utility operations\n\n"
+            "Click OK to begin.",
+            "KBase Studio - Welcome & First Run Guide", MB_OK | MB_ICONINFORMATION);
+        HANDLE hNewTut = CreateFileA("kbase_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hNewTut != INVALID_HANDLE_VALUE) {
+            DWORD written = 0;
+            WriteFile(hNewTut, "1", 1, &written, NULL);
+            CloseHandle(hNewTut);
+        }
+    } else {
+        if (hTut != INVALID_HANDLE_VALUE) CloseHandle(hTut);
+    }
     
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
             if (msg.wParam == VK_F1) {
                 SendMessageA(hwnd, WM_COMMAND, 99, 0);
+                continue;
+            }
+            if (msg.wParam == VK_F5) {
+                SendMessageA(hwnd, WM_COMMAND, 204, 0);
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                SendMessageA(hwnd, WM_COMMAND, 205, 0);
                 continue;
             }
             HWND hFocus = GetFocus();
