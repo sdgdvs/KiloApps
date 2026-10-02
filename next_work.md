@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: "kweb://portal (KiloNet Central Directory)"
   kilo_graphics: KSanctuary
-  kilo_tester: KPaint
+  kilo_tester: KPass
   kilo_usability: KHabit
   kilo_qa: KFarm
   kilo_expander: KPad
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KCosmic
-  timestamp: "2026-10-02T13:20:00Z"
+  agent: kilo-tester
+  app: KPaint
+  timestamp: "2026-10-02T14:18:00Z"
 last_planner_run: "2026-10-01T19:32:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KDragon`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono`, `KFortress`, `KCosmic` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KSanctuary, KDragon, KSubmarine, KStarDredge)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KPaint`
+- **Current Target**: `KPass`
 - **Upcoming Queue**:
-  `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad)*.
+  `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KHabit`
@@ -298,6 +298,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-02T14:18:00Z — kilo-tester: KPaint (Syntax Redeclaration Repair, Missing Shortcuts & Dropdown Dismissal)**
+  - Status: PASS ✅ (4 issues found, 4 fixed, 0 regressions, clean builds, 230.4 KB web / 39.0 KB native < 999 KB ceiling).
+  - Script Execution Fix: Eliminated 8 duplicate `let` redeclarations in RFMS collab block that caused fatal browser syntax parse error.
+  - Shortcut Wiring: Added missing `Ctrl+G` (pixel grid), `X` (swap FG/BG colors), and `J` (gradient tool) keyboard handlers.
+  - Modal & Dropdown Ergonomics: Added `closeExportDropdown()` to Escape key dismissal chain and added `TEXTAREA` input guard.
+  - Verification: Vite build clean in 378ms; check_icons & security_lint 100% PASS; zero glints; ARG guidelines intact.
+
 - **2026-10-02T13:20:00Z — kilo-graphics: KCosmic (Perimeter Dot & Glint Purge, Biocrust Shaders, Meltwater Lakes & Atolls)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 562.4 KB web / 261.6 KB native < 999 KB ceiling).
   - Dot & Glint Purge: Removed rotating gantry spokes, elevator traveling climber pod, and mass driver launch projectile dots.
@@ -330,11 +337,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Modal & Toast Ergonomics: Verified backdrop dismissal, mutual modal isolation, non-occluding bottom-right toasts, and Enter/Space triggers.
   - Keyboard Navigation: Confirmed 1-9 host presets, P/T/M/S/D/B/Q shortcuts, and high-contrast :focus-visible outlines across all interactive elements.
   - Verification: MSVC clean (`KPing.exe` 38.9 KB); Vite clean in 455ms; check_icons & security_lint 100% PASS.
-
-- **2026-10-02T10:20:00Z — kilo-qa: KCalendar (Pass 5: Full State Persistence, First-Run Tutorial, Safe Toasts & Win32 Quicksave)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 109.7 KB web / 24.6 KB native < 999 KB ceiling).
-  - Quicksave & State Integrity: Built F5 Quicksave / F9 Quickload in Win32 C (`kcalendar_quicksave.dat`) and web with full filter/view state capture.
-  - First-Run Tutorial: Enforced `kcalendar_tutorial.dat` and `kcalendar_tutorialSeen` flags preventing tutorial modal on restored sessions.
-  - Toast Occlusion Remediation: Relocated toasts to non-occluding bottom-right safe viewport with max 2 concurrent toasts and instant click dismiss.
-  - Modal Isolation: Added mutual modal closing preventing double-modal stacking across edit, help, stats, and delete confirmation dialogs.
-  - Verification: MSVC clean (`KCalendar.exe` 24.6 KB); Vite clean in 379ms; check_icons & security_lint 100% PASS.

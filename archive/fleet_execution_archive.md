@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-02T10:20:00Z — kilo-qa: KCalendar (Pass 5: Full State Persistence, First-Run Tutorial, Safe Toasts & Win32 Quicksave)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 109.7 KB web / 24.6 KB native < 999 KB ceiling).
+  - Quicksave & State Integrity: Built F5 Quicksave / F9 Quickload in Win32 C (`kcalendar_quicksave.dat`) and web with full filter/view state capture.
+  - First-Run Tutorial: Enforced `kcalendar_tutorial.dat` and `kcalendar_tutorialSeen` flags preventing tutorial modal on restored sessions.
+  - Toast Occlusion Remediation: Relocated toasts to non-occluding bottom-right safe viewport with max 2 concurrent toasts and instant click dismiss.
+  - Modal Isolation: Added mutual modal closing preventing double-modal stacking across edit, help, stats, and delete confirmation dialogs.
+  - Verification: MSVC clean (`KCalendar.exe` 24.6 KB); Vite clean in 379ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T07:36:00Z — kilo-tester: KPad (Interactive UI Audit, Missing Handlers, Diff Quicksave & Modal Dismissals)**
   - Status: PASS ✅ (5 issues found, 5 fixed, 0 regressions, clean builds, 230.3 KB web / 33.8 KB native < 999 KB ceiling).
   - Broken Handlers: Defined missing `ctxNewTab()` in context menu and `openCollabChat()` in collab dropdown.

@@ -1414,12 +1414,14 @@
     let currentSymmetry = 'none';
 
     // Collaborative Studio (Firebase Realtime Database)
+    let mp = null;
     let isLiveCollab = false;
     let currentCollabRoom = null;
     let collabClientId = 'artist_' + Math.random().toString(36).substr(2, 9);
     let collabClientNick = localStorage.getItem('kpaint_collab_nick') || ('Artist_' + Math.floor(1000 + Math.random() * 9000));
     let presenceUnsub = null;
     let strokesUnsub = null;
+    let cursorsRef = null;
     let cursorsUnsub = null;
     let snapshotUnsub = null;
     let lastCursorPush = 0;
@@ -4970,16 +4972,6 @@
     // =========================================================================
     // Collaborative Studio (Retro Firebase Multiplayer Service - RFMS Standard)
     // =========================================================================
-    let mp = null;
-    let isLiveCollab = false;
-    let currentCollabRoom = null;
-    let collabClientId = 'artist_' + Math.random().toString(36).substr(2, 9);
-    let collabClientNick = localStorage.getItem('kpaint_collab_nick') || ('Artist_' + Math.floor(1000 + Math.random() * 9000));
-    let peerCursors = {};
-    let cursorsRef = null;
-    let cursorsUnsub = null;
-    let lastCursorPush = 0;
-    let currentStroke = null;
 
     // Rule 12 Subnet Ghost Artist AI Copilot
     let isGhostArtistActive = false;
@@ -5754,7 +5746,7 @@
 
     // Keyboard Shortcuts
     window.addEventListener('keydown', (e) => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') return;
 
       if (e.key === 'F1') {
         e.preventDefault();
@@ -5780,6 +5772,7 @@
         closeCollabModal();
         closeTextModal();
         closeAnsiModal();
+        closeExportDropdown();
         clearSelection();
         const t = document.getElementById('toast');
         if (t) t.classList.remove('show');
@@ -5818,6 +5811,9 @@
         } else if (e.key === '0') {
           e.preventDefault();
           resetZoom();
+        } else if (e.key === 'g' || e.key === 'G') {
+          e.preventDefault();
+          togglePixelGrid();
         } else if (e.key === 's' || e.key === 'S') {
           e.preventDefault();
           saveVFS();
@@ -5835,6 +5831,8 @@
         else if (k === 'r') setTool('rect');
         else if (k === 'c') setTool('ellipse');
         else if (k === 'g') setTool('fill');
+        else if (k === 'j') setTool('gradient');
+        else if (k === 'x') swapColors();
         else if (k === 'f') toggleAnimationDock();
         else if (k === 'a') setTool('spray');
         else if (k === 'i') setTool('pipette');
