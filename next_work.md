@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KSanctuary
   kilo_tester: KPass
   kilo_usability: KFarm
-  kilo_qa: KFarm
+  kilo_qa: KFlash
   kilo_expander: KPad
 virtual_web_target: "kweb://portal"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KHabit
-  timestamp: "2026-10-02T15:20:00Z"
+  agent: kilo-qa
+  app: KFarm
+  timestamp: "2026-10-02T16:25:00Z"
 last_planner_run: "2026-10-01T19:32:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPaint`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash` *(Completed: KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KFarm`
+- **Current Target**: `KFlash`
 - **Upcoming Queue**:
-  `KFlash`, `KFont`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KCalendar` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar)*.
+  `KFont`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KCalendar`, `KFarm` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KPad`
@@ -298,6 +298,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-02T16:25:00Z — kilo-qa: KFarm (Pass 5: Full State Persistence, First-Run Tutorial, Safe Toasts & Win32 Quicksave)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 92.3 KB web / 136.2 KB native < 999 KB ceiling).
+  - Quicksave & State Integrity: Built F5 Quicksave / F9 Quickload in Win32 C (`kfarm.sav`) and web localStorage with full idempotent state capture.
+  - First-Run Tutorial: Enforced `kfarm_tutorial.dat` and `kfarm_tutorialSeen` flags so tutorial only triggers on fresh sessions.
+  - Toast Occlusion Remediation: Relocated toast container to non-occluding bottom-right safe viewport (`bottom: 24px; right: 20px`).
+  - Overlay Ergonomics & Buttons: Added Load [F9] button to web/native; wired Enter/Space help dismissal; updated Almanac shortcuts.
+  - Verification: MSVC clean (`KFarm.exe` 136.2 KB); Vite clean in 389ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T15:20:00Z — kilo-usability: KHabit (Win32 Layout & Quicksave Parity, Safe Toasts, Stats Grid & Focus Ergonomics)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 82.1 KB web / 175.0 KB native < 999 KB ceiling).
   - Win32 Parity & Alignment: Aligned dashboard to 520px list width, added 7-day history headers/day labels, F5/F9 Quicksave/Quickload, and Enter-to-add key.
@@ -330,11 +338,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - 2D Relay Topology Radar (Tab 11): Built 800x380 canvas with 7 nodes, 10 waveguides, animated photon pulses, Dijkstra routing & probe.
   - Audio Engine: Added Track 4 ("Lithospheric Cipher Suite" YM2612 FM / SPC700 delay), Bell 202 modem handshake, and cipher ticks.
   - Verification: Vite build clean in 377ms; security_lint 100% PASS; linked in KNet, portal, and webring.
-
-- **2026-10-02T11:24:00Z — kilo-expander: KPaint (PCX/ICO/ANSI/XBM Format Suite, Sprite Animation Reel, Bezier & Replace)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 230.5 KB web / 39.0 KB native < 999 KB ceiling).
-  - Format Suite: Added 24-bit TrueColor RLE PCX decoder/encoder, multi-res Windows ICO (16/32/48px), ANSI art BBS modal, and XBM export.
-  - Native Win32 Parity: Implemented 24-bit PCX and 1-bit monochrome XBM file exporters with GUI buttons and hotkeys in `KPaint.exe`.
-  - Sprite Animation Dock: Built multi-frame flipbook dock with onionskin overlay, 1-24 FPS preview, and Sprite Sheet PNG + JSON metadata export.
-  - Drawing Tools: Added 3-point Bezier Curve tool (shortcut K) and Global Layer Color Replace tool (shortcut Shift+G).
-  - Verification: MSVC clean (`KPaint.exe` 39.0 KB); Vite clean in 384ms; check_icons & security_lint 100% PASS.

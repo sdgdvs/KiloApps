@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-02T11:24:00Z — kilo-expander: KPaint (PCX/ICO/ANSI/XBM Format Suite, Sprite Animation Reel, Bezier & Replace)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 230.5 KB web / 39.0 KB native < 999 KB ceiling).
+  - Format Suite: Added 24-bit TrueColor RLE PCX decoder/encoder, multi-res Windows ICO (16/32/48px), ANSI art BBS modal, and XBM export.
+  - Native Win32 Parity: Implemented 24-bit PCX and 1-bit monochrome XBM file exporters with GUI buttons and hotkeys in `KPaint.exe`.
+  - Sprite Animation Dock: Built multi-frame flipbook dock with onionskin overlay, 1-24 FPS preview, and Sprite Sheet PNG + JSON metadata export.
+  - Drawing Tools: Added 3-point Bezier Curve tool (shortcut K) and Global Layer Color Replace tool (shortcut Shift+G).
+  - Verification: MSVC clean (`KPaint.exe` 39.0 KB); Vite clean in 384ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T10:37:00Z — kilo-usability: KPing (Win32 Overlap Fix, Responsive Media Queries & Focus Ergonomics)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 151.0 KB web / 38.9 KB native < 999 KB ceiling).
   - Win32 Layout Polish: Eliminated 10px overlap between preset combobox and Ping button; fixed 17px row 2 Audio/Resolve overlap at 880px minimum track size.

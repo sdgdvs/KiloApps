@@ -97,9 +97,9 @@
         }
         .toast-notify {
             position: fixed;
-            top: 16px;
-            right: 16px;
-            transform: translateY(-8px);
+            bottom: 24px;
+            right: 20px;
+            transform: translateY(8px);
             background-color: rgba(62, 39, 35, 0.96);
             color: #FFF3E0;
             padding: 9px 14px;
@@ -175,7 +175,8 @@
             <button id="mayoBtn" onclick="buyMayoMaker()" style="padding:5px 10px; font-size:14px; background-color:#FFF9C4; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Buy Mayo Maker ($100) [Y]</button>
             <button id="cheeseBtn" onclick="buyCheesePress()" style="padding:5px 10px; font-size:14px; background-color:#FFE082; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">Buy Cheese Press ($200) [E]</button>
             <button onclick="showHelp()" style="padding:5px 10px; font-size:14px; background-color:#2196F3; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Almanac [H / F1]</button>
-            <button id="saveBtn" onclick="saveGame(true)" style="padding:5px 10px; font-size:14px; background-color:#4CAF50; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Save [S]</button>
+            <button id="saveBtn" onclick="saveGame(true)" style="padding:5px 10px; font-size:14px; background-color:#4CAF50; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Save [F5/S]</button>
+            <button id="loadBtn" onclick="loadGame(true)" style="padding:5px 10px; font-size:14px; background-color:#00897B; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Load [F9/L]</button>
             <button id="resetBtn" onclick="promptReset()" style="padding:5px 10px; font-size:14px; background-color:#D32F2F; border:none; border-radius:5px; color:white; cursor:pointer; font-weight:bold;">Reset [R]</button>
         </div>
     </div>
@@ -213,7 +214,8 @@
                 <strong>[M]</strong>: Buy Mill ($150)<br>
                 <strong>[Y]</strong>: Buy Mayo Maker ($100)<br>
                 <strong>[E]</strong>: Buy Cheese Press ($200)<br>
-                <strong>[S]</strong>: Save Farm<br>
+                <strong>[F5] / [S]</strong>: Quicksave Farm<br>
+                <strong>[F9] / [L]</strong>: Quickload Farm<br>
                 <strong>[R]</strong>: Reset Farm<br>
                 <strong>[Esc]</strong>: Close Dialogs / Modals</p>
             </div>
@@ -320,8 +322,24 @@
                 }
                 return;
             }
-            if (isModalOpen) return;
+            if (isModalOpen) {
+                if (e.key === 'Enter' || e.key === ' ' || e.code === 'Space') {
+                    e.preventDefault();
+                    hideHelp();
+                }
+                return;
+            }
 
+            if (e.key === 'F5') {
+                e.preventDefault();
+                saveGame(true);
+                return;
+            }
+            if (e.key === 'F9') {
+                e.preventDefault();
+                loadGame(true);
+                return;
+            }
             if (e.key === ' ' || e.code === 'Space') {
                 e.preventDefault();
                 nextDay();
@@ -340,6 +358,11 @@
             if (e.key === 's' || e.key === 'S') {
                 e.preventDefault();
                 saveGame(true);
+                return;
+            }
+            if (e.key === 'l' || e.key === 'L') {
+                e.preventDefault();
+                loadGame(true);
                 return;
             }
             if (e.key === 'r' || e.key === 'R') {
@@ -851,61 +874,98 @@
         }
 
         function saveGame(manual = false) {
+            const currentSeason = Math.floor((day - 1) / 7) % 4;
             const saveData = {
+                version: 1,
                 day, money, fertilizerBought, toolsUpgraded,
                 chickens, cows, weather, hasScarecrow,
                 hasMill, hasMayoMaker, hasCheesePress,
-                grid: grid.map(c => ({ type: c.type, watered: c.watered || 0, growth: c.growth || 0, cropType: c.cropType || 0 }))
+                currentSeason,
+                grid: grid.map(c => ({
+                    type: c.type,
+                    watered: c.watered || 0,
+                    growth: c.growth || 0,
+                    cropType: c.cropType || 0
+                }))
             };
             try {
                 localStorage.setItem('kfarm_save_v1', JSON.stringify(saveData));
-                if (manual) showToast('💾 Farm saved successfully!');
-            } catch(e) {}
+                if (manual) showToast('💾 Quicksave successful [F5]!');
+            } catch(e) {
+                showToast('⚠️ Storage quota exceeded or disabled!', true);
+            }
         }
 
-        function loadGame() {
+        function loadGame(manual = false) {
             try {
                 const raw = localStorage.getItem('kfarm_save_v1');
-                if (!raw) return false;
+                if (!raw) {
+                    if (manual) showToast('⚠️ No saved farm found!', true);
+                    return false;
+                }
                 const data = JSON.parse(raw);
                 if (typeof data.day === 'number') day = data.day;
                 if (typeof data.money === 'number') money = data.money;
-                if (data.fertilizerBought) {
-                    fertilizerBought = true;
-                    cropData.forEach(c => { if (c.growthTime > 1) c.growthTime--; });
-                    const btn = document.getElementById('upgradeBtn');
-                    if (btn) { btn.innerText = 'Fertilizer (Owned)'; btn.style.backgroundColor = '#9E9E9E'; btn.disabled = true; }
+
+                fertilizerBought = !!data.fertilizerBought;
+                const fertBtn = document.getElementById('upgradeBtn');
+                if (fertBtn) {
+                    fertBtn.innerText = fertilizerBought ? 'Fertilizer (Owned)' : 'Fertilizer ($100) [F]';
+                    fertBtn.style.backgroundColor = fertilizerBought ? '#9E9E9E' : '#4CAF50';
+                    fertBtn.disabled = fertilizerBought;
                 }
-                if (data.toolsUpgraded) {
-                    toolsUpgraded = true;
-                    const btn = document.getElementById('upgradeToolsBtn');
-                    if (btn) { btn.innerText = 'Tools Upgraded (3x3)'; btn.style.backgroundColor = '#9E9E9E'; btn.disabled = true; }
+                const baseGrowthTimes = [2, 3, 4, 5];
+                cropData.forEach((c, i) => {
+                    c.growthTime = fertilizerBought ? Math.max(1, baseGrowthTimes[i] - 1) : baseGrowthTimes[i];
+                });
+
+                toolsUpgraded = !!data.toolsUpgraded;
+                const toolBtn = document.getElementById('upgradeToolsBtn');
+                if (toolBtn) {
+                    toolBtn.innerText = toolsUpgraded ? 'Tools Upgraded (3x3)' : 'Upgrade Tools ($200) [T]';
+                    toolBtn.style.backgroundColor = toolsUpgraded ? '#9E9E9E' : '#2196F3';
+                    toolBtn.disabled = toolsUpgraded;
                 }
+
                 if (typeof data.chickens === 'number') chickens = data.chickens;
                 if (typeof data.cows === 'number') cows = data.cows;
                 if (data.weather) weather = data.weather;
-                if (data.hasScarecrow) {
-                    hasScarecrow = true;
-                    document.getElementById('scarecrowSpan').innerText = 'Yes';
-                    const btn = document.getElementById('scarecrowBtn');
-                    if (btn) { btn.innerText = 'Scarecrow (Owned)'; btn.style.backgroundColor = '#9E9E9E'; btn.disabled = true; }
+
+                hasScarecrow = !!data.hasScarecrow;
+                const scarecrowSpan = document.getElementById('scarecrowSpan');
+                if (scarecrowSpan) scarecrowSpan.innerText = hasScarecrow ? 'Yes' : 'No';
+                const scarecrowBtn = document.getElementById('scarecrowBtn');
+                if (scarecrowBtn) {
+                    scarecrowBtn.innerText = hasScarecrow ? 'Scarecrow (Owned)' : 'Buy Scarecrow ($100) [K]';
+                    scarecrowBtn.style.backgroundColor = hasScarecrow ? '#9E9E9E' : '#607D8B';
+                    scarecrowBtn.disabled = hasScarecrow;
                 }
-                if (data.hasMill) {
-                    hasMill = true;
-                    cropData[0].value = 25;
-                    const btn = document.getElementById('millBtn');
-                    if (btn) { btn.innerText = 'Mill (Owned)'; btn.style.backgroundColor = '#9E9E9E'; btn.disabled = true; }
+
+                hasMill = !!data.hasMill;
+                cropData[0].value = hasMill ? 25 : 10;
+                const millBtn = document.getElementById('millBtn');
+                if (millBtn) {
+                    millBtn.innerText = hasMill ? 'Mill (Owned)' : 'Buy Mill ($150) [M]';
+                    millBtn.style.backgroundColor = hasMill ? '#9E9E9E' : '#D7CCC8';
+                    millBtn.disabled = hasMill;
                 }
-                if (data.hasMayoMaker) {
-                    hasMayoMaker = true;
-                    const btn = document.getElementById('mayoBtn');
-                    if (btn) { btn.innerText = 'Mayo Maker (Owned)'; btn.style.backgroundColor = '#9E9E9E'; btn.disabled = true; }
+
+                hasMayoMaker = !!data.hasMayoMaker;
+                const mayoBtn = document.getElementById('mayoBtn');
+                if (mayoBtn) {
+                    mayoBtn.innerText = hasMayoMaker ? 'Mayo Maker (Owned)' : 'Buy Mayo Maker ($100) [Y]';
+                    mayoBtn.style.backgroundColor = hasMayoMaker ? '#9E9E9E' : '#FFF9C4';
+                    mayoBtn.disabled = hasMayoMaker;
                 }
-                if (data.hasCheesePress) {
-                    hasCheesePress = true;
-                    const btn = document.getElementById('cheeseBtn');
-                    if (btn) { btn.innerText = 'Cheese Press (Owned)'; btn.style.backgroundColor = '#9E9E9E'; btn.disabled = true; }
+
+                hasCheesePress = !!data.hasCheesePress;
+                const cheeseBtn = document.getElementById('cheeseBtn');
+                if (cheeseBtn) {
+                    cheeseBtn.innerText = hasCheesePress ? 'Cheese Press (Owned)' : 'Buy Cheese Press ($200) [E]';
+                    cheeseBtn.style.backgroundColor = hasCheesePress ? '#9E9E9E' : '#FFE082';
+                    cheeseBtn.disabled = hasCheesePress;
                 }
+
                 if (Array.isArray(data.grid) && data.grid.length === grid.length) {
                     for (let i = 0; i < grid.length; i++) {
                         grid[i].type = data.grid[i].type || 0;
@@ -914,20 +974,35 @@
                         grid[i].cropType = data.grid[i].cropType || 0;
                     }
                 }
+
+                chickensList = [];
+                cowsList = [];
                 while (chickensList.length < Math.min(chickens, 8)) {
                     chickensList.push({ x: Math.random()*340+30, y: Math.random()*340+30, tx: Math.random()*340+30, ty: Math.random()*340+30, dir: 1, peck: 0, moveTimer: 30 });
                 }
                 while (cowsList.length < Math.min(cows, 6)) {
                     cowsList.push({ x: Math.random()*340+30, y: Math.random()*340+30, tx: Math.random()*340+30, ty: Math.random()*340+30, dir: 1, chew: 0, moveTimer: 50 });
                 }
+
+                timeOfDay = 'day';
+                const sleepBtn = document.getElementById('sleepBtn');
+                if (sleepBtn) sleepBtn.disabled = false;
+
                 updateMoney();
                 updateAnimals();
                 const currentSeason = Math.floor((day - 1) / 7) % 4;
                 document.getElementById('daySpan').innerText = day;
                 document.getElementById('seasonSpan').innerText = seasons[currentSeason];
                 document.getElementById('weatherSpan').innerText = weather;
+
+                if (manual) {
+                    showToast('📂 Quickload successful [F9]!');
+                }
                 return true;
-            } catch(e) { return false; }
+            } catch(e) {
+                if (manual) showToast('⚠️ Failed to load save data!', true);
+                return false;
+            }
         }
 
         function resetGame() {
@@ -1927,15 +2002,24 @@
             });
         });
 
-        loadGame();
+        const saveLoaded = loadGame(false);
         updateSeedLabelSelection();
         checkBankruptcy();
         updateAnimals();
         updateMoney();
         requestAnimationFrame(draw);
-        setTimeout(() => {
-            showToast('🌱 Welcome to KFarm! Click tiles to farm. Press [H] or [F1] for Almanac.');
-        }, 350);
+
+        const tutorialSeen = !!localStorage.getItem('kfarm_tutorialSeen');
+        if (!saveLoaded && !tutorialSeen) {
+            setTimeout(() => {
+                showToast('🌱 Welcome to KFarm! Click tiles to till/plant/water. [H/F1] for Almanac.');
+                try { localStorage.setItem('kfarm_tutorialSeen', '1'); } catch(e) {}
+            }, 350);
+        } else if (saveLoaded) {
+            setTimeout(() => {
+                showToast(`📂 Saved farm loaded (Day ${day}, $${money})! [Space] for Next Day.`);
+            }, 350);
+        }
     </script>
 </body>
 </html>

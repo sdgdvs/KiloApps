@@ -256,6 +256,7 @@ HWND hMayoBtn;
 HWND hCheeseBtn;
 HWND hHelpBtn;
 HWND hSaveBtn;
+HWND hLoadBtn;
 HWND hResetBtn;
 
 char toast_msg[128] = "";
@@ -400,13 +401,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 S(275), S(520), S(135), S(22), hwnd, (HMENU) 12, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
             hCheeseBtn = CreateWindow("BUTTON", "Cheese ($200) [E]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                S(10), S(548), S(120), S(24), hwnd, (HMENU) 13, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                S(10), S(548), S(110), S(24), hwnd, (HMENU) 13, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hHelpBtn = CreateWindow("BUTTON", "Almanac [F1]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                S(135), S(548), S(85), S(24), hwnd, (HMENU) 14, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
-            hSaveBtn = CreateWindow("BUTTON", "Save [S]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                S(225), S(548), S(85), S(24), hwnd, (HMENU) 15, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                S(125), S(548), S(75), S(24), hwnd, (HMENU) 14, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hSaveBtn = CreateWindow("BUTTON", "Save [F5]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                S(205), S(548), S(65), S(24), hwnd, (HMENU) 15, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+            hLoadBtn = CreateWindow("BUTTON", "Load [F9]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                S(275), S(548), S(65), S(24), hwnd, (HMENU) 17, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
             hResetBtn = CreateWindow("BUTTON", "Reset [R]", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                S(315), S(548), S(95), S(24), hwnd, (HMENU) 16, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+                S(345), S(548), S(65), S(24), hwnd, (HMENU) 16, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
 
             SendMessage(hSeedBtns[0], BM_SETCHECK, BST_CHECKED, 0);
             HFONT hFont = CreateFont(S(-13), 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
@@ -421,7 +424,19 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if (has_cheese_press) { EnableWindow(hCheeseBtn, FALSE); SetWindowText(hCheeseBtn, "Cheese Press (Owned)"); }
                 ShowNativeToast("Saved farm loaded!", 0);
             } else {
-                ShowNativeToast("Welcome to KFarm! [H/F1] for Almanac", 0);
+                FILE* tf = fopen("kfarm_tutorial.dat", "rb");
+                if (!tf) {
+                    ShowNativeToast("Welcome to KFarm! [H/F1] for Almanac", 0);
+                    tf = fopen("kfarm_tutorial.dat", "wb");
+                    if (tf) {
+                        int seen = 1;
+                        fwrite(&seen, sizeof(int), 1, tf);
+                        fclose(tf);
+                    }
+                } else {
+                    fclose(tf);
+                    ShowNativeToast("Ready to farm! [H/F1] for Almanac", 0);
+                }
             }
             UpdateTitle(hwnd);
             return 0;
@@ -430,8 +445,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SendMessage(hwnd, WM_COMMAND, 14, 0);
             } else if (wParam == VK_SPACE) {
                 SendMessage(hwnd, WM_COMMAND, 1, 0);
-            } else if (wParam == 'S' || wParam == 's') {
+            } else if (wParam == 'S' || wParam == 's' || wParam == VK_F5) {
                 SendMessage(hwnd, WM_COMMAND, 15, 0);
+            } else if (wParam == 'L' || wParam == 'l' || wParam == VK_F9) {
+                SendMessage(hwnd, WM_COMMAND, 17, 0);
             } else if (wParam == 'R' || wParam == 'r') {
                 SendMessage(hwnd, WM_COMMAND, 16, 0);
             } else if (wParam == 'F' || wParam == 'f') {
@@ -631,13 +648,39 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     "[M]: Buy Mill ($150)\n"
                     "[Y]: Buy Mayo Maker ($100)\n"
                     "[E]: Buy Cheese Press ($200)\n"
-                    "[S]: Save Farm\n"
+                    "[F5] / [S]: Quicksave Farm\n"
+                    "[F9] / [L]: Quickload Farm\n"
                     "[R]: Reset Farm",
                     "Farmer's Almanac - KFarm", MB_OK | MB_ICONINFORMATION);
             }
             if (LOWORD(wParam) == 15) {
                 SaveGame();
-                ShowNativeToast("Farm saved successfully!", 0);
+                ShowNativeToast("Quicksave successful! [F5]", 0);
+            }
+            if (LOWORD(wParam) == 17) {
+                if (LoadGame()) {
+                    EnableWindow(hUpgradeBtn, !fertilizer_bought);
+                    SetWindowText(hUpgradeBtn, fertilizer_bought ? "Fertilizer (Owned)" : "Fertilizer ($100) [F]");
+                    EnableWindow(hUpgradeToolsBtn, !tools_upgraded);
+                    SetWindowText(hUpgradeToolsBtn, tools_upgraded ? "Tools Upgraded (3x3)" : "Tools ($200) [T]");
+                    EnableWindow(hBuyScarecrowBtn, !has_scarecrow);
+                    SetWindowText(hBuyScarecrowBtn, has_scarecrow ? "Scarecrow (Owned)" : "Scarecrow ($100) [K]");
+                    EnableWindow(hMillBtn, !has_mill);
+                    SetWindowText(hMillBtn, has_mill ? "Mill (Owned)" : "Mill ($150) [M]");
+                    EnableWindow(hMayoBtn, !has_mayo_maker);
+                    SetWindowText(hMayoBtn, has_mayo_maker ? "Mayo Maker (Owned)" : "Mayo ($100) [Y]");
+                    EnableWindow(hCheeseBtn, !has_cheese_press);
+                    SetWindowText(hCheeseBtn, has_cheese_press ? "Cheese Press (Owned)" : "Cheese ($200) [E]");
+                    time_of_day = 0;
+                    selected_seed = 0;
+                    CheckRadioButton(hwnd, 2, 5, 2);
+                    UpdateTitle(hwnd);
+                    InvalidateRect(hwnd, NULL, TRUE);
+                    ShowNativeToast("Quickload successful! [F9]", 0);
+                } else {
+                    ShowNativeToast("No saved game found!", 1);
+                    MessageBeep(MB_ICONWARNING);
+                }
             }
             if (LOWORD(wParam) == 16) {
                 if (MessageBox(hwnd, "Are you sure you want to reset your farm? All progress will be lost.", "Reset Farm", MB_YESNO | MB_ICONWARNING) == IDYES) {
@@ -1664,8 +1707,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
                 SendMessage(hwnd, WM_COMMAND, seedCmd, 0);
                 continue;
             }
-            if (wp == 'S' || wp == 's') {
+            if (wp == 'S' || wp == 's' || wp == VK_F5) {
                 SendMessage(hwnd, WM_COMMAND, 15, 0);
+                continue;
+            }
+            if (wp == 'L' || wp == 'l' || wp == VK_F9) {
+                SendMessage(hwnd, WM_COMMAND, 17, 0);
                 continue;
             }
             if (wp == 'R' || wp == 'r') {
