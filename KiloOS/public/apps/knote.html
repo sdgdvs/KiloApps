@@ -454,7 +454,7 @@
   .dropdown-content button:hover {
     background: #fff9c4;
   }
-  .dropdown:hover .dropdown-content, .dropdown:focus-within .dropdown-content {
+  .dropdown:hover .dropdown-content, .dropdown:focus-within .dropdown-content, .dropdown.open .dropdown-content {
     display: block;
   }
 
@@ -1246,6 +1246,9 @@
   const pinBtn = document.getElementById('pinBtn');
   const lockBtn = document.getElementById('lockBtn');
   const viewToggleBtn = document.getElementById('viewToggleBtn');
+  const exportDropdown = document.querySelector('.dropdown');
+  const exportDropdownBtn = document.getElementById('exportDropdownBtn');
+  const dropdownContent = document.querySelector('.dropdown-content');
   const snapshotSaveBtn = document.getElementById('snapshotSaveBtn');
   const snapshotLoadBtn = document.getElementById('snapshotLoadBtn');
   const exportTxtBtn = document.getElementById('exportTxtBtn');
@@ -2278,6 +2281,19 @@
     }
   });
 
+  replaceInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (e.ctrlKey || e.altKey) {
+        replaceAllBtn.click();
+      } else {
+        replaceBtn.click();
+      }
+    } else if (e.key === 'Escape') {
+      toggleFindReplace(false);
+    }
+  });
+
   replaceBtn.addEventListener('click', () => {
     if (findMatches.length === 0 || currentMatchIndex === -1) return;
     const match = findMatches[currentMatchIndex];
@@ -3060,6 +3076,45 @@
     if (e.target === helpModal) {
       helpModal.style.display = 'none';
       helpBtn.focus();
+    }
+  });
+  if (statsModal) {
+    statsModal.addEventListener('click', (e) => {
+      if (e.target === statsModal) closeStatsModal();
+    });
+  }
+  if (collabModal) {
+    collabModal.addEventListener('click', (e) => {
+      if (e.target === collabModal) collabModal.style.display = 'none';
+    });
+  }
+
+  // Export Dropdown interaction & outside click dismissal
+  function closeExportDropdown() {
+    if (exportDropdown) exportDropdown.classList.remove('open');
+    if (document.activeElement && dropdownContent && dropdownContent.contains(document.activeElement)) {
+      document.activeElement.blur();
+    }
+  }
+
+  if (exportDropdownBtn && exportDropdown) {
+    exportDropdownBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      exportDropdown.classList.toggle('open');
+    });
+  }
+
+  if (dropdownContent) {
+    dropdownContent.addEventListener('click', (e) => {
+      if (e.target && e.target.tagName === 'BUTTON') {
+        closeExportDropdown();
+      }
+    });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (exportDropdown && !exportDropdown.contains(e.target)) {
+      closeExportDropdown();
     }
   });
 
@@ -3902,6 +3957,9 @@
         toast.classList.remove('show');
         if (toastTimer) clearTimeout(toastTimer);
       }
+      if (exportDropdown && exportDropdown.classList.contains('open')) {
+        closeExportDropdown();
+      }
       if (passModal.style.display === 'flex') {
         closePasswordModal();
       } else if (deleteModal.style.display === 'flex') {
@@ -3925,6 +3983,20 @@
         searchInput.blur();
       }
       return;
+    }
+
+    // Enter closes help and stats modals if open
+    if (e.key === 'Enter' && modalOpen) {
+      if (helpModal.style.display === 'flex') {
+        e.preventDefault();
+        helpModal.style.display = 'none';
+        helpBtn.focus();
+        return;
+      } else if (statsModal && statsModal.style.display === 'flex') {
+        e.preventDefault();
+        closeStatsModal();
+        return;
+      }
     }
 
     // Suppress background hotkeys when any modal is open

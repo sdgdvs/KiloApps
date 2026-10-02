@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-02T00:18:00Z — kilo-qa: KBase (Pass 5: Full State Persistence, First-Run Tutorial, Toast & Win32 Quicksave)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 118.5 KB web / 24.5 KB native < 999 KB ceiling).
+  - Quicksave & State Integrity: Built F5 Quicksave / F9 Quickload in Win32 C (`kbase_quicksave.dat`) and web localStorage capturing all studio state.
+  - First-Run Tutorial: Enforced `kbase_tutorial.dat` and `kbase_tutorialSeen` flags preventing tutorial modal from interrupting restored sessions.
+  - UI & Toast Occlusion: Relocated toast notifications to non-occluding bottom-right viewport with instant dismiss click and timeout cleanup.
+  - Overlay Ergonomics: Bound Enter/Space modal dismiss in web and verified Esc, F1/H help, and 1-click preset buttons across web & native.
+  - Verification: MSVC clean (`KBase.exe` 24.5 KB); Vite clean in 793ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-01T22:18:00Z — kilo-tester: KNet (Interactive UI Audit, Forge & Subnet Fixes, Passkey Hash & TINAG Scrub)**
   - Status: PASS ✅ (6 issues found, 6 fixed, 0 regressions, clean builds, 170.0 KB web / 41.5 KB native < 999 KB ceiling).
   - Runtime Fixes: Fixed undefined `logTraffic` calls in Forge to `addTrafficLog`, and `closeForge` to `closeForgeModal`.
