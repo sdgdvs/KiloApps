@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KPaint
   kilo_usability: KHabit
   kilo_qa: KFarm
-  kilo_expander: KPaint
+  kilo_expander: KPad
 virtual_web_target: "kweb://darknet"
 virtual_web_rotation:
   - "kweb://geocities"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KPing
-  timestamp: "2026-10-02T10:37:00Z"
+  agent: kilo-expander
+  app: KPaint
+  timestamp: "2026-10-02T11:24:00Z"
 last_planner_run: "2026-10-01T19:32:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KFlash`, `KFont`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KCalendar` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KPaint`
+- **Current Target**: `KPad`
 - **Upcoming Queue**:
-  `KPad`, `KSynth`, `KVault`, `KSnake` *(Completed: KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia, KTask, KNet, KPing, KHash, KPad)*.
+  `KSynth`, `KVault`, `KSnake`, `KPaint` *(Completed: KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia, KTask, KNet, KPing, KHash, KPad)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -300,6 +300,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-02T11:24:00Z — kilo-expander: KPaint (PCX/ICO/ANSI/XBM Format Suite, Sprite Animation Reel, Bezier & Replace)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 230.5 KB web / 39.0 KB native < 999 KB ceiling).
+  - Format Suite: Added 24-bit TrueColor RLE PCX decoder/encoder, multi-res Windows ICO (16/32/48px), ANSI art BBS modal, and XBM export.
+  - Native Win32 Parity: Implemented 24-bit PCX and 1-bit monochrome XBM file exporters with GUI buttons and hotkeys in `KPaint.exe`.
+  - Sprite Animation Dock: Built multi-frame flipbook dock with onionskin overlay, 1-24 FPS preview, and Sprite Sheet PNG + JSON metadata export.
+  - Drawing Tools: Added 3-point Bezier Curve tool (shortcut K) and Global Layer Color Replace tool (shortcut Shift+G).
+  - Verification: MSVC clean (`KPaint.exe` 39.0 KB); Vite clean in 384ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T10:37:00Z — kilo-usability: KPing (Win32 Overlap Fix, Responsive Media Queries & Focus Ergonomics)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 151.0 KB web / 38.9 KB native < 999 KB ceiling).
   - Win32 Layout Polish: Eliminated 10px overlap between preset combobox and Ping button; fixed 17px row 2 Audio/Resolve overlap at 880px minimum track size.
@@ -331,15 +339,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - UI & Toast Occlusion: Relocated toast notifications to non-occluding bottom-right safe viewport (`z-index: 3000`) with instant dismiss and quota safety.
   - Overlay Ergonomics: Bound Enter/Space modal dismiss in web; verified Esc, F1/H help, and button layout across web & native.
   - Verification: MSVC clean (`KBudget.exe` 170.0 KB); Vite clean in 387ms; check_icons & security_lint 100% PASS.
-
-- **2026-10-02T05:22:00Z — kilo-usability: KAudio (Top-Center Safe Toasts, Key Offsets, Focus Rings & Layout Fit)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 123.0 KB web / 23.0 KB native < 999 KB ceiling).
-  - Toast Occlusion Remediation: Relocated toast container to non-occluding top-center viewport (`top: 14px`) preventing sequencer step blockage.
-  - Piano Ergonomics: Replaced flex-static margins with exact pixel-perfect `left` coordinates (32/80/176/224/272px) for black keys.
-  - Double Modal Prevention: Scoped `toggleHelp()` and `toggleJamModal()` to mutually close each other on open, preventing stacking.
-  - Accessibility & Focus: Added high-contrast `:focus-visible` outlines, slider cursor pointers, and `aria-pressed` states on step buttons.
-  - Shortcuts & Layout Fit: Added `Shift+H` and `Enter` modal toggles, tightened padding/gaps ensuring 100% vertical fit at 1040x860.
-  - Verification: MSVC clean (`KAudio.exe` 23.0 KB); Vite clean in 383ms; check_icons & security_lint 100% PASS.
 
 
 

@@ -161,7 +161,7 @@
         return { success: false, reason: 'offline' };
       }
 
-      const code = generateRoomCode(this.prefix);
+      const code = (customData && customData.roomId) ? customData.roomId.toUpperCase() : generateRoomCode(this.prefix);
       this.roomId = code;
       this.mySlot = 'p1';
       this.isHost = true;

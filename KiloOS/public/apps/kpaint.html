@@ -596,6 +596,97 @@
     border-color: #10b981 !important;
     color: #6ee7b7 !important;
   }
+
+  /* Flipbook Animation Dock Styles */
+  .animation-dock {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(18, 20, 29, 0.96);
+    backdrop-filter: blur(12px);
+    border-top: 1px solid var(--panel-border);
+    padding: 8px 14px;
+    z-index: 30;
+    box-shadow: 0 -6px 20px rgba(0,0,0,0.6);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .anim-dock-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .anim-dock-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #60a5fa;
+  }
+  .anim-dock-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .anim-frame-strip {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px 2px;
+    align-items: center;
+    min-height: 58px;
+  }
+  .anim-frame-strip::-webkit-scrollbar {
+    height: 6px;
+  }
+  .anim-frame-strip::-webkit-scrollbar-thumb {
+    background: var(--panel-border);
+    border-radius: 3px;
+  }
+  .anim-frame-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    background: rgba(0,0,0,0.4);
+    border: 2px solid var(--panel-border);
+    border-radius: 6px;
+    padding: 4px;
+    cursor: pointer;
+    min-width: 58px;
+    transition: all 0.15s ease;
+  }
+  .anim-frame-card:hover {
+    border-color: rgba(96, 165, 250, 0.6);
+  }
+  .anim-frame-card.active {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.2);
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+  }
+  .anim-frame-card img {
+    width: 48px;
+    height: 36px;
+    object-fit: contain;
+    background: #ffffff;
+    image-rendering: pixelated;
+    border-radius: 3px;
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .anim-frame-card .frame-num {
+    font-size: 10px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+  .anim-frame-card.active .frame-num {
+    color: #60a5fa;
+  }
 </style>
 </head>
 <body>
@@ -616,6 +707,9 @@
         Redo [Ctrl+Y]
       </button>
       <div style="width: 1px; height: 20px; background: var(--panel-border); margin: 0 4px;"></div>
+      <button class="btn btn-accent" id="btn-sound" onclick="toggleAudio()" title="Toggle Sound [U] (YM2612 FM + SPC700 Delay)" aria-label="Toggle Sound">
+        <span id="sound-icon">🔊</span> Sound [U]
+      </button>
       <button class="btn btn-accent" id="btn-collab" onclick="toggleCollabModal()" title="Live Collaborative Studio (O)" aria-label="Collaborative Studio">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
         <span id="collab-btn-label">Collab [O]</span>
@@ -641,6 +735,11 @@
         Help [F1]
       </button>
       
+      <button class="btn btn-accent" id="btn-anim-toggle" onclick="toggleAnimationDock()" title="Sprite Flipbook Animation Reel [F]" aria-label="Sprite Flipbook Animation Reel">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="2" ry="2"></rect><line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line></svg>
+        <span id="anim-btn-label">Anim Reel [F]</span>
+      </button>
+
       <div class="export-dropdown" id="export-dropdown">
         <button class="btn btn-accent" id="btn-export" onclick="toggleExportDropdown(event)" aria-label="Export Menu" aria-haspopup="true" aria-expanded="false">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
@@ -650,13 +749,23 @@
           <a onclick="exportImage('png')" onkeydown="handleExportKey(event, 'png')" role="button" tabindex="0">PNG</a>
           <a onclick="exportImage('webp')" onkeydown="handleExportKey(event, 'webp')" role="button" tabindex="0">WEBP</a>
           <a onclick="exportImage('bmp')" onkeydown="handleExportKey(event, 'bmp')" role="button" tabindex="0">BMP (24-bit)</a>
+          <a onclick="exportPCX()" onkeydown="if(event.key==='Enter'||event.key===' ')exportPCX()" role="button" tabindex="0">PCX (ZSoft 24-bit)</a>
+          <a onclick="exportICO()" onkeydown="if(event.key==='Enter'||event.key===' ')exportICO()" role="button" tabindex="0">Windows Icon (.ICO)</a>
+          <a onclick="exportPPM()" onkeydown="if(event.key==='Enter'||event.key===' ')exportPPM()" role="button" tabindex="0">PPM (Netpbm)</a>
+          <a onclick="exportANSI()" onkeydown="if(event.key==='Enter'||event.key===' ')exportANSI()" role="button" tabindex="0">ANSI Art (.ANS)</a>
+          <a onclick="exportXBM()" onkeydown="if(event.key==='Enter'||event.key===' ')exportXBM()" role="button" tabindex="0">XBM C Bitmap (.xbm)</a>
+          <a onclick="exportCHeader()" onkeydown="if(event.key==='Enter'||event.key===' ')exportCHeader()" role="button" tabindex="0">C Header (.H)</a>
+          <a onclick="exportSVG()" onkeydown="if(event.key==='Enter'||event.key===' ')exportSVG()" role="button" tabindex="0">SVG Vector</a>
+          <a onclick="exportJSON()" onkeydown="if(event.key==='Enter'||event.key===' ')exportJSON()" role="button" tabindex="0">JSON Sprite</a>
+          <a onclick="exportCanvasSnippet()" onkeydown="if(event.key==='Enter'||event.key===' ')exportCanvasSnippet()" role="button" tabindex="0">HTML5 Canvas Page</a>
+          <a onclick="exportPaletteGPL()" onkeydown="if(event.key==='Enter'||event.key===' ')exportPaletteGPL()" role="button" tabindex="0">GIMP Palette (.GPL)</a>
         </div>
       </div>
 
     </div>
   </div>
 
-  <input type="file" id="img-loader" style="display:none" accept="image/*" onchange="importImage(event)">
+  <input type="file" id="img-loader" style="display:none" accept="image/*,.pcx,.bmp" onchange="importImage(event)">
 
   <!-- Help Modal Dialog -->
   <div id="help-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="help-modal-title" onclick="handleBackdropClick(event)">
@@ -674,17 +783,26 @@
           <div class="shortcut-item"><kbd>B</kbd><span>Brush Tool</span></div>
           <div class="shortcut-item"><kbd>E</kbd><span>Eraser</span></div>
           <div class="shortcut-item"><kbd>L</kbd><span>Line Tool</span></div>
+          <div class="shortcut-item"><kbd>K</kbd><span>Bezier Curve Tool</span></div>
           <div class="shortcut-item"><kbd>R</kbd><span>Rectangle</span></div>
           <div class="shortcut-item"><kbd>C</kbd><span>Ellipse / Circle</span></div>
           <div class="shortcut-item"><kbd>G</kbd><span>Flood Fill</span></div>
+          <div class="shortcut-item"><kbd>Shift</kbd>+<kbd>G</kbd><span>Color Replace</span></div>
+          <div class="shortcut-item"><kbd>J</kbd><span>Gradient Tool</span></div>
           <div class="shortcut-item"><kbd>A</kbd><span>Spray / Airbrush</span></div>
           <div class="shortcut-item"><kbd>I</kbd><span>Eyedropper / Pick</span></div>
           <div class="shortcut-item"><kbd>W</kbd><span>Magic Wand</span></div>
           <div class="shortcut-item"><kbd>S</kbd><span>Lasso Selection</span></div>
+          <div class="shortcut-item"><kbd>F</kbd><span>Sprite Anim Reel</span></div>
+          <div class="shortcut-item"><kbd>,</kbd> / <kbd>.</kbd><span>Prev / Next Frame</span></div>
+          <div class="shortcut-item"><kbd>Space</kbd><span>Play/Pause Anim</span></div>
+          <div class="shortcut-item"><kbd>X</kbd><span>Swap FG / BG Color</span></div>
           <div class="shortcut-item"><kbd>D</kbd><span>Load Demo Artwork</span></div>
           <div class="shortcut-item"><kbd>1</kbd>/<kbd>2</kbd>/<kbd>3</kbd><span>Brush Size (2, 6, 14px)</span></div>
           <div class="shortcut-item"><kbd>4</kbd><span>Toggle Round/Square</span></div>
           <div class="shortcut-item"><kbd>[</kbd> / <kbd>]</kbd><span>Brush Size - / +</span></div>
+          <div class="shortcut-item"><kbd>U</kbd><span>Toggle Sound FX</span></div>
+          <div class="shortcut-item"><kbd>P</kbd><span>Sepia Tone</span></div>
           <div class="shortcut-item"><kbd>V</kbd><span>Invert Colors</span></div>
           <div class="shortcut-item"><kbd>Y</kbd><span>Grayscale Filter</span></div>
           <div class="shortcut-item"><kbd>+</kbd> / <kbd>-</kbd><span>+/- Brightness</span></div>
@@ -694,7 +812,8 @@
           <div class="shortcut-item"><kbd>F5</kbd><span>Quicksave Snapshot</span></div>
           <div class="shortcut-item"><kbd>F9</kbd><span>Quickload Snapshot</span></div>
           <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>S</kbd><span>Save to OS / File</span></div>
-          <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>O</kbd><span>Open Image</span></div>
+          <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>O</kbd><span>Open Image (.PNG/.PCX/.BMP)</span></div>
+          <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>G</kbd><span>Toggle Pixel Grid</span></div>
           <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>Z</kbd><span>Undo</span></div>
           <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>Y</kbd><span>Redo</span></div>
           <div class="shortcut-item"><kbd>Ctrl</kbd>+<kbd>+</kbd><span>Zoom In</span></div>
@@ -707,14 +826,17 @@
 
         <div class="help-section-title" style="margin-top: 14px;">Drawing &amp; Features</div>
         <ul class="help-list">
-          <li><strong>Live Collaborative Studio:</strong> Join shared rooms (e.g. <code>studio-99</code>) powered by Firebase RTDB. Paint simultaneously with friends across computers with real-time brush strokes, floating peer cursors, and full canvas snapshot sync!</li>
-          <li><strong>Symmetry / Mirror Modes:</strong> Draw with instant horizontal, vertical, or 4-way quad kaleidoscope mirroring. Press <strong>M</strong> to cycle modes.</li>
-          <li><strong>Floyd-Steinberg Dithering:</strong> Transform art into authentic 1-bit monochrome or 16-color PC VGA retro palettes with mathematical error diffusion.</li>
-          <li><strong>Text Stamping:</strong> Stamp crisp text onto the canvas with retro monospace, impact, and serif fonts. Press <strong>T</strong>.</li>
-          <li><strong>Quick Starters:</strong> 1-click presets for Mountain Sunset Demo Art, Subterranean Signal '99, Pixel Grid, Flowcharts, and 8-bit Sprites.</li>
-          <li><strong>Drawing Tools:</strong> Brush, Line, Rect, Ellipse, Fill, Spray, Eyedropper, Magic Wand, Lasso, Eraser.</li>
-          <li><strong>Layers &amp; Blend Modes:</strong> Transparent layers, re-ordering, visibility toggling, blend modes, and merge down.</li>
-          <li><strong>Export:</strong> Export directly to PNG, WEBP, or standard 24-bit BMP.</li>
+          <li><strong>Retro Firebase Multiplayer (RFMS):</strong> Join shared studio rooms (e.g. <code>KPT-4892</code>) powered by Firebase RTDB. Paint simultaneously with friends across computers with real-time brush strokes, floating peer cursors, quick chat, and snapshot sync!</li>
+          <li><strong>Sprite Reel Animation &amp; Onion Skinning:</strong> Multi-frame pixel art flipbook engine [F]! Add/duplicate/delete frames, animate at 1-24 FPS with looping playback, preview ghosts of previous frames with translucent cyan onion skinning, and export complete horizontal Sprite Sheets!</li>
+          <li><strong>Bezier Curve &amp; Color Replace Tools:</strong> 3-point Bezier curve tool [K] (drag line then bend curve) and global layer color replacement tool [Shift+G] for rapid pixel palette shifts!</li>
+          <li><strong>Rule 12 Subnet Ghost Artist:</strong> If waiting for a peer and none joins within 25 seconds, the Subnet Ghost Artist (AI Cyber-Painter Copilot) automatically engages to collaboratively sketch alongside you!</li>
+          <li><strong>Dual Color Palette (FG &amp; BG):</strong> Left-click draws with Foreground; right-click draws with Background. Press <strong>X</strong> to instantly swap colors. Right-click any palette swatch to set Background color.</li>
+          <li><strong>Linear &amp; Radial Gradient Tool:</strong> Drag vector line to paint smooth/dithered gradients between Foreground and Background colors. Hold <strong>Shift</strong> for radial gradient. Press <strong>J</strong>.</li>
+          <li><strong>Toggleable Pixel Grid:</strong> Crisp 1px pixel grid aligning canvas pixels when zoomed in (≥200%). Press <strong>Ctrl+G</strong> or click Grid.</li>
+          <li><strong>Universal Retro Audio:</strong> Sega Genesis Yamaha YM2612 2-operator FM synthesis and Super Nintendo SPC700 stereo delay DSP. Press <strong>U</strong> to toggle.</li>
+          <li><strong>Retro Dithering &amp; Vintage Filters:</strong> Authentic Floyd-Steinberg error diffusion for Amiga OCS 32-Color, 1-Bit, 16-color PC VGA, Game Boy DMG-01 green, Commodore 64, CGA Mode 1, 8px Mosaic, Sabattier Solarization, RGB Beam Split, and CRT Phosphor Bloom!</li>
+          <li><strong>Symmetry &amp; Text Stamping:</strong> Instant horizontal, vertical, or 4-way kaleidoscope mirroring [M] and crisp typography stamps [T].</li>
+          <li><strong>Deep Retro Format Support:</strong> Export to 24-bit TrueColor RLE PCX (ZSoft Paintbrush), Windows Icon (.ICO 16x16/32x32/48x48), ANSI Art BBS (.ANS / .TXT), XBM X11 Bitmap (.xbm), PNG, WEBP, 24-bit BMP, PPM (Netpbm), C Header (.h), SVG Vector, JSON Sprite, Standalone HTML5 Canvas Page, and GIMP Palette (.gpl)!</li>
         </ul>
       </div>
       <div class="modal-footer" style="justify-content: space-between; align-items: center;">
@@ -732,27 +854,28 @@
       <div class="modal-header">
         <div class="modal-title" id="collab-modal-title">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
-          Live Collaborative Studio (Firebase RTDB)
+          Retro Firebase Multiplayer Studio (RFMS)
         </div>
         <button class="modal-close-btn" onclick="closeCollabModal()" aria-label="Close Collaborative Studio">&times;</button>
       </div>
       <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
         <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--panel-border);">
-          <span style="font-size: 12px; color: var(--text-muted);">Current Network State:</span>
+          <span style="font-size: 12px; color: var(--text-muted);">Network Status:</span>
           <span id="collab-state-pill" style="font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px; background: rgba(255,255,255,0.08); color: var(--text-muted);">⚪ Offline (Local Studio)</span>
         </div>
 
         <div>
           <label style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 4px;">Studio Room Code</label>
           <div style="display: flex; gap: 6px;">
-            <input type="text" id="collab-room-input" value="studio-99" maxlength="32" placeholder="room-code" onkeydown="if(event.key === 'Enter') joinCollabRoom()" style="flex: 1; padding: 7px 10px; background: var(--btn-bg); border: 1px solid var(--panel-border); border-radius: 6px; color: var(--text-main); font-family: monospace; font-size: 13px;">
+            <input type="text" id="collab-room-input" value="KPT-1999" maxlength="32" placeholder="room-code (e.g. KPT-4892)" onkeydown="if(event.key === 'Enter') joinCollabRoom()" style="flex: 1; padding: 7px 10px; background: var(--btn-bg); border: 1px solid var(--panel-border); border-radius: 6px; color: var(--text-main); font-family: monospace; font-size: 13px;">
+            <button class="btn btn-accent" id="btn-collab-share" style="display:none; padding: 7px 12px;" onclick="copyShareLink()" title="Copy room share link to clipboard">📋 Link</button>
           </div>
           <div style="display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;">
             <span style="font-size: 10px; color: var(--text-muted); line-height: 22px;">Quick Rooms:</span>
-            <button class="btn" style="padding: 2px 8px; font-size: 10px;" onclick="setCollabRoomCode('studio-99')">#studio-99</button>
-            <button class="btn" style="padding: 2px 8px; font-size: 10px;" onclick="setCollabRoomCode('pixel-jam')">#pixel-jam</button>
-            <button class="btn" style="padding: 2px 8px; font-size: 10px;" onclick="setCollabRoomCode('retro-art')">#retro-art</button>
-            <button class="btn" style="padding: 2px 8px; font-size: 10px;" onclick="setCollabRoomCode('sub-signal')">#sub-signal</button>
+            <button class="btn" style="padding: 2px 8px; font-size: 10px;" onclick="setCollabRoomCode('KPT-1999')">#KPT-1999</button>
+            <button class="btn" style="padding: 2px 8px; font-size: 10px;" onclick="setCollabRoomCode('PIXEL-JAM')">#PIXEL-JAM</button>
+            <button class="btn" style="padding: 2px 8px; font-size: 10px;" onclick="setCollabRoomCode('RETRO-ART')">#RETRO-ART</button>
+            <button class="btn" style="padding: 2px 8px; font-size: 10px;" onclick="setCollabRoomCode('SUB-SIGNAL')">#SUB-SIGNAL</button>
           </div>
         </div>
 
@@ -762,8 +885,20 @@
         </div>
 
         <div style="display: flex; gap: 8px;">
-          <button class="btn btn-accent" id="btn-collab-connect" style="flex: 1; font-weight: 600; padding: 8px;" onclick="joinCollabRoom()">🚀 Connect to Studio</button>
+          <button class="btn btn-accent" id="btn-collab-quick" style="padding: 8px 14px; font-weight: 600;" onclick="quickMatchCollab()" title="Quick Match across public subnet lobby">⚡ Quick Match</button>
+          <button class="btn btn-accent" id="btn-collab-connect" style="flex: 1; font-weight: 600; padding: 8px;" onclick="joinCollabRoom()">🚀 Join / Host Room</button>
           <button class="btn" id="btn-collab-disconnect" style="display: none; color: #ef4444; border-color: rgba(239, 68, 68, 0.4); padding: 8px 14px;" onclick="leaveCollabRoom()">Leave Room</button>
+        </div>
+
+        <!-- Ghost Artist Rule 12 Status Banner -->
+        <div id="collab-ghost-notice" style="display: none; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.4); border-radius: 6px; padding: 8px 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11px; font-weight: 600; color: #fbbf24;">🤖 Subnet Ghost Artist Copilot: Active</span>
+            <button class="btn" style="padding: 2px 8px; font-size: 10px;" onclick="toggleGhostArtist()">Pause / Resume</button>
+          </div>
+          <div style="font-size: 10px; color: var(--text-muted); margin-top: 3px;">
+            No peer joined in 25s (Rule 12). AI copilot is sketching cybernetic motifs alongside you.
+          </div>
         </div>
 
         <div id="collab-active-section" style="display: none; flex-direction: column; gap: 10px; border-top: 1px solid var(--panel-border); padding-top: 10px;">
@@ -772,9 +907,23 @@
             <div style="display: flex; gap: 4px;">
               <button class="btn" style="font-size: 11px; padding: 3px 8px;" onclick="pushCanvasSnapshot()" title="Send current full canvas to all peers in room">📡 Push Canvas</button>
               <button class="btn" style="font-size: 11px; padding: 3px 8px;" onclick="pullCanvasSnapshot()" title="Pull canvas state from room host">📥 Pull Canvas</button>
+              <button class="btn btn-accent" style="font-size: 11px; padding: 3px 8px;" onclick="broadcastSignalBeacon()" title="Transmit 1999Hz audio spectrogram telemetry to Subterranean Darknet mesh">📡 Beacon</button>
             </div>
           </div>
-          <div id="collab-peer-list" style="display: flex; flex-direction: column; gap: 4px; max-height: 120px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 6px;"></div>
+          <div id="collab-peer-list" style="display: flex; flex-direction: column; gap: 4px; max-height: 100px; overflow-y: auto; background: rgba(0,0,0,0.2); padding: 6px; border-radius: 6px;"></div>
+
+          <!-- Studio Quick Chat -->
+          <div>
+            <span style="font-size: 11px; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">In-Studio Quick Chat:</span>
+            <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+              <button class="btn" style="font-size: 10px; padding: 2px 7px;" onclick="sendCollabQuickChat('🎨 Awesome art!')">🎨 Awesome art!</button>
+              <button class="btn" style="font-size: 10px; padding: 2px 7px;" onclick="sendCollabQuickChat('✨ Let\'s collaborate!')">✨ Let's collab!</button>
+              <button class="btn" style="font-size: 10px; padding: 2px 7px;" onclick="sendCollabQuickChat('👾 Drawing pixel sprites!')">👾 Sprites!</button>
+              <button class="btn" style="font-size: 10px; padding: 2px 7px;" onclick="sendCollabQuickChat('👏 Looks great!')">👏 Looks great!</button>
+              <button class="btn" style="font-size: 10px; padding: 2px 7px;" onclick="sendCollabQuickChat('💾 Saving artwork!')">💾 Saving!</button>
+            </div>
+          </div>
+
           <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
             💡 <strong>Real-time Sync Active:</strong> Brush strokes, spray dots, shapes, and floating cursors are synchronized in real-time across connected users!
           </div>
@@ -838,6 +987,33 @@
     </div>
   </div>
 
+  <!-- ANSI Art BBS Modal Dialog -->
+  <div id="ansi-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="ansi-modal-title" onclick="handleAnsiBackdropClick(event)">
+    <div class="modal-dialog" style="max-width: 680px; width: 95%;">
+      <div class="modal-header">
+        <div class="modal-title" id="ansi-modal-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+          ANSI Art BBS Graphic (80 Columns)
+        </div>
+        <button class="modal-close-btn" onclick="closeAnsiModal()" aria-label="Close ANSI Art Viewer">&times;</button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="font-size: 11px; color: var(--text-muted);">
+          Downsampled to 80-column half-block retro ASCII/ANSI format compatible with BBS terminals, MS-DOS, and terminal emulators.
+        </div>
+        <div id="ansi-preview-box" style="background: #000000; color: #aaaaaa; font-family: 'Courier New', monospace; font-size: 8px; line-height: 8px; padding: 10px; border-radius: 6px; border: 1px solid var(--panel-border); overflow: auto; max-height: 320px; white-space: pre; letter-spacing: 0;"></div>
+      </div>
+      <div class="modal-footer" style="justify-content: space-between; align-items: center;">
+        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+          <button class="btn btn-accent" onclick="downloadAnsiFile()" title="Download raw .ANS file for BBS terminals">💾 Download .ANS</button>
+          <button class="btn" onclick="downloadAnsiTextFile()" title="Download plain text .TXT file">📄 Download .TXT</button>
+          <button class="btn" onclick="copyAnsiToClipboard()" title="Copy ANSI escape sequence text to clipboard">📋 Copy ANSI</button>
+        </div>
+        <button class="btn" onclick="closeAnsiModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification -->
   <div id="toast" class="toast-notification" role="status" aria-live="polite" onclick="this.classList.remove('show')" title="Click to dismiss"></div>
 
@@ -863,15 +1039,18 @@
         <div class="tool-grid">
           <button class="btn active" id="tool-freehand" onclick="setTool('freehand')" title="Brush (B)" aria-label="Brush (B)">Brush [B]</button>
           <button class="btn" id="tool-line" onclick="setTool('line')" title="Line (L)" aria-label="Line (L)">Line [L]</button>
+          <button class="btn" id="tool-curve" onclick="setTool('curve')" title="Bezier Curve (K)" aria-label="Bezier Curve (K)">Curve [K]</button>
           <button class="btn" id="tool-rect" onclick="setTool('rect')" title="Rectangle (R)" aria-label="Rectangle (R)">Rect [R]</button>
           <button class="btn" id="tool-ellipse" onclick="setTool('ellipse')" title="Ellipse / Circle (C)" aria-label="Ellipse (C)">Ellipse [C]</button>
           <button class="btn" id="tool-fill" onclick="setTool('fill')" title="Bucket Fill (G)" aria-label="Bucket Fill (G)">Fill [G]</button>
+          <button class="btn" id="tool-replace" onclick="setTool('replace')" title="Color Replace (Shift+G)" aria-label="Color Replace (Shift+G)">Replace</button>
           <button class="btn" id="tool-spray" onclick="setTool('spray')" title="Spray / Airbrush (A)" aria-label="Spray (A)">Spray [A]</button>
           <button class="btn" id="tool-pipette" onclick="setTool('pipette')" title="Eyedropper (I)" aria-label="Eyedropper (I)">Pick [I]</button>
           <button class="btn" id="tool-wand" onclick="setTool('wand')" title="Magic Wand (W)" aria-label="Magic Wand (W)">Wand [W]</button>
           <button class="btn" id="tool-lasso" onclick="setTool('lasso')" title="Lasso (S)" aria-label="Lasso (S)">Lasso [S]</button>
           <button class="btn" id="tool-eraser" onclick="setTool('eraser')" title="Eraser (E)" aria-label="Eraser (E)">Eraser [E]</button>
-          <button class="btn" id="tool-text" onclick="setTool('text')" title="Text Stamp (T)" aria-label="Text Stamp (T)" style="grid-column: span 2;">Text Stamp [T]</button>
+          <button class="btn" id="tool-gradient" onclick="setTool('gradient')" title="Gradient Fill (J)" aria-label="Gradient Fill (J)">Grad [J]</button>
+          <button class="btn" id="tool-text" onclick="setTool('text')" title="Text Stamp (T)" aria-label="Text Stamp (T)">Text [T]</button>
         </div>
       </div>
 
@@ -919,6 +1098,20 @@
       <!-- Color Palette -->
       <div>
         <div class="section-title">Color Palette</div>
+        <!-- Dual FG/BG Swatch Box -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; background: rgba(0,0,0,0.3); padding: 6px 8px; border-radius: 6px; border: 1px solid var(--panel-border);">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <div style="position: relative; width: 38px; height: 32px;">
+              <div id="swatch-bg" onclick="setActiveColorSlot('bg')" title="Secondary (BG) Color - Right Click draws with this" style="position: absolute; right: 0; bottom: 0; width: 22px; height: 22px; background: #ffffff; border: 2px solid rgba(255,255,255,0.4); border-radius: 4px; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.5);"></div>
+              <div id="swatch-fg" onclick="setActiveColorSlot('fg')" title="Primary (FG) Color - Left Click draws with this" style="position: absolute; left: 0; top: 0; width: 22px; height: 22px; background: #111111; border: 2px solid #ffffff; border-radius: 4px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.7); z-index: 2;"></div>
+            </div>
+            <div style="display: flex; flex-direction: column;">
+              <span id="swatch-slot-label" style="font-size: 11px; font-weight: 600; color: var(--text-main);">FG: #111111</span>
+              <span id="swatch-sub-label" style="font-size: 10px; color: var(--text-muted);">BG: #FFFFFF</span>
+            </div>
+          </div>
+          <button class="btn" onclick="swapColors()" title="Swap FG/BG Colors [X]" style="padding: 3px 8px; font-size: 11px;" aria-label="Swap Colors">⇄ [X]</button>
+        </div>
         <div style="margin-bottom: 8px;">
           <select id="palette-preset" onchange="loadPalettePreset()" aria-label="Color Palette Preset">
             <option value="classic">Classic Palette</option>
@@ -945,10 +1138,19 @@
           <button class="btn" onclick="applyFilter('brighten')" title="Brighten [+]" aria-label="Brighten">+Bright [+]</button>
           <button class="btn" onclick="applyFilter('darken')" title="Darken [-]" aria-label="Darken">-Bright [-]</button>
           <button class="btn" onclick="applyFilter('contrast')" aria-label="Increase Contrast">+Contrast</button>
-          <button class="btn" onclick="applyFilter('sepia')" aria-label="Sepia Filter">Sepia</button>
+          <button class="btn" onclick="applyFilter('sepia')" title="Sepia Tone [P]" aria-label="Sepia Filter">Sepia [P]</button>
 
           <button class="btn" onclick="applyDither('1bit')" title="Floyd-Steinberg 1-Bit Dither" aria-label="1-Bit Dither">Dither 1-Bit</button>
           <button class="btn" onclick="applyDither('vga16')" title="Floyd-Steinberg 16-Color VGA Dither" aria-label="16-Color VGA Dither">VGA 16-Col</button>
+          <button class="btn" onclick="applyDither('gameboy')" title="Game Boy DMG-01 4-Shade Green" aria-label="Game Boy Dither">Game Boy</button>
+          <button class="btn" onclick="applyDither('amiga32')" title="Amiga OCS 32-Color Dither" aria-label="Amiga 32 Dither">Amiga 32</button>
+          <button class="btn" onclick="applyDither('c64')" title="Commodore 64 16-Color Dither" aria-label="C64 Dither">C64 16-Col</button>
+          <button class="btn" onclick="applyDither('cga')" title="CGA Mode 1 4-Color Dither" aria-label="CGA Dither">CGA 4-Col</button>
+          <button class="btn" onclick="applyPixelize(8)" title="Chunky 8px Retro Mosaic" aria-label="Pixelize">Pixelize</button>
+          <button class="btn" onclick="applyFilter('solarize')" title="Sabattier Solarization Inversion" aria-label="Solarize">Solarize</button>
+          <button class="btn" onclick="applyChromaticSplit()" title="Chromatic Aberration RGB Shift" aria-label="RGB Split">RGB Split</button>
+          <button class="btn" onclick="applyCRTBloom()" title="Phosphor Glow &amp; Bloom" aria-label="CRT Bloom">Bloom</button>
+          <button class="btn" onclick="applyFilter('posterize')" title="Posterize Quantization" aria-label="Posterize">Posterize</button>
           <button class="btn" onclick="applyBoxBlur()" title="Soft Focus Box Blur" aria-label="Blur">Blur</button>
           <button class="btn" onclick="applyCRTFilter()" title="CRT Scanlines &amp; Phosphor" aria-label="CRT Scanlines">CRT Raster</button>
           <button class="btn" onclick="applyVignetteFilter()" title="Vignette Falloff" aria-label="Vignette">Vignette</button>
@@ -962,10 +1164,19 @@
       <!-- Layers -->
       <div>
         <div class="section-title">Layers</div>
-        <div style="display: flex; gap: 4px; margin-bottom: 4px;">
+        <div style="display: flex; gap: 4px; margin-bottom: 4px; flex-wrap: wrap;">
           <button class="btn" style="flex:1" onclick="addLayer()" aria-label="Add Layer">+ Add</button>
+          <button class="btn" style="flex:1" onclick="duplicateLayer()" title="Duplicate Active Layer" aria-label="Duplicate Active Layer">Dup</button>
           <button class="btn" style="flex:1" onclick="mergeLayerDown()" aria-label="Merge Layer Down">Merge</button>
+          <button class="btn" style="flex:1" onclick="flattenLayers()" title="Flatten All Layers" aria-label="Flatten All Layers">Flatten</button>
           <button class="btn" style="flex:1" onclick="deleteLayer()" aria-label="Delete Active Layer">Del</button>
+        </div>
+        <div class="control-group" style="margin-bottom: 4px;">
+          <div class="control-label">
+            <span>Layer Opacity</span>
+            <span class="control-val" id="layer-opacity-val">100%</span>
+          </div>
+          <input type="range" id="layer-opacity" min="0" max="100" value="100" oninput="updateLayerOpacity(this.value)" aria-label="Layer Opacity">
         </div>
         <div class="control-group">
           <div class="control-label">Blend Mode</div>
@@ -977,6 +1188,15 @@
           </select>
         </div>
         <div class="layers-panel" id="layers-list" role="listbox" aria-label="Layers List"></div>
+      </div>
+
+      <!-- Selection Actions -->
+      <div>
+        <div class="section-title">Selection Tools</div>
+        <div class="filter-grid">
+          <button class="btn" onclick="fillSelection()" title="Fill Selected Area with Current Color" aria-label="Fill Selection">Fill Sel</button>
+          <button class="btn" onclick="invertSelection()" title="Invert Colors inside Selection" aria-label="Invert Selection">Invert Sel</button>
+        </div>
       </div>
 
       <!-- Canvas Transforms -->
@@ -1001,12 +1221,45 @@
     </div>
 
     <!-- Canvas Container -->
-    <div class="canvas-container" id="container" role="main" aria-label="Canvas Workspace">
+    <div class="canvas-container" id="container" role="main" aria-label="Canvas Workspace" style="position: relative;">
       <div class="canvas-wrapper" id="canvas-wrapper" style="width: 800px; height: 600px;">
         <canvas id="canvas" width="800" height="600"></canvas>
+        <canvas id="onion-canvas" width="800" height="600" style="position: absolute; top: 0; left: 0; pointer-events: none; z-index: 2; display: none;"></canvas>
         <canvas id="preview" width="800" height="600"></canvas>
+        <canvas id="grid-canvas" width="800" height="600" style="position: absolute; top: 0; left: 0; pointer-events: none; z-index: 8; display: none;"></canvas>
         <canvas id="selection-canvas" width="800" height="600"></canvas>
         <div id="peer-cursors-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; overflow: hidden;"></div>
+      </div>
+
+      <!-- Flipbook Animation Dock -->
+      <div id="animation-dock" class="animation-dock" style="display: none;">
+        <div class="anim-dock-header">
+          <div class="anim-dock-title">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            Sprite Reel Flipbook (<span id="anim-frame-indicator">Frame 1/1</span>)
+          </div>
+          <div class="anim-dock-controls">
+            <button class="btn btn-accent" id="btn-anim-play" onclick="togglePlayAnimation()" title="Play / Pause Animation Loop (Space)">▶ Play</button>
+            <div style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-muted);">
+              <label for="anim-fps-input" style="font-weight: 600;">FPS:</label>
+              <input type="number" id="anim-fps-input" min="1" max="24" value="8" style="width: 44px; padding: 2px 4px; background: var(--btn-bg); border: 1px solid var(--panel-border); border-radius: 4px; color: var(--text-main); font-size: 11px;" onchange="updateAnimFps(this.value)">
+            </div>
+            <button class="btn" onclick="prevAnimFrame()" title="Previous Frame (,)">◀ Prev</button>
+            <button class="btn" onclick="nextAnimFrame()" title="Next Frame (.)">Next ▶</button>
+            <button class="btn btn-accent" onclick="addAnimFrame()" title="Add Blank Frame (+)">+ Frame</button>
+            <button class="btn" onclick="duplicateAnimFrame()" title="Duplicate Current Frame">Dup</button>
+            <button class="btn" onclick="deleteAnimFrame()" title="Delete Current Frame" style="color: #ef4444;">Del</button>
+            <label style="display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--text-main); cursor: pointer; user-select: none;">
+              <input type="checkbox" id="chk-onion-skin" onchange="toggleOnionSkin(this.checked)">
+              🧅 Onion Skin
+            </label>
+            <button class="btn btn-accent" onclick="exportSpriteSheet()" title="Stitch all frames into horizontal Sprite Sheet PNG">🖼️ Sheet PNG</button>
+            <button class="btn" onclick="toggleAnimationDock()" style="padding: 2px 7px;">✕</button>
+          </div>
+        </div>
+        <div id="anim-frame-strip" class="anim-frame-strip">
+          <!-- Rendered frame cards -->
+        </div>
       </div>
     </div>
   </div>
@@ -1019,8 +1272,9 @@
       <span>Tool: <strong id="lbl-tool">Brush</strong></span>
     </div>
     <div style="display: flex; align-items: center; gap: 12px;">
-      <span class="status-hints"><strong>Ctrl+Z</strong> Undo | <strong>F5</strong> QuickSave | <strong>F9</strong> QuickLoad | <strong>B</strong> Brush | <strong>E</strong> Eraser | <strong>G</strong> Fill | <strong>I</strong> Pick | <strong>O</strong> Collab | <strong>M</strong> Symmetry | <strong>F1/H</strong> Help</span>
+      <span class="status-hints"><strong>Ctrl+Z</strong> Undo | <strong>X</strong> Swap | <strong>K</strong> Curve | <strong>F</strong> Anim | <strong>J</strong> Grad | <strong>Ctrl+G</strong> Grid | <strong>F5</strong> Save | <strong>F9</strong> Load | <strong>B</strong> Brush | <strong>E</strong> Eraser | <strong>G</strong> Fill | <strong>I</strong> Pick | <strong>O</strong> Collab | <strong>F1/H</strong> Help</span>
       <div class="zoom-controls" role="group" aria-label="Zoom Controls">
+        <button class="zoom-btn" id="btn-grid" onclick="togglePixelGrid()" title="Toggle Pixel Grid (Ctrl+G)" aria-label="Toggle Pixel Grid">Grid</button>
         <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out (Ctrl -)" aria-label="Zoom Out">−</button>
         <span id="lbl-zoom" onclick="resetZoom()" title="Click to Reset Zoom (Ctrl 0)" style="cursor:pointer; min-width:34px; text-align:center; font-weight:600;">100%</span>
         <button class="zoom-btn" onclick="zoomIn()" title="Zoom In (Ctrl +)" aria-label="Zoom In">+</button>
@@ -1029,43 +1283,111 @@
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
-    import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
-      authDomain: "kiloappschat.firebaseapp.com",
-      databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
-      projectId: "kiloappschat",
-      storageBucket: "kiloappschat.firebasestorage.app",
-      messagingSenderId: "290208566057",
-      appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
-    };
-
-    try {
-      const app = initializeApp(firebaseConfig);
-      const db = getDatabase(app);
-      window.fb = {
-        app,
-        db,
-        ref,
-        set,
-        get,
-        push,
-        onValue,
-        onChildAdded,
-        off,
-        serverTimestamp,
-        onDisconnect
-      };
-      if (window.onFirebaseLoaded) window.onFirebaseLoaded();
-    } catch (err) {
-      console.warn("Firebase RTDB init error:", err);
-    }
-  </script>
+  <script src="../assets/js/retro_multiplayer.js"></script>
 
   <script>
+    // Universal Retro Audio Synthesizer (Yamaha YM2612 2-Operator FM & SNES SPC700 Delay DSP)
+    class RetroAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.enabled = localStorage.getItem('kpaint_sound') !== '0';
+      }
+      init() {
+        if (!this.ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) this.ctx = new AC();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      play(type) {
+        if (!this.enabled) return;
+        try {
+          this.init();
+          if (!this.ctx) return;
+          const now = this.ctx.currentTime;
+          const master = this.ctx.createGain();
+          master.gain.setValueAtTime(0.18, now);
+
+          // SNES SPC700 Stereo Delay DSP Warmth
+          const delay = this.ctx.createDelay();
+          delay.delayTime.setValueAtTime(0.12, now);
+          const delayGain = this.ctx.createGain();
+          delayGain.gain.setValueAtTime(0.22, now);
+          const delayFilter = this.ctx.createBiquadFilter();
+          delayFilter.type = 'lowpass';
+          delayFilter.frequency.setValueAtTime(2800, now);
+
+          master.connect(delay);
+          delay.connect(delayFilter);
+          delayFilter.connect(delayGain);
+          delayGain.connect(delay);
+          delayGain.connect(this.ctx.destination);
+          master.connect(this.ctx.destination);
+
+          const playFm = (freq, modMult, modIndex, duration, type1 = 'sine', type2 = 'sine') => {
+            const carrier = this.ctx.createOscillator();
+            const mod = this.ctx.createOscillator();
+            const modGain = this.ctx.createGain();
+            const env = this.ctx.createGain();
+
+            carrier.type = type1;
+            carrier.frequency.setValueAtTime(freq, now);
+
+            mod.type = type2;
+            mod.frequency.setValueAtTime(freq * modMult, now);
+
+            modGain.gain.setValueAtTime(freq * modIndex, now);
+            modGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+            env.gain.setValueAtTime(0.18, now);
+            env.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+            mod.connect(carrier.frequency);
+            carrier.connect(env);
+            env.connect(master);
+
+            mod.start(now);
+            carrier.start(now);
+            mod.stop(now + duration);
+            carrier.stop(now + duration);
+          };
+
+          if (type === 'brush') {
+            playFm(340, 1.5, 0.8, 0.06);
+          } else if (type === 'fill') {
+            [520, 440, 330].forEach((f, i) => {
+              setTimeout(() => { if (this.ctx) playFm(f, 2.0, 1.2, 0.15); }, i * 40);
+            });
+          } else if (type === 'shape') {
+            playFm(440, 2.0, 1.0, 0.08);
+            setTimeout(() => { if (this.ctx) playFm(660, 2.0, 1.0, 0.08); }, 50);
+          } else if (type === 'pick') {
+            playFm(880, 1.0, 0.4, 0.08);
+          } else if (type === 'filter') {
+            [440, 554, 659, 880].forEach((f, i) => {
+              setTimeout(() => { if (this.ctx) playFm(f, 2.0, 0.9, 0.16); }, i * 45);
+            });
+          } else if (type === 'ghost') {
+            playFm(220, 3.14, 2.2, 0.35, 'sine', 'sawtooth');
+          } else if (type === 'chirp') {
+            playFm(587.33, 1.0, 0.5, 0.08);
+          }
+        } catch (_) {}
+      }
+      toggle() {
+        this.enabled = !this.enabled;
+        try { localStorage.setItem('kpaint_sound', this.enabled ? '1' : '0'); } catch (_) {}
+        const btn = document.getElementById('btn-sound');
+        if (btn) btn.textContent = this.enabled ? '🔊 Sound: ON' : '🔇 Sound: OFF';
+        showToast(this.enabled ? 'Yamaha YM2612 / SPC700 Audio: ON [U]' : 'Audio Muted [U]');
+        if (this.enabled) this.play('chirp');
+      }
+    }
+    const retroAudio = new RetroAudioEngine();
+    function toggleAudio() { retroAudio.toggle(); }
+
     let canvas = document.getElementById('canvas');
     let ctx = canvas.getContext('2d', { willReadFrequently: true });
     const previewCanvas = document.getElementById('preview');
@@ -1076,7 +1398,11 @@
 
     let painting = false;
     let currentColor = '#111111';
-    let currentTool = 'freehand'; // freehand, line, rect, ellipse, fill, spray, pipette, wand, lasso, eraser, text
+    let secondaryColor = '#ffffff';
+    let activeColorSlot = 'fg'; // 'fg' | 'bg'
+    let pixelGridEnabled = false;
+    let isDrawingSecondary = false;
+    let currentTool = 'freehand'; // freehand, line, rect, ellipse, gradient, fill, spray, pipette, wand, lasso, eraser, text
     let previousTool = 'freehand';
     let brushSize = 4;
     let brushShape = 'round';
@@ -1167,8 +1493,35 @@
       selCanvas.style.width = dispW;
       selCanvas.style.height = dispH;
 
+      const gridCanvas = document.getElementById('grid-canvas');
+      if (gridCanvas) {
+        gridCanvas.style.width = dispW;
+        gridCanvas.style.height = dispH;
+      }
+      updatePixelGrid();
+
       const lbl = document.getElementById('lbl-zoom');
       if (lbl) lbl.innerText = Math.round(currentZoom * 100) + '%';
+    }
+
+    function togglePixelGrid() {
+      pixelGridEnabled = !pixelGridEnabled;
+      updatePixelGrid();
+      const btn = document.getElementById('btn-grid');
+      if (btn) btn.classList.toggle('active', pixelGridEnabled);
+      showToast(pixelGridEnabled ? 'Pixel Grid: ON' : 'Pixel Grid: OFF');
+    }
+
+    function updatePixelGrid() {
+      const gc = document.getElementById('grid-canvas');
+      if (!gc) return;
+      if (pixelGridEnabled && currentZoom >= 2.0) {
+        gc.style.display = 'block';
+        gc.style.backgroundImage = 'linear-gradient(to right, rgba(0,0,0,0.22) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.22) 1px, transparent 1px)';
+        gc.style.backgroundSize = `${currentZoom}px ${currentZoom}px`;
+      } else {
+        gc.style.display = 'none';
+      }
     }
 
     // History Stack
@@ -1213,6 +1566,8 @@
       });
       if (layers[activeLayerIndex]) {
         document.getElementById('layer-blend').value = layers[activeLayerIndex].blend || 'source-over';
+        const opSlider = document.getElementById('layer-opacity');
+        if (opSlider) opSlider.value = Math.round((layers[activeLayerIndex].opacity !== undefined ? layers[activeLayerIndex].opacity : 1.0) * 100);
       }
     }
 
@@ -1236,7 +1591,7 @@
       document.getElementById('canvas-wrapper').insertBefore(c, previewCanvas);
       
       const newCtx = c.getContext('2d', { willReadFrequently: true });
-      layers.push({ id: layerCounter++, canvas: c, ctx: newCtx, visible: true, blend: 'source-over' });
+      layers.push({ id: layerCounter++, canvas: c, ctx: newCtx, visible: true, blend: 'source-over', opacity: 1.0 });
       activeLayerIndex = layers.length - 1;
       canvas = layers[activeLayerIndex].canvas;
       ctx = layers[activeLayerIndex].ctx;
@@ -1244,6 +1599,7 @@
       updateLayersUI();
       updateBrushSettings();
       saveState();
+      retroAudio.play('shape');
       showToast(`Added Layer ${layerCounter}`);
     }
     
@@ -1273,8 +1629,10 @@
       const lower = layers[activeLayerIndex - 1];
       
       lower.ctx.globalCompositeOperation = upper.blend || 'source-over';
+      lower.ctx.globalAlpha = upper.opacity !== undefined ? upper.opacity : 1.0;
       lower.ctx.drawImage(upper.canvas, 0, 0);
       lower.ctx.globalCompositeOperation = 'source-over';
+      lower.ctx.globalAlpha = 1.0;
       
       upper.canvas.remove();
       layers.splice(activeLayerIndex, 1);
@@ -1284,7 +1642,79 @@
       updateLayersUI();
       updateBrushSettings();
       saveState();
+      retroAudio.play('fill');
       showToast("Merged layer down.");
+    }
+
+    function duplicateLayer() {
+      const srcLayer = layers[activeLayerIndex];
+      if (!srcLayer) return;
+      const c = document.createElement('canvas');
+      c.width = layers[0].canvas.width;
+      c.height = layers[0].canvas.height;
+      c.style.position = 'absolute';
+      c.style.top = '0';
+      c.style.left = '0';
+      c.style.pointerEvents = 'none';
+      const curOp = srcLayer.opacity !== undefined ? srcLayer.opacity : 1.0;
+      c.style.opacity = curOp;
+      c.style.mixBlendMode = srcLayer.blend || 'source-over';
+
+      const newCtx = c.getContext('2d', { willReadFrequently: true });
+      newCtx.drawImage(srcLayer.canvas, 0, 0);
+
+      document.getElementById('canvas-wrapper').insertBefore(c, previewCanvas);
+
+      const newLayer = {
+        id: layerCounter++,
+        canvas: c,
+        ctx: newCtx,
+        visible: srcLayer.visible,
+        blend: srcLayer.blend || 'source-over',
+        opacity: curOp
+      };
+
+      layers.splice(activeLayerIndex + 1, 0, newLayer);
+      activeLayerIndex = activeLayerIndex + 1;
+      canvas = layers[activeLayerIndex].canvas;
+      ctx = layers[activeLayerIndex].ctx;
+      applyZoom();
+      updateLayersUI();
+      updateBrushSettings();
+      saveState();
+      retroAudio.play('shape');
+      showToast(`Duplicated Layer ${srcLayer.id + 1}`);
+    }
+
+    function flattenLayers() {
+      if (layers.length <= 1) {
+        showToast("Canvas only has one layer.");
+        return;
+      }
+      const comp = getCompositedCanvas();
+      layers[0].ctx.clearRect(0, 0, layers[0].canvas.width, layers[0].canvas.height);
+      layers[0].ctx.drawImage(comp, 0, 0);
+
+      for (let i = 1; i < layers.length; i++) {
+        layers[i].canvas.remove();
+      }
+
+      layers = [layers[0]];
+      activeLayerIndex = 0;
+      canvas = layers[0].canvas;
+      ctx = layers[0].ctx;
+      updateLayersUI();
+      saveState();
+      retroAudio.play('fill');
+      showToast("Flattened all layers.");
+    }
+
+    function updateLayerOpacity(val) {
+      const op = Math.max(0, Math.min(100, parseInt(val, 10))) / 100;
+      if (layers[activeLayerIndex]) {
+        layers[activeLayerIndex].opacity = op;
+        layers[activeLayerIndex].canvas.style.opacity = op;
+      }
     }
 
     function toggleLayerVis(idx) {
@@ -1415,9 +1845,11 @@
       layers.forEach(l => {
         if (l.visible) {
           tctx.globalCompositeOperation = l.blend || 'source-over';
+          tctx.globalAlpha = (l.opacity !== undefined ? l.opacity : 1.0);
           tctx.drawImage(l.canvas, 0, 0);
         }
       });
+      tctx.globalAlpha = 1.0;
       return tmp;
     }
 
@@ -1466,7 +1898,975 @@
         link.click();
         setTimeout(() => link.remove(), 300);
       }
+      retroAudio.play('shape');
       showToast(`Exported artwork as ${format.toUpperCase()}!`);
+    }
+
+    function exportCHeader() {
+      closeExportDropdown();
+      const src = getCompositedCanvas();
+      const w = src.width;
+      const h = src.height;
+      const d = src.getContext('2d').getImageData(0, 0, w, h).data;
+
+      let c = `/*\n * KPaint Exported C Graphic Header (1999 Standard)\n * Resolution: ${w} x ${h} (32-bit ARGB)\n */\n\n`;
+      c += `#ifndef KPAINT_SPRITE_H\n#define KPAINT_SPRITE_H\n\n`;
+      c += `#include <stdint.h>\n\n`;
+      c += `#define SPRITE_WIDTH ${w}\n`;
+      c += `#define SPRITE_HEIGHT ${h}\n\n`;
+      c += `static const uint32_t sprite_pixels[${w * h}] = {\n  `;
+
+      let lineCount = 0;
+      for (let i = 0; i < d.length; i += 4) {
+        const a = d[i + 3];
+        const r = d[i];
+        const g = d[i + 1];
+        const b = d[i + 2];
+        const val = ((a << 24) | (r << 16) | (g << 8) | b) >>> 0;
+        c += '0x' + val.toString(16).toUpperCase().padStart(8, '0') + ', ';
+        lineCount++;
+        if (lineCount % 8 === 0 && i + 4 < d.length) {
+          c += '\n  ';
+        }
+      }
+      c += `\n};\n\n#endif /* KPAINT_SPRITE_H */\n`;
+
+      const blob = new Blob([c], { type: 'text/x-c' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.download = 'kpaint_sprite.h';
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 300);
+      retroAudio.play('shape');
+      showToast("Exported C Header (.H) sprite!");
+    }
+
+    function exportSVG() {
+      closeExportDropdown();
+      const src = getCompositedCanvas();
+      const w = src.width;
+      const h = src.height;
+      const d = src.getContext('2d').getImageData(0, 0, w, h).data;
+
+      let svg = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+      svg += `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" shape-rendering="crispEdges">\n`;
+      svg += `  <rect width="${w}" height="${h}" fill="#ffffff" />\n`;
+
+      for (let y = 0; y < h; y++) {
+        let runStart = 0;
+        let runColor = null;
+        for (let x = 0; x <= w; x++) {
+          let curColor = null;
+          if (x < w) {
+            const idx = (y * w + x) * 4;
+            const a = d[idx + 3];
+            if (a > 10) {
+              curColor = `rgba(${d[idx]},${d[idx+1]},${d[idx+2]},${(a/255).toFixed(2)})`;
+            }
+          }
+          if (curColor !== runColor) {
+            if (runColor && runColor !== 'rgba(255,255,255,1.00)' && runColor !== 'rgba(255,255,255,1)') {
+              const runWidth = x - runStart;
+              svg += `  <rect x="${runStart}" y="${y}" width="${runWidth}" height="1" fill="${runColor}" />\n`;
+            }
+            runStart = x;
+            runColor = curColor;
+          }
+        }
+      }
+      svg += `</svg>\n`;
+
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.download = 'kpaint_vector.svg';
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 300);
+      retroAudio.play('shape');
+      showToast("Exported SVG Vector graphic!");
+    }
+
+    function exportJSON() {
+      closeExportDropdown();
+      const src = getCompositedCanvas();
+      const payload = {
+        app: "KPaint Pro 1999",
+        version: "2.5",
+        width: src.width,
+        height: src.height,
+        layers: layers.map(l => ({ id: l.id, visible: l.visible, blend: l.blend, opacity: l.opacity ?? 1 })),
+        dataUrl: src.toDataURL('image/png'),
+        timestamp: Date.now()
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.download = 'kpaint_sprite.json';
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 300);
+      retroAudio.play('shape');
+      showToast("Exported JSON Sprite payload!");
+    }
+
+    function exportPPM() {
+      closeExportDropdown();
+      const src = getCompositedCanvas();
+      const w = src.width, h = src.height;
+      const d = src.getContext('2d').getImageData(0, 0, w, h).data;
+      const header = `P6\n${w} ${h}\n255\n`;
+      const headerBytes = new TextEncoder().encode(header);
+      const ppmData = new Uint8Array(headerBytes.length + w * h * 3);
+      ppmData.set(headerBytes, 0);
+      let outIdx = headerBytes.length;
+      for (let i = 0; i < d.length; i += 4) {
+        ppmData[outIdx++] = d[i];
+        ppmData[outIdx++] = d[i + 1];
+        ppmData[outIdx++] = d[i + 2];
+      }
+      const blob = new Blob([ppmData], { type: 'image/x-portable-pixmap' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.download = 'kpaint_canvas.ppm';
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 300);
+      retroAudio.play('shape');
+      showToast("Exported Netpbm PPM (P6 binary) image!");
+    }
+
+    function exportCanvasSnippet() {
+      closeExportDropdown();
+      const src = getCompositedCanvas();
+      const dataUrl = src.toDataURL('image/png');
+      const html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>KPaint Exported Graphic</title>
+<style>
+  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; background:#111; font-family:monospace; color:#ccc; }
+  .frame { text-align:center; padding:16px; background:#222; border:2px solid #444; border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,0.7); }
+  canvas { image-rendering:pixelated; border:1px solid #555; background:#fff; display:block; margin:0 auto 12px; }
+</style>
+</head>
+<body>
+  <div class="frame">
+    <h3>KPaint Graphic (${src.width}x${src.height})</h3>
+    <canvas id="view" width="${src.width}" height="${src.height}"></canvas>
+    <div>Rendered by KPaint Pro 1999 Canvas Engine</div>
+  </div>
+  <script>
+    const img = new Image();
+    img.onload = () => {
+      const c = document.getElementById('view');
+      c.getContext('2d').drawImage(img, 0, 0);
+    };
+    img.src = "${dataUrl}";
+  <\/script>
+</body>
+</html>`;
+      const blob = new Blob([html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.download = 'kpaint_render.html';
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 300);
+      retroAudio.play('shape');
+      showToast("Exported Standalone HTML5 Canvas Page!");
+    }
+
+    function exportPaletteGPL() {
+      closeExportDropdown();
+      const presetKey = document.getElementById('palette-preset').value;
+      const colors = PALETTES[presetKey] || PALETTES.classic;
+      let gpl = `GIMP Palette\nName: KPaint_${presetKey}\nColumns: 4\n# KPaint Pro 1999 Exported Palette\n`;
+      colors.forEach((hex, idx) => {
+        const m = hex.replace('#', '');
+        const r = parseInt(m.substring(0, 2), 16);
+        const g = parseInt(m.substring(2, 4), 16);
+        const b = parseInt(m.substring(4, 6), 16);
+        gpl += `${r.toString().padStart(3, ' ')} ${g.toString().padStart(3, ' ')} ${b.toString().padStart(3, ' ')}\tColor_${idx + 1}\n`;
+      });
+      const blob = new Blob([gpl], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.download = `kpaint_${presetKey}.gpl`;
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 300);
+      retroAudio.play('shape');
+      showToast(`Exported GIMP Palette (.GPL) for ${presetKey}!`);
+    }
+
+    // 24-bit TrueColor RLE PCX Export (ZSoft Paintbrush Standard)
+    function exportPCX() {
+      closeExportDropdown();
+      const src = getCompositedCanvas();
+      const w = src.width;
+      const h = src.height;
+      const d = src.getContext('2d').getImageData(0, 0, w, h).data;
+
+      const bpl = (w % 2 === 0) ? w : w + 1;
+      const header = new Uint8Array(128);
+      header[0] = 10; // Manufacturer: ZSoft .PCX
+      header[1] = 5;  // Version 3.0+ (24-bit RGB)
+      header[2] = 1;  // RLE Encoding
+      header[3] = 8;  // 8 bits per pixel per plane
+      const xmax = w - 1;
+      const ymax = h - 1;
+      header[8] = xmax & 0xFF; header[9] = (xmax >> 8) & 0xFF;
+      header[10] = ymax & 0xFF; header[11] = (ymax >> 8) & 0xFF;
+      header[12] = 0x2C; header[13] = 0x01; // HDpi 300
+      header[14] = 0x2C; header[15] = 0x01; // VDpi 300
+      header[65] = 3; // 3 planes (RGB)
+      header[66] = bpl & 0xFF; header[67] = (bpl >> 8) & 0xFF;
+      header[68] = 1; // Palette info: color
+      header[70] = w & 0xFF; header[71] = (w >> 8) & 0xFF;
+      header[72] = h & 0xFF; header[73] = (h >> 8) & 0xFF;
+
+      const chunks = [header];
+      const plane = new Uint8Array(bpl);
+      const outBuf = new Uint8Array(bpl * 2);
+
+      for (let y = 0; y < h; y++) {
+        for (let p = 0; p < 3; p++) {
+          for (let x = 0; x < w; x++) {
+            const idx = (y * w + x) * 4;
+            plane[x] = d[idx + p]; // p=0 is R, p=1 is G, p=2 is B
+          }
+          for (let x = w; x < bpl; x++) plane[x] = 0;
+
+          let outLen = 0;
+          let i = 0;
+          while (i < bpl) {
+            const val = plane[i];
+            let run = 1;
+            while (i + run < bpl && plane[i + run] === val && run < 63) {
+              run++;
+            }
+            if (run > 1 || (val & 0xC0) === 0xC0) {
+              outBuf[outLen++] = 0xC0 | run;
+              outBuf[outLen++] = val;
+            } else {
+              outBuf[outLen++] = val;
+            }
+            i += run;
+          }
+          chunks.push(outBuf.slice(0, outLen));
+        }
+      }
+
+      const blob = new Blob(chunks, { type: 'image/x-pcx' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.download = 'kpaint_artwork.pcx';
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 300);
+      retroAudio.play('shape');
+      showToast("Exported ZSoft 24-bit TrueColor PCX image!");
+    }
+
+    // Binary PCX Decoder (24-bit RGB & 8-bit 256-color palette support)
+    function decodePCX(buffer) {
+      const bytes = new Uint8Array(buffer);
+      if (bytes.length < 128 || bytes[0] !== 10) throw new Error("Not a valid ZSoft PCX file");
+      const bpp = bytes[3];
+      const xmin = bytes[4] | (bytes[5] << 8);
+      const ymin = bytes[6] | (bytes[7] << 8);
+      const xmax = bytes[8] | (bytes[9] << 8);
+      const ymax = bytes[10] | (bytes[11] << 8);
+      const nPlanes = bytes[65];
+      const bpl = bytes[66] | (bytes[67] << 8);
+      const w = xmax - xmin + 1;
+      const h = ymax - ymin + 1;
+      if (w <= 0 || h <= 0 || w > 4096 || h > 4096) throw new Error("Invalid PCX dimensions");
+
+      const imgData = new ImageData(w, h);
+      const out = imgData.data;
+      let offset = 128;
+      const scanlineSize = bpl * nPlanes;
+      const scanline = new Uint8Array(scanlineSize);
+
+      if (nPlanes === 3 && bpp === 8) {
+        for (let y = 0; y < h; y++) {
+          let scanIdx = 0;
+          while (scanIdx < scanlineSize && offset < bytes.length) {
+            let b = bytes[offset++];
+            if ((b & 0xC0) === 0xC0) {
+              const run = b & 0x3F;
+              const val = bytes[offset++];
+              for (let r = 0; r < run && scanIdx < scanlineSize; r++) {
+                scanline[scanIdx++] = val;
+              }
+            } else {
+              scanline[scanIdx++] = b;
+            }
+          }
+          for (let x = 0; x < w; x++) {
+            const outIdx = (y * w + x) * 4;
+            out[outIdx]     = scanline[x];           // R
+            out[outIdx + 1] = scanline[bpl + x];     // G
+            out[outIdx + 2] = scanline[bpl * 2 + x]; // B
+            out[outIdx + 3] = 255;
+          }
+        }
+      } else if (nPlanes === 1 && bpp === 8) {
+        let palOffset = bytes.length - 768;
+        const palette = new Uint8Array(768);
+        for (let i = 0; i < 768; i++) palette[i] = bytes[palOffset + i];
+
+        for (let y = 0; y < h; y++) {
+          let scanIdx = 0;
+          while (scanIdx < bpl && offset < bytes.length) {
+            let b = bytes[offset++];
+            if ((b & 0xC0) === 0xC0) {
+              const run = b & 0x3F;
+              const val = bytes[offset++];
+              for (let r = 0; r < run && scanIdx < bpl; r++) {
+                scanline[scanIdx++] = val;
+              }
+            } else {
+              scanline[scanIdx++] = b;
+            }
+          }
+          for (let x = 0; x < w; x++) {
+            const colIdx = scanline[x] * 3;
+            const outIdx = (y * w + x) * 4;
+            out[outIdx]     = palette[colIdx];
+            out[outIdx + 1] = palette[colIdx + 1];
+            out[outIdx + 2] = palette[colIdx + 2];
+            out[outIdx + 3] = 255;
+          }
+        }
+      } else {
+        throw new Error(`Unsupported PCX format (${nPlanes} planes, ${bpp} bpp)`);
+      }
+      return imgData;
+    }
+
+    // Windows Icon (.ICO) Multi-Resolution Export (16x16, 32x32, 48x48)
+    function exportICO() {
+      closeExportDropdown();
+      const src = getCompositedCanvas();
+      const sizes = [16, 32, 48];
+      const images = [];
+
+      sizes.forEach(size => {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = size;
+        tempCanvas.height = size;
+        const tctx = tempCanvas.getContext('2d');
+        tctx.imageSmoothingEnabled = false;
+        tctx.drawImage(src, 0, 0, size, size);
+        images.push({ size, imgData: tctx.getImageData(0, 0, size, size) });
+      });
+
+      const headerSize = 6 + sizes.length * 16;
+      let currentOffset = headerSize;
+      const dibs = [];
+
+      images.forEach(img => {
+        const s = img.size;
+        const xorSize = s * s * 4;
+        const andRowBytes = Math.ceil(s / 32) * 4;
+        const andSize = andRowBytes * s;
+        const dibSize = 40 + xorSize + andSize;
+
+        const dib = new Uint8Array(dibSize);
+        const dv = new DataView(dib.buffer);
+
+        dv.setUint32(0, 40, true);
+        dv.setInt32(4, s, true);
+        dv.setInt32(8, s * 2, true);
+        dv.setUint16(12, 1, true);
+        dv.setUint16(14, 32, true);
+        dv.setUint32(16, 0, true);
+        dv.setUint32(20, xorSize + andSize, true);
+
+        const pixels = img.imgData.data;
+        let dibPos = 40;
+        for (let y = s - 1; y >= 0; y--) {
+          for (let x = 0; x < s; x++) {
+            const srcIdx = (y * s + x) * 4;
+            dib[dibPos++] = pixels[srcIdx + 2]; // B
+            dib[dibPos++] = pixels[srcIdx + 1]; // G
+            dib[dibPos++] = pixels[srcIdx];     // R
+            dib[dibPos++] = pixels[srcIdx + 3]; // A
+          }
+        }
+
+        for (let y = s - 1; y >= 0; y--) {
+          for (let byteX = 0; byteX < andRowBytes; byteX++) {
+            let maskByte = 0;
+            for (let bit = 0; bit < 8; bit++) {
+              const x = byteX * 8 + bit;
+              if (x < s) {
+                const srcIdx = (y * s + x) * 4;
+                if (pixels[srcIdx + 3] < 128) {
+                  maskByte |= (0x80 >> bit);
+                }
+              }
+            }
+            dib[dibPos++] = maskByte;
+          }
+        }
+
+        dibs.push({ size: s, data: dib, offset: currentOffset, length: dibSize });
+        currentOffset += dibSize;
+      });
+
+      const icoBuffer = new Uint8Array(currentOffset);
+      const dv = new DataView(icoBuffer.buffer);
+
+      dv.setUint16(0, 0, true);
+      dv.setUint16(2, 1, true);
+      dv.setUint16(4, sizes.length, true);
+
+      dibs.forEach((d, idx) => {
+        const entryOffset = 6 + idx * 16;
+        icoBuffer[entryOffset]     = d.size;
+        icoBuffer[entryOffset + 1] = d.size;
+        icoBuffer[entryOffset + 2] = 0;
+        icoBuffer[entryOffset + 3] = 0;
+        dv.setUint16(entryOffset + 4, 1, true);
+        dv.setUint16(entryOffset + 6, 32, true);
+        dv.setUint32(entryOffset + 8, d.length, true);
+        dv.setUint32(entryOffset + 12, d.offset, true);
+
+        icoBuffer.set(d.data, d.offset);
+      });
+
+      const blob = new Blob([icoBuffer], { type: 'image/x-icon' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.download = 'kpaint_icon.ico';
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 300);
+      retroAudio.play('shape');
+      showToast("Exported multi-res (16x16, 32x32, 48x48) Windows .ICO!");
+    }
+
+    // ANSI Art BBS Graphic (80 Columns Unicode Half-Block)
+    let currentAnsiText = "";
+    function exportANSI() {
+      closeExportDropdown();
+      const src = getCompositedCanvas();
+      const cols = 80;
+      const ratio = src.height / src.width;
+      const rows = Math.max(10, Math.min(60, Math.round(cols * ratio * 0.55)));
+      const pixelHeight = rows * 2;
+
+      const temp = document.createElement('canvas');
+      temp.width = cols;
+      temp.height = pixelHeight;
+      const tctx = temp.getContext('2d');
+      tctx.imageSmoothingEnabled = false;
+      tctx.drawImage(src, 0, 0, cols, pixelHeight);
+      const d = tctx.getImageData(0, 0, cols, pixelHeight).data;
+
+      let ansiText = "";
+      let htmlPreview = "";
+
+      for (let y = 0; y < pixelHeight; y += 2) {
+        let lastFg = null;
+        let lastBg = null;
+        for (let x = 0; x < cols; x++) {
+          const topIdx = (y * cols + x) * 4;
+          const botIdx = ((y + 1) * cols + x) * 4;
+
+          const tr = d[topIdx], tg = d[topIdx + 1], tb = d[topIdx + 2], ta = d[topIdx + 3];
+          const br = d[botIdx], bg = d[botIdx + 1], bb = d[botIdx + 2], ba = d[botIdx + 3];
+
+          const fgCode = ta > 20 ? `\x1b[38;2;${tr};${tg};${tb}m` : `\x1b[39m`;
+          const bgCode = ba > 20 ? `\x1b[48;2;${br};${bg};${bb}m` : `\x1b[49m`;
+
+          if (fgCode !== lastFg) { ansiText += fgCode; lastFg = fgCode; }
+          if (bgCode !== lastBg) { ansiText += bgCode; lastBg = bgCode; }
+          ansiText += "▀";
+
+          const fgHex = ta > 20 ? `rgb(${tr},${tg},${tb})` : 'transparent';
+          const bgHex = ba > 20 ? `rgb(${br},${bg},${bb})` : 'transparent';
+          htmlPreview += `<span style="color:${fgHex};background-color:${bgHex};">▀</span>`;
+        }
+        ansiText += "\x1b[0m\r\n";
+        htmlPreview += "<br>";
+      }
+
+      currentAnsiText = ansiText;
+      const previewBox = document.getElementById('ansi-preview-box');
+      if (previewBox) previewBox.innerHTML = htmlPreview;
+      const modal = document.getElementById('ansi-modal');
+      if (modal) modal.classList.add('show');
+      retroAudio.play('shape');
+    }
+
+    function closeAnsiModal() {
+      const modal = document.getElementById('ansi-modal');
+      if (modal) modal.classList.remove('show');
+    }
+
+    function handleAnsiBackdropClick(e) {
+      if (e.target.id === 'ansi-modal') closeAnsiModal();
+    }
+
+    function downloadAnsiFile() {
+      const blob = new Blob([currentAnsiText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.download = 'kpaint_bbs.ans';
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 300);
+      showToast("Downloaded .ANS BBS Art file!");
+    }
+
+    function downloadAnsiTextFile() {
+      const blob = new Blob([currentAnsiText], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.download = 'kpaint_ansi.txt';
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 300);
+      showToast("Downloaded plain text ANSI file!");
+    }
+
+    function copyAnsiToClipboard() {
+      navigator.clipboard.writeText(currentAnsiText).then(() => {
+        showToast("Copied ANSI escape sequence text to clipboard!");
+      }).catch(() => {
+        showToast("Clipboard access denied.");
+      });
+    }
+
+    // XBM (X11 Bitmap) C Source Export
+    function exportXBM() {
+      closeExportDropdown();
+      const src = getCompositedCanvas();
+      const w = src.width;
+      const h = src.height;
+      const d = src.getContext('2d').getImageData(0, 0, w, h).data;
+
+      let xbm = `/* KPaint Pro Exported X11 Bitmap (XBM) */\n`;
+      xbm += `#define kpaint_width ${w}\n`;
+      xbm += `#define kpaint_height ${h}\n`;
+      xbm += `static unsigned char kpaint_bits[] = {\n  `;
+
+      const bytesPerRow = Math.ceil(w / 8);
+      const totalBytes = bytesPerRow * h;
+      let lineCount = 0;
+
+      for (let y = 0; y < h; y++) {
+        for (let b = 0; b < bytesPerRow; b++) {
+          let byteVal = 0;
+          for (let bit = 0; bit < 8; bit++) {
+            const x = b * 8 + bit;
+            if (x < w) {
+              const idx = (y * w + x) * 4;
+              const luma = (d[idx] * 77 + d[idx + 1] * 150 + d[idx + 2] * 29) >> 8;
+              if (luma < 128 && d[idx + 3] > 64) {
+                byteVal |= (1 << bit);
+              }
+            }
+          }
+          xbm += '0x' + byteVal.toString(16).toUpperCase().padStart(2, '0') + ', ';
+          lineCount++;
+          if (lineCount % 12 === 0 && lineCount < totalBytes) {
+            xbm += '\n  ';
+          }
+        }
+      }
+      xbm += `\n};\n`;
+
+      const blob = new Blob([xbm], { type: 'image/x-xbitmap' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.download = 'kpaint_bitmap.xbm';
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 300);
+      retroAudio.play('shape');
+      showToast("Exported XBM (X11 C Bitmap) image!");
+    }
+
+    // Global Color Replacement Tool [Shift+G]
+    function replaceColorGlobal(startX, startY, newColorHex) {
+      const w = canvas.width;
+      const h = canvas.height;
+      if (startX < 0 || startX >= w || startY < 0 || startY >= h) return;
+
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const data = imgData.data;
+
+      const targetIdx = (startY * w + startX) * 4;
+      const tR = data[targetIdx];
+      const tG = data[targetIdx + 1];
+      const tB = data[targetIdx + 2];
+      const tA = data[targetIdx + 3];
+
+      const fillR = parseInt(newColorHex.slice(1, 3), 16);
+      const fillG = parseInt(newColorHex.slice(3, 5), 16);
+      const fillB = parseInt(newColorHex.slice(5, 7), 16);
+
+      let replacedCount = 0;
+      const tolerance = 25;
+
+      for (let i = 0; i < data.length; i += 4) {
+        const dr = Math.abs(data[i] - tR);
+        const dg = Math.abs(data[i + 1] - tG);
+        const db = Math.abs(data[i + 2] - tB);
+        const da = Math.abs(data[i + 3] - tA);
+        if (dr <= tolerance && dg <= tolerance && db <= tolerance && da <= tolerance) {
+          data[i] = fillR;
+          data[i + 1] = fillG;
+          data[i + 2] = fillB;
+          data[i + 3] = 255;
+          replacedCount++;
+        }
+      }
+
+      ctx.putImageData(imgData, 0, 0);
+      saveState();
+      retroAudio.play('fill');
+      showToast(`Replaced ${replacedCount} pixels matching target color!`);
+    }
+
+    // Symmetric Bezier Curve Renderer
+    function applySymmetricCurve(targetCtx, sx, sy, cx, cy, ex, ey, color, size, shape) {
+      targetCtx.save();
+      targetCtx.lineWidth = size;
+      targetCtx.lineCap = shape === 'square' ? 'square' : 'round';
+      targetCtx.lineJoin = shape === 'square' ? 'miter' : 'round';
+      targetCtx.strokeStyle = color;
+
+      function renderCurve(x0, y0, xc, yc, x1, y1) {
+        targetCtx.beginPath();
+        targetCtx.moveTo(x0, y0);
+        targetCtx.quadraticCurveTo(xc, yc, x1, y1);
+        targetCtx.stroke();
+      }
+
+      renderCurve(sx, sy, cx, cy, ex, ey);
+      const w = canvas.width, h = canvas.height;
+      if (currentSymmetry === 'h' || currentSymmetry === 'quad') {
+        renderCurve(w - sx, sy, w - cx, cy, w - ex, ey);
+      }
+      if (currentSymmetry === 'v' || currentSymmetry === 'quad') {
+        renderCurve(sx, h - sy, cx, h - cy, ex, h - ey);
+      }
+      if (currentSymmetry === 'quad') {
+        renderCurve(w - sx, h - sy, w - cx, h - cy, w - ex, h - ey);
+      }
+      targetCtx.restore();
+    }
+
+    // Sprite Reel Animation & Flipbook Engine
+    let animFrames = [];
+    let currentAnimFrameIdx = 0;
+    let animPlaying = false;
+    let animTimer = null;
+    let animFps = 8;
+    let animOnionSkin = false;
+    let animDockOpen = false;
+
+    function toggleAnimationDock() {
+      const dock = document.getElementById('animation-dock');
+      const btn = document.getElementById('btn-anim-toggle');
+      if (!dock) return;
+      animDockOpen = !animDockOpen;
+      if (animDockOpen) {
+        dock.style.display = 'flex';
+        if (btn) btn.classList.add('btn-collab-active');
+        if (animFrames.length === 0) {
+          captureCurrentCanvasToFrame(0);
+        }
+        renderAnimFrameStrip();
+        showToast("Sprite Flipbook Animation Reel opened. Press Space to play/pause.");
+      } else {
+        if (animPlaying) togglePlayAnimation();
+        dock.style.display = 'none';
+        if (btn) btn.classList.remove('btn-collab-active');
+        const onion = document.getElementById('onion-canvas');
+        if (onion) onion.style.display = 'none';
+      }
+    }
+
+    function captureCurrentCanvasToFrame(idx) {
+      const comp = getCompositedCanvas();
+      const thumbCanvas = document.createElement('canvas');
+      thumbCanvas.width = 48;
+      thumbCanvas.height = 36;
+      const tctx = thumbCanvas.getContext('2d');
+      tctx.imageSmoothingEnabled = false;
+      tctx.drawImage(comp, 0, 0, 48, 36);
+
+      const frameData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const thumbUrl = thumbCanvas.toDataURL('image/png');
+
+      animFrames[idx] = {
+        data: frameData,
+        thumb: thumbUrl,
+        width: canvas.width,
+        height: canvas.height
+      };
+    }
+
+    function renderAnimFrameStrip() {
+      const strip = document.getElementById('anim-frame-strip');
+      const indicator = document.getElementById('anim-frame-indicator');
+      if (!strip) return;
+      strip.innerHTML = '';
+      if (indicator) {
+        indicator.textContent = `Frame ${currentAnimFrameIdx + 1}/${animFrames.length}`;
+      }
+
+      animFrames.forEach((frame, idx) => {
+        const card = document.createElement('div');
+        card.className = `anim-frame-card ${idx === currentAnimFrameIdx ? 'active' : ''}`;
+        card.title = `Switch to Frame ${idx + 1}`;
+        card.onclick = () => selectAnimFrame(idx);
+
+        const img = document.createElement('img');
+        img.src = frame.thumb;
+        img.alt = `Frame ${idx + 1}`;
+
+        const num = document.createElement('div');
+        num.className = 'frame-num';
+        num.textContent = `#${idx + 1}`;
+
+        card.appendChild(img);
+        card.appendChild(num);
+        strip.appendChild(card);
+      });
+    }
+
+    function selectAnimFrame(idx) {
+      if (idx < 0 || idx >= animFrames.length || idx === currentAnimFrameIdx) return;
+      captureCurrentCanvasToFrame(currentAnimFrameIdx);
+      currentAnimFrameIdx = idx;
+      loadFrameToCanvas(idx);
+      renderAnimFrameStrip();
+      updateOnionSkin();
+    }
+
+    function loadFrameToCanvas(idx) {
+      if (!animFrames[idx]) return;
+      ctx.putImageData(animFrames[idx].data, 0, 0);
+      saveState();
+    }
+
+    function addAnimFrame() {
+      captureCurrentCanvasToFrame(currentAnimFrameIdx);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      saveState();
+
+      currentAnimFrameIdx = animFrames.length;
+      captureCurrentCanvasToFrame(currentAnimFrameIdx);
+      renderAnimFrameStrip();
+      updateOnionSkin();
+      retroAudio.play('shape');
+      showToast(`Added Frame #${animFrames.length}!`);
+    }
+
+    function duplicateAnimFrame() {
+      captureCurrentCanvasToFrame(currentAnimFrameIdx);
+      const current = animFrames[currentAnimFrameIdx];
+      const cloneData = new ImageData(new Uint8ClampedArray(current.data.data), current.width, current.height);
+      const newFrame = {
+        data: cloneData,
+        thumb: current.thumb,
+        width: current.width,
+        height: current.height
+      };
+      animFrames.splice(currentAnimFrameIdx + 1, 0, newFrame);
+      currentAnimFrameIdx++;
+      loadFrameToCanvas(currentAnimFrameIdx);
+      renderAnimFrameStrip();
+      updateOnionSkin();
+      retroAudio.play('shape');
+      showToast(`Duplicated Frame #${currentAnimFrameIdx + 1}!`);
+    }
+
+    function deleteAnimFrame() {
+      if (animFrames.length <= 1) {
+        showToast("Cannot delete the only frame.");
+        return;
+      }
+      animFrames.splice(currentAnimFrameIdx, 1);
+      currentAnimFrameIdx = Math.max(0, currentAnimFrameIdx - 1);
+      loadFrameToCanvas(currentAnimFrameIdx);
+      renderAnimFrameStrip();
+      updateOnionSkin();
+      retroAudio.play('shape');
+      showToast(`Deleted frame. Now on Frame #${currentAnimFrameIdx + 1}.`);
+    }
+
+    function nextAnimFrame() {
+      if (animFrames.length <= 1) return;
+      captureCurrentCanvasToFrame(currentAnimFrameIdx);
+      currentAnimFrameIdx = (currentAnimFrameIdx + 1) % animFrames.length;
+      loadFrameToCanvas(currentAnimFrameIdx);
+      renderAnimFrameStrip();
+      updateOnionSkin();
+    }
+
+    function prevAnimFrame() {
+      if (animFrames.length <= 1) return;
+      captureCurrentCanvasToFrame(currentAnimFrameIdx);
+      currentAnimFrameIdx = (currentAnimFrameIdx - 1 + animFrames.length) % animFrames.length;
+      loadFrameToCanvas(currentAnimFrameIdx);
+      renderAnimFrameStrip();
+      updateOnionSkin();
+    }
+
+    function updateAnimFps(val) {
+      animFps = Math.max(1, Math.min(24, parseInt(val, 10) || 8));
+      if (animPlaying) {
+        clearInterval(animTimer);
+        animTimer = setInterval(animPlayStep, 1000 / animFps);
+      }
+      showToast(`Animation FPS: ${animFps}`);
+    }
+
+    function togglePlayAnimation() {
+      const btn = document.getElementById('btn-anim-play');
+      if (animPlaying) {
+        animPlaying = false;
+        clearInterval(animTimer);
+        animTimer = null;
+        if (btn) btn.textContent = '▶ Play';
+        loadFrameToCanvas(currentAnimFrameIdx);
+        renderAnimFrameStrip();
+        updateOnionSkin();
+        showToast("Animation playback paused.");
+      } else {
+        if (animFrames.length <= 1) {
+          showToast("Add more frames to play an animation loop (+ Frame).");
+          return;
+        }
+        captureCurrentCanvasToFrame(currentAnimFrameIdx);
+        animPlaying = true;
+        if (btn) btn.textContent = '⏹ Stop';
+        const onion = document.getElementById('onion-canvas');
+        if (onion) onion.style.display = 'none';
+        animTimer = setInterval(animPlayStep, 1000 / animFps);
+        showToast(`Playing animation loop at ${animFps} FPS...`);
+      }
+    }
+
+    function animPlayStep() {
+      currentAnimFrameIdx = (currentAnimFrameIdx + 1) % animFrames.length;
+      if (animFrames[currentAnimFrameIdx]) {
+        ctx.putImageData(animFrames[currentAnimFrameIdx].data, 0, 0);
+      }
+      const indicator = document.getElementById('anim-frame-indicator');
+      if (indicator) indicator.textContent = `Frame ${currentAnimFrameIdx + 1}/${animFrames.length}`;
+      document.querySelectorAll('.anim-frame-card').forEach((card, idx) => {
+        if (idx === currentAnimFrameIdx) card.classList.add('active');
+        else card.classList.remove('active');
+      });
+    }
+
+    function toggleOnionSkin(checked) {
+      animOnionSkin = checked;
+      updateOnionSkin();
+      showToast(`Onion skinning: ${checked ? 'ON' : 'OFF'}`);
+    }
+
+    function updateOnionSkin() {
+      const onionCanvas = document.getElementById('onion-canvas');
+      if (!onionCanvas) return;
+      if (!animOnionSkin || animPlaying || currentAnimFrameIdx === 0 || !animFrames[currentAnimFrameIdx - 1]) {
+        onionCanvas.style.display = 'none';
+        return;
+      }
+      onionCanvas.style.display = 'block';
+      const octx = onionCanvas.getContext('2d');
+      octx.clearRect(0, 0, onionCanvas.width, onionCanvas.height);
+      const prevData = animFrames[currentAnimFrameIdx - 1].data;
+
+      const tempC = document.createElement('canvas');
+      tempC.width = canvas.width;
+      tempC.height = canvas.height;
+      tempC.getContext('2d').putImageData(prevData, 0, 0);
+
+      octx.save();
+      octx.globalAlpha = 0.35;
+      octx.drawImage(tempC, 0, 0);
+      octx.restore();
+    }
+
+    function exportSpriteSheet() {
+      captureCurrentCanvasToFrame(currentAnimFrameIdx);
+      if (animFrames.length === 0) return;
+      const fw = canvas.width;
+      const fh = canvas.height;
+      const count = animFrames.length;
+
+      const sheet = document.createElement('canvas');
+      sheet.width = fw * count;
+      sheet.height = fh;
+      const sctx = sheet.getContext('2d');
+
+      const tempC = document.createElement('canvas');
+      tempC.width = fw;
+      tempC.height = fh;
+      const tctx = tempC.getContext('2d');
+
+      animFrames.forEach((frame, idx) => {
+        tctx.putImageData(frame.data, 0, 0);
+        sctx.drawImage(tempC, idx * fw, 0);
+      });
+
+      const url = sheet.toDataURL('image/png');
+      const a = document.createElement('a');
+      a.download = `kpaint_spritesheet_${count}f.png`;
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => a.remove(), 300);
+
+      const meta = {
+        app: "KPaint Pro 1999",
+        type: "spritesheet",
+        frameCount: count,
+        frameWidth: fw,
+        frameHeight: fh,
+        totalWidth: sheet.width,
+        totalHeight: sheet.height,
+        fps: animFps,
+        layout: "horizontal",
+        timestamp: Date.now()
+      };
+      const metaBlob = new Blob([JSON.stringify(meta, null, 2)], { type: 'application/json' });
+      const metaUrl = URL.createObjectURL(metaBlob);
+      const metaA = document.createElement('a');
+      metaA.download = `kpaint_spritesheet_${count}f.json`;
+      metaA.href = metaUrl;
+      document.body.appendChild(metaA);
+      metaA.click();
+      setTimeout(() => { metaA.remove(); URL.revokeObjectURL(metaUrl); }, 300);
+
+      retroAudio.play('shape');
+      showToast(`Exported ${count}-frame horizontal Sprite Sheet PNG + JSON metadata!`);
     }
 
     // Communication with KiloOS
@@ -1617,6 +3017,60 @@
     }
 
     // Palettes & Colors
+    function updateSwatchUI() {
+      const fg = document.getElementById('swatch-fg');
+      const bg = document.getElementById('swatch-bg');
+      const slotLbl = document.getElementById('swatch-slot-label');
+      const subLbl = document.getElementById('swatch-sub-label');
+      if (fg) fg.style.background = currentColor;
+      if (bg) bg.style.background = secondaryColor;
+      if (slotLbl) slotLbl.innerText = `FG: ${currentColor.toUpperCase()}`;
+      if (subLbl) subLbl.innerText = `BG: ${secondaryColor.toUpperCase()}`;
+
+      if (fg && bg) {
+        if (activeColorSlot === 'fg') {
+          fg.style.borderColor = '#ffffff';
+          fg.style.zIndex = '3';
+          bg.style.borderColor = 'rgba(255,255,255,0.3)';
+          bg.style.zIndex = '1';
+        } else {
+          bg.style.borderColor = '#ffffff';
+          bg.style.zIndex = '3';
+          fg.style.borderColor = 'rgba(255,255,255,0.3)';
+          fg.style.zIndex = '1';
+        }
+      }
+    }
+
+    function setActiveColorSlot(slot) {
+      activeColorSlot = slot;
+      updateSwatchUI();
+      const activeColor = slot === 'fg' ? currentColor : secondaryColor;
+      if (activeColor.startsWith('#') && activeColor.length === 7) {
+        const picker = document.getElementById('color-picker');
+        if (picker) picker.value = activeColor;
+      }
+      showToast(`Selected ${slot.toUpperCase()} color slot.`);
+    }
+
+    function swapColors() {
+      const tmp = currentColor;
+      currentColor = secondaryColor;
+      secondaryColor = tmp;
+      updateSwatchUI();
+      updateBrushSettings();
+      retroAudio.play('pick');
+      showToast(`Swapped FG & BG (FG: ${currentColor}, BG: ${secondaryColor})`);
+    }
+
+    function selectSecondaryColor(c) {
+      secondaryColor = c;
+      updateSwatchUI();
+      retroAudio.play('pick');
+      showToast(`Set BG color: ${c}`);
+      savePreferences();
+    }
+
     function loadPalettePreset() {
       const presetKey = document.getElementById('palette-preset').value;
       const colors = PALETTES[presetKey] || PALETTES.classic;
@@ -1630,13 +3084,25 @@
         div.setAttribute('role', 'button');
         div.setAttribute('aria-label', `Color ${c}`);
         div.onclick = () => selectColor(c, div);
+        div.oncontextmenu = (e) => {
+          e.preventDefault();
+          selectSecondaryColor(c);
+        };
         div.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectColor(c, div); } };
         grid.appendChild(div);
       });
+      updateSwatchUI();
       savePreferences();
     }
 
     function selectColor(c, el) {
+      if (activeColorSlot === 'bg') {
+        secondaryColor = c;
+        updateSwatchUI();
+        savePreferences();
+        showToast(`Set BG color: ${c}`);
+        return;
+      }
       currentColor = c;
       document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
       if (el) {
@@ -1651,6 +3117,7 @@
       if (c.startsWith('#') && c.length === 7) {
         document.getElementById('color-picker').value = c;
       }
+      updateSwatchUI();
       updateBrushSettings();
       savePreferences();
     }
@@ -1662,22 +3129,40 @@
     }
 
     function setCustomColor(c) {
+      if (activeColorSlot === 'bg') {
+        secondaryColor = c;
+        updateSwatchUI();
+        savePreferences();
+        showToast(`Set custom BG color: ${c}`);
+        return;
+      }
       currentColor = c;
       document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+      updateSwatchUI();
       updateBrushSettings();
       savePreferences();
     }
 
+    let curvePhase = 0;
+    let curveStart = { x: 0, y: 0 };
+    let curveEnd = { x: 0, y: 0 };
+    let curveCtrl = { x: 0, y: 0 };
+
     // Tool Management
     function setTool(t) {
       if (currentTool !== 'pipette') previousTool = currentTool;
+      if (currentTool === 'curve' && t !== 'curve') {
+        curvePhase = 0;
+        pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+        drawSymmetryGuides();
+      }
       currentTool = t;
       document.querySelectorAll('.tool-grid .btn').forEach(b => b.classList.remove('active'));
       const activeBtn = document.getElementById('tool-' + t);
       if (activeBtn) activeBtn.classList.add('active');
       const toolNames = {
-        freehand: 'Brush', line: 'Line', rect: 'Rectangle', ellipse: 'Ellipse',
-        fill: 'Fill', spray: 'Spray', pipette: 'Eyedropper', wand: 'Magic Wand',
+        freehand: 'Brush', line: 'Line', curve: 'Bezier Curve', rect: 'Rectangle', ellipse: 'Ellipse',
+        gradient: 'Gradient', fill: 'Fill', replace: 'Color Replace', spray: 'Spray', pipette: 'Eyedropper', wand: 'Magic Wand',
         lasso: 'Lasso', eraser: 'Eraser', text: 'Text Stamp'
       };
       document.getElementById('lbl-tool').innerText = toolNames[t] || (t.charAt(0).toUpperCase() + t.slice(1));
@@ -1876,6 +3361,28 @@
       lastDrawX = pos.x;
       lastDrawY = pos.y;
 
+      isDrawingSecondary = (e.button === 2);
+      const activeCol = isDrawingSecondary ? secondaryColor : currentColor;
+
+      if (currentTool === 'replace') {
+        replaceColorGlobal(startX, startY, activeCol);
+        return;
+      }
+
+      if (currentTool === 'curve') {
+        if (curvePhase === 0) {
+          curveStart = { x: pos.x, y: pos.y };
+          curveEnd = { x: pos.x, y: pos.y };
+          painting = true;
+          return;
+        } else if (curvePhase === 1) {
+          curveCtrl = { x: pos.x, y: pos.y };
+          curvePhase = 2;
+          painting = true;
+          return;
+        }
+      }
+
       if (currentTool === 'text') {
         openTextModal(pos.x, pos.y);
         return;
@@ -1883,22 +3390,28 @@
 
       if (currentTool === 'pipette' || e.altKey) {
         const sampled = sampleColorAt(pos.x, pos.y);
-        selectColor(sampled);
+        if (isDrawingSecondary) {
+          selectSecondaryColor(sampled);
+        } else {
+          selectColor(sampled);
+        }
+        retroAudio.play('pick');
         showToast(`Sampled color: ${sampled}`);
         if (currentTool === 'pipette') setTool(previousTool || 'freehand');
         return;
       }
 
       if (currentTool === 'fill') {
-        floodFill(startX, startY, currentColor);
+        floodFill(startX, startY, activeCol);
         saveState();
+        retroAudio.play('fill');
         if (isLiveCollab) {
           broadcastStroke({
             strokeId: collabClientId + '_' + Date.now(),
             clientId: collabClientId,
             nick: collabClientNick,
             tool: 'fill',
-            color: currentColor,
+            color: activeCol,
             startX,
             startY,
             time: Date.now()
@@ -1920,7 +3433,7 @@
           clientId: collabClientId,
           nick: collabClientNick,
           tool: currentTool,
-          color: currentColor,
+          color: activeCol,
           size: brushSize,
           shape: brushShape,
           symmetry: currentSymmetry,
@@ -1935,6 +3448,10 @@
         return;
       }
 
+      if (currentTool === 'gradient') {
+        return;
+      }
+
       if (currentTool === 'freehand' || currentTool === 'eraser' || currentTool === 'spray') {
         draw(e);
       }
@@ -1945,6 +3462,7 @@
       painting = false;
 
       const pos = getMousePos(e);
+      const activeCol = isDrawingSecondary ? secondaryColor : currentColor;
 
       if (currentTool === 'lasso') {
         if (lassoPoints.length > 2) {
@@ -1967,13 +3485,95 @@
         } else {
           clearSelection();
         }
+        isDrawingSecondary = false;
         return;
       }
 
-      if (currentTool !== 'freehand' && currentTool !== 'eraser' && currentTool !== 'spray') {
-        applySymmetricShape(ctx, currentTool, startX, startY, pos.x, pos.y, currentColor, brushSize, brushShape);
+      if (currentTool === 'gradient') {
         pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
         drawSymmetryGuides();
+        const grad = ctx.createLinearGradient(startX, startY, pos.x, pos.y);
+        grad.addColorStop(0, currentColor);
+        grad.addColorStop(1, secondaryColor);
+        ctx.save();
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
+        retroAudio.play('fill');
+        if (isLiveCollab) {
+          broadcastStroke({
+            strokeId: collabClientId + '_' + Date.now(),
+            clientId: collabClientId,
+            nick: collabClientNick,
+            tool: 'gradient',
+            color: currentColor,
+            color2: secondaryColor,
+            startX,
+            startY,
+            endX: pos.x,
+            endY: pos.y,
+            time: Date.now()
+          });
+        }
+        isDrawingSecondary = false;
+        saveState();
+        return;
+      }
+
+      if (currentTool === 'curve') {
+        if (curvePhase === 0) {
+          curveEnd = { x: pos.x, y: pos.y };
+          const dist = Math.hypot(curveEnd.x - curveStart.x, curveEnd.y - curveStart.y);
+          if (dist > 3) {
+            curvePhase = 1;
+            painting = false;
+            pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+            drawSymmetryGuides();
+            pctx.save();
+            pctx.lineWidth = brushSize;
+            pctx.lineCap = brushShape === 'square' ? 'square' : 'round';
+            pctx.strokeStyle = activeCol;
+            pctx.beginPath();
+            pctx.moveTo(curveStart.x, curveStart.y);
+            pctx.lineTo(curveEnd.x, curveEnd.y);
+            pctx.stroke();
+            const midX = (curveStart.x + curveEnd.x) / 2;
+            const midY = (curveStart.y + curveEnd.y) / 2;
+            pctx.fillStyle = '#38bdf8';
+            pctx.beginPath();
+            pctx.arc(midX, midY, 5, 0, Math.PI * 2);
+            pctx.fill();
+            pctx.restore();
+            showToast("Click & drag to bend curve. Release to stamp.", 2500);
+            return;
+          } else {
+            curvePhase = 0;
+            painting = false;
+            pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+            drawSymmetryGuides();
+            return;
+          }
+        } else if (curvePhase === 2) {
+          curveCtrl = { x: pos.x, y: pos.y };
+          applySymmetricCurve(ctx, curveStart.x, curveStart.y, curveCtrl.x, curveCtrl.y, curveEnd.x, curveEnd.y, activeCol, brushSize, brushShape);
+          pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+          drawSymmetryGuides();
+          curvePhase = 0;
+          painting = false;
+          retroAudio.play('shape');
+          saveState();
+          showToast("Bezier curve stamped!");
+          return;
+        }
+      }
+
+      if (currentTool !== 'freehand' && currentTool !== 'eraser' && currentTool !== 'spray') {
+        applySymmetricShape(ctx, currentTool, startX, startY, pos.x, pos.y, activeCol, brushSize, brushShape);
+        pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+        drawSymmetryGuides();
+        retroAudio.play('shape');
+      } else {
+        retroAudio.play('brush');
       }
 
       if (isLiveCollab && currentStroke) {
@@ -1985,6 +3585,7 @@
         broadcastCursor(pos.x, pos.y, false);
       }
 
+      isDrawingSecondary = false;
       saveState();
     }
 
@@ -1998,9 +3599,43 @@
 
       if (!painting) return;
 
+      const activeCol = isDrawingSecondary ? secondaryColor : currentColor;
       const isErasingUpper = currentTool === 'eraser' && activeLayerIndex > 0;
-      const activeColor = currentTool === 'eraser' ? (isErasingUpper ? 'rgba(0,0,0,1)' : '#ffffff') : currentColor;
+      const activeColor = currentTool === 'eraser' ? (isErasingUpper ? 'rgba(0,0,0,1)' : '#ffffff') : activeCol;
       const compositeOp = isErasingUpper ? 'destination-out' : 'source-over';
+
+      if (currentTool === 'curve') {
+        pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+        drawSymmetryGuides();
+        if (curvePhase === 0) {
+          curveEnd = { x: pos.x, y: pos.y };
+          pctx.save();
+          pctx.lineWidth = brushSize;
+          pctx.lineCap = brushShape === 'square' ? 'square' : 'round';
+          pctx.strokeStyle = activeColor;
+          pctx.beginPath();
+          pctx.moveTo(curveStart.x, curveStart.y);
+          pctx.lineTo(curveEnd.x, curveEnd.y);
+          pctx.stroke();
+          pctx.restore();
+        } else if (curvePhase === 2) {
+          curveCtrl = { x: pos.x, y: pos.y };
+          pctx.save();
+          pctx.lineWidth = brushSize;
+          pctx.lineCap = brushShape === 'square' ? 'square' : 'round';
+          pctx.strokeStyle = activeColor;
+          pctx.beginPath();
+          pctx.moveTo(curveStart.x, curveStart.y);
+          pctx.quadraticCurveTo(curveCtrl.x, curveCtrl.y, curveEnd.x, curveEnd.y);
+          pctx.stroke();
+          pctx.fillStyle = '#60a5fa';
+          pctx.beginPath();
+          pctx.arc(curveCtrl.x, curveCtrl.y, 4, 0, Math.PI * 2);
+          pctx.fill();
+          pctx.restore();
+        }
+        return;
+      }
 
       if (currentTool === 'lasso') {
         lassoPoints.push(pos);
@@ -2035,6 +3670,24 @@
         }
         lastDrawX = pos.x;
         lastDrawY = pos.y;
+      } else if (currentTool === 'gradient') {
+        pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+        drawSymmetryGuides();
+        pctx.save();
+        const grad = pctx.createLinearGradient(startX, startY, pos.x, pos.y);
+        grad.addColorStop(0, currentColor);
+        grad.addColorStop(1, secondaryColor);
+        pctx.strokeStyle = grad;
+        pctx.lineWidth = Math.max(3, brushSize);
+        pctx.beginPath();
+        pctx.moveTo(startX, startY);
+        pctx.lineTo(pos.x, pos.y);
+        pctx.stroke();
+        pctx.fillStyle = currentColor;
+        pctx.beginPath(); pctx.arc(startX, startY, 4, 0, 2 * Math.PI); pctx.fill();
+        pctx.fillStyle = secondaryColor;
+        pctx.beginPath(); pctx.arc(pos.x, pos.y, 4, 0, 2 * Math.PI); pctx.fill();
+        pctx.restore();
       } else {
         // Shape preview
         pctx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
@@ -2137,6 +3790,77 @@
         clearSelection();
         saveState();
         showToast("Cleared selected region.");
+      }
+    }
+
+    function fillSelection() {
+      if (!hasSelection) {
+        showToast("No active selection to fill.");
+        return;
+      }
+      const w = canvas.width, h = canvas.height;
+      const sData = sctx.getImageData(0, 0, w, h).data;
+      const cImg = ctx.getImageData(0, 0, w, h);
+      const cData = cImg.data;
+      
+      let r = 0, g = 0, b = 0;
+      if (currentColor.startsWith('#')) {
+        const hex = currentColor.replace('#', '');
+        if (hex.length === 3) {
+          r = parseInt(hex[0]+hex[0], 16);
+          g = parseInt(hex[1]+hex[1], 16);
+          b = parseInt(hex[2]+hex[2], 16);
+        } else {
+          r = parseInt(hex.substring(0, 2), 16);
+          g = parseInt(hex.substring(2, 4), 16);
+          b = parseInt(hex.substring(4, 6), 16);
+        }
+      }
+
+      let count = 0;
+      for (let i = 0; i < sData.length; i += 4) {
+        if (sData[i + 3] > 0) {
+          cData[i] = r;
+          cData[i + 1] = g;
+          cData[i + 2] = b;
+          cData[i + 3] = 255;
+          count++;
+        }
+      }
+      if (count > 0) {
+        ctx.putImageData(cImg, 0, 0);
+        clearSelection();
+        saveState();
+        retroAudio.play('fill');
+        showToast("Filled selected region with active color.");
+      }
+    }
+
+    function invertSelection() {
+      if (!hasSelection) {
+        showToast("No active selection to invert.");
+        return;
+      }
+      const w = canvas.width, h = canvas.height;
+      const sData = sctx.getImageData(0, 0, w, h).data;
+      const cImg = ctx.getImageData(0, 0, w, h);
+      const cData = cImg.data;
+
+      let count = 0;
+      for (let i = 0; i < sData.length; i += 4) {
+        if (sData[i + 3] > 0) {
+          cData[i] = 255 - cData[i];
+          cData[i + 1] = 255 - cData[i + 1];
+          cData[i + 2] = 255 - cData[i + 2];
+          count++;
+        }
+      }
+      if (count > 0) {
+        ctx.putImageData(cImg, 0, 0);
+        clearSelection();
+        saveState();
+        retroAudio.play('filter');
+        showToast("Inverted colors in selected region.");
       }
     }
 
@@ -2260,15 +3984,26 @@
           data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189));
           data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168));
           data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131));
+        } else if (type === 'posterize') {
+          const levels = 4;
+          const step = 255 / (levels - 1);
+          data[i] = Math.round(Math.round(r / step) * step);
+          data[i + 1] = Math.round(Math.round(g / step) * step);
+          data[i + 2] = Math.round(Math.round(b / step) * step);
+        } else if (type === 'solarize') {
+          data[i] = r > 128 ? (255 - r) : r;
+          data[i + 1] = g > 128 ? (255 - g) : g;
+          data[i + 2] = b > 128 ? (255 - b) : b;
         }
       }
 
       ctx.putImageData(imgData, 0, 0);
       saveState();
+      retroAudio.play('filter');
       showToast(`Applied ${type} adjustment.`);
     }
 
-    // Floyd-Steinberg Error Diffusion Dithering (1-Bit & 16-Color Retro VGA)
+    // Floyd-Steinberg Error Diffusion Dithering (1-Bit, 16-Col VGA, Game Boy, Amiga 32, C64, CGA)
     function applyDither(mode) {
       const w = canvas.width, h = canvas.height;
       const imgData = ctx.getImageData(0, 0, w, h);
@@ -2284,13 +4019,40 @@
         bBuf[p] = d[i + 2];
       }
 
-      // Standard 16-color PC VGA palette (1999 standard)
+      // Palettes
       const vgaPalette = [
         [0, 0, 0], [0, 0, 128], [0, 128, 0], [0, 128, 128],
         [128, 0, 0], [128, 0, 128], [128, 128, 0], [192, 192, 192],
         [128, 128, 128], [0, 0, 255], [0, 255, 0], [0, 255, 255],
         [255, 0, 0], [255, 0, 255], [255, 255, 0], [255, 255, 255]
       ];
+      const gameboyPalette = [
+        [15, 56, 15], [48, 98, 48], [139, 172, 15], [155, 188, 15]
+      ];
+      const amiga32Palette = [
+        [0,0,0], [0,0,68], [0,0,136], [0,0,204],
+        [0,68,0], [0,68,68], [0,68,136], [0,68,204],
+        [0,136,0], [0,136,68], [0,136,136], [0,136,204],
+        [68,0,0], [68,0,68], [68,0,136], [68,0,204],
+        [68,68,0], [68,68,68], [68,68,136], [68,68,204],
+        [136,0,0], [136,0,68], [136,0,136], [136,0,204],
+        [136,68,0], [136,68,68], [136,68,136], [136,68,204],
+        [204,204,204], [255,255,255], [238,153,68], [255,204,119]
+      ];
+      const c64Palette = [
+        [0, 0, 0], [255, 255, 255], [136, 0, 0], [170, 255, 238],
+        [204, 68, 204], [0, 204, 85], [0, 0, 170], [238, 238, 119],
+        [221, 136, 85], [102, 68, 0], [255, 119, 119], [51, 51, 51],
+        [119, 119, 119], [170, 255, 102], [0, 136, 255], [187, 187, 187]
+      ];
+      const cgaPalette = [
+        [0, 0, 0], [85, 255, 255], [255, 85, 255], [255, 255, 255]
+      ];
+
+      const activePalette = (mode === 'gameboy') ? gameboyPalette :
+                            (mode === 'amiga32') ? amiga32Palette :
+                            (mode === 'c64') ? c64Palette :
+                            (mode === 'cga') ? cgaPalette : vgaPalette;
 
       for (let y = 0; y < h; y++) {
         for (let x = 0; x < w; x++) {
@@ -2306,9 +4068,9 @@
             newR = newG = newB = val;
           } else {
             let bestDist = Infinity;
-            let bestCol = vgaPalette[0];
-            for (let c = 0; c < 16; c++) {
-              const col = vgaPalette[c];
+            let bestCol = activePalette[0];
+            for (let c = 0; c < activePalette.length; c++) {
+              const col = activePalette[c];
               const dist = (oldR - col[0]) * (oldR - col[0]) +
                            (oldG - col[1]) * (oldG - col[1]) +
                            (oldB - col[2]) * (oldB - col[2]);
@@ -2362,7 +4124,93 @@
 
       ctx.putImageData(imgData, 0, 0);
       saveState();
-      showToast(mode === '1bit' ? 'Applied Floyd-Steinberg 1-Bit Dither.' : 'Applied 16-Color VGA Dither.');
+      retroAudio.play('filter');
+      const label = mode === '1bit' ? '1-Bit Dither' :
+                    mode === 'gameboy' ? 'Game Boy DMG-01 Dither' :
+                    mode === 'amiga32' ? 'Amiga OCS 32-Color Dither' :
+                    mode === 'c64' ? 'Commodore 64 Dither' :
+                    mode === 'cga' ? 'CGA Mode 1 Dither' : '16-Color VGA Dither';
+      showToast(`Applied ${label}.`);
+    }
+
+    function applyChromaticSplit(offset = 4) {
+      const w = canvas.width, h = canvas.height;
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const src = new Uint8ClampedArray(imgData.data);
+      const d = imgData.data;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const idx = (y * w + x) * 4;
+          const rx = Math.max(0, x - offset);
+          const bx = Math.min(w - 1, x + offset);
+          d[idx] = src[(y * w + rx) * 4];
+          d[idx + 2] = src[(y * w + bx) * 4 + 2];
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+      saveState();
+      retroAudio.play('filter');
+      showToast('Applied RGB Split (Chromatic Aberration).');
+    }
+
+    function applyCRTBloom() {
+      const w = canvas.width, h = canvas.height;
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const d = imgData.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+        if (lum > 140) {
+          const boost = (lum - 140) * 0.45;
+          d[i] = Math.min(255, d[i] + boost * 0.8);
+          d[i + 1] = Math.min(255, d[i + 1] + boost * 1.15);
+          d[i + 2] = Math.min(255, d[i + 2] + boost * 0.9);
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+      saveState();
+      retroAudio.play('filter');
+      showToast('Applied Phosphor Bloom.');
+    }
+
+    function applyPixelize(blockSize = 8) {
+      const w = canvas.width, h = canvas.height;
+      const imgData = ctx.getImageData(0, 0, w, h);
+      const d = imgData.data;
+
+      for (let y = 0; y < h; y += blockSize) {
+        for (let x = 0; x < w; x += blockSize) {
+          let rSum = 0, gSum = 0, bSum = 0, aSum = 0, count = 0;
+          for (let dy = 0; dy < blockSize && y + dy < h; dy++) {
+            for (let dx = 0; dx < blockSize && x + dx < w; dx++) {
+              const idx = ((y + dy) * w + (x + dx)) * 4;
+              rSum += d[idx];
+              gSum += d[idx + 1];
+              bSum += d[idx + 2];
+              aSum += d[idx + 3];
+              count++;
+            }
+          }
+          if (count === 0) continue;
+          const r = Math.round(rSum / count);
+          const g = Math.round(gSum / count);
+          const b = Math.round(bSum / count);
+          const a = Math.round(aSum / count);
+
+          for (let dy = 0; dy < blockSize && y + dy < h; dy++) {
+            for (let dx = 0; dx < blockSize && x + dx < w; dx++) {
+              const idx = ((y + dy) * w + (x + dx)) * 4;
+              d[idx] = r;
+              d[idx + 1] = g;
+              d[idx + 2] = b;
+              d[idx + 3] = a;
+            }
+          }
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+      saveState();
+      retroAudio.play('filter');
+      showToast(`Applied Pixelize (${blockSize}px blocks).`);
     }
 
     // Soft Focus Box Blur
@@ -2530,6 +4378,32 @@
     function importImage(e) {
       const file = e.target.files[0];
       if (!file) return;
+
+      if (file.name.toLowerCase().endsWith('.pcx')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const imgData = decodePCX(event.target.result);
+            if (imgData.width > 4096 || imgData.height > 4096) {
+              showToast("PCX image exceeds maximum dimensions (4096x4096).", 4000);
+              return;
+            }
+            if (imgData.width !== layers[0].canvas.width || imgData.height !== layers[0].canvas.height) {
+              resizeCanvas(imgData.width, imgData.height);
+            }
+            ctx.putImageData(imgData, 0, 0);
+            saveState();
+            retroAudio.play('shape');
+            showToast(`Imported ZSoft PCX graphic (${imgData.width}x${imgData.height})!`);
+          } catch (err) {
+            showToast(`Failed to parse PCX: ${err.message}`, 4000);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+        e.target.value = '';
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (event) => {
         const img = new Image();
@@ -2623,7 +4497,7 @@
       e.preventDefault();
       if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
         const file = e.dataTransfer.files[0];
-        if (file.type.startsWith('image/')) {
+        if (file.type.startsWith('image/') || file.name.toLowerCase().endsWith('.pcx')) {
           const fakeEvt = { target: { files: [file], value: '' } };
           importImage(fakeEvt);
         }
@@ -3093,7 +4967,174 @@
       showToast(`Stamped text: "${text}"`);
     }
 
-    // Collaborative Studio (Firebase RTDB)
+    // =========================================================================
+    // Collaborative Studio (Retro Firebase Multiplayer Service - RFMS Standard)
+    // =========================================================================
+    let mp = null;
+    let isLiveCollab = false;
+    let currentCollabRoom = null;
+    let collabClientId = 'artist_' + Math.random().toString(36).substr(2, 9);
+    let collabClientNick = localStorage.getItem('kpaint_collab_nick') || ('Artist_' + Math.floor(1000 + Math.random() * 9000));
+    let peerCursors = {};
+    let cursorsRef = null;
+    let cursorsUnsub = null;
+    let lastCursorPush = 0;
+    let currentStroke = null;
+
+    // Rule 12 Subnet Ghost Artist AI Copilot
+    let isGhostArtistActive = false;
+    let ghostArtistTimer = null;
+    let ghostMotifIndex = 0;
+
+    function engageSubnetGhostArtist(reason) {
+      if (isGhostArtistActive) return;
+      isGhostArtistActive = true;
+      const notice = document.getElementById('collab-ghost-notice');
+      if (notice) notice.style.display = 'block';
+      retroAudio.play('ghost');
+      showToast("🤖 Subnet Ghost Artist engaged! (25s solo fallback active)", 4000);
+
+      if (ghostArtistTimer) clearInterval(ghostArtistTimer);
+      ghostArtistTimer = setInterval(runGhostArtistStep, 3500);
+    }
+
+    function stopGhostArtist() {
+      isGhostArtistActive = false;
+      if (ghostArtistTimer) {
+        clearInterval(ghostArtistTimer);
+        ghostArtistTimer = null;
+      }
+      const notice = document.getElementById('collab-ghost-notice');
+      if (notice) notice.style.display = 'none';
+    }
+
+    function toggleGhostArtist() {
+      if (isGhostArtistActive) {
+        stopGhostArtist();
+        showToast("Subnet Ghost Artist paused.");
+      } else {
+        engageSubnetGhostArtist('manual');
+      }
+    }
+
+    function runGhostArtistStep() {
+      if (!isGhostArtistActive) return;
+      const targetCtx = layers[0].ctx;
+      const w = canvas.width, h = canvas.height;
+      const motifs = ['circuit', 'constellation', 'diamond', 'pulse', 'glyph'];
+      const motif = motifs[ghostMotifIndex % motifs.length];
+      ghostMotifIndex++;
+
+      targetCtx.save();
+      const cyberColors = ['#06b6d4', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#3b82f6'];
+      const col = cyberColors[Math.floor(Math.random() * cyberColors.length)];
+      targetCtx.strokeStyle = col;
+      targetCtx.fillStyle = col;
+      targetCtx.lineWidth = 1.5;
+
+      const cx = 50 + Math.random() * (w - 100);
+      const cy = 50 + Math.random() * (h - 100);
+
+      if (motif === 'circuit') {
+        targetCtx.beginPath();
+        targetCtx.moveTo(cx, cy);
+        const step1X = cx + (Math.random() > 0.5 ? 40 : -40);
+        targetCtx.lineTo(step1X, cy);
+        const step2Y = cy + (Math.random() > 0.5 ? 40 : -40);
+        targetCtx.lineTo(step1X, step2Y);
+        targetCtx.stroke();
+        targetCtx.beginPath();
+        targetCtx.arc(step1X, step2Y, 3, 0, Math.PI * 2);
+        targetCtx.fill();
+      } else if (motif === 'constellation') {
+        const pts = [
+          { x: cx, y: cy },
+          { x: cx + (Math.random() - 0.5) * 60, y: cy + (Math.random() - 0.5) * 60 },
+          { x: cx + (Math.random() - 0.5) * 80, y: cy + (Math.random() - 0.5) * 80 }
+        ];
+        targetCtx.beginPath();
+        targetCtx.moveTo(pts[0].x, pts[0].y);
+        targetCtx.lineTo(pts[1].x, pts[1].y);
+        targetCtx.lineTo(pts[2].x, pts[2].y);
+        targetCtx.stroke();
+        pts.forEach(p => {
+          targetCtx.beginPath();
+          targetCtx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+          targetCtx.fill();
+        });
+      } else if (motif === 'diamond') {
+        const size = 12 + Math.random() * 16;
+        targetCtx.beginPath();
+        targetCtx.moveTo(cx, cy - size);
+        targetCtx.lineTo(cx + size, cy);
+        targetCtx.lineTo(cx, cy + size);
+        targetCtx.lineTo(cx - size, cy);
+        targetCtx.closePath();
+        targetCtx.stroke();
+      } else if (motif === 'pulse') {
+        targetCtx.beginPath();
+        targetCtx.arc(cx, cy, 8, 0, Math.PI * 2);
+        targetCtx.stroke();
+        targetCtx.beginPath();
+        targetCtx.arc(cx, cy, 18, 0, Math.PI * 2);
+        targetCtx.stroke();
+      } else if (motif === 'glyph') {
+        targetCtx.beginPath();
+        targetCtx.moveTo(cx - 10, cy); targetCtx.lineTo(cx + 10, cy);
+        targetCtx.moveTo(cx, cy - 10); targetCtx.lineTo(cx, cy + 10);
+        targetCtx.stroke();
+        targetCtx.strokeRect(cx - 6, cy - 6, 12, 12);
+      }
+
+      targetCtx.restore();
+      retroAudio.play('ghost');
+      showToast(`Ghost Artist: rendered ${motif} motif`);
+    }
+
+    function initMultiplayer() {
+      if (typeof RetroMultiplayer === 'undefined') return;
+      mp = new RetroMultiplayer({
+        gameId: 'kpaint',
+        prefix: 'KPT',
+        playerName: collabClientNick,
+        soloTimeoutMs: 25000,
+        onSoloFallback: ({ reason }) => {
+          engageSubnetGhostArtist(reason);
+        },
+        onMove: (moveData) => {
+          handleRemoteAction(moveData);
+        },
+        onChat: (chat) => {
+          if (chat && chat.text) {
+            showToast(`💬 ${chat.name || 'Peer'}: ${chat.text}`, 3500);
+            retroAudio.play('chirp');
+          }
+        },
+        onOpponentJoin: ({ slot, name }) => {
+          stopGhostArtist();
+          showToast(`🎨 Artist ${name || 'Peer'} joined studio!`, 3000);
+          retroAudio.play('chirp');
+          updateCollabUI();
+        },
+        onOpponentLeave: ({ slot, name }) => {
+          showToast(`⚠️ Artist ${name || 'Peer'} left room.`, 2500);
+          updateCollabUI();
+        },
+        onStatusMsg: (msg, type) => {
+          showToast(msg, 2500);
+        },
+        onStateChange: (room) => {
+          updateCollabPeerList(room);
+        }
+      });
+
+      mp.init().then(({ inviteCode }) => {
+        if (inviteCode) {
+          joinCollabRoom(inviteCode);
+        }
+      }).catch(() => {});
+    }
+
     function toggleCollabModal() {
       const modal = document.getElementById('collab-modal');
       if (!modal) return;
@@ -3125,12 +5166,35 @@
       if (input) input.value = code;
     }
 
+    function copyShareLink() {
+      if (!currentCollabRoom) return;
+      const shareUrl = window.location.origin + window.location.pathname + '#room=' + currentCollabRoom;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          showToast("📋 Room invite link copied to clipboard!");
+        });
+      } else {
+        showToast("Invite: " + shareUrl);
+      }
+    }
+
+    function sendCollabQuickChat(msg) {
+      if (!isLiveCollab || !mp) {
+        showToast("Join a studio room first!");
+        return;
+      }
+      mp.sendChat(msg);
+      showToast(`💬 You: ${msg}`);
+      retroAudio.play('chirp');
+    }
+
     function updateCollabUI() {
       const pill = document.getElementById('collab-state-pill');
       const btn = document.getElementById('btn-collab');
       const btnLabel = document.getElementById('collab-btn-label');
       const btnConnect = document.getElementById('btn-collab-connect');
       const btnDisconnect = document.getElementById('btn-collab-disconnect');
+      const btnShare = document.getElementById('btn-collab-share');
       const activeSection = document.getElementById('collab-active-section');
 
       if (isLiveCollab && currentCollabRoom) {
@@ -3141,8 +5205,9 @@
         }
         if (btn) btn.classList.add('btn-collab-active');
         if (btnLabel) btnLabel.textContent = `🟢 ${currentCollabRoom}`;
-        if (btnConnect) btnConnect.textContent = '🔄 Re-sync / Update Nick';
+        if (btnConnect) btnConnect.textContent = '🔄 Re-sync Nick';
         if (btnDisconnect) btnDisconnect.style.display = 'block';
+        if (btnShare) btnShare.style.display = 'block';
         if (activeSection) activeSection.style.display = 'flex';
       } else {
         if (pill) {
@@ -3152,130 +5217,132 @@
         }
         if (btn) btn.classList.remove('btn-collab-active');
         if (btnLabel) btnLabel.textContent = 'Collab [O]';
-        if (btnConnect) btnConnect.textContent = '🚀 Connect to Studio';
+        if (btnConnect) btnConnect.textContent = '🚀 Join / Host Room';
         if (btnDisconnect) btnDisconnect.style.display = 'none';
+        if (btnShare) btnShare.style.display = 'none';
         if (activeSection) activeSection.style.display = 'none';
       }
     }
 
-    function joinCollabRoom() {
-      const roomInput = document.getElementById('collab-room-input');
-      const nickInput = document.getElementById('collab-nick-input');
-      const rawRoom = roomInput ? roomInput.value.trim().toLowerCase() : '';
-      const room = rawRoom.replace(/[^a-z0-9_\-]/g, '') || 'studio-99';
+    function updateCollabPeerList(room) {
+      const peerListEl = document.getElementById('collab-peer-list');
+      const countEl = document.getElementById('collab-peer-count');
+      if (!peerListEl) return;
+      peerListEl.innerHTML = '';
+      if (!room) {
+        if (countEl) countEl.textContent = '0';
+        return;
+      }
+      let count = 0;
+      const peers = [];
+      if (room.p1) peers.push({ slot: 'p1', name: room.p1.name, isMe: mp && mp.mySlot === 'p1' });
+      if (room.p2) peers.push({ slot: 'p2', name: room.p2.name, isMe: mp && mp.mySlot === 'p2' });
+      count = peers.length;
 
+      peers.forEach(p => {
+        const item = document.createElement('div');
+        item.style.cssText = 'display:flex; align-items:center; justify-content:space-between; font-size:11px; padding:3px 6px; border-radius:4px; background:rgba(255,255,255,0.04);';
+        item.innerHTML = `<span style="display:flex; align-items:center; gap:6px;">
+          <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#10b981;"></span>
+          <strong>${p.name || 'Artist'}</strong> ${p.isMe ? '<em style="color:#60a5fa;">(You)</em>' : ''}
+        </span>
+        <span style="color:var(--text-muted); font-size:10px;">online</span>`;
+        peerListEl.appendChild(item);
+      });
+      if (countEl) countEl.textContent = count;
+    }
+
+    async function quickMatchCollab() {
+      if (!mp) initMultiplayer();
+      if (!mp) return;
+      syncNickInput();
+      showToast("⚡ Scanning public lobby for collaborative studio sessions...");
+      const res = await mp.quickMatch();
+      if (res && res.roomId) {
+        currentCollabRoom = res.roomId;
+        isLiveCollab = true;
+        updateCollabUI();
+        attachCollabCursors(res.roomId);
+        retroAudio.play('chirp');
+      }
+    }
+
+    function syncNickInput() {
+      const nickInput = document.getElementById('collab-nick-input');
       if (nickInput && nickInput.value.trim()) {
         collabClientNick = nickInput.value.trim().substring(0, 20);
         try { localStorage.setItem('kpaint_collab_nick', collabClientNick); } catch (_) {}
+        if (mp) mp.playerName = collabClientNick;
       }
+    }
 
-      if (!window.fb || !window.fb.db) {
-        showToast("⚠️ Firebase RTDB is initializing... please wait a second.");
-        return;
-      }
+    async function joinCollabRoom(specificCode) {
+      if (!mp) initMultiplayer();
+      if (!mp) return;
+      syncNickInput();
+
+      const roomInput = document.getElementById('collab-room-input');
+      const rawRoom = (specificCode || (roomInput ? roomInput.value.trim() : '')).toUpperCase();
+      const room = rawRoom.replace(/[^A-Z0-9_\-]/g, '') || 'KPT-1999';
 
       if (isLiveCollab && currentCollabRoom === room) {
-        showToast("Already connected to #" + room);
+        showToast("Already in #" + room);
         return;
       }
 
       leaveCollabRoom();
 
-      currentCollabRoom = room;
-      isLiveCollab = true;
-      updateCollabUI();
+      let res = await mp.joinRoom(room);
+      if (!res.success && res.reason === 'not_found') {
+        res = await mp.createRoom({ roomId: room }, true);
+      }
 
-      const db = window.fb.db;
-      const presenceRef = window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/presence/${collabClientId}`);
-      const allPresenceRef = window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/presence`);
-      const strokesRef = window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/strokes`);
-      const cursorsRef = window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/cursors`);
-      const snapRef = window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/snapshot`);
+      if (res && (res.roomId || res.success)) {
+        currentCollabRoom = res.roomId || room;
+        isLiveCollab = true;
+        updateCollabUI();
+        attachCollabCursors(currentCollabRoom);
+        retroAudio.play('chirp');
+        showToast(`Connected to #${currentCollabRoom} as ${collabClientNick}!`);
+      }
+    }
 
-      window.fb.set(presenceRef, {
-        clientId: collabClientId,
-        nick: collabClientNick,
-        joinedAt: Date.now()
-      });
-      window.fb.onDisconnect(presenceRef).remove();
-
-      const curRef = window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/cursors/${collabClientId}`);
-      window.fb.onDisconnect(curRef).remove();
-
-      presenceUnsub = window.fb.onValue(allPresenceRef, snapshot => {
-        const val = snapshot.val();
-        const peerListEl = document.getElementById('collab-peer-list');
-        const countEl = document.getElementById('collab-peer-count');
-        if (!peerListEl) return;
-        peerListEl.innerHTML = '';
-        let count = 0;
-        if (val) {
-          Object.values(val).forEach(p => {
-            count++;
-            const item = document.createElement('div');
-            item.style.cssText = 'display:flex; align-items:center; justify-content:space-between; font-size:11px; padding:3px 6px; border-radius:4px; background:rgba(255,255,255,0.04);';
-            const isMe = p.clientId === collabClientId;
-            item.innerHTML = `<span style="display:flex; align-items:center; gap:6px;">
-              <span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:#10b981;"></span>
-              <strong>${p.nick || 'Artist'}</strong> ${isMe ? '<em style="color:#60a5fa;">(You)</em>' : ''}
-            </span>
-            <span style="color:var(--text-muted); font-size:10px;">online</span>`;
-            peerListEl.appendChild(item);
-          });
-        }
-        if (countEl) countEl.textContent = count;
-      });
-
-      strokesUnsub = window.fb.onChildAdded(strokesRef, snapshot => {
-        const s = snapshot.val();
-        if (s && s.clientId !== collabClientId) {
-          renderRemoteStroke(s);
-        }
-      });
-
-      cursorsUnsub = window.fb.onValue(cursorsRef, snapshot => {
-        const val = snapshot.val();
-        renderPeerCursors(val);
-      });
-
-      snapshotUnsub = window.fb.onValue(snapRef, snapshot => {
-        const val = snapshot.val();
-        if (val && val.sender !== collabClientNick && (Date.now() - val.time < 15000)) {
-          showToast(`Snapshot received from ${val.sender}! Click 'Pull Canvas' to load.`, 3500);
-        }
-      });
-
-      showToast(`Connected to #${currentCollabRoom} as ${collabClientNick}!`);
+    function attachCollabCursors(code) {
+      if (!mp || !mp.fb || !mp.fb.db) return;
+      try {
+        const db = mp.fb.db;
+        cursorsRef = mp.fb.ref(db, `${mp.basePath}/rooms/${code}/cursors`);
+        cursorsUnsub = mp.fb.onValue(cursorsRef, snap => {
+          renderPeerCursors(snap.val());
+        });
+        const myCurRef = mp.fb.ref(db, `${mp.basePath}/rooms/${code}/cursors/${collabClientId}`);
+        mp.fb.onDisconnect(myCurRef).remove();
+      } catch (_) {}
     }
 
     function leaveCollabRoom() {
-      if (!isLiveCollab) return;
-      if (window.fb && window.fb.db && currentCollabRoom) {
-        try {
-          const db = window.fb.db;
-          window.fb.off(window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/presence`));
-          window.fb.off(window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/strokes`));
-          window.fb.off(window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/cursors`));
-          window.fb.off(window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/snapshot`));
-          window.fb.set(window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/presence/${collabClientId}`), null);
-          window.fb.set(window.fb.ref(db, `multiplayer/kpaint/rooms/${currentCollabRoom}/cursors/${collabClientId}`), null);
-        } catch (_) {}
+      if (mp) mp.leaveRoom();
+      if (cursorsRef && cursorsUnsub && mp && mp.fb) {
+        try { mp.fb.off(cursorsRef, 'value', cursorsUnsub); } catch (_) {}
       }
+      cursorsRef = null;
+      cursorsUnsub = null;
       isLiveCollab = false;
       currentCollabRoom = null;
       clearPeerCursors();
+      stopGhostArtist();
       updateCollabUI();
-      showToast("Disconnected from room. Studio is offline.");
+      showToast("Left studio room. Offline mode active.");
     }
 
     function broadcastCursor(x, y, isDrawing) {
-      if (!isLiveCollab || !window.fb || !window.fb.db || !currentCollabRoom) return;
+      if (!isLiveCollab || !mp || !mp.fb || !currentCollabRoom) return;
       const now = Date.now();
       if (now - lastCursorPush < 50) return;
       lastCursorPush = now;
       try {
-        const curRef = window.fb.ref(window.fb.db, `multiplayer/kpaint/rooms/${currentCollabRoom}/cursors/${collabClientId}`);
-        window.fb.set(curRef, {
+        const curRef = mp.fb.ref(mp.fb.db, `${mp.basePath}/rooms/${currentCollabRoom}/cursors/${collabClientId}`);
+        mp.fb.set(curRef, {
           clientId: collabClientId,
           nick: collabClientNick,
           x,
@@ -3343,12 +5410,23 @@
     }
 
     function broadcastStroke(s) {
-      if (!isLiveCollab || !window.fb || !window.fb.db || !currentCollabRoom) return;
-      try {
-        const strokesRef = window.fb.ref(window.fb.db, `multiplayer/kpaint/rooms/${currentCollabRoom}/strokes`);
-        window.fb.push(strokesRef, s);
-      } catch (err) {
-        console.warn("Failed to broadcast stroke:", err);
+      if (!isLiveCollab || !mp) return;
+      mp.sendMove({ type: 'stroke', stroke: s });
+    }
+
+    function handleRemoteAction(moveData) {
+      if (!moveData) return;
+      if (moveData.type === 'stroke') {
+        renderRemoteStroke(moveData.stroke);
+      } else if (moveData.type === 'snapshot' && moveData.dataUrl) {
+        const img = new Image();
+        img.onload = () => {
+          ctx.drawImage(img, 0, 0);
+          saveState();
+          showToast(`Snapshot synced from ${moveData.sender || 'Peer'}!`);
+          retroAudio.play('shape');
+        };
+        img.src = moveData.dataUrl;
       }
     }
 
@@ -3389,52 +5467,85 @@
         applySymmetricShape(targetCtx, s.tool, s.startX, s.startY, s.endX, s.endY, color, size, shape);
       } else if (s.tool === 'fill') {
         floodFill(s.startX, s.startY, color);
+      } else if (s.tool === 'gradient') {
+        const grad = targetCtx.createLinearGradient(s.startX, s.startY, s.endX, s.endY);
+        grad.addColorStop(0, s.color || '#111111');
+        grad.addColorStop(1, s.color2 || '#ffffff');
+        targetCtx.fillStyle = grad;
+        targetCtx.fillRect(0, 0, canvas.width, canvas.height);
+      } else if (s.tool === 'signal_telemetry') {
+        showToast(`📡 [10.19.99.4] Telemetry from ${s.nick || 'Peer'}: 1999Hz carrier ACK`);
+        retroAudio.play('shape');
+        return;
       } else if (s.tool === 'text') {
         stampText(targetCtx, s.text, s.startX, s.startY, s.fontSize, s.fontFamily, s.isBold, s.hasOutline, color);
       }
 
       currentSymmetry = prevSym;
       showToast(`Artist ${s.nick || 'Peer'} painted (${s.tool})`, 1200);
+      retroAudio.play('brush');
+    }
+
+    function broadcastSignalBeacon() {
+      if (!isLiveCollab || !mp) {
+        showToast("Join a Collaborative Studio room first to broadcast telemetry.");
+        return;
+      }
+      broadcastStroke({
+        strokeId: collabClientId + '_sig_' + Date.now(),
+        clientId: collabClientId,
+        nick: collabClientNick,
+        tool: 'signal_telemetry',
+        freq: 1999,
+        subnet: '10.19.99.4',
+        msg: 'TRANSMISSION_ACK_1999_CH0',
+        time: Date.now()
+      });
+      retroAudio.play('shape');
+      showToast("📡 Subterranean telemetry signal beacon broadcasted to room!");
     }
 
     function pushCanvasSnapshot() {
-      if (!isLiveCollab || !window.fb || !window.fb.db || !currentCollabRoom) {
+      if (!isLiveCollab || !mp) {
         showToast("Connect to a studio room first!");
         return;
       }
       try {
         const snap = getCompositedCanvas().toDataURL('image/jpeg', 0.85);
-        const snapRef = window.fb.ref(window.fb.db, `multiplayer/kpaint/rooms/${currentCollabRoom}/snapshot`);
-        window.fb.set(snapRef, {
+        mp.sendMove({
+          type: 'snapshot',
           dataUrl: snap,
           sender: collabClientNick,
           time: Date.now()
         });
         showToast("Pushed canvas snapshot to room peers!");
+        retroAudio.play('shape');
       } catch (_) {
         showToast("Error pushing snapshot.");
       }
     }
 
     function pullCanvasSnapshot() {
-      if (!isLiveCollab || !window.fb || !window.fb.db || !currentCollabRoom) {
+      if (!isLiveCollab || !mp || !mp.fb || !currentCollabRoom) {
         showToast("Connect to a studio room first!");
         return;
       }
       try {
-        const snapRef = window.fb.ref(window.fb.db, `multiplayer/kpaint/rooms/${currentCollabRoom}/snapshot`);
-        window.fb.get(snapRef).then(snapshot => {
+        const roomRef = mp.fb.ref(mp.fb.db, `${mp.basePath}/rooms/${currentCollabRoom}`);
+        mp.fb.get(roomRef).then(snapshot => {
           const val = snapshot.val();
-          if (val && val.dataUrl) {
+          if (val && val.lastMove && val.lastMove.data && val.lastMove.data.type === 'snapshot') {
+            const dataUrl = val.lastMove.data.dataUrl;
             const img = new Image();
             img.onload = () => {
               ctx.drawImage(img, 0, 0);
               saveState();
-              showToast(`Pulled snapshot from ${val.sender}!`);
+              showToast(`Pulled snapshot from ${val.lastMove.data.sender || 'Peer'}!`);
+              retroAudio.play('shape');
             };
-            img.src = val.dataUrl;
+            img.src = dataUrl;
           } else {
-            showToast("No snapshot found for this room.");
+            showToast("No snapshot found in room history.");
           }
         });
       } catch (_) {
@@ -3668,9 +5779,26 @@
         if (m && m.classList.contains('show')) closeHelp();
         closeCollabModal();
         closeTextModal();
+        closeAnsiModal();
         clearSelection();
         const t = document.getElementById('toast');
         if (t) t.classList.remove('show');
+        return;
+      }
+
+      if (animDockOpen && e.key === ' ') {
+        e.preventDefault();
+        togglePlayAnimation();
+        return;
+      }
+
+      if (animDockOpen && e.key === ',') {
+        prevAnimFrame();
+        return;
+      }
+
+      if (animDockOpen && e.key === '.') {
+        nextAnimFrame();
         return;
       }
 
@@ -3699,12 +5827,15 @@
         }
       } else if (!e.altKey) {
         const k = e.key.toLowerCase();
-        if (k === 'b') setTool('freehand');
+        if (e.shiftKey && k === 'g') setTool('replace');
+        else if (k === 'b') setTool('freehand');
         else if (k === 'e') setTool('eraser');
         else if (k === 'l') setTool('line');
+        else if (k === 'k') setTool('curve');
         else if (k === 'r') setTool('rect');
         else if (k === 'c') setTool('ellipse');
         else if (k === 'g') setTool('fill');
+        else if (k === 'f') toggleAnimationDock();
         else if (k === 'a') setTool('spray');
         else if (k === 'i') setTool('pipette');
         else if (k === 'w') setTool('wand');
@@ -3712,6 +5843,8 @@
         else if (k === 't') setTool('text');
         else if (k === 'm') toggleSymmetry();
         else if (k === 'o') toggleCollabModal();
+        else if (k === 'u') toggleAudio();
+        else if (k === 'p') applyFilter('sepia');
         else if (k === 'd') loadDemoArtwork();
         else if (k === '1') setBrushSize(2);
         else if (k === '2') setBrushSize(6);
@@ -3742,14 +5875,22 @@
     window.addEventListener('click', () => closeExportDropdown());
     window.addEventListener('beforeunload', () => leaveCollabRoom());
 
-    // Hash VFS Load support
+    // Hash VFS Load support & Initialization
     window.onload = () => {
       if (window.resizeTo) window.resizeTo(1140, 780);
       initCanvas();
       updateCollabUI();
+      initMultiplayer();
       if (window.location.hash) {
-        const path = window.location.hash.substring(1);
-        if (path) loadVFSFile(path);
+        const hash = window.location.hash.substring(1);
+        if (hash.startsWith('room=')) {
+          const code = hash.split('=')[1];
+          if (code) setTimeout(() => joinCollabRoom(code), 500);
+        } else if (/^[A-Za-z0-9_\-]{3,16}$/.test(hash) && hash.startsWith('KPT')) {
+          setTimeout(() => joinCollabRoom(hash), 500);
+        } else if (hash) {
+          loadVFSFile(hash);
+        }
       }
       const tutorialSeen = localStorage.getItem('kpaint_tutorial_seen') === '1' || localStorage.getItem('kpaint_tutorialSeen') === '1';
       const hasQuicksave = !!localStorage.getItem(QUICKSAVE_KEY);
