@@ -78,6 +78,11 @@ BOOL g_bWordWrap = FALSE;
 #define ID_TPL_HTML4        9042
 #define ID_TPL_ASM          9043
 #define ID_VIEW_HASHES      9044
+#define ID_TPL_TELEMETRY    9045
+#define ID_EDIT_LINENUM     9046
+#define ID_EDIT_PREFIX      9047
+#define ID_VIEW_HEXDUMP     9048
+#define ID_VIEW_CHARMAP     9049
 void UpdateStatusBar(void);
 void UpdateTabTitle(int index);
 void AddTab(const char* name, const char* path);
@@ -89,6 +94,10 @@ void QuickSaveNative(void);
 void QuickLoadNative(void);
 void TransformCaseExtended(int mode);
 void ShowChecksumsDialog(void);
+void NumberLinesNative(void);
+void PromptPrefixLinesNative(void);
+void ShowHexDumpDialogNative(void);
+void ShowSymbolPaletteDialogNative(void);
 
 int g_nFontSizePt = 12;
 char g_szCustomStatus[128] = {0};
@@ -193,6 +202,9 @@ void InsertTemplateNative(int type) {
     } else if (type == 5) {
         title = "kernel.asm";
         text = "; KiloOS Native x86 Skeleton\r\n[BITS 32]\r\nsection .text\r\nglobal _start\r\n\r\n_start:\r\n    xor eax, eax\r\n    mov ebx, 0x1999\r\n    ret\r\n";
+    } else if (type == 6) {
+        title = "telemetry.log";
+        text = "[KILONET INTRANET DIAGNOSTIC DUMP]\r\nDATE: 1999-10-24 03:14:08 UTC\r\nNODE: GATEWAY-07 (Subnet 10.19.99.0/24)\r\nSTATUS: SUBCARRIER ANOMALY DETECTED\r\n------------------------------------------------------------\r\n0x00402000: 45 43 48 4F 2D 53 55 42  53 59 53 54 45 4D 00 00  | ECHO-SUBSYSTEM..\r\n0x00402010: 31 39 39 39 48 7A 20 4C  4F 43 4B 20 41 43 51 00  | 1999Hz LOCK ACQ.\r\n0x00402020: 31 30 2E 31 39 2E 39 39  2E 34 2F 63 6C 61 73 73  | 10.19.99.4/class\r\n------------------------------------------------------------\r\nTRAFFIC LOG:\r\n- Packet ID #4819: Frame header matched Bell 202 AFSK format.\r\n- Transponder response received from Carlsbad salt-vault relay.\r\n- Local buffer synchronized. No packet corruption observed.\r\n";
     }
 
     HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
@@ -1381,6 +1393,275 @@ void OpenEncryptedFile() {
     }
 }
 
+void NumberLinesNative() {
+    if (g_NumTabs == 0 || !g_Tabs[g_ActiveTab].hEdit) return;
+    HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
+    int len = GetWindowTextLengthA(hEdit);
+    if (len <= 0) return;
+
+    char* src = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len + 1);
+    if (!src) return;
+    GetWindowTextA(hEdit, src, len + 1);
+
+    int lines = 1;
+    for (int i = 0; i < len; i++) {
+        if (src[i] == '\n') lines++;
+    }
+
+    int destCap = len + (lines * 16) + 128;
+    char* dest = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, destCap);
+    if (!dest) {
+        HeapFree(GetProcessHeap(), 0, src);
+        return;
+    }
+
+    char* pLine = src;
+    char* pOut = dest;
+    int lineNum = 1;
+
+    while (*pLine) {
+        char prefix[16];
+        int plen = wsprintfA(prefix, "%d. ", lineNum++);
+        memcpy(pOut, prefix, plen);
+        pOut += plen;
+
+        char* nextN = strchr(pLine, '\n');
+        if (nextN) {
+            int lineLen = (int)(nextN - pLine + 1);
+            memcpy(pOut, pLine, lineLen);
+            pOut += lineLen;
+            pLine = nextN + 1;
+        } else {
+            int lineLen = lstrlenA(pLine);
+            memcpy(pOut, pLine, lineLen);
+            pOut += lineLen;
+            break;
+        }
+    }
+    *pOut = '\0';
+
+    SetWindowTextA(hEdit, dest);
+    g_Tabs[g_ActiveTab].isModified = TRUE;
+    UpdateTabTitle(g_ActiveTab);
+    UpdateStatusBar();
+
+    HeapFree(GetProcessHeap(), 0, src);
+    HeapFree(GetProcessHeap(), 0, dest);
+
+    char stat[64];
+    wsprintfA(stat, "Numbered %d lines in document", lines);
+    ShowNativeStatus(stat);
+}
+
+void PrefixLinesNative(const char* prefix) {
+    if (!prefix || !prefix[0]) return;
+    if (g_NumTabs == 0 || !g_Tabs[g_ActiveTab].hEdit) return;
+    HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
+    int len = GetWindowTextLengthA(hEdit);
+    if (len <= 0) return;
+
+    char* src = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len + 1);
+    if (!src) return;
+    GetWindowTextA(hEdit, src, len + 1);
+
+    int lines = 1;
+    for (int i = 0; i < len; i++) {
+        if (src[i] == '\n') lines++;
+    }
+
+    int plen = lstrlenA(prefix);
+    int destCap = len + (lines * plen) + 128;
+    char* dest = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, destCap);
+    if (!dest) {
+        HeapFree(GetProcessHeap(), 0, src);
+        return;
+    }
+
+    char* pLine = src;
+    char* pOut = dest;
+
+    while (*pLine) {
+        memcpy(pOut, prefix, plen);
+        pOut += plen;
+
+        char* nextN = strchr(pLine, '\n');
+        if (nextN) {
+            int lineLen = (int)(nextN - pLine + 1);
+            memcpy(pOut, pLine, lineLen);
+            pOut += lineLen;
+            pLine = nextN + 1;
+        } else {
+            int lineLen = lstrlenA(pLine);
+            memcpy(pOut, pLine, lineLen);
+            pOut += lineLen;
+            break;
+        }
+    }
+    *pOut = '\0';
+
+    SetWindowTextA(hEdit, dest);
+    g_Tabs[g_ActiveTab].isModified = TRUE;
+    UpdateTabTitle(g_ActiveTab);
+    UpdateStatusBar();
+
+    HeapFree(GetProcessHeap(), 0, src);
+    HeapFree(GetProcessHeap(), 0, dest);
+
+    char stat[64];
+    wsprintfA(stat, "Added prefix '%s' to %d lines", prefix, lines);
+    ShowNativeStatus(stat);
+}
+
+void PromptPrefixLinesNative() {
+    int res = MessageBoxA(g_hMainWnd,
+        "Select prefix style for all lines in document:\r\n\r\n"
+        "  • Press YES for C/C++ line comments: // \r\n"
+        "  • Press NO for Shell/Python/Config comments: # \r\n"
+        "  • Press CANCEL to abort.",
+        "Add Prefix to Lines", MB_YESNOCANCEL | MB_ICONQUESTION);
+
+    if (res == IDYES) {
+        PrefixLinesNative("// ");
+    } else if (res == IDNO) {
+        PrefixLinesNative("# ");
+    }
+}
+
+static double IntLog2(int k) {
+    if (k <= 0) return 0.0;
+    int b = 0;
+    int temp = k;
+    while (temp >>= 1) b++;
+    double frac = (double)(k - (1 << b)) / (double)(1 << b);
+    return (double)b + frac * (1.442695 - 0.442695 * frac);
+}
+
+static double CalculateBufferEntropy(const unsigned char* data, int len) {
+    if (len <= 0 || !data) return 0.0;
+    int freq[256];
+    for (int i = 0; i < 256; i++) freq[i] = 0;
+    for (int i = 0; i < len; i++) freq[data[i]]++;
+
+    double sum = 0.0;
+    for (int i = 0; i < 256; i++) {
+        if (freq[i] > 0) {
+            sum += (double)freq[i] * IntLog2(freq[i]);
+        }
+    }
+    double totalLog = IntLog2(len);
+    double entropy = totalLog - (sum / (double)len);
+    if (entropy < 0.0) entropy = 0.0;
+    if (entropy > 8.0) entropy = 8.0;
+    return entropy;
+}
+
+void ShowHexDumpDialogNative() {
+    if (g_NumTabs == 0 || !g_Tabs[g_ActiveTab].hEdit) return;
+    HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
+    int len = GetWindowTextLengthA(hEdit);
+    if (len <= 0) {
+        MessageBoxA(g_hMainWnd, "Document buffer is empty (0 bytes).", "Hex Dump Inspector", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+
+    char* buf = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len + 1);
+    if (!buf) return;
+    GetWindowTextA(hEdit, buf, len + 1);
+
+    double entropy = CalculateBufferEntropy((const unsigned char*)buf, len);
+    int entWhole = (int)entropy;
+    int entFrac = (int)((entropy - entWhole) * 1000.0);
+
+    int maxBytes = len > 256 ? 256 : len;
+    int outCap = 4096;
+    char* dump = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, outCap);
+    if (!dump) {
+        HeapFree(GetProcessHeap(), 0, buf);
+        return;
+    }
+
+    int written = wsprintfA(dump,
+        "Hex Dump Inspector (First %d of %d bytes)\r\n"
+        "Shannon Entropy: %d.%03d bits/byte (%s)\r\n\r\n"
+        "Offset    00 01 02 03 04 05 06 07  08 09 0A 0B 0C 0D 0E 0F   ASCII\r\n"
+        "------------------------------------------------------------------\r\n",
+        maxBytes, len, entWhole, entFrac,
+        entropy > 7.0 ? "High Entropy / Cipher" : (entropy > 5.5 ? "Dense / Formatted" : "Plaintext / Source"));
+
+    for (int row = 0; row < maxBytes; row += 16) {
+        char rowBuf[128];
+        int rlen = wsprintfA(rowBuf, "%08X: ", row);
+
+        for (int c = 0; c < 16; c++) {
+            int idx = row + c;
+            if (idx < maxBytes) {
+                unsigned char b = (unsigned char)buf[idx];
+                rlen += wsprintfA(rowBuf + rlen, "%02X ", b);
+            } else {
+                rlen += wsprintfA(rowBuf + rlen, "   ");
+            }
+            if (c == 7) {
+                rowBuf[rlen++] = ' ';
+            }
+        }
+        rowBuf[rlen++] = ' ';
+        rowBuf[rlen++] = '|';
+
+        for (int c = 0; c < 16; c++) {
+            int idx = row + c;
+            if (idx < maxBytes) {
+                unsigned char b = (unsigned char)buf[idx];
+                rowBuf[rlen++] = (b >= 32 && b <= 126) ? (char)b : '.';
+            } else {
+                rowBuf[rlen++] = ' ';
+            }
+        }
+        rowBuf[rlen++] = '|';
+        rowBuf[rlen++] = '\r';
+        rowBuf[rlen++] = '\n';
+        rowBuf[rlen] = '\0';
+
+        if (written + rlen < outCap - 128) {
+            memcpy(dump + written, rowBuf, rlen + 1);
+            written += rlen;
+        }
+    }
+
+    MessageBoxA(g_hMainWnd, dump, "KPad Pro - Hex Dump Inspector", MB_OK | MB_ICONINFORMATION);
+
+    HeapFree(GetProcessHeap(), 0, buf);
+    HeapFree(GetProcessHeap(), 0, dump);
+}
+
+void ShowSymbolPaletteDialogNative() {
+    if (g_NumTabs == 0 || !g_Tabs[g_ActiveTab].hEdit) return;
+    HWND hEdit = g_Tabs[g_ActiveTab].hEdit;
+
+    const char* palette =
+        "KPad Pro - ASCII & CP437 Symbol Palette (Alt+A)\r\n\r\n"
+        "1. Box Drawing:     + - | = # * / \\\r\n"
+        "2. List & Flow:     * - > ~ o .\r\n"
+        "3. Brackets:       { } [ ] ( ) < >\r\n"
+        "4. Math & Logic:   = != < > <= >= & | ^ ~ + - * / %\r\n"
+        "5. Punctuation:    ; : , . \" ' `\r\n"
+        "6. Control Codes:  \\r\\n  \\t  \\0  \\x1b\r\n\r\n"
+        "Insert options:\r\n"
+        "  • Press YES to insert Markdown Table template\r\n"
+        "  • Press NO to insert ASCII Box Header\r\n"
+        "  • Press CANCEL to dismiss";
+
+    int res = MessageBoxA(g_hMainWnd, palette, "ASCII & Symbol Palette", MB_YESNOCANCEL | MB_ICONINFORMATION);
+    if (res == IDYES) {
+        const char* tbl = "| Column 1 | Column 2 | Column 3 |\r\n| -------- | -------- | -------- |\r\n| Item A   | Value 1  | 100      |\r\n| Item B   | Value 2  | 200      |\r\n";
+        SendMessageA(hEdit, EM_REPLACESEL, TRUE, (LPARAM)tbl);
+        ShowNativeStatus("Inserted Markdown Table skeleton");
+    } else if (res == IDNO) {
+        const char* box = "+----------------------------------------------------------+\r\n| KILONET ARCHIVE HEADER                                   |\r\n+----------------------------------------------------------+\r\n";
+        SendMessageA(hEdit, EM_REPLACESEL, TRUE, (LPARAM)box);
+        ShowNativeStatus("Inserted ASCII Box Header");
+    }
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (msg == g_uFindMsg && g_uFindMsg != 0) {
         LPFINDREPLACEA lpfr = (LPFINDREPLACEA)lParam;
@@ -1475,6 +1756,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hTplMenu, MF_STRING, ID_TPL_HTML4, "Retro HTML 4.01 (.html)");
             AppendMenuA(hTplMenu, MF_STRING, ID_TPL_ASM, "x86 Assembly (.asm)");
             AppendMenuA(hTplMenu, MF_STRING, ID_TPL_JSON, "JSON Configuration (.json)");
+            AppendMenuA(hTplMenu, MF_STRING, ID_TPL_TELEMETRY, "Subnet Telemetry Log (.log)");
             AppendMenuA(hFileMenu, MF_POPUP, (UINT_PTR)hTplMenu, "Insert Template");
 
             AppendMenuA(hFileMenu, MF_SEPARATOR, 0, NULL);
@@ -1506,6 +1788,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_TITLECASE, "Convert Title Case");
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_ROT13, "Apply ROT13 Cipher");
             AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_REVERSE, "Reverse Line Order");
+            AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_LINENUM, "Number All Lines");
+            AppendMenuA(hEditMenu, MF_STRING, ID_EDIT_PREFIX, "Add Prefix to Lines...");
             AppendMenuA(hMenu, MF_POPUP, (UINT_PTR)hEditMenu, "Edit");
 
             HMENU hTabMenu = CreatePopupMenu();
@@ -1517,6 +1801,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_STATS, "Document Stats...");
             AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_DIAGNOSTICS, "Detailed Diagnostics & Integrity...");
             AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_HASHES, "Cryptographic Checksums (MD5/CRC32)...");
+            AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_HEXDUMP, "Hex Dump & Entropy Inspector...\tCtrl+Shift+H");
+            AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_CHARMAP, "ASCII & Symbol Palette...\tAlt+A");
             AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_WRAP, "Toggle Word Wrap\tAlt+Z");
             AppendMenuA(hViewMenu, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hViewMenu, MF_STRING, ID_VIEW_ZOOMIN, "Zoom In\tCtrl++");
@@ -1698,6 +1984,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case ID_EDIT_REVERSE:
                     ReverseLinesNative();
                     break;
+                case ID_EDIT_LINENUM:
+                    NumberLinesNative();
+                    break;
+                case ID_EDIT_PREFIX:
+                    PromptPrefixLinesNative();
+                    break;
                 case ID_VIEW_STATS:
                     ShowStatsDialog();
                     break;
@@ -1706,6 +1998,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 case ID_VIEW_HASHES:
                     ShowChecksumsDialog();
+                    break;
+                case ID_VIEW_HEXDUMP:
+                    ShowHexDumpDialogNative();
+                    break;
+                case ID_VIEW_CHARMAP:
+                    ShowSymbolPaletteDialogNative();
                     break;
                 case ID_VIEW_WRAP:
                     g_bWordWrap = !g_bWordWrap;
@@ -1744,6 +2042,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case ID_TPL_ASM:
                     InsertTemplateNative(5);
                     break;
+                case ID_TPL_TELEMETRY:
+                    InsertTemplateNative(6);
+                    break;
                 case ID_HELP_SHORTCUTS:
                     MessageBoxA(hwnd,
                         "KPad Pro - Keyboard Shortcuts Guide\n\n"
@@ -1754,11 +2055,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         "  • Ctrl+W              : Close Active Tab\n"
                         "  • Ctrl+1 .. 9         : Switch to Tab 1-9\n"
                         "  • Ctrl+Tab / PgUp/PgDn: Next / Previous Tab Cycle\n\n"
-                        "EDITING & SEARCH:\n"
+                        "EDITING & TOOLS:\n"
                         "  • Ctrl+G              : Go to Line Number\n"
                         "  • Ctrl+F / Ctrl+H     : Find / Replace\n"
                         "  • Ctrl+A              : Select All\n"
                         "  • Ctrl+Shift+C / Alt+C: Copy All Document\n"
+                        "  • Ctrl+Shift+H        : Hex Dump & Entropy Inspector\n"
+                        "  • Alt+A               : ASCII & CP437 Symbol Palette\n"
                         "  • Alt+Z               : Toggle Word Wrap\n"
                         "  • Ctrl++ / Ctrl+-     : Zoom In / Out\n"
                         "  • Ctrl+0              : Reset Zoom (100%)\n"
@@ -1766,7 +2069,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         "  • F9                  : Quickload Snapshot\n"
                         "  • F7                  : Insert Date & Time\n\n"
                         "SECURITY & TEMPLATES:\n"
-                        "  • File -> Templates   : MD, C, HTML5, JSON\n"
+                        "  • File -> Templates   : MD, C, HTML5, JSON, Telemetry\n"
                         "  • Ctrl+E              : Encrypt Document\n"
                         "  • Ctrl+D              : Decrypt Document\n"
                         "  • F1                  : Show this Help Guide",
@@ -1852,6 +2155,16 @@ char* __cdecl strstr(const char* haystack, const char* needle) {
     return NULL;
 }
 
+char* __cdecl strchr(const char* str, int ch) {
+    if (!str) return NULL;
+    while (*str) {
+        if (*str == (char)ch) return (char*)str;
+        str++;
+    }
+    if ((char)ch == '\0') return (char*)str;
+    return NULL;
+}
+
 void MainEntry() {
     HMODULE hUser32 = GetModuleHandleA("user32.dll");
     if (hUser32) {
@@ -1889,6 +2202,14 @@ void MainEntry() {
 
             if (alt && (msg.wParam == 'Z' || msg.wParam == 'z')) {
                 SendMessage(hwnd, WM_COMMAND, ID_VIEW_WRAP, 0);
+                continue;
+            }
+            if (alt && (msg.wParam == 'A' || msg.wParam == 'a')) {
+                SendMessage(hwnd, WM_COMMAND, ID_VIEW_CHARMAP, 0);
+                continue;
+            }
+            if (ctrl && shift && (msg.wParam == 'H' || msg.wParam == 'h')) {
+                SendMessage(hwnd, WM_COMMAND, ID_VIEW_HEXDUMP, 0);
                 continue;
             }
             if ((ctrl && shift && (msg.wParam == 'C' || msg.wParam == 'c')) ||

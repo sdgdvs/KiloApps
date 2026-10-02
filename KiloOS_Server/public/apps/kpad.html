@@ -539,6 +539,221 @@
     color: var(--text-secondary);
   }
 
+  /* Syntax Validator & Linter Center */
+  .linter-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  .linter-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0,0,0,0.3);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-glass);
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .linter-badge-pass {
+    background: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .linter-badge-fail {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .linter-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 8px;
+  }
+  .linter-stat-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-glass);
+    border-radius: 6px;
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .linter-stat-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  .linter-stat-val {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent-hover);
+    font-family: 'Consolas', monospace;
+  }
+  .linter-code-box {
+    background: #090d16;
+    border: 1px solid var(--border-glass);
+    border-radius: 6px;
+    padding: 10px;
+    font-family: 'Consolas', monospace;
+    font-size: 11.5px;
+    max-height: 240px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    line-height: 1.5;
+  }
+  .linter-err-line {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    padding: 2px 4px;
+    border-radius: 3px;
+    display: block;
+    margin: 4px 0;
+  }
+
+  /* ASCII & CP437 Symbol Palette */
+  .charmap-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .charmap-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    background: rgba(0,0,0,0.25);
+    padding: 6px;
+    border-radius: 6px;
+  }
+  .charmap-tab {
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-secondary);
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .charmap-tab:hover {
+    background: rgba(255,255,255,0.06);
+    color: #fff;
+  }
+  .charmap-tab.active {
+    background: var(--accent);
+    color: #fff;
+    font-weight: 600;
+  }
+  .charmap-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+    gap: 4px;
+    max-height: 280px;
+    overflow-y: auto;
+    background: #090d16;
+    border: 1px solid var(--border-glass);
+    border-radius: 6px;
+    padding: 6px;
+  }
+  .charmap-cell {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border-glass);
+    border-radius: 4px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.12s;
+    user-select: none;
+    color: var(--text-primary);
+    font-family: 'Consolas', 'Courier New', monospace;
+  }
+  .charmap-cell:hover {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent-hover);
+    transform: scale(1.12);
+    z-index: 2;
+  }
+  .charmap-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(0,0,0,0.35);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-glass);
+    font-size: 11.5px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Hex Dump Inspector */
+  .hexdump-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-family: 'Consolas', monospace;
+  }
+  .hexdump-viewer {
+    background: #090d16;
+    border: 1px solid var(--border-glass);
+    border-radius: 6px;
+    padding: 8px;
+    max-height: 360px;
+    overflow: auto;
+    font-size: 11.5px;
+    line-height: 1.45;
+    white-space: pre;
+    color: var(--text-secondary);
+  }
+  .hexdump-row {
+    display: flex;
+    gap: 14px;
+  }
+  .hexdump-addr {
+    color: var(--accent);
+    user-select: none;
+  }
+  .hexdump-hex {
+    color: #f8fafc;
+    word-spacing: 2px;
+  }
+  .hexdump-ascii {
+    color: #34d399;
+    border-left: 1px solid var(--border-glass);
+    padding-left: 10px;
+  }
+  .entropy-gauge-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+  }
+  .entropy-gauge-bar {
+    width: 140px;
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .entropy-gauge-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+  }
+
   /* Find & Replace Floating Panel */
   .find-replace-panel {
     display: none;
@@ -1243,6 +1458,15 @@
     <div class="menu-btn">Tools
       <div class="dropdown">
         <div onclick="openDiffModal()"><span>📊 Compare / Diff Documents...</span><span class="shortcut">Ctrl+Shift+D</span></div>
+        <div onclick="openSyntaxLinterModal()"><span>🧪 Syntax Validator & Linter...</span><span class="shortcut">Ctrl+Shift+L</span></div>
+        <div onclick="openHexDumpModal()"><span>🔢 Hex Dump Inspector & Entropy...</span><span class="shortcut">Ctrl+Shift+H</span></div>
+        <div onclick="openSymbolPaletteModal()"><span>🔣 ASCII & CP437 Symbol Palette...</span><span class="shortcut">Alt+A</span></div>
+        <div class="divider"></div>
+        <div onclick="promptAddPrefixSuffix()"><span>✏️ Add Prefix / Suffix to Lines...</span></div>
+        <div onclick="numberAllLinesPrompt()"><span>🔢 Number All Lines...</span></div>
+        <div onclick="promptWrapLinesColumn()"><span>📏 Wrap Lines at Column (80c)...</span></div>
+        <div onclick="promptFilterLines()"><span>🔍 Filter / Extract Matching Lines...</span></div>
+        <div onclick="formatMarkdownTableInPlace()"><span>📐 Format & Align Markdown Table</span><span class="shortcut">Ctrl+Shift+T</span></div>
         <div class="divider"></div>
         <div onclick="promptEncryptDocument()"><span>🔒 Encrypt Document (Password Lock)...</span><span class="shortcut">Ctrl+E</span></div>
         <div onclick="promptDecryptDocument()"><span>🔓 Decrypt Document (Unlock)...</span><span class="shortcut">Ctrl+D</span></div>
@@ -1334,6 +1558,15 @@
       </button>
       <button class="quick-btn" id="btn-diff" onclick="openDiffModal()" title="Compare & Diff Documents (Tabs vs Quicksave vs Clipboard) [Ctrl+Shift+D]">
         📊 Diff
+      </button>
+      <button class="quick-btn" onclick="openSyntaxLinterModal()" title="Syntax Validator & Linter Center (Ctrl+Shift+L)">
+        🧪 Lint <span class="kbd-hint">Ctrl+Shift+L</span>
+      </button>
+      <button class="quick-btn" onclick="openHexDumpModal()" title="Hex Dump Inspector & Shannon Entropy (Ctrl+Shift+H)">
+        🔢 Hex <span class="kbd-hint">Ctrl+Shift+H</span>
+      </button>
+      <button class="quick-btn" onclick="openSymbolPaletteModal()" title="ASCII & CP437 Symbol Palette (Alt+A)">
+        🔣 Symbols <span class="kbd-hint">Alt+A</span>
       </button>
       <button class="quick-btn" onclick="quicksaveSnapshot()" title="Quicksave workspace snapshot to local storage (F5)">
         💾 Quicksave <span class="kbd-hint">F5</span>
@@ -1601,6 +1834,11 @@
       }
       const toast = document.createElement('div');
       toast.className = `toast ${type}`;
+      toast.style.cursor = 'pointer';
+      toast.title = 'Click to dismiss';
+      toast.addEventListener('click', (e) => {
+        if (!e.target.closest('.toast-close')) toast.remove();
+      });
       
       let icon = 'ℹ️';
       if (type === 'success') icon = '✅';
@@ -1991,6 +2229,10 @@
         switchTab(ctxTabIndex);
         promptAddTag();
       }
+    }
+
+    function ctxNewTab() {
+      newTab();
     }
 
     function ctxDuplicateTab() {
@@ -2744,7 +2986,7 @@
           <div class="search-tabs-container" id="global-search-results"></div>
         </div>
       `;
-      openModal('🌐 Search in All Open Tabs', bodyHTML, false, true);
+      openModal('🌐 Search in All Open Tabs', bodyHTML, true, true);
       setTimeout(() => {
         const inp = document.getElementById('global-search-input');
         if (inp) {
@@ -3340,7 +3582,7 @@
       const bodyHTML = `
         <div class="form-group">
           <label class="form-label" for="enc-pass">Encryption Password / Passphrase:</label>
-          <input type="password" class="form-input" id="enc-pass" placeholder="Enter a secure password">
+          <input type="password" class="form-input" id="enc-pass" placeholder="Enter a secure password" onkeydown="if(event.key==='Enter') document.getElementById('enc-pass-confirm')?.focus()">
         </div>
         <div class="form-group">
           <label class="form-label" for="enc-pass-confirm">Confirm Password:</label>
@@ -3966,7 +4208,7 @@
 
     function openDiffModal() {
       const activeTab = tabs[activeTabIndex] || { name: 'Active Document' };
-      const quicksaveRaw = safeGetStorage('kpad_quicksave_snapshot');
+      const quicksaveRaw = safeGetStorage('kpad_quicksave') || safeGetStorage('kpad_quicksave_snapshot');
       const hasQuicksave = Boolean(quicksaveRaw);
 
       let tabOptionsHtml = '';
@@ -4033,7 +4275,7 @@
           targetName = tabs[idx].name;
         }
       } else if (targetVal === 'quicksave') {
-        const raw = safeGetStorage('kpad_quicksave_snapshot');
+        const raw = safeGetStorage('kpad_quicksave') || safeGetStorage('kpad_quicksave_snapshot');
         if (raw) {
           try {
             const data = JSON.parse(raw);
@@ -4112,6 +4354,1176 @@
       updateEditor();
       closeModal();
       showToast('Replaced active tab with compared document version!', 'success', 3000);
+    }
+
+    // --- Syntax Validator & Linter Center ---
+    let currentLinterLang = 'auto';
+
+    function openSyntaxLinterModal() {
+      const activeTab = tabs[activeTabIndex] || { name: 'Active Document' };
+      const ext = (activeTab.name.split('.').pop() || '').toLowerCase();
+      
+      let detected = 'json';
+      if (['html', 'htm', 'xml', 'svg'].includes(ext)) detected = 'html';
+      else if (['csv', 'tsv'].includes(ext)) detected = 'csv';
+      else if (['md', 'markdown'].includes(ext)) detected = 'markdown';
+      else if (['c', 'h', 'cpp', 'js', 'ts', 'asm'].includes(ext)) detected = 'brackets';
+      else {
+        const txt = editor.value.trim();
+        if (txt.startsWith('{') || txt.startsWith('[')) detected = 'json';
+        else if (txt.startsWith('<')) detected = 'html';
+        else if (txt.includes('|') && txt.includes('\n|')) detected = 'markdown';
+        else if (txt.includes('{') && txt.includes('}')) detected = 'brackets';
+      }
+      currentLinterLang = detected;
+
+      const bodyHtml = `
+        <div class="linter-container">
+          <div class="linter-toolbar">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <label for="linter-lang-select" style="font-size:12px; font-weight:600; color:var(--text-secondary);">Target Syntax:</label>
+              <select class="form-input" id="linter-lang-select" style="padding:4px 8px; font-size:12px; max-width:200px;" onchange="currentLinterLang=this.value; runLinterValidation();">
+                <option value="json" ${detected === 'json' ? 'selected' : ''}>JSON (RFC 8259)</option>
+                <option value="html" ${detected === 'html' ? 'selected' : ''}>HTML / XML Tags</option>
+                <option value="csv" ${detected === 'csv' ? 'selected' : ''}>CSV Columns & Schema</option>
+                <option value="brackets" ${detected === 'brackets' ? 'selected' : ''}>C/JS Brackets & Parens</option>
+                <option value="markdown" ${detected === 'markdown' ? 'selected' : ''}>Markdown Headings & Links</option>
+              </select>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span id="linter-status-pill" class="linter-badge-pass">ANALYZING...</span>
+              <button class="quick-btn" onclick="runLinterValidation()">🔄 Re-validate</button>
+            </div>
+          </div>
+
+          <div id="linter-output-results"></div>
+        </div>
+      `;
+
+      openModal('🧪 Syntax Validator & Linter Center', bodyHtml, true, true);
+      setTimeout(runLinterValidation, 40);
+    }
+
+    function runLinterValidation() {
+      const output = document.getElementById('linter-output-results');
+      const pill = document.getElementById('linter-status-pill');
+      if (!output || !pill) return;
+
+      const text = editor.value;
+      const lang = currentLinterLang;
+
+      if (!text.trim()) {
+        pill.className = 'linter-badge-pass';
+        pill.innerText = 'EMPTY BUFFER';
+        output.innerHTML = `<div style="text-align:center; padding:30px; color:var(--text-muted);">The active document buffer is empty. Type or paste content to validate.</div>`;
+        return;
+      }
+
+      if (lang === 'json') {
+        validateJsonSyntax(text, output, pill);
+      } else if (lang === 'html') {
+        validateHtmlSyntax(text, output, pill);
+      } else if (lang === 'csv') {
+        validateCsvSyntax(text, output, pill);
+      } else if (lang === 'brackets') {
+        validateBracketsSyntax(text, output, pill);
+      } else if (lang === 'markdown') {
+        validateMarkdownSyntax(text, output, pill);
+      }
+    }
+
+    function validateJsonSyntax(text, output, pill) {
+      try {
+        const parsed = JSON.parse(text);
+        pill.className = 'linter-badge-pass';
+        pill.innerText = 'VALID JSON ✓';
+
+        let keyCount = 0;
+        let arrayCount = 0;
+        let maxDepth = 0;
+        const types = { string: 0, number: 0, boolean: 0, null: 0 };
+
+        function walk(node, depth) {
+          if (depth > maxDepth) maxDepth = depth;
+          if (node === null) {
+            types.null++;
+          } else if (Array.isArray(node)) {
+            arrayCount += node.length;
+            node.forEach(item => walk(item, depth + 1));
+          } else if (typeof node === 'object') {
+            const keys = Object.keys(node);
+            keyCount += keys.length;
+            keys.forEach(k => walk(node[k], depth + 1));
+          } else if (typeof node === 'string') {
+            types.string++;
+          } else if (typeof node === 'number') {
+            types.number++;
+          } else if (typeof node === 'boolean') {
+            types.boolean++;
+          }
+        }
+        walk(parsed, 1);
+
+        output.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div class="linter-stats-grid">
+              <div class="linter-stat-card"><span class="linter-stat-label">Root Structure</span><span class="linter-stat-val">${Array.isArray(parsed) ? 'Array' : 'Object'}</span></div>
+              <div class="linter-stat-card"><span class="linter-stat-label">Max Depth</span><span class="linter-stat-val">${maxDepth} levels</span></div>
+              <div class="linter-stat-card"><span class="linter-stat-label">Object Keys</span><span class="linter-stat-val">${keyCount}</span></div>
+              <div class="linter-stat-card"><span class="linter-stat-label">Array Elements</span><span class="linter-stat-val">${arrayCount}</span></div>
+              <div class="linter-stat-card"><span class="linter-stat-label">Strings / Numbers</span><span class="linter-stat-val">${types.string} / ${types.number}</span></div>
+            </div>
+
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:4px;">
+              <button class="modal-btn" onclick="prettifyJsonFromLinter(2)">Prettify (2 Spaces)</button>
+              <button class="quick-btn" onclick="prettifyJsonFromLinter(4)">Prettify (4 Spaces)</button>
+              <button class="quick-btn" onclick="minifyJsonFromLinter()">Minify / Compact</button>
+            </div>
+
+            <div class="linter-code-box" style="color:#34d399;">
+✓ JSON syntax is 100% compliant with RFC 8259.
+Root type: ${Array.isArray(parsed) ? `Array with ${parsed.length} items` : `Object with ${Object.keys(parsed).length} top-level keys`}.
+Payload size: ${text.length} characters (${new Blob([text]).size} bytes UTF-8).
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        pill.className = 'linter-badge-fail';
+        pill.innerText = 'SYNTAX ERROR ✗';
+
+        let line = 1, col = 1;
+        const match = err.message.match(/position\s+(\d+)/i) || err.message.match(/line\s+(\d+)\s+column\s+(\d+)/i);
+        if (match && match[2]) {
+          line = parseInt(match[1], 10);
+          col = parseInt(match[2], 10);
+        } else if (match && match[1]) {
+          const pos = parseInt(match[1], 10);
+          const upToErr = text.substring(0, pos);
+          const lines = upToErr.split('\n');
+          line = lines.length;
+          col = lines[lines.length - 1].length + 1;
+        }
+
+        const lines = text.split('\n');
+        const errLineText = lines[line - 1] || '';
+        const pointer = ' '.repeat(Math.max(0, col - 1)) + '^';
+
+        output.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div style="background:rgba(239, 68, 68, 0.15); border:1px solid #ef4444; border-radius:6px; padding:10px 14px; display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="color:#f87171; font-weight:bold; font-size:13px;">JSON Parse Exception</div>
+                <div style="color:var(--text-primary); font-size:12px; margin-top:2px;">${escapeHtml(err.message)}</div>
+                <div style="color:var(--text-muted); font-size:11px; margin-top:4px;">Error Location: Line ${line}, Column ${col}</div>
+              </div>
+              <button class="modal-btn" onclick="jumpToLineAndCloseModal(${line})">📍 Jump to Line ${line}</button>
+            </div>
+
+            <div class="linter-code-box">
+${line - 1 > 0 ? 'Line ' + (line - 1) + ': ' + escapeHtml(lines[line - 2]) + '\n' : ''}<span class="linter-err-line">Line ${line}: ${escapeHtml(errLineText)}
+${escapeHtml(pointer)}</span>${line < lines.length ? 'Line ' + (line + 1) + ': ' + escapeHtml(lines[line]) : ''}
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function prettifyJsonFromLinter(spaces = 2) {
+      try {
+        const obj = JSON.parse(editor.value);
+        editor.value = JSON.stringify(obj, null, spaces);
+        updateEditor();
+        runLinterValidation();
+        showToast(`JSON prettified with ${spaces}-space indentation`, 'success', 2000);
+      } catch (e) {
+        showToast('Cannot prettify invalid JSON: ' + e.message, 'error', 3000);
+      }
+    }
+
+    function minifyJsonFromLinter() {
+      try {
+        const obj = JSON.parse(editor.value);
+        editor.value = JSON.stringify(obj);
+        updateEditor();
+        runLinterValidation();
+        showToast('JSON minified into single-line stream', 'success', 2000);
+      } catch (e) {
+        showToast('Cannot minify invalid JSON: ' + e.message, 'error', 3000);
+      }
+    }
+
+    function validateHtmlSyntax(text, output, pill) {
+      const stripped = text.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+                           .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
+      const lines = stripped.split('\n');
+      const voidTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr', '!doctype']);
+      const tagRegex = /<\/?([a-zA-Z0-9\-]+)(?:\s+[^>]*?)?(\/?)>/g;
+
+      const stack = [];
+      const errors = [];
+      let totalTags = 0;
+
+      lines.forEach((lineText, idx) => {
+        const lineNum = idx + 1;
+        let match;
+        while ((match = tagRegex.exec(lineText)) !== null) {
+          const fullMatch = match[0];
+          const tagName = match[1].toLowerCase();
+          const isSelfClosing = match[2] === '/' || fullMatch.endsWith('/>');
+          const isClosing = fullMatch.startsWith('</');
+
+          if (tagName.startsWith('!--') || tagName.startsWith('?')) continue;
+          if (voidTags.has(tagName) || isSelfClosing) continue;
+
+          totalTags++;
+          if (isClosing) {
+            if (stack.length === 0) {
+              errors.push({ line: lineNum, msg: `Unexpected closing tag </${tagName}> without matching open tag`, tag: tagName });
+            } else {
+              const top = stack[stack.length - 1];
+              if (top.tag === tagName) {
+                stack.pop();
+              } else {
+                errors.push({ line: lineNum, msg: `Mismatched closing tag </${tagName}>; expected </${top.tag}> (opened on line ${top.line})`, tag: tagName });
+                stack.pop();
+              }
+            }
+          } else {
+            stack.push({ tag: tagName, line: lineNum });
+          }
+        }
+      });
+
+      while (stack.length > 0) {
+        const unclosed = stack.pop();
+        errors.push({ line: unclosed.line, msg: `Unclosed tag <${unclosed.tag}> opened on line ${unclosed.line}`, tag: unclosed.tag });
+      }
+
+      if (errors.length === 0) {
+        pill.className = 'linter-badge-pass';
+        pill.innerText = 'TAGS BALANCED ✓';
+        output.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div class="linter-stats-grid">
+              <div class="linter-stat-card"><span class="linter-stat-label">Tags Scanned</span><span class="linter-stat-val">${totalTags}</span></div>
+              <div class="linter-stat-card"><span class="linter-stat-label">Tag Mismatches</span><span class="linter-stat-val">0</span></div>
+              <div class="linter-stat-card"><span class="linter-stat-label">Unclosed Tags</span><span class="linter-stat-val">0</span></div>
+            </div>
+            <div class="linter-code-box" style="color:#34d399;">
+✓ All HTML/XML container tags are correctly matched and closed in proper hierarchy.
+Scanned ${lines.length} lines with ${totalTags} paired elements.
+            </div>
+          </div>
+        `;
+      } else {
+        pill.className = 'linter-badge-fail';
+        pill.innerText = `${errors.length} ISSUE${errors.length > 1 ? 'S' : ''} ✗`;
+        let errHtml = '';
+        errors.slice(0, 10).forEach(err => {
+          errHtml += `
+            <div style="background:rgba(239, 68, 68, 0.12); border-left:3px solid #ef4444; padding:6px 10px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+              <div><strong style="color:#f87171;">Line ${err.line}:</strong> <span style="color:var(--text-primary); font-size:12px;">${escapeHtml(err.msg)}</span></div>
+              <button class="quick-btn" onclick="jumpToLineAndCloseModal(${err.line})">Go to ${err.line}</button>
+            </div>
+          `;
+        });
+        output.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div style="font-size:12px; color:var(--text-secondary);">Found <strong>${errors.length}</strong> tag mismatch/unclosed issue${errors.length > 1 ? 's' : ''}:</div>
+            <div style="display:flex; flex-direction:column; gap:6px; max-height:260px; overflow-y:auto;">${errHtml}</div>
+          </div>
+        `;
+      }
+    }
+
+    function validateCsvSyntax(text, output, pill) {
+      const rawLines = text.split(/\r?\n/).filter(l => l.length > 0);
+      if (rawLines.length === 0) {
+        output.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">No CSV rows found.</div>`;
+        return;
+      }
+
+      const firstLine = rawLines[0];
+      const counts = { ',': (firstLine.match(/,/g) || []).length, ';': (firstLine.match(/;/g) || []).length, '\t': (firstLine.match(/\t/g) || []).length, '|': (firstLine.match(/\|/g) || []).length };
+      let delimiter = ',';
+      let maxD = -1;
+      for (const d in counts) {
+        if (counts[d] > maxD) { maxD = counts[d]; delimiter = d; }
+      }
+
+      function parseRow(str, delim) {
+        const res = [];
+        let cur = '';
+        let inQuotes = false;
+        for (let i = 0; i < str.length; i++) {
+          const ch = str[i];
+          if (ch === '"') {
+            if (inQuotes && str[i+1] === '"') { cur += '"'; i++; }
+            else inQuotes = !inQuotes;
+          } else if (ch === delim && !inQuotes) {
+            res.push(cur);
+            cur = '';
+          } else {
+            cur += ch;
+          }
+        }
+        res.push(cur);
+        return res;
+      }
+
+      const headerCells = parseRow(rawLines[0], delimiter);
+      const expectedCols = headerCells.length;
+      const issues = [];
+      let emptyCells = 0;
+
+      rawLines.forEach((line, idx) => {
+        const cells = parseRow(line, delimiter);
+        if (cells.length !== expectedCols) {
+          issues.push({ line: idx + 1, actual: cells.length, expected: expectedCols, raw: line });
+        }
+        cells.forEach(c => { if (!c.trim()) emptyCells++; });
+      });
+
+      if (issues.length === 0) {
+        pill.className = 'linter-badge-pass';
+        pill.innerText = 'CSV UNIFORM ✓';
+        output.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div class="linter-stats-grid">
+              <div class="linter-stat-card"><span class="linter-stat-label">Total Rows</span><span class="linter-stat-val">${rawLines.length}</span></div>
+              <div class="linter-stat-card"><span class="linter-stat-label">Columns</span><span class="linter-stat-val">${expectedCols} cols</span></div>
+              <div class="linter-stat-card"><span class="linter-stat-label">Detected Delimiter</span><span class="linter-stat-val">${delimiter === '\t' ? 'TAB' : (delimiter === ',' ? 'Comma (,)' : delimiter)}</span></div>
+              <div class="linter-stat-card"><span class="linter-stat-label">Empty Cells</span><span class="linter-stat-val">${emptyCells}</span></div>
+            </div>
+            <div class="linter-code-box" style="color:#34d399;">
+✓ CSV table schema is uniform across all ${rawLines.length} records.
+Columns: [${headerCells.map(c => `"${escapeHtml(c.trim())}"`).join(', ')}]
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="modal-btn" onclick="closeModal(); promptCsvToMarkdown();">Convert to Markdown Table</button>
+            </div>
+          </div>
+        `;
+      } else {
+        pill.className = 'linter-badge-fail';
+        pill.innerText = `${issues.length} RAGGED ROW${issues.length > 1 ? 'S' : ''} ✗`;
+        let issuesHtml = '';
+        issues.slice(0, 10).forEach(iss => {
+          issuesHtml += `
+            <div style="background:rgba(239, 68, 68, 0.12); border-left:3px solid #ef4444; padding:6px 10px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+              <div><strong style="color:#f87171;">Row ${iss.line}:</strong> Expected ${iss.expected} cols, found ${iss.actual} cols. <span style="font-family:monospace; font-size:11px; opacity:0.8;">(${escapeHtml(iss.raw.substring(0, 45))}...)</span></div>
+              <button class="quick-btn" onclick="jumpToLineAndCloseModal(${iss.line})">Go to Line</button>
+            </div>
+          `;
+        });
+        output.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div style="font-size:12px; color:var(--text-secondary);">Found <strong>${issues.length}</strong> row(s) with column count mismatch:</div>
+            <div style="display:flex; flex-direction:column; gap:6px; max-height:220px; overflow-y:auto;">${issuesHtml}</div>
+            <div>
+              <button class="modal-btn" onclick="alignCsvColumnsFromLinter(${expectedCols}, '${delimiter}')">Pad & Align Ragged Rows to ${expectedCols} Columns</button>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function alignCsvColumnsFromLinter(expectedCols, delim) {
+      const lines = editor.value.split(/\r?\n/);
+      const newLines = lines.map(line => {
+        if (!line.trim()) return line;
+        const parts = line.split(delim);
+        while (parts.length < expectedCols) parts.push('');
+        return parts.slice(0, expectedCols).join(delim);
+      });
+      editor.value = newLines.join('\n');
+      updateEditor();
+      runLinterValidation();
+      showToast('Aligned all CSV rows to ' + expectedCols + ' columns', 'success', 2200);
+    }
+
+    function validateBracketsSyntax(text, output, pill) {
+      const lines = text.split('\n');
+      const stack = [];
+      const errors = [];
+      const pairs = { '}': '{', ')': '(', ']': '[' };
+      const opens = new Set(['{', '(', '[']);
+      const closes = new Set(['}', ')', ']']);
+      let inString = null;
+      let inLineComment = false;
+      let inBlockComment = false;
+      let counts = { curly: 0, paren: 0, square: 0 };
+
+      for (let l = 0; l < lines.length; l++) {
+        const line = lines[l];
+        inLineComment = false;
+        for (let c = 0; c < line.length; c++) {
+          const ch = line[c];
+          const next = line[c + 1] || '';
+
+          if (inBlockComment) {
+            if (ch === '*' && next === '/') { inBlockComment = false; c++; }
+            continue;
+          }
+          if (inString) {
+            if (ch === '\\') { c++; continue; }
+            if (ch === inString) { inString = null; }
+            continue;
+          }
+          if (ch === '/' && next === '/') { break; }
+          if (ch === '/' && next === '*') { inBlockComment = true; c++; continue; }
+          if (ch === '"' || ch === "'" || ch === '`') { inString = ch; continue; }
+
+          if (opens.has(ch)) {
+            stack.push({ ch, line: l + 1, col: c + 1 });
+            if (ch === '{') counts.curly++;
+            else if (ch === '(') counts.paren++;
+            else if (ch === '[') counts.square++;
+          } else if (closes.has(ch)) {
+            if (stack.length === 0) {
+              errors.push({ line: l + 1, col: c + 1, msg: `Extra unmatched closing '${ch}'` });
+            } else {
+              const top = stack.pop();
+              if (top.ch !== pairs[ch]) {
+                errors.push({ line: l + 1, col: c + 1, msg: `Mismatched closing '${ch}'; opened '${top.ch}' on line ${top.line}, col ${top.col}` });
+              }
+            }
+          }
+        }
+      }
+
+      while (stack.length > 0) {
+        const top = stack.pop();
+        errors.push({ line: top.line, col: top.col, msg: `Unclosed opening bracket '${top.ch}'` });
+      }
+
+      if (errors.length === 0) {
+        pill.className = 'linter-badge-pass';
+        pill.innerText = 'BRACKETS BALANCED ✓';
+        output.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:12px;">
+            <div class="linter-stats-grid">
+              <div class="linter-stat-card"><span class="linter-stat-label">Curly { } Pairs</span><span class="linter-stat-val">${counts.curly}</span></div>
+              <div class="linter-stat-card"><span class="linter-stat-label">Parens ( ) Pairs</span><span class="linter-stat-val">${counts.paren}</span></div>
+              <div class="linter-stat-card"><span class="linter-stat-label">Square [ ] Pairs</span><span class="linter-stat-val">${counts.square}</span></div>
+              <div class="linter-stat-card"><span class="linter-stat-label">Mismatches</span><span class="linter-stat-val">0</span></div>
+            </div>
+            <div class="linter-code-box" style="color:#34d399;">
+✓ All code braces, brackets, and parentheses are properly balanced across ${lines.length} lines.
+Strings, block comments, and line comments were safely bypassed during scanning.
+            </div>
+          </div>
+        `;
+      } else {
+        pill.className = 'linter-badge-fail';
+        pill.innerText = `${errors.length} UNBALANCED ✗`;
+        let errHtml = '';
+        errors.slice(0, 10).forEach(e => {
+          errHtml += `
+            <div style="background:rgba(239, 68, 68, 0.12); border-left:3px solid #ef4444; padding:6px 10px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">
+              <div><strong style="color:#f87171;">Line ${e.line}, Col ${e.col}:</strong> <span style="color:var(--text-primary); font-size:12px;">${escapeHtml(e.msg)}</span></div>
+              <button class="quick-btn" onclick="jumpToLineAndCloseModal(${e.line})">Go to Line</button>
+            </div>
+          `;
+        });
+        output.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div style="font-size:12px; color:var(--text-secondary);">Found <strong>${errors.length}</strong> bracket / parenthesis balance issue(s):</div>
+            <div style="display:flex; flex-direction:column; gap:6px; max-height:250px; overflow-y:auto;">${errHtml}</div>
+          </div>
+        `;
+      }
+    }
+
+    function validateMarkdownSyntax(text, output, pill) {
+      const lines = text.split('\n');
+      const headings = [];
+      const warnings = [];
+      let inCodeFence = false;
+      let fenceStartLine = 0;
+
+      lines.forEach((l, idx) => {
+        const lineNum = idx + 1;
+        const trimmed = l.trim();
+        if (trimmed.startsWith('```')) {
+          inCodeFence = !inCodeFence;
+          if (inCodeFence) fenceStartLine = lineNum;
+        }
+        if (!inCodeFence) {
+          const hMatch = l.match(/^(#{1,6})\s+(.*)$/);
+          if (hMatch) {
+            const level = hMatch[1].length;
+            const title = hMatch[2].trim();
+            headings.push({ line: lineNum, level, title });
+          }
+        }
+      });
+
+      if (inCodeFence) {
+        warnings.push({ line: fenceStartLine, msg: `Unclosed code fence (\`\`\`) starting on line ${fenceStartLine}` });
+      }
+
+      for (let i = 1; i < headings.length; i++) {
+        const prev = headings[i - 1].level;
+        const curr = headings[i].level;
+        if (curr > prev + 1) {
+          warnings.push({ line: headings[i].line, msg: `Heading level skip: jumped from H${prev} to H${curr}` });
+        }
+      }
+
+      pill.className = warnings.length === 0 ? 'linter-badge-pass' : 'linter-badge-fail';
+      pill.innerText = warnings.length === 0 ? 'MARKDOWN VALID ✓' : `${warnings.length} NOTICE${warnings.length > 1 ? 'S' : ''}`;
+
+      let outlineHtml = '';
+      headings.forEach(h => {
+        const pad = '&nbsp;'.repeat((h.level - 1) * 3);
+        outlineHtml += `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:3px 6px; border-radius:4px; font-size:12px;">
+            <div>${pad}<span style="color:var(--accent); font-weight:bold; font-size:11px;">H${h.level}</span> ${escapeHtml(h.title)}</div>
+            <button class="quick-btn" style="padding:1px 6px; font-size:10px;" onclick="jumpToLineAndCloseModal(${h.line})">Ln ${h.line}</button>
+          </div>
+        `;
+      });
+
+      let warnHtml = '';
+      warnings.forEach(w => {
+        warnHtml += `
+          <div style="background:rgba(245, 158, 11, 0.15); border-left:3px solid #f59e0b; padding:4px 8px; border-radius:4px; font-size:11px; color:#fde68a;">
+            <strong>Line ${w.line}:</strong> ${escapeHtml(w.msg)}
+          </div>
+        `;
+      });
+
+      output.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="linter-stats-grid">
+            <div class="linter-stat-card"><span class="linter-stat-label">Total Headings</span><span class="linter-stat-val">${headings.length}</span></div>
+            <div class="linter-stat-card"><span class="linter-stat-label">Structure Notices</span><span class="linter-stat-val">${warnings.length}</span></div>
+          </div>
+          ${warnHtml ? `<div style="display:flex; flex-direction:column; gap:4px;">${warnHtml}</div>` : ''}
+          <div style="font-size:12px; font-weight:600; color:var(--text-secondary); margin-top:4px;">Document Heading Outline:</div>
+          <div style="background:#090d16; border:1px solid var(--border-glass); border-radius:6px; padding:6px; max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:2px;">
+            ${outlineHtml || '<div style="color:var(--text-muted); padding:10px;">No markdown headings (#) detected.</div>'}
+          </div>
+        </div>
+      `;
+    }
+
+    function jumpToLineAndCloseModal(lineNum) {
+      closeModal();
+      goToLineDirect(lineNum);
+    }
+
+    // --- ASCII & CP437 Symbol Palette ---
+    const CHARMAP_DATA = {
+      box: [
+        '┌', '┐', '└', '┘', '├', '┤', '┬', '┴', '┼', '─', '│',
+        '═', '║', '╔', '╗', '╚', '╝', '╠', '╣', '╦', '╩', '╬',
+        '╭', '╮', '╯', '╰', '╱', '╲', '╳',
+        '╒', '╓', '╕', '╖', '╘', '╙', '╛', '╜', '╞', '╟', '╡', '╢', '╤', '╥', '╧', '╨'
+      ],
+      blocks: [
+        '░', '▒', '▓', '█', '▄', '▌', '▐', '▀', '■', '▪', '▫', '▬', '▮', '▯', '▰', '▱',
+        '▲', '▼', '◄', '►', '▲', '▼', '◄', '►', '◘', '○', '◙', '•', '◦', '⌂'
+      ],
+      arrows: [
+        '←', '→', '↑', '↓', '↔', '↕', '↖', '↗', '↘', '↙', '↵', '⇄', '⇐', '⇒', '⇑', '⇓',
+        '➜', '➔', '➤', '➥', '↺', '↻', '↶', '↷', '⇦', '⇨', '⇧', '⇩'
+      ],
+      math: [
+        '±', '×', '÷', '≠', '≈', '≤', '≥', '√', '∞', '∫', '∑', '∏', 'π', 'µ', '°', '¬',
+        '∧', '∨', '∩', '∪', '∂', '∇', '‰', '‱', '∛', '∜', '∝', '∟', '∠', '≡'
+      ],
+      retro: [
+        '☺', '☻', '♥', '♦', '♣', '♠', '•', '◘', '○', '◙', '♂', '♀', '♪', '♫', '☼', '►',
+        '◄', '↕', '‼', '¶', '§', '▬', '↨', '↑', '↓', '→', '←', '∟', '↔', '▲', '▼'
+      ],
+      currency: [
+        '$', '¢', '£', '¥', '€', '¤', '©', '®', '™', '§', '¶', '•', '·', '†', '‡', '“',
+        '”', '‘', '’', '«', '»', '¿', '¡', '¦', 'ª', 'º', '§'
+      ]
+    };
+
+    let activeCharmapCat = 'box';
+
+    function openSymbolPaletteModal() {
+      const bodyHtml = `
+        <div class="charmap-container">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+            <div class="charmap-tabs">
+              <button class="charmap-tab active" id="charmap-tab-box" onclick="switchCharmapTab('box')">Box Drawing</button>
+              <button class="charmap-tab" id="charmap-tab-blocks" onclick="switchCharmapTab('blocks')">Blocks & Shades</button>
+              <button class="charmap-tab" id="charmap-tab-arrows" onclick="switchCharmapTab('arrows')">Arrows</button>
+              <button class="charmap-tab" id="charmap-tab-math" onclick="switchCharmapTab('math')">Math & Logic</button>
+              <button class="charmap-tab" id="charmap-tab-retro" onclick="switchCharmapTab('retro')">CP437 & Demoscene</button>
+              <button class="charmap-tab" id="charmap-tab-currency" onclick="switchCharmapTab('currency')">Currency & Symbols</button>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <input type="text" class="form-input" id="charmap-search-input" placeholder="Search glyph..." style="padding:3px 8px; font-size:11px; max-width:130px;" oninput="renderCharmapGrid(this.value)">
+            </div>
+          </div>
+
+          <div class="charmap-grid" id="charmap-grid-area"></div>
+
+          <div class="charmap-footer">
+            <div id="charmap-preview-desc" style="font-family:monospace; color:var(--text-secondary);">
+              Click any character to insert at cursor position
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <label style="font-size:11px; display:flex; align-items:center; gap:4px; cursor:pointer;">
+                <input type="checkbox" id="charmap-keep-open"> Keep palette open
+              </label>
+              <button class="quick-btn" onclick="closeModal()">Done</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      openModal('🔣 ASCII & CP437 Symbol Palette', bodyHtml, false, true);
+      setTimeout(() => switchCharmapTab('box'), 30);
+    }
+
+    function switchCharmapTab(cat) {
+      activeCharmapCat = cat;
+      document.querySelectorAll('.charmap-tab').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById('charmap-tab-' + cat);
+      if (activeBtn) activeBtn.classList.add('active');
+      const searchInp = document.getElementById('charmap-search-input');
+      renderCharmapGrid(searchInp ? searchInp.value : '');
+    }
+
+    function renderCharmapGrid(filter = '') {
+      const grid = document.getElementById('charmap-grid-area');
+      if (!grid) return;
+      const list = CHARMAP_DATA[activeCharmapCat] || [];
+      const q = filter.trim();
+
+      const filtered = q ? list.filter(ch => ch.includes(q)) : list;
+      let html = '';
+      filtered.forEach(ch => {
+        html += `<div class="charmap-cell" onclick="handleCharmapClick('${escapeHtml(ch)}')" onmouseenter="showCharmapPreview('${escapeHtml(ch)}')" title="${escapeHtml(ch)}">${escapeHtml(ch)}</div>`;
+      });
+      grid.innerHTML = html || '<div style="color:var(--text-muted); padding:10px; grid-column:1/-1; text-align:center;">No matching symbols found.</div>';
+    }
+
+    function showCharmapPreview(ch) {
+      const desc = document.getElementById('charmap-preview-desc');
+      if (!desc) return;
+      const code = ch.charCodeAt(0);
+      const hex = '0x' + code.toString(16).toUpperCase().padStart(4, '0');
+      desc.innerHTML = `Char: <strong style="color:var(--accent-hover); font-size:14px;">${escapeHtml(ch)}</strong> &bull; Dec: <strong>${code}</strong> &bull; Hex: <strong>${hex}</strong> &bull; Unicode: <code>\\u${code.toString(16).padStart(4, '0')}</code> &bull; HTML: <code>&amp;#${code};</code>`;
+    }
+
+    function handleCharmapClick(ch) {
+      const keepOpen = document.getElementById('charmap-keep-open')?.checked;
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const val = editor.value;
+
+      let insertStr = ch;
+      if (ch === '\\n') insertStr = '\n';
+      else if (ch === '\\r\\n') insertStr = '\r\n';
+      else if (ch === '\\t') insertStr = '\t';
+      else if (ch === '\\0') insertStr = '\0';
+      else if (ch === '\\x1b') insertStr = '\x1b';
+
+      editor.value = val.substring(0, start) + insertStr + val.substring(end);
+      editor.selectionStart = editor.selectionEnd = start + insertStr.length;
+      updateEditor();
+
+      navigator.clipboard.writeText(insertStr);
+      showToast(`Inserted & copied "${ch}"`, 'info', 1200);
+
+      if (!keepOpen) {
+        closeModal();
+      }
+    }
+
+    // --- Hex Dump Inspector & Shannon Entropy ---
+    let lastHexDumpData = '';
+
+    function openHexDumpModal() {
+      const bodyHtml = `
+        <div class="hexdump-container">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <label style="font-size:12px; display:flex; align-items:center; gap:4px; cursor:pointer;">
+                <input type="checkbox" id="hexdump-sel-only" onchange="renderHexDump()"> Inspect selection only
+              </label>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <button class="quick-btn" onclick="copyHexDumpText()">📋 Copy Hex Dump</button>
+              <button class="quick-btn" onclick="exportHexDumpFile()">💾 Export (.hex)</button>
+            </div>
+          </div>
+
+          <div id="hexdump-stats-bar" style="background:rgba(0,0,0,0.35); padding:8px 12px; border-radius:6px; border:1px solid var(--border-glass); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:12px;"></div>
+
+          <div class="hexdump-viewer" id="hexdump-viewer-area"></div>
+        </div>
+      `;
+
+      openModal('🔢 Hex Dump Inspector & Entropy Analyzer', bodyHtml, true, true);
+      setTimeout(renderHexDump, 30);
+    }
+
+    function computeShannonEntropy(bytes) {
+      if (!bytes || bytes.length === 0) return 0;
+      const freq = new Array(256).fill(0);
+      for (let i = 0; i < bytes.length; i++) freq[bytes[i]]++;
+      let entropy = 0;
+      const len = bytes.length;
+      for (let i = 0; i < 256; i++) {
+        if (freq[i] > 0) {
+          const p = freq[i] / len;
+          entropy -= p * Math.log2(p);
+        }
+      }
+      return entropy;
+    }
+
+    function renderHexDump() {
+      const viewer = document.getElementById('hexdump-viewer-area');
+      const statsBar = document.getElementById('hexdump-stats-bar');
+      const selCheckbox = document.getElementById('hexdump-sel-only');
+      if (!viewer || !statsBar) return;
+
+      const selOnly = selCheckbox ? selCheckbox.checked : false;
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      let text = editor.value;
+
+      if (selOnly && start !== end) {
+        text = text.substring(start, end);
+      }
+
+      if (!text) {
+        statsBar.innerHTML = `<span style="color:var(--text-muted);">Document is empty (0 bytes).</span>`;
+        viewer.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted);">No byte stream to display.</div>`;
+        return;
+      }
+
+      const encoder = new TextEncoder();
+      const bytes = encoder.encode(text);
+      const totalBytes = bytes.length;
+      const entropy = computeShannonEntropy(bytes);
+
+      let printable = 0, whitespace = 0, nulls = 0, high = 0;
+      for (let i = 0; i < totalBytes; i++) {
+        const b = bytes[i];
+        if (b === 0) nulls++;
+        else if (b === 32 || b === 9 || b === 10 || b === 13) whitespace++;
+        else if (b >= 33 && b <= 126) printable++;
+        if (b > 127) high++;
+      }
+
+      let entColor = '#34d399';
+      let entDesc = 'Plaintext / Structured Code';
+      if (entropy < 3.0) { entColor = '#38bdf8'; entDesc = 'Sparse / Low Entropy'; }
+      else if (entropy > 7.0) { entColor = '#d946ef'; entDesc = 'High Entropy / Cipher / Compressed'; }
+      else if (entropy > 5.5) { entColor = '#fbbf24'; entDesc = 'Dense Text / Formatted Data'; }
+
+      statsBar.innerHTML = `
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <span>Bytes: <strong>${totalBytes}</strong></span>
+          <span>Printable: <strong>${Math.round((printable / totalBytes) * 100)}%</strong></span>
+          <span>Whitespace: <strong>${Math.round((whitespace / totalBytes) * 100)}%</strong></span>
+          <span>Nulls (0x00): <strong>${nulls}</strong></span>
+          <span>High-Bit: <strong>${high}</strong></span>
+        </div>
+        <div class="entropy-gauge-wrap">
+          <span>Entropy: <strong style="color:${entColor};">${entropy.toFixed(3)}</strong> bits/byte</span>
+          <div class="entropy-gauge-bar" title="Entropy: ${entropy.toFixed(3)} / 8.000 bits (${entDesc})">
+            <div class="entropy-gauge-fill" style="width:${(entropy / 8) * 100}%; background:${entColor};"></div>
+          </div>
+        </div>
+      `;
+
+      let dumpLines = [];
+      const maxRows = 2000;
+      const numRows = Math.min(Math.ceil(totalBytes / 16), maxRows);
+
+      for (let row = 0; row < numRows; row++) {
+        const offset = row * 16;
+        const addr = offset.toString(16).toUpperCase().padStart(8, '0');
+        let hexPart = '';
+        let asciiPart = '';
+
+        for (let col = 0; col < 16; col++) {
+          const idx = offset + col;
+          if (idx < totalBytes) {
+            const b = bytes[idx];
+            hexPart += b.toString(16).toUpperCase().padStart(2, '0') + ' ';
+            asciiPart += (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
+          } else {
+            hexPart += '   ';
+            asciiPart += ' ';
+          }
+          if (col === 7) hexPart += ' ';
+        }
+
+        dumpLines.push(`${addr}: ${hexPart} |${asciiPart}|`);
+      }
+
+      if (totalBytes > maxRows * 16) {
+        dumpLines.push(`\n... [Truncated for display: ${totalBytes - maxRows * 16} additional bytes omitted]`);
+      }
+
+      lastHexDumpData = dumpLines.join('\n');
+      viewer.textContent = lastHexDumpData;
+    }
+
+    function copyHexDumpText() {
+      if (!lastHexDumpData) {
+        showToast('No hex dump to copy', 'warning');
+        return;
+      }
+      navigator.clipboard.writeText(lastHexDumpData);
+      showToast('Copied hex dump to clipboard!', 'success', 2000);
+    }
+
+    function exportHexDumpFile() {
+      if (!lastHexDumpData) {
+        showToast('No hex dump data available', 'warning');
+        return;
+      }
+      const activeTab = tabs[activeTabIndex] || { name: 'document' };
+      const filename = activeTab.name.replace(/\.[^/.]+$/, "") + '.hex';
+      const blob = new Blob([lastHexDumpData], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast(`Exported hex dump as ${filename}`, 'success', 2500);
+    }
+
+    // --- Stream & Multi-Line Editing Tools ---
+    function promptAddPrefixSuffix() {
+      const bodyHtml = `
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="form-group">
+            <label class="form-label" for="line-prefix-inp">Prefix to Add to Beginning of Lines:</label>
+            <input type="text" class="form-input" id="line-prefix-inp" placeholder="e.g. // or - [ ] or > ">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="line-suffix-inp">Suffix to Add to End of Lines:</label>
+            <input type="text" class="form-input" id="line-suffix-inp" placeholder="e.g. ; or , or </item>">
+          </div>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin:2px 0 6px 0;">
+            <button class="quick-btn" onclick="document.getElementById('line-prefix-inp').value='// '">// Comment</button>
+            <button class="quick-btn" onclick="document.getElementById('line-prefix-inp').value='# '># Comment</button>
+            <button class="quick-btn" onclick="document.getElementById('line-prefix-inp').value='- '">- List</button>
+            <button class="quick-btn" onclick="document.getElementById('line-prefix-inp').value='- [ ] '">- [ ] Task</button>
+            <button class="quick-btn" onclick="document.getElementById('line-prefix-inp').value='> '>Quote &gt;</button>
+            <button class="quick-btn" onclick="document.getElementById('line-suffix-inp').value=';'">; Semicolon</button>
+            <button class="quick-btn" onclick="document.getElementById('line-suffix-inp').value=','">, Comma</button>
+          </div>
+          <div class="form-group">
+            <label style="font-size:12px; display:flex; align-items:center; gap:6px; cursor:pointer;">
+              <input type="checkbox" id="line-apply-selection" ${editor.selectionStart !== editor.selectionEnd ? 'checked' : ''}> Apply to selected lines only
+            </label>
+          </div>
+          <div class="modal-btn-row">
+            <button class="modal-btn-cancel" onclick="closeModal()">Cancel</button>
+            <button class="modal-btn" onclick="executeAddPrefixSuffix()">Apply to Lines</button>
+          </div>
+        </div>
+      `;
+      openModal('✏️ Add Prefix / Suffix to Lines', bodyHtml, false);
+      setTimeout(() => document.getElementById('line-prefix-inp')?.focus(), 50);
+    }
+
+    function executeAddPrefixSuffix() {
+      const prefix = document.getElementById('line-prefix-inp')?.value || '';
+      const suffix = document.getElementById('line-suffix-inp')?.value || '';
+      const selOnly = document.getElementById('line-apply-selection')?.checked;
+
+      if (!prefix && !suffix) {
+        closeModal();
+        return;
+      }
+
+      const val = editor.value;
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+
+      if (selOnly && start !== end) {
+        const lineStart = val.lastIndexOf('\n', start - 1) + 1;
+        let lineEnd = val.indexOf('\n', end);
+        if (lineEnd === -1) lineEnd = val.length;
+
+        const targetLines = val.substring(lineStart, lineEnd).split('\n');
+        const modified = targetLines.map(l => prefix + l + suffix).join('\n');
+        editor.value = val.substring(0, lineStart) + modified + val.substring(lineEnd);
+        editor.setSelectionRange(lineStart, lineStart + modified.length);
+      } else {
+        const lines = val.split('\n');
+        editor.value = lines.map(l => prefix + l + suffix).join('\n');
+      }
+
+      updateEditor();
+      closeModal();
+      showToast('Added prefix/suffix across lines successfully', 'success', 2000);
+    }
+
+    function numberAllLinesPrompt() {
+      const bodyHtml = `
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="form-group">
+            <label class="form-label" for="num-format-select">Numbering Style Format:</label>
+            <select class="form-input" id="num-format-select">
+              <option value="dot">1. (Standard Dot)</option>
+              <option value="paren">1) (Right Paren)</option>
+              <option value="bracket">[1] (Bracketed)</option>
+              <option value="zero_dot">01. (Zero-padded)</option>
+              <option value="hash">#1: (Hash Prefix)</option>
+              <option value="md_task">1. [ ] (Numbered Task)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="num-start-val">Start Number:</label>
+            <input type="number" class="form-input" id="num-start-val" value="1" min="0">
+          </div>
+          <div class="modal-btn-row">
+            <button class="modal-btn-cancel" onclick="closeModal()">Cancel</button>
+            <button class="modal-btn" onclick="executeNumberAllLines()">Number Lines</button>
+          </div>
+        </div>
+      `;
+      openModal('🔢 Number All Lines in Document', bodyHtml, false);
+      setTimeout(() => document.getElementById('num-start-val')?.focus(), 50);
+    }
+
+    function executeNumberAllLines() {
+      const fmt = document.getElementById('num-format-select')?.value || 'dot';
+      const startNum = parseInt(document.getElementById('num-start-val')?.value || '1', 10);
+      const lines = editor.value.split('\n');
+      let cur = startNum;
+
+      const newLines = lines.map(line => {
+        let prefix = '';
+        if (fmt === 'dot') prefix = `${cur}. `;
+        else if (fmt === 'paren') prefix = `${cur}) `;
+        else if (fmt === 'bracket') prefix = `[${cur}] `;
+        else if (fmt === 'zero_dot') prefix = `${String(cur).padStart(2, '0')}. `;
+        else if (fmt === 'hash') prefix = `#${cur}: `;
+        else if (fmt === 'md_task') prefix = `${cur}. [ ] `;
+        cur++;
+        return prefix + line;
+      });
+
+      editor.value = newLines.join('\n');
+      updateEditor();
+      closeModal();
+      showToast(`Numbered ${lines.length} lines in buffer`, 'success', 2200);
+    }
+
+    function promptWrapLinesColumn() {
+      const bodyHtml = `
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="form-group">
+            <label class="form-label" for="wrap-col-width">Wrap Width (Characters / Column):</label>
+            <input type="number" class="form-input" id="wrap-col-width" value="80" min="20" max="240">
+            <div class="form-hint">Standard terminal & email width is 80 or 72 characters.</div>
+          </div>
+          <div class="modal-btn-row">
+            <button class="modal-btn-cancel" onclick="closeModal()">Cancel</button>
+            <button class="modal-btn" onclick="executeWrapLinesColumn()">Hard Wrap Text</button>
+          </div>
+        </div>
+      `;
+      openModal('📏 Wrap Lines at Column Width', bodyHtml, false);
+      setTimeout(() => document.getElementById('wrap-col-width')?.focus(), 50);
+    }
+
+    function executeWrapLinesColumn() {
+      const maxCol = parseInt(document.getElementById('wrap-col-width')?.value || '80', 10);
+      if (maxCol < 10) return;
+
+      const paragraphs = editor.value.split(/\r?\n\r?\n/);
+      const wrappedParagraphs = paragraphs.map(para => {
+        const words = para.replace(/\r?\n/g, ' ').split(/\s+/).filter(Boolean);
+        if (words.length === 0) return '';
+        const lines = [];
+        let curLine = words[0];
+
+        for (let i = 1; i < words.length; i++) {
+          const w = words[i];
+          if ((curLine + ' ' + w).length <= maxCol) {
+            curLine += ' ' + w;
+          } else {
+            lines.push(curLine);
+            curLine = w;
+          }
+        }
+        lines.push(curLine);
+        return lines.join('\n');
+      });
+
+      editor.value = wrappedParagraphs.join('\n\n');
+      updateEditor();
+      closeModal();
+      showToast(`Hard wrapped text at column ${maxCol}`, 'success', 2000);
+    }
+
+    function promptFilterLines() {
+      const bodyHtml = `
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div class="form-group">
+            <label class="form-label" for="filter-query-inp">Search Text or Regex Pattern:</label>
+            <input type="text" class="form-input" id="filter-query-inp" placeholder="e.g. ERROR or [0-9]{4}">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="filter-mode-select">Filter Action:</label>
+            <select class="form-input" id="filter-mode-select">
+              <option value="keep">Keep Only Matching Lines</option>
+              <option value="remove">Remove Matching Lines</option>
+              <option value="remove_empty">Remove All Blank / Empty Lines</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label style="font-size:12px; display:flex; align-items:center; gap:6px; cursor:pointer;">
+              <input type="checkbox" id="filter-is-regex"> Treat as Regular Expression
+            </label>
+          </div>
+          <div class="modal-btn-row">
+            <button class="modal-btn-cancel" onclick="closeModal()">Cancel</button>
+            <button class="modal-btn" onclick="executeFilterLines()">Filter Lines</button>
+          </div>
+        </div>
+      `;
+      openModal('🔍 Filter / Extract Matching Lines', bodyHtml, false);
+      setTimeout(() => document.getElementById('filter-query-inp')?.focus(), 50);
+    }
+
+    function executeFilterLines() {
+      const query = document.getElementById('filter-query-inp')?.value || '';
+      const mode = document.getElementById('filter-mode-select')?.value || 'keep';
+      const isRegex = document.getElementById('filter-is-regex')?.checked;
+
+      const lines = editor.value.split('\n');
+      let resultLines = [];
+
+      if (mode === 'remove_empty') {
+        resultLines = lines.filter(l => l.trim().length > 0);
+      } else {
+        if (!query) {
+          showToast('Search query is required', 'warning');
+          return;
+        }
+        let testFn;
+        if (isRegex) {
+          try {
+            const re = new RegExp(query, 'i');
+            testFn = (line) => re.test(line);
+          } catch (e) {
+            showToast('Invalid Regex: ' + e.message, 'error');
+            return;
+          }
+        } else {
+          const qLower = query.toLowerCase();
+          testFn = (line) => line.toLowerCase().includes(qLower);
+        }
+
+        if (mode === 'keep') {
+          resultLines = lines.filter(testFn);
+        } else {
+          resultLines = lines.filter(l => !testFn(l));
+        }
+      }
+
+      editor.value = resultLines.join('\n');
+      updateEditor();
+      closeModal();
+      showToast(`Filter complete: ${resultLines.length} lines retained`, 'success', 2200);
+    }
+
+    function formatMarkdownTableInPlace() {
+      const text = editor.value;
+      const lines = text.split('\n');
+      const tableLinesIdx = [];
+
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].includes('|')) {
+          tableLinesIdx.push(i);
+        }
+      }
+
+      if (tableLinesIdx.length < 2) {
+        showToast('No markdown table (| col | col |) detected in document', 'warning', 2500);
+        return;
+      }
+
+      const blocks = [];
+      let curBlock = [tableLinesIdx[0]];
+      for (let i = 1; i < tableLinesIdx.length; i++) {
+        if (tableLinesIdx[i] === tableLinesIdx[i-1] + 1) {
+          curBlock.push(tableLinesIdx[i]);
+        } else {
+          blocks.push(curBlock);
+          curBlock = [tableLinesIdx[i]];
+        }
+      }
+      blocks.push(curBlock);
+
+      let formattedCount = 0;
+      blocks.forEach(block => {
+        if (block.length < 2) return;
+        const rows = block.map(idx => {
+          let line = lines[idx].trim();
+          if (line.startsWith('|')) line = line.substring(1);
+          if (line.endsWith('|')) line = line.substring(0, line.length - 1);
+          return line.split('|').map(c => c.trim());
+        });
+
+        let maxCols = 0;
+        rows.forEach(r => { if (r.length > maxCols) maxCols = r.length; });
+        const colWidths = new Array(maxCols).fill(3);
+
+        rows.forEach((r, rowIdx) => {
+          if (rowIdx === 1 && r.every(cell => /^:?-+:?$/.test(cell))) return;
+          for (let c = 0; c < maxCols; c++) {
+            const cellLen = (r[c] || '').length;
+            if (cellLen > colWidths[c]) colWidths[c] = cellLen;
+          }
+        });
+
+        const formattedRows = rows.map((r, rowIdx) => {
+          const isSep = rowIdx === 1 && r.every(cell => /^:?-+:?$/.test(cell));
+          const cells = [];
+          for (let c = 0; c < maxCols; c++) {
+            const val = r[c] || '';
+            const width = colWidths[c];
+            if (isSep) {
+              const leftAlign = val.startsWith(':');
+              const rightAlign = val.endsWith(':');
+              if (leftAlign && rightAlign) {
+                cells.push(':' + '-'.repeat(Math.max(1, width - 2)) + ':');
+              } else if (leftAlign) {
+                cells.push(':' + '-'.repeat(Math.max(2, width - 1)));
+              } else if (rightAlign) {
+                cells.push('-'.repeat(Math.max(2, width - 1)) + ':');
+              } else {
+                cells.push('-'.repeat(width));
+              }
+            } else {
+              cells.push(val.padEnd(width, ' '));
+            }
+          }
+          return '| ' + cells.join(' | ') + ' |';
+        });
+
+        block.forEach((lineIdx, i) => {
+          lines[lineIdx] = formattedRows[i];
+        });
+        formattedCount++;
+      });
+
+      editor.value = lines.join('\n');
+      updateEditor();
+      showToast(`Formatted and aligned ${formattedCount} Markdown table block(s)`, 'success', 2500);
     }
 
     // --- Retro Firebase Multiplayer Service (RFMS) Engine ---
@@ -4566,6 +5978,14 @@
       openModal('👥 Real-Time Multiplayer Collaboration (RFMS)', bodyHtml, true);
     }
 
+    function openCollabChat() {
+      openCollabCenter();
+      setTimeout(() => {
+        const input = document.getElementById('collab-chat-input');
+        if (input) input.focus();
+      }, 100);
+    }
+
     function runCollabCenterRefresh() {
       openCollabCenter();
     }
@@ -4859,7 +6279,7 @@
 
     function closeModal() {
       const tourCb = document.getElementById('dont-show-tour');
-      if (tourCb) {
+      if (tourCb && tourCb.checked) {
         safeSetStorage('kpad_tutorialSeen', '1');
       }
       const card = document.querySelector('#app-modal .modal-card');
@@ -4903,6 +6323,14 @@
       { cat: 'edit', label: 'Zoom In / Out / Reset', key: 'Ctrl++ / Ctrl+- / Ctrl+0' },
       { cat: 'edit', label: 'Insert Current Date & Time', key: 'F7' },
       { cat: 'edit', label: 'Format & Pretty-Print JSON', key: 'Tools > Format JSON' },
+      { cat: 'edit', label: 'Syntax Validator & Linter Center', key: 'Ctrl + Shift + L' },
+      { cat: 'edit', label: 'Hex Dump Inspector & Shannon Entropy', key: 'Ctrl + Shift + H' },
+      { cat: 'edit', label: 'ASCII & CP437 Symbol Palette', key: 'Alt + A' },
+      { cat: 'edit', label: 'Format & Align Markdown Table', key: 'Ctrl + Shift + T' },
+      { cat: 'edit', label: 'Prefix / Suffix Every Line', key: 'Tools > Add Prefix' },
+      { cat: 'edit', label: 'Number All Lines in Buffer', key: 'Tools > Number Lines' },
+      { cat: 'edit', label: 'Wrap Lines at Column (80c)', key: 'Tools > Wrap Column' },
+      { cat: 'edit', label: 'Filter & Extract Matching Lines', key: 'Tools > Filter Lines' },
 
       // Real-Time Collaboration & Diff Suite
       { cat: 'collab', label: 'Open Collaboration Center', key: 'Alt + M' },
@@ -5192,14 +6620,22 @@
 
     // Global Key Shortcuts
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') { closeModal(); closeFind(); }
+      if (e.key === 'Escape') {
+        closeModal();
+        closeFind();
+        const ctxMenu = document.getElementById('tab-context-menu');
+        if (ctxMenu) ctxMenu.style.display = 'none';
+      }
       if (e.key === 'Enter') {
         const modal = document.getElementById('app-modal');
         if (modal && modal.classList.contains('active')) {
           const footer = document.getElementById('modal-footer');
+          const isTextArea = document.activeElement?.tagName === 'TEXTAREA';
           if (footer && footer.style.display !== 'none') {
-            e.preventDefault();
-            closeModal();
+            if (!isTextArea) {
+              e.preventDefault();
+              closeModal();
+            }
           } else {
             const startBtn = modal.querySelector('button[onclick*="finishOnboarding"]');
             if (startBtn) {
@@ -5213,10 +6649,16 @@
         const modal = document.getElementById('app-modal');
         if (modal && modal.classList.contains('active')) {
           const startBtn = modal.querySelector('button[onclick*="finishOnboarding"]');
-          const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
+          const isInput = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(document.activeElement?.tagName);
           if (startBtn && !isInput) {
             e.preventDefault();
             finishOnboarding();
+          } else {
+            const footer = document.getElementById('modal-footer');
+            if (footer && footer.style.display !== 'none' && !isInput) {
+              e.preventDefault();
+              closeModal();
+            }
           }
         }
       }
@@ -5244,6 +6686,10 @@
       if (e.ctrlKey && e.shiftKey && (e.key === 'f' || e.key === 'F')) { e.preventDefault(); openGlobalTabSearch(); }
       if (e.ctrlKey && e.shiftKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); exportDocument('workspace'); }
       if (e.ctrlKey && e.shiftKey && (e.key === 'd' || e.key === 'D')) { e.preventDefault(); openDiffModal(); }
+      if (e.ctrlKey && e.shiftKey && (e.key === 'l' || e.key === 'L')) { e.preventDefault(); openSyntaxLinterModal(); }
+      if (e.ctrlKey && e.shiftKey && (e.key === 'h' || e.key === 'H')) { e.preventDefault(); openHexDumpModal(); }
+      if (e.ctrlKey && e.shiftKey && (e.key === 't' || e.key === 'T')) { e.preventDefault(); formatMarkdownTableInPlace(); }
+      if (e.altKey && (e.key === 'a' || e.key === 'A')) { e.preventDefault(); openSymbolPaletteModal(); }
       if (e.altKey && (e.key === 'm' || e.key === 'M')) { e.preventDefault(); openCollabCenter(); }
       if (e.altKey && (e.key === 'j' || e.key === 'J')) { e.preventDefault(); toggleGhostTypist(); }
       if (e.altKey && (e.key === 'p' || e.key === 'P')) { e.preventDefault(); togglePreview(); }

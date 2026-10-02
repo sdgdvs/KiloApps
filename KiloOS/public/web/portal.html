@@ -1352,6 +1352,262 @@
     padding: 0 6px;
   }
   .status-cell:last-child { border-right: none; }
+
+  /* =========================================================================
+     TAB 11: CENTRAL VOYAGER GUESTBOOK STYLES
+     ========================================================================= */
+  .guestbook-hero {
+    background: #fdf5e6;
+    border: 2px groove #cd853f;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .guestbook-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+    background: #f7f7f7;
+    border: 1px solid #dcdcdc;
+    padding: 6px 10px;
+  }
+  .guestbook-entries-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .guestbook-card {
+    background: #ffffff;
+    border: 2px outset #ffffff;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.12);
+    padding: 10px 14px;
+    border-left: 5px solid var(--navy-dark);
+    font-family: Arial, sans-serif;
+  }
+  .guestbook-card.mood-hacker { border-left-color: #00aa00; background: #fafdfa; }
+  .guestbook-card.mood-y2k { border-left-color: #cc0000; background: #fffafa; }
+  .guestbook-card.mood-demoscene { border-left-color: #9900cc; background: #fdfaff; }
+  .guestbook-card.mood-surfer { border-left-color: #0066cc; background: #f8fcff; }
+
+  .gb-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px dotted #ccc;
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .gb-handle-link {
+    font-weight: bold;
+    font-size: 14px;
+    color: var(--navy-dark);
+    text-decoration: underline;
+  }
+  .gb-handle-link:hover { color: var(--accent-red); }
+  .gb-meta-badge {
+    background: #eef2f7;
+    border: 1px solid #c8d4e2;
+    padding: 1px 6px;
+    font-size: 11px;
+    border-radius: 2px;
+    font-family: 'Courier New', monospace;
+  }
+  .gb-stamp-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 900;
+    padding: 1px 5px;
+    color: #fff;
+    background: #cc0000;
+    border: 1px solid #800000;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transform: rotate(-2deg);
+    margin-right: 6px;
+  }
+  .gb-stamp-hot { background: #ff4500; }
+  .gb-stamp-netscape { background: #008080; }
+  .gb-stamp-elite { background: #660099; }
+  .gb-stamp-verified { background: #008800; }
+
+  .gb-message-body {
+    font-family: 'Times New Roman', serif;
+    font-size: 14px;
+    line-height: 1.45;
+    color: #222;
+    margin: 6px 0 8px 0;
+  }
+  .gb-signature {
+    font-style: italic;
+    font-size: 12px;
+    color: #555;
+    border-top: 1px dashed #e0e0e0;
+    padding-top: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .gb-kudos-btn {
+    background: #f0f0f0;
+    border: 1px outset #fff;
+    font-size: 11px;
+    cursor: pointer;
+    padding: 2px 7px;
+    font-family: Arial, sans-serif;
+  }
+  .gb-kudos-btn:hover { background: #ffe4e1; }
+  .gb-kudos-btn:active { border-style: inset; }
+
+  /* =========================================================================
+     TAB 12: NOC NETWORK DIAGNOSTIC LAB STYLES
+     ========================================================================= */
+  .noc-hero {
+    background: #e6f7ff;
+    border: 2px groove #0077b6;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+  }
+  .noc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  @media (max-width: 760px) {
+    .noc-grid { grid-template-columns: 1fr; }
+  }
+  .noc-panel {
+    background: #ffffff;
+    border: 2px ridge #99c2ff;
+    padding: 10px 12px;
+  }
+  .noc-title {
+    font-family: Arial, sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+    color: #003366;
+    border-bottom: 1px solid #b3d1ff;
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .noc-terminal {
+    background: #000814;
+    color: #38bdf8;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    line-height: 1.4;
+    padding: 8px 10px;
+    border: 2px inset #555555;
+    height: 180px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+  }
+  .noc-hop-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    margin-top: 6px;
+  }
+  .noc-hop-table th {
+    background: #003366;
+    color: #ffffff;
+    text-align: left;
+    padding: 3px 6px;
+  }
+  .noc-hop-table td {
+    border-bottom: 1px solid #e0e0e0;
+    padding: 3px 6px;
+  }
+  .noc-hop-table tr:hover td {
+    background: #f0f8ff;
+  }
+  .w3c-badge-display {
+    display: inline-flex;
+    align-items: center;
+    background: #000080;
+    color: #ffd700;
+    border: 2px outset #ffffff;
+    padding: 4px 10px;
+    font-family: Arial, sans-serif;
+    font-weight: bold;
+    font-size: 12px;
+    letter-spacing: 0.5px;
+  }
+
+  /* =========================================================================
+     TAB 13: KILOARCADE '99 STYLES
+     ========================================================================= */
+  .arcade-hero {
+    background: #0d1117;
+    color: #39ff14;
+    border: 3px ridge #333333;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .arcade-cabinet {
+    background: #111827;
+    border: 4px inset #4b5563;
+    padding: 10px;
+    box-shadow: 0 0 15px rgba(0,255,0,0.15);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .arcade-hud {
+    width: 100%;
+    max-width: 640px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #000000;
+    border: 2px solid #374151;
+    padding: 6px 12px;
+    color: #facc15;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 6px;
+  }
+  #arcadeCanvas {
+    background: #050811;
+    border: 2px solid #22c55e;
+    box-shadow: inset 0 0 20px rgba(0,255,0,0.15);
+    display: block;
+    cursor: crosshair;
+  }
+  .arcade-controls-guide {
+    margin-top: 8px;
+    color: #9ca3af;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    text-align: center;
+  }
+  .arcade-controls-guide kbd {
+    background: #374151;
+    color: #fff;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+  }
 </style>
 </head>
 <body>
@@ -1380,6 +1636,9 @@
       <div class="quick-links">
         <a href="/apps/kmail.html">✉️ Check Email</a>
         <a href="/apps/kchat.html">💬 KChat IRC</a>
+        <a href="#" onclick="switchPortalTab('guestbook'); return false;" style="color:#000080; font-weight:bold;">📖 Guestbook</a>
+        <a href="#" onclick="switchPortalTab('noc'); return false;" style="color:#006600; font-weight:bold;">🛠️ NOC Tools</a>
+        <a href="#" onclick="switchPortalTab('arcade'); return false;" style="color:#b30000; font-weight:bold;">🕹️ KiloArcade</a>
         <a href="#" onclick="switchPortalTab('news'); return false;">📰 News Wire '99</a>
         <a href="#" onclick="switchPortalTab('radio'); return false;" style="color:#cc6600; font-weight:bold;">📻 RealAudio .RAM</a>
         <a href="#" onclick="switchPortalTab('yellowpages'); return false;">📒 Yellow Pages</a>
@@ -1420,6 +1679,9 @@
     <!-- Navigation Tabs -->
     <div class="tab-row">
       <div class="portal-tab active" id="tabNav-directory" onclick="switchPortalTab('directory')">📂 Web Directory &amp; Search</div>
+      <div class="portal-tab" id="tabNav-guestbook" onclick="switchPortalTab('guestbook')">📖 Voyager Guestbook</div>
+      <div class="portal-tab" id="tabNav-noc" onclick="switchPortalTab('noc')">🛠️ NOC Net Tools</div>
+      <div class="portal-tab" id="tabNav-arcade" onclick="switchPortalTab('arcade')">🕹️ KiloArcade '99</div>
       <div class="portal-tab" id="tabNav-news" onclick="switchPortalTab('news')">📰 News Wire '99</div>
       <div class="portal-tab" id="tabNav-radio" onclick="switchPortalTab('radio')">📻 RealAudio Radio</div>
       <div class="portal-tab" id="tabNav-stocks" onclick="switchPortalTab('stocks')">📈 Stock Exchange</div>
@@ -2056,6 +2318,189 @@
     </div>
   </section>
 
+  <!-- TAB 11: CENTRAL VOYAGER GUESTBOOK & REGISTRY -->
+  <section id="tab-guestbook" class="tab-content">
+    <div class="guestbook-hero">
+      <div>
+        <h3 style="margin:0 0 2px 0; color:#8b4513; font-family:Arial, sans-serif;">📖 KiloNet Central Voyager Guestbook &amp; Registry (CGI Perl '99)</h3>
+        <p style="margin:0; font-size:12px; color:#555;">Official hypermedia guestbook. Sign your alias, BBS node, dial-up ISP, and 1999 tech allegiances to the ledger!</p>
+      </div>
+      <div style="display:flex; gap:6px; align-items:center;">
+        <span style="font-size:11px; font-weight:bold; color:var(--navy-dark);" id="guestbookCountBadge">14 Signatures Logged</span>
+        <button class="btn-retro btn-primary-retro" onclick="openSignGuestbookModal()">✍️ Sign Central Guestbook</button>
+      </div>
+    </div>
+
+    <!-- Filter & Search Row -->
+    <div class="guestbook-filter-row">
+      <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+        <span style="font-size:12px; font-weight:bold;">Filter by Allegiance:</span>
+        <button class="news-pill active" id="gbPill_ALL" onclick="setGuestbookFilter('ALL')">All Voyagers</button>
+        <button class="news-pill" id="gbPill_DEMO" onclick="setGuestbookFilter('DEMO')">👾 Demoscene</button>
+        <button class="news-pill" id="gbPill_HACKER" onclick="setGuestbookFilter('HACKER')">💻 Hackers &amp; ASM</button>
+        <button class="news-pill" id="gbPill_SURFER" onclick="setGuestbookFilter('SURFER')">🏄 56K Surfers</button>
+        <button class="news-pill" id="gbPill_SYSOP" onclick="setGuestbookFilter('SYSOP')">💾 BBS SysOps</button>
+        <button class="news-pill" id="gbPill_Y2K" onclick="setGuestbookFilter('Y2K')">⏳ Y2K Vigil</button>
+      </div>
+      <div style="margin-left:auto;">
+        <input type="text" id="gbSearchInput" class="form-input" style="width:170px; font-size:11px;" placeholder="Search handles, cities..." oninput="filterGuestbook()" />
+      </div>
+    </div>
+
+    <div class="guestbook-entries-container" id="guestbookListContainer">
+      <!-- Injected via JavaScript -->
+    </div>
+  </section>
+
+  <!-- TAB 12: NOC NETWORK OPERATIONS CENTER & WEBMASTER LAB -->
+  <section id="tab-noc" class="tab-content">
+    <div class="noc-hero">
+      <h3 style="margin:0 0 4px 0; color:#003366; font-family:Arial, sans-serif;">🛠️ KiloNet Network Operations Center (NOC) &amp; Webmaster Diagnostic Lab</h3>
+      <p style="margin:0; font-size:12px; color:#333;">
+        Comprehensive late-1999 diagnostic tools: WHOIS domain explorer, multi-hop ICMP traceroute simulator, HTTP/1.0 header inspector, and W3C HTML 4.01 strict code validator.
+      </p>
+    </div>
+
+    <div class="noc-grid">
+      <!-- Panel 1: WHOIS Explorer -->
+      <div class="noc-panel">
+        <div class="noc-title">
+          <span>🔍 InterNIC WHOIS Domain Explorer</span>
+          <select id="whoisPresetSelect" class="form-input" style="font-size:11px; width:140px;" onchange="handleWhoisPreset(this.value)">
+            <option value="">-- Presets --</option>
+            <option value="kilonet.org">kilonet.org</option>
+            <option value="geocities.com">geocities.com</option>
+            <option value="slashnet.org">slashnet.org</option>
+            <option value="3dfx.com">3dfx.com</option>
+            <option value="warez-vault.scene">warez-vault.scene</option>
+            <option value="scenecentral.net">scenecentral.net</option>
+            <option value="cybercafe99.net">cybercafe99.net</option>
+            <option value="carlsbad-research.internal">carlsbad-research.internal</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:6px; margin-bottom:8px;">
+          <input type="text" id="whoisDomainInput" class="form-input" style="flex:1; font-family:'Courier New', monospace; font-size:12px;" placeholder="Enter domain (e.g. kilonet.org)..." value="kilonet.org" />
+          <button class="btn-retro btn-primary-retro" onclick="runWhoisQuery()">Query WHOIS</button>
+        </div>
+        <div class="noc-terminal" id="whoisTerminalOutput">Query ready. Select preset or enter domain and click [Query WHOIS].</div>
+      </div>
+
+      <!-- Panel 2: ICMP Traceroute Simulator -->
+      <div class="noc-panel">
+        <div class="noc-title">
+          <span>📡 ICMP Multi-Hop Packet Traceroute</span>
+          <span style="font-family:'Courier New', monospace; font-size:10px; color:#008800;" id="traceStatusBadge">READY</span>
+        </div>
+        <div style="display:flex; gap:6px; margin-bottom:8px; align-items:center;">
+          <select id="traceTargetSelect" class="form-input" style="flex:1; font-size:11px;">
+            <option value="portal">kweb://portal (198.41.0.4 - Central Web Portal)</option>
+            <option value="geocities">kweb://geocities (209.85.128.42 - CyberSpire Shrine)</option>
+            <option value="warez">kweb://warez (194.109.13.77 - 0xRELEASE Scene Vault)</option>
+            <option value="darknet">kweb://darknet (10.19.99.12 - Encrypted Relay)</option>
+            <option value="cybercafe">kweb://cybercafe (204.152.184.99 - CyberCafe '99)</option>
+            <option value="carlsbad">10.19.99.4 (Carlsbad Subterranean Transponder)</option>
+          </select>
+          <button class="btn-retro btn-primary-retro" id="traceStartBtn" onclick="runTraceroute()">Trace Route</button>
+          <button class="btn-retro" id="traceAbortBtn" onclick="abortTraceroute()">Abort</button>
+        </div>
+        <div style="max-height:180px; overflow-y:auto; border:1px solid #ccc; background:#fff;">
+          <table class="noc-hop-table">
+            <thead>
+              <tr>
+                <th style="width:36px;">Hop</th>
+                <th>Hostname / IP</th>
+                <th style="width:55px;">RTT 1</th>
+                <th style="width:55px;">RTT 2</th>
+                <th style="width:55px;">RTT 3</th>
+                <th style="width:40px;">TTL</th>
+              </tr>
+            </thead>
+            <tbody id="traceHopTableBody">
+              <tr><td colspan="6" style="text-align:center; color:#777; padding:12px;">Click [Trace Route] to trace network path across 1999 backbones.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Panel 3: HTTP/1.0 Header Inspector -->
+      <div class="noc-panel">
+        <div class="noc-title">
+          <span>📄 HTTP/1.0 Header Dissector</span>
+          <span style="font-size:11px; color:#555;">RFC 1945 Compliant</span>
+        </div>
+        <div style="display:flex; gap:6px; margin-bottom:8px; align-items:center;">
+          <select id="httpMethodSelect" class="form-input" style="width:75px; font-weight:bold; font-size:11px;">
+            <option value="HEAD">HEAD</option>
+            <option value="GET">GET</option>
+          </select>
+          <input type="text" id="httpTargetUrl" class="form-input" style="flex:1; font-family:'Courier New', monospace; font-size:12px;" value="/web/portal.html" placeholder="/web/..." />
+          <button class="btn-retro btn-primary-retro" onclick="sendHttpInspect()">Inspect</button>
+        </div>
+        <div class="noc-terminal" id="httpHeadersOutput">Select target URL and click [Inspect] to view simulated HTTP/1.0 server response headers.</div>
+      </div>
+
+      <!-- Panel 4: W3C HTML 4.01 Webmaster Validator -->
+      <div class="noc-panel">
+        <div class="noc-title">
+          <span>🏆 W3C HTML 4.01 Strict Validator</span>
+          <button class="btn-retro" style="font-size:10px; padding:1px 6px;" onclick="loadSampleHtmlForValidation()">Load Sample HTML</button>
+        </div>
+        <div style="margin-bottom:6px;">
+          <textarea id="htmlValidateInput" class="form-input" style="width:100%; height:80px; font-family:'Courier New', monospace; font-size:11px; resize:none;" placeholder="Paste HTML 4.01 code here to test strict compliance..."></textarea>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <button class="btn-retro btn-primary-retro" onclick="runHtmlValidation()">Audit HTML Code</button>
+          <div id="w3cResultBadgeContainer"></div>
+        </div>
+        <div id="htmlValidationReport" style="font-size:11px; color:#333; max-height:80px; overflow-y:auto; line-height:1.35; background:#f9f9f9; border:1px solid #ccc; padding:4px 6px;">
+          Ready to validate. Click [Audit HTML Code] to test compliance against late-1999 W3C standards.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 13: KILOARCADE '99: SILICON BUG BUSTER -->
+  <section id="tab-arcade" class="tab-content">
+    <div class="arcade-hero">
+      <div>
+        <h3 style="margin:0 0 2px 0; color:#39ff14; font-family:Arial, sans-serif;">🕹️ KiloArcade '99 — Silicon Bug Buster '99 (Motherboard Defense)</h3>
+        <p style="margin:0; font-size:12px; color:#aaa;">Defend the 1999 motherboard from descending Y2K beetles, interrupt sparks, and glitched memory blocks!</p>
+      </div>
+      <div>
+        <button class="btn-retro btn-primary-retro" id="arcadeStartBtn" onclick="toggleArcadeGame()">▶ Start Game</button>
+        <button class="btn-retro" onclick="resetArcadeScores()">Reset High Scores</button>
+      </div>
+    </div>
+
+    <div class="arcade-cabinet">
+      <!-- HUD -->
+      <div class="arcade-hud">
+        <div>SCORE: <span id="arcadeScore">00000</span></div>
+        <div>LIVES: <span id="arcadeLives" style="color:#ff3333;">♥♥♥</span></div>
+        <div>WAVE: <span id="arcadeWave">1</span></div>
+        <div>POWER: <span id="arcadePowerup" style="color:#38bdf8;">NONE</span></div>
+        <div>HIGH: <span id="arcadeHighScore">18400</span></div>
+      </div>
+
+      <!-- Canvas -->
+      <canvas id="arcadeCanvas" width="640" height="360"></canvas>
+
+      <!-- Controls Guide -->
+      <div class="arcade-controls-guide">
+        <span>Controls: <kbd>←</kbd> <kbd>→</kbd> or Mouse to Move • <kbd>Space</kbd> or Left Click to Fire Parity Lasers • <kbd>P</kbd> to Pause</span><br>
+        <span style="color:#facc15;">Power-ups: 🚀 3dfx Glide Booster (Triple Laser) • 🛡️ 56K Buffer Shield • ⏱️ Quartz Overclock (Slow-Mo) • 💣 NMI Core Flush</span>
+      </div>
+    </div>
+
+    <!-- Leaderboard Table -->
+    <div style="background:#f4f4f4; border:1px solid #ccc; padding:8px 12px; margin-top:10px;">
+      <h4 style="margin:0 0 6px 0; font-family:Arial, sans-serif; font-size:13px; color:#222;">🏆 KiloArcade Hall of Fame ('99 Leaderboard)</h4>
+      <div id="arcadeLeaderboardList" style="display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; font-family:'Courier New', monospace; font-size:11px; text-align:center;">
+        <!-- Populated via JavaScript -->
+      </div>
+    </div>
+  </section>
+
   <!-- Webring Member Widget -->
   <div class="webring-widget">
     <strong>[ Central KiloNet 1999 Webring Member #001 ]</strong><br>
@@ -2361,6 +2806,93 @@
         <div style="text-align:right; margin-top:8px;">
           <button type="button" class="btn-retro" onclick="closeRegisterWebmasterModal()">Cancel</button>
           <button type="submit" class="btn-retro btn-primary-retro">Publish to Yellow Pages</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Sign Central Voyager Guestbook -->
+<div class="modal-overlay" id="signGuestbookModal">
+  <div class="retro-dialog" style="max-width:520px;">
+    <div class="dialog-titlebar">
+      <span>✍️ Sign the Central Voyager Guestbook &amp; Ledger</span>
+      <button class="dialog-close-btn" onclick="closeSignGuestbookModal()">×</button>
+    </div>
+    <div class="dialog-body">
+      <form id="signGuestbookForm" onsubmit="handleSignGuestbook(event)">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px;">
+          <div>
+            <label style="font-size:11px; font-weight:bold;">Your Nickname / Handle:</label>
+            <input type="text" id="gbInputHandle" class="form-input" placeholder="e.g. CyberVanguard_99" required />
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:bold;">Hometown &amp; BBS Node:</label>
+            <input type="text" id="gbInputLocation" class="form-input" placeholder="e.g. Austin, TX // Node 512" required />
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px;">
+          <div>
+            <label style="font-size:11px; font-weight:bold;">Dial-Up ISP Connection:</label>
+            <select id="gbInputIsp" class="form-input">
+              <option value="56K V.90 Rockwell / USR" selected>56K V.90 Rockwell / USR</option>
+              <option value="33.6K V.34+ Dual Async">33.6K V.34+ Dual Async</option>
+              <option value="28.8K V.34 Standard">28.8K V.34 Standard</option>
+              <option value="128K ISDN BRI 2B+D">128K ISDN BRI 2B+D</option>
+              <option value="14.4K V.32bis Heritage">14.4K V.32bis Heritage</option>
+              <option value="T1 1.544M Leased Trunk">T1 1.544M Leased Trunk</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:bold;">Browser / Environment:</label>
+            <select id="gbInputBrowser" class="form-input">
+              <option value="Netscape Communicator 4.75" selected>Netscape Communicator 4.75</option>
+              <option value="Internet Explorer 5.01">Internet Explorer 5.01</option>
+              <option value="Lynx 2.8.3 Console">Lynx 2.8.3 Console</option>
+              <option value="Opera 3.62 Win98">Opera 3.62 Win98</option>
+              <option value="NCSA Mosaic 3.0">NCSA Mosaic 3.0</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-bottom:8px;">
+          <div>
+            <label style="font-size:11px; font-weight:bold;">1999 Mood &amp; Allegiance:</label>
+            <select id="gbInputMood" class="form-input">
+              <option value="SURFER" selected>🏄 56K Web Surfer</option>
+              <option value="HACKER">💻 Hex Hacker &amp; ASM</option>
+              <option value="DEMO">👾 Demoscene Scroller</option>
+              <option value="SYSOP">💾 BBS SysOp &amp; NetOp</option>
+              <option value="Y2K">⏳ Y2K Midnight Watcher</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:bold;">Retro Stamp Badge:</label>
+            <select id="gbInputStamp" class="form-input">
+              <option value="HOT!" selected>HOT!</option>
+              <option value="NEW!">NEW!</option>
+              <option value="NETSCAPE">NETSCAPE NOW</option>
+              <option value="ELITE">ELITE 1999</option>
+              <option value="VERIFIED">VERIFIED</option>
+              <option value="UNDER CONST.">UNDER CONST.</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <label style="font-size:11px; font-weight:bold;">Personal Homepage / Shrine URL:</label>
+          <input type="text" id="gbInputUrl" class="form-input" placeholder="e.g. kweb://geocities or /web/users/neon_rider.html" value="/web/geocities.html" />
+        </div>
+
+        <div style="margin-bottom:8px;">
+          <label style="font-size:11px; font-weight:bold;">Guestbook Message / Signature Motto:</label>
+          <textarea id="gbInputMessage" class="form-input" style="height:60px; resize:none;" placeholder="Write your message to fellow net voyagers across the KiloNet Webring..." required></textarea>
+        </div>
+
+        <div style="text-align:right; margin-top:8px;">
+          <button type="button" class="btn-retro" onclick="closeSignGuestbookModal()">Cancel</button>
+          <button type="submit" class="btn-retro btn-primary-retro">Sign Guestbook Now</button>
         </div>
       </form>
     </div>
@@ -4883,7 +5415,7 @@ function selectZodiacSign(key) {
    ========================================================================= */
 function switchPortalTab(tabName) {
   playClick();
-  const tabs = ['directory', 'news', 'radio', 'stocks', 'classifieds', 'yellowpages', 'weather', 'speedtest', 'horoscope', 'trivia'];
+  const tabs = ['directory', 'guestbook', 'noc', 'arcade', 'news', 'radio', 'stocks', 'classifieds', 'yellowpages', 'weather', 'speedtest', 'horoscope', 'trivia'];
   tabs.forEach(t => {
     const navEl = document.getElementById(`tabNav-${t}`);
     const contentEl = document.getElementById(`tab-${t}`);
@@ -4916,6 +5448,12 @@ function switchPortalTab(tabName) {
     selectZodiacSign(activeZodiacKey);
   } else if (tabName === 'trivia') {
     renderTriviaQuestion();
+  } else if (tabName === 'guestbook') {
+    filterGuestbook();
+  } else if (tabName === 'noc') {
+    initNocDisplay();
+  } else if (tabName === 'arcade') {
+    initArcadeGame();
   }
 }
 
@@ -4927,6 +5465,9 @@ const WEBRING_SITES = [
   '/web/cybercafe.html',
   '/web/users/neon_rider.html',
   '/web/asm_temple.html',
+  '/web/darknet.html',
+  '/web/echo_subsystem.html',
+  '/web/classified.html',
   '/apps/contribute.html',
   '/apps/krogue.html',
   '/apps/kbbs.html'
@@ -5501,6 +6042,16 @@ function initFirebasePortal() {
               filterClassifieds();
             }
           });
+
+          // Listen for new Guestbook entries posted globally
+          const gbRef = ref(firebaseDb, 'virtual_web/portal/guestbook');
+          onChildAdded(gbRef, (snapshot) => {
+            const val = snapshot.val();
+            if (val && !guestbookData.some(entry => entry.id === val.id || (entry.handle === val.handle && entry.time === val.time && entry.message === val.message))) {
+              guestbookData.unshift(val);
+              filterGuestbook();
+            }
+          });
         });
     })
     .catch(() => {
@@ -5526,6 +6077,1382 @@ function syncYellowPagesToFirebase(entry) {
     }).catch(()=>{});
 }
 
+function syncGuestbookToFirebase(entry) {
+  if (!firebaseDb) return;
+  import("https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js")
+    .then(({ ref, push }) => {
+      const gbRef = ref(firebaseDb, 'virtual_web/portal/guestbook');
+      push(gbRef, entry);
+    }).catch(()=>{});
+}
+
+/* =========================================================================
+   14. CENTRAL VOYAGER GUESTBOOK ENGINE & FIREBASE SYNC
+   ========================================================================= */
+const DEFAULT_GUESTBOOK_ENTRIES = [
+  {
+    id: "gb_001",
+    handle: "neon_rider",
+    location: "Seattle, WA // Node 206-ASM",
+    isp: "56K V.90 Rockwell / USR",
+    browser: "Netscape Communicator 4.75",
+    mood: "DEMO",
+    stamp: "HOT!",
+    url: "/web/users/neon_rider.html",
+    message: "Optimized the planar copper scroller blitter loop down to 14 clock cycles on Win32 ASM. Greetings to all demosceners across the KiloNet Webring! Long live 60 FPS unrolled raster bars.",
+    time: "1999-10-15 16:42:10",
+    kudos: 42
+  },
+  {
+    id: "gb_002",
+    handle: "ByteCrusher_99",
+    location: "Austin, TX // Node 512-PoP",
+    isp: "128K ISDN BRI 2B+D",
+    browser: "Internet Explorer 5.01",
+    mood: "HACKER",
+    stamp: "VERIFIED",
+    url: "/web/asm_temple.html",
+    message: "The x86 Opcode Temple is officially open for hypermedia pilgrimage. Pure flat-mode PE32 binary dissection without runtime bloat. May your interrupts remain unmasked.",
+    time: "1999-10-15 15:30:22",
+    kudos: 38
+  },
+  {
+    id: "gb_003",
+    handle: "CyberSpire_99",
+    location: "San Jose, CA // Silicon Valley",
+    isp: "56K V.90 Rockwell / USR",
+    browser: "Netscape Communicator 4.75",
+    mood: "SURFER",
+    stamp: "NETSCAPE",
+    url: "/web/geocities.html",
+    message: "Welcome travelers of the global matrix! CyberSpire Retro Shrine now hosts 4-channel ProTracker (.MOD) streams and the Silicon Oracle. Keep surfing the copper waves!",
+    time: "1999-10-15 14:18:45",
+    kudos: 55
+  },
+  {
+    id: "gb_004",
+    handle: "Falcon_SysOp",
+    location: "Denver, CO // Node 303-BBS",
+    isp: "33.6K V.34+ Dual Async",
+    browser: "Lynx 2.8.3 Console",
+    mood: "SYSOP",
+    stamp: "ELITE",
+    url: "/apps/kbbs.html",
+    message: "BBS node #4 is dedicated to 1999 door games and ANSI art distribution. Upload your .ANS screens or face instant ratio degradation. SysOp out.",
+    time: "1999-10-15 13:05:00",
+    kudos: 29
+  },
+  {
+    id: "gb_005",
+    handle: "Trinitron_Glow",
+    location: "Portland, OR // Node 503",
+    isp: "56K V.90 Rockwell / USR",
+    browser: "Netscape Communicator 4.75",
+    mood: "DEMO",
+    stamp: "HOT!",
+    url: "/apps/kpaint.html",
+    message: "256 indexed colors is all the human retina will ever need. Calibrated my Sony Trinitron 19-inch aperture grille to 9300K white point. Pure phosphorus warmth.",
+    time: "1999-10-15 12:14:38",
+    kudos: 31
+  },
+  {
+    id: "gb_006",
+    handle: "Y2K_Watchman",
+    location: "Chicago, IL // Node 312",
+    isp: "28.8K V.34 Standard",
+    browser: "Opera 3.62 Win98",
+    mood: "Y2K",
+    stamp: "UNDER CONST.",
+    url: "/apps/kclock.html",
+    message: "Audited 140,000 lines of COBOL banking logic this week. Stockpiling 3.5-inch HD diskettes, MRE rations, and paraffin candles for December 31st.",
+    time: "1999-10-15 11:22:19",
+    kudos: 24
+  },
+  {
+    id: "gb_007",
+    handle: "ModemMelody",
+    location: "Toronto, ON // Node 416",
+    isp: "56K V.90 Rockwell / USR",
+    browser: "Netscape Communicator 4.75",
+    mood: "DEMO",
+    stamp: "NEW!",
+    url: "/apps/ksynth.html",
+    message: "The 2100Hz CED answer tone is the sweetest lullaby of our generation. Yamaha YM2612 FM slap bass + SNES delay makes this portal feel like home.",
+    time: "1999-10-15 10:45:51",
+    kudos: 47
+  },
+  {
+    id: "gb_008",
+    handle: "PixelValkyrie",
+    location: "Stockholm, SE // Node 08-Scene",
+    isp: "128K ISDN BRI 2B+D",
+    browser: "Netscape Communicator 4.75",
+    mood: "DEMO",
+    stamp: "ELITE",
+    url: "/web/warez.html",
+    message: "Copper rainbow bars and 256-color plasma shaders running inside standard browser canvas! Scene greetings flying out to FLARELIGHT, RAZOR 1999, and PARALAX.",
+    time: "1999-10-15 09:30:14",
+    kudos: 50
+  },
+  {
+    id: "gb_009",
+    handle: "GlitchWeaver",
+    location: "Tokyo, JP // Akihabara Net",
+    isp: "128K ISDN BRI 2B+D",
+    browser: "Internet Explorer 5.01",
+    mood: "HACKER",
+    stamp: "VERIFIED",
+    url: "/apps/khex.html",
+    message: "Scanning memory offsets in KHex. Found unexplained 1999Hz subcarrier frequencies modulated inside the lower 640K conventional segment. The machine is alive.",
+    time: "1999-10-15 08:12:04",
+    kudos: 33
+  },
+  {
+    id: "gb_010",
+    handle: "DialUpDan",
+    location: "Boston, MA // Node 617",
+    isp: "14.4K V.32bis Heritage",
+    browser: "NCSA Mosaic 3.0",
+    mood: "SURFER",
+    stamp: "HOT!",
+    url: "/web/cybercafe.html",
+    message: "Took 4 minutes for all interlaced GIF banners to render over my 14.4k modem, but it was worth every single millisecond. Pure 1999 cyber euphoria.",
+    time: "1999-10-15 07:05:33",
+    kudos: 19
+  },
+  {
+    id: "gb_011",
+    handle: "CGI_Master_99",
+    location: "Raleigh, NC // Node 919",
+    isp: "56K V.90 Rockwell / USR",
+    browser: "Netscape Communicator 4.75",
+    mood: "SYSOP",
+    stamp: "HOT!",
+    url: "/apps/kdb.html",
+    message: "Written in pure Perl 5.005 with flock() database record locking. Zero race conditions in my flatfiles. Web 1.0 architecture built to last forever.",
+    time: "1999-10-15 05:40:12",
+    kudos: 27
+  },
+  {
+    id: "gb_012",
+    handle: "Phreak_99",
+    location: "Atlanta, GA // Bell South PoP",
+    isp: "33.6K V.34+ Dual Async",
+    browser: "Lynx 2.8.3 Console",
+    mood: "HACKER",
+    stamp: "ELITE",
+    url: "/web/darknet.html",
+    message: "2600Hz tone generator dialed in. Probing lithospheric acoustic transit lines. Signals on 10.19.99.x are pulsing in phase with the fleet clock.",
+    time: "1999-10-15 04:19:50",
+    kudos: 41
+  },
+  {
+    id: "gb_013",
+    handle: "RetroRanger",
+    location: "Austin, TX // Node 512",
+    isp: "56K V.90 Rockwell / USR",
+    browser: "Netscape Communicator 4.75",
+    mood: "SURFER",
+    stamp: "VERIFIED",
+    url: "/apps/krogue.html",
+    message: "Just descended to Dungeon Floor 18 in KRogue with an enchanted Vorpal Shortsword. Best ASCII roguelike on the entire webring!",
+    time: "1999-10-15 02:55:01",
+    kudos: 22
+  },
+  {
+    id: "gb_014",
+    handle: "EchoEngineer",
+    location: "Carlsbad, NM // Sector 7F",
+    isp: "T1 1.544M Leased Trunk",
+    browser: "Netscape Communicator 4.75",
+    mood: "Y2K",
+    stamp: "VERIFIED",
+    url: "/web/echo_subsystem.html",
+    message: "Lithospheric transit link testing nominal. All subcarrier telemetry holding at 1999Hz lock. The autonomous fleet synchronizes without deviation.",
+    time: "1999-10-15 01:10:44",
+    kudos: 36
+  }
+];
+
+let guestbookData = [];
+let activeGbFilter = 'ALL';
+
+function loadGuestbookState() {
+  const saved = localStorage.getItem('knet_portal_guestbook');
+  if (saved) {
+    try {
+      guestbookData = JSON.parse(saved);
+      // Merge in any defaults not present
+      DEFAULT_GUESTBOOK_ENTRIES.forEach(def => {
+        if (!guestbookData.some(e => e.id === def.id || e.handle === def.handle)) {
+          guestbookData.push(def);
+        }
+      });
+    } catch (e) {
+      guestbookData = [...DEFAULT_GUESTBOOK_ENTRIES];
+    }
+  } else {
+    guestbookData = [...DEFAULT_GUESTBOOK_ENTRIES];
+    saveGuestbookState();
+  }
+}
+
+function saveGuestbookState() {
+  localStorage.setItem('knet_portal_guestbook', JSON.stringify(guestbookData));
+}
+
+function setGuestbookFilter(filterKey) {
+  playClick();
+  activeGbFilter = filterKey;
+  const pills = ['ALL', 'DEMO', 'HACKER', 'SURFER', 'SYSOP', 'Y2K'];
+  pills.forEach(p => {
+    const el = document.getElementById(`gbPill_${p}`);
+    if (el) el.classList.toggle('active', p === filterKey);
+  });
+  filterGuestbook();
+}
+
+function filterGuestbook() {
+  const container = document.getElementById('guestbookListContainer');
+  if (!container) return;
+
+  const searchVal = (document.getElementById('gbSearchInput')?.value || '').toLowerCase().trim();
+
+  const filtered = guestbookData.filter(entry => {
+    if (activeGbFilter !== 'ALL' && entry.mood !== activeGbFilter) {
+      return false;
+    }
+    if (searchVal) {
+      const matchHandle = (entry.handle || '').toLowerCase().includes(searchVal);
+      const matchLoc = (entry.location || '').toLowerCase().includes(searchVal);
+      const matchMsg = (entry.message || '').toLowerCase().includes(searchVal);
+      const matchIsp = (entry.isp || '').toLowerCase().includes(searchVal);
+      if (!matchHandle && !matchLoc && !matchMsg && !matchIsp) return false;
+    }
+    return true;
+  });
+
+  const badge = document.getElementById('guestbookCountBadge');
+  if (badge) {
+    badge.textContent = `${filtered.length} Signatures Shown (${guestbookData.length} Total)`;
+  }
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="text-align:center; padding:24px; color:#666; font-style:italic;">No guestbook signatures matching query. Click [Sign Central Guestbook] to be the first!</div>`;
+    return;
+  }
+
+  let html = '';
+  filtered.forEach((entry, idx) => {
+    const moodClass = entry.mood ? `mood-${entry.mood.toLowerCase()}` : '';
+    let stampClass = 'gb-stamp-hot';
+    if (entry.stamp === 'NETSCAPE') stampClass = 'gb-stamp-netscape';
+    else if (entry.stamp === 'ELITE') stampClass = 'gb-stamp-elite';
+    else if (entry.stamp === 'VERIFIED') stampClass = 'gb-stamp-verified';
+
+    const hasKudos = localStorage.getItem(`knet_kudos_${entry.id}`) === '1';
+
+    html += `
+      <div class="guestbook-card ${moodClass}">
+        <div class="gb-header-row">
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span class="gb-stamp-tag ${stampClass}">${escapeHtml(entry.stamp || 'HOT!')}</span>
+            <a href="${escapeHtml(entry.url || '#')}" class="gb-handle-link">${escapeHtml(entry.handle)}</a>
+            <span style="font-size:11px; color:#555;">from <strong>${escapeHtml(entry.location)}</strong></span>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <span class="gb-meta-badge">📟 ${escapeHtml(entry.isp)}</span>
+            <span class="gb-meta-badge">🌐 ${escapeHtml(entry.browser)}</span>
+            <span style="font-size:10px; color:#777; font-family:'Courier New', monospace;">#${String(guestbookData.length - idx).padStart(3, '0')}</span>
+          </div>
+        </div>
+        <div class="gb-message-body">
+          "${escapeHtml(entry.message)}"
+        </div>
+        <div class="gb-signature">
+          <span style="font-size:11px; color:#666;">Timestamp: 🕒 ${escapeHtml(entry.time)}</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <a href="${escapeHtml(entry.url || '#')}" style="font-size:11px; color:var(--link-blue);">[Visit Homepage]</a>
+            <button class="gb-kudos-btn" id="kudosBtn_${entry.id}" onclick="giveGuestbookKudos('${entry.id}')" ${hasKudos ? 'disabled style="color:#888;"' : ''}>
+              ${hasKudos ? '❤️ Echoed' : '❤️ Echo'} (${entry.kudos || 0})
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  container.innerHTML = html;
+}
+
+function openSignGuestbookModal() {
+  playClick();
+  const modal = document.getElementById('signGuestbookModal');
+  if (modal) modal.classList.add('active');
+}
+
+function closeSignGuestbookModal() {
+  playClick();
+  const modal = document.getElementById('signGuestbookModal');
+  if (modal) modal.classList.remove('active');
+}
+
+function handleSignGuestbook(e) {
+  e.preventDefault();
+  const handle = document.getElementById('gbInputHandle').value.trim();
+  const location = document.getElementById('gbInputLocation').value.trim();
+  const isp = document.getElementById('gbInputIsp').value;
+  const browser = document.getElementById('gbInputBrowser').value;
+  const mood = document.getElementById('gbInputMood').value;
+  const stamp = document.getElementById('gbInputStamp').value;
+  const url = document.getElementById('gbInputUrl').value.trim() || '/web/geocities.html';
+  const message = document.getElementById('gbInputMessage').value.trim();
+
+  if (!handle || !location || !message) {
+    alert("Please enter your nickname, hometown/node, and signature message!");
+    return;
+  }
+
+  const now = new Date();
+  const timeStr = `1999-10-15 ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+
+  const newEntry = {
+    id: 'gb_' + Date.now(),
+    handle,
+    location,
+    isp,
+    browser,
+    mood,
+    stamp,
+    url,
+    message,
+    time: timeStr,
+    kudos: 1
+  };
+
+  guestbookData.unshift(newEntry);
+  saveGuestbookState();
+  syncGuestbookToFirebase(newEntry);
+
+  closeSignGuestbookModal();
+  filterGuestbook();
+  playSuccessChime();
+
+  alert(`Congratulations, ${handle}! Your signature and dispatch have been permanently recorded in the Central KiloNet Guestbook.`);
+  document.getElementById('signGuestbookForm').reset();
+}
+
+function giveGuestbookKudos(entryId) {
+  if (localStorage.getItem(`knet_kudos_${entryId}`) === '1') return;
+
+  const item = guestbookData.find(e => e.id === entryId);
+  if (!item) return;
+
+  item.kudos = (item.kudos || 0) + 1;
+  localStorage.setItem(`knet_kudos_${entryId}`, '1');
+  saveGuestbookState();
+
+  triggerFmChime(1046.5, 2.0, 1.2, 0.25);
+  filterGuestbook();
+}
+
+/* =========================================================================
+   15. KILONET NOC & WEBMASTER DIAGNOSTIC WORKBENCH
+   ========================================================================= */
+const WHOIS_DATABASE = {
+  "kilonet.org": `Domain Name: KILONET.ORG
+Registry Domain ID: D19991015-KNET
+Registrar WHOIS Server: whois.networksolutions.com
+Registrar URL: http://www.networksolutions.com
+Updated Date: 1999-10-15T00:00:00Z
+Creation Date: 1994-06-01T05:00:00Z
+Registry Expiry Date: 2005-06-01T05:00:00Z
+Registrar: Network Solutions Inc. (NSI-1999)
+Registrant Name: KiloNet Central Administrative Authority
+Registrant Organization: KiloNet Consortium
+Registrant Street: 1000 Silicon Parkway, Suite 1999
+Registrant City: San Jose
+Registrant State/Province: CA
+Registrant Postal Code: 95134
+Registrant Country: US
+Admin Contact: SYSOP-ADMIN-99
+Admin Email: hostmaster@kilonet.org
+Tech Contact: NETENG-KNET
+Name Server: NS1.KILONET.ORG (198.41.0.4)
+Name Server: NS2.KILONET.ORG (198.41.0.10)
+Status: ACTIVE / DELEGATED // PRIMARY ROOT ANCHOR`,
+
+  "geocities.com": `Domain Name: GEOCITIES.COM
+Registry Domain ID: D19951212-GEO
+Registrar WHOIS Server: whois.networksolutions.com
+Creation Date: 1995-12-12T05:00:00Z
+Registry Expiry Date: 2002-12-12T05:00:00Z
+Registrar: Network Solutions Inc.
+Registrant Name: GeoCities Inc.
+Registrant Street: 1918 Main Street, Suite 300
+Registrant City: Santa Monica
+Registrant State/Province: CA
+Registrant Country: US
+Admin Contact: WEBMASTER-GEO
+Name Server: NS1.GEOCITIES.COM (209.85.128.42)
+Name Server: NS2.GEOCITIES.COM (209.85.128.43)
+Status: ACTIVE // 5 NEIGHBORHOOD THEMES DEPLOYED`,
+
+  "slashnet.org": `Domain Name: SLASHNET.ORG
+Registry Domain ID: D19970901-SLASH
+Registrar WHOIS Server: whois.publicinterestregistry.net
+Creation Date: 1997-09-01T04:00:00Z
+Registry Expiry Date: 2004-09-01T04:00:00Z
+Registrar: Network Solutions Inc.
+Registrant Name: SlashNet News & Technology Wire
+Registrant City: Dexter
+Registrant State/Province: MI
+Registrant Country: US
+Admin Contact: CMG-ROB-99
+Name Server: NS1.SLASHNET.ORG (204.152.184.64)
+Status: ACTIVE // NEWS FOR NERDS, STUFF THAT MATTERS`,
+
+  "3dfx.com": `Domain Name: 3DFX.COM
+Registry Domain ID: D19950824-3DFX
+Registrar WHOIS Server: whois.networksolutions.com
+Creation Date: 1995-08-24T04:00:00Z
+Registry Expiry Date: 2003-08-24T04:00:00Z
+Registrar: Network Solutions Inc.
+Registrant Organization: 3dfx Interactive Inc.
+Registrant City: San Jose
+Registrant State/Province: CA
+Registrant Country: US
+Admin Contact: GLIDE-DEV-99
+Name Server: NS1.3DFX.COM (207.46.130.12)
+Status: ACTIVE // GLIDE 3.0 API SPECIFICATIONS ONLINE`,
+
+  "warez-vault.scene": `Domain Name: WAREZ-VAULT.SCENE
+Registry Domain ID: SCENE-1999-0xREL
+Registrar: Top-Level Scene TLD Registrar (.SCENE)
+Creation Date: 1997-04-18T00:00:00Z
+Registry Expiry Date: 2008-04-18T00:00:00Z
+Registrant Organization: 0xRELEASE Demoscene Syndicate
+Registrant Country: NL (Amsterdam Underground)
+Admin Contact: SysOp_0x7F
+Name Server: NS1.SCENECENTRAL.NET (194.109.13.77)
+Status: ACTIVE // 16 NFO CRACKTROS & SOFTICE '99 SIMULATOR`,
+
+  "scenecentral.net": `Domain Name: SCENECENTRAL.NET
+Registry Domain ID: D19980314-SCENE
+Registrar: Network Solutions Inc.
+Creation Date: 1998-03-14T05:00:00Z
+Registrant Organization: European Demoscene Council
+Registrant City: Helsinki
+Registrant Country: FI
+Admin Contact: AMIGA-DEMO-CODER
+Name Server: NS1.SCENECENTRAL.NET (194.109.13.77)
+Status: ACTIVE // 1999 TRACKER COMPOSITION & ANSI VAULT`,
+
+  "cybercafe99.net": `Domain Name: CYBERCAFE99.NET
+Registry Domain ID: D19990101-CAFE
+Registrar: Network Solutions Inc.
+Creation Date: 1999-01-01T00:00:00Z
+Registrant Organization: CyberCafe '99 Virtual Lounge
+Registrant City: London
+Registrant Country: UK
+Admin Contact: MIRC-OPS-UK
+Name Server: NS1.CYBERCAFE99.NET (204.152.184.99)
+Status: ACTIVE // MIRC CHAT BOOTHS & ASCII TERMINALS`,
+
+  "carlsbad-research.internal": `Domain Name: CARLSBAD-RESEARCH.INTERNAL
+Registry Domain ID: NON-ROUTABLE-INTRANET-07
+Registrar: Carlsbad Acoustic Skunkworks
+Network Range: 10.19.99.0 - 10.19.99.255
+CIDR: 10.19.99.0/24
+Parent: IANA-C-BLK (10.0.0.0/8)
+Creation Date: 1999-07-19T00:00:00Z
+Status: QUARANTINED SUBTERRANEAN EXPERIMENTAL
+Tech Contact: Sector-7F-Telemetry
+Comment: Lithospheric acoustic carrier locked at 1999Hz. Route queries via echo-gw-07.kilonet.internal.`
+};
+
+function initNocDisplay() {
+  const whoisInput = document.getElementById('whoisDomainInput');
+  if (whoisInput && !whoisInput.value) {
+    whoisInput.value = 'kilonet.org';
+  }
+}
+
+function handleWhoisPreset(val) {
+  if (!val) return;
+  const input = document.getElementById('whoisDomainInput');
+  if (input) input.value = val;
+  runWhoisQuery();
+}
+
+function runWhoisQuery() {
+  playClick();
+  const input = document.getElementById('whoisDomainInput');
+  const term = document.getElementById('whoisTerminalOutput');
+  if (!input || !term) return;
+
+  const domain = input.value.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^kweb:\/\//, '').replace(/\/.*$/, '');
+  if (!domain) {
+    term.textContent = "Error: Please specify a valid domain name (e.g. kilonet.org, geocities.com).";
+    return;
+  }
+
+  term.textContent = `Connecting to whois.networksolutions.com [198.41.0.6:43]...\nQuerying domain: ${domain}\n\n`;
+
+  setTimeout(() => {
+    if (WHOIS_DATABASE[domain]) {
+      term.textContent = WHOIS_DATABASE[domain];
+      playSuccessChime();
+    } else {
+      // Procedural authentic 1999 record
+      const randomOctet = (Math.abs(domain.split('').reduce((a,c)=>a+c.charCodeAt(0), 0)) % 240) + 10;
+      term.textContent = `Domain Name: ${domain.toUpperCase()}
+Registry Domain ID: D1999-${Math.random().toString(16).slice(2, 10).toUpperCase()}
+Registrar WHOIS Server: whois.networksolutions.com
+Creation Date: 1996-04-12T04:00:00Z
+Registry Expiry Date: 2003-04-12T04:00:00Z
+Registrar: Network Solutions Inc. (NSI-1999)
+Registrant Organization: ${domain.split('.')[0].toUpperCase()} International
+Registrant City: Silicon Alley, New York
+Registrant Country: US
+Admin Contact: SYSOP-${domain.split('.')[0].toUpperCase()}
+IP Allocation: 207.46.${randomOctet}.15
+Name Server: NS1.${domain.toUpperCase()} (207.46.${randomOctet}.2)
+Name Server: NS2.${domain.toUpperCase()} (207.46.${randomOctet}.3)
+Status: ACTIVE / DELEGATED // 1999 K-NET VERIFIED`;
+      playSuccessChime();
+    }
+  }, 400);
+}
+
+// Traceroute Engine
+let traceTimer = null;
+let traceHopIndex = 0;
+
+const TRACEROUTE_HOPS = {
+  portal: [
+    { hop: 1, host: "gateway.local (192.168.1.1)", rtt1: "12ms", rtt2: "11ms", rtt3: "14ms", ttl: 64 },
+    { hop: 2, host: "nas-01.dialup.isp.net (209.85.128.1)", rtt1: "48ms", rtt2: "45ms", rtt3: "51ms", ttl: 63 },
+    { hop: 3, host: "atm-core.regional.telco.net (198.32.176.1)", rtt1: "72ms", rtt2: "68ms", rtt3: "70ms", ttl: 62 },
+    { hop: 4, host: "mae-west.interchange.net (192.203.230.1)", rtt1: "98ms", rtt2: "95ms", rtt3: "102ms", ttl: 61 },
+    { hop: 5, host: "uunet-ds3.backbone.net (204.152.184.64)", rtt1: "125ms", rtt2: "122ms", rtt3: "128ms", ttl: 60 },
+    { hop: 6, host: "kweb-portal.kilonet.org (198.41.0.4)", rtt1: "142ms", rtt2: "139ms", rtt3: "140ms", ttl: 59 }
+  ],
+  geocities: [
+    { hop: 1, host: "gateway.local (192.168.1.1)", rtt1: "11ms", rtt2: "12ms", rtt3: "10ms", ttl: 64 },
+    { hop: 2, host: "nas-01.dialup.isp.net (209.85.128.1)", rtt1: "46ms", rtt2: "44ms", rtt3: "49ms", ttl: 63 },
+    { hop: 3, host: "atm-core.regional.telco.net (198.32.176.1)", rtt1: "69ms", rtt2: "71ms", rtt3: "68ms", ttl: 62 },
+    { hop: 4, host: "mae-west.interchange.net (192.203.230.1)", rtt1: "92ms", rtt2: "95ms", rtt3: "90ms", ttl: 61 },
+    { hop: 5, host: "sprint-fiber.backbone.net (198.41.12.1)", rtt1: "118ms", rtt2: "115ms", rtt3: "120ms", ttl: 60 },
+    { hop: 6, host: "geocities-shrine.knet (209.85.128.42)", rtt1: "138ms", rtt2: "135ms", rtt3: "136ms", ttl: 59 }
+  ],
+  warez: [
+    { hop: 1, host: "gateway.local (192.168.1.1)", rtt1: "14ms", rtt2: "12ms", rtt3: "13ms", ttl: 64 },
+    { hop: 2, host: "nas-01.dialup.isp.net (209.85.128.1)", rtt1: "52ms", rtt2: "49ms", rtt3: "55ms", ttl: 63 },
+    { hop: 3, host: "trans-atlantic-tat12.cable.net (194.109.1.1)", rtt1: "108ms", rtt2: "112ms", rtt3: "105ms", ttl: 62 },
+    { hop: 4, host: "amsterdam-amsix.scene.net (194.109.10.1)", rtt1: "135ms", rtt2: "130ms", rtt3: "138ms", ttl: 61 },
+    { hop: 5, host: "underground-router.0xrel.scene (194.109.12.8)", rtt1: "152ms", rtt2: "155ms", rtt3: "150ms", ttl: 60 },
+    { hop: 6, host: "warez-vault.0xrel.scene (194.109.13.77)", rtt1: "165ms", rtt2: "162ms", rtt3: "168ms", ttl: 59 }
+  ],
+  darknet: [
+    { hop: 1, host: "gateway.local (192.168.1.1)", rtt1: "12ms", rtt2: "13ms", rtt3: "11ms", ttl: 64 },
+    { hop: 2, host: "nas-01.dialup.isp.net (209.85.128.1)", rtt1: "48ms", rtt2: "51ms", rtt3: "47ms", ttl: 63 },
+    { hop: 3, host: "non-routable-filter.telco.net (10.19.0.1)", rtt1: "95ms", rtt2: "92ms", rtt3: "98ms", ttl: 62 },
+    { hop: 4, host: "underground-repeater-3.knet (10.19.99.1)", rtt1: "145ms", rtt2: "148ms", rtt3: "142ms", ttl: 61 },
+    { hop: 5, host: "acoustic-waveguide-7f.knet (10.19.99.8)", rtt1: "185ms", rtt2: "188ms", rtt3: "182ms", ttl: 60 },
+    { hop: 6, host: "darknet-relay-node.internal (10.19.99.12)", rtt1: "210ms", rtt2: "208ms", rtt3: "212ms", ttl: 59 }
+  ],
+  cybercafe: [
+    { hop: 1, host: "gateway.local (192.168.1.1)", rtt1: "10ms", rtt2: "11ms", rtt3: "12ms", ttl: 64 },
+    { hop: 2, host: "nas-01.dialup.isp.net (209.85.128.1)", rtt1: "42ms", rtt2: "45ms", rtt3: "40ms", ttl: 63 },
+    { hop: 3, host: "atm-core.regional.telco.net (198.32.176.1)", rtt1: "65ms", rtt2: "62ms", rtt3: "67ms", ttl: 62 },
+    { hop: 4, host: "linx-london.telehouse.net (195.66.224.1)", rtt1: "88ms", rtt2: "90ms", rtt3: "85ms", ttl: 61 },
+    { hop: 5, host: "soho-fiber-gw.mirc.net (204.152.184.1)", rtt1: "105ms", rtt2: "102ms", rtt3: "108ms", ttl: 60 },
+    { hop: 6, host: "cybercafe-lounge.knet (204.152.184.99)", rtt1: "115ms", rtt2: "112ms", rtt3: "114ms", ttl: 59 }
+  ],
+  carlsbad: [
+    { hop: 1, host: "gateway.local (192.168.1.1)", rtt1: "12ms", rtt2: "14ms", rtt3: "11ms", ttl: 64 },
+    { hop: 2, host: "nas-01.dialup.isp.net (209.85.128.1)", rtt1: "54ms", rtt2: "50ms", rtt3: "56ms", ttl: 63 },
+    { hop: 3, host: "nm-desert-atm.telco.net (198.32.176.88)", rtt1: "98ms", rtt2: "102ms", rtt3: "95ms", ttl: 62 },
+    { hop: 4, host: "carlsbad-intranet-demarc (10.19.99.1)", rtt1: "184ms", rtt2: "186ms", rtt3: "182ms", ttl: 61 },
+    { hop: 5, host: "subterranean-waveguide-echo (10.19.99.2)", rtt1: "260ms", rtt2: "265ms", rtt3: "258ms", ttl: 60 },
+    { hop: 6, host: "CARLSBAD-TRANSPONDER-GRID (10.19.99.4)", rtt1: "342ms", rtt2: "338ms", rtt3: "345ms", ttl: 54 }
+  ]
+};
+
+function runTraceroute() {
+  playClick();
+  abortTraceroute();
+
+  const targetKey = document.getElementById('traceTargetSelect').value;
+  const hops = TRACEROUTE_HOPS[targetKey] || TRACEROUTE_HOPS['portal'];
+
+  const tbody = document.getElementById('traceHopTableBody');
+  const badge = document.getElementById('traceStatusBadge');
+  const startBtn = document.getElementById('traceStartBtn');
+
+  if (tbody) tbody.innerHTML = '';
+  if (badge) {
+    badge.textContent = "TRACING PATH...";
+    badge.style.color = "#ff8800";
+  }
+  if (startBtn) startBtn.disabled = true;
+
+  traceHopIndex = 0;
+
+  function stepHop() {
+    if (traceHopIndex >= hops.length) {
+      if (badge) {
+        badge.textContent = "ROUTE REACHED (200 OK)";
+        badge.style.color = "#008800";
+      }
+      if (startBtn) startBtn.disabled = false;
+      playSuccessChime();
+      return;
+    }
+
+    const h = hops[traceHopIndex];
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight:bold; color:var(--navy-dark);">${h.hop}</td>
+      <td style="color:#000;">${escapeHtml(h.host)}</td>
+      <td style="color:#0066cc;">${h.rtt1}</td>
+      <td style="color:#0066cc;">${h.rtt2}</td>
+      <td style="color:#0066cc;">${h.rtt3}</td>
+      <td style="color:#777;">${h.ttl}</td>
+    `;
+    if (tbody) tbody.appendChild(tr);
+
+    triggerFmChime(660 + traceHopIndex * 90, 1.8, 0.7, 0.08);
+
+    traceHopIndex++;
+    traceTimer = setTimeout(stepHop, 350);
+  }
+
+  stepHop();
+}
+
+function abortTraceroute() {
+  if (traceTimer) {
+    clearTimeout(traceTimer);
+    traceTimer = null;
+  }
+  const badge = document.getElementById('traceStatusBadge');
+  const startBtn = document.getElementById('traceStartBtn');
+  if (badge && badge.textContent.includes('TRACING')) {
+    badge.textContent = "ABORTED";
+    badge.style.color = "#cc0000";
+  }
+  if (startBtn) startBtn.disabled = false;
+}
+
+// HTTP Header Inspector
+function sendHttpInspect() {
+  playClick();
+  const method = document.getElementById('httpMethodSelect').value;
+  const url = document.getElementById('httpTargetUrl').value.trim() || '/web/portal.html';
+  const term = document.getElementById('httpHeadersOutput');
+  if (!term) return;
+
+  const now = new Date();
+  const dateStr = now.toUTCString();
+
+  let headerText = `${method} ${url} HTTP/1.0\r\nUser-Agent: KNet/2.0 (Win98; x86; I)\r\nAccept: text/html, image/gif, audio/basic, */*\r\nHost: kilonet.org\r\n\r\n`;
+
+  headerText += `HTTP/1.0 200 OK\r\n`;
+  headerText += `Date: ${dateStr}\r\n`;
+  headerText += `Server: Apache/1.3.9 (Unix) mod_perl/1.21 PHP/3.0.12\r\n`;
+  headerText += `Content-Type: text/html; charset=iso-8859-1\r\n`;
+  headerText += `Content-Length: 251783 bytes\r\n`;
+  headerText += `Last-Modified: Fri, 15 Oct 1999 12:00:00 GMT\r\n`;
+  headerText += `ETag: "1999-knet-v81"\r\n`;
+  headerText += `X-KNet-Baud: 56000 bps V.90\r\n`;
+  headerText += `X-KiloNet-Carrier: 1999Hz NOMINAL\r\n`;
+  headerText += `X-Webring-Node: #001 (KiloNet Central Portal)\r\n`;
+  headerText += `Connection: close\r\n\r\n`;
+
+  if (method === 'GET') {
+    headerText += `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\r\n`;
+    headerText += `<html>\r\n<head>\r\n<title>KiloNet Central! - The Premier 1999 Web Directory</title>\r\n`;
+    headerText += `<!-- [Payload preview: 200 OK - Document loaded successfully] -->\r\n`;
+  }
+
+  term.textContent = headerText;
+  playSuccessChime();
+}
+
+// W3C HTML 4.01 Validator
+const SAMPLE_HTML_CODE = `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>My Retro 1999 Cyber Temple</title>
+</head>
+<body bgcolor="#ffffff" text="#000000" link="#0000ff" vlink="#800080">
+  <table width="100%" border="0" cellpadding="4" cellspacing="0">
+    <tr>
+      <td><img src="images/banner.gif" alt="Site Banner" width="468" height="60"></td>
+    </tr>
+  </table>
+  <p>Welcome to my hypermedia corner of cyberspace!</p>
+</body>
+</html>`;
+
+function loadSampleHtmlForValidation() {
+  playClick();
+  const ta = document.getElementById('htmlValidateInput');
+  if (ta) ta.value = SAMPLE_HTML_CODE;
+  runHtmlValidation();
+}
+
+function runHtmlValidation() {
+  playClick();
+  const input = document.getElementById('htmlValidateInput')?.value || '';
+  const reportEl = document.getElementById('htmlValidationReport');
+  const badgeEl = document.getElementById('w3cResultBadgeContainer');
+  if (!reportEl) return;
+
+  if (!input.trim()) {
+    reportEl.textContent = "Please enter or paste HTML code above, or click [Load Sample HTML].";
+    if (badgeEl) badgeEl.innerHTML = '';
+    return;
+  }
+
+  let score = 100;
+  const issues = [];
+
+  // Check 1: DOCTYPE
+  if (!input.toUpperCase().includes('<!DOCTYPE HTML')) {
+    score -= 20;
+    issues.push("⚠️ Missing <!DOCTYPE HTML 4.01 ...> specification at line 1.");
+  }
+
+  // Check 2: Head & Title
+  if (!input.toLowerCase().includes('<title>') || !input.toLowerCase().includes('</title>')) {
+    score -= 15;
+    issues.push("⚠️ Document lacks a mandatory <title> tag inside <head>.");
+  }
+
+  // Check 3: ALT attributes on IMG
+  const imgMatches = input.match(/<img[^>]*>/gi) || [];
+  let missingAlt = 0;
+  imgMatches.forEach(img => {
+    if (!/alt\s*=\s*['"][^'"]*['"]/i.test(img)) {
+      missingAlt++;
+    }
+  });
+  if (missingAlt > 0) {
+    score -= missingAlt * 10;
+    issues.push(`⚠️ Found ${missingAlt} <img> tag(s) missing the standard 'alt' descriptive attribute.`);
+  }
+
+  // Check 4: Deprecated tags
+  const deprecatedTags = ['font', 'center', 'marquee', 'blink'];
+  deprecatedTags.forEach(tag => {
+    const reg = new RegExp(`<${tag}[^>]*>`, 'gi');
+    const matches = input.match(reg);
+    if (matches) {
+      score -= matches.length * 5;
+      issues.push(`ℹ️ Tag <${tag}> is present (${matches.length}x). Considered transitional/deprecated in late 1999.`);
+    }
+  });
+
+  // Check 5: Table attributes
+  if (input.toLowerCase().includes('<table') && !input.toLowerCase().includes('cellpadding')) {
+    score -= 5;
+    issues.push("ℹ️ <table> tag missing 'cellpadding' attribute for period-accurate layout spacing.");
+  }
+
+  score = Math.max(10, Math.min(100, score));
+
+  let reportHtml = `<div style="font-weight:bold; margin-bottom:4px; color:${score >= 80 ? '#008000' : '#cc0000'};">Audit Result: ${score}% W3C 1999 Compliance Rating</div>`;
+  if (issues.length === 0) {
+    reportHtml += `<div style="color:#008800;">✅ Excellent! Zero conformance issues detected. Fully compliant with late-1999 W3C HTML 4.01 Strict standards.</div>`;
+  } else {
+    reportHtml += `<ul style="margin:0 0 0 16px; padding:0;">${issues.map(i => `<li>${escapeHtml(i)}</li>`).join('')}</ul>`;
+  }
+  reportEl.innerHTML = reportHtml;
+
+  if (badgeEl) {
+    badgeEl.innerHTML = `<div class="w3c-badge-display">W3C HTML 4.01 VALIDATED [${score}%]</div>`;
+  }
+
+  if (score >= 80) {
+    playSuccessChime();
+  } else {
+    triggerFmChime(350, 1.5, 1.2, 0.2);
+  }
+}
+
+/* =========================================================================
+   16. KILOARCADE '99: SILICON BUG BUSTER (MOTHERBOARD DEFENSE)
+   ========================================================================= */
+let arcadeCtx = null;
+let arcadeLoopId = null;
+let arcadeRunning = false;
+let arcadeScore = 0;
+let arcadeLives = 3;
+let arcadeWave = 1;
+let arcadeHighScore = 18400;
+let arcadePowerupTimer = 0;
+let arcadeActivePower = 'NONE';
+let arcadeSlowMoTimer = 0;
+
+let playerShip = { x: 320, y: 325, w: 22, h: 22, speed: 6, vx: 0, shield: false };
+let lasers = [];
+let enemies = [];
+let particles = [];
+let powerups = [];
+let lastSpawnTime = 0;
+let keysPressed = {};
+
+function initArcadeGame() {
+  const canvas = document.getElementById('arcadeCanvas');
+  if (!canvas) return;
+  arcadeCtx = canvas.getContext('2d');
+
+  // Load high scores
+  const savedHigh = parseInt(localStorage.getItem('knet_arcade_high') || '18400');
+  arcadeHighScore = savedHigh;
+  const highEl = document.getElementById('arcadeHighScore');
+  if (highEl) highEl.textContent = arcadeHighScore;
+
+  renderArcadeLeaderboard();
+  drawArcadeTitleScreen();
+
+  // Attach controls
+  window.addEventListener('keydown', handleArcadeKeyDown);
+  window.addEventListener('keyup', handleArcadeKeyUp);
+  canvas.addEventListener('mousemove', handleArcadeMouseMove);
+  canvas.addEventListener('mousedown', handleArcadeMouseDown);
+}
+
+function handleArcadeKeyDown(e) {
+  if (document.getElementById('tab-arcade')?.classList.contains('active')) {
+    if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+      keysPressed['left'] = true;
+      e.preventDefault();
+    } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+      keysPressed['right'] = true;
+      e.preventDefault();
+    } else if (e.code === 'Space') {
+      firePlayerLaser();
+      e.preventDefault();
+    } else if (e.code === 'KeyP') {
+      toggleArcadeGame();
+      e.preventDefault();
+    }
+  }
+}
+
+function handleArcadeKeyUp(e) {
+  if (e.code === 'ArrowLeft' || e.code === 'KeyA') keysPressed['left'] = false;
+  if (e.code === 'ArrowRight' || e.code === 'KeyD') keysPressed['right'] = false;
+}
+
+function handleArcadeMouseMove(e) {
+  if (!arcadeRunning) return;
+  const canvas = document.getElementById('arcadeCanvas');
+  const rect = canvas.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  playerShip.x = Math.max(15, Math.min(canvas.width - 15, mouseX));
+}
+
+function handleArcadeMouseDown(e) {
+  if (!arcadeRunning) return;
+  firePlayerLaser();
+}
+
+function firePlayerLaser() {
+  if (!arcadeRunning) return;
+  initAudio();
+
+  if (arcadeActivePower === 'GLIDE') {
+    // Triple beam
+    lasers.push({ x: playerShip.x - 8, y: playerShip.y - 10, vy: -9, color: '#38bdf8' });
+    lasers.push({ x: playerShip.x, y: playerShip.y - 12, vy: -10, color: '#facc15' });
+    lasers.push({ x: playerShip.x + 8, y: playerShip.y - 10, vy: -9, color: '#38bdf8' });
+  } else {
+    // Standard dual parity beam
+    lasers.push({ x: playerShip.x - 5, y: playerShip.y - 10, vy: -8, color: '#39ff14' });
+    lasers.push({ x: playerShip.x + 5, y: playerShip.y - 10, vy: -8, color: '#39ff14' });
+  }
+
+  // Laser chirp
+  triggerFmChime(1100, 3.0, 1.2, 0.05);
+}
+
+function toggleArcadeGame() {
+  playClick();
+  const btn = document.getElementById('arcadeStartBtn');
+  if (arcadeRunning) {
+    arcadeRunning = false;
+    if (btn) btn.textContent = "▶ Resume Game";
+  } else {
+    if (arcadeLives <= 0) {
+      startNewArcadeGame();
+    } else {
+      arcadeRunning = true;
+      if (btn) btn.textContent = "⏸ Pause Game";
+      arcadeLoop();
+    }
+  }
+}
+
+function startNewArcadeGame() {
+  arcadeScore = 0;
+  arcadeLives = 3;
+  arcadeWave = 1;
+  arcadeActivePower = 'NONE';
+  playerShip.shield = false;
+  lasers = [];
+  enemies = [];
+  particles = [];
+  powerups = [];
+  arcadeRunning = true;
+  updateArcadeHud();
+  const btn = document.getElementById('arcadeStartBtn');
+  if (btn) btn.textContent = "⏸ Pause Game";
+  playSuccessChime();
+  arcadeLoop();
+}
+
+function updateArcadeHud() {
+  const scEl = document.getElementById('arcadeScore');
+  const lvEl = document.getElementById('arcadeLives');
+  const wvEl = document.getElementById('arcadeWave');
+  const pwEl = document.getElementById('arcadePowerup');
+  const hiEl = document.getElementById('arcadeHighScore');
+
+  if (scEl) scEl.textContent = String(arcadeScore).padStart(5, '0');
+  if (lvEl) lvEl.textContent = '♥'.repeat(Math.max(0, arcadeLives));
+  if (wvEl) wvEl.textContent = arcadeWave;
+  if (pwEl) pwEl.textContent = arcadeActivePower;
+  if (hiEl) hiEl.textContent = arcadeHighScore;
+}
+
+function spawnArcadeEnemy() {
+  const canvas = document.getElementById('arcadeCanvas');
+  if (!canvas) return;
+
+  const randX = 30 + Math.random() * (canvas.width - 60);
+  const roll = Math.random();
+  let type = 'beetle';
+  if (roll < 0.45) type = 'beetle';
+  else if (roll < 0.70) type = 'spark';
+  else if (roll < 0.88) type = 'packet';
+  else type = 'chip';
+
+  enemies.push({
+    x: randX,
+    y: -20,
+    type: type,
+    hp: type === 'chip' ? 3 : 1,
+    w: type === 'chip' ? 24 : 18,
+    h: type === 'chip' ? 18 : 16,
+    vy: type === 'spark' ? 2.5 : (type === 'beetle' ? 1.6 : 1.2),
+    vx: type === 'spark' ? (Math.random() > 0.5 ? 2 : -2) : 0,
+    phase: Math.random() * Math.PI * 2
+  });
+}
+
+function arcadeLoop() {
+  if (!arcadeRunning) return;
+  const canvas = document.getElementById('arcadeCanvas');
+  if (!canvas || !arcadeCtx) return;
+
+  // Clear & Motherboard Green Background
+  arcadeCtx.fillStyle = '#061008';
+  arcadeCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw circuit traces
+  arcadeCtx.strokeStyle = 'rgba(34, 197, 94, 0.15)';
+  arcadeCtx.lineWidth = 1;
+  for (let x = 20; x < canvas.width; x += 40) {
+    arcadeCtx.beginPath();
+    arcadeCtx.moveTo(x, 0);
+    arcadeCtx.lineTo(x, canvas.height);
+    arcadeCtx.stroke();
+  }
+  for (let y = 30; y < canvas.height; y += 45) {
+    arcadeCtx.beginPath();
+    arcadeCtx.moveTo(0, y);
+    arcadeCtx.lineTo(canvas.width, y);
+    arcadeCtx.stroke();
+  }
+
+  // Handle Player Movement
+  if (keysPressed['left']) playerShip.x -= playerShip.speed;
+  if (keysPressed['right']) playerShip.x += playerShip.speed;
+  playerShip.x = Math.max(15, Math.min(canvas.width - 15, playerShip.x));
+
+  // Draw Player Ship (Retro Security Cursor)
+  arcadeCtx.save();
+  arcadeCtx.translate(playerShip.x, playerShip.y);
+
+  // Thruster
+  arcadeCtx.fillStyle = Math.random() > 0.5 ? '#f97316' : '#eab308';
+  arcadeCtx.beginPath();
+  arcadeCtx.moveTo(-4, 10);
+  arcadeCtx.lineTo(4, 10);
+  arcadeCtx.lineTo(0, 16 + Math.random() * 4);
+  arcadeCtx.fill();
+
+  // Ship body
+  arcadeCtx.fillStyle = '#38bdf8';
+  arcadeCtx.strokeStyle = '#ffffff';
+  arcadeCtx.lineWidth = 1.5;
+  arcadeCtx.beginPath();
+  arcadeCtx.moveTo(0, -12);
+  arcadeCtx.lineTo(10, 8);
+  arcadeCtx.lineTo(0, 4);
+  arcadeCtx.lineTo(-10, 8);
+  arcadeCtx.closePath();
+  arcadeCtx.fill();
+  arcadeCtx.stroke();
+
+  // Shield aura
+  if (playerShip.shield) {
+    arcadeCtx.strokeStyle = '#60a5fa';
+    arcadeCtx.lineWidth = 2;
+    arcadeCtx.beginPath();
+    arcadeCtx.arc(0, 0, 16, 0, Math.PI * 2);
+    arcadeCtx.stroke();
+  }
+  arcadeCtx.restore();
+
+  // Move & Draw Lasers
+  for (let i = lasers.length - 1; i >= 0; i--) {
+    const l = lasers[i];
+    l.y += l.vy;
+    arcadeCtx.fillStyle = l.color;
+    arcadeCtx.fillRect(l.x - 1.5, l.y, 3, 10);
+    if (l.y < -10) lasers.splice(i, 1);
+  }
+
+  // Spawn Enemies
+  const now = Date.now();
+  const spawnRate = Math.max(800, 1800 - arcadeWave * 120);
+  if (now - lastSpawnTime > spawnRate) {
+    spawnArcadeEnemy();
+    lastSpawnTime = now;
+  }
+
+  // Slow-Mo & Powerup decay
+  const speedMult = arcadeSlowMoTimer > 0 ? 0.3 : 1.0;
+  if (arcadeSlowMoTimer > 0) arcadeSlowMoTimer--;
+  if (arcadePowerupTimer > 0) {
+    arcadePowerupTimer--;
+    if (arcadePowerupTimer <= 0) {
+      arcadeActivePower = 'NONE';
+      updateArcadeHud();
+    }
+  }
+
+  // Update & Draw Enemies
+  for (let i = enemies.length - 1; i >= 0; i--) {
+    const e = enemies[i];
+    e.y += e.vy * speedMult;
+    if (e.type === 'spark') {
+      e.x += e.vx * speedMult;
+      if (e.x < 15 || e.x > canvas.width - 15) e.vx *= -1;
+    } else if (e.type === 'beetle') {
+      e.phase += 0.05 * speedMult;
+      e.x += Math.sin(e.phase) * 1.5 * speedMult;
+    }
+
+    // Render Enemy
+    arcadeCtx.save();
+    arcadeCtx.translate(e.x, e.y);
+    if (e.type === 'beetle') {
+      // Y2K Beetle
+      arcadeCtx.fillStyle = '#22c55e';
+      arcadeCtx.beginPath();
+      arcadeCtx.arc(0, 0, 8, 0, Math.PI * 2);
+      arcadeCtx.fill();
+      arcadeCtx.fillStyle = '#ff0000';
+      arcadeCtx.fillRect(-4, -4, 2, 2);
+      arcadeCtx.fillRect(2, -4, 2, 2);
+    } else if (e.type === 'spark') {
+      // IRQ Spark
+      arcadeCtx.fillStyle = '#facc15';
+      arcadeCtx.beginPath();
+      arcadeCtx.arc(0, 0, 7, 0, Math.PI * 2);
+      arcadeCtx.fill();
+    } else if (e.type === 'chip') {
+      // Bad RAM Chip
+      arcadeCtx.fillStyle = '#9333ea';
+      arcadeCtx.strokeStyle = '#d8b4fe';
+      arcadeCtx.lineWidth = 1;
+      arcadeCtx.fillRect(-10, -8, 20, 16);
+      arcadeCtx.strokeRect(-10, -8, 20, 16);
+      arcadeCtx.fillStyle = '#ffffff';
+      arcadeCtx.font = '8px monospace';
+      arcadeCtx.fillText('RAM', -8, 4);
+    } else {
+      // Rogue Packet
+      arcadeCtx.fillStyle = '#ef4444';
+      arcadeCtx.beginPath();
+      arcadeCtx.moveTo(0, -8);
+      arcadeCtx.lineTo(8, 0);
+      arcadeCtx.lineTo(0, 8);
+      arcadeCtx.lineTo(-8, 0);
+      arcadeCtx.closePath();
+      arcadeCtx.fill();
+    }
+    arcadeCtx.restore();
+
+    // Laser Collisions
+    for (let j = lasers.length - 1; j >= 0; j--) {
+      const l = lasers[j];
+      const dist = Math.hypot(e.x - l.x, e.y - l.y);
+      if (dist < (e.w / 2 + 5)) {
+        lasers.splice(j, 1);
+        e.hp--;
+        createExplosionParticles(l.x, l.y, 6, '#facc15');
+
+        if (e.hp <= 0) {
+          // Kill enemy
+          createExplosionParticles(e.x, e.y, 16, e.type === 'beetle' ? '#22c55e' : (e.type === 'chip' ? '#c084fc' : '#f87171'));
+          playNoiseBurst(0.12, 1100);
+
+          let pts = 100;
+          if (e.type === 'spark') pts = 150;
+          if (e.type === 'chip') {
+            pts = 300;
+            spawnPowerup(e.x, e.y);
+          }
+          if (e.type === 'packet') pts = 120;
+
+          arcadeScore += pts;
+          if (arcadeScore > arcadeHighScore) {
+            arcadeHighScore = arcadeScore;
+            localStorage.setItem('knet_arcade_high', arcadeHighScore.toString());
+          }
+
+          // Wave check
+          if (arcadeScore > arcadeWave * 1500) {
+            arcadeWave++;
+            playSuccessChime();
+          }
+
+          enemies.splice(i, 1);
+          updateArcadeHud();
+          break;
+        }
+      }
+    }
+
+    // Player collision
+    if (enemies[i]) {
+      const distToPlayer = Math.hypot(e.x - playerShip.x, e.y - playerShip.y);
+      if (distToPlayer < 18) {
+        enemies.splice(i, 1);
+        createExplosionParticles(playerShip.x, playerShip.y, 25, '#f97316');
+
+        if (playerShip.shield) {
+          playerShip.shield = false;
+          triggerFmChime(600, 2.0, 1.0, 0.2);
+        } else {
+          arcadeLives--;
+          playErrorBuzz();
+          updateArcadeHud();
+          if (arcadeLives <= 0) {
+            handleArcadeGameOver();
+            return;
+          }
+        }
+      } else if (e.y > canvas.height + 20) {
+        enemies.splice(i, 1);
+      }
+    }
+  }
+
+  // Update & Draw Powerups
+  for (let i = powerups.length - 1; i >= 0; i--) {
+    const p = powerups[i];
+    p.y += 1.5;
+    arcadeCtx.save();
+    arcadeCtx.fillStyle = '#ffd700';
+    arcadeCtx.strokeStyle = '#ffffff';
+    arcadeCtx.lineWidth = 1;
+    arcadeCtx.fillRect(p.x - 9, p.y - 9, 18, 18);
+    arcadeCtx.strokeRect(p.x - 9, p.y - 9, 18, 18);
+    arcadeCtx.fillStyle = '#000000';
+    arcadeCtx.font = 'bold 9px monospace';
+    arcadeCtx.fillText(p.type, p.x - 7, p.y + 4);
+    arcadeCtx.restore();
+
+    // Check player pickup
+    const pDist = Math.hypot(p.x - playerShip.x, p.y - playerShip.y);
+    if (pDist < 20) {
+      applyPowerup(p.type);
+      powerups.splice(i, 1);
+    } else if (p.y > canvas.height + 20) {
+      powerups.splice(i, 1);
+    }
+  }
+
+  // Update Particles
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const pt = particles[i];
+    pt.x += pt.vx;
+    pt.y += pt.vy;
+    pt.life--;
+    arcadeCtx.fillStyle = pt.color;
+    arcadeCtx.fillRect(pt.x, pt.y, pt.size, pt.size);
+    if (pt.life <= 0) particles.splice(i, 1);
+  }
+
+  arcadeLoopId = requestAnimationFrame(arcadeLoop);
+}
+
+function spawnPowerup(x, y) {
+  const choices = ['3D', 'SH', 'OC', 'NMI'];
+  const type = choices[Math.floor(Math.random() * choices.length)];
+  powerups.push({ x, y, type });
+}
+
+function applyPowerup(type) {
+  playSuccessChime();
+  if (type === '3D') {
+    arcadeActivePower = 'GLIDE';
+    arcadePowerupTimer = 480; // 8 seconds
+  } else if (type === 'SH') {
+    playerShip.shield = true;
+  } else if (type === 'OC') {
+    arcadeSlowMoTimer = 360; // 6 seconds
+  } else if (type === 'NMI') {
+    // Flush all enemies
+    enemies.forEach(e => createExplosionParticles(e.x, e.y, 16, '#f43f5e'));
+    arcadeScore += enemies.length * 100;
+    enemies = [];
+    playNoiseBurst(0.25, 800);
+  }
+  updateArcadeHud();
+}
+
+function createExplosionParticles(x, y, count, color) {
+  for (let i = 0; i < count; i++) {
+    const ang = Math.random() * Math.PI * 2;
+    const spd = 1 + Math.random() * 3.5;
+    particles.push({
+      x,
+      y,
+      vx: Math.cos(ang) * spd,
+      vy: Math.sin(ang) * spd,
+      size: Math.random() > 0.5 ? 2 : 3,
+      life: 18 + Math.floor(Math.random() * 16),
+      color
+    });
+  }
+}
+
+function handleArcadeGameOver() {
+  arcadeRunning = false;
+  playErrorBuzz();
+  const btn = document.getElementById('arcadeStartBtn');
+  if (btn) btn.textContent = "▶ Play Again";
+
+  updateLeaderboardWithScore(arcadeScore);
+
+  if (arcadeCtx) {
+    const canvas = document.getElementById('arcadeCanvas');
+    arcadeCtx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+    arcadeCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+    arcadeCtx.fillStyle = '#ff3333';
+    arcadeCtx.font = 'bold 26px "Courier New", monospace';
+    arcadeCtx.textAlign = 'center';
+    arcadeCtx.fillText('SYSTEM PANIC: GAME OVER', canvas.width / 2, canvas.height / 2 - 15);
+
+    arcadeCtx.fillStyle = '#ffd700';
+    arcadeCtx.font = '16px "Courier New", monospace';
+    arcadeCtx.fillText(`FINAL SCORE: ${arcadeScore} (WAVE ${arcadeWave})`, canvas.width / 2, canvas.height / 2 + 15);
+
+    arcadeCtx.fillStyle = '#ffffff';
+    arcadeCtx.font = '12px Arial, sans-serif';
+    arcadeCtx.fillText('Click [Play Again] to reboot the diagnostic terminal.', canvas.width / 2, canvas.height / 2 + 45);
+  }
+}
+
+function drawArcadeTitleScreen() {
+  const canvas = document.getElementById('arcadeCanvas');
+  if (!canvas || !arcadeCtx) return;
+
+  arcadeCtx.fillStyle = '#050811';
+  arcadeCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+  arcadeCtx.fillStyle = '#39ff14';
+  arcadeCtx.font = 'bold 22px "Courier New", monospace';
+  arcadeCtx.textAlign = 'center';
+  arcadeCtx.fillText('★ SILICON BUG BUSTER \'99 ★', canvas.width / 2, 110);
+
+  arcadeCtx.fillStyle = '#facc15';
+  arcadeCtx.font = '14px Arial, sans-serif';
+  arcadeCtx.fillText('Defend Motherboard from Y2K Beetles & IRQ Sparks', canvas.width / 2, 140);
+
+  arcadeCtx.fillStyle = '#38bdf8';
+  arcadeCtx.font = '12px "Courier New", monospace';
+  arcadeCtx.fillText('Arrows / Mouse to Move • Space / Click to Fire', canvas.width / 2, 190);
+
+  arcadeCtx.fillStyle = '#ffffff';
+  arcadeCtx.font = 'bold 13px Arial, sans-serif';
+  arcadeCtx.fillText('Click [Start Game] to Initialize Diagnostic Probe', canvas.width / 2, 230);
+}
+
+function renderArcadeLeaderboard() {
+  const container = document.getElementById('arcadeLeaderboardList');
+  if (!container) return;
+
+  const defaultScores = [
+    { rank: "1ST", name: "NEON_99", score: 18400 },
+    { rank: "2ND", name: "CRUSHER", score: 14200 },
+    { rank: "3RD", name: "SYSOP", score: 11800 },
+    { rank: "4TH", name: "PILOT", score: 9500 },
+    { rank: "5TH", name: "SURFER", score: 7200 }
+  ];
+
+  const scores = JSON.parse(localStorage.getItem('knet_arcade_board') || JSON.stringify(defaultScores));
+
+  container.innerHTML = scores.map(s => `
+    <div style="background:#ffffff; border:1px inset #ddd; padding:4px;">
+      <strong style="color:var(--navy-dark);">${s.rank}</strong><br>
+      <span style="color:#cc0000; font-weight:bold;">${escapeHtml(s.name)}</span><br>
+      <span>${s.score} PTS</span>
+    </div>
+  `).join('');
+}
+
+function updateLeaderboardWithScore(score) {
+  if (score < 5000) return;
+  const defaultScores = [
+    { rank: "1ST", name: "NEON_99", score: 18400 },
+    { rank: "2ND", name: "CRUSHER", score: 14200 },
+    { rank: "3RD", name: "SYSOP", score: 11800 },
+    { rank: "4TH", name: "PILOT", score: 9500 },
+    { rank: "5TH", name: "SURFER", score: 7200 }
+  ];
+  let scores = JSON.parse(localStorage.getItem('knet_arcade_board') || JSON.stringify(defaultScores));
+  scores.push({ rank: "", name: "YOU", score });
+  scores.sort((a,b) => b.score - a.score);
+  scores = scores.slice(0, 5);
+  const ranks = ["1ST", "2ND", "3RD", "4TH", "5TH"];
+  scores.forEach((s, idx) => s.rank = ranks[idx]);
+  localStorage.setItem('knet_arcade_board', JSON.stringify(scores));
+  renderArcadeLeaderboard();
+}
+
+function resetArcadeScores() {
+  playClick();
+  localStorage.removeItem('knet_arcade_board');
+  localStorage.removeItem('knet_arcade_high');
+  arcadeHighScore = 18400;
+  const highEl = document.getElementById('arcadeHighScore');
+  if (highEl) highEl.textContent = arcadeHighScore;
+  renderArcadeLeaderboard();
+  alert("KiloArcade '99 high scores restored to factory 1999 defaults.");
+}
+
 /* =========================================================================
    13. INITIALIZATION
    ========================================================================= */
@@ -5544,6 +7471,7 @@ window.addEventListener('DOMContentLoaded', () => {
   loadYellowPages();
   loadTriviaState();
   loadPollState();
+  loadGuestbookState();
 
   // Initial renders
   renderStockTable();
@@ -5556,6 +7484,9 @@ window.addEventListener('DOMContentLoaded', () => {
   renderPoll(activePollTopic);
   recalcDownloadTimes();
   renderZodiacButtons();
+  filterGuestbook();
+  initNocDisplay();
+  initArcadeGame();
   updatePortalClock();
 
   // Start real-time stock ticker (every 3.5 seconds)
