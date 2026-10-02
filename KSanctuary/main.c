@@ -1306,19 +1306,22 @@ static void TriggerRaiderAttack(int isManual) {
         "Iron Skull Warband",
         "Rad-Scorpion Reavers",
         "Dune Stalker Syndicate",
-        "Super-Mutant Siege"
+        "Super-Mutant Siege",
+        "Titan Cyber-Vanguard"
     };
     const char* clanDescs[] = {
         "Scavenger bandits armed with pipe rifles and scrap cleavers.",
         "Armored wasteland raiders driving spiked battle buggies.",
         "Mutant beasts led by cybernetic wasteland slavers.",
         "High-tech mercenaries with heavy plasma weaponry.",
-        "Massive irradiated brutes wielding concrete rebar clubs."
+        "Massive irradiated brutes wielding concrete rebar clubs.",
+        "Autonomous pre-collapse war mechs and cyber-synth commandos."
     };
-    int baseAtks[] = { 30, 48, 65, 85, 110 };
+    int baseAtks[] = { 30, 48, 65, 85, 110, 135 };
 
     int clanIdx = 0;
-    if (g_state.day >= 16) clanIdx = 4;
+    if (g_state.day >= 20) clanIdx = 5;
+    else if (g_state.day >= 16) clanIdx = 4;
     else if (g_state.day >= 12) clanIdx = 3;
     else if (g_state.day >= 8) clanIdx = 2;
     else if (g_state.day >= 4) clanIdx = 1;
@@ -1342,11 +1345,11 @@ static void TriggerRaiderAttack(int isManual) {
         if (g_state.barricadeHp < 0) g_state.barricadeHp = 0;
         g_state.lastRaidDmg = dmg;
 
-        int scrapGained = 20 + rand() % 25;
-        int medsGained = (rand() % 100 < 60) ? 1 : 2;
+        int scrapGained = (clanIdx == 5 ? 40 : 20) + rand() % 25;
+        int medsGained = (clanIdx == 5 ? 3 : ((rand() % 100 < 60) ? 1 : 2));
         g_state.scrap += scrapGained;
         g_state.meds += medsGained;
-        g_state.morale += 6.0f;
+        g_state.morale += (clanIdx == 5 ? 10.0f : 6.0f);
         if (g_state.morale > 100.0f) g_state.morale = 100.0f;
 
         g_state.lastRaidScrap = scrapGained;
@@ -2980,7 +2983,7 @@ static void DrawRaiderSprite(HDC hdc, int x, int y, int clanIdx) {
         FillSolidRect(hdc, x + 12, y + 17, 8, 6, RGB(45, 45, 50));
         FillSolidRect(hdc, x + 10, y + 19, 3, 4, RGB(70, 75, 80));
         FillSolidRect(hdc, x + 19, y + 19, 3, 4, RGB(70, 75, 80));
-    } else {
+    } else if (clanIdx == 4) {
         // Super-Mutant Siege: Irradiated brute jaw, metal brow plate, rebar club
         FillSolidRect(hdc, x + 7, y + 6, 18, 19, RGB(90, 120, 50));
         DrawBoxBorder(hdc, x + 7, y + 6, 18, 19, RGB(120, 150, 70));
@@ -2993,6 +2996,20 @@ static void DrawRaiderSprite(HDC hdc, int x, int y, int clanIdx) {
         FillSolidRect(hdc, x + 11, y + 16, 2, 3, RGB(240, 240, 230));
         FillSolidRect(hdc, x + 18, y + 16, 2, 3, RGB(240, 240, 230));
         FillSolidRect(hdc, x + 3, y + 5, 4, 18, RGB(140, 140, 145));
+    } else {
+        // Titan Cyber-Vanguard (clanIdx == 5): Armored gunmetal chassis, red cyclops visor, twin missile pods, plasma cannon
+        FillSolidRect(hdc, x + 6, y + 5, 20, 21, RGB(55, 60, 70));
+        DrawBoxBorder(hdc, x + 6, y + 5, 20, 21, RGB(95, 105, 120));
+        FillSolidRect(hdc, x + 3, y + 4, 4, 7, RGB(70, 75, 85));
+        FillSolidRect(hdc, x + 25, y + 4, 4, 7, RGB(70, 75, 85));
+        FillSolidRect(hdc, x + 4, y + 5, 2, 2, RGB(240, 160, 30));
+        FillSolidRect(hdc, x + 26, y + 5, 2, 2, RGB(240, 160, 30));
+        FillSolidRect(hdc, x + 9, y + 10, 14, 4, RGB(25, 25, 30));
+        FillSolidRect(hdc, x + 12, y + 11, 8, 2, RGB(255, 35, 35));
+        FillSolidRect(hdc, x + 10, y + 16, 12, 8, RGB(40, 45, 52));
+        FillSolidRect(hdc, x + 14, y + 18, 4, 4, RGB(45, 180, 240));
+        FillSolidRect(hdc, x + 23, y + 14, 6, 10, RGB(80, 85, 95));
+        FillSolidRect(hdc, x + 27, y + 16, 3, 3, RGB(45, 180, 240));
     }
 }
 

@@ -3657,6 +3657,18 @@
                     <polygon points="13,20 14,18 15,20" fill="#f8fafc"/>
                     <polygon points="21,20 22,18 23,20" fill="#f8fafc"/>
                 </svg>`;
+            } else if (clanName.includes('Titan') || clanName.includes('Vanguard')) {
+                return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="3" y="3" width="30" height="30" rx="2" fill="${fill}" stroke="${stroke}" stroke-width="1"/>
+                    <rect x="9" y="8" width="18" height="18" rx="2" fill="#334155" stroke="#94a3b8" stroke-width="1.2"/>
+                    <rect x="11" y="14" width="14" height="4" fill="#0f172a"/>
+                    <rect x="15" y="15" width="6" height="2" fill="#ef4444"/>
+                    <rect x="5" y="7" width="5" height="9" rx="1" fill="#475569" stroke="#94a3b8" stroke-width="0.8"/>
+                    <rect x="26" y="7" width="5" height="9" rx="1" fill="#475569" stroke="#94a3b8" stroke-width="0.8"/>
+                    <circle cx="7.5" cy="11.5" r="1.5" fill="#f59e0b"/>
+                    <circle cx="28.5" cy="11.5" r="1.5" fill="#f59e0b"/>
+                    <rect x="13" y="22" width="10" height="5" fill="#1e293b" stroke="#38bdf8" stroke-width="0.8"/>
+                </svg>`;
             } else {
                 return `<svg viewBox="0 0 36 36" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <rect x="3" y="3" width="30" height="30" rx="2" fill="${fill}" stroke="${stroke}" stroke-width="1"/>
@@ -3774,19 +3786,6 @@
                 { x: 540, y: 116, vx: -0.32, room: VAULT_ROOM_SPECS[7], frame: 0, animTick: 0, role: 5 }
             ];
 
-            // Environmental Ash & Fallout Particles
-            vaultParticles = [];
-            for (let p = 0; p < 24; p++) {
-                vaultParticles.push({
-                    x: Math.random() * 620,
-                    y: Math.random() * 140,
-                    vx: (Math.random() - 0.4) * 0.4,
-                    vy: (Math.random() - 0.5) * 0.3,
-                    type: Math.random() > 0.6 ? 'rad' : 'ash',
-                    alpha: 0.2 + Math.random() * 0.5
-                });
-            }
-
             // Mouse interaction
             vaultCanvas.addEventListener('mousemove', (e) => {
                 const rect = vaultCanvas.getBoundingClientRect();
@@ -3859,12 +3858,11 @@
             ctx.fillRect(0, 72, w, 4);
             ctx.fillRect(0, 134, w, 6);
 
-            ctx.fillStyle = 'rgba(52, 211, 153, 0.4)';
-            for (let i = 0; i < 8; i++) {
-                const ox = (i * 78 + 35) % w;
-                const oy = ((i * 37 + 5) % 120) + 16;
-                ctx.fillRect(ox, oy, 2, 2);
-            }
+            // Subterranean Bedrock Strata (Clean static rock layer)
+            ctx.fillStyle = '#0c120d';
+            ctx.fillRect(0, 16, w, 1);
+            ctx.fillRect(0, 74, w, 1);
+            ctx.fillRect(0, 132, w, 1);
 
             // Top surface strip - responsive to active weather
             const wType = (state.weather && state.weather.type) ? state.weather.type : 0;
@@ -3910,13 +3908,17 @@
                     ctx.fillStyle = 'rgba(52, 211, 153, 0.08)';
                     ctx.fillRect(0, 0, w, 14);
                 }
-            } else if (wType === 4) { // Cold Snap frost
-                ctx.fillStyle = 'rgba(224, 242, 254, 0.6)';
-                for (let s = 0; s < 10; s++) {
-                    const sx = (s * 67 + Math.floor(t * 25)) % w;
-                    const sy = (s * 19 + Math.floor(t * 30)) % 13;
-                    ctx.fillRect(sx, sy, 1.5, 1.5);
+            } else if (wType === 4) { // Cold Snap static rime frost
+                ctx.strokeStyle = 'rgba(224, 242, 254, 0.65)';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                for (let s = 0; s < 18; s++) {
+                    const fx = s * 34 + 8;
+                    ctx.moveTo(fx, 0); ctx.lineTo(fx, 5);
+                    ctx.moveTo(fx - 2, 2); ctx.lineTo(fx + 2, 2);
+                    ctx.moveTo(fx + 10, 0); ctx.lineTo(fx + 10, 6);
                 }
+                ctx.stroke();
             } else if (wType === 2) { // Drought heat shimmer
                 ctx.strokeStyle = 'rgba(245, 158, 11, 0.3)';
                 ctx.lineWidth = 1;
@@ -4090,50 +4092,54 @@
                     ctx.fillStyle = '#38bdf8';
                     ctx.fillRect(r.x + 46, r.y + 24, 16, 2);
                     ctx.fillRect(r.x + 46, r.y + 29, 16, 2);
+                    ctx.fillRect(r.x + 46, r.y + 34, 16, 2);
                     ctx.fillStyle = '#334155';
-                    ctx.fillRect(r.x + 80, r.y + 32, 24, 14);
+                    ctx.fillRect(r.x + 76, r.y + 30, 28, 16);
                     ctx.fillStyle = '#047857';
-                    ctx.fillRect(r.x + 86, r.y + 22, 12, 10);
+                    ctx.fillRect(r.x + 84, r.y + 20, 16, 12);
                     ctx.fillStyle = '#6ee7b7';
-                    ctx.fillRect(r.x + 88, r.y + 24, 8, 6);
+                    ctx.fillRect(r.x + 86, r.y + 22, 12, 8);
                     if (state.relics && state.relics.holotape) {
                         ctx.fillStyle = '#064e3b';
-                        ctx.fillRect(r.x + 88, r.y + 24, 8, 6);
+                        ctx.fillRect(r.x + 86, r.y + 22, 12, 8);
                         ctx.strokeStyle = '#34d399';
                         ctx.lineWidth = 0.8;
                         ctx.beginPath();
-                        for (let px = 0; px < 8; px++) {
-                            const py = r.y + 27 + Math.sin(t * 6 + px * 1.2) * 1.8;
-                            if (px === 0) ctx.moveTo(r.x + 88 + px, py);
-                            else ctx.lineTo(r.x + 88 + px, py);
+                        for (let px = 0; px < 12; px++) {
+                            const py = r.y + 26 + Math.sin(t * 6 + px * 1.0) * 2.0;
+                            if (px === 0) ctx.moveTo(r.x + 86 + px, py);
+                            else ctx.lineTo(r.x + 86 + px, py);
                         }
                         ctx.stroke();
                     }
                 } else if (r.id === 'farm') {
+                    // Hydroponics: UV Grow lamps, nutrient mist trays & lush crops
                     ctx.fillStyle = '#701a75';
-                    ctx.fillRect(r.x + 10, r.y + 10, r.w - 20, 3);
-                    ctx.fillStyle = 'rgba(232, 121, 249, 0.18)';
+                    ctx.fillRect(r.x + 8, r.y + 10, r.w - 16, 3);
+                    ctx.fillStyle = 'rgba(232, 121, 249, 0.16)';
                     ctx.beginPath();
-                    ctx.moveTo(r.x + 10, r.y + 13);
+                    ctx.moveTo(r.x + 8, r.y + 13);
                     ctx.lineTo(r.x + 4, r.y + 44);
                     ctx.lineTo(r.x + r.w - 4, r.y + 44);
-                    ctx.lineTo(r.x + r.w - 10, r.y + 13);
+                    ctx.lineTo(r.x + r.w - 8, r.y + 13);
                     ctx.fill();
                     ctx.fillStyle = '#291809';
                     ctx.fillRect(r.x + 8, r.y + 38, r.w - 16, 8);
-                    ctx.fillStyle = (state.relics && state.relics.seeds) ? '#34d399' : '#22c55e';
                     for (let c = 0; c < 8; c++) {
                         const cx = r.x + 14 + c * 14;
                         const sway = Math.sin(t * 3 + c) * 1.5;
+                        ctx.fillStyle = (state.relics && state.relics.seeds) ? '#34d399' : '#16a34a';
                         ctx.fillRect(cx + sway, r.y + 26, 2, 12);
-                        ctx.fillRect(cx - 2 + sway, r.y + 26, 6, 4);
+                        ctx.fillStyle = (state.relics && state.relics.seeds) ? '#4ade80' : '#22c55e';
+                        ctx.fillRect(cx - 3 + sway, r.y + 26, 8, 4);
+                        ctx.fillRect(cx - 1 + sway, r.y + 23, 4, 3);
                         if (state.relics && state.relics.seeds) {
                             ctx.fillStyle = '#fde047';
-                            ctx.fillRect(cx - 1 + sway, r.y + 23, 4, 3);
-                            ctx.fillStyle = '#34d399';
+                            ctx.fillRect(cx - 1 + sway, r.y + 20, 4, 3);
                         }
                     }
                 } else if (r.id === 'quarters') {
+                    // Living Quarters: Dual bunk bed frames, ladder, footlocker & lantern
                     ctx.fillStyle = '#1e3a8a';
                     ctx.fillRect(r.x + 10, r.y + 20, 36, 6);
                     ctx.fillRect(r.x + 10, r.y + 36, 36, 6);
@@ -4143,21 +4149,33 @@
                     ctx.fillStyle = '#64748b';
                     ctx.fillRect(r.x + 8, r.y + 15, 2, 32);
                     ctx.fillRect(r.x + 46, r.y + 15, 2, 32);
+                    ctx.fillRect(r.x + 22, r.y + 15, 2, 32);
+                    ctx.fillRect(r.x + 24, r.y + 24, 6, 2);
+                    ctx.fillRect(r.x + 24, r.y + 32, 6, 2);
+                    ctx.fillStyle = '#78350f';
+                    ctx.fillRect(r.x + 56, r.y + 34, 14, 10);
+                    ctx.fillStyle = '#d97706';
+                    ctx.fillRect(r.x + 58, r.y + 36, 10, 2);
                     ctx.fillStyle = '#f59e0b';
-                    ctx.fillRect(r.x + 75, r.y + 28, 4, 6);
+                    ctx.fillRect(r.x + 78, r.y + 28, 4, 6);
                     ctx.fillStyle = 'rgba(245, 158, 11, 0.25)';
                     ctx.beginPath();
-                    ctx.arc(r.x + 77, r.y + 31, 12, 0, Math.PI * 2);
+                    ctx.arc(r.x + 80, r.y + 31, 12, 0, Math.PI * 2);
                     ctx.fill();
                 } else if (r.id === 'workshop') {
+                    // Scrap Workshop: Heavy iron anvil, tool pegboard & vice
                     ctx.fillStyle = '#475569';
-                    ctx.fillRect(r.x + 20, r.y + 32, 22, 6);
-                    ctx.fillRect(r.x + 26, r.y + 38, 10, 8);
+                    ctx.fillRect(r.x + 16, r.y + 32, 26, 6);
+                    ctx.fillRect(r.x + 22, r.y + 38, 14, 8);
                     ctx.fillStyle = '#334155';
-                    ctx.fillRect(r.x + 55, r.y + 15, 26, 18);
+                    ctx.fillRect(r.x + 18, r.y + 27, 6, 5);
+                    ctx.fillRect(r.x + 52, r.y + 14, 30, 20);
                     ctx.fillStyle = '#94a3b8';
-                    ctx.fillRect(r.x + 60, r.y + 18, 2, 10);
-                    ctx.fillRect(r.x + 66, r.y + 20, 8, 2);
+                    ctx.fillRect(r.x + 56, r.y + 17, 2, 12);
+                    ctx.fillRect(r.x + 55, r.y + 17, 4, 3);
+                    ctx.fillRect(r.x + 64, r.y + 19, 10, 2);
+                    ctx.fillRect(r.x + 68, r.y + 16, 3, 8);
+                    ctx.fillRect(r.x + 76, r.y + 22, 2, 8);
                     if (Math.floor(t * 8) % 4 === 0) {
                         ctx.fillStyle = '#fbbf24';
                         ctx.fillRect(r.x + 38, r.y + 28, 2, 2);
@@ -4165,6 +4183,7 @@
                         ctx.fillRect(r.x + 35, r.y + 22, 1.5, 1.5);
                     }
                 } else if (r.id === 'gen') {
+                    // Turbine Reactor: Armored rotor housing, spinning turbine & coils
                     const tcx = r.x + 35, tcy = r.y + 30;
                     ctx.fillStyle = '#1c1917';
                     ctx.beginPath();
@@ -4199,12 +4218,15 @@
                         ctx.stroke();
                     }
                     ctx.fillStyle = '#1e293b';
-                    ctx.fillRect(r.x + 75, r.y + 16, 55, 30);
+                    ctx.fillRect(r.x + 72, r.y + 16, 60, 30);
                     for (let b = 0; b < 4; b++) {
                         ctx.fillStyle = '#10b981';
-                        ctx.fillRect(r.x + 80 + b * 13, r.y + 22, 8, 18);
+                        ctx.fillRect(r.x + 76 + b * 14, r.y + 22, 9, 18);
+                        ctx.fillStyle = '#047857';
+                        ctx.fillRect(r.x + 78 + b * 14, r.y + 24, 5, 14);
                     }
                 } else if (r.id === 'water') {
+                    // Water Filtration: Triple cisterns with sight tubes & pipes
                     for (let c = 0; c < 3; c++) {
                         const cx = r.x + 20 + c * 38;
                         ctx.fillStyle = '#082f49';
@@ -4214,17 +4236,17 @@
                         const rip = Math.sin(t * 3 + c) * 2;
                         ctx.fillStyle = 'rgba(6, 182, 212, 0.65)';
                         ctx.fillRect(cx + 1, r.y + 22 + rip, 22, 25 - rip);
-                        const by = r.y + 40 - ((t * 20 + c * 8) % 18);
-                        ctx.fillStyle = '#e0f2fe';
-                        ctx.fillRect(cx + 6 + (c % 2) * 8, by, 2, 2);
+                        ctx.fillStyle = '#38bdf8';
+                        ctx.fillRect(cx + 21, r.y + 18, 2, 26);
                     }
                     ctx.strokeStyle = '#94a3b8';
                     ctx.lineWidth = 2;
                     ctx.beginPath();
-                    ctx.moveTo(r.x + 44, r.y + 24); ctx.lineTo(r.x + 58, r.y + 24);
-                    ctx.moveTo(r.x + 82, r.y + 24); ctx.lineTo(r.x + 96, r.y + 24);
+                    ctx.moveTo(r.x + 44, r.y + 20); ctx.lineTo(r.x + 58, r.y + 20);
+                    ctx.moveTo(r.x + 82, r.y + 20); ctx.lineTo(r.x + 96, r.y + 20);
                     ctx.stroke();
                 } else if (r.id === 'infirmary') {
+                    // Med-Lab Infirmary: Triage bed, bio-telemetry monitor & medical cross
                     ctx.fillStyle = '#ef4444';
                     ctx.fillRect(r.x + 14, r.y + 16, 4, 12);
                     ctx.fillRect(r.x + 10, r.y + 20, 12, 4);
@@ -4246,19 +4268,21 @@
                     ctx.lineTo(r.x + 115, r.y + 26);
                     ctx.stroke();
                 } else if (r.id === 'security') {
+                    // Armory Defense: Carbine rack, ballistic blast shields & tactical terminal
                     ctx.fillStyle = '#334155';
                     ctx.fillRect(r.x + 15, r.y + 16, 30, 28);
                     ctx.fillStyle = '#94a3b8';
                     ctx.fillRect(r.x + 20, r.y + 19, 20, 2);
                     ctx.fillRect(r.x + 20, r.y + 26, 20, 2);
                     ctx.fillRect(r.x + 20, r.y + 33, 20, 2);
+                    ctx.fillStyle = '#475569';
+                    ctx.fillRect(r.x + 17, r.y + 18, 3, 18);
                     ctx.strokeStyle = 'rgba(239, 68, 68, 0.7)';
                     ctx.lineWidth = 1;
                     ctx.beginPath();
                     ctx.moveTo(r.x + 60, r.y + 24);
                     ctx.lineTo(r.x + 88, r.y + 34);
                     ctx.stroke();
-                    // Tactical monitor & ammo crate
                     ctx.fillStyle = '#064e3b';
                     ctx.fillRect(r.x + 50, r.y + 15, 18, 13);
                     ctx.fillStyle = '#10b981';
@@ -4322,18 +4346,7 @@
                 }
             }
 
-            // Ash Particles
-            for (const p of vaultParticles) {
-                p.x += p.vx;
-                p.y += p.vy;
-                if (p.x < 0) p.x = w;
-                if (p.x > w) p.x = 0;
-                if (p.y < 0) p.y = h;
-                if (p.y > h) p.y = 0;
-
-                ctx.fillStyle = (p.type === 'rad') ? `rgba(52, 211, 153, ${p.alpha})` : `rgba(245, 158, 11, ${p.alpha * 0.7})`;
-                ctx.fillRect(Math.floor(p.x), Math.floor(p.y), 1.5, 1.5);
-            }
+            // Static atmospheric ambient baseline (zero floating dot particles)
         }
 
         function updateVaultCutawayRooms() {
@@ -5520,11 +5533,13 @@
                 { name: 'Iron Skull Warband', baseAtk: 48, desc: 'Armored wasteland raiders driving spiked battle buggies' },
                 { name: 'Rad-Scorpion Pack & Reavers', baseAtk: 65, desc: 'Mutant beasts led by cybernetic wasteland slavers' },
                 { name: 'Dune Stalker Syndicate', baseAtk: 85, desc: 'High-tech mercenaries with heavy plasma cannons and armor' },
-                { name: 'Super-Mutant Overlord Siege', baseAtk: 110, desc: 'Massive irradiated brutes wielding concrete rebar clubs' }
+                { name: 'Super-Mutant Overlord Siege', baseAtk: 110, desc: 'Massive irradiated brutes wielding concrete rebar clubs' },
+                { name: 'Titan Cyber-Vanguard', baseAtk: 135, desc: 'Pre-Collapse autonomous siege mechs and cyber-synth commandos' }
             ];
 
             let clanIdx = 0;
-            if (state.day >= 16) clanIdx = 4;
+            if (state.day >= 20) clanIdx = 5;
+            else if (state.day >= 16) clanIdx = 4;
             else if (state.day >= 12) clanIdx = 3;
             else if (state.day >= 8) clanIdx = 2;
             else if (state.day >= 4) clanIdx = 1;
@@ -5548,11 +5563,11 @@
                     dmgToBarricade = Math.floor(dmgToBarricade * 0.75);
                 }
                 state.barricadeHp = Math.max(0, (state.barricadeHp || 100) - dmgToBarricade);
-                scrapGained = 20 + Math.floor(Math.random() * 25);
-                medsGained = Math.random() < 0.6 ? 1 : 2;
+                scrapGained = (clanIdx === 5 ? 40 : 20) + Math.floor(Math.random() * 25);
+                medsGained = (clanIdx === 5 ? 3 : (Math.random() < 0.6 ? 1 : 2));
                 state.scrap += scrapGained;
                 state.meds = (state.meds || 0) + medsGained;
-                state.morale = Math.min(100, state.morale + 6);
+                state.morale = Math.min(100, state.morale + (clanIdx === 5 ? 10 : 6));
 
                 logEvent(`★ RAID REPELLED: ${clan.name} (Atk ${assaultPower}) repelled by Vault Defenses (${totalDef} pts)! Salvaged +${scrapGained} Scrap, +${medsGained} Meds. Barricades took ${dmgToBarricade} damage.`, 'cycle');
                 setTimeout(() => playSound('cycle'), 900);
@@ -5729,9 +5744,9 @@
             }
             const lblRadarDesc = document.getElementById('lbl-raid-threat-desc');
             if (lblRadarDesc) {
-                const clans = ['Rustfang Marauders', 'Iron Skull Warband', 'Rad-Scorpion Reavers', 'Dune Stalkers', 'Super-Mutant Siege'];
-                const clanLabels = ['Rustfang Marauders (~35 Atk)', 'Iron Skull Warband (~50 Atk)', 'Rad-Scorpion Reavers (~70 Atk)', 'Dune Stalkers (~90 Atk)', 'Super-Mutant Siege (~110 Atk)'];
-                let cIdx = Math.min(4, Math.floor(state.day / 3));
+                const clans = ['Rustfang Marauders', 'Iron Skull Warband', 'Rad-Scorpion Reavers', 'Dune Stalkers', 'Super-Mutant Siege', 'Titan Cyber-Vanguard'];
+                const clanLabels = ['Rustfang Marauders (~35 Atk)', 'Iron Skull Warband (~50 Atk)', 'Rad-Scorpion Reavers (~70 Atk)', 'Dune Stalkers (~90 Atk)', 'Super-Mutant Siege (~110 Atk)', 'Titan Cyber-Vanguard (~140 Atk)'];
+                let cIdx = Math.min(5, Math.floor(state.day / 4));
                 lblRadarDesc.textContent = `Projected Incursion: ${clanLabels[cIdx]} &bull; Threat Index: ${threatDays <= 1 ? 'CRITICAL' : 'ELEVATED'}`;
                 const radarBadge = document.getElementById('radar-raider-badge');
                 if (radarBadge) radarBadge.innerHTML = getRaiderClanSvg(clans[cIdx], false);
