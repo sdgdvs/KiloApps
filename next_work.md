@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KCosmic
   kilo_tester: KPaint
   kilo_usability: KHabit
-  kilo_qa: KCalendar
+  kilo_qa: KFarm
   kilo_expander: KPaint
 virtual_web_target: "kweb://darknet"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KPing
-  timestamp: "2026-10-02T09:20:00Z"
+  agent: kilo-qa
+  app: KCalendar
+  timestamp: "2026-10-02T10:20:00Z"
 last_planner_run: "2026-10-01T19:32:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KFarm`, `KPaint`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash` *(Completed: KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KCalendar`
+- **Current Target**: `KFarm`
 - **Upcoming Queue**:
-  `KFarm`, `KFlash`, `KFont`, `KImage`, `KJournal`, `KMail`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget)*.
+  `KFlash`, `KFont`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KCalendar` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KPaint`
@@ -300,6 +300,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-02T10:20:00Z — kilo-qa: KCalendar (Pass 5: Full State Persistence, First-Run Tutorial, Safe Toasts & Win32 Quicksave)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 109.7 KB web / 24.6 KB native < 999 KB ceiling).
+  - Quicksave & State Integrity: Built F5 Quicksave / F9 Quickload in Win32 C (`kcalendar_quicksave.dat`) and web with full filter/view state capture.
+  - First-Run Tutorial: Enforced `kcalendar_tutorial.dat` and `kcalendar_tutorialSeen` flags preventing tutorial modal on restored sessions.
+  - Toast Occlusion Remediation: Relocated toasts to non-occluding bottom-right safe viewport with max 2 concurrent toasts and instant click dismiss.
+  - Modal Isolation: Added mutual modal closing preventing double-modal stacking across edit, help, stats, and delete confirmation dialogs.
+  - Verification: MSVC clean (`KCalendar.exe` 24.6 KB); Vite clean in 379ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T09:20:00Z — kilo-usability: KPing (Non-Occluding Toast Viewport, Modal Hotkeys, Focus Rings & Win32 Layout Fit)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 150.2 KB web / 38.9 KB native < 999 KB ceiling).
   - Toast Occlusion Remediation: Relocated toasts to bottom-right (`bottom: 114px; right: 20px`), clearing analytics panel, graph tooltips, and stats.
@@ -333,14 +341,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Accessibility & Focus: Added high-contrast `:focus-visible` outlines, slider cursor pointers, and `aria-pressed` states on step buttons.
   - Shortcuts & Layout Fit: Added `Shift+H` and `Enter` modal toggles, tightened padding/gaps ensuring 100% vertical fit at 1040x860.
   - Verification: MSVC clean (`KAudio.exe` 23.0 KB); Vite clean in 383ms; check_icons & security_lint 100% PASS.
-
-- **2026-10-02T04:36:00Z — kilo-graphics: KChrono (Glint & Mote Ban, Static Tile Conduits, Win32 Hit Bounds & Gate Scoping)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 189.8 KB web / 23.5 KB native < 999 KB ceiling).
-  - Glint & Mote Ban: Removed 32 floating ambient motes and all `c.rotate` loops (precursor relay, quantum core, tachyon rift).
-  - Visual Polish: Replaced spinning tile elements with static high-tech conduits, concentric quantum casings, and dimensional breach rings.
-  - Causal Gate Scoping: Scoped Rule 1 power-grid gate energization to prevent Beta blast gate flicker on pressure plate scenarios (6 & 7).
-  - Win32 Splash Hitbounds: Fixed mouse click Y-bounds on splash screen ensuring Scenarios 1-7, Quicksave, and Manual trigger correctly.
-  - Verification: MSVC clean (`KChrono.exe` 23.5 KB); Vite clean in 475ms; check_icons & security_lint 100% PASS.
 
 
 

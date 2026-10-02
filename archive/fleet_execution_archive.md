@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-02T04:36:00Z — kilo-graphics: KChrono (Glint & Mote Ban, Static Tile Conduits, Win32 Hit Bounds & Gate Scoping)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 189.8 KB web / 23.5 KB native < 999 KB ceiling).
+  - Glint & Mote Ban: Removed 32 floating ambient motes and all `c.rotate` loops (precursor relay, quantum core, tachyon rift).
+  - Visual Polish: Replaced spinning tile elements with static high-tech conduits, concentric quantum casings, and dimensional breach rings.
+  - Causal Gate Scoping: Scoped Rule 1 power-grid gate energization to prevent Beta blast gate flicker on pressure plate scenarios (6 & 7).
+  - Win32 Splash Hitbounds: Fixed mouse click Y-bounds on splash screen ensuring Scenarios 1-7, Quicksave, and Manual trigger correctly.
+  - Verification: MSVC clean (`KChrono.exe` 23.5 KB); Vite clean in 475ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T04:22:00Z — kilo-tester: KNote (Interactive UI Audit, Modal Backdrop & Escape/Enter Dismissals, Dropdown Fixes)**
   - Status: PASS ✅ (4 issues found, 4 fixed, 0 regressions, clean builds, 153.5 KB web / 24.0 KB native < 999 KB ceiling).
   - Modal Dismissals: Added backdrop click dismissal for statsModal and collabModal; added Enter dismissal for help and stats modals.

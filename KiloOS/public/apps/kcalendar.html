@@ -860,31 +860,38 @@
   /* Toast Notification System */
   .toast-container {
     position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: 16px;
+    right: 20px;
+    left: auto;
+    transform: none;
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     gap: 8px;
     z-index: 9999;
     pointer-events: none;
+    max-width: calc(100vw - 40px);
   }
 
   .toast {
     background: #1e1b4b;
     border: 1px solid var(--accent);
     color: #f8fafc;
-    padding: 10px 18px;
-    border-radius: 20px;
-    font-size: 13px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 12px;
     font-weight: 600;
     box-shadow: 0 8px 24px rgba(0,0,0,0.5);
     display: flex;
     align-items: center;
     gap: 8px;
     animation: toastIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    transition: opacity 0.3s ease, transform 0.3s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease;
     pointer-events: auto;
+    cursor: pointer;
+    user-select: none;
+  }
+  .toast:hover {
+    filter: brightness(1.15);
   }
 
   .toast.toast-success { border-color: #10b981; }
@@ -1216,24 +1223,35 @@
     window.resizeTo(800, 600);
   }
 
-  // Toast Notification System
+  // Toast Notification System (Non-occluding, max 2 concurrent, click-to-dismiss)
   function showToast(message, type = 'info', duration = 3500) {
     const container = document.getElementById('toastContainer');
+    if (!container) return;
+    while (container.children.length >= 2) {
+      container.removeChild(container.firstChild);
+    }
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
+    toast.title = 'Click to dismiss';
     
     let icon = 'ℹ️';
     if (type === 'success') icon = '✅';
     else if (type === 'error') icon = '⚠️';
     
-    toast.innerHTML = `<span>${icon}</span> <span>${escapeHtml(message)}</span>`;
-    container.appendChild(toast);
-
-    setTimeout(() => {
+    toast.innerHTML = `<span>${icon}</span> <span style="flex:1;">${escapeHtml(message)}</span> <span style="opacity:0.6;font-size:11px;margin-left:4px;">&times;</span>`;
+    
+    let removed = false;
+    const removeToast = () => {
+      if (removed) return;
+      removed = true;
       toast.style.opacity = '0';
       toast.style.transform = 'translateY(10px)';
-      setTimeout(() => toast.remove(), 300);
-    }, duration);
+      setTimeout(() => toast.remove(), 200);
+    };
+
+    toast.onclick = removeToast;
+    container.appendChild(toast);
+    setTimeout(removeToast, duration);
   }
 
   // Welcome startup toast
@@ -1328,6 +1346,7 @@
       localStorage.setItem('kcalendar_events_v2', JSON.stringify(events));
     } catch (e) {
       console.error('Failed to save events:', e);
+      showToast('Storage quota exceeded: unable to save events', 'error', 3000);
     }
   }
 
@@ -2007,6 +2026,9 @@
   const duplicateEventBtn = document.getElementById('duplicateEventBtn');
 
   function openModal(eventId = null, defaultDateStr = null, defaultTimeStr = '') {
+    closeHelpModal();
+    closeStatsModal();
+    closeDeleteModal();
     editingEventId = eventId;
 
     if (eventId) {
@@ -2103,10 +2125,13 @@
   let pendingDeleteId = null;
 
   function promptDeleteEvent(eventId) {
+    closeHelpModal();
+    closeStatsModal();
     pendingDeleteId = eventId;
     const ev = events.find(e => e.id === eventId);
     const title = ev ? ev.title : 'this event';
     document.getElementById('deleteModalPrompt').textContent = `Are you sure you want to delete "${title}"?`;
+    deleteModalOverlay.style.zIndex = '150';
     deleteModalOverlay.classList.add('active');
     setTimeout(() => document.getElementById('confirmDeleteBtn').focus(), 50);
   }
@@ -2289,12 +2314,16 @@
   // --- HELP MODAL ---
   const helpModalOverlay = document.getElementById('helpModalOverlay');
   function openHelpModal() {
+    closeModal();
+    closeStatsModal();
+    closeDeleteModal();
     helpModalOverlay.classList.add('active');
   }
   function closeHelpModal() {
     helpModalOverlay.classList.remove('active');
     try {
       localStorage.setItem('kcalendar_tutorialSeen', '1');
+      localStorage.setItem('kcalendar_tutorial_seen', '1');
     } catch (e) {}
   }
 
@@ -2306,9 +2335,18 @@
         events: events,
         currentView: currentView,
         selectedDate: selectedDate.toISOString(),
+        searchQuery: searchQuery,
+        activeCategoryFilter: activeCategoryFilter,
+        activePriorityFilter: activePriorityFilter,
+        activeStatusFilter: activeStatusFilter,
+        activeTagFilter: activeTagFilter,
         savedAt: new Date().toISOString()
       };
       localStorage.setItem('kcalendar_quicksave', JSON.stringify(snapshot));
+      try {
+        localStorage.setItem('kcalendar_tutorialSeen', '1');
+        localStorage.setItem('kcalendar_tutorial_seen', '1');
+      } catch (_) {}
       showToast('Quicksave Snapshot Saved [F5] ✅', 'success', 2500);
     } catch (err) {
       showToast('Quicksave failed: ' + err.message, 'error');
@@ -2331,6 +2369,35 @@
         if (snapshot.selectedDate) {
           selectedDate = new Date(snapshot.selectedDate);
         }
+        if (snapshot.searchQuery !== undefined) {
+          searchQuery = snapshot.searchQuery;
+          searchInputElem.value = searchQuery;
+          clearSearchBtn.style.display = searchQuery ? 'inline-block' : 'none';
+        }
+        if (snapshot.activeCategoryFilter) {
+          activeCategoryFilter = snapshot.activeCategoryFilter;
+          const catSelect = document.getElementById('categoryFilter');
+          if (catSelect) catSelect.value = activeCategoryFilter;
+        }
+        if (snapshot.activePriorityFilter) {
+          activePriorityFilter = snapshot.activePriorityFilter;
+          const prioSelect = document.getElementById('priorityFilter');
+          if (prioSelect) prioSelect.value = activePriorityFilter;
+        }
+        if (snapshot.activeStatusFilter) {
+          activeStatusFilter = snapshot.activeStatusFilter;
+          const statusSelect = document.getElementById('statusFilter');
+          if (statusSelect) statusSelect.value = activeStatusFilter;
+        }
+        if (snapshot.activeTagFilter) {
+          activeTagFilter = snapshot.activeTagFilter;
+          const tagSelect = document.getElementById('tagFilter');
+          if (tagSelect) tagSelect.value = activeTagFilter;
+        }
+        try {
+          localStorage.setItem('kcalendar_tutorialSeen', '1');
+          localStorage.setItem('kcalendar_tutorial_seen', '1');
+        } catch (_) {}
         saveEvents();
         renderApp();
         showToast('Quicksave Snapshot Restored [F9] ✅', 'success', 2500);
@@ -2844,15 +2911,10 @@
   document.getElementById('closeHelpBtn').onclick = closeHelpModal;
 
   // Backdrop click dismissal for all modal overlays
-  [eventModalOverlay, statsModalOverlay, helpModalOverlay, deleteModalOverlay].forEach(overlay => {
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) {
-        overlay.classList.remove('active');
-        if (overlay === eventModalOverlay) editingEventId = null;
-        if (overlay === deleteModalOverlay) pendingDeleteId = null;
-      }
-    });
-  });
+  eventModalOverlay.addEventListener('click', (e) => { if (e.target === eventModalOverlay) closeModal(); });
+  statsModalOverlay.addEventListener('click', (e) => { if (e.target === statsModalOverlay) closeStatsModal(); });
+  helpModalOverlay.addEventListener('click', (e) => { if (e.target === helpModalOverlay) closeHelpModal(); });
+  deleteModalOverlay.addEventListener('click', (e) => { if (e.target === deleteModalOverlay) closeDeleteModal(); });
 
   // Global Keyboard Shortcuts
   window.addEventListener('keydown', (e) => {
@@ -2941,8 +3003,9 @@
   renderApp();
 
   // First-run tutorial onboarding check: only on fresh sessions, never interrupting restored save states
-  const hasSeenTutorial = localStorage.getItem('kcalendar_tutorialSeen');
-  const hasQuicksave = localStorage.getItem('kcalendar_quicksave');
+  const hasSeenTutorial = localStorage.getItem('kcalendar_tutorialSeen') === '1' ||
+                         localStorage.getItem('kcalendar_tutorial_seen') === '1';
+  const hasQuicksave = !!localStorage.getItem('kcalendar_quicksave');
   if (!hasSeenTutorial && !hasQuicksave) {
     setTimeout(openHelpModal, 350);
   }

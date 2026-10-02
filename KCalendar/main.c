@@ -20,6 +20,10 @@
 #define ID_BTN_STATS             1015
 #define ID_BTN_EXPORT_MD         1016
 #define ID_BTN_TOGGLE_DONE       1017
+#define ID_BTN_QUICKSAVE         1018
+#define ID_BTN_QUICKLOAD         1019
+
+#define KCALENDAR_QUICKSAVE_MAGIC 0x4C41434B // "KCAL"
 
 #define MAX_EVENTS 1000
 
@@ -38,7 +42,7 @@ static SYSTEMTIME selected_date;
 
 static HWND hMonthCal, hBtnToday, hListEvents, hEditEvent, hBtnAdd, hBtnDel, hBtnToggleDone;
 static HWND hComboCategory, hComboRecur, hComboPriority, hComboFilter, hComboPrioFilter, hEditSearch;
-static HWND hBtnExportIcs, hBtnExportCsv, hBtnExportMd, hBtnStats, hBtnHelp;
+static HWND hBtnExportIcs, hBtnExportCsv, hBtnExportMd, hBtnStats, hBtnHelp, hBtnQuickSave, hBtnQuickLoad;
 static HWND hStaticHeader = NULL;
 static HWND hStaticHelpPrompt = NULL;
 static HBRUSH hBgBrush = NULL;
@@ -230,6 +234,110 @@ static void SaveEvents() {
     CloseHandle(hFile);
 }
 
+static void RefreshList(void);
+
+static void NativeQuickSave(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kcalendar_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        DWORD magic = KCALENDAR_QUICKSAVE_MAGIC;
+        DWORD version = 1;
+        WriteFile(hFile, &magic, sizeof(magic), &written, NULL);
+        WriteFile(hFile, &version, sizeof(version), &written, NULL);
+        WriteFile(hFile, &selected_date, sizeof(selected_date), &written, NULL);
+
+        int catFilter = hComboFilter ? (int)SendMessage(hComboFilter, CB_GETCURSEL, 0, 0) : 0;
+        int prioFilter = hComboPrioFilter ? (int)SendMessage(hComboPrioFilter, CB_GETCURSEL, 0, 0) : 0;
+        WriteFile(hFile, &catFilter, sizeof(catFilter), &written, NULL);
+        WriteFile(hFile, &prioFilter, sizeof(prioFilter), &written, NULL);
+
+        char searchBuf[128] = {0};
+        if (hEditSearch) GetWindowTextA(hEditSearch, searchBuf, sizeof(searchBuf));
+        WriteFile(hFile, searchBuf, sizeof(searchBuf), &written, NULL);
+
+        WriteFile(hFile, &event_count, sizeof(event_count), &written, NULL);
+        if (event_count > 0) {
+            WriteFile(hFile, events, sizeof(Event) * event_count, &written, NULL);
+        }
+        CloseHandle(hFile);
+
+        // Mark first-run tutorial as seen
+        HANDLE hTut = CreateFileA("kcalendar_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTut != INVALID_HANDLE_VALUE) {
+            WriteFile(hTut, "1", 1, &written, NULL);
+            CloseHandle(hTut);
+        }
+
+        char msg[128];
+        wsprintfA(msg, "Quicksaved %d event(s) to kcalendar_quicksave.dat [F5]!", event_count);
+        MessageBoxA(hwnd, msg, "Quicksave Complete", MB_OK | MB_ICONINFORMATION);
+    } else {
+        MessageBoxA(hwnd, "Unable to write kcalendar_quicksave.dat", "Quicksave Error", MB_OK | MB_ICONWARNING);
+    }
+}
+
+static void NativeQuickLoad(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kcalendar_quicksave.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        MessageBoxA(hwnd, "No quicksave snapshot found (Press [F5] to quicksave first) [F9].", "Quickload", MB_OK | MB_ICONWARNING);
+        return;
+    }
+
+    DWORD magic = 0, version = 0, readBytes = 0;
+    ReadFile(hFile, &magic, sizeof(magic), &readBytes, NULL);
+    ReadFile(hFile, &version, sizeof(version), &readBytes, NULL);
+
+    if (magic != KCALENDAR_QUICKSAVE_MAGIC || version != 1) {
+        CloseHandle(hFile);
+        MessageBoxA(hwnd, "Invalid or corrupt kcalendar_quicksave.dat format!", "Quickload Error", MB_OK | MB_ICONWARNING);
+        return;
+    }
+
+    ReadFile(hFile, &selected_date, sizeof(selected_date), &readBytes, NULL);
+
+    int catFilter = 0, prioFilter = 0;
+    ReadFile(hFile, &catFilter, sizeof(catFilter), &readBytes, NULL);
+    ReadFile(hFile, &prioFilter, sizeof(prioFilter), &readBytes, NULL);
+
+    char searchBuf[128] = {0};
+    ReadFile(hFile, searchBuf, sizeof(searchBuf), &readBytes, NULL);
+
+    int count = 0;
+    ReadFile(hFile, &count, sizeof(count), &readBytes, NULL);
+    if (count < 0 || count > MAX_EVENTS) {
+        CloseHandle(hFile);
+        MessageBoxA(hwnd, "Corrupted event count in quicksave file!", "Quickload Error", MB_OK | MB_ICONWARNING);
+        return;
+    }
+
+    event_count = count;
+    if (event_count > 0) {
+        ReadFile(hFile, events, sizeof(Event) * event_count, &readBytes, NULL);
+    }
+    CloseHandle(hFile);
+
+    if (hMonthCal) SendMessage(hMonthCal, MCM_SETCURSEL, 0, (LPARAM)&selected_date);
+    if (hComboFilter) SendMessage(hComboFilter, CB_SETCURSEL, catFilter, 0);
+    if (hComboPrioFilter) SendMessage(hComboPrioFilter, CB_SETCURSEL, prioFilter, 0);
+    if (hEditSearch) SetWindowTextA(hEditSearch, searchBuf);
+
+    SaveEvents();
+    RefreshList();
+    if (hMonthCal) InvalidateRect(hMonthCal, NULL, TRUE);
+
+    // Mark tutorial seen
+    HANDLE hTut = CreateFileA("kcalendar_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hTut != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hTut, "1", 1, &written, NULL);
+        CloseHandle(hTut);
+    }
+
+    char msg[128];
+    wsprintfA(msg, "Quickloaded %d event(s) from kcalendar_quicksave.dat [F9]!", event_count);
+    MessageBoxA(hwnd, msg, "Quickload Complete", MB_OK | MB_ICONINFORMATION);
+}
+
 static void ExportToIcs() {
     HANDLE hFile = CreateFileA("kcalendar_export.ics", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) return;
@@ -330,6 +438,8 @@ static void ShowHelpDialog(HWND hwnd) {
         "7. Analytics: Press [S] or click 'Analytics' to view a summary breakdown of your commitments.\r\n\r\n"
         "KEYBOARD SHORTCUTS:\r\n"
         "- [F1] or [H]: Open this Help Guide\r\n"
+        "- [F5]: Quicksave snapshot to kcalendar_quicksave.dat\r\n"
+        "- [F9]: Quickload snapshot from kcalendar_quicksave.dat\r\n"
         "- [Space]: Toggle Completed status of selected event\r\n"
         "- [T]: Jump to Today\r\n"
         "- [S]: Open Analytics & Statistics\r\n"
@@ -672,13 +782,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 pad + exportW + SCALE(5), btnY, exportW, btnH, hwnd, (HMENU)ID_BTN_STATS, GetModuleHandle(NULL), NULL);
 
             btnY += btnH + spacing;
+            hBtnQuickSave = CreateWindowEx(0, "BUTTON", "Save [F5]",
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
+                pad, btnY, exportW, btnH, hwnd, (HMENU)ID_BTN_QUICKSAVE, GetModuleHandle(NULL), NULL);
+
+            hBtnQuickLoad = CreateWindowEx(0, "BUTTON", "Load [F9]",
+                WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON,
+                pad + exportW + SCALE(5), btnY, exportW, btnH, hwnd, (HMENU)ID_BTN_QUICKLOAD, GetModuleHandle(NULL), NULL);
+
+            btnY += btnH + spacing;
             hBtnHelp = CreateWindowEx(0, "BUTTON", "Help & Tutorial [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, pad, btnY, rc.right, btnH, hwnd, (HMENU)ID_BTN_HELP, GetModuleHandle(NULL), NULL);
 
             // Visible help & hotkeys prompt in left column
             hStaticHelpPrompt = CreateWindowEx(0, "STATIC",
-                "Hotkeys:\n[F1] Help / Tutorial\n[Space] Toggle Done\n[T] Today  |  [S] Stats\n[N] New Event\n[/] Search  |  [Del] Del",
+                "Hotkeys:\n[F1] Help\n[F5] Save  |  [F9] Load\n[Space] Done  |  [T] Today\n[S] Stats  |  [N] New\n[/] Search  |  [Del] Del",
                 WS_CHILD | WS_VISIBLE,
-                pad, btnY + btnH + SCALE(10), rc.right, SCALE(100),
+                pad, btnY + btnH + SCALE(8), rc.right, SCALE(100),
                 hwnd, NULL, GetModuleHandle(NULL), NULL);
 
             // Right column: Date and event counter header
@@ -838,6 +957,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ExportToMarkdown();
             } else if (LOWORD(wParam) == ID_BTN_STATS) {
                 ShowStatistics(hwnd);
+            } else if (LOWORD(wParam) == ID_BTN_QUICKSAVE) {
+                NativeQuickSave(hwnd);
+            } else if (LOWORD(wParam) == ID_BTN_QUICKLOAD) {
+                NativeQuickLoad(hwnd);
             } else if (LOWORD(wParam) == ID_BTN_HELP) {
                 ShowHelpDialog(hwnd);
             } else if (LOWORD(wParam) == ID_LIST_EVENTS && HIWORD(wParam) == LBN_DBLCLK) {
@@ -902,11 +1025,42 @@ void MainEntry() {
     RECT rc = {0, 0, 800, 600};
     AdjustWindowRect(&rc, style, FALSE);
 
-    HWND hwnd = CreateWindowEx(0, "KCalendarApp", "KCalendar (Press [F1] or [H] for Help)", style,
+    HWND hwnd = CreateWindowEx(0, "KCalendarApp", "KCalendar (Press [F1] Help, [F5] Save, [F9] Load)", style,
         CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+
+    // First-run tutorial check: only on fresh sessions, never interrupting restored save states
+    HANDLE hTutCheck = CreateFileA("kcalendar_tutorial.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hSaveCheck = CreateFileA("kcalendar_quicksave.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    BOOL hasSavedState = (hSaveCheck != INVALID_HANDLE_VALUE);
+    if (hSaveCheck != INVALID_HANDLE_VALUE) CloseHandle(hSaveCheck);
+
+    if (hTutCheck == INVALID_HANDLE_VALUE && !hasSavedState && event_count == 0) {
+        MessageBoxA(hwnd,
+            "=== Welcome to KCalendar ===\r\n\r\n"
+            "KCalendar is your high-efficiency retro date scheduler,\r\n"
+            "task checklist, and event tracking platform.\r\n\r\n"
+            "QUICK START GUIDE:\r\n"
+            "- Click any date on the calendar to view its schedule\r\n"
+            "- Press [N] or type an event title to add new commitments\r\n"
+            "- Press [Space] on an event to toggle Completed / Pending status\r\n"
+            "- Press [F5] at any time to Quicksave your calendar snapshot\r\n"
+            "- Press [F9] to Quickload your saved snapshot\r\n"
+            "- Press [F1] or [H] anytime for the full guide & hotkeys\r\n"
+            "- Export agendas via .ics, CSV, and Markdown buttons\r\n\r\n"
+            "Click OK to begin managing your schedule.",
+            "KCalendar - First Run Tutorial", MB_OK | MB_ICONINFORMATION);
+        HANDLE hTutWrite = CreateFileA("kcalendar_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTutWrite != INVALID_HANDLE_VALUE) {
+            DWORD written = 0;
+            WriteFile(hTutWrite, "1", 1, &written, NULL);
+            CloseHandle(hTutWrite);
+        }
+    } else if (hTutCheck != INVALID_HANDLE_VALUE) {
+        CloseHandle(hTutCheck);
+    }
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
@@ -914,7 +1068,11 @@ void MainEntry() {
             char cls[32] = {0};
             GetClassNameA(msg.hwnd, cls, 32);
             BOOL inEdit = (lstrcmpiA(cls, "EDIT") == 0);
-            if (msg.wParam == VK_F1 || (!inEdit && (msg.wParam == 'H' || msg.wParam == 'h'))) {
+            if (msg.wParam == VK_F5) {
+                NativeQuickSave(hwnd);
+            } else if (msg.wParam == VK_F9) {
+                NativeQuickLoad(hwnd);
+            } else if (msg.wParam == VK_F1 || (!inEdit && (msg.wParam == 'H' || msg.wParam == 'h'))) {
                 ShowHelpDialog(hwnd);
             } else if (!inEdit && (msg.wParam == 'T' || msg.wParam == 't')) {
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_TODAY, BN_CLICKED), (LPARAM)hBtnToday);
