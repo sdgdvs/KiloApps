@@ -2249,6 +2249,26 @@ static void DrawBarrenRockGDI(HDC hdc, CelestialBody* b, int px, int py, int pr,
     LineTo(hdc, px + (int)(pr * 0.3f), ry - (int)(pr * 0.05f));
     LineTo(hdc, px + (int)(pr * 0.75f), ry + (int)(pr * 0.04f));
 
+    // 5. Terraformed Pioneer Biocrust & Lichen Mats (Emerge as water and oxygen take root)
+    float curW = (b == GetActivePlanet()) ? sim.water : b->water;
+    float curO = (b == GetActivePlanet()) ? sim.oxygen : b->oxygen;
+    if (curW > 3.0f && curO > 0.5f) {
+        HBRUSH hLichenBr = CreateSolidBrush(RGB(34, 197, 94));
+        HPEN hLichenP = CreatePen(PS_SOLID, 1, RGB(34, 197, 94));
+        HBRUSH hOldLicB = (HBRUSH)SelectObject(hdc, hLichenBr);
+        HPEN hOldLicP = (HPEN)SelectObject(hdc, hLichenP);
+        int lox[3] = { (int)(-pr * 0.22f), (int)(pr * 0.32f), (int)(-pr * 0.06f) };
+        int loy[3] = { (int)(-pr * 0.18f), (int)(pr * 0.12f), (int)(pr * 0.35f) };
+        int lrad[3] = { (int)(pr * 0.15f), (int)(pr * 0.13f), (int)(pr * 0.14f) };
+        for (int l = 0; l < 3; l++) {
+            Ellipse(hdc, px + lox[l] - lrad[l], py + loy[l] - lrad[l], px + lox[l] + lrad[l], py + loy[l] + lrad[l]);
+        }
+        SelectObject(hdc, hOldLicB);
+        SelectObject(hdc, hOldLicP);
+        DeleteObject(hLichenBr);
+        DeleteObject(hLichenP);
+    }
+
     SelectObject(hdc, hOldB);
     SelectObject(hdc, hOldP);
     DeleteObject(hMareBrush);
@@ -2338,6 +2358,26 @@ static void DrawFrozenTundraGDI(HDC hdc, CelestialBody* b, int px, int py, int p
     Ellipse(hdc, px - pr, py - pr - iceH / 2, px + pr, py - pr + iceH * 2);
     Ellipse(hdc, px - pr, py + pr - iceH * 2, px + pr, py + pr + iceH / 2);
 
+    // 5. Terraformed Meltwater Glacial Lakes (Forms as temperature rises above -15°C)
+    float curT = (b == GetActivePlanet()) ? sim.temp : b->temp;
+    if (curT > -15.0f) {
+        HBRUSH hLakeBr = CreateSolidBrush(RGB(6, 182, 212));
+        HPEN hLakeP = CreatePen(PS_SOLID, 1, RGB(6, 182, 212));
+        HBRUSH hOldLakeB = (HBRUSH)SelectObject(hdc, hLakeBr);
+        HPEN hOldLakeP = (HPEN)SelectObject(hdc, hLakeP);
+        int lox[3] = { (int)(-pr * 0.22f), (int)(pr * 0.18f), (int)(-pr * 0.06f) };
+        int loy[3] = { (int)(-pr * 0.05f), (int)(pr * 0.22f), (int)(pr * 0.26f) };
+        int lrw[3] = { (int)(pr * 0.16f), (int)(pr * 0.20f), (int)(pr * 0.12f) };
+        int lrh[3] = { (int)(pr * 0.08f), (int)(pr * 0.10f), (int)(pr * 0.06f) };
+        for (int l = 0; l < 3; l++) {
+            Ellipse(hdc, px + lox[l] - lrw[l], py + loy[l] - lrh[l], px + lox[l] + lrw[l], py + loy[l] + lrh[l]);
+        }
+        SelectObject(hdc, hOldLakeB);
+        SelectObject(hdc, hOldLakeP);
+        DeleteObject(hLakeBr);
+        DeleteObject(hLakeP);
+    }
+
     SelectObject(hdc, hOldB);
     SelectObject(hdc, hOldP);
     DeleteObject(hIceBr);
@@ -2382,6 +2422,27 @@ static void DrawOceanWorldGDI(HDC hdc, CelestialBody* b, int px, int py, int pr,
         int vx = px + (int)(((v * 2) % 5 - 2) * 0.25f * pr);
         int vy = py + (int)(((v * 3) % 7 - 3) * 0.18f * pr);
         FillSolidRect(hdc, vx - 1, vy - 1, 3, 3, RGB(0, 245, 255));
+    }
+
+    // 5. Terraformed Coral Atolls & Pelagic Plankton Lagoons (Forms as habitability rises)
+    float curHab = (b == GetActivePlanet()) ? sim.habitability : b->habitability;
+    if (curHab > 35.0f) {
+        HBRUSH hAtollBr = CreateSolidBrush(RGB(45, 212, 191));
+        HPEN hAtollP = CreatePen(PS_SOLID, 1, RGB(21, 128, 61));
+        HBRUSH hOldAtB = (HBRUSH)SelectObject(hdc, hAtollBr);
+        HPEN hOldAtP = (HPEN)SelectObject(hdc, hAtollP);
+        int aox[3] = { (int)(-pr * 0.15f), (int)(pr * 0.25f), (int)(-pr * 0.28f) };
+        int aoy[3] = { (int)(-pr * 0.25f), (int)(pr * 0.18f), (int)(pr * 0.20f) };
+        int arw[3] = { (int)(pr * 0.18f), (int)(pr * 0.20f), (int)(pr * 0.14f) };
+        int arh[3] = { (int)(pr * 0.10f), (int)(pr * 0.11f), (int)(pr * 0.08f) };
+        for (int a = 0; a < 3; a++) {
+            Ellipse(hdc, px + aox[a] - arw[a], py + aoy[a] - arh[a], px + aox[a] + arw[a], py + aoy[a] + arh[a]);
+            FillSolidRect(hdc, px + aox[a] - 1, py + aoy[a] - 1, 3, 3, RGB(21, 128, 61));
+        }
+        SelectObject(hdc, hOldAtB);
+        SelectObject(hdc, hOldAtP);
+        DeleteObject(hAtollBr);
+        DeleteObject(hAtollP);
     }
 
     SelectObject(hdc, hOldB);
@@ -2668,7 +2729,7 @@ static void DrawExoplanetGDI(HDC hdc, CelestialBody* b, int px, int py, int pr, 
             if (count > 8) count = 8;
             float mOrbitR = (float)pr + 20.0f * z;
             for (int m = 0; m < count; m++) {
-                float mAng = simTime * 0.35f + (float)m * (6.2831853f / (float)count);
+                float mAng = (float)m * (6.2831853f / (float)count) - 0.35f;
                 int mx = px + (int)(cosf(mAng) * mOrbitR);
                 int my = py + (int)(sinf(mAng) * (mOrbitR * 0.7f));
 
@@ -2787,10 +2848,10 @@ static void DrawExoplanetGDI(HDC hdc, CelestialBody* b, int px, int py, int pr, 
             // Geostationary anchor terminal
             FillSolidRect(hdc, px - 3, elTopY - 3, 6, 6, RGB(0, 240, 255));
 
-            // Climber pod
-            float podProg = fmodf(simTime * 0.35f, 1.0f);
-            int podY = (py - pr) - (int)((36.0f * z) * podProg);
+            // Mid-transit transfer station & docked climber
+            int podY = (py - pr) - (int)(18.0f * z);
             FillSolidRect(hdc, px - 2, podY - 2, 4, 4, RGB(254, 240, 138));
+            FrameSolidRect(hdc, px - 3, podY - 3, 6, 6, RGB(245, 158, 11));
         }
 
         // Phase 11: 7. Armed Planetary Defense Bastions
@@ -2798,7 +2859,7 @@ static void DrawExoplanetGDI(HDC hdc, CelestialBody* b, int px, int py, int pr, 
             int numDef = sim.defenseStationStage;
             float defDist = (float)pr + 44.0f * z;
             for (int d = 0; d < numDef; d++) {
-                float dAng = simTime * 0.22f + (float)d * (6.2831853f / (float)numDef);
+                float dAng = (float)d * (6.2831853f / (float)numDef) - 0.75f;
                 int dx = px + (int)(cosf(dAng) * defDist);
                 int dy = py + (int)(sinf(dAng) * (defDist * 0.7f));
                 FillSolidRect(hdc, dx - 3, dy - 3, 6, 6, RGB(244, 63, 94));

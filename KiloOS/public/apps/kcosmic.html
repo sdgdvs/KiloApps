@@ -6427,9 +6427,23 @@
             shadeGrad.addColorStop(0.7, 'rgba(5, 5, 8, 0.82)');
             shadeGrad.addColorStop(1, 'rgba(2, 3, 5, 0.98)');
             ctx.fillStyle = shadeGrad;
-            ctx.beginPath();
-            ctx.arc(px, py, pr, 0, Math.PI * 2);
-            ctx.fill();
+            // F. Terraformed Pioneer Biocrust & Lichen Mats (Emerge as water and oxygen take root)
+            const curW = (planet.water !== undefined) ? planet.water : (planet.id === sim.activePlanetId ? sim.water : 0);
+            const curO = (planet.oxygen !== undefined) ? planet.oxygen : (planet.id === sim.activePlanetId ? sim.oxygen : 0);
+            if (curW > 3.0 && curO > 0.5) {
+                const bioAlpha = Math.min(0.65, (curW * 0.03) + (curO * 0.04));
+                ctx.fillStyle = `rgba(34, 197, 94, ${bioAlpha})`;
+                const bioCrags = [
+                    { x: -0.22, y: -0.18, r: 0.16 },
+                    { x: 0.32, y: 0.12, r: 0.14 },
+                    { x: -0.06, y: 0.35, r: 0.15 }
+                ];
+                bioCrags.forEach(bc => {
+                    ctx.beginPath();
+                    ctx.arc(px + bc.x * pr, py + bc.y * pr, bc.r * pr, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
 
             ctx.restore();
 
@@ -6778,9 +6792,22 @@
             shadeGrad.addColorStop(0.55, 'rgba(2, 6, 23, 0.35)');
             shadeGrad.addColorStop(1, 'rgba(2, 6, 23, 0.88)');
             ctx.fillStyle = shadeGrad;
-            ctx.beginPath();
-            ctx.arc(px, py, pr, 0, Math.PI * 2);
-            ctx.fill();
+            // F. Terraformed Bioluminescent Plankton & Coral Atoll Lagoons
+            const curHab = (planet.habitability !== undefined) ? planet.habitability : (planet.id === sim.activePlanetId ? sim.habitability : 25);
+            if (curHab > 35) {
+                const bloomAlpha = Math.min(0.55, (curHab - 35) * 0.015);
+                ctx.fillStyle = `rgba(16, 185, 129, ${bloomAlpha})`;
+                const blooms = [
+                    { x: -0.15, y: -0.25, rx: 0.22, ry: 0.10, rot: 0.3 },
+                    { x: 0.25, y: 0.18, rx: 0.24, ry: 0.12, rot: -0.2 },
+                    { x: -0.28, y: 0.20, rx: 0.18, ry: 0.08, rot: 0.1 }
+                ];
+                blooms.forEach(bl => {
+                    ctx.beginPath();
+                    ctx.ellipse(px + bl.x * pr, py + bl.y * pr, bl.rx * pr, bl.ry * pr, bl.rot, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
 
             ctx.restore();
         }
@@ -7482,7 +7509,7 @@
                 ctx.stroke();
 
                 for (let a = 0; a < 4; a++) {
-                    const ang = (a * Math.PI / 2) + (time * 0.1);
+                    const ang = (a * Math.PI / 2);
                     ctx.beginPath();
                     ctx.moveTo(zx + Math.cos(ang) * 8 * z, zy + Math.sin(ang) * 8 * z);
                     ctx.lineTo(zx + Math.cos(ang) * dockR, zy + Math.sin(ang) * dockR);
@@ -7491,7 +7518,7 @@
                 ctx.restore();
             }
 
-            // Draw Surface Mass Driver on Active Target Planet limb
+            // Draw Surface Mass Driver on Active Target Planet limb (clean static induction rail)
             if (sim.massDrivers > 0 && targetPlanet && targetPlanet.currX !== undefined) {
                 const px = targetPlanet.currX;
                 const py = targetPlanet.currY;
@@ -7509,13 +7536,16 @@
                 ctx.lineTo(lx + Math.cos(launchAngle) * barrelLen, ly + Math.sin(launchAngle) * barrelLen);
                 ctx.stroke();
 
-                const pulseT = (time * 2) % 2.0;
-                if (pulseT < 0.6) {
-                    const slugDist = barrelLen + (pulseT * 80 * z);
-                    ctx.fillStyle = '#6ee7b7';
+                // Induction acceleration coils along barrel (clean static gantry)
+                for (let c = 1; c <= 3; c++) {
+                    const coilDist = barrelLen * (c / 4);
+                    const cx = lx + Math.cos(launchAngle) * coilDist;
+                    const cy = ly + Math.sin(launchAngle) * coilDist;
+                    ctx.strokeStyle = '#34d399';
+                    ctx.lineWidth = 1.5 * z;
                     ctx.beginPath();
-                    ctx.arc(lx + Math.cos(launchAngle) * slugDist, ly + Math.sin(launchAngle) * slugDist, 2.5 * z, 0, Math.PI * 2);
-                    ctx.fill();
+                    ctx.arc(cx, cy, 2.5 * z, 0, Math.PI * 2);
+                    ctx.stroke();
                 }
                 ctx.restore();
             }
@@ -7718,7 +7748,7 @@
                     if (bMirrors > 0) {
                         const mirrorOrbitDist = pr + 30 * z;
                         for (let m = 0; m < bMirrors; m++) {
-                            const mAngle = (sim.time * 0.4) + (m * (Math.PI * 2 / bMirrors));
+                            const mAngle = (m * (Math.PI * 2 / bMirrors)) - 0.35;
                             const mx = px + Math.cos(mAngle) * mirrorOrbitDist;
                             const my = py + Math.sin(mAngle) * (mirrorOrbitDist * 0.7);
 
@@ -7918,13 +7948,13 @@
                             ctx.fillStyle = '#00f0ff';
                             ctx.fillRect(px - 3 * z, elTopY - 3 * z, 6 * z, 6 * z);
 
-                            // Moving climber transport pod
-                            const podProgress = (sim.time * 0.35) % 1.0;
-                            const podY = (py - pr) - (36 * z * podProgress);
+                            // Mid-transit transfer station & docked climber
+                            const podY = (py - pr) - (18 * z);
                             ctx.fillStyle = '#fef08a';
-                            ctx.beginPath();
-                            ctx.arc(px, podY, 2.5 * z, 0, Math.PI * 2);
-                            ctx.fill();
+                            ctx.fillRect(px - 2 * z, podY - 2 * z, 4 * z, 4 * z);
+                            ctx.strokeStyle = '#f59e0b';
+                            ctx.lineWidth = 1;
+                            ctx.strokeRect(px - 2 * z, podY - 2 * z, 4 * z, 4 * z);
                             ctx.restore();
                         }
 
@@ -7933,7 +7963,7 @@
                             ctx.save();
                             const numDef = sim.defenseStationStage;
                             for (let d = 0; d < numDef; d++) {
-                                const dAng = (sim.time * 0.22) + (d * (Math.PI * 2 / numDef));
+                                const dAng = (d * (Math.PI * 2 / numDef)) - 0.75;
                                 const dx = px + Math.cos(dAng) * (pr + 44 * z);
                                 const dy = py + Math.sin(dAng) * ((pr + 44 * z) * 0.7);
 
