@@ -114,6 +114,21 @@
             border-color: rgba(255, 255, 255, 0.2);
         }
 
+        .btn:active {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        .btn:focus-visible,
+        .search-box:focus-visible,
+        .select-box:focus-visible,
+        .check-btn:focus-visible,
+        .card-btn:focus-visible,
+        .modal-close-btn:focus-visible,
+        .habit-card:focus-visible {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 2px;
+        }
+
         .btn-primary {
             background: linear-gradient(135deg, var(--accent-color), #6d28d9);
             color: white;
@@ -707,17 +722,18 @@
         }
 
 
-        /* Toast Container */
+        /* Toast Container (Safe Non-Occluding Viewport Placement) */
         .toast-container {
             position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
+            bottom: 48px;
+            right: 20px;
             display: flex;
-            flex-direction: column;
+            flex-direction: column-reverse;
+            align-items: flex-end;
             gap: 8px;
-            z-index: 9999;
+            z-index: 1000;
             pointer-events: none;
+            max-width: 400px;
         }
 
         .toast {
@@ -760,6 +776,96 @@
             background: rgba(255, 255, 255, 0.25);
             transform: none;
             box-shadow: none;
+        }
+
+        /* Stats Grid Styles */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass-border);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.35rem;
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .stat-sub {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive Media Queries */
+        @media (max-width: 768px) {
+            body {
+                padding: 6px;
+            }
+            .app-container {
+                height: calc(100vh - 12px);
+                border-radius: 12px;
+            }
+            header {
+                padding: 10px 14px;
+                gap: 8px;
+            }
+            main {
+                padding: 14px 16px;
+            }
+            .footer-shortcuts {
+                flex-wrap: wrap;
+                gap: 8px;
+                justify-content: flex-end;
+            }
+        }
+
+        @media (max-width: 580px) {
+            h1 {
+                font-size: 1.25rem;
+            }
+            .search-box {
+                width: 100%;
+                max-width: none;
+            }
+            footer {
+                flex-direction: column;
+                gap: 8px;
+                align-items: center;
+                text-align: center;
+                padding: 8px 12px;
+            }
+            .footer-shortcuts {
+                justify-content: center;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .toast-container {
+                right: 12px;
+                left: 12px;
+                bottom: 52px;
+                max-width: none;
+                align-items: center;
+            }
         }
     </style>
 </head>
@@ -1281,9 +1387,12 @@
                 habitListEl.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-state-icon">🌱</div>
-                        <p>${habits.length === 0 ? 'No habits yet. Click <strong>+ New Habit</strong> (or press <kbd>Ctrl+N</kbd>) to plant your first seed!' : 'No habits match your search criteria.'}</p>
+                        <p>${habits.length === 0 ? 'No habits yet. Plant your first seed to begin building your streak!' : 'No habits match your search criteria.'}</p>
+                        ${habits.length === 0 ? '<button class="btn btn-primary" id="empty-add-btn" style="margin-top: 8px;">+ Create Habit</button>' : ''}
                     </div>
                 `;
+                const emptyAddBtn = document.getElementById('empty-add-btn');
+                if (emptyAddBtn) emptyAddBtn.addEventListener('click', openAddModal);
                 return;
             }
 
@@ -1308,6 +1417,9 @@
                 card.className = `habit-card ${isMastered ? 'mastered' : ''}`;
                 card.dataset.id = habit.id;
                 card.dataset.index = idx;
+                card.setAttribute('tabindex', '0');
+                card.setAttribute('role', 'article');
+                card.setAttribute('aria-label', `${habit.name}, streak ${streak} days`);
                 
                 card.innerHTML = `
                     <div class="habit-info">
@@ -1324,16 +1436,16 @@
                             <span class="streak-icon">🔥</span>
                             <span>${streakText}</span>
                         </div>
-                        <button class="check-btn ${isCompletedToday ? 'completed' : ''}" data-id="${habit.id}" title="${isCompletedToday ? 'Completed today! (Click to undo)' : 'Mark complete for today (Space)'}">
+                        <button class="check-btn ${isCompletedToday ? 'completed' : ''}" data-id="${habit.id}" aria-label="Mark ${escapeHtml(habit.name)} complete" title="${isCompletedToday ? 'Completed today! (Click to undo)' : 'Mark complete for today (Space)'}">
                             <span>✔</span>
                         </button>
-                        <button class="card-btn edit-btn" data-id="${habit.id}" title="Edit Habit (E)">
+                        <button class="card-btn edit-btn" data-id="${habit.id}" aria-label="Edit ${escapeHtml(habit.name)}" title="Edit Habit (E)">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                             </svg>
                         </button>
-                        <button class="card-btn delete-btn" data-id="${habit.id}" title="Delete Habit (Delete)">
+                        <button class="card-btn delete-btn" data-id="${habit.id}" aria-label="Delete ${escapeHtml(habit.name)}" title="Delete Habit (Delete)">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="3 6 5 6 21 6"></polyline>
                                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -1350,6 +1462,17 @@
                     if (e.target.closest('.check-btn') || e.target.closest('.edit-btn') || e.target.closest('.delete-btn')) return;
                     selectedHabitIndex = idx;
                     updateSelection();
+                });
+                card.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const btn = card.querySelector('.edit-btn');
+                        if (btn) btn.click();
+                    } else if (e.key === ' ') {
+                        e.preventDefault();
+                        const btn = card.querySelector('.check-btn');
+                        if (btn) btn.click();
+                    }
                 });
             });
 
@@ -1767,12 +1890,38 @@
             const completionRate = totalActive > 0 ? Math.round((completedToday / totalActive) * 100) : 0;
 
             statsContent.innerHTML = `
-                <p><strong>Total Active Habits:</strong> ${totalActive}</p>
-                <p><strong>Today's Progress:</strong> ${completedToday} / ${totalActive} (${completionRate}%)</p>
-                <p><strong>Total Mastered Habits:</strong> ${totalMastered}</p>
-                <p><strong>Longest Active Streak:</strong> ${longestStreak} days 🔥</p>
-                <p><strong>Lifetime Check-offs:</strong> ${totalCompletionsAllTime} logged</p>
-                <p><strong>Most Consistent Category:</strong> ${escapeHtml(mostConsistentCat)} (${highestAvg >= 0 ? highestAvg.toFixed(1) : 0} avg streak)</p>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <span class="stat-label">Active Habits</span>
+                        <span class="stat-value">${totalActive}</span>
+                        <span class="stat-sub">Tracking today</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">Today's Progress</span>
+                        <span class="stat-value">${completedToday} / ${totalActive}</span>
+                        <span class="stat-sub">${completionRate}% completed</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">Mastered Goals</span>
+                        <span class="stat-value">${totalMastered}</span>
+                        <span class="stat-sub">Target streaks reached</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">Best Streak</span>
+                        <span class="stat-value">${longestStreak} 🔥</span>
+                        <span class="stat-sub">Consecutive days</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">Lifetime Checks</span>
+                        <span class="stat-value">${totalCompletionsAllTime}</span>
+                        <span class="stat-sub">Total logged check-offs</span>
+                    </div>
+                    <div class="stat-card">
+                        <span class="stat-label">Top Category</span>
+                        <span class="stat-value" style="font-size: 1.1rem;">${escapeHtml(mostConsistentCat)}</span>
+                        <span class="stat-sub">${highestAvg >= 0 ? highestAvg.toFixed(1) : 0} avg streak</span>
+                    </div>
+                </div>
             `;
             closeAllModals();
             statsModal.classList.add('active');
@@ -1788,6 +1937,9 @@
         // Help Modal
         const openHelp = () => {
             closeAllModals();
+            if (checkTutorialSeen) {
+                checkTutorialSeen.checked = localStorage.getItem('khabit_tutorialSeen') === '1';
+            }
             helpModal.classList.add('active');
             playSound('modal');
         };
@@ -1856,6 +2008,7 @@
                 closeModal();
             } else {
                 nameInput.style.borderColor = 'var(--danger-color)';
+                showToast("Please enter a habit name.");
                 setTimeout(() => nameInput.style.borderColor = 'var(--glass-border)', 1500);
             }
         });

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://portal (KiloNet Central Directory)"
   kilo_graphics: KSanctuary
   kilo_tester: KPass
-  kilo_usability: KHabit
+  kilo_usability: KFarm
   kilo_qa: KFarm
   kilo_expander: KPad
 virtual_web_target: "kweb://portal"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KPaint
-  timestamp: "2026-10-02T14:18:00Z"
+  agent: kilo-usability
+  app: KHabit
+  timestamp: "2026-10-02T15:20:00Z"
 last_planner_run: "2026-10-01T19:32:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KHabit`
+- **Current Target**: `KFarm`
 - **Upcoming Queue**:
-  `KFarm`, `KPaint`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash` *(Completed: KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex)*.
+  `KPaint`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash` *(Completed: KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KFarm`
@@ -298,6 +298,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-02T15:20:00Z — kilo-usability: KHabit (Win32 Layout & Quicksave Parity, Safe Toasts, Stats Grid & Focus Ergonomics)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 82.1 KB web / 175.0 KB native < 999 KB ceiling).
+  - Win32 Parity & Alignment: Aligned dashboard to 520px list width, added 7-day history headers/day labels, F5/F9 Quicksave/Quickload, and Enter-to-add key.
+  - Window Dimension Polish: Adjusted default window size to 880x640 in App.jsx to prevent toolbar wrapping and awkward scrollbars.
+  - Toast Occlusion Remediation: Relocated toast container to non-occluding bottom-right safe viewport (`bottom: 48px; right: 20px`) with instant click dismiss.
+  - Accessibility & Ergonomics: Added high-contrast `:focus-visible` outlines, card `tabindex="0"`, Enter/Space card toggles, and empty state CTA button.
+  - Stats & Modal Polish: Refactored statistics into structured 2-column KPI tiles and synchronized first-run tutorial persistence.
+  - Verification: MSVC clean (`KHabit.exe` 175.0 KB); Vite clean in 380ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T14:18:00Z — kilo-tester: KPaint (Syntax Redeclaration Repair, Missing Shortcuts & Dropdown Dismissal)**
   - Status: PASS ✅ (4 issues found, 4 fixed, 0 regressions, clean builds, 230.4 KB web / 39.0 KB native < 999 KB ceiling).
   - Script Execution Fix: Eliminated 8 duplicate `let` redeclarations in RFMS collab block that caused fatal browser syntax parse error.
@@ -329,11 +338,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Sprite Animation Dock: Built multi-frame flipbook dock with onionskin overlay, 1-24 FPS preview, and Sprite Sheet PNG + JSON metadata export.
   - Drawing Tools: Added 3-point Bezier Curve tool (shortcut K) and Global Layer Color Replace tool (shortcut Shift+G).
   - Verification: MSVC clean (`KPaint.exe` 39.0 KB); Vite clean in 384ms; check_icons & security_lint 100% PASS.
-
-- **2026-10-02T10:37:00Z — kilo-usability: KPing (Win32 Overlap Fix, Responsive Media Queries & Focus Ergonomics)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 151.0 KB web / 38.9 KB native < 999 KB ceiling).
-  - Win32 Layout Polish: Eliminated 10px overlap between preset combobox and Ping button; fixed 17px row 2 Audio/Resolve overlap at 880px minimum track size.
-  - Responsive Media Queries: Added clean wrapping rules for narrow viewports (<=768px) and mobile toast bounds (<=500px).
-  - Modal & Toast Ergonomics: Verified backdrop dismissal, mutual modal isolation, non-occluding bottom-right toasts, and Enter/Space triggers.
-  - Keyboard Navigation: Confirmed 1-9 host presets, P/T/M/S/D/B/Q shortcuts, and high-contrast :focus-visible outlines across all interactive elements.
-  - Verification: MSVC clean (`KPing.exe` 38.9 KB); Vite clean in 455ms; check_icons & security_lint 100% PASS.

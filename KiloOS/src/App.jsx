@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.4.17';
+const MICROS_VERSION = '0.4.18';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='f1' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2364B5F6'/><stop offset='100%' stop-color='%231E88E5'/></linearGradient><linearGradient id='f2' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2390CAF9'/><stop offset='100%' stop-color='%232196F3'/></linearGradient></defs><path fill='url(%23f1)' d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/><path fill='url(%23f2)' d='M2 8h20v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V8z'/></svg>";
 const HELP_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232196F3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'></circle><path d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'></path><line x1='12' y1='17' x2='12.01' y2='17'></line></svg>";
@@ -72,7 +72,7 @@ const APPS = [
   { id: 'kjournal', title: 'KJournal', url: '/apps/kjournal.html', exeUrl: '/exe/KJournal.exe', icon: '/assets/icons/kjournal.ico', w: 1100, h: 750, folder: 'Office' },
   { id: 'kbreakout', title: 'KBreakout', url: '/apps/kbreakout.html', exeUrl: '/exe/KBreakout.exe', icon: '/assets/icons/kbreakout.ico', w: 430, h: 460, folder: 'Games' },
   { id: 'kbudget', title: 'KBudget', url: '/apps/kbudget.html', exeUrl: '/exe/KBudget.exe', icon: '/assets/icons/kbudget.ico', w: 800, h: 600, folder: 'Office' },
-  { id: 'khabit', title: 'KHabit', url: '/apps/khabit.html', exeUrl: '/exe/KHabit.exe', icon: '/assets/icons/khabit.ico', w: 800, h: 600, folder: 'Office' },
+  { id: 'khabit', title: 'KHabit', url: '/apps/khabit.html', exeUrl: '/exe/KHabit.exe', icon: '/assets/icons/khabit.ico', w: 880, h: 640, folder: 'Office' },
   { id: 'kflash', title: 'KFlash', url: '/apps/kflash.html', exeUrl: '/exe/KFlash.exe', icon: '/assets/icons/kflash.ico', w: 600, h: 500, folder: 'Office' },
   { id: 'k2048', title: 'K2048', url: '/apps/k2048.html', exeUrl: '/exe/K2048.exe', icon: '/assets/icons/k2048.ico', w: 380, h: 480, folder: 'Games' },
   { id: 'ksudoku', title: 'KSudoku', url: '/apps/ksudoku.html', exeUrl: '/exe/KSudoku.exe', icon: '/assets/icons/ksudoku.ico', w: 600, h: 600, folder: 'Games' },

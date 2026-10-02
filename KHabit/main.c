@@ -12,9 +12,15 @@
 #define ID_BTN_DELETE 105
 #define ID_BTN_IMPORT 106
 #define ID_BTN_EXPORT 107
-#define ID_BTN_HELP 112
+#define ID_BTN_SETTINGS 108
 #define ID_COMBO_SORT 109
 #define ID_SEARCH_EDIT 110
+#define ID_COMBO_CAT 111
+#define ID_BTN_HELP 112
+#define ID_COMBO_TARGET 114
+#define ID_BTN_STATS 115
+#define ID_BTN_QUICKSAVE 116
+#define ID_BTN_QUICKLOAD 117
 
 typedef struct {
     char name[128];
@@ -157,6 +163,47 @@ void UpdateList() {
     }
 }
 
+void QuickSaveHabits(HWND hwnd) {
+    FILE *f = fopen("khabit_quicksave.dat", "w");
+    if (!f) return;
+    for (int i = 0; i < habitCount; i++) {
+        fprintf(f, "%s|%d|%d|%s|%d\n", habits[i].name, habits[i].streak, habits[i].last_check_day, habits[i].category, habits[i].target_streak);
+    }
+    fclose(f);
+    SaveHabits();
+    MessageBox(hwnd, "State QuickSaved to snapshot! [F5]", "QuickSave", MB_OK | MB_ICONINFORMATION);
+}
+
+void QuickLoadHabits(HWND hwnd) {
+    FILE *f = fopen("khabit_quicksave.dat", "r");
+    if (!f) {
+        MessageBox(hwnd, "No QuickSave snapshot found. Press F5 to save one first.", "QuickLoad", MB_OK | MB_ICONWARNING);
+        return;
+    }
+    habitCount = 0;
+    char line[256];
+    while (fgets(line, sizeof(line), f)) {
+        char name[128] = {0};
+        int streak = 0, last = 0, target_streak = 0;
+        char cat[32] = "Other";
+        int n = sscanf(line, "%127[^|]|%d|%d|%31[^|]|%d", name, &streak, &last, cat, &target_streak);
+        if (n >= 4) {
+            strcpy(habits[habitCount].name, name);
+            habits[habitCount].streak = streak;
+            habits[habitCount].last_check_day = last;
+            strcpy(habits[habitCount].category, cat);
+            habits[habitCount].target_streak = target_streak;
+            habitCount++;
+            if (habitCount >= MAX_HABITS) break;
+        }
+    }
+    fclose(f);
+    SortHabits();
+    SaveHabits();
+    UpdateList();
+    MessageBox(hwnd, "State QuickLoaded from snapshot! [F9]", "QuickLoad", MB_OK | MB_ICONINFORMATION);
+}
+
 HBRUSH hbgBrush;
 HBRUSH hListBrush;
 HFONT hFont;
@@ -207,12 +254,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             hFont = CreateFont(18, 0, 0, 0, FW_SEMIBOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, "Segoe UI");
             
             hEdit = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
-                                   20, 20, 120, 28, hwnd, (HMENU)ID_EDIT, NULL, NULL);
+                                   20, 20, 115, 28, hwnd, (HMENU)ID_EDIT, NULL, NULL);
             SendMessage(hEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-#define ID_COMBO_CAT 111
             HWND hCatCombo = CreateWindowEx(0, "COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE,
-                                             145, 20, 80, 150, hwnd, (HMENU)ID_COMBO_CAT, NULL, NULL);
+                                             140, 20, 75, 150, hwnd, (HMENU)ID_COMBO_CAT, NULL, NULL);
             SendMessage(hCatCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hCatCombo, CB_ADDSTRING, 0, (LPARAM)"Health");
             SendMessage(hCatCombo, CB_ADDSTRING, 0, (LPARAM)"Work");
@@ -220,9 +266,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hCatCombo, CB_ADDSTRING, 0, (LPARAM)"Other");
             SendMessage(hCatCombo, CB_SETCURSEL, 3, 0);
 
-#define ID_COMBO_TARGET 114
             HWND hTargetCombo = CreateWindowEx(0, "COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE,
-                                             230, 20, 60, 150, hwnd, (HMENU)ID_COMBO_TARGET, NULL, NULL);
+                                             220, 20, 50, 150, hwnd, (HMENU)ID_COMBO_TARGET, NULL, NULL);
             SendMessage(hTargetCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hTargetCombo, CB_ADDSTRING, 0, (LPARAM)"0");
             SendMessage(hTargetCombo, CB_ADDSTRING, 0, (LPARAM)"7");
@@ -231,57 +276,63 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hTargetCombo, CB_SETCURSEL, 0, 0);
 
             HWND hSortCombo = CreateWindowEx(0, "COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE,
-                                             295, 20, 80, 150, hwnd, (HMENU)ID_COMBO_SORT, NULL, NULL);
+                                             275, 20, 70, 150, hwnd, (HMENU)ID_COMBO_SORT, NULL, NULL);
             SendMessage(hSortCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hSortCombo, CB_ADDSTRING, 0, (LPARAM)"Sort...");
             SendMessage(hSortCombo, CB_ADDSTRING, 0, (LPARAM)"A-Z");
             SendMessage(hSortCombo, CB_ADDSTRING, 0, (LPARAM)"Streak");
 
             HWND hAdd = CreateWindowEx(0, "BUTTON", "+ New", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                       380, 20, 55, 28, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
+                                       350, 20, 50, 28, hwnd, (HMENU)ID_BTN_ADD, NULL, NULL);
             SendMessage(hAdd, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-#define ID_BTN_STATS 115
             HWND hStats = CreateWindowEx(0, "BUTTON", "Stats", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                       440, 20, 50, 28, hwnd, (HMENU)ID_BTN_STATS, NULL, NULL);
+                                       405, 20, 42, 28, hwnd, (HMENU)ID_BTN_STATS, NULL, NULL);
             SendMessage(hStats, WM_SETFONT, (WPARAM)hFont, TRUE);
 
+            HWND hSettings = CreateWindowEx(0, "BUTTON", "Theme", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                          452, 20, 42, 28, hwnd, (HMENU)ID_BTN_SETTINGS, NULL, NULL);
+            SendMessage(hSettings, WM_SETFONT, (WPARAM)hFont, TRUE);
+
             HWND hHelp = CreateWindowEx(0, "BUTTON", "?", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                        495, 20, 25, 28, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
+                                        498, 20, 22, 28, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
             SendMessage(hHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hSearchLabel = CreateWindowEx(0, "STATIC", "Search:", WS_CHILD | WS_VISIBLE,
-                                               20, 145, 60, 20, hwnd, NULL, NULL, NULL);
+                                               20, 142, 55, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hSearchLabel, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hSearchEdit = CreateWindowEx(0, "EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
-                                         80, 140, 440, 28, hwnd, (HMENU)ID_SEARCH_EDIT, NULL, NULL);
+                                         78, 138, 442, 28, hwnd, (HMENU)ID_SEARCH_EDIT, NULL, NULL);
             SendMessage(hSearchEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hList = CreateWindowEx(0, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_BORDER | LBS_NOTIFY | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS,
-                                   20, 175, 500, 205, hwnd, (HMENU)ID_LISTBOX, NULL, NULL);
+                                   20, 172, 500, 215, hwnd, (HMENU)ID_LISTBOX, NULL, NULL);
             SendMessage(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hCheck = CreateWindowEx(0, "BUTTON", "Check Off", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                         20, 395, 90, 35, hwnd, (HMENU)ID_BTN_CHECK, NULL, NULL);
+                                         20, 395, 85, 34, hwnd, (HMENU)ID_BTN_CHECK, NULL, NULL);
             SendMessage(hCheck, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hDel = CreateWindowEx(0, "BUTTON", "Delete", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                       120, 395, 80, 35, hwnd, (HMENU)ID_BTN_DELETE, NULL, NULL);
+                                       110, 395, 68, 34, hwnd, (HMENU)ID_BTN_DELETE, NULL, NULL);
             SendMessage(hDel, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hImport = CreateWindowEx(0, "BUTTON", "Import", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                          210, 395, 80, 35, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
+                                          183, 395, 72, 34, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
             SendMessage(hImport, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             HWND hExport = CreateWindowEx(0, "BUTTON", "Export", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                          300, 395, 80, 35, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
+                                          260, 395, 72, 34, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
             SendMessage(hExport, WM_SETFONT, (WPARAM)hFont, TRUE);
 
-#define ID_BTN_SETTINGS 108
-            HWND hSettings = CreateWindowEx(0, "BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                                          390, 395, 80, 35, hwnd, (HMENU)ID_BTN_SETTINGS, NULL, NULL);
-            SendMessage(hSettings, WM_SETFONT, (WPARAM)hFont, TRUE);
+            HWND hSave = CreateWindowEx(0, "BUTTON", "Save (F5)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                        337, 395, 88, 34, hwnd, (HMENU)ID_BTN_QUICKSAVE, NULL, NULL);
+            SendMessage(hSave, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            HWND hLoad = CreateWindowEx(0, "BUTTON", "Load (F9)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                        430, 395, 90, 34, hwnd, (HMENU)ID_BTN_QUICKLOAD, NULL, NULL);
+            SendMessage(hLoad, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hMainWnd = hwnd;
             LoadSettings();
@@ -359,7 +410,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
             
-            RECT rcDash = {20, 60, 500, 130};
+            RECT rcDash = {20, 58, 520, 130};
             FillRect(hdc, &rcDash, hListBrush);
             
             int total = habitCount;
@@ -374,22 +425,34 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SelectObject(hdc, hFont);
             
             char progText[64];
-            sprintf(progText, "Daily Progress: %d / %d", completedToday, total);
-            RECT rcText = {35, 65, 200, 85};
+            int pct = total > 0 ? (completedToday * 100 / total) : 0;
+            sprintf(progText, "Daily Progress: %d / %d (%d%%)", completedToday, total, pct);
+            RECT rcText = {35, 64, 280, 84};
             DrawText(hdc, progText, -1, &rcText, DT_SINGLELINE | DT_VCENTER);
             
-            RECT rcBarBg = {35, 95, 255, 105};
+            RECT rcBarBg = {35, 90, 260, 102};
             HBRUSH hBarBg = CreateSolidBrush(RGB(60, 60, 65));
             FillRect(hdc, &rcBarBg, hBarBg);
             DeleteObject(hBarBg);
             
             if (total > 0 && completedToday > 0) {
-                RECT rcBarFill = {35, 95, 35 + (220 * completedToday / total), 105};
+                int fillWidth = 225 * completedToday / total;
+                RECT rcBarFill = {35, 90, 35 + fillWidth, 102};
                 HBRUSH hBarFill = CreateSolidBrush(accentColors[current_color_index]);
                 FillRect(hdc, &rcBarFill, hBarFill);
                 DeleteObject(hBarFill);
             }
-            
+
+            // 7-Day History Header
+            RECT rcHistTitle = {310, 64, 510, 80};
+            SetTextColor(hdc, RGB(160, 160, 170));
+            DrawText(hdc, "7-Day History", -1, &rcHistTitle, DT_SINGLELINE | DT_RIGHT | DT_VCENTER);
+
+            const char *dayLetters = "SMTWTFS";
+            time_t rawtime = time(NULL);
+            struct tm *ti = localtime(&rawtime);
+            int currentDayOfWeek = ti ? ti->tm_wday : 0;
+
             for(int d=6; d>=0; d--) {
                 int checkDay = today - d;
                 int complOnDay = 0;
@@ -399,19 +462,27 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                 }
                 
-                int startX = 300 + (6 - d) * 22;
-                RECT rcHistBg = {startX, 70, startX + 12, 115};
+                int startX = 330 + (6 - d) * 26;
+                RECT rcHistBg = {startX, 82, startX + 16, 114};
                 HBRUSH hHistBg = CreateSolidBrush(RGB(60, 60, 65));
                 FillRect(hdc, &rcHistBg, hHistBg);
                 DeleteObject(hHistBg);
                 
                 if (total > 0 && complOnDay > 0) {
-                    int h = 45 * complOnDay / total;
-                    RECT rcHistFill = {startX, 115 - h, startX + 12, 115};
+                    int h = 32 * complOnDay / total;
+                    if (h < 3) h = 3;
+                    RECT rcHistFill = {startX, 114 - h, startX + 16, 114};
                     HBRUSH hHistFill = CreateSolidBrush(accentColors[current_color_index]);
                     FillRect(hdc, &rcHistFill, hHistFill);
                     DeleteObject(hHistFill);
                 }
+
+                // Day label below bar
+                int dayIdx = (currentDayOfWeek - d + 70) % 7;
+                char dLabel[2] = { dayLetters[dayIdx], 0 };
+                RECT rcDayLbl = {startX, 115, startX + 16, 128};
+                SetTextColor(hdc, RGB(160, 160, 170));
+                DrawText(hdc, dLabel, -1, &rcDayLbl, DT_SINGLELINE | DT_CENTER | DT_VCENTER);
             }
             
             EndPaint(hwnd, &ps);
@@ -591,6 +662,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     hwnd, NULL, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL
                 );
                 ShowWindow(hSettingsWnd, SW_SHOW);
+            } else if (wmId == ID_BTN_QUICKSAVE && wmEvent == BN_CLICKED) {
+                QuickSaveHabits(hwnd);
+            } else if (wmId == ID_BTN_QUICKLOAD && wmEvent == BN_CLICKED) {
+                QuickLoadHabits(hwnd);
             } else if (wmId == ID_BTN_HELP && wmEvent == BN_CLICKED) {
                 MessageBox(hwnd, "KHabit Guide:\n\n"
                                  "Tracking: Select a habit and click 'Check Off' (or press Space) to log daily progress.\n"
@@ -691,6 +766,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             if (msg.wParam == 'N' && (GetKeyState(VK_CONTROL) & 0x8000)) {
                 SetFocus(hEdit);
                 bHandled = TRUE;
+            } else if (msg.wParam == VK_RETURN) {
+                if (GetFocus() == hEdit) {
+                    SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_ADD, BN_CLICKED), 0);
+                    bHandled = TRUE;
+                }
             } else if (msg.wParam == VK_SPACE) {
                 if (GetFocus() == hList || GetFocus() == hwnd) {
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_CHECK, BN_CLICKED), 0);
@@ -699,6 +779,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             } else if (msg.wParam == VK_DELETE) {
                 if (GetFocus() == hList || GetFocus() == hwnd) {
                     SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_DELETE, BN_CLICKED), 0);
+                    bHandled = TRUE;
+                }
+            } else if (msg.wParam == VK_F5) {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_QUICKSAVE, BN_CLICKED), 0);
+                bHandled = TRUE;
+            } else if (msg.wParam == VK_F9) {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_QUICKLOAD, BN_CLICKED), 0);
+                bHandled = TRUE;
+            } else if (msg.wParam == VK_F1) {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_HELP, BN_CLICKED), 0);
+                bHandled = TRUE;
+            } else if (msg.wParam == VK_ESCAPE) {
+                if (GetFocus() == hSearchEdit) {
+                    SetWindowText(hSearchEdit, "");
+                    SetFocus(hList);
                     bHandled = TRUE;
                 }
             } else if (msg.wParam == VK_UP || msg.wParam == VK_DOWN) {

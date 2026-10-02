@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-02T10:37:00Z — kilo-usability: KPing (Win32 Overlap Fix, Responsive Media Queries & Focus Ergonomics)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 151.0 KB web / 38.9 KB native < 999 KB ceiling).
+  - Win32 Layout Polish: Eliminated 10px overlap between preset combobox and Ping button; fixed 17px row 2 Audio/Resolve overlap at 880px minimum track size.
+  - Responsive Media Queries: Added clean wrapping rules for narrow viewports (<=768px) and mobile toast bounds (<=500px).
+  - Modal & Toast Ergonomics: Verified backdrop dismissal, mutual modal isolation, non-occluding bottom-right toasts, and Enter/Space triggers.
+  - Keyboard Navigation: Confirmed 1-9 host presets, P/T/M/S/D/B/Q shortcuts, and high-contrast :focus-visible outlines across all interactive elements.
+  - Verification: MSVC clean (`KPing.exe` 38.9 KB); Vite clean in 455ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T10:20:00Z — kilo-qa: KCalendar (Pass 5: Full State Persistence, First-Run Tutorial, Safe Toasts & Win32 Quicksave)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 109.7 KB web / 24.6 KB native < 999 KB ceiling).
   - Quicksave & State Integrity: Built F5 Quicksave / F9 Quickload in Win32 C (`kcalendar_quicksave.dat`) and web with full filter/view state capture.
