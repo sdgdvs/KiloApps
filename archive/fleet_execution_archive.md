@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-02T01:22:00Z — kilo-expander: KSnake (RFMS Duel Multiplayer, 25s Solo AI Fallback & Deterministic Replay Viewer)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 247.6 KB web / 54.2 KB native < 999 KB ceiling).
+  - RFMS Multiplayer: Standardized RetroMultiplayer integration with room sharing, `#room=CODE` URL sync, and 1-click link copying.
+  - Solo Fallback: Added 25-second countdown timer falling back to local Grandmaster AI Bot when no peer joins.
+  - Replay Playback Engine: Implemented complete deterministic replay viewer loop with on-canvas HUD banner and 0.5x-4x speed controls.
+  - Replay Import/Export: Added `.ksr` file download, JSON import, drag-and-drop file runner, and recent duel history ledger.
+  - Verification: MSVC clean (`KSnake.exe` 54.2 KB); Vite clean in 389ms; check_sizes & security_lint 100% PASS.
+
 - **2026-10-02T00:18:00Z — kilo-qa: KBase (Pass 5: Full State Persistence, First-Run Tutorial, Toast & Win32 Quicksave)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 118.5 KB web / 24.5 KB native < 999 KB ceiling).
   - Quicksave & State Integrity: Built F5 Quicksave / F9 Quickload in Win32 C (`kbase_quicksave.dat`) and web localStorage capturing all studio state.

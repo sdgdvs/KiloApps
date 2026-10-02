@@ -5,7 +5,7 @@
   "hostname": "DESKTOP-HSSS709",
   "model_tier": "Gemini Pro",
   "cadence": "1 turn/hour",
-  "status": "quota_paused",
+  "status": "active",
   "schedule_minutes": [
     30
   ],
@@ -13,9 +13,9 @@
   "session_end": "2026-10-07T21:54:00Z",
   "session_limit_enabled": true,
   "timer_enabled": true,
-  "turns_executed": 5,
+  "turns_executed": 6,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-10-01T22:30:09.618963+00:00",
-  "current_target": "KContacts",
+  "last_heartbeat": "2026-10-02T01:40:19.725271+00:00",
+  "current_target": "kweb://echo-subsystem.net (Acoustic Research Lab & SIGINT Grid)",
   "remote_command": "none"
 }

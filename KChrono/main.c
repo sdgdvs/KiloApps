@@ -233,10 +233,12 @@ static void PropagateCausality(int notify) {
 
     // Rule 1: Precursor Relay in Alpha -> Blast Gates in Beta and Gamma
     if (g_game.precursorRepaired) {
-        if (g_game.grids[EPOCH_BETA][7][12] == TILE_GATE) {
-            g_game.grids[EPOCH_BETA][7][12] = TILE_FLOOR;
-            g_game.grids[EPOCH_BETA][8][12] = TILE_FLOOR;
-            ripples++;
+        if (g_game.scenario == 1 || g_game.scenario == 5) {
+            if (g_game.grids[EPOCH_BETA][7][12] == TILE_GATE) {
+                g_game.grids[EPOCH_BETA][7][12] = TILE_FLOOR;
+                g_game.grids[EPOCH_BETA][8][12] = TILE_FLOOR;
+                ripples++;
+            }
         }
         if (g_game.grids[EPOCH_GAMMA][7][12] == TILE_GATE) {
             g_game.grids[EPOCH_GAMMA][7][12] = TILE_FLOOR;
@@ -1438,7 +1440,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
             if (g_appState == STATE_SPLASH) {
                 int midX = rc.right / 2;
                 if (mx >= midX - 160 && mx <= midX + 160) {
-                    if (my >= 135 && my <= 160) {
+                    if (my >= 130 && my < 155) {
                         ResetGame(1);
                         if (!HasSeenTutorial()) {
                             g_appState = STATE_TUTORIAL;
@@ -1446,26 +1448,29 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                         } else {
                             g_appState = STATE_PLAYING;
                         }
-                    } else if (my >= 165 && my <= 190) {
+                    } else if (my >= 155 && my < 180) {
                         ResetGame(2);
                         g_appState = STATE_PLAYING;
-                    } else if (my >= 195 && my <= 220) {
+                    } else if (my >= 180 && my < 205) {
                         ResetGame(3);
                         g_appState = STATE_PLAYING;
-                    } else if (my >= 225 && my <= 250) {
+                    } else if (my >= 205 && my < 230) {
                         ResetGame(4);
                         g_appState = STATE_PLAYING;
-                    } else if (my >= 255 && my <= 280) {
+                    } else if (my >= 230 && my < 255) {
                         ResetGame(5);
                         g_appState = STATE_PLAYING;
-                    } else if (my >= 285 && my <= 310) {
+                    } else if (my >= 255 && my < 280) {
                         ResetGame(6);
                         g_appState = STATE_PLAYING;
-                    } else if (my >= 330 && my <= 355) {
+                    } else if (my >= 280 && my < 310) {
+                        ResetGame(7);
+                        g_appState = STATE_PLAYING;
+                    } else if (my >= 320 && my < 345) {
                         if (Quickload()) g_appState = STATE_PLAYING;
-                    } else if (my >= 360 && my <= 385) {
+                    } else if (my >= 350 && my < 375) {
                         g_appState = STATE_TUTORIAL;
-                    } else if (my >= 390 && my <= 415) {
+                    } else if (my >= 380 && my < 410) {
                         PostQuitMessage(0);
                     }
                 }

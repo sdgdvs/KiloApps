@@ -1791,11 +1791,13 @@
 
                 // Rule 1: Alpha Precursor Relay -> Beta & Gamma Power Grid
                 if (this.flags.precursorRepaired) {
-                    // Energize blast gates in Beta
-                    if (this.grids.beta[7][12] === TILES.BLAST_GATE) {
-                        this.grids.beta[7][12] = TILES.FLOOR;
-                        this.grids.beta[8][12] = TILES.FLOOR;
-                        ripplesTriggered++;
+                    // Energize blast gates in Beta (for scenarios without dedicated dual biometric locks)
+                    if (this.currentScenario.id === 1 || this.currentScenario.id === 5) {
+                        if (this.grids.beta[7][12] === TILES.BLAST_GATE) {
+                            this.grids.beta[7][12] = TILES.FLOOR;
+                            this.grids.beta[8][12] = TILES.FLOOR;
+                            ripplesTriggered++;
+                        }
                     }
                     if (this.grids.gamma[7][12] === TILES.BLAST_GATE) {
                         this.grids.gamma[7][12] = TILES.FLOOR;
@@ -2561,19 +2563,7 @@
             shakeFrames = Math.max(shakeFrames, frames);
         }
 
-        // Ambient Environmental Tachyon Motes (Epoch-specific, zero orbiting glints, zero traveling perimeter dots)
-        const ambientMotes = [];
-        for (let i = 0; i < 32; i++) {
-            ambientMotes.push({
-                x: Math.random() * 768,
-                y: Math.random() * 512,
-                vx: (Math.random() - 0.5) * 0.35,
-                vy: (Math.random() - 0.5) * 0.25,
-                size: 1 + Math.random() * 1.5,
-                alpha: 0.15 + Math.random() * 0.35
-            });
-        }
-
+        // Clean static rendering (zero floating motes, zero orbiting glints, zero traveling perimeter dots)
         function render() {
             ctx.save();
             ctx.scale(dpr, dpr);
@@ -2588,21 +2578,6 @@
             // Clear background (virtual coordinates 768x512)
             ctx.fillStyle = "#030610";
             ctx.fillRect(0, 0, 768, 512);
-
-            // Render Ambient Environmental Dust Motes (Warm amber in Alpha, Cyan in Beta, Violet in Gamma)
-            const moteCol = engine.currentEpoch === 'alpha' ? '245, 158, 11' :
-                            engine.currentEpoch === 'beta'  ? '6, 182, 212' : '192, 132, 252';
-            for (let i = 0; i < ambientMotes.length; i++) {
-                const m = ambientMotes[i];
-                m.x += m.vx;
-                m.y += m.vy;
-                if (m.x < 0) m.x = 768;
-                if (m.x > 768) m.x = 0;
-                if (m.y < 0) m.y = 512;
-                if (m.y > 512) m.y = 0;
-                ctx.fillStyle = `rgba(${moteCol}, ${m.alpha})`;
-                ctx.fillRect(Math.round(m.x), Math.round(m.y), m.size, m.size);
-            }
 
             const grid = engine.grids[engine.currentEpoch];
 
@@ -2814,14 +2789,10 @@
                 c.lineWidth = 2;
                 c.stroke();
 
-                const angle = (now / 200) % (Math.PI * 2);
-                c.save();
-                c.translate(x + 16, y + 16);
-                c.rotate(angle);
+                // Static conduit junction cross (clean, period-accurate, zero rotating glints)
                 c.fillStyle = engine.flags.precursorRepaired ? "#fef08a" : "#b45309";
-                c.fillRect(-7, -2, 14, 4);
-                c.fillRect(-2, -7, 4, 14);
-                c.restore();
+                c.fillRect(x + 9, y + 14, 14, 4);
+                c.fillRect(x + 14, y + 9, 4, 14);
 
                 c.fillStyle = engine.flags.precursorRepaired ? "#fbbf24" : "#78350f";
                 c.beginPath();
@@ -2889,21 +2860,18 @@
             } else if (tile === TILES.QUANTUM_CORE) {
                 c.fillStyle = "#030712";
                 c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-                const t = now / 250;
-                c.save();
-                c.translate(x + 16, y + 16);
-                c.rotate(t);
+
+                // Static Concentric Quantum Containment Housing (Zero Rotating Glints)
                 c.strokeStyle = "#38bdf8";
                 c.lineWidth = 1.5;
-                c.strokeRect(-11, -11, 22, 22);
-                c.rotate(-t * 2);
+                c.strokeRect(x + 5, y + 5, 22, 22);
                 c.strokeStyle = "#c084fc";
                 c.lineWidth = 1.5;
                 c.beginPath();
-                c.arc(0, 0, 8, 0, Math.PI * 2);
+                c.arc(x + 16, y + 16, 8, 0, Math.PI * 2);
                 c.stroke();
-                c.restore();
 
+                const t = now / 250;
                 const pulse = Math.sin(t * 2) * 2;
                 const grad = c.createRadialGradient(x + 16, y + 16, 1, x + 16, y + 16, 7 + pulse);
                 grad.addColorStop(0, "#ffffff");
@@ -2916,18 +2884,18 @@
             } else if (tile === TILES.TACHYON_RIFT) {
                 c.fillStyle = "#090214";
                 c.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-                const t = now / 300;
-                c.save();
-                c.translate(x + 16, y + 16);
-                for (let i = 0; i < 3; i++) {
-                    c.rotate(t + (i * Math.PI * 2 / 3));
-                    c.strokeStyle = i === 0 ? "#c084fc" : i === 1 ? "#a855f7" : "#e879f9";
-                    c.lineWidth = 2;
-                    c.beginPath();
-                    c.arc(0, 0, 10 - i * 2, 0, Math.PI * 0.9);
-                    c.stroke();
-                }
-                c.restore();
+
+                // Static Layered Dimensional Breach Rings (Zero Rotating Glints)
+                c.strokeStyle = "#c084fc";
+                c.lineWidth = 1.5;
+                c.beginPath();
+                c.arc(x + 16, y + 16, 11, 0, Math.PI * 2);
+                c.stroke();
+                c.strokeStyle = "#a855f7";
+                c.lineWidth = 1.5;
+                c.beginPath();
+                c.arc(x + 16, y + 16, 7, 0, Math.PI * 2);
+                c.stroke();
                 c.fillStyle = "#000000";
                 c.beginPath();
                 c.arc(x + 16, y + 16, 4, 0, Math.PI * 2);
