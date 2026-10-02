@@ -946,7 +946,7 @@
                     </button>
                     <button class="splash-btn" id="btnSplashScenarios">
                         <span>📋 SELECT SCENARIO</span>
-                        <span style="font-size: 11px; opacity: 0.7;">6 Operations</span>
+                        <span style="font-size: 11px; opacity: 0.7;">7 Operations</span>
                     </button>
                     <button class="splash-btn" id="btnSplashHelp">
                         <span>📖 TEMPORAL MANUAL</span>
@@ -1220,6 +1220,34 @@
                 }
 
                 this.startAmbientDrone();
+                this.startArpeggiator();
+            }
+
+            startArpeggiator() {
+                if (this.arpInterval) return;
+                this.arpStep = 0;
+                this.arpInterval = setInterval(() => {
+                    if (this.muted || !this.droneEnabled || !this.ctx || this.ctx.state !== 'running') return;
+                    const epoch = typeof engine !== 'undefined' && engine ? engine.currentEpoch : 'beta';
+                    let note = 0;
+                    if (epoch === 'alpha') {
+                        // Precursor Warmth: D Major pentatonic
+                        const alphaScale = [146.83, 220.0, 293.66, 369.99, 440.0, 369.99, 293.66, 220.0, 164.81, 220.0, 329.63, 369.99, 440.0, 329.63, 293.66, 220.0];
+                        note = alphaScale[this.arpStep % alphaScale.length];
+                    } else if (epoch === 'beta') {
+                        // Prime Cybernetic Station: C Minor 16-step bassline & bell
+                        const betaScale = [130.81, 196.0, 261.63, 311.13, 392.0, 311.13, 261.63, 196.0, 116.54, 174.61, 233.08, 293.66, 349.23, 293.66, 233.08, 174.61];
+                        note = betaScale[this.arpStep % betaScale.length];
+                    } else {
+                        // Entropic Violet Ruins: E Diminished / Sci-fi shimmer
+                        const gammaScale = [164.81, 246.94, 329.63, 392.0, 466.16, 392.0, 329.63, 246.94, 155.56, 233.08, 311.13, 369.99, 466.16, 369.99, 311.13, 233.08];
+                        note = gammaScale[this.arpStep % gammaScale.length];
+                    }
+                    this.arpStep++;
+                    if (this.arpStep % 2 === 0) {
+                        this.playFM(note, 2.0, 1.8, 0.18, 0.045, true);
+                    }
+                }, 280);
             }
 
             toggleMute() {
@@ -1509,6 +1537,15 @@
                 briefing: "An ultimate cascade failure is underway across all 3 epochs! In 1984 (Alpha), trigger the cryogenic floodgate to quench Beta's plasma pit. In 2042 (Beta), record an Echo Ghost to keep the biometric plate depressed while you retrieve the Chronal Resonator. Finally, cross the stabilized ice bridge in 2188 (Gamma) and harmonize the Omega Core!",
                 startEpoch: "alpha",
                 winCondition: (state) => state.flags.cascadeStabilized === true
+            },
+            {
+                id: 7,
+                name: "The Chronal Citadel (Omega Harmonization)",
+                subtitle: "Master the tri-epoch causality nexus to breach the citadel sanctum and harmonize the Omega Singularity",
+                objective: "Restore Precursor Relay & Cryo-Floodgate in Alpha, coordinate Crate positioning & Echo Ghost in Beta, and harmonize Omega Core past phantoms in Gamma.",
+                briefing: "Deep within the Chronal Citadel, the station's primary Singularity Core is destabilizing across all three epochs! In 1984 (Alpha), repair the precursor geothermal relay and open the cryogenic floodgate to freeze Beta's plasma trenches. In 2042 (Beta), push the hardened lead crate onto pressure plate 1, and record a Chrono-Echo [R] to hold pressure plate 2, opening the reinforced blast gate. In 2188 (Gamma), traverse the ice bridge, avoid patrolling phantoms, and harmonize the Omega Core before Paradox Strain reaches critical mass!",
+                startEpoch: "alpha",
+                winCondition: (state) => state.flags.citadelHarmonized === true
             }
         ];
 
@@ -1588,6 +1625,7 @@
                     riftsClosed: 0,
                     omegaCoreAccessed: false,
                     cascadeStabilized: false,
+                    citadelHarmonized: false,
                     lockerItem: null
                 };
                 this.player = { x: 4, y: 7, facing: 'down' };
@@ -1707,6 +1745,31 @@
                     this.grids.gamma[11][4] = TILES.TACHYON_RIFT;
                     this.entities.gamma.push({ id: 'cascade_phantom', type: 'phantom', x: 14, y: 7, dir: 1 });
 
+                } else if (id === 7) {
+                    // Scenario 7: The Chronal Citadel (Omega Harmonization)
+                    // Alpha: Precursor Relay at (6, 3), Cryo Floodgate at (4, 11), Sapling at (6, 7), Lead Crate at (8, 7)
+                    this.grids.alpha[3][6] = TILES.PRECURSOR_RELAY;
+                    this.grids.alpha[11][4] = TILES.CRYO_FLOODGATE;
+                    this.grids.alpha[7][6] = TILES.SAPLING_VAULT;
+                    this.entities.alpha.push({ id: 'citadel_crate_a', type: 'crate', x: 8, y: 7 });
+                    this.entities.beta.push({ id: 'citadel_crate_b', type: 'crate', x: 8, y: 7 });
+
+                    // Beta: Plasma trenches, Dual Pressure Plates at (5, 4) & (5, 10), Blast Gate at (12, 7) & (12, 8)
+                    for (let y = 3; y <= 11; y++) {
+                        this.grids.beta[y][10] = TILES.PLASMA_PIT;
+                        this.grids.gamma[y][10] = TILES.VOID;
+                    }
+                    this.grids.beta[4][5] = TILES.PRESSURE_PLATE;
+                    this.grids.beta[10][5] = TILES.PRESSURE_PLATE;
+                    this.grids.beta[7][12] = TILES.BLAST_GATE;
+                    this.grids.beta[8][12] = TILES.BLAST_GATE;
+
+                    // Gamma: Omega Core at (19, 7), Tachyon Rift at (19, 4), Dual Patrolling Phantoms
+                    this.grids.gamma[7][19] = TILES.QUANTUM_CORE;
+                    this.grids.gamma[4][19] = TILES.TACHYON_RIFT;
+                    this.entities.gamma.push({ id: 'citadel_phantom_1', type: 'phantom', x: 14, y: 6, dir: 1 });
+                    this.entities.gamma.push({ id: 'citadel_phantom_2', type: 'phantom', x: 16, y: 9, dir: -1 });
+
                 } else {
                     // Scenario 5: Sandbox
                     this.grids.alpha[3][6] = TILES.PRECURSOR_RELAY;
@@ -1807,6 +1870,24 @@
                 if (this.currentScenario.id === 6) {
                     const plateActive = this.isPlatePressed(5, 5, 'beta');
                     if (plateActive) {
+                        if (this.grids.beta[7][12] === TILES.BLAST_GATE) {
+                            this.grids.beta[7][12] = TILES.FLOOR;
+                            this.grids.beta[8][12] = TILES.FLOOR;
+                            ripplesTriggered++;
+                        }
+                    } else {
+                        if (this.grids.beta[7][12] === TILES.FLOOR) {
+                            this.grids.beta[7][12] = TILES.BLAST_GATE;
+                            this.grids.beta[8][12] = TILES.BLAST_GATE;
+                        }
+                    }
+                }
+
+                // Rule 7: Scenario 7 Citadel Dual Pressure Plates & Blast Gates
+                if (this.currentScenario.id === 7) {
+                    const p1 = this.isPlatePressed(5, 4, 'beta');
+                    const p2 = this.isPlatePressed(5, 10, 'beta');
+                    if (p1 && p2) {
                         if (this.grids.beta[7][12] === TILES.BLAST_GATE) {
                             this.grids.beta[7][12] = TILES.FLOOR;
                             this.grids.beta[8][12] = TILES.FLOOR;
@@ -1953,7 +2034,7 @@
                         this.flags.riftsClosed = (this.flags.riftsClosed || 0) + 1;
                         audio.playTone(600, 0.3, 'sine', 0.25);
                         this.logEvent(`[RIFT SEALED] Tachyon Rift collapsed (${this.flags.riftsClosed}/3).`, "success");
-                        this.addParadoxStrain(-20, "Temporal rupture stabilized");
+                        this.addParadoxStrain(-25, "Temporal rupture stabilized");
                         interacted = true;
                         break;
                     } else if (tile === TILES.QUANTUM_CORE) {
@@ -1965,6 +2046,9 @@
                             this.flags.omegaCoreAccessed = true;
                             if (this.currentScenario.id === 6) {
                                 this.flags.cascadeStabilized = true;
+                            }
+                            if (this.currentScenario.id === 7) {
+                                this.flags.citadelHarmonized = true;
                             }
                         }
                         audio.playVictory();
@@ -2062,7 +2146,8 @@
                         e.y += e.dir;
                         if (e.y <= 4 || e.y >= 11) e.dir *= -1;
                         if (e.x === this.player.x && e.y === this.player.y) {
-                            this.addParadoxStrain(10, "Phantom phase collision");
+                            this.addParadoxStrain(8, "Phantom phase collision");
+                            if (typeof triggerShake === 'function') triggerShake(8);
                             this.spawnRippleEffect(this.player.x * TILE_SIZE + 16, this.player.y * TILE_SIZE + 16);
                             audio.playAlarm();
                             this.logEvent("[TEMPORAL DISPLACEMENT] Phased with Tachyon Anomaly! Paradox strain increased.", "danger");
@@ -2070,8 +2155,8 @@
                     }
                 });
 
-                // Scenario 3 & 6: Balanced passive paradox strain accumulation (every 3 turns)
-                if ((this.currentScenario.id === 3 || this.currentScenario.id === 6) && (this.flags.riftsClosed || 0) < 3) {
+                // Scenario 3, 6 & 7: Balanced passive paradox strain accumulation (every 3 turns)
+                if ((this.currentScenario.id === 3 || this.currentScenario.id === 6 || this.currentScenario.id === 7) && (this.flags.riftsClosed || 0) < 3) {
                     if (this.turn % 3 === 0) {
                         this.addParadoxStrain(1, "Uncontained Tachyon Rift singularity flux");
                     }
@@ -2471,15 +2556,53 @@
         setupCanvases();
         window.addEventListener('resize', setupCanvases);
 
+        let shakeFrames = 0;
+        function triggerShake(frames = 6) {
+            shakeFrames = Math.max(shakeFrames, frames);
+        }
+
+        // Ambient Environmental Tachyon Motes (Epoch-specific, zero orbiting glints, zero traveling perimeter dots)
+        const ambientMotes = [];
+        for (let i = 0; i < 32; i++) {
+            ambientMotes.push({
+                x: Math.random() * 768,
+                y: Math.random() * 512,
+                vx: (Math.random() - 0.5) * 0.35,
+                vy: (Math.random() - 0.5) * 0.25,
+                size: 1 + Math.random() * 1.5,
+                alpha: 0.15 + Math.random() * 0.35
+            });
+        }
+
         function render() {
             ctx.save();
             ctx.scale(dpr, dpr);
+
+            if (shakeFrames > 0) {
+                ctx.translate((Math.random() - 0.5) * 3, (Math.random() - 0.5) * 3);
+                shakeFrames--;
+            }
 
             const now = Date.now();
 
             // Clear background (virtual coordinates 768x512)
             ctx.fillStyle = "#030610";
             ctx.fillRect(0, 0, 768, 512);
+
+            // Render Ambient Environmental Dust Motes (Warm amber in Alpha, Cyan in Beta, Violet in Gamma)
+            const moteCol = engine.currentEpoch === 'alpha' ? '245, 158, 11' :
+                            engine.currentEpoch === 'beta'  ? '6, 182, 212' : '192, 132, 252';
+            for (let i = 0; i < ambientMotes.length; i++) {
+                const m = ambientMotes[i];
+                m.x += m.vx;
+                m.y += m.vy;
+                if (m.x < 0) m.x = 768;
+                if (m.x > 768) m.x = 0;
+                if (m.y < 0) m.y = 512;
+                if (m.y > 512) m.y = 0;
+                ctx.fillStyle = `rgba(${moteCol}, ${m.alpha})`;
+                ctx.fillRect(Math.round(m.x), Math.round(m.y), m.size, m.size);
+            }
 
             const grid = engine.grids[engine.currentEpoch];
 
@@ -3172,6 +3295,15 @@
                 chronoCtx.fillText(n.label, n.x, n.y + 24);
             });
 
+            // Period-Accurate Chrono Timestamp HUD
+            chronoCtx.fillStyle = engine.currentEpoch === 'alpha' ? '#f59e0b' : engine.currentEpoch === 'beta' ? '#06b6d4' : '#c084fc';
+            chronoCtx.font = "bold 9px monospace";
+            chronoCtx.textAlign = "center";
+            const chronoStamp = engine.currentEpoch === 'alpha' ? "1984-10-26 09:14:02 // PRECURSOR CONDUIT" :
+                                engine.currentEpoch === 'beta'  ? "2042-05-18 14:32:45 // PRIME CHRONO-ARRAY" :
+                                                                  "2188-11-04 23:59:10 // COLLAPSE HORIZON";
+            chronoCtx.fillText(chronoStamp, Math.round(w * 0.5), 10);
+
             chronoCtx.restore();
         }
 
@@ -3396,7 +3528,7 @@
                     document.getElementById('btnSplashScenarios').click();
                     return;
                 }
-                if (e.key >= '1' && e.key <= '6') {
+                if (e.key >= '1' && e.key <= '7') {
                     e.preventDefault();
                     const sIdx = parseInt(e.key, 10) - 1;
                     if (SCENARIOS[sIdx]) {

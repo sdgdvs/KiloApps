@@ -323,6 +323,32 @@ static void PropagateCausality(int notify) {
         }
     }
 
+    // Rule 7: Scenario 7 Citadel Dual Pressure Plates & Blast Gates
+    if (g_game.scenario == 7) {
+        int plate1 = 0, plate2 = 0;
+        if (g_game.epoch == EPOCH_BETA && g_game.playerX == 5 && g_game.playerY == 4) plate1 = 1;
+        if (g_game.epoch == EPOCH_BETA && g_game.playerX == 5 && g_game.playerY == 10) plate2 = 1;
+        if (g_hasEchoGhost && g_echoGhost.epoch == EPOCH_BETA && g_echoGhost.x == 5 && g_echoGhost.y == 4) plate1 = 1;
+        if (g_hasEchoGhost && g_echoGhost.epoch == EPOCH_BETA && g_echoGhost.x == 5 && g_echoGhost.y == 10) plate2 = 1;
+        for (int i = 0; i < g_game.entityCount[EPOCH_BETA]; i++) {
+            if (g_game.entities[EPOCH_BETA][i].type == 1 && g_game.entities[EPOCH_BETA][i].x == 5 && g_game.entities[EPOCH_BETA][i].y == 4) plate1 = 1;
+            if (g_game.entities[EPOCH_BETA][i].type == 1 && g_game.entities[EPOCH_BETA][i].x == 5 && g_game.entities[EPOCH_BETA][i].y == 10) plate2 = 1;
+        }
+
+        if (plate1 && plate2) {
+            if (g_game.grids[EPOCH_BETA][7][12] == TILE_GATE) {
+                g_game.grids[EPOCH_BETA][7][12] = TILE_FLOOR;
+                g_game.grids[EPOCH_BETA][8][12] = TILE_FLOOR;
+                ripples++;
+            }
+        } else {
+            if (g_game.grids[EPOCH_BETA][7][12] == TILE_FLOOR) {
+                g_game.grids[EPOCH_BETA][7][12] = TILE_GATE;
+                g_game.grids[EPOCH_BETA][8][12] = TILE_GATE;
+            }
+        }
+    }
+
     if (notify && ripples > 0) {
         TriggerRipple(g_game.playerX * TILE_SZ + 13, g_game.playerY * TILE_SZ + 13);
     }
@@ -331,7 +357,7 @@ static void PropagateCausality(int notify) {
 static void ResetGame(int scenario) {
     MyZeroMemory(&g_game, sizeof(GameState));
     g_game.scenario = scenario;
-    g_game.epoch = (scenario == 3 || scenario == 4 || scenario == 6) ? EPOCH_ALPHA : EPOCH_BETA;
+    g_game.epoch = (scenario == 3 || scenario == 4 || scenario == 6 || scenario == 7) ? EPOCH_ALPHA : EPOCH_BETA;
     g_game.playerX = 4;
     g_game.playerY = 7;
     g_game.playerDir = 0; // Down
@@ -425,6 +451,44 @@ static void ResetGame(int scenario) {
         g_game.entities[EPOCH_GAMMA][0].y = 7;
         g_game.entities[EPOCH_GAMMA][0].dir = 1;
         g_game.entityCount[EPOCH_GAMMA] = 1;
+
+    } else if (scenario == 7) {
+        // Scenario 7: Chronal Citadel (Omega Harmonization)
+        g_game.grids[EPOCH_ALPHA][3][6] = TILE_RELAY;
+        g_game.grids[EPOCH_ALPHA][11][4] = TILE_CRYO;
+        g_game.grids[EPOCH_ALPHA][7][6] = TILE_SAPLING;
+        g_game.entities[EPOCH_ALPHA][0].type = 1;
+        g_game.entities[EPOCH_ALPHA][0].x = 8;
+        g_game.entities[EPOCH_ALPHA][0].y = 7;
+        g_game.entityCount[EPOCH_ALPHA] = 1;
+
+        g_game.entities[EPOCH_BETA][0].type = 1;
+        g_game.entities[EPOCH_BETA][0].x = 8;
+        g_game.entities[EPOCH_BETA][0].y = 7;
+        g_game.entityCount[EPOCH_BETA] = 1;
+
+        for (int y = 3; y <= 11; y++) {
+            g_game.grids[EPOCH_BETA][y][10] = TILE_PLASMA;
+            g_game.grids[EPOCH_GAMMA][y][10] = TILE_VOID;
+        }
+        g_game.grids[EPOCH_BETA][4][5] = TILE_PLATE;
+        g_game.grids[EPOCH_BETA][10][5] = TILE_PLATE;
+        g_game.grids[EPOCH_BETA][7][12] = TILE_GATE;
+        g_game.grids[EPOCH_BETA][8][12] = TILE_GATE;
+
+        g_game.grids[EPOCH_GAMMA][7][19] = TILE_CORE;
+        g_game.grids[EPOCH_GAMMA][4][19] = TILE_RIFT;
+
+        g_game.entities[EPOCH_GAMMA][0].type = 2; // Phantom
+        g_game.entities[EPOCH_GAMMA][0].x = 14;
+        g_game.entities[EPOCH_GAMMA][0].y = 6;
+        g_game.entities[EPOCH_GAMMA][0].dir = 1;
+
+        g_game.entities[EPOCH_GAMMA][1].type = 2; // Phantom
+        g_game.entities[EPOCH_GAMMA][1].x = 16;
+        g_game.entities[EPOCH_GAMMA][1].y = 9;
+        g_game.entities[EPOCH_GAMMA][1].dir = -1;
+        g_game.entityCount[EPOCH_GAMMA] = 2;
 
     } else {
         // Scenario 5: Sandbox
@@ -600,7 +664,7 @@ static void MovePlayer(int dx, int dy) {
             e->y += e->dir;
             if (e->y <= 4 || e->y >= 11) e->dir *= -1;
             if (e->x == g_game.playerX && e->y == g_game.playerY) {
-                g_game.paradoxStrain += 10;
+                g_game.paradoxStrain += 8;
                 if (g_game.paradoxStrain > 100) g_game.paradoxStrain = 100;
                 PlaySfx(8); // Alarm
                 TriggerRipple(g_game.playerX * TILE_SZ + 13, g_game.playerY * TILE_SZ + 13);
@@ -609,7 +673,7 @@ static void MovePlayer(int dx, int dy) {
     }
 
     // Passive paradox strain accumulation
-    if ((g_game.scenario == 3 || g_game.scenario == 6) && g_game.riftsClosed < 3) {
+    if ((g_game.scenario == 3 || g_game.scenario == 6 || g_game.scenario == 7) && g_game.riftsClosed < 3) {
         if (g_game.turn % 3 == 0) {
             g_game.paradoxStrain++;
             if (g_game.paradoxStrain > 100) g_game.paradoxStrain = 100;
@@ -635,7 +699,7 @@ static void MovePlayer(int dx, int dy) {
     } else if (tile == TILE_RIFT) {
         g_game.grids[g_game.epoch][ny][nx] = TILE_FLOOR;
         g_game.riftsClosed++;
-        g_game.paradoxStrain -= 20;
+        g_game.paradoxStrain -= 25;
         if (g_game.paradoxStrain < 0) g_game.paradoxStrain = 0;
         PlaySfx(4);
         if (g_game.scenario == 3 && g_game.riftsClosed >= 3) {
@@ -706,26 +770,27 @@ static void DrawGame(HDC hdc, RECT* rcClient) {
         SetTextColor(memDC, RGB(148, 163, 184));
         TextOutA(memDC, w / 2 - 170, 95, "Chrono-Spatial Paradox Engine Simulator", 39);
 
-        // Menu Options (Scenarios 1-6)
+        // Menu Options (Scenarios 1-7)
         SetTextColor(memDC, RGB(248, 250, 252));
-        TextOutA(memDC, w / 2 - 140, 140, "[1] The Genesis Core (Operation Early Spark)", 43);
-        TextOutA(memDC, w / 2 - 140, 170, "[2] The Echo Protocol (Ghost Shift)", 35);
-        TextOutA(memDC, w / 2 - 140, 200, "[3] Singularity Rupture (Triple Containment)", 44);
-        TextOutA(memDC, w / 2 - 140, 230, "[4] Grandfather's Cipher (Causal Loop)", 38);
-        TextOutA(memDC, w / 2 - 140, 260, "[5] Chrono-Architect Sandbox (Free Lab)", 39);
-        TextOutA(memDC, w / 2 - 140, 290, "[6] Tachyon Cascade (The Grand Paradox)", 39);
+        TextOutA(memDC, w / 2 - 140, 135, "[1] The Genesis Core (Operation Early Spark)", 43);
+        TextOutA(memDC, w / 2 - 140, 160, "[2] The Echo Protocol (Ghost Shift)", 35);
+        TextOutA(memDC, w / 2 - 140, 185, "[3] Singularity Rupture (Triple Containment)", 44);
+        TextOutA(memDC, w / 2 - 140, 210, "[4] Grandfather's Cipher (Causal Loop)", 38);
+        TextOutA(memDC, w / 2 - 140, 235, "[5] Chrono-Architect Sandbox (Free Lab)", 39);
+        TextOutA(memDC, w / 2 - 140, 260, "[6] Tachyon Cascade (The Grand Paradox)", 39);
+        TextOutA(memDC, w / 2 - 140, 285, "[7] Chronal Citadel (Omega Harmonization)", 41);
 
         if (HasSaveFile()) {
             SetTextColor(memDC, RGB(16, 185, 129));
-            TextOutA(memDC, w / 2 - 140, 335, "[C] RESUME / LOAD QUICKSAVE", 27);
+            TextOutA(memDC, w / 2 - 140, 325, "[C] RESUME / LOAD QUICKSAVE", 27);
         } else {
             SetTextColor(memDC, RGB(71, 85, 105));
-            TextOutA(memDC, w / 2 - 140, 335, "[C] RESUME (No Save Found)", 26);
+            TextOutA(memDC, w / 2 - 140, 325, "[C] RESUME (No Save Found)", 26);
         }
         SetTextColor(memDC, RGB(245, 158, 11));
-        TextOutA(memDC, w / 2 - 140, 365, "[H] TEMPORAL MANUAL / BRIEFING", 30);
+        TextOutA(memDC, w / 2 - 140, 355, "[H] TEMPORAL MANUAL / BRIEFING", 30);
         SetTextColor(memDC, RGB(148, 163, 184));
-        TextOutA(memDC, w / 2 - 140, 395, "[Q] EXIT TO DESKTOP", 19);
+        TextOutA(memDC, w / 2 - 140, 385, "[Q] EXIT TO DESKTOP", 19);
 
         SetTextColor(memDC, RGB(100, 116, 139));
         TextOutA(memDC, w / 2 - 180, 480, "Quicksave [F5] • Quickload [F9] • Size < 999 KB", 48);
@@ -1313,6 +1378,9 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPar
                     g_appState = STATE_PLAYING;
                 } else if (wParam == '6') {
                     ResetGame(6);
+                    g_appState = STATE_PLAYING;
+                } else if (wParam == '7') {
+                    ResetGame(7);
                     g_appState = STATE_PLAYING;
                 } else if (wParam == 'C' || wParam == 'c' || wParam == VK_F9) {
                     if (Quickload()) {
