@@ -333,30 +333,31 @@
 
         .toast {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            bottom: 24px;
+            right: 24px;
             background: #1e293b;
             color: #f8fafc;
             border: 1px solid var(--glass-border);
             border-radius: 8px;
             padding: 0.75rem 1.25rem;
             font-size: 0.9rem;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            z-index: 200;
+            font-weight: 500;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+            z-index: 3000;
             opacity: 0;
-            transform: translateY(-10px);
+            transform: translateY(10px);
             pointer-events: none;
             transition: opacity 0.25s ease, transform 0.25s ease;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            cursor: pointer;
         }
 
         .toast.show {
             opacity: 1;
             transform: translateY(0);
             pointer-events: auto;
-            cursor: pointer;
         }
 
         .toast.success { border-color: var(--success-color); }
@@ -528,6 +529,12 @@
                     <p style="margin-bottom: 0.4rem;">• <strong>CSV &amp; JSON:</strong> Export ledgers to CSV for Excel/spreadsheets or JSON for complete backups.</p>
                     <p>• <strong>Expenses Pie Chart:</strong> Real-time category allocation visualization with responsive HiDPI rendering.</p>
                 </div>
+                <div style="margin-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 0.75rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #94a3b8; cursor: pointer;">
+                        <input type="checkbox" id="check-tutorial-seen" checked>
+                        First-run tutorial marked as completed
+                    </label>
+                </div>
             </div>
             <div class="modal-actions" style="margin-top: 1.5rem;">
                 <button type="button" class="btn" onclick="closeHelpModal()">Got It</button>
@@ -564,6 +571,36 @@
         </div>
     </div>
 
+    <!-- First-Run Tutorial Modal -->
+    <div class="modal-overlay" id="tutorial-modal">
+        <div class="modal" style="max-width: 480px;">
+            <div class="modal-header">
+                <h2>Welcome to KBudget</h2>
+                <button type="button" class="modal-close-btn" onclick="closeTutorialModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <div style="font-size: 0.9rem; color: #cbd5e1; display: flex; flex-direction: column; gap: 0.85rem; max-height: 60vh; overflow-y: auto;">
+                <p><strong>KBudget</strong> is your personal ledger, expense tracker, and real-time financial visualizer.</p>
+                <div style="background: rgba(255,255,255,0.04); padding: 0.75rem; border-radius: 6px; border: 1px solid var(--glass-border);">
+                    <h4 style="color: #fff; margin-bottom: 0.4rem; font-size: 0.85rem;">Quick Start:</h4>
+                    <ul style="padding-left: 1.2rem; line-height: 1.5; font-size: 0.85rem;">
+                        <li>Click <strong>+ New Transaction</strong> or press <kbd style="background: rgba(255,255,255,0.1); padding: 1px 5px; border-radius: 3px;">Ctrl+N</kbd> to add income or expenses.</li>
+                        <li>Press <kbd style="background: rgba(255,255,255,0.1); padding: 1px 5px; border-radius: 3px;">F5</kbd> anytime to quicksave a snapshot of your entire ledger.</li>
+                        <li>Press <kbd style="background: rgba(255,255,255,0.1); padding: 1px 5px; border-radius: 3px;">F9</kbd> to restore your quicksaved state.</li>
+                        <li>Press <kbd style="background: rgba(255,255,255,0.1); padding: 1px 5px; border-radius: 3px;">F1</kbd> or <kbd style="background: rgba(255,255,255,0.1); padding: 1px 5px; border-radius: 3px;">H</kbd> for the full keyboard shortcuts and user guide.</li>
+                        <li>Import/Export spreadsheets using the <strong>Data ▾</strong> menu.</li>
+                    </ul>
+                </div>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #94a3b8; cursor: pointer;">
+                    <input type="checkbox" id="check-tutorial-dontshow" checked>
+                    Don't show this welcome guide again on startup
+                </label>
+            </div>
+            <div class="modal-actions" style="margin-top: 1.25rem;">
+                <button type="button" class="btn" onclick="closeTutorialModal()">Get Started</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="toast" role="alert" aria-live="polite"></div>
 
     <script>
@@ -591,25 +628,30 @@
         const amountLabel = document.getElementById('amount-label');
         const helpModal = document.getElementById('help-modal');
         const dataModal = document.getElementById('data-modal');
+        const tutorialModal = document.getElementById('tutorial-modal');
 
         // Toast notifications
         let toastTimeout = null;
         function showToast(msg, type = 'info') {
-            let toastEl = document.getElementById('toast');
-            if (!toastEl) {
-                toastEl = document.createElement('div');
-                toastEl.id = 'toast';
-                document.body.appendChild(toastEl);
+            try {
+                let toastEl = document.getElementById('toast');
+                if (!toastEl) {
+                    toastEl = document.createElement('div');
+                    toastEl.id = 'toast';
+                    document.body.appendChild(toastEl);
+                }
+                toastEl.className = `toast show ${type}`;
+                toastEl.textContent = msg;
+                clearTimeout(toastTimeout);
+                toastEl.onclick = () => {
+                    toastEl.className = 'toast';
+                };
+                toastTimeout = setTimeout(() => {
+                    toastEl.className = 'toast';
+                }, 3200);
+            } catch (e) {
+                console.warn(msg);
             }
-            toastEl.className = `toast show ${type}`;
-            toastEl.textContent = msg;
-            clearTimeout(toastTimeout);
-            toastEl.onclick = () => {
-                toastEl.className = 'toast';
-            };
-            toastTimeout = setTimeout(() => {
-                toastEl.className = 'toast';
-            }, 3000);
         }
 
         // Init
@@ -619,6 +661,33 @@
             updateCategories();
             amountLabel.textContent = `Amount (${currencySymbol})`;
             render();
+
+            // First-run tutorial flag check: never interrupt restored sessions
+            try {
+                const tutorialSeen = localStorage.getItem('kbudget_tutorialSeen');
+                const hasExisting = (transactions && transactions.length > 0) || localStorage.getItem('kbudget_quicksave') || localStorage.getItem('kbudget_state');
+                if (!tutorialSeen && !hasExisting) {
+                    openTutorialModal();
+                }
+            } catch(e) {}
+        }
+
+        function openTutorialModal() {
+            if (tutorialModal) {
+                tutorialModal.classList.add('active');
+                const dontShow = document.getElementById('check-tutorial-dontshow');
+                if (dontShow) dontShow.checked = true;
+            }
+        }
+
+        function closeTutorialModal() {
+            if (tutorialModal) tutorialModal.classList.remove('active');
+            const dontShow = document.getElementById('check-tutorial-dontshow');
+            if (!dontShow || dontShow.checked) {
+                try { localStorage.setItem('kbudget_tutorialSeen', '1'); } catch(e) {}
+            }
+            const checkTutorialSeen = document.getElementById('check-tutorial-seen');
+            if (checkTutorialSeen) checkTutorialSeen.checked = true;
         }
 
         function escapeHtml(str) {
@@ -681,11 +750,25 @@
         }
 
         function openHelpModal() {
-            if (helpModal) helpModal.classList.add('active');
+            if (helpModal) {
+                helpModal.classList.add('active');
+                try {
+                    const checkTutorialSeen = document.getElementById('check-tutorial-seen');
+                    if (checkTutorialSeen) {
+                        checkTutorialSeen.checked = !!localStorage.getItem('kbudget_tutorialSeen');
+                    }
+                } catch(e) {}
+            }
         }
 
         function closeHelpModal() {
             if (helpModal) helpModal.classList.remove('active');
+            try {
+                const checkTutorialSeen = document.getElementById('check-tutorial-seen');
+                if (checkTutorialSeen && checkTutorialSeen.checked) {
+                    localStorage.setItem('kbudget_tutorialSeen', '1');
+                }
+            } catch(e) {}
         }
 
         function openDataModal() {
@@ -710,7 +793,11 @@
         }
 
         function saveTransactions() {
-            localStorage.setItem('kbudget_transactions', JSON.stringify(transactions));
+            try {
+                localStorage.setItem('kbudget_transactions', JSON.stringify(transactions));
+            } catch (e) {
+                showToast("Storage quota exceeded", "danger");
+            }
         }
 
         function quicksaveState() {
@@ -719,20 +806,26 @@
                     version: 1,
                     currency: currencySymbol,
                     transactions: transactions,
+                    search: document.getElementById('search-input')?.value || '',
+                    sort: document.getElementById('sort-select')?.value || 'date-desc',
+                    page: currentPage,
                     savedAt: new Date().toISOString()
                 };
-                localStorage.setItem('kbudget_quicksave', JSON.stringify(snapshot));
-                showToast("Quicksave Snapshot Saved [F5] ✅", "success");
+                const json = JSON.stringify(snapshot);
+                localStorage.setItem('kbudget_quicksave', json);
+                localStorage.setItem('kbudget_state', json);
+                localStorage.setItem('kbudget_tutorialSeen', '1');
+                showToast(`Quicksaved ${transactions.length} transaction(s) snapshot [F5] ✅`, "success");
             } catch (err) {
-                showToast("Quicksave failed: " + err.message, "danger");
+                showToast("Quicksave failed: storage quota exceeded", "danger");
             }
         }
 
         function quickloadState() {
             try {
-                const raw = localStorage.getItem('kbudget_quicksave');
+                const raw = localStorage.getItem('kbudget_quicksave') || localStorage.getItem('kbudget_state');
                 if (!raw) {
-                    showToast("No quicksave snapshot found [F9]", "warning");
+                    showToast("No quicksave snapshot found (Press F5 to save) [F9]", "warning");
                     return;
                 }
                 const snapshot = JSON.parse(raw);
@@ -744,15 +837,23 @@
                         if (currencyInput) currencyInput.value = currencySymbol;
                         if (amountLabel) amountLabel.textContent = `Amount (${currencySymbol})`;
                     }
+                    if (snapshot.search !== undefined) {
+                        const searchEl = document.getElementById('search-input');
+                        if (searchEl) searchEl.value = snapshot.search;
+                    }
+                    if (snapshot.sort !== undefined) {
+                        const sortEl = document.getElementById('sort-select');
+                        if (sortEl) sortEl.value = snapshot.sort;
+                    }
+                    currentPage = snapshot.page || 1;
                     saveTransactions();
-                    currentPage = 1;
                     render();
-                    showToast("Quicksave Snapshot Restored [F9] ✅", "success");
+                    showToast(`Quickloaded ${transactions.length} transaction(s) snapshot [F9] ✅`, "success");
                 } else {
-                    showToast("Corrupted quicksave data.", "danger");
+                    showToast("Corrupted quicksave data format.", "danger");
                 }
             } catch (err) {
-                showToast("Quickload failed: " + err.message, "danger");
+                showToast("Quickload failed (Corrupt data): " + err.message, "danger");
             }
         }
 
@@ -1188,6 +1289,12 @@
             });
         }
 
+        if (tutorialModal) {
+            tutorialModal.addEventListener('click', (e) => {
+                if (e.target === tutorialModal) closeTutorialModal();
+            });
+        }
+
         // Keyboard Shortcuts
         document.addEventListener('keydown', (e) => {
             const isInput = ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName);
@@ -1198,8 +1305,29 @@
                 closeSettingsModal();
                 closeHelpModal();
                 closeDataModal();
+                closeTutorialModal();
                 return;
             }
+
+            // Enter or Space closes open non-interactive modals when not typing
+            if ((e.key === 'Enter' || e.key === ' ') && !isInput) {
+                if (helpModal && helpModal.classList.contains('active')) {
+                    e.preventDefault();
+                    closeHelpModal();
+                    return;
+                }
+                if (tutorialModal && tutorialModal.classList.contains('active')) {
+                    e.preventDefault();
+                    closeTutorialModal();
+                    return;
+                }
+                if (dataModal && dataModal.classList.contains('active')) {
+                    e.preventDefault();
+                    closeDataModal();
+                    return;
+                }
+            }
+
             if (e.key === 'F5') {
                 e.preventDefault();
                 quicksaveState();

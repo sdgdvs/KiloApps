@@ -28,6 +28,8 @@ HWND hMainWnd;
 HWND hList;
 HWND hBtnAdd;
 HWND hBtnSettings;
+HWND hBtnSave, hBtnLoad, hBtnHelp;
+HWND hStatus;
 HWND hSearchEdit;
 HWND hSortCombo;
 HWND hLblTotal, hLblIncome, hLblExpense;
@@ -37,6 +39,143 @@ HBRUSH hbgBrush;
 HFONT hFont;
 
 char currency_symbol[8] = "$";
+
+#define KBUDGET_QUICKSAVE_MAGIC 0x47445542 // "BUDG"
+
+void ShowNativeStatus(const char* msg) {
+    if (hStatus && msg) {
+        SetWindowTextA(hStatus, msg);
+    }
+}
+
+void ShowHelp(HWND hwnd) {
+    MessageBoxA(hwnd,
+        "=== KBudget Studio Guide & Shortcuts ===\n\n"
+        "KEYBOARD SHORTCUTS:\n"
+        "- F1 or H: Open this Help & Feature Guide\n"
+        "- F5: Quicksave ledger snapshot to kbudget_quicksave.dat\n"
+        "- F9: Quickload ledger snapshot from kbudget_quicksave.dat\n"
+        "- Ctrl+N: Add new transaction (or click '+ New')\n"
+        "- Ctrl+F: Focus the search box\n"
+        "- Ctrl+S: Export ledger to CSV spreadsheet\n"
+        "- Ctrl+O: Import ledger from CSV spreadsheet\n"
+        "- Delete: Delete selected transaction\n"
+        "- Left / Right Arrow: Previous / Next page\n"
+        "- Esc: Close active dialogs\n\n"
+        "FEATURES:\n"
+        "- Full state snapshot persistence across sessions (F5/F9)\n"
+        "- Real-time expenses by category allocation pie chart\n"
+        "- Instant multi-criteria search and sort (Date/Amount)\n"
+        "- Formatted HTML printable report generation\n\n"
+        "KBudget - Lightweight Retro Financial Ledger",
+        "KBudget Help & Feature Guide", MB_OK | MB_ICONINFORMATION);
+}
+
+void NativeQuickSave(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kbudget_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        DWORD magic = KBUDGET_QUICKSAVE_MAGIC;
+        DWORD version = 1;
+        int sortType = hSortCombo ? (int)SendMessage(hSortCombo, CB_GETCURSEL, 0, 0) : 0;
+        char searchBuf[128] = {0};
+        if (hSearchEdit) {
+            GetWindowTextA(hSearchEdit, searchBuf, sizeof(searchBuf));
+        }
+
+        WriteFile(hFile, &magic, sizeof(magic), &written, NULL);
+        WriteFile(hFile, &version, sizeof(version), &written, NULL);
+        WriteFile(hFile, &num_transactions, sizeof(num_transactions), &written, NULL);
+        WriteFile(hFile, currency_symbol, sizeof(currency_symbol), &written, NULL);
+        WriteFile(hFile, &current_page, sizeof(current_page), &written, NULL);
+        WriteFile(hFile, &sortType, sizeof(sortType), &written, NULL);
+        WriteFile(hFile, searchBuf, sizeof(searchBuf), &written, NULL);
+        if (num_transactions > 0) {
+            WriteFile(hFile, transactions, sizeof(Transaction) * num_transactions, &written, NULL);
+        }
+        CloseHandle(hFile);
+
+        // Also touch tutorial flag so saved states never trigger first-run tutorial
+        HANDLE hTut = CreateFileA("kbudget_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTut != INVALID_HANDLE_VALUE) {
+            WriteFile(hTut, "1", 1, &written, NULL);
+            CloseHandle(hTut);
+        }
+
+        char msg[128];
+        snprintf(msg, sizeof(msg), " Quicksaved %d transaction(s) to kbudget_quicksave.dat [F5]", num_transactions);
+        ShowNativeStatus(msg);
+    } else {
+        ShowNativeStatus(" Quicksave failed: unable to write kbudget_quicksave.dat");
+    }
+}
+
+void UpdateUI();
+void SaveData();
+void SaveSettings();
+
+void NativeQuickLoad(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kbudget_quicksave.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        ShowNativeStatus(" No quicksave snapshot found (Press F5 to quicksave) [F9]");
+        return;
+    }
+
+    DWORD magic = 0, version = 0, readBytes = 0;
+    ReadFile(hFile, &magic, sizeof(magic), &readBytes, NULL);
+    ReadFile(hFile, &version, sizeof(version), &readBytes, NULL);
+
+    if (magic != KBUDGET_QUICKSAVE_MAGIC || version != 1) {
+        CloseHandle(hFile);
+        ShowNativeStatus(" Invalid or corrupt kbudget_quicksave.dat format!");
+        return;
+    }
+
+    int count = 0;
+    ReadFile(hFile, &count, sizeof(count), &readBytes, NULL);
+    if (count < 0 || count > MAX_TRANSACTIONS) {
+        CloseHandle(hFile);
+        ShowNativeStatus(" Corrupt transaction count in quicksave file!");
+        return;
+    }
+
+    char cur[8] = {0};
+    ReadFile(hFile, cur, sizeof(cur), &readBytes, NULL);
+    if (cur[0] != '\0') {
+        strncpy(currency_symbol, cur, sizeof(currency_symbol) - 1);
+        currency_symbol[sizeof(currency_symbol) - 1] = '\0';
+    }
+
+    int page = 1;
+    ReadFile(hFile, &page, sizeof(page), &readBytes, NULL);
+    current_page = (page > 0) ? page : 1;
+
+    int sortType = 0;
+    ReadFile(hFile, &sortType, sizeof(sortType), &readBytes, NULL);
+    if (hSortCombo && sortType >= 0 && sortType < 4) {
+        SendMessage(hSortCombo, CB_SETCURSEL, sortType, 0);
+    }
+
+    char searchBuf[128] = {0};
+    ReadFile(hFile, searchBuf, sizeof(searchBuf), &readBytes, NULL);
+    if (hSearchEdit) {
+        SetWindowTextA(hSearchEdit, searchBuf);
+    }
+
+    num_transactions = count;
+    if (num_transactions > 0) {
+        ReadFile(hFile, transactions, sizeof(Transaction) * num_transactions, &readBytes, NULL);
+    }
+    CloseHandle(hFile);
+
+    SaveData();
+    SaveSettings();
+    UpdateUI();
+
+    char msg[128];
+    snprintf(msg, sizeof(msg), " Quickloaded %d transaction(s) from kbudget_quicksave.dat [F9]", num_transactions);
+    ShowNativeStatus(msg);
+}
 
 void SaveData() {
     char appDataPath[MAX_PATH];
@@ -417,31 +556,37 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                                DEFAULT_PITCH | FF_DONTCARE, "Segoe UI");
             
             hLblTotal = CreateWindow("STATIC", "Total Balance: $0.00", WS_CHILD | WS_VISIBLE,
-                20, 20, 200, 20, hwnd, NULL, NULL, NULL);
+                20, 15, 205, 20, hwnd, NULL, NULL, NULL);
             hLblIncome = CreateWindow("STATIC", "Income: +$0.00", WS_CHILD | WS_VISIBLE,
-                20, 50, 200, 20, hwnd, NULL, NULL, NULL);
+                20, 38, 205, 20, hwnd, NULL, NULL, NULL);
             hLblExpense = CreateWindow("STATIC", "Expenses: -$0.00", WS_CHILD | WS_VISIBLE,
-                20, 80, 200, 20, hwnd, NULL, NULL, NULL);
+                20, 61, 205, 20, hwnd, NULL, NULL, NULL);
                 
-            hBtnAdd = CreateWindow("BUTTON", "+ New Transaction", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                20, 120, 150, 30, hwnd, (HMENU)1, NULL, NULL);
-            HWND hBtnEdit = CreateWindow("BUTTON", "Edit Selected", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                20, 160, 150, 30, hwnd, (HMENU)6, NULL, NULL);
-            HWND hBtnDel = CreateWindow("BUTTON", "Delete Selected", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                20, 200, 150, 30, hwnd, (HMENU)7, NULL, NULL);
+            hBtnAdd = CreateWindow("BUTTON", "+ New (Ctrl+N)", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                20, 90, 205, 28, hwnd, (HMENU)1, NULL, NULL);
+            HWND hBtnEdit = CreateWindow("BUTTON", "Edit", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                20, 122, 100, 28, hwnd, (HMENU)6, NULL, NULL);
+            HWND hBtnDel = CreateWindow("BUTTON", "Delete", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                125, 122, 100, 28, hwnd, (HMENU)7, NULL, NULL);
+            hBtnSave = CreateWindow("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                20, 154, 100, 28, hwnd, (HMENU)12, NULL, NULL);
+            hBtnLoad = CreateWindow("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                125, 154, 100, 28, hwnd, (HMENU)13, NULL, NULL);
             HWND hBtnImp = CreateWindow("BUTTON", "Import CSV", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                20, 240, 150, 30, hwnd, (HMENU)2, NULL, NULL);
+                20, 186, 100, 28, hwnd, (HMENU)2, NULL, NULL);
             HWND hBtnExp = CreateWindow("BUTTON", "Export CSV", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                20, 280, 150, 30, hwnd, (HMENU)3, NULL, NULL);
+                125, 186, 100, 28, hwnd, (HMENU)3, NULL, NULL);
             hBtnSettings = CreateWindow("BUTTON", "Settings", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                20, 320, 150, 30, hwnd, (HMENU)5, NULL, NULL);
+                20, 218, 100, 28, hwnd, (HMENU)5, NULL, NULL);
             HWND hBtnPrint = CreateWindow("BUTTON", "Print", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                20, 360, 150, 30, hwnd, (HMENU)11, NULL, NULL);
+                125, 218, 100, 28, hwnd, (HMENU)11, NULL, NULL);
+            hBtnHelp = CreateWindow("BUTTON", "Help & Guide [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                20, 250, 205, 28, hwnd, (HMENU)14, NULL, NULL);
                 
             hSearchEdit = CreateWindow("EDIT", "", WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL,
-                250, 20, 340, 25, hwnd, (HMENU)4, NULL, NULL);
+                250, 15, 340, 25, hwnd, (HMENU)4, NULL, NULL);
             hSortCombo = CreateWindow("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE,
-                600, 20, 150, 150, hwnd, (HMENU)8, NULL, NULL);
+                600, 15, 150, 150, hwnd, (HMENU)8, NULL, NULL);
                 
             SendMessage(hSortCombo, CB_ADDSTRING, 0, (LPARAM)"Date (Newest)");
             SendMessage(hSortCombo, CB_ADDSTRING, 0, (LPARAM)"Date (Oldest)");
@@ -450,14 +595,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hSortCombo, CB_SETCURSEL, 0, 0);
 
             hList = CreateWindow("LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_BORDER | LBS_NOTIFY,
-                250, 50, 500, 270, hwnd, NULL, NULL, NULL);
+                250, 48, 500, 270, hwnd, NULL, NULL, NULL);
                 
             hBtnPrev = CreateWindow("BUTTON", "Prev Page", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                250, 330, 100, 30, hwnd, (HMENU)9, NULL, NULL);
+                250, 330, 100, 28, hwnd, (HMENU)9, NULL, NULL);
             hLblPage = CreateWindow("STATIC", "Page 1 of 1", WS_CHILD | WS_VISIBLE | SS_CENTER,
-                360, 335, 120, 20, hwnd, NULL, NULL, NULL);
+                360, 334, 120, 20, hwnd, NULL, NULL, NULL);
             hBtnNext = CreateWindow("BUTTON", "Next Page", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
-                490, 330, 100, 30, hwnd, (HMENU)10, NULL, NULL);
+                490, 330, 100, 28, hwnd, (HMENU)10, NULL, NULL);
+
+            hStatus = CreateWindowExA(0, "STATIC",
+                " Ready | F1: Help | F5: Save | F9: Load | Ctrl+N: New | Ctrl+F: Search | Ctrl+S: Export",
+                WS_CHILD | WS_VISIBLE | SS_LEFT, 10, 545, 760, 20, hwnd, (HMENU)300, NULL, NULL);
             
             SendMessage(hSearchEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hSortCombo, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -467,14 +616,18 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hBtnAdd, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnEdit, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnDel, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnSave, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnLoad, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnImp, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnExp, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnSettings, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnPrint, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hList, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnPrev, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hLblPage, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnNext, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hStatus, WM_SETFONT, (WPARAM)hFont, TRUE);
             
             LoadData();
             LoadSettings();
@@ -486,22 +639,25 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 int width = LOWORD(lParam);
                 int height = HIWORD(lParam);
                 if (hSearchEdit) {
-                    MoveWindow(hSearchEdit, 250, 20, width - 430, 25, TRUE);
+                    MoveWindow(hSearchEdit, 250, 15, width - 420, 25, TRUE);
                 }
                 if (hSortCombo) {
-                    MoveWindow(hSortCombo, width - 170, 20, 150, 150, TRUE);
+                    MoveWindow(hSortCombo, width - 160, 15, 140, 150, TRUE);
                 }
                 if (hList) {
-                    MoveWindow(hList, 250, 50, width - 270, height - 110, TRUE);
+                    MoveWindow(hList, 250, 48, width - 270, height - 130, TRUE);
                 }
                 if (hBtnPrev) {
-                    MoveWindow(hBtnPrev, 250, height - 50, 100, 30, TRUE);
+                    MoveWindow(hBtnPrev, 250, height - 65, 100, 28, TRUE);
                 }
                 if (hLblPage) {
-                    MoveWindow(hLblPage, 360, height - 45, 120, 20, TRUE);
+                    MoveWindow(hLblPage, 360, height - 60, 120, 20, TRUE);
                 }
                 if (hBtnNext) {
-                    MoveWindow(hBtnNext, 490, height - 50, 100, 30, TRUE);
+                    MoveWindow(hBtnNext, 490, height - 65, 100, 28, TRUE);
+                }
+                if (hStatus) {
+                    MoveWindow(hStatus, 10, height - 25, width - 20, 20, TRUE);
                 }
             }
             return 0;
@@ -540,6 +696,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         num_transactions--;
                         SaveData();
                         UpdateUI();
+                        ShowNativeStatus(" Transaction deleted.");
                     }
                 } else {
                     MessageBoxA(hwnd, "Please select a transaction to delete.", "Notice", MB_OK);
@@ -560,6 +717,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 UpdateUI();
             } else if (LOWORD(wParam) == 11) {
                 PrintReport(hwnd);
+            } else if (LOWORD(wParam) == 12) {
+                NativeQuickSave(hwnd);
+            } else if (LOWORD(wParam) == 13) {
+                NativeQuickLoad(hwnd);
+            } else if (LOWORD(wParam) == 14) {
+                ShowHelp(hwnd);
             }
             break;
             
@@ -588,14 +751,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     }
                 }
                 
-                int cx = 110;
-                int cy = 450;
+                int cx = 122;
+                int cy = 415;
                 int r = 60;
                 
                 SelectObject(hdc, hFont);
                 SetTextColor(hdc, RGB(248, 250, 252));
                 SetBkMode(hdc, TRANSPARENT);
-                TextOut(hdc, cx - 70, cy - r - 25, "Expenses by Category", 20);
+                TextOut(hdc, cx - 65, cy - r - 25, "Expenses by Category", 20);
                 
                 if (total_expense > 0) {
                     COLORREF colors[] = {RGB(239, 68, 68), RGB(249, 115, 22), RGB(245, 158, 11), RGB(234, 179, 8), RGB(132, 204, 22), RGB(34, 197, 94), RGB(59, 130, 246)};
@@ -679,23 +842,81 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     SetClassLongPtr(hMainWnd, GCLP_HBRBACKGROUND, (LONG_PTR)CreateSolidBrush(RGB(15, 23, 42)));
     
     ShowWindow(hMainWnd, nCmdShow);
+    UpdateWindow(hMainWnd);
+    
+    // First-run tutorial flag check: never interrupt restored sessions
+    HANDLE hTutCheck = CreateFileA("kbudget_tutorial.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hSaveCheck = CreateFileA("kbudget_quicksave.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    BOOL hasSavedState = (hSaveCheck != INVALID_HANDLE_VALUE);
+    if (hSaveCheck != INVALID_HANDLE_VALUE) CloseHandle(hSaveCheck);
+
+    if (hTutCheck == INVALID_HANDLE_VALUE && !hasSavedState && num_transactions == 0) {
+        MessageBoxA(hMainWnd,
+            "=== Welcome to KBudget ===\n\n"
+            "KBudget is your personal ledger, expense tracker,\n"
+            "and real-time financial visualizer.\n\n"
+            "QUICK START GUIDE:\n"
+            "- Click '+ New' or press Ctrl+N to record transactions\n"
+            "- Press F5 to Quicksave your ledger snapshot at any time\n"
+            "- Press F9 to Quickload your saved snapshot\n"
+            "- Press F1 or H anytime for the full shortcuts guide\n"
+            "- Use the Search box and Sort dropdown to filter records\n"
+            "- Import / Export spreadsheets via CSV buttons\n\n"
+            "Click OK to begin tracking your finances.",
+            "KBudget - First Run Guide", MB_OK | MB_ICONINFORMATION);
+        HANDLE hNewTut = CreateFileA("kbudget_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hNewTut != INVALID_HANDLE_VALUE) {
+            DWORD written = 0;
+            WriteFile(hNewTut, "1", 1, &written, NULL);
+            CloseHandle(hNewTut);
+        }
+    } else {
+        if (hTutCheck != INVALID_HANDLE_VALUE) CloseHandle(hTutCheck);
+    }
     
     MSG msg = {0};
     while (GetMessage(&msg, NULL, 0, 0)) {
         BOOL bHandled = FALSE;
-        if (msg.message == WM_KEYDOWN && (GetKeyState(VK_CONTROL) & 0x8000)) {
-            if (msg.wParam == 'N') {
-                SendMessage(hMainWnd, WM_COMMAND, 1, 0);
+        if (msg.message == WM_KEYDOWN) {
+            char className[128] = {0};
+            GetClassNameA(msg.hwnd, className, sizeof(className));
+            BOOL isEdit = (_stricmp(className, "EDIT") == 0);
+            BOOL ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+
+            if (msg.wParam == VK_F5) {
+                NativeQuickSave(hMainWnd);
                 bHandled = TRUE;
-            } else if (msg.wParam == 'F') {
-                SetFocus(hSearchEdit);
+            } else if (msg.wParam == VK_F9) {
+                NativeQuickLoad(hMainWnd);
                 bHandled = TRUE;
-            } else if (msg.wParam == 'S') {
-                SendMessage(hMainWnd, WM_COMMAND, 3, 0);
+            } else if (msg.wParam == VK_F1 || ((msg.wParam == 'H' || msg.wParam == 'h') && !isEdit)) {
+                ShowHelp(hMainWnd);
                 bHandled = TRUE;
-            } else if (msg.wParam == 'O') {
-                SendMessage(hMainWnd, WM_COMMAND, 2, 0);
-                bHandled = TRUE;
+            } else if (ctrl) {
+                if (msg.wParam == 'N' || msg.wParam == 'n') {
+                    SendMessage(hMainWnd, WM_COMMAND, 1, 0);
+                    bHandled = TRUE;
+                } else if (msg.wParam == 'F' || msg.wParam == 'f') {
+                    SetFocus(hSearchEdit);
+                    bHandled = TRUE;
+                } else if (msg.wParam == 'S' || msg.wParam == 's') {
+                    SendMessage(hMainWnd, WM_COMMAND, 3, 0);
+                    bHandled = TRUE;
+                } else if (msg.wParam == 'O' || msg.wParam == 'o') {
+                    SendMessage(hMainWnd, WM_COMMAND, 2, 0);
+                    bHandled = TRUE;
+                }
+            } else if (!isEdit) {
+                if (msg.wParam == VK_DELETE) {
+                    SendMessage(hMainWnd, WM_COMMAND, 7, 0);
+                    bHandled = TRUE;
+                } else if (msg.wParam == VK_LEFT) {
+                    SendMessage(hMainWnd, WM_COMMAND, 9, 0);
+                    bHandled = TRUE;
+                } else if (msg.wParam == VK_RIGHT) {
+                    SendMessage(hMainWnd, WM_COMMAND, 10, 0);
+                    bHandled = TRUE;
+                }
             }
         }
         if (!bHandled) {

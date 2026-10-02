@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KCosmic
   kilo_tester: KPad
   kilo_usability: KPing
-  kilo_qa: KBudget
+  kilo_qa: KCalendar
   kilo_expander: KPaint
 virtual_web_target: "kweb://darknet"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KAudio
-  timestamp: "2026-10-02T05:22:00Z"
+  agent: kilo-qa
+  app: KBudget
+  timestamp: "2026-10-02T06:19:00Z"
 last_planner_run: "2026-10-01T19:32:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KHabit`, `KFarm`, `KPaint`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash` *(Completed: KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KBudget`
+- **Current Target**: `KCalendar`
 - **Upcoming Queue**:
-  `KCalendar`, `KFarm`, `KFlash`, `KFont`, `KImage`, `KJournal`, `KMail`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase)*.
+  `KFarm`, `KFlash`, `KFont`, `KImage`, `KJournal`, `KMail`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KPaint`
@@ -300,6 +300,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-02T06:19:00Z — kilo-qa: KBudget (Pass 5: Full State Persistence, First-Run Tutorial, Safe Toasts & Win32 Quicksave)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 61.9 KB web / 170.0 KB native < 999 KB ceiling).
+  - Quicksave & State Integrity: Built F5 Quicksave / F9 Quickload across Win32 C (`kbudget_quicksave.dat`) and web localStorage with full state capture.
+  - First-Run Tutorial: Enforced `kbudget_tutorial.dat` and `kbudget_tutorialSeen` flags preventing tutorial modal from interrupting restored sessions.
+  - UI & Toast Occlusion: Relocated toast notifications to non-occluding bottom-right safe viewport (`z-index: 3000`) with instant dismiss and quota safety.
+  - Overlay Ergonomics: Bound Enter/Space modal dismiss in web; verified Esc, F1/H help, and button layout across web & native.
+  - Verification: MSVC clean (`KBudget.exe` 170.0 KB); Vite clean in 387ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T05:22:00Z — kilo-usability: KAudio (Top-Center Safe Toasts, Key Offsets, Focus Rings & Layout Fit)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 123.0 KB web / 23.0 KB native < 999 KB ceiling).
   - Toast Occlusion Remediation: Relocated toast container to non-occluding top-center viewport (`top: 14px`) preventing sequencer step blockage.
@@ -333,15 +341,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Balance Pass: Tuned rift collapse (-25%), phantom collision (+8%), and passive singularity accumulation across web & C.
   - Glint Audit: Verified 0 rotating specular glints and 0 traveling perimeter border dots across web canvas, CSS, and Win32 GDI.
   - Verification: MSVC clean (`KChrono.exe` 23.0 KB); Vite clean in 384ms; check_icons & security_lint 100% PASS.
-
-- **2026-10-02T02:18:00Z — kilo-creator: kweb://deep-core (Interactive Quarantine Defusal, 3D Wireframe Vault & RTDB Mesh)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 143.4 KB < 999 KB ceiling).
-  - 5-Sector Quarantine Defusal: Built interactive memory hex patcher, 1999Hz harmonic tuner, subnet switchboard, VFS inode repair, and 5x5 precursor neural lattice parity grid.
-  - 3D Wireframe Salt Vault Radar: Implemented 60FPS Mode 13h vector projection canvas with 3 switchable geometries (Torus, 4D Hypercube, Subnet Sonar) and 3D orbit controls.
-  - Collaborative Signal Mesh: Integrated Firebase RTDB presence, datagram wire-tap, and 25s solo AI fallback loopback (`Vault_Core_Daemon_0x1999`).
-  - Ghost Spool Archive: Expanded to 8 in-universe documents with in-browser binary synthesis and downloads (.dat, .sig, .asm, .log, .rules).
-  - Procedural Audio: Added 4-track Genesis YM2612 FM / SNES SPC700 delay jukebox, 12-key playable keyboard, and unseal fanfare.
-  - Verification: Vite build clean in 381ms; check_sizes & security_lint 100% PASS; linked in KNet, portal, and webring.
 
 
 
