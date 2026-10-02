@@ -47,6 +47,7 @@
         .toast { background: #22223b; color: #48dbfb; border: 1px solid #48dbfb; padding: 8px 18px; border-radius: 6px; font-size: 13px; font-weight: bold; box-shadow: 0 4px 15px rgba(0,0,0,0.6); opacity: 0; transform: translateY(-10px); transition: all 0.25s ease-out; pointer-events: auto; text-align: center; cursor: pointer; }
         .toast.show { opacity: 1; transform: translateY(0); }
     </style>
+    <script src="../assets/js/retro_multiplayer.js"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
         import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
@@ -122,18 +123,21 @@
             </div>
         </div>
 
-        <!-- Direct Join by Code -->
-        <div class="mp-box" style="margin-bottom:14px; display:flex; align-items:center; gap:8px;">
-            <span style="font-size:12px; color:#94a3b8; white-space:nowrap;">JOIN CODE:</span>
-            <input type="text" id="mpDirectJoinCode" placeholder="ROOM CODE" maxlength="8" style="background:#0c0e18; border:1px solid #38bdf8; color:#38bdf8; border-radius:4px; padding:5px 8px; font-size:12px; font-weight:bold; width:130px; text-transform:uppercase;" onkeydown="if(event.key==='Enter') joinRoomByCode()">
-            <button onclick="joinRoomByCode()" style="background:#38bdf8; border:none; color:#0b1120; font-weight:bold; font-size:11px; padding:6px 14px; border-radius:4px; cursor:pointer;">Join Room</button>
-            <div id="mpStatusMsg" style="font-size:11px; color:#ffd700; margin-left:auto;"></div>
+        <!-- Direct Join by Code & Link Sharing -->
+        <div class="mp-box" style="margin-bottom:14px; display:flex; flex-direction:column; gap:6px;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <span style="font-size:12px; color:#94a3b8; white-space:nowrap;">JOIN CODE:</span>
+                <input type="text" id="mpDirectJoinCode" placeholder="ROOM CODE" maxlength="8" style="background:#0c0e18; border:1px solid #38bdf8; color:#38bdf8; border-radius:4px; padding:5px 8px; font-size:12px; font-weight:bold; width:130px; text-transform:uppercase;" onkeydown="if(event.key==='Enter') joinRoomByCode()">
+                <button onclick="joinRoomByCode()" style="background:#38bdf8; border:none; color:#0b1120; font-weight:bold; font-size:11px; padding:6px 14px; border-radius:4px; cursor:pointer;">Join Room</button>
+                <button id="btnCopyInviteLink" onclick="copyDuelLink()" style="background:#252b40; border:1px solid #00d2d3; color:#00ffff; font-size:11px; padding:6px 10px; border-radius:4px; cursor:pointer; display:none;" title="Copy room link with #room=CODE">📋 Copy Match Link</button>
+            </div>
+            <div id="mpStatusMsg" style="font-size:11px; color:#ffd700;"></div>
         </div>
 
         <!-- Live Public Lobby Table -->
         <div class="mp-box" style="margin-bottom:14px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <div style="font-size:12px; font-weight:bold; color:#38bdf8;">📡 ACTIVE PUBLIC DUEL ROOMS</div>
+                <div style="font-size:12px; font-weight:bold; color:#38bdf8;">📡 ACTIVE PUBLIC DUEL ROOMS (RFMS Standard)</div>
                 <button onclick="refreshLobbyList()" style="background:#252b40; border:1px solid #475569; color:#94a3b8; font-size:10px; padding:2px 8px; border-radius:3px; cursor:pointer;">↻ Refresh</button>
             </div>
             <div id="mpLobbyContainer" style="max-height:140px; overflow-y:auto; border:1px solid #1f2538; border-radius:4px; background:#0c0e18; font-size:11px;">
@@ -142,7 +146,7 @@
         </div>
 
         <!-- Offline / Practice AI Section -->
-        <div class="mp-box" style="border-color:#ffd700; display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <div class="mp-box" style="border-color:#ffd700; display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:14px;">
             <div>
                 <div style="font-size:12px; font-weight:bold; color:#ffd700;">🤖 OFFLINE SPLIT-SCREEN DUEL VS AI</div>
                 <div style="font-size:10px; color:#94a3b8;">No internet needed. Play 1v1 split screen with real attack hazards & speed surges.</div>
@@ -155,6 +159,14 @@
                     <option value="3">Cyber-AI Grandmaster</option>
                 </select>
                 <button onclick="launchAIDuelFromModal()" style="background:#ffd700; border:none; color:#181200; font-weight:bold; font-size:11px; padding:6px 12px; border-radius:4px; cursor:pointer;">Play Bot</button>
+            </div>
+        </div>
+
+        <!-- Recent Duel History Section -->
+        <div class="mp-box" style="border-color:#a29bfe;">
+            <div style="font-size:12px; font-weight:bold; color:#a29bfe; margin-bottom:6px;">📜 RECENT DUEL RECORD</div>
+            <div id="mpHistoryContainer">
+                <div style="padding:10px; text-align:center; color:#64748b; font-size:11px;">No duel matches recorded yet.</div>
             </div>
         </div>
     </div>
@@ -188,6 +200,7 @@
                     <button class="btn" onclick="startNewGame()">[ENTER] Play</button>
                     <button class="btn" onclick="openMultiplayerModal()" style="border-color:#00ffff; color:#00ffff; font-weight:bold;">[N] 🌐 Online Duel</button>
                     <button class="btn" onclick="startAIDuel()" style="border-color:#ffd700; color:#ffd700; font-weight:bold;">[X] ⚔️ Duel vs AI</button>
+                    <button class="btn" onclick="openReplayModal()" style="border-color:#a29bfe; color:#a29bfe; font-weight:bold;">[V] 🎬 Replays</button>
                     <button class="btn" onclick="openMapEditor()">[E] Map Editor</button>
                     <button class="btn" id="resumeBtn" onclick="resumeGame()" style="display:none;">[R] Resume</button>
                     <button class="btn" id="btnSoundToggle" onclick="toggleSound()">[U] Sound: ON</button>
@@ -248,6 +261,8 @@
                 <p style="margin-top: 8px;">Press <b style="color:#00d2d3">ENTER</b> or <b style="color:#00d2d3">ESC</b> to Return</p>
                 <div style="display:flex; gap:6px; margin-top:4px; flex-wrap:wrap; justify-content:center;">
                     <button class="btn" onclick="showMenu()">Back to Menu</button>
+                    <button class="btn" onclick="watchLastReplay()" style="border-color:#a29bfe; color:#a29bfe;">🎬 Watch Replay</button>
+                    <button class="btn" onclick="exportReplay()">💾 Save .ksr</button>
                     <button class="btn" id="btnGameOverQuickload" onclick="quickLoad()" style="display:none;">[F9] Reload Quicksave</button>
                 </div>
             </div>
@@ -334,7 +349,10 @@
                     <button class="btn" onclick="exportStatsCSV()">Export CSV</button>
                     <button class="btn" onclick="exportStatsJSON()">Export JSON</button>
                 </div>
-                <button class="btn" onclick="exportReplay()" style="margin-top:4px;">Export Replay (.ksr)</button>
+                <div style="display:flex; gap:6px; margin-top:4px;">
+                    <button class="btn" onclick="watchLastReplay()" style="border-color:#a29bfe; color:#a29bfe; flex:1;">🎬 Watch Match Replay</button>
+                    <button class="btn" onclick="exportReplay()" style="flex:1;">Export Replay (.ksr)</button>
+                </div>
                 <button class="btn" onclick="showMenu()" style="margin-top:4px;">[ESC] Close</button>
             </div>
 
@@ -350,6 +368,25 @@
                     <button class="btn" onclick="importData()">Import JSON</button>
                 </div>
                 <button class="btn" onclick="showMenu()" style="margin-top: 6px;">[ESC] Back</button>
+            </div>
+
+            <!-- REPLAY VIEWER OVERLAY -->
+            <div id="replayOverlay" class="overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Replay Viewer Dialog">
+                <button class="modal-close-btn" onclick="showMenu()" title="Back (ESC)">✕</button>
+                <h2>🎬 MATCH REPLAY VIEWER</h2>
+                <p style="color:#a29bfe; font-size:12px;">Watch previous matches with full seed determinism, step through inputs, or load exported .ksr replays.</p>
+                <div style="display:flex; flex-direction:column; gap:8px; width:92%; margin-top:8px;">
+                    <button id="btnPlayLastReplay" class="btn" onclick="watchLastReplay()" style="background:#2e2e4a; border-color:#a29bfe; color:#a29bfe; font-weight:bold; padding:8px;">▶ Watch Last Match</button>
+                    <div style="display:flex; gap:6px; justify-content:center;">
+                        <input type="file" id="replayFileInput" accept=".ksr,.json" style="display:none;" onchange="handleReplayFileSelect(event)">
+                        <button class="btn" onclick="document.getElementById('replayFileInput').click()">📁 Load .ksr File</button>
+                        <button class="btn" onclick="exportReplay()">💾 Export Current .ksr</button>
+                    </div>
+                    <textarea id="replayPasteBox" placeholder="Or paste replay JSON string here..." style="height:55px; font-size:10px;"></textarea>
+                    <button class="btn" onclick="playPastedReplay()" style="background:#4834d4; border-color:#a29bfe; color:#fff;">▶ Load & Play Pasted Replay</button>
+                </div>
+                <div style="margin-top:8px; font-size:11px; color:#8395a7;">Controls during replay: [Space] Pause | [1-4] 0.5x-4x Speed | [Esc] Exit</div>
+                <button class="btn" onclick="showMenu()" style="margin-top: 6px;">[ESC] Back to Menu</button>
             </div>
         </div>
 
@@ -400,6 +437,7 @@
         const bossBarFill = document.getElementById('bossBarFill');
         const bossBarText = document.getElementById('bossBarText');
         const tutorialOverlay = document.getElementById('tutorialOverlay');
+        const replayOverlay = document.getElementById('replayOverlay');
         let tutorialAutoStart = false;
 
         // Skill Buttons
@@ -429,8 +467,11 @@
         let oilSlicks = [];
         let magmaHazards = [];
         let isReplayMode = false;
+        let isReplayPaused = false;
+        let replaySpeed = 1.0;
         let replayTick = 0;
         let replayEvents = {};
+        let replayTotalTicks = 0;
 
         function addShockwave(x, y, color) {
             shockwaves.push({x, y, r: 2, r2: 1, maxR: 40, color, alpha: 1.0});
@@ -723,6 +764,11 @@
         let activeLobbyRef = null;
         let activeLobbyListener = null;
 
+        // Retro Firebase Multiplayer Service (RFMS) state
+        let rMultiplayer = null;
+        let soloFallbackInterval = null;
+        let soloFallbackCountdown = 25;
+
         let myPlayerSlot = 1; // 1 = P1 (Left Arena), 2 = P2 (Right Arena)
         let myPlayerName = safeGetStorage('ksnake_player_name') || ('Viper_' + Math.floor(1000 + Math.random() * 9000));
         let oppPlayerName = 'Opponent';
@@ -782,6 +828,180 @@
             if (!val) return;
             myPlayerName = val.trim().substring(0, 16);
             safeSetStorage('ksnake_player_name', myPlayerName);
+            if (rMultiplayer) rMultiplayer.playerName = myPlayerName;
+        }
+
+        function initRetroMultiplayer() {
+            if (typeof RetroMultiplayer !== 'undefined' && !rMultiplayer) {
+                try {
+                    rMultiplayer = new RetroMultiplayer({
+                        gameId: 'ksnake',
+                        prefix: 'SNK',
+                        soloTimeoutMs: 25000,
+                        playerName: myPlayerName,
+                        onOpponentJoin: ({ slot, name }) => {
+                            oppPlayerName = name || 'Challenger';
+                            stopSoloFallbackTimer();
+                            closeAllModals();
+                            showToast(`Challenger ${oppPlayerName} joined! DUEL START!`, 3000);
+                        },
+                        onOpponentLeave: ({ slot, name }) => {
+                            showToast(`Opponent ${name || 'Challenger'} disconnected!`, 4000);
+                            if (isDuelMode && isOnlineDuel) {
+                                duelMatchOver = true;
+                                duelWinner = myPlayerSlot;
+                                recordDuelResult(true, oppPlayerName, p1KOs, p2KOs);
+                            }
+                        },
+                        onSoloFallback: () => {
+                            handleSoloFallback();
+                        },
+                        onStatusMsg: (msg, type) => {
+                            showToast(msg, type === 'error' ? 4000 : 3000);
+                            const statusEl = document.getElementById('mpStatusMsg');
+                            if (statusEl) statusEl.innerText = msg;
+                        }
+                    });
+                    window.retroMultiplayer = rMultiplayer;
+                } catch(e) {
+                    console.warn("[KSnake] RetroMultiplayer init error:", e);
+                }
+            }
+        }
+
+        function checkUrlInvite() {
+            let code = null;
+            const hash = window.location.hash.replace(/^#/, '');
+            if (hash.startsWith('room=')) {
+                code = hash.split('=')[1];
+            } else if (/^[A-Za-z0-9_-]{3,12}$/.test(hash)) {
+                code = hash;
+            }
+            if (!code) {
+                const params = new URLSearchParams(window.location.search);
+                if (params.has('room')) code = params.get('room');
+            }
+            if (code) {
+                code = code.trim().toUpperCase();
+                console.log("[KSnake] Auto-joining room from URL:", code);
+                const joinWhenReady = (retries = 15) => {
+                    if (window.fb && window.fb.db) {
+                        showToast(`Auto-joining duel room [${code}]...`, 3000);
+                        joinRoom(code);
+                    } else if (retries > 0) {
+                        setTimeout(() => joinWhenReady(retries - 1), 300);
+                    }
+                };
+                joinWhenReady();
+            }
+        }
+
+        function copyDuelLink() {
+            if (!currentRoomId) {
+                showToast("No active room to copy link for!");
+                return;
+            }
+            const origin = window.location.origin || (window.location.protocol + '//' + window.location.host);
+            const url = `${origin}${window.location.pathname}#room=${currentRoomId}`;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(() => {
+                    showToast("📋 Duel invite link copied to clipboard!");
+                }).catch(() => {
+                    prompt("Share this Duel Room link:", url);
+                });
+            } else {
+                prompt("Share this Duel Room link:", url);
+            }
+        }
+
+        function startSoloFallbackTimer(code) {
+            stopSoloFallbackTimer();
+            soloFallbackCountdown = 25;
+            updateSoloFallbackStatus(code);
+            soloFallbackInterval = setInterval(() => {
+                soloFallbackCountdown--;
+                if (soloFallbackCountdown <= 0) {
+                    stopSoloFallbackTimer();
+                    handleSoloFallback();
+                } else {
+                    updateSoloFallbackStatus(code);
+                }
+            }, 1000);
+        }
+
+        function updateSoloFallbackStatus(code) {
+            const statusEl = document.getElementById('mpStatusMsg');
+            if (statusEl) {
+                statusEl.innerHTML = `<span style="color:#00ffc8;">Room <strong>${escapeHTML(code)}</strong> open! Waiting for challenger (<b style="color:#ffd700;">${soloFallbackCountdown}s</b> AI fallback)...</span>`;
+            }
+        }
+
+        function stopSoloFallbackTimer() {
+            if (soloFallbackInterval) {
+                clearInterval(soloFallbackInterval);
+                soloFallbackInterval = null;
+            }
+        }
+
+        function handleSoloFallback() {
+            if (!isDuelMode && currentRoomId) {
+                showToast("No peer connected in 25s. Engaging Subnet AI Cyber-Bot!", 4000);
+                closeAllModals();
+                startAIDuel(3); // Cyber-AI Grandmaster
+            }
+        }
+
+        function recordDuelResult(won, opponentName, myKOs, oppKOs) {
+            try {
+                let history = safeGetJSON('ksnake_duel_history', []);
+                if (!Array.isArray(history)) history = [];
+                history.unshift({
+                    date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    opp: opponentName || 'Opponent',
+                    won: won,
+                    score: `${myKOs}-${oppKOs}`,
+                    mode: isOnlineDuel ? 'Online RTDB' : 'Subnet AI'
+                });
+                if (history.length > 10) history = history.slice(0, 10);
+                safeSetStorage('ksnake_duel_history', JSON.stringify(history));
+                renderDuelHistoryUI();
+            } catch(e) {}
+        }
+
+        function renderDuelHistoryUI() {
+            const container = document.getElementById('mpHistoryContainer');
+            if (!container) return;
+            const history = safeGetJSON('ksnake_duel_history', []);
+            if (!history || history.length === 0) {
+                container.innerHTML = '<div style="padding:10px; text-align:center; color:#64748b; font-size:11px;">No duel matches recorded yet.</div>';
+                return;
+            }
+            let wins = history.filter(h => h.won).length;
+            let losses = history.length - wins;
+            let html = `<div style="display:flex; justify-content:space-between; margin-bottom:6px; font-weight:bold; font-size:11px; color:#a29bfe;">
+                <span>RECENT RECORD: <span style="color:#00ffc8;">${wins}W</span> - <span style="color:#ff6b81;">${losses}L</span></span>
+                <button onclick="clearDuelHistory()" style="background:none; border:none; color:#64748b; cursor:pointer; font-size:10px;">Clear</button>
+            </div>`;
+            html += '<table class="mp-table"><tr><th>TIME</th><th>MODE</th><th>OPPONENT</th><th>SCORE</th><th>RESULT</th></tr>';
+            history.forEach(h => {
+                const resCol = h.won ? '#00ffc8' : '#ff4757';
+                const resText = h.won ? 'VICTORY' : 'DEFEAT';
+                html += `<tr>
+                    <td>${escapeHTML(h.date)}</td>
+                    <td style="color:#94a3b8;">${escapeHTML(h.mode)}</td>
+                    <td><strong>${escapeHTML(h.opp)}</strong></td>
+                    <td>${escapeHTML(h.score)}</td>
+                    <td style="font-weight:bold; color:${resCol};">${resText}</td>
+                </tr>`;
+            });
+            html += '</table>';
+            container.innerHTML = html;
+        }
+
+        function clearDuelHistory() {
+            safeSetStorage('ksnake_duel_history', '[]');
+            renderDuelHistoryUI();
+            showToast("Duel match history cleared.");
         }
 
         function openMultiplayerModal() {
@@ -791,10 +1011,14 @@
             if (backdrop) backdrop.style.display = 'block';
             const nameInput = document.getElementById('mpPlayerName');
             if (nameInput) nameInput.value = myPlayerName;
+            const copyBtn = document.getElementById('btnCopyInviteLink');
+            if (copyBtn) copyBtn.style.display = currentRoomId ? 'inline-block' : 'none';
             refreshLobbyList();
+            renderDuelHistoryUI();
         }
 
         function closeAllModals() {
+            stopSoloFallbackTimer();
             const modal = document.getElementById('multiplayerModal');
             const backdrop = document.getElementById('modalBackdrop');
             if (modal) modal.style.display = 'none';
@@ -868,7 +1092,7 @@
                 if (openRoom) {
                     await joinRoom(openRoom);
                 } else {
-                    const newCode = 'VIP-' + Math.floor(1000 + Math.random() * 9000);
+                    const newCode = 'SNK-' + Math.floor(1000 + Math.random() * 9000);
                     await createRoomWithCode(newCode, 3, true);
                 }
             } catch(err) {
@@ -880,7 +1104,7 @@
         async function createCustomRoom() {
             let codeInput = document.getElementById('mpCustomCode');
             let code = codeInput ? codeInput.value.trim().toUpperCase() : '';
-            if (!code) code = 'VIP-' + Math.floor(1000 + Math.random() * 9000);
+            if (!code) code = 'SNK-' + Math.floor(1000 + Math.random() * 9000);
             let targetKOsVal = parseInt(document.getElementById('mpTargetKOs')?.value || '3', 10);
             await createRoomWithCode(code, targetKOsVal, true);
         }
@@ -930,9 +1154,16 @@
 
                 window.fb.onDisconnect(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}/p1/connected`)).set(false);
 
-                const statusEl = document.getElementById('mpStatusMsg');
-                if (statusEl) statusEl.innerHTML = `<span style="color:#00ffc8;">Room <strong>${code}</strong> created! Waiting for challenger...</span>`;
-                showToast(`Room ${code} created! Waiting for challenger...`, 5000);
+                // Sync URL hash
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState(null, '', `#room=${code}`);
+                }
+
+                const copyBtn = document.getElementById('btnCopyInviteLink');
+                if (copyBtn) copyBtn.style.display = 'inline-block';
+
+                startSoloFallbackTimer(code);
+                showToast(`Room ${code} created! Waiting for challenger (25s auto-fallback)...`, 4000);
 
                 listenToRoom(code);
             } catch(err) {
@@ -962,6 +1193,7 @@
                     return;
                 }
 
+                stopSoloFallbackTimer();
                 myPlayerSlot = 2;
                 currentRoomId = code;
                 isHost = false;
@@ -979,6 +1211,11 @@
                 await window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}/status`), 'playing');
                 window.fb.onDisconnect(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}/p2/connected`)).set(false);
                 await window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_LOBBY}/${code}`), null);
+
+                // Sync URL hash
+                if (window.history && window.history.replaceState) {
+                    window.history.replaceState(null, '', `#room=${code}`);
+                }
 
                 closeAllModals();
                 listenToRoom(code);
@@ -999,6 +1236,7 @@
 
                 // Host detects challenger join
                 if (isHost && myPlayerSlot === 1 && val.p2 && val.status === 'playing' && !isDuelMode) {
+                    stopSoloFallbackTimer();
                     oppPlayerName = val.p2.name || 'Challenger';
                     closeAllModals();
                     startDuelOnline(code, 1, val);
@@ -1011,6 +1249,7 @@
                     showToast(`${oppPlayerName} disconnected! You win!`, 5000);
                     duelMatchOver = true;
                     duelWinner = myPlayerSlot;
+                    recordDuelResult(true, oppPlayerName, p1KOs, p2KOs);
                 }
 
                 // Opponent state sync
@@ -1150,10 +1389,14 @@
         }
 
         function leaveDuel() {
+            stopSoloFallbackTimer();
             if (isOnlineDuel && activeRoomRef && activeRoomListener && window.fb) {
                 try {
                     window.fb.off(activeRoomRef, 'value', activeRoomListener);
                     window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${currentRoomId}/${myPlayerSlot === 1 ? 'p1' : 'p2'}/connected`), false);
+                    if (isHost && currentRoomId) {
+                        window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_LOBBY}/${currentRoomId}`), null);
+                    }
                 } catch(e){}
                 activeRoomRef = null;
                 activeRoomListener = null;
@@ -1162,6 +1405,13 @@
             isDuelMode = false;
             isOnlineDuel = false;
             isAIDuel = false;
+            currentRoomId = null;
+
+            if (window.history && window.history.replaceState) {
+                const cleanUrl = window.location.pathname + window.location.search;
+                window.history.replaceState(null, '', cleanUrl);
+            }
+
             restoreSinglePlayerCanvas();
             showMenu();
             showToast("Returned to Menu.");
@@ -1485,11 +1735,13 @@
                 duelWinner = 1;
                 roundBanner = `🏆 ${myPlayerName} WINS THE DUEL! 🏆`;
                 playSound('victory');
+                recordDuelResult(myPlayerSlot === 1, oppPlayerName, (myPlayerSlot === 1 ? p1KOs : p2KOs), (myPlayerSlot === 1 ? p2KOs : p1KOs));
             } else if (p2KOs >= targetKOs) {
                 duelMatchOver = true;
                 duelWinner = 2;
                 roundBanner = `🏆 ${oppPlayerName} WINS THE DUEL! 🏆`;
                 playSound('victory');
+                recordDuelResult(myPlayerSlot === 2, oppPlayerName, (myPlayerSlot === 2 ? p2KOs : p1KOs), (myPlayerSlot === 2 ? p1KOs : p2KOs));
             } else {
                 roundNumber++;
                 setTimeout(() => {
@@ -2266,6 +2518,7 @@
             configOverlay.style.display = 'none';
             statsExportOverlay.style.display = 'none';
             if (tutorialOverlay) tutorialOverlay.style.display = 'none';
+            if (replayOverlay) replayOverlay.style.display = 'none';
         }
 
         function showTutorial(autoStart = false) {
@@ -2629,6 +2882,19 @@
             matchTicks++;
             gridCoverage.add(`${snake[0].x},${snake[0].y}`);
 
+            // Deterministic Replay Event Playback
+            if (isReplayMode && replayEvents && replayEvents[matchTicks]) {
+                const evts = replayEvents[matchTicks];
+                for (let i = 0; i < evts.length; i++) {
+                    const ev = evts[i];
+                    if (ev.type === 'dir' && ev.val) {
+                        dir = { x: ev.val.x, y: ev.val.y };
+                    } else if (ev.type === 'skill' && ev.val) {
+                        activateSkill(ev.val);
+                    }
+                }
+            }
+
             if (ghostActive > 0) ghostActive--;
             if (ghostCd > 0) ghostCd--;
             if (freezeActive > 0) freezeActive--;
@@ -2874,6 +3140,19 @@
         }
 
         function triggerGameOver() {
+            if (isReplayMode) {
+                playSound('die');
+                gameState = 2;
+                if (gameLoop) clearInterval(gameLoop);
+                isReplayMode = false;
+                showToast("🎬 Replay playback finished!");
+                showMenu();
+                return;
+            }
+            if (lastReplayData) {
+                lastReplayData.totalTicks = matchTicks;
+                safeSetStorage('ksnake_last_replay', JSON.stringify(lastReplayData));
+            }
             playSound('die');
             gameState = 2;
             clearInterval(gameLoop);
@@ -2898,6 +3177,19 @@
         }
 
         function triggerVictory() {
+            if (isReplayMode) {
+                playSound('victory');
+                gameState = 4;
+                if (gameLoop) clearInterval(gameLoop);
+                isReplayMode = false;
+                showToast("🏆 Replay victory achieved!");
+                showMenu();
+                return;
+            }
+            if (lastReplayData) {
+                lastReplayData.totalTicks = matchTicks;
+                safeSetStorage('ksnake_last_replay', JSON.stringify(lastReplayData));
+            }
             playSound('victory');
             gameState = 4;
             clearInterval(gameLoop);
@@ -3987,6 +4279,25 @@
 
             ctx.restore(); // Restore screen shake transform
 
+            // Replay Playback HUD Overlay
+            if (isReplayMode) {
+                ctx.save();
+                ctx.fillStyle = 'rgba(16, 19, 29, 0.92)';
+                ctx.fillRect(8, 8, 384, 26);
+                ctx.strokeStyle = '#a29bfe';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(8, 8, 384, 26);
+
+                ctx.font = 'bold 10px monospace';
+                ctx.fillStyle = '#a29bfe';
+                const statusIcon = isReplayPaused ? '⏸ PAUSED' : '▶ PLAYING';
+                ctx.fillText(`🎬 ${statusIcon} [${replaySpeed}x] [T:${matchTicks}/${replayTotalTicks || '?'}]`, 14, 25);
+                ctx.fillStyle = '#cbd5e1';
+                ctx.font = '9px "Segoe UI", sans-serif';
+                ctx.fillText('[Space: Pause | 1-4: Speed | Esc: Exit]', 195, 25);
+                ctx.restore();
+            }
+
             if (gameState === 1 || particles.length > 0 || shockwaves.length > 0 || screenShake > 0.05) {
                 requestAnimationFrame(draw);
             }
@@ -4230,12 +4541,157 @@
             showToast("Replay (.ksr) exported!");
         }
 
-        // Replay Event Recording
+        // Replay Event Recording & Playback Engine
         function recordReplayEvent(type, val) {
             if (lastReplayData && lastReplayData.events) {
                 if (!lastReplayData.events[matchTicks]) lastReplayData.events[matchTicks] = [];
                 lastReplayData.events[matchTicks].push({ type, val });
             }
+        }
+
+        function openReplayModal() {
+            hideOverlays();
+            const modal = document.getElementById('replayOverlay');
+            if (modal) modal.style.display = 'flex';
+            gameState = 0;
+            const playLastBtn = document.getElementById('btnPlayLastReplay');
+            const saved = safeGetJSON('ksnake_last_replay', null);
+            const rep = lastReplayData || saved;
+            if (playLastBtn) {
+                if (rep) {
+                    playLastBtn.disabled = false;
+                    playLastBtn.innerText = `▶ Watch Last Match (${(rep.mode || 'classic').toUpperCase()} - ${rep.totalTicks || '?'} ticks)`;
+                } else {
+                    playLastBtn.disabled = true;
+                    playLastBtn.innerText = "▶ Watch Last Match (No match recorded yet)";
+                }
+            }
+        }
+
+        function watchLastReplay() {
+            const saved = safeGetJSON('ksnake_last_replay', null);
+            const rep = lastReplayData || saved;
+            if (!rep) {
+                showToast("No replay data recorded for recent run.");
+                return;
+            }
+            playReplayData(rep);
+        }
+
+        function playReplayData(data) {
+            if (!data || !data.events) {
+                showToast("Invalid replay data (.ksr).");
+                return;
+            }
+            hideOverlays();
+            isReplayMode = true;
+            isReplayPaused = false;
+            replaySpeed = 1.0;
+            replayEvents = data.events || {};
+            replayTotalTicks = data.totalTicks || 0;
+            rngSeed = data.seed || 12345;
+            gameMode = data.mode || 'classic';
+            difficulty = (data.diff !== undefined) ? data.diff : 1;
+            wrapMode = !!data.wrap;
+
+            startNewGameInternal(true, true);
+            applyReplaySpeed();
+            showToast(`🎬 Playing replay: ${gameMode.toUpperCase()} (${replayTotalTicks} ticks)`, 3500);
+        }
+
+        function togglePauseReplay() {
+            if (!isReplayMode) return;
+            isReplayPaused = !isReplayPaused;
+            if (isReplayPaused) {
+                if (gameLoop) clearInterval(gameLoop);
+                showToast("Replay Paused [Space]");
+            } else {
+                applyReplaySpeed();
+                showToast(`Replay Resumed (${replaySpeed}x)`);
+            }
+        }
+
+        function setReplaySpeed(mult) {
+            if (!isReplayMode) return;
+            replaySpeed = mult;
+            if (!isReplayPaused) {
+                applyReplaySpeed();
+            }
+            showToast(`Replay Speed: ${replaySpeed}x`);
+        }
+
+        function applyReplaySpeed() {
+            if (gameLoop) clearInterval(gameLoop);
+            const baseSpeed = currentSpeed || 150;
+            const interval = Math.max(16, Math.floor(baseSpeed / replaySpeed));
+            gameLoop = setInterval(update, interval);
+        }
+
+        function exitReplay() {
+            if (!isReplayMode) return;
+            if (gameLoop) clearInterval(gameLoop);
+            isReplayMode = false;
+            isReplayPaused = false;
+            showToast("Exited replay mode.");
+            showMenu();
+        }
+
+        function handleReplayFileSelect(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    playReplayData(data);
+                } catch(err) {
+                    showToast("Failed to parse .ksr file: " + err.message);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        function playPastedReplay() {
+            const box = document.getElementById('replayPasteBox');
+            if (!box || !box.value.trim()) {
+                showToast("Please paste replay JSON into the box first!");
+                return;
+            }
+            try {
+                const data = JSON.parse(box.value.trim());
+                playReplayData(data);
+            } catch(err) {
+                showToast("Invalid replay JSON: " + err.message);
+            }
+        }
+
+        function setupReplayDragAndDrop() {
+            if (!canvas) return;
+            canvas.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+            canvas.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const files = e.dataTransfer && e.dataTransfer.files;
+                if (files && files.length > 0) {
+                    const file = files[0];
+                    if (file.name.endsWith('.ksr') || file.name.endsWith('.json')) {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                            try {
+                                const data = JSON.parse(ev.target.result);
+                                playReplayData(data);
+                            } catch(err) {
+                                showToast("Error loading dropped replay: " + err.message);
+                            }
+                        };
+                        reader.readAsText(file);
+                    }
+                }
+            });
         }
 
         // Save & Resume Functionality
@@ -4428,7 +4884,8 @@
                    (configOverlay && configOverlay.style.display === 'flex') ||
                    (statsExportOverlay && statsExportOverlay.style.display === 'flex') ||
                    (exportImportOverlay && exportImportOverlay.style.display === 'flex') ||
-                   (tutorialOverlay && tutorialOverlay.style.display === 'flex');
+                   (tutorialOverlay && tutorialOverlay.style.display === 'flex') ||
+                   (replayOverlay && replayOverlay.style.display === 'flex');
         }
 
         // Touch Steering Controls
@@ -4527,6 +4984,36 @@
                 return;
             }
 
+            // Replay Playback Controls Hotkeys
+            if (isReplayMode) {
+                if (e.key === ' ' || k === 'p') {
+                    e.preventDefault();
+                    togglePauseReplay();
+                    return;
+                } else if (k === '1') {
+                    setReplaySpeed(0.5);
+                    return;
+                } else if (k === '2') {
+                    setReplaySpeed(1.0);
+                    return;
+                } else if (k === '3') {
+                    setReplaySpeed(2.0);
+                    return;
+                } else if (k === '4') {
+                    setReplaySpeed(4.0);
+                    return;
+                } else if (e.key === 'Escape' || k === 'q') {
+                    exitReplay();
+                    return;
+                }
+                // Disallow manual direction changes during replay playback
+                if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key) ||
+                    [keyBinds.up, keyBinds.down, keyBinds.left, keyBinds.right].includes(k)) {
+                    e.preventDefault();
+                    return;
+                }
+            }
+
             // Sound Toggle Hotkey 'U'
             if (k === 'u') {
                 toggleSound();
@@ -4536,6 +5023,7 @@
             if (gameState === 0) {
                 if (k === 'n') openMultiplayerModal();
                 else if (k === 'x') startAIDuel();
+                else if (k === 'v') openReplayModal();
                 else if (k === 'm') cycleMode();
                 else if (k === '1') { difficulty = 0; updateMenuUI(); }
                 else if (k === '2') { difficulty = 1; updateMenuUI(); }
@@ -4600,7 +5088,7 @@
         });
 
         // Backdrop click dismissal for modal dialogs
-        [leaderboardOverlay, configOverlay, statsExportOverlay, exportImportOverlay, tutorialOverlay, pauseOverlay].forEach(overlay => {
+        [leaderboardOverlay, configOverlay, statsExportOverlay, exportImportOverlay, tutorialOverlay, pauseOverlay, replayOverlay].forEach(overlay => {
             if (!overlay) return;
             overlay.addEventListener('click', e => {
                 if (e.target === overlay) {
@@ -4609,6 +5097,16 @@
                 }
             });
         });
+
+        // Initialize RFMS Multiplayer, URL invite auto-join, and Replay Drag-and-Drop
+        initRetroMultiplayer();
+        checkUrlInvite();
+        setupReplayDragAndDrop();
+
+        window.onFirebaseLoaded = () => {
+            initRetroMultiplayer();
+            checkUrlInvite();
+        };
 
         updateMenuUI();
         showToast("Welcome to KSnake! Press [H] or [F1] for Help.", 3500);
