@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-02T04:22:00Z — kilo-tester: KNote (Interactive UI Audit, Modal Backdrop & Escape/Enter Dismissals, Dropdown Fixes)**
+  - Status: PASS ✅ (4 issues found, 4 fixed, 0 regressions, clean builds, 153.5 KB web / 24.0 KB native < 999 KB ceiling).
+  - Modal Dismissals: Added backdrop click dismissal for statsModal and collabModal; added Enter dismissal for help and stats modals.
+  - Dropdown Behavior: Wired exportDropdownBtn toggle, auto-closed menu on item click/blur and on Escape/outside click.
+  - Find & Replace Ergonomics: Added Enter (replace / replace all) and Escape dismiss shortcuts for replaceInput.
+  - Glint & ARG Audit: Verified 0 traveling perimeter dots; confirmed subtle diegetic Arc 1 recovery log (`system_recovery_1999.log`).
+  - Verification: MSVC clean (`KNote.exe` 24.0 KB); Vite clean in 383ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T03:22:00Z — kilo-graphics: KChrono (Scenario 7 Citadel, YM2612 FM Arpeggiator, Motes & Balance)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 186.6 KB web / 23.0 KB native < 999 KB ceiling).
   - Content Expansion: Added Scenario 7 "The Chronal Citadel" (tri-epoch cascade, dual blast gates, phantoms & Omega core).

@@ -1384,41 +1384,41 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             SendMessageA(hComboPreset, CB_SETCURSEL, 0, 0);
 
-            hBtn = CreateWindowEx(0, "BUTTON", "Ping [P]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON, 410, 12, 65, 24, hwnd, (HMENU)1, NULL, NULL);
-            hBtnTrace = CreateWindowEx(0, "BUTTON", "Trace [T]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 480, 12, 68, 24, hwnd, (HMENU)2, NULL, NULL);
-            hBtnMTU = CreateWindowEx(0, "BUTTON", "MTU [M]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 553, 12, 68, 24, hwnd, (HMENU)4, NULL, NULL);
-            hBtnSubnet = CreateWindowEx(0, "BUTTON", "Subnet [S]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 626, 12, 75, 24, hwnd, (HMENU)7, NULL, NULL);
-            hBtnDNS = CreateWindowEx(0, "BUTTON", "DNS [D]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 706, 12, 65, 24, hwnd, (HMENU)8, NULL, NULL);
-            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 776, 12, 68, 24, hwnd, (HMENU)6, NULL, NULL);
-            hBtnBGP = CreateWindowEx(0, "BUTTON", "BGP [B]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 848, 12, 68, 24, hwnd, (HMENU)9, NULL, NULL);
+            hBtn = CreateWindowEx(0, "BUTTON", "Ping [P]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_DEFPUSHBUTTON, 410, 12, 64, 24, hwnd, (HMENU)1, NULL, NULL);
+            hBtnTrace = CreateWindowEx(0, "BUTTON", "Trace [T]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 477, 12, 66, 24, hwnd, (HMENU)2, NULL, NULL);
+            hBtnMTU = CreateWindowEx(0, "BUTTON", "MTU [M]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 546, 12, 66, 24, hwnd, (HMENU)4, NULL, NULL);
+            hBtnSubnet = CreateWindowEx(0, "BUTTON", "Subnet [S]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 615, 12, 70, 24, hwnd, (HMENU)7, NULL, NULL);
+            hBtnDNS = CreateWindowEx(0, "BUTTON", "DNS [D]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 688, 12, 64, 24, hwnd, (HMENU)8, NULL, NULL);
+            hBtnBGP = CreateWindowEx(0, "BUTTON", "BGP [B]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 755, 12, 66, 24, hwnd, (HMENU)9, NULL, NULL);
+            hBtnHelp = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 824, 12, 66, 24, hwnd, (HMENU)6, NULL, NULL);
 
             // Row 2: Parameters, Checkboxes, and Utility Buttons
-            hStaticCount = CreateWindowEx(0, "STATIC", "Count:", WS_CHILD | WS_VISIBLE, 15, 44, 40, 22, hwnd, NULL, NULL, NULL);
-            hInputCount = CreateWindowEx(0, "EDIT", "4", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_NUMBER, 57, 42, 35, 22, hwnd, NULL, NULL, NULL);
+            hStaticCount = CreateWindowEx(0, "STATIC", "Count:", WS_CHILD | WS_VISIBLE, 15, 44, 38, 22, hwnd, NULL, NULL, NULL);
+            hInputCount = CreateWindowEx(0, "EDIT", "4", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_NUMBER, 55, 42, 32, 22, hwnd, NULL, NULL, NULL);
             SetWindowLongPtr(hInputCount, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
 
-            hStaticSize = CreateWindowEx(0, "STATIC", "Size:", WS_CHILD | WS_VISIBLE, 98, 44, 32, 22, hwnd, NULL, NULL, NULL);
-            hInputSize = CreateWindowEx(0, "EDIT", "32", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_NUMBER, 132, 42, 42, 22, hwnd, NULL, NULL, NULL);
+            hStaticSize = CreateWindowEx(0, "STATIC", "Size:", WS_CHILD | WS_VISIBLE, 92, 44, 30, 22, hwnd, NULL, NULL, NULL);
+            hInputSize = CreateWindowEx(0, "EDIT", "32", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_NUMBER, 124, 42, 38, 22, hwnd, NULL, NULL, NULL);
             SetWindowLongPtr(hInputSize, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
 
-            hStaticTTL = CreateWindowEx(0, "STATIC", "TTL:", WS_CHILD | WS_VISIBLE, 180, 44, 28, 22, hwnd, NULL, NULL, NULL);
-            hInputTTL = CreateWindowEx(0, "EDIT", "115", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_NUMBER, 210, 42, 35, 22, hwnd, NULL, NULL, NULL);
+            hStaticTTL = CreateWindowEx(0, "STATIC", "TTL:", WS_CHILD | WS_VISIBLE, 168, 44, 26, 22, hwnd, NULL, NULL, NULL);
+            hInputTTL = CreateWindowEx(0, "EDIT", "115", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_NUMBER, 196, 42, 32, 22, hwnd, NULL, NULL, NULL);
             SetWindowLongPtr(hInputTTL, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
 
-            hStaticTimeout = CreateWindowEx(0, "STATIC", "Wait(ms):", WS_CHILD | WS_VISIBLE, 252, 44, 52, 22, hwnd, NULL, NULL, NULL);
-            hInputTimeout = CreateWindowEx(0, "EDIT", "1000", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_NUMBER, 306, 42, 42, 22, hwnd, NULL, NULL, NULL);
+            hStaticTimeout = CreateWindowEx(0, "STATIC", "Wait(ms):", WS_CHILD | WS_VISIBLE, 234, 44, 52, 22, hwnd, NULL, NULL, NULL);
+            hInputTimeout = CreateWindowEx(0, "EDIT", "1000", WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP | ES_NUMBER, 288, 42, 38, 22, hwnd, NULL, NULL, NULL);
             SetWindowLongPtr(hInputTimeout, GWLP_WNDPROC, (LONG_PTR)EditSubclassProc);
 
-            hCheckCont = CreateWindowEx(0, "BUTTON", "Cont (-t)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 356, 44, 72, 20, hwnd, NULL, NULL, NULL);
-            hCheckHex = CreateWindowEx(0, "BUTTON", "Hex Dump", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 432, 44, 80, 20, hwnd, NULL, NULL, NULL);
-            hCheckDF = CreateWindowEx(0, "BUTTON", "DF (-f)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 516, 44, 58, 20, hwnd, NULL, NULL, NULL);
-            hCheckResolve = CreateWindowEx(0, "BUTTON", "Resolve (-a)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 578, 44, 88, 20, hwnd, NULL, NULL, NULL);
-            hCheckSound = CreateWindowEx(0, "BUTTON", "Audio [U]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 670, 44, 72, 20, hwnd, (HMENU)12, NULL, NULL);
+            hCheckCont = CreateWindowEx(0, "BUTTON", "Cont (-t)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 334, 44, 70, 20, hwnd, NULL, NULL, NULL);
+            hCheckHex = CreateWindowEx(0, "BUTTON", "Hex Dump", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 408, 44, 76, 20, hwnd, NULL, NULL, NULL);
+            hCheckDF = CreateWindowEx(0, "BUTTON", "DF (-f)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 488, 44, 56, 20, hwnd, NULL, NULL, NULL);
+            hCheckResolve = CreateWindowEx(0, "BUTTON", "Resolve (-a)", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 548, 44, 84, 20, hwnd, NULL, NULL, NULL);
+            hCheckSound = CreateWindowEx(0, "BUTTON", "Audio [U]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_AUTOCHECKBOX, 638, 44, 72, 20, hwnd, (HMENU)12, NULL, NULL);
             SendMessage(hCheckSound, BM_SETCHECK, BST_CHECKED, 0);
 
-            hBtnBloat = CreateWindowEx(0, "BUTTON", "Bloat [Q]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 746, 42, 68, 22, hwnd, (HMENU)11, NULL, NULL);
-            hBtnExport = CreateWindowEx(0, "BUTTON", "Export [E]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 818, 42, 65, 22, hwnd, (HMENU)3, NULL, NULL);
-            hBtnClear = CreateWindowEx(0, "BUTTON", "Clear [C]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 887, 42, 58, 22, hwnd, (HMENU)5, NULL, NULL);
+            hBtnBloat = CreateWindowEx(0, "BUTTON", "Bloat [Q]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 714, 42, 68, 22, hwnd, (HMENU)11, NULL, NULL);
+            hBtnExport = CreateWindowEx(0, "BUTTON", "Export [E]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 786, 42, 65, 22, hwnd, (HMENU)3, NULL, NULL);
+            hBtnClear = CreateWindowEx(0, "BUTTON", "Clear [C]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 855, 42, 58, 22, hwnd, (HMENU)5, NULL, NULL);
 
             // Output Terminal Console
             hOutput = CreateWindowEx(0, "EDIT", "Welcome to KPing Network Diagnostics Suite.\r\n"
@@ -1493,22 +1493,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int nw = LOWORD(lParam);
             int nh = HIWORD(lParam);
 
-            int rightButtonsW = 500;
+            int rightButtonsW = 490;
             int inputW = nw - rightButtonsW - 200;
-            if (inputW < 110) inputW = 110;
+            if (inputW < 120) inputW = 120;
 
             MoveWindow(hInput, 60, 12, inputW, 24, TRUE);
             MoveWindow(hComboPreset, 65 + inputW + 5, 12, 145, 200, TRUE);
             
-            int btnX = nw - 520;
-            if (btnX < 400) btnX = 400;
-            MoveWindow(hBtn, btnX, 12, 65, 24, TRUE);
-            MoveWindow(hBtnTrace, btnX + 68, 12, 68, 24, TRUE);
-            MoveWindow(hBtnMTU, btnX + 139, 12, 68, 24, TRUE);
-            MoveWindow(hBtnSubnet, btnX + 210, 12, 72, 24, TRUE);
-            MoveWindow(hBtnDNS, btnX + 285, 12, 65, 24, TRUE);
-            MoveWindow(hBtnHelp, btnX + 353, 12, 68, 24, TRUE);
-            MoveWindow(hBtnBGP, btnX + 424, 12, 68, 24, TRUE);
+            int btnX = nw - 485;
+            if (btnX < 390) btnX = 390;
+            MoveWindow(hBtn, btnX, 12, 64, 24, TRUE);
+            MoveWindow(hBtnTrace, btnX + 67, 12, 66, 24, TRUE);
+            MoveWindow(hBtnMTU, btnX + 136, 12, 66, 24, TRUE);
+            MoveWindow(hBtnSubnet, btnX + 205, 12, 70, 24, TRUE);
+            MoveWindow(hBtnDNS, btnX + 278, 12, 64, 24, TRUE);
+            MoveWindow(hBtnBGP, btnX + 345, 12, 66, 24, TRUE);
+            MoveWindow(hBtnHelp, btnX + 414, 12, 66, 24, TRUE);
 
             MoveWindow(hCheckSound, nw - 265, 44, 68, 20, TRUE);
             MoveWindow(hBtnBloat, nw - 192, 42, 65, 22, TRUE);
@@ -1520,7 +1520,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_GETMINMAXINFO: {
             MINMAXINFO* mmi = (MINMAXINFO*)lParam;
-            mmi->ptMinTrackSize.x = 840;
+            mmi->ptMinTrackSize.x = 880;
             mmi->ptMinTrackSize.y = 420;
             return 0;
         }

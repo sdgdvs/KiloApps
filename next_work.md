@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://darknet (Encrypted Underground Relay & Cryptography Lab)"
   kilo_graphics: KCosmic
   kilo_tester: KPaint
-  kilo_usability: KPing
+  kilo_usability: KHabit
   kilo_qa: KCalendar
   kilo_expander: KPaint
 virtual_web_target: "kweb://darknet"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KPad
-  timestamp: "2026-10-02T07:36:00Z"
+  agent: kilo-usability
+  app: KPing
+  timestamp: "2026-10-02T09:20:00Z"
 last_planner_run: "2026-10-01T19:32:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPass`, `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KPing`
+- **Current Target**: `KHabit`
 - **Upcoming Queue**:
-  `KHabit`, `KFarm`, `KPaint`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash` *(Completed: KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex)*.
+  `KFarm`, `KPaint`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash` *(Completed: KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KCalendar`
@@ -300,6 +300,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-02T09:20:00Z — kilo-usability: KPing (Non-Occluding Toast Viewport, Modal Hotkeys, Focus Rings & Win32 Layout Fit)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 150.2 KB web / 38.9 KB native < 999 KB ceiling).
+  - Toast Occlusion Remediation: Relocated toasts to bottom-right (`bottom: 114px; right: 20px`), clearing analytics panel, graph tooltips, and stats.
+  - Toast Ergonomics: Capped concurrent toasts to 2 with instant click dismiss, visible `×` indicator, and modal `z-index: 2000` isolation.
+  - Modal Dismissals & Accessibility: Bound Enter/Space to dismiss help modal, enabled 1/2/3 quick export keys, and added card keyboard triggers.
+  - Visible Focus Outlines: Added high-contrast `:focus-visible` styling across all buttons, filter pills, mode pills, and export option cards.
+  - Win32 Layout Polish: Refined input coordinates, button widths, and track bounds preventing row 2 overlap at minimum window widths.
+  - Verification: MSVC clean (`KPing.exe` 38.9 KB); Vite clean in 373ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T07:36:00Z — kilo-tester: KPad (Interactive UI Audit, Missing Handlers, Diff Quicksave & Modal Dismissals)**
   - Status: PASS ✅ (5 issues found, 5 fixed, 0 regressions, clean builds, 230.3 KB web / 33.8 KB native < 999 KB ceiling).
   - Broken Handlers: Defined missing `ctxNewTab()` in context menu and `openCollabChat()` in collab dropdown.
@@ -332,14 +341,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Causal Gate Scoping: Scoped Rule 1 power-grid gate energization to prevent Beta blast gate flicker on pressure plate scenarios (6 & 7).
   - Win32 Splash Hitbounds: Fixed mouse click Y-bounds on splash screen ensuring Scenarios 1-7, Quicksave, and Manual trigger correctly.
   - Verification: MSVC clean (`KChrono.exe` 23.5 KB); Vite clean in 475ms; check_icons & security_lint 100% PASS.
-
-- **2026-10-02T04:22:00Z — kilo-tester: KNote (Interactive UI Audit, Modal Backdrop & Escape/Enter Dismissals, Dropdown Fixes)**
-  - Status: PASS ✅ (4 issues found, 4 fixed, 0 regressions, clean builds, 153.5 KB web / 24.0 KB native < 999 KB ceiling).
-  - Modal Dismissals: Added backdrop click dismissal for statsModal and collabModal; added Enter dismissal for help and stats modals.
-  - Dropdown Behavior: Wired exportDropdownBtn toggle, auto-closed menu on item click/blur and on Escape/outside click.
-  - Find & Replace Ergonomics: Added Enter (replace / replace all) and Escape dismiss shortcuts for replaceInput.
-  - Glint & ARG Audit: Verified 0 traveling perimeter dots; confirmed subtle diegetic Arc 1 recovery log (`system_recovery_1999.log`).
-  - Verification: MSVC clean (`KNote.exe` 24.0 KB); Vite clean in 383ms; check_icons & security_lint 100% PASS.
 
 
 

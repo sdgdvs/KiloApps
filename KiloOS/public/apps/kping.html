@@ -230,19 +230,42 @@
   .g-pill:hover { background: rgba(255, 255, 255, 0.18); color: white; }
   .g-pill.active { background: rgba(59, 130, 246, 0.35); border-color: #60a5fa; color: #93c5fd; font-weight: 700; }
 
+  .btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  .g-pill:focus-visible,
+  .filter-pill:focus-visible,
+  .export-option-card:focus-visible,
+  .modal-close:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
   canvas { flex: 1; width: 100%; height: 100%; border-radius: 6px; background: rgba(0,0,0,0.25); }
 
-  /* Toast Notification System (Bottom-Center non-occluding positioning) */
+  /* Toast Notification System (Safe Non-Occluding Viewport Placement) */
   .toast-container {
-    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); z-index: 1000;
-    display: flex; flex-direction: column-reverse; gap: 8px; pointer-events: none; align-items: center;
-    max-width: 90vw;
+    position: fixed; bottom: 114px; right: 20px; z-index: 1000;
+    display: flex; flex-direction: column-reverse; gap: 8px; pointer-events: none; align-items: flex-end;
+    max-width: 440px;
   }
   .toast {
-    pointer-events: auto; padding: 9px 13px; border-radius: 8px; font-size: 12px; font-weight: 500;
-    display: flex; align-items: center; gap: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-    animation: toastIn 0.25s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; transition: all 0.2s ease;
-    border: 1px solid var(--border); backdrop-filter: blur(8px); max-width: 420px;
+    pointer-events: auto; padding: 8px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 500;
+    display: flex; align-items: center; gap: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+    animation: toastIn 0.22s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; transition: all 0.18s ease;
+    border: 1px solid var(--border); backdrop-filter: blur(10px); max-width: 400px;
+    user-select: none;
+  }
+  .toast:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+  }
+  .toast .toast-dismiss {
+    margin-left: auto; font-size: 14px; opacity: 0.6; padding-left: 6px; line-height: 1;
+  }
+  .toast:hover .toast-dismiss {
+    opacity: 1;
   }
   .toast-info { background: rgba(15, 23, 42, 0.95); border-left: 4px solid var(--accent); color: #e2e8f0; }
   .toast-success { background: rgba(6, 78, 59, 0.95); border-left: 4px solid var(--success); color: #d1fae5; }
@@ -256,7 +279,7 @@
   /* Modal Dialogs */
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(6px);
-    display: flex; align-items: center; justify-content: center; z-index: 999;
+    display: flex; align-items: center; justify-content: center; z-index: 2000;
     opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
   }
   .modal-overlay.active { opacity: 1; pointer-events: auto; }
@@ -426,9 +449,9 @@
         </div>
       </div>
       <textarea id="out" readonly spellcheck="false" role="log" aria-live="polite" aria-atomic="false">Welcome to KPing Network Diagnostics Suite.
-Modes: Ping [P], Route Trace [T], Path MTU [M], Subnet LAN Sweep [S], DNS Inspector [D], BGP [B], Global Mesh [G].
+Modes: Ping [P], Route Trace [T], Path MTU [M], Subnet LAN Sweep [S], DNS Inspector [D], BGP [B], Bloat [Q], Global Mesh [G].
 Metrics: Mean Jitter (RFC 3550), Std Dev, VoIP MOS Quality Score, SLA Rating.
-Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for Help.
+Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for Help.
 
 </textarea>
     </div>
@@ -486,32 +509,32 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
         <button id="exportCloseBtn" class="modal-close" title="Close [Esc]" aria-label="Close export dialog">&times;</button>
       </div>
 
-      <div class="export-option-card" onclick="triggerExport('json')">
+      <div class="export-option-card" data-format="json" tabindex="0" role="button" aria-label="Export JSON Telemetry Dataset (Press 1 or Enter)" onclick="triggerExport('json')">
         <div>
-          <strong style="color:#93c5fd; font-size:13px;">JSON Telemetry Dataset (.json)</strong>
+          <strong style="color:#93c5fd; font-size:13px;">JSON Telemetry Dataset (.json) <span class="kbd-badge">1</span></strong>
           <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">Complete structured telemetry array, packet metrics, and session audit.</div>
         </div>
-        <button class="btn btn-secondary" style="min-width:60px;">Download</button>
+        <button class="btn btn-secondary" style="min-width:60px;" tabindex="-1">Download</button>
       </div>
 
-      <div class="export-option-card" onclick="triggerExport('csv')">
+      <div class="export-option-card" data-format="csv" tabindex="0" role="button" aria-label="Export CSV Spreadsheet Table (Press 2 or Enter)" onclick="triggerExport('csv')">
         <div>
-          <strong style="color:#6ee7b7; font-size:13px;">CSV Spreadsheet Table (.csv)</strong>
+          <strong style="color:#6ee7b7; font-size:13px;">CSV Spreadsheet Table (.csv) <span class="kbd-badge">2</span></strong>
           <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">RFC-compliant tabular dataset for Excel, Pandas, or Wireshark comparison.</div>
         </div>
-        <button class="btn btn-secondary" style="min-width:60px;">Download</button>
+        <button class="btn btn-secondary" style="min-width:60px;" tabindex="-1">Download</button>
       </div>
 
-      <div class="export-option-card" onclick="triggerExport('md')">
+      <div class="export-option-card" data-format="md" tabindex="0" role="button" aria-label="Export Markdown Audit Report (Press 3 or Enter)" onclick="triggerExport('md')">
         <div>
-          <strong style="color:#c084fc; font-size:13px;">Markdown Audit Report (.md)</strong>
+          <strong style="color:#c084fc; font-size:13px;">Markdown Audit Report (.md) <span class="kbd-badge">3</span></strong>
           <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">Formatted engineering report with metric tables and console dump.</div>
         </div>
-        <button class="btn btn-secondary" style="min-width:60px;">Download</button>
+        <button class="btn btn-secondary" style="min-width:60px;" tabindex="-1">Download</button>
       </div>
 
       <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
-        <button id="btnExportCancel" class="btn btn-secondary">Close [Esc]</button>
+        <button id="btnExportCancel" class="btn btn-secondary">Close [Esc / Enter]</button>
       </div>
     </div>
   </div>
@@ -677,9 +700,14 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
             <td>Quickly select Localhost, Core Gateway, Classified, etc.</td>
           </tr>
           <tr>
-            <td><span class="shortcut-key">Esc</span></td>
-            <td><strong>Cancel / Close</strong></td>
-            <td>Stop active operation, close modal or dismiss notification</td>
+            <td><span class="shortcut-key">1</span> / <span class="shortcut-key">2</span> / <span class="shortcut-key">3</span></td>
+            <td><strong>Export Format</strong></td>
+            <td>In export dialog: download JSON (1), CSV (2), or Markdown (3)</td>
+          </tr>
+          <tr>
+            <td><span class="shortcut-key">Esc</span> / <span class="shortcut-key">Enter</span></td>
+            <td><strong>Cancel / Dismiss</strong></td>
+            <td>Stop active operation, dismiss active modal or notification</td>
           </tr>
           <tr>
             <td><span class="shortcut-key">F1</span> / <span class="shortcut-key">H</span></td>
@@ -689,7 +717,7 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       </table>
 
       <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
-        <button id="btnModalGotIt" class="btn btn-primary">Got it [Esc]</button>
+        <button id="btnModalGotIt" class="btn btn-primary">Got it [Esc / Enter]</button>
       </div>
     </div>
   </div>
@@ -1076,25 +1104,26 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
     append(`[i] Configuration state quickloaded from storage [F9]\n`, 'info');
   }
 
-  function showToast(messageHtml, type = 'info', duration = 4000) {
-    while (toastContainer.children.length >= 3) {
+  function showToast(messageHtml, type = 'info', duration = 3500) {
+    while (toastContainer.children.length >= 2) {
       toastContainer.removeChild(toastContainer.firstChild);
     }
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
     toast.setAttribute('role', 'status');
-    toast.innerHTML = messageHtml;
+    toast.setAttribute('title', 'Click to dismiss');
+    toast.innerHTML = `<span style="flex:1;">${messageHtml}</span><span class="toast-dismiss" aria-hidden="true">&times;</span>`;
     toast.onclick = () => {
       toast.style.opacity = '0';
       toast.style.transform = 'translateY(10px)';
-      setTimeout(() => toast.remove(), 200);
+      setTimeout(() => toast.remove(), 180);
     };
     toastContainer.appendChild(toast);
     setTimeout(() => {
       if (toast.parentElement) {
         toast.style.opacity = '0';
         toast.style.transform = 'translateY(10px)';
-        setTimeout(() => toast.remove(), 200);
+        setTimeout(() => toast.remove(), 180);
       }
     }, duration);
   }
@@ -2708,6 +2737,12 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
       }
       showToast(`Callsign updated to <strong>${escapeHtml(myCallsign)}</strong>`, 'info', 2000);
     });
+    stationCallsignInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        stationCallsignInput.blur();
+      }
+    });
   }
 
   const REGIONS = ['US-West (Silicon Valley)', 'US-East (Virginia)', 'EU-Central (Frankfurt)', 'AP-East (Tokyo)', 'UK-South (London)'];
@@ -3124,6 +3159,17 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
   btnSound.onclick = toggleSound;
   btnHelp.onclick = openHelpModal;
 
+  // Keyboard navigation for export option cards (Enter / Space)
+  document.querySelectorAll('.export-option-card').forEach(card => {
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const fmt = card.getAttribute('data-format');
+        if (fmt) triggerExport(fmt);
+      }
+    });
+  });
+
   // Enter to ping on input fields
   [hostInput, countInput, sizeInput, intervalInput, ttlInput, timeoutInput].forEach(inp => {
     if (inp) {
@@ -3142,6 +3188,48 @@ Press Enter or 'P' to Ping, 'G' for Global Mesh, F5/F9 to Save/Load, or 'F1' for
   document.addEventListener('keydown', (e) => {
       const active = document.activeElement;
       const isInput = active.tagName === 'INPUT' || (active.tagName === 'TEXTAREA' && active.id !== 'out') || active.tagName === 'SELECT';
+
+      // Export modal shortcuts (1 = JSON, 2 = CSV, 3 = Markdown, Enter/Space/Escape to dismiss)
+      if (exportModal.classList.contains('active')) {
+          if (e.key === '1') {
+              e.preventDefault();
+              triggerExport('json');
+              return;
+          }
+          if (e.key === '2') {
+              e.preventDefault();
+              triggerExport('csv');
+              return;
+          }
+          if (e.key === '3') {
+              e.preventDefault();
+              triggerExport('md');
+              return;
+          }
+          if (e.key === 'Escape' || ((e.key === 'Enter' || e.key === ' ') && (active === btnExportCancel || active === exportCloseBtn))) {
+              e.preventDefault();
+              closeExportModal();
+              return;
+          }
+      }
+
+      // Help modal dismissal (Escape, Enter, Space, F1, H)
+      if (helpModal.classList.contains('active')) {
+          if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ' || e.key === 'F1' || ((e.key === 'h' || e.key === 'H' || e.key === '?') && !isInput)) {
+              e.preventDefault();
+              closeHelpModal();
+              return;
+          }
+      }
+
+      // Mesh modal dismissal
+      if (meshModal.classList.contains('active')) {
+          if (e.key === 'Escape' || ((e.key === 'Enter' || e.key === ' ') && (active === btnMeshClose || active === meshCloseBtn))) {
+              e.preventDefault();
+              closeMeshModal();
+              return;
+          }
+      }
 
       // Save / Export hotkey (Ctrl+S)
       if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) {
