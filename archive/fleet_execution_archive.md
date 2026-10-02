@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-01T22:18:00Z — kilo-tester: KNet (Interactive UI Audit, Forge & Subnet Fixes, Passkey Hash & TINAG Scrub)**
+  - Status: PASS ✅ (6 issues found, 6 fixed, 0 regressions, clean builds, 170.0 KB web / 41.5 KB native < 999 KB ceiling).
+  - Runtime Fixes: Fixed undefined `logTraffic` calls in Forge to `addTrafficLog`, and `closeForge` to `closeForgeModal`.
+  - Element ID Fixes: Corrected URL bar command handlers for `cidr:`, `bench`, and `ifconfig` to match DOM button/slider IDs.
+  - Modal & Drawer Ergonomics: Added Escape key dismissal for packet dissection drawer and verified modal backdrops.
+  - Passkey Secrecy: Replaced cleartext director passkey array with DJB2 cryptographic hashes adhering to secrecy protocol.
+  - ARG & TINAG Compliance: Sanitized Echoes transmission and button IDs from explicit fleet meta-spoilers into diegetic telemetry.
+  - State Persistence: Persisted active utility sub-tab across quicksave/quickload and session restore.
+  - Verification: MSVC clean (`KNet.exe` 41.5 KB); Vite clean in 419ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-01T21:18:00Z — kilo-graphics: KStarship (Glint Audit, Static Vector Station & Precursor Halos, Shore Leave)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 151.7 KB web / 148.5 KB native < 999 KB ceiling).
   - Glint & Comet Ban: Removed rotating perimeter dots in Station and Precursor Ruin modal previews across web & native.
