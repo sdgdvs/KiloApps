@@ -28,31 +28,37 @@
   .app-container {
     width: 100%;
     max-width: 980px;
-    margin: auto 0;
+    margin: 0 auto;
     background: rgba(15, 23, 42, 0.75);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 16px;
-    padding: 14px 18px;
+    padding: 12px 16px;
     box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
   }
   
+  /* Focus Accessibility */
+  button:focus-visible, input:focus-visible, select:focus-visible, .key:focus-visible, .step-btn:focus-visible {
+    outline: 2px solid #38bdf8 !important;
+    outline-offset: 2px !important;
+  }
+
   /* Header & Top Bar */
   .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    padding-bottom: 14px;
+    padding-bottom: 10px;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 8px;
   }
   .brand {
-    font-size: 22px;
+    font-size: 21px;
     font-weight: 800;
     letter-spacing: -0.5px;
     background: linear-gradient(135deg, #38bdf8, #818cf8);
@@ -66,7 +72,7 @@
   .header-actions {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     flex-wrap: wrap;
   }
   
@@ -74,9 +80,9 @@
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid rgba(255, 255, 255, 0.12);
     color: #e2e8f0;
-    padding: 6px 14px;
+    padding: 5px 12px;
     border-radius: 8px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -114,7 +120,7 @@
   .preset-section {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
   }
   .section-title {
     font-size: 11px;
@@ -125,22 +131,22 @@
   }
   .preset-grid {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
   }
   .preset-btn {
     background: rgba(30, 41, 59, 0.7);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 12px;
+    padding: 6px 10px;
+    font-size: 11px;
     font-weight: 600;
     color: #cbd5e1;
     cursor: pointer;
     transition: all 0.15s ease;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
   }
   .preset-btn:hover {
     background: rgba(56, 189, 248, 0.15);
@@ -154,7 +160,7 @@
   .panels-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 10px;
   }
   @media (max-width: 768px) {
     .panels-grid { grid-template-columns: 1fr; }
@@ -164,10 +170,10 @@
     background: rgba(0, 0, 0, 0.35);
     border: 1px solid rgba(255, 255, 255, 0.06);
     border-radius: 12px;
-    padding: 12px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
   .panel-header {
     display: flex;
@@ -180,7 +186,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    gap: 8px;
   }
   .control-label {
     font-size: 12px;
@@ -202,6 +208,7 @@
     background: rgba(255, 255, 255, 0.15);
     border-radius: 3px;
     outline: none;
+    cursor: pointer;
   }
   input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -241,7 +248,7 @@
   .visualizer-container {
     position: relative;
     width: 100%;
-    height: 110px;
+    height: 100px;
     background: rgba(0, 0, 0, 0.6);
     border-radius: 8px;
     overflow: hidden;
@@ -258,10 +265,10 @@
     background: rgba(0, 0, 0, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
-    padding: 12px 14px;
+    padding: 10px 12px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
     align-items: center;
   }
   .keyboard-status {
@@ -289,7 +296,7 @@
   }
   .key {
     width: 44px;
-    height: 125px;
+    height: 118px;
     background: linear-gradient(180deg, #f8fafc 0%, #cbd5e1 100%);
     border-radius: 0 0 6px 6px;
     display: flex;
@@ -318,7 +325,7 @@
     position: absolute;
     top: 4px;
     width: 28px;
-    height: 75px;
+    height: 70px;
     background: linear-gradient(180deg, #334155 0%, #0f172a 100%);
     border-radius: 0 0 4px 4px;
     color: #cbd5e1;
@@ -332,12 +339,12 @@
     font-weight: 600;
     color: #94a3b8;
   }
-  /* Black Key Positions */
-  .key.black[data-note="1"] { margin-left: 32px; }
-  .key.black[data-note="3"] { margin-left: 80px; }
-  .key.black[data-note="6"] { margin-left: 176px; }
-  .key.black[data-note="8"] { margin-left: 224px; }
-  .key.black[data-note="10"] { margin-left: 272px; }
+  /* Black Key Positions (Exact Pixel-Perfect Offsets) */
+  .key.black[data-note="1"] { left: 32px; margin-left: 0; }
+  .key.black[data-note="3"] { left: 80px; margin-left: 0; }
+  .key.black[data-note="6"] { left: 176px; margin-left: 0; }
+  .key.black[data-note="8"] { left: 224px; margin-left: 0; }
+  .key.black[data-note="10"] { left: 272px; margin-left: 0; }
 
   .key.active {
     background: #0ea5e9;
@@ -376,22 +383,22 @@
     background: rgba(0, 0, 0, 0.4);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 12px;
-    padding: 12px 14px;
+    padding: 10px 12px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
   .seq-controls {
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
   }
   .seq-grid {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
     overflow-x: auto;
     padding-bottom: 4px;
   }
@@ -415,7 +422,7 @@
   .step-btn {
     flex: 1;
     min-width: 22px;
-    height: 28px;
+    height: 26px;
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 4px;
@@ -434,15 +441,15 @@
     outline-offset: 1px;
   }
 
-  /* Toast Notification Container (Bottom-Center Safe Zone) */
+  /* Toast Notification Container (Top-Center Safe Zone - Non-Occluding) */
   .toast-container {
     position: fixed;
-    bottom: 20px;
+    top: 14px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 10000;
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
     gap: 8px;
     pointer-events: none;
     max-width: 440px;
@@ -452,9 +459,9 @@
     background: rgba(15, 23, 42, 0.95);
     border: 1px solid rgba(56, 189, 248, 0.4);
     color: #f1f5f9;
-    padding: 10px 16px;
+    padding: 8px 14px;
     border-radius: 10px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.2);
     display: flex;
@@ -474,7 +481,7 @@
   .toast.toast-warning { border-color: rgba(245, 158, 11, 0.6); box-shadow: 0 0 15px rgba(245, 158, 11, 0.25); color: #fde047; }
   .toast.toast-danger { border-color: rgba(244, 63, 94, 0.6); box-shadow: 0 0 15px rgba(244, 63, 94, 0.25); color: #fda4af; }
   @keyframes toastSlideIn {
-    from { opacity: 0; transform: translateY(14px) scale(0.95); }
+    from { opacity: 0; transform: translateY(-14px) scale(0.95); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 </style>
@@ -797,10 +804,10 @@
       <strong style="text-align: right; color: #38bdf8;">Ctrl + S / Ctrl + O</strong> <span>Save / Open JSON Synthesizer Projects</span>
       <strong style="text-align: right; color: #38bdf8;">Ctrl + E</strong> <span>Export 4-second High-Quality DSP WAV File</span>
       <strong style="text-align: right; color: #38bdf8;">M</strong> <span>Export 16-Step Pattern to Standard MIDI (.mid Type 0) File</span>
-      <strong style="text-align: right; color: #fbbf24;">F1 / ? / Esc</strong> <span>Toggle Help Manual / Close Dialog</span>
+      <strong style="text-align: right; color: #fbbf24;">F1 / ? / Shift+H / Esc</strong> <span>Toggle Help Manual / Close Dialog</span>
     </div>
     <div style="text-align: center; color: #94a3b8; font-size: 12px; font-weight: 500; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 8px; cursor: pointer;" onclick="toggleHelp()">
-      Click outside this dialog or press <span style="color: #f43f5e; font-weight: 700;">[Esc]</span> or <span style="color: #fbbf24; font-weight: 700;">[F1]</span> to return to your audio session
+      Click outside this dialog or press <span style="color: #f43f5e; font-weight: 700;">[Esc]</span>, <span style="color: #fbbf24; font-weight: 700;">[F1]</span>, or <span style="color: #38bdf8; font-weight: 700;">[Enter]</span> to return to your audio session
     </div>
   </div>
 </div>
@@ -912,14 +919,14 @@
     toast.title = 'Click to dismiss';
     toast.onclick = () => {
       toast.style.opacity = '0';
-      toast.style.transform = 'translateY(12px) scale(0.95)';
+      toast.style.transform = 'translateY(-12px) scale(0.95)';
       setTimeout(() => { if (toast.parentNode) toast.remove(); }, 150);
     };
     container.appendChild(toast);
     setTimeout(() => {
       if (toast.parentNode) {
         toast.style.opacity = '0';
-        toast.style.transform = 'translateY(12px) scale(0.95)';
+        toast.style.transform = 'translateY(-12px) scale(0.95)';
         setTimeout(() => { if (toast.parentNode) toast.remove(); }, 250);
       }
     }, duration);
@@ -963,8 +970,13 @@
   function toggleHelp() {
     const m = document.getElementById('helpModal');
     if (!m) return;
-    m.style.display = (m.style.display === 'none' || !m.style.display) ? 'flex' : 'none';
-    if (m.style.display === 'none') {
+    const isOpening = (m.style.display === 'none' || !m.style.display);
+    if (isOpening) {
+      const jamM = document.getElementById('jamModal');
+      if (jamM) jamM.style.display = 'none';
+      m.style.display = 'flex';
+    } else {
+      m.style.display = 'none';
       safeSetStorage('kaudio_tutorialSeen', '1');
     }
   }
@@ -1388,7 +1400,17 @@
   function toggleJamModal() {
     const m = document.getElementById('jamModal');
     if (!m) return;
-    m.style.display = (m.style.display === 'none' || !m.style.display) ? 'flex' : 'none';
+    const isOpening = (m.style.display === 'none' || !m.style.display);
+    if (isOpening) {
+      const helpM = document.getElementById('helpModal');
+      if (helpM) {
+        helpM.style.display = 'none';
+        safeSetStorage('kaudio_tutorialSeen', '1');
+      }
+      m.style.display = 'flex';
+    } else {
+      m.style.display = 'none';
+    }
   }
 
   function appendJamTicker(text, color = '#cbd5e1') {
@@ -1545,7 +1567,10 @@
       if (chkSync && chkSync.checked && seqTracks[ev.track]) {
         seqTracks[ev.track].grid[ev.step] = ev.active;
         const btn = seqGridEl.children[ev.track]?.querySelectorAll('.step-btn')[ev.step];
-        if (btn) btn.classList.toggle('active', ev.active);
+        if (btn) {
+          btn.classList.toggle('active', ev.active);
+          btn.setAttribute('aria-pressed', ev.active ? 'true' : 'false');
+        }
         appendJamTicker(`[${ev.nick}] set ${seqTracks[ev.track].name} Step ${ev.step + 1}`, ev.color || '#38bdf8');
       }
     }
@@ -2333,7 +2358,7 @@
     const jamModalEl = document.getElementById('jamModal');
     const isJamOpen = jamModalEl && (jamModalEl.style.display === 'flex' || jamModalEl.offsetParent !== null);
 
-    if (e.key === 'F1' || e.key === '?' || (e.key === '/' && e.shiftKey)) {
+    if (e.key === 'F1' || e.key === '?' || (e.key === '/' && e.shiftKey) || (e.key === 'H' && e.shiftKey)) {
       e.preventDefault();
       toggleHelp();
       return;
@@ -2353,7 +2378,7 @@
       }
     }
 
-    if (isHelpOpen && (e.key === 'h' || e.key === 'H')) {
+    if (isHelpOpen && (e.key === 'Enter' || e.key === ' ' || e.key === 'h' || e.key === 'H')) {
       e.preventDefault();
       helpModalEl.style.display = 'none';
       safeSetStorage('kaudio_tutorialSeen', '1');
@@ -2551,10 +2576,12 @@
         btn.dataset.track = trIdx;
         btn.dataset.step = st;
         btn.setAttribute('aria-label', `${track.name}, Step ${st + 1}`);
+        btn.setAttribute('aria-pressed', track.grid[st] ? 'true' : 'false');
         btn.title = `Toggle ${track.name} on Step ${st + 1}`;
         btn.onclick = () => {
           track.grid[st] = !track.grid[st];
           btn.classList.toggle('active', track.grid[st]);
+          btn.setAttribute('aria-pressed', track.grid[st] ? 'true' : 'false');
           broadcastJamEvent({ type: 'seq_step', track: trIdx, step: st, active: track.grid[st] });
           saveAudioState();
         };
