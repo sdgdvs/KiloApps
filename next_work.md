@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KCalendar
-  timestamp: "2026-10-02T10:20:00Z"
+  agent: kilo-usability
+  app: KPing
+  timestamp: "2026-10-02T10:37:00Z"
 last_planner_run: "2026-10-01T19:32:00Z"
 ---
 
@@ -300,6 +300,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-02T10:37:00Z — kilo-usability: KPing (Win32 Overlap Fix, Responsive Media Queries & Focus Ergonomics)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 151.0 KB web / 38.9 KB native < 999 KB ceiling).
+  - Win32 Layout Polish: Eliminated 10px overlap between preset combobox and Ping button; fixed 17px row 2 Audio/Resolve overlap at 880px minimum track size.
+  - Responsive Media Queries: Added clean wrapping rules for narrow viewports (<=768px) and mobile toast bounds (<=500px).
+  - Modal & Toast Ergonomics: Verified backdrop dismissal, mutual modal isolation, non-occluding bottom-right toasts, and Enter/Space triggers.
+  - Keyboard Navigation: Confirmed 1-9 host presets, P/T/M/S/D/B/Q shortcuts, and high-contrast :focus-visible outlines across all interactive elements.
+  - Verification: MSVC clean (`KPing.exe` 38.9 KB); Vite clean in 455ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T10:20:00Z — kilo-qa: KCalendar (Pass 5: Full State Persistence, First-Run Tutorial, Safe Toasts & Win32 Quicksave)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 109.7 KB web / 24.6 KB native < 999 KB ceiling).
   - Quicksave & State Integrity: Built F5 Quicksave / F9 Quickload in Win32 C (`kcalendar_quicksave.dat`) and web with full filter/view state capture.
@@ -307,15 +315,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast Occlusion Remediation: Relocated toasts to non-occluding bottom-right safe viewport with max 2 concurrent toasts and instant click dismiss.
   - Modal Isolation: Added mutual modal closing preventing double-modal stacking across edit, help, stats, and delete confirmation dialogs.
   - Verification: MSVC clean (`KCalendar.exe` 24.6 KB); Vite clean in 379ms; check_icons & security_lint 100% PASS.
-
-- **2026-10-02T09:20:00Z — kilo-usability: KPing (Non-Occluding Toast Viewport, Modal Hotkeys, Focus Rings & Win32 Layout Fit)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 150.2 KB web / 38.9 KB native < 999 KB ceiling).
-  - Toast Occlusion Remediation: Relocated toasts to bottom-right (`bottom: 114px; right: 20px`), clearing analytics panel, graph tooltips, and stats.
-  - Toast Ergonomics: Capped concurrent toasts to 2 with instant click dismiss, visible `×` indicator, and modal `z-index: 2000` isolation.
-  - Modal Dismissals & Accessibility: Bound Enter/Space to dismiss help modal, enabled 1/2/3 quick export keys, and added card keyboard triggers.
-  - Visible Focus Outlines: Added high-contrast `:focus-visible` styling across all buttons, filter pills, mode pills, and export option cards.
-  - Win32 Layout Polish: Refined input coordinates, button widths, and track bounds preventing row 2 overlap at minimum window widths.
-  - Verification: MSVC clean (`KPing.exe` 38.9 KB); Vite clean in 373ms; check_icons & security_lint 100% PASS.
 
 - **2026-10-02T07:36:00Z — kilo-tester: KPad (Interactive UI Audit, Missing Handlers, Diff Quicksave & Modal Dismissals)**
   - Status: PASS ✅ (5 issues found, 5 fixed, 0 regressions, clean builds, 230.3 KB web / 33.8 KB native < 999 KB ceiling).

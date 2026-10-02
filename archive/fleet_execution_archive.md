@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-02T05:22:00Z — kilo-usability: KAudio (Top-Center Safe Toasts, Key Offsets, Focus Rings & Layout Fit)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 123.0 KB web / 23.0 KB native < 999 KB ceiling).
+  - Toast Occlusion Remediation: Relocated toast container to non-occluding top-center viewport (`top: 14px`) preventing sequencer step blockage.
+  - Piano Ergonomics: Replaced flex-static margins with exact pixel-perfect `left` coordinates (32/80/176/224/272px) for black keys.
+  - Double Modal Prevention: Scoped `toggleHelp()` and `toggleJamModal()` to mutually close each other on open, preventing stacking.
+  - Accessibility & Focus: Added high-contrast `:focus-visible` outlines, slider cursor pointers, and `aria-pressed` states on step buttons.
+  - Shortcuts & Layout Fit: Added `Shift+H` and `Enter` modal toggles, tightened padding/gaps ensuring 100% vertical fit at 1040x860.
+  - Verification: MSVC clean (`KAudio.exe` 23.0 KB); Vite clean in 383ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T04:36:00Z — kilo-graphics: KChrono (Glint & Mote Ban, Static Tile Conduits, Win32 Hit Bounds & Gate Scoping)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 189.8 KB web / 23.5 KB native < 999 KB ceiling).
   - Glint & Mote Ban: Removed 32 floating ambient motes and all `c.rotate` loops (precursor relay, quantum core, tachyon rift).

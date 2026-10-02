@@ -320,6 +320,49 @@
   .export-option-card:hover {
     border-color: var(--accent); background: rgba(59, 130, 246, 0.1);
   }
+
+  /* Responsive Layout Ergonomics */
+  @media (max-width: 768px) {
+    body { padding: 8px; }
+    .controls { padding: 8px 10px; }
+    .filter-bar {
+      margin-left: 0;
+      width: 100%;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+    #filterInput {
+      flex: 1;
+      min-width: 90px;
+    }
+    .analytics-panel {
+      height: auto;
+      flex-wrap: wrap;
+    }
+    .stats-box {
+      flex: 1 1 80px;
+      min-width: 70px;
+    }
+    .graph-box {
+      min-width: 100%;
+      height: 90px;
+    }
+  }
+
+  @media (max-width: 500px) {
+    .toast-container {
+      right: 10px;
+      left: 10px;
+      max-width: none;
+    }
+    .toast {
+      max-width: 100%;
+    }
+    .actions-left, .actions-right {
+      width: 100%;
+      justify-content: flex-start;
+    }
+  }
 </style>
 </head>
 <body>
