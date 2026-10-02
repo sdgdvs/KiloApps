@@ -650,9 +650,9 @@
   /* Toast Notification */
   #toast {
     position: fixed;
-    top: 48px;
-    right: 16px;
-    transform: translateY(-20px);
+    bottom: 24px;
+    right: 20px;
+    transform: translateY(20px);
     background: #2b2b2b;
     color: #fff;
     border: 1px solid #444;
@@ -696,6 +696,7 @@
       <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 16px; border-top: 1px solid #3d3d3d; padding-top: 12px;">
         <span id="tutStepIndicator" style="font-size: 12px; color: #888;">Step 1 of 3</span>
         <div style="display:flex; gap: 8px;">
+          <button id="btnTutClose" style="background:#282828; border-color:#444; color:#aaa;" title="Close and skip tutorial">Skip</button>
           <button id="btnTutPrev" style="display:none; background:#333; border-color:#444;">Back</button>
           <button id="btnTutNext" class="primary" style="background:#e74c3c; border-color:#e74c3c;">Next &rarr;</button>
         </div>
@@ -721,6 +722,8 @@
         <div>&bull; Alt+L = Lock Vault | Alt+J = JSON | Alt+E = CSV | Alt+M = Markdown | Alt+I = Import</div>
       </div>
       <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
+        <button id="btnQuicksaveHelp" style="background: #333; border-color: #444; color: #ddd;" title="Save quicksave snapshot [F5]">Save [F5]</button>
+        <button id="btnQuickloadHelp" style="background: #333; border-color: #444; color: #ddd;" title="Restore quicksave snapshot [F9]">Load [F9]</button>
         <button id="btnLaunchTutorial" style="background: #333; border-color: #444; color: #ddd;">Tour</button>
         <button id="btnCloseHelp" style="background: #e74c3c; border-color: #e74c3c;">Close Help</button>
       </div>
@@ -788,7 +791,7 @@
   
   <!-- Tab 1: Generator -->
   <div class="content" id="contentGen" role="tabpanel" aria-labelledby="tabGen">
-    <div class="help-hint" id="hintHelp">Press 'H' or F1 for Help &amp; Shortcuts</div>
+    <div class="help-hint" id="hintHelp" tabindex="0" role="button" aria-label="Help and Shortcuts">Press 'H' or F1 for Help &amp; Shortcuts</div>
     
     <!-- Mode Pills -->
     <div class="mode-pills" role="radiogroup" aria-label="Generator Mode">
@@ -919,7 +922,7 @@
 
     <!-- Recent History Tray -->
     <div class="history-tray">
-      <div class="history-header" id="btnToggleHistory">
+      <div class="history-header" id="btnToggleHistory" tabindex="0" role="button" aria-label="Toggle recent passwords list">
         <span>🕒 Recent Passwords (<span id="lblHistoryCount">0</span>)</span>
         <span id="lblHistoryToggleIcon">▲</span>
       </div>
@@ -966,6 +969,8 @@
       <button class="btn-sm" id="btnExportMD" title="Export vault to formatted Markdown (Alt+M)">Markdown [Alt+M]</button>
       <button class="btn-sm" id="btnBackupKPass" title="Save encrypted backup (.kpass)">Backup (.kpass)</button>
       <button class="btn-sm" id="btnImport" title="Import credentials from CSV, JSON or .kpass (Alt+I)">Import [Alt+I]</button>
+      <button class="btn-sm" id="btnQuicksaveBar" title="Quicksave snapshot (F5)">Save [F5]</button>
+      <button class="btn-sm" id="btnQuickloadBar" title="Restore snapshot (F9)">Load [F9]</button>
       <button class="btn-sm btn-danger" id="btnLock" title="Instantly lock vault (Alt+L)">Lock [Alt+L]</button>
       <input type="file" id="fileImport" accept=".json,.csv,.kpass" style="display:none;">
     </div>
@@ -992,19 +997,19 @@
     </div>
 
     <div class="audit-grid">
-      <div class="audit-metric-card" id="cardTotalCreds" title="Click to view all items in Vault">
+      <div class="audit-metric-card" id="cardTotalCreds" title="Click to view all items in Vault" tabindex="0" role="button" aria-label="Total credentials">
         <div class="audit-metric-val" id="valTotalCreds" style="color:#fff;">0</div>
         <div class="audit-metric-label">Total Credentials</div>
       </div>
-      <div class="audit-metric-card" id="cardReusedCreds" title="Click to filter reused credentials">
+      <div class="audit-metric-card" id="cardReusedCreds" title="Click to filter reused credentials" tabindex="0" role="button" aria-label="Reused passwords">
         <div class="audit-metric-val" id="valReusedCreds">0</div>
         <div class="audit-metric-label">Reused Passwords</div>
       </div>
-      <div class="audit-metric-card" id="cardWeakCreds" title="Click to filter weak credentials">
+      <div class="audit-metric-card" id="cardWeakCreds" title="Click to filter weak credentials" tabindex="0" role="button" aria-label="Weak or at risk credentials">
         <div class="audit-metric-val" id="valWeakCreds">0</div>
         <div class="audit-metric-label">Weak / At Risk</div>
       </div>
-      <div class="audit-metric-card" id="cardStaleCreds" title="Click to filter stale credentials">
+      <div class="audit-metric-card" id="cardStaleCreds" title="Click to filter stale credentials" tabindex="0" role="button" aria-label="Stale credentials over 90 days">
         <div class="audit-metric-val" id="valStaleCreds" style="color:#f39c12;">0</div>
         <div class="audit-metric-label">Stale (&gt;90d)</div>
       </div>
@@ -1283,9 +1288,16 @@
     const tutTitle = document.getElementById('tutTitle');
     const tutBody = document.getElementById('tutBody');
     const tutStepIndicator = document.getElementById('tutStepIndicator');
+    const btnTutClose = document.getElementById('btnTutClose');
     const btnTutPrev = document.getElementById('btnTutPrev');
     const btnTutNext = document.getElementById('btnTutNext');
     const btnLaunchTutorial = document.getElementById('btnLaunchTutorial');
+
+    // Quicksave / Quickload UI buttons
+    const btnQuicksaveHelp = document.getElementById('btnQuicksaveHelp');
+    const btnQuickloadHelp = document.getElementById('btnQuickloadHelp');
+    const btnQuicksaveBar = document.getElementById('btnQuicksaveBar');
+    const btnQuickloadBar = document.getElementById('btnQuickloadBar');
 
     let currentTutStep = 1;
     const TUTORIAL_STEPS = [
@@ -1338,6 +1350,7 @@
 
     if (btnTutNext) btnTutNext.addEventListener('click', advanceTutorial);
     if (btnTutPrev) btnTutPrev.addEventListener('click', prevTutorial);
+    if (btnTutClose) btnTutClose.addEventListener('click', closeTutorial);
     if (btnLaunchTutorial) {
       btnLaunchTutorial.addEventListener('click', () => {
         toggleHelp(false);
@@ -1349,6 +1362,11 @@
         if (e.target === tutorialOverlay) closeTutorial();
       });
     }
+
+    if (btnQuicksaveHelp) btnQuicksaveHelp.addEventListener('click', () => { toggleHelp(false); quickSaveSession(); });
+    if (btnQuickloadHelp) btnQuickloadHelp.addEventListener('click', () => { toggleHelp(false); quickLoadSession(); });
+    if (btnQuicksaveBar) btnQuicksaveBar.addEventListener('click', quickSaveSession);
+    if (btnQuickloadBar) btnQuickloadBar.addEventListener('click', quickLoadSession);
 
     // Quicksave / Quickload Snapshot Persistence
     function quickSaveSession() {
@@ -1382,6 +1400,7 @@
           sort: vaultSort ? vaultSort.value : 'date-desc',
           search: vaultSearch ? vaultSearch.value : ''
         },
+        currentPass: getCurrentPassword(),
         saveForm: {
           label: labelInput ? labelInput.value : '',
           user: userInput ? userInput.value : '',
@@ -1451,7 +1470,7 @@
           if (vaultSort) vaultSort.value = state.vaultFilter.sort || 'date-desc';
           if (vaultSearch) {
             vaultSearch.value = state.vaultFilter.search || '';
-            if (btnClearSearch) btnClearSearch.style.display = vaultSearch.value ? 'inline' : 'none';
+            if (btnClearSearch) btnClearSearch.style.display = vaultSearch.value ? 'block' : 'none';
           }
         }
         if (state.mode) {
@@ -1460,7 +1479,12 @@
         if (state.activeTab) {
           switchTab(state.activeTab);
         }
-        generate();
+        if (state.currentPass && state.currentPass !== '...') {
+          pwdDisplay.innerHTML = escapeHtml(state.currentPass) + '<div class="display-hint">Click password to copy</div>';
+          evaluateStrength(state.currentPass);
+        } else {
+          generate();
+        }
         showToast("Session restored [F9]!");
       } catch (e) {
         showToast("Error loading quicksave snapshot", false);
@@ -1726,7 +1750,7 @@
                 closeTutorial();
                 return;
             }
-            if (e.key === 'ArrowRight' || e.key === 'Enter' || e.key === ' ') {
+            if (e.key === 'ArrowRight') {
                 e.preventDefault();
                 advanceTutorial();
                 return;
@@ -1734,6 +1758,21 @@
             if (e.key === 'ArrowLeft') {
                 e.preventDefault();
                 prevTutorial();
+                return;
+            }
+            if (e.key === 'Enter' || e.key === ' ') {
+                if (e.target === btnTutPrev) {
+                    e.preventDefault();
+                    prevTutorial();
+                    return;
+                }
+                if (e.target === btnTutClose) {
+                    e.preventDefault();
+                    closeTutorial();
+                    return;
+                }
+                e.preventDefault();
+                advanceTutorial();
                 return;
             }
             return;
@@ -1768,10 +1807,17 @@
             return;
         }
 
-        // Global Ctrl+S shortcut (works even when typing in input)
+        // Global Ctrl+S shortcut (works even when typing in input or in edit modal)
         if (e.ctrlKey && e.key.toLowerCase() === 's') {
             e.preventDefault();
-            if (lockScreen.style.display === 'none' && contentGen.style.display !== 'none') {
+            if (editModal && editModal.style.display === 'flex') {
+                btnSaveEdit.click();
+                return;
+            }
+            if (lockScreen.style.display === 'none') {
+                if (contentGen.style.display === 'none') {
+                    switchTab('gen');
+                }
                 handleSave();
             }
             return;
@@ -1841,7 +1887,7 @@
     });
 
     // Generator Mode Switching
-    function setGenMode(mode) {
+    function setGenMode(mode, skipSave = false) {
         activeGenMode = mode;
         [btnModeChars, btnModeDiceware, btnModePin, btnModeHex].forEach(btn => {
             btn.classList.remove('active');
@@ -1869,6 +1915,7 @@
             btnModeHex.setAttribute('aria-checked', 'true');
             controlsHex.style.display = 'flex';
         }
+        if (!skipSave) savePreferences();
         generate();
     }
     btnModeChars.addEventListener('click', () => setGenMode('chars'));
@@ -1941,7 +1988,7 @@
             if (p.sort && vaultSort && vaultSort.querySelector(`option[value="${p.sort}"]`)) vaultSort.value = p.sort;
             if (p.cat && catInput && catInput.querySelector(`option[value="${p.cat}"]`)) catInput.value = p.cat;
             if (p.mode && ['chars', 'diceware', 'pin', 'hex'].includes(p.mode)) {
-                setGenMode(p.mode);
+                setGenMode(p.mode, true);
             }
         } catch(e) {}
     }
@@ -2408,7 +2455,16 @@
             // Notes copy
             const notesEl = div.querySelector('.vault-notes');
             if (notesEl) {
+                notesEl.setAttribute('tabindex', '0');
+                notesEl.setAttribute('role', 'button');
+                notesEl.setAttribute('aria-label', 'Copy notes');
                 notesEl.addEventListener('click', () => copyText(item.notes, "Notes copied!"));
+                notesEl.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        copyText(item.notes, "Notes copied!");
+                    }
+                });
             }
 
             const passEl = div.querySelector('.vault-pass');
@@ -2581,6 +2637,7 @@
                 labelInput.value = w.label;
                 userInput.value = w.username || '';
                 catInput.value = w.category || 'Personal';
+                notesInput.value = w.notes || '';
                 switchTab('gen');
                 generate();
                 showToast(`Ready to generate new password for ${w.label}!`);
@@ -2613,23 +2670,45 @@
         showToast("Audit refreshed!");
     });
 
-    // Metric cards click handlers
-    document.getElementById('cardTotalCreds').addEventListener('click', () => {
-        vaultRiskFilter.value = '';
-        switchTab('vault');
+    // Metric cards click & keyboard handlers
+    const auditCards = [
+        { id: 'cardTotalCreds', risk: '' },
+        { id: 'cardReusedCreds', risk: 'reused' },
+        { id: 'cardWeakCreds', risk: 'weak' },
+        { id: 'cardStaleCreds', risk: 'stale' }
+    ];
+    auditCards.forEach(c => {
+        const el = document.getElementById(c.id);
+        if (!el) return;
+        el.addEventListener('click', () => {
+            vaultRiskFilter.value = c.risk;
+            switchTab('vault');
+        });
+        el.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                el.click();
+            }
+        });
     });
-    document.getElementById('cardReusedCreds').addEventListener('click', () => {
-        vaultRiskFilter.value = 'reused';
-        switchTab('vault');
-    });
-    document.getElementById('cardWeakCreds').addEventListener('click', () => {
-        vaultRiskFilter.value = 'weak';
-        switchTab('vault');
-    });
-    document.getElementById('cardStaleCreds').addEventListener('click', () => {
-        vaultRiskFilter.value = 'stale';
-        switchTab('vault');
-    });
+
+    if (btnToggleHistory) {
+        btnToggleHistory.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                btnToggleHistory.click();
+            }
+        });
+    }
+
+    if (hintHelp) {
+        hintHelp.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleHelp(true);
+            }
+        });
+    }
 
     // Export JSON
     document.getElementById('btnExportJSON').addEventListener('click', () => {
@@ -2849,6 +2928,7 @@
                         const pass = (r[passIdx] || '').trim();
                         const username = userIdx >= 0 && r[userIdx] ? r[userIdx].trim() : '';
                         if (!label && !pass) continue;
+                        if (!label) label = username ? `Imported (${username})` : 'Imported Credential';
                         const category = catIdx >= 0 && r[catIdx] && r[catIdx].trim() ? r[catIdx].trim() : 'Other';
                         const strength = strIdx >= 0 && r[strIdx] && r[strIdx].trim() ? r[strIdx].trim() : calcStrength(pass).rating;
                         const date = dateIdx >= 0 && r[dateIdx] && r[dateIdx].trim() ? r[dateIdx].trim() : new Date().toLocaleDateString();

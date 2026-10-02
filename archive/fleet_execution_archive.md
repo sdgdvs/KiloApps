@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-02T14:18:00Z — kilo-tester: KPaint (Syntax Redeclaration Repair, Missing Shortcuts & Dropdown Dismissal)**
+  - Status: PASS ✅ (4 issues found, 4 fixed, 0 regressions, clean builds, 230.4 KB web / 39.0 KB native < 999 KB ceiling).
+  - Script Execution Fix: Eliminated 8 duplicate `let` redeclarations in RFMS collab block that caused fatal browser syntax parse error.
+  - Shortcut Wiring: Added missing `Ctrl+G` (pixel grid), `X` (swap FG/BG colors), and `J` (gradient tool) keyboard handlers.
+  - Modal & Dropdown Ergonomics: Added `closeExportDropdown()` to Escape key dismissal chain and added `TEXTAREA` input guard.
+  - Verification: Vite build clean in 378ms; check_icons & security_lint 100% PASS; zero glints; ARG guidelines intact.
+
 - **2026-10-02T13:20:00Z — kilo-graphics: KCosmic (Perimeter Dot & Glint Purge, Biocrust Shaders, Meltwater Lakes & Atolls)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 562.4 KB web / 261.6 KB native < 999 KB ceiling).
   - Dot & Glint Purge: Removed rotating gantry spokes, elevator traveling climber pod, and mass driver launch projectile dots.
