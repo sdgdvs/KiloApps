@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-tester
   - kilo-usability
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KDragon
   kilo_tester: KPing
   kilo_usability: KFont
-  kilo_qa: KFlash
+  kilo_qa: KFont
   kilo_expander: K2048
 virtual_web_target: "kweb://webring"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KPaint
-  timestamp: "2026-10-02T22:20:00Z"
+  agent: kilo-qa
+  app: KFlash
+  timestamp: "2026-10-02T23:20:00Z"
 last_planner_run: "2026-10-02T20:15:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash` *(Completed: KPaint, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KFlash`
+- **Current Target**: `KFont`
 - **Upcoming Queue**:
-  `KFont`, `KImage`, `KJournal`, `KMail`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm)*.
+  `KImage`, `KJournal`, `KMail`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `K2048`
@@ -301,6 +301,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-02T23:20:00Z — kilo-qa: KFlash (Pass 5: Full State Persistence, First-Run Tutorial, Safe Toasts & Win32 Quicksave)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 94.3 KB web / 140.5 KB native < 999 KB ceiling).
+  - Quicksave & State Integrity: Built F5 Quicksave / F9 Quickload in Win32 C (`kflash.sav`) and web localStorage with full state capture.
+  - First-Run Tutorial: Enforced `kflash_tutorial.dat` and `kflash_tutorialSeen` flags so tutorial only triggers on fresh sessions.
+  - Toast Occlusion Remediation: Relocated toast container to non-occluding bottom-right safe viewport (`bottom: 60px; right: 20px`).
+  - Overlay Ergonomics & Buttons: Added Save [F5] / Load [F9] buttons to native toolbar; wired Enter/Space on all modal dialogs.
+  - Verification: MSVC clean (`KFlash.exe` 140.5 KB); Vite clean in 390ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T22:20:00Z — kilo-usability: KPaint (Safe Top-Center Toasts, Responsive Top-Bar & Dock Ergonomics)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 237.4 KB web / 39.9 KB native < 999 KB ceiling).
   - Toast Occlusion Remediation: Relocated toast to safe top-center banner (`top: 56px; left: 50%`) with backdrop blur and instant click dismiss, eliminating bottom-right zoom control occlusion.
@@ -332,12 +340,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - KiloArcade '99 (Tab 13): Built "Silicon Bug Buster '99" 60 FPS motherboard defense game with Glide/Shield/Clock powerups & hall of fame.
   - Audio Engine: Integrated YM2612 FM packet blips, laser chirps, explosion bursts, and guestbook echo chimes with SPC700 stereo delay.
   - Verification: Vite build clean in 374ms; check_icons & security_lint 100% PASS; linked in KNet default home and webring node #001.
-
-- **2026-10-02T16:25:00Z — kilo-qa: KFarm (Pass 5: Full State Persistence, First-Run Tutorial, Safe Toasts & Win32 Quicksave)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 92.3 KB web / 136.2 KB native < 999 KB ceiling).
-  - Quicksave & State Integrity: Built F5 Quicksave / F9 Quickload in Win32 C (`kfarm.sav`) and web localStorage with full idempotent state capture.
-  - First-Run Tutorial: Enforced `kfarm_tutorial.dat` and `kfarm_tutorialSeen` flags so tutorial only triggers on fresh sessions.
-  - Toast Occlusion Remediation: Relocated toast container to non-occluding bottom-right safe viewport (`bottom: 24px; right: 20px`).
-  - Overlay Ergonomics & Buttons: Added Load [F9] button to web/native; wired Enter/Space help dismissal; updated Almanac shortcuts.
-  - Verification: MSVC clean (`KFarm.exe` 136.2 KB); Vite clean in 389ms; check_icons & security_lint 100% PASS.
 

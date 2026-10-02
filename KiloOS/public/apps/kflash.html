@@ -311,16 +311,15 @@
         }
 
         #toast-container {
-            position: absolute;
-            top: 56px;
-            left: 50%;
-            transform: translateX(-50%);
+            position: fixed;
+            bottom: 60px;
+            right: 20px;
             display: flex;
             flex-direction: column;
             gap: 6px;
-            align-items: center;
+            align-items: flex-end;
             pointer-events: none;
-            z-index: 99;
+            z-index: 1000;
         }
 
         .toast {
@@ -1108,8 +1107,12 @@
         }
 
         function saveDeck() {
-            localStorage.setItem('kflash_deck', JSON.stringify(deck));
-            localStorage.setItem('kflash_initialized', 'true');
+            try {
+                localStorage.setItem('kflash_deck', JSON.stringify(deck));
+                localStorage.setItem('kflash_initialized', 'true');
+            } catch (e) {
+                showToast('⚠️ Storage quota exceeded, changes not saved', 'danger');
+            }
         }
 
         function updateFilteredIndices() {
@@ -1227,9 +1230,12 @@
                     currentIndex: currentIndex,
                     searchQuery: searchQuery,
                     reviewOnly: chkReviewOnly.checked,
+                    soundEnabled: soundEnabled,
                     timestamp: Date.now()
                 };
                 localStorage.setItem('kflash_quicksave', JSON.stringify(payload));
+                localStorage.setItem('kflash_tutorialSeen', 'true');
+                localStorage.setItem('kflash_tutorial_seen', 'true');
                 playSound('save');
                 showToast('💾 Deck snapshot quicksaved [F5]', 'success');
             } catch (e) {
@@ -1248,12 +1254,22 @@
                 if (payload && Array.isArray(payload.deck)) {
                     deck = payload.deck;
                     saveDeck();
+                    localStorage.setItem('kflash_tutorialSeen', 'true');
+                    localStorage.setItem('kflash_tutorial_seen', 'true');
                     if (typeof payload.searchQuery === 'string') {
                         searchQuery = payload.searchQuery;
                         searchBar.value = searchQuery;
                     }
                     if (typeof payload.reviewOnly === 'boolean') {
                         chkReviewOnly.checked = payload.reviewOnly;
+                    }
+                    if (typeof payload.soundEnabled === 'boolean') {
+                        soundEnabled = payload.soundEnabled;
+                        localStorage.setItem('kflash_sound_enabled', String(soundEnabled));
+                        if (btnAudioToggle) {
+                            btnAudioToggle.textContent = soundEnabled ? '🔊' : '🔇';
+                            btnAudioToggle.title = soundEnabled ? 'Mute Sound [M]' : 'Unmute Sound [M]';
+                        }
                     }
                     resetCardFlip();
                     updateFilteredIndices();
@@ -1366,11 +1382,11 @@
                         document.getElementById('btnSaveCard').click();
                         return;
                     }
-                } else if (activeModal.id === 'helpModal' && e.key === 'Enter') {
+                } else if (activeModal.id === 'helpModal' && (e.key === 'Enter' || e.code === 'Space')) {
                     e.preventDefault();
                     helpModal.classList.remove('active');
                     return;
-                } else if (activeModal.id === 'statsModal' && e.key === 'Enter') {
+                } else if (activeModal.id === 'statsModal' && (e.key === 'Enter' || e.code === 'Space')) {
                     e.preventDefault();
                     statsModal.classList.remove('active');
                     return;
@@ -1381,6 +1397,10 @@
                 } else if (activeModal.id === 'loadSampleModal' && e.key === 'Enter') {
                     e.preventDefault();
                     document.getElementById('btnConfirmLoad').click();
+                    return;
+                } else if (activeModal.id === 'importConfirmModal' && e.key === 'Enter') {
+                    e.preventDefault();
+                    document.getElementById('btnReplaceImportAction').click();
                     return;
                 }
                 return;
@@ -1901,11 +1921,15 @@
         // --- Boot & First-Run Welcome ---
         renderCard();
 
-        const hasSeenTutorial = localStorage.getItem('kflash_tutorial_seen');
-        if (!hasSeenTutorial) {
+        const hasSeenTutorial = localStorage.getItem('kflash_tutorialSeen') || localStorage.getItem('kflash_tutorial_seen');
+        const hasQuicksave = localStorage.getItem('kflash_quicksave');
+        if (!hasSeenTutorial && !hasQuicksave) {
             setTimeout(() => {
-                showToast('💡 Welcome to KFlash! [Space] Flip · [←/→] Navigate · [A] Add · [F1] Help · [F5] Save', 'info', 5000);
-                localStorage.setItem('kflash_tutorial_seen', 'true');
+                if (!localStorage.getItem('kflash_tutorialSeen') && !localStorage.getItem('kflash_tutorial_seen')) {
+                    showToast('💡 Welcome to KFlash! [Space] Flip · [←/→] Navigate · [A] Add · [F1] Help · [F5] Save', 'info', 5000);
+                    localStorage.setItem('kflash_tutorialSeen', 'true');
+                    localStorage.setItem('kflash_tutorial_seen', 'true');
+                }
             }, 350);
         }
     </script>

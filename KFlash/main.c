@@ -53,11 +53,25 @@
 #define IDC_HELP_TEXT 231
 #define IDC_HELP_CLOSE 232
 
+#define ID_BTN_QUICKSAVE 120
+#define ID_BTN_QUICKLOAD 121
+
+#define KFLASH_SAVE_MAGIC 0x4B464C53 // 'KFLS'
+
 typedef struct {
     char front[256];
     char back[256];
     int status;
 } FlashCard;
+
+typedef struct {
+    int magic;
+    int version;
+    int deckCount;
+    int currentIndex;
+    FlashCard deck[100];
+    time_t timestamp;
+} QuickSaveState;
 
 FlashCard deck[100];
 int deckCount = 0;
@@ -72,15 +86,101 @@ int filteredCount = 0;
 
 HWND hBtnPrev, hBtnNext, hBtnFlip, hBtnAdd, hBtnEdit, hBtnDelete, hBtnImport, hBtnExport, hBtnShuffle, hEditSearch, hBtnPrint;
 HWND hChkReview, hBtnGotIt, hBtnReview;
+HWND hBtnSave, hBtnLoad;
 HWND g_hwnd;
-HBRUSH hbgBrush, hCardBrush;
+HBRUSH hbgBrush, hCardBrush, hToastBrush;
 HFONT hFont, hCardFont;
+
+char g_toastText[128] = "";
+DWORD g_toastExpiry = 0;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK AddCardProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK EditCardProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK StatsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK HelpProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+void SetNativeToast(const char* msg, int durationMs) {
+    if (!msg || durationMs <= 0) {
+        g_toastText[0] = '\0';
+        g_toastExpiry = 0;
+    } else {
+        strncpy(g_toastText, msg, sizeof(g_toastText) - 1);
+        g_toastText[sizeof(g_toastText) - 1] = '\0';
+        g_toastExpiry = GetTickCount() + (DWORD)durationMs;
+    }
+    if (g_hwnd) {
+        InvalidateRect(g_hwnd, NULL, FALSE);
+        SetTimer(g_hwnd, 1, 100, NULL);
+    }
+}
+
+void SaveDeck(void);
+void UpdateFilteredIndices(void);
+void UpdateCardDisplay(void);
+
+void QuicksaveDeckNative(void) {
+    QuickSaveState qss;
+    memset(&qss, 0, sizeof(qss));
+    qss.magic = KFLASH_SAVE_MAGIC;
+    qss.version = 1;
+    qss.deckCount = deckCount;
+    qss.currentIndex = (filteredCount > 0) ? filteredIndices[currentIndex] : 0;
+    memcpy(qss.deck, deck, sizeof(FlashCard) * deckCount);
+    qss.timestamp = time(NULL);
+
+    FILE *f = fopen("kflash.sav", "wb");
+    if (f) {
+        fwrite(&qss, sizeof(QuickSaveState), 1, f);
+        fclose(f);
+        SetNativeToast("Deck snapshot quicksaved [F5]", 3000);
+    } else {
+        SetNativeToast("Unable to write quicksave file", 3000);
+    }
+}
+
+void QuickloadDeckNative(void) {
+    FILE *f = fopen("kflash.sav", "rb");
+    if (!f) {
+        SetNativeToast("No quicksave snapshot found [Press F5]", 3500);
+        return;
+    }
+    QuickSaveState qss;
+    size_t readBytes = fread(&qss, sizeof(QuickSaveState), 1, f);
+    fclose(f);
+
+    if (readBytes != 1 || qss.magic != KFLASH_SAVE_MAGIC || qss.deckCount < 0 || qss.deckCount > 100) {
+        SetNativeToast("Invalid quicksave data", 3500);
+        return;
+    }
+
+    deckCount = qss.deckCount;
+    memcpy(deck, qss.deck, sizeof(FlashCard) * deckCount);
+    SaveDeck();
+
+    FILE *tf = fopen("kflash_tutorial.dat", "wb");
+    if (tf) {
+        int flag = 1;
+        fwrite(&flag, sizeof(int), 1, tf);
+        fclose(tf);
+    }
+
+    isFlipped = 0;
+    UpdateFilteredIndices();
+    if (qss.currentIndex >= 0 && qss.currentIndex < deckCount) {
+        currentIndex = 0;
+        for (int i = 0; i < filteredCount; i++) {
+            if (filteredIndices[i] == qss.currentIndex) {
+                currentIndex = i;
+                break;
+            }
+        }
+    } else {
+        currentIndex = 0;
+    }
+    UpdateCardDisplay();
+    SetNativeToast("Quicksave snapshot restored [F9]", 3000);
+}
 
 void LoadDeck() {
     FILE *f = fopen("kflash_data.bin", "rb");
@@ -191,6 +291,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 
     hbgBrush = CreateSolidBrush(RGB(13, 17, 23));
     hCardBrush = CreateSolidBrush(RGB(22, 27, 34));
+    hToastBrush = CreateSolidBrush(RGB(22, 27, 34));
 
     INITCOMMONCONTROLSEX icex;
     icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
@@ -221,19 +322,69 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
     ShowWindow(hwnd, nCmdShow);
     UpdateCardDisplay();
 
+    FILE* tf = fopen("kflash_tutorial.dat", "rb");
+    if (!tf) {
+        tf = fopen("kflash_tutorial.dat", "wb");
+        if (tf) {
+            int flag = 1;
+            fwrite(&flag, sizeof(int), 1, tf);
+            fclose(tf);
+        }
+        SetNativeToast("Welcome! [Space] Flip · [<-/->] Nav · [F5] Save · [F1] Help", 5000);
+    } else {
+        fclose(tf);
+    }
+
     MSG msg = {0};
     while (GetMessage(&msg, NULL, 0, 0)) {
         int handled = 0;
-        if (msg.message == WM_KEYDOWN && GetActiveWindow() == g_hwnd) {
-            if (msg.wParam == VK_SPACE || msg.wParam == VK_RETURN) {
-                SendMessage(g_hwnd, WM_COMMAND, ID_BTN_FLIP, 0);
-                handled = 1;
-            } else if (msg.wParam == VK_LEFT) {
-                SendMessage(g_hwnd, WM_COMMAND, ID_BTN_PREV, 0);
-                handled = 1;
-            } else if (msg.wParam == VK_RIGHT) {
-                SendMessage(g_hwnd, WM_COMMAND, ID_BTN_NEXT, 0);
-                handled = 1;
+        if (msg.message == WM_KEYDOWN) {
+            HWND hFocus = GetFocus();
+            if (hFocus != hEditSearch) {
+                if (msg.wParam == VK_SPACE || msg.wParam == VK_RETURN) {
+                    SendMessage(g_hwnd, WM_COMMAND, ID_BTN_FLIP, 0);
+                    handled = 1;
+                } else if (msg.wParam == VK_LEFT) {
+                    SendMessage(g_hwnd, WM_COMMAND, ID_BTN_PREV, 0);
+                    handled = 1;
+                } else if (msg.wParam == VK_RIGHT) {
+                    SendMessage(g_hwnd, WM_COMMAND, ID_BTN_NEXT, 0);
+                    handled = 1;
+                } else if (msg.wParam == VK_F5 || (msg.wParam == 'S' && (GetKeyState(VK_CONTROL) & 0x8000))) {
+                    SendMessage(g_hwnd, WM_COMMAND, ID_BTN_QUICKSAVE, 0);
+                    handled = 1;
+                } else if (msg.wParam == VK_F9) {
+                    SendMessage(g_hwnd, WM_COMMAND, ID_BTN_QUICKLOAD, 0);
+                    handled = 1;
+                } else if (msg.wParam == VK_F1 || msg.wParam == 'H') {
+                    SendMessage(g_hwnd, WM_COMMAND, ID_BTN_HELP, 0);
+                    handled = 1;
+                } else if (msg.wParam == '1' || msg.wParam == 'G') {
+                    if (isFlipped) {
+                        SendMessage(g_hwnd, WM_COMMAND, ID_BTN_GOTIT, 0);
+                        handled = 1;
+                    }
+                } else if (msg.wParam == '2' || msg.wParam == 'R') {
+                    if (isFlipped) {
+                        SendMessage(g_hwnd, WM_COMMAND, ID_BTN_REVIEW, 0);
+                        handled = 1;
+                    }
+                } else if (msg.wParam == 'A') {
+                    SendMessage(g_hwnd, WM_COMMAND, ID_BTN_ADD, 0);
+                    handled = 1;
+                } else if (msg.wParam == 'E') {
+                    SendMessage(g_hwnd, WM_COMMAND, ID_BTN_EDIT, 0);
+                    handled = 1;
+                } else if (msg.wParam == VK_DELETE) {
+                    SendMessage(g_hwnd, WM_COMMAND, ID_BTN_DELETE, 0);
+                    handled = 1;
+                } else if (msg.wParam == VK_ESCAPE) {
+                    if (isFlipped) {
+                        isFlipped = 0;
+                        UpdateCardDisplay();
+                        handled = 1;
+                    }
+                }
             }
         }
         if (!handled) {
@@ -244,6 +395,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR pCmdLine,
 
     DeleteObject(hbgBrush);
     DeleteObject(hCardBrush);
+    DeleteObject(hToastBrush);
     if(hFont) DeleteObject(hFont);
     if(hCardFont) DeleteObject(hCardFont);
 
@@ -318,8 +470,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hBtnShuffle, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hChkReview = CreateWindow("BUTTON", "Review Only", WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
-                                   10, 45, 100, 20, hwnd, (HMENU)ID_CHK_REVIEW, NULL, NULL);
+                                   10, 43, 98, 20, hwnd, (HMENU)ID_CHK_REVIEW, NULL, NULL);
             SendMessage(hChkReview, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnSave = CreateWindow("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   115, 42, 68, 22, hwnd, (HMENU)ID_BTN_QUICKSAVE, NULL, NULL);
+            SendMessage(hBtnSave, WM_SETFONT, (WPARAM)hFont, TRUE);
+
+            hBtnLoad = CreateWindow("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON,
+                                   188, 42, 68, 22, hwnd, (HMENU)ID_BTN_QUICKLOAD, NULL, NULL);
+            SendMessage(hBtnLoad, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             hBtnGotIt = CreateWindow("BUTTON", "Got It", WS_CHILD | BS_PUSHBUTTON,
                                    150, 360, 100, 30, hwnd, (HMENU)ID_BTN_GOTIT, NULL, NULL);
@@ -330,6 +490,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hBtnReview, WM_SETFONT, (WPARAM)hFont, TRUE);
 
             break;
+        }
+        case WM_TIMER: {
+            if (wParam == 1) {
+                if (g_toastExpiry <= GetTickCount()) {
+                    KillTimer(hwnd, 1);
+                    g_toastText[0] = '\0';
+                    InvalidateRect(hwnd, NULL, FALSE);
+                }
+            }
+            return 0;
         }
         case WM_ERASEBKGND:
             return 1;
@@ -345,7 +515,22 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
 
             FillRect(hdcMem, &rcClient, hbgBrush);
 
-            RECT rcCard = { 50, 60, rcClient.right - 50, 300 };
+            if (g_toastExpiry > GetTickCount() && g_toastText[0] != '\0') {
+                RECT rcToast = { 262, 42, rcClient.right - 10, 64 };
+                HPEN hToastPen = CreatePen(PS_SOLID, 1, RGB(56, 139, 253));
+                HPEN hOldP = (HPEN)SelectObject(hdcMem, hToastPen);
+                HBRUSH hOldB = (HBRUSH)SelectObject(hdcMem, hToastBrush);
+                RoundRect(hdcMem, rcToast.left, rcToast.top, rcToast.right, rcToast.bottom, 6, 6);
+                SetBkMode(hdcMem, TRANSPARENT);
+                SetTextColor(hdcMem, RGB(88, 166, 255));
+                SelectObject(hdcMem, hFont);
+                DrawText(hdcMem, g_toastText, -1, &rcToast, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                SelectObject(hdcMem, hOldB);
+                SelectObject(hdcMem, hOldP);
+                DeleteObject(hToastPen);
+            }
+
+            RECT rcCard = { 45, 70, rcClient.right - 45, 308 };
             HPEN hPen = CreatePen(PS_SOLID, 1, RGB(48, 54, 61));
             HPEN hOldPen = (HPEN)SelectObject(hdcMem, hPen);
             HBRUSH hOldBrush = (HBRUSH)SelectObject(hdcMem, hCardBrush);
@@ -414,6 +599,12 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             }
             
             switch (wmId) {
+                case ID_BTN_QUICKSAVE:
+                    QuicksaveDeckNative();
+                    break;
+                case ID_BTN_QUICKLOAD:
+                    QuickloadDeckNative();
+                    break;
                 case ID_BTN_PREV:
                     if (currentIndex > 0) {
                         currentIndex--;
@@ -747,11 +938,11 @@ INT_PTR CALLBACK HelpProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg) {
         case WM_INITDIALOG: {
             SetDlgItemText(hwndDlg, IDC_HELP_TEXT, "KFlash Help & Shortcuts\r\n\r\n"
-                           "Card Basics\r\nUse '+Add' to create, 'Edit' to modify, 'Del' to remove.\r\n\r\n"
-                           "Import & Export\r\nExport to CSV. Import CSV/JSON decks.\r\n\r\n"
-                           "Review Mode\r\nUse Search bar to filter. Check 'Review Only' for cards needing review. Click 'Shuf' to shuffle.\r\n\r\n"
-                           "Spaced Repetition\r\nFlip a card and use 'Got It' or 'Needs Review' to track progress.\r\n\r\n"
-                           "Keyboard Shortcuts\r\n- Space/Enter: Flip card\r\n- Left/Right Arrows: Prev/Next card");
+                           "Card Basics\r\nUse '+Add' [A] to create, 'Edit' [E] to modify, 'Del' [Del] to remove.\r\n\r\n"
+                           "Navigation & Study\r\nSpace / Enter: Flip card. Left / Right: Prev / Next.\r\n1 / G: Got It (known). 2 / R: Needs Review.\r\n\r\n"
+                           "Quicksave & State Persistence\r\n[F5]: Quicksave snapshot (kflash.sav).\r\n[F9]: Quickload snapshot.\r\n\r\n"
+                           "Import & Export\r\nExport to CSV. Import CSV/JSON decks. 'Smpls' for pre-made packs.\r\n\r\n"
+                           "Review & Filter\r\nSearch filter [Ctrl+F]. Check 'Review Only'. 'Shuf' to shuffle.");
             return (INT_PTR)TRUE;
         }
         case WM_COMMAND:

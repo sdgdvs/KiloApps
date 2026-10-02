@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-02T16:25:00Z — kilo-qa: KFarm (Pass 5: Full State Persistence, First-Run Tutorial, Safe Toasts & Win32 Quicksave)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 92.3 KB web / 136.2 KB native < 999 KB ceiling).
+  - Quicksave & State Integrity: Built F5 Quicksave / F9 Quickload in Win32 C (`kfarm.sav`) and web localStorage with full idempotent state capture.
+  - First-Run Tutorial: Enforced `kfarm_tutorial.dat` and `kfarm_tutorialSeen` flags so tutorial only triggers on fresh sessions.
+  - Toast Occlusion Remediation: Relocated toast container to non-occluding bottom-right safe viewport (`bottom: 24px; right: 20px`).
+  - Overlay Ergonomics & Buttons: Added Load [F9] button to web/native; wired Enter/Space help dismissal; updated Almanac shortcuts.
+  - Verification: MSVC clean (`KFarm.exe` 136.2 KB); Vite clean in 389ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T15:20:00Z — kilo-usability: KHabit (Win32 Layout & Quicksave Parity, Safe Toasts, Stats Grid & Focus Ergonomics)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 82.1 KB web / 175.0 KB native < 999 KB ceiling).
   - Win32 Parity & Alignment: Aligned dashboard to 520px list width, added 7-day history headers/day labels, F5/F9 Quicksave/Quickload, and Enter-to-add key.
