@@ -1601,6 +1601,11 @@
       }
       const toast = document.createElement('div');
       toast.className = `toast ${type}`;
+      toast.style.cursor = 'pointer';
+      toast.title = 'Click to dismiss';
+      toast.addEventListener('click', (e) => {
+        if (!e.target.closest('.toast-close')) toast.remove();
+      });
       
       let icon = 'ℹ️';
       if (type === 'success') icon = '✅';
@@ -1991,6 +1996,10 @@
         switchTab(ctxTabIndex);
         promptAddTag();
       }
+    }
+
+    function ctxNewTab() {
+      newTab();
     }
 
     function ctxDuplicateTab() {
@@ -2744,7 +2753,7 @@
           <div class="search-tabs-container" id="global-search-results"></div>
         </div>
       `;
-      openModal('🌐 Search in All Open Tabs', bodyHTML, false, true);
+      openModal('🌐 Search in All Open Tabs', bodyHTML, true, true);
       setTimeout(() => {
         const inp = document.getElementById('global-search-input');
         if (inp) {
@@ -3340,7 +3349,7 @@
       const bodyHTML = `
         <div class="form-group">
           <label class="form-label" for="enc-pass">Encryption Password / Passphrase:</label>
-          <input type="password" class="form-input" id="enc-pass" placeholder="Enter a secure password">
+          <input type="password" class="form-input" id="enc-pass" placeholder="Enter a secure password" onkeydown="if(event.key==='Enter') document.getElementById('enc-pass-confirm')?.focus()">
         </div>
         <div class="form-group">
           <label class="form-label" for="enc-pass-confirm">Confirm Password:</label>
@@ -3966,7 +3975,7 @@
 
     function openDiffModal() {
       const activeTab = tabs[activeTabIndex] || { name: 'Active Document' };
-      const quicksaveRaw = safeGetStorage('kpad_quicksave_snapshot');
+      const quicksaveRaw = safeGetStorage('kpad_quicksave') || safeGetStorage('kpad_quicksave_snapshot');
       const hasQuicksave = Boolean(quicksaveRaw);
 
       let tabOptionsHtml = '';
@@ -4033,7 +4042,7 @@
           targetName = tabs[idx].name;
         }
       } else if (targetVal === 'quicksave') {
-        const raw = safeGetStorage('kpad_quicksave_snapshot');
+        const raw = safeGetStorage('kpad_quicksave') || safeGetStorage('kpad_quicksave_snapshot');
         if (raw) {
           try {
             const data = JSON.parse(raw);
@@ -4566,6 +4575,14 @@
       openModal('👥 Real-Time Multiplayer Collaboration (RFMS)', bodyHtml, true);
     }
 
+    function openCollabChat() {
+      openCollabCenter();
+      setTimeout(() => {
+        const input = document.getElementById('collab-chat-input');
+        if (input) input.focus();
+      }, 100);
+    }
+
     function runCollabCenterRefresh() {
       openCollabCenter();
     }
@@ -4859,7 +4876,7 @@
 
     function closeModal() {
       const tourCb = document.getElementById('dont-show-tour');
-      if (tourCb) {
+      if (tourCb && tourCb.checked) {
         safeSetStorage('kpad_tutorialSeen', '1');
       }
       const card = document.querySelector('#app-modal .modal-card');
@@ -5192,14 +5209,22 @@
 
     // Global Key Shortcuts
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') { closeModal(); closeFind(); }
+      if (e.key === 'Escape') {
+        closeModal();
+        closeFind();
+        const ctxMenu = document.getElementById('tab-context-menu');
+        if (ctxMenu) ctxMenu.style.display = 'none';
+      }
       if (e.key === 'Enter') {
         const modal = document.getElementById('app-modal');
         if (modal && modal.classList.contains('active')) {
           const footer = document.getElementById('modal-footer');
+          const isTextArea = document.activeElement?.tagName === 'TEXTAREA';
           if (footer && footer.style.display !== 'none') {
-            e.preventDefault();
-            closeModal();
+            if (!isTextArea) {
+              e.preventDefault();
+              closeModal();
+            }
           } else {
             const startBtn = modal.querySelector('button[onclick*="finishOnboarding"]');
             if (startBtn) {
@@ -5213,10 +5238,16 @@
         const modal = document.getElementById('app-modal');
         if (modal && modal.classList.contains('active')) {
           const startBtn = modal.querySelector('button[onclick*="finishOnboarding"]');
-          const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName);
+          const isInput = ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(document.activeElement?.tagName);
           if (startBtn && !isInput) {
             e.preventDefault();
             finishOnboarding();
+          } else {
+            const footer = document.getElementById('modal-footer');
+            if (footer && footer.style.display !== 'none' && !isInput) {
+              e.preventDefault();
+              closeModal();
+            }
           }
         }
       }

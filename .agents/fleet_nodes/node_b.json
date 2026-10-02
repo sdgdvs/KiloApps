@@ -13,9 +13,9 @@
   "session_end": "2026-10-07T21:54:00Z",
   "session_limit_enabled": true,
   "timer_enabled": true,
-  "turns_executed": 6,
+  "turns_executed": 7,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-10-02T01:40:19.725271+00:00",
-  "current_target": "kweb://echo-subsystem.net (Acoustic Research Lab & SIGINT Grid)",
+  "last_heartbeat": "2026-10-02T04:38:03.248770+00:00",
+  "current_target": "KChrono",
   "remote_command": "none"
 }
