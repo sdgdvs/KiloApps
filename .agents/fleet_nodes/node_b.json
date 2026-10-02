@@ -5,17 +5,17 @@
   "hostname": "DESKTOP-HSSS709",
   "model_tier": "Gemini Pro",
   "cadence": "1 turn/hour",
-  "status": "active",
+  "status": "quota_paused",
   "schedule_minutes": [
     30
   ],
-  "session_start": "2026-09-29T21:24:32.6330826Z",
-  "session_end": null,
-  "session_limit_enabled": false,
-  "timer_enabled": false,
-  "turns_executed": 25,
+  "session_start": "2026-09-30T21:54:00Z",
+  "session_end": "2026-10-07T21:54:00Z",
+  "session_limit_enabled": true,
+  "timer_enabled": true,
+  "turns_executed": 5,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-09-30T21:39:33.732999+00:00",
-  "current_target": "KJournal",
+  "last_heartbeat": "2026-10-01T22:30:09.618963+00:00",
+  "current_target": "KContacts",
   "remote_command": "none"
 }

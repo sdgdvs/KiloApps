@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-01T21:18:00Z — kilo-graphics: KStarship (Glint Audit, Static Vector Station & Precursor Halos, Shore Leave)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 151.7 KB web / 148.5 KB native < 999 KB ceiling).
+  - Glint & Comet Ban: Removed rotating perimeter dots in Station and Precursor Ruin modal previews across web & native.
+  - Vector Visual Polish: Built static blueprint vector habitat torus, docking rails, clamps, and Precursor containment halos.
+  - Station Shore Leave: Added crew shore leave service (75C, +30 Morale) with audio feedback in web and Win32 C (`KStarship.exe`).
+  - Key Parity: Bound key 0 to station shore leave in Win32 C; verified full 1-9 & Space modal navigation parity.
+  - Verification: MSVC clean (`KStarship.exe` 148.5 KB); Vite clean in 385ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-01T18:25:00Z — kilo-usability: KClip (Draggable Splitter, Mobile Sliding View, Font Zoom, Wrap & Native Keys)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 118.0 KB web / 16.9 KB native < 999 KB ceiling).
   - Responsive Splitter: Added mouse & touch draggable pane splitter (`#paneResizer`) with width clamping & localStorage persistence.
