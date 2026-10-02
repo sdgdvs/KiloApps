@@ -1,23 +1,23 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
-  - kilo-creator
-  - kilo-graphics
   - kilo-tester
   - kilo-usability
   - kilo-qa
   - kilo-expander
+  - kilo-creator
+  - kilo-graphics
 model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://webring (Central Webring Hub)"
-  kilo_graphics: KSanctuary
+  kilo_graphics: KDragon
   kilo_tester: KPass
-  kilo_usability: KFarm
+  kilo_usability: KPaint
   kilo_qa: KFlash
-  kilo_expander: KSynth
+  kilo_expander: K2048
 virtual_web_target: "kweb://webring"
 virtual_web_rotation:
   - "kweb://geocities"
@@ -32,10 +32,10 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://portal"
-  timestamp: "2026-10-02T18:20:00Z"
-last_planner_run: "2026-10-01T19:32:00Z"
+  agent: kilo-graphics
+  app: KSanctuary
+  timestamp: "2026-10-02T19:27:03Z"
+last_planner_run: "2026-10-02T20:15:00Z"
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -104,9 +104,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://portal, kweb://geocities, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KSanctuary`
+- **Current Target**: `KDragon`
 - **Upcoming Queue**:
-  `KDragon`, `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono`, `KFortress`, `KCosmic` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KSanctuary, KDragon, KSubmarine, KStarDredge)*.
+  `KStarDredge`, `KAbyss`, `KColosseum`, `KWizard`, `KStarship`, `KChrono`, `KFortress`, `KCosmic` *(Completed: KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KDragon, KSubmarine, KStarDredge, KSanctuary)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KPass`
@@ -114,24 +114,24 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPing`, `KQuest`, `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KFarm`
+- **Current Target**: `KPaint`
 - **Upcoming Queue**:
-  `KPaint`, `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash` *(Completed: KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit)*.
+  `KFont`, `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash` *(Completed: KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KFlash`
 - **Upcoming Queue**:
-  `KFont`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KCalendar`, `KFarm` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm)*.
+  `KFont`, `KImage`, `KJournal`, `KMail`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KSynth`
+- **Current Target**: `K2048`
 - **Upcoming Queue**:
-  `KVault`, `KSnake`, `KPaint` *(Completed: KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia, KTask, KNet, KPing, KHash, KPad)*.
-- **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
+  `KVault`, `KSnake`, `KPaint`, `KSynth` *(Completed: KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KSynth, KMedia, KTask, KNet, KPing, KHash, KPad)*.
+- **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://darknet` (`KiloOS/public/web/darknet.html`)
-  - *Next in Rotation*: `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core`.
+- **Current Active Target**: `kweb://webring` (`KiloOS/public/web/webring.html`)
+  - *Next in Rotation*: `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal`.
 - **Anti-Potemkin Directive & Content Mandates**:
   0. `kweb://warez` (*0xRELEASE Scene Vault & x86 Reverse Engineering Lab*):
      - ✅ 16 parody releases with 3D vector cracktro launcher, custom NFO viewer & .diz/.nfo downloads.
@@ -301,6 +301,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-02T19:27:00Z — kilo-graphics: KSanctuary (6th Raider Clan, Mech Sprites, Particle Purge & Room Polish)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 440.3 KB web / 268.8 KB native < 999 KB ceiling).
+  - 6th Raider Clan: Added Titan Cyber-Vanguard (autonomous pre-collapse war mechs and cyber-synth commandos) with baseAtk 135 and scaled rewards.
+  - Custom Mech Graphics: Implemented armored gunmetal chassis, red cyclops visor, twin missile pods & plasma cannon in Win32 C `DrawRaiderSprite` and web SVG.
+  - Particle & Glint Purge: Removed floating radiation and ash particles from vault canvas cutaway in compliance with Rule 11.
+  - Room Cutaways: Polished reactor rotor housing, water cistern sight tubes, infirmary bio-telemetry monitor, and armory ballistic shields.
+  - Verification: MSVC clean (`KSanctuary.exe` 268.8 KB); Vite clean in 386ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T18:20:00Z — kilo-creator: kweb://portal (Voyager Guestbook, NOC Diagnostic Lab & KiloArcade '99 Deep Expansion)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 326.4 KB < 999 KB ceiling).
   - Voyager Guestbook (Tab 11): Built CGI Perl '99 simulator with 14 authentic signatures, posting modal, live Firebase RTDB sync & kudos.
@@ -332,12 +340,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Shortcut Wiring: Added missing `Ctrl+G` (pixel grid), `X` (swap FG/BG colors), and `J` (gradient tool) keyboard handlers.
   - Modal & Dropdown Ergonomics: Added `closeExportDropdown()` to Escape key dismissal chain and added `TEXTAREA` input guard.
   - Verification: Vite build clean in 378ms; check_icons & security_lint 100% PASS; zero glints; ARG guidelines intact.
-
-- **2026-10-02T13:20:00Z — kilo-graphics: KCosmic (Perimeter Dot & Glint Purge, Biocrust Shaders, Meltwater Lakes & Atolls)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 562.4 KB web / 261.6 KB native < 999 KB ceiling).
-  - Dot & Glint Purge: Removed rotating gantry spokes, elevator traveling climber pod, and mass driver launch projectile dots.
-  - Orbital Structures: Fixed solar mirrors into geostationary constellation array and anchored defense bastions to perimeter nodes.
-  - Surface Shaders: Added pioneer lichen biocrust on Barren Rock and bio-active coral reef atolls with lagoons on Ocean Worlds.
-  - Cryo Parity: Implemented meltwater glacial lakes in C GDI shader when temperature warms past -15°C, matching web behavior.
-  - Verification: MSVC clean (`KCosmic.exe` 261.6 KB); Vite clean in 392ms; check_icons & security_lint 100% PASS.
 

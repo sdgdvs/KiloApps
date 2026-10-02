@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-02T13:20:00Z — kilo-graphics: KCosmic (Perimeter Dot & Glint Purge, Biocrust Shaders, Meltwater Lakes & Atolls)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 562.4 KB web / 261.6 KB native < 999 KB ceiling).
+  - Dot & Glint Purge: Removed rotating gantry spokes, elevator traveling climber pod, and mass driver launch projectile dots.
+  - Orbital Structures: Fixed solar mirrors into geostationary constellation array and anchored defense bastions to perimeter nodes.
+  - Surface Shaders: Added pioneer lichen biocrust on Barren Rock and bio-active coral reef atolls with lagoons on Ocean Worlds.
+  - Cryo Parity: Implemented meltwater glacial lakes in C GDI shader when temperature warms past -15°C, matching web behavior.
+  - Verification: MSVC clean (`KCosmic.exe` 261.6 KB); Vite clean in 392ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T11:24:00Z — kilo-expander: KPaint (PCX/ICO/ANSI/XBM Format Suite, Sprite Animation Reel, Bezier & Replace)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 230.5 KB web / 39.0 KB native < 999 KB ceiling).
   - Format Suite: Added 24-bit TrueColor RLE PCX decoder/encoder, multi-res Windows ICO (16/32/48px), ANSI art BBS modal, and XBM export.
