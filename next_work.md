@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KQuest
-  timestamp: "2026-10-03T14:35:00-07:00"
+  agent: kilo-qa
+  app: KiloOS
+  timestamp: "2026-10-03T15:15:00-07:00"
 last_planner_run: "2026-10-03T05:35:00Z"
 ---
 
@@ -153,6 +153,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Instructions: <directive text here>
 -->
 
+- **[kclock, ktimer, kpomodoro] — Architecture (ARCH-05: Background Tab Visibility & Timer Drift)** | Director Directive
+  - ⚠️ AGENT NOTE: Verified pending ticket from fleet architecture audit.
+  - Instructions: Implement `document.addEventListener('visibilitychange', ...)` in `kclock.html`, `ktimer.html`, and `kpomodoro.html`. When tab is hidden (`document.hidden === true`), clear active `setInterval` timers to eliminate CPU waste. When visible again, restart timers and compute elapsed delta via `Date.now()` timestamp differences so stopwatch, countdown timers, and clocks remain drift-free.
+
 - **[FLEET-WIDE] — Pivot to ARG, Multiplayer & Virtual Net Expansion (Freeze Standalone App Creation)** | Director Directive
   - ⚠️ AGENT NOTE: Human director priority directive.
   - Instructions: Halt creation of new standalone OS apps (frozen at 92 native / 99 web).
@@ -207,6 +211,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-03T15:15:00-07:00 — kilo-qa: KiloOS (Architecture Audit & App.jsx State Hardening)**
+  - Status: PASS ✅ (0 regressions, clean build in 406ms, version bumped to 0.4.22).
+  - State & Concurrency: Fixed openApp race condition with functional updater and zIndexRef synchronous mirror.
+  - Memory & Cleanup: Added notification timeout ref with unmount cleanup; wrapped localStorage in try/catch.
+  - Schema & Handlers: Added exeUrl: null to kexplorer/kdirector; stabilized os-launch-app event dependencies.
+  - Audit Triage: Evaluated ARCH-01..09 tickets; purged false positives; queued ARCH-05 (timer visibility).
+
 - **2026-10-03T14:35:00-07:00 — kilo-graphics: KQuest (Game Content, Visual Polish, Glint Purge & Class Balance)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 300.5 KB web / 97.8 KB native < 999 KB ceiling).
   - Glint & Border Ban: Purged pulsating perimeter shimmer from both web and C; installed clean static golden filigree HUD frames.
@@ -239,12 +250,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - UI & Accessibility: Repositioned toast to top-center (z-index: 2000) and added Enter/Space dismissal for help modal.
   - Native Shell Fix: Replaced command-breaking shell title calls with SetConsoleTitleA to prevent syntax errors.
   - Verification: Clean MSVC native build (201.0 KB); Vite build clean in 549ms; check_icons 100% PASS; security_lint 100% PASS.
-
-- **2026-10-03T09:30:00-07:00 — kilo-usability: KImage (Layout Polish, Tab Wrapping, Smooth Panning & Window Sizing)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 152.5 KB web / 26.6 KB native < 999 KB ceiling).
-  - Window Sizing: Expanded default dimensions to 1060×720 across App.jsx, meta tags, and Win32 C main.c to prevent toolbar wrap.
-  - Multi-Row Tab Layout: Upgraded sidebar tabs to wrapped multi-row flex grid, eliminating 2px horizontal scrollbar and revealing all 7 tabs.
-  - Panning Ergonomics: Disabled transition lag during active mouse dragging; restored smooth ease-out on zoom release.
-  - Button State Integrity: Fixed active class and textContent synchronization on crop apply/cancel and annotation brush deactivation.
-  - High-DPI Histogram & Modal: Wired requestAnimationFrame render for histogram tab switches; cleared toast occlusion on help modal open.
-  - Verification: MSVC native clean (26.6 KB); Vite clean in 6.55s; check_icons 100% PASS; security_lint 100% PASS.

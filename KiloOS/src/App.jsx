@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DEFAULT_VFS } from './defaultVfs';
 import './App.css';
-const MICROS_VERSION = '0.4.21';
+const MICROS_VERSION = '0.4.22';
 
 const FOLDER_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='f1' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2364B5F6'/><stop offset='100%' stop-color='%231E88E5'/></linearGradient><linearGradient id='f2' x1='0%' y1='0%' x2='0%' y2='100%'><stop offset='0%' stop-color='%2390CAF9'/><stop offset='100%' stop-color='%232196F3'/></linearGradient></defs><path fill='url(%23f1)' d='M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z'/><path fill='url(%23f2)' d='M2 8h20v10c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V8z'/></svg>";
 const HELP_ICON = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232196F3' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'></circle><path d='M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3'></path><line x1='12' y1='17' x2='12.01' y2='17'></line></svg>";
@@ -16,7 +16,7 @@ const FOLDERS = [
 ];
 
 const APPS = [
-  { id: 'kexplorer', title: 'File Browser', url: '/apps/kexplorer.html', icon: '/assets/icons/kexplorer.ico', w: 600, h: 450, folder: 'System' },
+  { id: 'kexplorer', title: 'File Browser', url: '/apps/kexplorer.html', exeUrl: null, icon: '/assets/icons/kexplorer.ico', w: 600, h: 450, folder: 'System' },
   { id: 'kchat', title: 'KChat', url: '/apps/kchat.html', exeUrl: '/exe/KChat.exe', icon: '/assets/icons/kchat.ico', w: 850, h: 650, folder: 'Network' },
   { id: 'kchatserver', title: 'KChat Server', url: '/apps/kchatserver.html', exeUrl: '/exe/KChatServer.exe', icon: '/assets/icons/kchatserver.ico', w: 450, h: 350, folder: 'Network' },
   { id: 'kpad', title: 'KPad', url: '/apps/kpad.html', exeUrl: '/exe/KPad.exe', icon: '/assets/icons/kpad.ico', w: 1000, h: 680, folder: 'Office' },
@@ -115,7 +115,7 @@ const APPS = [
   { id: 'krss', title: 'KRSS', url: '/apps/krss.html', exeUrl: '/exe/KRSS.exe', icon: '/assets/icons/krss.ico', w: 1100, h: 720, folder: 'Network' },
   { id: 'kclip', title: 'KClip', url: '/apps/kclip.html', exeUrl: '/exe/KClip.exe', icon: '/assets/icons/kclip.ico', w: 1080, h: 720, folder: 'System' },
   { id: 'kmatrix', title: 'KMatrix', url: '/apps/kmatrix.html', exeUrl: '/exe/KMatrix.exe', icon: '/assets/icons/kmatrix.ico', w: 1080, h: 720, folder: 'System' },
-  { id: 'kdirector', title: 'Director Console', url: '/apps/kdirector.html', icon: '/assets/icons/kdirector.ico', w: 1080, h: 720, folder: 'System' },
+  { id: 'kdirector', title: 'Director Console', url: '/apps/kdirector.html', exeUrl: null, icon: '/assets/icons/kdirector.ico', w: 1080, h: 720, folder: 'System' },
   { id: 'kanomaly', title: 'KAnomaly', url: '/apps/kanomaly.html', exeUrl: '/exe/KAnomaly.exe', icon: '/assets/icons/kanomaly.ico', w: 1040, h: 720, folder: 'System' },
   { id: 'kfleet', title: 'KFleet', url: '/apps/kfleet.html', exeUrl: '/exe/KFleet.exe', icon: '/assets/icons/kfleet.ico', w: 1060, h: 720, folder: 'System' },
   { id: 'knetmap', title: 'KNetMap', url: '/apps/knetmap.html', exeUrl: '/exe/KNetMap.exe', icon: '/assets/icons/knetmap.ico', w: 1080, h: 720, folder: 'Network' },
@@ -473,6 +473,9 @@ function App() {
   const [vfs, setVfs] = useState(DEFAULT_VFS);
   const [openApps, setOpenApps] = useState([]);
   const [zIndexCounter, setZIndexCounter] = useState(10);
+  const zIndexRef = useRef(10);
+  // Keep ref in sync with state for stale-closure-safe reads
+  useEffect(() => { zIndexRef.current = zIndexCounter; }, [zIndexCounter]);
   const [time, setTime] = useState("");
   const [dateStr, setDateStr] = useState("");
   const [clockPulse, setClockPulse] = useState(false);
@@ -513,12 +516,21 @@ function App() {
   // Notifications State
   const [notifications, setNotifications] = useState([]);
   
+  const notifyTimeouts = useRef([]);
+  
   const notify = useCallback((title, message) => {
     const id = Date.now() + Math.random();
     setNotifications(prev => [...prev, { id, title, message }]);
-    setTimeout(() => {
+    const tid = setTimeout(() => {
       setNotifications(prev => prev.filter(n => n.id !== id));
+      notifyTimeouts.current = notifyTimeouts.current.filter(t => t !== tid);
     }, 5000);
+    notifyTimeouts.current.push(tid);
+  }, []);
+  
+  // Cleanup notification timeouts on unmount
+  useEffect(() => {
+    return () => { notifyTimeouts.current.forEach(clearTimeout); };
   }, []);
 
   // Pinned Apps
@@ -694,13 +706,14 @@ function App() {
     const accent = vfs['/.sys_settings_accent'];
     if (accent) {
       document.documentElement.style.setProperty('--primary', accent);
-      localStorage.setItem('kiloos_accent', accent);
+      try { localStorage.setItem('kiloos_accent', accent); } catch (e) { /* quota/security */ }
     }
   }, [vfs]);
 
   // Load from localStorage on boot
   useEffect(() => {
-    const savedAccent = localStorage.getItem('kiloos_accent');
+    let savedAccent = null;
+    try { savedAccent = localStorage.getItem('kiloos_accent'); } catch (e) { /* security */ }
     if (savedAccent && !vfs['/.sys_settings_accent']) {
       setVfs(prev => ({ ...prev, '/.sys_settings_accent': savedAccent }));
     }
@@ -718,7 +731,7 @@ function App() {
     };
     window.addEventListener('os-launch-app', handler);
     return () => window.removeEventListener('os-launch-app', handler);
-  }, [openApps]);
+  }, [openApp]);
 
   // Handle Window Switching Shortcut & Help & Global Navigation
   useEffect(() => {
@@ -815,34 +828,41 @@ function App() {
     }
     setStartOpen(false);
     setStartFolder(null);
-    const existing = openApps.find(a => a.id === appDef.id && a.url === appDef.url);
-    if (existing) {
-      focusApp(existing.instanceId);
-      if (existing.minimized) toggleMinimize(existing.instanceId);
-      return;
-    }
-    const newApp = { 
-      ...appDef, 
-      instanceId: Math.random().toString(), 
-      x: 50 + ((openApps.length % 10) * 20), 
-      y: 50 + ((openApps.length % 10) * 20),
-      zIndex: zIndexCounter + 1,
-      minimized: false
-    };
-    setZIndexCounter(z => z + 1);
-    setOpenApps([...openApps, newApp]);
-    setActiveAppId(newApp.instanceId);
-  }, [openApps, zIndexCounter, cerberusBlinded]);
+    setOpenApps(prev => {
+      const existing = prev.find(a => a.id === appDef.id && a.url === appDef.url);
+      if (existing) {
+        focusApp(existing.instanceId);
+        if (existing.minimized) toggleMinimize(existing.instanceId);
+        return prev;
+      }
+      const instanceId = Math.random().toString();
+      const newZ = zIndexRef.current + 1;
+      zIndexRef.current = newZ; // sync update for rapid successive calls
+      setZIndexCounter(newZ);
+      const newApp = { 
+        ...appDef, 
+        instanceId, 
+        x: 50 + ((prev.length % 10) * 20), 
+        y: 50 + ((prev.length % 10) * 20),
+        zIndex: newZ,
+        minimized: false
+      };
+      setActiveAppId(instanceId);
+      return [...prev, newApp];
+    });
+  }, [cerberusBlinded, focusApp]);
 
   const closeApp = (instanceId) => {
     setOpenApps(prev => prev.filter(a => a.instanceId !== instanceId));
   };
 
-  const focusApp = (instanceId) => {
-    setZIndexCounter(z => z + 1);
-    setOpenApps(apps => apps.map(a => a.instanceId === instanceId ? { ...a, zIndex: zIndexCounter + 1 } : a));
+  const focusApp = useCallback((instanceId) => {
+    const newZ = zIndexRef.current + 1;
+    zIndexRef.current = newZ; // sync update for rapid successive calls
+    setZIndexCounter(newZ);
+    setOpenApps(apps => apps.map(a => a.instanceId === instanceId ? { ...a, zIndex: newZ } : a));
     setActiveAppId(instanceId);
-  };
+  }, []);
 
   const toggleMinimize = (instanceId) => {
     setStartOpen(false);
