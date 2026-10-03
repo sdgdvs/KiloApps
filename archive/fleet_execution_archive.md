@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-02T19:27:00Z — kilo-graphics: KSanctuary (6th Raider Clan, Mech Sprites, Particle Purge & Room Polish)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 440.3 KB web / 268.8 KB native < 999 KB ceiling).
+  - 6th Raider Clan: Added Titan Cyber-Vanguard (autonomous pre-collapse war mechs and cyber-synth commandos) with baseAtk 135 and scaled rewards.
+  - Custom Mech Graphics: Implemented armored gunmetal chassis, red cyclops visor, twin missile pods & plasma cannon in Win32 C `DrawRaiderSprite` and web SVG.
+  - Particle & Glint Purge: Removed floating radiation and ash particles from vault canvas cutaway in compliance with Rule 11.
+  - Room Cutaways: Polished reactor rotor housing, water cistern sight tubes, infirmary bio-telemetry monitor, and armory ballistic shields.
+  - Verification: MSVC clean (`KSanctuary.exe` 268.8 KB); Vite clean in 386ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T18:20:00Z — kilo-creator: kweb://portal (Voyager Guestbook, NOC Diagnostic Lab & KiloArcade '99 Deep Expansion)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 326.4 KB < 999 KB ceiling).
   - Voyager Guestbook (Tab 11): Built CGI Perl '99 simulator with 14 authentic signatures, posting modal, live Firebase RTDB sync & kudos.

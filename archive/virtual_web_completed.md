@@ -38,11 +38,11 @@
      - ✅ KiloNet NOC Diagnostic Lab (Tab 12): InterNIC WHOIS explorer, multi-hop ICMP traceroute simulator, HTTP/1.0 header dissector & W3C HTML 4.01 validator.
      - ✅ KiloArcade '99 (Tab 13): "Silicon Bug Buster '99" 60 FPS motherboard defense game with Glide/Shield/Clock powerups & hall of fame.
   3. `kweb://webring` (*Central KiloNet Webring Hub & Badge Studio*):
-     - ✅ 18-node verified directory with dynamic counters, category filtering, instant search & node inspector modal.
+     - ✅ 18-node verified directory + 2 unmapped dead transponders (#019 & #020) with 1999Hz subcarrier telemetry.
      - ✅ 88x31 Micro Button Studio & Pixel Art Generator (10 archetypes, 11 glyphs, 3D bevels, zoom, PNG/BMP/CSS export, pure client-side 24-bit .BMP file synthesis).
      - ✅ 8 Official HTML Webring Widget Styles (Classic text, 3D Beveled Box, Cyberpunk Neon HUD, 88x31 Button, Marquee Ticker, Netscape 4.7 Select, Lynx CP437 ASCII, Matrix Phosphor).
-     - ✅ Interactive Ring Topology Map (880x420 HTML5 Canvas visualizing 18 nodes in closed loop, photon packets, Circular/Hub-Spoke/Radar modes, FM ping sound).
-     - ✅ Backbone Traceroute Simulator (5-hop ICMP traceroute terminal across gateway, concentrator, MCI WorldCom backbone & KiloNet transit).
+     - ✅ Interactive Ring Topology Map (880x420 Canvas with Circular/Hub-Spoke/Radar modes, Step-by-Step Circuit Tracer, dashed dead beacon rings, zero glint comets per Rule 11).
+     - ✅ Backbone Traceroute Simulator (5-hop ICMP traceroute traversing echo-gw-07.kilonet.internal with 1999Hz carrier lock).
      - ✅ 1999 Baud Rate Bandwidth Benchmark (diagnostic speed matrix across V.32 to T1 leased lines).
      - ✅ Web Voyager Passport & Rank System (dynamic ranks & 5-category postal wax stamp collection book).
      - ✅ Dual Sega Genesis YM2612 FM synthesis tracks ("Hyperlink Voyager '99", "Ringmaster's Cadence") with SNES SPC700 stereo delay & procedural SFX.

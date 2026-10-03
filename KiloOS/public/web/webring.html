@@ -1722,10 +1722,13 @@ Click 'Run Full Ring Diagnostic' to probe all 18 active ring nodes.</div>
           <button class="btn-action" onclick="transmitTopologyPing()">
             <span>⚡</span> Transmit Ring Ping Wavefront
           </button>
+          <button class="btn-action" onclick="traceFullLoopCircuit()">
+            <span>🔄</span> Trace Ring Hop Sequence
+          </button>
         </div>
       </div>
       <div class="panel-desc">
-        Visualizes the bidirectional closed-loop ring architecture connecting all 18 consortium nodes. Hover over any node to inspect directional neighbor routing (Prev / Next), or switch between Circular Ring Loop, Hub &amp; Spoke Star, and Latency Radar ping sweep modes.
+        Visualizes the bidirectional closed-loop ring architecture connecting all 18 active consortium nodes and 2 physical transponder offsets. Hover over any node to inspect directional neighbor routing (Prev / Next), click any node for deep telemetry analysis, or switch between Circular Ring Loop, Hub &amp; Spoke Star, and Latency Radar ping sweep modes.
       </div>
 
       <!-- Topology Controls Bar -->
@@ -1755,7 +1758,7 @@ Click 'Run Full Ring Diagnostic' to probe all 18 active ring nodes.</div>
       <!-- Topology Telemetry Bar -->
       <div class="diag-stats-bar">
         <div><strong>Ring Topology:</strong> <span style="color:var(--green-bright);">CLOSED UNBROKEN LOOP</span></div>
-        <div><strong>Total Nodes:</strong> <span id="topoNodeCount" style="color:var(--cyan);">18</span></div>
+        <div><strong>Total Nodes:</strong> <span id="topoNodeCount" style="color:var(--cyan);">20 (18 Active, 2 Unresolved)</span></div>
         <div><strong>Propagation Delay:</strong> <span id="topoPropDelay" style="color:var(--amber-bright);">~24 ms/hop</span></div>
         <div><strong>Selected Node:</strong> <span id="topoSellabel" style="color:var(--text-primary);">None (Hover to inspect)</span></div>
       </div>
@@ -2207,7 +2210,24 @@ const DEFAULT_RING_NODES = [
     tech: "Non-Routable Subnet / RF Subcarrier / 1999Hz Harmonics",
     badgeLabel: "??? ANOMALY",
     latency: 1999,
-    tags: "anomaly,unknown,1999hz,subcarrier,ghost,carlsbad,echo-gw-07,telemetry"
+    tags: "anomaly,unknown,1999hz,subcarrier,ghost,carlsbad,echo-gw-07,telemetry",
+    isDead: true,
+    hiddenFromDirectory: true
+  },
+  {
+    id: "#020",
+    num: 20,
+    name: "Node ??? (Subsurface Transponder)",
+    handle: "DORMANT_RELAY",
+    category: "tools",
+    url: "#",
+    desc: "Dormant transponder slot. Physical loop closed at offset 0x7F, but HTTP/1.0 daemon is unmapped. Carrier oscillates continuously at 1999Hz.",
+    tech: "Acoustic Airgap Transponder / 1999Hz Subcarrier",
+    badgeLabel: "??? GHOST",
+    latency: 1999,
+    tags: "anomaly,ghost,1999hz,transponder,dormant,echo-gw-07,telemetry",
+    isDead: true,
+    hiddenFromDirectory: true
   }
 ];
 
@@ -2544,6 +2564,7 @@ function renderDirectoryTable() {
   const query = currentSearchQuery.toLowerCase().trim();
 
   const filtered = ringNodes.filter(node => {
+    if (node.hiddenFromDirectory) return false;
     const matchesCat = (activeCategoryFilter === 'all') || 
       (node.category === activeCategoryFilter) || 
       (activeCategoryFilter === 'community_submissions' && (node.isCommunity || node.category === 'community_submission' || node.category === 'submission'));
@@ -2593,7 +2614,8 @@ function renderDirectoryTable() {
 
   // Update counter
   const counterEl = document.getElementById('activeNodesCount');
-  if (counterEl) counterEl.textContent = ringNodes.length;
+  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+  if (counterEl) counterEl.textContent = visibleNodes.length;
 }
 
 function filterRingNodes(cat) {
@@ -2679,7 +2701,7 @@ function renderStarfield() {
 
 function getRandomCandidateNode() {
   const currentPath = window.location.pathname;
-  const candidates = ringNodes.filter(n => !n.url.includes('webring.html'));
+  const candidates = ringNodes.filter(n => !n.url.includes('webring.html') && !n.hiddenFromDirectory && n.url !== '#');
   if (candidates.length === 0) return ringNodes[0];
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
@@ -2774,8 +2796,9 @@ function logNodeVisit(nodeId) {
 
 function updateTourDisplay() {
   const history = getTourHistory();
-  const total = ringNodes.length;
-  const count = history.length;
+  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+  const total = visibleNodes.length;
+  const count = history.filter(id => visibleNodes.some(n => n.id === id)).length;
   const pct = Math.round((count / total) * 100);
 
   const textEl = document.getElementById('tourProgressText');
@@ -2814,7 +2837,7 @@ function updateTourDisplay() {
   const listEl = document.getElementById('tourNodesList');
   if (listEl) {
     listEl.innerHTML = '';
-    ringNodes.forEach(node => {
+    visibleNodes.forEach(node => {
       const isVisited = history.includes(node.id);
       const badge = document.createElement('span');
       badge.className = 'node-badge';
@@ -2841,7 +2864,7 @@ function updateTourDisplay() {
     STAMPS.forEach(s => {
       let isCollected = false;
       if (s.cat === "mystery") {
-        isCollected = history.some(id => id === "#015" || id === "#016" || id === "#017" || id === "#018" || id === "#019");
+        isCollected = history.some(id => id === "#015" || id === "#016" || id === "#017" || id === "#018" || id === "#019" || id === "#020");
       } else {
         isCollected = history.some(id => {
           const match = ringNodes.find(n => n.id === id);
@@ -2864,11 +2887,12 @@ function updateTourDisplay() {
 function triggerRingTourNext() {
   playSfx('warp');
   const history = getTourHistory();
-  // Find first unvisited node, or next sequential node
-  let target = ringNodes.find(n => !history.includes(n.id) && !n.url.includes('webring.html'));
+  // Find first unvisited visible node, or next sequential node
+  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory && !n.url.includes('webring.html') && n.url !== '#');
+  let target = visibleNodes.find(n => !history.includes(n.id));
   if (!target) {
     // If all visited, take random or loop to first
-    target = ringNodes[0];
+    target = visibleNodes[0] || ringNodes[0];
   }
   logNodeVisit(target.id);
   window.location.href = target.url;
@@ -2882,12 +2906,13 @@ function resetTourHistory() {
 }
 
 function updateDirectoryCounts() {
-  const total = ringNodes.length;
-  const comm = ringNodes.filter(n => n.category === 'community').length;
-  const demo = ringNodes.filter(n => n.category === 'demoscene').length;
-  const tools = ringNodes.filter(n => n.category === 'tools').length;
-  const apps = ringNodes.filter(n => n.category === 'apps').length;
-  const subs = ringNodes.filter(n => n.isCommunity || n.category === 'community_submission' || n.category === 'submission').length;
+  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+  const total = visibleNodes.length;
+  const comm = visibleNodes.filter(n => n.category === 'community').length;
+  const demo = visibleNodes.filter(n => n.category === 'demoscene').length;
+  const tools = visibleNodes.filter(n => n.category === 'tools').length;
+  const apps = visibleNodes.filter(n => n.category === 'apps').length;
+  const subs = visibleNodes.filter(n => n.isCommunity || n.category === 'community_submission' || n.category === 'submission').length;
 
   const elAll = document.getElementById('countAll');
   if (elAll) elAll.textContent = total;
@@ -2905,7 +2930,7 @@ function updateDirectoryCounts() {
   const activeCount = document.getElementById('activeNodesCount');
   if (activeCount) activeCount.textContent = total;
   const topoCount = document.getElementById('topoNodeCount');
-  if (topoCount) topoCount.textContent = total;
+  if (topoCount) topoCount.textContent = `${ringNodes.length} (${total} Active, ${ringNodes.length - total} Dormant)`;
 }
 
 /* =========================================================================
@@ -3586,8 +3611,10 @@ function runHealthAudit() {
   const statTags = document.getElementById('diagTags');
   const statStatus = document.getElementById('diagStatus');
 
+  const activeNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+
   consoleEl.textContent = "[INITIALIZING DIAGNOSTIC DAEMON]\n";
-  consoleEl.textContent += `Target: ${ringNodes.length} Registered Consortium Nodes\n`;
+  consoleEl.textContent += `Target: ${ringNodes.length} Physical Ring Nodes (${activeNodes.length} Active Public Directory, ${ringNodes.length - activeNodes.length} Unmapped Relays)\n`;
   consoleEl.textContent += "Verifying: DNS Resolution, HTTP 200, Webring Widget Tag, Bidirectional Loop\n";
   consoleEl.textContent += "----------------------------------------------------------------------\n";
 
@@ -3597,24 +3624,25 @@ function runHealthAudit() {
   let idx = 0;
   let totalLatency = 0;
   let detectedTags = 0;
+  let activeAudited = 0;
 
   const timer = setInterval(() => {
     if (idx >= ringNodes.length) {
       clearInterval(timer);
       isAuditing = false;
 
-      const avgLat = Math.round(totalLatency / ringNodes.length);
+      const avgLat = activeAudited > 0 ? Math.round(totalLatency / activeAudited) : 25;
       const lastNodeId = ringNodes[ringNodes.length - 1].id;
       consoleEl.textContent += "----------------------------------------------------------------------\n";
-      consoleEl.textContent += `[DIAGNOSTIC COMPLETE] All ${ringNodes.length} nodes probed successfully.\n`;
-      consoleEl.textContent += `Ring Loop Continuity: VERIFIED (Node ${lastNodeId} loops back to #001)\n`;
-      consoleEl.textContent += `Average Cluster Latency: ${avgLat}ms • Packet Loss: 0.0%\n`;
+      consoleEl.textContent += `[DIAGNOSTIC COMPLETE] ${activeAudited} active member nodes verified HTTP 200.\n`;
+      consoleEl.textContent += `Ring Loop Continuity: VERIFIED (Physical loop closed; unmapped offsets bridged via echo-gw-07.kilonet.internal)\n`;
+      consoleEl.textContent += `Average Active Latency: ${avgLat}ms • Packet Loss: 0.0%\n`;
       consoleEl.scrollTop = consoleEl.scrollHeight;
 
       statContinuity.textContent = "100% HEALTHY";
       statContinuity.style.color = "var(--green-bright)";
       statLatency.textContent = `${avgLat} ms`;
-      statTags.textContent = `${detectedTags} / ${ringNodes.length}`;
+      statTags.textContent = `${detectedTags} / ${activeNodes.length}`;
       statStatus.textContent = "Idle (All Clean)";
       statStatus.style.color = "var(--text-muted)";
 
@@ -3624,12 +3652,16 @@ function runHealthAudit() {
     }
 
     const node = ringNodes[idx];
-    const simulatedLatency = node.latency + Math.floor(Math.random() * 8 - 4);
-    totalLatency += simulatedLatency;
-    detectedTags++;
-
-    const logLine = `[PING] Node ${node.id} (${node.name.padEnd(28, ' ')}) -> HTTP 200 OK (${simulatedLatency}ms) [TAG DETECTED]\n`;
-    consoleEl.textContent += logLine;
+    if (node.isDead) {
+      consoleEl.textContent += `[PING] Node ${node.id} (${node.name.padEnd(28, ' ')}) -> TIMEOUT (1999ms) [NO HTTP / 1999Hz CARRIER LOCKED]\n`;
+      playFmTone(1999, 1.0, 0.2, 0.06, 0.04, true);
+    } else {
+      const simulatedLatency = node.latency + Math.floor(Math.random() * 8 - 4);
+      totalLatency += simulatedLatency;
+      detectedTags++;
+      activeAudited++;
+      consoleEl.textContent += `[PING] Node ${node.id} (${node.name.padEnd(28, ' ')}) -> HTTP 200 OK (${simulatedLatency}ms) [TAG DETECTED]\n`;
+    }
     consoleEl.scrollTop = consoleEl.scrollHeight;
 
     idx++;
@@ -3644,15 +3676,16 @@ function probeCustomTarget() {
 
   resEl.style.display = 'block';
 
-  // Diegetic Easter Egg: Probing 0x7F, 1999Hz, echo-gw, carlsbad, or darknet coordinates returns subtle packet telemetry
+  // Diegetic Telemetry: Probing 0x7F, 1999Hz, echo-gw, carlsbad, or non-routable coordinates returns atmospheric packet telemetry
   const lowerTarget = target.toLowerCase();
   if (lowerTarget.includes('0x7f') || lowerTarget.includes('darknet') || lowerTarget.includes('10.19.99') || lowerTarget.includes('echo-gw') || lowerTarget.includes('1999hz') || lowerTarget.includes('carlsbad') || lowerTarget.includes('subcarrier')) {
     resEl.innerHTML = `
-      <span style="color:var(--amber-bright);">[ANOMALOUS CARRIER DETECTED]</span><br>
-      Host: non-routable subnet carrier • Frequency: 1999Hz subcarrier active<br>
-      Handshake: Direct HTTP blocked • Lithospheric RF telemetry detected at offset 0x7F.<br>
-      <em>Note: Surface HTTP requests restricted. Navigate via terminal sniffer in KNet, <a href="/web/classified.html" style="color:var(--amber-bright); text-decoration:underline;">Access Intranet: 10.19.99.4</a>, <a href="/web/darknet.html" style="color:var(--phosphor, #22ff66); text-decoration:underline;">Node 0x7F: kweb://darknet</a>, or <a href="/web/deep_core.html" style="color:var(--cyan); text-decoration:underline;">Deep Core: 10.19.99.127</a></em>
+      <span style="color:var(--amber-bright); font-weight:bold;">[ANOMALOUS CARRIER DETECTED]</span><br>
+      Host: echo-gw-07.kilonet.internal [10.19.99.1] &bull; Gateway Status: Responsive<br>
+      Downstream Target: 10.19.99.4 &bull; ICMP Echo: 32 bytes in 1999ms &bull; Offset: 0x7F<br>
+      Subcarrier Telemetry: Lithospheric 1999Hz tone detected &bull; HTTP Daemon: Non-Routable
     `;
+    playFmTone(1999, 1.0, 0.5, 0.2, 0.08, true);
     return;
   }
 
@@ -3694,9 +3727,35 @@ function initTracerouteTargets() {
   ringNodes.forEach(node => {
     const opt = document.createElement('option');
     opt.value = node.id;
-    opt.textContent = `${node.id}: ${node.name} (${node.url})`;
+    if (node.isDead) {
+      opt.textContent = `${node.id}: ${node.name} [ANOMALOUS / 1999ms]`;
+    } else {
+      opt.textContent = `${node.id}: ${node.name} (${node.url})`;
+    }
     sel.appendChild(opt);
   });
+}
+
+function triggerTracerouteForNode(nodeId) {
+  switchTab('tab-health');
+  setTimeout(() => {
+    const sel = document.getElementById('tracerouteTargetSelect');
+    if (sel) {
+      sel.value = nodeId;
+    }
+    runTraceroute();
+  }, 100);
+}
+
+function probeTargetAddress(addr) {
+  switchTab('tab-health');
+  setTimeout(() => {
+    const input = document.getElementById('customProbeTarget');
+    if (input) {
+      input.value = addr;
+    }
+    probeCustomTarget();
+  }, 100);
 }
 
 let isTracing = false;
@@ -3715,7 +3774,10 @@ function runTraceroute() {
   consoleEl.textContent += `Target Ring ID: ${targetNode.id} • Latency Baseline: ${targetNode.latency}ms • Max Hops: 5\n`;
   consoleEl.textContent += "--------------------------------------------------------------------------------\n";
 
-  const isAnomalous = targetNode.id === '#019' || targetNode.latency >= 1000;
+  const isAnomalous = targetNode.isDead || targetNode.id === '#019' || targetNode.id === '#020' || targetNode.latency >= 1000;
+  const targetIp = targetNode.num === 19 ? "10.19.99.4" : (targetNode.num === 20 ? "10.19.99.7" : `10.19.99.${targetNode.num + 10}`);
+  const targetHost = targetNode.num === 19 ? "carlsbad-transponder-0x7f.internal" : (targetNode.num === 20 ? "subsurface-relay-1999hz.internal" : `node-${targetNode.id.replace('#','')}.kilonet.org`);
+
   const hops = [
     { hop: 1, ip: "192.168.1.1", host: "gateway.local.net", ms: 0.8 },
     { hop: 2, ip: "10.24.112.1", host: "dialup-v90-pop3.isp.net", ms: 24.2 },
@@ -3723,9 +3785,10 @@ function runTraceroute() {
     { hop: 4, ip: "10.19.99.1", host: "echo-gw-07.kilonet.internal", ms: 48.1 },
     {
       hop: 5,
-      ip: isAnomalous ? "10.19.99.4" : `10.19.99.${targetNode.num + 10}`,
-      host: isAnomalous ? "carlsbad-transponder-0x7f.internal" : `node-${targetNode.id.replace('#','')}.kilonet.org`,
-      ms: targetNode.latency + (isAnomalous ? 0 : Math.floor(Math.random() * 6 - 3))
+      ip: targetIp,
+      host: targetHost,
+      ms: isAnomalous ? 1999 : targetNode.latency + Math.floor(Math.random() * 6 - 3),
+      timeout: isAnomalous
     }
   ];
 
@@ -3735,21 +3798,29 @@ function runTraceroute() {
       clearInterval(hopTimer);
       isTracing = false;
       consoleEl.textContent += "--------------------------------------------------------------------------------\n";
-      consoleEl.textContent += `[TRACE COMPLETE] 5 hops traversed. Destination reached successfully in ${hops[4].ms}ms.\n`;
-      consoleEl.textContent += `Packet integrity: 100% (0 packets dropped). MTU 1500 MSS 1460.\n`;
       if (isAnomalous) {
-        consoleEl.textContent += `[CARRIER LOCK ACQUIRED @ 1999Hz] Non-routable subnet transponder pinged.\n`;
-        consoleEl.textContent += `Subcarrier signature: Lithospheric RF telemetry locked at offset 0x7F.\n`;
+        consoleEl.textContent += `[TRACE ANOMALOUS] Hop 4 reached gateway echo-gw-07.kilonet.internal [10.19.99.1].\n`;
+        consoleEl.textContent += `Hop 5 destination (${targetIp}) returned continuous 1999Hz carrier reflections.\n`;
+        consoleEl.textContent += `Packet status: ICMP echo timeout (1999 ms). Non-routable internal endpoint.\n`;
+        playFmTone(1999, 1.0, 0.4, 0.25, 0.1, true);
+      } else {
+        consoleEl.textContent += `[TRACE COMPLETE] 5 hops traversed. Destination reached successfully in ${hops[4].ms}ms.\n`;
+        consoleEl.textContent += `Packet integrity: 100% (0 packets dropped). MTU 1500 MSS 1460.\n`;
+        playSfx('submit');
       }
       consoleEl.scrollTop = consoleEl.scrollHeight;
-      playSfx('submit');
       return;
     }
 
     const h = hops[currentHop];
-    consoleEl.textContent += `  Hop ${h.hop}:  ${String(h.ms).padStart(5, ' ')} ms    ${h.ip.padEnd(16, ' ')}   [${h.host}]\n`;
+    if (h.timeout) {
+      consoleEl.textContent += `  Hop ${h.hop}:  ${String(h.ms).padStart(5, ' ')} ms    ${h.ip.padEnd(16, ' ')}   [${h.host}] * * * (1999Hz carrier lock)\n`;
+      playFmTone(1999, 1.0, 0.3, 0.08, 0.05, true);
+    } else {
+      consoleEl.textContent += `  Hop ${h.hop}:  ${String(h.ms).padStart(5, ' ')} ms    ${h.ip.padEnd(16, ' ')}   [${h.host}]\n`;
+      playSfx('traceroute');
+    }
     consoleEl.scrollTop = consoleEl.scrollHeight;
-    playSfx('traceroute');
     currentHop++;
   }, 240);
 }
@@ -3848,12 +3919,53 @@ function transmitTopologyPing() {
   }, 75);
 }
 
+let loopTraceTimer = null;
+let loopTraceActive = false;
+let loopTraceHop = 0;
+
+function traceFullLoopCircuit() {
+  if (loopTraceActive) return;
+  loopTraceActive = true;
+  loopTraceHop = 0;
+  playSfx('ping');
+  const hudEl = document.getElementById('topoSellabel');
+
+  if (loopTraceTimer) clearInterval(loopTraceTimer);
+  loopTraceTimer = setInterval(() => {
+    if (loopTraceHop >= ringNodes.length) {
+      clearInterval(loopTraceTimer);
+      loopTraceTimer = null;
+      loopTraceActive = false;
+      topoHoverNode = null;
+      if (hudEl) {
+        hudEl.innerHTML = `<span style="color:var(--green-bright); font-weight:bold;">[LOOP CIRCUIT VERIFIED]</span> ${ringNodes.length} physical hops traversed &bull; Unbroken bidirectional ring loop &bull; Gateway: echo-gw-07.kilonet.internal`;
+      }
+      playSfx('submit');
+      return;
+    }
+
+    const currNode = ringNodes[loopTraceHop];
+    topoHoverNode = { node: currNode, index: loopTraceHop };
+    if (hudEl) {
+      if (currNode.isDead) {
+        hudEl.innerHTML = `<span style="color:var(--amber-bright); font-weight:bold;">Hop ${loopTraceHop + 1}/${ringNodes.length}: ${currNode.name} (${currNode.id})</span> &bull; 1999ms via echo-gw-07.kilonet.internal [ANOMALOUS CARRIER]`;
+        playFmTone(1999, 1.0, 0.4, 0.08, 0.05, true);
+      } else {
+        hudEl.innerHTML = `<span style="color:var(--cyan); font-weight:bold;">Hop ${loopTraceHop + 1}/${ringNodes.length}: ${currNode.name} (${currNode.id})</span> &bull; ${currNode.latency}ms &bull; ${currNode.tech.slice(0, 32)}`;
+        playFmTone(440 + (loopTraceHop * 35), 1.5, 1.0, 0.05, 0.06, false);
+      }
+    }
+    loopTraceHop++;
+  }, 180);
+}
+
 function initTopologyMap() {
   const canvas = document.getElementById('topologyCanvas');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
 
   canvas.addEventListener('mousemove', (e) => {
+    if (loopTraceActive) return; // Keep hover lock during automated trace
     const rect = canvas.getBoundingClientRect();
     const scaleX = canvas.width / rect.width;
     const scaleY = canvas.height / rect.height;
@@ -3882,7 +3994,12 @@ function initTopologyMap() {
       const hudEl = document.getElementById('topoSellabel');
       if (hudEl) {
         if (found) {
-          hudEl.innerHTML = `<span style="color:var(--cyan); font-weight:bold;">${found.node.name} (${found.node.id})</span> • Latency: ${found.node.latency}ms • Cat: ${found.node.category.toUpperCase()}`;
+          if (found.node.isDead) {
+            hudEl.innerHTML = `<span style="color:var(--amber-bright); font-weight:bold;">${found.node.name} (${found.node.id})</span> • Latency: ${found.node.latency}ms [ANOMALOUS / 1999Hz] • Gateway: echo-gw-07.kilonet.internal`;
+            playFmTone(1999, 1.0, 0.3, 0.08, 0.04, true);
+          } else {
+            hudEl.innerHTML = `<span style="color:var(--cyan); font-weight:bold;">${found.node.name} (${found.node.id})</span> • Latency: ${found.node.latency}ms • Cat: ${found.node.category.toUpperCase()}`;
+          }
         } else {
           hudEl.textContent = "None (Hover node to inspect)";
         }
@@ -3958,11 +4075,22 @@ function drawTopologyMap(canvas, ctx) {
     const y2 = cy + radius * Math.sin(a2);
 
     const isHoverConnected = topoHoverNode && (topoHoverNode.index === i || topoHoverNode.index === (i + 1) % n);
-    ctx.strokeStyle = isHoverConnected ? "rgba(56, 189, 248, 0.85)" : "rgba(30, 41, 59, 0.7)";
+    const currIsDead = ringNodes[i].isDead;
+    const nextIsDead = ringNodes[(i + 1) % n].isDead;
+
+    if (currIsDead || nextIsDead) {
+      ctx.strokeStyle = isHoverConnected ? "rgba(245, 158, 11, 0.85)" : "rgba(120, 53, 15, 0.5)";
+      ctx.setLineDash([4, 3]);
+    } else {
+      ctx.strokeStyle = isHoverConnected ? "rgba(56, 189, 248, 0.85)" : "rgba(30, 41, 59, 0.7)";
+      ctx.setLineDash([]);
+    }
+
     ctx.beginPath();
     ctx.moveTo(x1, y1);
     ctx.lineTo(x2, y2);
     ctx.stroke();
+    ctx.setLineDash([]);
 
     if (topoMode === 'star') {
       ctx.strokeStyle = isHoverConnected ? "rgba(236, 72, 153, 0.7)" : "rgba(30, 41, 59, 0.35)";
@@ -3971,22 +4099,6 @@ function drawTopologyMap(canvas, ctx) {
       ctx.lineTo(x1, y1);
       ctx.stroke();
     }
-  }
-
-  // Draw Orbital Traveling Packets
-  const numPackets = 5;
-  for (let p = 0; p < numPackets; p++) {
-    const pFrac = ((topoAngle + (p / numPackets) * Math.PI * 2) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
-    const px = cx + radius * Math.cos(pFrac - Math.PI / 2);
-    const py = cy + radius * Math.sin(pFrac - Math.PI / 2);
-
-    ctx.fillStyle = p % 2 === 0 ? "#38bdf8" : "#f472b6";
-    ctx.shadowColor = ctx.fillStyle;
-    ctx.shadowBlur = 8;
-    ctx.beginPath();
-    ctx.arc(px, py, 3.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
   }
 
   // Draw Ping Wavefront if active
@@ -4028,6 +4140,42 @@ function drawTopologyMap(canvas, ctx) {
 
     const isHovered = topoHoverNode && topoHoverNode.index === i;
     const nodeR = isHovered ? 13 : 9;
+
+    if (node.isDead) {
+      const nodeColor = isHovered ? "#fbbf24" : "rgba(245, 158, 11, 0.45)";
+      ctx.fillStyle = isHovered ? "#291503" : "#110b03";
+      ctx.strokeStyle = nodeColor;
+      ctx.lineWidth = isHovered ? 2.5 : 1.5;
+      ctx.beginPath();
+      ctx.arc(nx, ny, nodeR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Outer dashed beacon ring
+      ctx.strokeStyle = isHovered ? "rgba(245, 158, 11, 0.9)" : "rgba(245, 158, 11, 0.35)";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 2]);
+      ctx.beginPath();
+      ctx.arc(nx, ny, nodeR + 4, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Draw '?' in center
+      ctx.fillStyle = isHovered ? "#fbbf24" : "rgba(245, 158, 11, 0.85)";
+      ctx.font = "bold 9px monospace";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText("?", nx, ny);
+
+      // Node ID Label
+      ctx.fillStyle = isHovered ? "#fbbf24" : "rgba(245, 158, 11, 0.6)";
+      ctx.font = isHovered ? "bold 10px monospace" : "9px monospace";
+      const labelDist = radius + (isHovered ? 26 : 20);
+      const lx = cx + labelDist * Math.cos(a);
+      const ly = cy + labelDist * Math.sin(a);
+      ctx.fillText("???", lx, ly);
+      continue;
+    }
 
     let nodeColor = "#38bdf8";
     if (node.category === 'community') nodeColor = "#38bdf8";
@@ -4285,15 +4433,59 @@ function openNodeModal(nodeId) {
   const body = document.getElementById('modalNodeBody');
   const launchBtn = document.getElementById('modalLaunchBtn');
 
-  title.textContent = `Ring Node Inspector: ${node.name} (${node.id})`;
-  launchBtn.href = node.url;
-
   // Calculate ring neighbors
   const idx = ringNodes.findIndex(n => n.id === nodeId);
   const prevIdx = (idx - 1 + ringNodes.length) % ringNodes.length;
   const nextIdx = (idx + 1) % ringNodes.length;
   const prevNode = ringNodes[prevIdx];
   const nextNode = ringNodes[nextIdx];
+
+  if (node.isDead) {
+    title.textContent = `Ring Telemetry: ${node.name} (${node.id})`;
+    launchBtn.style.display = 'none';
+
+    body.innerHTML = `
+      <div style="margin-bottom:10px;">
+        <strong style="color:var(--amber-bright); font-size:14px;">${node.name}</strong><br>
+        <span style="color:#ef4444; font-family:var(--font-mono); font-size:11px;">STATUS: UNRESPONSIVE / NON-ROUTABLE RING NODE</span>
+      </div>
+      <div style="background:#090d18; border:1px solid #78350f; padding:10px; margin-bottom:10px; font-family:var(--font-mono); font-size:11px;">
+        <div><strong>Allocated Slot:</strong> ${node.id}</div>
+        <div><strong>Webmaster Beacon:</strong> ${node.handle}</div>
+        <div><strong>Carrier Frequency:</strong> 1999Hz Subcarrier (Lithospheric RF Harmonic)</div>
+        <div><strong>Transit Gateway:</strong> echo-gw-07.kilonet.internal [10.19.99.1]</div>
+        <div><strong>Downstream Target:</strong> 10.19.99.${node.num === 19 ? '4' : '7'} [TIMEOUT]</div>
+        <div><strong>Latency Telemetry:</strong> 1999 ms (Subcarrier reflection lock)</div>
+      </div>
+      <div style="color:var(--text-primary); margin-bottom:12px; font-size:12px; line-height:1.6;">
+        ${node.desc}
+      </div>
+      <div style="background:#03060f; border:1px dashed var(--border-med); padding:8px; margin-bottom:12px; font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+        <strong>Diagnostic Log:</strong><br>
+        This physical slot is unmapped from the public webring directory. Attempt a 5-hop packet traversal in the Backbone Traceroute Simulator or perform a direct socket probe to inspect signal attenuation.
+      </div>
+      <div style="border-top:1px dashed var(--border-med); padding-top:8px; margin-bottom:12px; font-family:var(--font-mono); font-size:11px;">
+        <strong>Ring Neighborhood:</strong><br>
+        &laquo; Prev: <a href="${prevNode.url}" style="color:var(--cyan);">${prevNode.name} (${prevNode.id})</a><br>
+        &raquo; Next: <a href="${nextNode.url}" style="color:var(--cyan);">${nextNode.name} (${nextNode.id})</a>
+      </div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn-teleport" onclick="closeNodeModal(); triggerTracerouteForNode('${node.id}');" style="padding:6px 12px; font-size:11px;">
+          <span>🛰️</span> Run Backbone Traceroute
+        </button>
+        <button class="btn-action" onclick="closeNodeModal(); probeTargetAddress('10.19.99.${node.num === 19 ? '4' : '7'}');" style="padding:6px 12px; font-size:11px;">
+          <span>📡</span> Probe Socket (10.19.99.${node.num === 19 ? '4' : '7'})
+        </button>
+      </div>
+    `;
+    modal.classList.add('open');
+    playFmTone(1999, 1.0, 0.4, 0.15, 0.08, true);
+    return;
+  }
+
+  launchBtn.style.display = 'inline-flex';
+  title.textContent = `Ring Node Inspector: ${node.name} (${node.id})`;
+  launchBtn.href = node.url;
 
   body.innerHTML = `
     <div style="margin-bottom:10px;">
