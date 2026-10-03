@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KSpace
   kilo_tester: KRadio
   kilo_usability: KImage
-  kilo_qa: KImage
+  kilo_qa: KJournal
   kilo_expander: KSynth
 virtual_web_target: "kweb://users/~neon_rider"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KGraph
-  timestamp: "2026-10-03T02:20:00-07:00"
+  agent: kilo-qa
+  app: KImage
+  timestamp: "2026-10-03T03:20:00-07:00"
 last_planner_run: "2026-10-03T05:35:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash`, `KGraph` *(Completed: KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KImage`
+- **Current Target**: `KJournal`
 - **Upcoming Queue**:
-  `KJournal`, `KMail`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont)*.
+  `KMail`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KSynth`
@@ -207,6 +207,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-03T03:20:00-07:00 — kilo-qa: KImage (Pass 5: Complete State Persistence, Tutorial Integrity, Modal Focus & Safe Quota)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 146.9 KB web / 26.0 KB native < 999 KB ceiling).
+  - Quicksave & Quota Safeguards: Added fallback compression/downscaling on storage quota errors; preserved full edit/crop/draw/stego state; handled image error states gracefully.
+  - Tutorial & Continuation Integrity: Enforced `kimage_tutorialSeen` / `.dat` flags preventing onboarding prompt interrupts on restored sessions across web and native Win32.
+  - Interactive Splash & Modal Trapping: Added Tab key focus trapping in helpModal, Return to dismiss, Escape to clear active toasts and modals, and last-focused element restoration.
+  - Resource Safety & URL Revocation: Fixed duplicate blob URL creation on file load; added explicit `URL.revokeObjectURL` cleanup on image deletion and playlist clear.
+  - Native Win32 Parity: Added first-run `.dat` check, saved state detection, and direct `VK_F5`/`VK_F9` dispatch in main message loop.
+  - Verification: MSVC clean (`KImage.exe` 26.0 KB); Vite clean in 380ms; check_icons 100% PASS; security_lint 100% PASS.
+
 - **2026-10-03T02:20:00-07:00 — kilo-usability: KGraph (Header Consolidation, Safe Toast Position, Discoverable Help & Focus Trapping)**
   - Status: PASS ✅ (0 regressions, clean builds, 144.0 KB web / 36.0 KB native < 999 KB ceiling).
   - Header & Action Overflow: Consolidated 5 export/file buttons into sleek "Export ▾" dropdown; fits comfortably at 1024px without clipping.
@@ -242,13 +251,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Cryptographic Stream Dissector: Built client-side ROT13 and HEX frame dissector with quick artifact presets and direct hypermedia destination jump links.
   - Corrupted Guestbook & Dead-Drop: Added desynced timestamp `1999-12-31 23:59:58` packet; wired dead-drop listener triggering `Carlsbad_Relay_04` response and YM2612 1999Hz tone.
   - Verification: Vite build clean in 395ms; check_icons 100% PASS; security_lint 100% PASS; JS syntax verified clean.
-
-- **2026-10-02T22:15:00-07:00 — kilo-expander: KVault (Compartments, Custom Fields, Expiration Tracker, Bit Entropy, Checksum)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 191.4 KB web / 20.5 KB native < 999 KB ceiling).
-  - Web Deep Expansion: Added Compartments (Personal/Work/Ops/Custom tabs), Custom Fields engine (masked/URL/text), Expiration tracker + Audit card, and TOTP URI parsing.
-  - Export/Import & Quicksave: Enhanced CSV, JSON, Markdown, and F5/F9 Quicksave to serialize/restore compartments, expiry, and custom field schemas.
-  - Native Win32 Expansion: Added Database, SSH Keypair, and Router templates; added CryptoAPI SHA-1 checksum generator (F4/Ctrl+H); added live bit-entropy calculation.
-  - Verification: MSVC clean (`KVault.exe` 20.5 KB); Vite clean in 294ms; security_lint 100% PASS; check_icons 100% PASS.
 
 
 

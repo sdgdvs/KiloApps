@@ -281,12 +281,33 @@ int SaveBitmapToFile(const char* szFile) {
     return 1;
 }
 
+static BOOL HasSeenTutorial(void) {
+    DWORD attr = GetFileAttributesA("kimage_tutorial.dat");
+    return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+static void MarkTutorialSeen(void) {
+    HANDLE hFile = CreateFileA("kimage_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        char val = '1';
+        DWORD written = 0;
+        WriteFile(hFile, &val, 1, &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+static BOOL HasSavedState(void) {
+    DWORD attr = GetFileAttributesA("kimage_quicksave.bmp");
+    return (attr != INVALID_FILE_ATTRIBUTES && !(attr & FILE_ATTRIBUTE_DIRECTORY));
+}
+
 void QuickSave(HWND hwnd) {
     if (!g_hBmpWork || !g_pBitsWork) {
         MessageBoxA(hwnd, "No image to quicksave.", "KImage", MB_OK | MB_ICONWARNING);
         return;
     }
     if (SaveBitmapToFile("kimage_quicksave.bmp")) {
+        MarkTutorialSeen();
         MessageBoxA(hwnd, "Snapshot quicksaved to 'kimage_quicksave.bmp' [F5].", "KImage Quicksave", MB_OK | MB_ICONINFORMATION);
     } else {
         MessageBoxA(hwnd, "Failed to quicksave snapshot.", "KImage Error", MB_OK | MB_ICONERROR);
@@ -300,6 +321,7 @@ void QuickLoad(HWND hwnd) {
         return;
     }
     LoadBitmapFile(hwnd, "kimage_quicksave.bmp");
+    MarkTutorialSeen();
     MessageBoxA(hwnd, "Snapshot restored from 'kimage_quicksave.bmp' [F9].", "KImage Quickload", MB_OK | MB_ICONINFORMATION);
 }
 
@@ -796,6 +818,7 @@ void CreateDemoImage(HWND hwnd) {
 }
 
 void ShowHelpDialog(HWND hwnd) {
+    MarkTutorialSeen();
     MessageBoxA(hwnd,
         "KImage Pro - High-Fidelity Image Studio\n\n"
         "KEYBOARD & MOUSE SHORTCUTS:\n"
@@ -1476,12 +1499,28 @@ void MainEntry() {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
+    // Pass 5 First-run Tutorial Integrity & Saved State Startup Check
+    if (HasSavedState()) {
+        QuickLoad(hwnd);
+        MarkTutorialSeen();
+    } else if (!HasSeenTutorial()) {
+        CreateDemoImage(hwnd);
+        ShowHelpDialog(hwnd);
+        MarkTutorialSeen();
+    }
+
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         if (msg.message == WM_KEYDOWN) {
             BOOL ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
             if (msg.wParam == VK_F1 || (!ctrl && (msg.wParam == 'H' || msg.wParam == 'h'))) {
                 ShowHelpDialog(hwnd);
+                continue;
+            } else if (msg.wParam == VK_F5) {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_QUICKSAVE, 0);
+                continue;
+            } else if (msg.wParam == VK_F9) {
+                SendMessage(hwnd, WM_COMMAND, ID_BTN_QUICKLOAD, 0);
                 continue;
             } else if (ctrl && (msg.wParam == 'S' || msg.wParam == 's')) {
                 SendMessage(hwnd, WM_COMMAND, ID_BTN_SAVE, 0);

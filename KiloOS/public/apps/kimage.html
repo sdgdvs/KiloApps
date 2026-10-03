@@ -1291,23 +1291,40 @@
     }, duration);
   }
 
-  // First-run Onboarding Prompt
+  // First-run Onboarding Prompt (never interrupts restored sessions)
   try {
-    if (!localStorage.getItem('kimage_tutorial_seen')) {
+    const tutorialSeen = localStorage.getItem('kimage_tutorialSeen') || localStorage.getItem('kimage_tutorial_seen');
+    const hasQuicksave = !!localStorage.getItem('kimage_quicksave');
+    if (!tutorialSeen && !hasQuicksave) {
       setTimeout(() => {
         showToast('Welcome to KImage Pro! Press H or F1 for Studio Guide & Hotkeys', 'info', 4500);
       }, 500);
+      localStorage.setItem('kimage_tutorialSeen', '1');
       localStorage.setItem('kimage_tutorial_seen', '1');
     }
   } catch (_) {}
 
   // Help Modal Handlers
+  let lastFocusedElement = null;
   const helpModal = document.getElementById('helpModal');
   function openHelpModal() {
-    if (helpModal) helpModal.classList.add('active');
+    if (helpModal) {
+      lastFocusedElement = document.activeElement;
+      helpModal.classList.add('active');
+      document.getElementById('btnDismissHelp')?.focus();
+      try {
+        localStorage.setItem('kimage_tutorialSeen', '1');
+        localStorage.setItem('kimage_tutorial_seen', '1');
+      } catch (_) {}
+    }
   }
   function closeHelpModal() {
-    if (helpModal) helpModal.classList.remove('active');
+    if (helpModal) {
+      helpModal.classList.remove('active');
+      if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+        lastFocusedElement.focus();
+      }
+    }
   }
   document.getElementById('btnCloseHelp')?.addEventListener('click', closeHelpModal);
   document.getElementById('btnDismissHelp')?.addEventListener('click', closeHelpModal);
@@ -1424,6 +1441,11 @@
       ui.slideshowProgress.classList.add('hidden');
       ui.slideshowBar.style.width = '0%';
     }
+    state.playlist.forEach(item => {
+      if (item.origSrc && item.origSrc.startsWith('blob:')) {
+        try { URL.revokeObjectURL(item.origSrc); } catch (_) {}
+      }
+    });
     state.playlist = [];
     state.currentIndex = -1;
     updatePlaylistUI();
@@ -1475,17 +1497,49 @@
     if (e.key === 'Escape') {
       if (helpModal && helpModal.classList.contains('active')) {
         closeHelpModal();
-      } else if (state.crop.active) {
-        state.crop.active = false;
-        document.getElementById('btnToggleCrop')?.classList.remove('primary');
-        document.getElementById('cropControls')?.classList.add('hidden');
-        ui.cropOverlay.style.display = 'none';
-        showToast('Crop cancelled', 'info');
-      } else if (state.draw.active) {
-        state.draw.active = false;
-        document.getElementById('btnToggleDraw')?.classList.remove('primary');
-        ui.mainCanvas.style.cursor = 'default';
-        showToast('Brush deactivated', 'info');
+      } else {
+        const tc = document.getElementById('toastContainer');
+        if (tc) tc.innerHTML = '';
+        if (state.crop.active) {
+          state.crop.active = false;
+          document.getElementById('btnToggleCrop')?.classList.remove('primary');
+          document.getElementById('cropControls')?.classList.add('hidden');
+          ui.cropOverlay.style.display = 'none';
+          showToast('Crop cancelled', 'info');
+        } else if (state.draw.active) {
+          state.draw.active = false;
+          document.getElementById('btnToggleDraw')?.classList.remove('primary');
+          ui.mainCanvas.style.cursor = 'default';
+          showToast('Brush deactivated', 'info');
+        }
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+          document.activeElement.blur();
+        }
+      }
+      return;
+    }
+
+    // Modal Focus Trapping & Interaction
+    if (helpModal && helpModal.classList.contains('active')) {
+      if (e.key === 'Tab') {
+        const focusables = helpModal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+        if (focusables.length > 0) {
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        closeHelpModal();
+        return;
       }
       return;
     }
@@ -1503,8 +1557,7 @@
       return;
     }
 
-    // Suppress background hotkeys if modal is active or modifier keys are pressed
-    if (helpModal && helpModal.classList.contains('active')) return;
+    // Suppress background hotkeys if modifier keys are pressed
     if (ctrl || e.altKey) return;
 
     if (e.key === 'F5') {
@@ -1698,7 +1751,7 @@
             else selectImage(initialLen);
           }
         };
-        img.src = URL.createObjectURL(blob);
+        img.src = blobUrl;
       };
       reader.readAsArrayBuffer(file);
     });
@@ -1706,6 +1759,10 @@
 
   function removeImage(idx) {
     if (idx < 0 || idx >= state.playlist.length) return;
+    const removed = state.playlist[idx];
+    if (removed && removed.origSrc && removed.origSrc.startsWith('blob:')) {
+      try { URL.revokeObjectURL(removed.origSrc); } catch (_) {}
+    }
     state.playlist.splice(idx, 1);
     if (state.playlist.length === 0) {
       if (state.slideshow.playing) {
@@ -2181,7 +2238,7 @@
       off.width = item.img.width;
       off.height = item.img.height;
       off.getContext('2d').drawImage(item.img, 0, 0);
-      const baseData = off.toDataURL('image/png');
+      let baseData = off.toDataURL('image/png');
 
       const snap = {
         name: item.name || 'snapshot.png',
@@ -2196,7 +2253,31 @@
         exif: item.exif || {},
         timestamp: Date.now()
       };
-      localStorage.setItem('kimage_quicksave', JSON.stringify(snap));
+      try {
+        localStorage.setItem('kimage_quicksave', JSON.stringify(snap));
+      } catch (quotaErr) {
+        // Quota fallback: try JPEG compression or downscale if exceeding browser quota
+        const maxDim = Math.max(item.img.width, item.img.height);
+        if (maxDim > 1280) {
+          const scale = 1280 / maxDim;
+          const scaledW = Math.round(item.img.width * scale);
+          const scaledH = Math.round(item.img.height * scale);
+          const off2 = document.createElement('canvas');
+          off2.width = scaledW;
+          off2.height = scaledH;
+          off2.getContext('2d').drawImage(item.img, 0, 0, scaledW, scaledH);
+          snap.baseData = off2.toDataURL('image/jpeg', 0.82);
+          snap.type = 'image/jpeg';
+        } else {
+          snap.baseData = off.toDataURL('image/jpeg', 0.85);
+          snap.type = 'image/jpeg';
+        }
+        localStorage.setItem('kimage_quicksave', JSON.stringify(snap));
+      }
+      try {
+        localStorage.setItem('kimage_tutorialSeen', '1');
+        localStorage.setItem('kimage_tutorial_seen', '1');
+      } catch (_) {}
       showToast("Session quicksaved to local snapshot [F5]!", "success");
     } catch (_) {
       showToast("Failed to quicksave snapshot (storage limit)", "error");
@@ -2218,6 +2299,20 @@
       }
       const img = new Image();
       img.onload = () => {
+        if (state.slideshow.playing) {
+          cancelAnimationFrame(state.slideshow.animFrame);
+          state.slideshow.playing = false;
+          btnPlayPause.textContent = '▶ Play';
+          ui.slideshowProgress.classList.add('hidden');
+          ui.slideshowBar.style.width = '0%';
+        }
+        if (state.crop.active) {
+          state.crop.active = false;
+          document.getElementById('btnToggleCrop')?.classList.remove('primary');
+          document.getElementById('cropControls')?.classList.add('hidden');
+          ui.cropOverlay.style.display = 'none';
+        }
+
         const snapItem = {
           file: { name: snap.name, size: Math.round(dataSrc.length * 0.75), type: snap.type || 'image/png' },
           img,
@@ -2255,8 +2350,23 @@
         const cap = presetKey.charAt(0).toUpperCase() + presetKey.slice(1);
         document.getElementById(`btnFilter${cap}`)?.classList.add('active');
 
+        // Unhide UI panels
+        ui.bottomBar.classList.remove('hidden');
+        ui.leftPanel.classList.remove('hidden');
+        ui.viewTools.classList.remove('hidden');
+        ui.btnSaveModal.classList.remove('hidden');
+        ui.emptyState.classList.add('hidden');
+        ui.canvasWrapper.classList.remove('hidden');
+
         selectImage(0, true);
+        try {
+          localStorage.setItem('kimage_tutorialSeen', '1');
+          localStorage.setItem('kimage_tutorial_seen', '1');
+        } catch (_) {}
         showToast("Restored quicksaved session snapshot [F9]!", "success");
+      };
+      img.onerror = () => {
+        showToast("Failed to load quicksave snapshot image", "error");
       };
       img.src = dataSrc;
     } catch (_) {
@@ -3642,6 +3752,12 @@
     const divisor = gcd(w, h);
     return `${w / divisor}:${h / divisor}`;
   }
+
+  window.addEventListener('beforeunload', () => {
+    if (state.slideshow.playing) {
+      cancelAnimationFrame(state.slideshow.animFrame);
+    }
+  });
 </script>
 </body>
 </html>

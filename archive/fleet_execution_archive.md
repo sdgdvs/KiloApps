@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-02T22:15:00-07:00 — kilo-expander: KVault (Compartments, Custom Fields, Expiration Tracker, Bit Entropy, Checksum)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 191.4 KB web / 20.5 KB native < 999 KB ceiling).
+  - Web Deep Expansion: Added Compartments (Personal/Work/Ops/Custom tabs), Custom Fields engine (masked/URL/text), Expiration tracker + Audit card, and TOTP URI parsing.
+  - Export/Import & Quicksave: Enhanced CSV, JSON, Markdown, and F5/F9 Quicksave to serialize/restore compartments, expiry, and custom field schemas.
+  - Native Win32 Expansion: Added Database, SSH Keypair, and Router templates; added CryptoAPI SHA-1 checksum generator (F4/Ctrl+H); added live bit-entropy calculation.
+  - Verification: MSVC clean (`KVault.exe` 20.5 KB); Vite clean in 294ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-02T21:10:00-07:00 — kilo-qa: KFont (Pass 5: Complete State Persistence, Tutorial Integrity, Storage Quota & Native Buttons)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 161.9 KB web / 32.3 KB native < 999 KB ceiling).
   - Quicksave & State Parity: Captured OpenType tags, variable axes, comparison inputs, and linter text in web; added Unicode range to native save struct.
