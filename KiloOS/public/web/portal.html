@@ -1721,6 +1721,10 @@
       <div style="font-size:11px; color:#555; margin-top:4px;">
         💡 <em>Pro Tip: Use <code>cat:games</code>, <code>tag:multiplayer</code>, or keywords like <code>1999Hz</code>, <code>Carlsbad</code>, or <code>echo</code> for intranet telemetry archives.</em>
       </div>
+      <div class="search-spider-badge" id="searchSpiderStatus" style="display:flex; justify-content:space-between; align-items:center; margin-top:6px; font-family:'Courier New', monospace; font-size:11px; color:#004080; background:#f0f7ff; border:1px solid #b3d1ff; padding:3px 8px;">
+        <span>🕷️ KiloSpider 1.0 Index: <strong id="indexNodesCount">114 Nodes</strong> | <strong id="indexTermsCount">1,840+ Terms</strong> Indexed</span>
+        <span><a href="#" onclick="switchPortalTab('noc'); focusSpiderCrawler(); return false;" style="color:#0000cc; font-weight:bold;">[Launch Spider Crawler]</a></span>
+      </div>
     </div>
 
     <!-- Live Search Results Container -->
@@ -2507,6 +2511,66 @@
             <div style="margin-top:6px; background:#f5f5f5; border:1px inset #ddd; padding:6px; text-align:center;">
               <div style="font-size:10px; color:#666; margin-bottom:4px;">LIVE BADGE PREVIEW</div>
               <div id="genBadgePreview"></div>
+            </div>
+          </div>
+      </div>
+
+      <!-- Panel 6: KiloSpider '99 Web Crawler & Hypermedia Indexer -->
+      <div class="noc-panel" id="spiderCrawlerPanel" style="grid-column: 1 / -1;">
+        <div class="noc-title">
+          <span>🕷️ KiloSpider '99: Autonomous Web Crawler &amp; Hypermedia Indexer</span>
+          <span style="font-size:11px; color:#555;">HTTP/1.0 Inverted Index Engine</span>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+          <div>
+            <div style="display:flex; gap:6px; margin-bottom:6px; align-items:center;">
+              <label style="font-size:11px; font-weight:bold; width:80px;">Target Site:</label>
+              <select id="spiderTargetSelect" class="form-input" style="flex:1; font-size:11px;" onchange="handleSpiderPresetChange(this.value)">
+                <option value="/web/geocities.html" selected>kweb://geocities (CyberSpire Shrine &amp; MOD Vault)</option>
+                <option value="/web/warez.html">kweb://warez (0xRELEASE Scene Vault)</option>
+                <option value="/web/webring.html">kweb://webring (Central Webring Hub)</option>
+                <option value="/web/cybercafe.html">kweb://cybercafe (CyberCafe '99 Lounge)</option>
+                <option value="/web/users/neon_rider.html">kweb://users/~neon_rider (~neon_rider ASM Shrine)</option>
+                <option value="/web/asm_temple.html">kweb://asm-temple (x86 Opcode Temple)</option>
+                <option value="/web/echo_subsystem.html">kweb://echo-subsystem.net (Echo Acoustic Lab)</option>
+                <option value="/web/classified.html">kweb://10.19.99.4/classified (Carlsbad Intranet)</option>
+                <option value="/web/darknet.html">kweb://darknet (Node 0x7F Encrypted Relay)</option>
+                <option value="/web/deep_core.html">kweb://deep-core (Deep Core Ghost Terminal)</option>
+                <option value="/apps/contribute.html">/apps/contribute.html (Contributor Portal)</option>
+                <option value="CUSTOM">[Custom URL...]</option>
+              </select>
+            </div>
+            <div style="display:flex; gap:6px; margin-bottom:6px; align-items:center;" id="spiderCustomUrlRow">
+              <label style="font-size:11px; font-weight:bold; width:80px;">Custom URL:</label>
+              <input type="text" id="spiderCustomUrlInput" class="form-input" style="flex:1; font-family:'Courier New', monospace; font-size:11px;" value="/web/geocities.html" placeholder="/web/... or kweb://..." />
+            </div>
+            <div style="display:flex; gap:6px; margin-bottom:8px; align-items:center;">
+              <label style="font-size:11px; font-weight:bold; width:80px;">Crawl Depth:</label>
+              <select id="spiderDepthSelect" class="form-input" style="width:160px; font-size:11px;">
+                <option value="1" selected>Level 1 (Single Page Parse)</option>
+                <option value="2">Level 2 (Hyperlink Traverse)</option>
+                <option value="3">Level 3 (Deep Inverted Index)</option>
+              </select>
+              <button class="btn-retro btn-primary-retro" id="spiderStartBtn" style="font-size:11px;" onclick="startSpiderCrawl()">🕷️ Launch Spider Crawl</button>
+              <button class="btn-retro" id="spiderAbortBtn" style="font-size:11px;" onclick="abortSpiderCrawl()" disabled>⏹ Abort</button>
+            </div>
+            <!-- Progress Bar -->
+            <div style="background:#e0e0e0; border:1px inset #888; height:12px; margin-bottom:8px; overflow:hidden;">
+              <div id="spiderProgressBar" style="width:0%; height:100%; background:linear-gradient(to right, #000080, #0066cc); transition:width 0.2s;"></div>
+            </div>
+            <div id="spiderSummaryBox" style="font-size:11px; background:#fff; border:1px solid #ccc; padding:6px; min-height:80px;">
+              <div style="color:#777; text-align:center; padding-top:20px;">Select target site and click [Launch Spider Crawl] to index hypermedia content.</div>
+            </div>
+          </div>
+          <div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <label style="font-size:11px; font-weight:bold;">Crawler Terminal Output:</label>
+              <button class="btn-retro" style="font-size:10px; padding:1px 6px;" id="spiderIndexBtn" onclick="addSpiderToSearchIndex()" disabled>💾 Add Crawled Keywords to Search Index</button>
+            </div>
+            <div class="noc-terminal" id="spiderTerminalLog" style="height:175px; overflow-y:auto; font-size:10px; line-height:1.35;">
+KiloSpider 1.0 Autonomous Web Crawler &amp; Inverted Indexer Initialized.<br>
+Protocol: HTTP/1.0 (RFC 1945) &bull; Robot Identification: KiloSpider/1.0 (Win98; x86)<br>
+Ready. Select target destination to begin automated indexing pass.
             </div>
           </div>
         </div>
@@ -3906,7 +3970,15 @@ function executeSearch(query) {
   const tokens = cleanQuery.split(/\s+/).filter(t => t.length > 0);
   if (exactMatch) tokens.push(exactMatch);
 
-  const results = APPS_DATABASE.filter(item => {
+  let allSearchItems = [...APPS_DATABASE];
+  try {
+    const customSpiderItems = JSON.parse(localStorage.getItem('knet_custom_spider_index') || '[]');
+    if (Array.isArray(customSpiderItems) && customSpiderItems.length > 0) {
+      allSearchItems = allSearchItems.concat(customSpiderItems);
+    }
+  } catch(e) {}
+
+  const results = allSearchItems.filter(item => {
     if (categoryFilter && item.folder.toLowerCase() !== categoryFilter) {
       return false;
     }
@@ -3951,17 +4023,18 @@ function executeSearch(query) {
 
   let html = '';
   results.forEach(app => {
-    const badgeClass = 'badge-' + app.folder.toLowerCase();
+    const badgeClass = 'badge-' + (app.folder || 'web').toLowerCase();
     const actionLabel = app.folder === 'Web' ? 'Visit Website' : 'Launch in KiloOS';
     const highlightedTitle = highlightMatches(app.title, tokens);
     const highlightedDesc = highlightMatches(app.desc, tokens);
+    const spiderBadge = app.spiderIndexed ? '<span class="result-badge" style="background:#e0f2fe; color:#0369a1; border:1px solid #7dd3fc; margin-left:4px;">SPIDER INDEXED</span>' : '';
 
     html += `
       <div class="search-result-item">
         <div style="display:flex; justify-content:space-between; align-items:center;">
           <div>
             <a href="${app.url}" class="result-title-link">${highlightedTitle}</a>
-            <span class="result-badge ${badgeClass}">${app.folder}</span>
+            <span class="result-badge ${badgeClass}">${app.folder}</span>${spiderBadge}
             <span style="font-size:11px; color:#777; margin-left:6px;">[${app.id}.html]</span>
           </div>
           <div>
@@ -7154,6 +7227,368 @@ function copyWebmasterSnippet() {
 }
 
 /* =========================================================================
+   15.5 KILOSPIDER '99 WEB CRAWLER & HYPERMEDIA INDEXER ENGINE
+   ========================================================================= */
+let spiderCrawling = false;
+let spiderAbort = false;
+let lastCrawledData = null;
+let spiderTimeoutIds = [];
+
+const SPIDER_CRAWL_DB = {
+  "/web/geocities.html": {
+    title: "CyberSpire's Underground Retro Shrine & MOD Vault",
+    meta: "A classic personal cyber-temple featuring Web Audio tracker chiptunes, Amiga ProTracker (.MOD) downloads, 16-color Pixel Art Studio & Silicon Oracle.",
+    size: "348 KB",
+    links: 14,
+    images: 18,
+    badges: ["NETSCAPE 4.7 NOW", "MADE WITH NOTEPAD", "Y2K READY 1999"],
+    keywords: ["geocities", "shrine", "protracker", "mod", "amiga", "chiptunes", "demoscene", "fx", "copper", "plasma", "pixel", "oracle", "y2k", "cyberpunk"],
+    rank: "9.8 / 10.0",
+    y2k: "100% COMPLIANT",
+    sigint: false
+  },
+  "/web/warez.html": {
+    title: "0xRELEASE Scene Vault & Cracktro Archive '99",
+    meta: "Underground demoscene releases, Yamaha YM2612 FM chiptunes, 3D cracktros & ANSI NFOs.",
+    size: "284 KB",
+    links: 19,
+    images: 12,
+    badges: ["FLARELIGHT", "RAZOR 1999", "PARALAX", "SKID VECTOR"],
+    keywords: ["warez", "scene", "cracktro", "keygen", "chiptune", "ym2612", "fm", "nfo", "ansi", "flairlight", "demoscene", "release"],
+    rank: "9.4 / 10.0",
+    y2k: "100% COMPLIANT",
+    sigint: false
+  },
+  "/web/webring.html": {
+    title: "Central KiloNet 1999 Webring Hub & Topology Registry",
+    meta: "Central webring directory with 10 member nodes, random ring jump teleporter, 88x31 badge generator & traceroute simulator.",
+    size: "216 KB",
+    links: 26,
+    images: 8,
+    badges: ["W3C HTML 4.01", "NETSCAPE 4.7 NOW", "RING MASTER '99"],
+    keywords: ["webring", "hub", "teleport", "directory", "badges", "topology", "routing", "links", "members", "ringmaster"],
+    rank: "9.9 / 10.0",
+    y2k: "100% COMPLIANT",
+    sigint: false
+  },
+  "/web/cybercafe.html": {
+    title: "CyberCafe '99 Underground BBS & Lounge",
+    meta: "Threaded retro forums, terminal booths, 16-color ASCII art studio, mIRC chat lounge & procedural FM jukebox.",
+    size: "312 KB",
+    links: 21,
+    images: 15,
+    badges: ["MIRC 5.8", "ASCII ARTIST", "JAVA POWERED"],
+    keywords: ["cybercafe", "bbs", "forum", "ascii", "chat", "irc", "mirc", "jukebox", "dialup", "coffee", "lounge"],
+    rank: "9.6 / 10.0",
+    y2k: "100% COMPLIANT",
+    sigint: false
+  },
+  "/web/users/neon_rider.html": {
+    title: "~neon_rider's Win32 ASM Shrine",
+    meta: "x86 assembly devlog, opcode stream generator, YM2612 tracker tunes & demoscene NFO vault.",
+    size: "198 KB",
+    links: 11,
+    images: 7,
+    badges: ["MADE WITH NOTEPAD", "NASM ASSEMBLED", "PURE X86"],
+    keywords: ["neon_rider", "assembly", "asm", "x86", "opcodes", "win32", "tracker", "demoscene", "masm", "nasm"],
+    rank: "9.2 / 10.0",
+    y2k: "100% COMPLIANT",
+    sigint: false
+  },
+  "/web/asm_temple.html": {
+    title: "Temple of x86 Opcodes & Win32 PE Dissector",
+    meta: "x86 assembly programming shrine, opcode oracle (133+ opcodes), assembler, micro-CPU stepper & PE32 dissector.",
+    size: "410 KB",
+    links: 16,
+    images: 6,
+    badges: ["INTEL PENTIUM", "W3C HTML 4.01", "OPCODE ORACLE"],
+    keywords: ["asm", "temple", "opcodes", "pe32", "dissector", "assembly", "microcpu", "registers", "eax", "ebx", "flags"],
+    rank: "9.7 / 10.0",
+    y2k: "100% COMPLIANT",
+    sigint: false
+  },
+  "/web/echo_subsystem.html": {
+    title: "Echo Subsystem Acoustic Research Lab (Carlsbad SIGINT)",
+    meta: "Acoustic research journal, real-time 2D audio spectrogram waterfall, phased beamformer grid & 1999Hz subcarrier telemetry.",
+    size: "365 KB",
+    links: 8,
+    images: 4,
+    badges: ["RESTRICTED SIGINT", "LITHOSPHERIC MESH", "1999HZ CARRIER"],
+    keywords: ["echo", "subsystem", "audio", "spectrogram", "waterfall", "beamformer", "sigint", "1999hz", "subcarrier", "telemetry", "carlsbad"],
+    rank: "8.9 / 10.0",
+    y2k: "100% COMPLIANT",
+    sigint: true
+  },
+  "/web/classified.html": {
+    title: "10.19.99.4 Carlsbad Network Gateway & Intranet Archive",
+    meta: "Carlsbad skunkworks intranet archive: memory hex inspector, 1999Hz RF signal diagnostics & packet sniffer.",
+    size: "290 KB",
+    links: 6,
+    images: 3,
+    badges: ["INTRANET RESTRICTED", "SECTOR 7F", "CARLSBAD SKUNKWORKS"],
+    keywords: ["classified", "carlsbad", "intranet", "10.19.99.4", "skunkworks", "hex", "memory", "packet", "sniffer", "transponder"],
+    rank: "8.5 / 10.0",
+    y2k: "100% COMPLIANT",
+    sigint: true
+  },
+  "/web/darknet.html": {
+    title: "Node 0x7F Encrypted Underground Relay & Cryptography Lab",
+    meta: "Underground Feistel cryptographic relay, packet decoders, and subterranean telemetry node.",
+    size: "320 KB",
+    links: 7,
+    images: 2,
+    badges: ["ENCRYPTED 0X7F", "FEISTEL CIPHER", "DARKNET RELAY"],
+    keywords: ["darknet", "relay", "0x7f", "cryptography", "feistel", "encrypted", "cipher", "underground", "node0x7f"],
+    rank: "8.7 / 10.0",
+    y2k: "100% COMPLIANT",
+    sigint: true
+  },
+  "/web/deep_core.html": {
+    title: "Deep Core Ghost Terminal & Key Fragment Vault",
+    meta: "Carlsbad Subterranean Deep Core terminal, lithospheric wave decoders, and penultimate ARG passkey fragment analyzer.",
+    size: "310 KB",
+    links: 5,
+    images: 1,
+    badges: ["LEVEL 9 QUARANTINE", "DEEP CORE VAULT", "LITHOSPHERIC"],
+    keywords: ["deep_core", "terminal", "ghost", "passkey", "vault", "carlsbad", "subterranean", "sector7f", "matrix"],
+    rank: "8.8 / 10.0",
+    y2k: "100% COMPLIANT",
+    sigint: true
+  },
+  "/apps/contribute.html": {
+    title: "Fleet Compute Contributor Portal",
+    meta: "Donate free Gemini API compute quota to fuel the living autonomous fleet and guide the living OS.",
+    size: "145 KB",
+    links: 12,
+    images: 5,
+    badges: ["LIVING FLEET", "CONTRIBUTOR", "GEMINI POWERED"],
+    keywords: ["contribute", "compute", "quota", "gemini", "fleet", "living", "director", "autonomous"],
+    rank: "9.5 / 10.0",
+    y2k: "100% COMPLIANT",
+    sigint: false
+  }
+};
+
+function handleSpiderPresetChange(val) {
+  playClick();
+  const customInput = document.getElementById('spiderCustomUrlInput');
+  if (!customInput) return;
+  if (val === 'CUSTOM') {
+    customInput.value = '';
+    customInput.focus();
+  } else {
+    customInput.value = val;
+  }
+}
+
+function focusSpiderCrawler() {
+  setTimeout(() => {
+    const el = document.getElementById('spiderCrawlerPanel');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.style.outline = '3px solid #000080';
+      setTimeout(() => el.style.outline = 'none', 1600);
+    }
+  }, 100);
+}
+
+function updateSpiderIndexCounts() {
+  let customCount = 0;
+  try {
+    const stored = JSON.parse(localStorage.getItem('knet_custom_spider_index') || '[]');
+    if (Array.isArray(stored)) customCount = stored.length;
+  } catch(e) {}
+
+  const nodesEl = document.getElementById('indexNodesCount');
+  const termsEl = document.getElementById('indexTermsCount');
+  if (nodesEl) nodesEl.textContent = `${114 + customCount} Nodes`;
+  if (termsEl) termsEl.textContent = `${1840 + customCount * 12}+ Terms`;
+}
+
+function startSpiderCrawl() {
+  if (spiderCrawling) return;
+  playClick();
+
+  const customInput = document.getElementById('spiderCustomUrlInput');
+  let targetUrl = (customInput?.value || '/web/geocities.html').trim();
+  if (!targetUrl) targetUrl = '/web/geocities.html';
+
+  const depthSelect = document.getElementById('spiderDepthSelect');
+  const depth = depthSelect ? depthSelect.value : '1';
+
+  const termEl = document.getElementById('spiderTerminalLog');
+  const progressEl = document.getElementById('spiderProgressBar');
+  const startBtn = document.getElementById('spiderStartBtn');
+  const abortBtn = document.getElementById('spiderAbortBtn');
+  const indexBtn = document.getElementById('spiderIndexBtn');
+  const summaryBox = document.getElementById('spiderSummaryBox');
+
+  spiderCrawling = true;
+  spiderAbort = false;
+  spiderTimeoutIds = [];
+  lastCrawledData = null;
+
+  if (startBtn) startBtn.disabled = true;
+  if (abortBtn) abortBtn.disabled = false;
+  if (indexBtn) indexBtn.disabled = true;
+  if (progressEl) progressEl.style.width = '10%';
+
+  termEl.innerHTML = `[SPIDER]: Initiating crawl pass on target: <strong>${escapeHtml(targetUrl)}</strong> (Depth: Level ${depth})...<br>`;
+
+  // Resolve crawled mock metadata
+  let crawlMeta = SPIDER_CRAWL_DB[targetUrl];
+  if (!crawlMeta) {
+    // Generate simulated dynamic metadata for arbitrary URLs
+    const slug = targetUrl.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+    crawlMeta = {
+      title: `Custom Node: ${targetUrl}`,
+      meta: `User-specified hypermedia endpoint indexed dynamically by KiloSpider 1.0.`,
+      size: `${Math.floor(80 + Math.random() * 220)} KB`,
+      links: Math.floor(4 + Math.random() * 12),
+      images: Math.floor(2 + Math.random() * 8),
+      badges: ["NETSCAPE 4.7 NOW", "W3C VALID HTML"],
+      keywords: [slug, "web", "hypermedia", "kilonet", "1999", "retro"],
+      rank: "8.0 / 10.0",
+      y2k: "100% COMPLIANT",
+      sigint: targetUrl.includes('echo') || targetUrl.includes('10.19.99') || targetUrl.includes('darknet') || targetUrl.includes('deep_core')
+    };
+  }
+
+  // Sequence Step 1: DNS & TCP Connect
+  const t1 = setTimeout(() => {
+    if (spiderAbort) return;
+    progressEl.style.width = '30%';
+    termEl.innerHTML += `[SPIDER]: DNS resolved target &bull; Opening TCP socket via V.90 gateway (56,000 bps)...<br>`;
+    termEl.scrollTop = termEl.scrollHeight;
+  }, 400);
+  spiderTimeoutIds.push(t1);
+
+  // Sequence Step 2: HTTP/1.0 GET & Headers
+  const t2 = setTimeout(() => {
+    if (spiderAbort) return;
+    progressEl.style.width = '60%';
+    termEl.innerHTML += `[SPIDER]: HTTP/1.0 200 OK &bull; Server: Apache/1.3.9 (Unix) &bull; Payload: ${crawlMeta.size} received.<br>`;
+    termEl.innerHTML += `[SPIDER]: Parsing HTML 4.01 DOM: Extracted ${crawlMeta.links} outbound hyperlinks, ${crawlMeta.images} image/GIF entities.<br>`;
+    termEl.scrollTop = termEl.scrollHeight;
+  }, 800);
+  spiderTimeoutIds.push(t2);
+
+  // Sequence Step 3: Keywords & Analysis
+  const t3 = setTimeout(() => {
+    if (spiderAbort) return;
+    progressEl.style.width = '85%';
+    termEl.innerHTML += `[SPIDER]: Extracted ${crawlMeta.keywords.length} primary indexed keywords: [${crawlMeta.keywords.slice(0, 6).join(', ')}...]<br>`;
+    termEl.innerHTML += `[SPIDER]: Y2K Conformance Audit: ${crawlMeta.y2k} &bull; KiloRank '99 Score: ${crawlMeta.rank}.<br>`;
+    
+    if (crawlMeta.sigint) {
+      termEl.innerHTML += `<span style="color:#ffd700; font-weight:bold;">⚠️ [SIGINT HARMONIC DETECTION]: Acoustic carrier locked at 1999Hz detected in target HTML subheaders!</span><br>`;
+      termEl.innerHTML += `<span style="color:#00ffcc;">[SIGINT ROUTE]: Lithospheric transit trace routed through echo-gw-07.kilonet.internal (10.19.99.7).</span><br>`;
+      triggerFmChime(1999.0, 1.5, 0.8, 0.4);
+    }
+    termEl.scrollTop = termEl.scrollHeight;
+  }, 1200);
+  spiderTimeoutIds.push(t3);
+
+  // Sequence Step 4: Finalize & Enable Indexing
+  const t4 = setTimeout(() => {
+    if (spiderAbort) return;
+    progressEl.style.width = '100%';
+    termEl.innerHTML += `<span style="color:#39ff14; font-weight:bold;">[SPIDER]: Crawl completed successfully! Inverted index ready for commit.</span><br>`;
+    termEl.scrollTop = termEl.scrollHeight;
+
+    spiderCrawling = false;
+    if (startBtn) startBtn.disabled = false;
+    if (abortBtn) abortBtn.disabled = true;
+    if (indexBtn) indexBtn.disabled = false;
+
+    lastCrawledData = {
+      id: 'spider_' + Date.now(),
+      title: crawlMeta.title,
+      url: targetUrl,
+      folder: 'Web',
+      desc: crawlMeta.meta,
+      tags: crawlMeta.keywords.join(','),
+      spiderIndexed: true
+    };
+
+    summaryBox.innerHTML = `
+      <div style="font-weight:bold; color:var(--navy-dark); font-size:12px; margin-bottom:4px;">
+        📄 ${escapeHtml(crawlMeta.title)}
+      </div>
+      <div style="font-size:11px; color:#333; line-height:1.4; margin-bottom:6px;">
+        ${escapeHtml(crawlMeta.meta)}
+      </div>
+      <div style="display:flex; justify-content:space-between; flex-wrap:wrap; font-size:10px; color:#555; border-top:1px solid #ddd; padding-top:4px;">
+        <span>Size: <strong>${crawlMeta.size}</strong></span>
+        <span>Links: <strong>${crawlMeta.links}</strong></span>
+        <span>KiloRank: <strong style="color:#008000;">${crawlMeta.rank}</strong></span>
+        <span>Y2K: <strong style="color:#008000;">${crawlMeta.y2k}</strong></span>
+      </div>
+    `;
+
+    playSuccessChime();
+  }, 1600);
+  spiderTimeoutIds.push(t4);
+}
+
+function abortSpiderCrawl() {
+  if (!spiderCrawling) return;
+  spiderAbort = true;
+  spiderCrawling = false;
+  spiderTimeoutIds.forEach(id => clearTimeout(id));
+  spiderTimeoutIds = [];
+
+  const termEl = document.getElementById('spiderTerminalLog');
+  const progressEl = document.getElementById('spiderProgressBar');
+  const startBtn = document.getElementById('spiderStartBtn');
+  const abortBtn = document.getElementById('spiderAbortBtn');
+
+  if (startBtn) startBtn.disabled = false;
+  if (abortBtn) abortBtn.disabled = true;
+  if (progressEl) progressEl.style.width = '0%';
+
+  if (termEl) {
+    termEl.innerHTML += `<span style="color:#ff3333; font-weight:bold;">[SPIDER]: Crawl aborted by operator.</span><br>`;
+    termEl.scrollTop = termEl.scrollHeight;
+  }
+  playErrorBuzz();
+}
+
+function addSpiderToSearchIndex() {
+  if (!lastCrawledData) return;
+  playClick();
+
+  try {
+    let customIndex = JSON.parse(localStorage.getItem('knet_custom_spider_index') || '[]');
+    if (!Array.isArray(customIndex)) customIndex = [];
+
+    const existingIdx = customIndex.findIndex(item => item.url === lastCrawledData.url);
+    if (existingIdx >= 0) {
+      customIndex[existingIdx] = lastCrawledData;
+    } else {
+      customIndex.unshift(lastCrawledData);
+    }
+
+    localStorage.setItem('knet_custom_spider_index', JSON.stringify(customIndex));
+    updateSpiderIndexCounts();
+    playSuccessChime();
+
+    const indexBtn = document.getElementById('spiderIndexBtn');
+    if (indexBtn) {
+      indexBtn.disabled = true;
+      indexBtn.textContent = '✅ Added to Search Index';
+      setTimeout(() => {
+        if (indexBtn) indexBtn.textContent = '💾 Add Crawled Keywords to Search Index';
+      }, 3000);
+    }
+
+    alert(`Successfully committed "${lastCrawledData.title}" into KiloNet Central Search Index! You can now search for its keywords in the Directory tab.`);
+  } catch(e) {
+    alert("Error saving custom spider index: " + e.message);
+  }
+}
+
+/* =========================================================================
    16. KILOARCADE '99: SILICON BUG BUSTER (MOTHERBOARD DEFENSE)
    ========================================================================= */
 let arcadeCtx = null;
@@ -7757,6 +8192,7 @@ window.addEventListener('DOMContentLoaded', () => {
   filterGuestbook();
   initNocDisplay();
   generateWebmasterSnippet();
+  updateSpiderIndexCounts();
   initArcadeGame();
   updatePortalClock();
 
