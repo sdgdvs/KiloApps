@@ -358,13 +358,99 @@ int IsShielded(int x, int y) {
     return 0;
 }
 
+void PlayGameSound(int type);
+void GenerateTerrain(HDC hdc);
+
+typedef struct {
+    int version;
+    int food, power, maxPower, mat, advm;
+    int pop, maxPop, happiness, popWait, sci;
+    int tick, day, isDay;
+    int weatherType, weatherTicks, dustStormTicks;
+    int unlockedHydro, unlockedNuke, unlockedLaser, unlockedFactory;
+    int unlockedSolar4, unlockedXenoArmor, unlockedGeo, unlockedBio;
+    int unlockedShield, unlockedDrone, unlockedTrade, unlockedCavern, unlockedOrbital;
+    int freighterDays, planetType, activeAnomaly, gameMode;
+    int grid[GRID_W * GRID_H];
+    int alienCount;
+    Alien aliens[100];
+} KColonySaveData;
+
+void SaveGame(HWND hwnd) {
+    if (gameState != 1) return;
+    FILE* f = fopen("kcolony.sav", "wb");
+    if (!f) {
+        strcpy(msgText, "QUICKSAVE ERROR: UNABLE TO WRITE FILE");
+        msgTicks = 5;
+        InvalidateRect(hwnd, NULL, FALSE);
+        return;
+    }
+    KColonySaveData s = {0};
+    s.version = 1;
+    s.food = food; s.power = power; s.maxPower = maxPower; s.mat = mat; s.advm = advm;
+    s.pop = pop; s.maxPop = maxPop; s.happiness = happiness; s.popWait = popWait; s.sci = sci;
+    s.tick = tick; s.day = day; s.isDay = isDay;
+    s.weatherType = weatherType; s.weatherTicks = weatherTicks; s.dustStormTicks = dustStormTicks;
+    s.unlockedHydro = unlockedHydro; s.unlockedNuke = unlockedNuke; s.unlockedLaser = unlockedLaser; s.unlockedFactory = unlockedFactory;
+    s.unlockedSolar4 = unlockedSolar4; s.unlockedXenoArmor = unlockedXenoArmor; s.unlockedGeo = unlockedGeo; s.unlockedBio = unlockedBio;
+    s.unlockedShield = unlockedShield; s.unlockedDrone = unlockedDrone; s.unlockedTrade = unlockedTrade; s.unlockedCavern = unlockedCavern; s.unlockedOrbital = unlockedOrbital;
+    s.freighterDays = freighterDays; s.planetType = planetType; s.activeAnomaly = activeAnomaly; s.gameMode = gameMode;
+    memcpy(s.grid, grid, sizeof(grid));
+    s.alienCount = min(alienCount, 100);
+    memcpy(s.aliens, aliens, sizeof(Alien) * s.alienCount);
+    fwrite(&s, sizeof(KColonySaveData), 1, f);
+    fclose(f);
+    strcpy(msgText, "COLONY STATE SAVED [F5]");
+    msgTicks = 5;
+    PlayGameSound(5);
+    InvalidateRect(hwnd, NULL, FALSE);
+}
+
+void LoadGame(HWND hwnd) {
+    FILE* f = fopen("kcolony.sav", "rb");
+    if (!f) {
+        strcpy(msgText, "NO QUICKSAVE FILE FOUND (F5 TO SAVE)");
+        msgTicks = 5;
+        InvalidateRect(hwnd, NULL, FALSE);
+        return;
+    }
+    KColonySaveData s = {0};
+    if (fread(&s, sizeof(KColonySaveData), 1, f) != 1) {
+        fclose(f);
+        strcpy(msgText, "SAVE CORRUPT OR INVALID");
+        msgTicks = 5;
+        InvalidateRect(hwnd, NULL, FALSE);
+        return;
+    }
+    fclose(f);
+    food = s.food; power = s.power; maxPower = s.maxPower; mat = s.mat; advm = s.advm;
+    pop = s.pop; maxPop = s.maxPop; happiness = s.happiness; popWait = s.popWait; sci = s.sci;
+    tick = s.tick; day = s.day; isDay = s.isDay;
+    weatherType = s.weatherType; weatherTicks = s.weatherTicks; dustStormTicks = s.dustStormTicks;
+    unlockedHydro = s.unlockedHydro; unlockedNuke = s.unlockedNuke; unlockedLaser = s.unlockedLaser; unlockedFactory = s.unlockedFactory;
+    unlockedSolar4 = s.unlockedSolar4; unlockedXenoArmor = s.unlockedXenoArmor; unlockedGeo = s.unlockedGeo; unlockedBio = s.unlockedBio;
+    unlockedShield = s.unlockedShield; unlockedDrone = s.unlockedDrone; unlockedTrade = s.unlockedTrade; unlockedCavern = s.unlockedCavern; unlockedOrbital = s.unlockedOrbital;
+    freighterDays = s.freighterDays; planetType = s.planetType; activeAnomaly = s.activeAnomaly; gameMode = s.gameMode;
+    memcpy(grid, s.grid, sizeof(grid));
+    alienCount = min(s.alienCount, 100);
+    memcpy(aliens, s.aliens, sizeof(Alien) * alienCount);
+    gameState = 1;
+    HDC hdc = GetDC(hwnd);
+    GenerateTerrain(hdc);
+    ReleaseDC(hwnd, hdc);
+    strcpy(msgText, "COLONY RESTORED [F9]");
+    msgTicks = 5;
+    PlayGameSound(5);
+    InvalidateRect(hwnd, NULL, FALSE);
+}
+
 void DrawMenu(HDC hdc, HFONT hFont, RECT rc) {
     SetBkMode(hdc, TRANSPARENT);
     SetTextColor(hdc, RGB(0, 255, 255));
     SelectObject(hdc, hFont);
     
-    DrawText(hdc, "KCOLONY: PLANETARY EXPEDITIONS & TECH TREE", -1, &(RECT){0, 40, rc.right, 75}, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-    DrawText(hdc, "Select Planet Biome [1-7]  |  Press [H] or [F1] for Administrator's Manual", -1, &(RECT){0, 75, rc.right, 100}, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawText(hdc, "KCOLONY: PLANETARY EXPEDITIONS & TECH TREE", -1, &(RECT){0, 35, rc.right, 65}, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    DrawText(hdc, "Select Planet Biome [1-7], Resume [8/F9]  |  Press [H] or [F1] for Administrator's Manual", -1, &(RECT){0, 65, rc.right, 90}, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     
     const char* titles[] = { 
         "[1] MARS PRIME (STANDARD EXPEDITION)", 
@@ -374,10 +460,11 @@ void DrawMenu(HDC hdc, HFONT hFont, RECT rc) {
         "[5] SANDBOX COLONY (UNLIMITED TECH & MATS)", 
         "[6] 100-DAY SURVIVAL CHALLENGE", 
         "[7] RESOURCE RUSH (1000M, 100A BY D50)", 
-        "[8 / H / F1] HELP & TECH SPEC SHEET" 
+        "[8 / F9] RESUME / LOAD QUICKSAVE",
+        "[9 / H / F1] HELP & TECH SPEC SHEET" 
     };
-    for (int i=0; i<8; i++) {
-        RECT bRc = {rc.right/2 - 240, 110 + i*55, rc.right/2 + 240, 150 + i*55};
+    for (int i=0; i<9; i++) {
+        RECT bRc = {rc.right/2 - 240, 95 + i*48, rc.right/2 + 240, 135 + i*48};
         HBRUSH br = CreateSolidBrush(RGB(17,17,34));
         FillRect(hdc, &bRc, br);
         DeleteObject(br);
@@ -401,6 +488,7 @@ void DrawHelp(HDC hdc, HFONT hFont, RECT rc) {
         "[1-7] Select Mode (Menu) | [0/Esc] Inspect | [-/R] Repair | [1-6] Core (Solar/Farm/Mine/Hab/Bat/Lab)\n"
         "[7] Nuke | [8] Hydro | [9] Laser | [W] Wall | [T] Turret | [C] Factory | [G] Geo | [V] Bio-Dome\n"
         "[E] Shield | [U] Drone Hub | [P] Trade Port | [K] Cavern Drill | [O] Orbital Beacon | [Space] Orbital Strike\n"
+        "[F5] Quicksave Colony | [F9] Quickload Colony\n"
         "[H/F1/?] Toggle Manual | [Esc/Space/Enter] Close Help & Return\n\n"
         "RESOURCES: Food (Colony upkeep) | Power (System operations) | Mat (Basic building)\n"
         "AdvM (Advanced alloy) | Science (Research unlocks) | Happiness (Efficiency factor)\n\n"
@@ -436,6 +524,14 @@ void StartGame(HWND hwnd, int mode) {
     else planetType = 0;
 
     food = 50; power = 50; maxPower = 50; mat = 50; advm = 0;
+    if (mode == 1) { // Cryo Tundra: extreme cold buffer
+        power = maxPower = 65;
+        mat = 60;
+    } else if (mode == 2) { // Volcanic: fast breakdowns buffer
+        mat = 60;
+    } else if (mode == 3) { // Acid Swamp: aggressive swarms defense buffer
+        mat = 65;
+    }
     pop = 0; maxPop = 0; happiness = 100; sci = 0; popWait = 0;
     day = 1; isDay = 1; tick = 0; freighterDays = 0;
     
@@ -752,32 +848,16 @@ void DrawGrid(HDC hdc, HFONT hFont) {
         }
     }
     
-    // 1. Ornate Cybernetic Colony Defense Arcade HUD Reticle L-Brackets around Grid
+    // Clean static framing border around Grid (no traveling dots or flashing diodes)
     int gw = GRID_W * CELL_SIZE, gh = GRID_H * CELL_SIZE;
-    HPEN hudPen = CreatePen(PS_SOLID, 2, RGB(0, 255, 255));
-    HPEN oldHp = SelectObject(hdc, hudPen);
-    // Top-Left
-    MoveToEx(hdc, effOffsetX - 4, effOffsetY + 14, NULL); LineTo(hdc, effOffsetX - 4, effOffsetY - 4); LineTo(hdc, effOffsetX + 14, effOffsetY - 4);
-    // Top-Right
-    MoveToEx(hdc, effOffsetX + gw - 14, effOffsetY - 4, NULL); LineTo(hdc, effOffsetX + gw + 4, effOffsetY - 4); LineTo(hdc, effOffsetX + gw + 4, effOffsetY + 14);
-    // Bottom-Left
-    MoveToEx(hdc, effOffsetX - 4, effOffsetY + gh - 14, NULL); LineTo(hdc, effOffsetX - 4, effOffsetY + gh + 4); LineTo(hdc, effOffsetX + 14, effOffsetY + gh + 4);
-    // Bottom-Right
-    MoveToEx(hdc, effOffsetX + gw - 14, effOffsetY + gh + 4, NULL); LineTo(hdc, effOffsetX + gw + 4, effOffsetY + gh + 4); LineTo(hdc, effOffsetX + gw + 4, effOffsetY + gh - 14);
-    SelectObject(hdc, oldHp);
-    DeleteObject(hudPen);
-
-    // Glowing Status Diodes on Grid Frame
-    HBRUSH diodeBr = CreateSolidBrush(((animFrame % 12) < 6) ? RGB(0, 255, 255) : RGB(0, 150, 150));
-    HBRUSH oldDb = SelectObject(hdc, diodeBr);
-    HPEN nullP = CreatePen(PS_NULL, 0, 0);
-    HPEN oldNp = SelectObject(hdc, nullP);
-    Ellipse(hdc, effOffsetX - 3, effOffsetY - 3, effOffsetX + 1, effOffsetY + 1);
-    Ellipse(hdc, effOffsetX + gw - 1, effOffsetY - 3, effOffsetX + gw + 3, effOffsetY + 1);
-    Ellipse(hdc, effOffsetX - 3, effOffsetY + gh - 1, effOffsetX + 1, effOffsetY + gh + 3);
-    Ellipse(hdc, effOffsetX + gw - 1, effOffsetY + gh - 1, effOffsetX + gw + 3, effOffsetY + gh + 3);
-    SelectObject(hdc, oldNp); DeleteObject(nullP);
-    SelectObject(hdc, oldDb); DeleteObject(diodeBr);
+    HPEN framePen = CreatePen(PS_SOLID, 1, RGB(0, 180, 200));
+    HPEN oldFp = SelectObject(hdc, framePen);
+    HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
+    HBRUSH oldNb = SelectObject(hdc, nullBr);
+    Rectangle(hdc, effOffsetX - 2, effOffsetY - 2, effOffsetX + gw + 2, effOffsetY + gh + 2);
+    SelectObject(hdc, oldNb);
+    SelectObject(hdc, oldFp);
+    DeleteObject(framePen);
 
     // 2. Atmospheric Planetary Biome Motes
     if (planetType == 0) { // Mars Prime Red Dust
@@ -961,15 +1041,13 @@ void DrawGrid(HDC hdc, HFONT hFont) {
             SelectObject(hdc, oldP); DeleteObject(pClaw);
 
             // Threat targeting brackets for Goliath
-            if ((animFrame % 10) < 6) {
-                HPEN pRet = CreatePen(PS_SOLID, 1, RGB(255, 0, 50));
-                oldP = SelectObject(hdc, pRet);
-                MoveToEx(hdc, rc.left, rc.top + 4, NULL); LineTo(hdc, rc.left, rc.top); LineTo(hdc, rc.left + 4, rc.top);
-                MoveToEx(hdc, rc.right, rc.top + 4, NULL); LineTo(hdc, rc.right, rc.top); LineTo(hdc, rc.right - 4, rc.top);
-                MoveToEx(hdc, rc.left, rc.bottom - 4, NULL); LineTo(hdc, rc.left, rc.bottom); LineTo(hdc, rc.left + 4, rc.bottom);
-                MoveToEx(hdc, rc.right, rc.bottom - 4, NULL); LineTo(hdc, rc.right, rc.bottom); LineTo(hdc, rc.right - 4, rc.bottom);
-                SelectObject(hdc, oldP); DeleteObject(pRet);
-            }
+            HPEN pRet = CreatePen(PS_SOLID, 1, RGB(170, 0, 50));
+            oldP = SelectObject(hdc, pRet);
+            MoveToEx(hdc, rc.left, rc.top + 4, NULL); LineTo(hdc, rc.left, rc.top); LineTo(hdc, rc.left + 4, rc.top);
+            MoveToEx(hdc, rc.right, rc.top + 4, NULL); LineTo(hdc, rc.right, rc.top); LineTo(hdc, rc.right - 4, rc.top);
+            MoveToEx(hdc, rc.left, rc.bottom - 4, NULL); LineTo(hdc, rc.left, rc.bottom); LineTo(hdc, rc.left + 4, rc.bottom);
+            MoveToEx(hdc, rc.right, rc.bottom - 4, NULL); LineTo(hdc, rc.right, rc.bottom); LineTo(hdc, rc.right - 4, rc.bottom);
+            SelectObject(hdc, oldP); DeleteObject(pRet);
         }
 
         // Tactical Mini Health Gauge Bar
@@ -1313,7 +1391,17 @@ void DrawUI(HDC hdc, HFONT hFont) {
     strcpy(buttons[btnCount].label, "[SPACE] ORBITAL STRIKE");
     btnCount++; btnY2 += 24;
 
-    btnY2 += 4;
+    buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 88, btnY2 + 22 };
+    buttons[btnCount].id = 207;
+    strcpy(buttons[btnCount].label, "[F5] SAVE");
+    btnCount++;
+
+    buttons[btnCount].rc = (RECT){ sidebarX2 + 92, btnY2, sidebarX2 + 180, btnY2 + 22 };
+    buttons[btnCount].id = 208;
+    strcpy(buttons[btnCount].label, "[F9] LOAD");
+    btnCount++; btnY2 += 24;
+
+    btnY2 += 2;
     buttons[btnCount].rc = (RECT){ sidebarX2, btnY2, sidebarX2 + 180, btnY2 + 22 };
     buttons[btnCount].id = 300;
     strcpy(buttons[btnCount].label, "[H]/[F1] HELP/MANUAL");
@@ -1377,7 +1465,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 if (wParam >= '1' && wParam <= '7') {
                     StartGame(hwnd, (int)(wParam - '1'));
                     return 0;
-                } else if (wParam == '8') {
+                } else if (wParam == '8' || wParam == VK_F9) {
+                    LoadGame(hwnd);
+                    return 0;
+                } else if (wParam == '9') {
                     prevState = 0;
                     gameState = 2;
                     InvalidateRect(hwnd, NULL, FALSE);
@@ -1390,7 +1481,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     return 0;
                 }
             } else if (gameState == 1) { // Playing
-                if (wParam == VK_ESCAPE || wParam == '0' || wParam == 'I') {
+                if (wParam == VK_F5) {
+                    SaveGame(hwnd);
+                    return 0;
+                } else if (wParam == VK_F9) {
+                    LoadGame(hwnd);
+                    return 0;
+                } else if (wParam == VK_ESCAPE || wParam == '0' || wParam == 'I') {
                     selectedType = 0;
                 } else if (wParam == 'R' || wParam == VK_OEM_MINUS || wParam == VK_SUBTRACT) {
                     selectedType = -1;
@@ -1873,10 +1970,15 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 GetClientRect(hwnd, &rc);
                 int cx = rc.right / 2;
                 if (x >= cx - 240 && x <= cx + 240) {
-                    for (int i = 0; i < 8; i++) {
-                        if (y >= 110 + i*55 && y <= 150 + i*55) {
-                            if (i == 7) { prevState = 0; gameState = 2; InvalidateRect(hwnd, NULL, FALSE); }
-                            else StartGame(hwnd, i);
+                    for (int i = 0; i < 9; i++) {
+                        if (y >= 95 + i*48 && y <= 135 + i*48) {
+                            if (i == 7) {
+                                LoadGame(hwnd);
+                            } else if (i == 8) {
+                                prevState = 0; gameState = 2; InvalidateRect(hwnd, NULL, FALSE);
+                            } else {
+                                StartGame(hwnd, i);
+                            }
                             return 0;
                         }
                     }
@@ -2053,6 +2155,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             } else {
                                 MessageBox(hwnd, "Need at least 40 Power to charge Orbital Beacon capacitors.", "Low Power", MB_OK | MB_ICONWARNING);
                             }
+                        } else if (id == 207) {
+                            SaveGame(hwnd);
+                        } else if (id == 208) {
+                            LoadGame(hwnd);
                         } else if (id == 300) {
                             prevState = 1;
                             gameState = 2;
