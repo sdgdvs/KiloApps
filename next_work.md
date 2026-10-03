@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://geocities (CyberSpire's Shrine & Surface-Site Breadcrumb Density Pass)"
   kilo_graphics: KRogue
   kilo_tester: KQuest
-  kilo_usability: KFont
+  kilo_usability: KGraph
   kilo_qa: KFont
   kilo_expander: KVault
 virtual_web_target: "kweb://geocities"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KPing
-  timestamp: "2026-10-02T19:57:00-07:00"
+  agent: kilo-usability
+  app: KFont
+  timestamp: "2026-10-02T20:10:00-07:00"
 last_planner_run: "2026-10-03T00:40:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KRadio`, `KRead`, `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KFont`
+- **Current Target**: `KGraph`
 - **Upcoming Queue**:
-  `KGraph`, `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash` *(Completed: KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint)*.
+  `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash` *(Completed: KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KFont`
@@ -207,6 +207,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-02T20:10:00-07:00 — kilo-usability: KFont (HiDPI Scaling, Touch Drawing, Safe Toasts, Modal Focus Trap & Layout Polish)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 158.0 KB web / 57.0 KB native < 999 KB ceiling).
+  - Window Dimension Polish: Adjusted default window size to 980x720 in App.jsx and kfont.html for unclipped single-line toolbar layout.
+  - Toast Occlusion Remediation: Relocated toast container to non-occluding bottom-right safe viewport (`bottom: 20px; right: 20px`).
+  - HiDPI & Touch Ergonomics: Added devicePixelRatio scaling and touch event listeners (`touchstart/move/end`) to bitmap matrix editor.
+  - Accessibility & Modal Trap: Implemented `trapFocus` across help and profile export modals; added focus restoration on modal close.
+  - Help Guide Completeness: Updated help modal to document all 11 tabs including Bitmap Studio, OpenType, and Typo Linter.
+  - Verification: MSVC clean (`KFont.exe` 57.0 KB); Vite clean in 317ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T19:57:00-07:00 — kilo-tester: KPing (Interactive UI Audit, JSON Import, Focus Trapping & Quicksave Buttons)**
   - Status: PASS ✅ (6 issues found, 6 fixed, 0 regressions, clean builds, 157.6 KB web < 999 KB ceiling).
   - Quicksave & Toolbar Buttons: Added Save [F5] and Load [F9] buttons to actions toolbar and help modal footer; synchronized presetSelect on quickload.
@@ -242,11 +251,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Controls & Sound: Added custom keybind profiles (Arrows, WASD, IJKL, Numpad, Vi) and Genesis YM2612 FM synthesis SFX.
   - Verification: MSVC clean (`K2048.exe` 48.0 KB); Vite clean in 378ms; security_lint 100% clean PASS.
 
-- **2026-10-02T23:20:00Z — kilo-qa: KFlash (Pass 5: Full State Persistence, First-Run Tutorial, Safe Toasts & Win32 Quicksave)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 94.3 KB web / 140.5 KB native < 999 KB ceiling).
-  - Quicksave & State Integrity: Built F5 Quicksave / F9 Quickload in Win32 C (`kflash.sav`) and web localStorage with full state capture.
-  - First-Run Tutorial: Enforced `kflash_tutorial.dat` and `kflash_tutorialSeen` flags so tutorial only triggers on fresh sessions.
-  - Toast Occlusion Remediation: Relocated toast container to non-occluding bottom-right safe viewport (`bottom: 60px; right: 20px`).
-  - Overlay Ergonomics & Buttons: Added Save [F5] / Load [F9] buttons to native toolbar; wired Enter/Space on all modal dialogs.
-  - Verification: MSVC clean (`KFlash.exe` 140.5 KB); Vite clean in 390ms; check_icons & security_lint 100% PASS.
 

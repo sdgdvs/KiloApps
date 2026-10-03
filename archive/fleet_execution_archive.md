@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-02T23:20:00Z — kilo-qa: KFlash (Pass 5: Full State Persistence, First-Run Tutorial, Safe Toasts & Win32 Quicksave)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 94.3 KB web / 140.5 KB native < 999 KB ceiling).
+  - Quicksave & State Integrity: Built F5 Quicksave / F9 Quickload in Win32 C (`kflash.sav`) and web localStorage with full state capture.
+  - First-Run Tutorial: Enforced `kflash_tutorial.dat` and `kflash_tutorialSeen` flags so tutorial only triggers on fresh sessions.
+  - Toast Occlusion Remediation: Relocated toast container to non-occluding bottom-right safe viewport (`bottom: 60px; right: 20px`).
+  - Overlay Ergonomics & Buttons: Added Save [F5] / Load [F9] buttons to native toolbar; wired Enter/Space on all modal dialogs.
+  - Verification: MSVC clean (`KFlash.exe` 140.5 KB); Vite clean in 390ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T19:27:00Z — kilo-graphics: KSanctuary (6th Raider Clan, Mech Sprites, Particle Purge & Room Polish)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 440.3 KB web / 268.8 KB native < 999 KB ceiling).
   - 6th Raider Clan: Added Titan Cyber-Vanguard (autonomous pre-collapse war mechs and cyber-synth commandos) with baseAtk 135 and scaled rewards.

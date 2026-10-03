@@ -7,10 +7,10 @@
 <style>
   *, *::before, *::after { box-sizing: border-box; }
   body { margin: 0; font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Tahoma, sans-serif; background-color: #f4f5f7; display: flex; flex-direction: column; height: 100vh; overflow: hidden; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; color: #222; }
-  .header { background: #1e2227; color: white; padding: 10px 18px; display: flex; gap: 14px; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.25); z-index: 10; flex-wrap: wrap; }
-  .header-brand { font-weight: 700; font-size: 17px; letter-spacing: 0.5px; color: #4da3ff; display: flex; align-items: center; gap: 8px; }
+  .header { background: #1e2227; color: white; padding: 8px 14px; display: flex; gap: 8px; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.25); z-index: 10; flex-wrap: wrap; }
+  .header-brand { font-weight: 700; font-size: 16px; letter-spacing: 0.5px; color: #4da3ff; display: flex; align-items: center; gap: 6px; }
   .header-hint { font-size: 11px; color: #8fa0b3; font-weight: normal; }
-  .header select, .header input[type="text"] { padding: 6px 10px; font-family: inherit; border-radius: 4px; border: 1px solid #444c56; background: #2d333b; color: #e6edf3; outline: none; font-size: 13px; transition: border-color 0.15s; }
+  .header select, .header input[type="text"] { padding: 5px 8px; font-family: inherit; border-radius: 4px; border: 1px solid #444c56; background: #2d333b; color: #e6edf3; outline: none; font-size: 12px; transition: border-color 0.15s; }
   .header select:focus, .header input[type="text"]:focus { border-color: #4da3ff; }
   
   .main { display: flex; flex: 1; overflow: hidden; }
@@ -102,7 +102,7 @@
   .dissector-table td { padding: 7px 10px; border-bottom: 1px solid #e2e8f0; font-family: "Consolas", monospace; color: #1e293b; }
   .dissector-table tr:hover td { background: #f8fafc; }
 
-  #toastNotification { display: none; position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); background: #1e293b; color: #fff; padding: 10px 22px; border-radius: 20px; box-shadow: 0 4px 18px rgba(0,0,0,0.35); font-size: 12px; font-weight: 500; z-index: 2000; cursor: pointer; border-bottom: 2px solid #3b82f6; max-width: 90vw; text-align: center; pointer-events: auto; }
+  #toastNotification { display: none; position: fixed; bottom: 20px; right: 20px; left: auto; transform: none; background: #1e293b; color: #fff; padding: 10px 18px; border-radius: 8px; box-shadow: 0 4px 18px rgba(0,0,0,0.35); font-size: 12px; font-weight: 500; z-index: 2000; cursor: pointer; border-left: 4px solid #3b82f6; max-width: 360px; pointer-events: auto; }
   #toastNotification:hover { background: #273142; }
 
   #helpOverlay, #exportModal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
@@ -144,7 +144,7 @@
 </head>
 <body>
   <div class="header">
-    <div class="header-brand">KFont Inspect <span class="header-hint">(Press F1 or H for Help)</span></div>
+    <div class="header-brand">KFont Inspect <span class="header-hint">(F1/H Help)</span></div>
     <select id="fontList" title="Select Font Family">
       <option value="Arial" selected>Arial</option>
       <option value="Calibri">Calibri</option>
@@ -770,6 +770,9 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         <li><strong>Contrast &amp; WCAG</strong>: 6 retro and modern palettes with real-time luminance contrast ratios.</li>
         <li><strong>Spec &amp; Code Export</strong>: Win32 GDI C LOGFONT code and CSS typography variables generator.</li>
         <li><strong>Live Sample &amp; Run</strong>: Real-time text sandbox with granular character advance dissector table.</li>
+        <li><strong>Bitmap &amp; ROM Studio</strong>: 1-bit monochrome pixel editor, CRT/LCD preview, and C / x86 ASM / BDF export.</li>
+        <li><strong>OpenType &amp; Variables</strong>: Feature tags (liga, smcp, frac, zero), multi-axis dynamic variation &amp; pulse mode.</li>
+        <li><strong>Compare &amp; Typo Lint</strong>: Dual-font diff overlay, Hamburgevons metrics, and automated typographic proofing.</li>
       </ul>
       <p><strong>Keyboard Shortcuts:</strong></p>
       <ul style="font-size:12px; color:#475569;">
@@ -792,9 +795,9 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
   
   <script>
     if (window.top === window.self) {
-        window.resizeTo(950, 700);
+        window.resizeTo(980, 720);
     } else {
-        window.parent.postMessage({ type: 'resize', width: 950, height: 700 }, '*');
+        window.parent.postMessage({ type: 'resize', width: 980, height: 720 }, '*');
     }
 
     const fontList = document.getElementById('fontList');
@@ -1123,17 +1126,27 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
       }
     }
 
+    let lastActiveElementBeforeModal = null;
+
     function openExportModal() {
       clearToasts();
+      lastActiveElementBeforeModal = document.activeElement;
       const state = getWorkspaceState();
       document.getElementById('profileJsonTextarea').value = JSON.stringify(state, null, 2);
       exportModal.classList.add('visible');
+      const firstBtn = document.getElementById('downloadProfileJsonBtn');
+      if (firstBtn) firstBtn.focus();
       playSound('tab');
     }
 
     function closeExportModal() {
       exportModal.classList.remove('visible');
       playSound('click');
+      if (lastActiveElementBeforeModal && typeof lastActiveElementBeforeModal.focus === 'function') {
+        lastActiveElementBeforeModal.focus();
+      } else if (exportModalBtn) {
+        exportModalBtn.focus();
+      }
     }
     
     function getFontString(familyOverride, sizeOverride) {
@@ -1925,16 +1938,16 @@ body {
 
       document.getElementById('btnDownloadBitmapHeader').onclick = downloadBitmapHeader;
 
-      // Mouse drag handlers on canvas
+      // Mouse & touch drag handlers on canvas
       function getCanvasCell(e) {
         const rect = canvas.getBoundingClientRect();
-        const clientX = e.clientX;
-        const clientY = e.clientY;
+        const clientX = e.clientX !== undefined ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+        const clientY = e.clientY !== undefined ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
         const x = Math.floor(((clientX - rect.left) / rect.width) * bmpW);
         const y = Math.floor(((clientY - rect.top) / rect.height) * bmpH);
         return {
-          x: Math.max(0, Math.min(bmpW - 1, x)),
-          y: Math.max(0, Math.min(bmpH - 1, y))
+          x: Math.max(0, Math.min(bmpW - 1, isNaN(x) ? 0 : x)),
+          y: Math.max(0, Math.min(bmpH - 1, isNaN(y) ? 0 : y))
         };
       }
 
@@ -1961,7 +1974,36 @@ body {
         }
       };
 
+      canvas.addEventListener('touchstart', (e) => {
+        if (!e.touches || e.touches.length === 0) return;
+        e.preventDefault();
+        isBmpDrawing = true;
+        const cell = getCanvasCell(e.touches[0]);
+        const current = bmpGrid[cell.y * bmpW + cell.x];
+        bmpDrawVal = current ? 0 : 1;
+        bmpGrid[cell.y * bmpW + cell.x] = bmpDrawVal;
+        document.getElementById('bitmapCoordInfo').textContent = `X: ${cell.x} , Y: ${cell.y}`;
+        renderBitmapAll();
+        playSound('pixel');
+      }, { passive: false });
+
+      canvas.addEventListener('touchmove', (e) => {
+        if (!e.touches || e.touches.length === 0) return;
+        e.preventDefault();
+        const cell = getCanvasCell(e.touches[0]);
+        document.getElementById('bitmapCoordInfo').textContent = `X: ${cell.x} , Y: ${cell.y}`;
+        if (isBmpDrawing) {
+          if (bmpGrid[cell.y * bmpW + cell.x] !== bmpDrawVal) {
+            bmpGrid[cell.y * bmpW + cell.x] = bmpDrawVal;
+            renderBitmapAll();
+            playSound('pixel');
+          }
+        }
+      }, { passive: false });
+
       window.addEventListener('mouseup', () => { isBmpDrawing = false; });
+      window.addEventListener('touchend', () => { isBmpDrawing = false; });
+      window.addEventListener('touchcancel', () => { isBmpDrawing = false; });
       canvas.onmouseleave = () => {
         document.getElementById('bitmapCoordInfo').textContent = `X: - , Y: -`;
       };
@@ -2019,13 +2061,25 @@ body {
       const canvas = document.getElementById('bitmapEditorCanvas');
       if (!canvas) return;
       const ctx = canvas.getContext('2d');
-      const w = canvas.width;
-      const h = canvas.height;
-      const cellW = w / bmpW;
-      const cellH = h / bmpH;
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const cssW = Math.round(rect.width) || 320;
+      const cssH = cssW;
+      
+      const targetW = Math.round(cssW * dpr);
+      const targetH = Math.round(cssH * dpr);
+      if (canvas.width !== targetW || canvas.height !== targetH) {
+        canvas.width = targetW;
+        canvas.height = targetH;
+      }
+      canvas.style.height = `${cssH}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const cellW = cssW / bmpW;
+      const cellH = cssH / bmpH;
 
       ctx.fillStyle = '#0f172a';
-      ctx.fillRect(0, 0, w, h);
+      ctx.fillRect(0, 0, cssW, cssH);
 
       for (let y = 0; y < bmpH; y++) {
         for (let x = 0; x < bmpW; x++) {
@@ -3011,10 +3065,32 @@ body {
     window.addEventListener('resize', () => {
       updateAnatomy();
       updateDiagnostics();
+      renderBitmapEditor();
     });
+
+    function trapFocus(modalEl, e) {
+      if (e.key !== 'Tab') return;
+      const focusables = modalEl.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      const visibleFocusables = Array.from(focusables).filter(el => !el.disabled && el.offsetParent !== null);
+      if (visibleFocusables.length === 0) return;
+      const first = visibleFocusables[0];
+      const last = visibleFocusables[visibleFocusables.length - 1];
+      if (e.shiftKey) {
+        if (document.activeElement === first || !modalEl.contains(document.activeElement)) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last || !modalEl.contains(document.activeElement)) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
 
     function openHelp() {
       clearToasts();
+      lastActiveElementBeforeModal = document.activeElement;
       helpOverlay.classList.add('visible');
       const closeBtn = document.getElementById('helpModalCloseBtn') || document.getElementById('helpCloseBtn');
       if (closeBtn) closeBtn.focus();
@@ -3024,6 +3100,12 @@ body {
     function closeHelp() {
       helpOverlay.classList.remove('visible');
       playSound('click');
+      if (lastActiveElementBeforeModal && typeof lastActiveElementBeforeModal.focus === 'function') {
+        lastActiveElementBeforeModal.focus();
+      } else {
+        const helpBtn = document.getElementById('helpBtn');
+        if (helpBtn) helpBtn.focus();
+      }
     }
 
     document.getElementById('helpBtn').addEventListener('click', openHelp);
@@ -3040,6 +3122,20 @@ body {
 
     document.addEventListener('keydown', (e) => {
       const isInput = e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable;
+
+      // Handle Tab focus trapping inside open modals
+      if (helpOverlay && helpOverlay.classList.contains('visible')) {
+        if (e.key === 'Tab') {
+          trapFocus(helpOverlay, e);
+          return;
+        }
+      }
+      if (exportModal && exportModal.classList.contains('visible')) {
+        if (e.key === 'Tab') {
+          trapFocus(exportModal, e);
+          return;
+        }
+      }
 
       // Quicksave [F5] & Quickload [F9] work globally
       if (e.key === 'F5') {
