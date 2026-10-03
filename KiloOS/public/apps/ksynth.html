@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KSynth Workstation Pro</title>
+<script src="../assets/js/retro_multiplayer.js"></script>
 <style>
   :root {
     --bg-dark: #0d0f14;
@@ -131,6 +132,28 @@
   }
   .btn-danger:hover {
     background: #a00000;
+  }
+  .btn.active {
+    background: rgba(0, 243, 255, 0.2);
+    border-color: var(--accent-cyan);
+    color: var(--accent-cyan);
+    box-shadow: 0 0 8px rgba(0, 243, 255, 0.4);
+  }
+  .btn-warning {
+    background: #6a4700;
+    border-color: var(--accent-yellow);
+    color: #fff;
+  }
+  .btn-warning:hover {
+    background: #8a5d00;
+  }
+  .lfo-led-glow {
+    background: var(--accent-cyan) !important;
+    box-shadow: 0 0 10px var(--accent-cyan) !important;
+  }
+  .drive-active {
+    border-color: var(--accent-pink) !important;
+    box-shadow: 0 0 10px rgba(255, 0, 127, 0.4) !important;
   }
 
   select {
@@ -582,8 +605,12 @@
           <div style="font-weight:700; color:var(--accent-yellow); margin-bottom:4px;">Synthesizer Controls & Shortcuts</div>
           <ul style="list-style:none; padding-left:0; display:flex; flex-direction:column; gap:5px; font-size:12px;">
             <li><b>[Space] / [P]</b> : Play / Pause 16-step pattern sequencer</li>
-            <li><b>[1] - [9]</b> : Switch to Preset 1-9 (Lead, Bass, Pad, Chiptune, Bell, Pluck, YM2612 FM, SPC700, Beacon)</li>
+            <li><b>[1] - [9], [0]</b> : Switch to Preset 1-10 (Lead, Bass, Pad, Chiptune, Bell, Pluck, YM2612 FM, SPC700, Beacon, Juno)</li>
             <li><b>[Shift+J] / [N]</b> : Join / Leave Live Collaborative Jam Session</li>
+            <li><b>[Shift+G]</b> : Toggle Subnet Ghost Jammer (Rule 12 Autonomous AI Jam Bot)</li>
+            <li><b>[O]</b> : Toggle Vintage Analog Overdrive / Distortion</li>
+            <li><b>[Shift+F]</b> : Toggle LFO Modulation Matrix</li>
+            <li><b>[Shift+M]</b> : Export 16-Step Pattern as Standard MIDI File (.mid)</li>
             <li><b>[M]</b> : Toggle Yamaha YM2612 2-Operator FM Synthesis Mode</li>
             <li><b>[Z] / [X] / [◄] / [►]</b> : Shift keyboard octave down / up (-2 to +2)</li>
             <li><b>[▲] / [▼]</b> : Adjust Master Volume (+5% / -5%)</li>
@@ -603,8 +630,10 @@
           <div style="font-weight:700; color:var(--accent-cyan); margin-bottom:4px;">Audio Engine & Jam Features</div>
           <ul style="list-style:none; padding-left:0; display:flex; flex-direction:column; gap:4px; font-size:12px;">
             <li>&bull; <b>Dual Synthesis Engines:</b> Subtractive 5-waveform dual-oscillator & Yamaha YM2612 2-Op FM synthesis.</li>
-            <li>&bull; <b>Live Jam Session:</b> Real-time multi-user jamming via Firebase RTDB with synchronized notes and sequencer.</li>
-            <li>&bull; <b>Biquad Filter:</b> Lowpass, Highpass, and Bandpass with resonance and 1999Hz subcarrier anomaly detection.</li>
+            <li>&bull; <b>LFO Modulation Matrix:</b> Sine, Triangle, Saw, Square, and Sample & Hold with Free Hz or Tempo Sync.</li>
+            <li>&bull; <b>Drive, Bitcrush & Chorus:</b> Vintage analog saturation, tone filter, 4-16 bit DAC crunch, and Roland Juno stereo ensemble.</li>
+            <li>&bull; <b>Standardized RFMS Multiplayer:</b> Real-time jam rooms via Firebase RTDB, room link sharing (#room=CODE), and 25-second Subnet Ghost Jammer fallback.</li>
+            <li>&bull; <b>Standard MIDI Export:</b> Type 0 SMF .mid generator for direct DAW interoperability.</li>
             <li>&bull; <b>SPC700 Delay Echo:</b> Stereo ping-pong delay unit with warm Gaussian feedback loop damping.</li>
             <li>&bull; <b>ADSR Envelope:</b> Real-time visual curve canvas with millisecond precision.</li>
           </ul>
@@ -635,6 +664,11 @@
         <option value="genesis_fm">7: YM2612 FM Bass</option>
         <option value="spc700">8: SPC700 Echo Pad</option>
         <option value="beacon_1999">9: 1999 Ghost Beacon</option>
+        <option value="juno_strings">10: Juno Strings</option>
+        <option value="tb303_acid">11: TB-303 Acid Bass</option>
+        <option value="vapor_keys">12: Vaporwave Keys</option>
+        <option value="cyber_drone">13: 1999 Subnet Drone</option>
+        <option value="fm_slap_ep">14: YM2612 FM E-Piano</option>
         <option value="custom" disabled hidden>Custom Patch</option>
       </select>
       
@@ -646,6 +680,7 @@
       <input type="file" id="presetFileInput" accept=".json" style="display:none;">
 
       <button id="btnExportWav" class="btn" title="Export Synth Audio Preview to WAV [Ctrl+E]">🔊 WAV [^E]</button>
+      <button id="btnExportMidi" class="btn" title="Export 16-Step Pattern as Standard MIDI File (.mid) [Shift+M]">🎹 MIDI</button>
 
       <button id="btnExportSeq" class="btn" title="Export Sequencer Pattern">🎵 Seq Out</button>
       <button id="btnImportSeq" class="btn" title="Import Sequencer Pattern">📥 Seq In</button>
@@ -674,24 +709,32 @@
     <button class="btn quick-chip" onclick="selectPresetByIndex(6)" title="Preset 7: YM2612 FM Slap Bass">7: FM Bass</button>
     <button class="btn quick-chip" onclick="selectPresetByIndex(7)" title="Preset 8: SPC700 SNES Strings">8: SPC700</button>
     <button class="btn quick-chip" onclick="selectPresetByIndex(8)" title="Preset 9: 1999 Ghost Beacon">9: Beacon</button>
+    <button class="btn quick-chip" onclick="selectPresetByIndex(9)" title="Preset 10: Juno Strings">10: Juno</button>
+    <button class="btn quick-chip" onclick="selectPresetByIndex(10)" title="Preset 11: TB-303 Acid">11: 303 Acid</button>
+    <button class="btn quick-chip" onclick="selectPresetByIndex(11)" title="Preset 12: Vapor Keys">12: Vapor</button>
+    <button class="btn quick-chip" onclick="selectPresetByIndex(12)" title="Preset 13: 1999 Drone">13: Drone</button>
+    <button class="btn quick-chip" onclick="selectPresetByIndex(13)" title="Preset 14: FM E-Piano">14: FM Keys</button>
   </div>
 
-  <!-- Collaborative Jam Session Bar (Firebase RTDB) -->
+  <!-- Collaborative Jam Session Bar (Firebase RTDB + RFMS Standard) -->
   <div class="jam-deck" id="jamDeck">
     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; width:100%;">
       <span class="jam-status-badge" id="jamStatusBadge">Offline</span>
       <span style="font-size:11px; color:var(--text-muted); font-weight:600;">ROOM:</span>
-      <input type="text" id="jamRoomInput" value="general-jam" placeholder="room-name" style="width:110px; background:#1c202b; color:var(--accent-cyan); border:1px solid var(--panel-border); border-radius:4px; padding:3px 6px; font-size:11px; font-weight:600;">
+      <input type="text" id="jamRoomInput" value="SYN-1999" placeholder="SYN-XXXX" style="width:90px; background:#1c202b; color:var(--accent-cyan); border:1px solid var(--panel-border); border-radius:4px; padding:3px 6px; font-size:11px; font-weight:600; text-transform:uppercase;">
       <span style="font-size:11px; color:var(--text-muted); font-weight:600;">NICK:</span>
-      <input type="text" id="jamNickInput" value="SynthPilot" placeholder="Your Nick" style="width:100px; background:#1c202b; color:#fff; border:1px solid var(--panel-border); border-radius:4px; padding:3px 6px; font-size:11px; font-weight:600;">
-      <button id="btnJamConnect" class="btn btn-primary" style="padding:4px 10px; font-size:11px;" title="Join / Leave Real-Time Collaborative Jam Session [Shift+J / N]">🌐 Join Jam [Shift+J]</button>
+      <input type="text" id="jamNickInput" value="SynthPilot" placeholder="Your Nick" style="width:85px; background:#1c202b; color:#fff; border:1px solid var(--panel-border); border-radius:4px; padding:3px 6px; font-size:11px; font-weight:600;">
+      <button id="btnJamConnect" class="btn btn-primary" style="padding:4px 9px; font-size:11px;" title="Join / Leave Real-Time Collaborative Jam Session [Shift+J / N]">🌐 Join Jam [Shift+J]</button>
+      <button id="btnJamMatch" class="btn" style="padding:4px 8px; font-size:11px;" title="Public Matchmaking / Find Active Jam Room">🎲 Match</button>
+      <button id="btnJamShareLink" class="btn" style="padding:4px 8px; font-size:11px;" title="Copy Sharable Web Link (#room=CODE) to Clipboard">📋 Link</button>
+      <button id="btnGhostJammer" class="btn" style="padding:4px 8px; font-size:11px;" title="Toggle Subnet Ghost Jammer (Rule 12 Autonomous AI Jam Bot) [Shift+G]">🤖 Ghost: OFF [Shift+G]</button>
       
       <label style="display:flex; align-items:center; gap:4px; font-size:11px; color:var(--text-main); cursor:pointer; margin-left:4px;">
         <input type="checkbox" id="chkJamSyncSeq" checked style="accent-color:var(--accent-cyan); cursor:pointer;">
-        <span>Sync Sequencer</span>
+        <span>Sync Seq</span>
       </label>
 
-      <button id="btnJamSharePatch" class="btn" style="padding:4px 8px; font-size:11px;" title="Broadcast your active synth patch to all connected peers">📤 Broadcast Patch</button>
+      <button id="btnJamSharePatch" class="btn" style="padding:4px 8px; font-size:11px;" title="Broadcast your active synth patch to all connected peers">📤 Share Patch</button>
 
       <div style="display:flex; align-items:center; gap:4px; margin-left:auto;">
         <span style="font-size:10px; color:var(--text-muted);">REACT:</span>
@@ -925,6 +968,92 @@
       </div>
     </div>
 
+    <!-- LFO Modulation Matrix Panel -->
+    <div class="panel" id="lfoPanel">
+      <div class="panel-title">
+        <span>LFO Modulation Matrix [Shift+F]</span>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div id="lfoLed" style="width:8px; height:8px; border-radius:50%; background:#2a3040; transition:background 0.05s, box-shadow 0.05s;" title="LFO Phase Indicator"></div>
+          <button id="btnLfoToggle" class="btn" style="padding:2px 8px; font-size:10px;">LFO: OFF</button>
+        </div>
+      </div>
+      <div class="panel-row">
+        <div class="control-group">
+          <label>LFO Wave</label>
+          <select id="lfoWave">
+            <option value="sine">Sine</option>
+            <option value="triangle">Triangle</option>
+            <option value="sawtooth">Sawtooth</option>
+            <option value="square">Square</option>
+            <option value="sh">Sample & Hold</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Rate <span class="val" id="lfoRateVal">2.0 Hz</span></label>
+          <input type="range" id="lfoRate" min="0.1" max="20" value="2.0" step="0.1">
+        </div>
+        <div class="control-group">
+          <label>BPM Sync</label>
+          <select id="lfoSync">
+            <option value="free">Free (Hz)</option>
+            <option value="1">1/1 (Bar)</option>
+            <option value="2">1/2 Note</option>
+            <option value="4">1/4 Note</option>
+            <option value="8">1/8 Note</option>
+            <option value="16">1/16 Note</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Target</label>
+          <select id="lfoTarget">
+            <option value="cutoff">Filter Cutoff (Wah)</option>
+            <option value="pitch">Pitch (Vibrato)</option>
+            <option value="volume">Amp (Tremolo)</option>
+            <option value="fm">FM Mod Depth</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Depth <span class="val" id="lfoDepthVal">0%</span></label>
+          <input type="range" id="lfoDepth" min="0" max="1" value="0" step="0.01">
+        </div>
+      </div>
+    </div>
+
+    <!-- Analog Drive, Tone, Bitcrusher & Stereo Chorus Panel -->
+    <div class="panel" id="fxPanel">
+      <div class="panel-title">
+        <span>Drive, Bitcrush & Chorus [O]</span>
+        <button id="btnDriveToggle" class="btn" style="padding:2px 8px; font-size:10px;">DRIVE: OFF</button>
+      </div>
+      <div class="panel-row">
+        <div class="control-group">
+          <label>Overdrive <span class="val" id="driveAmtVal">0%</span></label>
+          <input type="range" id="driveAmt" min="0" max="1" value="0" step="0.01">
+        </div>
+        <div class="control-group">
+          <label>Tone Filter <span class="val" id="driveToneVal">8.0 kHz</span></label>
+          <input type="range" id="driveTone" min="800" max="12000" value="8000" step="100">
+        </div>
+        <div class="control-group">
+          <label>Lo-Fi Resolution</label>
+          <select id="bitDepth">
+            <option value="16">16-Bit (Clean)</option>
+            <option value="12">12-Bit (Vintage '90s)</option>
+            <option value="8">8-Bit (Chiptune)</option>
+            <option value="6">6-Bit (Lo-Fi)</option>
+            <option value="4">4-Bit (Raw Grit)</option>
+          </select>
+        </div>
+        <div class="control-group" style="min-width:130px;">
+          <label>Stereo Chorus <span class="val" id="chorusMixVal">OFF</span></label>
+          <div style="display:flex; align-items:center; gap:6px;">
+            <button id="btnChorusToggle" class="btn" style="padding:2px 6px; font-size:10px;">OFF</button>
+            <input type="range" id="chorusMix" min="0" max="1" value="0.5" step="0.01" style="flex:1;">
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Step Sequencer Panel -->
     <div class="panel" style="grid-column: span 2;">
       <div class="panel-title">
@@ -1067,8 +1196,9 @@
   // ----------------------------------------------------
   // Collaborative Jam Session State & Firebase Handlers
   // ----------------------------------------------------
+  let rfmsClient = null;
   let isJamConnected = false;
-  let jamRoomId = 'general-jam';
+  let jamRoomId = 'SYN-1999';
   let myJamNick = 'SynthPilot';
   const peerColors = ['#00f3ff', '#ff007f', '#00ff66', '#ffb703', '#9d4edd', '#00d2ff', '#ff5400', '#ff2a85'];
   let myJamColor = peerColors[Math.floor(Math.random() * peerColors.length)];
@@ -1076,6 +1206,9 @@
   let jamUserRef = null;
   let jamEventsRef = null;
   let sessionJoinedTime = 0;
+  let isGhostJammerActive = false;
+  let ghostJammerTimer = null;
+  let ghostJammerStepCount = 0;
 
   function appendJamTicker(msg, color = 'var(--text-muted)') {
     const ticker = document.getElementById('jamTicker');
@@ -1105,18 +1238,26 @@
   }
 
   function broadcastJamEvent(payload) {
-    if (!isJamConnected || !window.fb || !window.fb.push || !window.fb.ref) return;
-    try {
-      const eventsRef = window.fb.ref(window.fb.db, `multiplayer/ksynth/rooms/${jamRoomId}/events`);
-      window.fb.push(eventsRef, {
-        ...payload,
-        senderId: myJamId,
-        nick: myJamNick,
-        color: myJamColor,
-        timestamp: Date.now()
-      });
-    } catch (e) {
-      console.warn("Jam broadcast error:", e);
+    if (!isJamConnected) return;
+    const fullPayload = {
+      ...payload,
+      senderId: myJamId,
+      nick: myJamNick,
+      color: myJamColor,
+      timestamp: Date.now()
+    };
+    if (rfmsClient && typeof rfmsClient.sendMove === 'function') {
+      try {
+        rfmsClient.sendMove(fullPayload);
+      } catch (e) {
+        console.warn("RFMS sendMove error:", e);
+      }
+    }
+    if (window.fb && window.fb.push && window.fb.ref) {
+      try {
+        const eventsRef = window.fb.ref(window.fb.db, `multiplayer/ksynth/rooms/${jamRoomId}/events`);
+        window.fb.push(eventsRef, fullPayload);
+      } catch (e) {}
     }
   }
 
@@ -1131,14 +1272,149 @@
     appendJamTicker(`Shared active patch to #${jamRoomId}`, myJamColor);
   }
 
-  async function joinJamRoom() {
-    if (!window.fb || !window.fb.db) {
-      showToast('Multiplayer network offline or initializing...', 'error', 3000);
-      return;
+  // --- Subnet Ghost Jammer (Rule 12 Autonomous AI Jam Bot) ---
+  function engageSubnetGhostJammer(reason = 'manual') {
+    if (isGhostJammerActive) return;
+    isGhostJammerActive = true;
+    const btn = document.getElementById('btnGhostJammer');
+    if (btn) {
+      btn.innerText = '🤖 Ghost: ON [Shift+G]';
+      btn.classList.add('active');
     }
+    appendJamTicker('🤖 Subnet Ghost Jammer [AI-Bot] engaged with 1999Hz carrier sync', '#ffb703');
+    showToast('🤖 Subnet Ghost Jammer engaged! Autonomous cyber-bot jamming in session...', 'info', 3000);
+    updateJamUsersUI();
+
+    const scale = [48, 51, 53, 55, 58, 60, 63, 65, 67, 70, 72];
+    ghostJammerStepCount = 0;
+
+    clearInterval(ghostJammerTimer);
+    ghostJammerTimer = setInterval(() => {
+      if (!isGhostJammerActive) return;
+      ghostJammerStepCount++;
+
+      if (ghostJammerStepCount % 4 === 0 || Math.random() < 0.35) {
+        const note = scale[Math.floor(Math.random() * scale.length)];
+        triggerNoteOn(note, true, 'Ghost Jammer', '#ffb703');
+        const duration = 150 + Math.floor(Math.random() * 250);
+        setTimeout(() => {
+          triggerNoteOff(note, true);
+        }, duration);
+      }
+
+      if (ghostJammerStepCount % 16 === 0) {
+        const emojis = ['🔥', '⚡', '🎹', '✨'];
+        const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+        spawnFloatingReaction(emoji);
+        appendJamTicker(`Ghost Jammer reacted ${emoji}`, '#ffb703');
+      }
+    }, 380);
+  }
+
+  function stopSubnetGhostJammer() {
+    if (!isGhostJammerActive) return;
+    isGhostJammerActive = false;
+    clearInterval(ghostJammerTimer);
+    ghostJammerTimer = null;
+    const btn = document.getElementById('btnGhostJammer');
+    if (btn) {
+      btn.innerText = '🤖 Ghost: OFF [Shift+G]';
+      btn.classList.remove('active');
+    }
+    updateJamUsersUI();
+  }
+
+  function toggleSubnetGhostJammer() {
+    if (isGhostJammerActive) {
+      stopSubnetGhostJammer();
+      showToast('Subnet Ghost Jammer stopped.', 'info', 1500);
+    } else {
+      engageSubnetGhostJammer('manual');
+    }
+  }
+
+  function copyJamInviteLink() {
+    const code = jamRoomId || 'SYN-1999';
+    const url = `${window.location.origin}${window.location.pathname}#room=${code}`;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(() => {
+        showToast(`📋 Invite link copied: ${url}`, 'success', 3000);
+      }).catch(() => {
+        prompt('Copy room link:', url);
+      });
+    } else {
+      prompt('Copy room link:', url);
+    }
+  }
+
+  async function quickMatchJam() {
+    if (rfmsClient && typeof rfmsClient.quickMatch === 'function') {
+      showToast('Searching for open Jam Room...', 'info', 2000);
+      const res = await rfmsClient.quickMatch();
+      if (res && res.roomId) {
+        document.getElementById('jamRoomInput').value = res.roomId;
+        joinJamRoom(res.roomId);
+      } else {
+        joinJamRoom();
+      }
+    } else {
+      joinJamRoom();
+    }
+  }
+
+  async function initRetroMultiplayer() {
+    if (typeof RetroMultiplayer === 'undefined') return;
+    try {
+      rfmsClient = new RetroMultiplayer({
+        gameId: 'ksynth',
+        prefix: 'SYN',
+        playerName: myJamNick,
+        soloTimeoutMs: 25000,
+        onMove: (moveData) => {
+          handleRemoteJamEvent(moveData);
+        },
+        onOpponentJoin: ({ slot, name }) => {
+          stopSubnetGhostJammer();
+          showToast(`🎹 Musician ${name || 'Peer'} joined the jam!`, 'success', 3000);
+          appendJamTicker(`Peer ${name} joined session`, '#00f3ff');
+          updateJamUsersUI();
+        },
+        onOpponentLeave: ({ slot, name }) => {
+          showToast(`Musician ${name || 'Peer'} disconnected.`, 'info', 2500);
+          appendJamTicker(`Peer ${name} left session`, 'var(--text-muted)');
+          updateJamUsersUI();
+          if (isJamConnected && rfmsClient) {
+            rfmsClient.startSoloFallbackTimer();
+          }
+        },
+        onSoloFallback: ({ reason }) => {
+          engageSubnetGhostJammer(reason);
+        },
+        onChat: (chat) => {
+          if (chat && chat.text) {
+            appendJamTicker(`💬 ${chat.name || 'Peer'}: ${chat.text}`, '#ffb703');
+            showToast(`💬 ${chat.name}: ${chat.text}`, 'info', 3000);
+          }
+        },
+        onStatusMsg: (msg, type) => {
+          showToast(msg, type);
+        }
+      });
+
+      const { onlineAvailable, inviteCode } = await rfmsClient.init();
+      if (inviteCode) {
+        document.getElementById('jamRoomInput').value = inviteCode;
+        joinJamRoom(inviteCode);
+      }
+    } catch (e) {
+      console.warn("RFMS init error:", e);
+    }
+  }
+
+  async function joinJamRoom(codeOverride) {
     const roomInput = document.getElementById('jamRoomInput');
     const nickInput = document.getElementById('jamNickInput');
-    jamRoomId = (roomInput.value || 'general-jam').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '') || 'general-jam';
+    jamRoomId = (codeOverride || roomInput.value || 'SYN-1999').trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '') || 'SYN-1999';
     roomInput.value = jamRoomId;
     myJamNick = (nickInput.value || 'SynthPilot').trim().substring(0, 16) || 'SynthPilot';
     nickInput.value = myJamNick;
@@ -1155,40 +1431,54 @@
     btn.classList.add('btn-danger');
 
     try {
-      jamUserRef = window.fb.ref(window.fb.db, `multiplayer/ksynth/rooms/${jamRoomId}/users/${myJamId}`);
-      window.fb.set(jamUserRef, {
-        nick: myJamNick,
-        color: myJamColor,
-        joinedAt: Date.now(),
-        lastActive: Date.now()
-      });
-      window.fb.onDisconnect(jamUserRef).remove();
+      history.replaceState(null, '', `#room=${jamRoomId}`);
+    } catch (e) {}
 
-      const usersRef = window.fb.ref(window.fb.db, `multiplayer/ksynth/rooms/${jamRoomId}/users`);
-      window.fb.onValue(usersRef, (snapshot) => {
-        const val = snapshot.val();
-        updateJamUsersUI(val);
-      });
-
-      const eventsRef = window.fb.ref(window.fb.db, `multiplayer/ksynth/rooms/${jamRoomId}/events`);
-      window.fb.onChildAdded(eventsRef, (snapshot) => {
-        const ev = snapshot.val();
-        if (!ev || ev.senderId === myJamId) return;
-        if (ev.timestamp && ev.timestamp < sessionJoinedTime - 4000) return;
-        handleRemoteJamEvent(ev);
-      });
-
-      appendJamTicker(`Joined room #${jamRoomId} as ${myJamNick}`, myJamColor);
-      showToast(`🌐 Connected to Jam Room #${jamRoomId}!`, 'success', 2500);
-    } catch (err) {
-      console.error("Join jam error:", err);
-      showToast("Failed to join Jam room.", "error");
-      leaveJamRoom();
+    if (rfmsClient) {
+      rfmsClient.playerName = myJamNick;
+      await rfmsClient.joinRoom(jamRoomId);
+      rfmsClient.startSoloFallbackTimer();
     }
+
+    if (window.fb && window.fb.db) {
+      try {
+        jamUserRef = window.fb.ref(window.fb.db, `multiplayer/ksynth/rooms/${jamRoomId}/users/${myJamId}`);
+        window.fb.set(jamUserRef, {
+          nick: myJamNick,
+          color: myJamColor,
+          joinedAt: Date.now(),
+          lastActive: Date.now()
+        });
+        window.fb.onDisconnect(jamUserRef).remove();
+
+        const usersRef = window.fb.ref(window.fb.db, `multiplayer/ksynth/rooms/${jamRoomId}/users`);
+        window.fb.onValue(usersRef, (snapshot) => {
+          updateJamUsersUI(snapshot.val());
+        });
+
+        const eventsRef = window.fb.ref(window.fb.db, `multiplayer/ksynth/rooms/${jamRoomId}/events`);
+        window.fb.onChildAdded(eventsRef, (snapshot) => {
+          const ev = snapshot.val();
+          if (!ev || ev.senderId === myJamId) return;
+          if (ev.timestamp && ev.timestamp < sessionJoinedTime - 4000) return;
+          handleRemoteJamEvent(ev);
+        });
+      } catch (err) {
+        console.warn("Direct RTDB hook warning:", err);
+      }
+    }
+
+    appendJamTicker(`Joined room #${jamRoomId} as ${myJamNick}`, myJamColor);
+    showToast(`🌐 Connected to Jam Room #${jamRoomId}!`, 'success', 2500);
+    updateJamUsersUI();
   }
 
   function leaveJamRoom() {
     isJamConnected = false;
+    stopSubnetGhostJammer();
+    if (rfmsClient) {
+      try { rfmsClient.leaveRoom(); } catch (e) {}
+    }
     if (jamUserRef && window.fb && window.fb.remove) {
       try { window.fb.remove(jamUserRef); } catch (e) {}
       jamUserRef = null;
@@ -1218,21 +1508,36 @@
     const listEl = document.getElementById('jamUsersList');
     if (!listEl) return;
     listEl.innerHTML = '';
-    if (!usersObj || Object.keys(usersObj).length === 0) {
-      listEl.innerHTML = '<span style="color:var(--text-muted); font-size:10px; font-style:italic;">You are jamming solo in this room</span>';
-      return;
+    
+    let hasPeers = false;
+    if (usersObj && Object.keys(usersObj).length > 0) {
+      Object.entries(usersObj).forEach(([id, u]) => {
+        const badge = document.createElement('span');
+        badge.className = 'peer-badge';
+        const isMe = (id === myJamId);
+        const nick = (u && u.nick) ? u.nick : 'Musician';
+        const color = (u && u.color) ? u.color : '#00f3ff';
+        badge.style.borderColor = color;
+        badge.style.color = color;
+        badge.innerHTML = `<span class="peer-dot" style="background:${color};"></span><span>${nick}${isMe ? ' (You)' : ''}</span>`;
+        listEl.appendChild(badge);
+        hasPeers = true;
+      });
     }
-    Object.entries(usersObj).forEach(([id, u]) => {
-      const badge = document.createElement('span');
-      badge.className = 'peer-badge';
-      const isMe = (id === myJamId);
-      const nick = (u && u.nick) ? u.nick : 'Musician';
-      const color = (u && u.color) ? u.color : '#00f3ff';
-      badge.style.borderColor = color;
-      badge.style.color = color;
-      badge.innerHTML = `<span class="peer-dot" style="background:${color};"></span><span>${nick}${isMe ? ' (You)' : ''}</span>`;
-      listEl.appendChild(badge);
-    });
+
+    if (isGhostJammerActive) {
+      const gBadge = document.createElement('span');
+      gBadge.className = 'peer-badge';
+      gBadge.style.borderColor = '#ffb703';
+      gBadge.style.color = '#ffb703';
+      gBadge.innerHTML = `<span class="peer-dot" style="background:#ffb703; box-shadow:0 0 6px #ffb703;"></span><span>🤖 Ghost Jammer [Subnet-1999]</span>`;
+      listEl.appendChild(gBadge);
+      hasPeers = true;
+    }
+
+    if (!hasPeers) {
+      listEl.innerHTML = '<span style="color:var(--text-muted); font-size:10px; font-style:italic;">You are jamming solo in this room</span>';
+    }
   }
 
   function handleRemoteJamEvent(ev) {
@@ -1304,6 +1609,149 @@
   let subcarrierTimer = null;
   let is1999Locked = false;
 
+  // LFO Modulation Matrix
+  let lfoOsc = null;
+  let lfoGain = null;
+  let lfoPitchGain = null;
+  let lfoTremoloGain = null;
+  let lfoEnabled = false;
+  let lfoWave = 'sine';
+  let lfoRate = 2.0;
+  let lfoSync = 'free';
+  let lfoTarget = 'cutoff';
+  let lfoDepth = 0.0;
+  let lfoShTimer = null;
+
+  // Vintage Drive, Tone & Bitcrusher
+  let driveNode = null;
+  let toneFilterNode = null;
+  let bitcrushNode = null;
+  let driveEnabled = false;
+  let driveAmount = 0.0;
+  let driveTone = 8000;
+  let bitDepth = 16;
+
+  // Stereo Chorus / Ensemble
+  let chorusSplitter = null;
+  let chorusMerger = null;
+  let chorusDelayL = null;
+  let chorusDelayR = null;
+  let chorusLfoL = null;
+  let chorusLfoR = null;
+  let chorusModGainL = null;
+  let chorusModGainR = null;
+  let chorusDryGain = null;
+  let chorusWetGain = null;
+  let chorusOutputGain = null;
+  let chorusEnabled = false;
+  let chorusMix = 0.5;
+
+  function makeDriveCurve(k) {
+    const n = 4096;
+    const curve = new Float32Array(n);
+    if (!k || k <= 0.001) {
+      for (let i = 0; i < n; i++) curve[i] = (i * 2) / n - 1;
+    } else {
+      const factor = 1 + k * 12;
+      const norm = Math.tanh(factor);
+      for (let i = 0; i < n; i++) {
+        const x = (i * 2) / n - 1;
+        curve[i] = Math.tanh(x * factor) / norm;
+      }
+    }
+    return curve;
+  }
+
+  function makeBitcrushCurve(bits) {
+    const n = 4096;
+    const curve = new Float32Array(n);
+    const b = parseInt(bits) || 16;
+    if (b >= 16) {
+      for (let i = 0; i < n; i++) curve[i] = (i * 2) / n - 1;
+    } else {
+      const steps = Math.pow(2, b);
+      const half = steps / 2;
+      for (let i = 0; i < n; i++) {
+        const x = (i * 2) / n - 1;
+        curve[i] = Math.round(x * half) / half;
+      }
+    }
+    return curve;
+  }
+
+  function getEffectiveLfoRate() {
+    if (lfoSync === 'free') {
+      return parseFloat(document.getElementById('lfoRate').value) || 2.0;
+    }
+    const bpm = parseInt(document.getElementById('seqBpm').value) || 120;
+    const bps = bpm / 60;
+    const multMap = { '1': 0.25, '2': 0.5, '4': 1.0, '8': 2.0, '16': 4.0 };
+    return Math.max(0.05, Math.min(30.0, bps * (multMap[lfoSync] || 1.0)));
+  }
+
+  function updateLfo() {
+    if (!audioCtx || !lfoGain) return;
+    const effRate = getEffectiveLfoRate();
+    if (lfoOsc) {
+      lfoOsc.type = (lfoWave === 'sh') ? 'sine' : lfoWave;
+      lfoOsc.frequency.setValueAtTime(effRate, audioCtx.currentTime);
+    }
+
+    try { lfoGain.disconnect(); } catch (e) {}
+    clearInterval(lfoShTimer);
+    lfoShTimer = null;
+
+    if (!lfoEnabled || lfoDepth <= 0.001) {
+      if (lfoTremoloGain) lfoTremoloGain.gain.setValueAtTime(1.0, audioCtx.currentTime);
+      if (lfoPitchGain) lfoPitchGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
+      return;
+    }
+
+    if (lfoWave === 'sh') {
+      const intervalMs = Math.max(25, Math.round(1000 / effRate));
+      lfoShTimer = setInterval(() => {
+        if (!lfoEnabled || !audioCtx) return;
+        const rnd = (Math.random() * 2 - 1) * lfoDepth;
+        if (lfoTarget === 'cutoff' && filterNode) {
+          const baseCutoff = parseFloat(document.getElementById('filterCutoff').value);
+          const target = Math.max(40, Math.min(12000, baseCutoff + rnd * 2800));
+          filterNode.frequency.setTargetAtTime(target, audioCtx.currentTime, 0.015);
+        } else if (lfoTarget === 'volume' && lfoTremoloGain) {
+          const target = Math.max(0.05, Math.min(1.0, 1.0 - (Math.abs(rnd) * 0.7)));
+          lfoTremoloGain.gain.setTargetAtTime(target, audioCtx.currentTime, 0.015);
+        } else if (lfoTarget === 'pitch' && lfoPitchGain) {
+          lfoPitchGain.gain.setTargetAtTime(rnd * 80, audioCtx.currentTime, 0.015);
+        }
+      }, intervalMs);
+      return;
+    }
+
+    if (lfoTarget === 'cutoff' && filterNode) {
+      if (lfoTremoloGain) lfoTremoloGain.gain.setValueAtTime(1.0, audioCtx.currentTime);
+      if (lfoPitchGain) lfoPitchGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
+      lfoGain.gain.setValueAtTime(lfoDepth * 2800, audioCtx.currentTime);
+      lfoGain.connect(filterNode.frequency);
+    } else if (lfoTarget === 'pitch' && lfoPitchGain) {
+      if (lfoTremoloGain) lfoTremoloGain.gain.setValueAtTime(1.0, audioCtx.currentTime);
+      lfoGain.gain.setValueAtTime(lfoDepth * 70, audioCtx.currentTime);
+      lfoGain.connect(lfoPitchGain.gain);
+    } else if (lfoTarget === 'volume' && lfoTremoloGain) {
+      if (lfoPitchGain) lfoPitchGain.gain.setValueAtTime(0.0, audioCtx.currentTime);
+      lfoTremoloGain.gain.setValueAtTime(1.0 - (lfoDepth * 0.45), audioCtx.currentTime);
+      lfoGain.gain.setValueAtTime(lfoDepth * 0.45, audioCtx.currentTime);
+      lfoGain.connect(lfoTremoloGain.gain);
+    } else {
+      if (lfoTremoloGain) lfoTremoloGain.gain.setValueAtTime(1.0, audioCtx.currentTime);
+    }
+  }
+
+  function updateChorusNodes() {
+    if (!audioCtx || !chorusDryGain || !chorusWetGain) return;
+    const mix = chorusEnabled ? parseFloat(document.getElementById('chorusMix').value) : 0;
+    chorusDryGain.gain.setValueAtTime(1.0 - (mix * 0.35), audioCtx.currentTime);
+    chorusWetGain.gain.setValueAtTime(mix * 0.85, audioCtx.currentTime);
+  }
+
   const morseCodeSubsystem = "1000111010111010001010101000111011101110001110101010101110001010100010101110001110101010001010100011101011101110001010100011100010001110111000101110101110101110001110100010001110000000";
   let morseIdx = 0;
 
@@ -1322,21 +1770,100 @@
 
     analyserNode = audioCtx.createAnalyser();
     analyserNode.fftSize = 1024;
-    
+
+    // Vintage Drive & Saturation
+    driveNode = audioCtx.createWaveShaper();
+    driveNode.curve = makeDriveCurve(driveEnabled ? driveAmount : 0);
+
+    toneFilterNode = audioCtx.createBiquadFilter();
+    toneFilterNode.type = 'lowpass';
+    toneFilterNode.frequency.value = driveTone;
+
+    bitcrushNode = audioCtx.createWaveShaper();
+    bitcrushNode.curve = makeBitcrushCurve(bitDepth);
+
+    // Stereo Chorus
+    chorusSplitter = audioCtx.createChannelSplitter(2);
+    chorusMerger = audioCtx.createChannelMerger(2);
+    chorusDelayL = audioCtx.createDelay(1.0);
+    chorusDelayR = audioCtx.createDelay(1.0);
+    chorusDelayL.delayTime.value = 0.016;
+    chorusDelayR.delayTime.value = 0.023;
+
+    chorusLfoL = audioCtx.createOscillator();
+    chorusLfoR = audioCtx.createOscillator();
+    chorusModGainL = audioCtx.createGain();
+    chorusModGainR = audioCtx.createGain();
+
+    chorusLfoL.type = 'sine';
+    chorusLfoL.frequency.value = 0.8;
+    chorusLfoR.type = 'sine';
+    chorusLfoR.frequency.value = 0.88;
+
+    chorusModGainL.gain.value = 0.0022;
+    chorusModGainR.gain.value = 0.0022;
+
+    chorusLfoL.connect(chorusModGainL);
+    chorusModGainL.connect(chorusDelayL.delayTime);
+    chorusLfoR.connect(chorusModGainR);
+    chorusModGainR.connect(chorusDelayR.delayTime);
+
+    chorusLfoL.start();
+    chorusLfoR.start();
+
+    chorusDryGain = audioCtx.createGain();
+    chorusWetGain = audioCtx.createGain();
+    chorusOutputGain = audioCtx.createGain();
+    updateChorusNodes();
+
+    // LFO Modulation Nodes
+    lfoOsc = audioCtx.createOscillator();
+    lfoGain = audioCtx.createGain();
+    lfoPitchGain = audioCtx.createGain();
+    lfoTremoloGain = audioCtx.createGain();
+
+    lfoTremoloGain.gain.value = 1.0;
+    lfoGain.gain.value = 0.0;
+    lfoPitchGain.gain.value = 0.0;
+
+    lfoOsc.type = (lfoWave === 'sh') ? 'sine' : lfoWave;
+    lfoOsc.frequency.value = getEffectiveLfoRate();
+    lfoOsc.connect(lfoGain);
+    lfoOsc.start();
+
+    // SPC700 Delay Unit
     delayNode = audioCtx.createDelay(5.0);
     delayFeedback = audioCtx.createGain();
     delayMix = audioCtx.createGain();
 
     delayDampFilter = audioCtx.createBiquadFilter();
     delayDampFilter.type = 'lowpass';
-    delayDampFilter.frequency.value = 4200; // SNES SPC700 Gaussian-like warm damping
+    delayDampFilter.frequency.value = (document.getElementById('delayEchoMode').value === 'spc700') ? 3200 : 10000;
 
     delayNode.delayTime.value = parseFloat(document.getElementById('delayTime').value);
     delayFeedback.gain.value = parseFloat(document.getElementById('delayFdbk').value);
     delayMix.gain.value = parseFloat(document.getElementById('delayMix').value);
 
-    filterNode.connect(masterGain);
-    filterNode.connect(delayNode);
+    // Audio Graph Routing:
+    filterNode.connect(driveNode);
+    driveNode.connect(toneFilterNode);
+    toneFilterNode.connect(bitcrushNode);
+
+    bitcrushNode.connect(chorusDryGain);
+    bitcrushNode.connect(chorusSplitter);
+    chorusSplitter.connect(chorusDelayL, 0);
+    chorusSplitter.connect(chorusDelayR, 1);
+    chorusDelayL.connect(chorusMerger, 0, 0);
+    chorusDelayR.connect(chorusMerger, 0, 1);
+    chorusMerger.connect(chorusWetGain);
+
+    chorusDryGain.connect(chorusOutputGain);
+    chorusWetGain.connect(chorusOutputGain);
+
+    chorusOutputGain.connect(lfoTremoloGain);
+    lfoTremoloGain.connect(masterGain);
+
+    chorusOutputGain.connect(delayNode);
     delayNode.connect(delayDampFilter);
     delayDampFilter.connect(delayFeedback);
     delayFeedback.connect(delayNode);
@@ -1358,6 +1885,8 @@
       subcarrierOsc.start();
       startSubcarrierMorseLoop();
     } catch (e) {}
+
+    updateLfo();
   }
 
   function startSubcarrierMorseLoop() {
@@ -1384,6 +1913,17 @@
       if (tag) tag.style.display = isLock ? 'inline-flex' : 'none';
       if (isLock) {
         appendJamTicker('▲ 1999Hz SUBCARRIER ANOMALY LOCKED: Receiving RF Morse stream...', '#ffb703');
+        try {
+          if (window.fb && window.fb.ref && window.fb.set) {
+            const sigRef = window.fb.ref(window.fb.db, 'arg/signals/ksynth_beacon_locked');
+            window.fb.set(sigRef, {
+              locked: true,
+              freq: 1999,
+              timestamp: Date.now(),
+              source: 'ksynth_carrier_demod'
+            });
+          }
+        } catch (e) {}
       }
     }
   }
@@ -1532,6 +2072,14 @@
 
     voiceGain.connect(filterNode);
 
+    if (lfoEnabled && lfoTarget === 'pitch' && lfoPitchGain) {
+      sources.forEach(src => {
+        if (src && src.detune && typeof src.detune.setValueAtTime === 'function') {
+          try { lfoPitchGain.connect(src.detune); } catch (e) {}
+        }
+      });
+    }
+
     const voiceObj = { voiceGain, sources, startTime: now, isRemote };
     activeVoices.set(noteNum, voiceObj);
 
@@ -1558,6 +2106,9 @@
 
     setTimeout(() => {
       voiceObj.sources.forEach(src => {
+        try {
+          if (lfoPitchGain && src && src.detune) lfoPitchGain.disconnect(src.detune);
+        } catch (e) {}
         try { src.stop(); src.disconnect(); } catch (e) {}
       });
       voiceObj.voiceGain.disconnect();
@@ -1663,6 +2214,128 @@
   document.getElementById('osc2Wave').addEventListener('change', () => {
     if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
   });
+
+  bindSlider('lfoRate', 'lfoRateVal', ' Hz', v => parseFloat(v).toFixed(1) + ' Hz');
+  bindSlider('lfoDepth', 'lfoDepthVal', '', v => Math.round(v * 100) + '%');
+  bindSlider('driveAmt', 'driveAmtVal', '', v => Math.round(v * 100) + '%');
+  bindSlider('driveTone', 'driveToneVal', ' kHz', v => (v / 1000).toFixed(1) + ' kHz');
+  bindSlider('chorusMix', 'chorusMixVal', '', v => chorusEnabled ? Math.round(v * 100) + '%' : 'OFF');
+
+  // LFO UI listeners
+  const btnLfo = document.getElementById('btnLfoToggle');
+  if (btnLfo) {
+    btnLfo.addEventListener('click', () => {
+      lfoEnabled = !lfoEnabled;
+      btnLfo.innerText = `LFO: ${lfoEnabled ? 'ON' : 'OFF'}`;
+      if (lfoEnabled) btnLfo.classList.add('active');
+      else btnLfo.classList.remove('active');
+      updateLfo();
+      if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
+      showToast(`LFO Modulation: ${lfoEnabled ? 'ENABLED' : 'DISABLED'}`, 'info', 1200);
+    });
+  }
+
+  document.getElementById('lfoWave').addEventListener('change', (e) => {
+    lfoWave = e.target.value;
+    updateLfo();
+    if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
+  });
+  document.getElementById('lfoTarget').addEventListener('change', (e) => {
+    lfoTarget = e.target.value;
+    updateLfo();
+    if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
+  });
+  document.getElementById('lfoSync').addEventListener('change', (e) => {
+    lfoSync = e.target.value;
+    updateLfo();
+    if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
+  });
+  document.getElementById('lfoRate').addEventListener('input', () => {
+    updateLfo();
+  });
+  document.getElementById('lfoDepth').addEventListener('input', (e) => {
+    lfoDepth = parseFloat(e.target.value);
+    if (lfoDepth > 0 && !lfoEnabled) {
+      lfoEnabled = true;
+      if (btnLfo) { btnLfo.innerText = 'LFO: ON'; btnLfo.classList.add('active'); }
+    }
+    updateLfo();
+  });
+
+  // Drive & FX UI listeners
+  const btnDrive = document.getElementById('btnDriveToggle');
+  if (btnDrive) {
+    btnDrive.addEventListener('click', () => {
+      driveEnabled = !driveEnabled;
+      btnDrive.innerText = `DRIVE: ${driveEnabled ? 'ON' : 'OFF'}`;
+      const fxPanel = document.getElementById('fxPanel');
+      if (driveEnabled) {
+        btnDrive.classList.add('active');
+        if (fxPanel) fxPanel.classList.add('drive-active');
+      } else {
+        btnDrive.classList.remove('active');
+        if (fxPanel) fxPanel.classList.remove('drive-active');
+      }
+      if (driveNode) driveNode.curve = makeDriveCurve(driveEnabled ? driveAmount : 0);
+      if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
+      showToast(`Vintage Overdrive: ${driveEnabled ? 'ON' : 'OFF'}`, 'info', 1200);
+    });
+  }
+
+  document.getElementById('driveAmt').addEventListener('input', (e) => {
+    driveAmount = parseFloat(e.target.value);
+    if (driveAmount > 0.05 && !driveEnabled) {
+      driveEnabled = true;
+      if (btnDrive) { btnDrive.innerText = 'DRIVE: ON'; btnDrive.classList.add('active'); }
+      const fxPanel = document.getElementById('fxPanel');
+      if (fxPanel) fxPanel.classList.add('drive-active');
+    }
+    if (driveNode) driveNode.curve = makeDriveCurve(driveEnabled ? driveAmount : 0);
+  });
+  document.getElementById('driveTone').addEventListener('input', (e) => {
+    driveTone = parseFloat(e.target.value);
+    if (toneFilterNode) toneFilterNode.frequency.value = driveTone;
+  });
+  document.getElementById('bitDepth').addEventListener('change', (e) => {
+    bitDepth = parseInt(e.target.value);
+    if (bitcrushNode) bitcrushNode.curve = makeBitcrushCurve(bitDepth);
+    if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
+    showToast(`Bitcrusher: ${bitDepth}-bit resolution`, 'info', 1200);
+  });
+
+  // Chorus UI listeners
+  const btnChorus = document.getElementById('btnChorusToggle');
+  if (btnChorus) {
+    btnChorus.addEventListener('click', () => {
+      chorusEnabled = !chorusEnabled;
+      btnChorus.innerText = chorusEnabled ? 'ON' : 'OFF';
+      if (chorusEnabled) btnChorus.classList.add('active');
+      else btnChorus.classList.remove('active');
+      updateChorusNodes();
+      document.getElementById('chorusMixVal').innerText = chorusEnabled ? Math.round(parseFloat(document.getElementById('chorusMix').value) * 100) + '%' : 'OFF';
+      if (typeof saveCurrentPatch === 'function') saveCurrentPatch();
+      showToast(`Stereo Chorus: ${chorusEnabled ? 'ON' : 'OFF'}`, 'info', 1200);
+    });
+  }
+  document.getElementById('chorusMix').addEventListener('input', (e) => {
+    chorusMix = parseFloat(e.target.value);
+    if (chorusMix > 0.1 && !chorusEnabled) {
+      chorusEnabled = true;
+      if (btnChorus) { btnChorus.innerText = 'ON'; btnChorus.classList.add('active'); }
+    }
+    updateChorusNodes();
+    document.getElementById('chorusMixVal').innerText = chorusEnabled ? Math.round(chorusMix * 100) + '%' : 'OFF';
+  });
+
+  // Jam Deck additional buttons
+  const btnJamMatch = document.getElementById('btnJamMatch');
+  if (btnJamMatch) btnJamMatch.addEventListener('click', quickMatchJam);
+  const btnJamLink = document.getElementById('btnJamShareLink');
+  if (btnJamLink) btnJamLink.addEventListener('click', copyJamInviteLink);
+  const btnGhost = document.getElementById('btnGhostJammer');
+  if (btnGhost) btnGhost.addEventListener('click', toggleSubnetGhostJammer);
+  const btnExportMidi = document.getElementById('btnExportMidi');
+  if (btnExportMidi) btnExportMidi.addEventListener('click', exportMidiSequence);
 
   // ----------------------------------------------------
   // ADSR Graph Canvas
@@ -1780,6 +2453,22 @@
 
   function renderVisualizer() {
     requestAnimationFrame(renderVisualizer);
+
+    // Animate LFO Phase LED
+    const lfoLed = document.getElementById('lfoLed');
+    if (lfoLed) {
+      if (lfoEnabled && audioCtx) {
+        const rate = getEffectiveLfoRate();
+        const phase = (Math.sin(audioCtx.currentTime * rate * Math.PI * 2) + 1) / 2;
+        lfoLed.style.opacity = (0.2 + phase * 0.8).toFixed(2);
+        if (phase > 0.6) lfoLed.classList.add('lfo-led-glow');
+        else lfoLed.classList.remove('lfo-led-glow');
+      } else {
+        lfoLed.style.opacity = '0.25';
+        lfoLed.classList.remove('lfo-led-glow');
+      }
+    }
+
     if (!scopeCanvas) return;
     const dpr = window.devicePixelRatio || 1;
     const rect = scopeCanvas.getBoundingClientRect();
@@ -2425,6 +3114,30 @@
       selectPresetByIndex(parseInt(key) - 1);
       return;
     }
+    if (key === '0') {
+      selectPresetByIndex(9);
+      return;
+    }
+    if (e.shiftKey && key === 'm') {
+      e.preventDefault();
+      exportMidiSequence();
+      return;
+    }
+    if (key === 'o') {
+      const btn = document.getElementById('btnDriveToggle');
+      if (btn) btn.click();
+      return;
+    }
+    if (e.shiftKey && key === 'f') {
+      const btn = document.getElementById('btnLfoToggle');
+      if (btn) btn.click();
+      return;
+    }
+    if (e.shiftKey && key === 'g') {
+      const btn = document.getElementById('btnGhostJammer');
+      if (btn) btn.click();
+      return;
+    }
     if (key === 'm') {
       const modeSel = document.getElementById('synthEngineMode');
       modeSel.value = (modeSel.value === 'fm') ? 'subtractive' : 'fm';
@@ -2558,6 +3271,62 @@
       filterType: 'bandpass', filterCutoff: 1999, filterRes: 8.5, masterVol: 0.80,
       delayTime: 0.40, delayFdbk: 0.50, delayMix: 0.45, delayEchoMode: 'spc700',
       attack: 0.1, decay: 0.5, sustain: 0.6, release: 0.9
+    },
+    juno_strings: {
+      engineMode: 'subtractive',
+      osc1Wave: 'sawtooth', osc1Oct: 0, osc1Detune: -6, osc1Vol: 0.8,
+      osc2Wave: 'sawtooth', osc2Oct: 0, osc2Detune: 6, osc2Vol: 0.8,
+      filterType: 'lowpass', filterCutoff: 2400, filterRes: 1.5, masterVol: 0.75,
+      delayTime: 0.3, delayFdbk: 0.4, delayMix: 0.35, delayEchoMode: 'spc700',
+      attack: 0.35, decay: 0.6, sustain: 0.85, release: 1.2,
+      lfoWave: 'sine', lfoRate: 1.2, lfoSync: 'free', lfoTarget: 'cutoff', lfoDepth: 0.25, lfoEnabled: true,
+      driveEnabled: false, driveAmt: 0, driveTone: 6000, bitDepth: 16,
+      chorusEnabled: true, chorusMix: 0.85
+    },
+    tb303_acid: {
+      engineMode: 'subtractive',
+      osc1Wave: 'sawtooth', osc1Oct: -1, osc1Detune: 0, osc1Vol: 0.95,
+      osc2Wave: 'square', osc2Oct: -1, osc2Detune: 4, osc2Vol: 0.4,
+      filterType: 'lowpass', filterCutoff: 950, filterRes: 10.5, masterVol: 0.85,
+      delayTime: 0.25, delayFdbk: 0.35, delayMix: 0.25, delayEchoMode: 'mono',
+      attack: 0.005, decay: 0.22, sustain: 0.15, release: 0.12,
+      lfoWave: 'sawtooth', lfoRate: 3.5, lfoSync: '16', lfoTarget: 'cutoff', lfoDepth: 0.65, lfoEnabled: true,
+      driveEnabled: true, driveAmt: 0.65, driveTone: 4500, bitDepth: 16,
+      chorusEnabled: false, chorusMix: 0
+    },
+    vapor_keys: {
+      engineMode: 'subtractive',
+      osc1Wave: 'triangle', osc1Oct: 0, osc1Detune: -8, osc1Vol: 0.8,
+      osc2Wave: 'sine', osc2Oct: 1, osc2Detune: 10, osc2Vol: 0.5,
+      filterType: 'lowpass', filterCutoff: 2200, filterRes: 2.0, masterVol: 0.75,
+      delayTime: 0.42, delayFdbk: 0.55, delayMix: 0.45, delayEchoMode: 'spc700',
+      attack: 0.04, decay: 0.45, sustain: 0.5, release: 0.75,
+      lfoWave: 'sine', lfoRate: 0.8, lfoSync: 'free', lfoTarget: 'pitch', lfoDepth: 0.35, lfoEnabled: true,
+      driveEnabled: true, driveAmt: 0.15, driveTone: 3500, bitDepth: 12,
+      chorusEnabled: true, chorusMix: 0.70
+    },
+    cyber_drone: {
+      engineMode: 'subtractive',
+      osc1Wave: 'square', osc1Oct: -1, osc1Detune: -12, osc1Vol: 0.7,
+      osc2Wave: 'sawtooth', osc2Oct: 0, osc2Detune: 12, osc2Vol: 0.7,
+      filterType: 'bandpass', filterCutoff: 1999, filterRes: 6.5, masterVol: 0.80,
+      delayTime: 0.50, delayFdbk: 0.65, delayMix: 0.50, delayEchoMode: 'spc700',
+      attack: 0.8, decay: 1.0, sustain: 0.9, release: 2.0,
+      lfoWave: 'triangle', lfoRate: 0.25, lfoSync: '2', lfoTarget: 'cutoff', lfoDepth: 0.50, lfoEnabled: true,
+      driveEnabled: true, driveAmt: 0.35, driveTone: 2800, bitDepth: 8,
+      chorusEnabled: true, chorusMix: 0.55
+    },
+    fm_slap_ep: {
+      engineMode: 'fm',
+      fmRatio: 3.5, fmModDepth: 0.65, fmFeedback: 0.28,
+      osc1Wave: 'sine', osc1Oct: 0, osc1Detune: 0, osc1Vol: 0.9,
+      osc2Wave: 'sine', osc2Oct: 1, osc2Detune: 5, osc2Vol: 0.6,
+      filterType: 'lowpass', filterCutoff: 4800, filterRes: 2.2, masterVol: 0.80,
+      delayTime: 0.2, delayFdbk: 0.25, delayMix: 0.20, delayEchoMode: 'mono',
+      attack: 0.005, decay: 0.5, sustain: 0.25, release: 0.6,
+      lfoWave: 'triangle', lfoRate: 4.0, lfoSync: '8', lfoTarget: 'volume', lfoDepth: 0.20, lfoEnabled: true,
+      driveEnabled: false, driveAmt: 0, driveTone: 8000, bitDepth: 16,
+      chorusEnabled: true, chorusMix: 0.45
     }
   };
 
@@ -2619,6 +3388,98 @@
     setBoundedVal('sustain', p.sustain, 0, 1);
     setBoundedVal('release', p.release, 0.01, 4);
 
+    // LFO Modulation Matrix settings
+    if (p.lfoWave && ['sine', 'triangle', 'sawtooth', 'square', 'sh'].includes(p.lfoWave)) {
+      document.getElementById('lfoWave').value = p.lfoWave;
+      lfoWave = p.lfoWave;
+    }
+    if (p.lfoSync && ['free', '1', '2', '4', '8', '16'].includes(p.lfoSync)) {
+      document.getElementById('lfoSync').value = p.lfoSync;
+      lfoSync = p.lfoSync;
+    }
+    if (p.lfoTarget && ['cutoff', 'pitch', 'volume', 'fm'].includes(p.lfoTarget)) {
+      document.getElementById('lfoTarget').value = p.lfoTarget;
+      lfoTarget = p.lfoTarget;
+    }
+    if (p.lfoRate !== undefined) {
+      setBoundedVal('lfoRate', p.lfoRate, 0.1, 20);
+      document.getElementById('lfoRate').dispatchEvent(new Event('input'));
+    }
+    if (p.lfoDepth !== undefined) {
+      setBoundedVal('lfoDepth', p.lfoDepth, 0, 1);
+      lfoDepth = parseFloat(document.getElementById('lfoDepth').value);
+      document.getElementById('lfoDepth').dispatchEvent(new Event('input'));
+    }
+    if (p.lfoEnabled !== undefined) {
+      lfoEnabled = !!p.lfoEnabled;
+      const btnLfo = document.getElementById('btnLfoToggle');
+      if (btnLfo) {
+        btnLfo.innerText = `LFO: ${lfoEnabled ? 'ON' : 'OFF'}`;
+        if (lfoEnabled) btnLfo.classList.add('active');
+        else btnLfo.classList.remove('active');
+      }
+    }
+    updateLfo();
+
+    // Drive & Distortion settings
+    if (p.driveAmt !== undefined) {
+      setBoundedVal('driveAmt', p.driveAmt, 0, 1);
+      driveAmount = parseFloat(document.getElementById('driveAmt').value);
+      document.getElementById('driveAmt').dispatchEvent(new Event('input'));
+    }
+    if (p.driveTone !== undefined) {
+      setBoundedVal('driveTone', p.driveTone, 800, 12000);
+      driveTone = parseFloat(document.getElementById('driveTone').value);
+      if (toneFilterNode) toneFilterNode.frequency.value = driveTone;
+      document.getElementById('driveTone').dispatchEvent(new Event('input'));
+    }
+    if (p.driveEnabled !== undefined) {
+      driveEnabled = !!p.driveEnabled;
+      const btnDrive = document.getElementById('btnDriveToggle');
+      const fxPanel = document.getElementById('fxPanel');
+      if (btnDrive) {
+        btnDrive.innerText = `DRIVE: ${driveEnabled ? 'ON' : 'OFF'}`;
+        if (driveEnabled) btnDrive.classList.add('active');
+        else btnDrive.classList.remove('active');
+      }
+      if (fxPanel) {
+        if (driveEnabled) fxPanel.classList.add('drive-active');
+        else fxPanel.classList.remove('drive-active');
+      }
+    }
+    if (driveNode) driveNode.curve = makeDriveCurve(driveEnabled ? driveAmount : 0);
+
+    // Bitcrusher DAC settings
+    if (p.bitDepth !== undefined) {
+      const bd = parseInt(p.bitDepth);
+      if ([16, 12, 8, 6, 4].includes(bd)) {
+        document.getElementById('bitDepth').value = bd;
+        bitDepth = bd;
+        if (bitcrushNode) bitcrushNode.curve = makeBitcrushCurve(bitDepth);
+      }
+    }
+
+    // Chorus settings
+    if (p.chorusMix !== undefined) {
+      setBoundedVal('chorusMix', p.chorusMix, 0, 1);
+      chorusMix = parseFloat(document.getElementById('chorusMix').value);
+      document.getElementById('chorusMix').dispatchEvent(new Event('input'));
+    }
+    if (p.chorusEnabled !== undefined) {
+      chorusEnabled = !!p.chorusEnabled;
+      const btnChorus = document.getElementById('btnChorusToggle');
+      if (btnChorus) {
+        btnChorus.innerText = chorusEnabled ? 'ON' : 'OFF';
+        if (chorusEnabled) btnChorus.classList.add('active');
+        else btnChorus.classList.remove('active');
+      }
+    }
+    updateChorusNodes();
+    const chorusMixValEl = document.getElementById('chorusMixVal');
+    if (chorusMixValEl) {
+      chorusMixValEl.innerText = chorusEnabled ? Math.round(parseFloat(document.getElementById('chorusMix').value) * 100) + '%' : 'OFF';
+    }
+
     // Trigger input events to refresh text labels
     ['osc1Oct','osc1Detune','osc1Vol','osc2Oct','osc2Detune','osc2Vol',
      'filterCutoff','filterRes','masterVol','attack','decay','sustain','release',
@@ -2659,7 +3520,8 @@
     saveCurrentPatch();
     const names = [
       'Neon Lead', 'Sub Punch Bass', '80s Analog Pad', '8-Bit Chiptune',
-      'Glass Bell', 'Plucked Synth', 'YM2612 FM Bass', 'SPC700 Echo Pad', '1999 Ghost Beacon'
+      'Glass Bell', 'Plucked Synth', 'YM2612 FM Bass', 'SPC700 Echo Pad', '1999 Ghost Beacon',
+      'Juno Strings', 'TB-303 Acid Bass', 'Vaporwave Keys', '1999 Subnet Drone', 'YM2612 FM E-Piano'
     ];
     showToast(`Loaded Preset: ${names[idx] || pKey}`, 'info', 1500);
     ensureAudioActive();
@@ -2774,7 +3636,24 @@
       attack: parseFloat(document.getElementById('attack').value),
       decay: parseFloat(document.getElementById('decay').value),
       sustain: parseFloat(document.getElementById('sustain').value),
-      release: parseFloat(document.getElementById('release').value)
+      release: parseFloat(document.getElementById('release').value),
+      engineMode: document.getElementById('synthEngineMode').value,
+      fmRatio: parseFloat(document.getElementById('fmRatio').value),
+      fmModDepth: parseFloat(document.getElementById('fmModDepth').value),
+      fmFeedback: parseFloat(document.getElementById('fmFeedback').value),
+      delayEchoMode: document.getElementById('delayEchoMode').value,
+      lfoWave: document.getElementById('lfoWave').value,
+      lfoRate: parseFloat(document.getElementById('lfoRate').value),
+      lfoSync: document.getElementById('lfoSync').value,
+      lfoTarget: document.getElementById('lfoTarget').value,
+      lfoDepth: parseFloat(document.getElementById('lfoDepth').value),
+      lfoEnabled: lfoEnabled,
+      driveEnabled: driveEnabled,
+      driveAmt: parseFloat(document.getElementById('driveAmt').value),
+      driveTone: parseFloat(document.getElementById('driveTone').value),
+      bitDepth: parseInt(document.getElementById('bitDepth').value),
+      chorusEnabled: chorusEnabled,
+      chorusMix: parseFloat(document.getElementById('chorusMix').value)
     };
 
     const blob = new Blob([JSON.stringify(presetObj, null, 2)], { type: 'application/json' });
@@ -2869,6 +3748,120 @@
     reader.readAsText(file);
     e.target.value = '';
   });
+
+  // ----------------------------------------------------
+  // Standard MIDI File (SMF Type 0) Sequence Export
+  // ----------------------------------------------------
+  function encodeVarLen(value) {
+    const bytes = [];
+    bytes.push(value & 0x7f);
+    value >>= 7;
+    while (value > 0) {
+      bytes.unshift((value & 0x7f) | 0x80);
+      value >>= 7;
+    }
+    return bytes;
+  }
+
+  function exportMidiSequence() {
+    try {
+      const bpm = parseInt(document.getElementById('seqBpm').value) || 120;
+      const ticksPerQuarter = 96;
+      const stepTicks = ticksPerQuarter / 4; // 24 ticks per 16th note
+      const noteTicks = Math.round(stepTicks * 0.75); // 18 ticks gate
+      const restTicks = stepTicks - noteTicks; // 6 ticks
+
+      const trackBytes = [];
+
+      function pushVarLen(v) {
+        const b = encodeVarLen(v);
+        for (let i = 0; i < b.length; i++) trackBytes.push(b[i]);
+      }
+
+      function pushBytes(...bytes) {
+        for (let i = 0; i < bytes.length; i++) trackBytes.push(bytes[i]);
+      }
+
+      // Track Name Meta-event: Delta 0, FF 03 len "KSynth Pattern"
+      pushVarLen(0);
+      const title = "KSynth Pattern";
+      pushBytes(0xFF, 0x03, title.length);
+      for (let i = 0; i < title.length; i++) pushBytes(title.charCodeAt(i));
+
+      // Tempo Meta-event: Delta 0, FF 51 03 [3-byte us/quarter]
+      pushVarLen(0);
+      const usPerBeat = Math.round(60000000 / bpm);
+      pushBytes(0xFF, 0x51, 0x03, (usPerBeat >> 16) & 0xFF, (usPerBeat >> 8) & 0xFF, usPerBeat & 0xFF);
+
+      // Time Signature Meta-event: Delta 0, FF 58 04 04 02 18 08 (4/4 time)
+      pushVarLen(0);
+      pushBytes(0xFF, 0x58, 0x04, 0x04, 0x02, 0x18, 0x08);
+
+      // Program Change: Delta 0, Ch 0, Lead Synth (Prog 80 - 0x50)
+      pushVarLen(0);
+      pushBytes(0xC0, 0x50);
+
+      let accumulatedDelta = 0;
+
+      for (let i = 0; i < seqStepsData.length; i++) {
+        const step = seqStepsData[i];
+        if (step.on) {
+          const midiNum = noteToMidiMap[step.note] || 60;
+          // Note On
+          pushVarLen(accumulatedDelta);
+          pushBytes(0x90, midiNum, 100);
+
+          // Note Off after noteTicks
+          pushVarLen(noteTicks);
+          pushBytes(0x80, midiNum, 0);
+
+          accumulatedDelta = restTicks;
+        } else {
+          accumulatedDelta += stepTicks;
+        }
+      }
+
+      // End of Track Meta-event: Delta accumulatedDelta, FF 2F 00
+      pushVarLen(accumulatedDelta);
+      pushBytes(0xFF, 0x2F, 0x00);
+
+      // Build MThd and MTrk chunks
+      const totalLength = 14 + 8 + trackBytes.length;
+      const buffer = new ArrayBuffer(totalLength);
+      const view = new DataView(buffer);
+
+      // MThd
+      view.setUint8(0, 0x4D); view.setUint8(1, 0x54); view.setUint8(2, 0x68); view.setUint8(3, 0x64);
+      view.setUint32(4, 6, false);
+      view.setUint16(8, 0, false);
+      view.setUint16(10, 1, false);
+      view.setUint16(12, ticksPerQuarter, false);
+
+      // MTrk
+      view.setUint8(14, 0x4D); view.setUint8(15, 0x54); view.setUint8(16, 0x72); view.setUint8(17, 0x6B);
+      view.setUint32(18, trackBytes.length, false);
+
+      for (let i = 0; i < trackBytes.length; i++) {
+        view.setUint8(22 + i, trackBytes[i]);
+      }
+
+      const blob = new Blob([buffer], { type: 'audio/midi' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'ksynth_pattern.mid';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 500);
+      showToast('🎹 Pattern exported as ksynth_pattern.mid (SMF Type 0)', 'success', 2500);
+    } catch (err) {
+      console.error(err);
+      showToast('Failed to export MIDI sequence.', 'error');
+    }
+  }
 
   // Export Audio Preview to WAV (16-bit 44.1 kHz PCM)
   document.getElementById('btnExportWav').addEventListener('click', exportWavAudio);
@@ -3089,6 +4082,18 @@
       arpOctaves: parseInt(document.getElementById('arpOctaves').value),
       octaveShift: currentOctaveShift,
       visMode: visMode,
+      lfoWave: document.getElementById('lfoWave').value,
+      lfoRate: parseFloat(document.getElementById('lfoRate').value),
+      lfoSync: document.getElementById('lfoSync').value,
+      lfoTarget: document.getElementById('lfoTarget').value,
+      lfoDepth: parseFloat(document.getElementById('lfoDepth').value),
+      lfoEnabled: lfoEnabled,
+      driveEnabled: driveEnabled,
+      driveAmt: parseFloat(document.getElementById('driveAmt').value),
+      driveTone: parseFloat(document.getElementById('driveTone').value),
+      bitDepth: parseInt(document.getElementById('bitDepth').value),
+      chorusEnabled: chorusEnabled,
+      chorusMix: parseFloat(document.getElementById('chorusMix').value),
       timestamp: new Date().toISOString()
     };
   }
@@ -3232,6 +4237,8 @@
   // Load saved patch on initial start
   loadSavedPatch();
 
+  // Initialize standardized Retro Multiplayer (Rule 12 RFMS)
+  initRetroMultiplayer();
 </script>
 </body>
 </html>
