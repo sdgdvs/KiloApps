@@ -35,7 +35,7 @@ last_run:
   agent: kilo-expander
   app: KVault
   timestamp: "2026-10-02T22:15:00-07:00"
-last_planner_run: "2026-10-03T00:40:00Z"
+last_planner_run: "2026-10-03T05:35:00Z"
 ---
 
 # KiloApps Master Fleet Work & Queue State
