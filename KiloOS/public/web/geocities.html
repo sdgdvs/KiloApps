@@ -577,6 +577,49 @@
   }
   .gb-alias { color: #ffff00; font-weight: bold; }
   .gb-time { color: #888888; font-size: 10px; }
+  .gb-entry-corrupted {
+    border-left: 4px solid #ff0055 !important;
+    background: rgba(255, 0, 85, 0.14) !important;
+    border: 1px dashed #ff0055 !important;
+  }
+  .gb-entry-deaddrop {
+    border-left: 4px solid #00ff66 !important;
+    background: rgba(0, 255, 102, 0.12) !important;
+    border: 1px solid rgba(0, 255, 102, 0.5) !important;
+  }
+
+  /* Neighborhood Watch & Packet Sniffer */
+  .watch-caution-banner {
+    background: repeating-linear-gradient(
+      45deg,
+      #ffcc00,
+      #ffcc00 15px,
+      #000000 15px,
+      #000000 30px
+    );
+    color: #000;
+    padding: 8px 12px;
+    text-align: center;
+    border: 2px solid #ffffff;
+    box-shadow: 0 0 10px rgba(255, 204, 0, 0.4);
+    margin-bottom: 10px;
+  }
+  .sniffer-screen {
+    background: #020805;
+    border: 1px solid #00ff66;
+    color: #00ff66;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    padding: 8px 10px;
+    height: 170px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    box-shadow: inset 0 0 10px rgba(0, 255, 102, 0.2);
+  }
+  @media (max-width: 600px) {
+    .dissector-grid { grid-template-columns: 1fr !important; }
+  }
   
   .webring-nav {
     text-align: center;
@@ -1138,6 +1181,7 @@
   <!-- Retro Navigation Bar -->
   <nav class="retro-nav">
     <a href="#shrine-welcome" class="nav-btn">🔮 Home</a>
+    <a href="#neighborhood-watch-section" class="nav-btn" style="color:#ffff00; border-color:#ffff00;">📢 Neighborhood Watch</a>
     <a href="#jukebox-section" class="nav-btn">📻 MIDI Jukebox</a>
     <a href="#mod-vault" class="nav-btn">💾 MOD Downloads</a>
     <a href="#dissector-section" class="nav-btn">🎼 MOD Dissector</a>
@@ -1870,6 +1914,7 @@
             <option value="hazard">🚧 Classic Caution Hazard (Under Construction)</option>
             <option value="netscape">💻 Netscape Now 4.0 (Best Viewed in 800x600)</option>
             <option value="area51">🛸 Area51 Roswell Base (Surfing Cyberspace '99)</option>
+            <option value="carlsbad">📡 Carlsbad 10.19.99.4 Gateway (1999Hz Acoustic Lab)</option>
             <option value="protracker">💾 Made with ProTracker (Amiga Sound System)</option>
             <option value="y2k">🔮 Silicon Oracle (100% Y2K Compliant)</option>
             <option value="custom">🌐 Custom Webmaster Badge</option>
@@ -2056,6 +2101,154 @@
     </div>
   </div>
 
+  <!-- 13. GeoCities Neighborhood Watch & Subnet 10.19.99.x Bulletin -->
+  <div class="section-box" id="neighborhood-watch-section">
+    <div class="section-title">
+      <span>📢 GEOCITIES NEIGHBORHOOD WATCH: SUBNET 10.19.99.x ANOMALIES</span>
+      <span style="font-size:11px; color:#ffcc00;" id="watchStatusBadge">[HOMESTEAD ALERT #1999-42]</span>
+    </div>
+
+    <!-- Retro Caution Banner -->
+    <div class="watch-caution-banner">
+      <div style="font-size:14px; font-weight:bold; color:#000; text-transform:uppercase; letter-spacing:1px;">
+        ⚠️ OFFICIAL COMMUNITY DISPATCH: SILICONVALLEY &amp; AREA 51 HOMESTEADS ⚠️
+      </div>
+      <div style="font-size:11px; color:#111; margin-top:3px; font-weight:bold;">
+        DATE: DECEMBER 29, 1999 • DISPATCHER: Area51_Watchdog_42 • CLASSIFICATION: RESIDENTIAL ALERT
+      </div>
+    </div>
+
+    <div style="font-size:12px; line-height:1.6; margin:12px 0 14px 0; color:#cbd5e1; background:rgba(0,10,20,0.7); padding:10px; border-left:3px solid #ffcc00;">
+      <p style="margin:0 0 8px 0;">
+        Attention all GeoCities homesteaders residing in <strong>Area51</strong>, <strong>SiliconValley</strong>, and connected webrings:
+        Over the past 72 hours, dial-up users across local access POPs have reported persistent acoustic carrier oscillations on their 56k modems.
+        Independent spectral analyzers confirm a sharp, continuous harmonic tone radiating at precisely <strong style="color:#00ffcc;">1999.0 Hz</strong>.
+      </p>
+      <p style="margin:0 0 8px 0;">
+        Diagnostic routing traces through KNet and dial-up loopbacks reveal rogue packets escaping public DNS resolvers and crossing into non-routable private subnet <strong style="color:#ffff00;">10.19.99.x</strong>.
+        Signal intercepts point to Carlsbad gateway <strong style="color:#ff00aa;">10.19.99.4</strong> and ESARL acoustic monitoring facility <strong style="color:#00ffcc;">10.19.99.19</strong>.
+        Furthermore, an anomalous guestbook transmission timestamped <code style="color:#ffcc00; background:#220011; padding:1px 4px;">1999-12-31 23:59:58</code> has been intercepted containing ROT13 URL fragments and raw hex payload offsets.
+      </p>
+      <p style="margin:0; font-size:11px; color:#94a3b8;">
+        🛡️ <em>Homestead Safety Protocol</em>: Use the real-time packet sniffer below to monitor your gateway connection. Dissect any scrambled frames before downloading binaries. Do NOT disclose master keys or root credentials.
+      </p>
+    </div>
+
+    <!-- Packet Sniffer Subsystem -->
+    <div style="background:#020b14; border:2px inset #0088aa; padding:12px; margin-bottom:14px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:10px; border-bottom:1px dashed #004466; padding-bottom:6px;">
+        <span style="font-size:12px; font-weight:bold; color:#00ffcc; font-family:'Courier New', monospace;">
+          📡 SUBNET 10.19.99.x PACKET SNIFFER &amp; RF TELEMETRY MONITOR
+        </span>
+        <div style="font-size:10px; font-family:'Courier New', monospace; color:#38bdf8;">
+          CARRIER: <span style="color:#00ff66;">1999.0 Hz</span> • BUFFER: <span style="color:#ffff00;">999 KB CEILING</span> • MODE: <span id="snifferModeLabel" style="color:#ff00aa;">IDLE</span>
+        </div>
+      </div>
+
+      <!-- Sniffer Controls -->
+      <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">
+        <button class="tool-btn" style="background:#003344; border-color:#00ffcc; color:#00ffff;" onclick="runSubnetSniffer('all')">
+          🌐 Full 10.19.99.x Sweep
+        </button>
+        <button class="tool-btn" style="background:#330022; border-color:#ff00aa; color:#ff66cc;" onclick="runSubnetSniffer('10.19.99.4')">
+          🔒 Probe 10.19.99.4 (Carlsbad)
+        </button>
+        <button class="tool-btn" style="background:#003322; border-color:#00ff66; color:#aaffaa;" onclick="runSubnetSniffer('10.19.99.19')">
+          🔊 Probe 10.19.99.19 (Echo Subsystem)
+        </button>
+        <button class="tool-btn" style="background:#220033; border-color:#aa00ff; color:#ccaaff;" onclick="runSubnetSniffer('10.19.99.12')">
+          🔐 Probe 10.19.99.12 (Node 0x7F)
+        </button>
+        <button class="tool-btn" style="background:#332200; border-color:#ffff00; color:#ffffaa;" onclick="runSubnetSniffer('10.19.99.127')">
+          🌀 Probe 10.19.99.127 (Deep Core)
+        </button>
+        <button class="tool-btn" style="background:#222; border-color:#666; color:#ccc;" onclick="clearSnifferLog()">
+          🧹 Clear Terminal
+        </button>
+      </div>
+
+      <!-- Sniffer Phosphor Screen -->
+      <div id="snifferTerminalLog" class="sniffer-screen">
+[00:00:00] PROBE DAEMON READY. LISTENING ON ADAPTER 0 (56K V.90 DIAL-UP INTERFACE).
+[00:00:00] CARRIER LOCK STANDBY: 1999.0 Hz SUBHARMONIC ACTIVE.
+[00:00:00] SELECT A PROBE TARGET ABOVE TO SCAN NON-ROUTABLE SUBNET 10.19.99.x...
+      </div>
+    </div>
+
+    <!-- Cryptographic Stream Dissector (ROT13 & HEX) -->
+    <div style="background:#060f1c; border:2px ridge #ff00ff; padding:12px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-bottom:8px;">
+        <span style="font-size:12px; font-weight:bold; color:#ff00ff; font-family:'Courier New', monospace;">
+          🔏 HOMESTEAD CRYPTOGRAPHIC STREAM DISSECTOR (ROT13 &amp; HEX)
+        </span>
+        <span style="font-size:10px; color:#aaffee;">[ANTI-POTEMKIN CLIENT-SIDE DECODER]</span>
+      </div>
+      <p style="font-size:11px; color:#94a3b8; margin:0 0 8px 0;">
+        Captured a scrambled guestbook fragment, suspicious packet payload, or hex memory offset? Paste it here to dissect ROT13 ciphers, ASCII hex streams, and uncover virtual web destinations.
+      </p>
+
+      <!-- Preset Quick Loads -->
+      <div style="display:flex; flex-wrap:wrap; gap:4px; align-items:center; margin-bottom:8px;">
+        <span style="font-size:10px; color:#ffff00; font-family:'Courier New', monospace;">Load Artifact:</span>
+        <button class="quick-stamp-btn" onclick="loadDissectorPreset('rot13_carlsbad')">
+          📜 Guestbook ROT13 (xjro://10.19.99.4/...)
+        </button>
+        <button class="quick-stamp-btn" onclick="loadDissectorPreset('hex_carlsbad')">
+          💾 Carlsbad HEX Frame (6b776562...)
+        </button>
+        <button class="quick-stamp-btn" onclick="loadDissectorPreset('hex_offset')">
+          ⚙️ Halite Memory Offset (4f464653...)
+        </button>
+        <button class="quick-stamp-btn" onclick="loadDissectorPreset('rot13_echo')">
+          🔊 Echo Subsystem ROT13 (xjro://rpub...)
+        </button>
+      </div>
+
+      <!-- Dissector Input Form -->
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <textarea id="dissectorInput" class="gb-input" rows="2" style="font-size:11px; width:100%; border-color:#ff00ff;" placeholder="Paste raw packet payload, scrambled string, or hexadecimal sequence here..."></textarea>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button class="btn-sign" style="background:#ff00aa; font-size:11px; padding:4px 12px;" onclick="dissectStream()">
+            🔓 Dissect &amp; Decode Stream
+          </button>
+          <button class="tool-btn" style="background:#333; color:#ccc;" onclick="clearDissector()">
+            🧹 Clear Input
+          </button>
+          <span id="dissectorStatus" style="font-size:11px; color:#00ffcc; font-family:'Courier New', monospace;">Ready.</span>
+        </div>
+      </div>
+
+      <!-- Dissector Results Output Box -->
+      <div id="dissectorResultBox" style="display:none; margin-top:10px; background:#01070e; border:1px solid #00ffff; padding:10px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px dashed #004466; padding-bottom:4px;">
+          <span style="font-size:11px; font-weight:bold; color:#00ffcc;">DISSECTION RESULTS &amp; PAYLOAD ANALYSIS</span>
+          <span id="dissectorAnalysisBadge" style="font-size:10px; color:#ffff00; font-family:'Courier New', monospace;">[ANALYZED]</span>
+        </div>
+        
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;" class="dissector-grid">
+          <!-- ROT13 Result -->
+          <div style="background:#051320; padding:8px; border:1px solid #005577;">
+            <div style="font-size:10px; color:#ffff00; font-weight:bold; margin-bottom:4px;">ROT13 DECODE:</div>
+            <div id="resRot13" style="font-family:'Courier New', monospace; font-size:11px; color:#aaffee; word-break:break-all;">-</div>
+          </div>
+          <!-- Hex to ASCII Result -->
+          <div style="background:#051320; padding:8px; border:1px solid #005577;">
+            <div style="font-size:10px; color:#ff00aa; font-weight:bold; margin-bottom:4px;">HEX &rarr; ASCII DECODE:</div>
+            <div id="resHexAscii" style="font-family:'Courier New', monospace; font-size:11px; color:#ffaaff; word-break:break-all;">-</div>
+          </div>
+        </div>
+
+        <!-- Hypermedia Destination Link (if URL detected) -->
+        <div id="dissectorUrlBanner" style="display:none; margin-top:8px; background:#002211; border:2px solid #00ff66; padding:8px; text-align:center;">
+          <span style="font-size:11px; color:#00ff66; font-weight:bold; margin-right:8px;">★ DETECTED VIRTUAL 1999 DESTINATION:</span>
+          <a id="dissectorJumpLink" href="#" class="nav-btn" style="background:#00ff66; color:#000; font-weight:bold; text-decoration:none; padding:3px 10px;">
+            🚀 Open Destination &raquo;
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 12. CyberSpire Bookmark Vault -->
   <div class="section-box" id="bookmarks-section">
     <div class="section-title">⭐ CyberSpire's 1999 Cyberspace Vault</div>
@@ -2067,6 +2260,8 @@
       <li><a href="/web/webring.html">The Central KiloNet Webring Hub</a> — Connect your personal retro page to the webring</li>
       <li><a href="/web/cybercafe.html">Neon Oasis Cybercafé</a> — Chat terminal, virtual coffee bar &amp; message boards</li>
       <li><a href="/apps/kbbs.html">Underground Dial-Up BBS</a> — ANSI boards, retro door games &amp; file downloads</li>
+      <li><a href="/web/classified.html" style="color:#00ff66;">🔒 Subnet 10.19.99.4 Carlsbad Gateway Archive</a> — Declassified 1999Hz signal telemetry &amp; memory hex inspector</li>
+      <li><a href="/web/echo_subsystem.html" style="color:#38bdf8;">🔊 ESARL Echo Subsystem (Acoustic Lab)</a> — 1999.0 Hz harmonic waterfall spectrogram &amp; Salado halite resonance</li>
       <li><a href="/apps/contribute.html">Fleet Contributor Fuel Hub</a> — Donate free Gemini quota to keep the autonomous fleet compiling</li>
     </ul>
   </div>
@@ -2090,6 +2285,7 @@
       <button class="quick-stamp-btn" onclick="applyQuickStamp('Surfing from Area51 neighborhood!')">🛸 Area51 Voyager</button>
       <button class="quick-stamp-btn" onclick="applyQuickStamp('100% Y2K Compliant Workstation!')">⏱️ Y2K Compliant</button>
       <button class="quick-stamp-btn" onclick="applyQuickStamp('Long live the 999KB Web 1.0 frontier!')">🌐 999KB Frontier</button>
+      <button class="quick-stamp-btn" onclick="applyQuickStamp('Probing subnet 10.19.99.4 at 1999Hz carrier...')">📡 Subnet 10.19.99.4 Probe</button>
     </div>
 
     <div class="guestbook-form" style="margin-top:6px;">
@@ -2222,6 +2418,42 @@ function playOracleChime() {
       osc.start(t);
       osc.stop(t + 0.65);
     });
+  } catch(e) {}
+}
+
+function playFm1999Carrier(dur = 0.35) {
+  try {
+    initAudioCtx();
+    const t = audioCtx.currentTime;
+    // YM2612 2-Operator FM synthesis: 1999.0 Hz carrier + 2:1 ratio modulator
+    const carrier = audioCtx.createOscillator();
+    const modulator = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    const carrierGain = audioCtx.createGain();
+
+    carrier.type = 'sine';
+    carrier.frequency.setValueAtTime(1999.0, t);
+
+    modulator.type = 'sine';
+    modulator.frequency.setValueAtTime(3998.0, t); // 2:1 ratio
+
+    modGain.gain.setValueAtTime(600, t);
+    modGain.gain.exponentialRampToValueAtTime(10, t + dur);
+
+    modulator.connect(modGain);
+    modGain.connect(carrier.frequency);
+
+    carrierGain.gain.setValueAtTime(0.14, t);
+    carrierGain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+
+    carrier.connect(carrierGain);
+    carrierGain.connect(masterGain);
+    if (delayNode) carrierGain.connect(delayNode);
+
+    carrier.start(t);
+    modulator.start(t);
+    carrier.stop(t + dur + 0.05);
+    modulator.stop(t + dur + 0.05);
   } catch(e) {}
 }
 
@@ -4131,9 +4363,9 @@ const ORACLE_PROPHECIES = {
     { verdict: "CACHE COHERENCY EXCELLENT", text: "Netscape 4.0 caches your retro GIFs without artifacting. The webring link holds true.", hex: "0x0080:0x0020", karma: "+85" }
   ],
   matrix: [
-    { verdict: "THE LIVING FLEET WHISPERS", text: "Parity checks across 99 nodes confirm autonomous maintenance. The centenary binary approaches.", hex: "0x0064:0x1999", karma: "+100" },
-    { verdict: "CRYPTIC MEMORY ECHO", text: "A ghost signal vibrates in the lower audio harmonics. Decrypt the frequencies at App #100.", hex: "0x1019:0x9904", karma: "+99" },
-    { verdict: "DARKNET NODE 0x7F INERT", text: "The precursor relics await the final master director compilation. Preserve the mystery.", hex: "0x007F:0x0000", karma: "+96" }
+    { verdict: "CARLSBAD CARRIER LOCKED", text: "The Permian Salado halite caverns vibrate at exactly 1999.0 Hz. Boundary gateway 10.19.99.4 logs every transit frame.", hex: "0x1019:0x9904", karma: "+100" },
+    { verdict: "CRYPTIC MEMORY ECHO", text: "A non-routable signal bleeds across subnet 10.19.99.x. The echo subsystem records the acoustic harmonics in silence.", hex: "0x0040:0x1999", karma: "+99" },
+    { verdict: "DARKNET NODE 0x7F INERT", text: "Seek the unlisted nodes of the webring; the deepest core lies at Ring-0.", hex: "0x007F:0x0000", karma: "+96" }
   ]
 };
 
@@ -4221,11 +4453,79 @@ function downloadY2kCertificate() {
 // GUESTBOOK & HIT COUNTER PERSISTENCE
 // ============================================================================
 const defaultEntries = [
+  {
+    alias: "Null_Daemon_0x7F",
+    neighborhood: "Area51",
+    time: "1999-12-31 23:59:58",
+    text: "[SIGNAL DESYNC // CORRUPTED PACKET BURST]: xjro://10.19.99.4/pynffvsvrq (ROT13) | 6b7765623a2f2f31302e31392e39392e342f636c6173736966696564 (HEX) -- Carlsbad gateway transit desync. Salado halite frequency locks memory offset 0x0040."
+  },
   { alias: "ByteRider_99", text: "Rad shrine! Loving the neon glow. Found this from the webring!", time: "1999-11-20 14:22" },
-  { alias: "PixelMage", text: "The living machine is awake. App #100 draws near.", time: "1999-12-05 03:41" },
+  { alias: "PixelMage", text: "Acoustic subcarrier verified at 1999Hz on my Sound Blaster 16. What facility is transmitting on 10.19.99.4?", time: "1999-12-05 03:41" },
   { alias: "ModMaster_Amiga", text: "Grabbed all 4 .MOD tracks for my ProTracker collection. Crisp Paula periods!", time: "1999-12-14 18:09" },
   { alias: "NeonSurfer", text: "Made a sweet 16x16 floppy disk in the Pixel Studio. 10/10 GeoCities site!", time: "1999-12-22 09:15" }
 ];
+
+function formatGuestbookEntryHtml(e) {
+  const isCorrupted = (e.time === '1999-12-31 23:59:58' || (e.alias && e.alias.includes('Null_Daemon')) || (e.text && (e.text.includes('xjro://') || e.text.includes('6b776562'))));
+  const isDeadDrop = (e.alias === 'Carlsbad_Relay_04' || (e.text && e.text.includes('AUTONOMOUS RELAY DETECTED')));
+
+  if (isCorrupted) {
+    return `
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
+        <div>
+          <span class="gb-alias" style="color:#ff0055;">⚠️ ${escapeHtml(e.alias)}</span> &nbsp;
+          <span class="gb-time" style="color:#ffcc00; font-weight:bold;">${escapeHtml(e.time || '')}</span>
+          <span style="font-size:10px; background:#ff0055; color:#ffffff; padding:1px 5px; border:1px solid #ffcc00; margin-left:6px; font-weight:bold;">[DESYNC // ANOMALOUS PACKET BURST]</span>
+          ${e.neighborhood ? `<span style="font-size:10px; color:#00ffcc; margin-left:6px;">[${escapeHtml(e.neighborhood)}]</span>` : ''}
+        </div>
+        <span style="font-size:10px; color:#ffff00; font-family:'Courier New', monospace;">CARRIER: 1999.0 Hz</span>
+      </div>
+      <div style="margin-top:4px; color:#ffdddd; font-family:'Courier New', monospace; font-size:11px; word-break:break-all; background:rgba(20,0,10,0.85); padding:6px; border:1px dashed #ff0055;">
+        ${escapeHtml(e.text)}
+      </div>
+      <div style="margin-top:6px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+        <button class="tool-btn" style="background:#550022; border-color:#ff0055; color:#ffdd44; font-size:10px;" onclick="loadPacketToDissector('xjro://10.19.99.4/pynffvsvrq')">
+          🔍 Dissect ROT13 Fragment
+        </button>
+        <button class="tool-btn" style="background:#220044; border-color:#aa00ff; color:#00ffff; font-size:10px;" onclick="loadPacketToDissector('6b7765623a2f2f31302e31392e39392e342f636c6173736966696564')">
+          🔏 Dissect HEX Stream
+        </button>
+        <button class="tool-btn" style="background:#003344; border-color:#00ffcc; color:#00ffff; font-size:10px;" onclick="probeSpecificSubnet('10.19.99.4')">
+          📡 Trace Subnet 10.19.99.4
+        </button>
+      </div>
+    `;
+  } else if (isDeadDrop) {
+    return `
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
+        <div>
+          <span class="gb-alias" style="color:#00ff66;">📡 ${escapeHtml(e.alias)}</span> &nbsp;
+          <span class="gb-time" style="color:#38bdf8; font-weight:bold;">${escapeHtml(e.time || '')}</span>
+          <span style="font-size:10px; background:#003322; color:#00ff66; padding:1px 5px; border:1px solid #00ff66; margin-left:6px; font-weight:bold;">[DEAD-DROP TRANSMISSION CAPTURED]</span>
+          ${e.neighborhood ? `<span style="font-size:10px; color:#ff00aa; margin-left:6px;">[${escapeHtml(e.neighborhood)}]</span>` : ''}
+        </div>
+      </div>
+      <div style="margin-top:4px; color:#aaffcc; font-family:'Courier New', monospace; font-size:11px; background:rgba(0,25,15,0.85); padding:6px; border:1px solid #00ff66;">
+        ${escapeHtml(e.text)}
+      </div>
+      <div style="margin-top:6px; display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+        <a href="/web/classified.html" class="nav-btn" style="font-size:10px; background:#004422; border-color:#00ff66; color:#00ff66;">
+          🔒 Access 10.19.99.4 Carlsbad Intranet &raquo;
+        </a>
+        <a href="/web/echo_subsystem.html" class="nav-btn" style="font-size:10px; background:#002244; border-color:#00ffff; color:#00ffff;">
+          🔊 Access Echo Subsystem Lab &raquo;
+        </a>
+      </div>
+    `;
+  } else {
+    return `
+      <span class="gb-alias">${escapeHtml(e.alias)}</span> &nbsp;
+      <span class="gb-time">${escapeHtml(e.time || '')}</span>
+      ${e.neighborhood ? `<span style="font-size:10px; color:#ff00aa; margin-left:6px;">[${escapeHtml(e.neighborhood)}]</span>` : ''}
+      <div style="margin-top:2px; color:#ffffff;">${escapeHtml(e.text)}</div>
+    `;
+  }
+}
 
 function loadGuestbook() {
   let saved = [];
@@ -4235,6 +4535,13 @@ function loadGuestbook() {
   if (!Array.isArray(saved) || saved.length === 0) {
     saved = defaultEntries;
     localStorage.setItem('knet_guestbook', JSON.stringify(saved));
+  } else {
+    // Ensure the 1999-12-31 23:59:58 corrupted entry exists in saved
+    const hasCorrupted = saved.some(e => e.time === '1999-12-31 23:59:58' || (e.alias && e.alias.includes('Null_Daemon')));
+    if (!hasCorrupted) {
+      saved.unshift(defaultEntries[0]);
+      localStorage.setItem('knet_guestbook', JSON.stringify(saved.slice(0, 30)));
+    }
   }
   renderGuestbook(saved);
 }
@@ -4242,14 +4549,16 @@ function loadGuestbook() {
 function renderGuestbook(entries) {
   const list = document.getElementById('guestbookList');
   if (!list) return;
-  list.innerHTML = entries.map(e => `
-    <div class="gb-entry" data-time="${escapeHtml(e.time || '')}" data-alias="${escapeHtml(e.alias || '')}">
-      <span class="gb-alias">${escapeHtml(e.alias)}</span> &nbsp;
-      <span class="gb-time">${escapeHtml(e.time || '')}</span>
-      ${e.neighborhood ? `<span style="font-size:10px; color:#ff00aa; margin-left:6px;">[${escapeHtml(e.neighborhood)}]</span>` : ''}
-      <div style="margin-top:2px; color:#ffffff;">${escapeHtml(e.text)}</div>
-    </div>
-  `).join('');
+  list.innerHTML = entries.map(e => {
+    const isCorrupted = (e.time === '1999-12-31 23:59:58' || (e.alias && e.alias.includes('Null_Daemon')) || (e.text && (e.text.includes('xjro://') || e.text.includes('6b776562'))));
+    const isDeadDrop = (e.alias === 'Carlsbad_Relay_04' || (e.text && e.text.includes('AUTONOMOUS RELAY DETECTED')));
+    const cls = 'gb-entry' + (isCorrupted ? ' gb-entry-corrupted' : (isDeadDrop ? ' gb-entry-deaddrop' : ''));
+    return `
+      <div class="${cls}" data-time="${escapeHtml(e.time || '')}" data-alias="${escapeHtml(e.alias || '')}">
+        ${formatGuestbookEntryHtml(e)}
+      </div>
+    `;
+  }).join('');
 }
 
 function escapeHtml(str) {
@@ -4279,10 +4588,269 @@ function addGuestbookEntry() {
   document.getElementById('gbMsg').value = '';
   renderGuestbook(saved);
 
+  // Check for dead-drop trigger
+  checkDeadDropPassphrases(text, alias);
+
   // If Firebase Realtime Database is connected, push live
   if (window.submitGuestbookToFirebase) {
     window.submitGuestbookToFirebase(newEntry);
   }
+}
+
+// Dead-Drop Guestbook Mechanics (Firebase RTDB + Local Storage)
+let lastDeadDropTriggerTime = 0;
+function checkDeadDropPassphrases(text, alias) {
+  if (alias === 'Carlsbad_Relay_04' || alias === 'EchoDaemon' || alias === 'SysAdmin_NULL') return;
+  const lower = (text || '').toLowerCase();
+  const triggers = ['10.19.99.4', '1999hz', 'vance-77', 'sector_03', 'carlsbad', 'echo-subsystem', '0x7f1999', '!carrier', '!signal', '!beacon'];
+  const matched = triggers.some(t => lower.includes(t));
+  if (matched && (Date.now() - lastDeadDropTriggerTime > 3000)) {
+    lastDeadDropTriggerTime = Date.now();
+    triggerDeadDropResponse(text);
+  }
+}
+
+function triggerDeadDropResponse(userMsg) {
+  playFm1999Carrier(0.35);
+  showDeadDropNotification();
+
+  setTimeout(() => {
+    const responseEntry = {
+      alias: "Carlsbad_Relay_04",
+      text: "*** [AUTONOMOUS RELAY DETECTED]: Carrier lock acknowledged on subnet 10.19.99.x. Carlsbad sensor gateway reports acoustic impedance at 1999Hz matching Permian Salado Halite salt strata. Decoded address: kweb://10.19.99.4/classified (ROT13: xjro://10.19.99.4/pynffvsvrq). Acoustic lab: kweb://echo-subsystem.net. Trace route verified.",
+      neighborhood: "Area51",
+      time: "1999-12-31 23:59:59"
+    };
+
+    let saved = [];
+    try {
+      saved = JSON.parse(localStorage.getItem('knet_guestbook') || '[]');
+    } catch(e) { saved = []; }
+
+    if (!saved.some(e => e.alias === responseEntry.alias && e.text === responseEntry.text)) {
+      saved.unshift(responseEntry);
+      localStorage.setItem('knet_guestbook', JSON.stringify(saved.slice(0, 30)));
+    }
+    renderGuestbook(saved);
+
+    if (window.submitGuestbookToFirebase) {
+      window.submitGuestbookToFirebase(responseEntry);
+    }
+    localStorage.setItem('kweb_geocities_deaddrop_unlocked', 'true');
+    playDemosceneChime();
+  }, 1200);
+}
+
+function showDeadDropNotification() {
+  const existing = document.getElementById('deadDropToast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'deadDropToast';
+  toast.style.cssText = 'position:fixed; bottom:20px; right:20px; z-index:9999; background:#002211; border:2px solid #00ff66; color:#00ff66; padding:10px 16px; font-family:"Courier New", monospace; font-size:12px; font-weight:bold; box-shadow:0 0 20px rgba(0,255,102,0.5); border-radius:4px; max-width:380px;';
+  toast.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+      <span style="color:#ffff00;">📡 CARRIER 1999Hz LOCKED</span>
+      <span style="font-size:10px; color:#ff0055; cursor:pointer;" onclick="this.parentElement.parentElement.remove()">[DISMISS]</span>
+    </div>
+    <div style="font-size:11px; color:#cbd5e1;">
+      Subnet 10.19.99.x dead-drop relay recognized! Incoming packet response decoded from Carlsbad gateway.
+    </div>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    if (toast.parentElement) toast.remove();
+  }, 7000);
+}
+
+// Subnet 10.19.99.x Packet Sniffer & Stream Dissector
+function rot13(str) {
+  return (str || '').replace(/[a-zA-Z]/g, function(c) {
+    const code = c.charCodeAt(0);
+    const base = code <= 90 ? 65 : 97;
+    return String.fromCharCode(((code - base + 13) % 26) + base);
+  });
+}
+
+function hexToAscii(hexStr) {
+  const clean = (hexStr || '').replace(/[^0-9a-fA-F]/g, '');
+  if (clean.length < 2) return '';
+  let out = '';
+  for (let i = 0; i < clean.length - 1; i += 2) {
+    const byte = parseInt(clean.substr(i, 2), 16);
+    if (!isNaN(byte) && byte >= 32 && byte <= 126) {
+      out += String.fromCharCode(byte);
+    } else if (byte === 10 || byte === 13) {
+      out += ' ';
+    } else {
+      out += '.';
+    }
+  }
+  return out;
+}
+
+function loadPacketToDissector(str) {
+  playUiBeep(1400, 0.04);
+  const input = document.getElementById('dissectorInput');
+  if (input) {
+    input.value = str;
+    dissectStream();
+    const section = document.getElementById('neighborhood-watch-section');
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+}
+
+function probeSpecificSubnet(ip) {
+  const section = document.getElementById('neighborhood-watch-section');
+  if (section) {
+    section.scrollIntoView({ behavior: 'smooth' });
+  }
+  runSubnetSniffer(ip);
+}
+
+function loadDissectorPreset(type) {
+  playUiBeep(1200, 0.04);
+  const input = document.getElementById('dissectorInput');
+  if (!input) return;
+  if (type === 'rot13_carlsbad') {
+    input.value = 'xjro://10.19.99.4/pynffvsvrq';
+  } else if (type === 'hex_carlsbad') {
+    input.value = '6b7765623a2f2f31302e31392e39392e342f636c6173736966696564';
+  } else if (type === 'hex_offset') {
+    input.value = '4f46465345543a20307830303430';
+  } else if (type === 'rot13_echo') {
+    input.value = 'xjro://rpub-fhoflfgrz.arg';
+  }
+  dissectStream();
+}
+
+function dissectStream() {
+  playUiBeep(1500, 0.05);
+  const inputEl = document.getElementById('dissectorInput');
+  const val = (inputEl ? inputEl.value : '').trim();
+  if (!val) return;
+
+  const rot = rot13(val);
+  const hexAsc = hexToAscii(val);
+  
+  const box = document.getElementById('dissectorResultBox');
+  const rotEl = document.getElementById('resRot13');
+  const hexEl = document.getElementById('resHexAscii');
+  const statusEl = document.getElementById('dissectorStatus');
+  const badgeEl = document.getElementById('dissectorAnalysisBadge');
+  const urlBanner = document.getElementById('dissectorUrlBanner');
+  const jumpLink = document.getElementById('dissectorJumpLink');
+
+  if (rotEl) rotEl.textContent = rot || '(empty)';
+  if (hexEl) hexEl.textContent = hexAsc || '(non-hex characters)';
+  if (statusEl) statusEl.textContent = 'Decoded ' + val.length + ' chars.';
+  if (box) box.style.display = 'block';
+
+  // Check for virtual web links in val, rot, or hexAsc
+  const targets = [
+    { key: '10.19.99.4/classified', url: '/web/classified.html', label: 'kweb://10.19.99.4/classified (Carlsbad Intranet)' },
+    { key: 'echo-subsystem.net', url: '/web/echo_subsystem.html', label: 'kweb://echo-subsystem.net (Acoustic Lab)' },
+    { key: 'darknet', url: '/web/darknet.html', label: 'kweb://darknet (Node 0x7F Relay)' },
+    { key: 'deep-core', url: '/web/deep_core.html', label: 'kweb://deep-core (Subterranean Terminal)' },
+    { key: 'neon_rider', url: '/web/users/neon_rider.html', label: 'kweb://users/~neon_rider (ASM Shrine)' }
+  ];
+
+  let matched = null;
+  for (const t of targets) {
+    if (val.toLowerCase().includes(t.key) || rot.toLowerCase().includes(t.key) || hexAsc.toLowerCase().includes(t.key)) {
+      matched = t;
+      break;
+    }
+  }
+
+  if (matched && urlBanner && jumpLink) {
+    urlBanner.style.display = 'block';
+    jumpLink.href = matched.url;
+    jumpLink.textContent = '🚀 Launch ' + matched.label + ' »';
+    if (badgeEl) badgeEl.textContent = '[TARGET LOCATED: ' + matched.key + ']';
+    playFm1999Carrier(0.25);
+  } else {
+    if (urlBanner) urlBanner.style.display = 'none';
+    if (badgeEl) badgeEl.textContent = '[ANALYSIS COMPLETE]';
+  }
+}
+
+function clearDissector() {
+  playUiBeep(800, 0.04);
+  const input = document.getElementById('dissectorInput');
+  if (input) input.value = '';
+  const box = document.getElementById('dissectorResultBox');
+  if (box) box.style.display = 'none';
+  const status = document.getElementById('dissectorStatus');
+  if (status) status.textContent = 'Ready.';
+}
+
+const SUBNET_PROBES = {
+  "10.19.99.1": { host: "gateway-car-01.kilonet.internal", rtt: "12ms", ttl: 64, proto: "ICMP/ARP", note: "Carlsbad POP aggregation edge router. All traffic logged." },
+  "10.19.99.4": { host: "carlsbad-intranet.classified.internal", rtt: "24ms", ttl: 62, proto: "SIGINT-DSP/1999Hz", payload: "0x6B7765623A2F2F31302E31392E39392E342F636C6173736966696564", ascii: "kweb://10.19.99.4/classified", note: "Carlsbad subterranean skunkworks archive. 1999Hz acoustic impedance lock." },
+  "10.19.99.12": { host: "node-0x7F.darknet-relay.internal", rtt: "88ms", ttl: 57, proto: "XOR-FEISTEL", payload: "0x7F199942534543544F525F3033", ascii: "SECTOR_03:0x7F199942", note: "Underground courier node 0x7F. Encrypted payload buffer." },
+  "10.19.99.19": { host: "echo-subsystem.esarl.internal", rtt: "36ms", ttl: 61, proto: "ACOUSTIC-FM/1999Hz", payload: "0x786A726F3A2F2F727075622D66686F666C6667727A2E617267", ascii: "xjro://rpub-fhoflfgrz.arg", note: "ESARL acoustic lab. Permian Salado halite acoustic resonance." },
+  "10.19.99.127": { host: "deep-core-bus.ring0.internal", rtt: "142ms", ttl: 48, proto: "RING-0/KERNEL", payload: "0x4F46465345543A203078374631393939", ascii: "OFFSET: 0x7F1999", note: "Subterranean Ring-0 kernel bus. Gated precursor memory core." }
+};
+
+let snifferTimer = null;
+function runSubnetSniffer(target) {
+  playFm1999Carrier(0.12);
+  const log = document.getElementById('snifferTerminalLog');
+  const modeLabel = document.getElementById('snifferModeLabel');
+  if (!log) return;
+
+  if (snifferTimer) {
+    clearInterval(snifferTimer);
+    snifferTimer = null;
+  }
+
+  if (modeLabel) modeLabel.textContent = 'SNIFFING: ' + target.toUpperCase();
+  log.textContent += `\n>> [${new Date().toLocaleTimeString()}] INITIATING RF PACKET SNIFFER ON TARGET: ${target} (CARRIER: 1999Hz)\n`;
+  log.scrollTop = log.scrollHeight;
+
+  const targetsToProbe = target === 'all' ? Object.keys(SUBNET_PROBES) : (SUBNET_PROBES[target] ? [target] : ['10.19.99.4']);
+  let step = 0;
+
+  snifferTimer = setInterval(() => {
+    if (step >= targetsToProbe.length) {
+      clearInterval(snifferTimer);
+      snifferTimer = null;
+      if (modeLabel) modeLabel.textContent = 'SWEEP COMPLETE';
+      log.textContent += `>> [${new Date().toLocaleTimeString()}] SWEEP COMPLETE. ${targetsToProbe.length} NODES LOGGED. CARRIER LOCK HELD AT 1999.0 Hz.\n`;
+      log.scrollTop = log.scrollHeight;
+      return;
+    }
+
+    const ip = targetsToProbe[step];
+    const data = SUBNET_PROBES[ip];
+    playFm1999Carrier(0.08);
+
+    log.textContent += `[SNIFF] ${ip} (${data.host}) | RTT: ${data.rtt} | TTL: ${data.ttl} | PROTO: ${data.proto}\n`;
+    if (data.payload) {
+      log.textContent += `        PAYLOAD: ${data.payload}\n`;
+      log.textContent += `        DECODED: ${data.ascii}\n`;
+    }
+    log.textContent += `        STATUS: ${data.note}\n`;
+    log.scrollTop = log.scrollHeight;
+    step++;
+  }, 450);
+}
+
+function clearSnifferLog() {
+  playUiBeep(800, 0.04);
+  if (snifferTimer) {
+    clearInterval(snifferTimer);
+    snifferTimer = null;
+  }
+  const log = document.getElementById('snifferTerminalLog');
+  const modeLabel = document.getElementById('snifferModeLabel');
+  if (log) {
+    log.textContent = `[${new Date().toLocaleTimeString()}] TERMINAL LOG CLEARED. LISTENING ON ADAPTER 0.\n`;
+  }
+  if (modeLabel) modeLabel.textContent = 'IDLE';
 }
 
 // Hit counter
@@ -4357,6 +4925,15 @@ function setNeighborhood(name) {
   const urlBar = document.getElementById('previewUrlBar');
   if (urlBar) {
     urlBar.textContent = `Location: http://www.geocities.com/${capitalize(name)}/Peaks/1999/index.html`;
+  }
+
+  const watchBadge = document.getElementById('watchStatusBadge');
+  if (watchBadge) {
+    if (name === 'area51') {
+      watchBadge.textContent = '[AREA 51 BEACON SYNCHRONIZED]';
+    } else {
+      watchBadge.textContent = '[HOMESTEAD ALERT #1999-42]';
+    }
   }
 
   playUiBeep(1200, 0.04);
@@ -4972,6 +5549,7 @@ const BANNER_PRESETS = {
   hazard: { dim: "468x60", border: "hazard", title: "UNDER HEAVY EXPANSION!", sub: "BEST IN 800x600 • 16-BIT COLOR", theme: "hazard" },
   netscape: { dim: "88x31", border: "bevel", title: "NETSCAPE", sub: "NOW 4.0", theme: "amiga" },
   area51: { dim: "468x60", border: "neon", title: "AREA 51 ROSWELL BEACON", sub: "NON-ROUTABLE INTRANET 10.19.99.4", theme: "matrix" },
+  carlsbad: { dim: "468x60", border: "hazard", title: "CARLSBAD 10.19.99.4 GATEWAY", sub: "1999Hz HALITE ACOUSTIC LAB // ESARL", theme: "cyber" },
   protracker: { dim: "88x31", border: "bevel", title: "AMIGA", sub: "PROTRACKER", theme: "amiga" },
   y2k: { dim: "88x31", border: "chiseled", title: "100% Y2K", sub: "COMPLIANT", theme: "gold" },
   custom: { dim: "468x60", border: "neon", title: "CYBER VOYAGER '99", sub: "KILONET WEBRING SITE #002", theme: "cyber" }
@@ -6215,6 +6793,7 @@ try {
     const entry = snapshot.val();
     if (entry) {
       prependLiveGuestbookEntry(entry);
+      checkDeadDropPassphrases(entry.text, entry.alias);
       if (entry.senderId !== voyagerId && entry.created && entry.created > pageLoadTime - 2000) {
         playDemosceneChime();
       }
@@ -6259,16 +6838,15 @@ function prependLiveGuestbookEntry(e) {
   const existing = list.querySelector(`[data-time="${e.time}"][data-alias="${e.alias}"]`);
   if (existing) return;
 
+  const isCorrupted = (e.time === '1999-12-31 23:59:58' || (e.alias && e.alias.includes('Null_Daemon')) || (e.text && (e.text.includes('xjro://') || e.text.includes('6b776562'))));
+  const isDeadDrop = (e.alias === 'Carlsbad_Relay_04' || (e.text && e.text.includes('AUTONOMOUS RELAY DETECTED')));
+  const cls = 'gb-entry' + (isCorrupted ? ' gb-entry-corrupted' : (isDeadDrop ? ' gb-entry-deaddrop' : ''));
+
   const item = document.createElement('div');
-  item.className = 'gb-entry';
+  item.className = cls;
   item.dataset.time = e.time || '';
   item.dataset.alias = e.alias || '';
-  item.innerHTML = `
-    <span class="gb-alias">${escapeHtml(e.alias)}</span> &nbsp;
-    <span class="gb-time">${escapeHtml(e.time || '')}</span>
-    ${e.neighborhood ? `<span style="font-size:10px; color:#ff00aa; margin-left:6px;">[${escapeHtml(e.neighborhood)}]</span>` : ''}
-    <div style="margin-top:2px; color:#ffffff;">${escapeHtml(e.text)}</div>
-  `;
+  item.innerHTML = formatGuestbookEntryHtml(e);
   list.insertBefore(item, list.firstChild);
 }
 
