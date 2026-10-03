@@ -461,6 +461,8 @@
       </div>
       <div class="actions-divider"></div>
       <div class="actions-right">
+        <button id="btnSave" class="btn btn-secondary" title="Quicksave Target & Configuration [F5]">Save <span class="kbd-badge">F5</span></button>
+        <button id="btnLoad" class="btn btn-secondary" title="Quickload Saved Target & Configuration [F9]">Load <span class="kbd-badge">F9</span></button>
         <button id="btnExport" class="btn btn-secondary" title="Export Log / CSV / Markdown [E]">Export <span class="kbd-badge">E</span></button>
         <button id="btnCopy" class="btn btn-secondary" title="Copy Console Log [Ctrl+C]">Copy <span class="kbd-badge">^C</span></button>
         <button id="btnClear" class="btn btn-secondary" title="Clear Console [C]">Clear <span class="kbd-badge">C</span></button>
@@ -541,13 +543,14 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
-  <!-- Export Dialog Modal -->
+  <!-- Export & Import Dialog Modal -->
+  <input type="file" id="importFileInput" accept=".json,application/json" style="display: none;">
   <div id="exportModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
     <div class="modal-dialog glass" style="width: 520px;">
       <div class="modal-header">
         <div id="exportModalTitle" class="modal-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent);"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          Export Diagnostic Telemetry & Reports
+          Export & Import Diagnostic Telemetry
         </div>
         <button id="exportCloseBtn" class="modal-close" title="Close [Esc]" aria-label="Close export dialog">&times;</button>
       </div>
@@ -574,6 +577,14 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
           <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">Formatted engineering report with metric tables and console dump.</div>
         </div>
         <button class="btn btn-secondary" style="min-width:60px;" tabindex="-1">Download</button>
+      </div>
+
+      <div class="export-option-card" data-format="import" tabindex="0" role="button" aria-label="Import JSON Telemetry Dataset (Press 4 or I or Enter)" onclick="triggerImport()">
+        <div>
+          <strong style="color:#fbbf24; font-size:13px;">Import Telemetry Dataset (.json) <span class="kbd-badge">4 / I</span></strong>
+          <div style="font-size:11.5px; color:var(--text-muted); margin-top:3px;">Load and restore previously exported JSON diagnostics dataset, metrics, and log.</div>
+        </div>
+        <button class="btn btn-secondary" style="min-width:60px;" tabindex="-1">Load File</button>
       </div>
 
       <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
@@ -743,9 +754,9 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
             <td>Quickly select Localhost, Core Gateway, Classified, etc.</td>
           </tr>
           <tr>
-            <td><span class="shortcut-key">1</span> / <span class="shortcut-key">2</span> / <span class="shortcut-key">3</span></td>
-            <td><strong>Export Format</strong></td>
-            <td>In export dialog: download JSON (1), CSV (2), or Markdown (3)</td>
+            <td><span class="shortcut-key">1-4</span> / <span class="shortcut-key">I</span></td>
+            <td><strong>Export & Import</strong></td>
+            <td>In dialog: JSON (1), CSV (2), MD (3), or Import JSON (4 / I)</td>
           </tr>
           <tr>
             <td><span class="shortcut-key">Esc</span> / <span class="shortcut-key">Enter</span></td>
@@ -759,7 +770,11 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
           </tr>
       </table>
 
-      <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
+        <div style="display: flex; gap: 8px;">
+          <button id="btnHelpSave" class="btn btn-secondary" title="Save current config to storage">Save [F5]</button>
+          <button id="btnHelpLoad" class="btn btn-secondary" title="Restore config from storage">Load [F9]</button>
+        </div>
         <button id="btnModalGotIt" class="btn btn-primary">Got it [Esc / Enter]</button>
       </div>
     </div>
@@ -820,6 +835,8 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
   const btnBGP = document.getElementById('btnBGP');
   const btnBloat = document.getElementById('btnBloat');
   const btnMesh = document.getElementById('btnMesh');
+  const btnSave = document.getElementById('btnSave');
+  const btnLoad = document.getElementById('btnLoad');
   const btnExport = document.getElementById('btnExport');
   const btnCopy = document.getElementById('btnCopy');
   const btnClear = document.getElementById('btnClear');
@@ -860,9 +877,12 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
   const helpModal = document.getElementById('helpModal');
   const modalCloseBtn = document.getElementById('modalCloseBtn');
   const btnModalGotIt = document.getElementById('btnModalGotIt');
+  const btnHelpSave = document.getElementById('btnHelpSave');
+  const btnHelpLoad = document.getElementById('btnHelpLoad');
   const exportModal = document.getElementById('exportModal');
   const exportCloseBtn = document.getElementById('exportCloseBtn');
   const btnExportCancel = document.getElementById('btnExportCancel');
+  const importFileInput = document.getElementById('importFileInput');
 
   const filterPills = document.querySelectorAll('.filter-pill');
   const filterInput = document.getElementById('filterInput');
@@ -1142,10 +1162,18 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
     dfCheck.checked = !!saved.dfbit;
     resolveCheck.checked = !!saved.resolve;
     countInput.disabled = continuousCheck.checked;
+    if (presetSelect) {
+      presetSelect.value = hostInput.value.trim();
+    }
     saveConfig();
     showToast("📂 <strong>Configuration Quickloaded [F9]</strong>", "info", 2500);
     append(`[i] Configuration state quickloaded from storage [F9]\n`, 'info');
   }
+
+  if (btnSave) btnSave.onclick = quicksaveState;
+  if (btnLoad) btnLoad.onclick = quickloadState;
+  if (btnHelpSave) btnHelpSave.onclick = quicksaveState;
+  if (btnHelpLoad) btnHelpLoad.onclick = quickloadState;
 
   function showToast(messageHtml, type = 'info', duration = 3500) {
     while (toastContainer.children.length >= 2) {
@@ -1208,6 +1236,25 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
     meshModal.classList.remove('active');
     while (toastContainer.firstChild) {
       toastContainer.removeChild(toastContainer.firstChild);
+    }
+  }
+
+  function trapFocus(modal, e) {
+    if (e.key !== 'Tab') return;
+    const focusables = modal.querySelectorAll('button:not([disabled]), [tabindex="0"], input:not([disabled]), select:not([disabled]), textarea:not([disabled])');
+    if (!focusables || focusables.length === 0) return;
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
     }
   }
 
@@ -1363,7 +1410,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
     const filtered = allConsoleLines.filter(line => {
       if (currentFilter === 'reply' && line.type !== 'reply') return false;
       if (currentFilter === 'loss' && line.type !== 'timeout' && line.type !== 'error' && line.type !== 'mtu_frag') return false;
-      if (currentFilter === 'hops' && line.type !== 'trace_hop') return false;
+      if (currentFilter === 'hops' && line.type !== 'trace_hop' && line.type !== 'bgp_hop') return false;
       if (currentFilter === 'probes' && line.type !== 'mtu_pass' && line.type !== 'mtu_frag') return false;
       if (filterQuery && !line.text.toLowerCase().includes(filterQuery)) return false;
       return true;
@@ -2021,7 +2068,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
           graphTooltip.style.display = 'block';
           graphTooltip.style.left = `${Math.min(rect.width - 120, Math.max(10, x - 45))}px`;
           graphTooltip.style.top = `${Math.max(5, mouseY - 28)}px`;
-          const prefix = isTracing ? `Hop #${packetNum}` : (isMtuSweeping ? `Probe #${packetNum}` : (isSubnetSweeping ? `Node #${packetNum}` : `#${packetNum}`));
+          const prefix = (isTracing || isBgpInspecting) ? `Hop #${packetNum}` : ((isMtuSweeping || isBloatTesting) ? `Probe #${packetNum}` : (isSubnetSweeping ? `Node #${packetNum}` : `#${packetNum}`));
           if (val === null) {
               const reason = isMtuSweeping ? 'Exceeds MTU' : (isSubnetSweeping ? 'Offline' : 'Timeout');
               graphTooltip.innerHTML = `<span style="color:#f87171;">${prefix}: ${reason}</span>`;
@@ -3002,6 +3049,29 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
     }, 4500);
   }
 
+  function stopMeshPing(manual = true) {
+    if (!isMeshPinging) return;
+    if (pingInterval) {
+      clearInterval(pingInterval);
+      pingInterval = null;
+    }
+    isMeshPinging = false;
+    setStatus('idle');
+    btnAction.disabled = false;
+    btnTrace.disabled = false;
+    btnMTU.disabled = false;
+    btnSubnet.disabled = false;
+    btnDNS.disabled = false;
+    btnBGP.disabled = false;
+    if (btnBloat) btnBloat.disabled = false;
+    btnMesh.disabled = false;
+    setInputsDisabled(false);
+    if (manual) {
+      append(`\n[!] Global mesh echo cancelled by user.\n\n`, 'warning');
+      showToast("Mesh echo cancelled", "warning", 2000);
+    }
+  }
+
   if (btnBroadcastEcho) {
     btnBroadcastEcho.onclick = () => {
       closeMeshModal();
@@ -3196,6 +3266,62 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
       }
   }
 
+  function triggerImport() {
+    if (!importFileInput) return;
+    importFileInput.value = '';
+    importFileInput.click();
+  }
+
+  if (importFileInput) {
+    importFileInput.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const data = JSON.parse(evt.target.result);
+          if (typeof data !== 'object' || !data) throw new Error('Invalid JSON format');
+          
+          if (data.host) {
+            hostInput.value = data.host;
+            if (presetSelect) presetSelect.value = hostInput.value.trim();
+          }
+          if (data.metrics) {
+            if (data.metrics.jitter) valJitter.textContent = data.metrics.jitter;
+            if (data.metrics.loss) valLoss.textContent = data.metrics.loss;
+            if (data.metrics.stdDev) valStdDev.textContent = data.metrics.stdDev;
+            if (data.metrics.voipMOS) valMOS.textContent = data.metrics.voipMOS;
+            if (data.metrics.slaGrade) valSLA.textContent = data.metrics.slaGrade;
+            if (data.metrics.mtu) valMTU.textContent = data.metrics.mtu;
+            if (data.metrics.pattern && patternSelect) patternSelect.value = data.metrics.pattern;
+            if (data.metrics.interval && intervalInput) intervalInput.value = data.metrics.interval;
+          }
+          if (data.stats && typeof data.stats === 'object') {
+            stats = Object.assign({}, data.stats);
+          }
+          if (typeof data.rawConsole === 'string' && data.rawConsole.trim()) {
+            out.value = data.rawConsole;
+            allConsoleLines = data.rawConsole.split('\n').map(line => ({
+              text: line + '\n',
+              type: line.includes('Reply from') ? 'reply' : (line.includes('timed out') ? 'timeout' : 'info')
+            }));
+            out.scrollTop = out.scrollHeight;
+          }
+          if (Array.isArray(data.logs)) {
+            logEntries = data.logs;
+          }
+          closeExportModal();
+          saveConfig();
+          showToast(`Imported telemetry dataset for <strong>${escapeHtml(data.host || 'Target')}</strong>`, 'success', 3500);
+          append(`\n[i] Imported external JSON telemetry dataset [${escapeHtml(file.name)}]\n`, 'info');
+        } catch (err) {
+          showToast(`Import failed: ${err.message}`, 'error', 3500);
+        }
+      };
+      reader.readAsText(file);
+    });
+  }
+
   btnExport.onclick = openExportModal;
   btnCopy.onclick = copyLog;
   btnClear.onclick = clearOutput;
@@ -3208,7 +3334,8 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         const fmt = card.getAttribute('data-format');
-        if (fmt) triggerExport(fmt);
+        if (fmt === 'import') triggerImport();
+        else if (fmt) triggerExport(fmt);
       }
     });
   });
@@ -3232,8 +3359,9 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
       const active = document.activeElement;
       const isInput = active.tagName === 'INPUT' || (active.tagName === 'TEXTAREA' && active.id !== 'out') || active.tagName === 'SELECT';
 
-      // Export modal shortcuts (1 = JSON, 2 = CSV, 3 = Markdown, Enter/Space/Escape to dismiss)
+      // Export modal shortcuts (1 = JSON, 2 = CSV, 3 = Markdown, 4/I = Import, Enter/Space/Escape to dismiss)
       if (exportModal.classList.contains('active')) {
+          trapFocus(exportModal, e);
           if (e.key === '1') {
               e.preventDefault();
               triggerExport('json');
@@ -3249,6 +3377,11 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
               triggerExport('md');
               return;
           }
+          if (e.key === '4' || e.key === 'i' || e.key === 'I') {
+              e.preventDefault();
+              triggerImport();
+              return;
+          }
           if (e.key === 'Escape' || ((e.key === 'Enter' || e.key === ' ') && (active === btnExportCancel || active === exportCloseBtn))) {
               e.preventDefault();
               closeExportModal();
@@ -3258,6 +3391,14 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
 
       // Help modal dismissal (Escape, Enter, Space, F1, H)
       if (helpModal.classList.contains('active')) {
+          trapFocus(helpModal, e);
+          if (active === btnHelpSave || active === btnHelpLoad) {
+              if (e.key === 'Escape') {
+                  e.preventDefault();
+                  closeHelpModal();
+              }
+              return;
+          }
           if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ' || e.key === 'F1' || ((e.key === 'h' || e.key === 'H' || e.key === '?') && !isInput)) {
               e.preventDefault();
               closeHelpModal();
@@ -3267,6 +3408,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
 
       // Mesh modal dismissal
       if (meshModal.classList.contains('active')) {
+          trapFocus(meshModal, e);
           if (e.key === 'Escape' || ((e.key === 'Enter' || e.key === ' ') && (active === btnMeshClose || active === meshCloseBtn))) {
               e.preventDefault();
               closeMeshModal();
@@ -3328,6 +3470,7 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
           if (isDnsInspecting) btnDNS.click();
           if (isBgpInspecting) btnBGP.click();
           if (isBloatTesting) stopBufferbloat(true);
+          if (isMeshPinging) stopMeshPing(true);
           return;
       }
 
@@ -3392,6 +3535,9 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
   });
 
   // Initialize
+  if (out.value && allConsoleLines.length === 0) {
+    allConsoleLines.push({ text: out.value, type: 'info' });
+  }
   loadConfig();
   renderMeshDirectory();
   resizeCanvas();
