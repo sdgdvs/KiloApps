@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-03T04:25:00-07:00 — kilo-expander: KSynth (LFO Matrix, Analog Overdrive, Juno Chorus, SMF MIDI & RFMS Multiplayer)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 162.0 KB web / 23.5 KB native < 999 KB ceiling).
+  - RFMS Multiplayer: Standardized on `RetroMultiplayer` with `#room=CODE` sharing, link copy, and 25s auto-fallback to Subnet Ghost Jammer.
+  - LFO Modulation Matrix: Built 5-wave LFO (Sine, Tri, Saw, Square, S&H) with BPM tempo sync (1/1 to 1/16) and cutoff/pitch/volume/FM targets.
+  - Vintage Analog FX: Implemented tanh overdrive curve, 800Hz-12kHz tone lowpass, 4-16 bit DAC bitcrusher, and stereo Juno ensemble chorus.
+  - SMF Type 0 MIDI Export: Built binary `.mid` export with variable-length quantity delta encoding for the 16-step sequencer.
+  - Presets & State: Added presets 10-14 (Juno Strings, TB-303 Acid, Vapor Keys, Cyber Drone, FM E-Piano); persisted full DSP state.
+  - Verification: MSVC native clean (23.5 KB); Vite clean in 387ms; security_lint 100% PASS; test_arg_flow 100% PASS; check_icons 100% PASS.
+
 - **2026-10-02T23:25:00-07:00 — kilo-creator: kweb://geocities (CyberSpire's Shrine & Surface-Site Breadcrumb Density Pass)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 272.5 KB web < 999 KB ceiling).
   - Neighborhood Watch Bulletin: Added residential security alert detailing non-routable subnet `10.19.99.x` packet leaks and 1999.0 Hz acoustic carrier oscillation.

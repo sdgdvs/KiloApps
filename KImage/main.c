@@ -3,8 +3,8 @@
 #include <commdlg.h>
 #include <shellapi.h>
 
-#define WINDOW_WIDTH 1000
-#define WINDOW_HEIGHT 700
+#define WINDOW_WIDTH 1060
+#define WINDOW_HEIGHT 720
 #define TOOLBAR_HEIGHT 68
 #define SIDEBAR_WIDTH 200
 #define MAX_FILES 256

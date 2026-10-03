@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="window-width" content="1000">
-<meta name="window-height" content="700">
-<meta name="window-size" content="width=1000,height=700">
+<meta name="window-width" content="1060">
+<meta name="window-height" content="720">
+<meta name="window-size" content="width=1060,height=720">
 <title>KImage Pro (Press H/F1 for Help)</title>
 <style>
   :root {
@@ -20,7 +20,7 @@
     --accent-active: #2563eb;
     --danger: #ef4444;
     --success: #22c55e;
-    --panel-width: 275px;
+    --panel-width: 285px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
   body {
@@ -43,13 +43,13 @@
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 16px;
+    padding: 8px 14px;
     background: var(--glass-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--glass-border);
     z-index: 20;
-    gap: 12px;
+    gap: 8px;
   }
   .toolbar-section {
     display: flex;
@@ -73,16 +73,17 @@
     background: rgba(255, 255, 255, 0.06);
     border: 1px solid var(--glass-border);
     color: var(--text-main);
-    padding: 7px 12px;
+    padding: 6px 11px;
     border-radius: 6px;
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
+    gap: 5px;
+    user-select: none;
   }
   button:hover {
     background: rgba(255, 255, 255, 0.12);
@@ -104,7 +105,7 @@
   button.danger { background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; }
   button.danger:hover { background: rgba(239, 68, 68, 0.4); }
 
-  .icon-btn { padding: 7px 10px; border-radius: 6px; }
+  .icon-btn { padding: 6px 9px; border-radius: 6px; }
 
   /* Main Layout */
   .main-container {
@@ -132,29 +133,37 @@
   }
   .panel-tabs {
     display: flex;
+    flex-wrap: wrap;
     border-bottom: 1px solid var(--glass-border);
-    background: rgba(0,0,0,0.2);
-    overflow-x: auto;
+    background: rgba(0,0,0,0.25);
   }
-  .panel-tabs::-webkit-scrollbar { height: 2px; }
-  .panel-tabs::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
   .tab-btn {
-    flex: 1;
-    padding: 9px 4px;
+    flex: 1 1 calc(25% - 2px);
+    min-width: 62px;
+    padding: 7px 4px;
     border: none;
     border-bottom: 2px solid transparent;
     border-radius: 0;
     background: transparent;
-    font-size: 11.5px;
+    font-size: 11px;
+    font-weight: 500;
     color: var(--text-muted);
     white-space: nowrap;
     text-align: center;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
   }
-  .tab-btn:hover { background: rgba(255,255,255,0.04); color: var(--text-main); transform: none; }
+  .tab-btn:hover { background: rgba(255,255,255,0.06); color: var(--text-main); transform: none; }
   .tab-btn.active {
     color: var(--accent-hover);
     border-bottom-color: var(--accent);
-    background: rgba(59, 130, 246, 0.1);
+    background: rgba(59, 130, 246, 0.14);
+    font-weight: 600;
+  }
+  .right-panel .tab-btn {
+    flex: 1 1 50%;
+    min-width: 110px;
+    padding: 9px 6px;
+    font-size: 12px;
   }
 
   .panel-content {
@@ -1212,7 +1221,7 @@
   <div class="toast-container" id="toastContainer"></div>
 
 <script>
-  if (window.resizeTo) window.resizeTo(1000, 700);
+  if (window.resizeTo) window.resizeTo(1060, 720);
 
   // App State
   const state = {
@@ -1309,6 +1318,8 @@
   const helpModal = document.getElementById('helpModal');
   function openHelpModal() {
     if (helpModal) {
+      const tc = document.getElementById('toastContainer');
+      if (tc) tc.innerHTML = '';
       lastFocusedElement = document.activeElement;
       helpModal.classList.add('active');
       document.getElementById('btnDismissHelp')?.focus();
@@ -1502,13 +1513,23 @@
         if (tc) tc.innerHTML = '';
         if (state.crop.active) {
           state.crop.active = false;
-          document.getElementById('btnToggleCrop')?.classList.remove('primary');
+          const btn = document.getElementById('btnToggleCrop');
+          if (btn) {
+            btn.classList.remove('primary');
+            btn.classList.remove('active');
+            btn.textContent = 'Enable Crop Tool';
+          }
           document.getElementById('cropControls')?.classList.add('hidden');
           ui.cropOverlay.style.display = 'none';
           showToast('Crop cancelled', 'info');
         } else if (state.draw.active) {
           state.draw.active = false;
-          document.getElementById('btnToggleDraw')?.classList.remove('primary');
+          const btn = document.getElementById('btnToggleDraw');
+          if (btn) {
+            btn.classList.remove('primary');
+            btn.classList.remove('active');
+            btn.textContent = 'Enable Brush';
+          }
           ui.mainCanvas.style.cursor = 'default';
           showToast('Brush deactivated', 'info');
         }
@@ -1661,6 +1682,7 @@
       state.isPanning = true;
       state.panStart = { x: e.clientX - state.panX, y: e.clientY - state.panY };
       ui.workspace.style.cursor = 'grabbing';
+      ui.canvasWrapper.style.transition = 'none';
       try { ui.workspace.setPointerCapture(e.pointerId); } catch (_) {}
     }
   });
@@ -1683,6 +1705,7 @@
       state.isPanning = false;
       try { ui.workspace.releasePointerCapture(e.pointerId); } catch (_) {}
       ui.workspace.style.cursor = (state.zoom > 1 && !state.draw.active && !state.crop.active) ? 'grab' : '';
+      ui.canvasWrapper.style.transition = 'transform 0.1s ease-out';
     }
   };
   ui.workspace.addEventListener('pointerup', stopPanning);
@@ -3093,7 +3116,7 @@
       btnStego?.setAttribute('aria-selected', 'false');
       contentHist?.classList.remove('hidden');
       contentStego?.classList.add('hidden');
-      renderHistogram();
+      requestAnimationFrame(() => renderHistogram());
     } else {
       btnStego?.classList.add('active');
       btnStego?.setAttribute('aria-selected', 'true');
@@ -3103,8 +3126,20 @@
       contentHist?.classList.add('hidden');
     }
   }
-  document.getElementById('tabBtnHist')?.addEventListener('click', () => switchRightTab('hist'));
-  document.getElementById('tabBtnStego')?.addEventListener('click', () => switchRightTab('stego'));
+  const rTabHist = document.getElementById('tabBtnHist');
+  const rTabStego = document.getElementById('tabBtnStego');
+  rTabHist?.addEventListener('click', () => switchRightTab('hist'));
+  rTabStego?.addEventListener('click', () => switchRightTab('stego'));
+  [rTabHist, rTabStego].forEach((btn) => {
+    btn?.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const target = btn === rTabHist ? rTabStego : rTabHist;
+        target?.focus();
+        target?.click();
+      }
+    });
+  });
 
   // Transformations
   document.getElementById('btnRotateCCW').onclick = () => {
@@ -3179,7 +3214,7 @@
       ui.rightPanel.classList.toggle('hidden');
       btnToggleRight.classList.toggle('active', !ui.rightPanel.classList.contains('hidden'));
       if (!ui.rightPanel.classList.contains('hidden')) {
-        renderHistogram();
+        requestAnimationFrame(() => renderHistogram());
       }
     };
   }
@@ -3198,7 +3233,7 @@
   // Window Resize Responsiveness
   window.addEventListener('resize', () => {
     if (state.playlist.length > 0 && !ui.rightPanel.classList.contains('hidden')) {
-      renderHistogram();
+      requestAnimationFrame(() => renderHistogram());
     }
   });
 
@@ -3210,9 +3245,13 @@
     if (state.crop.active && state.draw.active) {
       state.draw.active = false;
       btnToggleDraw?.classList.remove('primary');
+      btnToggleDraw?.classList.remove('active');
+      if (btnToggleDraw) btnToggleDraw.textContent = 'Enable Brush';
       ui.mainCanvas.style.cursor = 'default';
     }
     btnToggleCrop.classList.toggle('primary', state.crop.active);
+    btnToggleCrop.classList.toggle('active', state.crop.active);
+    btnToggleCrop.textContent = state.crop.active ? 'Disable Crop' : 'Enable Crop Tool';
     cropControls.classList.toggle('hidden', !state.crop.active);
     ui.cropOverlay.style.display = state.crop.active ? 'block' : 'none';
     if (state.crop.active) {
@@ -3232,6 +3271,8 @@
       }
       updateCropOverlayUI();
       showToast("Crop tool active: drag frame to position", "info");
+    } else {
+      showToast("Crop disabled", "info");
     }
   };
 
@@ -3357,6 +3398,8 @@
       state.playlist[state.currentIndex].img = newImg;
       state.crop.active = false;
       btnToggleCrop.classList.remove('primary');
+      btnToggleCrop.classList.remove('active');
+      btnToggleCrop.textContent = 'Enable Crop Tool';
       cropControls.classList.add('hidden');
       ui.cropOverlay.style.display = 'none';
       selectImage(state.currentIndex);
@@ -3367,6 +3410,8 @@
   document.getElementById('btnCancelCrop').onclick = () => {
     state.crop.active = false;
     btnToggleCrop.classList.remove('primary');
+    btnToggleCrop.classList.remove('active');
+    btnToggleCrop.textContent = 'Enable Crop Tool';
     cropControls.classList.add('hidden');
     ui.cropOverlay.style.display = 'none';
     showToast("Crop cancelled", "info");
@@ -3431,10 +3476,14 @@
     if (state.draw.active && state.crop.active) {
       state.crop.active = false;
       btnToggleCrop?.classList.remove('primary');
+      btnToggleCrop?.classList.remove('active');
+      if (btnToggleCrop) btnToggleCrop.textContent = 'Enable Crop Tool';
       cropControls?.classList.add('hidden');
       ui.cropOverlay.style.display = 'none';
     }
     btnToggleDraw.classList.toggle('primary', state.draw.active);
+    btnToggleDraw.classList.toggle('active', state.draw.active);
+    btnToggleDraw.textContent = state.draw.active ? 'Disable Brush' : 'Enable Brush';
     ui.mainCanvas.style.cursor = state.draw.active ? 'crosshair' : 'default';
     showToast(state.draw.active ? "Annotation brush enabled" : "Annotation brush disabled", "info");
   };

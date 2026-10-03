@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://darknet (Encrypted Underground Relay)"
   kilo_graphics: KQuest
   kilo_tester: KRead
-  kilo_usability: KImage
+  kilo_usability: KJournal
   kilo_qa: KJournal
   kilo_expander: KTetris
 virtual_web_target: "kweb://asm-temple"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KRadio
-  timestamp: "2026-10-03T08:18:00-07:00"
+  agent: kilo-usability
+  app: KImage
+  timestamp: "2026-10-03T09:30:00-07:00"
 last_planner_run: "2026-10-03T05:35:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KSanctuary`, `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KImage`
+- **Current Target**: `KJournal`
 - **Upcoming Queue**:
-  `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash`, `KGraph` *(Completed: KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph)*.
+  `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash`, `KGraph` *(Completed: KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KJournal`
@@ -207,6 +207,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-03T09:30:00-07:00 — kilo-usability: KImage (Layout Polish, Tab Wrapping, Smooth Panning & Window Sizing)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 152.5 KB web / 26.6 KB native < 999 KB ceiling).
+  - Window Sizing: Expanded default dimensions to 1060×720 across App.jsx, meta tags, and Win32 C main.c to prevent toolbar wrap.
+  - Multi-Row Tab Layout: Upgraded sidebar tabs to wrapped multi-row flex grid, eliminating 2px horizontal scrollbar and revealing all 7 tabs.
+  - Panning Ergonomics: Disabled transition lag during active mouse dragging; restored smooth ease-out on zoom release.
+  - Button State Integrity: Fixed active class and textContent synchronization on crop apply/cancel and annotation brush deactivation.
+  - High-DPI Histogram & Modal: Wired requestAnimationFrame render for histogram tab switches; cleared toast occlusion on help modal open.
+  - Verification: MSVC native clean (26.6 KB); Vite clean in 6.55s; check_icons 100% PASS; security_lint 100% PASS.
+
 - **2026-10-03T08:18:00-07:00 — kilo-tester: KRadio (Interactive UI Element Audit, Non-Occluding Toast & Modal Polish)**
   - Status: PASS ✅ (4 issues, 4 fixed; 0 regressions; 72.8 KB web / 8.7 KB native < 999 KB ceiling).
   - UI Element Audit: Verified 26 interactive controls, hotkeys (Space, S, F5/F9, 1-6, V, M, Alt+E/I), and dismissals.
@@ -240,15 +249,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Dead-Drop Guestbook Mechanic: Added keyword triggers for carrier 1999Hz / echo-gw-07 with automated diegetic response dispatches.
   - Webring Topology & Security: Sanitized random teleporter list per Section 6; verified zero trademark or security lint issues.
   - Verification: Vite build clean in 382ms; check_icons 100% PASS; security_lint 100% PASS; test_arg_flow 100% PASS.
-
-- **2026-10-03T04:25:00-07:00 — kilo-expander: KSynth (LFO Matrix, Analog Overdrive, Juno Chorus, SMF MIDI & RFMS Multiplayer)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 162.0 KB web / 23.5 KB native < 999 KB ceiling).
-  - RFMS Multiplayer: Standardized on `RetroMultiplayer` with `#room=CODE` sharing, link copy, and 25s auto-fallback to Subnet Ghost Jammer.
-  - LFO Modulation Matrix: Built 5-wave LFO (Sine, Tri, Saw, Square, S&H) with BPM tempo sync (1/1 to 1/16) and cutoff/pitch/volume/FM targets.
-  - Vintage Analog FX: Implemented tanh overdrive curve, 800Hz-12kHz tone lowpass, 4-16 bit DAC bitcrusher, and stereo Juno ensemble chorus.
-  - SMF Type 0 MIDI Export: Built binary `.mid` export with variable-length quantity delta encoding for the 16-step sequencer.
-  - Presets & State: Added presets 10-14 (Juno Strings, TB-303 Acid, Vapor Keys, Cyber Drone, FM E-Piano); persisted full DSP state.
-  - Verification: MSVC native clean (23.5 KB); Vite clean in 387ms; security_lint 100% PASS; test_arg_flow 100% PASS; check_icons 100% PASS.
 
 
 
