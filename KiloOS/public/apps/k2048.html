@@ -4,6 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>K2048</title>
+    <script src="../assets/js/retro_multiplayer.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+        import { getDatabase, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDns9KBDxyd4v-TbAvi5xLrVkbXaUt_9GE",
+            authDomain: "kiloappschat.firebaseapp.com",
+            databaseURL: "https://kiloappschat-default-rtdb.firebaseio.com",
+            projectId: "kiloappschat",
+            storageBucket: "kiloappschat.firebasestorage.app",
+            messagingSenderId: "290208566057",
+            appId: "1:290208566057:web:deacd8c7457d0cc7ec0538"
+        };
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            const db = getDatabase(app);
+            window.fb = {
+                app, db, ref, set, get, push, onValue, onChildAdded, off, serverTimestamp, onDisconnect
+            };
+            if (window.onFirebaseLoaded) window.onFirebaseLoaded();
+        } catch (e) {
+            console.warn("[K2048] Firebase init fallback:", e);
+        }
+    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
         
@@ -547,76 +573,554 @@
             width: auto;
         }
         
-        @media (max-width: 500px) {
-            .container { padding: 15px; width: 95%; }
-            h1 { font-size: 2rem; }
-            .tile { font-size: 1.4rem; }
+        /* Duel Mode & Arena Styling */
+        .container.duel-active {
+            max-width: 860px;
+        }
+
+        .arena-layout {
+            display: flex;
+            gap: 18px;
+            align-items: flex-start;
+            justify-content: center;
+            width: 100%;
+        }
+
+        @media (max-width: 760px) {
+            .arena-layout {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        .arena-pane {
+            flex: 1;
+            min-width: 0;
+            max-width: 440px;
+            width: 100%;
+        }
+
+        .duel-header-bar {
+            background: linear-gradient(135deg, rgba(6, 8, 14, 0.9), rgba(16, 24, 48, 0.9));
+            border: 1px solid #00f0f0;
+            box-shadow: 0 0 15px rgba(0, 240, 240, 0.3);
+            border-radius: 10px;
+            padding: 8px 14px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .duel-badge {
+            font-size: 0.85rem;
+            font-weight: 800;
+            color: #00ffff;
+            letter-spacing: 1px;
+            text-shadow: 0 0 8px rgba(0, 255, 255, 0.6);
+        }
+
+        .duel-scores {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .duel-vs {
+            background: #ff5555;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 900;
+        }
+
+        .opponent-panel {
+            background: rgba(14, 18, 30, 0.75);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(0, 240, 240, 0.35);
+            border-radius: 16px;
+            padding: 14px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), inset 0 0 15px rgba(0, 240, 240, 0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .opp-header {
+            width: 100%;
+        }
+
+        .badge-tag {
+            background: #00f0f0;
+            color: #0c101d;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-bot {
+            background: #ffd700;
+            color: #1a1400;
+        }
+
+        .replay-bar {
+            background: rgba(0, 0, 0, 0.45);
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button.btn-sm {
+            padding: 4px 8px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            background: var(--btn-bg);
+            color: var(--btn-c);
+            border: 1px solid var(--btn-border);
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        button.btn-xs {
+            padding: 2px 6px;
+            font-size: 0.7rem;
+            border-radius: 3px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .secondary-controls {
+            margin-top: 8px;
+        }
+
+        /* Retro Modal Overlays */
+        .retro-modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(6, 8, 14, 0.82);
+            backdrop-filter: blur(4px);
+            z-index: 800;
+        }
+
+        .retro-modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 94%;
+            max-width: 620px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: #101422;
+            border: 2px solid #00f0f0;
+            box-shadow: 0 0 35px rgba(0, 240, 240, 0.35);
+            border-radius: 12px;
+            z-index: 850;
+            color: #ffffff;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: left;
+        }
+
+        .retro-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #252e48;
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+        }
+
+        .retro-modal-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #00f0f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .retro-card {
+            background: #161c2e;
+            border: 1px solid #283350;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+
+        .retro-input {
+            background: #0b0f1a;
+            border: 1px solid #00f0f0;
+            color: #00ffff;
+            border-radius: 4px;
+            padding: 6px 10px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            outline: none;
+        }
+
+        .retro-input:focus {
+            box-shadow: 0 0 8px rgba(0, 240, 240, 0.5);
+        }
+
+        /* Toast Alerts */
+        .retro-toast {
+            background: rgba(14, 18, 30, 0.95);
+            border: 1px solid #00f0f0;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 240, 240, 0.3);
+            border-radius: 8px;
+            padding: 10px 16px;
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: toastSlideUp 0.25s ease-out;
+            max-width: 340px;
+            pointer-events: auto;
+        }
+
+        .retro-toast.success { border-color: #00ffc8; box-shadow: 0 0 12px rgba(0, 255, 200, 0.3); }
+        .retro-toast.warning { border-color: #ffd700; color: #ffd700; box-shadow: 0 0 12px rgba(255, 215, 0, 0.3); }
+        .retro-toast.error { border-color: #ff5555; color: #ff8888; box-shadow: 0 0 12px rgba(255, 85, 85, 0.3); }
+
+        @keyframes toastSlideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
     </style>
 </head>
 <body>
     <canvas id="env-canvas" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; pointer-events:none;"></canvas>
-    <div class="container" role="main">
-        <div class="header">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <h1>2048</h1>
-                <div id="timer-display" style="font-size: 1.3rem; font-weight: bold; color: #ff5555; display: none;" aria-label="Remaining Time">60s</div>
-                <select id="ruleset-select" onchange="setRuleset(this.value)" aria-label="Game Ruleset" style="background: var(--btn-bg); color: var(--btn-c); border: 1px solid var(--btn-border); padding: 4px; border-radius: 5px; cursor: pointer; outline: none; font-size:0.8rem;">
-                    <option value="classic">Classic</option>
-                    <option value="fibonacci">Fibonacci</option>
-                    <option value="threes">Threes</option>
-                </select>
-                <select id="theme-select" onchange="setTheme(this.value)" aria-label="UI Theme" style="background: var(--btn-bg); color: var(--btn-c); border: 1px solid var(--btn-border); padding: 4px; border-radius: 5px; cursor: pointer; outline: none; font-size:0.8rem;">
-                    <option value="default">Dark</option>
-                    <option value="classic">Classic</option>
-                    <option value="pastel">Pastel</option>
-                </select>
+    <div id="toast-container"></div>
+    <div id="modalBackdrop" onclick="closeAllModals()" class="retro-modal-backdrop"></div>
+
+    <!-- Multiplayer & Arcade Duel Modal -->
+    <div id="multiplayerModal" class="retro-modal" role="dialog" aria-modal="true" aria-label="K2048 Arcade Duel Online Multiplayer">
+        <div class="retro-modal-header">
+            <div class="retro-modal-title">
+                <span>🌐</span> K2048 Arcade Duel — Online Multiplayer
             </div>
-            <div class="score-container">
-                <div class="score-box">
-                    <span>Score</span>
-                    <div id="score" aria-label="Current Score">0</div>
-                </div>
-                <div class="score-box">
-                    <span>Best</span>
-                    <div id="best-score" aria-label="Best Score">0</div>
-                </div>
+            <button onclick="closeAllModals()" style="background:#ff4444; border:none; color:#fff; border-radius:4px; padding:4px 10px; font-weight:bold; cursor:pointer;">✕ [Esc]</button>
+        </div>
+
+        <!-- Callsign / Nickname -->
+        <div class="retro-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+                <label style="font-size:12px; font-weight:600; color:#88a0cc;">YOUR CALLSIGN / NICKNAME:</label>
+                <input type="text" id="mpPlayerName" class="retro-input" maxlength="16" style="max-width:200px;" onchange="updatePlayerName(this.value)">
             </div>
         </div>
 
-        <div class="stage-banner" id="stage-banner" style="display:none;">
-            <span id="stage-title">Stage 1: 3x3 Beginner</span>
-            <span id="stage-moves">Moves: 60/60</span>
+        <!-- Quick Match & Create Room Grid -->
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+            <div class="retro-card" style="border-color:#00ffc8; display:flex; flex-direction:column; justify-content:space-between; margin-bottom:0;">
+                <div>
+                    <div style="font-weight:bold; font-size:13px; color:#00ffc8; margin-bottom:4px;">⚡ QUICK MATCH</div>
+                    <div style="font-size:11px; color:#94a3b8; margin-bottom:10px;">Instant matchmaking across all connected players worldwide.</div>
+                </div>
+                <button id="btnQuickMatch" onclick="startQuickMatch()" style="background:#00d2aa; border:none; color:#061018; font-weight:bold; font-size:12px; padding:8px 12px; border-radius:4px; cursor:pointer; width:100%;">⚡ Find / Host Match</button>
+            </div>
+
+            <div class="retro-card" style="border-color:#f59e0b; margin-bottom:0;">
+                <div style="font-weight:bold; font-size:13px; color:#f59e0b; margin-bottom:4px;">⚔️ CREATE ROOM</div>
+                <div style="display:flex; gap:6px; margin-bottom:6px;">
+                    <input type="text" id="mpCustomCode" class="retro-input" placeholder="CODE (e.g. K20)" maxlength="8" style="width:50%; text-transform:uppercase;">
+                    <select id="mpTargetKOs" style="background:#0b0f1a; border:1px solid #556; color:#fff; border-radius:4px; padding:4px; font-size:11px; width:50%;">
+                        <option value="1">1 KO (Sudden Death)</option>
+                        <option value="2" selected>Best of 3 (2 KOs)</option>
+                        <option value="3">First to 3 KOs</option>
+                    </select>
+                </div>
+                <button onclick="createCustomRoom()" style="background:#f59e0b; border:none; color:#0b0f19; font-weight:bold; font-size:12px; padding:8px 12px; border-radius:4px; cursor:pointer; width:100%;">Create Custom Room</button>
+            </div>
         </div>
 
-        <div class="size-controls" role="toolbar" aria-label="Grid Size Selector">
-            <button class="btn size-btn" onclick="setGridSize(3, this)" aria-label="3 by 3 Grid">3x3</button>
-            <button class="btn size-btn active" onclick="setGridSize(4, this)" aria-label="4 by 4 Grid">4x4</button>
-            <button class="btn size-btn" onclick="setGridSize(5, this)" aria-label="5 by 5 Grid">5x5</button>
-            <button class="btn size-btn" onclick="setGridSize(6, this)" aria-label="6 by 6 Grid">6x6</button>
+        <!-- Join Room by Code -->
+        <div class="retro-card" style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:12px; color:#94a3b8; white-space:nowrap;">JOIN CODE:</span>
+            <input type="text" id="mpDirectJoinCode" class="retro-input" placeholder="ROOM CODE" maxlength="8" style="width:130px; text-transform:uppercase;" onkeydown="if(event.key==='Enter') joinRoomByCode()">
+            <button onclick="joinRoomByCode()" style="background:#38bdf8; border:none; color:#0b1120; font-weight:bold; font-size:11px; padding:6px 14px; border-radius:4px; cursor:pointer;">Join Room</button>
+            <div id="mpStatusMsg" style="font-size:11px; color:#ffd700; margin-left:auto;"></div>
         </div>
 
-        <div class="skills-bar" role="toolbar" aria-label="Active Powerup Skills">
-            <button class="skill-btn" onclick="useUpgradeSkill()" id="btn-upg" title="Tile Upgrade (U)">[U] Upgrade (<span id="cnt-upg">3</span>)</button>
-            <button class="skill-btn" onclick="useRotateSkill()" id="btn-rot" title="Grid Rotate (R)">[R] Rotate (<span id="cnt-rot">3</span>)</button>
-            <button class="skill-btn" onclick="useHammerSkill()" id="btn-ham" title="Tile Smasher (H)">[H] Hammer (<span id="cnt-ham">3</span>)</button>
-            <button class="skill-btn" onclick="useUndoSkill()" id="btn-undo" title="Free Undo (Z)">[Z] Undo (<span id="cnt-undo">5</span>)</button>
+        <!-- Solo AI Fallback status banner -->
+        <div id="mpFallbackBanner" style="display:none; background:rgba(255,215,0,0.15); border:1px solid #ffd700; border-radius:6px; padding:6px 12px; font-size:11px; color:#ffd700; margin-bottom:12px; justify-content:space-between; align-items:center;">
+            <span>⏱️ Waiting for challenger...</span>
+            <span id="mpFallbackCountdown" style="font-weight:bold;">Solo AI Fallback in 25s</span>
         </div>
 
-        <div class="board-container" aria-label="Game Board">
-            <canvas id="board-bg-canvas" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; border-radius: 16px;"></canvas>
-            <div class="grid" id="grid-bg"></div>
-            <div class="tiles" id="tiles-container"></div>
-            <canvas id="fx-canvas" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5;"></canvas>
+        <!-- Active Public Duel Rooms -->
+        <div class="retro-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <div style="font-size:12px; font-weight:bold; color:#38bdf8;">📡 ACTIVE PUBLIC DUEL ROOMS</div>
+                <button onclick="refreshLobbyList()" style="background:#252e48; border:1px solid #475569; color:#94a3b8; font-size:10px; padding:2px 8px; border-radius:3px; cursor:pointer;">↻ Refresh</button>
+            </div>
+            <div id="mpLobbyContainer" style="max-height:120px; overflow-y:auto; border:1px solid #1f2538; border-radius:4px; background:#080b12; font-size:11px;">
+                <div style="padding:12px; text-align:center; color:#64748b;">Loading active public rooms...</div>
+            </div>
         </div>
 
-        <div class="controls" role="toolbar" aria-label="Game Controls">
-            <button class="btn" onclick="restartOrNextStage()" aria-label="Start New Game">New Game</button>
-            <button class="btn" onclick="toggleCampaign()" id="camp-btn" aria-label="Toggle Campaign Mode">Camp: Off</button>
-            <button class="btn" onclick="toggleTimeAttack()" id="ta-btn" aria-label="Toggle Time Attack Mode">Time: Off</button>
-            <button class="btn" onclick="toggleAutoPlay()" id="ap-btn" aria-label="Toggle Auto-Play">Auto: Off</button>
-            <button class="btn" onclick="showStats()" aria-label="Show Statistics">Stats</button>
-            <button class="btn" onclick="showHelp()" aria-label="Show Help">Help</button>
+        <!-- Offline Duel vs Local AI -->
+        <div class="retro-card" style="border-color:#ffd700; display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:0;">
+            <div>
+                <div style="font-size:12px; font-weight:bold; color:#ffd700;">🤖 OFFLINE SPLIT-SCREEN DUEL VS CYBER-BOT</div>
+                <div style="font-size:10px; color:#94a3b8;">100% offline practice. Play 1v1 split arena with live stone blocker attacks!</div>
+            </div>
+            <div style="display:flex; gap:6px;">
+                <select id="mpBotDiff" style="background:#080b12; border:1px solid #ffd700; color:#ffd700; border-radius:4px; padding:4px 6px; font-size:11px;">
+                    <option value="rookie">Rookie Bot</option>
+                    <option value="aggro" selected>Aggro Bot</option>
+                    <option value="tactical">Tactical Bot</option>
+                    <option value="grandmaster">Grandmaster Bot</option>
+                </select>
+                <button onclick="launchAIDuelFromModal()" style="background:#ffd700; border:none; color:#181200; font-weight:bold; font-size:11px; padding:6px 12px; border-radius:4px; cursor:pointer;">Play Bot</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Board State & FEN Lab Modal -->
+    <div id="boardStateModal" class="retro-modal" role="dialog" aria-modal="true" aria-label="Board State and FEN Lab">
+        <div class="retro-modal-header">
+            <div class="retro-modal-title">
+                <span>💾</span> Board State & FEN Notation Lab
+            </div>
+            <button onclick="closeAllModals()" style="background:#ff4444; border:none; color:#fff; border-radius:4px; padding:4px 10px; font-weight:bold; cursor:pointer;">✕ [Esc]</button>
+        </div>
+        <div class="retro-card">
+            <div style="font-size:11px; color:#94a3b8; margin-bottom:6px;">EXPORT CURRENT BOARD (COMPACT FEN):</div>
+            <div style="display:flex; gap:6px;">
+                <input type="text" id="fenExportInput" readonly class="retro-input" style="flex:1; font-family:monospace; font-size:11px;">
+                <button onclick="copyCurrentFen()" class="btn btn-sm" style="background:#00d2aa; color:#061018; font-weight:bold;">Copy FEN</button>
+                <button onclick="copyCurrentJson()" class="btn btn-sm">Copy JSON</button>
+            </div>
+        </div>
+        <div class="retro-card">
+            <div style="font-size:11px; color:#94a3b8; margin-bottom:6px;">IMPORT CUSTOM PUZZLE / BOARD SETUP:</div>
+            <div style="display:flex; gap:6px;">
+                <input type="text" id="fenImportInput" placeholder="Paste FEN (e.g. K2048:4:...) or JSON" class="retro-input" style="flex:1; font-family:monospace; font-size:11px;">
+                <button onclick="loadCustomFenInput()" class="btn btn-sm" style="background:#38bdf8; color:#061018; font-weight:bold;">Load Board</button>
+            </div>
+        </div>
+        <div class="retro-card" style="margin-bottom:0;">
+            <div style="font-size:11px; font-weight:bold; color:#ffd700; margin-bottom:8px;">🎯 PRESET PUZZLE SCENARIOS:</div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <button onclick="loadPresetPuzzle('cascade')" class="btn btn-sm" style="text-align:left; padding:8px;">
+                    <b>1. The 2048 Cascade</b><br><small style="color:#94a3b8;">1 swipe merges 1024+1024 to 2048!</small>
+                </button>
+                <button onclick="loadPresetPuzzle('stone_trap')" class="btn btn-sm" style="text-align:left; padding:8px;">
+                    <b>2. Stone Obstacle Escape</b><br><small style="color:#94a3b8;">Grid pinned by stone blocker walls.</small>
+                </button>
+                <button onclick="loadPresetPuzzle('frozen_citadel')" class="btn btn-sm" style="text-align:left; padding:8px;">
+                    <b>3. Frozen Core Citadel</b><br><small style="color:#94a3b8;">4 ice tiles need double-merges.</small>
+                </button>
+                <button onclick="loadPresetPuzzle('endgame_crucible')" class="btn btn-sm" style="text-align:left; padding:8px;">
+                    <b>4. Endgame Snake Chain</b><br><small style="color:#94a3b8;">1024-512-256-128 corner crucible.</small>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Rebinding Modal -->
+    <div id="keybindsModal" class="retro-modal" role="dialog" aria-modal="true" aria-label="Controls and Key Rebinding">
+        <div class="retro-modal-header">
+            <div class="retro-modal-title">
+                <span>⚙️</span> Controls & Key Rebinding
+            </div>
+            <button onclick="closeAllModals()" style="background:#ff4444; border:none; color:#fff; border-radius:4px; padding:4px 10px; font-weight:bold; cursor:pointer;">✕ [Esc]</button>
+        </div>
+        <div class="retro-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <label style="font-size:12px; font-weight:600; color:#88a0cc;">DIRECTIONAL CONTROL PRESET:</label>
+                <select id="keyPresetSelect" onchange="setKeybindPreset(this.value)" class="retro-input" style="font-size:12px;">
+                    <option value="arrows_wasd">Arrows & WASD (Default)</option>
+                    <option value="arrows_only">Arrows Only</option>
+                    <option value="wasd_only">WASD Only</option>
+                    <option value="ijkl">IJKL (Right Hand)</option>
+                    <option value="numpad">Numpad (8426)</option>
+                    <option value="vi">Vi Keys (HJKL)</option>
+                </select>
+            </div>
+            <div style="font-size:11px; color:#94a3b8; line-height:1.6;">
+                <b>Active Move Keys:</b> <span id="activeMoveKeysDisplay" style="color:#00ffff;">Arrows, WASD</span><br>
+                <b>Skills:</b> U (Upgrade), R (Rotate), H (Hammer), Z (Undo)<br>
+                <b>Shortcuts:</b> N (New Game), C (Campaign), M (Time Attack), P (Auto-Play), F (Ruleset), T (Theme)
+            </div>
+        </div>
+        <div style="text-align:right;">
+            <button onclick="closeAllModals()" class="btn btn-sm" style="background:#00d2aa; color:#061018; font-weight:bold; padding:8px 16px;">Save & Close</button>
+        </div>
+    </div>
+
+    <div class="container" role="main" id="mainContainer">
+        <!-- Duel Header Bar (visible when Duel mode is active) -->
+        <div id="duel-header-bar" class="duel-header-bar" style="display:none;">
+            <div class="duel-badge">⚔️ ARCADE DUEL ARENA</div>
+            <div class="duel-scores">
+                <span id="duel-p1-label">YOU: <b id="duel-p1-kos">0 KOs</b></span>
+                <span class="duel-vs">VS</span>
+                <span id="duel-p2-label">OPPONENT: <b id="duel-p2-kos">0 KOs</b></span>
+            </div>
+            <div style="display:flex; gap:6px;">
+                <button class="btn btn-xs" onclick="copyDuelLink()" id="btn-copy-duel" style="background:#00d2aa; color:#061018; font-weight:bold;">📋 Copy Link</button>
+                <button class="btn btn-xs" onclick="leaveDuelMode()" style="background:#ff4444; color:#fff;">Leave Duel</button>
+            </div>
+        </div>
+
+        <div class="arena-layout" id="arenaLayout">
+            <!-- Player Arena Pane -->
+            <div class="arena-pane player-pane" id="playerPane">
+                <div class="header">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <h1>2048</h1>
+                        <div id="timer-display" style="font-size: 1.3rem; font-weight: bold; color: #ff5555; display: none;" aria-label="Remaining Time">60s</div>
+                        <select id="ruleset-select" onchange="setRuleset(this.value)" aria-label="Game Ruleset" style="background: var(--btn-bg); color: var(--btn-c); border: 1px solid var(--btn-border); padding: 4px; border-radius: 5px; cursor: pointer; outline: none; font-size:0.8rem;">
+                            <option value="classic">Classic</option>
+                            <option value="fibonacci">Fibonacci</option>
+                            <option value="threes">Threes</option>
+                        </select>
+                        <select id="theme-select" onchange="setTheme(this.value)" aria-label="UI Theme" style="background: var(--btn-bg); color: var(--btn-c); border: 1px solid var(--btn-border); padding: 4px; border-radius: 5px; cursor: pointer; outline: none; font-size:0.8rem;">
+                            <option value="default">Dark</option>
+                            <option value="classic">Classic</option>
+                            <option value="pastel">Pastel</option>
+                        </select>
+                    </div>
+                    <div class="score-container">
+                        <div class="score-box">
+                            <span>Score</span>
+                            <div id="score" aria-label="Current Score">0</div>
+                        </div>
+                        <div class="score-box">
+                            <span>Best</span>
+                            <div id="best-score" aria-label="Best Score">0</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stage-banner" id="stage-banner" style="display:none;">
+                    <span id="stage-title">Stage 1: 3x3 Beginner</span>
+                    <span id="stage-moves">Moves: 60/60</span>
+                </div>
+
+                <div class="size-controls" role="toolbar" aria-label="Grid Size Selector">
+                    <button class="btn size-btn" onclick="setGridSize(3, this)" aria-label="3 by 3 Grid">3x3</button>
+                    <button class="btn size-btn active" onclick="setGridSize(4, this)" aria-label="4 by 4 Grid">4x4</button>
+                    <button class="btn size-btn" onclick="setGridSize(5, this)" aria-label="5 by 5 Grid">5x5</button>
+                    <button class="btn size-btn" onclick="setGridSize(6, this)" aria-label="6 by 6 Grid">6x6</button>
+                </div>
+
+                <div class="skills-bar" role="toolbar" aria-label="Active Powerup Skills">
+                    <button class="skill-btn" onclick="useUpgradeSkill()" id="btn-upg" title="Tile Upgrade (U)">[U] Upgrade (<span id="cnt-upg">3</span>)</button>
+                    <button class="skill-btn" onclick="useRotateSkill()" id="btn-rot" title="Grid Rotate (R)">[R] Rotate (<span id="cnt-rot">3</span>)</button>
+                    <button class="skill-btn" onclick="useHammerSkill()" id="btn-ham" title="Tile Smasher (H)">[H] Hammer (<span id="cnt-ham">3</span>)</button>
+                    <button class="skill-btn" onclick="useUndoSkill()" id="btn-undo" title="Free Undo (Z)">[Z] Undo (<span id="cnt-undo">5</span>)</button>
+                </div>
+
+                <div class="board-container" aria-label="Game Board">
+                    <canvas id="board-bg-canvas" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; border-radius: 16px;"></canvas>
+                    <div class="grid" id="grid-bg"></div>
+                    <div class="tiles" id="tiles-container"></div>
+                    <canvas id="fx-canvas" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:5;"></canvas>
+                </div>
+
+                <!-- Replay Controls Bar (visible in replay mode) -->
+                <div id="replay-bar" class="replay-bar" style="display:none;">
+                    <button class="btn-sm" onclick="replayFirst()" title="Jump to Start">⏮</button>
+                    <button class="btn-sm" onclick="replayPrev()" title="Previous Move">◀</button>
+                    <button class="btn-sm" onclick="toggleReplayPlay()" id="replay-play-btn" title="Auto Play/Pause">▶ Play</button>
+                    <button class="btn-sm" onclick="replayNext()" title="Next Move">▶</button>
+                    <button class="btn-sm" onclick="replayLast()" title="Jump to End">⏭</button>
+                    <input type="range" id="replay-slider" min="0" max="0" value="0" oninput="onReplaySliderChange(this.value)" style="flex:1; cursor:pointer;">
+                    <span id="replay-step-txt" style="font-size:0.75rem; min-width:60px; font-weight:bold; color:#ffd700;">0/0</span>
+                    <button class="btn-sm" onclick="exitReplayMode()" style="background:#ff4444; color:#fff;" title="Exit Replay">✕</button>
+                </div>
+
+                <div class="controls" role="toolbar" aria-label="Game Controls">
+                    <button class="btn" onclick="restartOrNextStage()" aria-label="Start New Game">New Game</button>
+                    <button class="btn" onclick="toggleCampaign()" id="camp-btn" aria-label="Toggle Campaign Mode">Camp: Off</button>
+                    <button class="btn" onclick="toggleTimeAttack()" id="ta-btn" aria-label="Toggle Time Attack Mode">Time: Off</button>
+                    <button class="btn" onclick="toggleAutoPlay()" id="ap-btn" aria-label="Toggle Auto-Play">Auto: Off</button>
+                    <button class="btn" onclick="showStats()" aria-label="Show Statistics">Stats</button>
+                    <button class="btn" onclick="showHelp()" aria-label="Show Help">Help</button>
+                </div>
+
+                <div class="controls secondary-controls" role="toolbar" aria-label="Multiplayer and Utility Controls">
+                    <button class="btn" onclick="openMultiplayerModal()" id="mp-btn" style="background:linear-gradient(135deg, #00d2d3, #0652dd); color:#fff; font-weight:bold; border-color:#00ffff;" aria-label="Open Online Multiplayer Duel">⚔️ Duel / Online</button>
+                    <button class="btn" onclick="openBoardStateModal()" id="fen-btn" aria-label="Board State Import Export">💾 Board FEN</button>
+                    <button class="btn" onclick="toggleReplayMode()" id="replay-btn" aria-label="Toggle Replay Mode">⏪ Replay</button>
+                    <button class="btn" onclick="openKeybindsModal()" id="keys-btn" aria-label="Configure Keybinds">⚙️ Keys</button>
+                    <button class="btn" onclick="toggleMute()" id="mute-btn" aria-label="Toggle Audio Sound">🔊 SFX</button>
+                </div>
+            </div>
+
+            <!-- Opponent Arena Pane (visible in Duel Mode) -->
+            <div class="arena-pane opponent-pane" id="oppPane" style="display:none;">
+                <div class="opponent-panel">
+                    <div class="opp-header">
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; margin-bottom:8px;">
+                            <span id="opp-name-badge" style="font-size:0.95rem; font-weight:bold; color:#00ffff; display:flex; align-items:center; gap:6px;">
+                                <span>🎮</span> <span id="opp-name-txt">Challenger</span>
+                            </span>
+                            <span id="opp-type-badge" class="badge-tag">ONLINE</span>
+                        </div>
+                        <div class="score-container" style="justify-content:center; margin-bottom:10px;">
+                            <div class="score-box">
+                                <span>Score</span>
+                                <div id="opp-score">0</div>
+                            </div>
+                            <div class="score-box">
+                                <span>Max Tile</span>
+                                <div id="opp-max-tile">0</div>
+                            </div>
+                            <div class="score-box" style="border-color:rgba(255,85,85,0.4);">
+                                <span>KOs</span>
+                                <div id="opp-kos-display" style="color:#ff5555;">0</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Opponent Attacks Indicator -->
+                    <div id="opp-attacks-gauge" style="display:flex; align-items:center; justify-content:space-between; width:100%; padding:4px 10px; background:rgba(0,0,0,0.3); border-radius:6px; margin-bottom:10px; font-size:0.8rem; box-sizing:border-box;">
+                        <span style="color:#ffd700; font-weight:600;">⚡ Attack Gauge:</span>
+                        <span id="opp-attack-pills" style="color:#00ffc8; font-weight:bold; letter-spacing:1px;">READY</span>
+                    </div>
+
+                    <!-- Opponent Board Canvas -->
+                    <canvas id="opp-canvas" width="280" height="280" style="width:280px; height:280px; border-radius:14px; background:rgba(0,0,0,0.4); border:1px solid rgba(0,255,255,0.25); box-shadow:0 4px 15px rgba(0,0,0,0.4);"></canvas>
+
+                    <!-- Action Banner -->
+                    <div id="opp-action-banner" style="font-size:0.8rem; color:#7dd3fc; margin-top:10px; min-height:20px; font-weight:600; text-align:center;">
+                        Connecting to opponent grid...
+                    </div>
+
+                    <!-- Quick Duel Taunts / Messages -->
+                    <div style="display:flex; gap:4px; margin-top:10px; width:100%; flex-wrap:wrap; justify-content:center;">
+                        <button class="btn btn-xs" onclick="sendDuelChat('Nice move!')" style="font-size:0.7rem; padding:3px 6px;">Nice move!</button>
+                        <button class="btn btn-xs" onclick="sendDuelChat('Watch out!')" style="font-size:0.7rem; padding:3px 6px;">Watch out!</button>
+                        <button class="btn btn-xs" onclick="sendDuelChat('Blocker sent!')" style="font-size:0.7rem; padding:3px 6px;">Blocker!</button>
+                        <button class="btn btn-xs" onclick="sendDuelChat('Good game!')" style="font-size:0.7rem; padding:3px 6px;">GG!</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="game-over" id="stats-modal" role="dialog" aria-modal="true" aria-labelledby="stats-title">
@@ -629,10 +1133,19 @@
             <h2 id="help-title">How to Play</h2>
             <div id="help-content" style="color:white; font-size:0.95rem; margin-bottom:20px; text-align:left; line-height:1.4; max-height: 60vh; overflow-y: auto; padding: 10px; width: 90%;">
                 <p><b>Controls:</b> Arrow keys, WASD, or swipe to slide tiles.</p>
+                <p><b>⚔️ Arcade Duel / Multiplayer:</b><br>
+                Play head-to-head online duels powered by Firebase RTDB or practice vs 4 Cyber-Bot AI levels! Merging tiles sends stone blocker attacks to your opponent's board:</p>
+                <ul>
+                    <li>Merge 128: Sends 1 Stone Obstacle</li>
+                    <li>Merge 256: Sends 2 Stone Obstacles</li>
+                    <li>Merge 512+: Sends 3 Stone Obstacles</li>
+                    <li>3+ Combo Merges: Sends Frozen Obstacle</li>
+                    <li>Board locks up = KO! First to target KOs wins the match!</li>
+                </ul>
                 <p><b>Active Skills / Hotkeys:</b><br>
                 <b>U</b>: Tile Upgrade (Doubles lowest tile)<br>
                 <b>R</b>: Grid Rotate (Rotates grid 90° clockwise)<br>
-                <b>H</b>: Hammer Smasher (Destroys 1 unwanted tile)<br>
+                <b>H</b>: Hammer Smasher (Destroys 1 unwanted tile / stone)<br>
                 <b>Z / Ctrl+Z</b>: Free Undo (Reverts last move)<br>
                 <b>N</b>: New Game / Restart<br>
                 <b>C</b>: Campaign Mode (30 Stages)<br>
@@ -966,24 +1479,93 @@
         }
 
         let audioCtx = null;
-        function playBeep(val) {
+        let soundMuted = safeGetStorage('k2048_sound_muted', '0') === '1';
+
+        function toggleMute() {
+            soundMuted = !soundMuted;
+            safeSetStorage('k2048_sound_muted', soundMuted ? '1' : '0');
+            const btn = document.getElementById('mute-btn');
+            if (btn) btn.textContent = soundMuted ? '🔇 Muted' : '🔊 SFX';
+            showToast(soundMuted ? 'Sound SFX Muted' : 'Sound SFX Active', 'info');
+        }
+
+        // Yamaha YM2612 2-Operator FM Synthesizer with SPC700 Stereo Delay
+        function playFmTone(carrierFreq, modRatio, modIndex, duration = 0.18, type = 'sine') {
+            if (soundMuted) return;
             try {
                 if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
                 if (audioCtx.state === 'suspended') audioCtx.resume();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                let note = 400;
-                let v = val;
-                while (v > 1) { note += 50; v >>= 1; }
-                osc.frequency.value = note;
-                osc.type = 'sine';
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.1);
-                setTimeout(() => { try { osc.stop(); } catch(e){} }, 100);
-            } catch (e) {}
+                const now = audioCtx.currentTime;
+
+                // Carrier Node
+                const carrier = audioCtx.createOscillator();
+                const carrierGain = audioCtx.createGain();
+                carrier.type = type;
+                carrier.frequency.setValueAtTime(carrierFreq, now);
+
+                // Modulator Node (2-op FM)
+                const modulator = audioCtx.createOscillator();
+                const modGain = audioCtx.createGain();
+                modulator.type = 'sine';
+                modulator.frequency.setValueAtTime(carrierFreq * modRatio, now);
+                
+                // Modulator envelope (attack & decay)
+                modGain.gain.setValueAtTime(carrierFreq * modIndex, now);
+                modGain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+                modulator.connect(carrier.frequency);
+
+                // Carrier envelope
+                carrierGain.gain.setValueAtTime(0.16, now);
+                carrierGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+
+                // SPC700 Stereo Warmth (Panner + Delay simulation)
+                const stereoPan = (Math.random() - 0.5) * 0.4;
+                if (audioCtx.createStereoPanner) {
+                    const panner = audioCtx.createStereoPanner();
+                    panner.pan.setValueAtTime(stereoPan, now);
+                    carrier.connect(carrierGain);
+                    carrierGain.connect(panner);
+                    panner.connect(audioCtx.destination);
+                } else {
+                    carrier.connect(carrierGain);
+                    carrierGain.connect(audioCtx.destination);
+                }
+
+                carrier.start(now);
+                modulator.start(now);
+                carrier.stop(now + duration + 0.05);
+                modulator.stop(now + duration + 0.05);
+            } catch(e) {}
+        }
+
+        function playBeep(val) {
+            if (soundMuted) return;
+            let v = val;
+            let power = 0;
+            while (v > 1) { power++; v >>= 1; }
+            const pentatonic = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25, 783.99, 880.00, 1046.50, 1174.66, 1318.51, 1567.98];
+            const pitch = pentatonic[Math.min(power, pentatonic.length - 1)] || (300 + power * 45);
+            playFmTone(pitch, 2.0, 1.8, 0.16);
+        }
+
+        function playAttackSfx() {
+            playFmTone(560, 3.5, 3.2, 0.26, 'sawtooth');
+        }
+
+        function playStoneImpactSfx() {
+            playFmTone(115, 1.5, 4.0, 0.35, 'square');
+        }
+
+        function playVictoryFanfare() {
+            [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+                setTimeout(() => playFmTone(freq, 2.0, 1.4, 0.28), idx * 110);
+            });
+        }
+
+        function playDefeatSfx() {
+            [329.63, 293.66, 261.63, 196.00].forEach((freq, idx) => {
+                setTimeout(() => playFmTone(freq, 2.5, 2.6, 0.32, 'sawtooth'), idx * 140);
+            });
         }
 
         function toggleCampaign() {
@@ -1848,6 +2430,7 @@
                             spawnWebParticles(targetX, targetY, -3);
                             spawnShockwave(targetX, targetY);
                             triggerScreenShakeWeb(22, 1.8);
+                            if (typeof currentTurnMerges !== 'undefined') currentTurnMerges.push(-3);
                             i += 2;
                             continue;
                         } else {
@@ -1861,6 +2444,7 @@
                             result.push(mergedTile);
                             score += mergedTile.val;
                             stats.tilesMerged++;
+                            if (typeof currentTurnMerges !== 'undefined') currentTurnMerges.push(mergedTile.val);
                             if (mergedTile.val > stats.highestTile) stats.highestTile = mergedTile.val;
                             i += 2;
                             continue;
@@ -2114,10 +2698,14 @@
             saveGameState();
         }
 
+        let currentTurnMerges = [];
         function handleInput(dir) {
-            if (isGameOverState || isAnimating) return false;
+            if (isGameOverState || isAnimating || (typeof isReplaying !== 'undefined' && isReplaying)) return false;
             
             let preState = cloneState();
+            let initialScore = score;
+            currentTurnMerges = [];
+
             let changed = false;
             if (dir === 'left') changed = moveLeft();
             else if (dir === 'right') changed = moveRight();
@@ -2125,6 +2713,23 @@
             else if (dir === 'down') changed = moveDown();
 
             if (changed) {
+                // Calculate attack charges from this turn's merges
+                let scoreGained = score - initialScore;
+                let attacksGenerated = 0;
+                currentTurnMerges.forEach(v => {
+                    if (v === 128) attacksGenerated += 1;
+                    else if (v === 256) attacksGenerated += 2;
+                    else if (v >= 512) attacksGenerated += 3;
+                    else if (v === -3) attacksGenerated += 1; // bomb explosion attack
+                });
+                if (currentTurnMerges.length >= 3) {
+                    attacksGenerated += 1; // 3+ merge combo bonus
+                }
+
+                if (typeof isDuelMode !== 'undefined' && isDuelMode && typeof syncDuelMove === 'function') {
+                    syncDuelMove(dir, scoreGained, attacksGenerated);
+                }
+
                 setTimeout(() => {
                     tiles.forEach(t => {
                         if (t.el && !t.el.classList.contains('merged')) {
@@ -2205,9 +2810,13 @@
                         stats.gamesPlayed++;
                         saveStats();
                         try { localStorage.removeItem('k2048_saved_state'); } catch (e) {}
-                        gameOverEl.querySelector('h2').textContent = "Game Over!";
-                        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-                        setTimeout(() => gameOverEl.classList.add('active'), 400);
+                        if (typeof isDuelMode !== 'undefined' && isDuelMode && typeof triggerGameOverInDuel === 'function') {
+                            triggerGameOverInDuel();
+                        } else {
+                            gameOverEl.querySelector('h2').textContent = "Game Over!";
+                            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+                            setTimeout(() => gameOverEl.classList.add('active'), 400);
+                        }
                     } else {
                         saveGameState();
                     }
@@ -2224,8 +2833,20 @@
             }
 
             if (e.key === 'Escape') {
+                closeAllModals();
                 closeStats();
                 closeHelp();
+                if (typeof isReplaying !== 'undefined' && isReplaying) exitReplayMode();
+                return;
+            }
+
+            // Replay Mode Navigation
+            if (typeof isReplaying !== 'undefined' && isReplaying) {
+                if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { e.preventDefault(); replayPrev(); return; }
+                if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { e.preventDefault(); replayNext(); return; }
+                if (e.key === ' ') { e.preventDefault(); toggleReplayPlay(); return; }
+                if (e.key === 'Home') { e.preventDefault(); replayFirst(); return; }
+                if (e.key === 'End') { e.preventDefault(); replayLast(); return; }
                 return;
             }
 
@@ -2244,6 +2865,9 @@
             if (k === 'n') { restartOrNextStage(); return; }
             if (k === 'c') { toggleCampaign(); return; }
             if (k === 'p') { toggleAutoPlay(); return; }
+            if (k === 'v') { openMultiplayerModal(); return; }
+            if (k === 'b') { openBoardStateModal(); return; }
+            if (k === 'k') { openKeybindsModal(); return; }
             if (k === 'f') { 
                 let modes = ['classic', 'fibonacci', 'threes'];
                 let next = modes[(modes.indexOf(ruleset) + 1) % modes.length];
@@ -2268,10 +2892,17 @@
 
             if (isGameOverState) return;
             
-            if (e.key === 'ArrowLeft' || k === 'a') handleInput('left');
-            if (e.key === 'ArrowRight' || k === 'd') handleInput('right');
-            if (e.key === 'ArrowUp' || k === 'w') handleInput('up');
-            if (e.key === 'ArrowDown' || k === 's') handleInput('down');
+            if (typeof matchesKey === 'function') {
+                if (matchesKey(e.key, 'left')) handleInput('left');
+                else if (matchesKey(e.key, 'right')) handleInput('right');
+                else if (matchesKey(e.key, 'up')) handleInput('up');
+                else if (matchesKey(e.key, 'down')) handleInput('down');
+            } else {
+                if (e.key === 'ArrowLeft' || k === 'a') handleInput('left');
+                else if (e.key === 'ArrowRight' || k === 'd') handleInput('right');
+                else if (e.key === 'ArrowUp' || k === 'w') handleInput('up');
+                else if (e.key === 'ArrowDown' || k === 's') handleInput('down');
+            }
         });
 
         let touchStartX = 0;
@@ -2358,6 +2989,1333 @@
                 if (e.target === helpM) closeHelp();
             });
         }
+
+        // =========================================================================
+        // K2048 ARCADE EXPANSION: MULTIPLAYER DUEL, FEN LAB, REPLAY & KEYBINDS
+        // =========================================================================
+
+        // --- RETRO TOAST NOTIFICATION SYSTEM ---
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `retro-toast toast-${type}`;
+            toast.textContent = msg;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-10px)';
+                setTimeout(() => toast.remove(), 400);
+            }, 3200);
+        }
+
+        // --- MODAL CONTROLS ---
+        function openModal(modalId) {
+            const backdrop = document.getElementById('modalBackdrop');
+            const modal = document.getElementById(modalId);
+            if (!backdrop || !modal) return;
+            document.querySelectorAll('.retro-modal').forEach(m => m.classList.remove('active'));
+            backdrop.classList.add('active');
+            modal.classList.add('active');
+        }
+
+        function closeAllModals() {
+            const backdrop = document.getElementById('modalBackdrop');
+            if (backdrop) backdrop.classList.remove('active');
+            document.querySelectorAll('.retro-modal').forEach(m => m.classList.remove('active'));
+        }
+
+        function openMultiplayerModal() {
+            const nameInput = document.getElementById('mpPlayerName');
+            if (nameInput) nameInput.value = myPlayerName;
+            openModal('multiplayerModal');
+            refreshLobbyList();
+        }
+
+        function openBoardStateModal() {
+            const fenInput = document.getElementById('fenExportInput');
+            if (fenInput) fenInput.value = exportBoardFen();
+            openModal('boardStateModal');
+        }
+
+        function openKeybindsModal() {
+            const select = document.getElementById('keyPresetSelect');
+            if (select) select.value = customKeybindPreset;
+            updateActiveMoveKeysDisplay();
+            openModal('keybindsModal');
+        }
+
+        // --- CUSTOM KEYBINDS & DIRECTION MAPPING ---
+        let customKeybindPreset = safeGetStorage('k2048_keybind_preset') || 'arrows_wasd';
+
+        const KEYBIND_PRESETS = {
+            arrows_wasd: {
+                label: 'Arrows & WASD (Default)',
+                up: ['ArrowUp', 'w', 'W'],
+                down: ['ArrowDown', 's', 'S'],
+                left: ['ArrowLeft', 'a', 'A'],
+                right: ['ArrowRight', 'd', 'D']
+            },
+            arrows_only: {
+                label: 'Arrows Only',
+                up: ['ArrowUp'],
+                down: ['ArrowDown'],
+                left: ['ArrowLeft'],
+                right: ['ArrowRight']
+            },
+            wasd_only: {
+                label: 'WASD Only',
+                up: ['w', 'W'],
+                down: ['s', 'S'],
+                left: ['a', 'A'],
+                right: ['d', 'D']
+            },
+            ijkl: {
+                label: 'IJKL (Right-hand)',
+                up: ['i', 'I'],
+                down: ['k', 'K'],
+                left: ['j', 'J'],
+                right: ['l', 'L']
+            },
+            numpad: {
+                label: 'Numpad (8426)',
+                up: ['8'],
+                down: ['2'],
+                left: ['4'],
+                right: ['6']
+            },
+            vi: {
+                label: 'Vi Keys (HJKL)',
+                up: ['k', 'K'],
+                down: ['j', 'J'],
+                left: ['h', 'H'],
+                right: ['l', 'L']
+            }
+        };
+
+        function setKeybindPreset(presetKey) {
+            if (!KEYBIND_PRESETS[presetKey]) presetKey = 'arrows_wasd';
+            customKeybindPreset = presetKey;
+            safeSetStorage('k2048_keybind_preset', presetKey);
+            updateActiveMoveKeysDisplay();
+            showToast(`Keybind profile: ${KEYBIND_PRESETS[presetKey].label}`, 'info');
+        }
+
+        function updateActiveMoveKeysDisplay() {
+            const display = document.getElementById('activeMoveKeysDisplay');
+            if (!display) return;
+            const p = KEYBIND_PRESETS[customKeybindPreset] || KEYBIND_PRESETS.arrows_wasd;
+            display.textContent = p.label;
+        }
+
+        function matchesKey(key, dir) {
+            if (dir === 'left' && key === 'ArrowLeft') return true;
+            if (dir === 'right' && key === 'ArrowRight') return true;
+            if (dir === 'up' && key === 'ArrowUp') return true;
+            if (dir === 'down' && key === 'ArrowDown') return true;
+
+            const p = KEYBIND_PRESETS[customKeybindPreset];
+            if (p && p[dir]) {
+                return p[dir].includes(key);
+            }
+            return false;
+        }
+
+        // --- FEN NOTATION & BOARD STATE LAB ---
+        function exportBoardFen() {
+            const rows = [];
+            for (let r = 0; r < gridSize; r++) {
+                const rowCells = [];
+                for (let c = 0; c < gridSize; c++) {
+                    const idx = r * gridSize + c;
+                    const tile = grid[idx];
+                    if (!tile) {
+                        rowCells.push('.');
+                    } else if (tile.val === -1) {
+                        rowCells.push('X');
+                    } else if (tile.val === -2) {
+                        rowCells.push('W');
+                    } else if (tile.val === -3) {
+                        rowCells.push('B');
+                    } else {
+                        rowCells.push(tile.val + (tile.frozen ? '*' : ''));
+                    }
+                }
+                rows.push(rowCells.join(','));
+            }
+            return `K2048:${gridSize}:${score}:${ruleset}:${rows.join('/')}`;
+        }
+
+        function importBoardFen(rawStr) {
+            if (!rawStr || typeof rawStr !== 'string') return false;
+            let str = rawStr.trim();
+            let targetSize = gridSize;
+            let targetScore = 0;
+            let targetRuleset = ruleset;
+            let fenGridPart = str;
+
+            if (str.startsWith('K2048:')) {
+                const parts = str.split(':');
+                if (parts.length >= 5) {
+                    targetSize = parseInt(parts[1], 10) || gridSize;
+                    targetScore = parseInt(parts[2], 10) || 0;
+                    targetRuleset = parts[3] || ruleset;
+                    fenGridPart = parts.slice(4).join(':');
+                }
+            }
+
+            const rows = fenGridPart.split('/');
+            const newSize = rows.length;
+            if (newSize < 3 || newSize > 8) {
+                showToast('Invalid FEN: Board dimension must be between 3x3 and 8x8', 'warning');
+                return false;
+            }
+            for (let r = 0; r < newSize; r++) {
+                const cells = rows[r].split(',');
+                if (cells.length !== newSize) {
+                    showToast(`Invalid FEN: Row ${r+1} has ${cells.length} cells, expected ${newSize}`, 'warning');
+                    return false;
+                }
+            }
+
+            if (gridSize !== newSize) {
+                gridSize = newSize;
+                const sizeBtns = document.querySelectorAll('.size-btn');
+                sizeBtns.forEach(b => {
+                    b.classList.toggle('active', parseInt(b.textContent, 10) === newSize);
+                });
+                updateBoardBackground();
+            }
+
+            if (targetRuleset && targetRuleset !== ruleset) {
+                setRuleset(targetRuleset);
+                const rSelect = document.getElementById('ruleset-select');
+                if (rSelect) rSelect.value = targetRuleset;
+            }
+
+            tiles.forEach(t => { if (t.el) t.el.remove(); });
+            tiles = [];
+            grid = Array(gridSize * gridSize).fill(null);
+            historyStack = [];
+            isGameOverState = false;
+            gameOverEl.classList.remove('active');
+
+            for (let r = 0; r < newSize; r++) {
+                const cells = rows[r].split(',');
+                for (let c = 0; c < newSize; c++) {
+                    const token = cells[c].trim();
+                    const idx = r * newSize + c;
+                    if (token === '.' || token === '0' || token === '') continue;
+
+                    let isFrozen = false;
+                    let rawToken = token;
+                    if (rawToken.endsWith('*')) {
+                        isFrozen = true;
+                        rawToken = rawToken.slice(0, -1);
+                    }
+                    let val = 0;
+                    if (rawToken.toUpperCase() === 'X' || rawToken === '-1') val = -1;
+                    else if (rawToken.toUpperCase() === 'W' || rawToken === '-2') val = -2;
+                    else if (rawToken.toUpperCase() === 'B' || rawToken === '-3') val = -3;
+                    else val = parseInt(rawToken, 10);
+
+                    if (!isNaN(val) && (val > 0 || val === -1 || val === -2 || val === -3)) {
+                        const tile = {
+                            id: tileIdCounter++,
+                            val: val,
+                            x: c,
+                            y: r,
+                            frozen: isFrozen
+                        };
+                        grid[idx] = tile;
+                        tiles.push(tile);
+                        createTileEl(tile, false);
+                    }
+                }
+            }
+            score = targetScore;
+            updateScore();
+            saveGameState();
+            showToast(`Board FEN loaded (${newSize}x${newSize})!`, 'success');
+            return true;
+        }
+
+        function copyCurrentFen() {
+            const fen = exportBoardFen();
+            navigator.clipboard.writeText(fen).then(() => {
+                showToast('Board FEN copied to clipboard!', 'success');
+            }).catch(() => {
+                const input = document.getElementById('fenExportInput');
+                if (input) { input.value = fen; input.select(); }
+                showToast('FEN displayed in box.', 'info');
+            });
+        }
+
+        function copyCurrentJson() {
+            const stateObj = {
+                app: 'K2048',
+                version: '1.9.99',
+                date: new Date().toISOString(),
+                gridSize: gridSize,
+                score: score,
+                moveCount: moveCount,
+                ruleset: ruleset,
+                fen: exportBoardFen(),
+                grid: grid.map(t => t ? { val: t.val, x: t.x, y: t.y, frozen: !!t.frozen } : null)
+            };
+            const jsonStr = JSON.stringify(stateObj, null, 2);
+            navigator.clipboard.writeText(jsonStr).then(() => {
+                showToast('Full JSON state copied to clipboard!', 'success');
+            }).catch(() => {
+                showToast('Unable to copy to clipboard.', 'warning');
+            });
+        }
+
+        function loadCustomFenInput() {
+            const input = document.getElementById('fenImportInput');
+            if (!input || !input.value.trim()) {
+                showToast('Please paste a FEN string or JSON state first.', 'warning');
+                return;
+            }
+            const raw = input.value.trim();
+            if (raw.startsWith('{')) {
+                try {
+                    const data = JSON.parse(raw);
+                    if (data.fen) {
+                        importBoardFen(data.fen);
+                        if (typeof data.score === 'number') { score = data.score; updateScore(); }
+                        closeAllModals();
+                        return;
+                    }
+                } catch (e) {
+                    showToast('Invalid JSON: ' + e.message, 'warning');
+                    return;
+                }
+            }
+            const success = importBoardFen(raw);
+            if (success) closeAllModals();
+        }
+
+        const PRESET_PUZZLES = {
+            cascade: {
+                name: 'The 2048 Cascade',
+                fen: 'K2048:4:0:classic:.,.,.,./256,512,1024,1024/256,512,.,./.,.,.,.'
+            },
+            stone_trap: {
+                name: 'Stone Obstacle Escape',
+                fen: 'K2048:4:0:classic:X,1024,512,X/256,128,64,32/16,8,4,2/X,.,.,X'
+            },
+            frozen_citadel: {
+                name: 'Frozen Core Citadel',
+                fen: 'K2048:4:0:classic:512*,1024*,1024*,512*/256,128,128,256/64,32,32,64/16,8,8,16'
+            },
+            endgame_crucible: {
+                name: 'Endgame Snake Chain',
+                fen: 'K2048:4:0:classic:4096,2048,1024,512/256,128,64,32/16,8,4,2/.,.,.,.'
+            }
+        };
+
+        function loadPresetPuzzle(presetKey) {
+            const puzzle = PRESET_PUZZLES[presetKey];
+            if (!puzzle) return;
+            const ok = importBoardFen(puzzle.fen);
+            if (ok) {
+                showToast(`Loaded Preset: ${puzzle.name}`, 'info');
+                closeAllModals();
+            }
+        }
+
+        // --- REPLAY SCRUBBER & VIEWER ---
+        let isReplaying = false;
+        let replayStep = 0;
+        let replayFrames = [];
+        let replayLiveBackup = null;
+        let replayPlayInterval = null;
+
+        function toggleReplayMode() {
+            if (isReplaying) {
+                exitReplayMode();
+                return;
+            }
+            const frames = [...historyStack, cloneState()];
+            if (frames.length < 2) {
+                showToast('Make at least 1 move before scrubbing replay.', 'info');
+                return;
+            }
+            isReplaying = true;
+            replayFrames = frames;
+            replayStep = frames.length - 1;
+            replayLiveBackup = cloneState();
+
+            const replayBar = document.getElementById('replay-bar');
+            if (replayBar) replayBar.style.display = 'flex';
+
+            const slider = document.getElementById('replay-slider');
+            if (slider) {
+                slider.max = frames.length - 1;
+                slider.value = replayStep;
+            }
+            renderReplayStep(replayStep);
+            showToast('Replay Mode Active (Use [◀] [▶] or Slider. Esc to Exit)', 'info');
+        }
+
+        function exitReplayMode() {
+            if (!isReplaying) return;
+            if (replayPlayInterval) {
+                clearInterval(replayPlayInterval);
+                replayPlayInterval = null;
+                const playBtn = document.getElementById('replay-play-btn');
+                if (playBtn) playBtn.textContent = '▶ Play';
+            }
+            isReplaying = false;
+            const replayBar = document.getElementById('replay-bar');
+            if (replayBar) replayBar.style.display = 'none';
+
+            if (replayLiveBackup) {
+                restoreState(replayLiveBackup);
+                replayLiveBackup = null;
+            }
+            showToast('Exited Replay Mode.', 'info');
+        }
+
+        function restoreState(st) {
+            if (!st || !st.grid) return;
+            grid = st.grid.map(t => {
+                if (!t) return null;
+                return { id: t.id !== undefined ? t.id : tileIdCounter++, val: t.val, x: t.x, y: t.y, frozen: !!t.frozen };
+            });
+            score = st.score !== undefined ? st.score : score;
+            movesLeft = st.movesLeft !== undefined ? st.movesLeft : movesLeft;
+            tiles.forEach(t => { if (t.el) t.el.remove(); });
+            tiles = [];
+            for (let i = 0; i < grid.length; i++) {
+                if (grid[i] !== null) {
+                    tiles.push(grid[i]);
+                    createTileEl(grid[i], false);
+                }
+            }
+            updateBoardBackground();
+            updateScore();
+        }
+
+        function renderReplayStep(stepIndex) {
+            if (stepIndex < 0) stepIndex = 0;
+            if (stepIndex >= replayFrames.length) stepIndex = replayFrames.length - 1;
+            replayStep = stepIndex;
+
+            const frame = replayFrames[replayStep];
+            restoreState(frame);
+
+            const counter = document.getElementById('replay-step-txt');
+            if (counter) counter.textContent = `${replayStep} / ${replayFrames.length - 1}`;
+
+            const slider = document.getElementById('replay-slider');
+            if (slider) slider.value = replayStep;
+        }
+
+        function replayPrev() {
+            if (!isReplaying || replayStep <= 0) return;
+            renderReplayStep(replayStep - 1);
+        }
+
+        function replayNext() {
+            if (!isReplaying || replayStep >= replayFrames.length - 1) return;
+            renderReplayStep(replayStep + 1);
+        }
+
+        function replayFirst() {
+            if (!isReplaying) return;
+            renderReplayStep(0);
+        }
+
+        function replayLast() {
+            if (!isReplaying) return;
+            renderReplayStep(replayFrames.length - 1);
+        }
+
+        function onReplaySliderChange(val) {
+            if (!isReplaying) return;
+            renderReplayStep(parseInt(val, 10));
+        }
+
+        function toggleReplayPlay() {
+            const playBtn = document.getElementById('replay-play-btn');
+            if (replayPlayInterval) {
+                clearInterval(replayPlayInterval);
+                replayPlayInterval = null;
+                if (playBtn) playBtn.textContent = '▶ Play';
+                return;
+            }
+            if (replayStep >= replayFrames.length - 1) {
+                renderReplayStep(0);
+            }
+            if (playBtn) playBtn.textContent = '⏸ Pause';
+            replayPlayInterval = setInterval(() => {
+                if (replayStep < replayFrames.length - 1) {
+                    renderReplayStep(replayStep + 1);
+                } else {
+                    clearInterval(replayPlayInterval);
+                    replayPlayInterval = null;
+                    if (playBtn) playBtn.textContent = '▶ Play';
+                }
+            }, 450);
+        }
+
+        // --- OPPONENT CANVAS RENDERER ---
+        const TILE_CANVAS_COLORS = {
+            0: '#202026',
+            2: { bg: '#eee4da', fg: '#776e65' },
+            4: { bg: '#ede0c8', fg: '#776e65' },
+            8: { bg: '#f2b179', fg: '#f9f6f2' },
+            16: { bg: '#f59563', fg: '#f9f6f2' },
+            32: { bg: '#f67c5f', fg: '#f9f6f2' },
+            64: { bg: '#f65e3b', fg: '#f9f6f2' },
+            128: { bg: '#edcf72', fg: '#f9f6f2' },
+            256: { bg: '#edcc61', fg: '#f9f6f2' },
+            512: { bg: '#edc850', fg: '#f9f6f2' },
+            1024: { bg: '#edc53f', fg: '#f9f6f2' },
+            2048: { bg: '#edc22e', fg: '#f9f6f2' },
+            4096: { bg: '#3c3a32', fg: '#f9f6f2' },
+            8192: { bg: '#2f2e27', fg: '#f9f6f2' },
+            '-1': { bg: '#3a3a46', fg: '#ff4444' }, // Stone
+            '-2': { bg: '#9c27b0', fg: '#ffffff' }, // Wildcard
+            '-3': { bg: '#d32f2f', fg: '#ffffff' }  // Bomb
+        };
+
+        function renderOpponentCanvas(boardGrid, size = 4) {
+            const canvas = document.getElementById('opp-canvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            const dpr = window.devicePixelRatio || 1;
+            const w = 280;
+            const h = 280;
+            if (canvas.width !== w * dpr) {
+                canvas.width = w * dpr;
+                canvas.height = h * dpr;
+            }
+            ctx.resetTransform();
+            ctx.scale(dpr, dpr);
+
+            ctx.fillStyle = '#121217';
+            ctx.fillRect(0, 0, w, h);
+
+            const gap = 8;
+            const totalGaps = (size + 1) * gap;
+            const cellSize = (w - totalGaps) / size;
+
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    const x = gap + c * (cellSize + gap);
+                    const y = gap + r * (cellSize + gap);
+                    const idx = r * size + c;
+                    const tileVal = (boardGrid && boardGrid[idx] !== undefined) ? 
+                        (typeof boardGrid[idx] === 'object' && boardGrid[idx] !== null ? boardGrid[idx].val : boardGrid[idx]) : 0;
+
+                    drawCanvasRoundRect(ctx, x, y, cellSize, cellSize, 6, '#1c1b22');
+
+                    if (tileVal && tileVal !== 0) {
+                        const colors = TILE_CANVAS_COLORS[tileVal] || { bg: '#ff0055', fg: '#ffffff' };
+                        drawCanvasRoundRect(ctx, x, y, cellSize, cellSize, 6, colors.bg);
+
+                        ctx.fillStyle = colors.fg;
+                        let text = String(tileVal);
+                        if (tileVal === -1) text = 'X';
+                        else if (tileVal === -2) text = 'W';
+                        else if (tileVal === -3) text = 'B';
+
+                        const fontSize = tileVal < 0 ? Math.floor(cellSize * 0.45) : (text.length > 4 ? Math.floor(cellSize * 0.28) : (text.length > 2 ? Math.floor(cellSize * 0.35) : Math.floor(cellSize * 0.45)));
+                        ctx.font = `bold ${fontSize}px sans-serif`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(text, x + cellSize / 2, y + cellSize / 2 + 1);
+                    }
+                }
+            }
+        }
+
+        function drawCanvasRoundRect(ctx, x, y, w, h, radius, fill) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + w - radius, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + radius);
+            ctx.lineTo(x + w, y + h - radius);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - radius, y + h);
+            ctx.lineTo(x + radius, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            ctx.fillStyle = fill;
+            ctx.fill();
+        }
+
+        // --- CYBER-2048 AI OPPONENT (OFFLINE / SOLO FALLBACK) ---
+        class Cyber2048Bot {
+            constructor(difficulty = 'aggro') {
+                this.difficulty = difficulty.toLowerCase();
+                this.size = 4;
+                this.grid = Array(16).fill(0);
+                this.score = 0;
+                this.maxTile = 0;
+                this.timer = null;
+                this.isKO = false;
+                this.reset();
+            }
+
+            reset() {
+                this.grid = Array(16).fill(0);
+                this.score = 0;
+                this.maxTile = 0;
+                this.isKO = false;
+                this.addRandomTile();
+                this.addRandomTile();
+            }
+
+            addRandomTile() {
+                const empties = [];
+                for (let i = 0; i < 16; i++) {
+                    if (this.grid[i] === 0) empties.push(i);
+                }
+                if (empties.length === 0) return false;
+                const target = empties[Math.floor(Math.random() * empties.length)];
+                const v = Math.random() < 0.9 ? 2 : 4;
+                this.grid[target] = v;
+                if (v > this.maxTile) this.maxTile = v;
+                return true;
+            }
+
+            addStoneBlocker() {
+                const empties = [];
+                for (let i = 0; i < 16; i++) {
+                    if (this.grid[i] === 0) empties.push(i);
+                }
+                if (empties.length > 0) {
+                    const target = empties[Math.floor(Math.random() * empties.length)];
+                    this.grid[target] = -1; // Stone obstacle
+                    return true;
+                }
+                return false;
+            }
+
+            start(onStepCallback) {
+                this.stop();
+                let interval = 1200;
+                if (this.difficulty === 'rookie') interval = 1600;
+                else if (this.difficulty === 'aggro') interval = 1100;
+                else if (this.difficulty === 'tactical') interval = 950;
+                else if (this.difficulty === 'grandmaster') interval = 750;
+
+                this.timer = setInterval(() => {
+                    if (this.isKO) return;
+                    const res = this.step();
+                    if (onStepCallback) onStepCallback(res);
+                }, interval);
+            }
+
+            stop() {
+                if (this.timer) {
+                    clearInterval(this.timer);
+                    this.timer = null;
+                }
+            }
+
+            step() {
+                if (this.isKO) return { changed: false, attacks: 0, isKO: true, score: this.score, maxTile: this.maxTile, grid: this.grid };
+
+                const bestDir = this.chooseBestMove();
+                if (bestDir === null) {
+                    this.isKO = true;
+                    return { changed: false, attacks: 0, isKO: true, score: this.score, maxTile: this.maxTile, grid: this.grid };
+                }
+
+                const moveRes = this.simulateMove(this.grid, bestDir);
+                this.grid = moveRes.grid;
+                this.score += moveRes.scoreGained;
+
+                let attacks = 0;
+                moveRes.merges.forEach(v => {
+                    if (v > this.maxTile) this.maxTile = v;
+                    if (v === 128) attacks += 1;
+                    else if (v === 256) attacks += 2;
+                    else if (v >= 512) attacks += 3;
+                });
+                if (moveRes.merges.length >= 3) attacks += 1;
+
+                this.addRandomTile();
+
+                if (this.isStuck(this.grid)) {
+                    this.isKO = true;
+                }
+
+                return { changed: true, attacks: attacks, isKO: this.isKO, score: this.score, maxTile: this.maxTile, grid: this.grid };
+            }
+
+            chooseBestMove() {
+                const dirs = [0, 1, 2, 3]; // 0: Up, 1: Right, 2: Down, 3: Left
+                const validMoves = [];
+
+                dirs.forEach(d => {
+                    const res = this.simulateMove(this.grid, d);
+                    if (res.changed) {
+                        validMoves.push({ dir: d, score: this.evaluateBoard(res.grid, res.merges) });
+                    }
+                });
+
+                if (validMoves.length === 0) return null;
+
+                let randomThreshold = 0.15;
+                if (this.difficulty === 'rookie') randomThreshold = 0.65;
+                else if (this.difficulty === 'aggro') randomThreshold = 0.35;
+                else if (this.difficulty === 'tactical') randomThreshold = 0.10;
+                else if (this.difficulty === 'grandmaster') randomThreshold = 0.0;
+
+                if (Math.random() < randomThreshold) {
+                    return validMoves[Math.floor(Math.random() * validMoves.length)].dir;
+                }
+
+                validMoves.sort((a, b) => b.score - a.score);
+                return validMoves[0].dir;
+            }
+
+            evaluateBoard(board, merges) {
+                let evalScore = 0;
+                let emptyCount = 0;
+                let maxVal = 0;
+                let maxIdx = 0;
+
+                for (let i = 0; i < 16; i++) {
+                    const v = board[i];
+                    if (v === 0) emptyCount++;
+                    else if (v > maxVal) {
+                        maxVal = v;
+                        maxIdx = i;
+                    }
+                }
+
+                evalScore += emptyCount * 35;
+                if ([0, 3, 12, 15].includes(maxIdx)) evalScore += 160;
+
+                merges.forEach(m => {
+                    evalScore += m * 2;
+                });
+
+                for (let r = 0; r < 4; r++) {
+                    for (let c = 0; c < 3; c++) {
+                        const v1 = board[r * 4 + c];
+                        const v2 = board[r * 4 + c + 1];
+                        if (v1 > 0 && v2 > 0) {
+                            evalScore -= Math.abs(Math.log2(v1) - Math.log2(v2)) * 4;
+                        }
+                    }
+                }
+                return evalScore;
+            }
+
+            simulateMove(srcGrid, dir) {
+                const g = [...srcGrid];
+                let changed = false;
+                let scoreGained = 0;
+                const merges = [];
+
+                const rotations = [3, 2, 1, 0][dir];
+                let rotated = this.rotateGrid(g, rotations);
+
+                for (let r = 0; r < 4; r++) {
+                    const row = [rotated[r*4], rotated[r*4+1], rotated[r*4+2], rotated[r*4+3]];
+                    const filtered = row.filter(v => v !== 0);
+                    const newRow = [];
+                    for (let i = 0; i < filtered.length; i++) {
+                        if (i < filtered.length - 1 && filtered[i] > 0 && filtered[i] === filtered[i+1]) {
+                            const mergedVal = filtered[i] * 2;
+                            newRow.push(mergedVal);
+                            scoreGained += mergedVal;
+                            merges.push(mergedVal);
+                            i++;
+                        } else {
+                            newRow.push(filtered[i]);
+                        }
+                    }
+                    while (newRow.length < 4) newRow.push(0);
+                    for (let c = 0; c < 4; c++) {
+                        if (rotated[r*4+c] !== newRow[c]) changed = true;
+                        rotated[r*4+c] = newRow[c];
+                    }
+                }
+
+                const resultGrid = this.rotateGrid(rotated, (4 - rotations) % 4);
+                return { grid: resultGrid, changed: changed, scoreGained: scoreGained, merges: merges };
+            }
+
+            rotateGrid(grid, times) {
+                let current = [...grid];
+                for (let t = 0; t < times; t++) {
+                    const next = Array(16).fill(0);
+                    for (let r = 0; r < 4; r++) {
+                        for (let c = 0; c < 4; c++) {
+                            next[c * 4 + (3 - r)] = current[r * 4 + c];
+                        }
+                    }
+                    current = next;
+                }
+                return current;
+            }
+
+            isStuck(board) {
+                for (let i = 0; i < 16; i++) {
+                    if (board[i] === 0) return false;
+                }
+                for (let r = 0; r < 4; r++) {
+                    for (let c = 0; c < 4; c++) {
+                        const v = board[r * 4 + c];
+                        if (v <= 0) continue;
+                        if (c < 3 && board[r * 4 + c + 1] === v) return false;
+                        if (r < 3 && board[(r + 1) * 4 + c] === v) return false;
+                    }
+                }
+                return true;
+            }
+        }
+
+        // --- ARCADE DUEL MULTIPLAYER ENGINE ---
+        let isDuelMode = false;
+        let isOnlineDuel = false;
+        let isAiDuel = false;
+        let currentDuelRoom = null;
+        let multiplayerClient = null;
+
+        let playerKOs = 0;
+        let oppKOs = 0;
+        let targetDuelKOs = 2; // Best of 3
+        let myPlayerName = safeGetStorage('k2048_player_name') || `Player_${Math.floor(1000 + Math.random() * 9000)}`;
+        let oppPlayerName = 'Challenger';
+        let cyberBotInstance = null;
+
+        function updatePlayerName(name) {
+            if (!name || !name.trim()) return;
+            myPlayerName = name.trim().slice(0, 16);
+            safeSetStorage('k2048_player_name', myPlayerName);
+            if (multiplayerClient) multiplayerClient.playerName = myPlayerName;
+            const p1Label = document.getElementById('duel-p1-label');
+            if (p1Label) p1Label.innerHTML = `${myPlayerName}: <b id="duel-p1-kos">${playerKOs} KOs</b>`;
+        }
+
+        function initRetroMultiplayer() {
+            if (typeof RetroMultiplayer === 'undefined') return;
+            try {
+                multiplayerClient = new RetroMultiplayer({
+                    gameId: 'k2048',
+                    prefix: 'K20',
+                    playerName: myPlayerName,
+                    soloTimeoutMs: 25000,
+                    onMove: (moveData) => {
+                        handleRemoteDuelMove(moveData);
+                    },
+                    onOpponentJoin: ({ slot, name }) => {
+                        stopSoloFallbackTimer();
+                        startDuelMatch(multiplayerClient.roomId, name || 'Challenger', true);
+                    },
+                    onOpponentLeave: () => {
+                        handleOpponentDisconnect();
+                    },
+                    onChat: ({ text, by }) => {
+                        showToast(`${oppPlayerName}: ${text}`, 'info');
+                    },
+                    onSoloFallback: () => {
+                        stopSoloFallbackTimer();
+                        closeAllModals();
+                        showToast('Solo AI Fallback: Engaging CYBER-2048 Bot!', 'warning');
+                        startAiDuelMatch('tactical');
+                    },
+                    onStatusMsg: (msg, type) => {
+                        setMultiplayerStatus(msg);
+                    }
+                });
+                multiplayerClient.init();
+            } catch (err) {
+                console.warn('Multiplayer init skipped:', err);
+            }
+        }
+
+        function setMultiplayerStatus(txt) {
+            const el = document.getElementById('mpStatusMsg');
+            if (el) el.textContent = txt;
+        }
+
+        let soloFallbackInterval = null;
+        let soloFallbackCountdown = 25;
+
+        function startSoloFallbackTimer() {
+            stopSoloFallbackTimer();
+            soloFallbackCountdown = 25;
+            const banner = document.getElementById('mpFallbackBanner');
+            const cd = document.getElementById('mpFallbackCountdown');
+            if (banner) banner.style.display = 'flex';
+            if (cd) cd.textContent = `Solo AI Fallback in ${soloFallbackCountdown}s`;
+
+            soloFallbackInterval = setInterval(() => {
+                soloFallbackCountdown--;
+                if (cd) cd.textContent = `Solo AI Fallback in ${soloFallbackCountdown}s`;
+                if (soloFallbackCountdown <= 0) {
+                    stopSoloFallbackTimer();
+                    closeAllModals();
+                    showToast('No peer connected in 25s. Summoning CYBER-2048 AI Bot!', 'warning');
+                    startAiDuelMatch('tactical');
+                }
+            }, 1000);
+        }
+
+        function stopSoloFallbackTimer() {
+            if (soloFallbackInterval) {
+                clearInterval(soloFallbackInterval);
+                soloFallbackInterval = null;
+            }
+            const banner = document.getElementById('mpFallbackBanner');
+            if (banner) banner.style.display = 'none';
+        }
+
+        async function startQuickMatch() {
+            const nameInput = document.getElementById('mpPlayerName');
+            if (nameInput && nameInput.value.trim()) updatePlayerName(nameInput.value.trim());
+
+            if (!multiplayerClient || !multiplayerClient.isOnline()) {
+                showToast('Network offline. Starting offline AI Duel!', 'warning');
+                closeAllModals();
+                startAiDuelMatch('tactical');
+                return;
+            }
+
+            setMultiplayerStatus('Contacting matchmaking network (prefix K20)...');
+            startSoloFallbackTimer();
+            const res = await multiplayerClient.quickMatch();
+            if (res && res.success && res.slot === 'p2') {
+                stopSoloFallbackTimer();
+                startDuelMatch(res.roomId, multiplayerClient.opponent || 'Host', true);
+            }
+        }
+
+        async function createCustomRoom() {
+            const nameInput = document.getElementById('mpPlayerName');
+            if (nameInput && nameInput.value.trim()) updatePlayerName(nameInput.value.trim());
+
+            const koSelect = document.getElementById('mpTargetKOs');
+            if (koSelect) targetDuelKOs = parseInt(koSelect.value, 10) || 2;
+
+            if (!multiplayerClient || !multiplayerClient.isOnline()) {
+                showToast('Network offline. Starting offline AI Duel!', 'warning');
+                closeAllModals();
+                startAiDuelMatch('tactical');
+                return;
+            }
+
+            const codeInput = document.getElementById('mpCustomCode');
+            let code = codeInput && codeInput.value.trim() ? codeInput.value.trim().toUpperCase() : null;
+            if (code && !code.startsWith('K20')) code = 'K20-' + code;
+
+            setMultiplayerStatus('Opening custom duel arena...');
+            startSoloFallbackTimer();
+            const res = await multiplayerClient.createRoom(code ? { roomId: code } : {});
+            if (res && res.success) {
+                currentDuelRoom = res.roomId;
+                setMultiplayerStatus(`Room [${res.roomId}] active. Waiting for opponent...`);
+            }
+        }
+
+        async function joinRoomByCode() {
+            const codeInput = document.getElementById('mpDirectJoinCode');
+            if (!codeInput || !codeInput.value.trim()) {
+                showToast('Please enter room code.', 'warning');
+                return;
+            }
+            let code = codeInput.value.trim().toUpperCase();
+            if (!code.startsWith('K20') && code.length === 4) code = 'K20-' + code;
+
+            const nameInput = document.getElementById('mpPlayerName');
+            if (nameInput && nameInput.value.trim()) updatePlayerName(nameInput.value.trim());
+
+            if (!multiplayerClient || !multiplayerClient.isOnline()) {
+                showToast('Multiplayer network unavailable.', 'warning');
+                return;
+            }
+
+            setMultiplayerStatus(`Connecting to room ${code}...`);
+            const res = await multiplayerClient.joinRoom(code);
+            if (res && res.success) {
+                stopSoloFallbackTimer();
+                startDuelMatch(code, multiplayerClient.opponent || 'Challenger', true);
+            }
+        }
+
+        function copyDuelLink() {
+            if (!currentDuelRoom) {
+                showToast('No active duel room code to copy.', 'warning');
+                return;
+            }
+            const url = `${window.location.origin}${window.location.pathname}#room=${currentDuelRoom}`;
+            navigator.clipboard.writeText(url).then(() => {
+                showToast(`Duel invite link copied: #room=${currentDuelRoom}`, 'success');
+            }).catch(() => {
+                prompt('Copy duel link:', url);
+            });
+        }
+
+        function refreshLobbyList() {
+            const container = document.getElementById('mpLobbyContainer');
+            if (!container) return;
+            if (!multiplayerClient || !multiplayerClient.isOnline()) {
+                container.innerHTML = '<div style="padding:10px; text-align:center; color:#64748b;">Direct Matchmaking Ready. Use Quick Match or Custom Room.</div>';
+                return;
+            }
+            try {
+                const lobbyRef = multiplayerClient.fb.ref(multiplayerClient.fb.db, `${multiplayerClient.basePath}/lobby`);
+                multiplayerClient.fb.get(lobbyRef).then(snap => {
+                    const lobby = snap.val();
+                    if (!lobby || Object.keys(lobby).length === 0) {
+                        container.innerHTML = '<div style="padding:10px; text-align:center; color:#64748b;">No open public duels. Click Quick Match or Create Room!</div>';
+                        return;
+                    }
+                    container.innerHTML = '';
+                    Object.entries(lobby).forEach(([code, item]) => {
+                        const row = document.createElement('div');
+                        row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:6px 10px; border-bottom:1px solid #1f2538;';
+                        row.innerHTML = `<span><b>${code}</b> (${item.host || 'Player'})</span>
+                                         <button class="btn btn-sm" onclick="joinLobbyRoom('${code}')" style="background:#00d2aa; color:#061018; font-weight:bold; padding:2px 8px; font-size:10px;">Join</button>`;
+                        container.appendChild(row);
+                    });
+                }).catch(() => {
+                    container.innerHTML = '<div style="padding:10px; text-align:center; color:#64748b;">Lobby scan ready.</div>';
+                });
+            } catch (e) {
+                container.innerHTML = '<div style="padding:10px; text-align:center; color:#64748b;">Lobby ready.</div>';
+            }
+        }
+
+        function joinLobbyRoom(code) {
+            const codeInput = document.getElementById('mpDirectJoinCode');
+            if (codeInput) codeInput.value = code;
+            joinRoomByCode();
+        }
+
+        function launchAIDuelFromModal() {
+            const diffSelect = document.getElementById('mpBotDiff');
+            const diff = diffSelect ? diffSelect.value : 'aggro';
+            closeAllModals();
+            startAiDuelMatch(diff);
+        }
+
+        function startDuelMatch(roomId, oppName, isOnline = true) {
+            closeAllModals();
+            isDuelMode = true;
+            isOnlineDuel = isOnline;
+            isAiDuel = !isOnline;
+            currentDuelRoom = roomId;
+            oppPlayerName = oppName || (isOnline ? 'Online Challenger' : 'CYBER-2048 AI');
+
+            playerKOs = 0;
+            oppKOs = 0;
+
+            const container = document.getElementById('mainContainer');
+            if (container) container.classList.add('duel-active');
+
+            const header = document.getElementById('duel-header-bar');
+            if (header) header.style.display = 'flex';
+
+            const oppPane = document.getElementById('oppPane');
+            if (oppPane) oppPane.style.display = 'block';
+
+            const oppNameTxt = document.getElementById('opp-name-txt');
+            if (oppNameTxt) oppNameTxt.textContent = oppPlayerName;
+
+            const oppTypeBadge = document.getElementById('opp-type-badge');
+            if (oppTypeBadge) oppTypeBadge.textContent = isOnline ? 'ONLINE' : 'BOT';
+
+            updateDuelKODisplay();
+            startDuelRound(1);
+            showDuelActionBanner('ROUND 1 - DUEL START!', 2000);
+            playVictoryFanfare();
+        }
+
+        function startAiDuelMatch(difficulty = 'aggro') {
+            if (cyberBotInstance) cyberBotInstance.stop();
+            cyberBotInstance = new Cyber2048Bot(difficulty);
+
+            startDuelMatch('AI-LOCAL', `CYBER-2048 [${difficulty.toUpperCase()}]`, false);
+
+            cyberBotInstance.start((stepData) => {
+                if (!isDuelMode) return;
+                renderOpponentCanvas(stepData.grid, 4);
+
+                const oppScore = document.getElementById('opp-score');
+                if (oppScore) oppScore.textContent = stepData.score;
+
+                const oppMax = document.getElementById('opp-max-tile');
+                if (oppMax) oppMax.textContent = stepData.maxTile;
+
+                if (stepData.attacks > 0) {
+                    receiveIncomingAttacks(stepData.attacks);
+                }
+
+                if (stepData.isKO) {
+                    handleOpponentKO();
+                }
+            });
+        }
+
+        function startDuelRound(roundNum) {
+            initGame();
+            if (cyberBotInstance) {
+                cyberBotInstance.reset();
+                renderOpponentCanvas(cyberBotInstance.grid, 4);
+            } else {
+                renderOpponentCanvas(Array(16).fill(0), 4);
+            }
+        }
+
+        function updateDuelKODisplay() {
+            const p1Label = document.getElementById('duel-p1-label');
+            if (p1Label) p1Label.innerHTML = `${myPlayerName}: <b id="duel-p1-kos">${playerKOs} KOs</b>`;
+
+            const p2Label = document.getElementById('duel-p2-label');
+            if (p2Label) p2Label.innerHTML = `${oppPlayerName}: <b id="duel-p2-kos">${oppKOs} KOs</b>`;
+
+            const oppKOsDisp = document.getElementById('opp-kos-display');
+            if (oppKOsDisp) oppKOsDisp.textContent = oppKOs;
+        }
+
+        function showDuelActionBanner(text, duration = 1800) {
+            const banner = document.getElementById('opp-action-banner');
+            if (!banner) return;
+            banner.textContent = text;
+            banner.style.color = '#ffd700';
+            setTimeout(() => {
+                if (banner && banner.textContent === text) {
+                    banner.textContent = 'Arena Active';
+                    banner.style.color = '#7dd3fc';
+                }
+            }, duration);
+        }
+
+        function syncDuelMove(dir, scoreGained, attacksGenerated) {
+            if (!isDuelMode) return;
+
+            let maxVal = 0;
+            grid.forEach(t => { if (t && t.val > maxVal) maxVal = t.val; });
+
+            if (attacksGenerated > 0) {
+                playAttackSfx();
+                showDuelActionBanner(`⚔️ SENT +${attacksGenerated} STONE${attacksGenerated > 1 ? 'S' : ''}!`, 1200);
+
+                if (isAiDuel && cyberBotInstance) {
+                    for (let i = 0; i < attacksGenerated; i++) {
+                        cyberBotInstance.addStoneBlocker();
+                    }
+                    renderOpponentCanvas(cyberBotInstance.grid, 4);
+                }
+            }
+
+            if (isOnlineDuel && multiplayerClient) {
+                multiplayerClient.sendMove({
+                    grid: grid.map(t => t ? t.val : 0),
+                    score: score,
+                    maxTile: maxVal,
+                    attacks: attacksGenerated,
+                    isGameOver: isGameOverState
+                });
+            }
+        }
+
+        function handleRemoteDuelMove(data) {
+            if (!isDuelMode || !data) return;
+            if (data.grid) {
+                renderOpponentCanvas(data.grid, 4);
+            }
+            if (data.score !== undefined) {
+                const oppScore = document.getElementById('opp-score');
+                if (oppScore) oppScore.textContent = data.score;
+            }
+            if (data.maxTile !== undefined) {
+                const oppMax = document.getElementById('opp-max-tile');
+                if (oppMax) oppMax.textContent = data.maxTile;
+            }
+            if (data.attacks && data.attacks > 0) {
+                receiveIncomingAttacks(data.attacks);
+            }
+            if (data.isGameOver) {
+                handleOpponentKO();
+            }
+        }
+
+        function receiveIncomingAttacks(stoneCount) {
+            if (!isDuelMode || stoneCount <= 0) return;
+            playStoneImpactSfx();
+            triggerScreenShakeWeb(14, 0.7);
+            showDuelActionBanner(`⚠️ INCOMING ${stoneCount} STONE${stoneCount > 1 ? 'S' : ''}!`, 1500);
+
+            let placed = 0;
+            const empties = [];
+            for (let i = 0; i < gridSize * gridSize; i++) {
+                if (grid[i] === null) empties.push(i);
+            }
+
+            empties.sort(() => Math.random() - 0.5);
+
+            while (placed < stoneCount && empties.length > 0) {
+                const idx = empties.pop();
+                const tile = {
+                    id: tileIdCounter++,
+                    val: -1, // Stone blocker
+                    x: idx % gridSize,
+                    y: Math.floor(idx / gridSize),
+                    frozen: false
+                };
+                grid[idx] = tile;
+                tiles.push(tile);
+                createTileEl(tile, true);
+                placed++;
+            }
+
+            if (isGameOver()) {
+                triggerGameOverInDuel();
+            }
+        }
+
+        function triggerGameOverInDuel() {
+            if (!isDuelMode) return;
+            playDefeatSfx();
+            oppKOs++;
+            updateDuelKODisplay();
+            showDuelActionBanner(`💥 KNOCKOUT! ${oppPlayerName} takes the point!`, 2500);
+
+            if (isOnlineDuel && multiplayerClient) {
+                multiplayerClient.sendMove({ isGameOver: true, score: score });
+            }
+
+            if (oppKOs >= targetDuelKOs) {
+                setTimeout(() => showDuelMatchResult(false), 1200);
+            } else {
+                setTimeout(() => {
+                    showDuelActionBanner(`ROUND ${playerKOs + oppKOs + 1} - READY?`, 1500);
+                    setTimeout(() => startDuelRound(playerKOs + oppKOs + 1), 1600);
+                }, 2000);
+            }
+        }
+
+        function handleOpponentKO() {
+            if (!isDuelMode) return;
+            playVictoryFanfare();
+            playerKOs++;
+            updateDuelKODisplay();
+            showDuelActionBanner(`🏆 POINT! ${oppPlayerName} was Knocked Out!`, 2500);
+
+            if (playerKOs >= targetDuelKOs) {
+                setTimeout(() => showDuelMatchResult(true), 1200);
+            } else {
+                setTimeout(() => {
+                    showDuelActionBanner(`ROUND ${playerKOs + oppKOs + 1} - READY?`, 1500);
+                    setTimeout(() => startDuelRound(playerKOs + oppKOs + 1), 1600);
+                }, 2000);
+            }
+        }
+
+        function showDuelMatchResult(playerWon) {
+            if (cyberBotInstance) cyberBotInstance.stop();
+            if (playerWon) {
+                playVictoryFanfare();
+                showDuelActionBanner(`👑 MATCH VICTORY! YOU WIN!`, 4000);
+                showToast(`Congratulations! You won the Arcade Duel (${playerKOs}-${oppKOs})!`, 'success');
+            } else {
+                playDefeatSfx();
+                showDuelActionBanner(`☠️ MATCH DEFEAT! ${oppPlayerName} WINS!`, 4000);
+                showToast(`Match ended: ${oppPlayerName} won (${oppKOs}-${playerKOs}).`, 'warning');
+            }
+        }
+
+        function leaveDuelMode() {
+            if (cyberBotInstance) {
+                cyberBotInstance.stop();
+                cyberBotInstance = null;
+            }
+            stopSoloFallbackTimer();
+            if (isOnlineDuel && multiplayerClient) {
+                multiplayerClient.leaveRoom();
+            }
+            isDuelMode = false;
+            isOnlineDuel = false;
+            isAiDuel = false;
+            currentDuelRoom = null;
+
+            const container = document.getElementById('mainContainer');
+            if (container) container.classList.remove('duel-active');
+
+            const header = document.getElementById('duel-header-bar');
+            if (header) header.style.display = 'none';
+
+            const oppPane = document.getElementById('oppPane');
+            if (oppPane) oppPane.style.display = 'none';
+
+            initGame();
+            showToast('Returned to solo arcade mode.', 'info');
+        }
+
+        function handleOpponentDisconnect() {
+            if (!isDuelMode) return;
+            showToast(`${oppPlayerName} disconnected from duel.`, 'warning');
+            showDuelActionBanner(`${oppPlayerName} DISCONNECTED!`, 3000);
+            if (isOnlineDuel) {
+                setTimeout(() => {
+                    showToast('Switching match to Cyber-2048 AI opponent...', 'info');
+                    startAiDuelMatch('tactical');
+                }, 2000);
+            }
+        }
+
+        function sendDuelChat(msg) {
+            if (!isDuelMode) return;
+            if (isOnlineDuel && multiplayerClient) {
+                multiplayerClient.sendChat(msg);
+            }
+            showToast(`You: ${msg}`, 'info');
+            if (isAiDuel) {
+                setTimeout(() => {
+                    const replies = ['Nice move!', 'Watch this cascade!', 'Calculating counter...', 'GG!'];
+                    const rep = replies[Math.floor(Math.random() * replies.length)];
+                    showToast(`${oppPlayerName}: ${rep}`, 'info');
+                }, 800);
+            }
+        }
+
+        function checkUrlInvite() {
+            const hash = window.location.hash;
+            const search = window.location.search;
+            let roomCode = null;
+
+            const hashMatch = hash.match(/room=([A-Za-z0-9_-]+)/i);
+            if (hashMatch) roomCode = hashMatch[1];
+            else {
+                const searchMatch = search.match(/room=([A-Za-z0-9_-]+)/i);
+                if (searchMatch) roomCode = searchMatch[1];
+            }
+
+            if (roomCode) {
+                const cleanCode = roomCode.toUpperCase();
+                showToast(`Duel invite detected: Room ${cleanCode}`, 'info');
+                openMultiplayerModal();
+                const codeInput = document.getElementById('mpDirectJoinCode');
+                if (codeInput) codeInput.value = cleanCode;
+                setTimeout(() => {
+                    joinRoomByCode();
+                }, 600);
+            }
+        }
+
+        // --- STARTUP INITIALIZATION HOOKS ---
+        updateActiveMoveKeysDisplay();
+        initRetroMultiplayer();
+        checkUrlInvite();
+        window.onFirebaseLoaded = () => {
+            initRetroMultiplayer();
+            checkUrlInvite();
+        };
+
         window.addEventListener('beforeunload', saveGameState);
 
         const hasSavedGame = loadGameState();
