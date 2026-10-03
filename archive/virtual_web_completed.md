@@ -1,104 +1,103 @@
 # Virtual 1999 Web — Completed Content Mandates Archive
 
-> Archived from next_work.md to reduce per-turn token overhead.
+> Archived from `next_work.md` to reduce per-turn token overhead.
 > These sites are fully built. This file is historical reference only.
 
 - **Anti-Potemkin Directive & Content Mandates**:
-  0. `kweb://warez` (*0xRELEASE Scene Vault & Cracktros*):
-     - âœ… 12 authentic parody releases with 3D vector cracktro launcher, ANSI NFO viewer & .diz/.nfo downloads.
-     - âœ… Chiptune Jukebox with dual stereo oscilloscope & 32-band peak LED equalizer across 6 procedural tracks.
-     - âœ… Yamaha YM2612 2-operator FM Sound Chip Laboratory with clickable piano tiles and harmonic ratio knobs.
-     - âœ… 3D Cracktro Workbench with 7 vector geometries (cube, octahedron, star, torus, icosahedron, helix, wavegrid).
-     - âœ… CP437 ANSI NFO Generator Studio & downloadable x86 assembly intro source (.asm).
-     - âœ… 1999 Scene Top-List voting poll & persistent underground courier shoutbox/guestbook.
-     - âœ… Central KiloNet Webring node #013 integration with subtle darknet discovery hooks.
+  0. `kweb://warez` (*0xRELEASE Scene Vault & x86 Reverse Engineering Lab*):
+     - ✅ 16 parody releases with 3D vector cracktro launcher, custom NFO viewer & .diz/.nfo downloads.
+     - ✅ x86 Reverse Engineering Sandbox: SoftICE '99 simulator with disassembler, registers, breakpoint manager (F9), RUN (F5), hex opcode patcher & PE32 binary builder.
+     - ✅ Chiptune Jukebox: 8 tracks (YM2612 FM + SPC700 stereo delay), time-domain oscilloscope, 32-band peak LED equalizer & live 4-channel Tracker Pattern visualizer with mute/solo.
+     - ✅ 3D Cracktro Workbench: 12 vector geometries & demoscene shaders (Tesseract 4D hypercube, Copper Rainbow Bars, 256-color Sine Plasma, 3D Warp Starfield, Phosphor Glitch, Acoustic Waterfall) with custom text scroller & downloadable NASM source.
+     - ✅ CP437 ANSI Studio: 6 scene group presets, CP437 character insertion palette & 1999Hz subcarrier intercept injector.
+     - ✅ NFO Stego Forensics Lab: trailing whitespace (SNOW) binary extractor, XOR-0x7F analyzer, CRC32/MD5 hash calculator, Web Audio 1999Hz carrier tone generator with CRT waterfall spectrum, and whitespace stego injector.
+     - ✅ 4-Channel Tracker Pattern Composer: 16-step matrix, 4 presets, tempo slider, export to C array / NASM / JSON, and 8 hardware SFX trigger pads.
+     - ✅ 1999 Scene Top-List & Demoscene Trivia Challenge: persistent voting polls, 10-question challenge & credential certificate.
+     - ✅ Live Firebase RTDB Scene Shoutbox: live courier presence, dead-drop keyword daemon (`Ghost_SysOp_0x7F`) & local fallback.
   1. `kweb://geocities` (*CyberSpire's Retro Shrine & MOD Vault*):
-     - âœ… 5 GeoCities Neighborhood Themes (SiliconValley, Area51, BeverlyHills, SoHo, EnchantedForest) & live presence badge.
-     - âœ… Web Audio 16-bit tracker MIDI jukebox with 4 demoscene/MOD tracks and dancing LED equalizer.
-     - âœ… Amiga ProTracker (.MOD) File Dissector & Pattern Matrix Analyzer with 31-sample table & PCM waveform audition.
-     - âœ… YM2612 2-Operator FM Synthesizer & Instrument Laboratory with 18-key interactive keyboard, oscilloscope & 8 presets.
-     - âœ… Retro Web 1.0 GIF & Banner Studio (468x60 / 88x31 canvas badge generator, PNG download, HTML embed).
-     - âœ… Webmaster Acolyte Workbench (1999 GeoCities personal page builder with live Netscape CRT preview & index.html download).
-     - âœ… Live Firebase Realtime Database Shoutbox & Cyber Voyagers Presence with quick-stamps and local storage fallback.
-     - âœ… 16-color Pixel Art Studio & Gallery with 8 retro sprites, zoom, and PNG/BMP/C-Hex export.
-     - âœ… 3D wireframe Silicon Oracle '99 techno-divination & Y2K compliance diagnostic terminal.
+     - ✅ 5 GeoCities Neighborhood Themes (SiliconValley, Area51, BeverlyHills, SoHo, EnchantedForest) & live presence badge.
+     - ✅ Web Audio 16-bit tracker MIDI jukebox with 4 demoscene/MOD tracks and dancing LED equalizer.
+     - ✅ Amiga ProTracker (.MOD) File Dissector & Pattern Matrix Analyzer with 31-sample table & PCM waveform audition.
+     - ✅ YM2612 2-Operator FM Synthesizer & Instrument Laboratory with 18-key interactive keyboard, oscilloscope & 8 presets.
+     - ✅ Demoscene Real-Time Visual FX Laboratory (Amiga Copper sine bars with scroller, 256-color sine plasma, Doom fire, 3D warp starfield, phosphor rain, PNG snapshot).
+     - ✅ 8-bit Amiga PCM Chip-Sample Sculptor & Audio Waveform Lab (interactive canvas drawing, 8 presets, normalize, 4-bit crush, smooth, reverse, loop points, C-2..C-5 pitches, RIFF/WAV & C array export).
+     - ✅ 1999 Cyber Voyagers Web Survey & Millennial Poll (3 interactive questions with animated progress bars, localStorage persistence, and live Firebase RTDB sync).
+     - ✅ Retro Web 1.0 GIF & Banner Studio (468x60 / 88x31 canvas badge generator, PNG download, HTML embed).
+     - ✅ Webmaster Acolyte Workbench (1999 GeoCities personal page builder with live Netscape CRT preview & index.html download).
+     - ✅ Live Firebase Realtime Database Shoutbox & Cyber Voyagers Presence with quick-stamps and local storage fallback.
+     - ✅ 16-color Pixel Art Studio & Gallery with 8 retro sprites, zoom, and PNG/BMP/C-Hex export.
+     - ✅ 3D wireframe Silicon Oracle '99 techno-divination & Y2K compliance diagnostic terminal.
   2. `kweb://portal` (*KiloNet Central 1999 Directory*):
-     - âœ… KiloSearch 1.0 simulated search engine indexing all 98 KiloApps & webring nodes with live filtering.
-     - âœ… Live simulated NASDAQ-1999 stock market ticker banner and $10k interactive portfolio brokerage desk.
-     - âœ… Interactive classified ads board with localStorage persistence, posting modal & simulated KMail reply.
-     - âœ… Multi-city meteorological station (NY, SF, London, Tokyo, Orbital Station) with live metrics & 3-day forecast.
-     - âœ… Daily 1999 retro computing trivia challenge with streak tracking and rank scoring.
-     - âœ… Yamaha YM2612 2-operator FM synthesis & SPC700 stereo delay sound effects.
+     - ✅ KiloSearch 1.0 simulated search engine indexing all 98 KiloApps & webring nodes with live filtering.
+     - ✅ Live simulated NASDAQ-1999 stock market ticker banner and $10k interactive portfolio brokerage desk.
+     - ✅ Interactive classified ads board with localStorage persistence, posting modal & simulated KMail reply.
+     - ✅ Multi-city meteorological station (NY, SF, London, Tokyo, Orbital Station) with live metrics & 3-day forecast.
+     - ✅ Daily 1999 retro computing trivia challenge with streak tracking and rank scoring.
+     - ✅ Yamaha YM2612 2-operator FM synthesis & SPC700 stereo delay sound effects.
+     - ✅ Voyager Guestbook (Tab 11): CGI Perl '99 simulator with 14 authentic signatures, posting modal, live Firebase RTDB sync & kudos.
+     - ✅ KiloNet NOC Diagnostic Lab (Tab 12): InterNIC WHOIS explorer, multi-hop ICMP traceroute simulator, HTTP/1.0 header dissector & W3C HTML 4.01 validator.
+     - ✅ KiloArcade '99 (Tab 13): "Silicon Bug Buster '99" 60 FPS motherboard defense game with Glide/Shield/Clock powerups & hall of fame.
   3. `kweb://webring` (*Central KiloNet Webring Hub & Badge Studio*):
-     - âœ… 18-node verified directory with dynamic counters, category filtering, instant search & node inspector modal.
-     - âœ… 88x31 Micro Button Studio & Pixel Art Generator (10 archetypes, 11 glyphs, 3D bevels, zoom, PNG/BMP/CSS export, pure client-side 24-bit .BMP file synthesis).
-     - âœ… 8 Official HTML Webring Widget Styles (Classic text, 3D Beveled Box, Cyberpunk Neon HUD, 88x31 Button, Marquee Ticker, Netscape 4.7 Select, Lynx CP437 ASCII, Matrix Phosphor).
-     - âœ… Interactive Ring Topology Map (880x420 HTML5 Canvas visualizing 18 nodes in closed loop, photon packets, Circular/Hub-Spoke/Radar modes, FM ping sound).
-     - âœ… Backbone Traceroute Simulator (5-hop ICMP traceroute terminal across gateway, concentrator, MCI WorldCom backbone & KiloNet transit).
-     - âœ… 1999 Baud Rate Bandwidth Benchmark (diagnostic speed matrix across V.32 to T1 leased lines).
-     - âœ… Web Voyager Passport & Rank System (dynamic ranks & 5-category postal wax stamp collection book).
-     - âœ… Dual Sega Genesis YM2612 FM synthesis tracks ("Hyperlink Voyager '99", "Ringmaster's Cadence") with SNES SPC700 stereo delay & procedural SFX.
-     - âœ… Random Hypermedia Teleporter with 3D canvas starfield warp, staged countdown & Webmaster Application / Guestbook.
+     - ✅ 18-node verified directory with dynamic counters, category filtering, instant search & node inspector modal.
+     - ✅ 88x31 Micro Button Studio & Pixel Art Generator (10 archetypes, 11 glyphs, 3D bevels, zoom, PNG/BMP/CSS export, pure client-side 24-bit .BMP file synthesis).
+     - ✅ 8 Official HTML Webring Widget Styles (Classic text, 3D Beveled Box, Cyberpunk Neon HUD, 88x31 Button, Marquee Ticker, Netscape 4.7 Select, Lynx CP437 ASCII, Matrix Phosphor).
+     - ✅ Interactive Ring Topology Map (880x420 HTML5 Canvas visualizing 18 nodes in closed loop, photon packets, Circular/Hub-Spoke/Radar modes, FM ping sound).
+     - ✅ Backbone Traceroute Simulator (5-hop ICMP traceroute terminal across gateway, concentrator, MCI WorldCom backbone & KiloNet transit).
+     - ✅ 1999 Baud Rate Bandwidth Benchmark (diagnostic speed matrix across V.32 to T1 leased lines).
+     - ✅ Web Voyager Passport & Rank System (dynamic ranks & 5-category postal wax stamp collection book).
+     - ✅ Dual Sega Genesis YM2612 FM synthesis tracks ("Hyperlink Voyager '99", "Ringmaster's Cadence") with SNES SPC700 stereo delay & procedural SFX.
+     - ✅ Random Hypermedia Teleporter with 3D canvas starfield warp, staged countdown & Webmaster Application / Guestbook.
   4. `kweb://users/~neon_rider` (*Personal Hacker / Demoscene Homepage*):
-     - âœ… Interactive 32-bit x86 CPU emulator, instruction sandbox, register stepper with EFLAGS and Pentium cycle counter.
-     - âœ… Live Data RAM Hex Dump (0x00402000) with ASCII view, flash memory mutations, and diegetic 10.19.99.4 packet buffer.
-     - âœ… Virtual Stack Inspector (0x0012FF80) with visual frame/ESP tracking, plus complete 16x16 Intel x86 Opcode Reference Map (00h-FFh).
-     - âœ… Live Mode 13h VGA 320x200 60FPS demoscene canvas (TinyTunnel, Plasma99, FireBuffer, Starfield3D) with 4 authentic retro palettes.
-     - âœ… YM2612 2-Operator FM Synthesizer Laboratory with interactive piano keyboard, SPC700 stereo delay & 4-track tracker jukebox.
-     - âœ… Demoscene code vault with client-side .asm/.nfo downloads, persistent CGI guestbook, and KiloNet Webring #006 node interconnect.
+     - ✅ Interactive 32-bit x86 CPU emulator, opcode assembler/stepper, and interactive RAM Hex Memory Editor with live byte patching & 10.19.99.4 packet injection.
+     - ✅ Real-time Mode 13h VGA 60FPS Demoscene Canvas: 3D vector mesh engine (Cube, Tesseract, Torus, Octahedron, Star; wireframe & flat Lambertian), Voxel Land '99 Comanche raycaster & 1KB cracktro intro with 8x8 font text scroller.
+     - ✅ Yamaha YM2612 FM Synthesis & SPC700 tracker jukebox (6 tracks), interactive piano keyboard & 16-step tracker sequencer.
+     - ✅ Pentium II 450MHz synthetic silicon benchmark, 8 x86 optimization articles, and 11-file ASM vault (.asm/.hex downloads).
   5. `kweb://asm-temple` (*x86 Assembly Programming Shrine & PE32 Dissector*):
-     - âœ… 133-instruction Opcode Oracle with category filters, Pentium cycle counts, and encoding format deconstruction.
-     - âœ… Two-way live x86 assembler & disassembler with preset library, C array / NASM / binary export, and .bin downloads.
-     - âœ… Interactive 32-bit micro-CPU single-step emulator (EAX-EIP, flags, cycle counter, virtual stack, SUB/AND/OR/NOT/NEG/SHL/SHR/XCHG/CMP/TEST).
-     - âœ… 32-bit interactive radix altar with IEEE-754 single float, ASCII char[4], and EFLAGS status simulation.
-     - âœ… Win32 PE32 binary dissector (headers, Shannon entropy heatmaps, IAT imports, entrypoint disasm, hex dumper, RVA tool).
-     - âœ… Win32 PE32 binary builder compiling valid downloadable 1.5KB .EXE executables directly in browser memory.
-     - âœ… Yamaha YM2612 FM synthesis & SPC700 stereo delay chiptune jukebox (4 tracks) with real-time FM timbre tuner.
-     - âœ… Persistent acolyte guestbook & Central KiloNet Webring node #005 interconnect with CyberCafe '99, ~neon_rider & Scene Vault.
+     - ✅ 133-instruction Opcode Oracle with category filters, Pentium cycle counts, and encoding format deconstruction.
+     - ✅ Two-way live x86 assembler & disassembler with preset library, C array / NASM / binary export, and .bin downloads.
+     - ✅ Interactive 32-bit micro-CPU single-step emulator (EAX-EIP, flags, cycle counter, virtual stack, SUB/AND/OR/NOT/NEG/SHL/SHR/XCHG/CMP/TEST).
+     - ✅ 32-bit interactive radix altar with IEEE-754 single float, ASCII char[4], and EFLAGS status simulation.
+     - ✅ Win32 PE32 binary dissector (headers, Shannon entropy heatmaps, IAT imports, entrypoint disasm, hex dumper, RVA tool).
+     - ✅ Win32 PE32 binary builder compiling valid downloadable 1.5KB .EXE executables directly in browser memory.
+     - ✅ Yamaha YM2612 FM synthesis & SPC700 stereo delay chiptune jukebox (4 tracks) with real-time FM timbre tuner.
+     - ✅ Persistent acolyte guestbook & Central KiloNet Webring node #005 interconnect with CyberCafe '99, ~neon_rider & Scene Vault.
   6. `kweb://cybercafe` (*The Underground BBS, ASCII Studio & mIRC Lounge*):
-     - âœ… Threaded retro message boards with 4 channels, search, localStorage persistence & ASCII art embedding.
-     - âœ… Interactive 60x20 ASCII/ANSI art studio with CP437 glyphs, 16-color palette, .ANS/.TXT export & 1-click forum posting.
-     - âœ… Underground IRC terminal client (mIRC style) with 4 channels, slash commands, interactive CafeBot & real-time Firebase RTDB sync.
-     - âœ… Procedural Genesis YM2612 2-operator FM synthesis & SNES SPC700 stereo delay audio jukebox with 3 tracks & 14-band LED CRT visualizer.
-     - âœ… Terminal booth station telemetry, 56k V.90 throughput benchmark, cafe kiosk with downloadable thermal receipts & hardware vault NFOs.
-  7. `kweb://darknet` (*Node 0x7F Subterranean Relay & Warez NFO Cryptography*):
-     - âœ… Tier 3 Ghost Node: VT-100 terminal shell with 17 directives & virtual spool filesystem (`routes.conf`, `transponder.log`, `precursor_cipher.nfo`, `fleet_heartbeat.hex`, `hardware.cfg`).
-     - âœ… Warez NFO Steganography Lab: CP437 ANSI viewer, hex dumper, live steganography scanner (trailing whitespace / XOR-0x7F) & custom NFO injector with 5 scene releases (*Surreal Tournament '99 [FLT]*, *Tremor III Arena [RZR]*, *Half-Cycle 1.1 [PDX]*, *Machina Ex Preview [SKD]*, *Carlsbad Bedrock Relay*).
-     - âœ… CRC32 & MD5 hash calculator with anomaly detection matching subterranean ARG relay seeds.
-     - âœ… 14-algorithm packet decoder suite (Hex, XOR, Rot13, Base64, Polybius, Atbash, CW Morse audio, Whitespace Stego) with Shannon entropy.
-     - âœ… Subnet 10.19.99.0/24 packet monitor & Bell 202 AFSK frame crafting/injector with destination node replies.
-     - âœ… Dual 60FPS RF oscilloscope & cascading 2D waterfall spectrogram with 4 phosphor palettes, 144.39MHz / 1999Hz tuner & S-meter.
-     - âœ… Gated Middle-Game Puzzle Relay (Sector 0x7F) validating sequential cross-node artifacts (acoustic carrier, sector 03, warez checksum) and converging on Deep Core (10.19.99.127).
-     - âœ… Collaborative Subterranean Signal Mesh via Firebase RTDB (`arg/signals/subterranean_darknet`) with instant Carlsbad salt-vault solo loopback fallback.
-     - âœ… Universal procedural audio engine: Genesis YM2612 2-op FM synthesis + SNES SPC700 stereo delay across 3 chiptune tracks + procedural SFX.
-     - âœ… Client-side asset synthesis & download (.asc, .asm, .nfo, .rom, .conf, .log) & Central KiloNet Webring #012 interconnect.
-  8. `kweb://10.19.99.4/classified` (*Corporate Network Leak, Signal Diagnostic & Airgap Vault*):
+     - ✅ Threaded retro message boards with 4 channels, search, localStorage persistence & ASCII art embedding.
+     - ✅ Interactive 60x20 ASCII/ANSI art studio with CP437 glyphs, 16-color palette, .ANS/.TXT export & 1-click forum posting.
+     - ✅ Underground IRC terminal client (mIRC style) with 4 channels, slash commands, interactive CafeBot & real-time Firebase RTDB sync.
+     - ✅ Procedural Genesis YM2612 2-operator FM synthesis & SNES SPC700 stereo delay audio jukebox with 3 tracks & 14-band LED CRT visualizer.
+     - ✅ Terminal booth station telemetry, 56k V.90 throughput benchmark, cafe kiosk with downloadable thermal receipts & hardware vault NFOs.
+  7. `kweb://darknet` (*Node 0x7F Subterranean Relay & Cryptography Lab*):
+     - ✅ Cryptography Lab (Tab 10): 64-bit Feistel block cipher simulator with S-Box/P-Box bit diffusion & avalanche effect test (% bit flip).
+     - ✅ RC4 State Visualizer: 256-byte S-Box 16x16 interactive matrix with animated KSA permutation, PRGA byte stepper & keystream encryptor.
+     - ✅ OTP & PGP Vaults: Built One-Time Pad generator (geothermal entropy, 5-letter codebooks, mod 26 trace) and PGP 1999 ASCII armor/keyring.
+     - ✅ 2D Relay Topology Radar (Tab 11): Built 800x380 canvas with 7 nodes, 10 waveguides, animated photon pulses, Dijkstra routing & probe.
+     - ✅ Tier 3 Ghost Node: VT-100 terminal shell with 22 directives, virtual spool filesystem (`routes.conf`, `transponder.log`, `precursor_cipher.nfo`, `fleet_heartbeat.hex`).
+     - ✅ Warez NFO Steganography Lab, CRC32/MD5 hash calculator, 14-algorithm packet decoder, Subnet 10.19.99.0/24 packet sniffer, and RF oscilloscope.
+     - ✅ Universal audio engine: Genesis YM2612 2-op FM synthesis + SNES SPC700 stereo delay across 4 chiptune tracks + Bell 202 modem handshake & SFX.
+     - ✅ Client-side asset synthesis & download (.asc, .asm, .nfo, .rom, .conf, .log, .pad) & Central KiloNet Webring #018 interconnect.
+  8. `kweb://10.19.99.4/classified` (*Corporate Network Leak & Signal Diagnostic*):
      - ✅ Signal Diagnostic Lab with dual-display time-domain oscilloscope & FFT frequency spectrum, tunable YM2612 FM / SPC700 stereo delay DSP controls & live subcarrier demodulator.
      - ✅ Subnet RF Sweep: 10.19.99.0/24 node sweep tracking signal-to-noise ratio, carrier lock, and audio DAC leakage.
-     - ✅ Corporate Leak Suite: 10 declassified diegetic memos, 6-sector memory hex inspector, packet sniffer with test frame injection & skunkworks CLI.
-     - ✅ Dual-Presence Acoustic Resonance Lock: Firebase RTDB multi-session synchronization with local Salado loopback fallback unlocking airgap transponder `CARLSBAD-TRANSPONDER-SYNCHRONIZED-0x7F`.
-     - ✅ Sequential Key-Artifact Decryption Chamber: 3-stage validation validating Echo Subsystem (1999Hz), Darknet (Sector 03), and Carlsbad coordinates unlocking Deep Memo #09 & Precursor Fragment #3 (`PRECURSOR-CARLSBAD-BEDROCK-0x7F1999`).
-     - ✅ Lithospheric Packet Bridge & Frame Injector: Subsurface packet animator diving through geological strata to -750m with Deep Core (10.19.99.127) echo frames.
-     - ✅ Forensic Steganography Demodulator: Real-time 1999Hz audio waterfall canvas with ASCII stream decoding and phase shift parser.
-     - ✅ Client-Side Artifact Downloads: In-browser synthesis of `CARLSBAD_0x1999.DMP`, `STATION_0x7F.NFO`, `MEMO_09.TXT`, and 16-bit PCM `CARRIER_1999HZ_BEACON.WAV`.
+     - ✅ Corporate Leak Suite: Sanitized diegetic memos, 4-sector memory hex inspector, packet sniffer with test frame injection & skunkworks CLI.
      - ✅ Discovery Integration: Linked node in KNet directory, portal category 5 / search index, portal classified ads, and webring node #015 / probe console.
   9. `kweb://echo-subsystem.net` (*Acoustic Research Lab, SIGINT Grid & Audio Steganography*):
-     - âœ… 7-log diegetic acoustic research journal with redaction masks, categorized filters & persistent user observation logbook (.SIG export).
-     - âœ… Yamaha YM2612 2-Operator FM synthesis engine with ADSR envelope, SPC700 stereo delay DSP, 14-key keyboard & dual-mode CRT oscilloscope / Lissajous XY phase goniometer.
-     - âœ… Real-time 2D FFT waterfall sonogram with 4 false-color palettes (Phosphor, Amber, Cyan, Thermal), peak tracking & live visual steganography rendering.
-     - âœ… 3-band parametric filter workbench with interactive live Bode magnitude plot & 1999Hz carrier lock acquisition.
-     - âœ… Subsurface Acoustic Transducer Grid & Phased Beamformer with 360Â° polar radar canvas, 4 listening stations (Carlsbad, Pacific MCI, Cheyenne Mtn, Orbital) & live phased beam audio.
-     - âœ… Spectrographic Audio Steganography Studio (visual glyph frequency encoding & .WAV export) + Bell 202 FSK teleprinter (RTTY) transceiver.
-     - âœ… VT-100 diagnostic field console and client-side browser synthesis of genuine RIFF WAV, DAT, JSON & SIG files.
-     - âœ… Registered as member node #016 in Central KiloNet Webring & linked across KNet portal directory.
+     - ✅ 9-log diegetic acoustic research journal with redaction masks, categorized filters & persistent user observation logbook (.SIG export).
+     - ✅ Yamaha YM2612 2-Operator FM synthesis engine with ADSR envelope, SPC700 stereo delay DSP, 14-key keyboard & dual-mode CRT oscilloscope / Lissajous XY phase goniometer.
+     - ✅ Real-time 2D FFT waterfall sonogram with 4 false-color palettes (Phosphor, Amber, Cyan, Thermal), peak tracking & live visual steganography rendering.
+     - ✅ 3-band parametric filter workbench with interactive live Bode magnitude plot & 1999Hz carrier lock acquisition.
+     - ✅ Subsurface Acoustic Transducer Grid & Phased Beamformer with 360° polar radar canvas, 4 listening stations (Carlsbad, Pacific MCI, Cheyenne Mtn, Orbital) & live phased beam audio.
+     - ✅ Spectrographic Audio Steganography Studio (visual glyph frequency encoding & .WAV export) + Bell 202 FSK teleprinter (RTTY) transceiver.
+     - ✅ Subterranean Acoustic Airgap & Collaborative Mesh (Tab 08) with Firebase RTDB presence, dual resonance lock (Carlsbad + ESARL) & 25s solo fallback.
+     - ✅ Tier 3 Sequential Key-Artifact Gating Deck (Carlsbad coords, Darknet XOR seed, Deep Core offset) unlocking ESARL Deep Transmission #0x7F & synthesized WAV/DAT/TXT downloads.
+     - ✅ VT-100 diagnostic field console and client-side browser synthesis of genuine RIFF WAV, DAT, JSON & SIG files.
+     - ✅ Registered as member node #016 in Central KiloNet Webring & linked across KNet portal directory.
   10. `kweb://deep-core` (*Ghost Node Terminal & Passkey Analyzer*):
-      - âœ… Multi-mode CRT visualizer: 3 display modes (Time-Domain Wave, 2D Phosphor Waterfall Spectrogram, Lissajous XY Phase Goniometer).
-      - âœ… 5-sector quarantine defusal workbench (MEM_HEAP, AUDIO_DSP, NET_RELAY, STORAGE_VFS, CORE_AI) with dynamic parity scoring (0% to 100%).
-      - âœ… Subterranean ghost spool vault (/core/spool/) with 5 diegetic files and client-side download synthesis (.log, .rules, .json, .sig, .nfo).
-      - âœ… Subterranean raw AFSK/TCP diagnostic packet injector transmitting frames to 10.19.99.1, 10.19.99.4, 10.19.99.19, 10.19.99.127.
-      - âœ… Procedural Sega Genesis YM2612 2-op FM chiptune jukebox with SNES SPC700 stereo delay DSP across 3 ambient vault tracks.
-      - âœ… Cryptographic tools (SHA-256, CRC32, Shannon entropy, bitwise XOR, memory decode) with F5/F9 state persistence.
-      - âœ… Registered as node #017 in Central KiloNet Webring, linked in KNet browser & KiloNet Portal directory.
-- **Execution Protocol**:
-  - `kilo-expander`, `kilo-creator`, and `kilo-graphics` alternate between native app targets and `virtual_web_target` to ensure the web world has genuine functional depth.
-  - All virtual web pages remain strictly `< 999 KB`, self-contained or cleanly linked within `/web/`, and adhere to period-accurate HTML 4.01 aesthetic.
+      - ✅ Multi-mode CRT visualizer: 4 display modes (Time-Domain Wave, 2D Phosphor Waterfall Spectrogram, Lissajous XY Phase Goniometer, 32-Band FFT Spectrum).
+      - ✅ 5-sector interactive quarantine defusal workbench (MEM_HEAP hex patcher, AUDIO_DSP harmonic tuner, NET_RELAY switchboard, STORAGE_VFS inode repair, CORE_AI 5x5 neural lattice parity puzzle) with unseal ceremony.
+      - ✅ 3D Wireframe Salt Vault Radar: 60FPS Mode 13h vector projection canvas with 3 switchable geometries (Torus, 4D Hypercube, Subnet Sonar) and 3D orbit controls.
+      - ✅ Collaborative Subterranean Signal Mesh via Firebase RTDB (`arg/presence/deep_core`, `arg/signals/subterranean_darknet`) with 25s solo AI fallback loopback (`Vault_Core_Daemon_0x1999`).
+      - ✅ Subterranean ghost spool vault (/core/spool/) with 8 diegetic files and client-side download synthesis (.log, .rules, .json, .sig, .nfo, .dat, .asm).
+      - ✅ Procedural Sega Genesis YM2612 2-op FM chiptune jukebox with SNES SPC700 stereo delay DSP across 4 ambient vault tracks & interactive 12-key keyboard.
+      - ✅ Cryptographic tools (SHA-256, CRC32, Shannon entropy, bitwise XOR, memory decode) with F5/F9 state persistence.
+      - ✅ Registered as node #017 in Central KiloNet Webring, linked in KNet browser & KiloNet Portal directory.
