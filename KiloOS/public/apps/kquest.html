@@ -565,15 +565,15 @@
     /* Toast Notification */
     #toast {
       position: fixed;
-      top: 54px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-20px);
+      bottom: 18px;
+      right: 18px;
+      transform: translateY(20px);
       background: rgba(24, 24, 37, 0.95);
       color: #f9e2af;
       border: 1px solid #89b4fa;
       box-shadow: 0 8px 24px rgba(0,0,0,0.8), 0 0 14px rgba(137, 180, 250, 0.3);
       border-radius: 8px;
-      padding: 8px 20px;
+      padding: 8px 18px;
       font-size: 0.85rem;
       font-weight: 600;
       z-index: 10000;
@@ -582,11 +582,11 @@
       opacity: 0;
       transition: all 0.25s ease-out;
       text-align: center;
-      max-width: 90%;
+      max-width: 380px;
     }
     #toast.show {
       opacity: 1;
-      transform: translateX(-50%) translateY(0);
+      transform: translateY(0);
       pointer-events: auto;
     }
   </style>
@@ -595,9 +595,12 @@
 
   <!-- Header -->
   <header>
-    <h1>🗡️ KQuest <span style="font-size:0.75rem; color:#a6adc8; margin-left:8px; font-weight:normal;">(Press H / F1 for Help)</span> <span class="badge">Phase 14</span></h1>
+    <h1>🗡️ KQuest <span style="font-size:0.75rem; color:#a6adc8; margin-left:8px; font-weight:normal;">(Press H / F1 for Help)</span> <span class="badge">RPG</span></h1>
     <div class="subtitle">Fantasy Text RPG & Dungeon Crawler (Web Audio API, Save Slots, Comprehensive Help & Lore Codex)</div>
-    <div style="display:flex; gap:6px; align-items:center;">
+    <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+      <button class="btn" style="background:#a6e3a1; color:#11111b; font-size:0.75rem; padding:4px 8px; font-weight:700;" onclick="saveSlot(0)" title="Quick Save (F5)">💾 Save (F5)</button>
+      <button class="btn" style="background:#89b4fa; color:#11111b; font-size:0.75rem; padding:4px 8px; font-weight:700;" onclick="loadSlot(0)" title="Quick Load (F9)">📂 Load (F9)</button>
+      <button class="btn" style="background:#313244; color:#cdd6f4; font-size:0.75rem; padding:4px 8px;" onclick="setGameState(STATE.CONFIG)" title="Game Settings & Key Binds">⚙️ Settings</button>
       <button class="btn btn-accent" id="audio-toggle-btn" onclick="toggleAudio()" style="font-size:0.75rem; padding:4px 8px;">🔊 SFX: ON</button>
       <button class="btn btn-primary" onclick="openHelpModal()" style="font-size:0.75rem; padding:4px 8px;">❓ Help & Codex (H/F1)</button>
     </div>
@@ -660,8 +663,8 @@
       <!-- Text Log Panel -->
       <div class="log-panel" id="log-panel">
         <div class="log-entry system">=== Welcome to KQuest: Fantasy RPG ===</div>
-        <div class="log-entry system">Press 'H' at any time to view the Help & Lore Codex.</div>
-        <div class="log-entry system">Phase 14: Comprehensive Help & Lore Codex Active!</div>
+        <div class="log-entry system">Press 'H' or 'F1' at any time to view the Help & Lore Codex.</div>
+        <div class="log-entry system">Use [1-6] for rapid actions, and [F5]/[F9] for Quick Save/Load.</div>
       </div>
 
       <!-- Action Button Panel -->
@@ -2430,6 +2433,7 @@
     ];
 
     // Player Object
+    let charCreated = false;
     let player = {
       name: 'Valerius',
       class: 'Warrior',
@@ -2582,8 +2586,29 @@
       document.getElementById('hp-bar').style.width = `${hpPercent}%`;
       document.getElementById('mp-bar').style.width = `${mpPercent}%`;
 
-      const b = BIOMES[player.biome];
-      document.getElementById('dungeon-floor').textContent = (currentState === STATE.DUNGEON || currentState === STATE.COMBAT) ? (player.arenaActive ? `Boss Rush (W${player.arenaWave})` : `${b.name} (F${player.floor})`) : (currentState === STATE.BOSS_RUSH ? 'Boss Rush Arena' : 'Town Square');
+      const b = BIOMES[player.biome] || BIOMES[0];
+      let locLabel = 'Town Square';
+      if (currentState === STATE.CHAR_CREATE) locLabel = 'Hero Creation';
+      else if (currentState === STATE.DUNGEON || currentState === STATE.COMBAT) {
+        locLabel = player.arenaActive ? `Boss Rush (W${player.arenaWave})` : `${b.name} (F${player.floor})`;
+      } else if (currentState === STATE.BOSS_RUSH) locLabel = 'Boss Rush Arena';
+      else if (currentState === STATE.CONFIG) locLabel = 'Game Settings';
+      else if (currentState === STATE.SAVE_LOAD) locLabel = 'Save / Load';
+      else if (currentState === STATE.ACHIEVEMENTS) locLabel = 'Hero Milestones';
+      else if (currentState === STATE.ARMY_BATTLE) locLabel = 'War Campaign';
+      else if (currentState === STATE.CASTLE_DEFENSE) locLabel = 'Castle Defense';
+      else if (currentState === STATE.TRAINING_HALL) locLabel = 'Training Hall';
+      else if (currentState === STATE.QUEST_BOARD) locLabel = 'Bounty Board';
+      else if (currentState === STATE.TAVERN) locLabel = 'Rusty Dragon Tavern';
+      else if (currentState === STATE.SHOP) locLabel = 'Merchant Shop';
+      else if (currentState === STATE.CRAFTING) locLabel = 'Alchemy & Forge';
+      else if (currentState === STATE.MERCENARY) locLabel = 'Mercenary Guild';
+      else if (currentState === STATE.FACTIONS) locLabel = 'Faction Encampment';
+      else if (currentState === STATE.MOUNTS) locLabel = 'Town Stables';
+      else if (currentState === STATE.KINGDOM) locLabel = 'Royal Stronghold';
+      else if (currentState === STATE.REPLAYS) locLabel = 'Combat Chronicle';
+      else if (currentState === STATE.GAME_OVER) locLabel = 'Fallen in Battle';
+      document.getElementById('dungeon-floor').textContent = locLabel;
 
       updateInventoryUI();
       updateQuestUI();
@@ -3022,6 +3047,14 @@
     }
 
     function saveSlot(slotNum) {
+      if (!charCreated || currentState === STATE.CHAR_CREATE) {
+        showToast('⚠️ Create your hero before saving progress!', 2500);
+        return;
+      }
+      if (currentState === STATE.GAME_OVER || player.hp <= 0) {
+        showToast('⚠️ Cannot save while fallen in battle. Restart or load a save!', 2500);
+        return;
+      }
       const data = {
         player: JSON.parse(JSON.stringify(player)),
         savedState: (currentState === STATE.SAVE_LOAD || currentState === STATE.CHAR_CREATE || currentState === STATE.GAME_OVER) ? STATE.TOWN : currentState,
@@ -3062,6 +3095,8 @@
       try {
         const data = JSON.parse(raw);
         player = data.player;
+        if (player.hp <= 0) player.hp = Math.max(1, Math.floor(player.maxHp * 0.5));
+        charCreated = true;
         if (data.ngLevel !== undefined) player.ngLevel = data.ngLevel;
         if (data.achievements) player.achievements = data.achievements;
         if (data.savedEnemy) {
@@ -3157,7 +3192,7 @@
 
       const ctrl = document.getElementById('controls-panel');
       ctrl.innerHTML = `
-        <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Return to Town</button>
+        <button class="btn btn-primary" onclick="setGameState(charCreated ? STATE.TOWN : STATE.CHAR_CREATE)">${charCreated ? '⬅️ Return to Town' : '⬅️ Return to Hero Creation'}</button>
       `;
     }
 
@@ -3257,7 +3292,7 @@
       `;
       const ctrl = document.getElementById('controls-panel');
       ctrl.innerHTML = `
-        <button class="btn btn-primary" onclick="setGameState(STATE.TOWN)">⬅️ Back to Town</button>
+        <button class="btn btn-primary" onclick="setGameState(charCreated ? STATE.TOWN : STATE.CHAR_CREATE)">${charCreated ? '⬅️ Back to Town' : '⬅️ Back to Hero Creation'}</button>
       `;
     }
 
@@ -3359,6 +3394,7 @@
         player.armor = { name: 'Hunter Cloak', bonusDef: 3, prefix: '' };
       }
 
+      charCreated = true;
       logMsg(`Welcome, ${player.name} the ${player.class}! Your journey begins in Oakhaven Town.`, 'system');
       setGameState(STATE.TOWN);
       try {
@@ -3414,6 +3450,7 @@
         <button class="btn" style="background:#a6e3a1; color:#11111b;" onclick="setGameState(STATE.SAVE_LOAD)">💾 Save / Load</button>
         <button class="btn" style="background:#ffd700; color:#11111b;" onclick="setGameState(STATE.ACHIEVEMENTS)">🏆 Milestones (${unlockedAchCount}/10)</button>
         <button class="btn" style="background:#89b4fa; color:#11111b;" onclick="setGameState(STATE.REPLAYS)">📜 Combat Log</button>
+        <button class="btn" style="background:#45475a; color:#cdd6f4;" onclick="setGameState(STATE.CONFIG)">⚙️ Settings & Keys</button>
         <button class="btn" style="background:#f38ba8; color:#11111b;" onclick="setGameState(STATE.FACTIONS)">🚩 Factions</button>
         <button class="btn" style="background:#f9e2af; color:#11111b;" onclick="setGameState(STATE.MOUNTS)">🐎 Mounts</button>
         <button class="btn" style="background:linear-gradient(135deg, #ffd700, #fab387); color:#11111b; font-weight:700;" onclick="setGameState(STATE.KINGDOM)">👑 Kingdom & War</button>
@@ -5999,6 +6036,7 @@
         defenseWave: 1,
         defenseBestWave: 1
       };
+      charCreated = false;
       setGameState(STATE.CHAR_CREATE);
       logMsg(`--- New Journey Initialized ---`, 'system');
       updateUI();
@@ -6058,7 +6096,16 @@
 
     // Global Hotkey Listener for Quick Help & Action Keys
     window.addEventListener('keydown', (e) => {
+      const helpModal = document.getElementById('help-modal-overlay');
+      const isHelpOpen = helpModal && helpModal.style.display === 'flex';
+
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        if (e.key === 'Escape' && isHelpOpen) {
+          e.preventDefault();
+          e.target.blur();
+          closeHelpModal();
+          return;
+        }
         if (e.key === 'Enter' && e.target.id === 'name-input') {
           e.preventDefault();
           e.target.blur();
@@ -6067,9 +6114,13 @@
         return;
       }
 
-      const helpModal = document.getElementById('help-modal-overlay');
-      if (helpModal && helpModal.style.display === 'flex') {
-        if (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') {
+      if (isHelpOpen) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeHelpModal();
+          return;
+        }
+        if ((e.key === 'Enter' || e.key === ' ') && e.target.tagName !== 'BUTTON') {
           e.preventDefault();
           closeHelpModal();
           return;
@@ -6123,9 +6174,9 @@
         toggleHelpModal();
       } else if (e.key === 'Escape') {
         if (currentState !== STATE.TOWN && currentState !== STATE.CHAR_CREATE && currentState !== STATE.COMBAT && currentState !== STATE.ARMY_BATTLE && currentState !== STATE.CASTLE_DEFENSE) {
-          setGameState(STATE.TOWN);
-          showToast('🏰 Returned to Town Square [Esc]', 2000);
-          logMsg('Returned to Town Square.', 'town');
+          setGameState(charCreated ? STATE.TOWN : STATE.CHAR_CREATE);
+          showToast(charCreated ? '🏰 Returned to Town Square [Esc]' : '⚔️ Returned to Hero Creation [Esc]', 2000);
+          logMsg(charCreated ? 'Returned to Town Square.' : 'Returned to Hero Creation.', 'town');
         }
       } else if (e.key === 's' || e.key === 'S') {
         if (currentState === STATE.COMBAT) {
@@ -6199,6 +6250,14 @@
     setGameState(STATE.CHAR_CREATE);
 
     function exportScoreJSON() {
+        if (!charCreated || currentState === STATE.CHAR_CREATE) {
+            showToast('⚠️ Create your hero before exporting save file!', 2500);
+            return;
+        }
+        if (currentState === STATE.GAME_OVER || player.hp <= 0) {
+            showToast('⚠️ Cannot export save while fallen in battle!', 2500);
+            return;
+        }
         const payload = {
             player: player,
             savedState: (currentState === STATE.SAVE_LOAD || currentState === STATE.CHAR_CREATE || currentState === STATE.GAME_OVER) ? STATE.TOWN : currentState,
@@ -6229,11 +6288,15 @@
                 if (imported) {
                     if (imported.player && imported.player.name) {
                         player = imported.player;
+                        if (player.hp <= 0) player.hp = Math.max(1, Math.floor(player.maxHp * 0.5));
+                        charCreated = true;
                         if (imported.ngLevel !== undefined) player.ngLevel = imported.ngLevel;
                         if (imported.achievements) player.achievements = imported.achievements;
                         if (imported.savedEnemy) currentEnemy = imported.savedEnemy;
                     } else if (imported.name) {
                         player = imported;
+                        if (player.hp <= 0) player.hp = Math.max(1, Math.floor(player.maxHp * 0.5));
+                        charCreated = true;
                     } else {
                         showToast('❌ Invalid JSON format.', 3000);
                         logMsg('❌ Invalid JSON format.', 'warning');
@@ -6361,6 +6424,18 @@
             <div class="help-card">
               <h4>💥 <kbd>B</kbd> Berserk Might</h4>
               <p>In combat: Casts Berserk Might (12 MP) doubling damage output (+100%) for 3 turns.</p>
+            </div>
+            <div class="help-card">
+              <h4>💾 <kbd>F5</kbd> Quick Save / 📂 <kbd>F9</kbd> Quick Load</h4>
+              <p>Instantly save or load your active journey in the primary quicksave slot at any point.</p>
+            </div>
+            <div class="help-card">
+              <h4>🎯 <kbd>1</kbd> - <kbd>6</kbd> Action Bar Hotkeys</h4>
+              <p>Trigger the first 6 action buttons in any screen or battle directly from your keyboard.</p>
+            </div>
+            <div class="help-card">
+              <h4>🔙 <kbd>Esc</kbd> Return / Dismiss</h4>
+              <p>Quickly return from sub-screens back to Town Square, or close open dialogues and guide.</p>
             </div>
             <div class="help-card">
               <h4><kbd>H</kbd> / <kbd>F1</kbd> / <kbd>?</kbd> Toggle Guide</h4>
@@ -6544,5 +6619,6 @@
     </div>
   </div>
   <input type="file" id="json-import-file" style="display:none;" accept=".json" onchange="importScoreJSON(event)">
+  <div id="toast" onclick="this.classList.remove('show')" title="Click to dismiss"></div>
 </body>
 </html>
