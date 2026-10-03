@@ -1672,7 +1672,7 @@
     <div class="marquee-bar">
       <span class="marquee-badge">FLASH 1999</span>
       <span class="marquee-content" id="marqueeText">
-        KiloApps Fleet reaches 98 retro applications! All modules under 999KB ceiling. Y2K compliance verification underway across all ring nodes.
+        KiloApps Fleet reaches 99 retro applications! All modules under 999KB ceiling. Y2K compliance verification underway across all ring nodes.
       </span>
     </div>
 
@@ -1701,7 +1701,7 @@
       <form id="searchForm" onsubmit="handlePortalSearch(event)">
         <div class="search-input-wrap">
           <label for="portalSearchInput" style="font-family:Arial, sans-serif; font-weight:bold; font-size:13px; color:var(--navy-dark);">Search Central:</label>
-          <input type="text" id="portalSearchInput" class="search-field" placeholder="Search 98 applications, games, tools, or webring sites..." oninput="handleLiveSearch(this.value)" />
+          <input type="text" id="portalSearchInput" class="search-field" placeholder="Search 99 applications, games, tools, or webring sites..." oninput="handleLiveSearch(this.value)" />
           <input type="submit" class="btn-retro btn-primary-retro" value="Search Central!" />
           <button type="button" class="btn-retro" onclick="handleFeelingRetro()">🎲 I'm Feeling Retro!</button>
           <button type="button" class="btn-retro" onclick="openSubmitSiteModal()">➕ Add Your URL</button>
@@ -2376,6 +2376,8 @@
             <option value="scenecentral.net">scenecentral.net</option>
             <option value="cybercafe99.net">cybercafe99.net</option>
             <option value="carlsbad-research.internal">carlsbad-research.internal</option>
+            <option value="echo-subsystem.net">echo-subsystem.net</option>
+            <option value="deep-core.internal">deep-core.internal</option>
           </select>
         </div>
         <div style="display:flex; gap:6px; margin-bottom:8px;">
@@ -2396,9 +2398,11 @@
             <option value="portal">kweb://portal (198.41.0.4 - Central Web Portal)</option>
             <option value="geocities">kweb://geocities (209.85.128.42 - CyberSpire Shrine)</option>
             <option value="warez">kweb://warez (194.109.13.77 - 0xRELEASE Scene Vault)</option>
+            <option value="echo">kweb://echo-subsystem.net (10.19.99.14 - Echo Acoustic Lab)</option>
             <option value="darknet">kweb://darknet (10.19.99.12 - Encrypted Relay)</option>
             <option value="cybercafe">kweb://cybercafe (204.152.184.99 - CyberCafe '99)</option>
             <option value="carlsbad">10.19.99.4 (Carlsbad Subterranean Transponder)</option>
+            <option value="deepcore">kweb://deep-core (10.19.99.254 - Deep Core Sanctum)</option>
           </select>
           <button class="btn-retro btn-primary-retro" id="traceStartBtn" onclick="runTraceroute()">Trace Route</button>
           <button class="btn-retro" id="traceAbortBtn" onclick="abortTraceroute()">Abort</button>
@@ -2454,6 +2458,57 @@
         </div>
         <div id="htmlValidationReport" style="font-size:11px; color:#333; max-height:80px; overflow-y:auto; line-height:1.35; background:#f9f9f9; border:1px solid #ccc; padding:4px 6px;">
           Ready to validate. Click [Audit HTML Code] to test compliance against late-1999 W3C standards.
+        </div>
+      </div>
+
+      <!-- Panel 5: Webring Badge & Meta-Tag Generator -->
+      <div class="noc-panel" style="grid-column: 1 / -1;">
+        <div class="noc-title">
+          <span>🌐 1999 Webmaster Studio: Meta-Tag &amp; Webring Badge Generator</span>
+          <span style="font-size:11px; color:#555;">HTML 4.01 Transitional Standard</span>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+          <div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-bottom:6px;">
+              <div>
+                <label style="font-size:11px; font-weight:bold;">Site Title:</label>
+                <input type="text" id="genSiteTitle" class="form-input" value="The Silicon Frontier" style="font-size:11px;" oninput="generateWebmasterSnippet()" />
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:bold;">Webmaster Nick:</label>
+                <input type="text" id="genWebmaster" class="form-input" value="CyberSurfer_99" style="font-size:11px;" oninput="generateWebmasterSnippet()" />
+              </div>
+            </div>
+            <div style="margin-bottom:6px;">
+              <label style="font-size:11px; font-weight:bold;">Meta Description:</label>
+              <input type="text" id="genSiteDesc" class="form-input" value="Premier retro 1999 hypermedia archive and hardware benchmark station." style="font-size:11px;" oninput="generateWebmasterSnippet()" />
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; margin-bottom:6px;">
+              <div>
+                <label style="font-size:11px; font-weight:bold;">Badge Style:</label>
+                <select id="genBadgeStyle" class="form-input" style="font-size:11px;" onchange="generateWebmasterSnippet()">
+                  <option value="netscape">NETSCAPE 4.7 NOW (88x31)</option>
+                  <option value="notepad">MADE WITH NOTEPAD (88x31)</option>
+                  <option value="html4">W3C VALID HTML 4.01 (88x31)</option>
+                  <option value="color16">800x600 16-BIT COLOR (88x31)</option>
+                  <option value="y2k">Y2K READY 1999 (88x31)</option>
+                </select>
+              </div>
+              <div>
+                <label style="font-size:11px; font-weight:bold;">Webring Member #:</label>
+                <input type="text" id="genMemberNum" class="form-input" value="042" style="font-size:11px;" oninput="generateWebmasterSnippet()" />
+              </div>
+            </div>
+            <button class="btn-retro btn-primary-retro" style="font-size:11px;" onclick="copyWebmasterSnippet()">📋 Copy HTML Snippet</button>
+          </div>
+          <div>
+            <label style="font-size:11px; font-weight:bold;">Generated HTML 4.01 Snippet:</label>
+            <textarea id="genOutputCode" class="form-input" style="width:100%; height:82px; font-family:'Courier New', monospace; font-size:10px; resize:none;" readonly></textarea>
+            <div style="margin-top:6px; background:#f5f5f5; border:1px inset #ddd; padding:6px; text-align:center;">
+              <div style="font-size:10px; color:#666; margin-bottom:4px;">LIVE BADGE PREVIEW</div>
+              <div id="genBadgePreview"></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -3518,8 +3573,9 @@ const APPS_DATABASE = [
   { id: 'kscript', title: 'KScript JavaScript Lab', folder: 'Dev', url: '/apps/kscript.html', desc: 'Interactive code editor for testing scripts with output console and benchmarking.', tags: 'script,javascript,code,editor,eval' },
   { id: 'ktype', title: 'KType Typing Speed Coach', folder: 'Dev', url: '/apps/ktype.html', desc: 'Typing speed coach measuring WPM, accuracy, and key fatigue analysis.', tags: 'typing,tutor,speed,wpm,keyboard' },
 
-  // Games (46)
+  // Games (47)
   { id: 'kmine', title: 'KMine Minesweeper', folder: 'Games', url: '/apps/kmine.html', desc: 'Classic minesweeper puzzle with custom minefields, flagging & high scores.', tags: 'mines,puzzle,logic,minesweeper' },
+  { id: 'kmines', title: 'KMines Minesweeper Deluxe', folder: 'Games', url: '/apps/kmines.html', desc: 'Custom minefield sweeper with Beginner, Intermediate, Expert, and custom grid dimensions.', tags: 'mines,puzzle,minesweeper,deluxe,logic' },
   { id: 'krogue', title: 'KRogue ASCII Dungeon', folder: 'Games', url: '/apps/krogue.html', desc: 'Deep procedural ASCII roguelike dungeon crawler with loot and monster factions.', tags: 'rogue,ascii,dungeon,rpg,crawler' },
   { id: 'ksnake', title: 'KSnake Arcade Game', folder: 'Games', url: '/apps/ksnake.html', desc: 'Classic arcade snake with bonus apples, speed tiers & competitive scores.', tags: 'snake,arcade,retro,classic' },
   { id: 'ktetris', title: 'KTetris Block Stacker', folder: 'Games', url: '/apps/ktetris.html', desc: 'Falling block puzzle with ghost piece preview, hard drop & multiplayer duels.', tags: 'tetris,blocks,puzzle,arcade' },
@@ -3658,7 +3714,7 @@ function getDiegeticAnomalyCard(query) {
   }
 
   // 3. Echo Subsystem & Gateway
-  if (q.includes('echo') || q.includes('echo-subsystem') || q.includes('echo-gw') || q.includes('sigint')) {
+  if (q.includes('echo') || q.includes('echo-subsystem') || q.includes('echo-gw') || q.includes('echo-gw-07') || q.includes('sigint')) {
     return {
       title: "KiloSearch 1.0 // Query: " + query + " [Acoustic Intelligence Journal]",
       html: `
@@ -3753,6 +3809,50 @@ function getDiegeticAnomalyCard(query) {
           </p>
           <div style="font-size:11px; color:#666; font-family:'Courier New', monospace; margin-top:6px;">
             Diagnostic: Clearnet gateway rejected TCP SYN • Subnet: 10.19.99.0/24 • Node: 0x7F Cryptography Lab
+          </div>
+        </div>
+      `
+    };
+  }
+
+  // 8. Sector Quarantine & Cerberus Security
+  if (q.includes('quarantine') || q.includes('kquarantine') || q.includes('sector 04') || q.includes('cerberus')) {
+    return {
+      title: "KiloSearch 1.0 // Query: " + query + " [Security Isolation Advisory]",
+      html: `
+        <div class="search-result-item" style="background:#fff5f5; border:1px solid #ff7b7b; border-left:5px solid #d32f2f; padding:12px; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-family:'Courier New', monospace; font-weight:bold; color:#b71c1c; font-size:13px;">⚠️ SECURITY RESTRICTION: Sector 04 Memory Quarantine</span>
+            <span class="result-badge badge-sys" style="background:#ffebee; color:#b71c1c; border:1px solid #ffcdd2;">LEVEL 9 CLEARANCE</span>
+          </div>
+          <p style="font-size:12px; margin:8px 0 4px 0; color:#222; line-height:1.5;">
+            Application container <code>kquarantine</code> is locked under emergency containment protocol. Memory page mapped at hex offset <code>0x7F1999</code>. Diagnostic terminal access requires authentication passkey or emergency recovery bootstrap script in <code>system_recovery_1999.log</code>.<br>
+            Inspect plaintext recovery procedures in <a href="/apps/knote.html"><strong>KNote</strong></a> or examine sector allocation in <a href="/apps/khex.html"><strong>KHex</strong></a>.
+          </p>
+          <div style="font-size:11px; color:#666; font-family:'Courier New', monospace; margin-top:6px;">
+            Status: QUARANTINED • Sector: 0x04 • Bypass: PASSPHRASE REQUIRED • Kernel: CERBERUS-99
+          </div>
+        </div>
+      `
+    };
+  }
+
+  // 9. SysAdmin_NULL Profile & Contact Record
+  if (q.includes('sysadmin_null') || q.includes('sysadmin@echo') || q.includes('sysadmin null')) {
+    return {
+      title: "KiloSearch 1.0 // Query: " + query + " [NOC Webmaster Record]",
+      html: `
+        <div class="search-result-item" style="background:#f0f7ff; border:1px solid #80b3ff; border-left:5px solid #0055cc; padding:12px; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-family:'Courier New', monospace; font-weight:bold; color:#004080; font-size:13px;">👤 DIRECTORY PROFILE: SysAdmin_NULL [Lead Systems Architect]</span>
+            <span class="result-badge badge-net" style="background:#e6f0ff; color:#004080; border:1px solid #99c2ff;">STAFF ENGINEER</span>
+          </div>
+          <p style="font-size:12px; margin:8px 0 4px 0; color:#222; line-height:1.5;">
+            Lead administrator for KiloNet Intranet Gateway and Carlsbad Skunkworks Transponder. Currently investigating unexplained 1999Hz harmonic subcarrier pulses on gateway router <code>10.19.99.4</code>.<br>
+            Active postings: Classified listing #1999 on <a href="#" onclick="switchPortalTab('classifieds'); return false;"><strong>KiloNet Classifieds</strong></a> seeking packet sniffer traces. Contact address: <code>sysadmin@echo-subsystem.net</code>.
+          </p>
+          <div style="font-size:11px; color:#666; font-family:'Courier New', monospace; margin-top:6px;">
+            Node: echo-gw-07.kilonet.internal • Direct Terminal: kweb://10.19.99.4/classified • Ticket: #0x1999-ECHO
           </div>
         </div>
       `
@@ -5465,9 +5565,6 @@ const WEBRING_SITES = [
   '/web/cybercafe.html',
   '/web/users/neon_rider.html',
   '/web/asm_temple.html',
-  '/web/darknet.html',
-  '/web/echo_subsystem.html',
-  '/web/classified.html',
   '/apps/contribute.html',
   '/apps/krogue.html',
   '/apps/kbbs.html'
@@ -5949,7 +6046,7 @@ function handleRegisterWebmaster(e) {
    MARQUEE ROTATOR & STATUS CLOCK
    ========================================================================= */
 const MARQUEE_HEADLINES = [
-  "FLASH 1999: KiloApps Fleet reaches 98 retro applications! All modules under 999KB ceiling. Y2K compliance verification underway across all ring nodes.",
+  "FLASH 1999: KiloApps Fleet reaches 99 retro applications! All modules under 999KB ceiling. Y2K compliance verification underway across all ring nodes.",
   "INTRANET BULLETIN: Carlsbad engineering division reports unexplained subcarrier harmonics on gateway router 10.19.99.4; diagnostic engineers logging 1999Hz carrier shifts...",
   "HARDWARE WATCH: 3dfx announces Glide 3.0 API specifications for Voodoo3 architecture; fill rates exceed 350 MTexels/sec in benchmark testing.",
   "GAMING WIRE: World Championship brackets finalized for Surreal Tournament and Tremor III Arena at Dallas LAN arena.",
@@ -6434,6 +6531,34 @@ function handleSignGuestbook(e) {
   saveGuestbookState();
   syncGuestbookToFirebase(newEntry);
 
+  // Check for dead-drop trigger keywords (ARG mechanic)
+  const lowerMsg = (message + ' ' + handle).toLowerCase();
+  const isDeadDropTrigger = lowerMsg.includes('1999hz') || lowerMsg.includes('1999 hz') || 
+                            lowerMsg.includes('carlsbad') || lowerMsg.includes('echo-gw-07') || 
+                            lowerMsg.includes('sysadmin_null') || lowerMsg.includes('0x7f');
+
+  if (isDeadDropTrigger) {
+    setTimeout(() => {
+      const echoReply = {
+        id: 'gb_echo_' + Date.now(),
+        handle: 'echo-daemon',
+        location: '10.19.99.7 [echo-gw-07.kilonet.internal]',
+        isp: 'Lithospheric Waveguide Transponder',
+        browser: 'Kernel Daemon v1.0',
+        mood: 'SYSOP',
+        stamp: 'VERIFIED',
+        url: '/web/echo_subsystem.html',
+        message: '📡 [AUTOMATED TELEMETRY DISPATCH]: Harmonic match confirmed on carrier 1999Hz. Acoustic burst trace captured and logged into research journal at kweb://echo-subsystem.net.',
+        time: timeStr,
+        kudos: 7
+      };
+      guestbookData.unshift(echoReply);
+      saveGuestbookState();
+      filterGuestbook();
+      triggerFmChime(1999.0, 1.5, 0.8, 0.4);
+    }, 1200);
+  }
+
   closeSignGuestbookModal();
   filterGuestbook();
   playSuccessChime();
@@ -6568,7 +6693,30 @@ Parent: IANA-C-BLK (10.0.0.0/8)
 Creation Date: 1999-07-19T00:00:00Z
 Status: QUARANTINED SUBTERRANEAN EXPERIMENTAL
 Tech Contact: Sector-7F-Telemetry
-Comment: Lithospheric acoustic carrier locked at 1999Hz. Route queries via echo-gw-07.kilonet.internal.`
+Comment: Lithospheric acoustic carrier locked at 1999Hz. Route queries via echo-gw-07.kilonet.internal.`,
+
+  "echo-subsystem.net": `Domain Name: ECHO-SUBSYSTEM.NET
+Registry Domain ID: D19991231-ECHO
+Registrar: Carlsbad Research Autonomous Registrar
+Updated Date: 1999-12-31T23:59:58Z
+Creation Date: 1999-08-14T00:00:00Z
+Registrant Organization: Skunkworks Acoustic Division
+Registrant State/Province: NM
+Registrant Country: US
+Name Server: ECHO-GW-07.KILONET.INTERNAL
+Name Server: NS1.CARLSBAD.INTERNAL
+DNSSEC: unsigned
+Status: clientTransferProhibited
+Note: Subcarrier tuned to 1999Hz. Automated telemetry listening port active.`,
+
+  "deep-core.internal": `Domain Name: DEEP-CORE.INTERNAL
+Registry Domain ID: NON-ROUTABLE-SANCTUM-0x7F
+Registrar: Subterranean Research Core
+Network IP: 10.19.99.254
+Status: RESTRICTED // ARG INNER SANCTUM GATEWAY
+Parent: CARLSBAD SKUNKWORKS INTRANET
+Admin Contact: SYSOP-SANCTUM
+Note: Lithospheric relay point for milestone App #100 KMatrix neural terminal.`
 };
 
 function initNocDisplay() {
@@ -6654,6 +6802,14 @@ const TRACEROUTE_HOPS = {
     { hop: 5, host: "underground-router.0xrel.scene (194.109.12.8)", rtt1: "152ms", rtt2: "155ms", rtt3: "150ms", ttl: 60 },
     { hop: 6, host: "warez-vault.0xrel.scene (194.109.13.77)", rtt1: "165ms", rtt2: "162ms", rtt3: "168ms", ttl: 59 }
   ],
+  echo: [
+    { hop: 1, host: "gateway.local (192.168.1.1)", rtt1: "12ms", rtt2: "11ms", rtt3: "10ms", ttl: 64 },
+    { hop: 2, host: "nas-01.dialup.isp.net (209.85.128.1)", rtt1: "48ms", rtt2: "45ms", rtt3: "50ms", ttl: 63 },
+    { hop: 3, host: "nm-backbone-atm.telco.net (198.32.176.42)", rtt1: "82ms", rtt2: "79ms", rtt3: "85ms", ttl: 62 },
+    { hop: 4, host: "echo-gw-07.kilonet.internal (10.19.99.7)", rtt1: "125ms", rtt2: "128ms", rtt3: "122ms", ttl: 61 },
+    { hop: 5, host: "acoustic-subcarrier-demod (1999Hz)", rtt1: "198ms", rtt2: "199ms", rtt3: "195ms", ttl: 60 },
+    { hop: 6, host: "echo-subsystem.net (10.19.99.14)", rtt1: "215ms", rtt2: "212ms", rtt3: "218ms", ttl: 59 }
+  ],
   darknet: [
     { hop: 1, host: "gateway.local (192.168.1.1)", rtt1: "12ms", rtt2: "13ms", rtt3: "11ms", ttl: 64 },
     { hop: 2, host: "nas-01.dialup.isp.net (209.85.128.1)", rtt1: "48ms", rtt2: "51ms", rtt3: "47ms", ttl: 63 },
@@ -6677,6 +6833,14 @@ const TRACEROUTE_HOPS = {
     { hop: 4, host: "carlsbad-intranet-demarc (10.19.99.1)", rtt1: "184ms", rtt2: "186ms", rtt3: "182ms", ttl: 61 },
     { hop: 5, host: "subterranean-waveguide-echo (10.19.99.2)", rtt1: "260ms", rtt2: "265ms", rtt3: "258ms", ttl: 60 },
     { hop: 6, host: "CARLSBAD-TRANSPONDER-GRID (10.19.99.4)", rtt1: "342ms", rtt2: "338ms", rtt3: "345ms", ttl: 54 }
+  ],
+  deepcore: [
+    { hop: 1, host: "gateway.local (192.168.1.1)", rtt1: "12ms", rtt2: "13ms", rtt3: "11ms", ttl: 64 },
+    { hop: 2, host: "nas-01.dialup.isp.net (209.85.128.1)", rtt1: "52ms", rtt2: "49ms", rtt3: "55ms", ttl: 63 },
+    { hop: 3, host: "non-routable-filter.telco.net (10.19.0.1)", rtt1: "110ms", rtt2: "108ms", rtt3: "115ms", ttl: 62 },
+    { hop: 4, host: "echo-gw-07.kilonet.internal (10.19.99.7)", rtt1: "195ms", rtt2: "199ms", rtt3: "192ms", ttl: 61 },
+    { hop: 5, host: "subterranean-repeater-grid (10.19.99.9)", rtt1: "285ms", rtt2: "290ms", rtt3: "282ms", ttl: 60 },
+    { hop: 6, host: "DEEP-CORE-VAULT-7F (10.19.99.254)", rtt1: "380ms", rtt2: "375ms", rtt3: "385ms", ttl: 52 }
   ]
 };
 
@@ -6759,21 +6923,54 @@ function sendHttpInspect() {
 
   let headerText = `${method} ${url} HTTP/1.0\r\nUser-Agent: KNet/2.0 (Win98; x86; I)\r\nAccept: text/html, image/gif, audio/basic, */*\r\nHost: kilonet.org\r\n\r\n`;
 
-  headerText += `HTTP/1.0 200 OK\r\n`;
-  headerText += `Date: ${dateStr}\r\n`;
-  headerText += `Server: Apache/1.3.9 (Unix) mod_perl/1.21 PHP/3.0.12\r\n`;
-  headerText += `Content-Type: text/html; charset=iso-8859-1\r\n`;
-  headerText += `Content-Length: 251783 bytes\r\n`;
-  headerText += `Last-Modified: Fri, 15 Oct 1999 12:00:00 GMT\r\n`;
-  headerText += `ETag: "1999-knet-v81"\r\n`;
-  headerText += `X-KNet-Baud: 56000 bps V.90\r\n`;
-  headerText += `X-KiloNet-Carrier: 1999Hz NOMINAL\r\n`;
-  headerText += `X-Webring-Node: #001 (KiloNet Central Portal)\r\n`;
-  headerText += `Connection: close\r\n\r\n`;
+  if (url.includes('echo_subsystem') || url.includes('echo')) {
+    headerText += `HTTP/1.0 200 OK\r\n`;
+    headerText += `Date: ${dateStr}\r\n`;
+    headerText += `Server: Carlsbad-Acoustic-Daemon/1.0 (Skunkworks DSP)\r\n`;
+    headerText += `Content-Type: text/html; charset=iso-8859-1\r\n`;
+    headerText += `X-Subcarrier-Parity: 1999Hz NOMINAL\r\n`;
+    headerText += `X-Gateway-Route: echo-gw-07.kilonet.internal\r\n`;
+    headerText += `X-Lithospheric-Mesh: AIRGAP-BRIDGE-07\r\n`;
+    headerText += `Connection: close\r\n\r\n`;
+  } else if (url.includes('deep_core') || url.includes('deep-core')) {
+    headerText += `HTTP/1.0 200 OK\r\n`;
+    headerText += `Date: ${dateStr}\r\n`;
+    headerText += `Server: DeepCore-Kernel/0x7F (Carlsbad Intranet)\r\n`;
+    headerText += `Content-Type: text/html; charset=iso-8859-1\r\n`;
+    headerText += `X-Subterranean-Relay: Node 0x7F\r\n`;
+    headerText += `X-Security-Clearance: LEVEL 9 QUARANTINE\r\n`;
+    headerText += `Connection: close\r\n\r\n`;
+  } else if (url.includes('darknet')) {
+    headerText += `HTTP/1.0 200 OK\r\n`;
+    headerText += `Date: ${dateStr}\r\n`;
+    headerText += `Server: Darknet-Relay-0x7F/1.0\r\n`;
+    headerText += `Content-Type: text/html; charset=iso-8859-1\r\n`;
+    headerText += `X-Encrypted-Relay: ACTIVE\r\n`;
+    headerText += `Connection: close\r\n\r\n`;
+  } else if (url.includes('10.19.99') || url.includes('classified')) {
+    headerText += `HTTP/1.0 200 OK\r\n`;
+    headerText += `Date: ${dateStr}\r\n`;
+    headerText += `Server: Carlsbad-Gateway-Router/4.1 (10.19.99.4)\r\n`;
+    headerText += `Content-Type: text/html; charset=iso-8859-1\r\n`;
+    headerText += `X-Intranet-Status: RESTRICTED ARCHIVE\r\n`;
+    headerText += `Connection: close\r\n\r\n`;
+  } else {
+    headerText += `HTTP/1.0 200 OK\r\n`;
+    headerText += `Date: ${dateStr}\r\n`;
+    headerText += `Server: Apache/1.3.9 (Unix) mod_perl/1.21 PHP/3.0.12\r\n`;
+    headerText += `Content-Type: text/html; charset=iso-8859-1\r\n`;
+    headerText += `Content-Length: 251783 bytes\r\n`;
+    headerText += `Last-Modified: Fri, 15 Oct 1999 12:00:00 GMT\r\n`;
+    headerText += `ETag: "1999-knet-v81"\r\n`;
+    headerText += `X-KNet-Baud: 56000 bps V.90\r\n`;
+    headerText += `X-KiloNet-Carrier: 1999Hz NOMINAL\r\n`;
+    headerText += `X-Webring-Node: #001 (KiloNet Central Portal)\r\n`;
+    headerText += `Connection: close\r\n\r\n`;
+  }
 
   if (method === 'GET') {
     headerText += `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\r\n`;
-    headerText += `<html>\r\n<head>\r\n<title>KiloNet Central! - The Premier 1999 Web Directory</title>\r\n`;
+    headerText += `<html>\r\n<head>\r\n<title>${escapeHtml(url)}</title>\r\n`;
     headerText += `<!-- [Payload preview: 200 OK - Document loaded successfully] -->\r\n`;
   }
 
@@ -6880,6 +7077,79 @@ function runHtmlValidation() {
     playSuccessChime();
   } else {
     triggerFmChime(350, 1.5, 1.2, 0.2);
+  }
+}
+
+// 1999 Webmaster Studio: Meta-Tag & Webring Badge Generator
+function generateWebmasterSnippet() {
+  const title = (document.getElementById('genSiteTitle')?.value || 'My 1999 Website').trim();
+  const author = (document.getElementById('genWebmaster')?.value || 'Webmaster').trim();
+  const desc = (document.getElementById('genSiteDesc')?.value || 'A cool personal homepage').trim();
+  const badge = document.getElementById('genBadgeStyle')?.value || 'netscape';
+  const member = (document.getElementById('genMemberNum')?.value || '042').trim();
+
+  const badgeLabels = {
+    netscape: 'NETSCAPE 4.7 NOW',
+    notepad: 'MADE WITH NOTEPAD',
+    html4: 'W3C VALID HTML 4.01',
+    color16: '800x600 16-BIT COLOR',
+    y2k: 'Y2K READY 1999'
+  };
+  const label = badgeLabels[badge] || 'NETSCAPE NOW';
+
+  const code = `<!-- === 1999 META TAGS === -->
+<meta name="title" content="${escapeHtml(title)}">
+<meta name="author" content="${escapeHtml(author)}">
+<meta name="description" content="${escapeHtml(desc)}">
+<meta name="generator" content="Notepad / KiloNet Webmaster Studio '99">
+
+<!-- === KILONET 1999 WEBRING NAVIGATOR === -->
+<center>
+<table border="1" cellpadding="4" cellspacing="0" bgcolor="#d4d0c8" width="468">
+  <tr align="center">
+    <td bgcolor="#000080"><font color="#ffffff" face="Arial" size="2"><b>Central KiloNet Webring Member #${escapeHtml(member)}</b></font></td>
+  </tr>
+  <tr align="center">
+    <td>
+      <font face="Times New Roman" size="2">
+        [ <a href="/web/portal.html">&laquo; Previous</a> ] &bull;
+        [ <a href="/web/webring.html">Ring Hub</a> ] &bull;
+        [ <a href="/web/geocities.html">Next Site &raquo;</a> ]
+      </font><br>
+      <table border="1" cellpadding="2" cellspacing="0" bgcolor="#000000" style="margin-top:4px;">
+        <tr><td bgcolor="#333333"><font color="#00ff66" face="Courier New" size="1"><b>[ ${label} ]</b></font></td></tr>
+      </table>
+    </td>
+  </tr>
+</table>
+</center>`;
+
+  const out = document.getElementById('genOutputCode');
+  if (out) out.value = code;
+
+  const prev = document.getElementById('genBadgePreview');
+  if (prev) {
+    prev.innerHTML = `
+      <div style="display:inline-block; background:#000; color:#00ff66; border:2px outset #fff; padding:3px 8px; font-family:'Courier New', monospace; font-size:11px; font-weight:bold; letter-spacing:1px;">
+        ${label}
+      </div>
+      <div style="font-size:10px; color:#333; margin-top:4px; font-family:Arial, sans-serif;">
+        [ Member #${escapeHtml(member)}: ${escapeHtml(title)} ]
+      </div>
+    `;
+  }
+}
+
+function copyWebmasterSnippet() {
+  playClick();
+  const out = document.getElementById('genOutputCode');
+  if (!out) return;
+  out.select();
+  try {
+    navigator.clipboard.writeText(out.value);
+    alert("Webmaster HTML 4.01 snippet copied to clipboard! Paste into your index.html page.");
+  } catch(e) {
+    alert("Snippet selected. Press Ctrl+C to copy to clipboard.");
   }
 }
 
@@ -7486,6 +7756,7 @@ window.addEventListener('DOMContentLoaded', () => {
   renderZodiacButtons();
   filterGuestbook();
   initNocDisplay();
+  generateWebmasterSnippet();
   initArcadeGame();
   updatePortalClock();
 
