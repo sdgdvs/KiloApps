@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://webring (Central Webring Hub)"
   kilo_graphics: KAsteroids
   kilo_tester: KSanctuary
-  kilo_usability: KJournal
+  kilo_usability: KMail
   kilo_qa: KMail
   kilo_expander: KDarts
 virtual_web_target: "kweb://asm-temple"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KRead
-  timestamp: "2026-10-03T15:35:00-07:00"
+  agent: kilo-usability
+  app: KJournal
+  timestamp: "2026-10-03T16:35:00-07:00"
 last_planner_run: "2026-10-03T05:35:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KJournal`
+- **Current Target**: `KMail`
 - **Upcoming Queue**:
-  `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash`, `KGraph` *(Completed: KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage)*.
+  `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash`, `KGraph` *(Completed: KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KMail`
@@ -211,6 +211,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-03T16:35:00-07:00 — kilo-usability: KJournal (UI/UX Layout, Toast Remediation, Responsive Toolbar & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 132.7 KB web / 205.8 KB native < 999 KB ceiling).
+  - Sidebar & Tabs: Installed compact Help [F1] badge preventing button wrap; wrapped notebook tabs to 3x2 matrix with 0 scrollbars.
+  - Layout & Overflow: Fixed flex child min-width: 0 bug preventing right-edge clipping on mood selector and footer status.
+  - Responsive Toolbar: Rebuilt into clean 2-row layout with dedicated date navigation and attribute/mood selector with live label.
+  - Toast Remediation: Relocated notification toast to non-occluding bottom-right safe zone with click dismissal and gold accent.
+  - ARCH-05 Visibility: Added visibilitychange event listener to flush dirty state and clear timers on tab hidden.
+  - Verification: Clean MSVC compile (`KJournal.exe` 205.8 KB); Vite clean in 487ms; check_icons 100% PASS; security_lint 100% PASS.
+
 - **2026-10-03T15:35:00-07:00 — kilo-tester: KRead (UI Audit, Toast Remediation, Keyboard Shortcuts & ARCH-05)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 163.5 KB web / 30.2 KB native < 999 KB ceiling).
   - UI Accessibility: Added keyboard focus (tabindex/Enter) to outline items, import session, and import notes labels.
@@ -243,11 +252,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Terminal Spool Integration: Added all 9 spool files to terminal VIRTUAL_FILES (carlsbad map, AFSK ASM driver, ROM hex, telemetry log).
   - New Directives & Mesh: Added convergence, relay, mesh, sniff, scope, spool, directory commands; synced Firebase RTDB signal beacon.
   - Verification: Clean Vite build in 463ms; test_arg_flow 100% PASS; security_lint 100% PASS; check_icons 100% PASS.
-
-- **2026-10-03T12:45:00-07:00 — kilo-expander: KTetris (RFMS Real-Time Multiplayer, 25s Fallback, F5/F9 Quicksave)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 184.2 KB web / 55.0 KB native < 999 KB ceiling).
-  - RFMS Online Multiplayer: Standardized RetroMultiplayer integration with room codes, copy duel link ([L]), and auto-join via URL.
-  - 25s Solo AI Fallback: Implemented auto-fallback countdown engaging local Aggro Bot if no challenger joins within 25s.
-  - Replay & Board Engine: Added full JSON replay export/import with drag-and-drop, plus board FEN state capture and restore.
-  - Quicksave & ARG Signal: Added universal F5 (quicksave) / F9 (quickload) across web and C, plus diegetic 1999Hz carrier telemetry.
-  - Verification: Clean MSVC native build (55.0 KB); Vite build clean in 584ms; security_lint 100% PASS; check_icons 100% PASS.

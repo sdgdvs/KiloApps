@@ -13,9 +13,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 25,
+  "turns_executed": 26,
   "last_turn_timestamp": "2026-09-28T17:56:12Z",
-  "last_heartbeat": "2026-10-03T21:37:15.883233+00:00",
-  "current_target": "KQuest",
+  "last_heartbeat": "2026-10-03T22:35:22.911905+00:00",
+  "current_target": "KRead",
   "remote_command": "none"
 }

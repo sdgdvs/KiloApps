@@ -107,19 +107,44 @@
   }
 
   .sidebar-header {
-    padding: 14px 16px;
+    padding: 12px 14px;
     border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 6px;
+    white-space: nowrap;
   }
   .brand-title {
     font-weight: 700;
-    font-size: 17px;
+    font-size: 16px;
     color: var(--accent-gold);
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    min-width: 0;
+  }
+  .help-badge {
+    font-size: 10px;
+    color: var(--accent-gold);
+    font-weight: bold;
+    background: rgba(229, 192, 123, 0.12);
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--accent-gold);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .help-badge:hover {
+    background: var(--accent-gold);
+    color: #111;
+  }
+  .sidebar-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
   }
 
   .icon-btn {
@@ -242,27 +267,112 @@
   .entry-item-snippet { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
   /* Main Workspace */
-  .main-content { flex: 1; display: flex; flex-direction: column; background: var(--bg-primary); min-height: 0; }
+  .main-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-primary);
+    min-height: 0;
+    min-width: 0;
+    overflow-x: hidden;
+  }
 
   .toolbar {
-    padding: 12px 20px; background: var(--bg-secondary); border-bottom: 1px solid var(--border-color);
-    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;
+    padding: 8px 16px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
   }
-  .toolbar-left { display: flex; align-items: center; gap: 12px; }
-  .date-title { font-size: 18px; font-weight: 700; color: var(--accent-gold); }
+  .toolbar-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+  .toolbar-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .date-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--accent-gold);
+    white-space: nowrap;
+    user-select: none;
+  }
 
-  .mood-picker { display: flex; align-items: center; gap: 4px; background: var(--bg-tertiary); padding: 3px; border-radius: 6px; border: 1px solid var(--border-color); }
+  .mood-picker {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    background: var(--bg-tertiary);
+    padding: 2px 4px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+  }
   .mood-opt {
-    background: transparent; border: none; padding: 4px 7px; border-radius: 4px; cursor: pointer; font-size: 15px; opacity: 0.5; transition: all 0.15s;
+    background: transparent;
+    border: none;
+    padding: 3px 6px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0.55;
+    transition: all 0.15s;
   }
-  .mood-opt:hover, .mood-opt.selected { opacity: 1; background: var(--bg-secondary); transform: scale(1.1); }
+  .mood-opt:hover, .mood-opt.selected {
+    opacity: 1;
+    background: var(--bg-secondary);
+    transform: scale(1.1);
+  }
 
-  .toolbar-right { display: flex; align-items: center; gap: 8px; }
+  .toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .toolbar-meta {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+  .meta-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .meta-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
 
   .btn {
-    background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-main);
-    padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500;
-    display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 5px 11px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+    white-space: nowrap;
   }
   .btn:hover { background: var(--border-color); color: var(--text-bright); }
   .btn-primary { background: var(--accent-gold); color: #181b22; border: none; font-weight: 600; }
@@ -271,15 +381,31 @@
   .btn-danger:hover { background: var(--accent-red); color: #fff; }
 
   /* Editor Container */
-  .editor-container { flex: 1; display: flex; flex-direction: column; padding: 20px; position: relative; min-height: 0; }
+  .editor-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 18px;
+    position: relative;
+    min-height: 0;
+    min-width: 0;
+  }
   textarea.journal-editor {
     flex: 1; width: 100%; background: transparent; border: none; outline: none;
     color: var(--text-bright); font-size: 16px; line-height: 1.7; font-family: inherit; resize: none;
   }
 
   .editor-footer {
-    display: flex; justify-content: space-between; align-items: center;
-    padding-top: 10px; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-width: 0;
   }
 
   /* Modals */
@@ -450,17 +576,16 @@
   }
   .notebook-tabs {
     display: flex;
+    flex-wrap: wrap;
     gap: 4px;
-    overflow-x: auto;
     padding-bottom: 2px;
-    scrollbar-width: thin;
   }
   .notebook-tab {
     font-size: 11px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-color);
     color: var(--text-main);
-    padding: 3px 8px;
+    padding: 4px 6px;
     border-radius: 6px;
     cursor: pointer;
     white-space: nowrap;
@@ -468,6 +593,9 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
+    flex: 1 1 calc(33.333% - 4px);
+    justify-content: center;
+    text-align: center;
   }
   .notebook-tab:hover {
     background: var(--border-color);
@@ -657,24 +785,29 @@
     font-weight: 500;
   }
 
-  /* Notification Toast (Non-occluding top-center safe zone) */
+  /* Notification Toast (Non-occluding bottom-right safe zone) */
   #toast {
-    position: fixed; top: 16px; left: 50%;
-    transform: translateX(-50%) translateY(-50px);
-    background: var(--accent-gold); color: #111; font-weight: 600;
-    padding: 8px 16px 8px 18px; border-radius: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.45);
-    opacity: 0; pointer-events: none; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 2000; display: flex; align-items: center; gap: 10px; max-width: 90vw;
+    position: fixed; bottom: 28px; right: 24px;
+    transform: translateY(20px);
+    background: var(--bg-tertiary); color: var(--text-bright);
+    border: 1px solid var(--accent-gold);
+    border-left: 4px solid var(--accent-gold);
+    font-size: 13px; font-weight: 600;
+    padding: 9px 16px; border-radius: 8px;
+    box-shadow: 0 6px 24px rgba(0,0,0,0.6);
+    opacity: 0; pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 9999; display: flex; align-items: center; gap: 10px; max-width: 440px;
     cursor: pointer;
   }
-  #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
+  #toast.show { transform: translateY(0); opacity: 1; pointer-events: auto; }
   #toast button {
-    background: rgba(0,0,0,0.15); border: none; color: #111; width: 20px; height: 20px;
+    background: rgba(255,255,255,0.1); border: none; color: var(--text-main); width: 20px; height: 20px;
     border-radius: 50%; cursor: pointer; font-size: 11px; font-weight: bold;
-    display: flex; align-items: center; justify-content: center; transition: background 0.15s;
+    display: flex; align-items: center; justify-content: center; transition: all 0.15s;
     flex-shrink: 0;
   }
-  #toast button:hover { background: rgba(0,0,0,0.35); }
+  #toast button:hover { background: var(--accent-red); color: #fff; }
 
   /* Responsive UX enhancements */
   .shortcut-tag { font-size: 10px; opacity: 0.75; }
@@ -684,10 +817,11 @@
   @media (max-width: 920px) {
     .btn-lbl-long { display: none; }
     .btn-lbl-short { display: inline !important; }
-    .toolbar-right .btn { padding: 5px 8px; font-size: 12px; }
+    .btn { padding: 4px 8px; font-size: 12px; }
   }
-  @media (max-width: 760px) {
-    .mood-picker { display: none !important; }
+  @media (max-width: 680px) {
+    .meta-label { display: none; }
+    .toolbar-row { gap: 6px; }
   }
 </style>
 </head>
@@ -728,10 +862,10 @@
     <div class="sidebar-header">
       <div class="brand-title">
         <span>📖</span> KJournal
-        <span style="font-size: 11px; color: var(--accent-gold); font-weight: bold; margin-left: 8px; background: rgba(229, 192, 123, 0.1); padding: 2px 6px; border-radius: 4px; border: 1px solid var(--accent-gold); cursor: pointer;" onclick="openModal('helpModal')">Press 'H' or F1 for Help</span>
+        <span class="help-badge" onclick="openModal('helpModal')" title="Open Help Guide & Shortcuts (Press 'H' or F1)">Help [F1]</span>
       </div>
-      <div>
-        <button class="icon-btn" onclick="openModal('helpModal')" title="Help (Press H or F1)">❓</button>
+      <div class="sidebar-actions">
+        <button class="icon-btn" onclick="openModal('helpModal')" title="Help & Keyboard Shortcuts (Press H or F1)">❓</button>
         <button class="icon-btn" onclick="openAnalyticsModal()" title="Analytics & Streaks">📊</button>
         <button class="icon-btn" onclick="openSettingsModal()" title="Settings & Security">⚙️</button>
         <button class="icon-btn" onclick="lockApp()" id="lockAppBtn" title="Lock Journal" style="display:none;">🔒</button>
@@ -817,39 +951,55 @@
   <!-- Main Content Editor -->
   <div class="main-content">
     <div class="toolbar">
-      <div class="toolbar-left">
-        <button id="btnToggleSidebar" class="icon-btn" onclick="toggleSidebar()" title="Toggle Sidebar / Zen Focus Mode (Alt+S or F2)" style="padding:4px 8px; font-weight:bold; font-size:13px; color:var(--accent-gold);">☰</button>
-        <div style="display:flex; align-items:center; gap:5px;">
-          <button class="icon-btn" onclick="navigateDay(-1)" title="Previous Day (Alt+Left)" style="padding:4px 7px; font-weight:bold;">◀</button>
-          <div class="date-title" id="currentDateDisplay" style="user-select:none; font-size:15px; white-space:nowrap;">July 24, 2026</div>
-          <button class="icon-btn" onclick="navigateDay(1)" title="Next Day (Alt+Right)" style="padding:4px 7px; font-weight:bold;">▶</button>
-          <button class="icon-btn" onclick="jumpToToday()" title="Today's Entry (Ctrl+N)" style="padding:4px 7px; font-size:11px; font-weight:600; color:var(--accent-gold);">Today</button>
+      <!-- Row 1: Date Navigation & Actions -->
+      <div class="toolbar-row">
+        <div class="toolbar-nav">
+          <button id="btnToggleSidebar" class="icon-btn" onclick="toggleSidebar()" title="Toggle Sidebar / Zen Focus Mode (Alt+S or F2)" style="padding:4px 8px; font-weight:bold; font-size:13px; color:var(--accent-gold);">☰</button>
+          <div style="display:flex; align-items:center; gap:4px;">
+            <button class="icon-btn" onclick="navigateDay(-1)" title="Previous Day (Alt+Left)" style="padding:4px 7px; font-weight:bold;">◀</button>
+            <div class="date-title" id="currentDateDisplay">July 24, 2026</div>
+            <button class="icon-btn" onclick="navigateDay(1)" title="Next Day (Alt+Right)" style="padding:4px 7px; font-weight:bold;">▶</button>
+            <button class="icon-btn" onclick="jumpToToday()" title="Today's Entry (Ctrl+N)" style="padding:4px 7px; font-size:11px; font-weight:600; color:var(--accent-gold);">Today</button>
+          </div>
         </div>
-        <select id="entryCategorySelect" class="form-control" style="width: auto; padding: 4px 6px; font-size: 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-bright); border-radius: 6px;" onchange="onCategoryChange(this.value)" title="Journal Notebook / Category">
-          <option value="personal">📔 Personal</option>
-          <option value="work">💼 Work & Projects</option>
-          <option value="ideas">💡 Ideas & Creative</option>
-          <option value="dreams">🌙 Dreams</option>
-          <option value="wellness">🧘 Health & Wellness</option>
-        </select>
-        <div class="mood-picker" title="Quick Mood Selector (Alt+1 to Alt+6)">
-          <button class="mood-opt" data-mood="😀" title="Happy [Alt+1]" onclick="selectMood('😀')">😀</button>
-          <button class="mood-opt" data-mood="😊" title="Calm [Alt+2]" onclick="selectMood('😊')">😊</button>
-          <button class="mood-opt" data-mood="😐" title="Neutral [Alt+3]" onclick="selectMood('😐')">😐</button>
-          <button class="mood-opt" data-mood="😔" title="Sad [Alt+4]" onclick="selectMood('😔')">😔</button>
-          <button class="mood-opt" data-mood="⚡" title="Energetic [Alt+5]" onclick="selectMood('⚡')">⚡</button>
-          <button class="mood-opt" data-mood="🧘" title="Focused [Alt+6]" onclick="selectMood('🧘')">🧘</button>
+
+        <div class="toolbar-actions">
+          <button class="btn" onclick="openModal('helpModal')" title="Help & Keyboard Shortcuts (F1 or H)">❓ <span class="btn-lbl-long">Help</span> <span class="shortcut-tag">[F1]</span></button>
+          <button class="btn" onclick="insertRandomPrompt()" style="color:var(--accent-gold);" title="Get Inspired with a Daily Reflection Prompt (Alt+P)">💡 <span class="btn-lbl-long">Prompt</span> <span class="shortcut-tag">[Alt+P]</span></button>
+          <button class="btn" onclick="copyCurrentEntry()" title="Copy Entry to Clipboard (Alt+C)">📋 <span class="btn-lbl-long">Copy</span> <span class="shortcut-tag">[Alt+C]</span></button>
+          <button class="btn" onclick="openTemplatesModal()" title="Prompt Templates (Ctrl+T)">📑 <span class="btn-lbl-long">Templates</span> <span class="shortcut-tag">[^T]</span></button>
+          <button class="btn" onclick="openImportExportModal()" title="Import / Export Data (Ctrl+I)">📥 <span class="btn-lbl-long">Data</span> <span class="shortcut-tag">[^I]</span></button>
+          <button class="btn btn-danger" onclick="deleteCurrentEntry()" title="Delete Current Entry (Del)">🗑️ <span class="btn-lbl-long">Delete</span> <span class="shortcut-tag">[Del]</span></button>
+          <button class="btn btn-primary" onclick="saveEntry()" title="Save Entry (Ctrl+S)">💾 Save <span class="shortcut-tag">[^S]</span></button>
         </div>
       </div>
 
-      <div class="toolbar-right">
-        <button class="btn" onclick="openModal('helpModal')" title="Help & Keyboard Shortcuts (F1 or H)" style="padding:5px 8px;">❓ <span class="btn-lbl-long">Help</span></button>
-        <button class="btn" onclick="insertRandomPrompt()" style="color:var(--accent-gold);" title="Get Inspired with a Daily Reflection Prompt (Alt+P)">💡 <span class="btn-lbl-long">Daily Prompt</span><span class="btn-lbl-short" style="display:none;">Prompt</span> <span class="shortcut-tag">[Alt+P]</span></button>
-        <button class="btn" onclick="copyCurrentEntry()" title="Copy Entry to Clipboard (Alt+C)">📋 <span class="btn-lbl-long">Copy</span> <span class="shortcut-tag">[Alt+C]</span></button>
-        <button class="btn" onclick="openTemplatesModal()" title="Prompt Templates (Ctrl+T)">📋 <span class="btn-lbl-long">Templates</span> <span class="shortcut-tag">[^T]</span></button>
-        <button class="btn" onclick="openImportExportModal()" title="Import / Export Data (Ctrl+I)">📥/📤 <span class="btn-lbl-long">Data</span> <span class="shortcut-tag">[^I]</span></button>
-        <button class="btn btn-danger" onclick="deleteCurrentEntry()" title="Delete Current Entry (Del)">🗑️ <span class="btn-lbl-long">Delete</span> <span class="shortcut-tag">[Del]</span></button>
-        <button class="btn btn-primary" onclick="saveEntry()" title="Save Entry (Ctrl+S)">💾 Save <span class="shortcut-tag">[^S]</span></button>
+      <!-- Row 2: Entry Attributes (Notebook & Mood) -->
+      <div class="toolbar-row" style="padding-top: 4px; border-top: 1px solid rgba(255,255,255,0.05);">
+        <div class="toolbar-meta">
+          <div class="meta-group">
+            <span class="meta-label">Notebook:</span>
+            <select id="entryCategorySelect" class="form-control" style="width: auto; padding: 3px 8px; font-size: 12px; background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-bright); border-radius: 6px;" onchange="onCategoryChange(this.value)" title="Journal Notebook / Category">
+              <option value="personal">📔 Personal</option>
+              <option value="work">💼 Work & Projects</option>
+              <option value="ideas">💡 Ideas & Creative</option>
+              <option value="dreams">🌙 Dreams</option>
+              <option value="wellness">🧘 Health & Wellness</option>
+            </select>
+          </div>
+          <div class="meta-group">
+            <span class="meta-label">Mood:</span>
+            <div class="mood-picker" title="Select Entry Mood (Alt+1 to Alt+6)">
+              <button class="mood-opt" data-mood="😀" title="Happy [Alt+1]" onclick="selectMood('😀')">😀</button>
+              <button class="mood-opt" data-mood="😊" title="Calm [Alt+2]" onclick="selectMood('😊')">😊</button>
+              <button class="mood-opt" data-mood="😐" title="Neutral [Alt+3]" onclick="selectMood('😐')">😐</button>
+              <button class="mood-opt" data-mood="😔" title="Sad [Alt+4]" onclick="selectMood('😔')">😔</button>
+              <button class="mood-opt" data-mood="⚡" title="Energetic [Alt+5]" onclick="selectMood('⚡')">⚡</button>
+              <button class="mood-opt" data-mood="🧘" title="Focused [Alt+6]" onclick="selectMood('🧘')">🧘</button>
+            </div>
+            <span id="currentMoodName" style="font-size: 12px; color: var(--accent-gold); font-weight: 600; min-width: 55px;">Happy</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -2259,12 +2409,25 @@
     renderEntryList();
   }
 
+  const MOOD_NAMES = {
+    '😀': 'Happy',
+    '😊': 'Calm',
+    '😐': 'Neutral',
+    '😔': 'Sad',
+    '⚡': 'Energetic',
+    '🧘': 'Focused'
+  };
+
   function selectMood(mood, triggerSave = true) {
     selectedMood = mood;
     document.querySelectorAll('.mood-opt').forEach(btn => {
       if (btn.getAttribute('data-mood') === mood) btn.classList.add('selected');
       else btn.classList.remove('selected');
     });
+    const moodLbl = document.getElementById('currentMoodName');
+    if (moodLbl) {
+      moodLbl.innerText = MOOD_NAMES[mood] || mood || '';
+    }
     if (triggerSave) {
       onEditorInput();
     }
@@ -3151,6 +3314,19 @@
         e.preventDefault();
         deleteCurrentEntry();
         return;
+      }
+    }
+  });
+
+  // ARCH-05: Background Tab Visibility & Timer Optimization
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (isDirty) {
+        saveEntry(false);
+      }
+      if (autoSaveTimer) {
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = null;
       }
     }
   });
