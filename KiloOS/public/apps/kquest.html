@@ -1313,23 +1313,21 @@
         if (GFX.victoryBanner.timer > 120) GFX.victoryBanner.active = false;
       }
 
-      // 9. Ornate Medieval RPG Golden Filigree & Pulsating Perimeter Inlay Border
+      // 9. Clean Static Medieval RPG Golden Filigree & Inlay Border (Zero Traveling Dots or Orbiting Glints)
       drawMedievalHUDFrame(ctx, w, h);
     }
 
     function drawMedievalHUDFrame(ctx, w, h) {
       ctx.save();
       
-      // Pulsating golden perimeter inlay border
-      const pulse = 0.5 + 0.5 * Math.sin(GFX.frame * 0.06);
-      ctx.strokeStyle = `rgba(249, 226, 175, ${0.35 + pulse * 0.35})`;
+      // Clean static golden perimeter inlay border (zero pulsating dots or traveling glints per Mandate 11)
+      ctx.strokeStyle = 'rgba(249, 226, 175, 0.65)';
       ctx.lineWidth = 1.5;
       ctx.strokeRect(3.5, 3.5, w - 7, h - 7);
 
-      ctx.strokeStyle = `rgba(203, 166, 247, ${0.2 + pulse * 0.2})`;
+      ctx.strokeStyle = 'rgba(203, 166, 247, 0.35)';
       ctx.lineWidth = 1;
       ctx.strokeRect(6.5, 6.5, w - 13, h - 13);
-
 
       // Ornate Golden Corner Filigree L-Brackets at 4 corners
       drawFiligreeBracket(ctx, 4, 4, 0);              // Top-Left
@@ -1661,6 +1659,164 @@
         }
         ctx.fillStyle = bladeC;
         ctx.fillRect(0, 0, 4, 25);
+        ctx.restore();
+
+      } else if (className === 'Paladin') {
+        // Golden/White Cape
+        ctx.fillStyle = '#fab387';
+        ctx.beginPath();
+        ctx.moveTo(x - 14, sy - 10);
+        ctx.lineTo(x - 26, sy + 32);
+        ctx.lineTo(x - 6, sy + 36);
+        ctx.closePath();
+        ctx.fill();
+
+        // Golden Plate Armor & Heraldic Surcoat
+        ctx.fillStyle = '#f9e2af';
+        ctx.fillRect(x - 14, sy - 15, 28, 35);
+        ctx.fillStyle = '#bac2de';
+        ctx.fillRect(x - 10, sy - 12, 20, 30);
+        ctx.fillStyle = '#f9e2af';
+        // Heraldic cross on chest
+        ctx.fillRect(x - 2, sy - 8, 4, 18);
+        ctx.fillRect(x - 7, sy - 3, 14, 4);
+
+        // Armored Greaves
+        ctx.fillStyle = '#6c7086';
+        ctx.fillRect(x - 12, sy + 20, 10, 22);
+        ctx.fillRect(x + 2, sy + 20, 10, 22);
+
+        // Radiant Knight Greathelm
+        ctx.fillStyle = '#f9e2af';
+        ctx.fillRect(x - 12, sy - 35, 24, 22);
+        ctx.fillStyle = '#fab387';
+        // Helm cross crest
+        ctx.beginPath();
+        ctx.moveTo(x, sy - 44);
+        ctx.lineTo(x - 4, sy - 35);
+        ctx.lineTo(x + 4, sy - 35);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#11111b';
+        ctx.fillRect(x - 7, sy - 26, 14, 3);
+        ctx.fillStyle = '#89dceb';
+        ctx.fillRect(x - 5, sy - 25, 4, 2);
+        ctx.fillRect(x + 1, sy - 25, 4, 2);
+
+        // Holy Kite Shield with Golden Cross
+        ctx.fillStyle = '#bac2de';
+        ctx.beginPath();
+        ctx.moveTo(x - 26, sy - 10);
+        ctx.lineTo(x - 8, sy - 10);
+        ctx.lineTo(x - 17, sy + 24);
+        ctx.closePath();
+        ctx.fill();
+        ctx.strokeStyle = '#f9e2af'; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = '#f9e2af';
+        ctx.fillRect(x - 19, sy - 6, 4, 16);
+        ctx.fillRect(x - 23, sy - 2, 12, 4);
+
+        // Heavy Flanged Warhammer / Mace
+        ctx.save();
+        ctx.translate(x + 14, sy + 5);
+        if (action === 'attack') {
+          ctx.rotate(Math.PI / 3);
+          ctx.beginPath();
+          ctx.arc(0, 0, 36, -Math.PI / 1.5, 0);
+          ctx.lineWidth = 10;
+          ctx.strokeStyle = 'rgba(249, 226, 175, 0.7)';
+          ctx.stroke();
+        }
+        ctx.fillStyle = '#fab387'; // Shaft
+        ctx.fillRect(0, -32, 5, 38);
+        ctx.fillStyle = '#f9e2af'; // Flanged Head
+        ctx.fillRect(-6, -34, 17, 10);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(-2, -36, 9, 14);
+        ctx.restore();
+
+      } else if (className === 'Ranger') {
+        // Forest Green Cloak
+        ctx.fillStyle = '#406e52';
+        ctx.beginPath();
+        ctx.moveTo(x - 14, sy - 12);
+        ctx.lineTo(x - 24, sy + 32);
+        ctx.lineTo(x + 14, sy + 32);
+        ctx.closePath();
+        ctx.fill();
+
+        // Hunter Leather Tunic
+        ctx.fillStyle = '#8a603c';
+        ctx.fillRect(x - 11, sy - 12, 22, 32);
+        ctx.fillStyle = '#a6e3a1';
+        ctx.fillRect(x - 8, sy - 10, 16, 26);
+
+        // Leather Boots
+        ctx.fillStyle = '#5c3a21';
+        ctx.fillRect(x - 10, sy + 20, 8, 22);
+        ctx.fillRect(x + 2, sy + 20, 8, 22);
+
+        // Archer Hood & Feathered Cap
+        ctx.fillStyle = '#315c42';
+        ctx.beginPath();
+        ctx.moveTo(x - 12, sy - 18);
+        ctx.lineTo(x + 12, sy - 18);
+        ctx.lineTo(x, sy - 40);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = '#f5e0dc';
+        ctx.beginPath(); ctx.arc(x, sy - 22, 8, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#315c42';
+        ctx.fillRect(x - 10, sy - 27, 20, 6);
+        // Feather
+        ctx.fillStyle = '#f38ba8';
+        ctx.beginPath();
+        ctx.moveTo(x - 2, sy - 38);
+        ctx.lineTo(x - 10, sy - 46);
+        ctx.lineTo(x - 6, sy - 36);
+        ctx.closePath();
+        ctx.fill();
+
+        // Quiver on Back
+        ctx.fillStyle = '#6e4526';
+        ctx.fillRect(x - 18, sy - 16, 6, 24);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(x - 19, sy - 22, 3, 7);
+        ctx.fillRect(x - 16, sy - 24, 3, 9);
+
+        // Recurve Bow & Arrow
+        ctx.save();
+        ctx.translate(x + 16, sy - 2);
+        if (action === 'attack') {
+          // Drawn bow with arrow shooting forward
+          ctx.strokeStyle = '#fab387'; ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(0, 5, 20, -Math.PI / 2.2, Math.PI / 2.2);
+          ctx.stroke();
+          // Bowstring drawn
+          ctx.strokeStyle = '#cdd6f4'; ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(10, -12); ctx.lineTo(-8, 5); ctx.lineTo(10, 22);
+          ctx.stroke();
+          // Loosed arrow
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(-6, 4, 35, 2);
+          ctx.fillStyle = '#fab387';
+          ctx.beginPath();
+          ctx.moveTo(29, 1); ctx.lineTo(35, 5); ctx.lineTo(29, 9);
+          ctx.closePath(); ctx.fill();
+        } else {
+          // Rested Bow
+          ctx.strokeStyle = '#fab387'; ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(0, 5, 20, -Math.PI / 2.2, Math.PI / 2.2);
+          ctx.stroke();
+          // Bowstring
+          ctx.strokeStyle = '#cdd6f4'; ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(10, -12); ctx.lineTo(10, 22);
+          ctx.stroke();
+        }
         ctx.restore();
       }
 
@@ -5605,7 +5761,10 @@
 
       GFX.heroAction = 'attack'; GFX.heroActionTimer = 15;
       GFX.monsterAction = 'hurt'; GFX.monsterActionTimer = 15;
-      triggerSpellFX('fireball');
+      if (player.class === 'Mage') triggerSpellFX('fireball');
+      else if (player.class === 'Paladin') triggerSpellFX('heal');
+      else if (player.class === 'Rogue') triggerSlashFX(520, 110, true);
+      else triggerSlashFX(520, 110, false);
 
       sfxSpellCast();
       let bonusInt = (player.companion && !player.companion.isDown && player.companion.id === 'archmage') ? 5 : 0;
@@ -5627,6 +5786,7 @@
         dmg = Math.floor(totalStr * 1.5 * surgeMult);
         if (player.berserkTurns > 0) dmg *= 2;
         currentEnemy.hp -= dmg;
+        triggerScreenShake(4);
         logMsg(`🛡️ You perform Shield Bash! Dealt ${dmg} physical damage to ${currentEnemy.name}!`, 'spell');
       } else if (player.class === 'Mage') {
         const cost = 10;
@@ -5638,6 +5798,7 @@
         dmg = Math.floor((player.int + bonusInt) * 2.2 * surgeMult);
         if (player.berserkTurns > 0) dmg *= 2;
         currentEnemy.hp -= dmg;
+        triggerScreenShake(6);
         logMsg(`🔥 You launch a flaming Fireball! Dealt ${dmg} magic damage to ${currentEnemy.name}!`, 'spell');
       } else if (player.class === 'Rogue') {
         const cost = 8;
@@ -5649,6 +5810,7 @@
         dmg = Math.floor(player.agi * 1.8 * surgeMult);
         if (player.berserkTurns > 0) dmg *= 2;
         currentEnemy.hp -= dmg;
+        triggerScreenShake(5);
         logMsg(`🗡️ Shadow Strike! You strike from darkness for ${dmg} critical damage!`, 'spell');
       } else if (player.class === 'Paladin') {
         const cost = 8;
@@ -5661,7 +5823,15 @@
         dmg = Math.floor((totalStr * 1.0 + player.int * 1.0) * surgeMult);
         if (player.berserkTurns > 0) dmg *= 2;
         currentEnemy.hp -= dmg;
-        logMsg(`✨ You cast Smite! Dealt ${dmg} holy damage to ${currentEnemy.name}!`, 'spell');
+        const healAmt = Math.min(16, player.maxHp - player.hp);
+        if (healAmt > 0) {
+          player.hp += healAmt;
+          addFloatingText('+' + healAmt + ' HP', 140, 100, '#a6e3a1', 18);
+          logMsg(`✨ You cast Smite! Dealt ${dmg} holy damage to ${currentEnemy.name} and healed ${healAmt} HP!`, 'spell');
+        } else {
+          logMsg(`✨ You cast Smite! Dealt ${dmg} holy damage to ${currentEnemy.name}!`, 'spell');
+        }
+        triggerScreenShake(5);
       } else if (player.class === 'Ranger') {
         const cost = 8;
         if (player.mp < cost) {
@@ -5669,10 +5839,18 @@
           return;
         }
         player.mp -= cost;
-        dmg = Math.floor(player.agi * 2.0 * surgeMult);
+        const isCrit = Math.random() < 0.35;
+        const critMult = isCrit ? 2.5 : 1.0;
+        dmg = Math.floor(player.agi * 2.0 * critMult * surgeMult);
         if (player.berserkTurns > 0) dmg *= 2;
         currentEnemy.hp -= dmg;
-        logMsg(`🏹 Aimed Shot! You fire a precise arrow for ${dmg} damage!`, 'spell');
+        if (isCrit) {
+          triggerScreenShake(8);
+          triggerSlashFX(520, 110, true);
+          logMsg(`🎯 Critical Precision! Aimed Shot strikes vital spot for ${dmg} damage!`, 'spell');
+        } else {
+          logMsg(`🏹 Aimed Shot! You fire a precise arrow for ${dmg} damage!`, 'spell');
+        }
       }
 
       addFloatingText('-' + dmg, 520, 90, '#fab387', 22);

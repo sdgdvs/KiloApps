@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://webring (Central Webring Hub)"
-  kilo_graphics: KQuest
+  kilo_graphics: KAsteroids
   kilo_tester: KRead
   kilo_usability: KJournal
   kilo_qa: KMail
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: kweb://darknet
-  timestamp: "2026-10-03T13:35:00-07:00"
+  agent: kilo-graphics
+  app: KQuest
+  timestamp: "2026-10-03T14:35:00-07:00"
 last_planner_run: "2026-10-03T05:35:00Z"
 ---
 
@@ -104,9 +104,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KQuest`
+- **Current Target**: `KAsteroids`
 - **Upcoming Queue**:
-  `KAsteroids`, `KBreakout`, `KPac`, `KAbyss`, `KColosseum`, `KRogue`, `KSpace` *(Completed: KRogue, KColony, KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KDragon, KSubmarine, KStarDredge, KSanctuary, KSpace)*.
+  `KBreakout`, `KPac`, `KAbyss`, `KColosseum`, `KRogue`, `KSpace`, `KQuest` *(Completed: KRogue, KColony, KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KDragon, KSubmarine, KStarDredge, KSanctuary, KSpace, KQuest)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KRead`
@@ -207,6 +207,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-03T14:35:00-07:00 — kilo-graphics: KQuest (Game Content, Visual Polish, Glint Purge & Class Balance)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 300.5 KB web / 97.8 KB native < 999 KB ceiling).
+  - Glint & Border Ban: Purged pulsating perimeter shimmer from both web and C; installed clean static golden filigree HUD frames.
+  - Paladin & Ranger Visuals: Added full canvas and GDI character rendering for Paladin (golden plate, cross crest, mace) and Ranger (hood, cloak, longbow).
+  - Combat & Class Balance: Added Smite holy heal (+16 HP) and Ranger Aimed Shot critical precision (35% crit for 2.5x dmg) with class-specific FX.
+  - Native Character Creation Fix: Repaired button handler mapping in main.c allowing full selection and initialization of Paladin and Ranger.
+  - Verification: Clean MSVC native build (97.8 KB); Vite build clean in 471ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-03T13:35:00-07:00 — kilo-creator: kweb://darknet (Encrypted Underground Relay & Cryptography Lab Deep Expansion)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 240.0 KB web < 999 KB ceiling).
   - Gated Middle-Game Relay: Enhanced 3-slot quarantine relay; resilient matching for acoustic carrier, Sector 03 clearance, and warez seed.
@@ -240,12 +248,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Button State Integrity: Fixed active class and textContent synchronization on crop apply/cancel and annotation brush deactivation.
   - High-DPI Histogram & Modal: Wired requestAnimationFrame render for histogram tab switches; cleared toast occlusion on help modal open.
   - Verification: MSVC native clean (26.6 KB); Vite clean in 6.55s; check_icons 100% PASS; security_lint 100% PASS.
-
-- **2026-10-03T08:18:00-07:00 — kilo-tester: KRadio (Interactive UI Element Audit, Non-Occluding Toast & Modal Polish)**
-  - Status: PASS ✅ (4 issues, 4 fixed; 0 regressions; 72.8 KB web / 8.7 KB native < 999 KB ceiling).
-  - UI Element Audit: Verified 26 interactive controls, hotkeys (Space, S, F5/F9, 1-6, V, M, Alt+E/I), and dismissals.
-  - Toast Remediation: Moved toast container to top-center (z-index: 2000) eliminating modal button and control occlusion.
-  - Modal Usability: Upgraded modal layout with flex-scroll content and fixed footer ensuring 'Got It' button is never cut off.
-  - Autoplay Compliance: Eliminated unprompted startup playback to comply with browser media policy and remove false error toasts.
-  - Storage & Presets: JSON export/import (Alt+E/Alt+I), Shift+Click preset assignment, and full quicksave/quickload verified.
-  - Verification: Clean MSVC native build (8.7 KB); Vite build clean in 546ms; security_lint 100% PASS; check_icons 100% PASS.

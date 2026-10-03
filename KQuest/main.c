@@ -1201,10 +1201,12 @@ void RenderHelpTabLog() {
             "   - Warrior : Starts with 60 HP, 15 MP, 14 STR, 12 DEF. Shield Bash ability.\r\n"
             "   - Mage    : Starts with 40 HP, 35 MP, 10 INT, 8 DEF. Fireball spell & Mana Surge.\r\n"
             "   - Rogue   : Starts with 45 HP, 20 MP, 14 AGI, 9 DEF. High Crit & Shadow Strike.\r\n"
+            "   - Paladin : Starts with 75 HP, 20 MP, 14 STR, 16 DEF. Smite ability (Holy Dmg + Heal).\r\n"
+            "   - Ranger  : Starts with 50 HP, 25 MP, 18 AGI, 7 DEF. Aimed Shot (Precise Crits).\r\n"
             "   - Attributes: STR increases physical dmg, INT boosts spell dmg & max MP,\r\n"
             "                 DEF reduces incoming dmg, AGI increases crit chance.\r\n\r\n"
             "2. TOWN FACILITIES:\r\n"
-            "   - Dungeon Entrance : Explore 3 distinct Biomes (Mines, Catacombs, Spire).\r\n"
+            "   - Dungeon Entrance : Explore 18 distinct Biomes across 15 floors & boss tiers.\r\n"
             "   - Boss Rush Arena  : Battle 5 consecutive boss waves for Trophies & Gear.\r\n"
             "   - Inventory Hub    : Filter/sort items, compare stats, quick-sell, expand slots.\r\n"
             "   - Quest & Training : Accept daily contracts & spend Skill Points (Off/Def/Util).\r\n"
@@ -2753,10 +2755,21 @@ void HandleButton1() {
             } else if (lstrcmpA(player.heroClass, "Paladin") == 0) {
                 int totalStr = player.str + player.weaponBonusStr;
                 dmg = (int)(((totalStr * 10 + player.intStat * 10) * surgeMult) / 1000);
-                char msg[128]; wsprintfA(msg, "✨ Smite! Dealt %d holy damage to %s!", dmg, currentEnemy.name); LogMessage(msg);
+                int healAmt = (player.maxHp - player.hp >= 16) ? 16 : (player.maxHp - player.hp);
+                if (healAmt > 0) {
+                    player.hp += healAmt;
+                    char msg[128]; wsprintfA(msg, "✨ Smite! Dealt %d holy damage to %s and healed %d HP!", dmg, currentEnemy.name, healAmt); LogMessage(msg);
+                } else {
+                    char msg[128]; wsprintfA(msg, "✨ Smite! Dealt %d holy damage to %s!", dmg, currentEnemy.name); LogMessage(msg);
+                }
             } else if (lstrcmpA(player.heroClass, "Ranger") == 0) {
-                dmg = (int)((player.agi * 20 * surgeMult) / 1000);
-                char msg[128]; wsprintfA(msg, "🏹 Aimed Shot! Dealt %d precise damage to %s!", dmg, currentEnemy.name); LogMessage(msg);
+                int isCrit = (xrand() % 100 < 35);
+                int critMult = isCrit ? 25 : 10;
+                dmg = (int)((player.agi * 20 * critMult * surgeMult) / 10000);
+                char msg[128];
+                if (isCrit) wsprintfA(msg, "🎯 Critical Precision! Aimed Shot dealt %d damage to %s!", dmg, currentEnemy.name);
+                else wsprintfA(msg, "🏹 Aimed Shot! Dealt %d precise damage to %s!", dmg, currentEnemy.name);
+                LogMessage(msg);
             } else {
                 int totalStr = player.str + player.weaponBonusStr;
                 dmg = (int)((totalStr * 15 * surgeMult) / 1000);
@@ -3653,10 +3666,11 @@ void HandleButton4() {
         return;
     }
     if (gameState == STATE_CHAR_CREATE) {
-        LogMessage("✨ Character created! Welcome to Oakhaven Town.");
-        gameState = STATE_TOWN;
-        SetupButtons();
+        selectedClassIndex = 3;
+        InitHero(3);
+        LogMessage("Selected Class: Paladin (High Defense & Holy Magic).");
         UpdateUI();
+        return;
     } else if (gameState == STATE_TOWN) {
         if (player.gold >= 10) {
             player.gold -= 10;
@@ -3754,6 +3768,13 @@ void HandleButton4() {
 }
 
 void HandleButton5() {
+    if (gameState == STATE_CHAR_CREATE) {
+        selectedClassIndex = 4;
+        InitHero(4);
+        LogMessage("Selected Class: Ranger (High Agility & Marksmanship).");
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_UTILS) {
         gameState = STATE_CONFIG;
         LogMessage("⌨️ Keybinds Configuration Opened.");
@@ -3958,6 +3979,13 @@ void HandleButton5() {
 }
 
 void HandleButton6() {
+    if (gameState == STATE_CHAR_CREATE) {
+        LogMessage("✨ Character created! Welcome to Oakhaven Town.");
+        gameState = STATE_TOWN;
+        SetupButtons();
+        UpdateUI();
+        return;
+    }
     if (gameState == STATE_TOWN) {
         gameState = STATE_TOWN_PAGE2;
         LogMessage("▶️ More Town Options.");
@@ -4411,6 +4439,108 @@ void DrawGdiHeroSprite(HDC hdc, int x, int y, const char* heroClass, int frame, 
         MoveToEx(hdc, x - 16, sy - 2, NULL); LineTo(hdc, x - 16, sy + 20);
         MoveToEx(hdc, x + 16, sy - 2, NULL); LineTo(hdc, x + 16, sy + 20);
         SelectObject(hdc, hOldP); DeleteObject(hDagP);
+
+    } else if (lstrcmpA(heroClass, "Paladin") == 0) {
+        // Golden Heraldic Cape
+        HBRUSH hCapeB = CreateSolidBrush(RGB(250, 179, 135));
+        SelectObject(hdc, hCapeB);
+        POINT cpts[3] = {{x - 12, sy - 5}, {x - 22, sy + 30}, {x - 4, sy + 32}};
+        Polygon(hdc, cpts, 3);
+        DeleteObject(hCapeB);
+
+        // Radiant Plate Armor & Heraldic Cross
+        HBRUSH hArmB = CreateSolidBrush(RGB(249, 226, 175));
+        SelectObject(hdc, hArmB);
+        RECT aR = {x - 12, sy - 10, x + 12, sy + 22};
+        FillRect(hdc, &aR, hArmB);
+        DeleteObject(hArmB);
+
+        HBRUSH hCrossB = CreateSolidBrush(RGB(180, 190, 254));
+        SelectObject(hdc, hCrossB);
+        RECT cr1 = {x - 2, sy - 6, x + 2, sy + 14};
+        RECT cr2 = {x - 6, sy - 2, x + 6, sy + 2};
+        FillRect(hdc, &cr1, hCrossB);
+        FillRect(hdc, &cr2, hCrossB);
+        DeleteObject(hCrossB);
+
+        // Greathelm with Golden Cross Crest
+        HBRUSH hHelmB = CreateSolidBrush(RGB(249, 226, 175));
+        SelectObject(hdc, hHelmB);
+        RECT hR = {x - 10, sy - 28, x + 10, sy - 10};
+        FillRect(hdc, &hR, hHelmB);
+        DeleteObject(hHelmB);
+
+        HBRUSH hVisB = CreateSolidBrush(RGB(137, 220, 235));
+        SelectObject(hdc, hVisB);
+        RECT visR = {x - 5, sy - 20, x + 5, sy - 17};
+        FillRect(hdc, &visR, hVisB);
+        DeleteObject(hVisB);
+
+        // Holy Kite Shield
+        HBRUSH hShldB = CreateSolidBrush(RGB(205, 214, 244));
+        SelectObject(hdc, hShldB);
+        POINT spts[3] = {{x - 24, sy - 8}, {x - 8, sy - 8}, {x - 16, sy + 22}};
+        Polygon(hdc, spts, 3);
+        DeleteObject(hShldB);
+
+        // Heavy Flanged Warhammer / Mace
+        HPEN hShaftP = CreatePen(PS_SOLID, 2, RGB(250, 179, 135));
+        HPEN hOldP = (HPEN)SelectObject(hdc, hShaftP);
+        if (g_HeroActionTimer > 0) {
+            MoveToEx(hdc, x + 14, sy + 15, NULL); LineTo(hdc, x + 32, sy - 5);
+        } else {
+            MoveToEx(hdc, x + 14, sy + 15, NULL); LineTo(hdc, x + 14, sy - 18);
+        }
+        SelectObject(hdc, hOldP); DeleteObject(hShaftP);
+
+        HBRUSH hMaceB = CreateSolidBrush(RGB(249, 226, 175));
+        SelectObject(hdc, hMaceB);
+        int mx = (g_HeroActionTimer > 0) ? (x + 32) : (x + 14);
+        int my_pos = (g_HeroActionTimer > 0) ? (sy - 5) : (sy - 18);
+        RECT mR = {mx - 4, my_pos - 6, mx + 4, my_pos + 6};
+        FillRect(hdc, &mR, hMaceB);
+        DeleteObject(hMaceB);
+
+    } else if (lstrcmpA(heroClass, "Ranger") == 0) {
+        // Forest Green Cloak
+        HBRUSH hCloakB = CreateSolidBrush(RGB(64, 110, 82));
+        SelectObject(hdc, hCloakB);
+        RECT rR = {x - 12, sy - 10, x + 12, sy + 32};
+        FillRect(hdc, &rR, hCloakB);
+        DeleteObject(hCloakB);
+
+        // Hunter Leather Tunic
+        HBRUSH hTunicB = CreateSolidBrush(RGB(166, 124, 82));
+        SelectObject(hdc, hTunicB);
+        RECT vR = {x - 8, sy - 8, x + 8, sy + 18};
+        FillRect(hdc, &vR, hTunicB);
+        DeleteObject(hTunicB);
+
+        // Archer Hood
+        HBRUSH hHoodB = CreateSolidBrush(RGB(49, 92, 66));
+        SelectObject(hdc, hHoodB);
+        Ellipse(hdc, x - 10, sy - 25, x + 10, sy - 5);
+        DeleteObject(hHoodB);
+
+        // Quiver on Back
+        HBRUSH hQuivB = CreateSolidBrush(RGB(110, 69, 38));
+        SelectObject(hdc, hQuivB);
+        RECT qR = {x - 16, sy - 12, x - 11, sy + 12};
+        FillRect(hdc, &qR, hQuivB);
+        DeleteObject(hQuivB);
+
+        // Recurve Longbow & Drawn Arrow on attack
+        HPEN hBowP = CreatePen(PS_SOLID, 2, RGB(250, 179, 135));
+        HPEN hOldP = (HPEN)SelectObject(hdc, hBowP);
+        Arc(hdc, x + 10, sy - 18, x + 30, sy + 22, x + 20, sy - 18, x + 20, sy + 22);
+        SelectObject(hdc, hOldP); DeleteObject(hBowP);
+
+        if (g_HeroActionTimer > 0) {
+            HPEN hArrowP = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
+            HPEN hOldA = (HPEN)SelectObject(hdc, hArrowP);
+            MoveToEx(hdc, x + 12, sy + 2, NULL); LineTo(hdc, x + 36, sy + 2);
+            SelectObject(hdc, hOldA); DeleteObject(hArrowP);
+        }
 
     } else { // Warrior
         HBRUSH hCapeB = CreateSolidBrush(RGB(243, 139, 168));
@@ -5032,10 +5162,10 @@ void RenderGdiScene(HDC hdc, int w, int h) {
         if (g_GdiBannerTimer > 90) g_GdiBannerActive = 0;
     }
 
-    // Ornate Medieval Golden Filigree HUD Frame & Pulsating Perimeter Inlay
+    // Clean Static Medieval Golden Filigree HUD Frame & Inlay (Zero Traveling Dots or Orbiting Glints)
     {
-        int shim = 190 + (FastSin(g_GfxFrame) * 45) / 127;
-        COLORREF goldC = RGB(shim, (shim * 85) / 100, 120);
+        COLORREF goldC = RGB(220, 190, 120);
+        COLORREF purpleC = RGB(150, 130, 190);
         HPEN hGoldPen = CreatePen(PS_SOLID, 1, goldC);
         HPEN hOldP = (HPEN)SelectObject(hdc, hGoldPen);
         HBRUSH hNullB = (HBRUSH)GetStockObject(NULL_BRUSH);
@@ -5043,7 +5173,11 @@ void RenderGdiScene(HDC hdc, int w, int h) {
 
         // Outer & inner border
         Rectangle(hdc, 3, 3, w - 3, h - 3);
+        HPEN hPurpPen = CreatePen(PS_SOLID, 1, purpleC);
+        SelectObject(hdc, hPurpPen);
         Rectangle(hdc, 6, 6, w - 6, h - 6);
+        SelectObject(hdc, hGoldPen);
+        DeleteObject(hPurpPen);
 
         // 4 Corner Filigree L-Brackets
         // Top-Left
