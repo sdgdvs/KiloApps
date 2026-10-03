@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KFont
-  timestamp: "2026-10-02T20:10:00-07:00"
+  agent: kilo-tester
+  app: KPing
+  timestamp: "2026-10-02T20:20:00-07:00"
 last_planner_run: "2026-10-03T00:40:00Z"
 ---
 
@@ -216,14 +216,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Help Guide Completeness: Updated help modal to document all 11 tabs including Bitmap Studio, OpenType, and Typo Linter.
   - Verification: MSVC clean (`KFont.exe` 57.0 KB); Vite clean in 317ms; check_icons & security_lint 100% PASS.
 
-- **2026-10-02T19:57:00-07:00 — kilo-tester: KPing (Interactive UI Audit, JSON Import, Focus Trapping & Quicksave Buttons)**
-  - Status: PASS ✅ (6 issues found, 6 fixed, 0 regressions, clean builds, 157.6 KB web < 999 KB ceiling).
-  - Quicksave & Toolbar Buttons: Added Save [F5] and Load [F9] buttons to actions toolbar and help modal footer; synchronized presetSelect on quickload.
-  - JSON Telemetry Import: Added file input and Import option card [4/I] in export modal, restoring host, metrics, console lines, and logs from JSON.
-  - Console Filter & Startup Fix: Fixed 'Hops' filter to include BGP AS route hops (`bgp_hop`); populated `allConsoleLines` with initial welcome banner.
+- **2026-10-02T20:20:00-07:00 — kilo-tester: KPing (Interactive UI Audit, Defensive Mutex, Button Sync & JSON Import)**
+  - Status: PASS ✅ (10 issues found, 10 fixed, 0 regressions, clean builds, 158.3 KB web < 999 KB ceiling).
+  - Diagnostic Mutex & Defensive State: Guarded quicksave, quickload, import, and clear output against concurrent execution during active diagnostics (`isBusy`).
+  - Button State Sync: Wired `btnSave`, `btnLoad`, and `btnClear` disabling in `setInputsDisabled` to prevent state mutation during active echo streams.
+  - Lore & Anachronism Polish: Replaced out-of-era preset DNS string with period-accurate 1999 in-universe resolver `OmniNet DNS`.
+  - Quicksave & Toolbar Buttons: Added Save [F5] and Load [F9] buttons to actions toolbar and help modal; synchronized presetSelect on quickload.
+  - JSON Telemetry Import & Filter: Added file input and Import option card [4/I] in export modal; fixed BGP hops in console filter.
   - Accessibility & Modal Trap: Implemented `trapFocus` across export, help, and mesh modals; allowed Enter/Space on modal buttons without premature close.
-  - Escape & Tooltip Polish: Added `stopMeshPing` to Escape key handler for clean abort; expanded canvas tooltip prefix for BGP and Bloat modes.
-  - Verification: Vite build clean in 312ms; check_icons & security_lint 100% PASS; zero glints; ARG guidelines intact.
 
 - **2026-10-02T19:25:00-07:00 — kilo-graphics: KColony (Visual Polish, Balance Pass, Quicksave State & Glint Purge)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 131.8 KB web / 174.1 KB native < 999 KB ceiling).
