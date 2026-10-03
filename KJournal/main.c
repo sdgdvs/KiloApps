@@ -86,6 +86,8 @@ void templates_library_menu();
 void write_entry_flow(int preselected_template);
 void copy_to_clipboard_win32(const char *text);
 void load_demo_journal();
+void quicksave_session_native();
+void quickload_session_native();
 
 int count_words_in_string(const char *str) {
     if (!str) return 0;
@@ -446,6 +448,139 @@ void free_entries(JournalEntry *entries, int count) {
             entries[i].content = NULL;
         }
     }
+}
+
+#define KJOURNAL_QUICKSAVE_MAGIC 0x4E52554A // "JURN"
+
+void quicksave_session_native() {
+    JournalEntry *entries = (JournalEntry *)malloc(sizeof(JournalEntry) * MAX_ENTRIES);
+    if (!entries) {
+        printf("\nMemory allocation failed during quicksave.\n");
+        return;
+    }
+    int count = load_all_entries(entries, MAX_ENTRIES);
+
+    FILE *f = fopen("kjournal_quicksave.dat", "wb");
+    if (!f) {
+        printf("\n[ERROR] Failed to create kjournal_quicksave.dat!\n");
+        free_entries(entries, count);
+        free(entries);
+        return;
+    }
+
+    unsigned int magic = KJOURNAL_QUICKSAVE_MAGIC;
+    unsigned int version = 1;
+    fwrite(&magic, sizeof(unsigned int), 1, f);
+    fwrite(&version, sizeof(unsigned int), 1, f);
+
+    // Save PIN hash if exists
+    unsigned int pin_hash = 0;
+    FILE *pinf = fopen(PIN_FILE, "r");
+    if (pinf) {
+        fscanf(pinf, "%u", &pin_hash);
+        fclose(pinf);
+    }
+    fwrite(&pin_hash, sizeof(unsigned int), 1, f);
+
+    // Save entries count and items
+    fwrite(&count, sizeof(int), 1, f);
+    for (int i = 0; i < count; i++) {
+        fwrite(entries[i].date_str, sizeof(char), 32, f);
+        fwrite(entries[i].time_str, sizeof(char), 32, f);
+        fwrite(entries[i].mood, sizeof(char), 32, f);
+        int len = entries[i].content ? (int)strlen(entries[i].content) : 0;
+        fwrite(&len, sizeof(int), 1, f);
+        if (len > 0) {
+            fwrite(entries[i].content, sizeof(char), len, f);
+        }
+    }
+    fclose(f);
+
+    // Mark first-run tutorial as seen
+    FILE *tut = fopen("kjournal_tutorial.dat", "wb");
+    if (tut) fclose(tut);
+
+    free_entries(entries, count);
+    free(entries);
+
+    printf("\n>>> [QUICKSAVE] Quicksaved %d entries & configuration to kjournal_quicksave.dat [F5]! <<<\n", count);
+}
+
+void quickload_session_native() {
+    FILE *f = fopen("kjournal_quicksave.dat", "rb");
+    if (!f) {
+        printf("\n[QUICKLOAD] No saved state found in kjournal_quicksave.dat (Press [S] or [F5] to quicksave first) [F9].\n");
+        return;
+    }
+
+    unsigned int magic = 0;
+    unsigned int version = 0;
+    if (fread(&magic, sizeof(unsigned int), 1, f) != 1 || magic != KJOURNAL_QUICKSAVE_MAGIC) {
+        printf("\n[ERROR] Corrupt or invalid kjournal_quicksave.dat magic header!\n");
+        fclose(f);
+        return;
+    }
+    if (fread(&version, sizeof(unsigned int), 1, f) != 1 || version != 1) {
+        printf("\n[ERROR] Unsupported quicksave format version!\n");
+        fclose(f);
+        return;
+    }
+
+    unsigned int pin_hash = 0;
+    fread(&pin_hash, sizeof(unsigned int), 1, f);
+    if (pin_hash != 0) {
+        FILE *pinf = fopen(PIN_FILE, "w");
+        if (pinf) {
+            fprintf(pinf, "%u\n", pin_hash);
+            fclose(pinf);
+        }
+    }
+
+    int count = 0;
+    if (fread(&count, sizeof(int), 1, f) != 1 || count < 0 || count > MAX_ENTRIES) {
+        printf("\n[ERROR] Invalid entry count in quicksave file!\n");
+        fclose(f);
+        return;
+    }
+
+    FILE *out = fopen(JOURNAL_FILE, "w");
+    if (!out) {
+        printf("\n[ERROR] Could not write to %s\n", JOURNAL_FILE);
+        fclose(f);
+        return;
+    }
+
+    int restored = 0;
+    for (int i = 0; i < count; i++) {
+        char d[32] = "", t[32] = "", m[32] = "";
+        fread(d, sizeof(char), 32, f);
+        fread(t, sizeof(char), 32, f);
+        fread(m, sizeof(char), 32, f);
+        int len = 0;
+        fread(&len, sizeof(int), 1, f);
+        char *content = NULL;
+        if (len > 0) {
+            content = (char *)malloc(len + 1);
+            if (content) {
+                fread(content, sizeof(char), len, f);
+                content[len] = '\0';
+            }
+        }
+        fprintf(out, "\n=== Entry: %s %s | Mood: %s ===\n", d, t, m);
+        if (content) {
+            fprintf(out, "%s", content);
+            free(content);
+        }
+        restored++;
+    }
+    fclose(out);
+    fclose(f);
+
+    // Mark tutorial as seen
+    FILE *tut = fopen("kjournal_tutorial.dat", "wb");
+    if (tut) fclose(tut);
+
+    printf("\n>>> [QUICKLOAD] Successfully restored %d entries from kjournal_quicksave.dat [F9]! <<<\n", restored);
 }
 
 // Write new entry with optional preselected template
@@ -1297,6 +1432,8 @@ void show_help() {
     printf(" - [7] Data Import & Export: Backup to Markdown, JSON, or CSV, and restore anytime.\n");
     printf(" - [8] Prompts & Templates Library: Choose from 6 guided journaling frameworks.\n");
     printf(" - [D] Load Sample Demo Entries: Populate starter entries across consecutive days.\n");
+    printf(" - [S] or [F5] Quicksave Snapshot: Snapshot complete journal state to kjournal_quicksave.dat.\n");
+    printf(" - [L] or [F9] Quickload Snapshot: Restore full journal state from kjournal_quicksave.dat.\n");
     printf(" - [C] Copy to Clipboard: Available when viewing entries to copy formatted text.\n");
     printf(" - [H] Help / Instructions: Open this help guide anytime.\n\n");
     printf("Press Enter to return to the main menu...");
@@ -1307,7 +1444,7 @@ int main() {
 #ifdef _WIN32
     SetProcessDPIAware();
     system("mode con: cols=120 lines=40");
-    system("title KJournal - Personal Journal & Mood Analytics [Press 'H' for Help]");
+    SetConsoleTitleA("KJournal - Personal Journal & Mood Analytics [Press 'H' for Help]");
     
     HWND hwnd = GetConsoleWindow();
     if (hwnd) {
@@ -1342,6 +1479,32 @@ int main() {
         return 0;
     }
 
+    // First-run tutorial flag check: only on fresh sessions, never interrupting restored save states
+    FILE *tut_check = fopen("kjournal_tutorial.dat", "rb");
+    FILE *save_check = fopen("kjournal_quicksave.dat", "rb");
+    if (!tut_check) {
+        if (!save_check) {
+            clear_screen();
+            printf("====================================================\n");
+            printf("         WELCOME TO KJOURNAL (FIRST-RUN GUIDE)      \n");
+            printf("====================================================\n");
+            printf("Welcome to KJournal - Personal Journal & Mood Analytics!\n\n");
+            printf("Quick Start Tips:\n");
+            printf(" - Press [1] to write your first journal entry\n");
+            printf(" - Press [8] to choose a structured reflection template\n");
+            printf(" - Press [D] to load sample entries across consecutive days\n");
+            printf(" - Press [S] or [F5] at any time to Quicksave journal state\n");
+            printf(" - Press [L] or [F9] at any time to Quickload your saved state\n");
+            printf(" - Press [H] at any time for Help & Keyboard Shortcuts\n\n");
+            printf("Press Enter to begin journaling...");
+            getchar();
+        }
+        FILE *tut_write = fopen("kjournal_tutorial.dat", "wb");
+        if (tut_write) fclose(tut_write);
+    }
+    if (tut_check) fclose(tut_check);
+    if (save_check) fclose(save_check);
+
     char choice[10];
     
     while (1) {
@@ -1357,8 +1520,8 @@ int main() {
 
 #ifdef _WIN32
         char title_buf[128];
-        sprintf(title_buf, "title KJournal - %d Entries | Goal: %d words [Press 'H' for Help]", entry_cnt, DAILY_WORD_GOAL);
-        system(title_buf);
+        sprintf(title_buf, "KJournal - %d Entries | Goal: %d words [Press 'H' for Help]", entry_cnt, DAILY_WORD_GOAL);
+        SetConsoleTitleA(title_buf);
 #endif
 
         printf("====================================================\n");
@@ -1375,6 +1538,8 @@ int main() {
         printf("7. Import / Export Data\n");
         printf("8. Prompts & Templates Library\n");
         printf("D. Load Sample / Demo Journal Entries\n");
+        printf("S. Quicksave Session Snapshot [F5]\n");
+        printf("L. Quickload Session Snapshot [F9]\n");
         printf("H. Help / Instructions\n");
         printf("9. Exit\n");
         printf("====================================================\n");
@@ -1400,6 +1565,14 @@ int main() {
             templates_library_menu();
         } else if (choice[0] == 'd' || choice[0] == 'D') {
             load_demo_journal();
+            printf("Press Enter to continue...");
+            getchar();
+        } else if (choice[0] == 's' || choice[0] == 'S' || _strnicmp(choice, "F5", 2) == 0 || _stricmp(choice, "quicksave\n") == 0 || _stricmp(choice, "save\n") == 0) {
+            quicksave_session_native();
+            printf("Press Enter to continue...");
+            getchar();
+        } else if (choice[0] == 'l' || choice[0] == 'L' || _strnicmp(choice, "F9", 2) == 0 || _stricmp(choice, "quickload\n") == 0 || _stricmp(choice, "load\n") == 0) {
+            quickload_session_native();
             printf("Press Enter to continue...");
             getchar();
         } else if (choice[0] == 'h' || choice[0] == 'H') {

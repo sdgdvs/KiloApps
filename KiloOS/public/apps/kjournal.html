@@ -657,14 +657,14 @@
     font-weight: 500;
   }
 
-  /* Notification Toast (Non-occluding bottom-center safe zone) */
+  /* Notification Toast (Non-occluding top-center safe zone) */
   #toast {
-    position: fixed; bottom: 24px; left: 50%;
-    transform: translateX(-50%) translateY(40px);
+    position: fixed; top: 16px; left: 50%;
+    transform: translateX(-50%) translateY(-50px);
     background: var(--accent-gold); color: #111; font-weight: 600;
     padding: 8px 16px 8px 18px; border-radius: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.45);
     opacity: 0; pointer-events: none; transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 1200; display: flex; align-items: center; gap: 10px; max-width: 90vw;
+    z-index: 2000; display: flex; align-items: center; gap: 10px; max-width: 90vw;
     cursor: pointer;
   }
   #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; pointer-events: auto; }
@@ -1587,11 +1587,17 @@
     loadSelectedEntry();
 
     const tutorialSeen = localStorage.getItem('kjournal_tutorialSeen');
+    const quicksaveExists = !!localStorage.getItem('kjournal_quicksave');
+    const hasExistingData = Object.keys(entries).length > 0;
     if (!tutorialSeen) {
-      localStorage.setItem('kjournal_tutorialSeen', '1');
-      setTimeout(() => {
-        showToast("📖 Welcome to KJournal! Press 'H' or F1 for Help | Ctrl+S to Save");
-      }, 450);
+      try {
+        localStorage.setItem('kjournal_tutorialSeen', '1');
+      } catch (e) {}
+      if (!quicksaveExists && !hasExistingData) {
+        setTimeout(() => {
+          showToast("📖 Welcome to KJournal! Press 'H' or F1 for Help | Ctrl+S to Save");
+        }, 450);
+      }
     }
   }
 
@@ -1644,10 +1650,13 @@
       calYear: calCurrentYear,
       calMonth: calCurrentMonth,
       editorMode: editorMode,
+      entries: entries,
+      settings: settings,
       timestamp: Date.now()
     };
     try {
       localStorage.setItem('kjournal_quicksave', JSON.stringify(snapshot));
+      localStorage.setItem('kjournal_tutorialSeen', '1');
       saveEntriesToStorage();
       saveSettingsToStorage();
       showToast('💾 Quicksave: Journal session saved [F5]');
@@ -1661,6 +1670,9 @@
       const raw = localStorage.getItem('kjournal_quicksave');
       loadSettings();
       loadEntries();
+      try {
+        localStorage.setItem('kjournal_tutorialSeen', '1');
+      } catch (e) {}
       if (raw) {
         const snapshot = JSON.parse(raw);
         if (snapshot && snapshot.selectedDate) {
@@ -1669,6 +1681,18 @@
           if (typeof snapshot.calMonth === 'number') calCurrentMonth = snapshot.calMonth;
           if (snapshot.editorMode) setEditorMode(snapshot.editorMode);
           if (snapshot.mood) selectMood(snapshot.mood, false);
+          if (snapshot.category) {
+            const catSel = document.getElementById('entryCategorySelect');
+            if (catSel) catSel.value = snapshot.category;
+          }
+          if (snapshot.entries && typeof snapshot.entries === 'object') {
+            entries = Object.assign({}, snapshot.entries, entries);
+            saveEntriesToStorage();
+          }
+          if (snapshot.settings && typeof snapshot.settings === 'object') {
+            settings = Object.assign({}, settings, snapshot.settings);
+            saveSettingsToStorage();
+          }
           loadSelectedEntry();
           if (snapshot.text !== undefined && (!entries[selectedDate] || !entries[selectedDate].text)) {
             document.getElementById('journalArea').value = snapshot.text;
@@ -1827,6 +1851,7 @@
 
   // PIN Protection System
   function showPinOverlay(mode) {
+    hideToast();
     pinMode = mode;
     pinBuffer = '';
     updatePinDots();
@@ -2609,6 +2634,10 @@
   }
 
   function openModal(id) {
+    hideToast();
+    document.querySelectorAll('.modal-backdrop.active').forEach(m => {
+      if (m.id !== id) m.classList.remove('active');
+    });
     const m = document.getElementById(id);
     if (m) m.classList.add('active');
   }
@@ -2988,6 +3017,16 @@
         e.preventDefault();
         const btn = document.getElementById('confirmModalBtn');
         if (btn) btn.click();
+        return;
+      }
+    }
+
+    // Enter / Space on Help Modal closes guide
+    const helpModalEl = document.getElementById('helpModal');
+    if (helpModalEl && helpModalEl.classList.contains('active')) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        closeModal('helpModal');
         return;
       }
     }
