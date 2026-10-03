@@ -934,7 +934,7 @@ class FleetDashboard(tk.Tk):
         def task():
             try:
                 res = subprocess.run(
-                    ["git", "pull", "--rebase"],
+                    ["git", "pull", "--rebase", "--autostash"],
                     cwd=str(REPO_ROOT),
                     capture_output=True,
                     text=True,

@@ -741,9 +741,16 @@
                     <span class="status-dot" id="statusDot"></span>
                     <span id="statusText">Ready</span>
                 </div>
+                <button class="btn-help" id="btnExport" title="Export Station Playlist & Config [.json]">
+                    📤 Export
+                </button>
+                <button class="btn-help" id="btnImport" title="Import Station Playlist & Config [.json]">
+                    📥 Import
+                </button>
                 <button class="btn-help" id="btnHelp" title="Help & Shortcuts [F1]">
                     Help <span class="key-badge">F1</span>
                 </button>
+                <input type="file" id="fileImportJson" accept=".json" style="display:none;" />
             </div>
         </header>
 
@@ -871,6 +878,10 @@
                         <td>Quick tune station preset</td>
                     </tr>
                     <tr>
+                        <td>Shift + 1 – 6</td>
+                        <td>Assign current stream URL to preset slot</td>
+                    </tr>
+                    <tr>
                         <td>← / →</td>
                         <td>Cycle previous / next preset</td>
                     </tr>
@@ -887,6 +898,10 @@
                         <td>Cycle visualizer style (LED / CRT / VU)</td>
                     </tr>
                     <tr>
+                        <td>Alt + E / Alt + I</td>
+                        <td>Export / Import station playlist [.json]</td>
+                    </tr>
+                    <tr>
                         <td>Enter</td>
                         <td>Tune to custom URL in text box</td>
                     </tr>
@@ -899,8 +914,13 @@
                         <td>Dismiss Help guide</td>
                     </tr>
                 </table>
-                <p style="font-size: 11px; color: var(--text-muted);">
-                    Tip: Direct HTTPS MP3 and AAC streaming endpoints are supported. Custom streams can be tuned anytime.
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;">
+                    <button class="btn-help" id="btnModalExport" style="flex:1; justify-content:center;">📤 Export JSON</button>
+                    <button class="btn-help" id="btnModalImport" style="flex:1; justify-content:center;">📥 Import JSON</button>
+                    <button class="btn-help" id="btnModalReset" style="flex:1; justify-content:center;">↺ Reset Defaults</button>
+                </div>
+                <p style="font-size: 11px; color: var(--text-muted); margin-top:2px;">
+                    Tip: Direct HTTPS MP3 and AAC streaming endpoints are supported. Custom streams can be assigned to any preset slot.
                 </p>
             </div>
             <div class="modal-footer">
@@ -911,7 +931,7 @@
 
     <script>
         // Station Presets
-        const PRESETS = [
+        const DEFAULT_PRESETS = [
             { id: 1, name: 'Subspace', genre: 'Synthwave', url: 'https://radio.erb.pw/public/subspace' },
             { id: 2, name: 'Groove Salad', genre: 'Chillout', url: 'https://ice2.somafm.com/groovesalad-128-mp3' },
             { id: 3, name: 'Nightwave', genre: 'Vaporwave', url: 'https://radio.plaza.one/mp3' },
@@ -919,6 +939,8 @@
             { id: 5, name: 'Secret Agent', genre: 'Spy / Retro', url: 'https://ice1.somafm.com/secretagent-128-mp3' },
             { id: 6, name: 'Space Station', genre: 'Spacemusic', url: 'https://ice1.somafm.com/spacestation-128-mp3' }
         ];
+
+        let PRESETS = JSON.parse(JSON.stringify(DEFAULT_PRESETS));
 
         // Elements
         const audio = document.getElementById('audioElement');
@@ -929,6 +951,12 @@
         const btnStop = document.getElementById('btnStop');
         const btnSave = document.getElementById('btnSave');
         const btnLoad = document.getElementById('btnLoad');
+        const btnExport = document.getElementById('btnExport');
+        const btnImport = document.getElementById('btnImport');
+        const fileImportJson = document.getElementById('fileImportJson');
+        const btnModalExport = document.getElementById('btnModalExport');
+        const btnModalImport = document.getElementById('btnModalImport');
+        const btnModalReset = document.getElementById('btnModalReset');
         const btnTune = document.getElementById('btnTune');
         const btnClearUrl = document.getElementById('btnClearUrl');
         const btnHelp = document.getElementById('btnHelp');
@@ -1158,14 +1186,130 @@
             PRESETS.forEach((preset, index) => {
                 const btn = document.createElement('button');
                 btn.className = 'preset-btn' + (index === activePresetIndex ? ' active' : '');
-                btn.title = `${preset.name} (${preset.genre}) - Press [${preset.id}]`;
+                btn.title = `${preset.name} (${preset.genre}) - Click to tune [${preset.id}] • Shift+Click to assign current stream`;
                 btn.innerHTML = `
                     <span class="preset-name">${preset.name}</span>
                     <span class="key-badge">${preset.id}</span>
                 `;
-                btn.onclick = () => selectPreset(index, true);
+                btn.onclick = (e) => {
+                    if (e.shiftKey) {
+                        assignCurrentToPreset(index);
+                    } else {
+                        selectPreset(index, true);
+                    }
+                };
                 presetsGrid.appendChild(btn);
             });
+        }
+
+        // Assign current stream to a preset slot (1-6)
+        function assignCurrentToPreset(index) {
+            if (index < 0 || index >= PRESETS.length) return;
+            const url = stationUrl.value.trim();
+            if (!url) {
+                showToast('Cannot assign empty URL to preset', 'warning', 2500);
+                return;
+            }
+            let name = displayStation.textContent;
+            if (!name || name === 'Custom Stream' || name === 'Subspace') {
+                try {
+                    const u = new URL(url);
+                    name = u.pathname.split('/').filter(Boolean).pop() || u.hostname;
+                    name = name.charAt(0).toUpperCase() + name.slice(1);
+                } catch (e) {
+                    name = `Preset ${index + 1}`;
+                }
+            }
+            PRESETS[index].url = url;
+            PRESETS[index].name = name;
+            PRESETS[index].genre = stationTag.textContent || 'CUSTOM';
+            safeSetStorage('kradio_custom_presets', JSON.stringify(PRESETS));
+            selectPreset(index, false);
+            showToast(`⭐ Assigned current stream to Preset [${index + 1}] (${name})`, 'success', 2500);
+        }
+
+        // Reset station presets to original defaults
+        function resetDefaultPresets() {
+            PRESETS = JSON.parse(JSON.stringify(DEFAULT_PRESETS));
+            safeSetStorage('kradio_custom_presets', JSON.stringify(PRESETS));
+            selectPreset(0, false);
+            showToast('↺ Station presets reset to factory defaults', 'info', 2200);
+        }
+
+        // JSON Station Export
+        function exportJsonConfig() {
+            const data = {
+                app: "KRadio",
+                version: "1.0",
+                exportedAt: new Date().toISOString(),
+                presets: PRESETS,
+                activePresetIndex: activePresetIndex,
+                currentStation: {
+                    name: displayStation.textContent,
+                    tag: stationTag.textContent,
+                    url: stationUrl.value,
+                    bitrate: displayBitrate.textContent
+                },
+                volume: parseInt(volumeSlider.value, 10),
+                isMuted: isMuted,
+                vizMode: vizMode
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `kradio_stations_${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast("📤 Station playlist & settings exported [.json]", "success", 2500);
+        }
+
+        // JSON Station Import
+        function importJsonConfig(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    const incomingPresets = Array.isArray(data) ? data : data.presets;
+                    if (Array.isArray(incomingPresets) && incomingPresets.length > 0) {
+                        PRESETS.length = 0;
+                        incomingPresets.slice(0, 6).forEach((p, idx) => {
+                            PRESETS.push({
+                                id: idx + 1,
+                                name: String(p.name || `Station ${idx + 1}`).substring(0, 32),
+                                genre: String(p.genre || 'STREAM').substring(0, 20),
+                                url: String(p.url || '').trim()
+                            });
+                        });
+                        safeSetStorage('kradio_custom_presets', JSON.stringify(PRESETS));
+                        renderPresets();
+                    }
+
+                    if (typeof data.volume === 'number' && !isNaN(data.volume)) {
+                        updateVolume(data.volume);
+                    }
+                    if (typeof data.vizMode === 'number' && data.vizMode >= 0 && data.vizMode < VIZ_MODES.length) {
+                        vizMode = data.vizMode;
+                        btnVizMode.textContent = VIZ_MODES[vizMode];
+                        safeSetStorage('kradio_viz_mode', String(vizMode));
+                    }
+                    if (data.currentStation && data.currentStation.url) {
+                        stationUrl.value = data.currentStation.url;
+                        displayStation.textContent = data.currentStation.name || 'Imported Stream';
+                        stationTag.textContent = data.currentStation.tag || 'CUSTOM';
+                        displayBitrate.textContent = data.currentStation.bitrate || 'Imported';
+                        safeSetStorage('kradio_station_url', data.currentStation.url);
+                    }
+                    showToast("📥 Successfully imported station playlist!", "success", 2500);
+                } catch (err) {
+                    console.error("Failed to parse JSON config", err);
+                    showToast("❌ Invalid or corrupted station JSON file", "error", 2800);
+                }
+            };
+            reader.readAsText(file);
         }
 
         // Storage Helpers (Catching quota errors gracefully)
@@ -1533,6 +1677,19 @@
         btnCloseModal.addEventListener('click', closeHelp);
         btnGotIt.addEventListener('click', closeHelp);
         
+        btnExport.addEventListener('click', exportJsonConfig);
+        btnImport.addEventListener('click', () => fileImportJson.click());
+        btnModalExport.addEventListener('click', exportJsonConfig);
+        btnModalImport.addEventListener('click', () => fileImportJson.click());
+        btnModalReset.addEventListener('click', resetDefaultPresets);
+
+        fileImportJson.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                importJsonConfig(e.target.files[0]);
+                e.target.value = '';
+            }
+        });
+
         helpModal.addEventListener('click', (e) => {
             if (e.target === helpModal) closeHelp();
         });
@@ -1546,8 +1703,26 @@
             document.title = `▶ ${displayStation.textContent} - KRadio`;
         });
 
+        audio.addEventListener('pause', () => {
+            if (!isSubcarrierActive && !isStopping) {
+                isPlaying = false;
+                playIcon.textContent = '▶';
+                playLabel.textContent = 'Play';
+                if (statusText.textContent === 'Live' || statusText.textContent === 'Buffering...') {
+                    setStatus('Paused', 'ready');
+                }
+                document.title = 'KRadio - Retro Stream Player';
+            }
+        });
+
         audio.addEventListener('waiting', () => {
             setStatus('Buffering...', 'buffering');
+        });
+
+        audio.addEventListener('stalled', () => {
+            if (isPlaying && !isStopping) {
+                setStatus('Buffering...', 'buffering');
+            }
         });
 
         audio.addEventListener('error', () => {
@@ -1564,7 +1739,7 @@
 
         // Keyboard Shortcuts
         window.addEventListener('keydown', (e) => {
-            const isInputFocused = document.activeElement === stationUrl;
+            const isInputFocused = document.activeElement && (document.activeElement === stationUrl || document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA');
 
             // Global modal handling: Esc, Enter, Space dismisses Help modal
             if (helpModal.classList.contains('active')) {
@@ -1590,6 +1765,26 @@
             if (e.key === 'F9') {
                 e.preventDefault();
                 quickloadState();
+                return;
+            }
+
+            // Export / Import shortcuts: Alt+E, Alt+I
+            if (e.altKey && (e.key === 'e' || e.key === 'E')) {
+                e.preventDefault();
+                exportJsonConfig();
+                return;
+            }
+            if (e.altKey && (e.key === 'i' || e.key === 'I')) {
+                e.preventDefault();
+                fileImportJson.click();
+                return;
+            }
+
+            // Shift + 1..6: Assign current stream to preset
+            if (e.shiftKey && e.key >= '1' && e.key <= '6') {
+                e.preventDefault();
+                const slot = parseInt(e.key, 10) - 1;
+                assignCurrentToPreset(slot);
                 return;
             }
 
@@ -1638,11 +1833,11 @@
                 selectPreset(presetNum - 1, true);
             } else if (e.key === 'ArrowLeft') {
                 e.preventDefault();
-                let nextIndex = activePresetIndex <= 0 ? PRESETS.length - 1 : activePresetIndex - 1;
+                let nextIndex = (activePresetIndex <= 0) ? PRESETS.length - 1 : activePresetIndex - 1;
                 selectPreset(nextIndex, true);
             } else if (e.key === 'ArrowRight') {
                 e.preventDefault();
-                let nextIndex = activePresetIndex >= PRESETS.length - 1 ? 0 : activePresetIndex + 1;
+                let nextIndex = (activePresetIndex >= PRESETS.length - 1 || activePresetIndex < 0) ? 0 : activePresetIndex + 1;
                 selectPreset(nextIndex, true);
             } else if (e.key === 'ArrowUp') {
                 e.preventDefault();
@@ -1664,8 +1859,23 @@
             }
         });
 
+        function loadSavedPresets() {
+            const raw = safeGetStorage('kradio_custom_presets');
+            if (raw) {
+                try {
+                    const parsed = JSON.parse(raw);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        PRESETS = parsed;
+                        return;
+                    }
+                } catch (e) {}
+            }
+            PRESETS = JSON.parse(JSON.stringify(DEFAULT_PRESETS));
+        }
+
         // App Initialization
         window.addEventListener('DOMContentLoaded', () => {
+            loadSavedPresets();
             resizeCanvas();
             drawVisualizer();
 

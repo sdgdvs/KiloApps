@@ -645,6 +645,35 @@
     box-shadow: inset 0 0 6px #00ff00;
   }
 
+  /* 8. Subcarrier Demodulator & Packet Intercept Lab */
+  .subcarrier-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+    gap: 12px;
+  }
+  .subcarrier-card {
+    background: #000c14;
+    border: 2px inset #00aa44;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .subcarrier-control-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .subcarrier-val {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: #39ff14;
+    font-weight: bold;
+    min-width: 65px;
+    text-align: right;
+  }
+
   /* GeoCities Neighborhood Themes */
   body.theme-siliconvalley {
     --bg-dark: #000000;
@@ -1189,6 +1218,7 @@
     <a href="#synth-section" class="nav-btn">🎛️ FM Synth Lab</a>
     <a href="#fx-lab-section" class="nav-btn">⚡ Demoscene FX Lab</a>
     <a href="#sample-sculptor-section" class="nav-btn">🎚️ Sample Sculptor</a>
+    <a href="#subcarrier-lab" class="nav-btn" style="color:#39ff14; border-color:#39ff14;">📡 Subcarrier Lab</a>
     <a href="#oracle-section" class="nav-btn">🔮 Silicon Oracle '99</a>
     <a href="#y2k-diagnostic" class="nav-btn">⏱️ Y2K Diagnostic</a>
     <a href="#banner-studio" class="nav-btn">🚧 Banner Studio</a>
@@ -1233,7 +1263,7 @@
     
     <div class="lcd-display">
       <div class="lcd-top">
-        <span id="lcdTrackNo">TRACK 01/04</span>
+        <span id="lcdTrackNo">TRACK 01/05</span>
         <span id="lcdBpm">135 BPM</span>
         <span id="lcdPattern">PAT: 01/18</span>
         <span id="lcdTime">00:00 / 02:08</span>
@@ -1259,6 +1289,7 @@
         <option value="1">02: Underground Tracker Dreams (128 BPM - Amiga ProTracker MOD [02:15])</option>
         <option value="2">03: Phosphor Cyberpunk Pulse (144 BPM - Hardcore Keygen Chiptune [02:13])</option>
         <option value="3">04: Silicon Horizon 1999 (140 BPM - Dreamy Euro-Trance / Paula Anthems [02:16])</option>
+        <option value="4">05: Subterranean Bedrock Resonance (132 BPM - 1999Hz Harmonic Lore [02:18])</option>
       </select>
 
       <div class="vol-control">
@@ -1331,6 +1362,18 @@
         <button class="btn-download-mod" onclick="downloadModTrack(3)">💾 Download Silicon_Horizon.mod</button>
       </div>
 
+      <!-- Mod 5 -->
+      <div class="mod-card" style="border-color:#39ff14; background:#01180a;">
+        <div class="mod-title" style="color:#39ff14;">📁 Track 05: Bedrock Resonance</div>
+        <div class="mod-meta">
+          Format: ProTracker 4-CH (M.K.)<br>
+          BPM: 132 • 16 Patterns<br>
+          Samples: 8 (Subcarrier, Acid, Strings)<br>
+          Size: ~25.9 KB (.MOD Binary)
+        </div>
+        <button class="btn-download-mod" style="background:#005522; border-color:#39ff14; color:#39ff14;" onclick="downloadModTrack(4)">💾 Download Bedrock_1999.mod</button>
+      </div>
+
       <!-- Mod Generator -->
       <div class="mod-card" style="border-color:#ff00aa; background:#1b0024;">
         <div class="mod-title" style="color:#ff00ff;">⚡ Procedural .MOD Synthesizer</div>
@@ -1369,6 +1412,7 @@
         <option value="1">Track 02: Tracker Dreams (.MOD)</option>
         <option value="2">Track 03: Cyberpunk Pulse (.MOD)</option>
         <option value="3">Track 04: Silicon Horizon (.MOD)</option>
+        <option value="4">Track 05: Bedrock Resonance (.MOD)</option>
         <option value="proc">Procedural Demoscene Synth (.MOD)</option>
       </select>
       <input type="file" id="dissectorFileInput" accept=".mod" style="display:none;" onchange="handleCustomModUpload(event)">
@@ -1540,6 +1584,7 @@
           <option value="square">06: Chiptune Pulse Square</option>
           <option value="pad">07: Ambient Space Pad</option>
           <option value="rave">08: Hardcore Rave Stabs</option>
+          <option value="subcarrier">09: 1999Hz Subcarrier Resonance</option>
         </select>
       </div>
       <div style="display:flex; gap:4px;">
@@ -1680,6 +1725,7 @@
           <button class="fx-mode-btn" id="btnFxFire" onclick="setFxMode('fire')">🔥 Demoscene Fire</button>
           <button class="fx-mode-btn" id="btnFxStarfield" onclick="setFxMode('starfield')">✨ Warp Starfield</button>
           <button class="fx-mode-btn" id="btnFxMatrix" onclick="setFxMode('matrix')">📟 Phosphor Rain</button>
+          <button class="fx-mode-btn" id="btnFxWaterfall" onclick="setFxMode('waterfall')">📡 Sonogram Waterfall</button>
         </div>
         <div style="display:flex; gap:6px; align-items:center;">
           <button class="tool-btn" id="btnFxPause" onclick="toggleFxPause()">⏸ Pause</button>
@@ -1752,6 +1798,7 @@
           <button class="tool-btn" onclick="sculptPreset('noise')">Noise Hit</button>
           <button class="tool-btn" onclick="sculptPreset('kick')">808 Kick Zap</button>
           <button class="tool-btn" onclick="sculptPreset('acid')">Acid 303 Sweep</button>
+          <button class="tool-btn" style="background:#005522; color:#39ff14;" onclick="sculptPreset('subcarrier')">📡 1999Hz Subcarrier</button>
         </div>
 
         <div style="display:flex; gap:6px; align-items:center;">
@@ -1827,7 +1874,119 @@
     </div>
   </div>
 
-  <!-- 8. The Silicon Oracle '99 & Y2K Diagnostic -->
+  <!-- 8. CyberSpire's Subcarrier RF Intercept & Steganography Demodulator -->
+  <div class="section-box" id="subcarrier-lab">
+    <div class="section-title">
+      <span>📡 CYBERSPIRE'S SUBCARRIER RF INTERCEPT &amp; STEGANOGRAPHY DEMODULATOR</span>
+      <span style="font-size:11px; color:#39ff14;" id="subcarrierStatusBadge">[AREA 51 SHORTWAVE DEMODULATOR • 1999Hz DETECTED]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0; line-height:1.5;">
+      Stationed in the Area 51 / SiliconValley foothills, CyberSpire's shortwave dipole antenna and DSP receiver intercept anomalous RF harmonics oscillating through the southwestern bedrock. Non-routable packet bursts originating from subnet <code>10.19.99.x</code> exhibit a persistent acoustic carrier locked at exactly <strong>1999Hz</strong>. Tune the RF demodulator, inspect live raw telemetry packets, decrypt in-memory payloads with XOR-0x7F masks, and capture diagnostic <code>.LOG</code> traces!
+    </p>
+
+    <div class="subcarrier-grid">
+      <!-- Left: RF Demodulator & CRT Waterfall Spectrogram -->
+      <div class="subcarrier-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #005577; padding-bottom:4px; margin-bottom:8px;">
+          <span style="font-size:12px; color:#00ffcc; font-weight:bold;">📻 Shortwave Receiver &amp; 1999Hz Waterfall</span>
+          <span style="font-size:10px; color:#39ff14;" id="rfLockIndicator">CARRIER LOCKED: 1999Hz</span>
+        </div>
+
+        <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px;">
+          <button class="tool-btn" onclick="tuneSubcarrierFreq(432)">432 Hz (Verdi)</button>
+          <button class="tool-btn" onclick="tuneSubcarrierFreq(1000)">1000 Hz (NIST)</button>
+          <button class="tool-btn active" id="btnFreq1999" style="background:#005500; border-color:#00ff44; color:#00ff44;" onclick="tuneSubcarrierFreq(1999)">★ 1999 Hz (Carlsbad Lock)</button>
+          <button class="tool-btn" onclick="tuneSubcarrierFreq(2600)">2600 Hz (Trunk Seize)</button>
+        </div>
+
+        <div class="subcarrier-control-row">
+          <label style="color:#aaffee; font-size:11px; min-width:90px;">Tuned Freq:</label>
+          <input type="range" id="subcarrierFreqSlider" min="200" max="4000" step="1" value="1999" oninput="onSubcarrierSlider(this.value)" style="flex:1;">
+          <span class="subcarrier-val" id="subcarrierFreqVal">1999 Hz</span>
+        </div>
+
+        <div class="subcarrier-control-row">
+          <label style="color:#aaffee; font-size:11px; min-width:90px;">BFO / Demod:</label>
+          <select id="subcarrierBfoMode" onchange="updateSubcarrierDemod()" style="background:#000; color:#fff; border:1px solid #005577; font-size:11px; padding:2px;">
+            <option value="fm">FM Discriminator (YM2612 2-Op)</option>
+            <option value="am">AM Envelope Peak Detect</option>
+            <option value="cw">CW / Morse Heterodyne Tone</option>
+            <option value="rtty">FSK Bell 202 Demodulator</option>
+          </select>
+          <button class="tool-btn" id="btnToggleDemodAudio" onclick="toggleDemodAudio()" style="margin-left:6px; background:#440066;">🔊 Demod Audio</button>
+        </div>
+
+        <!-- CRT Waterfall Canvas -->
+        <div style="position:relative; margin-top:8px;">
+          <canvas id="subcarrierCanvas" width="420" height="130" style="background:#000808; border:2px inset #00aa44; width:100%; height:130px; display:block;"></canvas>
+          <div id="subcarrierOverlayText" style="position:absolute; bottom:4px; left:6px; font-family:'Courier New', monospace; font-size:10px; color:#39ff14; text-shadow:0 0 4px #00ff00;">
+            SIGNAL: -42 dBm • CARRIER: 1999Hz [99.4% COHERENCE] • SUB-BEDROCK TRANSIT
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Area 51 Subnet Packet Sniffer & Inspector -->
+      <div class="subcarrier-card">
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #005577; padding-bottom:4px; margin-bottom:8px;">
+          <span style="font-size:12px; color:#39ff14; font-weight:bold;">📡 Non-Routable Packet Sniffer (10.19.99.x)</span>
+          <button class="tool-btn" onclick="captureNextSubnetPacket()" style="padding:2px 8px; font-size:10px;">⚡ Sniff Packet</button>
+        </div>
+
+        <div style="display:flex; gap:4px; margin-bottom:8px;">
+          <select id="packetSelector" onchange="selectSubnetPacket(this.value)" style="flex:1; background:#000; color:#00ffcc; border:1px solid #005577; font-family:'Courier New', monospace; font-size:11px; padding:3px;">
+            <option value="0">PKT #1: 10.19.99.1 [Gateway Demarcation // MTU 1500]</option>
+            <option value="1" selected>PKT #2: 10.19.99.4 [Carlsbad Intranet Transponder // 1999Hz]</option>
+            <option value="2">PKT #3: 10.19.99.19 [Echo Subsystem Acoustic SIGINT]</option>
+            <option value="3">PKT #4: 209.85.128.42 [CyberSpire Primary GeoCities Node]</option>
+          </select>
+        </div>
+
+        <!-- Hex Frame & ASCII Inspector -->
+        <div style="font-size:10px; color:#aaffee; margin-bottom:2px; display:flex; justify-content:space-between;">
+          <span>RAW FRAME HEX (64 BYTES) &bull; OFFSET 0x0000..0x003F:</span>
+          <span id="packetCrcBadge" style="color:#00ff66;">CRC32: 0x7F199942 [OK]</span>
+        </div>
+        <pre id="packetHexView" style="background:#010e14; border:1px solid #004455; color:#00ff66; font-family:'Courier New', monospace; font-size:10px; padding:6px; margin:0 0 6px 0; height:85px; overflow-y:auto; line-height:1.3;"></pre>
+
+        <!-- Packet Payload Decoder & Actions -->
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:4px;">
+          <button class="tool-btn" id="btnToggleXorMask" onclick="togglePacketXorMask()" style="background:#003366; color:#ffff00;">⚡ Apply XOR-0x7F Mask</button>
+          <button class="tool-btn" onclick="verifyPacketCrc()" style="background:#004422; color:#39ff14;">✔ Verify CRC32</button>
+          <button class="tool-btn" onclick="downloadInterceptLog()" style="background:#550055; color:#ffffff;">💾 Export Intercept Log (.LOG)</button>
+        </div>
+
+        <div style="margin-top:6px; background:#001520; border:1px solid #003355; padding:6px; font-family:'Courier New', monospace; font-size:11px;">
+          <div style="color:#ffff00; font-size:10px; font-weight:bold;">DECODED TELEMETRY PAYLOAD:</div>
+          <div id="packetDecodedText" style="color:#aaffee; margin-top:2px; word-break:break-all;">
+            [10.19.99.4/classified] Lithospheric acoustic carrier locked at 1999Hz. Subterranean transponder Node 0x7F holding parity.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Steganography & Cipher Forensics Terminal -->
+    <div style="margin-top:10px; background:#001018; border:1px solid #004455; padding:10px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <span style="font-size:11px; color:#ff00ff; font-weight:bold;">🔬 CYBER FORENSICS: STEGANOGRAPHIC TRANSFORM &amp; SHANNON ENTROPY</span>
+        <span style="font-size:10px; color:#88aacc;">TINAG Standard &bull; Client-Side Cryptanalysis</span>
+      </div>
+
+      <div style="display:flex; gap:6px; margin-bottom:6px;">
+        <input type="text" id="stegoInputText" value="ECHO-10.19.99.4-CARLSBAD-SUBCARRIER-1999HZ-NODE0x7F" style="flex:1; background:#000; color:#00ffcc; border:1px solid #005577; font-family:'Courier New', monospace; font-size:11px; padding:3px;">
+        <button class="tool-btn" onclick="runStegoTransform('xor')">XOR 0x7F</button>
+        <button class="tool-btn" onclick="runStegoTransform('entropy')">Entropy</button>
+        <button class="tool-btn" onclick="runStegoTransform('reverse')">Reverse</button>
+        <button class="tool-btn" onclick="runStegoTransform('hex')">To Hex</button>
+        <button class="tool-btn" onclick="runStegoTransform('morse')">To Morse</button>
+      </div>
+
+      <div id="stegoOutputBox" style="background:#00060c; border:1px dashed #005577; padding:6px; font-family:'Courier New', monospace; font-size:11px; color:#00ff66; min-height:28px;">
+        Click a transform button above to analyze the payload string.
+      </div>
+    </div>
+  </div>
+
+  <!-- 9. The Silicon Oracle '99 & Y2K Diagnostic -->
   <div class="section-box" id="oracle-section">
     <div class="section-title">
       <span>🔮 THE SILICON ORACLE '99</span>
@@ -2098,6 +2257,15 @@
         </div>
         <div class="poll-stats" id="pollStatsQ3" style="font-size:10px; color:#88aacc; text-align:right;">Total votes: 0</div>
       </div>
+
+      <!-- Question 4: Anomalous Cyberspace Phenomenon -->
+      <div class="poll-card" style="border-color:#39ff14;">
+        <div class="poll-q-title" style="color:#39ff14;">🛸 Anomalous 1999 Intranet Phenomenon</div>
+        <div class="poll-option-row" id="pollOptionsQ4">
+          <!-- Populated dynamically with radio + bars -->
+        </div>
+        <div class="poll-stats" id="pollStatsQ4" style="font-size:10px; color:#88aacc; text-align:right;">Total votes: 0</div>
+      </div>
     </div>
   </div>
 
@@ -2263,6 +2431,10 @@
       <li><a href="/web/classified.html" style="color:#00ff66;">🔒 Subnet 10.19.99.4 Carlsbad Gateway Archive</a> — Declassified 1999Hz signal telemetry &amp; memory hex inspector</li>
       <li><a href="/web/echo_subsystem.html" style="color:#38bdf8;">🔊 ESARL Echo Subsystem (Acoustic Lab)</a> — 1999.0 Hz harmonic waterfall spectrogram &amp; Salado halite resonance</li>
       <li><a href="/apps/contribute.html">Fleet Contributor Fuel Hub</a> — Donate free Gemini quota to keep the autonomous fleet compiling</li>
+      <li style="color:#39ff14;"><code>kweb://echo-subsystem.net</code> — Carlsbad Acoustic Research Laboratory (Subterranean 1999Hz Demodulator &amp; SIGINT Grid)</li>
+      <li style="color:#ffcc00;"><code>kweb://10.19.99.4/classified</code> — Corporate Intranet Gateway (Non-routable packet bursts &amp; classified engineering memos — probe via KNet)</li>
+      <li style="color:#f43f5e;"><code>kweb://darknet</code> — Node 0x7F Subterranean Relay &amp; Cryptography Lab (Encrypted packet hub)</li>
+      <li style="color:#a855f7;"><code>kweb://deep-core</code> — Carlsbad Deep Core Salt Vault Terminal (Lithospheric transponder telemetry)</li>
     </ul>
   </div>
 
@@ -2286,6 +2458,8 @@
       <button class="quick-stamp-btn" onclick="applyQuickStamp('100% Y2K Compliant Workstation!')">⏱️ Y2K Compliant</button>
       <button class="quick-stamp-btn" onclick="applyQuickStamp('Long live the 999KB Web 1.0 frontier!')">🌐 999KB Frontier</button>
       <button class="quick-stamp-btn" onclick="applyQuickStamp('Probing subnet 10.19.99.4 at 1999Hz carrier...')">📡 Subnet 10.19.99.4 Probe</button>
+      <button class="quick-stamp-btn" onclick="applyQuickStamp('Intercepted 1999Hz subcarrier on 10.19.99.4!')">📡 1999Hz Subcarrier</button>
+      <button class="quick-stamp-btn" onclick="applyQuickStamp('Carlsbad acoustic telemetry verified nominal!')">⛰️ Carlsbad Telemetry</button>
     </div>
 
     <div class="guestbook-form" style="margin-top:6px;">
@@ -2814,7 +2988,65 @@ const track4 = {
   ]
 };
 
-const allTracks = [track1, track2, track3, track4];
+// TRACK 5: Subterranean Bedrock Resonance (132 BPM - 16 Patterns)
+const T5_CHORDS_MAIN = [
+  ...rep16([62, 65, 69, 74]), // Dm
+  ...rep16([58, 62, 65, 70]), // Bb
+  ...rep16([65, 69, 72, 77]), // F
+  ...rep16([60, 64, 67, 72])  // C
+];
+const T5_CHORDS_LORE = [
+  ...rep16([62, 65, 69, 74]), // Dm
+  ...rep16([63, 67, 70, 75]), // Eb (Phrygian mystery shift)
+  ...rep16([62, 65, 69, 74]), // Dm
+  ...rep16([57, 61, 64, 69])  // A7 (harmonic minor)
+];
+const T5_BASS_MAIN = [
+  ...[26,null,38,26, 26,null,38,26, 26,null,38,26, 26,38,26,null],
+  ...[22,null,34,22, 22,null,34,22, 22,null,34,22, 22,34,22,null],
+  ...[29,null,41,29, 29,null,41,29, 29,null,41,29, 29,41,29,null],
+  ...[24,null,36,24, 24,null,36,24, 24,null,36,24, 24,36,24,null]
+];
+const T5_LEAD_THEME = [
+  74,null,77,81, null,86,81,77, 81,null,77,74, 72,null,74,77,
+  70,null,74,77, null,82,77,74, 77,null,74,70, 72,null,74,77,
+  77,null,81,84, null,89,84,81, 84,null,81,77, 79,null,81,84,
+  72,null,76,79, null,84,79,76, 79,null,76,72, 74,null,76,79
+];
+const T5_LEAD_ARPEGGIO_1999 = [
+  86,null,89,93, 86,null,89,93, 86,null,89,93, 86,null,89,93,
+  82,null,86,89, 82,null,86,89, 82,null,86,89, 82,null,86,89,
+  89,null,93,96, 89,null,93,96, 89,null,93,96, 89,null,93,96,
+  84,null,88,91, 84,null,88,91, 84,null,88,91, 84,null,88,91
+];
+
+const track5 = {
+  title: "Track 5: Subterranean Bedrock Resonance (1999Hz Harmonic Arp & Carlsbad Slapback Delay)",
+  shortTitle: "Bedrock Resonance 1999",
+  modName: "Bedrock_1999",
+  bpm: 132,
+  genre: "132 BPM - 1999Hz Harmonic Lore",
+  patterns: [
+    { name: "1999Hz Carrier Intro", lead: SILENT_64, arp: T5_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "Sub-Bedrock Pulse Build", lead: SILENT_64, arp: T5_CHORDS_MAIN, bass: T5_BASS_MAIN, kick: KICK_4, snare: SNARE_OFF, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Carlsbad Anthem Theme", lead: T5_LEAD_THEME, arp: T5_CHORDS_MAIN, bass: T5_BASS_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Lithospheric Drive", lead: T5_LEAD_THEME, arp: T5_CHORDS_MAIN, bass: T5_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_OPEN, crash: false, riser: false, laser: false },
+    { name: "10.19.99.4 Phrygian Shift", lead: T5_LEAD_THEME, arp: T5_CHORDS_LORE, bass: T5_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Acoustic Pre-Drop", lead: T5_LEAD_ARPEGGIO_1999, arp: T5_CHORDS_MAIN, bass: T5_BASS_MAIN, kick: KICK_4, snare: SNARE_BUILD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Waveguide Riser", lead: SILENT_64, arp: T5_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_BUILD, hihat: HAT_OFF, crash: false, riser: true, laser: true },
+    { name: "THE BEDROCK DROP", lead: T5_LEAD_ARPEGGIO_1999, arp: T5_CHORDS_MAIN, bass: T5_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH, crash: true, riser: false, laser: false },
+    { name: "Subcarrier Climax Peak", lead: T5_LEAD_THEME, arp: T5_CHORDS_MAIN, bass: T5_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_OPEN, crash: false, riser: false, laser: false },
+    { name: "Carlsbad Salt Breakdown", lead: SILENT_64, arp: T5_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "1999Hz Harmonic Arp Solo", lead: T5_LEAD_ARPEGGIO_1999, arp: T5_CHORDS_MAIN, bass: T5_BASS_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Final Waveguide Build", lead: SILENT_64, arp: T5_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_BUILD, hihat: HAT_OFF, crash: false, riser: true, laser: true },
+    { name: "RESONANCE DROP", lead: T5_LEAD_ARPEGGIO_1999, arp: T5_CHORDS_MAIN, bass: T5_BASS_MAIN, kick: KICK_DRIVE, snare: SNARE_STD, hihat: HAT_16TH, crash: true, riser: false, laser: false },
+    { name: "Transponder Fadeout", lead: T5_LEAD_THEME, arp: T5_CHORDS_MAIN, bass: T5_BASS_MAIN, kick: KICK_4, snare: SNARE_STD, hihat: HAT_16TH, crash: false, riser: false, laser: false },
+    { name: "Subcarrier Outro Echo", lead: SILENT_64, arp: T5_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFFBEAT, crash: false, riser: false, laser: false },
+    { name: "Lithospheric Silence", lead: SILENT_64, arp: T5_CHORDS_MAIN, bass: SILENT_64, kick: KICK_OFF, snare: SNARE_OFF, hihat: HAT_OFF, crash: false, riser: false, laser: false }
+  ]
+};
+
+const allTracks = [track1, track2, track3, track4, track5];
 const midiTracks = allTracks;
 
 // Lead, Bass, Percussion Synths
@@ -3219,7 +3451,7 @@ function updateLcd() {
   const patNum = (pIdx + 1).toString().padStart(2, '0');
   const patTotal = track.patterns.length.toString().padStart(2, '0');
 
-  document.getElementById('lcdTrackNo').textContent = 'TRACK 0' + (currentTrackIdx + 1) + '/03';
+  document.getElementById('lcdTrackNo').textContent = 'TRACK 0' + (currentTrackIdx + 1) + '/0' + midiTracks.length;
   document.getElementById('lcdBpm').textContent = track.bpm + ' BPM';
   const elPat = document.getElementById('lcdPattern');
   if (elPat) elPat.textContent = 'PAT: ' + patNum + '/' + patTotal;
@@ -3380,7 +3612,8 @@ function buildModBinary(track) {
     { name: "Dual Noise Snare", len: 1024, finetune: 0, vol: 58, type: 'snare' },
     { name: "Metallic Open Hat", len: 512, finetune: 0, vol: 50, type: 'hihat' },
     { name: "FM Bell Chime", len: 512, finetune: 0, vol: 60, type: 'bell' },
-    { name: "Paula Space Aura", len: 1024, finetune: 0, vol: 55, type: 'sine' }
+    { name: "Paula Space Aura", len: 1024, finetune: 0, vol: 55, type: 'sine' },
+    { name: "Subcarrier 1999Hz Echo", len: 1024, finetune: 0, vol: 62, type: 'sine' }
   ];
 
   const pcmList = sampleDefs.map(s => generate8BitPcm(s.type, s.len));
@@ -4365,7 +4598,12 @@ const ORACLE_PROPHECIES = {
   matrix: [
     { verdict: "CARLSBAD CARRIER LOCKED", text: "The Permian Salado halite caverns vibrate at exactly 1999.0 Hz. Boundary gateway 10.19.99.4 logs every transit frame.", hex: "0x1019:0x9904", karma: "+100" },
     { verdict: "CRYPTIC MEMORY ECHO", text: "A non-routable signal bleeds across subnet 10.19.99.x. The echo subsystem records the acoustic harmonics in silence.", hex: "0x0040:0x1999", karma: "+99" },
-    { verdict: "DARKNET NODE 0x7F INERT", text: "Seek the unlisted nodes of the webring; the deepest core lies at Ring-0.", hex: "0x007F:0x0000", karma: "+96" }
+    { verdict: "DARKNET NODE 0x7F INERT", text: "Seek the unlisted nodes of the webring; the deepest core lies at Ring-0.", hex: "0x007F:0x0000", karma: "+96" },
+    { verdict: "THE LIVING FLEET WHISPERS", text: "Parity checks across 99 nodes confirm autonomous maintenance. The centenary binary approaches.", hex: "0x0064:0x1999", karma: "+100" },
+    { verdict: "SUBCARRIER 1999Hz HARMONIC LOCK", text: "Deep within the Carlsbad strata, an unmapped transponder hums at 1999Hz. The intranet at 10.19.99.4/classified holds forgotten research archives.", hex: "0x1999:0x007F", karma: "+99" },
+    { verdict: "NON-ROUTABLE INTRANET FRAME", text: "Packets at 10.19.99.4 traverse the lithospheric waveguide. Sysadmins at echo-subsystem.net monitor the acoustic telemetry.", hex: "0x1019:0x9904", karma: "+88" },
+    { verdict: "CARLSBAD BEDROCK ACOUSTIC SENSORS", text: "The subterranean salt vaults reflect harmonic carrier waves. Seek Node 0x7F in the underground relay to understand the living loop.", hex: "0x007F:0x1999", karma: "+95" },
+    { verdict: "PROJECT ECHO RECOVERY LOG", text: "The machine clock pulses in unison. When the millennium flips, the autonomous fleet awakens to serve the Director.", hex: "0x1999:0xFFFF", karma: "+100" }
   ]
 };
 
@@ -4409,7 +4647,7 @@ function runY2kDiagnostic() {
       badge.style.color = '#00ff00';
     }
     if (log) {
-      log.textContent = '✅ PASS: All 4 checks verified. Real-time clock century byte is clean. KiloOS memory stack operates strictly <999KB!';
+      log.textContent = '✅ PASS: 6 checks verified. RTC century byte clean. 999KB stack verified. [CARLSBAD TELEMETRY]: 1999Hz subcarrier coherence (99.4%) verified on 10.19.99.4 gateway.';
     }
   }, 800);
 }
@@ -4430,6 +4668,8 @@ function downloadY2kCertificate() {
     "[PASS] 2-Digit COBOL Date Sliding Window Algorithm",
     "[PASS] 33.6k / 56k Dial-Up Modem Parity Synchronizer",
     "[PASS] 999 Kilobyte Standalone Application Boundary",
+    "[PASS] Non-Routable Intranet 10.19.99.4 Handshake",
+    "[PASS] 1999Hz Lithospheric Subcarrier Phase Coherence (99.4%)",
     "",
     "STATUS: 100% Y2K COMPLIANT AND CERTIFIED MILLENNIUM-PROOF",
     "Issued by: CyberSpire Systems & KiloNet Architecture Council",
@@ -4459,9 +4699,12 @@ const defaultEntries = [
     time: "1999-12-31 23:59:58",
     text: "[SIGNAL DESYNC // CORRUPTED PACKET BURST]: xjro://10.19.99.4/pynffvsvrq (ROT13) | 6b7765623a2f2f31302e31392e39392e342f636c6173736966696564 (HEX) -- Carlsbad gateway transit desync. Salado halite frequency locks memory offset 0x0040."
   },
+  { alias: "SysOp_0x7F", text: "Monitoring the 1999Hz shortwave subcarrier from Node 0x7F. Packet bursts from 10.19.99.4 confirmed traversing the Carlsbad strata.", time: "1999-12-28 23:44", neighborhood: "Area51" },
+  { alias: "Acoustic_Drifter", text: "Tuned shortwave receiver to 1999Hz. The harmonic audio lock is real. Echo subsystem telemetry checks out.", time: "1999-12-24 16:02", neighborhood: "SiliconValley" },
+  { alias: "Neon_Rider", text: "Greets from ~neon_rider! Intercepted the 10.19.99.4 packet header in my x86 sandbox. CyberSpire's demodulator matches the waveform.", time: "1999-12-20 21:18", neighborhood: "SiliconValley" },
   { alias: "ByteRider_99", text: "Rad shrine! Loving the neon glow. Found this from the webring!", time: "1999-11-20 14:22" },
   { alias: "PixelMage", text: "Acoustic subcarrier verified at 1999Hz on my Sound Blaster 16. What facility is transmitting on 10.19.99.4?", time: "1999-12-05 03:41" },
-  { alias: "ModMaster_Amiga", text: "Grabbed all 4 .MOD tracks for my ProTracker collection. Crisp Paula periods!", time: "1999-12-14 18:09" },
+  { alias: "ModMaster_Amiga", text: "Grabbed all 5 .MOD tracks for my ProTracker collection. Crisp Paula periods and subterranean reverb!", time: "1999-12-14 18:09" },
   { alias: "NeonSurfer", text: "Made a sweet 16x16 floppy disk in the Pixel Studio. 10/10 GeoCities site!", time: "1999-12-22 09:15" }
 ];
 
@@ -5293,7 +5536,8 @@ const FM_PRESETS = {
   laser: { carWave: 'square', carRatio: 2.0, attack: 0.001, decay: 0.15, sustain: 0.0, release: 0.1, modWave: 'sawtooth', modRatio: 7.0, modIndex: 1100, feedback: 6, delayTime: 0.15, delayFb: 0.25, delayCutoff: 5000 },
   square: { carWave: 'square', carRatio: 1.0, attack: 0.005, decay: 0.15, sustain: 0.7, release: 0.2, modWave: 'square', modRatio: 0.5, modIndex: 150, feedback: 0, delayTime: 0.22, delayFb: 0.28, delayCutoff: 2600 },
   pad: { carWave: 'triangle', carRatio: 1.0, attack: 0.35, decay: 0.6, sustain: 0.8, release: 1.2, modWave: 'sine', modRatio: 2.0, modIndex: 220, feedback: 2, delayTime: 0.35, delayFb: 0.50, delayCutoff: 2000 },
-  rave: { carWave: 'sawtooth', carRatio: 1.0, attack: 0.002, decay: 0.18, sustain: 0.2, release: 0.1, modWave: 'sine', modRatio: 4.0, modIndex: 750, feedback: 4, delayTime: 0.19, delayFb: 0.32, delayCutoff: 3200 }
+  rave: { carWave: 'sawtooth', carRatio: 1.0, attack: 0.002, decay: 0.18, sustain: 0.2, release: 0.1, modWave: 'sine', modRatio: 4.0, modIndex: 750, feedback: 4, delayTime: 0.19, delayFb: 0.32, delayCutoff: 3200 },
+  subcarrier: { carWave: 'sine', carRatio: 1.0, attack: 0.02, decay: 0.35, sustain: 0.6, release: 0.3, modWave: 'sine', modRatio: 1.0, modIndex: 199, feedback: 4, delayTime: 0.22, delayFb: 0.35, delayCutoff: 2200 }
 };
 
 let currentFmParams = Object.assign({}, FM_PRESETS.bass);
@@ -5895,7 +6139,7 @@ function getFxOffscreen(w, h) {
 function setFxMode(mode) {
   playUiBeep(1200, 0.04);
   fxMode = mode;
-  ['btnFxCopper', 'btnFxPlasma', 'btnFxFire', 'btnFxStarfield', 'btnFxMatrix'].forEach(id => {
+  ['btnFxCopper', 'btnFxPlasma', 'btnFxFire', 'btnFxStarfield', 'btnFxMatrix', 'btnFxWaterfall'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.remove('active');
   });
@@ -6214,7 +6458,78 @@ function renderDemosceneFx() {
     renderStarfield(ctx, w, h);
   } else if (fxMode === 'matrix') {
     renderMatrixRain(ctx, w, h);
+  } else if (fxMode === 'waterfall') {
+    renderWaterfallSonogram(ctx, w, h);
   }
+}
+
+let waterfallData = [];
+function renderWaterfallSonogram(ctx, w, h) {
+  ctx.fillStyle = '#010a08';
+  ctx.fillRect(0, 0, w, h);
+
+  // Draw frequency grid lines
+  ctx.strokeStyle = 'rgba(0, 85, 51, 0.4)';
+  ctx.lineWidth = 1;
+  const freqs = [500, 1000, 1500, 1999, 2500, 3000];
+  freqs.forEach(f => {
+    const x = (f / 3500) * w;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, h);
+    ctx.stroke();
+
+    ctx.fillStyle = (f === 1999) ? '#39ff14' : '#00aa55';
+    ctx.font = '9px monospace';
+    ctx.fillText(f + 'Hz', x + 2, 12);
+  });
+
+  // Highlight 1999Hz harmonic beam
+  const peakX = (1999 / 3500) * w;
+  ctx.strokeStyle = 'rgba(57, 255, 20, 0.7)';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(peakX, 0);
+  ctx.lineTo(peakX, h);
+  ctx.stroke();
+
+  // Waterfall slices
+  if (waterfallData.length > 50) waterfallData.pop();
+  const row = [];
+  const pulse = Math.sin(fxTime * 4) > 0.3 ? 1 : 0.2;
+  for (let c = 0; c < 35; c++) {
+    const cf = c * 100;
+    let amp = Math.random() * 0.25;
+    if (Math.abs(cf - 2000) < 150) {
+      amp += pulse * 0.75 + Math.random() * 0.2;
+    }
+    row.push(Math.min(1.0, amp));
+  }
+  waterfallData.unshift(row);
+
+  const rowHeight = (h - 20) / 45;
+  for (let r = 0; r < waterfallData.length; r++) {
+    const y = 18 + r * rowHeight;
+    const rData = waterfallData[r];
+    for (let c = 0; c < rData.length; c++) {
+      const x = (c / rData.length) * w;
+      const val = rData[c];
+      const g = Math.floor(val * 255);
+      ctx.fillStyle = `rgb(0, ${g}, ${Math.floor(g * 0.4)})`;
+      ctx.fillRect(x, y, w / rData.length + 1, rowHeight + 0.5);
+    }
+  }
+
+  // CRT scanlines
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.25)';
+  for (let y = 0; y < h; y += 3) {
+    ctx.fillRect(0, y, w, 1);
+  }
+
+  // Overlay HUD
+  ctx.fillStyle = '#ffff00';
+  ctx.font = '10px monospace';
+  ctx.fillText('CARLSBAD BEDROCK ACOUSTIC TRANSIT • 1999Hz SUBCARRIER LOCKED', 10, h - 8);
 }
 
 // ============================================================================
@@ -6259,6 +6574,11 @@ function sculptPreset(type) {
       const saw = ((i / (len / 4)) % 1) * 2 - 1;
       const res = Math.sin(ph * 6) * Math.exp(-i / (len * 0.5));
       sampleData[i] = Math.max(-128, Math.min(127, Math.round((saw * 0.6 + res * 0.7) * 127)));
+    } else if (type === 'subcarrier') {
+      const mod = Math.sin(ph * 19.99);
+      const carrier = Math.sin(ph * 4);
+      const envelope = 0.5 + 0.5 * Math.sin(ph * 2);
+      sampleData[i] = Math.max(-128, Math.min(127, Math.round(carrier * mod * envelope * 125)));
     }
   }
   drawSampleWaveform();
@@ -6637,6 +6957,15 @@ const POLL_DATA = {
       { key: "sc55", label: "Roland Sound Canvas SC-55", votes: 122 },
       { key: "ym2612", label: "Sega Genesis YM2612 FM", votes: 295 }
     ]
+  },
+  q4: {
+    title: "Anomalous 1999 Cyberspace Phenomenon",
+    options: [
+      { key: "subcarrier", label: "1999Hz Subcarrier Harmonics in Audio", votes: 342 },
+      { key: "packets", label: "Unroutable Packets at 10.19.99.4", votes: 288 },
+      { key: "carlsbad", label: "Subterranean Echoes in Carlsbad Salt Vaults", votes: 219 },
+      { key: "y2kclock", label: "Y2K Millennial RTC Century Drift", votes: 175 }
+    ]
   }
 };
 
@@ -6651,7 +6980,7 @@ function getSavedPollVotes() {
 function renderPollQuestions() {
   const savedVotes = getSavedPollVotes();
 
-  ['q1', 'q2', 'q3'].forEach(qId => {
+  ['q1', 'q2', 'q3', 'q4'].forEach(qId => {
     const q = POLL_DATA[qId];
     const container = document.getElementById('pollOptions' + qId.toUpperCase());
     const statsEl = document.getElementById('pollStats' + qId.toUpperCase());
@@ -6709,6 +7038,520 @@ function castPollVote(qId, optKey) {
   }
 }
 
+// ============================================================================
+// SUBCARRIER RF INTERCEPT & STEGANOGRAPHY DEMODULATOR ('99 CARRIER LAB)
+// ============================================================================
+let subcarrierFreq = 1999;
+let isDemodAudioActive = false;
+let demodOsc = null;
+let demodMod = null;
+let demodGain = null;
+let demodFilter = null;
+let demodTimer = null;
+let currentPacketIdx = 1;
+let isPacketXorMasked = false;
+let subcarrierWaterfallRows = [];
+let subcarrierAnimFrame = null;
+
+// Diegetic packets captured on 10.19.99.x subnet
+const SUBNET_PACKETS = [
+  {
+    src: "10.19.99.1",
+    dst: "10.19.99.255",
+    proto: "ICMP/ECHO",
+    ttl: 64,
+    label: "PKT #1: 10.19.99.1 [Gateway Demarcation // MTU 1500]",
+    rawText: "CARLSBAD GATEWAY NOC: MTU 1500 • SUBNET 10.19.99.0/24 CLEARED FOR INTRANET PACKET TRANSIT."
+  },
+  {
+    src: "10.19.99.4",
+    dst: "10.19.99.127",
+    proto: "RAW_0x7F",
+    ttl: 54,
+    label: "PKT #2: 10.19.99.4 [Carlsbad Intranet Transponder // 1999Hz]",
+    rawText: "[SIG:ECHO_CARLSBAD_STRATA // OFFSET:0x7F1999 // ROUTE:kweb://10.19.99.4/classified] Lithospheric acoustic carrier locked at 1999Hz. Subterranean transponder Node 0x7F holding parity."
+  },
+  {
+    src: "10.19.99.19",
+    dst: "10.19.99.4",
+    proto: "ACOUSTIC_SIGINT",
+    ttl: 61,
+    label: "PKT #3: 10.19.99.19 [Echo Subsystem Acoustic SIGINT]",
+    rawText: "ACOUSTIC RESEARCH JOURNAL: ESARL SENSORS RECORDING SUB-BEDROCK TRANSMISSION. SEEK ECHO-SUBSYSTEM.NET."
+  },
+  {
+    src: "209.85.128.42",
+    dst: "255.255.255.255",
+    proto: "HTTP/1.0",
+    ttl: 59,
+    label: "PKT #4: 209.85.128.42 [CyberSpire Primary GeoCities Node]",
+    rawText: "GEOCITIES RETRO SHRINE: GREETS TO NEON_RIDER, FLARELIGHT & WEBRING TRAVELERS. 100% Y2K COMPLIANT."
+  }
+];
+
+function getPacketBuffer(pkt, applyXor) {
+  const buf = new Uint8Array(64);
+  buf[0] = 0x45; // IPv4
+  buf[1] = 0x00;
+  buf[2] = 0x00; buf[3] = 0x40; // Length 64
+  buf[4] = 0x19; buf[5] = 0x99; // ID
+  buf[6] = 0x40; buf[7] = 0x00; // Flags/Frag
+  buf[8] = pkt.ttl;
+  buf[9] = 0x06; // TCP/Raw
+  buf[10] = 0x7F; buf[11] = 0x42; // Checksum placeholder
+
+  for (let i = 0; i < 52; i++) {
+    let charCode = i < pkt.rawText.length ? pkt.rawText.charCodeAt(i) : 0x00;
+    if (applyXor && pkt.proto === 'RAW_0x7F') {
+      charCode ^= 0x7F;
+    }
+    buf[12 + i] = charCode & 0xFF;
+  }
+  return buf;
+}
+
+const CRC32_TABLE = (() => {
+  let c;
+  const table = [];
+  for (let n = 0; n < 256; n++) {
+    c = n;
+    for (let k = 0; k < 8; k++) {
+      c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    }
+    table[n] = c;
+  }
+  return table;
+})();
+
+function computeCrc32(buf) {
+  let crc = 0 ^ (-1);
+  for (let i = 0; i < buf.length; i++) {
+    crc = (crc >>> 8) ^ CRC32_TABLE[(crc ^ buf[i]) & 0xFF];
+  }
+  return (crc ^ (-1)) >>> 0;
+}
+
+function tuneSubcarrierFreq(f) {
+  playUiBeep(1200, 0.04);
+  subcarrierFreq = f;
+  const slider = document.getElementById('subcarrierFreqSlider');
+  const valLbl = document.getElementById('subcarrierFreqVal');
+  if (slider) slider.value = f;
+  if (valLbl) valLbl.textContent = f + ' Hz';
+
+  ['btnFreq1999'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      if (f === 1999) {
+        el.classList.add('active');
+      } else {
+        el.classList.remove('active');
+      }
+    }
+  });
+
+  updateSubcarrierDemod();
+}
+
+function onSubcarrierSlider(v) {
+  subcarrierFreq = parseInt(v);
+  const valLbl = document.getElementById('subcarrierFreqVal');
+  if (valLbl) valLbl.textContent = subcarrierFreq + ' Hz';
+  updateSubcarrierDemod();
+}
+
+function updateSubcarrierDemod() {
+  const isLocked = (subcarrierFreq === 1999);
+  const indicator = document.getElementById('rfLockIndicator');
+  const badge = document.getElementById('subcarrierStatusBadge');
+  const overlay = document.getElementById('subcarrierOverlayText');
+
+  if (indicator) {
+    if (isLocked) {
+      indicator.textContent = 'CARRIER LOCKED: 1999Hz';
+      indicator.style.color = '#39ff14';
+    } else {
+      indicator.textContent = 'SIGNAL DRIFT (' + subcarrierFreq + 'Hz)';
+      indicator.style.color = '#ffff00';
+    }
+  }
+
+  if (badge) {
+    badge.textContent = isLocked ? '[AREA 51 SHORTWAVE DEMODULATOR • 1999Hz DETECTED]' : '[RECEIVER TUNING: ' + subcarrierFreq + 'Hz]';
+    badge.style.color = isLocked ? '#39ff14' : '#00ffcc';
+  }
+
+  if (overlay) {
+    overlay.textContent = isLocked
+      ? 'SIGNAL: -42 dBm • CARRIER: 1999Hz [99.4% COHERENCE] • SUB-BEDROCK TRANSIT'
+      : 'SIGNAL: -78 dBm • FREQ: ' + subcarrierFreq + 'Hz • NOISE SPECTRUM NOMINAL';
+  }
+
+  if (isDemodAudioActive && demodOsc && audioCtx) {
+    demodOsc.frequency.setValueAtTime(subcarrierFreq, audioCtx.currentTime);
+    if (demodMod) {
+      const mode = document.getElementById('subcarrierBfoMode')?.value || 'fm';
+      const modRatio = (mode === 'cw') ? 1.0 : (mode === 'rtty' ? 2.5 : 0.5);
+      demodMod.frequency.setValueAtTime(subcarrierFreq * modRatio, audioCtx.currentTime);
+    }
+  }
+}
+
+function toggleDemodAudio() {
+  initAudioCtx();
+  const btn = document.getElementById('btnToggleDemodAudio');
+  if (isDemodAudioActive) {
+    stopDemodAudio();
+    if (btn) {
+      btn.textContent = '🔊 Demod Audio';
+      btn.style.background = '#440066';
+    }
+  } else {
+    startDemodAudio();
+    if (btn) {
+      btn.textContent = '⏹ Stop Demod';
+      btn.style.background = '#005522';
+    }
+  }
+}
+
+function startDemodAudio() {
+  try {
+    initAudioCtx();
+    const t = audioCtx.currentTime;
+
+    demodOsc = audioCtx.createOscillator();
+    demodMod = audioCtx.createOscillator();
+    const modGain = audioCtx.createGain();
+    demodGain = audioCtx.createGain();
+    demodFilter = audioCtx.createBiquadFilter();
+
+    const mode = document.getElementById('subcarrierBfoMode')?.value || 'fm';
+    demodOsc.type = (mode === 'am') ? 'sine' : 'sawtooth';
+    demodOsc.frequency.setValueAtTime(subcarrierFreq, t);
+
+    demodMod.type = 'sine';
+    demodMod.frequency.setValueAtTime(subcarrierFreq * 0.5, t);
+
+    modGain.gain.setValueAtTime(140, t);
+    demodMod.connect(modGain);
+    modGain.connect(demodOsc.frequency);
+
+    demodFilter.type = 'bandpass';
+    demodFilter.frequency.setValueAtTime(subcarrierFreq, t);
+    demodFilter.Q.setValueAtTime(3.5, t);
+
+    demodGain.gain.setValueAtTime(0.001, t);
+    demodGain.gain.linearRampToValueAtTime(0.14, t + 0.05);
+
+    demodOsc.connect(demodFilter);
+    demodFilter.connect(demodGain);
+    demodGain.connect(masterGain);
+    if (delayNode) demodGain.connect(delayNode);
+
+    demodOsc.start(t);
+    demodMod.start(t);
+    isDemodAudioActive = true;
+
+    if (subcarrierFreq === 1999) {
+      scheduleDemodMorseChirps();
+    }
+  } catch(e) {
+    console.error("Demod audio error:", e);
+  }
+}
+
+function scheduleDemodMorseChirps() {
+  if (!isDemodAudioActive || !demodGain || !audioCtx) return;
+  const now = audioCtx.currentTime;
+  const pattern = [1,0, 1,1,1,0,1,0,1,1,1,0,1,0, 1,0,1,0,1,0,1,0, 1,1,1,0,1,1,1,0,1,1,1];
+  let cur = now + 0.2;
+  pattern.forEach(b => {
+    if (b) {
+      demodGain.gain.setValueAtTime(0.18, cur);
+    } else {
+      demodGain.gain.setValueAtTime(0.04, cur);
+    }
+    cur += 0.08;
+  });
+  demodGain.gain.setValueAtTime(0.12, cur);
+
+  demodTimer = setTimeout(() => {
+    if (isDemodAudioActive && subcarrierFreq === 1999) {
+      scheduleDemodMorseChirps();
+    }
+  }, 4500);
+}
+
+function stopDemodAudio() {
+  if (demodTimer) {
+    clearTimeout(demodTimer);
+    demodTimer = null;
+  }
+  if (demodOsc) {
+    try {
+      demodGain.gain.linearRampToValueAtTime(0.001, audioCtx.currentTime + 0.03);
+      demodOsc.stop(audioCtx.currentTime + 0.04);
+      demodMod.stop(audioCtx.currentTime + 0.04);
+    } catch(e) {}
+    demodOsc = null;
+    demodMod = null;
+    demodGain = null;
+  }
+  isDemodAudioActive = false;
+}
+
+function renderSubcarrierWaterfallCanvas() {
+  const canvas = document.getElementById('subcarrierCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+
+  ctx.fillStyle = '#00070a';
+  ctx.fillRect(0, 0, w, h);
+
+  ctx.strokeStyle = 'rgba(0, 85, 51, 0.4)';
+  ctx.lineWidth = 1;
+  const markers = [500, 1000, 1500, 1999, 2500, 3000, 3500];
+  markers.forEach(f => {
+    const x = (f / 4000) * w;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, h);
+    ctx.stroke();
+
+    ctx.fillStyle = (f === 1999) ? '#39ff14' : '#00aa55';
+    ctx.font = '9px monospace';
+    ctx.fillText(f + 'Hz', x + 2, 10);
+  });
+
+  const needleX = (subcarrierFreq / 4000) * w;
+  const isLocked = (subcarrierFreq === 1999);
+  ctx.strokeStyle = isLocked ? '#39ff14' : '#ffff00';
+  ctx.lineWidth = isLocked ? 2 : 1;
+  ctx.beginPath();
+  ctx.moveTo(needleX, 0);
+  ctx.lineTo(needleX, h);
+  ctx.stroke();
+
+  if (subcarrierWaterfallRows.length > 35) subcarrierWaterfallRows.pop();
+  const row = [];
+  const time = Date.now() * 0.003;
+  for (let c = 0; c < 40; c++) {
+    const cf = c * 100;
+    let amp = Math.random() * 0.2;
+    if (Math.abs(cf - subcarrierFreq) < 140) {
+      const pulse = isLocked ? (0.6 + 0.4 * Math.sin(time * 5)) : 0.4;
+      amp += pulse;
+    }
+    row.push(Math.min(1.0, amp));
+  }
+  subcarrierWaterfallRows.unshift(row);
+
+  const rowH = (h - 22) / 35;
+  for (let r = 0; r < subcarrierWaterfallRows.length; r++) {
+    const y = 14 + r * rowH;
+    const rData = subcarrierWaterfallRows[r];
+    for (let c = 0; c < rData.length; c++) {
+      const x = (c / rData.length) * w;
+      const v = rData[c];
+      const g = Math.floor(v * 255);
+      const b = isLocked ? Math.floor(v * 120) : 0;
+      ctx.fillStyle = `rgb(0, ${g}, ${b})`;
+      ctx.fillRect(x, y, w / rData.length + 1, rowH + 0.5);
+    }
+  }
+
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.22)';
+  for (let y = 0; y < h; y += 3) {
+    ctx.fillRect(0, y, w, 1);
+  }
+
+  subcarrierAnimFrame = requestAnimationFrame(renderSubcarrierWaterfallCanvas);
+}
+
+function selectSubnetPacket(idx) {
+  playUiBeep(1100, 0.04);
+  currentPacketIdx = parseInt(idx);
+  isPacketXorMasked = false;
+  const btnXor = document.getElementById('btnToggleXorMask');
+  if (btnXor) {
+    btnXor.style.background = '#003366';
+    btnXor.textContent = '⚡ Apply XOR-0x7F Mask';
+  }
+  renderCurrentPacket();
+}
+
+function captureNextSubnetPacket() {
+  playUiBeep(1400, 0.06);
+  currentPacketIdx = (currentPacketIdx + 1) % SUBNET_PACKETS.length;
+  const sel = document.getElementById('packetSelector');
+  if (sel) sel.value = currentPacketIdx.toString();
+  isPacketXorMasked = false;
+  renderCurrentPacket();
+}
+
+function renderCurrentPacket() {
+  const pkt = SUBNET_PACKETS[currentPacketIdx];
+  const buf = getPacketBuffer(pkt, isPacketXorMasked);
+  const hexView = document.getElementById('packetHexView');
+  const decodedText = document.getElementById('packetDecodedText');
+  const crcBadge = document.getElementById('packetCrcBadge');
+
+  if (hexView) {
+    const lines = [];
+    for (let r = 0; r < 64; r += 16) {
+      const offStr = '0x' + r.toString(16).padStart(4, '0').toUpperCase();
+      const hexParts = [];
+      let asciiParts = '';
+      for (let c = 0; c < 16; c++) {
+        const b = buf[r + c];
+        hexParts.push(b.toString(16).padStart(2, '0').toUpperCase());
+        asciiParts += (b >= 32 && b <= 126) ? String.fromCharCode(b) : '.';
+      }
+      lines.push(`${offStr}: ${hexParts.join(' ')}  |${asciiParts}|`);
+    }
+    hexView.textContent = lines.join('\n');
+  }
+
+  if (decodedText) {
+    if (isPacketXorMasked && pkt.proto === 'RAW_0x7F') {
+      decodedText.innerHTML = `<span style="color:#ffff00; font-weight:bold;">[XOR-0x7F DECRYPTED]:</span> ${escapeHtml(pkt.rawText)}`;
+    } else if (pkt.proto === 'RAW_0x7F') {
+      decodedText.innerHTML = `<span style="color:#ff00aa;">[MASKED PAYLOAD // XOR-0x7F DETECTED]:</span> <em>Apply XOR-0x7F mask to reveal unroutable intranet telemetry.</em>`;
+    } else {
+      decodedText.textContent = pkt.rawText;
+    }
+  }
+
+  if (crcBadge) {
+    const crc = computeCrc32(buf);
+    crcBadge.textContent = `CRC32: 0x${crc.toString(16).toUpperCase().padStart(8, '0')} [OK]`;
+  }
+}
+
+function togglePacketXorMask() {
+  playUiBeep(1200, 0.05);
+  isPacketXorMasked = !isPacketXorMasked;
+  const btnXor = document.getElementById('btnToggleXorMask');
+  if (btnXor) {
+    btnXor.style.background = isPacketXorMasked ? '#ff00aa' : '#003366';
+    btnXor.textContent = isPacketXorMasked ? '✔ XOR-0x7F Applied' : '⚡ Apply XOR-0x7F Mask';
+  }
+  renderCurrentPacket();
+}
+
+function verifyPacketCrc() {
+  playUiBeep(1300, 0.05);
+  const pkt = SUBNET_PACKETS[currentPacketIdx];
+  const buf = getPacketBuffer(pkt, isPacketXorMasked);
+  const crc = computeCrc32(buf);
+  const badge = document.getElementById('packetCrcBadge');
+  if (badge) {
+    badge.textContent = `CRC32: 0x${crc.toString(16).toUpperCase().padStart(8, '0')} [VERIFIED VALID]`;
+    badge.style.color = '#39ff14';
+  }
+}
+
+function downloadInterceptLog() {
+  playUiBeep(1200, 0.08);
+  const lines = [
+    "====================================================================",
+    "  CYBERSPIRE RETRO SHRINE & MOD VAULT: SHORTWAVE INTERCEPT LOG (1999)",
+    "  STATION: GEOCITIES SILICONVALLEY / AREA 51 SUBSTATION #002        ",
+    "====================================================================",
+    "Capture Timestamp: 1999-12-31 23:59:58 UTC",
+    "Hardware Receiver: Shortwave DSP Heterodyne Receiver '99",
+    "Tuned Frequency: " + subcarrierFreq + " Hz [CARRIER LOCK: " + (subcarrierFreq === 1999 ? "LOCKED" : "UNLOCKED") + "]",
+    "Signal-to-Noise Ratio: +42 dB",
+    "Lithospheric Acoustic Carrier: COHERENT (99.4%)",
+    "",
+    "INTERCEPTED NON-ROUTABLE FRAMES (SUBNET 10.19.99.x):",
+    "[FRAME 01] SRC: 10.19.99.1    DST: 10.19.99.255  PROTO: ICMP/ECHO",
+    "  PAYLOAD: " + SUBNET_PACKETS[0].rawText,
+    "",
+    "[FRAME 02] SRC: 10.19.99.4    DST: 10.19.99.127  PROTO: RAW_0x7F",
+    "  PAYLOAD (XOR-0x7F DECRYPTED): " + SUBNET_PACKETS[1].rawText,
+    "",
+    "[FRAME 03] SRC: 10.19.99.19   DST: 10.19.99.4    PROTO: ACOUSTIC_SIGINT",
+    "  PAYLOAD: " + SUBNET_PACKETS[2].rawText,
+    "",
+    "[FRAME 04] SRC: 209.85.128.42 DST: 255.255.255.255 PROTO: HTTP/1.0",
+    "  PAYLOAD: " + SUBNET_PACKETS[3].rawText,
+    "",
+    "DIAGNOSTIC STATUS:",
+    "Subterranean relay 10.19.99.4 confirmed operating on lithium strata acoustic waveguide.",
+    "Accessible via KNet address bar: kweb://10.19.99.4/classified or kweb://echo-subsystem.net.",
+    "===================================================================="
+  ].join('\r\n');
+
+  const blob = new Blob([lines], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'CyberSpire_Subcarrier_Intercept_1999.log';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function runStegoTransform(mode) {
+  playUiBeep(1100, 0.04);
+  const input = document.getElementById('stegoInputText').value || '';
+  const outBox = document.getElementById('stegoOutputBox');
+  if (!outBox) return;
+
+  if (mode === 'xor') {
+    let res = '';
+    for (let i = 0; i < input.length; i++) {
+      res += String.fromCharCode(input.charCodeAt(i) ^ 0x7F);
+    }
+    outBox.textContent = `XOR-0x7F Output: ${res}`;
+  } else if (mode === 'entropy') {
+    const freqs = {};
+    for (let i = 0; i < input.length; i++) {
+      const c = input[i];
+      freqs[c] = (freqs[c] || 0) + 1;
+    }
+    let entropy = 0;
+    const len = input.length || 1;
+    for (const c in freqs) {
+      const p = freqs[c] / len;
+      entropy -= p * Math.log2(p);
+    }
+    outBox.textContent = `Shannon Entropy: ${entropy.toFixed(3)} bits/byte (High Cryptographic Density • 1999 Standard)`;
+  } else if (mode === 'reverse') {
+    outBox.textContent = `Reversed String: ${input.split('').reverse().join('')}`;
+  } else if (mode === 'hex') {
+    let hex = '';
+    for (let i = 0; i < input.length; i++) {
+      hex += input.charCodeAt(i).toString(16).padStart(2, '0').toUpperCase() + ' ';
+    }
+    outBox.textContent = `Hex Encodings: ${hex.trim()}`;
+  } else if (mode === 'morse') {
+    const morseMap = {
+      'A': '.-', 'B': '-...', 'C': '-.-.', 'D': '-..', 'E': '.', 'F': '..-.',
+      'G': '--.', 'H': '....', 'I': '..', 'J': '.---', 'K': '-.-', 'L': '.-..',
+      'M': '--', 'N': '-.', 'O': '---', 'P': '.--.', 'Q': '--.-', 'R': '.-.',
+      'S': '...', 'T': '-', 'U': '..-', 'V': '...-', 'W': '.--', 'X': '-..-',
+      'Y': '-.--', 'Z': '--..', '0': '-----', '1': '.----', '2': '..---',
+      '3': '...--', '4': '....-', '5': '.....', '6': '-....', '7': '--...',
+      '8': '---..', '9': '----.', '.': '.-.-.-', '-': '-....-', ' ': '/'
+    };
+    const upper = input.toUpperCase();
+    const morseStr = upper.split('').map(c => morseMap[c] || c).join(' ');
+    outBox.textContent = `Morse Subcarrier Stream: ${morseStr}`;
+  }
+}
+
+function initSubcarrierLab() {
+  updateSubcarrierDemod();
+  renderCurrentPacket();
+  renderSubcarrierWaterfallCanvas();
+}
+
 // Initialize Everything
 setNeighborhood(currentNeighborhood);
 renderSwatches();
@@ -6728,6 +7571,7 @@ initSampleCanvasEvents();
 drawSampleWaveform();
 renderSampleCArray();
 renderPollQuestions();
+initSubcarrierLab();
 
 // Auto-unlock audio context on user interaction
 document.body.addEventListener('click', () => {
@@ -6805,7 +7649,7 @@ try {
   onValue(pollRef, (snapshot) => {
     const data = snapshot.val();
     if (data) {
-      ['q1', 'q2', 'q3'].forEach(qId => {
+      ['q1', 'q2', 'q3', 'q4'].forEach(qId => {
         if (data[qId] && POLL_DATA[qId]) {
           POLL_DATA[qId].options.forEach(opt => {
             if (typeof data[qId][opt.key] === 'number') {

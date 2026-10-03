@@ -564,9 +564,9 @@ def run_git_pull() -> bool:
     # 1. Clean up any stuck rebase, merge, or lockfile before pulling
     check_and_recover_git_state()
 
-    log("Running git pull --rebase in repo root...")
+    log("Running git pull --rebase --autostash in repo root...")
     res = subprocess.run(
-        ["git", "pull", "--rebase"],
+        ["git", "pull", "--rebase", "--autostash"],
         cwd=str(REPO_ROOT),
         capture_output=True,
         text=True,
