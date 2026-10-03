@@ -23,6 +23,7 @@
 #define ID_BTN_HELP 118
 #define ID_BTN_QUICKSAVE 119
 #define ID_BTN_QUICKLOAD 120
+#define ID_BTN_CHECKSUM 121
 
 #ifndef EM_SETCUEBANNER
 #define EM_SETCUEBANNER 0x1501
@@ -297,6 +298,64 @@ void GeneratePassword(HWND hTextEdit) {
 
     secure_zero(randBytes, sizeof(randBytes));
     secure_zero(pass, sizeof(pass));
+}
+
+void ComputeChecksum(HWND hwnd, HWND hTextEdit) {
+    int textLen = GetWindowTextLengthA(hTextEdit);
+    if (textLen == 0) {
+        MessageBoxA(hwnd, "Vault editor is empty. Enter text or payload to hash.", "KVault Checksum", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+    char* text = (char*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, textLen + 1);
+    if (!text) return;
+    GetWindowTextA(hTextEdit, text, textLen + 1);
+
+    HCRYPTPROV hProv = 0;
+    HCRYPTHASH hHash = 0;
+    BYTE hashVal[32];
+    DWORD hashLen = sizeof(hashVal);
+    char hashHex[65];
+    my_memset(hashHex, 0, sizeof(hashHex));
+    const char* hexChars = "0123456789abcdef";
+
+    if (CryptAcquireContextA(&hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
+        if (CryptCreateHash(hProv, CALG_SHA1, 0, 0, &hHash)) {
+            CryptHashData(hHash, (const BYTE*)text, textLen, 0);
+            if (CryptGetHashParam(hHash, HP_HASHVAL, hashVal, &hashLen, 0)) {
+                for (DWORD i = 0; i < hashLen && (i * 2 + 1) < sizeof(hashHex) - 1; i++) {
+                    hashHex[i * 2] = hexChars[(hashVal[i] >> 4) & 0x0F];
+                    hashHex[i * 2 + 1] = hexChars[hashVal[i] & 0x0F];
+                }
+                hashHex[hashLen * 2] = '\0';
+            }
+            CryptDestroyHash(hHash);
+        }
+        CryptReleaseContext(hProv, 0);
+    }
+
+    secure_zero(text, textLen + 1);
+    HeapFree(GetProcessHeap(), 0, text);
+
+    if (hashHex[0] != '\0') {
+        if (OpenClipboard(hwnd)) {
+            EmptyClipboard();
+            HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, sizeof(hashHex));
+            if (hMem) {
+                char* pMem = (char*)GlobalLock(hMem);
+                if (pMem) {
+                    my_memcpy(pMem, hashHex, sizeof(hashHex));
+                    GlobalUnlock(hMem);
+                    SetClipboardData(CF_TEXT, hMem);
+                }
+            }
+            CloseClipboard();
+        }
+        char msgBuf[256];
+        wsprintfA(msgBuf, "SHA-1 Checksum (copied to clipboard):\n\n%s\n\nPayload Size: %d bytes", hashHex, textLen);
+        MessageBoxA(hwnd, msgBuf, "KVault Cryptographic Checksum [F4]", MB_OK | MB_ICONINFORMATION);
+    } else {
+        MessageBoxA(hwnd, "Failed to compute cryptographic hash.", "KVault", MB_OK | MB_ICONERROR);
+    }
 }
 
 void LoadFromFile(HWND hwnd, HWND hTextEdit) {
@@ -616,7 +675,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HWND hBtnGen = CreateWindowA("BUTTON", "Gen Pass", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 490, 320, 90, 25, hwnd, (HMENU)ID_BTN_GENERATE, NULL, NULL);
             SendMessage(hBtnGen, WM_SETFONT, (WPARAM)hFont, TRUE);
             
-            HWND hComboTpl = CreateWindowA("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 15, 355, 90, 150, hwnd, (HMENU)ID_COMBO_TEMPLATE, NULL, NULL);
+            HWND hComboTpl = CreateWindowA("COMBOBOX", "", CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 15, 355, 90, 180, hwnd, (HMENU)ID_COMBO_TEMPLATE, NULL, NULL);
             SendMessage(hComboTpl, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Login");
             SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Finance");
@@ -624,6 +683,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Server");
             SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"API Key");
             SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"2FA Seed");
+            SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Database");
+            SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"SSH Key");
+            SendMessage(hComboTpl, CB_ADDSTRING, 0, (LPARAM)"Router");
             SendMessage(hComboTpl, CB_SETCURSEL, 0, 0);
             
             HWND hBtnTpl = CreateWindowA("BUTTON", "Insert", WS_VISIBLE | WS_CHILD | BS_FLAT | WS_TABSTOP, 110, 355, 55, 25, hwnd, (HMENU)ID_BTN_INSERT_TEMPLATE, NULL, NULL);
@@ -721,24 +783,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (len == 0) {
                     SetWindowTextA(GetDlgItem(hwnd, ID_STATIC_STRENGTH), "");
                 } else {
-                    int score = 0;
-                    int hasUpper = 0, hasNum = 0, hasSym = 0;
+                    int hasLower = 0, hasUpper = 0, hasNum = 0, hasSym = 0;
                     for (size_t i = 0; i < len; i++) {
-                        if (pwd[i] >= 'A' && pwd[i] <= 'Z') hasUpper = 1;
+                        if (pwd[i] >= 'a' && pwd[i] <= 'z') hasLower = 1;
+                        else if (pwd[i] >= 'A' && pwd[i] <= 'Z') hasUpper = 1;
                         else if (pwd[i] >= '0' && pwd[i] <= '9') hasNum = 1;
-                        else if (!(pwd[i] >= 'a' && pwd[i] <= 'z')) hasSym = 1;
+                        else hasSym = 1;
                     }
-                    if (len > 4) score++;
-                    if (len >= 8) score++;
-                    if (len >= 12) score++;
-                    if (hasUpper) score++;
-                    if (hasNum) score++;
-                    if (hasSym) score++;
+                    int pool = 0;
+                    if (hasLower) pool += 26;
+                    if (hasUpper) pool += 26;
+                    if (hasNum) pool += 10;
+                    if (hasSym) pool += 33;
                     
-                    if (score < 3) SetWindowTextA(GetDlgItem(hwnd, ID_STATIC_STRENGTH), "Strength: Weak");
-                    else if (score < 5) SetWindowTextA(GetDlgItem(hwnd, ID_STATIC_STRENGTH), "Strength: Medium");
-                    else SetWindowTextA(GetDlgItem(hwnd, ID_STATIC_STRENGTH), "Strength: Strong");
+                    int bitsPerCharX10 = 33;
+                    if (pool > 62) bitsPerCharX10 = 65;
+                    else if (pool > 36) bitsPerCharX10 = 59;
+                    else if (pool > 10) bitsPerCharX10 = 51;
                     
+                    int bits = (int)((len * bitsPerCharX10) / 10);
+                    char buf[64];
+                    if (bits < 40) wsprintfA(buf, "Strength: Weak (%d bits)", bits);
+                    else if (bits < 75) wsprintfA(buf, "Strength: Medium (%d bits)", bits);
+                    else wsprintfA(buf, "Strength: Strong (%d bits)", bits);
+                    
+                    SetWindowTextA(GetDlgItem(hwnd, ID_STATIC_STRENGTH), buf);
                     InvalidateRect(GetDlgItem(hwnd, ID_STATIC_STRENGTH), NULL, TRUE);
                 }
                 secure_zero(pwd, sizeof(pwd));
@@ -795,6 +864,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 else if (sel == 3) tpl = "\r\n--- Server ---\r\nHost: \r\nPort: 22\r\nUser: \r\nPrivate Key / Password: \r\n--------------\r\n";
                 else if (sel == 4) tpl = "\r\n--- API Key ---\r\nService: \r\nKey ID: \r\nSecret Token: \r\nEndpoint: \r\n---------------\r\n";
                 else if (sel == 5) tpl = "\r\n--- 2FA Seed ---\r\nAccount: \r\nBase32 Secret: \r\nAlgorithm: SHA1-30s-6digits\r\n----------------\r\n";
+                else if (sel == 6) tpl = "\r\n--- Database ---\r\nEngine: PostgreSQL / MySQL\r\nHost: 127.0.0.1\r\nPort: 5432\r\nDatabase: \r\nUsername: \r\nPassword: \r\nSSL Mode: require\r\n----------------\r\n";
+                else if (sel == 7) tpl = "\r\n--- SSH Keypair ---\r\nHost: \r\nUser: \r\nPassphrase: \r\nPublic Key: ssh-rsa AAAAB3NzaC1...\r\nPrivate Key:\r\n-----BEGIN RSA PRIVATE KEY-----\r\n-----END RSA PRIVATE KEY-----\r\n-------------------\r\n";
+                else if (sel == 8) tpl = "\r\n--- Router Gateway ---\r\nIP: 192.168.1.1\r\nGateway User: admin\r\nGateway Pass: \r\nWiFi SSID: \r\nWiFi Pass: \r\nWPA Mode: WPA2-PSK\r\n----------------------\r\n";
                 SendMessage(hData, EM_REPLACESEL, TRUE, (LPARAM)tpl);
                 SetFocus(hData);
             } else if (LOWORD(wParam) == ID_BTN_COPY_DATA) {
@@ -840,6 +912,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (LOWORD(wParam) == ID_BTN_QUICKLOAD) {
                 LoadSnapshot(hwnd, 1);
+            } else if (LOWORD(wParam) == ID_BTN_CHECKSUM) {
+                ComputeChecksum(hwnd, hData);
             } else if (LOWORD(wParam) == ID_BTN_HELP) {
                 MessageBoxA(hwnd, 
                     "KVault Help & Security Guide\n\n"
@@ -847,18 +921,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "2. Quicksave & Restore:\n"
                     "   F5: Quicksave workspace snapshot to kvault.dat\n"
                     "   F9: Quickload restored snapshot from kvault.dat\n"
-                    "3. Auto-Lock: Wipes displayed text and clipboard on inactivity.\n"
-                    "4. Shortcuts:\n"
-                    "   F5: Quicksave snapshot\n"
-                    "   F9: Quickload snapshot\n"
+                    "3. Checksum & Hash:\n"
+                    "   F4 / Ctrl+H: Compute SHA-1 cryptographic checksum of payload.\n"
+                    "4. Auto-Lock: Wipes displayed text and clipboard on inactivity.\n"
+                    "5. Shortcuts:\n"
+                    "   F4: Hash Checksum | F5: Quicksave | F9: Quickload\n"
                     "   Ctrl+S: Save file | Ctrl+O: Open file\n"
                     "   Ctrl+L: Lock vault | Ctrl+E: Encrypt data\n"
                     "   Ctrl+D: Decrypt data | Ctrl+G: Gen password\n"
                     "   Shift+Gen Pass: Generate 6-digit numeric PIN\n"
-                    "   Ctrl+F: Focus Find | F1: Help\n"
-                    "5. Templates: Login, Finance, Note, Server, API Key, 2FA Seed.\n"
-                    "6. Drag & Drop: Drop file to load contents into editor.\n"
-                    "7. Clipboard: Clear Clip wipes clipboard after use.",
+                    "   Ctrl+H: Checksum | Ctrl+F: Focus Find | F1: Help\n"
+                    "6. Templates: Login, Finance, Note, Server, API Key, 2FA, DB, SSH, Router.\n"
+                    "7. Drag & Drop: Drop file to load contents into editor.\n"
+                    "8. Clipboard: Clear Clip wipes clipboard after use.",
                     "KVault Help", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == ID_BTN_FIND) {
                 char findText[256];
@@ -994,10 +1069,16 @@ void __stdcall MainEntry() {
                     } else if (msg.wParam == 'F') {
                         SetFocus(GetDlgItem(hwnd, ID_EDIT_FIND));
                         continue;
+                    } else if (msg.wParam == 'H') {
+                        SendMessage(hwnd, WM_COMMAND, ID_BTN_CHECKSUM, 0);
+                        continue;
                     }
                 } else if (!bCtrl && !bShift && !bAlt) {
                     if (msg.wParam == VK_F1) {
                         SendMessage(hwnd, WM_COMMAND, ID_BTN_HELP, 0);
+                        continue;
+                    } else if (msg.wParam == VK_F4) {
+                        SendMessage(hwnd, WM_COMMAND, ID_BTN_CHECKSUM, 0);
                         continue;
                     } else if (msg.wParam == VK_F5) {
                         SendMessage(hwnd, WM_COMMAND, ID_BTN_QUICKSAVE, 0);

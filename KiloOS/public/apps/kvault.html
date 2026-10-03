@@ -251,6 +251,56 @@
             margin-left: 2px;
         }
 
+        /* Compartment Bar & Buttons */
+        .compartment-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .comp-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--glass-border);
+            color: var(--text-muted);
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .comp-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-color);
+        }
+
+        .comp-btn.active {
+            background: rgba(108, 92, 231, 0.25);
+            border-color: var(--primary-accent);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* Custom Fields Editor Rows */
+        .custom-field-row-edit {
+            display: grid;
+            grid-template-columns: 2fr 1.2fr 3fr auto;
+            gap: 8px;
+            align-items: center;
+        }
+
+        @media (max-width: 540px) {
+            .custom-field-row-edit {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
         /* Secret cards grid */
         .secret-list {
             display: grid;
@@ -826,6 +876,13 @@
                     </div>
                 </div>
 
+                <!-- Compartment Filter Bar -->
+                <div class="compartment-bar" id="compartment-bar">
+                    <span style="font-size:12px; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap;">📁 Compartment:</span>
+                    <div id="compartment-buttons" style="display:inline-flex; gap:6px; flex-wrap:wrap; align-items:center;"></div>
+                    <button class="btn secondary" style="padding:4px 8px; font-size:11px;" onclick="promptNewCompartment()" title="Add custom vault compartment">+ New Compartment</button>
+                </div>
+
                 <!-- Category & Tag Filter Pills -->
                 <div class="filter-bar" id="category-filter-bar">
                     <button class="pill-btn active" data-cat="ALL" onclick="setCategoryFilter('ALL')">All <span class="pill-badge" id="badge-count-all">0</span></button>
@@ -847,7 +904,10 @@
                 <div id="empty-state">
                     <div style="font-size: 40px; margin-bottom: 10px;">📦</div>
                     <p id="empty-state-text" style="font-size: 15px; margin: 0 0 16px 0;">Your vault is empty.</p>
-                    <button class="btn secondary" id="empty-state-btn" onclick="showAddSecret()">Create your first secret</button>
+                    <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+                        <button class="btn secondary" id="empty-state-btn" onclick="showAddSecret()">Create your first secret</button>
+                        <button class="btn secondary" id="empty-state-demo-btn" onclick="loadSampleVault()" title="Pre-load diegetic 1999 retro starter credentials">🌟 Load 1999 Starter Vault</button>
+                    </div>
                 </div>
             </div>
             
@@ -861,7 +921,15 @@
                         </label>
                     </div>
 
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px;">
+                        <div class="input-group">
+                            <label for="new-secret-compartment">Compartment</label>
+                            <select id="new-secret-compartment">
+                                <option value="Personal">Personal</option>
+                                <option value="Work">Work</option>
+                                <option value="Operations">Operations</option>
+                            </select>
+                        </div>
                         <div class="input-group">
                             <label for="new-secret-category">Category</label>
                             <select id="new-secret-category" onchange="adjustFormForCategory()">
@@ -891,8 +959,8 @@
                             </div>
                         </div>
                         <div class="input-group">
-                            <label for="new-secret-totp">2FA / TOTP Authenticator Key (Base32)</label>
-                            <input type="text" id="new-secret-totp" placeholder="e.g. JBSWY3DPEHPK3PXP (RFC 6238)">
+                            <label for="new-secret-totp">2FA / TOTP Authenticator Key (Base32 or otpauth:// URI)</label>
+                            <input type="text" id="new-secret-totp" placeholder="e.g. JBSWY3DPEHPK3PXP or paste otpauth:// URI" oninput="handleTotpInput(this.value)">
                         </div>
                     </div>
 
@@ -939,7 +1007,16 @@
                             <button class="btn secondary" style="padding: 2px 8px; font-size:11px;" type="button" onclick="openGeneratorModal(true)">🎲 Open Generator</button>
                         </div>
                         <div style="display:flex; gap:8px;">
-                            <textarea id="new-secret-value" placeholder="Enter password, private key, or confidential note..." style="flex:1; min-height:80px;"></textarea>
+                            <textarea id="new-secret-value" placeholder="Enter password, private key, or confidential note..." oninput="updateFormEntropy()" style="flex:1; min-height:80px;"></textarea>
+                        </div>
+                        <div id="form-entropy-box" style="display:none; margin-top:6px;">
+                            <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:3px; color:var(--text-muted);">
+                                <span id="form-entropy-bits">Entropy: ~0 bits</span>
+                                <span id="form-entropy-quality" style="font-weight:600; color:var(--danger-accent);">Weak</span>
+                            </div>
+                            <div style="height:4px; background:rgba(255,255,255,0.1); border-radius:2px; overflow:hidden;">
+                                <div id="form-entropy-bar" style="height:100%; width:0%; background:var(--danger-accent); transition:all 0.2s;"></div>
+                            </div>
                         </div>
                     </div>
 
@@ -953,6 +1030,28 @@
                             <label for="new-secret-notes">Additional Notes</label>
                             <textarea id="new-secret-notes" placeholder="Security questions, recovery seeds, PINs..." style="min-height:60px;"></textarea>
                         </div>
+                    </div>
+
+                    <!-- Expiration & Renewal Date -->
+                    <div class="input-group" style="margin-top:10px;">
+                        <label for="new-secret-expires">Credential Expiration / Renewal Date (Optional)</label>
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                            <input type="date" id="new-secret-expires" style="flex:1; min-width:140px;">
+                            <button type="button" class="btn secondary" style="padding:6px 10px; font-size:11px;" onclick="setExpiryPreset(30)">+30d</button>
+                            <button type="button" class="btn secondary" style="padding:6px 10px; font-size:11px;" onclick="setExpiryPreset(90)">+90d</button>
+                            <button type="button" class="btn secondary" style="padding:6px 10px; font-size:11px;" onclick="setExpiryPreset(365)">+1y</button>
+                            <button type="button" class="btn secondary" style="padding:6px 10px; font-size:11px;" onclick="document.getElementById('new-secret-expires').value=''">Clear</button>
+                        </div>
+                    </div>
+
+                    <!-- Custom Fields Section -->
+                    <div style="margin-top: 14px; background: rgba(0,0,0,0.25); border: 1px solid var(--glass-border); border-radius: 8px; padding: 12px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
+                            <span style="font-size:12px; font-weight:600; color:var(--text-muted); text-transform:uppercase;">Custom Fields</span>
+                            <button type="button" class="btn secondary" style="padding:3px 9px; font-size:11px;" onclick="addCustomFieldRow()">+ Add Field</button>
+                        </div>
+                        <div id="custom-fields-container" style="display:flex; flex-direction:column; gap:8px;"></div>
+                        <div id="custom-fields-empty" style="font-size:12px; color:var(--text-muted); font-style:italic; padding:4px 0;">No custom fields. Add PINs, security questions, API tokens, or SSH keys.</div>
                     </div>
 
                     <!-- Password Revision History (Visible when editing) -->
@@ -1114,6 +1213,10 @@
                     <div class="audit-card-val" id="audit-no2fa-count" style="color:#00f2fe;">0</div>
                     <div class="audit-card-label">Missing 2FA/TOTP</div>
                 </div>
+                <div class="audit-card" onclick="filterAuditItems('EXPIRED')">
+                    <div class="audit-card-val" id="audit-expired-count" style="color:#ff7675;">0</div>
+                    <div class="audit-card-label">Expired / Soon</div>
+                </div>
             </div>
 
             <div id="audit-recommendations" style="font-size:13px; line-height:1.6; background:rgba(0,0,0,0.25); border-radius:8px; padding:12px; margin-bottom:16px;">
@@ -1248,6 +1351,8 @@
         let idleTimer = null;
         let editingSecretId = null;
         let activeCategoryFilter = 'ALL';
+        let activeCompartmentFilter = 'ALL';
+        let customCompartments = ['Personal', 'Work', 'Operations'];
         let currentAuditFilter = null;
         let genTargetIsForm = false;
         let totpTimer = null;
@@ -1755,6 +1860,8 @@
 
             updateSoundUI();
             updateStatusBar(false);
+            customCompartments = safeStorageGetJSON('kvault_custom_compartments', ['Personal', 'Work', 'Operations']);
+            renderCompartmentTabs();
 
             let stored = null;
             try { stored = localStorage.getItem(STORAGE_KEY); } catch(e){}
@@ -1953,9 +2060,86 @@
         function showVault() {
             switchView('view-vault');
             document.getElementById('auth-controls').style.display = 'flex';
+            renderCompartmentTabs();
             renderSecrets();
             updateStatusBar(true);
             resetIdleTimer();
+        }
+
+        // --- Compartments & Custom Compartment Management ---
+        function saveCustomCompartments() {
+            safeStorageSet('kvault_custom_compartments', customCompartments);
+        }
+
+        function renderCompartmentTabs() {
+            const container = document.getElementById('compartment-buttons');
+            const selectEl = document.getElementById('new-secret-compartment');
+            if (container) {
+                let html = `<button class="comp-btn ${activeCompartmentFilter === 'ALL' ? 'active' : ''}" data-comp="ALL" onclick="setCompartmentFilter('ALL')">All</button>`;
+                customCompartments.forEach(comp => {
+                    const isCustom = !['Personal', 'Work', 'Operations'].includes(comp);
+                    const isActive = activeCompartmentFilter === comp;
+                    html += `
+                        <button class="comp-btn ${isActive ? 'active' : ''}" data-comp="${escapeHtml(comp)}" onclick="setCompartmentFilter('${escapeHtml(comp)}')">
+                            ${escapeHtml(comp)}
+                            ${isCustom ? `<span onclick="deleteCustomCompartment('${escapeHtml(comp)}', event)" style="margin-left:4px; opacity:0.6; font-size:11px;" title="Remove Compartment">&times;</span>` : ''}
+                        </button>
+                    `;
+                });
+                container.innerHTML = html;
+            }
+            if (selectEl) {
+                const currentVal = selectEl.value;
+                let optHtml = '';
+                customCompartments.forEach(comp => {
+                    optHtml += `<option value="${escapeHtml(comp)}">${escapeHtml(comp)}</option>`;
+                });
+                selectEl.innerHTML = optHtml;
+                if (customCompartments.includes(currentVal)) {
+                    selectEl.value = currentVal;
+                }
+            }
+        }
+
+        function setCompartmentFilter(comp) {
+            playSound('click');
+            activeCompartmentFilter = comp;
+            renderCompartmentTabs();
+            renderSecrets();
+        }
+
+        function promptNewCompartment() {
+            playSound('click');
+            const name = prompt("Enter new Compartment name (e.g. Research, DevOps, Archive):");
+            if (!name) return;
+            const clean = name.trim();
+            if (!clean) return;
+            if (!customCompartments.includes(clean)) {
+                customCompartments.push(clean);
+                saveCustomCompartments();
+                renderCompartmentTabs();
+                setCompartmentFilter(clean);
+                showNotification(`Compartment "${clean}" created`);
+            } else {
+                setCompartmentFilter(clean);
+            }
+        }
+
+        function deleteCustomCompartment(comp, ev) {
+            if (ev) ev.stopPropagation();
+            if (['Personal', 'Work', 'Operations'].includes(comp)) return;
+            showConfirmModal(`Delete compartment "${comp}"? Associated items will default to Personal.`, () => {
+                customCompartments = customCompartments.filter(c => c !== comp);
+                saveCustomCompartments();
+                vaultData.forEach(s => {
+                    if (s.compartment === comp) s.compartment = 'Personal';
+                });
+                saveVaultToStorage();
+                if (activeCompartmentFilter === comp) activeCompartmentFilter = 'ALL';
+                renderCompartmentTabs();
+                renderSecrets();
+                showNotification(`Compartment "${comp}" removed`);
+            });
         }
 
         // --- Category Filters & Badges ---
@@ -2026,12 +2210,163 @@
             }
         }
 
+        // --- Custom Fields Management in Form ---
+        function addCustomFieldRow(label = '', type = 'text', value = '') {
+            const container = document.getElementById('custom-fields-container');
+            const emptyEl = document.getElementById('custom-fields-empty');
+            if (!container) return;
+            if (emptyEl) emptyEl.style.display = 'none';
+
+            const row = document.createElement('div');
+            row.className = 'custom-field-row-edit';
+            row.style.cssText = 'display:grid; grid-template-columns: 2fr 1.2fr 3fr auto; gap:8px; align-items:center;';
+
+            row.innerHTML = `
+                <input type="text" class="cf-label" placeholder="Label (e.g. PIN, Port)" value="${escapeHtml(label)}">
+                <select class="cf-type">
+                    <option value="text" ${type === 'text' ? 'selected' : ''}>Text</option>
+                    <option value="secret" ${type === 'secret' ? 'selected' : ''}>Masked</option>
+                    <option value="url" ${type === 'url' ? 'selected' : ''}>URL</option>
+                </select>
+                <input type="text" class="cf-value" placeholder="Field value" value="${escapeHtml(value)}">
+                <button type="button" class="btn secondary" style="padding:4px 8px; font-size:11px; color:var(--danger-accent);" onclick="removeCustomFieldRow(this)" title="Delete Field">✕</button>
+            `;
+            container.appendChild(row);
+        }
+
+        function removeCustomFieldRow(btn) {
+            const row = btn.closest('.custom-field-row-edit');
+            const container = document.getElementById('custom-fields-container');
+            const emptyEl = document.getElementById('custom-fields-empty');
+            if (row) row.remove();
+            if (container && container.querySelectorAll('.custom-field-row-edit').length === 0) {
+                if (emptyEl) emptyEl.style.display = 'block';
+            }
+        }
+
+        function renderCustomFields(fields) {
+            const container = document.getElementById('custom-fields-container');
+            const emptyEl = document.getElementById('custom-fields-empty');
+            if (!container) return;
+            container.innerHTML = '';
+            if (!fields || !Array.isArray(fields) || fields.length === 0) {
+                if (emptyEl) emptyEl.style.display = 'block';
+                return;
+            }
+            if (emptyEl) emptyEl.style.display = 'none';
+            fields.forEach(f => {
+                if (f && (f.label || f.value)) {
+                    addCustomFieldRow(f.label || '', f.type || 'text', f.value || '');
+                }
+            });
+        }
+
+        function getCustomFieldsFromForm() {
+            const rows = document.querySelectorAll('#custom-fields-container .custom-field-row-edit');
+            const fields = [];
+            rows.forEach(r => {
+                const label = r.querySelector('.cf-label') ? r.querySelector('.cf-label').value.trim() : '';
+                const type = r.querySelector('.cf-type') ? r.querySelector('.cf-type').value : 'text';
+                const value = r.querySelector('.cf-value') ? r.querySelector('.cf-value').value : '';
+                if (label || value) {
+                    fields.push({ label, type, value });
+                }
+            });
+            return fields;
+        }
+
+        // --- Expiration Preset & Form Live Entropy ---
+        function setExpiryPreset(days) {
+            playSound('click');
+            const target = new Date();
+            target.setDate(target.getDate() + days);
+            const yyyy = target.getFullYear();
+            const mm = String(target.getMonth() + 1).padStart(2, '0');
+            const dd = String(target.getDate()).padStart(2, '0');
+            const dateStr = `${yyyy}-${mm}-${dd}`;
+            const el = document.getElementById('new-secret-expires');
+            if (el) el.value = dateStr;
+            showNotification(`Set renewal date to +${days} days (${dateStr})`);
+        }
+
+        function updateFormEntropy() {
+            const val = document.getElementById('new-secret-value') ? document.getElementById('new-secret-value').value : '';
+            const box = document.getElementById('form-entropy-box');
+            const bitsSpan = document.getElementById('form-entropy-bits');
+            const qualSpan = document.getElementById('form-entropy-quality');
+            const bar = document.getElementById('form-entropy-bar');
+            if (!box || !bitsSpan || !qualSpan || !bar) return;
+
+            if (!val || val.length === 0) {
+                box.style.display = 'none';
+                return;
+            }
+
+            box.style.display = 'block';
+            let pool = 0;
+            if (/[a-z]/.test(val)) pool += 26;
+            if (/[A-Z]/.test(val)) pool += 26;
+            if (/[0-9]/.test(val)) pool += 10;
+            if (/[^a-zA-Z0-9]/.test(val)) pool += 33;
+            if (pool === 0) pool = 10;
+
+            const entropy = Math.round(val.length * Math.log2(pool));
+            bitsSpan.textContent = `Entropy: ~${entropy} bits`;
+
+            if (entropy < 40) {
+                qualSpan.textContent = 'Weak';
+                qualSpan.style.color = 'var(--danger-accent)';
+                bar.style.background = 'var(--danger-accent)';
+                bar.style.width = '30%';
+            } else if (entropy < 65) {
+                qualSpan.textContent = 'Medium';
+                qualSpan.style.color = 'var(--warning-color)';
+                bar.style.background = 'var(--warning-color)';
+                bar.style.width = '65%';
+            } else {
+                qualSpan.textContent = 'Very Strong';
+                qualSpan.style.color = 'var(--success-color)';
+                bar.style.background = 'var(--success-color)';
+                bar.style.width = '100%';
+            }
+        }
+
+        // --- Smart TOTP URI Parser ---
+        function handleTotpInput(val) {
+            if (!val) return;
+            const str = val.trim();
+            if (str.startsWith('otpauth://')) {
+                try {
+                    const url = new URL(str);
+                    const secret = url.searchParams.get('secret');
+                    const issuer = url.searchParams.get('issuer');
+                    let label = decodeURIComponent(url.pathname.replace(/^\/\/totp\//i, '').replace(/^\/totp\//i, ''));
+                    if (secret) {
+                        document.getElementById('new-secret-totp').value = secret.toUpperCase();
+                        const titleElem = document.getElementById('new-secret-title');
+                        const userElem = document.getElementById('new-secret-username');
+                        if (titleElem && !titleElem.value) {
+                            titleElem.value = issuer || (label.includes(':') ? label.split(':')[0] : label) || '2FA Account';
+                        }
+                        if (userElem && !userElem.value && label.includes(':')) {
+                            userElem.value = label.split(':')[1].trim();
+                        }
+                        playSound('generate');
+                        showNotification("Parsed 2FA key & metadata from otpauth:// URI");
+                    }
+                } catch(e) {}
+            }
+        }
+
         function showAddSecret() {
             editingSecretId = null;
             document.getElementById('add-secret-heading').textContent = 'Add New Secret';
             document.getElementById('save-secret-btn').textContent = 'Save to Vault';
             document.getElementById('new-secret-favorite').checked = false;
             document.getElementById('new-secret-category').value = (activeCategoryFilter !== 'ALL' && activeCategoryFilter !== 'FAV' && activeCategoryFilter !== 'TRASH') ? activeCategoryFilter : 'Login';
+            if (document.getElementById('new-secret-compartment')) {
+                document.getElementById('new-secret-compartment').value = (activeCompartmentFilter !== 'ALL' && activeCompartmentFilter !== 'TRASH') ? activeCompartmentFilter : 'Personal';
+            }
             document.getElementById('new-secret-title').value = '';
             document.getElementById('new-secret-username').value = '';
             document.getElementById('new-secret-url').value = '';
@@ -2045,6 +2380,13 @@
             document.getElementById('new-secret-value').value = '';
             document.getElementById('new-secret-tags').value = '';
             document.getElementById('new-secret-notes').value = '';
+            if (document.getElementById('new-secret-expires')) {
+                document.getElementById('new-secret-expires').value = '';
+            }
+
+            renderCustomFields([]);
+            const entropyBox = document.getElementById('form-entropy-box');
+            if (entropyBox) entropyBox.style.display = 'none';
 
             const historyContainer = document.getElementById('password-history-container');
             if (historyContainer) historyContainer.style.display = 'none';
@@ -2062,6 +2404,9 @@
             document.getElementById('save-secret-btn').textContent = 'Update Secret';
             document.getElementById('new-secret-favorite').checked = !!secret.favorite;
             document.getElementById('new-secret-category').value = secret.category || 'General';
+            if (document.getElementById('new-secret-compartment')) {
+                document.getElementById('new-secret-compartment').value = secret.compartment || 'Personal';
+            }
             document.getElementById('new-secret-title').value = secret.title || '';
             document.getElementById('new-secret-username').value = secret.username || '';
             document.getElementById('new-secret-url').value = secret.url || '';
@@ -2075,6 +2420,12 @@
             document.getElementById('new-secret-value').value = secret.value || '';
             document.getElementById('new-secret-tags').value = Array.isArray(secret.tags) ? secret.tags.join(', ') : (secret.tags || '');
             document.getElementById('new-secret-notes').value = secret.notes || '';
+            if (document.getElementById('new-secret-expires')) {
+                document.getElementById('new-secret-expires').value = secret.expires || '';
+            }
+
+            renderCustomFields(secret.customFields || []);
+            updateFormEntropy();
 
             // Password revision history
             const historyContainer = document.getElementById('password-history-container');
@@ -2104,6 +2455,7 @@
 
         function restorePastPassword(val) {
             document.getElementById('new-secret-value').value = val;
+            updateFormEntropy();
             showNotification("Restored previous password into edit field");
         }
 
@@ -2112,6 +2464,9 @@
             const value = document.getElementById('new-secret-value').value;
             const category = document.getElementById('new-secret-category').value;
             const favorite = document.getElementById('new-secret-favorite').checked;
+            const compartment = document.getElementById('new-secret-compartment') ? document.getElementById('new-secret-compartment').value : 'Personal';
+            const expires = document.getElementById('new-secret-expires') ? document.getElementById('new-secret-expires').value : '';
+            const customFields = getCustomFieldsFromForm();
 
             if (!title) {
                 showNotification("Secret Title / Name is required", "error");
@@ -2133,6 +2488,7 @@
                     item.title = title;
                     item.value = value;
                     item.category = category;
+                    item.compartment = compartment;
                     item.favorite = favorite;
                     item.username = document.getElementById('new-secret-username').value.trim();
                     item.url = document.getElementById('new-secret-url').value.trim();
@@ -2145,6 +2501,8 @@
                     item.serverPort = document.getElementById('new-secret-serverport').value.trim();
                     item.tags = tagArray;
                     item.notes = document.getElementById('new-secret-notes').value.trim();
+                    item.expires = expires;
+                    item.customFields = customFields;
                     item.modified = new Date().toISOString();
                 }
                 editingSecretId = null;
@@ -2155,6 +2513,7 @@
                     title: title,
                     value: value,
                     category: category,
+                    compartment: compartment,
                     favorite: favorite,
                     username: document.getElementById('new-secret-username').value.trim(),
                     url: document.getElementById('new-secret-url').value.trim(),
@@ -2167,6 +2526,8 @@
                     serverPort: document.getElementById('new-secret-serverport').value.trim(),
                     tags: tagArray,
                     notes: document.getElementById('new-secret-notes').value.trim(),
+                    expires: expires,
+                    customFields: customFields,
                     created: new Date().toISOString()
                 });
                 showNotification("New secret saved to vault");
@@ -2275,6 +2636,9 @@
                 filtered = filtered.filter(s => s.trash);
             } else {
                 filtered = filtered.filter(s => !s.trash);
+                if (activeCompartmentFilter !== 'ALL') {
+                    filtered = filtered.filter(s => (s.compartment || 'Personal') === activeCompartmentFilter);
+                }
                 if (activeCategoryFilter === 'FAV') {
                     filtered = filtered.filter(s => s.favorite);
                 } else if (activeCategoryFilter !== 'ALL') {
@@ -2294,9 +2658,11 @@
                     const user = (s.username || '').toLowerCase();
                     const url = (s.url || '').toLowerCase();
                     const cat = (s.category || '').toLowerCase();
+                    const comp = (s.compartment || '').toLowerCase();
                     const tags = Array.isArray(s.tags) ? s.tags.join(' ').toLowerCase() : '';
                     const notes = (s.notes || '').toLowerCase();
-                    return title.includes(query) || user.includes(query) || url.includes(query) || cat.includes(query) || tags.includes(query) || notes.includes(query);
+                    const cfStr = Array.isArray(s.customFields) ? s.customFields.map(f => `${f.label} ${f.value}`).join(' ').toLowerCase() : '';
+                    return title.includes(query) || user.includes(query) || url.includes(query) || cat.includes(query) || comp.includes(query) || tags.includes(query) || notes.includes(query) || cfStr.includes(query);
                 });
             }
 
@@ -2436,6 +2802,49 @@
                     `;
                 }
 
+                // Custom fields
+                if (Array.isArray(s.customFields) && s.customFields.length > 0) {
+                    s.customFields.forEach((cf, cfIdx) => {
+                        if (!cf || (!cf.label && !cf.value)) return;
+                        const safeLabel = escapeHtml(cf.label || 'Field');
+                        const safeVal = escapeHtml(cf.value || '');
+                        const cfDomId = `val-cf-${domId}-${cfIdx}`;
+                        if (cf.type === 'secret') {
+                            const maskedCf = '••••••••';
+                            fieldsHtml += `
+                                <div class="secret-field-row">
+                                    <span class="secret-field-label">${safeLabel}</span>
+                                    <span class="secret-field-val masked" id="${cfDomId}">${maskedCf}</span>
+                                    <div class="secret-field-actions">
+                                        <button class="btn-field-mini" onclick="toggleMask('${cfDomId}', '${safeVal}', '${maskedCf}')">👁️</button>
+                                        <button class="btn-field-mini" onclick="copySecret('${safeVal}')">Copy</button>
+                                    </div>
+                                </div>
+                            `;
+                        } else if (cf.type === 'url') {
+                            fieldsHtml += `
+                                <div class="secret-field-row">
+                                    <span class="secret-field-label">${safeLabel}</span>
+                                    <span class="secret-field-val"><a href="${safeVal}" target="_blank" rel="noopener noreferrer" style="color:#00f2fe; text-decoration:none;">${safeVal}</a></span>
+                                    <div class="secret-field-actions">
+                                        <button class="btn-field-mini" onclick="copySecret('${safeVal}')">Copy</button>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            fieldsHtml += `
+                                <div class="secret-field-row">
+                                    <span class="secret-field-label">${safeLabel}</span>
+                                    <span class="secret-field-val">${safeVal}</span>
+                                    <div class="secret-field-actions">
+                                        <button class="btn-field-mini" onclick="copySecret('${safeVal}')">Copy</button>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+
                 // TOTP Live Box
                 let totpHtml = '';
                 const totpRes = totpResults[i];
@@ -2477,6 +2886,20 @@
                     `;
                 }
 
+                // Badges
+                let badgesHtml = `<span class="cat-badge" style="background:rgba(255,255,255,0.06); color:#a0a0ff;">📁 ${escapeHtml(s.compartment || 'Personal')}</span> <span class="cat-badge">${safeCat}</span>`;
+                if (s.expires) {
+                    const expTime = new Date(s.expires).getTime();
+                    const days = Math.ceil((expTime - Date.now()) / (1000 * 60 * 60 * 24));
+                    if (days < 0) {
+                        badgesHtml += ` <span class="cat-badge" style="background:rgba(255,71,87,0.25); border-color:var(--danger-accent); color:var(--danger-accent); font-weight:700;">⚠️ Expired (${escapeHtml(s.expires)})</span>`;
+                    } else if (days <= 14) {
+                        badgesHtml += ` <span class="cat-badge" style="background:rgba(255,165,2,0.25); border-color:var(--warning-color); color:var(--warning-color); font-weight:600;">⏳ Expiring in ${days}d</span>`;
+                    } else {
+                        badgesHtml += ` <span class="cat-badge" style="opacity:0.8;" title="Renewal date">📅 ${escapeHtml(s.expires)}</span>`;
+                    }
+                }
+
                 card.innerHTML = `
                     <div class="secret-item-header">
                         <div class="secret-title-area">
@@ -2484,7 +2907,7 @@
                             <span class="secret-title-text" title="${safeTitle}">${safeTitle}</span>
                         </div>
                         <div class="secret-badge-group">
-                            <span class="cat-badge">${safeCat}</span>
+                            ${badgesHtml}
                         </div>
                     </div>
                     ${tagsHtml ? `<div style="display:flex; gap:4px; flex-wrap:wrap;">${tagsHtml}</div>` : ''}
@@ -2746,6 +3169,11 @@
             if (filterType === 'NO2FA') {
                 return (item.category === 'Login') && !item.totpKey;
             }
+            if (filterType === 'EXPIRED') {
+                if (!item.expires) return false;
+                const expTime = new Date(item.expires).getTime();
+                return expTime <= Date.now() + (14 * 24 * 3600 * 1000);
+            }
             return true;
         }
 
@@ -2755,6 +3183,8 @@
             let reusedCount = 0;
             let oldCount = 0;
             let no2faCount = 0;
+            let expiredCount = 0;
+            const now = Date.now();
 
             const passMap = {};
             active.forEach(s => {
@@ -2770,12 +3200,18 @@
                 const days = (Date.now() - d.getTime()) / (1000 * 60 * 60 * 24);
                 if (days > 90) oldCount++;
                 if (s.category === 'Login' && !s.totpKey) no2faCount++;
+                if (s.expires) {
+                    const expTime = new Date(s.expires).getTime();
+                    if (expTime <= now + (14 * 24 * 3600 * 1000)) expiredCount++;
+                }
             });
 
             document.getElementById('audit-weak-count').textContent = weakCount;
             document.getElementById('audit-reused-count').textContent = reusedCount;
             document.getElementById('audit-old-count').textContent = oldCount;
             document.getElementById('audit-no2fa-count').textContent = no2faCount;
+            const expEl = document.getElementById('audit-expired-count');
+            if (expEl) expEl.textContent = expiredCount;
 
             // Score formula
             let score = 100;
@@ -2783,6 +3219,7 @@
             score -= Math.min(30, reusedCount * 8);
             score -= Math.min(15, oldCount * 3);
             score -= Math.min(15, no2faCount * 4);
+            score -= Math.min(20, expiredCount * 6);
             if (active.length === 0) score = 100;
             if (score < 15 && active.length > 0) score = 15;
 
@@ -2814,6 +3251,7 @@
                 if (weakCount > 0) recs.push(`Rotate ${weakCount} weak passwords to high-entropy strings (>= 14 chars).`);
                 if (reusedCount > 0) recs.push(`Eliminate credential reuse across ${reusedCount} duplicate accounts.`);
                 if (no2faCount > 0) recs.push(`Enable 2FA/TOTP on ${no2faCount} login accounts for multi-factor authentication.`);
+                if (expiredCount > 0) recs.push(`Renew or rotate ${expiredCount} expired or soon-to-expire credentials.`);
                 if (oldCount > 0) recs.push(`${oldCount} secrets have not been updated in over 90 days.`);
                 if (recs.length === 0) recs.push("No urgent security concerns detected. Great job!");
                 recList.innerHTML = recs.map(r => `<li>${r}</li>`).join('');
@@ -2825,6 +3263,121 @@
             currentAuditFilter = type;
             renderSecrets();
             showNotification(`Filtering: ${type} issues`);
+        }
+
+        async function loadSampleVault() {
+            if (!masterKey) {
+                showNotification("Unlock or initialize vault before loading sample data", "error");
+                return;
+            }
+            playSound('save');
+            vaultData = [
+                {
+                    id: 'sec_sample_dialup',
+                    title: 'CyberNet Dialup 56k',
+                    category: 'Login',
+                    compartment: 'Personal',
+                    favorite: true,
+                    username: 'surfer99@cybernet.net',
+                    value: 'v90*BaudRate!1999',
+                    url: 'http://dialup.cybernet.net',
+                    totpKey: 'JBSWY3DPEHPK3PXP',
+                    tags: ['dialup', 'isp', 'retro'],
+                    notes: 'Primary 56K V.90 modem login. Primary DNS: 199.170.0.1.',
+                    customFields: [
+                        { label: 'Access Number', type: 'text', value: '1-800-555-0199' },
+                        { label: 'Baud Limit', type: 'text', value: '56000 bps' }
+                    ],
+                    created: new Date().toISOString()
+                },
+                {
+                    id: 'sec_sample_usenet',
+                    title: 'USENET News Server',
+                    category: 'Server',
+                    compartment: 'Personal',
+                    favorite: false,
+                    username: 'news_reader',
+                    value: 'NNTP#Spool99',
+                    serverHost: 'news.kilonet.internal',
+                    serverPort: '119',
+                    tags: ['usenet', 'nntp', 'groups'],
+                    notes: 'Subscribed to alt.bbs.retro, comp.os.retro, sci.crypt.',
+                    customFields: [
+                        { label: 'Retention Days', type: 'text', value: '120 days' }
+                    ],
+                    created: new Date().toISOString()
+                },
+                {
+                    id: 'sec_sample_geocities',
+                    title: 'GeoCities SiliconValley Shell',
+                    category: 'Server',
+                    compartment: 'Personal',
+                    favorite: true,
+                    username: 'webmaster_matrix',
+                    value: 'FtpUpload*1999!',
+                    serverHost: 'ftp.geocities.com',
+                    serverPort: '21',
+                    url: 'http://www.geocities.com/SiliconValley/Pebble/1999',
+                    tags: ['homepage', 'web', 'html'],
+                    notes: 'Neighborhood homepage FTP. Update index.html and visitor counter.',
+                    customFields: [
+                        { label: 'Public Webring ID', type: 'text', value: 'RING-019' }
+                    ],
+                    created: new Date().toISOString()
+                },
+                {
+                    id: 'sec_sample_gateway',
+                    title: 'KiloNet Corporate Gateway',
+                    category: 'Server',
+                    compartment: 'Operations',
+                    favorite: true,
+                    username: 'root',
+                    value: 'SshRoot#Bastion!1999',
+                    serverHost: '10.19.99.1',
+                    serverPort: '22',
+                    totpKey: 'KZXW6YTBOI======',
+                    tags: ['infra', 'bastion', 'classified'],
+                    notes: 'Internal subnet gateway. Packet mirror configured on port 1999.',
+                    customFields: [
+                        { label: 'Subnet Mask', type: 'text', value: '255.255.255.0' },
+                        { label: 'Gateway Node', type: 'text', value: 'echo-gw-07.kilonet.internal' }
+                    ],
+                    created: new Date().toISOString()
+                },
+                {
+                    id: 'sec_sample_card',
+                    title: 'Mastercard Gold 1999',
+                    category: 'Finance',
+                    compartment: 'Personal',
+                    favorite: false,
+                    cardNumber: '5412 7512 3412 1999',
+                    cardExpiry: '12/28',
+                    cardCvv: '999',
+                    cardHolder: 'RETRO SURFER',
+                    value: 'ATM_PIN_8421',
+                    tags: ['finance', 'card'],
+                    notes: 'Primary hardware purchase credit card.',
+                    created: new Date().toISOString()
+                },
+                {
+                    id: 'sec_sample_notes',
+                    title: 'Subsystem Resonance Diagnostics',
+                    category: 'Note',
+                    compartment: 'Operations',
+                    favorite: false,
+                    value: 'Atmospheric microphonic resonance observed on 1999Hz bus. Non-routable subnet packets active at 10.19.99.x.',
+                    tags: ['diagnostics', 'telemetry', 'classified'],
+                    notes: 'Logged by Dr. Vance during harmonic sweep tests.',
+                    customFields: [
+                        { label: 'Frequency Target', type: 'text', value: '1999 Hz' },
+                        { label: 'Sensor Channel', type: 'text', value: 'CH-07' }
+                    ],
+                    created: new Date().toISOString()
+                }
+            ];
+            await saveVaultToStorage();
+            renderSecrets();
+            showNotification("🌟 Loaded 1999 Starter Vault (6 authentic credentials)");
         }
 
         // --- Export Multi-Format Suite ---
@@ -2867,13 +3420,15 @@
                 return;
             }
 
-            const headers = ["Title", "Category", "Username", "Password", "URL", "TOTP_Key", "CardNumber", "CardExpiry", "CardCVV", "Tags", "Notes", "Created", "Modified"];
+            const headers = ["Title", "Category", "Compartment", "Username", "Password", "URL", "TOTP_Key", "CardNumber", "CardExpiry", "CardCVV", "Expires", "CustomFields", "Tags", "Notes", "Created", "Modified"];
             const rows = [headers.map(h => `"${h}"`).join(',')];
 
             active.forEach(s => {
+                const customJson = (Array.isArray(s.customFields) && s.customFields.length > 0) ? JSON.stringify(s.customFields) : '';
                 const row = [
                     s.title || '',
                     s.category || 'General',
+                    s.compartment || 'personal',
                     s.username || '',
                     s.value || '',
                     s.url || '',
@@ -2881,6 +3436,8 @@
                     s.cardNumber || '',
                     s.cardExpiry || '',
                     s.cardCvv || '',
+                    s.expires || '',
+                    customJson,
                     Array.isArray(s.tags) ? s.tags.join('; ') : '',
                     s.notes || '',
                     s.created || '',
@@ -2897,12 +3454,14 @@
             closeExportModal();
             const active = vaultData.filter(s => !s.trash);
             let md = `# KVault Security Inventory\n*Generated: ${new Date().toLocaleString()}*\n\n`;
-            md += `| Title | Category | Username | URL | Tags | 2FA |\n`;
-            md += `| :--- | :--- | :--- | :--- | :--- | :--- |\n`;
+            md += `| Title | Category | Compartment | Username | URL | Tags | 2FA | Expires |\n`;
+            md += `| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n`;
             active.forEach(s => {
                 const tags = Array.isArray(s.tags) ? s.tags.join(', ') : '';
                 const has2fa = s.totpKey ? 'Yes' : 'No';
-                md += `| ${s.title || '-'} | ${s.category || 'General'} | ${s.username || '-'} | ${s.url || '-'} | ${tags || '-'} | ${has2fa} |\n`;
+                const comp = s.compartment ? s.compartment.toUpperCase() : 'PERSONAL';
+                const exp = s.expires || '-';
+                md += `| ${s.title || '-'} | ${s.category || 'General'} | ${comp} | ${s.username || '-'} | ${s.url || '-'} | ${tags || '-'} | ${has2fa} | ${exp} |\n`;
             });
             downloadFile("kvault_inventory.md", "text/markdown", md);
             showNotification("Markdown inventory report downloaded");
@@ -3023,9 +3582,15 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
                                     title: String(item.title),
                                     value: String(item.value || ''),
                                     category: item.category || 'General',
+                                    compartment: item.compartment || 'personal',
                                     username: item.username || '',
                                     url: item.url || '',
                                     totpKey: item.totpKey || '',
+                                    cardNumber: item.cardNumber || '',
+                                    cardExpiry: item.cardExpiry || '',
+                                    cardCvv: item.cardCvv || '',
+                                    expires: item.expires || '',
+                                    customFields: Array.isArray(item.customFields) ? item.customFields : [],
                                     tags: item.tags || [],
                                     notes: item.notes || '',
                                     created: item.created || new Date().toISOString()
@@ -3053,12 +3618,15 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
                                 title: item.title || 'Imported Credential',
                                 value: item.value || '',
                                 category: item.category || 'Login',
+                                compartment: item.compartment || 'personal',
                                 username: item.username || '',
                                 url: item.url || '',
                                 totpKey: item.totpKey || '',
                                 cardNumber: item.cardNumber || '',
                                 cardExpiry: item.cardExpiry || '',
                                 cardCvv: item.cardCvv || '',
+                                expires: item.expires || '',
+                                customFields: Array.isArray(item.customFields) ? item.customFields : [],
                                 tags: item.tags || [],
                                 notes: item.notes || '',
                                 created: new Date().toISOString()
@@ -3119,8 +3687,19 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
                     else if (key.includes('pass') || key.includes('secret')) obj.value = val;
                     else if (key.includes('user') || key.includes('email') || key.includes('login')) obj.username = val;
                     else if (key.includes('url') || key.includes('website') || key.includes('link')) obj.url = val;
+                    else if (key.includes('compartment')) obj.compartment = val.toLowerCase();
                     else if (key.includes('cat') || key.includes('type')) obj.category = val;
                     else if (key.includes('totp') || key.includes('otp') || key.includes('2fa')) obj.totpKey = val;
+                    else if (key.includes('cardexpiry') || key.includes('cardexp')) obj.cardExpiry = val;
+                    else if (key.includes('cardnum')) obj.cardNumber = val;
+                    else if (key.includes('cardcvv') || key.includes('cvv')) obj.cardCvv = val;
+                    else if (key.includes('expire') || key.includes('expiry')) obj.expires = val;
+                    else if (key.includes('custom')) {
+                        try {
+                            const parsed = JSON.parse(val);
+                            if (Array.isArray(parsed)) obj.customFields = parsed;
+                        } catch(e) {}
+                    }
                     else if (key.includes('note') || key.includes('comment')) obj.notes = val;
                     else if (key.includes('tag')) obj.tags = val.split(/[;,]/).map(t => t.trim().toLowerCase()).filter(t => t.length > 0);
                 }
@@ -3155,22 +3734,27 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
             const searchInput = document.getElementById('search-input');
 
             const snapshot = {
-                version: 3,
+                version: 4,
                 timestamp: Date.now(),
                 vaultData: safeStorageGet(STORAGE_KEY, null),
                 theme: themeName,
                 autolock: autoLockTimeout,
                 activeView: currentViewId,
                 activeCategoryFilter: activeCategoryFilter,
+                activeCompartmentFilter: activeCompartmentFilter,
+                customCompartments: customCompartments,
                 searchQuery: searchInput ? searchInput.value : '',
                 draft: (currentViewId === 'view-add') ? {
-                    title: document.getElementById('new-secret-title').value,
-                    value: document.getElementById('new-secret-value').value,
-                    category: document.getElementById('new-secret-category').value,
-                    username: document.getElementById('new-secret-username').value,
-                    url: document.getElementById('new-secret-url').value,
-                    totp: document.getElementById('new-secret-totp').value,
-                    notes: document.getElementById('new-secret-notes').value,
+                    title: document.getElementById('new-secret-title') ? document.getElementById('new-secret-title').value : '',
+                    value: document.getElementById('new-secret-value') ? document.getElementById('new-secret-value').value : '',
+                    category: document.getElementById('new-secret-category') ? document.getElementById('new-secret-category').value : '',
+                    compartment: document.getElementById('new-secret-compartment') ? document.getElementById('new-secret-compartment').value : 'personal',
+                    expires: document.getElementById('new-secret-expires') ? document.getElementById('new-secret-expires').value : '',
+                    customFields: getCustomFieldsFromForm(),
+                    username: document.getElementById('new-secret-username') ? document.getElementById('new-secret-username').value : '',
+                    url: document.getElementById('new-secret-url') ? document.getElementById('new-secret-url').value : '',
+                    totp: document.getElementById('new-secret-totp') ? document.getElementById('new-secret-totp').value : '',
+                    notes: document.getElementById('new-secret-notes') ? document.getElementById('new-secret-notes').value : '',
                     editingSecretId: editingSecretId
                 } : null
             };
@@ -3191,6 +3775,14 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
                 if (snapshot.vaultData) {
                     safeStorageSet(STORAGE_KEY, snapshot.vaultData);
                 }
+                if (Array.isArray(snapshot.customCompartments)) {
+                    customCompartments = snapshot.customCompartments;
+                    saveCustomCompartments();
+                }
+                if (snapshot.activeCompartmentFilter) {
+                    activeCompartmentFilter = snapshot.activeCompartmentFilter;
+                }
+                renderCompartmentTabs();
                 if (snapshot.theme) {
                     safeStorageSet('kvault_theme', snapshot.theme);
                     const themeSel = document.getElementById('theme-select');
@@ -3222,6 +3814,7 @@ Store this sheet in a fireproof safe or secure physical vault. It provides emerg
                                     const searchInput = document.getElementById('search-input');
                                     if (searchInput) searchInput.value = snapshot.searchQuery;
                                 }
+                                renderCompartmentTabs();
                                 showVault();
                                 playSound('load');
                                 showNotification("📂 Vault snapshot restored [F9]");
