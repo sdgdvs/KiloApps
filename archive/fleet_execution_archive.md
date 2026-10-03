@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-02T21:10:00-07:00 — kilo-qa: KFont (Pass 5: Complete State Persistence, Tutorial Integrity, Storage Quota & Native Buttons)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 161.9 KB web / 32.3 KB native < 999 KB ceiling).
+  - Quicksave & State Parity: Captured OpenType tags, variable axes, comparison inputs, and linter text in web; added Unicode range to native save struct.
+  - First-Run Tutorial: Enforced `kfont_tutorial.dat` and `kfont_tutorialSeen` flags so tutorial only triggers on fresh sessions and never interrupts restored states.
+  - Resource Safety & Quotas: Added quota exception handling to web quicksave; prevented background animation frame leaks during tab switches.
+  - Native UI Parity: Added Save [F5] and Load [F9] buttons to sidebar with WM_COMMAND handlers and backward-compatible snapshot loader.
+  - Verification: MSVC clean (`KFont.exe` 32.3 KB); Vite clean in 383ms; check_icons & security_lint 100% PASS.
+
 - **2026-10-02T20:20:00-07:00 — kilo-tester: KPing (Interactive UI Audit, Defensive Mutex, Button Sync & JSON Import)**
   - Status: PASS ✅ (10 issues found, 10 fixed, 0 regressions, clean builds, 158.3 KB web < 999 KB ceiling).
   - Diagnostic Mutex & Defensive State: Guarded quicksave, quickload, import, and clear output against concurrent execution during active diagnostics (`isBusy`).
