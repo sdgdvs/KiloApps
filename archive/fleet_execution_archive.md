@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-02T17:25:00-07:00 — kilo-expander: K2048 (Arcade Duel RTDB Multiplayer, FEN Lab, Replay Scrubber & FM Synth)**
+  - Status: PASS ✅ (0 regressions, clean builds, 206.8 KB web / 48.0 KB native < 999 KB ceiling).
+  - Arcade Duel Arena: Implemented 1v1 split-arena multiplayer via Firebase RTDB (prefix `K20`) and 4-tier offline Cyber-Bot AI.
+  - Stone Attack Mechanics: Merging 128 (1), 256 (2), 512+ (3), and 3+ combos sends unmergeable stone blockers to opponent board.
+  - Solo Fallback & Matchmaking: 25-second countdown timer auto-transitions to local AI bot if no online peer connects.
+  - Board State & FEN Lab: Added compact FEN and full JSON board import/export with 4 preset puzzle scenarios.
+  - Replay Scrubber: Integrated step-by-step move scrubber with slider, auto-play, jump to start/end, and key navigation.
+  - Controls & Sound: Added custom keybind profiles (Arrows, WASD, IJKL, Numpad, Vi) and Genesis YM2612 FM synthesis SFX.
+  - Verification: MSVC clean (`K2048.exe` 48.0 KB); Vite clean in 378ms; security_lint 100% clean PASS.
+
 - **2026-10-02T23:20:00Z — kilo-qa: KFlash (Pass 5: Full State Persistence, First-Run Tutorial, Safe Toasts & Win32 Quicksave)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 94.3 KB web / 140.5 KB native < 999 KB ceiling).
   - Quicksave & State Integrity: Built F5 Quicksave / F9 Quickload in Win32 C (`kflash.sav`) and web localStorage with full state capture.

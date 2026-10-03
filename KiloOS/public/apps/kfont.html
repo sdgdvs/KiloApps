@@ -818,6 +818,7 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     const quicksaveBtn = document.getElementById('quicksaveBtn');
     const quickloadBtn = document.getElementById('quickloadBtn');
     const exportModalBtn = document.getElementById('exportModalBtn');
+    const otfTags = ['liga', 'dlig', 'smcp', 'c2sc', 'onum', 'tnum', 'pnum', 'frac', 'zero', 'swsh', 'ss01', 'ss02'];
 
     function safeGetStorage(key, fallback) {
       try {
@@ -831,7 +832,10 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
     function safeSetStorage(key, val) {
       try {
         localStorage.setItem(key, val);
-      } catch (e) {}
+        return true;
+      } catch (e) {
+        return false;
+      }
     }
 
     function escapeHtml(str) {
@@ -1028,6 +1032,18 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
         bitmapGrid: (typeof bmpGrid !== 'undefined') ? bmpGrid : [],
         bitmapSize: (typeof bmpW !== 'undefined') ? `${bmpW}x${bmpH}` : '8x8',
         activeTab: document.querySelector('.tab-btn.active')?.dataset.target || 'panel-metrics',
+        otfFeatures: (typeof otfTags !== 'undefined') ? otfTags.filter(t => document.getElementById(`otf_${t}`)?.checked) : [],
+        otfPreviewText: document.getElementById('otfPreviewOn')?.innerText || '',
+        varAxes: {
+          weight: document.getElementById('varWeight')?.value || '400',
+          width: document.getElementById('varWidth')?.value || '100',
+          slant: document.getElementById('varSlant')?.value || '0',
+          opsz: document.getElementById('varOpsz')?.value || '16'
+        },
+        compFontB: document.getElementById('compFontBSelect')?.value || 'Georgia',
+        compMode: document.querySelector('input[name="compViewMode"]:checked')?.value || 'split',
+        compText: document.getElementById('compTestString')?.value || '',
+        typoLintText: document.getElementById('typoLintInput')?.value || '',
         soundEnabled: soundEnabled,
         savedAt: new Date().toISOString()
       };
@@ -1087,11 +1103,59 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
           if (document.getElementById('bitmapGridSize')) document.getElementById('bitmapGridSize').value = state.bitmapSize;
         }
       }
+      if (Array.isArray(state.otfFeatures) && typeof otfTags !== 'undefined') {
+        otfTags.forEach(t => {
+          const el = document.getElementById(`otf_${t}`);
+          if (el) el.checked = state.otfFeatures.includes(t);
+        });
+      }
+      if (state.otfPreviewText) {
+        const pOff = document.getElementById('otfPreviewOff');
+        const pOn = document.getElementById('otfPreviewOn');
+        if (pOff) pOff.innerText = state.otfPreviewText;
+        if (pOn) pOn.innerText = state.otfPreviewText;
+      }
+      if (state.varAxes && typeof state.varAxes === 'object') {
+        if (state.varAxes.weight) {
+          const el = document.getElementById('varWeight');
+          const valEl = document.getElementById('varWeightVal');
+          if (el) { el.value = state.varAxes.weight; if (valEl) valEl.textContent = state.varAxes.weight; }
+        }
+        if (state.varAxes.width) {
+          const el = document.getElementById('varWidth');
+          const valEl = document.getElementById('varWidthVal');
+          if (el) { el.value = state.varAxes.width; if (valEl) valEl.textContent = `${state.varAxes.width}%`; }
+        }
+        if (state.varAxes.slant) {
+          const el = document.getElementById('varSlant');
+          const valEl = document.getElementById('varSlantVal');
+          if (el) { el.value = state.varAxes.slant; if (valEl) valEl.textContent = `${state.varAxes.slant}°`; }
+        }
+        if (state.varAxes.opsz) {
+          const el = document.getElementById('varOpsz');
+          const valEl = document.getElementById('varOpszVal');
+          if (el) { el.value = state.varAxes.opsz; if (valEl) valEl.textContent = `${state.varAxes.opsz}pt`; }
+        }
+      }
+      if (state.compFontB && document.getElementById('compFontBSelect')) {
+        document.getElementById('compFontBSelect').value = state.compFontB;
+      }
+      if (state.compMode) {
+        const r = document.querySelector(`input[name="compViewMode"][value="${state.compMode}"]`);
+        if (r) r.checked = true;
+      }
+      if (state.compText !== undefined && document.getElementById('compTestString')) {
+        document.getElementById('compTestString').value = state.compText;
+      }
+      if (state.typoLintText !== undefined && document.getElementById('typoLintInput')) {
+        document.getElementById('typoLintInput').value = state.typoLintText;
+      }
       if (typeof state.soundEnabled === 'boolean') {
         soundEnabled = state.soundEnabled;
         updateSoundBtn();
         safeSetStorage('kfont_sound_enabled', soundEnabled ? '1' : '0');
       }
+      safeSetStorage('kfont_tutorialSeen', '1');
       updateAll();
       if (state.activeTab && document.getElementById(state.activeTab)) {
         switchToTab(state.activeTab);
@@ -1101,9 +1165,13 @@ Aa Bb Cc Dd Ee Ff Gg Hh Ii Jj Kk Ll Mm Nn Oo Pp Qq Rr Ss Tt Uu Vv Ww Xx Yy Zz</d
 
     function quicksave() {
       const state = getWorkspaceState();
-      safeSetStorage('kfont_quicksave', JSON.stringify(state));
-      playSound('save');
-      showToast("Workspace snapshot quicksaved [F5]");
+      const ok = safeSetStorage('kfont_quicksave', JSON.stringify(state));
+      if (ok) {
+        playSound('save');
+        showToast("Workspace snapshot quicksaved [F5]");
+      } else {
+        showToast("Quicksave failed: storage quota exceeded");
+      }
     }
 
     function quickload() {
@@ -2255,7 +2323,6 @@ body {
     /* =========================================================================
        MODULE 2: OPENTYPE & VARIABLE FONT AXES (TAB 10)
        ========================================================================= */
-    const otfTags = ['liga', 'dlig', 'smcp', 'c2sc', 'onum', 'tnum', 'pnum', 'frac', 'zero', 'swsh', 'ss01', 'ss02'];
     let isOscillating = false;
     let oscAngle = 0;
 
@@ -2687,6 +2754,14 @@ body {
         p.classList.toggle('active', p.id === targetId);
       });
       safeSetStorage('kfont_tab', targetId);
+      if (typeof isOscillating !== 'undefined' && isOscillating && targetId !== 'panel-opentype') {
+        isOscillating = false;
+        const btn = document.getElementById('btnToggleOscillation');
+        if (btn) {
+          btn.textContent = '▶ Start Typographic Pulse / Breath Mode';
+          btn.style.background = '#7c3aed';
+        }
+      }
       if (targetId === 'panel-anatomy') updateAnatomy();
       else if (targetId === 'panel-diagnostics') updateDiagnostics();
       else if (targetId === 'panel-metrics') updateMetrics();

@@ -763,6 +763,7 @@ void UpdateFont(HWND hwnd) {
 }
 
 #define QUICKSAVE_FILE "kfont_quicksave.dat"
+#define TUTORIAL_FILE  "kfont_tutorial.dat"
 
 typedef struct {
     char fontName[64];
@@ -772,6 +773,7 @@ typedef struct {
     int tab;
     WCHAR anatomyChar;
     char customText[512];
+    int rangeIndex;
 } KFontSaveData;
 
 void QuicksaveNative(HWND hwnd) {
@@ -783,6 +785,7 @@ void QuicksaveNative(HWND hwnd) {
     data.tab = currentTab;
     data.anatomyChar = anatomyChar;
     GetWindowTextA(hCustomText, data.customText, sizeof(data.customText));
+    data.rangeIndex = (int)SendMessage(hRangeList, CB_GETCURSEL, 0, 0);
 
     HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
@@ -802,7 +805,7 @@ void QuickloadNative(HWND hwnd) {
         DWORD read = 0;
         ReadFile(hFile, &data, sizeof(data), &read, NULL);
         CloseHandle(hFile);
-        if (read == sizeof(data)) {
+        if (read >= 588) { // Backward compatible with previous struct (592 bytes) and current struct (596 bytes)
             isBold = data.bold;
             isItalic = data.italic;
             SendMessage(hBold, BM_SETCHECK, isBold ? BST_CHECKED : BST_UNCHECKED, 0);
@@ -829,8 +832,17 @@ void QuickloadNative(HWND hwnd) {
             lstrcpynA(currentCustomText, data.customText, sizeof(currentCustomText));
             SetWindowTextA(hCustomText, currentCustomText);
 
+            if (data.rangeIndex >= 0 && data.rangeIndex < 11) {
+                SendMessage(hRangeList, CB_SETCURSEL, data.rangeIndex, 0);
+            }
+
             UpdateFont(hwnd);
             SelectTab(hwnd, data.tab);
+
+            // Ensure tutorial flag is marked so restored states never prompt
+            HANDLE hTut = CreateFileA(TUTORIAL_FILE, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+            if (hTut != INVALID_HANDLE_VALUE) CloseHandle(hTut);
+
             MessageBoxA(hwnd, "Quicksave snapshot restored from kfont_quicksave.dat [F9].", "KFont", MB_OK | MB_ICONINFORMATION);
             return;
         }
@@ -906,6 +918,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             CreateWindowEx(0, "BUTTON", "Digits & Symbols", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 526, 148, 22, hwnd, (HMENU)112, NULL, NULL);
             CreateWindowEx(0, "BUTTON", "Clear Text", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 552, 148, 22, hwnd, (HMENU)113, NULL, NULL);
 
+            CreateWindowEx(0, "STATIC", "Workspace State:", WS_CHILD | WS_VISIBLE, 10, 582, 150, 18, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 10, 602, 70, 24, hwnd, (HMENU)120, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 86, 602, 72, 24, hwnd, (HMENU)121, NULL, NULL);
+
             // Tab bar (7 tabs + Copy + Help)
             hTabMetrics   = CreateWindowEx(0, "BUTTON", "Metrics [1]",   WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 170, 10, 82, 20, hwnd, (HMENU)10, NULL, NULL);
             hTabGlyphs    = CreateWindowEx(0, "BUTTON", "Glyphs [2]",    WS_CHILD | WS_VISIBLE | BS_AUTORADIOBUTTON | WS_TABSTOP, 254, 10, 80, 20, hwnd, (HMENU)11, NULL, NULL);
@@ -968,6 +984,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             else if (LOWORD(wParam) == 17 && HIWORD(wParam) == BN_CLICKED) {
                 CopyReportToClipboard(hwnd);
+            }
+            else if (LOWORD(wParam) == 120 && HIWORD(wParam) == BN_CLICKED) {
+                QuicksaveNative(hwnd);
+            }
+            else if (LOWORD(wParam) == 121 && HIWORD(wParam) == BN_CLICKED) {
+                QuickloadNative(hwnd);
             }
             else if (LOWORD(wParam) >= 10 && LOWORD(wParam) <= 16 && HIWORD(wParam) == BN_CLICKED) {
                 SelectTab(hwnd, LOWORD(wParam) - 10);
@@ -1085,6 +1107,31 @@ void MainEntry() {
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+
+    // First-run tutorial onboarding flag
+    DWORD tutAttr = GetFileAttributesA(TUTORIAL_FILE);
+    if (tutAttr == INVALID_FILE_ATTRIBUTES) {
+        HANDLE hTut = CreateFileA(TUTORIAL_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTut != INVALID_HANDLE_VALUE) {
+            char tutFlag[] = "1\n";
+            DWORD wr = 0;
+            WriteFile(hTut, tutFlag, sizeof(tutFlag) - 1, &wr, NULL);
+            CloseHandle(hTut);
+        }
+        if (GetFileAttributesA(QUICKSAVE_FILE) == INVALID_FILE_ATTRIBUTES) {
+            MessageBoxA(hwnd,
+                "Welcome to KFont Typography & Font Engineering Inspector!\n\n"
+                "Explore font outline metrics, Unicode blocks, kerning tables, vector anatomy, and code generation.\n\n"
+                "Key Controls:\n"
+                "  - [1-7]  : Switch inspector tabs\n"
+                "  - [F5]   : Quicksave workspace snapshot (kfont_quicksave.dat)\n"
+                "  - [F9]   : Quickload snapshot\n"
+                "  - [F1/H] : Comprehensive Help & Shortcut Reference\n"
+                "  - [B/I]  : Toggle Bold / Italic weights\n"
+                "  - [C]    : Copy context report / Win32 LOGFONT snippet",
+                "KFont - Initial Setup", MB_OK | MB_ICONINFORMATION);
+        }
+    }
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {

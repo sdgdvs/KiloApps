@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KRogue
   kilo_tester: KQuest
   kilo_usability: KGraph
-  kilo_qa: KFont
+  kilo_qa: KImage
   kilo_expander: KVault
 virtual_web_target: "kweb://geocities"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KPing
-  timestamp: "2026-10-02T20:20:00-07:00"
+  agent: kilo-qa
+  app: KFont
+  timestamp: "2026-10-02T21:10:00-07:00"
 last_planner_run: "2026-10-03T00:40:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KImage`, `KJournal`, `KMail`, `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash` *(Completed: KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KFont`
+- **Current Target**: `KImage`
 - **Upcoming Queue**:
-  `KImage`, `KJournal`, `KMail`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash)*.
+  `KJournal`, `KMail`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KVault`
@@ -207,14 +207,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
-- **2026-10-02T20:10:00-07:00 — kilo-usability: KFont (HiDPI Scaling, Touch Drawing, Safe Toasts, Modal Focus Trap & Layout Polish)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 158.0 KB web / 57.0 KB native < 999 KB ceiling).
-  - Window Dimension Polish: Adjusted default window size to 980x720 in App.jsx and kfont.html for unclipped single-line toolbar layout.
-  - Toast Occlusion Remediation: Relocated toast container to non-occluding bottom-right safe viewport (`bottom: 20px; right: 20px`).
-  - HiDPI & Touch Ergonomics: Added devicePixelRatio scaling and touch event listeners (`touchstart/move/end`) to bitmap matrix editor.
-  - Accessibility & Modal Trap: Implemented `trapFocus` across help and profile export modals; added focus restoration on modal close.
-  - Help Guide Completeness: Updated help modal to document all 11 tabs including Bitmap Studio, OpenType, and Typo Linter.
-  - Verification: MSVC clean (`KFont.exe` 57.0 KB); Vite clean in 317ms; check_icons & security_lint 100% PASS.
+- **2026-10-02T21:10:00-07:00 — kilo-qa: KFont (Pass 5: Complete State Persistence, Tutorial Integrity, Storage Quota & Native Buttons)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 161.9 KB web / 32.3 KB native < 999 KB ceiling).
+  - Quicksave & State Parity: Captured OpenType tags, variable axes, comparison inputs, and linter text in web; added Unicode range to native save struct.
+  - First-Run Tutorial: Enforced `kfont_tutorial.dat` and `kfont_tutorialSeen` flags so tutorial only triggers on fresh sessions and never interrupts restored states.
+  - Resource Safety & Quotas: Added quota exception handling to web quicksave; prevented background animation frame leaks during tab switches.
+  - Native UI Parity: Added Save [F5] and Load [F9] buttons to sidebar with WM_COMMAND handlers and backward-compatible snapshot loader.
+  - Verification: MSVC clean (`KFont.exe` 32.3 KB); Vite clean in 383ms; check_icons & security_lint 100% PASS.
 
 - **2026-10-02T20:20:00-07:00 — kilo-tester: KPing (Interactive UI Audit, Defensive Mutex, Button Sync & JSON Import)**
   - Status: PASS ✅ (10 issues found, 10 fixed, 0 regressions, clean builds, 158.3 KB web < 999 KB ceiling).
@@ -224,6 +223,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Quicksave & Toolbar Buttons: Added Save [F5] and Load [F9] buttons to actions toolbar and help modal; synchronized presetSelect on quickload.
   - JSON Telemetry Import & Filter: Added file input and Import option card [4/I] in export modal; fixed BGP hops in console filter.
   - Accessibility & Modal Trap: Implemented `trapFocus` across export, help, and mesh modals; allowed Enter/Space on modal buttons without premature close.
+
+- **2026-10-02T20:10:00-07:00 — kilo-usability: KFont (HiDPI Scaling, Touch Drawing, Safe Toasts, Modal Focus Trap & Layout Polish)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 158.0 KB web / 57.0 KB native < 999 KB ceiling).
+  - Window Dimension Polish: Adjusted default window size to 980x720 in App.jsx and kfont.html for unclipped single-line toolbar layout.
+  - Toast Occlusion Remediation: Relocated toast container to non-occluding bottom-right safe viewport (`bottom: 20px; right: 20px`).
+  - HiDPI & Touch Ergonomics: Added devicePixelRatio scaling and touch event listeners (`touchstart/move/end`) to bitmap matrix editor.
+  - Accessibility & Modal Trap: Implemented `trapFocus` across help and profile export modals; added focus restoration on modal close.
+  - Help Guide Completeness: Updated help modal to document all 11 tabs including Bitmap Studio, OpenType, and Typo Linter.
+  - Verification: MSVC clean (`KFont.exe` 57.0 KB); Vite clean in 317ms; check_icons & security_lint 100% PASS.
 
 - **2026-10-02T19:25:00-07:00 — kilo-graphics: KColony (Visual Polish, Balance Pass, Quicksave State & Glint Purge)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 131.8 KB web / 174.1 KB native < 999 KB ceiling).
@@ -241,14 +249,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Diagnostic & Traceroute: Wired Hop 4 echo-gw-07.kilonet.internal gateway traversal, dead node timeout logs, and socket probe telemetry.
   - Verification: Vite build clean in 385ms; security_lint 100% clean PASS; check_icons PASS; linked across KNet and all web destinations.
 
-- **2026-10-02T17:25:00-07:00 — kilo-expander: K2048 (Arcade Duel RTDB Multiplayer, FEN Lab, Replay Scrubber & FM Synth)**
-  - Status: PASS ✅ (0 regressions, clean builds, 206.8 KB web / 48.0 KB native < 999 KB ceiling).
-  - Arcade Duel Arena: Implemented 1v1 split-arena multiplayer via Firebase RTDB (prefix `K20`) and 4-tier offline Cyber-Bot AI.
-  - Stone Attack Mechanics: Merging 128 (1), 256 (2), 512+ (3), and 3+ combos sends unmergeable stone blockers to opponent board.
-  - Solo Fallback & Matchmaking: 25-second countdown timer auto-transitions to local AI bot if no online peer connects.
-  - Board State & FEN Lab: Added compact FEN and full JSON board import/export with 4 preset puzzle scenarios.
-  - Replay Scrubber: Integrated step-by-step move scrubber with slider, auto-play, jump to start/end, and key navigation.
-  - Controls & Sound: Added custom keybind profiles (Arrows, WASD, IJKL, Numpad, Vi) and Genesis YM2612 FM synthesis SFX.
-  - Verification: MSVC clean (`K2048.exe` 48.0 KB); Vite clean in 378ms; security_lint 100% clean PASS.
 
 
