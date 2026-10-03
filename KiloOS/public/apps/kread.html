@@ -625,17 +625,19 @@
     align-items: center;
   }
 
-  /* Non-Blocking Toast System (Bottom-Right Safe Anchor) */
+  /* Non-Blocking Toast System (Top-Center Safe Anchor - Zero Occlusion) */
   .toast-container {
     position: fixed;
-    bottom: 38px;
-    right: 24px;
+    top: 54px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
     gap: 8px;
     z-index: 9999;
     pointer-events: none;
-    max-width: 360px;
+    max-width: 440px;
+    width: 90%;
   }
   .toast {
     background: var(--toast-bg);
@@ -645,8 +647,8 @@
     font-size: 13px;
     font-family: system-ui, sans-serif;
     font-weight: 500;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 18px rgba(0,0,0,0.3);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -655,11 +657,11 @@
     pointer-events: auto;
   }
   @keyframes toastSlideIn {
-    from { opacity: 0; transform: translateY(16px) scale(0.95); }
+    from { opacity: 0; transform: translateY(-16px) scale(0.96); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
   @keyframes toastFadeOut {
-    to { opacity: 0; transform: translateY(8px) scale(0.95); pointer-events: none; }
+    to { opacity: 0; transform: translateY(-8px) scale(0.96); pointer-events: none; }
   }
 
   /* Modal Form Controls */
@@ -1086,7 +1088,7 @@
         <button class="btn" id="btnExportTXT" style="flex: 1; font-size: 12px;" title="Export highlights and bookmarks to Plain Text">📄 Text</button>
       </div>
       <div style="display: flex; gap: 6px;">
-        <label class="btn" id="btnImportNotesLabel" style="flex: 1; font-size: 12px; justify-content: center; cursor: pointer;" title="Import highlights and bookmarks from JSON">
+        <label class="btn" id="btnImportNotesLabel" tabindex="0" role="button" aria-label="Import Highlights and Bookmarks from JSON" style="flex: 1; font-size: 12px; justify-content: center; cursor: pointer;" title="Import highlights and bookmarks from JSON">
           📤 Import JSON
           <input type="file" id="importNotesInp" class="file-input" accept=".json">
         </label>
@@ -1213,7 +1215,7 @@
       <textarea class="modal-textarea" id="noteInput" placeholder="Write your thoughts or annotation here..."></textarea>
       <div class="modal-actions">
         <button class="btn" id="btnCancelNote">Cancel</button>
-        <button class="btn active" id="btnConfirmNote">Add Note</button>
+        <button class="btn active" id="btnConfirmNote" title="Add Note (Ctrl+Enter)">Add Note <kbd>Ctrl+Enter</kbd></button>
       </div>
     </div>
   </div>
@@ -1265,7 +1267,7 @@
       </div>
 
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; font-size: 12px; opacity: 0.7;">
-        <span>Controls: <kbd>Space</kbd> Play/Pause, <kbd>[</kbd> / <kbd>]</kbd> Step, <kbd>Esc</kbd> Close</span>
+        <span>Controls: <kbd>Space</kbd> Play/Pause, <kbd>←</kbd> / <kbd>→</kbd> Step, <kbd>↑</kbd> / <kbd>↓</kbd> Speed, <kbd>Esc</kbd> Close</span>
         <button class="btn" id="btnCloseRsvp">Close</button>
       </div>
     </div>
@@ -1291,7 +1293,7 @@
         <button class="btn" id="btnExportSession" style="padding: 10px 16px; justify-content: center; font-size: 13px;">
           📥 Download Full Session Backup (.json)
         </button>
-        <label class="btn" id="btnImportSessionLabel" style="padding: 10px 16px; justify-content: center; font-size: 13px; cursor: pointer;">
+        <label class="btn" id="btnImportSessionLabel" tabindex="0" role="button" aria-label="Restore Session from File" style="padding: 10px 16px; justify-content: center; font-size: 13px; cursor: pointer;" title="Restore Reading Session from File">
           📂 Restore Session from File
           <input type="file" id="importSessionInp" class="file-input" accept=".json">
         </label>
@@ -1526,7 +1528,7 @@
       },
       chronos: {
         title: 'Chronos Subcarrier Decrypt.log',
-        text: `[CHRONOS NODE 0x7F - SUBCARRIER DECRYPT]\nTIMESTAMP: 1999-12-31T23:59:12Z\nORIGIN: SUBNET 10.19.99.4/classified (PORT 1999)\nSTATUS: AUTONOMOUS RECURSIVE DISPATCH ACTIVE\n============================================================\n\n00:00:01 - Autonomous multi-worker consensus heartbeat detected.\n00:00:03 - Node sync acknowledged: 6 specialized worker threads active.\n00:00:07 - Carrier frequency locked at 1999 Hz.\n00:00:12 - Decrypting intercepted packet stream from gateway 10.19.99.4...\n\nTRANSMISSION LOG:\n"The system does not sleep. The architecture is self-healing, bounded\nby the strict 999KB envelope. As the millennium closes, the consensus\nthreads continue their vigil in silent synchrony.\n\nDeep within the intranet archive, the subterranean mirror responds\nat kweb://deep-core. Those seeking the root origin must trace the\npacket echoes across the webring."\n\nDIAGNOSTIC HASH: 0x99A7-F00D-C0DE\nSYSTEM INTEGRITY: 100% NOMINAL`
+        text: `[CHRONOS NODE 0x7F - SUBCARRIER DECRYPT]\nTIMESTAMP: 1999-12-31T23:59:12Z\nORIGIN: SUBNET 10.19.99.4/classified (PORT 1999)\nSTATUS: SUBCARRIER CARRIER SYNCHRONIZATION ACTIVE\n============================================================\n\n00:00:01 - Subterranean beacon packet train received.\n00:00:03 - Carrier sync acknowledged: 6 multiplexed subchannel bands locked.\n00:00:07 - Carrier frequency locked at 1999 Hz.\n00:00:12 - Decrypting intercepted telemetry stream from gateway 10.19.99.4...\n\nTRANSMISSION LOG:\n"The relay does not sleep. The packet pipeline is self-healing, bounded\nwithin the legacy memory envelope. As the millennium closes, the carrier\nthreads continue their transmission in silent synchrony.\n\nDeep within the intranet archive, the subterranean mirror responds\nat kweb://deep-core. Those seeking the root origin must trace the\npacket echoes across the webring."\n\nDIAGNOSTIC HASH: 0x99A7-F00D-C0DE\nSYSTEM INTEGRITY: 100% NOMINAL`
       }
     };
 
@@ -2111,6 +2113,8 @@
     }
 
     function closeTab(tabId) {
+      if (autoScrollActive) toggleAutoScroll();
+      if (rsvpPlaying) stopRsvpTimer();
       if (tabs.length <= 1) {
         tabs[0].text = '';
         tabs[0].title = 'Untitled';
@@ -2151,6 +2155,8 @@
 
     function switchTab(newTabId) {
       if (newTabId === activeTabId) return;
+      if (autoScrollActive) toggleAutoScroll();
+      if (rsvpPlaying) stopRsvpTimer();
       saveActiveTabState();
       activeTabId = newTabId;
       clearSearchHighlights();
@@ -2535,7 +2541,7 @@
       }
 
       outlineList.innerHTML = outline.map(item => `
-        <div class="outline-item outline-lvl-${item.level}" onclick="jumpToOutline(${item.charOffset})" title="Jump to ${escapeHtml(item.title)} (${item.pct}%)">
+        <div class="outline-item outline-lvl-${item.level}" tabindex="0" role="button" onclick="jumpToOutline(${item.charOffset})" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();jumpToOutline(${item.charOffset});}" title="Jump to ${escapeHtml(item.title)} (${item.pct}%)">
           <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1;">${escapeHtml(item.title)}</span>
           <span class="outline-badge">${item.pct}%</span>
         </div>
@@ -3786,6 +3792,15 @@
       };
     }
 
+    if (btnImportNotesLabel) {
+      btnImportNotesLabel.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (importNotesInp) importNotesInp.click();
+        }
+      });
+    }
+
     if (btnClearNotes) {
       btnClearNotes.onclick = () => {
         const tab = getActiveTab();
@@ -3889,6 +3904,15 @@
       };
     }
 
+    if (btnImportSessionLabel) {
+      btnImportSessionLabel.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (importSessionInp) importSessionInp.click();
+        }
+      });
+    }
+
     if (btnExportActiveDocHtml) {
       btnExportActiveDocHtml.onclick = () => {
         const tab = getActiveTab();
@@ -3913,6 +3937,11 @@
     margin: 40px auto;
     padding: 0 20px;
   }
+  .content {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: ${fontSize}px;
+  }
   h1, h2, h3 { font-family: system-ui, sans-serif; }
   pre { background: #f3f4f6; border: 1px solid #e5e7eb; padding: 12px; border-radius: 6px; }
   blockquote { border-left: 4px solid #2563eb; padding-left: 14px; margin-left: 0; color: #555; }
@@ -3925,7 +3954,7 @@
     <strong>KRead Document Export:</strong> ${title} | Exported: ${new Date().toLocaleString()}
   </div>
   <div class="content">
-    ${isMarkdownView ? parseMarkdownToHtml(tab.text, tab.notes) : escapeHtml(tab.text).replace(/\\n/g, '<br>')}
+    ${isMarkdownView ? parseMarkdownToHtml(tab.text, tab.notes) : escapeHtml(tab.text).replace(/\n/g, '<br>')}
   </div>
 </body>
 </html>`;
@@ -4002,6 +4031,18 @@
           e.preventDefault();
           rsvpCurrentIdx = Math.min(rsvpWords.length - 1, rsvpCurrentIdx + 10);
           updateRsvpDisplay();
+          return;
+        } else if (e.key === '+' || e.key === '=' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          rsvpWpm = Math.min(900, rsvpWpm + 30);
+          if (rsvpWpmSlider) rsvpWpmSlider.value = rsvpWpm;
+          if (rsvpWpmDisplay) rsvpWpmDisplay.textContent = rsvpWpm;
+          return;
+        } else if (e.key === '-' || e.key === '_' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          rsvpWpm = Math.max(120, rsvpWpm - 30);
+          if (rsvpWpmSlider) rsvpWpmSlider.value = rsvpWpm;
+          if (rsvpWpmDisplay) rsvpWpmDisplay.textContent = rsvpWpm;
           return;
         } else if (e.key === 'Escape') {
           e.preventDefault();
@@ -4209,6 +4250,19 @@
     renderTabs();
     renderContent();
     window.addEventListener('resize', updateScrollProgress);
+
+    // Background tab visibility & CPU conservation (ARCH-05)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopReadingTimer();
+        if (autoScrollActive) stopAutoScrollLoop();
+        if (rsvpPlaying) stopRsvpTimer();
+      } else {
+        const tab = getActiveTab();
+        if (tab && tab.text) startReadingTimer();
+        if (autoScrollActive) startAutoScrollLoop();
+      }
+    });
 
     // First-run tutorial flag & welcome flow
     const tutorialSeen = safeGetItem('kread_tutorialSeen', '0');

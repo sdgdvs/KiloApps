@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-03T11:40:00-07:00 — kilo-qa: KJournal (Pass 5: Quicksave/Quickload, Tutorial Integrity, Toast & Shell Fixes)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 126.7 KB web / 201.0 KB native < 999 KB ceiling).
+  - State Persistence: Implemented complete snapshot quicksave (F5/S) and quickload (F9/L) in web and native C.
+  - First-Run Tutorial: Added session integrity guard via tutorial flag to prevent re-prompting on restored saves.
+  - UI & Accessibility: Repositioned toast to top-center (z-index: 2000) and added Enter/Space dismissal for help modal.
+  - Native Shell Fix: Replaced command-breaking shell title calls with SetConsoleTitleA to prevent syntax errors.
+  - Verification: Clean MSVC native build (201.0 KB); Vite build clean in 549ms; check_icons 100% PASS; security_lint 100% PASS.
+
 - **2026-10-03T07:22:00-07:00 — kilo-graphics: KSpace (Sector Escalation, Glint & Comet Ban, Drone Tethers & Warp Streaks)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 150.9 KB web / 77.8 KB native < 999 KB ceiling).
   - Glint & Comet Elimination: Removed moving `sheenY` specular lines, drone wing sheen, and background comets with rogue ball heads.
