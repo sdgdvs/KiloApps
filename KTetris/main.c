@@ -1964,7 +1964,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (wParam == '3') { game_mode = MODE_ULTRA;    start_screen = 0; score = 0; InitGame(); ShowNativeToast("Ultra Mode Started (2 Minutes)!", 1500); }
                 if (wParam == '4') { game_mode = MODE_CAMPAIGN; start_screen = 0; campaign_level = 1; score = 0; InitGame(); ShowNativeToast("Campaign Stage 1 Started!", 1500); }
                 if (wParam == '5' || wParam == 'L') { show_leaderboard = 1; start_screen = 0; }
-                if (wParam == 'V' || wParam == 'R') { LoadGameStateFromFile(); }
+                if (wParam == 'V' || wParam == 'R' || wParam == VK_F9) { if(LoadGameStateFromFile()) ShowNativeToast("Saved Game Loaded! [F9]", 1800); }
                 if (wParam == 'H' || wParam == VK_F1) { show_help = 1; }
                 if (wParam == 'K') { show_keybinds = 1; bind_index = 0; start_screen = 0; }
                 if (wParam == 'W' && has_saved_replay) { is_replaying = 1; start_screen = 0; InitGame(); ShowNativeToast("Playing Saved Replay...", 1500); }
@@ -2020,8 +2020,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     InvalidateRect(hwnd, NULL, FALSE);
                     break;
                 }
-                if (wParam == 'H' || wParam == VK_F1) { show_help = 1; InvalidateRect(hwnd, NULL, FALSE); break; }
-                if (wParam == 'V') { SaveGameStateToFile(); ShowNativeToast("Game State Saved! [V]", 1800); AddPopup((float)(W * CELL_SIZE / 2 - 30), (float)(H * CELL_SIZE / 2), "GAME SAVED!", RGB(0, 255, 255)); InvalidateRect(hwnd, NULL, FALSE); break; }
+                if (wParam == 'V' || wParam == VK_F5) { SaveGameStateToFile(); ShowNativeToast("Quicksave Saved! [F5]", 1800); AddPopup((float)(W * CELL_SIZE / 2 - 30), (float)(H * CELL_SIZE / 2), "GAME SAVED!", RGB(0, 255, 255)); InvalidateRect(hwnd, NULL, FALSE); break; }
+                if (wParam == VK_F9) { if(LoadGameStateFromFile()) { ShowNativeToast("Quicksave Loaded! [F9]", 1800); AddPopup((float)(W * CELL_SIZE / 2 - 30), (float)(H * CELL_SIZE / 2), "GAME LOADED!", RGB(0, 255, 100)); } else { ShowNativeToast("No Quicksave Found!", 1800); } InvalidateRect(hwnd, NULL, FALSE); break; }
                 if (wParam == keys.nuke) { UseRowNuke(); if(current_replay.count < 5000) { current_replay.events[current_replay.count].tick = replay_tick; current_replay.events[current_replay.count].key = 'B'; current_replay.count++; } InvalidateRect(hwnd, NULL, FALSE); break; }
                 if (wParam == keys.swap) { UsePieceSwap(); if(current_replay.count < 5000) { current_replay.events[current_replay.count].tick = replay_tick; current_replay.events[current_replay.count].key = 'S'; current_replay.count++; } InvalidateRect(hwnd, NULL, FALSE); break; }
                 if (wParam == keys.freeze) { UseGravityFreeze(); if(current_replay.count < 5000) { current_replay.events[current_replay.count].tick = replay_tick; current_replay.events[current_replay.count].key = 'F'; current_replay.count++; } InvalidateRect(hwnd, NULL, FALSE); break; }
