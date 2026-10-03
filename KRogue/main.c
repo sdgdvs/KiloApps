@@ -560,6 +560,7 @@ void draw_gothic_filigree_corners(HDC memDC, int w, int h) {
 }
 
 void draw_perimeter_inlay(HDC memDC, int w, int h, int frame) {
+    (void)frame;
     HPEN p = CreatePen(PS_SOLID, 1, RGB(90, 70, 20));
     HPEN oldP = (HPEN)SelectObject(memDC, p);
     HBRUSH oldB = (HBRUSH)SelectObject(memDC, GetStockObject(HOLLOW_BRUSH));
@@ -567,21 +568,6 @@ void draw_perimeter_inlay(HDC memDC, int w, int h, int frame) {
     SelectObject(memDC, oldB);
     SelectObject(memDC, oldP);
     DeleteObject(p);
-
-    int total = (w - 14) * 2 + (h - 14) * 2;
-    int pos = (frame * 5) % (total > 0 ? total : 1);
-    int gx = 6, gy = 6;
-    int top = w - 14, right = h - 14, bot = w - 14;
-    if (pos < top) { gx = 6 + pos; gy = 6; }
-    else if (pos < top + right) { gx = 6 + top; gy = 6 + (pos - top); }
-    else if (pos < top + right + bot) { gx = 6 + top - (pos - top - right); gy = 6 + right; }
-    else { gx = 6; gy = 6 + right - (pos - top - right - bot); }
-
-    SetPixel(memDC, gx, gy, RGB(255, 255, 255));
-    SetPixel(memDC, gx+1, gy, RGB(255, 220, 100));
-    SetPixel(memDC, gx-1, gy, RGB(255, 220, 100));
-    SetPixel(memDC, gx, gy+1, RGB(255, 220, 100));
-    SetPixel(memDC, gx, gy-1, RGB(255, 220, 100));
 }
 
 typedef struct {
@@ -1312,9 +1298,28 @@ void generate_map() {
             if(!g.entities[i].active) {
                 Entity* e = &g.entities[i];
                 e->active = 1; e->x = lcx; e->y = lcy;
-                e->ch = 'B'; e->fg = RGB(255, 100, 100); str_cpy(e->name, "Resurrected Boss");
-                e->hp = e->max_hp = 100 + g.dlevel*5; e->atk = 15 + g.dlevel; e->def = 10 + g.dlevel/2; e->xp = 200;
-                e->behavior = B_SMART; e->special_ability = ABILITY_SUMMON;
+                e->behavior = B_SMART;
+                if(g.dlevel == 10) {
+                    e->ch = 'W'; e->fg = RGB(170, 130, 220); str_cpy(e->name, "Gorgoroth the Crypt Weaver");
+                    e->hp = e->max_hp = 160; e->atk = 24; e->def = 14; e->xp = 400;
+                    e->special_ability = ABILITY_SUMMON;
+                } else if(g.dlevel == 20) {
+                    e->ch = 'D'; e->fg = RGB(255, 70, 40); str_cpy(e->name, "Ignis the Infernal Drake");
+                    e->hp = e->max_hp = 260; e->atk = 36; e->def = 20; e->xp = 700;
+                    e->special_ability = ABILITY_BREATHE_FIRE;
+                } else if(g.dlevel == 30) {
+                    e->ch = 'v'; e->fg = RGB(190, 90, 250); str_cpy(e->name, "Vex'thal the Void Harbinger");
+                    e->hp = e->max_hp = 380; e->atk = 48; e->def = 26; e->xp = 1100;
+                    e->special_ability = ABILITY_SUMMON;
+                } else if(g.dlevel == 40) {
+                    e->ch = 'O'; e->fg = RGB(240, 50, 90); str_cpy(e->name, "Xul'gath the Abyssal Tyrant");
+                    e->hp = e->max_hp = 500; e->atk = 64; e->def = 32; e->xp = 1800;
+                    e->special_ability = ABILITY_BREATHE_FIRE;
+                } else {
+                    e->ch = 'B'; e->fg = RGB(255, 100, 100); str_cpy(e->name, "Demon Overlord");
+                    e->hp = e->max_hp = 120 + g.dlevel*5; e->atk = 16 + g.dlevel; e->def = 10 + g.dlevel/2; e->xp = 300 + g.dlevel*10;
+                    e->special_ability = ABILITY_SUMMON;
+                }
                 break;
             }
         }
@@ -3013,13 +3018,6 @@ void draw_entity_gdi(HDC memDC, int x, int y, Entity* e) {
         RECT armorR = { cx - 3, cy - 4, cx + 4, cy + 5 };
         FillRect(memDC, &armorR, armorB);
         DeleteObject(armorB);
-        
-        // Specular sheen sweep on armor
-        int sheen = (g_anim_frame * 2) % 16 - 8;
-        if (sheen >= -3 && sheen <= 3) {
-            SetPixel(memDC, cx + sheen, cy, RGB(255, 255, 255));
-            SetPixel(memDC, cx + sheen, cy - 1, RGB(255, 255, 255));
-        }
 
         HBRUSH visorB = CreateSolidBrush(RGB(255, 215, 0));
         RECT visorR = { cx - 2, cy - 6, cx + 3, cy - 4 };

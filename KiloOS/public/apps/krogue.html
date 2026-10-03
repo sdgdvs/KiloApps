@@ -516,6 +516,22 @@
             </div>
         </div>
 
+        <!-- Crafting Anvil Modal -->
+        <div id="modal-anvil" class="modal-overlay" style="display: none;" onclick="if(event.target === this) closeModal('modal-anvil')">
+            <div class="modal-card" style="border-color: #ecc94b; background: #1a160c; box-shadow: 0 10px 30px rgba(236, 201, 75, 0.25);">
+                <div class="modal-header" style="color: #ecc94b;">⚒️ ANCIENT MASTER CRAFTING ANVIL ⚒️</div>
+                <div style="font-size: 12px; color: #a0aec0; margin-bottom: 12px; text-align: center;">
+                    Harness the primordial flame of the anvil to forge, reinforce, and socket your equipment!
+                </div>
+                <div id="anvil-options" style="display: flex; flex-direction: column; gap: 8px;">
+                    <!-- Populated dynamically -->
+                </div>
+                <div class="modal-close" style="display: flex; justify-content: center; gap: 8px; margin-top: 12px;">
+                    <button class="btn-modal-close" onclick="closeModal('modal-anvil')">Leave Anvil [ESC]</button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -1044,12 +1060,19 @@
             player.x = 2; player.y = 2;
             map[2][2] = '.';
             
-            // Stairs
+            // Milestone Bosses at Floors 10, 20, 30, 40
             if (dlevel % 10 === 0 && dlevel !== 50) {
-                let hp = Math.floor(100 + dlevel * 5);
+                let bName = 'Demon Overlord', bCh = 'B', bHp = 120 + dlevel * 5;
+                if (dlevel === 10) { bName = 'Gorgoroth the Crypt Weaver'; bCh = 'W'; bHp = 160; }
+                else if (dlevel === 20) { bName = 'Ignis the Infernal Drake'; bCh = 'D'; bHp = 260; }
+                else if (dlevel === 30) { bName = "Vex'thal the Void Harbinger"; bCh = 'v'; bHp = 380; }
+                else if (dlevel === 40) { bName = "Xul'gath the Abyssal Tyrant"; bCh = 'O'; bHp = 500; }
+                bHp = Math.floor(bHp * (1 + difficulty * 0.4));
                 monsters.push({
-                    x: COLS - 5, y: ROWS - 5, hp: hp, max_hp: hp, ch: 'B', name: 'Resurrected Boss', boss: false, turn: 0
+                    x: COLS - 5, y: ROWS - 5, hp: bHp, max_hp: bHp, ch: bCh, name: bName, boss: true, isFloorBoss: true, turn: 0
                 });
+                addMsg(`WARNING: ${bName.toUpperCase()} guards the descent stairs!`, 'msg-combat');
+                showToast(`Boss Encounter: ${bName}!`, 'error');
             }
             if (dlevel < 50) {
                 items.push({ x: COLS - 3, y: ROWS - 3, ch: '>', type: 'stairs' });
@@ -1057,9 +1080,10 @@
             } else {
                 let hp = Math.floor(1500 * (1 + difficulty * 0.5));
                 monsters.push({
-                    x: COLS - 5, y: ROWS - 5, hp: hp, max_hp: hp, ch: '&', name: 'True Astaroth', boss: true, turn: 0
+                    x: COLS - 5, y: ROWS - 5, hp: hp, max_hp: hp, ch: '&', name: 'True Astaroth', boss: true, finalBoss: true, turn: 0
                 });
                 addMsg("TRUE ASTAROTH AWAITS AT THE CENTER OF THE SANCTUARY!", 'msg-combat');
+                showToast("FINAL BATTLE: True Astaroth!", 'error');
             }
 
             // Shrines, Food, Gold, Altars, Pets, Vault Gates & Equipment Drops
@@ -1408,8 +1432,7 @@
 
         function drawPerimeterInlay(ctx, w, h) {
             ctx.save();
-            let pulse = (Math.sin(frameCount * 0.05) + 1) * 0.5;
-            ctx.strokeStyle = `rgba(214, 158, 46, ${0.25 + pulse * 0.25})`;
+            ctx.strokeStyle = 'rgba(214, 158, 46, 0.35)';
             ctx.lineWidth = 1;
             ctx.strokeRect(6, 6, w - 12, h - 12);
             ctx.restore();
@@ -1448,7 +1471,6 @@
         function drawPlayerSprite(px, py) {
             let bob = Math.sin(frameCount * 0.15) * 1.5;
             let cx = px + TILE / 2, cy = py + TILE / 2 + bob;
-            let sheenOffset = ((frameCount * 1.2) % 30) - 15;
 
             // Ground shadow
             ctx.fillStyle = 'rgba(0,0,0,0.55)';
@@ -1482,33 +1504,14 @@
             ctx.fillStyle = '#cbd5e0'; ctx.fillRect(cx - 5, cy - 4, 10, 10);
             ctx.fillStyle = '#a0aec0'; ctx.fillRect(cx - 3, cy, 6, 5);
 
-            // Diagonal Specular Sheen Sweep on Armor
-            ctx.save();
-            ctx.beginPath();
-            ctx.rect(cx - 5, cy - 4, 10, 10);
-            ctx.clip();
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-            ctx.beginPath();
-            ctx.moveTo(cx - 10 + sheenOffset, cy + 10);
-            ctx.lineTo(cx - 5 + sheenOffset, cy - 10);
-            ctx.lineTo(cx - 1 + sheenOffset, cy - 10);
-            ctx.lineTo(cx - 6 + sheenOffset, cy + 10);
-            ctx.fill();
-            ctx.restore();
-
             // Helmet & Crest
             ctx.fillStyle = '#e2e8f0'; ctx.beginPath(); ctx.arc(cx, cy - 6, 5.5, 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = '#ecc94b'; ctx.fillRect(cx - 3, cy - 8, 6, 2.5); // Golden visor crest
             ctx.fillStyle = '#1a202c'; ctx.fillRect(cx - 2.5, cy - 6, 5, 1.5); // Visor slit
 
-            // Weapon with Glint & Socket Elemental Aura
+            // Weapon & Socket Elemental Aura
             ctx.strokeStyle = '#edf2f7'; ctx.lineWidth = 2.2;
             ctx.beginPath(); ctx.moveTo(cx + 5, cy + 3); ctx.lineTo(cx + 10, cy - 7); ctx.stroke();
-            // Weapon glint tip
-            if (Math.sin(frameCount * 0.15) > 0.7) {
-                ctx.fillStyle = '#ffffff';
-                ctx.beginPath(); ctx.arc(cx + 10, cy - 7, 2, 0, Math.PI * 2); ctx.fill();
-            }
             if (equipment.weapon && equipment.weapon.sockets && equipment.weapon.sockets.length > 0) {
                 let firstGem = equipment.weapon.sockets[0];
                 let gDef = GEMS_DEF[firstGem];
@@ -1552,14 +1555,10 @@
                 let pulse = (Math.sin(frameCount * 0.2) + 1) * 0.5;
                 ctx.fillStyle = `rgba(99, 179, 237, ${0.35 + pulse * 0.35})`;
                 ctx.beginPath(); ctx.arc(cx, cy, 7 + pulse * 2, 0, Math.PI * 2); ctx.fill();
-                ctx.fillStyle = '#ebf8ff'; ctx.beginPath(); ctx.arc(cx, cy, 3.5, 0, Math.PI * 2); ctx.fill();
-                // 3 Orbiting sparks
-                for (let k = 0; k < 3; k++) {
-                    let oAng = frameCount * 0.12 + k * (Math.PI * 2 / 3);
-                    let ox = cx + Math.cos(oAng) * 8;
-                    let oy = cy + Math.sin(oAng) * 5;
-                    ctx.fillStyle = '#90cdf4'; ctx.fillRect(ox - 1, oy - 1, 2, 2);
-                }
+                // Ethereal Arcane Halo
+                ctx.strokeStyle = 'rgba(144, 205, 244, 0.45)';
+                ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.arc(cx, cy, 9, 0, Math.PI * 2); ctx.stroke();
             } else if (pet.type === 'golem') {
                 // Stone Golem
                 ctx.fillStyle = '#4a5568'; ctx.fillRect(cx - 6, cy - 4, 12, 10);
@@ -1654,14 +1653,9 @@
                 // Glowing eyes & nostrils
                 ctx.fillStyle = '#fefcbf'; ctx.fillRect(cx - 3, cy - 4 + bob, 2, 2); ctx.fillRect(cx + 1, cy - 4 + bob, 2, 2);
             } else if (type === 'L' || type === 'v' || type === 'E') { // Lich / Void / Eldritch
-                // Orbiting Necrotic Runes
-                for (let k = 0; k < 3; k++) {
-                    let oAngle = frameCount * 0.08 + (k * Math.PI * 2 / 3);
-                    let ox = cx + Math.cos(oAngle) * 11;
-                    let oy = cy + bob + Math.sin(oAngle) * 6;
-                    ctx.fillStyle = type === 'L' ? '#ecc94b' : '#b794f4';
-                    ctx.fillRect(ox - 1.5, oy - 1.5, 3, 3);
-                }
+                // Steady Necrotic Shroud
+                ctx.fillStyle = type === 'L' ? 'rgba(236, 201, 75, 0.2)' : 'rgba(183, 148, 244, 0.25)';
+                ctx.fillRect(cx - 7, cy - 9 + bob, 14, 18);
                 ctx.fillStyle = type === 'L' ? '#4a5568' : (type === 'v' ? '#553c9a' : '#2d004b');
                 ctx.fillRect(cx - 6, cy - 8 + bob, 12, 16);
                 ctx.fillStyle = type === 'L' ? '#cbd5e0' : '#00ffff';
@@ -1789,7 +1783,7 @@
                 }
             });
 
-            // Dropped Items with Specular Glint Sweeps
+            // Dropped Items & Floor Relics
             items.forEach(it => {
                 let ix = it.x * TILE + TILE / 2;
                 let iy = it.y * TILE + TILE / 2 + Math.sin(frameCount * 0.1 + it.x) * 1.5;
@@ -1821,11 +1815,8 @@
                     ctx.fillRect(ax + 7, ay + 8, TILE - 14, 4);
                     let gemColors = ['#e53e3e', '#63b3ed', '#48bb78', '#ecc94b', '#b794f4'];
                     for (let g = 0; g < 5; g++) {
-                        let ang = frameCount * 0.08 + g * (Math.PI * 2 / 5);
-                        let gx = ax + TILE / 2 + Math.cos(ang) * 9;
-                        let gy = ay + TILE / 2 + Math.sin(ang) * 6;
                         ctx.fillStyle = gemColors[g];
-                        ctx.fillRect(gx - 1.5, gy - 1.5, 3, 3);
+                        ctx.fillRect(ax + 4 + g * 3, ay + 4, 2, 2);
                     }
                 } else if (it.type === 'gem') {
                     let gx = it.x * TILE + TILE / 2, gy = it.y * TILE + TILE / 2 + Math.sin(frameCount * 0.12 + it.x) * 1.5;
@@ -2032,13 +2023,48 @@
                 ctx.restore();
             }
 
-            // Floating Text
+            // Floating Text with High-Contrast Dropshadows
             for (let i = floatTexts.length - 1; i >= 0; i--) {
-                let ft = floatTexts[i]; ft.y -= 0.8; ft.life -= 0.03;
-                ctx.fillStyle = ft.color; ctx.globalAlpha = Math.max(0, ft.life);
-                ctx.font = 'bold 12px monospace'; ctx.textAlign = 'center';
-                ctx.fillText(ft.text, ft.x, ft.y); ctx.globalAlpha = 1.0;
+                let ft = floatTexts[i]; ft.y -= 0.8; ft.life -= 0.025;
+                ctx.save();
+                ctx.globalAlpha = Math.max(0, ft.life);
+                let isBig = ft.text.includes('CRIT') || ft.text.includes('PHOENIX') || ft.text.includes('VICTORY') || ft.text.length > 7;
+                ctx.font = isBig ? 'bold 14px monospace' : 'bold 12px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = '#000000';
+                ctx.fillText(ft.text, ft.x + 1, ft.y + 1);
+                ctx.fillStyle = ft.color;
+                ctx.fillText(ft.text, ft.x, ft.y);
+                ctx.restore();
                 if (ft.life <= 0) floatTexts.splice(i, 1);
+            }
+
+            // Active Boss / Warden Health Bar
+            let activeBoss = monsters.find(m => (m.boss || m.isFloorBoss || m.finalBoss || m.ch === '&') && m.hp > 0);
+            if (activeBoss) {
+                let bw = 380, bh = 14;
+                let bx = (C_WIDTH - bw) / 2, by = 20;
+                ctx.save();
+                ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+                ctx.fillRect(bx - 6, by - 16, bw + 12, bh + 22);
+                ctx.strokeStyle = '#d69e2e';
+                ctx.lineWidth = 1;
+                ctx.strokeRect(bx - 6, by - 16, bw + 12, bh + 22);
+                
+                ctx.fillStyle = activeBoss.finalBoss ? '#fc8181' : '#ecc94b';
+                ctx.font = 'bold 11px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText(`☠ ${activeBoss.name.toUpperCase()} ☠`, C_WIDTH / 2, by - 4);
+                
+                ctx.fillStyle = '#2d3748';
+                ctx.fillRect(bx, by, bw, bh);
+                let pct = Math.max(0, activeBoss.hp) / activeBoss.max_hp;
+                ctx.fillStyle = activeBoss.finalBoss ? '#e53e3e' : '#ed8936';
+                ctx.fillRect(bx, by, bw * pct, bh);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 10px monospace';
+                ctx.fillText(`${activeBoss.hp} / ${activeBoss.max_hp}`, C_WIDTH / 2, by + 11);
+                ctx.restore();
             }
 
             // Ornate Gothic RPG HUD Corner Filigree L-Brackets & Inlay Border
@@ -2558,21 +2584,34 @@
             if (player.poisoned_turns > 0) { player.hp--; player.poisoned_turns--; if (player.hp <= 0) { triggerGameOver(); return; } }
             if (player.rooted_turns > 0) player.rooted_turns--;
 
-            if (player.hunger > 0) {
-                player.hunger--;
-                if (player.hunger === 50) addMsg("You are growing weak with hunger! Eat some food!", 'msg-combat');
-            } else {
-                player.hp--;
-                addMsg("You take damage from starvation!", 'msg-combat');
-                if (player.hp <= 0) { triggerGameOver(); return; }
+            let activeBossEngaged = monsters.some(m => (m.boss || m.isFloorBoss || m.finalBoss) && m.hp > 0 && Math.hypot(m.x - player.x, m.y - player.y) <= 8);
+            let hungerTick = activeBossEngaged ? (player.turn_parity % 2 === 0) : true;
+            if (hungerTick) {
+                if (player.hunger > 0) {
+                    player.hunger--;
+                    if (player.hunger === 50) addMsg("You are growing weak with hunger! Eat some food!", 'msg-combat');
+                } else {
+                    player.hp--;
+                    addMsg("You take damage from starvation!", 'msg-combat');
+                    if (player.hp <= 0) { triggerGameOver(); return; }
+                }
             }
 
             for (let i = monsters.length - 1; i >= 0; i--) {
                 let m = monsters[i];
                 if (m.hp <= 0) {
-                    if (m.boss) {
+                    if (m.finalBoss) {
                         addExplosion(m.x, m.y, 3.0);
                         setTimeout(() => { state = 3; saveRunToLeaderboard('VICTORY'); }, 2000);
+                    } else if (m.isFloorBoss) {
+                        addExplosion(m.x, m.y, 2.2);
+                        let bXp = 150 + dlevel * 15;
+                        let bGold = 50 + dlevel * 5;
+                        gainXP(bXp);
+                        player.gold += bGold;
+                        addMsg(`LEGENDARY VICTORY: ${m.name} has fallen! (+${bXp} XP, +${bGold}G)`, 'msg-good');
+                        showToast(`${m.name} Defeated! (+${bXp} XP)`, 'success');
+                        items.push(generateRandomLoot(m.x, m.y));
                     } else {
                         addParticles(m.x, m.y, '#fc8181', 15);
                     }
@@ -2668,7 +2707,7 @@
         }
 
         function isAnyModalOpen() {
-            const modalIds = ['modal-char-select', 'modal-inventory', 'modal-spellbook', 'modal-leaderboard', 'modal-keybinds', 'modal-help', 'modal-altar', 'modal-pet'];
+            const modalIds = ['modal-char-select', 'modal-inventory', 'modal-spellbook', 'modal-leaderboard', 'modal-keybinds', 'modal-help', 'modal-altar', 'modal-pet', 'modal-anvil'];
             return modalIds.some(id => {
                 let el = document.getElementById(id);
                 return el && el.style.display && el.style.display !== 'none';
@@ -2810,8 +2849,9 @@
                 return;
             }
             if (!eq.sockets) eq.sockets = [];
-            if (eq.sockets.length >= 2) {
-                showToast(`${eq.name} already has all sockets filled (max 2)!`, 'warning');
+            let maxSock = eq.maxSockets || 2;
+            if (eq.sockets.length >= maxSock) {
+                showToast(`${eq.name} already has all sockets filled (max ${maxSock})!`, 'warning');
                 return;
             }
             let gIdx = inventory.findIndex(it => it.type === 'gem' && it.gemKey === gemKey);
@@ -2959,6 +2999,109 @@
             } else {
                 el.style.display = 'none';
             }
+        }
+
+        let activeAnvilIdx = -1;
+        let activeAnvilX = -1;
+        let activeAnvilY = -1;
+
+        function openAnvilModal(itIdx, x, y) {
+            activeAnvilIdx = itIdx;
+            activeAnvilX = x;
+            activeAnvilY = y;
+            let container = document.getElementById('anvil-options');
+            if (!container) return;
+
+            let wName = equipment.weapon ? equipment.weapon.name : 'Unarmed Fists';
+            let wAtk = equipment.weapon ? equipment.weapon.val : player.atk;
+            let aName = equipment.armor ? equipment.armor.name : 'Cloth Tunic';
+            let aDef = equipment.armor ? equipment.armor.val : player.def;
+
+            let wSockets = equipment.weapon && equipment.weapon.sockets ? equipment.weapon.sockets.length : 0;
+            let wMaxSockets = equipment.weapon && equipment.weapon.maxSockets ? equipment.weapon.maxSockets : 1;
+
+            container.innerHTML = `
+                <div style="background:#111827; border:1px solid #4a5568; border-radius:6px; padding:10px; margin-bottom:6px;">
+                    <div style="color:#ecc94b; font-weight:bold; margin-bottom:4px;">Equipped Gear & Sockets:</div>
+                    <div style="font-size:12px; color:#cbd5e0;">⚔️ Weapon: <span style="color:#63b3ed;">${escapeHTML(wName)}</span> (ATK: +${wAtk}, Sockets: ${wSockets}/${wMaxSockets})</div>
+                    <div style="font-size:12px; color:#cbd5e0;">🛡️ Armor: <span style="color:#cbd5e0;">${escapeHTML(aName)}</span> (DEF: +${aDef})</div>
+                </div>
+
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <button class="inv-btn" style="background:#2d3748; padding:8px 12px; text-align:left; border:1px solid #ecc94b; color:#fff; border-radius:4px; cursor:pointer;" onclick="craftAtAnvil('hone')">
+                        <b style="color:#ecc94b;">[1] ⚔️ Hone Weapon:</b> Temper weapon blade with fiery strikes (+2 ATK)
+                    </button>
+                    <button class="inv-btn" style="background:#2d3748; padding:8px 12px; text-align:left; border:1px solid #48bb78; color:#fff; border-radius:4px; cursor:pointer;" onclick="craftAtAnvil('reinforce')">
+                        <b style="color:#48bb78;">[2] 🛡️ Reinforce Armor:</b> Harden armor plates and rivets (+2 DEF)
+                    </button>
+                    <button class="inv-btn" style="background:#2d3748; padding:8px 12px; text-align:left; border:1px solid #63b3ed; color:#fff; border-radius:4px; cursor:pointer;" onclick="craftAtAnvil('socket')">
+                        <b style="color:#63b3ed;">[3] 💎 Punch Gem Socket:</b> Forge an elemental gem socket into weapon (Max 3)
+                    </button>
+                    <button class="inv-btn" style="background:#2d3748; padding:8px 12px; text-align:left; border:1px solid #b794f4; color:#fff; border-radius:4px; cursor:pointer;" onclick="craftAtAnvil('temper')">
+                        <b style="color:#b794f4;">[4] ✨ Masterwork Affix:</b> Bestow Masterwork enchantment (+10 Max HP, +10% Crit)
+                    </button>
+                </div>
+            `;
+            document.getElementById('modal-anvil').style.display = 'flex';
+        }
+
+        function craftAtAnvil(action) {
+            if (activeAnvilIdx >= 0 && activeAnvilIdx < items.length && items[activeAnvilIdx].type === 'anvil') {
+                items.splice(activeAnvilIdx, 1);
+            } else {
+                let fIdx = items.findIndex(it => it.type === 'anvil' && it.x === activeAnvilX && it.y === activeAnvilY);
+                if (fIdx >= 0) items.splice(fIdx, 1);
+            }
+
+            if (action === 'hone') {
+                if (equipment.weapon) {
+                    equipment.weapon.val += 2;
+                    addMsg(`You hone ${equipment.weapon.name} at the Anvil! (+2 ATK)`, 'good');
+                    showToast(`${equipment.weapon.name} honed (+2 ATK)!`, 'success');
+                } else {
+                    player.atk += 2;
+                    addMsg("You temper your knuckles on the anvil! (+2 ATK)", 'good');
+                    showToast("Unarmed ATK +2!", 'success');
+                }
+                addFloatText(player.x, player.y, '+2 ATK', '#ecc94b');
+            } else if (action === 'reinforce') {
+                if (equipment.armor) {
+                    equipment.armor.val += 2;
+                    addMsg(`You reinforce ${equipment.armor.name} at the Anvil! (+2 DEF)`, 'good');
+                    showToast(`${equipment.armor.name} reinforced (+2 DEF)!`, 'success');
+                } else {
+                    player.def += 2;
+                    addMsg("You harden your iron resolve! (+2 DEF)", 'good');
+                    showToast("Defense +2!", 'success');
+                }
+                addFloatText(player.x, player.y, '+2 DEF', '#48bb78');
+            } else if (action === 'socket') {
+                if (equipment.weapon) {
+                    equipment.weapon.maxSockets = (equipment.weapon.maxSockets || 1) + 1;
+                    if (equipment.weapon.maxSockets > 3) equipment.weapon.maxSockets = 3;
+                    if (!equipment.weapon.sockets) equipment.weapon.sockets = [];
+                    addMsg(`You punch a socket into ${equipment.weapon.name}! (Now ${equipment.weapon.maxSockets} Sockets)`, 'msg-magic');
+                    showToast(`${equipment.weapon.name} socket punched!`, 'success');
+                    addFloatText(player.x, player.y, '+1 Socket', '#63b3ed');
+                } else {
+                    player.atk += 2;
+                    addMsg("No weapon equipped to socket. Fists tempered (+2 ATK)!", 'good');
+                    showToast("ATK +2!", 'success');
+                }
+            } else if (action === 'temper') {
+                player.max_hp += 10;
+                player.hp = Math.min(player.max_hp, player.hp + 10);
+                if (equipment.weapon && !equipment.weapon.name.includes('Masterwork')) {
+                    equipment.weapon.name = 'Masterwork ' + equipment.weapon.name;
+                    equipment.weapon.val += 1;
+                }
+                addMsg("Masterwork forging complete! (+10 Max HP, +10% Crit bonus)!", 'msg-magic');
+                showToast("Masterwork Affix Imbued!", 'success');
+                addFloatText(player.x, player.y, '+10 Max HP', '#b794f4');
+            }
+
+            addParticles(player.x, player.y, '#ecc94b', 25);
+            closeModal('modal-anvil');
         }
 
         function updatePetTurn() {
@@ -3340,21 +3483,10 @@
                         addParticles(nx, ny, '#ecc94b', 25);
                         showToast("Magic Shrine Blessing!", 'success');
                     } else if (it.type === 'anvil') {
-                        items.splice(itIdx, 1);
-                        if (equipment.weapon) {
-                            equipment.weapon.val += 2;
-                            addMsg(`You use the Crafting Anvil! ${equipment.weapon.name} upgraded (+2 ATK)!`, 'good');
-                            showToast("Weapon upgraded at Anvil!", 'success');
-                        } else if (equipment.armor) {
-                            equipment.armor.val += 2;
-                            addMsg(`You use the Crafting Anvil! ${equipment.armor.name} upgraded (+2 DEF)!`, 'good');
-                            showToast("Armor upgraded at Anvil!", 'success');
-                        } else {
-                            player.atk += 2;
-                            addMsg("You use the Crafting Anvil! Your fists are reinforced (+2 ATK)!", 'good');
-                            showToast("Fists reinforced at Anvil!", 'success');
-                        }
-                        addParticles(nx, ny, '#63b3ed', 20);
+                        addMsg("You stand before the Ancient Crafting Anvil! Forge and temper your gear.", 'msg-magic');
+                        showToast("Crafting Anvil Reached!", 'info');
+                        addParticles(nx, ny, '#ecc94b', 20);
+                        openAnvilModal(itIdx, nx, ny);
                     } else if (it.type === 'gold') {
                         let gVal = it.val || rngRange(5, 15);
                         player.gold += gVal;
@@ -3417,7 +3549,7 @@
             }
 
             if (e.key === 'Escape') {
-                closeModal('modal-inventory'); closeModal('modal-spellbook'); closeModal('modal-leaderboard'); closeModal('modal-char-select'); closeModal('modal-help'); closeModal('modal-keybinds'); closeModal('modal-altar'); closeModal('modal-pet');
+                closeModal('modal-inventory'); closeModal('modal-spellbook'); closeModal('modal-leaderboard'); closeModal('modal-char-select'); closeModal('modal-help'); closeModal('modal-keybinds'); closeModal('modal-altar'); closeModal('modal-pet'); closeModal('modal-anvil');
                 if (state === 4) { state = 1; addMsg("Targeting cancelled."); }
                 return;
             }

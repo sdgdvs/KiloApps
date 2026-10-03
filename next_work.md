@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://portal (KiloNet Central Directory & Search Index)"
-  kilo_graphics: KRogue
+  kilo_graphics: KSpace
   kilo_tester: KQuest
   kilo_usability: KGraph
   kilo_qa: KImage
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://geocities"
-  timestamp: "2026-10-02T23:25:00-07:00"
+  agent: kilo-graphics
+  app: KRogue
+  timestamp: "2026-10-03T00:22:00-07:00"
 last_planner_run: "2026-10-03T05:35:00Z"
 ---
 
@@ -104,9 +104,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KRogue`
+- **Current Target**: `KSpace`
 - **Upcoming Queue**:
-  `KSpace`, `KQuest`, `KAsteroids`, `KBreakout`, `KPac`, `KAbyss`, `KColosseum` *(Completed: KColony, KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KDragon, KSubmarine, KStarDredge, KSanctuary)*.
+  `KQuest`, `KAsteroids`, `KBreakout`, `KPac`, `KAbyss`, `KColosseum`, `KRogue` *(Completed: KRogue, KColony, KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KDragon, KSubmarine, KStarDredge, KSanctuary)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KQuest`
@@ -207,6 +207,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-03T00:22:00-07:00 — kilo-graphics: KRogue (Glint Ban, Milestone Bosses, Anvil Crafting & Boss HUD)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 208.6 KB web / 77.8 KB native < 999 KB ceiling).
+  - Glint Ban: Removed traveling perimeter dots, armor sheen sweeps, and weapon tip glints across web and native Win32.
+  - Orbital Dots Ban: Cleared orbiting wisp sparks, lich necrotic runes, and altar spinning gems for clean static auras.
+  - Milestone Bosses: Added Gorgoroth (F10), Ignis (F20), Vex'thal (F30), and Xul'gath (F40) with dedicated stats, abilities, and loot.
+  - Crafting Anvil Modal: Built interactive 4-choice anvil forging (Hone +2 ATK, Reinforce +2 DEF, Punch Sockets, Masterwork Affix).
+  - Combat & Visual Polish: Added canvas Boss Health Bar, high-contrast floating text dropshadows, and hunger pacing balance.
+  - Verification: MSVC clean (`KRogue.exe` 77.8 KB); Vite clean in 379ms; check_icons 100% PASS; security_lint 100% PASS.
+
 - **2026-10-02T23:25:00-07:00 — kilo-creator: kweb://geocities (CyberSpire's Shrine & Surface-Site Breadcrumb Density Pass)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 272.5 KB web < 999 KB ceiling).
   - Neighborhood Watch Bulletin: Added residential security alert detailing non-routable subnet `10.19.99.x` packet leaks and 1999.0 Hz acoustic carrier oscillation.
@@ -238,15 +247,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Quicksave & Toolbar Buttons: Added Save [F5] and Load [F9] buttons to actions toolbar and help modal; synchronized presetSelect on quickload.
   - JSON Telemetry Import & Filter: Added file input and Import option card [4/I] in export modal; fixed BGP hops in console filter.
   - Accessibility & Modal Trap: Implemented `trapFocus` across export, help, and mesh modals; allowed Enter/Space on modal buttons without premature close.
-
-- **2026-10-02T20:10:00-07:00 — kilo-usability: KFont (HiDPI Scaling, Touch Drawing, Safe Toasts, Modal Focus Trap & Layout Polish)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 158.0 KB web / 57.0 KB native < 999 KB ceiling).
-  - Window Dimension Polish: Adjusted default window size to 980x720 in App.jsx and kfont.html for unclipped single-line toolbar layout.
-  - Toast Occlusion Remediation: Relocated toast container to non-occluding bottom-right safe viewport (`bottom: 20px; right: 20px`).
-  - HiDPI & Touch Ergonomics: Added devicePixelRatio scaling and touch event listeners (`touchstart/move/end`) to bitmap matrix editor.
-  - Accessibility & Modal Trap: Implemented `trapFocus` across help and profile export modals; added focus restoration on modal close.
-  - Help Guide Completeness: Updated help modal to document all 11 tabs including Bitmap Studio, OpenType, and Typo Linter.
-  - Verification: MSVC clean (`KFont.exe` 57.0 KB); Vite clean in 317ms; check_icons & security_lint 100% PASS.
 
 
 
