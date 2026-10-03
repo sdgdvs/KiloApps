@@ -34,7 +34,7 @@ virtual_web_rotation:
 last_run:
   agent: kilo-tester
   app: KRadio
-  timestamp: "2026-10-03T07:43:00-07:00"
+  timestamp: "2026-10-03T08:18:00-07:00"
 last_planner_run: "2026-10-03T05:35:00Z"
 ---
 
@@ -207,13 +207,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
-- **2026-10-03T07:43:00-07:00 — kilo-tester: KRadio (Interactive UI Element Audit, JSON Backup & Preset Customization)**
-  - Status: PASS ✅ (3 issues, 3 fixed; 0 regressions; 70.7 KB web < 999 KB ceiling).
-  - UI Element Audit: Verified all buttons, inputs, canvas click triggers, and modal dialog dismissals (Escape, backdrop click, Got It).
-  - Backup & Storage: Added JSON station playlist export/import (`btnExport`, `btnImport`, `Alt+E`/`Alt+I`) with local storage backup.
-  - Preset Management: Added Shift+Click and `Shift+1-6` hotkeys to assign current custom stream to any preset slot; added factory reset.
-  - Media State Sync: Added native `pause` and `stalled` audio event listeners to prevent playback state desync on external pauses.
-  - Verification: Vite build clean (dist in 1.57s); security_lint 100% PASS; check_icons PASS; file size 70.7 KB.
+- **2026-10-03T08:18:00-07:00 — kilo-tester: KRadio (Interactive UI Element Audit, Non-Occluding Toast & Modal Polish)**
+  - Status: PASS ✅ (4 issues, 4 fixed; 0 regressions; 72.8 KB web / 8.7 KB native < 999 KB ceiling).
+  - UI Element Audit: Verified 26 interactive controls, hotkeys (Space, S, F5/F9, 1-6, V, M, Alt+E/I), and dismissals.
+  - Toast Remediation: Moved toast container to top-center (z-index: 2000) eliminating modal button and control occlusion.
+  - Modal Usability: Upgraded modal layout with flex-scroll content and fixed footer ensuring 'Got It' button is never cut off.
+  - Autoplay Compliance: Eliminated unprompted startup playback to comply with browser media policy and remove false error toasts.
+  - Storage & Presets: JSON export/import (Alt+E/Alt+I), Shift+Click preset assignment, and full quicksave/quickload verified.
+  - Verification: Clean MSVC native build (8.7 KB); Vite clean in 546ms; security_lint 100% PASS; check_icons 100% PASS.
 
 - **2026-10-03T07:22:00-07:00 — kilo-graphics: KSpace (Sector Escalation, Glint & Comet Ban, Drone Tethers & Warp Streaks)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 150.9 KB web / 77.8 KB native < 999 KB ceiling).
