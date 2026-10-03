@@ -432,21 +432,27 @@ window.addEventListener('beforeunload', () => {
   let playerChassis = parseInt(safeGetStorage('kspace_chassis') || '0', 10);
   if (isNaN(playerChassis) || playerChassis < 0 || playerChassis > 2) playerChassis = 0;
   const CHASSIS_SPECS = [
-    { name: 'ALPHA INTERCEPTOR', desc: 'Agile titanium interceptor with precision twin ion drives' },
-    { name: 'CRIMSON VANGUARD', desc: 'Heavy assault fighter with forward-swept wings and quad combustion jets' },
-    { name: 'VOID PHANTOM', desc: 'Phased stealth delta interceptor with emerald tachyon resonance' }
+    { name: 'ALPHA INTERCEPTOR', desc: 'Agile titanium interceptor (+15% speed, rapid Vulcan cycle)', perk: '+15% SPD / Rapid Vulcan' },
+    { name: 'CRIMSON VANGUARD', desc: 'Heavy assault dreadnought (4 Max HP, 4 Max Bombs, blast armor)', perk: '+1 Max HP / +1 Max Bomb' },
+    { name: 'VOID PHANTOM', desc: 'Phased stealth delta (+25% Overcharge rate, 30% faster Dash)', perk: '+Overcharge / Fast Dash' }
   ];
 
   function cyclePlayerChassis() {
     playerChassis = (playerChassis + 1) % 3;
     safeSetStorage('kspace_chassis', String(playerChassis));
-    showToast(`🚀 Fighter Chassis: ${CHASSIS_SPECS[playerChassis].name}`, 'info', 1800);
+    if (p) {
+      p.maxHp = playerChassis === 1 ? 4 : 3;
+      p.hp = Math.min(p.hp, p.maxHp);
+      p.maxBombs = playerChassis === 1 ? 4 : 3;
+    }
+    showToast(`🚀 Fighter: ${CHASSIS_SPECS[playerChassis].name} [${CHASSIS_SPECS[playerChassis].perk}]`, 'info', 2200);
     playSound(2);
   }
 
   // Timers & Active Skills Cooldowns
   let spreadTimer = 0;
   let laserTimer = 0;
+  let plasmaTimer = 0;
   let rapidTimer = 0;
   let timeStopTimer = 0;
   let timeStopCooldown = 0;
@@ -511,12 +517,11 @@ window.addEventListener('beforeunload', () => {
     { x: W * 0.45, y: H * 0.1, r: 85, col1: 'rgba(0, 80, 180, 0.22)', col2: 'rgba(0, 0, 0, 0)', vx: 0.07, vy: 0.25, phase: 3.0 }
   ];
 
-  // Loop 3: Distant Planets and Comets
+  // Distant Parallax Celestial Bodies
   let planets = [
     { x: W * 0.8, y: H * 0.2, r: 40, col: '#004d40', ringCol: 'rgba(0, 255, 128, 0.4)', rot: 0, vx: -0.02, vy: 0.05, type: 'ringed' },
     { x: W * 0.1, y: H * 0.7, r: 25, col: '#b71c1c', ringCol: null, rot: 0, vx: 0.01, vy: 0.03, type: 'cratered' }
   ];
-  let comets = [];
 
   // Init 3-Layer Parallax Starfield
   for (let i = 0; i < 75; i++) {
@@ -582,6 +587,7 @@ window.addEventListener('beforeunload', () => {
       totalKills: totalKills,
       spreadTimer: spreadTimer,
       laserTimer: laserTimer,
+      plasmaTimer: plasmaTimer,
       rapidTimer: rapidTimer,
       timeStopTimer: timeStopTimer,
       timeStopCooldown: timeStopCooldown,
@@ -641,6 +647,7 @@ window.addEventListener('beforeunload', () => {
       totalKills = saveObj.totalKills || enemiesKilled;
       spreadTimer = saveObj.spreadTimer || 0;
       laserTimer = saveObj.laserTimer || 0;
+      plasmaTimer = saveObj.plasmaTimer || 0;
       rapidTimer = saveObj.rapidTimer || 0;
       timeStopTimer = saveObj.timeStopTimer || 0;
       timeStopCooldown = saveObj.timeStopCooldown || 0;
@@ -685,7 +692,6 @@ window.addEventListener('beforeunload', () => {
       debris = [];
       shieldRipples = [];
       muzzleFlashes = [];
-      comets = [];
 
       enemies = Array.isArray(saveObj.enemies) ? saveObj.enemies : [];
       powerups = Array.isArray(saveObj.powerups) ? saveObj.powerups : [];
@@ -702,9 +708,46 @@ window.addEventListener('beforeunload', () => {
     safeRemoveStorage('kspace_save');
   }
 
-  // --- AUDIO SYNTHESIZER ---
-  let audioCtx;
-  function playSound(type) {
+  // --- GENESIS YM2612 FM SYNTHESIZER & SNES SPC700 STEREO DELAY ARCHITECTURE ---
+  let audioCtx = null;
+  let spcBus = null;
+
+  function initSPCDelay() {
+    if (spcBus || !audioCtx) return;
+    try {
+      const dryGain = audioCtx.createGain();
+      const wetGain = audioCtx.createGain();
+      const delayL = audioCtx.createDelay();
+      const delayR = audioCtx.createDelay();
+      const feedback = audioCtx.createGain();
+      const lowpass = audioCtx.createBiquadFilter();
+      const merger = audioCtx.createChannelMerger(2);
+
+      // Authentic SPC700 stereo slapback delay (140ms L / 210ms R with 1350Hz warmth damping)
+      delayL.delayTime.value = 0.14;
+      delayR.delayTime.value = 0.21;
+      feedback.gain.value = 0.28;
+      lowpass.type = 'lowpass';
+      lowpass.frequency.value = 1350;
+
+      wetGain.gain.value = 0.30;
+      dryGain.gain.value = 0.85;
+
+      dryGain.connect(audioCtx.destination);
+      delayL.connect(merger, 0, 0);
+      delayR.connect(merger, 0, 1);
+      merger.connect(lowpass);
+      lowpass.connect(feedback);
+      feedback.connect(delayL);
+      feedback.connect(delayR);
+      lowpass.connect(wetGain);
+      wetGain.connect(audioCtx.destination);
+
+      spcBus = { dryGain, delayL, delayR };
+    } catch (e) {}
+  }
+
+  function playFM(cType, mType, cFreq, mRatio, modIndex, duration, envDecay, gainAmt = 0.25, useDelay = true) {
     if (!soundEnabled) return;
     try {
       if (!audioCtx) {
@@ -713,90 +756,106 @@ window.addEventListener('beforeunload', () => {
         audioCtx = new AudioContext();
       }
       if (audioCtx.state === 'suspended') audioCtx.resume();
-      let osc = audioCtx.createOscillator();
-      let gain = audioCtx.createGain();
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      let t = audioCtx.currentTime;
+      initSPCDelay();
 
-      if (type === 0) { // Shoot
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(900, t);
-        osc.frequency.exponentialRampToValueAtTime(300, t + 0.08);
-        gain.gain.setValueAtTime(0.06, t);
-        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.08);
-        osc.start(t); osc.stop(t + 0.08);
-      } else if (type === 1) { // Explosion
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(220, t);
-        osc.frequency.exponentialRampToValueAtTime(40, t + 0.25);
-        gain.gain.setValueAtTime(0.12, t);
-        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.25);
-        osc.start(t); osc.stop(t + 0.25);
-      } else if (type === 2) { // Powerup / Skill
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(520, t);
-        osc.frequency.setValueAtTime(780, t + 0.08);
-        osc.frequency.setValueAtTime(1040, t + 0.16);
-        gain.gain.setValueAtTime(0.08, t);
-        gain.gain.linearRampToValueAtTime(0, t + 0.24);
-        osc.start(t); osc.stop(t + 0.24);
-      } else if (type === 3) { // Wave Clear / Stasis
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(350, t);
-        osc.frequency.setValueAtTime(550, t + 0.1);
-        osc.frequency.setValueAtTime(750, t + 0.2);
-        gain.gain.setValueAtTime(0.1, t);
-        gain.gain.linearRampToValueAtTime(0, t + 0.35);
-        osc.start(t); osc.stop(t + 0.35);
-      } else if (type === 4) { // Smart Bomb
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(150, t);
-        osc.frequency.exponentialRampToValueAtTime(30, t + 0.5);
-        gain.gain.setValueAtTime(0.2, t);
-        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
-        osc.start(t); osc.stop(t + 0.5);
-      } else if (type === 5) { // Laser
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(1200, t);
-        osc.frequency.linearRampToValueAtTime(800, t + 0.05);
-        gain.gain.setValueAtTime(0.04, t);
-        gain.gain.linearRampToValueAtTime(0, t + 0.05);
-        osc.start(t); osc.stop(t + 0.05);
+      const now = audioCtx.currentTime;
+      const carrier = audioCtx.createOscillator();
+      const modulator = audioCtx.createOscillator();
+      const modGain = audioCtx.createGain();
+      const mainGain = audioCtx.createGain();
+
+      carrier.type = cType;
+      modulator.type = mType;
+
+      carrier.frequency.setValueAtTime(cFreq, now);
+      modulator.frequency.setValueAtTime(cFreq * mRatio, now);
+
+      modGain.gain.setValueAtTime(cFreq * modIndex, now);
+      modGain.gain.exponentialRampToValueAtTime(0.01, now + envDecay);
+
+      mainGain.gain.setValueAtTime(gainAmt, now);
+      mainGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+      carrier.connect(mainGain);
+
+      if (spcBus && useDelay) {
+        mainGain.connect(spcBus.dryGain);
+        mainGain.connect(spcBus.delayL);
+        mainGain.connect(spcBus.delayR);
+      } else {
+        mainGain.connect(audioCtx.destination);
+      }
+
+      modulator.start(now);
+      carrier.start(now);
+      modulator.stop(now + duration);
+      carrier.stop(now + duration);
+    } catch (e) {}
+  }
+
+  function playSound(type) {
+    if (!soundEnabled) return;
+    try {
+      if (type === 0) { // Shoot (YM2612 punchy laser)
+        playFM('square', 'sawtooth', 840, 2.0, 3.2, 0.08, 0.05, 0.18, false);
+      } else if (type === 1) { // Explosion (Crunchy sub-FM detonation)
+        playFM('sawtooth', 'triangle', 180, 0.5, 6.0, 0.28, 0.2, 0.28, true);
+      } else if (type === 2) { // Powerup / Skill (Crystal FM chime)
+        playFM('sine', 'sine', 520, 2.0, 3.5, 0.22, 0.15, 0.22, true);
+      } else if (type === 3) { // Wave Clear / Stasis (Genesis harmonic chord)
+        playFM('triangle', 'sine', 440, 1.5, 2.8, 0.38, 0.28, 0.24, true);
+      } else if (type === 4) { // Smart Bomb (Heavy sub-bass shockwave)
+        playFM('sawtooth', 'square', 120, 0.25, 8.5, 0.55, 0.45, 0.35, true);
+      } else if (type === 5) { // Continuous Laser (Resonant filtered beam)
+        playFM('sawtooth', 'sine', 1100, 3.0, 2.5, 0.06, 0.04, 0.12, false);
       } else if (type === 6) { // Victory Fanfare
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(440, t);
-        osc.frequency.setValueAtTime(554, t + 0.12);
-        osc.frequency.setValueAtTime(659, t + 0.24);
-        osc.frequency.setValueAtTime(880, t + 0.36);
-        gain.gain.setValueAtTime(0.15, t);
-        gain.gain.linearRampToValueAtTime(0, t + 0.6);
-        osc.start(t); osc.stop(t + 0.6);
-      } else if (type === 7) { // Loop 11: Hyper-Jump Warp Sweep
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(200, t);
-        osc.frequency.exponentialRampToValueAtTime(1600, t + 0.25);
-        osc.frequency.exponentialRampToValueAtTime(350, t + 0.5);
-        gain.gain.setValueAtTime(0.2, t);
-        gain.gain.linearRampToValueAtTime(0.01, t + 0.5);
-        osc.start(t); osc.stop(t + 0.5);
-      } else if (type === 8) { // Loop 11: Drone Vulcan / Point Defense Zap
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(1100, t);
-        osc.frequency.exponentialRampToValueAtTime(450, t + 0.05);
-        gain.gain.setValueAtTime(0.04, t);
-        gain.gain.linearRampToValueAtTime(0, t + 0.05);
-        osc.start(t); osc.stop(t + 0.05);
-      } else if (type === 9) { // Loop 11: Dreadnought Mega-Ion Beam Roar
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(90, t);
-        osc.frequency.linearRampToValueAtTime(160, t + 0.3);
-        osc.frequency.linearRampToValueAtTime(60, t + 0.7);
-        gain.gain.setValueAtTime(0.25, t);
-        gain.gain.linearRampToValueAtTime(0.01, t + 0.75);
-        osc.start(t); osc.stop(t + 0.75);
+        playFM('triangle', 'sine', 587, 2.0, 3.0, 0.6, 0.4, 0.28, true);
+      } else if (type === 7) { // Hyper-Jump Warp Sweep
+        playFM('sawtooth', 'triangle', 260, 4.0, 5.0, 0.45, 0.35, 0.3, true);
+      } else if (type === 8) { // Point Defense Zap
+        playFM('square', 'sine', 1200, 1.5, 2.0, 0.05, 0.03, 0.14, false);
+      } else if (type === 9) { // Dreadnought Mega-Ion Beam Roar
+        playFM('sawtooth', 'sawtooth', 75, 1.0, 9.0, 0.75, 0.6, 0.38, true);
+      } else if (type === 10) { // Heavy Plasma Cannon (Deep thunderous blast)
+        playFM('sine', 'sawtooth', 240, 0.5, 7.5, 0.18, 0.12, 0.32, true);
       }
     } catch (e) {}
+  }
+
+  // --- PROCEDURAL 16-STEP CHIPTUNE TRACKER (GENESIS YM2612 & SNES SPC700) ---
+  let bgmEnabled = safeGetStorage('kspace_bgm') !== '0';
+  let bgmStep = 0;
+  let bgmTimer = null;
+  const BASS_NOTES = [146.8, 0, 146.8, 146.8, 174.6, 0, 174.6, 174.6, 130.8, 0, 130.8, 130.8, 116.5, 0, 116.5, 130.8];
+  const LEAD_NOTES = [587.3, 698.5, 880.0, 1046.5, 698.5, 880.0, 1046.5, 1318.5, 523.3, 659.3, 784.0, 1046.5, 466.2, 587.3, 698.5, 880.0];
+
+  function startBGM() {
+    if (bgmTimer) return;
+    bgmTimer = setInterval(() => {
+      if (!bgmEnabled || !soundEnabled || gameState !== STATE_PLAYING) return;
+      try {
+        const bassFreq = BASS_NOTES[bgmStep % 16];
+        if (bassFreq > 0) {
+          playFM('square', 'sawtooth', bassFreq, 2.0, 3.6, 0.10, 0.07, 0.10, false);
+        }
+        if (bgmStep % 2 === 0) {
+          const leadFreq = LEAD_NOTES[bgmStep % 16];
+          playFM('sine', 'triangle', leadFreq, 1.0, 1.4, 0.16, 0.10, 0.05, true);
+        }
+        if (bgmStep % 4 === 2) {
+          playFM('triangle', 'sawtooth', 80, 5.0, 4.0, 0.05, 0.03, 0.06, false);
+        }
+        bgmStep = (bgmStep + 1) % 16;
+      } catch (e) {}
+    }, 125);
+  }
+
+  function toggleBGM() {
+    bgmEnabled = !bgmEnabled;
+    safeSetStorage('kspace_bgm', bgmEnabled ? '1' : '0');
+    showToast(bgmEnabled ? '🎵 Genesis FM Synth: ON' : '🎵 Genesis FM Synth: OFF', 'info', 1800);
   }
 
   // --- PARTICLES, SHOCKWAVES & DEBRIS (Loop 8 Enhanced Engine) ---
@@ -1077,7 +1136,7 @@ window.addEventListener('beforeunload', () => {
       p.x = W / 2 - 10;
       p.y = H - 60;
       invincibleTimer = 125; // 2 seconds invincibility
-      dashCooldown = 300; // 5 seconds CD
+      dashCooldown = playerChassis === 2 ? 210 : 300; // Void Phantom: 30% faster cooldown
       playSound(2);
       showToast('💨 Tactical Dash Burst!', 'info', 1500);
       addExplosion(p.x + 10, p.y + 10, 25, '#00e5ff');
@@ -1099,28 +1158,30 @@ window.addEventListener('beforeunload', () => {
     showToast(`💥 SMART BOMB DETONATED! (${p.bombs} left)`, 'info', 1800);
     addExplosion(W / 2, H / 2, 50, '#ffffff');
 
+    let bombDmg = playerChassis === 1 ? 140 : 100;
     for (let i = enemies.length - 1; i >= 0; i--) {
       let e = enemies[i];
-      e.hp -= 100;
+      e.hp -= bombDmg;
       if (e.hp <= 0) handleEnemyDefeat(e, i);
     }
     eBullets = [];
 
     if (boss) {
+      let bossBombDmg = playerChassis === 1 ? 110 : 80;
       if (boss.isDreadnought) {
         if (boss.genL > 0) { boss.genL = Math.max(0, boss.genL - 50); addExplosion(boss.x + 25, boss.y + 25, 20, '#00e5ff'); }
         if (boss.genR > 0) { boss.genR = Math.max(0, boss.genR - 50); addExplosion(boss.x + 95, boss.y + 25, 20, '#00e5ff'); }
-        if (boss.genL <= 0 && boss.genR <= 0) boss.hp -= 80;
+        if (boss.genL <= 0 && boss.genR <= 0) boss.hp -= bossBombDmg;
       } else if (boss.isMothership) {
         for (let t of boss.turrets) {
           if (t.active) {
-            t.hp -= 60;
+            t.hp -= (playerChassis === 1 ? 80 : 60);
             if (t.hp <= 0) t.active = false;
           }
         }
-        if (!isMothershipShieldActive()) boss.hp -= 80;
+        if (!isMothershipShieldActive()) boss.hp -= bossBombDmg;
       } else {
-        boss.hp -= 80;
+        boss.hp -= bossBombDmg;
       }
       addExplosion(boss.x + boss.w / 2, boss.y + boss.h / 2, 35, '#ff1744');
       if (boss.hp <= 0) destroyBoss();
@@ -1497,16 +1558,21 @@ window.addEventListener('beforeunload', () => {
 
     p = {
       x: W / 2 - 10, y: H - 60,
-      hp: 3, maxHp: 3,
-      shield: false, bombs: 1, maxBombs: 3, weaponType: 0
+      hp: playerChassis === 1 ? 4 : 3,
+      maxHp: playerChassis === 1 ? 4 : 3,
+      shield: false,
+      bombs: playerChassis === 1 ? 2 : 1,
+      maxBombs: playerChassis === 1 ? 4 : 3,
+      weaponType: 0
     };
     weaponLevel = 0;
     score = 0; wave = 1; enemiesKilled = 0;
     comboMultiplier = 1; comboTimer = 0;
-    spreadTimer = 0; laserTimer = 0; rapidTimer = 0;
+    spreadTimer = 0; laserTimer = 0; plasmaTimer = 0; rapidTimer = 0;
     timeStopTimer = 0; timeStopCooldown = 0;
     dashCooldown = 0; invincibleTimer = 0;
     hyperShieldTimer = 0; hyperShieldCooldown = 0;
+    startBGM();
 
     drones = [];
     droneCount = 0;
@@ -1522,7 +1588,7 @@ window.addEventListener('beforeunload', () => {
     eliteSquadTimer = 0;
 
     bullets = []; eBullets = []; enemies = []; powerups = []; explosions = [];
-    shockwaves = []; debris = []; shieldRipples = []; muzzleFlashes = []; comets = [];
+    shockwaves = []; debris = []; shieldRipples = []; muzzleFlashes = [];
     boss = null;
     escort.active = false; pathGatesActive = false;
     gameState = STATE_PLAYING;
@@ -1543,21 +1609,48 @@ window.addEventListener('beforeunload', () => {
   function spawnEnemy() {
     if (boss || modeIndex === 2) return;
 
+    let sec = (wave <= 4) ? 1 : ((wave <= 8) ? 2 : ((wave <= 12) ? 3 : ((wave <= 16) ? 4 : 5)));
     let t = Math.floor(randomFloat() * 100);
     let type, dx = 0;
-    if (t < 25) type = 0;       // Scout Interceptor
-    else if (t < 38) type = 1;  // Chaser Predator
-    else if (t < 50) type = 2;  // Shooter Saucer
-    else if (t < 60) type = 3;  // Armored Heavy
-    else if (t < 70) { type = 4; dx = (randomFloat() < 0.5 ? 2.2 : -2.2); } // Zigzag
-    else if (t < 78) type = 5;  // Small Asteroid
-    else if (t < 85) { type = 6; dx = (randomFloat() < 0.5 ? 1.8 : -1.8); } // Frigate
-    else if (t < 92) type = 7;  // Kamikaze Interceptor
-    else type = 8;             // Stealth Cloak Fighter
+    if (sec === 1) {
+      // Sector 1: Perimeter Belt - Scouts, Chasers, Asteroids, occasional Zigzag
+      if (t < 40) type = 0;
+      else if (t < 70) type = 1;
+      else if (t < 88) type = 5;
+      else { type = 4; dx = (randomFloat() < 0.5 ? 2.2 : -2.2); }
+    } else if (sec === 2) {
+      // Sector 2: Nebula Corridor - Saucers, Zigzags, Kamikaze, Asteroids
+      if (t < 25) type = 0;
+      else if (t < 45) type = 2;
+      else if (t < 65) { type = 4; dx = (randomFloat() < 0.5 ? 2.2 : -2.2); }
+      else if (t < 82) type = 7;
+      else type = 5;
+    } else if (sec === 3) {
+      // Sector 3: Fleet Corridor - Heavies, Frigates, Saucers, Kamikaze
+      if (t < 20) type = 1;
+      else if (t < 40) type = 2;
+      else if (t < 62) type = 3;
+      else if (t < 82) { type = 6; dx = (randomFloat() < 0.5 ? 1.8 : -1.8); }
+      else type = 7;
+    } else if (sec === 4) {
+      // Sector 4: Volcanic Expanse - Stealth, Frigates, Heavies, Giant Asteroids
+      if (t < 20) type = 3;
+      else if (t < 42) type = 8;
+      else if (t < 64) { type = 6; dx = (randomFloat() < 0.5 ? 1.8 : -1.8); }
+      else if (t < 82) type = 9;
+      else type = 7;
+    } else {
+      // Sector 5: Citadel Core - Maximum danger squad
+      if (t < 18) type = 3;
+      else if (t < 38) type = 8;
+      else if (t < 58) { type = 6; dx = (randomFloat() < 0.5 ? 1.8 : -1.8); }
+      else if (t < 78) type = 10;
+      else type = 11;
+    }
 
-    let hp = type === 9 ? 50 : (type === 8 ? 18 : (type === 7 ? 8 : (type === 6 ? 45 : (type === 5 ? 25 : (type === 3 ? 12 : (type === 2 ? 6 : (type === 4 ? 4 : 2)))))));
-    let ew = (type === 6 || type === 9) ? 36 : 20;
-    enemies.push({ x: randomFloat() * (W - ew), y: -24, type: type, hp: hp, maxHp: hp, dx: dx, timer: 0, cloaked: false, isElite: false });
+    let hp = (type === 11) ? 35 : ((type === 10) ? 28 : ((type === 9) ? 50 : (type === 8 ? 18 : (type === 7 ? 8 : (type === 6 ? 45 : (type === 5 ? 25 : (type === 3 ? 12 : (type === 2 ? 6 : (type === 4 ? 4 : 2)))))))));
+    let ew = (type === 6 || type === 9 || type === 11 || type === 12) ? 36 : 20;
+    enemies.push({ x: randomFloat() * (W - ew), y: -24, type: type, hp: hp, maxHp: hp, dx: dx, timer: 0, cloaked: false, isElite: (type >= 10) });
   }
 
   function spawnFormation(type) {
@@ -1663,7 +1756,7 @@ window.addEventListener('beforeunload', () => {
   // --- SHOOTING LOGIC ---
   function shoot() {
     shotsFired++;
-    playSound(laserTimer > 0 ? 5 : 0);
+    playSound(laserTimer > 0 ? 5 : (p.weaponType === 3 ? 10 : 0));
     if (laserTimer > 0) return;
 
     if (spreadTimer > 0 || p.weaponType === 1) {
@@ -1830,10 +1923,12 @@ window.addEventListener('beforeunload', () => {
       }
     } else {
       let isFire = (keys[keybinds.fire] || keys['enter'] || keys['spacebar'] || keys[' '] || isPointerDown);
-      let fireRate = (overchargeTimer > 0) ? 3 : ((rapidTimer > 0) ? 3 : 7);
+      let baseFireRate = playerChassis === 0 ? 6 : 7;
+      let fireRate = (overchargeTimer > 0) ? (playerChassis === 0 ? 2 : 3) : ((rapidTimer > 0) ? 3 : baseFireRate);
       let willFire = (isFire && frameCount % fireRate === 0);
 
-      const speed = (keys['shift'] || keys['ShiftLeft']) ? 7 : 4.5;
+      const baseSpeed = playerChassis === 0 ? 5.2 : (playerChassis === 1 ? 4.2 : 4.6);
+      const speed = (keys['shift'] || keys['ShiftLeft']) ? baseSpeed * 1.5 : baseSpeed;
       if (keys[keybinds.left] || keys['arrowleft']) p.x -= speed;
       if (keys[keybinds.right] || keys['arrowright']) p.x += speed;
       if (keys[keybinds.up] || keys['arrowup']) p.y -= speed;
@@ -1853,7 +1948,13 @@ window.addEventListener('beforeunload', () => {
     if (modeIndex === 0) {
       let targetWave = Math.min(20, 1 + Math.floor(score / 650));
       if (targetWave > wave) {
+        let oldSec = (wave <= 4) ? 1 : ((wave <= 8) ? 2 : ((wave <= 12) ? 3 : ((wave <= 16) ? 4 : 5)));
         wave = targetWave;
+        let newSec = (wave <= 4) ? 1 : ((wave <= 8) ? 2 : ((wave <= 12) ? 3 : ((wave <= 16) ? 4 : 5)));
+        if (newSec !== oldSec) {
+          const secNames = ["PERIMETER BELT", "NEBULA CORRIDOR", "DREADNOUGHT FLEET", "VOLCANIC EXPANSE", "MOTHERSHIP CITADEL"];
+          showToast(`⚡ ENTERING SECTOR ${newSec}: ${secNames[newSec - 1]}`, 'info', 3500);
+        }
         playSound(3);
         if (wave === 3 && !eliteSquadActive && !boss) spawnEliteSquad(0);
         else if (wave === 4 && !bombardmentActive && !boss) triggerBombardment();
@@ -1876,8 +1977,9 @@ window.addEventListener('beforeunload', () => {
     }
 
     // Scroll Starfield
+    let starSpeedMult = (modeIndex === 1 ? 1.5 : 1.0) * (hyperJumpTimer > 0 ? 5.0 : 1.0);
     for (let s of stars) {
-      s.y += s.speed * (modeIndex === 1 ? 1.5 : 1.0);
+      s.y += s.speed * starSpeedMult;
       if (s.y > H) { s.y = 0; s.x = randomFloat() * W; }
     }
 
@@ -1920,8 +2022,9 @@ window.addEventListener('beforeunload', () => {
     updateExplosions();
 
     // Timers
-    if (spreadTimer > 0) spreadTimer--;
-    if (laserTimer > 0) laserTimer--;
+    if (spreadTimer > 0) { spreadTimer--; if (spreadTimer <= 0 && p.weaponType === 1) p.weaponType = (laserTimer > 0 ? 2 : (plasmaTimer > 0 ? 3 : 0)); }
+    if (laserTimer > 0) { laserTimer--; if (laserTimer <= 0 && p.weaponType === 2) p.weaponType = (spreadTimer > 0 ? 1 : (plasmaTimer > 0 ? 3 : 0)); }
+    if (plasmaTimer > 0) { plasmaTimer--; if (plasmaTimer <= 0 && p.weaponType === 3) p.weaponType = (spreadTimer > 0 ? 1 : (laserTimer > 0 ? 2 : 0)); }
     if (rapidTimer > 0) rapidTimer--;
     if (timeStopTimer > 0) timeStopTimer--;
     if (timeStopCooldown > 0) timeStopCooldown--;
@@ -2345,7 +2448,8 @@ window.addEventListener('beforeunload', () => {
     score += baseScore * comboMultiplier;
     enemiesKilled++;
     totalKills++;
-    overchargeEnergy = Math.min(100, overchargeEnergy + (e.isElite ? 12 : 4));
+    let ocGain = e.isElite ? (playerChassis === 2 ? 16 : 12) : (playerChassis === 2 ? 6 : 4);
+    overchargeEnergy = Math.min(100, overchargeEnergy + ocGain);
     hyperJumpEnergy = Math.min(100, hyperJumpEnergy + (e.isElite ? 15 : 3));
     playSound(1);
     addExplosion(e.x + 10, e.y + 10, e.isElite ? 24 : (e.type === 6 ? 20 : 12), e.isElite ? '#ffd700' : '#ff9100');
@@ -2359,7 +2463,7 @@ window.addEventListener('beforeunload', () => {
     // Powerup Drop Chance
     let dropChance = e.isElite ? 0.8 : 0.22;
     if (randomFloat() < dropChance) {
-      powerups.push({ x: e.x, y: e.y, dy: 1.8, type: Math.floor(randomFloat() * 11) });
+      powerups.push({ x: e.x, y: e.y, dy: 1.8, type: Math.floor(randomFloat() * 12) });
     }
 
     enemies.splice(index, 1);
@@ -2377,6 +2481,12 @@ window.addEventListener('beforeunload', () => {
     else if (type === 8) { if (weaponLevel < 2) weaponLevel++; }
     else if (type === 9) { overchargeEnergy = Math.min(100, overchargeEnergy + 50); }
     else if (type === 10) { deployDroneWing(); }
+    else if (type === 11) {
+      plasmaTimer = 350;
+      p.weaponType = 3;
+      showToast('⚡ PLASMA CANNON ENGAGED!', 'info', 1800);
+      playSound(2);
+    }
   }
 
   function playerHit() {
@@ -2422,28 +2532,27 @@ window.addEventListener('beforeunload', () => {
       ctx.fillStyle = '#00b0ff';
       ctx.beginPath(); ctx.moveTo(5, 1); ctx.lineTo(9, 7); ctx.lineTo(8, 10); ctx.lineTo(2, 10); ctx.lineTo(1, 7); ctx.closePath(); ctx.fill();
 
-      // Specular sheen sweep on drone wing
-      let dSheen = ((frame * 1.5 + d * 10) % 20) - 5;
-      ctx.save();
-      ctx.beginPath(); ctx.moveTo(5, 0); ctx.lineTo(11, 7); ctx.lineTo(9, 11); ctx.lineTo(1, 11); ctx.lineTo(-1, 7); ctx.closePath();
-      ctx.clip();
-      let dGrad = ctx.createLinearGradient(0, dSheen, 10, dSheen + 4);
-      dGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-      dGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.75)');
-      dGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      ctx.fillStyle = dGrad;
-      ctx.fillRect(-2, 0, 14, 12);
-      ctx.restore();
+      // Static armor facet highlight
+      ctx.strokeStyle = '#80d8ff';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(5, 2); ctx.lineTo(8, 7); ctx.stroke();
 
       // Point-Defense Plasma Cockpit / Focus Lens
       ctx.fillStyle = (frame % 4 < 2) ? '#ffea00' : '#ffffff';
       ctx.beginPath(); ctx.arc(5, 5, 2.5, 0, Math.PI * 2); ctx.fill();
 
-      // Point Defense rotating aura ring
-      ctx.strokeStyle = (frame % 4 < 2) ? 'rgba(0, 229, 255, 0.85)' : 'rgba(255, 255, 255, 0.85)';
+      // Point Defense aura ring (clean, static)
+      ctx.strokeStyle = 'rgba(0, 229, 255, 0.85)';
       ctx.lineWidth = 1;
-      let rotD = (frame * 0.1 + d * Math.PI) % (Math.PI * 2);
-      ctx.beginPath(); ctx.arc(5, 5, 8, rotD, rotD + Math.PI * 1.4); ctx.stroke();
+      ctx.beginPath(); ctx.arc(5, 5, 8, 0, Math.PI * 2); ctx.stroke();
+
+      // Cybernetic energy conduit tether to ship
+      ctx.strokeStyle = (frame % 4 < 2) ? 'rgba(0, 229, 255, 0.35)' : 'rgba(0, 140, 200, 0.2)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(5, 5);
+      ctx.lineTo(p.x + 10 - dr.x, p.y + 10 - dr.y);
+      ctx.stroke();
       ctx.restore();
     }
   }
@@ -2523,20 +2632,9 @@ window.addEventListener('beforeunload', () => {
       ctx.moveTo(10, 6); ctx.lineTo(2, 14);
       ctx.stroke();
 
-      // Specular Sheen Sweep
-      let sheenY = ((frame * 1.6) % 36) - 8;
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(10, -2); ctx.lineTo(21, 11); ctx.lineTo(19, 20); ctx.lineTo(14, 16);
-      ctx.lineTo(10, 20); ctx.lineTo(6, 16); ctx.lineTo(1, 20); ctx.lineTo(-1, 11);
-      ctx.closePath(); ctx.clip();
-      let sheenGrad = ctx.createLinearGradient(0, sheenY, 15, sheenY + 10);
-      sheenGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-      sheenGrad.addColorStop(0.5, 'rgba(255, 234, 0, 0.7)');
-      sheenGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      ctx.fillStyle = sheenGrad;
-      ctx.fillRect(-2, 0, 24, 24);
-      ctx.restore();
+      // Dorsal armor keel ridge (clean, static)
+      ctx.fillStyle = overchargeTimer > 0 ? '#fff59d' : '#ff5252';
+      ctx.fillRect(9.5, 3, 1, 8);
 
       // Amber-Gold Visor Cockpit
       ctx.fillStyle = '#ffea00';
@@ -2591,20 +2689,9 @@ window.addEventListener('beforeunload', () => {
       ctx.moveTo(10, 7); ctx.lineTo(1, 16);
       ctx.stroke();
 
-      // Specular Sheen Sweep
-      let sheenY = ((frame * 1.6) % 36) - 8;
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(10, -2); ctx.lineTo(22, 16); ctx.lineTo(15, 19); ctx.lineTo(10, 14);
-      ctx.lineTo(5, 19); ctx.lineTo(-2, 16);
-      ctx.closePath(); ctx.clip();
-      let sheenGrad = ctx.createLinearGradient(0, sheenY, 15, sheenY + 10);
-      sheenGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-      sheenGrad.addColorStop(0.5, 'rgba(0, 230, 118, 0.6)');
-      sheenGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      ctx.fillStyle = sheenGrad;
-      ctx.fillRect(-2, 0, 24, 24);
-      ctx.restore();
+      // Tachyon resonance waveguide (clean, static)
+      ctx.fillStyle = overchargeTimer > 0 ? '#fff59d' : '#69f0ae';
+      ctx.fillRect(9.5, 2, 1, 8);
 
       // Phased Crystalline Emerald Cockpit
       ctx.fillStyle = '#00e676';
@@ -2666,20 +2753,9 @@ window.addEventListener('beforeunload', () => {
       ctx.moveTo(10, 8); ctx.lineTo(4, 17);
       ctx.stroke();
 
-      // Specular Sheen Sweep Highlight Across Hull Facets
-      let sheenY = ((frame * 1.6) % 36) - 8;
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(10, 0); ctx.lineTo(20, 16); ctx.lineTo(15, 20); ctx.lineTo(10, 15); ctx.lineTo(5, 20); ctx.lineTo(0, 16);
-      ctx.closePath();
-      ctx.clip();
-      let sheenGrad = ctx.createLinearGradient(0, sheenY, 15, sheenY + 10);
-      sheenGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-      sheenGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.7)');
-      sheenGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      ctx.fillStyle = sheenGrad;
-      ctx.fillRect(-2, 0, 24, 24);
-      ctx.restore();
+      // Titanium dorsal spine (clean, static)
+      ctx.fillStyle = overchargeTimer > 0 ? '#fff59d' : '#b3e5fc';
+      ctx.fillRect(9.5, 2, 1, 9);
 
       // Cockpit Canopy Glass Glow & Reflection
       ctx.fillStyle = overchargeTimer > 0 ? '#00e5ff' : '#00e5ff';
@@ -2695,12 +2771,10 @@ window.addEventListener('beforeunload', () => {
       ctx.lineWidth = 2.5;
       ctx.shadowBlur = 12; ctx.shadowColor = '#ffea00';
       ctx.beginPath(); ctx.arc(10, 10, r, 0, Math.PI * 2); ctx.stroke();
-      // Orbiting plasma arcs
-      for (let a = 0; a < 3; a++) {
-        let ang = frame * 0.15 + a * (Math.PI * 2 / 3);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(10 + Math.cos(ang) * (r + 1) - 1.5, 10 + Math.sin(ang) * (r + 1) - 1.5, 3, 3);
-      }
+      // Concentric inner harmonic containment barrier (clean, static, no orbiting dots)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(10, 10, r - 3, 0, Math.PI * 2); ctx.stroke();
     } else if (hyperShieldTimer > 0) {
       let rPulse = 20 + Math.sin(frame * 0.3) * 2;
       ctx.strokeStyle = '#ffea00';
@@ -2708,11 +2782,10 @@ window.addEventListener('beforeunload', () => {
       ctx.shadowBlur = 10; ctx.shadowColor = '#ffea00';
       ctx.beginPath(); ctx.arc(10, 10, rPulse, 0, Math.PI * 2); ctx.stroke();
     } else if (shield) {
-      let rot = (frame * 0.1) % (Math.PI * 2);
       ctx.strokeStyle = '#00e5ff';
       ctx.lineWidth = 2;
       ctx.shadowBlur = 8; ctx.shadowColor = '#00e5ff';
-      ctx.beginPath(); ctx.arc(10, 10, 16, rot, rot + Math.PI * 1.6); ctx.stroke();
+      ctx.beginPath(); ctx.arc(10, 10, 16, 0, Math.PI * 2); ctx.stroke();
     }
 
     ctx.restore();
@@ -2739,7 +2812,18 @@ window.addEventListener('beforeunload', () => {
 
   function drawPlayerBullet(b, frame) {
     ctx.save();
-    if (overchargeTimer > 0) {
+    if (b.type === 1) {
+      // Heavy penetrating violet plasma orb
+      ctx.fillStyle = overchargeTimer > 0 ? '#ffea00' : '#d500f9';
+      ctx.shadowBlur = 10; ctx.shadowColor = overchargeTimer > 0 ? '#ffea00' : '#d500f9';
+      ctx.beginPath();
+      ctx.arc(b.x + 3, b.y + 4, 5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(b.x + 3, b.y + 4, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (overchargeTimer > 0) {
       // Thermonuclear golden plasma bolt
       ctx.fillStyle = '#ffea00';
       ctx.shadowBlur = 8; ctx.shadowColor = '#ffea00';
@@ -3075,13 +3159,15 @@ window.addEventListener('beforeunload', () => {
     let pulse = 1 + Math.sin(frame * 0.15) * 0.15;
     ctx.scale(pulse, pulse);
 
-    const colors = ['#00e676', '#00e5ff', '#3d5aff', '#ff1744', '#ffea00', '#d500f9', '#ffd700', '#00b0ff', '#ff64c8', '#ffea00', '#00e5ff'];
-    const labels = ['S', 'L', 'H', 'B', 'R', 'T', 'Y', 'D', 'W', 'O', 'W'];
+    const colors = ['#00e676', '#00e5ff', '#3d5aff', '#ff1744', '#ffea00', '#d500f9', '#ffd700', '#00b0ff', '#ff64c8', '#ffea00', '#00e5ff', '#d500f9'];
+    const labels = ['S', 'L', 'H', 'B', 'R', 'T', 'Y', 'D', 'W', 'O', 'W', 'P'];
 
     ctx.fillStyle = colors[pu.type] || '#fff';
     ctx.beginPath();
     let pulseAmt = (frame % 20 < 10) ? 1 : 0;
-    if (pu.type === 10) {
+    if (pu.type === 11) {
+      ctx.arc(0, 0, 8 + pulseAmt, 0, Math.PI * 2);
+    } else if (pu.type === 10) {
       ctx.moveTo(0, -8 - pulseAmt); ctx.lineTo(8+pulseAmt, 4); ctx.lineTo(4, 8+pulseAmt); ctx.lineTo(0, 4); ctx.lineTo(-4, 8+pulseAmt); ctx.lineTo(-8-pulseAmt, 4); ctx.closePath();
     } else if (pu.type === 9) {
       ctx.moveTo(0, -8 - pulseAmt); ctx.lineTo(8+pulseAmt, 0); ctx.lineTo(0, 8+pulseAmt); ctx.lineTo(-8-pulseAmt, 0); ctx.closePath();
@@ -3178,7 +3264,11 @@ window.addEventListener('beforeunload', () => {
 
     // Starfield
     for (let s of stars) {
-      if (s.layer === 2) {
+      if (hyperJumpTimer > 0) {
+        ctx.strokeStyle = (s.layer === 2) ? '#00e5ff' : 'rgba(255, 255, 255, 0.85)';
+        ctx.lineWidth = s.layer === 2 ? 2 : 1;
+        ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x, s.y + s.speed * 10); ctx.stroke();
+      } else if (s.layer === 2) {
         ctx.strokeStyle = `rgba(255, 255, 255, ${s.alpha})`; ctx.lineWidth = 1.5;
         ctx.beginPath(); ctx.moveTo(s.x, s.y); ctx.lineTo(s.x, s.y + 4); ctx.stroke();
       } else if (s.layer === 1) {
@@ -3195,6 +3285,14 @@ window.addEventListener('beforeunload', () => {
     else if (gameState === STATE_KEYBINDS) drawKeybindsScreen();
     else if (gameState === STATE_PLAYING || gameState === STATE_PAUSED || gameState === STATE_GAMEOVER || gameState === STATE_VICTORY) {
       drawDroneWings(frameCount);
+      if (hyperJumpTimer > 0) {
+        ctx.save();
+        for (let t = 1; t <= 3; t++) {
+          ctx.globalAlpha = 0.35 / t;
+          drawPlayerShip(p.x, p.y + t * 12, false, frameCount - t * 2);
+        }
+        ctx.restore();
+      }
       drawPlayerShip(p.x, p.y, p.shield, frameCount);
       drawHyperJumpEffect(frameCount);
 
@@ -3273,13 +3371,12 @@ window.addEventListener('beforeunload', () => {
 
   function drawSciFiHUDFrame(ctx, frame) {
     ctx.save();
-    // Pulsating Energy Perimeter Inlay
-    let borderAlpha = 0.25 + Math.sin(frame * 0.08) * 0.12;
-    ctx.strokeStyle = `rgba(0, 229, 255, ${borderAlpha})`;
+    // Static High-Contrast Sci-Fi HUD Frame (zero pulsating dots or traveling glints)
+    ctx.strokeStyle = 'rgba(0, 229, 255, 0.45)';
     ctx.lineWidth = 1.5;
     ctx.strokeRect(5, 5, W - 10, H - 10);
 
-    ctx.strokeStyle = `rgba(0, 229, 255, ${borderAlpha * 0.4})`;
+    ctx.strokeStyle = 'rgba(0, 140, 200, 0.25)';
     ctx.lineWidth = 1;
     ctx.strokeRect(8, 8, W - 16, H - 16);
 
@@ -3334,8 +3431,8 @@ window.addEventListener('beforeunload', () => {
     ctx.font = '12px monospace';
     ctx.textAlign = 'left';
     ctx.fillText(isReplaying ? `REP: ${score}` : `SCORE: ${score}`, 10, 18);
-    ctx.fillText(`HI: ${highScore}`, 105, 18);
-    ctx.fillText(`W:${wave}/20`, 185, 18);
+    let sec = (wave <= 4) ? 1 : ((wave <= 8) ? 2 : ((wave <= 12) ? 3 : ((wave <= 16) ? 4 : 5)));
+    ctx.fillText(`W:${wave}/20 [S${sec}]`, 175, 18);
 
     // Visible Pause [||] and Help [?] buttons in HUD
     ctx.fillStyle = 'rgba(10, 25, 50, 0.85)';
@@ -3404,7 +3501,7 @@ window.addEventListener('beforeunload', () => {
 
     ctx.fillStyle = '#80d8ff';
     ctx.font = '11px monospace';
-    ctx.fillText('Loop 11 Space Command', W / 2, 70);
+    ctx.fillText('Deep Space Command', W / 2, 70);
 
     // Animated Preview of Active Fighter Chassis
     drawPlayerShip(W / 2 - 10, 80, false, frameCount);
@@ -3458,21 +3555,20 @@ window.addEventListener('beforeunload', () => {
       "[C] / [F4]    : Cycle Fighter Chassis",
       "[P] / [||]    : Pause Game",
       "[F5] / [F9]   : Quicksave / Quickload",
-      "[M]           : Toggle Audio Mute",
+      "[M]           : Toggle Genesis FM Audio",
       "",
-      "--- LOOP 11 SYSTEMS ---",
+      "--- COMBAT SUBSYSTEMS ---",
       "[J] : Hyper-Jump Warp Drive",
       "[W] : Deploy Companion Drone",
       "[O] : Overcharge Hyper-Mode",
       "[T] : Time Stop (Chrono)",
       "[D] : Tactical Dash (Invinc.)",
-      "[B] : Smart Bomb (Clear)",
+      "[B] : Smart Bomb (Screen Wipe)",
       "[S] : Hyper Shield (Barrier)",
       "",
       "--- POWERUP PODS ---",
-      "S:Spread L:Laser H:Shield",
-      "B:Bomb R:Rapid T:Time",
-      "W:Drone Pod O:Overcharge Core"
+      "S:Spread L:Laser P:Plasma H:Shield",
+      "B:Bomb R:Rapid T:Time W:Drone O:Core"
     ];
     for (let i = 0; i < instructions.length; i++) {
       ctx.fillText(instructions[i], W / 2, 65 + i * 15);

@@ -80,7 +80,7 @@ typedef struct { float x; int timer, delay, active; int width; } OrbitalStrike;
 typedef struct {
     int score, wave, mode;
     int playerHp, shieldActive, hyperShieldTimer, hyperShieldCooldown, bombs, weaponType, weaponLevel;
-    int spreadTimer, laserTimer, rapidTimer, timeStopTimer, timeStopCooldown, dashCooldown, invincibleTimer;
+    int spreadTimer, laserTimer, plasmaTimer, rapidTimer, timeStopTimer, timeStopCooldown, dashCooldown, invincibleTimer;
     int overchargeEnergy, overchargeTimer, bombardmentActive;
     float px, py;
     int enemiesKilled, comboMultiplier, comboTimer;
@@ -165,7 +165,6 @@ ShieldRipple ripples[MAX_RIPPLES] = {0};
 MuzzleFlash flashes[MAX_FLASHES] = {0};
 
 typedef struct { float x, y, r, rot, vx, vy; int type; COLORREF col; } Planet;
-typedef struct { float x, y, vx, vy, life; } Comet;
 
 Nebula nebulae[3] = {
     { W * 0.25f, H * 0.3f, 90.0f, 0.12f, 0.2f, 0.0f, RGB(75, 0, 130) },
@@ -177,10 +176,10 @@ Planet planets[2] = {
     { W * 0.8f, H * 0.2f, 40.0f, 0.0f, -0.02f, 0.05f, 0, RGB(0, 77, 64) },
     { W * 0.1f, H * 0.7f, 25.0f, 0.0f, 0.01f, 0.03f, 1, RGB(183, 28, 28) }
 };
-Comet comets[5] = {0};
 
 int spreadTimer = 0;
 int laserTimer = 0;
+int plasmaTimer = 0;
 int rapidTimer = 0;
 int timeStopTimer = 0;
 int timeStopCooldown = 0;
@@ -620,6 +619,7 @@ void SaveGameState() {
     s.weaponLevel = weaponLevel;
     s.spreadTimer = spreadTimer;
     s.laserTimer = laserTimer;
+    s.plasmaTimer = plasmaTimer;
     s.rapidTimer = rapidTimer;
     s.timeStopTimer = timeStopTimer;
     s.timeStopCooldown = timeStopCooldown;
@@ -712,6 +712,7 @@ int LoadGameState() {
         weaponLevel = s.weaponLevel;
         spreadTimer = s.spreadTimer;
         laserTimer = s.laserTimer;
+        plasmaTimer = s.plasmaTimer;
         rapidTimer = s.rapidTimer;
         timeStopTimer = s.timeStopTimer;
         timeStopCooldown = s.timeStopCooldown;
@@ -918,18 +919,47 @@ void SpawnEnemy() {
             e[i].timer = 0;
             e[i].cloaked = 0;
 
+            int sec = (wave <= 4) ? 1 : ((wave <= 8) ? 2 : ((wave <= 12) ? 3 : ((wave <= 16) ? 4 : 5)));
             int t = rnd() % 100;
-            if (t < 25) e[i].type = 0.0f;       // Scout Interceptor
-            else if (t < 38) e[i].type = 1.0f;  // Chaser Predator
-            else if (t < 50) e[i].type = 2.0f;  // Shooter Saucer
-            else if (t < 60) e[i].type = 3.0f;  // Armored Heavy
-            else if (t < 70) { e[i].type = 4.0f; e[i].dx = (rnd()%2==0?2.2f:-2.2f); } // Zigzag
-            else if (t < 78) e[i].type = 5.0f;  // Small Asteroid
-            else if (t < 85) { e[i].type = 6.0f; e[i].dx = (rnd()%2==0?1.8f:-1.8f); } // Frigate
-            else if (t < 92) e[i].type = 7.0f;  // Kamikaze Interceptor (Fast dive)
-            else e[i].type = 8.0f;             // Stealth Cloak Fighter
+            if (sec == 1) {
+                // Sector 1: Perimeter Belt - Scouts, Chasers, Asteroids, occasional Zigzag
+                if (t < 40) e[i].type = 0.0f;
+                else if (t < 70) e[i].type = 1.0f;
+                else if (t < 88) e[i].type = 5.0f;
+                else { e[i].type = 4.0f; e[i].dx = (rnd()%2==0?2.2f:-2.2f); }
+            } else if (sec == 2) {
+                // Sector 2: Nebula Corridor - Saucers, Zigzags, Kamikaze, Asteroids
+                if (t < 25) e[i].type = 0.0f;
+                else if (t < 45) e[i].type = 2.0f;
+                else if (t < 65) { e[i].type = 4.0f; e[i].dx = (rnd()%2==0?2.2f:-2.2f); }
+                else if (t < 82) e[i].type = 7.0f;
+                else e[i].type = 5.0f;
+            } else if (sec == 3) {
+                // Sector 3: Fleet Corridor - Heavies, Frigates, Saucers, Kamikaze
+                if (t < 20) e[i].type = 1.0f;
+                else if (t < 40) e[i].type = 2.0f;
+                else if (t < 62) e[i].type = 3.0f;
+                else if (t < 82) { e[i].type = 6.0f; e[i].dx = (rnd()%2==0?1.8f:-1.8f); }
+                else e[i].type = 7.0f;
+            } else if (sec == 4) {
+                // Sector 4: Volcanic Expanse - Stealth, Frigates, Heavies, Giant Asteroids
+                if (t < 20) e[i].type = 3.0f;
+                else if (t < 42) e[i].type = 8.0f;
+                else if (t < 64) { e[i].type = 6.0f; e[i].dx = (rnd()%2==0?1.8f:-1.8f); }
+                else if (t < 82) e[i].type = 9.0f;
+                else e[i].type = 7.0f;
+            } else {
+                // Sector 5: Citadel Core - Maximum danger squad
+                if (t < 18) e[i].type = 3.0f;
+                else if (t < 38) e[i].type = 8.0f;
+                else if (t < 58) { e[i].type = 6.0f; e[i].dx = (rnd()%2==0?1.8f:-1.8f); }
+                else if (t < 78) e[i].type = 10.0f;
+                else e[i].type = 11.0f;
+            }
 
-            if (e[i].type == 9.0f) e[i].hp = 50;
+            if (e[i].type == 11.0f) e[i].hp = 35;
+            else if (e[i].type == 10.0f) e[i].hp = 28;
+            else if (e[i].type == 9.0f) e[i].hp = 50;
             else if (e[i].type == 8.0f) e[i].hp = 18;
             else if (e[i].type == 7.0f) e[i].hp = 8;
             else if (e[i].type == 6.0f) e[i].hp = 45;
@@ -1469,6 +1499,12 @@ void ApplyPowerup(int type) {
         hyperJumpEnergy += 35;
         if (hyperJumpEnergy > 100) hyperJumpEnergy = 100;
     }
+    else if (type == 11) { // Plasma Cannon
+        plasmaTimer = 350;
+        weaponType = 3;
+        ShowNativeToast("PLASMA CANNON ENGAGED!", 0, 120);
+        PlaySnd(2);
+    }
 }
 
 void Update() {
@@ -1632,7 +1668,15 @@ void Update() {
         int targetWave = 1 + (score / 650);
         if (targetWave > 20) targetWave = 20;
         if (targetWave > wave) {
+            int oldSec = (wave <= 4) ? 1 : ((wave <= 8) ? 2 : ((wave <= 12) ? 3 : ((wave <= 16) ? 4 : 5)));
             wave = targetWave;
+            int newSec = (wave <= 4) ? 1 : ((wave <= 8) ? 2 : ((wave <= 12) ? 3 : ((wave <= 16) ? 4 : 5)));
+            if (newSec != oldSec) {
+                const char* secNames[] = {"PERIMETER BELT", "NEBULA CORRIDOR", "DREADNOUGHT FLEET", "VOLCANIC EXPANSE", "MOTHERSHIP CITADEL"};
+                char secMsg[64];
+                wsprintfA(secMsg, "ENTERING SECTOR %d: %s", newSec, secNames[newSec - 1]);
+                ShowNativeToast(secMsg, 0, 180);
+            }
             PlaySnd(3);
             if (wave == 3 && !eliteSquadActive && !bossActive) SpawnEliteSquad(0);
             else if (wave == 4 && !bombardmentActive && !bossActive) TriggerBombardment();
@@ -1718,8 +1762,9 @@ void Update() {
     }
 
     // Skill Timers & Cooldowns
-    if (spreadTimer > 0) spreadTimer--;
-    if (laserTimer > 0) laserTimer--;
+    if (spreadTimer > 0) { spreadTimer--; if (spreadTimer <= 0 && weaponType == 1) weaponType = (laserTimer > 0 ? 2 : (plasmaTimer > 0 ? 3 : 0)); }
+    if (laserTimer > 0) { laserTimer--; if (laserTimer <= 0 && weaponType == 2) weaponType = (spreadTimer > 0 ? 1 : (plasmaTimer > 0 ? 3 : 0)); }
+    if (plasmaTimer > 0) { plasmaTimer--; if (plasmaTimer <= 0 && weaponType == 3) weaponType = (spreadTimer > 0 ? 1 : (laserTimer > 0 ? 2 : 0)); }
     if (rapidTimer > 0) rapidTimer--;
     if (timeStopTimer > 0) timeStopTimer--;
     if (timeStopCooldown > 0) timeStopCooldown--;
@@ -2170,7 +2215,7 @@ void Update() {
                     for (int k = 0; k < MAX_POWERUPS; k++) {
                         if (!pu[k].active) {
                             pu[k].active = 1.0f; pu[k].x = e[i].x; pu[k].y = e[i].y; pu[k].dy = 1.8f;
-                            pu[k].type = (float)(rnd() % 11); // Powerup 0..10
+                            pu[k].type = (float)(rnd() % 12); // Powerup 0..11
                             break;
                         }
                     }
@@ -2448,12 +2493,11 @@ void DrawPlayerShipGDI(HDC hdc, int x, int y, int shield, int frame) {
         MoveToEx(hdc, x + 10, y + 8, NULL); LineTo(hdc, x + 4, y + 17);
         SelectObject(hdc, oldP1); DeleteObject(inPen);
 
-        int sheenY = ((frame * 2) % 22);
-        HPEN sheenPen = CreatePen(PS_SOLID, 2, RGB(255, 255, 255));
-        HPEN oPen2 = (HPEN)SelectObject(hdc, sheenPen);
-        MoveToEx(hdc, x + 10 - sheenY / 3, y + sheenY, NULL);
-        LineTo(hdc, x + 10 + sheenY / 3, y + sheenY + 1);
-        SelectObject(hdc, oPen2); DeleteObject(sheenPen);
+        // Titanium dorsal spine (clean, static)
+        HBRUSH spineBr = CreateSolidBrush(overchargeTimer > 0 ? RGB(255, 245, 157) : RGB(179, 229, 252));
+        RECT spineRc = {x + 9, y + 2, x + 11, y + 11};
+        FillRect(hdc, &spineRc, spineBr);
+        DeleteObject(spineBr);
 
         for (int m = 0; m < 4; m++) {
             int my = y + 21 + ((frame * 2 + m * 5) % 18);
@@ -2689,13 +2733,19 @@ void DrawDroneWingsGDI(HDC hdc, int frame) {
         Polygon(hdc, pts, 5);
         SelectObject(hdc, oldBr); DeleteObject(dbr);
 
-        // Specular glint on drone wing
-        int dSheen = ((frame * 2 + d * 8) % 10);
-        HPEN dpen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-        HPEN oP = (HPEN)SelectObject(hdc, dpen);
-        MoveToEx(hdc, dx + 3, dy + dSheen, NULL);
-        LineTo(hdc, dx + 7, dy + dSheen);
-        SelectObject(hdc, oP); DeleteObject(dpen);
+        // Static armor facet highlight (clean, static)
+        HPEN facetPen = CreatePen(PS_SOLID, 1, RGB(128, 216, 255));
+        HPEN oP = (HPEN)SelectObject(hdc, facetPen);
+        MoveToEx(hdc, dx + 5, dy + 2, NULL);
+        LineTo(hdc, dx + 8, dy + 7);
+        SelectObject(hdc, oP); DeleteObject(facetPen);
+
+        // Cybernetic energy conduit tether to ship
+        HPEN tPen = CreatePen(PS_SOLID, 1, (frame % 4 < 2) ? RGB(0, 140, 200) : RGB(0, 90, 140));
+        HPEN oTp = (HPEN)SelectObject(hdc, tPen);
+        MoveToEx(hdc, (int)p.x + 10, (int)p.y + 10, NULL);
+        LineTo(hdc, dx + 5, dy + 5);
+        SelectObject(hdc, oTp); DeleteObject(tPen);
 
         // Drone Plasma Cockpit
         HBRUSH cbr = CreateSolidBrush(RGB(255, 234, 0));
@@ -3040,8 +3090,8 @@ void DrawBossGDI(HDC hdc, float fx, float fy, int frame) {
 
 void DrawPowerupGDI(HDC hdc, float fx, float fy, float ftype, int frame) {
     int x = (int)fx, y = (int)fy, type = (int)ftype;
-    COLORREF cols[11] = { RGB(0, 230, 118), RGB(0, 229, 255), RGB(61, 90, 255), RGB(255, 23, 68), RGB(255, 234, 0), RGB(213, 0, 249), RGB(255, 215, 0), RGB(0, 176, 255), RGB(255, 100, 200), RGB(255, 234, 0), RGB(0, 229, 255) };
-    COLORREF c = (type >= 0 && type < 11) ? cols[type] : RGB(255, 255, 255);
+    COLORREF cols[12] = { RGB(0, 230, 118), RGB(0, 229, 255), RGB(61, 90, 255), RGB(255, 23, 68), RGB(255, 234, 0), RGB(213, 0, 249), RGB(255, 215, 0), RGB(0, 176, 255), RGB(255, 100, 200), RGB(255, 234, 0), RGB(0, 229, 255), RGB(255, 87, 34) };
+    COLORREF c = (type >= 0 && type < 12) ? cols[type] : RGB(255, 255, 255);
     HBRUSH br = CreateSolidBrush(c);
     HBRUSH oldBr = (HBRUSH)SelectObject(hdc, br);
     HPEN pen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
@@ -3398,35 +3448,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SelectObject(memDC, oldP); DeleteObject(lavaPen);
                 }
 
-                // Comets (Loop 3)
-                if (rnd() % 200 == 0) {
-                    for(int i=0; i<5; i++){
-                        if (comets[i].life <= 0) {
-                            comets[i].x = (float)(rnd() % W); comets[i].y = -20.0f;
-                            comets[i].vx = ((float)(rnd() % 20) - 10.0f) * 0.2f;
-                            comets[i].vy = 5.0f + (float)(rnd() % 50) * 0.1f;
-                            comets[i].life = 1.0f;
-                            break;
-                        }
-                    }
-                }
-                for (int i = 0; i < 5; i++) {
-                    if (comets[i].life > 0) {
-                        comets[i].x += comets[i].vx; comets[i].y += comets[i].vy; comets[i].life -= 0.01f;
-                        if (comets[i].y > H + 20) comets[i].life = 0;
-                        else {
-                            HPEN cpen = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
-                            HPEN oldPen = (HPEN)SelectObject(memDC, cpen);
-                            MoveToEx(memDC, (int)comets[i].x, (int)comets[i].y, NULL);
-                            LineTo(memDC, (int)(comets[i].x - comets[i].vx * 10), (int)(comets[i].y - comets[i].vy * 10));
-                            SelectObject(memDC, oldPen); DeleteObject(cpen);
-                            HBRUSH cbr = CreateSolidBrush(RGB(255, 255, 255));
-                            HBRUSH oldBr = (HBRUSH)SelectObject(memDC, cbr);
-                            Ellipse(memDC, (int)comets[i].x - 1, (int)comets[i].y - 1, (int)comets[i].x + 2, (int)comets[i].y + 2);
-                            SelectObject(memDC, oldBr); DeleteObject(cbr);
-                        }
-                    }
-                }
 
                 // Orbital Bombardment Strikes Rendering
                 for (int k = 0; k < MAX_STRIKES; k++) {
@@ -3760,8 +3781,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     // HUD
                     SetTextColor(memDC, RGB(255, 255, 255));
+                    int sec = (wave <= 4) ? 1 : ((wave <= 8) ? 2 : ((wave <= 12) ? 3 : ((wave <= 16) ? 4 : 5)));
                     char hudStr[64];
-                    wsprintfA(hudStr, "SCORE: %d  HIGH: %d  W:%d/20", score, highScore, wave);
+                    wsprintfA(hudStr, "SCORE:%d HI:%d W:%d/20 [S%d]", score, highScore, wave, sec);
                     TextOutA(memDC, 10, 6, hudStr, lstrlenA(hudStr));
 
                     char statStr[80];
