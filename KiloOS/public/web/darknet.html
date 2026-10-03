@@ -1624,8 +1624,17 @@
         <!-- Convergence Directive on Deep Core -->
         <div id="boxConvergence" style="display:none; background:rgba(0,35,15,0.9); border:2px solid var(--phosphor); padding:10px; font-size:12px; line-height:1.5;">
           <strong style="color:var(--phosphor-bright);">🎉 ALL QUARANTINE SLOTS SYNCHRONIZED // RING-0 BUS ENGAGED!</strong>
+          <p style="margin-top:4px;">
+            Lithospheric transit pipe converged on <strong>Deep Core (10.19.99.127)</strong>. The subterranean relay has armed the Ring-0 memory bus. Out-of-band bridge <code style="color:var(--phosphor-bright); background:#000; padding:1px 3px;">RING0_BRIDGE_ENABLED</code> verified.
+          </p>
+          <div style="margin:6px 0; background:rgba(0,0,0,0.6); padding:6px; border:1px dashed var(--panel-border);">
+            <div>• <strong>Convergence Passkey:</strong> <code style="color:var(--phosphor-bright); background:#000; padding:1px 4px;">LITHO-CORE-99</code> (reconciles Precursor Singularity lattice in Deep Core)</div>
+            <div>• <strong>Sector 03 [NET_RELAY] Key:</strong> <code style="color:var(--phosphor-bright); background:#000; padding:1px 4px;">10.19.99.4</code></div>
+            <div>• <strong>Acoustic Memory Offset:</strong> <code style="color:var(--cyan); background:#000; padding:1px 4px;">0x00DEEPC0</code> / <code style="color:var(--cyan); background:#000; padding:1px 4px;">0x7F1999</code></div>
+            <div>• <strong>Middle-Game Gating:</strong> <code style="color:var(--warn); background:#000; padding:1px 4px;">SECTOR_03_SYNC_XOR_0x7F</code></div>
+          </div>
           <p>
-            Lithospheric transit pipe converged on <strong>Deep Core (10.19.99.127)</strong>. The subterranean relay has armed the Ring-0 memory bus. Navigate to <a href="/web/deep_core.html" style="font-weight:bold; color:var(--cyan);">kweb://deep-core</a> and enter passkey <code style="color:var(--phosphor-bright); background:#000; padding:2px 4px;">LITHO-CORE-99</code> to defusal sector 05 and access the endgame terminal!
+            Navigate to <a href="/web/deep_core.html" style="font-weight:bold; color:var(--cyan);">kweb://deep-core</a> and enter passkey <code style="color:var(--phosphor-bright); background:#000; padding:2px 4px;">LITHO-CORE-99</code> to defuse Sector 05 and access the endgame terminal!
           </p>
         </div>
       </div>
@@ -2189,7 +2198,7 @@
   <!-- Webring Navigation & Diegetic Footer -->
   <footer class="node-footer">
     <div class="webring-badge-box">
-      <span>[ NODE 0x7F &bull; MEMBER OF KILONET WEBRING #012 ]</span>
+      <span>[ NODE 0x7F &bull; MEMBER OF KILONET WEBRING #018 ]</span>
       <a href="/web/deep_core.html" class="webring-link">&laquo; Prev: Deep Core</a> |
       <a href="/web/webring.html" class="webring-link">Webring Hub</a> |
       <a href="/web/portal.html" class="webring-link">Surface Portal</a> |
@@ -2708,7 +2717,67 @@ TRANSMITTER  = GEOTHERMAL THERMOELECTRIC POWERED 45W RF
 ANTENNA      = 1.2km SALTWATER GROUND LOOP IN SALINE CAVITY
 FREQ_PRIMARY = 144.390 MHz
 SUBCARRIER   = 1999.0 Hz PHASE LOCKED LOOP
-BUFFER_SIZE  = 64 KB RING BUFFER (<999KB BOUNDARY)`
+BUFFER_SIZE  = 64 KB RING BUFFER (<999KB BOUNDARY)`,
+
+  "carlsbad_litho_profile.asc": `CARLSBAD SALT VAULTS // BEDROCK SECTOR 0x7F GEOLOGICAL ELEVATION
+========================================================================
+SURFACE [CLEARNET DNS / 0.0.0.0]
+------------------------------------------------------------------------
+   | | | |  Surface Antenna Towers (Inactive / Decommissioned 1999)
+~~~v~v~v~v~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   [ALLUVIAL GRAVEL & GYPSUM // DEPTH 0 - 300m]
+   [PERMIAN SHALE BASIN     // DEPTH 300m - 1200m]
+   [DELAWARE MOUNTAIN ROCK   // DEPTH 1200m - 2400m]
+   ══════════════════════════════════════════════════════════════════════
+   [CARLSBAD HALITE BEDROCK  // DEPTH 2400m - 3000m]
+   ══════════════════════════════════════════════════════════════════════
+       [ CAVITY T-77 ] === [ NODE 0x7F TRANSCEIVER (3000m) ]
+           |                   |
+           |                   +--> 1.2km Saline Ground Antenna Loop
+           |                   +--> Thermoelectric Geothermal 45W
+           +--> Non-Routable Subnet 10.19.99.0/24 Core
+========================================================================
+Compliance: Zero Bloat Fleet Standard (<999KB Boundary Active)`,
+
+  "bell202_afsk_driver.asm": `; BELL 202 AFSK AUDIO DEMODULATOR ROUTINE (16-BIT REAL MODE x86)
+; Node 0x7F Firmware Transponder (c) 1999 Carlsbad Operations
+; Input: Audio pulses on PIT Timer 0 (Port 40h) / UART Port (3F8h)
+; Mark = 1200 Hz, Space = 2200 Hz (1200 Baud)
+
+BITS 16
+ORG 0x100
+
+start:
+    cli                     ; Disable interrupts for accurate cycle timing
+    mov     dx, 0x3F8       ; COM1 Base Port
+    in      al, dx          ; Flush line buffer
+    mov     cx, 1200        ; Bell 202 Mark Frequency benchmark
+
+wait_pulse:
+    in      al, 0x40        ; Read PIT Timer counter
+    xor     al, 0x7F        ; Apply lithospheric 0x7F XOR parity mask
+    test    al, 0x01
+    jz      wait_pulse
+
+decode_bit:
+    mov     ah, 0x0E        ; BIOS Teletype output
+    int     0x10            ; Echo decoded byte to screen
+    sti                     ; Re-enable interrupts
+    ret`,
+
+  "node0x7f_firmware_rom.bin": `00000000: 4B 49 4C 4F 4E 45 54 5F 4E 4F 44 45 5F 30 78 37  KILONET_NODE_0x7
+00000010: 46 5F 52 4F 4D 5F 31 39 39 39 19 98 17 96 15 94  F_ROM_1999......
+00000020: 13 92 11 90 0F 8E 0D 8C 0B 8A 09 88 07 86 05 84  ................
+00000030: 03 82 01 80 FF 7E FD 7C FB 7A F9 78 F7 76 F5 74  .....~.|.z.x.v.t
+00000040: 53 45 43 54 4F 52 5F 30 33 5F 53 59 4E 43 5F 58  SECTOR_03_SYNC_X
+00000050: 4F 52 5F 30 78 37 46 20 4C 49 54 48 4F 2D 39 39  OR_0x7F LITHO-99`,
+
+  "transponder_telemetry.log": `[1999-12-31 23:42:01] PLL Carrier Lock acquired on 144.390 MHz (SNR: +24.8 dB).
+[1999-12-31 23:48:19] Bedrock pressure stable at 82.4 MPa. Temperature: 68.4 deg C.
+[1999-12-31 23:51:00] Transmitting Bell 202 beacon: CARLSBAD_0x7F_ACTIVE.
+[1999-12-31 23:55:44] Subcarrier resonance synchronized at 1999.002 Hz.
+[1999-12-31 23:59:00] Out-of-band packet exchange with 10.19.99.4 confirmed.
+[1999-12-31 23:59:58] Subterranean backbone active across 999KB compliance bound.`
 };
 
 function printTerminal(msg, isPrompt = false) {
@@ -2781,6 +2850,13 @@ function processTerminalCommand(cmdStr) {
   rc4                - Open RC4 256-byte S-box permutation stepper
   otp                - Open One-Time Pad generator & cipher desk
   pgp                - Open PGP 1999 ASCII armor & keyring vault
+  relay              - Jump to Gated Puzzle Relay (Tab 6)
+  convergence        - Inspect middle-game relay locks and yielded artifacts
+  mesh               - Inspect collaborative signal mesh (Tab 7)
+  sniff              - Open Packet Capture Sniffer (Tab 4)
+  scope              - Open RF Oscilloscope & Waterfall (Tab 5)
+  spool              - Open Archival Spools & Schematics (Tab 8)
+  directory          - List subterranean network destinations (Tab 9)
   router / topology  - Open 2D Lithospheric Relay Topology Switchboard
   probe <node>       - Transmit out-of-band lithospheric probe packet
   quicksave / save   - Quicksave station state to localStorage (F5)
@@ -2858,7 +2934,11 @@ http       0      0 10.19.99.7F:8080       10.19.99.254:1044      TIME_WAIT`
   -rw-r--r--  1 root  wheel   820 Dec 31 1999 precursor_cipher.nfo
   -rw-r--r--  1 root  wheel   256 Dec 31 1999 fleet_heartbeat.hex
   -rw-r--r--  1 root  wheel   390 Dec 31 1999 hardware.cfg
-5 file(s), 2,596 bytes used (< 999 KB ceiling intact)`
+  -rw-r--r--  1 root  wheel   940 Dec 31 1999 carlsbad_litho_profile.asc
+  -rw-r--r--  1 root  wheel   812 Dec 31 1999 bell202_afsk_driver.asm
+  -rw-r--r--  1 root  wheel  1024 Dec 31 1999 node0x7f_firmware_rom.bin
+  -rw-r--r--  1 root  wheel   512 Dec 31 1999 transponder_telemetry.log
+9 file(s), 5,884 bytes used (< 999 KB ceiling intact)`
       );
       break;
 
@@ -2996,6 +3076,56 @@ All parity checksums valid across 999KB boundaries.`
         document.getElementById('selProbeDest').value = arg.includes('4') ? 'aethel' : (arg.includes('127') ? 'deep_core' : 'echo');
       }
       launchTopologyProbe();
+      break;
+
+    case 'convergence': {
+      const c1 = RELAY_STATE.slot1 ? 'UNLOCKED (MEM_OFFSET_0x00DEEPC0)' : 'LOCKED (Acoustic 1999Hz)';
+      const c2 = RELAY_STATE.slot2 ? 'UNLOCKED (10.19.99.4 / LITHO-CORE-99)' : 'LOCKED (Sector 03 / Aethel)';
+      const c3 = RELAY_STATE.slot3 ? 'UNLOCKED (0x7F1999 / RING0_BRIDGE)' : 'LOCKED (Warez Checksum)';
+      const count = (RELAY_STATE.slot1 ? 1 : 0) + (RELAY_STATE.slot2 ? 1 : 0) + (RELAY_STATE.slot3 ? 1 : 0);
+      printTerminal(
+`[QUARANTINE RELAY GATEWAY CONVERGENCE STATUS]
+  Slot 1 [Acoustic Carrier] : ${c1}
+  Slot 2 [Sector 03 Relay]  : ${c2}
+  Slot 3 [Scene Checksum]   : ${c3}
+  Progress                  : ${Math.round((count/3)*100)}% (${count}/3 slots synchronized)
+  Convergence Target        : 10.19.99.127 (kweb://deep-core) -> App #100 (KMatrix)
+${count === 3 ? '  RING-0 BRIDGE: ACTIVE - Navigate to kweb://deep-core' : '  Type "relay" to access the interactive puzzle desk.'}`
+      );
+      break;
+    }
+
+    case 'relay':
+      switchTab('puzzle-relay');
+      printTerminal('[NAVIGATION] Transferred to Gated Puzzle Relay (Tab 6).');
+      break;
+
+    case 'mesh':
+      switchTab('mesh');
+      printTerminal(`[SIGNAL MESH] Connected to subterranean mesh (${meshRtdb ? 'Firebase Online' : 'Local Loopback'}).`);
+      break;
+
+    case 'sniff':
+    case 'sniffer':
+      switchTab('sniffer');
+      printTerminal('[PACKET SNIFFER] Monitoring 10.19.99.0/24 subnet traffic.');
+      break;
+
+    case 'scope':
+    case 'spectrum':
+      switchTab('spectrum');
+      printTerminal('[RF OSCILLOSCOPE] Monitoring 144.390MHz / 1999Hz subcarrier.');
+      break;
+
+    case 'spool':
+    case 'spools':
+      switchTab('spool');
+      printTerminal('[ARCHIVAL SPOOLS] Accessing classified 1999 blueprints.');
+      break;
+
+    case 'directory':
+      switchTab('directory');
+      printTerminal('[DIRECTORY] Subterranean node index opened.');
       break;
 
     case 'quicksave':
@@ -4277,8 +4407,9 @@ const RELAY_STATE = {
 function verifyRelaySlot(slotNum) {
   snd.playKeyClick();
   if (slotNum === 1) {
-    const val = document.getElementById('inpSlot1').value.trim().toUpperCase();
-    if (val === '1999HZ' || val === '1999' || val === 'ACOUSTIC_1999' || val === '0X001999') {
+    const raw = document.getElementById('inpSlot1').value.trim().toUpperCase();
+    const val = raw.replace(/\s+/g, '');
+    if (val === '1999HZ' || val === '1999' || val === '1999.00' || val === '1999.002' || val === 'ACOUSTIC_1999' || val === '0X001999' || val === '0X1999' || val === '0X007F1999' || val === '7F1999') {
       RELAY_STATE.slot1 = true;
       document.getElementById('badgeSlot1').textContent = 'UNLOCKED';
       document.getElementById('badgeSlot1').style.background = 'var(--phosphor)';
@@ -4293,8 +4424,9 @@ function verifyRelaySlot(slotNum) {
       alert("CARRIER MISMATCH: Carrier frequency key invalid or rejected by transponder.");
     }
   } else if (slotNum === 2) {
-    const val = document.getElementById('inpSlot2').value.trim().toUpperCase();
-    if (val === 'AETHEL-SECTOR-03' || val === 'SECTOR_03' || val === 'SECTOR-03' || val === '10.19.99.4/CLASSIFIED') {
+    const raw = document.getElementById('inpSlot2').value.trim().toUpperCase();
+    const val = raw.replace(/\s+/g, '_');
+    if (val === 'AETHEL-SECTOR-03' || val === 'SECTOR_03' || val === 'SECTOR-03' || val === '10.19.99.4/CLASSIFIED' || val.includes('SECTOR_03') || val.includes('SECTOR-03') || val.includes('AETHEL') || val.includes('10.19.99.4') || val.includes('CARLSBAD') || val.includes('HALITE')) {
       RELAY_STATE.slot2 = true;
       document.getElementById('badgeSlot2').textContent = 'UNLOCKED';
       document.getElementById('badgeSlot2').style.background = 'var(--phosphor)';
@@ -4309,8 +4441,9 @@ function verifyRelaySlot(slotNum) {
       alert("CLEARANCE DENIED: Corporate intranet sector key invalid.");
     }
   } else if (slotNum === 3) {
-    const val = document.getElementById('inpSlot3').value.trim().toUpperCase();
-    if (val === '0X7F_DARKNET_RELAY' || val === 'FLARELIGHT' || val === '0X7F199942' || val === 'CARLSBAD_0X7F_ACTIVE') {
+    const raw = document.getElementById('inpSlot3').value.trim().toUpperCase();
+    const val = raw.replace(/\s+/g, '_');
+    if (val === '0X7F_DARKNET_RELAY' || val === 'FLARELIGHT' || val === '0X7F199942' || val === 'CARLSBAD_0X7F_ACTIVE' || val.includes('0X7F') || val.includes('7F1999') || val.includes('FLARELIGHT') || val.includes('RAZOR') || val.includes('PARALAX') || val.includes('SKID') || val.includes('CARLSBAD')) {
       RELAY_STATE.slot3 = true;
       document.getElementById('badgeSlot3').textContent = 'UNLOCKED';
       document.getElementById('badgeSlot3').style.background = 'var(--phosphor)';
@@ -4336,6 +4469,20 @@ function updateRelayProgress() {
   if (count === 3) {
     document.getElementById('boxConvergence').style.display = 'block';
     printTerminal(`[ALERT] GATED RELAY COMPLETE! Ring-0 bridge unlocked toward kweb://deep-core.`);
+    if (meshRtdb && meshRtdb.db) {
+      try {
+        const meshRef = meshRtdb.ref(meshRtdb.db, 'arg/signals/subterranean_darknet');
+        meshRtdb.push(meshRef, {
+          nodeId: localNodeId,
+          time: new Date().toTimeString().split(' ')[0],
+          target: "10.19.99.127 (Deep Core)",
+          freq: "1999 Hz",
+          payload: "RELAY_CONVERGENCE_OK: LITHO-CORE-99",
+          timestamp: Date.now()
+        });
+      } catch (e) {}
+    }
+    quicksaveStationState();
   }
 }
 
