@@ -586,7 +586,7 @@
     bottom: 0;
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(4px);
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     z-index: 1000;
@@ -596,6 +596,7 @@
   }
 
   .modal-overlay.active {
+    display: flex;
     opacity: 1;
     pointer-events: auto;
   }
@@ -928,6 +929,7 @@
     border-radius: 4px;
     color: var(--primary);
     font-weight: 700;
+  }
   /* Network & Sockets Pane */
   .network-pane-container, .sentinel-pane-container, .profiler-pane-container {
     display: flex;
@@ -1719,7 +1721,7 @@
         Are you sure you want to end process <strong id="modalTaskName">Task</strong> (PID: <span id="modalTaskPid">0</span>)? Unsaved work in this application may be lost.
       </div>
       <div class="modal-footer">
-        <button class="btn-secondary" onclick="closeKillModal()">Cancel</button>
+        <button class="modal-close btn-secondary" id="confirmModalCloseBtn" onclick="closeKillModal()">Cancel</button>
         <button class="btn-kill" style="background: var(--danger); color: #fff;" onclick="executePendingKill()">End Process</button>
       </div>
     </div>
@@ -1736,7 +1738,7 @@
             <div id="inspectSubtitle" style="font-size:11px; color:var(--text-muted); font-family:monospace;">PID: 0 | Executable: task.exe</div>
           </div>
         </div>
-        <button class="btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="closeInspectModal()">✕</button>
+        <button class="modal-close btn-secondary" id="inspectModalCloseBtn" style="padding:4px 8px; font-size:11px;" onclick="closeInspectModal()" title="Close Inspector (Esc)">✕</button>
       </div>
 
       <div class="inspect-tabs" role="tablist" aria-label="Process details tabs">
@@ -1895,7 +1897,7 @@
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
           <h3 id="helpModalTitle">KTask Monitor &amp; Diagnostic Suite Help</h3>
         </div>
-        <button class="btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="closeHelpModal()" title="Close (Esc)">✕</button>
+        <button class="modal-close btn-secondary" id="helpModalCloseBtn" style="padding:4px 8px; font-size:11px;" onclick="closeHelpModal()" title="Close (Esc)">✕</button>
       </div>
       <div class="modal-body">
         <p style="margin-top:0; color:var(--text-main);">
@@ -1948,7 +1950,7 @@
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
           <h3 id="tutorialModalTitle">Welcome to KTask Monitor</h3>
         </div>
-        <button class="btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="closeTutorialModal()" title="Close (Esc)">✕</button>
+        <button class="modal-close btn-secondary" id="tutorialModalCloseBtn" style="padding:4px 8px; font-size:11px;" onclick="closeTutorialModal()" title="Close (Esc)">✕</button>
       </div>
       <div class="modal-body" style="display: flex; flex-direction: column; gap: 10px;">
         <p style="margin: 0; color: var(--text-main); font-size: 13px; line-height: 1.5;">
@@ -1965,7 +1967,7 @@
         <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); cursor: pointer;">
           <input type="checkbox" id="dontShowTutorialAgain" checked> Don't show again on launch
         </label>
-        <button class="btn-primary" onclick="closeTutorialModal()">Start Monitoring (Enter)</button>
+        <button class="btn-primary tutorial-btn-primary" id="startMonitoringBtn" onclick="closeTutorialModal()">Start Monitoring (Enter)</button>
       </div>
     </div>
   </div>

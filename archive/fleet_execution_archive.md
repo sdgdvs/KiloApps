@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T13:10:00-07:00 — kilo-usability: KClock (Analog Quartz HiDPI Canvas, Responsive Sizing & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, clean builds, 99.9 KB web / 19.4 KB native < 999 KB ceiling).
+  - Analog Quartz Dial (Canvas): High-DPI anti-aliased dial with metallic bezel, tick marks, numerals, and smooth 60fps sweeping seconds.
+  - Multi-View Modes: Added Analog, Digital, and Dual view modes with header/settings toggles and instant `A` keyboard shortcut.
+  - Tab Navigation & Scroll Ergonomics: Optimized tab padding and removed scrollbar line; all 8 tabs fit comfortably without clipping.
+  - Toast & Modal Ergonomics (Directive 189): Anchored toasts to 62px top-center below header; wired direct click and Escape dismissal.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener pausing analog RAF and suspending audio context on backgrounding.
+  - Verification: `test_web_apps.js` PASS (75 elements, 0 err); MSVC clean (`KClock.exe` 19.4 KB); Vite clean in 397ms; security_lint 100% PASS.
+
 - **2026-10-04T12:55:00-07:00 — kilo-tester: KChrono (Interactive UI Audit, Startup Modal Fix, Backdrop Dismissal & ARCH-05)**
   - Status: PASS ✅ (3 issues, 3 fixed; 192.5 KB web / 48.0 KB native < 999 KB ceiling).
   - Startup Modal & Occlusion: Added standard close button & Escape handling to splashOverlay; resolved CDP stuck modal failure.
