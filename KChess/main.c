@@ -25,10 +25,10 @@ int whiteTurn = 1;
 int gameOver = 0;
 int winner = 0; // 1 = White, 2 = Black, 3 = Draw
 int aiMode = 1; // 1 = vs AI, 0 = vs Player
-int gameMode = 0; // 0 = Campaign, 1 = Free Play, 2 = Puzzle Mode, 3 = Blitz Timer Mode
+int gameMode = 1; // 0 = Campaign, 1 = Free Play (Standard Game), 2 = Puzzle Mode, 3 = Blitz Timer Mode
 int currentStage = 1;
 int puzzleIndex = 0;
-int aiPersonality = 4; // 1=Easy, 2=Medium, 3=Hard, 4=Master
+int aiPersonality = 1; // 1=Easy, 2=Medium, 3=Hard, 4=Master
 char* diffNames[] = { "Easy", "Medium", "Hard", "Master" };
 
 int statsWins = 0, statsLosses = 0, statsDraws = 0;

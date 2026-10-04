@@ -755,6 +755,11 @@
     }
 
     .log-time {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
     /* Equipment Selector Bar & Descriptions */
     .equipment-nav {
       display: flex;
@@ -1361,7 +1366,7 @@
       height: 100vh;
       background: rgba(5, 5, 15, 0.82);
       backdrop-filter: blur(6px);
-      display: flex;
+      display: none;
       justify-content: center;
       align-items: center;
       z-index: 1000;
@@ -1371,6 +1376,7 @@
     }
 
     .codex-modal-overlay.show {
+      display: flex;
       opacity: 1;
       pointer-events: auto;
     }
@@ -5202,6 +5208,7 @@
         </div>
       `;
 
+      modal.style.display = 'flex';
       modal.classList.add('show');
       playChime(600, 'sine', 0.15);
     }
@@ -5209,7 +5216,10 @@
     function closeCodexModal(evt) {
       if (evt && evt.target && evt.target.id !== 'codex-modal-overlay' && !evt.target.classList.contains('codex-modal-close')) return;
       const modal = document.getElementById('codex-modal-overlay');
-      if (modal) modal.classList.remove('show');
+      if (modal) {
+        modal.classList.remove('show');
+        modal.style.display = 'none';
+      }
     }
 
     /* Phase 14: Grandmaster Manual & Help Modal Functions */
@@ -5218,6 +5228,7 @@
       if (modal) {
         modal.classList.remove('minimized');
         modal.classList.add('show');
+        modal.style.display = 'flex';
         const minBtn = document.getElementById('help-btn-min');
         if (minBtn) {
           minBtn.innerText = '🗕';
@@ -5235,23 +5246,25 @@
       if (modal) {
         modal.classList.remove('show');
         modal.classList.remove('minimized');
+        modal.style.display = 'none';
         updateManualBadge();
       }
     }
 
-    function minimizeHelpModal(evt) {
+    function minimizeHelpModal(evt, silent = false) {
       if (evt && evt.stopPropagation) evt.stopPropagation();
       const modal = document.getElementById('help-modal-overlay');
       if (modal) {
         modal.classList.add('show');
         modal.classList.add('minimized');
+        modal.style.display = 'block';
         const minBtn = document.getElementById('help-btn-min');
         if (minBtn) {
           minBtn.innerText = '🗖';
           minBtn.title = 'Restore Manual (M)';
         }
         updateManualBadge();
-        playChime(420, 'triangle', 0.1);
+        if (!silent) playChime(420, 'triangle', 0.1);
       }
     }
 
@@ -5368,6 +5381,9 @@
     renderGrimoire();
     updateSlotsUI();
     setGameMode(gameMode);
+
+    // Minimize manual on startup, opening only when actually called for
+    minimizeHelpModal(null, true);
 
     // Startup Welcome Notification Toast
     setTimeout(() => {
@@ -5723,7 +5739,7 @@
   </script>
 
   <!-- Master Alchemist Codex Inspector Modal -->
-  <div class="codex-modal-overlay" id="codex-modal-overlay" onclick="closeCodexModal(event)">
+  <div class="codex-modal-overlay" id="codex-modal-overlay" style="display:none;" onclick="closeCodexModal(event)">
     <div class="codex-modal-card" onclick="event.stopPropagation()">
       <button class="codex-modal-close" onclick="closeCodexModal()">✕</button>
       <div id="codex-modal-content">
@@ -5733,7 +5749,7 @@
   </div>
 
   <!-- Phase 14: Grandmaster Help & Manual Modal Overlay -->
-  <div class="help-modal-overlay" id="help-modal-overlay" onclick="closeHelpModal(event)">
+  <div class="help-modal-overlay" id="help-modal-overlay" style="display:none;" onclick="closeHelpModal(event)">
     <div class="help-modal-card" onclick="onHelpCardClick(event)">
       <div class="help-modal-header">
         <div class="help-modal-title">

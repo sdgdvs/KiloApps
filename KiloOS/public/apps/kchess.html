@@ -16,9 +16,13 @@
     min-height: 100vh; user-select: none; color: var(--text-main);
     overflow: hidden;
     text-rendering: optimizeLegibility;
+    box-sizing: border-box;
+    padding: 6px;
   }
   #app-container {
     display: flex; flex-direction: column; align-items: center; position: relative;
+    max-height: 100vh;
+    max-width: 100vw;
   }
   canvas { 
     background-color: rgba(0, 0, 0, 0.4); 
@@ -28,11 +32,116 @@
     cursor: pointer; 
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    max-width: 100vw;
-    max-height: 100vh;
+    max-width: 98vw;
+    max-height: calc(100vh - 54px);
     object-fit: contain;
     touch-action: none;
   }
+  /* Top Menu Bar Styles */
+  .menu-bar {
+    width: 760px;
+    max-width: 100vw;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    padding: 3px 8px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 12px;
+    user-select: none;
+    z-index: 100;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  .menu-brand {
+    font-weight: 700;
+    color: #5eead4;
+    padding: 4px 8px 4px 4px;
+    margin-right: 4px;
+    border-right: 1px solid rgba(51, 65, 85, 0.6);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+  }
+  .menu-item {
+    position: relative;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    color: #cbd5e1;
+    font-weight: 500;
+    transition: background 0.15s, color 0.15s;
+    outline: none;
+  }
+  .menu-item:hover, .menu-item:focus-within {
+    background: #1e293b;
+    color: #5eead4;
+  }
+  .menu-dropdown {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.85);
+    min-width: 220px;
+    z-index: 1000;
+    padding: 4px 0;
+    margin-top: 3px;
+  }
+  .menu-item:hover .menu-dropdown, .menu-item:focus-within .menu-dropdown {
+    display: block;
+  }
+  .menu-dropdown-entry {
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #f1f5f9;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.12s;
+  }
+  .menu-dropdown-entry:hover {
+    background: #0284c7;
+    color: #ffffff;
+  }
+  .menu-dropdown-entry .shortcut {
+    color: #94a3b8;
+    font-size: 11px;
+    margin-left: 14px;
+    font-family: monospace;
+  }
+  .menu-dropdown-entry:hover .shortcut {
+    color: #e0f2fe;
+  }
+  .menu-divider {
+    border-bottom: 1px solid rgba(51, 65, 85, 0.7);
+    margin: 4px 0;
+  }
+  .menu-btn-quickhelp {
+    background: #1e293b;
+    color: #5eead4;
+    border: 1px solid #334155;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.15s;
+  }
+  .menu-btn-quickhelp:hover {
+    background: #334155;
+    border-color: #5eead4;
+  }
+
   /* Glassmorphism Overlay Modals */
   .modal-overlay {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -122,6 +231,134 @@
 <div id="toast-container"></div>
 
 <div id="app-container">
+  <!-- Top Application Menu Bar -->
+  <div id="kchess-menu-bar" class="menu-bar" role="menubar">
+    <div class="menu-brand">♟️ KChess</div>
+    
+    <div class="menu-item" tabindex="0" role="menuitem" aria-haspopup="true">
+      <span>Game ▾</span>
+      <div class="menu-dropdown" role="menu">
+        <div class="menu-dropdown-entry" onclick="startStandardGame(1)">
+          <span>♟️ Standard vs Easy AI</span><span class="shortcut">Default</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="handleHotkey('r')">
+          <span>🔄 Restart Game</span><span class="shortcut">R</span>
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-dropdown-entry" onclick="setMode(0)">
+          <span id="menu-opt-campaign">⚔️ Campaign (20 Stages)</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="setMode(2)">
+          <span id="menu-opt-puzzle">🧩 Tactical Puzzles</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="setMode(3)">
+          <span id="menu-opt-blitz">⚡ Blitz Clock (3 min)</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="handleHotkey('t')">
+          <span id="menu-opt-passplay">👥 2-Player Pass & Play</span><span class="shortcut">T</span>
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-dropdown-entry" onclick="saveGameState()">
+          <span>💾 Quick Save State</span><span class="shortcut">F5 / S</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="loadGameState()">
+          <span>📂 Quick Load State</span><span class="shortcut">F9 / L</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-item" tabindex="0" role="menuitem" aria-haspopup="true">
+      <span>Difficulty ▾</span>
+      <div class="menu-dropdown" role="menu">
+        <div class="menu-dropdown-entry" onclick="setDifficulty(1)">
+          <span id="diff-opt-1">✓ Easy (Rookie)</span><span class="shortcut">1</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="setDifficulty(2)">
+          <span id="diff-opt-2">  Medium (Club)</span><span class="shortcut">2</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="setDifficulty(3)">
+          <span id="diff-opt-3">  Hard (Master)</span><span class="shortcut">3</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="setDifficulty(4)">
+          <span id="diff-opt-4">  Grandmaster (AB)</span><span class="shortcut">4</span>
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-dropdown-entry" onclick="handleHotkey('p')">
+          <span>Cycle Difficulty</span><span class="shortcut">P</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-item" tabindex="0" role="menuitem" aria-haspopup="true">
+      <span style="color:#6ee7b7; font-weight:600;">🌐 Multiplayer ▾</span>
+      <div class="menu-dropdown" role="menu">
+        <div class="menu-dropdown-entry" onclick="openMultiplayerModal()">
+          <span>🌐 Matchmaking Lobby & Rooms...</span><span class="shortcut">O</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="openMultiplayerModal(); startQuickMatch();">
+          <span>⚡ Instant Quick Match</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="openMultiplayerModal(); setTimeout(() => { const inp = document.getElementById('mp-join-code-input'); if(inp) inp.focus(); }, 150);">
+          <span>🔑 Join Room with Code...</span>
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-dropdown-entry" onclick="createCustomRoom(true)">
+          <span>🏠 Host Public Match Room</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="createCustomRoom(false)">
+          <span>🔒 Host Private Match Room</span>
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-dropdown-entry" onclick="leaveOnlineGame(true)">
+          <span style="color:#f87171;">🚪 Leave Online Match</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-item" tabindex="0" role="menuitem" aria-haspopup="true">
+      <span>Tools ▾</span>
+      <div class="menu-dropdown" role="menu">
+        <div class="menu-dropdown-entry" onclick="handleHotkey('h')">
+          <span>💡 Best Move Hint</span><span class="shortcut">H</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="handleHotkey('f')">
+          <span>❄️ Time Freeze Powerup</span><span class="shortcut">F</span>
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-dropdown-entry" onclick="undoMove()">
+          <span>↩️ Undo Move</span><span class="shortcut">U</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="redoMove()">
+          <span>↪️ Redo Move</span><span class="shortcut">Y</span>
+        </div>
+        <div class="menu-divider"></div>
+        <div class="menu-dropdown-entry" onclick="openFENModal()">
+          <span>📋 FEN Position Manager</span><span class="shortcut">E</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="openPGNModal()">
+          <span>📜 PGN Notation Manager</span><span class="shortcut">G</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="menu-item" tabindex="0" role="menuitem" aria-haspopup="true">
+      <span>Help ▾</span>
+      <div class="menu-dropdown" role="menu">
+        <div class="menu-dropdown-entry" onclick="openHelpModal()">
+          <span>❓ Help & Shortcuts Guide</span><span class="shortcut">F1</span>
+        </div>
+        <div class="menu-dropdown-entry" onclick="openMultiplayerModal()">
+          <span>🌐 Online Multiplayer Info</span><span class="shortcut">O</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-left: auto; display: flex; align-items: center; gap: 8px;">
+      <span id="menu-status-badge" style="font-size: 11px; padding: 2px 8px; border-radius: 4px; background: rgba(30, 41, 59, 0.8); border: 1px solid #334155; color: #5eead4; font-weight: 600;">Standard vs Easy AI</span>
+      <button onclick="openHelpModal()" class="menu-btn-quickhelp" title="Help & Controls [F1]">Help [F1]</button>
+    </div>
+  </div>
+
   <!-- Online Multiplayer Active HUD Bar -->
   <div id="online-hud-bar" style="display:none; width:760px; max-width:100vw; background:rgba(15,23,42,0.92); border:1px solid #38bdf8; border-radius:10px; margin-bottom:8px; padding:6px 14px; box-sizing:border-box; align-items:center; justify-content:space-between; font-size:12px; backdrop-filter:blur(8px); box-shadow:0 4px 16px rgba(0,0,0,0.4); z-index:50;">
     <div style="display:flex; align-items:center; gap:12px;">
@@ -144,37 +381,38 @@
       <h3>KChess Guide & Controls <span class="close-btn" onclick="closeModals()">&times;</span></h3>
       
       <div style="margin-bottom: 12px;">
-        <div style="font-size:13px; font-weight:bold; color:#38bdf8; margin-bottom:4px;">Game Modes (Click or Press [M] / [O] to Switch):</div>
+        <div style="font-size:13px; font-weight:bold; color:#38bdf8; margin-bottom:4px;">Game Modes (Menu Bar / Click / Hotkeys):</div>
         <div style="font-size:12px; color:#cbd5e1; line-height:1.5;">
+          <div><span class="mode-badge" style="cursor:pointer;" onclick="startStandardGame(1)" title="Standard Game vs Easy AI">Standard</span> Full standard 8x8 chess vs Easy AI (White moves first) or 2-player pass-and-play. (Default)</div>
           <div><span class="mode-badge" style="cursor:pointer;" onclick="setMode(0)" title="Switch to Campaign Mode">Campaign</span> 20 progressive historical & tactical endgame scenarios against advancing AI.</div>
-          <div><span class="mode-badge" style="cursor:pointer;" onclick="setMode(1)" title="Switch to Free Play">Free Play</span> Full standard chess board vs AI or 2-player pass-and-play.</div>
           <div><span class="mode-badge" style="cursor:pointer;" onclick="setMode(2)" title="Switch to Puzzle Mode">Puzzles</span> Tactical checkmate and endgame challenge scenarios.</div>
           <div><span class="mode-badge" style="cursor:pointer;" onclick="setMode(3)" title="Switch to Blitz Clock">Blitz</span> Fast-paced 3-minute blitz clock speed chess.</div>
-          <div><span class="mode-badge" style="cursor:pointer; background:#064e3b; border-color:#10b981; color:#6ee7b7;" onclick="openMultiplayerModal()" title="Online Multiplayer">🌐 Online</span> Real-time cross-computer multiplayer via Firebase RTDB lobby.</div>
+          <div><span class="mode-badge" style="cursor:pointer; background:#064e3b; border-color:#10b981; color:#6ee7b7;" onclick="openMultiplayerModal()" title="Online Multiplayer">🌐 Online</span> Optional real-time cross-computer multiplayer via Firebase RTDB lobby.</div>
         </div>
       </div>
 
       <div style="font-size:13px; font-weight:bold; color:#5eead4; margin-bottom:4px;">Keyboard Shortcuts & Controls:</div>
       <table class="help-table">
         <tr><td><kbd>F1</kbd> / <kbd>?</kbd></td><td>Open this Help & Controls guide</td></tr>
-        <tr><td><kbd>O</kbd></td><td>Open Online Multiplayer Matchmaking & Lobby (Firebase RTDB)</td></tr>
+        <tr><td><kbd>1</kbd> - <kbd>4</kbd></td><td>Set AI Difficulty (1: Easy, 2: Med, 3: Hard, 4: Master)</td></tr>
+        <tr><td><kbd>P</kbd></td><td>Cycle AI Difficulty (Easy, Medium, Hard, Master)</td></tr>
+        <tr><td><kbd>O</kbd></td><td>Open Online Multiplayer Matchmaking (Optional)</td></tr>
         <tr><td><kbd>H</kbd></td><td>Calculate & Display Best AI Move Hint</td></tr>
         <tr><td><kbd>F</kbd></td><td>Activate Time Freeze Skill (Skip AI turn / +15s Blitz)</td></tr>
         <tr><td><kbd>U</kbd> / <kbd>Y</kbd></td><td>Undo / Redo Move (interactive stack)</td></tr>
         <tr><td><kbd>S</kbd> / <kbd>F5</kbd></td><td>Quick Save Game State to storage</td></tr>
         <tr><td><kbd>L</kbd> / <kbd>F9</kbd></td><td>Quick Load Saved Game State</td></tr>
-        <tr><td><kbd>M</kbd></td><td>Switch Game Mode (Campaign / Free / Puzzle / Blitz)</td></tr>
-        <tr><td><kbd>T</kbd></td><td>Toggle vs AI / 2-Player Pass-and-Play Mode (Free Play)</td></tr>
-        <tr><td><kbd>P</kbd></td><td>Cycle AI Difficulty (Easy, Medium, Hard, Master)</td></tr>
+        <tr><td><kbd>M</kbd></td><td>Switch Game Mode (Standard / Campaign / Puzzle / Blitz)</td></tr>
+        <tr><td><kbd>T</kbd></td><td>Toggle vs AI / 2-Player Pass-and-Play Mode</td></tr>
         <tr><td><kbd>E</kbd></td><td>FEN Position Manager (Export / Load FEN string)</td></tr>
         <tr><td><kbd>G</kbd></td><td>PGN Move History (Export / Import PGN notation)</td></tr>
-        <tr><td><kbd>R</kbd></td><td>New Game / Restart / Next Campaign Stage / Rematch</td></tr>
+        <tr><td><kbd>R</kbd></td><td>New Game / Restart / Rematch</td></tr>
         <tr><td><kbd>&uarr;&darr;&larr;&rarr;</kbd> + <kbd>Enter</kbd></td><td>Keyboard Board Navigation & Move Execution</td></tr>
         <tr><td><kbd>Esc</kbd></td><td>Deselect current piece / Close Modals</td></tr>
       </table>
 
       <div style="font-size:11px; color:#94a3b8; margin-top:8px; line-height:1.4;">
-        Features: Cross-computer Firebase RTDB multiplayer, Real-time ECO Opening Book detector, Material Score advantage calculator, 3D Ornate Board lighting.
+        Features: Optional cross-computer Firebase RTDB multiplayer, Real-time ECO Opening Book detector, Material Score advantage calculator, 3D Ornate Board lighting.
       </div>
 
       <div class="btn-group" style="margin-top:16px;">
@@ -377,10 +615,10 @@
   let gameOver = false;
   let winner = 0; // 1 = White, 2 = Black, 3 = Draw
   let aiMode = true;
-  let gameMode = 0; // 0 = Campaign, 1 = Free Play, 2 = Puzzle Mode, 3 = Blitz Timer
+  let gameMode = 1; // 0 = Campaign, 1 = Free Play (Standard Chess vs AI), 2 = Puzzle Mode, 3 = Blitz Timer
   let currentStage = 1;
   let puzzleIndex = 0;
-  let aiPersonality = 4; // 1=Easy, 2=Medium, 3=Hard, 4=Master
+  let aiPersonality = 1; // 1=Easy, 2=Medium, 3=Hard, 4=Master (Default: Easy AI)
   const difficultyNames = ["Easy", "Medium", "Hard", "Master"];
 
   let statsWins = parseInt(localStorage.getItem('kchess_wins') || '0') || 0;
@@ -1379,6 +1617,7 @@
       moveHistoryStack = [];
       historyIndex = -1;
       pushHistoryState();
+      updateMenuIndicators();
   }
 
   let kbX = 4, kbY = 6;
@@ -1389,16 +1628,76 @@
       if (el) el.textContent = msg;
   }
 
+  function startStandardGame(diff = 1) {
+      if (isOnlineGame) {
+          leaveOnlineGame(true);
+      }
+      gameMode = 1;
+      aiMode = true;
+      aiPersonality = diff;
+      whiteTurn = true;
+      resetGame();
+      showToast(`Standard Game vs ${difficultyNames[aiPersonality - 1]} AI Started! White to move.`, "success");
+      closeModals();
+      updateMenuIndicators();
+  }
+
+  function setDifficulty(diff) {
+      if (isOnlineGame) {
+          showToast("AI difficulty disabled in Online match", "warn");
+          return;
+      }
+      aiPersonality = Math.max(1, Math.min(4, diff));
+      showToast(`AI Difficulty: ${difficultyNames[aiPersonality - 1]}`, "info");
+      updateMenuIndicators();
+  }
+
+  function updateMenuIndicators() {
+      for (let i = 1; i <= 4; i++) {
+          const el = document.getElementById('diff-opt-' + i);
+          if (el) {
+              const check = (aiPersonality === i && !isOnlineGame) ? '✓ ' : '  ';
+              const names = ['Easy (Rookie)', 'Medium (Club)', 'Hard (Master)', 'Grandmaster (AB)'];
+              el.textContent = check + names[i - 1];
+          }
+      }
+      const badge = document.getElementById('menu-status-badge');
+      if (badge) {
+          if (isOnlineGame) {
+              badge.textContent = `Online: ${currentRoomId || 'Match'}`;
+              badge.style.color = '#38bdf8';
+              badge.style.borderColor = '#0284c7';
+          } else if (gameMode === 1) {
+              badge.textContent = `Standard: ${aiMode ? 'vs ' + difficultyNames[aiPersonality - 1] + ' AI' : 'Pass & Play'}`;
+              badge.style.color = '#5eead4';
+              badge.style.borderColor = '#334155';
+          } else if (gameMode === 0) {
+              badge.textContent = `Campaign: Stage ${currentStage}/20`;
+              badge.style.color = '#fde68a';
+              badge.style.borderColor = '#ca8a04';
+          } else if (gameMode === 2) {
+              badge.textContent = `Puzzle #${(puzzleIndex % 6) + 1}`;
+              badge.style.color = '#f472b6';
+              badge.style.borderColor = '#db2777';
+          } else if (gameMode === 3) {
+              badge.textContent = `Blitz Speed Clock`;
+              badge.style.color = '#fb923c';
+              badge.style.borderColor = '#ea580c';
+          }
+      }
+  }
+
   function setMode(m) {
       if (isOnlineGame) {
           leaveOnlineGame(true);
       }
       gameMode = m;
-      if (gameMode === 0) aiMode = true;
+      if (gameMode === 0 || gameMode === 1) aiMode = true;
       resetGame();
-      const modeNames = ["Campaign Mode", "Free Play", "Puzzle Mode", "Blitz Timer"];
+      const modeNames = ["Campaign Mode", "Standard vs AI", "Puzzle Mode", "Blitz Timer"];
       showToast(`Mode: ${modeNames[gameMode]}`, "info");
       closeModals();
+      updateMenuIndicators();
   }
 
   function handleHotkey(key) {
@@ -1427,10 +1726,16 @@
           if (isOnlineGame) { showToast("AI toggle disabled in Online match", "warn"); return; }
           aiMode = !aiMode;
           showToast(aiMode ? "AI Opponent Enabled" : "2-Player Pass & Play Enabled", "info");
+          updateMenuIndicators();
       } else if (k === 'p') {
           if (isOnlineGame) { showToast("AI difficulty disabled in Online match", "warn"); return; }
           aiPersonality = (aiPersonality % 4) + 1;
           showToast(`AI Difficulty: ${difficultyNames[aiPersonality - 1]}`, "info");
+          updateMenuIndicators();
+      } else if (k === '1' || k === '2' || k === '3' || k === '4') {
+          if (!isOnlineGame) {
+              setDifficulty(parseInt(k, 10));
+          }
       } else if (k === 'h') {
           if (isOnlineGame) { showToast("AI Hint is disabled in Online Multiplayer matches", "warn"); return; }
           if (!gameOver) {
@@ -2693,7 +2998,11 @@
           if (mx >= 30 && mx <= 110) { openHelpModal(); return; }
           if (mx >= 118 && mx <= 198) { undoMove(); return; }
           if (mx >= 206 && mx <= 286) { redoMove(); return; }
-          if (mx >= 294 && mx <= 384) { openMultiplayerModal(); return; }
+          if (mx >= 294 && mx <= 384) {
+              if (isOnlineGame) openMultiplayerModal();
+              else handleHotkey('h');
+              return;
+          }
           if (mx >= 392 && mx <= 470) { saveGameState(); return; }
           if (mx >= 478 && mx <= 556) { loadGameState(); return; }
           if (mx >= 564 && mx <= 652) { handleHotkey('p'); return; }
@@ -3410,7 +3719,7 @@
           let roleStr = myPlayerNum === 1 ? "White (P1)" : (myPlayerNum === 2 ? "Black (P2)" : "Spectator");
           modeText = `🌐 Online [${currentRoomId || '...'}] (${roleStr})`;
       } else if (gameMode === 0) modeText = `Campaign: Stage ${currentStage}/20 [${difficultyNames[aiPersonality - 1]}]`;
-      else if (gameMode === 1) modeText = `${aiMode ? 'vs AI' : 'vs Player'} [${difficultyNames[aiPersonality - 1]}]`;
+      else if (gameMode === 1) modeText = `Standard: ${aiMode ? 'vs ' + difficultyNames[aiPersonality - 1] + ' AI' : 'Pass & Play'}`;
       else if (gameMode === 2) modeText = `Puzzle #${(puzzleIndex % 6) + 1} [${difficultyNames[aiPersonality - 1]}]`;
       else modeText = `Blitz (W:${Math.ceil(blitzTimeWhite)}s B:${Math.ceil(blitzTimeBlack)}s)`;
 
@@ -3489,7 +3798,7 @@
           { x: 30, y: 740, w: 80, h: 36, text: `Help [F1]`, color: '#1e293b', border: '#5eead4' },
           { x: 118, y: 740, w: 80, h: 36, text: `Undo [U]`, color: '#1e293b', border: '#5eead4' },
           { x: 206, y: 740, w: 80, h: 36, text: `Redo [Y]`, color: '#1e293b', border: '#5eead4' },
-          { x: 294, y: 740, w: 90, h: 36, text: isOnlineGame ? `Room [O]` : `Online [O]`, color: isOnlineGame ? '#064e3b' : '#0c4a6e', border: isOnlineGame ? '#10b981' : '#38bdf8' },
+          { x: 294, y: 740, w: 90, h: 36, text: isOnlineGame ? `Room [O]` : `Hint [H]`, color: isOnlineGame ? '#064e3b' : '#1e293b', border: isOnlineGame ? '#10b981' : '#5eead4' },
           { x: 392, y: 740, w: 78, h: 36, text: `Save [F5]`, color: '#1e293b', border: '#5eead4' },
           { x: 478, y: 740, w: 78, h: 36, text: `Load [F9]`, color: '#1e293b', border: '#5eead4' },
           { x: 564, y: 740, w: 88, h: 36, text: `AI: ${difficultyNames[aiPersonality - 1]} [P]`, color: '#1e293b', border: '#5eead4' },
@@ -3566,6 +3875,7 @@
   }
 
   resetGame();
+  updateMenuIndicators();
   requestAnimationFrame(gameLoop);
 
   window.onFirebaseLoaded = function() {
@@ -3580,18 +3890,11 @@
   }
 
   const TUTORIAL_KEY = 'kchess_tutorialSeen';
-  let seenTutorial = false;
-  try { seenTutorial = localStorage.getItem(TUTORIAL_KEY) === '1'; } catch(e) {}
-  if (!seenTutorial) {
-      try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch(e) {}
-      setTimeout(() => {
-          openHelpModal();
-      }, 350);
-  }
+  try { localStorage.setItem(TUTORIAL_KEY, '1'); } catch(e) {}
 
   setTimeout(() => {
-      showToast("Welcome to KChess! Press F1 or ? for Help & Controls | O for Online Multiplayer", "info", 5000);
-  }, 400);
+      showToast("KChess: Standard Game vs Easy AI — White to move.", "info", 4000);
+  }, 350);
 </script>
 </body>
 </html>
