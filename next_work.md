@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KRogue
   kilo_tester: KSynth
   kilo_usability: KHash
-  kilo_qa: KHex
+  kilo_qa: KBookmark
   kilo_expander: KMatch3
 virtual_web_target: "kweb://echo-subsystem.net"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-usability
-  app: KPass
-  timestamp: "2026-10-04T08:29:00-07:00"
+  agent: kilo-qa
+  app: KHex
+  timestamp: "2026-10-04T08:45:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KGraph`, `KClock`, `KTimer`, `KPomodoro` *(Completed: KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KHex`
+- **Current Target**: `KBookmark`
 - **Upcoming Queue**:
-  `KBookmark`, `KPing`, `KChat`, `KClock`, `KTimer`, `KPomodoro`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB)*.
+  `KPing`, `KChat`, `KClock`, `KTimer`, `KPomodoro`, `KMandel`, `KHex` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KMatch3`
@@ -221,6 +221,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T08:45:00-07:00 — kilo-qa: KHex (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & Subterranean Signal)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 138.0 KB web / 31.5 KB native < 999 KB ceiling).
+  - Quicksave & Quickload: Implemented persistent disk snapshots (`khex_quicksave.dat`, [F5]/[F9]) in Win32 C and hardened web state restoration.
+  - Tutorial Integrity: Enforced first-run flag gates (`khex_tutorialSeen.dat` / localStorage) preventing tutorial popups on restored saves.
+  - Toast Occlusion Remediation: Re-anchored toast bar to top-center (52px) under header and added auto-dismissal on input interaction per Directive 189.
+  - Subterranean Signal Mesh: Connected silent signal fragment broadcast (`arg/signals/khex.json`) upon Echo ROM inspection per Directive 215.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener for background buffer synchronization without CPU waste.
+  - Verification: MSVC clean (`KHex.exe` 31.5 KB); Vite clean in 288ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T08:29:00-07:00 — kilo-usability: KPass (UI/UX Usability Pass, Toast Occlusion Remediation & Layout Polish)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 128.0 KB web / 25.6 KB native < 999 KB ceiling).
   - Window Dimension Tuning: Expanded default dimensions in `App.jsx`, web postMessage, and Win32 `RECT` to 600x700 for optimal spacing.
@@ -250,13 +259,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Cryptographic Verification: Added Precursor Seed 0x7F1999 and Deep Core 10.19.99.127 signature authentication.
   - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener suspending audio context and visualizer RAF loops in background tabs.
   - Verification: Vite build clean in 371ms; security_lint 100% PASS; check_icons 100% PASS; <999KB ceiling verified.
-
-- **2026-10-04T07:28:00-07:00 — kilo-expander: KTowers (Feature Expansion: Speed Duel RFMS, Replay Scrubber, FEN, Quicksave & ARCH-05)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 160.2 KB web / 156.2 KB native < 999 KB ceiling).
-  - Online Multiplayer Speed Duel (RFMS): Retrofitted real-time race mode via Firebase RTDB, live opponent mini-canvas, chat taunts, and 25s auto-fallback to Cyber-Bot AI.
-  - Mandatory Connect Gate: Enforced explicit join confirmation modal for invite codes with zero autostart per Rule 12.
-  - Interactive Replay Scrubber: Added step-by-step move history playback (⏮, ◀, ▶/⏸, ▶, ⏭) with timeline slider and live disc animation.
-  - Board State FEN & Snapshot: Built FEN export/import with validation presets; added persistent Quicksave (F5) and Quickload (F9) in web and native (`ktowers_quicksave.dat`).
-  - Accessibility & Key Rebinding: Added custom hotkey configuration modal and key listener across all actions.
-  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener suspending audio context and preventing timer drift.
-  - Verification: MSVC clean (`KTowers.exe` 156.2 KB); Vite clean in 315ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.

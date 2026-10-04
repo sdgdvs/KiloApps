@@ -27,6 +27,8 @@
 #define ID_BTN_ROR32 23
 #define ID_BTN_INTELHEX 24
 #define ID_BTN_ASMDB 25
+#define ID_BTN_QUICKSAVE 26
+#define ID_BTN_QUICKLOAD 27
 
 HWND hHex, hDec, hBin, hOct, hAscii;
 HWND hInt8, hUint8, hInt16, hUint16, hInt32, hUint32, hFloat;
@@ -684,9 +686,12 @@ void ShowHelpDialog(HWND hwnd) {
         " • Checksum Suite: Instant Sum8, Sum16, Sum32, XOR8, CRC16, CRC32, Adler-32, and FNV-1a.\n"
         " • Byte Operations: Swap16, Swap32, Invert (~), XOR 0xFF mask, ROL32, and ROR32.\n"
         " • Export Suite: C/C++ byte arrays, formatted HexDump, Intel HEX, NASM Asm DB, and deep Shannon Entropy reports.\n"
+        " • Quicksave & Quickload: F5 snapshot save and F9 instant load to disk.\n"
         " • Clipboard: One-click 'Copy Output' to export your results instantly.\n\n"
         "KEYBOARD SHORTCUTS:\n"
         " • [F1]               : Open this Help Dialog\n"
+        " • [F5]               : Quicksave Current Workspace to Disk\n"
+        " • [F9]               : Quickload Workspace State from Disk\n"
         " • [P]                : Cycle Presets (PNG, ZIP, ELF, MZ, Wasm, Float Pi, Echo Sector)\n"
         " • [Ctrl+E]           : Toggle Endianness (LE / BE)\n"
         " • [Ctrl+1]           : Endian Swap 16-bit Words\n"
@@ -704,6 +709,62 @@ void ShowHelpDialog(HWND hwnd) {
         "Tip: Type in any base field to instantly update all representations.",
         "KHex Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
 }
+
+#define KHEX_SAVE_MAGIC 0x48455853 // 'HEXS'
+typedef struct {
+    DWORD magic;
+    unsigned int val;
+    BOOL isLittleEndian;
+} KHexQuickSave;
+
+void QuickSaveState(HWND hwnd) {
+    HANDLE hFile = CreateFileA("khex_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        KHexQuickSave qs;
+        qs.magic = KHEX_SAVE_MAGIC;
+        qs.val = GetCurrentVal();
+        qs.isLittleEndian = isLittleEndian;
+        WriteFile(hFile, &qs, sizeof(qs), &written, NULL);
+        CloseHandle(hFile);
+
+        HANDLE hTut = CreateFileA("khex_tutorialSeen.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTut != INVALID_HANDLE_VALUE) {
+            DWORD bw = 0; WriteFile(hTut, "1", 1, &bw, NULL); CloseHandle(hTut);
+        }
+        char msg[256];
+        wsprintfA(msg, "=== QUICKSAVE SAVED [F5] ===\r\n\r\nWorkspace state (0x%08X, %s) saved to khex_quicksave.dat.\r\nPress F9 anytime to restore this state.", qs.val, isLittleEndian ? "Little Endian" : "Big Endian");
+        SetWindowTextA(hExportEdit, msg);
+    } else {
+        SetWindowTextA(hExportEdit, "[QUICKSAVE ERROR] Could not save state to khex_quicksave.dat.");
+    }
+}
+
+void QuickLoadState(HWND hwnd) {
+    HANDLE hFile = CreateFileA("khex_quicksave.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD readBytes = 0;
+        KHexQuickSave qs;
+        ReadFile(hFile, &qs, sizeof(qs), &readBytes, NULL);
+        CloseHandle(hFile);
+        if (readBytes >= sizeof(qs) && qs.magic == KHEX_SAVE_MAGIC) {
+            isLittleEndian = qs.isLittleEndian;
+            SetWindowTextA(hEndianBtn, isLittleEndian ? "Endian: LE [^E]" : "Endian: BE [^E]");
+            SetCurrentVal(qs.val);
+
+            HANDLE hTut = CreateFileA("khex_tutorialSeen.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+            if (hTut != INVALID_HANDLE_VALUE) {
+                DWORD bw = 0; WriteFile(hTut, "1", 1, &bw, NULL); CloseHandle(hTut);
+            }
+            char msg[256];
+            wsprintfA(msg, "=== QUICKLOAD RESTORED [F9] ===\r\n\r\nWorkspace state restored from khex_quicksave.dat.\r\nCurrent Value: 0x%08X (%s).", qs.val, isLittleEndian ? "Little Endian" : "Big Endian");
+            SetWindowTextA(hExportEdit, msg);
+            return;
+        }
+    }
+    SetWindowTextA(hExportEdit, "[QUICKLOAD NOTICE] No valid quicksave found (khex_quicksave.dat).\r\nPress F5 or click 'Save [F5]' to create a quicksave snapshot.");
+}
+
 
 BOOL CALLBACK SetFontProc(HWND child, LPARAM hFont) {
     SendMessage(child, WM_SETFONT, hFont, TRUE);
@@ -1034,9 +1095,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             CreateWindowEx(0, "BUTTON", "XOR FF [^4]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 245, 300, 75, 24, hwnd, (HMENU)ID_BTN_XORMASK, NULL, NULL);
             CreateWindowEx(0, "BUTTON", "ROL32 [^L]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 325, 300, 75, 24, hwnd, (HMENU)ID_BTN_ROL32, NULL, NULL);
             CreateWindowEx(0, "BUTTON", "ROR32 [^R]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 405, 300, 75, 24, hwnd, (HMENU)ID_BTN_ROR32, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Preset [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 485, 300, 75, 24, hwnd, (HMENU)ID_BTN_PRESET, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 565, 300, 65, 24, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Copy Output", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 635, 300, 95, 24, hwnd, (HMENU)ID_BTN_COPYOUT, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 485, 300, 75, 24, hwnd, (HMENU)ID_BTN_QUICKSAVE, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 565, 300, 70, 24, hwnd, (HMENU)ID_BTN_QUICKLOAD, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Copy Out", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 640, 300, 90, 24, hwnd, (HMENU)ID_BTN_COPYOUT, NULL, NULL);
             CreateWindowEx(0, "BUTTON", "Clear", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 735, 300, 60, 24, hwnd, (HMENU)ID_BTN_CLEAROUT, NULL, NULL);
 
             // Row 2 Export Buttons (y=328)
@@ -1045,11 +1106,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             CreateWindowEx(0, "BUTTON", "Intel HEX [^8]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 185, 328, 95, 24, hwnd, (HMENU)ID_BTN_INTELHEX, NULL, NULL);
             CreateWindowEx(0, "BUTTON", "Asm DB [^9]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 285, 328, 85, 24, hwnd, (HMENU)ID_BTN_ASMDB, NULL, NULL);
             CreateWindowEx(0, "BUTTON", "Dissect & Entropy [^7]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 375, 328, 140, 24, hwnd, (HMENU)ID_BTN_DISSECT, NULL, NULL);
-            CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 520, 328, 80, 24, hwnd, (HMENU)100, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Preset [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 520, 328, 75, 24, hwnd, (HMENU)ID_BTN_PRESET, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 600, 328, 65, 24, hwnd, (HMENU)ID_BTN_RESET, NULL, NULL);
+            CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON | WS_TABSTOP, 670, 328, 75, 24, hwnd, (HMENU)100, NULL, NULL);
 
-            hExportEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KHex Suite!\r\nPress F1 or click 'Help' for user guide & shortcuts.\r\n\r\nInitial test value 0x12345678 loaded.\r\nClick 'Preset [P]' to cycle famous signatures, or type in any base field.\r\nClick 'Copy Output' or press Ctrl+C to copy results to clipboard.", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_READONLY | WS_TABSTOP, 10, 356, 810, 335, hwnd, NULL, NULL, NULL);
+            hExportEdit = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "Welcome to KHex Suite!\r\nPress F1 or click 'Help' for user guide & shortcuts.\r\n\r\nInitial test value 0x12345678 loaded.\r\nPress F5 to quicksave or F9 to quickload workspace state to disk.\r\nClick 'Preset [P]' to cycle famous signatures, or type in any base field.\r\nClick 'Copy Out' or press Ctrl+C to copy results to clipboard.", WS_CHILD | WS_VISIBLE | ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | ES_READONLY | WS_TABSTOP, 10, 356, 810, 335, hwnd, NULL, NULL, NULL);
 
-            CreateWindowEx(0, "STATIC", "Shortcuts: F1 (Help), P (Preset), Ctrl+E (Endian), Ctrl+1..9 (Ops & Exports), Ctrl+L/R (Rot), Ctrl+C (Copy)", WS_CHILD | WS_VISIBLE, 10, 698, 700, 18, hwnd, NULL, NULL, NULL);
+            CreateWindowEx(0, "STATIC", "Shortcuts: F1 (Help), F5 (Save), F9 (Load), P (Preset), Ctrl+E (Endian), Ctrl+1..9 (Ops & Exports), Ctrl+L/R (Rot), Ctrl+C (Copy)", WS_CHILD | WS_VISIBLE, 10, 698, 780, 18, hwnd, NULL, NULL, NULL);
 
             // Initialize Motes
             if (!g_motesInit) {
@@ -1136,6 +1199,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ApplyNextPreset(hwnd);
                     SpawnParticles(520, 312, RGB(6, 182, 212), 24);
                     SpawnShockwave(520, 312, RGB(6, 182, 212));
+                } else if (id == ID_BTN_QUICKSAVE) {
+                    QuickSaveState(hwnd);
+                    SpawnParticles(485, 312, RGB(16, 185, 129), 24);
+                    SpawnShockwave(485, 312, RGB(16, 185, 129));
+                } else if (id == ID_BTN_QUICKLOAD) {
+                    QuickLoadState(hwnd);
+                    SpawnParticles(565, 312, RGB(6, 182, 212), 24);
+                    SpawnShockwave(565, 312, RGB(6, 182, 212));
                 } else if (id == ID_BTN_COPYOUT) {
                     CopyExportToClipboard(hwnd);
                     SpawnParticles(680, 312, RGB(16, 185, 129), 24);
@@ -1153,6 +1224,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_KEYDOWN: {
             if (wParam == VK_F1) {
                 ShowHelpDialog(hwnd);
+            } else if (wParam == VK_F5) {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_QUICKSAVE, BN_CLICKED), 0);
+            } else if (wParam == VK_F9) {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_QUICKLOAD, BN_CLICKED), 0);
             }
             break;
         }
@@ -1404,11 +1479,31 @@ void MainEntry() {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
+    int hasTutorial = (GetFileAttributesA("khex_tutorialSeen.dat") != INVALID_FILE_ATTRIBUTES);
+    int hasExistingSave = (GetFileAttributesA("khex_quicksave.dat") != INVALID_FILE_ATTRIBUTES);
+    if (!hasTutorial) {
+        HANDLE hTut = CreateFileA("khex_tutorialSeen.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTut != INVALID_HANDLE_VALUE) {
+            DWORD bw = 0; WriteFile(hTut, "1", 1, &bw, NULL); CloseHandle(hTut);
+        }
+        if (!hasExistingSave) {
+            ShowHelpDialog(hwnd);
+        }
+    }
+
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         if (msg.message == WM_KEYDOWN) {
             if (msg.wParam == VK_F1) {
                 ShowHelpDialog(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F5) {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_QUICKSAVE, BN_CLICKED), 0);
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_QUICKLOAD, BN_CLICKED), 0);
                 continue;
             }
             if (GetKeyState(VK_CONTROL) & 0x8000) {

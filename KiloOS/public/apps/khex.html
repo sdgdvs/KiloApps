@@ -569,10 +569,10 @@
     max-height: 250px;
     overflow-y: auto;
   }
-  /* Toast Notification Container (Positioned Safely at Bottom-Center to prevent occluding Status Bar & controls) */
+  /* Toast Notification Container (Positioned Safely at Top-Center to prevent occluding Status Bar & controls per Directive 189) */
   #toastContainer {
     position: fixed;
-    bottom: 24px;
+    top: 52px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 10000;
@@ -1264,6 +1264,23 @@
     }, duration);
   }
 
+  // Silent Collaborative Subterranean Signal Fragment Broadcast (Directive 215)
+  function publishSignalFragment(sigName, detail) {
+    try {
+      const payload = {
+        app: 'khex',
+        signal: sigName || 'SUBNET_HEX_SECTOR_04',
+        detail: detail || '10.19.99.4:CLASSIFIED',
+        timestamp: Date.now()
+      };
+      fetch('https://kiloappschat-default-rtdb.firebaseio.com/arg/signals/khex.json', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }).catch(() => {});
+    } catch (e) {}
+  }
+
   function dismissTutorial() {
     const m = document.getElementById('tutorialModal');
     if (m) m.style.display = 'none';
@@ -1278,9 +1295,11 @@
     }
     const hexStr = Array.from(binaryBuffer).map(b => b.toString(16).padStart(2, '0')).join('');
     const tb = document.getElementById('rawTextBuffer');
+    const hexIn = document.getElementById('hexInput');
     const state = {
       hex: hexStr,
       text: tb ? tb.value : '',
+      hexInput: hexIn ? hexIn.value : '',
       activeTab: activeTab,
       isLittleEndian: isLittleEndian,
       selectedOffset: selectedOffset,
@@ -1288,6 +1307,7 @@
     };
     try {
       localStorage.setItem('khex_quicksave', JSON.stringify(state));
+      localStorage.setItem('khex_tutorialSeen', '1');
       showToast('⚡ Quicksave Saved [F5]', `Saved buffer (${binaryBuffer.length} B) to workspace memory.`, 'success', 3000);
     } catch (e) {
       showToast('Quicksave Error', 'Could not save state to localStorage.', 'error');
@@ -1311,15 +1331,21 @@
       }
       const tb = document.getElementById('rawTextBuffer');
       if (state.text !== undefined && tb) tb.value = state.text;
+      if (state.hexInput && document.getElementById('hexInput')) {
+        document.getElementById('hexInput').value = state.hexInput;
+        updateFromHex(state.hexInput);
+      }
       if (state.isLittleEndian !== undefined) {
         isLittleEndian = state.isLittleEndian;
-        document.getElementById('endianBadge').innerText = isLittleEndian ? 'LE (Little Endian)' : 'BE (Big Endian)';
+        const eb = document.getElementById('endianBadge');
+        if (eb) eb.innerText = isLittleEndian ? 'LE (Little Endian)' : 'BE (Big Endian)';
       }
       if (state.activeTab) switchTab(state.activeTab);
       renderHexView();
       if (state.selectedOffset !== undefined && state.selectedOffset < binaryBuffer.length) {
         selectByte(state.selectedOffset);
       }
+      localStorage.setItem('khex_tutorialSeen', '1');
       showToast('⚡ Quickload Restored [F9]', `Restored buffer (${binaryBuffer.length} B) successfully.`, 'success', 3000);
     } catch (e) {
       showToast('Quickload Error', 'Failed to parse saved state.', 'error');
@@ -1361,13 +1387,35 @@
       switchTab(activeTab);
     }
 
-    // First-Run Tutorial Check
+    // First-Run Tutorial Check (Fires only on fresh sessions; never interrupts restored save states)
     try {
-      if (!localStorage.getItem('khex_tutorialSeen')) {
+      if (!localStorage.getItem('khex_tutorialSeen') && !localStorage.getItem('khex_quicksave')) {
         const tut = document.getElementById('tutorialModal');
         if (tut) tut.style.display = 'flex';
       }
     } catch (e) {}
+
+    // Auto-dismiss toasts when user starts typing or focusing inputs (Directive 189)
+    document.addEventListener('input', (e) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        const container = document.getElementById('toastContainer');
+        if (container) {
+          while (container.firstChild) container.removeChild(container.firstChild);
+        }
+      }
+    });
+
+    // Background tab visibility listener to prevent drift / CPU waste (ARCH-05)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        try {
+          if (binaryBuffer && binaryBuffer.length > 0 && binaryBuffer.length < 32768) {
+            const tb = document.getElementById('rawTextBuffer');
+            if (tb && tb.value) localStorage.setItem('khex_text_buf', tb.value);
+          }
+        } catch (e) {}
+      }
+    });
 
     // Input Enter key listeners
     const sp = document.getElementById('searchPattern');
@@ -2117,6 +2165,7 @@
     selectedOffset = 0;
     renderHexView();
     selectByte(36);
+    publishSignalFragment('ECHO_SUBNET_04_PULSE', '10.19.99.4:CLASSIFIED');
     showToast('Echo ROM Loaded', 'Project Echo Intranet ROM Sector loaded (128 bytes, Target: 10.19.99.4)', 'success', 5000);
   }
 
@@ -2476,6 +2525,9 @@
         }
       }
       clueEl.style.display = isIpClue ? 'inline-flex' : 'none';
+      if (isIpClue) {
+        publishSignalFragment('ECHO_SUBNET_04_PULSE', '10.19.99.4:CLASSIFIED');
+      }
     }
     
     // Read 4 bytes from selected byte for Data Inspector

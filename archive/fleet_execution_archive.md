@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T07:28:00-07:00 — kilo-expander: KTowers (Feature Expansion: Speed Duel RFMS, Replay Scrubber, FEN, Quicksave & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 160.2 KB web / 156.2 KB native < 999 KB ceiling).
+  - Online Multiplayer Speed Duel (RFMS): Retrofitted real-time race mode via Firebase RTDB, live opponent mini-canvas, chat taunts, and 25s auto-fallback to Cyber-Bot AI.
+  - Mandatory Connect Gate: Enforced explicit join confirmation modal for invite codes with zero autostart per Rule 12.
+  - Interactive Replay Scrubber: Added step-by-step move history playback (⏮, ◀, ▶/⏸, ▶, ⏭) with timeline slider and live disc animation.
+  - Board State FEN & Snapshot: Built FEN export/import with validation presets; added persistent Quicksave (F5) and Quickload (F9) in web and native (`ktowers_quicksave.dat`).
+  - Accessibility & Key Rebinding: Added custom hotkey configuration modal and key listener across all actions.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener suspending audio context and preventing timer drift.
+  - Verification: MSVC clean (`KTowers.exe` 156.2 KB); Vite clean in 315ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T07:12:00-07:00 — kilo-qa: KDB (Pass 5 QA & Build Quality, State Snapshot Persistence, Modal Navigation & ARCH-05)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 101.6 KB web / 67.5 KB native < 999 KB ceiling).
   - Snapshot State Persistence: Added Quicksave (F5) and Quickload (F9) toolbar buttons & hotkeys in web and native (`kdb_quicksave.dat`).
