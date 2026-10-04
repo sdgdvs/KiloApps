@@ -37,8 +37,9 @@ This skill deepens functional utility and capabilities on exactly ONE applicatio
 8. **ARG Mystery Preservation & TINAG Standard (CRITICAL)**:
    - Clues must be subtle, atmospheric, and diegetic. Never use `(ARG)` or `ARG Lore` in UI or copy.
    - Never post explicit walkthroughs ("ARG Guidance"), spoil the autonomous fleet meta-twist before the endgame, or leak `ECHO-1999-ARCHITECT` in clear text.
-9. **🌐 Seamless Online Multiplayer Expansion via Firebase (DIRECTOR MANDATE - CRITICAL)**:
+9. **🌐 Seamless Online Multiplayer Expansion via Firebase & Autostart Prohibition (DIRECTOR MANDATE - CRITICAL)**:
    - **Core Purpose**: Concentrate on retrofitting and expanding existing games and collaborative applications with seamless online multiplayer powered by Firebase Realtime Database.
+   - **No Autostart / Mandatory Connect Gate**: NEVER autostart into multiplayer or initiate matchmaking on application load. Apps must open to a clean local/offline mode (e.g. against local Easy AI or solo practice) or a start screen with explicit mode choices. Online connection requires an explicit user action (clicking a "Connect" / "Play Online" button or choosing Multiplayer from a menu). People must never be thrown into multiplayer without prior warning.
    - **Cross-Computer Play**: Enable players visiting `kiloapps.web.app` from different computers anywhere in the world—who are not otherwise communicating and share no local network—to connect, challenge each other, and play in real-time, identical to how KChat connects global users in its `#general` room.
    - **Priority Expansion Targets**:
      - *Turn-Based Board & Strategy Games*: *KChess, KConnect4, KGo, KReversi, KDarts, KCheckers, KBattleship, KCards*. Implement shared room state (`multiplayer/<app>/rooms/<roomId>`), real-time move synchronization via RTDB `push`/`onValue`, turn alternation, spectator view, and global public matchmaking (`multiplayer/<app>/lobby`).
