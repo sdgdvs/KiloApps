@@ -1174,6 +1174,259 @@
     line-height: 14px;
     font-weight: bold;
     text-shadow: 1px 1px 1px #000;
+  /* ==========================================================================
+     CYBERSPIRE 16-BIT CHIPTUNE SFX LABORATORY '99
+     ========================================================================== */
+  .sfx-lab-panel {
+    background: #001220;
+    border: 2px outset #00aaff;
+    padding: 12px;
+    margin-top: 10px;
+  }
+  .sfx-presets-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+    background: #000a14;
+    padding: 8px;
+    border: 1px solid #004466;
+  }
+  .sfx-preset-btn {
+    background: #002538;
+    color: #38bdf8;
+    border: 1px outset #38bdf8;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 4px 8px;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .sfx-preset-btn:hover {
+    background: #38bdf8;
+    color: #000;
+  }
+  .sfx-preset-btn.active {
+    background: #ff00aa;
+    color: #fff;
+    border-style: inset;
+  }
+  .sfx-main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 768px) {
+    .sfx-main-grid { grid-template-columns: 1fr; }
+  }
+  .sfx-params-box {
+    background: #020912;
+    border: 1px solid #004466;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .sfx-param-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: #88ccee;
+    font-family: 'Courier New', monospace;
+  }
+  .sfx-param-row label {
+    flex: 1;
+    min-width: 130px;
+  }
+  .sfx-slider {
+    flex: 1;
+    accent-color: #38bdf8;
+    cursor: pointer;
+  }
+  .sfx-param-val {
+    width: 60px;
+    text-align: right;
+    color: #ffff00;
+    font-weight: bold;
+  }
+  .sfx-canvas-box {
+    background: #020810;
+    border: 1px solid #005577;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .sfx-canvas {
+    width: 100%;
+    max-width: 520px;
+    height: 90px;
+    background: #01060c;
+    border: 1px solid #003344;
+    display: block;
+  }
+  .sfx-actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    width: 100%;
+    justify-content: center;
+  }
+  .btn-sfx-action {
+    background: #003355;
+    color: #00ffff;
+    border: 2px outset #00ffff;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+    transition: all 0.1s;
+  }
+  .btn-sfx-action:hover {
+    background: #00ffff;
+    color: #000;
+  }
+  .btn-sfx-action:active {
+    border-style: inset;
+  }
+
+  /* ==========================================================================
+     SILICON ECHOES '99 DEMOSCENE DISKMAG READER & ARCHIVE
+     ========================================================================== */
+  .diskmag-reader-box {
+    background: #001008;
+    border: 2px outset #00ff66;
+    padding: 12px;
+    margin-top: 10px;
+    box-shadow: 0 0 15px rgba(0, 255, 102, 0.2);
+  }
+  .diskmag-header-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    background: #002410;
+    border: 1px solid #00ff66;
+    padding: 6px 10px;
+    margin-bottom: 10px;
+    gap: 6px;
+  }
+  .diskmag-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 10px;
+    background: #00160a;
+    padding: 6px;
+    border: 1px solid #004422;
+  }
+  .diskmag-article-select {
+    background: #000;
+    color: #00ff66;
+    border: 1px solid #00ff66;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    padding: 4px 6px;
+    flex: 1;
+    min-width: 220px;
+  }
+  .diskmag-btn {
+    background: #003318;
+    color: #00ff66;
+    border: 1px outset #00ff66;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 4px 8px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.1s;
+  }
+  .diskmag-btn:hover {
+    background: #00ff66;
+    color: #000;
+  }
+  .diskmag-btn:active, .diskmag-btn.active {
+    background: #ff00aa;
+    color: #fff;
+    border-style: inset;
+  }
+  .diskmag-content-pane {
+    background: #010c05;
+    border: 2px inset #00aa44;
+    padding: 14px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #00ff66;
+    max-height: 520px;
+    overflow-y: auto;
+    transition: background 0.2s, color 0.2s;
+  }
+  .diskmag-theme-green {
+    background: #010e05 !important;
+    color: #00ff66 !important;
+    border-color: #00ff66 !important;
+  }
+  .diskmag-theme-amber {
+    background: #140800 !important;
+    color: #ffb000 !important;
+    border-color: #ffb000 !important;
+  }
+  .diskmag-theme-cyan {
+    background: #001220 !important;
+    color: #00ffff !important;
+    border-color: #00ffff !important;
+  }
+  .diskmag-theme-paper {
+    background: #dedede !important;
+    color: #111111 !important;
+    border-color: #666666 !important;
+  }
+  .diskmag-article-header {
+    border-bottom: 1px dashed currentColor;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+  }
+  .diskmag-article-meta {
+    font-size: 11px;
+    opacity: 0.85;
+    margin-top: 4px;
+  }
+  .diskmag-ascii-banner {
+    font-size: 10px;
+    white-space: pre;
+    line-height: 1.1;
+    margin-bottom: 10px;
+    opacity: 0.9;
+  }
+  .diskmag-footer-tools {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 8px;
+    border-top: 1px solid #004422;
+    gap: 8px;
+  }
+  .diskmag-stars {
+    display: inline-flex;
+    gap: 4px;
+    cursor: pointer;
+  }
+  .diskmag-star {
+    font-size: 16px;
+    color: #444;
+    transition: color 0.1s;
+  }
+  .diskmag-star.filled {
+    color: #ffff00;
   }
 
 </style>
@@ -1218,12 +1471,14 @@
     <a href="#synth-section" class="nav-btn">🎛️ FM Synth Lab</a>
     <a href="#fx-lab-section" class="nav-btn">⚡ Demoscene FX Lab</a>
     <a href="#sample-sculptor-section" class="nav-btn">🎚️ Sample Sculptor</a>
+    <a href="#sfx-lab-section" class="nav-btn" style="color:#38bdf8; border-color:#38bdf8;">🔊 16-Bit SFX Lab</a>
     <a href="#subcarrier-lab" class="nav-btn" style="color:#39ff14; border-color:#39ff14;">📡 Subcarrier Lab</a>
     <a href="#oracle-section" class="nav-btn">🔮 Silicon Oracle '99</a>
     <a href="#y2k-diagnostic" class="nav-btn">⏱️ Y2K Diagnostic</a>
     <a href="#banner-studio" class="nav-btn">🚧 Banner Studio</a>
     <a href="#page-builder" class="nav-btn">🏗️ Page Builder</a>
     <a href="#cyber-poll-section" class="nav-btn">📊 Cyber Poll</a>
+    <a href="#diskmag-section" class="nav-btn" style="color:#f43f5e; border-color:#f43f5e;">📰 Silicon Echoes '99 Diskmag</a>
     <a href="#guestbook-section" class="nav-btn">📖 Live Shoutbox</a>
     <a href="#bookmarks-section" class="nav-btn">⭐ Bookmarks</a>
   </nav>
@@ -1874,6 +2129,154 @@
     </div>
   </div>
 
+  <!-- 8b. CyberSpire 16-Bit Chiptune SFX Laboratory '99 -->
+  <div class="section-box" id="sfx-lab-section">
+    <div class="section-title">
+      <span>🔊 CYBERSPIRE 16-BIT CHIPTUNE SFX LABORATORY '99</span>
+      <span style="font-size:11px; color:#38bdf8;">[ALGORITHMIC PROCEDURAL SOUND SYNTHESIZER &amp; WAV EXPORT]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0; line-height:1.5;">
+      Sculpt authentic retro video game and demoscene sound effects client-side using mathematical waveform modulation, exponential pitch sliding, vibrato, and resonant filtering. Audition through the Web Audio engine, randomize procedural sound profiles, download genuine 44.1kHz RIFF <code>.WAV</code> files, or export C sample buffers for native Win32 game development!
+    </p>
+
+    <!-- Quick Archetype Presets -->
+    <div class="sfx-presets-grid">
+      <span style="font-size:11px; color:#ffff00; font-family:'Courier New', monospace; align-self:center; margin-right:4px;">Presets:</span>
+      <button class="sfx-preset-btn active" id="btnSfxLaser" onclick="loadSfxPreset('laser')">⚡ Laser / Phaser</button>
+      <button class="sfx-preset-btn" id="btnSfxCoin" onclick="loadSfxPreset('coin')">🪙 Coin / Crystal</button>
+      <button class="sfx-preset-btn" id="btnSfxPowerup" onclick="loadSfxPreset('powerup')">🆙 Powerup</button>
+      <button class="sfx-preset-btn" id="btnSfxExplosion" onclick="loadSfxPreset('explosion')">💥 8-Bit Explosion</button>
+      <button class="sfx-preset-btn" id="btnSfxWarp" onclick="loadSfxPreset('warp')">🌀 Dimensional Warp</button>
+      <button class="sfx-preset-btn" id="btnSfxImpact" onclick="loadSfxPreset('impact')">🛡️ Impact / Deflect</button>
+      <button class="sfx-preset-btn" id="btnSfxJump" onclick="loadSfxPreset('jump')">🦘 High Jump</button>
+      <button class="sfx-preset-btn" id="btnSfx1999" onclick="loadSfxPreset('subcarrier1999')">📡 1999Hz Carrier Chirp</button>
+    </div>
+
+    <div class="sfx-main-grid">
+      <!-- Left: Parametric Synthesis Sliders -->
+      <div class="sfx-params-box">
+        <div style="font-size:11px; color:#00ffcc; font-weight:bold; border-bottom:1px solid #005577; padding-bottom:3px; margin-bottom:4px;">
+          🎛️ Synthesis Engine Parameters:
+        </div>
+
+        <div class="sfx-param-row">
+          <label for="sfxWaveformSelect">Waveform:</label>
+          <select id="sfxWaveformSelect" onchange="updateSfxParam('wave', this.value)" style="background:#001525; color:#00ffff; border:1px solid #00ffff; font-size:11px; padding:2px; flex:1;">
+            <option value="square">Square / Pulse (Variable Duty)</option>
+            <option value="sawtooth">Sawtooth (Aggressive Lead)</option>
+            <option value="triangle">Triangle (Warm Vintage)</option>
+            <option value="noise">Noise (8-Bit Percussion)</option>
+            <option value="sine">Sine (Pure Harmonic)</option>
+          </select>
+        </div>
+
+        <div class="sfx-param-row">
+          <label>Base Frequency:</label>
+          <input type="range" class="sfx-slider" id="sfxBaseFreq" min="40" max="2200" step="10" value="440" oninput="updateSfxParam('baseFreq', this.value)">
+          <span class="sfx-param-val" id="sfxBaseFreqVal">440 Hz</span>
+        </div>
+
+        <div class="sfx-param-row">
+          <label>Frequency Slide:</label>
+          <input type="range" class="sfx-slider" id="sfxFreqSlide" min="-100" max="100" step="1" value="-40" oninput="updateSfxParam('freqSlide', this.value)">
+          <span class="sfx-param-val" id="sfxFreqSlideVal">-40%</span>
+        </div>
+
+        <div class="sfx-param-row">
+          <label>Delta Slide Accel:</label>
+          <input type="range" class="sfx-slider" id="sfxDeltaSlide" min="-50" max="50" step="1" value="0" oninput="updateSfxParam('deltaSlide', this.value)">
+          <span class="sfx-param-val" id="sfxDeltaSlideVal">0%</span>
+        </div>
+
+        <div class="sfx-param-row">
+          <label>Vibrato Depth:</label>
+          <input type="range" class="sfx-slider" id="sfxVibDepth" min="0" max="60" step="1" value="0" oninput="updateSfxParam('vibDepth', this.value)">
+          <span class="sfx-param-val" id="sfxVibDepthVal">0 Hz</span>
+        </div>
+
+        <div class="sfx-param-row">
+          <label>Vibrato Speed:</label>
+          <input type="range" class="sfx-slider" id="sfxVibSpeed" min="1" max="30" step="1" value="8" oninput="updateSfxParam('vibSpeed', this.value)">
+          <span class="sfx-param-val" id="sfxVibSpeedVal">8 Hz</span>
+        </div>
+
+        <div class="sfx-param-row">
+          <label>Attack Time:</label>
+          <input type="range" class="sfx-slider" id="sfxAttack" min="0.001" max="0.3" step="0.005" value="0.005" oninput="updateSfxParam('attack', this.value)">
+          <span class="sfx-param-val" id="sfxAttackVal">5 ms</span>
+        </div>
+
+        <div class="sfx-param-row">
+          <label>Decay Time:</label>
+          <input type="range" class="sfx-slider" id="sfxDecay" min="0.02" max="1.5" step="0.01" value="0.25" oninput="updateSfxParam('decay', this.value)">
+          <span class="sfx-param-val" id="sfxDecayVal">0.25 s</span>
+        </div>
+
+        <div class="sfx-param-row">
+          <label>Sustain Level:</label>
+          <input type="range" class="sfx-slider" id="sfxSustain" min="0" max="100" step="1" value="20" oninput="updateSfxParam('sustain', this.value)">
+          <span class="sfx-param-val" id="sfxSustainVal">20%</span>
+        </div>
+
+        <div class="sfx-param-row">
+          <label>Release Time:</label>
+          <input type="range" class="sfx-slider" id="sfxRelease" min="0.01" max="0.8" step="0.01" value="0.10" oninput="updateSfxParam('release', this.value)">
+          <span class="sfx-param-val" id="sfxReleaseVal">0.10 s</span>
+        </div>
+
+        <div class="sfx-param-row">
+          <label>Duty Cycle (Square):</label>
+          <input type="range" class="sfx-slider" id="sfxDuty" min="10" max="90" step="5" value="50" oninput="updateSfxParam('duty', this.value)">
+          <span class="sfx-param-val" id="sfxDutyVal">50%</span>
+        </div>
+
+        <div class="sfx-param-row">
+          <label>Lowpass Filter:</label>
+          <input type="range" class="sfx-slider" id="sfxFilter" min="200" max="12000" step="100" value="8000" oninput="updateSfxParam('filter', this.value)">
+          <span class="sfx-param-val" id="sfxFilterVal">8000 Hz</span>
+        </div>
+
+        <div class="sfx-param-row">
+          <label>Bitcrush Depth:</label>
+          <select id="sfxBitcrushSelect" onchange="updateSfxParam('bits', this.value)" style="background:#001525; color:#00ffff; border:1px solid #00ffff; font-size:11px; padding:2px; flex:1;">
+            <option value="16">16-Bit Studio Clean (44.1 kHz)</option>
+            <option value="12">12-Bit Sound Blaster Pro</option>
+            <option value="8" selected>8-Bit Paula / Sound Blaster 2.0</option>
+            <option value="4">4-Bit Lo-Fi Cyber Gritty</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Right: Real-time Waveform Canvas & Export Deck -->
+      <div class="sfx-canvas-box">
+        <div style="font-size:11px; color:#ffff00; font-weight:bold; display:flex; justify-content:space-between; width:100%;">
+          <span>📈 Time-Domain Audio Waveform Display:</span>
+          <span id="sfxSampleStats" style="color:#00ffcc; font-family:'Courier New', monospace;">LEN: 0.35s • 15680 SAMPLES</span>
+        </div>
+
+        <canvas id="sfxWaveCanvas" class="sfx-canvas" width="520" height="90"></canvas>
+
+        <div class="sfx-actions-row">
+          <button class="btn-sfx-action" style="background:#004422; color:#00ff66;" onclick="playSfxSound()">▶ Play Sound Effect</button>
+          <button class="btn-sfx-action" style="background:#442200; color:#ffaa00;" onclick="randomizeSfx()">🎲 Randomize</button>
+          <button class="btn-sfx-action" style="background:#330044; color:#ff00ff;" onclick="mutateSfx()">🧬 Mutate ±10%</button>
+          <button class="btn-sfx-action" style="background:#550000; color:#ffff00;" onclick="downloadSfxWav()">💾 Download .WAV</button>
+          <button class="btn-sfx-action" style="background:#003344; color:#38bdf8;" onclick="copySfxCArray()">📋 Copy C Array</button>
+          <button class="btn-sfx-action" style="background:#220055; color:#a855f7;" onclick="copySfxJsSnippet()">📋 Copy Web Audio JS</button>
+        </div>
+
+        <!-- Export Output Box -->
+        <div style="width:100%; margin-top:4px;">
+          <div style="display:flex; justify-content:space-between; font-size:10px; color:#88ccee; margin-bottom:2px;">
+            <span>Source Code Buffer:</span>
+            <span id="sfxExportTypeNotice" style="color:#ffff00;">Ready</span>
+          </div>
+          <textarea id="sfxCodeOutput" style="width:100%; height:82px; background:#01070e; border:1px solid #004466; color:#00ffcc; font-family:'Courier New', monospace; font-size:10px; padding:4px; resize:vertical;" readonly placeholder="Exported C sample buffer or Web Audio JS code will appear here..."></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 8. CyberSpire's Subcarrier RF Intercept & Steganography Demodulator -->
   <div class="section-box" id="subcarrier-lab">
     <div class="section-title">
@@ -2412,6 +2815,94 @@
           <a id="dissectorJumpLink" href="#" class="nav-btn" style="background:#00ff66; color:#000; font-weight:bold; text-decoration:none; padding:3px 10px;">
             🚀 Open Destination &raquo;
           </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 13b. Silicon Echoes '99 Demoscene Diskmag Reader & Archive -->
+  <div class="section-box" id="diskmag-section">
+    <div class="section-title">
+      <span>📰 SILICON ECHOES '99: DEMOSCENE DISKMAG (ISSUE #07)</span>
+      <span style="font-size:11px; color:#f43f5e;" id="diskmagIssueBadge">[SUMMER 1999 PRESERVATION ARCHIVE]</span>
+    </div>
+    <p style="font-size:12px; margin:0 0 10px 0; line-height:1.5;">
+      Welcome to the official web diskmag edition of <strong>SILICON ECHOES '99</strong> (Issue #07, Summer Solstice 1999 Edition). Preserving demoscene coder reflections, Paula tracker math, Mekka &amp; Symposium party dispatches, assembly optimization secrets, and underground microwave telemetry reports from the American Southwest. Includes interactive CRT phosphor display modes, ambient FM reading music, reader star ratings, and 1-click downloads as formatted ASCII <code>.NFO</code> / <code>.TXT</code> files or standalone offline mini-diskmag <code>.HTML</code>!
+    </p>
+
+    <!-- Diskmag Reader Panel -->
+    <div class="diskmag-reader-box">
+      <!-- Title Bar -->
+      <div class="diskmag-header-bar">
+        <span style="color:#00ff66; font-family:'Courier New', monospace; font-weight:bold; font-size:12px;">
+          💾 [ SILICON ECHOES '99 • ISSUE #07 - SUMMER 1999 • DISKMAG SYSTEM ]
+        </span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span style="font-size:11px; color:#ffff00; font-family:'Courier New', monospace;" id="diskmagArticleCounter">ART: 01/06</span>
+          <button class="diskmag-btn" id="btnDiskmagBgm" onclick="toggleDiskmagBgm()" style="background:#003344; color:#38bdf8;">♫ Reading BGM [OFF]</button>
+        </div>
+      </div>
+
+      <!-- Controls & Theme Toolbar -->
+      <div class="diskmag-toolbar">
+        <label for="diskmagArticleSelect" style="font-size:11px; color:#aaffee;">Article:</label>
+        <select id="diskmagArticleSelect" class="diskmag-article-select" onchange="selectDiskmagArticle(parseInt(this.value))">
+          <option value="0">01: [Editorial] Twilight of the Millennium &amp; 16-Bit Silicon — CyberSpire</option>
+          <option value="1">02: [Party Report] Mekka Symposium &amp; Assembly '99 Dispatch — ShadowByte &amp; FrostWave</option>
+          <option value="2">03: [Soundtracker] Inside Paula's 4-Channel Heart &amp; ProTracker Math — TrackMaster '99</option>
+          <option value="3">04: [Coder's Black Book] 256-Byte Copper Plasmas &amp; x86 Sine Tables — HexViper</option>
+          <option value="4">05: [Underground Wire] Anomaly on Subnet 10.19.99.4: Bedrock RF Leakage — SysOp_0x7F</option>
+          <option value="5">06: [EuroScene Charts] 1999 Summer Tracker Top 10 &amp; Scene Standings</option>
+        </select>
+
+        <button class="diskmag-btn" onclick="stepDiskmagArticle(-1)">« Prev</button>
+        <button class="diskmag-btn" onclick="stepDiskmagArticle(1)">Next »</button>
+
+        <!-- Theme selector -->
+        <span style="font-size:11px; color:#ffff00; margin-left:6px;">CRT Mode:</span>
+        <button class="diskmag-btn active" id="btnThemeGreen" onclick="setDiskmagTheme('green')">🟢 Green</button>
+        <button class="diskmag-btn" id="btnThemeAmber" onclick="setDiskmagTheme('amber')">🟡 Amber</button>
+        <button class="diskmag-btn" id="btnThemeCyan" onclick="setDiskmagTheme('cyan')">🔵 Cyan</button>
+        <button class="diskmag-btn" id="btnThemePaper" onclick="setDiskmagTheme('paper')">⚪ Paper</button>
+
+        <!-- Font sizing -->
+        <span style="font-size:11px; color:#aaffee; margin-left:4px;">Size:</span>
+        <button class="diskmag-btn" onclick="adjustDiskmagFontSize(-1)">A-</button>
+        <button class="diskmag-btn" onclick="adjustDiskmagFontSize(1)">A+</button>
+
+        <!-- Live Search -->
+        <input type="text" id="diskmagSearchInput" oninput="searchDiskmagArticles(this.value)" placeholder="Search diskmag..." style="background:#000; color:#00ffcc; border:1px solid #005577; font-size:11px; padding:3px 6px; font-family:'Courier New', monospace; flex:1; min-width:130px;" />
+      </div>
+
+      <!-- Diskmag Content Reading Area -->
+      <div id="diskmagContentPane" class="diskmag-content-pane diskmag-theme-green">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Diskmag Footer Tools -->
+      <div class="diskmag-footer-tools">
+        <!-- Star Rating -->
+        <div style="display:flex; align-items:center; gap:6px;">
+          <span style="font-size:11px; color:#aaffee;">Rate Article:</span>
+          <div class="diskmag-stars" id="diskmagStars">
+            <span class="diskmag-star" onclick="rateDiskmagArticle(1)">★</span>
+            <span class="diskmag-star" onclick="rateDiskmagArticle(2)">★</span>
+            <span class="diskmag-star" onclick="rateDiskmagArticle(3)">★</span>
+            <span class="diskmag-star" onclick="rateDiskmagArticle(4)">★</span>
+            <span class="diskmag-star" onclick="rateDiskmagArticle(5)">★</span>
+          </div>
+          <span id="diskmagRatingScore" style="font-size:11px; color:#ffff00; font-family:'Courier New', monospace;">(5.0 / 5)</span>
+        </div>
+
+        <!-- Kudos Feedback -->
+        <button class="diskmag-btn" onclick="sendDiskmagKudos()" style="background:#440022; color:#ff00aa; border-color:#ff00aa;">
+          💌 Send Kudos to Editorial Desk (<span id="diskmagKudosCount">128</span>)
+        </button>
+
+        <!-- Download Buttons -->
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="diskmag-btn" style="background:#004422; color:#00ff66;" onclick="downloadDiskmagTxt()">💾 Download Issue (.TXT / .NFO)</button>
+          <button class="diskmag-btn" style="background:#002244; color:#38bdf8;" onclick="downloadDiskmagHtml()">🌐 Download Standalone .HTML</button>
         </div>
       </div>
     </div>
@@ -7552,6 +8043,918 @@ function initSubcarrierLab() {
   renderSubcarrierWaterfallCanvas();
 }
 
+// ============================================================================
+// CYBERSPIRE 16-BIT CHIPTUNE SFX LABORATORY '99
+// ============================================================================
+let sfxParams = {
+  wave: 'square',
+  baseFreq: 440,
+  freqSlide: -40,
+  deltaSlide: 0,
+  vibDepth: 0,
+  vibSpeed: 8,
+  attack: 0.005,
+  decay: 0.25,
+  sustain: 20,
+  release: 0.10,
+  duty: 50,
+  filter: 8000,
+  bits: 8,
+  volume: 80
+};
+
+let currentSfxPcmData = null;
+let currentSfxSampleRate = 44100;
+let currentSfxAnimFrame = null;
+
+const SFX_PRESETS = {
+  laser: { wave: 'square', baseFreq: 880, freqSlide: -60, deltaSlide: 0, vibDepth: 0, vibSpeed: 10, attack: 0.005, decay: 0.18, sustain: 10, release: 0.05, duty: 30, filter: 9000, bits: 8 },
+  coin: { wave: 'square', baseFreq: 987, freqSlide: 35, deltaSlide: 0, vibDepth: 0, vibSpeed: 8, attack: 0.005, decay: 0.28, sustain: 25, release: 0.12, duty: 50, filter: 10000, bits: 8 },
+  powerup: { wave: 'triangle', baseFreq: 330, freqSlide: 75, deltaSlide: 15, vibDepth: 12, vibSpeed: 16, attack: 0.01, decay: 0.45, sustain: 40, release: 0.15, duty: 50, filter: 8500, bits: 12 },
+  explosion: { wave: 'noise', baseFreq: 120, freqSlide: -70, deltaSlide: -20, vibDepth: 0, vibSpeed: 5, attack: 0.005, decay: 0.65, sustain: 15, release: 0.25, duty: 50, filter: 2200, bits: 8 },
+  warp: { wave: 'sine', baseFreq: 620, freqSlide: -45, deltaSlide: 30, vibDepth: 35, vibSpeed: 14, attack: 0.02, decay: 0.50, sustain: 30, release: 0.20, duty: 50, filter: 7000, bits: 16 },
+  impact: { wave: 'sawtooth', baseFreq: 180, freqSlide: -85, deltaSlide: 0, vibDepth: 5, vibSpeed: 6, attack: 0.005, decay: 0.22, sustain: 10, release: 0.08, duty: 50, filter: 3200, bits: 8 },
+  jump: { wave: 'square', baseFreq: 260, freqSlide: 65, deltaSlide: -10, vibDepth: 0, vibSpeed: 8, attack: 0.005, decay: 0.20, sustain: 15, release: 0.08, duty: 50, filter: 8000, bits: 8 },
+  subcarrier1999: { wave: 'sine', baseFreq: 1999, freqSlide: 0, deltaSlide: 0, vibDepth: 25, vibSpeed: 19, attack: 0.02, decay: 0.55, sustain: 45, release: 0.25, duty: 50, filter: 4200, bits: 16 }
+};
+
+function loadSfxPreset(type) {
+  playUiBeep(920, 0.04);
+  const pr = SFX_PRESETS[type];
+  if (!pr) return;
+  sfxParams = { ...sfxParams, ...pr };
+
+  // Update UI Elements
+  const waveSel = document.getElementById('sfxWaveformSelect');
+  if (waveSel) waveSel.value = sfxParams.wave;
+
+  const bindMap = {
+    sfxBaseFreq: ['baseFreq', ' Hz'],
+    sfxFreqSlide: ['freqSlide', '%'],
+    sfxDeltaSlide: ['deltaSlide', '%'],
+    sfxVibDepth: ['vibDepth', ' Hz'],
+    sfxVibSpeed: ['vibSpeed', ' Hz'],
+    sfxAttack: ['attack', ' s'],
+    sfxDecay: ['decay', ' s'],
+    sfxSustain: ['sustain', '%'],
+    sfxRelease: ['release', ' s'],
+    sfxDuty: ['duty', '%'],
+    sfxFilter: ['filter', ' Hz']
+  };
+
+  for (const id in bindMap) {
+    const el = document.getElementById(id);
+    const [key, unit] = bindMap[id];
+    if (el) el.value = sfxParams[key];
+    const valEl = document.getElementById(id + 'Val');
+    if (valEl) valEl.textContent = sfxParams[key] + unit;
+  }
+
+  const bitSel = document.getElementById('sfxBitcrushSelect');
+  if (bitSel) bitSel.value = sfxParams.bits;
+
+  // Preset button active state
+  ['laser', 'coin', 'powerup', 'explosion', 'warp', 'impact', 'jump', 'subcarrier1999'].forEach(k => {
+    const btn = document.getElementById('btnSfx' + (k === 'subcarrier1999' ? '1999' : k.charAt(0).toUpperCase() + k.slice(1)));
+    if (btn) {
+      if (k === type) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+  });
+
+  synthesizeSfxBuffer();
+}
+
+function updateSfxParam(key, val) {
+  sfxParams[key] = val;
+  const valEl = document.getElementById('sfx' + key.charAt(0).toUpperCase() + key.slice(1) + 'Val');
+  if (valEl) {
+    let unit = '';
+    if (key === 'baseFreq' || key === 'vibDepth' || key === 'vibSpeed' || key === 'filter') unit = ' Hz';
+    else if (key === 'freqSlide' || key === 'deltaSlide' || key === 'sustain' || key === 'duty') unit = '%';
+    else if (key === 'attack' || key === 'decay' || key === 'release') unit = ' s';
+    valEl.textContent = val + unit;
+  }
+  synthesizeSfxBuffer();
+}
+
+function synthesizeSfxBuffer() {
+  const p = sfxParams;
+  const sampleRate = 44100;
+  const attack = Math.max(0.001, parseFloat(p.attack));
+  const decay = Math.max(0.01, parseFloat(p.decay));
+  const release = Math.max(0.01, parseFloat(p.release));
+  const sustainLevel = Math.max(0, Math.min(1, parseFloat(p.sustain) / 100));
+  const totalDuration = attack + decay + release;
+  const totalSamples = Math.floor(totalDuration * sampleRate);
+
+  const pcm = new Float32Array(totalSamples);
+  let phase = 0;
+  const baseFreq = parseFloat(p.baseFreq);
+  const slide = parseFloat(p.freqSlide) / 100;
+  const deltaSlide = parseFloat(p.deltaSlide) / 100;
+  const vibDepth = parseFloat(p.vibDepth);
+  const vibSpeed = parseFloat(p.vibSpeed);
+  const duty = parseFloat(p.duty) / 100;
+  const cutoff = parseFloat(p.filter);
+  const bits = parseInt(p.bits, 10);
+  const quantStep = bits >= 16 ? 0 : Math.pow(2, bits - 1);
+
+  let filterState = 0;
+  const dt = 1.0 / sampleRate;
+  const rc = 1.0 / (2.0 * Math.PI * cutoff);
+  const alpha = dt / (dt + rc);
+
+  for (let i = 0; i < totalSamples; i++) {
+    const t = i / sampleRate;
+
+    // Instantaneous Frequency
+    let freq = baseFreq * (1.0 + slide * (t / totalDuration) + 0.5 * deltaSlide * Math.pow(t / totalDuration, 2));
+    if (vibDepth > 0) {
+      freq += vibDepth * Math.sin(2 * Math.PI * vibSpeed * t);
+    }
+    freq = Math.max(20, Math.min(20000, freq));
+
+    // Phase advancement
+    phase += freq / sampleRate;
+
+    // Raw Waveform Generation
+    let sample = 0;
+    const normPhase = phase % 1.0;
+    if (p.wave === 'square') {
+      sample = normPhase < duty ? 1.0 : -1.0;
+    } else if (p.wave === 'sawtooth') {
+      sample = 2.0 * normPhase - 1.0;
+    } else if (p.wave === 'triangle') {
+      sample = Math.abs(4.0 * normPhase - 2.0) - 1.0;
+    } else if (p.wave === 'noise') {
+      sample = Math.random() * 2.0 - 1.0;
+    } else if (p.wave === 'sine') {
+      sample = Math.sin(2.0 * Math.PI * phase);
+    }
+
+    // ADSR Envelope
+    let env = 0;
+    if (t < attack) {
+      env = t / attack;
+    } else if (t < attack + decay) {
+      const decayProgress = (t - attack) / decay;
+      env = 1.0 - (1.0 - sustainLevel) * decayProgress;
+    } else {
+      const releaseProgress = (t - attack - decay) / release;
+      env = sustainLevel * Math.max(0, 1.0 - releaseProgress);
+    }
+
+    sample *= env;
+
+    // 1-Pole Lowpass Filter
+    filterState += alpha * (sample - filterState);
+    sample = filterState;
+
+    // Bitcrush Quantization
+    if (quantStep > 0) {
+      sample = Math.round(sample * quantStep) / quantStep;
+    }
+
+    pcm[i] = Math.max(-1.0, Math.min(1.0, sample));
+  }
+
+  currentSfxPcmData = pcm;
+  currentSfxSampleRate = sampleRate;
+
+  const statsEl = document.getElementById('sfxSampleStats');
+  if (statsEl) {
+    statsEl.textContent = `LEN: ${totalDuration.toFixed(2)}s • ${totalSamples} SAMPLES • ${bits}-BIT`;
+  }
+
+  drawSfxWaveform(-1);
+  return pcm;
+}
+
+function drawSfxWaveform(progress = -1) {
+  const canvas = document.getElementById('sfxWaveCanvas');
+  if (!canvas || !currentSfxPcmData) return;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width;
+  const h = canvas.height;
+  const cy = h / 2;
+
+  ctx.fillStyle = '#01060c';
+  ctx.fillRect(0, 0, w, h);
+
+  // Grid
+  ctx.strokeStyle = '#002535';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, cy);
+  ctx.lineTo(w, cy);
+  for (let x = 0; x < w; x += 40) {
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, h);
+  }
+  ctx.stroke();
+
+  // Waveform
+  ctx.strokeStyle = '#38bdf8';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  const step = currentSfxPcmData.length / w;
+  for (let x = 0; x < w; x++) {
+    const idx = Math.floor(x * step);
+    const val = currentSfxPcmData[idx] || 0;
+    const y = cy - val * (cy - 4);
+    if (x === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+
+  // Playhead cursor
+  if (progress >= 0 && progress <= 1) {
+    const px = Math.floor(w * progress);
+    ctx.strokeStyle = '#ffff00';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(px, 0);
+    ctx.lineTo(px, h);
+    ctx.stroke();
+  }
+}
+
+function playSfxSound() {
+  initAudioCtx();
+  if (!currentSfxPcmData) synthesizeSfxBuffer();
+
+  const audioBuf = audioCtx.createBuffer(1, currentSfxPcmData.length, currentSfxSampleRate);
+  audioBuf.getChannelData(0).set(currentSfxPcmData);
+
+  const src = audioCtx.createBufferSource();
+  src.buffer = audioBuf;
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime((sfxParams.volume / 100) * 0.45, audioCtx.currentTime);
+
+  src.connect(gain);
+  gain.connect(masterGain);
+  gain.connect(delayNode);
+
+  src.start();
+
+  const startTime = performance.now();
+  const durMs = (currentSfxPcmData.length / currentSfxSampleRate) * 1000;
+  if (currentSfxAnimFrame) cancelAnimationFrame(currentSfxAnimFrame);
+
+  function animatePlayhead() {
+    const elapsed = performance.now() - startTime;
+    const progress = elapsed / durMs;
+    if (progress <= 1.0) {
+      drawSfxWaveform(progress);
+      currentSfxAnimFrame = requestAnimationFrame(animatePlayhead);
+    } else {
+      drawSfxWaveform(-1);
+      currentSfxAnimFrame = null;
+    }
+  }
+  currentSfxAnimFrame = requestAnimationFrame(animatePlayhead);
+}
+
+function randomizeSfx() {
+  playUiBeep(1000, 0.04);
+  const waves = ['square', 'sawtooth', 'triangle', 'noise', 'sine'];
+  sfxParams.wave = waves[Math.floor(Math.random() * waves.length)];
+  sfxParams.baseFreq = Math.floor(60 + Math.random() * 1400);
+  sfxParams.freqSlide = Math.floor(-90 + Math.random() * 180);
+  sfxParams.deltaSlide = Math.floor(-30 + Math.random() * 60);
+  sfxParams.vibDepth = Math.random() > 0.5 ? Math.floor(Math.random() * 40) : 0;
+  sfxParams.vibSpeed = Math.floor(4 + Math.random() * 20);
+  sfxParams.attack = parseFloat((0.002 + Math.random() * 0.08).toFixed(3));
+  sfxParams.decay = parseFloat((0.05 + Math.random() * 0.6).toFixed(2));
+  sfxParams.sustain = Math.floor(Math.random() * 60);
+  sfxParams.release = parseFloat((0.02 + Math.random() * 0.3).toFixed(2));
+  sfxParams.duty = Math.floor(20 + Math.random() * 60);
+  sfxParams.filter = Math.floor(1000 + Math.random() * 9000);
+
+  // Clear active preset buttons
+  document.querySelectorAll('.sfx-preset-btn').forEach(b => b.classList.remove('active'));
+
+  // Update UI values
+  const waveSel = document.getElementById('sfxWaveformSelect');
+  if (waveSel) waveSel.value = sfxParams.wave;
+
+  const bindMap = {
+    sfxBaseFreq: ['baseFreq', ' Hz'],
+    sfxFreqSlide: ['freqSlide', '%'],
+    sfxDeltaSlide: ['deltaSlide', '%'],
+    sfxVibDepth: ['vibDepth', ' Hz'],
+    sfxVibSpeed: ['vibSpeed', ' Hz'],
+    sfxAttack: ['attack', ' s'],
+    sfxDecay: ['decay', ' s'],
+    sfxSustain: ['sustain', '%'],
+    sfxRelease: ['release', ' s'],
+    sfxDuty: ['duty', '%'],
+    sfxFilter: ['filter', ' Hz']
+  };
+
+  for (const id in bindMap) {
+    const el = document.getElementById(id);
+    const [key, unit] = bindMap[id];
+    if (el) el.value = sfxParams[key];
+    const valEl = document.getElementById(id + 'Val');
+    if (valEl) valEl.textContent = sfxParams[key] + unit;
+  }
+
+  synthesizeSfxBuffer();
+  playSfxSound();
+}
+
+function mutateSfx() {
+  playUiBeep(1150, 0.04);
+  const perturb = (val, range, minVal, maxVal) => {
+    const delta = (Math.random() * 2 - 1) * range;
+    return Math.max(minVal, Math.min(maxVal, val + delta));
+  };
+
+  sfxParams.baseFreq = Math.round(perturb(sfxParams.baseFreq, 60, 40, 2200));
+  sfxParams.freqSlide = Math.round(perturb(sfxParams.freqSlide, 15, -100, 100));
+  sfxParams.deltaSlide = Math.round(perturb(sfxParams.deltaSlide, 10, -50, 50));
+  sfxParams.decay = parseFloat(perturb(sfxParams.decay, 0.08, 0.02, 1.5).toFixed(2));
+  sfxParams.filter = Math.round(perturb(sfxParams.filter, 500, 200, 12000));
+
+  const bindMap = {
+    sfxBaseFreq: ['baseFreq', ' Hz'],
+    sfxFreqSlide: ['freqSlide', '%'],
+    sfxDeltaSlide: ['deltaSlide', '%'],
+    sfxDecay: ['decay', ' s'],
+    sfxFilter: ['filter', ' Hz']
+  };
+
+  for (const id in bindMap) {
+    const el = document.getElementById(id);
+    const [key, unit] = bindMap[id];
+    if (el) el.value = sfxParams[key];
+    const valEl = document.getElementById(id + 'Val');
+    if (valEl) valEl.textContent = sfxParams[key] + unit;
+  }
+
+  synthesizeSfxBuffer();
+  playSfxSound();
+}
+
+function downloadSfxWav() {
+  playUiBeep(1400, 0.06);
+  if (!currentSfxPcmData) synthesizeSfxBuffer();
+  const numSamples = currentSfxPcmData.length;
+  const numChannels = 1;
+  const sampleRate = currentSfxSampleRate;
+  const bitsPerSample = 16;
+  const blockAlign = numChannels * (bitsPerSample / 8);
+  const byteRate = sampleRate * blockAlign;
+  const dataSize = numSamples * blockAlign;
+  const wavSize = 44 + dataSize;
+
+  const buf = new Uint8Array(wavSize);
+  const view = new DataView(buf.buffer);
+
+  buf.set([0x52, 0x49, 0x46, 0x46], 0); // "RIFF"
+  view.setUint32(4, 36 + dataSize, true);
+  buf.set([0x57, 0x41, 0x56, 0x45], 8); // "WAVE"
+  buf.set([0x66, 0x6D, 0x74, 0x20], 12); // "fmt "
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true); // PCM format
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, byteRate, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitsPerSample, true);
+  buf.set([0x64, 0x61, 0x74, 0x61], 36); // "data"
+  view.setUint32(40, dataSize, true);
+
+  let offset = 44;
+  for (let i = 0; i < numSamples; i++) {
+    const s = Math.max(-1, Math.min(1, currentSfxPcmData[i]));
+    const int16 = s < 0 ? Math.round(s * 32768) : Math.round(s * 32767);
+    view.setInt16(offset, int16, true);
+    offset += 2;
+  }
+
+  const blob = new Blob([buf], { type: 'audio/wav' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `CyberSpire_SFX_${sfxParams.wave}_${sfxParams.baseFreq}Hz.wav`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function copySfxCArray() {
+  playUiBeep(1200, 0.05);
+  if (!currentSfxPcmData) synthesizeSfxBuffer();
+  const numSamples = currentSfxPcmData.length;
+  let str = `/* CyberSpire 16-Bit Chiptune SFX (${numSamples} Samples • ${currentSfxSampleRate}Hz Mono) */\n`;
+  str += `const int16_t sfx_sample_data[${numSamples}] = {\n  `;
+  const displayLimit = Math.min(numSamples, 512);
+  for (let i = 0; i < displayLimit; i++) {
+    const s = Math.max(-1, Math.min(1, currentSfxPcmData[i]));
+    const int16 = s < 0 ? Math.round(s * 32768) : Math.round(s * 32767);
+    str += int16 + (i < displayLimit - 1 ? ", " : "");
+    if ((i + 1) % 12 === 0 && i < displayLimit - 1) str += "\n  ";
+  }
+  if (numSamples > displayLimit) {
+    str += `\n  /* ... ${numSamples - displayLimit} more samples truncated for preview ... */`;
+  }
+  str += "\n};\n";
+
+  const box = document.getElementById('sfxCodeOutput');
+  if (box) box.value = str;
+  const notice = document.getElementById('sfxExportTypeNotice');
+  if (notice) notice.textContent = 'C Array Copied!';
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(str).catch(() => {});
+  }
+}
+
+function copySfxJsSnippet() {
+  playUiBeep(1300, 0.05);
+  const p = sfxParams;
+  const code = `// CyberSpire Procedural Retro SFX Synthesizer (Web Audio API)
+function playProceduralSfx(audioCtx) {
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
+
+  osc.type = '${p.wave === 'noise' ? 'sawtooth' : p.wave}';
+  osc.frequency.setValueAtTime(${p.baseFreq}, now);
+  osc.frequency.exponentialRampToValueAtTime(Math.max(20, ${p.baseFreq} * (1 + ${p.freqSlide / 100})), now + ${p.decay});
+
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(${p.filter}, now);
+
+  gain.gain.setValueAtTime(0.001, now);
+  gain.gain.linearRampToValueAtTime(0.35, now + ${p.attack});
+  gain.gain.exponentialRampToValueAtTime(0.001, now + ${p.attack} + ${p.decay});
+
+  osc.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start(now);
+  osc.stop(now + ${p.attack} + ${p.decay} + 0.05);
+}`;
+
+  const box = document.getElementById('sfxCodeOutput');
+  if (box) box.value = code;
+  const notice = document.getElementById('sfxExportTypeNotice');
+  if (notice) notice.textContent = 'Web Audio JS Copied!';
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).catch(() => {});
+  }
+}
+
+function initSfxLab() {
+  loadSfxPreset('laser');
+}
+
+// ============================================================================
+// SILICON ECHOES '99 DEMOSCENE DISKMAG READER & ARCHIVE
+// ============================================================================
+const DISKMAG_ARTICLES = [
+  {
+    id: 'editorial',
+    title: 'Twilight of the Millennium: Why 16-Bit Silicon Refuses to Die',
+    author: 'CyberSpire',
+    group: 'CyberSpire Net / KiloNet Fleet',
+    date: 'August 1999',
+    category: 'Editorial',
+    words: 780,
+    asciiHeader: `  _____ _____ _      _____ _____ ____  _   _   ______ _____ _    _  ____  ______ _____ 
+ / ____|_   _| |    |_   _/ ____/ __ \\| \\ | | |  ____/ ____| |  | |/ __ \\|  ____/ ____|
+| (___   | | | |      | || |   | |  | |  \\| | | |__ | |    | |__| | |  | | |__ | (___  
+ \\___ \\  | | | |      | || |   | |  | | . \` | |  __|| |    |  __  | |  | |  __| \\___ \\ 
+ ____) |_| |_| |____ _| || |___| |__| | |\\  | | |___| |____| |  | | |__| | |________) |
+|_____/|_____|______|_____\\_____\\____/|_| \\_| |______\\_____|_|  |_|\\____/|______|_____/ 
+                    [ ISSUE #07 • SUMMER SOLSTICE 1999 EDITION ]`,
+    content: `<p>We stand on the precarious precipice of the Year 2000. Corporate computer publications speak of nothing but multi-gigabyte operating system bloat, 32-bit graphical shell layers consuming dozens of megabytes just to render an idle desktop, and the dreaded Y2K clock rollover bug.</p>
+<p>Yet here in our underground corner of the web—sheltered within the 999KB boundaries of our retro architectures—the demoscene and tracker communities are crafting the most vibrant, expressive digital art the world has ever witnessed. When every byte matters, every instruction counts. In an Amiga 500 with a mere 512 kilobytes of chip RAM, or a custom x86 real-mode binary compiled down to 256 bytes, there is no room for bloatware or abstraction leaks. You talk directly to the silicon registers.</p>
+<p>The Paula soundchip's 4-channel DMA channels, the Yamaha YM2612 2-operator FM synth cells, and the Copper display coprocessor running cycle-accurate scanline interrupts prove that true computer art is born from constraint. As the mainstream tech world barrels blindly toward bloated gigabytes, we preserve the purity of the 16-bit golden era. Keep your MOD trackers loaded, your CRT phosphors warm, and your assembly compilers tuned!</p>`
+  },
+  {
+    id: 'party_report',
+    title: 'Mekka & Symposium \'99 / Assembly \'99 Retrospective',
+    author: 'ShadowByte & FrostWave',
+    group: 'RAZOR 1999 & FLARELIGHT Alliance',
+    date: 'July 1999',
+    category: 'Scene Report',
+    words: 850,
+    asciiHeader: `  ____   _    ____ _____ __   __  ____  _____ ____   ___  ____ _____ 
+ |  _ \\ / \\  |  _ \\_   _|\\ \\ / / |  _ \\| ____|  _ \\ / _ \\|  _ \\_   _|
+ | |_) / _ \\ | |_) || |   \\ V /  | |_) |  _| | |_) | | | | |_) || |  
+ |  __/ ___ \\|  _ < | |    | |   |  _ <| |___|  __/| |_| |  _ < | |  
+ |_| /_/   \\_\\_| \\_\\|_|    |_|   |_| \\_\\_____|_|    \\___/|_| \\_\\|_|  `,
+    content: `<p>Greetings to all coders, graphicians, and tracker musicians across the globe! The summer of 1999 has been an unforgettable season for the international demoscene, characterized by jaw-dropping 64k intros and groundbreaking music disks.</p>
+<p>At <strong>Mekka &amp; Symposium '99</strong> in Fallingbostel, the hall roared as the 64-kilobyte PC intro competition showcased real-time procedural texture synthesis, volumetric light shafts, and algorithmic soft-shadow mapping—all fitting on a single standard 1.44MB floppy with room to spare! Special salutes to the crews at <strong>FLARELIGHT</strong>, <strong>RAZOR 1999</strong>, and <strong>PARALAX</strong> for pushing the envelope of Pentium II cycle optimizations.</p>
+<p>Over at <strong>Assembly '99</strong> in Helsinki, the 4-channel ProTracker and FastTracker II competitions were dominated by lush, melodic Euro-trance and hardcore breakbeat anthems. Musicians pushed Amiga Paula's 8-bit DAC to its absolute acoustic ceiling using software oversampling and resonant filter emulation. The scene is more alive than ever!</p>
+<p>For visitors wishing to study these historic releases and keygen cracktros, explore the curated repository over at <a href="/web/warez.html" style="color:#ff00ff; font-weight:bold;">kweb://warez (0xRELEASE Scene Vault)</a>!</p>`
+  },
+  {
+    id: 'soundtracker',
+    title: 'Inside Paula\'s 4-Channel Heart: ProTracker Period Arithmetic',
+    author: 'TrackMaster \'99',
+    group: 'Underground Sound Alliance',
+    date: 'June 1999',
+    category: 'Soundtrackers',
+    words: 920,
+    asciiHeader: `  _____   ___  _   _ _        _      __  __  ___  ____  
+ |  __ \\ / _ \\| | | | |      / \\    |  \\/  |/ _ \\|  _ \\ 
+ | |__) | /_\\ | | | | |     / _ \\   | |\\/| | | | | | | |
+ |  ___/|  _  | |_| | |___ / ___ \\  | |  | | |_| | |_| |
+ |_|    |_| |_|\\___/|_____/_/   \\_\\ |_|  |_|\\___/|____/ `,
+    content: `<p>Many modern PC composers treat music trackers as mere sequencers, oblivious to the elegant physical mechanics that made the Amiga's custom soundchip, <strong>Paula (8364)</strong>, an engineering masterpiece. Let us unpack the mathematics of ProTracker period registers.</p>
+<p>Unlike modern sound cards that perform complex CPU-driven software mixing at a fixed 44.1kHz rate, Paula featured four autonomous hardware DMA audio channels. The playback pitch of an 8-bit PCM sample was governed directly by the hardware <em>Period</em> register according to the Amiga master clock frequency:</p>
+<p style="background:#001525; padding:8px; border:1px solid #005577; font-family:'Courier New', monospace; color:#ffff00;">
+  PAL Clock:  3,546,895 Hz / Period = Sample Playback Rate (Hz)<br>
+  NTSC Clock: 3,579,545 Hz / Period = Sample Playback Rate (Hz)
+</p>
+<p>For example, the standard middle note <strong>C-2</strong> corresponds to a period of <code>428</code> on PAL machines. Plugging this into our formula yields:</p>
+<p style="background:#001525; padding:8px; border:1px solid #005577; font-family:'Courier New', monospace; color:#00ffcc;">
+  3,546,895 / 428 &approx; 8,287.14 Hz
+</p>
+<p>This is why all genuine Amiga ProTracker sample instruments (such as those downloadable in our MOD vault above) are calibrated around the canonical 8,287 Hz rate! Paula fetched signed 8-bit bytes directly from Chip RAM via cycle-stealing DMA during horizontal blanking intervals, converting them with dual 8-bit DACs into crisp analog audio without a single cycle of CPU overhead. Pure hardware bliss!</p>`
+  },
+  {
+    id: 'assembly_code',
+    title: 'Coder\'s Black Book: 256-Byte Copper Plasmas & Fixed-Point Sines',
+    author: 'HexViper',
+    group: 'PARALAX Systems',
+    date: 'August 1999',
+    category: 'Coding & Algorithms',
+    words: 890,
+    asciiHeader: `   ____ ___  ____  _____ ____  _ ____    ____   ___   ___  _  __
+  / ___/ _ \\|  _ \\| ____|  _ \\( ) ___|  | __ ) / _ \\ / _ \\| |/ /
+ | |  | | | | | | |  _| | |_) |/\\___ \\  |  _ \\| | | | | | | ' / 
+ | |__| |_| | |_| | |___|  _ <   ___) | | |_) | |_| | |_| | . \\ 
+  \\____\\___/|____/|_____|_| \\_\\ |____/  |____/ \\___/ \\___/|_|\\_\\`,
+    content: `<p>Welcome, fellow x86 acolytes. Today we inspect one of the most revered demoscene visual effects: the 256-byte real-time sine plasma running in VGA Mode 13h (320x200 256 colors).</p>
+<p>In high-level languages like C or Java, developers carelessly invoke <code>sin()</code> from math libraries, burning hundreds of floating-point cycles per pixel. In the demoscene 256-byte category, we generate a 256-byte precomputed integer sine lookup table directly in code or use iterative register tricks:</p>
+<pre style="background:#001525; padding:8px; border:1px solid #005577; color:#00ff66; font-size:11px;">
+; Simple 256-Color VGA Palette Generation (Copper Gradient)
+mov dx, 0x3C8       ; VGA DAC Pel Write Index Register
+xor al, al
+out dx, al          ; Start at palette index 0
+inc dx              ; DX = 0x3C9 (VGA DAC Data Register)
+
+.pal_loop:
+  mov al, cl        ; Red component
+  shr al, 2
+  out dx, al
+  mov al, cl        ; Green component
+  shr al, 1
+  out dx, al
+  mov al, 255       ; Blue component
+  sub al, cl
+  shr al, 2
+  out dx, al
+  inc cl
+  jnz .pal_loop
+</pre>
+<p>By indexing the color index $C(x, y)$ as a sum of four phase-offset trigonometric waves $C = \sin(x \cdot k_1 + t) + \sin(y \cdot k_2 + t) + \sin((x+y) \cdot k_3 + t)$, the video screen transforms into a liquid, pulsating kaleidoscope. To experiment with live interactive assembly code and micro-CPU execution, visit <a href="/web/asm_temple.html" style="color:#00ffcc; font-weight:bold;">kweb://asm-temple</a>!</p>`
+  },
+  {
+    id: 'underground_wire',
+    title: 'The Underground Wire: Spectral Transmissions on Subnet 10.19.99.4',
+    author: 'SysOp_0x7F',
+    group: 'Darknet / Carlsbad Relay Station',
+    date: 'August 1999',
+    category: 'Investigation & Wire',
+    words: 980,
+    asciiHeader: `  _   _ _   _ ____  _____ ____   ____ ____   ___  _   _ _   _ ____  
+ | | | | \\ | |  _ \\| ____|  _ \\ / ___|  _ \\ / _ \\| | | | \\ | |  _ \\ 
+ | | | |  \\| | | | |  _| | |_) | |  _| |_) | | | | | | |  \\| | | | |
+ | |_| | |\\  | |_| | |___|  _ <| |_| |  _ <| |_| | |_| | |\\  | |_| |
+  \\___/|_| \\_|____/|_____|_| \\_\\\\____|_| \\_\\\\___/ \\___/|_| \\_|____/ `,
+    content: `<p>Over the past three months, amateur radio operators and telecommunications engineers monitoring high-frequency microwave repeater hops across the New Mexico desert have logged recurring anomalous RF transmissions.</p>
+<p>According to confidential logs leaked by night-shift operators, automated packet sniffers began capturing ICMP and UDP datagrams originating from an unlisted, non-routable private class A address block: <strong>10.19.99.4</strong>. What makes these packets extraordinary is their acoustic subcarrier: baseband receivers tapped into the line audio output detected an unyielding sinusoidal hum locked at precisely <strong>1999.0 Hz</strong>.</p>
+<p>Further analysis of the payload headers revealed recurring ASCII strings referencing <em>"Carlsbad Subterranean Acoustic Research Laboratory"</em> and <em>"Salado Halite Bedrock Transponder Grid"</em>. Technicians who attempted to route standard web requests to <code>kweb://10.19.99.4/classified</code> or query WHOIS records for <code>echo-gw-07.kilonet.internal</code> encountered declassified signal telemetry and memory hex dumps.</p>
+<p>What is generating these autonomous transmissions deep within the bedrock? Are they legacy defense telemetry relics from early cold-war seismic monitoring grids, or something awakening within the network? Curious voyagers can tune CyberSpire's RF Demodulator in Section 8 above, or probe <a href="/web/classified.html" style="color:#00ff66; font-weight:bold;">kweb://10.19.99.4/classified</a> and <a href="/web/echo_subsystem.html" style="color:#38bdf8; font-weight:bold;">kweb://echo-subsystem.net</a> directly in KNet to judge for themselves.</p>`
+  },
+  {
+    id: 'charts',
+    title: '1999 EuroScene Tracker Top 10 Chart & Scene Group Standings',
+    author: 'ChartCouncil',
+    group: 'EuroScene Top-List',
+    date: 'Summer 1999',
+    category: 'Charts & Rankings',
+    words: 710,
+    asciiHeader: `   ____ _   _    _    ____ _____ ____    ____   ___  ____  
+  / ___| | | |  / \\  |  _ \\_   _/ ___|  |_ _/  / _ \\|  _ \\ 
+ | |   | |_| | / _ \\ | |_) || | \\___ \\   | |  | | | | |_) |
+ | |___|  _  |/ ___ \\|  _ < | |  ___) |  | |  | |_| |  __/ 
+  \\____|_| |_/_/   \\_\\_| \\_\\|_| |____/  |___|  \\___/|_|    `,
+    content: `<p>The official Scene Top-List for Summer 1999 as voted by registered acolyte trackers and demoscene groups across Europe and North America:</p>
+<table style="width:100%; border-collapse:collapse; font-size:11px; margin-top:8px; border:1px solid #005577;">
+  <thead>
+    <tr style="background:#002538; color:#ffff00;">
+      <th style="padding:4px; border:1px solid #005577;">Rank</th>
+      <th style="padding:4px; border:1px solid #005577;">Track Title</th>
+      <th style="padding:4px; border:1px solid #005577;">Author</th>
+      <th style="padding:4px; border:1px solid #005577;">Group</th>
+      <th style="padding:4px; border:1px solid #005577;">Format</th>
+      <th style="padding:4px; border:1px solid #005577;">Rating</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr style="background:#001525;"><td style="padding:4px; border:1px solid #005577; text-align:center;">#1</td><td>Neon Horizon</td><td>CyberSpire</td><td>KiloNet</td><td>4-CH MOD</td><td style="color:#00ffcc;">9.8 / 10</td></tr>
+    <tr style="background:#000f1a;"><td style="padding:4px; border:1px solid #005577; text-align:center;">#2</td><td>Starlight Overture</td><td>FrostWave</td><td>FLARELIGHT</td><td>4-CH MOD</td><td style="color:#00ffcc;">9.6 / 10</td></tr>
+    <tr style="background:#001525;"><td style="padding:4px; border:1px solid #005577; text-align:center;">#3</td><td>Silicon Acid 303</td><td>AcidByte</td><td>RAZOR 1999</td><td>4-CH MOD</td><td style="color:#00ffcc;">9.5 / 10</td></tr>
+    <tr style="background:#000f1a;"><td style="padding:4px; border:1px solid #005577; text-align:center;">#4</td><td>Subterranean Drift</td><td>PulseMaster</td><td>PARALAX</td><td>XM 8-CH</td><td style="color:#00ffcc;">9.4 / 10</td></tr>
+    <tr style="background:#001525;"><td style="padding:4px; border:1px solid #005577; text-align:center;">#5</td><td>Phosphor Trance</td><td>Viper_99</td><td>SKID VECTOR</td><td>4-CH MOD</td><td style="color:#00ffcc;">9.2 / 10</td></tr>
+    <tr style="background:#000f1a;"><td style="padding:4px; border:1px solid #005577; text-align:center;">#6</td><td>Lithospheric Pulse</td><td>Node_0x7F</td><td>Independent</td><td>4-CH MOD</td><td style="color:#00ffcc;">9.1 / 10</td></tr>
+    <tr style="background:#001525;"><td style="padding:4px; border:1px solid #005577; text-align:center;">#7</td><td>Quantum Cascade</td><td>BitMage</td><td>FLARELIGHT</td><td>IT 16-CH</td><td style="color:#00ffcc;">9.0 / 10</td></tr>
+    <tr style="background:#000f1a;"><td style="padding:4px; border:1px solid #005577; text-align:center;">#8</td><td>Tracker Dreams '99</td><td>SoundDemon</td><td>KiloNet</td><td>4-CH MOD</td><td style="color:#00ffcc;">8.9 / 10</td></tr>
+    <tr style="background:#001525;"><td style="padding:4px; border:1px solid #005577; text-align:center;">#9</td><td>Bedrock Echoes</td><td>Carlsbad_04</td><td>Research Core</td><td>4-CH MOD</td><td style="color:#00ffcc;">8.8 / 10</td></tr>
+    <tr style="background:#000f1a;"><td style="padding:4px; border:1px solid #005577; text-align:center;">#10</td><td>Millennium Bug Hop</td><td>Y2K_Survivor</td><td>Silicon Valley</td><td>4-CH MOD</td><td style="color:#00ffcc;">8.7 / 10</td></tr>
+  </tbody>
+</table>
+<p style="margin-top:10px;">Congratulations to all ranked composers! You can download and dissect full modules right here in CyberSpire's MOD Vault and Dissector tables.</p>`
+  }
+];
+
+let currentDiskmagIndex = 0;
+let currentDiskmagTheme = localStorage.getItem('diskmag_theme') || 'green';
+let currentDiskmagFontSize = 13;
+let diskmagBgmInterval = null;
+let isDiskmagBgmActive = false;
+
+function selectDiskmagArticle(index) {
+  playUiBeep(880, 0.04);
+  currentDiskmagIndex = Math.max(0, Math.min(DISKMAG_ARTICLES.length - 1, index));
+  const sel = document.getElementById('diskmagArticleSelect');
+  if (sel) sel.value = currentDiskmagIndex;
+  const counter = document.getElementById('diskmagArticleCounter');
+  if (counter) counter.textContent = `ART: 0${currentDiskmagIndex + 1}/0${DISKMAG_ARTICLES.length}`;
+  renderDiskmagArticle();
+}
+
+function stepDiskmagArticle(dir) {
+  let next = currentDiskmagIndex + dir;
+  if (next < 0) next = DISKMAG_ARTICLES.length - 1;
+  if (next >= DISKMAG_ARTICLES.length) next = 0;
+  selectDiskmagArticle(next);
+}
+
+function renderDiskmagArticle() {
+  const art = DISKMAG_ARTICLES[currentDiskmagIndex];
+  const pane = document.getElementById('diskmagContentPane');
+  if (!pane || !art) return;
+
+  const savedRating = parseInt(localStorage.getItem('diskmag_rating_' + art.id) || '5', 10);
+  updateDiskmagStarsUI(savedRating);
+
+  let html = '';
+  html += `<pre class="diskmag-ascii-banner">${art.asciiHeader}</pre>`;
+  html += `<div class="diskmag-article-header">`;
+  html += `  <div style="font-size:15px; font-weight:bold; color:currentColor;">${art.title}</div>`;
+  html += `  <div class="diskmag-article-meta">`;
+  html += `    AUTHOR: <strong>${art.author}</strong> [${art.group}] • CATEGORY: ${art.category} • DATE: ${art.date} • WORDS: ${art.words}`;
+  html += `  </div>`;
+  html += `</div>`;
+  html += `<div class="diskmag-article-body">${art.content}</div>`;
+
+  pane.innerHTML = html;
+  pane.scrollTop = 0;
+}
+
+function setDiskmagTheme(theme) {
+  playUiBeep(960, 0.04);
+  currentDiskmagTheme = theme;
+  localStorage.setItem('diskmag_theme', theme);
+  const pane = document.getElementById('diskmagContentPane');
+  if (pane) {
+    pane.className = `diskmag-content-pane diskmag-theme-${theme}`;
+  }
+  ['green', 'amber', 'cyan', 'paper'].forEach(t => {
+    const btn = document.getElementById(`btnTheme${t.charAt(0).toUpperCase() + t.slice(1)}`);
+    if (btn) {
+      if (t === theme) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+  });
+}
+
+function adjustDiskmagFontSize(delta) {
+  currentDiskmagFontSize = Math.max(11, Math.min(18, currentDiskmagFontSize + delta));
+  const pane = document.getElementById('diskmagContentPane');
+  if (pane) {
+    pane.style.fontSize = currentDiskmagFontSize + 'px';
+  }
+}
+
+function updateDiskmagStarsUI(rating) {
+  const starsBox = document.getElementById('diskmagStars');
+  if (!starsBox) return;
+  const stars = starsBox.querySelectorAll('.diskmag-star');
+  stars.forEach((s, idx) => {
+    if (idx < rating) s.classList.add('filled');
+    else s.classList.remove('filled');
+  });
+  const scoreEl = document.getElementById('diskmagRatingScore');
+  if (scoreEl) scoreEl.textContent = `(${rating}.0 / 5)`;
+}
+
+function rateDiskmagArticle(rating) {
+  playUiBeep(1100, 0.05);
+  const art = DISKMAG_ARTICLES[currentDiskmagIndex];
+  if (!art) return;
+  localStorage.setItem('diskmag_rating_' + art.id, rating);
+  updateDiskmagStarsUI(rating);
+}
+
+function sendDiskmagKudos() {
+  playDemosceneChime();
+  let count = parseInt(localStorage.getItem('diskmag_kudos_count') || '128', 10);
+  count += 1;
+  localStorage.setItem('diskmag_kudos_count', count);
+  const el = document.getElementById('diskmagKudosCount');
+  if (el) el.textContent = count;
+}
+
+function toggleDiskmagBgm() {
+  initAudioCtx();
+  isDiskmagBgmActive = !isDiskmagBgmActive;
+  const btn = document.getElementById('btnDiskmagBgm');
+
+  if (isDiskmagBgmActive) {
+    if (btn) {
+      btn.textContent = '♫ Reading BGM [ON]';
+      btn.style.background = '#005533';
+      btn.style.color = '#00ff66';
+    }
+    startDiskmagBgm();
+  } else {
+    if (btn) {
+      btn.textContent = '♫ Reading BGM [OFF]';
+      btn.style.background = '#003344';
+      btn.style.color = '#38bdf8';
+    }
+    stopDiskmagBgm();
+  }
+}
+
+const DISKMAG_CHORDS = [
+  [57, 60, 64, 69], // Am7
+  [53, 57, 60, 65], // Fmaj7
+  [48, 55, 60, 64], // Cmaj
+  [55, 59, 62, 67]  // G6
+];
+let diskmagChordStep = 0;
+
+function startDiskmagBgm() {
+  if (diskmagBgmInterval) clearInterval(diskmagBgmInterval);
+  playDiskmagArpChord();
+  diskmagBgmInterval = setInterval(playDiskmagArpChord, 2400);
+}
+
+function stopDiskmagBgm() {
+  if (diskmagBgmInterval) {
+    clearInterval(diskmagBgmInterval);
+    diskmagBgmInterval = null;
+  }
+}
+
+function playDiskmagArpChord() {
+  if (!isDiskmagBgmActive || !audioCtx) return;
+  const chord = DISKMAG_CHORDS[diskmagChordStep % DISKMAG_CHORDS.length];
+  diskmagChordStep++;
+  const now = audioCtx.currentTime;
+
+  chord.forEach((midi, idx) => {
+    const t = now + idx * 0.18;
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    const f = audioCtx.createBiquadFilter();
+
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(midiNoteToFreq(midi), t);
+
+    f.type = 'lowpass';
+    f.frequency.setValueAtTime(1800, t);
+
+    g.gain.setValueAtTime(0.001, t);
+    g.gain.linearRampToValueAtTime(0.06, t + 0.08);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 1.8);
+
+    osc.connect(f);
+    f.connect(g);
+    g.connect(masterGain);
+    g.connect(delayNode);
+
+    osc.start(t);
+    osc.stop(t + 2.0);
+  });
+}
+
+function searchDiskmagArticles(query) {
+  const q = query.trim().toLowerCase();
+  if (!q) return;
+  for (let i = 0; i < DISKMAG_ARTICLES.length; i++) {
+    const a = DISKMAG_ARTICLES[i];
+    if (a.title.toLowerCase().includes(q) || a.content.toLowerCase().includes(q) || a.author.toLowerCase().includes(q)) {
+      selectDiskmagArticle(i);
+      break;
+    }
+  }
+}
+
+function downloadDiskmagTxt() {
+  playUiBeep(1200, 0.06);
+  let txt = `================================================================================\n`;
+  txt += `        SILICON ECHOES '99 - DEMOSCENE DISKMAG (ISSUE #07 - SUMMER 1999)       \n`;
+  txt += `           Archived & Preserved at CyberSpire's GeoCities Retro Shrine         \n`;
+  txt += `================================================================================\n\n`;
+  txt += `TABLE OF CONTENTS:\n`;
+  DISKMAG_ARTICLES.forEach((a, idx) => {
+    txt += `[0${idx + 1}] ${a.title} (by ${a.author} / ${a.group})\n`;
+  });
+  txt += `\n================================================================================\n\n`;
+
+  DISKMAG_ARTICLES.forEach((a, idx) => {
+    txt += `--------------------------------------------------------------------------------\n`;
+    txt += `ARTICLE 0${idx + 1}: ${a.title.toUpperCase()}\n`;
+    txt += `AUTHOR: ${a.author} [${a.group}] | DATE: ${a.date} | CAT: ${a.category}\n`;
+    txt += `--------------------------------------------------------------------------------\n\n`;
+    const cleanContent = a.content.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+    txt += cleanContent + `\n\n`;
+  });
+
+  txt += `================================================================================\n`;
+  txt += `GREETS TO: FLARELIGHT, RAZOR 1999, PARALAX, SKID VECTOR, KILONET FLEET & WEBRING!\n`;
+  txt += `EOF - SILICON ECHOES ISSUE #07 - 100% Y2K COMPLIANT\n`;
+  txt += `================================================================================\n`;
+
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `SILICON_ECHOES_ISSUE_07.NFO`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function downloadDiskmagHtml() {
+  playUiBeep(1300, 0.06);
+  const art = DISKMAG_ARTICLES[currentDiskmagIndex];
+  let html = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>SILICON ECHOES '99 - Issue #07: ${art.title}</title>
+<style>
+  body { background: #000; color: #00ff66; font-family: 'Courier New', monospace; padding: 20px; line-height: 1.6; }
+  .box { max-width: 800px; margin: 0 auto; border: 2px solid #00ff66; padding: 16px; background: #010f05; box-shadow: 0 0 20px #00ff66; }
+  pre { font-size: 10px; color: #ffff00; }
+  h1 { font-size: 18px; color: #00ffff; border-bottom: 1px dashed #00ff66; padding-bottom: 6px; }
+  .meta { font-size: 12px; color: #ff00aa; margin-bottom: 12px; }
+  a { color: #ffff00; }
+</style>
+</head>
+<body>
+<div class="box">
+  <pre>${art.asciiHeader}</pre>
+  <h1>${art.title}</h1>
+  <div class="meta">AUTHOR: ${art.author} [${art.group}] | DATE: ${art.date} | CAT: ${art.category}</div>
+  <div>${art.content}</div>
+  <hr style="border: 1px dashed #00ff66; margin-top: 20px;">
+  <div style="font-size:11px; text-align:center;">
+    Preserved from CyberSpire's Underground Retro Shrine &amp; MOD Vault (GeoCities Node #002) • KiloNet 1999
+  </div>
+</div>
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Silicon_Echoes_Issue_07_${art.id}.html`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function initDiskmagReader() {
+  setDiskmagTheme(currentDiskmagTheme);
+  const kudos = localStorage.getItem('diskmag_kudos_count') || '128';
+  const kudosEl = document.getElementById('diskmagKudosCount');
+  if (kudosEl) kudosEl.textContent = kudos;
+  selectDiskmagArticle(0);
+}
+
 // Initialize Everything
 setNeighborhood(currentNeighborhood);
 renderSwatches();
@@ -7572,6 +8975,8 @@ drawSampleWaveform();
 renderSampleCArray();
 renderPollQuestions();
 initSubcarrierLab();
+initSfxLab();
+initDiskmagReader();
 
 // Auto-unlock audio context on user interaction
 document.body.addEventListener('click', () => {
