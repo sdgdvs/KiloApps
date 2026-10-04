@@ -783,7 +783,29 @@
       slashAnim: null
     };
 
+    // --- IMAGEN 3 HERO CLASS SPRITE ATLAS SYSTEM (PHASE 1) ---
+    const HERO_SPRITES = {};
+    const HERO_CLASSES = ['warrior', 'mage', 'rogue', 'paladin', 'ranger'];
+
+    function preloadHeroSprites() {
+      HERO_CLASSES.forEach(cls => {
+        const img = new Image();
+        img.src = `../assets/sprites/kquest/kquest_hero_${cls}.png`;
+        img.onload = () => {
+          HERO_SPRITES[cls] = { img: img, loaded: true, frameW: 128, frameH: 128 };
+        };
+        img.onerror = () => {
+          const fallback = new Image();
+          fallback.src = `assets/sprites/kquest/kquest_hero_${cls}.png`;
+          fallback.onload = () => {
+            HERO_SPRITES[cls] = { img: fallback, loaded: true, frameW: 128, frameH: 128 };
+          };
+        };
+      });
+    }
+
     function initGFX() {
+      preloadHeroSprites();
       GFX.canvas = document.getElementById('kquest-gfx-canvas');
       if (!GFX.canvas) return;
       GFX.ctx = GFX.canvas.getContext('2d');
@@ -1538,6 +1560,38 @@
       ctx.beginPath();
       ctx.ellipse(x, y + 45, 24, 8, 0, 0, Math.PI * 2);
       ctx.fill();
+
+      // --- IMAGEN 3 SPRITE ATLAS BLITTING (WITH VECTOR FALLBACK) ---
+      const classKey = (className || 'Warrior').toLowerCase();
+      const spriteData = HERO_SPRITES[classKey];
+      if (spriteData && spriteData.loaded && spriteData.img) {
+        let frameIdx = 0;
+        if (action === 'attack') frameIdx = 1;
+        else if (action === 'hurt') frameIdx = 2;
+
+        const fw = spriteData.frameW || 128;
+        const fh = spriteData.frameH || 128;
+        const sx = frameIdx * fw;
+
+        if (wpnName.includes('Diamond') || armName.includes('Diamond')) {
+          ctx.save();
+          ctx.shadowColor = '#89dceb';
+          ctx.shadowBlur = 12 + Math.sin(frame * 0.2) * 4;
+          ctx.drawImage(spriteData.img, sx, 0, fw, fh, x - 64, sy - 72, 128, 128);
+          ctx.restore();
+        } else if (wpnName.includes('Gold') || armName.includes('Gold')) {
+          ctx.save();
+          ctx.shadowColor = '#f9e2af';
+          ctx.shadowBlur = 10 + Math.sin(frame * 0.2) * 3;
+          ctx.drawImage(spriteData.img, sx, 0, fw, fh, x - 64, sy - 72, 128, 128);
+          ctx.restore();
+        } else {
+          ctx.drawImage(spriteData.img, sx, 0, fw, fh, x - 64, sy - 72, 128, 128);
+        }
+
+        ctx.restore();
+        return;
+      }
 
       if (className === 'Warrior') {
         ctx.fillStyle = '#f38ba8';

@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T00:05:00-07:00 — kilo-qa: Fleet Audit (Multiplayer Connect Gate & Startup UX Verification)**
+  - Status: PASS ✅ (11 apps audited, 100% startup & UX test suite pass, zero console exceptions).
+  - Connect Gate Standard: Added explicit confirmation dialogs on deep links (`#room=CODE`) across `KChess`, `KConnect4`, `KReversi`, `KGo`, `KDarts`, `KTetris`, `K2048`, `KSnake`, `KSynth`, `KPad`.
+  - Autostart Ban: Eliminated unprompted network connections or matchmaking on boot; all default to local offline play or manual connect.
+  - Startup UX Fixes: Fixed unclosable modal selectors and CSS display states in `K2048` and `KType`.
+  - Verification: `test_app_startup.py` passes 11/11 apps; `npm run build` clean (270ms); `security_lint.py` 100% PASS; all files < 999 KB.
+
 - **2026-10-03T23:45:00-07:00 — kilo-tester: KSanctuary (Interactive UI Audit, Worker Dispatch Fixes, JSON Save/Load & ARCH-05)**
   - Status: PASS ✅ (2 critical missing handlers fixed, 0 regressions, clean builds, 449.9 KB web / 264.2 KB native < 999 KB ceiling).
   - Worker Controls: Implemented missing `changeWorker` and `assignSurvivorJob` handlers enabling facility staffing buttons and roster assignment.

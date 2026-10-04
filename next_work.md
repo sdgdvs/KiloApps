@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://users/~neon_rider (Neon Rider's Devlog)"
-  kilo_graphics: KQuest
+  kilo_graphics: "KQuest (Phase 2: Dungeon & Hub Backgrounds)"
   kilo_tester: KScript
   kilo_usability: KMedia
   kilo_qa: KNet
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://geocities (CyberSpire's Shrine)"
-  timestamp: "2026-10-04T01:27:00-07:00"
+  agent: kilo-graphics
+  app: "KQuest (Phase 1: Hero Class Sprites)"
+  timestamp: "2026-10-04T01:46:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KQuest` (Phase 1: Hero Class Sprites)
+- **Current Target**: `KQuest` (Phase 2: Dungeon & Hub Backgrounds)
 - **Upcoming Queue**:
-  `KQuest` (Phase 2: Dungeon & Hub Backgrounds), `KQuest` (Phase 3: Monster & Boss Bestiary), `KQuest` (Phase 4: Town NPCs & Combat FX), `KQuest` (Phase 5: Performance & Win32 Parity), `KRogue`, `KColosseum`, `KAbyss`, `KSpace`, `KPac`, `KBreakout`, `KAsteroids` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15)*.
+  `KQuest` (Phase 3: Monster & Boss Bestiary), `KQuest` (Phase 4: Town NPCs & Combat FX), `KQuest` (Phase 5: Performance & Win32 Parity), `KRogue`, `KColosseum`, `KAbyss`, `KSpace`, `KPac`, `KBreakout`, `KAsteroids` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phase 1)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KScript`
@@ -230,6 +230,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
  
+- **2026-10-04T01:46:00-07:00 — kilo-graphics: KQuest (Phase 1: Hero Class Sprite Atlases & Mandate 11 Glint Audit)**
+  - Status: PASS ✅ (0 regressions, 0 glints, 303.5 KB web / 99.3 KB native < 999 KB ceiling).
+  - Imagen 3 Sprite Pipeline: Generated 1024x1024 orthographic retro sprites on `#FF00FF` for 5 hero classes (Warrior, Mage, Rogue, Paladin, Ranger).
+  - 2-Stage Post-Processing: Processed via `scripts/asset_pipeline.py` into despilled, auto-cropped, centered 128x128 3-frame strips (`idle`, `attack`, `hurt`) + JSON atlases.
+  - Engine Integration: Refactored `drawHeroSprite()` in `kquest.html` with preloader, dynamic action frame blitting, and Diamond/Gold tier glow auras with vector fallback.
+  - Glint Audit: Verified clean static medieval filigree HUD borders with zero rotating comets or traveling perimeter dots across web and native C.
+  - Verification: MSVC clean (`KQuest.exe` 99.3 KB); Vite build clean in 356ms; `security_lint.py` 100% PASS; `check_icons.py` 100% PASS.
+
 - **2026-10-04T01:27:00-07:00 — kilo-creator: kweb://geocities (CyberSpire's Shrine & MOD Vault Deep Expansion)**
   - Status: PASS ✅ (0 regressions, 381.8 KB web < 999 KB ceiling, Vite clean in 291ms, security_lint 100% PASS).
   - Silicon Echoes '99 Diskmag: Built 6-article Web 1.0 demoscene reader with CRT green/amber/cyan/paper themes, ambient FM BGM, rating stars, and .NFO/.TXT/.HTML export.
@@ -261,13 +269,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast & Dialog Polish: Capped toast stack to 3 with explicit dismiss crosses; wired modal Esc and backdrop dismiss handlers.
   - ARCH-05 Visibility: Implemented visibilitychange listeners pausing animation loops and suspending AudioContext on background tab.
   - Verification: MSVC native clean (21.5 KB); Vite build clean in 337ms; check_icons 100% PASS; security_lint 100% PASS.
-
-- **2026-10-04T00:05:00-07:00 — kilo-qa: Fleet Audit (Multiplayer Connect Gate & Startup UX Verification)**
-  - Status: PASS ✅ (11 apps audited, 100% startup & UX test suite pass, zero console exceptions).
-  - Connect Gate Standard: Added explicit confirmation dialogs on deep links (`#room=CODE`) across `KChess`, `KConnect4`, `KReversi`, `KGo`, `KDarts`, `KTetris`, `K2048`, `KSnake`, `KSynth`, `KPad`.
-  - Autostart Ban: Eliminated unprompted network connections or matchmaking on boot; all default to local offline play or manual connect.
-  - Startup UX Fixes: Fixed unclosable modal selectors and CSS display states in `K2048` and `KType`.
-  - Verification: `test_app_startup.py` passes 11/11 apps; `npm run build` clean (270ms); `security_lint.py` 100% PASS; all files < 999 KB.
 
 
 
