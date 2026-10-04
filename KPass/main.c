@@ -742,35 +742,35 @@ static BOOL CALLBACK SetChildFont(HWND hChild, LPARAM lParam) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            hHelpLabel = CreateWindowA("STATIC", "KPass Security & Vault Manager [F1 for Help]", WS_CHILD | SS_LEFT, 20, 8, 410, 18, hwnd, NULL, NULL, NULL);
-            hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 445, 5, 75, 22, hwnd, (HMENU)1009, NULL, NULL);
+            hHelpLabel = CreateWindowA("STATIC", "KPass Security & Vault Manager [F1 for Help]", WS_CHILD | SS_LEFT, 20, 8, 460, 18, hwnd, NULL, NULL, NULL);
+            hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 490, 5, 90, 22, hwnd, (HMENU)1009, NULL, NULL);
 
-            hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Click Generate...", WS_CHILD | WS_TABSTOP | ES_CENTER | ES_READONLY | ES_AUTOHSCROLL, 20, 32, 500, 32, hwnd, NULL, NULL, NULL);
-            hStrengthDisplay = CreateWindowA("STATIC", "Strength: - (0 bits)", WS_CHILD | SS_CENTER, 20, 68, 500, 18, hwnd, NULL, NULL, NULL);
+            hDisplay = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Click Generate...", WS_CHILD | WS_TABSTOP | ES_CENTER | ES_READONLY | ES_AUTOHSCROLL, 20, 32, 560, 32, hwnd, NULL, NULL, NULL);
+            hStrengthDisplay = CreateWindowA("STATIC", "Strength: - (0 bits)", WS_CHILD | SS_CENTER, 20, 68, 560, 18, hwnd, NULL, NULL, NULL);
 
-            hUpper = CreateWindowA("BUTTON", "Uppercase", WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX, 20, 92, 120, 20, hwnd, NULL, NULL, NULL);
-            hLower = CreateWindowA("BUTTON", "Lowercase", WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX, 145, 92, 120, 20, hwnd, NULL, NULL, NULL);
-            hNum = CreateWindowA("BUTTON", "Numbers", WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX, 270, 92, 120, 20, hwnd, NULL, NULL, NULL);
-            hSym = CreateWindowA("BUTTON", "Symbols", WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX, 395, 92, 120, 20, hwnd, NULL, NULL, NULL);
+            hUpper = CreateWindowA("BUTTON", "Uppercase", WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX, 20, 92, 130, 20, hwnd, NULL, NULL, NULL);
+            hLower = CreateWindowA("BUTTON", "Lowercase", WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX, 160, 92, 130, 20, hwnd, NULL, NULL, NULL);
+            hNum = CreateWindowA("BUTTON", "Numbers", WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX, 300, 92, 130, 20, hwnd, NULL, NULL, NULL);
+            hSym = CreateWindowA("BUTTON", "Symbols", WS_CHILD | WS_TABSTOP | BS_AUTOCHECKBOX, 440, 92, 130, 20, hwnd, NULL, NULL, NULL);
 
             SendMessage(hUpper, BM_SETCHECK, BST_CHECKED, 0);
             SendMessage(hLower, BM_SETCHECK, BST_CHECKED, 0);
             SendMessage(hNum, BM_SETCHECK, BST_CHECKED, 0);
             SendMessage(hSym, BM_SETCHECK, BST_CHECKED, 0);
 
-            hLenLabel = CreateWindowA("STATIC", "Length:", WS_CHILD, 20, 120, 50, 20, hwnd, NULL, NULL, NULL);
-            hLen = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "16", WS_CHILD | WS_TABSTOP | ES_NUMBER | ES_CENTER, 72, 118, 48, 24, hwnd, NULL, NULL, NULL);
+            hLenLabel = CreateWindowA("STATIC", "Length:", WS_CHILD, 20, 120, 55, 20, hwnd, NULL, NULL, NULL);
+            hLen = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "16", WS_CHILD | WS_TABSTOP | ES_NUMBER | ES_CENTER, 78, 118, 48, 24, hwnd, NULL, NULL, NULL);
             
-            hBtnGen = CreateWindowA("BUTTON", "Generate [Enter]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 128, 118, 172, 24, hwnd, (HMENU)1001, NULL, NULL);
-            hBtnCopy = CreateWindowA("BUTTON", "Copy [Ctrl+C]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 308, 118, 212, 24, hwnd, (HMENU)1002, NULL, NULL);
+            hBtnGen = CreateWindowA("BUTTON", "Generate [Enter]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 136, 118, 200, 24, hwnd, (HMENU)1001, NULL, NULL);
+            hBtnCopy = CreateWindowA("BUTTON", "Copy [Ctrl+C]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 346, 118, 234, 24, hwnd, (HMENU)1002, NULL, NULL);
 
-            hLabelInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_TABSTOP | ES_AUTOHSCROLL, 20, 152, 120, 24, hwnd, NULL, NULL, NULL);
+            hLabelInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_TABSTOP | ES_AUTOHSCROLL, 20, 152, 135, 24, hwnd, NULL, NULL, NULL);
             SendMessageA(hLabelInput, EM_SETCUEBANNER, FALSE, (LPARAM)L"Service");
 
-            hUserInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_TABSTOP | ES_AUTOHSCROLL, 146, 152, 120, 24, hwnd, NULL, NULL, NULL);
+            hUserInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_TABSTOP | ES_AUTOHSCROLL, 165, 152, 135, 24, hwnd, NULL, NULL, NULL);
             SendMessageA(hUserInput, EM_SETCUEBANNER, FALSE, (LPARAM)L"Username");
 
-            hCatInput = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_TABSTOP | CBS_DROPDOWN, 272, 152, 110, 120, hwnd, NULL, NULL, NULL);
+            hCatInput = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_TABSTOP | CBS_DROPDOWN, 310, 152, 120, 120, hwnd, NULL, NULL, NULL);
             SendMessageA(hCatInput, CB_ADDSTRING, 0, (LPARAM)"Personal");
             SendMessageA(hCatInput, CB_ADDSTRING, 0, (LPARAM)"Work");
             SendMessageA(hCatInput, CB_ADDSTRING, 0, (LPARAM)"Finance");
@@ -779,11 +779,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hCatInput, CB_ADDSTRING, 0, (LPARAM)"Other");
             SendMessageA(hCatInput, CB_SETCURSEL, 0, 0);
             
-            hBtnSave = CreateWindowA("BUTTON", "Save [Ctrl+S]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 388, 152, 132, 24, hwnd, (HMENU)1003, NULL, NULL);
+            hBtnSave = CreateWindowA("BUTTON", "Save [Ctrl+S]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 440, 152, 140, 24, hwnd, (HMENU)1003, NULL, NULL);
 
-            hVaultSearch = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_TABSTOP | ES_AUTOHSCROLL, 20, 186, 175, 24, hwnd, (HMENU)2001, NULL, NULL);
+            hVaultSearch = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_TABSTOP | ES_AUTOHSCROLL, 20, 186, 200, 24, hwnd, (HMENU)2001, NULL, NULL);
             SendMessageA(hVaultSearch, EM_SETCUEBANNER, FALSE, (LPARAM)L"Search (Ctrl+F)...");
-            hFilterCat = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST, 202, 186, 115, 120, hwnd, (HMENU)2003, NULL, NULL);
+            hFilterCat = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "", WS_CHILD | WS_TABSTOP | CBS_DROPDOWNLIST, 230, 186, 120, 120, hwnd, (HMENU)2003, NULL, NULL);
             SendMessageA(hFilterCat, CB_ADDSTRING, 0, (LPARAM)"All Cats");
             SendMessageA(hFilterCat, CB_ADDSTRING, 0, (LPARAM)"Personal");
             SendMessageA(hFilterCat, CB_ADDSTRING, 0, (LPARAM)"Work");
@@ -793,25 +793,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(hFilterCat, CB_ADDSTRING, 0, (LPARAM)"Other");
             SendMessageA(hFilterCat, CB_SETCURSEL, 0, 0);
 
-            hBtnCopyVault = CreateWindowA("BUTTON", "Copy [C]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 324, 186, 95, 24, hwnd, (HMENU)1004, NULL, NULL);
-            hBtnDelVault = CreateWindowA("BUTTON", "Delete [Del]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 425, 186, 95, 24, hwnd, (HMENU)1005, NULL, NULL);
+            hBtnCopyVault = CreateWindowA("BUTTON", "Copy [C]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 360, 186, 105, 24, hwnd, (HMENU)1004, NULL, NULL);
+            hBtnDelVault = CreateWindowA("BUTTON", "Delete [Del]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 475, 186, 105, 24, hwnd, (HMENU)1005, NULL, NULL);
 
-            hVaultList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_TABSTOP | WS_VSCROLL | LBS_NOTIFY, 20, 218, 500, 355, hwnd, (HMENU)2002, NULL, NULL);
+            hVaultList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", NULL, WS_CHILD | WS_TABSTOP | WS_VSCROLL | LBS_NOTIFY, 20, 218, 560, 395, hwnd, (HMENU)2002, NULL, NULL);
             
-            hBtnExpCSV = CreateWindowA("BUTTON", "CSV [Alt+E]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 20, 585, 75, 26, hwnd, (HMENU)1006, NULL, NULL);
-            hBtnExpJSON = CreateWindowA("BUTTON", "JSON [Alt+J]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 100, 585, 78, 26, hwnd, (HMENU)1007, NULL, NULL);
-            hBtnExpMD = CreateWindowA("BUTTON", "MD [Alt+M]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 183, 585, 78, 26, hwnd, (HMENU)1011, NULL, NULL);
-            hBtnAudit = CreateWindowA("BUTTON", "Audit [Alt+A]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 266, 585, 85, 26, hwnd, (HMENU)1012, NULL, NULL);
-            hBtnImp = CreateWindowA("BUTTON", "Import [Alt+I]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 356, 585, 80, 26, hwnd, (HMENU)1008, NULL, NULL);
-            hBtnLockMain = CreateWindowA("BUTTON", "Lock [Alt+L]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 441, 585, 79, 26, hwnd, (HMENU)1010, NULL, NULL);
+            hBtnExpCSV = CreateWindowA("BUTTON", "CSV [Alt+E]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 20, 625, 85, 28, hwnd, (HMENU)1006, NULL, NULL);
+            hBtnExpJSON = CreateWindowA("BUTTON", "JSON [Alt+J]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 115, 625, 85, 28, hwnd, (HMENU)1007, NULL, NULL);
+            hBtnExpMD = CreateWindowA("BUTTON", "MD [Alt+M]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 210, 625, 85, 28, hwnd, (HMENU)1011, NULL, NULL);
+            hBtnAudit = CreateWindowA("BUTTON", "Audit [Alt+A]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 305, 625, 90, 28, hwnd, (HMENU)1012, NULL, NULL);
+            hBtnImp = CreateWindowA("BUTTON", "Import [Alt+I]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 405, 625, 85, 28, hwnd, (HMENU)1008, NULL, NULL);
+            hBtnLockMain = CreateWindowA("BUTTON", "Lock [Alt+L]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 500, 625, 80, 28, hwnd, (HMENU)1010, NULL, NULL);
 
             // Lock screen controls
-            hLockLabel = CreateWindowA("STATIC", "KPass Vault Locked", WS_CHILD | SS_CENTER, 40, 180, 460, 26, hwnd, NULL, NULL, NULL);
-            hLockInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_TABSTOP | ES_PASSWORD | ES_AUTOHSCROLL | ES_CENTER, 140, 220, 260, 26, hwnd, NULL, NULL, NULL);
+            hLockLabel = CreateWindowA("STATIC", "KPass Vault Locked", WS_CHILD | SS_CENTER, 40, 190, 520, 26, hwnd, NULL, NULL, NULL);
+            hLockInput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_TABSTOP | ES_PASSWORD | ES_AUTOHSCROLL | ES_CENTER, 170, 235, 260, 26, hwnd, NULL, NULL, NULL);
             SendMessageA(hLockInput, EM_SETCUEBANNER, FALSE, (LPARAM)L"Master Password");
-            hShowMasterPass = CreateWindowA("BUTTON", "Show Password", WS_CHILD | BS_AUTOCHECKBOX, 210, 255, 120, 20, hwnd, (HMENU)3002, NULL, NULL);
-            hBtnUnlock = CreateWindowA("BUTTON", "Unlock / Setup [Enter]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 155, 285, 230, 32, hwnd, (HMENU)3001, NULL, NULL);
-            hLockHelpLabel = CreateWindowA("STATIC", "Enter your master password to unlock.\nIf first time, entering a password initializes your encrypted vault.", WS_CHILD | SS_CENTER, 40, 335, 460, 36, hwnd, NULL, NULL, NULL);
+            hShowMasterPass = CreateWindowA("BUTTON", "Show Password", WS_CHILD | BS_AUTOCHECKBOX, 240, 270, 120, 20, hwnd, (HMENU)3002, NULL, NULL);
+            hBtnUnlock = CreateWindowA("BUTTON", "Unlock / Setup [Enter]", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 185, 305, 230, 32, hwnd, (HMENU)3001, NULL, NULL);
+            hLockHelpLabel = CreateWindowA("STATIC", "Enter your master password to unlock.\nIf first time, entering a password initializes your encrypted vault.", WS_CHILD | SS_CENTER, 40, 355, 520, 36, hwnd, NULL, NULL, NULL);
 
             hBgBrush = CreateSolidBrush(RGB(30, 30, 30));
             hEditBrush = CreateSolidBrush(RGB(22, 22, 22));
@@ -1012,7 +1012,7 @@ void __stdcall MainEntry() {
     wc.hbrBackground = CreateSolidBrush(RGB(30, 30, 30));
 
     RegisterClassA(&wc);
-    RECT rc = { 0, 0, 540, 660 };
+    RECT rc = { 0, 0, 600, 700 };
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, FALSE);
     HWND hwnd = CreateWindowExA(0, "KPassClass", "KPass Security & Vault Manager [F1 for Help]", (WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN) & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, wc.hInstance, NULL);
     

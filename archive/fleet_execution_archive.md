@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T07:12:00-07:00 — kilo-qa: KDB (Pass 5 QA & Build Quality, State Snapshot Persistence, Modal Navigation & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 101.6 KB web / 67.5 KB native < 999 KB ceiling).
+  - Snapshot State Persistence: Added Quicksave (F5) and Quickload (F9) toolbar buttons & hotkeys in web and native (`kdb_quicksave.dat`).
+  - First-Run Tutorial Integrity: Standardized `kdb_tutorialSeen` / `kdb_tutorial.dat` flags ensuring welcome tour never interrupts restored states.
+  - Interactive Modal Ergonomics: Added Enter key confirmation across edit, new table, sync, and delete modals with Escape dismissals.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` auto-flush listener persisting unsaved database changes when tab is hidden.
+  - Storage & Reader Hardening: Added `reader.onerror` handlers for CSV/JSON imports and quota overflow recovery.
+  - Verification: MSVC clean (`KDB.exe` 67.5 KB); Vite clean in 409ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T06:55:00-07:00 — kilo-usability: KNote (UI/UX Usability Pass, Toast Occlusion Remediation & ARCH-05)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 157.7 KB web / 25.6 KB native < 999 KB ceiling).
   - Window Dimension Expansion: Widened default window bounds in `App.jsx` and native Win32 to 980x680 for comfortable editing.

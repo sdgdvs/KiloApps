@@ -50,7 +50,7 @@ const APPS = [
   { id: 'kzip', title: 'KZip', url: '/apps/kzip.html', exeUrl: '/exe/KZip.exe', icon: '/assets/icons/kzip.ico', w: 980, h: 700, folder: 'System' },
   { id: 'knote', title: 'KNote', url: '/apps/knote.html', exeUrl: '/exe/KNote.exe', icon: '/assets/icons/knote.ico', w: 980, h: 680, folder: 'Office' },
   { id: 'kcolor', title: 'KColor', url: '/apps/kcolor.html', exeUrl: '/exe/KColor.exe', icon: '/assets/icons/kcolor.ico', w: 400, h: 300, folder: 'Media' },
-  { id: 'kpass', title: 'KPass', url: '/apps/kpass.html', exeUrl: '/exe/KPass.exe', icon: '/assets/icons/kpass.ico', w: 540, h: 660, folder: 'System' },
+  { id: 'kpass', title: 'KPass', url: '/apps/kpass.html', exeUrl: '/exe/KPass.exe', icon: '/assets/icons/kpass.ico', w: 600, h: 700, folder: 'System' },
   { id: 'kcipher', title: 'KCipher', url: '/apps/kcipher.html', exeUrl: '/exe/KCipher.exe', icon: '/assets/icons/kcipher.ico', w: 960, h: 680, folder: 'System' },
   { id: 'kping', title: 'KPing', url: '/apps/kping.html', exeUrl: '/exe/KPing.exe', icon: '/assets/icons/kping.ico', w: 960, h: 700, folder: 'System' },
   { id: 'khex', title: 'KHex', url: '/apps/khex.html', exeUrl: '/exe/KHex.exe', icon: '/assets/icons/khex.ico', w: 980, h: 820, folder: 'System' },

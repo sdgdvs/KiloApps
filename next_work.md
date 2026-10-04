@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://echo-subsystem.net"
   kilo_graphics: KRogue
   kilo_tester: KSynth
-  kilo_usability: KPass
+  kilo_usability: KHash
   kilo_qa: KHex
   kilo_expander: KMatch3
 virtual_web_target: "kweb://echo-subsystem.net"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-tester
-  app: KSubmarine
-  timestamp: "2026-10-04T08:11:00-07:00"
+  agent: kilo-usability
+  app: KPass
+  timestamp: "2026-10-04T08:29:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio`, `KSanctuary`, `KStarship`, `KStellar`, `KSubmarine` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KPass`
+- **Current Target**: `KHash`
 - **Upcoming Queue**:
-  `KHash`, `KGraph`, `KClock`, `KTimer`, `KPomodoro` *(Completed: KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote)*.
+  `KGraph`, `KClock`, `KTimer`, `KPomodoro` *(Completed: KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KHex`
@@ -221,6 +221,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T08:29:00-07:00 — kilo-usability: KPass (UI/UX Usability Pass, Toast Occlusion Remediation & Layout Polish)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 128.0 KB web / 25.6 KB native < 999 KB ceiling).
+  - Window Dimension Tuning: Expanded default dimensions in `App.jsx`, web postMessage, and Win32 `RECT` to 600x700 for optimal spacing.
+  - Toast Occlusion Remediation: Re-anchored toast bar to top-center (48px) under tab bar per Directive 189, eliminating action button overlap.
+  - Privacy & Masking: Added generator password conceal/reveal toggle (`btnToggleGenMask` 👁) with masked bullet rendering.
+  - Input Ergonomics & Focus: Added Enter listener to category dropdowns in save form & edit modal, added `:focus-visible` styling, and retro scrollbars.
+  - Storage & Snapshot Hardening: Fixed `recentHistory` reassignment bug ensuring smooth F9 quickload snapshot restoration.
+  - Verification: MSVC clean (`KPass.exe` 25.6 KB); Vite clean in 299ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T08:11:00-07:00 — kilo-tester: KSubmarine (Interactive UI Audit, Overlay Dismissals, Save Export/Import & ARCH-05)**
   - Status: PASS ✅ (4 issues found, 4 fixed, 0 regressions, clean builds, 447.4 KB web / 257.5 KB native < 999 KB ceiling).
   - Modal & Dialog Ergonomics: Wired backdrop click dismissal on tutorial briefing and added return-to-sonar close buttons to all 9 overlay views.
@@ -251,12 +260,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Accessibility & Key Rebinding: Added custom hotkey configuration modal and key listener across all actions.
   - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener suspending audio context and preventing timer drift.
   - Verification: MSVC clean (`KTowers.exe` 156.2 KB); Vite clean in 315ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
-
-- **2026-10-04T07:12:00-07:00 — kilo-qa: KDB (Pass 5 QA & Build Quality, State Snapshot Persistence, Modal Navigation & ARCH-05)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 101.6 KB web / 67.5 KB native < 999 KB ceiling).
-  - Snapshot State Persistence: Added Quicksave (F5) and Quickload (F9) toolbar buttons & hotkeys in web and native (`kdb_quicksave.dat`).
-  - First-Run Tutorial Integrity: Standardized `kdb_tutorialSeen` / `kdb_tutorial.dat` flags ensuring welcome tour never interrupts restored states.
-  - Interactive Modal Ergonomics: Added Enter key confirmation across edit, new table, sync, and delete modals with Escape dismissals.
-  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` auto-flush listener persisting unsaved database changes when tab is hidden.
-  - Storage & Reader Hardening: Added `reader.onerror` handlers for CSV/JSON imports and quota overflow recovery.
-  - Verification: MSVC clean (`KDB.exe` 67.5 KB); Vite clean in 409ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.

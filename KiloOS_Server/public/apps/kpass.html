@@ -20,6 +20,24 @@
     flex-direction: column;
     overflow: hidden;
   }
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #181818;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #383838;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+  button:focus-visible, input:focus-visible, select:focus-visible, .btn-mode:focus-visible, .btn-preset:focus-visible, .audit-metric-card:focus-visible, .vault-pass:focus-visible, .display:focus-visible {
+    outline: 2px solid #e74c3c !important;
+    outline-offset: 1px;
+  }
   .tabs {
     display: flex;
     background: #2d2d2d;
@@ -650,9 +668,9 @@
   /* Toast Notification */
   #toast {
     position: fixed;
-    bottom: 20px;
+    top: 48px;
     left: 50%;
-    transform: translateX(-50%) translateY(80px);
+    transform: translate(-50%, -15px);
     background: #2b2b2b;
     color: #fff;
     border: 1px solid #444;
@@ -664,13 +682,14 @@
     font-weight: 600;
     z-index: 9999;
     opacity: 0;
-    pointer-events: auto;
+    pointer-events: none;
     cursor: pointer;
     transition: transform 0.25s ease, opacity 0.25s ease;
   }
   #toast.show {
-    transform: translateX(-50%) translateY(0);
+    transform: translate(-50%, 0);
     opacity: 1;
+    pointer-events: auto;
   }
 </style>
 </head>
@@ -687,6 +706,22 @@
     <div class="setup-msg" id="setupMsg">If this is your first time, entering a password will initialize your encrypted vault. Press Enter to unlock.</div>
   </div>
 
+  <!-- Tutorial / Onboarding Modal -->
+  <div id="tutorialOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="tutTitle">
+    <div class="modal-box" style="max-width: 440px;">
+      <h2 id="tutTitle" class="modal-title">Welcome to KPass!</h2>
+      <div id="tutBody" style="min-height: 100px; font-size: 13px; color: #ddd; line-height: 1.5;"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 16px; border-top: 1px solid #3d3d3d; padding-top: 12px;">
+        <span id="tutStepIndicator" style="font-size: 12px; color: #888;">Step 1 of 3</span>
+        <div style="display:flex; gap: 8px;">
+          <button id="btnTutClose" style="background:#282828; border-color:#444; color:#aaa;" title="Close and skip tutorial">Skip</button>
+          <button id="btnTutPrev" style="display:none; background:#333; border-color:#444;">Back</button>
+          <button id="btnTutNext" class="primary" style="background:#e74c3c; border-color:#e74c3c;">Next &rarr;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Help Overlay -->
   <div id="helpOverlay" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
     <div class="modal-box">
@@ -699,11 +734,15 @@
       <div style="background:#1a1a1a; padding:10px; border-radius:4px; font-size:12px; color:#2ecc71; margin-top:8px;">
         <div><strong>Shortcuts:</strong></div>
         <div>&bull; '1' = Generator | '2' = Vault | '3' = Security Audit | 'H' / F1 = Help</div>
+        <div>&bull; F5 = Quicksave snapshot | F9 = Quickload snapshot</div>
         <div>&bull; Enter = Unlock / Save / Generate | Ctrl+F or '/' = Focus Search</div>
         <div>&bull; Ctrl+S = Save Credential | Ctrl+G = Generate | Ctrl+C = Copy Password</div>
         <div>&bull; Alt+L = Lock Vault | Alt+J = JSON | Alt+E = CSV | Alt+M = Markdown | Alt+I = Import</div>
       </div>
-      <div style="text-align: right; margin-top: 14px;">
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px;">
+        <button id="btnQuicksaveHelp" style="background: #333; border-color: #444; color: #ddd;" title="Save quicksave snapshot [F5]">Save [F5]</button>
+        <button id="btnQuickloadHelp" style="background: #333; border-color: #444; color: #ddd;" title="Restore quicksave snapshot [F9]">Load [F9]</button>
+        <button id="btnLaunchTutorial" style="background: #333; border-color: #444; color: #ddd;">Tour</button>
         <button id="btnCloseHelp" style="background: #e74c3c; border-color: #e74c3c;">Close Help</button>
       </div>
     </div>
@@ -770,7 +809,7 @@
   
   <!-- Tab 1: Generator -->
   <div class="content" id="contentGen" role="tabpanel" aria-labelledby="tabGen">
-    <div class="help-hint" id="hintHelp">Press 'H' or F1 for Help &amp; Shortcuts</div>
+    <div class="help-hint" id="hintHelp" tabindex="0" role="button" aria-label="Help and Shortcuts">Press 'H' or F1 for Help &amp; Shortcuts</div>
     
     <!-- Mode Pills -->
     <div class="mode-pills" role="radiogroup" aria-label="Generator Mode">
@@ -780,8 +819,11 @@
       <button class="btn-mode" id="btnModeHex" role="radio" aria-checked="false">Hex Key</button>
     </div>
 
-    <div class="display" id="pwdDisplay" title="Click to copy password" tabindex="0">...
-      <div class="display-hint">Click password to copy</div>
+    <div style="position: relative;">
+      <div class="display" id="pwdDisplay" title="Click to copy password" tabindex="0">...
+        <div class="display-hint">Click password to copy</div>
+      </div>
+      <button type="button" id="btnToggleGenMask" title="Conceal Password" style="position: absolute; right: 10px; top: 12px; background: transparent; border: none; color: #888; font-size: 16px; cursor: pointer; padding: 4px 6px; user-select: none;">👁</button>
     </div>
     
     <!-- Password Strength Meter -->
@@ -901,7 +943,7 @@
 
     <!-- Recent History Tray -->
     <div class="history-tray">
-      <div class="history-header" id="btnToggleHistory">
+      <div class="history-header" id="btnToggleHistory" tabindex="0" role="button" aria-label="Toggle recent passwords list">
         <span>🕒 Recent Passwords (<span id="lblHistoryCount">0</span>)</span>
         <span id="lblHistoryToggleIcon">▲</span>
       </div>
@@ -943,12 +985,18 @@
       </select>
     </div>
     <div class="vault-actions" style="margin-bottom:6px;">
-      <button class="btn-sm" id="btnExportJSON" title="Export vault to JSON (Alt+J)">JSON [Alt+J]</button>
-      <button class="btn-sm" id="btnExportCSV" title="Export vault to CSV (Alt+E)">CSV [Alt+E]</button>
-      <button class="btn-sm" id="btnExportMD" title="Export vault to formatted Markdown (Alt+M)">Markdown [Alt+M]</button>
-      <button class="btn-sm" id="btnBackupKPass" title="Save encrypted backup (.kpass)">Backup (.kpass)</button>
-      <button class="btn-sm" id="btnImport" title="Import credentials from CSV, JSON or .kpass (Alt+I)">Import [Alt+I]</button>
-      <button class="btn-sm btn-danger" id="btnLock" title="Instantly lock vault (Alt+L)">Lock [Alt+L]</button>
+      <div style="display:flex; gap:5px; flex-wrap:wrap; flex:1;">
+        <button class="btn-sm" id="btnExportJSON" title="Export vault to JSON (Alt+J)">JSON [Alt+J]</button>
+        <button class="btn-sm" id="btnExportCSV" title="Export vault to CSV (Alt+E)">CSV [Alt+E]</button>
+        <button class="btn-sm" id="btnExportMD" title="Export vault to formatted Markdown (Alt+M)">Markdown [Alt+M]</button>
+        <button class="btn-sm" id="btnBackupKPass" title="Save encrypted backup (.kpass)">Backup (.kpass)</button>
+      </div>
+      <div style="display:flex; gap:5px; flex-wrap:wrap;">
+        <button class="btn-sm" id="btnImport" title="Import credentials from CSV, JSON or .kpass (Alt+I)">Import [Alt+I]</button>
+        <button class="btn-sm" id="btnQuicksaveBar" title="Quicksave snapshot (F5)">Save [F5]</button>
+        <button class="btn-sm" id="btnQuickloadBar" title="Restore snapshot (F9)">Load [F9]</button>
+        <button class="btn-sm btn-danger" id="btnLock" title="Instantly lock vault (Alt+L)">Lock [Alt+L]</button>
+      </div>
       <input type="file" id="fileImport" accept=".json,.csv,.kpass" style="display:none;">
     </div>
     <div class="vault-status-bar">
@@ -974,19 +1022,19 @@
     </div>
 
     <div class="audit-grid">
-      <div class="audit-metric-card" id="cardTotalCreds" title="Click to view all items in Vault">
+      <div class="audit-metric-card" id="cardTotalCreds" title="Click to view all items in Vault" tabindex="0" role="button" aria-label="Total credentials">
         <div class="audit-metric-val" id="valTotalCreds" style="color:#fff;">0</div>
         <div class="audit-metric-label">Total Credentials</div>
       </div>
-      <div class="audit-metric-card" id="cardReusedCreds" title="Click to filter reused credentials">
+      <div class="audit-metric-card" id="cardReusedCreds" title="Click to filter reused credentials" tabindex="0" role="button" aria-label="Reused passwords">
         <div class="audit-metric-val" id="valReusedCreds">0</div>
         <div class="audit-metric-label">Reused Passwords</div>
       </div>
-      <div class="audit-metric-card" id="cardWeakCreds" title="Click to filter weak credentials">
+      <div class="audit-metric-card" id="cardWeakCreds" title="Click to filter weak credentials" tabindex="0" role="button" aria-label="Weak or at risk credentials">
         <div class="audit-metric-val" id="valWeakCreds">0</div>
         <div class="audit-metric-label">Weak / At Risk</div>
       </div>
-      <div class="audit-metric-card" id="cardStaleCreds" title="Click to filter stale credentials">
+      <div class="audit-metric-card" id="cardStaleCreds" title="Click to filter stale credentials" tabindex="0" role="button" aria-label="Stale credentials over 90 days">
         <div class="audit-metric-val" id="valStaleCreds" style="color:#f39c12;">0</div>
         <div class="audit-metric-label">Stale (&gt;90d)</div>
       </div>
@@ -1006,7 +1054,7 @@
 
   <script>
     try {
-      window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 520, height: 640 }, '*');
+      window.parent.postMessage({ type: 'VFS_SET_WINDOW_SIZE', width: 600, height: 700 }, '*');
     } catch(e) {}
 
     // Safe storage wrappers
@@ -1019,13 +1067,19 @@
 
     // Toast Notification System
     const toastEl = document.getElementById('toast');
+    function dismissToast() {
+      const toast = document.getElementById('toast');
+      if (toast && toast.classList.contains('show')) {
+        toast.classList.remove('show');
+        clearTimeout(toast.timer);
+      }
+    }
     if (toastEl) {
-      toastEl.addEventListener('click', () => {
-        toastEl.classList.remove('show');
-      });
+      toastEl.addEventListener('click', dismissToast);
     }
     function showToast(msg, isSuccess = true) {
       const toast = document.getElementById('toast');
+      if (!toast) return;
       toast.innerText = msg;
       toast.style.borderLeftColor = isSuccess ? '#2ecc71' : '#e74c3c';
       toast.classList.add('show');
@@ -1034,6 +1088,18 @@
         toast.classList.remove('show');
       }, 2400);
     }
+
+    // Auto-dismiss toast on typing or focusing interactive inputs
+    document.addEventListener('input', (e) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        dismissToast();
+      }
+    });
+    document.addEventListener('focusin', (e) => {
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        dismissToast();
+      }
+    });
 
     // Safe clipboard helper
     function copyText(str, successMsg = "Copied to clipboard!") {
@@ -1143,7 +1209,9 @@
     let editingIndex = -1;
     let deletingIndex = -1;
     let activeGenMode = 'chars'; // 'chars', 'diceware', 'pin', 'hex'
-    const recentHistory = [];
+    let recentHistory = [];
+    let isGenMasked = false;
+    let rawGeneratedPassword = '';
     const revealedKeys = new Set();
     const LOCK_TIMEOUT = 60000; // 1 minute
 
@@ -1167,6 +1235,28 @@
                 btnToggleMasterPass.title = 'Show Master Password';
             }
             masterPassInput.focus();
+        });
+    }
+
+    const btnToggleGenMask = document.getElementById('btnToggleGenMask');
+    function updateGenDisplay() {
+        const pwdDisplay = document.getElementById('pwdDisplay');
+        if (!pwdDisplay) return;
+        if (!rawGeneratedPassword || rawGeneratedPassword === '...') {
+            pwdDisplay.innerHTML = '...<div class="display-hint">Click password to copy</div>';
+            return;
+        }
+        const displayPass = isGenMasked ? '•'.repeat(Math.min(24, Math.max(8, rawGeneratedPassword.length))) : rawGeneratedPassword;
+        pwdDisplay.innerHTML = escapeHtml(displayPass) + '<div class="display-hint">Click password to copy</div>';
+    }
+
+    if (btnToggleGenMask) {
+        btnToggleGenMask.addEventListener('click', (e) => {
+            e.stopPropagation();
+            isGenMasked = !isGenMasked;
+            btnToggleGenMask.innerText = isGenMasked ? '🔒' : '👁';
+            btnToggleGenMask.title = isGenMasked ? 'Reveal Password' : 'Conceal Password';
+            updateGenDisplay();
         });
     }
 
@@ -1242,13 +1332,239 @@
     const auditIssuesList = document.getElementById('auditIssuesList');
     const btnRunAudit = document.getElementById('btnRunAudit');
 
+    // Tutorial elements
+    const tutorialOverlay = document.getElementById('tutorialOverlay');
+    const tutTitle = document.getElementById('tutTitle');
+    const tutBody = document.getElementById('tutBody');
+    const tutStepIndicator = document.getElementById('tutStepIndicator');
+    const btnTutClose = document.getElementById('btnTutClose');
+    const btnTutPrev = document.getElementById('btnTutPrev');
+    const btnTutNext = document.getElementById('btnTutNext');
+    const btnLaunchTutorial = document.getElementById('btnLaunchTutorial');
+
+    // Quicksave / Quickload UI buttons
+    const btnQuicksaveHelp = document.getElementById('btnQuicksaveHelp');
+    const btnQuickloadHelp = document.getElementById('btnQuickloadHelp');
+    const btnQuicksaveBar = document.getElementById('btnQuicksaveBar');
+    const btnQuickloadBar = document.getElementById('btnQuickloadBar');
+
+    let currentTutStep = 1;
+    const TUTORIAL_STEPS = [
+      {
+        title: "Step 1: 4 Password Engines",
+        text: "Generate unbreakable credentials in 4 modes: Random Characters, Memorable Passphrase (Diceware), PIN Codes, or Hex Keys. Customize length, entropy, and character sets. Click the password display or press Ctrl+C to copy instantly."
+      },
+      {
+        title: "Step 2: Encrypted Local Vault",
+        text: "Store and categorize your credentials safely. All entries are encrypted locally in your browser using military-grade AES-GCM 256 with PBKDF2 (100,000 iterations). Your vault auto-locks after 1 minute of inactivity for maximum security."
+      },
+      {
+        title: "Step 3: Security Audit & Portability",
+        text: "The Audit tab scans for weak, reused, or stale credentials in real time. Export your data to JSON, CSV, Markdown, or encrypted .kpass backups anytime. Shortcuts: F1/H for Help, F5 Quicksave, F9 Quickload, Ctrl+S Save to Vault, Alt+L Lock."
+      }
+    ];
+
+    function showTutorial(step = 1) {
+      if (!tutorialOverlay) return;
+      currentTutStep = Math.max(1, Math.min(step, TUTORIAL_STEPS.length));
+      const info = TUTORIAL_STEPS[currentTutStep - 1];
+      if (tutTitle) tutTitle.innerText = info.title;
+      if (tutBody) tutBody.innerText = info.text;
+      if (tutStepIndicator) tutStepIndicator.innerText = `Step ${currentTutStep} of ${TUTORIAL_STEPS.length}`;
+      if (btnTutPrev) btnTutPrev.style.display = currentTutStep > 1 ? 'inline-block' : 'none';
+      if (btnTutNext) btnTutNext.innerText = currentTutStep === TUTORIAL_STEPS.length ? "Finish" : "Next \u2192";
+      tutorialOverlay.style.display = 'flex';
+    }
+
+    function advanceTutorial() {
+      if (currentTutStep < TUTORIAL_STEPS.length) {
+        showTutorial(currentTutStep + 1);
+      } else {
+        closeTutorial();
+      }
+    }
+
+    function prevTutorial() {
+      if (currentTutStep > 1) {
+        showTutorial(currentTutStep - 1);
+      }
+    }
+
+    function closeTutorial() {
+      if (tutorialOverlay) {
+        tutorialOverlay.style.display = 'none';
+      }
+      safeSetStorage('kpass_tutorialSeen', '1');
+    }
+
+    if (btnTutNext) btnTutNext.addEventListener('click', advanceTutorial);
+    if (btnTutPrev) btnTutPrev.addEventListener('click', prevTutorial);
+    if (btnTutClose) btnTutClose.addEventListener('click', closeTutorial);
+    if (btnLaunchTutorial) {
+      btnLaunchTutorial.addEventListener('click', () => {
+        toggleHelp(false);
+        showTutorial(1);
+      });
+    }
+    if (tutorialOverlay) {
+      tutorialOverlay.addEventListener('click', (e) => {
+        if (e.target === tutorialOverlay) closeTutorial();
+      });
+    }
+
+    if (btnQuicksaveHelp) btnQuicksaveHelp.addEventListener('click', () => { toggleHelp(false); quickSaveSession(); });
+    if (btnQuickloadHelp) btnQuickloadHelp.addEventListener('click', () => { toggleHelp(false); quickLoadSession(); });
+    if (btnQuicksaveBar) btnQuicksaveBar.addEventListener('click', quickSaveSession);
+    if (btnQuickloadBar) btnQuickloadBar.addEventListener('click', quickLoadSession);
+
+    // Quicksave / Quickload Snapshot Persistence
+    function quickSaveSession() {
+      const state = {
+        mode: activeGenMode,
+        activeTab: (contentVault && contentVault.style.display !== 'none') ? 'vault' : ((contentAudit && contentAudit.style.display !== 'none') ? 'audit' : 'gen'),
+        chars: {
+          upper: document.getElementById('chkUpper') ? document.getElementById('chkUpper').checked : true,
+          lower: document.getElementById('chkLower') ? document.getElementById('chkLower').checked : true,
+          num: document.getElementById('chkNum') ? document.getElementById('chkNum').checked : true,
+          sym: document.getElementById('chkSym') ? document.getElementById('chkSym').checked : true,
+          ambiguous: document.getElementById('chkAmbiguous') ? document.getElementById('chkAmbiguous').checked : false,
+          len: document.getElementById('rngLen') ? document.getElementById('rngLen').value : '16'
+        },
+        diceware: {
+          words: document.getElementById('rngDwWords') ? document.getElementById('rngDwWords').value : '4',
+          sep: document.getElementById('selDwSep') ? document.getElementById('selDwSep').value : '-',
+          capitalize: document.getElementById('chkDwCapitalize') ? document.getElementById('chkDwCapitalize').checked : true,
+          number: document.getElementById('chkDwNumber') ? document.getElementById('chkDwNumber').checked : true
+        },
+        pin: {
+          len: document.getElementById('rngPinLen') ? document.getElementById('rngPinLen').value : '6'
+        },
+        hex: {
+          len: document.getElementById('rngHexLen') ? document.getElementById('rngHexLen').value : '32',
+          upper: document.getElementById('chkHexUpper') ? document.getElementById('chkHexUpper').checked : false
+        },
+        vaultFilter: {
+          cat: vaultCatFilter ? vaultCatFilter.value : '',
+          risk: vaultRiskFilter ? vaultRiskFilter.value : '',
+          sort: vaultSort ? vaultSort.value : 'date-desc',
+          search: vaultSearch ? vaultSearch.value : ''
+        },
+        currentPass: getCurrentPassword(),
+        saveForm: {
+          label: labelInput ? labelInput.value : '',
+          user: userInput ? userInput.value : '',
+          cat: catInput ? catInput.value : 'Personal',
+          notes: notesInput ? notesInput.value : ''
+        },
+        recentHistory: Array.isArray(recentHistory) ? JSON.parse(JSON.stringify(recentHistory)) : [],
+        historyExpanded: !!historyExpanded,
+        timestamp: Date.now()
+      };
+      if (safeSetStorage('kpass_quicksave', JSON.stringify(state))) {
+        showToast("Session quicksaved [F5]!");
+      } else {
+        showToast("Storage quota exceeded! Could not save snapshot.", false);
+      }
+    }
+
+    function quickLoadSession() {
+      const raw = safeGetStorage('kpass_quicksave');
+      if (!raw) {
+        showToast("No quicksave snapshot found [F5]", false);
+        return;
+      }
+      try {
+        const state = JSON.parse(raw);
+        if (state.chars) {
+          if (document.getElementById('chkUpper')) document.getElementById('chkUpper').checked = state.chars.upper !== false;
+          if (document.getElementById('chkLower')) document.getElementById('chkLower').checked = state.chars.lower !== false;
+          if (document.getElementById('chkNum')) document.getElementById('chkNum').checked = state.chars.num !== false;
+          if (document.getElementById('chkSym')) document.getElementById('chkSym').checked = state.chars.sym !== false;
+          if (document.getElementById('chkAmbiguous')) document.getElementById('chkAmbiguous').checked = !!state.chars.ambiguous;
+          if (state.chars.len && document.getElementById('rngLen')) {
+            document.getElementById('rngLen').value = state.chars.len;
+            const lenVal = document.getElementById('lenVal');
+            if (lenVal) lenVal.innerText = state.chars.len;
+          }
+        }
+        if (state.diceware) {
+          if (state.diceware.words && document.getElementById('rngDwWords')) {
+            document.getElementById('rngDwWords').value = state.diceware.words;
+            const dwWordsVal = document.getElementById('dwWordsVal');
+            if (dwWordsVal) dwWordsVal.innerText = state.diceware.words;
+          }
+          if (state.diceware.sep && document.getElementById('selDwSep')) {
+            document.getElementById('selDwSep').value = state.diceware.sep;
+          }
+          if (document.getElementById('chkDwCapitalize')) document.getElementById('chkDwCapitalize').checked = state.diceware.capitalize !== false;
+          if (document.getElementById('chkDwNumber')) document.getElementById('chkDwNumber').checked = state.diceware.number !== false;
+        }
+        if (state.pin && state.pin.len && document.getElementById('rngPinLen')) {
+          document.getElementById('rngPinLen').value = state.pin.len;
+          const pinLenVal = document.getElementById('pinLenVal');
+          if (pinLenVal) pinLenVal.innerText = state.pin.len;
+        }
+        if (state.hex) {
+          if (state.hex.len && document.getElementById('rngHexLen')) {
+            document.getElementById('rngHexLen').value = state.hex.len;
+            const hexLenVal = document.getElementById('hexLenVal');
+            if (hexLenVal) hexLenVal.innerText = state.hex.len;
+          }
+          if (document.getElementById('chkHexUpper')) document.getElementById('chkHexUpper').checked = !!state.hex.upper;
+        }
+        if (state.saveForm) {
+          if (labelInput) labelInput.value = state.saveForm.label || '';
+          if (userInput) userInput.value = state.saveForm.user || '';
+          if (catInput) catInput.value = state.saveForm.cat || 'Personal';
+          if (notesInput) notesInput.value = state.saveForm.notes || '';
+        }
+        if (state.vaultFilter) {
+          if (vaultCatFilter) vaultCatFilter.value = state.vaultFilter.cat || '';
+          if (vaultRiskFilter) vaultRiskFilter.value = state.vaultFilter.risk || '';
+          if (vaultSort) vaultSort.value = state.vaultFilter.sort || 'date-desc';
+          if (vaultSearch) {
+            vaultSearch.value = state.vaultFilter.search || '';
+            if (btnClearSearch) btnClearSearch.style.display = vaultSearch.value ? 'block' : 'none';
+          }
+        }
+        if (Array.isArray(state.recentHistory)) {
+          recentHistory = state.recentHistory;
+          renderRecentHistory();
+        }
+        if (typeof state.historyExpanded === 'boolean') {
+          historyExpanded = state.historyExpanded;
+          if (historyList) historyList.style.display = historyExpanded ? 'flex' : 'none';
+          if (lblHistoryToggleIcon) lblHistoryToggleIcon.innerText = historyExpanded ? '▲' : '▼';
+        }
+        if (state.mode) {
+          setGenMode(state.mode);
+        }
+        if (state.activeTab) {
+          switchTab(state.activeTab);
+        }
+        if (state.currentPass && state.currentPass !== '...') {
+          rawGeneratedPassword = state.currentPass;
+          updateGenDisplay();
+          evaluateStrength(state.currentPass);
+        } else {
+          generate();
+        }
+        safeSetStorage('kpass_tutorialSeen', '1');
+        showToast("Session restored [F9]!");
+      } catch (e) {
+        showToast("Error loading quicksave snapshot", false);
+      }
+    }
+
     // Init lock screen message
     if(safeGetStorage('kpass_vault_enc')) {
         setupMsg.style.display = 'none';
         btnUnlock.innerText = "Unlock Vault";
     }
 
+    let lastActiveTime = Date.now();
     function resetAutoLock() {
+        lastActiveTime = Date.now();
         if(!currentMasterPass) return;
         clearTimeout(autoLockTimer);
         autoLockTimer = setTimeout(lockVault, LOCK_TIMEOUT);
@@ -1257,6 +1573,15 @@
     document.addEventListener('keydown', resetAutoLock);
     document.addEventListener('pointerdown', resetAutoLock);
     document.addEventListener('touchstart', resetAutoLock);
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            if (currentMasterPass && Date.now() - lastActiveTime >= LOCK_TIMEOUT) {
+                lockVault();
+            } else {
+                resetAutoLock();
+            }
+        }
+    });
 
     function lockVault() {
         currentMasterPass = null;
@@ -1286,13 +1611,18 @@
     btnLock.addEventListener('click', lockVault);
 
     async function saveVault() {
-        if(!currentMasterPass) return;
+        if(!currentMasterPass) return false;
         try {
             const jsonStr = JSON.stringify(vault);
             const encData = await encryptData(currentMasterPass, jsonStr);
-            safeSetStorage('kpass_vault_enc', JSON.stringify(encData));
+            if (!safeSetStorage('kpass_vault_enc', JSON.stringify(encData))) {
+                showToast("Storage quota exceeded! Could not save encrypted vault.", false);
+                return false;
+            }
+            return true;
         } catch(e) {
             showToast("Failed to save encrypted vault.", false);
+            return false;
         }
     }
 
@@ -1317,6 +1647,13 @@
                 renderVault();
                 updateVaultCount();
                 showToast("Vault unlocked successfully!");
+                const hasExistingData = !!(safeGetStorage('kpass_vault_enc') || safeGetStorage('kpass_quicksave'));
+                if (!safeGetStorage('kpass_tutorialSeen')) {
+                    safeSetStorage('kpass_tutorialSeen', '1');
+                    if (!hasExistingData) {
+                        setTimeout(() => showTutorial(1), 350);
+                    }
+                }
             } catch(e) {
                 lockError.innerText = "Error decrypting vault.";
             }
@@ -1330,6 +1667,13 @@
             btnUnlock.innerText = "Unlock Vault";
             resetAutoLock();
             showToast("Master password set! Vault ready.");
+            const hasExistingData = !!(safeGetStorage('kpass_vault_enc') || safeGetStorage('kpass_quicksave'));
+            if (!safeGetStorage('kpass_tutorialSeen')) {
+                safeSetStorage('kpass_tutorialSeen', '1');
+                if (!hasExistingData) {
+                    setTimeout(() => showTutorial(1), 350);
+                }
+            }
         }
     });
 
@@ -1410,6 +1754,7 @@
 
     function closeModals() {
         toggleHelp(false);
+        closeTutorial();
         editModal.style.display = 'none';
         deleteModal.style.display = 'none';
         editingIndex = -1;
@@ -1461,7 +1806,7 @@
         renderVault();
         showToast("Credential updated!");
     });
-    [editPass, editLabel, editUser, editNotes].forEach(input => {
+    [editPass, editLabel, editUser, editCat, editNotes].forEach(input => {
         input.addEventListener('keydown', (e) => {
             if(e.key === 'Enter') btnSaveEdit.click();
         });
@@ -1489,8 +1834,47 @@
 
     // Global Key Listener
     document.addEventListener('keydown', (e) => {
+        if (e.key === 'F1') {
+            e.preventDefault();
+            toggleHelp();
+            return;
+        }
+
+        if (tutorialOverlay && tutorialOverlay.style.display === 'flex') {
+            if (e.key === 'Escape') {
+                closeTutorial();
+                return;
+            }
+            if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                advanceTutorial();
+                return;
+            }
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prevTutorial();
+                return;
+            }
+            if (e.key === 'Enter' || e.key === ' ') {
+                if (e.target === btnTutPrev) {
+                    e.preventDefault();
+                    prevTutorial();
+                    return;
+                }
+                if (e.target === btnTutClose) {
+                    e.preventDefault();
+                    closeTutorial();
+                    return;
+                }
+                e.preventDefault();
+                advanceTutorial();
+                return;
+            }
+            return;
+        }
+
         if (e.key === 'Escape') {
-            if (helpOverlay.style.display === 'flex' || editModal.style.display === 'flex' || deleteModal.style.display === 'flex') {
+            if (helpOverlay.style.display === 'flex' || editModal.style.display === 'flex' || deleteModal.style.display === 'flex' || (tutorialOverlay && tutorialOverlay.style.display === 'flex')) {
                 closeModals();
                 return;
             }
@@ -1502,10 +1886,50 @@
             }
         }
 
-        // Global Ctrl+S shortcut (works even when typing in input)
+        if (e.key === 'Enter') {
+            if (helpOverlay.style.display === 'flex') {
+                e.preventDefault();
+                toggleHelp(false);
+                return;
+            }
+            if (deleteModal.style.display === 'flex') {
+                e.preventDefault();
+                btnConfirmDelete.click();
+                return;
+            }
+        }
+
+        // Global F5 quicksave & F9 quickload
+        if (e.key === 'F5') {
+            e.preventDefault();
+            if (lockScreen.style.display === 'none') {
+                quickSaveSession();
+            } else {
+                showToast("Vault is locked. Unlock before saving snapshot [F5].", false);
+            }
+            return;
+        }
+        if (e.key === 'F9') {
+            e.preventDefault();
+            if (lockScreen.style.display === 'none') {
+                quickLoadSession();
+            } else {
+                showToast("Vault is locked. Unlock before restoring snapshot [F9].", false);
+            }
+            return;
+        }
+
+        // Global Ctrl+S shortcut (works even when typing in input or in edit modal)
         if (e.ctrlKey && e.key.toLowerCase() === 's') {
             e.preventDefault();
-            if (lockScreen.style.display === 'none' && contentGen.style.display !== 'none') {
+            if (editModal && editModal.style.display === 'flex') {
+                btnSaveEdit.click();
+                return;
+            }
+            if (lockScreen.style.display === 'none') {
+                if (contentGen.style.display === 'none') {
+                    switchTab('gen');
+                }
                 handleSave();
             }
             return;
@@ -1521,7 +1945,7 @@
             if (e.key === '1') { switchTab('gen'); return; }
             if (e.key === '2') { switchTab('vault'); return; }
             if (e.key === '3') { switchTab('audit'); return; }
-            if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
+            if (e.key.toLowerCase() === 'h') {
                 e.preventDefault();
                 toggleHelp();
                 return;
@@ -1575,7 +1999,7 @@
     });
 
     // Generator Mode Switching
-    function setGenMode(mode) {
+    function setGenMode(mode, skipSave = false) {
         activeGenMode = mode;
         [btnModeChars, btnModeDiceware, btnModePin, btnModeHex].forEach(btn => {
             btn.classList.remove('active');
@@ -1603,6 +2027,7 @@
             btnModeHex.setAttribute('aria-checked', 'true');
             controlsHex.style.display = 'flex';
         }
+        if (!skipSave) savePreferences();
         generate();
     }
     btnModeChars.addEventListener('click', () => setGenMode('chars'));
@@ -1675,7 +2100,7 @@
             if (p.sort && vaultSort && vaultSort.querySelector(`option[value="${p.sort}"]`)) vaultSort.value = p.sort;
             if (p.cat && catInput && catInput.querySelector(`option[value="${p.cat}"]`)) catInput.value = p.cat;
             if (p.mode && ['chars', 'diceware', 'pin', 'hex'].includes(p.mode)) {
-                setGenMode(p.mode);
+                setGenMode(p.mode, true);
             }
         } catch(e) {}
     }
@@ -1861,7 +2286,8 @@
             pass = passChars.join('');
         }
 
-        pwdDisplay.innerHTML = escapeHtml(pass) + '<div class="display-hint">Click password to copy</div>';
+        rawGeneratedPassword = pass;
+        updateGenDisplay();
         const strInfo = evaluateStrength(pass);
         addRecentHistory(pass, strInfo.rating);
     }
@@ -1898,7 +2324,8 @@
             `;
             row.querySelector('.btn-hist-copy').addEventListener('click', () => copyText(item.pass, "Recent password copied!"));
             row.querySelector('.btn-hist-use').addEventListener('click', () => {
-                pwdDisplay.innerHTML = escapeHtml(item.pass) + '<div class="display-hint">Click password to copy</div>';
+                rawGeneratedPassword = item.pass;
+                updateGenDisplay();
                 evaluateStrength(item.pass);
                 labelInput.focus();
                 showToast("Password loaded into save form!");
@@ -1915,6 +2342,7 @@
     });
 
     function getCurrentPassword() {
+        if (rawGeneratedPassword) return rawGeneratedPassword;
         const text = pwdDisplay.innerText;
         return text.replace(/Click password to copy/g, '').trim();
     }
@@ -1983,7 +2411,7 @@
         }
     }
     btnSave.addEventListener('click', handleSave);
-    [labelInput, userInput, notesInput].forEach(inp => {
+    [labelInput, userInput, catInput, notesInput].forEach(inp => {
         inp.addEventListener('keydown', (e) => {
             if(e.key === 'Enter') handleSave();
         });
@@ -2142,7 +2570,16 @@
             // Notes copy
             const notesEl = div.querySelector('.vault-notes');
             if (notesEl) {
+                notesEl.setAttribute('tabindex', '0');
+                notesEl.setAttribute('role', 'button');
+                notesEl.setAttribute('aria-label', 'Copy notes');
                 notesEl.addEventListener('click', () => copyText(item.notes, "Notes copied!"));
+                notesEl.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        copyText(item.notes, "Notes copied!");
+                    }
+                });
             }
 
             const passEl = div.querySelector('.vault-pass');
@@ -2315,6 +2752,7 @@
                 labelInput.value = w.label;
                 userInput.value = w.username || '';
                 catInput.value = w.category || 'Personal';
+                notesInput.value = w.notes || '';
                 switchTab('gen');
                 generate();
                 showToast(`Ready to generate new password for ${w.label}!`);
@@ -2347,23 +2785,45 @@
         showToast("Audit refreshed!");
     });
 
-    // Metric cards click handlers
-    document.getElementById('cardTotalCreds').addEventListener('click', () => {
-        vaultRiskFilter.value = '';
-        switchTab('vault');
+    // Metric cards click & keyboard handlers
+    const auditCards = [
+        { id: 'cardTotalCreds', risk: '' },
+        { id: 'cardReusedCreds', risk: 'reused' },
+        { id: 'cardWeakCreds', risk: 'weak' },
+        { id: 'cardStaleCreds', risk: 'stale' }
+    ];
+    auditCards.forEach(c => {
+        const el = document.getElementById(c.id);
+        if (!el) return;
+        el.addEventListener('click', () => {
+            vaultRiskFilter.value = c.risk;
+            switchTab('vault');
+        });
+        el.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                el.click();
+            }
+        });
     });
-    document.getElementById('cardReusedCreds').addEventListener('click', () => {
-        vaultRiskFilter.value = 'reused';
-        switchTab('vault');
-    });
-    document.getElementById('cardWeakCreds').addEventListener('click', () => {
-        vaultRiskFilter.value = 'weak';
-        switchTab('vault');
-    });
-    document.getElementById('cardStaleCreds').addEventListener('click', () => {
-        vaultRiskFilter.value = 'stale';
-        switchTab('vault');
-    });
+
+    if (btnToggleHistory) {
+        btnToggleHistory.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                btnToggleHistory.click();
+            }
+        });
+    }
+
+    if (hintHelp) {
+        hintHelp.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                toggleHelp(true);
+            }
+        });
+    }
 
     // Export JSON
     document.getElementById('btnExportJSON').addEventListener('click', () => {
@@ -2583,6 +3043,7 @@
                         const pass = (r[passIdx] || '').trim();
                         const username = userIdx >= 0 && r[userIdx] ? r[userIdx].trim() : '';
                         if (!label && !pass) continue;
+                        if (!label) label = username ? `Imported (${username})` : 'Imported Credential';
                         const category = catIdx >= 0 && r[catIdx] && r[catIdx].trim() ? r[catIdx].trim() : 'Other';
                         const strength = strIdx >= 0 && r[strIdx] && r[strIdx].trim() ? r[strIdx].trim() : calcStrength(pass).rating;
                         const date = dateIdx >= 0 && r[dateIdx] && r[dateIdx].trim() ? r[dateIdx].trim() : new Date().toLocaleDateString();
