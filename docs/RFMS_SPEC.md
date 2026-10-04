@@ -14,6 +14,7 @@ The **Retro Firebase Multiplayer Service (RFMS)** provides all KiloApps web game
 - **Ephemeral Room Generation:** Standardized 4-character codes (e.g. `KGO-4892`, `REV-8193`).
 - **Presence & Auto-Pruning:** Uses RTDB `.info/connected` and `onDisconnect().set(false)` to handle dropped peers without orphan ghost rooms.
 - **Mandatory 25-Second Solo Fallback (Mandate Rule 12):** Lone players who host a room or wait in matchmaking are automatically transitioned to an active local AI opponent after 25 seconds so no user is ever trapped waiting indefinitely.
+- **No Autostart / Explicit Connect Gate Mandate (CRITICAL):** Apps MUST NOT autostart into multiplayer, launch matchmaking, or connect to the online lobby on application load/boot. Players must never be thrown into multiplayer without hitting a "Connect", "Play Online", or "Quick Match" button or choosing Multiplayer from a menu or start screen first. The default startup state must always be local/offline play or a clean title/mode selection screen.
 - **Dual URL Scheme & Iframe Support:** Supports both `?room=CODE` query parameters and `#room=CODE` URL hash fragments, ensuring direct browser links and embedded KiloOS desktop iframes work out-of-the-box.
 - **Zero Bundler Overhead:** Loads via `<script src="../assets/js/retro_multiplayer.js"></script>` or ES import without swelling the sacred `< 999 KB` app size ceiling.
 
@@ -112,9 +113,11 @@ multiplayer/
 ## 4. Director Mandate Rule 12 Compliance Checklist
 
 When adding or updating multiplayer in any KiloApp:
-1. [ ] **25s Solo Path**: If waiting for a peer and none joins within 25 seconds, app automatically switches to local AI cyber-bot.
-2. [ ] **Address Bar Hash**: Sync `#room=CODE` upon hosting/joining and strip clean upon leaving.
-3. [ ] **Auto-Join**: Read `window.location.hash` (`#room=CODE` or `#CODE`) and `window.location.search` (`?room=CODE`) on startup.
-4. [ ] **Disconnect Hook**: Hook `onDisconnect()` so closing a tab marks the player disconnected and removes open lobby entries.
-5. [ ] **Offline Fallback**: App remains 100% playable offline if Firebase is unreachable or user is disconnected.
-6. [ ] **File Size**: App + scripts stay strictly `< 999 KB`.
+1. [ ] **No Autostart on Boot (Connect Gate)**: NEVER autostart into multiplayer, initiate matchmaking, or listen to the lobby on initial app load. Default to offline play (vs AI/solo) or a start screen with mode choices.
+2. [ ] **Start / Connect Screen**: Require players to hit an explicit "Connect", "Play Online", or "Quick Match" button (or select Multiplayer from a menu) before establishing any online session. People must never be thrown into multiplayer without prior warning.
+3. [ ] **Invite Link Handling**: When launched with an invite link (`?room=CODE` or `#room=CODE`), show a clean connect prompt or join confirmation instead of an unprompted silent takeover.
+4. [ ] **25s Solo Path**: If waiting for a peer and none joins within 25 seconds, app automatically switches to local AI cyber-bot.
+5. [ ] **Address Bar Hash**: Sync `#room=CODE` upon hosting/joining and strip clean upon leaving.
+6. [ ] **Disconnect Hook**: Hook `onDisconnect()` so closing a tab marks the player disconnected and removes open lobby entries.
+7. [ ] **Offline Fallback**: App remains 100% playable offline if Firebase is unreachable or user is disconnected.
+8. [ ] **File Size**: App + scripts stay strictly `< 999 KB`.
