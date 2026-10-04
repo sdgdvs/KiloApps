@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KPong - Ultimate Arcade Pong</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+<script src="../assets/js/retro_multiplayer.js"></script>
 <style>
   :root {
     --bg-color: #050a10;
@@ -175,6 +176,7 @@
     <div class="game-title">KPONG</div>
     <div class="top-controls">
       <button class="btn-sm" onclick="toggleSound()" id="btn-sound" title="Toggle Sound FX (U)">🔊 Sound [U]</button>
+      <button class="btn-sm" onclick="openMultiplayerModal()" id="btn-multiplayer" title="Online Multiplayer & Matchmaking [O]">🌐 Online [O]</button>
       <button class="btn-sm" onclick="togglePvPMode()" id="btn-pvp" title="Toggle 1P vs AI / 2P Local PvP (V)">👥 1P vs AI [V]</button>
       <button class="btn-sm" onclick="cycleGameMode()" id="btn-mode" title="Cycle Game Modes (M)">🎮 Mode: Classic [M]</button>
       <button class="btn-sm" onclick="cycleDifficulty()" id="btn-diff" title="Cycle AI Difficulty (1-3)">⚡ Diff: Normal [1-3]</button>
@@ -230,6 +232,7 @@
     <table>
       <tr><th>P1 Controls</th><td>W / S, Up / Down, or Mouse / Touch Drag</td></tr>
       <tr><th>P2 Controls</th><td>Up / Down (in 2P Local PvP mode)</td></tr>
+      <tr><th>Online Match</th><td>[O] Online Net-Arena | Quick Match, Host & Codes</td></tr>
       <tr><th>Skills</th><td>[F] Slow-Mo | [E] Mega Paddle | [B] Fireball</td></tr>
       <tr><th>System</th><td>[Space] Pause | [M] Mode | [1-3] Diff | [V] PvP | [T] Theme | [U] Sound</td></tr>
       <tr><th>Replay</th><td>[P] Match Replay | [Space] Pause | [←/→] Scrub | [1/2/3] Speed</td></tr>
@@ -237,7 +240,7 @@
       <tr><th>Save/Load</th><td>[F5] Save Game | [F9] Load Game</td></tr>
     </table>
     <div class="modal-actions">
-      <button class="btn-sm" onclick="closeHelpModal()">Got it!</button>
+      <button class="btn-sm modal-close btn-close help-btn-close" id="btn-close-help" onclick="closeHelpModal()">Got it!</button>
     </div>
   </div>
 </div>
@@ -272,7 +275,84 @@
 
     <div class="modal-actions">
       <button class="btn-sm" onclick="resetStatsData()" style="color: #ff5555;">Reset Stats</button>
-      <button class="btn-sm" onclick="closeStatsModal()">Close</button>
+      <button class="btn-sm modal-close btn-close" id="btn-close-stats" onclick="closeStatsModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Multiplayer Modal -->
+<div class="modal-overlay" id="multiplayerModal" role="dialog" aria-modal="true" aria-labelledby="mpTitle">
+  <div class="modal" style="max-width: 480px;">
+    <h2 id="mpTitle">🌐 Online Net-Arena (RFMS)</h2>
+    <p style="font-size: 13px; margin: 4px 0 12px 0; color: #a0c0d8;">
+      Challenge global players in real-time across the 1999 cyber-net, or duel the Subnet Cyber-Bot.
+    </p>
+
+    <!-- Handle Configuration -->
+    <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 14px; background: rgba(255,255,255,0.05); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+      <label for="mpPlayerName" style="font-size: 12px; font-weight: 700; color: var(--accent);">Handle:</label>
+      <input type="text" id="mpPlayerName" maxlength="16" style="flex: 1; background: rgba(0,0,0,0.5); border: 1px solid var(--primary); color: #fff; padding: 4px 8px; border-radius: 4px; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600;" onchange="updateMpName(this.value)">
+    </div>
+
+    <!-- Matchmaking Actions (when not in a room) -->
+    <div id="mpLobbyControls" style="display: flex; flex-direction: column; gap: 10px;">
+      <div style="display: flex; gap: 8px;">
+        <button class="btn-sm" style="flex: 1; padding: 8px; justify-content: center;" onclick="startQuickMatch()">⚡ Quick Match</button>
+        <button class="btn-sm" style="flex: 1; padding: 8px; justify-content: center;" onclick="createOnlineRoom()">🏠 Host Match</button>
+      </div>
+
+      <div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+        <input type="text" id="joinCodeInput" maxlength="10" placeholder="PNG-XXXX" style="flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 10px; border-radius: 6px; font-family: monospace; font-size: 13px; text-transform: uppercase;" onkeydown="if(event.key==='Enter') joinOnlineRoomFromInput()">
+        <button class="btn-sm" style="padding: 6px 14px;" onclick="joinOnlineRoomFromInput()">🔗 Join</button>
+      </div>
+
+      <div style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 4px; padding-top: 8px; display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 11px; color: #888;">Instant Duel:</span>
+        <button class="btn-sm" onclick="startCyberBotDuel()">🤖 Play Cyber-Bot AI</button>
+      </div>
+    </div>
+
+    <!-- Active Room / Match Status Panel -->
+    <div id="mpActivePanel" style="display: none; flex-direction: column; gap: 10px; background: rgba(0,0,0,0.4); padding: 12px; border-radius: 8px; border: 1px solid var(--primary); margin-top: 8px;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 12px; font-weight: 700; color: var(--accent);">Room: <strong id="mpRoomCodeDisplay" style="color: #fff; font-family: monospace;">---</strong></span>
+        <button class="btn-sm" onclick="copyOnlineInvite()">📋 Copy Link</button>
+      </div>
+      <div id="mpStatusMessage" style="font-size: 12px; color: var(--primary); font-weight: 600;">Connecting...</div>
+      <div id="mpCountdown" style="font-size: 11px; color: #ffd700; display: none;">Auto-engaging Cyber-Bot AI in <span id="mpCountdownSec">25</span>s...</div>
+
+      <!-- Quick In-Game Chat / Emotes -->
+      <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px;">
+        <button class="btn-sm" style="font-size: 10px;" onclick="sendOnlineChat('👋 Hello!')">👋 Hi</button>
+        <button class="btn-sm" style="font-size: 10px;" onclick="sendOnlineChat('🔥 Nice shot!')">🔥 Nice</button>
+        <button class="btn-sm" style="font-size: 10px;" onclick="sendOnlineChat('⚡ Epic rally!')">⚡ Rally!</button>
+        <button class="btn-sm" style="font-size: 10px;" onclick="sendOnlineChat('👑 Rematch?')">🔄 Rematch</button>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 6px;">
+        <button class="btn-sm" style="color: #ff5555; border-color: rgba(255,85,85,0.4);" onclick="leaveOnlineMatch()">✖ Leave Match</button>
+      </div>
+    </div>
+
+    <div class="modal-actions" style="margin-top: 14px;">
+      <button class="btn-sm modal-close btn-close" id="btn-close-mp" onclick="closeMultiplayerModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Invite Received Modal (Rule 12 Connect Gate) -->
+<div class="modal-overlay" id="inviteModal" role="dialog" aria-modal="true" aria-labelledby="inviteTitle">
+  <div class="modal" style="max-width: 400px; text-align: center;">
+    <h2 id="inviteTitle" style="color: var(--accent); border-bottom: none; margin-bottom: 6px;">⚔️ Match Challenge!</h2>
+    <p style="font-size: 13px; color: #ccc; margin-bottom: 14px;">
+      You have been invited to an online arcade duel in room:
+    </p>
+    <div style="font-size: 22px; font-weight: 900; color: var(--primary); font-family: monospace; letter-spacing: 2px; margin-bottom: 18px;" id="inviteCodeLabel">
+      PNG-XXXX
+    </div>
+    <div style="display: flex; gap: 10px; justify-content: center;">
+      <button class="btn-sm" style="padding: 8px 18px; font-size: 13px; border-color: var(--primary); color: var(--primary);" onclick="acceptInvite()">⚔️ Connect & Play</button>
+      <button class="btn-sm modal-close btn-close" id="btn-decline-invite" style="padding: 8px 14px; font-size: 13px;" onclick="declineInvite()">Decline / Play Solo</button>
     </div>
   </div>
 </div>
@@ -450,6 +530,452 @@
   let shockwaves = [];
   let balls = [];
 
+  // RFMS Multiplayer & Online Net-Arena State (Rule 12 compliant)
+  let rMultiplayer = null;
+  let isOnline = false;
+  let isHost = false;
+  let myPlayerSlot = 1; // 1: P1 (Left), 2: P2 (Right)
+  let myPlayerName = safeGetStorage('kpong_player_name', 'CyberPaddle_' + Math.floor(1000 + Math.random() * 9000));
+  let oppPlayerName = 'Opponent';
+  let isCyberBotDuel = false;
+  let soloCountdownTimer = null;
+  let soloSecondsLeft = 25;
+  let lastNetSendTime = 0;
+  let pendingInviteCode = null;
+  let pendingClientSkill = null;
+  let speechBubbles = []; // { player: 1|2, text: string, life: 140, maxLife: 140 }
+
+  function updateMpName(val) {
+      if (!val) return;
+      myPlayerName = val.trim().substring(0, 16);
+      safeSetStorage('kpong_player_name', myPlayerName);
+      if (rMultiplayer) rMultiplayer.playerName = myPlayerName;
+  }
+
+  function initRetroMultiplayer() {
+      if (typeof RetroMultiplayer === 'undefined') {
+          console.warn("[KPong] RetroMultiplayer library not loaded.");
+          return;
+      }
+      if (rMultiplayer) return;
+
+      try {
+          rMultiplayer = new RetroMultiplayer({
+              gameId: 'kpong',
+              prefix: 'PNG',
+              playerName: myPlayerName,
+              soloTimeoutMs: 25000,
+              onMove: (moveData) => {
+                  handleRemoteMove(moveData);
+              },
+              onOpponentJoin: ({ slot, name }) => {
+                  oppPlayerName = name || 'Challenger';
+                  stopSoloFallbackTimer();
+                  closeMultiplayerModal();
+                  closeInviteModal();
+                  isOnline = true;
+                  isCyberBotDuel = false;
+                  showToast(`⚔️ Challenger ${oppPlayerName} joined! DUEL START!`);
+                  updateBadge();
+                  restartGame();
+              },
+              onOpponentLeave: ({ slot, name }) => {
+                  showToast(`Opponent ${name || 'Challenger'} disconnected! Victory by forfeit.`);
+                  if (isOnline) {
+                      gameOver = true;
+                      s1 = myPlayerSlot === 1 ? 11 : s1;
+                      s2 = myPlayerSlot === 2 ? 11 : s2;
+                      document.getElementById('s1').innerText = s1;
+                      document.getElementById('s2').innerText = s2;
+                  }
+              },
+              onChat: ({ text, by, name }) => {
+                  const senderSlot = by === 'p1' ? 1 : 2;
+                  speechBubbles.push({ player: senderSlot, text: text, life: 140, maxLife: 140 });
+                  playSound(850, 'hit');
+                  showToast(`${name || oppPlayerName}: ${text}`);
+              },
+              onRematch: ({ requestedBy }) => {
+                  showToast("Opponent requested a rematch! Starting new round...");
+                  restartGame();
+              },
+              onSoloFallback: ({ reason }) => {
+                  handleSoloFallback(reason);
+              },
+              onStatusMsg: (msg, type) => {
+                  showToast(msg);
+                  const statusEl = document.getElementById('mpStatusMessage');
+                  if (statusEl) statusEl.innerText = msg;
+              }
+          });
+
+          rMultiplayer.init().then(({ onlineAvailable, inviteCode }) => {
+              if (inviteCode) {
+                  showInvitePrompt(inviteCode.toUpperCase());
+              }
+          });
+      } catch(err) {
+          console.warn("[KPong] RetroMultiplayer init failed:", err);
+      }
+  }
+
+  function openMultiplayerModal() {
+      initRetroMultiplayer();
+      const pNameInput = document.getElementById('mpPlayerName');
+      if (pNameInput) pNameInput.value = myPlayerName;
+      updateMultiplayerUI();
+      document.getElementById('multiplayerModal').classList.add('active');
+  }
+
+  function closeMultiplayerModal() {
+      document.getElementById('multiplayerModal').classList.remove('active');
+  }
+
+  function showInvitePrompt(code) {
+      pendingInviteCode = code;
+      const modal = document.getElementById('inviteModal');
+      const label = document.getElementById('inviteCodeLabel');
+      if (label) label.textContent = code;
+      if (modal) modal.classList.add('active');
+  }
+
+  function closeInviteModal() {
+      const modal = document.getElementById('inviteModal');
+      if (modal) modal.classList.remove('active');
+  }
+
+  function acceptInvite() {
+      const code = pendingInviteCode;
+      pendingInviteCode = null;
+      closeInviteModal();
+      if (code) {
+          joinOnlineRoom(code);
+      }
+  }
+
+  function declineInvite() {
+      closeInviteModal();
+      pendingInviteCode = null;
+      try {
+          if (window.location.hash.includes('room=')) {
+              window.history.replaceState(null, '', window.location.pathname + window.location.search);
+          }
+      } catch(e) {}
+      showToast("Challenge declined. Switched to local play.");
+  }
+
+  function updateMultiplayerUI() {
+      const lobbyControls = document.getElementById('mpLobbyControls');
+      const activePanel = document.getElementById('mpActivePanel');
+      const roomCodeDisp = document.getElementById('mpRoomCodeDisplay');
+      const statusMsg = document.getElementById('mpStatusMessage');
+
+      if (isOnline && rMultiplayer && rMultiplayer.roomId) {
+          if (lobbyControls) lobbyControls.style.display = 'none';
+          if (activePanel) activePanel.style.display = 'flex';
+          if (roomCodeDisp) roomCodeDisp.textContent = rMultiplayer.roomId;
+          if (statusMsg) {
+              if (rMultiplayer.status === 'waiting') {
+                  statusMsg.textContent = "Waiting for challenger to connect...";
+              } else {
+                  statusMsg.textContent = `Match in progress vs ${oppPlayerName} (P${myPlayerSlot === 1 ? '1' : '2'})`;
+              }
+          }
+      } else {
+          if (lobbyControls) lobbyControls.style.display = 'flex';
+          if (activePanel) activePanel.style.display = 'none';
+      }
+  }
+
+  async function startQuickMatch() {
+      initRetroMultiplayer();
+      if (!rMultiplayer) return;
+      showToast("Scanning public subnet for open games...");
+      const res = await rMultiplayer.quickMatch();
+      if (res && res.success) {
+          isOnline = true;
+          isHost = res.slot === 'p1';
+          myPlayerSlot = res.slot === 'p1' ? 1 : 2;
+          if (isHost) {
+              startSoloFallbackTimer(res.roomId);
+          } else {
+              oppPlayerName = (res.room && res.room.p1 && res.room.p1.name) || 'Host';
+              closeMultiplayerModal();
+              restartGame();
+          }
+          updateMultiplayerUI();
+          updateBadge();
+      }
+  }
+
+  async function createOnlineRoom() {
+      initRetroMultiplayer();
+      if (!rMultiplayer) return;
+      const res = await rMultiplayer.createRoom({}, true);
+      if (res && res.success) {
+          isOnline = true;
+          isHost = true;
+          myPlayerSlot = 1;
+          startSoloFallbackTimer(res.roomId);
+          updateMultiplayerUI();
+          updateBadge();
+      }
+  }
+
+  async function joinOnlineRoom(code) {
+      initRetroMultiplayer();
+      if (!rMultiplayer) return;
+      showToast(`Connecting to room [${code}]...`);
+      const res = await rMultiplayer.joinRoom(code);
+      if (res && res.success) {
+          isOnline = true;
+          isHost = false;
+          myPlayerSlot = res.slot === 'p1' ? 1 : 2;
+          oppPlayerName = (res.room && res.room.p1 && res.room.p1.name) || 'Host';
+          closeMultiplayerModal();
+          updateBadge();
+          restartGame();
+      }
+  }
+
+  function joinOnlineRoomFromInput() {
+      const input = document.getElementById('joinCodeInput');
+      if (!input || !input.value.trim()) {
+          showToast("Please enter a match code (e.g. PNG-XXXX)");
+          return;
+      }
+      joinOnlineRoom(input.value.trim().toUpperCase());
+  }
+
+  function copyOnlineInvite() {
+      if (rMultiplayer) {
+          rMultiplayer.copyInviteLink();
+      }
+  }
+
+  function sendOnlineChat(msg) {
+      if (rMultiplayer && isOnline) {
+          rMultiplayer.sendChat(msg);
+          speechBubbles.push({ player: myPlayerSlot, text: msg, life: 140, maxLife: 140 });
+      }
+  }
+
+  function leaveOnlineMatch() {
+      stopSoloFallbackTimer();
+      if (rMultiplayer) {
+          rMultiplayer.leaveRoom(true);
+      }
+      isOnline = false;
+      isHost = false;
+      isCyberBotDuel = false;
+      updateMultiplayerUI();
+      updateBadge();
+      showToast("Returned to Local / Solo Play.");
+      restartGame();
+  }
+
+  function startSoloFallbackTimer(code) {
+      stopSoloFallbackTimer();
+      soloSecondsLeft = 25;
+      const cdEl = document.getElementById('mpCountdown');
+      const cdSec = document.getElementById('mpCountdownSec');
+      if (cdEl) cdEl.style.display = 'block';
+      if (cdSec) cdSec.textContent = soloSecondsLeft;
+
+      soloCountdownTimer = setInterval(() => {
+          soloSecondsLeft--;
+          if (cdSec) cdSec.textContent = soloSecondsLeft;
+          if (soloSecondsLeft <= 0) {
+              stopSoloFallbackTimer();
+              handleSoloFallback('timeout');
+          }
+      }, 1000);
+  }
+
+  function stopSoloFallbackTimer() {
+      if (soloCountdownTimer) {
+          clearInterval(soloCountdownTimer);
+          soloCountdownTimer = null;
+      }
+      const cdEl = document.getElementById('mpCountdown');
+      if (cdEl) cdEl.style.display = 'none';
+  }
+
+  function handleSoloFallback(reason) {
+      stopSoloFallbackTimer();
+      if (rMultiplayer) rMultiplayer.leaveRoom(true);
+      closeMultiplayerModal();
+      isOnline = false;
+      isPvP = false;
+      isCyberBotDuel = true;
+      difficulty = 3; // Cyber-Bot Hard AI
+      updateBadge();
+      showToast("🤖 No peer connected in 25s. Engaging Subnet Cyber-Bot AI!", "warning");
+      restartGame();
+  }
+
+  function startCyberBotDuel() {
+      stopSoloFallbackTimer();
+      if (rMultiplayer && isOnline) rMultiplayer.leaveRoom(false);
+      closeMultiplayerModal();
+      isOnline = false;
+      isPvP = false;
+      isCyberBotDuel = true;
+      difficulty = 3;
+      updateBadge();
+      showToast("🤖 Subnet Cyber-Bot AI engaged! Ready, Player 1?", "success");
+      restartGame();
+  }
+
+  function emitArgSignal(eventName, data) {
+      if (rMultiplayer && rMultiplayer.fb && rMultiplayer.fb.db) {
+          try {
+              const sigRef = rMultiplayer.fb.ref(rMultiplayer.fb.db, `arg/signals/kpong_${Date.now()}`);
+              rMultiplayer.fb.set(sigRef, {
+                  event: eventName,
+                  app: 'KPong',
+                  player: myPlayerName,
+                  data: data,
+                  timestamp: Date.now()
+              });
+          } catch(e) {}
+      }
+  }
+
+  function checkUrlInvite() {
+      try {
+          const hash = window.location.hash || '';
+          const search = window.location.search || '';
+          let code = null;
+          if (hash.includes('room=')) {
+              code = hash.split('room=')[1].split('&')[0];
+          } else if (search.includes('room=')) {
+              code = new URLSearchParams(search).get('room');
+          }
+          if (code && /^[A-Za-z0-9_-]{3,10}$/.test(code)) {
+              showInvitePrompt(code.toUpperCase());
+          }
+      } catch(e) {}
+  }
+
+  function handleRemoteMove(moveData) {
+      if (!moveData || !isOnline) return;
+
+      if (isHost && moveData.type === 'client_input') {
+          // Host receives Client (P2) paddle position and optional skill
+          p2y = moveData.y;
+          if (moveData.skill) {
+              if (moveData.skill === 'slow') {
+                  skillSlowTimer = 180;
+                  createShockwave(W/2, H/2, getSecondaryColor());
+                  playSound(1200, 'hit');
+              } else if (moveData.skill === 'mega') {
+                  p2BuffTimer = 240;
+                  createShockwave(W - 20, p2y + p2PadH/2, '#ffd700');
+                  playSound(1000, 'hit');
+              } else if (moveData.skill === 'fire') {
+                  for (let b of balls) {
+                      if (b.active && b.lastHitter === 2) b.isFireball = true;
+                  }
+                  createShockwave(W - 20, p2y + p2PadH/2, '#ff6400');
+                  playSound(1400, 'hit');
+              }
+          }
+      } else if (!isHost && moveData.type === 'sync') {
+          // Client (P2) receives Host authoritative state
+          p1y = moveData.p1y;
+          s1 = moveData.s1;
+          s2 = moveData.s2;
+          rally = moveData.rally;
+          document.getElementById('s1').innerText = s1;
+          document.getElementById('s2').innerText = s2;
+          checkHighRally(rally);
+
+          p1PadH = moveData.p1PadH || p1PadH;
+          p2PadH = moveData.p2PadH || p2PadH;
+          p1BuffTimer = moveData.p1BuffTimer || 0;
+          p2BuffTimer = moveData.p2BuffTimer || 0;
+          p1FreezeTimer = moveData.p1FreezeTimer || 0;
+          p2FreezeTimer = moveData.p2FreezeTimer || 0;
+          p1ShieldTimer = moveData.p1ShieldTimer || 0;
+          p2ShieldTimer = moveData.p2ShieldTimer || 0;
+          skillSlowTimer = moveData.skillSlowTimer || 0;
+
+          if (moveData.powerup) {
+              powerupX = moveData.powerup.x;
+              powerupY = moveData.powerup.y;
+              powerupType = moveData.powerup.type;
+              powerupActive = moveData.powerup.active;
+          }
+
+          if (Array.isArray(moveData.balls)) {
+              balls = moveData.balls.map(mb => {
+                  let existing = balls.find(b => b.id === mb.id);
+                  return {
+                      id: mb.id || 0,
+                      x: mb.x,
+                      y: mb.y,
+                      dx: mb.dx,
+                      dy: mb.dy,
+                      active: mb.active,
+                      isFireball: mb.isFireball,
+                      lastHitter: mb.lastHitter,
+                      trail: (existing && existing.trail) ? existing.trail : []
+                  };
+              });
+          }
+      } else if (!isHost && moveData.type === 'game_over') {
+          s1 = moveData.s1;
+          s2 = moveData.s2;
+          gameOver = true;
+          document.getElementById('s1').innerText = s1;
+          document.getElementById('s2').innerText = s2;
+          playSound(200, 'score');
+      }
+  }
+
+  function syncOnlineState(force = false) {
+      if (!isOnline || !rMultiplayer) return;
+      const now = performance.now();
+
+      if (isHost) {
+          if (!force && now - lastNetSendTime < 38) return;
+          lastNetSendTime = now;
+
+          const payload = {
+              type: 'sync',
+              p1y: Math.round(p1y),
+              s1, s2, rally,
+              balls: balls.filter(b => b.active).map((b, idx) => ({
+                  id: idx,
+                  x: Math.round(b.x * 10) / 10,
+                  y: Math.round(b.y * 10) / 10,
+                  dx: Math.round(b.dx * 100) / 100,
+                  dy: Math.round(b.dy * 100) / 100,
+                  active: b.active,
+                  isFireball: b.isFireball,
+                  lastHitter: b.lastHitter
+              })),
+              powerup: { x: Math.round(powerupX), y: Math.round(powerupY), type: powerupType, active: powerupActive },
+              p1PadH, p2PadH,
+              p1BuffTimer, p2BuffTimer, p1FreezeTimer, p2FreezeTimer, p1ShieldTimer, p2ShieldTimer,
+              skillSlowTimer
+          };
+          rMultiplayer.sendMove(payload);
+      } else {
+          if (!force && !pendingClientSkill && now - lastNetSendTime < 32) return;
+          lastNetSendTime = now;
+
+          const payload = {
+              type: 'client_input',
+              y: Math.round(p2y),
+              skill: pendingClientSkill
+          };
+          pendingClientSkill = null;
+          rMultiplayer.sendMove(payload);
+      }
+  }
+
   function resetBalls() {
       balls = [];
       let baseSpd = (gameMode === 4) ? Math.min(11, 4 + Math.floor(campaignLevel / 2)) : (startSpeeds[difficulty] || 5);
@@ -608,21 +1134,40 @@
 
   function triggerSkill(skill) {
       if (gameOver || isPaused) return;
+      if (isOnline && myPlayerSlot === 2) {
+          if (skill === 'slow' && skillSlowCooldown === 0) {
+              skillSlowCooldown = 360;
+              pendingClientSkill = 'slow';
+              syncOnlineState(true);
+          } else if (skill === 'mega' && skillMegaCooldown === 0) {
+              skillMegaCooldown = 450;
+              pendingClientSkill = 'mega';
+              syncOnlineState(true);
+          } else if (skill === 'fire' && skillFireballCooldown === 0) {
+              skillFireballCooldown = 300;
+              pendingClientSkill = 'fire';
+              syncOnlineState(true);
+          }
+          return;
+      }
       if (skill === 'slow' && skillSlowCooldown === 0) {
           skillSlowTimer = 180;
           skillSlowCooldown = 360;
           createShockwave(W/2, H/2, getPrimaryColor());
           playSound(1200, 'hit');
+          if (isOnline && isHost) syncOnlineState(true);
       } else if (skill === 'mega' && skillMegaCooldown === 0) {
           skillMegaTimer = 240;
           skillMegaCooldown = 450;
           createShockwave(20, p1y + p1PadH/2, '#ffd700');
           playSound(1000, 'hit');
+          if (isOnline && isHost) syncOnlineState(true);
       } else if (skill === 'fire' && skillFireballCooldown === 0) {
           skillFireballReady = true;
           skillFireballCooldown = 300;
           createShockwave(20, p1y + p1PadH/2, '#ff6400');
           playSound(1400, 'hit');
+          if (isOnline && isHost) syncOnlineState(true);
       }
   }
 
@@ -668,9 +1213,16 @@
   }
 
   function updateBadge() {
-      const modeStr = MODE_NAMES[gameMode].toUpperCase();
-      const pStr = isPvP ? "2P LOCAL PVP" : `1P VS AI (${DIFF_NAMES[difficulty].toUpperCase()})`;
-      document.getElementById('hud-mode-badge').innerText = `${pStr} • ${modeStr}`;
+      if (isOnline) {
+          const roomCode = (rMultiplayer && rMultiplayer.roomId) ? rMultiplayer.roomId : 'PNG';
+          document.getElementById('hud-mode-badge').innerText = `🌐 ONLINE DUEL [${roomCode}] • VS ${oppPlayerName.toUpperCase()}`;
+      } else if (isCyberBotDuel) {
+          document.getElementById('hud-mode-badge').innerText = `🤖 1P VS CYBER-BOT AI • ARENA`;
+      } else {
+          const modeStr = MODE_NAMES[gameMode].toUpperCase();
+          const pStr = isPvP ? "2P LOCAL PVP" : `1P VS AI (${DIFF_NAMES[difficulty].toUpperCase()})`;
+          document.getElementById('hud-mode-badge').innerText = `${pStr} • ${modeStr}`;
+      }
   }
 
   function cycleTheme() {
@@ -838,10 +1390,16 @@
 
       const helpModalEl = document.getElementById('helpModal');
       const statsModalEl = document.getElementById('statsModal');
+      const mpModalEl = document.getElementById('multiplayerModal');
+      const inviteModalEl = document.getElementById('inviteModal');
       const isHelpActive = helpModalEl && helpModalEl.classList.contains('active');
       const isStatsActive = statsModalEl && statsModalEl.classList.contains('active');
+      const isMpActive = mpModalEl && mpModalEl.classList.contains('active');
+      const isInviteActive = inviteModalEl && inviteModalEl.classList.contains('active');
 
       if (e.key === 'Escape') {
+          if (isInviteActive) { declineInvite(); return; }
+          if (isMpActive) { closeMultiplayerModal(); return; }
           if (isHelpActive) { closeHelpModal(); return; }
           if (isStatsActive) { closeStatsModal(); return; }
           if (isReplaying) { stopReplay(); return; }
@@ -850,12 +1408,14 @@
       }
 
       // If a modal is open, prevent background game key inputs
-      if (isHelpActive || isStatsActive) {
+      if (isHelpActive || isStatsActive || isMpActive || isInviteActive) {
           if ((e.key === 'h' || e.key === 'H' || e.key === 'F1') && isHelpActive) {
               if (e.key === 'F1') e.preventDefault();
               closeHelpModal();
           } else if ((e.key === 'l' || e.key === 'L') && isStatsActive) {
               closeStatsModal();
+          } else if ((e.key === 'o' || e.key === 'O') && isMpActive) {
+              closeMultiplayerModal();
           }
           return;
       }
@@ -876,11 +1436,21 @@
           return;
       }
 
+      if (gameOver && (e.key === 'r' || e.key === 'R')) {
+          if (isOnline && rMultiplayer) {
+              rMultiplayer.requestRematch();
+          } else {
+              restartGame();
+          }
+          return;
+      }
+
       if(e.key === '1') setDifficulty(1);
       if(e.key === '2') setDifficulty(2);
       if(e.key === '3') setDifficulty(3);
 
       if(e.key === 'u' || e.key === 'U') toggleSound();
+      if(e.key === 'o' || e.key === 'O') openMultiplayerModal();
       if(e.key === 'f' || e.key === 'F') triggerSkill('slow');
       if(e.key === 'e' || e.key === 'E') triggerSkill('mega');
       if(e.key === 'b' || e.key === 'B') triggerSkill('fire');
@@ -909,6 +1479,12 @@
   document.getElementById('statsModal').addEventListener('click', function(e) {
       if (e.target === this) closeStatsModal();
   });
+  document.getElementById('multiplayerModal').addEventListener('click', function(e) {
+      if (e.target === this) closeMultiplayerModal();
+  });
+  document.getElementById('inviteModal').addEventListener('click', function(e) {
+      if (e.target === this) declineInvite();
+  });
 
   function restartGame() {
       s1 = 0; s2 = 0; rally = 0; winScreen = false;
@@ -933,7 +1509,11 @@
   function handleCanvasPointer(e) {
       if (isPaused || isReplaying) return;
       if (gameOver) {
-          restartGame();
+          if (isOnline && rMultiplayer) {
+              rMultiplayer.requestRematch();
+          } else {
+              restartGame();
+          }
           return;
       }
       const rect = canvas.getBoundingClientRect();
@@ -945,7 +1525,13 @@
               const t = e.touches[i];
               const tX = t.clientX - rect.left;
               const tY = (t.clientY - rect.top) * scaleY;
-              if (isPvP && tX >= rect.width / 2) {
+              if (isOnline) {
+                  if (myPlayerSlot === 2) {
+                      if (p2FreezeTimer === 0) p2y = Math.max(0, Math.min(H - p2PadH, tY - p2PadH / 2));
+                  } else {
+                      if (p1FreezeTimer === 0) p1y = Math.max(0, Math.min(H - p1PadH, tY - p1PadH / 2));
+                  }
+              } else if (isPvP && tX >= rect.width / 2) {
                   if (p2FreezeTimer === 0) {
                       p2y = Math.max(0, Math.min(H - p2PadH, tY - p2PadH / 2));
                   }
@@ -958,7 +1544,13 @@
       } else if (e.clientY !== undefined) {
           const mX = e.clientX - rect.left;
           const mY = (e.clientY - rect.top) * scaleY;
-          if (isPvP && mX >= rect.width / 2) {
+          if (isOnline) {
+              if (myPlayerSlot === 2) {
+                  if (p2FreezeTimer === 0) p2y = Math.max(0, Math.min(H - p2PadH, mY - p2PadH / 2));
+              } else {
+                  if (p1FreezeTimer === 0) p1y = Math.max(0, Math.min(H - p1PadH, mY - p1PadH / 2));
+              }
+          } else if (isPvP && mX >= rect.width / 2) {
               if (p2FreezeTimer === 0) {
                   p2y = Math.max(0, Math.min(H - p2PadH, mY - p2PadH / 2));
               }
@@ -970,7 +1562,10 @@
       }
   }
   canvas.addEventListener('click', () => {
-      if (gameOver) restartGame();
+      if (gameOver) {
+          if (isOnline && rMultiplayer) rMultiplayer.requestRematch();
+          else restartGame();
+      }
   });
   canvas.addEventListener('mousemove', e => {
       if (e.buttons === 1 || !isPvP) handleCanvasPointer(e);
@@ -1194,8 +1789,15 @@
       // Player 1 Movement (W/S or Up/Down if 1P mode)
       let p1PrevY = p1y;
       if (p1FreezeTimer === 0) {
-          if (keys['w'] || keys['W'] || (!isPvP && (keys['ArrowUp']))) p1y -= 6.5;
-          if (keys['s'] || keys['S'] || (!isPvP && (keys['ArrowDown']))) p1y += 6.5;
+          if (isOnline) {
+              if (myPlayerSlot === 1) {
+                  if (keys['w'] || keys['W'] || keys['ArrowUp']) p1y -= 6.5;
+                  if (keys['s'] || keys['S'] || keys['ArrowDown']) p1y += 6.5;
+              }
+          } else {
+              if (keys['w'] || keys['W'] || (!isPvP && (keys['ArrowUp']))) p1y -= 6.5;
+              if (keys['s'] || keys['S'] || (!isPvP && (keys['ArrowDown']))) p1y += 6.5;
+          }
       }
       if (p1y < 0) p1y = 0;
       if (p1y > H - p1PadH) p1y = H - p1PadH;
@@ -1204,14 +1806,20 @@
       // Player 2 / AI Movement
       let p2PrevY = p2y;
       if (p2FreezeTimer === 0) {
-          if (isPvP) {
+          if (isOnline) {
+              if (myPlayerSlot === 2) {
+                  if (keys['ArrowUp'] || keys['w'] || keys['W']) p2y -= 6.5;
+                  if (keys['ArrowDown'] || keys['s'] || keys['S']) p2y += 6.5;
+              }
+          } else if (isPvP) {
               // 2-Player Local PvP Mode
               if (keys['ArrowUp']) p2y -= 6.5;
               if (keys['ArrowDown']) p2y += 6.5;
           } else {
               // AI Logic
               let aiSpeed = aiSpeeds[difficulty];
-              if (gameMode === 4) { // Campaign stages
+              if (isCyberBotDuel) aiSpeed = 7.5; // Grandmaster Cyber-Bot
+              else if (gameMode === 4) { // Campaign stages
                   if (campaignLevel <= 2) aiSpeed = 3;
                   else if (campaignLevel <= 5) aiSpeed = 4;
                   else if (campaignLevel <= 9) aiSpeed = 5;
@@ -1442,6 +2050,7 @@
               playSound(200, 'score');
               document.getElementById('s2').innerText = s2;
               if (activeBallCount() === 0) resetBalls();
+              if (isOnline && isHost) syncOnlineState(true);
           }
           if (b.x > W + 15) {
               b.active = false; s1++;
@@ -1451,6 +2060,7 @@
               playSound(200, 'score');
               document.getElementById('s1').innerText = s1;
               if (activeBallCount() === 0) resetBalls();
+              if (isOnline && isHost) syncOnlineState(true);
           }
       }
 
@@ -1485,12 +2095,32 @@
                   winScreen = true; gameOver = true; stats.wins++; stats.games++;
               } else { resetBalls(); }
           } else {
-              gameOver = true; stats.wins++; stats.games++;
+              gameOver = true;
+              if (isOnline) {
+                  if (myPlayerSlot === 1) stats.wins++; else stats.losses++;
+              } else {
+                  stats.wins++;
+              }
+              stats.games++;
+              if (isOnline && isHost && rMultiplayer) {
+                  rMultiplayer.sendMove({ type: 'game_over', s1, s2, winner: 1 });
+                  emitArgSignal('kpong_duel_finished', { winner: 1, s1, s2, rally: stats.highRally });
+              }
           }
           safeSetStorage('kpong_stats_v2', stats);
       }
       if (s2 >= targetScore) {
-          gameOver = true; stats.losses++; stats.games++;
+          gameOver = true;
+          if (isOnline) {
+              if (myPlayerSlot === 2) stats.wins++; else stats.losses++;
+          } else {
+              stats.losses++;
+          }
+          stats.games++;
+          if (isOnline && isHost && rMultiplayer) {
+              rMultiplayer.sendMove({ type: 'game_over', s1, s2, winner: 2 });
+              emitArgSignal('kpong_duel_finished', { winner: 2, s1, s2, rally: stats.highRally });
+          }
           safeSetStorage('kpong_stats_v2', stats);
       }
 
@@ -1515,6 +2145,7 @@
           btnFire.innerText = skillFireballReady ? "🔥 FIRE READY!" : (skillFireballCooldown > 0 ? `🔥 [B] (${Math.ceil(skillFireballCooldown/30)}s)` : "🔥 [B] Fireball");
       }
 
+      syncOnlineState(false);
       recordReplayFrame();
   }
 
@@ -1813,7 +2444,7 @@
       ctx.strokeRect(2, 2, W - 4, H - 4);
       ctx.restore();
 
-      // Pulsating Energy Perimeter Inlay Border with Traveling Specular Glint (Loop 8)
+      // Static Energy Perimeter Inlay Border (Rule 11 compliant)
       ctx.save();
       let borderGlow = getPrimaryColor();
       let pulseAlpha = 0.35 + Math.sin(Date.now() * 0.005) * 0.25 + arenaPulse * 0.4;
@@ -2027,10 +2658,52 @@
           }
           ctx.restore();
       }
+
+      // Speech Bubbles Rendering (Online Emotes & Quick Chat)
+      for (let i = speechBubbles.length - 1; i >= 0; i--) {
+          let sb = speechBubbles[i];
+          sb.life--;
+          let bubbleX = sb.player === 1 ? (35 + PAD_W) : (W - 35 - PAD_W);
+          let bubbleY = sb.player === 1 ? (p1y - 12) : (p2y - 12);
+          if (bubbleY < 20) bubbleY = 20;
+          if (bubbleY > H - 20) bubbleY = H - 20;
+
+          ctx.save();
+          let alpha = Math.min(1.0, sb.life / 20);
+          ctx.globalAlpha = alpha;
+          ctx.font = 'bold 11px Inter, sans-serif';
+          let txtW = ctx.measureText(sb.text).width;
+          let boxW = txtW + 14;
+          let boxH = 18;
+          let boxX = sb.player === 1 ? bubbleX : (bubbleX - boxW);
+          let boxY = bubbleY - boxH / 2;
+
+          ctx.fillStyle = 'rgba(10, 20, 30, 0.9)';
+          ctx.strokeStyle = sb.player === 1 ? getPrimaryColor() : getSecondaryColor();
+          ctx.lineWidth = 1.5;
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = ctx.strokeStyle;
+          ctx.fillRect(boxX, boxY, boxW, boxH);
+          ctx.strokeRect(boxX, boxY, boxW, boxH);
+
+          ctx.fillStyle = '#ffffff';
+          ctx.shadowBlur = 0;
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(sb.text, boxX + 7, boxY + boxH / 2);
+          ctx.restore();
+
+          if (sb.life <= 0) speechBubbles.splice(i, 1);
+      }
       
       // HUD Header Overlay
       ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; ctx.font = '12px Inter'; ctx.textAlign = 'center';
-      ctx.fillText("RALLY: " + rally + "  HIGH: " + stats.highRally + "  WINS: " + stats.wins + "  |  Press 'H' for Help", W/2, 20);
+      if (isOnline) {
+          ctx.fillStyle = getPrimaryColor();
+          ctx.fillText(`🌐 ROOM [${(rMultiplayer && rMultiplayer.roomId) || 'PNG'}]  |  ${myPlayerName} (P${myPlayerSlot}) vs ${oppPlayerName}`, W/2, 20);
+      } else {
+          ctx.fillText("RALLY: " + rally + "  HIGH: " + stats.highRally + "  WINS: " + stats.wins + "  |  Press 'H' for Help", W/2, 20);
+      }
 
       if (gameMode === 4) {
           ctx.fillStyle = '#ffd700';
@@ -2052,13 +2725,20 @@
               ctx.fillStyle = '#ffd700'; ctx.shadowBlur = 20; ctx.shadowColor = '#ffd700';
               ctx.fillText("CAMPAIGN VICTORY!", W/2, H/2 - 15);
               ctx.font = '14px Inter'; ctx.fillText("20 STAGES CLEARED!", W/2, H/2 + 10);
+          } else if (isOnline) {
+              const iWon = (myPlayerSlot === 1 && s1 > s2) || (myPlayerSlot === 2 && s2 > s1);
+              ctx.fillStyle = iWon ? getPrimaryColor() : getSecondaryColor();
+              ctx.shadowBlur = 20; ctx.shadowColor = ctx.fillStyle;
+              ctx.fillText(iWon ? "VICTORY! YOU WIN!" : "DEFEAT! OPPONENT WINS!", W/2, H/2 - 10);
+              ctx.shadowBlur = 0; ctx.fillStyle = 'white'; ctx.font = '14px Inter';
+              ctx.fillText("Press 'R' or Tap Canvas to Request Rematch | [Esc] Exit", W/2, H/2 + 35);
           } else {
               ctx.fillStyle = s1 > s2 ? getPrimaryColor() : getSecondaryColor();
               ctx.shadowBlur = 20; ctx.shadowColor = ctx.fillStyle;
               ctx.fillText(s1 > s2 ? (isPvP ? "PLAYER 1 WINS!" : "YOU WIN!") : (isPvP ? "PLAYER 2 WINS!" : "CPU WINS!"), W/2, H/2 - 10);
+              ctx.shadowBlur = 0; ctx.fillStyle = 'white'; ctx.font = '14px Inter';
+              ctx.fillText("Press 'P' for Match Replay  |  'R' / Tap Canvas to Restart", W/2, H/2 + 35);
           }
-          ctx.shadowBlur = 0; ctx.fillStyle = 'white'; ctx.font = '14px Inter';
-          ctx.fillText("Press 'P' for Match Replay  |  'R' / Tap Canvas to Restart", W/2, H/2 + 35);
       }
       ctx.restore();
   }
@@ -2071,6 +2751,11 @@
   updateBadge();
   updateSoundUI();
   resetBalls();
+
+  // Initialize RFMS Multiplayer service & URL invite detection (Rule 12 connect gate compliant)
+  initRetroMultiplayer();
+  checkUrlInvite();
+
   function gameLoop(timestamp) {
       update();
       draw();

@@ -1411,7 +1411,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 LineTo(memDC, W - 2, H - 2); LineTo(memDC, 2, H - 2); LineTo(memDC, 2, 2);
                 SelectObject(memDC, oldPen); DeleteObject(borderPen);
 
-                // Pulsating Energy Perimeter Inlay Border with Traveling Specular Glint (Loop 8)
+                // Static Energy Perimeter Inlay Border (Rule 11 compliant)
                 HPEN inlayPen = CreatePen(PS_SOLID, 1, (skill_slow_timer > 0) ? GetPrimaryColor() : RGB(0, 140, 180));
                 HPEN oldPenInlay = (HPEN)SelectObject(memDC, inlayPen);
                 MoveToEx(memDC, 6, 6, NULL); LineTo(memDC, W - 6, 6);
