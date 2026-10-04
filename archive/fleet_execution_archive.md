@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T01:05:00-07:00 — kilo-expander: KGo (Kifu Replay Viewer, SGF Import/Export, Coordinates, Byo-Yomi & Glint Purge)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 158.3 KB web / 169.5 KB native < 999 KB ceiling).
+  - SGF Import/Export: Added Smart Game Format (SGF) modal with clipboard copy, file download, drag-drop import, and JSON state backup.
+  - Replay & Kifu Viewer: Built move-by-move match replay mode with slider, step navigation, autoplay, and stone move numbering badges.
+  - Controls & Board Ergonomics: Added Goban coordinate toggle (A-T, 1-19), byo-yomi clock modes, F5 quicksave, and F9 quickload.
+  - Mandate 11 Glint Ban: Purged traveling stone sheens and floating Zen dust motes across web and native Win32 C.
+  - Verification: MSVC clean (`KGo.exe` 169.5 KB); Vite build clean in 335ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T00:10:00-07:00 — kilo-usability: KMandel (Tabbed Controls Ergonomics, Multiplayer Connect Gate, Mote/Shake Purge & ARCH-05)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 124.2 KB web / 21.5 KB native < 999 KB ceiling).
   - Tabbed Ergonomics: Organized 18 controls into 3 compact category tabs (Explore, Style, Tools) eliminating vertical scrolling in 720px window.

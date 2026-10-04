@@ -16,9 +16,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 91,
+  "turns_executed": 92,
   "last_turn_timestamp": "2026-09-30T00:26:00Z",
-  "last_heartbeat": "2026-10-04T08:51:46.607279+00:00",
-  "current_target": "KScript",
+  "last_heartbeat": "2026-10-04T09:09:43.744987+00:00",
+  "current_target": "KMedia",
   "remote_command": "none"
 }

@@ -456,7 +456,7 @@
   /* Toast Notification */
   .toast-notification {
     position: fixed;
-    top: 60px;
+    bottom: 36px;
     right: 20px;
     background: var(--bg-card);
     border: 1px solid var(--accent);
@@ -467,7 +467,7 @@
     font-weight: 600;
     box-shadow: 0 4px 15px rgba(0,0,0,0.6);
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(8px);
     transition: opacity 0.2s ease, transform 0.2s ease;
     cursor: pointer;
     pointer-events: auto;
@@ -999,7 +999,8 @@
         <div class="panel-title">
           <span>KiloNet 360° Polar Mesh Radar</span>
           <div style="display:flex; gap:6px; align-items:center;">
-            <button class="btn btn-primary" id="btnBroadcastBeacon">📡 Broadcast Beacon [B]</button>
+            <button class="btn btn-primary" id="btnToggleMeshConnect" style="background:#0284c7; font-weight:700;">🌐 Connect Global Mesh</button>
+            <button class="btn" id="btnBroadcastBeacon">📡 Broadcast Beacon [B]</button>
             <button class="btn" id="btnPingMesh">Ping Peers</button>
           </div>
         </div>
@@ -1012,10 +1013,10 @@
       <div class="panel" style="width:380px; display:flex; flex-direction:column;">
         <div class="panel-title">
           <span>Global Telemetry Stream</span>
-          <span id="meshStatusBadge" class="badge badge-success">ONLINE (RTDB)</span>
+          <span id="meshStatusBadge" class="badge" style="background:rgba(100,116,139,0.25); border:1px solid #64748b; color:#94a3b8;">STANDBY (OFFLINE)</span>
         </div>
         <div class="content-box" id="meshStreamArea" style="flex:1; font-size:11px; line-height:1.5;">
-          Connecting to global peer mesh...
+          Local radar standby. Click 'Connect Global Mesh' for real-time RTDB network tracking.
         </div>
         <!-- Diegetic Carrier Lock Box (Revealed when resonance threshold reached) -->
         <div id="meshCarrierBox" style="margin-top:6px; padding:8px; background:rgba(6,78,59,0.3); border:1px solid #10b981; border-radius:4px; font-size:11px; display:none;">
@@ -1353,26 +1354,35 @@
     }, 3200);
   }
 
-  // Welcome prompt on launch (persists first-run flag)
+  // Welcome prompt on launch (persists first-run flag only on fresh sessions, never interrupting saves)
   function initStartupToast() {
     const seen = localStorage.getItem('knet_tutorialSeen');
-    if (!seen) {
+    const hasSave = localStorage.getItem('knet_quicksave') || localStorage.getItem('knet_session_state') || localStorage.getItem('knet_saved_state');
+    if (!seen && !hasSave) {
       showToast("Welcome to KNet! Press F1 or 'H' for Help & Shortcuts", "info");
+      localStorage.setItem('knet_tutorialSeen', 'true');
+    } else if (!seen && hasSave) {
       localStorage.setItem('knet_tutorialSeen', 'true');
     }
   }
   window.addEventListener('DOMContentLoaded', initStartupToast);
 
-  // Quick Save & Quick Load State Management
+  // Quick Save & Quick Load State Management (Complete App/Session State)
   function quickSave() {
     const activeTabBtn = document.querySelector('.tab-btn.active');
     const activeTabId = activeTabBtn ? activeTabBtn.dataset.tab : 'tab-http';
+    let activeViewMode = 'rendered';
+    if (httpContentArea && httpContentArea.style.display === 'block') activeViewMode = 'source';
+    else if (hexViewer && hexViewer.style.display === 'block') activeViewMode = 'hex';
+
     const state = {
       url: urlInput.value,
       navHistory: navHistory.slice(-25),
       navIdx: navIdx,
       activeTab: activeTabId,
+      activeView: activeViewMode,
       activeUtilTab: document.querySelector('#tab-utils .btn-chip.active')?.id || 'btnUtilDnsTab',
+      utilTarget: document.getElementById('utilTargetInput')?.value || '',
       pingTarget: (document.getElementById('pingTargetInput')?.value) || '8.8.8.8',
       pingStats: pingStats,
       pingHistory: pingHistoryData.slice(-50),
@@ -1380,10 +1390,21 @@
       scanPorts: (document.getElementById('scanPortsInput')?.value) || '80, 443, 21, 22, 25, 53, 3389, 4444, 8080',
       trafficLogs: trafficLogs.slice(0, 100),
       totalBytes: totalBytesTransferred,
+      callsign: myCallsign,
+      meshResonance: meshResonance,
+      isMuted: isMuted,
+      forge: {
+        method: (typeof forgeMethod !== 'undefined' && forgeMethod) ? forgeMethod.value : 'GET',
+        url: (typeof forgeUrl !== 'undefined' && forgeUrl) ? forgeUrl.value : '',
+        headers: (typeof forgeHeadersText !== 'undefined' && forgeHeadersText) ? forgeHeadersText.value : '',
+        body: (typeof forgeBodyText !== 'undefined' && forgeBodyText) ? forgeBodyText.value : ''
+      },
       savedAt: new Date().toISOString()
     };
     try {
+      localStorage.setItem('knet_quicksave', JSON.stringify(state));
       localStorage.setItem('knet_saved_state', JSON.stringify(state));
+      localStorage.setItem('knet_tutorialSeen', 'true');
       showToast('State snapshot saved to slot [F5]! Press F9 to restore.', 'success');
     } catch (e) {
       showToast('Failed to save state snapshot: ' + e.message, 'error');
@@ -1392,7 +1413,7 @@
 
   function quickLoad() {
     try {
-      const raw = localStorage.getItem('knet_saved_state');
+      const raw = localStorage.getItem('knet_quicksave') || localStorage.getItem('knet_saved_state');
       if (!raw) {
         showToast('No saved snapshot in slot [F5]. Press F5 or Save to snapshot state.', 'warning');
         return;
@@ -1411,8 +1432,18 @@
         const tBtn = document.querySelector(`[data-tab="${s.activeTab}"]`);
         if (tBtn) tBtn.click();
       }
+      if (s.activeView === 'source' && typeof btnViewSource !== 'undefined' && btnViewSource) {
+        btnViewSource.click();
+      } else if (s.activeView === 'hex' && typeof btnViewHex !== 'undefined' && btnViewHex) {
+        btnViewHex.click();
+      } else if (typeof btnViewRendered !== 'undefined' && btnViewRendered) {
+        btnViewRendered.click();
+      }
       if (s.activeUtilTab && typeof switchUtilTab === 'function') {
         switchUtilTab(s.activeUtilTab);
+      }
+      if (s.utilTarget && document.getElementById('utilTargetInput')) {
+        document.getElementById('utilTargetInput').value = s.utilTarget;
       }
       if (s.pingTarget && document.getElementById('pingTargetInput')) {
         document.getElementById('pingTargetInput').value = s.pingTarget;
@@ -1438,6 +1469,25 @@
         lblTotalBytes.textContent = formatBytes(totalBytesTransferred);
         renderLogs();
       }
+      if (typeof s.isMuted === 'boolean' && s.isMuted !== isMuted && typeof toggleMute === 'function') {
+        toggleMute();
+      }
+      if (s.callsign) {
+        myCallsign = s.callsign;
+        localStorage.setItem('knet_mesh_callsign', myCallsign);
+        if (meshMyCallsign) meshMyCallsign.textContent = myCallsign;
+      }
+      if (typeof s.meshResonance === 'number') {
+        meshResonance = s.meshResonance;
+        updateMeshCounters();
+      }
+      if (s.forge) {
+        if (typeof forgeMethod !== 'undefined' && forgeMethod && s.forge.method) forgeMethod.value = s.forge.method;
+        if (typeof forgeUrl !== 'undefined' && forgeUrl && s.forge.url) forgeUrl.value = s.forge.url;
+        if (typeof forgeHeadersText !== 'undefined' && forgeHeadersText && s.forge.headers) forgeHeadersText.value = s.forge.headers;
+        if (typeof forgeBodyText !== 'undefined' && forgeBodyText && s.forge.body) forgeBodyText.value = s.forge.body;
+      }
+      localStorage.setItem('knet_tutorialSeen', 'true');
       const saveTime = s.savedAt ? new Date(s.savedAt).toLocaleTimeString() : 'earlier';
       showToast(`Snapshot restored [F9]! (Saved at ${saveTime})`, 'success');
     } catch (e) {
@@ -3006,7 +3056,7 @@
     cidrLabel.textContent = '/8';
     document.getElementById('btnCalcSubnet').click();
   };
-  const btnSubnetPresetIntranet = document.getElementById('btnSubnetPresetIntranet') || document.getElementById('btnSubnetPresetARG');
+  const btnSubnetPresetIntranet = document.getElementById('btnSubnetPresetIntranet');
   if (btnSubnetPresetIntranet) {
     btnSubnetPresetIntranet.onclick = () => {
       document.getElementById('cidrIpInput').value = '10.19.99.4';
@@ -3437,7 +3487,7 @@
   // Auto-restore previous session state if available
   function restoreAutoSession() {
     try {
-      const raw = localStorage.getItem('knet_saved_state');
+      const raw = localStorage.getItem('knet_session_state') || localStorage.getItem('knet_saved_state');
       if (raw) {
         const s = JSON.parse(raw);
         if (s.url && s.url !== '/web/portal.html') {
@@ -3453,8 +3503,16 @@
           const tBtn = document.querySelector(`[data-tab="${s.activeTab}"]`);
           if (tBtn) tBtn.click();
         }
+        if (s.activeView === 'source' && typeof btnViewSource !== 'undefined' && btnViewSource) {
+          btnViewSource.click();
+        } else if (s.activeView === 'hex' && typeof btnViewHex !== 'undefined' && btnViewHex) {
+          btnViewHex.click();
+        }
         if (s.activeUtilTab && typeof switchUtilTab === 'function') {
           switchUtilTab(s.activeUtilTab);
+        }
+        if (s.utilTarget && document.getElementById('utilTargetInput')) {
+          document.getElementById('utilTargetInput').value = s.utilTarget;
         }
         if (s.pingTarget && document.getElementById('pingTargetInput')) {
           document.getElementById('pingTargetInput').value = s.pingTarget;
@@ -3471,17 +3529,23 @@
   }
   setTimeout(restoreAutoSession, 50);
 
-  // Auto-save on page unload
+  // Auto-save on page unload (persists to knet_session_state to avoid overwriting manual knet_quicksave snapshots)
   window.addEventListener('beforeunload', () => {
     try {
       const activeTabBtn = document.querySelector('.tab-btn.active');
       const activeTabId = activeTabBtn ? activeTabBtn.dataset.tab : 'tab-http';
+      let activeViewMode = 'rendered';
+      if (httpContentArea && httpContentArea.style.display === 'block') activeViewMode = 'source';
+      else if (hexViewer && hexViewer.style.display === 'block') activeViewMode = 'hex';
+
       const autoState = {
         url: urlInput.value,
         navHistory: navHistory.slice(-25),
         navIdx: navIdx,
         activeTab: activeTabId,
+        activeView: activeViewMode,
         activeUtilTab: document.querySelector('#tab-utils .btn-chip.active')?.id || 'btnUtilDnsTab',
+        utilTarget: document.getElementById('utilTargetInput')?.value || '',
         pingTarget: (document.getElementById('pingTargetInput')?.value) || '8.8.8.8',
         pingStats: pingStats,
         pingHistory: pingHistoryData.slice(-50),
@@ -3489,8 +3553,12 @@
         scanPorts: (document.getElementById('scanPortsInput')?.value) || '80, 443, 21, 22, 25, 53, 3389, 4444, 8080',
         trafficLogs: trafficLogs.slice(0, 100),
         totalBytes: totalBytesTransferred,
+        callsign: myCallsign,
+        meshResonance: meshResonance,
+        isMuted: isMuted,
         savedAt: new Date().toISOString()
       };
+      localStorage.setItem('knet_session_state', JSON.stringify(autoState));
       localStorage.setItem('knet_saved_state', JSON.stringify(autoState));
     } catch(e) {}
   });
@@ -3714,6 +3782,7 @@
   const meshMyCallsign = document.getElementById('meshMyCallsign');
   const meshTotalBeacons = document.getElementById('meshTotalBeacons');
   const meshResonancePct = document.getElementById('meshResonancePct');
+  const btnToggleMeshConnect = document.getElementById('btnToggleMeshConnect');
   const btnBroadcastBeacon = document.getElementById('btnBroadcastBeacon');
   const btnPingMesh = document.getElementById('btnPingMesh');
   const meshStatusBadge = document.getElementById('meshStatusBadge');
@@ -3729,6 +3798,11 @@
   let meshResonance = 25;
   let sweepAngle = 0;
   let beaconRipples = [];
+  let isMeshConnected = false;
+  let meshHeartbeatTimer = null;
+  let meshPeersRef = null;
+  let meshBeaconsRef = null;
+  let myPresenceRef = null;
 
   let meshPeers = [
     { id: 'gw1', callsign: 'GATEWAY-01', ip: '10.19.99.1', angle: 0.78, dist: 0.82, rtt: 14, pingFlash: 0, isGateway: true },
@@ -3781,7 +3855,7 @@
     playBeaconChirp();
     logMeshTelemetry(`<span style="color:#38bdf8;">📡 LOCAL BEACON:</span> Transmitted 1999 Hz carrier pulse from ${myCallsign}`);
 
-    if (window.knetFirebase && window.knetFirebase.db) {
+    if (isMeshConnected && window.knetFirebase && window.knetFirebase.db) {
       try {
         const { db, ref, set, serverTimestamp } = window.knetFirebase;
         const bRef = ref(db, `multiplayer/knet/beacons/${myPeerId}`);
@@ -3959,34 +4033,47 @@
   updateMeshCounters();
 
   // =========================================================================
-  // FIREBASE RTDB GLOBAL MULTIPLAYER PRESENCE & BEACONS
+  // FIREBASE RTDB GLOBAL MULTIPLAYER PRESENCE & BEACONS (MANDATE 12 CONNECT GATE)
   // =========================================================================
-  window.onKnetFirebaseReady = function() {
+  function connectGlobalMesh() {
+    if (!window.knetFirebase) {
+      showToast('Firebase RTDB multiplayer relay initializing...', 'info');
+      return;
+    }
     try {
-      const { db, ref, set, push, onValue, onDisconnect, serverTimestamp } = window.knetFirebase;
-      const myRef = ref(db, `multiplayer/knet/peers/${myPeerId}`);
-      const peersRef = ref(db, `multiplayer/knet/peers`);
-      const beaconsRef = ref(db, `multiplayer/knet/beacons`);
+      const { db, ref, set, onValue, onDisconnect, serverTimestamp } = window.knetFirebase;
+      myPresenceRef = ref(db, `multiplayer/knet/peers/${myPeerId}`);
+      meshPeersRef = ref(db, `multiplayer/knet/peers`);
+      meshBeaconsRef = ref(db, `multiplayer/knet/beacons`);
 
       const myAngle = (Math.random() * Math.PI * 2);
       const myDist = 0.35 + Math.random() * 0.55;
 
-      set(myRef, {
+      set(myPresenceRef, {
         callsign: myCallsign,
         angle: myAngle,
         dist: myDist,
         lastSeen: serverTimestamp()
       });
-      onDisconnect(myRef).remove();
+      onDisconnect(myPresenceRef).remove();
 
+      isMeshConnected = true;
+      if (btnToggleMeshConnect) {
+        btnToggleMeshConnect.textContent = '🔌 Disconnect (Offline)';
+        btnToggleMeshConnect.style.background = '#475569';
+      }
       if (meshStatusBadge) {
-        meshStatusBadge.className = 'badge badge-success';
+        meshStatusBadge.style.background = 'rgba(16,185,129,0.2)';
+        meshStatusBadge.style.borderColor = '#10b981';
+        meshStatusBadge.style.color = '#34d399';
         meshStatusBadge.textContent = 'ONLINE (RTDB)';
       }
 
       logMeshTelemetry(`<span style="color:#34d399;">🌐 MESH LINKED:</span> Connected to KiloApps global RTDB mesh as <strong>${myCallsign}</strong>`);
+      showToast('Connected to KiloApps Global Mesh [RTDB]', 'success');
 
-      onValue(peersRef, (snap) => {
+      onValue(meshPeersRef, (snap) => {
+        if (!isMeshConnected) return;
         const val = snap.val() || {};
         const remotePeers = [];
         Object.keys(val).forEach(k => {
@@ -4016,7 +4103,8 @@
         }
       });
 
-      onValue(beaconsRef, (snap) => {
+      onValue(meshBeaconsRef, (snap) => {
+        if (!isMeshConnected) return;
         const val = snap.val() || {};
         Object.keys(val).forEach(k => {
           if (k !== myPeerId) {
@@ -4032,14 +4120,68 @@
         });
       });
 
-      setInterval(() => {
-        try {
-          set(ref(db, `multiplayer/knet/peers/${myPeerId}/lastSeen`), serverTimestamp());
-        } catch (e) {}
+      clearInterval(meshHeartbeatTimer);
+      meshHeartbeatTimer = setInterval(() => {
+        if (isMeshConnected && myPresenceRef) {
+          try {
+            set(ref(db, `multiplayer/knet/peers/${myPeerId}/lastSeen`), serverTimestamp());
+          } catch (e) {}
+        }
       }, 25000);
 
     } catch (e) {
       console.warn('Firebase RTDB presence error:', e);
+      showToast('Global mesh connection failed: ' + e.message, 'error');
+    }
+  }
+
+  function disconnectGlobalMesh() {
+    isMeshConnected = false;
+    clearInterval(meshHeartbeatTimer);
+    if (window.knetFirebase) {
+      const { off, remove } = window.knetFirebase;
+      if (meshPeersRef && typeof off === 'function') off(meshPeersRef);
+      if (meshBeaconsRef && typeof off === 'function') off(meshBeaconsRef);
+      if (myPresenceRef) {
+        remove(myPresenceRef).catch(() => {});
+        myPresenceRef = null;
+      }
+    }
+    meshPeers = [
+      { id: 'gw1', callsign: 'GATEWAY-01', ip: '10.19.99.1', angle: 0.78, dist: 0.82, rtt: 14, pingFlash: 0, isGateway: true },
+      { id: 'sub1999', callsign: 'CARRIER-1999', ip: '1999 Hz Subcarrier', angle: 3.48, dist: 0.55, rtt: 3, pingFlash: 0, isClassified: true },
+      { id: 'node7f', callsign: 'NODE-0x7F', ip: '192.168.1.127', angle: 5.42, dist: 0.38, rtt: 28, pingFlash: 0 },
+      { id: 'arpa4', callsign: 'ARPA-LEAK', ip: '10.19.99.4', angle: 2.12, dist: 0.91, rtt: 42, pingFlash: 0, isClassified: true }
+    ];
+    updateMeshCounters();
+    if (btnToggleMeshConnect) {
+      btnToggleMeshConnect.textContent = '🌐 Connect Global Mesh';
+      btnToggleMeshConnect.style.background = '#0284c7';
+    }
+    if (meshStatusBadge) {
+      meshStatusBadge.style.background = 'rgba(100,116,139,0.25)';
+      meshStatusBadge.style.borderColor = '#64748b';
+      meshStatusBadge.style.color = '#94a3b8';
+      meshStatusBadge.textContent = 'STANDBY (OFFLINE)';
+    }
+    logMeshTelemetry(`<span style="color:#94a3b8;">🔌 MESH OFFLINE:</span> Disconnected from global RTDB mesh. Reverted to local radar.`);
+    showToast('Disconnected from Global Mesh (Offline mode)', 'info');
+  }
+
+  if (btnToggleMeshConnect) {
+    btnToggleMeshConnect.onclick = () => {
+      if (isMeshConnected) {
+        disconnectGlobalMesh();
+      } else {
+        connectGlobalMesh();
+      }
+    };
+  }
+
+  window.onKnetFirebaseReady = function() {
+    // Mandate 12 Connect Gate: Do NOT autostart into global mesh; wait for user Connect gesture
+    if (isMeshConnected) {
+      connectGlobalMesh();
     }
   };
 

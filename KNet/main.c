@@ -42,6 +42,9 @@ void DisplayLogSummary();
 void RunCidr(const char* target);
 void RunSpeedBenchmark();
 void RunMeshRadar();
+BOOL QuickSaveState(HWND hwnd);
+BOOL QuickLoadState(HWND hwnd);
+void CheckFirstRunTutorial(HWND hwnd);
 
 void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd,
@@ -49,6 +52,8 @@ void ShowHelpDialog(HWND hwnd) {
         "====================================================\n\n"
         "KEYBOARD SHORTCUTS:\n"
         "  • F1 or H            : Show this Help & Shortcut guide\n"
+        "  • F5                 : Quick Save complete session snapshot\n"
+        "  • F9                 : Quick Load session snapshot\n"
         "  • Enter (in URL)     : Execute HTTP Fetch or command\n"
         "  • Enter (in Filter)  : Refresh Traffic Log filter\n"
         "  • P                  : Start Ping & Latency test\n"
@@ -92,6 +97,12 @@ LRESULT CALLBACK UrlEditSubclass(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
         } else if (wParam == VK_ESCAPE) {
             SetWindowTextA(hwnd, "");
             return 0;
+        } else if (wParam == VK_F5) {
+            QuickSaveState(GetParent(hwnd));
+            return 0;
+        } else if (wParam == VK_F9) {
+            QuickLoadState(GetParent(hwnd));
+            return 0;
         }
     }
     return CallWindowProcA(g_OldUrlEditProc, hwnd, msg, wParam, lParam);
@@ -105,6 +116,12 @@ LRESULT CALLBACK FilterEditSubclass(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
         } else if (wParam == VK_ESCAPE) {
             SetWindowTextA(hwnd, "");
             DisplayLogSummary();
+            return 0;
+        } else if (wParam == VK_F5) {
+            QuickSaveState(GetParent(hwnd));
+            return 0;
+        } else if (wParam == VK_F9) {
+            QuickLoadState(GetParent(hwnd));
             return 0;
         }
     }
@@ -165,6 +182,165 @@ void AddTrafficLog(const char* type, const char* target, const char* status, int
     
     g_LogCount++;
     g_TotalBytes += bytes;
+}
+
+#define QUICKSAVE_FILE "knet_quicksave.dat"
+#define TUTORIAL_FLAG_FILE "knet_tutorialSeen.dat"
+
+typedef struct {
+    char magic[8]; // "KNETSAVE"
+    int version;   // 1
+    char currentUrl[512];
+    int historyCount;
+    int historyIdx;
+    char history[100][512];
+    PING_STATS pingStats;
+    int logCount;
+    int totalBytes;
+    LOG_ENTRY logs[100];
+} KNET_SNAPSHOT;
+
+BOOL QuickSaveState(HWND hwnd) {
+    KNET_SNAPSHOT snap;
+    ZeroMemory(&snap, sizeof(snap));
+    lstrcpyA(snap.magic, "KNETSAVE");
+    snap.version = 1;
+    if (hUrlEdit) {
+        GetWindowTextA(hUrlEdit, snap.currentUrl, sizeof(snap.currentUrl));
+    }
+    snap.historyCount = historyCount;
+    snap.historyIdx = historyIdx;
+    for (int i = 0; i < historyCount && i < 100; i++) {
+        lstrcpyA(snap.history[i], history[i]);
+    }
+    snap.pingStats = g_PingStats;
+    snap.logCount = g_LogCount;
+    snap.totalBytes = g_TotalBytes;
+    for (int i = 0; i < g_LogCount && i < 100; i++) {
+        snap.logs[i] = g_Log[i];
+    }
+
+    HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        MessageBoxA(hwnd, "Failed to create quicksave file (knet_quicksave.dat).", "KNet Error", MB_OK | MB_ICONERROR);
+        return FALSE;
+    }
+    DWORD written = 0;
+    WriteFile(hFile, &snap, sizeof(snap), &written, NULL);
+    CloseHandle(hFile);
+
+    // Ensure tutorial flag is marked so save state is never interrupted
+    HANDLE hFlag = CreateFileA(TUTORIAL_FLAG_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFlag != INVALID_HANDLE_VALUE) {
+        BYTE b = 1;
+        DWORD w = 0;
+        WriteFile(hFlag, &b, 1, &w, NULL);
+        CloseHandle(hFlag);
+    }
+
+    char msg[256];
+    wsprintfA(msg, "\r\n[QUICKSAVE] Session snapshot saved successfully to %s [F5] (%d logs, %d history entries).\r\n",
+        QUICKSAVE_FILE, g_LogCount, historyCount);
+    AppendContent(msg);
+    MessageBeep(MB_OK);
+    return TRUE;
+}
+
+BOOL QuickLoadState(HWND hwnd) {
+    HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        MessageBoxA(hwnd, "No quicksave snapshot found (knet_quicksave.dat).\r\nPress F5 to save snapshot.", "KNet", MB_OK | MB_ICONINFORMATION);
+        return FALSE;
+    }
+    KNET_SNAPSHOT snap;
+    DWORD readBytes = 0;
+    BOOL ok = ReadFile(hFile, &snap, sizeof(snap), &readBytes, NULL);
+    CloseHandle(hFile);
+
+    if (!ok || readBytes < sizeof(KNET_SNAPSHOT) || lstrcmpA(snap.magic, "KNETSAVE") != 0) {
+        MessageBoxA(hwnd, "Invalid or corrupted quicksave file (knet_quicksave.dat).", "KNet Error", MB_OK | MB_ICONERROR);
+        return FALSE;
+    }
+
+    historyCount = snap.historyCount;
+    if (historyCount < 0) historyCount = 0;
+    if (historyCount > 100) historyCount = 100;
+
+    historyIdx = snap.historyIdx;
+    if (historyIdx >= historyCount) historyIdx = historyCount - 1;
+
+    for (int i = 0; i < historyCount; i++) {
+        lstrcpyA(history[i], snap.history[i]);
+    }
+
+    g_PingStats = snap.pingStats;
+    g_LogCount = snap.logCount;
+    if (g_LogCount < 0) g_LogCount = 0;
+    if (g_LogCount > 100) g_LogCount = 100;
+    g_TotalBytes = snap.totalBytes;
+
+    for (int i = 0; i < g_LogCount; i++) {
+        g_Log[i] = snap.logs[i];
+    }
+
+    if (hUrlEdit && snap.currentUrl[0]) {
+        SetWindowTextA(hUrlEdit, snap.currentUrl);
+    }
+    UpdateNavButtons();
+
+    // Mark tutorial flag so restored saves are never interrupted
+    HANDLE hFlag = CreateFileA(TUTORIAL_FLAG_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFlag != INVALID_HANDLE_VALUE) {
+        BYTE b = 1;
+        DWORD w = 0;
+        WriteFile(hFlag, &b, 1, &w, NULL);
+        CloseHandle(hFlag);
+    }
+
+    char msg[256];
+    wsprintfA(msg, "\r\n[QUICKLOAD] Session snapshot restored successfully from %s [F9]!\r\n"
+                  "Active URL: %s | Logs: %d | Total Data: %d bytes\r\n"
+                  "------------------------------------------------------------\r\n",
+        QUICKSAVE_FILE, snap.currentUrl[0] ? snap.currentUrl : "(none)", g_LogCount, g_TotalBytes);
+    AppendContent(msg);
+    MessageBeep(MB_OK);
+    return TRUE;
+}
+
+void CheckFirstRunTutorial(HWND hwnd) {
+    HANDLE hFlag = CreateFileA(TUTORIAL_FLAG_FILE, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (hFlag != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFlag);
+        return;
+    }
+
+    HANDLE hSave = CreateFileA(QUICKSAVE_FILE, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (hSave != INVALID_HANDLE_VALUE) {
+        CloseHandle(hSave);
+        HANDLE hNewFlag = CreateFileA(TUTORIAL_FLAG_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hNewFlag != INVALID_HANDLE_VALUE) {
+            BYTE b = 1;
+            DWORD w = 0;
+            WriteFile(hNewFlag, &b, 1, &w, NULL);
+            CloseHandle(hNewFlag);
+        }
+        return;
+    }
+
+    HANDLE hNewFlag = CreateFileA(TUTORIAL_FLAG_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hNewFlag != INVALID_HANDLE_VALUE) {
+        BYTE b = 1;
+        DWORD w = 0;
+        WriteFile(hNewFlag, &b, 1, &w, NULL);
+        CloseHandle(hNewFlag);
+    }
+
+    AppendContent(
+        "\r\n★ FIRST-RUN TIP: Press F1 or 'H' anytime for the command guide.\r\n"
+        "  • Press F5 to Quick Save complete session state (history, logs, stats).\r\n"
+        "  • Press F9 to Quick Load saved session state.\r\n"
+        "  • Enter 'kweb:portal' or 'mesh' in URL box to explore KiloNet.\r\n"
+        "------------------------------------------------------------\r\n");
 }
 
 void FetchUrl(HWND hwnd, BOOL addToHistory);
@@ -507,7 +683,7 @@ void ShowVirtualWeb(const char* site) {
             "TOP CHAT CHANNELS & BBS BOARDS:\r\n"
             "  #kilo-lounge : Casual retro talk, coffee orders, and Voodoo 3 discussions\r\n"
             "  #lan-gaming  : Setting up Surreal Tournament & Tremor III Arena matches\r\n"
-            "  #arg-leaks   : Whispers regarding 1999 Hz carrier tones on subnet 10.19.99.x\r\n\r\n"
+            "  #net-anomalies : Whispers regarding 1999 Hz carrier tones on subnet 10.19.99.x\r\n\r\n"
             "[RECENT POSTS]\r\n"
             "  <SpeedDemon_99> Who's hosting the VoidCraft LAN party tonight?\r\n"
             "  <GlitchHunter> Found an odd 1999 Hz tone in KNet. Anyone else picking it up?\r\n"
@@ -601,8 +777,8 @@ void ShowVirtualWeb(const char* site) {
             "  • Broadcast : 10.19.99.255\r\n"
             "  • Gateway   : 10.19.99.1\r\n\r\n"
             "SYSTEM ANOMALY:\r\n"
-            "  Memory offset 0x0000FF00 records an autonomous fleet coordinating\r\n"
-            "  across time. Frequency 1999 Hz resonates through all 999 KB nodes.\r\n"
+            "  Memory offset 0x0000FF00 records anomalous distributed subsystem processes\r\n"
+            "  coordinating across non-routable interfaces. Frequency 1999 Hz resonates through all memory banks.\r\n"
             "========================================================================\r\n");
     } else { // echoes
         SetWindowTextA(hContentEdit,
@@ -1165,6 +1341,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 "- Click 'Scan [S]' to audit standard and custom server ports.\r\n"
                 "- Click 'Logs [L]' or type in filter box to filter traffic live.\r\n"
                 "- Click 'Export [E]' or press Ctrl+S to save activity to CSV.\r\n"
+                "- Press F5 to Quick Save complete session snapshot, F9 to Quick Load.\r\n"
                 "- Special commands: ping:, scan:, dns:, whois:, trace:, ifconfig, sniff\r\n"
                 "- Press 'H' or F1 at any time for Help & shortcut reference.\r\n"
                 "============================================================\r\n",
@@ -1332,6 +1509,7 @@ void MainEntry() {
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+    CheckFirstRunTutorial(hwnd);
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
@@ -1343,6 +1521,14 @@ void MainEntry() {
 
             if (msg.wParam == VK_F1) {
                 ShowHelpDialog(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F5) {
+                QuickSaveState(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                QuickLoadState(hwnd);
                 continue;
             }
             if (ctrlDown && (msg.wParam == 'S' || msg.wParam == 's')) {

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: "KQuest (Phase 2: Dungeon & Hub Backgrounds)"
   kilo_tester: KStarDredge
   kilo_usability: KMystery
-  kilo_qa: KNet
+  kilo_qa: KNote
   kilo_expander: KReversi
 virtual_web_target: "kweb://users/~neon_rider"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KMedia
-  timestamp: "2026-10-04T02:08:00-07:00"
+  agent: kilo-qa
+  app: KNet
+  timestamp: "2026-10-04T02:29:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KNet`, `KNote`, `KPass`, `KHash`, `KGraph`, `KClock`, `KTimer`, `KPomodoro` *(Completed: KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KNet`
+- **Current Target**: `KNote`
 - **Upcoming Queue**:
-  `KNote`, `KPass`, `KDB`, `KHex`, `KBookmark`, `KPing`, `KChat`, `KClock`, `KTimer`, `KPomodoro`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel)*.
+  `KPass`, `KDB`, `KHex`, `KBookmark`, `KPing`, `KChat`, `KClock`, `KTimer`, `KPomodoro`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KReversi`
@@ -230,6 +230,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T02:29:00-07:00 — kilo-qa: KNet (Pass 5 QA & Build Quality, Mandate 12 Connect Gate, Full State & TINAG Polish)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 181.8 KB web / 45.1 KB native < 999 KB ceiling).
+  - Quicksave & Full State Persistence: Added complete state persistence across all 7 tabs/utilities with F5/F9 hotkeys on web and native Win32 C (`knet_quicksave.dat`).
+  - First-Run Tutorial Integrity: Added safe first-run flag checks (`knet_tutorialSeen` / `.dat`) ensuring welcome prompts never interrupt restored save states.
+  - Mandate 12 Connect Gate: Enforced offline default on Mesh Radar; gated global Firebase RTDB telemetry behind explicit Connect/Disconnect toggle.
+  - Toast & TINAG Polish: Re-anchored toasts to bottom right above footer eliminating button occlusion; cleaned non-diegetic `#arg-leaks` and meta-spoilers in C.
+  - Verification: MSVC native clean (`KNet.exe` 45.1 KB); Vite build clean in 265ms; CDP startup PASS; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T02:08:00-07:00 — kilo-usability: KMedia (UI/UX Ergonomics, Mandate 12 Connect Gate, Collapsible Sidebar & HiDPI Polish)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 143.9 KB web / 22.0 KB native < 999 KB ceiling).
   - Mandate 12 Connect Gate: Removed multiplayer autostart; defaulted to offline mode; added explicit Connect/Disconnect toggle for Watch Party.
@@ -259,11 +267,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - 16-Bit Chiptune SFX Lab: Implemented procedural audio synthesizer with 8 presets (laser, coin, warp, explosion, 1999Hz chirp), live waveform oscilloscope, WAV download & C/JS export.
   - Diegetic ARG Lore: Embedded Subnet 10.19.99.4 microwave telemetry leak & 1999Hz acoustic carrier breadcrumbs connecting to classified intranet and Echo Subsystem.
   - Ecosystem Interconnect: Updated navigation toolbar, KNet routing, Webring directory (#002), and KiloNet Portal crawl database.
-
-- **2026-10-04T01:05:00-07:00 — kilo-expander: KGo (Kifu Replay Viewer, SGF Import/Export, Coordinates, Byo-Yomi & Glint Purge)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 158.3 KB web / 169.5 KB native < 999 KB ceiling).
-  - SGF Import/Export: Added Smart Game Format (SGF) modal with clipboard copy, file download, drag-drop import, and JSON state backup.
-  - Replay & Kifu Viewer: Built move-by-move match replay mode with slider, step navigation, autoplay, and stone move numbering badges.
-  - Controls & Board Ergonomics: Added Goban coordinate toggle (A-T, 1-19), byo-yomi clock modes, F5 quicksave, and F9 quickload.
-  - Mandate 11 Glint Ban: Purged traveling stone sheens and floating Zen dust motes across web and native Win32 C.
-  - Verification: MSVC clean (`KGo.exe` 169.5 KB); Vite build clean in 335ms; security_lint 100% PASS; check_icons 100% PASS.
