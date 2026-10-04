@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T02:08:00-07:00 — kilo-usability: KMedia (UI/UX Ergonomics, Mandate 12 Connect Gate, Collapsible Sidebar & HiDPI Polish)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 143.9 KB web / 22.0 KB native < 999 KB ceiling).
+  - Mandate 12 Connect Gate: Removed multiplayer autostart; defaulted to offline mode; added explicit Connect/Disconnect toggle for Watch Party.
+  - Toast Occlusion Remediation: Re-anchored toasts safely above visualizer canvas, eliminating control and input overlap.
+  - Collapsible Sidebar & Layout: Added Sidebar toggle button + Tab hotkey with responsive layout; tuned default window size to 1000x700.
+  - HiDPI Canvas & Native Scaling: Added ResizeObserver for instant crisp visualizer scaling; added WM_SIZE and WM_GETMINMAXINFO to native Win32 C.
+  - Verification: MSVC clean (`KMedia.exe` 22.0 KB); Vite build clean in 283ms; test_app_startup PASS; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T01:50:00-07:00 — kilo-tester: KScript (UI Audit, Modal Overlay Display Fix & Build Verification)**
   - Status: PASS ✅ (1 startup modal defect fixed, 0 regressions, 102.1 KB web / 24.5 KB native < 999 KB).
   - Modal Overlay Fix: Fixed `.modal-overlay` CSS to `display: none` when inactive, resolving headless startup occlusion and stuck modal detection.

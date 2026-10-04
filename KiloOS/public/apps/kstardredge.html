@@ -1435,6 +1435,18 @@
             border: 1px solid var(--border-panel);
             border-radius: 2px;
             overflow: hidden;
+        }
+
+        .contract-progress-fill {
+            height: 100%;
+            background: var(--accent-cyan);
+            transition: width 0.3s ease;
+        }
+
+        .contract-progress-fill.ready {
+            background: var(--accent-emerald);
+        }
+
         /* Phase 12: Void Pirate Defense & Weapon Systems Modal */
         .btn.btn-defense {
             border-color: #ef4444;
@@ -1785,6 +1797,9 @@
         <div class="header-actions">
             <button class="btn-hdr" id="btnHdrSave" title="Quicksave flight state to local storage (F5)">💾 SAVE (F5)</button>
             <button class="btn-hdr" id="btnHdrLoad" title="Quickload saved flight state (F9)">⚡ LOAD (F9)</button>
+            <button class="btn-hdr" id="btnHdrExport" title="Export flight ledger & salvage logs to JSON file">📤 EXPORT</button>
+            <button class="btn-hdr" id="btnHdrImport" title="Import flight record from JSON file">📥 IMPORT</button>
+            <input type="file" id="fileInputImport" accept=".json" style="display: none;">
             <button class="btn-hdr" id="btnHdrTutorial" title="View Captain's Induction / Operations Briefing">ℹ️ BRIEFING</button>
         </div>
     </header>
@@ -4593,6 +4608,11 @@
                 if (el && el.classList.contains('open')) {
                     el.classList.remove('open');
                     closedAny = true;
+                    if (id === 'tutorialModal') {
+                        try {
+                            localStorage.setItem('kstardredge_tutorialSeen', '1');
+                        } catch (e) {}
+                    }
                 }
             });
             return closedAny;
@@ -4810,6 +4830,42 @@
                 console.error('Quickload error:', err);
                 showToast("PARSE ERROR: Failed to restore flight state", "error");
             }
+        }
+
+        function exportGameJSON() {
+            quicksaveGame();
+            const raw = localStorage.getItem('kstardredge_quicksave');
+            if (!raw) return;
+            const blob = new Blob([raw], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `kstardredge_flightlog_${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast("FLIGHT LEDGER EXPORTED TO JSON", "success");
+        }
+
+        function importGameJSON(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const parsed = JSON.parse(event.target.result);
+                    if (!parsed || !parsed.version) {
+                        showToast("INVALID FLIGHT RECORD JSON", "error");
+                        return;
+                    }
+                    localStorage.setItem('kstardredge_quicksave', JSON.stringify(parsed));
+                    quickloadGame();
+                    showToast("FLIGHT LOG RESTORED FROM FILE", "success");
+                } catch (err) {
+                    showToast("ERROR PARSING JSON FILE", "error");
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
         }
 
         // Initialize Procedural Starfield & Asteroid Field
@@ -6999,8 +7055,14 @@
             }
             if (e.code === 'KeyD') {
                 const stationModal = document.getElementById('stationModal');
-                if (stationModal.classList.contains('open')) closeStationModal();
-                else openStationModal();
+                if (stationModal && stationModal.classList.contains('open')) {
+                    closeStationModal();
+                } else if (state.station) {
+                    const dist = Math.hypot(state.station.x - state.ship.x, state.station.y - state.ship.y);
+                    if (state.station.docked || dist < 280) {
+                        openStationModal();
+                    }
+                }
             }
             if (document.getElementById('stationModal').classList.contains('open')) {
                 if (e.code === 'Digit1') serviceRepairHull();
@@ -7544,12 +7606,32 @@
         if (btnHdrSave) btnHdrSave.addEventListener('click', quicksaveGame);
         const btnHdrLoad = document.getElementById('btnHdrLoad');
         if (btnHdrLoad) btnHdrLoad.addEventListener('click', quickloadGame);
+        const btnHdrExport = document.getElementById('btnHdrExport');
+        if (btnHdrExport) btnHdrExport.addEventListener('click', exportGameJSON);
+        const btnHdrImport = document.getElementById('btnHdrImport');
+        const fileInputImport = document.getElementById('fileInputImport');
+        if (btnHdrImport && fileInputImport) {
+            btnHdrImport.addEventListener('click', () => fileInputImport.click());
+            fileInputImport.addEventListener('change', importGameJSON);
+        }
         const btnHdrTutorial = document.getElementById('btnHdrTutorial');
         if (btnHdrTutorial) btnHdrTutorial.addEventListener('click', openTutorialModal);
         const btnCloseTutorial = document.getElementById('btnCloseTutorial');
         if (btnCloseTutorial) btnCloseTutorial.addEventListener('click', closeTutorialModal);
         const btnDismissTutorial = document.getElementById('btnDismissTutorial');
         if (btnDismissTutorial) btnDismissTutorial.addEventListener('click', closeTutorialModal);
+
+        // Modal backdrop click dismissal
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    overlay.classList.remove('open');
+                    if (overlay.id === 'tutorialModal') {
+                        try { localStorage.setItem('kstardredge_tutorialSeen', '1'); } catch (err) {}
+                    }
+                }
+            });
+        });
 
         function switchHelpTab(tabIdx) {
             const tabBtns = document.querySelectorAll('.help-tab-btn');

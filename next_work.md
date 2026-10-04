@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: "kweb://asm-temple (x86 Opcode Shrine)"
   kilo_graphics: "KQuest (Phase 3: Monster & Boss Bestiary)"
-  kilo_tester: KStarDredge
+  kilo_tester: KStarship
   kilo_usability: KMystery
   kilo_qa: KNote
   kilo_expander: KPong
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: "KQuest (Phase 2: Dungeon & Hub Backgrounds)"
-  timestamp: "2026-10-04T03:32:00-07:00"
+  agent: kilo-tester
+  app: KStarDredge
+  timestamp: "2026-10-04T03:45:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KQuest` (Phase 4: Town NPCs & Combat FX), `KQuest` (Phase 5: Performance & Win32 Parity), `KRogue`, `KColosseum`, `KAbyss`, `KSpace`, `KPac`, `KBreakout`, `KAsteroids` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phase 1, KQuest Phase 2)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KStarDredge`
+- **Current Target**: `KStarship`
 - **Upcoming Queue**:
-  `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio`, `KSanctuary` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript)*.
+  `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio`, `KSanctuary` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KMystery`
@@ -230,6 +230,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T03:45:00-07:00 — kilo-tester: KStarDredge (Interactive UI Audit, CSS Brace Fix, JSON Import/Export & Backdrop Dismissal)**
+  - Status: PASS ✅ (3 issues fixed, 0 regressions, clean builds, 485.6 KB web / 276.0 KB native < 999 KB).
+  - CSS Syntax Repair: Fixed unclosed `.contract-progress-bar` brace and added `.contract-progress-fill` styling, resolving startup audit failure.
+  - Modal Dismissals: Added backdrop-click dismissal across all 11 modal overlays; fixed tutorialSeen flag preservation on Escape close.
+  - Controls & Storage: Added JSON flight ledger export & import in header; tuned KeyD to prioritize docking proximity over flight yaw.
+  - Verification: MSVC clean (`KStarDredge.exe` 276.0 KB); Vite build clean in 272ms; test_app_startup PASS; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T03:32:00-07:00 — kilo-graphics: KQuest (Phase 2: Dungeon & Hub Environmental Backgrounds)**
   - Status: PASS ✅ (0 regressions, 0 glints, 298.7 KB web / 97.0 KB native < 999 KB ceiling, Vite clean).
   - Imagen 3 Background Generation: Generated 12 atmospheric 16:9 side-scrolling environmental plates for Town Hub and all 18 Dungeon Biomes.
@@ -261,11 +268,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Mandate 12 Connect Gate: Enforced offline default on Mesh Radar; gated global Firebase RTDB telemetry behind explicit Connect/Disconnect toggle.
   - Toast & TINAG Polish: Re-anchored toasts to bottom right above footer eliminating button occlusion; cleaned non-diegetic `#arg-leaks` and meta-spoilers in C.
   - Verification: MSVC native clean (`KNet.exe` 45.1 KB); Vite build clean in 265ms; CDP startup PASS; security_lint 100% PASS; check_icons 100% PASS.
-
-- **2026-10-04T02:08:00-07:00 — kilo-usability: KMedia (UI/UX Ergonomics, Mandate 12 Connect Gate, Collapsible Sidebar & HiDPI Polish)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 143.9 KB web / 22.0 KB native < 999 KB ceiling).
-  - Mandate 12 Connect Gate: Removed multiplayer autostart; defaulted to offline mode; added explicit Connect/Disconnect toggle for Watch Party.
-  - Toast Occlusion Remediation: Re-anchored toasts safely above visualizer canvas, eliminating control and input overlap.
-  - Collapsible Sidebar & Layout: Added Sidebar toggle button + Tab hotkey with responsive layout; tuned default window size to 1000x700.
-  - HiDPI Canvas & Native Scaling: Added ResizeObserver for instant crisp visualizer scaling; added WM_SIZE and WM_GETMINMAXINFO to native Win32 C.
-  - Verification: MSVC clean (`KMedia.exe` 22.0 KB); Vite build clean in 283ms; test_app_startup PASS; security_lint 100% PASS; check_icons 100% PASS.
