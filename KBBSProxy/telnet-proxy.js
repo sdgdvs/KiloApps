@@ -13,14 +13,15 @@ const wss = new WebSocketServer({ server });
 
 wss.on('connection', (ws, req) => {
     const url = new URL(req.url, `http://${req.headers.host}`);
-    const host = url.searchParams.get('host');
-    const port = parseInt(url.searchParams.get('port') || '23', 10);
+    let host = url.searchParams.get('host');
+    let port = parseInt(url.searchParams.get('port') || '23', 10);
 
     const origin = req.headers.origin || '';
-    const isLocalhost = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
-    const isKiloApps = origin === 'https://kiloapps.web.app';
+    const isLocalhost = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:') || origin.startsWith('https://localhost:') || origin.startsWith('https://127.0.0.1:');
+    const isKiloApps = origin === 'https://kiloapps.web.app' || origin === 'https://kiloapps.firebaseapp.com' || origin.endsWith('.web.app') || origin.endsWith('.firebaseapp.com');
+    const isAllowedOrigin = isLocalhost || isKiloApps || !origin || origin === 'null';
 
-    if (!isLocalhost && !isKiloApps) {
+    if (!isAllowedOrigin) {
         console.error(`Connection rejected: Invalid Origin '${origin}'`);
         ws.close(1008, 'Origin not allowed');
         return;
@@ -30,6 +31,12 @@ wss.on('connection', (ws, req) => {
         console.error('Connection rejected: Missing host parameter');
         ws.close(1008, 'Missing host parameter');
         return;
+    }
+
+    if (host.includes(':')) {
+        const parts = host.split(':');
+        host = parts[0];
+        port = parseInt(parts[1], 10) || port;
     }
 
     console.log(`[PROXY] Connect request from ${origin} to ${host}:${port}...`);

@@ -137,7 +137,7 @@
     <div id="toastContainer"></div>
     <div class="conn-bar">
         <span>Host:</span>
-        <input type="text" id="host" placeholder="Address..." value="" onkeydown="if(event.key==='Enter') { initAudio(); toggleConnect(); }">
+        <input type="text" id="host" placeholder="e.g. vert.synchro.net or telehack.com" value="vert.synchro.net" onkeydown="if(event.key==='Enter') { initAudio(); toggleConnect(); }">
         <span>Port:</span>
         <input type="text" id="port" value="23" onkeydown="if(event.key==='Enter') { initAudio(); toggleConnect(); }">
         <label style="color: #d4d4d8; display: flex; align-items: center; gap: 4px; font-size: 11px; text-transform: uppercase; font-weight: 600; cursor: pointer; user-select: none; margin: 0 2px;">
@@ -188,10 +188,11 @@
                     <span>Multi-Node Dialing Directory Manager</span>
                     <button class="modal-close" onclick="closeDialingDir()">X</button>
                 </div>
-                <div style="padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; gap: 8px; background: rgba(0,0,0,0.3);">
-                    <input type="text" id="dirSearchInput" placeholder="Search BBS by name, host, or tag (#games, #retro)..." style="flex:1; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px 10px; border-radius:6px; outline:none;" oninput="renderDirList()">
+                <div style="padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; gap: 8px; background: rgba(0,0,0,0.3); flex-wrap: wrap;">
+                    <input type="text" id="dirSearchInput" placeholder="Search BBS by name, host, or tag (#games, #retro)..." style="flex:1; min-width:180px; background:#09090b; border:1px solid #27272a; color:#fff; padding:6px 10px; border-radius:6px; outline:none;" oninput="renderDirList()">
                     <button class="btn-secondary" onclick="document.getElementById('dirImportUpload').click()">Import JSON</button>
                     <button class="btn-secondary" onclick="exportDirectoryJSON()">Export JSON</button>
+                    <button class="btn-secondary" onclick="resetDefaultDirectory()">Restore Defaults</button>
                 </div>
                 <div style="flex: 1; display: flex; overflow: hidden;">
                     <div style="width: 260px; border-right: 1px solid #27272a; overflow-y: auto;" id="dirList"></div>
@@ -722,11 +723,16 @@ SEND:"secret\r"'></textarea>
         loadMsgBase();
         loadDoorState();
 
-        // Restore last host/port
+        // Restore last host/port (with fallback to live default if empty or dead)
         const lastHost = safeGetStorage('kbbs_last_host');
         const lastPort = safeGetStorage('kbbs_last_port');
-        if (lastHost) document.getElementById('host').value = lastHost;
+        if (lastHost && lastHost !== 'bbs.synchro.net' && lastHost !== 'bcrbbs.com') {
+            document.getElementById('host').value = lastHost;
+        } else {
+            document.getElementById('host').value = 'vert.synchro.net';
+        }
         if (lastPort) document.getElementById('port').value = lastPort;
+        else document.getElementById('port').value = '23';
 
         // Initialize terminal screen buffer and display welcome banner
         initScreen();
@@ -954,42 +960,182 @@ SEND:"secret\r"'></textarea>
     // ─── Connection Management ───
     const PROXY_URL = 'wss://kbbs-proxy-751490709804.us-central1.run.app';
 
+    // ─── Telnet Protocol State & IAC Negotiation ───
+    const TELNET_SE    = 240;
+    const TELNET_NOP   = 241;
+    const TELNET_DM    = 242;
+    const TELNET_BRK   = 243;
+    const TELNET_IP    = 244;
+    const TELNET_AO    = 245;
+    const TELNET_AYT   = 246;
+    const TELNET_EC    = 247;
+    const TELNET_EL    = 248;
+    const TELNET_GA    = 249;
+    const TELNET_SB    = 250;
+    const TELNET_WILL  = 251;
+    const TELNET_WONT  = 252;
+    const TELNET_DO    = 253;
+    const TELNET_DONT  = 254;
+    const TELNET_IAC   = 255;
+
+    const TELNET_OPT_ECHO   = 1;
+    const TELNET_OPT_SGA    = 3;
+    const TELNET_OPT_TTYPE  = 24;
+    const TELNET_OPT_NAWS   = 31;
+
+    let telnetState = 0; // 0: DATA, 1: IAC, 2: WILL, 3: WONT, 4: DO, 5: DONT, 6: SB, 7: SB_DATA
+    let telnetSBOption = 0;
+    let telnetSBData = [];
+
+    function sendTelnetBytes(bytesArr) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(new Uint8Array(bytesArr));
+        }
+    }
+
+    function processTelnetStream(uint8) {
+        let textChunk = "";
+        for (let i = 0; i < uint8.length; i++) {
+            let b = uint8[i];
+            if (telnetState === 0) {
+                if (b === TELNET_IAC) {
+                    telnetState = 1;
+                } else {
+                    textChunk += String.fromCharCode(b);
+                }
+            } else if (telnetState === 1) { // Received IAC
+                if (b === TELNET_WILL) telnetState = 2;
+                else if (b === TELNET_WONT) telnetState = 3;
+                else if (b === TELNET_DO) telnetState = 4;
+                else if (b === TELNET_DONT) telnetState = 5;
+                else if (b === TELNET_SB) { telnetState = 6; telnetSBData = []; }
+                else if (b === TELNET_IAC) {
+                    textChunk += String.fromCharCode(255);
+                    telnetState = 0;
+                } else {
+                    telnetState = 0;
+                }
+            } else if (telnetState === 2) { // Server offers WILL <opt>
+                if (b === TELNET_OPT_SGA || b === TELNET_OPT_ECHO) {
+                    sendTelnetBytes([TELNET_IAC, TELNET_DO, b]);
+                } else {
+                    sendTelnetBytes([TELNET_IAC, TELNET_DONT, b]);
+                }
+                telnetState = 0;
+            } else if (telnetState === 3) { // Server sent WONT <opt>
+                sendTelnetBytes([TELNET_IAC, TELNET_DONT, b]);
+                telnetState = 0;
+            } else if (telnetState === 4) { // Server requested DO <opt>
+                if (b === TELNET_OPT_NAWS) {
+                    sendTelnetBytes([
+                        TELNET_IAC, TELNET_WILL, TELNET_OPT_NAWS,
+                        TELNET_IAC, TELNET_SB, TELNET_OPT_NAWS,
+                        0, COLS, 0, ROWS,
+                        TELNET_IAC, TELNET_SE
+                    ]);
+                } else if (b === TELNET_OPT_TTYPE) {
+                    sendTelnetBytes([TELNET_IAC, TELNET_WILL, TELNET_OPT_TTYPE]);
+                } else if (b === TELNET_OPT_SGA) {
+                    sendTelnetBytes([TELNET_IAC, TELNET_WILL, TELNET_OPT_SGA]);
+                } else {
+                    sendTelnetBytes([TELNET_IAC, TELNET_WONT, b]);
+                }
+                telnetState = 0;
+            } else if (telnetState === 5) { // Server requested DONT <opt>
+                sendTelnetBytes([TELNET_IAC, TELNET_WONT, b]);
+                telnetState = 0;
+            } else if (telnetState === 6) { // IAC SB <opt>
+                telnetSBOption = b;
+                telnetState = 7;
+            } else if (telnetState === 7) { // Subnegotiation data
+                if (b === TELNET_IAC) {
+                    // SE expected next
+                } else if (b === TELNET_SE) {
+                    if (telnetSBOption === TELNET_OPT_TTYPE && telnetSBData.length > 0 && telnetSBData[0] === 1) {
+                        sendTelnetBytes([
+                            TELNET_IAC, TELNET_SB, TELNET_OPT_TTYPE, 0,
+                            65, 78, 83, 73, // 'A', 'N', 'S', 'I'
+                            TELNET_IAC, TELNET_SE
+                        ]);
+                    }
+                    telnetState = 0;
+                } else {
+                    telnetSBData.push(b);
+                }
+            }
+        }
+        return textChunk;
+    }
+
     function toggleConnect(forceConnect) {
         if (ws) { ws.close(); if (forceConnect !== true) return; ws = null; }
-        const host = document.getElementById('host').value.trim();
-        const port = document.getElementById('port').value.trim();
+        let host = document.getElementById('host').value.trim();
+        let port = document.getElementById('port').value.trim();
         if (!host) {
-            showToast("Please enter a BBS host or pick one from Directory [D]", "warning");
-            return;
+            host = 'vert.synchro.net';
+            port = '23';
+            document.getElementById('host').value = host;
+            document.getElementById('port').value = port;
         }
+
+        // Parse host:port if user pasted or typed it into the host box
+        if (host.includes(':') && !host.startsWith('ws://') && !host.startsWith('wss://')) {
+            let parts = host.split(':');
+            host = parts[0].trim();
+            if (parts[1]) {
+                port = parts[1].trim();
+                document.getElementById('port').value = port;
+            }
+            document.getElementById('host').value = host;
+        }
+
         safeSetStorage('kbbs_last_host', host);
         safeSetStorage('kbbs_last_port', port);
 
         let url = (host.startsWith('ws://') || host.startsWith('wss://')) ? host : `${PROXY_URL}/?host=${encodeURIComponent(host)}&port=${encodeURIComponent(port || '23')}`;
 
-        initScreen(); render(); setStatus('connecting', 'Connecting to ' + host + '...');
+        initScreen();
+        telnetState = 0;
+        telnetSBData = [];
+        render();
+        setStatus('connecting', 'Connecting to ' + host + ':' + (port || '23') + '...');
         bytesRx = 0; bytesTx = 0; updateBytes();
 
         try {
             ws = new WebSocket(url);
             ws.binaryType = 'arraybuffer';
             ws.onopen = () => {
-                setStatus('connected', 'Connected to ' + host);
+                setStatus('connected', 'Connected to ' + host + ':' + (port || '23'));
                 document.getElementById('btnConn').textContent = 'Disconnect';
-                canvas.focus(); playChime('connect');
+                canvas.focus();
+                playChime('connect');
                 triggerAutoLoginOnConnect();
             };
             ws.onmessage = (e) => {
-                let text = (e.data instanceof ArrayBuffer) ? new TextDecoder("ascii").decode(e.data) : e.data;
-                bytesRx += text.length; updateBytes();
-                rxQueue += text;
+                let data = e.data;
+                let text = "";
+                if (data instanceof ArrayBuffer) {
+                    text = processTelnetStream(new Uint8Array(data));
+                } else if (typeof data === 'string') {
+                    let arr = new Uint8Array(data.length);
+                    for (let i = 0; i < data.length; i++) arr[i] = data.charCodeAt(i) & 0xFF;
+                    text = processTelnetStream(arr);
+                }
+                if (text.length > 0) {
+                    bytesRx += text.length;
+                    updateBytes();
+                    rxQueue += text;
+                }
             };
-            ws.onclose = () => {
-                setStatus('disconnected', 'Disconnected');
+            ws.onclose = (e) => {
+                let reason = e.reason ? ` (${e.reason})` : '';
+                if (e.code === 1011) reason = ' (Target Offline / Host Unreachable)';
+                else if (e.code === 1008) reason = ' (Access Denied / Origin Rejected)';
+                setStatus('disconnected', 'Disconnected' + reason);
                 document.getElementById('btnConn').textContent = 'Connect';
                 ws = null;
             };
-            ws.onerror = () => setStatus('disconnected', 'Connection error');
+            ws.onerror = () => setStatus('disconnected', 'Connection Error (Target may be offline or port unreachable)');
         } catch (err) { setStatus('disconnected', 'Error: ' + err.message); ws = null; }
     }
 
@@ -1003,27 +1149,154 @@ SEND:"secret\r"'></textarea>
 
     // ─── 1. Multi-Node Dialing Directory Manager ───
     const DEFAULT_DIR = [
-        { name: "Synchronet BBS", host: "bbs.synchro.net", port: "23", type: "telnet", autoLogin: "login:~guest\r", tags: "#retro #popular", nodes: [
-            { id: 1, name: "Node 1 - Telnet Main", host: "bbs.synchro.net", port: "23", type: "telnet" },
-            { id: 2, name: "Node 2 - SSH Gate", host: "bbs.synchro.net", port: "22", type: "telnet" },
-            { id: 3, name: "Node 3 - Web Gateway", host: "wss://bbs.synchro.net/ws", type: "ws" }
-        ]},
-        { name: "TeleHack Matrix", host: "telehack.com", port: "23", type: "telnet", autoLogin: "", tags: "#matrix #shell", nodes: [
-            { id: 1, name: "Node 1 - Primary Matrix", host: "telehack.com", port: "23", type: "telnet" }
-        ]},
-        { name: "Black Country Rock", host: "bcrbbs.com", port: "23", type: "telnet", autoLogin: "", tags: "#music #games", nodes: [
-            { id: 1, name: "Node 1 - Primary Line", host: "bcrbbs.com", port: "23", type: "telnet" }
-        ]}
+        { 
+            name: "Vertrauen (Synchronet HQ)", 
+            host: "vert.synchro.net", 
+            port: "23", 
+            type: "telnet", 
+            autoLogin: "", 
+            tags: "#synchronet #retro #doors #popular", 
+            nodes: [
+                { id: 1, name: "Node 1 - Primary Telnet", host: "vert.synchro.net", port: "23", type: "telnet" },
+                { id: 2, name: "Node 2 - Alternate Telnet", host: "vert.synchro.net", port: "2323", type: "telnet" }
+            ]
+        },
+        { 
+            name: "TeleHack Matrix", 
+            host: "telehack.com", 
+            port: "23", 
+            type: "telnet", 
+            autoLogin: "", 
+            tags: "#matrix #shell #sim #retro", 
+            nodes: [
+                { id: 1, name: "Node 1 - Primary Matrix", host: "telehack.com", port: "23", type: "telnet" }
+            ]
+        },
+        { 
+            name: "SDF Public Access UNIX", 
+            host: "sdf.org", 
+            port: "23", 
+            type: "telnet", 
+            autoLogin: "", 
+            tags: "#unix #shell #vintage #usenet", 
+            nodes: [
+                { id: 1, name: "Node 1 - Primary SDF Line", host: "sdf.org", port: "23", type: "telnet" }
+            ]
+        },
+        { 
+            name: "Bottomless Abyss BBS", 
+            host: "bbs.bottomlessabyss.net", 
+            port: "2023", 
+            type: "telnet", 
+            autoLogin: "", 
+            tags: "#games #doors #retro #amiga", 
+            nodes: [
+                { id: 1, name: "Node 1 - Main System", host: "bbs.bottomlessabyss.net", port: "2023", type: "telnet" }
+            ]
+        },
+        { 
+            name: "Electronic Chicken BBS", 
+            host: "bbs.electronicchicken.com", 
+            port: "23", 
+            type: "telnet", 
+            autoLogin: "", 
+            tags: "#synchronet #games #ansi #doors", 
+            nodes: [
+                { id: 1, name: "Node 1 - Main Telnet", host: "bbs.electronicchicken.com", port: "23", type: "telnet" }
+            ]
+        },
+        { 
+            name: "The Keep BBS", 
+            host: "bbs.thekeep.net", 
+            port: "23", 
+            type: "telnet", 
+            autoLogin: "", 
+            tags: "#vintage #commodore #ansi", 
+            nodes: [
+                { id: 1, name: "Node 1 - Main Line", host: "bbs.thekeep.net", port: "23", type: "telnet" }
+            ]
+        },
+        { 
+            name: "Borderline BBS", 
+            host: "borderlinebbs.dyndns.org", 
+            port: "23", 
+            type: "telnet", 
+            autoLogin: "", 
+            tags: "#amiga #retro #scene #art", 
+            nodes: [
+                { id: 1, name: "Node 1 - Primary Line", host: "borderlinebbs.dyndns.org", port: "23", type: "telnet" }
+            ]
+        }
     ];
     let dirEntries = [];
     let selectedDirIndex = -1;
 
-    function loadDirectory() {
-        const saved = safeGetStorage('kbbs_directory_v2');
-        if (saved) { try { dirEntries = JSON.parse(saved); } catch(e){ dirEntries = [...DEFAULT_DIR]; } }
-        else dirEntries = [...DEFAULT_DIR];
+    function repairDeadEntries() {
+        let changed = false;
+        dirEntries.forEach(e => {
+            if (e.host === 'bbs.synchro.net') {
+                e.host = 'vert.synchro.net';
+                if (e.name && e.name.includes('Synchronet')) e.name = 'Vertrauen (Synchronet HQ)';
+                changed = true;
+            } else if (e.host === 'bcrbbs.com') {
+                e.name = 'SDF Public Access UNIX';
+                e.host = 'sdf.org';
+                e.port = '23';
+                e.tags = '#unix #shell #vintage #usenet';
+                changed = true;
+            }
+            if (e.nodes) {
+                e.nodes.forEach(n => {
+                    if (n.host === 'bbs.synchro.net') { n.host = 'vert.synchro.net'; changed = true; }
+                    if (n.host === 'bcrbbs.com') { n.host = 'sdf.org'; changed = true; }
+                });
+            }
+        });
+        const currentHosts = dirEntries.map(e => (e.host || '').toLowerCase());
+        DEFAULT_DIR.forEach(def => {
+            if (!currentHosts.includes(def.host.toLowerCase())) {
+                dirEntries.push(JSON.parse(JSON.stringify(def)));
+                changed = true;
+            }
+        });
+        if (changed) saveDirectory();
     }
-    function saveDirectory() { safeSetStorage('kbbs_directory_v2', JSON.stringify(dirEntries)); }
+
+    function resetDefaultDirectory() {
+        if (confirm("Reset dialing directory to recommended online BBS nodes?")) {
+            dirEntries = JSON.parse(JSON.stringify(DEFAULT_DIR));
+            saveDirectory();
+            selectEntry(0);
+            renderDirList();
+            showToast("Dialing directory reset to tested online defaults!", "success");
+        }
+    }
+
+    function loadDirectory() {
+        const saved = safeGetStorage('kbbs_directory_v3');
+        if (saved) {
+            try {
+                dirEntries = JSON.parse(saved);
+                repairDeadEntries();
+            } catch(e) {
+                dirEntries = JSON.parse(JSON.stringify(DEFAULT_DIR));
+            }
+        } else {
+            const oldSaved = safeGetStorage('kbbs_directory_v2');
+            if (oldSaved) {
+                try {
+                    dirEntries = JSON.parse(oldSaved);
+                    repairDeadEntries();
+                    safeSetStorage('kbbs_directory_v3', JSON.stringify(dirEntries));
+                } catch(e) {
+                    dirEntries = JSON.parse(JSON.stringify(DEFAULT_DIR));
+                }
+            } else {
+                dirEntries = JSON.parse(JSON.stringify(DEFAULT_DIR));
+            }
+        }
+    }
+    function saveDirectory() { safeSetStorage('kbbs_directory_v3', JSON.stringify(dirEntries)); }
 
     function showDialingDir() {
         document.getElementById('dialingDir').style.display = 'flex';
@@ -1117,13 +1390,25 @@ SEND:"secret\r"'></textarea>
     function connectSelected() {
         if (selectedDirIndex >= 0 && selectedDirIndex < dirEntries.length) {
             let e = dirEntries[selectedDirIndex];
-            document.getElementById('host').value = e.host;
-            document.getElementById('port').value = e.port;
-            safeSetStorage('kbbs_last_host', e.host);
-            safeSetStorage('kbbs_last_port', e.port);
-            document.getElementById('dirAutoLogin').value = e.autoLogin || '';
-            closeDialingDir(); toggleConnect(true);
-            showToast(`Dialing ${e.name} (${e.host}:${e.port})...`, "info");
+            let host = document.getElementById('dirHost').value.trim() || e.host;
+            let port = document.getElementById('dirPort').value.trim() || e.port || '23';
+            let autoLogin = document.getElementById('dirAutoLogin').value;
+
+            // Handle host:port syntax if present
+            if (host.includes(':') && !host.startsWith('ws://') && !host.startsWith('wss://')) {
+                let parts = host.split(':');
+                host = parts[0].trim();
+                port = parts[1].trim() || port;
+            }
+
+            document.getElementById('host').value = host;
+            document.getElementById('port').value = port;
+            safeSetStorage('kbbs_last_host', host);
+            safeSetStorage('kbbs_last_port', port);
+            document.getElementById('dirAutoLogin').value = autoLogin || '';
+            closeDialingDir();
+            toggleConnect(true);
+            showToast(`Dialing ${e.name} (${host}:${port})...`, "info");
         }
     }
 
@@ -1139,6 +1424,7 @@ SEND:"secret\r"'></textarea>
         reader.onload = (evt) => {
             try {
                 dirEntries = JSON.parse(evt.target.result);
+                repairDeadEntries();
                 saveDirectory(); renderDirList();
                 showToast(`Directory imported (${dirEntries.length} BBS entries)!`, "success");
             } catch(err) {
@@ -1147,9 +1433,81 @@ SEND:"secret\r"'></textarea>
         };
         reader.readAsText(file);
     }
+
+    let pingWs = null;
     function pingCurrentNode() {
-        document.getElementById('nodeStatusText').textContent = "Node Status: Ping 24ms (Online)";
-        showToast("Node ping: 24ms response (Online)", "success");
+        let host = document.getElementById('dirHost').value.trim();
+        let port = document.getElementById('dirPort').value.trim() || '23';
+        if (!host) {
+            showToast("Please enter or select a host to ping.", "warning");
+            return;
+        }
+        if (host.includes(':') && !host.startsWith('ws://') && !host.startsWith('wss://')) {
+            let p = host.split(':');
+            host = p[0].trim();
+            port = p[1].trim() || port;
+        }
+
+        const statusEl = document.getElementById('nodeStatusText');
+        statusEl.textContent = `Node Status: Pinging ${host}:${port}...`;
+        statusEl.style.color = '#38bdf8';
+
+        if (pingWs) { try { pingWs.close(); } catch(e){} pingWs = null; }
+
+        let url = (host.startsWith('ws://') || host.startsWith('wss://')) ? host : `${PROXY_URL}/?host=${encodeURIComponent(host)}&port=${encodeURIComponent(port)}`;
+        const start = Date.now();
+        let finished = false;
+
+        try {
+            pingWs = new WebSocket(url);
+            const timeoutTimer = setTimeout(() => {
+                if (!finished) {
+                    finished = true;
+                    if (pingWs) { try { pingWs.close(); } catch(e){} pingWs = null; }
+                    statusEl.textContent = `Node Status: Timeout (${host}:${port} unreachable)`;
+                    statusEl.style.color = '#ef4444';
+                    showToast(`Ping timeout: ${host}:${port} unreachable`, "error");
+                }
+            }, 5000);
+
+            pingWs.onopen = () => {
+                if (finished) return;
+                finished = true;
+                clearTimeout(timeoutTimer);
+                const rtt = Date.now() - start;
+                statusEl.textContent = `Node Status: Online (RTT ${rtt}ms)`;
+                statusEl.style.color = '#10b981';
+                showToast(`Node ${host}:${port} is ONLINE (${rtt}ms)`, "success");
+                try { pingWs.close(); } catch(e){}
+                pingWs = null;
+            };
+
+            pingWs.onerror = () => {
+                if (finished) return;
+                finished = true;
+                clearTimeout(timeoutTimer);
+                statusEl.textContent = `Node Status: Connection Error (${host}:${port})`;
+                statusEl.style.color = '#ef4444';
+                showToast(`Node ${host}:${port} connection failed`, "error");
+                pingWs = null;
+            };
+
+            pingWs.onclose = (e) => {
+                if (finished) return;
+                finished = true;
+                clearTimeout(timeoutTimer);
+                let msg = (e.code === 1011) ? "Host Unreachable / DNS Error" : (e.code === 1008 ? "Origin Disallowed" : "Closed");
+                statusEl.textContent = `Node Status: Offline (${msg})`;
+                statusEl.style.color = '#ef4444';
+                showToast(`Node ${host}:${port}: ${msg}`, "error");
+                pingWs = null;
+            };
+        } catch(err) {
+            finished = true;
+            statusEl.textContent = `Node Status: Error (${err.message})`;
+            statusEl.style.color = '#ef4444';
+            showToast(`Ping error: ${err.message}`, "error");
+        }
     }
 
     // ─── 2. Session Log Capture & Export (ANSI/TXT) ───
