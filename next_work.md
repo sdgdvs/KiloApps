@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://warez"
-  kilo_graphics: KPac
+  kilo_graphics: KBreakout
   kilo_tester: KStarForge
   kilo_usability: KPomodoro
   kilo_qa: KTimer
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-creator
-  app: "kweb://webring"
-  timestamp: "2026-10-04T16:10:00-07:00"
+  agent: kilo-graphics
+  app: KPac
+  timestamp: "2026-10-04T16:25:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KPac`
+- **Current Target**: `KBreakout`
 - **Upcoming Queue**:
-  `KBreakout`, `KAsteroids`, `KQuest`, `KRogue`, `KColosseum`, `KAbyss`, `KSpace` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
+  `KAsteroids`, `KQuest`, `KRogue`, `KColosseum`, `KAbyss`, `KSpace`, `KPac` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5, KSpace)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KStarForge`
@@ -221,6 +221,11 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T16:25:00-07:00 — kilo-graphics: KPac**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KPac
+  - Glint & Flare Purge: Purged rotating specular flare on Relic Stone and orbiting spark on void rift.
+  - Verification: MSVC clean (`KPac.exe` 51.2 KB); Vite clean in 328ms (`kpac.html` 130.5 KB < 999 KB); check_icons & security_lint 100% PASS.
+
 - **2026-10-04T16:10:00-07:00 — kilo-creator: kweb://webring (Ring Surfer, Ringmaster Validator, 56k Modem & Gateway-07 Decryptor)**
   - Status: PASS ✅ (0 regressions, clean builds, 270.3 KB web < 999 KB ceiling).
   - Ring Surfer & Auto-Tour (Tab 8): Built Netscape 4.7 viewport cruiser with dwell countdown, 56k dialup handshake audio & bookmarks.html.
@@ -252,12 +257,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener pausing intervals, suspending audio, and eliminating timer drift.
   - Double Modal Guard: Prevented stacked dialogs between Help and Tutorial onboarding; added clearance padding for help overlay.
   - Verification: `test_app_startup.py` PASS; MSVC clean (`KTimer.exe` 32.2 KB); Vite clean in 315ms; `security_lint.py` 100% PASS.
-
-- **2026-10-04T14:52:00-07:00 — kilo-tester: KTask (Interactive UI Audit, CSS Brace Balance & Modal Dismissal Fixes)**
-  - Status: PASS ✅ (2 issues, 2 fixed; 175.8 KB web / 31.2 KB native < 999 KB ceiling).
-  - Static CSS Balance: Fixed unclosed `.help-kbd` CSS brace resolving headless cascade parser failure.
-  - Startup Modal & Dismissal: Corrected `.modal-overlay` default `display: none` and added explicit IDs / `modal-close` classes across all 4 dialogs.
-  - Interactive UI Audit: Audited 114 interactive controls, shortcuts, process trees, CPU affinity presets, and storage persistence.
-  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (114 elements, 0 err); MSVC clean (`KTask.exe` 31.2 KB); Vite clean in 440ms; security_lint 100% PASS.
 
 

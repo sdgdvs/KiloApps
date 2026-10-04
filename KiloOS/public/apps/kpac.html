@@ -2249,12 +2249,6 @@
           let p = Math.sin(frameCount * 0.2) * 2;
           ctx.save();
           ctx.translate(cx, cy);
-          // Rotating specular flare
-          ctx.strokeStyle = 'rgba(255, 215, 0, 0.7)'; ctx.lineWidth = 1.5;
-          ctx.beginPath();
-          ctx.moveTo(-10, 0); ctx.lineTo(10, 0);
-          ctx.moveTo(0, -10); ctx.lineTo(0, 10);
-          ctx.stroke();
           // Faceted gem body
           ctx.fillStyle = '#ffd700';
           ctx.beginPath();
@@ -2565,10 +2559,7 @@
                   radV.addColorStop(0, '#000000'); radV.addColorStop(0.7, '#4a148c'); radV.addColorStop(1, '#7b1fa2');
                   ctx.fillStyle = radV;
                   ctx.beginPath(); ctx.arc(cx, cy, 5, 0, Math.PI * 2); ctx.fill();
-                  // Orbiting photon spark
-                  let angP = frameCount * 0.2;
-                  ctx.fillStyle = '#e1bee7';
-                  ctx.beginPath(); ctx.arc(cx + Math.cos(angP) * 6, cy + Math.sin(angP) * 6, 1.2, 0, Math.PI * 2); ctx.fill();
+
               } else if (tile === 10) {
                   // Phase Gateway: Oscillating Cyber Forcefield
                   let open = (frameCount % 40 < 20);
