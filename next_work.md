@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://darknet"
-  kilo_graphics: KColosseum
+  kilo_graphics: KAbyss
   kilo_tester: KSys
   kilo_usability: KGraph
   kilo_qa: KPing
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-creator
-  app: "kweb://deep-core"
-  timestamp: "2026-10-04T10:55:00-07:00"
+  agent: kilo-graphics
+  app: KColosseum
+  timestamp: "2026-10-04T11:04:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KColosseum`
+- **Current Target**: `KAbyss`
 - **Upcoming Queue**:
-  `KAbyss`, `KSpace`, `KPac`, `KBreakout`, `KAsteroids`, `KQuest`, `KRogue` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5)*.
+  `KSpace`, `KPac`, `KBreakout`, `KAsteroids`, `KQuest`, `KRogue`, `KColosseum` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KSys`
@@ -221,6 +221,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T11:04:00-07:00 — kilo-graphics: KColosseum**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KColosseum
+
 - **2026-10-04T10:55:00-07:00 — kilo-creator: kweb://deep-core (Subterranean Terminal Expansion & Passkey Secrecy Remediation)**
   - Status: PASS ✅ (0 regressions, clean builds, 149.5 KB web < 999 KB ceiling).
   - Mystery Preservation: Purged all cleartext leaks of master passkey and pre-climax meta-spoilers per TINAG standard.
@@ -253,11 +256,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener for background autosave snapshot and HiDPI canvas redraw.
   - Accessibility & Ergonomics: Added dialog ARIA semantics, Escape toast dismissal, and updated responsive footer wrapping for narrow viewports.
   - Verification: MSVC clean (`KHash.exe` 17.9 KB); Vite clean in 328ms; security_lint 100% PASS; check_icons 100% PASS.
-
-- **2026-10-04T09:54:00-07:00 — kilo-tester: KSynth (Interactive UI Audit, Toast Occlusion Remediation & ARCH-05)**
-  - Status: PASS ✅ (3 issues fixed, 0 regressions, clean builds, 163.2 KB web < 999 KB ceiling).
-  - Toast Occlusion Remediation: Re-anchored toast bar to top-center (50px) under header and added auto-dismissal on user interaction per Directive 189.
-  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener releasing active voices and auto-saving patch on tab hide.
-  - Preset Loading UX: Synchronized preset dropdown to custom patch indicator on JSON file import.
-  - Verification: Vite build clean in 316ms; test_app_startup PASS; security_lint 100% PASS; check_icons 100% PASS.
 

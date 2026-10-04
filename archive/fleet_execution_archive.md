@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T09:54:00-07:00 — kilo-tester: KSynth (Interactive UI Audit, Toast Occlusion Remediation & ARCH-05)**
+  - Status: PASS ✅ (3 issues fixed, 0 regressions, clean builds, 163.2 KB web < 999 KB ceiling).
+  - Toast Occlusion Remediation: Re-anchored toast bar to top-center (50px) under header and added auto-dismissal on user interaction per Directive 189.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener releasing active voices and auto-saving patch on tab hide.
+  - Preset Loading UX: Synchronized preset dropdown to custom patch indicator on JSON file import.
+  - Verification: Vite build clean in 316ms; test_app_startup PASS; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T09:28:00-07:00 — kilo-creator: kweb://echo-subsystem.net (Virtual 1999 Web Expansion: Lithospheric Strata TDR)**
   - Status: PASS ✅ (0 regressions, clean builds, 221.4 KB web < 999 KB ceiling).
   - Lithospheric Seismic Profiler & TDR: Built Tab 09 with 2D strata cross-section, time-domain reflection A-scan oscillograph, and borehole hydrophone probe.
