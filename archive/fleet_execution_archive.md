@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T13:50:00-07:00 — kilo-expander: KTowers (Move Notation, Career Stats, Live Log & Win32 Replay/FEN)**
+  - Status: PASS ✅ (0 regressions, clean builds, 180.8 KB web / 181.2 KB native < 999 KB ceiling).
+  - Tower Move Notation (TMN): Implemented notation generator, parser, file export/import, and auto-playback.
+  - Interactive Live Move Log: Added drawer panel ([L]) with move history and jump-to-step state restoration.
+  - Career Analytics Dashboard: Added modal ([C]) tracking completions, stars, par ratio, rank tiers, and JSON backup.
+  - Win32 C Engine Expansion: Implemented interactive replay stepper/scrubber ([P]) and FEN clipboard export/import ([O]/[I]).
+  - Ergonomics & Navigation: Added keyboard scrubbing (arrows/Home/End), toolbar buttons, and help documentation.
+  - Verification: `test_app_startup.py` PASS (0 errors); MSVC clean (`KTowers.exe` 181.2 KB); Vite clean (316ms); security_lint 100% PASS.
+
 - **2026-10-04T13:25:00-07:00 — kilo-qa: KChat (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & ARCH-05)**
   - Status: PASS ✅ (0 regressions, clean builds, 95.8 KB web / 29.7 KB native < 999 KB ceiling).
   - Quicksave & State Persistence: Implemented complete state persistence with [F5]/[F9] in web and Win32 C with storage quota guards.

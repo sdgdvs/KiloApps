@@ -726,10 +726,10 @@
     vertical-align: middle;
   }
 
-  /* Toast Notification System (Directive 189 Top-Center Placement) */
+  /* Toast Notification System (Directive 189: Bottom Anchor, Zero Occlusion) */
   #toast-container {
     position: fixed;
-    top: 62px;
+    bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -757,7 +757,7 @@
     pointer-events: auto;
     cursor: pointer;
     user-select: none;
-    animation: toastSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: toastSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
     max-width: 420px;
     transition: opacity 0.2s ease, transform 0.2s ease;
   }
@@ -770,8 +770,8 @@
   .toast.toast-warn { border-color: var(--accent-yellow); }
   .toast.toast-info { border-color: var(--primary); }
 
-  @keyframes toastSlideDown {
-    from { transform: translateY(-100%); opacity: 0; }
+  @keyframes toastSlideUp {
+    from { transform: translateY(100%); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
   }
 
@@ -881,6 +881,8 @@
       <button class="tab" role="tab" id="tab-btn-settings" aria-selected="false" aria-controls="tab-settings" onclick="switchTab('settings')">Settings <span class="badge-key">8</span></button>
     </div>
     <div class="header-actions">
+      <button class="icon-btn" id="quicksave-btn" onclick="quicksaveState()" aria-label="Quicksave Workspace (F5)">💾 <span class="icon-btn-label">Save</span> <span class="badge-key">F5</span></button>
+      <button class="icon-btn" id="quickload-btn" onclick="quickloadState()" aria-label="Quickload Workspace (F9)">📂 <span class="icon-btn-label">Load</span> <span class="badge-key">F9</span></button>
       <button class="icon-btn" id="sound-toggle-btn" onclick="toggleSound()" aria-label="Toggle Sound">🔊 <span class="icon-btn-label">Sound</span> <span class="badge-key">M</span></button>
       <button class="icon-btn" id="format-toggle-btn" onclick="toggleFormat()" aria-label="Toggle 12/24 Hour Format"><span id="format-btn-text">24H</span> <span class="badge-key">F</span></button>
       <button class="icon-btn" id="help-btn" onclick="openHelpModal()" aria-label="Open Help Guide">❓ <span class="icon-btn-label">Help</span> <span class="badge-key">F1</span></button>
@@ -1185,6 +1187,22 @@
 
         <div class="setting-row">
           <div class="setting-info">
+            <span class="setting-title">Quicksave Workspace [F5]</span>
+            <span class="setting-desc">Snapshot all timers, stopwatch, laps, alarms, cities & state</span>
+          </div>
+          <button class="btn primary" onclick="quicksaveState()">Save [F5]</button>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-title">Quickload Workspace [F9]</span>
+            <span class="setting-desc">Restore snapshot saved in local storage</span>
+          </div>
+          <button class="btn" onclick="quickloadState()">Load [F9]</button>
+        </div>
+
+        <div class="setting-row">
+          <div class="setting-info">
             <span class="setting-title">Export Settings (JSON)</span>
             <span class="setting-desc">Backup your alarms, world cities & preferences</span>
           </div>
@@ -1212,13 +1230,38 @@
     <div class="modal-box">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
         <div class="modal-title" id="modal-title" style="margin-bottom: 0;">⏰ Alarm</div>
-        <button class="icon-btn" onclick="dismissModal()" style="padding: 2px 8px; font-size: 12px;" aria-label="Close">✕</button>
+        <button class="icon-btn modal-close btn-close" id="alert-close-x" onclick="dismissModal()" style="padding: 2px 8px; font-size: 12px;" aria-label="Close">✕</button>
       </div>
       <div class="modal-desc" id="modal-desc">Time is up!</div>
       <div class="btn-row" style="margin-top: 0;">
-        <button class="btn primary" onclick="dismissModal()">Dismiss</button>
+        <button class="btn primary modal-close" id="alert-dismiss-btn" onclick="dismissModal()">Dismiss</button>
         <button class="btn" id="snooze-btn-5" onclick="snoozeAlarm(5)">Snooze 5m</button>
         <button class="btn" id="snooze-btn-10" onclick="snoozeAlarm(10)">Snooze 10m</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- First-Run Tutorial Modal Overlay -->
+  <div class="modal-overlay" id="tutorial-modal" role="dialog" aria-modal="true" aria-labelledby="tutorial-title" onclick="if(event.target===this)closeTutorialModal()">
+    <div class="modal-box help-modal-box">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+        <div class="modal-title" id="tutorial-title" style="margin-bottom: 0;">⏰ Welcome to KClock!</div>
+        <button class="icon-btn modal-close btn-close" id="tutorial-close-x" onclick="closeTutorialModal()" style="padding: 4px 10px;" aria-label="Close">✕</button>
+      </div>
+      <div style="font-size: 13px; color: var(--text-muted); margin-top: 12px; line-height: 1.5;">
+        KClock is your high-precision timekeeping workspace featuring 8 integrated tools:
+      </div>
+      <ul style="font-size: 12px; color: var(--text-main); margin: 10px 0 14px 20px; line-height: 1.6; padding: 0;">
+        <li><strong>Precision Clock:</strong> HiDPI analog quartz dial, digital display, or dual layout.</li>
+        <li><strong>World Time & TZ Calculator:</strong> Live multi-city tracking with day offsets & difference math.</li>
+        <li><strong>Epoch Suite:</strong> Live Unix epoch ticker, DOY/ISO week, and bidirectional timestamp converter.</li>
+        <li><strong>Stopwatch & Timer:</strong> Millisecond lap splits with fastest/slowest badges and custom timers.</li>
+        <li><strong>Repeating Alarms:</strong> Configurable weekday/weekend repeat schedules with audio chimes.</li>
+        <li><strong>Quicksave & Load:</strong> Press <span class="badge-key">F5</span> to save or <span class="badge-key">F9</span> to restore your entire workspace.</li>
+      </ul>
+      <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 14px;">
+        <span style="font-size: 11px; color: var(--text-muted);">Press <span class="badge-key">F1</span> or <span class="badge-key">H</span> anytime for full shortcuts</span>
+        <button class="btn primary modal-close tutorial-btn-primary" id="tutorial-close-btn" onclick="closeTutorialModal()">Get Started (Enter)</button>
       </div>
     </div>
   </div>
@@ -1228,7 +1271,7 @@
     <div class="modal-box help-modal-box">
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
         <div class="modal-title" id="help-title" style="margin-bottom: 0;">⏱️ KClock Quick Guide</div>
-        <button class="icon-btn" onclick="closeHelpModal()" style="padding: 4px 10px;">✕</button>
+        <button class="icon-btn modal-close btn-close" id="help-close-x" onclick="closeHelpModal()" style="padding: 4px 10px;" aria-label="Close">✕</button>
       </div>
       <div style="font-size: 13px; color: var(--text-muted); margin-top: 12px; line-height: 1.5;">
         KClock provides full precision world time with high-DPI analog dial, timezone offset calculations, Unix Epoch converter, stopwatch with fastest/slowest lap detection, countdown timers, and repeating daily alarms.
@@ -1246,6 +1289,7 @@
           <tr><td><span class="badge-key">Space</span></td><td>Start / Pause active Stopwatch or Timer</td></tr>
           <tr><td><span class="badge-key">L</span></td><td>Record Lap split (Stopwatch)</td></tr>
           <tr><td><span class="badge-key">R</span></td><td>Reset active Stopwatch or Timer</td></tr>
+          <tr><td><span class="badge-key">F5</span> / <span class="badge-key">F9</span></td><td>Quicksave / Quickload complete workspace snapshot</td></tr>
           <tr><td><span class="badge-key">M</span></td><td>Toggle Audio Chimes and Alarm Sounds</td></tr>
           <tr><td><span class="badge-key">F</span></td><td>Toggle 12-Hour / 24-Hour Time Format</td></tr>
           <tr><td><span class="badge-key">H</span> / <span class="badge-key">F1</span></td><td>Open this Help & Keyboard Shortcuts Guide</td></tr>
@@ -1253,7 +1297,7 @@
         </tbody>
       </table>
       <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
-        <button class="btn primary" onclick="closeHelpModal()">Got it (Esc)</button>
+        <button class="btn primary modal-close" id="help-close-btn" onclick="closeHelpModal()">Got it (Esc)</button>
       </div>
     </div>
   </div>
@@ -1264,6 +1308,10 @@
     let use24Hour = false;
     let audioCtx = null;
     let currentTab = 'clock';
+    let clockInterval = null;
+    let worldClockInterval = null;
+    let epochInterval = null;
+    let hiddenTimestamp = 0;
 
     const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -1670,7 +1718,7 @@
 
       checkAlarms(now);
     }
-    setInterval(updateClock, 1000);
+    clockInterval = setInterval(updateClock, 1000);
     updateClock();
 
     // --- Tab 2: World Clock ---
@@ -1802,7 +1850,7 @@
         }
       });
     }
-    setInterval(updateWorldClock, 1000);
+    worldClockInterval = setInterval(updateWorldClock, 1000);
     updateWorldClock();
 
     // --- Tab 3: Timezone Calculator ---
@@ -1929,7 +1977,7 @@
       if (yearPctEl) yearPctEl.innerText = `${pct}% done`;
     }
 
-    setInterval(updateEpochTicker, 50);
+    epochInterval = setInterval(updateEpochTicker, 50);
 
     function dismissAllToasts() {
       const container = document.getElementById('toast-container');
@@ -1964,12 +2012,36 @@
       }, duration);
     }
 
+    let tutorialActive = false;
+    let helpActive = false;
+
+    function openTutorialModal() {
+      if (helpActive) closeHelpModal();
+      tutorialActive = true;
+      const modal = document.getElementById('tutorial-modal');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeTutorialModal() {
+      tutorialActive = false;
+      const modal = document.getElementById('tutorial-modal');
+      if (modal) modal.classList.remove('active');
+      safeSetStorage('kclock_tutorialSeen', true);
+      safeSetStorage('kclock_onboarded', true);
+      showToast('★ Ready! [Space] Start/Pause, [F5] Save, [F9] Load, [F1] Help', 'info', 4000);
+    }
+
     function openHelpModal() {
-      document.getElementById('help-modal').classList.add('active');
+      if (tutorialActive) closeTutorialModal();
+      helpActive = true;
+      const modal = document.getElementById('help-modal');
+      if (modal) modal.classList.add('active');
     }
 
     function closeHelpModal() {
-      document.getElementById('help-modal').classList.remove('active');
+      helpActive = false;
+      const modal = document.getElementById('help-modal');
+      if (modal) modal.classList.remove('active');
     }
 
     function copyLiveEpoch(mode) {
@@ -2481,20 +2553,248 @@
       }
     }
 
-    // --- Tab 8: Settings Export & Import [JSON] ---
-    function exportSettingsJSON() {
-      const data = {
+    // --- Full State Persistence Suite (Pass 5: Quicksave F5 & Quickload F9) ---
+    function getFullStateSnapshot() {
+      const now = Date.now();
+      let currentSwElapsed = swElapsed;
+      if (swRunning) {
+        currentSwElapsed += (now - swStart);
+      }
+
+      let currentTmRemaining = tmRemaining;
+      if (tmRunning) {
+        currentTmRemaining = Math.max(0, tmDuration - (now - tmStart));
+      }
+
+      const dtInput = document.getElementById('calc-datetime');
+      const srcInput = document.getElementById('calc-src-city');
+      const tgtInput = document.getElementById('calc-tgt-city');
+      const epochInput = document.getElementById('conv-epoch-input');
+      const dateInput = document.getElementById('conv-date-input');
+      const tzInput = document.getElementById('conv-date-tz');
+
+      return {
         version: "1.0",
         appName: "KClock",
-        exportDate: new Date().toISOString(),
+        timestamp: now,
+        activeTab: currentTab,
         settings: {
           use24Hour: use24Hour,
-          soundEnabled: soundEnabled
+          soundEnabled: soundEnabled,
+          clockMode: clockMode
         },
-        worldCities: worldCities,
-        alarms: alarms
+        worldCities: [...worldCities],
+        alarms: JSON.parse(JSON.stringify(alarms)),
+        stopwatch: {
+          running: swRunning,
+          elapsed: currentSwElapsed,
+          laps: JSON.parse(JSON.stringify(swLaps)),
+          lastLapTime: swLastLapTime
+        },
+        timer: {
+          running: tmRunning,
+          duration: tmDuration,
+          remaining: currentTmRemaining
+        },
+        tzCalc: {
+          srcCity: srcInput ? srcInput.value : 'America/New_York',
+          tgtCity: tgtInput ? tgtInput.value : 'Asia/Tokyo',
+          datetime: dtInput ? dtInput.value : ''
+        },
+        epochConverter: {
+          epochInput: epochInput ? epochInput.value : '',
+          dateInput: dateInput ? dateInput.value : '',
+          dateTz: tzInput ? tzInput.value : 'local'
+        }
       };
+    }
 
+    function restoreFullStateSnapshot(snap) {
+      if (!snap || typeof snap !== 'object') return false;
+      try {
+        // 1. Settings
+        if (snap.settings) {
+          if (typeof snap.settings.use24Hour === 'boolean') {
+            use24Hour = snap.settings.use24Hour;
+            const fmtTxt = document.getElementById('format-btn-text');
+            if (fmtTxt) fmtTxt.innerText = use24Hour ? '12H' : '24H';
+            const sFmt = document.getElementById('settings-format-btn');
+            if (sFmt) sFmt.innerText = use24Hour ? '24-Hour' : '12-Hour';
+          }
+          if (typeof snap.settings.soundEnabled === 'boolean') {
+            soundEnabled = snap.settings.soundEnabled;
+            const sBtn = document.getElementById('sound-toggle-btn');
+            if (sBtn) sBtn.innerHTML = soundEnabled ? '🔊 <span class="icon-btn-label">Sound</span> <span class="badge-key">M</span>' : '🔇 <span class="icon-btn-label">Muted</span> <span class="badge-key">M</span>';
+            const sSound = document.getElementById('settings-sound-btn');
+            if (sSound) sSound.innerText = soundEnabled ? 'Enabled' : 'Muted';
+          }
+          if (typeof snap.settings.clockMode === 'string') {
+            setClockMode(snap.settings.clockMode);
+          }
+        }
+
+        // 2. World Cities
+        if (Array.isArray(snap.worldCities)) {
+          worldCities = [...snap.worldCities];
+          updateWorldClock();
+        }
+
+        // 3. Alarms
+        if (Array.isArray(snap.alarms)) {
+          alarms = JSON.parse(JSON.stringify(snap.alarms));
+          renderAlarms();
+        }
+
+        // 4. Stopwatch
+        if (snap.stopwatch) {
+          if (swRaf) cancelAnimationFrame(swRaf);
+          swRunning = !!snap.stopwatch.running;
+          swElapsed = snap.stopwatch.elapsed || 0;
+          swLaps = Array.isArray(snap.stopwatch.laps) ? JSON.parse(JSON.stringify(snap.stopwatch.laps)) : [];
+          swLastLapTime = snap.stopwatch.lastLapTime || 0;
+          if (swRunning) {
+            swStart = Date.now();
+            renderSw();
+            const swBtn = document.getElementById('sw-btn');
+            if (swBtn) {
+              swBtn.innerText = 'Stop';
+              swBtn.classList.remove('primary');
+            }
+          } else {
+            const swDisplay = document.getElementById('stopwatch-display');
+            if (swDisplay) swDisplay.innerText = formatSw(swElapsed);
+            const swBtn = document.getElementById('sw-btn');
+            if (swBtn) {
+              swBtn.innerText = swElapsed > 0 ? 'Resume' : 'Start';
+              swBtn.classList.add('primary');
+            }
+          }
+          renderLaps();
+        }
+
+        // 5. Timer
+        if (snap.timer) {
+          if (tmInterval) clearInterval(tmInterval);
+          tmDuration = snap.timer.duration || 300000;
+          tmRemaining = typeof snap.timer.remaining === 'number' ? snap.timer.remaining : tmDuration;
+          tmRunning = !!snap.timer.running;
+
+          const tmDisplay = document.getElementById('timer-display');
+          const tmBtn = document.getElementById('tm-btn');
+          const minsInput = document.getElementById('timer-mins');
+          if (minsInput) minsInput.value = Math.max(1, Math.round(tmDuration / 60000));
+
+          if (tmRunning) {
+            if (tmRemaining <= 0) {
+              tmRunning = false;
+              if (tmDisplay) tmDisplay.innerText = "00:00";
+              if (tmBtn) {
+                tmBtn.innerText = 'Start';
+                tmBtn.classList.add('primary');
+              }
+            } else {
+              tmStart = Date.now();
+              tmInterval = setInterval(updateTmDisplay, 100);
+              if (tmDisplay) tmDisplay.innerText = formatTm(tmRemaining);
+              if (tmBtn) {
+                tmBtn.innerText = 'Pause';
+                tmBtn.classList.remove('primary');
+              }
+            }
+          } else {
+            if (tmDisplay) tmDisplay.innerText = formatTm(tmRemaining);
+            if (tmBtn) {
+              tmBtn.innerText = (tmRemaining < tmDuration && tmRemaining > 0) ? 'Resume' : 'Start';
+              tmBtn.classList.add('primary');
+            }
+          }
+        }
+
+        // 6. TZ Calculator
+        if (snap.tzCalc) {
+          const srcInput = document.getElementById('calc-src-city');
+          const tgtInput = document.getElementById('calc-tgt-city');
+          const dtInput = document.getElementById('calc-datetime');
+          if (srcInput && snap.tzCalc.srcCity) srcInput.value = snap.tzCalc.srcCity;
+          if (tgtInput && snap.tzCalc.tgtCity) tgtInput.value = snap.tzCalc.tgtCity;
+          if (dtInput && snap.tzCalc.datetime) dtInput.value = snap.tzCalc.datetime;
+          calculateTzDiff();
+        }
+
+        // 7. Epoch Converter
+        if (snap.epochConverter) {
+          const epochInput = document.getElementById('conv-epoch-input');
+          const dateInput = document.getElementById('conv-date-input');
+          const tzInput = document.getElementById('conv-date-tz');
+          if (epochInput && snap.epochConverter.epochInput) {
+            epochInput.value = snap.epochConverter.epochInput;
+            convertEpochToHuman();
+          }
+          if (dateInput && snap.epochConverter.dateInput) {
+            dateInput.value = snap.epochConverter.dateInput;
+          }
+          if (tzInput && snap.epochConverter.dateTz) {
+            tzInput.value = snap.epochConverter.dateTz;
+          }
+          if (dateInput && dateInput.value) {
+            convertHumanToEpoch();
+          }
+        }
+
+        // 8. Active Tab
+        if (snap.activeTab && tabOrder.includes(snap.activeTab)) {
+          switchTab(snap.activeTab);
+        }
+
+        saveState();
+        return true;
+      } catch (err) {
+        console.error('Failed to restore snapshot:', err);
+        return false;
+      }
+    }
+
+    function quicksaveState() {
+      try {
+        const snap = getFullStateSnapshot();
+        safeSetStorage('kclock_quicksave', snap);
+        showToast('★ Full workspace snapshot quicksaved [F5]', 'success');
+      } catch (err) {
+        showToast('⚠ Quicksave failed: storage quota exceeded', 'danger');
+      }
+    }
+
+    function quickloadState() {
+      const snap = safeGetStorage('kclock_quicksave', null);
+      if (!snap) {
+        showToast('⚠ No quicksave snapshot found [F5 to save first]', 'warn');
+        return false;
+      }
+      const ok = restoreFullStateSnapshot(snap);
+      if (ok) {
+        showToast('★ Quicksave state restored [F9]', 'success');
+      } else {
+        showToast('⚠ Failed to restore quicksave data', 'danger');
+      }
+      return ok;
+    }
+
+    function autoSaveSession() {
+      try {
+        const snap = getFullStateSnapshot();
+        safeSetStorage('kclock_session_state', snap);
+      } catch (e) {}
+    }
+
+    // Connect Header Quicksave and Quickload buttons
+    const btnSaveEl = document.getElementById('quicksave-btn');
+    if (btnSaveEl) btnSaveEl.onclick = quicksaveState;
+    const btnLoadEl = document.getElementById('quickload-btn');
+    if (btnLoadEl) btnLoadEl.onclick = quickloadState;
+
+    // --- Tab 8: Settings Export & Import [JSON] ---
+    function exportSettingsJSON() {
+      const data = getFullStateSnapshot();
       const jsonStr = JSON.stringify(data, null, 2);
       const blob = new Blob([jsonStr], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -2505,7 +2805,7 @@
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      showToast('Configuration exported as JSON', 'success');
+      showToast('Full workspace snapshot exported as JSON', 'success');
     }
 
     function importSettingsJSON(event) {
@@ -2516,39 +2816,19 @@
       reader.onload = function(e) {
         try {
           const imported = JSON.parse(e.target.result);
-          const st = imported.settings || imported;
-          if (st) {
-            if (typeof st.use24Hour === 'boolean') {
-              use24Hour = st.use24Hour;
-              document.getElementById('format-toggle-btn').innerHTML = use24Hour ? '12H <span class="badge-key">F</span>' : '24H <span class="badge-key">F</span>';
-              document.getElementById('settings-format-btn').innerText = use24Hour ? '24-Hour' : '12-Hour';
-              updateClock();
+          // Check if file is full snapshot or older settings format
+          if (imported && (imported.settings || imported.stopwatch || imported.alarms)) {
+            const ok = restoreFullStateSnapshot(imported);
+            if (ok) {
+              showToast('Settings & data successfully restored from JSON!', 'success');
+            } else {
+              showToast('Partially restored settings from JSON', 'info');
             }
-            if (typeof st.soundEnabled === 'boolean') {
-              soundEnabled = st.soundEnabled;
-              document.getElementById('sound-toggle-btn').innerHTML = soundEnabled ? '🔊 Sound <span class="badge-key">M</span>' : '🔇 Muted <span class="badge-key">M</span>';
-              document.getElementById('settings-sound-btn').innerText = soundEnabled ? 'Enabled' : 'Muted';
-            }
+          } else {
+            showToast('Unrecognized JSON format', 'warn');
           }
-          if (Array.isArray(imported.worldCities)) {
-            worldCities = imported.worldCities.filter(c => typeof c === 'string');
-            updateWorldClock();
-          }
-          if (Array.isArray(imported.alarms)) {
-            alarms = imported.alarms.map((a, idx) => ({
-              id: a.id || ('alarm_' + Date.now() + '_' + idx),
-              time: typeof a.time === 'string' ? a.time : '08:00',
-              label: typeof a.label === 'string' ? a.label : 'Alarm',
-              days: Array.isArray(a.days) ? a.days : [0, 1, 2, 3, 4, 5, 6],
-              active: typeof a.active === 'boolean' ? a.active : true,
-              triggered: false
-            }));
-            renderAlarms();
-          }
-          saveState();
-          showToast('Settings & data successfully imported!', 'success');
         } catch (err) {
-          showToast('Failed to import JSON file. Please verify file format.', 'error');
+          showToast('Failed to import JSON file. Please verify file format.', 'danger');
         }
       };
       reader.readAsText(file);
@@ -2603,8 +2883,38 @@
       // Escape closes modal and toasts anywhere
       if (e.key === 'Escape') {
         dismissModal();
-        closeHelpModal();
+        if (helpActive) closeHelpModal();
+        if (tutorialActive) closeTutorialModal();
         dismissAllToasts();
+        return;
+      }
+
+      // Enter / Space navigation on active tutorial modal
+      if (tutorialActive) {
+        if (e.key === 'Enter' || e.code === 'Space') {
+          e.preventDefault();
+          closeTutorialModal();
+          return;
+        }
+      }
+
+      if (helpActive) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          closeHelpModal();
+          return;
+        }
+      }
+
+      // Quicksave [F5] and Quickload [F9] shortcuts (always accessible outside text inputs)
+      if (e.key === 'F5') {
+        e.preventDefault();
+        quicksaveState();
+        return;
+      }
+      if (e.key === 'F9') {
+        e.preventDefault();
+        quickloadState();
         return;
       }
 
@@ -2684,24 +2994,80 @@
       }
     });
 
-    // Resource & Tab Visibility Management (ARCH-05)
+    // Resource & Tab Visibility Management (ARCH-05: Background Tab Visibility & Timer Drift)
+    function stopActiveIntervals() {
+      if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
+      if (worldClockInterval) { clearInterval(worldClockInterval); worldClockInterval = null; }
+      if (epochInterval) { clearInterval(epochInterval); epochInterval = null; }
+    }
+
+    function startActiveIntervals() {
+      if (!clockInterval) clockInterval = setInterval(updateClock, 1000);
+      if (!worldClockInterval) worldClockInterval = setInterval(updateWorldClock, 1000);
+      if (!epochInterval) epochInterval = setInterval(updateEpochTicker, 50);
+    }
+
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) {
+        hiddenTimestamp = Date.now();
+        stopActiveIntervals();
         stopAnalogClock();
+
+        if (tmRunning && tmInterval) {
+          clearInterval(tmInterval);
+          tmInterval = null;
+        }
+
         if (audioCtx && audioCtx.state === 'running') {
           audioCtx.suspend().catch(() => {});
         }
       } else {
+        const now = Date.now();
+        hiddenTimestamp = 0;
+
+        // Reconnect audio
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+
+        // Restart intervals
+        startActiveIntervals();
         updateClock();
         updateWorldClock();
+
         if (currentTab === 'clock' && (clockMode === 'analog' || clockMode === 'dual')) {
           startAnalogClock();
         }
         if (currentTab === 'epoch') {
           updateEpochTicker();
         }
-        if (audioCtx && audioCtx.state === 'suspended') {
-          audioCtx.resume().catch(() => {});
+
+        // Drift-free stopwatch update
+        if (swRunning) {
+          renderSw();
+        }
+
+        // Drift-free countdown timer update
+        if (tmRunning) {
+          const current = tmDuration - (now - tmStart);
+          if (current <= 0) {
+            tmRunning = false;
+            tmRemaining = 0;
+            const tmDisplay = document.getElementById('timer-display');
+            if (tmDisplay) tmDisplay.innerText = "00:00";
+            const tmBtn = document.getElementById('tm-btn');
+            if (tmBtn) {
+              tmBtn.innerText = 'Start';
+              tmBtn.classList.add('primary');
+            }
+            playChime([600, 800, 1000], 0.3);
+            showModal("⏲️ Timer Finished!", "Your timer countdown has completed.");
+          } else {
+            tmRemaining = current;
+            const tmDisplay = document.getElementById('timer-display');
+            if (tmDisplay) tmDisplay.innerText = formatTm(current);
+            tmInterval = setInterval(updateTmDisplay, 100);
+          }
         }
       }
     });
@@ -2713,8 +3079,9 @@
       }
     });
 
-    // Cleanup on beforeunload
+    // Cleanup and Session Save on beforeunload
     window.addEventListener('beforeunload', () => {
+      autoSaveSession();
       if (audioCtx && audioCtx.state !== 'closed') {
         audioCtx.close().catch(() => {});
       }
@@ -2722,19 +3089,26 @@
       if (tmInterval) clearInterval(tmInterval);
       if (swRaf) cancelAnimationFrame(swRaf);
       stopAnalogClock();
+      stopActiveIntervals();
     });
 
-    // First-run tutorial onboarding banner (gated by flag)
-    function checkFirstRunOnboarding() {
-      const onboarded = safeGetStorage('kclock_onboarded', false);
-      if (!onboarded) {
-        safeSetStorage('kclock_onboarded', true);
-        setTimeout(() => {
-          showToast("⏰ Welcome to KClock! High-DPI analog dial, world time, stopwatch & alarms. Press 'H' or F1 for guide.", "info", 6000);
-        }, 400);
-      }
+    // --- Startup Initialization, Session Recovery & Tutorial Onboarding ---
+    const savedSession = safeGetStorage('kclock_session_state', null);
+    const hasQuicksave = safeGetStorage('kclock_quicksave', null);
+    const hasSeenTutorial = safeGetStorage('kclock_tutorialSeen', false) || safeGetStorage('kclock_onboarded', false);
+
+    if (savedSession) {
+      restoreFullStateSnapshot(savedSession);
     }
-    checkFirstRunOnboarding();
+
+    // First-run tutorial onboarding check: only on fresh sessions, never interrupting restored save states
+    if (!hasSeenTutorial && !hasQuicksave && !savedSession) {
+      setTimeout(openTutorialModal, 400);
+    } else {
+      setTimeout(() => {
+        showToast("⏱️ Ready. [Space] Start/Pause, [F5] Save, [F9] Load, [F1] Help", "info", 3500);
+      }, 500);
+    }
   </script>
 </body>
 </html>

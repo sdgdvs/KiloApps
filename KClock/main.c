@@ -7,13 +7,20 @@ void* __cdecl memset(void* p, int c, size_t sz) {
     return p;
 }
 
+void* __cdecl memcpy(void* dest, const void* src, size_t sz) {
+    char* d = (char*)dest;
+    const char* s = (const char*)src;
+    while (sz--) *d++ = *s++;
+    return dest;
+}
+
 HWND hClockDisplay, hWorldDisplay, hTzCalcDisplay, hDisplay, hTimerDisplay;
 HWND hEpochDisplay, hDoyDisplay, hEditEpoch, hBtnEpochNow, hBtnEpochToDate, hBtnDateToEpoch, hEpochResultDisplay;
 HWND hBtnStart, hBtnStop, hBtnReset, hBtnLap;
 HWND hEditTimerMins, hBtnTimerStart, hBtnTimerReset;
 HWND hListBox;
 HWND hEditAlarmHour, hEditAlarmMin, hBtnAddAlarm, hBtnDelAlarm, hBtnToggleAlarm, hAlarmList;
-HWND hStatusDisplay, hBtnSilenceAlarm, hBtnSnoozeAlarm, hBtnWorldCity, hBtnTzCalc, hBtnExport, hBtnImport, hBtnHelp;
+HWND hStatusDisplay, hBtnSilenceAlarm, hBtnSnoozeAlarm, hBtnWorldCity, hBtnTzCalc, hBtnExport, hBtnImport, hBtnHelp, hBtnQuicksave, hBtnQuickload;
 
 #define MAX_ALARMS 20
 #define MAX_LAPS 50
@@ -28,9 +35,11 @@ void ShowHelpDialog(HWND hwnd) {
         "• Stopwatch: Millisecond precision with fastest/slowest lap split analysis.\n"
         "• Countdown Timer: Configurable duration countdown with audible alerts.\n"
         "• Repeating Alarms: Add, toggle, delete, snooze, and manage multiple alarms.\n"
-        "• Backup & Restore: Export and import configuration via kclock_config.txt.\n\n"
+        "• Backup & Restore: Quicksave snapshot [F5], restore [F9], or export/import kclock_config.txt.\n\n"
         "Keyboard Shortcuts:\n"
         "• [F1] or [H]: Open this Help & Feature Guide\n"
+        "• [F5]: Quicksave Full State Snapshot\n"
+        "• [F9]: Quickload Full State Snapshot\n"
         "• [S]: Stopwatch Start / Stop\n"
         "• [L]: Record Stopwatch Lap Split\n"
         "• [R]: Reset Stopwatch\n"
@@ -477,6 +486,169 @@ void LoadConfig() {
     }
 }
 
+#pragma pack(push, 1)
+typedef struct {
+    char magic[4]; // "KCLK"
+    int version;   // 1
+    int currentCityIndex;
+    int tzSrcCityIndex;
+    int tzTgtCityIndex;
+    int isRunning;
+    DWORD elapsed;
+    int lapCount;
+    DWORD lapSplits[MAX_LAPS];
+    DWORD lapTotals[MAX_LAPS];
+    DWORD lastLapTotal;
+    int tmRunning;
+    DWORD tmDuration;
+    DWORD tmRemaining;
+    int numAlarms;
+    Alarm alarms[MAX_ALARMS];
+} KClockQuicksaveData;
+#pragma pack(pop)
+
+void QuicksaveState(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kclock_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        KClockQuicksaveData data;
+        memset(&data, 0, sizeof(data));
+        data.magic[0] = 'K'; data.magic[1] = 'C'; data.magic[2] = 'L'; data.magic[3] = 'K';
+        data.version = 1;
+        data.currentCityIndex = currentCityIndex;
+        data.tzSrcCityIndex = tzSrcCityIndex;
+        data.tzTgtCityIndex = tzTgtCityIndex;
+
+        data.isRunning = isRunning;
+        data.elapsed = elapsed;
+        if (isRunning) {
+            data.elapsed += (GetTickCount() - startTime);
+        }
+        data.lapCount = lapCount;
+        memcpy(data.lapSplits, lapSplits, sizeof(lapSplits));
+        memcpy(data.lapTotals, lapTotals, sizeof(lapTotals));
+        data.lastLapTotal = lastLapTotal;
+
+        data.tmRunning = tmRunning;
+        data.tmDuration = tmDuration;
+        data.tmRemaining = tmRemaining;
+        if (tmRunning) {
+            DWORD pass = GetTickCount() - tmStartTime;
+            data.tmRemaining = (pass < tmDuration) ? (tmDuration - pass) : 0;
+        }
+
+        data.numAlarms = numAlarms;
+        memcpy(data.alarms, alarms, sizeof(alarms));
+
+        DWORD bytesWritten;
+        WriteFile(hFile, &data, sizeof(data), &bytesWritten, NULL);
+        CloseHandle(hFile);
+        SetWindowTextA(hStatusDisplay, "★ Quicksaved [F5]");
+        MessageBeep(MB_OK);
+    }
+}
+
+void QuickloadState(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kclock_quicksave.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        KClockQuicksaveData data;
+        DWORD bytesRead;
+        if (ReadFile(hFile, &data, sizeof(data), &bytesRead, NULL) && bytesRead == sizeof(data)) {
+            if (data.magic[0] == 'K' && data.magic[1] == 'C' && data.magic[2] == 'L' && data.magic[3] == 'K') {
+                currentCityIndex = data.currentCityIndex;
+                if (currentCityIndex < 0 || currentCityIndex >= NUM_CITIES) currentCityIndex = 0;
+                tzSrcCityIndex = data.tzSrcCityIndex;
+                if (tzSrcCityIndex < 0 || tzSrcCityIndex >= NUM_CITIES) tzSrcCityIndex = 0;
+                tzTgtCityIndex = data.tzTgtCityIndex;
+                if (tzTgtCityIndex < 0 || tzTgtCityIndex >= NUM_CITIES) tzTgtCityIndex = 3;
+
+                isRunning = data.isRunning;
+                elapsed = data.elapsed;
+                if (isRunning) startTime = GetTickCount();
+
+                lapCount = data.lapCount;
+                if (lapCount < 0) lapCount = 0;
+                if (lapCount > MAX_LAPS) lapCount = MAX_LAPS;
+                memcpy(lapSplits, data.lapSplits, sizeof(lapSplits));
+                memcpy(lapTotals, data.lapTotals, sizeof(lapTotals));
+                lastLapTotal = data.lastLapTotal;
+                RebuildLapList();
+
+                tmDuration = data.tmDuration;
+                tmRemaining = data.tmRemaining;
+                tmRunning = data.tmRunning;
+                if (tmRunning) {
+                    tmStartTime = GetTickCount();
+                    SetWindowTextA(hBtnTimerStart, "Pause");
+                } else {
+                    SetWindowTextA(hBtnTimerStart, (tmRemaining < tmDuration && tmRemaining > 0) ? "Resume" : "Start");
+                }
+
+                numAlarms = data.numAlarms;
+                if (numAlarms < 0) numAlarms = 0;
+                if (numAlarms > MAX_ALARMS) numAlarms = MAX_ALARMS;
+                memcpy(alarms, data.alarms, sizeof(alarms));
+
+                SendMessage(hAlarmList, LB_RESETCONTENT, 0, 0);
+                for (int i = 0; i < numAlarms; i++) {
+                    char dayStr[16], listBuf[48];
+                    FormatDaysMask(alarms[i].daysMask, dayStr);
+                    wsprintfA(listBuf, "[%s-%s] %02d:%02d", alarms[i].active ? "ON" : "OFF", dayStr, alarms[i].hour, alarms[i].min);
+                    SendMessageA(hAlarmList, LB_ADDSTRING, 0, (LPARAM)listBuf);
+                }
+
+                SetWindowTextA(hStatusDisplay, "★ Quickloaded [F9]");
+                MessageBeep(MB_OK);
+                UpdateDisplays(hwnd);
+            }
+        }
+        CloseHandle(hFile);
+    } else {
+        SetWindowTextA(hStatusDisplay, "No quicksave found [F5]");
+        MessageBeep(MB_ICONWARNING);
+    }
+}
+
+void CheckFirstRunTutorial(HWND hwnd) {
+    HANDLE hTut = CreateFileA("kclock_tutorial.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hTut != INVALID_HANDLE_VALUE) {
+        CloseHandle(hTut);
+        return;
+    }
+
+    HANDLE hSave = CreateFileA("kclock_quicksave.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hSave != INVALID_HANDLE_VALUE) {
+        CloseHandle(hSave);
+        return;
+    }
+
+    HANDLE hCfg = CreateFileA("kclock_config.txt", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hCfg != INVALID_HANDLE_VALUE) {
+        CloseHandle(hCfg);
+        return;
+    }
+
+    MessageBoxA(hwnd,
+        "Welcome to KClock!\n\n"
+        "• Local Time & World Clock: accurate multi-city time & day offset.\n"
+        "• TZ Calculator: Instant difference between major financial/tech hubs.\n"
+        "• Epoch Suite: Live Unix timestamp, Day of Year (DOY), ISO Week, and bidirectional converter.\n"
+        "• Precision Stopwatch: Millisecond timing with [FAST]/[SLOW] lap detection.\n"
+        "• Countdown Timer: Configurable duration countdown with audio alerts.\n"
+        "• Repeating Alarms: Add, toggle, delete, snooze, and manage multiple alarms.\n"
+        "• Quicksave & Quickload: Press [F5] anytime to save, [F9] to restore.\n\n"
+        "Press [F1] or [H] anytime for shortcuts and feature help.",
+        "KClock Welcome",
+        MB_OK | MB_ICONINFORMATION);
+
+    HANDLE hCreate = CreateFileA("kclock_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hCreate != INVALID_HANDLE_VALUE) {
+        const char* msg = "KClock Tutorial Seen\n";
+        DWORD written;
+        WriteFile(hCreate, msg, (DWORD)lstrlenA(msg), &written, NULL);
+        CloseHandle(hCreate);
+    }
+}
+
 BOOL CALLBACK EnumChildProc(HWND hwnd, LPARAM lParam) {
     SendMessage(hwnd, WM_SETFONT, (WPARAM)lParam, TRUE);
     return TRUE;
@@ -551,12 +723,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             hAlarmList = CreateWindowExA(WS_EX_CLIENTEDGE, "LISTBOX", "", WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL | LBS_NOTIFY, 10, 444, 300, 48, hwnd, NULL, NULL, NULL);
 
-            // Export / Import Config, Help Button & Status Bar
-            hBtnExport = CreateWindowA("BUTTON", "Export", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 10, 497, 48, 22, hwnd, (HMENU)14, NULL, NULL);
-            hBtnImport = CreateWindowA("BUTTON", "Import", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 61, 497, 48, 22, hwnd, (HMENU)15, NULL, NULL);
-            hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 112, 497, 65, 22, hwnd, (HMENU)30, NULL, NULL);
-            hStatusDisplay = CreateWindowA("STATIC", "Ready (H/F1: Help)", WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE, 180, 497, 130, 22, hwnd, NULL, NULL, NULL);
+            // Quicksave [F5], Quickload [F9], Export / Import Config, Help Button & Status Bar
+            hBtnQuicksave = CreateWindowA("BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 10, 497, 56, 22, hwnd, (HMENU)31, NULL, NULL);
+            hBtnQuickload = CreateWindowA("BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 70, 497, 56, 22, hwnd, (HMENU)32, NULL, NULL);
+            hBtnExport = CreateWindowA("BUTTON", "Export", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 130, 497, 44, 22, hwnd, (HMENU)14, NULL, NULL);
+            hBtnImport = CreateWindowA("BUTTON", "Import", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 178, 497, 44, 22, hwnd, (HMENU)15, NULL, NULL);
+            hBtnHelp = CreateWindowA("BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 226, 497, 84, 22, hwnd, (HMENU)30, NULL, NULL);
 
+            hStatusDisplay = CreateWindowA("STATIC", "Ready (H/F1: Help, F5: Save, F9: Load)", WS_CHILD | WS_VISIBLE | SS_CENTERIMAGE, 10, 523, 300, 24, hwnd, NULL, NULL, NULL);
             hBtnSilenceAlarm = CreateWindowA("BUTTON", "Dismiss 🔔", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 10, 523, 140, 24, hwnd, (HMENU)11, NULL, NULL);
             hBtnSnoozeAlarm = CreateWindowA("BUTTON", "Snooze 5m 💤", WS_CHILD | WS_TABSTOP | BS_PUSHBUTTON, 160, 523, 140, 24, hwnd, (HMENU)16, NULL, NULL);
 
@@ -681,9 +855,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 UpdateDisplays(hwnd);
             } else if (id == 11) { // Dismiss Alarm
                 alarmRinging = 0;
-                SetWindowTextA(hStatusDisplay, "Ready (H or F1: Help)");
+                SetWindowTextA(hStatusDisplay, "Ready (H/F1: Help, F5: Save, F9: Load)");
                 ShowWindow(hBtnSilenceAlarm, SW_HIDE);
                 ShowWindow(hBtnSnoozeAlarm, SW_HIDE);
+                ShowWindow(hStatusDisplay, SW_SHOW);
             } else if (id == 12) { // Toggle Alarm Enable/Disable
                 int sel = SendMessage(hAlarmList, LB_GETCURSEL, 0, 0);
                 if (sel != LB_ERR && sel < numAlarms) {
@@ -728,6 +903,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SetWindowTextA(hStatusDisplay, "Snoozed 5m");
                     ShowWindow(hBtnSilenceAlarm, SW_HIDE);
                     ShowWindow(hBtnSnoozeAlarm, SW_HIDE);
+                    ShowWindow(hStatusDisplay, SW_SHOW);
                 }
             } else if (id == 22) { // Epoch Now
                 SYSTEMTIME stUtc;
@@ -779,11 +955,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 wsprintfA(resBuf, "Epoch: %s seconds since 1970-01-01", strEpoch);
             } else if (id == 30) { // Help Dialog
                 ShowHelpDialog(hwnd);
+            } else if (id == 31) { // Quicksave [F5]
+                QuicksaveState(hwnd);
+            } else if (id == 32) { // Quickload [F9]
+                QuickloadState(hwnd);
             }
             break;
         }
         case WM_KEYDOWN:
-            if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
+            if (wParam == VK_F5) {
+                QuicksaveState(hwnd);
+            } else if (wParam == VK_F9) {
+                QuickloadState(hwnd);
+            } else if (wParam == 'H' || wParam == 'h' || wParam == VK_F1) {
                 ShowHelpDialog(hwnd);
             } else if (wParam == 'S' || wParam == 's') {
                 if (!isRunning) {
@@ -841,6 +1025,7 @@ void __stdcall MainEntry() {
     
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+    CheckFirstRunTutorial(hwnd);
 
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
@@ -852,6 +1037,14 @@ void __stdcall MainEntry() {
 
             if (msg.wParam == VK_F1) {
                 ShowHelpDialog(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F5) {
+                QuicksaveState(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                QuickloadState(hwnd);
                 continue;
             }
             if (msg.wParam == VK_ESCAPE) {

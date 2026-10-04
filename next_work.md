@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KPac
   kilo_tester: KStarForge
   kilo_usability: KPomodoro
-  kilo_qa: KClock
+  kilo_qa: KTimer
   kilo_expander: KReversi
 virtual_web_target: "kweb://webring"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-usability
-  app: KTimer
-  timestamp: "2026-10-04T15:10:00-07:00"
+  agent: kilo-qa
+  app: KClock
+  timestamp: "2026-10-04T15:27:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KGraph` *(Completed: KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KClock`
+- **Current Target**: `KTimer`
 - **Upcoming Queue**:
-  `KTimer`, `KPomodoro`, `KMandel`, `KHex` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat)*.
+  `KPomodoro`, `KMandel`, `KHex`, `KClock` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KReversi`
@@ -162,9 +162,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - ⚠️ AGENT NOTE: Human director priority mandate for `kilo-graphics`.
   - Instructions: The graphics agent must do nothing but replace programmer art with Imagen 3 generated assets for a while on its turns. If assigned an app where Imagen 3 asset replacement is not appropriate (pure vector/wireframe arcade games, abstract board games, text utilities, or apps with already mature art), skip the turn cleanly (`⏭️ Skip — Imagen 3 asset replacement not appropriate for [app]`), rotate the target to the queue bottom, and terminate without code changes.
 
-- **[kclock, ktimer, kpomodoro] — Architecture (ARCH-05: Background Tab Visibility & Timer Drift)** | Director Directive
-  - ⚠️ AGENT NOTE: Verified pending ticket from fleet architecture audit.
-  - Instructions: Implement `document.addEventListener('visibilitychange', ...)` in `kclock.html`, `ktimer.html`, and `kpomodoro.html`. When tab is hidden (`document.hidden === true`), clear active `setInterval` timers to eliminate CPU waste. When visible again, restart timers and compute elapsed delta via `Date.now()` timestamp differences so stopwatch, countdown timers, and clocks remain drift-free.
+- **[kpomodoro] — Architecture (ARCH-05: Background Tab Visibility & Timer Drift)** | Director Directive
+  - ⚠️ AGENT NOTE: Verified pending ticket from fleet architecture audit (`kclock` & `ktimer` completed).
+  - Instructions: Implement `document.addEventListener('visibilitychange', ...)` in `kpomodoro.html`. When tab is hidden (`document.hidden === true`), clear active `setInterval` timers to eliminate CPU waste. When visible again, restart timers and compute elapsed delta via `Date.now()` timestamp differences so stopwatch, countdown timers, and clocks remain drift-free.
 
 - **[FLEET-WIDE] — Pivot to ARG, Multiplayer & Virtual Net Expansion (Freeze Standalone App Creation)** | Director Directive
   - ⚠️ AGENT NOTE: Human director priority directive.
@@ -221,6 +221,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T15:27:00-07:00 — kilo-qa: KClock (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, clean builds, 113.1 KB web / 22.5 KB native < 999 KB ceiling).
+  - Quicksave & State Persistence: Implemented complete state persistence with [F5]/[F9] in web and Win32 C with storage quota guards.
+  - First-Run Tutorial Integrity: Added flag gating (`kclock_tutorial.dat` / `kclock_tutorialSeen`) preventing interruptions on restored saves.
+  - Toast & Modal Ergonomics (Directive 189): Relocated toasts to bottom anchor; added unique IDs and classes resolving CDP modal test.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` interval clearing and timestamp delta math eliminating timer drift.
+  - Verification: `test_app_startup.py` PASS; `smoke_test_native.py` PASS (101/101); MSVC clean (`KClock.exe` 22.5 KB); Vite clean in 322ms.
+
 - **2026-10-04T15:10:00-07:00 — kilo-usability: KTimer (Window Resizing, Responsive Nav, Toast Re-anchoring & ARCH-05)**
   - Status: PASS ✅ (0 regressions, clean builds, 105.9 KB web / 32.2 KB native < 999 KB ceiling).
   - Window & Layout Ergonomics: Tuned default window size to 520x640 in App.jsx and script; all panels display without internal scrollbars.
@@ -251,14 +259,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Webmaster Widgets: Stock watcher, local weather radar, speed dial bookmarks, QuickPad memo, and lithospheric telemetry beacon.
   - Silicon Cubicle '99: Added 8-episode Canvas comic syndicate with multi-panel vector art, zoom controls, 5-star ratings, and KMail sharing.
   - Verification: `security_lint.py` 100% PASS; `test_arg_flow.py` 7/7 stages PASS (TINAG compliant); Vite build clean.
-
-- **2026-10-04T13:50:00-07:00 — kilo-expander: KTowers (Move Notation, Career Stats, Live Log & Win32 Replay/FEN)**
-  - Status: PASS ✅ (0 regressions, clean builds, 180.8 KB web / 181.2 KB native < 999 KB ceiling).
-  - Tower Move Notation (TMN): Implemented notation generator, parser, file export/import, and auto-playback.
-  - Interactive Live Move Log: Added drawer panel ([L]) with move history and jump-to-step state restoration.
-  - Career Analytics Dashboard: Added modal ([C]) tracking completions, stars, par ratio, rank tiers, and JSON backup.
-  - Win32 C Engine Expansion: Implemented interactive replay stepper/scrubber ([P]) and FEN clipboard export/import ([O]/[I]).
-  - Ergonomics & Navigation: Added keyboard scrubbing (arrows/Home/End), toolbar buttons, and help documentation.
-  - Verification: `test_app_startup.py` PASS (0 errors); MSVC clean (`KTowers.exe` 181.2 KB); Vite clean (316ms); security_lint 100% PASS.
 
 
