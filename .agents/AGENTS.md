@@ -159,4 +159,10 @@ You are operating in a token-constrained multi-agent environment. Every line you
   - **Do:** Create eerie USENET threads from late 1999, corrupted memory dumps at hex offsets, faint audio subcarriers, mysterious packet logs from non-routable subnets (10.19.99.x), or cryptic hacker manifestos.
   - **Don't:** Post news headlines that read like developer walkthroughs, e.g. *"ARG Guidance: The central node will awaken at App #100... Solving the terminal requires the master director passkey..."*
 
+## Online Multiplayer & Autostart Prohibition Protocol (CRITICAL)
 
+- **No Autostart in Multiplayer (MANDATORY CONNECT GATE):** Applications with multiplayer features MUST NEVER autostart into multiplayer, initiate matchmaking, or connect to the online lobby on application boot/load. People do not like being thrown into multiplayer without hitting a "Connect" button or getting prior warning.
+- **Mandatory Start/Connect Screen or Local Default:**
+  - Games must boot into local/offline play (e.g. against local AI, solo mode, or pass-and-play) OR present a title/start screen where multiplayer requires an explicit click.
+  - Online connections must be gated behind an explicit user gesture: clicking a "Connect", "Play Online", or "Quick Match" button, or selecting Multiplayer from a menu bar.
+  - Deep-link invite URLs (`?room=CODE` or `#room=CODE`) must display a join confirmation/connect button rather than an unprompted silent takeover.
