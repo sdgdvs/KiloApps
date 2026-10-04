@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://10.19.99.4/classified (Corporate Network Leak & Signal Diagnostic)"
-  kilo_graphics: "KQuest (Phase 4: Town NPCs & Combat FX)"
+  kilo_graphics: "KQuest (Phase 5: Performance & Win32 Parity)"
   kilo_tester: KStellar
   kilo_usability: KNote
   kilo_qa: KDB
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-creator
-  app: "kweb://cybercafe"
-  timestamp: "2026-10-04T06:10:00-07:00"
+  agent: kilo-graphics
+  app: "KQuest (Phase 4: Town NPCs & Combat FX)"
+  timestamp: "2026-10-04T06:31:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KQuest` (Phase 4: Town NPCs & Combat FX)
+- **Current Target**: `KQuest` (Phase 5: Performance & Win32 Parity)
 - **Upcoming Queue**:
-  `KQuest` (Phase 5: Performance & Win32 Parity), `KRogue`, `KColosseum`, `KAbyss`, `KSpace`, `KPac`, `KBreakout`, `KAsteroids` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phase 1, KQuest Phase 2, KQuest Phase 3)*.
+  `KRogue`, `KColosseum`, `KAbyss`, `KSpace`, `KPac`, `KBreakout`, `KAsteroids` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phase 1, KQuest Phase 2, KQuest Phase 3, KQuest Phase 4)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KStellar`
@@ -230,6 +230,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T06:31:00-07:00 — kilo-graphics: KQuest (Phase 4: Town NPCs, Companions & Combat FX Overhaul)**
+  - Status: PASS ✅ (0 regressions, 0 glints, 317.1 KB web / 97.0 KB native < 999 KB ceiling, Vite clean).
+  - Imagen 3 Town NPC Overhaul: Generated 5 full NPC archetypes (Shopkeeper, Blacksmith, Guildmaster, Factions, Stablemaster) on `#FF00FF` with animated idle/talk/greet frames.
+  - Companion Party System: Added dedicated Cleric companion sprite (`kquest_companion_cleric`) + mapped Paladin, Mage, and Ranger; added battlefield rendering, level/HP bar, and damage reaction.
+  - Stylized Combat FX: Generated 4 animated 128x128 FX strips (fireball projectile, lightning strike, holy burst, frost nova) and integrated into class spells and elemental runes.
+  - Glint & Border Audit: Verified static medieval filigree borders with 0 moving dots or traveling specular comets in web and native C.
+  - Verification: MSVC clean (`KQuest.exe` 97.0 KB); Vite build clean in 311ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T06:10:00-07:00 — kilo-creator: kweb://cybercafe (Virtual 1999 Web Deep Expansion: Phreak Lab, Station CRT VNC, Barista Roaster & ZMODEM)**
   - Status: PASS ✅ (0 regressions, 0 glints, 226.9 KB web < 999 KB ceiling, Vite clean build).
   - Phreak Lab & Coupler: Built 16-key DTMF tone matrix, 2600Hz trunk seize, Red Box coin pulses, Bell FSK, and 1999Hz subcarrier generator with live oscilloscope.
@@ -263,11 +271,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Resource & Tab Visibility (ARCH-05): Added visibilitychange listener pausing ping/sniffer timers when tab hidden.
   - Dialog & Layout Ergonomics: Added Enter dismissal for Help modal, auto-render on payload tab, :focus-visible outlines, and flex-wrap.
   - Verification: MSVC clean (`KNet.exe` 44.0 KB); Vite clean in 375ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
-
-- **2026-10-04T05:12:00-07:00 — kilo-tester: KStarship (Interactive UI Audit, Modal Overlay, Backdrop & Toast Occlusion Remediation)**
-  - Status: PASS ✅ (4 issues fixed, 0 regressions, clean builds, 153.8 KB web / 143.5 KB native < 999 KB).
-  - Modal Dismissals & Overlay: Added `.modal-overlay` container with backdrop-click and close button `[✕]` dismissal across all encounters.
-  - Toast Occlusion Remediation: Re-anchored toast from bottom-right to canvas center, preventing action button overlap; added click-dismiss.
-  - Multi-Planet Exploration: Added planetary orbit selector allowing exploration of all planets in multi-planet star systems.
-  - Input & Ergonomics Polish: Added `blur`/`visibilitychange` key release preventing fuel burn; added `:focus-visible` button styling.
-  - Verification: MSVC clean (`KStarship.exe` 143.5 KB); Vite clean in 292ms; `test_app_startup.py` PASS; `security_lint.py` 100% PASS; `check_icons.py` 100% PASS.
