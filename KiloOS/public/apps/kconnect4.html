@@ -941,6 +941,18 @@
     <button class="close" onclick="closeAllModals()" style="margin-top:12px; background:#ff5252; width:100%;">Close [Esc]</button>
   </div>
 
+  <!-- Deep-Link Match Invite Confirmation Modal -->
+  <div id="mpInviteModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:10001; background:#0c1020; border:2px solid #00e5ff; border-radius:8px; padding:16px 20px; text-align:center; color:#fff; width:340px; box-shadow:0 10px 30px rgba(0,0,0,0.8);">
+    <h3 style="margin-top:0; color:#00e5ff; font-size:16px;">🎮 Online Match Invite</h3>
+    <p style="font-size:13px; color:#cbd5e1; margin-bottom:14px;">
+      Incoming match invite for room <strong id="mpInviteCodeLabel" style="color:#ffd700; font-family:monospace; font-size:15px;"></strong>.
+    </p>
+    <div style="display:flex; gap:10px; justify-content:center;">
+      <button id="mpInviteJoinBtn" style="background:#00c853; border:1px solid #00e5ff; color:#fff; font-weight:bold; padding:8px 18px; border-radius:4px; cursor:pointer;" onclick="acceptInvite()">⚔️ Connect &amp; Join</button>
+      <button id="mpInviteDeclineBtn" class="close btn-close modal-close" style="background:#37474f; border:1px solid #607d8b; color:#eceff1; padding:8px 14px; border-radius:4px; cursor:pointer;" onclick="declineInvite()">Play Solo</button>
+    </div>
+  </div>
+
   <script src="../assets/js/retro_multiplayer.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -1082,9 +1094,11 @@
       const notation = document.getElementById('notationModal');
       const mp = document.getElementById('multiplayerModal');
       const backdrop = document.getElementById('modalBackdrop');
+      const inv = document.getElementById('mpInviteModal');
       if (help) help.style.display = 'none';
       if (notation) notation.style.display = 'none';
       if (mp) mp.style.display = 'none';
+      if (inv) inv.style.display = 'none';
       if (backdrop) backdrop.style.display = 'none';
       if (activeLobbyRef && activeLobbyListener && window.fb) {
         try { window.fb.off(activeLobbyRef, 'value', activeLobbyListener); } catch(e) {}
@@ -3984,6 +3998,37 @@
     resizeFxCanvas();
     requestAnimationFrame(renderFx);
 
+    let pendingInviteRoom = null;
+
+    function showInvitePrompt(code) {
+      pendingInviteRoom = code;
+      const modal = document.getElementById('mpInviteModal');
+      const label = document.getElementById('mpInviteCodeLabel');
+      const backdrop = document.getElementById('modalBackdrop');
+      if (label) label.textContent = code;
+      if (modal) modal.style.display = 'block';
+      if (backdrop) backdrop.style.display = 'block';
+    }
+
+    function acceptInvite() {
+      const code = pendingInviteRoom;
+      pendingInviteRoom = null;
+      closeAllModals();
+      if (code) {
+        joinOnlineRoom(code);
+      }
+    }
+
+    function declineInvite() {
+      pendingInviteRoom = null;
+      if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+        const cleanUrl = window.location.pathname + window.location.search;
+        window.history.replaceState(null, '', cleanUrl);
+      }
+      closeAllModals();
+      showToast('Invite declined. Continuing in local offline mode.', 'info');
+    }
+
     function checkUrlAutoJoin() {
       try {
         let room = null;
@@ -3995,10 +4040,9 @@
           else if (h.includes('?room=')) room = new URLSearchParams(h.split('?')[1]).get('room');
           else if (/^[A-Za-z0-9_-]{3,10}$/.test(h)) room = h;
         }
-        if (room && window.fb) {
-          setTimeout(() => {
-            joinOnlineRoom(room);
-          }, 400);
+        if (room) {
+          const cleanCode = room.trim().toUpperCase();
+          showInvitePrompt(cleanCode);
         }
       } catch(e) {}
     }

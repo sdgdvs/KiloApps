@@ -5577,8 +5577,23 @@ Strings, block comments, and line comments were safely bypassed during scanning.
 
       const { onlineAvailable, inviteCode } = await mp.init();
       if (inviteCode) {
-        showToast(`Joining collaborative session [${inviteCode}]...`, 'info', 2500);
-        await joinCollabRoom(inviteCode);
+        const cleanCode = inviteCode.trim().toUpperCase();
+        openModal(
+          `👥 Collaborative Session Invite`,
+          `<div style="text-align:center; padding:10px;">
+            <p style="font-size:13px; color:var(--text-main); margin-bottom:14px;">
+              You have been invited to collaborate in room <strong style="color:var(--accent-amber); font-family:var(--font-mono); font-size:15px;">${escapeHtml(cleanCode)}</strong>.
+            </p>
+            <p style="font-size:11px; color:var(--text-muted); margin-bottom:18px;">
+              Would you like to connect and sync your editor with peers in this room?
+            </p>
+            <div style="display:flex; gap:10px; justify-content:center;">
+              <button class="btn btn-primary" onclick="closeModal(); joinCollabRoom('${escapeHtml(cleanCode)}')">👥 Join Session</button>
+              <button class="btn" onclick="closeModal(); showToast('Continuing in solo local editing mode.', 'info', 2500)">Decline (Solo Mode)</button>
+            </div>
+          </div>`,
+          false
+        );
       }
     }
 

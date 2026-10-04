@@ -1403,8 +1403,10 @@
 
       const { onlineAvailable, inviteCode } = await rfmsClient.init();
       if (inviteCode) {
-        document.getElementById('jamRoomInput').value = inviteCode;
-        joinJamRoom(inviteCode);
+        const cleanCode = inviteCode.trim().toUpperCase();
+        const roomInput = document.getElementById('jamRoomInput');
+        if (roomInput) roomInput.value = cleanCode;
+        showToast(`🎵 Jam Invite: Room [${cleanCode}] loaded into toolbar. Click [Join Jam] to connect!`, 'info', 6000);
       }
     } catch (e) {
       console.warn("RFMS init error:", e);

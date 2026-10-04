@@ -15,6 +15,18 @@
 <!-- Modal Backdrop -->
 <div id="modalBackdrop" onclick="closeAllModals()" style="display:none; position:fixed; inset:0; background:rgba(6,8,14,0.78); backdrop-filter:blur(3px); z-index:800;"></div>
 
+<!-- Deep-Link Match Invite Confirmation Modal -->
+<div id="inviteModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:90%; max-width:380px; background:#10131d; border:2px solid #00f0f0; box-shadow:0 0 35px rgba(0,240,240,0.35); border-radius:8px; z-index:900; font-family:'Segoe UI',system-ui,sans-serif; color:#ffffff; padding:18px; text-align:center;">
+  <div style="font-size:16px; font-weight:bold; color:#00f0f0; margin-bottom:8px;">⚔️ Duel Match Invite</div>
+  <p style="font-size:13px; color:#cbd5e1; margin-bottom:16px;">
+    Incoming duel challenge for room <strong id="inviteCodeLabel" style="color:#ffd700; font-family:monospace; font-size:15px;"></strong>.
+  </p>
+  <div style="display:flex; gap:10px; justify-content:center;">
+    <button id="inviteJoinBtn" style="background:#00d2aa; border:none; color:#061018; font-weight:bold; padding:8px 18px; border-radius:4px; cursor:pointer;" onclick="acceptInvite()">⚔️ Connect &amp; Duel</button>
+    <button id="inviteDeclineBtn" class="modal-close btn-close" style="background:#334155; border:1px solid #475569; color:#cbd5e1; padding:8px 14px; border-radius:4px; cursor:pointer;" onclick="declineInvite()">Play Solo</button>
+  </div>
+</div>
+
 <!-- Multiplayer Modal -->
 <div id="multiplayerModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); width:94%; max-width:640px; max-height:92vh; overflow-y:auto; background:#10131d; border:2px solid #00f0f0; box-shadow:0 0 35px rgba(0,240,240,0.35); border-radius:8px; z-index:850; font-family:'Segoe UI',system-ui,sans-serif; color:#ffffff; padding:18px;">
   <!-- Title bar -->
@@ -583,6 +595,45 @@
       }
   }
 
+  let pendingInviteCode = null;
+
+  function showInvitePrompt(code) {
+      pendingInviteCode = code;
+      const modal = document.getElementById('inviteModal');
+      const label = document.getElementById('inviteCodeLabel');
+      const backdrop = document.getElementById('modalBackdrop');
+      if (label) label.textContent = code;
+      if (modal) modal.style.display = 'block';
+      if (backdrop) backdrop.style.display = 'block';
+  }
+
+  function acceptInvite() {
+      const code = pendingInviteCode;
+      pendingInviteCode = null;
+      closeAllModals();
+      if (code) {
+          const joinWhenReady = (retries = 20) => {
+              if (rMultiplayer && rMultiplayer.isOnline()) {
+                  showToast(`Joining duel room [${code}]...`, 3000);
+                  joinRoom(code);
+              } else if (retries > 0) {
+                  setTimeout(() => joinWhenReady(retries - 1), 250);
+              }
+          };
+          joinWhenReady();
+      }
+  }
+
+  function declineInvite() {
+      pendingInviteCode = null;
+      if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+          const cleanUrl = window.location.pathname + window.location.search;
+          window.history.replaceState(null, '', cleanUrl);
+      }
+      closeAllModals();
+      showToast('Invite declined. Continuing in solo mode.', 3000);
+  }
+
   function checkUrlInvite() {
       let code = null;
       const hash = window.location.hash.replace(/^#/, '');
@@ -597,16 +648,7 @@
       }
       if (code) {
           code = code.trim().toUpperCase();
-          console.log("[KTetris] Auto-joining room from URL:", code);
-          const joinWhenReady = (retries = 20) => {
-              if (rMultiplayer && rMultiplayer.isOnline()) {
-                  showToast(`Auto-joining duel room [${code}]...`, 3000);
-                  joinRoom(code);
-              } else if (retries > 0) {
-                  setTimeout(() => joinWhenReady(retries - 1), 250);
-              }
-          };
-          joinWhenReady();
+          showInvitePrompt(code);
       }
   }
 
@@ -623,7 +665,9 @@
   function closeAllModals() {
       const modal = document.getElementById('multiplayerModal');
       const backdrop = document.getElementById('modalBackdrop');
+      const inv = document.getElementById('inviteModal');
       if (modal) modal.style.display = 'none';
+      if (inv) inv.style.display = 'none';
       if (backdrop) backdrop.style.display = 'none';
   }
 

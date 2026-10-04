@@ -548,17 +548,18 @@
             background: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(5px);
             border-radius: 20px;
-            display: flex;
+            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 10;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.2s ease;
         }
 
         .game-over.active {
+            display: flex;
             opacity: 1;
             pointer-events: auto;
         }
@@ -813,6 +814,18 @@
     <canvas id="env-canvas" style="position:fixed; top:0; left:0; width:100%; height:100%; z-index:-1; pointer-events:none;"></canvas>
     <div id="toast-container"></div>
     <div id="modalBackdrop" onclick="closeAllModals()" class="retro-modal-backdrop"></div>
+
+    <!-- Deep-Link Match Invite Confirmation Modal -->
+    <div id="inviteModal" class="retro-modal" style="max-width:380px; text-align:center; padding:18px;">
+        <div style="font-size:16px; font-weight:bold; color:#00f0f0; margin-bottom:8px;">⚔️ Duel Match Invite</div>
+        <p style="font-size:13px; color:#cbd5e1; margin-bottom:16px;">
+            Incoming duel challenge for room <strong id="inviteCodeLabel" style="color:#ffd700; font-family:monospace; font-size:15px;"></strong>.
+        </p>
+        <div style="display:flex; gap:10px; justify-content:center;">
+            <button id="inviteJoinBtn" class="btn" style="background:#00d2aa; color:#061018; font-weight:bold; padding:8px 18px; border-radius:4px; cursor:pointer;" onclick="acceptInvite()">⚔️ Connect &amp; Duel</button>
+            <button id="inviteDeclineBtn" class="btn modal-close btn-close" style="background:#334155; border:1px solid #475569; color:#cbd5e1; padding:8px 14px; border-radius:4px; cursor:pointer;" onclick="declineInvite()">Play Solo</button>
+        </div>
+    </div>
 
     <!-- Multiplayer & Arcade Duel Modal -->
     <div id="multiplayerModal" class="retro-modal" role="dialog" aria-modal="true" aria-label="K2048 Arcade Duel Online Multiplayer">
@@ -1160,7 +1173,7 @@
                 ⭐ <b>Wildcard Gems:</b> Merges with any tile to upgrade it.<br>
                 ✖ <b>Stone Obstacles:</b> Impassable blocker blocks.</p>
             </div>
-            <button class="btn" onclick="closeHelp()" style="width: auto;" aria-label="Close Help Dialog">Close</button>
+            <button class="btn modal-close btn-close" id="help-modal-close-btn" onclick="closeHelp()" style="width: auto;" aria-label="Close Help Dialog">Close</button>
         </div>
 
         <div class="game-over" id="game-over" role="dialog" aria-modal="true" aria-labelledby="go-title">
@@ -4283,6 +4296,36 @@
             }
         }
 
+        let pendingInviteCode = null;
+
+        function showInvitePrompt(code) {
+            pendingInviteCode = code;
+            const label = document.getElementById('inviteCodeLabel');
+            if (label) label.textContent = code;
+            openModal('inviteModal');
+        }
+
+        function acceptInvite() {
+            const code = pendingInviteCode;
+            pendingInviteCode = null;
+            closeAllModals();
+            if (code) {
+                const codeInput = document.getElementById('mpDirectJoinCode');
+                if (codeInput) codeInput.value = code;
+                joinRoomByCode();
+            }
+        }
+
+        function declineInvite() {
+            pendingInviteCode = null;
+            if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+                const cleanUrl = window.location.pathname + window.location.search;
+                window.history.replaceState(null, '', cleanUrl);
+            }
+            closeAllModals();
+            showToast('Invite declined. Continuing in solo mode.', 'info');
+        }
+
         function checkUrlInvite() {
             const hash = window.location.hash;
             const search = window.location.search;
@@ -4297,13 +4340,7 @@
 
             if (roomCode) {
                 const cleanCode = roomCode.toUpperCase();
-                showToast(`Duel invite detected: Room ${cleanCode}`, 'info');
-                openMultiplayerModal();
-                const codeInput = document.getElementById('mpDirectJoinCode');
-                if (codeInput) codeInput.value = cleanCode;
-                setTimeout(() => {
-                    joinRoomByCode();
-                }, 600);
+                showInvitePrompt(cleanCode);
             }
         }
 

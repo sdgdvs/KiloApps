@@ -1367,15 +1367,42 @@ function initRetroMultiplayer() {
 
         rMultiplayer.init().then(({ onlineAvailable, inviteCode }) => {
             if (inviteCode) {
-                setTimeout(() => {
-                    showToast(`🔗 Auto-joining room ${inviteCode} from link...`, 'info');
-                    joinOnlineRoom(inviteCode);
-                }, 500);
+                showInvitePrompt(inviteCode.toUpperCase());
             }
         });
     } catch(err) {
         console.warn("[KDarts] RetroMultiplayer init failed:", err);
     }
+}
+
+let pendingInviteRoom = null;
+
+function showInvitePrompt(code) {
+    pendingInviteRoom = code;
+    const modal = document.getElementById('invite-modal');
+    const label = document.getElementById('invite-code-label');
+    if (label) label.textContent = code;
+    if (modal) modal.style.display = 'flex';
+}
+
+function acceptInvite() {
+    const code = pendingInviteRoom;
+    pendingInviteRoom = null;
+    closeMultiplayerModal();
+    if (code) {
+        joinOnlineRoom(code);
+    }
+}
+
+function declineInvite() {
+    pendingInviteRoom = null;
+    if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
+        const cleanUrl = window.location.pathname + window.location.search;
+        window.history.replaceState(null, '', cleanUrl);
+    }
+    const inv = document.getElementById('invite-modal');
+    if (inv) inv.style.display = 'none';
+    showToast('Invite declined. Continuing in local offline mode.', 'info');
 }
 
 function openMultiplayerModal() {
@@ -1391,6 +1418,8 @@ function openMultiplayerModal() {
 function closeMultiplayerModal() {
     const modal = document.getElementById('multiplayer-modal');
     if (modal) modal.style.display = 'none';
+    const inv = document.getElementById('invite-modal');
+    if (inv) inv.style.display = 'none';
 }
 
 function savePlayerName() {
@@ -3766,6 +3795,21 @@ update();
         <div id="mpLobbyList" class="mp-lobby-box">
           <div style="color: #aaa; font-style: italic; font-size: 12px; text-align: center; padding: 10px;">Connecting to lobby...</div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Deep-Link Match Invite Confirmation Modal -->
+  <div id="invite-modal" class="modal" style="display: none;" onclick="if(event.target===this) declineInvite()">
+    <div class="modal-content" style="border-color: #00d2ff; width: 360px; text-align: center;">
+      <span class="close-btn modal-close btn-close" onclick="declineInvite()">&times;</span>
+      <h3 style="margin-top: 0; color: #00d2ff; font-size: 16px;">🎮 Online Match Invite</h3>
+      <p style="font-size: 13px; color: #cbd5e1; margin-bottom: 16px;">
+        Incoming match invite for room <strong id="invite-code-label" style="color: #ffd700; font-family: monospace; font-size: 15px;"></strong>.
+      </p>
+      <div style="display: flex; gap: 10px; justify-content: center;">
+        <button id="invite-join-btn" style="background: #00c853; border: 1px solid #00d2ff; color: #fff; font-weight: bold; padding: 8px 18px; border-radius: 4px; cursor: pointer;" onclick="acceptInvite()">⚔️ Connect &amp; Join</button>
+        <button id="invite-decline-btn" class="close-btn-decline modal-close btn-close" style="background: #37474f; border: 1px solid #607d8b; color: #eceff1; padding: 8px 14px; border-radius: 4px; cursor: pointer;" onclick="declineInvite()">Play Solo</button>
       </div>
     </div>
   </div>
