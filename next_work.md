@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://geocities (CyberSpire's Shrine)"
-  kilo_graphics: KBreakout
+  kilo_graphics: KQuest
   kilo_tester: KSanctuary
   kilo_usability: KMandel
   kilo_qa: KMandel
@@ -104,9 +104,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
-- **Current Target**: `KBreakout`
+- **Current Target**: `KQuest` (Phase 1: Hero Class Sprites)
 - **Upcoming Queue**:
-  `KPac`, `KAbyss`, `KColosseum`, `KRogue`, `KSpace`, `KQuest`, `KAsteroids` *(Completed: KRogue, KColony, KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KDragon, KSubmarine, KStarDredge, KSanctuary, KSpace, KQuest, KAsteroids)*.
+  `KQuest` (Phase 2: Dungeon & Hub Backgrounds), `KQuest` (Phase 3: Monster & Boss Bestiary), `KQuest` (Phase 4: Town NPCs & Combat FX), `KQuest` (Phase 5: Performance & Win32 Parity), `KBreakout`, `KPac`, `KAbyss`, `KColosseum`, `KRogue`, `KSpace`, `KAsteroids` *(Completed: KRogue, KColony, KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KDragon, KSubmarine, KStarDredge, KSanctuary, KSpace, KQuest, KAsteroids)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KSanctuary`
@@ -152,6 +152,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - ⚠️ AGENT NOTE: This is a human director request, not a machine-generated task. Evaluate whether this directive aligns with the project's core pillars (999KB retro OS, ludonarrative consonance, ARG integrity, fleet stability) before implementing. If counterproductive, skip and log your reasoning.
   - Instructions: <directive text here>
 -->
+
+- **[KQuest] — Visual Art & Asset Overhaul (Imagen 3 Sprites & Backgrounds)** | Director Directive
+  - ⚠️ AGENT NOTE: Human director priority directive for `kilo-graphics`. Replace programmer cutout vector shapes with authentic Imagen 3 generated game assets using the 2-stage asset pipeline.
+  - Instructions: Execute a 5-phase visual overhaul to eliminate all programmer vector cutouts (`ctx.fillRect`, `ctx.beginPath`, `ctx.lineTo`) across hero classes, enemy monsters, town NPCs, and dungeon environments:
+    1. **Phase 1 (Hero Class Sprite Strips)**: Generate orthographic 2D sprite frames on magenta `#FF00FF` for 5 player classes (Warrior, Mage, Rogue, Paladin, Ranger) with weapon/armor tiers. Process via `uv run scripts/asset_pipeline.py process-sprites --frames ... --out-strip KiloOS/public/assets/sprites/kquest/kquest_hero_<class>.png --out-atlas KiloOS/public/assets/sprites/kquest/kquest_hero_<class>.json --box-size 128` (keys out `#FF00FF`, despills fringes, auto-crops, centers, packs into horizontal strips). Refactor `drawHeroSprite()` in `kquest.html` to blit sprite frames (`idle`, `attack`, `hurt`) from loaded image atlases with graceful vector fallback.
+    2. **Phase 2 (Dungeon & Hub Environmental Backgrounds)**: Generate atmospheric backdrops for Town Hub (Sanctuary / Market / Guild) and all 15 Dungeon Biomes (Goblin Outpost, Skeleton Crypt, Sunken Temple, Dark Forest, Orc Fortress, Haunted Mine, Infernal Volcano, Frostpeak Summit, Blood Citadel, Astral Nexus, Void Spire, etc.). Process into quantized 680x220 canvas plates in `KiloOS/public/assets/backgrounds/kquest/` (<999KB budget conscious, e.g. 256-color indexed PNG). Refactor `drawEnvironmentBG()` in `kquest.html` to draw backdrop plates under atmospheric weather motes, replacing procedural gradient lines.
+    3. **Phase 3 (Monster & Boss Bestiary Sprites)**: Generate core biome mob archetypes and 15 Chapter Bosses (Goblin King Prime, Lich Lord Malakor, Abyssal Leviathan, Ancient Treant, Orc Warlord Grommash, Dragon King Pyroth, Void Archon Malakor) on `#FF00FF`. Process via `process-sprites` into 128x128 strips with multi-frame idle, attack lunge, and hit states. Refactor `drawMonsterSprite()` in `kquest.html` to render sprite sheets with status condition overlay tints (poison, burn, freeze).
+    4. **Phase 4 (Town NPCs, Companions & Combat FX)**: Generate Town NPCs (Shopkeeper, Blacksmith, Guildmaster, Factions), Companion summons (Paladin, Ranger), and stylized projectile/spell FX on `#FF00FF`. Refactor `drawNPCSprite()`, companion helper rendering, and spell FX in `kquest.html`.
+    5. **Phase 5 (Performance, Asset Preloader & Win32 Native Parity)**: Build non-blocking async asset preloader with cache status; ensure zero layout pop-in or canvas stutter; keep all files strictly under 999 KB ceiling. Update Win32 native `KQuest/main.c` GDI routines or transparent bitmap blitting if resources bundled, ensuring compile-clean build (`KQuest.exe` < 999 KB). Verify test suites (`npm run build` in `KiloOS/`, `python scripts/security_lint.py`, `python scripts/check_icons.py`).
 
 - **[kclock, ktimer, kpomodoro] — Architecture (ARCH-05: Background Tab Visibility & Timer Drift)** | Director Directive
   - ⚠️ AGENT NOTE: Verified pending ticket from fleet architecture audit.
