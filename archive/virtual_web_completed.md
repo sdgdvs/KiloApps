@@ -37,6 +37,8 @@
      - ✅ Voyager Guestbook (Tab 11): CGI Perl '99 simulator with 14 authentic signatures, posting modal, live Firebase RTDB sync & kudos.
      - ✅ KiloNet NOC Diagnostic Lab (Tab 12): InterNIC WHOIS explorer, multi-hop ICMP traceroute simulator, HTTP/1.0 header dissector & W3C HTML 4.01 validator.
      - ✅ KiloArcade '99 (Tab 13): "Silicon Bug Buster '99" 60 FPS motherboard defense game with Glide/Shield/Clock powerups & hall of fame.
+     - ✅ My KiloNet '99 (Tab 2): Personalized Web 1.0 dashboard with 16 retro pixel avatars, custom handle/motto/timezone, 6 switchable color themes (Classic, Matrix, Hotdog Stand, Netscape, GeoCities, Workstation), and 6 live widgets (Stock Watcher, Weather Radar, Speed Dial Bookmarks, QuickPad Sticky Memo, Silicon Horoscope, Lithospheric NOC Transponder with 1999Hz acoustic ping & JSON backup/restore).
+     - ✅ Silicon Cubicle '99 (Tab 3): Daily syndicated tech comic viewer with 8 complete episodes, high-DPI Canvas vector cartoon art, zoom levels, 5-star interactive ratings, PNG download, and KMail forward simulator.
   3. `kweb://webring` (*Central KiloNet Webring Hub & Badge Studio*):
      - ✅ 18-node verified directory + 2 unmapped dead transponders (#019 & #020) with 1999Hz subcarrier telemetry.
      - ✅ 88x31 Micro Button Studio & Pixel Art Generator (10 archetypes, 11 glyphs, 3D bevels, zoom, PNG/BMP/CSS export, pure client-side 24-bit .BMP file synthesis).

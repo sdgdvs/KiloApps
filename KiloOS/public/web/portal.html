@@ -1608,6 +1608,330 @@
     border-radius: 3px;
     font-family: 'Courier New', monospace;
   }
+
+  /* =========================================================================
+     THEME SYSTEM & VISUAL PALETTES
+     ========================================================================= */
+  body.theme-matrix {
+    background-color: #020c04;
+    background-image: radial-gradient(#052e0d 15%, #010a03 15%);
+    color: #39ff14;
+  }
+  body.theme-matrix .portal-wrapper {
+    background: #041407;
+    border-color: #00aa33;
+    box-shadow: 0 0 25px rgba(0,255,100,0.3);
+  }
+  body.theme-matrix header { border-bottom-color: #00aa33; }
+  body.theme-matrix .logo-title { color: #00ff66; text-shadow: 2px 2px 0 #004411, 3px 3px 0 #000; }
+  body.theme-matrix .logo-title .excl { color: #a3e635; text-shadow: 2px 2px 0 #004411; }
+  body.theme-matrix .portal-tab { background: #08240d; color: #86efac; border-color: #008822; }
+  body.theme-matrix .portal-tab.active { background: #041407; color: #39ff14; border-color: #00ff66; border-bottom-color: #041407; }
+  body.theme-matrix .search-hero { background: #061c0a; border-color: #00aa33; }
+  body.theme-matrix .quick-bar { background: #092b10; border-color: #00aa33; }
+  body.theme-matrix a { color: #00ffcc; }
+
+  body.theme-hotdog {
+    background-color: #990000;
+    background-image: radial-gradient(#cc0000 15%, #880000 15%);
+    color: #000000;
+  }
+  body.theme-hotdog .portal-wrapper {
+    background: #ffff00;
+    border-color: #cc0000;
+    box-shadow: 0 0 20px rgba(0,0,0,0.8);
+  }
+  body.theme-hotdog header { border-bottom-color: #cc0000; }
+  body.theme-hotdog .logo-title { color: #cc0000; text-shadow: 2px 2px 0 #000000; }
+  body.theme-hotdog .portal-tab { background: #ffd000; color: #000000; border-color: #cc0000; }
+  body.theme-hotdog .portal-tab.active { background: #ffff00; color: #cc0000; border-color: #cc0000; border-bottom-color: #ffff00; }
+  body.theme-hotdog .search-hero { background: #fff588; border-color: #cc0000; }
+  body.theme-hotdog .quick-bar { background: #ffea55; border-color: #cc0000; }
+
+  body.theme-netscape {
+    background-color: #002244;
+    background-image: radial-gradient(#004477 15%, #001933 15%);
+  }
+  body.theme-netscape .portal-wrapper {
+    background: #f0f7fa;
+    border-color: #004477;
+  }
+  body.theme-netscape header { border-bottom-color: #004477; }
+  body.theme-netscape .logo-title { color: #006699; text-shadow: 2px 2px 0 #88ccff, 3px 3px 0 #000; }
+  body.theme-netscape .portal-tab { background: #d0e4ef; color: #003366; }
+  body.theme-netscape .portal-tab.active { background: #f0f7fa; color: #004477; border-color: #004477; border-bottom-color: #f0f7fa; }
+  body.theme-netscape .search-hero { background: #e0f0f8; border-color: #006699; }
+
+  body.theme-geocities {
+    background-color: #2b003b;
+    background-image: radial-gradient(#5a007a 15%, #220030 15%);
+  }
+  body.theme-geocities .portal-wrapper {
+    background: #fff8fc;
+    border-color: #aa00aa;
+  }
+  body.theme-geocities header { border-bottom-color: #aa00aa; }
+  body.theme-geocities .logo-title { color: #cc0088; text-shadow: 2px 2px 0 #ffd700, 3px 3px 0 #000; }
+  body.theme-geocities .portal-tab { background: #eed5ee; color: #660066; }
+  body.theme-geocities .portal-tab.active { background: #fff8fc; color: #aa00aa; border-color: #aa00aa; border-bottom-color: #fff8fc; }
+  body.theme-geocities .search-hero { background: #fcedf9; border-color: #aa00aa; }
+
+  body.theme-workstation {
+    background-color: #555555;
+    background-image: radial-gradient(#777777 15%, #444444 15%);
+  }
+  body.theme-workstation .portal-wrapper {
+    background: #d4d0c8;
+    border-color: #808080;
+  }
+  body.theme-workstation header { border-bottom-color: #404040; }
+  body.theme-workstation .logo-title { color: #000080; text-shadow: 2px 2px 0 #ffffff; }
+  body.theme-workstation .portal-tab { background: #c0c0c0; color: #000; }
+  body.theme-workstation .portal-tab.active { background: #d4d0c8; color: #000080; border-color: #404040; border-bottom-color: #d4d0c8; }
+  body.theme-workstation .search-hero { background: #e0ded8; border-color: #808080; }
+
+  /* =========================================================================
+     TAB: MY KILONET '99 STYLES
+     ========================================================================= */
+  .myk-hero {
+    background: linear-gradient(180deg, #e6f2ff 0%, #d0e4ff 100%);
+    border: 2px groove var(--navy-dark);
+    padding: 10px 14px;
+    margin-bottom: 12px;
+  }
+  .myk-avatar-badge {
+    font-size: 32px;
+    background: #ffffff;
+    border: 2px inset #999;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    user-select: none;
+  }
+  .myk-time-pill {
+    background: #000000;
+    color: #39ff14;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 3px 8px;
+    border: 1px inset #555;
+    letter-spacing: 1px;
+  }
+  .myk-settings-panel {
+    background: #fff8e7;
+    border: 2px dashed #b8860b;
+    padding: 12px;
+    margin-bottom: 14px;
+    border-radius: 3px;
+  }
+  .myk-avatar-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .myk-avatar-item {
+    font-size: 20px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px outset #fff;
+    background: #eee;
+    cursor: pointer;
+    border-radius: 3px;
+  }
+  .myk-avatar-item:hover {
+    background: #ddd;
+  }
+  .myk-avatar-item.selected {
+    background: #ffd700;
+    border: 2px inset #b8860b;
+  }
+  .myk-widget-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 12px;
+  }
+  .myk-widget {
+    background: #ffffff;
+    border: 2px groove var(--navy-dark);
+    padding: 10px;
+    box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+  }
+  .myk-widget-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--navy-dark);
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--navy-dark);
+  }
+  .myk-stock-pills {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .myk-stock-pill {
+    background: #f4f8ff;
+    border: 1px solid #b3d1ff;
+    padding: 4px 6px;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .myk-bookmarks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 140px;
+    overflow-y: auto;
+  }
+  .myk-bookmark-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fafafa;
+    border: 1px solid #e0e0e0;
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+  .myk-bookmark-item a {
+    font-weight: bold;
+    color: var(--navy-dark);
+    text-decoration: underline;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 220px;
+  }
+  .myk-memo-box {
+    width: 100%;
+    height: 75px;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    background: #ffffdd;
+    border: 1px solid #d4c060;
+    padding: 6px;
+    resize: none;
+    outline: none;
+    box-sizing: border-box;
+  }
+  .telemetry-badge {
+    background: #cc0000;
+    color: #ffffff;
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 4px;
+    border-radius: 2px;
+  }
+
+  /* =========================================================================
+     TAB: SILICON CUBICLE '99 COMIC SYNDICATE STYLES
+     ========================================================================= */
+  .comic-hero {
+    background: #fae8ff;
+    border: 2px groove #86198f;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+  }
+  .comic-nav-bar {
+    background: var(--win-gray);
+    border-top: 1px solid #ffffff;
+    border-bottom: 1px solid #808080;
+    padding: 6px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .comic-header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 6px;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    margin-bottom: 8px;
+    font-family: Arial, sans-serif;
+  }
+  .comic-viewport {
+    background: #ffffff;
+    border: 3px solid #000000;
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.25);
+    padding: 8px;
+    overflow-x: auto;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  .comic-canvas {
+    background: #ffffff;
+    display: inline-block;
+    vertical-align: middle;
+  }
+  .comic-interaction-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    background: #f9f9f9;
+    border: 1px solid #ccc;
+    padding: 6px 10px;
+    font-family: Arial, sans-serif;
+  }
+  .comic-stars {
+    display: inline-flex;
+    gap: 2px;
+    cursor: pointer;
+  }
+  .comic-star {
+    font-size: 16px;
+    color: #bbb;
+    transition: color 0.15s;
+    user-select: none;
+  }
+  .comic-star.active,
+  .comic-star:hover {
+    color: #f59e0b;
+  }
+  .comic-archive-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .comic-card {
+    background: #ffffff;
+    border: 1px solid #bbb;
+    padding: 6px;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+    font-size: 11px;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .comic-card:hover {
+    border-color: #86198f;
+    background: #fdf4ff;
+  }
+  .comic-card.active {
+    border: 2px solid #86198f;
+    background: #fae8ff;
+  }
 </style>
 </head>
 <body>
@@ -1636,6 +1960,8 @@
       <div class="quick-links">
         <a href="/apps/kmail.html">✉️ Check Email</a>
         <a href="/apps/kchat.html">💬 KChat IRC</a>
+        <a href="#" onclick="switchPortalTab('mykilonet'); return false;" style="color:#b45309; font-weight:bold;">⭐ My KiloNet</a>
+        <a href="#" onclick="switchPortalTab('comics'); return false;" style="color:#7e22ce; font-weight:bold;">🎨 Comic Syndicate</a>
         <a href="#" onclick="switchPortalTab('guestbook'); return false;" style="color:#000080; font-weight:bold;">📖 Guestbook</a>
         <a href="#" onclick="switchPortalTab('noc'); return false;" style="color:#006600; font-weight:bold;">🛠️ NOC Tools</a>
         <a href="#" onclick="switchPortalTab('arcade'); return false;" style="color:#b30000; font-weight:bold;">🕹️ KiloArcade</a>
@@ -1669,7 +1995,7 @@
     </div>
 
     <!-- Breaking News Marquee -->
-    <div class="marquee-bar">
+    <div class="marquee-bar" onclick="handleMarqueeClick()" style="cursor:pointer;" title="Click to inspect news wire dispatch">
       <span class="marquee-badge">FLASH 1999</span>
       <span class="marquee-content" id="marqueeText">
         KiloApps Fleet reaches 99 retro applications! All modules under 999KB ceiling. Y2K compliance verification underway across all ring nodes.
@@ -1679,6 +2005,8 @@
     <!-- Navigation Tabs -->
     <div class="tab-row">
       <div class="portal-tab active" id="tabNav-directory" onclick="switchPortalTab('directory')">📂 Web Directory &amp; Search</div>
+      <div class="portal-tab" id="tabNav-mykilonet" onclick="switchPortalTab('mykilonet')">⭐ My KiloNet '99</div>
+      <div class="portal-tab" id="tabNav-comics" onclick="switchPortalTab('comics')">🎨 Comic Syndicate</div>
       <div class="portal-tab" id="tabNav-guestbook" onclick="switchPortalTab('guestbook')">📖 Voyager Guestbook</div>
       <div class="portal-tab" id="tabNav-noc" onclick="switchPortalTab('noc')">🛠️ NOC Net Tools</div>
       <div class="portal-tab" id="tabNav-arcade" onclick="switchPortalTab('arcade')">🕹️ KiloArcade '99</div>
@@ -1881,6 +2209,265 @@
       </table>
     </div>
   </main>
+
+  <!-- TAB: MY KILONET '99 DASHBOARD & CUSTOMIZER -->
+  <section id="tab-mykilonet" class="tab-content">
+    <div class="myk-hero">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div id="mykAvatarDisplay" class="myk-avatar-badge">📟</div>
+          <div>
+            <h3 style="margin:0 0 2px 0; color:var(--navy-dark); font-family:Arial, sans-serif;">
+              ⭐ Welcome to My KiloNet, <span id="mykHandleDisplay">CyberVoyager_99</span>!
+            </h3>
+            <p id="mykMottoDisplay" style="margin:0; font-size:12px; color:#555; font-style:italic;">
+              "Surfing the 1999 World Wide Web at 56kbps!"
+            </p>
+          </div>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+          <span class="myk-time-pill" id="mykClockPill">🕒 14:00:00 PST</span>
+          <button class="btn-retro" onclick="toggleMyKSettings()">⚙️ Customize Profile &amp; Theme</button>
+          <button class="btn-retro" onclick="exportMyKProfile()">💾 Export Profile</button>
+          <label class="btn-retro" style="cursor:pointer; margin:0;">
+            📂 Import <input type="file" id="mykImportInput" accept=".json" style="display:none;" onchange="importMyKProfile(event)">
+          </label>
+          <button class="btn-retro" onclick="resetMyKSettings()">↺ Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Collapsible Settings Panel -->
+    <div id="mykSettingsPanel" class="myk-settings-panel" style="display:none;">
+      <h4 style="margin:0 0 8px 0; font-family:Arial, sans-serif; font-size:13px; color:var(--navy-dark);">
+        🛠️ My KiloNet '99 Customizer &amp; Visual Theme Engine
+      </h4>
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-bottom:10px;">
+        <div>
+          <label style="font-size:11px; font-weight:bold;">Callsign / Nickname:</label>
+          <input type="text" id="mykInputHandle" class="form-input" value="CyberVoyager_99" maxlength="24" onchange="updateMyKProfileField('handle', this.value)" />
+        </div>
+        <div>
+          <label style="font-size:11px; font-weight:bold;">Status Motto:</label>
+          <input type="text" id="mykInputMotto" class="form-input" value="Surfing the 1999 World Wide Web at 56kbps!" maxlength="60" onchange="updateMyKProfileField('motto', this.value)" />
+        </div>
+        <div>
+          <label style="font-size:11px; font-weight:bold;">Local Timezone:</label>
+          <select id="mykInputTimezone" class="form-input" onchange="updateMyKProfileField('timezone', this.value)">
+            <option value="PST">Pacific Time (UTC-8 / California)</option>
+            <option value="EST">Eastern Time (UTC-5 / New York)</option>
+            <option value="GMT">Greenwich Mean Time (UTC+0 / London)</option>
+            <option value="JST">Japan Standard Time (UTC+9 / Tokyo)</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:11px; font-weight:bold;">Portal Color Theme:</label>
+          <select id="mykInputTheme" class="form-input" onchange="switchPortalTheme(this.value)">
+            <option value="classic">Classic 1999 Blue &amp; Gold</option>
+            <option value="matrix">Cyber Matrix Phosphor Green</option>
+            <option value="hotdog">Windows 95 Hotdog Stand</option>
+            <option value="netscape">Netscape Navigator Slate Teal</option>
+            <option value="geocities">GeoCities Sunset Lavender</option>
+            <option value="workstation">Beige 486 Workstation Gray</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-bottom:10px;">
+        <label style="font-size:11px; font-weight:bold;">Select Your 1999 Avatar Icon:</label>
+        <div class="myk-avatar-grid" id="mykAvatarSelector">
+          <!-- 16 retro avatars injected via JS -->
+        </div>
+      </div>
+
+      <div style="text-align:right;">
+        <button class="btn-retro btn-primary-retro" onclick="toggleMyKSettings()">Done Customizing</button>
+      </div>
+    </div>
+
+    <!-- Active Widgets Grid -->
+    <div class="myk-widget-grid">
+      <!-- Widget 1: Stock Watcher -->
+      <div class="myk-widget">
+        <div class="myk-widget-title">
+          <span>📈 My Dot-Com Stock Watcher</span>
+          <a href="#" onclick="switchPortalTab('stocks'); return false;" style="font-size:11px;">Trading Floor »</a>
+        </div>
+        <div style="font-size:11px; color:#555; margin-bottom:6px;">Custom watchlist tracking real-time dot-com equity movements:</div>
+        <div class="myk-stock-pills" id="mykStockPills">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+
+      <!-- Widget 2: Local Weather Radar -->
+      <div class="myk-widget">
+        <div class="myk-widget-title">
+          <span>⛅ Local Weather &amp; Barometer</span>
+          <select id="mykCitySelect" class="form-input" style="width:130px; font-size:10px; padding:1px 3px;" onchange="changeMyKCity(this.value)">
+            <option value="sf">San Francisco, CA</option>
+            <option value="ny">New York, NY</option>
+            <option value="london">London, UK</option>
+            <option value="tokyo">Tokyo, JP</option>
+            <option value="carlsbad">Carlsbad Station, NM</option>
+          </select>
+        </div>
+        <div id="mykWeatherContent" style="display:flex; align-items:center; justify-content:space-between; padding:4px 0;">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+
+      <!-- Widget 3: Speed Dial Web Bookmarks -->
+      <div class="myk-widget">
+        <div class="myk-widget-title">
+          <span>⚡ Webmaster Speed Dial Bookmarks</span>
+          <button class="btn-retro" style="font-size:10px; padding:1px 5px;" onclick="promptAddBookmark()">➕ Add URL</button>
+        </div>
+        <div id="mykBookmarksList" class="myk-bookmarks-list">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+
+      <!-- Widget 4: QuickPad Sticky Notepad -->
+      <div class="myk-widget">
+        <div class="myk-widget-title">
+          <span>📝 QuickPad Webmaster Memo</span>
+          <div style="display:flex; gap:4px;">
+            <button class="btn-retro" style="font-size:10px; padding:1px 5px;" onclick="copyMyKMemo()">📋 Copy</button>
+            <button class="btn-retro" style="font-size:10px; padding:1px 5px;" onclick="clearMyKMemo()">🗑️ Clear</button>
+          </div>
+        </div>
+        <textarea id="mykMemoArea" class="myk-memo-box" placeholder="Jot quick notes, IP addresses, dial-up codes, or server notes here (auto-saved)..." oninput="saveMyKMemo(this.value)"></textarea>
+        <div style="display:flex; justify-content:space-between; font-size:10px; color:#666; margin-top:3px;">
+          <span id="mykMemoStats">0 characters • 0 words</span>
+          <span>Auto-saved to LocalStorage</span>
+        </div>
+      </div>
+
+      <!-- Widget 5: Silicon Horoscope -->
+      <div class="myk-widget">
+        <div class="myk-widget-title">
+          <span>🔮 Daily Silicon Zodiac Oracle</span>
+          <select id="mykZodiacSelect" class="form-input" style="width:130px; font-size:10px; padding:1px 3px;" onchange="changeMyKZodiac(this.value)">
+            <!-- Populated via JS -->
+          </select>
+        </div>
+        <div id="mykZodiacContent" style="font-size:12px; line-height:1.4; padding:4px 0;">
+          <!-- Populated via JS -->
+        </div>
+      </div>
+
+      <!-- Widget 6: Lithospheric NOC Telemetry (Intranet Gateway) -->
+      <div class="myk-widget" style="border-color:#800000;">
+        <div class="myk-widget-title" style="border-bottom-color:#800000; color:#800000;">
+          <span>📡 Carlsbad Skunkworks Lithospheric Transponder</span>
+          <span class="telemetry-badge" id="mykTransponderStatus">CARRIER 1999Hz LOCKED</span>
+        </div>
+        <div style="font-size:11px; font-family:'Courier New', monospace; line-height:1.4; background:#111; color:#0f0; padding:6px; border:1px inset #555; margin-bottom:6px;">
+          <div>NODE: CARLSBAD-TRANSPONDER-07 [10.19.99.4]</div>
+          <div>SUBCARRIER: 1999Hz PHASE-LOCKED // HARMONIC OK</div>
+          <div style="display:flex; align-items:center; gap:6px; margin-top:2px;">
+            <span>SIGNAL:</span>
+            <div style="flex:1; background:#222; height:10px; border:1px solid #444; position:relative; overflow:hidden;">
+              <div id="mykSignalMeterFill" style="width:84%; height:100%; background:linear-gradient(90deg, #00aa00, #39ff14, #ffd700);"></div>
+            </div>
+            <span>-14 dBm</span>
+          </div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <button class="btn-retro btn-primary-retro" style="font-size:11px;" onclick="pingCarlsbadTransponder()">📡 Ping Gateway (10.19.99.4)</button>
+          <span id="mykPingResult" style="font-size:11px; font-family:'Courier New', monospace; color:#000080;">RTT: 198ms (OK)</span>
+        </div>
+        <div id="mykPingLog" style="font-family:'Courier New', monospace; font-size:10px; color:#555; margin-top:4px; max-height:42px; overflow-y:auto; line-height:1.3;">
+          [1999-10-15 14:02:00] Lithospheric transit link nominal. Phased subcarrier locked at 1999Hz.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB: SILICON CUBICLE '99 COMIC SYNDICATE -->
+  <section id="tab-comics" class="tab-content">
+    <div class="comic-hero">
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div>
+          <h3 style="margin:0 0 2px 0; color:#4a044e; font-family:Arial, sans-serif;">
+            🎨 Silicon Cubicle '99 — The Daily Web Comic Syndicate
+          </h3>
+          <p style="margin:0; font-size:12px; color:#555;">
+            Syndicated computing humor from the trenches of late-90s dot-com start-ups, Y2K bunkers &amp; late-night LAN parties.
+          </p>
+        </div>
+        <div style="display:flex; gap:6px; align-items:center;">
+          <span style="font-size:11px; font-weight:bold; color:#666;">Zoom:</span>
+          <button class="btn-retro" id="comicZoom1x" onclick="setComicZoom(1)" style="font-weight:bold;">1x</button>
+          <button class="btn-retro" id="comicZoom15x" onclick="setComicZoom(1.5)">1.5x</button>
+          <button class="btn-retro" id="comicZoom2x" onclick="setComicZoom(2)">2x</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comic Navigation Bar -->
+    <div class="comic-nav-bar">
+      <div style="display:flex; gap:4px; align-items:center; flex-wrap:wrap;">
+        <button class="btn-retro" onclick="firstComic()">⏮ First</button>
+        <button class="btn-retro" onclick="prevComic()">◀ Previous</button>
+        <button class="btn-retro" onclick="randomComic()">🎲 Random</button>
+        <button class="btn-retro" onclick="nextComic()">Next ▶</button>
+        <button class="btn-retro" onclick="latestComic()">⏭ Latest</button>
+      </div>
+
+      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <label style="font-size:11px; font-weight:bold;">Episode:</label>
+        <select id="comicEpisodeSelect" class="form-input" style="width:230px;" onchange="selectComic(parseInt(this.value, 10))">
+          <!-- Populated via JS -->
+        </select>
+      </div>
+    </div>
+
+    <!-- Strip Header Info -->
+    <div class="comic-header-info">
+      <div style="font-weight:bold; font-size:14px; color:var(--navy-dark);" id="comicTitleDisplay">
+        #1: The Y2K War Room
+      </div>
+      <div style="font-size:11px; color:#666;" id="comicDateDisplay">
+        Published: October 1, 1999 • Silicon Cubicle Syndicate
+      </div>
+    </div>
+
+    <!-- Canvas Viewport Frame -->
+    <div class="comic-viewport" id="comicViewportWrap">
+      <canvas id="comicCanvas" width="780" height="260" class="comic-canvas"></canvas>
+    </div>
+
+    <!-- Comic Interaction & Rating Bar -->
+    <div class="comic-interaction-bar">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:12px; font-weight:bold;">Rate this strip:</span>
+        <div class="comic-stars" id="comicStarWidget">
+          <span class="comic-star" data-star="1" onclick="rateCurrentComic(1)">★</span>
+          <span class="comic-star" data-star="2" onclick="rateCurrentComic(2)">★</span>
+          <span class="comic-star" data-star="3" onclick="rateCurrentComic(3)">★</span>
+          <span class="comic-star" data-star="4" onclick="rateCurrentComic(4)">★</span>
+          <span class="comic-star" data-star="5" onclick="rateCurrentComic(5)">★</span>
+        </div>
+        <span id="comicRatingFeedback" style="font-size:11px; color:#008000; font-weight:bold;">(4.9/5 • 342 votes)</span>
+      </div>
+
+      <div style="display:flex; gap:6px;">
+        <button class="btn-retro" onclick="downloadComicPng()">💾 Save Strip (.PNG)</button>
+        <button class="btn-retro btn-primary-retro" onclick="openComicForwardModal()">✉️ Email to a Friend</button>
+      </div>
+    </div>
+
+    <!-- Comic Archive Browser -->
+    <div style="margin-top:14px; background:#fafafa; border:1px solid #ccc; padding:10px;">
+      <h4 style="margin:0 0 8px 0; font-family:Arial, sans-serif; font-size:13px; color:#333;">
+        📚 Complete Episode Archive ('99 Syndicate Season 1)
+      </h4>
+      <div class="comic-archive-grid" id="comicArchiveGrid">
+        <!-- 8 episode cards injected via JS -->
+      </div>
+    </div>
+  </section>
 
   <!-- TAB: NEWS WIRE '99 -->
   <section id="tab-news" class="tab-content">
@@ -3018,6 +3605,36 @@ Ready. Select target destination to begin automated indexing pass.
   </div>
 </div>
 
+<!-- MODAL: Forward Comic via KMail -->
+<div class="modal-overlay" id="comicForwardModal">
+  <div class="retro-dialog" style="max-width:440px;">
+    <div class="dialog-titlebar">
+      <span>Forward Silicon Cubicle '99 Strip via KMail</span>
+      <button class="dialog-close-btn" onclick="closeComicForwardModal()">×</button>
+    </div>
+    <div class="dialog-body">
+      <form id="comicForwardForm" onsubmit="sendComicForward(event)">
+        <div class="form-group">
+          <label>Recipient Email Address:</label>
+          <input type="text" id="comicForwardTo" class="form-input" placeholder="e.g. sysadmin@echo-subsystem.net or friend@knet.org" required />
+        </div>
+        <div class="form-group">
+          <label>Subject Line:</label>
+          <input type="text" id="comicForwardSubject" class="form-input" value="Hilarious 1999 Tech Comic: Silicon Cubicle '99" required />
+        </div>
+        <div class="form-group">
+          <label>Personal Message / Commentary:</label>
+          <textarea id="comicForwardComment" class="form-input" style="height:60px; resize:none;" placeholder="Thought you would enjoy this retro computing strip! Check it out on KiloNet Portal."></textarea>
+        </div>
+        <div style="text-align:right; margin-top:8px;">
+          <button type="button" class="btn-retro" onclick="closeComicForwardModal()">Cancel</button>
+          <button type="submit" class="btn-retro btn-primary-retro">Dispatch via KMail</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 <script>
 /* =========================================================================
    1. UNIVERSAL AUDIO ENGINE (YM2612 FM + SPC700 STEREO DELAY WARMTH)
@@ -3130,6 +3747,50 @@ function playSuccessChime() {
   triggerFmChime(523.25, 2.0, 1.5, 0.25); // C5
   setTimeout(() => triggerFmChime(659.25, 2.0, 1.5, 0.25), 100); // E5
   setTimeout(() => triggerFmChime(783.99, 2.0, 1.5, 0.45), 200); // G5
+}
+
+function playPageTurn() {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(320, now);
+  osc.frequency.exponentialRampToValueAtTime(140, now + 0.12);
+  gain.gain.setValueAtTime(0.12, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+  osc.connect(gain);
+  gain.connect(masterGain || audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.13);
+}
+
+function playComicChime() {
+  triggerFmChime(587.33, 2.0, 1.2, 0.15); // D5
+  setTimeout(() => triggerFmChime(739.99, 2.0, 1.2, 0.15), 80); // F#5
+  setTimeout(() => triggerFmChime(880.00, 2.0, 1.5, 0.35), 160); // A5
+}
+
+function playPingTone() {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(1999, now); // 1999Hz acoustic subcarrier
+  gain.gain.setValueAtTime(0.25, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+  osc.connect(gain);
+  if (delayNode) {
+    gain.connect(delayNode);
+  }
+  gain.connect(masterGain || audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + 0.46);
 }
 
 function playErrorBuzz() {
@@ -5589,7 +6250,7 @@ function selectZodiacSign(key) {
    ========================================================================= */
 function switchPortalTab(tabName) {
   playClick();
-  const tabs = ['directory', 'guestbook', 'noc', 'arcade', 'news', 'radio', 'stocks', 'classifieds', 'yellowpages', 'weather', 'speedtest', 'horoscope', 'trivia'];
+  const tabs = ['directory', 'mykilonet', 'comics', 'guestbook', 'noc', 'arcade', 'news', 'radio', 'stocks', 'classifieds', 'yellowpages', 'weather', 'speedtest', 'horoscope', 'trivia'];
   tabs.forEach(t => {
     const navEl = document.getElementById(`tabNav-${t}`);
     const contentEl = document.getElementById(`tab-${t}`);
@@ -5628,6 +6289,10 @@ function switchPortalTab(tabName) {
     initNocDisplay();
   } else if (tabName === 'arcade') {
     initArcadeGame();
+  } else if (tabName === 'mykilonet') {
+    renderMyKiloNet();
+  } else if (tabName === 'comics') {
+    renderComicEpisode(currentComicIndex);
   }
 }
 
@@ -8173,6 +8838,1057 @@ function resetArcadeScores() {
 }
 
 /* =========================================================================
+   12B. MARQUEE CLICK DISPATCHER
+   ========================================================================= */
+function handleMarqueeClick() {
+  playClick();
+  const el = document.getElementById('marqueeText');
+  const txt = el ? el.textContent.toLowerCase() : '';
+  if (txt.includes('carlsbad') || txt.includes('1999hz') || txt.includes('intranet')) {
+    switchPortalTab('news');
+    setNewsCategory('INTRANET');
+  } else if (txt.includes('stock') || txt.includes('nasdaq')) {
+    switchPortalTab('stocks');
+  } else if (txt.includes('fleet') || txt.includes('applications')) {
+    switchPortalTab('directory');
+  } else {
+    switchPortalTab('news');
+  }
+}
+
+/* =========================================================================
+   12C. MY KILONET '99 PERSONALIZATION & DASHBOARD ENGINE
+   ========================================================================= */
+const RETRO_AVATARS = ['📟', '💾', '🖥️', '🐧', '🐹', '🙂', '🧙', '👽', '🐱', '☕', '📼', '💿', '🕹️', '💀', '🪐', '⚡'];
+
+const DEFAULT_MYK_PROFILE = {
+  handle: "CyberVoyager_99",
+  motto: "Surfing the 1999 World Wide Web at 56kbps!",
+  timezone: "PST",
+  avatar: "📟",
+  theme: "classic",
+  pinnedStocks: ["KLNT", "VOOD", "CYBR", "GEOC"],
+  weatherCity: "sf",
+  zodiacSign: "transistor",
+  bookmarks: [
+    { title: "KiloNet Central Directory", url: "/web/portal.html" },
+    { title: "GeoCities CyberSpire", url: "/web/geocities.html" },
+    { title: "0xRELEASE Scene Vault", url: "/web/warez.html" },
+    { title: "CyberCafe '99 Lounge", url: "/web/cybercafe.html" },
+    { title: "x86 Opcode Temple", url: "/web/asm_temple.html" },
+    { title: "Central KiloNet Webring", url: "/web/webring.html" }
+  ],
+  memo: "TODO 1999:\n- Pick up 128MB PC133 SDRAM\n- Back up MP3 collection to Zip-100\n- Inspect Carlsbad NOC router logs on 10.19.99.4\n- Check Y2K BIOS update for motherboard"
+};
+
+let myKProfile = { ...DEFAULT_MYK_PROFILE };
+
+function loadMyKiloNetProfile() {
+  try {
+    const raw = localStorage.getItem('my_kilonet_profile');
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      myKProfile = { ...DEFAULT_MYK_PROFILE, ...parsed };
+    }
+  } catch (e) {
+    console.error("Failed to load My KiloNet profile:", e);
+  }
+  applyPortalTheme(myKProfile.theme);
+}
+
+function saveMyKiloNetProfile() {
+  try {
+    localStorage.setItem('my_kilonet_profile', JSON.stringify(myKProfile));
+  } catch (e) {
+    console.error("Failed to save My KiloNet profile:", e);
+  }
+}
+
+function applyPortalTheme(themeKey) {
+  document.body.classList.remove('theme-matrix', 'theme-hotdog', 'theme-netscape', 'theme-geocities', 'theme-workstation');
+  if (themeKey && themeKey !== 'classic') {
+    document.body.classList.add(`theme-${themeKey}`);
+  }
+}
+
+function switchPortalTheme(themeKey) {
+  playClick();
+  myKProfile.theme = themeKey;
+  applyPortalTheme(themeKey);
+  saveMyKiloNetProfile();
+}
+
+function toggleMyKSettings() {
+  playClick();
+  const panel = document.getElementById('mykSettingsPanel');
+  if (!panel) return;
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  if (panel.style.display === 'block') {
+    renderMyKAvatarSelector();
+  }
+}
+
+function updateMyKProfileField(field, val) {
+  myKProfile[field] = val;
+  saveMyKiloNetProfile();
+  if (field === 'handle') {
+    const hEl = document.getElementById('mykHandleDisplay');
+    if (hEl) hEl.textContent = val;
+  } else if (field === 'motto') {
+    const mEl = document.getElementById('mykMottoDisplay');
+    if (mEl) mEl.textContent = `"${val}"`;
+  }
+}
+
+function renderMyKAvatarSelector() {
+  const container = document.getElementById('mykAvatarSelector');
+  if (!container) return;
+  container.innerHTML = RETRO_AVATARS.map(av => `
+    <div class="myk-avatar-item ${myKProfile.avatar === av ? 'selected' : ''}" onclick="selectMyKAvatar('${av}')">
+      ${av}
+    </div>
+  `).join('');
+}
+
+function selectMyKAvatar(av) {
+  playClick();
+  myKProfile.avatar = av;
+  saveMyKiloNetProfile();
+  const avEl = document.getElementById('mykAvatarDisplay');
+  if (avEl) avEl.textContent = av;
+  renderMyKAvatarSelector();
+}
+
+function renderMyKiloNet() {
+  const hEl = document.getElementById('mykHandleDisplay');
+  if (hEl) hEl.textContent = myKProfile.handle;
+  const mEl = document.getElementById('mykMottoDisplay');
+  if (mEl) mEl.textContent = `"${myKProfile.motto}"`;
+  const avEl = document.getElementById('mykAvatarDisplay');
+  if (avEl) avEl.textContent = myKProfile.avatar;
+
+  const inpHandle = document.getElementById('mykInputHandle');
+  if (inpHandle) inpHandle.value = myKProfile.handle;
+  const inpMotto = document.getElementById('mykInputMotto');
+  if (inpMotto) inpMotto.value = myKProfile.motto;
+  const inpTz = document.getElementById('mykInputTimezone');
+  if (inpTz) inpTz.value = myKProfile.timezone;
+  const inpTheme = document.getElementById('mykInputTheme');
+  if (inpTheme) inpTheme.value = myKProfile.theme;
+
+  const memoArea = document.getElementById('mykMemoArea');
+  if (memoArea) {
+    memoArea.value = myKProfile.memo || '';
+    updateMyKMemoStats();
+  }
+
+  renderMyKStockPills();
+  renderMyKWeather();
+  renderMyKBookmarks();
+  renderMyKZodiac();
+  updateMyKClock();
+}
+
+function renderMyKStockPills() {
+  const container = document.getElementById('mykStockPills');
+  if (!container) return;
+  const stocks = myKProfile.pinnedStocks || ["KLNT", "VOOD", "CYBR", "GEOC"];
+  container.innerHTML = stocks.map(sym => {
+    const s = STOCK_DATA.find(item => item.symbol === sym) || STOCK_DATA[0];
+    const isUp = s.change >= 0;
+    const deltaStr = (isUp ? '+' : '') + s.change.toFixed(2);
+    const prevPrice = Math.max(0.1, s.price - s.change);
+    const pct = ((s.change / prevPrice) * 100);
+    const pctStr = (isUp ? '+' : '') + pct.toFixed(1) + '%';
+    const color = isUp ? '#008000' : '#cc0000';
+    const arrow = isUp ? '▲' : '▼';
+    return `
+      <div class="myk-stock-pill">
+        <div>
+          <strong>${s.symbol}</strong>
+          <span style="font-size:10px; color:#666; margin-left:2px;">$${s.price.toFixed(2)}</span>
+        </div>
+        <span style="color:${color}; font-weight:bold; font-size:10px;">${arrow} ${deltaStr} (${pctStr})</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderMyKWeather() {
+  const container = document.getElementById('mykWeatherContent');
+  if (!container) return;
+  const cityKey = myKProfile.weatherCity || 'sf';
+  const c = WEATHER_DATA[cityKey] || WEATHER_DATA.sf;
+  const sel = document.getElementById('mykCitySelect');
+  if (sel) sel.value = cityKey;
+
+  const tempF = c.temp;
+  const tempC = Math.round((tempF - 32) * 5 / 9);
+  container.innerHTML = `
+    <div style="display:flex; align-items:center; gap:8px;">
+      <span style="font-size:26px;">${c.icon}</span>
+      <div>
+        <div style="font-size:14px; font-weight:bold; color:var(--navy-dark);">${tempF}°F / ${tempC}°C</div>
+        <div style="font-size:11px; color:#555;">${c.cond} • ${c.name}</div>
+      </div>
+    </div>
+    <div style="text-align:right; font-size:10px; color:#666; font-family:'Courier New', monospace;">
+      <div>Humidity: ${c.humidity}%</div>
+      <div>Barometer: ${c.barometer}</div>
+      <div>Wind: ${c.wind}</div>
+    </div>
+  `;
+}
+
+function changeMyKCity(cityKey) {
+  playClick();
+  myKProfile.weatherCity = cityKey;
+  saveMyKiloNetProfile();
+  renderMyKWeather();
+}
+
+function renderMyKBookmarks() {
+  const container = document.getElementById('mykBookmarksList');
+  if (!container) return;
+  if (!myKProfile.bookmarks || myKProfile.bookmarks.length === 0) {
+    container.innerHTML = '<div style="font-size:11px; color:#888; padding:4px;">No custom bookmarks saved yet.</div>';
+    return;
+  }
+  container.innerHTML = myKProfile.bookmarks.map((b, idx) => `
+    <div class="myk-bookmark-item">
+      <a href="${b.url}" title="${b.url}">🔗 ${b.title}</a>
+      <div style="display:flex; gap:4px; align-items:center;">
+        <span style="font-size:10px; color:#888; font-family:monospace;">${b.url}</span>
+        <button class="btn-retro" style="font-size:9px; padding:0 3px;" onclick="deleteMyKBookmark(${idx})" title="Delete bookmark">×</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function promptAddBookmark() {
+  playClick();
+  const url = prompt("Enter Web URL to bookmark (e.g. kweb://users/~neon_rider or /web/geocities.html):", "kweb://");
+  if (!url) return;
+  const title = prompt("Enter a friendly Title for this bookmark:", "My Retro Link");
+  if (!title) return;
+  if (!myKProfile.bookmarks) myKProfile.bookmarks = [];
+  myKProfile.bookmarks.push({ title: title.trim(), url: url.trim() });
+  saveMyKiloNetProfile();
+  renderMyKBookmarks();
+  playSuccessChime();
+}
+
+function deleteMyKBookmark(idx) {
+  playClick();
+  if (!myKProfile.bookmarks) return;
+  myKProfile.bookmarks.splice(idx, 1);
+  saveMyKiloNetProfile();
+  renderMyKBookmarks();
+}
+
+function saveMyKMemo(text) {
+  myKProfile.memo = text;
+  saveMyKiloNetProfile();
+  updateMyKMemoStats();
+}
+
+function updateMyKMemoStats() {
+  const statsEl = document.getElementById('mykMemoStats');
+  if (!statsEl) return;
+  const txt = myKProfile.memo || '';
+  const words = txt.trim() ? txt.trim().split(/\s+/).length : 0;
+  statsEl.textContent = `${txt.length} characters • ${words} words`;
+}
+
+function copyMyKMemo() {
+  playClick();
+  const txt = myKProfile.memo || '';
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(txt).then(() => {
+      alert("QuickPad Memo copied to system clipboard!");
+    });
+  } else {
+    alert("QuickPad Memo:\n\n" + txt);
+  }
+}
+
+function clearMyKMemo() {
+  playClick();
+  if (confirm("Clear your QuickPad memo?")) {
+    myKProfile.memo = "";
+    saveMyKiloNetProfile();
+    const memoArea = document.getElementById('mykMemoArea');
+    if (memoArea) memoArea.value = "";
+    updateMyKMemoStats();
+  }
+}
+
+function renderMyKZodiac() {
+  const sel = document.getElementById('mykZodiacSelect');
+  if (sel && sel.options.length === 0) {
+    sel.innerHTML = Object.keys(ZODIAC_DATA).map(k => `
+      <option value="${k}">${ZODIAC_DATA[k].sign}</option>
+    `).join('');
+  }
+  const signKey = myKProfile.zodiacSign || 'transistor';
+  if (sel) sel.value = signKey;
+
+  const container = document.getElementById('mykZodiacContent');
+  if (!container) return;
+  const z = ZODIAC_DATA[signKey] || ZODIAC_DATA.transistor;
+  container.innerHTML = `
+    <div style="font-weight:bold; color:#5b21b6; margin-bottom:2px;">
+      ${z.sign} • Element: ${z.element}
+    </div>
+    <div style="color:#333; font-style:italic;">
+      "${z.prophecy}"
+    </div>
+  `;
+}
+
+function changeMyKZodiac(signKey) {
+  playClick();
+  myKProfile.zodiacSign = signKey;
+  saveMyKiloNetProfile();
+  renderMyKZodiac();
+}
+
+let pingCounter = 0;
+function pingCarlsbadTransponder() {
+  playPingTone();
+  pingCounter++;
+  const resultEl = document.getElementById('mykPingResult');
+  const logEl = document.getElementById('mykPingLog');
+  const barEl = document.getElementById('mykSignalMeterFill');
+
+  if (resultEl) resultEl.textContent = "TRANSMITTING 1999Hz...";
+  if (barEl) barEl.style.width = "40%";
+
+  setTimeout(() => {
+    const rtt = (195 + Math.random() * 8).toFixed(1);
+    if (resultEl) resultEl.textContent = `RTT: ${rtt}ms (OK)`;
+    if (barEl) barEl.style.width = (82 + Math.floor(Math.random() * 12)) + "%";
+
+    if (logEl) {
+      const now = new Date();
+      const timeStr = `1999-10-15 ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+      const newEntry = `[${timeStr}] 64 bytes from 10.19.99.4: icmp_seq=${pingCounter} ttl=58 time=${rtt} ms | Subcarrier 1999Hz LOCKED`;
+      logEl.innerHTML = newEntry + "<br>" + logEl.innerHTML;
+    }
+  }, 220);
+}
+
+function exportMyKProfile() {
+  playClick();
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(myKProfile, null, 2));
+  const a = document.createElement('a');
+  a.setAttribute("href", dataStr);
+  a.setAttribute("download", `my_kilonet_${myKProfile.handle}.json`);
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  playSuccessChime();
+}
+
+function importMyKProfile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      myKProfile = { ...DEFAULT_MYK_PROFILE, ...parsed };
+      saveMyKiloNetProfile();
+      applyPortalTheme(myKProfile.theme);
+      renderMyKiloNet();
+      playSuccessChime();
+      alert("My KiloNet profile successfully imported and applied!");
+    } catch (err) {
+      alert("Error parsing profile JSON: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function resetMyKSettings() {
+  playClick();
+  if (confirm("Reset My KiloNet dashboard and settings to 1999 factory defaults?")) {
+    myKProfile = { ...DEFAULT_MYK_PROFILE };
+    saveMyKiloNetProfile();
+    applyPortalTheme('classic');
+    renderMyKiloNet();
+    playSuccessChime();
+  }
+}
+
+function updateMyKClock() {
+  const clockEl = document.getElementById('mykClockPill');
+  if (!clockEl) return;
+  const now = new Date();
+  const tz = myKProfile.timezone || 'PST';
+  const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
+  clockEl.textContent = `🕒 ${timeStr} ${tz}`;
+}
+
+/* =========================================================================
+   12D. SILICON CUBICLE '99 COMIC SYNDICATE ENGINE
+   ========================================================================= */
+const COMIC_EPISODES = [
+  {
+    id: 1,
+    title: "The Y2K War Room",
+    date: "1999-10-01",
+    rating: 4.9,
+    votes: 382,
+    synopsis: "Sysadmin hunkers down in the server bunker with Spam and flashlights as midnight approaches."
+  },
+  {
+    id: 2,
+    title: "The 56K Handshake Betrayal",
+    date: "1999-10-12",
+    rating: 4.8,
+    votes: 415,
+    synopsis: "After 4 hours downloading a 14MB 3Dfx demo, Mom picks up the kitchen phone."
+  },
+  {
+    id: 3,
+    title: "Mouse Ball Surgery",
+    date: "1999-10-24",
+    rating: 4.9,
+    votes: 512,
+    synopsis: "Tech support performs delicate surgery with tweezers to extract 3 years of roller lint."
+  },
+  {
+    id: 4,
+    title: "The 100MB Zip Disk Hoard",
+    date: "1999-11-05",
+    rating: 4.7,
+    votes: 367,
+    synopsis: "Boasting about 100MB of uncompressed MP3s right before the dreaded Click of Death."
+  },
+  {
+    id: 5,
+    title: "Pencil-Modding the Celeron 300A",
+    date: "1999-11-18",
+    rating: 4.9,
+    votes: 448,
+    synopsis: "Overclocking a $70 chip to 450MHz with a #2 graphite pencil and aquarium pump."
+  },
+  {
+    id: 6,
+    title: "The 1999Hz Whisper",
+    date: "1999-12-01",
+    rating: 5.0,
+    votes: 620,
+    synopsis: "Late night at the Carlsbad NOC: the oscilloscope locks onto a 1999Hz harmonic tone."
+  },
+  {
+    id: 7,
+    title: "The Hit Counter Grifter",
+    date: "1999-12-14",
+    rating: 4.8,
+    votes: 390,
+    synopsis: "Webmaster loops a bash curl script 50,000 times to claim the Golden Floppy Award."
+  },
+  {
+    id: 8,
+    title: "The Basement LAN Party",
+    date: "1999-12-28",
+    rating: 4.9,
+    votes: 526,
+    synopsis: "Six 19-inch CRTs heating the basement to 98°F during a 16-player Surreal Tournament match."
+  }
+];
+
+let currentComicIndex = 0;
+let comicZoomLevel = 1;
+let userComicRatings = {};
+
+function loadComicState() {
+  try {
+    const raw = localStorage.getItem('knet_comic_ratings');
+    if (raw) userComicRatings = JSON.parse(raw);
+  } catch (e) {
+    console.error("Failed to load comic ratings:", e);
+  }
+}
+
+function saveComicState() {
+  try {
+    localStorage.setItem('knet_comic_ratings', JSON.stringify(userComicRatings));
+  } catch (e) {
+    console.error("Failed to save comic ratings:", e);
+  }
+}
+
+function renderComicEpisode(idx) {
+  if (idx < 0) idx = 0;
+  if (idx >= COMIC_EPISODES.length) idx = COMIC_EPISODES.length - 1;
+  currentComicIndex = idx;
+  const ep = COMIC_EPISODES[idx];
+
+  const titleEl = document.getElementById('comicTitleDisplay');
+  if (titleEl) titleEl.textContent = `#${ep.id}: ${ep.title}`;
+  const dateEl = document.getElementById('comicDateDisplay');
+  if (dateEl) dateEl.textContent = `Published: ${ep.date} • Silicon Cubicle Syndicate Season 1`;
+
+  const sel = document.getElementById('comicEpisodeSelect');
+  if (sel) {
+    if (sel.options.length === 0) {
+      sel.innerHTML = COMIC_EPISODES.map((item, i) => `
+        <option value="${i}">Ep #${item.id}: ${item.title}</option>
+      `).join('');
+    }
+    sel.value = idx.toString();
+  }
+
+  // Draw on canvas
+  drawComicStrip(ep, comicZoomLevel);
+
+  // Update rating stars
+  updateComicStars(ep.id);
+  renderComicArchive();
+}
+
+function drawComicStrip(ep, zoom) {
+  const canvas = document.getElementById('comicCanvas');
+  if (!canvas) return;
+  const baseW = 780;
+  const baseH = 260;
+  canvas.width = baseW * zoom;
+  canvas.height = baseH * zoom;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(zoom, zoom);
+
+  // Clear
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, baseW, baseH);
+
+  // Outer border
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 3;
+  ctx.strokeRect(1, 1, baseW - 2, baseH - 2);
+
+  // Header Title Strip
+  ctx.fillStyle = "#1e1b4b";
+  ctx.fillRect(2, 2, baseW - 4, 22);
+  ctx.fillStyle = "#ffd700";
+  ctx.font = "bold 11px Arial, sans-serif";
+  ctx.fillText(`SILICON CUBICLE '99 ★ STRIP #${ep.id}: ${ep.title.toUpperCase()}`, 10, 16);
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "10px 'Courier New', monospace";
+  ctx.fillText("(C) 1999 KILONET SYNDICATE", baseW - 190, 16);
+
+  // Draw 3 panels
+  const p1 = { x: 8, y: 28, w: 246, h: 224 };
+  const p2 = { x: 262, y: 28, w: 246, h: 224 };
+  const p3 = { x: 516, y: 28, w: 256, h: 224 };
+
+  drawSinglePanel(ctx, ep, 1, p1);
+  drawSinglePanel(ctx, ep, 2, p2);
+  drawSinglePanel(ctx, ep, 3, p3);
+}
+
+function drawSinglePanel(ctx, ep, panelNum, p) {
+  ctx.save();
+  // Panel background
+  ctx.fillStyle = getPanelBgColor(ep.id, panelNum);
+  ctx.fillRect(p.x, p.y, p.w, p.h);
+
+  // Floor
+  ctx.fillStyle = getPanelFloorColor(ep.id, panelNum);
+  ctx.fillRect(p.x, p.y + 140, p.w, p.h - 140);
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(p.x, p.y + 140);
+  ctx.lineTo(p.x + p.w, p.y + 140);
+  ctx.stroke();
+
+  // Draw episode specific art & props
+  drawEpisodeArt(ctx, ep.id, panelNum, p);
+
+  // Panel outer frame
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(p.x, p.y, p.w, p.h);
+  ctx.restore();
+}
+
+function getPanelBgColor(epId, panelNum) {
+  if (epId === 6) return "#041407"; // Dark NOC green
+  if (epId === 8) return "#1c1917"; // Dark basement
+  if (panelNum === 1) return "#fef3c7";
+  if (panelNum === 2) return "#e0f2fe";
+  return "#fce7f3";
+}
+
+function getPanelFloorColor(epId, panelNum) {
+  if (epId === 6) return "#020a04";
+  if (epId === 8) return "#0c0a09";
+  if (panelNum === 1) return "#d97706";
+  if (panelNum === 2) return "#0284c7";
+  return "#db2777";
+}
+
+function drawSpeechBubble(ctx, text, x, y, w, h, tailX, tailY) {
+  ctx.save();
+  ctx.fillStyle = "#ffffff";
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 1.5;
+
+  // Bubble body
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.fill();
+  ctx.stroke();
+
+  // Tail
+  ctx.beginPath();
+  ctx.moveTo(x + w / 2 - 6, y + h);
+  ctx.lineTo(tailX, tailY);
+  ctx.lineTo(x + w / 2 + 6, y + h);
+  ctx.closePath();
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+  ctx.stroke();
+
+  // Text
+  ctx.fillStyle = "#000000";
+  ctx.font = "bold 10px Arial, sans-serif";
+  const lines = wrapTextLines(ctx, text, w - 8);
+  lines.forEach((l, idx) => {
+    ctx.fillText(l, x + 4, y + 12 + (idx * 11));
+  });
+  ctx.restore();
+}
+
+function wrapTextLines(ctx, text, maxWidth) {
+  const words = text.split(" ");
+  const lines = [];
+  let curr = words[0];
+  for (let i = 1; i < words.length; i++) {
+    const test = curr + " " + words[i];
+    if (ctx.measureText(test).width < maxWidth) {
+      curr = test;
+    } else {
+      lines.push(curr);
+      curr = words[i];
+    }
+  }
+  lines.push(curr);
+  return lines;
+}
+
+function drawSoundBurst(ctx, text, cx, cy) {
+  ctx.save();
+  ctx.fillStyle = "#fef08a";
+  ctx.strokeStyle = "#dc2626";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  const spikes = 8;
+  const outerR = 26;
+  const innerR = 14;
+  for (let i = 0; i < spikes * 2; i++) {
+    const r = i % 2 === 0 ? outerR : innerR;
+    const angle = (i * Math.PI) / spikes;
+    const x = cx + Math.cos(angle) * r;
+    const y = cy + Math.sin(angle) * r;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = "#dc2626";
+  ctx.font = "bold 9px Arial Black, sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText(text, cx, cy);
+  ctx.restore();
+}
+
+function drawEpisodeArt(ctx, epId, pNum, p) {
+  const x = p.x;
+  const y = p.y;
+
+  const drawDeskAndCrt = (screenColor = "#0284c7") => {
+    ctx.fillStyle = "#78350f";
+    ctx.fillRect(x + 20, y + 130, 110, 40);
+    ctx.fillStyle = "#e5e5e5";
+    ctx.fillRect(x + 40, y + 80, 50, 42);
+    ctx.fillStyle = screenColor;
+    ctx.fillRect(x + 44, y + 84, 42, 34);
+    ctx.fillStyle = "#d4d4d4";
+    ctx.fillRect(x + 58, y + 122, 14, 8);
+    ctx.fillStyle = "#f5f5f5";
+    ctx.fillRect(x + 35, y + 132, 45, 8);
+  };
+
+  const drawCharacter = (cx, cy, hairColor = "#451a03", isPanicked = false) => {
+    ctx.fillStyle = "#2563eb";
+    ctx.fillRect(cx - 14, cy + 26, 28, 40);
+    ctx.fillStyle = "#fed7aa";
+    ctx.fillRect(cx - 5, cy + 20, 10, 8);
+    ctx.beginPath();
+    ctx.arc(cx, cy + 8, 16, 0, Math.PI * 2);
+    ctx.fillStyle = "#fed7aa";
+    ctx.fill();
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = hairColor;
+    ctx.beginPath();
+    ctx.arc(cx, cy + 2, 16, Math.PI, 0, false);
+    ctx.fill();
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(cx - 10, cy + 4, 8, 6);
+    ctx.strokeRect(cx + 2, cy + 4, 8, 6);
+    ctx.beginPath();
+    ctx.moveTo(cx - 2, cy + 7);
+    ctx.lineTo(cx + 2, cy + 7);
+    ctx.stroke();
+    ctx.fillStyle = "#000";
+    ctx.fillRect(cx - 7, cy + 6, 2, 2);
+    ctx.fillRect(cx + 5, cy + 6, 2, 2);
+    ctx.beginPath();
+    if (isPanicked) {
+      ctx.arc(cx, cy + 14, 4, 0, Math.PI * 2);
+      ctx.fillStyle = "#7f1d1d";
+      ctx.fill();
+    } else {
+      ctx.arc(cx, cy + 12, 6, 0.2, Math.PI - 0.2);
+    }
+    ctx.stroke();
+  };
+
+  if (epId === 1) { // Y2K War Room
+    if (pNum === 1) {
+      drawDeskAndCrt("#1e1b4b");
+      drawCharacter(x + 180, y + 80, "#451a03", false);
+      drawSpeechBubble(ctx, "T-minus 10 seconds to 2000! Mainframe BIOS ready...", x + 15, y + 8, 170, 36, x + 180, y + 70);
+    } else if (pNum === 2) {
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(x + 60, y + 40, 126, 45);
+      ctx.fillStyle = "#ef4444";
+      ctx.font = "bold 22px 'Courier New', monospace";
+      ctx.fillText("00:00:00", x + 72, y + 72);
+      drawCharacter(x + 120, y + 100, "#451a03", true);
+      drawSoundBurst(ctx, "TICK!", x + 195, y + 55);
+    } else {
+      drawDeskAndCrt("#16a34a");
+      ctx.fillStyle = "#333333";
+      ctx.fillRect(x + 170, y + 100, 24, 32);
+      ctx.fillStyle = "#78350f";
+      ctx.fillRect(x + 172, y + 116, 20, 14);
+      drawCharacter(x + 130, y + 80, "#451a03", false);
+      drawSpeechBubble(ctx, "Civilization survived! But Mr. Coffee just brewed decaf!", x + 10, y + 8, 175, 36, x + 130, y + 70);
+    }
+  } else if (epId === 2) { // 56K Handshake Betrayal
+    if (pNum === 1) {
+      drawDeskAndCrt("#0284c7");
+      drawCharacter(x + 180, y + 80, "#854d0e", false);
+      drawSpeechBubble(ctx, "14.2 MB / 14.3 MB... 99.8% done! Just 3 seconds left!", x + 15, y + 8, 175, 36, x + 180, y + 70);
+    } else if (pNum === 2) {
+      ctx.fillStyle = "#db2777";
+      ctx.fillRect(x + 110, y + 100, 30, 45);
+      ctx.fillStyle = "#fed7aa";
+      ctx.beginPath();
+      ctx.arc(x + 125, y + 80, 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#000";
+      ctx.fillRect(x + 100, y + 75, 10, 20);
+      drawSpeechBubble(ctx, "Hello Aunt Linda? Can you hear me over this fax screech?", x + 10, y + 8, 170, 36, x + 125, y + 70);
+      drawSoundBurst(ctx, "SCREECH!", x + 200, y + 80);
+    } else {
+      drawDeskAndCrt("#dc2626");
+      drawCharacter(x + 170, y + 90, "#854d0e", true);
+      drawSpeechBubble(ctx, "CONNECTION RESET BY PEER! Transfer Aborted! NOOOO!", x + 15, y + 8, 175, 36, x + 170, y + 80);
+    }
+  } else if (epId === 3) { // Mouse Ball Surgery
+    if (pNum === 1) {
+      drawDeskAndCrt("#eab308");
+      drawCharacter(x + 180, y + 80, "#1e293b", true);
+      drawSpeechBubble(ctx, "My cursor is jumping across the screen like a rabbit!", x + 15, y + 8, 170, 36, x + 180, y + 70);
+    } else if (pNum === 2) {
+      ctx.fillStyle = "#e5e5e5";
+      ctx.beginPath();
+      ctx.ellipse(x + 120, y + 120, 28, 18, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = "#4b5563";
+      ctx.beginPath();
+      ctx.arc(x + 170, y + 120, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      drawCharacter(x + 60, y + 80, "#0f172a", false);
+      drawSpeechBubble(ctx, "Pop the ring... time for surgical extraction.", x + 20, y + 8, 160, 34, x + 60, y + 70);
+    } else {
+      ctx.strokeStyle = "#475569";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x + 120, y + 80);
+      ctx.lineTo(x + 140, y + 120);
+      ctx.stroke();
+      ctx.fillStyle = "#1e293b";
+      ctx.beginPath();
+      ctx.arc(x + 142, y + 124, 7, 0, Math.PI * 2);
+      ctx.fill();
+      drawCharacter(x + 60, y + 80, "#0f172a", false);
+      drawSpeechBubble(ctx, "Behold! 3 years of carpet lint, hair, and Cheetos dust.", x + 20, y + 8, 170, 36, x + 60, y + 70);
+      drawSoundBurst(ctx, "LINT!", x + 200, y + 75);
+    }
+  } else if (epId === 4) { // 100MB Zip Disk Hoard
+    if (pNum === 1) {
+      ctx.fillStyle = "#2563eb";
+      ctx.fillRect(x + 140, y + 100, 22, 22);
+      drawCharacter(x + 80, y + 80, "#451a03", false);
+      drawSpeechBubble(ctx, "Behold! 100 Megabytes of MP3s on a single blue cartridge!", x + 15, y + 8, 175, 36, x + 80, y + 70);
+    } else if (pNum === 2) {
+      ctx.fillStyle = "#64748b";
+      ctx.fillRect(x + 90, y + 110, 65, 30);
+      ctx.fillStyle = "#2563eb";
+      ctx.fillRect(x + 120, y + 118, 18, 14);
+      drawSoundBurst(ctx, "CLICK!", x + 70, y + 80);
+      drawSoundBurst(ctx, "CLACK!", x + 175, y + 80);
+    } else {
+      drawDeskAndCrt("#ef4444");
+      drawCharacter(x + 170, y + 80, "#451a03", true);
+      drawSpeechBubble(ctx, "CLICK OF DEATH! My 18 songs are gone into the void!", x + 15, y + 8, 175, 36, x + 170, y + 70);
+    }
+  } else if (epId === 5) { // Celeron 300A
+    if (pNum === 1) {
+      drawCharacter(x + 70, y + 80, "#b45309", false);
+      ctx.fillStyle = "#eab308";
+      ctx.fillRect(x + 130, y + 100, 6, 26);
+      drawSpeechBubble(ctx, "Bridging pin B21 with a #2 pencil unlocks 450MHz!", x + 15, y + 8, 170, 36, x + 70, y + 70);
+    } else if (pNum === 2) {
+      ctx.fillStyle = "#b45309";
+      ctx.fillRect(x + 90, y + 90, 50, 45);
+      ctx.fillStyle = "#22c55e";
+      ctx.fillRect(x + 145, y + 105, 20, 25);
+      drawSoundBurst(ctx, "TURBO!", x + 180, y + 65);
+      drawCharacter(x + 50, y + 80, "#b45309", false);
+    } else {
+      drawDeskAndCrt("#22c55e");
+      drawCharacter(x + 170, y + 80, "#b45309", false);
+      drawSpeechBubble(ctx, "450MHz stable! Now don't turn on the kitchen microwave!", x + 15, y + 8, 175, 36, x + 170, y + 70);
+    }
+  } else if (epId === 6) { // The 1999Hz Whisper
+    if (pNum === 1) {
+      ctx.fillStyle = "#064e3b";
+      ctx.fillRect(x + 30, y + 50, 50, 110);
+      for (let i = 0; i < 5; i++) {
+        ctx.fillStyle = (i % 2 === 0) ? "#34d399" : "#fbbf24";
+        ctx.fillRect(x + 35, y + 60 + i * 18, 6, 6);
+      }
+      drawCharacter(x + 170, y + 80, "#047857", false);
+      drawSpeechBubble(ctx, "Carlsbad NOC 2:00 AM: Tapping non-routable host 10.19.99.4...", x + 15, y + 8, 175, 36, x + 170, y + 70);
+    } else if (pNum === 2) {
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(x + 30, y + 50, 185, 100);
+      ctx.strokeStyle = "#22c55e";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let sx = 0; sx < 175; sx++) {
+        const sy = y + 100 + Math.sin(sx * 0.18) * 22;
+        if (sx === 0) ctx.moveTo(x + 35 + sx, sy);
+        else ctx.lineTo(x + 35 + sx, sy);
+      }
+      ctx.stroke();
+      drawSoundBurst(ctx, "1999Hz", x + 120, y + 60);
+    } else {
+      drawCharacter(x + 80, y + 80, "#047857", true);
+      drawSpeechBubble(ctx, "Carrier coherent at 1999Hz... but all network cables are unplugged.", x + 15, y + 8, 175, 36, x + 80, y + 70);
+      drawSoundBurst(ctx, "ECHO?", x + 195, y + 85);
+    }
+  } else if (epId === 7) { // Hit Counter Grifter
+    if (pNum === 1) {
+      drawDeskAndCrt("#9333ea");
+      drawCharacter(x + 180, y + 80, "#6b21a8", false);
+      drawSpeechBubble(ctx, "New GeoCities page is live! Visitor #000001...", x + 15, y + 8, 160, 34, x + 180, y + 70);
+    } else if (pNum === 2) {
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(x + 20, y + 50, 205, 95);
+      ctx.fillStyle = "#22c55e";
+      ctx.font = "9px 'Courier New', monospace";
+      ctx.fillText("while true; do", x + 28, y + 70);
+      ctx.fillText("  curl -s $URL > /dev/null", x + 28, y + 85);
+      ctx.fillText("  hits=$((hits+1))", x + 28, y + 100);
+      ctx.fillText("done", x + 28, y + 115);
+      drawSoundBurst(ctx, "LOOP!", x + 190, y + 80);
+    } else {
+      drawCharacter(x + 60, y + 80, "#6b21a8", false);
+      ctx.fillStyle = "#ffd700";
+      ctx.fillRect(x + 140, y + 70, 70, 70);
+      ctx.fillStyle = "#000000";
+      ctx.font = "bold 8px Arial, sans-serif";
+      ctx.fillText("GOLDEN FLOPPY", x + 144, y + 100);
+      ctx.fillText("100,000 HITS!", x + 146, y + 115);
+      drawSpeechBubble(ctx, "I am the most popular webmaster on the entire internet!", x + 10, y + 8, 170, 36, x + 60, y + 70);
+    }
+  } else if (epId === 8) { // Basement LAN Party
+    if (pNum === 1) {
+      ctx.strokeStyle = "#eab308";
+      ctx.lineWidth = 2;
+      for (let i = 0; i < 4; i++) {
+        ctx.beginPath();
+        ctx.moveTo(x + 10, y + 140 + i * 8);
+        ctx.bezierCurveTo(x + 80, y + 120 + i * 10, x + 150, y + 160, x + 230, y + 140 + i * 6);
+        ctx.stroke();
+      }
+      drawCharacter(x + 120, y + 70, "#713f12", false);
+      drawSpeechBubble(ctx, "Six 19-inch CRTs heating the basement to 98 degrees...", x + 15, y + 8, 170, 36, x + 120, y + 60);
+    } else if (pNum === 2) {
+      drawCharacter(x + 80, y + 75, "#b91c1c", true);
+      drawCharacter(x + 160, y + 75, "#1d4ed8", true);
+      drawSoundBurst(ctx, "BOOM!", x + 120, y + 55);
+      drawSpeechBubble(ctx, "WHO HAS THE ROCKET LAUNCHER ON FACING WORLDS?!", x + 10, y + 8, 175, 36, x + 80, y + 65);
+    } else {
+      ctx.fillStyle = "#db2777";
+      ctx.fillRect(x + 40, y + 80, 24, 40);
+      ctx.fillStyle = "#fed7aa";
+      ctx.beginPath();
+      ctx.arc(x + 52, y + 66, 12, 0, Math.PI * 2);
+      ctx.fill();
+      drawCharacter(x + 170, y + 80, "#713f12", true);
+      drawSpeechBubble(ctx, "CAN'T PAUSE, MOM! IT'S SURREAL TOURNAMENT MULTIPLAYER!", x + 10, y + 8, 185, 36, x + 170, y + 70);
+    }
+  }
+}
+
+function prevComic() {
+  playPageTurn();
+  if (currentComicIndex > 0) {
+    renderComicEpisode(currentComicIndex - 1);
+  }
+}
+
+function nextComic() {
+  playPageTurn();
+  if (currentComicIndex < COMIC_EPISODES.length - 1) {
+    renderComicEpisode(currentComicIndex + 1);
+  }
+}
+
+function firstComic() {
+  playPageTurn();
+  renderComicEpisode(0);
+}
+
+function latestComic() {
+  playPageTurn();
+  renderComicEpisode(COMIC_EPISODES.length - 1);
+}
+
+function randomComic() {
+  playPageTurn();
+  const rand = Math.floor(Math.random() * COMIC_EPISODES.length);
+  renderComicEpisode(rand);
+}
+
+function selectComic(idx) {
+  playPageTurn();
+  renderComicEpisode(idx);
+}
+
+function setComicZoom(level) {
+  playClick();
+  comicZoomLevel = level;
+  ['1x', '15x', '2x'].forEach(z => {
+    const btn = document.getElementById(`comicZoom${z}`);
+    if (btn) btn.style.fontWeight = 'normal';
+  });
+  const activeBtn = document.getElementById(`comicZoom${level === 1.5 ? '15x' : level + 'x'}`);
+  if (activeBtn) activeBtn.style.fontWeight = 'bold';
+  drawComicStrip(COMIC_EPISODES[currentComicIndex], comicZoomLevel);
+}
+
+function rateCurrentComic(starNum) {
+  playComicChime();
+  const ep = COMIC_EPISODES[currentComicIndex];
+  userComicRatings[ep.id] = starNum;
+  saveComicState();
+  updateComicStars(ep.id);
+  const fb = document.getElementById('comicRatingFeedback');
+  if (fb) fb.textContent = `★ You rated this ${starNum}/5 stars! (Saved)`;
+}
+
+function updateComicStars(epId) {
+  const userRating = userComicRatings[epId] || 0;
+  for (let s = 1; s <= 5; s++) {
+    const starEl = document.querySelector(`.comic-star[data-star="${s}"]`);
+    if (starEl) {
+      if (s <= userRating) {
+        starEl.classList.add('active');
+      } else {
+        starEl.classList.remove('active');
+      }
+    }
+  }
+  const fb = document.getElementById('comicRatingFeedback');
+  const ep = COMIC_EPISODES.find(item => item.id === epId);
+  if (fb && ep) {
+    if (userRating > 0) {
+      fb.textContent = `★ You rated ${userRating}/5 • Avg: ${ep.rating}/5 (${ep.votes} votes)`;
+    } else {
+      fb.textContent = `(${ep.rating}/5 • ${ep.votes} community votes)`;
+    }
+  }
+}
+
+function downloadComicPng() {
+  playClick();
+  const canvas = document.getElementById('comicCanvas');
+  if (!canvas) return;
+  const ep = COMIC_EPISODES[currentComicIndex];
+  const link = document.createElement('a');
+  link.download = `silicon_cubicle_ep${ep.id}.png`;
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  playSuccessChime();
+}
+
+function openComicForwardModal() {
+  playClick();
+  const ep = COMIC_EPISODES[currentComicIndex];
+  const subj = document.getElementById('comicForwardSubject');
+  if (subj) subj.value = `Hilarious 1999 Tech Comic: #${ep.id} - ${ep.title}`;
+  const modal = document.getElementById('comicForwardModal');
+  if (modal) modal.classList.add('active');
+}
+
+function closeComicForwardModal() {
+  playClick();
+  const modal = document.getElementById('comicForwardModal');
+  if (modal) modal.classList.remove('active');
+}
+
+function sendComicForward(e) {
+  e.preventDefault();
+  playSuccessChime();
+  const to = document.getElementById('comicForwardTo').value;
+  closeComicForwardModal();
+  alert(`Dispatched comic strip via KMail gateway to ${to}!\n\nSMTP Response: 250 Message queued for local delivery.`);
+}
+
+function renderComicArchive() {
+  const container = document.getElementById('comicArchiveGrid');
+  if (!container) return;
+  container.innerHTML = COMIC_EPISODES.map((ep, idx) => `
+    <div class="comic-card ${idx === currentComicIndex ? 'active' : ''}" onclick="selectComic(${idx})">
+      <div style="font-weight:bold; color:var(--navy-dark);">#${ep.id}: ${ep.title}</div>
+      <div style="font-size:10px; color:#666;">${ep.date}</div>
+      <div style="font-size:10px; color:#444; margin-top:2px;">${ep.synopsis}</div>
+      <div style="font-size:10px; color:#b45309; margin-top:4px;">★ ${ep.rating}/5 (${ep.votes} votes)</div>
+    </div>
+  `).join('');
+}
+
+/* =========================================================================
    13. INITIALIZATION
    ========================================================================= */
 window.addEventListener('DOMContentLoaded', () => {
@@ -8191,6 +9907,8 @@ window.addEventListener('DOMContentLoaded', () => {
   loadTriviaState();
   loadPollState();
   loadGuestbookState();
+  loadMyKiloNetProfile();
+  loadComicState();
 
   // Initial renders
   renderStockTable();
@@ -8208,16 +9926,25 @@ window.addEventListener('DOMContentLoaded', () => {
   generateWebmasterSnippet();
   updateSpiderIndexCounts();
   initArcadeGame();
+  renderMyKiloNet();
+  renderComicEpisode(0);
   updatePortalClock();
+  updateMyKClock();
 
   // Start real-time stock ticker (every 3.5 seconds)
-  setInterval(tickStockMarket, 3500);
+  setInterval(() => {
+    tickStockMarket();
+    renderMyKStockPills();
+  }, 3500);
 
   // Marquee rotator (every 6 seconds)
   setInterval(rotateMarquee, 6000);
 
   // Clock updater (every 1 second)
-  setInterval(updatePortalClock, 1000);
+  setInterval(() => {
+    updatePortalClock();
+    updateMyKClock();
+  }, 1000);
 
   // Initialize Firebase RTDB presence & signals
   initFirebasePortal();
