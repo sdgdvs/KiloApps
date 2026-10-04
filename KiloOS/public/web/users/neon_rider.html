@@ -979,6 +979,81 @@
     margin-top: 20px;
     line-height: 1.5;
   }
+
+  /* 8x8 Demoscene Font & Micro-Sprite Studio */
+  .font-studio-grid {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 760px) {
+    .font-studio-grid { grid-template-columns: 1fr; }
+  }
+  .pixel-grid-8x8 {
+    display: grid;
+    grid-template-columns: repeat(8, 26px);
+    grid-template-rows: repeat(8, 26px);
+    gap: 2px;
+    background: #02060c;
+    padding: 6px;
+    border: 2px solid var(--border-dim);
+    width: fit-content;
+    user-select: none;
+  }
+  .pixel-cell {
+    width: 26px;
+    height: 26px;
+    background: #07101c;
+    border: 1px solid #132238;
+    cursor: pointer;
+    transition: background 0.08s, box-shadow 0.08s;
+  }
+  .pixel-cell:hover {
+    border-color: var(--accent-cyan);
+  }
+  .pixel-cell.active {
+    background: var(--accent-cyan);
+    box-shadow: 0 0 8px rgba(0, 255, 204, 0.8), inset 0 0 3px #ffffff;
+    border-color: #ffffff;
+  }
+  .font-tools-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .font-preview-crt {
+    background: #000;
+    border: 2px inset #334155;
+    box-shadow: inset 0 0 10px rgba(0, 255, 204, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  /* Amiga Copper Bar & Palette Studio */
+  .copper-studio-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 14px;
+  }
+  @media (max-width: 820px) {
+    .copper-studio-layout { grid-template-columns: 1fr; }
+  }
+  .copper-screen-wrap {
+    background: #000;
+    border: 2px solid var(--accent-magenta);
+    padding: 4px;
+    box-shadow: 0 0 15px rgba(255, 0, 170, 0.3);
+    text-align: center;
+  }
+  .copper-canvas {
+    width: 100%;
+    max-width: 480px;
+    height: auto;
+    image-rendering: pixelated;
+    background: #000;
+  }
 </style>
 </head>
 <body>
@@ -1022,6 +1097,8 @@
     <button class="nav-btn" data-target="tab-sandbox">⚡ x86 Sandbox &amp; Stepper</button>
     <button class="nav-btn" data-target="tab-audio">🎵 YM2612 &amp; SPC700 Audio Lab</button>
     <button class="nav-btn" data-target="tab-vault">💾 Demoscene Vault &amp; Mode 13h</button>
+    <button class="nav-btn" data-target="tab-font">👾 8x8 Font &amp; Sprite Studio</button>
+    <button class="nav-btn" data-target="tab-copper">🌈 Copper &amp; Palette Studio</button>
     <button class="nav-btn" data-target="tab-benchmark">⚡ Rig Benchmark</button>
     <button class="nav-btn" data-target="tab-guestbook">✍️ Guestbook ('99)</button>
     <button class="nav-btn" data-target="tab-webring">🌐 Webring &amp; Badges</button>
@@ -1260,6 +1337,25 @@ SUB EDI, EAX                 ; EDI = X' in 16.16 fixed format!
 ;       max_drawn_height = screen_y
           </div>
           Because the ray steps outward from near to far, front-to-back occlusion guarantees that hidden canyons are naturally culled by foreground ridges. We achieve full 60 FPS software raycasting across 320 columns with zero 3D acceleration!
+        </div>
+      </div>
+
+      <!-- Article 9 -->
+      <div class="article-item" id="art-9" onclick="toggleArticle(9)">
+        <div class="article-header">
+          <span class="article-title">09. Intercepting the 1999Hz Subcarrier: Memory Analysis at Offset 0x00402030</span>
+          <span class="article-meta">1999-12-31 &bull; 0xNEON</span>
+        </div>
+        <div class="article-body">
+          Further investigation into the anomalous packets logged at <code>10.19.99.4/classified</code> confirms a subterranean transmitter lock.
+          When parsing the raw NDIS payload through our memory disassembler at offset <code>0x00402030</code>, the payload bytes decode to:
+          <div class="code-snippet">
+0x00402030: 50 4B 54 2E 31 30 2E 31 39 2E 39 39 2E 34 20 5B  PKT.10.19.99.4 [
+0x00402040: 53 55 42 3A 31 39 39 39 48 7A 5D 20 53 49 47 3A  SUB:1999Hz] SIG:
+0x00402050: 45 43 48 4F 5F 43 4F 52 45 20 5B 30 78 37 46 5D  ECHO_CORE [0x7F]
+          </div>
+          The acoustic subcarrier matches the 1999Hz resonance profile recorded by the ESARL acoustic monitoring station in the Carlsbad salt formation (<a href="/web/echo_subsystem.html" style="color:var(--accent-cyan);">kweb://echo-subsystem.net</a>).
+          Furthermore, scene couriers report that entering frequency tokens like <code>1999Hz</code>, <code>10.19.99.4</code>, or <code>Carlsbad</code> into the guestbook triggers automated packet reflections from listening daemons on the subterranean grid.
         </div>
       </div>
     </div>
@@ -1676,6 +1772,8 @@ NOP</textarea>
         <button class="btn-retro" onclick="selectVaultFile('voxel_land.asm')">voxel_land.asm (256b)</button>
         <button class="btn-retro" onclick="selectVaultFile('intro1k.asm')">intro1k.asm (1024b)</button>
         <button class="btn-retro" onclick="selectVaultFile('neon_synth.asm')">neon_synth.asm (512b)</button>
+        <button class="btn-retro" onclick="selectVaultFile('copper_rainbow.asm')">copper_rainbow.asm (384b)</button>
+        <button class="btn-retro" onclick="selectVaultFile('demoscene_font8x8.asm')">demoscene_font8x8.asm (256b)</button>
         <button class="btn-retro" onclick="selectVaultFile('fl_neon.nfo')">fl_neon.nfo (Release Info)</button>
       </div>
 
@@ -1801,11 +1899,203 @@ NOP</textarea>
           <button type="submit" class="btn-retro" style="background:#221504; border-color:#ffcc00; color:#ffcc00;">✍️ Sign Guestbook</button>
         </div>
         <div id="gbStatusNotice" style="font-size:11px; color:var(--accent-green); margin-top:4px;"></div>
+        <div style="margin-top:6px; font-size:10px; color:var(--text-muted); background:#050d18; border:1px dashed #1e293b; padding:4px 8px;">
+          <span style="color:var(--accent-amber);">💡 Scene Dead-Drop Notice:</span> Subcarrier frequencies (<code>1999Hz</code>), memory offsets (<code>0x00402030</code>), or classified nodes (<code>10.19.99.4</code>) ping subterranean listener daemons.
+        </div>
       </form>
 
       <!-- Entries List -->
       <div id="gbEntriesContainer">
         <!-- Rendered via JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB: 8x8 Demoscene Font & Micro-Sprite Studio -->
+  <section class="content-section" id="tab-font">
+    <div class="panel-card green-edge">
+      <div class="panel-title">
+        <span>👾 8x8 DEMOSCENE BITMAP FONT &amp; MICRO-SPRITE STUDIO</span>
+        <span style="font-size:10px; color:var(--accent-green);">1-BPP PACKED DB COMPILER &bull; MODE 13h GLYPH EXPORTER</span>
+      </div>
+
+      <p style="font-size:12px; margin-bottom:12px;">
+        In 1KB and 4KB Win32 cracktros, storing characters as vectors or fonts wastes megabytes of bloated resource forks. True scene intros store glyphs and micro-sprites as 8-byte 1-bit-per-pixel bitmasks (1 bit per pixel, 8 scanlines = 8 bytes total). Draw or edit your glyph below to compile live Intel x86 <code>DB</code> byte definitions, C header tables, or raw 8-byte binary blobs.
+      </p>
+
+      <div class="font-studio-grid">
+        <!-- Left: 8x8 Interactive Grid & Tools -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <label style="font-size:11px; color:var(--accent-cyan); font-weight:bold;">Preset Glyph:</label>
+            <select id="fontPresetSelect" style="background:#09121f; color:#00ffcc; border:1px solid var(--border-dim); padding:2px 6px; font-family:var(--font-mono); font-size:11px;">
+              <option value="skull">1. FLARELIGHT Skull</option>
+              <option value="diamond" selected>2. 0xNEON Crest</option>
+              <option value="invader">3. Mode 13h Alien Invader</option>
+              <option value="heart">4. 8-Bit Pixel Heart</option>
+              <option value="lightning">5. Overclock Lightning Bolt</option>
+              <option value="floppy">6. 1.44MB Floppy Disk</option>
+              <option value="antenna">7. 1999Hz Transmit Mast</option>
+              <option value="key">8. Subnet Passkey Fragment</option>
+              <option value="ghost">9. Ghost Spectre 0x7F</option>
+              <option value="star">10. Demoscene 12-Pt Star</option>
+            </select>
+          </div>
+
+          <div style="display:flex; justify-content:center; margin:10px 0;">
+            <div class="pixel-grid-8x8" id="fontPixelGrid">
+              <!-- 64 pixel cells generated by JS -->
+            </div>
+          </div>
+
+          <div class="font-tools-bar">
+            <button class="btn-retro" onclick="shiftFontGrid('up')">▲ Up</button>
+            <button class="btn-retro" onclick="shiftFontGrid('down')">▼ Down</button>
+            <button class="btn-retro" onclick="shiftFontGrid('left')">◄ Left</button>
+            <button class="btn-retro" onclick="shiftFontGrid('right')">► Right</button>
+            <button class="btn-retro" onclick="mirrorFontGrid('h')">↔ Mirror H</button>
+            <button class="btn-retro" onclick="mirrorFontGrid('v')">↕ Mirror V</button>
+            <button class="btn-retro" onclick="invertFontGrid()">⚡ Invert</button>
+            <button class="btn-retro" onclick="clearFontGrid()">🧹 Clear</button>
+          </div>
+
+          <!-- CRT Mode 13h Live Bouncing Preview -->
+          <div style="margin-top:14px; background:#050b13; border:1px solid #1e293b; padding:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-size:11px; color:var(--accent-amber); font-weight:bold;">📺 Mode 13h Live Glyph Preview:</span>
+              <span style="font-size:10px; color:var(--accent-green);">60 FPS Phosphor CRT</span>
+            </div>
+            <div class="font-preview-crt">
+              <canvas id="fontPreviewCanvas" width="240" height="70"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Code Generation & Exporters -->
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <div style="display:flex; gap:4px; align-items:center;">
+              <span style="font-size:11px; color:var(--accent-cyan); font-weight:bold;">Format:</span>
+              <select id="fontExportFormat" style="background:#09121f; color:#ffcc00; border:1px solid var(--border-dim); padding:2px 4px; font-family:var(--font-mono); font-size:10px;">
+                <option value="nasm">MASM / NASM [DB 0XXh]</option>
+                <option value="c">C/C++ Header Array</option>
+                <option value="hex">Raw Hex Byte Stream</option>
+                <option value="bin">Binary Bitmask [0011b]</option>
+              </select>
+            </div>
+            <div style="display:flex; gap:4px;">
+              <button class="btn-retro" onclick="copyFontCode()">📋 Copy</button>
+              <button class="btn-retro btn-retro-pink" onclick="downloadFontAsm()">💾 .ASM</button>
+              <button class="btn-retro" onclick="downloadFontHeader()">💾 .H</button>
+              <button class="btn-retro" onclick="downloadFontBin()">💾 .BIN</button>
+            </div>
+          </div>
+
+          <textarea id="fontCodeOutput" readonly class="code-input-area" style="height:260px; font-size:11px; color:#38bdf8;" spellcheck="false"></textarea>
+
+          <div style="margin-top:8px; font-size:10px; color:var(--text-muted); line-height:1.5;">
+            &bull; Pure silicon footprint: exactly 8 bytes (64 bits).<br>
+            &bull; Direct hardware blitting: shift bits via <code>SHL / SHR</code> into VGA memory segment <code>0xA0000</code>.<br>
+            &bull; Download <code>.BIN</code> to include directly in flat binary routines via <code>incbin "glyph.bin"</code>.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB: Amiga Copper Bar & Palette Studio -->
+  <section class="content-section" id="tab-copper">
+    <div class="panel-card magenta-edge">
+      <div class="panel-title">
+        <span>🌈 AMIGA COPPER BAR &amp; VGA PALETTE GRADIENT STUDIO</span>
+        <span style="font-size:10px; color:var(--accent-magenta);">HORIZONTAL RETRACE RASTER INTERRUPTS &bull; REAL-TIME VGA DAC COMPILER</span>
+      </div>
+
+      <p style="font-size:12px; margin-bottom:12px;">
+        On the Amiga, the dedicated Copper co-processor reprogrammed hardware color registers during the horizontal scanline retrace without consuming CPU cycles. In Win32 and DOS Mode 13h, scene coders reproduced this hypnotic effect by polling VGA Status Register 1 at I/O Port <code>0x3DA</code> and writing to the PEL Address/Data registers at <code>0x3C8/0x3C9</code>.
+      </p>
+
+      <div class="copper-studio-layout">
+        <!-- Screen Preview -->
+        <div>
+          <div class="copper-screen-wrap">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; padding:0 6px;">
+              <span style="font-size:11px; color:var(--accent-cyan); font-weight:bold;">CRT RASTER SPLIT SIMULATOR</span>
+              <span style="font-size:10px; color:var(--accent-green);"><span id="copperFps">60</span> FPS RASTER</span>
+            </div>
+            <canvas id="copperCanvas" class="copper-canvas" width="320" height="160"></canvas>
+          </div>
+
+          <!-- Real-Time Generated Code Viewer -->
+          <div style="margin-top:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-size:11px; color:var(--accent-amber); font-weight:bold;">Mode 13h Hardware Palette Routine (MASM / NASM):</span>
+              <div style="display:flex; gap:4px;">
+                <button class="btn-retro" onclick="copyCopperCode()">📋 Copy ASM</button>
+                <button class="btn-retro btn-retro-pink" onclick="downloadCopperAsm()">💾 Download copper.asm</button>
+              </div>
+            </div>
+            <textarea id="copperCodeOutput" readonly class="code-input-area" style="height:150px; font-size:10px; color:#ffcc00;" spellcheck="false"></textarea>
+          </div>
+        </div>
+
+        <!-- Controls -->
+        <div style="background:#070e18; border:1px solid var(--border-dim); padding:10px;">
+          <span style="font-size:12px; color:var(--accent-magenta); font-weight:bold; display:block; border-bottom:1px solid #1e293b; padding-bottom:4px; margin-bottom:8px;">
+            🎛️ COPPER GRADIENT PARAMETERS
+          </span>
+
+          <div style="display:flex; flex-direction:column; gap:10px; font-size:11px;">
+            <div>
+              <label style="color:var(--text-muted); display:block; margin-bottom:3px;">Gradient Preset:</label>
+              <select id="copperPresetSelect" style="width:100%; background:#09121f; color:#ff00aa; border:1px solid var(--border-dim); padding:4px; font-family:var(--font-mono); font-size:11px;">
+                <option value="amiga" selected>Amiga Classic Rainbow (1999)</option>
+                <option value="neon">Neon Overdrive (Cyan / Magenta)</option>
+                <option value="fire">Thermal Cyber Fire (Red / Gold)</option>
+                <option value="matrix">Phosphor Matrix (Lime / White)</option>
+                <option value="vapor">Vaporwave Sunset (Purple / Coral)</option>
+              </select>
+            </div>
+
+            <div>
+              <label style="color:var(--text-muted); display:flex; justify-content:space-between;">
+                <span>Number of Bars:</span>
+                <span id="copperBarsVal" style="color:var(--accent-cyan); font-weight:bold;">4</span>
+              </label>
+              <input type="range" id="copperBarsSlider" min="1" max="8" value="4" style="width:100%;">
+            </div>
+
+            <div>
+              <label style="color:var(--text-muted); display:flex; justify-content:space-between;">
+                <span>Bar Scanline Thickness:</span>
+                <span id="copperThicknessVal" style="color:var(--accent-amber); font-weight:bold;">16 px</span>
+              </label>
+              <input type="range" id="copperThicknessSlider" min="6" max="32" value="16" style="width:100%;">
+            </div>
+
+            <div>
+              <label style="color:var(--text-muted); display:flex; justify-content:space-between;">
+                <span>Sine Wave Speed:</span>
+                <span id="copperSpeedVal" style="color:var(--accent-green); font-weight:bold;">1.0x</span>
+              </label>
+              <input type="range" id="copperSpeedSlider" min="2" max="25" value="10" style="width:100%;">
+            </div>
+
+            <div>
+              <label style="color:var(--text-muted); display:flex; justify-content:space-between;">
+                <span>Oscillation Amplitude:</span>
+                <span id="copperAmpVal" style="color:#38bdf8; font-weight:bold;">45 px</span>
+              </label>
+              <input type="range" id="copperAmpSlider" min="10" max="70" value="45" style="width:100%;">
+            </div>
+
+            <div style="background:#030710; border:1px solid #1e293b; padding:6px; font-size:10px; color:#94a3b8; line-height:1.4;">
+              &bull; VGA PEL Write Port: <code>0x3C8</code> (Index)<br>
+              &bull; VGA PEL Data Port: <code>0x3C9</code> (RGB)<br>
+              &bull; Status #1 Port: <code>0x3DA</code> (Retrace)
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -1895,6 +2185,8 @@ NOP</textarea>
       if (sec.id === targetId) sec.classList.add('active');
       else sec.classList.remove('active');
     });
+    if (targetId === 'tab-font' && typeof initFontStudio === 'function') initFontStudio();
+    if (targetId === 'tab-copper' && typeof initCopperStudio === 'function') initCopperStudio();
   }
 
   navButtons.forEach(btn => {
@@ -4858,7 +5150,145 @@ render_3d_star:
 
 render_8x8_scroller:
     ; 8x8 bitmap font blitter with horizontal pixel shift
-    ret`
+    ret`,
+
+    'copper_rainbow.asm': `; copper_rainbow.asm — Amiga-Style Copper Bar Scanline Engine in x86 ASM
+; Emulates Amiga Copper coprocessor palette splits on Mode 13h CRT raster
+; Target: DOS COM / Real Mode / VGA Port 0x3DA & 0x3C8/0x3C9
+; Author: neon_rider [FLARELIGHT / 1999]
+
+BITS 16
+ORG 100h
+
+start:
+    mov ax, 13h              ; Set Mode 13h (320x200 256-color)
+    int 10h
+
+main_loop:
+    inc byte [frame_tick]    ; Increment phase timer
+
+    ; Wait for Vertical Retrace to ensure smooth 60 FPS pacing
+    mov dx, 03DAh
+wait_vr_end:
+    in al, dx
+    test al, 8
+    jnz wait_vr_end
+wait_vr_start:
+    in al, dx
+    test al, 8
+    jz wait_vr_start
+
+    ; Render 200 scanline copper gradient
+    xor cx, cx               ; Line counter = 0
+
+scanline_loop:
+    ; Wait for Horizontal Retrace start (Bit 0 of Port 0x3DA)
+wait_hr:
+    in al, dx
+    test al, 1
+    jz wait_hr
+
+    ; Compute copper bar color for current scanline CX
+    mov al, cl
+    add al, [frame_tick]
+    and al, 63               ; Modulo 64 (VGA DAC 6-bit depth)
+
+    ; Output to VGA DAC Color 0 (Overscan & Background)
+    push dx
+    mov dx, 03C8h           ; PEL Address Write Mode
+    xor al, al              ; Color register 0
+    out dx, al
+    mov dx, 03C9h           ; PEL Data Register
+
+    ; Rainbow spectrum RGB calculation
+    mov al, cl
+    add al, [frame_tick]
+    and al, 63              ; Red
+    out dx, al
+
+    mov al, cl
+    shr al, 1
+    and al, 63              ; Green
+    out dx, al
+
+    mov al, 63
+    sub al, cl
+    and al, 63              ; Blue
+    out dx, al
+    pop dx
+
+    inc cx
+    cmp cx, 200
+    jl scanline_loop
+
+    ; Check ESC key
+    in al, 60h
+    cmp al, 1
+    jne main_loop
+
+    mov ax, 03h             ; Restore 80x25 text mode
+    int 10h
+    ret
+
+frame_tick db 0`,
+
+    'demoscene_font8x8.asm': `; demoscene_font8x8.asm — 1-bit 8x8 Bitmap Font Blitter in Pure x86 ASM
+; Squeezes full 1-bpp micro-sprites and font glyphs into 8 bytes per char
+; Target: DOS COM / Mode 13h Screen Segment 0xA000
+; Author: neon_rider [FLARELIGHT / 1999]
+
+BITS 16
+ORG 100h
+
+start:
+    mov ax, 13h              ; 320x200 Mode 13h
+    int 10h
+    push 0A000h
+    pop es                   ; ES -> 0xA000 (Video RAM)
+
+    ; Blit 8x8 glyph centered at (156, 96)
+    mov si, glyph_neon       ; DS:SI -> 8-byte font definition
+    mov di, 320 * 96 + 156   ; ES:DI -> Video memory offset
+    mov cx, 8                ; 8 scanlines
+
+blit_row:
+    lodsb                    ; AL = bitmask for this row (8 pixels)
+    mov ah, 8                ; 8 pixels per byte
+    push di
+
+blit_pixel:
+    shl al, 1                ; Shift highest bit into Carry Flag
+    jnc skip_pixel           ; If bit is 0, leave background untouched
+
+    mov byte [es:di], 0Dh    ; Cyan palette index (bright neon)
+
+skip_pixel:
+    inc di
+    dec ah
+    jnz blit_pixel
+
+    pop di
+    add di, 320              ; Advance to next scanline
+    loop blit_row
+
+    ; Wait for keystroke
+    xor ah, ah
+    int 16h
+
+    mov ax, 03h              ; Restore text mode
+    int 10h
+    ret
+
+; 8x8 Glyph Data (0xNEON Crest): 8 bytes total
+glyph_neon:
+    db 00011000b ; ..##....
+    db 00111100b ; .####...
+    db 01111110b ; ######..
+    db 11111111b ; ########
+    db 11111111b ; ########
+    db 01111110b ; ######..
+    db 00111100b ; .####...
+    db 00011000b ; ..##....`
   };
 
   let currentVaultKey = 'tinytunnel.asm';
@@ -5093,7 +5523,16 @@ render_8x8_scroller:
 
       const author = document.createElement('span');
       author.className = 'gb-author';
-      author.textContent = entry.nick + (entry.crew ? ` [${entry.crew}]` : '');
+
+      if (entry.nick === 'Carlsbad_Relay_04' || entry.nick === 'Ghost_SysOp_0x7F' || entry.nick === 'EchoDaemon') {
+        card.style.border = '1px solid #00ffcc';
+        card.style.background = '#001a14';
+        card.style.boxShadow = '0 0 10px rgba(0,255,204,0.3)';
+        author.style.color = '#00ffcc';
+        author.innerHTML = `📡 <strong>${entry.nick}</strong> <span style="font-size:9px; background:#003322; color:#00ffcc; padding:1px 5px; border:1px solid #00ffcc; margin-left:4px; font-weight:bold;">[DEAD-DROP CAPTURED]</span>`;
+      } else {
+        author.textContent = entry.nick + (entry.crew ? ` [${entry.crew}]` : '');
+      }
 
       const date = document.createElement('span');
       date.className = 'gb-date';
@@ -5103,7 +5542,7 @@ render_8x8_scroller:
       header.appendChild(date);
 
       const msg = document.createElement('div');
-      msg.style.color = '#cbd5e1';
+      msg.style.color = (entry.nick === 'Carlsbad_Relay_04') ? '#a7f3d0' : '#cbd5e1';
       msg.textContent = entry.msg;
 
       card.appendChild(header);
@@ -5223,6 +5662,9 @@ render_8x8_scroller:
     showToast("✍️ Signed ~neon_rider's guestbook!");
     setTimeout(() => { status.textContent = ''; }, 4000);
     playClickSound();
+
+    // Check dead-drop triggers
+    checkDeadDropGuestbook(msg, nick, crew);
   }
 
   renderGuestbook();
@@ -5239,6 +5681,550 @@ render_8x8_scroller:
       showToast(`✔ Copied ${badgeName} badge code to clipboard!`);
     }
   }
+
+  /* =========================================================================
+     8B. 8x8 DEMOSCENE BITMAP FONT & MICRO-SPRITE STUDIO
+     ========================================================================= */
+  const fontPresets = {
+    diamond: [0x18, 0x3C, 0x7E, 0xFF, 0xFF, 0x7E, 0x3C, 0x18],
+    skull: [0x3C, 0x7E, 0xDB, 0xFF, 0xFF, 0x24, 0x5A, 0x3C],
+    invader: [0x18, 0x3C, 0x7E, 0xDB, 0xFF, 0x24, 0x5A, 0x81],
+    heart: [0x00, 0x66, 0xFF, 0xFF, 0xFF, 0x7E, 0x3C, 0x18],
+    lightning: [0x08, 0x1C, 0x3E, 0x7C, 0x1E, 0x38, 0x10, 0x00],
+    floppy: [0x7E, 0x42, 0x42, 0x7E, 0x7E, 0x66, 0x66, 0x7E],
+    antenna: [0x18, 0x18, 0x99, 0x5A, 0x3C, 0x18, 0x18, 0x18],
+    key: [0x1C, 0x22, 0x22, 0x1C, 0x08, 0x0E, 0x08, 0x0E],
+    ghost: [0x3C, 0x7E, 0xD7, 0xFF, 0xFF, 0xFF, 0xA5, 0x00],
+    star: [0x18, 0x18, 0x99, 0x7E, 0x7E, 0x99, 0x18, 0x18]
+  };
+
+  let fontGridData = [...fontPresets.diamond];
+  let isFontMouseDown = false;
+  let fontDrawMode = 1;
+  let fontStudioInitialized = false;
+
+  function initFontStudio() {
+    if (fontStudioInitialized) return;
+    const gridEl = document.getElementById('fontPixelGrid');
+    if (!gridEl) return;
+    fontStudioInitialized = true;
+
+    gridEl.innerHTML = '';
+    for (let r = 0; r < 8; r++) {
+      for (let c = 0; c < 8; c++) {
+        const cell = document.createElement('div');
+        cell.className = 'pixel-cell';
+        cell.dataset.row = r;
+        cell.dataset.col = c;
+        cell.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          isFontMouseDown = true;
+          const current = (fontGridData[r] >> (7 - c)) & 1;
+          fontDrawMode = current ? 0 : 1;
+          setFontPixel(r, c, fontDrawMode);
+        });
+        cell.addEventListener('mouseenter', () => {
+          if (isFontMouseDown) {
+            setFontPixel(r, c, fontDrawMode);
+          }
+        });
+        gridEl.appendChild(cell);
+      }
+    }
+
+    window.addEventListener('mouseup', () => { isFontMouseDown = false; });
+
+    const presetSel = document.getElementById('fontPresetSelect');
+    if (presetSel) {
+      presetSel.addEventListener('change', (e) => {
+        if (fontPresets[e.target.value]) {
+          fontGridData = [...fontPresets[e.target.value]];
+          renderFontGrid();
+        }
+      });
+    }
+
+    const fmtSel = document.getElementById('fontExportFormat');
+    if (fmtSel) {
+      fmtSel.addEventListener('change', updateFontCodeOutput);
+    }
+
+    renderFontGrid();
+    startFontPreviewAnim();
+  }
+
+  function setFontPixel(r, c, val) {
+    if (val) {
+      fontGridData[r] |= (1 << (7 - c));
+    } else {
+      fontGridData[r] &= ~(1 << (7 - c));
+    }
+    renderFontGrid();
+    playClickSound();
+  }
+
+  function renderFontGrid() {
+    const gridEl = document.getElementById('fontPixelGrid');
+    if (!gridEl) return;
+    const cells = gridEl.querySelectorAll('.pixel-cell');
+    cells.forEach(cell => {
+      const r = parseInt(cell.dataset.row, 10);
+      const c = parseInt(cell.dataset.col, 10);
+      const active = (fontGridData[r] >> (7 - c)) & 1;
+      if (active) cell.classList.add('active');
+      else cell.classList.remove('active');
+    });
+    updateFontCodeOutput();
+  }
+
+  function shiftFontGrid(dir) {
+    if (dir === 'up') {
+      fontGridData.shift();
+      fontGridData.push(0);
+    } else if (dir === 'down') {
+      fontGridData.pop();
+      fontGridData.unshift(0);
+    } else if (dir === 'left') {
+      for (let r = 0; r < 8; r++) {
+        fontGridData[r] = (fontGridData[r] << 1) & 0xFF;
+      }
+    } else if (dir === 'right') {
+      for (let r = 0; r < 8; r++) {
+        fontGridData[r] = (fontGridData[r] >> 1) & 0xFF;
+      }
+    }
+    renderFontGrid();
+    playClickSound();
+  }
+
+  function mirrorFontGrid(axis) {
+    if (axis === 'v') {
+      fontGridData.reverse();
+    } else if (axis === 'h') {
+      for (let r = 0; r < 8; r++) {
+        let b = fontGridData[r];
+        let rev = 0;
+        for (let i = 0; i < 8; i++) {
+          if ((b >> i) & 1) rev |= (1 << (7 - i));
+        }
+        fontGridData[r] = rev;
+      }
+    }
+    renderFontGrid();
+    playClickSound();
+  }
+
+  function invertFontGrid() {
+    for (let r = 0; r < 8; r++) {
+      fontGridData[r] = (~fontGridData[r]) & 0xFF;
+    }
+    renderFontGrid();
+    playClickSound();
+  }
+
+  function clearFontGrid() {
+    fontGridData = [0, 0, 0, 0, 0, 0, 0, 0];
+    renderFontGrid();
+    playClickSound();
+  }
+
+  function updateFontCodeOutput() {
+    const out = document.getElementById('fontCodeOutput');
+    if (!out) return;
+    const fmt = document.getElementById('fontExportFormat')?.value || 'nasm';
+
+    if (fmt === 'nasm') {
+      let code = `; 8x8 Demoscene Bitmap Glyph [Width: 8, Height: 8]\n; Format: 1-bpp Packed DB (8 bytes total)\n; Generated live via kweb://users/~neon_rider\nglyph_data:\n`;
+      fontGridData.forEach((b) => {
+        const hex = b.toString(16).toUpperCase().padStart(2, '0');
+        const binArt = b.toString(2).padStart(8, '0').replace(/0/g, '.').replace(/1/g, '#');
+        code += `    DB 0${hex}h    ; ${binArt}\n`;
+      });
+      out.value = code;
+    } else if (fmt === 'c') {
+      let code = `// 8x8 Demoscene Bitmap Glyph (1-bit packed byte array)\n// Generated live via kweb://users/~neon_rider\nconst unsigned char glyph_custom[8] = {\n`;
+      const hexList = fontGridData.map(b => '0x' + b.toString(16).toUpperCase().padStart(2, '0'));
+      code += `    ${hexList.join(', ')}\n};\n`;
+      out.value = code;
+    } else if (fmt === 'hex') {
+      out.value = fontGridData.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+    } else if (fmt === 'bin') {
+      let code = `; Binary Bitmask Representation (8 scanlines)\n`;
+      fontGridData.forEach(b => {
+        code += `    db ${b.toString(2).padStart(8, '0')}b\n`;
+      });
+      out.value = code;
+    }
+  }
+
+  function copyFontCode() {
+    const out = document.getElementById('fontCodeOutput');
+    if (out && navigator.clipboard) {
+      navigator.clipboard.writeText(out.value);
+      showToast("📋 Copied glyph code to clipboard!");
+    }
+  }
+
+  function downloadFontAsm() {
+    const text = document.getElementById('fontCodeOutput')?.value || '';
+    downloadBlobText(text, 'glyph_8x8.asm');
+  }
+
+  function downloadFontHeader() {
+    const hexList = fontGridData.map(b => '0x' + b.toString(16).toUpperCase().padStart(2, '0')).join(', ');
+    const text = `#ifndef GLYPH_8X8_H\n#define GLYPH_8X8_H\n\n// 8x8 Demoscene Bitmap Glyph (8 bytes)\nstatic const unsigned char GLYPH_DATA[8] = { ${hexList} };\n\n#endif\n`;
+    downloadBlobText(text, 'glyph_8x8.h');
+  }
+
+  function downloadFontBin() {
+    const bytes = new Uint8Array(fontGridData);
+    const blob = new Blob([bytes], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'glyph_8x8.bin';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast("💾 Downloaded raw 8-byte glyph_8x8.bin!");
+  }
+
+  function downloadBlobText(text, filename) {
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast(`💾 Downloaded ${filename}!`);
+  }
+
+  /* Mode 13h Live CRT Glyph Animation */
+  let fontAnimX = 10;
+  let fontAnimDir = 1;
+  let fontAnimY = 15;
+  let fontAnimYDir = 1;
+
+  function startFontPreviewAnim() {
+    const canvas = document.getElementById('fontPreviewCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    function loop() {
+      ctx.fillStyle = 'rgba(2, 6, 12, 0.35)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      fontAnimX += 1.5 * fontAnimDir;
+      if (fontAnimX > canvas.width - 45 || fontAnimX < 8) fontAnimDir *= -1;
+
+      fontAnimY += 1.0 * fontAnimYDir;
+      if (fontAnimY > canvas.height - 45 || fontAnimY < 8) fontAnimYDir *= -1;
+
+      // Draw custom 8x8 glyph scaled 4x
+      const scale = 4;
+      ctx.fillStyle = '#00ffcc';
+      ctx.shadowColor = '#00ffcc';
+      ctx.shadowBlur = 6;
+
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          if ((fontGridData[r] >> (7 - c)) & 1) {
+            ctx.fillRect(fontAnimX + c * scale, fontAnimY + r * scale, scale - 1, scale - 1);
+          }
+        }
+      }
+      ctx.shadowBlur = 0;
+
+      // Scanline grid
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+      for (let y = 0; y < canvas.height; y += 3) {
+        ctx.fillRect(0, y, canvas.width, 1);
+      }
+
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+  }
+
+  /* =========================================================================
+     8C. AMIGA COPPER BAR & PALETTE GRADIENT STUDIO
+     ========================================================================= */
+  const copperPalettes = {
+    amiga: [
+      { r: 255, g: 0, b: 0 },
+      { r: 255, g: 128, b: 0 },
+      { r: 255, g: 255, b: 0 },
+      { r: 0, g: 255, b: 64 },
+      { r: 0, g: 255, b: 255 },
+      { r: 0, g: 128, b: 255 },
+      { r: 255, g: 0, b: 255 }
+    ],
+    neon: [
+      { r: 0, g: 255, b: 204 },
+      { r: 0, g: 180, b: 255 },
+      { r: 200, g: 0, b: 255 },
+      { r: 255, g: 0, b: 170 },
+      { r: 255, g: 0, b: 100 }
+    ],
+    fire: [
+      { r: 40, g: 0, b: 0 },
+      { r: 180, g: 20, b: 0 },
+      { r: 255, g: 80, b: 0 },
+      { r: 255, g: 200, b: 0 },
+      { r: 255, g: 255, b: 200 }
+    ],
+    matrix: [
+      { r: 0, g: 20, b: 5 },
+      { r: 0, g: 120, b: 30 },
+      { r: 0, g: 255, b: 70 },
+      { r: 160, g: 255, b: 180 }
+    ],
+    vapor: [
+      { r: 60, g: 0, b: 120 },
+      { r: 140, g: 20, b: 180 },
+      { r: 255, g: 80, b: 160 },
+      { r: 255, g: 160, b: 120 },
+      { r: 255, g: 220, b: 140 }
+    ]
+  };
+
+  let copperTime = 0;
+  let isCopperRunning = false;
+
+  function initCopperStudio() {
+    if (isCopperRunning) return;
+    isCopperRunning = true;
+
+    const bSlider = document.getElementById('copperBarsSlider');
+    const tSlider = document.getElementById('copperThicknessSlider');
+    const sSlider = document.getElementById('copperSpeedSlider');
+    const aSlider = document.getElementById('copperAmpSlider');
+    const pSelect = document.getElementById('copperPresetSelect');
+
+    if (bSlider) {
+      bSlider.addEventListener('input', (e) => {
+        document.getElementById('copperBarsVal').textContent = e.target.value;
+        updateCopperCode();
+      });
+    }
+    if (tSlider) {
+      tSlider.addEventListener('input', (e) => {
+        document.getElementById('copperThicknessVal').textContent = e.target.value + ' px';
+        updateCopperCode();
+      });
+    }
+    if (sSlider) {
+      sSlider.addEventListener('input', (e) => {
+        document.getElementById('copperSpeedVal').textContent = (e.target.value / 10).toFixed(1) + 'x';
+        updateCopperCode();
+      });
+    }
+    if (aSlider) {
+      aSlider.addEventListener('input', (e) => {
+        document.getElementById('copperAmpVal').textContent = e.target.value + ' px';
+        updateCopperCode();
+      });
+    }
+    if (pSelect) {
+      pSelect.addEventListener('change', updateCopperCode);
+    }
+
+    updateCopperCode();
+    startCopperAnimation();
+  }
+
+  function startCopperAnimation() {
+    const canvas = document.getElementById('copperCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const fpsEl = document.getElementById('copperFps');
+    let lastT = performance.now();
+    let fCount = 0;
+
+    function renderCopper() {
+      const now = performance.now();
+      fCount++;
+      if (now - lastT >= 1000) {
+        if (fpsEl) fpsEl.textContent = fCount.toString();
+        fCount = 0;
+        lastT = now;
+      }
+
+      const numBars = parseInt(document.getElementById('copperBarsSlider')?.value || '4', 10);
+      const thickness = parseInt(document.getElementById('copperThicknessSlider')?.value || '16', 10);
+      const speed = (parseInt(document.getElementById('copperSpeedSlider')?.value || '10', 10) / 10) * 0.035;
+      const amp = parseInt(document.getElementById('copperAmpSlider')?.value || '45', 10);
+      const presetKey = document.getElementById('copperPresetSelect')?.value || 'amiga';
+      const colors = copperPalettes[presetKey] || copperPalettes.amiga;
+
+      copperTime += speed;
+
+      // Dark background
+      ctx.fillStyle = '#01050a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const midY = canvas.height / 2;
+
+      for (let b = 0; b < numBars; b++) {
+        const phase = b * (Math.PI / numBars);
+        const barY = Math.round(midY + Math.sin(copperTime + phase) * amp);
+        const col = colors[b % colors.length];
+
+        // Draw horizontal gradient slice for this copper bar
+        for (let dy = -thickness; dy <= thickness; dy++) {
+          const py = barY + dy;
+          if (py < 0 || py >= canvas.height) continue;
+          const factor = 1.0 - Math.abs(dy) / thickness;
+          const r = Math.round(col.r * factor);
+          const g = Math.round(col.g * factor);
+          const blue = Math.round(col.b * factor);
+
+          ctx.fillStyle = `rgb(${r},${g},${blue})`;
+          ctx.fillRect(0, py, canvas.width, 1);
+        }
+      }
+
+      // CRT scanlines overlay
+      ctx.fillStyle = 'rgba(0,0,0,0.35)';
+      for (let y = 0; y < canvas.height; y += 2) {
+        ctx.fillRect(0, y, canvas.width, 1);
+      }
+
+      requestAnimationFrame(renderCopper);
+    }
+    requestAnimationFrame(renderCopper);
+  }
+
+  function updateCopperCode() {
+    const out = document.getElementById('copperCodeOutput');
+    if (!out) return;
+
+    const numBars = document.getElementById('copperBarsSlider')?.value || '4';
+    const thickness = document.getElementById('copperThicknessSlider')?.value || '16';
+    const presetKey = document.getElementById('copperPresetSelect')?.value || 'amiga';
+
+    let asm = `; --- MODE 13h COPPER BAR RASTER SCANLINE ROUTINE ---\n`;
+    asm += `; Preset: ${presetKey.toUpperCase()} // Active Bars: ${numBars} // Thickness: ${thickness}px\n`;
+    asm += `; Target: Intel x86 Real Mode / VGA Port 0x3DA & 0x3C8/0x3C9\n`;
+    asm += `; Generated live via kweb://users/~neon_rider\n\n`;
+    asm += `render_copper_bars:\n`;
+    asm += `    mov dx, 03DAh       ; Input Status #1 Register\n`;
+    asm += `    xor cx, cx          ; CX = scanline 0..199\n\n`;
+    asm += `.raster_loop:\n`;
+    asm += `    in al, dx\n`;
+    asm += `    test al, 1          ; Wait for Horizontal Retrace Start\n`;
+    asm += `    jz .raster_loop\n\n`;
+    asm += `    ; Reprogram Palette DAC Index 0 (Background Overscan)\n`;
+    asm += `    push dx\n`;
+    asm += `    mov dx, 03C8h       ; PEL Address Write Mode\n`;
+    asm += `    xor al, al          ; Register 0\n`;
+    asm += `    out dx, al\n`;
+    asm += `    mov dx, 03C9h       ; PEL Data Register (6-bit RGB 0..63)\n`;
+    asm += `    mov al, [copper_table + cx*3 + 0]  ; Red\n`;
+    asm += `    out dx, al\n`;
+    asm += `    mov al, [copper_table + cx*3 + 1]  ; Green\n`;
+    asm += `    out dx, al\n`;
+    asm += `    mov al, [copper_table + cx*3 + 2]  ; Blue\n`;
+    asm += `    out dx, al\n`;
+    asm += `    pop dx\n\n`;
+    asm += `    inc cx\n`;
+    asm += `    cmp cx, 200\n`;
+    asm += `    jl .raster_loop\n`;
+    asm += `    ret\n`;
+
+    out.value = asm;
+  }
+
+  function copyCopperCode() {
+    const out = document.getElementById('copperCodeOutput');
+    if (out && navigator.clipboard) {
+      navigator.clipboard.writeText(out.value);
+      showToast("📋 Copied Copper ASM routine to clipboard!");
+    }
+  }
+
+  function downloadCopperAsm() {
+    const text = document.getElementById('copperCodeOutput')?.value || '';
+    downloadBlobText(text, 'copper_bars.asm');
+  }
+
+  /* =========================================================================
+     8D. DEAD-DROP GUESTBOOK & 1999Hz ACOUSTIC INTERCEPTOR
+     ========================================================================= */
+  function checkDeadDropGuestbook(msg, nick, crew) {
+    if (nick === 'Carlsbad_Relay_04' || nick === 'EchoDaemon' || nick === 'Ghost_SysOp_0x7F') return;
+    const lower = (msg + ' ' + (crew || '')).toLowerCase();
+    const triggers = ['10.19.99.4', '1999hz', 'carlsbad', 'sector_03', 'flarescan', '0xneon', 'salado', 'echo-subsystem', 'deep-core', '0x7f', 'echo_core'];
+    const matched = triggers.some(t => lower.includes(t));
+
+    if (matched) {
+      playDeadDropCarrier();
+      showDeadDropBanner();
+
+      setTimeout(() => {
+        const responseEntry = {
+          nick: "Carlsbad_Relay_04",
+          crew: "FLARELIGHT_Echo_Node",
+          date: "1999-12-31",
+          msg: "*** [AUTONOMOUS PACKET INTERCEPT]: Frame offset 0x00402030 verified. 1999Hz acoustic impedance matches Permian Salado Halite salt cavern strata. ESARL Acoustic Array telemetry online at kweb://echo-subsystem.net. Classified gateway at kweb://10.19.99.4/classified. Memory sector 0x7F unlocked."
+        };
+
+        const entries = getGuestbook();
+        if (!entries.some(e => e.nick === responseEntry.nick && e.msg === responseEntry.msg)) {
+          entries.unshift(responseEntry);
+          localStorage.setItem('neon_rider_guestbook', JSON.stringify(entries));
+          renderGuestbook();
+
+          if (fbDb && fbPush && fbRef) {
+            try {
+              const remoteRef = fbRef(fbDb, `virtual_web/neon_rider/guestbook`);
+              fbPush(remoteRef, responseEntry);
+            } catch (err) {
+              console.log("Firebase dead-drop push failed:", err);
+            }
+          }
+        }
+        localStorage.setItem('kweb_neon_rider_deaddrop_unlocked', 'true');
+        showToast("📡 CARRIER 1999Hz LOCKED: Inbound response decoded!");
+      }, 1200);
+    }
+  }
+
+  function playDeadDropCarrier() {
+    initAudio();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    triggerFmVoice(1999.0, 1.8, false, 2.0, 800);
+  }
+
+  function showDeadDropBanner() {
+    const existing = document.getElementById('deadDropBanner');
+    if (existing) existing.remove();
+
+    const banner = document.createElement('div');
+    banner.id = 'deadDropBanner';
+    banner.style.cssText = 'position:fixed; bottom:24px; right:24px; z-index:10001; background:#001a12; border:2px solid #00ffcc; color:#00ffcc; padding:12px 18px; font-family:var(--font-mono); font-size:12px; font-weight:bold; box-shadow:0 0 25px rgba(0,255,204,0.6); max-width:400px;';
+    banner.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; border-bottom:1px solid #00ffcc; padding-bottom:3px;">
+        <span style="color:#ffff00;">📡 CARRIER 1999Hz LOCKED // RELAY 0x7F</span>
+        <span style="font-size:10px; color:#ff0055; cursor:pointer;" onclick="this.parentElement.parentElement.remove()">[DISMISS]</span>
+      </div>
+      <div style="font-size:11px; color:#cbd5e1; line-height:1.4;">
+        Autonomous dead-drop response captured! Packet frame verified at offset 0x00402030. Injected into guestbook stream.
+      </div>
+    `;
+    document.body.appendChild(banner);
+    setTimeout(() => { if (banner.parentElement) banner.remove(); }, 8000);
+  }
+
+  // Pre-initialize studios so canvases are prepared
+  setTimeout(() => {
+    initFontStudio();
+    initCopperStudio();
+  }, 200);
 </script>
 
 </body>
