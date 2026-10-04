@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://asm-temple (x86 Opcode Shrine)"
   kilo_graphics: "KQuest (Phase 3: Monster & Boss Bestiary)"
   kilo_tester: KStarship
-  kilo_usability: KMystery
+  kilo_usability: KNet
   kilo_qa: KNote
   kilo_expander: KPong
 virtual_web_target: "kweb://asm-temple"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KStarDredge
-  timestamp: "2026-10-04T03:45:00-07:00"
+  agent: kilo-usability
+  app: KMystery
+  timestamp: "2026-10-04T03:55:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio`, `KSanctuary` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KMystery`
+- **Current Target**: `KNet`
 - **Upcoming Queue**:
-  `KNet`, `KNote`, `KPass`, `KHash`, `KGraph`, `KClock`, `KTimer`, `KPomodoro` *(Completed: KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia)*.
+  `KNote`, `KPass`, `KHash`, `KGraph`, `KClock`, `KTimer`, `KPomodoro` *(Completed: KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KNote`
@@ -230,6 +230,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T03:55:00-07:00 — kilo-usability: KMystery (UI/UX Usability Pass, Toast Occlusion Fix, Modal Close Accessibility & Responsive Sizing)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 154.8 KB web / 39.9 KB native < 999 KB ceiling).
+  - Toast Occlusion Remediation: Re-anchored toast bar from screen-center to bottom-right with inline dismiss icon, preventing button occlusion.
+  - Modal Close & Hotkey Accessibility: Added explicit close IDs, help-btn-close classes, and document+window keydown listeners; CDP startup test 100% PASS.
+  - Layout & Window Dimensions: Tuned default window to 960x710 in App.jsx; added crisp canvas rendering and responsive CSS media queries.
+  - Ergonomics & Polish: Added focus-visible outlines for keyboard navigation, sleek retro scrollbars, and bumped KiloOS version to 0.4.24.
+  - Verification: MSVC clean (`KMystery.exe` 39.9 KB); Vite build clean in 313ms; test_app_startup PASS; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T03:45:00-07:00 — kilo-tester: KStarDredge (Interactive UI Audit, CSS Brace Fix, JSON Import/Export & Backdrop Dismissal)**
   - Status: PASS ✅ (3 issues fixed, 0 regressions, clean builds, 485.6 KB web / 276.0 KB native < 999 KB).
   - CSS Syntax Repair: Fixed unclosed `.contract-progress-bar` brace and added `.contract-progress-fill` styling, resolving startup audit failure.
@@ -260,11 +268,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Opening Book & Endgame Minimax: Added 18 opening recognitions (D4 symmetry) and exact endgame solver badge.
   - Keyboard Navigation & Parity: Added Arrow/WASD cursor navigation, Enter/Space placement, and F5/F9 state parity in web and Win32 C.
   - Verification: MSVC clean (`KReversi.exe` 164.3 KB); Vite build clean in 268ms; security_lint 100% PASS; check_icons 100% PASS.
-
-- **2026-10-04T02:29:00-07:00 — kilo-qa: KNet (Pass 5 QA & Build Quality, Mandate 12 Connect Gate, Full State & TINAG Polish)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 181.8 KB web / 45.1 KB native < 999 KB ceiling).
-  - Quicksave & Full State Persistence: Added complete state persistence across all 7 tabs/utilities with F5/F9 hotkeys on web and native Win32 C (`knet_quicksave.dat`).
-  - First-Run Tutorial Integrity: Added safe first-run flag checks (`knet_tutorialSeen` / `.dat`) ensuring welcome prompts never interrupt restored save states.
-  - Mandate 12 Connect Gate: Enforced offline default on Mesh Radar; gated global Firebase RTDB telemetry behind explicit Connect/Disconnect toggle.
-  - Toast & TINAG Polish: Re-anchored toasts to bottom right above footer eliminating button occlusion; cleaned non-diegetic `#arg-leaks` and meta-spoilers in C.
-  - Verification: MSVC native clean (`KNet.exe` 45.1 KB); Vite build clean in 265ms; CDP startup PASS; security_lint 100% PASS; check_icons 100% PASS.

@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T02:29:00-07:00 — kilo-qa: KNet (Pass 5 QA & Build Quality, Mandate 12 Connect Gate, Full State & TINAG Polish)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 181.8 KB web / 45.1 KB native < 999 KB ceiling).
+  - Quicksave & Full State Persistence: Added complete state persistence across all 7 tabs/utilities with F5/F9 hotkeys on web and native Win32 C (`knet_quicksave.dat`).
+  - First-Run Tutorial Integrity: Added safe first-run flag checks (`knet_tutorialSeen` / `.dat`) ensuring welcome prompts never interrupt restored save states.
+  - Mandate 12 Connect Gate: Enforced offline default on Mesh Radar; gated global Firebase RTDB telemetry behind explicit Connect/Disconnect toggle.
+  - Toast & TINAG Polish: Re-anchored toasts to bottom right above footer eliminating button occlusion; cleaned non-diegetic `#arg-leaks` and meta-spoilers in C.
+  - Verification: MSVC native clean (`KNet.exe` 45.1 KB); Vite build clean in 265ms; CDP startup PASS; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T02:08:00-07:00 — kilo-usability: KMedia (UI/UX Ergonomics, Mandate 12 Connect Gate, Collapsible Sidebar & HiDPI Polish)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 143.9 KB web / 22.0 KB native < 999 KB ceiling).
   - Mandate 12 Connect Gate: Removed multiplayer autostart; defaulted to offline mode; added explicit Connect/Disconnect toggle for Watch Party.
