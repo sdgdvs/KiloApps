@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://geocities (CyberSpire's Shrine)"
   kilo_graphics: KQuest
   kilo_tester: KScript
-  kilo_usability: KMandel
+  kilo_usability: KMedia
   kilo_qa: KMandel
   kilo_expander: KGo
 virtual_web_target: "kweb://geocities"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: FleetMultiplayerAudit
-  timestamp: "2026-10-04T00:05:00-07:00"
+  agent: kilo-usability
+  app: KMandel
+  timestamp: "2026-10-04T00:10:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio`, `KSanctuary` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KMandel`
+- **Current Target**: `KMedia`
 - **Upcoming Queue**:
-  `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash`, `KGraph`, `KClock`, `KTimer`, `KPomodoro` *(Completed: KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail)*.
+  `KMystery`, `KNet`, `KNote`, `KPass`, `KHash`, `KGraph`, `KClock`, `KTimer`, `KPomodoro` *(Completed: KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KMandel`
@@ -230,6 +230,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
  
+- **2026-10-04T00:10:00-07:00 — kilo-usability: KMandel (Tabbed Controls Ergonomics, Multiplayer Connect Gate, Mote/Shake Purge & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 124.2 KB web / 21.5 KB native < 999 KB ceiling).
+  - Tabbed Ergonomics: Organized 18 controls into 3 compact category tabs (Explore, Style, Tools) eliminating vertical scrolling in 720px window.
+  - Mandatory Connect Gate: Enforced Rule 12 with offline-by-default boot, replacing autostart with manual Connect Co-Op and Disconnect.
+  - Glint & Clutter Purge: Removed floating motes, screen shake, and GDI brush churn across web and native C for crisp, serene exploration.
+  - Toast & Dialog Polish: Capped toast stack to 3 with explicit dismiss crosses; wired modal Esc and backdrop dismiss handlers.
+  - ARCH-05 Visibility: Implemented visibilitychange listeners pausing animation loops and suspending AudioContext on background tab.
+  - Verification: MSVC native clean (21.5 KB); Vite build clean in 337ms; check_icons 100% PASS; security_lint 100% PASS.
+
 - **2026-10-04T00:05:00-07:00 — kilo-qa: Fleet Audit (Multiplayer Connect Gate & Startup UX Verification)**
   - Status: PASS ✅ (11 apps audited, 100% startup & UX test suite pass, zero console exceptions).
   - Connect Gate Standard: Added explicit confirmation dialogs on deep links (`#room=CODE`) across `KChess`, `KConnect4`, `KReversi`, `KGo`, `KDarts`, `KTetris`, `K2048`, `KSnake`, `KSynth`, `KPad`.
@@ -259,14 +268,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - ARCH-05 Visibility: Added visibilitychange event listener suspending audio, stopping thrust, and pausing animation loop when backgrounded.
   - Gameplay & Polish: Tuned dynamic heartbeat tempo scaling with remaining asteroid count, clean static cyber HUD borders, and build sync.
   - Verification: MSVC native clean (`KAsteroids.exe` 217.0 KB); Vite build clean in 320ms; check_icons 100% PASS; security_lint 100% PASS.
-
-- **2026-10-03T23:12:00-07:00 — kilo-creator: kweb://warez (Subterranean Signals Telemetry, 1999Hz Courier Beacon, ARCH-05 & Breadcrumb Pass)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean build in 306ms, 255.0 KB web < 999 KB ceiling).
-  - Subterranean Signals: Added Tab 10 `[ 📡 SUBTERRANEAN SIGNALS ]` live `arg/signals` sync, sniffer terminal, and decrypted courier cache.
-  - Collaborative ARG: Built 1999Hz courier pulse broadcaster and solo verification lock (`acquireSoloCourierLock`) per director mandate.
-  - Surface Breadcrumbs: Added ECHOPLEX '99 release NFO with 1999Hz carrier notes, DeepCoreBridge.exe sandbox target, and cracktro glitch offsets.
-  - ARCH-05 Visibility: Implemented `visibilitychange` handler suspending audio and pausing timers/canvas animation loops when hidden.
-  - Verification: Vite build clean (306ms); security_lint 100% PASS; check_icons 100% PASS.
 
 
 

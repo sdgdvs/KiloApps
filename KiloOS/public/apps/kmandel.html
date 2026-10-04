@@ -240,26 +240,77 @@
   .coop-indicator {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
     font-size: 11px;
-    color: #34d399;
+    color: #94a3b8;
     font-weight: 600;
-    padding: 2px 6px;
-    background: rgba(16, 185, 129, 0.15);
+    padding: 4px 8px;
+    background: rgba(15, 23, 42, 0.7);
     border-radius: 4px;
-    border: 1px solid rgba(52, 211, 153, 0.3);
+    border: 1px solid rgba(96, 165, 250, 0.25);
+    justify-content: center;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .coop-indicator.online {
+    color: #34d399;
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(52, 211, 153, 0.35);
   }
   .coop-dot {
     width: 7px;
     height: 7px;
-    background: #34d399;
+    background: #64748b;
     border-radius: 50%;
+  }
+  .coop-indicator.online .coop-dot {
+    background: #34d399;
     box-shadow: 0 0 6px #34d399;
     animation: pulseDot 1.8s infinite;
   }
   @keyframes pulseDot {
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.4; transform: scale(0.8); }
+  }
+  .controls-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 6px;
+    border-bottom: 1px solid rgba(96, 165, 250, 0.2);
+    padding-bottom: 6px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 6px 3px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(15, 23, 42, 0.6);
+    border: 1px solid rgba(96, 165, 250, 0.25);
+    color: #94a3b8;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+    line-height: 1.2;
+  }
+  .tab-btn:hover {
+    background: rgba(59, 130, 246, 0.25);
+    color: #f8fafc;
+    border-color: rgba(96, 165, 250, 0.45);
+  }
+  .tab-btn.active {
+    background: linear-gradient(180deg, rgba(59, 130, 246, 0.45) 0%, rgba(30, 58, 102, 0.7) 100%);
+    border-color: #60a5fa;
+    color: #ffffff;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.35);
+  }
+  .tab-pane {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .tab-pane.active {
+    display: flex;
   }
   #help-overlay, #import-overlay {
     display: none;
@@ -540,178 +591,201 @@
         </button>
       </div>
 
-      <!-- 1. Fractal Formula Select (8 Formulas) -->
-      <div class="control-group">
-        <label for="fractal-select">Fractal Formula <span style="color:#60a5fa;font-size:10px;">[1-8/F]</span></label>
-        <select id="fractal-select" aria-label="Fractal Formula">
-          <option value="0">1. Mandelbrot (z² + c)</option>
-          <option value="1">2. Burning Ship</option>
-          <option value="2">3. Tricorn / Mandelbar</option>
-          <option value="3">4. Celtic Mandelbrot</option>
-          <option value="4">5. Buffalo Fractal</option>
-          <option value="5">6. Multibrot 3 (z³ + c)</option>
-          <option value="6">7. Multibrot 4 (z⁴ + c)</option>
-          <option value="7">8. Perpendicular Ship</option>
-        </select>
+      <!-- Tab Navigation Header -->
+      <div class="controls-tabs" role="tablist">
+        <button id="tab-btn-explore" class="tab-btn active" role="tab" aria-selected="true" aria-controls="pane-explore" data-tab="pane-explore">🌀 Explore</button>
+        <button id="tab-btn-style" class="tab-btn" role="tab" aria-selected="false" aria-controls="pane-style" data-tab="pane-style">🎨 Style</button>
+        <button id="tab-btn-tools" class="tab-btn" role="tab" aria-selected="false" aria-controls="pane-tools" data-tab="pane-tools">🛠️ Tools</button>
       </div>
 
-      <!-- 2. Landmark Presets (18 Presets) -->
-      <div class="control-group">
-        <label for="landmark-select">Landmark Presets <span style="color:#fbbf24;font-size:10px;">[L/P]</span></label>
-        <select id="landmark-select" aria-label="Landmark Presets">
-          <option value="-1">-- Jump to Landmark --</option>
-          <option value="0">Mandelbrot Overview</option>
-          <option value="1">Seahorse Valley</option>
-          <option value="2">Elephant Valley</option>
-          <option value="3">Triple Spiral</option>
-          <option value="4">Mini Mandelbrot</option>
-          <option value="5">Burning Ship Main</option>
-          <option value="6">Ship Needle</option>
-          <option value="7">Tricorn Main</option>
-          <option value="8">Celtic Ring</option>
-          <option value="9">Buffalo Heart</option>
-          <option value="10">Julia Dendrite</option>
-          <option value="11">Julia San Marco</option>
-          <option value="12">Multibrot 3 Clover</option>
-          <option value="13">Multibrot 3 Cusp</option>
-          <option value="14">Multibrot 4 Cross</option>
-          <option value="15">Multibrot 4 Feather</option>
-          <option value="16">Perp Ship Spire</option>
-          <option value="17">Perp Ship Web</option>
-        </select>
-      </div>
-
-      <!-- 3. Saved Custom Bookmarks -->
-      <div class="control-group">
-        <label for="bookmark-select">Custom Bookmarks</label>
-        <div class="row">
-          <select id="bookmark-select" style="flex:2;" aria-label="Saved Bookmarks">
-            <option value="-1">-- Saved Views (0) --</option>
+      <!-- PANE 1: EXPLORE -->
+      <div id="pane-explore" class="tab-pane active" role="tabpanel" aria-labelledby="tab-btn-explore">
+        <!-- 1. Fractal Formula Select (8 Formulas) -->
+        <div class="control-group">
+          <label for="fractal-select">Fractal Formula <span style="color:#60a5fa;font-size:10px;">[1-8/F]</span></label>
+          <select id="fractal-select" aria-label="Fractal Formula">
+            <option value="0">1. Mandelbrot (z² + c)</option>
+            <option value="1">2. Burning Ship</option>
+            <option value="2">3. Tricorn / Mandelbar</option>
+            <option value="3">4. Celtic Mandelbrot</option>
+            <option value="4">5. Buffalo Fractal</option>
+            <option value="5">6. Multibrot 3 (z³ + c)</option>
+            <option value="6">7. Multibrot 4 (z⁴ + c)</option>
+            <option value="7">8. Perpendicular Ship</option>
           </select>
-          <button id="btn-add-bookmark" style="flex:1;" aria-label="Bookmark View (B)" title="Bookmark View (B)">
-            ⭐ <span class="shortcut-badge">B</span>
+        </div>
+
+        <!-- 2. Landmark Presets (18 Presets) -->
+        <div class="control-group">
+          <label for="landmark-select">Landmark Presets <span style="color:#fbbf24;font-size:10px;">[L/P]</span></label>
+          <select id="landmark-select" aria-label="Landmark Presets">
+            <option value="-1">-- Jump to Landmark --</option>
+            <option value="0">Mandelbrot Overview</option>
+            <option value="1">Seahorse Valley</option>
+            <option value="2">Elephant Valley</option>
+            <option value="3">Triple Spiral</option>
+            <option value="4">Mini Mandelbrot</option>
+            <option value="5">Burning Ship Main</option>
+            <option value="6">Ship Needle</option>
+            <option value="7">Tricorn Main</option>
+            <option value="8">Celtic Ring</option>
+            <option value="9">Buffalo Heart</option>
+            <option value="10">Julia Dendrite</option>
+            <option value="11">Julia San Marco</option>
+            <option value="12">Multibrot 3 Clover</option>
+            <option value="13">Multibrot 3 Cusp</option>
+            <option value="14">Multibrot 4 Cross</option>
+            <option value="15">Multibrot 4 Feather</option>
+            <option value="16">Perp Ship Spire</option>
+            <option value="17">Perp Ship Web</option>
+          </select>
+        </div>
+
+        <!-- 3. Saved Custom Bookmarks -->
+        <div class="control-group">
+          <label for="bookmark-select">Custom Bookmarks</label>
+          <div class="row">
+            <select id="bookmark-select" style="flex:2;" aria-label="Saved Bookmarks">
+              <option value="-1">-- Saved Views (0) --</option>
+            </select>
+            <button id="btn-add-bookmark" style="flex:1;" aria-label="Bookmark View (B)" title="Bookmark View (B)">
+              ⭐ <span class="shortcut-badge">B</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. Zoom & Iterations Telemetry -->
+        <div class="control-group">
+          <label>Zoom &amp; Iterations</label>
+          <div class="row">
+            <div class="value-display" id="zoom-disp" style="flex:1;" aria-live="polite">1.0x</div>
+            <div class="value-display" id="iter-disp" style="flex:1;" aria-live="polite">100 iter</div>
+          </div>
+        </div>
+
+        <div class="row">
+          <button id="btn-zoom-in" aria-label="Zoom In">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg> Zoom In <span class="shortcut-badge">+</span>
+          </button>
+          <button id="btn-zoom-out" aria-label="Zoom Out">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg> Zoom Out <span class="shortcut-badge">-</span>
           </button>
         </div>
-      </div>
 
-      <!-- 4. Zoom & Iterations Telemetry -->
-      <div class="control-group">
-        <label>Zoom &amp; Iterations</label>
         <div class="row">
-          <div class="value-display" id="zoom-disp" style="flex:1;" aria-live="polite">1.0x</div>
-          <div class="value-display" id="iter-disp" style="flex:1;" aria-live="polite">100 iter</div>
+          <button id="btn-undo" disabled aria-label="Undo">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path></svg> Undo <span class="shortcut-badge">Z</span>
+          </button>
+          <button id="btn-redo" disabled aria-label="Redo">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"></path><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path></svg> Redo <span class="shortcut-badge">Y</span>
+          </button>
         </div>
-      </div>
 
-      <div class="row">
-        <button id="btn-zoom-in" aria-label="Zoom In">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg> Zoom In <span class="shortcut-badge">+</span>
-        </button>
-        <button id="btn-zoom-out" aria-label="Zoom Out">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg> Zoom Out <span class="shortcut-badge">-</span>
-        </button>
-      </div>
-
-      <div class="row">
-        <button id="btn-undo" disabled aria-label="Undo">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7v6h6"></path><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path></svg> Undo <span class="shortcut-badge">Z</span>
-        </button>
-        <button id="btn-redo" disabled aria-label="Redo">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 7v6h-6"></path><path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3l3 2.7"></path></svg> Redo <span class="shortcut-badge">Y</span>
-        </button>
-      </div>
-
-      <div class="row">
-        <button id="btn-quicksave" aria-label="Quicksave View (F5)" title="Quicksave Viewport (F5)">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Save <span class="shortcut-badge">F5</span>
-        </button>
-        <button id="btn-quickload" aria-label="Quickload View (F9)" title="Quickload Viewport (F9)">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> Load <span class="shortcut-badge">F9</span>
-        </button>
-      </div>
-
-      <!-- 5. Palette & Shading Engine -->
-      <div class="control-group">
-        <label for="theme-select">Color Theme <span style="color:#a855f7;font-size:10px;">[T]</span></label>
-        <select id="theme-select" aria-label="Color Theme">
-          <option value="0">Fire Spectrum</option>
-          <option value="1">Deep Ocean</option>
-          <option value="2">Cyberpunk Neon</option>
-          <option value="3">Monochrome Band</option>
-          <option value="4">Emerald Matrix</option>
-          <option value="5">Sunset Glow</option>
-          <option value="6">Cosmic Nebula</option>
-          <option value="7">Solar Flare</option>
-          <option value="8">Custom Dual Palette</option>
-        </select>
-      </div>
-
-      <div class="control-group" id="custom-colors" style="display:none;">
-        <label>Custom Gradient Colors</label>
         <div class="row">
-          <input type="color" id="color1" value="#ff0055" aria-label="Start color">
-          <input type="color" id="color2" value="#00e5ff" aria-label="End color">
+          <button id="btn-quicksave" aria-label="Quicksave View (F5)" title="Quicksave Viewport (F5)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Save <span class="shortcut-badge">F5</span>
+          </button>
+          <button id="btn-quickload" aria-label="Quickload View (F9)" title="Quickload Viewport (F9)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg> Load <span class="shortcut-badge">F9</span>
+          </button>
         </div>
-      </div>
 
-      <div class="row">
-        <button id="btn-color-cycle" aria-label="Toggle Color Cycling" title="Toggle 60 FPS Color Cycling (Space)">
-          🌈 <span>Cycle</span> <span class="shortcut-badge">Space</span>
-        </button>
-        <button id="btn-smooth" aria-label="Toggle Smooth Shading" title="Toggle Continuous Potential Gradients (G)">
-          ✨ <span>Smooth</span> <span class="shortcut-badge">G</span>
+        <button id="btn-reset" aria-label="Reset View">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg> Reset View <span class="shortcut-badge">R / 0</span>
         </button>
       </div>
 
-      <!-- 6. Yamaha YM2612 FM Audio & Sonification -->
-      <div class="row">
-        <button id="btn-audio-mute" aria-label="Toggle Audio" title="Toggle Sega Genesis YM2612 FM Audio (M)">
-          🎵 <span id="txt-audio-mute">FM Sound</span> <span class="shortcut-badge">M</span>
-        </button>
-        <button id="btn-sonify" aria-label="Sonify Cursor" title="Sonify Cursor Location in Real-Time (U)">
-          ✨ <span id="txt-sonify">Sonify Off</span> <span class="shortcut-badge">U</span>
-        </button>
-      </div>
-
-      <!-- 7. Firebase Realtime Co-Op Exploration -->
-      <div class="row" style="align-items:center;">
-        <button id="btn-broadcast-beacon" style="flex:1;" aria-label="Broadcast Beacon" title="Broadcast Current Coordinate Beacon to Worldwide Peers (O)">
-          📡 Beacon <span class="shortcut-badge">O</span>
-        </button>
-        <div id="coop-status" class="coop-indicator" style="flex:1; justify-content:center;" title="Live connected explorers">
-          <span class="coop-dot"></span>
-          <span id="coop-count-text">1 Online</span>
+      <!-- PANE 2: STYLE -->
+      <div id="pane-style" class="tab-pane" role="tabpanel" aria-labelledby="tab-btn-style">
+        <!-- Palette & Shading Engine -->
+        <div class="control-group">
+          <label for="theme-select">Color Theme <span style="color:#a855f7;font-size:10px;">[T]</span></label>
+          <select id="theme-select" aria-label="Color Theme">
+            <option value="0">Fire Spectrum</option>
+            <option value="1">Deep Ocean</option>
+            <option value="2">Cyberpunk Neon</option>
+            <option value="3">Monochrome Band</option>
+            <option value="4">Emerald Matrix</option>
+            <option value="5">Sunset Glow</option>
+            <option value="6">Cosmic Nebula</option>
+            <option value="7">Solar Flare</option>
+            <option value="8">Custom Dual Palette</option>
+          </select>
         </div>
+
+        <div class="control-group" id="custom-colors" style="display:none;">
+          <label>Custom Gradient Colors</label>
+          <div class="row">
+            <input type="color" id="color1" value="#ff0055" aria-label="Start color">
+            <input type="color" id="color2" value="#00e5ff" aria-label="End color">
+          </div>
+        </div>
+
+        <div class="row">
+          <button id="btn-color-cycle" aria-label="Toggle Color Cycling" title="Toggle 60 FPS Color Cycling (Space)">
+            🌈 <span>Cycle</span> <span class="shortcut-badge">Space</span>
+          </button>
+          <button id="btn-smooth" aria-label="Toggle Smooth Shading" title="Toggle Continuous Potential Gradients (G)">
+            ✨ <span>Smooth</span> <span class="shortcut-badge">G</span>
+          </button>
+        </div>
+
+        <!-- Yamaha YM2612 FM Audio & Sonification -->
+        <div class="row">
+          <button id="btn-audio-mute" aria-label="Toggle Audio" title="Toggle Sega Genesis YM2612 FM Audio (M)">
+            🎵 <span id="txt-audio-mute">FM Sound</span> <span class="shortcut-badge">M</span>
+          </button>
+          <button id="btn-sonify" aria-label="Sonify Cursor" title="Sonify Cursor Location in Real-Time (U)">
+            ✨ <span id="txt-sonify">Sonify Off</span> <span class="shortcut-badge">U</span>
+          </button>
+        </div>
+
+        <!-- Julia Mode -->
+        <button id="btn-julia" aria-label="Toggle Julia">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path><path d="M2 12h20"></path></svg> <span id="btn-julia-text">Toggle Julia Mode</span> <span class="shortcut-badge">J</span>
+        </button>
       </div>
 
-      <!-- 8. Julia Mode & Export Utilities -->
-      <button id="btn-julia" aria-label="Toggle Julia">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path><path d="M2 12h20"></path></svg> <span id="btn-julia-text">Toggle Julia Mode</span> <span class="shortcut-badge">J</span>
-      </button>
+      <!-- PANE 3: TOOLS -->
+      <div id="pane-tools" class="tab-pane" role="tabpanel" aria-labelledby="tab-btn-tools">
+        <!-- Firebase Realtime Co-Op Exploration -->
+        <div class="control-group">
+          <label>Worldwide Co-Op Room</label>
+          <div id="coop-status" class="coop-indicator" title="Global exploration network status">
+            <span class="coop-dot"></span>
+            <span id="coop-count-text">⚪ Offline (Local)</span>
+          </div>
+        </div>
 
-      <button id="btn-save" aria-label="Save 4K PNG">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Export 4K PNG <span class="shortcut-badge">S</span>
-      </button>
+        <div class="row">
+          <button id="btn-toggle-coop" style="flex:1;" aria-label="Toggle Co-Op Connection" title="Connect / Disconnect from Worldwide Co-Op Explorer Network">
+            🌐 Connect Co-Op
+          </button>
+          <button id="btn-broadcast-beacon" style="flex:1;" aria-label="Broadcast Beacon" title="Broadcast Current Coordinate Beacon to Worldwide Peers (O)">
+            📡 Beacon <span class="shortcut-badge">O</span>
+          </button>
+        </div>
 
-      <div class="row">
-        <button id="btn-export-json" aria-label="Export Presets JSON" title="Export Presets and Bookmarks JSON (E)">
-          📤 JSON <span class="shortcut-badge">E</span>
+        <button id="btn-save" aria-label="Save 4K PNG">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg> Export 4K PNG <span class="shortcut-badge">S</span>
         </button>
-        <button id="btn-import-json" aria-label="Import Presets JSON" title="Import Presets JSON (I)">
-          📥 Import <span class="shortcut-badge">I</span>
-        </button>
-        <button id="btn-share-coords" aria-label="Copy Share Coords" title="Copy Coordinate Share Link (K)">
-          🔗 Share <span class="shortcut-badge">K</span>
+
+        <div class="row">
+          <button id="btn-export-json" aria-label="Export Presets JSON" title="Export Presets and Bookmarks JSON (E)">
+            📤 JSON <span class="shortcut-badge">E</span>
+          </button>
+          <button id="btn-import-json" aria-label="Import Presets JSON" title="Import Presets JSON (I)">
+            📥 Import <span class="shortcut-badge">I</span>
+          </button>
+          <button id="btn-share-coords" aria-label="Copy Share Coords" title="Copy Coordinate Share Link (K)">
+            🔗 Share <span class="shortcut-badge">K</span>
+          </button>
+        </div>
+
+        <button id="btn-help" aria-label="Help & Controls" style="background: linear-gradient(180deg, rgba(59, 130, 246, 0.25) 0%, rgba(30, 58, 102, 0.5) 100%); border-color: rgba(96, 165, 250, 0.4);">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Help &amp; Controls <span class="shortcut-badge">F1 / H</span>
         </button>
       </div>
-
-      <button id="btn-reset" aria-label="Reset View">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg> Reset View <span class="shortcut-badge">R / 0</span>
-      </button>
-
-      <button id="btn-help" aria-label="Help & Controls" style="background: linear-gradient(180deg, rgba(59, 130, 246, 0.25) 0%, rgba(30, 58, 102, 0.5) 100%); border-color: rgba(96, 165, 250, 0.4);">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Help &amp; Controls <span class="shortcut-badge">F1 / H</span>
-      </button>
     </div>
 
     <!-- HUD Telemetry Badge -->
@@ -1103,99 +1177,25 @@
     }
 
     // ==========================================
-    // VISUAL EFFECTS ENGINE (Particles, Motes, Filigree)
+    // VISUAL EFFECTS ENGINE & HUD FILIGREE
     // ==========================================
-    let shakeMagnitude = 0;
-    let shakeDecay = 0.88;
-    let shakeAngle = 0;
-
-    const motes = [];
-    const NUM_MOTES = 40;
-    function initMotes() {
-      motes.length = 0;
-      for (let i = 0; i < NUM_MOTES; i++) {
-        motes.push({
-          x: Math.random() * window.innerWidth,
-          y: Math.random() * window.innerHeight,
-          vx: (Math.random() - 0.5) * 0.4,
-          vy: -0.2 - Math.random() * 0.5,
-          size: 1.0 + Math.random() * 2.5,
-          alpha: 0.2 + Math.random() * 0.6,
-          pulse: Math.random() * Math.PI * 2,
-          hue: Math.random() > 0.5 ? 210 : (Math.random() > 0.5 ? 45 : 280)
-        });
-      }
-    }
-    initMotes();
-
-    const particles = [];
-    function triggerScreenShake(magnitude) {
-      shakeMagnitude = Math.min(shakeMagnitude + magnitude, 26);
-    }
-
-    function spawnParticleBurst(x, y, count = 26, colorTheme = 0) {
-      for (let i = 0; i < count; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 2.0 + Math.random() * 8.0;
-        const layer = Math.floor(Math.random() * 4);
-        
-        let color = '#38bdf8';
-        if (colorTheme === 0) color = ['#ff4500', '#ffaa00', '#ffee55', '#ffffff'][Math.floor(Math.random()*4)];
-        else if (colorTheme === 1) color = ['#00d4ff', '#0077ff', '#70e0ff', '#ffffff'][Math.floor(Math.random()*4)];
-        else if (colorTheme === 2) color = ['#ff007f', '#00ffff', '#a855f7', '#ffffff'][Math.floor(Math.random()*4)];
-        else if (colorTheme === 4) color = ['#10b981', '#34d399', '#6ee7b7', '#ffffff'][Math.floor(Math.random()*4)];
-        else if (colorTheme === 5) color = ['#f43f5e', '#fb923c', '#facc15', '#ffffff'][Math.floor(Math.random()*4)];
-        else if (colorTheme === 6) color = ['#c084fc', '#818cf8', '#38bdf8', '#fbbf24'][Math.floor(Math.random()*4)];
-        else if (colorTheme === 7) color = ['#facc15', '#f97316', '#ef4444', '#ffffff'][Math.floor(Math.random()*4)];
-        else color = ['#38bdf8', '#818cf8', '#c084fc', '#fbbf24'][Math.floor(Math.random()*4)];
-
-        particles.push({
-          layer: layer,
-          x: x, y: y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          size: layer === 0 ? 1.5 : (layer === 1 ? 7.0 : (layer === 2 ? 4.0 : 5.5)),
-          growth: layer === 1 ? 0.3 : (layer === 3 ? 0.12 : -0.05),
-          alpha: 1.0,
-          decay: layer === 0 ? 0.045 : (layer === 1 ? 0.026 : 0.022),
-          gravity: layer === 2 ? 0.18 : (layer === 1 ? -0.05 : 0.0),
-          drag: layer === 0 ? 0.94 : (layer === 1 ? 0.92 : 0.97),
-          rotation: Math.random() * Math.PI * 2,
-          rotSpeed: (Math.random() - 0.5) * 0.3,
-          color: color
-        });
-      }
-    }
-
-    const shockwaves = [];
-    function spawnShockwave(x, y, maxR = 85, color = 'rgba(56, 189, 248, 0.8)') {
-      shockwaves.push({
-        x: x, y: y, radius: 2, maxRadius: maxR, speed: 6.5, alpha: 1.0, decay: 0.035,
-        width: 3.0, color: '#ffffff'
-      });
-      shockwaves.push({
-        x: x, y: y, radius: 1, maxRadius: maxR * 1.35, speed: 4.2, alpha: 0.85, decay: 0.024,
-        width: 5.0, color: color
-      });
-    }
-
-    function triggerImpact(x, y, intensity = 5, count = 26) {
-      triggerScreenShake(intensity);
-      spawnShockwave(x, y, 55 + intensity * 7);
-      spawnParticleBurst(x, y, count, theme);
-    }
+    function triggerScreenShake(magnitude) {}
+    function spawnParticleBurst(x, y, count = 26, colorTheme = 0) {}
+    function spawnShockwave(x, y, maxR = 85, color = 'rgba(56, 189, 248, 0.8)') {}
+    function triggerImpact(x, y, intensity = 5, count = 26) {}
+    function initMotes() {}
 
     // Collaborative Explorer Beacons list for rendering markers on canvas
     const peerBeacons = [];
 
     // ==========================================
-    // CONTINUOUS 60 FPS ANIMATION & COMPOSITING LOOP
+    // CONTINUOUS 60 FPS ANIMATION & COMPOSITING LOOP (ARCH-05 AWARE)
     // ==========================================
     let lastTime = 0;
+    let isBackgrounded = false;
 
     function renderLoop(time) {
-      const dt = (time - lastTime) / 1000 || 0.016;
-      lastTime = time;
+      if (isBackgrounded) return;
 
       // Handle 60 FPS Color Cycling flow without re-rendering fractal math
       if (colorCycleActive && cachedIters && cachedW > 0 && cachedH > 0 && !isRendering) {
@@ -1208,20 +1208,6 @@
 
       ctx.save();
       ctx.clearRect(0, 0, w, h);
-
-      // Screen-Shake transform
-      if (shakeMagnitude > 0.05) {
-        shakeAngle += 0.8;
-        const shakeX = Math.sin(shakeAngle * 2.3) * shakeMagnitude;
-        const shakeY = Math.cos(shakeAngle * 1.9) * shakeMagnitude;
-        const shakeRot = Math.sin(shakeAngle) * (shakeMagnitude * 0.001);
-        ctx.translate(w / 2 + shakeX, h / 2 + shakeY);
-        ctx.rotate(shakeRot);
-        ctx.translate(-w / 2, -h / 2);
-        shakeMagnitude *= shakeDecay;
-      } else {
-        shakeMagnitude = 0;
-      }
 
       // 1. Draw Offscreen Fractal Buffer at physical 1:1 resolution
       if (fractalCanvas.width > 0 && fractalCanvas.height > 0) {
@@ -1236,124 +1222,16 @@
       ctx.save();
       ctx.scale(dpr, dpr);
 
-      // 2. Draw Floating Motes
-      for (let i = 0; i < motes.length; i++) {
-        const m = motes[i];
-        m.x += m.vx;
-        m.y += m.vy;
-        m.pulse += 0.03;
-        if (m.y < -10) m.y = cssH + 10;
-        if (m.x < -10) m.x = cssW + 10;
-        if (m.x > cssW + 10) m.x = -10;
-
-        const currentAlpha = m.alpha * (0.6 + 0.4 * Math.sin(m.pulse));
-        ctx.beginPath();
-        ctx.arc(m.x, m.y, m.size, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(${m.hue}, 90%, 65%, ${currentAlpha})`;
-        ctx.shadowColor = `hsla(${m.hue}, 90%, 65%, ${currentAlpha * 0.8})`;
-        ctx.shadowBlur = 8;
-        ctx.fill();
-        ctx.shadowBlur = 0;
+      // 2. Draw Active Peer Discovery Beacons (when connected to Co-Op room)
+      if (coopConnected && peerBeacons.length > 0) {
+        drawPeerBeacons(ctx, cssW, cssH);
       }
 
-      // 3. Draw Concentric Shockwaves
-      for (let i = shockwaves.length - 1; i >= 0; i--) {
-        const sw = shockwaves[i];
-        sw.radius += sw.speed;
-        sw.alpha -= sw.decay;
-
-        if (sw.alpha <= 0 || sw.radius >= sw.maxRadius) {
-          shockwaves.splice(i, 1);
-          continue;
-        }
-
-        ctx.beginPath();
-        ctx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
-        ctx.lineWidth = sw.width * (sw.radius / sw.maxRadius);
-        ctx.strokeStyle = sw.color.startsWith('rgba') 
-          ? sw.color.replace(/[\d\.]+\)$/, `${sw.alpha})`)
-          : sw.color;
-        ctx.globalAlpha = Math.max(0, sw.alpha);
-        ctx.stroke();
-        ctx.globalAlpha = 1.0;
-      }
-
-      // 4. Draw 4-Layer Particles
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vx *= p.drag;
-        p.vy *= p.drag;
-        p.vy += p.gravity;
-        p.size = Math.max(0.5, p.size + p.growth);
-        p.alpha -= p.decay;
-        p.rotation += p.rotSpeed;
-
-        if (p.alpha <= 0 || p.size <= 0) {
-          particles.splice(i, 1);
-          continue;
-        }
-
-        ctx.save();
-        ctx.globalAlpha = Math.max(0, p.alpha);
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rotation);
-
-        if (p.layer === 0) { // Spark
-          ctx.beginPath();
-          ctx.moveTo(-p.vx * 2, -p.vy * 2);
-          ctx.lineTo(p.vx * 2, p.vy * 2);
-          ctx.strokeStyle = p.color;
-          ctx.lineWidth = p.size;
-          ctx.stroke();
-        } else if (p.layer === 1) { // Puff
-          const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, p.size);
-          grad.addColorStop(0, p.color);
-          grad.addColorStop(1, 'transparent');
-          ctx.fillStyle = grad;
-          ctx.beginPath();
-          ctx.arc(0, 0, p.size, 0, Math.PI * 2);
-          ctx.fill();
-        } else if (p.layer === 2) { // Shard
-          ctx.fillStyle = p.color;
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(-p.size, -p.size);
-          ctx.lineTo(p.size, -p.size * 0.5);
-          ctx.lineTo(p.size * 0.6, p.size);
-          ctx.lineTo(-p.size * 0.8, p.size * 0.6);
-          ctx.closePath();
-          ctx.fill();
-          ctx.stroke();
-        } else { // Star
-          ctx.fillStyle = p.color;
-          ctx.beginPath();
-          for (let s = 0; s < 4; s++) {
-            const a = (s * Math.PI) / 2;
-            const rOuter = p.size * 1.5;
-            const rInner = p.size * 0.4;
-            ctx.lineTo(Math.cos(a) * rOuter, Math.sin(a) * rOuter);
-            ctx.lineTo(Math.cos(a + Math.PI / 4) * rInner, Math.sin(a + Math.PI / 4) * rInner);
-          }
-          ctx.closePath();
-          ctx.fill();
-        }
-        ctx.restore();
-      }
-
-      // 5. Draw Active Peer Discovery Beacons
-      drawPeerBeacons(ctx, cssW, cssH);
+      // 3. Static Ornate Cybernetic HUD Corner Filigree (Strictly no moving glints)
+      drawCornerFiligree(ctx, cssW, cssH);
 
       ctx.restore(); // Restore DPR scale
-      ctx.restore(); // Restore shake transform
-
-      // 6. Static Ornate Cybernetic HUD Corner Filigree (Strictly no moving glints)
-      ctx.save();
-      ctx.scale(dpr, dpr);
-      drawCornerFiligree(ctx, cssW, cssH);
-      ctx.restore();
+      ctx.restore(); // Restore base transform
 
       requestAnimationFrame(renderLoop);
     }
@@ -1528,7 +1406,7 @@
     function showToast(message, type = 'info', duration = 2800) {
       const container = document.getElementById('toast-container');
       if (!container) return;
-      while (container.children.length >= 5) {
+      while (container.children.length >= 3) {
         container.removeChild(container.firstChild);
       }
       const toast = document.createElement('div');
@@ -1552,8 +1430,18 @@
       } else {
         msgSpan.textContent = message;
       }
+      const closeBtn = document.createElement('span');
+      closeBtn.innerHTML = '&times;';
+      closeBtn.style.marginLeft = 'auto';
+      closeBtn.style.paddingLeft = '8px';
+      closeBtn.style.opacity = '0.65';
+      closeBtn.style.fontSize = '14px';
+      closeBtn.style.lineHeight = '1';
+      closeBtn.setAttribute('aria-label', 'Close toast');
+
       toast.appendChild(iconWrap.firstElementChild || iconWrap);
       toast.appendChild(msgSpan);
+      toast.appendChild(closeBtn);
       toast.onclick = () => {
         toast.classList.add('hiding');
         setTimeout(() => toast.remove(), 250);
@@ -2319,6 +2207,9 @@
     // ==========================================
     // FIREBASE REALTIME MULTIPLAYER BEACON & CO-OP ROOM
     // ==========================================
+    // ==========================================
+    // FIREBASE REALTIME MULTIPLAYER BEACON & CO-OP ROOM (CONNECT GATE ENFORCED)
+    // ==========================================
     let userCallsign = safeGetStorage('kmandel_callsign', null);
     if (!userCallsign) {
       const suffixes = ["Voyager", "Echo", "Specter", "Pioneer", "Drifter", "Archon", "Vector", "Pulse"];
@@ -2327,35 +2218,39 @@
       safeSetStorage('kmandel_callsign', userCallsign);
     }
     const explorerId = 'exp_' + Math.random().toString(36).substr(2, 9);
+    let coopConnected = false;
+    let coopPresenceRef = null;
+    let coopExplorersRef = null;
+    let coopBeaconsRef = null;
 
-    function initCoopRoom() {
-      if (!window.fb) return;
-      const { db, ref, set, onValue, push, onChildAdded, onDisconnect, serverTimestamp } = window.fb;
-      const roomRef = ref(db, 'multiplayer/kmandel/rooms/public');
-      const myPresenceRef = ref(db, `multiplayer/kmandel/rooms/public/explorers/${explorerId}`);
+    function connectCoop() {
+      if (coopConnected) return;
+      if (!window.fb) {
+        showToast('⚠️ Multiplayer service unavailable', 'warning', 3000);
+        return;
+      }
+      const { db, ref, set, onValue, onChildAdded, onDisconnect, serverTimestamp } = window.fb;
       
-      // Update my presence
-      set(myPresenceRef, {
+      coopPresenceRef = ref(db, `multiplayer/kmandel/rooms/public/explorers/${explorerId}`);
+      set(coopPresenceRef, {
         id: explorerId,
         callsign: userCallsign,
         fractal: fractalNames[fractalType],
         online: true,
         lastSeen: serverTimestamp()
       });
-      onDisconnect(myPresenceRef).remove();
+      onDisconnect(coopPresenceRef).remove();
 
-      // Listen to peer count
-      const explorersListRef = ref(db, 'multiplayer/kmandel/rooms/public/explorers');
-      onValue(explorersListRef, (snapshot) => {
+      coopExplorersRef = ref(db, 'multiplayer/kmandel/rooms/public/explorers');
+      onValue(coopExplorersRef, (snapshot) => {
         const val = snapshot.val();
         const count = val ? Object.keys(val).length : 1;
         const txt = document.getElementById('coop-count-text');
-        if (txt) txt.textContent = `${count} Online`;
+        if (txt) txt.textContent = `🟢 Connected (${count} Online)`;
       });
 
-      // Listen to peer discovery beacons
-      const beaconsRef = ref(db, 'multiplayer/kmandel/rooms/public/beacons');
-      onChildAdded(beaconsRef, (snapshot) => {
+      coopBeaconsRef = ref(db, 'multiplayer/kmandel/rooms/public/beacons');
+      onChildAdded(coopBeaconsRef, (snapshot) => {
         const b = snapshot.val();
         if (!b || b.sender === userCallsign) return;
         peerBeacons.push({
@@ -2371,7 +2266,6 @@
         playSfx('beacon');
         showToast(`📡 <b>${b.sender}</b> beacon at ${b.name}! <span style="text-decoration:underline;">[Click to Jump]</span>`, 'purple', 5000);
         
-        // Clicking toast teleports to peer view
         const container = document.getElementById('toast-container');
         if (container && container.lastElementChild) {
           const toastEl = container.lastElementChild;
@@ -2382,17 +2276,54 @@
           };
         }
       });
+
+      coopConnected = true;
+      const btn = document.getElementById('btn-toggle-coop');
+      if (btn) btn.innerHTML = '🔌 Disconnect';
+      const txt = document.getElementById('coop-count-text');
+      if (txt) txt.textContent = '🟢 Connected (1 Online)';
+      const status = document.getElementById('coop-status');
+      if (status) status.classList.add('online');
+      showToast(`🌐 Connected to Co-Op room as "${userCallsign}"`, 'success', 3000);
     }
 
-    if (window.fb) initCoopRoom();
-    else window.onFirebaseReady = initCoopRoom;
+    function disconnectCoop() {
+      if (!coopConnected) return;
+      if (window.fb && coopPresenceRef) {
+        try {
+          window.fb.set(coopPresenceRef, null);
+          if (coopExplorersRef && window.fb.off) window.fb.off(coopExplorersRef);
+          if (coopBeaconsRef && window.fb.off) window.fb.off(coopBeaconsRef);
+        } catch (e) {}
+      }
+      coopConnected = false;
+      peerBeacons.length = 0;
+      const btn = document.getElementById('btn-toggle-coop');
+      if (btn) btn.innerHTML = '🌐 Connect Co-Op';
+      const txt = document.getElementById('coop-count-text');
+      if (txt) txt.textContent = '⚪ Offline (Local)';
+      const status = document.getElementById('coop-status');
+      if (status) status.classList.remove('online');
+      showToast('🔌 Disconnected from Co-Op network', 'info', 2500);
+    }
+
+    function toggleCoopConnection() {
+      if (coopConnected) {
+        disconnectCoop();
+      } else {
+        connectCoop();
+      }
+    }
 
     function broadcastBeacon() {
+      if (!coopConnected) {
+        connectCoop();
+      }
       const wRe = maxRe - minRe;
       const zoomStr = (3.0 / wRe).toFixed(1) + 'x';
       const beaconName = `${fractalNames[fractalType]} (${zoomStr})`;
 
-      if (window.fb) {
+      if (window.fb && coopConnected) {
         const { db, ref, push, serverTimestamp } = window.fb;
         const beaconsRef = ref(db, 'multiplayer/kmandel/rooms/public/beacons');
         push(beaconsRef, {
@@ -2409,7 +2340,6 @@
         });
       }
 
-      triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 8, 35);
       playSfx('beacon');
       showToast(`📡 Beacon broadcasted as "${userCallsign}"!`, 'success', 2800);
     }
@@ -2427,18 +2357,65 @@
       theme = b.theme;
       document.getElementById('fractal-select').value = fractalType;
       document.getElementById('theme-select').value = theme;
-      triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 9, 45);
       playSfx('landmark');
       saveState();
       requestRender();
       showToast(`🚀 Teleported to ${b.sender}'s Beacon!`, 'purple', 3000);
     }
 
+    document.getElementById('btn-toggle-coop').addEventListener('click', toggleCoopConnection);
     document.getElementById('btn-broadcast-beacon').addEventListener('click', broadcastBeacon);
 
+    window.addEventListener('beforeunload', () => {
+      if (coopConnected && window.fb && coopPresenceRef) {
+        try { window.fb.set(coopPresenceRef, null); } catch(e) {}
+      }
+    });
+
     // ==========================================
-    // UI INTERACTION HANDLERS
+    // ARCH-05: VISIBILITY CHANGE & BACKGROUND RESOURCE PRESERVATION
     // ==========================================
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        isBackgrounded = true;
+        if (audioCtx && audioCtx.state === 'running') {
+          audioCtx.suspend();
+        }
+        safeSetStorage('kmandel_quicksave', {
+          minRe, maxRe, minIm, maxIm, max_iter,
+          theme, fractalType, smoothShading, isJulia,
+          juliaCRe, juliaCIm, customColor1, customColor2
+        });
+      } else {
+        isBackgrounded = false;
+        if (audioCtx && audioCtx.state === 'suspended' && !audioMuted) {
+          audioCtx.resume();
+        }
+        requestRender();
+        requestAnimationFrame(renderLoop);
+      }
+    });
+
+    // ==========================================
+    // UI TAB SWITCHING & INTERACTION HANDLERS
+    // ==========================================
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        const isActive = btn.dataset.tab === tabId;
+        btn.classList.toggle('active', isActive);
+        btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+      document.querySelectorAll('.tab-pane').forEach(pane => {
+        pane.classList.toggle('active', pane.id === tabId);
+      });
+    }
+
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.tab) switchTab(btn.dataset.tab);
+      });
+    });
+
     document.getElementById('fractal-select').addEventListener('change', (e) => {
       fractalType = parseInt(e.target.value, 10);
       isJulia = false;

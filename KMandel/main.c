@@ -120,165 +120,12 @@ static double RandomDouble(double minVal, double maxVal) {
     return minVal + (double)(XorShift32() % 10000) / 10000.0 * (maxVal - minVal);
 }
 
-// Screen Shake
-double shakeMagnitude = 0.0;
-double shakeAngle = 0.0;
-
-// Atmospheric Floating Quantum Motes
-#define NUM_MOTES 35
-typedef struct {
-    double x, y;
-    double vx, vy;
-    double size;
-    double pulse;
-    COLORREF color;
-} AmbientMote;
-AmbientMote motes[NUM_MOTES];
-
-// 4-Layer Kinematic Particle Engine
-#define MAX_PARTICLES 128
-typedef struct {
-    int active;
-    int layer; // 0: Spark, 1: Plasma Puff, 2: Crystal Shard, 3: Celebration Star
-    double x, y;
-    double vx, vy;
-    double size, growth;
-    double alpha, decay;
-    double gravity, drag;
-    double angle, rotSpeed;
-    COLORREF color;
-} Particle;
-Particle particles[MAX_PARTICLES];
-
-// Dual-Tier Shockwaves
-#define MAX_SHOCKWAVES 12
-typedef struct {
-    int active;
-    double x, y;
-    double radius, maxRadius;
-    double speed;
-    double alpha, decay;
-    int width;
-    COLORREF color;
-} Shockwave;
-Shockwave shockwaves[MAX_SHOCKWAVES];
-
-void InitAmbientMotes() {
-    for (int i = 0; i < NUM_MOTES; i++) {
-        motes[i].x = RandomDouble(0, W);
-        motes[i].y = RandomDouble(0, H);
-        motes[i].vx = RandomDouble(-0.3, 0.3);
-        motes[i].vy = RandomDouble(-0.6, -0.2);
-        motes[i].size = RandomDouble(1.5, 3.5);
-        motes[i].pulse = RandomDouble(0, 6.28);
-        int pick = XorShift32() % 3;
-        if (pick == 0) motes[i].color = RGB(100, 200, 255);
-        else if (pick == 1) motes[i].color = RGB(255, 215, 0);
-        else motes[i].color = RGB(180, 100, 255);
-    }
-}
-
-void TriggerScreenShake(double intensity) {
-    shakeMagnitude += intensity;
-    if (shakeMagnitude > 25.0) shakeMagnitude = 25.0;
-}
-
-void SpawnShockwave(double x, double y, double maxR, COLORREF color) {
-    for (int i = 0; i < MAX_SHOCKWAVES; i++) {
-        if (!shockwaves[i].active) {
-            shockwaves[i].active = 1;
-            shockwaves[i].x = x;
-            shockwaves[i].y = y;
-            shockwaves[i].radius = 2.0;
-            shockwaves[i].maxRadius = maxR;
-            shockwaves[i].speed = 6.0;
-            shockwaves[i].alpha = 1.0;
-            shockwaves[i].decay = 0.045;
-            shockwaves[i].width = 3;
-            shockwaves[i].color = RGB(255, 255, 255);
-            break;
-        }
-    }
-    for (int i = 0; i < MAX_SHOCKWAVES; i++) {
-        if (!shockwaves[i].active) {
-            shockwaves[i].active = 1;
-            shockwaves[i].x = x;
-            shockwaves[i].y = y;
-            shockwaves[i].radius = 1.0;
-            shockwaves[i].maxRadius = maxR * 1.35;
-            shockwaves[i].speed = 4.0;
-            shockwaves[i].alpha = 0.85;
-            shockwaves[i].decay = 0.028;
-            shockwaves[i].width = 4;
-            shockwaves[i].color = color;
-            break;
-        }
-    }
-}
-
-void SpawnParticleBurst(double x, double y, int count, COLORREF baseColor) {
-    for (int c = 0; c < count; c++) {
-        for (int i = 0; i < MAX_PARTICLES; i++) {
-            if (!particles[i].active) {
-                particles[i].active = 1;
-                particles[i].layer = XorShift32() % 4;
-                particles[i].x = x;
-                particles[i].y = y;
-                double angle = RandomDouble(0, 6.28318);
-                double speed = RandomDouble(2.0, 7.5);
-                particles[i].vx = FastCos(angle) * speed;
-                particles[i].vy = FastSin(angle) * speed;
-                particles[i].alpha = 1.0;
-                particles[i].angle = RandomDouble(0, 6.28);
-                particles[i].rotSpeed = RandomDouble(-0.3, 0.3);
-
-                if (particles[i].layer == 0) { // Needle Spark
-                    particles[i].size = 2.0;
-                    particles[i].growth = 0.0;
-                    particles[i].decay = 0.05;
-                    particles[i].gravity = 0.0;
-                    particles[i].drag = 0.94;
-                    particles[i].color = RGB(255, 255, 255);
-                } else if (particles[i].layer == 1) { // Plasma Puff
-                    particles[i].size = 6.0;
-                    particles[i].growth = 0.3;
-                    particles[i].decay = 0.035;
-                    particles[i].gravity = -0.05;
-                    particles[i].drag = 0.92;
-                    particles[i].color = baseColor;
-                } else if (particles[i].layer == 2) { // Crystal Shard
-                    particles[i].size = 4.0;
-                    particles[i].growth = -0.05;
-                    particles[i].decay = 0.028;
-                    particles[i].gravity = 0.22;
-                    particles[i].drag = 0.97;
-                    particles[i].color = RGB(100, 220, 255);
-                } else { // Celebration Star
-                    particles[i].size = 5.0;
-                    particles[i].growth = 0.1;
-                    particles[i].decay = 0.025;
-                    particles[i].gravity = 0.02;
-                    particles[i].drag = 0.96;
-                    particles[i].color = RGB(255, 215, 0);
-                }
-                break;
-            }
-        }
-    }
-}
-
-void TriggerImpact(double x, double y, double intensity, int count) {
-    TriggerScreenShake(intensity);
-    COLORREF c = RGB(100, 180, 255);
-    if (theme == 0) c = RGB(255, 120, 30);
-    else if (theme == 1) c = RGB(0, 200, 255);
-    else if (theme == 2) c = RGB(255, 0, 180);
-    else if (theme == 4) c = RGB(50, 220, 100);
-    else if (theme == 5) c = RGB(255, 80, 140);
-    
-    SpawnShockwave(x, y, 60.0 + intensity * 6.0, c);
-    SpawnParticleBurst(x, y, count, c);
-}
+// Static clean viewport ergonomics (screen shake, motes, and particle clutter removed per director policy)
+void InitAmbientMotes() {}
+void TriggerScreenShake(double intensity) { (void)intensity; }
+void SpawnShockwave(double x, double y, double maxR, COLORREF color) { (void)x; (void)y; (void)maxR; (void)color; }
+void SpawnParticleBurst(double x, double y, int count, COLORREF baseColor) { (void)x; (void)y; (void)count; (void)baseColor; }
+void TriggerImpact(double x, double y, double intensity, int count) { (void)x; (void)y; (void)intensity; (void)count; }
 
 void SaveState() {
     if (history_idx < MAX_HISTORY - 1) {
@@ -756,53 +603,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
                 }
 
-                // Update screen shake
-                if (shakeMagnitude > 0.05) {
-                    shakeAngle += 0.8;
-                    shakeMagnitude *= 0.88;
-                } else {
-                    shakeMagnitude = 0.0;
+                if (colorCycleActive) {
+                    InvalidateRect(hwnd, NULL, FALSE);
                 }
-                
-                // Update ambient motes
-                for (int i = 0; i < NUM_MOTES; i++) {
-                    motes[i].x += motes[i].vx;
-                    motes[i].y += motes[i].vy;
-                    motes[i].pulse += 0.04;
-                    if (motes[i].y < 0) motes[i].y = bmpH;
-                    if (motes[i].x < 0) motes[i].x = bmpW;
-                    if (motes[i].x > bmpW) motes[i].x = 0;
-                }
-                
-                // Update shockwaves
-                for (int i = 0; i < MAX_SHOCKWAVES; i++) {
-                    if (shockwaves[i].active) {
-                        shockwaves[i].radius += shockwaves[i].speed;
-                        shockwaves[i].alpha -= shockwaves[i].decay;
-                        if (shockwaves[i].alpha <= 0.0 || shockwaves[i].radius >= shockwaves[i].maxRadius) {
-                            shockwaves[i].active = 0;
-                        }
-                    }
-                }
-                
-                // Update particles
-                for (int i = 0; i < MAX_PARTICLES; i++) {
-                    if (particles[i].active) {
-                        particles[i].x += particles[i].vx;
-                        particles[i].y += particles[i].vy;
-                        particles[i].vx *= particles[i].drag;
-                        particles[i].vy *= particles[i].drag;
-                        particles[i].vy += particles[i].gravity;
-                        particles[i].size += particles[i].growth;
-                        particles[i].alpha -= particles[i].decay;
-                        particles[i].angle += particles[i].rotSpeed;
-                        if (particles[i].alpha <= 0.0 || particles[i].size <= 0.5) {
-                            particles[i].active = 0;
-                        }
-                    }
-                }
-                
-                InvalidateRect(hwnd, NULL, FALSE);
             }
             break;
         }
@@ -1143,129 +946,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 HBITMAP hbmMem = CreateCompatibleBitmap(hdc, bmpW, bmpH);
                 HBITMAP hOldBm = (HBITMAP)SelectObject(hdcMem, hbmMem);
                 
-                // 1. Calculate Screen-Shake offset
-                int shakeX = 0, shakeY = 0;
-                if (shakeMagnitude > 0.05) {
-                    shakeX = (int)(FastSin(shakeAngle * 2.3) * shakeMagnitude);
-                    shakeY = (int)(FastCos(shakeAngle * 1.9) * shakeMagnitude);
-                }
-                
-                // Clear background with deep space dark tone
+                // 1. Clear background with deep space dark tone
                 HBRUSH hBgBrush = CreateSolidBrush(RGB(7, 10, 18));
                 RECT fullRc = { 0, 0, bmpW, bmpH };
                 FillRect(hdcMem, &fullRc, hBgBrush);
                 DeleteObject(hBgBrush);
                 
-                // 2. Blit Fractal Bitmap with shake offset
+                // 2. Blit Fractal Bitmap at crisp 1:1 scale
                 if (hBitmap) {
                     HDC hdcFractal = CreateCompatibleDC(hdc);
                     HBITMAP hOldF = (HBITMAP)SelectObject(hdcFractal, hBitmap);
-                    BitBlt(hdcMem, shakeX, shakeY, bmpW, bmpH, hdcFractal, 0, 0, SRCCOPY);
+                    BitBlt(hdcMem, 0, 0, bmpW, bmpH, hdcFractal, 0, 0, SRCCOPY);
                     SelectObject(hdcFractal, hOldF);
                     DeleteDC(hdcFractal);
-                }
-                
-                // 3. Draw Ambient Floating Motes
-                for (int i = 0; i < NUM_MOTES; i++) {
-                    HBRUSH hMoteBrush = CreateSolidBrush(motes[i].color);
-                    HPEN hNullPen = (HPEN)GetStockObject(NULL_PEN);
-                    HPEN hOldP = (HPEN)SelectObject(hdcMem, hNullPen);
-                    HBRUSH hOldB = (HBRUSH)SelectObject(hdcMem, hMoteBrush);
-                    
-                    int mx = (int)motes[i].x + shakeX;
-                    int my = (int)motes[i].y + shakeY;
-                    int sz = (int)motes[i].size;
-                    Ellipse(hdcMem, mx - sz, my - sz, mx + sz + 1, my + sz + 1);
-                    
-                    SelectObject(hdcMem, hOldP);
-                    SelectObject(hdcMem, hOldB);
-                    DeleteObject(hMoteBrush);
-                }
-                
-                // 4. Draw Concentric Shockwaves
-                for (int i = 0; i < MAX_SHOCKWAVES; i++) {
-                    if (shockwaves[i].active) {
-                        HPEN hSwPen = CreatePen(PS_SOLID, shockwaves[i].width, shockwaves[i].color);
-                        HBRUSH hNullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
-                        HPEN hOldP = (HPEN)SelectObject(hdcMem, hSwPen);
-                        HBRUSH hOldB = (HBRUSH)SelectObject(hdcMem, hNullBrush);
-                        
-                        int sx = (int)shockwaves[i].x + shakeX;
-                        int sy = (int)shockwaves[i].y + shakeY;
-                        int r = (int)shockwaves[i].radius;
-                        Ellipse(hdcMem, sx - r, sy - r, sx + r, sy + r);
-                        
-                        SelectObject(hdcMem, hOldP);
-                        SelectObject(hdcMem, hOldB);
-                        DeleteObject(hSwPen);
-                    }
-                }
-                
-                // 5. Draw 4-Layer Particles
-                for (int i = 0; i < MAX_PARTICLES; i++) {
-                    if (particles[i].active) {
-                        int px = (int)particles[i].x + shakeX;
-                        int py = (int)particles[i].y + shakeY;
-                        int psz = (int)particles[i].size;
-                        if (psz < 1) psz = 1;
-                        
-                        if (particles[i].layer == 0) { // Needle Spark
-                            HPEN hSpkPen = CreatePen(PS_SOLID, (int)particles[i].size, particles[i].color);
-                            HPEN hOldP = (HPEN)SelectObject(hdcMem, hSpkPen);
-                            MoveToEx(hdcMem, px - (int)(particles[i].vx * 2), py - (int)(particles[i].vy * 2), NULL);
-                            LineTo(hdcMem, px + (int)(particles[i].vx * 2), py + (int)(particles[i].vy * 2));
-                            SelectObject(hdcMem, hOldP);
-                            DeleteObject(hSpkPen);
-                        } else if (particles[i].layer == 1) { // Plasma Puff
-                            HBRUSH hPuffBrush = CreateSolidBrush(particles[i].color);
-                            HPEN hNullPen = (HPEN)GetStockObject(NULL_PEN);
-                            HPEN hOldP = (HPEN)SelectObject(hdcMem, hNullPen);
-                            HBRUSH hOldB = (HBRUSH)SelectObject(hdcMem, hPuffBrush);
-                            Ellipse(hdcMem, px - psz, py - psz, px + psz + 1, py + psz + 1);
-                            SelectObject(hdcMem, hOldP);
-                            SelectObject(hdcMem, hOldB);
-                            DeleteObject(hPuffBrush);
-                        } else if (particles[i].layer == 2) { // Crystal Shard
-                            POINT pts[4];
-                            double a = particles[i].angle;
-                            pts[0].x = px + (int)(FastCos(a) * psz);
-                            pts[0].y = py + (int)(FastSin(a) * psz);
-                            pts[1].x = px + (int)(FastCos(a + 1.57) * psz * 0.6);
-                            pts[1].y = py + (int)(FastSin(a + 1.57) * psz * 0.6);
-                            pts[2].x = px + (int)(FastCos(a + 3.14) * psz);
-                            pts[2].y = py + (int)(FastSin(a + 3.14) * psz);
-                            pts[3].x = px + (int)(FastCos(a + 4.71) * psz * 0.6);
-                            pts[3].y = py + (int)(FastSin(a + 4.71) * psz * 0.6);
-                            
-                            HBRUSH hShardBrush = CreateSolidBrush(particles[i].color);
-                            HPEN hShardPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-                            HPEN hOldP = (HPEN)SelectObject(hdcMem, hShardPen);
-                            HBRUSH hOldB = (HBRUSH)SelectObject(hdcMem, hShardBrush);
-                            Polygon(hdcMem, pts, 4);
-                            SelectObject(hdcMem, hOldP);
-                            SelectObject(hdcMem, hOldB);
-                            DeleteObject(hShardBrush);
-                            DeleteObject(hShardPen);
-                        } else { // Celebration Star
-                            POINT starPts[8];
-                            double a = particles[i].angle;
-                            for (int s = 0; s < 8; s++) {
-                                double curA = a + s * 0.785398;
-                                double r = (s % 2 == 0) ? psz * 1.6 : psz * 0.5;
-                                starPts[s].x = px + (int)(FastCos(curA) * r);
-                                starPts[s].y = py + (int)(FastSin(curA) * r);
-                            }
-                            HBRUSH hStarBrush = CreateSolidBrush(particles[i].color);
-                            HPEN hStarPen = CreatePen(PS_SOLID, 1, RGB(255, 255, 255));
-                            HPEN hOldP = (HPEN)SelectObject(hdcMem, hStarPen);
-                            HBRUSH hOldB = (HBRUSH)SelectObject(hdcMem, hStarBrush);
-                            Polygon(hdcMem, starPts, 8);
-                            SelectObject(hdcMem, hOldP);
-                            SelectObject(hdcMem, hOldB);
-                            DeleteObject(hStarBrush);
-                            DeleteObject(hStarPen);
-                        }
-                    }
                 }
                 
                 // 6. Draw Corner Filigree
