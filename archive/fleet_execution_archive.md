@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T08:11:00-07:00 — kilo-tester: KSubmarine (Interactive UI Audit, Overlay Dismissals, Save Export/Import & ARCH-05)**
+  - Status: PASS ✅ (4 issues found, 4 fixed, 0 regressions, clean builds, 447.4 KB web / 257.5 KB native < 999 KB ceiling).
+  - Modal & Dialog Ergonomics: Wired backdrop click dismissal on tutorial briefing and added return-to-sonar close buttons to all 9 overlay views.
+  - Toast Occlusion Remediation: Re-anchored toast bar to top-center above sonar viewport, preventing control overlap on helm & navigation panels per Directive 189.
+  - Storage Persistence: Added JSON telemetry Export and Import file reader with validation alongside F5 Quicksave / F9 Quickload.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener suspending audio context and auto-saving state on background switch.
+  - Discoverability: Expanded Manual Chapter 8 table with Space ping, F5 save, F9 load, Esc return, and F1 help bindings.
+  - Verification: MSVC clean (`KSubmarine.exe` 257.5 KB); Vite clean in 368ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T07:28:00-07:00 — kilo-expander: KTowers (Feature Expansion: Speed Duel RFMS, Replay Scrubber, FEN, Quicksave & ARCH-05)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 160.2 KB web / 156.2 KB native < 999 KB ceiling).
   - Online Multiplayer Speed Duel (RFMS): Retrofitted real-time race mode via Firebase RTDB, live opponent mini-canvas, chat taunts, and 25s auto-fallback to Cyber-Bot AI.

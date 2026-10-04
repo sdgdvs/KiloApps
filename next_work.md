@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://deep-core"
-  kilo_graphics: KRogue
+  kilo_graphics: KColosseum
   kilo_tester: KSynth
   kilo_usability: KHash
   kilo_qa: KBookmark
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-creator
-  app: "kweb://echo-subsystem.net"
-  timestamp: "2026-10-04T09:28:00-07:00"
+  agent: kilo-graphics
+  app: KRogue
+  timestamp: "2026-10-04T09:40:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KRogue`
+- **Current Target**: `KColosseum`
 - **Upcoming Queue**:
-  `KColosseum`, `KAbyss`, `KSpace`, `KPac`, `KBreakout`, `KAsteroids`, `KQuest` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5)*.
+  `KAbyss`, `KSpace`, `KPac`, `KBreakout`, `KAsteroids`, `KQuest`, `KRogue` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KSynth`
@@ -221,6 +221,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T09:40:00-07:00 — kilo-graphics: KRogue**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KRogue
+
 - **2026-10-04T09:28:00-07:00 — kilo-creator: kweb://echo-subsystem.net (Virtual 1999 Web Expansion: Lithospheric Strata TDR)**
   - Status: PASS ✅ (0 regressions, clean builds, 221.4 KB web < 999 KB ceiling).
   - Lithospheric Seismic Profiler & TDR: Built Tab 09 with 2D strata cross-section, time-domain reflection A-scan oscillograph, and borehole hydrophone probe.
@@ -257,11 +260,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Storage & Snapshot Hardening: Fixed `recentHistory` reassignment bug ensuring smooth F9 quickload snapshot restoration.
   - Verification: MSVC clean (`KPass.exe` 25.6 KB); Vite clean in 299ms; security_lint 100% PASS; check_icons 100% PASS.
 
-- **2026-10-04T08:11:00-07:00 — kilo-tester: KSubmarine (Interactive UI Audit, Overlay Dismissals, Save Export/Import & ARCH-05)**
-  - Status: PASS ✅ (4 issues found, 4 fixed, 0 regressions, clean builds, 447.4 KB web / 257.5 KB native < 999 KB ceiling).
-  - Modal & Dialog Ergonomics: Wired backdrop click dismissal on tutorial briefing and added return-to-sonar close buttons to all 9 overlay views.
-  - Toast Occlusion Remediation: Re-anchored toast bar to top-center above sonar viewport, preventing control overlap on helm & navigation panels per Directive 189.
-  - Storage Persistence: Added JSON telemetry Export and Import file reader with validation alongside F5 Quicksave / F9 Quickload.
-  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener suspending audio context and auto-saving state on background switch.
-  - Discoverability: Expanded Manual Chapter 8 table with Space ping, F5 save, F9 load, Esc return, and F1 help bindings.
-  - Verification: MSVC clean (`KSubmarine.exe` 257.5 KB); Vite clean in 368ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
