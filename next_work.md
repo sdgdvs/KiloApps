@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://echo-subsystem.net"
-  kilo_graphics: "KQuest (Phase 5: Performance & Win32 Parity)"
+  kilo_graphics: KRogue
   kilo_tester: KSubmarine
   kilo_usability: KPass
   kilo_qa: KHex
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-creator
-  app: "kweb://10.19.99.4/classified"
-  timestamp: "2026-10-04T07:44:00-07:00"
+  agent: kilo-graphics
+  app: "KQuest (Phase 5: Performance & Win32 Parity)"
+  timestamp: "2026-10-04T07:51:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KQuest` (Phase 5: Performance & Win32 Parity)
+- **Current Target**: `KRogue`
 - **Upcoming Queue**:
-  `KRogue`, `KColosseum`, `KAbyss`, `KSpace`, `KPac`, `KBreakout`, `KAsteroids` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phase 1, KQuest Phase 2, KQuest Phase 3, KQuest Phase 4)*.
+  `KColosseum`, `KAbyss`, `KSpace`, `KPac`, `KBreakout`, `KAsteroids`, `KQuest` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KSubmarine`
@@ -161,15 +161,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **[FLEET: kilo-graphics] — Exclusive Focus on Imagen 3 Asset Overhauls & Inappropriate App Turn Skipping** | Director Directive
   - ⚠️ AGENT NOTE: Human director priority mandate for `kilo-graphics`.
   - Instructions: The graphics agent must do nothing but replace programmer art with Imagen 3 generated assets for a while on its turns. If assigned an app where Imagen 3 asset replacement is not appropriate (pure vector/wireframe arcade games, abstract board games, text utilities, or apps with already mature art), skip the turn cleanly (`⏭️ Skip — Imagen 3 asset replacement not appropriate for [app]`), rotate the target to the queue bottom, and terminate without code changes.
-
-- **[KQuest] — Visual Art & Asset Overhaul (Imagen 3 Sprites & Backgrounds)** | Director Directive
-  - ⚠️ AGENT NOTE: Human director priority directive for `kilo-graphics`. Replace programmer cutout vector shapes with authentic Imagen 3 generated game assets using the 2-stage asset pipeline.
-  - Instructions: Execute a 5-phase visual overhaul to eliminate all programmer vector cutouts (`ctx.fillRect`, `ctx.beginPath`, `ctx.lineTo`) across hero classes, enemy monsters, town NPCs, and dungeon environments:
-    1. **Phase 1 (Hero Class Sprite Strips)**: Generate orthographic 2D sprite frames on magenta `#FF00FF` for 5 player classes (Warrior, Mage, Rogue, Paladin, Ranger) with weapon/armor tiers. Process via `uv run scripts/asset_pipeline.py process-sprites --frames ... --out-strip KiloOS/public/assets/sprites/kquest/kquest_hero_<class>.png --out-atlas KiloOS/public/assets/sprites/kquest/kquest_hero_<class>.json --box-size 128` (keys out `#FF00FF`, despills fringes, auto-crops, centers, packs into horizontal strips). Refactor `drawHeroSprite()` in `kquest.html` to blit sprite frames (`idle`, `attack`, `hurt`) from loaded image atlases with graceful vector fallback.
-    2. **Phase 2 (Dungeon & Hub Environmental Backgrounds)**: Generate atmospheric backdrops for Town Hub (Sanctuary / Market / Guild) and all 15 Dungeon Biomes (Goblin Outpost, Skeleton Crypt, Sunken Temple, Dark Forest, Orc Fortress, Haunted Mine, Infernal Volcano, Frostpeak Summit, Blood Citadel, Astral Nexus, Void Spire, etc.). Process into quantized 680x220 canvas plates in `KiloOS/public/assets/backgrounds/kquest/` (<999KB budget conscious, e.g. 256-color indexed PNG). Refactor `drawEnvironmentBG()` in `kquest.html` to draw backdrop plates under atmospheric weather motes, replacing procedural gradient lines.
-    3. **Phase 3 (Monster & Boss Bestiary Sprites)**: Generate core biome mob archetypes and 15 Chapter Bosses (Goblin King Prime, Lich Lord Malakor, Abyssal Leviathan, Ancient Treant, Orc Warlord Grommash, Dragon King Pyroth, Void Archon Malakor) on `#FF00FF`. Process via `process-sprites` into 128x128 strips with multi-frame idle, attack lunge, and hit states. Refactor `drawMonsterSprite()` in `kquest.html` to render sprite sheets with status condition overlay tints (poison, burn, freeze).
-    4. **Phase 4 (Town NPCs, Companions & Combat FX)**: Generate Town NPCs (Shopkeeper, Blacksmith, Guildmaster, Factions), Companion summons (Paladin, Ranger), and stylized projectile/spell FX on `#FF00FF`. Refactor `drawNPCSprite()`, companion helper rendering, and spell FX in `kquest.html`.
-    5. **Phase 5 (Performance, Asset Preloader & Win32 Native Parity)**: Build non-blocking async asset preloader with cache status; ensure zero layout pop-in or canvas stutter; keep all files strictly under 999 KB ceiling. Update Win32 native `KQuest/main.c` GDI routines or transparent bitmap blitting if resources bundled, ensuring compile-clean build (`KQuest.exe` < 999 KB). Verify test suites (`npm run build` in `KiloOS/`, `python scripts/security_lint.py`, `python scripts/check_icons.py`).
 
 - **[kclock, ktimer, kpomodoro] — Architecture (ARCH-05: Background Tab Visibility & Timer Drift)** | Director Directive
   - ⚠️ AGENT NOTE: Verified pending ticket from fleet architecture audit.
@@ -230,6 +221,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T07:51:00-07:00 — kilo-graphics: KQuest (Phase 5: Performance & Win32 Parity)**
+  - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KQuest (Phase 5: Performance & Win32 Parity)
+
 - **2026-10-04T07:44:00-07:00 — kilo-creator: kweb://10.19.99.4/classified (Corporate Intranet Leak & Signal Diagnostic Deep Expansion)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 182.7 KB web < 999 KB ceiling).
   - Dual-Presence & Solo Fallback: Added 30s auto-fallback timer to cached relay and cross-presence listening for 10.19.99.19 (Echo Subsystem).
@@ -265,12 +259,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Discoverable Help & Keyboard Accessibility: Added status bar `❓ Help [F1]` trigger, outline keyboard traversal, and focus returns on modal close.
   - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener ensuring unsaved edits flush to storage on tab switch.
   - Verification: MSVC clean (`KNote.exe` 25.6 KB); Vite clean in 312ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
-
-- **2026-10-04T06:43:00-07:00 — kilo-tester: KStellar (Interactive UI Audit, Startup Modal Dismissal, Centered Toast & ARCH-05)**
-  - Status: PASS ✅ (3 issues fixed, 0 regressions, clean builds, 153.0 KB web / 157.0 KB native < 999 KB ceiling).
-  - Modal Dismissal Fix: Added explicit IDs (`manual-close-btn`, `manual-resume-btn`) and `modal-close` hooks to Star Captain's Manual; fixed automated CDP test pass.
-  - Toast Occlusion Remediation: Re-anchored toast bar to center-bottom (`translateX(-50%)`) preventing overlap with station action buttons.
-  - Keyboard & Event Binding: Attached global keydown listener to `document` ensuring Enter/Esc/Space/hotkeys fire reliably; wired Esc return to station.
-  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener suspending audio context, pausing FM synth timer and drone in background tabs.
-  - Storage & Error Hardening: Wrapped audio toggles, save imports, and manual tutorial flags with `safeSetStorage`; added file import `onerror` recovery.
-  - Verification: MSVC clean (`KStellar.exe` 157.0 KB); Vite clean in 305ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.

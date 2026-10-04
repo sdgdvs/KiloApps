@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T06:43:00-07:00 — kilo-tester: KStellar (Interactive UI Audit, Startup Modal Dismissal, Centered Toast & ARCH-05)**
+  - Status: PASS ✅ (3 issues fixed, 0 regressions, clean builds, 153.0 KB web / 157.0 KB native < 999 KB ceiling).
+  - Modal Dismissal Fix: Added explicit IDs (`manual-close-btn`, `manual-resume-btn`) and `modal-close` hooks to Star Captain's Manual; fixed automated CDP test pass.
+  - Toast Occlusion Remediation: Re-anchored toast bar to center-bottom (`translateX(-50%)`) preventing overlap with station action buttons.
+  - Keyboard & Event Binding: Attached global keydown listener to `document` ensuring Enter/Esc/Space/hotkeys fire reliably; wired Esc return to station.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener suspending audio context, pausing FM synth timer and drone in background tabs.
+  - Storage & Error Hardening: Wrapped audio toggles, save imports, and manual tutorial flags with `safeSetStorage`; added file import `onerror` recovery.
+  - Verification: MSVC clean (`KStellar.exe` 157.0 KB); Vite clean in 305ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T05:58:00-07:00 — kilo-expander: KSnake (RFMS Online Multiplayer Expansion, Dual Duel Skills, Replay Export & ARCH-05)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 255.9 KB web / 55.5 KB native < 999 KB ceiling).
   - RFMS Online Multiplayer Architecture: Standardized `RetroMultiplayer` integration with room codes (`SNK-XXXX`), lobby matchmaking, presence tracking, and 25s solo AI fallback.

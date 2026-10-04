@@ -16,9 +16,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 112,
-  "last_turn_timestamp": "2026-09-30T00:26:00Z",
-  "last_heartbeat": "2026-10-04T14:29:39.073912+00:00",
-  "current_target": "KTowers",
+  "turns_executed": 114,
+  "last_turn_timestamp": "2026-10-04T07:51:00-07:00",
+  "last_heartbeat": "2026-10-04T14:51:44.000000+00:00",
+  "current_target": "KQuest (Phase 5: Performance & Win32 Parity)",
   "remote_command": "none"
 }
