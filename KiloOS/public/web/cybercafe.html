@@ -1143,6 +1143,251 @@
     flex-wrap: wrap;
   }
 
+  /* ------------------- PHREAK LAB & ACOUSTIC COUPLER ------------------- */
+  .phreak-container {
+    background: #02060d;
+    border: 2px solid #0284c7;
+    border-radius: 4px;
+    padding: 14px;
+    margin-bottom: 14px;
+    box-shadow: 0 0 16px rgba(2, 132, 199, 0.25);
+  }
+  .phreak-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  @media (max-width: 768px) {
+    .phreak-layout { grid-template-columns: 1fr; }
+  }
+  .dtmf-panel {
+    background: #070e1b;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px;
+  }
+  .dtmf-display {
+    background: #000;
+    border: 1px solid #0284c7;
+    color: #38bdf8;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    padding: 8px 12px;
+    border-radius: 3px;
+    letter-spacing: 2px;
+    min-height: 38px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .dtmf-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .dtmf-btn {
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: #e2e8f0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: bold;
+    padding: 10px 4px;
+    text-align: center;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.1s;
+    user-select: none;
+  }
+  .dtmf-btn:hover {
+    background: #1e293b;
+    border-color: #38bdf8;
+    color: #38bdf8;
+  }
+  .dtmf-btn:active {
+    background: #0284c7;
+    color: #000;
+    transform: scale(0.97);
+  }
+  .dtmf-btn.special {
+    color: #f59e0b;
+    border-color: rgba(245, 158, 11, 0.4);
+  }
+  .dtmf-sub {
+    font-size: 8px;
+    display: block;
+    color: var(--text-muted);
+    font-weight: normal;
+  }
+  .phreak-tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .phreak-tool-btn {
+    background: #091322;
+    border: 1px solid #1e3a5f;
+    color: #7dd3fc;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    font-weight: bold;
+    padding: 8px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .phreak-tool-btn:hover {
+    background: #0284c7;
+    color: #000;
+  }
+  .phreak-scope-box {
+    background: #000;
+    border: 1px solid #0284c7;
+    border-radius: 3px;
+    padding: 6px;
+    margin-bottom: 10px;
+  }
+  .phreak-terminal {
+    background: #00050a;
+    border: 1px solid #1e293b;
+    color: #38bdf8;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 1.4;
+    padding: 8px;
+    border-radius: 3px;
+    height: 160px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+  }
+
+  /* ------------------- STATION REMOTE CRT & CLI ------------------- */
+  .station-remote-panel {
+    background: #070d17;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px;
+    margin-top: 12px;
+  }
+  .station-crt-screen {
+    background: #000;
+    border: 2px solid #10b981;
+    border-radius: 4px;
+    position: relative;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .station-cli-wrap {
+    background: #020704;
+    border: 1px solid #064e3b;
+    border-radius: 3px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .station-cli-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #34d399;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    flex: 1;
+  }
+  .station-cli-log {
+    background: #010a05;
+    border: 1px solid #065f46;
+    color: #6ee7b7;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 1.4;
+    padding: 8px;
+    height: 120px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    margin-bottom: 8px;
+  }
+
+  /* ------------------- CYBER BARISTA COFFEE ROASTING LAB ------------------- */
+  .barista-lab-card {
+    background: #0d121c;
+    border: 1px solid #b45309;
+    border-radius: 4px;
+    padding: 12px;
+    margin-top: 12px;
+    box-shadow: 0 0 14px rgba(180, 83, 9, 0.2);
+  }
+  .barista-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  @media (max-width: 600px) {
+    .barista-grid { grid-template-columns: 1fr; }
+  }
+  .barista-steam-box {
+    background: #05070c;
+    border: 1px solid #374151;
+    border-radius: 3px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .coffee-stat-pill {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 9px;
+    border-radius: 2px;
+    font-weight: bold;
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid var(--amber);
+    color: var(--amber-bright);
+  }
+
+  /* ------------------- ZMODEM BBS FILE TRANSFER ------------------- */
+  .zmodem-box {
+    background: #030712;
+    border: 2px solid #0284c7;
+    border-radius: 4px;
+    padding: 14px;
+  }
+  .zmodem-progress {
+    height: 14px;
+    background: #111827;
+    border: 1px solid #374151;
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 8px 0;
+  }
+  .zmodem-progress-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #0284c7, #38bdf8);
+    transition: width 0.1s linear;
+  }
+  .zmodem-stream-window {
+    background: #000;
+    border: 1px solid #1e293b;
+    color: #38bdf8;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    line-height: 1.35;
+    padding: 8px;
+    height: 130px;
+    overflow-y: auto;
+    white-space: pre;
+    margin: 8px 0;
+  }
+
   footer {
     text-align: center;
     font-size: 10px;
@@ -1262,6 +1507,7 @@
   <!-- Navigation Tabs -->
   <nav class="cyber-tabs">
     <button class="tab-btn active" onclick="switchTab('tab-lounge')">☕ TERMINAL LOUNGE</button>
+    <button class="tab-btn" onclick="switchTab('tab-phreak')">📞 PHREAK &amp; COUPLER LAB</button>
     <button class="tab-btn" onclick="switchTab('tab-forum')">💬 THREADED BBS FORUM</button>
     <button class="tab-btn" onclick="switchTab('tab-ascii')">🎨 ASCII ART STUDIO</button>
     <button class="tab-btn" onclick="switchTab('tab-irc')">📟 IRC CHAT (mIRC)</button>
@@ -1296,6 +1542,29 @@
           <div id="speedStatus" style="font-size:10px; color:var(--text-muted); display:flex; justify-content:space-between;">
             <span>STATUS: IDLE</span>
             <span>0.0 KB/s</span>
+          </div>
+        </div>
+
+        <!-- Station Remote CRT & CLI Console -->
+        <div class="station-remote-panel">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div>
+              <span id="remoteStationTitle" style="font-size:11px; font-weight:bold; color:var(--green-bright);">📺 REMOTE VNC STATION CRT: STATION #1</span>
+              <span id="remoteStationIp" style="font-size:10px; color:var(--text-muted); margin-left:8px;">[10.19.99.11]</span>
+            </div>
+            <button class="btn-retro" style="font-size:9px;" onclick="cycleStationCrtView()">CYCLE BOOTH ↻</button>
+          </div>
+          <div class="station-crt-screen">
+            <canvas id="stationCrtCanvas" width="460" height="150" style="width:100%; height:150px; display:block;"></canvas>
+          </div>
+          <div class="station-cli-log" id="stationCliLog">[STATION #1 VNC DAEMON CONNECTED]
+Station: Pentium III Katmai 500MHz | 3dfx Voodoo3 3000 AGP
+Active Session: ~neon_rider (Compiling Win32 ASM Demotape)
+Type 'help' for station shell directives or 'ping 10.19.99.4'.</div>
+          <div class="station-cli-wrap">
+            <span class="station-cli-prompt" id="stationCliPrompt">st1:~$</span>
+            <input type="text" id="stationCliInput" class="station-cli-input" placeholder="Type station command (help, ping 10.19.99.4, glinfo, netstat)..." onkeydown="handleStationCliKey(event)">
+            <button class="btn-retro" style="padding:2px 8px; font-size:10px;" onclick="execStationCli()">EXEC</button>
           </div>
         </div>
       </div>
@@ -1363,6 +1632,137 @@
           <div class="receipt-box" id="receiptOutput">[THERMAL RECEIPT PRINTER]
 READY FOR ORDERS...
 Select an item above to vend voucher.</div>
+        </div>
+
+        <!-- Cyber Barista Coffee Roaster & Recipe Lab -->
+        <div class="barista-lab-card">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-size:11px; font-weight:bold; color:var(--amber-bright);">☕ CYBER BARISTA ROASTING LAB &amp; RECIPE CRAFTER</span>
+            <span class="coffee-stat-pill" id="baristaBuffPill">PERK: +40% TYPING</span>
+          </div>
+          <p style="font-size:10px; color:var(--text-muted); margin-bottom:8px;">Synthesize custom hacker beverages with authentic thermal receipt and door-game buffs.</p>
+          
+          <div class="barista-grid">
+            <div>
+              <label style="font-size:10px; color:var(--cyan-bright); font-weight:bold;">BEAN ROAST LEVEL:</label>
+              <select id="baristaRoastSel" class="form-select" style="width:100%; margin-top:2px; font-size:10px;" onchange="updateBaristaStats()">
+                <option value="light">Light Baud Roast (120°C - Citrus Acid)</option>
+                <option value="med" selected>Medium Overclock (200°C - Caramel Nut)</option>
+                <option value="dark">Dark 0x00 Carbon (240°C - Smoky Tar)</option>
+                <option value="cryo">Liquid Nitrogen Freeze-Dried (-196°C)</option>
+              </select>
+
+              <div style="margin-top:6px;">
+                <div style="display:flex; justify-content:space-between; font-size:10px;">
+                  <span style="color:var(--amber-bright);">CAFFEINE LOAD:</span>
+                  <span id="baristaCaffeineVal" style="color:#fff;">150 mg</span>
+                </div>
+                <input type="range" id="baristaCaffeineSlider" min="50" max="400" step="25" value="150" style="width:100%; margin-top:4px;" oninput="updateBaristaStats()">
+              </div>
+
+              <label style="font-size:10px; color:var(--cyan-bright); font-weight:bold; margin-top:6px; display:block;">VESSEL HARDWARE:</label>
+              <select id="baristaCupSel" class="form-select" style="width:100%; margin-top:2px; font-size:10px;" onchange="updateBaristaStats()">
+                <option value="mug">Silicon Motherboard Ceramic Mug</option>
+                <option value="cobalt">Cobalt Blue Glass Bottle</option>
+                <option value="thermos">3dfx Glide Insulated Flask</option>
+                <option value="floppy">5.25" Floppy Diskette Shaker</option>
+              </select>
+            </div>
+
+            <div class="barista-steam-box">
+              <canvas id="steamCanvas" width="180" height="100" style="width:100%; height:100px; display:block;"></canvas>
+              <div style="font-size:9px; color:var(--amber-bright); text-align:center; margin-top:4px;" id="baristaTempDisplay">CORE TEMP: 94.5°C • STEAM OK</div>
+            </div>
+          </div>
+
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px; margin-top:4px;">
+            <div style="font-size:10px; color:var(--text-muted);">
+              Additives: 
+              <label style="margin-left:4px; color:#fff;"><input type="checkbox" id="addSurge" onchange="updateBaristaStats()"> Surge</label>
+              <label style="margin-left:6px; color:#fff;"><input type="checkbox" id="addBawls" onchange="updateBaristaStats()"> Bawls</label>
+              <label style="margin-left:6px; color:#fff;"><input type="checkbox" id="addNitrogen" onchange="updateBaristaStats()"> LN2</label>
+            </div>
+            <button class="btn-retro amber" onclick="brewCustomBeverage()">⚡ BREW CONCOCTION</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PANE: PHREAK LAB & ACOUSTIC COUPLER -->
+  <section id="tab-phreak" class="pane-content">
+    <div class="section-title">
+      <span>📞 TELECOMMUNICATIONS PHREAKING &amp; ACOUSTIC COUPLER LAB</span>
+      <span style="font-size: 11px; color: var(--text-muted);">BELL SYSTEM IN-BAND SIGNALING • DTMF MATRIX • 1999Hz CARRIER INTERCEPT</span>
+    </div>
+
+    <div class="phreak-container">
+      <div class="phreak-layout">
+        <!-- Left: DTMF Keypad & Number Buffer -->
+        <div class="dtmf-panel">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span style="font-size:11px; font-weight:bold; color:var(--cyan-bright);">📞 16-KEY DTMF TONE GENERATOR</span>
+            <span style="font-size:10px; color:var(--text-muted);">BELL 202 DUAL FREQUENCY</span>
+          </div>
+
+          <div class="dtmf-display">
+            <span id="dtmfBufferDisplay">555-1999</span>
+            <button class="btn-retro" style="padding:2px 8px; font-size:10px;" onclick="clearDtmfBuffer()">CLEAR</button>
+          </div>
+
+          <div class="dtmf-grid">
+            <div class="dtmf-btn" onclick="pressDtmf('1', 697, 1209)">1<span class="dtmf-sub">697/1209</span></div>
+            <div class="dtmf-btn" onclick="pressDtmf('2', 697, 1336)">2<span class="dtmf-sub">697/1336</span></div>
+            <div class="dtmf-btn" onclick="pressDtmf('3', 697, 1477)">3<span class="dtmf-sub">697/1477</span></div>
+            <div class="dtmf-btn special" onclick="pressDtmf('A', 697, 1633)">A<span class="dtmf-sub">FO (697)</span></div>
+
+            <div class="dtmf-btn" onclick="pressDtmf('4', 770, 1209)">4<span class="dtmf-sub">770/1209</span></div>
+            <div class="dtmf-btn" onclick="pressDtmf('5', 770, 1336)">5<span class="dtmf-sub">770/1336</span></div>
+            <div class="dtmf-btn" onclick="pressDtmf('6', 770, 1477)">6<span class="dtmf-sub">770/1477</span></div>
+            <div class="dtmf-btn special" onclick="pressDtmf('B', 770, 1633)">B<span class="dtmf-sub">F (770)</span></div>
+
+            <div class="dtmf-btn" onclick="pressDtmf('7', 852, 1209)">7<span class="dtmf-sub">852/1209</span></div>
+            <div class="dtmf-btn" onclick="pressDtmf('8', 852, 1336)">8<span class="dtmf-sub">852/1336</span></div>
+            <div class="dtmf-btn" onclick="pressDtmf('9', 852, 1477)">9<span class="dtmf-sub">852/1477</span></div>
+            <div class="dtmf-btn special" onclick="pressDtmf('C', 852, 1633)">C<span class="dtmf-sub">I (852)</span></div>
+
+            <div class="dtmf-btn special" onclick="pressDtmf('*', 941, 1209)">*<span class="dtmf-sub">941/1209</span></div>
+            <div class="dtmf-btn" onclick="pressDtmf('0', 941, 1336)">0<span class="dtmf-sub">941/1336</span></div>
+            <div class="dtmf-btn special" onclick="pressDtmf('#', 941, 1477)">#<span class="dtmf-sub">941/1477</span></div>
+            <div class="dtmf-btn special" onclick="pressDtmf('D', 941, 1633)">D<span class="dtmf-sub">P (941)</span></div>
+          </div>
+
+          <div style="display:flex; gap:6px;">
+            <button class="btn-retro green" style="flex:1;" onclick="dialDtmfSequence()">📞 DIAL SEQUENCE</button>
+            <button class="btn-retro amber" style="flex:1;" onclick="autoDial1999()">⚡ DIAL 10.19.99.4</button>
+          </div>
+        </div>
+
+        <!-- Right: In-Band Phreaking Tools & Acoustic Spectrum -->
+        <div>
+          <div class="phreak-scope-box">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-size:10px; font-weight:bold; color:var(--cyan-bright);">ACOUSTIC CRT OSCILLOSCOPE &amp; WATERFALL SPECTRUM</span>
+              <span id="phreakPeakFreq" style="font-size:10px; color:var(--amber-bright);">PEAK: --- Hz</span>
+            </div>
+            <canvas id="phreakScopeCanvas" width="440" height="100" style="width:100%; height:100px; display:block;"></canvas>
+          </div>
+
+          <h5 style="font-size:11px; color:var(--amber-bright); margin-bottom:6px;">TELECOMMUNICATIONS FREQUENCY WEAPONS &amp; BEACONS</h5>
+          <div class="phreak-tools-grid">
+            <button class="phreak-tool-btn" onclick="trigger2600Hz()">2600Hz TRUNK SEIZE</button>
+            <button class="phreak-tool-btn" onclick="triggerRedBox('nickel')">RED BOX: 5¢ (NICKEL)</button>
+            <button class="phreak-tool-btn" onclick="triggerRedBox('dime')">RED BOX: 10¢ (DIME)</button>
+            <button class="phreak-tool-btn" onclick="triggerRedBox('quarter')">RED BOX: 25¢ (QUARTER)</button>
+            <button class="phreak-tool-btn" style="border-color:var(--amber); color:var(--amber-bright);" onclick="trigger1999HzCarrier()">1999Hz SUBCARRIER</button>
+            <button class="phreak-tool-btn" onclick="triggerBellFsk()">BELL 103/202 FSK</button>
+            <button class="phreak-tool-btn" onclick="triggerV90Handshake()">56K V.90 HANDSHAKE</button>
+          </div>
+
+          <div class="phreak-terminal" id="phreakTerminalLog">[TELECOM PHREAK SUITE READY]
+Acoustic Coupler: Active (Microphone &amp; Receiver calibrated)
+Trunk Signaling: In-band SF 2600Hz / MF Red Box (1700+2200Hz)
+Carrier Monitor: Scanning 10.19.99.0/24 subnet loopbacks...</div>
         </div>
       </div>
     </div>
@@ -1762,77 +2162,110 @@ Choose an option below to initialize your carrier!
           <td>1.4 KB</td>
           <td>1999-10-01</td>
           <td>SysOp Info</td>
-          <td><button class="btn-retro" onclick="viewVaultFile('CAFE_WELCOME')">VIEW</button></td>
+          <td>
+            <button class="btn-retro" onclick="viewVaultFile('CAFE_WELCOME')">VIEW</button>
+            <button class="btn-retro" style="color:var(--cyan-bright); border-color:var(--cyan);" onclick="openZmodemModal('CAFE_WELCOME')">⚡ ZMODEM DL</button>
+          </td>
         </tr>
         <tr>
           <td><strong>VOODOO3_OPTIMIZATION.NFO</strong></td>
           <td>3.2 KB</td>
           <td>1999-10-18</td>
           <td>Hardware</td>
-          <td><button class="btn-retro" onclick="viewVaultFile('VOODOO3')">VIEW</button></td>
+          <td>
+            <button class="btn-retro" onclick="viewVaultFile('VOODOO3')">VIEW</button>
+            <button class="btn-retro" style="color:var(--cyan-bright); border-color:var(--cyan);" onclick="openZmodemModal('VOODOO3')">⚡ ZMODEM DL</button>
+          </td>
         </tr>
         <tr>
           <td><strong>ASCII_ART_PRIMER.TXT</strong></td>
           <td>2.8 KB</td>
           <td>1999-11-04</td>
           <td>Art Scene</td>
-          <td><button class="btn-retro" onclick="viewVaultFile('ASCII_PRIMER')">VIEW</button></td>
+          <td>
+            <button class="btn-retro" onclick="viewVaultFile('ASCII_PRIMER')">VIEW</button>
+            <button class="btn-retro" style="color:var(--cyan-bright); border-color:var(--cyan);" onclick="openZmodemModal('ASCII_PRIMER')">⚡ ZMODEM DL</button>
+          </td>
         </tr>
         <tr>
           <td><strong>IRCD_GUIDE.TXT</strong></td>
           <td>2.1 KB</td>
           <td>1999-10-25</td>
           <td>Networking</td>
-          <td><button class="btn-retro" onclick="viewVaultFile('IRCD_GUIDE')">VIEW</button></td>
+          <td>
+            <button class="btn-retro" onclick="viewVaultFile('IRCD_GUIDE')">VIEW</button>
+            <button class="btn-retro" style="color:var(--cyan-bright); border-color:var(--cyan);" onclick="openZmodemModal('IRCD_GUIDE')">⚡ ZMODEM DL</button>
+          </td>
         </tr>
         <tr>
           <td><strong>PENTIUM_III_SSE.TXT</strong></td>
           <td>3.5 KB</td>
           <td>1999-11-08</td>
           <td>Silicon Dev</td>
-          <td><button class="btn-retro" onclick="viewVaultFile('PENTIUM_SSE')">VIEW</button></td>
+          <td>
+            <button class="btn-retro" onclick="viewVaultFile('PENTIUM_SSE')">VIEW</button>
+            <button class="btn-retro" style="color:var(--cyan-bright); border-color:var(--cyan);" onclick="openZmodemModal('PENTIUM_SSE')">⚡ ZMODEM DL</button>
+          </td>
         </tr>
         <tr>
           <td><strong>SUBNET_ANOMALY_101999.LOG</strong></td>
           <td>1.8 KB</td>
           <td>1999-11-15</td>
           <td>Telemetry</td>
-          <td><button class="btn-retro" onclick="viewVaultFile('SUBNET_LOG')">VIEW</button></td>
+          <td>
+            <button class="btn-retro" onclick="viewVaultFile('SUBNET_LOG')">VIEW</button>
+            <button class="btn-retro" style="color:var(--cyan-bright); border-color:var(--cyan);" onclick="openZmodemModal('SUBNET_LOG')">⚡ ZMODEM DL</button>
+          </td>
         </tr>
         <tr>
           <td><strong>VOODOO_GLIDE_BENCHMARKS.NFO</strong></td>
           <td>2.9 KB</td>
           <td>1999-11-19</td>
           <td>3D Graphics</td>
-          <td><button class="btn-retro" onclick="viewVaultFile('GLIDE_BENCH')">VIEW</button></td>
+          <td>
+            <button class="btn-retro" onclick="viewVaultFile('GLIDE_BENCH')">VIEW</button>
+            <button class="btn-retro" style="color:var(--cyan-bright); border-color:var(--cyan);" onclick="openZmodemModal('GLIDE_BENCH')">⚡ ZMODEM DL</button>
+          </td>
         </tr>
         <tr>
           <td><strong>CYBERCAFE_1999_MENU.TXT</strong></td>
           <td>1.6 KB</td>
           <td>1999-11-20</td>
           <td>Cafe Kiosk</td>
-          <td><button class="btn-retro" onclick="viewVaultFile('CAFE_MENU')">VIEW</button></td>
+          <td>
+            <button class="btn-retro" onclick="viewVaultFile('CAFE_MENU')">VIEW</button>
+            <button class="btn-retro" style="color:var(--cyan-bright); border-color:var(--cyan);" onclick="openZmodemModal('CAFE_MENU')">⚡ ZMODEM DL</button>
+          </td>
         </tr>
         <tr>
           <td><strong>DOOR_GAME_HACKERS_GUIDE.TXT</strong></td>
           <td>3.1 KB</td>
           <td>1999-11-22</td>
           <td>BBS Gaming</td>
-          <td><button class="btn-retro" onclick="viewVaultFile('DOOR_GUIDE')">VIEW</button></td>
+          <td>
+            <button class="btn-retro" onclick="viewVaultFile('DOOR_GUIDE')">VIEW</button>
+            <button class="btn-retro" style="color:var(--cyan-bright); border-color:var(--cyan);" onclick="openZmodemModal('DOOR_GUIDE')">⚡ ZMODEM DL</button>
+          </td>
         </tr>
         <tr>
           <td><strong>CARRIER_FREQUENCY_1999HZ.DISPATCH</strong></td>
           <td>2.4 KB</td>
           <td>1999-11-24</td>
           <td>Acoustic Phreak</td>
-          <td><button class="btn-retro" onclick="viewVaultFile('CARRIER_DISPATCH')">VIEW</button></td>
+          <td>
+            <button class="btn-retro" onclick="viewVaultFile('CARRIER_DISPATCH')">VIEW</button>
+            <button class="btn-retro" style="color:var(--cyan-bright); border-color:var(--cyan);" onclick="openZmodemModal('CARRIER_DISPATCH')">⚡ ZMODEM DL</button>
+          </td>
         </tr>
         <tr>
           <td><strong>LAN_PARTY_RULES_1999.TXT</strong></td>
           <td>1.9 KB</td>
           <td>1999-11-25</td>
           <td>Tournaments</td>
-          <td><button class="btn-retro" onclick="viewVaultFile('LAN_RULES')">VIEW</button></td>
+          <td>
+            <button class="btn-retro" onclick="viewVaultFile('LAN_RULES')">VIEW</button>
+            <button class="btn-retro" style="color:var(--cyan-bright); border-color:var(--cyan);" onclick="openZmodemModal('LAN_RULES')">⚡ ZMODEM DL</button>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -1865,6 +2298,59 @@ Choose an option below to initialize your carrier!
         <button class="btn-retro" id="boothBenchBtn" onclick="runBoothGlideBenchmark()">⚡ GLIDE BENCHMARK</button>
         <button class="btn-retro amber" id="boothClaimBtn" onclick="claimBoothStation()">🪑 CLAIM BOOTH</button>
         <button class="btn-retro" onclick="closeBoothModal()">CLOSE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ZMODEM BBS FILE TRANSFER SIMULATOR MODAL -->
+  <div id="zmodemModal" class="modal-overlay">
+    <div class="modal-box zmodem-box" style="max-width:540px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #0284c7; padding-bottom:6px; margin-bottom:10px;">
+        <span id="zmodemModalTitle" style="color:#38bdf8; font-size:12px; font-weight:bold;">⚡ ZMODEM-99 STREAMING FILE TRANSFER</span>
+        <button class="btn-retro" style="padding:2px 8px;" onclick="closeZmodemModal()">[X]</button>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:8px;">
+        <span id="zmodemFileName" style="color:var(--amber-bright); font-weight:bold;">FILE: VOODOO3_OPTIMIZATION.NFO</span>
+        <span id="zmodemFileSize" style="color:var(--text-muted);">SIZE: 3.2 KB (25 BLOCKS)</span>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-bottom:8px;">
+        <div style="flex:1;">
+          <label style="font-size:10px; color:var(--cyan-bright); font-weight:bold;">PROTOCOL:</label>
+          <select id="zmodemProtoSel" class="form-select" style="width:100%; font-size:10px;" onchange="updateZmodemSpeed()">
+            <option value="zmodem" selected>ZMODEM-99 (Sliding Window 1024b CRC-32)</option>
+            <option value="xmodem">XMODEM-CRC (128-byte Checksum)</option>
+            <option value="kermit">Kermit (Packet Sliding)</option>
+          </select>
+        </div>
+        <div style="flex:1;">
+          <label style="font-size:10px; color:var(--cyan-bright); font-weight:bold;">BAUD RATE:</label>
+          <select id="zmodemBaudSel" class="form-select" style="width:100%; font-size:10px;" onchange="updateZmodemSpeed()">
+            <option value="57600" selected>56,600 bps (V.90 Fast)</option>
+            <option value="33600">33,600 bps (V.34 High)</option>
+            <option value="14400">14,400 bps (V.32bis Standard)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="zmodem-progress">
+        <div id="zmodemProgressBar" class="zmodem-progress-fill"></div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; font-size:10px; color:var(--text-muted); margin-bottom:6px;">
+        <span id="zmodemBlockStatus">BLOCK 0 / 0 [IDLE]</span>
+        <span id="zmodemCrcStatus">CRC-32: STANDBY</span>
+        <span id="zmodemBpsStatus">0.0 KB/s</span>
+      </div>
+
+      <div class="zmodem-stream-window" id="zmodemStreamOutput">[ZMODEM PROTOCOL NEGOTIATION]
+Ready to initiate packet stream. Click "START TRANSMISSION" to begin.</div>
+
+      <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
+        <button class="btn-retro green" id="zmodemStartBtn" onclick="startZmodemTransfer()">⚡ START TRANSMISSION</button>
+        <button class="btn-retro amber" id="zmodemSaveBtn" style="display:none;" onclick="downloadTransferredFile()">💾 SAVE TO DISK</button>
+        <button class="btn-retro" onclick="closeZmodemModal()">ABORT / CLOSE</button>
       </div>
     </div>
   </div>
@@ -2035,6 +2521,90 @@ function playModemChirp() {
   gain.connect(audioCtx.destination);
   osc.start(now);
   osc.stop(now + 0.1);
+}
+
+function playDtmfTone(rowFreq, colFreq, dur = 0.16) {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const gain1 = audioCtx.createGain();
+  const gain2 = audioCtx.createGain();
+
+  osc1.type = 'sine';
+  osc1.frequency.setValueAtTime(rowFreq, now);
+  osc2.type = 'sine';
+  osc2.frequency.setValueAtTime(colFreq, now);
+
+  gain1.gain.setValueAtTime(0.08, now);
+  gain1.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+  gain2.gain.setValueAtTime(0.08, now);
+  gain2.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+  osc1.connect(gain1);
+  osc2.connect(gain2);
+
+  if (analyserNode) {
+    gain1.connect(analyserNode);
+    gain2.connect(analyserNode);
+  }
+  gain1.connect(audioCtx.destination);
+  gain2.connect(audioCtx.destination);
+
+  osc1.start(now);
+  osc2.start(now);
+  osc1.stop(now + dur);
+  osc2.stop(now + dur);
+}
+
+function playNoiseBurst(dur = 0.25, centerFreq = 1400) {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  const now = audioCtx.currentTime;
+
+  const bufferSize = Math.floor(audioCtx.sampleRate * dur);
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) {
+    data[i] = (Math.random() * 2 - 1) * Math.exp(-3 * (i / bufferSize));
+  }
+
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buffer;
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.setValueAtTime(centerFreq, now);
+  filter.Q.value = 3.0;
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.07, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+
+  noise.connect(filter);
+  filter.connect(gain);
+  if (analyserNode) gain.connect(analyserNode);
+  gain.connect(audioCtx.destination);
+
+  noise.start(now);
+}
+
+function playSteamBubbling(dur = 1.4) {
+  if (!audioEnabled) return;
+  initAudio();
+  if (!audioCtx) return;
+  playNoiseBurst(dur, 2200);
+  for (let i = 0; i < 5; i++) {
+    setTimeout(() => {
+      if (audioEnabled) {
+        playFmTone(180 + Math.random() * 120, 1.5, 3.0, 0.08, 0.06, false);
+      }
+    }, i * 220);
+  }
 }
 
 /* =========================================================================
@@ -2267,11 +2837,12 @@ function switchTab(tabId) {
 
   const btnMap = {
     'tab-lounge': 0,
-    'tab-forum': 1,
-    'tab-ascii': 2,
-    'tab-irc': 3,
-    'tab-game': 4,
-    'tab-vault': 5
+    'tab-phreak': 1,
+    'tab-forum': 2,
+    'tab-ascii': 3,
+    'tab-irc': 4,
+    'tab-game': 5,
+    'tab-vault': 6
   };
   const buttons = document.querySelectorAll('.tab-btn');
   if (buttons[btnMap[tabId]]) {
@@ -2280,6 +2851,11 @@ function switchTab(tabId) {
 
   if (tabId === 'tab-irc') {
     scrollIrcToBottom();
+  } else if (tabId === 'tab-phreak') {
+    initPhreakScope();
+  } else if (tabId === 'tab-lounge') {
+    initStationCrt();
+    initSteamCanvas();
   }
 }
 
@@ -2463,6 +3039,647 @@ function runSpeedTest() {
       status.innerHTML = '<span style="color:var(--green-bright); font-weight:bold;">CONNECTED: 56,600 BPS V.90 OK</span><span style="color:var(--amber-bright);">LATENCY: 118ms</span>';
     }
   }, 110);
+}
+
+/* =========================================================================
+   5B. STATION REMOTE CRT & INTERACTIVE CLI CONSOLE
+   ========================================================================= */
+let currentStationCrtId = 1;
+let stationCrtAnimId = null;
+let stationCrtAngle = 0;
+let stationCrtRadarStep = 0;
+let stationCrtTrackerRow = 0;
+
+function initStationCrt() {
+  const canvas = document.getElementById('stationCrtCanvas');
+  if (!canvas) return;
+  if (stationCrtAnimId) cancelAnimationFrame(stationCrtAnimId);
+  renderStationCrtLoop();
+}
+
+function renderStationCrtLoop() {
+  const canvas = document.getElementById('stationCrtCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const w = canvas.width;
+  const h = canvas.height;
+
+  // Clear dark CRT background
+  ctx.fillStyle = '#020604';
+  ctx.fillRect(0, 0, w, h);
+
+  // Scanline overlay
+  ctx.fillStyle = 'rgba(16, 185, 129, 0.03)';
+  for (let y = 0; y < h; y += 4) {
+    ctx.fillRect(0, y, w, 2);
+  }
+
+  // Draw Station-specific visualizer
+  if (currentStationCrtId === 1) {
+    // Station 1: 3D Wireframe Timedemo (Glide 3.03)
+    stationCrtAngle += 0.035;
+    ctx.strokeStyle = '#10b981';
+    ctx.lineWidth = 1.5;
+
+    const cx = w * 0.25;
+    const cy = h * 0.5;
+    const size = 38;
+
+    // 3D Cube Projection
+    const cosA = Math.cos(stationCrtAngle);
+    const sinA = Math.sin(stationCrtAngle);
+    const cosB = Math.cos(stationCrtAngle * 0.7);
+    const sinB = Math.sin(stationCrtAngle * 0.7);
+
+    const vertices = [
+      [-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
+      [-1, -1, 1], [1, -1, 1], [1, 1, 1], [-1, 1, 1]
+    ];
+
+    const proj = vertices.map(([x, y, z]) => {
+      let x1 = x * cosA - z * sinA;
+      let z1 = x * sinA + z * cosA;
+      let y1 = y * cosB - z1 * sinB;
+      let z2 = y * sinB + z1 * cosB;
+      const d = 3.2 + z2;
+      return [cx + (x1 / d) * size * 2.8, cy + (y1 / d) * size * 2.8];
+    });
+
+    const edges = [
+      [0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],
+      [0,4],[1,5],[2,6],[3,7]
+    ];
+
+    ctx.beginPath();
+    edges.forEach(([i, j]) => {
+      ctx.moveTo(proj[i][0], proj[i][1]);
+      ctx.lineTo(proj[j][0], proj[j][1]);
+    });
+    ctx.stroke();
+
+    // Telemetry text
+    ctx.fillStyle = '#34d399';
+    ctx.font = '10px Consolas, monospace';
+    ctx.fillText('[3DFX GLIDE 3.03 TIMEDEMO 1]', w * 0.52, 28);
+    ctx.fillText('Engine: Tremor III Arena (1024x768 16-bit)', w * 0.52, 46);
+    ctx.fillText('Framerate: 73.8 FPS (±0.12ms)', w * 0.52, 64);
+    ctx.fillText('Rasterizer: Voodoo3 3000 AGP (166MHz Core)', w * 0.52, 82);
+    ctx.fillText('Draw Calls: 412 / VRAM: 11.2MB / 16.0MB', w * 0.52, 100);
+    ctx.fillText('Status: 100% Glide Acceleration Stable', w * 0.52, 118);
+
+  } else if (currentStationCrtId === 2) {
+    // Station 2: Surreal Tournament CTF-Face Radar
+    stationCrtRadarStep += 0.05;
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1;
+
+    // Arena boundary circles
+    const cx = w * 0.28;
+    const cy = h * 0.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 50, 0, Math.PI * 2);
+    ctx.arc(cx, cy, 30, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Tower bases
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillRect(cx - 45, cy - 8, 12, 16);
+    ctx.fillStyle = '#f43f5e';
+    ctx.fillRect(cx + 33, cy - 8, 12, 16);
+
+    // Simulated Bot Blips
+    for (let i = 0; i < 6; i++) {
+      const angle = stationCrtRadarStep + (i * 1.05);
+      const dist = 18 + (i * 5);
+      const bx = cx + Math.cos(angle) * dist;
+      const by = cy + Math.sin(angle) * dist * 0.5;
+      ctx.fillStyle = (i % 2 === 0) ? '#38bdf8' : '#f43f5e';
+      ctx.beginPath();
+      ctx.arc(bx, by, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Match text
+    ctx.fillStyle = '#7dd3fc';
+    ctx.font = '10px Consolas, monospace';
+    ctx.fillText('[SURREAL TOURNAMENT: CTF-FACE]', w * 0.54, 28);
+    ctx.fillText('Blue Team: 3 Flags | Red Team: 2 Flags', w * 0.54, 46);
+    ctx.fillText('Player: FragKing_99 (Sniper Rifle / Translocator)', w * 0.54, 64);
+    ctx.fillText('LAN Ping: 12ms (10.19.99.12 -> 10.19.99.20)', w * 0.54, 82);
+    ctx.fillText('Bot Morale: Berserk (Surreal AI Engine)', w * 0.54, 100);
+    ctx.fillText('Frags: 24 Frags / 8 Deaths', w * 0.54, 118);
+
+  } else if (currentStationCrtId === 3) {
+    // Station 3: Amiga 4-Channel Tracker Matrix
+    stationCrtTrackerRow = (stationCrtTrackerRow + 0.15) % 16;
+    const curRow = Math.floor(stationCrtTrackerRow);
+
+    ctx.fillStyle = '#10b981';
+    ctx.font = '9px Consolas, monospace';
+    ctx.fillText('ROW | CH1: BASS  | CH2: LEAD  | CH3: ARPEGGIO | CH4: SNARE', 14, 20);
+    ctx.fillText('------------------------------------------------------------', 14, 30);
+
+    const notes = ['C-3 01', 'D-3 02', 'E-3 01', 'F-3 03', 'G-3 01', 'A-3 04', 'B-3 02', 'C-4 01'];
+    for (let r = 0; r < 5; r++) {
+      const rowIdx = (curRow + r) % 16;
+      const isCur = (r === 0);
+      ctx.fillStyle = isCur ? '#34d399' : '#059669';
+      const n1 = notes[(rowIdx) % 8];
+      const n2 = notes[(rowIdx + 2) % 8];
+      const n3 = notes[(rowIdx + 4) % 8];
+      const n4 = (rowIdx % 4 === 0) ? 'SN-1 05' : '... ..';
+      ctx.fillText(`${String(rowIdx).padStart(2, '0')}  | ${n1}  | ${n2}  | ${n3}     | ${n4}`, 14, 46 + r * 14);
+    }
+
+    // VU meter bars on right
+    ctx.fillStyle = '#fbbf24';
+    ctx.fillText('CHANNEL VU METERS:', w * 0.65, 25);
+    for (let ch = 0; ch < 4; ch++) {
+      const val = 15 + Math.floor(Math.sin(stationCrtRadarStep * 2 + ch) * 20 + 25);
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(w * 0.65, 42 + ch * 18, 120, 10);
+      ctx.fillStyle = (val > 40) ? '#f59e0b' : '#10b981';
+      ctx.fillRect(w * 0.65, 42 + ch * 18, Math.min(120, val * 2.4), 10);
+    }
+
+  } else if (currentStationCrtId === 4) {
+    // Station 4: The Anomalous Gateway Station (Subnet 10.19.99.4)
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = '10px Consolas, monospace';
+    ctx.fillText('⚠️ [ANOMALOUS SUBNET INTERCEPT // GATEWAY 10.19.99.4:1999]', 16, 24);
+    
+    ctx.fillStyle = '#fef08a';
+    ctx.fillText('MEMORY BUS PROBE: CARRIER TONE 1999Hz DETECTED', 16, 42);
+    ctx.fillText('FRAME DUMP: 10.19.99.12 -> 10.19.99.4 [SYN, ACK, ECHO]', 16, 60);
+    ctx.fillText('DECODED TAG: "FACILITY=CARLSBAD OFFSET=0x0040 SUBCARRIER"', 16, 78);
+    ctx.fillText('STATUS: Memory controller loopback active (NO PHYSICAL NIC)', 16, 96);
+    ctx.fillText('HINT: Check classified dossier at kweb://10.19.99.4/classified', 16, 114);
+
+    // Glowing carrier lock badge
+    ctx.fillStyle = (Math.floor(Date.now() / 350) % 2 === 0) ? '#22c55e' : '#15803d';
+    ctx.fillRect(w - 140, 20, 124, 24);
+    ctx.fillStyle = '#000';
+    ctx.font = '10px Consolas, monospace';
+    ctx.fillText('● 1999Hz LOCKED', w - 128, 36);
+
+  } else {
+    // Station 5-8: System Telemetry & Router Monitor
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '10px Consolas, monospace';
+    const b = BOOTHS_DATA.find(x => x.id === currentStationCrtId) || BOOTHS_DATA[0];
+    ctx.fillText(`[STATION #${b.id} // ${b.ip} // ${b.user}]`, 16, 25);
+    ctx.fillText(`Current Session: ${b.task}`, 16, 44);
+    ctx.fillText(`OS Kernel: Linux 2.2.12-20 KiloNet Edition (i686 SMP)`, 16, 63);
+    ctx.fillText(`Load Average: 0.18, 0.22, 0.15 • RAM: 128MB (34MB Free)`, 16, 82);
+    ctx.fillText(`TCP Sockets: 8 Established • Gateway Forwarder Active`, 16, 101);
+    ctx.fillText(`Terminal Type: VT-100 ANSI 80x25 Monospace`, 16, 120);
+  }
+
+  stationCrtAnimId = requestAnimationFrame(renderStationCrtLoop);
+}
+
+function cycleStationCrtView() {
+  playKeyClick();
+  currentStationCrtId = (currentStationCrtId % 8) + 1;
+  const booth = BOOTHS_DATA.find(b => b.id === currentStationCrtId) || BOOTHS_DATA[0];
+  
+  const title = document.getElementById('remoteStationTitle');
+  const ip = document.getElementById('remoteStationIp');
+  const prompt = document.getElementById('stationCliPrompt');
+  if (title) title.textContent = `📺 REMOTE VNC STATION CRT: STATION #${booth.id}`;
+  if (ip) ip.textContent = `[${booth.ip}]`;
+  if (prompt) prompt.textContent = `st${booth.id}:~$`;
+
+  logStationCli(`\n[VNC CARRIER SWITCH] Switched terminal to Station #${booth.id} (${booth.ip} - ${booth.user})`);
+}
+
+function handleStationCliKey(e) {
+  if (e.key === 'Enter') {
+    execStationCli();
+  }
+}
+
+function execStationCli() {
+  const input = document.getElementById('stationCliInput');
+  const raw = (input.value || '').trim();
+  if (!raw) return;
+  input.value = '';
+
+  playKeyClick();
+  const booth = BOOTHS_DATA.find(b => b.id === currentStationCrtId) || BOOTHS_DATA[0];
+  logStationCli(`st${booth.id}:~$ ${raw}`);
+
+  const parts = raw.split(' ');
+  const cmd = parts[0].toLowerCase();
+  const arg = parts.slice(1).join(' ');
+
+  if (cmd === 'help') {
+    logStationCli(`DIRECTIVES:
+  ping <ip>          - ICMP echo request probe (e.g. ping 10.19.99.4)
+  traceroute <ip>    - Trace packet hops across KiloNet switches
+  cat /proc/cpuinfo  - Display processor architecture and SSE flags
+  glinfo             - 3dfx Glide 3.x driver configuration
+  netstat            - Open TCP/UDP listening sockets
+  finger             - Patron session registry
+  uptime             - Kernel session timer
+  glide_test         - Run timedemo graphics test
+  scan               - Scan subnet 10.19.99.0/24
+  clear              - Purge terminal buffer`);
+  } else if (cmd === 'ping') {
+    const target = arg || '10.19.99.1';
+    if (target.includes('10.19.99.4')) {
+      playFmTone(999.5, 2.0, 3.5, 0.35, 0.12, true);
+      logStationCli(`PING 10.19.99.4: 64 bytes received in 0.42ms.
+Warning: Target responds without physical NIC. Memory loopback carrier detected!
+Telemetry payload: [CARRIER_1999HZ_FACILITY_CARLSBAD_OFFSET_0x0040]`);
+      broadcastArgSignalFragment(1999, 'PING_1019994');
+    } else {
+      playChime(660, 0.08);
+      logStationCli(`PING ${target}: 64 bytes from ${target}: icmp_seq=1 ttl=64 time=0.38 ms`);
+    }
+  } else if (cmd === 'traceroute') {
+    logStationCli(`traceroute to ${arg || '10.19.99.4'}, 30 hops max:
+ 1  10.19.99.1 (cafe-switch-01.knet)  0.28 ms
+ 2  10.19.99.12 (station-02.knet)     0.41 ms
+ 3  10.19.99.4 (echo-bus-loopback)    0.35 ms [ANOMALY]`);
+  } else if (cmd === 'cat' && raw.includes('cpuinfo')) {
+    logStationCli(`processor : 0
+vendor_id : GenuineIntel
+cpu family : 6
+model name : Pentium III (Katmai) 500MHz
+stepping : 3
+cpu MHz : 501.12
+cache size : 512 KB
+flags : fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 mmx fxsr sse`);
+  } else if (cmd === 'glinfo') {
+    logStationCli(`3dfx Interactive Glide 3.03 Driver:
+Hardware: Voodoo3 3000 AGP 16MB SDRAM (Core: 166MHz)
+Direct3D: 6.1 Compatible
+Glide Resolution: 1024x768 16bpp (22-bit post-filter)
+Pacing: Fixed 60Hz VSync`);
+  } else if (cmd === 'netstat') {
+    logStationCli(`Active Internet connections:
+Proto Recv-Q Send-Q Local Address          Foreign Address        State
+tcp        0      0 10.19.99.${booth.id}:1999      10.19.99.4:1999        ESTABLISHED
+tcp        0      0 10.19.99.${booth.id}:6667      irc.underground.knet   ESTABLISHED
+tcp        0      0 10.19.99.${booth.id}:27960     10.19.99.20:27960      ESTABLISHED`);
+  } else if (cmd === 'finger') {
+    logStationCli(`Login     Name              Tty      Idle  Login Time   Where
+~neon_r   Neon Rider        tty1     0:02  20:10        Booth #1
+bitcrush  BitCrusher_99     tty2     0:00  21:45        Booth #2
+pixelgod  PixelGoddess      tty3     0:01  22:00        Booth #3
+darkfib   DarkFiber         tty5     0:05  22:15        Booth #5`);
+  } else if (cmd === 'uptime') {
+    logStationCli(` 23:42:00 up 42 days, 16:28, 7 users, load average: 0.18, 0.22, 0.15`);
+  } else if (cmd === 'scan') {
+    logStationCli(`Starting Nmap 2.53 ( www.insecure.org/nmap/ )
+Host 10.19.99.1 is up (0.00028s latency) - Port 80, 23, 6667 open
+Host 10.19.99.4 is up (0.00035s latency) - Port 1999 [ECHO_CARRIER] open
+Nmap done: 256 IP addresses scanned in 1.4 seconds.`);
+  } else if (cmd === 'glide_test') {
+    runBoothGlideBenchmark();
+  } else if (cmd === 'clear') {
+    document.getElementById('stationCliLog').textContent = '';
+  } else {
+    logStationCli(`bash: ${cmd}: command not found. Type 'help' for directory.`);
+  }
+}
+
+function logStationCli(text) {
+  const log = document.getElementById('stationCliLog');
+  if (log) {
+    log.textContent += '\n' + text;
+    log.scrollTop = log.scrollHeight;
+  }
+}
+
+/* =========================================================================
+   5C. CYBER BARISTA COFFEE ROASTER & RECIPE CRAFTER
+   ========================================================================= */
+let steamParticles = [];
+let steamAnimId = null;
+
+function initSteamCanvas() {
+  const c = document.getElementById('steamCanvas');
+  if (!c) return;
+  if (!steamAnimId) {
+    steamParticles = [];
+    for (let i = 0; i < 18; i++) {
+      steamParticles.push({
+        x: 40 + Math.random() * 100,
+        y: 20 + Math.random() * 70,
+        vy: 0.5 + Math.random() * 0.8,
+        vx: (Math.random() - 0.5) * 0.4,
+        char: ['~', '°', '*', '§'][Math.floor(Math.random() * 4)],
+        alpha: Math.random() * 0.8
+      });
+    }
+    renderSteamLoop();
+  }
+}
+
+function renderSteamLoop() {
+  const c = document.getElementById('steamCanvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  if (!ctx) return;
+
+  ctx.fillStyle = '#05070c';
+  ctx.fillRect(0, 0, c.width, c.height);
+
+  // Draw coffee cup outline
+  ctx.strokeStyle = '#b45309';
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(55, 65, 70, 30);
+  ctx.beginPath();
+  ctx.arc(125, 80, 10, -Math.PI / 2, Math.PI / 2);
+  ctx.stroke();
+
+  // Draw floating steam particles
+  ctx.font = '12px Consolas, monospace';
+  steamParticles.forEach(p => {
+    p.y -= p.vy;
+    p.x += p.vx;
+    p.alpha -= 0.008;
+
+    if (p.y < 10 || p.alpha <= 0) {
+      p.y = 65;
+      p.x = 65 + Math.random() * 50;
+      p.alpha = 0.8;
+      p.vy = 0.5 + Math.random() * 0.8;
+    }
+
+    ctx.fillStyle = `rgba(251, 191, 36, ${Math.max(0, p.alpha)})`;
+    ctx.fillText(p.char, p.x, p.y);
+  });
+
+  steamAnimId = requestAnimationFrame(renderSteamLoop);
+}
+
+function updateBaristaStats() {
+  const roast = document.getElementById('baristaRoastSel')?.value || 'med';
+  const caffeine = parseInt(document.getElementById('baristaCaffeineSlider')?.value || 150, 10);
+  const surge = document.getElementById('addSurge')?.checked;
+  const bawls = document.getElementById('addBawls')?.checked;
+  const ln2 = document.getElementById('addNitrogen')?.checked;
+
+  const caffEl = document.getElementById('baristaCaffeineVal');
+  if (caffEl) caffEl.textContent = `${caffeine} mg`;
+
+  let temp = (roast === 'light') ? 88.0 : (roast === 'med') ? 94.5 : (roast === 'dark') ? 99.2 : -18.5;
+  if (ln2) temp -= 40;
+
+  const tempEl = document.getElementById('baristaTempDisplay');
+  if (tempEl) tempEl.textContent = `CORE TEMP: ${temp.toFixed(1)}°C • STEAM OK`;
+
+  let perk = '+40% Typing';
+  if (caffeine > 300) perk = '+75% Kernel Overdrive';
+  else if (surge && bawls) perk = '+60% Twitch Reflex';
+  else if (ln2) perk = '+30% ICE Cooling Buffer';
+
+  const perkEl = document.getElementById('baristaBuffPill');
+  if (perkEl) perkEl.textContent = `PERK: ${perk}`;
+}
+
+function brewCustomBeverage() {
+  playSteamBubbling(1.5);
+  const roast = document.getElementById('baristaRoastSel')?.value || 'med';
+  const caffeine = document.getElementById('baristaCaffeineSlider')?.value || 150;
+  const cup = document.getElementById('baristaCupSel')?.value || 'mug';
+  const surge = document.getElementById('addSurge')?.checked;
+  const bawls = document.getElementById('addBawls')?.checked;
+  const ln2 = document.getElementById('addNitrogen')?.checked;
+
+  const orderId = Math.floor(1000 + Math.random() * 9000);
+  const time = new Date().toLocaleTimeString();
+
+  const receipt = document.getElementById('receiptOutput');
+  if (receipt) {
+    receipt.textContent = 
+`==================================
+CYBERCAFE '99 - CUSTOM BREW VOUCHER
+BATCH #${orderId} // TIME: ${time}
+----------------------------------
+ROAST: ${roast.toUpperCase()} [${caffeine}mg CAFFEINE]
+VESSEL: ${cup.toUpperCase()}
+ADDITIVES: ${[surge ? 'SURGE' : '', bawls ? 'BAWLS' : '', ln2 ? 'LN2' : ''].filter(Boolean).join(', ') || 'NONE (BLACK)'}
+BUFF GRANTED: +${caffeine > 250 ? '30' : '15'}% COMBAT CYCLES
+----------------------------------
+HACKER CONCOCTION BREWED AT 10Base-T!
+ENJOY YOUR TERMINAL SESSION.
+==================================`;
+  }
+
+  // Apply buff to door game player state
+  if (doorGameState && doorGameState.player) {
+    doorGameState.player.credits += 10;
+    doorGameState.player.turns = Math.min(doorGameState.player.maxTurns, doorGameState.player.turns + 3);
+    saveDoorGame();
+  }
+
+  // Also apply buff to duel state
+  if (duelState && duelState.p1) {
+    duelState.p1.cycles = Math.min(duelState.p1.maxCycles, duelState.p1.cycles + 20);
+    updateDuelUI();
+  }
+
+  playChime(880, 0.2);
+  alert(`[CONCOCTION BREWED!]\nBatch #${orderId} ready in ${cup}!\nBuff applied: +20 CPU Cycles & +3 BBS Door Game Turns!`);
+}
+
+/* =========================================================================
+   5D. TELECOMMUNICATIONS PHREAK LAB & ACOUSTIC COUPLER
+   ========================================================================= */
+let dtmfBuffer = '555-1999';
+let phreakScopeAnimId = null;
+
+function initPhreakScope() {
+  const c = document.getElementById('phreakScopeCanvas');
+  if (!c) return;
+  if (!phreakScopeAnimId) {
+    renderPhreakScopeLoop();
+  }
+}
+
+function renderPhreakScopeLoop() {
+  const c = document.getElementById('phreakScopeCanvas');
+  if (!c) return;
+  const ctx = c.getContext('2d');
+  if (!ctx) return;
+
+  const w = c.width;
+  const h = c.height;
+
+  ctx.fillStyle = '#01050a';
+  ctx.fillRect(0, 0, w, h);
+
+  // Oscilloscope grid lines
+  ctx.strokeStyle = 'rgba(2, 132, 199, 0.2)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  for (let x = 0; x < w; x += 40) { ctx.moveTo(x, 0); ctx.lineTo(x, h); }
+  for (let y = 0; y < h; y += 25) { ctx.moveTo(0, y); ctx.lineTo(w, y); }
+  ctx.stroke();
+
+  if (analyserNode && audioEnabled) {
+    const timeData = new Uint8Array(analyserNode.fftSize);
+    analyserNode.getByteTimeDomainData(timeData);
+
+    ctx.strokeStyle = '#38bdf8';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    const sliceWidth = w / timeData.length;
+    let x = 0;
+    for (let i = 0; i < timeData.length; i++) {
+      const v = timeData[i] / 128.0;
+      const y = (v * h) / 2;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+      x += sliceWidth;
+    }
+    ctx.stroke();
+
+    // FFT Peak detection
+    const freqData = new Uint8Array(analyserNode.frequencyBinCount);
+    analyserNode.getByteFrequencyData(freqData);
+    let maxIdx = 0;
+    let maxVal = 0;
+    for (let i = 0; i < freqData.length; i++) {
+      if (freqData[i] > maxVal) {
+        maxVal = freqData[i];
+        maxIdx = i;
+      }
+    }
+    const peakHz = Math.round((maxIdx * (audioCtx ? audioCtx.sampleRate : 44100)) / analyserNode.fftSize);
+    const peakEl = document.getElementById('phreakPeakFreq');
+    if (peakEl && maxVal > 30) {
+      peakEl.textContent = `PEAK: ${peakHz} Hz`;
+    }
+  }
+
+  phreakScopeAnimId = requestAnimationFrame(renderPhreakScopeLoop);
+}
+
+function pressDtmf(char, f1, f2) {
+  playDtmfTone(f1, f2, 0.16);
+  dtmfBuffer += char;
+  if (dtmfBuffer.length > 20) dtmfBuffer = dtmfBuffer.slice(-20);
+  const disp = document.getElementById('dtmfBufferDisplay');
+  if (disp) disp.textContent = dtmfBuffer;
+
+  logPhreak(`[DTMF] Key '${char}' tone sent: ${f1}Hz + ${f2}Hz`);
+}
+
+function clearDtmfBuffer() {
+  playKeyClick();
+  dtmfBuffer = '';
+  const disp = document.getElementById('dtmfBufferDisplay');
+  if (disp) disp.textContent = '---';
+}
+
+function dialDtmfSequence() {
+  if (!dtmfBuffer || dtmfBuffer === '---') return;
+  const digits = dtmfBuffer.split('');
+  const dtmfMap = {
+    '1': [697, 1209], '2': [697, 1336], '3': [697, 1477], 'A': [697, 1633],
+    '4': [770, 1209], '5': [770, 1336], '6': [770, 1477], 'B': [770, 1633],
+    '7': [852, 1209], '8': [852, 1336], '9': [852, 1477], 'C': [852, 1633],
+    '*': [941, 1209], '0': [941, 1336], '#': [941, 1477], 'D': [941, 1633]
+  };
+
+  logPhreak(`\n[AUTODIAL] Dialing sequence: "${dtmfBuffer}"...`);
+  digits.forEach((d, idx) => {
+    setTimeout(() => {
+      if (dtmfMap[d]) {
+        playDtmfTone(dtmfMap[d][0], dtmfMap[d][1], 0.10);
+      }
+    }, idx * 160);
+  });
+
+  setTimeout(() => {
+    playModemChirp();
+    logPhreak(`[DIAL COMPLETE] Central Office switch answered. Remote carrier standing by.`);
+  }, digits.length * 160 + 200);
+}
+
+function autoDial1999() {
+  dtmfBuffer = '1019994';
+  const disp = document.getElementById('dtmfBufferDisplay');
+  if (disp) disp.textContent = dtmfBuffer;
+  dialDtmfSequence();
+
+  setTimeout(() => {
+    trigger1999HzCarrier();
+  }, 1600);
+}
+
+function trigger2600Hz() {
+  initAudio();
+  playFmTone(2600, 1.0, 0.5, 0.8, 0.15, true);
+  logPhreak(`[IN-BAND TRUNK SEIZE] Transmitted 2600Hz supervisory tone.
+Toll line disconnected. Remote switch hold active. Free trunk circuit seized!`);
+}
+
+function triggerRedBox(type) {
+  initAudio();
+  const pulses = (type === 'nickel') ? 1 : (type === 'dime') ? 2 : 5;
+  logPhreak(`[RED BOX] Emitting ${pulses} coin pulse(s) for ${type.toUpperCase()} (1700Hz + 2200Hz)...`);
+
+  for (let i = 0; i < pulses; i++) {
+    setTimeout(() => {
+      playDtmfTone(1700, 2200, 0.055);
+    }, i * 110);
+  }
+}
+
+function trigger1999HzCarrier() {
+  initAudio();
+  // 1999Hz fundamental modulated by 432Hz subcarrier
+  playFmTone(1999, 432 / 1999, 2.5, 1.2, 0.16, true);
+  logPhreak(`\n★ ★ ★ [CARRIER INTERCEPT DETECTED] ★ ★ ★
+Frequency: 1999.04 Hz (Fundamental)
+Modulation: 432.00 Hz Subcarrier
+Gateway: 10.19.99.4 [NO PHYSICAL INTERFACE DETECTED]
+Decoded Memory Header: "FACILITY=CARLSBAD OFFSET=0x0040"
+Status: Acoustic lock established. Telemetry written to Darknet signal board!`);
+
+  localStorage.setItem('kweb_cybercafe_deaddrop_unlocked', 'true');
+  broadcastArgSignalFragment(1999, 'ACOUSTIC_LOCK_CARLSBAD');
+  playChime(880, 0.3);
+}
+
+function triggerBellFsk() {
+  initAudio();
+  logPhreak(`[BELL 103 FSK] Modulating 300 baud carrier (1070Hz Space / 1270Hz Mark)...`);
+  const pattern = [1070, 1270, 1070, 1070, 1270, 1270, 1070, 1270];
+  pattern.forEach((freq, i) => {
+    setTimeout(() => {
+      playFmTone(freq, 1.0, 0.2, 0.08, 0.1, false);
+    }, i * 90);
+  });
+}
+
+function triggerV90Handshake() {
+  initAudio();
+  logPhreak(`[V.90 56K HANDSHAKE] Negotiating V.8 / V.34 / V.90 constellation lock...`);
+  playModemChirp();
+  setTimeout(() => playFmTone(2100, 1.0, 0.2, 0.4, 0.12, false), 150);
+  setTimeout(() => playNoiseBurst(0.6, 1800), 600);
+  setTimeout(() => playFmTone(1200, 2.0, 1.5, 0.3, 0.1, false), 1250);
+  setTimeout(() => {
+    playNoiseBurst(0.8, 2400);
+    logPhreak(`[CONNECT] 56,600 bps V.90 / V.42bis compression active!`);
+  }, 1600);
+}
+
+function logPhreak(text) {
+  const log = document.getElementById('phreakTerminalLog');
+  if (log) {
+    log.textContent += '\n' + text;
+    log.scrollTop = log.scrollHeight;
+  }
 }
 
 /* =========================================================================
@@ -4741,6 +5958,156 @@ function escapeHtml(str) {
 }
 
 /* =========================================================================
+   11B. ZMODEM BBS FILE TRANSFER SIMULATOR
+   ========================================================================= */
+let zmodemState = {
+  active: false,
+  fileKey: null,
+  totalBlocks: 32,
+  curBlock: 0,
+  timer: null,
+  baud: 57600
+};
+
+function openZmodemModal(fileKey) {
+  playChime(550, 0.08);
+  zmodemState.fileKey = fileKey;
+  zmodemState.active = false;
+  zmodemState.curBlock = 0;
+  if (zmodemState.timer) clearInterval(zmodemState.timer);
+
+  const modal = document.getElementById('zmodemModal');
+  const title = document.getElementById('zmodemFileName');
+  const size = document.getElementById('zmodemFileSize');
+  const bar = document.getElementById('zmodemProgressBar');
+  const out = document.getElementById('zmodemStreamOutput');
+  const saveBtn = document.getElementById('zmodemSaveBtn');
+  const startBtn = document.getElementById('zmodemStartBtn');
+
+  if (modal) modal.style.display = 'flex';
+  if (title) title.textContent = `FILE: ${fileKey}.TXT`;
+  
+  const content = VAULT_FILES[fileKey] || 'Sample BBS text payload';
+  const byteLen = content.length;
+  zmodemState.totalBlocks = Math.max(12, Math.ceil(byteLen / 128));
+
+  if (size) size.textContent = `SIZE: ${(byteLen / 1024).toFixed(1)} KB (${zmodemState.totalBlocks} BLOCKS)`;
+  if (bar) bar.style.width = '0%';
+  if (saveBtn) saveBtn.style.display = 'none';
+  if (startBtn) {
+    startBtn.disabled = false;
+    startBtn.textContent = '⚡ START TRANSMISSION';
+  }
+
+  if (out) {
+    out.textContent = `[ZMODEM-99 TRANSFER PROTOCOL INITIALIZED]
+Target File: ${fileKey}.TXT
+Window Size: 4096 bytes (Sliding) • Checksum: CRC-32
+Ready to stream packets. Click 'START TRANSMISSION'.`;
+  }
+}
+
+function closeZmodemModal() {
+  if (zmodemState.timer) {
+    clearInterval(zmodemState.timer);
+    zmodemState.timer = null;
+  }
+  zmodemState.active = false;
+  const modal = document.getElementById('zmodemModal');
+  if (modal) modal.style.display = 'none';
+}
+
+function updateZmodemSpeed() {
+  const baudSel = document.getElementById('zmodemBaudSel');
+  zmodemState.baud = parseInt(baudSel ? baudSel.value : 57600, 10);
+}
+
+function startZmodemTransfer() {
+  if (zmodemState.active) return;
+  zmodemState.active = true;
+  updateZmodemSpeed();
+
+  playModemChirp();
+  const startBtn = document.getElementById('zmodemStartBtn');
+  if (startBtn) startBtn.disabled = true;
+
+  const bar = document.getElementById('zmodemProgressBar');
+  const out = document.getElementById('zmodemStreamOutput');
+  const blockStat = document.getElementById('zmodemBlockStatus');
+  const crcStat = document.getElementById('zmodemCrcStatus');
+  const bpsStat = document.getElementById('zmodemBpsStatus');
+  const saveBtn = document.getElementById('zmodemSaveBtn');
+
+  const intervalMs = (zmodemState.baud >= 50000) ? 90 : (zmodemState.baud >= 30000) ? 140 : 220;
+
+  if (out) out.textContent += `\n[NEGOTIATION OK] Handshake V.42bis verified. Streaming blocks...`;
+
+  zmodemState.timer = setInterval(() => {
+    zmodemState.curBlock++;
+    const pct = Math.min(100, Math.round((zmodemState.curBlock / zmodemState.totalBlocks) * 100));
+    if (bar) bar.style.width = pct + '%';
+
+    const hexBlock = Math.floor(Math.random() * 0xFFFFFF).toString(16).padStart(6, '0').toUpperCase();
+    if (blockStat) blockStat.textContent = `BLOCK ${zmodemState.curBlock} / ${zmodemState.totalBlocks} (${pct}%)`;
+    if (crcStat) crcStat.textContent = `CRC-32: 0x${hexBlock} [OK]`;
+    if (bpsStat) bpsStat.textContent = `${(zmodemState.baud / 10000).toFixed(1)} KB/s`;
+
+    if (out) {
+      out.textContent += `\nBLK #${String(zmodemState.curBlock).padStart(3, '0')} -> ACK 0x${hexBlock} [PACKET OK]`;
+      out.scrollTop = out.scrollHeight;
+    }
+    playKeyClick();
+
+    if (zmodemState.curBlock >= zmodemState.totalBlocks) {
+      clearInterval(zmodemState.timer);
+      zmodemState.timer = null;
+      zmodemState.active = false;
+      playChime(987, 0.25);
+
+      if (out) {
+        out.textContent += `\n======================================================
+[TRANSFER COMPLETE] 100% Verified. ZMODEM EOT Received.
+File integrity checksum passed. Click 'SAVE TO DISK'.`;
+        out.scrollTop = out.scrollHeight;
+      }
+      if (saveBtn) saveBtn.style.display = 'inline-block';
+    }
+  }, intervalMs);
+}
+
+function downloadTransferredFile() {
+  if (!zmodemState.fileKey) return;
+  viewVaultFile(zmodemState.fileKey);
+  downloadCurrentVaultFile();
+  closeZmodemModal();
+}
+
+/* =========================================================================
+   11C. ARG SIGNAL BOARD & TELEMETRY BROADCASTER
+   ========================================================================= */
+function broadcastArgSignalFragment(freq, tag) {
+  const payload = {
+    source: 'cybercafe',
+    freq: freq || 1999,
+    tag: tag || 'CARRIER_INTERCEPT',
+    facility: 'CARLSBAD',
+    offset: '0x0040',
+    timestamp: Date.now()
+  };
+
+  try {
+    localStorage.setItem('kweb_cybercafe_arg_signal', JSON.stringify(payload));
+  } catch (e) {}
+
+  if (ircDb && pushFn && dbRefFn) {
+    try {
+      const r = dbRefFn(ircDb, 'arg/signals/subterranean_darknet');
+      pushFn(r, payload);
+    } catch (e) {}
+  }
+}
+
+/* =========================================================================
    12. INITIALIZATION
    ========================================================================= */
 window.addEventListener('DOMContentLoaded', () => {
@@ -4751,6 +6118,9 @@ window.addEventListener('DOMContentLoaded', () => {
   initDoorGame();
   initFirebaseIrc();
   initCyberDuelMultiplayer();
+  initStationCrt();
+  initSteamCanvas();
+  updateBaristaStats();
 
   // Attach Piano key clicks
   document.querySelectorAll('.piano-key').forEach(k => {

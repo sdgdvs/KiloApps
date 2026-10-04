@@ -16,9 +16,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 105,
+  "turns_executed": 106,
   "last_turn_timestamp": "2026-09-30T00:26:00Z",
-  "last_heartbeat": "2026-10-04T12:46:06.458165+00:00",
-  "current_target": "KPass",
+  "last_heartbeat": "2026-10-04T13:00:09.787131+00:00",
+  "current_target": "KSnake",
   "remote_command": "none"
 }

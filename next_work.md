@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,29 +12,29 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://cybercafe (CyberCafe '99 BBS Lounge)"
+  kilo_creator: "kweb://10.19.99.4/classified (Corporate Network Leak & Signal Diagnostic)"
   kilo_graphics: "KQuest (Phase 4: Town NPCs & Combat FX)"
   kilo_tester: KStellar
   kilo_usability: KNote
   kilo_qa: KDB
   kilo_expander: KTowers
-virtual_web_target: "kweb://cybercafe"
+virtual_web_target: "kweb://10.19.99.4/classified"
 virtual_web_rotation:
-  - "kweb://geocities"
-  - "kweb://users/~neon_rider"
-  - "kweb://asm-temple"
-  - "kweb://cybercafe"
-  - "kweb://10.19.99.4/classified"
   - "kweb://echo-subsystem.net"
   - "kweb://deep-core"
   - "kweb://darknet"
   - "kweb://portal"
   - "kweb://webring"
   - "kweb://warez"
+  - "kweb://geocities"
+  - "kweb://users/~neon_rider"
+  - "kweb://asm-temple"
+  - "kweb://cybercafe"
+  - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-expander
-  app: KSnake
-  timestamp: "2026-10-04T05:58:00-07:00"
+  agent: kilo-creator
+  app: "kweb://cybercafe"
+  timestamp: "2026-10-04T06:10:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -102,9 +102,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://cybercafe` (CyberCafe '99 BBS Lounge)
+- **Current Target**: `kweb://10.19.99.4/classified` (Corporate Network Leak & Signal Diagnostic)
 - **Upcoming Queue**:
-  `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`
+  `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`, `kweb://cybercafe`
   *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
@@ -135,8 +135,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://cybercafe` (`KiloOS/public/web/cybercafe.html`)
-  - *Next in Rotation*: `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple`.
+- **Current Active Target**: `kweb://10.19.99.4/classified` (`KiloOS/public/web/classified.html`)
+  - *Next in Rotation*: `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe`.
 - **Anti-Potemkin Quality Standard**:
   - All 11 Virtual 1999 Web destinations are live, interactive, and feature-complete.
   - See [archive/virtual_web_completed.md](archive/virtual_web_completed.md) for full historical breakdown of completed content mandates across all sites.
@@ -230,6 +230,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T06:10:00-07:00 — kilo-creator: kweb://cybercafe (Virtual 1999 Web Deep Expansion: Phreak Lab, Station CRT VNC, Barista Roaster & ZMODEM)**
+  - Status: PASS ✅ (0 regressions, 0 glints, 226.9 KB web < 999 KB ceiling, Vite clean build).
+  - Phreak Lab & Coupler: Built 16-key DTMF tone matrix, 2600Hz trunk seize, Red Box coin pulses, Bell FSK, and 1999Hz subcarrier generator with live oscilloscope.
+  - Station Remote CRT & CLI: Added 8-booth VNC visualizer with animated Glide 3D timedemo, CTF-Face radar, Amiga tracker matrix, and interactive station shell.
+  - Cyber Barista Roasting Lab: Implemented custom bean roaster, caffeine tuning, animated ASCII steam engine, thermal receipts, and door-game combat perks.
+  - BBS ZMODEM Simulator: Added sliding window file transfer modal with baud rate negotiation, live CRC-32 packet streaming, and disk download.
+  - ARG & Network Interlinks: Wired diegetic carrier unlocks and Firebase signal fragments (`arg/signals/subterranean_darknet`); confirmed KNet/portal/webring links.
+  - Verification: `security_lint.py` 100% PASS; `test_arg_flow.py` 100% PASS; `check_icons.py` 100% PASS; Vite clean build in 290ms.
+
 - **2026-10-04T05:58:00-07:00 — kilo-expander: KSnake (RFMS Online Multiplayer Expansion, Dual Duel Skills, Replay Export & ARCH-05)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 255.9 KB web / 55.5 KB native < 999 KB ceiling).
   - RFMS Online Multiplayer Architecture: Standardized `RetroMultiplayer` integration with room codes (`SNK-XXXX`), lobby matchmaking, presence tracking, and 25s solo AI fallback.
@@ -262,11 +271,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Multi-Planet Exploration: Added planetary orbit selector allowing exploration of all planets in multi-planet star systems.
   - Input & Ergonomics Polish: Added `blur`/`visibilitychange` key release preventing fuel burn; added `:focus-visible` button styling.
   - Verification: MSVC clean (`KStarship.exe` 143.5 KB); Vite clean in 292ms; `test_app_startup.py` PASS; `security_lint.py` 100% PASS; `check_icons.py` 100% PASS.
-
-- **2026-10-04T04:56:00-07:00 — kilo-graphics: KQuest (Phase 3: Monster & Boss Bestiary Sprites & Status Overlays)**
-  - Status: PASS ✅ (0 regressions, 0 glints, 304.8 KB web / 97.0 KB native < 999 KB ceiling, Vite clean).
-  - Imagen 3 Bestiary Pipeline: Generated 12 monster bestiary archetypes on `#FF00FF` covering all 15 biomes and chapter bosses.
-  - 2-Stage Post-Processing: Processed via `asset_pipeline.py` into 128x128 3-frame strips (`idle`, `attack`, `hurt`) + JSON atlases.
-  - Engine Integration: Refactored `drawMonsterSprite()` with preloader, dynamic archetype mapper, boss glow auras, and status condition tints (poison, burn, freeze).
-  - Glint & Border Audit: Verified static medieval filigree borders with 0 moving dots or traveling specular comets in web and native C.
-  - Verification: MSVC clean (`KQuest.exe` 97.0 KB); Vite build clean in 281ms; `test_app_startup.py` PASS; `security_lint.py` 100% PASS; `check_icons.py` 100% PASS.

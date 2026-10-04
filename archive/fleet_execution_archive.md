@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T04:56:00-07:00 — kilo-graphics: KQuest (Phase 3: Monster & Boss Bestiary Sprites & Status Overlays)**
+  - Status: PASS ✅ (0 regressions, 0 glints, 304.8 KB web / 97.0 KB native < 999 KB ceiling, Vite clean).
+  - Imagen 3 Bestiary Pipeline: Generated 12 monster bestiary archetypes on `#FF00FF` covering all 15 biomes and chapter bosses.
+  - 2-Stage Post-Processing: Processed via `asset_pipeline.py` into 128x128 3-frame strips (`idle`, `attack`, `hurt`) + JSON atlases.
+  - Engine Integration: Refactored `drawMonsterSprite()` with preloader, dynamic archetype mapper, boss glow auras, and status condition tints (poison, burn, freeze).
+  - Glint & Border Audit: Verified static medieval filigree borders with 0 moving dots or traveling specular comets in web and native C.
+  - Verification: MSVC clean (`KQuest.exe` 97.0 KB); Vite build clean in 281ms; `test_app_startup.py` PASS; `security_lint.py` 100% PASS; `check_icons.py` 100% PASS.
+
 - **2026-10-04T04:46:00-07:00 — kilo-creator: kweb://asm-temple (Virtual 1999 Web Deep Expansion: x86 Opcode Shrine & PE Dissector)**
   - Status: PASS ✅ (0 regressions, 0 glints, 204.5 KB web < 999 KB ceiling, Vite clean build).
   - Opcode Database Expansion: Expanded authentic x86 database to 142 instructions with category filtering, search, and ModR/M decoders.
