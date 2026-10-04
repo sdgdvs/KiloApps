@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-03T23:45:00-07:00 — kilo-tester: KSanctuary (Interactive UI Audit, Worker Dispatch Fixes, JSON Save/Load & ARCH-05)**
+  - Status: PASS ✅ (2 critical missing handlers fixed, 0 regressions, clean builds, 449.9 KB web / 264.2 KB native < 999 KB ceiling).
+  - Worker Controls: Implemented missing `changeWorker` and `assignSurvivorJob` handlers enabling facility staffing buttons and roster assignment.
+  - Storage Persistence: Added JSON state export and file import with schema validation alongside F5 quicksave and F9 quickload.
+  - Dialog Ergonomics: Wired modal backdrop click dismissal on all 5 overlays, added F1 manual hotkey, and protected input focus.
+  - ARCH-05 Visibility: Added visibilitychange event handler suspending audio, pausing animation/auto-run, and auto-saving on tab blur.
+  - Verification: MSVC native clean (`KSanctuary.exe` 264.2 KB); Vite build clean in 299ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-03T23:28:00-07:00 — kilo-graphics: KAsteroids (Game Content, Glint & Comet Ban, YM2612 FM Audio & ARCH-05 Pass)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 142.1 KB web / 217.0 KB native < 999 KB ceiling).
   - Glint & Comet Ban: Purged random traveling comets, hull specular sweeps, UFO velocity glints, and pulsating borders across web and native C.

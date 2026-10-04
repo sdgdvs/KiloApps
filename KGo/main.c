@@ -23,6 +23,9 @@
 #define ID_BTN_ESTIMATE 116
 #define ID_BTN_ANALYZER 117
 #define ID_BTN_TSUMEGO 118
+#define ID_BTN_SGF 119
+#define ID_BTN_COORDS 120
+#define ID_BTN_MOVENUMS 121
 
 typedef struct {
     int x;
@@ -272,12 +275,16 @@ typedef struct {
 PetalParticle petals[MAX_PETALS];
 
 typedef struct {
-    float x, y;
-    float vx, vy;
-    float size;
-} ZenMote;
-#define MAX_ZEN_MOTES 25
-ZenMote zenMotes[MAX_ZEN_MOTES];
+    int x;
+    int y;
+    int color;
+    int pass;
+} NativeMove;
+#define MAX_NATIVE_MOVES 1024
+NativeMove nativeMoves[MAX_NATIVE_MOVES];
+int nativeMoveCount = 0;
+int showCoords = 1;
+int showMoveNumbers = 0;
 
 float animTime = 0.0f;
 
@@ -852,6 +859,13 @@ void PlaceStone(HWND hwnd, int x, int y) {
     
     PushUndo(boardBackup, capBackup, currentPlayer);
     CopyBoard(prevBoard, boardBackup);
+    if (nativeMoveCount < MAX_NATIVE_MOVES) {
+        nativeMoves[nativeMoveCount].x = x;
+        nativeMoves[nativeMoveCount].y = y;
+        nativeMoves[nativeMoveCount].color = currentPlayer;
+        nativeMoves[nativeMoveCount].pass = 0;
+        nativeMoveCount++;
+    }
     currentPlayer = opp;
     consecutivePasses = 0;
     hintX = -1; hintY = -1;
@@ -1014,8 +1028,8 @@ void MakeAIMove(HWND hwnd) {
     }
 }
 
-void SaveGame(HWND hwnd) {
-    FILE *f = fopen("kgo_save.dat", "wb");
+void SaveGameFile(HWND hwnd, const char* filename, int showMsg) {
+    FILE *f = fopen(filename, "wb");
     if (f) {
         fwrite(&boardSize, sizeof(int), 1, f);
         fwrite(board, sizeof(char), 19*19, f);
@@ -1027,15 +1041,17 @@ void SaveGame(HWND hwnd) {
         fwrite(&redoCount, sizeof(int), 1, f);
         fwrite(redoStack, sizeof(GameState), redoCount, f);
         fwrite(&currentKomi, sizeof(float), 1, f);
+        fwrite(&nativeMoveCount, sizeof(int), 1, f);
+        fwrite(nativeMoves, sizeof(NativeMove), nativeMoveCount, f);
         fclose(f);
-        MessageBox(hwnd, "Game saved.", "Save", MB_OK);
+        if (showMsg) MessageBox(hwnd, "Game saved.", "Save", MB_OK);
     } else {
-        MessageBox(hwnd, "Failed to save game.", "Error", MB_OK);
+        if (showMsg) MessageBox(hwnd, "Failed to save game.", "Error", MB_OK);
     }
 }
 
-void LoadGame(HWND hwnd) {
-    FILE *f = fopen("kgo_save.dat", "rb");
+void LoadGameFile(HWND hwnd, const char* filename, int showMsg) {
+    FILE *f = fopen(filename, "rb");
     if (f) {
         fread(&boardSize, sizeof(int), 1, f);
         fread(board, sizeof(char), 19*19, f);
@@ -1047,6 +1063,13 @@ void LoadGame(HWND hwnd) {
         fread(&redoCount, sizeof(int), 1, f);
         fread(redoStack, sizeof(GameState), redoCount, f);
         fread(&currentKomi, sizeof(float), 1, f);
+        nativeMoveCount = 0;
+        fread(&nativeMoveCount, sizeof(int), 1, f);
+        if (nativeMoveCount > 0 && nativeMoveCount <= MAX_NATIVE_MOVES) {
+            fread(nativeMoves, sizeof(NativeMove), nativeMoveCount, f);
+        } else {
+            nativeMoveCount = 0;
+        }
         fclose(f);
         
         int sel = 0;
@@ -1056,18 +1079,50 @@ void LoadGame(HWND hwnd) {
         
         hintX = -1; hintY = -1;
         InvalidateRect(hwnd, NULL, TRUE);
-        MessageBox(hwnd, "Game loaded.", "Load", MB_OK);
+        if (showMsg) MessageBox(hwnd, "Game loaded.", "Load", MB_OK);
         
         if (currentPlayer == 2 && SendMessage(GetDlgItem(hwnd, ID_CB_AI), BM_GETCHECK, 0, 0) == BST_CHECKED) {
             SetTimer(hwnd, 2, 500, NULL);
         }
     } else {
-        MessageBox(hwnd, "No saved game found.", "Error", MB_OK);
+        if (showMsg) MessageBox(hwnd, "No saved game found.", "Error", MB_OK);
     }
+}
+
+void SaveGame(HWND hwnd) {
+    SaveGameFile(hwnd, "kgo_save.dat", 1);
+}
+
+void LoadGame(HWND hwnd) {
+    LoadGameFile(hwnd, "kgo_save.dat", 1);
+}
+
+void ExportGameToSGF(HWND hwnd, const char* filename) {
+    FILE* f = fopen(filename, "w");
+    if (!f) {
+        MessageBox(hwnd, "Could not open file for writing.", "Export SGF", MB_OK | MB_ICONWARNING);
+        return;
+    }
+    fprintf(f, "(;GM[1]FF[4]CA[UTF-8]AP[KGo:1999]SZ[%d]KM[%.1f]RU[Japanese]PB[Player 1]PW[Player 2]\n", boardSize, currentKomi);
+    for (int i = 0; i < nativeMoveCount; i++) {
+        char col = nativeMoves[i].color == 1 ? 'B' : 'W';
+        if (nativeMoves[i].pass) {
+            fprintf(f, ";%c[]", col);
+        } else {
+            fprintf(f, ";%c[%c%c]", col, 'a' + nativeMoves[i].x, 'a' + nativeMoves[i].y);
+        }
+        if ((i + 1) % 10 == 0) fprintf(f, "\n");
+    }
+    fprintf(f, ")\n");
+    fclose(f);
+    char buf[128];
+    sprintf(buf, "Game exported successfully to %s (%d moves)!", filename, nativeMoveCount);
+    MessageBox(hwnd, buf, "SGF Export", MB_OK | MB_ICONINFORMATION);
 }
 
 void InitBoard() {
     consecutivePasses = 0;
+    nativeMoveCount = 0;
     memset(board, 0, sizeof(board));
     memset(prevBoard, 0, sizeof(prevBoard));
     currentPlayer = 1;
@@ -1198,13 +1253,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 petals[i].vy = (rand() % 20 + 20) / 10.0f;
                 petals[i].size = (rand() % 5) + 3;
             }
-            for (int i = 0; i < MAX_ZEN_MOTES; i++) {
-                zenMotes[i].x = (float)(rand() % 800);
-                zenMotes[i].y = (float)(rand() % 800);
-                zenMotes[i].vx = ((rand() % 16) - 8) / 10.0f;
-                zenMotes[i].vy = -((rand() % 15) + 5) / 10.0f;
-                zenMotes[i].size = (float)((rand() % 3) + 2);
-            }
             SetTimer(hwnd, 4, 50, NULL);
             hBtnPass = CreateWindow("BUTTON", "Pass", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
                 15, 620, 45, 30, hwnd, (HMENU)ID_BTN_PASS, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
@@ -1233,6 +1281,11 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             SendMessage(hCbDifficulty, CB_ADDSTRING, 0, (LPARAM)"Grandmaster");
             SendMessage(hCbDifficulty, CB_SETCURSEL, 3, 0);
 
+            CreateWindow("BUTTON", "Coords(C)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                515, 620, 68, 30, hwnd, (HMENU)ID_BTN_COORDS, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            CreateWindow("BUTTON", "Move#(M)", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                588, 620, 68, 30, hwnd, (HMENU)ID_BTN_MOVENUMS, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+
             CreateWindow("BUTTON", "Save", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
                 15, 660, 45, 30, hwnd, (HMENU)ID_BTN_SAVE, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             CreateWindow("BUTTON", "Load", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
@@ -1253,6 +1306,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 500, 660, 45, 30, hwnd, (HMENU)ID_BTN_STATS, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             CreateWindow("BUTTON", "Help", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
                 550, 660, 45, 30, hwnd, (HMENU)ID_BTN_HELP, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
+            CreateWindow("BUTTON", "SGF", WS_TABSTOP | WS_VISIBLE | WS_CHILD | BS_DEFPUSHBUTTON,
+                600, 660, 56, 30, hwnd, (HMENU)ID_BTN_SGF, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), NULL);
             return 0;
 
         case WM_TIMER:
@@ -1333,17 +1388,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                         petals[i].x = rand() % 800;
                     }
                 }
-                for (int i = 0; i < MAX_ZEN_MOTES; i++) {
-                    zenMotes[i].x += zenMotes[i].vx;
-                    zenMotes[i].y += zenMotes[i].vy;
-                    zenMotes[i].vx += ((rand() % 5) - 2) / 20.0f;
-                    if (zenMotes[i].vx > 1.2f) zenMotes[i].vx = 1.2f;
-                    if (zenMotes[i].vx < -1.2f) zenMotes[i].vx = -1.2f;
-                    if (zenMotes[i].y < -10) {
-                        zenMotes[i].y = 810;
-                        zenMotes[i].x = (float)(rand() % 800);
-                    }
-                }
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == 2) {
                 KillTimer(hwnd, 2);
@@ -1371,6 +1415,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             } else if (wParam == VK_F1) {
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(ID_BTN_HELP, 0), 0);
+            } else if (wParam == VK_F5) {
+                SaveGameFile(hwnd, "kgo_quicksave.dat", 1);
+            } else if (wParam == VK_F9) {
+                LoadGameFile(hwnd, "kgo_quicksave.dat", 1);
+            } else if (wParam == 'C' || wParam == 'c') {
+                showCoords = !showCoords;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == 'M' || wParam == 'm') {
+                showMoveNumbers = !showMoveNumbers;
+                InvalidateRect(hwnd, NULL, TRUE);
             } else if ((wParam == 'Z' || wParam == 'z') && (GetKeyState(VK_CONTROL) & 0x8000)) {
                 DoUndo(hwnd);
             }
@@ -1598,6 +1652,35 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 }
             }
             DeleteObject(hoshiBrush);
+
+            // Draw Goban board coordinates
+            if (showCoords) {
+                HFONT coordFont = CreateFont(12, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+                                             OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+                                             DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+                HFONT oldCoordFont = (HFONT)SelectObject(memDC, coordFont);
+                SetBkMode(memDC, TRANSPARENT);
+                SetTextColor(memDC, RGB(75, 48, 24));
+                static const char* colLetters = "ABCDEFGHJKLMNOPQRST";
+                for (int i = 0; i < boardSize; i++) {
+                    char colBuf[2] = { colLetters[i], 0 };
+                    int cx = padding + i * cellSize;
+                    RECT rcTop = { cx - 12, padding - 22, cx + 12, padding - 4 };
+                    DrawText(memDC, colBuf, -1, &rcTop, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                    RECT rcBot = { cx - 12, padding + boardW + 4, cx + 12, padding + boardW + 22 };
+                    DrawText(memDC, colBuf, -1, &rcBot, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+                    char rowBuf[8];
+                    sprintf(rowBuf, "%d", boardSize - i);
+                    int cy = padding + i * cellSize;
+                    RECT rcLeft = { padding - 24, cy - 8, padding - 6, cy + 8 };
+                    DrawText(memDC, rowBuf, -1, &rcLeft, DT_RIGHT | DT_VCENTER | DT_SINGLELINE);
+                    RECT rcRight = { padding + boardW + 6, cy - 8, padding + boardW + 24, cy + 8 };
+                    DrawText(memDC, rowBuf, -1, &rcRight, DT_LEFT | DT_VCENTER | DT_SINGLELINE);
+                }
+                SelectObject(memDC, oldCoordFont);
+                DeleteObject(coordFont);
+            }
             
             // Ko & Superko forbidden overlay indicators
             for (int r = 0; r < boardSize; r++) {
@@ -1814,16 +1897,28 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                             DeleteObject(sheenBrush);
                         }
 
-                        // Traveling diagonal specular sheen glint traversing stone face
-                        float sheenPos = fmodf(animTime * 1.5f + (r * 0.25f + c * 0.35f), 4.0f);
-                        if (sheenPos < 0.85f) {
-                            int shOff = (int)((sheenPos / 0.85f - 0.5f) * (radius * 1.5f));
-                            HPEN sheenLinePen = CreatePen(PS_SOLID, 1, board[r][c] == 1 ? RGB(90, 110, 135) : RGB(255, 255, 255));
-                            HPEN oldShP = SelectObject(memDC, sheenLinePen);
-                            MoveToEx(memDC, cx - radius/2 + shOff, cy + radius/2 + shOff, NULL);
-                            LineTo(memDC, cx + radius/2 + shOff, cy - radius/2 + shOff);
-                            SelectObject(memDC, oldShP);
-                            DeleteObject(sheenLinePen);
+                        // Move Numbering Overlay (Kifu review diagram)
+                        if (showMoveNumbers) {
+                            int lastNum = 0;
+                            for (int m = 0; m < nativeMoveCount; m++) {
+                                if (!nativeMoves[m].pass && nativeMoves[m].x == c && nativeMoves[m].y == r) {
+                                    lastNum = m + 1;
+                                }
+                            }
+                            if (lastNum > 0) {
+                                HFONT numFont = CreateFont(radius > 10 ? 11 : 9, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
+                                                           OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+                                                           DEFAULT_PITCH | FF_SWISS, "Segoe UI");
+                                HFONT oldNF = (HFONT)SelectObject(memDC, numFont);
+                                SetBkMode(memDC, TRANSPARENT);
+                                SetTextColor(memDC, board[r][c] == 1 ? RGB(0, 240, 255) : RGB(20, 20, 20));
+                                char nBuf[8];
+                                sprintf(nBuf, "%d", lastNum);
+                                RECT nRect = { cx - radius, cy - radius, cx + radius, cy + radius };
+                                DrawText(memDC, nBuf, -1, &nRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+                                SelectObject(memDC, oldNF);
+                                DeleteObject(numFont);
+                            }
                         }
 
                         // Last Move Marker Ring
@@ -2026,7 +2121,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 SetTextColor(memDC, RGB(255, 215, 0));
                 TextOut(memDC, 20, 595, hintStr, strlen(hintStr));
             } else {
-                const char *hotkeyHelp = "Shortcuts: [F1] Help  [H] Hint  [S] Analyzer  [T] Territory  [U] Undo  [P] Pass  [N] New";
+                const char *hotkeyHelp = "Shortcuts: [F1] Help  [F5] Save  [F9] Load  [C] Coords  [M] Move#  [H] Hint  [S] Analyzer  [T] Terr  [U] Undo  [P] Pass";
                 SetTextColor(memDC, RGB(180, 190, 200));
                 TextOut(memDC, 20, 595, hotkeyHelp, strlen(hotkeyHelp));
             }
@@ -2042,22 +2137,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 Ellipse(memDC, px, py, px + s*2, py + s);
             }
             DeleteObject(petalBrush);
-
-            // Atmospheric floating golden Zen dust motes
-            HBRUSH zenBrush = CreateSolidBrush(RGB(255, 215, 0));
-            HBRUSH zenCore = CreateSolidBrush(RGB(255, 255, 255));
-            for (int i = 0; i < MAX_ZEN_MOTES; i++) {
-                int px = (int)zenMotes[i].x;
-                int py = (int)zenMotes[i].y;
-                int s = (int)zenMotes[i].size;
-                SelectObject(memDC, nullPen);
-                SelectObject(memDC, zenBrush);
-                Ellipse(memDC, px - s, py - s, px + s, py + s);
-                SelectObject(memDC, zenCore);
-                Ellipse(memDC, px - 1, py - 1, px + 1, py + 1);
-            }
-            DeleteObject(zenBrush);
-            DeleteObject(zenCore);
 
             // Double-buffered BitBlt with procedural screen-shake offset
             int offX = 0, offY = 0;
@@ -2094,6 +2173,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 char bBackup[19][19];
                 CopyBoard(bBackup, board);
                 PushUndo(bBackup, capBackup, currentPlayer);
+                if (nativeMoveCount < MAX_NATIVE_MOVES) {
+                    nativeMoves[nativeMoveCount].x = -1;
+                    nativeMoves[nativeMoveCount].y = -1;
+                    nativeMoves[nativeMoveCount].color = currentPlayer;
+                    nativeMoves[nativeMoveCount].pass = 1;
+                    nativeMoveCount++;
+                }
                 currentPlayer = currentPlayer == 1 ? 2 : 1;
                 hintX = -1; hintY = -1;
                 InvalidateRect(hwnd, NULL, TRUE);
@@ -2163,6 +2249,14 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 sprintf(smsg, "Statistics:\nGames Played: %d\n\nvs AI Mode:\nWins: %d\nLosses: %d\n\nLocal Mode:\nBlack Wins: %d\nWhite Wins: %d",
                         stats.played, stats.aiWins, stats.aiLosses, stats.localB, stats.localW);
                 MessageBox(hwnd, smsg, "Statistics", MB_OK);
+            } else if (LOWORD(wParam) == ID_BTN_COORDS) {
+                showCoords = !showCoords;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == ID_BTN_MOVENUMS) {
+                showMoveNumbers = !showMoveNumbers;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (LOWORD(wParam) == ID_BTN_SGF) {
+                ExportGameToSGF(hwnd, "kgo_game.sgf");
             } else if (LOWORD(wParam) == ID_BTN_HELP) {
                 MessageBox(hwnd, 
                     "Goal: Control more territory (empty intersections) than your opponent.\n\n"
@@ -2175,15 +2269,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                     "- Scoring: Controlled Territory + Captured Stones + Komi (White bonus).\n\n"
                     "Keyboard Shortcuts & Assistance:\n"
                     "- F1 : Open this Help & Rules Guide\n"
+                    "- F5 : Quick Save match state\n"
+                    "- F9 : Quick Load match state\n"
+                    "- C : Toggle Goban coordinates (A-T, 1-19)\n"
+                    "- M : Toggle move numbering badges on stones\n"
                     "- H (Hint) : Calculate & highlight optimal AI candidate move\n"
-                    "- S (Analyzer) : Toggle Group Liberty Analyzer overlay with numbered liberties\n"
+                    "- S (Analyzer) : Toggle Group Liberty Analyzer overlay\n"
                     "- T (Territory) : Toggle territory ownership map & Atari warnings\n"
                     "- U / Ctrl+Z (Undo) : Revert previous turn move pair\n"
                     "- P (Pass) : Pass current turn (2 consecutive passes trigger scoring)\n"
                     "- N (New) : Start a fresh new match\n\n"
                     "Game Modes:\n"
                     "- Campaign: 20 progressive historical Baduk stages\n"
-                    "- Tsumego: Life-and-death tactical puzzle solver",
+                    "- Tsumego: Life-and-death tactical puzzle solver\n"
+                    "- SGF: Export standard Smart Game Format match record",
                     "How to Play KGo", MB_OK | MB_ICONINFORMATION);
             } else if (LOWORD(wParam) == ID_CB_SIZE && HIWORD(wParam) == CBN_SELCHANGE) {
                 int sel = SendMessage(hCbSize, CB_GETCURSEL, 0, 0);

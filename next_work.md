@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KScript
   kilo_usability: KMedia
   kilo_qa: KNet
-  kilo_expander: KGo
+  kilo_expander: KReversi
 virtual_web_target: "kweb://geocities"
 virtual_web_rotation:
   - "kweb://geocities"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KMandel
-  timestamp: "2026-10-04T00:27:00-07:00"
+  agent: kilo-expander
+  app: KGo
+  timestamp: "2026-10-04T01:05:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -129,9 +129,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KNote`, `KPass`, `KDB`, `KHex`, `KBookmark`, `KPing`, `KChat`, `KClock`, `KTimer`, `KPomodoro`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KGo`
+- **Current Target**: `KReversi`
 - **Upcoming Queue**:
-  `KReversi`, `KPong`, `KSnake`, `KTowers`, `KMatch3`, `KSimon` *(Completed: KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts)*.
+  `KPong`, `KSnake`, `KTowers`, `KMatch3`, `KSimon` *(Completed: KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KReversi, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -230,6 +230,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
  
+- **2026-10-04T01:05:00-07:00 — kilo-expander: KGo (Kifu Replay Viewer, SGF Import/Export, Coordinates, Byo-Yomi & Glint Purge)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 158.3 KB web / 169.5 KB native < 999 KB ceiling).
+  - SGF Import/Export: Added Smart Game Format (SGF) modal with clipboard copy, file download, drag-drop import, and JSON state backup.
+  - Replay & Kifu Viewer: Built move-by-move match replay mode with slider, step navigation, autoplay, and stone move numbering badges.
+  - Controls & Board Ergonomics: Added Goban coordinate toggle (A-T, 1-19), byo-yomi clock modes, F5 quicksave, and F9 quickload.
+  - Mandate 11 Glint Ban: Purged traveling stone sheens and floating Zen dust motes across web and native Win32 C.
+  - Verification: MSVC clean (`KGo.exe` 169.5 KB); Vite build clean in 335ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T00:27:00-07:00 — kilo-qa: KMandel (Pass 5: Disk State Persistence, Tutorial Integrity, Modal Shortcuts & Build Audit)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 125.7 KB web / 22.0 KB native < 999 KB ceiling).
   - State Persistence: Implemented universal quicksave (F5) and quickload (F9) to `kmandel_quicksave.dat` (native Win32 binary) and local storage (web).
@@ -261,13 +269,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Offline Default: All games must boot into local/offline play (e.g. vs AI or solo) or explicit start screen.
   - Policy Sync: Updated `next_work.md`, `docs/RFMS_SPEC.md`, `kilo-creator`, `kilo-expander`, and `.agents/AGENTS.md`.
 
-- **2026-10-03T23:45:00-07:00 — kilo-tester: KSanctuary (Interactive UI Audit, Worker Dispatch Fixes, JSON Save/Load & ARCH-05)**
-  - Status: PASS ✅ (2 critical missing handlers fixed, 0 regressions, clean builds, 449.9 KB web / 264.2 KB native < 999 KB ceiling).
-  - Worker Controls: Implemented missing `changeWorker` and `assignSurvivorJob` handlers enabling facility staffing buttons and roster assignment.
-  - Storage Persistence: Added JSON state export and file import with schema validation alongside F5 quicksave and F9 quickload.
-  - Dialog Ergonomics: Wired modal backdrop click dismissal on all 5 overlays, added F1 manual hotkey, and protected input focus.
-  - ARCH-05 Visibility: Added visibilitychange event handler suspending audio, pausing animation/auto-run, and auto-saving on tab blur.
-  - Verification: MSVC native clean (`KSanctuary.exe` 264.2 KB); Vite build clean in 299ms; security_lint 100% PASS; check_icons 100% PASS.
 
 
 

@@ -105,18 +105,148 @@
     box-shadow: inset 0 0 12px rgba(255, 215, 0, 0.15);
     animation: goldBorderShimmer 4s ease-in-out infinite alternate;
   }
-  .zen-mote {
-    position: absolute;
-    background: radial-gradient(circle, #fff 0%, #ffd700 50%, rgba(255, 215, 0, 0) 100%);
-    border-radius: 50%;
-    pointer-events: none;
-    z-index: 9998;
-    animation: moteFloat linear infinite alternate;
+  /* Goban Coordinates Frame */
+  .goban-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
-  @keyframes moteFloat {
-    0% { transform: translate(0, 0) scale(0.6); opacity: 0.2; }
-    50% { opacity: 0.85; transform: translate(15px, -25px) scale(1.2); }
-    100% { transform: translate(-15px, -50px) scale(0.5); opacity: 0.1; }
+  .goban-middle {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+  .coord-row {
+    display: flex;
+    justify-content: center;
+    user-select: none;
+    pointer-events: none;
+  }
+  .coord-col {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    user-select: none;
+    pointer-events: none;
+  }
+  .coord-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffd700;
+    font-size: 11px;
+    font-weight: 700;
+    font-family: monospace, sans-serif;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.85);
+  }
+  .coord-row .coord-label {
+    width: var(--cell-size, 34px);
+    height: 18px;
+  }
+  .coord-col .coord-label {
+    height: var(--cell-size, 34px);
+    width: 18px;
+  }
+
+  /* Stone Move Numbers Badge (Kifu review) */
+  .stone-num-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: calc(var(--cell-size, 34px) * 0.4);
+    font-weight: 800;
+    font-family: monospace, sans-serif;
+    pointer-events: none;
+    z-index: 6;
+    user-select: none;
+    line-height: 1;
+  }
+  .stone.black .stone-num-label {
+    color: #00f0ff;
+    text-shadow: 0 0 2px #000, 0 1px 2px #000;
+  }
+  .stone.white .stone-num-label {
+    color: #111;
+    text-shadow: 0 0 1px #fff;
+  }
+
+  /* Replay Navigator Bar */
+  .replay-bar {
+    width: 90%;
+    max-width: 600px;
+    background: linear-gradient(135deg, #18202c, #0f151e);
+    border: 2px solid #00f0ff;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.7), 0 0 12px rgba(0,240,255,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    box-sizing: border-box;
+    flex-wrap: wrap;
+  }
+  .replay-title {
+    font-weight: bold;
+    color: #00f0ff;
+    font-size: 0.85em;
+    letter-spacing: 0.5px;
+  }
+  .replay-counter {
+    font-family: monospace;
+    font-weight: bold;
+    color: #ffd700;
+    font-size: 0.9em;
+    min-width: 95px;
+    text-align: center;
+  }
+
+  /* Match Clock Bar */
+  .clock-bar {
+    width: 90%;
+    max-width: 600px;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 10px;
+  }
+  .clock-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #151515;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 6px 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    transition: all 0.2s;
+  }
+  .clock-box.active-clock {
+    border-color: #ffd700;
+    box-shadow: 0 0 10px rgba(255,215,0,0.4);
+    background: #242010;
+  }
+  .clock-box.low-time {
+    border-color: #ff3333 !important;
+    box-shadow: 0 0 12px rgba(255,50,50,0.6) !important;
+    animation: pulseClockLow 0.8s infinite alternate;
+  }
+  @keyframes pulseClockLow {
+    0% { background: #201010; }
+    100% { background: #401010; }
+  }
+  .clock-label {
+    font-size: 0.82em;
+    font-weight: 600;
+    color: #bbb;
+  }
+  .clock-time {
+    font-family: monospace;
+    font-size: 1.15em;
+    font-weight: 700;
+    color: #fff;
   }
   @keyframes goldBorderShimmer {
     0% { border-color: rgba(255, 215, 0, 0.2); box-shadow: inset 0 0 6px rgba(255, 215, 0, 0.08); }
@@ -904,6 +1034,10 @@
     <span class="hotkey-item" title="Request AI Recommended Move"><kbd>H</kbd> Hint</span>
     <span class="hotkey-item" title="Toggle Stone Group Liberty Inspector"><kbd>S</kbd> Analyzer</span>
     <span class="hotkey-item" title="Toggle Controlled Territory Estimator"><kbd>T</kbd> Territory</span>
+    <span class="hotkey-item" title="Toggle Move Numbers on Stones"><kbd>M</kbd> Numbers</span>
+    <span class="hotkey-item" title="Toggle Goban Coordinates"><kbd>C</kbd> Coords</span>
+    <span class="hotkey-item" title="Quicksave Game"><kbd>F5</kbd> Save</span>
+    <span class="hotkey-item" title="Quickload Game"><kbd>F9</kbd> Load</span>
     <span class="hotkey-item" title="Revert Last Move Pair"><kbd>U</kbd> Undo</span>
     <span class="hotkey-item" title="Pass Current Turn"><kbd>P</kbd> Pass</span>
     <span class="hotkey-item" title="Start New Game"><kbd>N</kbd> New</span>
@@ -912,6 +1046,27 @@
     <div class="status">Current Turn: Black</div>
     <div class="stage-info" id="stage-info">Komi: 6.5</div>
     <div class="analyzer-banner" id="analyzer-banner"></div>
+  </div>
+  <div id="clockBar" class="clock-bar" style="display:none;">
+    <div class="clock-box black-clock">
+      <span class="clock-label">⚫ Black:</span>
+      <span id="black-time-display" class="clock-time">05:00</span>
+    </div>
+    <div class="clock-box white-clock">
+      <span class="clock-label">⚪ White:</span>
+      <span id="white-time-display" class="clock-time">05:00</span>
+    </div>
+  </div>
+  <div id="replayBar" class="replay-bar" style="display:none;">
+    <span class="replay-title">🎞️ REPLAY</span>
+    <button id="btn-replay-first" class="btn-tiny" title="First Move (|<<)">|&lt;&lt;</button>
+    <button id="btn-replay-prev" class="btn-tiny" title="Previous Move (< / [)">◀</button>
+    <span id="replay-counter" class="replay-counter">Move 0 / 0</span>
+    <button id="btn-replay-next" class="btn-tiny" title="Next Move (> / ])">▶</button>
+    <button id="btn-replay-last" class="btn-tiny" title="Last Move (>>|)">>&gt;|</button>
+    <button id="btn-replay-play" class="btn-tiny" style="background:#00897b; color:#fff;" title="Auto-Play Replay (Space)">▶ Auto</button>
+    <input type="range" id="replay-slider" min="0" max="0" value="0" style="flex:1; max-width:140px; accent-color:#ffd700;" title="Scrub Game Moves">
+    <button id="btn-replay-exit" class="btn-tiny btn-danger" title="Exit Replay & Return to Live Match">Exit</button>
   </div>
   <div id="onlineBar" class="online-bar" style="display:none;">
     <div class="online-header">
@@ -947,7 +1102,15 @@
     <div class="goban-filigree goban-filigree-tr"></div>
     <div class="goban-filigree goban-filigree-bl"></div>
     <div class="goban-filigree goban-filigree-br"></div>
-    <div class="board" id="board"></div>
+    <div class="goban-wrapper" id="goban-wrapper">
+      <div class="coord-row coord-top" id="coord-top"></div>
+      <div class="goban-middle">
+        <div class="coord-col coord-left" id="coord-left"></div>
+        <div class="board" id="board"></div>
+        <div class="coord-col coord-right" id="coord-right"></div>
+      </div>
+      <div class="coord-row coord-bottom" id="coord-bottom"></div>
+    </div>
   </div>
   <div class="controls">
     <button id="btn-multiplayer" style="background: linear-gradient(135deg, #1b5e20, #00897b); color: #fff; font-weight: bold; border-color: #00e5ff;" title="Open Online Multiplayer Hub (O)">🌐 Online (O)</button>
@@ -958,16 +1121,26 @@
     <button id="btn-estimate" title="Toggle territory ownership map & Atari group danger warnings (T)">Territory (T)</button>
     <button id="btn-analyzer" title="Toggle Stone Group Liberty Analyzer overlay with numbered badges (S)">Analyzer (S)</button>
     <button id="btn-score" title="Calculate final score based on territory and captured stones">Score Game</button>
+    <button id="btn-replay" title="Open Interactive Move Replay & Game Review Navigator">🎞️ Replay</button>
+    <button id="btn-sgf" title="Import or Export match in standard SGF (Smart Game Format)">📜 SGF</button>
+    <button id="btn-coords" title="Toggle Goban grid coordinates (C)">Coords (C)</button>
+    <button id="btn-move-numbers" title="Toggle move numbering overlay on stones (M)">Move #s (M)</button>
     <button id="btn-campaign" title="Play 20 progressively challenging Baduk campaign stages">Campaign (20 Stages)</button>
     <button id="btn-tsume" title="Practice life-and-death Go tactical puzzles">Tsumego Puzzles</button>
-    <button id="btn-save" title="Save current match state to local storage">Save</button>
-    <button id="btn-load" title="Restore saved game from local storage">Load</button>
+    <button id="btn-save" title="Quick save match state to local storage (F5)">Save (F5)</button>
+    <button id="btn-load" title="Restore saved game from local storage (F9)">Load (F9)</button>
     <button id="btn-stats" title="View games played, AI win/loss ratio, and local records">Stats</button>
     <button id="btn-help" title="View game rules, strategy guides, and keyboard shortcuts (F1 / ?)">Help (F1)</button>
     <select id="board-size" title="Select Goban grid size (9x9, 13x13, or 19x19)">
       <option value="9">9x9</option>
       <option value="13">13x13</option>
       <option value="19">19x19</option>
+    </select>
+    <select id="clock-mode" title="Select Match Clock Mode">
+      <option value="none">⏱️ No Clock</option>
+      <option value="blitz">⏱️ Blitz (30s)</option>
+      <option value="rapid">⏱️ Rapid (5m+30s)</option>
+      <option value="standard">⏱️ Standard (10m+30s)</option>
     </select>
     <button id="btn-new" title="Reset board and start a fresh new match (N)">New Game</button>
     <label style="display:flex;align-items:center;margin-left:6px;cursor:pointer;font-size:12px;" title="Toggle AI opponent"><input type="checkbox" id="ai-toggle" checked> VS AI (White)</label>
@@ -1003,6 +1176,10 @@
           <li><strong>Hint (<kbd>H</kbd>):</strong> Grandmaster AI evaluates and highlights the optimal candidate move with score.</li>
           <li><strong>Liberty Analyzer (<kbd>S</kbd>):</strong> Highlights stone groups and overlays numbered badges on all remaining liberties.</li>
           <li><strong>Territory Estimator (<kbd>T</kbd>):</strong> Displays colored territory markers and flashes warning borders on groups in Atari (1 liberty).</li>
+          <li><strong>Interactive Replay:</strong> Step forward/backward through moves (<kbd>[</kbd> / <kbd>]</kbd>), scrub the move slider, or watch auto-play.</li>
+          <li><strong>SGF Management:</strong> Export clean Smart Game Format (SGF FF[4]) strings or upload match files to study previous games.</li>
+          <li><strong>Goban Coordinates (<kbd>C</kbd>) & Move Numbers (<kbd>M</kbd>):</strong> Toggle standard letter/number grid edges and chronologically numbered stone badges.</li>
+          <li><strong>Match Clocks:</strong> Blitz (30s), Rapid (5m+30s), and Standard (10m+30s) timing controls with Japanese Byo-yomi countdown audio.</li>
           <li><strong>Undo (<kbd>U</kbd> / <kbd>Ctrl+Z</kbd>):</strong> Reverts last turn (move pair against AI, single move locally).</li>
         </ul>
       </div>
@@ -1015,6 +1192,10 @@
           <tr><td><kbd>H</kbd></td><td>Request AI Move Hint</td><td><kbd>S</kbd></td><td>Toggle Liberty Analyzer</td></tr>
           <tr><td><kbd>T</kbd></td><td>Toggle Territory Estimator</td><td><kbd>P</kbd></td><td>Pass Turn</td></tr>
           <tr><td><kbd>U</kbd> / <kbd>Ctrl+Z</kbd></td><td>Undo previous move</td><td><kbd>N</kbd></td><td>Start New Game</td></tr>
+          <tr><td><kbd>C</kbd></td><td>Toggle Goban Coordinates</td><td><kbd>M</kbd></td><td>Toggle Move Number Badges</td></tr>
+          <tr><td><kbd>F5</kbd></td><td>Quick Save Game</td><td><kbd>F9</kbd></td><td>Quick Load Game</td></tr>
+          <tr><td><kbd>[</kbd></td><td>Replay: Previous Move</td><td><kbd>]</kbd></td><td>Replay: Next Move</td></tr>
+          <tr><td><kbd>Space</kbd></td><td>Toggle Replay Auto-Play</td><td><kbd>O</kbd></td><td>Toggle Multiplayer Modal</td></tr>
         </table>
       </div>
 
@@ -1104,6 +1285,39 @@
     </div>
   </div>
 
+  <!-- SGF Manager Modal -->
+  <div id="sgf-modal" class="modal" onclick="if(event.target===this) closeAllModals()">
+    <div class="modal-content" style="max-width: 600px; border-color: #ffd700;">
+      <button id="btn-close-sgf" class="close-btn modal-close btn-close" onclick="closeAllModals()" title="Close (Esc)">&times;</button>
+      <h2 style="margin-top: 0; color: #ffd700;">📜 SGF (Smart Game Format) Manager</h2>
+      <p style="font-size: 0.85em; color: #d4af37; margin-top: -6px; margin-bottom: 12px;">
+        Universal format for Go match records, review diagrams, and tactical problems.
+      </p>
+
+      <div class="mp-section">
+        <h3 style="margin: 0 0 6px 0; color: #69f0ae; font-size: 1em;">📤 Export Match to SGF</h3>
+        <textarea id="sgfExportText" readonly rows="4" style="width: 100%; box-sizing: border-box; background: #0a0704; border: 1px solid #73502b; color: #a5d6a7; font-family: monospace; font-size: 0.8em; padding: 6px; border-radius: 4px; resize: vertical;"></textarea>
+        <div style="display: flex; gap: 8px; margin-top: 6px; flex-wrap: wrap;">
+          <button onclick="copySgfToClipboard()" style="background:#2e7d32; border-color:#81c784; font-weight:bold;">📋 Copy SGF</button>
+          <button onclick="downloadSgfFile()" style="background:#0277bd; border-color:#4fc3f7; font-weight:bold;">💾 Download .sgf File</button>
+          <button onclick="exportJsonState()" style="background:#37474f; border-color:#78909c;">Backup JSON</button>
+        </div>
+      </div>
+
+      <div class="mp-section">
+        <h3 style="margin: 0 0 6px 0; color: #ffd700; font-size: 1em;">📥 Import SGF Match / Problem</h3>
+        <textarea id="sgfImportText" placeholder="Paste standard SGF text code here (e.g. (;GM[1]SZ[19]...))" rows="4" style="width: 100%; box-sizing: border-box; background: #0a0704; border: 1px solid #73502b; color: #fff; font-family: monospace; font-size: 0.8em; padding: 6px; border-radius: 4px; resize: vertical;"></textarea>
+        <div style="display: flex; gap: 8px; margin-top: 6px; align-items: center; flex-wrap: wrap;">
+          <input type="file" id="sgfFileInput" accept=".sgf,.txt" style="display: none;" onchange="handleSgfFileUpload(event)">
+          <button onclick="document.getElementById('sgfFileInput').click()" style="background:#4e342e; border-color:#8d6e63;">📁 Open .sgf File...</button>
+          <button onclick="parseAndLoadSGF()" style="background:#ef6c00; border-color:#ffb74d; font-weight:bold;">⚔️ Import &amp; Replay Match</button>
+          <input type="file" id="jsonFileInput" accept=".json" style="display: none;" onchange="importJsonState(this.files[0])">
+          <button onclick="document.getElementById('jsonFileInput').click()" style="background:#263238; border-color:#546e7a;">Restore JSON</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="../assets/js/retro_multiplayer.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
@@ -1179,6 +1393,22 @@
   let undoStack = [];
   let redoStack = [];
   let consecutivePasses = 0;
+
+  let showCoords = true;
+  let showMoveNumbers = false;
+  let stoneMoveNumbers = [];
+  let moveRecord = [];
+  let handicapStones = [];
+  let replayMode = false;
+  let replayIndex = -1;
+  let autoPlayTimer = null;
+
+  /* Match Clock State */
+  let clockMode = 'none';
+  let clockInterval = null;
+  let blackTimeLeft = 300;
+  let whiteTimeLeft = 300;
+  let lastClockTimestamp = 0;
 
   let currentKomi = 6.5;
   let hintCell = null;
@@ -1271,8 +1501,10 @@
     if (boardSize === 9) pts = pts9;
     else if (boardSize === 13) pts = pts13;
     let limit = Math.min(count, pts.length);
+    handicapStones = [];
     for(let i=0; i<limit; i++) {
       board[pts[i][1]][pts[i][0]] = 'B';
+      handicapStones.push({x: pts[i][0], y: pts[i][1], color: 'B'});
     }
     currentPlayer = 'W';
     history = [boardToString()];
@@ -1455,9 +1687,11 @@
     const help = document.getElementById('help-modal');
     const mp = document.getElementById('multiplayer-modal');
     const inv = document.getElementById('invite-modal');
+    const sgf = document.getElementById('sgf-modal');
     if (help) help.style.display = 'none';
     if (mp) mp.style.display = 'none';
     if (inv) inv.style.display = 'none';
+    if (sgf) sgf.style.display = 'none';
     if (activeLobbyRef && activeLobbyListener && window.fb) {
       try { window.fb.off(activeLobbyRef, 'value', activeLobbyListener); } catch(e) {}
       activeLobbyRef = null;
@@ -1979,9 +2213,619 @@
     showToast('Returned to local play.', 'info');
   }
 
+  /* --- Coordinates Engine --- */
+  const COORD_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T'];
+
+  function renderCoordinates() {
+    const topEl = document.getElementById('coord-top');
+    const botEl = document.getElementById('coord-bottom');
+    const leftEl = document.getElementById('coord-left');
+    const rightEl = document.getElementById('coord-right');
+    if (!topEl || !botEl || !leftEl || !rightEl) return;
+    
+    if (!showCoords) {
+      topEl.style.display = 'none';
+      botEl.style.display = 'none';
+      leftEl.style.display = 'none';
+      rightEl.style.display = 'none';
+      return;
+    }
+    
+    topEl.style.display = 'flex';
+    botEl.style.display = 'flex';
+    leftEl.style.display = 'flex';
+    rightEl.style.display = 'flex';
+    
+    topEl.innerHTML = '';
+    botEl.innerHTML = '';
+    leftEl.innerHTML = '';
+    rightEl.innerHTML = '';
+    
+    for (let c = 0; c < size; c++) {
+      const letter = COORD_LETTERS[c] || String.fromCharCode(65 + c);
+      const topLbl = document.createElement('div');
+      topLbl.className = 'coord-label';
+      topLbl.innerText = letter;
+      topEl.appendChild(topLbl);
+      
+      const botLbl = document.createElement('div');
+      botLbl.className = 'coord-label';
+      botLbl.innerText = letter;
+      botEl.appendChild(botLbl);
+    }
+    
+    for (let r = 0; r < size; r++) {
+      const rowNum = size - r;
+      const leftLbl = document.createElement('div');
+      leftLbl.className = 'coord-label';
+      leftLbl.innerText = rowNum;
+      leftEl.appendChild(leftLbl);
+      
+      const rightLbl = document.createElement('div');
+      rightLbl.className = 'coord-label';
+      rightLbl.innerText = rowNum;
+      rightEl.appendChild(rightLbl);
+    }
+  }
+
+  /* --- Move Numbering & Stone History --- */
+  function rebuildStoneMoveNumbers() {
+    stoneMoveNumbers = Array(size).fill(null).map(() => Array(size).fill(0));
+    moveRecord.forEach(m => {
+      if (!m.pass && m.x >= 0 && m.y >= 0 && m.x < size && m.y < size) {
+        stoneMoveNumbers[m.y][m.x] = m.num;
+      }
+      if (m.capturedList && m.capturedList.length) {
+        m.capturedList.forEach(c => {
+          if (c.x >= 0 && c.y >= 0 && c.x < size && c.y < size) {
+            stoneMoveNumbers[c.y][c.x] = 0;
+          }
+        });
+      }
+    });
+  }
+
+  /* --- Match Clock & Timer Engine (ARCH-05 Compliant) --- */
+  function initClock() {
+    stopClock();
+    const clockBar = document.getElementById('clockBar');
+    if (!clockBar) return;
+    if (clockMode === 'none') {
+      clockBar.style.display = 'none';
+      return;
+    }
+    clockBar.style.display = 'flex';
+    if (clockMode === 'blitz') {
+      blackTimeLeft = 30;
+      whiteTimeLeft = 30;
+    } else if (clockMode === 'rapid') {
+      blackTimeLeft = 300;
+      whiteTimeLeft = 300;
+    } else if (clockMode === 'standard') {
+      blackTimeLeft = 600;
+      whiteTimeLeft = 600;
+    }
+    updateClockDisplay();
+    startClock();
+  }
+
+  function startClock() {
+    if (clockInterval) clearInterval(clockInterval);
+    lastClockTimestamp = Date.now();
+    clockInterval = setInterval(tickClock, 1000);
+  }
+
+  function stopClock() {
+    if (clockInterval) {
+      clearInterval(clockInterval);
+      clockInterval = null;
+    }
+  }
+
+  function tickClock() {
+    if (replayMode || isOnlineGame) return;
+    const now = Date.now();
+    const delta = Math.floor((now - lastClockTimestamp) / 1000);
+    if (delta < 1) return;
+    lastClockTimestamp = now;
+
+    if (currentPlayer === 'B') {
+      blackTimeLeft = Math.max(0, blackTimeLeft - delta);
+      if (blackTimeLeft <= 5 && blackTimeLeft > 0) playClockWarning();
+      if (blackTimeLeft === 0) {
+        stopClock();
+        playSound('over');
+        showToast('⏱️ Black ran out of time! White wins by timeout!', 'warning');
+        alert('Time Expired!\n\nBlack ran out of time. White wins by timeout!');
+        recordGameEnd('W');
+        initBoard();
+        return;
+      }
+    } else {
+      whiteTimeLeft = Math.max(0, whiteTimeLeft - delta);
+      if (whiteTimeLeft <= 5 && whiteTimeLeft > 0) playClockWarning();
+      if (whiteTimeLeft === 0) {
+        stopClock();
+        playSound('over');
+        showToast('⏱️ White ran out of time! Black wins by timeout!', 'warning');
+        alert('Time Expired!\n\nWhite ran out of time. Black wins by timeout!');
+        recordGameEnd('B');
+        initBoard();
+        return;
+      }
+    }
+    updateClockDisplay();
+  }
+
+  function onTurnChangedForClock() {
+    if (clockMode === 'blitz') {
+      if (currentPlayer === 'B') blackTimeLeft = 30;
+      else whiteTimeLeft = 30;
+    }
+    lastClockTimestamp = Date.now();
+    updateClockDisplay();
+  }
+
+  function updateClockDisplay() {
+    const bEl = document.getElementById('black-time-display');
+    const wEl = document.getElementById('white-time-display');
+    const bBox = document.querySelector('.black-clock');
+    const wBox = document.querySelector('.white-clock');
+
+    function fmt(secs) {
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
+
+    if (bEl) bEl.innerText = fmt(blackTimeLeft);
+    if (wEl) wEl.innerText = fmt(whiteTimeLeft);
+
+    if (bBox && wBox) {
+      bBox.classList.toggle('active-clock', currentPlayer === 'B');
+      wBox.classList.toggle('active-clock', currentPlayer === 'W');
+      bBox.classList.toggle('low-time', blackTimeLeft <= 10);
+      wBox.classList.toggle('low-time', whiteTimeLeft <= 10);
+    }
+  }
+
+  function playClockWarning() {
+    try {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.connect(g);
+      g.connect(audioCtx.destination);
+      osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+      g.gain.setValueAtTime(0.12, audioCtx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.07);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.07);
+    } catch(e) {}
+  }
+
+  // ARCH-05: Tab visibility change handling
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (clockInterval) {
+        clearInterval(clockInterval);
+        clockInterval = null;
+      }
+    } else {
+      if (clockMode !== 'none' && !replayMode) {
+        tickClock();
+        startClock();
+      }
+    }
+  });
+
+  /* --- Interactive Replay Viewer Engine --- */
+  function enterReplayMode() {
+    if (moveRecord.length === 0) {
+      showToast("No moves in match to replay yet.", "info");
+      return;
+    }
+    replayMode = true;
+    replayIndex = moveRecord.length - 1;
+    const bar = document.getElementById('replayBar');
+    if (bar) bar.style.display = 'flex';
+    updateReplayUI();
+    showToast("🎞️ Entered Replay Mode. Use controls or [ / ] keys to navigate.", "info");
+  }
+
+  function exitReplayMode() {
+    if (autoPlayTimer) {
+      clearInterval(autoPlayTimer);
+      autoPlayTimer = null;
+      const playBtn = document.getElementById('btn-replay-play');
+      if (playBtn) playBtn.innerText = '▶ Auto';
+    }
+    replayMode = false;
+    replayIndex = -1;
+    const bar = document.getElementById('replayBar');
+    if (bar) bar.style.display = 'none';
+    if (moveRecord.length > 0) {
+      const lastM = moveRecord[moveRecord.length - 1];
+      board = deepCopy(lastM.board);
+      captures = { ...lastM.captures };
+      lastMove = lastM.pass ? { x: -1, y: -1 } : { x: lastM.x, y: lastM.y };
+    }
+    rebuildStoneMoveNumbers();
+    updateStatus();
+    drawBoard();
+    showToast("Exited replay. Returned to live match.", "info");
+  }
+
+  function goToReplayMove(idx) {
+    if (idx < -1) idx = -1;
+    if (idx >= moveRecord.length) idx = moveRecord.length - 1;
+    replayIndex = idx;
+    
+    if (idx === -1) {
+      board = Array(size).fill(null).map(() => Array(size).fill(null));
+      if (handicapStones && handicapStones.length > 0) {
+        handicapStones.forEach(s => { board[s.y][s.x] = 'B'; });
+      }
+      captures = { B: 0, W: 0 };
+      lastMove = { x: -1, y: -1 };
+      stoneMoveNumbers = Array(size).fill(null).map(() => Array(size).fill(0));
+    } else {
+      const m = moveRecord[idx];
+      board = deepCopy(m.board);
+      captures = { ...m.captures };
+      lastMove = m.pass ? { x: -1, y: -1 } : { x: m.x, y: m.y };
+      stoneMoveNumbers = Array(size).fill(null).map(() => Array(size).fill(0));
+      for (let i = 0; i <= idx; i++) {
+        const step = moveRecord[i];
+        if (!step.pass && step.x >= 0 && step.y >= 0 && step.x < size && step.y < size) {
+          stoneMoveNumbers[step.y][step.x] = step.num;
+        }
+        if (step.capturedList) {
+          step.capturedList.forEach(c => {
+            if (c.x >= 0 && c.y >= 0 && c.x < size && c.y < size) {
+              stoneMoveNumbers[c.y][c.x] = 0;
+            }
+          });
+        }
+      }
+      playSound('place');
+    }
+    updateReplayUI();
+    updateStatus();
+    drawBoard();
+  }
+
+  function updateReplayUI() {
+    const counter = document.getElementById('replay-counter');
+    const slider = document.getElementById('replay-slider');
+    const total = moveRecord.length;
+    const current = replayIndex + 1;
+    if (counter) counter.innerText = `Move ${current} / ${total}`;
+    if (slider) {
+      slider.min = 0;
+      slider.max = total;
+      slider.value = current;
+    }
+  }
+
+  function toggleAutoPlay() {
+    const playBtn = document.getElementById('btn-replay-play');
+    if (autoPlayTimer) {
+      clearInterval(autoPlayTimer);
+      autoPlayTimer = null;
+      if (playBtn) playBtn.innerText = '▶ Auto';
+    } else {
+      if (replayIndex >= moveRecord.length - 1) {
+        goToReplayMove(-1);
+      }
+      if (playBtn) playBtn.innerText = '⏸ Pause';
+      autoPlayTimer = setInterval(() => {
+        if (replayIndex < moveRecord.length - 1) {
+          goToReplayMove(replayIndex + 1);
+        } else {
+          clearInterval(autoPlayTimer);
+          autoPlayTimer = null;
+          if (playBtn) playBtn.innerText = '▶ Auto';
+        }
+      }, 1200);
+    }
+  }
+
+  /* --- SGF (Smart Game Format) Manager --- */
+  const SGF_CHARS = "abcdefghijklmnopqrstuvwxyz";
+  function toSgfCoord(x, y) { return (SGF_CHARS[x] || 'a') + (SGF_CHARS[y] || 'a'); }
+
+  function generateSGF() {
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '.');
+    const bName = isOnlineGame ? (myPlayerColor === 'B' ? myPlayerName : opponentName) : 'Player (Black)';
+    const wName = isOnlineGame ? (myPlayerColor === 'W' ? myPlayerName : opponentName) : (document.getElementById('ai-toggle').checked ? 'Subnet Go AI' : 'Player (White)');
+    let sgf = `(;GM[1]FF[4]CA[UTF-8]AP[KGo:1999]SZ[${size}]KM[${currentKomi}]RU[Japanese]PB[${bName}]PW[${wName}]DT[${dateStr}]`;
+    if (handicapStones && handicapStones.length > 0) {
+      sgf += `HA[${handicapStones.length}]AB`;
+      handicapStones.forEach(s => { sgf += `[${toSgfCoord(s.x, s.y)}]`; });
+    }
+    moveRecord.forEach(m => {
+      if (m.pass) {
+        sgf += `;${m.color}[]`;
+      } else {
+        sgf += `;${m.color}[${toSgfCoord(m.x, m.y)}]`;
+      }
+    });
+    sgf += ')';
+    return sgf;
+  }
+
+  function openSgfModal() {
+    const modal = document.getElementById('sgf-modal');
+    const txt = document.getElementById('sgfExportText');
+    if (txt) txt.value = generateSGF();
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function copySgfToClipboard() {
+    const txt = document.getElementById('sgfExportText');
+    if (!txt || !txt.value) return;
+    navigator.clipboard.writeText(txt.value).then(() => {
+      showToast('📋 SGF copied to clipboard!', 'success');
+    }).catch(() => {
+      txt.select();
+      document.execCommand('copy');
+      showToast('📋 SGF copied to clipboard!', 'success');
+    });
+  }
+
+  function downloadSgfFile() {
+    const txt = document.getElementById('sgfExportText');
+    if (!txt || !txt.value) return;
+    const blob = new Blob([txt.value], { type: 'application/x-go-sgf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `kgo_match_${Date.now()}.sgf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('💾 SGF file downloaded!', 'success');
+  }
+
+  function handleSgfFileUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const importArea = document.getElementById('sgfImportText');
+      if (importArea) importArea.value = event.target.result;
+      showToast(`📄 Loaded file: ${file.name}`, 'info');
+    };
+    reader.readAsText(file);
+  }
+
+  function parseAndLoadSGF() {
+    const importArea = document.getElementById('sgfImportText');
+    if (!importArea || !importArea.value.trim()) {
+      showToast('Please paste or upload an SGF string first.', 'warning');
+      return;
+    }
+    const content = importArea.value.trim();
+    
+    const szMatch = content.match(/SZ\[(\d+)\]/i);
+    let newSize = 19;
+    if (szMatch) {
+      const parsedSize = parseInt(szMatch[1]);
+      if ([9, 13, 19].includes(parsedSize)) {
+        newSize = parsedSize;
+      }
+    }
+
+    const kmMatch = content.match(/KM\[([0-9.]+)\]/i);
+    let newKomi = 6.5;
+    if (kmMatch) {
+      newKomi = parseFloat(kmMatch[1]);
+    }
+
+    size = newSize;
+    currentKomi = newKomi;
+    document.getElementById('board-size').value = size;
+    initBoard();
+
+    const setupRegex = /A([BW])((?:\[[a-z]{2}\])+)/gi;
+    let setupMatch;
+    while ((setupMatch = setupRegex.exec(content)) !== null) {
+      const color = setupMatch[1].toUpperCase();
+      const coordStr = setupMatch[2];
+      const coords = coordStr.match(/\[([a-z]{2})\]/gi);
+      if (coords) {
+        coords.forEach(c => {
+          const letters = c.slice(1, 3).toLowerCase();
+          const x = SGF_CHARS.indexOf(letters[0]);
+          const y = SGF_CHARS.indexOf(letters[1]);
+          if (x >= 0 && x < size && y >= 0 && y < size) {
+            board[y][x] = color;
+            handicapStones.push({ x, y, color });
+          }
+        });
+      }
+    }
+
+    const moveRegex = /;([BW])\[([a-z]{0,2})\]/gi;
+    let mMatch;
+    let moveNum = 1;
+    while ((mMatch = moveRegex.exec(content)) !== null) {
+      const color = mMatch[1].toUpperCase();
+      const cStr = mMatch[2].toLowerCase();
+      let isPass = (!cStr || cStr === '' || (cStr === 'tt' && size === 19));
+      let mx = -1, my = -1;
+      let caps = 0;
+
+      if (!isPass) {
+        mx = SGF_CHARS.indexOf(cStr[0]);
+        my = SGF_CHARS.indexOf(cStr[1]);
+        if (mx >= 0 && mx < size && my >= 0 && my < size) {
+          board[my][mx] = color;
+          const opp = color === 'B' ? 'W' : 'B';
+          caps = checkCaptures(opp, true);
+          capturedStonesForAnim = [];
+        } else {
+          isPass = true;
+        }
+      }
+
+      moveRecord.push({
+        num: moveNum++,
+        color,
+        x: mx,
+        y: my,
+        pass: isPass,
+        captures: { ...captures },
+        board: deepCopy(board),
+        capturedList: []
+      });
+    }
+
+    rebuildStoneMoveNumbers();
+    closeAllModals();
+    updateStatus();
+    drawBoard();
+    showToast(`✅ Loaded SGF match (${moveRecord.length} moves on ${size}x${size})! Opening Replay mode...`, 'success');
+    enterReplayMode();
+  }
+
+  /* --- Quicksave (F5) & Quickload (F9) + JSON Backup --- */
+  function quickSaveGame() {
+    const state = {
+      size,
+      board,
+      currentPlayer,
+      history,
+      captures,
+      lastMove,
+      undoStack,
+      redoStack,
+      currentKomi,
+      currentCampaignStage,
+      aiToggle: document.getElementById('ai-toggle').checked,
+      aiDifficulty: document.getElementById('ai-difficulty').value,
+      moveRecord,
+      showCoords,
+      showMoveNumbers,
+      clockMode,
+      blackTimeLeft,
+      whiteTimeLeft,
+      timestamp: Date.now()
+    };
+    localStorage.setItem('kgo_quicksave', JSON.stringify(state));
+    showToast('💾 Quick Save completed (F5)!', 'success');
+    playSound('turn');
+  }
+
+  function quickLoadGame() {
+    const data = localStorage.getItem('kgo_quicksave');
+    if (!data) {
+      showToast('⚠️ No quicksave data found (Press F5 to save first).', 'warning');
+      return;
+    }
+    try {
+      const state = JSON.parse(data);
+      restoreFullState(state);
+      showToast('📂 Quick Load restored (F9)!', 'success');
+      playSound('turn');
+    } catch(e) {
+      showToast('Failed to parse quicksave data.', 'warning');
+    }
+  }
+
+  function exportJsonState() {
+    const state = {
+      app: "KGo",
+      version: "1999.2",
+      size,
+      board,
+      currentPlayer,
+      history,
+      captures,
+      lastMove,
+      currentKomi,
+      currentCampaignStage,
+      aiToggle: document.getElementById('ai-toggle').checked,
+      aiDifficulty: document.getElementById('ai-difficulty').value,
+      moveRecord,
+      timestamp: Date.now()
+    };
+    const jsonStr = JSON.stringify(state, null, 2);
+    const blob = new Blob([jsonStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `kgo_save_${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('💾 JSON backup file downloaded!', 'success');
+  }
+
+  function importJsonState(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const state = JSON.parse(e.target.result);
+        restoreFullState(state);
+        closeAllModals();
+        showToast('📂 Game restored from JSON save file!', 'success');
+      } catch(err) {
+        showToast('Invalid JSON save file format.', 'warning');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function restoreFullState(state) {
+    size = state.size || 9;
+    board = state.board;
+    currentPlayer = state.currentPlayer || 'B';
+    history = state.history || [];
+    captures = state.captures || { B: 0, W: 0 };
+    lastMove = state.lastMove || { x: -1, y: -1 };
+    currentKomi = state.currentKomi || 6.5;
+    currentCampaignStage = state.currentCampaignStage !== undefined ? state.currentCampaignStage : -1;
+    moveRecord = state.moveRecord || [];
+    if (state.aiToggle !== undefined) document.getElementById('ai-toggle').checked = state.aiToggle;
+    if (state.aiDifficulty) document.getElementById('ai-difficulty').value = state.aiDifficulty;
+    if (state.showCoords !== undefined) showCoords = state.showCoords;
+    if (state.showMoveNumbers !== undefined) showMoveNumbers = state.showMoveNumbers;
+    if (state.clockMode !== undefined) {
+      clockMode = state.clockMode;
+      const cm = document.getElementById('clock-mode');
+      if (cm) cm.value = clockMode;
+    }
+    if (state.blackTimeLeft !== undefined) blackTimeLeft = state.blackTimeLeft;
+    if (state.whiteTimeLeft !== undefined) whiteTimeLeft = state.whiteTimeLeft;
+    document.getElementById('board-size').value = size;
+    
+    rebuildStoneMoveNumbers();
+    initClock();
+    updateStatus();
+    drawBoard();
+    if (currentPlayer === 'W' && document.getElementById('ai-toggle').checked) {
+      setTimeout(makeAIMove, 500);
+    }
+  }
 
   function initBoard() {
     board = Array(size).fill(null).map(() => Array(size).fill(null));
+    stoneMoveNumbers = Array(size).fill(null).map(() => Array(size).fill(0));
+    moveRecord = [];
+    handicapStones = [];
+    replayMode = false;
+    replayIndex = -1;
+    if (autoPlayTimer) {
+      clearInterval(autoPlayTimer);
+      autoPlayTimer = null;
+    }
+    const replayBar = document.getElementById('replayBar');
+    if (replayBar) replayBar.style.display = 'none';
     currentPlayer = 'B';
     history = [];
     captures = { B: 0, W: 0 };
@@ -1992,6 +2836,7 @@
     redoStack = [];
     consecutivePasses = 0;
     hintCell = null;
+    initClock();
     updateStatus();
     drawBoard();
   }
@@ -2224,6 +3069,7 @@
     boardEl.innerHTML = '';
     boardEl.style.gridTemplateColumns = `repeat(${size}, ${currentCellSize}px)`;
     boardEl.style.gridTemplateRows = `repeat(${size}, ${currentCellSize}px)`;
+    renderCoordinates();
     
     if (showEstimator) {
       computeTerritoryAndAtari();
@@ -2329,6 +3175,13 @@
               if (ripple.parentNode) ripple.remove(); 
               if (rippleOuter.parentNode) rippleOuter.remove();
             }, 750);
+          }
+
+          if (showMoveNumbers && stoneMoveNumbers[y] && stoneMoveNumbers[y][x] > 0) {
+            const numBadge = document.createElement('div');
+            numBadge.className = 'stone-num-label';
+            numBadge.innerText = stoneMoveNumbers[y][x];
+            stone.appendChild(numBadge);
           }
 
           cell.appendChild(stone);
@@ -2542,6 +3395,9 @@
   }
 
   function placeStone(x, y) {
+    if (replayMode) {
+      exitReplayMode();
+    }
     if (isOnlineGame) {
       if (!isLocalPlayerTurn()) {
         showToast("It's not your turn!", "warning");
@@ -2598,6 +3454,24 @@
     consecutivePasses = 0;
     lastMove = {x, y};
     hintCell = null;
+
+    const moveNum = moveRecord.length + 1;
+    moveRecord.push({
+      num: moveNum,
+      color: prevColor,
+      x, y,
+      pass: false,
+      captures: { ...captures },
+      board: deepCopy(board),
+      capturedList: caps > 0 ? [...capturedStonesForAnim] : []
+    });
+    if (stoneMoveNumbers[y]) stoneMoveNumbers[y][x] = moveNum;
+    if (caps > 0 && capturedStonesForAnim) {
+      capturedStonesForAnim.forEach(s => {
+        if (stoneMoveNumbers[s.y]) stoneMoveNumbers[s.y][s.x] = 0;
+      });
+    }
+    onTurnChangedForClock();
     
     if (caps > 0) {
       playSound('capture');
@@ -2981,6 +3855,7 @@
       return;
     }
 
+    if (replayMode) exitReplayMode();
     consecutivePasses++;
     if (consecutivePasses >= 2) {
       calculateScore();
@@ -2991,10 +3866,23 @@
       captures: { ...captures },
       history: [...history],
       lastMove: { ...lastMove },
-      currentPlayer: currentPlayer
+      currentPlayer: currentPlayer,
+      moveRecordCount: moveRecord.length
     });
     redoStack = [];
+    const prevColor = currentPlayer;
     currentPlayer = currentPlayer === 'B' ? 'W' : 'B';
+    const moveNum = moveRecord.length + 1;
+    moveRecord.push({
+      num: moveNum,
+      color: prevColor,
+      x: -1, y: -1,
+      pass: true,
+      captures: { ...captures },
+      board: deepCopy(board),
+      capturedList: []
+    });
+    onTurnChangedForClock();
     hintCell = null;
     updateStatus();
     if (currentPlayer === 'W' && document.getElementById('ai-toggle').checked) {
@@ -3007,6 +3895,7 @@
       showToast("Undo is disabled during online matches.", "warning");
       return;
     }
+    if (replayMode) exitReplayMode();
     let isVsAI = document.getElementById('ai-toggle').checked;
     let stepsToUndo = (isVsAI && undoStack.length >= 2) ? 2 : 1;
     
@@ -3016,7 +3905,8 @@
         currentPlayer,
         captures: { ...captures },
         lastMove: { ...lastMove },
-        history: [...history]
+        history: [...history],
+        moveRecordCount: moveRecord.length
       });
       let state = undoStack.pop();
       board = state.board;
@@ -3024,8 +3914,14 @@
       captures = state.captures;
       lastMove = state.lastMove;
       history = state.history;
+      if (state.moveRecordCount !== undefined) {
+        moveRecord = moveRecord.slice(0, state.moveRecordCount);
+      } else if (moveRecord.length > 0) {
+        moveRecord.pop();
+      }
       stepsToUndo--;
     }
+    rebuildStoneMoveNumbers();
     capturedStonesForAnim = [];
     hintCell = null;
     triggerScreenShake(3.0);
@@ -3110,58 +4006,64 @@
   });
 
   document.getElementById('btn-save').addEventListener('click', () => {
-    const state = {
-      size,
-      board,
-      currentPlayer,
-      history,
-      captures,
-      lastMove,
-      undoStack,
-      redoStack,
-      currentKomi,
-      currentCampaignStage,
-      aiToggle: document.getElementById('ai-toggle').checked,
-      aiDifficulty: document.getElementById('ai-difficulty').value
-    };
-    localStorage.setItem('kgo_save', JSON.stringify(state));
-    alert('Game saved.');
+    quickSaveGame();
   });
 
   document.getElementById('btn-load').addEventListener('click', () => {
-    const data = localStorage.getItem('kgo_save');
-    if (data) {
-      try {
-        const state = JSON.parse(data);
-        size = state.size;
-        board = state.board;
-        currentPlayer = state.currentPlayer;
-        history = state.history || [];
-        captures = state.captures;
-        lastMove = state.lastMove || {x: -1, y: -1};
-        undoStack = state.undoStack || [];
-        redoStack = state.redoStack || [];
-        currentKomi = state.currentKomi || 6.5;
-        if (state.currentCampaignStage !== undefined) currentCampaignStage = state.currentCampaignStage;
-        if (state.aiToggle !== undefined) document.getElementById('ai-toggle').checked = state.aiToggle;
-        if (state.aiDifficulty) document.getElementById('ai-difficulty').value = state.aiDifficulty;
-        document.getElementById('board-size').value = size;
-        hintCell = null;
-        triggerScreenShake(4.0);
-        updateStatus();
-        drawBoard();
-        alert('Game loaded.');
-        
-        if (currentPlayer === 'W' && document.getElementById('ai-toggle').checked) {
-          setTimeout(makeAIMove, 500);
-        }
-      } catch (e) {
-        alert('Failed to load game.');
-      }
+    quickLoadGame();
+  });
+
+  document.getElementById('btn-replay').addEventListener('click', () => {
+    if (replayMode) {
+      exitReplayMode();
     } else {
-      alert('No saved game found.');
+      enterReplayMode();
     }
   });
+
+  document.getElementById('btn-sgf').addEventListener('click', () => {
+    openSgfModal();
+  });
+
+  document.getElementById('btn-coords').addEventListener('click', () => {
+    showCoords = !showCoords;
+    document.getElementById('btn-coords').classList.toggle('active', showCoords);
+    renderCoordinates();
+    showToast(`Coordinates ${showCoords ? 'ON' : 'OFF'}`, 'info');
+  });
+
+  document.getElementById('btn-move-numbers').addEventListener('click', () => {
+    showMoveNumbers = !showMoveNumbers;
+    document.getElementById('btn-move-numbers').classList.toggle('active', showMoveNumbers);
+    drawBoard();
+    showToast(`Move Numbers ${showMoveNumbers ? 'ON' : 'OFF'}`, 'info');
+  });
+
+  document.getElementById('clock-mode').addEventListener('change', (e) => {
+    clockMode = e.target.value;
+    initClock();
+    showToast(`Clock: ${e.target.options[e.target.selectedIndex].text}`, 'info');
+  });
+
+  document.getElementById('btn-replay-first').addEventListener('click', () => goToReplayMove(0));
+  document.getElementById('btn-replay-prev').addEventListener('click', () => goToReplayMove(replayIndex - 1));
+  document.getElementById('btn-replay-next').addEventListener('click', () => goToReplayMove(replayIndex + 1));
+  document.getElementById('btn-replay-last').addEventListener('click', () => goToReplayMove(moveRecord.length));
+  document.getElementById('btn-replay-play').addEventListener('click', toggleAutoPlay);
+  document.getElementById('btn-replay-exit').addEventListener('click', exitReplayMode);
+  document.getElementById('replay-slider').addEventListener('input', (e) => goToReplayMove(parseInt(e.target.value)));
+
+  window.copySgfToClipboard = copySgfToClipboard;
+  window.downloadSgfFile = downloadSgfFile;
+  window.handleSgfFileUpload = handleSgfFileUpload;
+  window.parseAndLoadSGF = parseAndLoadSGF;
+  window.exportJsonState = exportJsonState;
+  window.importJsonState = importJsonState;
+  window.quickSaveGame = quickSaveGame;
+  window.quickLoadGame = quickLoadGame;
+  window.toggleAutoPlay = toggleAutoPlay;
+  window.exitReplayMode = exitReplayMode;
+  window.goToReplayMove = goToReplayMove;
 
   document.getElementById('board-size').addEventListener('change', (e) => {
     currentCampaignStage = -1;
@@ -3222,6 +4124,16 @@
       closeAllModals();
       return;
     }
+    if (e.key === 'F5') {
+      e.preventDefault();
+      quickSaveGame();
+      return;
+    }
+    if (e.key === 'F9') {
+      e.preventDefault();
+      quickLoadGame();
+      return;
+    }
     if (e.ctrlKey && (e.key === 'z' || e.key === 'Z')) {
       e.preventDefault();
       doUndo();
@@ -3243,9 +4155,26 @@
       }
       return;
     }
+    const sgfModal = document.getElementById('sgf-modal');
+    if (sgfModal && sgfModal.style.display === 'flex') {
+      return;
+    }
 
     if (e.key === 'u' || e.key === 'U') {
       doUndo();
+    } else if (e.key === 'c' || e.key === 'C') {
+      document.getElementById('btn-coords').click();
+    } else if (e.key === 'm' || e.key === 'M') {
+      document.getElementById('btn-move-numbers').click();
+    } else if (e.key === '[') {
+      if (!replayMode) enterReplayMode();
+      goToReplayMove(replayIndex - 1);
+    } else if (e.key === ']') {
+      if (!replayMode) enterReplayMode();
+      goToReplayMove(replayIndex + 1);
+    } else if (e.code === 'Space' && replayMode) {
+      e.preventDefault();
+      toggleAutoPlay();
     } else if (e.key === 'h' || e.key === 'H') {
       calculateHint();
     } else if (e.key === 'o' || e.key === 'O') {
@@ -3282,19 +4211,6 @@
       petal.style.animationDuration = Math.random() * 5 + 5 + 's, ' + (Math.random() * 3 + 2) + 's';
       petal.style.animationDelay = Math.random() * 5 + 's, ' + Math.random() * 5 + 's';
       container.appendChild(petal);
-    }
-    // Atmospheric floating golden Zen dust motes
-    for (let i = 0; i < 20; i++) {
-      const mote = document.createElement('div');
-      mote.className = 'zen-mote';
-      const mSize = Math.random() * 4 + 2;
-      mote.style.width = mSize + 'px';
-      mote.style.height = mSize + 'px';
-      mote.style.left = Math.random() * 100 + 'vw';
-      mote.style.top = Math.random() * 100 + 'vh';
-      mote.style.animationDuration = (Math.random() * 4 + 3) + 's';
-      mote.style.animationDelay = (Math.random() * 3) + 's';
-      container.appendChild(mote);
     }
   }
   createPetals();
