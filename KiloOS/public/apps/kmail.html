@@ -460,14 +460,14 @@
     font-size: 13.5px;
   }
 
-  /* Toast Notification System */
+  /* Toast Notification System (Vision Audit & Toast Occlusion Remediation) */
   #toast-container {
     position: fixed;
-    bottom: 34px;
+    top: 14px;
     right: 20px;
     z-index: 9999;
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
     gap: 8px;
     pointer-events: none;
   }
@@ -494,12 +494,12 @@
   .toast.toast-warning { border-left-color: var(--gold); }
   .toast.toast-error { border-left-color: var(--danger); }
   @keyframes toastIn {
-    from { transform: translateY(16px); opacity: 0; }
+    from { transform: translateY(-16px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
   }
   @keyframes toastOut {
     from { transform: translateY(0); opacity: 1; }
-    to { transform: translateY(16px); opacity: 0; }
+    to { transform: translateY(-16px); opacity: 0; }
   }
 
   /* Modal Dialogs */
@@ -1020,6 +1020,41 @@
 <!-- Toast Notifications -->
 <div id="toast-container"></div>
 
+<!-- First-Run Tutorial Modal Dialog -->
+<div class="modal-backdrop" id="tutorial-modal" role="dialog" aria-modal="true" aria-labelledby="tutorial-modal-title" onclick="onModalBackdropClick(event, 'tutorial-modal')">
+  <div class="modal-window" style="width: 520px;">
+    <div class="modal-header">
+      <h3 id="tutorial-modal-title"><span>📬</span> Welcome to KMail</h3>
+      <button class="modal-close-btn" onclick="closeModal('tutorial-modal')" aria-label="Close tutorial modal">✕</button>
+    </div>
+    <div class="modal-content">
+      <p style="margin-top:0; color:#94a3b8; font-size:13px;">
+        KMail is a lightweight multi-tab email client with encryption, automated rules, real-time KiloNet delivery, and full state persistence.
+      </p>
+      <div style="display:flex; flex-direction:column; gap:9px; font-size:12.5px; color:#e2e8f0; margin-bottom:14px;">
+        <div style="background:rgba(0,0,0,0.25); border:1px solid var(--border); border-radius:6px; padding:8px 12px;">
+          <strong style="color:#93c5fd;">📁 Folders & Navigation:</strong> Press <kbd>1</kbd>-<kbd>6</kbd> to jump between Inbox, Starred, Sent, Drafts, Outbox, and Trash. Use <kbd>↑</kbd>/<kbd>↓</kbd> or <kbd>J</kbd>/<kbd>K</kbd> to browse messages.
+        </div>
+        <div style="background:rgba(0,0,0,0.25); border:1px solid var(--border); border-radius:6px; padding:8px 12px;">
+          <strong style="color:#93c5fd;">✏️ Composing & Multi-Tab:</strong> Press <kbd>C</kbd> or <kbd>N</kbd> to compose in tabs. Send with <kbd>Ctrl+Enter</kbd>, save drafts with <kbd>Ctrl+S</kbd>, or reply with <kbd>R</kbd>.
+        </div>
+        <div style="background:rgba(0,0,0,0.25); border:1px solid var(--border); border-radius:6px; padding:8px 12px;">
+          <strong style="color:#93c5fd;">💾 Quicksave & Quickload:</strong> Press <kbd>F5</kbd> anytime to snapshot complete mailbox state and settings. Press <kbd>F9</kbd> to restore instantly.
+        </div>
+        <div style="background:rgba(0,0,0,0.25); border:1px solid var(--border); border-radius:6px; padding:8px 12px;">
+          <strong style="color:#93c5fd;">🌐 KiloNet & Security:</strong> Press <kbd>F4</kbd> for real-time peer email via Firebase RTDB. Secure sensitive messages with AES password encryption and organize with <kbd>F3</kbd> filter rules.
+        </div>
+      </div>
+      <p style="margin:0; font-size:12px; color:var(--text-sec);">
+        Press <kbd>F1</kbd> or <kbd>H</kbd> anytime during your session to view all keyboard shortcuts.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="modal-btn primary" onclick="closeModal('tutorial-modal')">Get Started <kbd>↵</kbd></button>
+    </div>
+  </div>
+</div>
+
 <!-- Help Modal Dialog -->
 <div class="modal-backdrop" id="help-modal" role="dialog" aria-modal="true" aria-labelledby="help-modal-title" onclick="onModalBackdropClick(event, 'help-modal')">
   <div class="modal-window">
@@ -1404,6 +1439,12 @@
   function closeModal(modalId) {
     const m = document.getElementById(modalId);
     if (m) m.classList.remove('active');
+    if (modalId === 'tutorial-modal') {
+      try {
+        localStorage.setItem('kmail_tutorialSeen', '1');
+        localStorage.setItem('kmail_onboarded_v1', 'true');
+      } catch(e) {}
+    }
   }
   function onModalBackdropClick(e, modalId) {
     if (e.target === document.getElementById(modalId)) {
@@ -2697,14 +2738,35 @@
 
   window.quickSave = function() {
     try {
+      const searchEl = document.getElementById('search-box');
+      const tagEl = document.getElementById('tag-filter');
       const snapshot = {
         emails,
         rules,
         userAddress,
         currentFolder,
+        soundEnabled: AudioEngine.enabled,
+        netEnabled,
+        nextId,
+        searchQuery: searchEl ? searchEl.value : '',
+        tagFilter: tagEl ? tagEl.value : '',
+        activeQuickFilter,
+        tabs: tabs.map(t => ({
+          id: t.id,
+          type: t.type,
+          emailId: t.emailId,
+          title: t.title,
+          draftId: t.draftId,
+          data: t.data ? { ...t.data } : null
+        })),
+        activeTabId,
         timestamp: Date.now()
       };
       localStorage.setItem(QUICKSAVE_KEY, JSON.stringify(snapshot));
+      try {
+        localStorage.setItem('kmail_tutorialSeen', '1');
+        localStorage.setItem('kmail_onboarded_v1', 'true');
+      } catch(e) {}
       AudioEngine.playClick();
       showToast(`Quicksave complete [F5] (${emails.length} emails, ${rules.length} rules).`, 'success');
     } catch(err) {
@@ -2734,7 +2796,7 @@
           starred: !!m.starred,
           timestamp: typeof m.timestamp === 'number' ? m.timestamp : Date.now()
         }));
-        nextId = emails.reduce((max, m) => Math.max(max, m.id), 0) + 1;
+        nextId = typeof snapshot.nextId === 'number' ? snapshot.nextId : (emails.reduce((max, m) => Math.max(max, m.id), 0) + 1);
         safeSaveEmails();
       }
       if (Array.isArray(snapshot.rules)) {
@@ -2743,7 +2805,17 @@
       }
       if (snapshot.userAddress && typeof snapshot.userAddress === 'string') {
         userAddress = snapshot.userAddress;
-        localStorage.setItem('kmail_net_address', userAddress);
+        try { localStorage.setItem('kmail_net_address', userAddress); } catch(e) {}
+      }
+      if (typeof snapshot.netEnabled === 'boolean') {
+        netEnabled = snapshot.netEnabled;
+        try { localStorage.setItem('kmail_net_enabled', netEnabled ? '1' : '0'); } catch(e) {}
+      }
+      if (typeof snapshot.soundEnabled === 'boolean') {
+        AudioEngine.enabled = snapshot.soundEnabled;
+        try { localStorage.setItem('kmail_sfx_enabled', AudioEngine.enabled ? '1' : '0'); } catch(e) {}
+        const sfxBtn = document.getElementById('sfx-toggle');
+        if (sfxBtn) sfxBtn.textContent = AudioEngine.enabled ? '🔊 SFX: On' : '🔇 SFX: Off';
       }
       if (snapshot.currentFolder && ['inbox', 'starred', 'sent', 'drafts', 'outbox', 'trash'].includes(snapshot.currentFolder)) {
         currentFolder = snapshot.currentFolder;
@@ -2751,6 +2823,31 @@
         const fEl = document.getElementById(`f-${currentFolder}`);
         if (fEl) fEl.classList.add('active');
       }
+      if (typeof snapshot.searchQuery === 'string') {
+        const sb = document.getElementById('search-box');
+        if (sb) sb.value = snapshot.searchQuery;
+      }
+      if (typeof snapshot.tagFilter === 'string') {
+        const tf = document.getElementById('tag-filter');
+        if (tf) tf.value = snapshot.tagFilter;
+      }
+      if (snapshot.activeQuickFilter && ['all', 'unread', 'starred', 'enc'].includes(snapshot.activeQuickFilter)) {
+        activeQuickFilter = snapshot.activeQuickFilter;
+        document.querySelectorAll('.qfilter-btn').forEach(btn => btn.classList.remove('active'));
+        const b = document.getElementById(`qf-${activeQuickFilter}`);
+        if (b) b.classList.add('active');
+      }
+      if (Array.isArray(snapshot.tabs)) {
+        tabs = snapshot.tabs;
+        activeTabId = snapshot.activeTabId || (tabs.length > 0 ? tabs[0].id : null);
+      }
+      // Ensure first-run tutorial never interrupts restored save state
+      try {
+        localStorage.setItem('kmail_tutorialSeen', '1');
+        localStorage.setItem('kmail_onboarded_v1', 'true');
+      } catch(e) {}
+      closeModal('tutorial-modal');
+
       renderList();
       renderTabs();
       updateNetworkUI();
@@ -2806,7 +2903,15 @@
     if (e.key === 'Escape') {
       const openModals = document.querySelectorAll('.modal-backdrop.active');
       if (openModals.length > 0) {
-        openModals.forEach(m => m.classList.remove('active'));
+        openModals.forEach(m => {
+          m.classList.remove('active');
+          if (m.id === 'tutorial-modal') {
+            try {
+              localStorage.setItem('kmail_tutorialSeen', '1');
+              localStorage.setItem('kmail_onboarded_v1', 'true');
+            } catch(err) {}
+          }
+        });
         return;
       }
       const sb = document.getElementById('search-box');
@@ -2822,8 +2927,21 @@
       }
     }
 
-    // Suppress background keystrokes when any modal is open
-    if (anyModalOpen) return;
+    // Modal navigation: Enter or Space triggers the primary action when not focused on an input
+    if (anyModalOpen) {
+      if ((e.key === 'Enter' || e.key === ' ') && !['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) {
+        const activeModal = document.querySelector('.modal-backdrop.active');
+        if (activeModal) {
+          const primaryBtn = activeModal.querySelector('.modal-btn.primary') || activeModal.querySelector('.modal-btn');
+          if (primaryBtn && e.target !== primaryBtn) {
+            e.preventDefault();
+            primaryBtn.click();
+            return;
+          }
+        }
+      }
+      return;
+    }
 
     // Ctrl+S: Save Draft
     if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 's' || e.key === 'S')) {
@@ -3016,13 +3134,35 @@
     window.resizeTo(960, 640);
   }
 
-  // Initial render & welcome onboarding
+  // ARCH-05: Tab Visibility State Management & Auto-Save
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      // Auto-save active draft if in compose mode to prevent loss on background tab discard
+      if (activeTabId) {
+        const tab = tabs.find(t => t.id === activeTabId);
+        if (tab && tab.type === 'compose') {
+          saveDraft(tab.id);
+        }
+      }
+    } else {
+      updateFolderBadges();
+    }
+  });
+
+  // Initial render & first-run tutorial check (Pass 5 Tutorial Integrity)
   renderList();
   const ONBOARD_KEY = 'kmail_onboarded_v1';
-  if (!localStorage.getItem(ONBOARD_KEY)) {
-    localStorage.setItem(ONBOARD_KEY, 'true');
+  const tutorialSeen = (localStorage.getItem('kmail_tutorialSeen') === '1') || (localStorage.getItem(ONBOARD_KEY) === 'true');
+  const hasSavedSnapshot = localStorage.getItem(QUICKSAVE_KEY) !== null;
+  if (!tutorialSeen && !hasSavedSnapshot) {
+    showModal('tutorial-modal');
+    try {
+      localStorage.setItem('kmail_tutorialSeen', '1');
+      localStorage.setItem(ONBOARD_KEY, 'true');
+    } catch(e) {}
+  } else {
     setTimeout(() => {
-      showToast("Welcome to KMail! Press F1 or H anytime for Help & Shortcuts.", "info", 5000);
+      showToast("Welcome to KMail! Press F1 or H anytime for Help & Shortcuts.", "info", 4000);
     }, 300);
   }
 </script>

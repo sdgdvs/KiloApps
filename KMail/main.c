@@ -28,9 +28,14 @@
 #define ID_BTN_HELP 116
 #define ID_BTN_REPLY 117
 #define ID_BTN_EXPORT_MD 118
+#define ID_BTN_QUICKSAVE 119
+#define ID_BTN_QUICKLOAD 120
+
+#define KMAIL_QUICKSAVE_MAGIC 0x4B4D4149 // 'KMAI'
+#define KMAIL_QUICKSAVE_VERSION 1
 
 HWND hFolders, hEmails, hTitle, hBody, hBtnCompose, hBtnDelete, hBtnEmptyTrash, hSearchBox;
-HWND hTagFilter, hBtnImport, hBtnExport, hTab, hBtnTag, hBtnDecrypt, hBtnStar, hBtnExportEml, hBtnExportMd, hBtnReply, hBtnSaveDraft, hBtnHelp, hHelpLabel;
+HWND hTagFilter, hBtnImport, hBtnExport, hTab, hBtnTag, hBtnDecrypt, hBtnStar, hBtnExportEml, hBtnExportMd, hBtnReply, hBtnSaveDraft, hBtnHelp, hBtnQuickSave, hBtnQuickLoad, hHelpLabel;
 
 WNDPROC oldSearchEditProc = NULL;
 
@@ -122,6 +127,8 @@ void ExportJson();
 void ExportCsv();
 void ExportMbox();
 void ImportJson(HWND hwnd);
+void QuickSaveNative(HWND hwnd);
+void QuickLoadNative(HWND hwnd);
 
 void RefreshEmailList() {
     SendMessage(hEmails, LB_RESETCONTENT, 0, 0);
@@ -294,6 +301,8 @@ void ShowHelpDialog(HWND hwnd) {
         " [V]           : Export CSV Index (.CSV)\n"
         " [X]           : Export Unix Mailbox Archive (.MBOX)\n"
         " [Del]         : Delete Email / Move to Trash\n"
+        " [F5]          : Quicksave Mailbox Snapshot (.DAT)\n"
+        " [F9]          : Quickload Mailbox Snapshot (.DAT)\n"
         " [Ctrl+S]      : Save Draft (in Compose)\n"
         " [Ctrl+Enter]  : Send Message (in Compose)\n"
         " [Ctrl+F]      : Focus Search Bar\n"
@@ -305,11 +314,123 @@ void ShowHelpDialog(HWND hwnd) {
         "FEATURES:\n"
         " * Multi-Tab Email Viewing & Composing with Live Sync\n"
         " * Starred Priority Filtering & Folder Organization\n"
+        " * Full Quicksave [F5] and Quickload [F9] Session State Persistence\n"
         " * Automatic Draft Saving & Resuming\n"
         " * Quick Reply with Quoting\n"
         " * Search by Subject, Sender, Body & Tags\n"
         " * Full EML, Markdown (.MD), CSV, MBOX & JSON Export/Import\n",
         "KMail - Help & Shortcuts", MB_OK | MB_ICONINFORMATION);
+}
+
+void QuickSaveNative(HWND hwnd) {
+    SyncCurrentTabState();
+    HANDLE hFile = CreateFileA("kmail_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        MessageBoxA(hwnd, "Failed to open kmail_quicksave.dat for writing.", "Quicksave Error", MB_OK | MB_ICONERROR);
+        return;
+    }
+    DWORD written = 0;
+    unsigned int magic = KMAIL_QUICKSAVE_MAGIC;
+    unsigned int version = KMAIL_QUICKSAVE_VERSION;
+    WriteFile(hFile, &magic, sizeof(unsigned int), &written, NULL);
+    WriteFile(hFile, &version, sizeof(unsigned int), &written, NULL);
+    WriteFile(hFile, &num_emails, sizeof(int), &written, NULL);
+    WriteFile(hFile, emails, sizeof(Email) * num_emails, &written, NULL);
+    WriteFile(hFile, &nextId, sizeof(int), &written, NULL);
+    WriteFile(hFile, &currentFolder, sizeof(int), &written, NULL);
+    WriteFile(hFile, searchQuery, sizeof(char) * 128, &written, NULL);
+    WriteFile(hFile, tagQuery, sizeof(char) * 64, &written, NULL);
+    WriteFile(hFile, &num_tabs, sizeof(int), &written, NULL);
+    WriteFile(hFile, tabs, sizeof(TabData) * num_tabs, &written, NULL);
+    WriteFile(hFile, &currentTabIdx, sizeof(int), &written, NULL);
+    CloseHandle(hFile);
+
+    // Mark first-run tutorial as seen
+    HANDLE hTut = CreateFileA("kmail_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hTut != INVALID_HANDLE_VALUE) CloseHandle(hTut);
+
+    char msg[128];
+    wsprintfA(msg, "Quicksave complete [F5]!\nSaved %d emails & open tabs to kmail_quicksave.dat.", num_emails);
+    MessageBoxA(hwnd, msg, "KMail Quicksave", MB_OK | MB_ICONINFORMATION);
+}
+
+void QuickLoadNative(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kmail_quicksave.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        MessageBoxA(hwnd, "No quicksave snapshot found in kmail_quicksave.dat.\nPress F5 to quicksave first.", "KMail Quickload", MB_OK | MB_ICONWARNING);
+        return;
+    }
+    DWORD readBytes = 0;
+    unsigned int magic = 0;
+    unsigned int version = 0;
+    if (!ReadFile(hFile, &magic, sizeof(unsigned int), &readBytes, NULL) || magic != KMAIL_QUICKSAVE_MAGIC) {
+        CloseHandle(hFile);
+        MessageBoxA(hwnd, "Invalid or corrupt kmail_quicksave.dat header.", "Quickload Error", MB_OK | MB_ICONERROR);
+        return;
+    }
+    if (!ReadFile(hFile, &version, sizeof(unsigned int), &readBytes, NULL) || version != KMAIL_QUICKSAVE_VERSION) {
+        CloseHandle(hFile);
+        MessageBoxA(hwnd, "Incompatible quicksave version.", "Quickload Error", MB_OK | MB_ICONERROR);
+        return;
+    }
+    int loadedNumEmails = 0;
+    if (!ReadFile(hFile, &loadedNumEmails, sizeof(int), &readBytes, NULL) || loadedNumEmails < 0 || loadedNumEmails > 200) {
+        CloseHandle(hFile);
+        MessageBoxA(hwnd, "Corrupted email count in quicksave.", "Quickload Error", MB_OK | MB_ICONERROR);
+        return;
+    }
+    num_emails = loadedNumEmails;
+    ReadFile(hFile, emails, sizeof(Email) * num_emails, &readBytes, NULL);
+    ReadFile(hFile, &nextId, sizeof(int), &readBytes, NULL);
+    ReadFile(hFile, &currentFolder, sizeof(int), &readBytes, NULL);
+    ReadFile(hFile, searchQuery, sizeof(char) * 128, &readBytes, NULL);
+    ReadFile(hFile, tagQuery, sizeof(char) * 64, &readBytes, NULL);
+    ReadFile(hFile, &num_tabs, sizeof(int), &readBytes, NULL);
+    if (num_tabs < 0) num_tabs = 0;
+    if (num_tabs > 20) num_tabs = 20;
+    ReadFile(hFile, tabs, sizeof(TabData) * num_tabs, &readBytes, NULL);
+    ReadFile(hFile, &currentTabIdx, sizeof(int), &readBytes, NULL);
+    CloseHandle(hFile);
+
+    // Mark tutorial as seen so restored save state is never interrupted
+    HANDLE hTut = CreateFileA("kmail_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hTut != INVALID_HANDLE_VALUE) CloseHandle(hTut);
+
+    // Rebuild UI state
+    SetWindowTextA(hSearchBox, searchQuery);
+    SetWindowTextA(hTagFilter, tagQuery);
+    if (currentFolder >= 0 && currentFolder <= 4) {
+        SendMessage(hFolders, LB_SETCURSEL, currentFolder, 0);
+    }
+    RefreshEmailList();
+
+    // Rebuild tabs
+    SendMessage(hTab, TCM_DELETEALLITEMS, 0, 0);
+    for (int i = 0; i < num_tabs; i++) {
+        TCITEM tie;
+        tie.mask = TCIF_TEXT;
+        if (tabs[i].id == 0) {
+            tie.pszText = tabs[i].composeSub[0] ? tabs[i].composeSub : "New Msg";
+        } else {
+            Email* em = NULL;
+            for (int j = 0; j < num_emails; j++) {
+                if (emails[j].id == tabs[i].emailId) { em = &emails[j]; break; }
+            }
+            tie.pszText = em ? em->subject : "Email";
+        }
+        SendMessage(hTab, TCM_INSERTITEM, i, (LPARAM)&tie);
+    }
+
+    if (currentTabIdx >= 0 && currentTabIdx < num_tabs) {
+        SendMessage(hTab, TCM_SETCURSEL, currentTabIdx, 0);
+    } else {
+        currentTabIdx = (num_tabs > 0 ? 0 : -1);
+    }
+    RenderPane();
+
+    char msg[128];
+    wsprintfA(msg, "Quickload complete [F9]!\nRestored %d emails & open tabs from snapshot.", num_emails);
+    MessageBoxA(hwnd, msg, "KMail Quickload", MB_OK | MB_ICONINFORMATION);
 }
 
 void RenderPane() {
@@ -803,10 +924,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hBtnImport = CreateWindowEx(0, "BUTTON", "Import [I]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 125, 10, 75, 30, hwnd, (HMENU)ID_BTN_IMPORT, NULL, NULL);
             hBtnExport = CreateWindowEx(0, "BUTTON", "Export [O]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 205, 10, 75, 30, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
             hBtnHelp = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 285, 10, 75, 30, hwnd, (HMENU)ID_BTN_HELP, NULL, NULL);
-            hHelpLabel = CreateWindowEx(0, "STATIC", "Press F1 or H for Help", WS_CHILD | WS_VISIBLE, 370, 16, 150, 20, hwnd, NULL, NULL, NULL);
+            hBtnQuickSave = CreateWindowEx(0, "BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 365, 10, 75, 30, hwnd, (HMENU)ID_BTN_QUICKSAVE, NULL, NULL);
+            hBtnQuickLoad = CreateWindowEx(0, "BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 445, 10, 75, 30, hwnd, (HMENU)ID_BTN_QUICKLOAD, NULL, NULL);
+            hHelpLabel = CreateWindowEx(0, "STATIC", "F1: Help | F5: Save | F9: Load", WS_CHILD | WS_VISIBLE, 528, 16, 200, 20, hwnd, NULL, NULL, NULL);
             SendMessage(hBtnImport, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnExport, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hBtnHelp, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnQuickSave, WM_SETFONT, (WPARAM)hFont, TRUE);
+            SendMessage(hBtnQuickLoad, WM_SETFONT, (WPARAM)hFont, TRUE);
             SendMessage(hHelpLabel, WM_SETFONT, (WPARAM)hSmallFont, TRUE);
 
             hFolders = CreateWindowEx(WS_EX_CLIENTEDGE, "LISTBOX", NULL,
@@ -902,6 +1027,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             else if (LOWORD(wParam) == ID_BTN_HELP) {
                 ShowHelpDialog(hwnd);
+            }
+            else if (LOWORD(wParam) == ID_BTN_QUICKSAVE) {
+                QuickSaveNative(hwnd);
+            }
+            else if (LOWORD(wParam) == ID_BTN_QUICKLOAD) {
+                QuickLoadNative(hwnd);
             }
             else if (LOWORD(wParam) == ID_BTN_REPLY) {
                 ReplyToCurrentEmail();
@@ -1141,6 +1272,32 @@ void MainEntry() {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
+    // First-run tutorial flag check: only on fresh sessions, never interrupting restored save states
+    HANDLE hTutCheck = CreateFileA("kmail_tutorial.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hSaveCheck = CreateFileA("kmail_quicksave.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hTutCheck == INVALID_HANDLE_VALUE) {
+        if (hSaveCheck == INVALID_HANDLE_VALUE) {
+            MessageBoxA(hwnd,
+                "Welcome to KMail - Lightweight Win32 Email Client!\n\n"
+                "Quick Guide & Shortcuts:\n"
+                "  - Press [C] to compose a new message in a tab\n"
+                "  - Press [1] - [5] to switch folders (Inbox, Starred, Sent, Drafts, Trash)\n"
+                "  - Press [S] to Star / Unstar priority emails\n"
+                "  - Press [R] to Reply with quote\n"
+                "  - Press [Ctrl+S] to save drafts\n"
+                "  - Press [Ctrl+F] to search emails\n"
+                "  - Press [F5] at any time to Quicksave mailbox state\n"
+                "  - Press [F9] at any time to Quickload saved state\n"
+                "  - Press [F1] or [H] anytime for Help & Shortcuts\n\n"
+                "Click OK to begin.",
+                "KMail - First-Run Guide", MB_OK | MB_ICONINFORMATION);
+        }
+        HANDLE hTutWrite = CreateFileA("kmail_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTutWrite != INVALID_HANDLE_VALUE) CloseHandle(hTutWrite);
+    }
+    if (hTutCheck != INVALID_HANDLE_VALUE) CloseHandle(hTutCheck);
+    if (hSaveCheck != INVALID_HANDLE_VALUE) CloseHandle(hSaveCheck);
+
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
         if (msg.message == WM_KEYDOWN) {
@@ -1152,6 +1309,14 @@ void MainEntry() {
 
             if (msg.wParam == VK_F1 || (!isEdit && (msg.wParam == 'H' || msg.wParam == 'h'))) {
                 ShowHelpDialog(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F5) {
+                QuickSaveNative(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                QuickLoadNative(hwnd);
                 continue;
             }
             if (isCtrl && (msg.wParam == 'S' || msg.wParam == 's')) {

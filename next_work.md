@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KAsteroids
   kilo_tester: KSanctuary
   kilo_usability: KMail
-  kilo_qa: KMail
+  kilo_qa: KMandel
   kilo_expander: KDarts
 virtual_web_target: "kweb://asm-temple"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KJournal
-  timestamp: "2026-10-03T16:35:00-07:00"
+  agent: kilo-qa
+  app: KMail
+  timestamp: "2026-10-03T17:36:00-07:00"
 last_planner_run: "2026-10-03T05:35:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash`, `KGraph` *(Completed: KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KMail`
+- **Current Target**: `KMandel`
 - **Upcoming Queue**:
-  `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal)*.
+  *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KDarts`
@@ -211,6 +211,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-03T17:36:00-07:00 — kilo-qa: KMail (Pass 5: State Persistence, Tutorial Integrity, Toast Remediation & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 124.4 KB web / 519.7 KB native < 999 KB ceiling).
+  - State Persistence: Implemented universal quicksave (F5) and quickload (F9) across web and pure Win32 native C (`kmail_quicksave.dat`).
+  - First-Run Tutorial: Added interactive first-run guide modal and `.dat` flag guard preventing interruption on restored save states.
+  - Toast Remediation: Relocated toast container to top-right safe zone eliminating overlap with compose actions and status bar.
+  - ARCH-05 Visibility: Added visibilitychange event listener to auto-save active compose drafts on background tab switch.
+  - Modal Navigation: Added Enter/Space primary action activation and Escape modal dismissal across all dialogs.
+  - Verification: MSVC native clean (`KMail.exe` 519.7 KB); Vite clean in 384ms; check_icons 100% PASS; security_lint 100% PASS.
+
 - **2026-10-03T16:35:00-07:00 — kilo-usability: KJournal (UI/UX Layout, Toast Remediation, Responsive Toolbar & ARCH-05)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 132.7 KB web / 205.8 KB native < 999 KB ceiling).
   - Sidebar & Tabs: Installed compact Help [F1] badge preventing button wrap; wrapped notebook tabs to 3x2 matrix with 0 scrollbars.
@@ -244,11 +253,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Native Character Creation Fix: Repaired button handler mapping in main.c allowing full selection and initialization of Paladin and Ranger.
   - Verification: Clean MSVC native build (97.8 KB); Vite build clean in 471ms; security_lint 100% PASS; check_icons 100% PASS.
 
-- **2026-10-03T13:35:00-07:00 — kilo-creator: kweb://darknet (Encrypted Underground Relay & Cryptography Lab Deep Expansion)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 240.0 KB web < 999 KB ceiling).
-  - Gated Middle-Game Relay: Enhanced 3-slot quarantine relay; resilient matching for acoustic carrier, Sector 03 clearance, and warez seed.
-  - Convergence & Multi-Node Wiring: Yields artifacts (10.19.99.4, LITHO-CORE-99, SECTOR_03_SYNC_XOR_0x7F, 0x7F1999) converging on Deep Core.
-  - Subterranean IP Routing: Added 10.19.99.12 / 10.19.99.7f to KNet address bar routing; verified webring #018 badge harmonization.
-  - Terminal Spool Integration: Added all 9 spool files to terminal VIRTUAL_FILES (carlsbad map, AFSK ASM driver, ROM hex, telemetry log).
-  - New Directives & Mesh: Added convergence, relay, mesh, sniff, scope, spool, directory commands; synced Firebase RTDB signal beacon.
-  - Verification: Clean Vite build in 463ms; test_arg_flow 100% PASS; security_lint 100% PASS; check_icons 100% PASS.
