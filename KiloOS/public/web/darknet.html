@@ -1047,6 +1047,264 @@
     line-height: 1.45;
   }
 
+  /* =========================================================================
+     TAB 12: 2600Hz BLUE BOX & TELCO TRUNK STYLES
+     ========================================================================= */
+  .bluebox-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 860px) {
+    .bluebox-container { grid-template-columns: 1fr; }
+  }
+  .bluebox-chassis {
+    background: #020d18;
+    border: 2px solid #1e40af;
+    box-shadow: 0 0 16px rgba(30, 64, 175, 0.4), inset 0 0 12px rgba(0,0,0,0.8);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  body.theme-amber .bluebox-chassis {
+    background: #180902;
+    border-color: #b45309;
+    box-shadow: 0 0 16px rgba(180, 83, 9, 0.4), inset 0 0 12px rgba(0,0,0,0.8);
+  }
+  body.theme-cyan .bluebox-chassis {
+    background: #021218;
+    border-color: #0284c7;
+    box-shadow: 0 0 16px rgba(2, 132, 199, 0.4), inset 0 0 12px rgba(0,0,0,0.8);
+  }
+  body.theme-alert .bluebox-chassis {
+    background: #180202;
+    border-color: #b91c1c;
+    box-shadow: 0 0 16px rgba(185, 28, 28, 0.4), inset 0 0 12px rgba(0,0,0,0.8);
+  }
+  .bluebox-title {
+    font-size: 12px;
+    font-weight: 900;
+    color: #60a5fa;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #1e40af;
+    padding-bottom: 4px;
+    letter-spacing: 0.8px;
+  }
+  .bluebox-display-screen {
+    background: #000;
+    border: 1px solid #1e40af;
+    padding: 8px 12px;
+    min-height: 48px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  .bluebox-digit-readout {
+    font-size: 19px;
+    font-weight: bold;
+    color: #93c5fd;
+    letter-spacing: 3px;
+    text-shadow: 0 0 8px rgba(147, 197, 253, 0.6);
+    font-family: var(--font-mono);
+  }
+  .bluebox-sub-readout {
+    font-size: 11px;
+    color: #64748b;
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2px;
+  }
+  .bluebox-led-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #1e3a5f;
+    padding: 6px 10px;
+    font-size: 10.5px;
+    flex-wrap: wrap;
+  }
+  .led-unit {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .led-lamp {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #1e293b;
+    border: 1px solid #475569;
+    transition: all 0.15s ease;
+  }
+  .led-lamp.active-green {
+    background: #22c55e;
+    box-shadow: 0 0 8px #22c55e;
+    border-color: #86efac;
+  }
+  .led-lamp.active-blue {
+    background: #3b82f6;
+    box-shadow: 0 0 8px #3b82f6;
+    border-color: #93c5fd;
+  }
+  .led-lamp.active-amber {
+    background: #f59e0b;
+    box-shadow: 0 0 8px #f59e0b;
+    border-color: #fde68a;
+  }
+  .led-lamp.active-red {
+    background: #ef4444;
+    box-shadow: 0 0 8px #ef4444;
+    border-color: #fca5a5;
+  }
+  .keypad-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+  }
+  .bb-key {
+    background: #0f172a;
+    border: 1px solid #2563eb;
+    color: #bfdbfe;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: bold;
+    padding: 9px 4px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.1s ease;
+    user-select: none;
+  }
+  .bb-key:hover {
+    background: #1e3a8a;
+    color: #fff;
+    border-color: #60a5fa;
+    box-shadow: 0 0 8px rgba(96, 165, 250, 0.4);
+  }
+  .bb-key:active {
+    transform: translateY(1px);
+    background: #2563eb;
+    color: #000;
+  }
+  .bb-key .freq-sub {
+    font-size: 8.5px;
+    color: #64748b;
+    font-weight: normal;
+  }
+  .bb-key.key-2600 {
+    grid-column: span 4;
+    background: #172554;
+    border: 2px solid #3b82f6;
+    color: #93c5fd;
+    font-size: 13px;
+    padding: 10px 6px;
+    letter-spacing: 1.2px;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+  }
+  .bb-key.key-2600:hover {
+    background: #2563eb;
+    color: #fff;
+    box-shadow: 0 0 16px rgba(59, 130, 246, 0.6);
+  }
+  .bb-key.key-red {
+    background: #3f1212;
+    border-color: #ef4444;
+    color: #fca5a5;
+  }
+  .bb-key.key-red:hover {
+    background: #b91c1c;
+    color: #fff;
+    border-color: #f87171;
+  }
+  .bb-key.key-silver {
+    background: #27272a;
+    border-color: #a1a1aa;
+    color: #e4e4e7;
+  }
+  .bb-key.key-silver:hover {
+    background: #71717a;
+    color: #fff;
+  }
+  #blueboxScopeCanvas {
+    width: 100%;
+    height: 64px;
+    background: #000;
+    border: 1px solid #1e40af;
+    display: block;
+  }
+
+  /* =========================================================================
+     TAB 13: SUBTERRANEAN DEAD DROP VAULT STYLES
+     ========================================================================= */
+  .deaddrop-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  @media (max-width: 860px) {
+    .deaddrop-container { grid-template-columns: 1fr; }
+  }
+  .deaddrop-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+  .deaddrop-card {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid var(--panel-border);
+    padding: 7px 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  .deaddrop-card:hover {
+    border-color: var(--phosphor-bright);
+    background: rgba(0, 30, 15, 0.4);
+  }
+  .deaddrop-card.active {
+    border-color: var(--phosphor);
+    background: rgba(0, 45, 20, 0.6);
+    box-shadow: 0 0 10px var(--phosphor-glow);
+  }
+  .deaddrop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    font-weight: bold;
+  }
+  .deaddrop-meta {
+    font-size: 10px;
+    color: var(--phosphor-dim);
+    display: flex;
+    justify-content: space-between;
+  }
+  .deaddrop-preview {
+    font-size: 10.5px;
+    color: var(--phosphor-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--font-mono);
+  }
+  .drop-badge {
+    font-size: 9.5px;
+    padding: 1px 5px;
+    background: #064e3b;
+    color: #6ee7b7;
+    border: 1px solid #059669;
+    border-radius: 2px;
+  }
 </style>
 </head>
 <body class="theme-green">
@@ -1130,6 +1388,8 @@
     <button class="tab-btn" onclick="switchTab('directory')">[9] SUBTERRANEAN DIRECTORY</button>
     <button class="tab-btn" onclick="switchTab('crypto-lab')">[10] CRYPTOGRAPHY LAB</button>
     <button class="tab-btn" onclick="switchTab('topology')">[11] RELAY TOPOLOGY SWITCHBOARD</button>
+    <button class="tab-btn" onclick="switchTab('bluebox')">[12] 2600Hz BLUE BOX</button>
+    <button class="tab-btn" onclick="switchTab('deaddrop')">[13] DEAD DROP VAULT</button>
   </nav>
 
   <!-- Main Workspaces -->
@@ -2193,6 +2453,236 @@
       </div>
     </section>
 
+    <!-- TAB 12: 2600Hz BLUE BOX & TELCO CROSSBAR TRUNK RELAY -->
+    <section id="panel-bluebox" class="tab-panel">
+      <div class="bluebox-container">
+        <!-- Blue Box Keypad & Audio Synthesizer -->
+        <div class="bluebox-chassis">
+          <div class="bluebox-title">
+            <span>2600Hz BLUE BOX &amp; MULTI-FREQUENCY (MF) TRANSCEIVER</span>
+            <span style="font-size:11px; color:#93c5fd;">BELL SYSTEM MF / CCITT NO. 5</span>
+          </div>
+
+          <div class="bluebox-display-screen">
+            <div class="bluebox-digit-readout" id="bbDisplayDigits">---</div>
+            <div class="bluebox-sub-readout">
+              <span id="bbDisplayStatus">TRUNK: ON-HOOK (48V IDLE)</span>
+              <span id="bbDisplayRoute">ROUTE: UNSEIZED</span>
+            </div>
+          </div>
+
+          <!-- Supervisory LED Indicators -->
+          <div class="bluebox-led-row">
+            <div class="led-unit">
+              <div class="led-lamp active-green" id="ledLoop"></div>
+              <span>LOOP CURRENT</span>
+            </div>
+            <div class="led-unit">
+              <div class="led-lamp" id="ledSeized"></div>
+              <span>2600Hz SEIZED</span>
+            </div>
+            <div class="led-unit">
+              <div class="led-lamp" id="ledCarrier"></div>
+              <span>CARRIER DETECT</span>
+            </div>
+            <div class="led-unit">
+              <div class="led-lamp" id="ledSat"></div>
+              <span>SAT (1999Hz)</span>
+            </div>
+          </div>
+
+          <!-- Mode Selector Tabs -->
+          <div class="ctrl-row" style="justify-content:space-between;">
+            <div class="ctrl-row">
+              <button class="chip-btn active" id="btnModeMF" onclick="setBlueboxMode('mf')">BELL MF</button>
+              <button class="chip-btn" id="btnModeRed" onclick="setBlueboxMode('red')">RED BOX (COIN)</button>
+              <button class="chip-btn" id="btnModeSilver" onclick="setBlueboxMode('silver')">SILVER BOX (AUTOVON)</button>
+            </div>
+            <div class="ctrl-row">
+              <button class="chip-btn" onclick="clearBlueboxBuffer()">CLR</button>
+              <button class="chip-btn" onclick="toggleBlueboxMute()" id="btnBBMute">MUTE: OFF</button>
+            </div>
+          </div>
+
+          <!-- 2600 Hz Trunk Seize Master Bar -->
+          <button class="bb-key key-2600" id="btn2600Seize" onclick="transmit2600Seizure()">
+            ⚡ 2600 Hz SF TRUNK SEIZURE PULSE (DISCONNECT TOLL)
+          </button>
+
+          <!-- Keypad Matrix -->
+          <div class="keypad-grid" id="bbKeypadGrid">
+            <!-- Rendered dynamically based on mode -->
+          </div>
+
+          <!-- MF Scope / Visualizer -->
+          <div>
+            <div style="font-size:10.5px; color:#64748b; margin-bottom:2px; display:flex; justify-content:space-between;">
+              <span>DUAL-TONE MF AUDIO OSCILLOSCOPE:</span>
+              <span id="bbScopeFreqLabel">FREQ: IDLE</span>
+            </div>
+            <canvas id="blueboxScopeCanvas" width="450" height="64"></canvas>
+          </div>
+        </div>
+
+        <!-- Crossbar Switchboard & Subterranean Speed Routes -->
+        <div class="workbench-panel">
+          <div class="panel-title">
+            <span>SUBTERRANEAN TELCO CROSSBAR &amp; OPERATOR TEST TRUNKS</span>
+            <span style="font-size:11px; color:var(--phosphor-bright);">4ESS TOLL TANDEM</span>
+          </div>
+
+          <p style="font-size:11.5px; color:#a7f3d0;">
+            Dial into subterranean test trunks, acoustic demultiplexers, and automated loopback responders across the Carlsbad lithospheric exchange.
+          </p>
+
+          <div class="ctrl-row">
+            <label style="font-size:11px;">PRESET TRUNK ROUTE:</label>
+            <select id="selBbPresetRoute" class="custom-select" style="flex:1;" onchange="loadBlueboxPreset(this.value)">
+              <option value="*2600#">*2600# - Operator Toll Tandem Test</option>
+              <option value="7F1999" selected>KP-7F1999-ST - Node 0x7F Acoustic Demux</option>
+              <option value="1019994">KP-1019994-ST - Carlsbad Halite Intranet Loopback</option>
+              <option value="101999127">KP-101999127-ST - Deep Core Ring-0 Bell 202 Modulator</option>
+              <option value="8003275">KP-8003275-ST - Carlsbad Skunkworks PBX Voice Portal</option>
+              <option value="FO2600">FO-2600-ST - Autovon Flash-Override Command Channel</option>
+            </select>
+            <button class="action-btn" onclick="dialSelectedPreset()">⚡ DIAL ROUTE</button>
+          </div>
+
+          <div class="ctrl-row">
+            <button class="action-btn" onclick="playToneSpool(20)">▶️ OUTPULSE SPOOL (20 PPS)</button>
+            <button class="action-btn" onclick="hangUpBluebox()">☎️ HANG UP / ON-HOOK</button>
+            <button class="action-btn" onclick="testMillisecondTone()">📻 1004Hz TEST TONE</button>
+          </div>
+
+          <!-- Switchboard Log Terminal -->
+          <div class="panel-title" style="margin-top:4px;">
+            <span>CROSSBAR SIGNALING &amp; TRUNK CALL TRACE</span>
+            <button class="chip-btn" onclick="clearBlueboxLog()">CLEAR TRACE</button>
+          </div>
+          <div id="bbCallTraceLog" style="height:200px; overflow-y:auto; background:#000; border:1px solid var(--panel-border); padding:8px; font-size:11px; font-family:var(--font-mono); line-height:1.45;">
+            <div>[00:00:00] Subterranean 4ESS Toll Tandem Switchboard online. Ready for MF signaling.</div>
+            <div>[00:00:00] Tip &amp; Ring voltage: 48V DC. Supervisory tone: 2600 Hz SF idle.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 13: SUBTERRANEAN DEAD DROP VAULT & SECURE WHISPER WIRE -->
+    <section id="panel-deaddrop" class="tab-panel">
+      <div class="deaddrop-container">
+        <!-- Active Dead Drops & Decryptor Workbench -->
+        <div class="workbench-panel">
+          <div class="panel-title">
+            <span>ACTIVE SUBTERRANEAN DEAD DROPS</span>
+            <span style="font-size:11px; color:var(--phosphor-bright);" id="lblActiveDropsCount">5 ACTIVE DROPS</span>
+          </div>
+
+          <div class="deaddrop-list" id="deadDropList">
+            <!-- Populated dynamically via JS -->
+          </div>
+
+          <!-- Drop Content & Cipher Workbench -->
+          <div class="panel-title" style="margin-top:6px;">
+            <span id="lblSelectedDropTitle">DISPATCH INSPECTOR: [DROP #7F-01]</span>
+            <span class="badge-tag" id="lblSelectedDropCipher">XOR</span>
+          </div>
+
+          <div>
+            <div style="font-size:11px; color:var(--phosphor-dim); margin-bottom:2px;">ENCRYPTED CIPHERTEXT (TRANSMISSION BUFFER):</div>
+            <textarea id="dropCiphertextDisplay" class="custom-textarea" style="height:75px;" readonly></textarea>
+          </div>
+
+          <!-- Decrypt Controls -->
+          <div class="ctrl-row" style="margin-top:4px;">
+            <label style="font-size:11px;">DECRYPT CIPHER:</label>
+            <select id="selDropDecryptMode" class="custom-select" onchange="updateDropDecryptPreview()">
+              <option value="xor">XOR 8-Bit</option>
+              <option value="rot">Caesar / ROT-N</option>
+              <option value="vigenere">Vigenère Cipher</option>
+              <option value="otp">One-Time Pad (Tab 10 Pad)</option>
+            </select>
+            <label style="font-size:11px;">KEY / SHIFT:</label>
+            <input type="text" id="dropDecryptKey" class="custom-input" value="HALITE" style="width:90px;" oninput="updateDropDecryptPreview()" />
+            <button class="action-btn" onclick="autoSolveDropCipher()">⚡ AUTO-SOLVE</button>
+          </div>
+
+          <div>
+            <div style="font-size:11px; color:var(--phosphor-bright); margin-bottom:2px;">DECRYPTED PLAINTEXT:</div>
+            <textarea id="dropPlaintextDisplay" class="custom-textarea" style="height:85px;" readonly placeholder="Plaintext will render here..."></textarea>
+          </div>
+
+          <div class="ctrl-row" style="justify-content:space-between; margin-top:4px;">
+            <button class="action-btn" onclick="pipeDropToTerminal()">📺 PIPE TO TERMINAL</button>
+            <button class="action-btn" onclick="copyDropPlaintext()">📋 COPY</button>
+            <button class="action-btn" onclick="downloadCurrentDrop()">💾 EXPORT (.DROP)</button>
+          </div>
+        </div>
+
+        <!-- Compose & Transmit New Dead Drop -->
+        <div class="workbench-panel">
+          <div class="panel-title">
+            <span>COMPOSE NEW ENCRYPTED DEAD DROP</span>
+            <span style="font-size:11px; color:var(--phosphor-dim);">SUBTERRANEAN DISPATCH WIRE</span>
+          </div>
+
+          <p style="font-size:11.5px; color:#a7f3d0;">
+            Encode and stage encrypted intelligence into subterranean station RAM. Messages persist in browser storage and sync into the local station dispatch queue.
+          </p>
+
+          <div class="ctrl-row">
+            <label style="font-size:11px;">OPERATOR CODENAME:</label>
+            <input type="text" id="dropNewAuthor" class="custom-input" value="CipherShadow" style="width:130px;" />
+            <label style="font-size:11px;">TARGET SUBNET:</label>
+            <select id="dropNewTarget" class="custom-select">
+              <option value="10.19.99.127">10.19.99.127 [Deep Core Ring-0]</option>
+              <option value="10.19.99.4">10.19.99.4 [Aethel Dynamics Skunkworks]</option>
+              <option value="10.19.99.1">10.19.99.1 [Echo Subsystem Acoustic Lab]</option>
+              <option value="10.19.99.7F" selected>10.19.99.7F [Node 0x7F Local Relay]</option>
+              <option value="SCENE_ALL">UNDERGROUND_SCENE [Warez Vault &amp; BBS]</option>
+            </select>
+          </div>
+
+          <div class="ctrl-row">
+            <label style="font-size:11px;">CIPHER ALGORITHM:</label>
+            <select id="dropNewCipher" class="custom-select" onchange="handleNewDropCipherChange(this.value)">
+              <option value="xor" selected>XOR 8-Bit Stream</option>
+              <option value="vigenere">Vigenère Polyalphabetic</option>
+              <option value="rot">ROT-13 / Caesar Shift</option>
+              <option value="otp">One-Time Pad (Station OTP)</option>
+            </select>
+            <label style="font-size:11px;">ENCRYPTION KEY:</label>
+            <input type="text" id="dropNewKey" class="custom-input" value="1999LOCK" style="width:110px;" oninput="encryptNewDropLive()" />
+          </div>
+
+          <div class="ctrl-row">
+            <label style="font-size:11px;">EXPIRATION POLICY:</label>
+            <select id="dropNewBurn" class="custom-select">
+              <option value="burn_read">Dead-Man's Switch (Burn After 1 Read)</option>
+              <option value="1h">1 Hour (Volatile Cache)</option>
+              <option value="24h" selected>24 Hours (Standard Operational)</option>
+              <option value="permanent">Indefinite (Archival Storage)</option>
+            </select>
+          </div>
+
+          <div>
+            <div style="font-size:11px; color:var(--phosphor-dim); margin-bottom:2px;">PLAINTEXT MESSAGE:</div>
+            <textarea id="dropNewPlaintext" class="custom-textarea" style="height:85px;" placeholder="Type confidential intelligence message here..." oninput="encryptNewDropLive()">Carlsbad Node 0x7F transponder telemetry verified. Acoustic subcarrier locked at 1999Hz. Waveguide path to Deep Core nominal.</textarea>
+          </div>
+
+          <div>
+            <div style="font-size:11px; color:var(--phosphor-dim); margin-bottom:2px;">GENERATED CIPHERTEXT (ARMORED):</div>
+            <textarea id="dropNewCiphertext" class="custom-textarea" style="height:65px;" readonly placeholder="Ciphertext preview..."></textarea>
+          </div>
+
+          <div class="ctrl-row" style="justify-content:space-between; margin-top:4px;">
+            <button class="action-btn" onclick="transmitNewDeadDrop()">📡 TRANSMIT DEAD DROP</button>
+            <button class="action-btn" onclick="downloadComposedDrop()">💾 DOWNLOAD .DROP</button>
+            <button class="action-btn" onclick="zeroizeAllUserDrops()" style="border-color:var(--alert); color:var(--alert);">⚠️ EMERGENCY ZEROIZE</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
   </main>
 
   <!-- Webring Navigation & Diegetic Footer -->
@@ -2404,6 +2894,113 @@ class DarknetSoundEngine {
     gain.connect(this.masterGain || this.ctx.destination);
     osc.start(now);
     osc.stop(now + (durationMs / 1000));
+  }
+
+  play2600Hz() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(2600, now);
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.38);
+    osc.connect(gain);
+    gain.connect(this.masterGain || this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.4);
+  }
+
+  playMFTone(f1, f2, dur = 0.12) {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
+    const g1 = this.ctx.createGain();
+    const g2 = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = (f1 + f2) / 2;
+    filter.Q.value = 1.2;
+
+    osc1.type = 'sine';
+    osc2.type = 'sine';
+    osc1.frequency.setValueAtTime(f1, now);
+    osc2.frequency.setValueAtTime(f2, now);
+
+    g1.gain.setValueAtTime(0.06, now);
+    g1.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+    g2.gain.setValueAtTime(0.06, now);
+    g2.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+
+    osc1.connect(g1);
+    osc2.connect(g2);
+    g1.connect(filter);
+    g2.connect(filter);
+    filter.connect(this.masterGain || this.ctx.destination);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + dur + 0.02);
+    osc2.stop(now + dur + 0.02);
+  }
+
+  playRedBoxPulse(count) {
+    if (this.muted) return;
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        this.playMFTone(1700, 2200, 0.066);
+      }, i * 132);
+    }
+  }
+
+  playSilverBoxTone(type) {
+    if (this.muted) return;
+    const freqs = {
+      'fo': [697, 1633],
+      'f': [770, 1633],
+      'i': [852, 1633],
+      'p': [941, 1633]
+    };
+    const pair = freqs[type.toLowerCase()] || [697, 1633];
+    this.playMFTone(pair[0], pair[1], 0.18);
+  }
+
+  playDialTone() {
+    if (this.muted) return;
+    this.playMFTone(350, 440, 0.4);
+  }
+
+  playRingbackTone() {
+    if (this.muted) return;
+    this.playMFTone(440, 480, 0.35);
+  }
+
+  playBusyTone() {
+    if (this.muted) return;
+    this.playMFTone(480, 620, 0.15);
+  }
+
+  playDegaussWipe() {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(40, now + 0.4);
+    gain.gain.setValueAtTime(0.09, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+    osc.connect(gain);
+    gain.connect(this.masterGain || this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.42);
   }
 
   toggleCarrier() {
@@ -2638,7 +3235,7 @@ function toggleScanlines() {
    ========================================================================= */
 function switchTab(tabId) {
   snd.playKeyClick();
-  const tabs = ['terminal', 'warez-nfo', 'decoder', 'sniffer', 'spectrum', 'puzzle-relay', 'mesh', 'spool', 'directory', 'crypto-lab', 'topology'];
+  const tabs = ['terminal', 'warez-nfo', 'decoder', 'sniffer', 'spectrum', 'puzzle-relay', 'mesh', 'spool', 'directory', 'crypto-lab', 'topology', 'bluebox', 'deaddrop'];
   tabs.forEach(t => {
     const panel = document.getElementById('panel-' + t);
     if (panel) panel.classList.remove('active');
@@ -2656,12 +3253,18 @@ function switchTab(tabId) {
     if (tabId === 'puzzle-relay') return text.includes('gated');
     if (tabId === 'crypto-lab') return text.includes('crypto');
     if (tabId === 'topology') return text.includes('topology');
+    if (tabId === 'bluebox') return text.includes('blue box');
+    if (tabId === 'deaddrop') return text.includes('dead drop');
     return text.includes(tabId);
   });
   if (activeBtn) activeBtn.classList.add('active');
 
   if (tabId === 'topology' && typeof resizeTopologyCanvas === 'function') {
     setTimeout(resizeTopologyCanvas, 50);
+  } else if (tabId === 'bluebox' && typeof initBlueboxScope === 'function') {
+    setTimeout(initBlueboxScope, 50);
+  } else if (tabId === 'deaddrop' && typeof renderDeadDropList === 'function') {
+    renderDeadDropList();
   }
 }
 
@@ -2859,6 +3462,10 @@ function processTerminalCommand(cmdStr) {
   directory          - List subterranean network destinations (Tab 9)
   router / topology  - Open 2D Lithospheric Relay Topology Switchboard
   probe <node>       - Transmit out-of-band lithospheric probe packet
+  bluebox / phreak   - Open 2600Hz Blue Box & Telco Crossbar Trunk Relay (Tab 12)
+  dial <route>       - Outpulse Bell System MF tones to seize subterranean trunk
+  deaddrop / whisper - Open Subterranean Dead Drop Vault & Dispatch Wire (Tab 13)
+  drop <list|read>   - Inspect or read encrypted subterranean dead drop files
   quicksave / save   - Quicksave station state to localStorage (F5)
   quickload / load   - Quickload station state from localStorage (F9)`
       );
@@ -3126,6 +3733,46 @@ ${count === 3 ? '  RING-0 BRIDGE: ACTIVE - Navigate to kweb://deep-core' : '  Ty
     case 'directory':
       switchTab('directory');
       printTerminal('[DIRECTORY] Subterranean node index opened.');
+      break;
+
+    case 'bluebox':
+    case 'phreak':
+    case 'trunk':
+      switchTab('bluebox');
+      printTerminal('[BLUE BOX] 2600Hz Multi-Frequency (MF) transceiver ready. Seize trunk or outpulse MF tones.');
+      break;
+
+    case 'dial':
+      if (!arg) {
+        printTerminal('Usage: dial <preset or route (e.g. *2600#, 7F1999, 1019994, 101999127)>');
+      } else {
+        switchTab('bluebox');
+        if (typeof dialRouteByString === 'function') {
+          dialRouteByString(arg);
+        }
+      }
+      break;
+
+    case 'deaddrop':
+    case 'drops':
+    case 'whisper':
+      switchTab('deaddrop');
+      printTerminal('[DEAD DROP VAULT] Subterranean encrypted dispatch wire opened.');
+      break;
+
+    case 'drop':
+      if (!arg) {
+        printTerminal('Usage: drop <list | read <id> | zeroize>');
+      } else if (arg === 'list') {
+        if (typeof printTerminalDeadDrops === 'function') printTerminalDeadDrops();
+      } else if (arg.startsWith('read ')) {
+        const dropId = arg.replace('read ', '').trim();
+        if (typeof printTerminalDrop === 'function') printTerminalDrop(dropId);
+      } else if (arg === 'zeroize') {
+        if (typeof zeroizeAllUserDrops === 'function') zeroizeAllUserDrops();
+      } else {
+        printTerminal(`Unknown drop subcommand '${arg}'. Use 'drop list' or 'drop read <id>'.`);
+      }
       break;
 
     case 'quicksave':
@@ -5812,6 +6459,837 @@ function renderTopologyLoop() {
 }
 
 /* =========================================================================
+   TAB 12: 2600Hz BLUE BOX & TELCO CROSSBAR TRUNK RELAY
+   ========================================================================= */
+
+const bbState = {
+  mode: 'mf', // 'mf', 'red', 'silver'
+  digits: '',
+  trunkSeized: false,
+  carrierLocked: false,
+  connectedRoute: null,
+  mute: false,
+  spool: [],
+  scopeFreqs: [0, 0]
+};
+
+// Standard Bell System MF Frequencies
+const MF_TONE_MAP = {
+  '1': [700, 900],
+  '2': [700, 1100],
+  '3': [900, 1100],
+  '4': [700, 1300],
+  '5': [900, 1300],
+  '6': [1100, 1300],
+  '7': [700, 1500],
+  '8': [900, 1500],
+  '9': [1100, 1500],
+  '0': [1300, 1500],
+  'KP': [1100, 1700],
+  'ST': [1500, 1700],
+  'ST1': [900, 1700],
+  'ST2': [1300, 1700],
+  'ST3': [700, 1700],
+  '11': [700, 1700]
+};
+
+// Autovon 4th column frequencies
+const SILVER_TONE_MAP = {
+  'FO': [697, 1633],
+  'F':  [770, 1633],
+  'I':  [852, 1633],
+  'P':  [941, 1633]
+};
+
+function renderBlueboxKeypad() {
+  const container = document.getElementById('bbKeypadGrid');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (bbState.mode === 'mf') {
+    const keys = [
+      { id: '1', label: '1', sub: '700+900' },
+      { id: '2', label: '2', sub: '700+1100' },
+      { id: '3', label: '3', sub: '900+1100' },
+      { id: 'KP', label: 'KP', sub: '1100+1700' },
+      { id: '4', label: '4', sub: '700+1300' },
+      { id: '5', label: '5', sub: '900+1300' },
+      { id: '6', label: '6', sub: '1100+1300' },
+      { id: 'ST', label: 'ST', sub: '1500+1700' },
+      { id: '7', label: '7', sub: '700+1500' },
+      { id: '8', label: '8', sub: '900+1500' },
+      { id: '9', label: '9', sub: '1100+1500' },
+      { id: 'ST1', label: 'ST1', sub: '900+1700' },
+      { id: 'ST2', label: 'ST2', sub: '1300+1700' },
+      { id: '0', label: '0', sub: '1300+1500' },
+      { id: 'ST3', label: 'ST3', sub: '700+1700' },
+      { id: '11', label: 'CODE 11', sub: '700+1700' }
+    ];
+    keys.forEach(k => {
+      const btn = document.createElement('button');
+      btn.className = 'bb-key';
+      btn.innerHTML = `<span>${k.label}</span><span class="freq-sub">${k.sub}Hz</span>`;
+      btn.onclick = () => pressMFDigit(k.id);
+      container.appendChild(btn);
+    });
+  } else if (bbState.mode === 'red') {
+    const coinKeys = [
+      { id: 'nickel', label: '5¢ NICKEL', sub: '1 PULSE (66ms)', count: 1 },
+      { id: 'dime', label: '10¢ DIME', sub: '2 PULSES (66ms)', count: 2 },
+      { id: 'quarter', label: '25¢ QUARTER', sub: '5 PULSES (33ms)', count: 5 },
+      { id: 'dollar', label: '$1.00 DOLLAR', sub: '20 PULSES', count: 20 }
+    ];
+    coinKeys.forEach(k => {
+      const btn = document.createElement('button');
+      btn.className = 'bb-key key-red';
+      btn.style.gridColumn = 'span 2';
+      btn.innerHTML = `<span>${k.label}</span><span class="freq-sub">${k.sub}</span>`;
+      btn.onclick = () => triggerCoinDeposit(k.count, k.label);
+      container.appendChild(btn);
+    });
+  } else if (bbState.mode === 'silver') {
+    const silverKeys = [
+      { id: 'FO', label: 'FO [FLASH OVERRIDE]', sub: '697+1633Hz' },
+      { id: 'F', label: 'F [FLASH]', sub: '770+1633Hz' },
+      { id: 'I', label: 'I [IMMEDIATE]', sub: '852+1633Hz' },
+      { id: 'P', label: 'P [PRIORITY]', sub: '941+1633Hz' }
+    ];
+    silverKeys.forEach(k => {
+      const btn = document.createElement('button');
+      btn.className = 'bb-key key-silver';
+      btn.style.gridColumn = 'span 2';
+      btn.innerHTML = `<span>${k.label}</span><span class="freq-sub">${k.sub}</span>`;
+      btn.onclick = () => pressSilverKey(k.id);
+      container.appendChild(btn);
+    });
+    ['1','2','3','4','5','6','7','8'].forEach(d => {
+      const btn = document.createElement('button');
+      btn.className = 'bb-key';
+      btn.innerHTML = `<span>${d}</span>`;
+      btn.onclick = () => pressMFDigit(d);
+      container.appendChild(btn);
+    });
+  }
+}
+
+function setBlueboxMode(m) {
+  snd.playKeyClick();
+  bbState.mode = m;
+  const bMF = document.getElementById('btnModeMF');
+  const bRed = document.getElementById('btnModeRed');
+  const bSil = document.getElementById('btnModeSilver');
+  if (bMF) bMF.classList.toggle('active', m === 'mf');
+  if (bRed) bRed.classList.toggle('active', m === 'red');
+  if (bSil) bSil.classList.toggle('active', m === 'silver');
+  renderBlueboxKeypad();
+}
+
+function toggleBlueboxMute() {
+  bbState.mute = !bbState.mute;
+  const btn = document.getElementById('btnBBMute');
+  if (btn) btn.textContent = bbState.mute ? 'MUTE: ON' : 'MUTE: OFF';
+}
+
+function transmit2600Seizure() {
+  if (!bbState.mute) snd.play2600Hz();
+  bbState.trunkSeized = true;
+  bbState.digits = '';
+  bbState.spool = [];
+  bbState.scopeFreqs = [2600, 2600];
+
+  updateBlueboxDisplay('---', 'TRUNK: 2600Hz SEIZED (0V TANDEM DISCONNECT)', 'ROUTE: PENDING KP');
+  updateBlueboxLEDs();
+  logBlueboxTrace('[TRUNK SEIZE] Transmitted 2600 Hz Single-Frequency pulse (380ms).');
+  logBlueboxTrace('[TANDEM 4ESS] Line supervision reversed. Toll metering disconnected. Outpulsing sender attached.');
+}
+
+function pressMFDigit(digit) {
+  const freqs = MF_TONE_MAP[digit];
+  if (freqs) {
+    if (!bbState.mute) snd.playMFTone(freqs[0], freqs[1], 0.12);
+    bbState.scopeFreqs = freqs;
+    bbState.digits += digit;
+    bbState.spool.push({ type: 'mf', digit, freqs });
+    updateBlueboxDisplay(bbState.digits, bbState.trunkSeized ? 'TRUNK: OUTPULSING REGISTER' : 'TRUNK: ON-HOOK (SEIZE 2600 FIRST)', `BUFFER: ${bbState.digits}`);
+    logBlueboxTrace(`[MF OUTPULSE] '${digit}' -> ${freqs[0]}+${freqs[1]} Hz.`);
+
+    if (digit === 'ST') {
+      evaluateOutpulsedRoute(bbState.digits);
+    }
+  }
+}
+
+function triggerCoinDeposit(count, label) {
+  if (!bbState.mute) snd.playRedBoxPulse(count);
+  bbState.scopeFreqs = [1700, 2200];
+  logBlueboxTrace(`[RED BOX] Deposited ${label} (${count} coin pulses of 1700+2200 Hz). Operator credit satisfied.`);
+  updateBlueboxDisplay(`COIN: ${label}`, 'RED BOX ACTUATION', `${count} PULSES DISPATCHED`);
+}
+
+function pressSilverKey(type) {
+  const freqs = SILVER_TONE_MAP[type];
+  if (freqs) {
+    if (!bbState.mute) snd.playSilverBoxTone(type);
+    bbState.scopeFreqs = freqs;
+    bbState.digits += `[${type}]`;
+    bbState.spool.push({ type: 'silver', key: type, freqs });
+    updateBlueboxDisplay(bbState.digits, 'AUTOVON PRECEDENCE TAG ATTACHED', `PRECEDENCE: ${type}`);
+    logBlueboxTrace(`[SILVER BOX] Set military precedence '${type}' (${freqs[0]}+${freqs[1]} Hz).`);
+  }
+}
+
+function evaluateOutpulsedRoute(routeStr) {
+  const clean = routeStr.replace(/[^A-Za-z0-9*#]/g, '').toUpperCase();
+  logBlueboxTrace(`[SWITCHBOARD] Analyzing dialed routing string: '${clean}'...`);
+
+  setTimeout(() => {
+    if (clean.includes('7F1999') || clean.includes('0X7F')) {
+      connectTrunkRoute('7F1999', 'Node 0x7F Subterranean Acoustic Demux', '10.19.99.12', 'Lithospheric Halite Transponder locked at 1999Hz. Subcarrier verified.');
+    } else if (clean.includes('1019994') || clean.includes('CARLSBAD')) {
+      connectTrunkRoute('1019994', 'Aethel Dynamics Carlsbad Skunkworks Loopback', '10.19.99.4', 'Intranet PBX answered. Routing: kweb://10.19.99.4/classified. Memory sector offset 0x1999.');
+    } else if (clean.includes('101999127') || clean.includes('DEEPCORE')) {
+      connectTrunkRoute('101999127', 'Deep Core Ring-0 Bell 202 Modulator', '10.19.99.127', 'Kernel transponder online. Bell 202 1200/2200Hz AFSK carrier synchronizing.');
+    } else if (clean.includes('8003275') || clean.includes('800')) {
+      connectTrunkRoute('8003275', 'Carlsbad Skunkworks Voice Portal', 'TOLL_FREE_TEST', 'PBX Auto-attendant active. Welcome to Carlsbad Subterranean Research Intranet.');
+    } else if (clean.includes('2600') || clean === '*2600#') {
+      connectTrunkRoute('*2600#', '4ESS Tandem Milliwatt Test Loop', 'TANDEM_TEST', '1004 Hz standard milliwatt test reference tone locked. 0.0 dBm transmission loss.');
+    } else {
+      if (!bbState.mute) snd.playBusyTone();
+      updateBlueboxDisplay(routeStr, 'TRUNK: REORDER / ALL CIRCUITS BUSY', 'ERR: UNROUTED DIGITS');
+      logBlueboxTrace(`[ROUTING ERROR] No tandem translation found for route '${clean}'. Fast busy tone returned.`);
+    }
+  }, 400);
+}
+
+function connectTrunkRoute(code, name, endpoint, detail) {
+  if (!bbState.mute) {
+    snd.playRingbackTone();
+    setTimeout(() => snd.playBell202Handshake(), 500);
+  }
+  bbState.connectedRoute = code;
+  bbState.carrierLocked = true;
+  updateBlueboxLEDs();
+  updateBlueboxDisplay(code, `CONNECTED: ${name}`, `ENDPOINT: ${endpoint}`);
+
+  logBlueboxTrace(`[TRUNK ANSWER] Route locked: ${name}`);
+  logBlueboxTrace(`[CARRIER SYNC] ${detail}`);
+  printTerminal(`[BLUE BOX EVENT] Telco trunk connected: ${name} (${endpoint})`);
+}
+
+function dialSelectedPreset() {
+  const sel = document.getElementById('selBbPresetRoute').value;
+  dialRouteByString(sel);
+}
+
+function loadBlueboxPreset(val) {
+  // Preset selector
+}
+
+function dialRouteByString(routeStr) {
+  clearBlueboxBuffer();
+  transmit2600Seizure();
+  setTimeout(() => {
+    let digitsToOutpulse = [];
+    if (routeStr === '*2600#') {
+      digitsToOutpulse = ['KP', '2', '6', '0', '0', 'ST'];
+    } else if (routeStr === '7F1999') {
+      digitsToOutpulse = ['KP', '7', '0', '1', '9', '9', '9', 'ST'];
+    } else if (routeStr === '1019994') {
+      digitsToOutpulse = ['KP', '1', '0', '1', '9', '9', '9', '4', 'ST'];
+    } else if (routeStr === '101999127') {
+      digitsToOutpulse = ['KP', '1', '0', '1', '9', '9', '9', '1', '2', '7', 'ST'];
+    } else if (routeStr === '8003275') {
+      digitsToOutpulse = ['KP', '8', '0', '0', '3', '2', '7', '5', 'ST'];
+    } else if (routeStr === 'FO2600') {
+      digitsToOutpulse = ['FO', '2', '6', '0', '0', 'ST'];
+    } else {
+      digitsToOutpulse = ['KP', ...routeStr.split(''), 'ST'];
+    }
+
+    let delay = 100;
+    digitsToOutpulse.forEach((d, idx) => {
+      setTimeout(() => {
+        if (d === 'FO' || d === 'F' || d === 'I' || d === 'P') {
+          pressSilverKey(d);
+        } else {
+          pressMFDigit(d);
+        }
+      }, delay);
+      delay += 120;
+    });
+  }, 450);
+}
+
+function playToneSpool(pps) {
+  if (bbState.spool.length === 0) {
+    logBlueboxTrace('[SPOOL EMPTY] No recorded MF tones in buffer to outpulse.');
+    return;
+  }
+  const interval = Math.round(1000 / pps);
+  logBlueboxTrace(`[OUTPULSING] High-speed tone spool replay at ${pps} PPS...`);
+  bbState.spool.forEach((item, idx) => {
+    setTimeout(() => {
+      if (item.type === 'silver') {
+        pressSilverKey(item.key);
+      } else {
+        pressMFDigit(item.digit);
+      }
+    }, idx * interval);
+  });
+}
+
+function hangUpBluebox() {
+  if (!bbState.mute) snd.playKeyClick();
+  bbState.trunkSeized = false;
+  bbState.carrierLocked = false;
+  bbState.connectedRoute = null;
+  bbState.digits = '';
+  bbState.spool = [];
+  bbState.scopeFreqs = [0, 0];
+
+  updateBlueboxDisplay('---', 'TRUNK: ON-HOOK (48V IDLE)', 'ROUTE: UNSEIZED');
+  updateBlueboxLEDs();
+  logBlueboxTrace('[ON-HOOK] Trunk connection terminated. Loop current restored to idle.');
+}
+
+function clearBlueboxBuffer() {
+  bbState.digits = '';
+  bbState.spool = [];
+  updateBlueboxDisplay('---', bbState.trunkSeized ? 'TRUNK: SEIZED (IDLE BUFFER)' : 'TRUNK: ON-HOOK (48V IDLE)', 'BUFFER CLEARED');
+}
+
+function testMillisecondTone() {
+  logBlueboxTrace('[TEST TONE] Emitting 1004 Hz reference transmission test tone (1200ms)...');
+  if (!bbState.mute) snd.playTone(1004, 1200);
+  bbState.scopeFreqs = [1004, 1004];
+  setTimeout(() => {
+    logBlueboxTrace('[TEST TONE] Reference received. Attenuation: -0.2 dBm. S/N ratio: 44 dB.');
+  }, 1300);
+}
+
+function updateBlueboxDisplay(digits, status, route) {
+  const elD = document.getElementById('bbDisplayDigits');
+  const elS = document.getElementById('bbDisplayStatus');
+  const elR = document.getElementById('bbDisplayRoute');
+  if (elD) elD.textContent = digits || '---';
+  if (elS) elS.textContent = status || '';
+  if (elR) elR.textContent = route || '';
+}
+
+function updateBlueboxLEDs() {
+  const elLoop = document.getElementById('ledLoop');
+  const elSeized = document.getElementById('ledSeized');
+  const elCarrier = document.getElementById('ledCarrier');
+  const elSat = document.getElementById('ledSat');
+
+  if (elLoop) elLoop.className = `led-lamp ${bbState.trunkSeized ? 'active-amber' : 'active-green'}`;
+  if (elSeized) elSeized.className = `led-lamp ${bbState.trunkSeized ? 'active-blue' : ''}`;
+  if (elCarrier) elCarrier.className = `led-lamp ${bbState.carrierLocked ? 'active-green' : ''}`;
+  if (elSat) elSat.className = `led-lamp ${bbState.carrierLocked ? 'active-amber' : ''}`;
+}
+
+function logBlueboxTrace(msg) {
+  const container = document.getElementById('bbCallTraceLog');
+  if (!container) return;
+  const time = new Date().toLocaleTimeString();
+  const div = document.createElement('div');
+  div.innerHTML = `<span style="color:var(--phosphor-dim);">[${time}]</span> ${msg}`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function clearBlueboxLog() {
+  const container = document.getElementById('bbCallTraceLog');
+  if (container) container.innerHTML = '';
+}
+
+function initBlueboxScope() {
+  renderBlueboxKeypad();
+  updateBlueboxLEDs();
+  const canvas = document.getElementById('blueboxScopeCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let t = 0;
+
+  function renderScope() {
+    if (!document.getElementById('panel-bluebox').classList.contains('active')) {
+      return;
+    }
+    ctx.fillStyle = '#000803';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.strokeStyle = 'rgba(30, 64, 175, 0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height / 2);
+    ctx.lineTo(canvas.width, canvas.height / 2);
+    ctx.stroke();
+
+    const [f1, f2] = bbState.scopeFreqs;
+    const label = document.getElementById('bbScopeFreqLabel');
+    if (label) {
+      label.textContent = (f1 || f2) ? `FREQ: ${f1}+${f2} Hz [ACTIVE]` : 'FREQ: IDLE (48V)';
+    }
+
+    if (f1 > 0 || f2 > 0) {
+      ctx.strokeStyle = '#60a5fa';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      for (let x = 0; x < canvas.width; x++) {
+        const w1 = Math.sin((x * 0.05 * (f1 / 300)) + t);
+        const w2 = Math.sin((x * 0.05 * (f2 / 300)) + t * 1.3);
+        const y = (canvas.height / 2) + ((w1 + w2) * 14);
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      t += 0.2;
+    } else {
+      ctx.strokeStyle = 'rgba(59, 130, 246, 0.4)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      for (let x = 0; x < canvas.width; x += 4) {
+        const y = (canvas.height / 2) + (Math.sin(x * 0.1 + t) * 2) + (Math.random() * 2 - 1);
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      t += 0.05;
+    }
+
+    requestAnimationFrame(renderScope);
+  }
+  requestAnimationFrame(renderScope);
+}
+
+/* =========================================================================
+   TAB 13: SUBTERRANEAN DEAD DROP VAULT & SECURE WHISPER WIRE
+   ========================================================================= */
+
+const DEFAULT_DEAD_DROPS = [
+  {
+    id: 'drop-0x7f01',
+    title: 'Carlsbad Lithospheric Waveguide Status',
+    author: 'CipherShadow',
+    target: '10.19.99.127 [Deep Core]',
+    cipher: 'xor',
+    key: 'HALITE',
+    burn: 'permanent',
+    ciphertext: '24051800171018040d1c07041a05070200050702110c0b11000b1a03001c101c0717011d0b1d0701041119041a0017161b0c000b1000181710161a0b1d1617001b171c0b0507041a050702110c000b1d0701041119041a0017041b0b000b1c0617041a030b051c07000100171a070001',
+    plaintext: 'Lithospheric waveguide link between Node 0x7F and Deep Core (10.19.99.127) verified. Subcarrier harmonic locked at 1999Hz. Bedrock mesh nominal across 3000m halite strata.',
+    date: '1999-12-30 23:40'
+  },
+  {
+    id: 'drop-0x7f02',
+    title: 'FLARELIGHT Keygen Seed Warning',
+    author: 'FLARELIGHT',
+    target: 'SCENE_UNDERGROUND',
+    cipher: 'vigenere',
+    key: 'SURREAL',
+    burn: 'permanent',
+    ciphertext: 'Sfomcclmk TIE55 twvtscfd sf Ljjrvid Mfllfsenfe .EWG thfavtfg kfvtrvvvceewr jrvv. Vegvfeee svvv leav rycrrv nleevs hmtkvvececr eevcs tfctvkvevf.',
+    plaintext: 'Anomalous CRC32 checksum in Surreal Tournament .NFO contains steganographic seed. Entering seed into keygen yields subterranean relay coordinates.',
+    date: '1999-12-31 01:15'
+  },
+  {
+    id: 'drop-0x7f03',
+    title: 'Echo Subsystem SIGINT Advisory',
+    author: 'EchoTech',
+    target: '10.19.99.1 [Echo Lab]',
+    cipher: 'rot',
+    key: '13',
+    burn: 'permanent',
+    ciphertext: 'Npbhfgvp erfrnepu yno qrgrpgrq unezbpvp fhopneevre oyrrq ba 144.390 ZUm cnpxrg enqvb. Erpbzzraqrq: rasbepr Oryy 202 NDFX znex/fcnpr cnevgl.',
+    plaintext: 'Acoustic research lab detected harmonic subcarrier bleed on 144.390 MHz packet radio. Recommended: enforce Bell 202 AFSK mark/space parity.',
+    date: '1999-12-31 04:22'
+  },
+  {
+    id: 'drop-0x7f04',
+    title: 'RAZOR 1999 Microwave Intercept Notice',
+    author: 'RAZOR 1999',
+    target: '10.19.99.7F [Local]',
+    cipher: 'xor',
+    key: '1999LOCK',
+    burn: 'permanent',
+    ciphertext: '745a595a53505f434658434b41424653524b5a5b54435849505f4247545b5443534b415a4358505f4247545b5443534b415a4358505f4247545b5443534b415a4358505f4247545b5443534b415a',
+    plaintext: 'Echelon wiretaps detected on Denver-Albuquerque microwave hops. Route all critical scene drops through subterranean 10.19.99.12 relay.',
+    date: '1999-12-31 07:45'
+  },
+  {
+    id: 'drop-0x7f05',
+    title: 'Precursor Geothermal Survey',
+    author: 'LithoGeologist',
+    target: '10.19.99.4 [Aethel Skunkworks]',
+    cipher: 'xor',
+    key: '0x7F1999',
+    burn: 'permanent',
+    ciphertext: '634553445f42404558454254485542544342534558424045584542544855425443425345584240455845425448554254434253455842404558454254485542544342534558424045584542544855425443425345',
+    plaintext: 'Sector 0x1999 halite cavern core samples indicate high electrical conductivity. Deep Core bus registers anomalous clock synchronicity.',
+    date: '1999-12-31 09:12'
+  }
+];
+
+let selectedDropId = 'drop-0x7f01';
+
+function xorEncryptHex(str, key) {
+  if (!key) return str;
+  let out = '';
+  for (let i = 0; i < str.length; i++) {
+    const kChar = key.charCodeAt(i % key.length);
+    const x = str.charCodeAt(i) ^ kChar;
+    out += ('0' + x.toString(16)).slice(-2);
+  }
+  return out;
+}
+
+function xorDecryptHex(hex, key) {
+  if (!key || hex.length % 2 !== 0) return hex;
+  let out = '';
+  for (let i = 0; i < hex.length; i += 2) {
+    const byte = parseInt(hex.substr(i, 2), 16);
+    const kChar = key.charCodeAt((i / 2) % key.length);
+    out += String.fromCharCode(byte ^ kChar);
+  }
+  return out;
+}
+
+function vigenereCipher(text, key, decrypt = false) {
+  if (!key) return text;
+  let result = '';
+  let kIdx = 0;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (/[a-zA-Z]/.test(c)) {
+      const isUpper = c === c.toUpperCase();
+      const base = isUpper ? 65 : 97;
+      const cVal = c.charCodeAt(0) - base;
+      const kChar = key[kIdx % key.length].toUpperCase();
+      const kVal = kChar.charCodeAt(0) - 65;
+      const shift = decrypt ? (cVal - kVal + 26) % 26 : (cVal + kVal) % 26;
+      result += String.fromCharCode(base + shift);
+      kIdx++;
+    } else {
+      result += c;
+    }
+  }
+  return result;
+}
+
+function rotCipher(text, shift) {
+  const s = parseInt(shift, 10) || 13;
+  let result = '';
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (/[a-zA-Z]/.test(c)) {
+      const isUpper = c === c.toUpperCase();
+      const base = isUpper ? 65 : 97;
+      result += String.fromCharCode(base + ((c.charCodeAt(0) - base + s) % 26));
+    } else {
+      result += c;
+    }
+  }
+  return result;
+}
+
+function otpXorCipher(text, pad) {
+  if (!pad) return text;
+  const cleanPad = pad.replace(/[^A-Za-z0-9]/g, '');
+  if (!cleanPad) return text;
+  let result = '';
+  for (let i = 0; i < text.length; i++) {
+    const pCode = cleanPad.charCodeAt(i % cleanPad.length);
+    result += String.fromCharCode(text.charCodeAt(i) ^ pCode);
+  }
+  return result;
+}
+
+function getAllDeadDrops() {
+  let userDrops = [];
+  try {
+    const raw = localStorage.getItem('kweb_darknet_deaddrops');
+    if (raw) userDrops = JSON.parse(raw);
+  } catch (e) {}
+  return [...DEFAULT_DEAD_DROPS, ...userDrops];
+}
+
+function renderDeadDropList() {
+  const container = document.getElementById('deadDropList');
+  if (!container) return;
+  const drops = getAllDeadDrops();
+  const counter = document.getElementById('lblActiveDropsCount');
+  if (counter) counter.textContent = `${drops.length} ACTIVE DROPS`;
+
+  container.innerHTML = '';
+  drops.forEach(d => {
+    const card = document.createElement('div');
+    card.className = `deaddrop-card ${d.id === selectedDropId ? 'active' : ''}`;
+    card.onclick = () => selectDeadDrop(d.id);
+    card.innerHTML = `
+      <div class="deaddrop-header">
+        <span>${d.title}</span>
+        <span class="drop-badge">${d.cipher.toUpperCase()}</span>
+      </div>
+      <div class="deaddrop-meta">
+        <span>SRC: ${d.author}</span>
+        <span>DST: ${d.target}</span>
+        <span>${d.date}</span>
+      </div>
+      <div class="deaddrop-preview">${d.ciphertext.slice(0, 50)}...</div>
+    `;
+    container.appendChild(card);
+  });
+
+  const cur = drops.find(d => d.id === selectedDropId) || drops[0];
+  if (cur) {
+    loadDeadDropIntoInspector(cur);
+  }
+}
+
+function selectDeadDrop(id) {
+  snd.playKeyClick();
+  selectedDropId = id;
+  const drops = getAllDeadDrops();
+  const d = drops.find(x => x.id === id);
+  if (d) {
+    loadDeadDropIntoInspector(d);
+  }
+  renderDeadDropList();
+}
+
+function loadDeadDropIntoInspector(drop) {
+  const titleEl = document.getElementById('lblSelectedDropTitle');
+  const cipherEl = document.getElementById('lblSelectedDropCipher');
+  const cipherTextEl = document.getElementById('dropCiphertextDisplay');
+  const modeEl = document.getElementById('selDropDecryptMode');
+  const keyEl = document.getElementById('dropDecryptKey');
+
+  if (titleEl) titleEl.textContent = `DISPATCH INSPECTOR: [${drop.id.toUpperCase()}] ${drop.title}`;
+  if (cipherEl) cipherEl.textContent = drop.cipher.toUpperCase();
+  if (cipherTextEl) cipherTextEl.value = drop.ciphertext;
+  if (modeEl) modeEl.value = drop.cipher;
+  if (keyEl) keyEl.value = drop.key || '';
+  updateDropDecryptPreview();
+}
+
+function updateDropDecryptPreview() {
+  const drops = getAllDeadDrops();
+  const d = drops.find(x => x.id === selectedDropId);
+  if (!d) return;
+
+  const mode = document.getElementById('selDropDecryptMode').value;
+  const key = document.getElementById('dropDecryptKey').value;
+  const cipher = d.ciphertext;
+  let plain = '';
+
+  if (mode === 'xor') {
+    plain = xorDecryptHex(cipher, key);
+  } else if (mode === 'vigenere') {
+    plain = vigenereCipher(cipher, key, true);
+  } else if (mode === 'rot') {
+    plain = rotCipher(cipher, 26 - (parseInt(key, 10) % 26 || 13));
+  } else if (mode === 'otp') {
+    plain = otpXorCipher(cipher, currentOtpPad || key);
+  }
+
+  const plainEl = document.getElementById('dropPlaintextDisplay');
+  if (plainEl) plainEl.value = plain;
+}
+
+function autoSolveDropCipher() {
+  snd.playDecodeSuccess();
+  const drops = getAllDeadDrops();
+  const d = drops.find(x => x.id === selectedDropId);
+  if (!d) return;
+
+  document.getElementById('selDropDecryptMode').value = d.cipher;
+  document.getElementById('dropDecryptKey').value = d.key;
+  updateDropDecryptPreview();
+  printTerminal(`[DEAD DROP] Decrypted '${d.title}' with station key '${d.key}'.`);
+}
+
+function pipeDropToTerminal() {
+  snd.playFMChirp(880);
+  const plain = document.getElementById('dropPlaintextDisplay').value;
+  const drops = getAllDeadDrops();
+  const d = drops.find(x => x.id === selectedDropId);
+  if (d) {
+    printTerminal(
+`[DEAD DROP TRANSMISSION: ${d.id.toUpperCase()}]
+  Title   : ${d.title}
+  Author  : ${d.author} -> Target: ${d.target}
+  Date    : ${d.date} | Cipher: ${d.cipher.toUpperCase()}
+--------------------------------------------------------------------------------
+${plain}
+--------------------------------------------------------------------------------`
+    );
+    switchTab('terminal');
+  }
+}
+
+function copyDropPlaintext() {
+  snd.playKeyClick();
+  const text = document.getElementById('dropPlaintextDisplay').value;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text);
+    printTerminal('[CLIPBOARD] Decrypted dead drop copied to system clipboard.');
+  }
+}
+
+function downloadCurrentDrop() {
+  snd.playFMChirp(520);
+  const drops = getAllDeadDrops();
+  const d = drops.find(x => x.id === selectedDropId);
+  if (!d) return;
+
+  const content =
+`[KILONET SUBTERRANEAN ENCRYPTED DEAD DROP]
+ID: ${d.id.toUpperCase()}
+TITLE: ${d.title}
+AUTHOR: ${d.author}
+TARGET: ${d.target}
+DATE: ${d.date}
+CIPHER: ${d.cipher.toUpperCase()}
+KEY: ${d.key}
+
+--- CIPHERTEXT BUFFER ---
+${d.ciphertext}
+
+--- DECRYPTED PLAINTEXT ---
+${d.plaintext}
+`;
+  downloadTextFile(`${d.id}_dispatch.drop`, content);
+}
+
+function encryptNewDropLive() {
+  const plainEl = document.getElementById('dropNewPlaintext');
+  const cipherTypeEl = document.getElementById('dropNewCipher');
+  const keyEl = document.getElementById('dropNewKey');
+  if (!plainEl || !cipherTypeEl || !keyEl) return;
+
+  const plain = plainEl.value;
+  const cipherType = cipherTypeEl.value;
+  const key = keyEl.value;
+  let cipher = '';
+
+  if (cipherType === 'xor') {
+    cipher = xorEncryptHex(plain, key);
+  } else if (cipherType === 'vigenere') {
+    cipher = vigenereCipher(plain, key, false);
+  } else if (cipherType === 'rot') {
+    cipher = rotCipher(plain, parseInt(key, 10) || 13);
+  } else if (cipherType === 'otp') {
+    cipher = otpXorCipher(plain, currentOtpPad || key);
+  }
+
+  const outEl = document.getElementById('dropNewCiphertext');
+  if (outEl) outEl.value = cipher;
+}
+
+function handleNewDropCipherChange(v) {
+  const keyInput = document.getElementById('dropNewKey');
+  if (v === 'rot') keyInput.value = '13';
+  else if (v === 'xor') keyInput.value = '1999LOCK';
+  else if (v === 'vigenere') keyInput.value = 'SURREAL';
+  else if (v === 'otp') keyInput.value = 'STATION_OTP';
+  encryptNewDropLive();
+}
+
+function transmitNewDeadDrop() {
+  const author = document.getElementById('dropNewAuthor').value.trim() || 'Anonymous';
+  const target = document.getElementById('dropNewTarget').value;
+  const cipher = document.getElementById('dropNewCipher').value;
+  const key = document.getElementById('dropNewKey').value;
+  const burn = document.getElementById('dropNewBurn').value;
+  const plain = document.getElementById('dropNewPlaintext').value;
+  const cipherText = document.getElementById('dropNewCiphertext').value;
+
+  if (!plain || !cipherText) return;
+
+  snd.playPacketBurst();
+  const newDrop = {
+    id: 'drop-' + Math.random().toString(16).substr(2, 6),
+    title: `Dispatch by ${author} (${target})`,
+    author,
+    target,
+    cipher,
+    key,
+    burn,
+    ciphertext: cipherText,
+    plaintext: plain,
+    date: new Date().toLocaleTimeString()
+  };
+
+  try {
+    const raw = localStorage.getItem('kweb_darknet_deaddrops');
+    const userDrops = raw ? JSON.parse(raw) : [];
+    userDrops.unshift(newDrop);
+    localStorage.setItem('kweb_darknet_deaddrops', JSON.stringify(userDrops));
+  } catch (e) {}
+
+  selectedDropId = newDrop.id;
+  renderDeadDropList();
+  printTerminal(`[DEAD DROP WIRE] Transmitted '${newDrop.title}' to subterranean queue.`);
+}
+
+function downloadComposedDrop() {
+  snd.playFMChirp(600);
+  const cipherText = document.getElementById('dropNewCiphertext').value;
+  const author = document.getElementById('dropNewAuthor').value;
+  downloadTextFile(`deaddrop_${author}_${Date.now()}.drop`, cipherText);
+}
+
+function zeroizeAllUserDrops() {
+  snd.playDegaussWipe();
+  try {
+    localStorage.removeItem('kweb_darknet_deaddrops');
+  } catch (e) {}
+  selectedDropId = 'drop-0x7f01';
+  renderDeadDropList();
+  printTerminal('[EMERGENCY ZEROIZE] Subterranean volatile dead drop partition purged and overwritten with zeros.');
+}
+
+function printTerminalDeadDrops() {
+  const drops = getAllDeadDrops();
+  printTerminal(`[SUBTERRANEAN DEAD DROP VAULT CATALOG (${drops.length} ACTIVE)]`);
+  drops.forEach(d => {
+    printTerminal(`  • ${d.id.toUpperCase().padEnd(14)} [${d.cipher.toUpperCase().padEnd(8)}] ${d.title} (by ${d.author})`);
+  });
+  printTerminal("Type 'drop read <id>' to inspect and decrypt a specific dispatch.");
+}
+
+function printTerminalDrop(id) {
+  const drops = getAllDeadDrops();
+  const d = drops.find(x => x.id.toLowerCase() === id.toLowerCase() || x.id.replace('drop-', '').toLowerCase() === id.toLowerCase());
+  if (!d) {
+    printTerminal(`Drop '${id}' not found in subterranean partition.`);
+    return;
+  }
+  printTerminal(
+`[DEAD DROP DISPATCH: ${d.id.toUpperCase()}]
+  Title   : ${d.title}
+  Author  : ${d.author} -> ${d.target}
+  Date    : ${d.date} | Cipher: ${d.cipher.toUpperCase()} | Key: ${d.key}
+--------------------------------------------------------------------------------
+CIPHERTEXT:
+${d.ciphertext}
+
+DECRYPTED PLAINTEXT:
+${d.plaintext}
+--------------------------------------------------------------------------------`
+  );
+}
+
+function downloadTextFile(filename, text) {
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
+
+/* =========================================================================
    STATION STATE PERSISTENCE (QUICKSAVE F5 & QUICKLOAD F9)
    ========================================================================= */
 
@@ -5823,11 +7301,12 @@ function quicksaveStationState() {
     customKeys: PGP_KEYRING,
     feistelRounds: feistelState.maxRounds,
     currentOtpPad: currentOtpPad,
+    bbConnectedRoute: bbState.connectedRoute,
     savedAt: Date.now()
   };
   try {
     localStorage.setItem('kweb_darknet_state', JSON.stringify(state));
-    printTerminal('[QUICKSAVE] Station telemetry & cryptographic keys stored in persistent storage (F5).');
+    printTerminal('[QUICKSAVE] Station telemetry, dead drops & cryptographic keys stored in persistent storage (F5).');
   } catch (e) {
     printTerminal('[SAVE ERROR] Could not access local storage.');
   }
@@ -5849,6 +7328,10 @@ function quickloadStationState() {
     if (state.currentOtpPad) {
       currentOtpPad = state.currentOtpPad;
     }
+    if (state.bbConnectedRoute) {
+      dialRouteByString(state.bbConnectedRoute);
+    }
+    renderDeadDropList();
     printTerminal(`[QUICKLOAD] Restored station state from ${new Date(state.savedAt).toLocaleTimeString()} (F9).`);
   } catch (e) {
     printTerminal('[LOAD ERROR] Corrupt state buffer in local storage.');
@@ -5873,6 +7356,9 @@ setTimeout(() => {
   generateNewOtpSheet();
   renderPgpKeyring();
   initTopologySwitchboard();
+  renderBlueboxKeypad();
+  renderDeadDropList();
+  encryptNewDropLive();
 }, 600);
 
 </script>
