@@ -178,8 +178,8 @@ void SaveToMemory() {
     }
 }
 
-void LoadNotes() {
-    HANDLE hFile = CreateFileA("knote_data_v2.txt", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+int LoadNotesFromFile(const char* filename) {
+    HANDLE hFile = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD fileSize = GetFileSize(hFile, NULL);
         if (fileSize != INVALID_FILE_SIZE && fileSize > 0 && fileSize < 10 * 1024 * 1024) {
@@ -210,19 +210,14 @@ void LoadNotes() {
             }
         }
         CloseHandle(hFile);
+        return (numNotes > 0) ? 1 : 0;
     }
-    if (numNotes == 0) {
-        numNotes = 2;
-        pinned[0] = 0; encrypted[0] = 0;
-        lstrcpyA(notes[0], "Welcome to KNote!\r\n- #tags supported\r\n- Tabs available\r\n- AES encryption\r\n- Press F5/F9 for quick snapshot\r\n- Click Help or press F1/H for Help");
-        pinned[1] = 0; encrypted[1] = 0;
-        lstrcpyA(notes[1], "system_recovery_1999.log\r\n\r\n#kernel #recovery #anomaly\r\n\r\n[1999-12-28 23:41:09] SYSTEM KERNEL JOURNAL RECOVERY\r\nSubsystem: K-OS / Echo Subsystem Node 0x7F\r\nAnomaly ID: SIG-1999-ECHO\r\n\r\nMemory Offset Dump:\r\n0x00401000 : 45 43 48 4F 2D 31 39 39 39  | ECHO-1999...\r\n0x00401010 : 31 30 2E 31 39 2E 39 39 2E  | 10.19.99...\r\n0x00401020 : 63 6C 61 73 73 69 66 69 65  | classified..\r\n\r\n[LOG ENTRY #042]\r\nPacket stream redirected through non-routable interface 10.19.99.4/classified.\r\nAnomalous subcarrier frequency 1999Hz detected on primary bus.\r\nAutomated diagnostic daemon suspended pending manual operator authorization.\r\nAll node telemetry synchronized with echo-subsystem.net.\r\n\r\n-- END RECOVERY DUMP --");
-    }
+    return 0;
 }
 
-void SaveNotes() {
+void SaveNotesToFile(const char* filename) {
     SaveToMemory();
-    HANDLE hFile = CreateFileA("knote_data_v2.txt", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hFile = CreateFileA(filename, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD bw;
         for(int i=0; i<numNotes; i++) {
@@ -238,7 +233,32 @@ void SaveNotes() {
         }
         CloseHandle(hFile);
     }
+}
+
+void LoadNotes() {
+    if (!LoadNotesFromFile("knote_data_v2.txt")) {
+        if (numNotes == 0) {
+            numNotes = 2;
+            pinned[0] = 0; encrypted[0] = 0;
+            lstrcpyA(notes[0], "Welcome to KNote!\r\n- #tags supported\r\n- Tabs available\r\n- AES encryption\r\n- Press F5/F9 for quick snapshot\r\n- Click Help or press F1/H for Help");
+            pinned[1] = 0; encrypted[1] = 0;
+            lstrcpyA(notes[1], "system_recovery_1999.log\r\n\r\n#kernel #recovery #anomaly\r\n\r\n[1999-12-28 23:41:09] SYSTEM KERNEL JOURNAL RECOVERY\r\nSubsystem: K-OS / Echo Subsystem Node 0x7F\r\nAnomaly ID: SIG-1999-ECHO\r\n\r\nMemory Offset Dump:\r\n0x00401000 : 45 43 48 4F 2D 31 39 39 39  | ECHO-1999...\r\n0x00401010 : 31 30 2E 31 39 2E 39 39 2E  | 10.19.99...\r\n0x00401020 : 63 6C 61 73 73 69 66 69 65  | classified..\r\n\r\n[LOG ENTRY #042]\r\nPacket stream redirected through non-routable interface 10.19.99.4/classified.\r\nAnomalous subcarrier frequency 1999Hz detected on primary bus.\r\nAutomated diagnostic daemon suspended pending manual operator authorization.\r\nAll node telemetry synchronized with echo-subsystem.net.\r\n\r\n-- END RECOVERY DUMP --");
+        }
+    }
+}
+
+void SaveNotes() {
+    SaveNotesToFile("knote_data_v2.txt");
     isDirty = 0;
+}
+
+void SaveSnapshot() {
+    SaveNotesToFile("knote_snapshot.dat");
+}
+
+int LoadSnapshot() {
+    if (LoadNotesFromFile("knote_snapshot.dat")) return 1;
+    return LoadNotesFromFile("knote_data_v2.txt");
 }
 
 void ExportNoteMD() {
@@ -846,6 +866,17 @@ void MainEntry() {
     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
     HWND hwnd = CreateWindowEx(0, "KNoteApp", "KNote - Press F1 or H for Help", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN, CW_USEDEFAULT, CW_USEDEFAULT, rc.right - rc.left, rc.bottom - rc.top, NULL, NULL, hInstance, NULL);
     ShowWindow(hwnd, SW_SHOW); UpdateWindow(hwnd);
+    int hasTutorial = (GetFileAttributesA("knote_tutorialSeen.dat") != INVALID_FILE_ATTRIBUTES);
+    int hasExistingSave = (GetFileAttributesA("knote_data_v2.txt") != INVALID_FILE_ATTRIBUTES);
+    if (!hasTutorial) {
+        HANDLE hTut = CreateFileA("knote_tutorialSeen.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTut != INVALID_HANDLE_VALUE) {
+            DWORD bw = 0; WriteFile(hTut, "1", 1, &bw, NULL); CloseHandle(hTut);
+        }
+        if (!hasExistingSave) {
+            ShowHelpDialog(hwnd);
+        }
+    }
     MSG msg; 
     while (GetMessage(&msg, NULL, 0, 0) > 0) { 
         if (msg.message == WM_KEYDOWN) {
@@ -916,15 +947,18 @@ void MainEntry() {
                 continue;
             }
             if (msg.wParam == VK_F5) {
-                SaveNotes();
+                SaveSnapshot();
                 SetWindowTextA(hStatus, "  Session snapshot saved [F5]");
                 continue;
             }
             if (msg.wParam == VK_F9) {
-                LoadNotes();
-                if (numNotes > 0) OpenTab(0);
-                RefreshList();
-                SetWindowTextA(hStatus, "  Session snapshot restored [F9]");
+                if (LoadSnapshot()) {
+                    if (numNotes > 0) OpenTab(0);
+                    RefreshList();
+                    SetWindowTextA(hStatus, "  Session snapshot restored [F9]");
+                } else {
+                    SetWindowTextA(hStatus, "  No snapshot found. Press F5 to take a snapshot first.");
+                }
                 continue;
             }
             if (msg.wParam == VK_F1 || (!isEdit && (msg.wParam == 'H' || msg.wParam == 'h'))) {

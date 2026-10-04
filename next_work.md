@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: "KQuest (Phase 3: Monster & Boss Bestiary)"
   kilo_tester: KStarship
   kilo_usability: KNet
-  kilo_qa: KNote
+  kilo_qa: KPass
   kilo_expander: KPong
 virtual_web_target: "kweb://asm-temple"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KMystery
-  timestamp: "2026-10-04T03:55:00-07:00"
+  agent: kilo-qa
+  app: KNote
+  timestamp: "2026-10-04T04:08:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KNote`, `KPass`, `KHash`, `KGraph`, `KClock`, `KTimer`, `KPomodoro` *(Completed: KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KNote`
+- **Current Target**: `KPass`
 - **Upcoming Queue**:
-  `KPass`, `KDB`, `KHex`, `KBookmark`, `KPing`, `KChat`, `KClock`, `KTimer`, `KPomodoro`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet)*.
+  `KDB`, `KHex`, `KBookmark`, `KPing`, `KChat`, `KClock`, `KTimer`, `KPomodoro`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KPong`
@@ -230,6 +230,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T04:08:00-07:00 — kilo-qa: KNote (Pass 5 QA & Build Quality, Full State Snapshot Persistence & Tutorial Integrity)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 158.8 KB web / 25.6 KB native < 999 KB ceiling).
+  - Snapshot State Persistence: Added full snapshot save/load (F5/F9) capturing tabs, active note, trash notes, selection, and sidebar in web and native (`knote_snapshot.dat`).
+  - First-Run Tutorial Integrity: Added safe check (`knote_tutorialSeen` / `.dat`) ensuring welcome modal only fires on fresh sessions and never interrupts restored states.
+  - Interactive Modal Ergonomics: Added Enter key dismissal across help, stats, trash, and collab modals; verified Esc hotkey and backdrop-click dismissals.
+  - Verification: MSVC clean (`KNote.exe` 25.6 KB); Vite build clean in 288ms; CDP startup PASS; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T03:55:00-07:00 — kilo-usability: KMystery (UI/UX Usability Pass, Toast Occlusion Fix, Modal Close Accessibility & Responsive Sizing)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 154.8 KB web / 39.9 KB native < 999 KB ceiling).
   - Toast Occlusion Remediation: Re-anchored toast bar from screen-center to bottom-right with inline dismiss icon, preventing button occlusion.
@@ -260,11 +267,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Dead-Drop Guestbook & 1999Hz Carrier: Implemented dead-drop passphrase detector on guestbook submissions triggering procedural 1999Hz YM2612 FM audio, CRT alert banner, and diegetic Carlsbad relay injection.
   - Devlog & Vault Expansion: Added Article 09 (1999Hz subcarrier packet analysis), `copper_rainbow.asm`, and `demoscene_font8x8.asm` with full copy & download support.
   - Verification: `security_lint.py` 100% PASS; Vite build clean in 300ms; `check_sizes.py` 100% PASS.
-
-- **2026-10-04T02:52:00-07:00 — kilo-expander: KReversi (Replay Scrubber, FEN/Transcript Engine, Opening Book & Accessibility)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 201.9 KB web / 164.3 KB native < 999 KB ceiling).
-  - Replay Engine & History: Implemented step scrubber, auto-play speed controls, and interactive move chips list.
-  - FEN & Transcript Notation: Added standard FEN generator/parser, move transcript export/import, and preset positions.
-  - Opening Book & Endgame Minimax: Added 18 opening recognitions (D4 symmetry) and exact endgame solver badge.
-  - Keyboard Navigation & Parity: Added Arrow/WASD cursor navigation, Enter/Space placement, and F5/F9 state parity in web and Win32 C.
-  - Verification: MSVC clean (`KReversi.exe` 164.3 KB); Vite build clean in 268ms; security_lint 100% PASS; check_icons 100% PASS.

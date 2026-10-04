@@ -3199,13 +3199,17 @@
       } else {
         cur.text = noteArea.value;
       }
+      cur.updated_at = new Date().toISOString();
     }
     const snapshot = {
       timestamp: new Date().toISOString(),
       notes: JSON.parse(JSON.stringify(notes)),
+      trashNotes: JSON.parse(JSON.stringify(trashNotes)),
       openTabs: [...openTabs],
       activeTabIndex: activeTabIndex,
-      activeIndex: activeIndex
+      activeIndex: activeIndex,
+      cursorPos: (noteArea && typeof noteArea.selectionStart === 'number') ? noteArea.selectionStart : 0,
+      sidebarVisible: !sidebar.classList.contains('hidden')
     };
     if (safeSetStorage('knote_snapshot', JSON.stringify(snapshot))) {
       showToast("Session snapshot saved [F5]");
@@ -3222,13 +3226,27 @@
       const snap = JSON.parse(raw);
       if (Array.isArray(snap.notes) && snap.notes.length > 0) {
         notes = snap.notes;
+        if (Array.isArray(snap.trashNotes)) {
+          trashNotes = snap.trashNotes;
+          updateTrashUI();
+        }
         openTabs = Array.isArray(snap.openTabs) && snap.openTabs.length > 0 ? snap.openTabs : [0];
         activeTabIndex = (typeof snap.activeTabIndex === 'number' && snap.activeTabIndex < openTabs.length) ? snap.activeTabIndex : 0;
         activeIndex = openTabs[activeTabIndex] || 0;
+        if (typeof snap.sidebarVisible === 'boolean') {
+          toggleSidebar(snap.sidebarVisible);
+        }
         saveNotes();
         loadActive();
         renderList();
         renderTabs();
+        if (typeof snap.cursorPos === 'number' && noteArea) {
+          try {
+            noteArea.selectionStart = snap.cursorPos;
+            noteArea.selectionEnd = snap.cursorPos;
+          } catch (err) {}
+        }
+        safeSetStorage('knote_tutorialSeen', '1');
         const timeStr = snap.timestamp ? new Date(snap.timestamp).toLocaleTimeString() : '';
         showToast(`Session snapshot restored [F9]${timeStr ? ' (' + timeStr + ')' : ''}`);
       } else {
@@ -3985,7 +4003,7 @@
       return;
     }
 
-    // Enter closes help and stats modals if open
+    // Enter closes help, stats, trash, or collab modals if open
     if (e.key === 'Enter' && modalOpen) {
       if (helpModal.style.display === 'flex') {
         e.preventDefault();
@@ -3996,6 +4014,19 @@
         e.preventDefault();
         closeStatsModal();
         return;
+      } else if (trashModal.style.display === 'flex') {
+        e.preventDefault();
+        trashModal.style.display = 'none';
+        if (trashBtn) trashBtn.focus();
+        return;
+      } else if (collabModal && collabModal.style.display === 'flex') {
+        const isCollabInput = document.activeElement && (document.activeElement.id === 'joinCodeInput' || document.activeElement.id === 'collabChatInput');
+        if (!isCollabInput) {
+          e.preventDefault();
+          collabModal.style.display = 'none';
+          if (collabBtn) collabBtn.focus();
+          return;
+        }
       }
     }
 
@@ -4204,12 +4235,17 @@
   }
 
   const tutorialSeen = safeGetStorage('knote_tutorialSeen');
+  const hasExistingData = !!(safeGetStorage('knote_data_multi') || safeGetStorage('knote_data') || safeGetStorage('knote_snapshot'));
   if (!tutorialSeen) {
     safeSetStorage('knote_tutorialSeen', '1');
-    setTimeout(() => {
-      helpModal.style.display = 'flex';
-      setTimeout(() => helpOkBtn.focus(), 50);
-    }, 250);
+    if (!hasExistingData) {
+      setTimeout(() => {
+        helpModal.style.display = 'flex';
+        setTimeout(() => helpOkBtn.focus(), 50);
+      }, 250);
+    } else {
+      showToast("KNote ready. Press F1 or H for Help [F5 Snapshot / F9 Restore]", 2800);
+    }
   } else {
     showToast("KNote ready. Press F1 or H for Help [F5 Snapshot / F9 Restore]", 2800);
   }

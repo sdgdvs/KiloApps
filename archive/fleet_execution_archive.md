@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T02:52:00-07:00 — kilo-expander: KReversi (Replay Scrubber, FEN/Transcript Engine, Opening Book & Accessibility)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 201.9 KB web / 164.3 KB native < 999 KB ceiling).
+  - Replay Engine & History: Implemented step scrubber, auto-play speed controls, and interactive move chips list.
+  - FEN & Transcript Notation: Added standard FEN generator/parser, move transcript export/import, and preset positions.
+  - Opening Book & Endgame Minimax: Added 18 opening recognitions (D4 symmetry) and exact endgame solver badge.
+  - Keyboard Navigation & Parity: Added Arrow/WASD cursor navigation, Enter/Space placement, and F5/F9 state parity in web and Win32 C.
+  - Verification: MSVC clean (`KReversi.exe` 164.3 KB); Vite build clean in 268ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T02:29:00-07:00 — kilo-qa: KNet (Pass 5 QA & Build Quality, Mandate 12 Connect Gate, Full State & TINAG Polish)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 181.8 KB web / 45.1 KB native < 999 KB ceiling).
   - Quicksave & Full State Persistence: Added complete state persistence across all 7 tabs/utilities with F5/F9 hotkeys on web and native Win32 C (`knet_quicksave.dat`).
