@@ -4,6 +4,16 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T10:45:00-07:00 — kilo-expander: KSimon (Deep Feature Expansion, RFMS Duels, YM2612 FM Audio & Replay)**
+  - Status: PASS ✅ (0 regressions, clean builds, 114.7 KB web / 137.0 KB native < 999 KB ceiling).
+  - Online Multiplayer Duels (RFMS): Retrofitted Speed Match & Add-A-Step Volley modes via RTDB with live opponent LED indicators and quick-chat.
+  - Connect Gate & Solo Fallback: Enforced zero-autostart modal gate and 25s fallback timer to local CyberBot-99 AI opponent per Rule 12.
+  - Universal Audio Architecture: Implemented Genesis YM2612 2-op FM synthesis and SNES SPC700 stereo delay warmth with cycle toggle.
+  - Replay Viewer & Key Rebinding: Built step-by-step sequence scrubber (⏮, ◀, ▶/⏸, ▶, ⏭) and customizable keyboard controls.
+  - In-Universe Subnet Anomaly: Added diegetic 1999Hz subcarrier anomaly pointing to `kweb://echo-subsystem.net` per ARG Arc 1 & 2.
+  - Tab Visibility & Toast Occlusion: Added `visibilitychange` CPU drift prevention (ARCH-05) and safe non-occluding toast bar (Directive 189).
+  - Verification: MSVC clean; Vite build clean in 662ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T10:25:00-07:00 — kilo-qa: KBookmark (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & ARCH-05)**
   - Status: PASS ✅ (0 regressions, clean builds, 121.2 KB web / 24.1 KB native < 999 KB ceiling).
   - Quicksave & Quickload: Hardened [F5]/[F9] full state persistence (filters, categories, theme, view mode) and quota protection across web/Win32.

@@ -165,7 +165,18 @@ void CopyConsoleToClipboard(HWND hwnd) {
     }
 }
 
+#define TUTORIAL_FLAG_FILE "kping_tutorial.dat"
+#define QUICKSAVE_FILE "kping_state.dat"
+
 void ShowHelpDialog(HWND hwnd) {
+    HANDLE hNewFlag = CreateFileA(TUTORIAL_FLAG_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hNewFlag != INVALID_HANDLE_VALUE) {
+        BYTE b = 1;
+        DWORD w = 0;
+        WriteFile(hNewFlag, &b, 1, &w, NULL);
+        CloseHandle(hNewFlag);
+    }
+
     const char* helpMsg = 
         "================ KPing Diagnostics & Hotkeys ================\n\n"
         "KEYBOARD SHORTCUTS:\n"
@@ -205,6 +216,37 @@ void ShowHelpDialog(HWND hwnd) {
     MessageBoxA(hwnd, helpMsg, "KPing User Guide & Shortcuts", MB_OK | MB_ICONINFORMATION);
 }
 
+void CheckFirstRunTutorial(HWND hwnd) {
+    HANDLE hFlag = CreateFileA(TUTORIAL_FLAG_FILE, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (hFlag != INVALID_HANDLE_VALUE) {
+        CloseHandle(hFlag);
+        return;
+    }
+
+    HANDLE hSave = CreateFileA(QUICKSAVE_FILE, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (hSave != INVALID_HANDLE_VALUE) {
+        CloseHandle(hSave);
+        HANDLE hNewFlag = CreateFileA(TUTORIAL_FLAG_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hNewFlag != INVALID_HANDLE_VALUE) {
+            BYTE b = 1;
+            DWORD w = 0;
+            WriteFile(hNewFlag, &b, 1, &w, NULL);
+            CloseHandle(hNewFlag);
+        }
+        return;
+    }
+
+    HANDLE hNewFlag = CreateFileA(TUTORIAL_FLAG_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hNewFlag != INVALID_HANDLE_VALUE) {
+        BYTE b = 1;
+        DWORD w = 0;
+        WriteFile(hNewFlag, &b, 1, &w, NULL);
+        CloseHandle(hNewFlag);
+    }
+
+    AppendText("[i] Welcome to KPing! First-run session initialized. Press F1 or H for user manual & keyboard shortcuts.\r\n\r\n");
+}
+
 void SaveState(HWND hwnd) {
     KPING_STATE st;
     ZeroMemory(&st, sizeof(st));
@@ -212,24 +254,28 @@ void SaveState(HWND hwnd) {
 
     char numBuf[32];
     GetWindowTextA(hInputCount, numBuf, 32);
-    st.count = 4;
-    for (int i = 0; numBuf[i] >= '0' && numBuf[i] <= '9'; i++) st.count = st.count * 10 + (numBuf[i] - '0');
-    if (st.count < 1) st.count = 4;
+    int cVal = 0;
+    BOOL hasCDigits = FALSE;
+    for (int i = 0; numBuf[i] >= '0' && numBuf[i] <= '9'; i++) { cVal = cVal * 10 + (numBuf[i] - '0'); hasCDigits = TRUE; }
+    st.count = (hasCDigits && cVal > 0) ? cVal : 4;
 
     GetWindowTextA(hInputSize, numBuf, 32);
-    st.size = 32;
-    for (int i = 0; numBuf[i] >= '0' && numBuf[i] <= '9'; i++) st.size = st.size * 10 + (numBuf[i] - '0');
-    if (st.size < 1) st.size = 32;
+    int sVal = 0;
+    BOOL hasSDigits = FALSE;
+    for (int i = 0; numBuf[i] >= '0' && numBuf[i] <= '9'; i++) { sVal = sVal * 10 + (numBuf[i] - '0'); hasSDigits = TRUE; }
+    st.size = (hasSDigits && sVal > 0) ? sVal : 32;
 
     GetWindowTextA(hInputTTL, numBuf, 32);
-    st.ttl = 115;
-    for (int i = 0; numBuf[i] >= '0' && numBuf[i] <= '9'; i++) st.ttl = st.ttl * 10 + (numBuf[i] - '0');
-    if (st.ttl < 1) st.ttl = 115;
+    int tVal = 0;
+    BOOL hasTDigits = FALSE;
+    for (int i = 0; numBuf[i] >= '0' && numBuf[i] <= '9'; i++) { tVal = tVal * 10 + (numBuf[i] - '0'); hasTDigits = TRUE; }
+    st.ttl = (hasTDigits && tVal > 0) ? tVal : 115;
 
     GetWindowTextA(hInputTimeout, numBuf, 32);
-    st.timeout = 1000;
-    for (int i = 0; numBuf[i] >= '0' && numBuf[i] <= '9'; i++) st.timeout = st.timeout * 10 + (numBuf[i] - '0');
-    if (st.timeout < 100) st.timeout = 1000;
+    int toVal = 0;
+    BOOL hasToDigits = FALSE;
+    for (int i = 0; numBuf[i] >= '0' && numBuf[i] <= '9'; i++) { toVal = toVal * 10 + (numBuf[i] - '0'); hasToDigits = TRUE; }
+    st.timeout = (hasToDigits && toVal >= 100) ? toVal : 1000;
 
     st.continuous = SendMessage(hCheckCont, BM_GETCHECK, 0, 0) == BST_CHECKED;
     st.hexdump = SendMessage(hCheckHex, BM_GETCHECK, 0, 0) == BST_CHECKED;
@@ -237,7 +283,7 @@ void SaveState(HWND hwnd) {
     st.resolve = SendMessage(hCheckResolve, BM_GETCHECK, 0, 0) == BST_CHECKED;
     st.sound = SendMessage(hCheckSound, BM_GETCHECK, 0, 0) == BST_CHECKED;
 
-    HANDLE hFile = CreateFileA("kping_state.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD written;
         WriteFile(hFile, &st, sizeof(st), &written, NULL);
@@ -247,7 +293,7 @@ void SaveState(HWND hwnd) {
 }
 
 void LoadState(HWND hwnd) {
-    HANDLE hFile = CreateFileA("kping_state.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         KPING_STATE st;
         DWORD bytesRead;
@@ -396,41 +442,49 @@ DWORD WINAPI PingThread(LPVOID param) {
 
     char countStr[32] = "4";
     GetWindowTextA(hInputCount, countStr, 32);
-    int countVal = 4;
+    int countVal = 0;
+    BOOL hasCountDigits = FALSE;
     for (int i = 0; countStr[i] >= '0' && countStr[i] <= '9'; i++) {
         countVal = countVal * 10 + (countStr[i] - '0');
+        hasCountDigits = TRUE;
     }
-    if (countVal < 1) countVal = 1;
+    if (!hasCountDigits || countVal < 1) countVal = 4;
     if (countVal > 1000) countVal = 1000;
     wsprintfA(countStr, "%d", countVal);
 
     char sizeStr[32] = "32";
     GetWindowTextA(hInputSize, sizeStr, 32);
-    int sizeVal = 32;
+    int sizeVal = 0;
+    BOOL hasSizeDigits = FALSE;
     for (int i = 0; sizeStr[i] >= '0' && sizeStr[i] <= '9'; i++) {
         sizeVal = sizeVal * 10 + (sizeStr[i] - '0');
+        hasSizeDigits = TRUE;
     }
-    if (sizeVal < 1) sizeVal = 1;
+    if (!hasSizeDigits || sizeVal < 1) sizeVal = 32;
     if (sizeVal > 65500) sizeVal = 65500;
     wsprintfA(sizeStr, "%d", sizeVal);
 
     char ttlStr[32] = "115";
     GetWindowTextA(hInputTTL, ttlStr, 32);
-    int ttlVal = 115;
+    int ttlVal = 0;
+    BOOL hasTtlDigits = FALSE;
     for (int i = 0; ttlStr[i] >= '0' && ttlStr[i] <= '9'; i++) {
         ttlVal = ttlVal * 10 + (ttlStr[i] - '0');
+        hasTtlDigits = TRUE;
     }
-    if (ttlVal < 1) ttlVal = 1;
+    if (!hasTtlDigits || ttlVal < 1) ttlVal = 115;
     if (ttlVal > 255) ttlVal = 255;
     wsprintfA(ttlStr, "%d", ttlVal);
 
     char timeoutStr[32] = "1000";
     GetWindowTextA(hInputTimeout, timeoutStr, 32);
-    int timeoutVal = 1000;
+    int timeoutVal = 0;
+    BOOL hasTimeoutDigits = FALSE;
     for (int i = 0; timeoutStr[i] >= '0' && timeoutStr[i] <= '9'; i++) {
         timeoutVal = timeoutVal * 10 + (timeoutStr[i] - '0');
+        hasTimeoutDigits = TRUE;
     }
-    if (timeoutVal < 100) timeoutVal = 100;
+    if (!hasTimeoutDigits || timeoutVal < 100) timeoutVal = 1000;
     if (timeoutVal > 10000) timeoutVal = 10000;
     wsprintfA(timeoutStr, "%d", timeoutVal);
 
@@ -1582,6 +1636,7 @@ void MainEntry() {
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+    CheckFirstRunTutorial(hwnd);
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {

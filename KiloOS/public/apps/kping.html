@@ -244,21 +244,21 @@
 
   canvas { flex: 1; width: 100%; height: 100%; border-radius: 6px; background: rgba(0,0,0,0.25); }
 
-  /* Toast Notification System (Safe Non-Occluding Viewport Placement) */
+  /* Toast Notification System (Top-Center Safe Placement per Directive 189) */
   .toast-container {
-    position: fixed; bottom: 114px; right: 20px; z-index: 1000;
-    display: flex; flex-direction: column-reverse; gap: 8px; pointer-events: none; align-items: flex-end;
-    max-width: 440px;
+    position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 3000;
+    display: flex; flex-direction: column; gap: 8px; pointer-events: none; align-items: center;
+    max-width: 520px; width: auto;
   }
   .toast {
-    pointer-events: auto; padding: 8px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 500;
+    pointer-events: auto; padding: 8px 14px; border-radius: 8px; font-size: 11.5px; font-weight: 500;
     display: flex; align-items: center; gap: 8px; box-shadow: 0 6px 20px rgba(0,0,0,0.5);
     animation: toastIn 0.22s cubic-bezier(0.16, 1, 0.3, 1); cursor: pointer; transition: all 0.18s ease;
-    border: 1px solid var(--border); backdrop-filter: blur(10px); max-width: 400px;
+    border: 1px solid var(--border); backdrop-filter: blur(10px); max-width: 460px;
     user-select: none;
   }
   .toast:hover {
-    transform: translateY(-1px);
+    transform: translateY(1px);
     box-shadow: 0 8px 24px rgba(0,0,0,0.6);
   }
   .toast .toast-dismiss {
@@ -272,7 +272,7 @@
   .toast-warning { background: rgba(120, 53, 15, 0.95); border-left: 4px solid var(--warning); color: #fef3c7; }
   .toast-error { background: rgba(127, 29, 29, 0.95); border-left: 4px solid var(--danger); color: #fee2e2; }
   @keyframes toastIn {
-    from { opacity: 0; transform: translateY(12px) scale(0.95); }
+    from { opacity: 0; transform: translateY(-10px) scale(0.95); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
@@ -808,8 +808,15 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
   function safeSetStorage(key, val) {
     try {
       localStorage.setItem(key, JSON.stringify(val));
+      return true;
     } catch (e) {
       console.warn('localStorage access failed:', e);
+      if (e && (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014)) {
+        if (typeof showToast === 'function') {
+          showToast("Storage quota exceeded. Unable to persist configuration.", "warning", 3000);
+        }
+      }
+      return false;
     }
   }
 
@@ -1128,12 +1135,12 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
       return;
     }
     saveConfig();
-    safeSetStorage('kping_quicksave', {
+    const success = safeSetStorage('kping_quicksave', {
       host: hostInput.value.trim(),
       count: parseInt(countInput.value) || 4,
       size: parseInt(sizeInput.value) || 32,
       interval: parseInt(intervalInput.value) || 1000,
-      pattern: patternSelect.value || 'ascii',
+      pattern: patternSelect ? patternSelect.value : 'ascii',
       dscp: dscpSelect ? dscpSelect.value : '0',
       ttl: parseInt(ttlInput.value) || 115,
       timeout: parseInt(timeoutInput.value) || 1000,
@@ -1141,10 +1148,15 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
       hexdump: hexdumpCheck.checked,
       dfbit: dfCheck.checked,
       resolve: resolveCheck.checked,
+      graphMode: graphMode,
+      soundMuted: soundMuted,
+      currentFilter: currentFilter,
       timestamp: new Date().toISOString()
     });
-    showToast("💾 <strong>Configuration Quicksaved [F5]</strong>", "success", 2500);
-    append(`[i] Configuration state quicksaved to storage [F5]\n`, 'info');
+    if (success) {
+      showToast("💾 <strong>Configuration Quicksaved [F5]</strong>", "success", 2500);
+      append(`[i] Configuration state quicksaved to storage [F5]\n`, 'info');
+    }
   }
 
   function quickloadState() {
@@ -1170,6 +1182,17 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
     dfCheck.checked = !!saved.dfbit;
     resolveCheck.checked = !!saved.resolve;
     countInput.disabled = continuousCheck.checked;
+    if (typeof saved.soundMuted === 'boolean') {
+      soundMuted = saved.soundMuted;
+      safeSetStorage('kping_sound_muted', soundMuted);
+      updateSoundButton();
+    }
+    if (saved.graphMode && (saved.graphMode === 'line' || saved.graphMode === 'hist' || saved.graphMode === 'strip')) {
+      setGraphMode(saved.graphMode);
+    }
+    if (saved.currentFilter && typeof setConsoleFilter === 'function') {
+      setConsoleFilter(saved.currentFilter);
+    }
     if (presetSelect) {
       presetSelect.value = hostInput.value.trim();
     }
@@ -1183,6 +1206,13 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
   if (btnHelpSave) btnHelpSave.onclick = quicksaveState;
   if (btnHelpLoad) btnHelpLoad.onclick = quickloadState;
 
+  function dismissAllToasts() {
+    if (!toastContainer) return;
+    while (toastContainer.firstChild) {
+      toastContainer.removeChild(toastContainer.firstChild);
+    }
+  }
+
   function showToast(messageHtml, type = 'info', duration = 3500) {
     while (toastContainer.children.length >= 2) {
       toastContainer.removeChild(toastContainer.firstChild);
@@ -1194,14 +1224,14 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
     toast.innerHTML = `<span style="flex:1;">${messageHtml}</span><span class="toast-dismiss" aria-hidden="true">&times;</span>`;
     toast.onclick = () => {
       toast.style.opacity = '0';
-      toast.style.transform = 'translateY(10px)';
+      toast.style.transform = 'translateY(-10px)';
       setTimeout(() => toast.remove(), 180);
     };
     toastContainer.appendChild(toast);
     setTimeout(() => {
       if (toast.parentElement) {
         toast.style.opacity = '0';
-        toast.style.transform = 'translateY(10px)';
+        toast.style.transform = 'translateY(-10px)';
         setTimeout(() => toast.remove(), 180);
       }
     }, duration);
@@ -1269,12 +1299,16 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
   function openHelpModal() {
     lastFocusedEl = document.activeElement;
     closeAllModals();
+    safeSetStorage('kping_tutorialSeen', '1');
+    safeSetStorage('kping_onboarded', true);
     helpModal.classList.add('active');
     modalCloseBtn.focus();
   }
 
   function closeHelpModal() {
     helpModal.classList.remove('active');
+    safeSetStorage('kping_tutorialSeen', '1');
+    safeSetStorage('kping_onboarded', true);
     if (lastFocusedEl && typeof lastFocusedEl.focus === 'function') {
       lastFocusedEl.focus();
     }
@@ -1426,6 +1460,17 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
 
     out.value = filtered.map(l => l.text).join('');
     out.scrollTop = out.scrollHeight;
+  }
+
+  function setConsoleFilter(mode) {
+    if (!mode) return;
+    const targetPill = document.querySelector(`.filter-pill[data-filter="${mode}"]`);
+    if (targetPill) {
+      filterPills.forEach(p => p.classList.remove('active'));
+      targetPill.classList.add('active');
+      currentFilter = mode;
+      applyConsoleFilter();
+    }
   }
 
   function append(text, type = "info", rawObj = null) {
@@ -3490,6 +3535,9 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
               closeHelpModal();
               return;
           }
+          if (toastContainer && toastContainer.children.length > 0) {
+              dismissAllToasts();
+          }
           if (isPinging) stopPing();
           if (isTracing) stopTrace(true);
           if (isMtuSweeping) stopMtuSweep();
@@ -3571,10 +3619,26 @@ Press Enter or 'P' to Ping, 'B' for BGP, 'Q' for Bloat, 'G' for Global Mesh, F5/
   window.addEventListener('DOMContentLoaded', resizeCanvas);
   setTimeout(resizeCanvas, 100);
 
-  // Startup Welcome & Onboarding
+  // Background Tab Visibility & CPU Conservation (ARCH-05)
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (audioCtx && audioCtx.state === 'running') {
+        audioCtx.suspend().catch(() => {});
+      }
+    } else {
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+      resizeCanvas();
+    }
+  });
+
+  // Startup Welcome & Onboarding (Pass 5 Tutorial Integrity)
   setTimeout(() => {
-    const onboarded = safeGetStorage('kping_onboarded', false);
-    if (!onboarded) {
+    const hasQuicksave = !!safeGetStorage('kping_quicksave', null);
+    const tutorialSeen = safeGetStorage('kping_tutorialSeen', false) || safeGetStorage('kping_onboarded', false);
+    if (!tutorialSeen && !hasQuicksave) {
+      safeSetStorage('kping_tutorialSeen', '1');
       safeSetStorage('kping_onboarded', true);
       showToast("💡 <strong>Welcome to KPing!</strong> Press <strong>F1</strong> or <strong>H</strong> anytime for the interactive manual and keyboard shortcuts.", "info", 6000);
     } else {
