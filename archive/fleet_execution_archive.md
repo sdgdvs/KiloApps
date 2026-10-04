@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T10:25:00-07:00 — kilo-qa: KBookmark (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, clean builds, 121.2 KB web / 24.1 KB native < 999 KB ceiling).
+  - Quicksave & Quickload: Hardened [F5]/[F9] full state persistence (filters, categories, theme, view mode) and quota protection across web/Win32.
+  - Tutorial Integrity: Enforced first-run flag gates (`kbookmark_tutorial.dat` / localStorage) preventing tutorial popups on restored saves.
+  - Interactive Overlays: Added Space/Enter dismissal across splash, help, and diagnostic overlays; added Win32 modal dialog message processing.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener for background autosave snapshot without CPU waste.
+  - Verification: MSVC clean (`KBookmark.exe` 24.1 KB); Vite clean in 333ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T09:54:00-07:00 — kilo-tester: KSynth (Interactive UI Audit, Toast Occlusion Remediation & ARCH-05)**
   - Status: PASS ✅ (3 issues fixed, 0 regressions, clean builds, 163.2 KB web < 999 KB ceiling).
   - Toast Occlusion Remediation: Re-anchored toast bar to top-center (50px) under header and added auto-dismissal on user interaction per Directive 189.

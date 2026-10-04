@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://darknet"
   kilo_graphics: KAbyss
   kilo_tester: KChrono
-  kilo_usability: KGraph
+  kilo_usability: KClock
   kilo_qa: KPing
   kilo_expander: KReversi
 virtual_web_target: "kweb://darknet"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-tester
-  app: KSys
-  timestamp: "2026-10-04T11:26:00-07:00"
+  agent: kilo-usability
+  app: KGraph
+  timestamp: "2026-10-04T11:46:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio`, `KSanctuary`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys` *(Completed: KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KGraph`
+- **Current Target**: `KClock`
 - **Upcoming Queue**:
-  `KClock`, `KTimer`, `KPomodoro` *(Completed: KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass)*.
+  `KTimer`, `KPomodoro`, `KGraph` *(Completed: KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KPing`
@@ -221,6 +221,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T11:46:00-07:00 — kilo-usability: KGraph (Cursor-Centered Zoom, Touch Ergonomics, Dark Scrollbars & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, clean builds, 149.3 KB web / 36.9 KB native < 999 KB ceiling).
+  - Cursor-Centered Zooming: Implemented smooth invariant mouse wheel zooming centered on pointer in web and Win32 C.
+  - Touch Ergonomics: Added `touch-action: none;` on canvas and auto-dismissal of active toasts on canvas interaction.
+  - Visual Polish: Replaced bright browser scrollbars with sleek dark scrollbars matching OS theme on presets and tabs.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener pausing sonification and audio to eliminate background CPU waste.
+  - Header & Layout Resilience: Added flex-wrapping to header actions preventing button clipping on narrow viewports.
+  - Verification: MSVC clean; Vite build clean in 335ms; test_web_apps PASS (60 FPS, 0 errors); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T11:26:00-07:00 — kilo-tester: KSys (Interactive UI Audit, ARCH-05 & Directive 189)**
   - Status: PASS ✅ (3 issues, 3 fixed; 180.1 KB web / 32.2 KB native < 999 KB ceiling).
   - Background Tab Visibility: Added `visibilitychange` listener pausing telemetry intervals to eliminate CPU waste (ARCH-05).
@@ -249,12 +258,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - In-Universe Subnet Anomaly: Added diegetic 1999Hz subcarrier anomaly pointing to `kweb://echo-subsystem.net` per ARG Arc 1 & 2.
   - Tab Visibility & Toast Occlusion: Added `visibilitychange` CPU drift prevention (ARCH-05) and safe non-occluding toast bar (Directive 189).
   - Verification: MSVC clean; Vite build clean in 662ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
-
-- **2026-10-04T10:25:00-07:00 — kilo-qa: KBookmark (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & ARCH-05)**
-  - Status: PASS ✅ (0 regressions, clean builds, 121.2 KB web / 24.1 KB native < 999 KB ceiling).
-  - Quicksave & Quickload: Hardened [F5]/[F9] full state persistence (filters, categories, theme, view mode) and quota protection across web/Win32.
-  - Tutorial Integrity: Enforced first-run flag gates (`kbookmark_tutorial.dat` / localStorage) preventing tutorial popups on restored saves.
-  - Interactive Overlays: Added Space/Enter dismissal across splash, help, and diagnostic overlays; added Win32 modal dialog message processing.
-  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener for background autosave snapshot without CPU waste.
-  - Verification: MSVC clean (`KBookmark.exe` 24.1 KB); Vite clean in 333ms; security_lint 100% PASS; check_icons 100% PASS.
 

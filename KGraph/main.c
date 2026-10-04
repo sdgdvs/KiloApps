@@ -975,10 +975,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_MOUSEWHEEL: {
             short zDelta = (short)HIWORD(wParam);
-            if (zDelta > 0) {
-                view_scale *= 0.85;
+            POINT pt = { (short)LOWORD(lParam), (short)HIWORD(lParam) };
+            ScreenToClient(hwnd, &pt);
+
+            RECT rect;
+            GetClientRect(hwnd, &rect);
+            int w = rect.right - rect.left;
+            int h = rect.bottom - g_canvasTop;
+            double factor = (zDelta > 0) ? 0.85 : 1.18;
+
+            if (pt.y >= g_canvasTop && w > 0 && h > 0) {
+                double mouse_world_x = view_cx - view_scale + ((double)(pt.x - rect.left) / w) * (2.0 * view_scale);
+                double mouse_world_y = view_cy - view_scale + ((double)(g_canvasTop + h - pt.y) / h) * (2.0 * view_scale);
+                view_cx = mouse_world_x - (mouse_world_x - view_cx) * factor;
+                view_cy = mouse_world_y - (mouse_world_y - view_cy) * factor;
+                view_scale *= factor;
             } else {
-                view_scale *= 1.18;
+                view_scale *= factor;
             }
             InvalidateRect(hwnd, NULL, FALSE);
             return 0;
