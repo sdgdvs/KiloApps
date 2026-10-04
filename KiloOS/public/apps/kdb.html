@@ -871,6 +871,8 @@
       <button class="btn-secondary" onclick="exportSQLDump()" title="Export ANSI SQL DDL + INSERT statements (.sql)">Exp SQL</button>
       <button class="btn-secondary" onclick="exportMarkdown()" title="Export Markdown Directory Report (M)">Exp MD <span class="kbd-badge">M</span></button>
       <button class="btn-secondary" onclick="printReport()" title="Generate printable HTML report">Print</button>
+      <button class="btn-secondary" onclick="quicksaveDatabase()" title="Quicksave database snapshot (F5)">Save <span class="kbd-badge">F5</span></button>
+      <button class="btn-secondary" onclick="quickloadDatabase()" title="Quickload snapshot (F9)">Load <span class="kbd-badge">F9</span></button>
       <button class="btn-secondary" onclick="openResetModal()" title="Reset database to default tables (R)">Reset <span class="kbd-badge">R</span></button>
       <button class="btn-secondary" onclick="openHelpModal()" title="Show Help & Shortcuts (F1/H)">Help <span class="kbd-badge">F1</span></button>
     </div>
@@ -892,7 +894,7 @@
       <button class="btn-action edit-btn" onclick="batchExportSelected()">Export Selected</button>
       <button class="btn-action" style="background:rgba(255,255,255,0.1);color:#fff;" onclick="clearSelection()">Cancel</button>
     </div>
-    <span>Auto-saves locally. <strong>[F1] Help</strong> | <strong>[Ctrl+Enter] Run SQL</strong></span>
+    <span>Auto-saves locally. <strong>[F1] Help</strong> | <strong>[F5] Quicksave</strong> | <strong>[F9] Quickload</strong> | <strong>[Ctrl+Enter] Run SQL</strong></span>
   </div>
 
   <!-- VIEW 1: Data Grid View -->
@@ -2477,6 +2479,9 @@ function importCSV(e) {
   if (!file) return;
 
   const reader = new FileReader();
+  reader.onerror = function() {
+    showToast('Failed to read CSV file.', 'danger');
+  };
   reader.onload = function(evt) {
     try {
       const text = evt.target.result;
@@ -2552,6 +2557,9 @@ function importJSON(e) {
   if (!file) return;
 
   const reader = new FileReader();
+  reader.onerror = function() {
+    showToast('Failed to read JSON file.', 'danger');
+  };
   reader.onload = function(evt) {
     try {
       let data = evt.target.result;
@@ -2569,6 +2577,8 @@ function importJSON(e) {
         sortCol = null;
         sortAsc = true;
         selectedRecordIds.clear();
+        localStorage.setItem('kdb_tutorialSeen', 'true');
+        localStorage.setItem('kdb_has_seen_tutorial', 'true');
         saveDatabase();
         renderAll();
         showToast('Full database JSON restored successfully', 'success');
@@ -2700,10 +2710,12 @@ function handleSearchKey(e) {
 function quicksaveDatabase() {
   try {
     localStorage.setItem('kdb_quicksave', JSON.stringify(dbState));
+    localStorage.setItem('kdb_tutorialSeen', 'true');
+    localStorage.setItem('kdb_has_seen_tutorial', 'true');
     showToast('💾 Quicksave recorded (F5)', 'success');
     updateStatus('Database snapshot quicksaved (F5)');
   } catch(err) {
-    showToast('Failed to quicksave state.', 'danger');
+    showToast('Failed to quicksave state (Storage quota exceeded).', 'danger');
   }
 }
 
@@ -2720,10 +2732,14 @@ function quickloadDatabase() {
       sortCol = null;
       sortAsc = true;
       selectedRecordIds.clear();
+      localStorage.setItem('kdb_tutorialSeen', 'true');
+      localStorage.setItem('kdb_has_seen_tutorial', 'true');
       saveDatabase();
       renderAll();
       showToast('📂 Quicksave restored (F9)', 'success');
       updateStatus('Quicksave restored from F5 snapshot');
+    } else {
+      showToast('Corrupted quicksave payload.', 'danger');
     }
   } catch(err) {
     showToast('Failed to restore quicksave.', 'danger');
@@ -2780,6 +2796,15 @@ window.addEventListener('keydown', function(e) {
       } else if (document.getElementById('statsModal').classList.contains('active')) {
         e.preventDefault();
         closeStatsModal();
+      } else if (document.getElementById('editModal').classList.contains('active')) {
+        e.preventDefault();
+        saveEditedRecord();
+      } else if (document.getElementById('newTableModal').classList.contains('active')) {
+        e.preventDefault();
+        createCustomTable();
+      } else if (document.getElementById('syncModal').classList.contains('active')) {
+        e.preventDefault();
+        connectLiveSync();
       }
     }
     return;
@@ -2829,17 +2854,28 @@ if (window.resizeTo) {
   window.resizeTo(940, 660);
 }
 
+// ARCH-05: Background Tab Visibility & Storage Flush
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    saveDatabase(false);
+  }
+});
+
 // Initial Boot
 loadDatabase();
-const hasSeenWelcome = localStorage.getItem('kdb_has_seen_tutorial');
+const hasSeenWelcome = localStorage.getItem('kdb_tutorialSeen') || localStorage.getItem('kdb_has_seen_tutorial');
 if (!hasSeenWelcome) {
   setTimeout(() => {
-    showToast('👋 Welcome to KDB Studio! [1] Grid [2] Cards [3] SQL [4] Dash. [F1] Help.', 'info', 4500);
-    localStorage.setItem('kdb_has_seen_tutorial', 'true');
+    if (!localStorage.getItem('kdb_tutorialSeen') && !localStorage.getItem('kdb_has_seen_tutorial')) {
+      showToast('👋 Welcome to KDB Studio! [1] Grid [2] Cards [3] SQL [4] Dash. [F1] Help | [F5] Quicksave.', 'info', 5000);
+      localStorage.setItem('kdb_tutorialSeen', 'true');
+      localStorage.setItem('kdb_has_seen_tutorial', 'true');
+    }
   }, 300);
 } else {
+  localStorage.setItem('kdb_tutorialSeen', 'true');
   setTimeout(() => {
-    updateStatus('Database ready. [F1] Help | [F5] Quicksave');
+    updateStatus('Database ready. [F1] Help | [F5] Quicksave | [F9] Quickload');
   }, 200);
 }
 </script>

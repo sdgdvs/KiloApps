@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T05:58:00-07:00 — kilo-expander: KSnake (RFMS Online Multiplayer Expansion, Dual Duel Skills, Replay Export & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 255.9 KB web / 55.5 KB native < 999 KB ceiling).
+  - RFMS Online Multiplayer Architecture: Standardized `RetroMultiplayer` integration with room codes (`SNK-XXXX`), lobby matchmaking, presence tracking, and 25s solo AI fallback.
+  - Duel Simulation Symmetry: Fixed remote player simulation desync, enabled full duel skills for both P1 and P2, and added cross-conduit attack beams with hazard warnings.
+  - Duel Match Replays: Added duel match record capture, `.ksdr` export, and integrated replay viewer support.
+  - Diegetic ARG Telemetry: Integrated `broadcastArgSignalFragment` logging echo telemetry carriers (1999Hz at 0x1999) on duel completions.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` auto-pause listener when tab is hidden.
+  - Verification: MSVC clean (`KSnake.exe` 55.5 KB); Vite clean in 286ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T05:45:00-07:00 — kilo-qa: KPass (Pass 5 QA & Build Quality, Full State Snapshot Persistence & Tutorial Integrity)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 125.9 KB web / 25.6 KB native < 999 KB ceiling).
   - Snapshot State Persistence: Added full snapshot save/load (F5/F9) capturing generator options, history, and form inputs in web and native (`kpass_quicksave.dat`).

@@ -22,16 +22,24 @@
 #define IDC_STATS_BTN 115
 #define IDC_EXPORT_MD 116
 #define IDC_EXPORT_SQL 117
+#define IDC_QUICKSAVE_BTN 118
+#define IDC_QUICKLOAD_BTN 119
+
+#define QUICKSAVE_FILE "kdb_quicksave.dat"
+#define TUTORIAL_FILE "kdb_tutorial.dat"
 
 HWND hListView;
 HWND hSearch;
 HWND hAddId, hAddName, hAddDept, hAddRole, hAddBtn, hDelBtn;
 HWND hPwd, hExpCSV, hImpCSV, hExpJSON, hImpJSON, hExpMD, hExpSQL, hStatsBtn, hReload, hHelpBtn;
+HWND hQuickSave, hQuickLoad;
 HFONT hFont;
 HBRUSH hBgBrush;
 HBRUSH hEditBgBrush;
 
 const char* headers[] = {"ID", "Name", "Department", "Role"};
+
+void PopulateListView(const char* filter);
 
 #define MAX_RECORDS 200
 #define FILE_NAME "kdb_data.dat"
@@ -182,6 +190,112 @@ void LoadDataFromFile() {
         CloseHandle(hFile);
     } else {
         data_count = 5;
+    }
+}
+
+void TouchTutorialFile() {
+    HANDLE hFile = CreateFileA(TUTORIAL_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        WriteFile(hFile, "1", 1, &written, NULL);
+        CloseHandle(hFile);
+    }
+}
+
+void CheckFirstRunTutorial(HWND hwnd) {
+    DWORD attr = GetFileAttributesA(TUTORIAL_FILE);
+    if (attr == INVALID_FILE_ATTRIBUTES) {
+        TouchTutorialFile();
+        const char* tut = 
+            "=== Welcome to KDB Studio ===\r\n\r\n"
+            "Quick Reference:\r\n"
+            "  • [F1] / [H]      : Help & Keyboard Shortcuts\r\n"
+            "  • [F5]           : Quicksave database snapshot\r\n"
+            "  • [F9]           : Quickload database snapshot\r\n"
+            "  • [/] or Ctrl+F  : Search and query records\r\n"
+            "  • [A]            : Analytics & Headcount distribution\r\n"
+            "  • [Enter]        : Add employee record / [Del]: Delete\r\n\r\n"
+            "Click OK to begin.";
+        MessageBoxA(hwnd, tut, "KDB Studio Welcome Guide", MB_OK | MB_ICONINFORMATION);
+    }
+}
+
+void QuicksaveData(HWND hwnd) {
+    char key[64] = {0};
+    if (hPwd) GetWindowTextA(hPwd, key, sizeof(key));
+    HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD written = 0;
+        int magic = key[0] ? 0x4B444245 : 0x4B444231;
+        WriteFile(hFile, &magic, sizeof(int), &written, NULL);
+        
+        int bufferSize = sizeof(int) + sizeof(Record) * data_count;
+        char* buffer = (char*)GlobalAlloc(GMEM_FIXED, bufferSize);
+        if (buffer) {
+            memcpy(buffer, &data_count, sizeof(int));
+            memcpy(buffer + sizeof(int), data, sizeof(Record) * data_count);
+            
+            if (key[0]) CryptData(buffer, bufferSize, key);
+            
+            WriteFile(hFile, buffer, bufferSize, &written, NULL);
+            GlobalFree(buffer);
+        }
+        CloseHandle(hFile);
+        TouchTutorialFile();
+        SetWindowTextA(hwnd, "KDB [Snapshot Quicksaved (F5)] - Employee Database & Analytics");
+        MessageBoxA(hwnd, "Database snapshot successfully quicksaved to " QUICKSAVE_FILE ".\r\nPress [F9] at any time to quickload.", "Quicksave Recorded (F5)", MB_OK | MB_ICONINFORMATION);
+    } else {
+        MessageBoxA(hwnd, "Failed to write quicksave snapshot.", "Quicksave Error", MB_OK | MB_ICONWARNING);
+    }
+}
+
+void QuickloadData(HWND hwnd) {
+    DWORD attr = GetFileAttributesA(QUICKSAVE_FILE);
+    if (attr == INVALID_FILE_ATTRIBUTES) {
+        MessageBoxA(hwnd, "No quicksave snapshot found.\r\nPress [F5] to take a quicksave snapshot first.", "No Quicksave Found", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+    char key[64] = {0};
+    if (hPwd) GetWindowTextA(hPwd, key, sizeof(key));
+    HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) {
+        DWORD readBytes = 0;
+        int magic = 0;
+        if (ReadFile(hFile, &magic, sizeof(int), &readBytes, NULL) && readBytes == sizeof(int)) {
+            int encrypted = (magic == 0x4B444245);
+            if (encrypted && !key[0]) {
+                CloseHandle(hFile);
+                MessageBoxA(hwnd, "Quicksave snapshot is encrypted. Please enter your Crypto Key in the Key box.", "Decryption Key Required", MB_OK | MB_ICONWARNING);
+                return;
+            }
+            
+            DWORD size = GetFileSize(hFile, NULL) - sizeof(int);
+            if (size > 0 && size < 1000000) {
+                char* buffer = (char*)GlobalAlloc(GMEM_FIXED, size);
+                if (buffer) {
+                    if (ReadFile(hFile, buffer, size, &readBytes, NULL) && readBytes == size) {
+                        if (encrypted) CryptData(buffer, size, key);
+                        int count = 0;
+                        memcpy(&count, buffer, sizeof(int));
+                        if (count >= 0 && count <= MAX_RECORDS) {
+                            memcpy(data, buffer + sizeof(int), count * sizeof(Record));
+                            data_count = count;
+                            SaveDataToFile();
+                            TouchTutorialFile();
+                            char buf[128] = {0};
+                            if (hSearch) GetWindowTextA(hSearch, buf, sizeof(buf));
+                            PopulateListView(buf);
+                            SetWindowTextA(hwnd, "KDB [Quicksave Restored (F9)] - Employee Database & Analytics");
+                            MessageBoxA(hwnd, "Quicksave snapshot successfully restored (F9).", "Quicksave Restored", MB_OK | MB_ICONINFORMATION);
+                        } else {
+                            MessageBoxA(hwnd, "Corrupted quicksave payload.", "Quickload Error", MB_OK | MB_ICONWARNING);
+                        }
+                    }
+                    GlobalFree(buffer);
+                }
+            }
+        }
+        CloseHandle(hFile);
     }
 }
 
@@ -688,6 +802,8 @@ void ShowHelpDialog(HWND hwnd) {
         "=== KDB Employee Database & Analytics ===\r\n\r\n"
         "[Keyboard Shortcuts & Accelerators]\r\n"
         "  • F1 / H        : Show this Help & Shortcuts guide\r\n"
+        "  • F5            : Quicksave database snapshot\r\n"
+        "  • F9            : Quickload database snapshot\r\n"
         "  • / or Ctrl+F   : Jump to & Focus Search / Query field\r\n"
         "  • Ctrl+N        : Jump to Add Employee fields\r\n"
         "  • A / Alt+A     : Department Analytics & Metrics\r\n"
@@ -730,18 +846,20 @@ LRESULT CALLBACK SearchSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
 }
 
 void InitListView(HWND hwnd) {
-    hPwd = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_PASSWORD | WS_TABSTOP, 10, 10, 85, 25, hwnd, (HMENU)IDC_PWD, GetModuleHandle(NULL), NULL);
-    hReload = CreateWindowEx(0, "BUTTON", "Load [L]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 100, 10, 60, 25, hwnd, (HMENU)IDC_RELOAD_BTN, GetModuleHandle(NULL), NULL);
-    hSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 165, 10, 140, 25, hwnd, (HMENU)IDC_SEARCH, GetModuleHandle(NULL), NULL);
+    hPwd = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | ES_PASSWORD | WS_TABSTOP, 10, 10, 75, 25, hwnd, (HMENU)IDC_PWD, GetModuleHandle(NULL), NULL);
+    hReload = CreateWindowEx(0, "BUTTON", "Reload", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 88, 10, 52, 25, hwnd, (HMENU)IDC_RELOAD_BTN, GetModuleHandle(NULL), NULL);
+    hQuickSave = CreateWindowEx(0, "BUTTON", "Save [F5]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 143, 10, 64, 25, hwnd, (HMENU)IDC_QUICKSAVE_BTN, GetModuleHandle(NULL), NULL);
+    hQuickLoad = CreateWindowEx(0, "BUTTON", "Load [F9]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 210, 10, 64, 25, hwnd, (HMENU)IDC_QUICKLOAD_BTN, GetModuleHandle(NULL), NULL);
+    hSearch = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL | WS_TABSTOP, 277, 10, 115, 25, hwnd, (HMENU)IDC_SEARCH, GetModuleHandle(NULL), NULL);
     
-    hStatsBtn = CreateWindowEx(0, "BUTTON", "Stats [A]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 310, 10, 62, 25, hwnd, (HMENU)IDC_STATS_BTN, GetModuleHandle(NULL), NULL);
-    hExpCSV = CreateWindowEx(0, "BUTTON", "CSV [E]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 375, 10, 62, 25, hwnd, (HMENU)IDC_EXPORT_CSV, GetModuleHandle(NULL), NULL);
-    hImpCSV = CreateWindowEx(0, "BUTTON", "Imp [I]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 440, 10, 60, 25, hwnd, (HMENU)IDC_IMPORT_CSV, GetModuleHandle(NULL), NULL);
-    hExpJSON = CreateWindowEx(0, "BUTTON", "JSON [J]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 503, 10, 66, 25, hwnd, (HMENU)IDC_EXPORT_JSON, GetModuleHandle(NULL), NULL);
-    hImpJSON = CreateWindowEx(0, "BUTTON", "Imp [O]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 572, 10, 64, 25, hwnd, (HMENU)IDC_IMPORT_JSON, GetModuleHandle(NULL), NULL);
-    hExpMD = CreateWindowEx(0, "BUTTON", "MD [M]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 639, 10, 58, 25, hwnd, (HMENU)IDC_EXPORT_MD, GetModuleHandle(NULL), NULL);
-    hExpSQL = CreateWindowEx(0, "BUTTON", "SQL", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 700, 10, 52, 25, hwnd, (HMENU)IDC_EXPORT_SQL, GetModuleHandle(NULL), NULL);
-    hHelpBtn = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 755, 10, 68, 25, hwnd, (HMENU)IDC_HELP_BTN, GetModuleHandle(NULL), NULL);
+    hStatsBtn = CreateWindowEx(0, "BUTTON", "Stats [A]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 395, 10, 58, 25, hwnd, (HMENU)IDC_STATS_BTN, GetModuleHandle(NULL), NULL);
+    hExpCSV = CreateWindowEx(0, "BUTTON", "CSV [E]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 456, 10, 54, 25, hwnd, (HMENU)IDC_EXPORT_CSV, GetModuleHandle(NULL), NULL);
+    hImpCSV = CreateWindowEx(0, "BUTTON", "Imp [I]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 513, 10, 52, 25, hwnd, (HMENU)IDC_IMPORT_CSV, GetModuleHandle(NULL), NULL);
+    hExpJSON = CreateWindowEx(0, "BUTTON", "JSON [J]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 568, 10, 58, 25, hwnd, (HMENU)IDC_EXPORT_JSON, GetModuleHandle(NULL), NULL);
+    hImpJSON = CreateWindowEx(0, "BUTTON", "Imp [O]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 629, 10, 54, 25, hwnd, (HMENU)IDC_IMPORT_JSON, GetModuleHandle(NULL), NULL);
+    hExpMD = CreateWindowEx(0, "BUTTON", "MD [M]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 686, 10, 54, 25, hwnd, (HMENU)IDC_EXPORT_MD, GetModuleHandle(NULL), NULL);
+    hExpSQL = CreateWindowEx(0, "BUTTON", "SQL", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 743, 10, 48, 25, hwnd, (HMENU)IDC_EXPORT_SQL, GetModuleHandle(NULL), NULL);
+    hHelpBtn = CreateWindowEx(0, "BUTTON", "Help [F1]", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 794, 10, 66, 25, hwnd, (HMENU)IDC_HELP_BTN, GetModuleHandle(NULL), NULL);
     
     g_pfnOrigSearchProc = (WNDPROC)SetWindowLongPtrA(hSearch, GWLP_WNDPROC, (LONG_PTR)SearchSubclassProc);
 
@@ -773,6 +891,8 @@ void InitListView(HWND hwnd) {
     SendMessage(hSearch, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hPwd, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hReload, WM_SETFONT, (WPARAM)hFont, TRUE);
+    SendMessage(hQuickSave, WM_SETFONT, (WPARAM)hFont, TRUE);
+    SendMessage(hQuickLoad, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hStatsBtn, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hExpCSV, WM_SETFONT, (WPARAM)hFont, TRUE);
     SendMessage(hImpCSV, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -874,6 +994,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 LoadDataFromFile();
                 char buf[128]; GetWindowTextA(hSearch, buf, sizeof(buf));
                 PopulateListView(buf);
+            } else if (LOWORD(wParam) == IDC_QUICKSAVE_BTN) {
+                QuicksaveData(hwnd);
+            } else if (LOWORD(wParam) == IDC_QUICKLOAD_BTN) {
+                QuickloadData(hwnd);
             } else if (LOWORD(wParam) == IDC_STATS_BTN) {
                 ShowStats(hwnd);
             } else if (LOWORD(wParam) == IDC_EXPORT_CSV) {
@@ -982,23 +1106,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int nh = HIWORD(lParam);
             if (nw < 100 || nh < 100) break;
 
-            MoveWindow(hPwd, 10, 10, 85, 25, TRUE);
-            MoveWindow(hReload, 98, 10, 60, 25, TRUE);
+            MoveWindow(hPwd, 10, 10, 75, 25, TRUE);
+            MoveWindow(hReload, 88, 10, 52, 25, TRUE);
+            MoveWindow(hQuickSave, 143, 10, 64, 25, TRUE);
+            MoveWindow(hQuickLoad, 210, 10, 64, 25, TRUE);
             
-            int btnSpace = 540;
-            int sh = nw - 165 - btnSpace - 20;
-            if (sh < 80) sh = 80;
-            MoveWindow(hSearch, 163, 10, sh, 25, TRUE);
+            int btnSpace = 490;
+            int sh = nw - 277 - btnSpace - 20;
+            if (sh < 70) sh = 70;
+            MoveWindow(hSearch, 277, 10, sh, 25, TRUE);
             
-            int rx = 163 + sh + 6;
-            MoveWindow(hStatsBtn, rx, 10, 62, 25, TRUE);
-            MoveWindow(hExpCSV, rx + 65, 10, 62, 25, TRUE);
-            MoveWindow(hImpCSV, rx + 130, 10, 60, 25, TRUE);
-            MoveWindow(hExpJSON, rx + 193, 10, 66, 25, TRUE);
-            MoveWindow(hImpJSON, rx + 262, 10, 64, 25, TRUE);
-            MoveWindow(hExpMD, rx + 329, 10, 58, 25, TRUE);
-            MoveWindow(hExpSQL, rx + 390, 10, 52, 25, TRUE);
-            MoveWindow(hHelpBtn, rx + 445, 10, 68, 25, TRUE);
+            int rx = 277 + sh + 6;
+            MoveWindow(hStatsBtn, rx, 10, 58, 25, TRUE);
+            MoveWindow(hExpCSV, rx + 61, 10, 54, 25, TRUE);
+            MoveWindow(hImpCSV, rx + 118, 10, 52, 25, TRUE);
+            MoveWindow(hExpJSON, rx + 173, 10, 58, 25, TRUE);
+            MoveWindow(hImpJSON, rx + 234, 10, 54, 25, TRUE);
+            MoveWindow(hExpMD, rx + 291, 10, 54, 25, TRUE);
+            MoveWindow(hExpSQL, rx + 348, 10, 48, 25, TRUE);
+            MoveWindow(hHelpBtn, rx + 399, 10, 66, 25, TRUE);
 
             MoveWindow(hListView, 10, 45, nw - 20, nh - 90, TRUE);
             
@@ -1058,11 +1184,12 @@ void MainEntry() {
     RECT rect = {0, 0, W, H};
     AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
 
-    HWND hwnd = CreateWindowEx(0, "KDBApp", "KDB - Employee Database & Analytics [F1: Help | /: Search | Del: Delete]", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
+    HWND hwnd = CreateWindowEx(0, "KDBApp", "KDB - Employee Database & Analytics [F1: Help | F5: Quicksave | F9: Quickload | /: Search]", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
+    CheckFirstRunTutorial(hwnd);
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {
@@ -1074,6 +1201,14 @@ void MainEntry() {
 
             if (msg.wParam == VK_F1) {
                 SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_HELP_BTN, BN_CLICKED), (LPARAM)hHelpBtn);
+                continue;
+            }
+            if (msg.wParam == VK_F5) {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_QUICKSAVE_BTN, BN_CLICKED), (LPARAM)hQuickSave);
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                SendMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_QUICKLOAD_BTN, BN_CLICKED), (LPARAM)hQuickLoad);
                 continue;
             }
             if (isCtrl && (msg.wParam == 'F' || msg.wParam == 'f')) {

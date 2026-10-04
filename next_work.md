@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: "KQuest (Phase 5: Performance & Win32 Parity)"
   kilo_tester: KSubmarine
   kilo_usability: KPass
-  kilo_qa: KDB
+  kilo_qa: KHex
   kilo_expander: KTowers
 virtual_web_target: "kweb://10.19.99.4/classified"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-usability
-  app: KNote
-  timestamp: "2026-10-04T06:55:00-07:00"
+  agent: kilo-qa
+  app: KDB
+  timestamp: "2026-10-04T07:12:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KHash`, `KGraph`, `KClock`, `KTimer`, `KPomodoro` *(Completed: KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KDB`
+- **Current Target**: `KHex`
 - **Upcoming Queue**:
-  `KHex`, `KBookmark`, `KPing`, `KChat`, `KClock`, `KTimer`, `KPomodoro`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass)*.
+  `KBookmark`, `KPing`, `KChat`, `KClock`, `KTimer`, `KPomodoro`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KTowers`
@@ -230,6 +230,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T07:12:00-07:00 — kilo-qa: KDB (Pass 5 QA & Build Quality, State Snapshot Persistence, Modal Navigation & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 101.6 KB web / 67.5 KB native < 999 KB ceiling).
+  - Snapshot State Persistence: Added Quicksave (F5) and Quickload (F9) toolbar buttons & hotkeys in web and native (`kdb_quicksave.dat`).
+  - First-Run Tutorial Integrity: Standardized `kdb_tutorialSeen` / `kdb_tutorial.dat` flags ensuring welcome tour never interrupts restored states.
+  - Interactive Modal Ergonomics: Added Enter key confirmation across edit, new table, sync, and delete modals with Escape dismissals.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` auto-flush listener persisting unsaved database changes when tab is hidden.
+  - Storage & Reader Hardening: Added `reader.onerror` handlers for CSV/JSON imports and quota overflow recovery.
+  - Verification: MSVC clean (`KDB.exe` 67.5 KB); Vite clean in 409ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T06:55:00-07:00 — kilo-usability: KNote (UI/UX Usability Pass, Toast Occlusion Remediation & ARCH-05)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 157.7 KB web / 25.6 KB native < 999 KB ceiling).
   - Window Dimension Expansion: Widened default window bounds in `App.jsx` and native Win32 to 980x680 for comfortable editing.
@@ -263,12 +272,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - BBS ZMODEM Simulator: Added sliding window file transfer modal with baud rate negotiation, live CRC-32 packet streaming, and disk download.
   - ARG & Network Interlinks: Wired diegetic carrier unlocks and Firebase signal fragments (`arg/signals/subterranean_darknet`); confirmed KNet/portal/webring links.
   - Verification: `security_lint.py` 100% PASS; `test_arg_flow.py` 100% PASS; `check_icons.py` 100% PASS; Vite clean build in 290ms.
-
-- **2026-10-04T05:58:00-07:00 — kilo-expander: KSnake (RFMS Online Multiplayer Expansion, Dual Duel Skills, Replay Export & ARCH-05)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 255.9 KB web / 55.5 KB native < 999 KB ceiling).
-  - RFMS Online Multiplayer Architecture: Standardized `RetroMultiplayer` integration with room codes (`SNK-XXXX`), lobby matchmaking, presence tracking, and 25s solo AI fallback.
-  - Duel Simulation Symmetry: Fixed remote player simulation desync, enabled full duel skills for both P1 and P2, and added cross-conduit attack beams with hazard warnings.
-  - Duel Match Replays: Added duel match record capture, `.ksdr` export, and integrated replay viewer support.
-  - Diegetic ARG Telemetry: Integrated `broadcastArgSignalFragment` logging echo telemetry carriers (1999Hz at 0x1999) on duel completions.
-  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` auto-pause listener when tab is hidden.
-  - Verification: MSVC clean (`KSnake.exe` 55.5 KB); Vite clean in 286ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
