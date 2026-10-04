@@ -222,16 +222,15 @@
             height: 100%;
             position: absolute;
             top: 0; left: 0;
-            display: none;
+            display: none !important;
         }
 
         .view-panel.active {
-            display: flex;
+            display: flex !important;
         }
 
         /* Blueprint Bay Layout */
         #blueprint-view {
-            display: flex;
             flex-direction: row;
             overflow: auto;
             width: 100%;
@@ -461,7 +460,6 @@
 
         /* Drydock View */
         #drydock-view {
-            display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
@@ -518,7 +516,6 @@
 
         /* Shakedown Flight View */
         #flight-view {
-            display: flex;
             flex-direction: column;
             width: 100%;
             height: 100%;
@@ -614,7 +611,6 @@
 
         /* Contracts View */
         #contracts-view {
-            display: flex;
             flex-direction: column;
             padding: 16px clamp(16px, 3vw, 40px);
             overflow-y: auto;
@@ -708,7 +704,6 @@
             padding: 20px clamp(16px, 4vw, 50px);
             overflow-y: auto;
             background: #080d19;
-            display: flex;
             flex-direction: column;
             gap: 20px;
         }
@@ -866,11 +861,13 @@
         /* Toast notifications */
         #toast-container {
             position: fixed;
-            bottom: 24px;
-            right: 24px;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 10000;
             display: flex;
             flex-direction: column;
+            align-items: center;
             gap: 8px;
             pointer-events: none;
         }
@@ -887,6 +884,8 @@
             opacity: 0;
             transform: translateY(10px);
             animation: toastIn 0.25s forwards, toastOut 0.25s forwards 2.5s;
+            pointer-events: auto;
+            cursor: pointer;
         }
 
         @keyframes toastIn {
@@ -1945,6 +1944,10 @@
             const el = document.createElement('div');
             el.className = 'toast-msg';
             el.textContent = msg;
+            el.title = 'Click to dismiss';
+            el.addEventListener('click', () => {
+                if (el.parentNode) el.parentNode.removeChild(el);
+            });
             container.appendChild(el);
             setTimeout(() => {
                 if (el.parentNode) el.parentNode.removeChild(el);
@@ -2492,6 +2495,13 @@
 
             // Render contracts checklist
             renderContracts();
+
+            // Drydock Progress Bar Sync
+            const dryBar = document.getElementById('drydock-progress-bar');
+            if (dryBar) {
+                dryBar.style.width = `${state.drydockProgress}%`;
+                dryBar.textContent = state.drydockProgress >= 100 ? '100% READY FOR FLIGHT' : (state.drydockProgress > 0 ? `${state.drydockProgress}% ASSEMBLED` : '0% READY');
+            }
         }
 
         /* Module Palette Builder */
@@ -3295,14 +3305,18 @@
                 if (state.loadFromStorage()) {
                     updateUI();
                     renderBlueprintGrid();
+                    if (document.getElementById('drydock-view')?.classList.contains('active')) {
+                        drawDrydockScene();
+                    }
                 }
             } else if (e.key === 'F1' || ((e.key === 'h' || e.key === 'H') && (!document.activeElement || document.activeElement.tagName !== 'INPUT'))) {
                 e.preventDefault();
                 const helpModal = document.getElementById('quick-help-modal');
                 if (helpModal) {
-                    if (helpModal.style.display !== 'none') {
+                    if (window.getComputedStyle(helpModal).display !== 'none') {
                         helpModal.style.display = 'none';
                     } else {
+                        closeAllModals();
                         helpModal.style.display = 'flex';
                     }
                 }
@@ -3321,14 +3335,14 @@
                 audio.init();
                 audio.muted = !audio.muted;
                 const btnAudio = document.getElementById('btn-audio-toggle');
-                if (btnAudio) btnAudio.textContent = audio.muted ? '🔇 Muted' : '🔊 Audio';
+                if (btnAudio) btnAudio.textContent = audio.muted ? '🔇 Muted' : '🔊 Audio [M]';
                 showToast(audio.muted ? 'AUDIO MUTED [M]' : 'AUDIO ENABLED [M]');
                 localStorage.setItem('kstarforge_soundMuted', audio.muted ? '1' : '0');
             } else if (e.key === 'Escape') {
                 let closedModal = false;
                 ['quick-help-modal', 'splash-modal', 'tutorial-modal', 'template-modal', 'settings-modal'].forEach(id => {
                     const el = document.getElementById(id);
-                    if (el && el.style.display !== 'none') {
+                    if (el && window.getComputedStyle(el).display !== 'none') {
                         el.style.display = 'none';
                         closedModal = true;
                         if (id === 'tutorial-modal') {
@@ -3346,15 +3360,19 @@
                     }
                 }
             } else if (e.key === 'Enter') {
-                if (document.getElementById('quick-help-modal') && document.getElementById('quick-help-modal').style.display !== 'none') {
+                const isModalOpen = (id) => {
+                    const el = document.getElementById(id);
+                    return el && window.getComputedStyle(el).display !== 'none';
+                };
+                if (isModalOpen('quick-help-modal')) {
                     document.getElementById('btn-help-done')?.click();
-                } else if (document.getElementById('splash-modal').style.display !== 'none') {
+                } else if (isModalOpen('splash-modal')) {
                     document.getElementById('btn-splash-start')?.click();
-                } else if (document.getElementById('tutorial-modal').style.display !== 'none') {
+                } else if (isModalOpen('tutorial-modal')) {
                     document.getElementById('btn-tut-next')?.click();
-                } else if (document.getElementById('template-modal').style.display !== 'none') {
+                } else if (isModalOpen('template-modal')) {
                     document.getElementById('btn-template-done')?.click();
-                } else if (document.getElementById('settings-modal').style.display !== 'none') {
+                } else if (isModalOpen('settings-modal')) {
                     document.getElementById('btn-settings-done')?.click();
                 }
             } else if (e.key >= '1' && e.key <= '5' && (!document.activeElement || document.activeElement.tagName !== 'INPUT')) {
@@ -3367,6 +3385,10 @@
         window.addEventListener('keyup', (e) => {
             flightSim.keys[e.key.toLowerCase()] = false;
             flightSim.keys[e.code] = false;
+        });
+
+        window.addEventListener('blur', () => {
+            flightSim.keys = {};
         });
 
         function updateFlightSim() {
@@ -4108,9 +4130,18 @@
             }
         ];
 
+        const ALL_MODAL_IDS = ['splash-modal', 'tutorial-modal', 'template-modal', 'settings-modal', 'quick-help-modal'];
+        function closeAllModals() {
+            ALL_MODAL_IDS.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+        }
+
         let tutIndex = 0;
 
         function showTutorialStep(idx) {
+            closeAllModals();
             tutIndex = idx;
             const step = TUTORIAL_STEPS[idx];
             document.getElementById('tut-step-title').textContent = step.title;
@@ -4203,6 +4234,7 @@
         document.getElementById('btn-clear-grid').addEventListener('click', () => {
             audio.playRemove();
             state.grid = Array(GRID_SIZE).fill(0).map(() => Array(GRID_SIZE).fill(0));
+            state.drydockProgress = 0;
             state.calculateTelemetry();
             updateUI();
             renderBlueprintGrid();
@@ -4369,6 +4401,7 @@
                 showToast('LOADED: PROJECT 1999 ECHO PROTOTYPE');
             }
 
+            state.drydockProgress = 0;
             updateUI();
             renderBlueprintGrid();
             audio.playSuccess();
@@ -4376,6 +4409,7 @@
 
         document.getElementById('btn-template-select').addEventListener('click', () => {
             audio.playClick();
+            closeAllModals();
             document.getElementById('template-modal').style.display = 'flex';
         });
 
@@ -4414,10 +4448,13 @@
                 return;
             }
             if (state.resources.credits >= 150) {
+                if (fabInterval) {
+                    clearInterval(fabInterval);
+                    fabInterval = null;
+                }
+                state.isFabricating = false;
                 state.resources.credits -= 150;
                 state.drydockProgress = 100;
-                document.getElementById('drydock-progress-bar').style.width = '100%';
-                document.getElementById('drydock-progress-bar').textContent = '100% READY FOR FLIGHT';
                 showToast('FABRICATION OVERCLOCKED TO 100%');
                 audio.playSuccess();
                 updateUI();
@@ -4479,6 +4516,7 @@
 
         document.getElementById('btn-settings-open').addEventListener('click', () => {
             audio.playClick();
+            closeAllModals();
             document.getElementById('settings-modal').style.display = 'flex';
         });
 
@@ -4508,6 +4546,7 @@
 
         const openHelpModal = () => {
             audio.playClick();
+            closeAllModals();
             document.getElementById('quick-help-modal').style.display = 'flex';
         };
         document.getElementById('btn-help-open').addEventListener('click', openHelpModal);
@@ -4738,6 +4777,7 @@
 
         document.getElementById('btn-splash-settings').addEventListener('click', () => {
             audio.playClick();
+            closeAllModals();
             document.getElementById('settings-modal').style.display = 'flex';
         });
 
@@ -4768,6 +4808,56 @@
             const btnAudio = document.getElementById('btn-audio-toggle');
             if (btnAudio) btnAudio.textContent = '🔇 Muted';
         }
+
+        // ARCH-05: Tab visibility change handling and timer drift elimination
+        let hiddenTimestamp = null;
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                hiddenTimestamp = Date.now();
+                flightSim.keys = {};
+                if (fabInterval) {
+                    clearInterval(fabInterval);
+                    fabInterval = null;
+                }
+                if (audio.ctx && audio.ctx.state === 'running') {
+                    audio.ctx.suspend().catch(() => {});
+                }
+            } else {
+                if (audio.ctx && audio.ctx.state === 'suspended') {
+                    audio.ctx.resume().catch(() => {});
+                }
+                if (state.isFabricating && hiddenTimestamp) {
+                    const elapsed = Date.now() - hiddenTimestamp;
+                    const steps = Math.floor(elapsed / 60);
+                    state.drydockProgress = Math.min(100, state.drydockProgress + steps * 2);
+                    if (state.drydockProgress >= 100) {
+                        state.isFabricating = false;
+                        showToast('VESSEL FABRICATION COMPLETE');
+                        audio.playSuccess();
+                    } else {
+                        fabInterval = setInterval(() => {
+                            if (state.drydockProgress < 100) {
+                                state.drydockProgress += 2;
+                                audio.playWeld();
+                                updateUI();
+                                drawDrydockScene();
+                            } else {
+                                clearInterval(fabInterval);
+                                fabInterval = null;
+                                state.isFabricating = false;
+                                showToast('VESSEL FABRICATION COMPLETE');
+                                audio.playSuccess();
+                                updateUI();
+                                drawDrydockScene();
+                            }
+                        }, 60);
+                    }
+                    updateUI();
+                    drawDrydockScene();
+                }
+                hiddenTimestamp = null;
+            }
+        });
 
         // Initialize state & components
         setupCanvases();
