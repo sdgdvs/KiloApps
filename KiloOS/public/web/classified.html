@@ -814,6 +814,7 @@
         <option value="0x2000">Sector 0x2000 (Y2K Quarantine &amp; Millennium Watchdog)</option>
         <option value="0x4242">Sector 0x4242 (Lithospheric Seismic Array &amp; Waveguide)</option>
         <option value="0x00FF">Sector 0x00FF (Fleet Daemon Duty Rotation Schedule)</option>
+        <option value="0x00DE">Sector 0x00DE (Deep Core Precursor Commutator &amp; Offset 0x00DEEPC0)</option>
       </select>
 
       <span style="color:var(--border);">|</span>
@@ -1256,6 +1257,7 @@
       <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px;">
         <button class="btn-retro" onclick="transmitResonancePulse()">⚡ Transmit 1999Hz Resonance Pulse</button>
         <button class="btn-retro" id="btnToggleLoopback" onclick="toggleSaltLoopback()">🔄 Engage Simulated Salt-Vault Echo Loopback</button>
+        <span id="lblSoloCountdown" style="font-size:11px; color:var(--amber-bright); font-weight:bold; padding:2px 8px; border:1px solid var(--border-amber); border-radius:3px; background:#04070e;">⏱️ Solo Auto-Lock in: 30s</span>
         <button class="btn-retro" onclick="decoupleResonance()">🧹 Decouple Stations</button>
         <span style="font-size:11px; color:var(--text-muted); margin-left:auto;" id="lblRtdbMeshStatus">Mesh: Connecting...</span>
       </div>
@@ -2481,7 +2483,8 @@ const SECTORS = {
   '0x7F00': generateSectorData('0x7F00', 'BEACON_STATION_0x7F\x00LITHOSPHERE_WAVEGUIDE\x00CARLSBAD_SALT_VAULT\x00HASH_VERIFY_ACTIVE'),
   '0x2000': generateSectorData('0x2000', 'Y2K_QUARANTINE_SECTOR\x00MILLENNIUM_WATCHDOG_ARMED\x00PREVENT_MEMORY_CASCADE\x00HALT_ENTROPY'),
   '0x4242': generateSectorData('0x4242', 'LITHOSPHERE_SEISMIC_REGISTER\x00GROUND_LOOP_ROD_COUPLING\x00HALITE_CAVERN_0x7F\x00RESONANCE_432HZ_1999HZ'),
-  '0x00FF': generateSectorData('0x00FF', 'FLEET_MODULE_SCHEDULE\x00ALPHA_GENESIS\x00BETA_VISUAL_AUDIO\x00GAMMA_VERIFY\x00DELTA_ERGONOMICS\x00EPSILON_WATCHDOG\x00ZETA_EXPAND')
+  '0x00FF': generateSectorData('0x00FF', 'FLEET_MODULE_SCHEDULE\x00ALPHA_GENESIS\x00BETA_VISUAL_AUDIO\x00GAMMA_VERIFY\x00DELTA_ERGONOMICS\x00EPSILON_WATCHDOG\x00ZETA_EXPAND'),
+  '0x00DE': generateSectorData('0x00DE', 'DEEP_CORE_COMMUTATOR\x00OFFSET_0x00DEEPC0\x00HOST_10.19.99.127\x00PRECURSOR_0x7F1999\x00SECTOR_03_SYNC')
 };
 
 const ORIGINAL_SECTORS = {};
@@ -3478,8 +3481,10 @@ async function verifyFragment() {
     statusHtml += `<div style="color:var(--amber-bright); margin-top:6px; font-weight:700;">★ HARMONIC FREQUENCY LOCK CONFIRMED: 1999 Hz Subcarrier Synchronized.</div>`;
   } else if (upper.includes('CARLSBAD-TRANSPONDER') || upper.includes('TRANSPONDER-SYNCHRONIZED')) {
     statusHtml += `<div style="color:var(--green-bright); margin-top:6px; font-weight:700;">★ DUAL-RESONANCE TRANSPONDER VERIFIED: 10.19.99.4 Airgap Ground Wave Synchronized.</div>`;
-  } else if (upper.includes('PRECURSOR-CARLSBAD') || upper.includes('0X7F1999')) {
-    statusHtml += `<div style="color:var(--cyan-net); margin-top:6px; font-weight:700;">★ PRECURSOR FRAGMENT #3 VERIFIED: Carlsbad Bedrock Memory Register Authenticated.</div>`;
+  } else if (upper.includes('PRECURSOR-CARLSBAD') || upper.includes('0X7F1999') || upper.includes('7F1999')) {
+    statusHtml += `<div style="color:var(--green-bright); margin-top:6px; font-weight:700;">★ PRECURSOR FRAGMENT #3 VERIFIED: Carlsbad Bedrock Memory Register Authenticated (0x7F1999). Convergence Vector: Seek Deep Core at 10.19.99.127.</div>`;
+  } else if (upper.includes('DEEP-CORE') || upper.includes('DEEP CORE') || upper.includes('10.19.99.127') || upper.includes('0X00DE')) {
+    statusHtml += `<div style="color:var(--cyan-net); margin-top:6px; font-weight:700;">★ DEEP CORE AIRGAP INTERFACE VERIFIED: Subterranean Terminal Host 10.19.99.127 &amp; Offset 0x00DEEPC0 Authenticated.</div>`;
   } else if (upper.includes('SECTOR_03') || upper.includes('SECTOR-03')) {
     statusHtml += `<div style="color:var(--amber-bright); margin-top:6px; font-weight:700;">★ SECTOR 03 ROUTING KEY CONFIRMED: Darknet Subterranean Relay Offset Verified.</div>`;
   } else {
@@ -3510,11 +3515,55 @@ const localSessionId = (function() {
 let saltLoopbackActive = false;
 let airgapRtdb = null;
 let dualResonanceLocked = false;
+let carlsbadPresenceList = [];
+let echoPresenceList = [];
+let soloFallbackSeconds = 30;
+let soloFallbackInterval = null;
+
+function startSoloFallbackTimer() {
+  if (soloFallbackInterval) clearInterval(soloFallbackInterval);
+  soloFallbackSeconds = 30;
+  const cd = document.getElementById('lblSoloCountdown');
+  if (cd) cd.textContent = `⏱️ Solo Auto-Lock in: ${soloFallbackSeconds}s`;
+
+  soloFallbackInterval = setInterval(() => {
+    if (dualResonanceLocked || saltLoopbackActive) {
+      clearInterval(soloFallbackInterval);
+      soloFallbackInterval = null;
+      if (cd) cd.textContent = 'Harmonic Lock Active';
+      return;
+    }
+    soloFallbackSeconds--;
+    if (cd) cd.textContent = `⏱️ Solo Auto-Lock in: ${soloFallbackSeconds}s`;
+    if (soloFallbackSeconds <= 0) {
+      clearInterval(soloFallbackInterval);
+      soloFallbackInterval = null;
+      engageSoloRelayFallback();
+    }
+  }, 1000);
+}
+
+function engageSoloRelayFallback() {
+  if (dualResonanceLocked) return;
+  saltLoopbackActive = true;
+  const btn = document.getElementById('btnToggleLoopback');
+  if (btn) {
+    btn.textContent = '⏹️ Disengage Salt Loopback';
+    btn.classList.add('active');
+  }
+  const cd = document.getElementById('lblSoloCountdown');
+  if (cd) cd.textContent = '⏱️ Solo Auto-Lock: Engaged (Halite Reflection)';
+  playResonanceChime();
+  updateDualPresenceUI();
+  logDemodEvent('⚡ 30s TIMEOUT REACHED: Signal lock acquired from cached Carlsbad relay (Solo Fallback Active).');
+}
 
 async function initAirgapPresence() {
   const lblMesh = document.getElementById('lblRtdbMeshStatus');
   const lblSessionA = document.getElementById('lblSessionA');
   if (lblSessionA) lblSessionA.textContent = `Session ID: ${localSessionId}`;
+
+  startSoloFallbackTimer();
 
   try {
     const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js");
@@ -3551,52 +3600,102 @@ async function initAirgapPresence() {
       onDisconnect(presenceRef).remove();
     } catch(e) {}
 
+    // 1. Listen for peer sessions on 10.19.99.4
     const allPresenceRef = ref(db, 'arg/presence/station_10_19_99_4');
     onValue(allPresenceRef, (snapshot) => {
       const data = snapshot.val() || {};
       const now = Date.now();
-      const activeSessions = Object.values(data).filter(s => s && (now - (s.timestamp || 0) < 120000));
-      updateDualPresenceUI(activeSessions);
+      carlsbadPresenceList = Object.values(data).filter(s => s && (now - (s.timestamp || 0) < 120000));
+      updateDualPresenceUI();
     });
+
+    // 2. Listen for companion sessions on 10.19.99.19 (Echo Subsystem)
+    const echoSubPresenceRef = ref(db, 'arg/presence/echo_subsystem');
+    onValue(echoSubPresenceRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      const now = Date.now();
+      echoPresenceList = Object.values(data).filter(s => s && (now - (s.timestamp || 0) < 120000));
+      updateDualPresenceUI();
+    });
+
+    // 3. Listen for collaborative signals board pulses across the subterranean net
+    const signalsRef = ref(db, 'arg/signals');
+    onValue(signalsRef, (snapshot) => {
+      const data = snapshot.val() || {};
+      const keys = Object.keys(data);
+      if (keys.length > 0) {
+        const lastKey = keys[keys.length - 1];
+        const lastSig = data[lastKey];
+        if (lastSig && lastSig.payload && lastSig.sessionId !== localSessionId) {
+          logDemodEvent(`[SIGNAL MESH] Carrier pulse intercepted from ${lastSig.host || lastKey}: ${lastSig.freq || '1999Hz'} "${lastSig.payload}"`);
+        }
+      }
+    });
+
   } catch (err) {
     if (lblMesh) {
       lblMesh.textContent = 'Mesh: STANDALONE SUBNET (Solo/Loopback Ready)';
       lblMesh.style.color = 'var(--text-muted)';
     }
-    updateDualPresenceUI([ { sessionId: localSessionId, host: '10.19.99.4', freq: 1999.0 } ]);
+    carlsbadPresenceList = [ { sessionId: localSessionId, host: '10.19.99.4', freq: 1999.0 } ];
+    updateDualPresenceUI();
   }
 }
 
-function updateDualPresenceUI(sessions) {
+function updateDualPresenceUI() {
   const lblCount = document.getElementById('lblDualPresenceCount');
   const cardB = document.getElementById('stationCardB');
   const titleB = document.getElementById('stationBTitle');
   const statusB = document.getElementById('stationBStatus');
   const freqB = document.getElementById('stationBFreq');
   const sessionBEl = document.getElementById('lblSessionB');
+  const nodeBEl = document.getElementById('stationBNode');
   const barProg = document.getElementById('barResonanceProgress');
   const lblPct = document.getElementById('lblResonancePct');
   const secretBox = document.getElementById('dualResonanceSecretBox');
   const badgeSync = document.getElementById('badgeAirgapSync');
+  const cd = document.getElementById('lblSoloCountdown');
 
-  const remoteSession = sessions.find(s => s.sessionId !== localSessionId);
-  const isDual = saltLoopbackActive || (sessions.length >= 2 && !!remoteSession);
+  // Check peer from echo subsystem first, then carlsbad peer
+  const echoPeer = echoPresenceList.find(s => s.sessionId !== localSessionId);
+  const carlsbadPeer = carlsbadPresenceList.find(s => s.sessionId !== localSessionId);
+  const remotePeer = echoPeer || carlsbadPeer;
+  const isEchoPeer = !!echoPeer;
+
+  const isDual = saltLoopbackActive || !!remotePeer;
 
   if (isDual) {
     dualResonanceLocked = true;
+    if (soloFallbackInterval) {
+      clearInterval(soloFallbackInterval);
+      soloFallbackInterval = null;
+    }
+    if (cd) cd.textContent = saltLoopbackActive ? '⏱️ Solo Fallback: Engaged' : '⏱️ Resonance Locked (Peer)';
+
     if (lblCount) lblCount.textContent = 'STATIONS IN RESONANCE: 2/2 (SYNCHRONIZED)';
     if (cardB) {
       cardB.classList.add('synced');
       cardB.classList.add('active');
     }
-    if (titleB) titleB.textContent = saltLoopbackActive ? 'STATION BETA [SALADO HALITE LOOPBACK]' : 'STATION BETA [REMOTE PEER TRANSCEIVER]';
+    if (titleB) {
+      if (saltLoopbackActive) {
+        titleB.textContent = 'STATION BETA [SALADO HALITE LOOPBACK]';
+      } else if (isEchoPeer) {
+        titleB.textContent = 'STATION BETA [10.19.99.19 ECHO TRANSCEIVER]';
+      } else {
+        titleB.textContent = 'STATION BETA [REMOTE PEER TRANSCEIVER]';
+      }
+    }
+    if (nodeBEl) {
+      nodeBEl.textContent = isEchoPeer ? '10.19.99.19 (Echo Subsystem)' : '10.19.99.4 (Carlsbad Intranet)';
+    }
     if (statusB) {
       statusB.textContent = '● SYNCHRONIZED';
       statusB.style.color = 'var(--green-bright)';
     }
     if (freqB) freqB.textContent = '1999.0 Hz [PHASE LOCKED]';
     if (sessionBEl) {
-      sessionBEl.textContent = saltLoopbackActive ? 'Session: LOOPBACK-LOCAL-HALITE-0x7F' : `Session: ${remoteSession ? remoteSession.sessionId : 'PEER-0x7F'}`;
+      sessionBEl.textContent = saltLoopbackActive ? 'Session: LOOPBACK-LOCAL-HALITE-0x7F' : `Session: ${remotePeer ? remotePeer.sessionId : 'PEER-0x7F'}`;
     }
     if (barProg) barProg.style.width = '100%';
     if (lblPct) {
@@ -3617,6 +3716,7 @@ function updateDualPresenceUI(sessions) {
       cardB.classList.remove('active');
     }
     if (titleB) titleB.textContent = 'STATION BETA [REMOTE TRANSCEIVER]';
+    if (nodeBEl) nodeBEl.textContent = '10.19.99.19 (Echo Subsystem)';
     if (statusB) {
       statusB.textContent = '○ AWAITING PEER / LOOPBACK';
       statusB.style.color = 'var(--text-muted)';
@@ -3645,15 +3745,22 @@ function toggleSaltLoopback() {
       btn.textContent = '⏹️ Disengage Salt Loopback';
       btn.classList.add('active');
     }
+    if (soloFallbackInterval) {
+      clearInterval(soloFallbackInterval);
+      soloFallbackInterval = null;
+    }
+    const cd = document.getElementById('lblSoloCountdown');
+    if (cd) cd.textContent = '⏱️ Loopback Engaged';
     playResonanceChime();
-    updateDualPresenceUI([{ sessionId: localSessionId, host: '10.19.99.4', freq: 1999.0 }]);
+    updateDualPresenceUI();
     logDemodEvent('LITHO-LOOPBACK ENGAGED: Halite reflection coupled at 1999.0 Hz (Station Beta Active).');
   } else {
     if (btn) {
       btn.textContent = '🔄 Engage Simulated Salt-Vault Echo Loopback';
       btn.classList.remove('active');
     }
-    updateDualPresenceUI([{ sessionId: localSessionId, host: '10.19.99.4', freq: 1999.0 }]);
+    startSoloFallbackTimer();
+    updateDualPresenceUI();
     logDemodEvent('LITHO-LOOPBACK DISENGAGED.');
   }
 }
@@ -3665,7 +3772,8 @@ function decoupleResonance() {
     btn.textContent = '🔄 Engage Simulated Salt-Vault Echo Loopback';
     btn.classList.remove('active');
   }
-  updateDualPresenceUI([{ sessionId: localSessionId, host: '10.19.99.4', freq: 1999.0 }]);
+  startSoloFallbackTimer();
+  updateDualPresenceUI();
   logDemodEvent('RESONANCE DECOUPLED: Transceivers reset to standby mode.');
 }
 
@@ -4156,6 +4264,35 @@ window.addEventListener('keydown', (e) => {
   } else if (key === ' ' || key === 'p' || key === 'P') {
     toggleSniffer();
     e.preventDefault();
+  }
+});
+
+// Tab Visibility & Resource Management (ARCH-05)
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (audioCtx && audioCtx.state === 'running') {
+      audioCtx.suspend();
+    }
+    if (animFrameMini) cancelAnimationFrame(animFrameMini);
+    if (animFrameLarge) cancelAnimationFrame(animFrameLarge);
+    if (strataAnimId) cancelAnimationFrame(strataAnimId);
+    if (stegoAnimId) cancelAnimationFrame(stegoAnimId);
+    animFrameMini = null;
+    animFrameLarge = null;
+    strataAnimId = null;
+    stegoAnimId = null;
+  } else {
+    if (audioCtx && audioEnabled && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    if (audioEnabled) {
+      startVisualizers();
+    }
+    const activeTab = document.querySelector('.tab-pane.active');
+    if (activeTab && activeTab.id === 'tab-airgap') {
+      if (!strataAnimId) initStrataCanvas();
+      if (stegoDemodActive && !stegoAnimId) runStegoAnimation();
+    }
   }
 });
 
