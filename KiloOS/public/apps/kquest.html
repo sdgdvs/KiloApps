@@ -850,9 +850,78 @@
       });
     }
 
+    // --- IMAGEN 3 MONSTER & BOSS BESTIARY SPRITE ATLAS SYSTEM (PHASE 3) ---
+    const MONSTER_SPRITES = {};
+    const MONSTER_ARCHETYPES = [
+      'goblin', 'skeleton', 'treant', 'orc', 'spectre', 'yeti',
+      'serpent', 'golem', 'dragon', 'vampire', 'leviathan', 'void_archon'
+    ];
+
+    function preloadMonsterSprites() {
+      MONSTER_ARCHETYPES.forEach(arch => {
+        const img = new Image();
+        img.src = `../assets/sprites/kquest/kquest_monster_${arch}.png`;
+        img.onload = () => {
+          MONSTER_SPRITES[arch] = { img: img, loaded: true, frameW: 128, frameH: 128 };
+        };
+        img.onerror = () => {
+          const fallback = new Image();
+          fallback.src = `assets/sprites/kquest/kquest_monster_${arch}.png`;
+          fallback.onload = () => {
+            MONSTER_SPRITES[arch] = { img: fallback, loaded: true, frameW: 128, frameH: 128 };
+          };
+        };
+      });
+    }
+
+    function getMonsterArchetype(name) {
+      if (!name) return 'goblin';
+      const n = name.toLowerCase();
+
+      if (n.includes('dragon') || n.includes('drake') || n.includes('wyrm') || n.includes('bahamut') || n.includes('pyroth') || n.includes('wyvern')) {
+        return 'dragon';
+      }
+      if (n.includes('void') || n.includes('singularity') || n.includes('chronos') || n.includes('erebus') || n.includes('cosmos') || n.includes('anomaly') || n.includes('archon') || n.includes('shadow')) {
+        return 'void_archon';
+      }
+      if (n.includes('vampire') || n.includes('dracula') || n.includes('blood') || n.includes('thrall')) {
+        return 'vampire';
+      }
+      if (n.includes('treant') || n.includes('dryad') || n.includes('brier') || n.includes('corrupted ent') || n.includes('moss')) {
+        return 'treant';
+      }
+      if (n.includes('yeti') || n.includes('ymir') || n.includes('frost') || n.includes('blizzard') || n.includes('glacial') || n.includes('snow')) {
+        return 'yeti';
+      }
+      if (n.includes('serpent') || n.includes('hydra') || n.includes('gorgon') || n.includes('basilisk') || n.includes('viper') || n.includes('naga') || n.includes('acid')) {
+        return 'serpent';
+      }
+      if (n.includes('golem') || n.includes('ignis') || n.includes('magma') || n.includes('molten') || n.includes('crystal') || n.includes('quartz') || n.includes('diamond') || n.includes('rock') || n.includes('lava') || n.includes('pyro') || n.includes('obsidian')) {
+        return 'golem';
+      }
+      if (n.includes('wraith') || n.includes('nocturne') || n.includes('banshee') || n.includes('phantom') || n.includes('shade') || n.includes('spectre') || n.includes('specter') || n.includes('seraph') || n.includes('gabriel') || n.includes('ghost') || n.includes('sentry')) {
+        return 'spectre';
+      }
+      if (n.includes('orc') || n.includes('grommash') || n.includes('berserk') || n.includes('ogre') || n.includes('shaman') || n.includes('grunt') || n.includes('warlord')) {
+        return 'orc';
+      }
+      if (n.includes('skeleton') || n.includes('lich') || n.includes('ghoul') || n.includes('bone') || n.includes('necromancer') || n.includes('colossus')) {
+        return 'skeleton';
+      }
+      if (n.includes('leviathan') || n.includes('oceanus') || n.includes('kraken') || n.includes('trench') || n.includes('scuttler') || n.includes('siren') || n.includes('drowned') || n.includes('zealot') || n.includes('tidal') || n.includes('abyss') || n.includes('titan')) {
+        return 'leviathan';
+      }
+      if (n.includes('goblin') || n.includes('slinger') || n.includes('taskmaster') || n.includes('spider') || n.includes('slime') || n.includes('imp') || n.includes('stalker') || n.includes('troll')) {
+        return 'goblin';
+      }
+
+      return 'goblin';
+    }
+
     function initGFX() {
       preloadHeroSprites();
       preloadEnvironmentBGs();
+      preloadMonsterSprites();
       GFX.canvas = document.getElementById('kquest-gfx-canvas');
       if (!GFX.canvas) return;
       GFX.ctx = GFX.canvas.getContext('2d');
@@ -2044,131 +2113,182 @@
 
       ctx.fillStyle = 'rgba(0,0,0,0.35)';
       ctx.beginPath();
-      ctx.ellipse(x, y + 45, 28, 9, 0, 0, Math.PI * 2);
+      ctx.ellipse(x, y + 45, 30, 9, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      const n = name.toLowerCase();
+      // --- IMAGEN 3 SPRITE ATLAS BLITTING (WITH VECTOR FALLBACK) ---
+      const archKey = getMonsterArchetype(name);
+      const spriteData = MONSTER_SPRITES[archKey];
 
-      if (n.includes('slime') || n.includes('scuttler') || n.includes('spider')) {
-        ctx.fillStyle = '#a6e3a1';
-        ctx.beginPath();
-        ctx.ellipse(x, my + 10, 32, 26 + Math.sin(frame * 0.2) * 4, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.fillStyle = '#cdd6f4';
-        ctx.beginPath(); ctx.arc(x - 10, my - 5, 6, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#11111b';
-        ctx.fillRect(x - 8, my + 5, 5, 5); ctx.fillRect(x + 5, my + 5, 5, 5);
+      if (spriteData && spriteData.loaded && spriteData.img) {
+        let frameIdx = 0;
+        if (action === 'attack') frameIdx = 1;
+        else if (action === 'hurt') frameIdx = 2;
 
-      } else if (n.includes('goblin') || n.includes('slinger') || n.includes('taskmaster')) {
-        ctx.fillStyle = '#a6e3a1';
-        ctx.fillRect(x - 14, my - 10, 28, 32);
-        ctx.beginPath(); ctx.moveTo(x - 14, my - 25); ctx.lineTo(x - 30, my - 20); ctx.lineTo(x - 14, my - 15); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(x + 14, my - 25); ctx.lineTo(x + 30, my - 20); ctx.lineTo(x + 14, my - 15); ctx.fill();
-        ctx.fillRect(x - 12, my - 30, 24, 20);
-        ctx.fillStyle = '#f38ba8';
-        ctx.fillRect(x - 8, my - 24, 5, 4); ctx.fillRect(x + 3, my - 24, 5, 4);
-        ctx.fillStyle = '#f9e2af';
-        ctx.fillRect(x - 24, my - 20, 8, 40);
+        const fw = spriteData.frameW || 128;
+        const fh = spriteData.frameH || 128;
+        const sx = frameIdx * fw;
 
-      } else if (n.includes('skeleton') || n.includes('ghoul') || n.includes('bone') || n.includes('lich')) {
-        ctx.fillStyle = '#e6e9ef';
-        ctx.fillRect(x - 10, my - 10, 20, 30);
-        for (let i = my - 8; i < my + 15; i += 6) {
-          ctx.fillStyle = '#11111b'; ctx.fillRect(x - 8, i, 16, 2);
+        const isBoss = (name.includes('Boss') || name.includes('King') || name.includes('Lord') ||
+                        name.includes('Overlord') || name.includes('Sovereign') || name.includes('Titan') ||
+                        name.includes('Matriarch') || name.includes('Archon') || name.includes('Final Boss'));
+
+        if (isBoss) {
+          ctx.save();
+          let glowC = '#f9e2af';
+          if (archKey === 'dragon' || archKey === 'golem') glowC = '#fab387';
+          else if (archKey === 'void_archon' || archKey === 'spectre') glowC = '#cba6f7';
+          else if (archKey === 'vampire') glowC = '#f38ba8';
+          else if (archKey === 'leviathan' || archKey === 'yeti') glowC = '#89dceb';
+          else if (archKey === 'treant' || archKey === 'serpent' || archKey === 'goblin') glowC = '#a6e3a1';
+
+          ctx.shadowColor = glowC;
+          ctx.shadowBlur = 16 + Math.sin(frame * 0.18) * 6;
+          ctx.drawImage(spriteData.img, sx, 0, fw, fh, x - 64, my - 72, 128, 128);
+          ctx.restore();
+        } else {
+          ctx.drawImage(spriteData.img, sx, 0, fw, fh, x - 64, my - 72, 128, 128);
         }
-        ctx.fillStyle = '#e6e9ef';
-        ctx.fillRect(x - 12, my - 34, 24, 22);
-        ctx.fillStyle = '#89dceb';
-        ctx.fillRect(x - 8, my - 26, 6, 6); ctx.fillRect(x + 2, my - 26, 6, 6);
-
-      } else if (n.includes('orc') || n.includes('berserk') || n.includes('ogre') || n.includes('grommash')) {
-        ctx.fillStyle = '#40a02b';
-        ctx.fillRect(x - 22, my - 20, 44, 45);
-        ctx.fillStyle = '#585b70';
-        ctx.fillRect(x - 28, my - 24, 14, 14); ctx.fillRect(x + 14, my - 24, 14, 14);
-        ctx.fillStyle = '#313244';
-        ctx.fillRect(x - 14, my - 42, 28, 22);
-        ctx.fillStyle = '#f9e2af';
-        ctx.beginPath(); ctx.moveTo(x - 14, my - 40); ctx.lineTo(x - 32, my - 55); ctx.lineTo(x - 10, my - 34); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(x + 14, my - 40); ctx.lineTo(x + 32, my - 55); ctx.lineTo(x + 10, my - 34); ctx.fill();
-        ctx.fillStyle = '#89b4fa';
-        ctx.fillRect(x + 22, my - 45, 8, 65);
-        ctx.fillRect(x + 12, my - 45, 28, 16);
-
-      } else if (n.includes('dragon') || n.includes('drake') || n.includes('wyrm') || n.includes('bahamut')) {
-        ctx.fillStyle = '#f38ba8';
-        ctx.beginPath(); ctx.ellipse(x, my, 35, 25, 0, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#f9e2af';
-        ctx.beginPath(); ctx.ellipse(x - 5, my + 5, 20, 14, 0, 0, Math.PI * 2); ctx.fill();
-        const wingY = my - 20 + Math.sin(frame * 0.2) * 12;
-        ctx.fillStyle = '#e78284';
-        ctx.beginPath(); ctx.moveTo(x - 10, my - 10); ctx.lineTo(x - 55, wingY); ctx.lineTo(x - 25, my + 10); ctx.fill();
-        ctx.beginPath(); ctx.moveTo(x + 10, my - 10); ctx.lineTo(x + 55, wingY); ctx.lineTo(x + 25, my + 10); ctx.fill();
-        ctx.fillStyle = '#ea999c';
-        ctx.fillRect(x - 30, my - 30, 26, 20);
-        ctx.fillStyle = '#fab387';
-        if (Math.random() < 0.4) addParticles(x - 35, my - 20, '#fab387', 2);
-
       } else {
-        ctx.fillStyle = '#1e1e2e';
-        ctx.beginPath(); ctx.arc(x, my, 38, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = '#cba6f7';
-        ctx.lineWidth = 4; ctx.strokeStyle = '#cba6f7';
-        ctx.beginPath(); ctx.arc(x, my, 46 + Math.sin(frame * 0.1) * 6, 0, Math.PI * 2); ctx.stroke();
-        ctx.fillStyle = '#f38ba8';
-        ctx.beginPath(); ctx.arc(x - 14, my - 10, 8, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(x + 14, my - 10, 8, 0, Math.PI * 2); ctx.fill();
+        // Procedural vector fallback
+        const n = name.toLowerCase();
+        if (n.includes('slime') || n.includes('scuttler') || n.includes('spider')) {
+          ctx.fillStyle = '#a6e3a1';
+          ctx.beginPath();
+          ctx.ellipse(x, my + 10, 32, 26 + Math.sin(frame * 0.2) * 4, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#cdd6f4';
+          ctx.beginPath(); ctx.arc(x - 10, my - 5, 6, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#11111b';
+          ctx.fillRect(x - 8, my + 5, 5, 5); ctx.fillRect(x + 5, my + 5, 5, 5);
+        } else if (n.includes('goblin') || n.includes('slinger') || n.includes('taskmaster')) {
+          ctx.fillStyle = '#a6e3a1';
+          ctx.fillRect(x - 14, my - 10, 28, 32);
+          ctx.beginPath(); ctx.moveTo(x - 14, my - 25); ctx.lineTo(x - 30, my - 20); ctx.lineTo(x - 14, my - 15); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(x + 14, my - 25); ctx.lineTo(x + 30, my - 20); ctx.lineTo(x + 14, my - 15); ctx.fill();
+          ctx.fillRect(x - 12, my - 30, 24, 20);
+          ctx.fillStyle = '#f38ba8';
+          ctx.fillRect(x - 8, my - 24, 5, 4); ctx.fillRect(x + 3, my - 24, 5, 4);
+          ctx.fillStyle = '#f9e2af';
+          ctx.fillRect(x - 24, my - 20, 8, 40);
+        } else if (n.includes('skeleton') || n.includes('ghoul') || n.includes('bone') || n.includes('lich')) {
+          ctx.fillStyle = '#e6e9ef';
+          ctx.fillRect(x - 10, my - 10, 20, 30);
+          for (let i = my - 8; i < my + 15; i += 6) {
+            ctx.fillStyle = '#11111b'; ctx.fillRect(x - 8, i, 16, 2);
+          }
+          ctx.fillStyle = '#e6e9ef';
+          ctx.fillRect(x - 12, my - 34, 24, 22);
+          ctx.fillStyle = '#89dceb';
+          ctx.fillRect(x - 8, my - 26, 6, 6); ctx.fillRect(x + 2, my - 26, 6, 6);
+        } else if (n.includes('orc') || n.includes('berserk') || n.includes('ogre') || n.includes('grommash')) {
+          ctx.fillStyle = '#40a02b';
+          ctx.fillRect(x - 22, my - 20, 44, 45);
+          ctx.fillStyle = '#585b70';
+          ctx.fillRect(x - 28, my - 24, 14, 14); ctx.fillRect(x + 14, my - 24, 14, 14);
+          ctx.fillStyle = '#313244';
+          ctx.fillRect(x - 14, my - 42, 28, 22);
+          ctx.fillStyle = '#f9e2af';
+          ctx.beginPath(); ctx.moveTo(x - 14, my - 40); ctx.lineTo(x - 32, my - 55); ctx.lineTo(x - 10, my - 34); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(x + 14, my - 40); ctx.lineTo(x + 32, my - 55); ctx.lineTo(x + 10, my - 34); ctx.fill();
+          ctx.fillStyle = '#89b4fa';
+          ctx.fillRect(x + 22, my - 45, 8, 65);
+          ctx.fillRect(x + 12, my - 45, 28, 16);
+        } else if (n.includes('dragon') || n.includes('drake') || n.includes('wyrm') || n.includes('bahamut')) {
+          ctx.fillStyle = '#f38ba8';
+          ctx.beginPath(); ctx.ellipse(x, my, 35, 25, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#f9e2af';
+          ctx.beginPath(); ctx.ellipse(x - 5, my + 5, 20, 14, 0, 0, Math.PI * 2); ctx.fill();
+          const wingY = my - 20 + Math.sin(frame * 0.2) * 12;
+          ctx.fillStyle = '#e78284';
+          ctx.beginPath(); ctx.moveTo(x - 10, my - 10); ctx.lineTo(x - 55, wingY); ctx.lineTo(x - 25, my + 10); ctx.fill();
+          ctx.beginPath(); ctx.moveTo(x + 10, my - 10); ctx.lineTo(x + 55, wingY); ctx.lineTo(x + 25, my + 10); ctx.fill();
+          ctx.fillStyle = '#ea999c';
+          ctx.fillRect(x - 30, my - 30, 26, 20);
+          ctx.fillStyle = '#fab387';
+          if (Math.random() < 0.4) addParticles(x - 35, my - 20, '#fab387', 2);
+        } else {
+          ctx.fillStyle = '#1e1e2e';
+          ctx.beginPath(); ctx.arc(x, my, 38, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#cba6f7';
+          ctx.lineWidth = 4; ctx.strokeStyle = '#cba6f7';
+          ctx.beginPath(); ctx.arc(x, my, 46 + Math.sin(frame * 0.1) * 6, 0, Math.PI * 2); ctx.stroke();
+          ctx.fillStyle = '#f38ba8';
+          ctx.beginPath(); ctx.arc(x - 14, my - 10, 8, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(x + 14, my - 10, 8, 0, Math.PI * 2); ctx.fill();
+        }
       }
 
-      // Status Debuffs Visual FX
+      // Status Debuffs Visual FX & Overlay Tints
       if (poisonedTurns > 0) {
-        ctx.fillStyle = 'rgba(166, 227, 161, 0.35)';
-        ctx.beginPath(); ctx.arc(x, my, 42, 0, Math.PI * 2); ctx.fill();
+        ctx.save();
+        ctx.fillStyle = 'rgba(166, 227, 161, 0.32)';
+        ctx.beginPath();
+        ctx.ellipse(x, my - 8, 46, 52, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
         // Venom droplets dripping down
         ctx.fillStyle = '#a6e3a1';
-        for (let i = 0; i < 3; i++) {
-          const vx = x - 18 + i * 18;
-          const vy = my + 15 + ((frame * 2 + i * 14) % 35);
+        for (let i = 0; i < 4; i++) {
+          const vx = x - 22 + i * 15;
+          const vy = my + 10 + ((frame * 2 + i * 14) % 38);
           ctx.beginPath(); ctx.arc(vx, vy, 2.5, 0, Math.PI * 2); ctx.fill();
         }
         if (Math.random() < 0.2) addParticles(x, my, '#a6e3a1', 1);
       }
       if (burningTurns > 0) {
-        ctx.fillStyle = 'rgba(243, 139, 168, 0.3)';
-        ctx.beginPath(); ctx.arc(x, my, 42, 0, Math.PI * 2); ctx.fill();
+        ctx.save();
+        ctx.fillStyle = 'rgba(243, 139, 168, 0.28)';
+        ctx.beginPath();
+        ctx.ellipse(x, my - 8, 46, 52, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
         // Animated licking flame tongues
-        for (let i = 0; i < 4; i++) {
-          const fx = x - 24 + i * 16;
-          const fh = 14 + Math.sin(frame * 0.3 + i * 1.5) * 8;
+        for (let i = 0; i < 5; i++) {
+          const fx = x - 28 + i * 14;
+          const fh = 16 + Math.sin(frame * 0.3 + i * 1.4) * 10;
           ctx.fillStyle = (i % 2 === 0) ? '#f38ba8' : '#fab387';
           ctx.beginPath();
-          ctx.moveTo(fx - 5, my + 30);
-          ctx.lineTo(fx + 5, my + 30);
-          ctx.lineTo(fx, my + 30 - fh);
+          ctx.moveTo(fx - 6, my + 32);
+          ctx.lineTo(fx + 6, my + 32);
+          ctx.lineTo(fx, my + 32 - fh);
           ctx.closePath();
           ctx.fill();
         }
         if (Math.random() < 0.3) addParticles(x, my, '#fab387', 2);
       }
       if (frozenTurns > 0) {
-        // Crystalline ice encasement with angular spikes
-        ctx.fillStyle = 'rgba(137, 220, 235, 0.45)';
+        // Crystalline ice encasement with angular spikes and cold cyan overlay
+        ctx.save();
+        ctx.fillStyle = 'rgba(137, 220, 235, 0.40)';
         ctx.strokeStyle = '#89dceb';
         ctx.lineWidth = 2;
-        ctx.fillRect(x - 34, my - 34, 68, 68);
-        ctx.strokeRect(x - 34, my - 34, 68, 68);
+        ctx.fillRect(x - 38, my - 44, 76, 88);
+        ctx.strokeRect(x - 38, my - 44, 76, 88);
+
+        // Frost crystal facets
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x - 38, my - 44); ctx.lineTo(x, my); ctx.lineTo(x + 38, my - 44);
+        ctx.moveTo(x - 38, my + 44); ctx.lineTo(x, my); ctx.lineTo(x + 38, my + 44);
+        ctx.stroke();
+
         // Frost crystal spikes
         ctx.fillStyle = '#cdd6f4';
-        for (let a = 0; a < 4; a++) {
-          const sx = (a < 2) ? x - 34 : x + 34;
-          const sySpike = my - 20 + (a % 2) * 40;
+        for (let a = 0; a < 6; a++) {
+          const sx = (a < 3) ? x - 38 : x + 38;
+          const sySpike = my - 30 + (a % 3) * 30;
           ctx.beginPath();
           ctx.moveTo(sx, sySpike - 6);
-          ctx.lineTo(sx + (a < 2 ? -10 : 10), sySpike);
+          ctx.lineTo(sx + (a < 3 ? -12 : 12), sySpike);
           ctx.lineTo(sx, sySpike + 6);
           ctx.closePath();
           ctx.fill();
         }
+        ctx.restore();
       }
 
       ctx.restore();

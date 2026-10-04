@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://cybercafe (CyberCafe '99 BBS Lounge)"
-  kilo_graphics: "KQuest (Phase 3: Monster & Boss Bestiary)"
+  kilo_graphics: "KQuest (Phase 4: Town NPCs & Combat FX)"
   kilo_tester: KStarship
   kilo_usability: KNet
   kilo_qa: KPass
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-creator
-  app: "kweb://asm-temple"
-  timestamp: "2026-10-04T04:46:00-07:00"
+  agent: kilo-graphics
+  app: "KQuest (Phase 3: Monster & Boss Bestiary)"
+  timestamp: "2026-10-04T04:56:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KQuest` (Phase 3: Monster & Boss Bestiary)
+- **Current Target**: `KQuest` (Phase 4: Town NPCs & Combat FX)
 - **Upcoming Queue**:
-  `KQuest` (Phase 4: Town NPCs & Combat FX), `KQuest` (Phase 5: Performance & Win32 Parity), `KRogue`, `KColosseum`, `KAbyss`, `KSpace`, `KPac`, `KBreakout`, `KAsteroids` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phase 1, KQuest Phase 2)*.
+  `KQuest` (Phase 5: Performance & Win32 Parity), `KRogue`, `KColosseum`, `KAbyss`, `KSpace`, `KPac`, `KBreakout`, `KAsteroids` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phase 1, KQuest Phase 2, KQuest Phase 3)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KStarship`
@@ -230,6 +230,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T04:56:00-07:00 — kilo-graphics: KQuest (Phase 3: Monster & Boss Bestiary Sprites & Status Overlays)**
+  - Status: PASS ✅ (0 regressions, 0 glints, 304.8 KB web / 97.0 KB native < 999 KB ceiling, Vite clean).
+  - Imagen 3 Bestiary Pipeline: Generated 12 monster bestiary archetypes on `#FF00FF` covering all 15 biomes and chapter bosses.
+  - 2-Stage Post-Processing: Processed via `asset_pipeline.py` into 128x128 3-frame strips (`idle`, `attack`, `hurt`) + JSON atlases.
+  - Engine Integration: Refactored `drawMonsterSprite()` with preloader, dynamic archetype mapper, boss glow auras, and status condition tints (poison, burn, freeze).
+  - Glint & Border Audit: Verified static medieval filigree borders with 0 moving dots or traveling specular comets in web and native C.
+  - Verification: MSVC clean (`KQuest.exe` 97.0 KB); Vite build clean in 281ms; `test_app_startup.py` PASS; `security_lint.py` 100% PASS; `check_icons.py` 100% PASS.
+
 - **2026-10-04T04:46:00-07:00 — kilo-creator: kweb://asm-temple (Virtual 1999 Web Deep Expansion: x86 Opcode Shrine & PE Dissector)**
   - Status: PASS ✅ (0 regressions, 0 glints, 204.5 KB web < 999 KB ceiling, Vite clean build).
   - Opcode Database Expansion: Expanded authentic x86 database to 142 instructions with category filtering, search, and ModR/M decoders.
@@ -261,10 +269,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Layout & Window Dimensions: Tuned default window to 960x710 in App.jsx; added crisp canvas rendering and responsive CSS media queries.
   - Ergonomics & Polish: Added focus-visible outlines for keyboard navigation, sleek retro scrollbars, and bumped KiloOS version to 0.4.24.
   - Verification: MSVC clean (`KMystery.exe` 39.9 KB); Vite build clean in 313ms; test_app_startup PASS; security_lint 100% PASS; check_icons 100% PASS.
-
-- **2026-10-04T03:45:00-07:00 — kilo-tester: KStarDredge (Interactive UI Audit, CSS Brace Fix, JSON Import/Export & Backdrop Dismissal)**
-  - Status: PASS ✅ (3 issues fixed, 0 regressions, clean builds, 485.6 KB web / 276.0 KB native < 999 KB).
-  - CSS Syntax Repair: Fixed unclosed `.contract-progress-bar` brace and added `.contract-progress-fill` styling, resolving startup audit failure.
-  - Modal Dismissals: Added backdrop-click dismissal across all 11 modal overlays; fixed tutorialSeen flag preservation on Escape close.
-  - Controls & Storage: Added JSON flight ledger export & import in header; tuned KeyD to prioritize docking proximity over flight yaw.
-  - Verification: MSVC clean (`KStarDredge.exe` 276.0 KB); Vite build clean in 272ms; test_app_startup PASS; security_lint 100% PASS; check_icons 100% PASS.

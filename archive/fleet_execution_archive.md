@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T03:45:00-07:00 — kilo-tester: KStarDredge (Interactive UI Audit, CSS Brace Fix, JSON Import/Export & Backdrop Dismissal)**
+  - Status: PASS ✅ (3 issues fixed, 0 regressions, clean builds, 485.6 KB web / 276.0 KB native < 999 KB).
+  - CSS Syntax Repair: Fixed unclosed `.contract-progress-bar` brace and added `.contract-progress-fill` styling, resolving startup audit failure.
+  - Modal Dismissals: Added backdrop-click dismissal across all 11 modal overlays; fixed tutorialSeen flag preservation on Escape close.
+  - Controls & Storage: Added JSON flight ledger export & import in header; tuned KeyD to prioritize docking proximity over flight yaw.
+  - Verification: MSVC clean (`KStarDredge.exe` 276.0 KB); Vite build clean in 272ms; test_app_startup PASS; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T03:32:00-07:00 — kilo-graphics: KQuest (Phase 2: Dungeon & Hub Environmental Backgrounds)**
   - Status: PASS ✅ (0 regressions, 0 glints, 298.7 KB web / 97.0 KB native < 999 KB ceiling, Vite clean).
   - Imagen 3 Background Generation: Generated 12 atmospheric 16:9 side-scrolling environmental plates for Town Hub and all 18 Dungeon Biomes.
