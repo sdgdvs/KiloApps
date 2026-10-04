@@ -101,6 +101,24 @@ void SaveStats() {
     }
 }
 
+typedef struct {
+    int mode;
+    int currentStageIdx;
+    int numDiscs;
+    int numPegs;
+    int pegs[MAX_PEGS][MAX_DISCS];
+    int pegCounts[MAX_PEGS];
+    int selectedPeg;
+    int moves;
+    int elapsedSeconds;
+    int freezeSeconds;
+    int freezeCharges;
+    int swapCharges;
+    int historyCount;
+    int historyFrom[4096];
+    int historyTo[4096];
+} QuickSaveData;
+
 // Global Game State
 int mode = 0; // 0 = Campaign, 1 = Free Play
 int currentStageIdx = 0;
@@ -825,6 +843,73 @@ void UndoMove(HWND hwnd) {
     InvalidateRect(hwnd, NULL, FALSE);
 }
 
+void DoQuicksave(HWND hwnd) {
+    QuickSaveData qs;
+    memset(&qs, 0, sizeof(qs));
+    qs.mode = mode;
+    qs.currentStageIdx = currentStageIdx;
+    qs.numDiscs = numDiscs;
+    qs.numPegs = numPegs;
+    memcpy(qs.pegs, pegs, sizeof(pegs));
+    memcpy(qs.pegCounts, pegCounts, sizeof(pegCounts));
+    qs.selectedPeg = selectedPeg;
+    qs.moves = moves;
+    qs.elapsedSeconds = elapsedSeconds;
+    qs.freezeSeconds = freezeSeconds;
+    qs.freezeCharges = freezeCharges;
+    qs.swapCharges = swapCharges;
+    qs.historyCount = historyCount;
+    int hToCopy = historyCount < 4096 ? historyCount : 4096;
+    memcpy(qs.historyFrom, historyFrom, sizeof(int) * hToCopy);
+    memcpy(qs.historyTo, historyTo, sizeof(int) * hToCopy);
+
+    FILE* fp = fopen("ktowers_quicksave.dat", "wb");
+    if (fp) {
+        fwrite(&qs, sizeof(QuickSaveData), 1, fp);
+        fclose(fp);
+        snprintf(statusMessage, sizeof(statusMessage), "[F5] Quicksaved (Moves: %d, Time: %02d:%02d)", moves, elapsedSeconds / 60, elapsedSeconds % 60);
+    } else {
+        snprintf(statusMessage, sizeof(statusMessage), "[F5] Quicksave Failed!");
+    }
+    InvalidateRect(hwnd, NULL, FALSE);
+}
+
+void DoQuickload(HWND hwnd) {
+    FILE* fp = fopen("ktowers_quicksave.dat", "rb");
+    if (fp) {
+        QuickSaveData qs;
+        if (fread(&qs, sizeof(QuickSaveData), 1, fp) == 1) {
+            mode = qs.mode;
+            currentStageIdx = qs.currentStageIdx;
+            numDiscs = qs.numDiscs;
+            numPegs = qs.numPegs;
+            memcpy(pegs, qs.pegs, sizeof(pegs));
+            memcpy(pegCounts, qs.pegCounts, sizeof(pegCounts));
+            selectedPeg = qs.selectedPeg;
+            moves = qs.moves;
+            elapsedSeconds = qs.elapsedSeconds;
+            freezeSeconds = qs.freezeSeconds;
+            freezeCharges = qs.freezeCharges;
+            swapCharges = qs.swapCharges;
+            historyCount = qs.historyCount;
+            if (historyCount > 4096) historyCount = 4096;
+            memcpy(historyFrom, qs.historyFrom, sizeof(int) * historyCount);
+            memcpy(historyTo, qs.historyTo, sizeof(int) * historyCount);
+            won = FALSE;
+            gameOver = FALSE;
+            hintFrom = -1;
+            hintTo = -1;
+            snprintf(statusMessage, sizeof(statusMessage), "[F9] Quickload Restored (Moves: %d, Time: %02d:%02d)", moves, elapsedSeconds / 60, elapsedSeconds % 60);
+        } else {
+            snprintf(statusMessage, sizeof(statusMessage), "[F9] Quicksave file corrupted!");
+        }
+        fclose(fp);
+    } else {
+        snprintf(statusMessage, sizeof(statusMessage), "[F9] No Quicksave file found!");
+    }
+    InvalidateRect(hwnd, NULL, FALSE);
+}
+
 void ApplyHint(HWND hwnd) {
     if (won || gameOver) return;
     int f, t;
@@ -1245,7 +1330,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "- [U] Undo last move.\n"
                     "- [H] Optimal Frame-Stewart Hint.\n"
                     "- [F] Time Freeze (pauses timer for 15s).\n"
-                    "- [S] Disk Swap / Instant Teleport to valid peg.",
+                    "- [S] Disk Swap / Instant Teleport to valid peg.\n"
+                    "- [F5] Quicksave state snapshot.\n"
+                    "- [F9] Quickload state snapshot.",
                     "Help / Instructions", MB_OK | MB_ICONINFORMATION);
             }
             break;
@@ -1267,6 +1354,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (wParam == 'R' || wParam == 'r') InitGame(hwnd);
             else if (wParam == 'A' || wParam == 'a') {
                 SendMessage(hwnd, WM_COMMAND, 4, 0);
+            } else if (wParam == VK_F5) {
+                DoQuicksave(hwnd);
+            } else if (wParam == VK_F9) {
+                DoQuickload(hwnd);
             }
             break;
         }

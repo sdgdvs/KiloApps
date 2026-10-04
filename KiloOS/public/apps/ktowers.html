@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KTowers</title>
+    <script src="../assets/js/retro_multiplayer.js"></script>
     <style>
         :root {
             --bg-color: #0f172a;
@@ -292,6 +293,267 @@
             font-weight: 600;
             color: var(--danger-color);
             margin-bottom: 8px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .secondary-controls {
+            margin-top: 10px;
+        }
+
+        .btn-mp {
+            background: linear-gradient(135deg, #0ea5e9, #6366f1);
+            color: #ffffff;
+            font-weight: 700;
+            border-color: #38bdf8;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+        }
+
+        .btn-mp:hover:not(:disabled) {
+            background: linear-gradient(135deg, #0284c7, #4f46e5);
+            box-shadow: 0 0 16px rgba(56, 189, 248, 0.5);
+        }
+
+        .btn-util {
+            background: #1e293b;
+            border-color: #475569;
+            color: #cbd5e1;
+        }
+
+        .btn-util:hover:not(:disabled) {
+            background: #334155;
+            border-color: #94a3b8;
+        }
+
+        /* Replay Bar */
+        .replay-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #0f172a;
+            border: 1px solid var(--accent-color);
+            padding: 8px 16px;
+            border-radius: 10px;
+            max-width: 900px;
+            width: 100%;
+            margin-top: 10px;
+            box-sizing: border-box;
+        }
+
+        .replay-bar button {
+            padding: 5px 10px;
+            font-size: 12px;
+        }
+
+        .replay-slider {
+            flex: 1;
+            cursor: pointer;
+            accent-color: var(--accent-color);
+        }
+
+        .replay-step-txt {
+            font-size: 13px;
+            font-weight: 700;
+            color: #fde047;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        /* Arena Layout (Duel Mode) */
+        .arena-wrapper {
+            display: flex;
+            gap: 15px;
+            max-width: 1250px;
+            width: 100%;
+            justify-content: center;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .arena-main {
+            flex: 1;
+            min-width: 320px;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+        }
+
+        .opponent-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 14px;
+            max-width: 360px;
+            width: 100%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            box-sizing: border-box;
+        }
+
+        .opp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+
+        .opp-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .badge-tag {
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-online {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            border: 1px solid #22c55e;
+        }
+
+        .badge-ai {
+            background: rgba(168, 85, 247, 0.2);
+            color: #c084fc;
+            border: 1px solid #a855f7;
+        }
+
+        .opp-stats-row {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            background: #0f172a;
+            padding: 6px 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .opp-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #0f172a;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .opp-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #38bdf8, #22c55e);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        #oppCanvas {
+            width: 100%;
+            max-width: 330px;
+            height: 180px;
+            background: #090d16;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .opp-banner {
+            font-size: 12px;
+            font-weight: 600;
+            color: #7dd3fc;
+            min-height: 18px;
+            text-align: center;
+        }
+
+        .taunt-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .btn-taunt {
+            font-size: 11px;
+            padding: 4px 8px;
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            color: var(--text-dim);
+            border-radius: 5px;
+        }
+
+        .btn-taunt:hover {
+            color: var(--text-color);
+            border-color: var(--accent-color);
+        }
+
+        /* Modal sub-styles */
+        .modal-form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .modal-form label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-dim);
+        }
+
+        .modal-form input[type="text"], .modal-form textarea {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 100%;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        .modal-form input[type="text"]:focus, .modal-form textarea:focus {
+            outline: 2px solid var(--accent-color);
+        }
+
+        .keybind-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            font-size: 13px;
+        }
+
+        .key-badge {
+            background: #0f172a;
+            border: 1px solid var(--accent-color);
+            color: #38bdf8;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: 700;
+            min-width: 32px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .key-badge:hover {
+            background: var(--accent-color);
+            color: #0f172a;
         }
     </style>
 </head>
@@ -344,18 +606,70 @@
 
     <div class="message-toast" id="messageToast"></div>
 
-    <div class="game-container">
-        <canvas id="ktowersCanvas" width="860" height="380"></canvas>
-    </div>
+    <div class="arena-wrapper" id="arenaWrapper">
+        <div class="arena-main" id="arenaMain">
+            <div class="game-container">
+                <canvas id="ktowersCanvas" width="860" height="380"></canvas>
+            </div>
 
-    <div class="controls-grid">
-        <button class="btn-powerup" onclick="undoMove()" id="undoBtn" disabled>↩️ Undo [U]</button>
-        <button class="btn-powerup" onclick="applyHint()" id="hintBtn">💡 Hint [H]</button>
-        <button class="btn-freeze" onclick="useTimeFreeze()" id="freezeBtn">🧊 Freeze [F] (<span id="freezeChargesDisplay">3</span>)</button>
-        <button class="btn-powerup" onclick="useDiskSwap()" id="swapBtn">⚡ Swap [S] (<span id="swapChargesDisplay">3</span>)</button>
-        <button onclick="toggleAutoSolve()" id="autoBtn">🤖 Auto-Solve [A]</button>
-        <button onclick="initGame()">🔄 Restart [R]</button>
-        <button onclick="showHelp()">❓ Help</button>
+            <!-- Replay Controls Bar (visible in replay mode) -->
+            <div id="replayBar" class="replay-bar" style="display: none;">
+                <button onclick="replayFirst()" title="First Move">⏮</button>
+                <button onclick="replayPrev()" title="Previous Move">◀</button>
+                <button onclick="toggleReplayPlay()" id="replayPlayBtn" title="Play/Pause">▶ Play</button>
+                <button onclick="replayNext()" title="Next Move">▶</button>
+                <button onclick="replayLast()" title="Last Move">⏭</button>
+                <input type="range" id="replaySlider" class="replay-slider" min="0" max="0" value="0" oninput="seekReplay(this.value)">
+                <span id="replayStepTxt" class="replay-step-txt">0 / 0</span>
+                <button onclick="exitReplayMode()" style="background: var(--danger-color); color: #fff;" title="Exit Replay">✕</button>
+            </div>
+
+            <div class="controls-grid">
+                <button class="btn-powerup" onclick="undoMove()" id="undoBtn" disabled>↩️ Undo [U]</button>
+                <button class="btn-powerup" onclick="applyHint()" id="hintBtn">💡 Hint [H]</button>
+                <button class="btn-freeze" onclick="useTimeFreeze()" id="freezeBtn">🧊 Freeze [F] (<span id="freezeChargesDisplay">3</span>)</button>
+                <button class="btn-powerup" onclick="useDiskSwap()" id="swapBtn">⚡ Swap [S] (<span id="swapChargesDisplay">3</span>)</button>
+                <button onclick="toggleAutoSolve()" id="autoBtn">🤖 Auto-Solve [A]</button>
+                <button onclick="initGame()">🔄 Restart [R]</button>
+                <button onclick="showHelp()">❓ Help</button>
+            </div>
+
+            <div class="controls-grid secondary-controls">
+                <button class="btn-mp" onclick="openMultiplayerModal()" id="duelBtn">⚔️ Speed Duel / Online</button>
+                <button class="btn-util" onclick="toggleReplayMode()" id="replayBtn">⏪ Replay</button>
+                <button class="btn-util" onclick="openFenModal()" id="fenBtn">💾 Board FEN</button>
+                <button class="btn-util" onclick="quicksaveState()" id="quicksaveBtn">💾 Quicksave [F5]</button>
+                <button class="btn-util" onclick="quickloadState()" id="quickloadBtn">📂 Quickload [F9]</button>
+                <button class="btn-util" onclick="openKeybindsModal()" id="keysBtn">⚙️ Keys</button>
+            </div>
+        </div>
+
+        <!-- Opponent Arena Pane (visible in Speed Duel Mode) -->
+        <div class="opponent-panel" id="oppPane" style="display: none;">
+            <div class="opp-header">
+                <div class="opp-name">
+                    <span>🎮</span> <span id="oppNameTxt">Challenger</span>
+                </div>
+                <span class="badge-tag badge-online" id="oppBadgeTag">ONLINE</span>
+            </div>
+            <div class="opp-stats-row">
+                <div>🎯 Moves: <span id="oppMovesTxt" style="color:var(--accent-color)">0</span></div>
+                <div>⏱️ Time: <span id="oppTimeTxt" style="color:#fde047">00:00</span></div>
+            </div>
+            <div class="opp-progress-bar" title="Opponent Progress">
+                <div class="opp-progress-fill" id="oppProgressFill"></div>
+            </div>
+            <canvas id="oppCanvas" width="340" height="200"></canvas>
+            <div class="opp-banner" id="oppActionBanner">Waiting for opponent move...</div>
+            <div class="taunt-bar">
+                <button class="btn-taunt" onclick="sendDuelChat('Good luck!')">Good luck!</button>
+                <button class="btn-taunt" onclick="sendDuelChat('Nice move!')">Nice move!</button>
+                <button class="btn-taunt" onclick="sendDuelChat('Speed up!')">Speed up!</button>
+                <button class="btn-taunt" onclick="sendDuelChat('Almost done!')">Almost done!</button>
+                <button class="btn-taunt" onclick="sendDuelChat('GG!')">GG!</button>
+            </div>
+            <button onclick="exitDuelMode()" style="background: rgba(239,68,68,0.2); border-color: var(--danger-color); color: #fca5a5; font-size:12px; padding: 5px 12px; margin-top: 4px;">Exit Duel Mode</button>
+        </div>
     </div>
 
     <!-- Modals -->
@@ -365,6 +679,120 @@
             <div class="modal-stars" id="modalStars">⭐⭐⭐</div>
             <div class="modal-body" id="modalBody"></div>
             <div class="modal-btns" id="modalBtns"></div>
+        </div>
+    </div>
+
+    <!-- Multiplayer & Duel Modal -->
+    <div class="modal-overlay" id="mpModal" style="display: none;">
+        <div class="modal-content" style="max-width: 520px;">
+            <div class="modal-title" style="color: var(--accent-color);">⚔️ KTowers Speed Duel</div>
+            <div class="modal-body">
+                <div class="modal-form">
+                    <label for="mpPlayerName">Player Nickname:</label>
+                    <input type="text" id="mpPlayerName" maxlength="16" placeholder="Enter nickname">
+
+                    <label for="mpPresetSelect">Race Preset:</label>
+                    <select id="mpPresetSelect">
+                        <option value="blitz">Blitz Race (3 Discs, 3 Pegs - Par 7)</option>
+                        <option value="classic" selected>Classic Sprint (4 Discs, 3 Pegs - Par 15)</option>
+                        <option value="master">Master Duel (5 Discs, 3 Pegs - Par 31)</option>
+                        <option value="current">Current Stage Setup</option>
+                    </select>
+
+                    <div style="display: flex; gap: 8px; margin-top: 6px;">
+                        <button onclick="mpQuickMatch()" style="flex: 1; background: var(--accent-color); color: #0f172a; font-weight: bold;">⚡ Quick Match</button>
+                        <button onclick="mpCreateRoom()" style="flex: 1;" class="btn-mp">🏠 Host Room</button>
+                    </div>
+
+                    <div style="display: flex; gap: 8px; margin-top: 6px;">
+                        <input type="text" id="mpRoomCodeInput" placeholder="Enter Room Code (e.g. TOW-1234)" style="flex: 2;">
+                        <button onclick="mpJoinCode()" style="flex: 1;">🔗 Join</button>
+                    </div>
+
+                    <div id="mpRoomStatusBox" style="display: none; background: #0f172a; padding: 10px; border-radius: 8px; border: 1px solid var(--accent-color); margin-top: 6px; font-size: 13px; text-align: center;">
+                        <div id="mpStatusMessage">Hosting room...</div>
+                        <div style="display: flex; gap: 6px; justify-content: center; margin-top: 6px;">
+                            <input type="text" id="mpShareUrlInput" readonly style="font-size: 12px; font-family: monospace;">
+                            <button onclick="copyShareUrl()" style="padding: 4px 8px; font-size: 12px;">📋 Copy</button>
+                        </div>
+                        <div id="mpSoloCountdown" style="color: var(--warning-color); font-size: 12px; margin-top: 6px;">25s auto-fallback to Cyber-Bot AI</div>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 12px 0;">
+
+                    <label>Offline Practice vs Cyber-Bot AI:</label>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button onclick="startAiDuel('novice')" style="flex: 1; font-size: 12px; background: #1e293b;">🤖 Novice (1.4s)</button>
+                        <button onclick="startAiDuel('adept')" style="flex: 1; font-size: 12px; background: #1e293b;">🤖 Adept (0.7s)</button>
+                        <button onclick="startAiDuel('master')" style="flex: 1; font-size: 12px; background: #1e293b;">🤖 Master (0.38s)</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-btns">
+                <button onclick="closeAllModals()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Board FEN Modal -->
+    <div class="modal-overlay" id="fenModal" style="display: none;">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-title" style="color: var(--accent-color);">💾 Board State FEN</div>
+            <div class="modal-body">
+                <div class="modal-form">
+                    <label for="fenInput">Tower FEN String:</label>
+                    <textarea id="fenInput" rows="3" placeholder="KTOWERS:3:4:4,3,2,1||"></textarea>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="copyCurrentFen()" style="flex: 1;">📋 Copy Current FEN</button>
+                        <button onclick="applyFenFromInput()" style="flex: 1; background: var(--accent-color); color: #0f172a;">📥 Load FEN</button>
+                    </div>
+
+                    <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">
+                    <label>Quick Presets:</label>
+                    <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                        <button onclick="loadFenPreset('standard4')" style="flex: 1; font-size: 12px;">Standard 4-Disc</button>
+                        <button onclick="loadFenPreset('reves5')" style="flex: 1; font-size: 12px;">Reve's 5-Disc (4-Peg)</button>
+                        <button onclick="loadFenPreset('split')" style="flex: 1; font-size: 12px;">Split Tower</button>
+                        <button onclick="loadFenPreset('endgame')" style="flex: 1; font-size: 12px;">Endgame (1-Move)</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-btns">
+                <button onclick="closeAllModals()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Keybindings Modal -->
+    <div class="modal-overlay" id="keysModal" style="display: none;">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-title" style="color: var(--accent-color);">⚙️ Custom Keybindings</div>
+            <div class="modal-body">
+                <p style="font-size: 12px; color: var(--text-dim); margin-top: 0;">Click any key badge to rebind, then press your desired key.</p>
+                <div id="keybindsList" style="max-height: 280px; overflow-y: auto; padding-right: 4px;"></div>
+                <div style="margin-top: 12px; text-align: center;">
+                    <button onclick="resetKeybindsToDefaults()" style="font-size: 12px; background: #1e293b;">🔄 Reset Defaults</button>
+                </div>
+            </div>
+            <div class="modal-btns">
+                <button onclick="closeAllModals()">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invite Confirmation Modal (Mandatory Connect Gate) -->
+    <div class="modal-overlay" id="inviteModal" style="display: none;">
+        <div class="modal-content" style="max-width: 420px;">
+            <div class="modal-title" style="color: #38bdf8;">⚔️ Speed Duel Invite</div>
+            <div class="modal-body" style="text-align: center;">
+                <p>A challenger has invited you to a live KTowers Speed Duel!</p>
+                <p style="font-size: 16px; font-weight: bold; color: #fde047;">Room: <span id="inviteRoomCodeTxt">----</span></p>
+                <p style="font-size: 12px; color: var(--text-dim);">Both players race to solve the identical tower in real time.</p>
+            </div>
+            <div class="modal-btns">
+                <button onclick="acceptInviteRoom()" style="background: var(--accent-color); color: #0f172a; font-weight: bold;">⚔️ Join Speed Duel</button>
+                <button onclick="declineInviteRoom()">Play Solo</button>
+            </div>
         </div>
     </div>
 
@@ -490,6 +918,67 @@
         } catch (e) {
             campaignStats = {};
         }
+
+        // ----------------------------------------------------
+        // Speed Duel & Multiplayer State (Retro Firebase Multiplayer Service)
+        // ----------------------------------------------------
+        let mp = null;
+        let duelActive = false;
+        let duelMode = 'solo_ai'; // 'online' | 'solo_ai'
+        let aiDifficulty = 'adept';
+        let aiInterval = null;
+        let aiPegs = [];
+        let aiMoves = 0;
+        let aiElapsedSeconds = 0;
+        let oppData = {
+            name: 'Challenger',
+            badge: 'ONLINE',
+            moves: 0,
+            time: 0,
+            progress: 0,
+            pegs: [],
+            from: -1,
+            to: -1,
+            won: false
+        };
+        let soloCountdownTimer = null;
+        let soloCountdownSec = 25;
+
+        // ----------------------------------------------------
+        // Replay Mode State
+        // ----------------------------------------------------
+        let isReplayMode = false;
+        let replayIndex = 0;
+        let replayInterval = null;
+        let livePegsBackup = null;
+        let liveMovesBackup = 0;
+        let liveElapsedBackup = 0;
+
+        // ----------------------------------------------------
+        // Custom Keybindings State
+        // ----------------------------------------------------
+        const DEFAULT_KEYBINDS = {
+            peg1: '1', peg2: '2', peg3: '3', peg4: '4', peg5: '5',
+            undo: 'u', hint: 'h', freeze: 'f', swap: 's',
+            autosolve: 'a', restart: 'r', replay: 'p',
+            quicksave: 'F5', quickload: 'F9'
+        };
+        let keybinds = Object.assign({}, DEFAULT_KEYBINDS);
+        try {
+            const rawKeys = localStorage.getItem('ktowers_keybinds_v1');
+            if (rawKeys) {
+                const parsedKeys = JSON.parse(rawKeys);
+                if (parsedKeys && typeof parsedKeys === 'object') {
+                    keybinds = Object.assign({}, DEFAULT_KEYBINDS, parsedKeys);
+                }
+            }
+        } catch (e) {}
+        let rebindAction = null;
+
+        // ----------------------------------------------------
+        // ARCH-05: Tab Visibility State
+        // ----------------------------------------------------
+        let tabHiddenTime = 0;
 
         // Audio System
         let audioCtx = null;
@@ -794,6 +1283,7 @@
         }
 
         function undoMove() {
+            if (isReplayMode) return;
             if (moveHistory.length === 0 || won || gameOver) return;
             const lastMove = moveHistory.pop();
             if (pegs[lastMove.to] && pegs[lastMove.to].length > 0 && pegs[lastMove.from]) {
@@ -802,12 +1292,20 @@
             }
             selectedPeg = null;
             hintHighlight = null;
+            document.getElementById('moveDisplay').innerText = moves;
+            document.getElementById('undoBtn').disabled = (moveHistory.length === 0);
+            if (duelActive) {
+                const prog = Math.round((pegs[numPegs - 1].length / numDiscs) * 100);
+                if (duelMode === 'online' && mp) {
+                    mp.sendMove({ from: lastMove.to, to: lastMove.from, moves, won: false, elapsed: elapsedSeconds, progress: prog, pegs: pegs.map(p => [...p]) });
+                }
+            }
             render();
             playSound('drop');
         }
 
         function handlePegClick(pegIdx) {
-            if (won || gameOver) return;
+            if (isReplayMode || won || gameOver) return;
             document.getElementById('messageToast').innerText = '';
 
             const config = getCurrentStageConfig();
@@ -864,11 +1362,21 @@
                 }
 
                 if (toPeg.length === 0 || toPeg[toPeg.length - 1] > movingDisc) {
-                    moveHistory.push({ from: selectedPeg, to: pegIdx });
+                    const prevFrom = selectedPeg;
+                    moveHistory.push({ from: prevFrom, to: pegIdx });
                     toPeg.push(fromPeg.pop());
                     moves++;
                     selectedPeg = null;
                     hintHighlight = null;
+                    document.getElementById('moveDisplay').innerText = moves;
+                    document.getElementById('undoBtn').disabled = false;
+
+                    if (duelActive) {
+                        const prog = Math.round((pegs[numPegs - 1].length / numDiscs) * 100);
+                        if (duelMode === 'online' && mp) {
+                            mp.sendMove({ from: prevFrom, to: pegIdx, moves, won: false, elapsed: elapsedSeconds, progress: prog, pegs: pegs.map(p => [...p]) });
+                        }
+                    }
 
                     if (!timerInterval) timerInterval = setInterval(updateTimer, 1000);
 
@@ -895,19 +1403,18 @@
         // ----------------------------------------------------
         // Optimal Solver & Hint Engine
         // ----------------------------------------------------
-        function getBFSNextMove() {
-            const targetPeg = numPegs - 1;
-            const config = getCurrentStageConfig();
-            if (pegs[targetPeg].length === numDiscs) return null;
+        function getBFSNextMoveForState(pState, pCount, dCount, config, currentMoves = 0) {
+            const targetPeg = pCount - 1;
+            if (pState[targetPeg].length === dCount) return null;
 
             const queue = [];
             const visited = new Set();
 
-            function encodeState(pState) {
+            function encodeState(st) {
                 let code = [];
-                for (let d = 1; d <= numDiscs; d++) {
-                    for (let p = 0; p < numPegs; p++) {
-                        if (pState[p].includes(d)) {
+                for (let d = 1; d <= dCount; d++) {
+                    for (let p = 0; p < pCount; p++) {
+                        if (st[p].includes(d)) {
                             code.push(p);
                             break;
                         }
@@ -916,33 +1423,33 @@
                 return code.join(',');
             }
 
-            const initialCode = encodeState(pegs);
-            queue.push({ state: pegs.map(p => [...p]), firstMove: null, depth: 0 });
+            const initialCode = encodeState(pState);
+            queue.push({ state: pState.map(p => [...p]), firstMove: null, depth: 0 });
             visited.add(initialCode);
 
             let qHead = 0;
             while (qHead < queue.length && qHead < 4000) {
                 const curr = queue[qHead++];
 
-                if (curr.state[targetPeg].length === numDiscs) {
+                if (curr.state[targetPeg].length === dCount) {
                     return curr.firstMove;
                 }
 
                 if (curr.depth > 30) continue;
 
-                for (let from = 0; from < numPegs; from++) {
+                for (let from = 0; from < pCount; from++) {
                     if (curr.state[from].length === 0) continue;
                     const topDisc = curr.state[from][curr.state[from].length - 1];
 
-                    if (config.lockedDisk > 0 && topDisc === config.lockedDisk && (moves + curr.depth) < config.lockDuration) {
+                    if (config && config.lockedDisk > 0 && topDisc === config.lockedDisk && (currentMoves + curr.depth) < config.lockDuration) {
                         continue;
                     }
 
-                    for (let to = 0; to < numPegs; to++) {
+                    for (let to = 0; to < pCount; to++) {
                         if (from === to) continue;
-                        if (config.adjOnly && Math.abs(from - to) !== 1) continue;
-                        if (config.cyclic && ((from + 1) % numPegs !== to)) continue;
-                        if (config.colorRestr === 1 && to === 1 && (topDisc % 2 !== 0)) continue;
+                        if (config && config.adjOnly && Math.abs(from - to) !== 1) continue;
+                        if (config && config.cyclic && ((from + 1) % pCount !== to)) continue;
+                        if (config && config.colorRestr === 1 && to === 1 && (topDisc % 2 !== 0)) continue;
 
                         if (curr.state[to].length === 0 || curr.state[to][curr.state[to].length - 1] > topDisc) {
                             const nextState = curr.state.map(p => [...p]);
@@ -962,6 +1469,10 @@
                 }
             }
             return null;
+        }
+
+        function getBFSNextMove() {
+            return getBFSNextMoveForState(pegs, numPegs, numDiscs, getCurrentStageConfig(), moves);
         }
 
         function applyHint() {
@@ -1013,6 +1524,22 @@
                     clearInterval(autoSolveInterval);
                     autoSolveInterval = null;
                     document.getElementById('autoBtn').innerText = "🤖 Auto-Solve [A]";
+                }
+
+                if (duelActive) {
+                    if (duelMode === 'online' && mp) {
+                        mp.sendMove({ from: selectedPeg !== null ? selectedPeg : 0, to: targetPeg, moves, won: true, elapsed: elapsedSeconds, progress: 100, pegs: pegs.map(p => [...p]) });
+                        mp.sendChat("I cleared the tower! GG!");
+                    }
+                    if (aiInterval) {
+                        clearInterval(aiInterval);
+                        aiInterval = null;
+                    }
+                    spawnVictoryFireworks();
+                    playSound('win');
+                    render();
+                    showDuelResultModal(true, `You cleared the tower in ${moves} moves (${formatTime(elapsedSeconds)})! Victory!`);
+                    return true;
                 }
 
                 const config = getCurrentStageConfig();
@@ -2037,7 +2564,7 @@
             updateAndDrawParticles(ctx, groundY);
 
             // ----------------------------------------------------
-            // 7. Ornate HUD Corner Filigree L-Brackets & Perimeter Glint
+            // 7. Ornate HUD Corner Filigree L-Brackets & Static Border Inlay
             // ----------------------------------------------------
             const pad = 8;
             const bW = w - pad * 2;
@@ -2108,31 +2635,955 @@
         requestAnimationFrame(animateLoop);
 
         // ----------------------------------------------------
+        // UI, Toast, & Modal Helpers
+        // ----------------------------------------------------
+        function showMessage(msg, type = 'info') {
+            const toast = document.getElementById('messageToast');
+            if (!toast) return;
+            toast.innerText = msg;
+            if (type === 'error') toast.style.color = 'var(--danger-color)';
+            else if (type === 'success') toast.style.color = 'var(--success-color)';
+            else if (type === 'warning') toast.style.color = 'var(--warning-color)';
+            else toast.style.color = 'var(--accent-color)';
+        }
+
+        function closeAllModals() {
+            ['modalOverlay', 'mpModal', 'fenModal', 'keysModal', 'inviteModal'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+            rebindAction = null;
+        }
+
+        function openMultiplayerModal() {
+            closeAllModals();
+            document.getElementById('mpPlayerName').value = getStoredPlayerName();
+            document.getElementById('mpModal').style.display = 'flex';
+        }
+
+        function openFenModal() {
+            closeAllModals();
+            document.getElementById('fenInput').value = generateFEN();
+            document.getElementById('fenModal').style.display = 'flex';
+        }
+
+        function openKeybindsModal() {
+            closeAllModals();
+            renderKeybindsList();
+            document.getElementById('keysModal').style.display = 'flex';
+        }
+
+        function showInvitePrompt(code) {
+            closeAllModals();
+            pendingInviteCode = code;
+            document.getElementById('inviteRoomCodeTxt').innerText = code;
+            document.getElementById('inviteModal').style.display = 'flex';
+        }
+
+        function acceptInviteRoom() {
+            closeAllModals();
+            if (pendingInviteCode) {
+                mpJoinRoomDirect(pendingInviteCode);
+            }
+        }
+
+        function declineInviteRoom() {
+            closeAllModals();
+            pendingInviteCode = null;
+            try {
+                history.replaceState(null, '', window.location.pathname);
+            } catch (e) {}
+            showMessage("Invite declined. Playing local solo mode.");
+        }
+
+        function showDuelResultModal(isWin, details) {
+            document.getElementById('modalTitle').innerText = isWin ? "DUEL VICTORY! 🏆" : "DUEL DEFEAT ⚔️";
+            document.getElementById('modalTitle').style.color = isWin ? "var(--success-color)" : "var(--danger-color)";
+            document.getElementById('modalStars').innerText = isWin ? "⭐⭐⭐" : "💀";
+            document.getElementById('modalBody').innerHTML = `
+                <strong>${isWin ? 'Congratulations! You solved the tower first!' : 'Challenger finished before you.'}</strong><br><br>
+                ${details}<br><br>
+                🎯 <strong>Your Moves:</strong> ${moves} | ⏱️ <strong>Your Time:</strong> ${formatTime(elapsedSeconds)}
+            `;
+            document.getElementById('modalBtns').innerHTML = `
+                <button onclick="rematchDuel()" style="background: var(--accent-color); color: #0f172a;">⚔️ Rematch</button>
+                <button onclick="exitDuelMode()">Exit Duel</button>
+            `;
+            document.getElementById('modalOverlay').style.display = 'flex';
+        }
+
+        // ----------------------------------------------------
+        // Board State FEN Export / Import
+        // ----------------------------------------------------
+        function generateFEN() {
+            const pegStrs = pegs.map(p => p.join(','));
+            return `KTOWERS:${numPegs}:${numDiscs}:${pegStrs.join('|')}`;
+        }
+
+        function copyCurrentFen() {
+            const fen = generateFEN();
+            navigator.clipboard.writeText(fen).then(() => {
+                showMessage("📋 FEN copied to clipboard!", "success");
+            }).catch(() => {
+                showMessage("📋 FEN generated: " + fen);
+            });
+        }
+
+        function applyFenFromInput() {
+            const input = document.getElementById('fenInput').value.trim();
+            if (parseAndLoadFEN(input)) {
+                closeAllModals();
+            }
+        }
+
+        function loadFenPreset(presetName) {
+            let fen = '';
+            if (presetName === 'standard4') {
+                fen = 'KTOWERS:3:4:4,3,2,1||';
+            } else if (presetName === 'reves5') {
+                fen = 'KTOWERS:4:5:5,4,3,2,1|||';
+            } else if (presetName === 'split') {
+                fen = 'KTOWERS:3:4:4,2|3,1|';
+            } else if (presetName === 'endgame') {
+                fen = 'KTOWERS:3:4:1||4,3,2';
+            }
+            if (fen) {
+                document.getElementById('fenInput').value = fen;
+                parseAndLoadFEN(fen);
+                closeAllModals();
+            }
+        }
+
+        function parseAndLoadFEN(fenStr) {
+            if (!fenStr || !fenStr.startsWith('KTOWERS:')) {
+                showMessage("Invalid FEN! Must start with KTOWERS:", "error");
+                return false;
+            }
+            const parts = fenStr.split(':');
+            if (parts.length < 4) {
+                showMessage("Invalid FEN format!", "error");
+                return false;
+            }
+            const pCount = parseInt(parts[1], 10);
+            const dCount = parseInt(parts[2], 10);
+            if (isNaN(pCount) || pCount < 3 || pCount > 5 || isNaN(dCount) || dCount < 1 || dCount > 10) {
+                showMessage("Invalid peg or disc count in FEN!", "error");
+                return false;
+            }
+            const pegParts = parts[3].split('|');
+            if (pegParts.length !== pCount) {
+                showMessage(`Expected ${pCount} pegs in FEN, found ${pegParts.length}!`, "error");
+                return false;
+            }
+            const newPegs = [];
+            const seen = new Set();
+            for (let i = 0; i < pCount; i++) {
+                const s = pegParts[i].trim();
+                if (!s) {
+                    newPegs.push([]);
+                    continue;
+                }
+                const rawDiscs = s.split(',').map(x => parseInt(x.trim(), 10));
+                for (let j = 0; j < rawDiscs.length; j++) {
+                    const d = rawDiscs[j];
+                    if (isNaN(d) || d < 1 || d > dCount || seen.has(d)) {
+                        showMessage(`Invalid/duplicate disc ${d} in peg ${i+1}!`, "error");
+                        return false;
+                    }
+                    if (j > 0 && d >= rawDiscs[j - 1]) {
+                        showMessage(`Illegal stack in peg ${i+1}: larger disc cannot be on smaller!`, "error");
+                        return false;
+                    }
+                    seen.add(d);
+                }
+                newPegs.push(rawDiscs);
+            }
+
+            setMode('free');
+            numPegs = pCount;
+            numDiscs = dCount;
+            document.getElementById('freePegs').value = numPegs;
+            document.getElementById('freeDiscs').value = numDiscs;
+            pegs = newPegs;
+            moves = 0;
+            moveHistory = [];
+            selectedPeg = null;
+            hintHighlight = null;
+            won = false;
+            gameOver = false;
+            elapsedSeconds = 0;
+            document.getElementById('moveDisplay').innerText = '0';
+            document.getElementById('timeDisplay').innerText = '00:00';
+            document.getElementById('undoBtn').disabled = true;
+            document.getElementById('parDisplay').innerText = getOptimalMovesCount(numDiscs, numPegs);
+            showMessage("Custom FEN Board State Loaded!", "success");
+            playSound('drop');
+            render();
+            return true;
+        }
+
+        // ----------------------------------------------------
+        // Quicksave & Quickload State Snapshot
+        // ----------------------------------------------------
+        function quicksaveState() {
+            if (duelActive) {
+                showMessage("Quicksave disabled during Speed Duel!");
+                return;
+            }
+            const state = {
+                currentMode,
+                currentStageIdx,
+                numPegs,
+                numDiscs,
+                pegs: pegs.map(p => [...p]),
+                moves,
+                elapsedSeconds,
+                freezeSeconds,
+                freezeCharges,
+                swapCharges,
+                moveHistory: [...moveHistory]
+            };
+            try {
+                localStorage.setItem('ktowers_quicksave_v1', JSON.stringify(state));
+                showMessage(`💾 State Quicksaved [F5] (Moves: ${moves}, Time: ${formatTime(elapsedSeconds)})`, 'success');
+                playSound('freeze');
+            } catch (e) {
+                showMessage("Quicksave failed!");
+            }
+        }
+
+        function quickloadState() {
+            if (duelActive) {
+                showMessage("Quickload disabled during Speed Duel!");
+                return;
+            }
+            try {
+                const raw = localStorage.getItem('ktowers_quicksave_v1');
+                if (!raw) {
+                    showMessage("No Quicksave snapshot found! Press F5 to save.", 'warning');
+                    return;
+                }
+                const state = JSON.parse(raw);
+                currentMode = state.currentMode || 'free';
+                currentStageIdx = state.currentStageIdx || 0;
+                numPegs = state.numPegs || 3;
+                numDiscs = state.numDiscs || 4;
+                pegs = state.pegs.map(p => [...p]);
+                selectedPeg = null;
+                moves = state.moves || 0;
+                elapsedSeconds = state.elapsedSeconds || 0;
+                freezeSeconds = state.freezeSeconds || 0;
+                freezeCharges = state.freezeCharges !== undefined ? state.freezeCharges : 3;
+                swapCharges = state.swapCharges !== undefined ? state.swapCharges : 3;
+                moveHistory = state.moveHistory || [];
+                won = false;
+                gameOver = false;
+                hintHighlight = null;
+
+                if (currentMode === 'campaign') {
+                    document.getElementById('modeCampaignBtn').classList.add('active');
+                    document.getElementById('modeFreeBtn').classList.remove('active');
+                    document.getElementById('campaignControls').style.display = 'flex';
+                    document.getElementById('freeControls').style.display = 'none';
+                    document.getElementById('stageSelect').value = currentStageIdx;
+                } else {
+                    document.getElementById('modeCampaignBtn').classList.remove('active');
+                    document.getElementById('modeFreeBtn').classList.add('active');
+                    document.getElementById('campaignControls').style.display = 'none';
+                    document.getElementById('freeControls').style.display = 'flex';
+                    document.getElementById('freePegs').value = numPegs;
+                    document.getElementById('freeDiscs').value = numDiscs;
+                }
+
+                document.getElementById('freezeChargesDisplay').innerText = freezeCharges;
+                document.getElementById('swapChargesDisplay').innerText = swapCharges;
+                document.getElementById('timeDisplay').innerText = formatTime(elapsedSeconds);
+                document.getElementById('moveDisplay').innerText = moves;
+                document.getElementById('undoBtn').disabled = (moveHistory.length === 0);
+                showMessage(`📂 Quickload Restored [F9] (Moves: ${moves}, Time: ${formatTime(elapsedSeconds)})`, 'success');
+                playSound('drop');
+                render();
+            } catch (e) {
+                showMessage("Quickload error reading save data!");
+            }
+        }
+
+        // ----------------------------------------------------
+        // Interactive Move Replay Engine
+        // ----------------------------------------------------
+        function toggleReplayMode() {
+            if (isReplayMode) {
+                exitReplayMode();
+                return;
+            }
+            if (moveHistory.length === 0) {
+                showMessage("No moves in history to replay!", "warning");
+                return;
+            }
+            isReplayMode = true;
+            livePegsBackup = pegs.map(p => [...p]);
+            liveMovesBackup = moves;
+            liveElapsedBackup = elapsedSeconds;
+            replayIndex = moveHistory.length;
+
+            document.getElementById('replayBar').style.display = 'flex';
+            document.getElementById('replaySlider').max = moveHistory.length;
+            document.getElementById('replaySlider').value = replayIndex;
+            document.getElementById('replayStepTxt').innerText = `${replayIndex} / ${moveHistory.length}`;
+            document.getElementById('replayBtn').style.background = 'var(--accent-color)';
+            document.getElementById('replayBtn').style.color = '#0f172a';
+            applyReplayStep();
+        }
+
+        function exitReplayMode() {
+            if (!isReplayMode) return;
+            if (replayInterval) {
+                clearInterval(replayInterval);
+                replayInterval = null;
+                document.getElementById('replayPlayBtn').innerText = "▶ Play";
+            }
+            isReplayMode = false;
+            document.getElementById('replayBar').style.display = 'none';
+            document.getElementById('replayBtn').style.background = '';
+            document.getElementById('replayBtn').style.color = '';
+            if (livePegsBackup) {
+                pegs = livePegsBackup.map(p => [...p]);
+                moves = liveMovesBackup;
+                elapsedSeconds = liveElapsedBackup;
+                document.getElementById('moveDisplay').innerText = moves;
+                document.getElementById('timeDisplay').innerText = formatTime(elapsedSeconds);
+                document.getElementById('undoBtn').disabled = (moveHistory.length === 0);
+            }
+            selectedPeg = null;
+            hintHighlight = null;
+            render();
+        }
+
+        function applyReplayStep() {
+            pegs = Array.from({ length: numPegs }, () => []);
+            for (let i = numDiscs; i >= 1; i--) {
+                pegs[0].push(i);
+            }
+            for (let i = 0; i < replayIndex; i++) {
+                const m = moveHistory[i];
+                if (pegs[m.from] && pegs[m.from].length > 0) {
+                    pegs[m.to].push(pegs[m.from].pop());
+                }
+            }
+            document.getElementById('replaySlider').value = replayIndex;
+            document.getElementById('replayStepTxt').innerText = `${replayIndex} / ${moveHistory.length}`;
+            document.getElementById('moveDisplay').innerText = replayIndex;
+            selectedPeg = null;
+            hintHighlight = null;
+            render();
+        }
+
+        function replayFirst() {
+            replayIndex = 0;
+            applyReplayStep();
+        }
+
+        function replayPrev() {
+            if (replayIndex > 0) {
+                replayIndex--;
+                applyReplayStep();
+            }
+        }
+
+        function replayNext() {
+            if (replayIndex < moveHistory.length) {
+                replayIndex++;
+                applyReplayStep();
+            } else if (replayInterval) {
+                toggleReplayPlay();
+            }
+        }
+
+        function replayLast() {
+            replayIndex = moveHistory.length;
+            applyReplayStep();
+        }
+
+        function seekReplay(val) {
+            replayIndex = parseInt(val, 10);
+            applyReplayStep();
+        }
+
+        function toggleReplayPlay() {
+            if (replayInterval) {
+                clearInterval(replayInterval);
+                replayInterval = null;
+                document.getElementById('replayPlayBtn').innerText = "▶ Play";
+            } else {
+                if (replayIndex >= moveHistory.length) {
+                    replayIndex = 0;
+                    applyReplayStep();
+                }
+                document.getElementById('replayPlayBtn').innerText = "⏸ Pause";
+                replayInterval = setInterval(() => {
+                    if (replayIndex < moveHistory.length) {
+                        replayIndex++;
+                        applyReplayStep();
+                    } else {
+                        toggleReplayPlay();
+                    }
+                }, 550);
+            }
+        }
+
+        // ----------------------------------------------------
+        // Custom Keybinding Configuration
+        // ----------------------------------------------------
+        function renderKeybindsList() {
+            const listEl = document.getElementById('keybindsList');
+            if (!listEl) return;
+            const labels = {
+                peg1: 'Select Peg 1', peg2: 'Select Peg 2', peg3: 'Select Peg 3',
+                peg4: 'Select Peg 4', peg5: 'Select Peg 5',
+                undo: 'Undo Last Move', hint: 'Show Optimal Hint',
+                freeze: 'Time Freeze (15s)', swap: 'Disk Swap / Teleport',
+                autosolve: 'Auto-Solve Toggle', restart: 'Restart Current Puzzle',
+                replay: 'Toggle Move Replay', quicksave: 'Quicksave Snapshot',
+                quickload: 'Quickload Snapshot'
+            };
+            let html = '';
+            for (const [action, label] of Object.entries(labels)) {
+                const currentKey = keybinds[action] || DEFAULT_KEYBINDS[action];
+                html += `
+                    <div class="keybind-row">
+                        <span>${label}</span>
+                        <span class="key-badge" id="kbadge_${action}" onclick="startRebind('${action}')">${currentKey.toUpperCase()}</span>
+                    </div>
+                `;
+            }
+            listEl.innerHTML = html;
+        }
+
+        function startRebind(action) {
+            rebindAction = action;
+            const badge = document.getElementById(`kbadge_${action}`);
+            if (badge) {
+                badge.innerText = 'PRESS...';
+                badge.style.background = '#f59e0b';
+                badge.style.color = '#0f172a';
+            }
+        }
+
+        function resetKeybindsToDefaults() {
+            keybinds = Object.assign({}, DEFAULT_KEYBINDS);
+            try {
+                localStorage.removeItem('ktowers_keybinds_v1');
+            } catch (e) {}
+            renderKeybindsList();
+            showMessage("Keybindings reset to defaults.", "info");
+        }
+
+        // ----------------------------------------------------
+        // Speed Duel & Retro Firebase Multiplayer
+        // ----------------------------------------------------
+        let pendingInviteCode = null;
+
+        function getStoredPlayerName() {
+            try {
+                return localStorage.getItem('kilo_ktowers_name') || ('Player_' + Math.floor(1000 + Math.random() * 9000));
+            } catch (e) {
+                return 'Player_1999';
+            }
+        }
+
+        function setStoredPlayerName(name) {
+            try {
+                localStorage.setItem('kilo_ktowers_name', name);
+            } catch (e) {}
+        }
+
+        function initMultiplayerClient() {
+            if (typeof RetroMultiplayer === 'undefined') return;
+            try {
+                mp = new RetroMultiplayer({
+                    gameId: 'ktowers',
+                    prefix: 'TOW',
+                    playerName: getStoredPlayerName(),
+                    soloTimeoutMs: 25000,
+                    onMove: (data) => {
+                        if (!duelActive) return;
+                        oppData.moves = data.moves || 0;
+                        oppData.time = data.elapsed || 0;
+                        oppData.progress = data.progress || 0;
+                        oppData.pegs = data.pegs || [];
+                        oppData.from = data.from !== undefined ? data.from : -1;
+                        oppData.to = data.to !== undefined ? data.to : -1;
+                        oppData.won = !!data.won;
+
+                        document.getElementById('oppMovesTxt').innerText = oppData.moves;
+                        document.getElementById('oppTimeTxt').innerText = formatTime(oppData.time);
+                        document.getElementById('oppProgressFill').style.width = `${oppData.progress}%`;
+                        if (data.from !== undefined && data.to !== undefined && data.from >= 0 && data.to >= 0) {
+                            document.getElementById('oppActionBanner').innerText = `Opponent: Peg ${data.from + 1} ➔ Peg ${data.to + 1}`;
+                        }
+                        renderOpponentCanvas();
+
+                        if (data.won) {
+                            playSound('error');
+                            showDuelResultModal(false, `Challenger completed the tower in ${data.moves} moves (${formatTime(data.elapsed || 0)})!`);
+                        }
+                    },
+                    onOpponentJoin: ({ slot, name }) => {
+                        oppData.name = name || 'Challenger';
+                        document.getElementById('oppNameTxt').innerText = oppData.name;
+                        const badgeEl = document.getElementById('oppBadgeTag');
+                        badgeEl.innerText = 'ONLINE';
+                        badgeEl.className = 'badge-tag badge-online';
+                        document.getElementById('oppActionBanner').innerText = `${name} joined! Race started!`;
+                        showMessage(`Challenger joined: ${name}! Match starting!`, 'success');
+                        startOnlineDuelMatch();
+                    },
+                    onOpponentLeave: ({ slot, name }) => {
+                        showMessage(`Opponent ${name || 'peer'} disconnected.`, 'warning');
+                        document.getElementById('oppActionBanner').innerText = 'Opponent disconnected.';
+                    },
+                    onChat: ({ sender, text }) => {
+                        document.getElementById('oppActionBanner').innerText = `💬 ${sender}: "${text}"`;
+                        showMessage(`💬 ${sender}: ${text}`);
+                    },
+                    onSoloFallback: ({ reason }) => {
+                        showMessage('No peer joined within 25s. Engaging Subnet Cyber-Bot AI!', 'warning');
+                        startAiDuel('adept');
+                    },
+                    onStatusMsg: (msg, type) => {
+                        showMessage(msg, type);
+                    }
+                });
+            } catch (e) {
+                console.warn("Failed to init RetroMultiplayer", e);
+            }
+        }
+
+        function renderOpponentCanvas() {
+            const oCanvas = document.getElementById('oppCanvas');
+            if (!oCanvas) return;
+            const oCtx = oCanvas.getContext('2d');
+            const w = oCanvas.width;
+            const h = oCanvas.height;
+
+            oCtx.fillStyle = '#090d16';
+            oCtx.fillRect(0, 0, w, h);
+
+            // Ground base line
+            oCtx.strokeStyle = 'rgba(51, 65, 85, 0.4)';
+            oCtx.lineWidth = 1;
+            oCtx.beginPath();
+            oCtx.moveTo(10, h - 25);
+            oCtx.lineTo(w - 10, h - 25);
+            oCtx.stroke();
+
+            const oPegs = oppData.pegs && oppData.pegs.length > 0 ? oppData.pegs : pegs;
+            const pCount = numPegs || 3;
+            const pegW = w / pCount;
+            const maxD = numDiscs || 4;
+
+            for (let p = 0; p < pCount; p++) {
+                const cx = pegW * p + pegW / 2;
+                const isFrom = (oppData.from === p);
+                const isTo = (oppData.to === p);
+
+                // Peg rod
+                oCtx.fillStyle = isTo ? '#22c55e' : (isFrom ? '#f59e0b' : '#334155');
+                oCtx.fillRect(cx - 3, 25, 6, h - 50);
+
+                // Peg pedestal
+                oCtx.fillStyle = isTo ? '#15803d' : (isFrom ? '#b45309' : '#1e293b');
+                oCtx.fillRect(cx - pegW * 0.35, h - 25, pegW * 0.7, 6);
+
+                // Discs
+                const stack = oPegs[p] || [];
+                for (let d = 0; d < stack.length; d++) {
+                    const discVal = stack[d];
+                    const theme = DISK_THEMES[discVal - 1] || DISK_THEMES[0];
+                    const discW = Math.max(16, (discVal / maxD) * (pegW * 0.8));
+                    const discH = 12;
+                    const dy = h - 25 - (d + 1) * (discH + 2);
+
+                    oCtx.fillStyle = theme.main;
+                    oCtx.fillRect(cx - discW / 2, dy, discW, discH);
+
+                    oCtx.fillStyle = theme.top;
+                    oCtx.fillRect(cx - discW / 2, dy, discW, 3);
+                }
+            }
+        }
+
+        function startAiDuel(difficulty = 'adept') {
+            aiDifficulty = difficulty;
+            duelMode = 'solo_ai';
+            duelActive = true;
+
+            const nameInput = document.getElementById('mpPlayerName');
+            if (nameInput && nameInput.value.trim()) {
+                setStoredPlayerName(nameInput.value.trim());
+            }
+
+            const preset = document.getElementById('mpPresetSelect').value;
+            applyMatchPreset(preset);
+
+            aiPegs = Array.from({ length: numPegs }, () => []);
+            for (let i = numDiscs; i >= 1; i--) {
+                aiPegs[0].push(i);
+            }
+            aiMoves = 0;
+            aiElapsedSeconds = 0;
+
+            let diffName = 'Adept';
+            let moveDelay = 700;
+            if (difficulty === 'novice') { diffName = 'Novice'; moveDelay = 1400; }
+            else if (difficulty === 'master') { diffName = 'Grandmaster'; moveDelay = 380; }
+
+            oppData = {
+                name: `CyberTowers AI (${diffName})`,
+                badge: 'CYBER-BOT',
+                moves: 0,
+                time: 0,
+                progress: 0,
+                pegs: aiPegs.map(p => [...p]),
+                from: -1,
+                to: -1,
+                won: false
+            };
+
+            document.getElementById('oppNameTxt').innerText = oppData.name;
+            const badgeEl = document.getElementById('oppBadgeTag');
+            badgeEl.innerText = 'CYBER-BOT';
+            badgeEl.className = 'badge-tag badge-ai';
+            document.getElementById('oppMovesTxt').innerText = '0';
+            document.getElementById('oppTimeTxt').innerText = '00:00';
+            document.getElementById('oppProgressFill').style.width = '0%';
+            document.getElementById('oppActionBanner').innerText = 'Cyber-Bot connected! Race started!';
+            document.getElementById('oppPane').style.display = 'flex';
+
+            closeAllModals();
+            initGame();
+            renderOpponentCanvas();
+
+            if (aiInterval) clearInterval(aiInterval);
+            const config = getCurrentStageConfig();
+            aiInterval = setInterval(() => {
+                if (!duelActive || won || oppData.won) return;
+                aiElapsedSeconds++;
+                document.getElementById('oppTimeTxt').innerText = formatTime(aiElapsedSeconds);
+
+                const move = getBFSNextMoveForState(aiPegs, numPegs, numDiscs, config, aiMoves);
+                if (move && move.from !== undefined && move.to !== undefined) {
+                    const disc = aiPegs[move.from].pop();
+                    aiPegs[move.to].push(disc);
+                    aiMoves++;
+                    oppData.from = move.from;
+                    oppData.to = move.to;
+                    oppData.moves = aiMoves;
+                    oppData.pegs = aiPegs.map(p => [...p]);
+                    const prog = Math.round((aiPegs[numPegs - 1].length / numDiscs) * 100);
+                    oppData.progress = prog;
+
+                    document.getElementById('oppMovesTxt').innerText = aiMoves;
+                    document.getElementById('oppProgressFill').style.width = `${prog}%`;
+                    document.getElementById('oppActionBanner').innerText = `Cyber-Bot: Peg ${move.from + 1} ➔ Peg ${move.to + 1}`;
+                    renderOpponentCanvas();
+
+                    if (aiPegs[numPegs - 1].length === numDiscs) {
+                        oppData.won = true;
+                        clearInterval(aiInterval);
+                        aiInterval = null;
+                        playSound('error');
+                        showDuelResultModal(false, `Cyber-Bot finished in ${aiMoves} moves (${formatTime(aiElapsedSeconds)})!`);
+                    }
+                }
+            }, moveDelay);
+        }
+
+        function applyMatchPreset(preset) {
+            setMode('free');
+            if (preset === 'blitz') {
+                numPegs = 3; numDiscs = 3;
+            } else if (preset === 'classic') {
+                numPegs = 3; numDiscs = 4;
+            } else if (preset === 'master') {
+                numPegs = 3; numDiscs = 5;
+            } else if (preset === 'current') {
+                // keep current
+            }
+            document.getElementById('freePegs').value = numPegs;
+            document.getElementById('freeDiscs').value = numDiscs;
+        }
+
+        async function mpQuickMatch() {
+            if (!mp) {
+                showMessage("Multiplayer service unavailable. Switching to Cyber-Bot AI.", "warning");
+                startAiDuel('adept');
+                return;
+            }
+            const nameInput = document.getElementById('mpPlayerName');
+            if (nameInput && nameInput.value.trim()) {
+                setStoredPlayerName(nameInput.value.trim());
+                mp.playerName = nameInput.value.trim();
+            }
+            const preset = document.getElementById('mpPresetSelect').value;
+            applyMatchPreset(preset);
+
+            document.getElementById('mpStatusMessage').innerText = "Quick matching with open rooms...";
+            document.getElementById('mpRoomStatusBox').style.display = 'block';
+            startSoloCountdownDisplay();
+
+            const res = await mp.quickMatch({ discs: numDiscs, pegs: numPegs });
+            if (res && res.roomId) {
+                updateRoomStatusBox(res.roomId);
+            }
+        }
+
+        async function mpCreateRoom() {
+            if (!mp) {
+                showMessage("Multiplayer service unavailable. Starting offline duel.", "warning");
+                startAiDuel('adept');
+                return;
+            }
+            const nameInput = document.getElementById('mpPlayerName');
+            if (nameInput && nameInput.value.trim()) {
+                setStoredPlayerName(nameInput.value.trim());
+                mp.playerName = nameInput.value.trim();
+            }
+            const preset = document.getElementById('mpPresetSelect').value;
+            applyMatchPreset(preset);
+
+            document.getElementById('mpStatusMessage').innerText = "Creating room...";
+            document.getElementById('mpRoomStatusBox').style.display = 'block';
+            startSoloCountdownDisplay();
+
+            const res = await mp.createRoom({ discs: numDiscs, pegs: numPegs });
+            if (res && res.roomId) {
+                updateRoomStatusBox(res.roomId);
+            }
+        }
+
+        async function mpJoinCode() {
+            const codeInput = document.getElementById('mpRoomCodeInput');
+            const code = codeInput ? codeInput.value.trim().toUpperCase() : '';
+            if (!code) {
+                showMessage("Please enter a room code!", "warning");
+                return;
+            }
+            mpJoinRoomDirect(code);
+        }
+
+        async function mpJoinRoomDirect(code) {
+            if (!mp) {
+                showMessage("Multiplayer service unavailable.", "warning");
+                return;
+            }
+            const nameInput = document.getElementById('mpPlayerName');
+            if (nameInput && nameInput.value.trim()) {
+                setStoredPlayerName(nameInput.value.trim());
+                mp.playerName = nameInput.value.trim();
+            }
+            document.getElementById('mpStatusMessage').innerText = `Joining room ${code}...`;
+            document.getElementById('mpRoomStatusBox').style.display = 'block';
+
+            const res = await mp.joinRoom(code);
+            if (res && res.roomId) {
+                closeAllModals();
+                startOnlineDuelMatch();
+            } else {
+                showMessage(`Could not join room ${code}. Room may be full or closed.`, 'error');
+            }
+        }
+
+        function updateRoomStatusBox(roomId) {
+            document.getElementById('mpStatusMessage').innerText = `Room ${roomId} Active! Waiting for challenger...`;
+            const shareUrl = `${window.location.origin}${window.location.pathname}#room=${roomId}`;
+            document.getElementById('mpShareUrlInput').value = shareUrl;
+        }
+
+        function copyShareUrl() {
+            const input = document.getElementById('mpShareUrlInput');
+            if (!input || !input.value) return;
+            navigator.clipboard.writeText(input.value).then(() => {
+                showMessage("📋 Invite link copied to clipboard!", "success");
+            }).catch(() => {
+                showMessage("📋 Link: " + input.value);
+            });
+        }
+
+        function startSoloCountdownDisplay() {
+            if (soloCountdownTimer) clearInterval(soloCountdownTimer);
+            soloCountdownSec = 25;
+            const el = document.getElementById('mpSoloCountdown');
+            if (el) el.innerText = `25s auto-fallback to Cyber-Bot AI`;
+            soloCountdownTimer = setInterval(() => {
+                soloCountdownSec--;
+                if (el) el.innerText = `${Math.max(0, soloCountdownSec)}s auto-fallback to Cyber-Bot AI`;
+                if (soloCountdownSec <= 0) {
+                    clearInterval(soloCountdownTimer);
+                    soloCountdownTimer = null;
+                }
+            }, 1000);
+        }
+
+        function startOnlineDuelMatch() {
+            duelActive = true;
+            duelMode = 'online';
+            if (soloCountdownTimer) {
+                clearInterval(soloCountdownTimer);
+                soloCountdownTimer = null;
+            }
+            document.getElementById('oppPane').style.display = 'flex';
+            document.getElementById('oppMovesTxt').innerText = '0';
+            document.getElementById('oppTimeTxt').innerText = '00:00';
+            document.getElementById('oppProgressFill').style.width = '0%';
+            document.getElementById('oppActionBanner').innerText = 'Online race live! Solve your tower first!';
+
+            oppData.pegs = Array.from({ length: numPegs }, () => []);
+            for (let i = numDiscs; i >= 1; i--) {
+                oppData.pegs[0].push(i);
+            }
+            oppData.moves = 0;
+            oppData.progress = 0;
+            oppData.won = false;
+
+            closeAllModals();
+            initGame();
+            renderOpponentCanvas();
+        }
+
+        function sendDuelChat(msg) {
+            if (!duelActive) return;
+            if (duelMode === 'online' && mp) {
+                mp.sendChat(msg);
+                showMessage(`Sent: "${msg}"`);
+            } else {
+                showMessage(`Sent: "${msg}"`);
+                document.getElementById('oppActionBanner').innerText = `💬 You: "${msg}"`;
+            }
+        }
+
+        function exitDuelMode() {
+            if (aiInterval) {
+                clearInterval(aiInterval);
+                aiInterval = null;
+            }
+            if (soloCountdownTimer) {
+                clearInterval(soloCountdownTimer);
+                soloCountdownTimer = null;
+            }
+            if (mp && duelMode === 'online') {
+                mp.leaveRoom();
+            }
+            duelActive = false;
+            document.getElementById('oppPane').style.display = 'none';
+            closeAllModals();
+            initGame();
+            showMessage("Exited Speed Duel mode.");
+        }
+
+        function rematchDuel() {
+            closeAllModals();
+            if (duelMode === 'solo_ai') {
+                startAiDuel(aiDifficulty);
+            } else {
+                startOnlineDuelMatch();
+            }
+        }
+
+        // ----------------------------------------------------
         // Keyboard Hotkeys
         // ----------------------------------------------------
         document.addEventListener('keydown', (e) => {
-            if (e.ctrlKey || e.altKey || e.metaKey) return;
-            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) return;
+            if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) {
+                return;
+            }
 
-            if (e.key >= '1' && e.key <= '5') {
-                const idx = parseInt(e.key, 10) - 1;
-                if (idx >= 0 && idx < numPegs) handlePegClick(idx);
-            } else if (e.key === 'u' || e.key === 'U') {
+            if (rebindAction) {
+                e.preventDefault();
+                e.stopPropagation();
+                let keyName = e.key;
+                if (keyName === ' ') keyName = 'Space';
+                keybinds[rebindAction] = keyName;
+                rebindAction = null;
+                try {
+                    localStorage.setItem('ktowers_keybinds_v1', JSON.stringify(keybinds));
+                } catch (err) {}
+                renderKeybindsList();
+                showMessage("Key re-bound successfully!", "success");
+                return;
+            }
+
+            // Quicksave & Quickload
+            const pressed = e.key.toLowerCase();
+            const qsKey = (keybinds.quicksave || 'F5').toLowerCase();
+            const qlKey = (keybinds.quickload || 'F9').toLowerCase();
+
+            if (pressed === qsKey) {
+                e.preventDefault();
+                quicksaveState();
+                return;
+            }
+            if (pressed === qlKey) {
+                e.preventDefault();
+                quickloadState();
+                return;
+            }
+
+            if (e.ctrlKey || e.altKey || e.metaKey) return;
+
+            // Check peg keys 1..5
+            for (let p = 1; p <= 5; p++) {
+                const k = (keybinds[`peg${p}`] || `${p}`).toLowerCase();
+                if (pressed === k) {
+                    const idx = p - 1;
+                    if (idx >= 0 && idx < numPegs) handlePegClick(idx);
+                    return;
+                }
+            }
+
+            if (pressed === (keybinds.undo || 'u').toLowerCase()) {
                 undoMove();
-            } else if (e.key === 'h' || e.key === 'H') {
+            } else if (pressed === (keybinds.hint || 'h').toLowerCase()) {
                 applyHint();
-            } else if (e.key === 'f' || e.key === 'F') {
+            } else if (pressed === (keybinds.freeze || 'f').toLowerCase()) {
                 useTimeFreeze();
-            } else if (e.key === 's' || e.key === 'S') {
+            } else if (pressed === (keybinds.swap || 's').toLowerCase()) {
                 useDiskSwap();
-            } else if (e.key === 'r' || e.key === 'R') {
+            } else if (pressed === (keybinds.restart || 'r').toLowerCase()) {
                 initGame();
-            } else if (e.key === 'a' || e.key === 'A') {
+            } else if (pressed === (keybinds.autosolve || 'a').toLowerCase()) {
                 toggleAutoSolve();
+            } else if (pressed === (keybinds.replay || 'p').toLowerCase()) {
+                toggleReplayMode();
             } else if (e.key === 'Escape') {
-                const modal = document.getElementById('modalOverlay');
-                if (modal && modal.style.display !== 'none' && !won && !gameOver) {
-                    modal.style.display = 'none';
+                closeAllModals();
+            }
+        });
+
+        // ----------------------------------------------------
+        // ARCH-05: Tab Visibility Drift Remediation
+        // ----------------------------------------------------
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                tabHiddenTime = Date.now();
+                if (audioCtx && audioCtx.state === 'running') {
+                    audioCtx.suspend().catch(() => {});
+                }
+            } else {
+                if (tabHiddenTime > 0) {
+                    const deltaSec = Math.floor((Date.now() - tabHiddenTime) / 1000);
+                    if (timerInterval && !won && !gameOver && freezeSeconds <= 0 && deltaSec > 0) {
+                        elapsedSeconds += deltaSec;
+                        document.getElementById('timeDisplay').innerText = formatTime(elapsedSeconds);
+                        const config = getCurrentStageConfig();
+                        if (config.timeLimit > 0 && elapsedSeconds >= config.timeLimit) {
+                            triggerGameOver("Time limit expired while tab was in background!");
+                        }
+                    }
+                    tabHiddenTime = 0;
+                }
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume().catch(() => {});
                 }
             }
         });
@@ -2141,7 +3592,7 @@
         if (modalEl) {
             modalEl.addEventListener('click', (e) => {
                 if (e.target === modalEl && !won && !gameOver) {
-                    modalEl.style.display = 'none';
+                    closeAllModals();
                 }
             });
         }
@@ -2149,12 +3600,17 @@
         window.addEventListener('beforeunload', () => {
             if (timerInterval) clearInterval(timerInterval);
             if (autoSolveInterval) clearInterval(autoSolveInterval);
+            if (aiInterval) clearInterval(aiInterval);
+            if (soloCountdownTimer) clearInterval(soloCountdownTimer);
+            if (replayInterval) clearInterval(replayInterval);
+            if (mp && duelMode === 'online') mp.leaveRoom();
             if (audioCtx && audioCtx.state !== 'closed') {
                 audioCtx.close().catch(() => {});
             }
         });
 
         function showHelp() {
+            closeAllModals();
             document.getElementById('modalTitle').innerText = "How to Play KTowers";
             document.getElementById('modalTitle').style.color = "var(--accent-color)";
             document.getElementById('modalStars').innerText = "🏰";
@@ -2169,22 +3625,36 @@
                     <li><strong>Color Restriction:</strong> Peg 2 accepts even-numbered disks only.</li>
                     <li><strong>Locked Disks:</strong> Certain blocks cannot move until turn requirement is met.</li>
                 </ul>
-                <p><strong>Power-ups & Keys:</strong></p>
+                <p><strong>⚔️ Speed Duel / Multiplayer:</strong></p>
+                <p>Race head-to-head in real time against online players or Cyber-Bot AI! Live opponent mini-canvas mirrors your challenger's moves.</p>
+                <p><strong>Hotkeys & Features:</strong></p>
                 <ul>
                     <li><strong>1-5:</strong> Select / Move to Peg 1..5</li>
                     <li><strong>[U] Undo:</strong> Takes back last move.</li>
-                    <li><strong>[H] Hint:</strong> Highlights optimal next move.</li>
+                    <li><strong>[H] Hint:</strong> Optimal Frame-Stewart move.</li>
                     <li><strong>[F] Freeze:</strong> Pauses timer for 15s.</li>
-                    <li><strong>[S] Swap:</strong> Teleports top disk to valid peg.</li>
+                    <li><strong>[S] Swap:</strong> Instant teleport to valid peg.</li>
+                    <li><strong>[F5] / [F9]:</strong> Quicksave / Quickload state snapshot.</li>
+                    <li><strong>[P]:</strong> Move Replay scrubber.</li>
                 </ul>
             `;
-            document.getElementById('modalBtns').innerHTML = `<button onclick="document.getElementById('modalOverlay').style.display='none'">Close</button>`;
+            document.getElementById('modalBtns').innerHTML = `<button onclick="closeAllModals()">Close</button>`;
             document.getElementById('modalOverlay').style.display = 'flex';
         }
 
-        // Start initial game
-        populateStageDropdown();
-        initGame();
+        // Start initial game & setup Retro Firebase Multiplayer
+        window.addEventListener('DOMContentLoaded', async () => {
+            populateStageDropdown();
+            initGame();
+            initMultiplayerClient();
+            if (mp) {
+                const { onlineAvailable, inviteCode } = await mp.init();
+                if (inviteCode) {
+                    // Mandatory Connect Gate: Prompt user, do NOT autostart!
+                    showInvitePrompt(inviteCode);
+                }
+            }
+        });
     </script>
 </body>
 </html>
