@@ -16,9 +16,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 125,
+  "turns_executed": 126,
   "last_turn_timestamp": "2026-10-04T08:45:00-07:00",
-  "last_heartbeat": "2026-10-04T17:56:53.809154+00:00",
-  "current_target": "kweb://deep-core",
+  "last_heartbeat": "2026-10-04T18:05:23.824231+00:00",
+  "current_target": "KColosseum",
   "remote_command": "none"
 }

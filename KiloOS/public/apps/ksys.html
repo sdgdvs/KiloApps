@@ -527,19 +527,19 @@
   .log-level.ERROR { color: var(--accent-red); }
   .log-level.BENCH { color: var(--accent-purple); }
 
-  /* Toast Container & Notifications (Bottom-Center Guard) */
+  /* Toast Container & Notifications (Top-Center Safe Placement per Directive 189) */
   #toast-container {
     position: fixed;
-    bottom: 24px;
+    top: 54px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
     align-items: center;
     gap: 8px;
     z-index: 3000;
     pointer-events: none;
-    max-width: 90vw;
+    max-width: min(540px, 92vw);
   }
 
   .ksys-toast {
@@ -565,7 +565,7 @@
   .ksys-toast.error { border-left-color: var(--accent-red); }
 
   @keyframes toastIn {
-    from { opacity: 0; transform: translateY(12px) scale(0.95); }
+    from { opacity: 0; transform: translateY(-12px) scale(0.95); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
 
@@ -1690,12 +1690,12 @@
     toast.innerHTML = `
       <span style="font-size: 16px;">${icon}</span>
       <span style="flex:1;">${escapeHtml(message)}</span>
-      <button class="toast-close-btn" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:14px; padding:2px 6px; margin-left:6px; border-radius:4px; line-height:1;" title="Dismiss (Click)">✕</button>
+      <button class="toast-close-btn" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:14px; padding:2px 6px; margin-left:6px; border-radius:4px; line-height:1;" title="Dismiss (Click)" onclick="event.stopPropagation(); dismiss();">✕</button>
     `;
 
     function dismiss() {
       toast.style.opacity = '0';
-      toast.style.transform = 'translateY(10px) scale(0.95)';
+      toast.style.transform = 'translateY(-10px) scale(0.95)';
       toast.style.transition = 'all 0.25s ease';
       setTimeout(() => toast.remove(), 250);
     }
@@ -2040,12 +2040,13 @@
       return;
     }
 
-    // Escape closes modals or clears search
+    // Escape closes modals, dismisses toasts, or clears search
     if (e.key === 'Escape') {
       if (isAnyModalOpen()) {
         closeAllModals();
         return;
       }
+      clearToasts();
       const svcSearch = document.getElementById('svc-search-input');
       const logSearch = document.getElementById('log-search');
       if (svcSearch && svcSearch.value) { svcSearch.value = ''; renderServices(); return; }
@@ -2915,20 +2916,27 @@
     showToast('Executing full diagnostic benchmark suite...', 'info');
     playYm2612Sfx('benchStart');
 
-    await runCpuBenchmark();
-    await runRamBenchmark();
-    await runDiskBenchmark();
-    await runGpuBenchmark();
-    await runCryptoBenchmark();
-    await runLatencyBenchmark();
+    try {
+      await runCpuBenchmark();
+      await runRamBenchmark();
+      await runDiskBenchmark();
+      await runGpuBenchmark();
+      await runCryptoBenchmark();
+      await runLatencyBenchmark();
 
-    benchActive = false;
-    document.getElementById('bench-status-text').textContent = 'All 6 diagnostic benchmarks finished successfully.';
-    btn.disabled = false;
-    if (typeof updateSystemHealth === 'function') updateSystemHealth();
-    logEvent('INFO', 'Full 6-phase Diagnostic Benchmark suite finished.');
-    playYm2612Sfx('benchComplete');
-    showToast('Full Diagnostic Benchmark Suite complete (6/6 tests passed)!', 'success', 3500);
+      document.getElementById('bench-status-text').textContent = 'All 6 diagnostic benchmarks finished successfully.';
+      if (typeof updateSystemHealth === 'function') updateSystemHealth();
+      logEvent('INFO', 'Full 6-phase Diagnostic Benchmark suite finished.');
+      playYm2612Sfx('benchComplete');
+      showToast('Full Diagnostic Benchmark Suite complete (6/6 tests passed)!', 'success', 3500);
+    } catch(err) {
+      document.getElementById('bench-status-text').textContent = 'Diagnostic benchmark suite encountered an issue.';
+      logEvent('ERROR', `Benchmark suite error: ${err.message}`);
+      showToast('Benchmark suite encountered an error', 'error', 3000);
+    } finally {
+      benchActive = false;
+      btn.disabled = false;
+    }
   }
 
   // --- SERVICES & TELEMETRY LOGIC ---
@@ -3721,7 +3729,7 @@
     document.body.appendChild(a);
     a.click();
     setTimeout(() => {
-      document.body.removeChild(a);
+      if (a.parentNode) a.parentNode.removeChild(a);
       URL.revokeObjectURL(url);
     }, 1500);
     logEvent('INFO', `Exported system report file: ${filename}`);
@@ -4168,6 +4176,28 @@
   window.addEventListener('pagehide', () => {
     autoSaveState();
     cleanupTimers();
+  });
+
+  // Resource & Background Tab Visibility Management (ARCH-05)
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      autoSaveState();
+      cleanupTimers();
+    } else {
+      updateUptime();
+      inspectHardware();
+      updateSystemHealth();
+      updateCpuSpectrum();
+      if (getActiveTabId() === 'services') {
+        updateTelemetrySparklines();
+      }
+      cleanupTimers();
+      timerUptime = setInterval(updateUptime, 1000);
+      timerInspect = setInterval(inspectHardware, 5000);
+      timerSparklines = setInterval(updateTelemetrySparklines, 1000);
+      timerHealth = setInterval(updateSystemHealth, 2000);
+      timerSpectrum = setInterval(updateCpuSpectrum, 1000);
+    }
   });
 
   // Initialization
