@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://users/~neon_rider (Neon Rider's Devlog)"
   kilo_graphics: "KQuest (Phase 2: Dungeon & Hub Backgrounds)"
   kilo_tester: KStarDredge
-  kilo_usability: KMedia
+  kilo_usability: KMystery
   kilo_qa: KNet
   kilo_expander: KReversi
 virtual_web_target: "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KScript
-  timestamp: "2026-10-04T01:50:00-07:00"
+  agent: kilo-usability
+  app: KMedia
+  timestamp: "2026-10-04T02:08:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio`, `KSanctuary` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KMedia`
+- **Current Target**: `KMystery`
 - **Upcoming Queue**:
-  `KMystery`, `KNet`, `KNote`, `KPass`, `KHash`, `KGraph`, `KClock`, `KTimer`, `KPomodoro` *(Completed: KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail)*.
+  `KNet`, `KNote`, `KPass`, `KHash`, `KGraph`, `KClock`, `KTimer`, `KPomodoro` *(Completed: KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KNet`
@@ -230,6 +230,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T02:08:00-07:00 — kilo-usability: KMedia (UI/UX Ergonomics, Mandate 12 Connect Gate, Collapsible Sidebar & HiDPI Polish)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 143.9 KB web / 22.0 KB native < 999 KB ceiling).
+  - Mandate 12 Connect Gate: Removed multiplayer autostart; defaulted to offline mode; added explicit Connect/Disconnect toggle for Watch Party.
+  - Toast Occlusion Remediation: Re-anchored toasts safely above visualizer canvas, eliminating control and input overlap.
+  - Collapsible Sidebar & Layout: Added Sidebar toggle button + Tab hotkey with responsive layout; tuned default window size to 1000x700.
+  - HiDPI Canvas & Native Scaling: Added ResizeObserver for instant crisp visualizer scaling; added WM_SIZE and WM_GETMINMAXINFO to native Win32 C.
+  - Verification: MSVC clean (`KMedia.exe` 22.0 KB); Vite build clean in 283ms; test_app_startup PASS; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T01:50:00-07:00 — kilo-tester: KScript (UI Audit, Modal Overlay Display Fix & Build Verification)**
   - Status: PASS ✅ (1 startup modal defect fixed, 0 regressions, 102.1 KB web / 24.5 KB native < 999 KB).
   - Modal Overlay Fix: Fixed `.modal-overlay` CSS to `display: none` when inactive, resolving headless startup occlusion and stuck modal detection.
@@ -259,11 +267,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Controls & Board Ergonomics: Added Goban coordinate toggle (A-T, 1-19), byo-yomi clock modes, F5 quicksave, and F9 quickload.
   - Mandate 11 Glint Ban: Purged traveling stone sheens and floating Zen dust motes across web and native Win32 C.
   - Verification: MSVC clean (`KGo.exe` 169.5 KB); Vite build clean in 335ms; security_lint 100% PASS; check_icons 100% PASS.
-
-- **2026-10-04T00:27:00-07:00 — kilo-qa: KMandel (Pass 5: Disk State Persistence, Tutorial Integrity, Modal Shortcuts & Build Audit)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 125.7 KB web / 22.0 KB native < 999 KB ceiling).
-  - State Persistence: Implemented universal quicksave (F5) and quickload (F9) to `kmandel_quicksave.dat` (native Win32 binary) and local storage (web).
-  - First-Run Tutorial: Added `kmandel_tutorialSeen` / `.dat` file flag checks preventing tutorial prompts from interrupting restored save states.
-  - Modal Ergonomics: Added Enter and Space key dismiss handlers for help guide; wired Ctrl+Enter preset import submission; backdrop click dismiss.
-  - Defensive Loading: Added fallback guards for custom gradient color arrays and viewport bounds in `loadState`.
-  - Build & Size Verification: MSVC clean (`KMandel.exe` 22.0 KB); Vite build clean in 342ms; security_lint 100% PASS; check_icons 100% PASS.

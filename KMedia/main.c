@@ -791,6 +791,28 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTimer(hwnd, 1, 200, NULL);
             break;
         }
+        case WM_GETMINMAXINFO: {
+            MINMAXINFO* pMMI = (MINMAXINFO*)lParam;
+            pMMI->ptMinTrackSize.x = 640;
+            pMMI->ptMinTrackSize.y = 480;
+            return 0;
+        }
+        case WM_SIZE: {
+            int cx = LOWORD(lParam);
+            int cy = HIWORD(lParam);
+            if (cx > 0 && cy > 0 && hTitle) {
+                SetWindowPos(hTitle, NULL, 10, 10, cx - 20, 20, SWP_NOZORDER);
+                SetWindowPos(hEditSearch, NULL, 10, 35, cx - 20, 22, SWP_NOZORDER);
+                if (cx > 380) {
+                    SetWindowPos(hTimeStatus, NULL, 365, 66, cx - 20 - 365, 20, SWP_NOZORDER);
+                }
+                int lbH = cy - 275;
+                if (lbH < 80) lbH = 80;
+                SetWindowPos(hListBox, NULL, 10, 155, cx - 20, lbH, SWP_NOZORDER);
+                SetWindowPos(hSubText, NULL, 10, cy - 115, cx - 20, 105, SWP_NOZORDER);
+            }
+            break;
+        }
         case WM_DROPFILES: {
             HDROP hDrop = (HDROP)wParam;
             UINT count = DragQueryFileA(hDrop, 0xFFFFFFFF, NULL, 0);

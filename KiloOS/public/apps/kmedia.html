@@ -319,6 +319,9 @@
     position: relative;
     overflow: hidden;
   }
+  .sidebar.collapsed {
+    display: none !important;
+  }
 
   /* Tab Header */
   .sidebar-tabs {
@@ -753,12 +756,12 @@
     gap: 10px;
   }
 
-  /* Non-occluding bottom-center toast */
+  /* Non-occluding toast positioned safely above visualizer canvas */
   #toast {
     display: none;
     position: fixed;
-    bottom: 22px;
-    left: 50%;
+    bottom: 86px;
+    left: calc((100% - 310px) / 2);
     transform: translateX(-50%) translateY(4px);
     background: rgba(24, 38, 25, 0.95);
     color: #a5d6a7;
@@ -778,17 +781,37 @@
     max-width: 90vw;
     text-align: center;
   }
+  body.sidebar-collapsed #toast {
+    left: 50%;
+  }
+
+  @media (max-width: 768px) {
+    #toast {
+      left: 50% !important;
+      bottom: 86px;
+    }
+    .main-layout {
+      flex-direction: column;
+    }
+    .sidebar {
+      width: 100%;
+      height: 260px;
+      border-left: none;
+      border-top: 1px solid #303030;
+    }
+  }
 
   input[type="file"] { display: none; }
 </style>
 </head>
-<body data-width="950" data-height="700">
+<body data-width="1000" data-height="700">
 
 <div class="header">
   <div class="title-row">
     <div class="title" id="title">No media selected (Press 'H' or F1 for help)</div>
     <div class="header-badges">
-      <div class="party-badge" id="partyHeaderBadge" title="Open Watch Party &amp; Multiplayer Sync">🌐 Party: <span id="partyHeaderStatus">Lounge</span></div>
+      <button id="btnToggleSidebar" class="secondary" style="height:20px; font-size:10px; padding:1px 6px;" title="Toggle Sidebar [Tab]">◀ Sidebar [Tab]</button>
+      <div class="party-badge" id="partyHeaderBadge" title="Open Watch Party &amp; Multiplayer Sync">🌐 Party: <span id="partyHeaderStatus">Offline</span></div>
       <div class="app-badge">KiloApps '99</div>
     </div>
   </div>
@@ -1021,8 +1044,8 @@
       <div class="tab-panel" id="panelParty" role="tabpanel">
         <div class="party-banner">
           <div class="party-status">
-            <div class="party-dot" id="partyDot"></div>
-            <span id="partyStatusText">Connected: #lounge</span>
+            <div class="party-dot offline" id="partyDot"></div>
+            <span id="partyStatusText">Offline (Local Mode)</span>
           </div>
           <div style="display:flex; gap:4px;">
             <button id="btnPartyDJMode" class="secondary" style="font-size:10px; height:20px; padding:2px 6px;" title="Toggle DJ Control Mode">DJ: Collab</button>
@@ -1032,13 +1055,13 @@
 
         <div class="party-room-row">
           <input type="text" id="partyRoomInput" class="party-room-input" placeholder="Room ID (e.g. lounge, retro99)" value="lounge" aria-label="Watch Party Room ID" />
-          <button id="btnJoinRoom" style="height:24px; font-size:10px;">Join</button>
+          <button id="btnConnectParty" style="height:24px; font-size:10px; font-weight:600; background:#2e7d32; min-width:70px;">⚡ Connect</button>
           <button id="btnLoungeQuick" class="secondary" style="height:24px; font-size:10px;" title="Reset to default public lounge">Lounge</button>
         </div>
 
         <div class="party-listeners" id="partyListenersWrap">
           <span>👥 Listeners (1):</span>
-          <span class="listener-chip" id="myChip">You</span>
+          <span class="listener-chip" id="myChip">You (Offline)</span>
         </div>
 
         <div class="party-reaction-deck">
@@ -1087,6 +1110,7 @@
       <tr><td>P / N</td><td>Previous / Next Track</td></tr>
       <tr><td>Alt + Up / Down</td><td>Move Track Up / Down in Playlist</td></tr>
       <tr><td>1 - 4</td><td>Switch Sidebar Tabs (Playlist, DSP, Video, Party)</td></tr>
+      <tr><td>Tab</td><td>Toggle Sidebar (Expand / Collapse)</td></tr>
       <tr><td>Del</td><td>Remove Selected Track from Playlist</td></tr>
       <tr><td>S</td><td>Stop Playback &amp; Rewind</td></tr>
       <tr><td>M</td><td>Cycle Playback Mode (Normal/Repeat/Shuffle)</td></tr>
@@ -1148,6 +1172,8 @@
 <script>
   const UI = {
     title: document.getElementById('title'),
+    btnToggleSidebar: document.getElementById('btnToggleSidebar'),
+    sidebar: document.querySelector('.sidebar'),
     partyHeaderBadge: document.getElementById('partyHeaderBadge'),
     partyHeaderStatus: document.getElementById('partyHeaderStatus'),
     btnAdd: document.getElementById('btnAdd'),
@@ -1230,7 +1256,7 @@
     partyDot: document.getElementById('partyDot'),
     partyStatusText: document.getElementById('partyStatusText'),
     partyRoomInput: document.getElementById('partyRoomInput'),
-    btnJoinRoom: document.getElementById('btnJoinRoom'),
+    btnConnectParty: document.getElementById('btnConnectParty'),
     btnLoungeQuick: document.getElementById('btnLoungeQuick'),
     btnPartyDJMode: document.getElementById('btnPartyDJMode'),
     btnPartyResync: document.getElementById('btnPartyResync'),
@@ -1639,16 +1665,33 @@
     if (!analyser || UI.mediaPlayer.paused) drawIdleVisualizer();
   }
   window.addEventListener('resize', resizeCanvas);
+  if (window.ResizeObserver && UI.waveform && UI.waveform.parentElement) {
+    try {
+      new ResizeObserver(() => resizeCanvas()).observe(UI.waveform.parentElement);
+    } catch (_) {}
+  }
+
+  function toggleSidebar() {
+    if (!UI.sidebar) return;
+    const isCollapsed = UI.sidebar.classList.toggle('collapsed');
+    document.body.classList.toggle('sidebar-collapsed', isCollapsed);
+    if (UI.btnToggleSidebar) {
+      UI.btnToggleSidebar.textContent = isCollapsed ? '▶ Sidebar [Tab]' : '◀ Sidebar [Tab]';
+    }
+    resizeCanvas();
+  }
+  if (UI.btnToggleSidebar) UI.btnToggleSidebar.onclick = toggleSidebar;
 
   function drawIdleVisualizer() {
     const w = UI.waveform.width;
     const h = UI.waveform.height;
+    const dpr = window.devicePixelRatio || 1;
     wCtx.fillStyle = '#0f0f0f';
     wCtx.fillRect(0, 0, w, h);
     
-    // Draw subtle grid
+    // Draw subtle grid with crisp HiDPI scaling
     wCtx.strokeStyle = '#1b2a1c';
-    wCtx.lineWidth = 1;
+    wCtx.lineWidth = 1 * dpr;
     wCtx.beginPath();
     wCtx.moveTo(0, h / 2);
     wCtx.lineTo(w, h / 2);
@@ -3023,37 +3066,84 @@
   let currentRoomId = 'lounge';
   let isDjCollab = true;
   let isRemoteSyncing = false;
+  let isPartyConnected = false;
   let roomStateRef = null;
   let roomChatRef = null;
   let roomMembersRef = null;
   let myPresenceRef = null;
 
   function initWatchParty() {
-    if (!window.kmedia_fb) {
-      UI.partyDot.className = 'party-dot offline';
-      UI.partyStatusText.textContent = 'Offline (Local Only)';
-      UI.partyHeaderStatus.textContent = 'Offline';
-      return;
+    // Mandate 12 Connect Gate: Boot in local offline mode by default
+    isPartyConnected = false;
+    UI.partyDot.className = 'party-dot offline';
+    UI.partyStatusText.textContent = 'Offline (Local Mode)';
+    UI.partyHeaderStatus.textContent = 'Offline';
+    UI.partyHeaderBadge.classList.remove('online');
+    if (UI.btnConnectParty) {
+      UI.btnConnectParty.textContent = '⚡ Connect';
+      UI.btnConnectParty.className = '';
+      UI.btnConnectParty.style.background = '#2e7d32';
     }
-    joinPartyRoom(currentRoomId);
+    UI.partyListenersWrap.innerHTML = `<span>👥 Listeners (1):</span><span class="listener-chip" id="myChip">You (Offline)</span>`;
   }
 
-  window.onWatchPartyReady = initWatchParty;
+  window.onWatchPartyReady = () => {
+    if (!isPartyConnected) {
+      initWatchParty();
+    }
+  };
+
+  function leavePartyRoom() {
+    if (window.kmedia_fb) {
+      const { off, remove } = window.kmedia_fb;
+      if (roomStateRef) off(roomStateRef);
+      if (roomMembersRef) off(roomMembersRef);
+      if (roomChatRef) off(roomChatRef);
+      if (myPresenceRef) remove(myPresenceRef).catch(() => {});
+    }
+    roomStateRef = null;
+    roomChatRef = null;
+    roomMembersRef = null;
+    myPresenceRef = null;
+    isPartyConnected = false;
+
+    UI.partyHeaderStatus.textContent = 'Offline';
+    UI.partyStatusText.textContent = 'Offline (Local Mode)';
+    UI.partyDot.className = 'party-dot offline';
+    UI.partyHeaderBadge.classList.remove('online');
+    if (UI.btnConnectParty) {
+      UI.btnConnectParty.textContent = '⚡ Connect';
+      UI.btnConnectParty.className = '';
+      UI.btnConnectParty.style.background = '#2e7d32';
+    }
+    UI.partyListenersWrap.innerHTML = `<span>👥 Listeners (1):</span><span class="listener-chip" id="myChip">You (Offline)</span>`;
+    showToast('Disconnected from Watch Party (Offline mode)');
+  }
 
   function joinPartyRoom(roomId) {
-    if (!window.kmedia_fb) return;
+    if (!window.kmedia_fb) {
+      showToast('Firebase multiplayer relay connecting...', false);
+      return;
+    }
     const { db, ref, set, onValue, onChildAdded, off, remove, serverTimestamp, onDisconnect } = window.kmedia_fb;
     
     // Detach previous listeners
     if (roomStateRef) off(roomStateRef);
     if (roomMembersRef) off(roomMembersRef);
-    if (myPresenceRef) remove(myPresenceRef);
+    if (roomChatRef) off(roomChatRef);
+    if (myPresenceRef) remove(myPresenceRef).catch(() => {});
 
     currentRoomId = roomId.trim().toLowerCase() || 'lounge';
+    isPartyConnected = true;
     UI.partyHeaderStatus.textContent = currentRoomId;
     UI.partyStatusText.textContent = `Connected: #${currentRoomId}`;
     UI.partyDot.className = 'party-dot';
     UI.partyHeaderBadge.classList.add('online');
+    if (UI.btnConnectParty) {
+      UI.btnConnectParty.textContent = '🔌 Disconnect';
+      UI.btnConnectParty.className = 'secondary';
+      UI.btnConnectParty.style.background = '#333333';
+    }
 
     const roomBasePath = `multiplayer/kmedia/rooms/${currentRoomId}`;
     roomStateRef = ref(db, `${roomBasePath}/state`);
@@ -3134,7 +3224,7 @@
   }
 
   function broadcastPartyState() {
-    if (!window.kmedia_fb || isRemoteSyncing) return;
+    if (!window.kmedia_fb || isRemoteSyncing || !isPartyConnected) return;
     if (!isDjCollab) return; // If DJ mode is restricted
     const { set } = window.kmedia_fb;
     if (!roomStateRef) return;
@@ -3160,12 +3250,12 @@
       text: cleanText,
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     };
-    if (window.kmedia_fb && roomChatRef) {
+    if (window.kmedia_fb && roomChatRef && isPartyConnected) {
       const { push } = window.kmedia_fb;
       push(roomChatRef, payload).catch(() => {});
     } else {
       appendPartyChatMessage(payload);
-      showToast('Message sent (Local mode)');
+      showToast(isPartyConnected ? 'Message sent' : 'Message sent (Local mode)');
     }
     UI.partyChatInput.value = '';
   }
@@ -3182,13 +3272,23 @@
     UI.partyChatFeed.scrollTop = UI.partyChatFeed.scrollHeight;
   }
 
-  UI.btnJoinRoom.onclick = () => {
-    const val = UI.partyRoomInput.value.trim();
-    if (val) joinPartyRoom(val);
-  };
+  if (UI.btnConnectParty) {
+    UI.btnConnectParty.onclick = () => {
+      if (isPartyConnected) {
+        leavePartyRoom();
+      } else {
+        const val = UI.partyRoomInput.value.trim() || 'lounge';
+        joinPartyRoom(val);
+      }
+    };
+  }
   UI.btnLoungeQuick.onclick = () => {
     UI.partyRoomInput.value = 'lounge';
-    joinPartyRoom('lounge');
+    if (isPartyConnected) {
+      joinPartyRoom('lounge');
+    } else {
+      showToast('Set room to #lounge. Click Connect to join.');
+    }
   };
   UI.btnPartyDJMode.onclick = () => {
     isDjCollab = !isDjCollab;
@@ -3591,6 +3691,12 @@
       return;
     }
 
+    if (e.key === 'Tab' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+      toggleSidebar();
+      e.preventDefault();
+      return;
+    }
+
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'o') {
       UI.fileInput.click();
       e.preventDefault();
@@ -3780,10 +3886,8 @@
   renderPlaylist();
   renderCuePoints();
 
-  // Try activating Watch Party if Firebase already loaded
-  if (window.kmedia_fb) {
-    initWatchParty();
-  }
+  // Initialize Watch Party in offline mode
+  initWatchParty();
 
   // First-run tutorial onboarding or welcome toast
   const tutorialSeen = safeGetStorage('kmedia_tutorialSeen', '0') === '1';

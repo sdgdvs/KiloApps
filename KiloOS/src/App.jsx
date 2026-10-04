@@ -39,7 +39,7 @@ const APPS = [
   { id: 'kspace', title: 'KSpace', url: '/apps/kspace.html', exeUrl: '/exe/KSpace.exe', icon: '/assets/icons/kspace.ico', w: 340, h: 520, folder: 'Games' },
   { id: 'kpac', title: 'KPac', url: '/apps/kpac.html', exeUrl: '/exe/KPac.exe', icon: '/assets/icons/kpac.ico', w: 400, h: 630, folder: 'Games' },
   { id: 'kmail', title: 'KMail', url: '/apps/kmail.html', exeUrl: '/exe/KMail.exe', icon: '/assets/icons/kmail.ico', w: 960, h: 640, folder: 'Network' },
-  { id: 'kmedia', title: 'KMedia', url: '/apps/kmedia.html', exeUrl: '/exe/KMedia.exe', icon: '/assets/icons/kmedia.ico', w: 950, h: 700, folder: 'Media' },
+  { id: 'kmedia', title: 'KMedia', url: '/apps/kmedia.html', exeUrl: '/exe/KMedia.exe', icon: '/assets/icons/kmedia.ico', w: 1000, h: 700, folder: 'Media' },
   { id: 'kimage', title: 'KImage', url: '/apps/kimage.html', exeUrl: '/exe/KImage.exe', icon: '/assets/icons/kimage.ico', w: 1060, h: 720, folder: 'Media' },
   { id: 'knet', title: 'KNet', url: '/apps/knet.html', exeUrl: '/exe/KNet.exe', icon: '/assets/icons/knet.ico', w: 1040, h: 740, folder: 'Network' },
   { id: 'kdb', title: 'KDB', url: '/apps/kdb.html', exeUrl: '/exe/KDB.exe', icon: '/assets/icons/kdb.ico', w: 900, h: 650, folder: 'Dev' },
