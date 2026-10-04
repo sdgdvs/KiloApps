@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KSpace
   kilo_tester: KTask
   kilo_usability: KTimer
-  kilo_qa: KChat
+  kilo_qa: KClock
   kilo_expander: KTowers
 virtual_web_target: "kweb://portal"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-usability
-  app: KClock
-  timestamp: "2026-10-04T13:10:00-07:00"
+  agent: kilo-qa
+  app: KChat
+  timestamp: "2026-10-04T13:25:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPomodoro`, `KGraph` *(Completed: KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KChat`
+- **Current Target**: `KClock`
 - **Upcoming Queue**:
-  `KClock`, `KTimer`, `KPomodoro`, `KMandel`, `KHex` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing)*.
+  `KTimer`, `KPomodoro`, `KMandel`, `KHex` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KTowers`
@@ -221,6 +221,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T13:25:00-07:00 — kilo-qa: KChat (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, clean builds, 95.8 KB web / 29.7 KB native < 999 KB ceiling).
+  - Quicksave & State Persistence: Implemented complete state persistence with [F5]/[F9] in web and Win32 C with storage quota guards.
+  - First-Run Tutorial Integrity: Added flag gating (`kchat_tutorial.dat` / `kchat_tutorialSeen`) preventing interruptions on restored saves.
+  - Toast & Modal Ergonomics (Directive 189): Anchored toasts safely below header (86px) with direct click & Escape key dismissal.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener suspending Web Audio context when backgrounded.
+  - Accessible Modals: Added `role="dialog"` and `aria-modal` across all five interactive modal overlays.
+  - Verification: `test_web_apps.js` PASS (61 elements, 0 err); MSVC clean (`KChat.exe` 29.7 KB); Vite clean in 338ms; security_lint 100% PASS.
+
 - **2026-10-04T13:10:00-07:00 — kilo-usability: KClock (Analog Quartz HiDPI Canvas, Responsive Sizing & ARCH-05)**
   - Status: PASS ✅ (0 regressions, clean builds, 99.9 KB web / 19.4 KB native < 999 KB ceiling).
   - Analog Quartz Dial (Canvas): High-DPI anti-aliased dial with metallic bezel, tick marks, numerals, and smooth 60fps sweeping seconds.
@@ -250,13 +259,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Cross-Network Linking: Linked in KNet help index, searchable database in portal.html, and updated Node #018 in webring.html.
   - Terminal Integration & Quicksave: Added `bluebox`, `phreak`, `deaddrop`, `whisper`, `dial <trunk>`, and `drop <list|read>` to VT-100 terminal; F5/F9 state persistence.
   - Verification: Vite build clean in 432ms; security_lint 100% PASS across all modified files; file size 295KB well below 999KB ceiling.
-
-- **2026-10-04T12:08:00-07:00 — kilo-expander: KReversi (Standardized RFMS Multiplayer, ARCH-05 & Tournament Exports)**
-  - Status: PASS ✅ (0 regressions, clean builds, 221.0 KB web / 164.3 KB native < 999 KB ceiling).
-  - Online Multiplayer (RFMS): Retrofitted standardized RetroMultiplayer with room sync, live lobby, chat, and spectator mode.
-  - Connect Gate & Solo Fallback: Enforced no-autostart modal gate and 25s fallback timer to local Cyber-Bot AI per Rule 12.
-  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener pausing timers/RAF and calculating drift on return.
-  - Glint & Comet Ban (Mandate 11): Removed continuous ambient motes and idle 60fps RAF loop to preserve CPU/battery.
-  - Tournament Exports: Added WOT/GGF (.ggf) and JSON match log downloads for external engine analysis (Edax/WZebra).
-  - Verification: MSVC clean (`KReversi.exe` 164.3 KB); Vite clean in 345ms; security_lint 100% PASS; check_icons 100% PASS.
 

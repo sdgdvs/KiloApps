@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T12:08:00-07:00 — kilo-expander: KReversi (Standardized RFMS Multiplayer, ARCH-05 & Tournament Exports)**
+  - Status: PASS ✅ (0 regressions, clean builds, 221.0 KB web / 164.3 KB native < 999 KB ceiling).
+  - Online Multiplayer (RFMS): Retrofitted standardized RetroMultiplayer with room sync, live lobby, chat, and spectator mode.
+  - Connect Gate & Solo Fallback: Enforced no-autostart modal gate and 25s fallback timer to local Cyber-Bot AI per Rule 12.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener pausing timers/RAF and calculating drift on return.
+  - Glint & Comet Ban (Mandate 11): Removed continuous ambient motes and idle 60fps RAF loop to preserve CPU/battery.
+  - Tournament Exports: Added WOT/GGF (.ggf) and JSON match log downloads for external engine analysis (Edax/WZebra).
+  - Verification: MSVC clean (`KReversi.exe` 164.3 KB); Vite clean in 345ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T11:56:00-07:00 — kilo-qa: KPing (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & ARCH-05)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 157.3 KB web / 38.5 KB native < 999 KB ceiling).
   - Quicksave & State Persistence: Fixed integer parsing bug in Win32 C [F5]/[F9], hardened web state persistence, and added quota protection.

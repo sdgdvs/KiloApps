@@ -360,7 +360,108 @@ void CopyLogToClipboard(HWND hwnd) {
     }
 }
 
+#define QUICKSAVE_FILE "kchat_quicksave.dat"
+#define TUTORIAL_FILE  "kchat_tutorial.dat"
+#define ID_QUICKSAVE   117
+#define ID_QUICKLOAD   118
+
+typedef struct {
+    char magic[8]; // "KCHATQS1"
+    int version;   // 1
+    char currentUsername[32];
+    char currentRoom[32];
+    int filterPinnedOnly;
+    int topicCount;
+    RoomTopic roomTopics[MAX_ROOMS];
+    int msgCount;
+    Message messages[MAX_MSGS];
+} KChatSaveData;
+
+void SwitchToRoom(HWND hwnd, const char* room);
+
+void SaveQuickSave(HWND hwnd) {
+    HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        AddMessage("System", "[Quicksave failed: cannot create save file]", currentRoom, 0);
+        return;
+    }
+    KChatSaveData* data = (KChatSaveData*)GlobalAlloc(GPTR, sizeof(KChatSaveData));
+    if (!data) {
+        CloseHandle(hFile);
+        return;
+    }
+    my_strcpy(data->magic, "KCHATQS1");
+    data->version = 1;
+    my_strncpy(data->currentUsername, currentUsername, sizeof(data->currentUsername));
+    my_strncpy(data->currentRoom, currentRoom, sizeof(data->currentRoom));
+    data->filterPinnedOnly = filterPinnedOnly;
+    data->topicCount = g_topicCount;
+    for (int i = 0; i < g_topicCount && i < MAX_ROOMS; i++) {
+        data->roomTopics[i] = g_roomTopics[i];
+    }
+    data->msgCount = g_msgCount;
+    for (int i = 0; i < g_msgCount && i < MAX_MSGS; i++) {
+        data->messages[i] = g_messages[i];
+    }
+    DWORD bytesWritten = 0;
+    WriteFile(hFile, data, sizeof(KChatSaveData), &bytesWritten, NULL);
+    CloseHandle(hFile);
+    GlobalFree(data);
+
+    // Mark tutorial as seen so save state restoration never pops up tutorial
+    HANDLE hTut = CreateFileA(TUTORIAL_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hTut != INVALID_HANDLE_VALUE) CloseHandle(hTut);
+
+    AddMessage("System", "[Quicksave snapshot created! [F5]]", currentRoom, 0);
+}
+
+void LoadQuickSave(HWND hwnd) {
+    HANDLE hFile = CreateFileA(QUICKSAVE_FILE, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) {
+        AddMessage("System", "[No quicksave snapshot found (F5 to save)]", currentRoom, 0);
+        return;
+    }
+    KChatSaveData* data = (KChatSaveData*)GlobalAlloc(GPTR, sizeof(KChatSaveData));
+    if (!data) {
+        CloseHandle(hFile);
+        return;
+    }
+    DWORD bytesRead = 0;
+    BOOL bSuccess = ReadFile(hFile, data, sizeof(KChatSaveData), &bytesRead, NULL);
+    CloseHandle(hFile);
+
+    if (bSuccess && bytesRead >= sizeof(KChatSaveData) && my_strcmp(data->magic, "KCHATQS1") == 0) {
+        my_strncpy(currentUsername, data->currentUsername, sizeof(currentUsername));
+        my_strncpy(currentRoom, data->currentRoom, sizeof(currentRoom));
+        filterPinnedOnly = data->filterPinnedOnly;
+        g_topicCount = data->topicCount;
+        if (g_topicCount > MAX_ROOMS) g_topicCount = MAX_ROOMS;
+        for (int i = 0; i < g_topicCount; i++) {
+            g_roomTopics[i] = data->roomTopics[i];
+        }
+        g_msgCount = data->msgCount;
+        if (g_msgCount > MAX_MSGS) g_msgCount = MAX_MSGS;
+        for (int i = 0; i < g_msgCount; i++) {
+            g_messages[i] = data->messages[i];
+        }
+
+        // Mark tutorial as seen so save state restoration never pops up tutorial
+        HANDLE hTut = CreateFileA(TUTORIAL_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTut != INVALID_HANDLE_VALUE) CloseHandle(hTut);
+
+        SwitchToRoom(hwnd, currentRoom);
+        AddMessage("System", "[Quicksave snapshot restored! [F9]]", currentRoom, 0);
+    } else {
+        AddMessage("System", "[Quicksave data corrupted or invalid]", currentRoom, 0);
+    }
+    GlobalFree(data);
+}
+
 void ShowHelpDialog(HWND hwnd) {
+    // Record tutorial seen flag
+    HANDLE hTut = CreateFileA(TUTORIAL_FILE, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hTut != INVALID_HANDLE_VALUE) CloseHandle(hTut);
+
     const char* helpText =
         "=== KChat Native Pro User Guide & Reference ===\r\n\r\n"
         "[QUICK-START TUTORIAL]\r\n"
@@ -371,9 +472,12 @@ void ShowHelpDialog(HWND hwnd) {
         "  3. Interactive Poll: Click [+ Poll] or type /poll to launch a vote; click [Vote] to vote.\r\n"
         "  4. Search & Filter : Type in the Search box to filter messages; press [Esc] to reset.\r\n"
         "  5. Export & Copy   : Click [Copy] or press [Ctrl+C] to copy log to clipboard;\r\n"
-        "                       click [Save TXT] or [JSON] to archive conversation history.\r\n\r\n"
+        "                       click [Save TXT] or [JSON] to archive conversation history.\r\n"
+        "  6. Quicksave/Load  : Press [F5] anytime to create a snapshot; press [F9] to restore.\r\n\r\n"
         "[KEYBOARD SHORTCUTS]\r\n"
         "  F1, H            : Open this comprehensive Help & Tutorial guide\r\n"
+        "  F5               : Quicksave complete chat state snapshot to local disk\r\n"
+        "  F9               : Quickload chat state snapshot from local disk\r\n"
         "  Ctrl+1 .. Ctrl+4 : Quick switch channel (#general, #dev, #random, #lounge)\r\n"
         "  Ctrl+C           : Copy channel chat log to clipboard\r\n"
         "  Ctrl+F           : Focus and select Search filter box\r\n"
@@ -393,6 +497,8 @@ void ShowHelpDialog(HWND hwnd) {
         "  /stats                              : Display channel analytics\r\n"
         "  /me <action>                        : Send 3rd-person action notice\r\n"
         "  /shrug, /table                      : Quick fun ASCII emotes\r\n"
+        "  /quicksave, /save                   : Quicksave snapshot [F5]\r\n"
+        "  /quickload, /load                   : Quickload snapshot [F9]\r\n"
         "  /clear                              : Clear message view\r\n"
         "  /unpin                              : Unpin banner message\r\n\r\n"
         "[SERVER CONNECTIVITY]\r\n"
@@ -429,6 +535,16 @@ LRESULT CALLBACK SearchSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
         SendMessageA(hParent, WM_COMMAND, 112, 0);
         return 0;
     }
+    if (msg == WM_KEYDOWN && wParam == VK_F5) {
+        HWND hParent = GetParent(hwnd);
+        SendMessageA(hParent, WM_COMMAND, ID_QUICKSAVE, 0);
+        return 0;
+    }
+    if (msg == WM_KEYDOWN && wParam == VK_F9) {
+        HWND hParent = GetParent(hwnd);
+        SendMessageA(hParent, WM_COMMAND, ID_QUICKLOAD, 0);
+        return 0;
+    }
     return CallWindowProcA(oldSearchProc, hwnd, msg, wParam, lParam);
 }
 
@@ -445,6 +561,16 @@ LRESULT CALLBACK InputSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
     if (msg == WM_KEYDOWN && wParam == VK_F1) {
         HWND hParent = GetParent(hwnd);
         SendMessageA(hParent, WM_COMMAND, 112, 0);
+        return 0;
+    }
+    if (msg == WM_KEYDOWN && wParam == VK_F5) {
+        HWND hParent = GetParent(hwnd);
+        SendMessageA(hParent, WM_COMMAND, ID_QUICKSAVE, 0);
+        return 0;
+    }
+    if (msg == WM_KEYDOWN && wParam == VK_F9) {
+        HWND hParent = GetParent(hwnd);
+        SendMessageA(hParent, WM_COMMAND, ID_QUICKLOAD, 0);
         return 0;
     }
     if (msg == WM_KEYDOWN && (GetKeyState(VK_CONTROL) & 0x8000)) {
@@ -580,6 +706,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 }
             } else if (wmId == 115) { // Stats Button
                 ShowRoomStats();
+            } else if (wmId == ID_QUICKSAVE) { // Quicksave F5
+                SaveQuickSave(hwnd);
+            } else if (wmId == ID_QUICKLOAD) { // Quickload F9
+                LoadQuickSave(hwnd);
             } else if (wmId == 100) { // Connect
                 if (s != INVALID_SOCKET) {
                     closesocket(s);
@@ -632,7 +762,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (buf[0]) {
                     // Slash command handling
                     if (my_strcmp(buf, "/help") == 0) {
-                        AddMessage("System", "Help: /poll <q>? <o1>|<o2>, /vote <num>, /topic <text>, /nick <name>, /roll [d20], /stats, /me <act>, /shrug, /clear, /unpin", currentRoom, 0);
+                        AddMessage("System", "Help: /poll <q>? <o1>|<o2>, /vote <num>, /topic <text>, /nick <name>, /roll [d20], /stats, /me <act>, /shrug, /quicksave, /quickload, /clear, /unpin", currentRoom, 0);
+                        SetWindowTextA(hInput, "");
+                        break;
+                    }
+
+                    if (my_strcmp(buf, "/quicksave") == 0 || my_strcmp(buf, "/save") == 0) {
+                        SaveQuickSave(hwnd);
+                        SetWindowTextA(hInput, "");
+                        break;
+                    }
+
+                    if (my_strcmp(buf, "/quickload") == 0 || my_strcmp(buf, "/load") == 0) {
+                        LoadQuickSave(hwnd);
                         SetWindowTextA(hInput, "");
                         break;
                     }
@@ -938,6 +1080,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 ShowHelpDialog(hwnd);
                 return 0;
             }
+            if (wParam == VK_F5) {
+                SaveQuickSave(hwnd);
+                return 0;
+            }
+            if (wParam == VK_F9) {
+                LoadQuickSave(hwnd);
+                return 0;
+            }
             break;
         case WM_DESTROY:
             if (s != INVALID_SOCKET) closesocket(s);
@@ -981,11 +1131,28 @@ void __stdcall MainEntry() {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
+    // First-run tutorial integrity check (Pass 5)
+    HANDLE hTutCheck = CreateFileA(TUTORIAL_FILE, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hTutCheck == INVALID_HANDLE_VALUE) {
+        // First run! Show Help & Tutorial guide once
+        ShowHelpDialog(hwnd);
+    } else {
+        CloseHandle(hTutCheck);
+    }
+
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
             if (msg.wParam == VK_F1) {
                 ShowHelpDialog(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F5) {
+                SaveQuickSave(hwnd);
+                continue;
+            }
+            if (msg.wParam == VK_F9) {
+                LoadQuickSave(hwnd);
                 continue;
             }
             HWND focus = GetFocus();

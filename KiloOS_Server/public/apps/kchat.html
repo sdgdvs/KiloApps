@@ -587,10 +587,10 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* System notification toast */
+        /* System notification toast - positioned safely below header controls (Directive 189) */
         .toast {
             position: fixed;
-            top: 14px;
+            top: 86px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(30, 41, 59, 0.95);
@@ -608,6 +608,7 @@
             pointer-events: auto;
             max-width: 90%;
             text-align: center;
+            user-select: none;
         }
     </style>
 </head>
@@ -690,7 +691,7 @@
     </div>
 
     <!-- Help Modal Overlay -->
-    <div class="modal-overlay" id="helpModal" onclick="if(event.target===this) window.closeHelpModal()">
+    <div class="modal-overlay" id="helpModal" role="dialog" aria-modal="true" aria-label="Help Guide & Tutorial" onclick="if(event.target===this) window.closeHelpModal()">
         <div class="modal-box" style="width: 560px;">
             <div class="modal-header">
                 <span>💬 KChat Pro User Guide & Reference</span>
@@ -757,7 +758,7 @@
     </div>
 
     <!-- Create Poll Modal Overlay -->
-    <div class="modal-overlay" id="pollModal" onclick="if(event.target===this) window.closePollModal()">
+    <div class="modal-overlay" id="pollModal" role="dialog" aria-modal="true" aria-label="Create Poll" onclick="if(event.target===this) window.closePollModal()">
         <div class="modal-box">
             <div class="modal-header">
                 <span>📊 Create Interactive Poll</span>
@@ -793,7 +794,7 @@
     </div>
 
     <!-- Create Room Modal Overlay -->
-    <div class="modal-overlay" id="roomModal" onclick="if(event.target===this) window.closeRoomModal()">
+    <div class="modal-overlay" id="roomModal" role="dialog" aria-modal="true" aria-label="Create or Join Channel" onclick="if(event.target===this) window.closeRoomModal()">
         <div class="modal-box">
             <div class="modal-header">
                 <span>➕ Create or Join Channel</span>
@@ -817,7 +818,7 @@
     </div>
 
     <!-- Edit Topic Modal Overlay -->
-    <div class="modal-overlay" id="topicModal" onclick="if(event.target===this) window.closeTopicModal()">
+    <div class="modal-overlay" id="topicModal" role="dialog" aria-modal="true" aria-label="Edit Topic" onclick="if(event.target===this) window.closeTopicModal()">
         <div class="modal-box">
             <div class="modal-header">
                 <span>✏️ Edit Channel Topic</span>
@@ -837,7 +838,7 @@
     </div>
 
     <!-- Stats Modal Overlay -->
-    <div class="modal-overlay" id="statsModal" onclick="if(event.target===this) window.closeStatsModal()">
+    <div class="modal-overlay" id="statsModal" role="dialog" aria-modal="true" aria-label="Chat Statistics" onclick="if(event.target===this) window.closeStatsModal()">
         <div class="modal-box">
             <div class="modal-header">
                 <span>📈 KChat Pro Analytics & Insights</span>
@@ -953,6 +954,7 @@
                     if (parsed.roomTopics && typeof parsed.roomTopics === 'object') roomTopics = parsed.roomTopics;
                     if (parsed.currentUsername) currentUsername = parsed.currentUsername;
                     if (parsed.currentRoom) currentRoom = parsed.currentRoom;
+                    if (parsed.showOnlyPinned !== undefined) showOnlyPinned = !!parsed.showOnlyPinned;
                 }
             } catch(e) {
                 console.warn("Could not load KChat state from localStorage:", e);
@@ -966,11 +968,25 @@
                     rooms: rooms,
                     roomTopics: roomTopics,
                     currentUsername: currentUsername,
-                    currentRoom: currentRoom
+                    currentRoom: currentRoom,
+                    showOnlyPinned: showOnlyPinned
                 };
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
             } catch(e) {
-                console.warn("Could not save KChat state to localStorage:", e);
+                try {
+                    // Graceful quota fallback: trim message history aggressively
+                    const fallbackState = {
+                        messages: messages.slice(-40),
+                        rooms: rooms,
+                        roomTopics: roomTopics,
+                        currentUsername: currentUsername,
+                        currentRoom: currentRoom,
+                        showOnlyPinned: showOnlyPinned
+                    };
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(fallbackState));
+                } catch(err2) {
+                    console.warn("Could not save KChat state to localStorage:", err2);
+                }
             }
         }
 
@@ -984,9 +1000,11 @@
                     currentRoom: currentRoom,
                     rooms: rooms,
                     roomTopics: roomTopics,
-                    messages: messages
+                    messages: messages.slice(-200),
+                    showOnlyPinned: showOnlyPinned
                 };
                 localStorage.setItem(QUICKSAVE_KEY, JSON.stringify(snapshot));
+                try { localStorage.setItem('kchat_tutorialSeen', '1'); } catch(err) {}
                 safeSaveState();
                 playChime(784.00, 0.15);
                 showToast("💾 Quicksave created! [F5]");
@@ -1018,6 +1036,15 @@
                 if (parsed.currentRoom) {
                     currentRoom = parsed.currentRoom;
                 }
+                if (parsed.showOnlyPinned !== undefined) {
+                    showOnlyPinned = !!parsed.showOnlyPinned;
+                    const btn = document.getElementById('btnFilterPinned');
+                    if (btn) {
+                        if (showOnlyPinned) btn.classList.add('btn-active');
+                        else btn.classList.remove('btn-active');
+                    }
+                }
+                try { localStorage.setItem('kchat_tutorialSeen', '1'); } catch(err) {}
                 safeSaveState();
                 if (window.renderChannelBar) window.renderChannelBar();
                 if (window.renderMessages) window.renderMessages();
@@ -1102,9 +1129,11 @@
 
         window.openHelpModal = function() {
             closeAllModals();
+            try { localStorage.setItem('kchat_tutorialSeen', '1'); } catch(e) {}
             if (helpModalEl) helpModalEl.classList.add('active');
         };
         window.closeHelpModal = function() {
+            try { localStorage.setItem('kchat_tutorialSeen', '1'); } catch(e) {}
             if (helpModalEl) helpModalEl.classList.remove('active');
         };
 
@@ -1609,6 +1638,9 @@
                 const anyModalOpen = [helpModalEl, pollModalEl, roomModalEl, topicModalEl, statsModalEl].some(m => m && m.classList.contains('active'));
                 if (anyModalOpen) {
                     closeAllModals();
+                } else if (toastEl && toastEl.style.display !== 'none' && toastEl.style.display !== '') {
+                    toastEl.style.display = 'none';
+                    if (toastTimeout) clearTimeout(toastTimeout);
                 } else if (searchInput === document.activeElement || (searchInput && searchInput.value)) {
                     if (searchInput) {
                         searchInput.value = '';
@@ -1909,7 +1941,19 @@
             if (!msg) return;
 
             if (msg === '/help' || msg.startsWith('/help ')) {
-                addMessage("System", "KChat Commands: /poll <q>? <opt1>|<opt2>, /vote <num>, /topic <text>, /roll [d20], /stats, /me <action>, /shrug, /tableflip, /nick <name>, /join <#room>, /clear, /unpin", currentRoom, false);
+                addMessage("System", "KChat Commands: /poll <q>? <opt1>|<opt2>, /vote <num>, /topic <text>, /roll [d20], /stats, /me <action>, /shrug, /tableflip, /nick <name>, /join <#room>, /quicksave, /quickload, /clear, /unpin", currentRoom, false);
+                inputEl.value = '';
+                return;
+            }
+
+            if (msg === '/quicksave' || msg === '/save') {
+                window.quickSave();
+                inputEl.value = '';
+                return;
+            }
+
+            if (msg === '/quickload' || msg === '/load') {
+                window.quickLoad();
                 inputEl.value = '';
                 return;
             }
@@ -2080,12 +2124,39 @@
             showToast("Cleared chat log.");
         };
 
+        // Tab visibility and audio context suspension (ARCH-05)
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (audioCtx && audioCtx.state === 'running') {
+                    try { audioCtx.suspend(); } catch(e) {}
+                }
+            } else {
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    try { audioCtx.resume(); } catch(e) {}
+                }
+            }
+        });
+
         // Initial setup
         window.renderChannelBar();
         window.renderMessages();
-        setTimeout(() => {
-            showToast("💬 Welcome to KChat Pro! Press [F1] or [H] for Help & Shortcuts.");
-        }, 350);
+
+        // First-run Tutorial Integrity (Pass 5)
+        let tutorialSeen = false;
+        try {
+            tutorialSeen = localStorage.getItem('kchat_tutorialSeen') === '1';
+        } catch(e) {}
+
+        if (!tutorialSeen) {
+            setTimeout(() => {
+                window.openHelpModal();
+                showToast("👋 Welcome to KChat Pro! [F1] for Tutorial & Shortcuts.");
+            }, 300);
+        } else {
+            setTimeout(() => {
+                showToast("💬 Welcome back to KChat Pro! Press [F1] for Help & Shortcuts.");
+            }, 300);
+        }
     </script>
 </body>
 </html>
