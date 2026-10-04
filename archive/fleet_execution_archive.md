@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T01:50:00-07:00 — kilo-tester: KScript (UI Audit, Modal Overlay Display Fix & Build Verification)**
+  - Status: PASS ✅ (1 startup modal defect fixed, 0 regressions, 102.1 KB web / 24.5 KB native < 999 KB).
+  - Modal Overlay Fix: Fixed `.modal-overlay` CSS to `display: none` when inactive, resolving headless startup occlusion and stuck modal detection.
+  - Interactive UI Audit: Verified all buttons (Rec/Play/Step/Continue/Run/Save/Load/Clear/Help/Export/Bench), search & replace, CSV export, and presets.
+  - Hotkey & Storage Audit: Confirmed F5 quicksave, F9 quickload, F1/H help modal, F10 step, F8 continue, F6 bench, Ctrl+Enter run, Esc dismiss.
+  - Verification: MSVC clean (`KScript.exe` 24.5 KB); Vite build clean in 313ms; `test_app_startup.py` PASS; `security_lint.py` 100% PASS; `check_icons.py` 100% PASS.
+
 - **2026-10-04T01:05:00-07:00 — kilo-expander: KGo (Kifu Replay Viewer, SGF Import/Export, Coordinates, Byo-Yomi & Glint Purge)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 158.3 KB web / 169.5 KB native < 999 KB ceiling).
   - SGF Import/Export: Added Smart Game Format (SGF) modal with clipboard copy, file download, drag-drop import, and JSON state backup.

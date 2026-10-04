@@ -804,8 +804,55 @@
       });
     }
 
+    // --- IMAGEN 3 DUNGEON & HUB ENVIRONMENTAL BACKGROUND SYSTEM (PHASE 2) ---
+    const BG_PLATES = {};
+    const BG_KEYS = [
+      'town', 'outpost', 'crypt', 'temple', 'forest', 'fortress',
+      'haunted_mine', 'frostpeak', 'serpent_swamp', 'infernal_volcano',
+      'blood_citadel', 'astral_nexus'
+    ];
+
+    const BIOME_BG_MAP = {
+      'outpost': 'outpost',
+      'crypt': 'crypt',
+      'temple': 'temple',
+      'forest': 'forest',
+      'fortress': 'fortress',
+      'haunted_mine': 'haunted_mine',
+      'frostpeak': 'frostpeak',
+      'serpent_swamp': 'serpent_swamp',
+      'infernal_volcano': 'infernal_volcano',
+      'spire': 'infernal_volcano',
+      'shadow_realm': 'astral_nexus',
+      'celestial_ruins': 'temple',
+      'blood_citadel': 'blood_citadel',
+      'abyssal_trench': 'temple',
+      'void_citadel': 'astral_nexus',
+      'crystal': 'frostpeak',
+      'ruins': 'fortress',
+      'astral_nexus': 'astral_nexus'
+    };
+
+    function preloadEnvironmentBGs() {
+      BG_KEYS.forEach(key => {
+        const img = new Image();
+        img.src = `../assets/backgrounds/kquest/kquest_bg_${key}.png`;
+        img.onload = () => {
+          BG_PLATES[key] = { img: img, loaded: true };
+        };
+        img.onerror = () => {
+          const fallback = new Image();
+          fallback.src = `assets/backgrounds/kquest/kquest_bg_${key}.png`;
+          fallback.onload = () => {
+            BG_PLATES[key] = { img: fallback, loaded: true };
+          };
+        };
+      });
+    }
+
     function initGFX() {
       preloadHeroSprites();
+      preloadEnvironmentBGs();
       GFX.canvas = document.getElementById('kquest-gfx-canvas');
       if (!GFX.canvas) return;
       GFX.ctx = GFX.canvas.getContext('2d');
@@ -1402,70 +1449,99 @@
     }
 
     function drawEnvironmentBG(ctx, biomeIdx, state) {
-      const w = GFX.canvas.width;
-      const h = GFX.canvas.height;
+      const w = 680;
+      const h = 220;
       const b = BIOMES[biomeIdx] || BIOMES[0];
+      const isTown = (state === STATE.TOWN || state === STATE.SHOP || state === STATE.CRAFTING || state === STATE.CHAR_CREATE);
 
-      if (state === STATE.TOWN || state === STATE.SHOP || state === STATE.CRAFTING || state === STATE.CHAR_CREATE) {
-        let grad = ctx.createLinearGradient(0, 0, 0, h);
-        grad.addColorStop(0, '#1e1e2e');
-        grad.addColorStop(0.7, '#313244');
-        grad.addColorStop(1, '#181825');
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, w, h);
+      const bgKey = isTown ? 'town' : (BIOME_BG_MAP[b.id] || 'outpost');
+      const bgData = BG_PLATES[bgKey];
 
-        ctx.fillStyle = '#45475a';
-        ctx.fillRect(0, 160, w, 60);
-        ctx.fillStyle = '#585b70';
-        for (let i = 0; i < w; i += 30) {
-          ctx.fillRect(i, 160, 28, 4);
-          ctx.fillRect(i + 15, 180, 28, 4);
+      if (bgData && bgData.loaded && bgData.img) {
+        // Blit high-fidelity Imagen 3 256-color environmental plate
+        ctx.drawImage(bgData.img, 0, 0, w, h);
+      } else {
+        // Procedural vector fallback
+        if (isTown) {
+          let grad = ctx.createLinearGradient(0, 0, 0, h);
+          grad.addColorStop(0, '#1e1e2e');
+          grad.addColorStop(0.7, '#313244');
+          grad.addColorStop(1, '#181825');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, w, h);
+
+          ctx.fillStyle = '#45475a';
+          ctx.fillRect(0, 160, w, 60);
+          ctx.fillStyle = '#585b70';
+          for (let i = 0; i < w; i += 30) {
+            ctx.fillRect(i, 160, 28, 4);
+            ctx.fillRect(i + 15, 180, 28, 4);
+          }
+
+          ctx.fillStyle = '#1e1e2e';
+          ctx.fillRect(40, 60, 100, 100);
+          ctx.fillRect(30, 40, 30, 30);
+          ctx.fillRect(110, 40, 30, 30);
+
+          ctx.fillStyle = '#a6e3a1';
+          ctx.beginPath();
+          ctx.arc(600, 100, 35, 0, Math.PI * 2);
+          ctx.arc(630, 120, 30, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          let bgTop = '#11111b', bgBot = '#181825';
+          if (b.id === 'infernal_volcano' || b.id === 'spire') { bgTop = '#2e181e'; bgBot = '#451e24'; }
+          else if (b.id === 'crypt' || b.id === 'blood_citadel') { bgTop = '#1c1c2e'; bgBot = '#2b1c38'; }
+          else if (b.id === 'frostpeak') { bgTop = '#182438'; bgBot = '#24384a'; }
+          else if (b.id === 'forest' || b.id === 'serpent_swamp') { bgTop = '#182e22'; bgBot = '#1c3d2a'; }
+          else if (b.id === 'astral_nexus') { bgTop = '#090814'; bgBot = '#22153b'; }
+
+          let grad = ctx.createLinearGradient(0, 0, 0, h);
+          grad.addColorStop(0, bgTop);
+          grad.addColorStop(1, bgBot);
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, 0, w, h);
+
+          ctx.strokeStyle = (b.id === 'astral_nexus') ? '#453266' : '#313244';
+          ctx.lineWidth = 1;
+          for (let y = 10; y < 160; y += 24) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+            const offset = (y % 48 === 0) ? 0 : 30;
+            for (let x = offset; x < w; x += 60) {
+              ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 24); ctx.stroke();
+            }
+          }
+
+          ctx.fillStyle = (b.id === 'astral_nexus') ? '#18122b' : '#1e1e2e';
+          ctx.fillRect(0, 160, w, 60);
+
+          if (b.id === 'infernal_volcano' || b.id === 'spire') {
+            ctx.fillStyle = '#f38ba8';
+            ctx.fillRect(0, 195, w, 25);
+            if (Math.random() < 0.3) addParticles(Math.random() * w, 200, '#fab387', 1);
+          } else if (b.id === 'temple' || b.id === 'abyssal_trench') {
+            ctx.fillStyle = '#89b4fa';
+            ctx.fillRect(0, 198, w, 22);
+          } else if (b.id === 'serpent_swamp' || b.id === 'crypt') {
+            ctx.fillStyle = '#a6e3a1';
+            ctx.fillRect(0, 198, w, 22);
+          } else if (b.id === 'astral_nexus') {
+            ctx.fillStyle = '#cba6f7';
+            ctx.fillRect(0, 198, w, 22);
+          }
         }
-
-        ctx.fillStyle = '#1e1e2e';
-        ctx.fillRect(40, 60, 100, 100);
-        ctx.fillRect(30, 40, 30, 30);
-        ctx.fillRect(110, 40, 30, 30);
-
-        ctx.fillStyle = '#a6e3a1';
-        ctx.beginPath();
-        ctx.arc(600, 100, 35, 0, Math.PI * 2);
-        ctx.arc(630, 120, 30, 0, Math.PI * 2);
-        ctx.fill();
-        return;
       }
 
-      let bgTop = '#11111b', bgBot = '#181825';
-      if (b.id === 'infernal_volcano' || b.id === 'spire') { bgTop = '#2e181e'; bgBot = '#451e24'; }
-      else if (b.id === 'crypt' || b.id === 'blood_citadel') { bgTop = '#1c1c2e'; bgBot = '#2b1c38'; }
-      else if (b.id === 'frostpeak') { bgTop = '#182438'; bgBot = '#24384a'; }
-      else if (b.id === 'forest' || b.id === 'serpent_swamp') { bgTop = '#182e22'; bgBot = '#1c3d2a'; }
-      else if (b.id === 'astral_nexus') { bgTop = '#090814'; bgBot = '#22153b'; }
-
-      let grad = ctx.createLinearGradient(0, 0, 0, h);
-      grad.addColorStop(0, bgTop);
-      grad.addColorStop(1, bgBot);
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, w, h);
-
-      ctx.strokeStyle = (b.id === 'astral_nexus') ? '#453266' : '#313244';
-      ctx.lineWidth = 1;
-      for (let y = 10; y < 160; y += 24) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-        const offset = (y % 48 === 0) ? 0 : 30;
-        for (let x = offset; x < w; x += 60) {
-          ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x, y + 24); ctx.stroke();
-        }
-      }
+      if (isTown) return;
 
       // Draw Flickering Ambient Glow (Torchlight or Cosmic Singularity)
       const flicker = Math.sin(GFX.frame * 0.2) * 5 + Math.random() * 5;
       const torchGrad = ctx.createRadialGradient(w/2, 80, 20 + flicker, w/2, 80, 200 + flicker);
-      if (b.id === 'astral_nexus') {
-        torchGrad.addColorStop(0, 'rgba(203, 166, 247, 0.22)');
+      if (b.id === 'astral_nexus' || b.id === 'shadow_realm' || b.id === 'void_citadel') {
+        torchGrad.addColorStop(0, 'rgba(203, 166, 247, 0.18)');
         torchGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
       } else {
-        torchGrad.addColorStop(0, 'rgba(250, 179, 135, 0.15)');
+        torchGrad.addColorStop(0, 'rgba(250, 179, 135, 0.12)');
         torchGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
       }
       ctx.fillStyle = torchGrad;
@@ -1498,7 +1574,7 @@
           if (py < 0) py += 160;
           ctx.beginPath(); ctx.arc(px, py, 2, 0, Math.PI * 2); ctx.fill();
         }
-      } else if (b.id === 'astral_nexus') {
+      } else if (b.id === 'astral_nexus' || b.id === 'shadow_realm' || b.id === 'void_citadel') {
         // Cosmic Singularity Stars & Void Motes
         for (let i = 0; i < 22; i++) {
           const ang = GFX.frame * 0.015 + i * 0.55;
@@ -1518,24 +1594,6 @@
           if (py < 0) py += 160;
           ctx.beginPath(); ctx.arc(px, py, (i%2)+1, 0, Math.PI * 2); ctx.fill();
         }
-      }
-
-      ctx.fillStyle = (b.id === 'astral_nexus') ? '#18122b' : '#1e1e2e';
-      ctx.fillRect(0, 160, w, 60);
-
-      if (b.id === 'infernal_volcano' || b.id === 'spire') {
-        ctx.fillStyle = '#f38ba8';
-        ctx.fillRect(0, 195, w, 25);
-        if (Math.random() < 0.3) addParticles(Math.random() * w, 200, '#fab387', 1);
-      } else if (b.id === 'temple' || b.id === 'abyssal_trench') {
-        ctx.fillStyle = '#89b4fa';
-        ctx.fillRect(0, 198, w, 22);
-      } else if (b.id === 'serpent_swamp' || b.id === 'crypt') {
-        ctx.fillStyle = '#a6e3a1';
-        ctx.fillRect(0, 198, w, 22);
-      } else if (b.id === 'astral_nexus') {
-        ctx.fillStyle = '#cba6f7';
-        ctx.fillRect(0, 198, w, 22);
       }
     }
 
