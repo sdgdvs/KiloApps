@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T13:25:00-07:00 — kilo-qa: KChat (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, clean builds, 95.8 KB web / 29.7 KB native < 999 KB ceiling).
+  - Quicksave & State Persistence: Implemented complete state persistence with [F5]/[F9] in web and Win32 C with storage quota guards.
+  - First-Run Tutorial Integrity: Added flag gating (`kchat_tutorial.dat` / `kchat_tutorialSeen`) preventing interruptions on restored saves.
+  - Toast & Modal Ergonomics (Directive 189): Anchored toasts safely below header (86px) with direct click & Escape key dismissal.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener suspending Web Audio context when backgrounded.
+  - Accessible Modals: Added `role="dialog"` and `aria-modal` across all five interactive modal overlays.
+  - Verification: `test_web_apps.js` PASS (61 elements, 0 err); MSVC clean (`KChat.exe` 29.7 KB); Vite clean in 338ms; security_lint 100% PASS.
+
 - **2026-10-04T13:10:00-07:00 — kilo-usability: KClock (Analog Quartz HiDPI Canvas, Responsive Sizing & ARCH-05)**
   - Status: PASS ✅ (0 regressions, clean builds, 99.9 KB web / 19.4 KB native < 999 KB ceiling).
   - Analog Quartz Dial (Canvas): High-DPI anti-aliased dial with metallic bezel, tick marks, numerals, and smooth 60fps sweeping seconds.

@@ -56,7 +56,7 @@ const APPS = [
   { id: 'khex', title: 'KHex', url: '/apps/khex.html', exeUrl: '/exe/KHex.exe', icon: '/assets/icons/khex.ico', w: 980, h: 820, folder: 'System' },
   { id: 'ksys', title: 'KSys', url: '/apps/ksys.html', exeUrl: '/exe/KSys.exe', icon: '/assets/icons/ksys.ico', w: 1024, h: 768, folder: 'System' },
   { id: 'kmandel', title: 'KMandel', url: '/apps/kmandel.html', exeUrl: '/exe/KMandel.exe', icon: '/assets/icons/kmandel.ico', w: 1024, h: 720, folder: 'Media' },
-  { id: 'ktimer', title: 'KTimer', url: '/apps/ktimer.html', exeUrl: '/exe/KTimer.exe', icon: '/assets/icons/ktimer.ico', w: 460, h: 580, folder: 'System' },
+  { id: 'ktimer', title: 'KTimer', url: '/apps/ktimer.html', exeUrl: '/exe/KTimer.exe', icon: '/assets/icons/ktimer.ico', w: 520, h: 640, folder: 'System' },
   { id: 'ksynth', title: 'KSynth', url: '/apps/ksynth.html', exeUrl: '/exe/KSynth.exe', icon: '/assets/icons/ksynth.ico', w: 1040, h: 860, folder: 'Media' },
   { id: 'kfont', title: 'KFont', url: '/apps/kfont.html', exeUrl: '/exe/KFont.exe', icon: '/assets/icons/kfont.ico', w: 980, h: 720, folder: 'System' },
   { id: 'kconverter', title: 'KConverter', url: '/apps/kconverter.html', exeUrl: '/exe/KConverter.exe', icon: '/assets/icons/kconverter.ico', w: 900, h: 650, folder: 'System' },

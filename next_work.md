@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://webring"
   kilo_graphics: KPac
   kilo_tester: KStarForge
-  kilo_usability: KTimer
+  kilo_usability: KPomodoro
   kilo_qa: KClock
   kilo_expander: KReversi
 virtual_web_target: "kweb://webring"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-tester
-  app: KTask
-  timestamp: "2026-10-04T14:52:00-07:00"
+  agent: kilo-usability
+  app: KTimer
+  timestamp: "2026-10-04T15:10:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio`, `KSanctuary`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask` *(Completed: KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KTimer`
+- **Current Target**: `KPomodoro`
 - **Upcoming Queue**:
-  `KPomodoro`, `KGraph` *(Completed: KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass)*.
+  `KGraph` *(Completed: KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KClock`
@@ -221,6 +221,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T15:10:00-07:00 — kilo-usability: KTimer (Window Resizing, Responsive Nav, Toast Re-anchoring & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, clean builds, 105.9 KB web / 32.2 KB native < 999 KB ceiling).
+  - Window & Layout Ergonomics: Tuned default window size to 520x640 in App.jsx and script; all panels display without internal scrollbars.
+  - Responsive Nav Bar: Added horizontal scroll containment and whitespace wrapping protection for all 8 mode & utility tabs.
+  - Toast Occlusion Remediation (Directive 189): Relocated toasts to bottom-center anchor with instant whole-toast click dismissal.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener pausing intervals, suspending audio, and eliminating timer drift.
+  - Double Modal Guard: Prevented stacked dialogs between Help and Tutorial onboarding; added clearance padding for help overlay.
+  - Verification: `test_app_startup.py` PASS; MSVC clean (`KTimer.exe` 32.2 KB); Vite clean in 315ms; `security_lint.py` 100% PASS.
+
 - **2026-10-04T14:52:00-07:00 — kilo-tester: KTask (Interactive UI Audit, CSS Brace Balance & Modal Dismissal Fixes)**
   - Status: PASS ✅ (2 issues, 2 fixed; 175.8 KB web / 31.2 KB native < 999 KB ceiling).
   - Static CSS Balance: Fixed unclosed `.help-kbd` CSS brace resolving headless cascade parser failure.
@@ -251,14 +260,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Win32 C Engine Expansion: Implemented interactive replay stepper/scrubber ([P]) and FEN clipboard export/import ([O]/[I]).
   - Ergonomics & Navigation: Added keyboard scrubbing (arrows/Home/End), toolbar buttons, and help documentation.
   - Verification: `test_app_startup.py` PASS (0 errors); MSVC clean (`KTowers.exe` 181.2 KB); Vite clean (316ms); security_lint 100% PASS.
-
-- **2026-10-04T13:25:00-07:00 — kilo-qa: KChat (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & ARCH-05)**
-  - Status: PASS ✅ (0 regressions, clean builds, 95.8 KB web / 29.7 KB native < 999 KB ceiling).
-  - Quicksave & State Persistence: Implemented complete state persistence with [F5]/[F9] in web and Win32 C with storage quota guards.
-  - First-Run Tutorial Integrity: Added flag gating (`kchat_tutorial.dat` / `kchat_tutorialSeen`) preventing interruptions on restored saves.
-  - Toast & Modal Ergonomics (Directive 189): Anchored toasts safely below header (86px) with direct click & Escape key dismissal.
-  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener suspending Web Audio context when backgrounded.
-  - Accessible Modals: Added `role="dialog"` and `aria-modal` across all five interactive modal overlays.
-  - Verification: `test_web_apps.js` PASS (61 elements, 0 err); MSVC clean (`KChat.exe` 29.7 KB); Vite clean in 338ms; security_lint 100% PASS.
 
 
