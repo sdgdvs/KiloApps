@@ -263,12 +263,19 @@ async def run_cdp_audit(app_name: str, browser_path: str, port: int) -> Dict[str
                 let canvasInfo = null;
                 if (canvas && isVisible(canvas)) {
                     const cr = canvas.getBoundingClientRect();
-                    canvasInfo = { width: Math.round(cr.width), height: Math.round(cr.height), left: Math.round(cr.left), top: Math.round(cr.top) };
+                    canvasInfo = {
+                        width: Math.round(cr.width),
+                        height: Math.round(cr.height),
+                        left: Math.round(cr.left),
+                        top: Math.round(cr.top),
+                        centerX: Math.round(cr.left + cr.width / 2),
+                        centerY: Math.round(cr.top + cr.height / 2)
+                    };
                 }
 
                 // Check for large overlay / modal elements
                 const overlayCandidates = Array.from(document.querySelectorAll(
-                    '[class*="modal"], [id*="modal"], [class*="overlay"], [id*="overlay"], [class*="dialog"], [class*="backdrop"], [class*="manual"], [id*="manual"]'
+                    '[class*="modal"], [id*="modal"], [class*="overlay"], [id*="overlay"], [class*="dialog"], [class*="backdrop"], [class*="manual"], [id*="manual"], [class*="splash"], [id*="splash"]'
                 )).filter(isVisible);
 
                 let primaryOverlay = null;
@@ -276,10 +283,9 @@ async def run_cdp_audit(app_name: str, browser_path: str, port: int) -> Dict[str
                     const rect = el.getBoundingClientRect();
                     const area = rect.width * rect.height;
                     const coverage = (area / totalArea);
-                    if (coverage > 0.35) { // Covers >35% of the viewport
-                        // Find close button
+                    if (coverage > 0.35) { // Covers >35% of viewport
                         const closeBtn = el.querySelector(
-                            'button[class*="close"], .btn-close, button[title*="Close"], button[title*="close"], button'
+                            'button[class*="close"], .btn-close, button[title*="Close"], button[title*="close"], button[title*="Dismiss"], .btn-help-footer-close, button'
                         );
                         primaryOverlay = {
                             id: el.id,
@@ -293,25 +299,9 @@ async def run_cdp_audit(app_name: str, browser_path: str, port: int) -> Dict[str
                     }
                 }
 
-                // Check center hit-test
-                const centerX = Math.round(vw / 2);
-                const centerY = Math.round(vh / 2);
-                const hitEl = document.elementFromPoint(centerX, centerY);
-                let hitInfo = null;
-                if (hitEl) {
-                    hitInfo = {
-                        tag: hitEl.tagName.toLowerCase(),
-                        id: hitEl.id || null,
-                        className: hitEl.className || null,
-                        isCanvas: hitEl.tagName.toLowerCase() === 'canvas',
-                        isOverlay: Boolean(hitEl.closest('[class*="modal"], [id*="modal"], [class*="overlay"], [id*="overlay"]'))
-                    };
-                }
-
                 return {
                     canvasInfo,
-                    primaryOverlay,
-                    hitInfo
+                    primaryOverlay
                 };
             })()
             """
@@ -325,13 +315,10 @@ async def run_cdp_audit(app_name: str, browser_path: str, port: int) -> Dict[str
                 result["canvas_size"] = f"{canvas_info['width']}x{canvas_info['height']}"
 
             primary_overlay = probe_data.get("primaryOverlay")
-            hit_info = probe_data.get("hitInfo") or {}
 
             if primary_overlay:
                 result["startup_modal"] = primary_overlay
                 cov = primary_overlay["coverage"]
-                # A full-screen or large startup modal was found!
-                # Test dismissal to ensure it's not stuck
                 result["modal_dismiss_tested"] = True
 
                 dismiss_test_js = """
@@ -346,7 +333,9 @@ async def run_cdp_audit(app_name: str, browser_path: str, port: int) -> Dict[str
                         '.modal-close',
                         'button[class*="close"]',
                         '[class*="modal"] button',
-                        '[class*="overlay"] button'
+                        '[class*="overlay"] button',
+                        '#btnStartDive',
+                        '.tutorial-btn-primary'
                     ];
 
                     for (const s of candidates) {
@@ -364,11 +353,11 @@ async def run_cdp_audit(app_name: str, browser_path: str, port: int) -> Dict[str
                         document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', bubbles: true }));
                     }
 
-                    await new Promise(r => setTimeout(r, 200));
+                    await new Promise(r => setTimeout(r, 250));
 
                     // Verify if overlay is now hidden
                     const overlays = Array.from(document.querySelectorAll(
-                        '[class*="modal"], [id*="modal"], [class*="overlay"], [id*="overlay"]'
+                        '[class*="modal"], [id*="modal"], [class*="overlay"], [id*="overlay"], [class*="dialog"], [class*="backdrop"]'
                     ));
                     const stillVisible = overlays.some(el => {
                         const style = window.getComputedStyle(el);
@@ -391,21 +380,66 @@ async def run_cdp_audit(app_name: str, browser_path: str, port: int) -> Dict[str
                 if dismiss_data.get("stillVisible"):
                     result["modal_dismiss_success"] = False
                     result["failures"].append(
-                        f"Unclosable startup modal: Overlay '{primary_overlay.get('id') or primary_overlay.get('className')}' covers {cov}% of screen and remained visible after close button click / ESC!"
+                        f"Unclosable startup modal: Overlay '{primary_overlay.get('id') or primary_overlay.get('className')}' covers {cov}%% of screen and remained visible after close button click / ESC!"
                     )
                 else:
                     result["modal_dismiss_success"] = True
 
-            # 4. Occlusion Check: Does the center of the screen hit the gameplay area or a blocking overlay?
-            if hit_info:
-                if hit_info.get("isOverlay"):
-                    result["occlusion_check"] = "BLOCKED"
-                    result["occlusion_blocker"] = f"<{hit_info['tag']} id='{hit_info['id']}' class='{hit_info['className']}'>"
-                    result["failures"].append(
-                        f"Gameplay surface occluded: Center viewport hit-test intercepted by modal overlay: {result['occlusion_blocker']}"
-                    )
-                else:
-                    result["occlusion_check"] = "PASS"
+            # 4. Post-Dismissal Occlusion Check: Does the game surface receive clicks?
+            hit_test_js = """
+            (function() {
+                const vw = window.innerWidth || 1024;
+                const vh = window.innerHeight || 768;
+                const canvas = document.querySelector('canvas');
+                let targetX = Math.round(vw / 2);
+                let targetY = Math.round(vh / 2);
+
+                if (canvas) {
+                    const cr = canvas.getBoundingClientRect();
+                    if (cr.width > 0 && cr.height > 0) {
+                        targetX = Math.round(cr.left + cr.width / 2);
+                        targetY = Math.round(cr.top + cr.height / 2);
+                    }
+                }
+
+                // Constrain within viewport bounds
+                targetX = Math.max(10, Math.min(vw - 10, targetX));
+                targetY = Math.max(10, Math.min(vh - 10, targetY));
+
+                const hitEl = document.elementFromPoint(targetX, targetY);
+                if (!hitEl) return { tag: 'none', isBlocked: false };
+
+                const isOverlay = Boolean(hitEl.closest(
+                    '[class*="modal"]:not(.minimized), [id*="modal"]:not(.minimized), [class*="overlay"]:not(.minimized), [id*="overlay"]:not(.minimized), [class*="backdrop"]'
+                ));
+
+                // Also check if hitEl is an invisible full-screen blocker (e.g. pointer-events left on transparent overlay)
+                const style = window.getComputedStyle(hitEl);
+                const rect = hitEl.getBoundingClientRect();
+                const isScreenBlocker = isOverlay && (rect.width * rect.height > vw * vh * 0.35);
+
+                return {
+                    tag: hitEl.tagName.toLowerCase(),
+                    id: hitEl.id || null,
+                    className: hitEl.className || null,
+                    isCanvas: hitEl.tagName.toLowerCase() === 'canvas',
+                    isOverlay: isScreenBlocker,
+                    targetX,
+                    targetY
+                };
+            })()
+            """
+            hit_res = await send_cmd("Runtime.evaluate", {"expression": hit_test_js, "returnByValue": True})
+            hit_data = hit_res.get("result", {}).get("value") or {}
+
+            if hit_data.get("isOverlay"):
+                result["occlusion_check"] = "BLOCKED"
+                result["occlusion_blocker"] = f"<{hit_data['tag']} id='{hit_data['id']}' class='{hit_data['className']}'>"
+                result["failures"].append(
+                    f"Gameplay surface occluded: Click at ({hit_data.get('targetX')}, {hit_data.get('targetY')}) is blocked by overlay {result['occlusion_blocker']}"
+                )
+            else:
+                result["occlusion_check"] = "PASS"
 
             listener_task.cancel()
 
