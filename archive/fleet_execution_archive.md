@@ -4,6 +4,13 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T04:08:00-07:00 — kilo-qa: KNote (Pass 5 QA & Build Quality, Full State Snapshot Persistence & Tutorial Integrity)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 158.8 KB web / 25.6 KB native < 999 KB ceiling).
+  - Snapshot State Persistence: Added full snapshot save/load (F5/F9) capturing tabs, active note, trash notes, selection, and sidebar in web and native (`knote_snapshot.dat`).
+  - First-Run Tutorial Integrity: Added safe check (`knote_tutorialSeen` / `.dat`) ensuring welcome modal only fires on fresh sessions and never interrupts restored states.
+  - Interactive Modal Ergonomics: Added Enter key dismissal across help, stats, trash, and collab modals; verified Esc hotkey and backdrop-click dismissals.
+  - Verification: MSVC clean (`KNote.exe` 25.6 KB); Vite build clean in 288ms; CDP startup PASS; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T03:55:00-07:00 — kilo-usability: KMystery (UI/UX Usability Pass, Toast Occlusion Fix, Modal Close Accessibility & Responsive Sizing)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 154.8 KB web / 39.9 KB native < 999 KB ceiling).
   - Toast Occlusion Remediation: Re-anchored toast bar from screen-center to bottom-right with inline dismiss icon, preventing button occlusion.

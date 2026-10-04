@@ -16,9 +16,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 102,
+  "turns_executed": 103,
   "last_turn_timestamp": "2026-09-30T00:26:00Z",
-  "last_heartbeat": "2026-10-04T11:57:52.990782+00:00",
-  "current_target": "KQuest (Phase 3: Monster & Boss Bestiary)",
+  "last_heartbeat": "2026-10-04T12:13:17.112399+00:00",
+  "current_target": "KStarship",
   "remote_command": "none"
 }

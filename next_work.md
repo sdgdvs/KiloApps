@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://cybercafe (CyberCafe '99 BBS Lounge)"
   kilo_graphics: "KQuest (Phase 4: Town NPCs & Combat FX)"
   kilo_tester: KStellar
-  kilo_usability: KNet
+  kilo_usability: KNote
   kilo_qa: KPass
   kilo_expander: KSnake
 virtual_web_target: "kweb://cybercafe"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KStarship
-  timestamp: "2026-10-04T05:12:00-07:00"
+  agent: kilo-usability
+  app: KNet
+  timestamp: "2026-10-04T05:28:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio`, `KSanctuary`, `KStarship` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KNet`
+- **Current Target**: `KNote`
 - **Upcoming Queue**:
-  `KNote`, `KPass`, `KHash`, `KGraph`, `KClock`, `KTimer`, `KPomodoro` *(Completed: KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia)*.
+  `KPass`, `KHash`, `KGraph`, `KClock`, `KTimer`, `KPomodoro` *(Completed: KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KPass`
@@ -230,6 +230,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T05:28:00-07:00 — kilo-usability: KNet (UI/UX Usability Pass, HiDPI Canvas Scaling, Toast Occlusion & Tab Visibility)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 180.8 KB web / 44.0 KB native < 999 KB ceiling).
+  - HiDPI Canvas Crispness: Added devicePixelRatio scaling to polar radar (tab 7) and speed dial (tab 5).
+  - Toast Occlusion Remediation: Re-anchored toast bar to center-bottom above footer, preventing button overlap.
+  - Resource & Tab Visibility (ARCH-05): Added visibilitychange listener pausing ping/sniffer timers when tab hidden.
+  - Dialog & Layout Ergonomics: Added Enter dismissal for Help modal, auto-render on payload tab, :focus-visible outlines, and flex-wrap.
+  - Verification: MSVC clean (`KNet.exe` 44.0 KB); Vite clean in 375ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T05:12:00-07:00 — kilo-tester: KStarship (Interactive UI Audit, Modal Overlay, Backdrop & Toast Occlusion Remediation)**
   - Status: PASS ✅ (4 issues fixed, 0 regressions, clean builds, 153.8 KB web / 143.5 KB native < 999 KB).
   - Modal Dismissals & Overlay: Added `.modal-overlay` container with backdrop-click and close button `[✕]` dismissal across all encounters.
@@ -262,10 +270,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - In-Game Chat & Emotes: Added quick emote bubbles above paddles, rematch requests, and diegetic ARG signal board integration (`arg/signals/kpong_*`).
   - Native Win32 Parity: Replaced legacy glint comment with Rule 11 static energy border in `KPong/main.c`; compiled clean 44 KB binary.
   - Verification: MSVC clean (`KPong.exe` 44.0 KB); Vite clean in 274ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
-
-- **2026-10-04T04:08:00-07:00 — kilo-qa: KNote (Pass 5 QA & Build Quality, Full State Snapshot Persistence & Tutorial Integrity)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 158.8 KB web / 25.6 KB native < 999 KB ceiling).
-  - Snapshot State Persistence: Added full snapshot save/load (F5/F9) capturing tabs, active note, trash notes, selection, and sidebar in web and native (`knote_snapshot.dat`).
-  - First-Run Tutorial Integrity: Added safe check (`knote_tutorialSeen` / `.dat`) ensuring welcome modal only fires on fresh sessions and never interrupts restored states.
-  - Interactive Modal Ergonomics: Added Enter key dismissal across help, stats, trash, and collab modals; verified Esc hotkey and backdrop-click dismissals.
-  - Verification: MSVC clean (`KNote.exe` 25.6 KB); Vite build clean in 288ms; CDP startup PASS; security_lint 100% PASS; check_icons 100% PASS.
