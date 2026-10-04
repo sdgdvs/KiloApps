@@ -913,29 +913,39 @@
       border: 1px solid #f87171;
     }
 
-    /* Toast Notification (Bottom Safe Zone - Clears Footer) */
+    /* Toast Notification (Top-Center Safe Zone - Non-Occluding per Directive 189) */
     .toast {
       position: fixed;
-      bottom: 34px;
+      top: 50px;
       left: 50%;
       transform: translateX(-50%);
       background: var(--surface);
-      border: 1px solid var(--primary);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--primary);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
       color: var(--text);
-      padding: 8px 18px;
+      padding: 7px 14px;
       border-radius: 4px;
       font-size: 12px;
       font-weight: 600;
       display: none;
-      z-index: 2000;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 9000;
       cursor: pointer;
       user-select: none;
       max-width: calc(100vw - 40px);
-      animation: toastSlideUp 0.2s ease;
+      min-width: 200px;
+      animation: toastSlideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1);
       pointer-events: auto;
       transition: background 0.15s, border-color 0.15s;
     }
+
+    .toast.success { border-left-color: var(--success); }
+    .toast.warning { border-left-color: var(--warning); }
+    .toast.error { border-left-color: var(--danger); }
+    .toast.info { border-left-color: var(--primary); }
 
     .toast:hover {
       background: var(--surface-hover);
@@ -943,11 +953,26 @@
     }
 
     .toast.show {
-      display: block;
+      display: flex;
     }
 
-    @keyframes toastSlideUp {
-      from { opacity: 0; transform: translate(-50%, 12px); }
+    .toast-close-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      line-height: 1;
+      padding: 0 2px;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+
+    .toast-close-btn:hover {
+      color: var(--danger);
+    }
+
+    @keyframes toastSlideDown {
+      from { opacity: 0; transform: translate(-50%, -10px); }
       to { opacity: 1; transform: translate(-50%, 0); }
     }
 
@@ -984,6 +1009,18 @@
         gap: 8px;
       }
       .format-group {
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+    @media (max-width: 720px) {
+      footer.k-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+        padding: 5px 10px;
+      }
+      .status-right {
+        font-size: 10px;
         flex-wrap: wrap;
         gap: 6px;
       }
@@ -1385,10 +1422,10 @@
   </footer>
 
   <!-- MODAL: Start Splash Screen -->
-  <div class="modal-overlay" id="modalSplash">
+  <div class="modal-overlay" id="modalSplash" role="dialog" aria-modal="true" aria-labelledby="splashTitle">
     <div class="modal-box splash-card">
       <div class="splash-logo">#</div>
-      <div class="splash-title">KHash v1.0.0</div>
+      <div class="splash-title" id="splashTitle">KHash v1.0.0</div>
       <div class="splash-desc">
         Sovereign Multi-Algorithm Checksum & Cryptographic Integrity Workstation.<br>
         Engineered for deep verification, forensics, and fleet data preservation.
@@ -1415,7 +1452,7 @@
 
       <div style="display:flex; justify-content:center; gap:10px;">
         <button class="btn btn-primary" id="btnSplashEnter" style="padding:8px 20px; font-size:13px;">
-          🚀 Open Workstation (Enter)
+          🚀 Start Workstation [Enter]
         </button>
         <button class="btn" id="btnSplashTour">
           ⚡ Quick Tour & Reference
@@ -1425,10 +1462,10 @@
   </div>
 
   <!-- MODAL: Help & Shortcuts Reference -->
-  <div class="modal-overlay" id="modalHelp">
+  <div class="modal-overlay" id="modalHelp" role="dialog" aria-modal="true" aria-labelledby="helpTitle">
     <div class="modal-box">
       <div class="modal-header">
-        <div class="modal-title">❓ Help & Quick Reference</div>
+        <div class="modal-title" id="helpTitle">❓ Help & Quick Reference</div>
         <button class="modal-close" id="btnCloseHelp">✕</button>
       </div>
       <div class="modal-body">
@@ -1966,22 +2003,54 @@
       { id: 'sha512', name: 'SHA-512', tag: 'crypto', tagClass: 'tag-crypto', bits: 512 }
     ];
 
-    // Status Helper & Toast
+    // Status Helper & Toast (Directive 189 Non-Occluding Top-Center Notification)
     let toastTimer = null;
-    function showToast(msg) {
+    function showToast(msg, customType) {
       const toast = document.getElementById('toastNotice');
       if (!toast) return;
-      toast.textContent = msg;
-      toast.classList.add('show');
+      let type = customType;
+      if (!type) {
+        const lower = msg.toLowerCase();
+        if (lower.includes('fail') || lower.includes('error') || lower.includes('invalid') || lower.includes('unavailable')) {
+          type = 'error';
+        } else if (lower.includes('please') || lower.includes('no ') || lower.includes('empty')) {
+          type = 'warning';
+        } else if (lower.includes('copied') || lower.includes('export') || lower.includes('import') || lower.includes('quicksave') || lower.includes('quickload') || lower.includes('verified') || lower.includes('synced') || lower.includes('enabled')) {
+          type = 'success';
+        } else {
+          type = 'info';
+        }
+      }
+      toast.className = `toast show ${type}`;
+      toast.innerHTML = `
+        <span class="toast-text">${msg}</span>
+        <button class="toast-close-btn" title="Dismiss notification" aria-label="Dismiss notification">✕</button>
+      `;
+      const closeBtn = toast.querySelector('.toast-close-btn');
+      if (closeBtn) {
+        closeBtn.onclick = (e) => {
+          e.stopPropagation();
+          dismissToast();
+        };
+      }
       if (toastTimer) clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
+      toastTimer = setTimeout(dismissToast, 2600);
+    }
+
+    function dismissToast() {
+      const toast = document.getElementById('toastNotice');
+      if (!toast || !toast.classList.contains('show')) return;
+      toast.classList.remove('show');
+      if (toastTimer) {
+        clearTimeout(toastTimer);
+        toastTimer = null;
+      }
     }
 
     const toastNoticeEl = document.getElementById('toastNotice');
     if (toastNoticeEl) {
       toastNoticeEl.addEventListener('click', () => {
-        toastNoticeEl.classList.remove('show');
-        if (toastTimer) clearTimeout(toastTimer);
+        dismissToast();
       });
     }
 
@@ -1999,6 +2068,7 @@
     });
 
     function switchTab(tabId) {
+      dismissToast();
       document.querySelectorAll('.tab-btn').forEach(b => {
         const isActive = (b.dataset.tab === tabId);
         b.classList.toggle('active', isActive);
@@ -2007,9 +2077,11 @@
       document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id === tabId));
       APP_STATE.currentTab = tabId;
       if (tabId === 'tabForensics') {
-        if (typeof renderEntropyAnalysis === 'function') renderEntropyAnalysis();
-        if (typeof runAvalancheTest === 'function') runAvalancheTest();
-        if (typeof drawHistogram === 'function') drawHistogram();
+        requestAnimationFrame(() => {
+          if (typeof renderEntropyAnalysis === 'function') renderEntropyAnalysis();
+          if (typeof runAvalancheTest === 'function') runAvalancheTest();
+          if (typeof drawHistogram === 'function') drawHistogram();
+        });
       }
       setStatus(`Switched to ${tabId.replace('tab', '')} view.`);
     }
@@ -3544,6 +3616,7 @@
         return;
       }
       if (e.key === 'Escape') {
+        dismissToast();
         let dismissed = false;
         document.querySelectorAll('.modal-overlay').forEach(m => {
           if (m.classList.contains('active')) {
@@ -3614,6 +3687,37 @@
     window.addEventListener('resize', () => {
       if (APP_STATE.currentTab === 'tabForensics' && typeof drawHistogram === 'function') {
         drawHistogram();
+      }
+    });
+
+    // Resource & Tab Visibility Management (ARCH-05 / Directive 166)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        dismissToast();
+        try {
+          const snapshot = getFullStateSnapshot();
+          localStorage.setItem('khash_autosave', JSON.stringify(snapshot));
+        } catch (e) {}
+      } else {
+        if (APP_STATE.currentTab === 'tabForensics' && typeof drawHistogram === 'function') {
+          requestAnimationFrame(() => drawHistogram());
+        }
+      }
+    });
+
+    // Auto-dismiss floating toasts on user interaction (Directive 189)
+    document.addEventListener('pointerdown', (e) => {
+      const toast = document.getElementById('toastNotice');
+      if (toast && toast.classList.contains('show') && !toast.contains(e.target)) {
+        dismissToast();
+      }
+    });
+
+    // Auto-dismiss toast when typing in input payload or expected fields
+    ['textPayload', 'verifyExpected', 'verifyCalculated', 'inputHmacKey', 'identInputHash'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('input', () => dismissToast());
       }
     });
 

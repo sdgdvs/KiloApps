@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T08:45:00-07:00 — kilo-qa: KHex (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & Subterranean Signal)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 138.0 KB web / 31.5 KB native < 999 KB ceiling).
+  - Quicksave & Quickload: Implemented persistent disk snapshots (`khex_quicksave.dat`, [F5]/[F9]) in Win32 C and hardened web state restoration.
+  - Tutorial Integrity: Enforced first-run flag gates (`khex_tutorialSeen.dat` / localStorage) preventing tutorial popups on restored saves.
+  - Toast Occlusion Remediation: Re-anchored toast bar to top-center (52px) under header and added auto-dismissal on input interaction per Directive 189.
+  - Subterranean Signal Mesh: Connected silent signal fragment broadcast (`arg/signals/khex.json`) upon Echo ROM inspection per Directive 215.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener for background buffer synchronization without CPU waste.
+  - Verification: MSVC clean (`KHex.exe` 31.5 KB); Vite clean in 288ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T08:29:00-07:00 — kilo-usability: KPass (UI/UX Usability Pass, Toast Occlusion Remediation & Layout Polish)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 128.0 KB web / 25.6 KB native < 999 KB ceiling).
   - Window Dimension Tuning: Expanded default dimensions in `App.jsx`, web postMessage, and Win32 `RECT` to 600x700 for optimal spacing.

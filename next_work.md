@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://deep-core"
   kilo_graphics: KColosseum
   kilo_tester: KSys
-  kilo_usability: KHash
+  kilo_usability: KGraph
   kilo_qa: KBookmark
   kilo_expander: KSimon
 virtual_web_target: "kweb://deep-core"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-tester
-  app: KSynth
-  timestamp: "2026-10-04T09:54:00-07:00"
+  agent: kilo-usability
+  app: KHash
+  timestamp: "2026-10-04T10:10:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio`, `KSanctuary`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth` *(Completed: KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KHash`
+- **Current Target**: `KGraph`
 - **Upcoming Queue**:
-  `KGraph`, `KClock`, `KTimer`, `KPomodoro` *(Completed: KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass)*.
+  `KClock`, `KTimer`, `KPomodoro` *(Completed: KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KBookmark`
@@ -221,6 +221,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T10:10:00-07:00 — kilo-usability: KHash (Toast Occlusion Remediation, HiDPI Canvas & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, clean builds, 143.2 KB web / 17.9 KB native < 999 KB ceiling).
+  - Toast Occlusion Remediation: Re-anchored toast bar to top-center (50px) under header and added auto-dismissal on user interaction per Directive 189.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener for background autosave snapshot and HiDPI canvas redraw.
+  - Accessibility & Ergonomics: Added dialog ARIA semantics, Escape toast dismissal, and updated responsive footer wrapping for narrow viewports.
+  - Verification: MSVC clean (`KHash.exe` 17.9 KB); Vite clean in 328ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T09:54:00-07:00 — kilo-tester: KSynth (Interactive UI Audit, Toast Occlusion Remediation & ARCH-05)**
   - Status: PASS ✅ (3 issues fixed, 0 regressions, clean builds, 163.2 KB web < 999 KB ceiling).
   - Toast Occlusion Remediation: Re-anchored toast bar to top-center (50px) under header and added auto-dismissal on user interaction per Directive 189.
@@ -248,13 +255,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Custom Ergonomics & ARCH-05: Added key rebinds, tab visibility timer drift protection, and safe top-center toast bar per Directive 189.
   - ARG Signal Mesh: Connected silent fragment broadcast (`arg/signals/kmatch3`) on 5+ combo or duel victory per Directive 215.
   - Verification: MSVC clean (`KMatch3.exe` 38.4 KB); Vite clean in 321ms; security_lint 100% PASS; check_icons 100% PASS.
-
-- **2026-10-04T08:45:00-07:00 — kilo-qa: KHex (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & Subterranean Signal)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 138.0 KB web / 31.5 KB native < 999 KB ceiling).
-  - Quicksave & Quickload: Implemented persistent disk snapshots (`khex_quicksave.dat`, [F5]/[F9]) in Win32 C and hardened web state restoration.
-  - Tutorial Integrity: Enforced first-run flag gates (`khex_tutorialSeen.dat` / localStorage) preventing tutorial popups on restored saves.
-  - Toast Occlusion Remediation: Re-anchored toast bar to top-center (52px) under header and added auto-dismissal on input interaction per Directive 189.
-  - Subterranean Signal Mesh: Connected silent signal fragment broadcast (`arg/signals/khex.json`) upon Echo ROM inspection per Directive 215.
-  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener for background buffer synchronization without CPU waste.
-  - Verification: MSVC clean (`KHex.exe` 31.5 KB); Vite clean in 288ms; security_lint 100% PASS; check_icons 100% PASS.
 
