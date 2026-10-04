@@ -16,9 +16,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 92,
+  "turns_executed": 93,
   "last_turn_timestamp": "2026-09-30T00:26:00Z",
-  "last_heartbeat": "2026-10-04T09:09:43.744987+00:00",
-  "current_target": "KMedia",
+  "last_heartbeat": "2026-10-04T09:30:01.514686+00:00",
+  "current_target": "KNet",
   "remote_command": "none"
 }

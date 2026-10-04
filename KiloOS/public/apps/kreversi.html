@@ -386,6 +386,52 @@
         .toast.toast-success { border-left-color: #00e676; }
         .toast.toast-warning { border-left-color: #ff9100; }
         .toast.toast-info { border-left-color: #00e5ff; }
+
+        /* Keyboard Cursor & Accessibility */
+        .cell.keyboard-cursor {
+            outline: 3px solid #00e5ff !important;
+            outline-offset: -2px;
+            box-shadow: 0 0 10px #00e5ff, inset 0 0 6px #00e5ff !important;
+            z-index: 5;
+        }
+
+        /* Replay Bar & Scrubber */
+        .replay-bar {
+            width: 100%;
+            max-width: 480px;
+            background: linear-gradient(135deg, rgba(27, 38, 59, 0.95), rgba(13, 27, 42, 0.95));
+            border: 2px solid #ffd700;
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 4px 16px rgba(255, 215, 0, 0.25), inset 0 0 10px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            box-sizing: border-box;
+        }
+        .replay-chip {
+            background: #1e293b;
+            border: 1px solid #475569;
+            color: #cbd5e1;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            font-family: monospace;
+            transition: all 0.15s;
+            user-select: none;
+        }
+        .replay-chip:hover {
+            border-color: #ffd700;
+            color: #ffd700;
+        }
+        .replay-chip.active-chip {
+            background: #ffd700;
+            color: #000;
+            border-color: #ffaa00;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body class="theme-classic" data-player="1" data-bomb="false">
@@ -398,6 +444,9 @@
         </div>
         <div class="eval-panel">
             <span id="eval-score">Eval: +0</span>
+            <span id="opening-badge" style="color: #69f0ae; display: none;">📖 Book: -</span>
+            <span id="endgame-badge" style="color: #ff99ff; display: none;">🏆 Endgame: -</span>
+            <span id="cursor-coord-badge" style="color: #00e5ff; display: none;">Cell: -</span>
             <span id="clock-display" style="color: #ffaa00;">Clock: Off</span>
             <span id="hint-text">Best: -</span>
             <span id="bomb-text" style="color: #ff6600;">Bombs: 2</span>
@@ -484,6 +533,33 @@
             <button class="chat-chip" onclick="sendCustomOnlineChat()" style="background: #005f73; border-color: #00e5ff; color: #fff;">Send</button>
         </div>
     </div>
+    <div id="replayBar" class="replay-bar" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+            <span style="font-weight: bold; color: #ffd700; font-size: 13px;">🎬 MATCH REPLAY &amp; ANALYSIS</span>
+            <div style="display: flex; gap: 4px; align-items: center;">
+                <button class="btn-tiny" onclick="goToReplayStep(0)" title="First move (Home)">|◀</button>
+                <button class="btn-tiny" onclick="goToReplayStep(replayStep - 1)" title="Previous move ([ or Left Arrow)">◀</button>
+                <button id="replayAutoPlayBtn" class="btn-tiny" onclick="toggleReplayAutoPlay()" style="background: #00897b; color: #fff;">▶ Play</button>
+                <button class="btn-tiny" onclick="goToReplayStep(replayStep + 1)" title="Next move (] or Right Arrow)">▶</button>
+                <button class="btn-tiny" onclick="goToReplayStep(moveHistory.length - 1)" title="Last move (End)">▶|</button>
+                <select id="replaySpeedSelect" onchange="changeReplaySpeed()" style="padding: 2px 4px; font-size: 11px; background: #1a2634; color: #fff; border: 1px solid #475569; border-radius: 4px;">
+                    <option value="1200">0.8x</option>
+                    <option value="750" selected>1x</option>
+                    <option value="400">2x</option>
+                    <option value="200">4x</option>
+                </select>
+                <button class="btn-tiny btn-danger" onclick="exitReplayMode()">✕ Exit</button>
+            </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <input type="range" id="replayScrubber" min="0" max="0" value="0" style="flex: 1; accent-color: #ffd700;" oninput="goToReplayStep(parseInt(this.value))">
+            <span id="replayStepCounter" style="font-family: monospace; font-size: 11px; color: #ffd700; white-space: nowrap;">0 / 0</span>
+        </div>
+        <div id="replayStepDescription" style="font-size: 12px; color: #cbd5e1; text-align: center; background: rgba(0,0,0,0.3); padding: 4px 8px; border-radius: 4px;">
+            Start of match
+        </div>
+        <div id="replayMoveChips" style="display: flex; gap: 4px; overflow-x: auto; padding: 4px 2px; max-height: 52px; flex-wrap: wrap;"></div>
+    </div>
     <div class="board-wrapper" id="board-wrapper">
         <div class="inlay-shimmer"></div>
         <div class="stud tl"></div><div class="stud tr"></div>
@@ -496,6 +572,8 @@
 
     <div class="button-bar">
         <button id="btn-online" onclick="openMultiplayerModal()" style="border-color: #00e5ff; color: #00e5ff; font-weight: bold; background: #002b36;">🌐 Online Match</button>
+        <button id="btn-replay" onclick="toggleReplayMode()" style="border-color: #ffd700; color: #ffd700; font-weight: bold; background: #2b2000;">🎬 Replay</button>
+        <button id="btn-notation" onclick="openNotationModal()" style="border-color: #69f0ae; color: #69f0ae; font-weight: bold; background: #002b1b;">📜 Notation &amp; FEN</button>
         <button id="bomb-btn" onclick="toggleBomb()" style="border-color: #ff6600; color: #ff9933;">Bomb Disc (B)</button>
         <button id="freeze-btn" onclick="useFreezeAI()" style="border-color: #00f5d4; color: #00f5d4;">Freeze AI (F)</button>
         <button onclick="undoMove()">Undo (U)</button>
@@ -655,6 +733,516 @@
         let stats = { wins: 0, losses: 0, draws: 0 };
         let gameEnded = false;
 
+        /* Replay & Move History State */
+        let moveHistory = [];
+        let isReplayMode = false;
+        let replayStep = 0;
+        let replayAutoPlayTimer = null;
+        let replaySpeedMs = 750;
+
+        /* Keyboard Accessibility Cursor */
+        let keyboardCursor = { r: 3, c: 3, active: false };
+
+        /* Classical Othello / Reversi Opening Book */
+        const OPENINGS = [
+            { name: "Tiger (Parallel)", moves: ["f5", "f6", "e6", "f4"] },
+            { name: "Rose (Diagonal)", moves: ["f5", "d6", "c5", "f4"] },
+            { name: "Cow (Diagonal)", moves: ["f5", "d6", "c3", "d3"] },
+            { name: "Bat (Diagonal)", moves: ["f5", "d6", "c5", "f6"] },
+            { name: "Buffalo (Diagonal)", moves: ["f5", "d6", "c4"] },
+            { name: "Cat (Diagonal)", moves: ["f5", "d6", "c3", "c4"] },
+            { name: "Chimney (Diagonal)", moves: ["f5", "d6", "c3", "d3", "c4", "b4"] },
+            { name: "Snake (Diagonal)", moves: ["f5", "d6", "c3", "d3", "c4", "f4"] },
+            { name: "Peacock (Parallel)", moves: ["f5", "f6", "e6", "f4", "g5"] },
+            { name: "Heath (Parallel)", moves: ["f5", "f6", "e6", "f4", "e3"] },
+            { name: "Dragonfly (Parallel)", moves: ["f5", "f6", "e6", "f4", "g6"] },
+            { name: "Sailboat (Perpendicular)", moves: ["f5", "d6", "c4", "d3"] },
+            { name: "Maru Variation", moves: ["f5", "d6", "c5", "d3"] },
+            { name: "Compass Variation", moves: ["f5", "d6", "c3", "d3", "e3"] },
+            { name: "X-Square Gambit", moves: ["f5", "d6", "c5", "f4", "b4"] },
+            { name: "Bright Variation", moves: ["f5", "d6", "c3", "d3", "c4", "c5"] },
+            { name: "Leader Variation", moves: ["f5", "d6", "c5", "f4", "e3"] },
+            { name: "Wing Variation", moves: ["f5", "d6", "c4", "d3", "c5"] }
+        ];
+
+        function countDiscs(b, player) {
+            let cnt = 0;
+            for (let c of b) if (c === player) cnt++;
+            return cnt;
+        }
+
+        function recordMoveToHistory(idx, player, flips = [], isPass = false) {
+            const notation = isPass ? 'pass' : (idx !== null && idx >= 0 ? getCoords(idx).toLowerCase() : 'start');
+            const bCount = countDiscs(boardState, BLACK);
+            const wCount = countDiscs(boardState, WHITE);
+            const evalVal = evaluateBoardState(boardState, boardWidth, boardHeight, BLACK);
+            moveHistory.push({
+                moveNum: moveHistory.length,
+                player: player,
+                index: idx,
+                notation: notation,
+                flips: [...flips],
+                boardState: [...boardState],
+                bCount: bCount,
+                wCount: wCount,
+                evalScore: evalVal,
+                timestamp: Date.now(),
+                isPass: isPass
+            });
+            updateOpeningBadge();
+            updateEndgameSolver();
+            updateReplayControls();
+        }
+
+        function identifyOpeningBook() {
+            if (boardWidth !== 8 || boardHeight !== 8) return null;
+            const played = [];
+            for (let i = 1; i < moveHistory.length; i++) {
+                if (moveHistory[i].isPass) break;
+                if (!moveHistory[i].notation || moveHistory[i].notation === '-' || moveHistory[i].notation === 'start') continue;
+                played.push(moveHistory[i].notation);
+                if (played.length >= 8) break;
+            }
+            if (played.length < 2) return null;
+
+            const transformCoord = (c, r, sym) => {
+                switch(sym) {
+                    case 0: return { c, r };
+                    case 1: return { c: 7 - r, r: c };
+                    case 2: return { c: 7 - c, r: 7 - r };
+                    case 3: return { c: r, r: 7 - c };
+                    case 4: return { c: 7 - c, r };
+                    case 5: return { c, r: 7 - r };
+                    case 6: return { c: r, r: c };
+                    case 7: return { c: 7 - r, r: 7 - c };
+                }
+                return { c, r };
+            };
+
+            for (let op of OPENINGS) {
+                for (let sym = 0; sym < 8; sym++) {
+                    let matches = true;
+                    const minLen = Math.min(played.length, op.moves.length);
+                    if (minLen < 2) continue;
+                    for (let step = 0; step < minLen; step++) {
+                        const opMove = op.moves[step];
+                        const opC = opMove.charCodeAt(0) - 97;
+                        const opR = parseInt(opMove[1], 10) - 1;
+                        const trans = transformCoord(opC, opR, sym);
+                        const transStr = String.fromCharCode(97 + trans.c) + (trans.r + 1);
+                        if (played[step] !== transStr) {
+                            matches = false;
+                            break;
+                        }
+                    }
+                    if (matches) {
+                        return { name: op.name, length: op.moves.length, played: played.length };
+                    }
+                }
+            }
+            return null;
+        }
+
+        function updateOpeningBadge() {
+            const badge = document.getElementById('opening-badge');
+            if (!badge) return;
+            const op = identifyOpeningBook();
+            if (op) {
+                badge.textContent = `📖 Book: ${op.name}`;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function exactEndgameMinimax(b, w, h, alpha, beta, isMaxPlayer, player) {
+            const opp = (player === BLACK ? WHITE : BLACK);
+            const curr = isMaxPlayer ? player : opp;
+            const moves = [];
+            for (let i = 0; i < w * h; i++) {
+                if ((b[i] === EMPTY || b[i] === DOUBLE_FLIP) && getFlippableOnBoard(b, w, h, i, curr).length > 0) {
+                    moves.push(i);
+                }
+            }
+            if (moves.length === 0) {
+                let oppHasMove = false;
+                for (let i = 0; i < w * h; i++) {
+                    if ((b[i] === EMPTY || b[i] === DOUBLE_FLIP) && getFlippableOnBoard(b, w, h, i, isMaxPlayer ? opp : player).length > 0) {
+                        oppHasMove = true;
+                        break;
+                    }
+                }
+                if (!oppHasMove) {
+                    let pCount = 0, oCount = 0;
+                    for (let i = 0; i < w * h; i++) {
+                        if (b[i] === player) pCount++;
+                        else if (b[i] === opp) oCount++;
+                    }
+                    return pCount - oCount;
+                }
+                return exactEndgameMinimax(b, w, h, alpha, beta, !isMaxPlayer, player);
+            }
+            if (isMaxPlayer) {
+                let maxVal = -9999;
+                for (let m of moves) {
+                    const temp = [...b];
+                    const flips = getFlippableOnBoard(temp, w, h, m, curr);
+                    temp[m] = curr;
+                    for (let f of flips) temp[f] = curr;
+                    const val = exactEndgameMinimax(temp, w, h, alpha, beta, false, player);
+                    if (val > maxVal) maxVal = val;
+                    if (val > alpha) alpha = val;
+                    if (beta <= alpha) break;
+                }
+                return maxVal;
+            } else {
+                let minVal = 9999;
+                for (let m of moves) {
+                    const temp = [...b];
+                    const flips = getFlippableOnBoard(temp, w, h, m, curr);
+                    temp[m] = curr;
+                    for (let f of flips) temp[f] = curr;
+                    const val = exactEndgameMinimax(temp, w, h, alpha, beta, true, player);
+                    if (val < minVal) minVal = val;
+                    if (val < beta) beta = val;
+                    if (beta <= alpha) break;
+                }
+                return minVal;
+            }
+        }
+
+        function updateEndgameSolver() {
+            const badge = document.getElementById('endgame-badge');
+            if (!badge) return;
+            if (boardWidth !== 8 || boardHeight !== 8 || gameEnded) {
+                badge.style.display = 'none';
+                return;
+            }
+            let emptyCount = 0;
+            for (let c of boardState) if (c === EMPTY || c === DOUBLE_FLIP) emptyCount++;
+            if (emptyCount > 0 && emptyCount <= 10) {
+                try {
+                    const diff = exactEndgameMinimax(boardState, boardWidth, boardHeight, -9999, 9999, currentPlayer === BLACK, BLACK);
+                    const outcome = diff > 0 ? `Black +${diff}` : (diff < 0 ? `White +${Math.abs(diff)}` : 'Draw (0)');
+                    badge.textContent = `🏆 Endgame: ${outcome}`;
+                    badge.style.display = 'inline-block';
+                } catch(e) {
+                    badge.style.display = 'none';
+                }
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        function toggleReplayMode() {
+            if (isReplayMode) exitReplayMode();
+            else startReplayMode();
+        }
+
+        function startReplayMode() {
+            if (moveHistory.length === 0) {
+                showToast("No move history recorded yet.", "info");
+                return;
+            }
+            isReplayMode = true;
+            const bar = document.getElementById('replayBar');
+            if (bar) bar.style.display = 'flex';
+            const btn = document.getElementById('btn-replay');
+            if (btn) { btn.classList.add('active-btn'); btn.textContent = '✕ Exit Replay'; }
+            goToReplayStep(moveHistory.length - 1);
+        }
+
+        function exitReplayMode() {
+            stopReplayAutoPlay();
+            isReplayMode = false;
+            const bar = document.getElementById('replayBar');
+            if (bar) bar.style.display = 'none';
+            const btn = document.getElementById('btn-replay');
+            if (btn) { btn.classList.remove('active-btn'); btn.textContent = '🎬 Replay'; }
+            renderBoard();
+        }
+
+        function changeReplaySpeed() {
+            const sel = document.getElementById('replaySpeedSelect');
+            if (sel) replaySpeedMs = parseInt(sel.value, 10);
+        }
+
+        function toggleReplayAutoPlay() {
+            if (replayAutoPlayTimer) {
+                stopReplayAutoPlay();
+            } else {
+                startReplayAutoPlay();
+            }
+        }
+
+        function startReplayAutoPlay() {
+            stopReplayAutoPlay();
+            const btn = document.getElementById('replayAutoPlayBtn');
+            if (btn) { btn.textContent = '⏸ Pause'; btn.style.background = '#e65100'; }
+            if (replayStep >= moveHistory.length - 1) goToReplayStep(0);
+            replayAutoPlayTimer = setInterval(() => {
+                if (replayStep < moveHistory.length - 1) {
+                    goToReplayStep(replayStep + 1);
+                } else {
+                    stopReplayAutoPlay();
+                }
+            }, replaySpeedMs);
+        }
+
+        function stopReplayAutoPlay() {
+            if (replayAutoPlayTimer) {
+                clearInterval(replayAutoPlayTimer);
+                replayAutoPlayTimer = null;
+            }
+            const btn = document.getElementById('replayAutoPlayBtn');
+            if (btn) { btn.textContent = '▶ Play'; btn.style.background = '#00897b'; }
+        }
+
+        function goToReplayStep(stepIndex) {
+            if (moveHistory.length === 0) return;
+            replayStep = Math.max(0, Math.min(stepIndex, moveHistory.length - 1));
+            const step = moveHistory[replayStep];
+            
+            const scrubber = document.getElementById('replayScrubber');
+            if (scrubber) { scrubber.max = moveHistory.length - 1; scrubber.value = replayStep; }
+            const counter = document.getElementById('replayStepCounter');
+            if (counter) counter.textContent = `${replayStep} / ${moveHistory.length - 1}`;
+            
+            const desc = document.getElementById('replayStepDescription');
+            if (desc) {
+                if (replayStep === 0) {
+                    desc.innerHTML = `<strong>Start of Match</strong> — Board initialized (B: 2, W: 2)`;
+                } else {
+                    const pName = step.player === BLACK ? 'Black' : 'White';
+                    const col = step.player === BLACK ? '#ffd700' : '#ffffff';
+                    desc.innerHTML = `<strong>Step ${replayStep}:</strong> <span style="color:${col}; font-weight:bold;">${pName}</span> ${step.isPass ? 'passed turn' : 'played <strong>' + step.notation.toUpperCase() + '</strong> (+' + step.flips.length + ' flipped)'} | Score: <strong>B:${step.bCount} W:${step.wCount}</strong> | Eval: <strong>${step.evalScore >= 0 ? '+' : ''}${step.evalScore}</strong>`;
+                }
+            }
+
+            const chips = document.querySelectorAll('.replay-chip');
+            chips.forEach((c, idx) => {
+                if (idx === replayStep) c.classList.add('active-chip');
+                else c.classList.remove('active-chip');
+            });
+
+            renderBoard(step.flips || [], step.index !== null ? step.index : -1, step.boardState);
+        }
+
+        function updateReplayControls() {
+            const scrubber = document.getElementById('replayScrubber');
+            if (scrubber) scrubber.max = Math.max(0, moveHistory.length - 1);
+            const counter = document.getElementById('replayStepCounter');
+            if (counter) counter.textContent = `${replayStep} / ${Math.max(0, moveHistory.length - 1)}`;
+            renderReplayChips();
+        }
+
+        function renderReplayChips() {
+            const container = document.getElementById('replayMoveChips');
+            if (!container) return;
+            let html = `<div class="replay-chip ${replayStep === 0 ? 'active-chip' : ''}" onclick="goToReplayStep(0)">Start</div>`;
+            let turnCount = 1;
+            for (let i = 1; i < moveHistory.length; i++) {
+                const m = moveHistory[i];
+                const label = m.isPass ? `${m.player === BLACK ? 'B' : 'W'}:pass` : `${m.player === BLACK ? turnCount + '. ' : ''}${m.notation}`;
+                html += `<div class="replay-chip ${replayStep === i ? 'active-chip' : ''}" onclick="goToReplayStep(${i})">${label}</div>`;
+                if (m.player === WHITE) turnCount++;
+            }
+            container.innerHTML = html;
+        }
+
+        function generateAlgebraicTranscript() {
+            if (moveHistory.length <= 1) return '(No moves played)';
+            let str = '';
+            let turnNum = 1;
+            for (let i = 1; i < moveHistory.length; i++) {
+                const m = moveHistory[i];
+                if (m.player === BLACK) {
+                    str += `${turnNum}. ${m.notation} `;
+                } else {
+                    str += `${m.notation}  `;
+                    turnNum++;
+                }
+            }
+            return str.trim();
+        }
+
+        function generateCompactMoveSequence() {
+            let str = '';
+            for (let i = 1; i < moveHistory.length; i++) {
+                if (moveHistory[i].isPass) continue;
+                str += moveHistory[i].notation;
+            }
+            return str;
+        }
+
+        function generateBoardFEN() {
+            let fen = '';
+            for (let i = 0; i < boardWidth * boardHeight; i++) {
+                if (boardState[i] === BLACK) fen += 'B';
+                else if (boardState[i] === WHITE) fen += 'W';
+                else if (boardState[i] === BLOCKED) fen += 'X';
+                else if (boardState[i] === DOUBLE_FLIP) fen += '2';
+                else fen += '-';
+            }
+            fen += ' ' + (currentPlayer === BLACK ? 'B' : 'W');
+            return fen;
+        }
+
+        function openNotationModal() {
+            const modal = document.getElementById('notation-modal');
+            if (!modal) return;
+            modal.style.display = 'flex';
+            const algText = document.getElementById('algebraicTranscriptText');
+            if (algText) algText.value = generateAlgebraicTranscript();
+            const fenInput = document.getElementById('boardFenInput');
+            if (fenInput) fenInput.value = generateBoardFEN();
+        }
+
+        function closeNotationModal() {
+            const modal = document.getElementById('notation-modal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function copyAlgebraicTranscript() {
+            const text = generateAlgebraicTranscript();
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("Formatted transcript copied to clipboard!", "success");
+            }).catch(() => {
+                showToast("Failed to copy transcript", "warning");
+            });
+        }
+
+        function copyCompactMoveSequence() {
+            const seq = generateCompactMoveSequence();
+            navigator.clipboard.writeText(seq).then(() => {
+                showToast(`Move sequence "${seq}" copied to clipboard!`, "success");
+            }).catch(() => {
+                showToast("Failed to copy sequence", "warning");
+            });
+        }
+
+        function copyBoardFen() {
+            const fen = generateBoardFEN();
+            navigator.clipboard.writeText(fen).then(() => {
+                showToast("Board FEN copied to clipboard!", "success");
+            }).catch(() => {
+                showToast("Failed to copy FEN", "warning");
+            });
+        }
+
+        function importPositionFromInput() {
+            const input = document.getElementById('importPositionInput');
+            if (!input) return;
+            const raw = input.value.trim();
+            if (!raw) {
+                showToast("Please enter a FEN string or move sequence.", "warning");
+                return;
+            }
+            const parts = raw.split(/\s+/);
+            const boardStr = parts[0];
+            const totalCells = boardWidth * boardHeight;
+            if (boardStr.length === totalCells && /^[BWX2\-]+$/i.test(boardStr)) {
+                for (let i = 0; i < totalCells; i++) {
+                    const ch = boardStr[i].toUpperCase();
+                    if (ch === 'B') boardState[i] = BLACK;
+                    else if (ch === 'W') boardState[i] = WHITE;
+                    else if (ch === 'X') boardState[i] = BLOCKED;
+                    else if (ch === '2') boardState[i] = DOUBLE_FLIP;
+                    else boardState[i] = EMPTY;
+                }
+                currentPlayer = (parts.length > 1 && parts[1].toUpperCase() === 'W') ? WHITE : BLACK;
+                gameEnded = false;
+                moveHistory = [{
+                    moveNum: 0, player: 0, index: null, notation: 'Imported FEN',
+                    flips: [], boardState: [...boardState], bCount: countDiscs(boardState, BLACK),
+                    wCount: countDiscs(boardState, WHITE), evalScore: 0, timestamp: Date.now(), isPass: false
+                }];
+                closeNotationModal();
+                updateOpeningBadge();
+                updateEndgameSolver();
+                renderBoard();
+                showToast("FEN position loaded successfully!", "success");
+                return;
+            }
+
+            const cleanSeq = raw.replace(/\d+\.|\s+/g, '').toLowerCase();
+            if (/^([a-h][1-8])+$/.test(cleanSeq)) {
+                if (boardWidth !== 8 || boardHeight !== 8) {
+                    boardWidth = 8;
+                    boardHeight = 8;
+                    initBoardDOM();
+                }
+                setupBoardState();
+                currentPlayer = BLACK;
+                moveHistory = [{
+                    moveNum: 0, player: 0, index: null, notation: 'Start',
+                    flips: [], boardState: [...boardState], bCount: 2, wCount: 2,
+                    evalScore: 0, timestamp: Date.now(), isPass: false
+                }];
+                let turn = BLACK;
+                let movesApplied = 0;
+                for (let k = 0; k < cleanSeq.length; k += 2) {
+                    const c = cleanSeq.charCodeAt(k) - 97;
+                    const r = parseInt(cleanSeq[k + 1], 10) - 1;
+                    const idx = r * 8 + c;
+                    const flips = getFlippable(idx, turn);
+                    if (flips.length > 0) {
+                        boardState[idx] = turn;
+                        for (let f of flips) boardState[f] = turn;
+                        recordMoveToHistory(idx, turn, flips);
+                        movesApplied++;
+                        const nextTurn = (turn === BLACK ? WHITE : BLACK);
+                        if (getValidMoves(nextTurn).length > 0) {
+                            turn = nextTurn;
+                        } else if (getValidMoves(turn).length > 0) {
+                            recordMoveToHistory(null, nextTurn, [], true);
+                        } else {
+                            break;
+                        }
+                        currentPlayer = turn;
+                    } else {
+                        break;
+                    }
+                }
+                closeNotationModal();
+                renderBoard();
+                showToast(`Imported ${movesApplied} moves from sequence!`, "success");
+                return;
+            }
+
+            showToast("Invalid format. Supply 64-char FEN or move sequence like f5d6c3d3.", "warning");
+        }
+
+        function loadPresetPosition(presetKey) {
+            const input = document.getElementById('importPositionInput');
+            if (!input) return;
+            if (presetKey === 'tiger') {
+                input.value = 'f5f6e6f4g5';
+            } else if (presetKey === 'rose') {
+                input.value = 'f5d6c5f4';
+            } else if (presetKey === 'endgame') {
+                input.value = 'BBBBBBBB-BBBBBBB--BBBBBB--WBBBBB--WWBBBB--WWWWBB-WWWWWW-WWWWWWWW B';
+            }
+            importPositionFromInput();
+        }
+
+        function updateKeyboardCursor(dr, dc) {
+            keyboardCursor.active = true;
+            keyboardCursor.r = Math.max(0, Math.min(boardHeight - 1, keyboardCursor.r + dr));
+            keyboardCursor.c = Math.max(0, Math.min(boardWidth - 1, keyboardCursor.c + dc));
+            const idx = keyboardCursor.r * boardWidth + keyboardCursor.c;
+            
+            document.querySelectorAll('.cell.keyboard-cursor').forEach(el => el.classList.remove('keyboard-cursor'));
+            const cellEl = document.getElementById('cell-' + idx);
+            if (cellEl) cellEl.classList.add('keyboard-cursor');
+
+            const badge = document.getElementById('cursor-coord-badge');
+            if (badge) {
+                badge.textContent = `Cell: ${getCoords(idx)}`;
+                badge.style.display = 'inline-block';
+            }
+        }
+
         /* Online Multiplayer State */
         let isOnlineGame = false;
         let currentRoomId = null;
@@ -727,6 +1315,8 @@
         function closeAllModals() {
             closeHelp();
             closeMultiplayerModal();
+            closeNotationModal();
+            if (isReplayMode) exitReplayMode();
             const inv = document.getElementById('invite-modal');
             if (inv) inv.style.display = 'none';
         }
@@ -1093,6 +1683,13 @@
                 if (room.boardState) boardState = room.boardState.slice();
                 if (room.turn) currentPlayer = room.turn;
 
+                recordMoveToHistory(
+                    room.lastMove.idx !== undefined ? room.lastMove.idx : null,
+                    room.lastMove.player,
+                    room.lastMove.flips || [],
+                    !!room.lastMove.pass
+                );
+
                 if (room.lastMove.pass) {
                     const passPlayer = room.lastMove.player === BLACK ? 'Black' : 'White';
                     showToast(`Turn passed! ${passPlayer} had no legal moves.`, 'info');
@@ -1396,6 +1993,7 @@
         function saveGame() {
             const state = {
                 boardState, boardWidth, boardHeight, currentPlayer, history,
+                moveHistory,
                 gameEnded, bombCount, freezeCount, isBombActive, aiFrozen, gameMode, currentStage,
                 theme: currentThemeKey,
                 timeMode: document.getElementById('time-mode').value,
@@ -1416,6 +2014,14 @@
                     boardHeight = state.boardHeight;
                     currentPlayer = state.currentPlayer;
                     history = state.history || [];
+                    moveHistory = state.moveHistory || [];
+                    if (moveHistory.length === 0) {
+                        moveHistory = [{
+                            moveNum: 0, player: 0, index: null, notation: 'Start',
+                            flips: [], boardState: [...boardState], bCount: countDiscs(boardState, BLACK),
+                            wCount: countDiscs(boardState, WHITE), evalScore: 0, timestamp: Date.now(), isPass: false
+                        }];
+                    }
                     gameEnded = state.gameEnded || false;
                     bombCount = state.bombCount !== undefined ? state.bombCount : 2;
                     freezeCount = state.freezeCount !== undefined ? state.freezeCount : 1;
@@ -1451,6 +2057,9 @@
                     if (aiTimeoutId) { clearTimeout(aiTimeoutId); aiTimeoutId = null; }
                     stopTimer();
                     initBoardDOM();
+                    updateOpeningBadge();
+                    updateEndgameSolver();
+                    updateReplayControls();
                     renderBoard();
                     
                     if (state.moveTimeLeft !== undefined) {
@@ -1687,14 +2296,37 @@
             gameEnded = false;
             isBombActive = false;
             aiFrozen = false;
+            isReplayMode = false;
+            keyboardCursor = { r: Math.floor(boardHeight / 2), c: Math.floor(boardWidth / 2), active: false };
+            const bar = document.getElementById('replayBar');
+            if (bar) bar.style.display = 'none';
+            const btn = document.getElementById('btn-replay');
+            if (btn) { btn.classList.remove('active-btn'); btn.textContent = '🎬 Replay'; }
             if (aiTimeoutId) { clearTimeout(aiTimeoutId); aiTimeoutId = null; }
             
+            moveHistory = [{
+                moveNum: 0,
+                player: 0,
+                index: null,
+                notation: 'Start',
+                flips: [],
+                boardState: [...boardState],
+                bCount: countDiscs(boardState, BLACK),
+                wCount: countDiscs(boardState, WHITE),
+                evalScore: 0,
+                timestamp: Date.now(),
+                isPass: false
+            }];
+
             if (gameMode === 'campaign') {
                 const stageData = CAMPAIGN_STAGES[currentStage - 1];
                 messageEl.textContent = `Stage ${currentStage}: ${stageData.name} - ${stageData.desc}`;
             } else messageEl.textContent = '';
 
             initBoardDOM();
+            updateOpeningBadge();
+            updateEndgameSolver();
+            updateReplayControls();
             renderBoard();
             resetTimer();
         }
@@ -2097,7 +2729,9 @@
             let lastState = history.pop();
             while (lastState.player !== BLACK && history.length > 0) {
                 lastState = history.pop();
+                if (moveHistory.length > 1) moveHistory.pop();
             }
+            if (moveHistory.length > 1) moveHistory.pop();
             boardState = lastState.board;
             currentPlayer = BLACK;
             bombCount = lastState.bombCount;
@@ -2106,6 +2740,9 @@
             aiFrozen = lastState.aiFrozen || false;
             gameEnded = false;
             messageEl.textContent = 'Move undone.';
+            updateOpeningBadge();
+            updateEndgameSolver();
+            updateReplayControls();
             renderBoard();
             resetTimer();
         }
@@ -2191,9 +2828,9 @@
             return getValidMovesOnBoard(boardState, boardWidth, boardHeight, player);
         }
 
-        function updateScores() {
+        function updateScores(targetBoard = boardState) {
             let b = 0, w = 0;
-            for (let c of boardState) {
+            for (let c of targetBoard) {
                 if (c === BLACK) b++;
                 if (c === WHITE) w++;
             }
@@ -2259,6 +2896,7 @@
         }
 
         function handleCellClick(index) {
+            if (isReplayMode) exitReplayMode();
             if (gameEnded) return;
 
             if (isOnlineGame) {
@@ -2283,6 +2921,7 @@
 
                 boardState[index] = currentPlayer;
                 for (let f of flips) boardState[f] = currentPlayer;
+                recordMoveToHistory(index, currentPlayer, flips, false);
 
                 const opponentPlayer = (currentPlayer === BLACK ? WHITE : BLACK);
                 const oppMoves = getValidMovesOnBoard(boardState, boardWidth, boardHeight, opponentPlayer);
@@ -2297,6 +2936,7 @@
                     } else {
                         nextTurn = currentPlayer; // Pass turn back to current player
                         passOccurred = true;
+                        recordMoveToHistory(null, opponentPlayer, [], true);
                     }
                 }
 
@@ -2395,6 +3035,7 @@
                         const cy = rect.top - wrapperRect.top + rect.height / 2;
                         spawnMultiLayerExplosion(cx, cy, 'bomb', 2.0);
                     }
+                    recordMoveToHistory(index, BLACK, flipped, false);
                     
                     const themeInfo = THEMES[currentThemeKey] || THEMES.classic;
                     if (aiFrozen) {
@@ -2407,6 +3048,7 @@
                             currentPlayer = BLACK;
                             if (getValidMoves(BLACK).length > 0) {
                                 messageEl.textContent = `${themeInfo.p2} has no legal moves. Turn passed!`;
+                                recordMoveToHistory(null, WHITE, [], true);
                             }
                         }
                     }
@@ -2449,6 +3091,7 @@
                     playSound('place');
                     triggerScreenShake(1.6 + flips.length * 0.35);
                 }
+                recordMoveToHistory(index, currentPlayer, flips, false);
 
                 // Spawn concentric placement ripple shockwave on board
                 const cellEl = document.getElementById('cell-' + index);
@@ -2480,6 +3123,7 @@
                             return;
                         } else {
                             messageEl.textContent = `${themeInfo.p2} has no legal moves. Turn passed!`;
+                            recordMoveToHistory(null, WHITE, [], true);
                         }
                     }
                 }
@@ -2636,6 +3280,7 @@
                     playSound('place');
                     triggerScreenShake(1.6 + flips.length * 0.35);
                 }
+                recordMoveToHistory(bestMove, WHITE, flips, false);
 
                 // Concentric placement shockwave
                 const cellEl = document.getElementById('cell-' + bestMove);
@@ -2653,6 +3298,7 @@
                     if (getValidMoves(WHITE).length > 0) {
                         const themeInfo = THEMES[currentThemeKey] || THEMES.classic;
                         messageEl.textContent = `${themeInfo.p1} has no legal moves. Turn passed!`;
+                        recordMoveToHistory(null, BLACK, [], true);
                         aiTimeoutId = setTimeout(makeAIMove, 400);
                     }
                 }
@@ -2669,12 +3315,13 @@
             return `${col}${row}`;
         }
 
-        function renderBoard(flippedIndices = [], newlyPlacedIdx = -1) {
+        function renderBoard(flippedIndices = [], newlyPlacedIdx = -1, overrideBoard = null) {
+            const b = overrideBoard || boardState;
             document.body.dataset.player = currentPlayer;
             document.body.dataset.bomb = isBombActive ? "true" : "false";
-            validMoves = getValidMoves(currentPlayer);
+            validMoves = overrideBoard ? [] : getValidMoves(currentPlayer);
             const showHints = document.getElementById('hint-toggle').checked;
-            const bestMoveIdx = (!isOnlineGame && showHints && currentPlayer === BLACK && !gameEnded) ? getBestMove(BLACK) : null;
+            const bestMoveIdx = (!isOnlineGame && showHints && currentPlayer === BLACK && !gameEnded && !overrideBoard) ? getBestMove(BLACK) : null;
             const themeInfo = THEMES[currentThemeKey] || THEMES.classic;
             
             for (let i = 0; i < boardWidth * boardHeight; i++) {
@@ -2683,16 +3330,19 @@
                 if (!cell || !disc) continue;
                 
                 cell.className = 'cell';
-                if (boardState[i] === BLOCKED) {
+                if (keyboardCursor.active && i === (keyboardCursor.r * boardWidth + keyboardCursor.c)) {
+                    cell.classList.add('keyboard-cursor');
+                }
+                if (b[i] === BLOCKED) {
                     cell.classList.add('blocked');
                     disc.className = 'disc';
                     continue;
-                } else if (boardState[i] === DOUBLE_FLIP) {
+                } else if (b[i] === DOUBLE_FLIP) {
                     cell.classList.add('double-flip');
                 }
 
-                const canPlayHere = isOnlineGame ? (currentPlayer === myPlayerNum && !gameEnded) : (currentPlayer === BLACK && !gameEnded);
-                if ((boardState[i] === EMPTY || boardState[i] === DOUBLE_FLIP) && canPlayHere) {
+                const canPlayHere = isOnlineGame ? (currentPlayer === myPlayerNum && !gameEnded && !overrideBoard) : (currentPlayer === BLACK && !gameEnded && !overrideBoard);
+                if ((b[i] === EMPTY || b[i] === DOUBLE_FLIP) && canPlayHere) {
                     if (!isOnlineGame && isBombActive) {
                         cell.classList.add('bomb-target');
                     } else if (validMoves.includes(i)) {
@@ -2703,19 +3353,19 @@
                     }
                 }
                 
-                if (boardState[i] === EMPTY || boardState[i] === DOUBLE_FLIP) {
+                if (b[i] === EMPTY || b[i] === DOUBLE_FLIP) {
                     disc.className = 'disc';
                 } else {
-                    disc.className = 'disc ' + (boardState[i] === BLACK ? 'black' : 'white');
+                    disc.className = 'disc ' + (b[i] === BLACK ? 'black' : 'white');
                     if (flippedIndices.includes(i)) {
-                        disc.classList.add(boardState[i] === BLACK ? 'flip-to-black' : 'flip-to-white');
+                        disc.classList.add(b[i] === BLACK ? 'flip-to-black' : 'flip-to-white');
                         const wrapper = document.getElementById('board-wrapper');
-                        if (wrapper && cell) {
+                        if (wrapper && cell && !overrideBoard) {
                             const rect = wrapper.getBoundingClientRect();
                             const cRect = cell.getBoundingClientRect();
                             const cx = cRect.left - rect.left + cRect.width / 2;
                             const cy = cRect.top - rect.top + cRect.height / 2;
-                            spawnSparks(cx, cy, 8, boardState[i] === BLACK ? '#ffd700' : '#00f5d4');
+                            spawnSparks(cx, cy, 8, b[i] === BLACK ? '#ffd700' : '#00f5d4');
                         }
                     } else if (i === newlyPlacedIdx) {
                         disc.classList.add('wobble-settle');
@@ -2738,7 +3388,7 @@
                 turnDisplayEl.textContent = `Turn: ${currentPlayer === BLACK ? themeInfo.p1 : themeInfo.p2}`;
                 turnDisplayEl.style.color = '';
             }
-            updateScores();
+            updateScores(b);
 
             if (isOnlineGame) {
                 if (bombBtnEl) bombBtnEl.style.display = 'none';
@@ -2756,7 +3406,7 @@
                 if (freezeBtnEl) freezeBtnEl.className = aiFrozen ? 'active-freeze' : '';
             }
 
-            const evalScore = evaluateBoardState(boardState, boardWidth, boardHeight, BLACK);
+            const evalScore = evaluateBoardState(b, boardWidth, boardHeight, BLACK);
             const evalScoreEl = document.getElementById('eval-score');
             const hintTextEl = document.getElementById('hint-text');
             if (evalScoreEl) {
@@ -2771,6 +3421,11 @@
                     hintTextEl.textContent = `Best: -`;
                 }
             }
+
+            if (!overrideBoard) {
+                updateOpeningBadge();
+                updateEndgameSolver();
+            }
         }
 
         function showHelp() { document.getElementById('help-modal').style.display = 'flex'; }
@@ -2778,23 +3433,67 @@
 
         window.addEventListener('keydown', (e) => {
             if (e.target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) return;
-            if (e.key === 'Escape') closeAllModals();
-            else if (e.key === 'F5' || (e.ctrlKey && (e.key === 's' || e.key === 'S'))) {
+            if (e.key === 'Escape') {
+                if (isReplayMode) exitReplayMode();
+                closeAllModals();
+            } else if (e.key === 'F5' || (e.ctrlKey && (e.key === 's' || e.key === 'S'))) {
                 e.preventDefault();
                 saveGame();
             } else if (e.key === 'F9' || (e.ctrlKey && (e.key === 'o' || e.key === 'O'))) {
                 e.preventDefault();
                 loadGame();
+            } else if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
+                e.preventDefault();
+                updateKeyboardCursor(-1, 0);
+            } else if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
+                e.preventDefault();
+                updateKeyboardCursor(1, 0);
+            } else if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                e.preventDefault();
+                if (isReplayMode) {
+                    goToReplayStep(replayStep - 1);
+                } else {
+                    updateKeyboardCursor(0, -1);
+                }
+            } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                e.preventDefault();
+                if (isReplayMode) {
+                    goToReplayStep(replayStep + 1);
+                } else {
+                    updateKeyboardCursor(0, 1);
+                }
+            } else if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                if (isReplayMode) {
+                    toggleReplayAutoPlay();
+                } else if (keyboardCursor.active) {
+                    handleCellClick(keyboardCursor.r * boardWidth + keyboardCursor.c);
+                }
+            } else if (e.key === '[' || e.key === ',') {
+                if (isReplayMode) goToReplayStep(replayStep - 1);
+            } else if (e.key === ']' || e.key === '.') {
+                if (isReplayMode) goToReplayStep(replayStep + 1);
+            } else if (e.key === 'Home') {
+                if (isReplayMode) goToReplayStep(0);
+            } else if (e.key === 'End') {
+                if (isReplayMode) goToReplayStep(moveHistory.length - 1);
             } else if (e.key === 'b' || e.key === 'B') toggleBomb();
             else if (e.key === 'f' || e.key === 'F') useFreezeAI();
             else if (e.key === 'h' || e.key === 'H') {
                 const chk = document.getElementById('hint-toggle');
-                chk.checked = !chk.checked;
-                localStorage.setItem('kreversi_hints', chk.checked);
-                renderBoard();
+                if (chk) {
+                    chk.checked = !chk.checked;
+                    localStorage.setItem('kreversi_hints', chk.checked);
+                    renderBoard();
+                }
             } else if (e.key === 'u' || e.key === 'U') undoMove();
             else if (e.key === 'r' || e.key === 'R') initGame();
-            else if (e.key === '?' || (e.shiftKey && e.key === '/')) showHelp();
+            else if (e.key === 'p' || e.key === 'P') toggleReplayMode();
+            else if (e.key === 'n' || e.key === 'N') openNotationModal();
+            else if (e.key === 'F1' || e.key === '?' || (e.shiftKey && e.key === '/')) {
+                e.preventDefault();
+                showHelp();
+            }
         });
 
         loadPrefs();
@@ -2888,7 +3587,22 @@
                 <p><strong>Restart (R):</strong> Reset current stage or board.</p>
             </div>
             <div class="guide-section">
-                <h3>4. 🌐 Online Real-Time Multiplayer</h3>
+                <h3>4. ⌨️ Keyboard Controls &amp; Accessibility</h3>
+                <p><strong>Arrow Keys / WASD:</strong> Move the interactive high-contrast cyan cursor on the board.</p>
+                <p><strong>Enter / Space:</strong> Place disc on active cursor cell or detonate active bomb.</p>
+                <p><strong>[ / ] (Left / Right Arrow):</strong> Step previous / next in Replay Mode.</p>
+                <p><strong>Home / End:</strong> Jump to start / end of Replay.</p>
+                <p><strong>Esc:</strong> Close all modals or exit Replay Mode.</p>
+            </div>
+            <div class="guide-section">
+                <h3>5. 🎬 Match Replay, Opening Book &amp; FEN</h3>
+                <p><strong>Interactive Replay:</strong> Scrub move-by-move or auto-play through your entire game history.</p>
+                <p><strong>Opening Book Engine:</strong> Identifies 18 classic Reversi opening lines (Tiger, Rose, Cow, Bat, Cat, Snake, etc.) with rotational D4 symmetry.</p>
+                <p><strong>Exact Endgame Solver:</strong> Evaluates theoretical disc differential to the final move when &le;10 empty squares remain.</p>
+                <p><strong>Notation &amp; FEN:</strong> Copy algebraic transcripts, compact move sequences, or load custom FEN positions.</p>
+            </div>
+            <div class="guide-section">
+                <h3>6. 🌐 Online Real-Time Multiplayer</h3>
                 <p><strong>Instant Matchmaking:</strong> Play live against opponents across the web with seamless Firebase RTDB.</p>
                 <p><strong>Custom Rooms & Sizes:</strong> Host public or private matches in 6x6, 8x8, or 10x10 boards.</p>
                 <p><strong>Spectator Mode:</strong> Additional players joining an active room automatically watch live moves in real time.</p>
@@ -2972,7 +3686,52 @@
         </div>
     </div>
 
-    <!-- Safe Top-Right Toast Notifications Container -->
-    <div id="toast-container" style="position: fixed; top: 16px; right: 18px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; max-width: 320px;"></div>
+    <!-- Standard Reversi Notation & FEN Importer / Exporter Modal -->
+    <div id="notation-modal" class="modal" onclick="if(event.target===this) closeNotationModal()">
+        <div class="modal-content" style="border-color: #69f0ae; max-width: 500px;">
+            <span class="close-btn" onclick="closeNotationModal()">&times;</span>
+            <h2 style="color: #69f0ae;">📜 Transcript &amp; FEN Engine</h2>
+            <p style="font-size: 12px; color: #94a3b8; margin-top: -6px; margin-bottom: 12px; text-align: center;">
+                Inspect standard algebraic move transcripts, export board FEN, or paste custom positions &amp; tournament sequences.
+            </p>
+
+            <!-- Formatted Algebraic Transcript -->
+            <div class="mp-section" style="border-color: #444;">
+                <label style="color: #69f0ae;">Formatted Algebraic Notation:</label>
+                <textarea id="algebraicTranscriptText" readonly rows="3" style="width: 100%; box-sizing: border-box; background: #161b22; color: #69f0ae; font-family: monospace; font-size: 11px; border: 1px solid #333; border-radius: 4px; padding: 6px; resize: none;"></textarea>
+                <div style="display: flex; gap: 6px; margin-top: 6px;">
+                    <button onclick="copyAlgebraicTranscript()" style="flex: 1; background: #004d40; color: #fff; font-size: 11px; border: 1px solid #69f0ae; border-radius: 4px; padding: 5px 8px; cursor: pointer; font-weight: bold;">📋 Copy Formatted</button>
+                    <button onclick="copyCompactMoveSequence()" style="flex: 1; background: #1a2634; color: #00e5ff; font-size: 11px; border: 1px solid #00e5ff; border-radius: 4px; padding: 5px 8px; cursor: pointer; font-weight: bold;">📋 Copy String (f5d6...)</button>
+                </div>
+            </div>
+
+            <!-- Board Position FEN -->
+            <div class="mp-section" style="border-color: #444;">
+                <label style="color: #ffd700;">Board Position (FEN):</label>
+                <input type="text" id="boardFenInput" readonly style="width: 100%; box-sizing: border-box; background: #161b22; color: #ffd700; font-family: monospace; font-size: 11px; border: 1px solid #333; border-radius: 4px; padding: 6px;">
+                <div style="display: flex; gap: 6px; margin-top: 6px;">
+                    <button onclick="copyBoardFen()" style="flex: 1; background: #4a3800; color: #ffd700; font-size: 11px; border: 1px solid #ffd700; border-radius: 4px; padding: 5px 8px; cursor: pointer; font-weight: bold;">📋 Copy FEN String</button>
+                </div>
+            </div>
+
+            <!-- Import Section -->
+            <div class="mp-section" style="background: rgba(105, 240, 174, 0.08); border-color: #69f0ae;">
+                <label style="color: #69f0ae;">📥 Load Position or Move Sequence:</label>
+                <textarea id="importPositionInput" rows="2" placeholder="Paste 64-char FEN string (e.g. ---W... B) OR move sequence (e.g. f5d6c3d3...)" style="width: 100%; box-sizing: border-box; background: #0d1117; color: #fff; font-family: monospace; font-size: 11px; border: 1px solid #444; border-radius: 4px; padding: 6px; resize: none;"></textarea>
+                <div style="display: flex; gap: 6px; margin-top: 6px;">
+                    <button onclick="importPositionFromInput()" style="flex: 2; background: #00897b; color: #fff; font-weight: bold; font-size: 12px; border: 1px solid #69f0ae; border-radius: 4px; padding: 6px 12px; cursor: pointer;">📥 Load &amp; Set Board</button>
+                </div>
+                <div style="margin-top: 8px; font-size: 11px; color: #94a3b8; display: flex; align-items: center; flex-wrap: wrap; gap: 4px;">
+                    <strong style="color: #cbd5e1;">Presets:</strong>
+                    <button onclick="loadPresetPosition('tiger')" style="font-size: 10px; padding: 2px 6px; background: #222; color: #ffd700; border: 1px solid #555; border-radius: 3px; cursor: pointer;">Tiger Opening</button>
+                    <button onclick="loadPresetPosition('rose')" style="font-size: 10px; padding: 2px 6px; background: #222; color: #ff007f; border: 1px solid #555; border-radius: 3px; cursor: pointer;">Rose Opening</button>
+                    <button onclick="loadPresetPosition('endgame')" style="font-size: 10px; padding: 2px 6px; background: #222; color: #00e5ff; border: 1px solid #555; border-radius: 3px; cursor: pointer;">Endgame (8 Left)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Safe Bottom-Right Toast Notifications Container (Mandate / Vision Audit Compliance) -->
+    <div id="toast-container" style="position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; pointer-events: none; max-width: 320px;"></div>
 </body>
 </html>

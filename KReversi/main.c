@@ -124,6 +124,9 @@ int moveTimeLeftDeci = 0;
 int gameEnded = 0;
 int currentPlayer = BLACK;
 int hoverIdx = -1;
+int keyCursorR = 3;
+int keyCursorC = 3;
+int keyCursorActive = 0;
 
 int gameOverSoundPlayed = 0;
 int animatingFlips[100];
@@ -1030,7 +1033,10 @@ void ShowHelp(HWND hwnd) {
         "• Optimal Hint (H): Highlights top-evaluated move based on positional weights & minimax.\n"
         "• Undo Move (U): Reverts last turn move pair against AI.\n"
         "• Bomb Disc (B): Place a disc on ANY empty cell to flip 3x3 surrounding enemy discs!\n"
-        "• Freeze AI (F): Forces the AI to skip 1 turn, giving you an extra turn!\n\n"
+        "• Freeze AI (F): Forces the AI to skip 1 turn, giving you an extra turn!\n"
+        "• Quicksave (F5) / Quickload (F9): Save & restore game state to file.\n"
+        "• Keyboard Cursor: Arrow Keys or W/A/S/D to move cursor, Enter or Space to place disc.\n"
+        "• Restart (R), Help (F1 or ?).\n\n"
         "3. CAMPAIGN MODE (20 STAGES)\n"
         "• Conquer 20 diverse stages with dynamic 6x6, 8x8, and 10x10 boards, blocked holes, 2X bonus tiles, and 4 AI personalities (Rookie, Greedy, Positional, Grandmaster Minimax).\n\n"
         "4. CORNER & MOBILITY STRATEGY\n"
@@ -1155,6 +1161,9 @@ void InitGame(HWND hwnd) {
     isBombActive = 0;
     numAnimatingFlips = 0;
     newlyPlacedDisc = -1;
+    keyCursorR = g_boardHeight / 2;
+    keyCursorC = g_boardWidth / 2;
+    keyCursorActive = 0;
     if (hwnd) {
         KillTimer(hwnd, 1);
         KillTimer(hwnd, 2);
@@ -1720,7 +1729,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_KEYDOWN: {
-            if (wParam == 'B' || wParam == 'b') {
+            if (wParam == VK_F5) {
+                SaveGame(hwnd);
+            } else if (wParam == VK_F9) {
+                LoadGame(hwnd);
+            } else if (wParam == VK_F1 || wParam == VK_OEM_2) {
+                ShowHelp(hwnd);
+            } else if (wParam == 'B' || wParam == 'b') {
                 if (bombCount > 0 && !gameEnded && currentPlayer == BLACK) {
                     isBombActive = !isBombActive;
                     InvalidateRect(hwnd, NULL, TRUE);
@@ -1734,6 +1749,54 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 UndoMove(hwnd);
             } else if (wParam == 'R' || wParam == 'r') {
                 InitGame(hwnd);
+            } else if (wParam == VK_UP || wParam == 'W' || wParam == 'w') {
+                keyCursorActive = 1;
+                if (keyCursorR > 0) keyCursorR--;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == VK_DOWN || wParam == 'S' || wParam == 's') {
+                keyCursorActive = 1;
+                if (keyCursorR < g_boardHeight - 1) keyCursorR++;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == VK_LEFT || wParam == 'A' || wParam == 'a') {
+                keyCursorActive = 1;
+                if (keyCursorC > 0) keyCursorC--;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == VK_RIGHT || wParam == 'D' || wParam == 'd') {
+                keyCursorActive = 1;
+                if (keyCursorC < g_boardWidth - 1) keyCursorC++;
+                InvalidateRect(hwnd, NULL, TRUE);
+            } else if (wParam == VK_RETURN || wParam == VK_SPACE) {
+                if (keyCursorActive && currentPlayer == BLACK && !gameEnded) {
+                    int idx = keyCursorR * g_boardWidth + keyCursorC;
+                    if (isBombActive) {
+                        if ((board[idx] == EMPTY || board[idx] == DOUBLE_FLIP) && bombCount > 0) {
+                            DoBombMove(idx, BLACK, hwnd);
+                            currentPlayer = WHITE;
+                            if (!HasValidMoves(WHITE)) {
+                                currentPlayer = BLACK;
+                            } else {
+                                SetTimer(hwnd, 1, 400, NULL);
+                            }
+                            ResetMoveTimer(hwnd);
+                            InvalidateRect(hwnd, NULL, TRUE);
+                        }
+                    } else {
+                        int flips[100];
+                        int count = GetFlippable(idx, BLACK, flips);
+                        if (count > 0) {
+                            PushHistory();
+                            DoMove(idx, BLACK, hwnd);
+                            currentPlayer = WHITE;
+                            if (!HasValidMoves(WHITE)) {
+                                currentPlayer = BLACK;
+                            } else {
+                                SetTimer(hwnd, 1, 400, NULL);
+                            }
+                            ResetMoveTimer(hwnd);
+                            InvalidateRect(hwnd, NULL, TRUE);
+                        }
+                    }
+                }
             }
             break;
         }
@@ -2126,6 +2189,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                 DeleteObject(hintPen);
                             }
                         }
+                    }
+                    if (keyCursorActive && r == keyCursorR && c == keyCursorC) {
+                        HPEN curPen = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
+                        HGDIOBJ oldPen = SelectObject(hdc, curPen);
+                        HGDIOBJ oldBr = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                        Rectangle(hdc, rect.left + 1, rect.top + 1, rect.right - 1, rect.bottom - 1);
+                        SelectObject(hdc, oldPen);
+                        SelectObject(hdc, oldBr);
+                        DeleteObject(curPen);
                     }
                 }
             }
