@@ -28,6 +28,7 @@
     overflow: hidden;
     font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
   .sidebar {
@@ -267,6 +268,10 @@
     background: #ffebee;
     border-color: var(--danger);
     color: var(--danger);
+  }
+  button:focus-visible, .btn:focus-visible, select:focus-visible, .template-chip:focus-visible, .tab-item:focus-visible, .outline-item:focus-visible, .trash-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--accent-dark);
   }
 
   /* Multi-Tab Strip */
@@ -668,30 +673,31 @@
   }
   .toast {
     position: fixed;
-    bottom: 30px;
-    right: 16px;
+    bottom: 36px;
+    left: 50%;
+    transform: translateX(-50%) translateY(8px);
     background: #1f2937;
     color: #f9fafb;
-    padding: 7px 14px;
+    padding: 8px 16px;
     border-radius: 6px;
     font-size: 12px;
     box-shadow: 0 4px 14px rgba(0,0,0,0.3);
-    z-index: 500;
+    z-index: 1100;
     opacity: 0;
-    pointer-events: auto;
+    pointer-events: none;
     cursor: pointer;
     user-select: none;
     transition: opacity 0.2s ease, transform 0.2s ease;
-    transform: translateY(6px);
     border: 1px solid rgba(255, 255, 255, 0.18);
     display: flex;
     align-items: center;
     gap: 8px;
-    max-width: 420px;
+    max-width: 480px;
   }
   .toast.show {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
   }
   .toast-close {
     margin-left: auto;
@@ -869,6 +875,30 @@
     gap: 4px;
     margin: 2px;
   }
+  @media (max-width: 860px) {
+    .sidebar {
+      width: 210px;
+      min-width: 175px;
+    }
+    .outline-pane {
+      width: 190px;
+    }
+    .speed-bar {
+      overflow-x: auto;
+      white-space: nowrap;
+      flex-wrap: nowrap;
+      scrollbar-width: thin;
+    }
+  }
+  @media (max-width: 660px) {
+    .sidebar {
+      width: 180px;
+      min-width: 150px;
+    }
+    .toolbar-group {
+      flex-wrap: wrap;
+    }
+  }
 </style>
 <script src="../assets/js/retro_multiplayer.js"></script>
 </head>
@@ -1017,6 +1047,7 @@
       <span id="statCollabSync" style="display: none; font-size: 11px; color: #16a34a; font-weight: 600;">🟢 Synced</span>
     </div>
     <div style="display: flex; gap: 10px; align-items: center;">
+      <span id="statHelpHint" role="button" tabindex="0" style="cursor: pointer; color: var(--accent-dark); font-weight: 600; font-size: 11px; padding: 1px 6px; border-radius: 3px; border: 1px dashed rgba(245, 127, 23, 0.4);" title="Click or press F1/H for Help & Shortcuts">❓ Help [F1]</span>
       <span id="statDate" style="font-size: 11px; color: #888;"></span>
       <span id="saveStatus" style="font-size: 11px; color: #777;">Auto-saved</span>
     </div>
@@ -2672,8 +2703,8 @@
     renderTrashList();
     trashModal.style.display = 'flex';
   });
-  trashModalClose.addEventListener('click', () => { trashModal.style.display = 'none'; });
-  trashCloseBtn.addEventListener('click', () => { trashModal.style.display = 'none'; });
+  trashModalClose.addEventListener('click', () => { trashModal.style.display = 'none'; if (trashBtn) trashBtn.focus(); });
+  trashCloseBtn.addEventListener('click', () => { trashModal.style.display = 'none'; if (trashBtn) trashBtn.focus(); });
   trashEmptyBtn.addEventListener('click', () => {
     if (trashNotes.length === 0) return;
     if (confirm("Permanently empty all items in Trash? This cannot be undone.")) {
@@ -3070,7 +3101,10 @@
     if (e.target === deleteModal) closeDeleteModal();
   });
   trashModal.addEventListener('click', (e) => {
-    if (e.target === trashModal) trashModal.style.display = 'none';
+    if (e.target === trashModal) {
+      trashModal.style.display = 'none';
+      if (trashBtn) trashBtn.focus();
+    }
   });
   helpModal.addEventListener('click', (e) => {
     if (e.target === helpModal) {
@@ -3085,7 +3119,10 @@
   }
   if (collabModal) {
     collabModal.addEventListener('click', (e) => {
-      if (e.target === collabModal) collabModal.style.display = 'none';
+      if (e.target === collabModal) {
+        collabModal.style.display = 'none';
+        if (collabBtn) collabBtn.focus();
+      }
     });
   }
 
@@ -3646,7 +3683,7 @@
       return;
     }
     outlineList.innerHTML = headings.map(h => `
-      <div class="outline-item lvl-${h.level}" data-line="${h.lineIdx}" title="Jump to line ${h.lineIdx + 1}">
+      <div class="outline-item lvl-${h.level}" data-line="${h.lineIdx}" tabindex="0" role="button" title="Jump to line ${h.lineIdx + 1}">
         <span style="opacity: 0.6; font-size: 10px;">${'#'.repeat(h.level)}</span>
         <span style="overflow: hidden; text-overflow: ellipsis;">${escapeHtml(h.text)}</span>
       </div>
@@ -3668,6 +3705,15 @@
   }
 
   if (outlineList) {
+    outlineList.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        const item = e.target.closest('.outline-item');
+        if (item) {
+          e.preventDefault();
+          item.click();
+        }
+      }
+    });
     outlineList.addEventListener('click', (e) => {
       const item = e.target.closest('.outline-item');
       if (!item) return;
@@ -3939,8 +3985,8 @@
     updateCollabUI();
     collabModal.style.display = 'flex';
   });
-  if (collabCloseBtn) collabCloseBtn.addEventListener('click', () => { collabModal.style.display = 'none'; });
-  if (collabModalClose) collabModalClose.addEventListener('click', () => { collabModal.style.display = 'none'; });
+  if (collabCloseBtn) collabCloseBtn.addEventListener('click', () => { collabModal.style.display = 'none'; if (collabBtn) collabBtn.focus(); });
+  if (collabModalClose) collabModalClose.addEventListener('click', () => { collabModal.style.display = 'none'; if (collabBtn) collabBtn.focus(); });
   if (createRoomBtn) createRoomBtn.addEventListener('click', startCollabHost);
   if (leaveRoomBtn) leaveRoomBtn.addEventListener('click', leaveCollabSession);
   if (copyShareLinkBtn) copyShareLinkBtn.addEventListener('click', copyCollabInviteLink);
@@ -4225,6 +4271,43 @@
     }
   });
 
+  // Status Bar Help Hint
+  const statHelpHint = document.getElementById('statHelpHint');
+  if (statHelpHint) {
+    statHelpHint.addEventListener('click', () => {
+      helpBtn.click();
+    });
+    statHelpHint.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        helpBtn.click();
+      }
+    });
+  }
+
+  // ARCH-05: Tab Visibility & Background State Hygiene
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      const cur = notes[activeIndex];
+      if (cur) {
+        if (cur.encrypted && cur.unlockedText !== null && cur._sessionPassword) {
+          encryptNoteText(cur.unlockedText, cur._sessionPassword).then(cipher => {
+            cur.text = cipher;
+            saveNotes();
+          }).catch(() => {});
+        } else if (!cur.encrypted && noteArea) {
+          cur.text = noteArea.value;
+          saveNotes();
+        }
+      }
+    } else {
+      updateStats();
+      if (outlinePane && outlinePane.style.display !== 'none') {
+        updateOutline();
+      }
+    }
+  });
+
   // Initialize
   loadNotes();
   loadActive();
@@ -4246,8 +4329,6 @@
     } else {
       showToast("KNote ready. Press F1 or H for Help [F5 Snapshot / F9 Restore]", 2800);
     }
-  } else {
-    showToast("KNote ready. Press F1 or H for Help [F5 Snapshot / F9 Restore]", 2800);
   }
 })();
 </script>

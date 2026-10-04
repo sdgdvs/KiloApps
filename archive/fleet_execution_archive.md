@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T05:45:00-07:00 — kilo-qa: KPass (Pass 5 QA & Build Quality, Full State Snapshot Persistence & Tutorial Integrity)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 125.9 KB web / 25.6 KB native < 999 KB ceiling).
+  - Snapshot State Persistence: Added full snapshot save/load (F5/F9) capturing generator options, history, and form inputs in web and native (`kpass_quicksave.dat`).
+  - First-Run Tutorial Integrity: Added safe check (`kpass_tutorialSeen` / `.dat`) ensuring welcome tour only fires on fresh sessions and never interrupts restored states.
+  - Interactive Modal Ergonomics: Added global F1 Help shortcut, Enter/Esc dismissals across modals, and centered toast bar to eliminate button occlusion.
+  - Quota & Resource Safety: Added storage quota handling in saveVault and snapshot logic; added visibilitychange auto-lock delta check.
+  - Verification: MSVC clean (`KPass.exe` 25.6 KB); Vite build clean in 330ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T05:28:00-07:00 — kilo-usability: KNet (UI/UX Usability Pass, HiDPI Canvas Scaling, Toast Occlusion & Tab Visibility)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 180.8 KB web / 44.0 KB native < 999 KB ceiling).
   - HiDPI Canvas Crispness: Added devicePixelRatio scaling to polar radar (tab 7) and speed dial (tab 5).

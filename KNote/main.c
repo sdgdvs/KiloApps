@@ -8,8 +8,8 @@
 #pragma comment(lib, "advapi32.lib")
 #pragma comment(lib, "comctl32.lib")
 
-#define W 920
-#define H 640
+#define W 980
+#define H 680
 
 HWND hEdit, hList, hBtnNew, hBtnDel, hStatus, hSearch, hBtnPin, hBtnExportMd, hBtnExportCsv, hBtnExportJson, hBtnImport, hBtnLock, hTab, hBtnHelp, hBtnClone, hBtnStats, hBtnTmpl;
 HBRUSH bgBrush, sidebarBrush, g_hbrClass;
