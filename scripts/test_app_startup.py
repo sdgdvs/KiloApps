@@ -451,6 +451,11 @@ async def run_cdp_audit(app_name: str, browser_path: str, port: int) -> Dict[str
 
 
 def main():
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
     parser = argparse.ArgumentParser(description="KiloApps Human-Perspective Startup & UX Test Suite")
     parser.add_argument("--app", help="Specific app name to test (e.g. kalchemy, kchess, kquest)")
     parser.add_argument("--all", action="store_true", help="Test all web apps in KiloOS/public/apps/")
