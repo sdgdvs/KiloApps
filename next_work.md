@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,10 +15,10 @@ current_targets:
   kilo_creator: "kweb://warez (Scene Vault)"
   kilo_graphics: KAsteroids
   kilo_tester: KSanctuary
-  kilo_usability: KMail
+  kilo_usability: KMandel
   kilo_qa: KMandel
   kilo_expander: KGo
-virtual_web_target: "kweb://asm-temple"
+virtual_web_target: "kweb://warez"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -35,7 +35,7 @@ last_run:
   agent: kilo-creator
   app: "kweb://webring"
   timestamp: "2026-10-03T19:36:00-07:00"
-last_planner_run: "2026-10-03T05:35:00Z"
+last_planner_run: "2026-10-04T05:48:00Z"
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -114,24 +114,24 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KMail`
+- **Current Target**: `KMandel`
 - **Upcoming Queue**:
-  `KMandel`, `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash`, `KGraph` *(Completed: KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal)*.
+  `KMedia`, `KMystery`, `KNet`, `KNote`, `KPass`, `KHash`, `KGraph`, `KClock`, `KTimer`, `KPomodoro` *(Completed: KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KMandel`
 - **Upcoming Queue**:
-  *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail)*.
+  `KNet`, `KNote`, `KPass`, `KDB`, `KHex`, `KBookmark`, `KPing`, `KChat`, `KClock`, `KTimer`, `KPomodoro` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KDarts`
+- **Current Target**: `KGo`
 - **Upcoming Queue**:
-  `KGo`, `KReversi`, `KSnake`, `KPaint`, `K2048`, `KSynth`, `KTetris` *(Completed: KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KDarts, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048)*.
+  `KReversi`, `KPong`, `KSnake`, `KTowers`, `KMatch3`, `KSimon` *(Completed: KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KGo, KReversi, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://geocities` (`KiloOS/public/web/geocities.html`)
-  - *Next in Rotation*: `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez`.
+- **Current Active Target**: `kweb://warez` (`KiloOS/public/web/warez.html`)
+  - *Next in Rotation*: `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring`.
 - **Anti-Potemkin Quality Standard**:
   - All 11 Virtual 1999 Web destinations are live, interactive, and feature-complete.
   - See [archive/virtual_web_completed.md](archive/virtual_web_completed.md) for full historical breakdown of completed content mandates across all sites.

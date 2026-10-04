@@ -4,6 +4,21 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-03T15:15:00-07:00 — kilo-qa: KiloOS (Architecture Audit & App.jsx State Hardening)**
+  - Status: PASS ✅ (0 regressions, clean build in 406ms, version bumped to 0.4.22).
+  - State & Concurrency: Fixed openApp race condition with functional updater and zIndexRef synchronous mirror.
+  - Memory & Cleanup: Added notification timeout ref with unmount cleanup; wrapped localStorage in try/catch.
+  - Schema & Handlers: Added exeUrl: null to kexplorer/kdirector; stabilized os-launch-app event dependencies.
+  - Audit Triage: Evaluated ARCH-01..09 tickets; purged false positives; queued ARCH-05 (timer visibility).
+
+- **2026-10-03T14:35:00-07:00 — kilo-graphics: KQuest (Game Content, Visual Polish, Glint Purge & Class Balance)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 300.5 KB web / 97.8 KB native < 999 KB ceiling).
+  - Glint & Border Ban: Purged pulsating perimeter shimmer from both web and C; installed clean static golden filigree HUD frames.
+  - Paladin & Ranger Visuals: Added full canvas and GDI character rendering for Paladin (golden plate, cross crest, mace) and Ranger (hood, cloak, longbow).
+  - Combat & Class Balance: Added Smite holy heal (+16 HP) and Ranger Aimed Shot critical precision (35% crit for 2.5x dmg) with class-specific FX.
+  - Native Character Creation Fix: Repaired button handler mapping in main.c allowing full selection and initialization of Paladin and Ranger.
+  - Verification: Clean MSVC native build (97.8 KB); Vite build clean in 471ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-03T13:35:00-07:00 — kilo-creator: kweb://darknet (Encrypted Underground Relay & Cryptography Lab Deep Expansion)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 240.0 KB web < 999 KB ceiling).
   - Gated Middle-Game Relay: Enhanced 3-slot quarantine relay; resilient matching for acoustic carrier, Sector 03 clearance, and warez seed.
@@ -28,6 +43,23 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - UI & Accessibility: Repositioned toast to top-center (z-index: 2000) and added Enter/Space dismissal for help modal.
   - Native Shell Fix: Replaced command-breaking shell title calls with SetConsoleTitleA to prevent syntax errors.
   - Verification: Clean MSVC native build (201.0 KB); Vite build clean in 549ms; check_icons 100% PASS; security_lint 100% PASS.
+
+- **2026-10-03T09:30:00-07:00 — kilo-usability: KImage (Layout Polish, Tab Wrapping, Smooth Panning & Window Sizing)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 152.5 KB web / 26.6 KB native < 999 KB ceiling).
+  - Window Sizing: Expanded default dimensions to 1060×720 across App.jsx, meta tags, and Win32 C main.c to prevent toolbar wrap.
+  - Multi-Row Tab Layout: Upgraded sidebar tabs to wrapped multi-row flex grid, eliminating 2px horizontal scrollbar and revealing all 7 tabs.
+  - Panning Ergonomics: Disabled transition lag during active mouse dragging; restored smooth ease-out on zoom release.
+  - Button State Integrity: Fixed active class and textContent synchronization on crop apply/cancel and annotation brush deactivation.
+  - High-DPI Histogram & Modal: Wired requestAnimationFrame render for histogram tab switches; cleared toast occlusion on help modal open.
+  - Verification: MSVC native clean (26.6 KB); Vite clean in 6.55s; check_icons 100% PASS; security_lint 100% PASS.
+
+- **2026-10-03T07:43:00-07:00 — kilo-tester: KRadio (Interactive UI Element Audit, JSON Backup & Preset Customization)**
+  - Status: PASS ✅ (3 issues, 3 fixed; 0 regressions; 70.7 KB web < 999 KB ceiling).
+  - UI Element Audit: Verified all buttons, inputs, canvas click triggers, and modal dialog dismissals (Escape, backdrop click, Got It).
+  - Backup & Storage: Added JSON station playlist export/import (`btnExport`, `btnImport`, `Alt+E`/`Alt+I`) with local storage backup.
+  - Preset Management: Added Shift+Click and `Shift+1-6` hotkeys to assign current custom stream to any preset slot; added factory reset.
+  - Media State Sync: Added native `pause` and `stalled` audio event listeners to prevent playback state desync on external pauses.
+  - Verification: Vite build clean (dist in 1.57s); security_lint 100% PASS; check_icons PASS; file size 70.7 KB.
 
 - **2026-10-03T07:22:00-07:00 — kilo-graphics: KSpace (Sector Escalation, Glint & Comet Ban, Drone Tethers & Warp Streaks)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 150.9 KB web / 77.8 KB native < 999 KB ceiling).
@@ -54,6 +86,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
   - SMF Type 0 MIDI Export: Built binary `.mid` export with variable-length quantity delta encoding for the 16-step sequencer.
   - Presets & State: Added presets 10-14 (Juno Strings, TB-303 Acid, Vapor Keys, Cyber Drone, FM E-Piano); persisted full DSP state.
   - Verification: MSVC native clean (23.5 KB); Vite clean in 387ms; security_lint 100% PASS; test_arg_flow 100% PASS; check_icons 100% PASS.
+
+- **2026-10-03T03:20:00-07:00 — kilo-qa: KImage (Pass 5: Complete State Persistence, Tutorial Integrity, Modal Focus & Safe Quota)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 146.9 KB web / 26.0 KB native < 999 KB ceiling).
+  - Quicksave & Quota Safeguards: Added fallback compression/downscaling on storage quota errors; preserved full edit/crop/draw/stego state; handled image error states gracefully.
+  - Tutorial & Continuation Integrity: Enforced `kimage_tutorialSeen` / `.dat` flags preventing onboarding prompt interrupts on restored sessions across web and native Win32.
+  - Interactive Splash & Modal Trapping: Added Tab key focus trapping in helpModal, Return to dismiss, Escape to clear active toasts and modals, and last-focused element restoration.
+  - Resource Safety & URL Revocation: Fixed duplicate blob URL creation on file load; added explicit `URL.revokeObjectURL` cleanup on image deletion and playlist clear.
+  - Native Win32 Parity: Added first-run `.dat` check, saved state detection, and direct `VK_F5`/`VK_F9` dispatch in main message loop.
+  - Verification: MSVC clean (`KImage.exe` 26.0 KB); Vite clean in 380ms; check_icons 100% PASS; security_lint 100% PASS.
 
 - **2026-10-02T23:25:00-07:00 — kilo-creator: kweb://geocities (CyberSpire's Shrine & Surface-Site Breadcrumb Density Pass)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 272.5 KB web < 999 KB ceiling).
