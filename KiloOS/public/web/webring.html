@@ -1588,6 +1588,37 @@ Click 'Run Full Ring Diagnostic' to probe all 18 active ring nodes.</div>
         </div>
         <div id="probeResultBox" style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-top:6px; display:none;"></div>
       </div>
+
+      <!-- Subterranean Harmonic Signals Telemetry [arg/signals] -->
+      <div style="margin-top:14px; background:#050914; border:1px solid #78350f; padding:12px;" id="subterraneanSignalPanel">
+        <div class="panel-header" style="margin-bottom:8px; padding-bottom:4px; border-color:#78350f;">
+          <div style="font-family:var(--font-mono); font-size:12px; font-weight:bold; color:var(--amber-bright); display:flex; align-items:center; gap:6px;">
+            <span>📡</span> SUBTERRANEAN HARMONIC SIGNALS TELEMETRY [arg/signals]
+          </div>
+          <div style="font-family:var(--font-mono); font-size:10px; color:var(--amber);">
+            Carrier: 1999Hz &bull; Gateway: echo-gw-07.kilonet.internal [10.19.99.1]
+          </div>
+        </div>
+        <div style="font-size:11px; color:var(--text-muted); margin-bottom:8px;">
+          Monitors lithospheric subcarrier pulses transmitted across subterranean nodes and 1999 dial-up endpoints. When multiple node beacons synchronize their carrier frequency, the unmapped transponder route resonates.
+        </div>
+        <div id="subterraneanSignalsList" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:8px; margin-bottom:10px;">
+          <!-- Populated dynamically: subterranean_webring, subterranean_darknet, subterranean_classified, subterranean_echo -->
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; background:#03060f; border:1px dashed var(--border-med); padding:8px;">
+          <div id="subterraneanStatusText" style="font-family:var(--font-mono); font-size:11px; color:var(--amber);">
+            Status: SCANNING SUBCARRIER CHANNELS (1999Hz)...
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-action" onclick="transmitSubterraneanPulse()" style="border-color:var(--amber); color:var(--amber-bright);">
+              <span>⚡</span> Transmit 1999Hz Pulse
+            </button>
+            <button class="btn-action" onclick="testSoloHarmonicLock()" title="Test solo-path multi-node simulation">
+              <span>🔄</span> Sync Ring Beacon
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -2444,10 +2475,15 @@ function stopProceduralBgm() {
 const visCanvas = document.getElementById('visCanvas');
 const visCtx = visCanvas ? visCanvas.getContext('2d') : null;
 let visPhase = 0;
+let visAnimFrame = null;
 
 function drawAudioVisualizer() {
   if (!visCtx) return;
-  requestAnimationFrame(drawAudioVisualizer);
+  if (document.hidden) {
+    visAnimFrame = null;
+    return;
+  }
+  visAnimFrame = requestAnimationFrame(drawAudioVisualizer);
 
   visCtx.fillStyle = '#05070f';
   visCtx.fillRect(0, 0, visCanvas.width, visCanvas.height);
@@ -2644,6 +2680,7 @@ const warpCanvas = document.getElementById('warpCanvas');
 const warpCtx = warpCanvas ? warpCanvas.getContext('2d') : null;
 let warpStars = [];
 let isWarpCanvasRunning = false;
+let warpAnimFrame = null;
 
 function initWarpStars() {
   warpStars = [];
@@ -2667,7 +2704,12 @@ function startWarpStarfield() {
 
 function renderStarfield() {
   if (!warpCtx) return;
-  requestAnimationFrame(renderStarfield);
+  if (document.hidden) {
+    warpAnimFrame = null;
+    isWarpCanvasRunning = false;
+    return;
+  }
+  warpAnimFrame = requestAnimationFrame(renderStarfield);
 
   warpCtx.fillStyle = '#050811';
   warpCtx.fillRect(0, 0, warpCanvas.width, warpCanvas.height);
@@ -3686,6 +3728,9 @@ function probeCustomTarget() {
       Subcarrier Telemetry: Lithospheric 1999Hz tone detected &bull; HTTP Daemon: Non-Routable
     `;
     playFmTone(1999, 1.0, 0.5, 0.2, 0.08, true);
+    if (typeof broadcastWebringSignal === 'function') {
+      broadcastWebringSignal('socket_probe', { target: lowerTarget });
+    }
     return;
   }
 
@@ -3803,6 +3848,9 @@ function runTraceroute() {
         consoleEl.textContent += `Hop 5 destination (${targetIp}) returned continuous 1999Hz carrier reflections.\n`;
         consoleEl.textContent += `Packet status: ICMP echo timeout (1999 ms). Non-routable internal endpoint.\n`;
         playFmTone(1999, 1.0, 0.4, 0.25, 0.1, true);
+        if (typeof broadcastWebringSignal === 'function') {
+          broadcastWebringSignal('traceroute_anomaly', { target: targetNode.name, ip: targetIp, ms: 1999 });
+        }
       } else {
         consoleEl.textContent += `[TRACE COMPLETE] 5 hops traversed. Destination reached successfully in ${hops[4].ms}ms.\n`;
         consoleEl.textContent += `Packet integrity: 100% (0 packets dropped). MTU 1500 MSS 1460.\n`;
@@ -3911,6 +3959,9 @@ function transmitTopologyPing() {
     if (nodeChirpIdx >= ringNodes.length) {
       clearInterval(chirpTimer);
       setTimeout(() => { isTopoPingActive = false; }, 400);
+      if (typeof broadcastWebringSignal === 'function') {
+        broadcastWebringSignal('ring_ping_complete', { totalNodes: ringNodes.length });
+      }
       return;
     }
     const freq = 440 + (nodeChirpIdx % 8) * 60;
@@ -4393,6 +4444,7 @@ function submitGuestbookPost() {
   document.getElementById('gbMsg').value = '';
   renderGuestbook();
   showNoticeToast("Guestbook entry recorded!");
+  checkWebringDeadDrop(msg, handle);
 }
 
 function insertEmoticon(emo) {
@@ -4400,6 +4452,171 @@ function insertEmoticon(emo) {
   const msgEl = document.getElementById('gbMsg');
   msgEl.value += ' ' + emo + ' ';
   msgEl.focus();
+}
+
+function checkWebringDeadDrop(msg, handle) {
+  if (!msg) return;
+  if (handle.includes('echo-gw-07') || handle.includes('Ringmaster_NULL') || handle.includes('Carrier_Daemon')) return;
+  const lower = (msg + ' ' + handle).toLowerCase();
+  const triggers = ['echo-gw-07', '1999hz', '1999 hz', 'carlsbad', '0x7f', 'beacon', 'transit', 'subcarrier', 'lithospheric'];
+  const matched = triggers.some(t => lower.includes(t));
+  if (matched) {
+    playFmTone(1999, 1.0, 0.4, 0.35, 0.15, true);
+    setTimeout(() => {
+      const now = new Date();
+      const timeStr = `1999-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      const echoReply = {
+        handle: "echo-gw-07 [Ringmaster_NULL]",
+        site: "10.19.99.1 (echo-gw-07.kilonet.internal)",
+        time: timeStr,
+        msg: "*** [RING TRANSIT ECHO DETECTED]: Gateway echo-gw-07.kilonet.internal [10.19.99.1] acknowledges harmonic probe at 1999Hz. Physical loop remains closed through node 0x7F. Subterranean relay packets reflect from Carlsbad salt beds toward kweb://deep-core."
+      };
+      const entries = getGuestbookEntries();
+      if (!entries.some(e => e.handle === echoReply.handle && e.msg === echoReply.msg)) {
+        entries.unshift(echoReply);
+        try {
+          localStorage.setItem('knet_webring_guestbook', JSON.stringify(entries));
+        } catch (e) {}
+        if (window.fb && window.fb.db && window.fb.ref && window.fb.push) {
+          try {
+            window.fb.push(window.fb.ref(window.fb.db, 'webring/guestbook'), echoReply);
+          } catch (e) {}
+        }
+        renderGuestbook();
+        showNoticeToast("⚡ Transit Echo response received from echo-gw-07!");
+        broadcastWebringSignal('dead_drop_echo', { phrase: matched });
+      }
+    }, 1200);
+  }
+}
+
+/* =========================================================================
+   SUBTERRANEAN HARMONIC SIGNALS BOARD [arg/signals]
+   ========================================================================= */
+let subterraneanSignals = {};
+
+function initSubterraneanSignalsBoard() {
+  const container = document.getElementById('subterraneanSignalsList');
+  if (!container) return;
+
+  const cached = localStorage.getItem('knet_subterranean_signals');
+  if (cached) {
+    try {
+      subterraneanSignals = JSON.parse(cached);
+    } catch (e) {}
+  }
+  renderSubterraneanSignals();
+
+  if (window.fb && window.fb.db && window.fb.ref && window.fb.onValue) {
+    try {
+      const sigRef = window.fb.ref(window.fb.db, 'arg/signals');
+      window.fb.onValue(sigRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data && typeof data === 'object') {
+          subterraneanSignals = { ...subterraneanSignals, ...data };
+          try {
+            localStorage.setItem('knet_subterranean_signals', JSON.stringify(subterraneanSignals));
+          } catch (e) {}
+          renderSubterraneanSignals();
+        }
+      });
+    } catch (err) {
+      console.warn("arg/signals init sync error:", err);
+    }
+  }
+}
+
+function renderSubterraneanSignals() {
+  const container = document.getElementById('subterraneanSignalsList');
+  const statusEl = document.getElementById('subterraneanStatusText');
+  if (!container) return;
+
+  const standardNodes = [
+    { key: "subterranean_webring", label: "Webring Hub #000", ip: "10.19.99.1", freq: "1999Hz" },
+    { key: "subterranean_classified", label: "Carlsbad Intranet #015", ip: "10.19.99.4", freq: "1999Hz" },
+    { key: "subterranean_echo", label: "Echo Acoustic Lab #016", ip: "10.19.99.8", freq: "1999Hz" },
+    { key: "subterranean_darknet", label: "Darknet Relay #018", ip: "10.19.99.12", freq: "1999Hz" }
+  ];
+
+  container.innerHTML = '';
+  let activeCount = 0;
+
+  standardNodes.forEach(item => {
+    const sig = subterraneanSignals[item.key];
+    const isLocked = Boolean(sig);
+    if (isLocked) activeCount++;
+
+    const div = document.createElement('div');
+    div.style.background = isLocked ? '#081710' : '#070a14';
+    div.style.border = `1px solid ${isLocked ? '#10b981' : '#334155'}`;
+    div.style.padding = '8px';
+    div.style.borderRadius = '2px';
+    div.style.fontFamily = 'var(--font-mono)';
+    div.style.fontSize = '10px';
+
+    div.innerHTML = `
+      <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
+        <span style="color:${isLocked ? 'var(--green-bright)' : 'var(--text-dim)'}; font-weight:bold;">${item.label}</span>
+        <span style="color:${isLocked ? 'var(--green-bright)' : '#ef4444'};">${isLocked ? '● LOCKED' : '○ DORMANT'}</span>
+      </div>
+      <div style="color:var(--text-muted);">IP: ${item.ip} &bull; Freq: ${item.freq}</div>
+      <div style="color:var(--text-dim); margin-top:2px;">Last Pulse: ${sig && sig.timestamp ? new Date(sig.timestamp).toLocaleTimeString() : '--:--:--'}</div>
+    `;
+    container.appendChild(div);
+  });
+
+  if (statusEl) {
+    if (activeCount >= 3) {
+      statusEl.innerHTML = `<span style="color:var(--green-bright); font-weight:bold;">★ HARMONIC RESONANCE LOCKED (${activeCount}/4 NODES)</span> &bull; 1999Hz Lithospheric Subcarrier Coherent &bull; Ingress: kweb://deep-core`;
+    } else {
+      statusEl.innerHTML = `<span style="color:var(--amber-bright);">SUBCARRIER SCANNING (${activeCount}/4 Beacons Synchronized)</span> &bull; Gateway: echo-gw-07.kilonet.internal`;
+    }
+  }
+}
+
+function broadcastWebringSignal(action, extraData = {}) {
+  const payload = {
+    source: "webring_hub",
+    gateway: "echo-gw-07.kilonet.internal",
+    ip: "10.19.99.1",
+    frequency: 1999,
+    action: action,
+    timestamp: Date.now(),
+    ...extraData
+  };
+
+  subterraneanSignals['subterranean_webring'] = payload;
+  try {
+    localStorage.setItem('knet_subterranean_signals', JSON.stringify(subterraneanSignals));
+  } catch (e) {}
+  renderSubterraneanSignals();
+
+  if (window.fb && window.fb.db && window.fb.ref && window.fb.set) {
+    try {
+      window.fb.set(window.fb.ref(window.fb.db, 'arg/signals/subterranean_webring'), payload);
+    } catch (e) {
+      console.warn("Signal broadcast error:", e);
+    }
+  }
+}
+
+function transmitSubterraneanPulse() {
+  playFmTone(1999, 1.0, 0.45, 0.25, 0.12, true);
+  broadcastWebringSignal('manual_harmonic_pulse', { operator: userCallsign });
+  showNoticeToast("⚡ 1999Hz Lithospheric Pulse Dispatched to echo-gw-07!");
+}
+
+function testSoloHarmonicLock() {
+  playFmTone(1999, 1.2, 0.5, 0.3, 0.15, true);
+  const now = Date.now();
+  subterraneanSignals['subterranean_webring'] = { source: "webring_hub", frequency: 1999, timestamp: now };
+  subterraneanSignals['subterranean_classified'] = { source: "carlsbad_leak", frequency: 1999, timestamp: now - 4000 };
+  subterraneanSignals['subterranean_echo'] = { source: "acoustic_lab", frequency: 1999, timestamp: now - 8000 };
+  try {
+    localStorage.setItem('knet_subterranean_signals', JSON.stringify(subterraneanSignals));
+  } catch (e) {}
+  renderSubterraneanSignals();
+  showNoticeToast("🌐 Subterranean Beacons Synchronized (Solo Verification Locked)!");
 }
 
 /* =========================================================================
@@ -5065,6 +5282,23 @@ window.onFirebaseReady = function() {
   } catch (err) {
     console.warn("Submissions sync error:", err);
   }
+
+  // 5. Collaborative Subterranean Signals Board live sync [arg/signals]
+  try {
+    const signalsRef = ref(db, 'arg/signals');
+    onValue(signalsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data && typeof data === 'object') {
+        subterraneanSignals = { ...subterraneanSignals, ...data };
+        try {
+          localStorage.setItem('knet_subterranean_signals', JSON.stringify(subterraneanSignals));
+        } catch (e) {}
+        renderSubterraneanSignals();
+      }
+    });
+  } catch (err) {
+    console.warn("arg/signals live sync error:", err);
+  }
 };
 
 /* =========================================================================
@@ -5118,6 +5352,7 @@ window.addEventListener('DOMContentLoaded', () => {
   initBaudBenchmark();
   initTopologyMap();
   drawAudioVisualizer();
+  initSubterraneanSignalsBoard();
 
   if (window.fb && typeof window.onFirebaseReady === 'function') {
     window.onFirebaseReady();
@@ -5128,6 +5363,57 @@ window.addEventListener('DOMContentLoaded', () => {
   if (urlParams.get('warp') === 'random') {
     switchTab('tab-teleport');
     triggerStagedWarp();
+  }
+});
+
+/* =========================================================================
+   17. ARCH-05: BACKGROUND TAB VISIBILITY & TIMER DRIFT
+   ========================================================================= */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    // Tab backgrounded: pause synthesis timers and cancel animation loops to prevent CPU waste
+    if (bgmTimer) {
+      clearInterval(bgmTimer);
+      bgmTimer = null;
+    }
+    if (topoAnimFrame) {
+      cancelAnimationFrame(topoAnimFrame);
+      topoAnimFrame = null;
+    }
+    if (visAnimFrame) {
+      cancelAnimationFrame(visAnimFrame);
+      visAnimFrame = null;
+    }
+    if (warpAnimFrame) {
+      cancelAnimationFrame(warpAnimFrame);
+      warpAnimFrame = null;
+      isWarpCanvasRunning = false;
+    }
+  } else {
+    // Tab foregrounded: restore animation frame loops and audio clock
+    if (!topoAnimFrame && typeof initTopologyMap === 'function') {
+      const canvas = document.getElementById('topologyCanvas');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        const loop = () => {
+          if (!document.hidden) {
+            drawTopologyMap(canvas, ctx);
+            topoAnimFrame = requestAnimationFrame(loop);
+          }
+        };
+        loop();
+      }
+    }
+    if (!visAnimFrame && typeof drawAudioVisualizer === 'function') {
+      drawAudioVisualizer();
+    }
+    const currentActiveTab = document.querySelector('.tab-pane.active');
+    if (currentActiveTab && currentActiveTab.id === 'tab-teleport' && !isWarpCanvasRunning) {
+      startWarpStarfield();
+    }
+    if (isAudioEnabled && isBgmPlaying && !bgmTimer && typeof startProceduralBgm === 'function') {
+      startProceduralBgm();
+    }
   }
 });
 </script>
