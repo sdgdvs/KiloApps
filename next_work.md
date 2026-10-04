@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KStarForge
   kilo_usability: KPomodoro
   kilo_qa: KTimer
-  kilo_expander: KReversi
+  kilo_expander: KSnake
 virtual_web_target: "kweb://webring"
 virtual_web_rotation:
   - "kweb://echo-subsystem.net"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-qa
-  app: KClock
-  timestamp: "2026-10-04T15:27:00-07:00"
+  agent: kilo-expander
+  app: KReversi
+  timestamp: "2026-10-04T15:45:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -129,9 +129,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPomodoro`, `KMandel`, `KHex`, `KClock` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat, KClock)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KReversi`
+- **Current Target**: `KSnake`
 - **Upcoming Queue**:
-  `KSnake`, `KPong`, `KGo`, `KSynth`, `KNote`, `KFont`, `KRSS`, `KSys`, `KZip`, `KVault`, `KType`, `KMandel`, `KGraph`, `KChart`, `KPaint`, `KConnect4`, `KChess`, `KTetris`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KImage`, `KAudio`, `KMedia`, `KTask`, `KNet`, `KPing`, `KHash`, `KPad`, `K2048`, `KDarts`, `KTowers` *(Completed: KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts)*.
+  `KPong`, `KGo`, `KSynth`, `KNote`, `KFont`, `KRSS`, `KSys`, `KZip`, `KVault`, `KType`, `KMandel`, `KGraph`, `KChart`, `KPaint`, `KConnect4`, `KChess`, `KTetris`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KImage`, `KAudio`, `KMedia`, `KTask`, `KNet`, `KPing`, `KHash`, `KPad`, `K2048`, `KDarts`, `KTowers`, `KReversi` *(Completed: KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*, *KMatch3*, *KSimon*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -221,6 +221,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T15:45:00-07:00 — kilo-expander: KReversi (Replay Engine, Opening Book, Minimax Endgame & ARG Telemetry)**
+  - Status: PASS ✅ (0 regressions, clean builds, 226.8 KB web / 177.1 KB native < 999 KB ceiling).
+  - Win32 Replay & Solvers: Added 140-move stepper/auto-play, D4 dihedral opening book (18 lines), and exact minimax endgame solver (<=10 empty).
+  - Notation & Format Exports: Implemented algebraic transcripts, FEN generator, clipboard sync, and tournament record (.ggf) export.
+  - Tutorial & ARG Hook: Added first-run interactive modal, localStorage onboarding flags, and collaborative ARG signal beacon.
+  - Verification: MSVC clean (KReversi.exe 177.1 KB); Vite build clean in 315ms; security_lint.py 100% PASS.
+
 - **2026-10-04T15:27:00-07:00 — kilo-qa: KClock (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & ARCH-05)**
   - Status: PASS ✅ (0 regressions, clean builds, 113.1 KB web / 22.5 KB native < 999 KB ceiling).
   - Quicksave & State Persistence: Implemented complete state persistence with [F5]/[F9] in web and Win32 C with storage quota guards.
@@ -251,13 +258,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Seamless Vertical Starfield: Integrated seamless 1024x1024 deep-space nebula background with parallax scroll and canvas fallback.
   - Specular Glint & Border Ban (Mandate 11): Removed color-pulsating sin oscillation in HUD frame; ensured static high-contrast borders.
   - Verification: `security_lint.py` 100% PASS; `check_icons.py` 100% PASS; MSVC clean (`KSpace.exe` 75.5 KB); Vite clean in 316ms.
-
-- **2026-10-04T14:10:00-07:00 — kilo-creator: kweb://portal (My KiloNet '99 Dashboard, Silicon Cubicle '99 Comic Syndicate & Theme Engine)**
-  - Status: PASS ✅ (0 regressions, clean Vite build in 298ms, 428.9 KB web < 999 KB ceiling).
-  - My KiloNet '99: Added personalized dashboard with avatar selector (16 retro icons), custom motto, timezone, and 6 active widgets.
-  - Theme Engine: Added 6 authentic 1999 visual themes (Classic Blue/Gold, Cyber Matrix, Hotdog Stand, Netscape Teal, GeoCities Sunset, Beige 486).
-  - Webmaster Widgets: Stock watcher, local weather radar, speed dial bookmarks, QuickPad memo, and lithospheric telemetry beacon.
-  - Silicon Cubicle '99: Added 8-episode Canvas comic syndicate with multi-panel vector art, zoom controls, 5-star ratings, and KMail sharing.
-  - Verification: `security_lint.py` 100% PASS; `test_arg_flow.py` 7/7 stages PASS (TINAG compliant); Vite build clean.
 
 

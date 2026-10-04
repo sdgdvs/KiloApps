@@ -73,6 +73,21 @@
 #define IDM_THEME_CRIMSON 1022
 #define IDM_THEME_TERMINAL 1023
 
+#define IDM_REPLAY_MODE        1030
+#define IDM_REPLAY_PREV        1031
+#define IDM_REPLAY_NEXT        1032
+#define IDM_REPLAY_AUTOPLAY    1033
+#define IDM_REPLAY_START       1034
+#define IDM_REPLAY_END         1035
+
+#define IDM_NOTATION_TRANSCRIPT 1040
+#define IDM_NOTATION_FEN        1041
+#define IDM_NOTATION_GGF        1042
+#define IDM_NOTATION_PRESET_TIGER 1043
+#define IDM_NOTATION_PRESET_ROSE  1044
+
+#define IDM_TUTORIAL           1050
+
 typedef struct {
     COLORREF bg;
     COLORREF boardCell;
@@ -223,6 +238,52 @@ typedef struct {
 
 HistoryState history[300];
 int historyCount = 0;
+
+typedef struct {
+    int idx;
+    int player;
+    int isPass;
+    int isBomb;
+    int flipCount;
+    int flips[100];
+    int boardSnapshot[100];
+    int bCount;
+    int wCount;
+} MoveLogEntry;
+
+#define MAX_MOVE_LOG 140
+static MoveLogEntry g_moveLog[MAX_MOVE_LOG];
+static int g_moveLogCount = 0;
+static int g_replayStep = 0;
+static int g_isReplayMode = 0;
+static int g_replayAutoPlay = 0;
+
+typedef struct {
+    const char* name;
+    const char* moves[8];
+    int count;
+} OpeningBookDef;
+
+static const OpeningBookDef g_openings[18] = {
+    { "Tiger (Parallel)", {"f5", "f6", "e6", "f4"}, 4 },
+    { "Rose (Diagonal)", {"f5", "d6", "c5", "f4"}, 4 },
+    { "Cow (Diagonal)", {"f5", "d6", "c3", "d3"}, 4 },
+    { "Bat (Diagonal)", {"f5", "d6", "c5", "f6"}, 4 },
+    { "Buffalo (Diagonal)", {"f5", "d6", "c4"}, 3 },
+    { "Cat (Diagonal)", {"f5", "d6", "c3", "c4"}, 4 },
+    { "Chimney (Diagonal)", {"f5", "d6", "c3", "d3", "c4", "b4"}, 6 },
+    { "Snake (Diagonal)", {"f5", "d6", "c3", "d3", "c4", "f4"}, 6 },
+    { "Peacock (Parallel)", {"f5", "f6", "e6", "f4", "g5"}, 5 },
+    { "Heath (Parallel)", {"f5", "f6", "e6", "f4", "e3"}, 5 },
+    { "Dragonfly (Parallel)", {"f5", "f6", "e6", "f4", "g6"}, 5 },
+    { "Sailboat (Perpendicular)", {"f5", "d6", "c4", "d3"}, 4 },
+    { "Maru Variation", {"f5", "d6", "c5", "d3"}, 4 },
+    { "Compass Variation", {"f5", "d6", "c3", "d3", "e3"}, 5 },
+    { "X-Square Gambit", {"f5", "d6", "c5", "f4", "b4"}, 5 },
+    { "Bright Variation", {"f5", "d6", "c3", "d3", "c4", "c5"}, 6 },
+    { "Leader Variation", {"f5", "d6", "c5", "f4", "e3"}, 5 },
+    { "Wing Variation", {"f5", "d6", "c4", "d3", "c5"}, 5 }
+};
 
 typedef struct {
     float x, y;
@@ -1164,9 +1225,32 @@ void InitGame(HWND hwnd) {
     keyCursorR = g_boardHeight / 2;
     keyCursorC = g_boardWidth / 2;
     keyCursorActive = 0;
+
+    g_moveLogCount = 0;
+    g_isReplayMode = 0;
+    g_replayAutoPlay = 0;
+    g_replayStep = 0;
+
+    // Record initial board state (Step 0)
+    g_moveLog[0].idx = -1;
+    g_moveLog[0].player = BLACK;
+    g_moveLog[0].isPass = 0;
+    g_moveLog[0].isBomb = 0;
+    g_moveLog[0].flipCount = 0;
+    int bInit = 0, wInit = 0;
+    for (int i = 0; i < g_boardWidth * g_boardHeight; i++) {
+        g_moveLog[0].boardSnapshot[i] = board[i];
+        if (board[i] == BLACK) bInit++;
+        else if (board[i] == WHITE) wInit++;
+    }
+    g_moveLog[0].bCount = bInit;
+    g_moveLog[0].wCount = wInit;
+    g_moveLogCount = 1;
+
     if (hwnd) {
         KillTimer(hwnd, 1);
         KillTimer(hwnd, 2);
+        KillTimer(hwnd, 6);
         ResetMoveTimer(hwnd);
         InvalidateRect(hwnd, NULL, TRUE);
     }
@@ -1402,6 +1486,291 @@ int GetBestMoveForPlayer(int player) {
     return bestMove;
 }
 
+void RecordMoveLog(int idx, int player, int isPass, int isBomb, const int* flips, int flipCount) {
+    if (g_moveLogCount >= MAX_MOVE_LOG) return;
+    MoveLogEntry* entry = &g_moveLog[g_moveLogCount];
+    entry->idx = idx;
+    entry->player = player;
+    entry->isPass = isPass;
+    entry->isBomb = isBomb;
+    entry->flipCount = flipCount;
+    for (int i = 0; i < flipCount && i < 100; i++) {
+        if (flips) entry->flips[i] = flips[i];
+    }
+    int bCount = 0, wCount = 0;
+    for (int i = 0; i < g_boardWidth * g_boardHeight; i++) {
+        entry->boardSnapshot[i] = board[i];
+        if (board[i] == BLACK) bCount++;
+        else if (board[i] == WHITE) wCount++;
+    }
+    entry->bCount = bCount;
+    entry->wCount = wCount;
+    g_moveLogCount++;
+}
+
+void EnterReplayMode(HWND hwnd) {
+    if (g_moveLogCount <= 1) {
+        MessageBox(hwnd, "No moves played yet in this match.", "Replay Mode", MB_OK | MB_ICONINFORMATION);
+        return;
+    }
+    g_isReplayMode = 1;
+    g_replayAutoPlay = 0;
+    g_replayStep = g_moveLogCount - 1;
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void ExitReplayMode(HWND hwnd) {
+    g_isReplayMode = 0;
+    g_replayAutoPlay = 0;
+    if (hwnd) KillTimer(hwnd, 6);
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void GoToReplayStep(HWND hwnd, int step) {
+    if (!g_isReplayMode || g_moveLogCount == 0) return;
+    if (step < 0) step = 0;
+    if (step >= g_moveLogCount) step = g_moveLogCount - 1;
+    g_replayStep = step;
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+void ToggleReplayAutoPlay(HWND hwnd) {
+    if (!g_isReplayMode) return;
+    g_replayAutoPlay = !g_replayAutoPlay;
+    if (g_replayAutoPlay) {
+        if (g_replayStep >= g_moveLogCount - 1) g_replayStep = 0;
+        SetTimer(hwnd, 6, 750, NULL);
+    } else {
+        KillTimer(hwnd, 6);
+    }
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
+static void TransformCoord(int c, int r, int sym, int* outC, int* outR) {
+    switch(sym) {
+        case 0: *outC = c; *outR = r; break;
+        case 1: *outC = 7 - r; *outR = c; break;
+        case 2: *outC = 7 - c; *outR = 7 - r; break;
+        case 3: *outC = r; *outR = 7 - c; break;
+        case 4: *outC = 7 - c; *outR = r; break;
+        case 5: *outC = c; *outR = 7 - r; break;
+        case 6: *outC = r; *outR = c; break;
+        case 7: *outC = 7 - r; *outR = 7 - c; break;
+        default: *outC = c; *outR = r; break;
+    }
+}
+
+const char* IdentifyOpeningBook(void) {
+    if (g_boardWidth != 8 || g_boardHeight != 8) return NULL;
+    char played[16][4];
+    int playedCount = 0;
+    for (int i = 1; i < g_moveLogCount && playedCount < 8; i++) {
+        if (g_moveLog[i].isPass) break;
+        int idx = g_moveLog[i].idx;
+        if (idx < 0) continue;
+        int c = idx % 8;
+        int r = idx / 8;
+        sprintf(played[playedCount++], "%c%d", 'a' + c, r + 1);
+    }
+    if (playedCount < 2) return NULL;
+
+    for (int o = 0; o < 18; o++) {
+        const OpeningBookDef* op = &g_openings[o];
+        for (int sym = 0; sym < 8; sym++) {
+            int minLen = playedCount < op->count ? playedCount : op->count;
+            if (minLen < 2) continue;
+            int matches = 1;
+            for (int s = 0; s < minLen; s++) {
+                int opC = op->moves[s][0] - 'a';
+                int opR = op->moves[s][1] - '1';
+                int transC, transR;
+                TransformCoord(opC, opR, sym, &transC, &transR);
+                char transStr[4];
+                sprintf(transStr, "%c%d", 'a' + transC, transR + 1);
+                if (strcmp(played[s], transStr) != 0) {
+                    matches = 0;
+                    break;
+                }
+            }
+            if (matches) return op->name;
+        }
+    }
+    return NULL;
+}
+
+int ExactEndgameMinimax(const int* b, int W, int H, int alpha, int beta, int isMaxPlayer, int player) {
+    int opp = (player == BLACK) ? WHITE : BLACK;
+    int curr = isMaxPlayer ? player : opp;
+    int moves[64];
+    int moveCount = 0;
+    int dummyFlips[64];
+    for (int i = 0; i < W * H; i++) {
+        if ((b[i] == EMPTY || b[i] == DOUBLE_FLIP) && GetFlippableOnBoard(b, W, H, i, curr, dummyFlips) > 0) {
+            moves[moveCount++] = i;
+        }
+    }
+    if (moveCount == 0) {
+        int oppHasMove = 0;
+        for (int i = 0; i < W * H; i++) {
+            if ((b[i] == EMPTY || b[i] == DOUBLE_FLIP) && GetFlippableOnBoard(b, W, H, i, isMaxPlayer ? opp : player, dummyFlips) > 0) {
+                oppHasMove = 1;
+                break;
+            }
+        }
+        if (!oppHasMove) {
+            int pCount = 0, oCount = 0;
+            for (int i = 0; i < W * H; i++) {
+                if (b[i] == player) pCount++;
+                else if (b[i] == opp) oCount++;
+            }
+            return pCount - oCount;
+        }
+        return ExactEndgameMinimax(b, W, H, alpha, beta, !isMaxPlayer, player);
+    }
+    if (isMaxPlayer) {
+        int maxVal = -9999;
+        for (int m = 0; m < moveCount; m++) {
+            int temp[100];
+            memcpy(temp, b, W * H * sizeof(int));
+            int flips[64];
+            int fCount = GetFlippableOnBoard(temp, W, H, moves[m], curr, flips);
+            temp[moves[m]] = curr;
+            for (int f = 0; f < fCount; f++) temp[flips[f]] = curr;
+            int val = ExactEndgameMinimax(temp, W, H, alpha, beta, 0, player);
+            if (val > maxVal) maxVal = val;
+            if (val > alpha) alpha = val;
+            if (beta <= alpha) break;
+        }
+        return maxVal;
+    } else {
+        int minVal = 9999;
+        for (int m = 0; m < moveCount; m++) {
+            int temp[100];
+            memcpy(temp, b, W * H * sizeof(int));
+            int flips[64];
+            int fCount = GetFlippableOnBoard(temp, W, H, moves[m], curr, flips);
+            temp[moves[m]] = curr;
+            for (int f = 0; f < fCount; f++) temp[flips[f]] = curr;
+            int val = ExactEndgameMinimax(temp, W, H, alpha, beta, 1, player);
+            if (val < minVal) minVal = val;
+            if (val < beta) beta = val;
+            if (beta <= alpha) break;
+        }
+        return minVal;
+    }
+}
+
+void CopyTextToClipboard(HWND hwnd, const char* text) {
+    if (!text || strlen(text) == 0) return;
+    if (OpenClipboard(hwnd)) {
+        EmptyClipboard();
+        size_t len = strlen(text) + 1;
+        HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len);
+        if (hMem) {
+            char* p = (char*)GlobalLock(hMem);
+            if (p) {
+                memcpy(p, text, len);
+                GlobalUnlock(hMem);
+                SetClipboardData(CF_TEXT, hMem);
+            }
+        }
+        CloseClipboard();
+    }
+}
+
+void GenerateBoardFEN(char* outFen, int maxLen) {
+    int idx = 0;
+    for (int i = 0; i < g_boardWidth * g_boardHeight && idx < maxLen - 10; i++) {
+        if (board[i] == BLACK) outFen[idx++] = 'B';
+        else if (board[i] == WHITE) outFen[idx++] = 'W';
+        else if (board[i] == BLOCKED) outFen[idx++] = 'X';
+        else if (board[i] == DOUBLE_FLIP) outFen[idx++] = '2';
+        else outFen[idx++] = '-';
+    }
+    outFen[idx++] = ' ';
+    outFen[idx++] = (currentPlayer == BLACK) ? 'B' : 'W';
+    outFen[idx] = '\0';
+}
+
+void GenerateAlgebraicTranscript(char* outTranscript, int maxLen) {
+    if (g_moveLogCount <= 1) {
+        strncpy(outTranscript, "(No moves played yet)", maxLen);
+        return;
+    }
+    outTranscript[0] = '\0';
+    char moveBuf[32];
+    int turnNum = 1;
+    for (int i = 1; i < g_moveLogCount; i++) {
+        if (g_moveLog[i].isPass) {
+            sprintf(moveBuf, "%s:pass ", g_moveLog[i].player == BLACK ? "B" : "W");
+        } else {
+            int c = g_moveLog[i].idx % g_boardWidth;
+            int r = g_moveLog[i].idx / g_boardWidth;
+            if (g_moveLog[i].player == BLACK) {
+                sprintf(moveBuf, "%d. %c%d ", turnNum, 'a' + c, r + 1);
+            } else {
+                sprintf(moveBuf, "%c%d  ", 'a' + c, r + 1);
+                turnNum++;
+            }
+        }
+        if (strlen(outTranscript) + strlen(moveBuf) < (size_t)maxLen - 2) {
+            strcat(outTranscript, moveBuf);
+        } else break;
+    }
+}
+
+void ExportTournamentGGF(HWND hwnd) {
+    FILE* f = fopen("kreversi_match.ggf", "w");
+    if (f) {
+        char transcript[1024];
+        GenerateAlgebraicTranscript(transcript, sizeof(transcript));
+        fprintf(f, "(;GM[Othello]PC[KReversi]SZ[%d]PB[Black]PW[White]RE[%s]\n",
+                g_boardWidth, gameEnded ? "Completed" : "Active");
+        fprintf(f, "MO[%s];)\n", transcript);
+        fclose(f);
+        MessageBox(hwnd, "Tournament record saved to 'kreversi_match.ggf'!", "Tournament Export", MB_OK | MB_ICONINFORMATION);
+    } else {
+        MessageBox(hwnd, "Could not open file for writing.", "Export Error", MB_OK | MB_ICONERROR);
+    }
+}
+
+void ShowTutorial(HWND hwnd) {
+    const char* tut =
+        "Welcome to KReversi!\n\n"
+        "1. Core Objective: Trap enemy discs in a straight line between two of your discs to sandwich and flip them.\n\n"
+        "2. Campaign Mode: Conquer 20 stages with obstacles (dark unplayable cells) and 2X Double-Flip bonus tiles!\n\n"
+        "3. Active Skills:\n"
+        "   - Bomb Disc (B): Detonates a 3x3 explosion flipping adjacent enemy discs!\n"
+        "   - Freeze AI (F): Skips the AI turn, granting you a double turn!\n"
+        "   - Optimal Hint (H): Highlights recommended minimax move.\n\n"
+        "4. Analysis Engine:\n"
+        "   - Match Replay (P): Review every move with stepping (Left/Right or [/]) and auto-play (Space).\n"
+        "   - Opening Book: Auto-recognizes 18 classic openings (Tiger, Rose, Cow, Bat, Cat, Snake, etc.).\n"
+        "   - Exact Endgame Solver: Solves theoretical disc differential when <= 10 squares remain.\n"
+        "   - Transcript & FEN: Copy algebraic notation (Ctrl+T) or FEN (Ctrl+E).\n\n"
+        "5. Shortcuts:\n"
+        "   - Arrows / WASD: Move selection cursor\n"
+        "   - Enter / Space: Place disc\n"
+        "   - F5 / F9: Quick Save / Quick Load\n"
+        "   - F1: Strategy Guide & Rules";
+    MessageBox(hwnd, tut, "KReversi Interactive Tutorial", MB_OK | MB_ICONINFORMATION);
+}
+
+void CheckFirstRunTutorial(HWND hwnd) {
+    FILE* f = fopen("kreversi_tut.dat", "rb");
+    if (!f) {
+        ShowTutorial(hwnd);
+        f = fopen("kreversi_tut.dat", "wb");
+        if (f) {
+            int flag = 1;
+            fwrite(&flag, sizeof(int), 1, f);
+            fclose(f);
+        }
+    } else {
+        fclose(f);
+    }
+}
+
 void DoMove(int index, int player, HWND hwnd) {
     int count = GetFlippable(index, player, animatingFlips);
     if (count > 0) {
@@ -1452,6 +1821,7 @@ void DoMove(int index, int player, HWND hwnd) {
         for(int i = 0; i < count; i++) {
             board[animatingFlips[i]] = player;
         }
+        RecordMoveLog(index, player, 0, 0, animatingFlips, numAnimatingFlips);
     }
 }
 
@@ -1492,7 +1862,42 @@ void DoBombMove(int index, int player, HWND hwnd) {
     flipProgress = 0;
     SetTimer(hwnd, 2, 30, NULL);
     PlaySoundEffect(3);
+    RecordMoveLog(index, player, 0, 1, animatingFlips, flippableCount);
 }
+
+void PlayCoordinateMove(HWND hwnd, const char* coord, int player) {
+    if (!coord || strlen(coord) < 2) return;
+    int c = coord[0] - 'a';
+    int r = coord[1] - '1';
+    if (c >= 0 && c < g_boardWidth && r >= 0 && r < g_boardHeight) {
+        int idx = r * g_boardWidth + c;
+        PushHistory();
+        DoMove(idx, player, hwnd);
+    }
+}
+
+void LoadPresetOpening(HWND hwnd, int presetType) {
+    g_boardWidth = 8;
+    g_boardHeight = 8;
+    gameMode = MODE_FREEPLAY;
+    InitGame(hwnd);
+    if (presetType == 0) { // Tiger
+        PlayCoordinateMove(hwnd, "f5", BLACK);
+        PlayCoordinateMove(hwnd, "f6", WHITE);
+        PlayCoordinateMove(hwnd, "e6", BLACK);
+        PlayCoordinateMove(hwnd, "f4", WHITE);
+        currentPlayer = BLACK;
+    } else if (presetType == 1) { // Rose
+        PlayCoordinateMove(hwnd, "f5", BLACK);
+        PlayCoordinateMove(hwnd, "d6", WHITE);
+        PlayCoordinateMove(hwnd, "c5", BLACK);
+        PlayCoordinateMove(hwnd, "f4", WHITE);
+        currentPlayer = BLACK;
+    }
+    ResetMoveTimer(hwnd);
+    InvalidateRect(hwnd, NULL, TRUE);
+}
+
 
 void AIMove(HWND hwnd) {
     if (gameEnded) return;
@@ -1512,6 +1917,7 @@ void AIMove(HWND hwnd) {
     currentPlayer = BLACK;
     if (!HasValidMoves(BLACK)) {
         currentPlayer = WHITE;
+        RecordMoveLog(-1, BLACK, 1, 0, NULL, 0);
         if (HasValidMoves(WHITE)) {
             SetTimer(hwnd, 1, 400, NULL);
         }
@@ -1635,8 +2041,27 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenu(hActionMenu, MF_STRING | MF_CHECKED, IDM_SOUND, "Sound Effects");
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hActionMenu, "Actions");
             
+            HMENU hReplayMenu = CreatePopupMenu();
+            AppendMenu(hReplayMenu, MF_STRING, IDM_REPLAY_MODE, "Toggle Replay Mode (P)");
+            AppendMenu(hReplayMenu, MF_STRING, IDM_REPLAY_PREV, "Previous Move ([ or Left)");
+            AppendMenu(hReplayMenu, MF_STRING, IDM_REPLAY_NEXT, "Next Move (] or Right)");
+            AppendMenu(hReplayMenu, MF_STRING, IDM_REPLAY_AUTOPLAY, "Auto-play / Pause (Space)");
+            AppendMenu(hReplayMenu, MF_STRING, IDM_REPLAY_START, "Jump to Start (Home)");
+            AppendMenu(hReplayMenu, MF_STRING, IDM_REPLAY_END, "Jump to End (End)");
+            AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hReplayMenu, "Replay");
+
+            HMENU hNotationMenu = CreatePopupMenu();
+            AppendMenu(hNotationMenu, MF_STRING, IDM_NOTATION_TRANSCRIPT, "Copy Move Transcript (Ctrl+T)");
+            AppendMenu(hNotationMenu, MF_STRING, IDM_NOTATION_FEN, "Copy Board FEN (Ctrl+E)");
+            AppendMenu(hNotationMenu, MF_STRING, IDM_NOTATION_GGF, "Export Tournament Record (.ggf)");
+            AppendMenu(hNotationMenu, MF_SEPARATOR, 0, NULL);
+            AppendMenu(hNotationMenu, MF_STRING, IDM_NOTATION_PRESET_TIGER, "Load Tiger Opening Preset");
+            AppendMenu(hNotationMenu, MF_STRING, IDM_NOTATION_PRESET_ROSE, "Load Rose Opening Preset");
+            AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hNotationMenu, "Notation & FEN");
+
             HMENU hHelpMenu = CreatePopupMenu();
-            AppendMenu(hHelpMenu, MF_STRING, IDM_HELP, "Strategy Guide & Rules");
+            AppendMenu(hHelpMenu, MF_STRING, IDM_TUTORIAL, "Interactive Tutorial (T)");
+            AppendMenu(hHelpMenu, MF_STRING, IDM_HELP, "Strategy Guide & Rules (F1)");
             AppendMenu(hMenu, MF_POPUP, (UINT_PTR)hHelpMenu, "Help");
             
             SetMenu(hwnd, hMenu);
@@ -1725,11 +2150,83 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 case IDM_LOAD: LoadGame(hwnd); break;
                 case IDM_SOUND: soundEnabled = !soundEnabled; break;
                 case IDM_HELP: ShowHelp(hwnd); break;
+                case IDM_TUTORIAL: ShowTutorial(hwnd); break;
+
+                case IDM_REPLAY_MODE: {
+                    if (g_isReplayMode) ExitReplayMode(hwnd);
+                    else EnterReplayMode(hwnd);
+                    break;
+                }
+                case IDM_REPLAY_PREV: GoToReplayStep(hwnd, g_replayStep - 1); break;
+                case IDM_REPLAY_NEXT: GoToReplayStep(hwnd, g_replayStep + 1); break;
+                case IDM_REPLAY_AUTOPLAY: ToggleReplayAutoPlay(hwnd); break;
+                case IDM_REPLAY_START: GoToReplayStep(hwnd, 0); break;
+                case IDM_REPLAY_END: GoToReplayStep(hwnd, g_moveLogCount - 1); break;
+
+                case IDM_NOTATION_TRANSCRIPT: {
+                    char trans[2048];
+                    GenerateAlgebraicTranscript(trans, sizeof(trans));
+                    CopyTextToClipboard(hwnd, trans);
+                    MessageBox(hwnd, "Algebraic move transcript copied to clipboard!", "Notation Engine", MB_OK | MB_ICONINFORMATION);
+                    break;
+                }
+                case IDM_NOTATION_FEN: {
+                    char fen[256];
+                    GenerateBoardFEN(fen, sizeof(fen));
+                    CopyTextToClipboard(hwnd, fen);
+                    MessageBox(hwnd, "Board position FEN string copied to clipboard!", "FEN Engine", MB_OK | MB_ICONINFORMATION);
+                    break;
+                }
+                case IDM_NOTATION_GGF: ExportTournamentGGF(hwnd); break;
+                case IDM_NOTATION_PRESET_TIGER: LoadPresetOpening(hwnd, 0); break;
+                case IDM_NOTATION_PRESET_ROSE: LoadPresetOpening(hwnd, 1); break;
             }
             break;
         }
         case WM_KEYDOWN: {
-            if (wParam == VK_F5) {
+            if (g_isReplayMode) {
+                if (wParam == VK_ESCAPE) {
+                    ExitReplayMode(hwnd);
+                } else if (wParam == VK_LEFT || wParam == VK_OEM_4 || wParam == 'A' || wParam == 'a') {
+                    GoToReplayStep(hwnd, g_replayStep - 1);
+                } else if (wParam == VK_RIGHT || wParam == VK_OEM_6 || wParam == 'D' || wParam == 'd') {
+                    GoToReplayStep(hwnd, g_replayStep + 1);
+                } else if (wParam == VK_HOME) {
+                    GoToReplayStep(hwnd, 0);
+                } else if (wParam == VK_END) {
+                    GoToReplayStep(hwnd, g_moveLogCount - 1);
+                } else if (wParam == VK_SPACE || wParam == 'P' || wParam == 'p') {
+                    ToggleReplayAutoPlay(hwnd);
+                }
+                break;
+            }
+
+            if (GetKeyState(VK_CONTROL) & 0x8000) {
+                if (wParam == 'T' || wParam == 't') {
+                    char trans[2048];
+                    GenerateAlgebraicTranscript(trans, sizeof(trans));
+                    CopyTextToClipboard(hwnd, trans);
+                    MessageBox(hwnd, "Algebraic move transcript copied to clipboard!", "Notation Engine", MB_OK | MB_ICONINFORMATION);
+                    break;
+                } else if (wParam == 'E' || wParam == 'e') {
+                    char fen[256];
+                    GenerateBoardFEN(fen, sizeof(fen));
+                    CopyTextToClipboard(hwnd, fen);
+                    MessageBox(hwnd, "Board position FEN string copied to clipboard!", "FEN Engine", MB_OK | MB_ICONINFORMATION);
+                    break;
+                } else if (wParam == 'G' || wParam == 'g') {
+                    ExportTournamentGGF(hwnd);
+                    break;
+                }
+            }
+
+            if (wParam == 'P' || wParam == 'p') {
+                EnterReplayMode(hwnd);
+                break;
+            } else if (wParam == 'T' || wParam == 't') {
+                ShowTutorial(hwnd);
+                break;
+            } else if (wParam == VK_F5) {
                 SaveGame(hwnd);
             } else if (wParam == VK_F9) {
                 LoadGame(hwnd);
@@ -1774,6 +2271,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             currentPlayer = WHITE;
                             if (!HasValidMoves(WHITE)) {
                                 currentPlayer = BLACK;
+                                RecordMoveLog(-1, WHITE, 1, 0, NULL, 0);
                             } else {
                                 SetTimer(hwnd, 1, 400, NULL);
                             }
@@ -1789,6 +2287,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             currentPlayer = WHITE;
                             if (!HasValidMoves(WHITE)) {
                                 currentPlayer = BLACK;
+                                RecordMoveLog(-1, WHITE, 1, 0, NULL, 0);
                             } else {
                                 SetTimer(hwnd, 1, 400, NULL);
                             }
@@ -1801,6 +2300,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
         }
         case WM_LBUTTONDOWN: {
+            if (g_isReplayMode) {
+                int clickX = LOWORD(lParam);
+                RECT cr;
+                GetClientRect(hwnd, &cr);
+                if (clickX < cr.right / 2) {
+                    GoToReplayStep(hwnd, g_replayStep - 1);
+                } else {
+                    GoToReplayStep(hwnd, g_replayStep + 1);
+                }
+                break;
+            }
             if (currentPlayer != BLACK || gameEnded) break;
             int x = LOWORD(lParam);
             int y = HIWORD(lParam);
@@ -1820,6 +2330,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         currentPlayer = WHITE;
                         if (!HasValidMoves(WHITE)) {
                             currentPlayer = BLACK;
+                            RecordMoveLog(-1, WHITE, 1, 0, NULL, 0);
                         } else {
                             SetTimer(hwnd, 1, 400, NULL);
                         }
@@ -1835,6 +2346,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         currentPlayer = WHITE;
                         if (!HasValidMoves(WHITE)) {
                             currentPlayer = BLACK;
+                            RecordMoveLog(-1, WHITE, 1, 0, NULL, 0);
                         } else {
                             SetTimer(hwnd, 1, 400, NULL);
                         }
@@ -1896,6 +2408,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     if (g_screenShake <= 0.05f) g_screenShake = 0.0f;
                 }
                 InvalidateRect(hwnd, NULL, FALSE);
+            } else if (wParam == 6) {
+                if (g_isReplayMode && g_replayAutoPlay) {
+                    if (g_replayStep < g_moveLogCount - 1) {
+                        g_replayStep++;
+                        InvalidateRect(hwnd, NULL, FALSE);
+                    } else {
+                        g_replayAutoPlay = 0;
+                        KillTimer(hwnd, 6);
+                        InvalidateRect(hwnd, NULL, TRUE);
+                    }
+                }
             }
             break;
         }
@@ -1924,10 +2447,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetBkColor(hdc, theme->bg);
             SetTextColor(hdc, theme->text);
             
+            const int* activeBoard = g_isReplayMode ? g_moveLog[g_replayStep].boardSnapshot : board;
             int bCount = 0, wCount = 0;
             for(int i = 0; i < g_boardWidth * g_boardHeight; i++) {
-                if(board[i] == BLACK) bCount++;
-                if(board[i] == WHITE) wCount++;
+                if(activeBoard[i] == BLACK) bCount++;
+                if(activeBoard[i] == WHITE) wCount++;
             }
             
             char headerStr[128];
@@ -1961,7 +2485,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             TextOut(hdc, 10, 26, scoreStr, strlen(scoreStr));
             SetTextColor(hdc, theme->text);
             
-            if (gameEnded) {
+            if (g_isReplayMode) {
+                char repStr[256];
+                if (g_replayStep == 0) {
+                    sprintf(repStr, "[REPLAY] Step 0/%d: Match Initial Board | [Left/Right] Step | [Space] Play | [Esc] Exit", g_moveLogCount - 1);
+                } else {
+                    MoveLogEntry* entry = &g_moveLog[g_replayStep];
+                    char coord[16] = "pass";
+                    if (!entry->isPass && entry->idx >= 0) {
+                        sprintf(coord, "%c%d", 'A' + (entry->idx % g_boardWidth), (entry->idx / g_boardWidth) + 1);
+                    }
+                    sprintf(repStr, "[REPLAY] Step %d/%d: %s %s (+%d) | B:%d W:%d | [%s] | [Esc] Exit",
+                            g_replayStep, g_moveLogCount - 1,
+                            entry->player == BLACK ? theme->p1Name : theme->p2Name,
+                            coord, entry->flipCount, entry->bCount, entry->wCount,
+                            g_replayAutoPlay ? "AUTO-PLAY" : "PAUSED");
+                }
+                SetTextColor(hdc, RGB(255, 215, 0));
+                TextOut(hdc, 10, 44, repStr, strlen(repStr));
+                SetTextColor(hdc, theme->text);
+            } else if (gameEnded) {
                 char winMsg[128];
                 if (moveTimeMode > 0 && moveTimeLeftDeci <= 0) {
                     sprintf(winMsg, "%s Timeout!", currentPlayer == BLACK ? theme->p1Name : theme->p2Name);
@@ -1997,15 +2540,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 TextOut(hdc, 10, 44, "BOMB ACTIVE: Click ANY empty cell to detonate 3x3 explosion!", 60);
             }
 
-            int evalScore = EvaluateBoardState(board, g_boardWidth, g_boardHeight, BLACK);
-            int bestMoveIdx = (currentPlayer == BLACK && HasValidMoves(BLACK) && !gameEnded) ? GetBestMoveForPlayer(BLACK) : -1;
+            int evalScore = EvaluateBoardState(activeBoard, g_boardWidth, g_boardHeight, BLACK);
+            int bestMoveIdx = (!g_isReplayMode && currentPlayer == BLACK && HasValidMoves(BLACK) && !gameEnded) ? GetBestMoveForPlayer(BLACK) : -1;
             
             char evalStr[160];
             char clockStr[32];
             if (moveTimeMode > 0) sprintf(clockStr, "Clock: %.1fs", moveTimeLeftDeci / 10.0);
             else sprintf(clockStr, "Clock: Off");
 
-            if (bestMoveIdx != -1 && showHint) {
+            if (!g_isReplayMode && bestMoveIdx != -1 && showHint) {
                 int col = bestMoveIdx % g_boardWidth;
                 int row = bestMoveIdx / g_boardWidth;
                 sprintf(evalStr, "Eval: %+d | Best: %c%d | %s | [H]int [U]ndo [B]omb [F]reeze", 
@@ -2015,6 +2558,31 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         evalScore, clockStr);
             }
             TextOut(hdc, 10, 68, evalStr, strlen(evalStr));
+
+            if (!g_isReplayMode) {
+                const char* book = IdentifyOpeningBook();
+                if (book) {
+                    char bookStr[96];
+                    sprintf(bookStr, "Book: %s", book);
+                    SetTextColor(hdc, RGB(105, 240, 174));
+                    TextOut(hdc, 270, 26, bookStr, strlen(bookStr));
+                    SetTextColor(hdc, theme->text);
+                }
+                int emptyCount = 0;
+                for (int i = 0; i < g_boardWidth * g_boardHeight; i++) {
+                    if (board[i] == EMPTY || board[i] == DOUBLE_FLIP) emptyCount++;
+                }
+                if (emptyCount > 0 && emptyCount <= 10 && !gameEnded && g_boardWidth == 8) {
+                    int diff = ExactEndgameMinimax(board, g_boardWidth, g_boardHeight, -9999, 9999, currentPlayer == BLACK, BLACK);
+                    char endStr[64];
+                    if (diff > 0) sprintf(endStr, "Endgame: Black +%d", diff);
+                    else if (diff < 0) sprintf(endStr, "Endgame: White +%d", -diff);
+                    else sprintf(endStr, "Endgame: Draw (0)");
+                    SetTextColor(hdc, RGB(255, 153, 255));
+                    TextOut(hdc, 270, 8, endStr, strlen(endStr));
+                    SetTextColor(hdc, theme->text);
+                }
+            }
 
             HBRUSH blockedBrush = CreateHatchBrush(HS_DIAGCROSS, RGB(100, 100, 100));
             
@@ -2035,10 +2603,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     };
                     int idx = r * g_boardWidth + c;
 
-                    if (board[idx] == BLOCKED) {
+                    if (activeBoard[idx] == BLOCKED) {
                         SelectObject(hdc, blockedBrush);
                         Rectangle(hdc, rect.left, rect.top, rect.right, rect.bottom);
-                    } else if (board[idx] == DOUBLE_FLIP) {
+                    } else if (activeBoard[idx] == DOUBLE_FLIP) {
                         HBRUSH goldCellBrush = CreateSolidBrush(RGB(70, 55, 10));
                         HPEN goldBorderPen = CreatePen(PS_SOLID, 2, RGB(255, 215, 0));
                         SelectObject(hdc, goldCellBrush);
@@ -2098,7 +2666,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                     int h1 = g_boardWidth == 6 ? 1 : 2;
                     int h2 = g_boardWidth == 6 ? 4 : (g_boardWidth == 8 ? 5 : 7);
-                    if (board[idx] != BLOCKED && (r == h1 || r == h2) && (c == h1 || c == h2)) {
+                    if (activeBoard[idx] != BLOCKED && (r == h1 || r == h2) && (c == h1 || c == h2)) {
                         HBRUSH hoshiBrush = CreateSolidBrush(RGB(212, 175, 55));
                         HPEN hoshiPen = CreatePen(PS_SOLID, 1, RGB(160, 120, 20));
                         SelectObject(hdc, hoshiBrush);
@@ -2110,9 +2678,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         DeleteObject(hoshiPen);
                     }
                     
-                    if (board[idx] == BLACK || board[idx] == WHITE) {
+                    if (activeBoard[idx] == BLACK || activeBoard[idx] == WHITE) {
                         int isAnimating = 0;
-                        if (numAnimatingFlips > 0 && flipProgress < 10) {
+                        if (!g_isReplayMode && numAnimatingFlips > 0 && flipProgress < 10) {
                             for(int k=0; k<numAnimatingFlips; k++) {
                                 if (animatingFlips[k] == idx) { isAnimating = 1; break; }
                             }
@@ -2125,8 +2693,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         int bCenterX = boardStartX + (g_boardWidth * cellSize) / 2;
                         int bCenterY = boardStartY + (g_boardHeight * cellSize) / 2;
                         if (isAnimating) {
-                            int oldColor = (board[idx] == BLACK) ? WHITE : BLACK;
-                            int newColor = board[idx];
+                            int oldColor = (activeBoard[idx] == BLACK) ? WHITE : BLACK;
+                            int newColor = activeBoard[idx];
                             int displayColor = (flipProgress < 5) ? oldColor : newColor;
                             
                             int fullW = radius * 2;
@@ -2137,16 +2705,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
                             int yOff = (flipProgress < 5) ? -flipProgress * 2 : -(10 - flipProgress) * 2;
                             DrawDisc3D(hdc, cx, cy, radius, displayColor, currentW, yOff, bCenterX, bCenterY);
-                        } else if (idx == newlyPlacedDisc && numAnimatingFlips > 0 && flipProgress < 10) {
+                        } else if (!g_isReplayMode && idx == newlyPlacedDisc && numAnimatingFlips > 0 && flipProgress < 10) {
                             int bounceY = 0;
                             if (flipProgress < 3) bounceY = -8 + flipProgress * 2;
                             else if (flipProgress < 6) bounceY = (flipProgress - 3) * 2;
                             else if (flipProgress < 8) bounceY = -3 + (flipProgress - 6);
-                            DrawDisc3D(hdc, cx, cy, radius, board[idx], radius * 2, bounceY, bCenterX, bCenterY);
+                            DrawDisc3D(hdc, cx, cy, radius, activeBoard[idx], radius * 2, bounceY, bCenterX, bCenterY);
                         } else {
-                            DrawDisc3D(hdc, cx, cy, radius, board[idx], radius * 2, 0, bCenterX, bCenterY);
+                            DrawDisc3D(hdc, cx, cy, radius, activeBoard[idx], radius * 2, 0, bCenterX, bCenterY);
                         }
-                    } else if (currentPlayer == BLACK && !gameEnded && (board[idx] == EMPTY || board[idx] == DOUBLE_FLIP)) {
+                    } else if (!g_isReplayMode && currentPlayer == BLACK && !gameEnded && (activeBoard[idx] == EMPTY || activeBoard[idx] == DOUBLE_FLIP)) {
                         int dummy[100];
                         if (isBombActive) {
                             HPEN bombPen = CreatePen(PS_SOLID, 2, RGB(255, 69, 0));
@@ -2190,7 +2758,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                             }
                         }
                     }
-                    if (keyCursorActive && r == keyCursorR && c == keyCursorC) {
+                    if (!g_isReplayMode && keyCursorActive && r == keyCursorR && c == keyCursorC) {
                         HPEN curPen = CreatePen(PS_SOLID, 2, RGB(0, 229, 255));
                         HGDIOBJ oldPen = SelectObject(hdc, curPen);
                         HGDIOBJ oldBr = SelectObject(hdc, GetStockObject(NULL_BRUSH));
@@ -2269,6 +2837,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     ShowWindow(hwnd, nCmdShow);
     UpdateWindow(hwnd);
+    CheckFirstRunTutorial(hwnd);
 
     while(GetMessage(&Msg, NULL, 0, 0) > 0) {
         TranslateMessage(&Msg);
