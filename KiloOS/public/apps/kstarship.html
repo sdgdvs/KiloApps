@@ -97,25 +97,65 @@
     background-color: #00ffff;
     color: #000;
   }
+  button:focus-visible, .action-btn:focus-visible, .modal-close-btn:focus-visible {
+    outline: 2px solid #ffffff;
+    box-shadow: 0 0 10px #00ffff;
+  }
   #btn-up { grid-column: 2; grid-row: 1; }
   #btn-left { grid-column: 1; grid-row: 2; }
   #btn-down { grid-column: 2; grid-row: 2; }
   #btn-right { grid-column: 3; grid-row: 2; }
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: rgba(2, 4, 12, 0.75);
+    backdrop-filter: blur(2px);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
   #modal {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
+    position: relative;
     background-color: rgba(6, 8, 26, 0.97);
     border: 2px solid #00ffff;
     padding: 18px;
     box-shadow: 0 0 35px rgba(0, 255, 255, 0.7), inset 0 0 15px rgba(0, 255, 255, 0.2);
     text-align: center;
     display: none;
-    z-index: 100;
+    z-index: 101;
     width: 380px;
     border-radius: 6px;
+    box-sizing: border-box;
   }
-  #modal h2 { margin-top: 0; color: #ff9900; font-size: 17px; letter-spacing: 1px; text-shadow: 0 0 10px #ff6600; }
+  .modal-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    line-height: 22px;
+    font-size: 14px;
+    background: rgba(20, 30, 50, 0.85);
+    color: #00ffff;
+    border: 1px solid #00ffff;
+    border-radius: 3px;
+    cursor: pointer;
+    box-shadow: 0 0 6px rgba(0, 255, 255, 0.4);
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 105;
+  }
+  .modal-close-btn:hover {
+    background: #00ffff;
+    color: #020206;
+    box-shadow: 0 0 12px #00ffff;
+  }
+  #modal h2 { margin-top: 0; color: #ff9900; font-size: 17px; letter-spacing: 1px; text-shadow: 0 0 10px #ff6600; padding-right: 24px; }
   #modal-preview { width: 100%; height: 110px; margin-bottom: 10px; border-radius: 4px; background: #02040c; border: 1px solid #006666; }
   #modal p { font-size: 12px; margin-bottom: 14px; line-height: 1.4; white-space: pre-line; color: #d0e8ff; }
   #modal-actions { display: flex; flex-direction: column; gap: 6px; }
@@ -125,10 +165,9 @@
   .action-btn.super:hover { background: #ffee66; box-shadow: 0 0 12px #ffaa00; }
   #toast {
     position: absolute;
-    bottom: 16px;
-    right: 16px;
-    left: auto;
-    transform: none;
+    bottom: 18px;
+    left: 300px;
+    transform: translateX(-50%);
     background: rgba(4, 12, 28, 0.95);
     border: 1px solid #00ffff;
     color: #00ffff;
@@ -137,7 +176,8 @@
     letter-spacing: 1px;
     border-radius: 4px;
     box-shadow: 0 0 16px rgba(0, 255, 255, 0.6);
-    pointer-events: none;
+    pointer-events: auto;
+    cursor: pointer;
     opacity: 0;
     transition: opacity 0.25s ease;
     z-index: 300;
@@ -215,11 +255,14 @@
     <div id="toast"></div>
   </div>
 
-  <div id="modal">
-    <h2 id="modal-title">Encounter</h2>
-    <canvas id="modal-preview" width="340" height="110"></canvas>
-    <p id="modal-desc">Description</p>
-    <div id="modal-actions"></div>
+  <div id="modal-overlay" class="modal-overlay">
+    <div id="modal">
+      <button id="modal-close-btn" class="modal-close-btn btn-close" title="Close (Esc)">✕</button>
+      <h2 id="modal-title">Encounter</h2>
+      <canvas id="modal-preview" width="340" height="110"></canvas>
+      <p id="modal-desc">Description</p>
+      <div id="modal-actions"></div>
+    </div>
   </div>
 
   <script>
@@ -255,6 +298,9 @@
     const btnImport = document.getElementById('btn-import');
     const importFileInput = document.getElementById('import-file');
     const toastEl = document.getElementById('toast');
+    const modalOverlay = document.getElementById('modal-overlay');
+    const modalEl = document.getElementById('modal');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
 
     let toastTimer = null;
     function showToast(msg) {
@@ -266,10 +312,63 @@
         toastEl.style.opacity = '0';
       }, 2400);
     }
+    if (toastEl) {
+      toastEl.onclick = () => { toastEl.style.opacity = '0'; };
+    }
+
+    function openModalUI(encounterType) {
+      state.modalOpen = true;
+      if (encounterType) state.currentEncounter = encounterType;
+      const isCombat = ['Pirates', 'Fleet', 'XenonHunter', 'SyndicateFrigate', 'PrecursorRuin', 'VoidLeviathan'].includes(state.currentEncounter);
+      const isGameOver = state.currentEncounter === 'GameOver' || state.resources.hull <= 0;
+      if (modalCloseBtn) {
+        modalCloseBtn.style.display = (isCombat && state.bossHp > 0) || isGameOver ? 'none' : 'flex';
+      }
+      if (modalOverlay) modalOverlay.style.display = 'flex';
+      if (modalEl) modalEl.style.display = 'block';
+      keys.w = keys.a = keys.s = keys.d = false;
+      setHum(false);
+    }
+
+    function closeModalUI(force = false) {
+      const isCombat = ['Pirates', 'Fleet', 'XenonHunter', 'SyndicateFrigate', 'PrecursorRuin', 'VoidLeviathan'].includes(state.currentEncounter);
+      if (state.resources.hull <= 0 && state.currentEncounter === 'GameOver') {
+        location.reload();
+        return;
+      }
+      if (!isCombat || state.bossHp <= 0 || force) {
+        if (modalEl) modalEl.style.display = 'none';
+        if (modalOverlay) modalOverlay.style.display = 'none';
+        state.modalOpen = false;
+        keys.w = keys.a = keys.s = keys.d = false;
+        updateUI();
+      }
+    }
+
+    if (modalOverlay) {
+      modalOverlay.addEventListener('click', (e) => {
+        if (e.target === modalOverlay) {
+          closeModalUI();
+        }
+      });
+    }
+    if (modalCloseBtn) {
+      modalCloseBtn.addEventListener('click', () => {
+        closeModalUI();
+      });
+    }
 
     // Audio system
     let soundMuted = false;
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function ensureAudioResumed() {
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+    window.addEventListener('pointerdown', ensureAudioResumed, { once: true });
+    window.addEventListener('keydown', ensureAudioResumed, { once: true });
 
     function toggleSound() {
       soundMuted = !soundMuted;
@@ -953,7 +1052,7 @@
         pCtx.fillRect(-10, -8, 20, 4);
 
         pCtx.restore();
-      } else if (type === 'Station') {
+      } else if (type === 'Station' || type === 'Tutorial' || type === 'Crew' || type === 'Help' || type === 'GameOver' || type === 'Beacon') {
         pCtx.save();
         pCtx.translate(cx, cy);
 
@@ -2162,10 +2261,8 @@
 
     function showGameOver(msg) {
       state.resources.hull = 0;
-      state.modalOpen = true;
       state.currentEncounter = 'GameOver';
       updateUI();
-      const modal = document.getElementById('modal');
       const title = document.getElementById('modal-title');
       const desc = document.getElementById('modal-desc');
       const actions = document.getElementById('modal-actions');
@@ -2189,14 +2286,12 @@
         actions.appendChild(btnRestart);
       }
       renderModalPreview('Station');
-      if (modal) modal.style.display = 'block';
+      openModalUI('GameOver');
     }
 
     function triggerEncounter(type, fromStation = false) {
-      state.modalOpen = true;
       state.currentEncounter = type;
       state.bossHp = (type === 'Fleet' ? 160 : (type === 'Pirates' ? 50 : 0));
-      const modal = document.getElementById('modal');
       const title = document.getElementById('modal-title');
       const desc = document.getElementById('modal-desc');
       const actions = document.getElementById('modal-actions');
@@ -2215,9 +2310,7 @@
 
       const closeBtn = () => {
         addBtn('Continue', () => {
-          modal.style.display = 'none';
-          state.modalOpen = false;
-          updateUI();
+          closeModalUI();
         });
       };
 
@@ -2296,9 +2389,7 @@
                       state.resources.hull = Math.min(100, state.resources.hull + 6);
                       showToast('Nanite repair swarm restored +6% Hull');
                     }
-                    modal.style.display = 'none';
-                    state.modalOpen = false;
-                    updateUI();
+                    closeModalUI();
                 });
             } else if (state.resources.hull <= 0) {
                 showGameOver("Your starship was destroyed in combat!");
@@ -2483,8 +2574,7 @@
             updateUI();
         });
         addBtn('Withdraw', () => {
-            modal.style.display = 'none';
-            state.modalOpen = false;
+            closeModalUI();
         });
       } else if (type === 'Boarding') {
         playAlarm();
@@ -2612,8 +2702,7 @@
                 if (fromStation) {
                     triggerEncounter('Station');
                 } else {
-                    modal.style.display = 'none';
-                    state.modalOpen = false;
+                    closeModalUI();
                 }
             });
         };
@@ -2637,8 +2726,7 @@
             triggerEncounter('Pirates');
         });
         addBtn('Ignore', () => {
-            modal.style.display = 'none';
-            state.modalOpen = false;
+            closeModalUI();
         });
       } else if (type === 'Anomaly') {
         desc.innerText = "You encounter a deep space anomaly. A swirling rift in space.";
@@ -2676,8 +2764,7 @@
             updateUI();
         });
         addBtn('Leave', () => {
-            modal.style.display = 'none';
-            state.modalOpen = false;
+            closeModalUI();
         });
       } else if (type === 'Trader') {
         if (state.crew.length < 50) {
@@ -2772,8 +2859,7 @@
                     }
                 });
                 addBtn('Leave Station', () => {
-                    modal.style.display = 'none';
-                    state.modalOpen = false;
+                    closeModalUI();
                 });
             } else if (mode === 'shipyard') {
                 const wpnCost = state.upgrades.weapons * 500;
@@ -2872,8 +2958,7 @@
                 updateUI();
             });
             addBtn('Ignore', () => {
-                modal.style.display = 'none';
-                state.modalOpen = false;
+                closeModalUI();
             });
         } else if (storyType === 1) {
             desc.innerText = "You receive a distress signal from a nearby moon.";
@@ -2895,8 +2980,7 @@
                 }
             });
             addBtn('Ignore', () => {
-                modal.style.display = 'none';
-                state.modalOpen = false;
+                closeModalUI();
             });
         } else {
             desc.innerText = "Scanners detect ancient alien ruins on a barren planet.";
@@ -2917,8 +3001,7 @@
                 updateUI();
             });
             addBtn('Leave', () => {
-                modal.style.display = 'none';
-                state.modalOpen = false;
+                closeModalUI();
             });
         }
       } else if (type === 'FlarelightBeacon') {
@@ -2942,9 +3025,7 @@
           actions.innerHTML = ''; closeBtn(); updateUI();
         });
         addBtn('Leave Beacon in Orbit', () => {
-          modal.style.display = 'none';
-          state.modalOpen = false;
-          updateUI();
+          closeModalUI();
         });
       } else if (type === 'EchoProbe') {
         playWarpPing();
@@ -2967,9 +3048,7 @@
           actions.innerHTML = ''; closeBtn(); updateUI();
         });
         addBtn('Leave in Deep Space Orbit', () => {
-          modal.style.display = 'none';
-          state.modalOpen = false;
-          updateUI();
+          closeModalUI();
         });
       } else if (type === 'Land') {
         const nearby = state.stars.filter(s => Math.hypot(s.x - state.ship.x, s.y - state.ship.y) < 55);
@@ -3101,22 +3180,26 @@
             }
             actions.innerHTML = ''; closeBtn(); updateUI();
         });
+        if (curStar && curStar.planets && curStar.planets.length > 1) {
+          const nextIdx = ((state.currentPlanetIdx || 0) + 1) % curStar.planets.length;
+          const nextPlanet = curStar.planets[nextIdx];
+          addBtn(`Orbit Next Planet: ${nextPlanet.toUpperCase()} [${nextIdx + 1}/${curStar.planets.length}]`, () => {
+            state.currentPlanetIdx = nextIdx;
+            triggerEncounter('Land');
+          });
+        }
         addBtn('Leave Orbit', () => {
-            modal.style.display = 'none';
-            state.modalOpen = false;
+            closeModalUI();
         });
       }
       
-      modal.style.display = 'block';
-      keys.w = keys.a = keys.s = keys.d = false;
+      openModalUI(type);
       updateUI();
     }
 
     function triggerEmergencyBeacon() {
       if (state.modalOpen) return;
-      state.modalOpen = true;
       state.currentEncounter = 'Beacon';
-      const modal = document.getElementById('modal');
       const title = document.getElementById('modal-title');
       const desc = document.getElementById('modal-desc');
       const actions = document.getElementById('modal-actions');
@@ -3140,7 +3223,7 @@
           state.resources.fuel += 800;
           desc.innerText = "A civilian tug responds and transfers 800 Fuel.";
           actions.innerHTML = '';
-          addBtn('Resume Flight', () => { modal.style.display = 'none'; state.modalOpen = false; updateUI(); });
+          addBtn('Resume Flight', () => { closeModalUI(); });
           updateUI();
         });
       }
@@ -3150,7 +3233,7 @@
           state.resources.fuel += 500;
           desc.innerText = "Engineers converted xenotech power cells into 500 Fuel.";
           actions.innerHTML = '';
-          addBtn('Resume Flight', () => { modal.style.display = 'none'; state.modalOpen = false; updateUI(); });
+          addBtn('Resume Flight', () => { closeModalUI(); });
           updateUI();
         });
       }
@@ -3160,7 +3243,7 @@
           state.resources.fuel += 400;
           desc.innerText = "Crude minerals refined into 400 Fuel units.";
           actions.innerHTML = '';
-          addBtn('Resume Flight', () => { modal.style.display = 'none'; state.modalOpen = false; updateUI(); });
+          addBtn('Resume Flight', () => { closeModalUI(); });
           updateUI();
         });
       }
@@ -3170,7 +3253,7 @@
           state.factions.Federation = Math.max(0, state.factions.Federation - 5);
           desc.innerText = "Federation patrol answers and provides 300 emergency fuel (-5 Rep).";
           actions.innerHTML = '';
-          addBtn('Resume Flight', () => { modal.style.display = 'none'; state.modalOpen = false; updateUI(); });
+          addBtn('Resume Flight', () => { closeModalUI(); });
         } else {
           desc.innerText = "Pirates intercepted the distress broadcast and ambushed your adrift vessel!";
           actions.innerHTML = '';
@@ -3184,8 +3267,7 @@
         });
       }
 
-      modal.style.display = 'block';
-      keys.w = keys.a = keys.s = keys.d = false;
+      openModalUI('Beacon');
       updateUI();
     }
 
@@ -3193,6 +3275,10 @@
       const nearby = state.stars.filter(s => Math.hypot(s.x - state.ship.x, s.y - state.ship.y) < 55);
       if (nearby.length > 0 && !state.modalOpen) {
         const sys = nearby[0];
+        if (state.lastStarName !== sys.name) {
+          state.lastStarName = sys.name;
+          state.currentPlanetIdx = 0;
+        }
         if (sys.encounter && sys.encounter !== 'None') {
           triggerEncounter(sys.encounter);
         } else if (sys.planets && sys.planets.length > 0) {
@@ -3289,15 +3375,12 @@
     }
 
     function openCrewModal() {
-        const modal = document.getElementById('modal');
         const title = document.getElementById('modal-title');
         if (state.modalOpen && title && title.innerText.includes('CREW')) {
-            modal.style.display = 'none';
-            state.modalOpen = false;
+            closeModalUI();
             return;
         }
         if (state.modalOpen) return;
-        state.modalOpen = true;
         const desc = document.getElementById('modal-desc');
         const actions = document.getElementById('modal-actions');
         
@@ -3325,26 +3408,21 @@
             addBtn('Cycle Gunner (Role 2)', () => { cycleOfficer(2); renderCrew(); updateUI(); });
             addBtn('Cycle Engineer (Role 3)', () => { cycleOfficer(3); renderCrew(); updateUI(); });
             addBtn('Close Roster', () => {
-                modal.style.display = 'none';
-                state.modalOpen = false;
+                closeModalUI();
             });
         };
         renderCrew();
         renderModalPreview('Station');
-        modal.style.display = 'block';
-        keys.w = keys.a = keys.s = keys.d = false;
+        openModalUI('Crew');
     }
 
     function openHelpModal() {
-        const modal = document.getElementById('modal');
         const title = document.getElementById('modal-title');
         if (state.modalOpen && title && title.innerText.includes('MANUAL')) {
-            modal.style.display = 'none';
-            state.modalOpen = false;
+            closeModalUI();
             return;
         }
         if (state.modalOpen) return;
-        state.modalOpen = true;
         const desc = document.getElementById('modal-desc');
         const actions = document.getElementById('modal-actions');
         
@@ -3371,18 +3449,15 @@
         addBtn('Quick Load [F9]', () => { loadGame(); });
         addBtn('Export Mission Log [JSON]', () => { exportSaveFile(); });
         addBtn('Replay Onboarding Briefing', () => {
-            modal.style.display = 'none';
-            state.modalOpen = false;
+            closeModalUI();
             openTutorialBriefing();
         });
         addBtn('Close Manual', () => {
-            modal.style.display = 'none';
-            state.modalOpen = false;
+            closeModalUI();
         });
         
         renderModalPreview('Station');
-        modal.style.display = 'block';
-        keys.w = keys.a = keys.s = keys.d = false;
+        openModalUI('Help');
     }
 
     function getSaveState() {
@@ -3400,6 +3475,7 @@
         upgrades: { ...state.upgrades },
         modules: { ...state.modules },
         currentPlanetType: state.currentPlanetType,
+        currentPlanetIdx: state.currentPlanetIdx || 0,
         currentStoryType: state.currentStoryType,
         superweapon: { ...state.superweapon },
         factions: { ...state.factions },
@@ -3454,6 +3530,7 @@
         state.modules.scanner = !!data.modules.scanner;
       }
       if (data.currentPlanetType) state.currentPlanetType = data.currentPlanetType;
+      if (typeof data.currentPlanetIdx === 'number') state.currentPlanetIdx = data.currentPlanetIdx;
       if (typeof data.currentStoryType === 'number') state.currentStoryType = data.currentStoryType;
       if (data.superweapon) {
         state.superweapon.type = data.superweapon.type ?? 1;
@@ -3484,9 +3561,7 @@
           });
         }
       }
-      const modal = document.getElementById('modal');
-      if (modal) modal.style.display = 'none';
-      state.modalOpen = false;
+      closeModalUI(true);
       state.currentEncounter = '';
       updateUI();
       if (showFeedback) showToast('Game loaded successfully (F9)!');
@@ -3572,7 +3647,7 @@
       reader.onload = e => {
         try {
           const data = JSON.parse(e.target.result);
-          if (applySaveState(data, true)) {
+          if (applySaveState(data, false)) {
             saveGame(false);
             showToast('Mission log imported & restored!');
           }
@@ -3599,11 +3674,9 @@
 
     function openTutorialBriefing() {
       if (state.modalOpen) return;
-      state.modalOpen = true;
       try {
         localStorage.setItem('kstarship_tutorialSeen', '1');
       } catch (e) {}
-      const modal = document.getElementById('modal');
       const title = document.getElementById('modal-title');
       const desc = document.getElementById('modal-desc');
       const actions = document.getElementById('modal-actions');
@@ -3624,14 +3697,12 @@
       btn.className = 'action-btn';
       btn.innerText = 'Begin Mission [ENTER / SPACE]';
       btn.onclick = () => {
-        modal.style.display = 'none';
-        state.modalOpen = false;
+        closeModalUI();
       };
       actions.appendChild(btn);
 
       renderModalPreview('Station');
-      modal.style.display = 'block';
-      keys.w = keys.a = keys.s = keys.d = false;
+      openModalUI('Tutorial');
     }
 
     document.getElementById('btn-crew').addEventListener('click', openCrewModal);
@@ -3640,6 +3711,10 @@
     if (btnLand) btnLand.addEventListener('click', () => {
       const nearby = state.stars.filter(s => Math.hypot(s.x - state.ship.x, s.y - state.ship.y) < 55);
       if (nearby.length > 0 && nearby[0].planets.length > 0 && !state.modalOpen) {
+          if (state.lastStarName !== nearby[0].name) {
+            state.lastStarName = nearby[0].name;
+            state.currentPlanetIdx = 0;
+          }
           triggerEncounter('Land');
       }
     });
@@ -3664,23 +3739,37 @@
       }
     });
 
+    window.addEventListener('blur', () => {
+      keys.w = keys.a = keys.s = keys.d = false;
+      setHum(false);
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        keys.w = keys.a = keys.s = keys.d = false;
+        setHum(false);
+      }
+    });
+
     window.addEventListener('keydown', e => {
       const k = e.key.toLowerCase();
       if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', 'f5', 'f9'].includes(k)) {
         e.preventDefault();
       }
-      if (k === 'w' || e.key === 'ArrowUp') { keys.w = true; }
-      if (k === 's' || e.key === 'ArrowDown') { keys.s = true; }
-      if (k === 'a' || e.key === 'ArrowLeft') { keys.a = true; }
-      if (k === 'd' || e.key === 'ArrowRight') { keys.d = true; }
+      if (!state.modalOpen) {
+        if (k === 'w' || e.key === 'ArrowUp') { keys.w = true; }
+        if (k === 's' || e.key === 'ArrowDown') { keys.s = true; }
+        if (k === 'a' || e.key === 'ArrowLeft') { keys.a = true; }
+        if (k === 'd' || e.key === 'ArrowRight') { keys.d = true; }
+      }
       if (k === 'c') { openCrewModal(); }
       if (k === 'h' || e.key === 'F1' || k === '?') { openHelpModal(); }
       if (k === 'm') { toggleSound(); }
-      if (k === 'e') { interactWithStar(); }
-      if (k === 'l') {
-        if (btnLand && btnLand.style.display !== 'none' && !state.modalOpen) btnLand.click();
+      if (k === 'e' && !state.modalOpen) { interactWithStar(); }
+      if (k === 'l' && !state.modalOpen) {
+        if (btnLand && btnLand.style.display !== 'none') btnLand.click();
       }
-      if (k === 'b' && state.resources.fuel <= 0) { triggerEmergencyBeacon(); }
+      if (k === 'b' && state.resources.fuel <= 0 && !state.modalOpen) { triggerEmergencyBeacon(); }
       if (e.key === 'F5' || (e.ctrlKey && k === 's')) {
         e.preventDefault();
         saveGame();
@@ -3701,15 +3790,8 @@
         }
       }
       if (e.key === 'Escape') {
-        const modal = document.getElementById('modal');
-        const isCombat = ['Pirates', 'Fleet', 'XenonHunter', 'SyndicateFrigate', 'PrecursorRuin', 'VoidLeviathan'].includes(state.currentEncounter);
         if (state.modalOpen) {
-          if (state.resources.hull <= 0) {
-            location.reload();
-          } else if (!isCombat || state.bossHp <= 0) {
-            modal.style.display = 'none';
-            state.modalOpen = false;
-          }
+          closeModalUI();
         }
       }
       if (state.modalOpen) {

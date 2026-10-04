@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T03:55:00-07:00 — kilo-usability: KMystery (UI/UX Usability Pass, Toast Occlusion Fix, Modal Close Accessibility & Responsive Sizing)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 154.8 KB web / 39.9 KB native < 999 KB ceiling).
+  - Toast Occlusion Remediation: Re-anchored toast bar from screen-center to bottom-right with inline dismiss icon, preventing button occlusion.
+  - Modal Close & Hotkey Accessibility: Added explicit close IDs, help-btn-close classes, and document+window keydown listeners; CDP startup test 100% PASS.
+  - Layout & Window Dimensions: Tuned default window to 960x710 in App.jsx; added crisp canvas rendering and responsive CSS media queries.
+  - Ergonomics & Polish: Added focus-visible outlines for keyboard navigation, sleek retro scrollbars, and bumped KiloOS version to 0.4.24.
+  - Verification: MSVC clean (`KMystery.exe` 39.9 KB); Vite build clean in 313ms; test_app_startup PASS; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T03:45:00-07:00 — kilo-tester: KStarDredge (Interactive UI Audit, CSS Brace Fix, JSON Import/Export & Backdrop Dismissal)**
   - Status: PASS ✅ (3 issues fixed, 0 regressions, clean builds, 485.6 KB web / 276.0 KB native < 999 KB).
   - CSS Syntax Repair: Fixed unclosed `.contract-progress-bar` brace and added `.contract-progress-fill` styling, resolving startup audit failure.
