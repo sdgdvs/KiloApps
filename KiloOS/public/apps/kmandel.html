@@ -1334,6 +1334,11 @@
       } catch (e) {}
     }
 
+    function markTutorialSeen() {
+      safeSetStorage('kmandel_tutorialSeen', '1');
+      safeSetStorage('kmandel_tutorial_seen', true);
+    }
+
     function hexToRgb(hex) {
       const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
       return result ? [
@@ -1474,16 +1479,24 @@
     }
     
     function loadState(state) {
-      minRe = state.minRe; maxRe = state.maxRe;
-      minIm = state.minIm; maxIm = state.maxIm;
-      max_iter = state.max_iter;
-      isJulia = state.isJulia;
-      juliaCRe = state.juliaCRe; juliaCIm = state.juliaCIm;
-      theme = state.theme;
-      fractalType = state.fractalType !== undefined ? state.fractalType : 0;
-      smoothShading = state.smoothShading !== undefined ? state.smoothShading : true;
-      customColor1 = [...state.customColor1];
-      customColor2 = [...state.customColor2];
+      if (!state) return;
+      minRe = typeof state.minRe === 'number' ? state.minRe : -2.0;
+      maxRe = typeof state.maxRe === 'number' ? state.maxRe : 1.0;
+      minIm = typeof state.minIm === 'number' ? state.minIm : -1.2;
+      maxIm = typeof state.maxIm === 'number' ? state.maxIm : 1.2;
+      max_iter = typeof state.max_iter === 'number' ? state.max_iter : 100;
+      isJulia = !!state.isJulia;
+      juliaCRe = typeof state.juliaCRe === 'number' ? state.juliaCRe : -0.7;
+      juliaCIm = typeof state.juliaCIm === 'number' ? state.juliaCIm : 0.27015;
+      theme = typeof state.theme === 'number' ? state.theme : 0;
+      fractalType = typeof state.fractalType === 'number' ? state.fractalType : 0;
+      smoothShading = state.smoothShading !== undefined ? !!state.smoothShading : true;
+      if (Array.isArray(state.customColor1) && state.customColor1.length === 3) {
+        customColor1 = [...state.customColor1];
+      }
+      if (Array.isArray(state.customColor2) && state.customColor2.length === 3) {
+        customColor2 = [...state.customColor2];
+      }
       
       document.getElementById('fractal-select').value = fractalType;
       document.getElementById('theme-select').value = theme;
@@ -2167,6 +2180,12 @@
       document.getElementById('import-overlay').style.display = 'flex';
       document.getElementById('import-text').focus();
     });
+    document.getElementById('import-text').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        document.getElementById('btn-do-import').click();
+      }
+    });
     document.getElementById('btn-close-import-x').addEventListener('click', () => {
       document.getElementById('import-overlay').style.display = 'none';
     });
@@ -2552,6 +2571,7 @@
         timestamp: Date.now()
       };
       safeSetStorage('kmandel_quicksave', state);
+      markTutorialSeen();
       triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 6, 25);
       playSfx('quicksave');
       showToast('💾 Viewport quicksaved (F5)', 'success', 2500);
@@ -2566,6 +2586,7 @@
       loadState(state);
       triggerImpact(window.innerWidth / 2, window.innerHeight / 2, 7, 30);
       playSfx('quickload');
+      saveState();
       requestRender();
       showToast('📂 Viewport quickloaded (F9)', 'purple', 2500);
     }
@@ -2670,7 +2691,7 @@
         const hOverlay = document.getElementById('help-overlay');
         if (hOverlay && (hOverlay.style.display === 'flex' || hOverlay.style.display === 'block')) {
           hOverlay.style.display = 'none';
-          safeSetStorage('kmandel_tutorial_seen', true);
+          markTutorialSeen();
           if (e.target && e.target.blur) e.target.blur();
           return;
         }
@@ -2678,6 +2699,19 @@
         const toasts = document.querySelectorAll('.toast');
         toasts.forEach(t => t.remove());
         return;
+      }
+
+      // If help modal is open, Enter or Space also dismisses it cleanly
+      const hOverlay = document.getElementById('help-overlay');
+      const isHelpOpen = hOverlay && (hOverlay.style.display === 'flex' || hOverlay.style.display === 'block');
+      if (isHelpOpen && (e.key === 'Enter' || e.code === 'Space')) {
+        if (!e.target || (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA')) {
+          e.preventDefault();
+          hOverlay.style.display = 'none';
+          markTutorialSeen();
+          if (e.target && e.target.blur) e.target.blur();
+          return;
+        }
       }
 
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA')) {
@@ -2693,8 +2727,7 @@
       }
 
       // Suppress background hotkeys when modals are open
-      const hOverlay = document.getElementById('help-overlay');
-      if (hOverlay && (hOverlay.style.display === 'flex' || hOverlay.style.display === 'block')) return;
+      if (isHelpOpen) return;
       const iOverlay = document.getElementById('import-overlay');
       if (iOverlay && (iOverlay.style.display === 'flex' || iOverlay.style.display === 'block')) return;
 
@@ -2860,21 +2893,21 @@
     // Help overlay dismissal
     document.getElementById('btn-close-help').addEventListener('click', () => {
       document.getElementById('help-overlay').style.display = 'none';
-      safeSetStorage('kmandel_tutorial_seen', true);
+      markTutorialSeen();
     });
     document.getElementById('btn-close-help-x').addEventListener('click', () => {
       document.getElementById('help-overlay').style.display = 'none';
-      safeSetStorage('kmandel_tutorial_seen', true);
+      markTutorialSeen();
     });
     document.getElementById('btn-dont-show-help').addEventListener('click', () => {
       document.getElementById('help-overlay').style.display = 'none';
-      safeSetStorage('kmandel_tutorial_seen', true);
+      markTutorialSeen();
       showToast('Preference saved. Press F1 or H anytime for help.', 'info', 2200);
     });
     document.getElementById('help-overlay').addEventListener('click', (e) => {
       if (e.target === document.getElementById('help-overlay')) {
         document.getElementById('help-overlay').style.display = 'none';
-        safeSetStorage('kmandel_tutorial_seen', true);
+        markTutorialSeen();
       }
     });
 
@@ -3029,10 +3062,11 @@
     saveState();
     requestRender();
 
-    // Startup Welcome Toast & Onboarding
+    // Startup Welcome Toast & Onboarding (Pass 5 Tutorial Integrity)
     setTimeout(() => {
-      const tutorialSeen = safeGetStorage('kmandel_tutorial_seen', false);
-      if (!tutorialSeen) {
+      const tutorialSeen = safeGetStorage('kmandel_tutorialSeen', null) || safeGetStorage('kmandel_tutorial_seen', false);
+      const hasQuicksave = safeGetStorage('kmandel_quicksave', null) !== null;
+      if (!tutorialSeen && !hasQuicksave) {
         const overlay = document.getElementById('help-overlay');
         if (overlay) overlay.style.display = 'flex';
       } else {

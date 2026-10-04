@@ -85,6 +85,36 @@ int history_max = -1;
 static ViewState quicksaveState;
 static int hasQuicksave = 0;
 
+static int SaveQuicksaveToFile(void) {
+    HANDLE hFile = CreateFileA("kmandel_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+    DWORD written = 0;
+    DWORD magic = 0x4D414E44; // "MAND"
+    WriteFile(hFile, &magic, sizeof(magic), &written, NULL);
+    WriteFile(hFile, &quicksaveState, sizeof(quicksaveState), &written, NULL);
+    CloseHandle(hFile);
+    return 1;
+}
+
+static int LoadQuicksaveFromFile(void) {
+    HANDLE hFile = CreateFileA("kmandel_quicksave.dat", GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return 0;
+    DWORD readBytes = 0;
+    DWORD magic = 0;
+    ReadFile(hFile, &magic, sizeof(magic), &readBytes, NULL);
+    if (magic != 0x4D414E44) {
+        CloseHandle(hFile);
+        return 0;
+    }
+    ReadFile(hFile, &quicksaveState, sizeof(quicksaveState), &readBytes, NULL);
+    CloseHandle(hFile);
+    if (readBytes == sizeof(quicksaveState)) {
+        hasQuicksave = 1;
+        return 1;
+    }
+    return 0;
+}
+
 // State for Drag-to-Pan and cached HUD Font
 static HFONT g_hHudFont = NULL;
 static int isDragging = 0;
@@ -552,6 +582,8 @@ void DrawCornerFiligreeGDI(HDC hdc, int w, int h) {
 
 
 void ShowHelpDialog(HWND hwnd) {
+    HANDLE hFile = CreateFileA("kmandel_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile != INVALID_HANDLE_VALUE) CloseHandle(hFile);
     MessageBox(hwnd, 
         "KMandel Pro - Ultra Fractal Explorer\n"
         "====================================\n\n"
@@ -572,11 +604,20 @@ void ShowHelpDialog(HWND hwnd) {
         " • [T]: Cycle 9 color spectrum themes\n"
         " • [C]: Pick custom gradient palette\n"
         " • [Z] / [Y]: Undo / Redo view navigation history\n"
-        " • [F5] / [F9]: Quicksave / Quickload Viewport\n"
+        " • [F5] / [F9]: Quicksave / Quickload Viewport (kmandel_quicksave.dat)\n"
         " • [S]: Export Ultra-HD 4K BMP image\n"
         " • [F1] / [H]: Open this Help Guide\n"
         " • [Esc]: Dismiss dialogs",
         "KMandel Pro - Help & Keyboard Shortcuts", MB_OK | MB_ICONINFORMATION);
+}
+
+static void CheckFirstRunTutorial(HWND hwnd) {
+    DWORD dwAttr = GetFileAttributesA("kmandel_tutorial.dat");
+    if (dwAttr == INVALID_FILE_ATTRIBUTES && !hasQuicksave) {
+        HANDLE hFile = CreateFileA("kmandel_tutorial.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) CloseHandle(hFile);
+        ShowHelpDialog(hwnd);
+    }
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -899,9 +940,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 quicksaveState.cc2[1] = customColor2[1];
                 quicksaveState.cc2[2] = customColor2[2];
                 hasQuicksave = 1;
+                SaveQuicksaveToFile();
                 TriggerImpact(bmpW / 2, bmpH / 2, 7.0, 30);
                 InvalidateRect(hwnd, NULL, FALSE);
             } else if (wParam == VK_F9) {
+                if (!hasQuicksave) {
+                    LoadQuicksaveFromFile();
+                }
                 if (hasQuicksave) {
                     minRe = quicksaveState.minRe;
                     maxRe = quicksaveState.maxRe;
@@ -923,6 +968,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SaveState();
                     RenderMandelbrotToBuffer(pixels, bmpW, bmpH);
                     InvalidateRect(hwnd, NULL, FALSE);
+                } else {
+                    MessageBox(hwnd, "No quicksave snapshot found.\nPress [F5] to save current viewport.", "KMandel Pro", MB_OK | MB_ICONINFORMATION);
                 }
             } else if (wParam == 'S') {
                 TriggerImpact(bmpW / 2, bmpH / 2, 8.0, 40);
@@ -1070,10 +1117,13 @@ void MainEntry() {
     HWND hwnd = CreateWindowEx(0, "KMandelApp", "KMandel Pro - [F1] Help | Drag to Pan | Scroll/Click to Zoom", WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
         CW_USEDEFAULT, CW_USEDEFAULT, rect.right - rect.left, rect.bottom - rect.top, NULL, NULL, hInstance, NULL);
 
+    LoadQuicksaveFromFile();
     SaveState(); // Save initial state
 
     ShowWindow(hwnd, SW_SHOWNORMAL);
     UpdateWindow(hwnd);
+
+    CheckFirstRunTutorial(hwnd);
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0) > 0) {

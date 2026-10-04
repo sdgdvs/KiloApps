@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: KQuest
   kilo_tester: KScript
   kilo_usability: KMedia
-  kilo_qa: KMandel
+  kilo_qa: KNet
   kilo_expander: KGo
 virtual_web_target: "kweb://geocities"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
+  agent: kilo-qa
   app: KMandel
-  timestamp: "2026-10-04T00:10:00-07:00"
+  timestamp: "2026-10-04T00:27:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KMystery`, `KNet`, `KNote`, `KPass`, `KHash`, `KGraph`, `KClock`, `KTimer`, `KPomodoro` *(Completed: KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KMandel`
+- **Current Target**: `KNet`
 - **Upcoming Queue**:
-  `KNet`, `KNote`, `KPass`, `KDB`, `KHex`, `KBookmark`, `KPing`, `KChat`, `KClock`, `KTimer`, `KPomodoro` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail)*.
+  `KNote`, `KPass`, `KDB`, `KHex`, `KBookmark`, `KPing`, `KChat`, `KClock`, `KTimer`, `KPomodoro`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KGo`
@@ -230,6 +230,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
  
+- **2026-10-04T00:27:00-07:00 — kilo-qa: KMandel (Pass 5: Disk State Persistence, Tutorial Integrity, Modal Shortcuts & Build Audit)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 125.7 KB web / 22.0 KB native < 999 KB ceiling).
+  - State Persistence: Implemented universal quicksave (F5) and quickload (F9) to `kmandel_quicksave.dat` (native Win32 binary) and local storage (web).
+  - First-Run Tutorial: Added `kmandel_tutorialSeen` / `.dat` file flag checks preventing tutorial prompts from interrupting restored save states.
+  - Modal Ergonomics: Added Enter and Space key dismiss handlers for help guide; wired Ctrl+Enter preset import submission; backdrop click dismiss.
+  - Defensive Loading: Added fallback guards for custom gradient color arrays and viewport bounds in `loadState`.
+  - Build & Size Verification: MSVC clean (`KMandel.exe` 22.0 KB); Vite build clean in 342ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T00:10:00-07:00 — kilo-usability: KMandel (Tabbed Controls Ergonomics, Multiplayer Connect Gate, Mote/Shake Purge & ARCH-05)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 124.2 KB web / 21.5 KB native < 999 KB ceiling).
   - Tabbed Ergonomics: Organized 18 controls into 3 compact category tabs (Explore, Style, Tools) eliminating vertical scrolling in 720px window.
@@ -260,14 +268,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Dialog Ergonomics: Wired modal backdrop click dismissal on all 5 overlays, added F1 manual hotkey, and protected input focus.
   - ARCH-05 Visibility: Added visibilitychange event handler suspending audio, pausing animation/auto-run, and auto-saving on tab blur.
   - Verification: MSVC native clean (`KSanctuary.exe` 264.2 KB); Vite build clean in 299ms; security_lint 100% PASS; check_icons 100% PASS.
-
-- **2026-10-03T23:28:00-07:00 — kilo-graphics: KAsteroids (Game Content, Glint & Comet Ban, YM2612 FM Audio & ARCH-05 Pass)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 142.1 KB web / 217.0 KB native < 999 KB ceiling).
-  - Glint & Comet Ban: Purged random traveling comets, hull specular sweeps, UFO velocity glints, and pulsating borders across web and native C.
-  - Audio Engine: Implemented Genesis YM2612 2-op FM synthesis, SNES SPC700 stereo delay warmth, and dynamic arcade dual-pulse heartbeat bassline.
-  - ARCH-05 Visibility: Added visibilitychange event listener suspending audio, stopping thrust, and pausing animation loop when backgrounded.
-  - Gameplay & Polish: Tuned dynamic heartbeat tempo scaling with remaining asteroid count, clean static cyber HUD borders, and build sync.
-  - Verification: MSVC native clean (`KAsteroids.exe` 217.0 KB); Vite build clean in 320ms; check_icons 100% PASS; security_lint 100% PASS.
 
 
 

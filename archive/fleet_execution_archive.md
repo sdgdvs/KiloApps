@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-03T23:28:00-07:00 — kilo-graphics: KAsteroids (Game Content, Glint & Comet Ban, YM2612 FM Audio & ARCH-05 Pass)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 142.1 KB web / 217.0 KB native < 999 KB ceiling).
+  - Glint & Comet Ban: Purged random traveling comets, hull specular sweeps, UFO velocity glints, and pulsating borders across web and native C.
+  - Audio Engine: Implemented Genesis YM2612 2-op FM synthesis, SNES SPC700 stereo delay warmth, and dynamic arcade dual-pulse heartbeat bassline.
+  - ARCH-05 Visibility: Added visibilitychange event listener suspending audio, stopping thrust, and pausing animation loop when backgrounded.
+  - Gameplay & Polish: Tuned dynamic heartbeat tempo scaling with remaining asteroid count, clean static cyber HUD borders, and build sync.
+  - Verification: MSVC native clean (`KAsteroids.exe` 217.0 KB); Vite build clean in 320ms; check_icons 100% PASS; security_lint 100% PASS.
+
 - **2026-10-03T23:12:00-07:00 — kilo-creator: kweb://warez (Subterranean Signals Telemetry, 1999Hz Courier Beacon, ARCH-05 & Breadcrumb Pass)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean build in 306ms, 255.0 KB web < 999 KB ceiling).
   - Subterranean Signals: Added Tab 10 `[ 📡 SUBTERRANEAN SIGNALS ]` live `arg/signals` sync, sniffer terminal, and decrypted courier cache.
