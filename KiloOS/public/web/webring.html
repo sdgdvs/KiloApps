@@ -1054,6 +1054,260 @@
     font-size: 11px;
   }
 
+  /* =========================================================================
+     TAB 8: RING SURFER & AUTO-TOUR RETRO VIEWPORT STYLES
+     ========================================================================= */
+  .netscape-browser {
+    background: #c0c0c0;
+    border: 2px outset #ffffff;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6);
+    font-family: var(--font-sans);
+    color: #000;
+    margin-bottom: 14px;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .netscape-titlebar {
+    background: linear-gradient(90deg, #000080 0%, #1084d0 100%);
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 3px 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    letter-spacing: 0.5px;
+  }
+  .netscape-menubar {
+    background: #c0c0c0;
+    border-bottom: 1px solid #808080;
+    padding: 2px 8px;
+    font-size: 11px;
+    display: flex;
+    gap: 12px;
+  }
+  .netscape-menubar span {
+    cursor: default;
+  }
+  .netscape-menubar span:hover {
+    background: #000080;
+    color: #fff;
+  }
+  .netscape-toolbar {
+    background: #c0c0c0;
+    border-bottom: 2px groove #ffffff;
+    padding: 4px 6px;
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .btn-retro-nav {
+    background: #c0c0c0;
+    border: 2px outset #ffffff;
+    color: #000;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: bold;
+    padding: 3px 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    line-height: 1.2;
+  }
+  .btn-retro-nav:active {
+    border-style: inset;
+    padding: 4px 7px 2px 9px;
+  }
+  .btn-retro-nav:hover {
+    background: #d4d0c8;
+  }
+  .netscape-location-bar {
+    background: #c0c0c0;
+    padding: 4px 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-bottom: 2px groove #ffffff;
+  }
+  .location-input-wrap {
+    flex: 1;
+    background: #ffffff;
+    border: 2px inset #808080;
+    padding: 2px 6px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: #000;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .netscape-n-logo {
+    width: 24px;
+    height: 24px;
+    background: #000040;
+    border: 2px outset #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #38bdf8;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    text-shadow: 0 0 6px #38bdf8;
+  }
+  .netscape-n-logo.animating {
+    animation: netscapePulse 0.5s infinite alternate;
+  }
+  @keyframes netscapePulse {
+    from { color: #38bdf8; text-shadow: 0 0 4px #38bdf8; }
+    to { color: #f59e0b; text-shadow: 0 0 8px #f59e0b; }
+  }
+  .netscape-content-frame {
+    background: #0c1220;
+    color: var(--text-primary);
+    padding: 16px;
+    min-height: 240px;
+    border: 2px inset #808080;
+    position: relative;
+  }
+  .dialup-transfer-bar {
+    background: #111827;
+    border: 1px solid var(--border-med);
+    height: 14px;
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 8px 0;
+    position: relative;
+  }
+  .dialup-transfer-fill {
+    background: linear-gradient(90deg, #0284c7 0%, #38bdf8 100%);
+    height: 100%;
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+  .netscape-statusbar {
+    background: #c0c0c0;
+    border-top: 1px solid #808080;
+    padding: 2px 8px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* =========================================================================
+     TAB 9: RINGMASTER VALIDATOR & AUDIT ENGINE STYLES
+     ========================================================================= */
+  .validator-console {
+    background: #02060d;
+    border: 1px solid #10b981;
+    color: #34d399;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.45;
+    padding: 12px;
+    height: 280px;
+    overflow-y: auto;
+    box-shadow: inset 0 0 16px rgba(16, 185, 129, 0.15);
+    border-radius: 3px;
+    white-space: pre-wrap;
+  }
+  .audit-stages-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .audit-stage-pill {
+    background: #0e1526;
+    border: 1px solid var(--border-med);
+    padding: 8px;
+    border-radius: 3px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+  }
+  .audit-stage-pill.passed {
+    border-color: #10b981;
+    background: rgba(16, 185, 129, 0.1);
+  }
+  .audit-stage-pill.failed {
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+  }
+  .audit-stage-pill.running {
+    border-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+    animation: blinkBorder 0.8s infinite;
+  }
+  @keyframes blinkBorder {
+    50% { border-color: transparent; }
+  }
+  .score-gauge-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #070a14;
+    border: 1px solid var(--border-med);
+    padding: 10px 14px;
+    border-radius: 3px;
+    margin-bottom: 12px;
+  }
+  .score-gauge-number {
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: bold;
+    color: var(--green-bright);
+    letter-spacing: 1px;
+  }
+
+  /* =========================================================================
+     GATEWAY-07 PACKET SNIFFER & OSCILLOSCOPE STYLES
+     ========================================================================= */
+  .gateway-sniffer-box {
+    background: #040813;
+    border: 1px solid var(--amber);
+    padding: 12px;
+    margin-top: 14px;
+    border-radius: 3px;
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.15);
+  }
+  .oscilloscope-canvas {
+    background: #020409;
+    border: 1px solid #78350f;
+    width: 100%;
+    height: 120px;
+    display: block;
+    margin-bottom: 10px;
+    border-radius: 2px;
+  }
+  .freq-tuner-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    background: #0a0f1d;
+    border: 1px solid var(--border-med);
+    padding: 8px 12px;
+    margin-bottom: 10px;
+  }
+  .descramble-terminal {
+    background: #02050c;
+    border: 1px solid #d97706;
+    color: var(--amber-bright);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    padding: 10px;
+    height: 150px;
+    overflow-y: auto;
+    border-radius: 2px;
+    white-space: pre-wrap;
+    box-shadow: inset 0 0 10px rgba(217, 119, 6, 0.2);
+  }
+
   /* Footer */
   footer {
     border-top: 1px solid var(--border-med);
@@ -1154,6 +1408,12 @@
     </button>
     <button class="tab-btn" data-tab="tab-topology" onclick="switchTab('tab-topology')">
       <span>🕸️</span> [7] Ring Topology Map
+    </button>
+    <button class="tab-btn" data-tab="tab-surf" onclick="switchTab('tab-surf')">
+      <span>🏄</span> [8] Ring Surfer &amp; Tour
+    </button>
+    <button class="tab-btn" data-tab="tab-validator" onclick="switchTab('tab-validator')">
+      <span>🛡️</span> [9] Ringmaster Validator
     </button>
   </div>
 
@@ -1618,6 +1878,56 @@ Click 'Run Full Ring Diagnostic' to probe all 18 active ring nodes.</div>
             </button>
           </div>
         </div>
+
+        <!-- Gateway-07 Decryptor & Packet Sniffer -->
+        <div class="gateway-sniffer-box" id="gatewaySnifferBox">
+          <div class="panel-header" style="margin-bottom:6px; padding-bottom:4px; border-color:#d97706;">
+            <div style="font-family:var(--font-mono); font-size:11px; font-weight:bold; color:var(--amber-bright); display:flex; align-items:center; gap:6px;">
+              <span>🛰️</span> GATEWAY-07 HARMONIC TRANSIT SNIFFER [echo-gw-07.kilonet.internal]
+            </div>
+            <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-muted);" id="gatewayLockBadge">
+              LOCK: ❌ UNTUNED
+            </div>
+          </div>
+          <div style="font-size:10px; color:var(--text-muted); margin-bottom:8px;">
+            Intercept transit packets crossing the subterranean BGP circuit between Echo Subsystem and Deep Core. Adjust the frequency dial below to isolate the 1999Hz carrier resonance.
+          </div>
+          <!-- Live Oscilloscope Canvas -->
+          <canvas id="gatewayOscilloscopeCanvas" class="oscilloscope-canvas" width="600" height="100"></canvas>
+
+          <!-- Frequency Tuner Controls -->
+          <div class="freq-tuner-wrap">
+            <label style="font-family:var(--font-mono); font-size:11px; color:var(--amber-bright); font-weight:bold;">CARRIER FREQ:</label>
+            <input type="range" id="gatewayFreqSlider" min="1000" max="2500" step="1" value="1420" oninput="onGatewayFreqSlider(this.value)" style="flex:1; accent-color:var(--amber); cursor:pointer;">
+            <span id="gatewayFreqDisplay" style="font-family:var(--font-mono); font-size:12px; font-weight:bold; color:var(--cyan); min-width:70px;">1420.0 Hz</span>
+            <div style="display:flex; gap:4px;">
+              <button class="pill-btn" onclick="adjustGatewayFreq(-10)">-10Hz</button>
+              <button class="pill-btn" onclick="adjustGatewayFreq(-1)">-1Hz</button>
+              <button class="pill-btn" onclick="adjustGatewayFreq(1)">+1Hz</button>
+              <button class="pill-btn" onclick="adjustGatewayFreq(10)">+10Hz</button>
+              <button class="pill-btn" onclick="autoResonateGateway()" style="background:#0284c7; color:#fff; border-color:#38bdf8;">Auto-Tune (1999Hz)</button>
+            </div>
+          </div>
+
+          <!-- Actions & Decoded Terminal -->
+          <div style="display:flex; gap:8px; margin-bottom:8px; align-items:center; flex-wrap:wrap;">
+            <button class="btn-teleport" id="btnDescrambleFrame" onclick="descrambleGatewayFrame()" disabled style="background:#334155; border-color:#64748b; cursor:not-allowed; opacity:0.6;">
+              <span>🔓</span> Descramble Transit Frame
+            </button>
+            <button class="btn-teleport alt" onclick="clearGatewayTerminal()">
+              <span>🧹</span> Clear Buffer
+            </button>
+            <span id="gatewaySnifferStatus" style="font-family:var(--font-mono); font-size:10px; color:var(--text-dim);">
+              Carrier drift: tune to exactly 1999Hz to acquire phase lock.
+            </span>
+          </div>
+          <div class="descramble-terminal" id="gatewayTerminalLog">
+[ECHO-GW-07 TRANSIT SNIFFER INITIALIZED]
+Interface: eth0.subterranean (10.19.99.7)
+Listening on transit bus... Awaiting frequency carrier lock.
+Tune dial to match lithospheric harmonic frequency to isolate transit frames.
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -1792,6 +2102,277 @@ Click 'Run Full Ring Diagnostic' to probe all 18 active ring nodes.</div>
         <div><strong>Total Nodes:</strong> <span id="topoNodeCount" style="color:var(--cyan);">20 (18 Active, 2 Unresolved)</span></div>
         <div><strong>Propagation Delay:</strong> <span id="topoPropDelay" style="color:var(--amber-bright);">~24 ms/hop</span></div>
         <div><strong>Selected Node:</strong> <span id="topoSellabel" style="color:var(--text-primary);">None (Hover to inspect)</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 8: Ring Surfer & Auto-Tour Simulator -->
+  <section id="tab-surf" class="tab-pane">
+    <div class="panel-box">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>🏄</span> Ring Surfer &amp; Auto-Tour Retro Viewport Simulator
+        </div>
+        <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+          Continuous Webring Cruising &bull; Netscape 4.7 Viewport &bull; Procedural 56k Dial-up Modem Sound
+        </div>
+      </div>
+      <div class="panel-desc">
+        Cruise through member homepages, demoscene vaults, and network shrines in an authentic period Netscape 4.7 simulator. Set your dwell timer to let the ring tour advance hands-free, throttle simulated modem connection speeds, hear procedural dial-up handshakes and hop chimes, or bookmark your favorite stops into a Netscape bookmarks.html archive.
+      </div>
+
+      <!-- Auto-Tour Controls Bar -->
+      <div class="filter-row" style="margin-bottom:12px;">
+        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+          <button class="btn-teleport" id="btnTourToggle" onclick="toggleAutoTour()">
+            <span id="tourToggleIcon">▶</span> <span id="tourToggleLabel">Start Auto-Tour</span>
+          </button>
+          <button class="btn-teleport alt" onclick="surfStep(-1)" title="Previous Site">
+            <span>⏮</span> Prev
+          </button>
+          <button class="btn-teleport alt" onclick="surfStep(1)" title="Next Site">
+            <span>⏭</span> Next
+          </button>
+          <button class="btn-teleport alt" onclick="surfJumpRandom()" title="Random Jump">
+            <span>🔀</span> Random
+          </button>
+        </div>
+
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <div style="display:flex; gap:4px; align-items:center;">
+            <label style="font-family:var(--font-mono); font-size:11px; font-weight:bold; color:var(--text-muted);">DWELL:</label>
+            <button class="pill-btn active" id="btnDwell5" onclick="setDwellSeconds(5)">5s</button>
+            <button class="pill-btn" id="btnDwell10" onclick="setDwellSeconds(10)">10s</button>
+            <button class="pill-btn" id="btnDwell15" onclick="setDwellSeconds(15)">15s</button>
+            <button class="pill-btn" id="btnDwell30" onclick="setDwellSeconds(30)">30s</button>
+          </div>
+
+          <div style="display:flex; gap:4px; align-items:center;">
+            <label style="font-family:var(--font-mono); font-size:11px; font-weight:bold; color:var(--text-muted);">BAUD:</label>
+            <select class="form-control" id="surfBaudSelect" onchange="setSurfBaud(this.value)" style="padding:3px 6px; font-size:11px; width:110px;">
+              <option value="14400">14.4k Modem</option>
+              <option value="28800">28.8k V.34</option>
+              <option value="33600">33.6k Super</option>
+              <option value="56000" selected>56k V.90</option>
+              <option value="1544000">T1 Dedicated</option>
+            </select>
+          </div>
+
+          <div style="display:flex; gap:4px; align-items:center;">
+            <label style="font-family:var(--font-mono); font-size:11px; font-weight:bold; color:var(--text-muted);">AUDIO:</label>
+            <select class="form-control" id="surfAudioModeSelect" onchange="setSurfAudioMode(this.value)" style="padding:3px 6px; font-size:11px; width:125px;">
+              <option value="dialup" selected>Modem + Chime</option>
+              <option value="chime">Hop Chime Only</option>
+              <option value="mute">Muted</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dwell Countdown Bar -->
+      <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:10px; color:var(--text-dim); margin-bottom:3px;">
+        <span>AUTOTOUR DWELL TIMER: <strong id="dwellTimerText" style="color:var(--cyan);">PAUSED</strong></span>
+        <span>TRANSFER STATUS: <strong id="transferStatusText" style="color:var(--green-bright);">IDLE</strong></span>
+      </div>
+      <div class="dialup-transfer-bar">
+        <div class="dialup-transfer-fill" id="dwellProgressBar"></div>
+      </div>
+
+      <!-- Retro Netscape 4.7 Browser Chrome -->
+      <div class="netscape-browser">
+        <div class="netscape-titlebar">
+          <span id="netscapeTitle">Netscape Communicator - [KiloNet 1999 Web Portal]</span>
+          <div style="display:flex; gap:3px;">
+            <span style="background:#c0c0c0; color:#000; border:1px outset #fff; padding:0 4px; font-size:9px; cursor:default;">_</span>
+            <span style="background:#c0c0c0; color:#000; border:1px outset #fff; padding:0 4px; font-size:9px; cursor:default;">□</span>
+            <span style="background:#c0c0c0; color:#000; border:1px outset #fff; padding:0 4px; font-size:9px; cursor:default;">×</span>
+          </div>
+        </div>
+        <div class="netscape-menubar">
+          <span>File</span>
+          <span>Edit</span>
+          <span>View</span>
+          <span>Go</span>
+          <span>Communicator</span>
+          <span>Help</span>
+        </div>
+        <div class="netscape-toolbar">
+          <button class="btn-retro-nav" onclick="surfStep(-1)">⬅ Back</button>
+          <button class="btn-retro-nav" onclick="surfStep(1)">➡ Forward</button>
+          <button class="btn-retro-nav" onclick="surfReload()">🔄 Reload</button>
+          <button class="btn-retro-nav" onclick="surfGoHub()">🏠 Hub</button>
+          <button class="btn-retro-nav" onclick="addCurrentToBookmarks()">⭐ Bookmark</button>
+          <button class="btn-retro-nav" onclick="surfLaunchDirect()">🚀 Open In Tab</button>
+        </div>
+        <div class="netscape-location-bar">
+          <span style="font-family:var(--font-sans); font-size:11px; font-weight:bold; color:#000;">Location:</span>
+          <div class="location-input-wrap">
+            <span id="netscapeLocationUrl" style="color:#000080; font-weight:bold;">kweb://portal</span>
+          </div>
+          <div class="netscape-n-logo" id="netscapeThrobber">N</div>
+        </div>
+
+        <!-- Netscape Viewport Document Body -->
+        <div class="netscape-content-frame" id="netscapeViewportArea">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <!-- Netscape Statusbar -->
+        <div class="netscape-statusbar">
+          <span id="netscapeStatusLeft">Document: Done (Verified &lt;999KB)</span>
+          <span id="netscapeStatusRight">Security: Netscape RSA 128-Bit • 100% Authentic</span>
+        </div>
+      </div>
+
+      <!-- Telemetry Odometer Bar -->
+      <div class="diag-stats-bar" style="margin-bottom:14px;">
+        <div><strong>Hops In Tour:</strong> <span id="surfHopCount" style="color:var(--cyan);">0</span></div>
+        <div><strong>Data Streamed:</strong> <span id="surfDataStreamed" style="color:var(--amber-bright);">0.0 KB</span></div>
+        <div><strong>Average Latency:</strong> <span id="surfAvgLatency" style="color:var(--green-bright);">22 ms</span></div>
+        <div><strong>Consortium Coverage:</strong> <span id="surfCoveragePct" style="color:var(--magenta);">5%</span></div>
+      </div>
+
+      <!-- Netscape Bookmarks Manager & Export -->
+      <div style="background:#0a0f1d; border:1px solid var(--border-med); padding:12px; border-radius:3px;">
+        <div class="panel-header" style="margin-bottom:8px; padding-bottom:4px;">
+          <div style="font-family:var(--font-mono); font-size:12px; font-weight:bold; color:var(--cyan); display:flex; align-items:center; gap:6px;">
+            <span>⭐</span> Netscape Favorites &amp; Bookmarks Collection
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-copy-embed" onclick="exportNetscapeBookmarks()">
+              <span>📋</span> Copy bookmarks.html
+            </button>
+            <button class="btn-copy-embed" onclick="clearNetscapeBookmarks()">
+              <span>🧹</span> Clear All
+            </button>
+          </div>
+        </div>
+        <div id="surfBookmarksContainer" style="display:flex; flex-wrap:wrap; gap:6px; min-height:36px; align-items:center;">
+          <!-- Dynamically populated bookmarks -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 9: Consortium Ringmaster Validator & Link Rot Auditor -->
+  <section id="tab-validator" class="tab-pane">
+    <div class="panel-box">
+      <div class="panel-header">
+        <div class="panel-title">
+          <span>🛡️</span> Consortium Ringmaster Validator &amp; Link Rot Auditor
+        </div>
+        <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted);">
+          Bylaws Audit • HTML 4.01 Strict Compliance • &lt;999KB Footprint Checker • Ringmaster 1999 Seal
+        </div>
+      </div>
+      <div class="panel-desc">
+        Under the 1999 KiloNet Consortium Charter, all member sites and candidate homepages must be audited by the automated Ringmaster validator. Audits test HTML 4.01 Doctype structure, webring widget link anchors, strict size ceiling compliance (&lt;999KB), 4-hop packet jitter, and lithospheric subcarrier resonance. Passing nodes receive an exportable animated pixel seal and an ASCII Certificate of Accreditation.
+      </div>
+
+      <!-- Validator Controls -->
+      <div class="filter-row">
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; flex:1;">
+          <label style="font-family:var(--font-mono); font-size:11px; font-weight:bold; color:var(--cyan);">AUDIT TARGET:</label>
+          <select class="form-control" id="valTargetSelect" onchange="onValidatorTargetChange(this.value)" style="flex:1; min-width:240px;">
+            <!-- Populated dynamically with all ring nodes -->
+          </select>
+          <input type="text" class="form-control" id="valCustomUrlInput" placeholder="or enter custom URL / path..." style="flex:1; min-width:200px;">
+        </div>
+        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+          <button class="btn-teleport" onclick="runRingmasterAudit()" style="background:linear-gradient(180deg, #10b981 0%, #059669 100%); border-color:#34d399;">
+            <span>⚡</span> Run Deep Audit
+          </button>
+          <button class="btn-teleport alt" onclick="auditRandomNode()">
+            <span>🎲</span> Audit Random
+          </button>
+          <button class="btn-teleport alt" onclick="auditAllNodesBatch()">
+            <span>🔄</span> Audit All (Batch)
+          </button>
+        </div>
+      </div>
+
+      <!-- 5-Stage Audit Pipeline Indicators -->
+      <div class="audit-stages-grid" id="auditStagesGrid">
+        <div class="audit-stage-pill" id="stagePill1">
+          <div style="font-weight:bold; color:var(--text-primary);">STAGE 1: DOCTYPE</div>
+          <div style="color:var(--text-dim);" id="stageStatus1">Pending...</div>
+        </div>
+        <div class="audit-stage-pill" id="stagePill2">
+          <div style="font-weight:bold; color:var(--text-primary);">STAGE 2: RING WIDGET</div>
+          <div style="color:var(--text-dim);" id="stageStatus2">Pending...</div>
+        </div>
+        <div class="audit-stage-pill" id="stagePill3">
+          <div style="font-weight:bold; color:var(--text-primary);">STAGE 3: &lt;999KB CEILING</div>
+          <div style="color:var(--text-dim);" id="stageStatus3">Pending...</div>
+        </div>
+        <div class="audit-stage-pill" id="stagePill4">
+          <div style="font-weight:bold; color:var(--text-primary);">STAGE 4: JITTER &amp; HOPS</div>
+          <div style="color:var(--text-dim);" id="stageStatus4">Pending...</div>
+        </div>
+        <div class="audit-stage-pill" id="stagePill5">
+          <div style="font-weight:bold; color:var(--text-primary);">STAGE 5: ARG ANOMALY</div>
+          <div style="color:var(--text-dim);" id="stageStatus5">Pending...</div>
+        </div>
+      </div>
+
+      <!-- Score & Metrics Banner -->
+      <div class="score-gauge-wrap">
+        <div>
+          <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-dim); text-transform:uppercase;">COMPLIANCE SCORE</div>
+          <div class="score-gauge-number" id="valScoreText">-- / 100</div>
+        </div>
+        <div style="flex:1;">
+          <div style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:11px; margin-bottom:4px;">
+            <span id="valVerdictText" style="color:var(--cyan); font-weight:bold;">Awaiting audit initiation...</span>
+            <span id="valSizeFootprintText" style="color:var(--text-muted);">Size Footprint: -- KB / 999.0 KB</span>
+          </div>
+          <div style="background:#111827; border:1px solid var(--border-med); height:12px; border-radius:2px; overflow:hidden;">
+            <div id="valSizeBar" style="background:#10b981; height:100%; width:0%; transition:width 0.3s ease;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Live VT100 Terminal Output -->
+      <div class="validator-console" id="validatorTerminalLog">
+[KILONET 1999 RINGMASTER COMPLIANCE ENGINE READY]
+Select a member node or custom site URL above and press [Run Deep Audit].
+All 18 registered consortium nodes and custom submissions are checked against the 1999 Consortium Bylaws:
+- HTML 4.01 Strict semantic parsing
+- Ring Navigation Anchor & Widget verification
+- 999 Kilobyte hard asset limit
+- 4-Hop packet transit latency & route flapping
+- Lithospheric 1999Hz subcarrier anomaly detection
+      </div>
+
+      <!-- Official Ringmaster Seal & Certificate Generator Panel -->
+      <div style="margin-top:14px; background:#070a14; border:1px solid var(--border-med); padding:14px; border-radius:3px;">
+        <div class="panel-header" style="margin-bottom:10px;">
+          <div class="panel-title">
+            <span>🏅</span> Official Ringmaster Accreditation Seal &amp; Netscape Certificate
+          </div>
+          <div style="display:flex; gap:6px;">
+            <button class="btn-teleport" onclick="copyRingmasterSealEmbed()">
+              <span>📋</span> Copy Seal HTML
+            </button>
+            <button class="btn-teleport alt" onclick="downloadRingmasterSeal()">
+              <span>💾</span> Download Seal PNG
+            </button>
+            <button class="btn-teleport alt" onclick="copyAsciiCertificate()">
+              <span>📜</span> Copy ASCII Cert
+            </button>
+          </div>
+        </div>
+        <div style="display:grid; grid-template-columns:auto 1fr; gap:16px; align-items:center;">
+          <div style="text-align:center;">
+            <canvas id="ringmasterSealCanvas" width="88" height="31" style="image-rendering:pixelated; width:176px; height:62px; border:2px outset #fbbf24; box-shadow:0 0 16px rgba(251,191,36,0.35);"></canvas>
+            <div style="font-family:var(--font-mono); font-size:10px; color:var(--amber-bright); margin-top:4px;">
+              ★ 88x31 PIXEL SEAL ★
+            </div>
+          </div>
+          <div>
+            <textarea class="code-output" id="asciiCertificateBox" readonly style="height:80px; font-size:10px;"></textarea>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -2410,7 +2991,75 @@ function playSfx(type) {
     playFmTone(587.33, 1.5, 2.2, 0.25, 0.14, true);
   } else if (type === 'traceroute') {
     playFmTone(640 + Math.random() * 260, 2.0, 1.0, 0.06, 0.08, false);
+  } else if (type === 'hop') {
+    playFmTone(783.99, 1.0, 1.8, 0.12, 0.12, true);
+    setTimeout(() => playFmTone(1046.50, 1.0, 1.4, 0.22, 0.10, true), 80);
+  } else if (type === 'dialup') {
+    playDialupSound();
+  } else if (type === 'decrypt') {
+    playFmTone(1999, 2.0, 2.5, 0.10, 0.15, true);
+    setTimeout(() => playFmTone(1499, 1.5, 2.0, 0.08, 0.12, false), 50);
+    setTimeout(() => playFmTone(2398, 2.5, 3.0, 0.14, 0.12, true), 100);
   }
+}
+
+// Procedural 1999 56k Dial-up Modem Handshake Audio Generator
+function playDialupSound() {
+  if (!isAudioEnabled || !audioCtx) return;
+  const now = audioCtx.currentTime;
+
+  // 1. Dial tone pulse (350Hz + 440Hz dual tone)
+  const dt1 = audioCtx.createOscillator();
+  const dt2 = audioCtx.createOscillator();
+  const dtGain = audioCtx.createGain();
+  dt1.frequency.setValueAtTime(350, now);
+  dt2.frequency.setValueAtTime(440, now);
+  dtGain.gain.setValueAtTime(0.08, now);
+  dtGain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+  dt1.connect(dtGain);
+  dt2.connect(dtGain);
+  dtGain.connect(audioCtx.destination);
+  dt1.start(now);
+  dt2.start(now);
+  dt1.stop(now + 0.28);
+  dt2.stop(now + 0.28);
+
+  // 2. High-pitch carrier answer tone (2100Hz)
+  const ansOsc = audioCtx.createOscillator();
+  const ansGain = audioCtx.createGain();
+  ansOsc.frequency.setValueAtTime(2100, now + 0.30);
+  ansGain.gain.setValueAtTime(0.001, now + 0.30);
+  ansGain.gain.linearRampToValueAtTime(0.07, now + 0.34);
+  ansGain.gain.exponentialRampToValueAtTime(0.001, now + 0.62);
+  ansOsc.connect(ansGain);
+  ansGain.connect(audioCtx.destination);
+  ansOsc.start(now + 0.30);
+  ansOsc.stop(now + 0.62);
+
+  // 3. V.90 Baud negotiation chirps / white noise hiss
+  try {
+    const bufferSize = Math.floor(audioCtx.sampleRate * 0.35);
+    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+    const whiteNoise = audioCtx.createBufferSource();
+    whiteNoise.buffer = noiseBuffer;
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(1800, now + 0.65);
+    filter.Q.setValueAtTime(3.0, now + 0.65);
+    const noiseGain = audioCtx.createGain();
+    noiseGain.gain.setValueAtTime(0.001, now + 0.65);
+    noiseGain.gain.linearRampToValueAtTime(0.05, now + 0.68);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.98);
+    whiteNoise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(audioCtx.destination);
+    whiteNoise.start(now + 0.65);
+    whiteNoise.stop(now + 0.98);
+  } catch (e) {}
 }
 
 // Procedural Background Chiptunes
@@ -2549,13 +3198,17 @@ function switchTab(targetId) {
 
   if (targetId === 'tab-teleport') {
     startWarpStarfield();
+  } else if (targetId === 'tab-surf') {
+    if (typeof renderSurfViewport === 'function') renderSurfViewport();
+  } else if (targetId === 'tab-validator') {
+    if (typeof initRingmasterValidator === 'function') initRingmasterValidator();
   }
 }
 
-// Global hotkeys: 1-7 for tabs
+// Global hotkeys: 1-9 for tabs
 window.addEventListener('keydown', (e) => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-  if (e.key >= '1' && e.key <= '7') {
+  if (e.key >= '1' && e.key <= '9') {
     const tabMap = {
       '1': 'tab-directory',
       '2': 'tab-teleport',
@@ -2563,7 +3216,9 @@ window.addEventListener('keydown', (e) => {
       '4': 'tab-health',
       '5': 'tab-join',
       '6': 'tab-guestbook',
-      '7': 'tab-topology'
+      '7': 'tab-topology',
+      '8': 'tab-surf',
+      '9': 'tab-validator'
     };
     switchTab(tabMap[e.key]);
   } else if (e.key === 'Escape') {
@@ -5336,6 +5991,829 @@ function showNoticeToast(msg) {
 }
 
 /* =========================================================================
+   18. GATEWAY-07 DECRYPTOR & PACKET SNIFFER [echo-gw-07.kilonet.internal]
+   ========================================================================= */
+let gatewayTargetFreq = 1999.0;
+let gatewayCurrentFreq = 1420.0;
+let isGatewayLocked = false;
+let gatewayOscAnimFrame = null;
+
+function initGatewaySniffer() {
+  const slider = document.getElementById('gatewayFreqSlider');
+  if (slider) slider.value = gatewayCurrentFreq;
+  updateGatewayFreqDisplay();
+  startGatewayOscilloscope();
+}
+
+function updateGatewayFreqDisplay() {
+  const disp = document.getElementById('gatewayFreqDisplay');
+  const badge = document.getElementById('gatewayLockBadge');
+  const btnDescramble = document.getElementById('btnDescrambleFrame');
+  const statusEl = document.getElementById('gatewaySnifferStatus');
+
+  if (disp) disp.textContent = `${gatewayCurrentFreq.toFixed(1)} Hz`;
+
+  const diff = Math.abs(gatewayCurrentFreq - gatewayTargetFreq);
+  if (diff <= 2.0) {
+    if (!isGatewayLocked) {
+      isGatewayLocked = true;
+      playSfx('badge');
+      showNoticeToast("🟢 Phase Lock Acquired on Gateway-07 (1999Hz)!");
+    }
+    if (badge) {
+      badge.innerHTML = `<span style="color:var(--green-bright); font-weight:bold;">● 1999Hz PHASE LOCKED</span>`;
+    }
+    if (btnDescramble) {
+      btnDescramble.disabled = false;
+      btnDescramble.style.background = 'linear-gradient(180deg, #10b981 0%, #059669 100%)';
+      btnDescramble.style.borderColor = '#34d399';
+      btnDescramble.style.cursor = 'pointer';
+      btnDescramble.style.opacity = '1.0';
+    }
+    if (statusEl) {
+      statusEl.innerHTML = `<span style="color:var(--green-bright); font-weight:bold;">Phase coherence: 99.8%. Transit frame ready for descrambling.</span>`;
+    }
+  } else {
+    isGatewayLocked = false;
+    if (badge) {
+      badge.innerHTML = `<span style="color:#ef4444;">LOCK: ❌ UNTUNED (${diff.toFixed(1)}Hz drift)</span>`;
+    }
+    if (btnDescramble) {
+      btnDescramble.disabled = true;
+      btnDescramble.style.background = '#334155';
+      btnDescramble.style.borderColor = '#64748b';
+      btnDescramble.style.cursor = 'not-allowed';
+      btnDescramble.style.opacity = '0.6';
+    }
+    if (statusEl) {
+      statusEl.textContent = `Carrier drift: ${diff.toFixed(1)}Hz away from resonance. Tune closer to 1999Hz.`;
+    }
+  }
+}
+
+function onGatewayFreqSlider(val) {
+  gatewayCurrentFreq = parseFloat(val);
+  updateGatewayFreqDisplay();
+  playFmTone(gatewayCurrentFreq, 1.0, 0.4, 0.05, 0.04, false);
+}
+
+function adjustGatewayFreq(delta) {
+  gatewayCurrentFreq = Math.max(1000, Math.min(2500, gatewayCurrentFreq + delta));
+  const slider = document.getElementById('gatewayFreqSlider');
+  if (slider) slider.value = gatewayCurrentFreq;
+  updateGatewayFreqDisplay();
+  playFmTone(gatewayCurrentFreq, 1.0, 0.4, 0.05, 0.05, false);
+}
+
+function autoResonateGateway() {
+  playSfx('warp');
+  gatewayCurrentFreq = 1999.0;
+  const slider = document.getElementById('gatewayFreqSlider');
+  if (slider) slider.value = gatewayCurrentFreq;
+  updateGatewayFreqDisplay();
+}
+
+function startGatewayOscilloscope() {
+  if (gatewayOscAnimFrame) return;
+  const canvas = document.getElementById('gatewayOscilloscopeCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let phase = 0;
+
+  function render() {
+    if (document.hidden) {
+      gatewayOscAnimFrame = null;
+      return;
+    }
+    gatewayOscAnimFrame = requestAnimationFrame(render);
+    ctx.fillStyle = '#020409';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = 0; x < canvas.width; x += 40) {
+      ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height);
+    }
+    for (let y = 0; y < canvas.height; y += 20) {
+      ctx.moveTo(0, y); ctx.lineTo(canvas.width, y);
+    }
+    ctx.stroke();
+
+    // Centerline
+    ctx.strokeStyle = '#334155';
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height / 2);
+    ctx.lineTo(canvas.width, canvas.height / 2);
+    ctx.stroke();
+
+    // Carrier Waveform
+    const isLocked = isGatewayLocked;
+    ctx.strokeStyle = isLocked ? '#34d399' : '#f59e0b';
+    ctx.lineWidth = isLocked ? 2 : 1.5;
+    ctx.shadowBlur = isLocked ? 8 : 4;
+    ctx.shadowColor = isLocked ? '#10b981' : '#f59e0b';
+
+    ctx.beginPath();
+    const freqFactor = (gatewayCurrentFreq / 200);
+    const midY = canvas.height / 2;
+    for (let x = 0; x < canvas.width; x++) {
+      const noise = isLocked ? 0 : (Math.random() - 0.5) * 6;
+      const y = midY + Math.sin(x * 0.05 * freqFactor + phase) * (isLocked ? 32 : 24) + noise;
+      if (x === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    phase += (isLocked ? 0.15 : 0.08);
+  }
+  render();
+}
+
+function descrambleGatewayFrame() {
+  if (!isGatewayLocked) return;
+  playSfx('decrypt');
+
+  const logEl = document.getElementById('gatewayTerminalLog');
+  if (!logEl) return;
+
+  logEl.textContent = `[DESCRAMBLING TRANSIT FRAME @ 1999Hz...]\nApplying Feistel phase rotation across circuit 0x7F...\nIntegrity checksum: 0x7F1999 PASS\n\n` +
+`================ [ECHO-GW-07 TRANSIT CAPTURE] ================\n` +
+`TIMESTAMP: 1999-12-28T03:14:09.112Z\n` +
+`ROUTER: echo-gw-07.kilonet.internal [10.19.99.7]\n` +
+`CIRCUIT: 0x7F Subsurface Lithospheric Ring Interface\n` +
+`PEER LINK: echo-subsystem.net [10.19.99.8] <-> deep-core [10.19.99.127]\n` +
+`PACKET FLAGS: [SYN, ACK, TEL-1999, DIEGETIC-ECHO]\n` +
+`DATA PAYLOAD:\n` +
+`  > Lithospheric acoustic subcarrier telemetry confirmed at 1999.00 Hz.\n` +
+`  > Strata profiling reveals recurring harmonic reflections in Carlsbad quadrant.\n` +
+`  > Unmapped transponder beacons #019 and #020 are echoing transit frames.\n` +
+`  > Sysadmin Note: Do not alter non-routable ring topology routes; memory dumps\n` +
+`    are propagating directly toward subterranean ring-0 core.\n` +
+`==============================================================\n` +
+`[STATUS] Telemetry frame broadcast to subterranean mesh.`;
+
+  // Broadcast signal to shared board and local storage
+  broadcastWebringSignal('gateway07_transit_descrambled', {
+    gateway: "echo-gw-07.kilonet.internal",
+    frequency: 1999,
+    carrier: "locked",
+    frame: "0x7F1999"
+  });
+
+  showNoticeToast("🛰️ Gateway-07 Transit Frame Decrypted & Broadcast!");
+}
+
+function clearGatewayTerminal() {
+  playSfx('click');
+  const logEl = document.getElementById('gatewayTerminalLog');
+  if (logEl) {
+    logEl.textContent = `[ECHO-GW-07 TRANSIT SNIFFER INITIALIZED]\nInterface: eth0.subterranean (10.19.99.7)\nListening on transit bus... Awaiting frequency carrier lock.`;
+  }
+}
+
+/* =========================================================================
+   19. RING SURFER & AUTO-TOUR RETRO VIEWPORT SIMULATOR (TAB 8)
+   ========================================================================= */
+let currentSurfIndex = 0;
+let isAutoTourRunning = false;
+let autoTourTimer = null;
+let dwellDurationSec = 10;
+let dwellRemainingMs = 10000;
+let dwellIntervalTimer = null;
+let surfSelectedBaud = 56000;
+let surfAudioMode = 'dialup';
+let surfTourHistoryHops = 0;
+let surfTotalBytesStreamed = 0;
+let surfBookmarks = [];
+
+function initRingSurfer() {
+  loadSurfBookmarks();
+  renderSurfBookmarks();
+  renderSurfViewport();
+  updateSurfOdometer();
+}
+
+function loadSurfBookmarks() {
+  try {
+    const saved = localStorage.getItem('knet_surf_bookmarks');
+    if (saved) {
+      surfBookmarks = JSON.parse(saved);
+    } else {
+      surfBookmarks = [
+        { id: "#001", name: "KiloNet 1999 Web Portal", url: "/web/portal.html" },
+        { id: "#002", name: "CyberSpire Retro Shrine", url: "/web/geocities.html" },
+        { id: "#003", name: "0xRELEASE Scene Vault", url: "/web/warez.html" }
+      ];
+    }
+  } catch (e) {
+    surfBookmarks = [];
+  }
+}
+
+function saveSurfBookmarks() {
+  try {
+    localStorage.setItem('knet_surf_bookmarks', JSON.stringify(surfBookmarks));
+  } catch (e) {}
+}
+
+function renderSurfViewport() {
+  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+  if (currentSurfIndex < 0 || currentSurfIndex >= visibleNodes.length) {
+    currentSurfIndex = 0;
+  }
+  const node = visibleNodes[currentSurfIndex];
+  if (!node) return;
+
+  // Titlebar & Location
+  const titleEl = document.getElementById('netscapeTitle');
+  const locEl = document.getElementById('netscapeLocationUrl');
+  if (titleEl) titleEl.textContent = `Netscape Communicator - [${node.name}]`;
+  if (locEl) locEl.textContent = node.url.startsWith('/') ? `kweb://${node.url.replace('/web/', '').replace('.html', '')}` : node.url;
+
+  // Viewport Content
+  const viewport = document.getElementById('netscapeViewportArea');
+  if (viewport) {
+    const sizeKb = (35 + (node.num * 14.5) % 180).toFixed(1);
+    viewport.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; border-bottom:1px solid var(--border-med); padding-bottom:8px; flex-wrap:wrap; gap:8px;">
+        <div>
+          <div style="font-size:16px; font-weight:bold; color:var(--cyan); display:flex; align-items:center; gap:8px;">
+            <span>${node.num <= 3 ? '🏛️' : node.num <= 7 ? '💾' : '🚀'}</span> ${node.name}
+            <span class="node-badge" style="background:#0284c7;">${node.id}</span>
+            <span class="node-cat cat-${node.category}">${node.category.toUpperCase()}</span>
+          </div>
+          <div style="font-family:var(--font-mono); font-size:11px; color:var(--text-muted); margin-top:2px;">
+            Webmaster: <strong style="color:var(--amber-bright);">${node.handle}</strong> &bull; Latency: <strong style="color:var(--green-bright);">${node.latency}ms</strong> &bull; Size: ~${sizeKb} KB
+          </div>
+        </div>
+        <div style="display:flex; gap:6px;">
+          <a href="${node.url}" class="btn-teleport" target="_top" style="padding:4px 10px; font-size:11px;">
+            <span>🚀</span> Visit Site Directly
+          </a>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px; line-height:1.6; font-size:12px; color:var(--text-primary); background:#070b16; border:1px solid var(--border-dark); padding:10px; border-radius:2px;">
+        ${node.desc}
+      </div>
+
+      <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:10px; margin-bottom:12px;">
+        <div style="background:#090d18; border:1px solid var(--border-med); padding:8px; border-radius:2px;">
+          <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-dim); text-transform:uppercase;">TECHNOLOGY ARCHITECTURE</div>
+          <div style="font-family:var(--font-mono); font-size:11px; color:var(--cyan); margin-top:2px;">${node.tech}</div>
+        </div>
+        <div style="background:#090d18; border:1px solid var(--border-med); padding:8px; border-radius:2px;">
+          <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-dim); text-transform:uppercase;">TAGS &amp; PROTOCOLS</div>
+          <div style="font-family:var(--font-mono); font-size:11px; color:var(--amber); margin-top:2px;">${node.tags}</div>
+        </div>
+      </div>
+
+      <div style="font-family:var(--font-mono); font-size:10px; color:var(--text-dim); border-top:1px dashed var(--border-med); padding-top:6px; display:flex; justify-content:space-between;">
+        <span>HTTP/1.1 200 OK &bull; Server: Apache/1.3.9 (Unix) mod_perl/1.21</span>
+        <span>Content-Type: text/html; charset=iso-8859-1 &bull; Cache-Control: max-age=0</span>
+      </div>
+    `;
+  }
+
+  // Update status bar
+  const statusLeft = document.getElementById('netscapeStatusLeft');
+  if (statusLeft) {
+    statusLeft.textContent = `Document: Done (${node.name} loaded cleanly)`;
+  }
+}
+
+function surfStep(dir) {
+  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+  currentSurfIndex = (currentSurfIndex + dir + visibleNodes.length) % visibleNodes.length;
+
+  surfTourHistoryHops++;
+  const activeNode = visibleNodes[currentSurfIndex];
+  const simulatedBytes = Math.round(25000 + (activeNode.num * 8500) % 95000);
+  surfTotalBytesStreamed += simulatedBytes;
+
+  logNodeVisit(activeNode.id);
+  updateTourDisplay();
+
+  // Play audio according to selected mode
+  if (surfAudioMode === 'dialup') {
+    playSfx('dialup');
+  } else if (surfAudioMode === 'chime') {
+    playSfx('hop');
+  }
+
+  // Animate Netscape Throbber
+  const throbber = document.getElementById('netscapeThrobber');
+  if (throbber) {
+    throbber.classList.add('animating');
+    setTimeout(() => {
+      if (throbber) throbber.classList.remove('animating');
+    }, 600);
+  }
+
+  // Reset dwell countdown
+  dwellRemainingMs = dwellDurationSec * 1000;
+  renderSurfViewport();
+  updateSurfOdometer();
+}
+
+function surfJumpRandom() {
+  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+  const nextIdx = Math.floor(Math.random() * visibleNodes.length);
+  currentSurfIndex = nextIdx;
+  surfStep(0);
+}
+
+function surfReload() {
+  playSfx('click');
+  renderSurfViewport();
+  showNoticeToast("Netscape cache flushed & reloaded.");
+}
+
+function surfGoHub() {
+  playSfx('click');
+  switchTab('tab-directory');
+}
+
+function surfLaunchDirect() {
+  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+  const node = visibleNodes[currentSurfIndex];
+  if (node) {
+    window.location.href = node.url;
+  }
+}
+
+function setDwellSeconds(sec) {
+  playSfx('click');
+  dwellDurationSec = sec;
+  dwellRemainingMs = sec * 1000;
+  [5, 10, 15, 30].forEach(s => {
+    const btn = document.getElementById(`btnDwell${s}`);
+    if (btn) {
+      if (s === sec) btn.classList.add('active');
+      else btn.classList.remove('active');
+    }
+  });
+  showNoticeToast(`Auto-Tour dwell set to ${sec} seconds.`);
+}
+
+function setSurfBaud(baud) {
+  surfSelectedBaud = parseInt(baud);
+  playSfx('click');
+  showNoticeToast(`Connection rate throttled to ${baud >= 1000000 ? 'T1 Backbone' : (baud/1000) + 'k'}.`);
+}
+
+function setSurfAudioMode(mode) {
+  surfAudioMode = mode;
+  playSfx('click');
+}
+
+function toggleAutoTour() {
+  isAutoTourRunning = !isAutoTourRunning;
+  const btn = document.getElementById('btnTourToggle');
+  const icon = document.getElementById('tourToggleIcon');
+  const label = document.getElementById('tourToggleLabel');
+  const timerText = document.getElementById('dwellTimerText');
+  const transferText = document.getElementById('transferStatusText');
+
+  if (isAutoTourRunning) {
+    playSfx('submit');
+    if (icon) icon.textContent = '⏸';
+    if (label) label.textContent = 'Pause Tour';
+    if (btn) btn.style.background = 'linear-gradient(180deg, #ea580c 0%, #c2410c 100%)';
+    if (transferText) transferText.textContent = 'STREAMING CYBER TOUR...';
+    startDwellCountdown();
+    showNoticeToast("▶ Auto-Tour started! Cruising through ring nodes...");
+  } else {
+    playSfx('click');
+    if (icon) icon.textContent = '▶';
+    if (label) label.textContent = 'Start Auto-Tour';
+    if (btn) btn.style.background = 'linear-gradient(180deg, #0284c7 0%, #0369a1 100%)';
+    if (timerText) timerText.textContent = 'PAUSED';
+    if (transferText) transferText.textContent = 'IDLE';
+    stopDwellCountdown();
+  }
+}
+
+function startDwellCountdown() {
+  stopDwellCountdown();
+  const stepMs = 100;
+  dwellIntervalTimer = setInterval(() => {
+    if (document.hidden) return;
+    dwellRemainingMs -= stepMs;
+    const progressPct = Math.max(0, Math.min(100, (1 - (dwellRemainingMs / (dwellDurationSec * 1000))) * 100));
+
+    const fill = document.getElementById('dwellProgressBar');
+    const timerText = document.getElementById('dwellTimerText');
+    if (fill) fill.style.width = `${progressPct}%`;
+    if (timerText) timerText.textContent = `${Math.ceil(Math.max(0, dwellRemainingMs) / 1000)}s until next hop`;
+
+    if (dwellRemainingMs <= 0) {
+      surfStep(1);
+    }
+  }, stepMs);
+}
+
+function stopDwellCountdown() {
+  if (dwellIntervalTimer) {
+    clearInterval(dwellIntervalTimer);
+    dwellIntervalTimer = null;
+  }
+  const fill = document.getElementById('dwellProgressBar');
+  if (fill) fill.style.width = '0%';
+}
+
+function updateSurfOdometer() {
+  const hopsEl = document.getElementById('surfHopCount');
+  const dataEl = document.getElementById('surfDataStreamed');
+  const latEl = document.getElementById('surfAvgLatency');
+  const covEl = document.getElementById('surfCoveragePct');
+
+  if (hopsEl) hopsEl.textContent = surfTourHistoryHops;
+  if (dataEl) dataEl.textContent = `${(surfTotalBytesStreamed / 1024).toFixed(1)} KB`;
+
+  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+  const activeNode = visibleNodes[currentSurfIndex];
+  if (latEl && activeNode) latEl.textContent = `${activeNode.latency} ms`;
+
+  const history = getTourHistory();
+  const pct = Math.round((history.length / visibleNodes.length) * 100);
+  if (covEl) covEl.textContent = `${pct}%`;
+}
+
+function addCurrentToBookmarks() {
+  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+  const node = visibleNodes[currentSurfIndex];
+  if (!node) return;
+
+  if (surfBookmarks.some(b => b.id === node.id)) {
+    showNoticeToast(`Node ${node.id} is already in your Netscape Bookmarks.`);
+    return;
+  }
+
+  surfBookmarks.push({ id: node.id, name: node.name, url: node.url });
+  saveSurfBookmarks();
+  renderSurfBookmarks();
+  playSfx('badge');
+  showNoticeToast(`⭐ Added [${node.name}] to Netscape Bookmarks!`);
+}
+
+function removeSurfBookmark(id) {
+  playSfx('click');
+  surfBookmarks = surfBookmarks.filter(b => b.id !== id);
+  saveSurfBookmarks();
+  renderSurfBookmarks();
+}
+
+function renderSurfBookmarks() {
+  const container = document.getElementById('surfBookmarksContainer');
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (surfBookmarks.length === 0) {
+    container.innerHTML = `<span style="font-family:var(--font-mono); font-size:11px; color:var(--text-dim);">No bookmarks saved yet. Click ⭐ Bookmark in the Netscape toolbar above!</span>`;
+    return;
+  }
+
+  surfBookmarks.forEach(b => {
+    const div = document.createElement('div');
+    div.style.background = '#0e172a';
+    div.style.border = '1px solid var(--border-med)';
+    div.style.padding = '3px 8px';
+    div.style.borderRadius = '2px';
+    div.style.fontFamily = 'var(--font-mono)';
+    div.style.fontSize = '11px';
+    div.style.display = 'flex';
+    div.style.alignItems = 'center';
+    div.style.gap = '6px';
+
+    div.innerHTML = `
+      <span style="color:var(--amber-bright); cursor:pointer;" onclick="jumpToBookmark('${b.id}')" title="Jump to this site">🔖 ${b.name} (${b.id})</span>
+      <span style="color:var(--text-dim); cursor:pointer; font-size:10px;" onclick="removeSurfBookmark('${b.id}')" title="Remove">×</span>
+    `;
+    container.appendChild(div);
+  });
+}
+
+function jumpToBookmark(id) {
+  const visibleNodes = ringNodes.filter(n => !n.hiddenFromDirectory);
+  const idx = visibleNodes.findIndex(n => n.id === id);
+  if (idx !== -1) {
+    currentSurfIndex = idx;
+    surfStep(0);
+  }
+}
+
+function clearNetscapeBookmarks() {
+  playSfx('click');
+  surfBookmarks = [];
+  saveSurfBookmarks();
+  renderSurfBookmarks();
+  showNoticeToast("Netscape bookmarks cleared.");
+}
+
+function exportNetscapeBookmarks() {
+  playSfx('badge');
+  const now = Math.floor(Date.now() / 1000);
+  let html = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<!-- This is an automatically generated file.
+     It will be read and overwritten.
+     DO NOT EDIT! -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<TITLE>Bookmarks</TITLE>
+<H1>Bookmarks</H1>
+<DL><p>
+    <DT><H3 ADD_DATE="${now}" LAST_MODIFIED="${now}">KiloNet 1999 Webring Favorites</H3>
+    <DL><p>
+`;
+  surfBookmarks.forEach(b => {
+    html += `        <DT><A HREF="${b.url}" ADD_DATE="${now}">${b.name}</A>\n`;
+  });
+  html += `    </DL><p>
+</DL><p>`;
+
+  navigator.clipboard.writeText(html).then(() => {
+    showNoticeToast("📋 Netscape bookmarks.html copied to clipboard!");
+  }).catch(() => {
+    showNoticeToast("Could not copy bookmarks to clipboard.");
+  });
+}
+
+/* =========================================================================
+   20. CONSORTIUM RINGMASTER VALIDATOR & LINK ROT AUDITOR (TAB 9)
+   ========================================================================= */
+let isAuditRunning = false;
+
+function initRingmasterValidator() {
+  populateValidatorTargets();
+  renderRingmasterSealCanvas();
+  generateAsciiCertificate(ringNodes[0]);
+}
+
+function populateValidatorTargets() {
+  const sel = document.getElementById('valTargetSelect');
+  if (!sel || sel.options.length > 0) return;
+  sel.innerHTML = '';
+
+  ringNodes.forEach(node => {
+    const opt = document.createElement('option');
+    opt.value = node.id;
+    opt.textContent = `${node.id} — ${node.name} (${node.url})`;
+    sel.appendChild(opt);
+  });
+}
+
+function onValidatorTargetChange(id) {
+  playSfx('click');
+  const node = ringNodes.find(n => n.id === id);
+  if (node) {
+    const urlInput = document.getElementById('valCustomUrlInput');
+    if (urlInput) urlInput.value = node.url;
+  }
+}
+
+function runRingmasterAudit() {
+  if (isAuditRunning) return;
+  isAuditRunning = true;
+  playSfx('submit');
+
+  const sel = document.getElementById('valTargetSelect');
+  const customInput = document.getElementById('valCustomUrlInput');
+  const terminal = document.getElementById('validatorTerminalLog');
+  const scoreText = document.getElementById('valScoreText');
+  const verdictText = document.getElementById('valVerdictText');
+  const sizeFootprintText = document.getElementById('valSizeFootprintText');
+  const sizeBar = document.getElementById('valSizeBar');
+
+  let targetNode = ringNodes.find(n => n.id === (sel ? sel.value : '#001')) || ringNodes[0];
+  let targetUrl = (customInput && customInput.value.trim()) ? customInput.value.trim() : targetNode.url;
+
+  terminal.textContent = `[RINGMASTER VALIDATOR INITIATED: ${new Date().toLocaleTimeString()}]\n` +
+`Auditing Target: ${targetNode.name} (${targetUrl})\n` +
+`Consortium Bylaws: Version 1999.4 / Strict <999KB Hard Footprint Policy\n` +
+`----------------------------------------------------------------------\n`;
+
+  // Reset stage pills
+  for (let i = 1; i <= 5; i++) {
+    const pill = document.getElementById(`stagePill${i}`);
+    const stat = document.getElementById(`stageStatus${i}`);
+    if (pill) { pill.className = 'audit-stage-pill running'; }
+    if (stat) { stat.textContent = 'Auditing...'; }
+  }
+
+  // Simulate 5 audit stages with realistic timing
+  setTimeout(() => {
+    // Stage 1: Doctype & HTML 4.01 Syntax
+    playSfx('click');
+    const pill1 = document.getElementById('stagePill1');
+    const stat1 = document.getElementById('stageStatus1');
+    if (pill1) pill1.className = 'audit-stage-pill passed';
+    if (stat1) stat1.textContent = 'PASS: HTML 4.01 Valid';
+    terminal.textContent += `[STAGE 1 PASS] DOCTYPE parsed: <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">\n` +
+`  - Meta charset: verified UTF-8 / ISO-8859-1\n` +
+`  - DOM Tree integrity: closed tags, zero malformed entities\n`;
+
+    setTimeout(() => {
+      // Stage 2: Ring Navigation Anchors
+      playSfx('click');
+      const pill2 = document.getElementById('stagePill2');
+      const stat2 = document.getElementById('stageStatus2');
+      const hasRingLinks = !targetNode.isDead;
+      if (pill2) pill2.className = `audit-stage-pill ${hasRingLinks ? 'passed' : 'failed'}`;
+      if (stat2) stat2.textContent = hasRingLinks ? 'PASS: Ring Anchors Ok' : 'FAIL: Dead Node';
+      terminal.textContent += hasRingLinks ?
+        `[STAGE 2 PASS] Ring navigation fragment verified:\n` +
+        `  - [Previous Node] anchor active\n` +
+        `  - [Next Node] anchor active\n` +
+        `  - [Random Jump] & [Hub Directory] verified\n` :
+        `[STAGE 2 WARN] Unmapped transponder: missing standard navigation widget.\n`;
+
+      setTimeout(() => {
+        // Stage 3: <999KB Size Ceiling
+        playSfx('click');
+        const pill3 = document.getElementById('stagePill3');
+        const stat3 = document.getElementById('stageStatus3');
+        const estBytes = 38000 + (targetNode.num * 14200) % 240000;
+        const estKb = (estBytes / 1024).toFixed(1);
+        const marginKb = (999.0 - parseFloat(estKb)).toFixed(1);
+        if (pill3) pill3.className = 'audit-stage-pill passed';
+        if (stat3) stat3.textContent = `PASS: ${estKb} KB (<999KB)`;
+        terminal.textContent += `[STAGE 3 PASS] File size benchmark: ${estKb} KB / 999.0 KB limit\n` +
+`  - Headroom margin: +${marginKb} KB safe clearance\n` +
+`  - No external bloated assets detected (zero CDN bloat)\n`;
+
+        if (sizeFootprintText) sizeFootprintText.textContent = `Size Footprint: ${estKb} KB / 999.0 KB`;
+        if (sizeBar) sizeBar.style.width = `${Math.min(100, (parseFloat(estKb) / 999.0) * 100)}%`;
+
+        setTimeout(() => {
+          // Stage 4: Jitter & Route Flap Benchmark
+          playSfx('click');
+          const pill4 = document.getElementById('stagePill4');
+          const stat4 = document.getElementById('stageStatus4');
+          if (pill4) pill4.className = 'audit-stage-pill passed';
+          if (stat4) stat4.textContent = `PASS: ${targetNode.latency}ms Jitter`;
+          terminal.textContent += `[STAGE 4 PASS] 4-Hop packet transit simulation:\n` +
+`  Hop 1: kilonet-core-01 (10.19.0.1) -> 4ms\n` +
+`  Hop 2: transit-west-03 (10.19.1.5) -> 11ms\n` +
+`  Hop 3: ring-relay-05 (10.19.2.14) -> 17ms\n` +
+`  Hop 4: target-host -> ${targetNode.latency}ms (0% packet loss)\n`;
+
+          setTimeout(() => {
+            // Stage 5: ARG Anomaly Detection
+            const pill5 = document.getElementById('stagePill5');
+            const stat5 = document.getElementById('stageStatus5');
+            const isAnomaly = targetNode.isDead || targetNode.id === '#015' || targetNode.id === '#016' || targetNode.id === '#017' || targetNode.id === '#018' || targetNode.id === '#019' || targetNode.id === '#020';
+
+            if (isAnomaly) {
+              if (pill5) pill5.className = 'audit-stage-pill running';
+              if (stat5) stat5.textContent = 'ANOMALY: 1999Hz Echo';
+              terminal.textContent += `[STAGE 5 ANOMALY] Lithospheric resonance scan flagged:\n` +
+`  - 1999Hz subcarrier signal detected on circuit 0x7F\n` +
+`  - Routing packets through gateway echo-gw-07.kilonet.internal\n` +
+`  - Non-routable internal transit link observed\n`;
+            } else {
+              if (pill5) pill5.className = 'audit-stage-pill passed';
+              if (stat5) stat5.textContent = 'PASS: Clean Carrier';
+              terminal.textContent += `[STAGE 5 PASS] Lithospheric carrier scan: nominal baseline.\n`;
+            }
+
+            // Final Verdict
+            playSfx('badge');
+            const finalScore = isAnomaly ? 96 : 99;
+            if (scoreText) scoreText.textContent = `${finalScore} / 100`;
+            if (verdictText) {
+              verdictText.innerHTML = `<span style="color:var(--green-bright); font-weight:bold;">★ CONSORTIUM ACCREDITED — VERIFIED 1999 COMPLIANT ★</span>`;
+            }
+            terminal.textContent += `----------------------------------------------------------------------\n` +
+`[AUDIT COMPLETE] Result: ACCREDITED (${finalScore}/100)\n` +
+`Consortium Seal Issued: RINGMASTER-1999-VERIFIED\n`;
+
+            generateAsciiCertificate(targetNode);
+            isAuditRunning = false;
+            showNoticeToast(`🛡️ Ringmaster Audit complete: ${targetNode.name} ACCREDITED!`);
+          }, 300);
+        }, 300);
+      }, 300);
+    }, 300);
+  }, 350);
+}
+
+function auditRandomNode() {
+  playSfx('click');
+  const sel = document.getElementById('valTargetSelect');
+  if (!sel) return;
+  const randIdx = Math.floor(Math.random() * sel.options.length);
+  sel.selectedIndex = randIdx;
+  onValidatorTargetChange(sel.value);
+  runRingmasterAudit();
+}
+
+function auditAllNodesBatch() {
+  playSfx('submit');
+  const terminal = document.getElementById('validatorTerminalLog');
+  if (!terminal) return;
+  terminal.textContent = `[BATCH CONSORTIUM AUDIT RUNNING ACROSS ALL NODES...]\n` +
+`Timestamp: ${new Date().toISOString()}\n\n`;
+
+  let passed = 0;
+  ringNodes.forEach(node => {
+    const isAnom = node.isDead || node.num >= 15;
+    terminal.textContent += `Node ${node.id} [${node.name.substring(0, 24).padEnd(24)}]: ${isAnom ? 'ACCREDITED (ANOMALY FLAGGED 1999Hz)' : 'ACCREDITED (100% CLEAN)'}\n`;
+    passed++;
+  });
+
+  terminal.textContent += `\n[BATCH AUDIT COMPLETE] 20/20 Nodes Processed. 0 Size Ceiling Violations (<999KB).`;
+  showNoticeToast("🔄 Batch Consortium Audit Completed for all 20 Nodes!");
+}
+
+function renderRingmasterSealCanvas() {
+  const canvas = document.getElementById('ringmasterSealCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  ctx.fillStyle = '#0a1020';
+  ctx.fillRect(0, 0, 88, 31);
+
+  // 3D Gold Beveled Border
+  ctx.strokeStyle = '#fbbf24';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(1.5, 1.5, 85, 28);
+  ctx.strokeStyle = '#d97706';
+  ctx.strokeRect(2.5, 2.5, 83, 26);
+
+  // Accent Corner Dots
+  ctx.fillStyle = '#f59e0b';
+  ctx.fillRect(2, 2, 2, 2);
+  ctx.fillRect(84, 2, 2, 2);
+  ctx.fillRect(2, 27, 2, 2);
+  ctx.fillRect(84, 27, 2, 2);
+
+  // Text
+  ctx.font = 'bold 8px Consolas, monospace';
+  ctx.fillStyle = '#fbbf24';
+  ctx.textAlign = 'center';
+  ctx.fillText('RINGMASTER', 44, 11);
+
+  ctx.fillStyle = '#34d399';
+  ctx.font = 'bold 7px Consolas, monospace';
+  ctx.fillText('1999 VERIFIED', 44, 20);
+
+  ctx.fillStyle = '#38bdf8';
+  ctx.font = '6px Consolas, monospace';
+  ctx.fillText('★ <999KB OK ★', 44, 27);
+}
+
+function copyRingmasterSealEmbed() {
+  playSfx('badge');
+  const code = `<a href="kweb://webring" target="_top" title="Official KiloNet 1999 Ringmaster Verified Node">
+  <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='88' height='31'><rect width='88' height='31' fill='%230a1020'/><rect x='1' y='1' width='86' height='29' fill='none' stroke='%23fbbf24' stroke-width='2'/><text x='44' y='12' fill='%23fbbf24' font-family='monospace' font-size='8' font-weight='bold' text-anchor='middle'>RINGMASTER</text><text x='44' y='21' fill='%2334d399' font-family='monospace' font-size='7' font-weight='bold' text-anchor='middle'>1999 VERIFIED</text><text x='44' y='28' fill='%2338bdf8' font-family='monospace' font-size='6' text-anchor='middle'>★ &lt;999KB OK ★</text></svg>" width="88" height="31" alt="Ringmaster 1999 Verified" style="border:1px solid #fbbf24;">
+</a>`;
+  navigator.clipboard.writeText(code).then(() => {
+    showNoticeToast("📋 Ringmaster Seal HTML snippet copied to clipboard!");
+  }).catch(() => {
+    showNoticeToast("Could not copy seal snippet.");
+  });
+}
+
+function downloadRingmasterSeal() {
+  playSfx('badge');
+  const canvas = document.getElementById('ringmasterSealCanvas');
+  if (!canvas) return;
+  const link = document.createElement('a');
+  link.download = 'ringmaster_1999_seal.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+  showNoticeToast("💾 Ringmaster Seal (.PNG) downloaded!");
+}
+
+function generateAsciiCertificate(node) {
+  const box = document.getElementById('asciiCertificateBox');
+  if (!box) return;
+  const targetName = node ? node.name : "KiloNet Web Sanctuary";
+  const targetId = node ? node.id : "#001";
+  box.value =
+`+--------------------------------------------------------------+
+|       KILONET 1999 WEBRING CONSORTIUM ACCREDITATION SEAL     |
+| Node: ${targetName.padEnd(30)} ID: ${targetId.padEnd(8)} Verified: 1999-12-31 |
+| Status: ACCREDITED <999KB • HTML 4.01 STRICT • JITTER TEST PASS |
+| Authority: Central Ringmaster Council [echo-gw-07.kilonet]   |
++--------------------------------------------------------------+`;
+}
+
+function copyAsciiCertificate() {
+  playSfx('badge');
+  const box = document.getElementById('asciiCertificateBox');
+  if (box) {
+    navigator.clipboard.writeText(box.value).then(() => {
+      showNoticeToast("📜 ASCII Certificate copied to clipboard!");
+    });
+  }
+}
+
+/* =========================================================================
    16. INITIALIZATION ON PAGE LOAD
    ========================================================================= */
 window.addEventListener('DOMContentLoaded', () => {
@@ -5353,6 +6831,8 @@ window.addEventListener('DOMContentLoaded', () => {
   initTopologyMap();
   drawAudioVisualizer();
   initSubterraneanSignalsBoard();
+  initGatewaySniffer();
+  initRingSurfer();
 
   if (window.fb && typeof window.onFirebaseReady === 'function') {
     window.onFirebaseReady();
@@ -5389,6 +6869,14 @@ document.addEventListener('visibilitychange', () => {
       warpAnimFrame = null;
       isWarpCanvasRunning = false;
     }
+    if (gatewayOscAnimFrame) {
+      cancelAnimationFrame(gatewayOscAnimFrame);
+      gatewayOscAnimFrame = null;
+    }
+    if (dwellIntervalTimer) {
+      clearInterval(dwellIntervalTimer);
+      dwellIntervalTimer = null;
+    }
   } else {
     // Tab foregrounded: restore animation frame loops and audio clock
     if (!topoAnimFrame && typeof initTopologyMap === 'function') {
@@ -5407,9 +6895,15 @@ document.addEventListener('visibilitychange', () => {
     if (!visAnimFrame && typeof drawAudioVisualizer === 'function') {
       drawAudioVisualizer();
     }
+    if (!gatewayOscAnimFrame && typeof startGatewayOscilloscope === 'function') {
+      startGatewayOscilloscope();
+    }
     const currentActiveTab = document.querySelector('.tab-pane.active');
     if (currentActiveTab && currentActiveTab.id === 'tab-teleport' && !isWarpCanvasRunning) {
       startWarpStarfield();
+    }
+    if (currentActiveTab && currentActiveTab.id === 'tab-surf' && isAutoTourRunning && !dwellIntervalTimer) {
+      startDwellCountdown();
     }
     if (isAudioEnabled && isBgmPlaying && !bgmTimer && typeof startProceduralBgm === 'function') {
       startProceduralBgm();
