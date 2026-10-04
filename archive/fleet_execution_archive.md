@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T11:56:00-07:00 — kilo-qa: KPing (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 157.3 KB web / 38.5 KB native < 999 KB ceiling).
+  - Quicksave & State Persistence: Fixed integer parsing bug in Win32 C [F5]/[F9], hardened web state persistence, and added quota protection.
+  - First-Run Tutorial Integrity: Enforced flag gating (`kping_tutorial.dat` / `kping_tutorialSeen`) preventing popups on restored saves.
+  - Toast & Modal Ergonomics: Re-anchored toast bar to top-center safe placement (Directive 189) with Escape key auto-dismissal.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener pausing Web Audio FM engine to eliminate background CPU waste.
+  - Verification: MSVC clean (`KPing.exe` 38.5 KB); Vite clean in 311ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T11:46:00-07:00 — kilo-usability: KGraph (Cursor-Centered Zoom, Touch Ergonomics, Dark Scrollbars & ARCH-05)**
   - Status: PASS ✅ (0 regressions, clean builds, 149.3 KB web / 36.9 KB native < 999 KB ceiling).
   - Cursor-Centered Zooming: Implemented smooth invariant mouse wheel zooming centered on pointer in web and Win32 C.

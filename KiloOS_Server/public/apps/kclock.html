@@ -56,12 +56,32 @@
     gap: 4px;
     height: 100%;
     overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-panel::-webkit-scrollbar, .lap-container::-webkit-scrollbar {
+    width: 6px;
+    height: 4px;
+  }
+
+  .tab-panel::-webkit-scrollbar-thumb, .lap-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+  }
+
+  .tab-panel::-webkit-scrollbar-thumb:hover, .lap-container::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
   }
 
   .tab {
     display: inline-flex;
     align-items: center;
-    padding: 0 14px;
+    padding: 0 10px;
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
@@ -132,10 +152,97 @@
     justify-content: center;
   }
 
+  /* Analog & Digital Clock Components */
+  .clock-mode-selector {
+    display: flex;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 3px;
+    margin-bottom: 20px;
+  }
+
+  .clock-mode-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 5px 14px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    outline: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .clock-mode-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .clock-mode-btn.active {
+    background: var(--primary);
+    color: #0f172a;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+  }
+
+  .clock-view-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 760px;
+  }
+
+  .clock-dual-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+
+  .analog-clock-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  #analog-clock-canvas {
+    width: 260px;
+    height: 260px;
+    max-width: 80vw;
+    max-height: 80vw;
+    border-radius: 50%;
+    box-shadow: 0 0 32px rgba(0, 0, 0, 0.6), inset 0 0 16px rgba(0, 0, 0, 0.5);
+    background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+
+  #analog-clock-canvas:hover {
+    transform: scale(1.02);
+  }
+
+  .digital-clock-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
   /* Digital Displays */
   .digital-clock {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 52px;
+    font-size: clamp(34px, 6vw, 54px);
     font-weight: 700;
     letter-spacing: 2px;
     color: #ffffff;
@@ -619,16 +726,20 @@
     vertical-align: middle;
   }
 
-  /* Toast Notification System */
+  /* Toast Notification System (Directive 189 Top-Center Placement) */
   #toast-container {
     position: fixed;
-    bottom: 18px;
-    right: 18px;
+    top: 62px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 8px;
     z-index: 2000;
     pointer-events: none;
+    width: max-content;
+    max-width: 90vw;
   }
 
   .toast {
@@ -644,17 +755,24 @@
     align-items: center;
     gap: 8px;
     pointer-events: auto;
-    animation: toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-    max-width: 340px;
+    cursor: pointer;
+    user-select: none;
+    animation: toastSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    max-width: 420px;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+
+  .toast:hover {
+    filter: brightness(1.1);
   }
 
   .toast.toast-success { border-color: var(--accent-green); }
   .toast.toast-warn { border-color: var(--accent-yellow); }
   .toast.toast-info { border-color: var(--primary); }
 
-  @keyframes toastSlideIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+  @keyframes toastSlideDown {
+    from { transform: translateY(-100%); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
   }
 
   /* Modal Overlay */
@@ -727,6 +845,23 @@
     padding: 6px 8px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   }
+
+  /* Responsive Layout Adaptations */
+  @media (max-width: 768px) {
+    .header { padding: 0 8px; }
+    .tab { padding: 0 8px; font-size: 12px; }
+    .header-actions .icon-btn-label { display: none; }
+    .calc-grid { grid-template-columns: 1fr; gap: 8px; }
+    .clock-dual-wrap { gap: 20px; }
+    #analog-clock-canvas { width: 220px; height: 220px; }
+  }
+
+  @media (max-width: 520px) {
+    .badge-key { display: none; }
+    .tab { padding: 0 6px; font-size: 11px; }
+    .calc-card, .settings-card { padding: 16px; }
+    #analog-clock-canvas { width: 180px; height: 180px; }
+  }
 </style>
 </head>
 <body>
@@ -746,20 +881,35 @@
       <button class="tab" role="tab" id="tab-btn-settings" aria-selected="false" aria-controls="tab-settings" onclick="switchTab('settings')">Settings <span class="badge-key">8</span></button>
     </div>
     <div class="header-actions">
-      <button class="icon-btn" id="sound-toggle-btn" onclick="toggleSound()" aria-label="Toggle Sound">🔊 Sound <span class="badge-key">M</span></button>
-      <button class="icon-btn" id="format-toggle-btn" onclick="toggleFormat()" aria-label="Toggle 12/24 Hour Format">24H <span class="badge-key">F</span></button>
-      <button class="icon-btn" id="help-btn" onclick="openHelpModal()" aria-label="Open Help Guide">❓ Help <span class="badge-key">F1</span></button>
+      <button class="icon-btn" id="sound-toggle-btn" onclick="toggleSound()" aria-label="Toggle Sound">🔊 <span class="icon-btn-label">Sound</span> <span class="badge-key">M</span></button>
+      <button class="icon-btn" id="format-toggle-btn" onclick="toggleFormat()" aria-label="Toggle 12/24 Hour Format"><span id="format-btn-text">24H</span> <span class="badge-key">F</span></button>
+      <button class="icon-btn" id="help-btn" onclick="openHelpModal()" aria-label="Open Help Guide">❓ <span class="icon-btn-label">Help</span> <span class="badge-key">F1</span></button>
     </div>
   </div>
 
-  <!-- Content Area -->-->
+  <!-- Content Area -->
   <div class="content-area">
 
     <!-- Tab 1: Clock -->
     <div id="tab-clock" class="tab-panel center-panel active" role="tabpanel" aria-labelledby="tab-btn-clock">
-      <div class="digital-clock" id="main-clock">00:00:00</div>
-      <div class="date-display" id="main-date">Loading...</div>
-      <div class="tz-badge" id="tz-display">Local Timezone</div>
+      <div class="clock-mode-selector" role="group" aria-label="Clock Display Mode">
+        <button class="clock-mode-btn" id="mode-btn-analog" onclick="setClockMode('analog')">🕒 Analog</button>
+        <button class="clock-mode-btn" id="mode-btn-digital" onclick="setClockMode('digital')">🔲 Digital</button>
+        <button class="clock-mode-btn active" id="mode-btn-dual" onclick="setClockMode('dual')">⏱️ Dual <span class="badge-key">A</span></button>
+      </div>
+
+      <div class="clock-view-container" id="clock-container">
+        <div class="clock-dual-wrap" id="clock-dual-wrap">
+          <div class="analog-clock-wrap" id="analog-clock-wrap">
+            <canvas id="analog-clock-canvas" width="260" height="260" aria-label="Analog Quartz Dial" onclick="cycleClockMode()" title="Click to cycle clock modes"></canvas>
+          </div>
+          <div class="digital-clock-wrap" id="digital-clock-wrap">
+            <div class="digital-clock" id="main-clock">00:00:00</div>
+            <div class="date-display" id="main-date">Loading...</div>
+            <div class="tz-badge" id="tz-display">Local Timezone</div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Tab 2: World Clock -->
@@ -802,7 +952,12 @@
               <option value="Australia/Sydney">Sydney (AEST)</option>
               <option value="Asia/Kolkata">New Delhi (IST)</option>
               <option value="Asia/Dubai">Dubai (GST)</option>
+              <option value="Asia/Singapore">Singapore (SGT)</option>
+              <option value="Pacific/Honolulu">Honolulu (HST)</option>
               <option value="America/Los_Angeles">Los Angeles (PST)</option>
+              <option value="America/Sao_Paulo">São Paulo (BRT)</option>
+              <option value="Africa/Cairo">Cairo (EEST)</option>
+              <option value="Pacific/Auckland">Auckland (NZST)</option>
               <option value="UTC">UTC</option>
             </select>
           </div>
@@ -819,15 +974,23 @@
               <option value="Australia/Sydney">Sydney (AEST)</option>
               <option value="Asia/Kolkata">New Delhi (IST)</option>
               <option value="Asia/Dubai">Dubai (GST)</option>
+              <option value="Asia/Singapore">Singapore (SGT)</option>
+              <option value="Pacific/Honolulu">Honolulu (HST)</option>
               <option value="America/Los_Angeles">Los Angeles (PST)</option>
+              <option value="America/Sao_Paulo">São Paulo (BRT)</option>
+              <option value="Africa/Cairo">Cairo (EEST)</option>
+              <option value="Pacific/Auckland">Auckland (NZST)</option>
               <option value="UTC">UTC</option>
             </select>
           </div>
         </div>
 
         <div class="calc-box">
-          <span class="calc-label">Source Date & Time</span>
-          <input type="datetime-local" id="calc-datetime" onchange="calculateTzDiff()">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span class="calc-label">Source Date & Time</span>
+            <button class="btn" onclick="setCalcToNow()" style="padding: 2px 8px; font-size: 11px;">Now</button>
+          </div>
+          <input type="datetime-local" id="calc-datetime" oninput="calculateTzDiff()" onchange="calculateTzDiff()">
         </div>
 
         <div class="calc-result">
@@ -933,7 +1096,7 @@
       </div>
     </div>
 
-    <!-- Tab 5: Timer -->
+    <!-- Tab 6: Timer -->
     <div id="tab-timer" class="tab-panel center-panel" role="tabpanel" aria-labelledby="tab-btn-timer">
       <div class="digital-clock" id="timer-display">05:00</div>
       
@@ -948,7 +1111,7 @@
 
       <div style="margin-top: 16px; display: flex; align-items: center; gap: 8px;">
         <label for="timer-mins" style="font-size: 13px; color: var(--text-muted);">Custom Mins:</label>
-        <input type="number" id="timer-mins" value="5" min="1" max="999" style="width: 75px; text-align: center;">
+        <input type="number" id="timer-mins" value="5" min="1" max="999" style="width: 75px; text-align: center;" oninput="onTimerMinsChange()">
       </div>
 
       <div class="btn-row">
@@ -957,7 +1120,7 @@
       </div>
     </div>
 
-    <!-- Tab 6: Alarms -->
+    <!-- Tab 7: Alarms -->
     <div id="tab-alarms" class="tab-panel" role="tabpanel" aria-labelledby="tab-btn-alarms">
       <div class="calc-card" style="max-width: 540px; padding: 20px;">
         <div style="font-weight: 700; font-size: 16px; color: #ffffff;">Add Repeating Alarm</div>
@@ -991,10 +1154,18 @@
       <div class="alarm-list" id="alarm-list"></div>
     </div>
 
-    <!-- Tab 7: Settings & Backup -->
+    <!-- Tab 8: Settings & Backup -->
     <div id="tab-settings" class="tab-panel center-panel" role="tabpanel" aria-labelledby="tab-btn-settings">
       <div class="settings-card">
         <div style="font-weight: 700; font-size: 18px; color: #ffffff;">Settings & Data Management</div>
+
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-title">Clock Dial View</span>
+            <span class="setting-desc">Choose between Analog Quartz dial, Digital readout, or Dual layout</span>
+          </div>
+          <button class="btn" onclick="cycleClockMode()" id="settings-mode-btn">Dual</button>
+        </div>
 
         <div class="setting-row">
           <div class="setting-info">
@@ -1039,7 +1210,10 @@
   <!-- Notification Modal Overlay -->
   <div class="modal-overlay" id="alert-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" onclick="if(event.target===this)dismissModal()">
     <div class="modal-box">
-      <div class="modal-title" id="modal-title">⏰ Alarm</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+        <div class="modal-title" id="modal-title" style="margin-bottom: 0;">⏰ Alarm</div>
+        <button class="icon-btn" onclick="dismissModal()" style="padding: 2px 8px; font-size: 12px;" aria-label="Close">✕</button>
+      </div>
       <div class="modal-desc" id="modal-desc">Time is up!</div>
       <div class="btn-row" style="margin-top: 0;">
         <button class="btn primary" onclick="dismissModal()">Dismiss</button>
@@ -1057,7 +1231,7 @@
         <button class="icon-btn" onclick="closeHelpModal()" style="padding: 4px 10px;">✕</button>
       </div>
       <div style="font-size: 13px; color: var(--text-muted); margin-top: 12px; line-height: 1.5;">
-        KClock provides full precision world time, timezone offset calculations, Unix Epoch converter, stopwatch with fastest/slowest lap detection, countdown timers, and repeating daily alarms.
+        KClock provides full precision world time with high-DPI analog dial, timezone offset calculations, Unix Epoch converter, stopwatch with fastest/slowest lap detection, countdown timers, and repeating daily alarms.
       </div>
       <table class="help-shortcuts-table">
         <thead>
@@ -1068,17 +1242,18 @@
         </thead>
         <tbody>
           <tr><td><span class="badge-key">1</span> - <span class="badge-key">8</span></td><td>Jump directly to tab (Clock, World, TZ Calc, Epoch, Stopwatch, Timer, Alarms, Settings)</td></tr>
+          <tr><td><span class="badge-key">A</span></td><td>Cycle Clock view (Analog Quartz, Digital, Dual)</td></tr>
           <tr><td><span class="badge-key">Space</span></td><td>Start / Pause active Stopwatch or Timer</td></tr>
           <tr><td><span class="badge-key">L</span></td><td>Record Lap split (Stopwatch)</td></tr>
           <tr><td><span class="badge-key">R</span></td><td>Reset active Stopwatch or Timer</td></tr>
           <tr><td><span class="badge-key">M</span></td><td>Toggle Audio Chimes and Alarm Sounds</td></tr>
           <tr><td><span class="badge-key">F</span></td><td>Toggle 12-Hour / 24-Hour Time Format</td></tr>
           <tr><td><span class="badge-key">H</span> / <span class="badge-key">F1</span></td><td>Open this Help & Keyboard Shortcuts Guide</td></tr>
-          <tr><td><span class="badge-key">Esc</span></td><td>Dismiss active Modal / Alarm / Dialog</td></tr>
+          <tr><td><span class="badge-key">Esc</span></td><td>Dismiss active Modal / Alarm / Dialog / Toasts</td></tr>
         </tbody>
       </table>
       <div style="display: flex; justify-content: flex-end; margin-top: 14px;">
-        <button class="btn primary" onclick="closeHelpModal()">Got it</button>
+        <button class="btn primary" onclick="closeHelpModal()">Got it (Esc)</button>
       </div>
     </div>
   </div>
@@ -1115,9 +1290,13 @@
     }
 
     // Load persisted state
+    let clockMode = 'dual'; // 'analog', 'digital', 'dual'
+    let analogClockRaf = null;
+
     const savedSettings = safeGetStorage('kclock_settings', {});
     if (typeof savedSettings.use24Hour === 'boolean') use24Hour = savedSettings.use24Hour;
     if (typeof savedSettings.soundEnabled === 'boolean') soundEnabled = savedSettings.soundEnabled;
+    if (typeof savedSettings.clockMode === 'string') clockMode = savedSettings.clockMode;
 
     let worldCities = [
       'America/New_York',
@@ -1140,7 +1319,7 @@
     }
 
     function saveState() {
-      safeSetStorage('kclock_settings', { use24Hour, soundEnabled });
+      safeSetStorage('kclock_settings', { use24Hour, soundEnabled, clockMode });
       safeSetStorage('kclock_cities', worldCities);
       safeSetStorage('kclock_alarms', alarms);
     }
@@ -1186,18 +1365,246 @@
     function toggleSound() {
       soundEnabled = !soundEnabled;
       const btn = document.getElementById('sound-toggle-btn');
-      btn.innerText = soundEnabled ? '🔊 Sound On' : '🔇 Muted';
+      btn.innerHTML = soundEnabled ? '🔊 <span class="icon-btn-label">Sound</span> <span class="badge-key">M</span>' : '🔇 <span class="icon-btn-label">Muted</span> <span class="badge-key">M</span>';
       document.getElementById('settings-sound-btn').innerText = soundEnabled ? 'Enabled' : 'Muted';
       saveState();
+      showToast(soundEnabled ? 'Audio Chimes Enabled' : 'Audio Muted', 'info');
     }
 
     function toggleFormat() {
       use24Hour = !use24Hour;
-      document.getElementById('format-toggle-btn').innerText = use24Hour ? '12H' : '24H';
+      const fmtTxt = document.getElementById('format-btn-text');
+      if (fmtTxt) fmtTxt.innerText = use24Hour ? '12H' : '24H';
       document.getElementById('settings-format-btn').innerText = use24Hour ? '24-Hour' : '12-Hour';
       updateClock();
       updateWorldClock();
+      if (currentTab === 'tzcalc') calculateTzDiff();
       saveState();
+      showToast(`Time format set to ${use24Hour ? '24-Hour' : '12-Hour'}`, 'info');
+    }
+
+    // --- Analog Quartz Clock Engine (HiDPI Canvas) ---
+    function setClockMode(mode) {
+      clockMode = mode;
+      document.querySelectorAll('.clock-mode-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById('mode-btn-' + mode);
+      if (activeBtn) activeBtn.classList.add('active');
+      const settingsModeBtn = document.getElementById('settings-mode-btn');
+      if (settingsModeBtn) {
+        settingsModeBtn.innerText = mode.charAt(0).toUpperCase() + mode.slice(1);
+      }
+
+      const analogWrap = document.getElementById('analog-clock-wrap');
+      const digitalWrap = document.getElementById('digital-clock-wrap');
+
+      if (mode === 'analog') {
+        if (analogWrap) analogWrap.style.display = 'flex';
+        if (digitalWrap) digitalWrap.style.display = 'none';
+      } else if (mode === 'digital') {
+        if (analogWrap) analogWrap.style.display = 'none';
+        if (digitalWrap) digitalWrap.style.display = 'flex';
+      } else { // dual
+        if (analogWrap) analogWrap.style.display = 'flex';
+        if (digitalWrap) digitalWrap.style.display = 'flex';
+      }
+
+      saveState();
+      if (currentTab === 'clock' && (mode === 'analog' || mode === 'dual') && !document.hidden) {
+        startAnalogClock();
+      } else {
+        stopAnalogClock();
+      }
+    }
+
+    function cycleClockMode() {
+      const modes = ['analog', 'digital', 'dual'];
+      const nextIdx = (modes.indexOf(clockMode) + 1) % modes.length;
+      setClockMode(modes[nextIdx]);
+      showToast(`Clock view: ${modes[nextIdx].toUpperCase()}`, 'info', 1500);
+    }
+
+    function drawAnalogClock() {
+      const canvas = document.getElementById('analog-clock-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const size = 260;
+
+      if (canvas.width !== Math.round(size * dpr) || canvas.height !== Math.round(size * dpr)) {
+        canvas.width = Math.round(size * dpr);
+        canvas.height = Math.round(size * dpr);
+      }
+
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.clearRect(0, 0, size, size);
+
+      const cx = size / 2;
+      const cy = size / 2;
+      const r = (size / 2) - 8;
+
+      // Outer bezel with brushed metallic gradient
+      const bezelGrad = ctx.createLinearGradient(0, 0, size, size);
+      bezelGrad.addColorStop(0, '#475569');
+      bezelGrad.addColorStop(0.5, '#1e293b');
+      bezelGrad.addColorStop(1, '#0f172a');
+      ctx.beginPath();
+      ctx.arc(cx, cy, r + 4, 0, Math.PI * 2);
+      ctx.fillStyle = bezelGrad;
+      ctx.fill();
+
+      // Subtle cyan accent ring
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Inner dial face
+      const dialGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, r);
+      dialGrad.addColorStop(0, '#1e293b');
+      dialGrad.addColorStop(0.85, '#0f172a');
+      dialGrad.addColorStop(1, '#020617');
+      ctx.beginPath();
+      ctx.arc(cx, cy, r - 1, 0, Math.PI * 2);
+      ctx.fillStyle = dialGrad;
+      ctx.fill();
+
+      // Tick marks
+      for (let i = 0; i < 60; i++) {
+        const angle = (i * Math.PI) / 30;
+        const isHour = i % 5 === 0;
+        const tickLen = isHour ? 10 : 4;
+        const tickWidth = isHour ? 2.5 : 1;
+        const innerR = r - 10 - tickLen;
+        const outerR = r - 10;
+
+        const x1 = cx + Math.sin(angle) * innerR;
+        const y1 = cy - Math.cos(angle) * innerR;
+        const x2 = cx + Math.sin(angle) * outerR;
+        const y2 = cy - Math.cos(angle) * outerR;
+
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.strokeStyle = isHour ? '#38bdf8' : 'rgba(148, 163, 184, 0.35)';
+        ctx.lineWidth = tickWidth;
+        ctx.lineCap = 'round';
+        ctx.stroke();
+      }
+
+      // Hour numerals
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const numR = r - 30;
+      for (let h = 1; h <= 12; h++) {
+        const angle = (h * Math.PI) / 6;
+        const x = cx + Math.sin(angle) * numR;
+        const y = cy - Math.cos(angle) * numR;
+        const isCardinal = (h % 3 === 0);
+        ctx.font = isCardinal ? '600 13px "JetBrains Mono", monospace' : '500 10px "Inter", sans-serif';
+        ctx.fillStyle = isCardinal ? '#f8fafc' : '#94a3b8';
+        ctx.fillText(h.toString(), x, y);
+      }
+
+      // Brand mark
+      ctx.font = '700 9px "JetBrains Mono", monospace';
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.6)';
+      ctx.fillText('KCLOCK', cx, cy - (r * 0.35));
+      ctx.font = '500 7px "Inter", sans-serif';
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.4)';
+      ctx.fillText('QUARTZ', cx, cy + (r * 0.35));
+
+      // Precision time values
+      const now = new Date();
+      const ms = now.getMilliseconds();
+      const sec = now.getSeconds() + (ms / 1000);
+      const min = now.getMinutes() + (sec / 60);
+      const hr = (now.getHours() % 12) + (min / 60);
+
+      // Hour Hand
+      const hrAngle = hr * (Math.PI / 6);
+      const hrLen = r * 0.5;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(cx - Math.sin(hrAngle) * 10, cy + Math.cos(hrAngle) * 10);
+      ctx.lineTo(cx + Math.sin(hrAngle) * hrLen, cy - Math.cos(hrAngle) * hrLen);
+      ctx.strokeStyle = '#f8fafc';
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+      ctx.shadowBlur = 6;
+      ctx.stroke();
+      ctx.restore();
+
+      // Minute Hand
+      const minAngle = min * (Math.PI / 30);
+      const minLen = r * 0.72;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(cx - Math.sin(minAngle) * 12, cy + Math.cos(minAngle) * 12);
+      ctx.lineTo(cx + Math.sin(minAngle) * minLen, cy - Math.cos(minAngle) * minLen);
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.8;
+      ctx.lineCap = 'round';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
+      ctx.shadowBlur = 6;
+      ctx.stroke();
+      ctx.restore();
+
+      // Second Hand (Sweeping needle with counterbalance ring)
+      const secAngle = sec * (Math.PI / 30);
+      const secLen = r * 0.82;
+      const backLen = r * 0.2;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(cx - Math.sin(secAngle) * backLen, cy + Math.cos(secAngle) * backLen);
+      ctx.lineTo(cx + Math.sin(secAngle) * secLen, cy - Math.cos(secAngle) * secLen);
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 1.5;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+
+      // Counterbalance ring
+      const cbX = cx - Math.sin(secAngle) * (backLen * 0.65);
+      const cbY = cy + Math.cos(secAngle) * (backLen * 0.65);
+      ctx.beginPath();
+      ctx.arc(cbX, cbY, 3, 0, Math.PI * 2);
+      ctx.fillStyle = '#ef4444';
+      ctx.fill();
+      ctx.restore();
+
+      // Center pivot cap
+      ctx.beginPath();
+      ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+      ctx.fillStyle = '#f8fafc';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+      ctx.fillStyle = '#0f172a';
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function startAnalogClock() {
+      if (analogClockRaf) cancelAnimationFrame(analogClockRaf);
+      function loop() {
+        if (currentTab === 'clock' && (clockMode === 'analog' || clockMode === 'dual') && !document.hidden) {
+          drawAnalogClock();
+          analogClockRaf = requestAnimationFrame(loop);
+        } else {
+          analogClockRaf = null;
+        }
+      }
+      loop();
+    }
+
+    function stopAnalogClock() {
+      if (analogClockRaf) {
+        cancelAnimationFrame(analogClockRaf);
+        analogClockRaf = null;
+      }
     }
 
     // Navigation Tabs
@@ -1218,6 +1625,13 @@
           panel.classList.remove('active');
         }
       });
+      if (tabId === 'clock') {
+        if (clockMode === 'analog' || clockMode === 'dual') startAnalogClock();
+      } else {
+        stopAnalogClock();
+      }
+      if (tabId === 'world') updateWorldClock();
+      if (tabId === 'alarms') renderAlarms();
       if (tabId === 'tzcalc') initTzCalcDefaults();
       if (tabId === 'epoch') initEpochDefaults();
     }
@@ -1262,17 +1676,27 @@
     // --- Tab 2: World Clock ---
     function addWorldCity() {
       const sel = document.getElementById('city-select').value;
-      if (!worldCities.includes(sel)) {
-        worldCities.push(sel);
-        updateWorldClock();
-        saveState();
+      if (worldCities.includes(sel)) {
+        showToast('City is already added to your world clock list.', 'warn');
+        return;
       }
+      if (worldCities.length >= 24) {
+        showToast('Maximum 24 world clock cities reached.', 'warn');
+        return;
+      }
+      worldCities.push(sel);
+      updateWorldClock();
+      saveState();
+      const rawCityName = sel.split('/')[1] ? sel.split('/')[1].replace(/_/g, ' ') : sel;
+      showToast(`Added ${rawCityName} to World Clock`, 'success');
     }
 
     function removeWorldCity(tz) {
       worldCities = worldCities.filter(c => c !== tz);
       updateWorldClock();
       saveState();
+      const rawCityName = tz.split('/')[1] ? tz.split('/')[1].replace(/_/g, ' ') : tz;
+      showToast(`Removed ${rawCityName}`, 'info');
     }
 
     function getTimezoneOffsetMinutes(tzName, date = new Date()) {
@@ -1285,33 +1709,69 @@
       }
     }
 
+    function getDayDiffLabel(tzName, refDate) {
+      try {
+        const locParts = new Intl.DateTimeFormat('en-US', { year: 'numeric', month: 'numeric', day: 'numeric' }).formatToParts(refDate);
+        const tzParts = new Intl.DateTimeFormat('en-US', { timeZone: tzName, year: 'numeric', month: 'numeric', day: 'numeric' }).formatToParts(refDate);
+        const locDate = new Date(locParts.find(p => p.type === 'year').value, locParts.find(p => p.type === 'month').value - 1, locParts.find(p => p.type === 'day').value);
+        const tgtDate = new Date(tzParts.find(p => p.type === 'year').value, tzParts.find(p => p.type === 'month').value - 1, tzParts.find(p => p.type === 'day').value);
+        const diff = Math.round((tgtDate - locDate) / 86400000);
+        if (diff > 0) return `+${diff} Day${diff > 1 ? 's' : ''}`;
+        if (diff < 0) return `${diff} Day${diff < -1 ? 's' : ''}`;
+        return 'Today';
+      } catch (e) {
+        return 'Today';
+      }
+    }
+
     function updateWorldClock() {
       const grid = document.getElementById('world-grid');
-      grid.innerHTML = '';
       const now = new Date();
       const localOffset = -now.getTimezoneOffset();
 
+      if (worldCities.length === 0) {
+        grid.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 32px; grid-column: 1 / -1; font-size: 14px;">No cities added yet. Select a timezone above and click "+ Add City".</div>';
+        return;
+      }
+
+      // Check if existing cards match current worldCities order to update in-place without destroying DOM nodes
+      const existingCards = grid.querySelectorAll('.city-card');
+      const canUpdateInPlace = existingCards.length === worldCities.length &&
+        Array.from(existingCards).every((c, i) => c.dataset.tz === worldCities[i]);
+
+      if (canUpdateInPlace) {
+        worldCities.forEach((tz, i) => {
+          const card = existingCards[i];
+          try {
+            const timeStr = now.toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: !use24Hour });
+            const dateStr = now.toLocaleDateString('en-US', { timeZone: tz, weekday: 'short', month: 'short', day: 'numeric' });
+            const dayDiffLabel = getDayDiffLabel(tz, now);
+            const cityOffset = getTimezoneOffsetMinutes(tz, now);
+            const diffMinutes = cityOffset - localOffset;
+            const diffHours = (diffMinutes / 60).toFixed(1).replace('.0', '');
+            const diffSign = diffMinutes >= 0 ? '+' : '';
+            const offsetBadgeStr = `${diffSign}${diffHours}h vs Local`;
+
+            const dayDiffEl = card.querySelector('.city-daydiff');
+            const timeEl = card.querySelector('.city-time');
+            const dateEl = card.querySelector('.city-date');
+            const badgeEl = card.querySelector('.city-offset-badge');
+
+            if (dayDiffEl) dayDiffEl.innerText = dayDiffLabel;
+            if (timeEl) timeEl.innerText = timeStr;
+            if (dateEl) dateEl.innerText = `${dateStr} (${tz})`;
+            if (badgeEl) badgeEl.innerText = offsetBadgeStr;
+          } catch (e) {}
+        });
+        return;
+      }
+
+      grid.innerHTML = '';
       worldCities.forEach(tz => {
         try {
           const timeStr = now.toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: !use24Hour });
           const dateStr = now.toLocaleDateString('en-US', { timeZone: tz, weekday: 'short', month: 'short', day: 'numeric' });
-          
-          const localDay = now.getDate();
-          const targetDayStr = now.toLocaleDateString('en-US', { timeZone: tz, day: 'numeric' });
-          const targetDay = parseInt(targetDayStr, 10);
-          
-          let dayDiffLabel = 'Today';
-          if (targetDay !== localDay) {
-            const localHour = now.getHours();
-            const targetHourStr = now.toLocaleTimeString('en-US', { timeZone: tz, hour: '2-digit', hour12: false });
-            const targetHour = parseInt(targetHourStr, 10);
-            if (targetHour > localHour || (targetDay > localDay && !(localDay > 25 && targetDay === 1))) {
-              dayDiffLabel = '+1 Day';
-            } else {
-              dayDiffLabel = '-1 Day';
-            }
-          }
-
+          const dayDiffLabel = getDayDiffLabel(tz, now);
           const cityOffset = getTimezoneOffsetMinutes(tz, now);
           const diffMinutes = cityOffset - localOffset;
           const diffHours = (diffMinutes / 60).toFixed(1).replace('.0', '');
@@ -1320,6 +1780,7 @@
 
           const card = document.createElement('div');
           card.className = 'city-card';
+          card.dataset.tz = tz;
           const rawCityName = tz.split('/')[1] ? tz.split('/')[1].replace(/_/g, ' ') : tz;
           const safeCityName = escapeHtml(rawCityName);
           const safeTz = escapeHtml(tz);
@@ -1355,6 +1816,14 @@
       calculateTzDiff();
     }
 
+    function setCalcToNow() {
+      const now = new Date();
+      const isoStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+      document.getElementById('calc-datetime').value = isoStr;
+      calculateTzDiff();
+      showToast('Source date & time set to now', 'info');
+    }
+
     function swapCalcCities() {
       const src = document.getElementById('calc-src-city');
       const tgt = document.getElementById('calc-tgt-city');
@@ -1362,6 +1831,7 @@
       src.value = tgt.value;
       tgt.value = tmp;
       calculateTzDiff();
+      showToast('Swapped source and target cities', 'info');
     }
 
     function calculateTzDiff() {
@@ -1371,9 +1841,9 @@
 
       if (!dtVal) return;
 
-      const baseDate = new Date(dtVal);
-      const srcOffset = getTimezoneOffsetMinutes(srcTz, baseDate);
-      const tgtOffset = getTimezoneOffsetMinutes(tgtTz, baseDate);
+      const refDate = new Date(dtVal + 'Z');
+      const srcOffset = getTimezoneOffsetMinutes(srcTz, refDate);
+      const tgtOffset = getTimezoneOffsetMinutes(tgtTz, refDate);
 
       const diffMins = tgtOffset - srcOffset;
       const diffHours = diffMins / 60;
@@ -1382,10 +1852,11 @@
       document.getElementById('calc-diff-text').innerText = `${signStr}${diffHours.toFixed(1).replace('.0', '')} Hours`;
 
       try {
-        const targetDate = new Date(baseDate.getTime() + diffMins * 60000);
-        const options = { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: !use24Hour };
-        const formattedTgt = targetDate.toLocaleDateString('en-US', options);
-        document.getElementById('calc-target-result').innerHTML = `Target City Time: <strong>${escapeHtml(formattedTgt)}</strong>`;
+        const targetUtc = new Date(refDate.getTime() + diffMins * 60000);
+        const options = { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: !use24Hour };
+        const formattedTgt = targetUtc.toLocaleDateString('en-US', options);
+        const rawTgtName = tgtTz.split('/')[1] ? tgtTz.split('/')[1].replace(/_/g, ' ') : tgtTz;
+        document.getElementById('calc-target-result').innerHTML = `Target City Time (${escapeHtml(rawTgtName)}): <strong>${escapeHtml(formattedTgt)}</strong>`;
       } catch (e) {
         document.getElementById('calc-target-result').innerText = 'Calculation Error';
       }
@@ -1416,6 +1887,7 @@
     }
 
     function updateEpochTicker() {
+      if (currentTab !== 'epoch' || document.hidden) return;
       const now = new Date();
       const nowMs = now.getTime();
       const nowSec = Math.floor(nowMs / 1000);
@@ -1457,7 +1929,14 @@
       if (yearPctEl) yearPctEl.innerText = `${pct}% done`;
     }
 
-    setInterval(updateEpochTicker, 50);    function showToast(msg, type = 'info', duration = 3500) {
+    setInterval(updateEpochTicker, 50);
+
+    function dismissAllToasts() {
+      const container = document.getElementById('toast-container');
+      if (container) container.innerHTML = '';
+    }
+
+    function showToast(msg, type = 'info', duration = 3500) {
       const container = document.getElementById('toast-container');
       if (!container) return;
       const toast = document.createElement('div');
@@ -1466,13 +1945,22 @@
       if (type === 'success') icon = '✅';
       else if (type === 'warn') icon = '⚠️';
       else if (type === 'error') icon = '❌';
-      toast.innerHTML = `<span>${icon}</span><span>${escapeHtml(msg)}</span>`;
+      toast.innerHTML = `<span>${icon}</span><span>${escapeHtml(msg)}</span><span style="opacity: 0.6; font-size: 10px; margin-left: 6px;">✕</span>`;
+      toast.title = "Click to dismiss";
+      toast.onclick = () => {
+        toast.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-10px)';
+        setTimeout(() => toast.remove(), 200);
+      };
       container.appendChild(toast);
       setTimeout(() => {
-        toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(100%)';
-        setTimeout(() => toast.remove(), 300);
+        if (toast.parentNode) {
+          toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(-10px)';
+          setTimeout(() => toast.remove(), 300);
+        }
       }, duration);
     }
 
@@ -1487,20 +1975,41 @@
     function copyLiveEpoch(mode) {
       const now = Date.now();
       const text = mode === 'sec' ? Math.floor(now / 1000).toString() : now.toString();
-      navigator.clipboard.writeText(text).then(() => {
-        const btn = document.getElementById(mode === 'sec' ? 'copy-sec-btn' : 'copy-ms-btn');
+      const btn = document.getElementById(mode === 'sec' ? 'copy-sec-btn' : 'copy-ms-btn');
+
+      function onSuccess() {
         if (btn) {
           const orig = btn.innerText;
           btn.innerText = '✅ Copied!';
           setTimeout(() => { btn.innerText = orig; }, 1200);
         }
         showToast(`Timestamp (${mode === 'sec' ? 'seconds' : 'milliseconds'}) copied to clipboard!`, 'success');
-      }).catch(() => {
+      }
+
+      function fallbackCopy() {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = text;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          const ok = document.execCommand('copy');
+          document.body.removeChild(ta);
+          if (ok) { onSuccess(); return; }
+        } catch (e) {}
         showToast('Failed to copy to clipboard', 'warn');
-      });
+      }
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(onSuccess).catch(fallbackCopy);
+      } else {
+        fallbackCopy();
+      }
     }
 
     function initEpochDefaults() {
+      updateEpochTicker();
       const input = document.getElementById('conv-epoch-input');
       if (input && !input.value) {
         input.value = Math.floor(Date.now() / 1000);
@@ -1617,7 +2126,7 @@
         swElapsed += Date.now() - swStart;
         cancelAnimationFrame(swRaf);
         swRunning = false;
-        document.getElementById('sw-btn').innerText = 'Start';
+        document.getElementById('sw-btn').innerText = 'Resume';
         document.getElementById('sw-btn').classList.add('primary');
         showToast('Stopwatch paused', 'info');
       } else {
@@ -1644,6 +2153,8 @@
 
         renderLaps();
         showToast(`Lap ${swLaps.length} recorded: +${formatSw(splitTime)}`, 'info');
+      } else {
+        showToast('Start stopwatch to record a lap', 'warn');
       }
     }
 
@@ -1723,12 +2234,26 @@
       return `${mins}:${secs}`;
     }
 
+    function onTimerMinsChange() {
+      if (!tmRunning) {
+        let mins = parseInt(document.getElementById('timer-mins').value, 10);
+        if (isNaN(mins) || mins < 1) mins = 1;
+        if (mins > 999) mins = 999;
+        tmDuration = mins * 60000;
+        tmRemaining = tmDuration;
+        document.getElementById('timer-display').innerText = formatTm(tmDuration);
+      }
+    }
+
     function setTimerPreset(mins) {
       document.getElementById('timer-mins').value = mins;
-      resetTimer();
+      tmRunning = false;
+      clearInterval(tmInterval);
       tmDuration = mins * 60000;
       tmRemaining = tmDuration;
       document.getElementById('timer-display').innerText = formatTm(tmDuration);
+      document.getElementById('tm-btn').innerText = 'Start';
+      document.getElementById('tm-btn').classList.add('primary');
       showToast(`Timer set to ${mins} min`, 'info');
     }
 
@@ -1875,6 +2400,11 @@
       const list = document.getElementById('alarm-list');
       list.innerHTML = '';
 
+      if (alarms.length === 0) {
+        list.innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 24px; font-size: 13px; border: 1px dashed var(--border-color); border-radius: 12px;">No alarms set. Configure time and days above to add an alarm.</div>';
+        return;
+      }
+
       alarms.sort((a, b) => a.time.localeCompare(b.time)).forEach((a, i) => {
         const card = document.createElement('div');
         card.className = `alarm-card ${a.active ? '' : 'disabled'}`;
@@ -1915,6 +2445,11 @@
         if (a.active && Array.isArray(a.days) && a.days.includes(currentDay) && a.time === hhmm && !a.triggered) {
           a.triggered = true;
           activeAlarmIndex = index;
+          if (a.isOneTime) {
+            a.active = false;
+            saveState();
+            renderAlarms();
+          }
           playChime([523.25, 659.25, 783.99], 0.35);
           showModal(`⏰ ${a.label || 'Alarm'}`, `Alarm ringing for ${a.time}`, true);
         }
@@ -1937,7 +2472,8 @@
           label: `${alarms[activeAlarmIndex].label || 'Alarm'} (Snoozed ${mins}m)`,
           days: [snoozedDay],
           active: true,
-          triggered: false
+          triggered: false,
+          isOneTime: true
         });
         renderAlarms();
         saveState();
@@ -1965,7 +2501,9 @@
       const a = document.createElement("a");
       a.href = url;
       a.download = `kclock_config_${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
       a.click();
+      document.body.removeChild(a);
       URL.revokeObjectURL(url);
       showToast('Configuration exported as JSON', 'success');
     }
@@ -1978,15 +2516,16 @@
       reader.onload = function(e) {
         try {
           const imported = JSON.parse(e.target.result);
-          if (imported.settings) {
-            if (typeof imported.settings.use24Hour === 'boolean') {
-              use24Hour = imported.settings.use24Hour;
+          const st = imported.settings || imported;
+          if (st) {
+            if (typeof st.use24Hour === 'boolean') {
+              use24Hour = st.use24Hour;
               document.getElementById('format-toggle-btn').innerHTML = use24Hour ? '12H <span class="badge-key">F</span>' : '24H <span class="badge-key">F</span>';
               document.getElementById('settings-format-btn').innerText = use24Hour ? '24-Hour' : '12-Hour';
               updateClock();
             }
-            if (typeof imported.settings.soundEnabled === 'boolean') {
-              soundEnabled = imported.settings.soundEnabled;
+            if (typeof st.soundEnabled === 'boolean') {
+              soundEnabled = st.soundEnabled;
               document.getElementById('sound-toggle-btn').innerHTML = soundEnabled ? '🔊 Sound <span class="badge-key">M</span>' : '🔇 Muted <span class="badge-key">M</span>';
               document.getElementById('settings-sound-btn').innerText = soundEnabled ? 'Enabled' : 'Muted';
             }
@@ -2043,10 +2582,12 @@
     }
 
     // Initial renders & UI sync
-    document.getElementById('format-toggle-btn').innerHTML = use24Hour ? '12H <span class="badge-key">F</span>' : '24H <span class="badge-key">F</span>';
+    const fmtTxt = document.getElementById('format-btn-text');
+    if (fmtTxt) fmtTxt.innerText = use24Hour ? '12H' : '24H';
     document.getElementById('settings-format-btn').innerText = use24Hour ? '24-Hour' : '12-Hour';
-    document.getElementById('sound-toggle-btn').innerHTML = soundEnabled ? '🔊 Sound <span class="badge-key">M</span>' : '🔇 Muted <span class="badge-key">M</span>';
+    document.getElementById('sound-toggle-btn').innerHTML = soundEnabled ? '🔊 <span class="icon-btn-label">Sound</span> <span class="badge-key">M</span>' : '🔇 <span class="icon-btn-label">Muted</span> <span class="badge-key">M</span>';
     document.getElementById('settings-sound-btn').innerText = soundEnabled ? 'Enabled' : 'Muted';
+    setClockMode(clockMode);
     renderAlarms();
 
     // Auto-opening size (for standalone/window mode)
@@ -2059,10 +2600,11 @@
 
     // Keyboard listener for help, shortcuts, and Escape
     document.addEventListener('keydown', (e) => {
-      // Escape closes modal anywhere
+      // Escape closes modal and toasts anywhere
       if (e.key === 'Escape') {
         dismissModal();
         closeHelpModal();
+        dismissAllToasts();
         return;
       }
 
@@ -2085,6 +2627,18 @@
           convertEpochToHuman();
           return;
         }
+      } else if (e.target.id === 'conv-date-input') {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          convertHumanToEpoch();
+          return;
+        }
+      } else if (e.target.id === 'city-select') {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          addWorldCity();
+          return;
+        }
       }
 
       // Avoid triggering action shortcuts when typing in inputs or selects
@@ -2099,15 +2653,17 @@
           return;
         }
       }
-      if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
+      if (e.key === 'a' || e.key === 'A') {
+        if (currentTab === 'clock') {
+          cycleClockMode();
+        }
+      } else if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
         if (e.key === 'F1') e.preventDefault();
         openHelpModal();
       } else if (e.key === 'm' || e.key === 'M') {
         toggleSound();
-        showToast(soundEnabled ? 'Audio Chimes Enabled' : 'Audio Muted', 'info');
       } else if (e.key === 'f' || e.key === 'F') {
         toggleFormat();
-        showToast(`Time format set to ${use24Hour ? '24-Hour' : '12-Hour'}`, 'info');
       } else if (e.code === 'Space') {
         e.preventDefault();
         if (currentTab === 'stopwatch') {
@@ -2128,6 +2684,35 @@
       }
     });
 
+    // Resource & Tab Visibility Management (ARCH-05)
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopAnalogClock();
+        if (audioCtx && audioCtx.state === 'running') {
+          audioCtx.suspend().catch(() => {});
+        }
+      } else {
+        updateClock();
+        updateWorldClock();
+        if (currentTab === 'clock' && (clockMode === 'analog' || clockMode === 'dual')) {
+          startAnalogClock();
+        }
+        if (currentTab === 'epoch') {
+          updateEpochTicker();
+        }
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+      }
+    });
+
+    // Window resize listener to keep canvas crisp
+    window.addEventListener('resize', () => {
+      if (currentTab === 'clock' && (clockMode === 'analog' || clockMode === 'dual')) {
+        drawAnalogClock();
+      }
+    });
+
     // Cleanup on beforeunload
     window.addEventListener('beforeunload', () => {
       if (audioCtx && audioCtx.state !== 'closed') {
@@ -2136,12 +2721,20 @@
       if (alertAudioLoop) clearInterval(alertAudioLoop);
       if (tmInterval) clearInterval(tmInterval);
       if (swRaf) cancelAnimationFrame(swRaf);
+      stopAnalogClock();
     });
 
-    // Startup welcome notification
-    setTimeout(() => {
-      showToast("⏰ Welcome to KClock! Multi-timezone, alarms, stopwatch & epoch tool. Press 'H' or F1 for help.", "info", 5000);
-    }, 250);
+    // First-run tutorial onboarding banner (gated by flag)
+    function checkFirstRunOnboarding() {
+      const onboarded = safeGetStorage('kclock_onboarded', false);
+      if (!onboarded) {
+        safeSetStorage('kclock_onboarded', true);
+        setTimeout(() => {
+          showToast("⏰ Welcome to KClock! High-DPI analog dial, world time, stopwatch & alarms. Press 'H' or F1 for guide.", "info", 6000);
+        }, 400);
+      }
+    }
+    checkFirstRunOnboarding();
   </script>
 </body>
 </html>
