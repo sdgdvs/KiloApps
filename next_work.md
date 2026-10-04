@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://asm-temple (x86 Opcode Shrine)"
+  kilo_creator: "kweb://cybercafe (CyberCafe '99 BBS Lounge)"
   kilo_graphics: "KQuest (Phase 3: Monster & Boss Bestiary)"
   kilo_tester: KStarship
   kilo_usability: KNet
   kilo_qa: KPass
   kilo_expander: KSnake
-virtual_web_target: "kweb://asm-temple"
+virtual_web_target: "kweb://cybercafe"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-expander
-  app: KPong
-  timestamp: "2026-10-04T04:29:00-07:00"
+  agent: kilo-creator
+  app: "kweb://asm-temple"
+  timestamp: "2026-10-04T04:46:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -102,9 +102,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://asm-temple` (x86 Opcode Shrine)
+- **Current Target**: `kweb://cybercafe` (CyberCafe '99 BBS Lounge)
 - **Upcoming Queue**:
-  `kweb://cybercafe` (CyberCafe '99 Lounge), `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`
+  `kweb://10.19.99.4/classified`, `kweb://echo-subsystem.net`, `kweb://deep-core`, `kweb://darknet`, `kweb://portal`, `kweb://webring`, `kweb://warez`, `kweb://geocities`, `kweb://users/~neon_rider`, `kweb://asm-temple`
   *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
@@ -135,8 +135,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://asm-temple` (`KiloOS/public/web/asm_temple.html`)
-  - *Next in Rotation*: `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider`.
+- **Current Active Target**: `kweb://cybercafe` (`KiloOS/public/web/cybercafe.html`)
+  - *Next in Rotation*: `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez` ➔ `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple`.
 - **Anti-Potemkin Quality Standard**:
   - All 11 Virtual 1999 Web destinations are live, interactive, and feature-complete.
   - See [archive/virtual_web_completed.md](archive/virtual_web_completed.md) for full historical breakdown of completed content mandates across all sites.
@@ -230,6 +230,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T04:46:00-07:00 — kilo-creator: kweb://asm-temple (Virtual 1999 Web Deep Expansion: x86 Opcode Shrine & PE Dissector)**
+  - Status: PASS ✅ (0 regressions, 0 glints, 204.5 KB web < 999 KB ceiling, Vite clean build).
+  - Opcode Database Expansion: Expanded authentic x86 database to 142 instructions with category filtering, search, and ModR/M decoders.
+  - Interactive Radix Altar & ALU: Added direct hex/dec input and live bitwise ALU operations (AND, OR, XOR) with flag updates.
+  - PE32 Dissector Strings Tool: Added interactive ASCII string extractor with live search, copy-all, and Tier 3 telemetry presets.
+  - Diegetic ARG Telemetry: Embedded 1999Hz subcarrier anomaly log triggers, undocumented ECHO_PULSE opcode, and guestbook breadcrumbs.
+  - Procedural Jukebox & Synthesis: Added Track 05 ("Subcarrier 1999") with YM2612 2-operator FM synthesis and SPC700 echo.
+  - Verification: `security_lint.py` 100% PASS; Vite build clean in 260ms; file size ~204.5 KB (< 999 KB ceiling).
+
 - **2026-10-04T04:29:00-07:00 — kilo-expander: KPong (Online Multiplayer Net-Arena, RFMS Retrofit & Connect Gate)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 117.5 KB web / 44.0 KB native < 999 KB ceiling).
   - Online Multiplayer Architecture: Retrofitted standardized RFMS module (`retro_multiplayer.js`) with room codes (`PNG-XXXX`), lobby matchmaking, and host-authoritative ball/paddle sync.
@@ -259,11 +268,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Modal Dismissals: Added backdrop-click dismissal across all 11 modal overlays; fixed tutorialSeen flag preservation on Escape close.
   - Controls & Storage: Added JSON flight ledger export & import in header; tuned KeyD to prioritize docking proximity over flight yaw.
   - Verification: MSVC clean (`KStarDredge.exe` 276.0 KB); Vite build clean in 272ms; test_app_startup PASS; security_lint 100% PASS; check_icons 100% PASS.
-
-- **2026-10-04T03:32:00-07:00 — kilo-graphics: KQuest (Phase 2: Dungeon & Hub Environmental Backgrounds)**
-  - Status: PASS ✅ (0 regressions, 0 glints, 298.7 KB web / 97.0 KB native < 999 KB ceiling, Vite clean).
-  - Imagen 3 Background Generation: Generated 12 atmospheric 16:9 side-scrolling environmental plates for Town Hub and all 18 Dungeon Biomes.
-  - 2-Stage Post-Processing: Processed via PIL into 680x220 256-color quantized plates in `KiloOS/public/assets/backgrounds/kquest/`.
-  - Engine Integration: Refactored `drawEnvironmentBG()` in `kquest.html` with dual-path preloader, dynamic plate blitting, and atmospheric weather overlays.
-  - Glint & Border Audit: Verified static medieval filigree borders with 0 moving dots or traveling specular comets in web and native C.
-  - Verification: MSVC clean (`KQuest.exe` 97.0 KB); Vite build clean in 275ms; `test_app_startup.py` PASS; `security_lint.py` 100% PASS; `check_icons.py` 100% PASS.

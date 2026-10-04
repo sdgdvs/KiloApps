@@ -714,7 +714,7 @@
 
   <!-- Navigation Tabs -->
   <div class="nav-bar">
-    <button class="nav-btn active" data-tab="tab-oracle">[1] 📜 Opcode Oracle (118 Ops)</button>
+    <button class="nav-btn active" data-tab="tab-oracle">[1] 📜 Opcode Oracle (142 Ops)</button>
     <button class="nav-btn" data-tab="tab-converter">[2] ⚙️ Assembler &amp; Micro-CPU Stepper</button>
     <button class="nav-btn" data-tab="tab-altar">[3] 🧮 Bitwise Radix Altar</button>
     <button class="nav-btn" data-tab="tab-pe">[4] 🏛️ Win32 PE Dissector &amp; Builder</button>
@@ -728,7 +728,7 @@
     <div class="panel-box gold-accent">
       <div class="panel-title">
         <span>📜 The x86 / i386 Sacred Instruction Lexicon &amp; Encoding Deconstructor</span>
-        <span style="font-size:11px; font-weight:normal; color:var(--text-muted);" id="lblOpcodeCount">Showing 118 instructions</span>
+        <span style="font-size:11px; font-weight:normal; color:var(--text-muted);" id="lblOpcodeCount">Showing 142 instructions</span>
       </div>
       <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
         Query the sacred silicon registers and instruction encodings. Search by mnemonic, byte opcode, category, or affected EFLAGS. Click any instruction row to inspect its hardware encoding deconstruction or load it directly into the assembler workbench!
@@ -757,16 +757,16 @@
       <div style="display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap;">
         <input type="text" id="oracleSearch" placeholder="Search mnemonic (e.g. NOP, XOR, MOV), hex byte (e.g. 90, 31, C3), flags, description..." style="flex:1; min-width:240px;" />
         <select id="oracleCatFilter" style="width:170px;">
-          <option value="ALL">All Categories (118)</option>
-          <option value="Data">Data Movement (18)</option>
-          <option value="Arithmetic">Arithmetic (18)</option>
+          <option value="ALL">All Categories (142)</option>
+          <option value="Data">Data Movement (22)</option>
+          <option value="Arithmetic">Arithmetic (25)</option>
           <option value="Logic">Logic &amp; Bit Testing (12)</option>
-          <option value="Shift">Shift &amp; Rotate (10)</option>
-          <option value="Flow">Control Flow (22)</option>
-          <option value="Condition">Conditional Set (14)</option>
-          <option value="String">String Operations (10)</option>
-          <option value="Stack">Stack &amp; Frame (8)</option>
-          <option value="System">System &amp; Traps (14)</option>
+          <option value="Shift">Shift &amp; Rotate (15)</option>
+          <option value="Flow">Control Flow (26)</option>
+          <option value="Condition">Conditional (CMOV/SET) (20)</option>
+          <option value="String">String Operations (15)</option>
+          <option value="Stack">Stack &amp; Frame (10)</option>
+          <option value="System">System &amp; Traps (20)</option>
           <option value="FPU">FPU &amp; MMX (16)</option>
         </select>
         <button class="btn-retro" id="btnResetOracle">Reset Filter</button>
@@ -785,7 +785,7 @@
             </tr>
           </thead>
           <tbody id="oracleTbody">
-            <!-- Dynamically populated with 118+ instructions -->
+            <!-- Dynamically populated with 142+ instructions -->
           </tbody>
         </table>
       </div>
@@ -816,6 +816,8 @@
         <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="rdtsc">5. RDTSC Benchmark</button>
         <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="loopfib">6. Fibonacci Loop</button>
         <button class="btn-retro btn-emerald" style="font-size:11px; padding:3px 8px;" data-preset="anomaly">7. Telemetry Echo (10.19.99.4)</button>
+        <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="plasma">8. Plasma Palette Trig</button>
+        <button class="btn-retro" style="font-size:11px; padding:3px 8px;" data-preset="decrypt">9. XOR Key Decryptor</button>
       </div>
 
       <div class="asm-grid">
@@ -995,6 +997,31 @@
         <button class="btn-retro btn-gold" id="btnSetAllBits">Set All 1s (0xFFFFFFFF)</button>
       </div>
 
+      <!-- Direct Radix Input & Bitwise ALU -->
+      <div style="margin-top:12px; background:#090e18; border:1px solid #1e293b; padding:10px; border-radius:3px;">
+        <div style="font-size:11px; font-weight:bold; color:var(--gold-bright); margin-bottom:6px;">
+          ⌨️ Direct Value Input &amp; Bitwise ALU (EAX [OP] EBX):
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+          <div>
+            <label style="font-size:10px; color:var(--text-muted);">Set Register EAX Directly (Hex or Dec):</label>
+            <div style="display:flex; gap:6px; margin-top:2px;">
+              <input type="text" id="inputDirectVal" placeholder="e.g. 0x1999FE04 or 42" style="flex:1;" />
+              <button class="btn-retro btn-gold" id="btnApplyDirectVal">Set EAX</button>
+            </div>
+          </div>
+          <div>
+            <label style="font-size:10px; color:var(--text-muted);">ALU Operation with Operand (EBX):</label>
+            <div style="display:flex; gap:6px; margin-top:2px;">
+              <input type="text" id="inputAluOp" value="0x0000FFFF" placeholder="e.g. 0xFF" style="flex:1;" />
+              <button class="btn-retro" id="btnAluAnd">AND</button>
+              <button class="btn-retro" id="btnAluOr">OR</button>
+              <button class="btn-retro" id="btnAluXor">XOR</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- EFLAGS Register Simulator -->
       <div style="margin-top:14px; background:#090e18; border:1px solid #1e293b; padding:10px; border-radius:3px;">
         <div style="font-size:12px; font-weight:bold; color:var(--gold-bright); margin-bottom:6px;">
@@ -1040,7 +1067,7 @@
               <button class="btn-retro" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleReturn42">1. Console Return 42 (1.5 KB)</button>
               <button class="btn-retro" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleMsgbox">2. GUI MessageBoxA (2.0 KB)</button>
               <button class="btn-retro" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleDemo">3. Demoscene Flame Stub (1.5 KB)</button>
-              <button class="btn-retro btn-emerald" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleAnom">4. Subnet 10.19.99.4 Telemetry</button>
+              <button class="btn-retro btn-emerald" style="font-size:11px; padding:3px 8px;" id="btnLoadSampleAnom">4. Subnet 10.19.99.4 Telemetry (Tier 3 Strings)</button>
             </div>
             <button class="btn-retro" id="btnDownloadLoadedPE" style="font-size:11px; padding:3px 8px;">💾 Export Loaded .EXE</button>
           </div>
@@ -1138,6 +1165,23 @@
           </div>
           <div id="peHexDumpBox" class="hex-dump-view">
 // Hex dump will render here...
+          </div>
+        </div>
+
+        <!-- Extracted PE Strings Inspector (Reverse Engineering Tool) -->
+        <div style="margin-top:12px; background:#090e18; border:1px solid #1e293b; padding:10px; border-radius:3px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:8px;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <strong style="color:var(--cyan); font-size:11px;">🔍 Extracted PE ASCII / Text Strings (Min Length: 4):</strong>
+              <span id="lblStringCount" style="font-size:10px; color:var(--text-muted);">(0 strings found)</span>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <input type="text" id="strSearchInput" placeholder="Filter strings (e.g. kweb, 10.19, http)..." style="font-size:11px; padding:2px 6px; width:220px;" />
+              <button class="btn-retro btn-cyan" id="btnCopyStrings" style="font-size:10px; padding:2px 8px;">Copy Strings</button>
+            </div>
+          </div>
+          <div id="peStringsBox" class="hex-dump-view" style="max-height:160px; color:var(--text-main);">
+// Extracted strings with offsets and RVAs will appear here...
           </div>
         </div>
       </div>
@@ -1322,7 +1366,7 @@
     <div class="panel-box gold-accent">
       <div class="panel-title">
         <span>🎵 YM2612 (FM) &amp; SPC700 (Stereo Delay) Chiptune Sanctuary</span>
-        <span class="status-pill online">Mandate 9 Compliant // 4 Tracks</span>
+        <span class="status-pill online">Mandate 9 Compliant // 5 Tracks</span>
       </div>
       <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
         Pure procedural Web Audio synthesis adhering strictly to the Sega Genesis (Yamaha YM2612 2-operator FM synthesis) and Super Nintendo (SPC700 stereo slapback echo) architecture. Zero external soundfiles or sample bloat.
@@ -1446,6 +1490,7 @@
           <a href="/web/cybercafe.html">☕ [Next] CyberCafe '99 BBS »</a>
           <a href="/web/geocities.html">🌆 CyberSpire Retro Shrine</a>
           <a href="/web/warez.html">💾 0xRELEASE Scene Vault</a>
+          <a href="/web/darknet.html">🕵️ [Tier 3] Darknet Portal</a>
         </div>
       </div>
 
@@ -1533,7 +1578,7 @@
   if (lblCounter) lblCounter.textContent = String(visits).padStart(7, '0');
 
   // ==========================================
-  // 2. Opcode Oracle (Expanded 118 Sacred Opcodes)
+  // 2. Opcode Oracle (Expanded 142 Sacred Opcodes)
   // ==========================================
   const OPCODES_DB = [
     // DATA MOVEMENT
@@ -1542,14 +1587,28 @@
     { mnem: "MOV reg, reg", hex: "89 /r", cat: "Data", cycles: "1", flags: "None", desc: "Copy contents of source 32-bit register to destination register.", enc: { p: "None", o: "89", m: "ModR/M", s: "None", d: "None", i: "None" } },
     { mnem: "MOV reg, [mem]", hex: "8B /r", cat: "Data", cycles: "1..2", flags: "None", desc: "Load 32-bit value from memory address into register.", enc: { p: "None", o: "8B", m: "ModR/M", s: "Optional", d: "0-4B", i: "None" } },
     { mnem: "MOV [mem], reg", hex: "89 /r", cat: "Data", cycles: "1..2", flags: "None", desc: "Store 32-bit register value into memory address.", enc: { p: "None", o: "89", m: "ModR/M", s: "Optional", d: "0-4B", i: "None" } },
+    { mnem: "MOV [mem], imm32", hex: "C7 /0 [id]", cat: "Data", cycles: "1..2", flags: "None", desc: "Store 32-bit immediate constant directly into memory address.", enc: { p: "None", o: "C7", m: "ModR/M (/0)", s: "Optional", d: "0-4B", i: "id (4B)" } },
+    { mnem: "MOV reg8, imm8", hex: "B0+r [ib]", cat: "Data", cycles: "1", flags: "None", desc: "Move 8-bit immediate byte constant into 8-bit register.", enc: { p: "None", o: "B0+r", m: "None", s: "None", d: "None", i: "ib (1B)" } },
     { mnem: "LEA reg, [mem]", hex: "8D /r", cat: "Data", cycles: "1", flags: "None", desc: "Load effective address calculation into register without memory access.", enc: { p: "None", o: "8D", m: "ModR/M", s: "SIB", d: "0-4B", i: "None" } },
     { mnem: "XCHG reg, reg", hex: "87 /r", cat: "Data", cycles: "3", flags: "None", desc: "Atomically exchange contents of two registers without temporary storage.", enc: { p: "None", o: "87", m: "ModR/M", s: "None", d: "None", i: "None" } },
     { mnem: "BSWAP reg32", hex: "0F C8+r", cat: "Data", cycles: "1", flags: "None", desc: "Reverses byte order of 32-bit register (Little ⮂ Big Endian conversion).", enc: { p: "None", o: "0F C8", m: "None", s: "None", d: "None", i: "None" } },
-    { mnem: "MOVSX reg, reg8", hex: "0F BE /r", cat: "Data", cycles: "3", flags: "None", desc: "Move with sign-extension from 8-bit/16-bit to 32-bit register.", enc: { p: "None", o: "0F BE", m: "ModR/M", s: "None", d: "None", i: "None" } },
-    { mnem: "MOVZX reg, reg8", hex: "0F B6 /r", cat: "Data", cycles: "3", flags: "None", desc: "Move with zero-extension from 8-bit/16-bit to 32-bit register.", enc: { p: "None", o: "0F B6", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "MOVSX reg32, reg8", hex: "0F BE /r", cat: "Data", cycles: "3", flags: "None", desc: "Move byte with sign-extension to 32-bit doubleword register.", enc: { p: "None", o: "0F BE", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "MOVSX reg32, reg16", hex: "0F BF /r", cat: "Data", cycles: "3", flags: "None", desc: "Move word with sign-extension to 32-bit doubleword register.", enc: { p: "None", o: "0F BF", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "MOVZX reg32, reg8", hex: "0F B6 /r", cat: "Data", cycles: "3", flags: "None", desc: "Move byte with zero-extension to 32-bit register.", enc: { p: "None", o: "0F B6", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "MOVZX reg32, reg16", hex: "0F B7 /r", cat: "Data", cycles: "3", flags: "None", desc: "Move word with zero-extension to 32-bit register.", enc: { p: "None", o: "0F B7", m: "ModR/M", s: "None", d: "None", i: "None" } },
     { mnem: "XLATB", hex: "D7", cat: "Data", cycles: "4", flags: "None", desc: "Table look-up translation: AL = [EBX + AL].", enc: { p: "None", o: "D7", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "CBW", hex: "66 98", cat: "Data", cycles: "3", flags: "None", desc: "Convert Byte to Word (AX = sign-extend AL).", enc: { p: "66", o: "98", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "CWDE", hex: "98", cat: "Data", cycles: "3", flags: "None", desc: "Convert Word to Doubleword Extended (EAX = sign-extend AX).", enc: { p: "None", o: "98", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "CWD", hex: "66 99", cat: "Data", cycles: "2", flags: "None", desc: "Convert Word to Doubleword (DX:AX = sign-extend AX).", enc: { p: "66", o: "99", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "CDQ", hex: "99", cat: "Data", cycles: "2", flags: "None", desc: "Convert Doubleword to Quadword (EDX:EAX = sign-extend EAX for IDIV).", enc: { p: "None", o: "99", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "LAHF", hex: "9F", cat: "Data", cycles: "2", flags: "None", desc: "Load Status Flags (SF, ZF, AF, PF, CF) into AH register.", enc: { p: "None", o: "9F", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "SAHF", hex: "9E", cat: "Data", cycles: "2", flags: "SF,ZF,AF,PF,CF", desc: "Store AH register into Status Flags (SF, ZF, AF, PF, CF).", enc: { p: "None", o: "9E", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "CMOVZ reg, reg", hex: "0F 44 /r", cat: "Data", cycles: "1", flags: "None", desc: "Conditional Move if Zero / Equal (ZF=1). Pentium Pro+ branchless idiom.", enc: { p: "None", o: "0F 44", m: "ModR/M", s: "None", d: "None", i: "None" } },
+
+    // STACK & FRAME
     { mnem: "PUSH reg32", hex: "50..57", cat: "Stack", cycles: "1", flags: "None", desc: "Push 32-bit register onto stack; decrements ESP by 4.", enc: { p: "None", o: "50+r", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "PUSH imm32", hex: "68 [cd]", cat: "Stack", cycles: "1", flags: "None", desc: "Push 32-bit immediate constant onto stack.", enc: { p: "None", o: "68", m: "None", s: "None", d: "None", i: "imm32" } },
+    { mnem: "PUSH imm8", hex: "6A [cb]", cat: "Stack", cycles: "1", flags: "None", desc: "Push sign-extended 8-bit immediate byte constant onto stack.", enc: { p: "None", o: "6A", m: "None", s: "None", d: "None", i: "ib" } },
     { mnem: "POP reg32", hex: "58..5F", cat: "Stack", cycles: "1", flags: "None", desc: "Pop 32-bit value from stack into register; increments ESP by 4.", enc: { p: "None", o: "58+r", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "PUSHA", hex: "60", cat: "Stack", cycles: "5", flags: "None", desc: "Push all general registers: EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI.", enc: { p: "None", o: "60", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "POPA", hex: "61", cat: "Stack", cycles: "5", flags: "None", desc: "Pop all general registers from stack in reverse order.", enc: { p: "None", o: "61", m: "None", s: "None", d: "None", i: "None" } },
@@ -1560,15 +1619,21 @@
 
     // ARITHMETIC
     { mnem: "ADD reg, reg", hex: "01 /r", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Add source operand to destination operand.", enc: { p: "None", o: "01", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "ADD reg, imm32", hex: "81 /0 [id]", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Add 32-bit immediate constant to destination register.", enc: { p: "None", o: "81", m: "ModR/M (/0)", s: "None", d: "None", i: "id (4B)" } },
     { mnem: "ADC reg, reg", hex: "11 /r", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Add with Carry: dest = dest + src + CarryFlag.", enc: { p: "None", o: "11", m: "ModR/M", s: "None", d: "None", i: "None" } },
     { mnem: "SUB reg, reg", hex: "29 /r", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Subtract source operand from destination operand.", enc: { p: "None", o: "29", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "SUB reg, imm32", hex: "81 /5 [id]", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Subtract 32-bit immediate constant from destination register.", enc: { p: "None", o: "81", m: "ModR/M (/5)", s: "None", d: "None", i: "id (4B)" } },
     { mnem: "SBB reg, reg", hex: "19 /r", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Subtract with Borrow: dest = dest - (src + CarryFlag).", enc: { p: "None", o: "19", m: "ModR/M", s: "None", d: "None", i: "None" } },
     { mnem: "INC reg32", hex: "40..47", cat: "Arithmetic", cycles: "1", flags: "ZF,SF,OF,AF,PF", desc: "Increment register by 1 (Note: preserves Carry Flag CF!).", enc: { p: "None", o: "40+r", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "INC reg8", hex: "FE /0", cat: "Arithmetic", cycles: "1", flags: "ZF,SF,OF,AF,PF", desc: "Increment 8-bit register or memory byte by 1.", enc: { p: "None", o: "FE", m: "ModR/M (/0)", s: "None", d: "None", i: "None" } },
     { mnem: "DEC reg32", hex: "48..4F", cat: "Arithmetic", cycles: "1", flags: "ZF,SF,OF,AF,PF", desc: "Decrement register by 1 (preserves Carry Flag CF!).", enc: { p: "None", o: "48+r", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "DEC reg8", hex: "FE /1", cat: "Arithmetic", cycles: "1", flags: "ZF,SF,OF,AF,PF", desc: "Decrement 8-bit register or memory byte by 1.", enc: { p: "None", o: "FE", m: "ModR/M (/1)", s: "None", d: "None", i: "None" } },
     { mnem: "NEG reg", hex: "F7 /3", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Two's complement negation (dest = 0 - dest).", enc: { p: "None", o: "F7", m: "ModR/M (/3)", s: "None", d: "None", i: "None" } },
     { mnem: "CMP reg, reg", hex: "39 /r", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Compare two operands via subtraction, updating EFLAGS without modifying registers.", enc: { p: "None", o: "39", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "CMP reg, imm32", hex: "81 /7 [id]", cat: "Arithmetic", cycles: "1", flags: "CF,ZF,SF,OF,AF,PF", desc: "Compare register against 32-bit immediate constant.", enc: { p: "None", o: "81", m: "ModR/M (/7)", s: "None", d: "None", i: "id (4B)" } },
     { mnem: "MUL reg32", hex: "F7 /4", cat: "Arithmetic", cycles: "10", flags: "CF,OF", desc: "Unsigned multiplication: EDX:EAX = EAX * reg32.", enc: { p: "None", o: "F7", m: "ModR/M (/4)", s: "None", d: "None", i: "None" } },
     { mnem: "IMUL reg, reg", hex: "0F AF /r", cat: "Arithmetic", cycles: "10", flags: "CF,OF", desc: "Signed multiplication: dest = dest * src.", enc: { p: "None", o: "0F AF", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "IMUL reg, reg, imm", hex: "69 /r [id]", cat: "Arithmetic", cycles: "10", flags: "CF,OF", desc: "Three-operand signed multiplication: dest = src * immediate constant.", enc: { p: "None", o: "69", m: "ModR/M", s: "None", d: "None", i: "id (4B)" } },
     { mnem: "DIV reg32", hex: "F7 /6", cat: "Arithmetic", cycles: "41", flags: "None (undefined)", desc: "Unsigned division: EAX = EDX:EAX / reg32, EDX = remainder.", enc: { p: "None", o: "F7", m: "ModR/M (/6)", s: "None", d: "None", i: "None" } },
     { mnem: "IDIV reg32", hex: "F7 /7", cat: "Arithmetic", cycles: "43", flags: "None (undefined)", desc: "Signed division: EAX = EDX:EAX / reg32, EDX = remainder.", enc: { p: "None", o: "F7", m: "ModR/M (/7)", s: "None", d: "None", i: "None" } },
     { mnem: "XADD reg, reg", hex: "0F C1 /r", cat: "Arithmetic", cycles: "3", flags: "CF,ZF,SF,OF,AF,PF", desc: "Exchange and add: temp = dest + src; src = dest; dest = temp.", enc: { p: "None", o: "0F C1", m: "ModR/M", s: "None", d: "None", i: "None" } },
@@ -1577,6 +1642,9 @@
     { mnem: "DAS", hex: "2F", cat: "Arithmetic", cycles: "4", flags: "CF,AF,ZF,SF,PF", desc: "Decimal adjust AL after BCD subtraction.", enc: { p: "None", o: "2F", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "AAA", hex: "37", cat: "Arithmetic", cycles: "4", flags: "CF,AF", desc: "ASCII adjust AL after addition.", enc: { p: "None", o: "37", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "AAS", hex: "3F", cat: "Arithmetic", cycles: "4", flags: "CF,AF", desc: "ASCII adjust AL after subtraction.", enc: { p: "None", o: "3F", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "AAM imm8", hex: "D4 [ib]", cat: "Arithmetic", cycles: "17", flags: "SF,ZF,PF", desc: "ASCII adjust AX after multiply (AH = AL / ib, AL = AL % ib). Supports arbitrary base.", enc: { p: "None", o: "D4", m: "None", s: "None", d: "None", i: "ib (default 0A)" } },
+    { mnem: "AAD imm8", hex: "D5 [ib]", cat: "Arithmetic", cycles: "19", flags: "SF,ZF,PF", desc: "ASCII adjust AX before division (AL = (AH * ib) + AL, AH = 0).", enc: { p: "None", o: "D5", m: "None", s: "None", d: "None", i: "ib (default 0A)" } },
+    { mnem: "SALC / SETALC", hex: "D6", cat: "Arithmetic", cycles: "3", flags: "None", desc: "Undocumented opcode: Set AL from Carry Flag (AL = CF ? 0xFF : 0x00).", enc: { p: "None", o: "D6", m: "None", s: "None", d: "None", i: "None" } },
 
     // LOGIC & BIT TESTING
     { mnem: "XOR reg, reg", hex: "31 /r", cat: "Logic", cycles: "1", flags: "ZF,SF,PF,CF=0,OF=0", desc: "Bitwise exclusive OR. Iconic zeroing idiom (e.g. XOR EAX, EAX).", enc: { p: "None", o: "31", m: "ModR/M", s: "None", d: "None", i: "None" } },
@@ -1584,6 +1652,7 @@
     { mnem: "OR reg, reg", hex: "09 /r", cat: "Logic", cycles: "1", flags: "ZF,SF,PF,CF=0,OF=0", desc: "Bitwise inclusive OR operation.", enc: { p: "None", o: "09", m: "ModR/M", s: "None", d: "None", i: "None" } },
     { mnem: "NOT reg", hex: "F7 /2", cat: "Logic", cycles: "1", flags: "None", desc: "One's complement bitwise inversion (inverts all bits).", enc: { p: "None", o: "F7", m: "ModR/M (/2)", s: "None", d: "None", i: "None" } },
     { mnem: "TEST reg, reg", hex: "85 /r", cat: "Logic", cycles: "1", flags: "ZF,SF,PF,CF=0,OF=0", desc: "Non-destructive bitwise AND. Sets Zero Flag if result is 0.", enc: { p: "None", o: "85", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "TEST reg, imm32", hex: "F7 /0 [id]", cat: "Logic", cycles: "1", flags: "ZF,SF,PF,CF=0,OF=0", desc: "Non-destructive bitwise AND against 32-bit immediate mask.", enc: { p: "None", o: "F7", m: "ModR/M (/0)", s: "None", d: "None", i: "id (4B)" } },
     { mnem: "BT reg, imm8", hex: "0F BA /4 [ib]", cat: "Logic", cycles: "4", flags: "CF", desc: "Bit Test: copies selected bit index into Carry Flag.", enc: { p: "None", o: "0F BA", m: "ModR/M (/4)", s: "None", d: "None", i: "ib" } },
     { mnem: "BTS reg, imm8", hex: "0F BA /5 [ib]", cat: "Logic", cycles: "4", flags: "CF", desc: "Bit Test and Set: copies bit into Carry Flag and sets bit to 1.", enc: { p: "None", o: "0F BA", m: "ModR/M (/5)", s: "None", d: "None", i: "ib" } },
     { mnem: "BTR reg, imm8", hex: "0F BA /6 [ib]", cat: "Logic", cycles: "4", flags: "CF", desc: "Bit Test and Reset: copies bit into Carry Flag and clears bit to 0.", enc: { p: "None", o: "0F BA", m: "ModR/M (/6)", s: "None", d: "None", i: "ib" } },
@@ -1593,10 +1662,17 @@
 
     // SHIFT & ROTATE
     { mnem: "SHL reg, 1", hex: "D1 /4", cat: "Shift", cycles: "1", flags: "CF,OF,ZF,SF,PF", desc: "Shift logical left by 1. Multiplies unsigned integer by 2.", enc: { p: "None", o: "D1", m: "ModR/M (/4)", s: "None", d: "None", i: "None" } },
+    { mnem: "SHL reg, CL", hex: "D3 /4", cat: "Shift", cycles: "1", flags: "CF,OF,ZF,SF,PF", desc: "Shift logical left by count in CL register.", enc: { p: "None", o: "D3", m: "ModR/M (/4)", s: "None", d: "None", i: "None" } },
+    { mnem: "SHL reg, imm8", hex: "C1 /4 [ib]", cat: "Shift", cycles: "1", flags: "CF,OF,ZF,SF,PF", desc: "Shift logical left by immediate count.", enc: { p: "None", o: "C1", m: "ModR/M (/4)", s: "None", d: "None", i: "ib" } },
     { mnem: "SHR reg, 1", hex: "D1 /5", cat: "Shift", cycles: "1", flags: "CF,OF,ZF,SF,PF", desc: "Shift logical right by 1. Divides unsigned integer by 2.", enc: { p: "None", o: "D1", m: "ModR/M (/5)", s: "None", d: "None", i: "None" } },
+    { mnem: "SHR reg, CL", hex: "D3 /5", cat: "Shift", cycles: "1", flags: "CF,OF,ZF,SF,PF", desc: "Shift logical right by count in CL register.", enc: { p: "None", o: "D3", m: "ModR/M (/5)", s: "None", d: "None", i: "None" } },
+    { mnem: "SHR reg, imm8", hex: "C1 /5 [ib]", cat: "Shift", cycles: "1", flags: "CF,OF,ZF,SF,PF", desc: "Shift logical right by immediate count.", enc: { p: "None", o: "C1", m: "ModR/M (/5)", s: "None", d: "None", i: "ib" } },
     { mnem: "SAR reg, 1", hex: "D1 /7", cat: "Shift", cycles: "1", flags: "CF,OF,ZF,SF,PF", desc: "Shift arithmetic right by 1 (preserves sign bit).", enc: { p: "None", o: "D1", m: "ModR/M (/7)", s: "None", d: "None", i: "None" } },
+    { mnem: "SAR reg, CL", hex: "D3 /7", cat: "Shift", cycles: "1", flags: "CF,OF,ZF,SF,PF", desc: "Shift arithmetic right by count in CL register.", enc: { p: "None", o: "D3", m: "ModR/M (/7)", s: "None", d: "None", i: "None" } },
     { mnem: "ROL reg, 1", hex: "D1 /0", cat: "Shift", cycles: "1", flags: "CF,OF", desc: "Rotate left by 1 bit circular.", enc: { p: "None", o: "D1", m: "ModR/M (/0)", s: "None", d: "None", i: "None" } },
+    { mnem: "ROL reg, CL", hex: "D3 /0", cat: "Shift", cycles: "1", flags: "CF,OF", desc: "Rotate left circular by count in CL.", enc: { p: "None", o: "D3", m: "ModR/M (/0)", s: "None", d: "None", i: "None" } },
     { mnem: "ROR reg, 1", hex: "D1 /1", cat: "Shift", cycles: "1", flags: "CF,OF", desc: "Rotate right by 1 bit circular.", enc: { p: "None", o: "D1", m: "ModR/M (/1)", s: "None", d: "None", i: "None" } },
+    { mnem: "ROR reg, CL", hex: "D3 /1", cat: "Shift", cycles: "1", flags: "CF,OF", desc: "Rotate right circular by count in CL.", enc: { p: "None", o: "D3", m: "ModR/M (/1)", s: "None", d: "None", i: "None" } },
     { mnem: "RCL reg, 1", hex: "D1 /2", cat: "Shift", cycles: "1", flags: "CF,OF", desc: "Rotate through carry left by 1 bit.", enc: { p: "None", o: "D1", m: "ModR/M (/2)", s: "None", d: "None", i: "None" } },
     { mnem: "RCR reg, 1", hex: "D1 /3", cat: "Shift", cycles: "1", flags: "CF,OF", desc: "Rotate through carry right by 1 bit.", enc: { p: "None", o: "D1", m: "ModR/M (/3)", s: "None", d: "None", i: "None" } },
     { mnem: "SHLD reg, reg, imm8", hex: "0F A4 /r [ib]", cat: "Shift", cycles: "4", flags: "CF,ZF,SF,PF", desc: "Double precision shift left: shifts dest left, filling from src.", enc: { p: "None", o: "0F A4", m: "ModR/M", s: "None", d: "None", i: "ib" } },
@@ -1605,6 +1681,7 @@
     // CONTROL FLOW
     { mnem: "JMP rel8", hex: "EB [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Unconditional short relative branch (-128..+127 bytes).", enc: { p: "None", o: "EB", m: "None", s: "None", d: "None", i: "cb" } },
     { mnem: "JMP rel32", hex: "E9 [cd]", cat: "Flow", cycles: "1", flags: "None", desc: "Unconditional near relative jump (+/-2GB).", enc: { p: "None", o: "E9", m: "None", s: "None", d: "None", i: "cd" } },
+    { mnem: "JMP reg32", hex: "FF /4", cat: "Flow", cycles: "2", flags: "None", desc: "Indirect unconditional jump through register value.", enc: { p: "None", o: "FF", m: "ModR/M (/4)", s: "None", d: "None", i: "None" } },
     { mnem: "JZ / JE rel8", hex: "74 [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if Zero / Equal (ZF = 1).", enc: { p: "None", o: "74", m: "None", s: "None", d: "None", i: "cb" } },
     { mnem: "JNZ / JNE rel8", hex: "75 [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if Not Zero / Not Equal (ZF = 0).", enc: { p: "None", o: "75", m: "None", s: "None", d: "None", i: "cb" } },
     { mnem: "JC / JB rel8", hex: "72 [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if Carry / Jump if Below (CF = 1).", enc: { p: "None", o: "72", m: "None", s: "None", d: "None", i: "cb" } },
@@ -1623,11 +1700,16 @@
     { mnem: "JLE / JNG rel8", hex: "7E [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if Less or Equal signed (ZF=1 or SF!=OF).", enc: { p: "None", o: "7E", m: "None", s: "None", d: "None", i: "cb" } },
     { mnem: "JCXZ / JECXZ", hex: "E3 [cb]", cat: "Flow", cycles: "1", flags: "None", desc: "Jump if ECX is Zero (loop break).", enc: { p: "None", o: "E3", m: "None", s: "None", d: "None", i: "cb" } },
     { mnem: "LOOP rel8", hex: "E2 [cb]", cat: "Flow", cycles: "1..2", flags: "None", desc: "Decrement ECX; if ECX != 0, branch to target.", enc: { p: "None", o: "E2", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "LOOPE / LOOPZ", hex: "E1 [cb]", cat: "Flow", cycles: "1..2", flags: "None", desc: "Decrement ECX; jump if ECX != 0 and ZF = 1.", enc: { p: "None", o: "E1", m: "None", s: "None", d: "None", i: "cb" } },
+    { mnem: "LOOPNE / LOOPNZ", hex: "E0 [cb]", cat: "Flow", cycles: "1..2", flags: "None", desc: "Decrement ECX; jump if ECX != 0 and ZF = 0.", enc: { p: "None", o: "E0", m: "None", s: "None", d: "None", i: "cb" } },
     { mnem: "CALL rel32", hex: "E8 [cd]", cat: "Flow", cycles: "1", flags: "None", desc: "Push return address onto stack and branch to target procedure.", enc: { p: "None", o: "E8", m: "None", s: "None", d: "None", i: "cd" } },
+    { mnem: "CALL reg32", hex: "FF /2", cat: "Flow", cycles: "2", flags: "None", desc: "Indirect procedure call through register pointer (Win32 IAT dispatch).", enc: { p: "None", o: "FF", m: "ModR/M (/2)", s: "None", d: "None", i: "None" } },
     { mnem: "RET", hex: "C3", cat: "Flow", cycles: "1", flags: "None", desc: "Pop return address from stack and resume execution.", enc: { p: "None", o: "C3", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "RET imm16", hex: "C2 [iw]", cat: "Flow", cycles: "2", flags: "None", desc: "Pop return address and release specified bytes from stack (stdcall cleanup).", enc: { p: "None", o: "C2", m: "None", s: "None", d: "None", i: "iw" } },
+    { mnem: "RETF", hex: "CB", cat: "Flow", cycles: "4", flags: "None", desc: "Far Return: pop instruction pointer (EIP) and code segment (CS).", enc: { p: "None", o: "CB", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "RETF imm16", hex: "CA [iw]", cat: "Flow", cycles: "4", flags: "None", desc: "Far Return popping EIP, CS and clearing imm16 bytes from stack.", enc: { p: "None", o: "CA", m: "None", s: "None", d: "None", i: "iw" } },
 
-    // CONDITIONAL SET
+    // CONDITIONAL SET & CMOV
     { mnem: "SETZ / SETE reg8", hex: "0F 94 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if Zero / Equal (ZF=1).", enc: { p: "None", o: "0F 94", m: "ModR/M", s: "None", d: "None", i: "None" } },
     { mnem: "SETNZ / SETNE reg8", hex: "0F 95 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if Not Zero / Not Equal (ZF=0).", enc: { p: "None", o: "0F 95", m: "ModR/M", s: "None", d: "None", i: "None" } },
     { mnem: "SETC / SETB reg8", hex: "0F 92 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if Carry / Below (CF=1).", enc: { p: "None", o: "0F 92", m: "ModR/M", s: "None", d: "None", i: "None" } },
@@ -1642,6 +1724,12 @@
     { mnem: "SETGE reg8", hex: "0F 9D /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if Greater or Equal signed (SF=OF).", enc: { p: "None", o: "0F 9D", m: "ModR/M", s: "None", d: "None", i: "None" } },
     { mnem: "SETL reg8", hex: "0F 9C /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if Less signed (SF != OF).", enc: { p: "None", o: "0F 9C", m: "ModR/M", s: "None", d: "None", i: "None" } },
     { mnem: "SETLE reg8", hex: "0F 9E /r", cat: "Condition", cycles: "1", flags: "None", desc: "Set byte if Less or Equal signed (ZF=1 or SF!=OF).", enc: { p: "None", o: "0F 9E", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "CMOVNZ reg, reg", hex: "0F 45 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Conditional Move if Not Zero (ZF=0).", enc: { p: "None", o: "0F 45", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "CMOVC reg, reg", hex: "0F 42 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Conditional Move if Carry / Below (CF=1).", enc: { p: "None", o: "0F 42", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "CMOVNC reg, reg", hex: "0F 43 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Conditional Move if No Carry / Above or Equal (CF=0).", enc: { p: "None", o: "0F 43", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "CMOVS reg, reg", hex: "0F 48 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Conditional Move if Sign / Negative (SF=1).", enc: { p: "None", o: "0F 48", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "CMOVNS reg, reg", hex: "0F 49 /r", cat: "Condition", cycles: "1", flags: "None", desc: "Conditional Move if Not Sign (SF=0).", enc: { p: "None", o: "0F 49", m: "ModR/M", s: "None", d: "None", i: "None" } },
+    { mnem: "CMOVG reg, reg", hex: "0F 4F /r", cat: "Condition", cycles: "1", flags: "None", desc: "Conditional Move if Greater signed (ZF=0 and SF=OF).", enc: { p: "None", o: "0F 4F", m: "ModR/M", s: "None", d: "None", i: "None" } },
 
     // STRING OPERATIONS
     { mnem: "MOVSB", hex: "A4", cat: "String", cycles: "3", flags: "None", desc: "Move byte from string: [EDI] = [ESI]; update ESI/EDI.", enc: { p: "None", o: "A4", m: "None", s: "None", d: "None", i: "None" } },
@@ -1651,14 +1739,22 @@
     { mnem: "STOSB", hex: "AA", cat: "String", cycles: "3", flags: "None", desc: "Store byte to string: [EDI] = AL; update EDI.", enc: { p: "None", o: "AA", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "STOSD", hex: "AB", cat: "String", cycles: "3", flags: "None", desc: "Store doubleword to string: [EDI] = EAX; EDI +/- 4 (Fast Memset!).", enc: { p: "None", o: "AB", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "CMPSB", hex: "A6", cat: "String", cycles: "4", flags: "CF,ZF,SF,OF,AF,PF", desc: "Compare bytes in strings: [ESI] with [EDI].", enc: { p: "None", o: "A6", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "CMPSD", hex: "A7", cat: "String", cycles: "4", flags: "CF,ZF,SF,OF,AF,PF", desc: "Compare doublewords in strings: [ESI] with [EDI].", enc: { p: "None", o: "A7", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "SCASB", hex: "AE", cat: "String", cycles: "3", flags: "CF,ZF,SF,OF,AF,PF", desc: "Scan string byte: compare AL with [EDI]; update EDI.", enc: { p: "None", o: "AE", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "SCASD", hex: "AF", cat: "String", cycles: "3", flags: "CF,ZF,SF,OF,AF,PF", desc: "Scan string doubleword: compare EAX with [EDI]; update EDI.", enc: { p: "None", o: "AF", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "INSB / INSD", hex: "6C / 6D", cat: "String", cycles: "8", flags: "None", desc: "Input byte or doubleword from I/O port specified in DX into [EDI].", enc: { p: "None", o: "6C/6D", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "OUTSB / OUTSD", hex: "6E / 6F", cat: "String", cycles: "8", flags: "None", desc: "Output byte or doubleword from [ESI] to I/O port specified in DX.", enc: { p: "None", o: "6E/6F", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "REP prefix", hex: "F3", cat: "String", cycles: "--", flags: "None", desc: "Repeat string operation while ECX != 0.", enc: { p: "F3", o: "--", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "REPE / REPZ", hex: "F3", cat: "String", cycles: "--", flags: "None", desc: "Repeat string operation while ECX != 0 and ZF = 1.", enc: { p: "F3", o: "--", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "REPNE / REPNZ", hex: "F2", cat: "String", cycles: "--", flags: "None", desc: "Repeat string operation while ECX != 0 and ZF = 0 (memchr idiom).", enc: { p: "F2", o: "--", m: "None", s: "None", d: "None", i: "None" } },
 
-    // SYSTEM & PROCESSOR TRAPS
+    // SYSTEM, PROCESSOR TRAPS & UNDOCUMENTED
     { mnem: "INT 3", hex: "CC", cat: "System", cycles: "13", flags: "IF,TF", desc: "Breakpoint trap interrupt for debuggers and reverse engineers.", enc: { p: "None", o: "CC", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "INT 21h", hex: "CD 21", cat: "System", cycles: "16", flags: "All", desc: "MS-DOS legacy API dispatch interrupt (AH = function number).", enc: { p: "None", o: "CD", m: "None", s: "None", d: "None", i: "21h" } },
     { mnem: "INT 2Eh", hex: "CD 2E", cat: "System", cycles: "24", flags: "All", desc: "Win32 NT native system call interrupt gateway.", enc: { p: "None", o: "CD", m: "None", s: "None", d: "None", i: "2Eh" } },
+    { mnem: "INT 10h", hex: "CD 10", cat: "System", cycles: "18", flags: "All", desc: "BIOS Video services dispatch interrupt (VGA Mode 13h setup).", enc: { p: "None", o: "CD", m: "None", s: "None", d: "None", i: "10h" } },
+    { mnem: "INT 16h", hex: "CD 16", cat: "System", cycles: "14", flags: "All", desc: "BIOS Keyboard services dispatch interrupt.", enc: { p: "None", o: "CD", m: "None", s: "None", d: "None", i: "16h" } },
+    { mnem: "IRET", hex: "CF", cat: "System", cycles: "15", flags: "All", desc: "Interrupt Return: pop EIP, CS, and EFLAGS from stack.", enc: { p: "None", o: "CF", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "RDTSC", hex: "0F 31", cat: "System", cycles: "9", flags: "None", desc: "Read 64-bit CPU Time-Stamp Counter into EDX:EAX (Pentium+).", enc: { p: "None", o: "0F 31", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "CPUID", hex: "0F A2", cat: "System", cycles: "14", flags: "None", desc: "Query processor signature, feature flags, and vendor string.", enc: { p: "None", o: "0F A2", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "CLI", hex: "FA", cat: "System", cycles: "7", flags: "IF=0", desc: "Clear Interrupt Flag (Ring 0 privilege required).", enc: { p: "None", o: "FA", m: "None", s: "None", d: "None", i: "None" } },
@@ -1670,6 +1766,18 @@
     { mnem: "CLD", hex: "FC", cat: "System", cycles: "1", flags: "DF=0", desc: "Clear Direction Flag: string operations increment ESI/EDI.", enc: { p: "None", o: "FC", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "STD", hex: "FD", cat: "System", cycles: "1", flags: "DF=1", desc: "Set Direction Flag: string operations decrement ESI/EDI.", enc: { p: "None", o: "FD", m: "None", s: "None", d: "None", i: "None" } },
     { mnem: "INVD", hex: "0F 08", cat: "System", cycles: "15", flags: "None", desc: "Invalidate internal CPU caches without writing back (Ring 0).", enc: { p: "None", o: "0F 08", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "WBINVD", hex: "0F 09", cat: "System", cycles: "20", flags: "None", desc: "Write Back and Invalidate internal CPU caches (Ring 0).", enc: { p: "None", o: "0F 09", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "IN AL, imm8", hex: "E4 [ib]", cat: "System", cycles: "7", flags: "None", desc: "Read 8-bit byte from fixed I/O port into AL.", enc: { p: "None", o: "E4", m: "None", s: "None", d: "None", i: "ib" } },
+    { mnem: "OUT imm8, AL", hex: "E6 [ib]", cat: "System", cycles: "7", flags: "None", desc: "Write 8-bit byte in AL to fixed I/O port.", enc: { p: "None", o: "E6", m: "None", s: "None", d: "None", i: "ib" } },
+    { mnem: "IN EAX, DX", hex: "ED", cat: "System", cycles: "7", flags: "None", desc: "Read 32-bit doubleword from variable I/O port in DX into EAX.", enc: { p: "None", o: "ED", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "OUT DX, EAX", hex: "EF", cat: "System", cycles: "7", flags: "None", desc: "Write 32-bit doubleword in EAX to variable I/O port in DX.", enc: { p: "None", o: "EF", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "SYSENTER", hex: "0F 34", cat: "System", cycles: "9", flags: "None", desc: "Fast transition from Ring 3 user mode to Ring 0 kernel privilege (Pentium II+).", enc: { p: "None", o: "0F 34", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "SYSEXIT", hex: "0F 35", cat: "System", cycles: "9", flags: "None", desc: "Fast transition from Ring 0 kernel handler back to Ring 3 user space (Pentium II+).", enc: { p: "None", o: "0F 35", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "RSM", hex: "0F AA", cat: "System", cycles: "30", flags: "All", desc: "Resume from System Management Mode (SMM state restore).", enc: { p: "None", o: "0F AA", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "UD2", hex: "0F 0B", cat: "System", cycles: "1", flags: "None", desc: "Defined Undefined Instruction: intentionally triggers Invalid Opcode (#UD) exception.", enc: { p: "None", o: "0F 0B", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "LOADALL", hex: "0F 07", cat: "System", cycles: "195", flags: "All", desc: "Undocumented 286/386 opcode: loads all CPU registers and hidden descriptor caches from memory.", enc: { p: "None", o: "0F 07", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "ICEBP / INT1", hex: "F1", cat: "System", cycles: "10", flags: "TF,IF", desc: "Undocumented in-circuit emulator breakpoint (IceCap trap).", enc: { p: "None", o: "F1", m: "None", s: "None", d: "None", i: "None" } },
+    { mnem: "ECHO_PULSE (Undocumented)", hex: "0F 3F /r", cat: "System", cycles: "1", flags: "ZF,PF", desc: "Undocumented microcode echo instruction. NOTE: Observed only on KiloNet internal nodes (10.19.99.x) - echoes subcarrier signal when EAX=0x1999.", enc: { p: "None", o: "0F 3F", m: "ModR/M", s: "None", d: "None", i: "None" } },
 
     // FPU & MMX
     { mnem: "FNOP", hex: "D9 D0", cat: "FPU", cycles: "1", flags: "None", desc: "Floating-Point No Operation.", enc: { p: "None", o: "D9 D0", m: "None", s: "None", d: "None", i: "None" } },
@@ -2196,7 +2304,9 @@
     vga: `; VGA Mode 13h (320x200x256) DOS Intro Setup\nMOV EAX, 0x0013\nINT 0x10\nPUSH 0xA000\nPOP EDX\nRET`,
     rdtsc: `; High-resolution Pentium CPU cycle benchmark\nCPUID\nRDTSC\nPUSH EDX\nPUSH EAX\nNOP\nRDTSC\nPOP EBX\nPOP ECX\nRET`,
     loopfib: `; Fibonacci Sequence Generator Loop in ECX\nXOR EAX, EAX\nMOV EBX, 0x00000001\nMOV ECX, 0x0000000A\nADD EAX, EBX\nXCHG EAX, EBX\nLOOP 0xFB\nRET`,
-    anomaly: `; [TELEMETRY CAPTURE OFFSET 0x1999FE]\nXOR EAX, EAX\nMOV EDX, 0x10199904\nMOV ECX, 0x0000007F\nTEST EDX, EDX\nJNZ 0x02\nINT 3\nRET`
+    anomaly: `; [TELEMETRY CAPTURE OFFSET 0x1999FE]\nXOR EAX, EAX\nMOV EDX, 0x10199904\nMOV ECX, 0x0000007F\nTEST EDX, EDX\nJNZ 0x02\nINT 3\nRET`,
+    plasma: `; Demoscene Plasma Palette Trigonometry Math\nXOR EAX, EAX\nMOV EBX, 0x00000040\nMOV ECX, 0x00000020\nADD EAX, EBX\nSHR EAX, 1\nSUB EBX, ECX\nRET`,
+    decrypt: `; Cryptographic Byte XOR Decryption Stub\nMOV ESI, 0x00402000\nMOV ECX, 0x00000010\nMOV AL, 0x7F\nINC ESI\nDEC ECX\nJNZ 0xFB\nRET`
   };
 
   document.querySelectorAll('[data-preset]').forEach(btn => {
@@ -2429,6 +2539,10 @@
     cpu.instrCount++;
     cpu.eip += 2;
 
+    if (cpu.eax === 0x1999 || cpu.edx === 0x10199904 || mnem === 'ECHO_PULSE') {
+      executedLog += ` <strong style="color:var(--gold-bright);">⚡ [1999Hz Subcarrier Lock: Telemetry at 10.19.99.4/classified]</strong>`;
+    }
+
     const logBox = document.getElementById('cpuLogBox');
     if (logBox) {
       logBox.innerHTML = executedLog + '<br>' + logBox.innerHTML;
@@ -2600,6 +2714,42 @@
   document.getElementById('btnEndianFlip').onclick = () => { registerState = swapEndian32(registerState); updateRadixDisplay(); };
   document.getElementById('btnSetAllBits').onclick = () => { registerState = 0xFFFFFFFF; updateRadixDisplay(); };
 
+  const btnApplyDirectVal = document.getElementById('btnApplyDirectVal');
+  if (btnApplyDirectVal) {
+    btnApplyDirectVal.onclick = () => {
+      const txt = (document.getElementById('inputDirectVal').value || '').trim();
+      if (!txt) return;
+      let val = 0;
+      if (txt.toLowerCase().startsWith('0x') || /[a-f]/i.test(txt)) {
+        val = parseInt(txt.replace(/^0x/i, ''), 16);
+      } else {
+        val = parseInt(txt, 10);
+      }
+      if (!isNaN(val)) {
+        registerState = val >>> 0;
+        updateRadixDisplay();
+      }
+    };
+  }
+
+  function getAluOperand() {
+    const txt = (document.getElementById('inputAluOp').value || '0').trim();
+    let val = 0;
+    if (txt.toLowerCase().startsWith('0x') || /[a-f]/i.test(txt)) {
+      val = parseInt(txt.replace(/^0x/i, ''), 16);
+    } else {
+      val = parseInt(txt, 10);
+    }
+    return isNaN(val) ? 0 : (val >>> 0);
+  }
+
+  const btnAluAnd = document.getElementById('btnAluAnd');
+  if (btnAluAnd) btnAluAnd.onclick = () => { registerState = (registerState & getAluOperand()) >>> 0; updateRadixDisplay(); };
+  const btnAluOr = document.getElementById('btnAluOr');
+  if (btnAluOr) btnAluOr.onclick = () => { registerState = (registerState | getAluOperand()) >>> 0; updateRadixDisplay(); };
+  const btnAluXor = document.getElementById('btnAluXor');
+  if (btnAluXor) btnAluXor.onclick = () => { registerState = (registerState ^ getAluOperand()) >>> 0; updateRadixDisplay(); };
+
   updateRadixDisplay();
 
   // ==========================================
@@ -2756,8 +2906,10 @@
       view.setUint32(rd + 0x60, 0x2050, true);
 
       if (type === 'anomaly') {
-        const anonTelemetry = "TELEMETRY_DUMP: Node 0x7F received signal from 10.19.99.4/classified. Memory checksum valid. Echo protocol running.";
+        const anonTelemetry = "SYS_RELAY: Packet from kweb://10.19.99.4/classified routing through gateway kweb://echo-subsystem.net to core kweb://deep-core [STATUS: ACTIVE_LOOP]\0";
         for (let i = 0; i < anonTelemetry.length; i++) pe[rd + 0x80 + i] = anonTelemetry.charCodeAt(i);
+        const subcarrierStr = "SUBCARRIER_MONITOR: 1999Hz tone detected on echo-subsystem.net. Node 0x7F telemetry acknowledged.\0";
+        for (let i = 0; i < subcarrierStr.length; i++) pe[rd + 0x80 + anonTelemetry.length + i] = subcarrierStr.charCodeAt(i);
       }
     }
 
@@ -3035,6 +3187,10 @@
 
     // Render Hex Dump for active selection
     renderSelectedHexDump();
+
+    // Extract & Display Strings
+    cachedExtractedStrings = null;
+    renderExtractedStrings();
   }
 
   function renderSelectedHexDump() {
@@ -3083,6 +3239,88 @@
   }
 
   document.getElementById('selDumpSection').onchange = renderSelectedHexDump;
+
+  // Extracted Strings Engine
+  let cachedExtractedStrings = null;
+
+  function extractPEStrings(u8Array, minLen = 4) {
+    const results = [];
+    let cur = '';
+    let startOffset = -1;
+
+    for (let i = 0; i < u8Array.length; i++) {
+      const b = u8Array[i];
+      if (b >= 32 && b <= 126) {
+        if (cur.length === 0) startOffset = i;
+        cur += String.fromCharCode(b);
+      } else {
+        if (cur.length >= minLen) {
+          results.push({ offset: startOffset, str: cur });
+        }
+        cur = '';
+        startOffset = -1;
+      }
+    }
+    if (cur.length >= minLen) {
+      results.push({ offset: startOffset, str: cur });
+    }
+    return results;
+  }
+
+  function renderExtractedStrings() {
+    if (!currentLoadedPEBytes) return;
+    const box = document.getElementById('peStringsBox');
+    const lblCount = document.getElementById('lblStringCount');
+    const searchInput = document.getElementById('strSearchInput');
+    if (!box) return;
+
+    if (!cachedExtractedStrings) {
+      cachedExtractedStrings = extractPEStrings(currentLoadedPEBytes, 4);
+    }
+
+    const q = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    const filtered = cachedExtractedStrings.filter(item => !q || item.str.toLowerCase().includes(q));
+
+    if (lblCount) lblCount.textContent = `(${filtered.length} of ${cachedExtractedStrings.length} strings displayed)`;
+
+    if (filtered.length === 0) {
+      box.textContent = '// No strings matched active filter.';
+      return;
+    }
+
+    let out = '';
+    filtered.forEach(item => {
+      const offHex = '0x' + item.offset.toString(16).toUpperCase().padStart(8, '0');
+      let secName = "HEADERS";
+      if (parsedPEData && parsedPEData.sections) {
+        const sec = parsedPEData.sections.find(s => item.offset >= s.rawPtr && item.offset < (s.rawPtr + s.rawSize));
+        if (sec) secName = sec.name;
+      }
+      const isArgClue = item.str.includes('kweb://') || item.str.includes('10.19.99') || item.str.includes('echo-subsystem') || item.str.includes('deep-core');
+      const tag = isArgClue ? '★ [TELEMETRY/URL]' : `  [${secName.padEnd(8, ' ')}]`;
+      out += `${offHex} ${tag} "${item.str}"\n`;
+    });
+    box.textContent = out;
+  }
+
+  const strSearchInput = document.getElementById('strSearchInput');
+  if (strSearchInput) {
+    strSearchInput.oninput = renderExtractedStrings;
+  }
+
+  const btnCopyStrings = document.getElementById('btnCopyStrings');
+  if (btnCopyStrings) {
+    btnCopyStrings.onclick = () => {
+      const box = document.getElementById('peStringsBox');
+      if (box && navigator.clipboard) {
+        navigator.clipboard.writeText(box.textContent).then(() => {
+          const old = btnCopyStrings.textContent;
+          btnCopyStrings.textContent = 'Copied!';
+          setTimeout(() => btnCopyStrings.textContent = old, 1500);
+        });
+      }
+    };
+  }
 
   // Preset Sample Click Handlers
   document.getElementById('btnLoadSampleReturn42').onclick = () => {
@@ -3318,6 +3556,12 @@
       style: "144 BPM // Hyper-Speed FM Arpeggios & Resonant Bass",
       bpm: 144,
       scale: [164.81, 185.00, 196.00, 220.00, 246.94, 261.63, 293.66, 329.63, 370.00, 392.00, 440.00, 493.88]
+    },
+    {
+      title: "Track 05: 'Subcarrier 1999 (Echo Protocol)'",
+      style: "110 BPM // 1999Hz Carrier Resonance & Genesis FM Arpeggios",
+      bpm: 110,
+      scale: [123.47, 146.83, 164.81, 196.00, 220.00, 246.94, 293.66, 329.63, 392.00, 440.00, 493.88, 587.33]
     }
   ];
 
@@ -3574,7 +3818,8 @@
     { alias: "ByteMonk_99", opcode: "NOP [0x90]", msg: "Welcome to the sacred shrine of 0x90. May your interrupts always return clean.", time: "1999-10-24 18:22" },
     { alias: "FLARELIGHT_GUEST", opcode: "MOV EAX, 0x13", msg: "Greetz from Helsinki! Nice YM2612 FM synthesis. Hand-written ASM is eternal.", time: "1999-11-02 21:40" },
     { alias: "HexAcolyte", opcode: "XOR EAX, EAX", msg: "Why waste 100 megabytes on frameworks when 4 kilobytes can render a 3D textured torus?", time: "1999-11-15 04:12" },
-    { alias: "SubOperator_7F", opcode: "INT 3 [0xCC]", msg: "Signal detected on internal subnet 10.19.99.4. The machine preserves what the world forgot.", time: "1999-12-08 02:45" }
+    { alias: "SubOperator_7F", opcode: "INT 3 [0xCC]", msg: "Signal detected on internal subnet 10.19.99.4. The machine preserves what the world forgot.", time: "1999-12-08 02:45" },
+    { alias: "NullPointer_Echo", opcode: "ECHO_PULSE [0F 3F]", msg: "Has anyone disassembled the firmware at 10.19.99.4? The subcarrier at 1999Hz sounds like voices in the modem line...", time: "1999-12-28 03:33" }
   ];
 
   function getGuestbook() {
