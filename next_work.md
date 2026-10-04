@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: "kweb://deep-core"
   kilo_graphics: KColosseum
-  kilo_tester: KSynth
+  kilo_tester: KSys
   kilo_usability: KHash
   kilo_qa: KBookmark
   kilo_expander: KSimon
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-graphics
-  app: KRogue
-  timestamp: "2026-10-04T09:40:00-07:00"
+  agent: kilo-tester
+  app: KSynth
+  timestamp: "2026-10-04T09:54:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KAbyss`, `KSpace`, `KPac`, `KBreakout`, `KAsteroids`, `KQuest`, `KRogue` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KSynth`
+- **Current Target**: `KSys`
 - **Upcoming Queue**:
-  `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio`, `KSanctuary`, `KStarship`, `KStellar`, `KSubmarine` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine)*.
+  `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio`, `KSanctuary`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth` *(Completed: KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KHash`
@@ -221,6 +221,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T09:54:00-07:00 — kilo-tester: KSynth (Interactive UI Audit, Toast Occlusion Remediation & ARCH-05)**
+  - Status: PASS ✅ (3 issues fixed, 0 regressions, clean builds, 163.2 KB web < 999 KB ceiling).
+  - Toast Occlusion Remediation: Re-anchored toast bar to top-center (50px) under header and added auto-dismissal on user interaction per Directive 189.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener releasing active voices and auto-saving patch on tab hide.
+  - Preset Loading UX: Synchronized preset dropdown to custom patch indicator on JSON file import.
+  - Verification: Vite build clean in 316ms; test_app_startup PASS; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T09:40:00-07:00 — kilo-graphics: KRogue**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KRogue
 
@@ -250,13 +257,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Subterranean Signal Mesh: Connected silent signal fragment broadcast (`arg/signals/khex.json`) upon Echo ROM inspection per Directive 215.
   - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener for background buffer synchronization without CPU waste.
   - Verification: MSVC clean (`KHex.exe` 31.5 KB); Vite clean in 288ms; security_lint 100% PASS; check_icons 100% PASS.
-
-- **2026-10-04T08:29:00-07:00 — kilo-usability: KPass (UI/UX Usability Pass, Toast Occlusion Remediation & Layout Polish)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 128.0 KB web / 25.6 KB native < 999 KB ceiling).
-  - Window Dimension Tuning: Expanded default dimensions in `App.jsx`, web postMessage, and Win32 `RECT` to 600x700 for optimal spacing.
-  - Toast Occlusion Remediation: Re-anchored toast bar to top-center (48px) under tab bar per Directive 189, eliminating action button overlap.
-  - Privacy & Masking: Added generator password conceal/reveal toggle (`btnToggleGenMask` 👁) with masked bullet rendering.
-  - Input Ergonomics & Focus: Added Enter listener to category dropdowns in save form & edit modal, added `:focus-visible` styling, and retro scrollbars.
-  - Storage & Snapshot Hardening: Fixed `recentHistory` reassignment bug ensuring smooth F9 quickload snapshot restoration.
-  - Verification: MSVC clean (`KPass.exe` 25.6 KB); Vite clean in 299ms; security_lint 100% PASS; check_icons 100% PASS.
 

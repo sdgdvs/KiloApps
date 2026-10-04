@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T08:29:00-07:00 — kilo-usability: KPass (UI/UX Usability Pass, Toast Occlusion Remediation & Layout Polish)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 128.0 KB web / 25.6 KB native < 999 KB ceiling).
+  - Window Dimension Tuning: Expanded default dimensions in `App.jsx`, web postMessage, and Win32 `RECT` to 600x700 for optimal spacing.
+  - Toast Occlusion Remediation: Re-anchored toast bar to top-center (48px) under tab bar per Directive 189, eliminating action button overlap.
+  - Privacy & Masking: Added generator password conceal/reveal toggle (`btnToggleGenMask` 👁) with masked bullet rendering.
+  - Input Ergonomics & Focus: Added Enter listener to category dropdowns in save form & edit modal, added `:focus-visible` styling, and retro scrollbars.
+  - Storage & Snapshot Hardening: Fixed `recentHistory` reassignment bug ensuring smooth F9 quickload snapshot restoration.
+  - Verification: MSVC clean (`KPass.exe` 25.6 KB); Vite clean in 299ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T08:11:00-07:00 — kilo-tester: KSubmarine (Interactive UI Audit, Overlay Dismissals, Save Export/Import & ARCH-05)**
   - Status: PASS ✅ (4 issues found, 4 fixed, 0 regressions, clean builds, 447.4 KB web / 257.5 KB native < 999 KB ceiling).
   - Modal & Dialog Ergonomics: Wired backdrop click dismissal on tutorial briefing and added return-to-sonar close buttons to all 9 overlay views.

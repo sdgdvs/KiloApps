@@ -448,35 +448,38 @@
     pointer-events: none;
   }
 
-  /* Toast Notifications (Anchored Safely Above Keyboard / Non-Occluding) */
+  /* Toast Notifications (Anchored Safely at Top-Center / Non-Occluding per Directive 189) */
   #toastContainer {
     position: fixed;
-    bottom: 114px;
-    right: 20px;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
-    flex-direction: column-reverse;
+    flex-direction: column;
     gap: 6px;
     z-index: 9000;
     pointer-events: none;
-    max-width: 380px;
+    max-width: 440px;
+    width: 90%;
+    align-items: center;
   }
   .toast {
-    background: rgba(22, 25, 34, 0.95);
+    background: rgba(22, 25, 34, 0.96);
     border: 1px solid var(--accent-cyan);
     color: var(--text-main);
-    padding: 7px 12px;
+    padding: 7px 14px;
     border-radius: 6px;
     font-size: 11px;
     font-weight: 600;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    box-shadow: 0 4px 18px rgba(0,0,0,0.65);
     display: flex;
     align-items: center;
     gap: 8px;
     pointer-events: auto;
     cursor: pointer;
     backdrop-filter: blur(4px);
-    animation: toastSlideIn 0.25s ease-out forwards;
-    transition: opacity 0.25s ease, transform 0.25s ease;
+    animation: toastSlideIn 0.22s ease-out forwards;
+    transition: opacity 0.22s ease, transform 0.22s ease;
   }
   .toast:hover {
     filter: brightness(1.15);
@@ -495,7 +498,7 @@
   .toast.error { border-color: var(--accent-pink); }
   .toast.info { border-color: var(--accent-cyan); }
   @keyframes toastSlideIn {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
@@ -1142,7 +1145,7 @@
       if (isRemoved) return;
       isRemoved = true;
       toast.style.opacity = '0';
-      toast.style.transform = 'translateY(10px)';
+      toast.style.transform = 'translateY(-10px)';
       setTimeout(() => toast.remove(), 250);
     };
     toast.onclick = dismiss;
@@ -3684,6 +3687,11 @@
       try {
         const p = JSON.parse(event.target.result);
         applyPreset(p);
+        if (p.preset && document.getElementById('presetSelect').querySelector(`option[value="${p.preset}"]`)) {
+          document.getElementById('presetSelect').value = p.preset;
+        } else {
+          document.getElementById('presetSelect').value = 'custom';
+        }
         saveCurrentPatch();
         showToast('Preset loaded successfully!', 'success');
       } catch (err) {
@@ -4228,13 +4236,33 @@
     });
   }
 
-  // Auto-save patch on page unload or visibility change
+  // Auto-save patch on page unload or visibility change (ARCH-05)
   window.addEventListener('beforeunload', () => {
     saveCurrentPatch();
   });
   window.addEventListener('pagehide', () => {
     saveCurrentPatch();
   });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (typeof panicAllNotesOff === 'function') {
+        panicAllNotesOff();
+      }
+      saveCurrentPatch();
+    }
+  });
+
+  // Auto-dismiss active toasts on user interaction to prevent occlusion (Directive 189)
+  document.addEventListener('pointerdown', (e) => {
+    if (e.target && !e.target.closest('#toastContainer')) {
+      const container = document.getElementById('toastContainer');
+      if (container && container.children.length > 0) {
+        Array.from(container.children).forEach(toast => {
+          if (toast && toast.onclick) toast.onclick();
+        });
+      }
+    }
+  }, { passive: true });
 
   // Load saved patch on initial start
   loadSavedPatch();
