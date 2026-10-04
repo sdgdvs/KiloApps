@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>KSimon 3D Arcade</title>
+<script src="../assets/js/retro_multiplayer.js"></script>
 <style>
   body {
     margin: 0;
@@ -169,9 +170,214 @@
     background-color: #444; color: white; border: none; padding: 6px 12px; cursor: pointer; float: right; border-radius: 4px; font-weight: bold;
   }
   .close-btn:hover { background-color: #ff3366; }
+
+  /* Toast Notification */
+  #ksimon-toast {
+    position: fixed;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 18px;
+    background: rgba(14, 20, 32, 0.96);
+    border: 1px solid #00ffcc;
+    border-radius: 6px;
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 1000;
+    box-shadow: 0 4px 18px rgba(0, 255, 204, 0.4);
+    pointer-events: auto;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+  }
+  #ksimon-toast.toast-error { border-color: #ff3366; box-shadow: 0 4px 18px rgba(255, 51, 102, 0.4); color: #ff88a3; }
+  #ksimon-toast.toast-success { border-color: #00ff88; box-shadow: 0 4px 18px rgba(0, 255, 136, 0.4); color: #88ffbb; }
+  #ksimon-toast.toast-warning { border-color: #ffbb00; box-shadow: 0 4px 18px rgba(255, 187, 0, 0.4); color: #ffe066; }
+
+  /* Multiplayer HUD */
+  #mp-hud {
+    display: none;
+    background: rgba(15, 22, 34, 0.94);
+    border: 1px solid #00e5ff66;
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin: 8px 0;
+    box-shadow: 0 4px 15px rgba(0, 229, 255, 0.25);
+  }
+  .mp-hud-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .mp-card {
+    flex: 1;
+    background: #111a28;
+    border: 1px solid #293d58;
+    border-radius: 6px;
+    padding: 6px 8px;
+    text-align: left;
+  }
+  .mp-card.local { border-color: #00ffcc88; }
+  .mp-card.remote { border-color: #ffaa3388; text-align: right; }
+  .mp-card-name { font-weight: bold; font-size: 12px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mp-card-score { font-size: 16px; font-weight: bold; color: #00ffcc; margin-top: 1px; }
+  .mp-card.remote .mp-card-score { color: #ffaa33; }
+  .mp-card-status { font-size: 10px; text-transform: uppercase; color: #88aacc; letter-spacing: 0.5px; }
+  .remote-led-rack {
+    display: inline-flex;
+    gap: 3px;
+    margin-top: 3px;
+  }
+  .remote-led {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #253347;
+    transition: background 0.15s, box-shadow 0.15s;
+  }
+  .mp-center-info {
+    text-align: center;
+    min-width: 90px;
+  }
+  .mp-mode-badge {
+    font-size: 11px;
+    font-weight: bold;
+    color: #00e5ff;
+    background: rgba(0, 229, 255, 0.15);
+    border: 1px solid #00e5ff44;
+    border-radius: 4px;
+    padding: 2px 6px;
+    display: inline-block;
+  }
+  .mp-room-tag {
+    font-size: 11px;
+    color: #ffd700;
+    margin-top: 2px;
+    cursor: pointer;
+  }
+  .mp-room-tag:hover {
+    text-decoration: underline;
+  }
+  .mp-chat-bar {
+    display: flex;
+    gap: 4px;
+    margin-top: 6px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .chat-chip {
+    background: #19273c;
+    border: 1px solid #00e5ff44;
+    color: #aae8ff;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .chat-chip:hover {
+    background: #254060;
+    color: #fff;
+    border-color: #00e5ff;
+  }
+
+  /* Replay Viewer */
+  #replay-bar {
+    display: none;
+    background: rgba(20, 24, 34, 0.95);
+    border: 1px solid #ffd70066;
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin-top: 8px;
+    box-shadow: 0 4px 15px rgba(255, 215, 0, 0.2);
+  }
+  .replay-ribbon {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+    max-height: 40px;
+    overflow-y: auto;
+  }
+  .replay-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 1px solid #555;
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  .replay-dot.active {
+    transform: scale(1.4);
+    box-shadow: 0 0 8px #ffffff;
+    border-color: #ffffff;
+  }
+
+  /* Additional Modals */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85);
+    justify-content: center;
+    align-items: center;
+    z-index: 20;
+    backdrop-filter: blur(5px);
+  }
+  .modal-box {
+    background: #181d28;
+    padding: 20px;
+    border-radius: 12px;
+    max-width: 440px;
+    width: 90%;
+    text-align: left;
+    border: 1px solid #00e5ff55;
+    box-shadow: 0 0 30px rgba(0,229,255,0.25);
+  }
+  .modal-box h2 {
+    margin-top: 0;
+    color: #00e5ff;
+    font-size: 18px;
+  }
+  .modal-input {
+    background: #10151f;
+    border: 1px solid #2d3f57;
+    color: #fff;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 6px 0 12px 0;
+  }
+  .modal-input:focus {
+    border-color: #00e5ff;
+    outline: none;
+  }
+  .keybind-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    border-bottom: 1px solid #233144;
+    font-size: 13px;
+  }
+  .keybind-key {
+    background: #253347;
+    border: 1px solid #486588;
+    color: #00ffcc;
+    padding: 2px 10px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .keybind-key:hover {
+    border-color: #00ffcc;
+  }
 </style>
 </head>
 <body>
+<div id="ksimon-toast" style="display:none;" onclick="this.style.display='none'"></div>
 
 <div id="game-container">
   <h1>KSimon 3D</h1>
@@ -183,6 +389,46 @@
   </div>
   <div id="powerups-display">
     Hints (H): <span id="hints-val">3</span> | Slow (L): <span id="slowmo-val">2</span> | Shields (B): <span id="shields-val">1</span> | Freeze (T): <span id="freeze-val">2</span>
+  </div>
+
+  <!-- Multiplayer Duel HUD -->
+  <div id="mp-hud">
+    <div class="mp-hud-row">
+      <div class="mp-card local">
+        <div class="mp-card-name" id="mp-p1-name">Player 1</div>
+        <div class="mp-card-score"><span id="mp-p1-score">0</span> <span style="font-size:10px; color:#888;">PTS</span></div>
+        <div class="mp-card-status" id="mp-p1-status">READY</div>
+      </div>
+      <div class="mp-center-info">
+        <div class="mp-mode-badge" id="mp-mode-badge">SPEED MATCH</div>
+        <div style="font-size:12px; font-weight:bold; color:#fff; margin-top:2px;" id="mp-round-txt">ROUND 1</div>
+        <div class="mp-room-tag" id="mp-room-tag" onclick="copyInviteLink()" title="Click to copy invite link">ROOM: ---- [📋]</div>
+      </div>
+      <div class="mp-card remote">
+        <div class="mp-card-name" id="mp-p2-name">Challenger</div>
+        <div class="mp-card-score"><span id="mp-p2-score">0</span> <span style="font-size:10px; color:#888;">PTS</span></div>
+        <div class="mp-card-status" id="mp-p2-status">WAITING</div>
+        <div class="remote-led-rack" id="mp-remote-leds">
+          <div class="remote-led" id="rled-0"></div>
+          <div class="remote-led" id="rled-1"></div>
+          <div class="remote-led" id="rled-2"></div>
+          <div class="remote-led" id="rled-3"></div>
+          <div class="remote-led" id="rled-4"></div>
+          <div class="remote-led" id="rled-5"></div>
+          <div class="remote-led" id="rled-6"></div>
+          <div class="remote-led" id="rled-7"></div>
+        </div>
+      </div>
+    </div>
+    <div class="mp-chat-bar">
+      <button class="chat-chip" onclick="sendQuickChat('Good luck!')">Good luck!</button>
+      <button class="chat-chip" onclick="sendQuickChat('Nice memory!')">Nice memory!</button>
+      <button class="chat-chip" onclick="sendQuickChat('Too fast!')">Too fast!</button>
+      <button class="chat-chip" onclick="sendQuickChat('Watch this!')">Watch this!</button>
+      <button class="chat-chip" onclick="sendQuickChat('GG!')">GG!</button>
+      <button class="chat-chip" id="mp-rematch-btn" style="border-color:#00ff88; color:#00ff88;" onclick="requestRematch()">Rematch</button>
+      <button class="chat-chip" style="border-color:#ff3366; color:#ff88aa;" onclick="leaveMultiplayerSession()">Leave Match</button>
+    </div>
   </div>
 
   <div id="arcade-canvas-wrap">
@@ -219,6 +465,12 @@
       <button id="shield-btn" class="action-btn pwr-btn" disabled>Shield (B)</button>
       <button id="freeze-btn" class="action-btn pwr-btn" disabled>Freeze (T)</button>
     </div>
+    <div style="margin-top: 6px; display: flex; justify-content: center; flex-wrap: wrap; gap: 4px;">
+      <button id="mp-open-btn" class="action-btn" style="background: linear-gradient(180deg, #184860 0%, #0e2b3a 100%); border-color: #00e5ff; color: #79eeff; font-weight: bold;" onclick="openMpModal()">🌐 Online Duel</button>
+      <button id="replay-open-btn" class="action-btn" style="background: linear-gradient(180deg, #594411 0%, #352807 100%); border-color: #ffd700; color: #fff1a8;" onclick="openReplay()">🎬 Replay</button>
+      <button id="synth-toggle-btn" class="action-btn" title="Cycle Audio Architecture" onclick="toggleSoundArchitecture()">🎵 FM: YM2612</button>
+      <button id="keybinds-open-btn" class="action-btn" onclick="openKeybindsModal()">⌨️ Controls</button>
+    </div>
     <div style="margin-top: 6px;">
       <button id="save-btn" class="action-btn" disabled>Save (F5)</button>
       <button id="load-btn" class="action-btn">Load (F9)</button>
@@ -229,6 +481,27 @@
       <input type="file" id="import-file" style="display:none;" accept=".json">
     </div>
   </div>
+
+  <!-- Replay Viewer Bar -->
+  <div id="replay-bar">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; font-size:13px; color:#ffd700; font-weight:bold;">
+      <span>🎬 SEQUENCE REPLAY VIEWER</span>
+      <span id="replay-step-txt" style="color:#fff;">Step: 0 / 0</span>
+      <button class="action-btn" style="padding:2px 8px; font-size:11px;" onclick="closeReplay()">Close ✕</button>
+    </div>
+    <div class="replay-ribbon" id="replay-ribbon"></div>
+    <div style="display:flex; justify-content:center; align-items:center; gap:6px;">
+      <button class="action-btn" onclick="stepReplay(-1)">⏮ Prev</button>
+      <button class="action-btn" id="replay-play-btn" onclick="toggleReplayPlay()">▶ Play</button>
+      <button class="action-btn" onclick="stepReplay(1)">⏭ Next</button>
+      <select id="replay-speed" style="background:#111; color:#00ffcc; border:1px solid #00ffcc44; border-radius:4px; padding:3px 6px; font-size:12px;" onchange="changeReplaySpeed(this.value)">
+        <option value="0.5">0.5x</option>
+        <option value="1.0" selected>1.0x</option>
+        <option value="2.0">2.0x</option>
+      </select>
+    </div>
+  </div>
+
   <div id="status">Press Start (or Space)</div>
   <div id="stats" style="margin-top: 10px; font-size: 13px; color: #888;">
     Games: <span id="stat-games">0</span> | Streak: <span id="stat-streak">0</span> | Best Time: <span id="stat-time">0</span>s
@@ -243,7 +516,7 @@
     <p><strong>Controls:</strong></p>
     <ul>
       <li>Mouse / Touch: Click or tap the 3D console buttons.</li>
-      <li>Keyboard: Q, W, E, R (Top Row) / A, S, D, F (Bottom Row) or 1-8 keys.</li>
+      <li>Keyboard: Q, W, E, R (Top Row) / A, S, D, F (Bottom Row) or 1-8 keys (customizable in Controls).</li>
       <li>Space: Start game.</li>
       <li>H: Hint (Replays current sequence at slow speed).</li>
       <li>L: Slow-Mo (Halves playback speed for stage).</li>
@@ -259,7 +532,85 @@
       <li><strong>Pitch Audio:</strong> Sound-only mode without color hints!</li>
       <li><strong>Speed:</strong> Ultra fast playback and 10s countdown timer.</li>
       <li><strong>Campaign:</strong> 20 stages culminating in Stage 20 Grandmaster Memory Master Challenge!</li>
+      <li><strong>🌐 Online Multiplayer:</strong> Real-time cross-computer Speed Matches & Add-A-Step Volley Duels via Subnet RFMS!</li>
     </ul>
+  </div>
+</div>
+
+<!-- Multiplayer Matchmaking Modal -->
+<div id="mp-modal" class="modal-overlay">
+  <div class="modal-box">
+    <button class="close-btn" onclick="closeMpModal()">X</button>
+    <h2>🌐 KSimon Online Duel</h2>
+    <p style="font-size:12px; color:#aaa; margin-top:-6px;">Global Real-Time Cross-Computer Memory Duels via Subnet RFMS</p>
+    
+    <label style="font-size:12px; color:#88aacc; font-weight:bold;">CALL-SIGN / HANDLE:</label>
+    <input type="text" id="mp-player-name-input" class="modal-input" maxlength="16" placeholder="Enter your call-sign">
+    
+    <label style="font-size:12px; color:#88aacc; font-weight:bold;">DUEL DISCIPLINE:</label>
+    <div style="display:flex; gap:8px; margin:6px 0 14px 0;">
+      <label style="flex:1; background:#111824; border:1px solid #283e58; border-radius:6px; padding:8px; font-size:12px; cursor:pointer;">
+        <input type="radio" name="mp-mode-radio" value="speed" checked>
+        <strong style="color:#00ffcc;">Speed Match</strong>
+        <div style="color:#888; font-size:11px; margin-top:2px;">Simultaneous memory race with live step sync!</div>
+      </label>
+      <label style="flex:1; background:#111824; border:1px solid #283e58; border-radius:6px; padding:8px; font-size:12px; cursor:pointer;">
+        <input type="radio" name="mp-mode-radio" value="volley">
+        <strong style="color:#ffaa33;">Add-A-Step Volley</strong>
+        <div style="color:#888; font-size:11px; margin-top:2px;">Turn-based; repeat sequence and add 1 note!</div>
+      </label>
+    </div>
+
+    <div style="display:flex; gap:8px; flex-direction:column;">
+      <button class="action-btn" style="padding:10px; font-weight:bold; background:linear-gradient(180deg, #184860 0%, #0e2b3a 100%); border-color:#00e5ff; color:#fff;" onclick="startQuickMatch()">⚡ Quick Match (Join Open or Host)</button>
+      <button class="action-btn" style="padding:10px; font-weight:bold; background:linear-gradient(180deg, #2b3950 0%, #172130 100%); border-color:#88aacc; color:#fff;" onclick="hostMultiplayerRoom()">📡 Host Duel Room (SIM-XXXX)</button>
+      <div style="display:flex; gap:6px; margin-top:4px;">
+        <input type="text" id="mp-join-input" class="modal-input" style="margin:0; text-transform:uppercase;" placeholder="Room Code (SIM-XXXX)">
+        <button class="action-btn" style="white-space:nowrap; padding:8px 14px;" onclick="joinRoomByCode()">Join Code</button>
+      </div>
+      <button class="action-btn" style="padding:8px; font-size:12px; background:#19273c; border-color:#5c7899; color:#bdd8f2;" onclick="startCyberBotPractice()">🤖 Practice vs Subnet Cyber-Bot</button>
+    </div>
+    
+    <div id="mp-solo-timer-bar" style="display:none; margin-top:12px; text-align:center; padding:8px; background:#122030; border:1px solid #00e5ff44; border-radius:6px; font-size:12px; color:#00ffcc;">
+      Searching global subnet for opponent... (<span id="mp-countdown-sec">25</span>s)<br>
+      <span style="font-size:11px; color:#88aacc;">Rule 12: Subnet AI Cyber-Bot engages automatically if no peer connects.</span>
+      <div style="margin-top:6px;">
+        <button class="action-btn" style="padding:4px 10px; font-size:11px;" onclick="cancelMatchmaking()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Challenger Invite Received Modal -->
+<div id="invite-modal" class="modal-overlay">
+  <div class="modal-box">
+    <h2>⚔️ Duel Challenge Received</h2>
+    <p style="font-size:14px; color:#fff;">
+      A challenger has invited you to a live KSimon duel in room: <strong id="invite-room-code-txt" style="color:#00ffcc; font-size:16px;">SIM-XXXX</strong>
+    </p>
+    <p style="font-size:12px; color:#88aacc;">
+      Click Accept to connect to the global subnet duel room, or Decline to keep playing offline.
+    </p>
+    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:16px;">
+      <button class="action-btn" onclick="declineInvite()">Decline</button>
+      <button class="action-btn" style="background:linear-gradient(180deg, #184860 0%, #0e2b3a 100%); border-color:#00e5ff; color:#00ffcc; font-weight:bold;" onclick="acceptInvite()">⚔️ Accept Challenge</button>
+    </div>
+  </div>
+</div>
+
+<!-- Controls / Keybinds Modal -->
+<div id="keybinds-modal" class="modal-overlay">
+  <div class="modal-box">
+    <button class="close-btn" onclick="closeKeybindsModal()">X</button>
+    <h2>⌨️ Custom Controls & Keybinds</h2>
+    <p style="font-size:12px; color:#88aacc; margin-top:-6px;">Click any key button below and press a new key to rebind it.</p>
+    
+    <div id="keybinds-list"></div>
+
+    <div style="display:flex; justify-content:space-between; margin-top:16px;">
+      <button class="action-btn" onclick="resetKeybinds()">Reset Defaults</button>
+      <button class="action-btn" style="border-color:#00ffcc; color:#00ffcc;" onclick="closeKeybindsModal()">Done</button>
+    </div>
   </div>
 </div>
 
@@ -1304,21 +1655,140 @@
     buttonStates.forEach((_, i) => releaseButtonFlash(i));
   }, { passive: false });
 
+  // --- UNIVERSAL AUDIO ARCHITECTURE (YM2612 FM & SPC700 DELAY) ---
+  let soundArchitecture = localStorage.getItem('ksimon_sound_arch') || 'ym2612'; // 'ym2612' | 'spc700' | 'classic'
+  const synthToggleBtn = document.getElementById('synth-toggle-btn');
+  function updateSynthButtonLabel() {
+    if (!synthToggleBtn) return;
+    if (soundArchitecture === 'ym2612') synthToggleBtn.innerText = '🎵 FM: YM2612';
+    else if (soundArchitecture === 'spc700') synthToggleBtn.innerText = '🎵 SNES: SPC700';
+    else synthToggleBtn.innerText = '🎵 Synth: Classic';
+  }
+  updateSynthButtonLabel();
+
+  function toggleSoundArchitecture() {
+    if (soundArchitecture === 'ym2612') soundArchitecture = 'spc700';
+    else if (soundArchitecture === 'spc700') soundArchitecture = 'classic';
+    else soundArchitecture = 'ym2612';
+    localStorage.setItem('ksimon_sound_arch', soundArchitecture);
+    updateSynthButtonLabel();
+    showToast(`Audio Synth Architecture switched to: ${soundArchitecture.toUpperCase()}`, 'info');
+    playTone(440, 250);
+  }
+
+  // SNES SPC700 Stereo Delay Echo Bus
+  let spcDelayLeft = null, spcDelayRight = null, spcFilter = null, spcFeedback = null;
+  function initSpcDelayBus() {
+    if (!audioCtx || spcDelayLeft) return;
+    try {
+      spcDelayLeft = audioCtx.createDelay(1.0);
+      spcDelayRight = audioCtx.createDelay(1.0);
+      spcDelayLeft.delayTime.value = 0.14; // 140ms
+      spcDelayRight.delayTime.value = 0.21; // 210ms
+      
+      spcFilter = audioCtx.createBiquadFilter();
+      spcFilter.type = 'lowpass';
+      spcFilter.frequency.value = 2600; // 2.6kHz warm 16-bit SPC700 anti-aliasing
+      
+      spcFeedback = audioCtx.createGain();
+      spcFeedback.gain.value = 0.28;
+      
+      spcDelayLeft.connect(spcFilter);
+      spcDelayRight.connect(spcFilter);
+      spcFilter.connect(spcFeedback);
+      spcFeedback.connect(spcDelayLeft);
+      spcFeedback.connect(spcDelayRight);
+      
+      const merger = audioCtx.createChannelMerger ? audioCtx.createChannelMerger(2) : null;
+      if (merger) {
+        spcDelayLeft.connect(merger, 0, 0);
+        spcDelayRight.connect(merger, 0, 1);
+        merger.connect(audioCtx.destination);
+      } else {
+        spcDelayLeft.connect(audioCtx.destination);
+        spcDelayRight.connect(audioCtx.destination);
+      }
+    } catch (e) {
+      console.warn("[KSimon] SPC700 delay bus error:", e);
+    }
+  }
+
   function playTone(freq, duration) {
     if (audioCtx.state === 'suspended') audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    
-    osc.type = 'triangle';
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    
-    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration / 1000);
-    
-    osc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + duration / 1000);
+    const t = audioCtx.currentTime;
+    const durSec = Math.max(0.06, duration / 1000);
+
+    if (soundArchitecture === 'ym2612') {
+      // Yamaha YM2612 2-Operator FM Synthesizer (Carrier + Modulator)
+      const carrier = audioCtx.createOscillator();
+      const modulator = audioCtx.createOscillator();
+      const modGain = audioCtx.createGain();
+      const mainGain = audioCtx.createGain();
+
+      carrier.type = 'sine';
+      carrier.frequency.setValueAtTime(freq, t);
+
+      // YM2612 2:1 harmonic ratio for arcade bells/chimes
+      const harmonicRatio = 2.0;
+      modulator.type = 'sine';
+      modulator.frequency.setValueAtTime(freq * harmonicRatio, t);
+
+      const modIndex = Math.min(1200, Math.max(200, freq * 1.8));
+      modGain.gain.setValueAtTime(modIndex, t);
+      modGain.gain.exponentialRampToValueAtTime(Math.max(1, modIndex * 0.05), t + durSec * 0.75);
+
+      modulator.connect(modGain);
+      modGain.connect(carrier.frequency);
+
+      mainGain.gain.setValueAtTime(0.001, t);
+      mainGain.gain.linearRampToValueAtTime(0.35, t + 0.015);
+      mainGain.gain.exponentialRampToValueAtTime(0.001, t + durSec);
+
+      carrier.connect(mainGain);
+      mainGain.connect(audioCtx.destination);
+
+      carrier.start(t);
+      modulator.start(t);
+      carrier.stop(t + durSec);
+      modulator.stop(t + durSec);
+    } else if (soundArchitecture === 'spc700') {
+      // Super Nintendo SPC700 Warmth with stereo delay
+      initSpcDelayBus();
+      const osc = audioCtx.createOscillator();
+      const mainGain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, t);
+
+      mainGain.gain.setValueAtTime(0.001, t);
+      mainGain.gain.linearRampToValueAtTime(0.32, t + 0.02);
+      mainGain.gain.exponentialRampToValueAtTime(0.001, t + durSec);
+
+      osc.connect(mainGain);
+      mainGain.connect(audioCtx.destination);
+
+      if (spcDelayLeft && spcDelayRight) {
+        const sendGain = audioCtx.createGain();
+        sendGain.gain.value = 0.35;
+        mainGain.connect(sendGain);
+        sendGain.connect(spcDelayLeft);
+        sendGain.connect(spcDelayRight);
+      }
+
+      osc.start(t);
+      osc.stop(t + durSec);
+    } else {
+      // Classic 1978 Square/Triangle retro arcade tone
+      const osc = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, t);
+      gainNode.gain.setValueAtTime(0.3, t);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, t + durSec);
+      osc.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + durSec);
+    }
   }
 
   function getHighScore(mode) {
@@ -1647,27 +2117,12 @@
     let index = -1;
     const k = e.key.toLowerCase();
     
-    if (numBtns === 4) {
-      if (k === 'q' || k === '1') index = 0;
-      else if (k === 'w' || k === '2') index = 1;
-      else if (k === 'a' || k === '3') index = 2;
-      else if (k === 's' || k === '4') index = 3;
-    } else if (numBtns === 6) {
-      if (k === 'q' || k === '1') index = 0;
-      else if (k === 'w' || k === '2') index = 1;
-      else if (k === 'e' || k === '3') index = 2;
-      else if (k === 'a' || k === '4') index = 3;
-      else if (k === 's' || k === '5') index = 4;
-      else if (k === 'd' || k === '6') index = 5;
-    } else { // 8 buttons
-      if (k === 'q' || k === '1') index = 0;
-      else if (k === 'w' || k === '2') index = 1;
-      else if (k === 'e' || k === '3') index = 2;
-      else if (k === 'r' || k === '4') index = 3;
-      else if (k === 'a' || k === '5') index = 4;
-      else if (k === 's' || k === '6') index = 5;
-      else if (k === 'd' || k === '7') index = 6;
-      else if (k === 'f' || k === '8') index = 7;
+    // Rebindable button matching (or numeric fallback 1-8)
+    for (let b = 0; b < numBtns; b++) {
+      if (k === keybinds[b] || k === (b + 1).toString()) {
+        index = b;
+        break;
+      }
     }
 
     if (index !== -1) {
@@ -1680,14 +2135,12 @@
   document.addEventListener('keyup', (e) => {
     let index = -1;
     const k = e.key.toLowerCase();
-    if (k === 'q' || k === '1') index = 0;
-    else if (k === 'w' || k === '2') index = 1;
-    else if (k === 'e' || k === '3') index = 2;
-    else if (k === 'r' || k === '4') index = 3;
-    else if (k === 'a' || k === '5') index = 4;
-    else if (k === 's' || k === '6') index = 5;
-    else if (k === 'd' || k === '7') index = 6;
-    else if (k === 'f' || k === '8') index = 7;
+    for (let b = 0; b < getActiveButtonCount(); b++) {
+      if (k === keybinds[b] || k === (b + 1).toString()) {
+        index = b;
+        break;
+      }
+    }
     if (index !== -1) releaseButtonFlash(index);
   });
 
@@ -1707,14 +2160,18 @@
       else if (stg.modifier === 3) modStr = 'CHAOS REVERSE';
       stageModVal.innerText = modStr;
       
-      hintBtn.disabled = hintsRemaining <= 0 || isPlayingSequence || sequence.length === 0;
-      slowmoBtn.disabled = slowmoRemaining <= 0 || isPlayingSequence || sequence.length === 0;
+      hintBtn.disabled = hintsRemaining <= 0 || isPlayingSequence || sequence.length === 0 || isMultiplayerActive;
+      slowmoBtn.disabled = slowmoRemaining <= 0 || isPlayingSequence || sequence.length === 0 || isMultiplayerActive;
       shieldBtn.disabled = shieldsRemaining <= 0 || sequence.length === 0;
-      freezeBtn.disabled = freezesRemaining <= 0 || isPlayingSequence || sequence.length === 0 || isTimeFrozen;
+      freezeBtn.disabled = freezesRemaining <= 0 || isPlayingSequence || sequence.length === 0 || isTimeFrozen || isMultiplayerActive;
       layoutButtons();
   }
 
   function startGame() {
+    if (isMultiplayerActive) {
+      showToast('Multiplayer Duel in progress. Use Leave Match to exit first.', 'info');
+      return;
+    }
     if (audioCtx.state === 'suspended') {
       audioCtx.resume();
     }
@@ -1749,6 +2206,7 @@
     
     let numColors = getActiveButtonCount();
     sequence.push(Math.floor(Math.random() * numColors));
+    lastCompletedSequence = [...sequence];
     scoreDisplay.innerText = (sequence.length - 1).toString();
     playSequence();
   }
@@ -1795,7 +2253,7 @@
         isSlowmoActive = false;
         let isRev = currentMode === 'chaos_rev' || (currentMode === 'campaign' && (campaignStages[currentStage-1].modifier === 1 || campaignStages[currentStage-1].modifier === 3));
         statusDisplay.innerText = isRev ? "Your Turn (REVERSE)!" : "Your Turn!";
-        saveBtn.disabled = false;
+        saveBtn.disabled = isMultiplayerActive;
         updateDisplays();
         startInputCountdown();
         return;
@@ -1828,6 +2286,11 @@
       window.deathEffect = { active: true, scale: 0.5, alpha: 1.0 };
       playTone(freqWrong, 800);
       let finalScore = sequence.length - 1;
+      
+      if (sequence.length > 0) {
+        lastCompletedSequence = [...sequence];
+      }
+      
       statusDisplay.innerText = "Game Over! Score: " + finalScore;
       
       if (finalScore > getHighScore(currentMode)) {
@@ -1853,6 +2316,15 @@
   }
 
   function handlePlayerInput(index) {
+    if (isMultiplayerActive) {
+      if (mpMode === 'speed') {
+        handleMpSpeedInput(index);
+      } else {
+        handleMpVolleyInput(index);
+      }
+      return;
+    }
+
     playerSequence.push(index);
 
     const currentStep = playerSequence.length - 1;
@@ -1881,6 +2353,7 @@
 
     if (playerSequence.length === sequence.length) {
       clearInterval(inputTimer);
+      lastCompletedSequence = [...sequence];
       if (currentMode === 'campaign') {
           let stg = campaignStages[currentStage - 1] || campaignStages[0];
           if (sequence.length >= stg.targetLen) {
@@ -1928,6 +2401,843 @@
       setTimeout(nextRound, 1000);
     }
   }
+
+  // --- REPLAY VIEWER ENGINE ---
+  let lastCompletedSequence = [];
+  let replayIndex = 0;
+  let isReplayPlaying = false;
+  let replayTimer = null;
+  let replaySpeed = 1.0;
+
+  function openReplay() {
+    if (lastCompletedSequence.length === 0) {
+      showToast('No sequence recorded yet. Play a round first!', 'warning');
+      return;
+    }
+    const bar = document.getElementById('replay-bar');
+    if (bar) bar.style.display = 'block';
+    replayIndex = 0;
+    renderReplayRibbon();
+    jumpToReplayStep(0);
+    showToast('Replay Viewer opened. Step or Play to analyze pattern.', 'info');
+  }
+
+  function closeReplay() {
+    stopReplayPlay();
+    const bar = document.getElementById('replay-bar');
+    if (bar) bar.style.display = 'none';
+  }
+
+  function renderReplayRibbon() {
+    const ribbon = document.getElementById('replay-ribbon');
+    const txt = document.getElementById('replay-step-txt');
+    if (!ribbon) return;
+    ribbon.innerHTML = '';
+    lastCompletedSequence.forEach((btnId, idx) => {
+      const dot = document.createElement('div');
+      const cfg = buttonConfigs[btnId] || { baseColor: '#555', name: 'Note' };
+      dot.className = 'replay-dot' + (idx === replayIndex ? ' active' : '');
+      dot.style.backgroundColor = cfg.baseColor;
+      dot.title = `Step ${idx + 1}: ${cfg.name} (${cfg.label})`;
+      dot.onclick = () => jumpToReplayStep(idx);
+      ribbon.appendChild(dot);
+    });
+    if (txt) {
+      txt.innerText = `Step: ${lastCompletedSequence.length > 0 ? replayIndex + 1 : 0} / ${lastCompletedSequence.length}`;
+    }
+  }
+
+  function jumpToReplayStep(idx) {
+    if (idx < 0 || idx >= lastCompletedSequence.length) return;
+    replayIndex = idx;
+    renderReplayRibbon();
+    const btnId = lastCompletedSequence[replayIndex];
+    triggerButtonFlash(btnId);
+    playTone(freqs[btnId], 280);
+    setTimeout(() => releaseButtonFlash(btnId), 280);
+  }
+
+  function stepReplay(delta) {
+    stopReplayPlay();
+    let nextIdx = replayIndex + delta;
+    if (nextIdx < 0) nextIdx = 0;
+    if (nextIdx >= lastCompletedSequence.length) nextIdx = lastCompletedSequence.length - 1;
+    jumpToReplayStep(nextIdx);
+  }
+
+  function toggleReplayPlay() {
+    if (isReplayPlaying) stopReplayPlay();
+    else startReplayPlay();
+  }
+
+  function startReplayPlay() {
+    isReplayPlaying = true;
+    const btn = document.getElementById('replay-play-btn');
+    if (btn) btn.innerText = '⏸ Pause';
+    if (replayIndex >= lastCompletedSequence.length - 1) replayIndex = -1;
+    playNextReplayStep();
+  }
+
+  function stopReplayPlay() {
+    isReplayPlaying = false;
+    if (replayTimer) {
+      clearTimeout(replayTimer);
+      replayTimer = null;
+    }
+    const btn = document.getElementById('replay-play-btn');
+    if (btn) btn.innerText = '▶ Play';
+  }
+
+  function playNextReplayStep() {
+    if (!isReplayPlaying) return;
+    replayIndex++;
+    if (replayIndex >= lastCompletedSequence.length) {
+      stopReplayPlay();
+      return;
+    }
+    jumpToReplayStep(replayIndex);
+    const stepDelay = Math.floor(520 / replaySpeed);
+    replayTimer = setTimeout(playNextReplayStep, stepDelay);
+  }
+
+  function changeReplaySpeed(val) {
+    replaySpeed = parseFloat(val) || 1.0;
+  }
+
+  // --- CUSTOM KEY REBINDING SYSTEM ---
+  const defaultKeybinds = {
+    0: 'q', 1: 'w', 2: 'e', 3: 'r',
+    4: 'a', 5: 's', 6: 'd', 7: 'f'
+  };
+  let keybinds = JSON.parse(localStorage.getItem('ksimon_keybinds') || 'null') || { ...defaultKeybinds };
+  let listeningKeySlot = null;
+
+  function openKeybindsModal() {
+    renderKeybindsList();
+    const modal = document.getElementById('keybinds-modal');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeKeybindsModal() {
+    listeningKeySlot = null;
+    const modal = document.getElementById('keybinds-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function resetKeybinds() {
+    keybinds = { ...defaultKeybinds };
+    localStorage.removeItem('ksimon_keybinds');
+    renderKeybindsList();
+    showToast('Controls reset to default (QWER / ASDF).', 'info');
+  }
+
+  function renderKeybindsList() {
+    const list = document.getElementById('keybinds-list');
+    if (!list) return;
+    list.innerHTML = '';
+    buttonConfigs.forEach((cfg) => {
+      const row = document.createElement('div');
+      row.className = 'keybind-row';
+      const curKey = (keybinds[cfg.id] || defaultKeybinds[cfg.id]).toUpperCase();
+      row.innerHTML = `
+        <span><strong style="color:${cfg.glowColor};">Button ${cfg.id + 1} (${cfg.name})</strong></span>
+        <button class="keybind-key" id="kbind-btn-${cfg.id}" onclick="listenForKey(${cfg.id})">${curKey}</button>
+      `;
+      list.appendChild(row);
+    });
+  }
+
+  function listenForKey(slotId) {
+    listeningKeySlot = slotId;
+    const btn = document.getElementById('kbind-btn-' + slotId);
+    if (btn) {
+      btn.innerText = 'Press Key...';
+      btn.style.borderColor = '#ffd700';
+      btn.style.color = '#ffd700';
+    }
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (listeningKeySlot !== null) {
+      e.preventDefault();
+      e.stopPropagation();
+      const k = e.key.toLowerCase();
+      if (k !== 'escape') {
+        keybinds[listeningKeySlot] = k;
+        localStorage.setItem('ksimon_keybinds', JSON.stringify(keybinds));
+        showToast(`Button ${listeningKeySlot + 1} bound to "${k.toUpperCase()}".`, 'success');
+      }
+      listeningKeySlot = null;
+      renderKeybindsList();
+    }
+  }, true);
+
+  // --- DIEGETIC ARG SUBNET ANOMALY LISTENER (ARC 1 & 2) ---
+  let argBuffer = '';
+  function checkArgKeystroke(key) {
+    argBuffer = (argBuffer + key).slice(-4);
+    if (argBuffer === '1999') {
+      triggerSubnetAnomaly();
+    }
+  }
+
+  function triggerSubnetAnomaly() {
+    addTrauma(0.5);
+    playTone(1999, 650);
+    triggerDualShockwave(canvas.width / 2, canvas.height / 2, '#00e5ff');
+    statusDisplay.innerText = "[ANOMALOUS SUBNET SIGNAL 1999Hz]: Memory offset 0x1999 locked. Echo origin: kweb://echo-subsystem.net";
+    showToast("📡 Anomaly detected at 1999Hz: Echo Subnet link verified.", "info");
+    setTimeout(() => {
+      if (statusDisplay.innerText.includes("1999Hz")) {
+        statusDisplay.innerText = "Press Start (or Space)";
+      }
+    }, 6500);
+  }
+
+  // --- TAB VISIBILITY & DRIFT-FREE TIMER (ARCH-05) ---
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      if (audioCtx && audioCtx.state === 'running') {
+        audioCtx.suspend();
+      }
+      if (inputTimer) {
+        clearInterval(inputTimer);
+        inputTimer = null;
+      }
+    } else {
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      if (!isPlayingSequence && sequence.length > 0 && !inputTimer && !isMultiplayerActive) {
+        startInputCountdown();
+      }
+    }
+  });
+
+  // --- STANDARDIZED RETRO FIREBASE MULTIPLAYER SERVICE (RFMS) ---
+  let rMultiplayer = null;
+  let isMultiplayerActive = false;
+  let mpMode = 'speed'; // 'speed' | 'volley'
+  let myPlayerName = localStorage.getItem('ksimon_player_name') || ('Player_' + Math.floor(1000 + Math.random() * 9000));
+  let opponentName = 'Challenger';
+  let myRole = 'p1'; // 'p1' | 'p2' | 'spectator'
+  let mpP1Score = 0;
+  let mpP2Score = 0;
+  let mpRound = 1;
+  let mpMyStrikes = 0;
+  let mpOpponentStrikes = 0;
+  let isMyVolleyTurn = false;
+  let isCyberBotOpponent = false;
+  let cyberBotTimer = null;
+  let soloFallbackCountdown = null;
+  let soloFallbackRemaining = 25;
+  let pendingInviteRoom = null;
+  let mpRoundStartTime = 0;
+
+  function initRetroMultiplayer() {
+    if (typeof RetroMultiplayer === 'undefined') {
+      console.warn("[KSimon] RetroMultiplayer module not loaded.");
+      return;
+    }
+    if (rMultiplayer) return;
+
+    try {
+      rMultiplayer = new RetroMultiplayer({
+        gameId: 'ksimon',
+        prefix: 'SIM',
+        playerName: myPlayerName,
+        soloTimeoutMs: 25000,
+        onMove: (moveData) => handleRemoteMove(moveData),
+        onStateChange: (room) => handleRoomState(room),
+        onOpponentJoin: ({ slot, name }) => handleOpponentJoin(slot, name),
+        onOpponentLeave: ({ slot, name }) => handleOpponentLeave(slot, name),
+        onChat: (chat) => handleRemoteChat(chat),
+        onRematch: (rematch) => handleRemoteRematch(rematch),
+        onSoloFallback: () => engageSoloFallbackAi(),
+        onStatusMsg: (msg, type) => showToast(msg, type)
+      });
+
+      rMultiplayer.init().then(({ onlineAvailable, inviteCode }) => {
+        if (inviteCode) {
+          showInvitePrompt(inviteCode.toUpperCase());
+        }
+      });
+    } catch (err) {
+      console.warn("[KSimon] RetroMultiplayer init failed:", err);
+    }
+  }
+
+  function showInvitePrompt(code) {
+    pendingInviteRoom = code;
+    const txt = document.getElementById('invite-room-code-txt');
+    if (txt) txt.innerText = code;
+    const modal = document.getElementById('invite-modal');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function acceptInvite() {
+    const code = pendingInviteRoom;
+    pendingInviteRoom = null;
+    const modal = document.getElementById('invite-modal');
+    if (modal) modal.style.display = 'none';
+    if (code) joinRoomByCode(code);
+  }
+
+  function declineInvite() {
+    pendingInviteRoom = null;
+    const modal = document.getElementById('invite-modal');
+    if (modal) modal.style.display = 'none';
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+    showToast('Challenge declined. Playing offline.', 'info');
+  }
+
+  function openMpModal() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    initRetroMultiplayer();
+    const input = document.getElementById('mp-player-name-input');
+    if (input) input.value = myPlayerName;
+    const modal = document.getElementById('mp-modal');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeMpModal() {
+    cancelMatchmaking();
+    const modal = document.getElementById('mp-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function savePlayerNameFromModal() {
+    const input = document.getElementById('mp-player-name-input');
+    if (input && input.value.trim()) {
+      myPlayerName = input.value.trim().slice(0, 16);
+      localStorage.setItem('ksimon_player_name', myPlayerName);
+      if (rMultiplayer) rMultiplayer.playerName = myPlayerName;
+    }
+  }
+
+  function getSelectedMpMode() {
+    const radios = document.getElementsByName('mp-mode-radio');
+    for (let r of radios) {
+      if (r.checked) return r.value;
+    }
+    return 'speed';
+  }
+
+  async function startQuickMatch() {
+    savePlayerNameFromModal();
+    mpMode = getSelectedMpMode();
+    startSoloFallbackCountdown();
+    const res = await rMultiplayer.quickMatch({ mpMode });
+    if (res && res.success) {
+      handleMatchConnected(res.roomId, res.slot, false);
+    }
+  }
+
+  async function hostMultiplayerRoom() {
+    savePlayerNameFromModal();
+    mpMode = getSelectedMpMode();
+    startSoloFallbackCountdown();
+    const res = await rMultiplayer.createRoom({ mpMode }, true);
+    if (res && res.success) {
+      handleMatchConnected(res.roomId, 'p1', false);
+    }
+  }
+
+  async function joinRoomByCode(explicitCode = null) {
+    savePlayerNameFromModal();
+    const code = (explicitCode || document.getElementById('mp-join-input').value).trim().toUpperCase();
+    if (!code) {
+      showToast('Please enter a valid room code.', 'warning');
+      return;
+    }
+    const res = await rMultiplayer.joinRoom(code);
+    if (res && res.success) {
+      if (res.room && res.room.mpMode) mpMode = res.room.mpMode;
+      handleMatchConnected(code, res.slot, false);
+    }
+  }
+
+  function startCyberBotPractice() {
+    savePlayerNameFromModal();
+    mpMode = getSelectedMpMode();
+    closeMpModal();
+    engageSoloFallbackAi();
+  }
+
+  function startSoloFallbackCountdown() {
+    const bar = document.getElementById('mp-solo-timer-bar');
+    const secTxt = document.getElementById('mp-countdown-sec');
+    if (bar) bar.style.display = 'block';
+    soloFallbackRemaining = 25;
+    if (secTxt) secTxt.innerText = soloFallbackRemaining;
+    if (soloFallbackCountdown) clearInterval(soloFallbackCountdown);
+    soloFallbackCountdown = setInterval(() => {
+      soloFallbackRemaining--;
+      if (secTxt) secTxt.innerText = soloFallbackRemaining;
+      if (soloFallbackRemaining <= 0) {
+        clearInterval(soloFallbackCountdown);
+        soloFallbackCountdown = null;
+      }
+    }, 1000);
+  }
+
+  function stopSoloFallbackCountdown() {
+    if (soloFallbackCountdown) {
+      clearInterval(soloFallbackCountdown);
+      soloFallbackCountdown = null;
+    }
+    const bar = document.getElementById('mp-solo-timer-bar');
+    if (bar) bar.style.display = 'none';
+  }
+
+  function cancelMatchmaking() {
+    stopSoloFallbackCountdown();
+    if (rMultiplayer && rMultiplayer.roomId) {
+      rMultiplayer.leaveRoom(true);
+    }
+  }
+
+  function engageSoloFallbackAi() {
+    stopSoloFallbackCountdown();
+    isCyberBotOpponent = true;
+    opponentName = 'CyberBot-99 [Subnet AI]';
+    showToast('🤖 Peer timed out (25s). Subnet Cyber-Bot connected! Starting Duel.', 'warning');
+    handleMatchConnected(rMultiplayer ? rMultiplayer.roomId : 'SIM-AI99', 'p1', true);
+  }
+
+  function handleMatchConnected(roomId, slot, isAi) {
+    stopSoloFallbackCountdown();
+    const modal = document.getElementById('mp-modal');
+    if (modal) modal.style.display = 'none';
+
+    isMultiplayerActive = true;
+    myRole = slot || 'p1';
+    isCyberBotOpponent = Boolean(isAi);
+    if (!isCyberBotOpponent && myRole === 'p1') {
+      opponentName = 'Waiting for Challenger...';
+    }
+
+    // Reset scores & HUD
+    mpP1Score = 0;
+    mpP2Score = 0;
+    mpRound = 1;
+    mpMyStrikes = 0;
+    mpOpponentStrikes = 0;
+    sequence = [];
+    playerSequence = [];
+    currentStage = 1;
+
+    // Show HUD
+    const hud = document.getElementById('mp-hud');
+    if (hud) hud.style.display = 'block';
+    const tag = document.getElementById('mp-room-tag');
+    if (tag) tag.innerText = `ROOM: ${roomId} [📋]`;
+    const badge = document.getElementById('mp-mode-badge');
+    if (badge) badge.innerText = mpMode === 'speed' ? 'SPEED MATCH' : 'VOLLEY DUEL';
+
+    updateMpHud();
+
+    // Disable single-player controls during match
+    startBtn.disabled = true;
+    modeSelect.disabled = true;
+    saveBtn.disabled = true;
+
+    if (myRole === 'p1') {
+      startMpRound(1);
+    } else {
+      statusDisplay.innerText = "Connected! Waiting for host to initiate round...";
+    }
+  }
+
+  function handleOpponentJoin(slot, name) {
+    stopSoloFallbackCountdown();
+    opponentName = name || 'Challenger';
+    showToast(`⚔️ ${opponentName} joined the duel!`, 'success');
+    updateMpHud();
+    if (myRole === 'p1' && sequence.length === 0) {
+      startMpRound(1);
+    }
+  }
+
+  function handleOpponentLeave(slot, name) {
+    showToast(`Opponent ${name || ''} disconnected.`, 'warning');
+    const status = document.getElementById('mp-p2-status');
+    if (status) status.innerText = 'DISCONNECTED';
+  }
+
+  function updateMpHud() {
+    const p1Name = document.getElementById('mp-p1-name');
+    const p2Name = document.getElementById('mp-p2-name');
+    const p1Score = document.getElementById('mp-p1-score');
+    const p2Score = document.getElementById('mp-p2-score');
+    const p1Status = document.getElementById('mp-p1-status');
+    const p2Status = document.getElementById('mp-p2-status');
+    const roundTxt = document.getElementById('mp-round-txt');
+
+    if (p1Name) p1Name.innerText = myRole === 'p1' ? myPlayerName : opponentName;
+    if (p2Name) p2Name.innerText = myRole === 'p1' ? opponentName : myPlayerName;
+    if (p1Score) p1Score.innerText = myRole === 'p1' ? mpP1Score : mpP2Score;
+    if (p2Score) p2Score.innerText = myRole === 'p1' ? mpP2Score : mpP1Score;
+
+    if (p1Status) {
+      if (myRole === 'p1') p1Status.innerText = mpMyStrikes > 0 ? `STRIKES: ${mpMyStrikes}/3` : 'ACTIVE';
+      else p1Status.innerText = mpOpponentStrikes > 0 ? `STRIKES: ${mpOpponentStrikes}/3` : 'ACTIVE';
+    }
+    if (p2Status) {
+      if (myRole === 'p2') p2Status.innerText = mpMyStrikes > 0 ? `STRIKES: ${mpMyStrikes}/3` : 'ACTIVE';
+      else p2Status.innerText = mpOpponentStrikes > 0 ? `STRIKES: ${mpOpponentStrikes}/3` : (opponentName.includes('Waiting') ? 'WAITING' : 'ACTIVE');
+    }
+    if (roundTxt) roundTxt.innerText = `ROUND ${mpRound}`;
+  }
+
+  function startMpRound(roundNum) {
+    mpRound = roundNum;
+    playerSequence = [];
+    clearInterval(inputTimer);
+    updateMpHud();
+
+    if (mpMode === 'speed') {
+      // Speed Match: Procedural sequence shared between peers
+      let numColors = getActiveButtonCount();
+      if (roundNum === 1) {
+        sequence = [
+          Math.floor(Math.random() * numColors),
+          Math.floor(Math.random() * numColors),
+          Math.floor(Math.random() * numColors)
+        ];
+      } else {
+        sequence.push(Math.floor(Math.random() * numColors));
+      }
+      lastCompletedSequence = [...sequence];
+
+      if (rMultiplayer && rMultiplayer.isOnline()) {
+        rMultiplayer.sendMove({ type: 'start_speed_round', round: roundNum, sequence });
+      }
+
+      playSequence();
+      mpRoundStartTime = Date.now();
+
+      if (isCyberBotOpponent) {
+        scheduleCyberBotSpeedPlay();
+      }
+    } else {
+      // Add-A-Step Volley: Host begins with 1 note
+      if (roundNum === 1) {
+        sequence = [];
+        isMyVolleyTurn = true;
+        statusDisplay.innerText = "Your Turn: Tap 1 button to start the Volley!";
+      }
+    }
+  }
+
+  function handleMpSpeedInput(index) {
+    if (isPlayingSequence) return;
+    playerSequence.push(index);
+    const step = playerSequence.length - 1;
+
+    // Broadcast tap
+    if (rMultiplayer && rMultiplayer.isOnline()) {
+      rMultiplayer.sendMove({ type: 'tap', btn: index, step: playerSequence.length });
+    }
+
+    if (playerSequence[step] !== sequence[step]) {
+      // Mistake!
+      if (shieldsRemaining > 0) {
+        shieldsRemaining--;
+        addTrauma(0.4);
+        triggerDualShockwave(canvas.width / 2, canvas.height / 2, '#33aaff');
+        playTone(750, 280);
+        playerSequence = [];
+        statusDisplay.innerText = `Shield Absorbed Error! (${shieldsRemaining} left)`;
+        return;
+      }
+
+      mpMyStrikes++;
+      playTone(freqWrong, 500);
+      addTrauma(0.5);
+      showToast(`Strike ${mpMyStrikes}/3!`, 'error');
+      updateMpHud();
+
+      if (rMultiplayer && rMultiplayer.isOnline()) {
+        rMultiplayer.sendMove({ type: 'strike', strikes: mpMyStrikes });
+      }
+
+      if (mpMyStrikes >= 3) {
+        statusDisplay.innerText = "Match Over: 3 Strikes! Opponent wins.";
+        showToast('Defeat! 3 Strikes accumulated.', 'error');
+        return;
+      }
+      playerSequence = [];
+      statusDisplay.innerText = `Strike! Re-try sequence (${3 - mpMyStrikes} strikes left)`;
+      return;
+    }
+
+    playTone(freqs[index], 200);
+
+    if (playerSequence.length === sequence.length) {
+      clearInterval(inputTimer);
+      const roundTimeSec = Math.max(1, Math.floor((Date.now() - mpRoundStartTime) / 1000));
+      const speedBonus = Math.max(0, 15 - roundTimeSec) * 10;
+      const pts = 100 + speedBonus;
+      if (myRole === 'p1') mpP1Score += pts;
+      else mpP2Score += pts;
+      updateMpHud();
+
+      triggerVictoryFireworks();
+      statusDisplay.innerText = `Round ${mpRound} Cleared! (+${pts} pts)`;
+
+      if (rMultiplayer && rMultiplayer.isOnline()) {
+        rMultiplayer.sendMove({ type: 'round_clear', round: mpRound, score: myRole === 'p1' ? mpP1Score : mpP2Score });
+      }
+
+      // Next round after brief pause
+      if (myRole === 'p1' || isCyberBotOpponent) {
+        setTimeout(() => startMpRound(mpRound + 1), 1600);
+      }
+    }
+  }
+
+  function handleMpVolleyInput(index) {
+    if (!isMyVolleyTurn || isPlayingSequence) {
+      showToast("Wait for opponent's turn to complete!", 'warning');
+      return;
+    }
+
+    playerSequence.push(index);
+    playTone(freqs[index], 200);
+
+    // If repeating previous notes
+    if (playerSequence.length <= sequence.length) {
+      const step = playerSequence.length - 1;
+      if (playerSequence[step] !== sequence[step]) {
+        // Volley mistake!
+        playTone(freqWrong, 600);
+        addTrauma(0.5);
+        statusDisplay.innerText = "Volley Failed! Wrong note.";
+        showToast('Mistake in Volley repetition! Opponent scores.', 'error');
+        if (myRole === 'p1') mpP2Score += 250;
+        else mpP1Score += 250;
+        updateMpHud();
+        isMyVolleyTurn = false;
+        if (rMultiplayer && rMultiplayer.isOnline()) {
+          rMultiplayer.sendMove({ type: 'volley_fail' });
+        }
+        return;
+      }
+      statusDisplay.innerText = `Matching sequence (${playerSequence.length}/${sequence.length})... Now add 1 NEW note!`;
+      return;
+    }
+
+    // Player added 1 new note!
+    sequence.push(index);
+    lastCompletedSequence = [...sequence];
+    isMyVolleyTurn = false;
+    const pts = 50 + sequence.length * 10;
+    if (myRole === 'p1') mpP1Score += pts;
+    else mpP2Score += pts;
+    updateMpHud();
+
+    statusDisplay.innerText = `Note added! Sequence length is now ${sequence.length}. Sent to opponent...`;
+    showToast(`Sequence sent to opponent (Len: ${sequence.length})`, 'success');
+
+    if (rMultiplayer && rMultiplayer.isOnline()) {
+      rMultiplayer.sendMove({ type: 'volley_turn', sequence });
+    }
+
+    if (isCyberBotOpponent) {
+      scheduleCyberBotVolleyPlay();
+    }
+  }
+
+  function handleRemoteMove(moveData) {
+    if (!moveData || !isMultiplayerActive) return;
+
+    if (moveData.type === 'tap') {
+      flashRemoteLed(moveData.btn);
+    } else if (moveData.type === 'start_speed_round') {
+      mpRound = moveData.round;
+      sequence = [...moveData.sequence];
+      lastCompletedSequence = [...sequence];
+      playerSequence = [];
+      updateMpHud();
+      playSequence();
+      mpRoundStartTime = Date.now();
+    } else if (moveData.type === 'round_clear') {
+      if (myRole === 'p1') mpP2Score = moveData.score;
+      else mpP1Score = moveData.score;
+      updateMpHud();
+      showToast(`Opponent cleared round ${moveData.round}!`, 'info');
+    } else if (moveData.type === 'strike') {
+      mpOpponentStrikes = moveData.strikes;
+      updateMpHud();
+      showToast(`Opponent received Strike ${mpOpponentStrikes}/3!`, 'warning');
+      if (mpOpponentStrikes >= 3) {
+        statusDisplay.innerText = "Opponent struck out! You win the match!";
+        showToast('🏆 Victory! Opponent accumulated 3 strikes.', 'success');
+        triggerVictoryFireworks();
+      }
+    } else if (moveData.type === 'volley_turn') {
+      sequence = [...moveData.sequence];
+      lastCompletedSequence = [...sequence];
+      playerSequence = [];
+      updateMpHud();
+      statusDisplay.innerText = "Opponent played! Watch sequence, then repeat + add 1 note.";
+      playSequence();
+      setTimeout(() => {
+        isMyVolleyTurn = true;
+      }, (sequence.length * 600) + 400);
+    } else if (moveData.type === 'volley_fail') {
+      showToast('Opponent failed the volley! You win the volley point.', 'success');
+      triggerVictoryFireworks();
+      if (myRole === 'p1') mpP1Score += 250;
+      else mpP2Score += 250;
+      updateMpHud();
+      setTimeout(() => startMpRound(1), 2000);
+    }
+  }
+
+  function handleRoomState(room) {
+    if (!room || !isMultiplayerActive) return;
+    if (room.p2 && myRole === 'p1' && opponentName.includes('Waiting')) {
+      opponentName = room.p2.name || 'Challenger';
+      updateMpHud();
+    }
+  }
+
+  function flashRemoteLed(index) {
+    const led = document.getElementById('rled-' + index);
+    if (!led) return;
+    const cfg = buttonConfigs[index] || { flashColor: '#00ffcc' };
+    led.style.background = cfg.flashColor;
+    led.style.boxShadow = `0 0 8px ${cfg.flashColor}`;
+    setTimeout(() => {
+      led.style.background = '#253347';
+      led.style.boxShadow = 'none';
+    }, 250);
+  }
+
+  function scheduleCyberBotSpeedPlay() {
+    if (cyberBotTimer) clearTimeout(cyberBotTimer);
+    const playbackTime = (sequence.length * 600) + 400;
+    cyberBotTimer = setTimeout(() => {
+      let bIdx = 0;
+      const botInterval = setInterval(() => {
+        if (!isMultiplayerActive) { clearInterval(botInterval); return; }
+        if (bIdx >= sequence.length) {
+          clearInterval(botInterval);
+          // 92% success rate
+          if (Math.random() > 0.08) {
+            const pts = 100 + Math.floor(Math.random() * 50);
+            if (myRole === 'p1') mpP2Score += pts;
+            else mpP1Score += pts;
+            updateMpHud();
+          } else {
+            mpOpponentStrikes++;
+            updateMpHud();
+            showToast('Cyber-Bot made a mistake! (+1 Strike)', 'info');
+          }
+          return;
+        }
+        flashRemoteLed(sequence[bIdx]);
+        bIdx++;
+      }, 340);
+    }, playbackTime);
+  }
+
+  function scheduleCyberBotVolleyPlay() {
+    setTimeout(() => {
+      if (!isMultiplayerActive) return;
+      statusDisplay.innerText = "Cyber-Bot calculating sequence...";
+      let bIdx = 0;
+      const botInterval = setInterval(() => {
+        if (bIdx < sequence.length) {
+          flashRemoteLed(sequence[bIdx]);
+          bIdx++;
+        } else {
+          clearInterval(botInterval);
+          // CyberBot adds 1 new note
+          const newNote = Math.floor(Math.random() * getActiveButtonCount());
+          flashRemoteLed(newNote);
+          sequence.push(newNote);
+          lastCompletedSequence = [...sequence];
+          if (myRole === 'p1') mpP2Score += 50 + sequence.length * 10;
+          else mpP1Score += 50 + sequence.length * 10;
+          updateMpHud();
+          showToast(`Cyber-Bot added a note! Total length: ${sequence.length}`, 'info');
+          setTimeout(() => {
+            playerSequence = [];
+            statusDisplay.innerText = "Your Turn: Repeat sequence and ADD 1 NOTE!";
+            playSequence();
+            setTimeout(() => { isMyVolleyTurn = true; }, (sequence.length * 600) + 400);
+          }, 600);
+        }
+      }, 350);
+    }, 1200);
+  }
+
+  function sendQuickChat(text) {
+    if (!text) return;
+    showToast(`You: ${text}`, 'info');
+    if (rMultiplayer && rMultiplayer.isOnline()) {
+      rMultiplayer.sendChat(text);
+    }
+  }
+
+  function handleRemoteChat(chat) {
+    if (!chat || !chat.text) return;
+    showToast(`${chat.name || 'Opponent'}: ${chat.text}`, 'info');
+  }
+
+  function requestRematch() {
+    showToast('Rematch requested! Resetting scores...', 'info');
+    if (rMultiplayer && rMultiplayer.isOnline()) {
+      rMultiplayer.requestRematch();
+    }
+    mpP1Score = 0;
+    mpP2Score = 0;
+    mpMyStrikes = 0;
+    mpOpponentStrikes = 0;
+    updateMpHud();
+    startMpRound(1);
+  }
+
+  function handleRemoteRematch() {
+    showToast('Opponent agreed to rematch! Starting new match.', 'success');
+    requestRematch();
+  }
+
+  function leaveMultiplayerSession() {
+    if (cyberBotTimer) clearTimeout(cyberBotTimer);
+    if (rMultiplayer) rMultiplayer.leaveRoom(true);
+    isMultiplayerActive = false;
+    isCyberBotOpponent = false;
+    const hud = document.getElementById('mp-hud');
+    if (hud) hud.style.display = 'none';
+
+    startBtn.disabled = false;
+    modeSelect.disabled = false;
+    saveBtn.disabled = true;
+    sequence = [];
+    playerSequence = [];
+    statusDisplay.innerText = "Press Start (or Space)";
+    showToast('Multiplayer session ended. Returned to solo mode.', 'info');
+  }
+
+  function copyInviteLink() {
+    if (rMultiplayer && rMultiplayer.roomId) {
+      rMultiplayer.copyInviteLink();
+    } else {
+      showToast('No active room code to copy.', 'warning');
+    }
+  }
+
+  // --- INITIALIZATION HOOKS ---
+  initRetroMultiplayer();
+  window.addEventListener('load', () => {
+    initRetroMultiplayer();
+  });
 </script>
 
 </body>
