@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>KMatch3</title>
+<script src="../assets/js/retro_multiplayer.js"></script>
 <style>
   body {
     margin: 0; padding: 0; background: radial-gradient(circle at center, #261f30 0%, #110d18 100%); color: #fff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -179,9 +180,63 @@
   .sheen-band {
     animation: sheenSweep 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
   }
+
+  /* Toast Notification Bar */
+  #toastBar {
+    position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+    z-index: 2500; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    pointer-events: none; width: max-content; max-width: 90vw;
+  }
+  .toast-item {
+    background: #1e172a; color: #fff; border: 1.5px solid #ffd700; border-radius: 6px;
+    padding: 6px 14px; font-size: 12px; font-weight: bold; box-shadow: 0 4px 14px rgba(0,0,0,0.8), 0 0 10px rgba(255,215,0,0.3);
+    pointer-events: auto; cursor: pointer; animation: toastSlide 0.2s ease-out;
+  }
+  @keyframes toastSlide { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Duel Arena HUD */
+  .duel-container {
+    width: 400px; background: rgba(30, 20, 45, 0.95); border: 1.5px solid #00d9ff; border-radius: 6px;
+    padding: 6px 8px; margin-bottom: 5px; box-sizing: border-box; display: none; box-shadow: 0 0 15px rgba(0,217,255,0.25);
+  }
+  .duel-bar-wrap {
+    width: 100%; height: 10px; background: #222; border-radius: 4px; overflow: hidden; display: flex; margin: 4px 0; border: 1px solid #555;
+  }
+  .duel-p1-bar {
+    height: 100%; background: linear-gradient(90deg, #ff8c00, #ffd700); width: 50%; transition: width 0.3s ease-out;
+  }
+  .duel-p2-bar {
+    height: 100%; background: linear-gradient(90deg, #00d9ff, #9933ff); width: 50%; transition: width 0.3s ease-out;
+  }
+  .attack-banner {
+    background: #ff2244; color: #fff; font-size: 11px; font-weight: 900; text-align: center;
+    padding: 3px 6px; border-radius: 3px; display: none; animation: pulseBomb 0.6s infinite; margin: 3px 0;
+  }
+
+  /* Modals */
+  .modal-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85);
+    z-index: 1000; justify-content: center; align-items: center; display: none;
+  }
+  .modal-box {
+    background: #231b2e; border: 2px solid #555; border-radius: 8px; padding: 18px; width: 380px;
+    max-height: 85vh; overflow-y: auto; box-shadow: 0 4px 20px rgba(0,0,0,0.8); box-sizing: border-box;
+    font-size: 13px;
+  }
+  .modal-box h2 { margin-top: 0; color: #ffd700; font-size: 18px; }
+  .modal-btn {
+    background: #3a2e4c; color: #ffd700; border: 1px solid #776699; padding: 5px 12px; cursor: pointer;
+    border-radius: 4px; font-weight: bold; font-size: 12px; transition: all 0.2s;
+  }
+  .modal-btn:hover { background: #503e68; border-color: #ffd700; }
+  .lobby-item {
+    background: rgba(255,255,255,0.06); border: 1px solid #443355; border-radius: 4px;
+    padding: 6px 10px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;
+  }
 </style>
 </head>
 <body>
+  <div id="toastBar"></div>
   <svg width="0" height="0" style="position:absolute;z-index:-1;">
     <defs>
       <filter id="glassyGem">
@@ -205,10 +260,14 @@
   <div class="magic-dust"></div>
   <div style="width: 400px; display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
     <h1 style="margin: 2px 0;">KMatch3</h1>
-    <button onclick="showHelp()" style="background:#444; color:#fff; border:1px solid #777; padding:3px 10px; cursor:pointer; border-radius:4px; font-weight:bold; font-size:12px;">Help [F1]</button>
+    <div style="display:flex; gap: 4px;">
+      <button onclick="openMultiplayerModal()" class="powerup-btn" style="color:#00d9ff; border-color:#00d9ff;" title="Online Multiplayer Duel or Practice vs AI">⚔️ Duel</button>
+      <button onclick="openSaveModal()" class="powerup-btn" style="color:#ffd700; border-color:#ffd700;" title="Quicksave / Load / Export">💾 State</button>
+      <button onclick="showHelp()" style="background:#444; color:#fff; border:1px solid #777; padding:3px 8px; cursor:pointer; border-radius:4px; font-weight:bold; font-size:11px;">Help [F1]</button>
+    </div>
   </div>
   <div class="info">
-    <span><select id="mode" onchange="changeMode()" style="background:#333;color:#fff;border:1px solid #555;padding:2px 4px;border-radius:4px;font-weight:bold;"><option value="0">Campaign</option><option value="1">Zen</option><option value="2">Timed Rush</option></select></span>
+    <span><select id="mode" onchange="changeMode()" style="background:#333;color:#fff;border:1px solid #555;padding:2px 4px;border-radius:4px;font-weight:bold;"><option value="0">Campaign</option><option value="1">Zen</option><option value="2">Timed Rush</option><option value="3">⚔️ Duel Arena</option></select></span>
     <span>Stage: <span id="stageName">1</span></span>
     <span>Score: <span id="score">0</span>/<span id="target">800</span></span>
     <span><span id="movesLabel">Moves</span>: <span id="moves">20</span></span>
@@ -217,6 +276,29 @@
   <div id="bossBarContainer">
     <div id="bossBarFill"></div>
     <div id="bossBarText">JEWEL KING BOSS: <span id="bossHPText">100/100</span></div>
+  </div>
+
+  <!-- Duel Arena Live HUD -->
+  <div id="duelContainer" class="duel-container">
+    <div style="display: flex; justify-content: space-between; font-size: 11px; font-weight: bold;">
+      <span><span id="p1DuelName" style="color: #ffd700;">You</span>: <span id="p1DuelScore">0</span> pts (<span id="p1DuelCombo">x1</span>)</span>
+      <span id="duelTimerDisplay" style="color: #ff5555; font-size: 11px; font-weight: 900;">Time: 90s</span>
+      <span><span id="p2DuelName" style="color: #00d9ff;">Opponent</span>: <span id="p2DuelScore">0</span> pts (<span id="p2DuelCombo">x1</span>)</span>
+    </div>
+    <div class="duel-bar-wrap">
+      <div id="duelP1Bar" class="duel-p1-bar"></div>
+      <div id="duelP2Bar" class="duel-p2-bar"></div>
+    </div>
+    <div id="duelAttackAlert" class="attack-banner">⚔️ INCOMING ATTACK!</div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 3px; font-size: 11px;">
+      <span id="duelOpponentStatus" style="color: #aaa; font-style: italic;">Status: Offline/Idle</span>
+      <div style="display:flex; gap:3px;">
+        <button onclick="sendDuelChat('Nice match!')" class="powerup-btn" style="padding:1px 4px; font-size:10px;">💬 Nice!</button>
+        <button onclick="sendDuelChat('Taste the ice! ❄️')" class="powerup-btn" style="padding:1px 4px; font-size:10px;">❄️ Ice!</button>
+        <button onclick="sendDuelChat('Good game! 🤝')" class="powerup-btn" style="padding:1px 4px; font-size:10px;">🤝 GG</button>
+        <button id="btnRematch" onclick="requestRematch()" class="powerup-btn" style="padding:1px 4px; font-size:10px; display:none; color:#ffd700; border-color:#ffd700;">🔄 Rematch</button>
+      </div>
+    </div>
   </div>
 
   <div class="info" style="font-size: 12px; color: #ccc;">
@@ -237,9 +319,10 @@
     <div id="board" role="grid" aria-label="KMatch3 Game Board"></div>
   </div>
 
-  <div id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle" onclick="if(event.target === this) hideHelp()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:1000; justify-content:center; align-items:center;">
-    <div style="background:#2d2d2d; border:2px solid #555; border-radius:8px; padding:18px; width:370px; max-height:85vh; overflow-y:auto; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">
-      <h2 id="helpTitle" style="margin-top:0; color:#ffd700;">How to Play KMatch3</h2>
+  <!-- Help Modal -->
+  <div id="helpModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="helpTitle" onclick="if(event.target === this) hideHelp()">
+    <div class="modal-box">
+      <h2 id="helpTitle">How to Play KMatch3</h2>
       <p>Swap adjacent gems to form lines of 3 or more of the same color.</p>
       <p><b>Special Gems:</b><br/>
       - <b>Match 4:</b> Line Blaster (destroys row or column).<br/>
@@ -252,14 +335,147 @@
       <p><b>Game Modes:</b><br/>
       - <b>Campaign (20 Stages):</b> Dynamic 6x6 to 10x10 boards & objectives.<br/>
       - <b>Zen:</b> Infinite relaxing play.<br/>
-      - <b>Timed Rush:</b> Speed challenge against the clock.</p>
+      - <b>Timed Rush:</b> Speed challenge against the clock.<br/>
+      - <b>⚔️ Duel Arena:</b> Real-time Match-3 duel vs online peers or GemBot-99 AI! Combos send Ice and Stone attacks.</p>
       <p><b>Active Skills (Cost 300 Score):</b><br/>
       - <b>[H] Hammer:</b> Destroy any single gem, ice, stone, or iron tile.<br/>
       - <b>[E] +Moves / +15s:</b> Add extra moves or timer seconds.<br/>
       - <b>[S] Shuffle:</b> Rearrange all board gems.<br/>
       - <b>[L] Color Nuke:</b> Nuke all gems of target color.</p>
+      <p><b>Shortcuts & State Management:</b><br/>
+      - <b>[F5]:</b> Quicksave State snapshot.<br/>
+      - <b>[F9]:</b> Quickload State snapshot.<br/>
+      - <b>[R]:</b> Watch move replay viewer.<br/>
+      - <b>[Esc]:</b> Deselect or close modals.</p>
       <div style="text-align:center; margin-top:15px;">
-        <button onclick="hideHelp()" style="background:#444; color:#fff; border:1px solid #777; padding:6px 14px; cursor:pointer; border-radius:4px; font-weight:bold;">Close</button>
+        <button onclick="hideHelp()" class="modal-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Multiplayer Modal -->
+  <div id="multiplayerModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="mpModalTitle" onclick="if(event.target === this) closeMultiplayerModal()">
+    <div class="modal-box">
+      <h2 id="mpModalTitle">⚔️ Match-3 Duel Arena</h2>
+      <div style="margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+        <span>Call-Sign:</span>
+        <div style="display:flex; gap: 4px;">
+          <input id="mpPlayerNameInput" maxlength="16" style="background:#110d1a; color:#fff; border:1px solid #555; padding:3px 6px; border-radius:4px; font-weight:bold; width:130px;">
+          <button onclick="savePlayerName()" class="modal-btn" style="padding:3px 8px;">Save</button>
+        </div>
+      </div>
+
+      <button onclick="quickMatch()" class="modal-btn" style="width:100%; margin-bottom:8px; color:#00ffaa; border-color:#00ffaa; font-size:13px; padding:7px;">⚡ Quick Match (Find or Create)</button>
+      
+      <div style="display:flex; gap:6px; margin-bottom:10px;">
+        <button onclick="hostRoom()" class="modal-btn" style="flex:1; padding:6px;">🏠 Host Room</button>
+        <button onclick="startAiDuel()" class="modal-btn" style="flex:1; color:#ffd700; border-color:#ffd700; padding:6px;">🤖 Practice vs AI</button>
+      </div>
+
+      <div style="display:flex; gap:4px; margin-bottom:12px;">
+        <input id="joinRoomCode" placeholder="Enter Room Code (e.g. M3-8492)" style="flex:1; background:#110d1a; color:#fff; border:1px solid #555; padding:4px 8px; border-radius:4px; font-family:monospace; text-transform:uppercase; font-size:12px;">
+        <button onclick="joinRoomFromInput()" class="modal-btn">Join</button>
+      </div>
+
+      <!-- Active Waiting Area -->
+      <div id="mpRoomActiveArea" style="display:none; background:rgba(0,0,0,0.5); border:1px solid #00d9ff; border-radius:6px; padding:10px; margin-bottom:10px; text-align:center;">
+        <div style="font-size:11px; color:#aaa; margin-bottom:3px;">ACTIVE ROOM CODE:</div>
+        <div id="activeRoomCodeLabel" style="font-size:20px; font-weight:900; color:#ffd700; font-family:monospace; letter-spacing:2px; margin-bottom:6px;">----</div>
+        <div id="soloCountdownNotice" style="font-size:11px; color:#00d9ff; margin-bottom:8px;">⏱️ Waiting for peer... Subnet AI engages in <span id="soloCountdown">25</span>s</div>
+        <div style="display:flex; justify-content:center; gap:6px;">
+          <button onclick="copyInviteLink()" class="modal-btn" style="font-size:11px; padding:4px 8px;">📋 Copy Link</button>
+          <button onclick="leaveDuelRoom()" class="modal-btn" style="font-size:11px; padding:4px 8px; color:#ff4444; border-color:#ff4444;">Leave Room</button>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <span style="font-weight:bold; color:#00d9ff;">🌐 Public Match Lobby</span>
+        <button onclick="refreshLobbyList()" class="powerup-btn" style="padding:2px 6px; font-size:10px;">🔄 Refresh</button>
+      </div>
+      <div id="mpLobbyList" style="max-height:120px; overflow-y:auto; border:1px solid #443355; border-radius:4px; padding:6px; background:#110d1a; margin-bottom:12px;">
+        <div style="color:#888; font-style:italic; text-align:center; padding:8px;">Connecting to Firebase RTDB...</div>
+      </div>
+
+      <div style="text-align:center;">
+        <button onclick="closeMultiplayerModal()" class="modal-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Invite Gate Prompt Modal -->
+  <div id="inviteModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="inviteTitle">
+    <div class="modal-box" style="text-align:center;">
+      <h2 id="inviteTitle" style="color:#00d9ff;">⚔️ Match-3 Duel Challenge!</h2>
+      <p>A challenger has invited you to a real-time Match-3 Duel in room <b id="inviteRoomCodeLabel" style="color:#ffd700; font-family:monospace;">----</b>.</p>
+      <p style="font-size:11px; color:#aaa;">In Duel Arena, your combos send Ice and Stone attacks directly to your opponent's board!</p>
+      <div style="display:flex; justify-content:center; gap:10px; margin-top:16px;">
+        <button onclick="acceptInvite()" class="modal-btn" style="color:#00ffaa; border-color:#00ffaa; padding:6px 14px;">Accept Duel</button>
+        <button onclick="declineInvite()" class="modal-btn" style="padding:6px 14px;">Decline (Play Offline)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- State & Replay Management Modal -->
+  <div id="saveModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="saveModalTitle" onclick="if(event.target === this) closeSaveModal()">
+    <div class="modal-box">
+      <h2 id="saveModalTitle">💾 State Management & Tools</h2>
+      <div style="display:flex; gap:6px; margin-bottom:10px;">
+        <button onclick="quicksaveState()" class="modal-btn" style="flex:1; padding:6px;">[F5] Quicksave</button>
+        <button onclick="quickloadState()" class="modal-btn" style="flex:1; padding:6px;">[F9] Quickload</button>
+      </div>
+      <div style="display:flex; gap:6px; margin-bottom:10px;">
+        <button onclick="exportStateJson()" class="modal-btn" style="flex:1; padding:6px;">📥 Export Session JSON</button>
+        <button onclick="triggerImportFileInput()" class="modal-btn" style="flex:1; padding:6px;">📤 Import Session JSON</button>
+        <input type="file" id="stateFileInput" accept=".json,application/json" style="display:none;" onchange="handleStateFileImport(event)">
+      </div>
+      <button onclick="openReplayModal()" class="modal-btn" style="width:100%; margin-bottom:8px; color:#00d9ff; border-color:#00d9ff; padding:6px;">🎬 Watch Move Replay History</button>
+      <button onclick="openKeybindModal()" class="modal-btn" style="width:100%; margin-bottom:12px; padding:6px;">⌨️ Custom Key Rebinding</button>
+      <div style="text-align:center;">
+        <button onclick="closeSaveModal()" class="modal-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Move Replay Viewer Modal -->
+  <div id="replayModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="replayModalTitle" onclick="if(event.target === this) closeReplayModal()">
+    <div class="modal-box">
+      <h2 id="replayModalTitle">🎬 Move Replay Viewer</h2>
+      <div id="replayMoveStats" style="font-size:12px; color:#aaa; margin-bottom:8px;">Recorded moves: <span id="replayCount">0</span></div>
+      <div id="replayHistoryList" style="max-height:180px; overflow-y:auto; border:1px solid #443355; border-radius:4px; padding:6px; background:#110d1a; font-family:monospace; font-size:11px; margin-bottom:10px;">
+        <div style="color:#777; text-align:center; padding:10px;">No moves recorded in this session yet.</div>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <button onclick="clearReplayHistory()" class="modal-btn" style="color:#ff6666; font-size:11px;">Clear Log</button>
+        <button onclick="closeReplayModal()" class="modal-btn">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Keybinds Modal -->
+  <div id="keybindModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="keybindModalTitle" onclick="if(event.target === this) closeKeybindModal()">
+    <div class="modal-box">
+      <h2 id="keybindModalTitle">⌨️ Custom Key Rebinding</h2>
+      <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px; font-size:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span>Hammer Powerup:</span> <input id="kbHammer" maxlength="1" value="H" style="width:40px; text-align:center; background:#110d1a; color:#ffd700; border:1px solid #666; font-weight:bold;">
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span>+Moves / +15s:</span> <input id="kbMoves" maxlength="1" value="E" style="width:40px; text-align:center; background:#110d1a; color:#ffd700; border:1px solid #666; font-weight:bold;">
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span>Shuffle Board:</span> <input id="kbShuffle" maxlength="1" value="S" style="width:40px; text-align:center; background:#110d1a; color:#ffd700; border:1px solid #666; font-weight:bold;">
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span>Color Nuke:</span> <input id="kbNuke" maxlength="1" value="L" style="width:40px; text-align:center; background:#110d1a; color:#ffd700; border:1px solid #666; font-weight:bold;">
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span>Replay Viewer:</span> <input id="kbReplay" maxlength="1" value="R" style="width:40px; text-align:center; background:#110d1a; color:#ffd700; border:1px solid #666; font-weight:bold;">
+        </div>
+      </div>
+      <div style="display:flex; justify-content:space-between;">
+        <button onclick="saveKeybinds()" class="modal-btn" style="color:#00ffaa; border-color:#00ffaa;">Save Binds</button>
+        <button onclick="resetKeybinds()" class="modal-btn">Reset Defaults</button>
+        <button onclick="closeKeybindModal()" class="modal-btn">Close</button>
       </div>
     </div>
   </div>
@@ -356,6 +572,739 @@
     function playMatchSound(combo) { playTone(400 + combo * 100, 'sine', 0.12); }
     function playBadSwapSound() { playTone(150, 'sawtooth', 0.12); }
     function playPowerupSound() { playTone(700, 'triangle', 0.15); }
+
+    // --- Toast Notification System (Directive 189 Compliant) ---
+    function showToast(msg, type='info', duration=3200) {
+      const container = document.getElementById('toastBar');
+      if (!container) return;
+      const item = document.createElement('div');
+      item.className = 'toast-item';
+      let borderCol = '#ffd700';
+      if (type === 'error' || type === 'warning') borderCol = '#ff4444';
+      else if (type === 'success') borderCol = '#00ffaa';
+      else if (type === 'attack') borderCol = '#00d9ff';
+      item.style.borderColor = borderCol;
+      item.innerHTML = msg;
+      item.onclick = () => item.remove();
+      container.appendChild(item);
+      setTimeout(() => {
+        item.style.transition = 'opacity 0.4s, transform 0.4s';
+        item.style.opacity = '0';
+        item.style.transform = 'translateY(-8px)';
+        setTimeout(() => item.remove(), 400);
+      }, duration);
+    }
+
+    // --- Keybinds System ---
+    let keybinds = { hammer: 'H', moves: 'E', shuffle: 'S', nuke: 'L', replay: 'R' };
+    function loadKeybinds() {
+      const saved = safeGetStorage('kmatch3_keybinds');
+      if (saved) {
+        try { keybinds = Object.assign(keybinds, JSON.parse(saved)); } catch(e) {}
+      }
+      const kbH = document.getElementById('kbHammer'); if (kbH) kbH.value = keybinds.hammer;
+      const kbM = document.getElementById('kbMoves'); if (kbM) kbM.value = keybinds.moves;
+      const kbS = document.getElementById('kbShuffle'); if (kbS) kbS.value = keybinds.shuffle;
+      const kbN = document.getElementById('kbNuke'); if (kbN) kbN.value = keybinds.nuke;
+      const kbR = document.getElementById('kbReplay'); if (kbR) kbR.value = keybinds.replay;
+    }
+    function saveKeybinds() {
+      const kbH = document.getElementById('kbHammer'); if (kbH && kbH.value) keybinds.hammer = kbH.value.trim().toUpperCase() || 'H';
+      const kbM = document.getElementById('kbMoves'); if (kbM && kbM.value) keybinds.moves = kbM.value.trim().toUpperCase() || 'E';
+      const kbS = document.getElementById('kbShuffle'); if (kbS && kbS.value) keybinds.shuffle = kbS.value.trim().toUpperCase() || 'S';
+      const kbN = document.getElementById('kbNuke'); if (kbN && kbN.value) keybinds.nuke = kbN.value.trim().toUpperCase() || 'L';
+      const kbR = document.getElementById('kbReplay'); if (kbR && kbR.value) keybinds.replay = kbR.value.trim().toUpperCase() || 'R';
+      safeSetStorage('kmatch3_keybinds', JSON.stringify(keybinds));
+      showToast("Keybinds saved successfully!", "success");
+      closeKeybindModal();
+    }
+    function resetKeybinds() {
+      keybinds = { hammer: 'H', moves: 'E', shuffle: 'S', nuke: 'L', replay: 'R' };
+      safeSetStorage('kmatch3_keybinds', JSON.stringify(keybinds));
+      loadKeybinds();
+      showToast("Keybinds reset to defaults.", "info");
+    }
+
+    // --- Move Recording & Replay History ---
+    let moveHistory = [];
+    function recordMove(r1, c1, r2, c2, scoreDelta, combo) {
+      moveHistory.push({
+        moveNum: moveHistory.length + 1,
+        r1, c1, r2, c2,
+        scoreDelta,
+        combo,
+        ts: new Date().toLocaleTimeString()
+      });
+      if (moveHistory.length > 50) moveHistory.shift();
+    }
+    function renderReplayList() {
+      const listEl = document.getElementById('replayHistoryList');
+      const countEl = document.getElementById('replayCount');
+      if (countEl) countEl.textContent = moveHistory.length;
+      if (!listEl) return;
+      if (moveHistory.length === 0) {
+        listEl.innerHTML = '<div style="color:#777; text-align:center; padding:10px;">No moves recorded in this session yet.</div>';
+        return;
+      }
+      let html = '';
+      for (let i = moveHistory.length - 1; i >= 0; i--) {
+        const m = moveHistory[i];
+        html += `<div style="padding:4px 0; border-bottom:1px solid #332244; display:flex; justify-content:space-between; align-items:center;">
+          <span>#${m.moveNum}: Swap (${m.r1+1},${m.c1+1}) ↔ (${m.r2+1},${m.c2+1})</span>
+          <span style="color:#ffd700;">+${m.scoreDelta} pts (x${m.combo})</span>
+        </div>`;
+      }
+      listEl.innerHTML = html;
+    }
+    function clearReplayHistory() {
+      moveHistory = [];
+      renderReplayList();
+      showToast("Replay history cleared.", "info");
+    }
+
+    // --- Modal View Handlers ---
+    function openSaveModal() { document.getElementById('saveModal').style.display = 'flex'; }
+    function closeSaveModal() { document.getElementById('saveModal').style.display = 'none'; }
+    function openReplayModal() { renderReplayList(); document.getElementById('replayModal').style.display = 'flex'; }
+    function closeReplayModal() { document.getElementById('replayModal').style.display = 'none'; }
+    function openKeybindModal() { loadKeybinds(); document.getElementById('keybindModal').style.display = 'flex'; }
+    function closeKeybindModal() { document.getElementById('keybindModal').style.display = 'none'; }
+    function openMultiplayerModal() {
+      const nameInput = document.getElementById('mpPlayerNameInput');
+      if (nameInput) nameInput.value = myPlayerName;
+      document.getElementById('multiplayerModal').style.display = 'flex';
+      refreshLobbyList();
+    }
+    function closeMultiplayerModal() { document.getElementById('multiplayerModal').style.display = 'none'; }
+
+    // --- Quicksave / Quickload (F5 / F9) & JSON Export/Import ---
+    function quicksaveState() {
+      const state = {
+        level, score, moves, targetScore, gameMode, bossHP,
+        collectedRed, collectedGreen, collectedBlue,
+        grid: grid.map(row => row.map(cell => cell ? {color: cell.color, type: cell.type, ice: cell.ice, stoneHits: cell.stoneHits, barrier: cell.barrier} : null)),
+        savedAt: new Date().toLocaleString()
+      };
+      safeSetStorage('kmatch3_quicksave', JSON.stringify(state));
+      playPowerupSound();
+      showToast("💾 Quicksaved State! [F5]", "success");
+    }
+
+    function quickloadState() {
+      const saved = safeGetStorage('kmatch3_quicksave');
+      if (!saved) {
+        playBadSwapSound();
+        showToast("No quicksave state found.", "warning");
+        return false;
+      }
+      try {
+        const state = JSON.parse(saved);
+        level = state.level || 1;
+        score = state.score || 0;
+        moves = state.moves;
+        targetScore = state.targetScore || 800;
+        gameMode = state.gameMode || 0;
+        bossHP = state.bossHP || 0;
+        collectedRed = state.collectedRed || 0;
+        collectedGreen = state.collectedGreen || 0;
+        collectedBlue = state.collectedBlue || 0;
+        document.getElementById('mode').value = gameMode;
+
+        let isTimed = false;
+        if (gameMode === 0 && level >= 1 && level <= 20) {
+          const cfg = CAMPAIGN_STAGES[level - 1];
+          stageNameEl.textContent = cfg.name;
+          ROWS = cfg.rows; COLS = cfg.cols;
+          maxBossHP = cfg.bossHP;
+          isTimed = cfg.timeLimit > 0;
+          targetEl.textContent = (cfg.bossHP > 0) ? "BOSS" : targetScore;
+        } else if (gameMode === 3) {
+          stageNameEl.textContent = "Duel Arena";
+          ROWS = 8; COLS = 8; maxBossHP = 0;
+          isTimed = true;
+          targetEl.textContent = 5000;
+        } else {
+          stageNameEl.textContent = gameMode === 1 ? "Zen" : "Timed Rush";
+          ROWS = 8; COLS = 8; maxBossHP = 0;
+          isTimed = (gameMode === 2);
+          targetEl.textContent = targetScore;
+        }
+
+        document.getElementById('movesLabel').textContent = (gameMode === 1) ? "Zen" : (gameMode === 3 ? "Duel Time" : (isTimed ? "Time" : "Moves"));
+        document.getElementById('btnMoves').textContent = isTimed ? "[E] +15s" : "[E] +Moves";
+        cellSize = Math.floor(400 / Math.max(ROWS, COLS));
+        scoreEl.textContent = score;
+        movesEl.textContent = moves;
+
+        boardEl.innerHTML = '';
+        boardEl.appendChild(fxCanvas);
+        grid = [];
+        for (let r = 0; r < ROWS; r++) {
+          let row = [];
+          for (let c = 0; c < COLS; c++) {
+            let sc = state.grid[r][c];
+            if (sc) {
+              let cell = createCellElement(r, c, sc.color, sc.type, sc.stoneHits, sc.ice, sc.barrier);
+              boardEl.appendChild(cell);
+              row.push({ color: sc.color, type: sc.type, ice: sc.ice, stoneHits: sc.stoneHits, barrier: sc.barrier, el: cell });
+            } else {
+              row.push(null);
+            }
+          }
+          grid.push(row);
+        }
+        updateObstacleCounts();
+        playPowerupSound();
+        showToast("💾 Quickloaded State! [F9]", "success");
+        return true;
+      } catch(e) {
+        showToast("Failed to restore quickload state.", "error");
+        return false;
+      }
+    }
+
+    function exportStateJson() {
+      const exportData = {
+        app: 'kmatch3',
+        version: '1.99',
+        timestamp: Date.now(),
+        stats: { gamesPlayed, bestScore, maxCombo, campaignLevel },
+        state: {
+          level, score, moves, targetScore, gameMode, bossHP,
+          collectedRed, collectedGreen, collectedBlue,
+          grid: grid.map(row => row.map(cell => cell ? {color: cell.color, type: cell.type, ice: cell.ice, stoneHits: cell.stoneHits, barrier: cell.barrier} : null))
+        }
+      };
+      const jsonStr = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kmatch3_save_lv${level}_${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast("Session JSON exported successfully!", "success");
+    }
+
+    function triggerImportFileInput() {
+      const fi = document.getElementById('stateFileInput');
+      if (fi) fi.click();
+    }
+
+    function handleStateFileImport(e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          const data = JSON.parse(evt.target.result);
+          if (!data || !data.state) throw new Error("Invalid format");
+          safeSetStorage('kmatch3_quicksave', JSON.stringify(data.state));
+          quickloadState();
+          if (data.stats) {
+            gamesPlayed = data.stats.gamesPlayed || gamesPlayed;
+            bestScore = data.stats.bestScore || bestScore;
+            maxCombo = data.stats.maxCombo || maxCombo;
+            campaignLevel = data.stats.campaignLevel || campaignLevel;
+            saveStats();
+          }
+          showToast("Session imported and restored successfully!", "success");
+          closeSaveModal();
+        } catch(err) {
+          showToast("Failed to parse import file: " + err.message, "error");
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // --- Retro Firebase Multiplayer Service (RFMS) Integration ---
+    let rMultiplayer = null;
+    let myPlayerName = safeGetStorage('kmatch3_player_name') || `Player_${Math.floor(1000 + Math.random() * 9000)}`;
+    let opponentName = 'Opponent';
+    let isOnlineDuel = false;
+    let vsAiDuel = false;
+    let oppDuelScore = 0;
+    let oppDuelCombo = 1;
+    let duelTimeLeft = 90;
+    let duelInterval = null;
+    let aiOpponentInterval = null;
+    let soloFallbackSeconds = 25;
+    let soloFallbackInterval = null;
+    let pendingInviteRoom = null;
+
+    function savePlayerName() {
+      const input = document.getElementById('mpPlayerNameInput');
+      if (!input) return;
+      const val = input.value.trim();
+      if (val) {
+        myPlayerName = val;
+        safeSetStorage('kmatch3_player_name', myPlayerName);
+        if (rMultiplayer) rMultiplayer.playerName = myPlayerName;
+        const p1Label = document.getElementById('p1DuelName');
+        if (p1Label) p1Label.textContent = myPlayerName;
+        showToast(`Call-sign updated to "${myPlayerName}"`, 'success');
+      }
+    }
+
+    function initRetroMultiplayer() {
+      if (typeof RetroMultiplayer === 'undefined') return;
+      if (rMultiplayer) return;
+
+      try {
+        rMultiplayer = new RetroMultiplayer({
+          gameId: 'kmatch3',
+          prefix: 'M3',
+          playerName: myPlayerName,
+          soloTimeoutMs: 25000,
+          onMove: (moveData) => {
+            handleRemoteDuelMove(moveData);
+          },
+          onStateChange: (room) => {
+            handleDuelRoomState(room);
+          },
+          onOpponentJoin: ({ slot, name }) => {
+            stopSoloFallbackCountdown();
+            opponentName = name || 'Challenger';
+            showToast(`⚔️ ${opponentName} joined the duel!`, 'success');
+            startDuelMatch(rMultiplayer.roomId, opponentName, false);
+          },
+          onOpponentLeave: () => {
+            showToast(`Opponent ${opponentName} disconnected.`, 'warning');
+            const st = document.getElementById('duelOpponentStatus');
+            if (st) st.textContent = 'Opponent Disconnected';
+          },
+          onChat: ({ text, by }) => {
+            showToast(`💬 ${by || opponentName}: "${text}"`, 'info', 4000);
+          },
+          onRematch: () => {
+            showToast(`Opponent requested a rematch! Game reset.`, 'info');
+            startDuelMatch(rMultiplayer.roomId, opponentName, false);
+          },
+          onSoloFallback: () => {
+            engageSoloAiFallback();
+          },
+          onStatusMsg: (msg, type) => {
+            showToast(msg, type);
+          }
+        });
+
+        rMultiplayer.init().then(({ onlineAvailable, inviteCode }) => {
+          if (inviteCode) {
+            showInvitePrompt(inviteCode.toUpperCase());
+          }
+        });
+      } catch(err) {
+        console.warn("[KMatch3] RetroMultiplayer init failed:", err);
+      }
+    }
+
+    function showInvitePrompt(code) {
+      pendingInviteRoom = code;
+      const lbl = document.getElementById('inviteRoomCodeLabel');
+      if (lbl) lbl.textContent = code;
+      const modal = document.getElementById('inviteModal');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function acceptInvite() {
+      const code = pendingInviteRoom;
+      pendingInviteRoom = null;
+      const modal = document.getElementById('inviteModal');
+      if (modal) modal.style.display = 'none';
+      if (code) {
+        joinDuelRoom(code);
+      }
+    }
+
+    function declineInvite() {
+      pendingInviteRoom = null;
+      try {
+        window.history.replaceState(null, '', window.location.pathname);
+      } catch(e) {}
+      const modal = document.getElementById('inviteModal');
+      if (modal) modal.style.display = 'none';
+      showToast("Invite declined. Continuing in local play.", "info");
+    }
+
+    function updateDuelHud() {
+      const p1NameEl = document.getElementById('p1DuelName');
+      const p1ScoreEl = document.getElementById('p1DuelScore');
+      const p1ComboEl = document.getElementById('p1DuelCombo');
+      const p2NameEl = document.getElementById('p2DuelName');
+      const p2ScoreEl = document.getElementById('p2DuelScore');
+      const p2ComboEl = document.getElementById('p2DuelCombo');
+      const timerEl = document.getElementById('duelTimerDisplay');
+      const p1Bar = document.getElementById('duelP1Bar');
+      const p2Bar = document.getElementById('duelP2Bar');
+
+      if (p1NameEl) p1NameEl.textContent = myPlayerName;
+      if (p1ScoreEl) p1ScoreEl.textContent = score;
+      if (p1ComboEl) p1ComboEl.textContent = 'x' + maxCombo;
+      if (p2NameEl) p2NameEl.textContent = opponentName;
+      if (p2ScoreEl) p2ScoreEl.textContent = oppDuelScore;
+      if (p2ComboEl) p2ComboEl.textContent = 'x' + oppDuelCombo;
+      if (timerEl) timerEl.textContent = `Time: ${duelTimeLeft}s`;
+
+      let total = Math.max(1, score + oppDuelScore);
+      let p1Pct = Math.round((score / total) * 100);
+      let p2Pct = 100 - p1Pct;
+      if (p1Bar) p1Bar.style.width = p1Pct + '%';
+      if (p2Bar) p2Bar.style.width = p2Pct + '%';
+    }
+
+    function startDuelMatch(roomId, oppName, isAi = false) {
+      closeMultiplayerModal();
+      isOnlineDuel = !isAi;
+      vsAiDuel = isAi;
+      opponentName = oppName;
+      oppDuelScore = 0;
+      oppDuelCombo = 1;
+      duelTimeLeft = 90;
+
+      gameMode = 3;
+      document.getElementById('mode').value = '3';
+      initStage(1);
+
+      document.getElementById('duelContainer').style.display = 'block';
+      document.getElementById('duelOpponentStatus').textContent = isAi ? "vs GemBot-99 AI" : `vs ${oppName}`;
+      document.getElementById('btnRematch').style.display = 'none';
+      updateDuelHud();
+
+      if (duelInterval) clearInterval(duelInterval);
+      duelInterval = setInterval(() => {
+        duelTimeLeft--;
+        moves = duelTimeLeft;
+        movesEl.textContent = duelTimeLeft;
+        updateDuelHud();
+        if (duelTimeLeft <= 0) {
+          clearInterval(duelInterval);
+          endDuelMatch();
+        }
+      }, 1000);
+
+      if (isAi) {
+        startAiOpponentSimulation();
+      } else {
+        stopAiOpponentSimulation();
+      }
+    }
+
+    function startAiDuel() {
+      stopSoloFallbackCountdown();
+      if (rMultiplayer && rMultiplayer.roomId) {
+        rMultiplayer.leaveRoom();
+      }
+      startDuelMatch('LOCAL_AI', 'GemBot-99 AI', true);
+      showToast("⚔️ Duel started vs GemBot-99 AI! Good luck.", "success");
+    }
+
+    function engageSoloAiFallback() {
+      stopSoloFallbackCountdown();
+      showToast("⏱️ No peer connected in 25s. Engaging GemBot-99 AI opponent...", "warning");
+      startDuelMatch('AI_FALLBACK', 'GemBot-99 AI', true);
+    }
+
+    function startSoloFallbackCountdown(code) {
+      stopSoloFallbackCountdown();
+      soloFallbackSeconds = 25;
+      const area = document.getElementById('mpRoomActiveArea');
+      const codeLbl = document.getElementById('activeRoomCodeLabel');
+      const countEl = document.getElementById('soloCountdown');
+      if (area) area.style.display = 'block';
+      if (codeLbl) codeLbl.textContent = code;
+      if (countEl) countEl.textContent = soloFallbackSeconds;
+
+      soloFallbackInterval = setInterval(() => {
+        soloFallbackSeconds--;
+        if (countEl) countEl.textContent = soloFallbackSeconds;
+        if (soloFallbackSeconds <= 0) {
+          stopSoloFallbackCountdown();
+          engageSoloAiFallback();
+        }
+      }, 1000);
+    }
+
+    function stopSoloFallbackCountdown() {
+      if (soloFallbackInterval) {
+        clearInterval(soloFallbackInterval);
+        soloFallbackInterval = null;
+      }
+      const area = document.getElementById('mpRoomActiveArea');
+      if (area) area.style.display = 'none';
+    }
+
+    function startAiOpponentSimulation() {
+      stopAiOpponentSimulation();
+      aiOpponentInterval = setInterval(() => {
+        if (gameMode !== 3 || duelTimeLeft <= 0) return;
+        if (Math.random() < 0.75) {
+          let combo = Math.random() < 0.25 ? 2 : (Math.random() < 0.08 ? 3 : 1);
+          let addScore = (Math.floor(Math.random() * 3) + 3) * 10 * combo;
+          oppDuelScore += addScore;
+          oppDuelCombo = combo;
+          updateDuelHud();
+
+          if (combo >= 2) {
+            let type = combo >= 3 ? 'stone' : 'ice';
+            triggerIncomingAttack(type, 1);
+          }
+
+          if (oppDuelScore >= 5000) {
+            endDuelMatch();
+          }
+        }
+      }, 2200);
+    }
+
+    function stopAiOpponentSimulation() {
+      if (aiOpponentInterval) {
+        clearInterval(aiOpponentInterval);
+        aiOpponentInterval = null;
+      }
+    }
+
+    function triggerIncomingAttack(type, count) {
+      let alertEl = document.getElementById('duelAttackAlert');
+      if (alertEl) {
+        alertEl.textContent = type === 'stone' ? `⚔️ INCOMING STONE ATTACK (${count})!` : `⚔️ INCOMING ICE ATTACK (${count})!`;
+        alertEl.style.display = 'block';
+        setTimeout(() => { if (alertEl) alertEl.style.display = 'none'; }, 2000);
+      }
+      playBadSwapSound();
+      triggerShake(12);
+
+      let placed = 0;
+      for (let k = 0; k < 20 && placed < count; k++) {
+        let r = Math.floor(Math.random() * ROWS);
+        let c = Math.floor(Math.random() * COLS);
+        if (grid[r] && grid[r][c] && grid[r][c].stoneHits === 0 && !grid[r][c].ice) {
+          if (type === 'ice') {
+            grid[r][c].ice = true;
+            grid[r][c].el.innerHTML = getGemSVG(getColorIndex(grid[r][c].color), grid[r][c].type, 0, true, grid[r][c].barrier);
+          } else {
+            grid[r][c].stoneHits = 1;
+            grid[r][c].color = null;
+            grid[r][c].el.innerHTML = getGemSVG(0, 0, 1, false, false);
+          }
+          let cx = c * cellSize + cellSize/2;
+          let cy = r * cellSize + cellSize/2;
+          createShockwave(cx, cy, type === 'ice' ? '#00e5ff' : '#888888', 60);
+          createParticles(cx, cy, type === 'ice' ? '#00e5ff' : '#888888', 2);
+          placed++;
+        }
+      }
+      updateObstacleCounts();
+    }
+
+    function handleRemoteDuelMove(data) {
+      if (!data) return;
+      if (data.type === 'attack') {
+        if (data.attackType && data.count) {
+          triggerIncomingAttack(data.attackType, data.count);
+        }
+        if (typeof data.score === 'number') oppDuelScore = data.score;
+        if (typeof data.combo === 'number') oppDuelCombo = data.combo;
+        updateDuelHud();
+        if (oppDuelScore >= 5000) endDuelMatch();
+      } else if (data.type === 'score_update') {
+        if (typeof data.score === 'number') oppDuelScore = data.score;
+        if (typeof data.combo === 'number') oppDuelCombo = data.combo;
+        updateDuelHud();
+        if (oppDuelScore >= 5000) endDuelMatch();
+      }
+    }
+
+    function handleDuelRoomState(room) {
+      if (!room) return;
+      if (room.status === 'playing' && room.p2 && room.p2.name) {
+        stopSoloFallbackCountdown();
+        opponentName = room.p2.name;
+        startDuelMatch(rMultiplayer.roomId, opponentName, false);
+      }
+    }
+
+    function sendDuelChat(msg) {
+      if (rMultiplayer && isOnlineDuel) {
+        rMultiplayer.sendChat(msg);
+      }
+      showToast(`💬 You: "${msg}"`, 'info', 2000);
+    }
+
+    function requestRematch() {
+      if (rMultiplayer && isOnlineDuel) {
+        rMultiplayer.sendRematch();
+        showToast("Rematch request sent!", "info");
+      } else {
+        startDuelMatch('AI', opponentName, vsAiDuel);
+      }
+    }
+
+    function endDuelMatch() {
+      if (duelInterval) { clearInterval(duelInterval); duelInterval = null; }
+      stopAiOpponentSimulation();
+
+      let won = score > oppDuelScore;
+      let tie = score === oppDuelScore;
+      let rematchBtn = document.getElementById('btnRematch');
+      if (rematchBtn) rematchBtn.style.display = 'inline-block';
+
+      if (won) {
+        playPowerupSound();
+        triggerShake(20);
+        showToast(`🏆 VICTORY! You won the Match-3 Duel! Final: ${score} vs ${oppDuelScore}`, 'success', 6000);
+        broadcastArgSignal('duel_victory');
+      } else if (tie) {
+        showToast(`🤝 DRAW! Match ended in a tie: ${score} pts each!`, 'info', 5000);
+      } else {
+        playBadSwapSound();
+        showToast(`💀 DEFEAT! Opponent won the Duel. Final: ${oppDuelScore} vs ${score}`, 'warning', 6000);
+      }
+    }
+
+    async function quickMatch() {
+      if (!rMultiplayer) {
+        showToast("Multiplayer service initializing, please retry...", "warning");
+        return;
+      }
+      showToast("Scanning for open duel matches...", "info");
+      try {
+        const res = await rMultiplayer.quickMatch();
+        if (res && res.code) {
+          if (res.isHost) {
+            startSoloFallbackCountdown(res.code);
+            showToast(`Created room ${res.code}. Waiting for challenger...`, "info");
+          } else {
+            closeMultiplayerModal();
+            showToast(`Joined room ${res.code}! Starting duel...`, "success");
+          }
+        }
+      } catch(e) {
+        showToast("Matchmaking failed: " + e.message, "error");
+      }
+    }
+
+    async function hostRoom() {
+      if (!rMultiplayer) return;
+      try {
+        const code = await rMultiplayer.createRoom();
+        startSoloFallbackCountdown(code);
+        showToast(`Hosted room ${code}. Share link or wait for opponent!`, "success");
+      } catch(e) {
+        showToast("Could not host room: " + e.message, "error");
+      }
+    }
+
+    async function joinRoomFromInput() {
+      const inp = document.getElementById('joinRoomCode');
+      if (!inp || !inp.value.trim()) {
+        showToast("Please enter a room code.", "warning");
+        return;
+      }
+      joinDuelRoom(inp.value.trim());
+    }
+
+    async function joinDuelRoom(code) {
+      if (!rMultiplayer) return;
+      try {
+        const cleanCode = code.toUpperCase();
+        showToast(`Connecting to room ${cleanCode}...`, "info");
+        const ok = await rMultiplayer.joinRoom(cleanCode);
+        if (ok) {
+          closeMultiplayerModal();
+          showToast(`Joined duel room ${cleanCode}! Game starting.`, "success");
+        }
+      } catch(e) {
+        showToast("Join failed: " + e.message, "error");
+      }
+    }
+
+    function leaveDuelRoom() {
+      stopSoloFallbackCountdown();
+      if (rMultiplayer) rMultiplayer.leaveRoom();
+      document.getElementById('mpRoomActiveArea').style.display = 'none';
+      showToast("Left room. Returned to local mode.", "info");
+    }
+
+    function copyInviteLink() {
+      if (!rMultiplayer || !rMultiplayer.roomId) return;
+      const url = `${window.location.origin}${window.location.pathname}#room=${rMultiplayer.roomId}`;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          showToast("📋 Invite link copied to clipboard!", "success");
+        }).catch(() => {
+          prompt("Copy room link:", url);
+        });
+      } else {
+        prompt("Copy room link:", url);
+      }
+    }
+
+    async function refreshLobbyList() {
+      const listEl = document.getElementById('mpLobbyList');
+      if (!listEl) return;
+      if (!rMultiplayer || !rMultiplayer.fb || !rMultiplayer.fb.db) {
+        listEl.innerHTML = '<div style="color:#ff8888; text-align:center; padding:8px;">Connecting to RTDB...</div>';
+        return;
+      }
+      listEl.innerHTML = '<div style="color:#aaa; text-align:center; padding:8px;">Scanning lobby...</div>';
+      try {
+        const lobbyRef = rMultiplayer.fb.ref(rMultiplayer.fb.db, 'multiplayer/kmatch3/lobby');
+        const snap = await rMultiplayer.fb.get(lobbyRef);
+        const data = snap.val();
+        if (!data || Object.keys(data).length === 0) {
+          listEl.innerHTML = '<div style="color:#777; font-style:italic; text-align:center; padding:8px;">No open matches found. Host a match!</div>';
+          return;
+        }
+        let html = '';
+        const now = Date.now();
+        for (const [code, info] of Object.entries(data)) {
+          if (info.createdAt && (now - info.createdAt > 30 * 60 * 1000)) continue;
+          const host = escapeHtml(info.host || 'Player');
+          html += `<div class="lobby-item">
+            <div><strong style="color:#ffd700;">${code}</strong> <span style="color:#aaa; font-size:11px;">by ${host}</span></div>
+            <button onclick="joinDuelRoom('${code}')" class="powerup-btn" style="color:#00d9ff; border-color:#00d9ff; padding:2px 8px;">Join</button>
+          </div>`;
+        }
+        listEl.innerHTML = html || '<div style="color:#777; font-style:italic; text-align:center; padding:8px;">No active matches in lobby.</div>';
+      } catch(e) {
+        listEl.innerHTML = '<div style="color:#ff8888; text-align:center; padding:8px;">Lobby scan failed.</div>';
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+    }
+
+    function checkUrlInvite() {
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      let roomCode = null;
+      const hashMatch = hash.match(/room=([A-Za-z0-9_-]+)/i);
+      if (hashMatch) roomCode = hashMatch[1];
+      else {
+        const searchMatch = search.match(/room=([A-Za-z0-9_-]+)/i);
+        if (searchMatch) roomCode = searchMatch[1];
+      }
+      if (roomCode) {
+        showInvitePrompt(roomCode.toUpperCase());
+      }
+    }
+
+    function broadcastArgSignal(reason) {
+      try {
+        if (rMultiplayer && rMultiplayer.fb && rMultiplayer.fb.db) {
+          const sigRef = rMultiplayer.fb.ref(rMultiplayer.fb.db, 'arg/signals/kmatch3');
+          rMultiplayer.fb.set(sigRef, {
+            source: 'kmatch3',
+            signal: '0x7F1999_CHIP_ALIGN',
+            trigger: reason,
+            maxCombo: maxCombo,
+            score: score,
+            ts: Date.now()
+          }).catch(() => {});
+        }
+      } catch(e) {}
+    }
     
     function createScorePopup(x, y, text, color='#ffd700') {
       let popup = document.createElement('div');
@@ -887,7 +1836,18 @@
         moves = 60;
         bossHP = 0; maxBossHP = 0;
         document.getElementById('movesLabel').textContent = "Time";
+      } else if (gameMode === 3) {
+        level = 1;
+        ROWS = 8; COLS = 8;
+        stageNameEl.textContent = "Duel Arena";
+        targetScore = 5000;
+        moves = duelTimeLeft || 90;
+        bossHP = 0; maxBossHP = 0;
+        document.getElementById('movesLabel').textContent = "Duel Time";
       }
+
+      const duelEl = document.getElementById('duelContainer');
+      if (duelEl) duelEl.style.display = (gameMode === 3) ? 'block' : 'none';
 
       cellSize = Math.floor(400 / Math.max(ROWS, COLS));
       score = 0;
@@ -899,15 +1859,15 @@
       clearHint();
       document.querySelectorAll('.powerup-btn').forEach(b => b.classList.remove('active'));
 
-      let isTimedStage = (gameMode === 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode === 2);
+      let isTimedStage = (gameMode === 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode === 2) || (gameMode === 3);
       document.getElementById('btnMoves').textContent = isTimedStage ? "[E] +15s" : "[E] +Moves";
 
       scoreEl.textContent = score;
-      targetEl.textContent = (gameMode === 0 && CAMPAIGN_STAGES[level-1].bossHP > 0) ? "BOSS" : targetScore;
+      targetEl.textContent = (gameMode === 0 && CAMPAIGN_STAGES[level-1].bossHP > 0) ? "BOSS" : (gameMode === 3 ? "5000" : targetScore);
       movesEl.textContent = moves;
 
-      let iceToPlace = (gameMode === 0) ? CAMPAIGN_STAGES[level - 1].iceCount : (gameMode === 1 ? 0 : 4);
-      let stoneToPlace = (gameMode === 0) ? CAMPAIGN_STAGES[level - 1].stoneCount : 0;
+      let iceToPlace = (gameMode === 0) ? CAMPAIGN_STAGES[level - 1].iceCount : (gameMode === 1 ? 0 : (gameMode === 3 ? 0 : 4));
+      let stoneToPlace = (gameMode === 0) ? CAMPAIGN_STAGES[level - 1].stoneCount : (gameMode === 3 ? 2 : 0);
       let ironToPlace = (gameMode === 0) ? CAMPAIGN_STAGES[level - 1].ironCount : 0;
 
       for (let r = 0; r < ROWS; r++) {
@@ -1284,7 +2244,8 @@
 
       let matches = findMatches();
       if (matches.hMatches.length > 0 || matches.vMatches.length > 0 || specialTrigger) {
-        let isTimed = (gameMode === 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode === 2);
+        recordMove(r1, c1, r2, c2, 0, 1);
+        let isTimed = (gameMode === 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode === 2) || (gameMode === 3);
         if (!isTimed && gameMode === 0 && typeof moves === 'number') {
           moves--;
           movesEl.textContent = moves;
@@ -1474,12 +2435,45 @@
         });
 
         playMatchSound(comboMultiplier);
-        score += (toDestroy.size * 10 + stoneToBreak.size * 20) * comboMultiplier;
+        let earned = (toDestroy.size * 10 + stoneToBreak.size * 20) * comboMultiplier;
+        score += earned;
         scoreEl.textContent = score;
         if (score > bestScore) {
           bestScore = score;
           bestScoreEl.textContent = bestScore;
           saveStats();
+        }
+
+        if (gameMode === 3) {
+          let attackType = null;
+          let attackCount = 0;
+          if (comboMultiplier >= 3) {
+            attackType = 'stone'; attackCount = 1;
+          } else if (comboMultiplier === 2) {
+            attackType = 'ice'; attackCount = 1;
+          }
+          newSpecials.forEach(s => {
+            if (s.type === 1 || s.type === 2) { attackType = 'ice'; attackCount++; }
+            else if (s.type === 3) { attackType = 'ice'; attackCount += 2; }
+            else if (s.type === 4) { attackType = 'stone'; attackCount++; }
+          });
+          if (attackCount > 0) {
+            if (rMultiplayer && isOnlineDuel) {
+              rMultiplayer.sendMove({ type: 'attack', attackType: attackType || 'ice', count: attackCount, score, combo: comboMultiplier });
+            } else if (vsAiDuel) {
+              oppDuelScore = Math.max(0, oppDuelScore - attackCount * 30);
+              showToast(`⚔️ Attack sent to AI! (-${attackCount * 30} pts)`, 'attack', 2000);
+            }
+          } else {
+            if (rMultiplayer && isOnlineDuel) {
+              rMultiplayer.sendMove({ type: 'score_update', score, combo: comboMultiplier });
+            }
+          }
+          updateDuelHud();
+        }
+
+        if (comboMultiplier >= 5) {
+          broadcastArgSignal('high_combo');
         }
 
         let destroyArr = Array.from(toDestroy).map(key => {
@@ -1665,6 +2659,10 @@
     }
 
     function gameOver() {
+        if (gameMode === 3) {
+          endDuelMatch();
+          return;
+        }
         alert("Game Over! Stage failed.");
         gamesPlayed++;
         saveStats();
@@ -1675,10 +2673,17 @@
         if (isProcessing) return;
         gameMode = parseInt(document.getElementById('mode').value);
         if (gameMode === 0) initStage(campaignLevel);
+        else if (gameMode === 3) startAiDuel();
         else initStage(1);
     }
 
     function checkLevelProgress() {
+      if (gameMode === 3) {
+        if (score >= 5000 || oppDuelScore >= 5000) {
+          endDuelMatch();
+        }
+        return;
+      }
       if (gameMode === 1) {
           if (score >= level * 2000) {
             level++;
@@ -1746,11 +2751,26 @@
 
     document.addEventListener('keydown', (e) => {
       let help = document.getElementById('helpModal');
-      let isHelpOpen = (help && help.style.display === 'flex');
+      let mpModal = document.getElementById('multiplayerModal');
+      let invModal = document.getElementById('inviteModal');
+      let saveModal = document.getElementById('saveModal');
+      let repModal = document.getElementById('replayModal');
+      let kbModal = document.getElementById('keybindModal');
+      let isAnyModalOpen = (help && help.style.display === 'flex') ||
+                           (mpModal && mpModal.style.display === 'flex') ||
+                           (invModal && invModal.style.display === 'flex') ||
+                           (saveModal && saveModal.style.display === 'flex') ||
+                           (repModal && repModal.style.display === 'flex') ||
+                           (kbModal && kbModal.style.display === 'flex');
 
       if (e.key === 'Escape') {
-        if (isHelpOpen) {
-          hideHelp();
+        if (isAnyModalOpen) {
+          if (help) hideHelp();
+          if (mpModal) closeMultiplayerModal();
+          if (invModal) declineInvite();
+          if (saveModal) closeSaveModal();
+          if (repModal) closeReplayModal();
+          if (kbModal) closeKeybindModal();
           return;
         }
         if (powerupMode > 0) {
@@ -1767,12 +2787,27 @@
 
       if (e.key === 'F1' || e.key === '?') {
         e.preventDefault();
-        if (isHelpOpen) hideHelp(); else showHelp();
+        if (help && help.style.display === 'flex') hideHelp(); else showHelp();
         return;
       }
 
-      // Guard modifier shortcuts (Ctrl, Alt, Meta) and background keystrokes when modal is displayed
-      if (e.ctrlKey || e.altKey || e.metaKey || isHelpOpen) return;
+      if (e.key === 'F5') {
+        e.preventDefault();
+        quicksaveState();
+        return;
+      }
+
+      if (e.key === 'F9') {
+        e.preventDefault();
+        quickloadState();
+        return;
+      }
+
+      // Guard modifier shortcuts and typing in modal input fields
+      if (e.ctrlKey || e.altKey || e.metaKey || isAnyModalOpen) return;
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+
+      const keyUpper = e.key.toUpperCase();
 
       if (e.key === '1') {
         if (gameMode !== 0) {
@@ -1792,14 +2827,20 @@
           document.getElementById('mode').value = '2';
           initStage(1);
         }
-      } else if (e.key === 'h' || e.key === 'H') {
+      } else if (e.key === '4') {
+        if (gameMode !== 3) {
+          startAiDuel();
+        }
+      } else if (keyUpper === (keybinds.hammer || 'H')) {
         useHammer();
-      } else if (e.key === 'e' || e.key === 'E' || e.key === 'm' || e.key === 'M') {
+      } else if (keyUpper === (keybinds.moves || 'E') || keyUpper === 'M') {
         useExtraMoves();
-      } else if (e.key === 's' || e.key === 'S') {
+      } else if (keyUpper === (keybinds.shuffle || 'S')) {
         useShuffle();
-      } else if (e.key === 'l' || e.key === 'L') {
+      } else if (keyUpper === (keybinds.nuke || 'L')) {
         useColorNuke();
+      } else if (keyUpper === (keybinds.replay || 'R')) {
+        openReplayModal();
       } else if (selectedCell && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
         e.preventDefault();
         let r = selectedCell.r;
@@ -1852,7 +2893,23 @@
       }
     }
 
+    // --- ARCH-05: Resource & Tab Visibility Management ---
+    let lastActiveTimestamp = Date.now();
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (audioCtx && audioCtx.state === 'running') {
+          audioCtx.suspend().catch(() => {});
+        }
+      } else {
+        lastActiveTimestamp = Date.now();
+        if (audioCtx && audioCtx.state === 'suspended') {
+          audioCtx.resume().catch(() => {});
+        }
+      }
+    });
+
     setInterval(() => {
+        if (document.hidden) return;
         let help = document.getElementById('helpModal');
         if (help && help.style.display === 'flex') return;
         let isTimed = (gameMode === 0 && CAMPAIGN_STAGES[level-1].timeLimit > 0) || (gameMode === 2);
@@ -1873,7 +2930,15 @@
         }
     }, 1000);
 
+    // --- Startup Initialization Hooks ---
     loadStats();
+    loadKeybinds();
+    initRetroMultiplayer();
+    checkUrlInvite();
+    window.onFirebaseLoaded = function() {
+      initRetroMultiplayer();
+      checkUrlInvite();
+    };
     if (!loadGame()) {
       initStage(1);
     }

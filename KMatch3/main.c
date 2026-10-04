@@ -1529,6 +1529,61 @@ int LoadGame() {
     return 1;
 }
 
+void QuicksaveGame() {
+    FILE *f = fopen("kmatch3_quicksave.dat", "wb");
+    if (!f) return;
+    fwrite(&level, sizeof(int), 1, f);
+    fwrite(&score, sizeof(int), 1, f);
+    fwrite(&moves, sizeof(int), 1, f);
+    fwrite(&targetScore, sizeof(int), 1, f);
+    fwrite(&gameMode, sizeof(int), 1, f);
+    fwrite(grid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fwrite(typeGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fwrite(iceGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fwrite(stoneGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fwrite(barrierGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fwrite(&bossHP, sizeof(int), 1, f);
+    fwrite(&collectedRed, sizeof(int), 1, f);
+    fwrite(&collectedGreen, sizeof(int), 1, f);
+    fwrite(&collectedBlue, sizeof(int), 1, f);
+    fclose(f);
+}
+
+int QuickloadGame() {
+    FILE *f = fopen("kmatch3_quicksave.dat", "rb");
+    if (!f) return 0;
+    if (fread(&level, sizeof(int), 1, f) != 1) { fclose(f); return 0; }
+    fread(&score, sizeof(int), 1, f);
+    fread(&moves, sizeof(int), 1, f);
+    fread(&targetScore, sizeof(int), 1, f);
+    if (fread(&gameMode, sizeof(int), 1, f) != 1) gameMode = 0;
+    fread(grid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fread(typeGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fread(iceGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fread(stoneGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fread(barrierGrid, sizeof(int), MAX_ROWS * MAX_COLS, f);
+    fread(&bossHP, sizeof(int), 1, f);
+    if (fread(&collectedRed, sizeof(int), 1, f) != 1) collectedRed = 0;
+    if (fread(&collectedGreen, sizeof(int), 1, f) != 1) collectedGreen = 0;
+    if (fread(&collectedBlue, sizeof(int), 1, f) != 1) collectedBlue = 0;
+    fclose(f);
+
+    if (level < 1) level = 1;
+    if (level > 20) level = 20;
+    if (gameMode < 0 || gameMode > 2) gameMode = 0;
+
+    if (gameMode == 0) {
+        rows = CAMPAIGN_STAGES[level - 1].rows;
+        cols = CAMPAIGN_STAGES[level - 1].cols;
+        maxBossHP = CAMPAIGN_STAGES[level - 1].bossHP;
+    } else {
+        rows = 8; cols = 8;
+        maxBossHP = 0;
+    }
+    cellSize = BOARD_SIZE / cols;
+    return 1;
+}
+
 void GameOver(HWND hwnd) {
     statsGamesPlayed++;
     SaveStats();
@@ -1760,8 +1815,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 if (score >= 300) {
                     powerupMode = 2; PlayPowerupSound(); InvalidateRect(hwnd, NULL, FALSE);
                 }
+            } else if (wParam == VK_F5) {
+                QuicksaveGame();
+                PlayPowerupSound();
+                SetWindowTextA(hwnd, "KMatch3 - Quicksaved State [F5]");
+            } else if (wParam == VK_F9) {
+                if (QuickloadGame()) {
+                    PlayPowerupSound();
+                    SetWindowTextA(hwnd, "KMatch3 - Quickloaded State [F9]");
+                    InvalidateRect(hwnd, NULL, FALSE);
+                } else {
+                    PlayBadSwapSound();
+                    SetWindowTextA(hwnd, "KMatch3 - No Quicksave Found");
+                }
             } else if (wParam == VK_F1) {
-                MessageBox(hwnd, "How to Play KMatch3:\nSwap adjacent gems to form lines of 3+.\n\nSpecial Gems:\n- Match 4: Line Blaster (clears row/col).\n- Match 5: Rainbow Gem (clears all of selected color).\n- T/L Shape: 3x3 Bomb Gem.\n- Stone/Iron Tiles: 1-3 hits to shatter!\n- Boss: Stage 20 Jewel King Boss (75 HP, Barrier Gems).\n\nActive Skills (Cost 300):\n- [H] Hammer: Smash any single tile/gem.\n- [E] +Moves/+15s: Add extra moves or timer.\n- [S] Shuffle: Rearrange all board gems.\n- [L] Color Nuke: Nuke all gems of selected color.\n\nModes:\n- [1] Campaign (20 Stages)\n- [2] Zen Mode\n- [3] Timed Rush", "Help / How to Play", MB_OK | MB_ICONINFORMATION);
+                MessageBox(hwnd, "How to Play KMatch3:\nSwap adjacent gems to form lines of 3+.\n\nSpecial Gems:\n- Match 4: Line Blaster (clears row/col).\n- Match 5: Rainbow Gem (clears all of selected color).\n- T/L Shape: 3x3 Bomb Gem.\n- Stone/Iron Tiles: 1-3 hits to shatter!\n- Boss: Stage 20 Jewel King Boss (75 HP, Barrier Gems).\n\nActive Skills (Cost 300):\n- [H] Hammer: Smash any single tile/gem.\n- [E] +Moves/+15s: Add extra moves or timer.\n- [S] Shuffle: Rearrange all board gems.\n- [L] Color Nuke: Nuke all gems of selected color.\n\nSaves & Snapshots:\n- [F5] Quicksave State\n- [F9] Quickload State\n\nModes:\n- [1] Campaign (20 Stages)\n- [2] Zen Mode\n- [3] Timed Rush", "Help / How to Play", MB_OK | MB_ICONINFORMATION);
             } else if (selR != -1 && (wParam == VK_UP || wParam == VK_DOWN || wParam == VK_LEFT || wParam == VK_RIGHT)) {
                 int tr = selR, tc = selC;
                 if (wParam == VK_UP) tr--;
