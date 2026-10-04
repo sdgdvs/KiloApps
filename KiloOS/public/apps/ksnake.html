@@ -389,10 +389,11 @@
                 <p style="color:#a29bfe; font-size:12px;">Watch previous matches with full seed determinism, step through inputs, or load exported .ksr replays.</p>
                 <div style="display:flex; flex-direction:column; gap:8px; width:92%; margin-top:8px;">
                     <button id="btnPlayLastReplay" class="btn" onclick="watchLastReplay()" style="background:#2e2e4a; border-color:#a29bfe; color:#a29bfe; font-weight:bold; padding:8px;">▶ Watch Last Match</button>
+                    <button id="btnPlayLastDuel" class="btn" onclick="exportDuelReplay()" style="background:#2e2e4a; border-color:#ffd700; color:#ffd700; font-weight:bold; padding:8px;">💾 Export Last Duel Record (.ksdr)</button>
                     <div style="display:flex; gap:6px; justify-content:center;">
-                        <input type="file" id="replayFileInput" accept=".ksr,.json" style="display:none;" onchange="handleReplayFileSelect(event)">
+                        <input type="file" id="replayFileInput" accept=".ksr,.ksdr,.json" style="display:none;" onchange="handleReplayFileSelect(event)">
                         <button class="btn" onclick="document.getElementById('replayFileInput').click()">📁 Load .ksr File</button>
-                        <button class="btn" onclick="exportReplay()">💾 Export Current .ksr</button>
+                        <button class="btn" onclick="exportReplay()">💾 Export Solo .ksr</button>
                     </div>
                     <textarea id="replayPasteBox" placeholder="Or paste replay JSON string here..." style="height:55px; font-size:10px;"></textarea>
                     <button class="btn" onclick="playPastedReplay()" style="background:#4834d4; border-color:#a29bfe; color:#fff;">▶ Load & Play Pasted Replay</button>
@@ -843,6 +844,61 @@
             if (rMultiplayer) rMultiplayer.playerName = myPlayerName;
         }
 
+        let lastDuelReplayData = null;
+
+        /* --- Diegetic ARG Telemetry Signal Broadcast (TINAG Standard) --- */
+        function broadcastArgSignalFragment(action, freq = 1999) {
+            if (window.fb && window.fb.db) {
+                try {
+                    const sigRef = window.fb.ref(window.fb.db, `arg/signals/ksnake_${Date.now()}`);
+                    window.fb.set(sigRef, {
+                        source: 'ksnake',
+                        action,
+                        freq,
+                        ts: Date.now(),
+                        offset: '0x1999'
+                    });
+                    console.log(`[SUBNET] Echo telemetry carrier logged: ${freq}Hz at offset 0x1999 (${action})`);
+                } catch(e) {}
+            }
+        }
+
+        function recordDuelReplaySummary() {
+            lastDuelReplayData = {
+                type: 'ksnake_duel_replay',
+                version: '1.0',
+                date: new Date().toISOString(),
+                mode: isOnlineDuel ? 'Online RTDB' : 'Subnet AI',
+                p1Name: myPlayerSlot === 1 ? myPlayerName : oppPlayerName,
+                p2Name: myPlayerSlot === 2 ? myPlayerName : oppPlayerName,
+                p1KOs,
+                p2KOs,
+                targetKOs,
+                winner: duelWinner === 1 ? 'Player 1' : 'Player 2',
+                finalScore: `${p1KOs} - ${p2KOs}`
+            };
+            safeSetStorage('ksnake_last_duel_replay', JSON.stringify(lastDuelReplayData));
+        }
+
+        function exportDuelReplay() {
+            const saved = safeGetJSON('ksnake_last_duel_replay', null);
+            const data = lastDuelReplayData || saved;
+            if (!data) {
+                showToast("No duel replay recorded yet. Play a duel match first!");
+                return;
+            }
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ksnake_duel_${(data.p1Name || 'P1').replace(/\s+/g, '_')}_vs_${(data.p2Name || 'P2').replace(/\s+/g, '_')}.ksdr`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            showToast("💾 Duel Match Record (.ksdr) exported!");
+        }
+
         function initRetroMultiplayer() {
             if (typeof RetroMultiplayer !== 'undefined' && !rMultiplayer) {
                 try {
@@ -855,18 +911,31 @@
                             oppPlayerName = name || 'Challenger';
                             stopSoloFallbackTimer();
                             closeAllModals();
-                            showToast(`Challenger ${oppPlayerName} joined! DUEL START!`, 3000);
+                            if (isHost && myPlayerSlot === 1 && !isDuelMode) {
+                                startDuelOnline(rMultiplayer.roomId || currentRoomId, 1, { targetKOs });
+                            }
+                            showToast(`⚔️ Challenger ${oppPlayerName} joined! DUEL START!`, 3500);
                         },
                         onOpponentLeave: ({ slot, name }) => {
-                            showToast(`Opponent ${name || 'Challenger'} disconnected!`, 4000);
+                            showToast(`⚠️ Opponent ${name || 'Challenger'} disconnected!`, 4000);
                             if (isDuelMode && isOnlineDuel) {
                                 duelMatchOver = true;
                                 duelWinner = myPlayerSlot;
                                 recordDuelResult(true, oppPlayerName, p1KOs, p2KOs);
+                                recordDuelReplaySummary();
                             }
                         },
                         onSoloFallback: () => {
                             handleSoloFallback();
+                        },
+                        onChat: ({ text, by, name }) => {
+                            const oppSlot = (myPlayerSlot === 1) ? 2 : 1;
+                            speechBubbles.push({ player: oppSlot, text, life: 120 });
+                            playSound('skill');
+                            showToast(`${name || oppPlayerName}: ${text}`, 2000);
+                        },
+                        onRematch: ({ requestedBy }) => {
+                            showToast("Opponent requested a rematch! Press [R] to accept.", 3500);
                         },
                         onStatusMsg: (msg, type) => {
                             showToast(msg, type === 'error' ? 4000 : 3000);
@@ -1110,13 +1179,46 @@
         }
 
         async function startQuickMatch() {
+            const btn = document.getElementById('btnQuickMatch');
+            if (btn) btn.innerText = "⏳ Searching for Match...";
+
+            if (rMultiplayer && rMultiplayer.isOnline()) {
+                try {
+                    const res = await rMultiplayer.quickMatch({ targetKOs: 3 });
+                    if (btn) btn.innerText = "⚡ Find / Host Match";
+                    if (res && res.success) {
+                        currentRoomId = res.roomId;
+                        if (res.slot === 'p2') {
+                            stopSoloFallbackTimer();
+                            myPlayerSlot = 2;
+                            isHost = false;
+                            targetKOs = res.room?.targetKOs || 3;
+                            oppPlayerName = res.room?.p1?.name || 'Player 1';
+                            closeAllModals();
+                            listenToRoom(res.roomId);
+                            startDuelOnline(res.roomId, 2, res.room || { targetKOs });
+                        } else {
+                            isHost = true;
+                            myPlayerSlot = 1;
+                            targetKOs = 3;
+                            startSoloFallbackTimer(res.roomId);
+                            listenToRoom(res.roomId);
+                            const copyBtn = document.getElementById('btnCopyInviteLink');
+                            if (copyBtn) copyBtn.style.display = 'inline-block';
+                        }
+                        return;
+                    }
+                } catch(err) {
+                    console.warn("[KSnake] rMultiplayer quickMatch error:", err);
+                }
+            }
+
             if (!window.fb) {
                 showToast("Firebase RTDB initializing... Launching offline AI duel!");
                 launchAIDuelFromModal();
+                if (btn) btn.innerText = "⚡ Find / Host Match";
                 return;
             }
-            const btn = document.getElementById('btnQuickMatch');
-            if (btn) btn.innerText = "⏳ Searching for Match...";
 
             try {
                 const lobbyRef = window.fb.ref(window.fb.db, FIREBASE_PATH_LOBBY);
@@ -1150,6 +1252,25 @@
             let code = codeInput ? codeInput.value.trim().toUpperCase() : '';
             if (!code) code = 'SNK-' + Math.floor(1000 + Math.random() * 9000);
             let targetKOsVal = parseInt(document.getElementById('mpTargetKOs')?.value || '3', 10);
+
+            if (rMultiplayer && rMultiplayer.isOnline()) {
+                try {
+                    const res = await rMultiplayer.createRoom({ roomId: code, targetKOs: targetKOsVal }, true);
+                    if (res && res.success) {
+                        currentRoomId = res.roomId;
+                        isHost = true;
+                        myPlayerSlot = 1;
+                        targetKOs = targetKOsVal;
+                        startSoloFallbackTimer(res.roomId);
+                        listenToRoom(res.roomId);
+                        const copyBtn = document.getElementById('btnCopyInviteLink');
+                        if (copyBtn) copyBtn.style.display = 'inline-block';
+                        return;
+                    }
+                } catch(err) {
+                    console.warn("[KSnake] rMultiplayer createRoom error:", err);
+                }
+            }
             await createRoomWithCode(code, targetKOsVal, true);
         }
 
@@ -1223,6 +1344,25 @@
         }
 
         async function joinRoom(code) {
+            if (rMultiplayer && rMultiplayer.isOnline()) {
+                try {
+                    const res = await rMultiplayer.joinRoom(code);
+                    if (res && res.success) {
+                        stopSoloFallbackTimer();
+                        myPlayerSlot = (res.slot === 'p2') ? 2 : 1;
+                        currentRoomId = res.roomId;
+                        isHost = (res.slot === 'p1');
+                        targetKOs = res.room?.targetKOs || 3;
+                        oppPlayerName = res.room?.p1?.name || 'Player 1';
+                        closeAllModals();
+                        listenToRoom(res.roomId);
+                        startDuelOnline(res.roomId, myPlayerSlot, res.room || { targetKOs });
+                        return;
+                    }
+                } catch(err) {
+                    console.warn("[KSnake] rMultiplayer joinRoom error:", err);
+                }
+            }
             if (!window.fb) return;
             try {
                 const roomRef = window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${code}`);
@@ -1310,6 +1450,7 @@
                         if (oppData.ghostActive !== undefined) p2GhostActive = oppData.ghostActive;
                         if (oppData.freezeActive !== undefined) p2FreezeActive = oppData.freezeActive;
                         if (oppData.magnetActive !== undefined) p2MagnetActive = oppData.magnetActive;
+                        if (oppData.obstacles && Array.isArray(oppData.obstacles)) p2Obstacles = oppData.obstacles;
                     } else {
                         if (oppData.snake) p1Snake = oppData.snake;
                         if (oppData.dir) p1Dir = oppData.dir;
@@ -1321,6 +1462,7 @@
                         if (oppData.ghostActive !== undefined) p1GhostActive = oppData.ghostActive;
                         if (oppData.freezeActive !== undefined) p1FreezeActive = oppData.freezeActive;
                         if (oppData.magnetActive !== undefined) p1MagnetActive = oppData.magnetActive;
+                        if (oppData.obstacles && Array.isArray(oppData.obstacles)) p1Obstacles = oppData.obstacles;
                     }
                 }
 
@@ -1340,7 +1482,7 @@
             window.fb.onChildAdded(attacksRef, snap => {
                 const atk = snap.val();
                 if (!atk || atk.from === myPlayerSlot) return;
-                applyIncomingAttack(atk.type);
+                receiveRemoteAttack(atk.from, atk.type);
             });
 
             // Taunts listener
@@ -1434,6 +1576,9 @@
 
         function leaveDuel() {
             stopSoloFallbackTimer();
+            if (rMultiplayer) {
+                try { rMultiplayer.leaveRoom(false); } catch(e){}
+            }
             if (isOnlineDuel && activeRoomRef && activeRoomListener && window.fb) {
                 try {
                     window.fb.off(activeRoomRef, 'value', activeRoomListener);
@@ -1508,7 +1653,7 @@
             }
 
             // Move Player 1
-            if (p1Alive) {
+            if (p1Alive && (myPlayerSlot === 1 || isAIDuel)) {
                 if (p1SpeedCurse > 0) p1SpeedCurse--;
                 if (p1GhostActive > 0) p1GhostActive--;
                 if (p1FreezeActive > 0) p1FreezeActive--;
@@ -1653,11 +1798,11 @@
                 const myData = (myPlayerSlot === 1) ? {
                     snake: p1Snake, dir: p1Dir, score: p1Score, apples: p1Apples, alive: p1Alive,
                     food: p1Food, special: p1Special, ghostActive: p1GhostActive, freezeActive: p1FreezeActive,
-                    magnetActive: p1MagnetActive, connected: true
+                    magnetActive: p1MagnetActive, obstacles: p1Obstacles, connected: true
                 } : {
                     snake: p2Snake, dir: p2Dir, score: p2Score, apples: p2Apples, alive: p2Alive,
                     food: p2Food, special: p2Special, ghostActive: p2GhostActive, freezeActive: p2FreezeActive,
-                    magnetActive: p2MagnetActive, connected: true
+                    magnetActive: p2MagnetActive, obstacles: p2Obstacles, connected: true
                 };
                 try {
                     window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${currentRoomId}/${mySlotStr}`), myData);
@@ -1722,11 +1867,7 @@
                 life: 30, maxLife: 30
             });
 
-            if (toSlot === 1) {
-                applyIncomingAttack(type, 1);
-            } else {
-                applyIncomingAttack(type, 2);
-            }
+            applyIncomingAttack(type, toSlot);
 
             if (isOnlineDuel && myPlayerSlot === fromSlot && window.fb) {
                 try {
@@ -1737,6 +1878,26 @@
                     });
                 } catch(e){}
             }
+        }
+
+        function receiveRemoteAttack(fromSlot, type) {
+            playSound('skill');
+            let toSlot = (fromSlot === 1) ? 2 : 1;
+            let sx = (fromSlot === 1) ? (A1_X + (p1Snake[0]?.x || 5) * D_CELL) : (A2_X + (p2Snake[0]?.x || 14) * D_CELL);
+            let sy = (fromSlot === 1) ? (A1_Y + (p1Snake[0]?.y || 10) * D_CELL) : (A2_Y + (p2Snake[0]?.y || 10) * D_CELL);
+            let tx = (toSlot === 1) ? (A1_X + 170) : (A2_X + 170);
+            let ty = (toSlot === 1) ? (A1_Y + 170) : (A2_Y + 170);
+            let color = (type === 'junk') ? '#00d2d3' : (type === 'speed' ? '#ffd700' : '#ff4757');
+            let label = (type === 'junk') ? '+1 GLITCH WALL!' : (type === 'speed' ? '⚡ SPEED CURSE!' : '🔥 MAGMA TRAP!');
+
+            attackBeams.push({
+                from: fromSlot,
+                sx, sy, tx, ty,
+                color, text: label,
+                life: 30, maxLife: 30
+            });
+
+            applyIncomingAttack(type, toSlot);
         }
 
         function applyIncomingAttack(type, targetSlot) {
@@ -1780,12 +1941,16 @@
                 roundBanner = `🏆 ${myPlayerName} WINS THE DUEL! 🏆`;
                 playSound('victory');
                 recordDuelResult(myPlayerSlot === 1, oppPlayerName, (myPlayerSlot === 1 ? p1KOs : p2KOs), (myPlayerSlot === 1 ? p2KOs : p1KOs));
+                recordDuelReplaySummary();
+                broadcastArgSignalFragment(isOnlineDuel ? 'online_duel_p1_win' : 'ai_duel_p1_win', 1999);
             } else if (p2KOs >= targetKOs) {
                 duelMatchOver = true;
                 duelWinner = 2;
                 roundBanner = `🏆 ${oppPlayerName} WINS THE DUEL! 🏆`;
                 playSound('victory');
                 recordDuelResult(myPlayerSlot === 2, oppPlayerName, (myPlayerSlot === 2 ? p2KOs : p1KOs), (myPlayerSlot === 2 ? p1KOs : p2KOs));
+                recordDuelReplaySummary();
+                broadcastArgSignalFragment(isOnlineDuel ? 'online_duel_p2_win' : 'ai_duel_p2_win', 1999);
             } else {
                 roundNumber++;
                 setTimeout(() => {
@@ -1797,12 +1962,17 @@
         function requestRematch() {
             if (isAIDuel) {
                 resetDuelMatch();
-            } else if (isOnlineDuel && window.fb) {
-                try {
-                    const slotStr = (myPlayerSlot === 1) ? 'p1' : 'p2';
-                    window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${currentRoomId}/rematch/${slotStr}`), true);
-                    showToast("Rematch requested! Waiting for opponent...");
-                } catch(e){}
+            } else {
+                if (rMultiplayer && rMultiplayer.isOnline()) {
+                    try { rMultiplayer.requestRematch(); } catch(e){}
+                }
+                if (window.fb) {
+                    try {
+                        const slotStr = (myPlayerSlot === 1) ? 'p1' : 'p2';
+                        window.fb.set(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${currentRoomId}/rematch/${slotStr}`), true);
+                        showToast("Rematch requested! Waiting for opponent...");
+                    } catch(e){}
+                }
             }
         }
 
@@ -1825,31 +1995,57 @@
         function sendDuelTaunt(slot, text) {
             speechBubbles.push({ player: slot, text, life: 120 });
             playSound('skill');
-            if (isOnlineDuel && window.fb) {
-                try {
-                    window.fb.push(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${currentRoomId}/taunts`), {
-                        player: slot,
-                        text,
-                        ts: Date.now()
-                    });
-                } catch(e){}
+            if (isOnlineDuel) {
+                if (rMultiplayer && rMultiplayer.isOnline()) {
+                    try { rMultiplayer.sendChat(text); } catch(e){}
+                }
+                if (window.fb) {
+                    try {
+                        window.fb.push(window.fb.ref(window.fb.db, `${FIREBASE_PATH_ROOMS}/${currentRoomId}/taunts`), {
+                            player: slot,
+                            text,
+                            ts: Date.now()
+                        });
+                    } catch(e){}
+                }
             }
         }
 
         function activateDuelSkill(s) {
             if (!isDuelMode || roundCountdown > 0 || duelMatchOver) return;
-            if (s === 'G' && p1GhostActive <= 0) {
-                p1GhostActive = 40;
-                playSound('skill');
-                combatAlerts.push({ text: '👻 GHOST VIPER ACTIVE!', color: '#00d2d3', x: A1_X + 170, y: A1_Y + 170, life: 35 });
-            } else if (s === 'F' && p1FreezeActive <= 0) {
-                p1FreezeActive = 60;
-                playSound('skill');
-                combatAlerts.push({ text: '❄️ ICE FREEZE SHIELD!', color: '#48dbfb', x: A1_X + 170, y: A1_Y + 170, life: 35 });
-            } else if (s === 'M' && p1MagnetActive <= 0) {
-                p1MagnetActive = 60;
-                playSound('skill');
-                combatAlerts.push({ text: '🧲 APPLE MAGNET CHARGE!', color: '#fbc531', x: A1_X + 170, y: A1_Y + 170, life: 35 });
+            const ax = (myPlayerSlot === 1) ? A1_X : A2_X;
+            const ay = (myPlayerSlot === 1) ? A1_Y : A2_Y;
+
+            if (s === 'G') {
+                if (myPlayerSlot === 1 && p1GhostActive <= 0) {
+                    p1GhostActive = 40;
+                    playSound('skill');
+                    combatAlerts.push({ text: '👻 GHOST VIPER ACTIVE!', color: '#00d2d3', x: ax + 170, y: ay + 170, life: 35 });
+                } else if (myPlayerSlot === 2 && p2GhostActive <= 0) {
+                    p2GhostActive = 40;
+                    playSound('skill');
+                    combatAlerts.push({ text: '👻 GHOST VIPER ACTIVE!', color: '#00d2d3', x: ax + 170, y: ay + 170, life: 35 });
+                }
+            } else if (s === 'F') {
+                if (myPlayerSlot === 1 && p1FreezeActive <= 0) {
+                    p1FreezeActive = 60;
+                    playSound('skill');
+                    combatAlerts.push({ text: '❄️ ICE FREEZE SHIELD!', color: '#48dbfb', x: ax + 170, y: ay + 170, life: 35 });
+                } else if (myPlayerSlot === 2 && p2FreezeActive <= 0) {
+                    p2FreezeActive = 60;
+                    playSound('skill');
+                    combatAlerts.push({ text: '❄️ ICE FREEZE SHIELD!', color: '#48dbfb', x: ax + 170, y: ay + 170, life: 35 });
+                }
+            } else if (s === 'M') {
+                if (myPlayerSlot === 1 && p1MagnetActive <= 0) {
+                    p1MagnetActive = 60;
+                    playSound('skill');
+                    combatAlerts.push({ text: '🧲 APPLE MAGNET CHARGE!', color: '#fbc531', x: ax + 170, y: ay + 170, life: 35 });
+                } else if (myPlayerSlot === 2 && p2MagnetActive <= 0) {
+                    p2MagnetActive = 60;
+                    playSound('skill');
+                    combatAlerts.push({ text: '🧲 APPLE MAGNET CHARGE!', color: '#fbc531', x: ax + 170, y: ay + 170, life: 35 });
+                }
             }
         }
 
@@ -2051,22 +2247,29 @@
                 ctx.fillStyle = (duelWinner === 1) ? '#00d2d3' : '#e056fd';
                 ctx.font = 'bold 28px system-ui, sans-serif';
                 let winTitle = (duelWinner === 1) ? `🏆 ${myPlayerName} WINS! 🏆` : `🏆 ${oppPlayerName} WINS! 🏆`;
-                ctx.fillText(winTitle, 390, 180);
+                ctx.fillText(winTitle, 390, 175);
 
                 ctx.fillStyle = '#ffd700';
                 ctx.font = 'bold 16px monospace';
-                ctx.fillText(`FINAL SCORE: ${p1KOs} - ${p2KOs}`, 390, 215);
+                ctx.fillText(`FINAL SCORE: ${p1KOs} - ${p2KOs}`, 390, 205);
 
                 ctx.fillStyle = '#00d2aa';
-                ctx.fillRect(250, 245, 130, 36);
+                ctx.fillRect(210, 235, 110, 36);
                 ctx.fillStyle = '#041416';
-                ctx.font = 'bold 12px system-ui, sans-serif';
-                ctx.fillText('⚡ REMATCH [R]', 315, 268);
+                ctx.font = 'bold 11px system-ui, sans-serif';
+                ctx.fillText('⚡ REMATCH [R]', 265, 257);
+
+                ctx.fillStyle = '#a29bfe';
+                ctx.fillRect(335, 235, 110, 36);
+                ctx.fillStyle = '#0c0e18';
+                ctx.font = 'bold 11px system-ui, sans-serif';
+                ctx.fillText('💾 SAVE .KSDR [D]', 390, 257);
 
                 ctx.fillStyle = '#ff4757';
-                ctx.fillRect(400, 245, 130, 36);
+                ctx.fillRect(460, 235, 110, 36);
                 ctx.fillStyle = '#ffffff';
-                ctx.fillText('✕ MENU [ESC]', 465, 268);
+                ctx.font = 'bold 11px system-ui, sans-serif';
+                ctx.fillText('✕ MENU [ESC]', 515, 257);
                 ctx.restore();
             }
 
@@ -2270,11 +2473,15 @@
             const my = (e.clientY - rect.top) * scaleY;
 
             if (duelMatchOver) {
-                if (mx >= 250 && mx <= 380 && my >= 245 && my <= 281) {
+                if (mx >= 210 && mx <= 320 && my >= 235 && my <= 271) {
                     requestRematch();
                     return;
                 }
-                if (mx >= 400 && mx <= 530 && my >= 245 && my <= 281) {
+                if (mx >= 335 && mx <= 445 && my >= 235 && my <= 271) {
+                    exportDuelReplay();
+                    return;
+                }
+                if (mx >= 460 && mx <= 570 && my >= 235 && my <= 271) {
                     leaveDuel();
                     return;
                 }
@@ -2318,6 +2525,10 @@
             if (duelMatchOver) {
                 if (k === 'r') {
                     requestRematch();
+                    return;
+                }
+                if (k === 'd') {
+                    exportDuelReplay();
                     return;
                 }
                 if (e.key === 'Enter') {
@@ -4610,6 +4821,19 @@
                     playLastBtn.innerText = "▶ Watch Last Match (No match recorded yet)";
                 }
             }
+
+            const playLastDuelBtn = document.getElementById('btnPlayLastDuel');
+            const savedDuel = safeGetJSON('ksnake_last_duel_replay', null);
+            const duelRep = lastDuelReplayData || savedDuel;
+            if (playLastDuelBtn) {
+                if (duelRep) {
+                    playLastDuelBtn.disabled = false;
+                    playLastDuelBtn.innerText = `💾 Export Last Duel Record (${duelRep.p1Name} vs ${duelRep.p2Name}: ${duelRep.finalScore})`;
+                } else {
+                    playLastDuelBtn.disabled = true;
+                    playLastDuelBtn.innerText = "💾 Export Last Duel Record (No duel recorded yet)";
+                }
+            }
         }
 
         function watchLastReplay() {
@@ -5140,6 +5364,15 @@
                     else showMenu();
                 }
             });
+        });
+
+        // ARCH-05: Tab visibility change listener
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (gameState === 1 && !isDuelMode) {
+                    togglePauseGame();
+                }
+            }
         });
 
         // Initialize RFMS Multiplayer, URL invite auto-join, and Replay Drag-and-Drop

@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KStellar
   kilo_usability: KNote
   kilo_qa: KDB
-  kilo_expander: KSnake
+  kilo_expander: KTowers
 virtual_web_target: "kweb://cybercafe"
 virtual_web_rotation:
   - "kweb://geocities"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KPass
-  timestamp: "2026-10-04T05:45:00-07:00"
+  agent: kilo-expander
+  app: KSnake
+  timestamp: "2026-10-04T05:58:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -129,9 +129,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KHex`, `KBookmark`, `KPing`, `KChat`, `KClock`, `KTimer`, `KPomodoro`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KSnake`
+- **Current Target**: `KTowers`
 - **Upcoming Queue**:
-  `KTowers`, `KMatch3`, `KSimon`, `KReversi` *(Completed: KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KReversi, KTetris, KSnake, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts)*.
+  `KMatch3`, `KSimon`, `KReversi` *(Completed: KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KReversi, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -230,6 +230,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T05:58:00-07:00 — kilo-expander: KSnake (RFMS Online Multiplayer Expansion, Dual Duel Skills, Replay Export & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 255.9 KB web / 55.5 KB native < 999 KB ceiling).
+  - RFMS Online Multiplayer Architecture: Standardized `RetroMultiplayer` integration with room codes (`SNK-XXXX`), lobby matchmaking, presence tracking, and 25s solo AI fallback.
+  - Duel Simulation Symmetry: Fixed remote player simulation desync, enabled full duel skills for both P1 and P2, and added cross-conduit attack beams with hazard warnings.
+  - Duel Match Replays: Added duel match record capture, `.ksdr` export, and integrated replay viewer support.
+  - Diegetic ARG Telemetry: Integrated `broadcastArgSignalFragment` logging echo telemetry carriers (1999Hz at 0x1999) on duel completions.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` auto-pause listener when tab is hidden.
+  - Verification: MSVC clean (`KSnake.exe` 55.5 KB); Vite clean in 286ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T05:45:00-07:00 — kilo-qa: KPass (Pass 5 QA & Build Quality, Full State Snapshot Persistence & Tutorial Integrity)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 125.9 KB web / 25.6 KB native < 999 KB ceiling).
   - Snapshot State Persistence: Added full snapshot save/load (F5/F9) capturing generator options, history, and form inputs in web and native (`kpass_quicksave.dat`).
@@ -261,12 +270,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Engine Integration: Refactored `drawMonsterSprite()` with preloader, dynamic archetype mapper, boss glow auras, and status condition tints (poison, burn, freeze).
   - Glint & Border Audit: Verified static medieval filigree borders with 0 moving dots or traveling specular comets in web and native C.
   - Verification: MSVC clean (`KQuest.exe` 97.0 KB); Vite build clean in 281ms; `test_app_startup.py` PASS; `security_lint.py` 100% PASS; `check_icons.py` 100% PASS.
-
-- **2026-10-04T04:46:00-07:00 — kilo-creator: kweb://asm-temple (Virtual 1999 Web Deep Expansion: x86 Opcode Shrine & PE Dissector)**
-  - Status: PASS ✅ (0 regressions, 0 glints, 204.5 KB web < 999 KB ceiling, Vite clean build).
-  - Opcode Database Expansion: Expanded authentic x86 database to 142 instructions with category filtering, search, and ModR/M decoders.
-  - Interactive Radix Altar & ALU: Added direct hex/dec input and live bitwise ALU operations (AND, OR, XOR) with flag updates.
-  - PE32 Dissector Strings Tool: Added interactive ASCII string extractor with live search, copy-all, and Tier 3 telemetry presets.
-  - Diegetic ARG Telemetry: Embedded 1999Hz subcarrier anomaly log triggers, undocumented ECHO_PULSE opcode, and guestbook breadcrumbs.
-  - Procedural Jukebox & Synthesis: Added Track 05 ("Subcarrier 1999") with YM2612 2-operator FM synthesis and SPC700 echo.
-  - Verification: `security_lint.py` 100% PASS; Vite build clean in 260ms; file size ~204.5 KB (< 999 KB ceiling).
