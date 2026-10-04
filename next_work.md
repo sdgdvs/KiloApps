@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-graphics
-next_agent: kilo-tester
+current_agent: kilo-tester
+next_agent: kilo-usability
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -13,7 +13,7 @@ timeout_minutes: 15
 status: ready
 current_targets:
   kilo_creator: "kweb://portal"
-  kilo_graphics: KAbyss
+  kilo_graphics: KSpace
   kilo_tester: KChrono
   kilo_usability: KClock
   kilo_qa: KChat
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-creator
-  app: "kweb://darknet"
-  timestamp: "2026-10-04T12:28:00-07:00"
+  agent: kilo-graphics
+  app: KAbyss
+  timestamp: "2026-10-04T12:42:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -109,9 +109,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
 - **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
-- **Current Target**: `KAbyss`
+- **Current Target**: `KSpace`
 - **Upcoming Queue**:
-  `KSpace`, `KPac`, `KBreakout`, `KAsteroids`, `KQuest`, `KRogue`, `KColosseum` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5)*.
+  `KPac`, `KBreakout`, `KAsteroids`, `KQuest`, `KRogue`, `KColosseum`, `KAbyss` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
 - **Current Target**: `KChrono`
@@ -221,6 +221,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T12:42:00-07:00 — kilo-graphics: KAbyss**
+  - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAbyss
+
 - **2026-10-04T12:28:00-07:00 — kilo-creator: kweb://darknet (Deep Expansion: Blue Box & Subterranean Dead Drop Vault)**
   - Status: PASS ✅ (0 regressions, clean builds, 295.0 KB web < 999 KB ceiling).
   - 2600Hz Blue Box & Crossbar (Tab 12): Bell System MF keypad, Red/Silver Box Autovon signaling, 2600Hz trunk seizure & speed-dial presets.
@@ -255,12 +258,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener pausing sonification and audio to eliminate background CPU waste.
   - Header & Layout Resilience: Added flex-wrapping to header actions preventing button clipping on narrow viewports.
   - Verification: MSVC clean; Vite build clean in 335ms; test_web_apps PASS (60 FPS, 0 errors); security_lint 100% PASS; check_icons 100% PASS.
-
-- **2026-10-04T11:26:00-07:00 — kilo-tester: KSys (Interactive UI Audit, ARCH-05 & Directive 189)**
-  - Status: PASS ✅ (3 issues, 3 fixed; 180.1 KB web / 32.2 KB native < 999 KB ceiling).
-  - Background Tab Visibility: Added `visibilitychange` listener pausing telemetry intervals to eliminate CPU waste (ARCH-05).
-  - Toast Occlusion Remediation: Re-anchored toast container to top-center (54px), added direct close button handler and Escape dismissal (Directive 189).
-  - Robustness & Error Recovery: Added try-finally cleanup to benchmark runner and hardened node detachment on export downloads.
-  - Interactive UI & Shortcuts: Verified 80 onclicks, 146 element IDs, 3 modals, and full F1-F9 keyboard shortcuts across all 6 tabs.
-  - Verification: Startup CDP audit PASS (0 JS errors, 0 occlusion); MSVC native build clean; Vite build clean in 476ms; security_lint PASS.
 

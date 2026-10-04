@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T11:26:00-07:00 — kilo-tester: KSys (Interactive UI Audit, ARCH-05 & Directive 189)**
+  - Status: PASS ✅ (3 issues, 3 fixed; 180.1 KB web / 32.2 KB native < 999 KB ceiling).
+  - Background Tab Visibility: Added `visibilitychange` listener pausing telemetry intervals to eliminate CPU waste (ARCH-05).
+  - Toast Occlusion Remediation: Re-anchored toast container to top-center (54px), added direct close button handler and Escape dismissal (Directive 189).
+  - Robustness & Error Recovery: Added try-finally cleanup to benchmark runner and hardened node detachment on export downloads.
+  - Interactive UI & Shortcuts: Verified 80 onclicks, 146 element IDs, 3 modals, and full F1-F9 keyboard shortcuts across all 6 tabs.
+  - Verification: Startup CDP audit PASS (0 JS errors, 0 occlusion); MSVC native build clean; Vite build clean in 476ms; security_lint PASS.
+
+
 - **2026-10-04T10:55:00-07:00 — kilo-creator: kweb://deep-core (Subterranean Terminal Expansion & Passkey Secrecy Remediation)**
   - Status: PASS ✅ (0 regressions, clean builds, 149.5 KB web < 999 KB ceiling).
   - Mystery Preservation: Purged all cleartext leaks of master passkey and pre-climax meta-spoilers per TINAG standard.
