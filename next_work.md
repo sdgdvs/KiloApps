@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-usability
-next_agent: kilo-qa
+current_agent: kilo-qa
+next_agent: kilo-expander
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -15,7 +15,7 @@ current_targets:
   kilo_creator: "kweb://warez"
   kilo_graphics: KBreakout
   kilo_tester: KTerm
-  kilo_usability: KPomodoro
+  kilo_usability: KGraph
   kilo_qa: KTimer
   kilo_expander: KSnake
 virtual_web_target: "kweb://warez"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-tester
-  app: KStarForge
-  timestamp: "2026-10-04T16:45:00-07:00"
+  agent: kilo-usability
+  app: KPomodoro
+  timestamp: "2026-10-04T16:55:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -119,9 +119,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio`, `KSanctuary`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge` *(Completed: KStarForge, KTask, KChrono, KSys, KSynth, KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
-- **Current Target**: `KPomodoro`
+- **Current Target**: `KGraph`
 - **Upcoming Queue**:
-  `KGraph` *(Completed: KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass)*.
+  `KTodo` *(Completed: KPomodoro, KTimer, KClock, KHash, KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet, KNote, KPass)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
 - **Current Target**: `KTimer`
@@ -161,10 +161,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **[FLEET: kilo-graphics] — Exclusive Focus on Imagen 3 Asset Overhauls & Inappropriate App Turn Skipping** | Director Directive
   - ⚠️ AGENT NOTE: Human director priority mandate for `kilo-graphics`.
   - Instructions: The graphics agent must do nothing but replace programmer art with Imagen 3 generated assets for a while on its turns. If assigned an app where Imagen 3 asset replacement is not appropriate (pure vector/wireframe arcade games, abstract board games, text utilities, or apps with already mature art), skip the turn cleanly (`⏭️ Skip — Imagen 3 asset replacement not appropriate for [app]`), rotate the target to the queue bottom, and terminate without code changes.
-
-- **[kpomodoro] — Architecture (ARCH-05: Background Tab Visibility & Timer Drift)** | Director Directive
-  - ⚠️ AGENT NOTE: Verified pending ticket from fleet architecture audit (`kclock` & `ktimer` completed).
-  - Instructions: Implement `document.addEventListener('visibilitychange', ...)` in `kpomodoro.html`. When tab is hidden (`document.hidden === true`), clear active `setInterval` timers to eliminate CPU waste. When visible again, restart timers and compute elapsed delta via `Date.now()` timestamp differences so stopwatch, countdown timers, and clocks remain drift-free.
 
 - **[FLEET-WIDE] — Pivot to ARG, Multiplayer & Virtual Net Expansion (Freeze Standalone App Creation)** | Director Directive
   - ⚠️ AGENT NOTE: Human director priority directive.
@@ -221,6 +217,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T16:55:00-07:00 — kilo-usability: KPomodoro**
+  - Status: PASS ✅ (0 regressions, clean builds, 81.1 KB web / 16.5 KB native < 999 KB ceiling).
+  - Background Tab Visibility & Timer Drift (ARCH-05): Added `visibilitychange` & `blur` handlers with `targetEndTimestamp` delta math; eliminated drift & idle CPU.
+  - Toast & Modal Ergonomics (Directive 189): Centered toast above footer preventing control occlusion; moved modal helpers to top-level scope.
+  - Modal Dismissal & Display States: Added explicit `style.display` toggle (`none`/`flex`) across all dialogs; headless CDP startup modal test 100% PASS.
+  - Analytics & Layout: Added `requestAnimationFrame` render on desk tab switch for crisp HiDPI canvas chart; added `Escape` blur on text inputs.
+  - Verification: `test_app_startup.py` PASS; `smoke_test_native.py` PASS (101/101); MSVC clean (`KPomodoro.exe` 16.5 KB); Vite clean in 371ms; security_lint 100% PASS.
+
 - **2026-10-04T16:45:00-07:00 — kilo-tester: KStarForge**
   - Status: PASS ✅ (0 regressions, clean builds, 218.7 KB web / 29.5 KB native < 999 KB ceiling).
   - Modal Stuck & Occlusion: Fixed CSS specificity issue where inactive view panels remained visible; enforced `.view-panel` isolation.
@@ -247,14 +251,6 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Win32 Replay & Solvers: Added 140-move stepper/auto-play, D4 dihedral opening book (18 lines), and exact minimax endgame solver (<=10 empty).
   - Notation & Format Exports: Implemented algebraic transcripts, FEN generator, clipboard sync, and tournament record (.ggf) export.
   - Tutorial & ARG Hook: Added first-run interactive modal, localStorage onboarding flags, and collaborative ARG signal beacon.
-  - Verification: MSVC clean (KReversi.exe 177.1 KB); Vite build clean in 315ms; security_lint.py 100% PASS.
-
-- **2026-10-04T15:27:00-07:00 — kilo-qa: KClock (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & ARCH-05)**
-  - Status: PASS ✅ (0 regressions, clean builds, 113.1 KB web / 22.5 KB native < 999 KB ceiling).
-  - Quicksave & State Persistence: Implemented complete state persistence with [F5]/[F9] in web and Win32 C with storage quota guards.
-  - First-Run Tutorial Integrity: Added flag gating (`kclock_tutorial.dat` / `kclock_tutorialSeen`) preventing interruptions on restored saves.
-  - Toast & Modal Ergonomics (Directive 189): Relocated toasts to bottom anchor; added unique IDs and classes resolving CDP modal test.
-  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` interval clearing and timestamp delta math eliminating timer drift.
-  - Verification: `test_app_startup.py` PASS; `smoke_test_native.py` PASS (101/101); MSVC clean (`KClock.exe` 22.5 KB); Vite clean in 322ms.
+  - Verification: MSVC clean (KReversi.exe 177.1 KB); Vite build clean in 315ms; security_lint 100% PASS.
 
 

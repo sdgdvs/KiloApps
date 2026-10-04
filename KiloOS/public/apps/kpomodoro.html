@@ -688,7 +688,7 @@
     inset: 0;
     background: rgba(0, 0, 0, 0.75);
     backdrop-filter: blur(4px);
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     z-index: 1000;
@@ -698,6 +698,7 @@
   }
 
   .modal-overlay.open {
+    display: flex;
     opacity: 1;
     pointer-events: auto;
   }
@@ -847,13 +848,13 @@
   /* Toast notification */
   .toast {
     position: fixed;
-    top: 58px;
-    right: 20px;
-    transform: translateY(-8px);
+    bottom: 42px;
+    left: 50%;
+    transform: translate(-50%, 8px);
     background: #1e2434;
     color: var(--text-primary);
     border: 1px solid var(--border-color);
-    padding: 8px 16px;
+    padding: 8px 18px;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
@@ -872,7 +873,7 @@
   .toast.show {
     opacity: 1;
     pointer-events: auto;
-    transform: translateY(0);
+    transform: translate(-50%, 0);
   }
 
   /* ARG Relic notification badge */
@@ -1664,6 +1665,9 @@ function showToast(msg, icon = '🍅') {
 
 // --- Timer Cycle Controller ---
 let intervalTimer = null;
+let targetEndTimestamp = null;
+let pomoWasRunningOnHide = false;
+let pomoHideTimestamp = 0;
 
 function setMode(newMode, resetTimer = true) {
   state.mode = newMode;
@@ -1695,6 +1699,7 @@ function setMode(newMode, resetTimer = true) {
   if (resetTimer) {
     state.remainingSeconds = state.targetDuration;
   }
+  targetEndTimestamp = state.isRunning ? (Date.now() + (state.remainingSeconds * 1000)) : null;
   updateTimerDisplay();
   saveState();
 }
@@ -1716,6 +1721,8 @@ function startTimer() {
   
   updateAmbience();
 
+  targetEndTimestamp = Date.now() + (state.remainingSeconds * 1000);
+
   clearInterval(intervalTimer);
   intervalTimer = setInterval(() => {
     tick();
@@ -1730,11 +1737,16 @@ function pauseTimer() {
       return false;
     }
   }
+  if (state.isRunning && targetEndTimestamp) {
+    state.remainingSeconds = Math.max(0, Math.ceil((targetEndTimestamp - Date.now()) / 1000));
+  }
   state.isRunning = false;
+  targetEndTimestamp = null;
   document.getElementById('btnStartPause').textContent = 'Start (Space)';
   document.getElementById('statusDot').classList.remove('pulse');
   document.getElementById('statusText').textContent = 'Paused';
   clearInterval(intervalTimer);
+  intervalTimer = null;
   stopAmbience();
   saveState();
   return true;
@@ -1745,6 +1757,7 @@ function resetTimer() {
     if (!pauseTimer()) return;
   }
   state.remainingSeconds = state.targetDuration;
+  targetEndTimestamp = null;
   updateTimerDisplay();
   showToast('Timer reset', '🔄');
   saveState();
@@ -1761,11 +1774,16 @@ function skipPhase() {
 }
 
 function tick() {
-  if (state.remainingSeconds > 0) {
+  if (targetEndTimestamp) {
+    state.remainingSeconds = Math.max(0, Math.ceil((targetEndTimestamp - Date.now()) / 1000));
+  } else if (state.remainingSeconds > 0) {
     state.remainingSeconds--;
-    playTick();
-    updateTimerDisplay();
-  } else {
+  }
+
+  playTick();
+  updateTimerDisplay();
+
+  if (state.remainingSeconds <= 0) {
     cycleComplete();
   }
 }
@@ -2173,7 +2191,9 @@ function initDeskNav() {
       document.getElementById('viewHistory').style.display = target === 'history' ? 'flex' : 'none';
       document.getElementById('viewPresets').style.display = target === 'presets' ? 'flex' : 'none';
 
-      if (target === 'stats') renderStats();
+      if (target === 'stats') {
+        requestAnimationFrame(() => renderStats());
+      }
       if (target === 'history') renderHistory();
     });
   });
@@ -2257,6 +2277,7 @@ function quickSave() {
 function quickLoad() {
   if (loadState()) {
     setMode(state.mode, false);
+    targetEndTimestamp = state.isRunning ? (Date.now() + (state.remainingSeconds * 1000)) : null;
     renderTasks();
     renderStats();
     renderHistory();
@@ -2288,6 +2309,7 @@ function importJSON(file) {
       if (parsed && parsed.settings && parsed.tasks) {
         Object.assign(state, parsed);
         setMode(state.mode, true);
+        targetEndTimestamp = state.isRunning ? (Date.now() + (state.remainingSeconds * 1000)) : null;
         renderTasks();
         renderStats();
         renderHistory();
@@ -2323,6 +2345,63 @@ function exportCSV() {
   a.click();
   URL.revokeObjectURL(url);
   showToast('Exported history CSV', '📊');
+}
+
+// --- Unified Modal Management (Strict Mutual Exclusivity) ---
+function openModal(id) {
+  const target = document.getElementById(id);
+  if (!target) return;
+  const tutorialModal = document.getElementById('tutorialModal');
+
+  // Auto-mark tutorial seen if moving to another modal from tutorial
+  if (tutorialModal && tutorialModal.classList.contains('open') && id !== 'tutorialModal') {
+    const chk = document.getElementById('chkDontShowTutorial');
+    if (chk && chk.checked) localStorage.setItem(TUTORIAL_FLAG, 'true');
+  }
+
+  // Close all other modals first to prevent any double-modal backdrop stacking/collisions
+  document.querySelectorAll('.modal-overlay').forEach(modal => {
+    if (modal !== target) {
+      modal.classList.remove('open');
+      modal.style.display = 'none';
+      modal.removeAttribute('aria-modal');
+    }
+  });
+
+  target.style.display = 'flex';
+  target.classList.add('open');
+  target.setAttribute('aria-modal', 'true');
+  playTone(540, 'sine', 0.04);
+}
+
+function closeModal(id) {
+  const m = document.getElementById(id);
+  if (m) {
+    if (id === 'tutorialModal') {
+      const chk = document.getElementById('chkDontShowTutorial');
+      if (chk && chk.checked) localStorage.setItem(TUTORIAL_FLAG, 'true');
+    }
+    m.classList.remove('open');
+    m.style.display = 'none';
+    m.removeAttribute('aria-modal');
+    playTone(440, 'sine', 0.03);
+  }
+}
+
+function closeAllModals() {
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    if (m.id === 'tutorialModal') {
+      const chk = document.getElementById('chkDontShowTutorial');
+      if (chk && chk.checked) localStorage.setItem(TUTORIAL_FLAG, 'true');
+    }
+    m.classList.remove('open');
+    m.style.display = 'none';
+    m.removeAttribute('aria-modal');
+  });
+}
+
+function getActiveModal() {
+  return document.querySelector('.modal-overlay.open');
 }
 
 // --- Wire Event Handlers ---
@@ -2410,62 +2489,6 @@ function initEvents() {
     });
   }
 
-  // --- Unified Modal Management (Strict Mutual Exclusivity) ---
-  const splashModal = document.getElementById('splashModal');
-  const tutorialModal = document.getElementById('tutorialModal');
-  const settingsModal = document.getElementById('settingsModal');
-
-  function openModal(id) {
-    const target = document.getElementById(id);
-    if (!target) return;
-
-    // Auto-mark tutorial seen if moving to another modal from tutorial
-    if (tutorialModal.classList.contains('open') && id !== 'tutorialModal') {
-      const chk = document.getElementById('chkDontShowTutorial');
-      if (chk && chk.checked) localStorage.setItem(TUTORIAL_FLAG, 'true');
-    }
-
-    // Close all other modals first to prevent any double-modal backdrop stacking/collisions
-    document.querySelectorAll('.modal-overlay').forEach(modal => {
-      if (modal !== target) {
-        modal.classList.remove('open');
-        modal.removeAttribute('aria-modal');
-      }
-    });
-
-    target.classList.add('open');
-    target.setAttribute('aria-modal', 'true');
-    playTone(540, 'sine', 0.04);
-  }
-
-  function closeModal(id) {
-    const m = document.getElementById(id);
-    if (m) {
-      if (id === 'tutorialModal') {
-        const chk = document.getElementById('chkDontShowTutorial');
-        if (chk && chk.checked) localStorage.setItem(TUTORIAL_FLAG, 'true');
-      }
-      m.classList.remove('open');
-      m.removeAttribute('aria-modal');
-      playTone(440, 'sine', 0.03);
-    }
-  }
-
-  function closeAllModals() {
-    document.querySelectorAll('.modal-overlay').forEach(m => {
-      if (m.id === 'tutorialModal') {
-        const chk = document.getElementById('chkDontShowTutorial');
-        if (chk && chk.checked) localStorage.setItem(TUTORIAL_FLAG, 'true');
-      }
-      m.classList.remove('open');
-      m.removeAttribute('aria-modal');
-    });
-  }
-
-  function getActiveModal() {
-    return document.querySelector('.modal-overlay.open');
-  }
-
   // Splash Screen Actions
   document.getElementById('btnSplashStart').addEventListener('click', () => {
     closeModal('splashModal');
@@ -2529,7 +2552,12 @@ function initEvents() {
 
   // Global Keyboard Navigation
   window.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+      if (e.key === 'Escape') {
+        e.target.blur();
+      }
+      return;
+    }
 
     const activeModal = getActiveModal();
 
@@ -2605,6 +2633,69 @@ function initEvents() {
   window.addEventListener('resize', () => {
     if (document.getElementById('viewStats').style.display !== 'none') {
       renderStats();
+    }
+  });
+
+  // --- Background Tab Visibility & Timer Drift Prevention (ARCH-05) ---
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      // Tab backgrounded: clear active interval and suspend audio to eliminate CPU waste
+      const now = Date.now();
+      if (state.isRunning) {
+        pomoWasRunningOnHide = true;
+        pomoHideTimestamp = now;
+        if (targetEndTimestamp) {
+          state.remainingSeconds = Math.max(0, Math.ceil((targetEndTimestamp - now) / 1000));
+        }
+      } else {
+        pomoWasRunningOnHide = false;
+      }
+
+      if (intervalTimer) {
+        clearInterval(intervalTimer);
+        intervalTimer = null;
+      }
+
+      stopAmbience();
+      if (audioCtx && audioCtx.state === 'running') {
+        try { audioCtx.suspend(); } catch (e) {}
+      }
+    } else {
+      // Tab visible again: resume audio context and compute elapsed delta via Date.now() timestamp differences
+      if (audioCtx && audioCtx.state === 'suspended') {
+        try { audioCtx.resume(); } catch (e) {}
+      }
+
+      if (pomoWasRunningOnHide) {
+        pomoWasRunningOnHide = false;
+        const now = Date.now();
+        let remaining = 0;
+        if (targetEndTimestamp) {
+          remaining = Math.max(0, Math.ceil((targetEndTimestamp - now) / 1000));
+        } else {
+          const elapsedSec = Math.floor((now - pomoHideTimestamp) / 1000);
+          remaining = Math.max(0, state.remainingSeconds - elapsedSec);
+        }
+        state.remainingSeconds = remaining;
+
+        if (remaining <= 0) {
+          cycleComplete();
+        } else {
+          targetEndTimestamp = now + (state.remainingSeconds * 1000);
+          updateTimerDisplay();
+          clearInterval(intervalTimer);
+          intervalTimer = setInterval(() => {
+            tick();
+          }, 1000);
+          updateAmbience();
+        }
+      }
+    }
+  });
+
+  window.addEventListener('blur', () => {
+    if (!state.isRunning) {
+      stopAmbience();
     }
   });
 

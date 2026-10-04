@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T15:27:00-07:00 — kilo-qa: KClock (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, clean builds, 113.1 KB web / 22.5 KB native < 999 KB ceiling).
+  - Quicksave & State Persistence: Implemented complete state persistence with [F5]/[F9] in web and Win32 C with storage quota guards.
+  - First-Run Tutorial Integrity: Added flag gating (`kclock_tutorial.dat` / `kclock_tutorialSeen`) preventing interruptions on restored saves.
+  - Toast & Modal Ergonomics (Directive 189): Relocated toasts to bottom anchor; added unique IDs and classes resolving CDP modal test.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` interval clearing and timestamp delta math eliminating timer drift.
+  - Verification: `test_app_startup.py` PASS; `smoke_test_native.py` PASS (101/101); MSVC clean (`KClock.exe` 22.5 KB); Vite clean in 322ms.
+
 - **2026-10-04T14:52:00-07:00 — kilo-tester: KTask (Interactive UI Audit, CSS Brace Balance & Modal Dismissal Fixes)**
   - Status: PASS ✅ (2 issues, 2 fixed; 175.8 KB web / 31.2 KB native < 999 KB ceiling).
   - Static CSS Balance: Fixed unclosed `.help-kbd` CSS brace resolving headless cascade parser failure.
