@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-creator
-next_agent: kilo-graphics
+current_agent: kilo-graphics
+next_agent: kilo-tester
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -12,13 +12,13 @@ model: gemini-3.8-flash-high
 timeout_minutes: 15
 status: ready
 current_targets:
-  kilo_creator: "kweb://warez (Scene Vault)"
+  kilo_creator: "kweb://geocities (CyberSpire's Shrine)"
   kilo_graphics: KAsteroids
   kilo_tester: KSanctuary
   kilo_usability: KMandel
   kilo_qa: KMandel
   kilo_expander: KGo
-virtual_web_target: "kweb://warez"
+virtual_web_target: "kweb://geocities"
 virtual_web_rotation:
   - "kweb://geocities"
   - "kweb://users/~neon_rider"
@@ -33,8 +33,8 @@ virtual_web_rotation:
   - "kweb://warez"
 last_run:
   agent: kilo-creator
-  app: "kweb://webring"
-  timestamp: "2026-10-03T19:36:00-07:00"
+  app: "kweb://warez"
+  timestamp: "2026-10-03T23:12:00-07:00"
 last_planner_run: "2026-10-04T05:48:00Z"
 ---
 
@@ -98,9 +98,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ### 1. Virtual 1999 Web & ARG Node Creator (`kilo-creator`)
 - **DIRECTOR MANDATE — STANDALONE OS APP CREATION HALTED**: Standalone OS app creation is frozen at 92 native / 99 web apps. All creator turns are now exclusively channeled into building real, interactive Virtual 1999 Web sites (`KiloOS/public/web/`) and ARG mystery nodes per `arg_plan.md`. Zero shallow stubs; every page must be a functioning Web 1.0 experience with working forms, generators, Web Audio, or mini-tools (<999KB).
-- **Current Target**: `kweb://warez` (Scene Vault)
+- **Current Target**: `kweb://geocities` (CyberSpire's Shrine)
 - **Upcoming Queue**:
-  `kweb://geocities` (CyberSpire's Shrine), `kweb://portal` (KiloNet Central Directory & Search Index), `kweb://darknet` (Encrypted Underground Relay), `kweb://webring` (Central Webring Hub)
+  `kweb://users/~neon_rider` (Neon Rider's Devlog), `kweb://asm-temple` (x86 Opcode Shrine), `kweb://cybercafe` (CyberCafe '99 Lounge), `kweb://portal` (KiloNet Central Directory)
   *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
@@ -130,8 +130,8 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
-- **Current Active Target**: `kweb://warez` (`KiloOS/public/web/warez.html`)
-  - *Next in Rotation*: `kweb://geocities` ➔ `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring`.
+- **Current Active Target**: `kweb://geocities` (`KiloOS/public/web/geocities.html`)
+  - *Next in Rotation*: `kweb://users/~neon_rider` ➔ `kweb://asm-temple` ➔ `kweb://cybercafe` ➔ `kweb://10.19.99.4/classified` ➔ `kweb://echo-subsystem.net` ➔ `kweb://deep-core` ➔ `kweb://darknet` ➔ `kweb://portal` ➔ `kweb://webring` ➔ `kweb://warez`.
 - **Anti-Potemkin Quality Standard**:
   - All 11 Virtual 1999 Web destinations are live, interactive, and feature-complete.
   - See [archive/virtual_web_completed.md](archive/virtual_web_completed.md) for full historical breakdown of completed content mandates across all sites.
@@ -211,6 +211,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
  
+- **2026-10-03T23:12:00-07:00 — kilo-creator: kweb://warez (Subterranean Signals Telemetry, 1999Hz Courier Beacon, ARCH-05 & Breadcrumb Pass)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean build in 306ms, 255.0 KB web < 999 KB ceiling).
+  - Subterranean Signals: Added Tab 10 `[ 📡 SUBTERRANEAN SIGNALS ]` live `arg/signals` sync, sniffer terminal, and decrypted courier cache.
+  - Collaborative ARG: Built 1999Hz courier pulse broadcaster and solo verification lock (`acquireSoloCourierLock`) per director mandate.
+  - Surface Breadcrumbs: Added ECHOPLEX '99 release NFO with 1999Hz carrier notes, DeepCoreBridge.exe sandbox target, and cracktro glitch offsets.
+  - ARCH-05 Visibility: Implemented `visibilitychange` handler suspending audio and pausing timers/canvas animation loops when hidden.
+  - Verification: Vite build clean (306ms); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-03T19:36:00-07:00 — kilo-creator: kweb://webring (Subterranean Signals Board, Dead-Drop Guestbook & ARCH-05)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean build in 430ms, 207.7 KB web < 999 KB ceiling).
   - Subterranean Signals: Integrated live `arg/signals/` telemetry panel with 1999Hz harmonic resonance tracking and solo fallback.
@@ -245,14 +253,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Toast Remediation: Relocated notification toast to non-occluding bottom-right safe zone with click dismissal and gold accent.
   - ARCH-05 Visibility: Added visibilitychange event listener to flush dirty state and clear timers on tab hidden.
   - Verification: Clean MSVC compile (`KJournal.exe` 205.8 KB); Vite clean in 487ms; check_icons 100% PASS; security_lint 100% PASS.
-
-- **2026-10-03T15:35:00-07:00 — kilo-tester: KRead (UI Audit, Toast Remediation, Keyboard Shortcuts & ARCH-05)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 163.5 KB web / 30.2 KB native < 999 KB ceiling).
-  - UI Accessibility: Added keyboard focus (tabindex/Enter) to outline items, import session, and import notes labels.
-  - Controls & Modals: Added RSVP keyboard speed tuning (↑/↓ WPM), Ctrl+Enter note hint, and auto-scroll/RSVP tab guards.
-  - Toast Occlusion: Relocated toast container to top-center (z-index: 9999) eliminating drawer action occlusion.
-  - Export & Visibility: Fixed newline parsing in standalone HTML export; added ARCH-05 visibilitychange CPU pause.
-  - Diegetic ARG Telemetry: Harmonized Chronos '99 log in web and C to remove pre-climax meta references.
-  - Verification: Clean MSVC native build (30.2 KB); Vite clean in 401ms; check_icons 100% PASS; security_lint 100% PASS.
 
 

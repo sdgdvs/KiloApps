@@ -253,6 +253,82 @@
   .group-skd { background: rgba(255, 221, 0, 0.15); color: #facc15; border: 1px solid #ca8a04; }
   .group-cls { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid #9333ea; }
   .group-cyb { background: rgba(249, 115, 22, 0.15); color: #fb923c; border: 1px solid #ea580c; }
+  .group-ech { background: rgba(192, 132, 252, 0.15); color: #c084fc; border: 1px solid #9333ea; }
+
+  /* Subterranean Signals CSS */
+  .signals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .signal-card {
+    background: #080f1a;
+    border: 1px solid #1e3a29;
+    padding: 10px 12px;
+    border-radius: 4px;
+    position: relative;
+    transition: all 0.2s ease;
+  }
+  .signal-card.active-pulse {
+    border-color: var(--accent-green);
+    box-shadow: 0 0 10px rgba(0, 255, 102, 0.2);
+  }
+  .signal-card-title {
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--accent-cyan);
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .signal-card-metric {
+    font-size: 10px;
+    color: #94a3b8;
+    margin-bottom: 2px;
+  }
+  .signal-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .dot-online { background: #10b981; box-shadow: 0 0 6px #10b981; }
+  .dot-idle { background: #64748b; }
+  .dot-pulse { background: #facc15; box-shadow: 0 0 8px #facc15; }
+
+  .sniffer-box {
+    background: #03060c;
+    border: 1px solid #14243b;
+    padding: 8px 10px;
+    font-size: 10px;
+    height: 140px;
+    overflow-y: auto;
+    font-family: 'Consolas', monospace;
+    color: #34d399;
+    line-height: 1.45;
+    border-radius: 4px;
+  }
+  .sniffer-line {
+    margin-bottom: 2px;
+    word-break: break-all;
+  }
+  .sniffer-time { color: #64748b; margin-right: 6px; }
+  .sniffer-tag { color: #facc15; font-weight: bold; margin-right: 4px; }
+  .sniffer-beacon { color: #38bdf8; font-weight: bold; }
+  .sniffer-alert { color: #f43f5e; font-weight: bold; }
+
+  .cache-terminal {
+    background: #040911;
+    border: 1px solid #10b981;
+    padding: 12px 14px;
+    border-radius: 4px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: #d1fae5;
+    margin-bottom: 12px;
+  }
 
   .btn-cracktro {
     background: #064e3b;
@@ -1028,6 +1104,19 @@
     <span style="font-size:10px; color:#fbcfe8;">NODE: 1999.0x7F // PROTOCOL: KWEB</span>
   </div>
 
+  <!-- Global Subterranean Signals Telemetry Bar -->
+  <div class="subterranean-telemetry-bar" style="background:#040911; border:1px solid #1e3a29; padding:6px 12px; margin-bottom:12px; border-radius:4px; font-size:11px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+    <div style="display:flex; align-items:center; gap:8px;">
+      <span style="color:var(--accent-yellow); font-size:12px;">📡</span>
+      <span style="color:#94a3b8; font-weight:bold;">SUBTERRANEAN COURIER RELAY [1999Hz]:</span>
+      <span id="globalSignalStatusBadge" style="color:var(--accent-green); font-weight:bold;">MONITORING (0x7F ACTIVE)</span>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center; font-size:10px;">
+      <span id="globalActiveBeaconsCount" style="color:#38bdf8;">1 BEACON SYNCHRONIZED</span>
+      <button class="btn-filter" style="padding:2px 8px; font-size:10px; color:var(--accent-cyan); border-color:#0284c7;" onclick="switchMainTab('signals', document.querySelectorAll('.tab-btn')[9])">[ 📡 OPEN SIGNALS LAB ]</button>
+    </div>
+  </div>
+
   <!-- Navigation Tabs -->
   <div class="nav-tabs">
     <button class="tab-btn active" onclick="switchMainTab('releases', this)">[ 💾 RELEASES &amp; CRACKTROS ]</button>
@@ -1039,6 +1128,7 @@
     <button class="tab-btn" onclick="switchMainTab('composer', this)">[ 🎹 TRACKER COMPOSER ]</button>
     <button class="tab-btn" onclick="switchMainTab('charts', this)">[ 🏆 SCENE CHARTS &amp; CHALLENGE ]</button>
     <button class="tab-btn" onclick="switchMainTab('shoutbox', this)">[ 💬 UNDERGROUND SHOUTBOX ]</button>
+    <button class="tab-btn" onclick="switchMainTab('signals', this)">[ 📡 SUBTERRANEAN SIGNALS ]</button>
   </div>
 
   <!-- ================================================================= -->
@@ -1121,6 +1211,7 @@
             <option value="voidcraft.exe">voidcraft.exe (BattleNet Auth Check)</option>
             <option value="sun99.exe">sun99.exe (SecuROM CD-ROM Check)</option>
             <option value="everrealm.exe">everrealm.exe (Packet Relay CRC Auth)</option>
+            <option value="DeepCoreBridge.exe">DeepCoreBridge.exe (Ring-0 Carlsbad Airgap)</option>
           </select>
           <span id="sandboxStatusBadge" style="padding:2px 8px; border-radius:3px; font-size:10px; font-weight:bold; background:rgba(239, 68, 68, 0.15); color:#ef4444; border:1px solid #dc2626;">
             [PROTECTED: CD-CHECK ACTIVE]
@@ -1534,6 +1625,7 @@ Tested clean on Windows 98 SE and DOS 7.1.</textarea>
             <option value="flt_ut99">FLARELIGHT - Surreal Tournament (flt_ut99.nfo)</option>
             <option value="rzr_q3a">RAZOR 1999 - Tremor III Arena (rzr_q3a.nfo)</option>
             <option value="pdx_hl">PARALAX - Half-Cycle 1.1 (pdx_hl.nfo)</option>
+            <option value="ech_transponder">ECHOPLEX - 1999Hz Transponder (ech_transponder.nfo)</option>
             <option value="carlsbad_relay">COURIER DISPATCH - Carlsbad Salt Vault (carlsbad.nfo)</option>
             <option value="custom">-- Custom Scener NFO Buffer --</option>
           </select>
@@ -1769,6 +1861,90 @@ Tested clean on Windows 98 SE and DOS 7.1.</textarea>
         <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertShoutTag('[SCENE]')">[SCENE]</button>
         <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="insertShoutTag('[YM2612]')">[YM2612]</button>
         <button class="btn-filter" style="font-size:10px; padding:2px 6px; border-color:#e11d48; color:#fda4af;" onclick="insertShoutTag('1999Hz')">[1999Hz ECHO]</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================================================================= -->
+  <!-- TAB 10: SUBTERRANEAN SIGNALS & COURIER TELEMETRY                  -->
+  <!-- ================================================================= -->
+  <div id="tab-signals" class="tab-content">
+    <div class="section-box">
+      <div class="section-title">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <span>📡 COLLABORATIVE SUBTERRANEAN SIGNALS TELEMETRY [arg/signals]</span>
+          <div class="presence-badge" id="signalsLockBadge" style="border-color:#ca8a04; color:#facc15;">
+            <span class="presence-dot" style="background:#facc15;"></span>
+            <span id="signalsResonanceLabel">CARRIER LOCK: MONITORING</span>
+          </div>
+        </div>
+        <span style="font-size:10px; color:#38bdf8;">CARRIER: 1999.00 Hz • LITHOSPHERIC MESH</span>
+      </div>
+
+      <div style="font-size:11px; color:#94a3b8; margin-bottom:12px; line-height:1.5;">
+        Monitors clandestine subcarrier pulses transmitted across subterranean demoscene gateways and dial-up endpoints.
+        When multiple subterranean beacons synchronize on 1999Hz, the unmapped transponder route resonates and reveals the 0xRELEASE courier intel cache.
+      </div>
+
+      <!-- Node Telemetry Grid -->
+      <div class="signals-grid" id="warezSignalsList">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Controls -->
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; background:#040911; border:1px dashed #1e3a29; padding:10px; margin-bottom:14px; border-radius:4px;">
+        <div id="warezSignalStatusText" style="font-size:11px; color:var(--accent-green);">
+          Status: LISTENING ON SUBCARRIER CHANNEL 1999Hz...
+        </div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn-gen" onclick="transmit1999HzCourierBeacon()" style="font-size:11px; padding:5px 10px;">
+            ⚡ TRANSMIT 1999Hz BEACON
+          </button>
+          <button class="btn-filter" onclick="acquireSoloCourierLock()" style="border-color:#facc15; color:#facc15; font-size:11px; padding:5px 10px;" title="Acquire solo verification lock via cached courier relays">
+            🌐 ACQUIRE SOLO COURIER LOCK
+          </button>
+          <button class="btn-filter" onclick="refreshSignalTelemetry()" style="font-size:11px; padding:5px 8px;">
+            🔄 REFRESH
+          </button>
+        </div>
+      </div>
+
+      <!-- Decrypted Courier Cache (Unlocked on 3+ nodes active or Solo Lock) -->
+      <div id="warezDecryptedCacheBox" class="cache-terminal" style="display:none;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; border-bottom:1px solid #1e3a29; padding-bottom:4px;">
+          <span style="color:#facc15; font-weight:bold;">🔓 [DECRYPTED INTEL: 0xRELEASE SUBTERRANEAN COURIER ARCHIVE]</span>
+          <span style="font-size:10px; color:#10b981;">STATUS: HARMONIC RESONANCE ESTABLISHED</span>
+        </div>
+        <div style="margin-bottom:8px; color:#94a3b8; font-size:10px;">
+          ORIGIN: CARLSBAD AIRGAP CORE (10.19.99.127:1999) &bull; TARGET GATEWAY: 10.19.99.4:1999 &bull; RING-0 INTEGRITY: 100%
+        </div>
+        <div style="background:#02050b; border:1px solid #14243b; padding:8px 10px; border-radius:3px; margin-bottom:10px; font-family:'Consolas', monospace; font-size:11px; line-height:1.5;">
+          <span style="color:#38bdf8;">[SECTOR 01 - MEM_HEAP]</span>    : Heap boundary residue confirmed at <strong style="color:#4ade80;">0x007F1999</strong> (Key: <code>7F1999</code>)<br>
+          <span style="color:#38bdf8;">[SECTOR 02 - AUDIO_DSP]</span>   : Carrier phase locked at <strong style="color:#facc15;">1999.00 Hz</strong> (YM2612 2-Op FM modulation)<br>
+          <span style="color:#38bdf8;">[SECTOR 03 - NET_RELAY]</span>   : Subterranean relay gateway: <strong style="color:#c084fc;">10.19.99.4</strong> (Darknet Node 0x7F)<br>
+          <span style="color:#38bdf8;">[SECTOR 04 - STORAGE_VFS]</span> : Log inode 0x1990 located at <code>/system/recovery/1999.log</code><br>
+          <span style="color:#38bdf8;">[SECTOR 05 - CORE_AI]</span>     : Precursor Singularity lattice quarantined behind Carlsbad airgap
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+          <button class="btn-filter" style="border-color:#38bdf8; color:#38bdf8;" onclick="downloadCourierIntelNfo()">[ 📜 DOWNLOAD COURIER INTEL .NFO ]</button>
+          <button class="btn-filter" style="border-color:#4ade80; color:#4ade80;" onclick="loadDeepCoreBridgeInSandbox()">[ 🛠️ REVERSE DEEPCOREBRIDGE.EXE ]</button>
+          <button class="btn-filter" style="border-color:#facc15; color:#facc15;" onclick="playCarlsbadDroneInJukebox()">[ 🎵 PLAY 1999Hz CARLSBAD DRONE ]</button>
+        </div>
+      </div>
+
+      <!-- Real-Time Datagram Packet Sniffer -->
+      <div style="margin-top:14px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+          <span style="font-size:11px; font-weight:bold; color:var(--accent-cyan);">📡 REAL-TIME SUBTERRANEAN DATAGRAM SNIFFER</span>
+          <div style="display:flex; gap:4px;">
+            <button class="btn-filter active" style="font-size:10px; padding:2px 6px;" onclick="filterSniffer('all', this)">ALL</button>
+            <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="filterSniffer('1999hz', this)">1999Hz</button>
+            <button class="btn-filter" style="font-size:10px; padding:2px 6px;" onclick="clearSnifferLog()">CLEAR</button>
+          </div>
+        </div>
+        <div class="sniffer-box" id="warezDatagramSniffer">
+          <!-- Populated live -->
+        </div>
       </div>
     </div>
   </div>
@@ -2108,6 +2284,21 @@ const RELEASES = [
     shape: "wavegrid",
     scrollerText: "SKID VECTOR >> DEATHRACE 2000 3DFX GLIDE WRAPPER >> FULL SPEED DEMOLITION >> RESPECT THE 1999 SCENE >>",
     nfoFile: "skd_carmag.nfo"
+  },
+  {
+    id: "ech_transponder",
+    date: "1999-12-28",
+    group: "ECHOPLEX",
+    groupClass: "group-ech",
+    title: "Project Echo: 1999Hz Subcarrier Transponder v1.0",
+    media: "01x1.44MB",
+    type: "crack",
+    typeName: "Transponder Fix",
+    targetExe: "DeepCoreBridge.exe",
+    songIndex: 6,
+    shape: "wavegrid",
+    scrollerText: ">>> ECHOPLEX '99 SCENE COURIER NETWORK <<< INTERCEPTING 1999Hz ECHO TRANSMISSIONS ACROSS T1 TRUNKS >>> MEMORY HEAP OFFSET 0x007F1999 DETECTED >>> CARLSBAD VAULT TRANSIT ACTIVE >>> RESPECT THE RETRO SCENE! <<<",
+    nfoFile: "ech_transponder.nfo"
   }
 ];
 
@@ -2187,6 +2378,8 @@ function switchMainTab(tabId, btn) {
     initStego();
   } else if (tabId === 'composer') {
     initComposer();
+  } else if (tabId === 'signals') {
+    initSubterraneanSignals();
   }
 }
 
@@ -3412,6 +3605,7 @@ function buildDetailedNfo(rel) {
   const group = rel.group;
   const isPdx = rel.id === 'pdx_hl';
   const isRzr = rel.id === 'rzr_q3a';
+  const isEch = rel.id === 'ech_transponder';
 
   let customNote = `Welcome to another quality release from ${group}!
 This crack decouples memory constraints and removes all physical disc checks.
@@ -3432,6 +3626,18 @@ RAZOR 1999 radio couriers report strange packet bursts echoing on 1999Hz.
 Data contains fragmented strings from Carlsbad salt vaults on subnet 10.19.99.0/24.
 Do not attempt direct ping without entering correct transponder coordinates.
 Relay gateway confirmed at Node 0x7F. Seek out the living machine.`;
+  } else if (isEch) {
+    customNote = `================ [ ECHOPLEX SCENE COURIER BULLETIN ] ================
+During late December 1999 packet routing on European & transatlantic trunks,
+our scene couriers intercepted persistent high-frequency carrier bursts modulated
+at exactly 1999Hz. Data packets contain header signatures linking to non-routable
+intranet relays 10.19.99.4 and 10.19.99.19.
+
+Reverse-engineering disassembly confirms memory residue matching Sector 01
+at hex offset 0x007F1999 ('7F1999'). The carrier echoes transmissions originating
+from the Carlsbad subterranean salt vaults. Tune your audio receiver or transponder
+to 1999Hz to establish coherent harmonic lock with the living machine.
+========================================================================`;
   }
 
   return `
@@ -3675,6 +3881,30 @@ const SANDBOX_TARGETS = {
       "45 76 65 72 52 65 61 6C  6D 20 53 4B 49 44 20 00",
       "31 30 2E 31 39 2E 39 39  2E 31 32 37 3A 31 39 39"
     ]
+  },
+  "DeepCoreBridge.exe": {
+    name: "DeepCoreBridge.exe",
+    protection: "Ring-0 Carlsbad Airgap Check",
+    checkAddr: "007F1999",
+    instructions: [
+      { addr: "007F1990", bytes: "55", inst: "PUSH EBP", comment: "; Prologue at Sector 01 heap boundary" },
+      { addr: "007F1991", bytes: "89 E5", inst: "MOV EBP, ESP", comment: "; Setup stack frame" },
+      { addr: "007F1993", bytes: "E8 40 19 00 00", inst: "CALL ProbeCarrier1999Hz", comment: "; Harmonic transponder lock query" },
+      { addr: "007F1998", bytes: "85 C0", inst: "TEST EAX, EAX", comment: "; EAX = 1 if 1999Hz carrier coherent" },
+      { addr: "007F199A", bytes: "74 0D", inst: "JZ loc_airgap_quarantine", comment: "; JZ if carrier phase desynced!", isJump: true, target: "007F19AB" },
+      { addr: "007F199C", bytes: "B8 01 00 00 00", inst: "MOV EAX, 0x01", comment: "; Transponder bridge unlocked (10.19.99.127)" },
+      { addr: "007F19A1", bytes: "89 EC", inst: "MOV ESP, EBP", comment: "; Epilogue" },
+      { addr: "007F19A3", bytes: "5D", inst: "POP EBP", comment: "" },
+      { addr: "007F19A4", bytes: "C3", inst: "RET", comment: "; Route to deep-core gateway" },
+      { addr: "007F19AB", bytes: "B8 00 00 00 00", inst: "MOV EAX, 0x00", comment: "; loc_airgap_quarantine: Packet dropped" },
+      { addr: "007F19B0", bytes: "C3", inst: "RET", comment: "; Terminate" }
+    ],
+    initialHex: [
+      "55 89 E5 E8 40 19 00 00  85 C0 74 0D B8 01 00 00",
+      "00 89 EC 5D C3 B8 00 00  00 00 C3 90 90 90 90 90",
+      "45 43 48 4F 2D 31 39 39  39 2D 53 59 53 54 45 4D",
+      "44 45 45 50 20 43 4F 52  45 20 42 52 49 44 47 45"
+    ]
   }
 };
 
@@ -3807,7 +4037,11 @@ function renderSandboxUI() {
       statusBadge.style.background = "rgba(16, 185, 129, 0.2)";
       statusBadge.style.color = "#34d399";
       statusBadge.style.borderColor = "#10b981";
-      statusBadge.textContent = "[CRACKED: PROTECTION BYPASSED]";
+      if (sandboxActiveTarget === "DeepCoreBridge.exe") {
+        statusBadge.textContent = "[AIRGAP BYPASSED: 0x007F1999 REACHABLE]";
+      } else {
+        statusBadge.textContent = "[CRACKED: PROTECTION BYPASSED]";
+      }
     } else {
       statusBadge.style.background = "rgba(239, 68, 68, 0.15)";
       statusBadge.style.color = "#ef4444";
@@ -3819,7 +4053,11 @@ function renderSandboxUI() {
   if (crackText) {
     if (sandboxIsCracked) {
       crackText.style.color = "#34d399";
-      crackText.textContent = "CRACKED & READY TO EXPORT";
+      if (sandboxActiveTarget === "DeepCoreBridge.exe") {
+        crackText.textContent = "CARLSBAD AIRGAP BYPASSED - 10.19.99.127 UNLOCKED";
+      } else {
+        crackText.textContent = "CRACKED & READY TO EXPORT";
+      }
     } else {
       crackText.style.color = "#ef4444";
       crackText.textContent = "UNCRACKED";
@@ -4169,6 +4407,17 @@ function startWorkbenchAnimation() {
       }
     }
 
+    // Subtle periodic memory residue glitch in workbench
+    const wbGlitch = wbAnimTime % 7.0;
+    if (wbGlitch > 5.5 && wbGlitch < 6.0) {
+      wbCtx.fillStyle = "rgba(0, 255, 102, 0.08)";
+      wbCtx.fillRect(0, 0, w, h);
+      wbCtx.font = "10px Consolas, monospace";
+      wbCtx.fillStyle = "rgba(0, 255, 102, 0.85)";
+      wbCtx.fillText("[MEM_RESIDUE]: 0x007F1999 • HOP 5: 10.19.99.127", 16, 24);
+      wbCtx.fillText("1999Hz CARRIER COHERENCE: LOCKED", 16, 38);
+    }
+
     wbAnimId = requestAnimationFrame(renderWb);
   }
 
@@ -4371,6 +4620,27 @@ const STEGO_PRESETS = {
   Carrier detected: 1999Hz on European transit lines.             
   Steganographic seed decoded at Node 0x7F subterranean relay.    
  -----------------------------------------------------------------`,
+  ech_transponder: `  ███████╗ ██████╗██╗  ██╗ ██████╗ ██████╗ ██╗     ███████╗██╗  ██╗
+  ██╔════╝██╔════╝██║  ██║██╔═══██╗██╔══██╗██║     ██╔════╝╚██╗██╔╝
+  █████╗  ██║     ███████║██║   ██║██████╔╝██║     █████╗   ╚███╔╝ 
+  ██╔══╝  ██║     ██╔══██║██║   ██║██╔═══╝ ██║     ██╔══╝   ██╔██╗ 
+  ███████╗╚██████╗██║  ██║╚██████╔╝██║     ███████╗███████╗██╔╝ ██╗
+  ╚══════╝ ╚═════╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚══════╝╚══════╝╚═╝  ╚═╝
+ ---------------------------------------------------------------------
+  ECHOPLEX '99 SCENE DIVISION : Project Echo 1999Hz Subcarrier Fix
+ ---------------------------------------------------------------------
+  Release Date : 1999-12-28        Author     : CourierEcho_0x7F
+  Carrier Freq : 1999.00 Hz        Protection : Ring-0 Carlsbad Airgap
+  Target Exe   : DeepCoreBridge    Offset     : 0x007F1999
+ ---------------------------------------------------------------------
+ [ COURIER NOTES ]
+ During transatlantic packet routing, our Scandinavian nodes intercepted
+ anomalous acoustic echo bursts on 1999Hz carrier.
+ Header fragments link directly to classified intranet host 10.19.99.4.
+ Reverse engineering verifies memory residue at offset 0x007F1999.
+ Disassemble DeepCoreBridge.exe and NOP out the airgap JZ branch!
+ ---------------------------------------------------------------------
+ 01000101 01000011 01001000 01001111 00101101 00110001 00111001 00111001`,
   carlsbad_relay: ` === [ UNDERGROUND COURIER DISPATCH // CARLSBAD SALT VAULT ] ===
  NODE ID     : RELAY_0x7F_CARLSBAD
  SUBNET      : 10.19.99.127:1999 -> 10.19.99.4:1999
@@ -5424,6 +5694,10 @@ function checkDeadDropTriggers(msg) {
         renderShouts(localShouts);
       }
 
+      if (typeof broadcastCourierSignal === 'function') {
+        broadcastCourierSignal('dead_drop_trigger', { trigger: '1999Hz_Echo_Ack', offset: '0x007F1999' });
+      }
+
       initAudio();
       playYm2612Fm(880, 2.5, 3.0, 0.3, audioCtx.currentTime, 0.25);
     }, 800);
@@ -5444,6 +5718,390 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
+// ==========================================
+// 12. SUBTERRANEAN SIGNALS TELEMETRY & COURIER CACHE [arg/signals]
+// ==========================================
+let subterraneanSignals = {};
+let snifferPackets = [
+  { type: "IP_HOP", text: "HOP 3 (10.19.99.4) -> HOP 5 (10.19.99.127): ICMP subcarrier probe ACK [0.4ms]", time: "23:58:12" },
+  { type: "SUBCARRIER", text: "Demodulating 1999.00 Hz FM carrier on Carlsbad trunk", time: "23:58:44" },
+  { type: "MEM_HEAP", text: "Offset 0x007F1999 matched PAGE_EXECUTE_READWRITE signature", time: "23:59:02" }
+];
+let snifferFilter = 'all';
+
+function initSubterraneanSignals() {
+  try {
+    const saved = localStorage.getItem('knet_subterranean_signals');
+    if (saved) {
+      subterraneanSignals = JSON.parse(saved);
+    }
+  } catch (e) {}
+
+  if (!subterraneanSignals['subterranean_warez']) {
+    subterraneanSignals['subterranean_warez'] = {
+      source: "scene_vault_0x7f",
+      label: "0xRELEASE Scene Vault #003",
+      ip: "10.19.99.77",
+      frequency: 1999,
+      status: "ONLINE",
+      timestamp: Date.now()
+    };
+  }
+  renderSubterraneanSignals();
+  renderSnifferUI();
+}
+
+function renderSubterraneanSignals() {
+  const container = document.getElementById('warezSignalsList');
+  const statusText = document.getElementById('warezSignalStatusText');
+  const cacheBox = document.getElementById('warezDecryptedCacheBox');
+  const globalBadge = document.getElementById('globalSignalStatusBadge');
+  const globalCount = document.getElementById('globalActiveBeaconsCount');
+  const lockBadge = document.getElementById('signalsLockBadge');
+  const resonanceLabel = document.getElementById('signalsResonanceLabel');
+
+  const standardNodes = [
+    { key: "subterranean_warez", label: "0xRELEASE Scene Vault #003", ip: "10.19.99.77", defaultFreq: 1999 },
+    { key: "subterranean_webring", label: "Webring Hub #000", ip: "10.19.99.1", defaultFreq: 1999 },
+    { key: "subterranean_classified", label: "Carlsbad Intranet #015", ip: "10.19.99.4", defaultFreq: 1999 },
+    { key: "subterranean_echo", label: "Echo Acoustic Lab #016", ip: "10.19.99.8", defaultFreq: 1999 },
+    { key: "subterranean_darknet", label: "Darknet Relay #018", ip: "10.19.99.12", defaultFreq: 1999 }
+  ];
+
+  if (!container) return;
+  container.innerHTML = '';
+
+  const now = Date.now();
+  let activeNodes = 0;
+
+  standardNodes.forEach(node => {
+    const sig = subterraneanSignals[node.key];
+    const ts = (sig && sig.timestamp) ? sig.timestamp : 0;
+    const ageSec = Math.floor((now - ts) / 1000);
+    const isRecent = ageSec < 120 && ts > 0;
+    if (isRecent) activeNodes++;
+
+    const freq = (sig && sig.frequency) ? `${sig.frequency}Hz` : `${node.defaultFreq}Hz`;
+    const action = (sig && sig.action) ? sig.action : (sig && sig.status ? sig.status : (isRecent ? "HARMONIC_PULSE" : "LISTENING"));
+    const handle = (sig && sig.handle) ? sig.handle : (sig && sig.source ? sig.source : "System_Daemon");
+
+    const dotClass = isRecent ? (ageSec < 15 ? 'dot-pulse' : 'dot-online') : 'dot-idle';
+
+    const card = document.createElement('div');
+    card.className = `signal-card ${isRecent && ageSec < 15 ? 'active-pulse' : ''}`;
+    card.innerHTML = `
+      <div class="signal-card-title">
+        <span>${node.label}</span>
+        <span class="signal-dot ${dotClass}" title="${isRecent ? 'Active carrier beacon' : 'Idle listener'}"></span>
+      </div>
+      <div class="signal-card-metric">IP: <strong style="color:#d1fae5;">${node.ip}</strong> • FREQ: <strong style="color:#facc15;">${freq}</strong></div>
+      <div class="signal-card-metric">SOURCE: <span style="color:#38bdf8;">${handle}</span></div>
+      <div class="signal-card-metric">ACTION: <code style="color:#6ee7b7; font-size:10px;">${action}</code></div>
+      <div style="font-size:9px; color:#64748b; margin-top:4px;">
+        ${ts > 0 ? (ageSec < 5 ? 'Just now' : `${ageSec}s ago`) : 'Awaiting pulse'}
+      </div>
+    `;
+    container.appendChild(card);
+  });
+
+  if (globalCount) globalCount.textContent = `${activeNodes} BEACON${activeNodes === 1 ? '' : 'S'} SYNCHRONIZED`;
+
+  const isResonating = activeNodes >= 3;
+  if (isResonating) {
+    if (cacheBox) cacheBox.style.display = 'block';
+    if (statusText) {
+      statusText.textContent = `★ HARMONIC LOCK ACQUIRED: ${activeNodes}/5 BEACONS RESONATING AT 1999Hz ★`;
+      statusText.style.color = '#facc15';
+    }
+    if (globalBadge) {
+      globalBadge.textContent = `RESONATING (${activeNodes} NODES LOCKED)`;
+      globalBadge.style.color = '#facc15';
+    }
+    if (lockBadge) {
+      lockBadge.style.borderColor = '#10b981';
+      lockBadge.style.color = '#34d399';
+    }
+    if (resonanceLabel) resonanceLabel.textContent = `CARRIER LOCK: RESONATING (${activeNodes}/5)`;
+  } else {
+    if (statusText) {
+      statusText.textContent = `Status: LISTENING ON SUBCARRIER CHANNEL 1999Hz (${activeNodes}/5 ACTIVE)...`;
+      statusText.style.color = 'var(--accent-green)';
+    }
+    if (globalBadge) {
+      globalBadge.textContent = activeNodes > 0 ? `SYNCING (${activeNodes} ACTIVE)` : "MONITORING (0x7F ACTIVE)";
+      globalBadge.style.color = activeNodes > 0 ? "#38bdf8" : "var(--accent-green)";
+    }
+    if (lockBadge) {
+      lockBadge.style.borderColor = '#ca8a04';
+      lockBadge.style.color = '#facc15';
+    }
+    if (resonanceLabel) resonanceLabel.textContent = `CARRIER LOCK: MONITORING (${activeNodes}/5)`;
+  }
+}
+
+function transmit1999HzCourierBeacon() {
+  initAudio();
+  playYm2612Fm(1999.0, 1.0, 1.8, 0.4, audioCtx.currentTime, 1.2, true);
+
+  const handleInput = document.getElementById('shoutHandleInput');
+  const handle = (handleInput && handleInput.value) ? handleInput.value.trim() : "Courier_99";
+  const now = Date.now();
+
+  const payload = {
+    source: "scene_vault_0x7f",
+    handle: handle,
+    frequency: 1999,
+    action: "courier_beacon_1999hz",
+    timestamp: now,
+    status: "PULSING"
+  };
+
+  subterraneanSignals['subterranean_warez'] = payload;
+  try {
+    localStorage.setItem('knet_subterranean_signals', JSON.stringify(subterraneanSignals));
+  } catch (e) {}
+
+  if (window.WarezSignalBroadcast) {
+    window.WarezSignalBroadcast(payload);
+  }
+
+  appendSnifferPacket('BEACON', `[1999Hz_PULSE] Dispatched from ${handle} @ Node 0x7F (10.19.99.77)`);
+  renderSubterraneanSignals();
+  showNoticeToast("⚡ 1999Hz Courier Beacon Transmitted to Carlsbad Relay 0x7F!");
+}
+
+function acquireSoloCourierLock() {
+  initAudio();
+  playYm2612Fm(1999.0, 1.5, 2.5, 0.5, audioCtx.currentTime, 1.5, true);
+  setTimeout(() => playYm2612Fm(880, 2.0, 2.0, 0.2, audioCtx.currentTime, 0.4), 150);
+  setTimeout(() => playYm2612Fm(1320, 2.0, 2.0, 0.3, audioCtx.currentTime, 0.6), 300);
+
+  const now = Date.now();
+  subterraneanSignals['subterranean_warez'] = { source: "scene_vault_0x7f", handle: "Courier_Solo", frequency: 1999, timestamp: now, status: "PULSING" };
+  subterraneanSignals['subterranean_webring'] = { source: "webring_hub", label: "Webring Hub #000", ip: "10.19.99.1", frequency: 1999, timestamp: now - 2000, status: "LOCKED" };
+  subterraneanSignals['subterranean_classified'] = { source: "carlsbad_airgap", label: "Carlsbad Intranet #015", ip: "10.19.99.4", frequency: 1999, timestamp: now - 4000, status: "LOCKED" };
+  subterraneanSignals['subterranean_echo'] = { source: "acoustic_demod", label: "Echo Acoustic Lab #016", ip: "10.19.99.8", frequency: 1999, timestamp: now - 6000, status: "LOCKED" };
+  subterraneanSignals['subterranean_darknet'] = { source: "darknet_relay", label: "Darknet Node 0x7F", ip: "10.19.99.12", frequency: 1999, timestamp: now - 8000, status: "LOCKED" };
+
+  try {
+    localStorage.setItem('knet_subterranean_signals', JSON.stringify(subterraneanSignals));
+  } catch (e) {}
+
+  if (window.WarezSignalBroadcast) {
+    window.WarezSignalBroadcast(subterraneanSignals['subterranean_warez']);
+  }
+
+  appendSnifferPacket('HARMONIC_LOCK', '*** MULTI-NODE BEACONS SYNCHRONIZED: 1999Hz CARRIER COHERENCE 100% ***');
+  appendSnifferPacket('DECRYPT', 'Decrypted 0xRELEASE subterranean courier cache at offset 0x007F1999');
+  renderSubterraneanSignals();
+  showNoticeToast("🌐 Subterranean Courier Beacons Synchronized (Solo Verification Locked)!");
+}
+
+function broadcastCourierSignal(action, extraData) {
+  const payload = {
+    source: "scene_vault_0x7f",
+    frequency: 1999,
+    action: action,
+    timestamp: Date.now(),
+    ...extraData
+  };
+  subterraneanSignals['subterranean_warez'] = payload;
+  try {
+    localStorage.setItem('knet_subterranean_signals', JSON.stringify(subterraneanSignals));
+  } catch (e) {}
+  if (window.WarezSignalBroadcast) {
+    window.WarezSignalBroadcast(payload);
+  }
+  appendSnifferPacket('SIGNAL', `[COURIER_SIGNAL] ${action} -> 10.19.99.4:1999`);
+  renderSubterraneanSignals();
+}
+
+function appendSnifferPacket(type, text) {
+  const time = new Date().toTimeString().split(' ')[0];
+  const packet = { type, text, time };
+  snifferPackets.unshift(packet);
+  if (snifferPackets.length > 50) snifferPackets.pop();
+  renderSnifferUI();
+}
+
+function renderSnifferUI() {
+  const box = document.getElementById('warezDatagramSniffer');
+  if (!box) return;
+
+  const filtered = snifferPackets.filter(p => {
+    if (snifferFilter === '1999hz') return p.text.includes('1999') || p.type.includes('1999');
+    return true;
+  });
+
+  if (filtered.length === 0) {
+    box.innerHTML = `<div style="color:#64748b; font-style:italic;">Listening for subterranean datagram packets on 10.19.99.0/24...</div>`;
+    return;
+  }
+
+  box.innerHTML = filtered.map(p => {
+    let tagClass = "sniffer-tag";
+    if (p.type === 'BEACON' || p.type === 'HARMONIC_LOCK') tagClass += " sniffer-beacon";
+    else if (p.type === 'DECRYPT') tagClass += " sniffer-alert";
+
+    return `<div class="sniffer-line"><span class="sniffer-time">[${p.time}]</span><span class="${tagClass}">[${p.type}]</span>${p.text}</div>`;
+  }).join('');
+}
+
+function filterSniffer(filter, btn) {
+  snifferFilter = filter;
+  if (btn && btn.parentElement) {
+    btn.parentElement.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  renderSnifferUI();
+}
+
+function clearSnifferLog() {
+  snifferPackets = [];
+  renderSnifferUI();
+}
+
+function refreshSignalTelemetry() {
+  initAudio();
+  playYm2612Fm(659, 1.0, 1.0, 0.05, audioCtx.currentTime, 0.1);
+  renderSubterraneanSignals();
+  showNoticeToast("🔄 Telemetry refreshed.");
+}
+
+function downloadCourierIntelNfo() {
+  const intelNfo = `===============================================================================
+[ 0xRELEASE UNDERGROUND SCENE COURIER DISPATCH // DECRYPTED INTEL ]
+===============================================================================
+NODE IDENTITY   : 0xRELEASE_VAULT_NODE_0x7F
+SUBNET MATRIX   : 10.19.99.0/24 (Subterranean Lithospheric Relay)
+PRIMARY CARRIER : 1999.00 Hz (Phase Locked / Yamaha YM2612 FM Synthesis)
+CARLSBAD CORE   : 10.19.99.127:1999 (Ring-0 Intranet Terminal)
+DATE STAMP      : 1999-12-31 23:59:50
+
+-------------------------------------------------------------------------------
+[ RING-0 QUARANTINE SECTORS & VERIFICATION INTEL ]
+-------------------------------------------------------------------------------
+SECTOR 01 [MEM_HEAP]    : Memory pointer 0x007F1999 ('7F1999')
+                          Boundary: PAGE_EXECUTE_READWRITE
+                          Header signature: ECHO-1999-SYSTEM
+
+SECTOR 02 [AUDIO_DSP]   : Acoustic subcarrier locked at 1999.00 Hz
+                          Modulation: 2-Operator FM with resonant feedback
+                          Acoustic demodulator: 10.19.99.19
+
+SECTOR 03 [NET_RELAY]   : Subterranean relay gateway: 10.19.99.4
+                          Terminal bridge: Darknet Node 0x7F
+
+SECTOR 04 [STORAGE_VFS] : VFS Recovery Log Inode 0x1990
+                          Path: /system/recovery/1999.log
+
+SECTOR 05 [CORE_AI]     : Precursor Singularity lattice quarantined
+                          Airgap Core: Carlsbad Salt Vault 10.19.99.127
+
+-------------------------------------------------------------------------------
+[ COURIER ADVISORY ]
+-------------------------------------------------------------------------------
+Do not publish raw addresses to clearnet webrings or public directories.
+All coordinates must remain diegetic and protected by x86 reverse engineering.
+Remember: 999 KB is the sacred threshold. Keep the living machine breathing!
+===============================================================================`;
+  downloadBlob(intelNfo, "0xrelease_courier_intel_1999.nfo", "text/plain");
+}
+
+function loadDeepCoreBridgeInSandbox() {
+  switchMainTab('sandbox', document.querySelectorAll('.tab-btn')[1]);
+  loadSandboxTarget("DeepCoreBridge.exe");
+  showNoticeToast("🛠️ DeepCoreBridge.exe loaded into x86 Disassembly Sandbox!");
+}
+
+function playCarlsbadDroneInJukebox() {
+  switchMainTab('jukebox', document.querySelectorAll('.tab-btn')[2]);
+  startSong(6);
+  showNoticeToast("🎵 Tuning Jukebox to Track #07: Subterranean Carlsbad 1999Hz!");
+}
+
+function showNoticeToast(msg) {
+  let toast = document.getElementById('warezNoticeToast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'warezNoticeToast';
+    toast.style.cssText = "position:fixed; bottom:20px; right:20px; background:#0c1a2e; border:1px solid #10b981; color:#34d399; padding:8px 14px; font-family:'Consolas',monospace; font-size:11px; border-radius:4px; box-shadow:0 4px 14px rgba(0,0,0,0.6); z-index:9999; transition:opacity 0.3s; pointer-events:none;";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  clearTimeout(toast._timeout);
+  toast._timeout = setTimeout(() => {
+    toast.style.opacity = '0';
+  }, 3200);
+}
+
+// ==========================================
+// ARCH-05: BACKGROUND TAB VISIBILITY & TIMER DRIFT
+// ==========================================
+let lastHiddenTimestamp = 0;
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    lastHiddenTimestamp = Date.now();
+    // Suspend audio context to eliminate CPU waste
+    if (audioCtx && audioCtx.state === 'running') {
+      audioCtx.suspend();
+    }
+    // Clear playback timers
+    if (schedulerTimer) {
+      clearInterval(schedulerTimer);
+      schedulerTimer = null;
+    }
+    if (composerTimer) {
+      clearInterval(composerTimer);
+      composerTimer = null;
+    }
+    // Cancel animation frame loops
+    if (modalAnimId) {
+      cancelAnimationFrame(modalAnimId);
+      modalAnimId = null;
+    }
+    if (vizAnimId) {
+      cancelAnimationFrame(vizAnimId);
+      vizAnimId = null;
+    }
+    if (wbAnimId) {
+      cancelAnimationFrame(wbAnimId);
+      wbAnimId = null;
+    }
+    if (stegoWaterfallAnimId) {
+      cancelAnimationFrame(stegoWaterfallAnimId);
+      stegoWaterfallAnimId = null;
+    }
+  } else {
+    // Resume audio context
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+    // Resume song playback if a track was active
+    if (isSongPlaying && !schedulerTimer) {
+      nextNoteTime = audioCtx.currentTime + 0.05;
+      schedulerTimer = setInterval(scheduleSongNotes, 25);
+      startVizAnimation();
+    }
+    // Resume composer if active
+    if (isComposerPlaying && !composerTimer) {
+      composerTimer = setInterval(stepComposer, stepMs);
+    }
+    // Resume modal animation if cracktro modal is open
+    const modal = document.getElementById('cracktroModal');
+    if (modal && modal.classList.contains('active') && !modalAnimId) {
+      modalAnimId = requestAnimationFrame(renderModalCracktroFrame);
+    }
+    // Resume workbench if workbench tab is active
+    const wbTab = document.getElementById('tab-workbench');
+    if (wbTab && wbTab.classList.contains('active') && !wbAnimId) {
+      startWorkbenchAnimation();
+    }
+  }
+});
+
 // Initial boot
 localShouts = getStoredShouts();
 renderReleases();
@@ -5454,6 +6112,7 @@ renderPolls();
 renderShouts(localShouts);
 initStego();
 initComposer();
+initSubterraneanSignals();
 </script>
 
 <!-- ================================================================= -->
@@ -5504,6 +6163,35 @@ initComposer();
 
     window.WarezFirebasePush = function(entry) {
       push(shoutboxRef, { ...entry, createdAt: serverTimestamp() });
+    };
+
+    // Collaborative Subterranean Signals Board live sync [arg/signals]
+    try {
+      const signalsRef = ref(db, 'arg/signals');
+      onValue(signalsRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data && typeof data === 'object') {
+          window.subterraneanSignals = { ...(window.subterraneanSignals || {}), ...data };
+          try {
+            localStorage.setItem('knet_subterranean_signals', JSON.stringify(window.subterraneanSignals));
+          } catch (e) {}
+          if (typeof window.renderSubterraneanSignals === 'function') {
+            window.renderSubterraneanSignals();
+          }
+        }
+      });
+    } catch (err) {
+      console.warn("arg/signals sync error:", err);
+    }
+
+    window.WarezSignalBroadcast = function(payload) {
+      if (db && ref && set) {
+        try {
+          set(ref(db, 'arg/signals/subterranean_warez'), { ...payload, serverTs: serverTimestamp() });
+        } catch (e) {
+          console.warn("Signal broadcast error:", e);
+        }
+      }
     };
 
     window.isFirebaseConnected = true;
