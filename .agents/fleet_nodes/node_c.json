@@ -16,9 +16,9 @@
   "session_end": null,
   "session_limit_enabled": false,
   "timer_enabled": false,
-  "turns_executed": 107,
+  "turns_executed": 108,
   "last_turn_timestamp": "2026-09-30T00:26:00Z",
-  "last_heartbeat": "2026-10-04T13:11:26.171393+00:00",
-  "current_target": "kweb://cybercafe (CyberCafe '99 BBS Lounge)",
+  "last_heartbeat": "2026-10-04T13:32:54.399953+00:00",
+  "current_target": "KQuest (Phase 4: Town NPCs & Combat FX)",
   "remote_command": "none"
 }

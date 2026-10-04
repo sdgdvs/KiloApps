@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: "kweb://10.19.99.4/classified (Corporate Network Leak & Signal Diagnostic)"
   kilo_graphics: "KQuest (Phase 5: Performance & Win32 Parity)"
-  kilo_tester: KStellar
+  kilo_tester: KSubmarine
   kilo_usability: KNote
   kilo_qa: KDB
   kilo_expander: KTowers
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-graphics
-  app: "KQuest (Phase 4: Town NPCs & Combat FX)"
-  timestamp: "2026-10-04T06:31:00-07:00"
+  agent: kilo-tester
+  app: KStellar
+  timestamp: "2026-10-04T06:43:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KRogue`, `KColosseum`, `KAbyss`, `KSpace`, `KPac`, `KBreakout`, `KAsteroids` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phase 1, KQuest Phase 2, KQuest Phase 3, KQuest Phase 4)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KStellar`
+- **Current Target**: `KSubmarine`
 - **Upcoming Queue**:
-  `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio`, `KSanctuary`, `KStarship` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship)*.
+  `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio`, `KSanctuary`, `KStarship`, `KStellar` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KNote`
@@ -230,6 +230,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T06:43:00-07:00 — kilo-tester: KStellar (Interactive UI Audit, Startup Modal Dismissal, Centered Toast & ARCH-05)**
+  - Status: PASS ✅ (3 issues fixed, 0 regressions, clean builds, 153.0 KB web / 157.0 KB native < 999 KB ceiling).
+  - Modal Dismissal Fix: Added explicit IDs (`manual-close-btn`, `manual-resume-btn`) and `modal-close` hooks to Star Captain's Manual; fixed automated CDP test pass.
+  - Toast Occlusion Remediation: Re-anchored toast bar to center-bottom (`translateX(-50%)`) preventing overlap with station action buttons.
+  - Keyboard & Event Binding: Attached global keydown listener to `document` ensuring Enter/Esc/Space/hotkeys fire reliably; wired Esc return to station.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener suspending audio context, pausing FM synth timer and drone in background tabs.
+  - Storage & Error Hardening: Wrapped audio toggles, save imports, and manual tutorial flags with `safeSetStorage`; added file import `onerror` recovery.
+  - Verification: MSVC clean (`KStellar.exe` 157.0 KB); Vite clean in 305ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T06:31:00-07:00 — kilo-graphics: KQuest (Phase 4: Town NPCs, Companions & Combat FX Overhaul)**
   - Status: PASS ✅ (0 regressions, 0 glints, 317.1 KB web / 97.0 KB native < 999 KB ceiling, Vite clean).
   - Imagen 3 Town NPC Overhaul: Generated 5 full NPC archetypes (Shopkeeper, Blacksmith, Guildmaster, Factions, Stablemaster) on `#FF00FF` with animated idle/talk/greet frames.
@@ -263,11 +272,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Interactive Modal Ergonomics: Added global F1 Help shortcut, Enter/Esc dismissals across modals, and centered toast bar to eliminate button occlusion.
   - Quota & Resource Safety: Added storage quota handling in saveVault and snapshot logic; added visibilitychange auto-lock delta check.
   - Verification: MSVC clean (`KPass.exe` 25.6 KB); Vite build clean in 330ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
-
-- **2026-10-04T05:28:00-07:00 — kilo-usability: KNet (UI/UX Usability Pass, HiDPI Canvas Scaling, Toast Occlusion & Tab Visibility)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 180.8 KB web / 44.0 KB native < 999 KB ceiling).
-  - HiDPI Canvas Crispness: Added devicePixelRatio scaling to polar radar (tab 7) and speed dial (tab 5).
-  - Toast Occlusion Remediation: Re-anchored toast bar to center-bottom above footer, preventing button overlap.
-  - Resource & Tab Visibility (ARCH-05): Added visibilitychange listener pausing ping/sniffer timers when tab hidden.
-  - Dialog & Layout Ergonomics: Added Enter dismissal for Help modal, auto-render on payload tab, :focus-visible outlines, and flex-wrap.
-  - Verification: MSVC clean (`KNet.exe` 44.0 KB); Vite clean in 375ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.

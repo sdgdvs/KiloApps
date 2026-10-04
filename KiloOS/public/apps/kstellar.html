@@ -208,7 +208,7 @@
                 <button id="music-toggle-btn" class="action-btn" style="margin:0; padding:4px 8px; font-size:11px; border-color:#ff00ff; color:#ff00ff;" onclick="toggleFmMusic()" title="Toggle Genesis YM2612 FM Music">🎵 FM BGM: OFF</button>
             </div>
         </div>
-        <div id="toast" style="display:none; position:fixed; bottom:20px; right:20px; background:rgba(0,30,45,0.95); border:1px solid #00ffcc; color:#00ffcc; padding:10px 18px; border-radius:4px; font-size:13px; font-weight:bold; z-index:9999; box-shadow:0 0 15px rgba(0,255,204,0.5); pointer-events:none; transition:opacity 0.3s;"></div>
+        <div id="toast" style="display:none; position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(0,30,45,0.95); border:1px solid #00ffcc; color:#00ffcc; padding:10px 18px; border-radius:4px; font-size:13px; font-weight:bold; z-index:9999; box-shadow:0 0 15px rgba(0,255,204,0.5); pointer-events:none; text-align:center; transition:opacity 0.3s;"></div>
         <div id="faction-bar" style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:10px; padding:6px 10px; border:1px solid #00ffcc; background:rgba(0,25,35,0.7); box-shadow: 0 0 10px rgba(0,255,204,0.2);">
             <span>FEDERATION: <span id="rep-fed" style="color:#00ffff; font-weight:bold;">+10 (Neutral)</span></span>
             <span>TRADERS GUILD: <span id="rep-trd" style="color:#00ff00; font-weight:bold;">+15 (Friendly)</span></span>
@@ -254,7 +254,7 @@
         <div id="manual-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(3,8,16,0.96); z-index:150; flex-direction:column; padding:20px; box-sizing:border-box;" onclick="if (event.target === this) closeManual()">
             <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #00ffcc; padding-bottom:8px; margin-bottom:10px;">
                 <h2 style="margin:0; color:#00ffcc; font-size:18px; letter-spacing:1px; text-shadow:0 0 10px #00ffcc;">★ STAR CAPTAIN'S MANUAL &amp; CODEX</h2>
-                <button class="action-btn" style="margin:0; padding:4px 12px; font-size:12px; border-color:#ffff00; color:#ffff00;" onclick="closeManual()">[X] CLOSE (ESC / ENTER / SPACE)</button>
+                <button id="manual-close-btn" class="action-btn modal-close btn-close close" style="margin:0; padding:4px 12px; font-size:12px; border-color:#ffff00; color:#ffff00;" onclick="closeManual()" title="Close Manual">[X] CLOSE (ESC / ENTER / SPACE)</button>
             </div>
             <div style="display:flex; gap:6px; margin-bottom:10px; flex-wrap:wrap;">
                 <button id="man-tab-0" class="action-btn" style="margin:0; padding:5px 8px; font-size:11px;" onclick="switchManualTab(0)">1. FLIGHT &amp; NAV [1]</button>
@@ -267,9 +267,9 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px; font-size:12px; color:#66cccc;">
                 <span id="manual-tab-indicator">Section 1 of 5</span>
                 <div style="display:flex; gap:8px;">
-                    <button class="action-btn" style="margin:0; padding:4px 12px; font-size:11px;" onclick="prevManualTab()">← PREV [LEFT]</button>
-                    <button class="action-btn" style="margin:0; padding:4px 12px; font-size:11px;" onclick="nextManualTab()">NEXT → [RIGHT]</button>
-                    <button class="action-btn" style="margin:0; padding:4px 12px; font-size:11px; border-color:#ffff00; color:#ffff00;" onclick="closeManual()">RESUME FLIGHT [SPACE]</button>
+                    <button id="manual-prev-btn" class="action-btn" style="margin:0; padding:4px 12px; font-size:11px;" onclick="prevManualTab()">← PREV [LEFT]</button>
+                    <button id="manual-next-btn" class="action-btn" style="margin:0; padding:4px 12px; font-size:11px;" onclick="nextManualTab()">NEXT → [RIGHT]</button>
+                    <button id="manual-resume-btn" class="action-btn modal-close btn-close close" style="margin:0; padding:4px 12px; font-size:11px; border-color:#ffff00; color:#ffff00;" onclick="closeManual()" title="Resume Flight">RESUME FLIGHT [SPACE]</button>
                 </div>
             </div>
         </div>
@@ -426,7 +426,7 @@
 
         window.toggleAudio = function() {
             soundEnabled = !soundEnabled;
-            localStorage.setItem('kstellar_soundEnabled', soundEnabled);
+            safeSetStorage('kstellar_soundEnabled', soundEnabled);
             const btn = document.getElementById('audio-toggle-btn');
             if (soundEnabled) {
                 initAudio();
@@ -443,7 +443,7 @@
 
         window.toggleDrone = function() {
             droneEnabled = !droneEnabled;
-            localStorage.setItem('kstellar_droneEnabled', droneEnabled);
+            safeSetStorage('kstellar_droneEnabled', droneEnabled);
             const btn = document.getElementById('drone-toggle-btn');
             if (droneEnabled) {
                 initAudio();
@@ -491,7 +491,7 @@
 
         window.toggleFmMusic = function() {
             fmMusicEnabled = !fmMusicEnabled;
-            localStorage.setItem('kstellar_fmMusicEnabled', fmMusicEnabled);
+            safeSetStorage('kstellar_fmMusicEnabled', fmMusicEnabled);
             const btn = document.getElementById('music-toggle-btn');
             if (fmMusicEnabled) {
                 initAudio();
@@ -1087,12 +1087,16 @@
                     if (!data || typeof data !== 'object' || typeof data.credits !== 'number') {
                         throw new Error("Invalid save file structure");
                     }
-                    localStorage.setItem('kstellar_save', JSON.stringify(data));
+                    safeSetStorage('kstellar_save', data);
                     loadGameState(false);
                     showToast("★ SAVE IMPORTED SUCCESSFULLY");
                 } catch (err) {
                     alert("Failed to import save: invalid JSON structure.");
                 }
+                event.target.value = '';
+            };
+            reader.onerror = function() {
+                alert("Failed to read file.");
                 event.target.value = '';
             };
             reader.readAsText(file);
@@ -2753,7 +2757,7 @@
 
         window.closeManual = function() {
             playBlip();
-            localStorage.setItem('kstellar_tutorialSeen', 'true');
+            safeSetStorage('kstellar_tutorialSeen', 'true');
             document.getElementById('manual-modal').style.display = 'none';
         };
 
@@ -2790,9 +2794,9 @@
             switchManualTab(nextIdx);
         };
 
-        window.addEventListener('keydown', (e) => {
+        function handleKeyDown(e) {
             const modal = document.getElementById('manual-modal');
-            const isManualOpen = (modal && modal.style.display === 'flex');
+            const isManualOpen = (modal && (modal.style.display === 'flex' || window.getComputedStyle(modal).display === 'flex'));
 
             // Quicksave F5
             if (e.key === 'F5') {
@@ -2870,6 +2874,28 @@
             if (e.key === 'Escape') {
                 if (isManualOpen) {
                     closeManual();
+                } else if (!inCombat) {
+                    showSystemInfo(systems.find(s => s.id === currentSystemId));
+                }
+            }
+        }
+        document.addEventListener('keydown', handleKeyDown);
+
+        // ARCH-05: Resource & Tab Visibility Management
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                stopFmMusic();
+                stopAmbientDrone();
+                if (audioCtx && audioCtx.state === 'running') {
+                    audioCtx.suspend().catch(() => {});
+                }
+            } else {
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume().catch(() => {});
+                }
+                if (soundEnabled) {
+                    if (droneEnabled && !droneOsc1) startAmbientDrone();
+                    if (fmMusicEnabled && !fmMusicTimer) startFmMusic();
                 }
             }
         });

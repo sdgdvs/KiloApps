@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T05:28:00-07:00 — kilo-usability: KNet (UI/UX Usability Pass, HiDPI Canvas Scaling, Toast Occlusion & Tab Visibility)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 180.8 KB web / 44.0 KB native < 999 KB ceiling).
+  - HiDPI Canvas Crispness: Added devicePixelRatio scaling to polar radar (tab 7) and speed dial (tab 5).
+  - Toast Occlusion Remediation: Re-anchored toast bar to center-bottom above footer, preventing button overlap.
+  - Resource & Tab Visibility (ARCH-05): Added visibilitychange listener pausing ping/sniffer timers when tab hidden.
+  - Dialog & Layout Ergonomics: Added Enter dismissal for Help modal, auto-render on payload tab, :focus-visible outlines, and flex-wrap.
+  - Verification: MSVC clean (`KNet.exe` 44.0 KB); Vite clean in 375ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T05:12:00-07:00 — kilo-tester: KStarship (Interactive UI Audit, Modal Overlay, Backdrop & Toast Occlusion Remediation)**
   - Status: PASS ✅ (4 issues fixed, 0 regressions, clean builds, 153.8 KB web / 143.5 KB native < 999 KB).
   - Modal Dismissals & Overlay: Added `.modal-overlay` container with backdrop-click and close button `[✕]` dismissal across all encounters.
