@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: "kweb://echo-subsystem.net"
   kilo_graphics: KRogue
-  kilo_tester: KSubmarine
+  kilo_tester: KSynth
   kilo_usability: KPass
   kilo_qa: KHex
   kilo_expander: KMatch3
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-graphics
-  app: "KQuest (Phase 5: Performance & Win32 Parity)"
-  timestamp: "2026-10-04T07:51:00-07:00"
+  agent: kilo-tester
+  app: KSubmarine
+  timestamp: "2026-10-04T08:11:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -114,9 +114,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KColosseum`, `KAbyss`, `KSpace`, `KPac`, `KBreakout`, `KAsteroids`, `KQuest` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15. Completed: KQuest Phases 1-5)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KSubmarine`
+- **Current Target**: `KSynth`
 - **Upcoming Queue**:
-  `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio`, `KSanctuary`, `KStarship`, `KStellar` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar)*.
+  `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio`, `KSanctuary`, `KStarship`, `KStellar`, `KSubmarine` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary, KScript, KStarDredge, KStarship, KStellar, KSubmarine)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KPass`
@@ -221,6 +221,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T08:11:00-07:00 — kilo-tester: KSubmarine (Interactive UI Audit, Overlay Dismissals, Save Export/Import & ARCH-05)**
+  - Status: PASS ✅ (4 issues found, 4 fixed, 0 regressions, clean builds, 447.4 KB web / 257.5 KB native < 999 KB ceiling).
+  - Modal & Dialog Ergonomics: Wired backdrop click dismissal on tutorial briefing and added return-to-sonar close buttons to all 9 overlay views.
+  - Toast Occlusion Remediation: Re-anchored toast bar to top-center above sonar viewport, preventing control overlap on helm & navigation panels per Directive 189.
+  - Storage Persistence: Added JSON telemetry Export and Import file reader with validation alongside F5 Quicksave / F9 Quickload.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener suspending audio context and auto-saving state on background switch.
+  - Discoverability: Expanded Manual Chapter 8 table with Space ping, F5 save, F9 load, Esc return, and F1 help bindings.
+  - Verification: MSVC clean (`KSubmarine.exe` 257.5 KB); Vite clean in 368ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T07:51:00-07:00 — kilo-graphics: KQuest (Phase 5: Performance & Win32 Parity)**
   - Status: ⏭️ Skip — Imagen 3 asset replacement not appropriate for KQuest (Phase 5: Performance & Win32 Parity)
 
@@ -251,11 +260,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` auto-flush listener persisting unsaved database changes when tab is hidden.
   - Storage & Reader Hardening: Added `reader.onerror` handlers for CSV/JSON imports and quota overflow recovery.
   - Verification: MSVC clean (`KDB.exe` 67.5 KB); Vite clean in 409ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
-
-- **2026-10-04T06:55:00-07:00 — kilo-usability: KNote (UI/UX Usability Pass, Toast Occlusion Remediation & ARCH-05)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 157.7 KB web / 25.6 KB native < 999 KB ceiling).
-  - Window Dimension Expansion: Widened default window bounds in `App.jsx` and native Win32 to 980x680 for comfortable editing.
-  - Toast Occlusion Remediation: Re-anchored toast bar to center-bottom with `pointer-events: none` when hidden, preventing control overlap.
-  - Discoverable Help & Keyboard Accessibility: Added status bar `❓ Help [F1]` trigger, outline keyboard traversal, and focus returns on modal close.
-  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener ensuring unsaved edits flush to storage on tab switch.
-  - Verification: MSVC clean (`KNote.exe` 25.6 KB); Vite clean in 312ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.

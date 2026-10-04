@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T06:55:00-07:00 — kilo-usability: KNote (UI/UX Usability Pass, Toast Occlusion Remediation & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 157.7 KB web / 25.6 KB native < 999 KB ceiling).
+  - Window Dimension Expansion: Widened default window bounds in `App.jsx` and native Win32 to 980x680 for comfortable editing.
+  - Toast Occlusion Remediation: Re-anchored toast bar to center-bottom with `pointer-events: none` when hidden, preventing control overlap.
+  - Discoverable Help & Keyboard Accessibility: Added status bar `❓ Help [F1]` trigger, outline keyboard traversal, and focus returns on modal close.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener ensuring unsaved edits flush to storage on tab switch.
+  - Verification: MSVC clean (`KNote.exe` 25.6 KB); Vite clean in 312ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T06:43:00-07:00 — kilo-tester: KStellar (Interactive UI Audit, Startup Modal Dismissal, Centered Toast & ARCH-05)**
   - Status: PASS ✅ (3 issues fixed, 0 regressions, clean builds, 153.0 KB web / 157.0 KB native < 999 KB ceiling).
   - Modal Dismissal Fix: Added explicit IDs (`manual-close-btn`, `manual-resume-btn`) and `modal-close` hooks to Star Captain's Manual; fixed automated CDP test pass.
