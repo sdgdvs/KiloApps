@@ -2813,8 +2813,8 @@ void DrawCyberReticleGDI(HDC hdc, int x, int y, int dirX, int dirY) {
 }
 
 void DrawSciFiHUDFrame(HDC hdc, int frame) {
-    int shim = 160 + (FastSin(frame * 2) * 60) / 127;
-    COLORREF hudCol = RGB(0, shim, 255);
+    (void)frame;
+    COLORREF hudCol = RGB(0, 180, 255);
     HPEN hHudPen = CreatePen(PS_SOLID, 1, hudCol);
     HPEN oldPen = (HPEN)SelectObject(hdc, hHudPen);
     HBRUSH nullBr = (HBRUSH)GetStockObject(NULL_BRUSH);
@@ -3857,7 +3857,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                     }
 
-                    // Cybernetic Sci-Fi HUD Frame & Pulsating Perimeter Inlay
+                    // Cybernetic Sci-Fi HUD Frame & Static Perimeter Inlay
                     DrawSciFiHUDFrame(memDC, frameCount);
 
                     if (gameState == STATE_PAUSED) {

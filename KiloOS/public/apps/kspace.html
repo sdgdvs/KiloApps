@@ -536,6 +536,41 @@ window.addEventListener('beforeunload', () => {
     });
   }
 
+  // --- IMAGEN 3 SPRITE & SEAMLESS BACKGROUND PIPELINE ---
+  const KSPACE_SPRITES = {};
+  const KSPACE_BG = { img: null, loaded: false };
+  let bgScrollY = 0;
+
+  function initKSpaceAssets() {
+    const bgImg = new Image();
+    bgImg.src = '../assets/backgrounds/kspace/kspace_bg_nebula.png';
+    bgImg.onload = () => { KSPACE_BG.img = bgImg; KSPACE_BG.loaded = true; };
+    bgImg.onerror = () => {
+      const fb = new Image();
+      fb.src = 'assets/backgrounds/kspace/kspace_bg_nebula.png';
+      fb.onload = () => { KSPACE_BG.img = fb; KSPACE_BG.loaded = true; };
+    };
+
+    const spriteKeys = [
+      'ship_alpha', 'ship_crimson', 'ship_phantom',
+      'enemy_interceptor', 'enemy_chaser', 'enemy_saucer',
+      'enemy_armored', 'enemy_zigzag', 'asteroid',
+      'boss_flagship'
+    ];
+
+    spriteKeys.forEach(key => {
+      const img = new Image();
+      img.src = `../assets/sprites/kspace/kspace_${key}.png`;
+      img.onload = () => { KSPACE_SPRITES[key] = { img: img, loaded: true }; };
+      img.onerror = () => {
+        const fb = new Image();
+        fb.src = `assets/sprites/kspace/kspace_${key}.png`;
+        fb.onload = () => { KSPACE_SPRITES[key] = { img: fb, loaded: true }; };
+      };
+    });
+  }
+  initKSpaceAssets();
+
   // Local Storage Persistence
   try { highScore = parseInt(safeGetStorage('kspace_highscore', '0'), 10) || 0; } catch (e) {}
   try { totalKills = parseInt(safeGetStorage('kspace_totalkills', '0'), 10) || 0; } catch (e) {}
@@ -2583,7 +2618,38 @@ window.addEventListener('beforeunload', () => {
     let flameH = 6 + Math.sin(frame * 0.4) * 3;
     if (overchargeTimer > 0) flameH += 4;
 
-    if (playerChassis === 1) {
+    let spriteKey = playerChassis === 1 ? 'ship_crimson' : (playerChassis === 2 ? 'ship_phantom' : 'ship_alpha');
+    let spriteObj = KSPACE_SPRITES[spriteKey];
+
+    if (spriteObj && spriteObj.loaded) {
+      // Thruster flame effects behind the sprite
+      ctx.save();
+      if (playerChassis === 1) {
+        ctx.fillStyle = (frame % 2 === 0) ? '#ff9100' : '#ff3d00';
+        ctx.beginPath(); ctx.moveTo(2, 22); ctx.lineTo(4, 22 + flameH * 0.9); ctx.lineTo(6, 22); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(14, 22); ctx.lineTo(16, 22 + flameH * 0.9); ctx.lineTo(18, 22); ctx.closePath(); ctx.fill();
+      } else if (playerChassis === 2) {
+        ctx.fillStyle = (frame % 2 === 0) ? '#00e676' : '#7c4dff';
+        ctx.beginPath(); ctx.moveTo(7, 22); ctx.lineTo(10, 22 + flameH); ctx.lineTo(13, 22); ctx.closePath(); ctx.fill();
+      } else {
+        ctx.fillStyle = (frame % 2 === 0) ? '#ff9100' : '#ff3d00';
+        ctx.beginPath(); ctx.moveTo(7, 22); ctx.lineTo(10, 22 + flameH * 1.2); ctx.lineTo(13, 22); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#00e5ff';
+        ctx.beginPath(); ctx.moveTo(8.5, 22); ctx.lineTo(10, 22 + flameH * 0.7); ctx.lineTo(11.5, 22); ctx.closePath(); ctx.fill();
+      }
+      ctx.restore();
+
+      // Overcharge / Hyper glow
+      if (overchargeTimer > 0) {
+        ctx.save();
+        ctx.shadowColor = '#ffea00';
+        ctx.shadowBlur = 12;
+        ctx.drawImage(spriteObj.img, -4, -4, 28, 28);
+        ctx.restore();
+      } else {
+        ctx.drawImage(spriteObj.img, -4, -4, 28, 28);
+      }
+    } else if (playerChassis === 1) {
       // === CHASSIS 1: CRIMSON VANGUARD (Heavy Assault Dread Fighter) ===
       // Quad Heavy Combustion Nozzles
       ctx.fillStyle = (frame % 2 === 0) ? '#ff9100' : '#ff3d00';
@@ -2891,104 +2957,192 @@ window.addEventListener('beforeunload', () => {
     }
 
     if (e.type === 0) { // Red Interceptor
-      ctx.fillStyle = '#b71c1c';
-      ctx.beginPath(); ctx.moveTo(0, 2); ctx.lineTo(10, 19); ctx.lineTo(20, 2); ctx.lineTo(13, 6); ctx.lineTo(10, 0); ctx.lineTo(7, 6); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#ff1744';
-      ctx.beginPath(); ctx.moveTo(2, 3); ctx.lineTo(10, 17); ctx.lineTo(18, 3); ctx.lineTo(12, 6); ctx.lineTo(10, 1); ctx.lineTo(8, 6); ctx.closePath(); ctx.fill();
-      // Cockpit visor
-      ctx.fillStyle = '#ffea00'; ctx.fillRect(8.5, 7, 3, 4);
+      let spr = KSPACE_SPRITES['enemy_interceptor'];
+      if (spr && spr.loaded) {
+        ctx.drawImage(spr.img, -4, -4, 28, 28);
+      } else {
+        ctx.fillStyle = '#b71c1c';
+        ctx.beginPath(); ctx.moveTo(0, 2); ctx.lineTo(10, 19); ctx.lineTo(20, 2); ctx.lineTo(13, 6); ctx.lineTo(10, 0); ctx.lineTo(7, 6); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#ff1744';
+        ctx.beginPath(); ctx.moveTo(2, 3); ctx.lineTo(10, 17); ctx.lineTo(18, 3); ctx.lineTo(12, 6); ctx.lineTo(10, 1); ctx.lineTo(8, 6); ctx.closePath(); ctx.fill();
+        // Cockpit visor
+        ctx.fillStyle = '#ffea00'; ctx.fillRect(8.5, 7, 3, 4);
+      }
     } else if (e.type === 1) { // Orange Chaser
-      ctx.fillStyle = '#e65100';
-      ctx.beginPath(); ctx.moveTo(10, 21); ctx.lineTo(21, 3); ctx.lineTo(10, -1); ctx.lineTo(-1, 3); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#ff9100';
-      ctx.beginPath(); ctx.moveTo(10, 19); ctx.lineTo(19, 4); ctx.lineTo(10, 1); ctx.lineTo(1, 4); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#ffffff'; ctx.fillRect(9, 6, 2, 4);
+      let spr = KSPACE_SPRITES['enemy_chaser'];
+      if (spr && spr.loaded) {
+        ctx.drawImage(spr.img, -4, -4, 28, 28);
+      } else {
+        ctx.fillStyle = '#e65100';
+        ctx.beginPath(); ctx.moveTo(10, 21); ctx.lineTo(21, 3); ctx.lineTo(10, -1); ctx.lineTo(-1, 3); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#ff9100';
+        ctx.beginPath(); ctx.moveTo(10, 19); ctx.lineTo(19, 4); ctx.lineTo(10, 1); ctx.lineTo(1, 4); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(9, 6, 2, 4);
+      }
     } else if (e.type === 2) { // Purple Saucer
-      ctx.fillStyle = '#7b1fa2'; ctx.beginPath(); ctx.ellipse(10, 12, 11, 7, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#d500f9'; ctx.beginPath(); ctx.ellipse(10, 12, 9, 5, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#00e5ff'; ctx.beginPath(); ctx.arc(10, 12, 3.5, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(9.5, 11.5, 1.2, 0, Math.PI * 2); ctx.fill();
+      let spr = KSPACE_SPRITES['enemy_saucer'];
+      if (spr && spr.loaded) {
+        ctx.drawImage(spr.img, -3, -1, 26, 26);
+      } else {
+        ctx.fillStyle = '#7b1fa2'; ctx.beginPath(); ctx.ellipse(10, 12, 11, 7, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#d500f9'; ctx.beginPath(); ctx.ellipse(10, 12, 9, 5, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#00e5ff'; ctx.beginPath(); ctx.arc(10, 12, 3.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(9.5, 11.5, 1.2, 0, Math.PI * 2); ctx.fill();
+      }
     } else if (e.type === 3) { // Heavy Armored
-      ctx.fillStyle = '#455a64'; ctx.fillRect(1, 1, 18, 18);
-      ctx.fillStyle = '#78909c'; ctx.fillRect(3, 3, 14, 14);
-      ctx.fillStyle = '#ff1744'; ctx.fillRect(8, 6, 4, 8);
-      ctx.fillStyle = '#ffea00'; ctx.fillRect(9, 8, 2, 4);
+      let spr = KSPACE_SPRITES['enemy_armored'];
+      if (spr && spr.loaded) {
+        ctx.drawImage(spr.img, -4, -4, 28, 28);
+      } else {
+        ctx.fillStyle = '#455a64'; ctx.fillRect(1, 1, 18, 18);
+        ctx.fillStyle = '#78909c'; ctx.fillRect(3, 3, 14, 14);
+        ctx.fillStyle = '#ff1744'; ctx.fillRect(8, 6, 4, 8);
+        ctx.fillStyle = '#ffea00'; ctx.fillRect(9, 8, 2, 4);
+      }
     } else if (e.type === 4) { // Zigzag
-      ctx.fillStyle = '#0097a7';
-      ctx.beginPath(); ctx.moveTo(10, 19); ctx.lineTo(21, -1); ctx.lineTo(10, 5); ctx.lineTo(-1, -1); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#00e5ff';
-      ctx.beginPath(); ctx.moveTo(10, 17); ctx.lineTo(19, 1); ctx.lineTo(10, 6); ctx.lineTo(1, 1); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#ffffff'; ctx.fillRect(9, 7, 2, 4);
+      let spr = KSPACE_SPRITES['enemy_zigzag'];
+      if (spr && spr.loaded) {
+        ctx.drawImage(spr.img, -4, -4, 28, 28);
+      } else {
+        ctx.fillStyle = '#0097a7';
+        ctx.beginPath(); ctx.moveTo(10, 19); ctx.lineTo(21, -1); ctx.lineTo(10, 5); ctx.lineTo(-1, -1); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#00e5ff';
+        ctx.beginPath(); ctx.moveTo(10, 17); ctx.lineTo(19, 1); ctx.lineTo(10, 6); ctx.lineTo(1, 1); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(9, 7, 2, 4);
+      }
     } else if (e.type === 5 || e.type === 9) { // Asteroids
-      ctx.fillStyle = '#5d4037';
+      let spr = KSPACE_SPRITES['asteroid'];
       let r = (e.type === 9) ? 15 : 9;
-      ctx.beginPath();
-      for (let i = 0; i < 8; i++) {
-        let a = i * Math.PI * 2 / 8;
-        let pR = (r + 1) * (0.8 + ((Math.floor(e.x + i * 77) % 100) / 250));
-        if (i === 0) ctx.moveTo(r + Math.cos(a)*pR, r + Math.sin(a)*pR);
-        else ctx.lineTo(r + Math.cos(a)*pR, r + Math.sin(a)*pR);
+      if (spr && spr.loaded) {
+        ctx.save();
+        ctx.translate(r, r);
+        ctx.rotate(((e.x + 13) * 0.1 + frame * 0.02) % (Math.PI * 2));
+        let sz = (e.type === 9) ? 36 : 22;
+        ctx.drawImage(spr.img, -sz / 2, -sz / 2, sz, sz);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = '#5d4037';
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          let a = i * Math.PI * 2 / 8;
+          let pR = (r + 1) * (0.8 + ((Math.floor(e.x + i * 77) % 100) / 250));
+          if (i === 0) ctx.moveTo(r + Math.cos(a)*pR, r + Math.sin(a)*pR);
+          else ctx.lineTo(r + Math.cos(a)*pR, r + Math.sin(a)*pR);
+        }
+        ctx.closePath(); ctx.fill();
+        // Asteroid Body
+        ctx.fillStyle = '#8d6e63';
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          let a = i * Math.PI * 2 / 8;
+          let pR = r * (0.8 + ((Math.floor(e.x + i * 77) % 100) / 250));
+          if (i === 0) ctx.moveTo(r + Math.cos(a)*pR, r + Math.sin(a)*pR);
+          else ctx.lineTo(r + Math.cos(a)*pR, r + Math.sin(a)*pR);
+        }
+        ctx.closePath(); ctx.fill();
+        // 3D Craters
+        ctx.fillStyle = '#3e2723';
+        ctx.beginPath(); ctx.arc(r - r*0.3, r - r*0.2, r*0.25, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(r + r*0.3, r + r*0.2, r*0.2, 0, Math.PI * 2); ctx.fill();
       }
-      ctx.closePath(); ctx.fill();
-      // Asteroid Body
-      ctx.fillStyle = '#8d6e63';
-      ctx.beginPath();
-      for (let i = 0; i < 8; i++) {
-        let a = i * Math.PI * 2 / 8;
-        let pR = r * (0.8 + ((Math.floor(e.x + i * 77) % 100) / 250));
-        if (i === 0) ctx.moveTo(r + Math.cos(a)*pR, r + Math.sin(a)*pR);
-        else ctx.lineTo(r + Math.cos(a)*pR, r + Math.sin(a)*pR);
-      }
-      ctx.closePath(); ctx.fill();
-      // 3D Craters
-      ctx.fillStyle = '#3e2723';
-      ctx.beginPath(); ctx.arc(r - r*0.3, r - r*0.2, r*0.25, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.arc(r + r*0.3, r + r*0.2, r*0.2, 0, Math.PI * 2); ctx.fill();
     } else if (e.type === 6) { // Frigate
-      ctx.fillStyle = '#8e0000';
-      ctx.beginPath(); ctx.moveTo(18, 35); ctx.lineTo(35, 7); ctx.lineTo(18, 11); ctx.lineTo(1, 7); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#c62828';
-      ctx.beginPath(); ctx.moveTo(18, 33); ctx.lineTo(33, 9); ctx.lineTo(18, 13); ctx.lineTo(3, 9); ctx.closePath(); ctx.fill();
-      // Command bridge
-      ctx.fillStyle = '#ffea00'; ctx.fillRect(16, 14, 4, 8);
+      let spr = KSPACE_SPRITES['enemy_chaser'];
+      if (spr && spr.loaded) {
+        ctx.save();
+        ctx.shadowColor = '#d50000'; ctx.shadowBlur = 8;
+        ctx.drawImage(spr.img, -2, -2, 38, 38);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = '#8e0000';
+        ctx.beginPath(); ctx.moveTo(18, 35); ctx.lineTo(35, 7); ctx.lineTo(18, 11); ctx.lineTo(1, 7); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#c62828';
+        ctx.beginPath(); ctx.moveTo(18, 33); ctx.lineTo(33, 9); ctx.lineTo(18, 13); ctx.lineTo(3, 9); ctx.closePath(); ctx.fill();
+        // Command bridge
+        ctx.fillStyle = '#ffea00'; ctx.fillRect(16, 14, 4, 8);
+      }
     } else if (e.type === 7) { // Kamikaze Spike
-      ctx.fillStyle = '#f57f17';
-      ctx.beginPath(); ctx.moveTo(10, 23); ctx.lineTo(21, -1); ctx.lineTo(10, 3); ctx.lineTo(-1, -1); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#ffeb3b';
-      ctx.beginPath(); ctx.moveTo(10, 21); ctx.lineTo(19, 1); ctx.lineTo(10, 5); ctx.lineTo(1, 1); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#ff1744'; ctx.fillRect(9, 7, 2, 5);
+      let spr = KSPACE_SPRITES['enemy_chaser'];
+      if (spr && spr.loaded) {
+        ctx.save();
+        ctx.shadowColor = '#ff9100'; ctx.shadowBlur = 10;
+        ctx.drawImage(spr.img, -4, -4, 28, 28);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = '#f57f17';
+        ctx.beginPath(); ctx.moveTo(10, 23); ctx.lineTo(21, -1); ctx.lineTo(10, 3); ctx.lineTo(-1, -1); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#ffeb3b';
+        ctx.beginPath(); ctx.moveTo(10, 21); ctx.lineTo(19, 1); ctx.lineTo(10, 5); ctx.lineTo(1, 1); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#ff1744'; ctx.fillRect(9, 7, 2, 5);
+      }
     } else if (e.type === 8) { // Stealth Fighter
-      ctx.fillStyle = '#4a148c';
-      ctx.beginPath(); ctx.moveTo(10, 19); ctx.lineTo(21, 1); ctx.lineTo(10, 7); ctx.lineTo(-1, 1); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#673ab7';
-      ctx.beginPath(); ctx.moveTo(10, 17); ctx.lineTo(19, 3); ctx.lineTo(10, 9); ctx.lineTo(1, 3); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#00e5ff'; ctx.fillRect(9, 8, 2, 3);
+      let spr = KSPACE_SPRITES['enemy_zigzag'];
+      if (spr && spr.loaded) {
+        ctx.save();
+        ctx.shadowColor = '#b388ff'; ctx.shadowBlur = 8;
+        ctx.drawImage(spr.img, -4, -4, 28, 28);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = '#4a148c';
+        ctx.beginPath(); ctx.moveTo(10, 19); ctx.lineTo(21, 1); ctx.lineTo(10, 7); ctx.lineTo(-1, 1); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#673ab7';
+        ctx.beginPath(); ctx.moveTo(10, 17); ctx.lineTo(19, 3); ctx.lineTo(10, 9); ctx.lineTo(1, 3); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#00e5ff'; ctx.fillRect(9, 8, 2, 3);
+      }
     } else if (e.type === 10) { // Elite Valkyrie
-      ctx.fillStyle = '#b71c1c';
-      ctx.beginPath(); ctx.moveTo(10, 23); ctx.lineTo(21, 1); ctx.lineTo(14, 7); ctx.lineTo(10, -1); ctx.lineTo(6, 7); ctx.lineTo(-1, 1); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#ff2828';
-      ctx.beginPath(); ctx.moveTo(10, 21); ctx.lineTo(19, 3); ctx.lineTo(14, 9); ctx.lineTo(10, 1); ctx.lineTo(6, 9); ctx.lineTo(1, 3); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 1.5; ctx.stroke();
-      ctx.fillStyle = '#ffd700'; ctx.beginPath(); ctx.arc(10, 11, 2.5, 0, Math.PI * 2); ctx.fill();
+      let spr = KSPACE_SPRITES['enemy_interceptor'];
+      if (spr && spr.loaded) {
+        ctx.save();
+        ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 12;
+        ctx.drawImage(spr.img, -4, -4, 28, 28);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = '#b71c1c';
+        ctx.beginPath(); ctx.moveTo(10, 23); ctx.lineTo(21, 1); ctx.lineTo(14, 7); ctx.lineTo(10, -1); ctx.lineTo(6, 7); ctx.lineTo(-1, 1); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#ff2828';
+        ctx.beginPath(); ctx.moveTo(10, 21); ctx.lineTo(19, 3); ctx.lineTo(14, 9); ctx.lineTo(10, 1); ctx.lineTo(6, 9); ctx.lineTo(1, 3); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = '#ffd700'; ctx.beginPath(); ctx.arc(10, 11, 2.5, 0, Math.PI * 2); ctx.fill();
+      }
     } else if (e.type === 11) { // Elite Void Phantom
-      ctx.fillStyle = '#4a148c';
-      ctx.beginPath(); ctx.moveTo(18, 33); ctx.lineTo(35, 11); ctx.lineTo(29, 1); ctx.lineTo(18, 7); ctx.lineTo(7, 1); ctx.lineTo(1, 11); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#aa00ff';
-      ctx.beginPath(); ctx.moveTo(18, 31); ctx.lineTo(33, 13); ctx.lineTo(27, 3); ctx.lineTo(18, 9); ctx.lineTo(9, 3); ctx.lineTo(3, 13); ctx.closePath(); ctx.fill();
-      ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 1.5; ctx.stroke();
-      ctx.fillStyle = '#00e5ff'; ctx.beginPath(); ctx.arc(18, 16, 3, 0, Math.PI * 2); ctx.fill();
+      let spr = KSPACE_SPRITES['ship_phantom'];
+      if (spr && spr.loaded) {
+        ctx.save();
+        ctx.shadowColor = '#d500f9'; ctx.shadowBlur = 12;
+        ctx.drawImage(spr.img, -2, -2, 38, 38);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = '#4a148c';
+        ctx.beginPath(); ctx.moveTo(18, 33); ctx.lineTo(35, 11); ctx.lineTo(29, 1); ctx.lineTo(18, 7); ctx.lineTo(7, 1); ctx.lineTo(1, 11); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#aa00ff';
+        ctx.beginPath(); ctx.moveTo(18, 31); ctx.lineTo(33, 13); ctx.lineTo(27, 3); ctx.lineTo(18, 9); ctx.lineTo(9, 3); ctx.lineTo(3, 13); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = '#00e5ff'; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = '#00e5ff'; ctx.beginPath(); ctx.arc(18, 16, 3, 0, Math.PI * 2); ctx.fill();
+      }
     } else if (e.type === 12) { // Elite Command Cruiser
-      ctx.fillStyle = '#c6a700';
-      ctx.beginPath(); ctx.moveTo(18, 35); ctx.lineTo(37, 17); ctx.lineTo(33, 1); ctx.lineTo(23, 5); ctx.lineTo(18, -1); ctx.lineTo(13, 5); ctx.lineTo(3, 1); ctx.lineTo(-1, 17); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#ffd700';
-      ctx.beginPath(); ctx.moveTo(18, 33); ctx.lineTo(35, 19); ctx.lineTo(31, 3); ctx.lineTo(21, 7); ctx.lineTo(18, 1); ctx.lineTo(15, 7); ctx.lineTo(5, 3); ctx.lineTo(1, 19); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#ffea00'; ctx.beginPath(); ctx.arc(18, 17, 5, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(17, 16, 1.8, 0, Math.PI * 2); ctx.fill();
+      let spr = KSPACE_SPRITES['enemy_armored'];
+      if (spr && spr.loaded) {
+        ctx.save();
+        ctx.shadowColor = '#ffd700'; ctx.shadowBlur = 14;
+        ctx.drawImage(spr.img, -2, -2, 40, 40);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = '#c6a700';
+        ctx.beginPath(); ctx.moveTo(18, 35); ctx.lineTo(37, 17); ctx.lineTo(33, 1); ctx.lineTo(23, 5); ctx.lineTo(18, -1); ctx.lineTo(13, 5); ctx.lineTo(3, 1); ctx.lineTo(-1, 17); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#ffd700';
+        ctx.beginPath(); ctx.moveTo(18, 33); ctx.lineTo(35, 19); ctx.lineTo(31, 3); ctx.lineTo(21, 7); ctx.lineTo(18, 1); ctx.lineTo(15, 7); ctx.lineTo(5, 3); ctx.lineTo(1, 19); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#ffea00'; ctx.beginPath(); ctx.arc(18, 17, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(17, 16, 1.8, 0, Math.PI * 2); ctx.fill();
+      }
     } else if (e.type === 13) { // Siege Drop Pod
-      ctx.fillStyle = '#37474f'; ctx.fillRect(3, 3, 18, 18);
-      ctx.fillStyle = '#646478'; ctx.fillRect(5, 5, 14, 14);
-      ctx.fillStyle = '#ff3d00'; ctx.fillRect(8, 6, 8, 4);
-      ctx.fillStyle = '#ffea00'; ctx.fillRect(9, 13, 6, 2);
+      let spr = KSPACE_SPRITES['enemy_armored'];
+      if (spr && spr.loaded) {
+        ctx.drawImage(spr.img, -2, -2, 28, 28);
+      } else {
+        ctx.fillStyle = '#37474f'; ctx.fillRect(3, 3, 18, 18);
+        ctx.fillStyle = '#646478'; ctx.fillRect(5, 5, 14, 14);
+        ctx.fillStyle = '#ff3d00'; ctx.fillRect(8, 6, 8, 4);
+        ctx.fillStyle = '#ffea00'; ctx.fillRect(9, 13, 6, 2);
+      }
     }
 
     ctx.restore();
@@ -3002,24 +3156,35 @@ window.addEventListener('beforeunload', () => {
     let isCritical = (b.hp < b.maxHp * 0.25);
 
     if (b.isDreadnought) {
-      // Dreadnought Flagship Base Hull
-      ctx.fillStyle = isEnraged ? '#7a0e1e' : '#263238';
-      ctx.beginPath();
-      ctx.moveTo(60, 63); ctx.lineTo(101, 46); ctx.lineTo(121, 26); ctx.lineTo(116, 4); ctx.lineTo(86, 1);
-      ctx.lineTo(60, 9); ctx.lineTo(34, 1); ctx.lineTo(4, 4); ctx.lineTo(-1, 26); ctx.lineTo(19, 46);
-      ctx.closePath(); ctx.fill();
+      let sprBoss = KSPACE_SPRITES['boss_flagship'];
+      if (sprBoss && sprBoss.loaded) {
+        ctx.save();
+        if (isEnraged) {
+          ctx.shadowColor = '#ff1744';
+          ctx.shadowBlur = 14;
+        }
+        ctx.drawImage(sprBoss.img, -4, -6, 128, 76);
+        ctx.restore();
+      } else {
+        // Dreadnought Flagship Base Hull
+        ctx.fillStyle = isEnraged ? '#7a0e1e' : '#263238';
+        ctx.beginPath();
+        ctx.moveTo(60, 63); ctx.lineTo(101, 46); ctx.lineTo(121, 26); ctx.lineTo(116, 4); ctx.lineTo(86, 1);
+        ctx.lineTo(60, 9); ctx.lineTo(34, 1); ctx.lineTo(4, 4); ctx.lineTo(-1, 26); ctx.lineTo(19, 46);
+        ctx.closePath(); ctx.fill();
 
-      // Armor Plates & Bevels
-      ctx.fillStyle = isEnraged ? '#a01428' : '#37474f';
-      ctx.beginPath();
-      ctx.moveTo(60, 61); ctx.lineTo(99, 44); ctx.lineTo(119, 24); ctx.lineTo(114, 6); ctx.lineTo(84, 3);
-      ctx.lineTo(60, 11); ctx.lineTo(36, 3); ctx.lineTo(6, 6); ctx.lineTo(1, 24); ctx.lineTo(21, 44);
-      ctx.closePath(); ctx.fill();
+        // Armor Plates & Bevels
+        ctx.fillStyle = isEnraged ? '#a01428' : '#37474f';
+        ctx.beginPath();
+        ctx.moveTo(60, 61); ctx.lineTo(99, 44); ctx.lineTo(119, 24); ctx.lineTo(114, 6); ctx.lineTo(84, 3);
+        ctx.lineTo(60, 11); ctx.lineTo(36, 3); ctx.lineTo(6, 6); ctx.lineTo(1, 24); ctx.lineTo(21, 44);
+        ctx.closePath(); ctx.fill();
 
-      // Armor Overlay Plates
-      ctx.fillStyle = isCritical ? '#5a1414' : '#546e7a';
-      ctx.beginPath(); ctx.moveTo(15, 12); ctx.lineTo(45, 12); ctx.lineTo(40, 38); ctx.lineTo(10, 30); ctx.closePath(); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(75, 12); ctx.lineTo(105, 12); ctx.lineTo(110, 30); ctx.lineTo(80, 38); ctx.closePath(); ctx.fill();
+        // Armor Overlay Plates
+        ctx.fillStyle = isCritical ? '#5a1414' : '#546e7a';
+        ctx.beginPath(); ctx.moveTo(15, 12); ctx.lineTo(45, 12); ctx.lineTo(40, 38); ctx.lineTo(10, 30); ctx.closePath(); ctx.fill();
+        ctx.beginPath(); ctx.moveTo(75, 12); ctx.lineTo(105, 12); ctx.lineTo(110, 30); ctx.lineTo(80, 38); ctx.closePath(); ctx.fill();
+      }
 
       // Power Conduit Lines Linking Generators to Central Gun
       ctx.strokeStyle = (b.genL > 0 || b.genR > 0) ? ((frame % 4 < 2) ? '#00e5ff' : '#80d8ff') : '#37474f';
@@ -3206,23 +3371,34 @@ window.addEventListener('beforeunload', () => {
     }
 
     // Dynamic Background
-    let bgR = bombardmentActive ? (65 + (frameCount % 20)) : (5 + (wave * 4) % 25);
-    let bgG = bombardmentActive ? (25 + (frameCount % 10)) : (5 + (wave * 6) % 25);
-    let bgB = bombardmentActive ? 12 : (18 + (wave * 10) % 40);
-    ctx.fillStyle = `rgb(${bgR}, ${bgG}, ${bgB})`;
-    ctx.fillRect(0, 0, W, H);
+    if (KSPACE_BG.loaded && KSPACE_BG.img) {
+      let scrollSpeed = (modeIndex === 1 ? 1.5 : 0.8) * (hyperJumpTimer > 0 ? 5.0 : 1.0);
+      bgScrollY = (bgScrollY + scrollSpeed) % H;
+      // Seamless vertical scrolling wrap
+      ctx.drawImage(KSPACE_BG.img, 0, bgScrollY - H, W, H);
+      ctx.drawImage(KSPACE_BG.img, 0, bgScrollY, W, H);
+      // Subtle tint overlay to keep high arcade bullet contrast
+      ctx.fillStyle = bombardmentActive ? 'rgba(70, 0, 0, 0.40)' : 'rgba(5, 5, 18, 0.35)';
+      ctx.fillRect(0, 0, W, H);
+    } else {
+      let bgR = bombardmentActive ? (65 + (frameCount % 20)) : (5 + (wave * 4) % 25);
+      let bgG = bombardmentActive ? (25 + (frameCount % 10)) : (5 + (wave * 6) % 25);
+      let bgB = bombardmentActive ? 12 : (18 + (wave * 10) % 40);
+      ctx.fillStyle = `rgb(${bgR}, ${bgG}, ${bgB})`;
+      ctx.fillRect(0, 0, W, H);
 
-    // Deep Space Nebulae
-    for (let n of nebulae) {
-      n.x += n.vx; n.y += n.vy; n.phase += 0.015;
-      if (n.x < -n.r) n.x = W + n.r;
-      if (n.x > W + n.r) n.x = -n.r;
-      if (n.y < -n.r) n.y = H + n.r;
-      if (n.y > H + n.r) n.y = -n.r;
-      let pr = n.r + Math.sin(n.phase) * 12;
-      let g = ctx.createRadialGradient(n.x, n.y, 5, n.x, n.y, pr);
-      g.addColorStop(0, n.col1); g.addColorStop(1, n.col2);
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(n.x, n.y, pr, 0, Math.PI * 2); ctx.fill();
+      // Deep Space Nebulae
+      for (let n of nebulae) {
+        n.x += n.vx; n.y += n.vy; n.phase += 0.015;
+        if (n.x < -n.r) n.x = W + n.r;
+        if (n.x > W + n.r) n.x = -n.r;
+        if (n.y < -n.r) n.y = H + n.r;
+        if (n.y > H + n.r) n.y = -n.r;
+        let pr = n.r + Math.sin(n.phase) * 12;
+        let g = ctx.createRadialGradient(n.x, n.y, 5, n.x, n.y, pr);
+        g.addColorStop(0, n.col1); g.addColorStop(1, n.col2);
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(n.x, n.y, pr, 0, Math.PI * 2); ctx.fill();
+      }
     }
 
     // Planets

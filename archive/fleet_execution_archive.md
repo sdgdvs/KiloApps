@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T12:55:00-07:00 — kilo-tester: KChrono (Interactive UI Audit, Startup Modal Fix, Backdrop Dismissal & ARCH-05)**
+  - Status: PASS ✅ (3 issues, 3 fixed; 192.5 KB web / 48.0 KB native < 999 KB ceiling).
+  - Startup Modal & Occlusion: Added standard close button & Escape handling to splashOverlay; resolved CDP stuck modal failure.
+  - Double-Modal Stacking: Dedicated Onboarding Tutorial splash button preventing unrequested chained modal on new timeline.
+  - Modal Dismissals & Accessibility: Standardized `modal-close btn-close close` across all 6 dialogs; wired backdrop-click dismissal.
+  - Toast Ergonomics (Directive 189): Added `pointer-events: auto` and pointer cursor on visible toast for direct click dismissal.
+  - Tab Visibility & State Persistence (ARCH-05): Added `visibilitychange` audio suspend/resume; added `gameStarted` flag on JSON import.
+  - Verification: `test_app_startup.py` PASS; `test_web_apps.js` PASS (48 interactive, 0 err); MSVC clean; Vite clean (389ms); security_lint 100% PASS.
+
 - **2026-10-04T12:28:00-07:00 — kilo-creator: kweb://darknet (Deep Expansion: Blue Box & Subterranean Dead Drop Vault)**
   - Status: PASS ✅ (0 regressions, clean builds, 295.0 KB web < 999 KB ceiling).
   - 2600Hz Blue Box & Crossbar (Tab 12): Bell System MF keypad, Red/Silver Box Autovon signaling, 2600Hz trunk seizure & speed-dial presets.
