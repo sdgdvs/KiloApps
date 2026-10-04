@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-qa
-next_agent: kilo-expander
+current_agent: kilo-expander
+next_agent: kilo-creator
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -16,7 +16,7 @@ current_targets:
   kilo_graphics: "KQuest (Phase 4: Town NPCs & Combat FX)"
   kilo_tester: KStellar
   kilo_usability: KNote
-  kilo_qa: KPass
+  kilo_qa: KDB
   kilo_expander: KSnake
 virtual_web_target: "kweb://cybercafe"
 virtual_web_rotation:
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-usability
-  app: KNet
-  timestamp: "2026-10-04T05:28:00-07:00"
+  agent: kilo-qa
+  app: KPass
+  timestamp: "2026-10-04T05:45:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -124,9 +124,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KPass`, `KHash`, `KGraph`, `KClock`, `KTimer`, `KPomodoro` *(Completed: KMystery, KMandel, KFont, KPing, KAudio, KSynth, KScript, KRead, KRadio, KSys, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KChrono, KTask, KStarForge, KPad, KBookmark, KHash, KRSS, KClip, KHex, KHabit, KFarm, KPaint, KGraph, KImage, KJournal, KMail, KMedia, KNet)*.
 
 ### 5. QA & Build Queue (`kilo-qa` — Pass 5: Tutorial & State Integrity)
-- **Current Target**: `KPass`
+- **Current Target**: `KDB`
 - **Upcoming Queue**:
-  `KDB`, `KHex`, `KBookmark`, `KPing`, `KChat`, `KClock`, `KTimer`, `KPomodoro`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote)*.
+  `KHex`, `KBookmark`, `KPing`, `KChat`, `KClock`, `KTimer`, `KPomodoro`, `KMandel` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
 - **Current Target**: `KSnake`
@@ -230,6 +230,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T05:45:00-07:00 — kilo-qa: KPass (Pass 5 QA & Build Quality, Full State Snapshot Persistence & Tutorial Integrity)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 125.9 KB web / 25.6 KB native < 999 KB ceiling).
+  - Snapshot State Persistence: Added full snapshot save/load (F5/F9) capturing generator options, history, and form inputs in web and native (`kpass_quicksave.dat`).
+  - First-Run Tutorial Integrity: Added safe check (`kpass_tutorialSeen` / `.dat`) ensuring welcome tour only fires on fresh sessions and never interrupts restored states.
+  - Interactive Modal Ergonomics: Added global F1 Help shortcut, Enter/Esc dismissals across modals, and centered toast bar to eliminate button occlusion.
+  - Quota & Resource Safety: Added storage quota handling in saveVault and snapshot logic; added visibilitychange auto-lock delta check.
+  - Verification: MSVC clean (`KPass.exe` 25.6 KB); Vite build clean in 330ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T05:28:00-07:00 — kilo-usability: KNet (UI/UX Usability Pass, HiDPI Canvas Scaling, Toast Occlusion & Tab Visibility)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 180.8 KB web / 44.0 KB native < 999 KB ceiling).
   - HiDPI Canvas Crispness: Added devicePixelRatio scaling to polar radar (tab 7) and speed dial (tab 5).
@@ -262,11 +270,3 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Diegetic ARG Telemetry: Embedded 1999Hz subcarrier anomaly log triggers, undocumented ECHO_PULSE opcode, and guestbook breadcrumbs.
   - Procedural Jukebox & Synthesis: Added Track 05 ("Subcarrier 1999") with YM2612 2-operator FM synthesis and SPC700 echo.
   - Verification: `security_lint.py` 100% PASS; Vite build clean in 260ms; file size ~204.5 KB (< 999 KB ceiling).
-
-- **2026-10-04T04:29:00-07:00 — kilo-expander: KPong (Online Multiplayer Net-Arena, RFMS Retrofit & Connect Gate)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 117.5 KB web / 44.0 KB native < 999 KB ceiling).
-  - Online Multiplayer Architecture: Retrofitted standardized RFMS module (`retro_multiplayer.js`) with room codes (`PNG-XXXX`), lobby matchmaking, and host-authoritative ball/paddle sync.
-  - Mandate Rule 12 Compliance: Implemented strict connect gate (no autostart), invite link confirmation modal, address bar hash syncing, and 25-second auto-fallback to Cyber-Bot AI.
-  - In-Game Chat & Emotes: Added quick emote bubbles above paddles, rematch requests, and diegetic ARG signal board integration (`arg/signals/kpong_*`).
-  - Native Win32 Parity: Replaced legacy glint comment with Rule 11 static energy border in `KPong/main.c`; compiled clean 44 KB binary.
-  - Verification: MSVC clean (`KPong.exe` 44.0 KB); Vite clean in 274ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.

@@ -651,8 +651,8 @@
   #toast {
     position: fixed;
     bottom: 24px;
-    right: 20px;
-    transform: translateY(20px);
+    left: 50%;
+    transform: translate(-50%, 20px);
     background: #2b2b2b;
     color: #fff;
     border: 1px solid #444;
@@ -669,7 +669,7 @@
     transition: transform 0.25s ease, opacity 0.25s ease;
   }
   #toast.show {
-    transform: translateY(0);
+    transform: translate(-50%, 0);
     opacity: 1;
     pointer-events: auto;
   }
@@ -1407,10 +1407,15 @@
           cat: catInput ? catInput.value : 'Personal',
           notes: notesInput ? notesInput.value : ''
         },
+        recentHistory: Array.isArray(recentHistory) ? JSON.parse(JSON.stringify(recentHistory)) : [],
+        historyExpanded: !!historyExpanded,
         timestamp: Date.now()
       };
-      safeSetStorage('kpass_quicksave', JSON.stringify(state));
-      showToast("Session quicksaved [F5]!");
+      if (safeSetStorage('kpass_quicksave', JSON.stringify(state))) {
+        showToast("Session quicksaved [F5]!");
+      } else {
+        showToast("Storage quota exceeded! Could not save snapshot.", false);
+      }
     }
 
     function quickLoadSession() {
@@ -1473,6 +1478,15 @@
             if (btnClearSearch) btnClearSearch.style.display = vaultSearch.value ? 'block' : 'none';
           }
         }
+        if (Array.isArray(state.recentHistory)) {
+          recentHistory = state.recentHistory;
+          renderRecentHistory();
+        }
+        if (typeof state.historyExpanded === 'boolean') {
+          historyExpanded = state.historyExpanded;
+          if (historyList) historyList.style.display = historyExpanded ? 'flex' : 'none';
+          if (lblHistoryToggleIcon) lblHistoryToggleIcon.innerText = historyExpanded ? '▲' : '▼';
+        }
         if (state.mode) {
           setGenMode(state.mode);
         }
@@ -1485,6 +1499,7 @@
         } else {
           generate();
         }
+        safeSetStorage('kpass_tutorialSeen', '1');
         showToast("Session restored [F9]!");
       } catch (e) {
         showToast("Error loading quicksave snapshot", false);
@@ -1497,7 +1512,9 @@
         btnUnlock.innerText = "Unlock Vault";
     }
 
+    let lastActiveTime = Date.now();
     function resetAutoLock() {
+        lastActiveTime = Date.now();
         if(!currentMasterPass) return;
         clearTimeout(autoLockTimer);
         autoLockTimer = setTimeout(lockVault, LOCK_TIMEOUT);
@@ -1506,6 +1523,15 @@
     document.addEventListener('keydown', resetAutoLock);
     document.addEventListener('pointerdown', resetAutoLock);
     document.addEventListener('touchstart', resetAutoLock);
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) {
+            if (currentMasterPass && Date.now() - lastActiveTime >= LOCK_TIMEOUT) {
+                lockVault();
+            } else {
+                resetAutoLock();
+            }
+        }
+    });
 
     function lockVault() {
         currentMasterPass = null;
@@ -1535,13 +1561,18 @@
     btnLock.addEventListener('click', lockVault);
 
     async function saveVault() {
-        if(!currentMasterPass) return;
+        if(!currentMasterPass) return false;
         try {
             const jsonStr = JSON.stringify(vault);
             const encData = await encryptData(currentMasterPass, jsonStr);
-            safeSetStorage('kpass_vault_enc', JSON.stringify(encData));
+            if (!safeSetStorage('kpass_vault_enc', JSON.stringify(encData))) {
+                showToast("Storage quota exceeded! Could not save encrypted vault.", false);
+                return false;
+            }
+            return true;
         } catch(e) {
             showToast("Failed to save encrypted vault.", false);
+            return false;
         }
     }
 
@@ -1566,8 +1597,12 @@
                 renderVault();
                 updateVaultCount();
                 showToast("Vault unlocked successfully!");
+                const hasExistingData = !!(safeGetStorage('kpass_vault_enc') || safeGetStorage('kpass_quicksave'));
                 if (!safeGetStorage('kpass_tutorialSeen')) {
-                    setTimeout(() => showTutorial(1), 350);
+                    safeSetStorage('kpass_tutorialSeen', '1');
+                    if (!hasExistingData) {
+                        setTimeout(() => showTutorial(1), 350);
+                    }
                 }
             } catch(e) {
                 lockError.innerText = "Error decrypting vault.";
@@ -1582,8 +1617,12 @@
             btnUnlock.innerText = "Unlock Vault";
             resetAutoLock();
             showToast("Master password set! Vault ready.");
+            const hasExistingData = !!(safeGetStorage('kpass_vault_enc') || safeGetStorage('kpass_quicksave'));
             if (!safeGetStorage('kpass_tutorialSeen')) {
-                setTimeout(() => showTutorial(1), 350);
+                safeSetStorage('kpass_tutorialSeen', '1');
+                if (!hasExistingData) {
+                    setTimeout(() => showTutorial(1), 350);
+                }
             }
         }
     });
@@ -1745,6 +1784,12 @@
 
     // Global Key Listener
     document.addEventListener('keydown', (e) => {
+        if (e.key === 'F1') {
+            e.preventDefault();
+            toggleHelp();
+            return;
+        }
+
         if (tutorialOverlay && tutorialOverlay.style.display === 'flex') {
             if (e.key === 'Escape') {
                 closeTutorial();
@@ -1791,11 +1836,26 @@
             }
         }
 
+        if (e.key === 'Enter') {
+            if (helpOverlay.style.display === 'flex') {
+                e.preventDefault();
+                toggleHelp(false);
+                return;
+            }
+            if (deleteModal.style.display === 'flex') {
+                e.preventDefault();
+                btnConfirmDelete.click();
+                return;
+            }
+        }
+
         // Global F5 quicksave & F9 quickload
         if (e.key === 'F5') {
             e.preventDefault();
             if (lockScreen.style.display === 'none') {
                 quickSaveSession();
+            } else {
+                showToast("Vault is locked. Unlock before saving snapshot [F5].", false);
             }
             return;
         }
@@ -1803,6 +1863,8 @@
             e.preventDefault();
             if (lockScreen.style.display === 'none') {
                 quickLoadSession();
+            } else {
+                showToast("Vault is locked. Unlock before restoring snapshot [F9].", false);
             }
             return;
         }
@@ -1833,7 +1895,7 @@
             if (e.key === '1') { switchTab('gen'); return; }
             if (e.key === '2') { switchTab('vault'); return; }
             if (e.key === '3') { switchTab('audit'); return; }
-            if (e.key.toLowerCase() === 'h' || e.key === 'F1') {
+            if (e.key.toLowerCase() === 'h') {
                 e.preventDefault();
                 toggleHelp();
                 return;

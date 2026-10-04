@@ -468,29 +468,43 @@ void LockUI(int lock) {
     }
 }
 
+typedef struct {
+    DWORD magic; // 0x51535632 ("QSV2")
+    int up;
+    int low;
+    int num;
+    int sym;
+    int len;
+    int catSel;
+    char label[64];
+    char user[64];
+    char pass[128];
+} KPassQuickSave;
+
 void QuickSaveState(HWND hwnd) {
     HANDLE hFile = CreateFileA("kpass_quicksave.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD written = 0;
-        int up = (SendMessage(hUpper, BM_GETCHECK, 0, 0) == BST_CHECKED);
-        int low = (SendMessage(hLower, BM_GETCHECK, 0, 0) == BST_CHECKED);
-        int num = (SendMessage(hNum, BM_GETCHECK, 0, 0) == BST_CHECKED);
-        int sym = (SendMessage(hSym, BM_GETCHECK, 0, 0) == BST_CHECKED);
+        KPassQuickSave qs;
+        memset(&qs, 0, sizeof(qs));
+        qs.magic = 0x51535632;
+        qs.up = (SendMessage(hUpper, BM_GETCHECK, 0, 0) == BST_CHECKED);
+        qs.low = (SendMessage(hLower, BM_GETCHECK, 0, 0) == BST_CHECKED);
+        qs.num = (SendMessage(hNum, BM_GETCHECK, 0, 0) == BST_CHECKED);
+        qs.sym = (SendMessage(hSym, BM_GETCHECK, 0, 0) == BST_CHECKED);
         char lenBuf[16] = {0};
         GetWindowTextA(hLen, lenBuf, sizeof(lenBuf));
-        int len = my_atoi(lenBuf);
-        int data[8];
-        data[0] = 0x51535631; // Magic "QSV1"
-        data[1] = up;
-        data[2] = low;
-        data[3] = num;
-        data[4] = sym;
-        data[5] = len;
-        data[6] = 0;
-        data[7] = 0;
-        WriteFile(hFile, data, sizeof(data), &written, NULL);
+        qs.len = my_atoi(lenBuf);
+        qs.catSel = (int)SendMessage(hCatInput, CB_GETCURSEL, 0, 0);
+        GetWindowTextA(hLabelInput, qs.label, sizeof(qs.label));
+        GetWindowTextA(hUserInput, qs.user, sizeof(qs.user));
+        GetWindowTextA(hDisplay, qs.pass, sizeof(qs.pass));
+
+        WriteFile(hFile, &qs, sizeof(qs), &written, NULL);
         CloseHandle(hFile);
         SetWindowTextA(hStrengthDisplay, "Session settings quicksaved [F5]!");
+    } else {
+        SetWindowTextA(hStrengthDisplay, "Failed to save quicksave snapshot.");
     }
 }
 
@@ -498,10 +512,38 @@ void QuickLoadState(HWND hwnd) {
     HANDLE hFile = CreateFileA("kpass_quicksave.dat", GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile != INVALID_HANDLE_VALUE) {
         DWORD read = 0;
-        int data[8] = {0};
-        ReadFile(hFile, data, sizeof(data), &read, NULL);
+        KPassQuickSave qs;
+        memset(&qs, 0, sizeof(qs));
+        ReadFile(hFile, &qs, sizeof(qs), &read, NULL);
         CloseHandle(hFile);
-        if (read >= sizeof(int) * 6 && data[0] == 0x51535631) {
+        if (read >= sizeof(DWORD) && qs.magic == 0x51535632) {
+            SendMessage(hUpper, BM_SETCHECK, qs.up ? BST_CHECKED : BST_UNCHECKED, 0);
+            SendMessage(hLower, BM_SETCHECK, qs.low ? BST_CHECKED : BST_UNCHECKED, 0);
+            SendMessage(hNum, BM_SETCHECK, qs.num ? BST_CHECKED : BST_UNCHECKED, 0);
+            SendMessage(hSym, BM_SETCHECK, qs.sym ? BST_CHECKED : BST_UNCHECKED, 0);
+            char lenBuf[16];
+            my_itoa(qs.len > 0 ? qs.len : 16, lenBuf);
+            SetWindowTextA(hLen, lenBuf);
+            if (qs.catSel >= 0) SendMessage(hCatInput, CB_SETCURSEL, (WPARAM)qs.catSel, 0);
+            SetWindowTextA(hLabelInput, qs.label);
+            SetWindowTextA(hUserInput, qs.user);
+            if (qs.pass[0]) {
+                SetWindowTextA(hDisplay, qs.pass);
+                char strDisplay[64];
+                char strRating[20];
+                CalculateStrength(qs.pass, strDisplay, strRating);
+                SetWindowTextA(hStrengthDisplay, strDisplay);
+            } else {
+                SendMessage(hwnd, WM_COMMAND, 1001, 0); // Generate
+            }
+            HANDLE hTut = CreateFileA("kpass_tutorialSeen.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+            if (hTut != INVALID_HANDLE_VALUE) {
+                DWORD bw = 0; WriteFile(hTut, "1", 1, &bw, NULL); CloseHandle(hTut);
+            }
+            SetWindowTextA(hStrengthDisplay, "Session settings restored [F9]!");
+            return;
+        } else if (read >= sizeof(int) * 6 && *((DWORD*)&qs) == 0x51535631) {
+            int* data = (int*)&qs;
             SendMessage(hUpper, BM_SETCHECK, data[1] ? BST_CHECKED : BST_UNCHECKED, 0);
             SendMessage(hLower, BM_SETCHECK, data[2] ? BST_CHECKED : BST_UNCHECKED, 0);
             SendMessage(hNum, BM_SETCHECK, data[3] ? BST_CHECKED : BST_UNCHECKED, 0);
@@ -510,6 +552,10 @@ void QuickLoadState(HWND hwnd) {
             my_itoa(data[5], lenBuf);
             SetWindowTextA(hLen, lenBuf);
             SendMessage(hwnd, WM_COMMAND, 1001, 0); // Generate
+            HANDLE hTut = CreateFileA("kpass_tutorialSeen.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+            if (hTut != INVALID_HANDLE_VALUE) {
+                DWORD bw = 0; WriteFile(hTut, "1", 1, &bw, NULL); CloseHandle(hTut);
+            }
             SetWindowTextA(hStrengthDisplay, "Session settings restored [F9]!");
             return;
         }
@@ -973,6 +1019,19 @@ void __stdcall MainEntry() {
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
 
+    int hasTutorial = (GetFileAttributesA("kpass_tutorialSeen.dat") != INVALID_FILE_ATTRIBUTES);
+    int hasExistingSave = (GetFileAttributesA("kpass_vault.enc") != INVALID_FILE_ATTRIBUTES) || 
+                          (GetFileAttributesA("kpass_quicksave.dat") != INVALID_FILE_ATTRIBUTES);
+    if (!hasTutorial) {
+        HANDLE hTut = CreateFileA("kpass_tutorialSeen.dat", GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hTut != INVALID_HANDLE_VALUE) {
+            DWORD bw = 0; WriteFile(hTut, "1", 1, &bw, NULL); CloseHandle(hTut);
+        }
+        if (!hasExistingSave) {
+            ShowHelpModal(hwnd);
+        }
+    }
+
     MSG msg;
     while (GetMessageA(&msg, NULL, 0, 0)) {
         if (msg.message == WM_KEYDOWN) {
@@ -990,10 +1049,16 @@ void __stdcall MainEntry() {
                 if (!g_locked) {
                     QuickSaveState(hwnd);
                     continue;
+                } else {
+                    SetWindowTextA(hLockHelpLabel, "Vault is locked. Unlock before saving snapshot [F5].");
+                    continue;
                 }
             } else if (msg.wParam == VK_F9) {
                 if (!g_locked) {
                     QuickLoadState(hwnd);
+                    continue;
+                } else {
+                    SetWindowTextA(hLockHelpLabel, "Vault is locked. Unlock before restoring snapshot [F9].");
                     continue;
                 }
             } else if (alt) {

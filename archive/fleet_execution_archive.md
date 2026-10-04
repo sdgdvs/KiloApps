@@ -4,6 +4,14 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T04:29:00-07:00 — kilo-expander: KPong (Online Multiplayer Net-Arena, RFMS Retrofit & Connect Gate)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 117.5 KB web / 44.0 KB native < 999 KB ceiling).
+  - Online Multiplayer Architecture: Retrofitted standardized RFMS module (`retro_multiplayer.js`) with room codes (`PNG-XXXX`), lobby matchmaking, and host-authoritative ball/paddle sync.
+  - Mandate Rule 12 Compliance: Implemented strict connect gate (no autostart), invite link confirmation modal, address bar hash syncing, and 25-second auto-fallback to Cyber-Bot AI.
+  - In-Game Chat & Emotes: Added quick emote bubbles above paddles, rematch requests, and diegetic ARG signal board integration (`arg/signals/kpong_*`).
+  - Native Win32 Parity: Replaced legacy glint comment with Rule 11 static energy border in `KPong/main.c`; compiled clean 44 KB binary.
+  - Verification: MSVC clean (`KPong.exe` 44.0 KB); Vite clean in 274ms; CDP startup PASS (100%); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T04:08:00-07:00 — kilo-qa: KNote (Pass 5 QA & Build Quality, Full State Snapshot Persistence & Tutorial Integrity)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 158.8 KB web / 25.6 KB native < 999 KB ceiling).
   - Snapshot State Persistence: Added full snapshot save/load (F5/F9) capturing tabs, active note, trash notes, selection, and sidebar in web and native (`knote_snapshot.dat`).
