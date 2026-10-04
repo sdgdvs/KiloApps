@@ -1450,30 +1450,8 @@ void DrawPerimeterInlayGDI(HDC hdc, int width, int height, float t) {
 }
 
 void DrawBoardSpecularSweepGDI(HDC hdc, int cx, int cy, float t) {
-    float sweepPeriod = 5.0f;
-    float progress = fmodf(t * 0.4f, sweepPeriod);
-    if (progress < 1.4f) {
-        float sweepRatio = progress / 1.4f;
-        int sweepX = (int)((cx - BOARD_R * 1.2f) + sweepRatio * (BOARD_R * 2.4f));
-
-        POINT pts[4];
-        pts[0].x = sweepX - 25; pts[0].y = cy - BOARD_R;
-        pts[1].x = sweepX + 25; pts[1].y = cy - BOARD_R;
-        pts[2].x = sweepX + 45; pts[2].y = cy + BOARD_R;
-        pts[3].x = sweepX - 5;  pts[3].y = cy + BOARD_R;
-
-        HBRUSH sheenBr = CreateSolidBrush(RGB(65, 65, 70));
-        HPEN sheenPen = CreatePen(PS_NULL, 0, 0);
-        HBRUSH oldB = (HBRUSH)SelectObject(hdc, sheenBr);
-        HPEN oldP = (HPEN)SelectObject(hdc, sheenPen);
-
-        Polygon(hdc, pts, 4);
-
-        SelectObject(hdc, oldB);
-        SelectObject(hdc, oldP);
-        DeleteObject(sheenBr);
-        DeleteObject(sheenPen);
-    }
+    // Purged per Director Mandate Rule 11 (Specular Glint & Traveling Comet Ban)
+    (void)hdc; (void)cx; (void)cy; (void)t;
 }
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -1563,7 +1541,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             else if (LOWORD(wParam) == 109) { Redo(hwnd); }
             else if (LOWORD(wParam) == 110) {
                 MessageBox(hwnd, 
-                    "KDarts - 3D Visual Edition (Loop 7 Expansion):\n\n"
+                    "KDarts - 3D Visual Edition:\n\n"
                     "Controls:\n"
                     "- Aim with mouse, click to throw.\n"
                     "- Press F: Focus (slows wobble 75%)\n"
@@ -1883,9 +1861,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
                 shakeMag *= 0.88f;
             }
 
-            // Draw 3D Sisal Dartboard with metallic wire spider and specular sweep
+            // Draw 3D Sisal Dartboard with metallic wire spider
             Draw3DSisalDartboardGDI(memDC, CX + shakeX, CY + shakeY);
-            DrawBoardSpecularSweepGDI(memDC, CX + shakeX, CY + shakeY, t);
             
             // Header Text & Score UI
             SetBkMode(memDC, TRANSPARENT);

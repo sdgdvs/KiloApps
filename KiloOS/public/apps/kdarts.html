@@ -302,6 +302,114 @@
   .toast-success { border-color: #00e676; }
   .toast-warning { border-color: #ff9100; }
   .toast-info { border-color: #00d2ff; }
+
+  /* Replay & Statistics Modal Styling */
+  .modal-content-lg {
+    width: 660px;
+    max-width: 95vw;
+  }
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .stat-card {
+    background: #14141c;
+    border: 1px solid #2d2d3d;
+    border-radius: 6px;
+    padding: 8px 10px;
+    text-align: center;
+  }
+  .stat-val {
+    font-size: 18px;
+    font-weight: 800;
+    color: #ffd700;
+    margin-bottom: 2px;
+  }
+  .stat-label {
+    font-size: 10px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .replay-canvas-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: #101018;
+    border: 1px solid #28283a;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 12px;
+  }
+  .replay-controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+  }
+  .replay-slider {
+    width: 100%;
+    accent-color: #00d2ff;
+    cursor: pointer;
+  }
+  .history-box {
+    max-height: 150px;
+    overflow-y: auto;
+    background: #121218;
+    border: 1px solid #282838;
+    border-radius: 6px;
+    padding: 4px;
+    font-size: 11px;
+  }
+  .history-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 8px;
+    border-bottom: 1px solid #1a1a24;
+    cursor: pointer;
+  }
+  .history-row:hover {
+    background: #1c1c28;
+  }
+  .history-row.active {
+    background: #00334e;
+    border-color: #00d2ff;
+  }
+  .keybind-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 4px;
+    border-bottom: 1px solid #282838;
+  }
+  .keybind-row:last-child {
+    border-bottom: none;
+  }
+  .key-badge {
+    background: #101924;
+    border: 1px solid #38bdf8;
+    color: #38bdf8;
+    font-family: monospace;
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    min-width: 60px;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .key-badge:hover, .key-badge.recording {
+    background: #0284c7;
+    color: #fff;
+    border-color: #ffd700;
+  }
 </style>
 </head>
 <body>
@@ -326,7 +434,9 @@
       <button onclick="redo()">Redo Turn</button>
     </div>
     <div class="btn-group">
-      <button id="btnOnline" onclick="openMultiplayerModal()" style="border-color: #00d2ff; color: #00d2ff; background: #002b36; font-weight: bold;">🌐 Online Match</button>
+      <button id="btnOnline" onclick="openMultiplayerModal()" style="border-color: #00d2ff; color: #00d2ff; background: #002b36; font-weight: bold;">🌐 Online Match (O)</button>
+      <button id="btnReplay" onclick="openReplayModal()" style="border-color: #ffd700; color: #ffd700; background: #262208; font-weight: bold;">📊 Replay & Stats (R)</button>
+      <button id="btnSettings" onclick="openSettingsModal()" style="border-color: #818cf8; color: #c7d2fe; background: #1e1b4b; font-weight: bold;">⚙️ Keys & Aim (K)</button>
       <select id="diff" onchange="setDifficulty(this.value)">
         <option value="Easy">Vs AI: Easy</option>
         <option value="Medium" selected>Vs AI: Medium</option>
@@ -352,6 +462,7 @@
       <span id="badgeUndo">Undo: 1/1</span>
       <span id="badgeLaser">Laser: 2/2</span>
       <span id="badgeWind">Wind: 0 mph</span>
+      <span id="badgeStats" style="color: #ffd700; font-weight: bold;">3-Dart Avg: 0.0</span>
     </div>
   </div>
 
@@ -392,7 +503,7 @@
     <div id="helpPanel" class="panel">
       <h3 style="margin-top:0; color:#00d2ff;">KDarts - 3D Visual Edition & Online Multiplayer</h3>
       <h4 style="margin-bottom:4px; color:#ffd700;">General Controls</h4>
-      <p style="font-size:13px; margin-top:0;">Aim with mouse and click to throw. Aim wobbles dynamically over time. Throw 3 darts per turn.</p>
+      <p style="font-size:13px; margin-top:0;">Aim with mouse and click or press Space to throw. Aim wobbles dynamically over time. Throw 3 darts per turn.</p>
       
       <h4 style="margin-bottom:4px; color:#ffd700;">Power-Ups & Active Skills</h4>
       <ul style="font-size:13px; padding-left:20px; margin-top:0;">
@@ -402,6 +513,16 @@
         <li><strong>Laser Sight (L):</strong> Displays exact trajectory prediction line arc. (2 uses)</li>
         <li><strong>1-6 Keys:</strong> Switch Modes | <strong>C Key:</strong> Campaign Mode</li>
       </ul>
+
+      <h4 style="margin-bottom:4px; color:#ffd700;">📊 Match Replay & Performance Analytics (R)</h4>
+      <p style="font-size:13px; margin-top:0;">
+        Review your complete leg and match history dart-by-dart. Interactive 3D board visualizer allows scrubbing through throws, watching shot arcs, inspecting 3-dart averages, and exporting or importing match replays as JSON.
+      </p>
+
+      <h4 style="margin-bottom:4px; color:#ffd700;">⚙️ Custom Key Rebinding & Aim Assistance (K)</h4>
+      <p style="font-size:13px; margin-top:0;">
+        Fully rebind all throw and ability keys, select high-contrast reticles (Gold Ring, Neon Emerald, Ruby Dot), and adjust motor wobble sensitivity.
+      </p>
 
       <h4 style="margin-bottom:4px; color:#ffd700;">Game Modes</h4>
       <p style="font-size:13px; margin-top:0;">
@@ -413,9 +534,9 @@
         <strong>Killer Darts:</strong> Become Killer, reduce opponent's 5 lives to 0!
       </p>
 
-      <h4 style="margin-bottom:4px; color:#ffd700;">🌐 Seamless Online Multiplayer</h4>
+      <h4 style="margin-bottom:4px; color:#ffd700;">🌐 Seamless Online Multiplayer (O)</h4>
       <p style="font-size:13px; margin-top:0;">
-        Challenge players across different computers anywhere on the internet in real-time via Firebase Realtime Database. Watch live opponent throws into the sisal board, exchange quick emote reactions, and request instant rematches!
+        Challenge players across different computers anywhere on the internet in real-time via Firebase Realtime Database. Watch live opponent throws into the sisal board, exchange quick emote reactions, and request instant rematches! Mandatory 25-second solo fallback engages Cyber-Darter AI automatically if no peer connects.
       </p>
 
       <h4 style="margin-bottom:4px; color:#ffd700;">20-Stage Campaign</h4>
@@ -466,7 +587,7 @@
 
 <script>
 const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
+let ctx = canvas.getContext('2d');
 const titleEl = document.getElementById('title-bar');
 const scoreEl = document.getElementById('score');
 const statusEl = document.getElementById('status');
@@ -613,7 +734,8 @@ let historyStack = [];
 let redoStack = [];
 let aiTimeoutId = null;
 
-// Multiplayer state & networking variables
+// --- Retro Firebase Multiplayer Service (RFMS Standard) ---
+let rMultiplayer = null;
 let isOnlineGame = false;
 let currentRoomId = null;
 let currentRoomStatus = 'waiting'; // 'waiting', 'playing', 'finished'
@@ -623,32 +745,63 @@ let myPlayerName = localStorage.getItem('kdarts_player_name') || ('DartAce_' + M
 let opponentName = 'Waiting...';
 let p1OnlineName = 'Player 1';
 let p2OnlineName = 'Player 2';
-let activeRoomRef = null;
-let activeRoomListener = null;
 let localLastDartTs = 0;
 let localLastChatTs = 0;
 let localLastTurnTs = 0;
-let soloFallbackTimer = null;
 
-function startSoloFallbackTimer(code) {
-    clearSoloFallbackTimer();
-    soloFallbackTimer = setTimeout(() => {
-        if (isOnlineGame && currentRoomStatus === 'waiting' && currentRoomId === code) {
-            showToast("⏱️ No opponent joined in 25s. Engaging Subnet Cyber-Darter AI...", "warning");
-            leaveOnlineGame(false);
-            aiDifficulty = 'Medium';
-            setMode(gameMode || '501');
-            showToast("🎯 Subnet Cyber-Darter AI engaged! Step up to the oche.", "info");
+// --- Match Replay & Performance Analytics State ---
+let currentLegNumber = 1;
+let currentTurnNumber = 1;
+let matchTimeline = []; // Array of throw objects
+let matchStats = {
+    p1: { totalPts: 0, darts: 0, turns: 0, highCO: 0, ton180: 0, ton140: 0, ton100: 0, ton60: 0, bulls: 0 },
+    p2: { totalPts: 0, darts: 0, turns: 0, highCO: 0, ton180: 0, ton140: 0, ton100: 0, ton60: 0, bulls: 0 }
+};
+let replayIndex = 0;
+let replayPlayInterval = null;
+let replaySpeed = 1;
+
+// --- Key Rebinding & Aim Assistance Settings ---
+const DEFAULT_KEYBINDS = {
+    throw: ' ',
+    nextTurn: 'Enter',
+    focus: 'f',
+    magnet: 'm',
+    undo: 'u',
+    laser: 'l',
+    replay: 'r',
+    online: 'o',
+    settings: 'k',
+    help: 'h'
+};
+let userKeybinds = Object.assign({}, DEFAULT_KEYBINDS);
+try {
+    const savedKeys = localStorage.getItem('kdarts_keybinds');
+    if (savedKeys) Object.assign(userKeybinds, JSON.parse(savedKeys));
+} catch(e) {}
+
+let reticleStyle = localStorage.getItem('kdarts_reticle_style') || 'cyan'; // 'cyan', 'gold', 'neon', 'ruby'
+let wobbleAssistFactor = parseFloat(localStorage.getItem('kdarts_wobble_factor') || '1.0');
+let activeRecordingAction = null;
+
+// --- ARCH-05: Tab Visibility & CPU / Timer Drift Remediation ---
+let isTabHidden = false;
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        isTabHidden = true;
+        if (aiTimeoutId) {
+            clearTimeout(aiTimeoutId);
+            aiTimeoutId = null;
         }
-    }, 25000);
-}
-
-function clearSoloFallbackTimer() {
-    if (soloFallbackTimer) {
-        clearTimeout(soloFallbackTimer);
-        soloFallbackTimer = null;
+    } else {
+        isTabHidden = false;
+        if (state === 'PLAYING' && currentPlayer === 1 && (!isOnlineGame && (isCampaign || aiDifficulty !== 'Human'))) {
+            aiTimeoutId = setTimeout(aiThrow, 600);
+        } else if (state === 'TURN_END' && currentPlayer === 1 && (!isOnlineGame && (isCampaign || aiDifficulty !== 'Human'))) {
+            aiTimeoutId = setTimeout(nextTurn, 1000);
+        }
     }
-}
+});
 
 function showToast(msg, type = 'info') {
     const container = document.getElementById('toast-container');
@@ -658,7 +811,7 @@ function showToast(msg, type = 'info') {
     toast.innerHTML = msg;
     toast.onclick = () => {
         toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
+        setTimeout(() => toast.remove(), 250);
     };
     container.appendChild(toast);
     setTimeout(() => {
@@ -677,6 +830,552 @@ function escapeHtml(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+function formatHitLabel(number, mult) {
+    if (number === 25) return mult === 2 ? 'Double Bull (50)' : 'Outer Bull (25)';
+    if (mult === 3) return `T${number}`;
+    if (mult === 2) return `D${number}`;
+    if (mult === 1) return `S${number}`;
+    return 'Miss';
+}
+
+function recordMatchDart(d) {
+    const pKey = d.player === 0 ? 'p1' : 'p2';
+    const st = matchStats[pKey];
+    st.darts++;
+    st.totalPts += d.pts;
+    if (d.pts === 50 || d.number === 25) st.bulls++;
+    if (d.isCheckout && d.scoreBefore > st.highCO) {
+        st.highCO = d.scoreBefore;
+    }
+
+    const rec = {
+        id: matchTimeline.length + 1,
+        leg: currentLegNumber,
+        turn: currentTurnNumber,
+        player: d.player,
+        playerName: d.player === 0 ? (isOnlineGame ? p1OnlineName : 'Player 1') : (isOnlineGame ? p2OnlineName : (isCampaign ? CAMPAIGN_STAGES[campaignStage].opponent : (aiDifficulty === 'Human' ? 'Player 2' : 'AI'))),
+        dartNum: 3 - (d.dartsLeft !== undefined ? d.dartsLeft : 0),
+        rawX: d.rawX,
+        rawY: d.rawY,
+        finalX: d.finalX,
+        finalY: d.finalY,
+        pts: d.pts,
+        number: d.number,
+        mult: d.mult,
+        label: formatHitLabel(d.number, d.mult),
+        scoreBefore: d.scoreBefore,
+        scoreAfter: d.scoreAfter,
+        isCheckout: Boolean(d.isCheckout),
+        isBust: Boolean(d.isBust),
+        timestamp: Date.now()
+    };
+    matchTimeline.push(rec);
+    if (matchTimeline.length > 500) matchTimeline.shift();
+
+    updateLiveStatsBadge();
+}
+
+function recordTurnMilestone(player, turnPoints) {
+    const pKey = player === 0 ? 'p1' : 'p2';
+    const st = matchStats[pKey];
+    st.turns++;
+    if (turnPoints === 180) st.ton180++;
+    else if (turnPoints >= 140) st.ton140++;
+    else if (turnPoints >= 100) st.ton100++;
+    else if (turnPoints >= 60) st.ton60++;
+    updateLiveStatsBadge();
+}
+
+function updateLiveStatsBadge() {
+    const badge = document.getElementById('badgeStats');
+    if (!badge) return;
+    const p1Darts = matchStats.p1.darts;
+    const p1Avg = p1Darts > 0 ? ((matchStats.p1.totalPts / p1Darts) * 3).toFixed(1) : '0.0';
+    badge.textContent = `3-Dart Avg: ${p1Avg}`;
+}
+
+// --- Sisal Board Replay Visualizer ---
+function openReplayModal() {
+    const modal = document.getElementById('replay-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    updateReplayStatCards();
+    updateReplayTurnTable();
+    if (matchTimeline.length > 0) {
+        replayIndex = matchTimeline.length - 1;
+    } else {
+        replayIndex = 0;
+    }
+    drawReplayBoard();
+}
+
+function closeReplayModal() {
+    if (replayPlayInterval) {
+        clearInterval(replayPlayInterval);
+        replayPlayInterval = null;
+        const btn = document.getElementById('btnReplayPlay');
+        if (btn) btn.textContent = '▶ Play';
+    }
+    const modal = document.getElementById('replay-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function updateReplayStatCards() {
+    const p1Darts = matchStats.p1.darts;
+    const p2Darts = matchStats.p2.darts;
+    const p1Avg = p1Darts > 0 ? ((matchStats.p1.totalPts / p1Darts) * 3).toFixed(1) : '0.0';
+    const p2Avg = p2Darts > 0 ? ((matchStats.p2.totalPts / p2Darts) * 3).toFixed(1) : '0.0';
+    const highestCO = Math.max(matchStats.p1.highCO, matchStats.p2.highCO);
+
+    const elP1 = document.getElementById('statP1Avg'); if (elP1) elP1.textContent = p1Avg;
+    const elP2 = document.getElementById('statP2Avg'); if (elP2) elP2.textContent = p2Avg;
+    const elCO = document.getElementById('statHighCheckout'); if (elCO) elCO.textContent = highestCO;
+    const el180 = document.getElementById('statTon180'); if (el180) el180.textContent = matchStats.p1.ton180 + matchStats.p2.ton180;
+    const el140 = document.getElementById('statTon140'); if (el140) el140.textContent = matchStats.p1.ton140 + matchStats.p2.ton140;
+    const el100 = document.getElementById('statTon100'); if (el100) el100.textContent = matchStats.p1.ton100 + matchStats.p2.ton100;
+    const elBulls = document.getElementById('statBulls'); if (elBulls) elBulls.textContent = matchStats.p1.bulls + matchStats.p2.bulls;
+    const elDarts = document.getElementById('statTotalDarts'); if (elDarts) elDarts.textContent = p1Darts + p2Darts;
+}
+
+function updateReplayTurnTable() {
+    const box = document.getElementById('replayHistoryBox');
+    if (!box) return;
+    if (matchTimeline.length === 0) {
+        box.innerHTML = '<div style="color: #64748b; font-style: italic; text-align: center; padding: 10px;">No throws recorded in current match.</div>';
+        return;
+    }
+
+    let html = '';
+    // Group by leg and turn
+    let curTurnKey = '';
+    let curTurnThrows = [];
+
+    matchTimeline.forEach((throwRec, idx) => {
+        const key = `L${throwRec.leg}-T${throwRec.turn}-${throwRec.player}`;
+        if (key !== curTurnKey) {
+            if (curTurnThrows.length > 0) {
+                html += formatTurnTableRow(curTurnThrows);
+            }
+            curTurnKey = key;
+            curTurnThrows = [];
+        }
+        curTurnThrows.push({ ...throwRec, globalIndex: idx });
+    });
+    if (curTurnThrows.length > 0) {
+        html += formatTurnTableRow(curTurnThrows);
+    }
+    box.innerHTML = html;
+}
+
+function formatTurnTableRow(throws) {
+    const first = throws[0];
+    const turnPts = throws.reduce((acc, t) => acc + (t.pts || 0), 0);
+    const throwsStr = throws.map(t => `${t.label} (${t.pts})`).join(' + ');
+    const lastScore = throws[throws.length - 1].scoreAfter;
+    const isSpecial = turnPts === 180 ? 'color: #ff3366; font-weight: bold;' : (turnPts >= 100 ? 'color: #ffd700;' : '');
+    const isP1 = first.player === 0;
+
+    return `
+        <div class="history-row" onclick="jumpReplayToThrow(${first.globalIndex})">
+            <div>
+                <span style="color: ${isP1 ? '#00e5ff' : '#ff9100'}; font-weight: 600;">[L${first.leg}:T${first.turn}] ${escapeHtml(first.playerName)}:</span>
+                <span style="color: #cbd5e1; margin-left: 4px;">${throwsStr} =</span>
+                <strong style="margin-left: 4px; ${isSpecial}">${turnPts} pts</strong>
+            </div>
+            <div style="color: #94a3b8; font-family: monospace;">
+                ${lastScore !== undefined ? `Rem: ${lastScore}` : ''}
+            </div>
+        </div>
+    `;
+}
+
+function drawReplayBoard() {
+    const replayCanvas = document.getElementById('replayCanvas');
+    if (!replayCanvas) return;
+    const rCtx = replayCanvas.getContext('2d');
+    rCtx.clearRect(0, 0, 340, 340);
+
+    // Swap global ctx to render Sisal board scaled
+    const origCtx = ctx;
+    ctx = rCtx;
+    rCtx.save();
+    rCtx.scale(340 / 600, 340 / 600);
+    draw3DSisalDartboard();
+    rCtx.restore();
+    ctx = origCtx;
+
+    if (matchTimeline.length === 0) return;
+    const currentRec = matchTimeline[replayIndex] || matchTimeline[0];
+    if (!currentRec) return;
+
+    const scale = 340 / 600;
+    const currentLeg = currentRec.leg;
+
+    // Render throws from current leg up to replayIndex
+    for (let i = 0; i <= replayIndex; i++) {
+        const item = matchTimeline[i];
+        if (item.leg !== currentLeg) continue;
+        const ix = item.finalX * scale;
+        const iy = item.finalY * scale;
+        const isCurrent = (i === replayIndex);
+
+        rCtx.beginPath();
+        rCtx.arc(ix, iy, isCurrent ? 5.5 : 3.5, 0, Math.PI * 2);
+        rCtx.fillStyle = item.player === 0 ? '#00e5ff' : '#ff5722';
+        rCtx.fill();
+        rCtx.strokeStyle = isCurrent ? '#ffd700' : '#111';
+        rCtx.lineWidth = isCurrent ? 2 : 1;
+        rCtx.stroke();
+
+        if (isCurrent) {
+            // Trajectory trace arc from bottom release position
+            rCtx.beginPath();
+            rCtx.moveTo(170, 340);
+            rCtx.lineTo(ix, iy);
+            rCtx.strokeStyle = 'rgba(255, 215, 0, 0.65)';
+            rCtx.lineWidth = 1.8;
+            rCtx.setLineDash([4, 4]);
+            rCtx.stroke();
+            rCtx.setLineDash([]);
+
+            // Pulsing target locator ring
+            rCtx.beginPath();
+            rCtx.arc(ix, iy, 13, 0, Math.PI * 2);
+            rCtx.strokeStyle = '#ffd700';
+            rCtx.lineWidth = 1.5;
+            rCtx.stroke();
+
+            // Label callout
+            rCtx.font = 'bold 11px "Segoe UI", sans-serif';
+            rCtx.fillStyle = '#ffffff';
+            rCtx.textAlign = 'center';
+            rCtx.fillText(item.label, ix, iy - 14);
+        }
+    }
+
+    // Update Slider and Card Labels
+    const stepLabel = document.getElementById('replayStepLabel');
+    if (stepLabel) stepLabel.textContent = `Throw ${replayIndex + 1} / ${matchTimeline.length}`;
+    const slider = document.getElementById('replaySlider');
+    if (slider) {
+        slider.max = matchTimeline.length - 1;
+        slider.value = replayIndex;
+    }
+    const cardDetail = document.getElementById('replayDartDetail');
+    if (cardDetail) {
+        cardDetail.innerHTML = `<strong>${escapeHtml(currentRec.playerName)}</strong> (Leg ${currentRec.leg}, Turn ${currentRec.turn}, Dart ${currentRec.dartNum}): <strong>${currentRec.label}</strong> (+${currentRec.pts} pts)`;
+    }
+    const cardScore = document.getElementById('replayDartScore');
+    if (cardScore) {
+        cardScore.textContent = currentRec.scoreAfter !== undefined ? `Rem: ${currentRec.scoreAfter}` : '';
+    }
+}
+
+function onReplaySliderChange(val) {
+    replayIndex = parseInt(val, 10);
+    drawReplayBoard();
+}
+
+function stepReplay(delta) {
+    if (matchTimeline.length === 0) return;
+    replayIndex = Math.max(0, Math.min(matchTimeline.length - 1, replayIndex + delta));
+    drawReplayBoard();
+}
+
+function stepReplayToStart() {
+    replayIndex = 0;
+    drawReplayBoard();
+}
+
+function stepReplayToEnd() {
+    if (matchTimeline.length === 0) return;
+    replayIndex = matchTimeline.length - 1;
+    drawReplayBoard();
+}
+
+function jumpReplayToThrow(idx) {
+    if (idx >= 0 && idx < matchTimeline.length) {
+        replayIndex = idx;
+        drawReplayBoard();
+    }
+}
+
+function toggleReplayPlay() {
+    const btn = document.getElementById('btnReplayPlay');
+    if (replayPlayInterval) {
+        clearInterval(replayPlayInterval);
+        replayPlayInterval = null;
+        if (btn) btn.textContent = '▶ Play';
+    } else {
+        if (matchTimeline.length === 0) return;
+        if (replayIndex >= matchTimeline.length - 1) replayIndex = 0;
+        if (btn) btn.textContent = '⏸ Pause';
+        const delay = Math.round(900 / replaySpeed);
+        replayPlayInterval = setInterval(() => {
+            if (replayIndex < matchTimeline.length - 1) {
+                replayIndex++;
+                drawReplayBoard();
+            } else {
+                clearInterval(replayPlayInterval);
+                replayPlayInterval = null;
+                if (btn) btn.textContent = '▶ Play';
+            }
+        }, delay);
+    }
+}
+
+function changeReplaySpeed(val) {
+    replaySpeed = parseFloat(val) || 1;
+    if (replayPlayInterval) {
+        toggleReplayPlay();
+        toggleReplayPlay();
+    }
+}
+
+// --- JSON Replay Export & Import ---
+function exportMatchJson() {
+    if (matchTimeline.length === 0) {
+        showToast("No match throws recorded yet to export.", "warning");
+        return;
+    }
+    const payload = {
+        format: "kdarts_replay_v1",
+        version: "1.0",
+        appName: "KDarts",
+        exportedAt: new Date().toISOString(),
+        gameMode: gameMode,
+        scores: scores.slice(),
+        stats: matchStats,
+        timeline: matchTimeline
+    };
+    const jsonStr = JSON.stringify(payload, null, 2);
+    try {
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `kdarts_replay_${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 250);
+    } catch(e) {}
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(jsonStr).then(() => {
+            showToast("📥 Match replay exported & copied to clipboard!", "success");
+        }).catch(() => {
+            showToast("📥 Match replay JSON downloaded!", "success");
+        });
+    } else {
+        showToast("📥 Match replay JSON downloaded!", "success");
+    }
+}
+
+function triggerImportFileInput() {
+    const input = document.getElementById('replayFileInput');
+    if (input) input.click();
+}
+
+function handleImportFile(event) {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        importMatchJson(e.target.result);
+        event.target.value = '';
+    };
+    reader.readAsText(file);
+}
+
+function importMatchJson(jsonText) {
+    try {
+        const data = JSON.parse(jsonText);
+        if (!data || (!data.timeline && !Array.isArray(data))) {
+            showToast("Invalid KDarts replay JSON format.", "warning");
+            return;
+        }
+        matchTimeline = Array.isArray(data) ? data : (data.timeline || []);
+        if (data.stats) matchStats = data.stats;
+        if (data.gameMode) gameMode = data.gameMode;
+        replayIndex = 0;
+        updateScoreUI();
+        updateBadges();
+        updateLiveStatsBadge();
+        updateReplayStatCards();
+        updateReplayTurnTable();
+        drawReplayBoard();
+        showToast(`📤 Match replay loaded: ${matchTimeline.length} throws ready.`, "success");
+    } catch(err) {
+        showToast("JSON Import Error: " + err.message, "error");
+    }
+}
+
+// --- Key Rebinding & Settings Logic ---
+function renderKeybindList() {
+    const listEl = document.getElementById('keybindList');
+    if (!listEl) return;
+    const labels = {
+        throw: 'Throw Dart',
+        nextTurn: 'Next Turn / Pass',
+        focus: 'Focus Skill (F)',
+        magnet: 'Magnet Skill (M)',
+        undo: 'Undo Dart (U)',
+        laser: 'Laser Sight (L)',
+        replay: 'Match Replay (R)',
+        online: 'Online Multiplayer (O)',
+        settings: 'Keys & Aim (K)',
+        help: 'Help Guide (H)'
+    };
+    let html = '';
+    for (const [action, label] of Object.entries(labels)) {
+        const curKey = userKeybinds[action] === ' ' ? 'SPACE' : userKeybinds[action].toUpperCase();
+        const isRec = activeRecordingAction === action;
+        html += `
+            <div class="keybind-row">
+                <span style="font-size: 12px; color: #cbd5e1;">${label}</span>
+                <button class="key-badge ${isRec ? 'recording' : ''}" onclick="startKeyRecording('${action}')">
+                    ${isRec ? 'PRESS KEY...' : curKey}
+                </button>
+            </div>
+        `;
+    }
+    listEl.innerHTML = html;
+}
+
+function startKeyRecording(action) {
+    activeRecordingAction = action;
+    renderKeybindList();
+    const handleKey = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        userKeybinds[action] = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+        localStorage.setItem('kdarts_keybinds', JSON.stringify(userKeybinds));
+        activeRecordingAction = null;
+        window.removeEventListener('keydown', handleKey, true);
+        renderKeybindList();
+        showToast(`Shortcut for "${action}" set to [${userKeybinds[action].toUpperCase()}]`, 'success');
+    };
+    window.addEventListener('keydown', handleKey, { capture: true, once: true });
+}
+
+function resetKeybindsToDefault() {
+    userKeybinds = Object.assign({}, DEFAULT_KEYBINDS);
+    localStorage.removeItem('kdarts_keybinds');
+    renderKeybindList();
+    showToast("Keybinds reset to defaults.", "info");
+}
+
+function openSettingsModal() {
+    const modal = document.getElementById('settings-modal');
+    if (modal) {
+        modal.style.display = 'flex';
+        renderKeybindList();
+        const radios = document.getElementsByName('reticleStyleRadio');
+        for (let r of radios) {
+            r.checked = (r.value === reticleStyle);
+        }
+        const slider = document.getElementById('wobbleAssistSlider');
+        if (slider) slider.value = Math.round(wobbleAssistFactor * 100);
+        const factorTxt = document.getElementById('wobbleFactorText');
+        if (factorTxt) factorTxt.textContent = `${Math.round(wobbleAssistFactor * 100)}%`;
+    }
+}
+
+function closeSettingsModal() {
+    const modal = document.getElementById('settings-modal');
+    if (modal) modal.style.display = 'none';
+}
+
+function changeReticleStyle(style) {
+    reticleStyle = style;
+    localStorage.setItem('kdarts_reticle_style', style);
+    showToast(`Reticle style updated to "${style.toUpperCase()}"`, 'info');
+}
+
+function changeWobbleAssist(val) {
+    wobbleAssistFactor = parseInt(val) / 100;
+    localStorage.setItem('kdarts_wobble_factor', wobbleAssistFactor.toString());
+    const factorTxt = document.getElementById('wobbleFactorText');
+    if (factorTxt) factorTxt.textContent = `${val}%`;
+}
+
+// --- Standardized RFMS RetroMultiplayer Integration ---
+function initRetroMultiplayer() {
+    if (typeof RetroMultiplayer === 'undefined') {
+        console.warn("[KDarts] RetroMultiplayer library not loaded.");
+        return;
+    }
+    if (rMultiplayer) return;
+
+    try {
+        rMultiplayer = new RetroMultiplayer({
+            gameId: 'kdarts',
+            prefix: 'DAR',
+            playerName: myPlayerName,
+            soloTimeoutMs: 25000,
+            onMove: (moveData) => {
+                if (!moveData) return;
+                if (moveData.type === 'dart') {
+                    handleRemoteDart(moveData);
+                } else if (moveData.type === 'turn') {
+                    handleRemoteTurn(moveData);
+                } else if (moveData.type === 'win') {
+                    handleRemoteWin(moveData);
+                }
+            },
+            onStateChange: (room) => {
+                handleRoomUpdate(room);
+            },
+            onOpponentJoin: ({ slot, name }) => {
+                opponentName = name || 'Challenger';
+                p2OnlineName = opponentName;
+                const oppInd = document.getElementById('onlineOpponentIndicator');
+                if (oppInd) oppInd.textContent = '🟢';
+                const oppTxt = document.getElementById('onlineOpponentText');
+                if (oppTxt) oppTxt.textContent = `Opponent: ${opponentName}`;
+                showToast(`🎯 Challenger ${opponentName} joined the match! Game on!`, 'success');
+                playSound('powerup');
+            },
+            onOpponentLeave: ({ slot, name }) => {
+                const oppInd = document.getElementById('onlineOpponentIndicator');
+                if (oppInd) oppInd.textContent = '🔴';
+                const oppTxt = document.getElementById('onlineOpponentText');
+                if (oppTxt) oppTxt.textContent = `Opponent (${name || slot}) disconnected.`;
+                showToast(`Opponent ${name || slot} disconnected.`, 'warning');
+            },
+            onChat: (chat) => {
+                if (chat && chat.text && chat.by !== (myPlayerNum === 1 ? 'p1' : 'p2')) {
+                    playSound('powerup');
+                    showToast(`💬 <strong>${escapeHtml(chat.sender || 'Opponent')}:</strong> ${escapeHtml(chat.text)}`, 'info');
+                }
+            },
+            onRematch: (rematchData) => {
+                showToast('Opponent requested a rematch! Click Rematch to accept.', 'info');
+            },
+            onSoloFallback: ({ reason }) => {
+                showToast("⏱️ No opponent joined in 25s. Engaging Subnet Cyber-Darter AI...", "warning");
+                leaveOnlineGame(false);
+                aiDifficulty = 'Medium';
+                setMode(gameMode || '501');
+                showToast("🎯 Subnet Cyber-Darter AI engaged! Step up to the oche.", "info");
+            },
+            onStatusMsg: (msg, type) => {
+                showToast(msg, type);
+            }
+        });
+
+        rMultiplayer.init().then(({ onlineAvailable, inviteCode }) => {
+            if (inviteCode) {
+                setTimeout(() => {
+                    showToast(`🔗 Auto-joining room ${inviteCode} from link...`, 'info');
+                    joinOnlineRoom(inviteCode);
+                }, 500);
+            }
+        });
+    } catch(err) {
+        console.warn("[KDarts] RetroMultiplayer init failed:", err);
+    }
 }
 
 function openMultiplayerModal() {
@@ -701,6 +1400,7 @@ function savePlayerName() {
     if (val) {
         myPlayerName = val;
         localStorage.setItem('kdarts_player_name', myPlayerName);
+        if (rMultiplayer) rMultiplayer.playerName = myPlayerName;
         showToast(`Call-sign updated to "${escapeHtml(myPlayerName)}"`, 'success');
     }
 }
@@ -708,15 +1408,15 @@ function savePlayerName() {
 async function refreshLobbyList() {
     const lobbyEl = document.getElementById('mpLobbyList');
     if (!lobbyEl) return;
-    if (!window.fb) {
+    if (!rMultiplayer || !rMultiplayer.isOnline()) {
         lobbyEl.innerHTML = '<div style="color: #f87171; text-align: center; padding: 10px; font-size: 12px;">Firebase RTDB connecting...</div>';
         return;
     }
     lobbyEl.innerHTML = '<div style="color: #94a3b8; text-align: center; padding: 10px; font-size: 12px;">Scanning open matches...</div>';
 
     try {
-        const lobbyRef = window.fb.ref(window.fb.db, 'multiplayer/kdarts/lobby');
-        const snap = await window.fb.get(lobbyRef);
+        const lobbyRef = rMultiplayer.fb.ref(rMultiplayer.fb.db, 'multiplayer/kdarts/lobby');
+        const snap = await rMultiplayer.fb.get(lobbyRef);
         const data = snap.val();
 
         if (!data || Object.keys(data).length === 0) {
@@ -750,7 +1450,7 @@ async function refreshLobbyList() {
 }
 
 async function startQuickMatch() {
-    if (!window.fb) {
+    if (!rMultiplayer || !rMultiplayer.isOnline()) {
         showToast("Firebase RTDB not connected yet.", "warning");
         return;
     }
@@ -758,25 +1458,11 @@ async function startQuickMatch() {
     if (btn) btn.innerText = "🔍 Searching...";
 
     try {
-        const lobbyRef = window.fb.ref(window.fb.db, 'multiplayer/kdarts/lobby');
-        const snap = await window.fb.get(lobbyRef);
-        const data = snap.val();
-
-        if (data) {
-            const now = Date.now();
-            for (const [code, info] of Object.entries(data)) {
-                if (info.createdAt && (now - info.createdAt < 45 * 60 * 1000)) {
-                    showToast(`⚡ Match found! Joining ${code}...`, 'success');
-                    if (btn) btn.innerText = "⚡ Instant Quick Match";
-                    await joinOnlineRoom(code);
-                    return;
-                }
-            }
-        }
-
-        showToast("No open matches found. Hosting new public match...", "info");
+        const res = await rMultiplayer.quickMatch({ mode: '501' });
         if (btn) btn.innerText = "⚡ Instant Quick Match";
-        await createCustomRoom(true, '501');
+        if (res && res.success) {
+            setupOnlineRoomUI(res.roomId, res.slot === 'p1' ? 1 : 2, '501');
+        }
     } catch(e) {
         console.error("Quick match error:", e);
         showToast("Quick Match error: " + e.message, "warning");
@@ -811,32 +1497,38 @@ function initOnlineMatchState(mode) {
     updateScoreUI();
 }
 
+function setupOnlineRoomUI(code, slot, mode) {
+    isOnlineGame = true;
+    currentRoomId = code;
+    myPlayerNum = slot;
+    isHost = (slot === 1);
+    gameMode = mode || '501';
+    initOnlineMatchState(gameMode);
+
+    closeMultiplayerModal();
+    const onlineBar = document.getElementById('onlineBar');
+    if (onlineBar) onlineBar.style.display = 'flex';
+    document.getElementById('onlineRoomIdText').textContent = code;
+    document.getElementById('onlineRoleText').textContent = myPlayerNum === 1 ? 'You: Player 1 (Host)' : (myPlayerNum === 2 ? 'You: Player 2 (Guest)' : 'You: Spectator');
+    document.getElementById('onlineModeText').textContent = `${gameMode.toUpperCase()}`;
+    document.getElementById('onlineRematchBtn').style.display = 'none';
+    if (myPlayerNum === 1) {
+        document.getElementById('onlineOpponentIndicator').textContent = '🟡';
+        document.getElementById('onlineOpponentText').textContent = 'Waiting for opponent to join...';
+    }
+}
+
 async function createCustomRoom(isPublic = true, customMode = null) {
-    if (!window.fb) {
+    if (!rMultiplayer || !rMultiplayer.isOnline()) {
         showToast("Firebase RTDB not connected yet.", "warning");
         return;
     }
     const modeSelect = document.getElementById('mpGameModeSelect');
     const chosenMode = customMode || (modeSelect ? modeSelect.value : '501');
-    const code = 'DART-' + Math.floor(1000 + Math.random() * 9000);
-
-    isOnlineGame = true;
-    currentRoomId = code;
-    currentRoomStatus = 'waiting';
-    isHost = true;
-    myPlayerNum = 1; // P1
-    p1OnlineName = myPlayerName;
-    p2OnlineName = 'Waiting...';
 
     initOnlineMatchState(chosenMode);
-
-    const roomData = {
-        id: code,
-        status: 'waiting',
+    const res = await rMultiplayer.createRoom({
         mode: chosenMode,
-        p1: { name: myPlayerName, connected: true, joinedAt: Date.now() },
-        p2: null,
-        turn: 0,
         gameState: {
             scores: scores.slice(),
             prevScores: prevScores.slice(),
@@ -847,57 +1539,12 @@ async function createCustomRoom(isPublic = true, customMode = null) {
             isKiller: isKiller.slice(),
             totalDarts: totalDarts.slice(),
             highestCheckout: highestCheckout.slice()
-        },
-        lastDart: null,
-        lastTurn: null,
-        winner: null,
-        winReason: null,
-        rematch: { p1: false, p2: false },
-        chat: null,
-        isPublic: isPublic,
-        createdAt: Date.now(),
-        updatedAt: Date.now()
-    };
-
-    try {
-        await window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + code), roomData);
-        if (isPublic) {
-            await window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/lobby/' + code), {
-                id: code,
-                host: myPlayerName,
-                mode: chosenMode,
-                createdAt: Date.now()
-            });
         }
+    }, isPublic);
 
-        try {
-            window.fb.onDisconnect(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + code + '/p1/connected')).set(false);
-            if (isPublic) {
-                window.fb.onDisconnect(window.fb.ref(window.fb.db, 'multiplayer/kdarts/lobby/' + code)).remove();
-            }
-        } catch(e) {}
-
-        closeMultiplayerModal();
-        attachRoomListener(code);
-        startSoloFallbackTimer(code);
-        if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
-            window.history.replaceState(null, '', '#room=' + code);
-        }
-
-        const onlineBar = document.getElementById('onlineBar');
-        if (onlineBar) onlineBar.style.display = 'flex';
-        document.getElementById('onlineRoomIdText').textContent = code;
-        document.getElementById('onlineRoleText').textContent = 'You: Player 1 (Host)';
-        document.getElementById('onlineModeText').textContent = `${chosenMode.toUpperCase()}`;
-        document.getElementById('onlineOpponentIndicator').textContent = '🟡';
-        document.getElementById('onlineOpponentText').textContent = 'Waiting for opponent to join...';
-        document.getElementById('onlineRematchBtn').style.display = 'none';
-
-        showToast(`🌐 Room ${code} created! Waiting for Player 2...`, 'success');
-    } catch(err) {
-        console.error("Room creation error:", err);
-        showToast('Failed to create room: ' + err.message, 'warning');
-        isOnlineGame = false;
+    if (res && res.success) {
+        setupOnlineRoomUI(res.roomId, 1, chosenMode);
+        showToast(`🌐 Room ${res.roomId} created! Waiting for Player 2 (or AI in 25s)...`, 'success');
     }
 }
 
@@ -913,141 +1560,33 @@ function joinRoomByInput() {
 }
 
 async function joinOnlineRoom(roomId) {
-    if (!window.fb) {
+    if (!rMultiplayer || !rMultiplayer.isOnline()) {
         showToast('Firebase RTDB not connected yet.', 'warning');
         return;
     }
     const code = roomId.toUpperCase().trim();
-    if (!code) {
-        showToast('Please enter a valid room code.', 'warning');
-        return;
-    }
+    if (!code) return;
 
-    try {
-        const roomRef = window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + code);
-        const snap = await window.fb.get(roomRef);
-        const room = snap.val();
-
-        if (!room) {
-            showToast(`Room "${code}" does not exist.`, 'warning');
-            return;
-        }
-
-        gameMode = room.mode || '501';
-        currentPlayer = room.turn || 0;
-        isOnlineGame = true;
-        currentRoomId = code;
-
+    const res = await rMultiplayer.joinRoom(code);
+    if (res && res.success) {
+        const slotNum = res.slot === 'p1' ? 1 : (res.slot === 'p2' ? 2 : 0);
+        const room = res.room || {};
+        setupOnlineRoomUI(code, slotNum, room.mode || '501');
+        if (room.p1) p1OnlineName = room.p1.name || 'Player 1';
+        if (room.p2) p2OnlineName = room.p2.name || 'Player 2';
         if (room.gameState) {
-            scores = room.gameState.scores ? room.gameState.scores.slice() : (gameMode === '301' ? [301, 301] : [501, 501]);
-            prevScores = room.gameState.prevScores ? room.gameState.prevScores.slice() : scores.slice();
-            cricketHits = room.gameState.cricketHits ? JSON.parse(JSON.stringify(room.gameState.cricketHits)) : [{15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}, {15:0, 16:0, 17:0, 18:0, 19:0, 20:0, 25:0}];
-            atcTarget = room.gameState.atcTarget ? room.gameState.atcTarget.slice() : [1, 1];
-            blitzHits = room.gameState.blitzHits ? room.gameState.blitzHits.slice() : [0, 0];
-            killerLives = room.gameState.killerLives ? room.gameState.killerLives.slice() : [5, 5];
-            isKiller = room.gameState.isKiller ? room.gameState.isKiller.slice() : [false, false];
-            totalDarts = room.gameState.totalDarts ? room.gameState.totalDarts.slice() : [0, 0];
-            highestCheckout = room.gameState.highestCheckout ? room.gameState.highestCheckout.slice() : [0, 0];
+            scores = room.gameState.scores ? room.gameState.scores.slice() : scores;
+            prevScores = room.gameState.prevScores ? room.gameState.prevScores.slice() : prevScores;
         }
-
-        state = room.status === 'finished' ? 'WON' : 'PLAYING';
-        darts = [];
-        dartsLeft = 3;
-        clearTimeout(aiTimeoutId);
-
-        if (room.status === 'waiting' || !room.p2) {
-            isHost = false;
-            myPlayerNum = 2; // P2 (Guest)
-            p1OnlineName = room.p1 ? room.p1.name : 'Player 1';
-            p2OnlineName = myPlayerName;
-            currentRoomStatus = 'playing';
-
-            await window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + code + '/p2'), {
-                name: myPlayerName,
-                connected: true,
-                joinedAt: Date.now()
-            });
-            await window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + code + '/status'), 'playing');
-            await window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + code + '/updatedAt'), Date.now());
-
-            try {
-                await window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/lobby/' + code), null);
-            } catch(e) {}
-
-            try {
-                window.fb.onDisconnect(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + code + '/p2/connected')).set(false);
-            } catch(e) {}
-
-            showToast(`🎮 Joined match ${code} as Player 2!`, 'success');
-        } else {
-            isHost = false;
-            myPlayerNum = 0; // Spectator
-            p1OnlineName = room.p1 ? room.p1.name : 'Player 1';
-            p2OnlineName = room.p2 ? room.p2.name : 'Player 2';
-            currentRoomStatus = room.status;
-            showToast(`👁️ Joined room ${code} as Spectator!`, 'info');
-        }
-
         updateScoreUI();
         updateBadges();
-
-        closeMultiplayerModal();
-        attachRoomListener(code);
-        if (room.status === 'waiting' || !room.p2) {
-            startSoloFallbackTimer(code);
-        } else {
-            clearSoloFallbackTimer();
-        }
-        if (typeof window !== 'undefined' && window.history && window.history.replaceState) {
-            window.history.replaceState(null, '', '#room=' + code);
-        }
-
-        const onlineBar = document.getElementById('onlineBar');
-        if (onlineBar) onlineBar.style.display = 'flex';
-        document.getElementById('onlineRoomIdText').textContent = code;
-        document.getElementById('onlineRoleText').textContent = myPlayerNum === 1 ? 'You: Player 1 (Host)' : (myPlayerNum === 2 ? 'You: Player 2 (Guest)' : 'You: Spectator');
-        document.getElementById('onlineModeText').textContent = `${gameMode.toUpperCase()}`;
-        document.getElementById('onlineRematchBtn').style.display = 'none';
-    } catch(err) {
-        console.error("Join room error:", err);
-        showToast('Failed to join room: ' + err.message, 'warning');
-        isOnlineGame = false;
+        showToast(`🎮 Connected to match ${code}!`, 'success');
     }
-}
-
-function attachRoomListener(roomId) {
-    if (activeRoomRef && activeRoomListener && window.fb) {
-        try { window.fb.off(activeRoomRef, 'value', activeRoomListener); } catch(e) {}
-        activeRoomRef = null;
-        activeRoomListener = null;
-    }
-
-    const roomRef = window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + roomId);
-    activeRoomRef = roomRef;
-    activeRoomListener = window.fb.onValue(roomRef, (snapshot) => {
-        const data = snapshot.val();
-        if (!data) {
-            if (isOnlineGame) {
-                showToast('Online room closed.', 'warning');
-                leaveOnlineGame(false);
-            }
-            return;
-        }
-        handleRoomUpdate(data);
-    });
 }
 
 function handleRoomUpdate(room) {
-    const prevStatus = currentRoomStatus;
+    if (!room) return;
     currentRoomStatus = room.status || 'waiting';
-
-    if (room.status === 'playing' || room.p2) {
-        clearSoloFallbackTimer();
-    }
-
-    const roleStr = myPlayerNum === 1 ? 'You: Player 1 (Host)' : (myPlayerNum === 2 ? 'You: Player 2 (Guest)' : 'You: Spectator');
-    const roleEl = document.getElementById('onlineRoleText');
-    if (roleEl) roleEl.textContent = roleStr;
 
     if (room.p1) p1OnlineName = room.p1.name || 'Player 1';
     if (room.p2) p2OnlineName = room.p2.name || 'Player 2';
@@ -1063,108 +1602,14 @@ function handleRoomUpdate(room) {
         opponentName = opponent.name || 'Opponent';
         if (oppIndicator) oppIndicator.textContent = opponent.connected ? '🟢' : '🔴';
         if (oppText) oppText.textContent = `Opponent: ${opponentName}${opponent.connected ? '' : ' (Disconnected)'}`;
-        
-        if (prevStatus === 'waiting' && room.status === 'playing') {
-            showToast(`🎯 ${opponentName} joined the match! Game on!`, 'success');
-            playSound('powerup');
-        }
-    }
-
-    // Remote Dart Sync
-    if (room.lastDart && room.lastDart.ts > localLastDartTs) {
-        localLastDartTs = room.lastDart.ts;
-        if (room.lastDart.player !== (myPlayerNum - 1)) {
-            handleRemoteDart(room.lastDart);
-        }
-    }
-
-    // Remote Turn Sync
-    if (room.lastTurn && room.lastTurn.ts > localLastTurnTs) {
-        localLastTurnTs = room.lastTurn.ts;
-        darts = [];
-        dartsLeft = 3;
-        currentPlayer = room.lastTurn.turn;
-        windX = room.lastTurn.windX || 0;
-        windY = room.lastTurn.windY || 0;
-        windSpeed = room.lastTurn.windSpeed || 0;
-        windAngle = room.lastTurn.windAngle || 0;
-        state = 'PLAYING';
-        focusActive[currentPlayer] = false;
-        magnetActive[currentPlayer] = false;
-        laserActive[currentPlayer] = false;
-
-        let nextPlayerName = currentPlayer === 0 ? p1OnlineName : p2OnlineName;
-        statusEl.innerText = `${nextPlayerName}'s Turn - Throw 3 Darts`;
-        updateScoreUI();
-        updateBadges();
-
-        let isMyTurn = (myPlayerNum === 1 && currentPlayer === 0) || (myPlayerNum === 2 && currentPlayer === 1);
-        if (isMyTurn) {
-            playSound('powerup');
-            showToast("🎯 Your turn! Throw 3 darts!", "success");
-        }
-    }
-
-    // Match Finished
-    if (room.status === 'finished') {
-        state = 'WON';
-        const rematchBtn = document.getElementById('onlineRematchBtn');
-        if (rematchBtn) rematchBtn.style.display = 'inline-block';
-
-        if (prevStatus !== 'finished') {
-            playSound('cheer');
-            if (room.winner === myPlayerNum) {
-                spawnMultiLayerExplosion(CX, CY, '#ffd700', 3.0);
-                spawnShockwave(CX, CY, '#ffd700', 160);
-                showToast(`🏆 VICTORY! You won the match!`, 'success');
-                statusEl.innerText = `🏆 VICTORY! You won: ${room.winReason || 'Match Complete'}`;
-            } else if (room.winner) {
-                const winnerName = room.winner === 1 ? p1OnlineName : p2OnlineName;
-                showToast(`Match finished: ${winnerName} wins!`, 'warning');
-                statusEl.innerText = `Defeated! ${winnerName} wins: ${room.winReason || 'Match Complete'}`;
-            }
-        }
     }
 
     // Rematch Sync
-    if (room.rematch) {
-        if (room.rematch.p1 && room.rematch.p2) {
-            if (isHost) {
-                initOnlineMatchState(room.mode || '501');
-                window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/rematch'), { p1: false, p2: false });
-                window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/status'), 'playing');
-                window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/winner'), null);
-                window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/winReason'), null);
-                window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/turn'), 0);
-                window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/lastDart'), null);
-                window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/lastTurn'), null);
-                window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/gameState'), {
-                    scores: scores.slice(),
-                    prevScores: prevScores.slice(),
-                    cricketHits: JSON.parse(JSON.stringify(cricketHits)),
-                    atcTarget: atcTarget.slice(),
-                    blitzHits: blitzHits.slice(),
-                    killerLives: killerLives.slice(),
-                    isKiller: isKiller.slice(),
-                    totalDarts: totalDarts.slice(),
-                    highestCheckout: highestCheckout.slice()
-                });
-            }
-            initOnlineMatchState(room.mode || '501');
-            document.getElementById('onlineRematchBtn').style.display = 'none';
-            showToast('🔥 Rematch started! Game On!', 'success');
-        } else if ((myPlayerNum === 1 && room.rematch.p2) || (myPlayerNum === 2 && room.rematch.p1)) {
-            showToast('Opponent wants a rematch! Click Rematch to accept.', 'info');
-        }
-    }
-
-    // Chat Sync
-    if (room.chat && room.chat.ts > localLastChatTs) {
-        localLastChatTs = room.chat.ts;
-        if (room.chat.sender !== myPlayerName) {
-            playSound('powerup');
-            showToast(`💬 <strong>${escapeHtml(room.chat.sender)}:</strong> ${escapeHtml(room.chat.text)}`, 'info');
-        }
+    if (room.rematch && room.rematch.p1 && room.rematch.p2) {
+        initOnlineMatchState(room.mode || '501');
+        const rematchBtn = document.getElementById('onlineRematchBtn');
+        if (rematchBtn) rematchBtn.style.display = 'none';
+        showToast('🔥 Rematch started! Game On!', 'success');
     }
 }
 
@@ -1190,26 +1635,76 @@ function handleRemoteDart(d) {
     if (d.state) state = d.state;
     if (d.statusText) statusEl.innerText = d.statusText;
 
+    recordMatchDart({
+        player: d.player,
+        rawX: d.rawX || d.finalX,
+        rawY: d.rawY || d.finalY,
+        finalX: d.finalX,
+        finalY: d.finalY,
+        pts: d.pts,
+        number: d.number,
+        mult: d.mult,
+        scoreBefore: (d.scores && d.scores[d.player] !== undefined) ? d.scores[d.player] + d.pts : scores[d.player],
+        scoreAfter: (d.scores && d.scores[d.player] !== undefined) ? d.scores[d.player] : scores[d.player],
+        dartsLeft: d.dartsLeft,
+        isCheckout: state === 'WON'
+    });
+
     if (state === 'WON') {
         playSound('cheer');
         triggerShake(16, 22);
         spawnMultiLayerExplosion(CX, CY, '#ffd700', 3.0);
         spawnShockwave(CX, CY, '#ffd700', 160);
-        spawnShockwave(CX, CY, '#00d2ff', 200);
+        const rematchBtn = document.getElementById('onlineRematchBtn');
+        if (rematchBtn) rematchBtn.style.display = 'inline-block';
     }
     updateScoreUI();
     updateBadges();
 }
 
+function handleRemoteTurn(turnData) {
+    darts = [];
+    dartsLeft = 3;
+    currentPlayer = turnData.turn;
+    windX = turnData.windX || 0;
+    windY = turnData.windY || 0;
+    windSpeed = turnData.windSpeed || 0;
+    windAngle = turnData.windAngle || 0;
+    state = 'PLAYING';
+    focusActive[currentPlayer] = false;
+    magnetActive[currentPlayer] = false;
+    laserActive[currentPlayer] = false;
+
+    let nextPlayerName = currentPlayer === 0 ? p1OnlineName : p2OnlineName;
+    statusEl.innerText = `${nextPlayerName}'s Turn - Throw 3 Darts`;
+    updateScoreUI();
+    updateBadges();
+
+    let isMyTurn = (myPlayerNum === 1 && currentPlayer === 0) || (myPlayerNum === 2 && currentPlayer === 1);
+    if (isMyTurn) {
+        playSound('powerup');
+        showToast("🎯 Your turn! Throw 3 darts!", "success");
+    }
+}
+
+function handleRemoteWin(winData) {
+    state = 'WON';
+    playSound('cheer');
+    triggerShake(16, 22);
+    spawnMultiLayerExplosion(CX, CY, '#ffd700', 3.0);
+    spawnShockwave(CX, CY, '#ffd700', 160);
+    const rematchBtn = document.getElementById('onlineRematchBtn');
+    if (rematchBtn) rematchBtn.style.display = 'inline-block';
+    if (winData.winner === myPlayerNum) {
+        showToast("🏆 VICTORY! You won the match!", "success");
+    } else {
+        showToast("Defeated! Opponent won the match.", "warning");
+    }
+}
+
 function sendOnlineChat(msg) {
-    if (!isOnlineGame || !currentRoomId || !window.fb) return;
-    const chatData = {
-        sender: myPlayerName,
-        text: msg,
-        ts: Date.now()
-    };
-    localLastChatTs = chatData.ts;
-    window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/chat'), chatData);
+    if (!isOnlineGame || !rMultiplayer || !rMultiplayer.roomId) return;
+    rMultiplayer.sendChat(msg);
     showToast(`💬 You: ${escapeHtml(msg)}`, 'info');
 }
 
@@ -1223,10 +1718,8 @@ function sendCustomOnlineChat() {
 }
 
 function requestOnlineRematch() {
-    if (!isOnlineGame || !currentRoomId || !window.fb) return;
-    const slot = myPlayerNum === 1 ? 'p1' : (myPlayerNum === 2 ? 'p2' : null);
-    if (!slot) return;
-    window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/rematch/' + slot), true);
+    if (!isOnlineGame || !rMultiplayer || !rMultiplayer.roomId) return;
+    rMultiplayer.requestRematch();
     showToast('Rematch requested! Waiting for opponent...', 'info');
 }
 
@@ -1245,42 +1738,23 @@ function copyOnlineRoomLink() {
 }
 
 function leaveOnlineGame(confirmPrompt = true) {
-    clearSoloFallbackTimer();
-    try {
-        if (window.location.hash.includes('room=')) {
-            window.history.replaceState(null, '', window.location.pathname + window.location.search);
-        }
-    } catch(e) {}
-
     if (confirmPrompt && isOnlineGame && currentRoomStatus === 'playing') {
         if (!confirm('Leave this active online match? This will concede the match to your opponent.')) return;
-        if (window.fb && currentRoomId) {
-            window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/winner'), (myPlayerNum === 1 ? 2 : 1));
-            window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/winReason'), 'opponent concession');
-            window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/status'), 'finished');
-        }
     }
-
-    if (window.fb && currentRoomId) {
-        if (isHost && currentRoomStatus === 'waiting') {
-            try { window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/lobby/' + currentRoomId), null); } catch(e) {}
-        }
-        const slot = myPlayerNum === 1 ? 'p1' : (myPlayerNum === 2 ? 'p2' : null);
-        if (slot) {
-            try { window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/' + slot + '/connected'), false); } catch(e) {}
-        }
+    if (rMultiplayer) {
+        rMultiplayer.leaveRoom(false);
     }
-
-    if (activeRoomRef && activeRoomListener && window.fb) {
-        try { window.fb.off(activeRoomRef, 'value', activeRoomListener); } catch(e) {}
-    }
-    activeRoomRef = null;
-    activeRoomListener = null;
     isOnlineGame = false;
     currentRoomId = null;
     currentRoomStatus = 'waiting';
     isHost = false;
     myPlayerNum = 1;
+
+    try {
+        if (window.location.hash.includes('room=')) {
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+    } catch(e) {}
 
     const bar = document.getElementById('onlineBar');
     if (bar) bar.style.display = 'none';
@@ -1289,26 +1763,11 @@ function leaveOnlineGame(confirmPrompt = true) {
     showToast('Returned to Local / Solo Play.', 'info');
 }
 
-window.onFirebaseLoaded = () => {
-    refreshLobbyList();
-    try {
-        let room = null;
-        const params = new URLSearchParams(window.location.search);
-        room = params.get('room') || params.get('join');
-        if (!room && window.location.hash) {
-            const m = window.location.hash.match(/room=([A-Za-z0-9_-]+)/i);
-            if (m) room = m[1];
-        }
-        if (room) {
-            setTimeout(() => {
-                showToast(`🔗 Auto-joining room ${room} from link...`, 'info');
-                joinOnlineRoom(room);
-            }, 500);
-        }
-    } catch(e) {}
-};
-if (window.fb && window.onFirebaseLoaded) {
-    window.onFirebaseLoaded();
+window.addEventListener('DOMContentLoaded', () => {
+    initRetroMultiplayer();
+});
+if (typeof RetroMultiplayer !== 'undefined') {
+    initRetroMultiplayer();
 }
 
 // Global FX state
@@ -1830,6 +2289,11 @@ function nextTurn() {
         if (state === 'TURN_END') {
             let isMyTurnEnding = (myPlayerNum === 1 && currentPlayer === 0) || (myPlayerNum === 2 && currentPlayer === 1);
             if (isMyTurnEnding) {
+                const prevTurnPlayer = currentPlayer;
+                const turnPoints = (prevScores[prevTurnPlayer] !== undefined && scores[prevTurnPlayer] !== undefined) ? (prevScores[prevTurnPlayer] - scores[prevTurnPlayer]) : 0;
+                if (turnPoints > 0) recordTurnMilestone(prevTurnPlayer, turnPoints);
+                currentTurnNumber++;
+
                 darts = [];
                 dartsLeft = 3;
                 prevScores[currentPlayer] = scores[currentPlayer];
@@ -1846,6 +2310,7 @@ function nextTurn() {
                 updateBadges();
 
                 const turnData = {
+                    type: 'turn',
                     turn: currentPlayer,
                     windX: windX,
                     windY: windY,
@@ -1857,10 +2322,9 @@ function nextTurn() {
                 };
                 localLastTurnTs = turnData.ts;
 
-                if (window.fb && currentRoomId) {
-                    window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/lastTurn'), turnData);
-                    window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/turn'), currentPlayer);
-                    window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/updatedAt'), Date.now());
+                if (rMultiplayer && rMultiplayer.roomId) {
+                    const nextSlot = currentPlayer === 0 ? 'p1' : 'p2';
+                    rMultiplayer.sendMove(turnData, nextSlot);
                 }
             }
         }
@@ -1868,6 +2332,11 @@ function nextTurn() {
     }
 
     if (state === 'TURN_END') {
+        const prevTurnPlayer = currentPlayer;
+        const turnPoints = (prevScores[prevTurnPlayer] !== undefined && scores[prevTurnPlayer] !== undefined) ? (prevScores[prevTurnPlayer] - scores[prevTurnPlayer]) : 0;
+        if (turnPoints > 0) recordTurnMilestone(prevTurnPlayer, turnPoints);
+        currentTurnNumber++;
+
         darts = [];
         dartsLeft = 3;
         prevScores[currentPlayer] = scores[currentPlayer];
@@ -2065,8 +2534,25 @@ function throwDart(rawX, rawY) {
 
     updateScoreUI();
 
+    recordMatchDart({
+        player: currentPlayer,
+        rawX: rawX,
+        rawY: rawY,
+        finalX: finalX,
+        finalY: finalY,
+        pts: pts,
+        number: hit.number,
+        mult: hit.mult,
+        scoreBefore: prevScores[currentPlayer],
+        scoreAfter: scores[currentPlayer],
+        dartsLeft: dartsLeft,
+        isCheckout: (state === 'WON'),
+        isBust: statusEl.innerText.includes('Bust')
+    });
+
     if (isOnlineGame) {
         const dartData = {
+            type: 'dart',
             player: myPlayerNum - 1,
             dartsLeft: dartsLeft,
             rawX: rawX,
@@ -2093,25 +2579,17 @@ function throwDart(rawX, rawY) {
         };
         localLastDartTs = dartData.ts;
 
-        if (window.fb && currentRoomId) {
-            window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/lastDart'), dartData);
-            window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/gameState'), {
-                scores: scores.slice(),
-                prevScores: prevScores.slice(),
-                cricketHits: JSON.parse(JSON.stringify(cricketHits)),
-                atcTarget: atcTarget.slice(),
-                blitzHits: blitzHits.slice(),
-                killerLives: killerLives.slice(),
-                isKiller: isKiller.slice(),
-                totalDarts: totalDarts.slice(),
-                highestCheckout: highestCheckout.slice()
-            });
-            window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/updatedAt'), Date.now());
+        if (rMultiplayer && rMultiplayer.roomId) {
+            rMultiplayer.sendMove(dartData);
 
             if (state === 'WON') {
-                window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/status'), 'finished');
-                window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/winner'), myPlayerNum);
-                window.fb.set(window.fb.ref(window.fb.db, 'multiplayer/kdarts/rooms/' + currentRoomId + '/winReason'), statusEl.innerText);
+                rMultiplayer.sendMove({
+                    type: 'win',
+                    winner: myPlayerNum,
+                    winReason: statusEl.innerText
+                });
+                const rematchBtn = document.getElementById('onlineRematchBtn');
+                if (rematchBtn) rematchBtn.style.display = 'inline-block';
             }
         }
     }
@@ -2676,14 +3154,13 @@ function drawPerimeterInlay(ctx) {
     const w = canvas.width - margin * 2;
     const h = canvas.height - margin * 2;
 
-    // Pulsating energy border
-    const pulseAlpha = 0.4 + 0.3 * Math.sin(t * 3.5);
-    ctx.strokeStyle = `rgba(212, 175, 55, ${pulseAlpha})`;
+    // Static clean border per Mandate Rule 11
+    ctx.strokeStyle = 'rgba(212, 175, 55, 0.45)';
     ctx.lineWidth = 1.5;
     ctx.strokeRect(margin, margin, w, h);
 
-    // Subtle inner glow border
-    ctx.strokeStyle = `rgba(0, 210, 255, ${pulseAlpha * 0.5})`;
+    // Subtle inner border
+    ctx.strokeStyle = 'rgba(0, 210, 255, 0.25)';
     ctx.lineWidth = 0.8;
     ctx.strokeRect(margin + 3, margin + 3, w - 6, h - 6);
 
@@ -2691,37 +3168,18 @@ function drawPerimeterInlay(ctx) {
 }
 
 function drawBoardSpecularSweep(ctx) {
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(CX, CY, BOARD_R * 1.35, 0, Math.PI * 2);
-    ctx.clip();
-
-    const sweepPeriod = 5.0;
-    const progress = (t * 0.4) % sweepPeriod;
-    if (progress < 1.4) {
-        const sweepRatio = progress / 1.4;
-        const sweepX = (CX - BOARD_R * 1.5) + sweepRatio * (BOARD_R * 3.0);
-        
-        ctx.save();
-        ctx.translate(sweepX, CY);
-        ctx.rotate(-Math.PI / 4);
-
-        const sheenGrad = ctx.createLinearGradient(-35, 0, 35, 0);
-        sheenGrad.addColorStop(0, 'rgba(255, 255, 255, 0)');
-        sheenGrad.addColorStop(0.5, 'rgba(255, 255, 255, 0.14)');
-        sheenGrad.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        ctx.fillStyle = sheenGrad;
-        ctx.fillRect(-35, -BOARD_R * 2, 70, BOARD_R * 4);
-        ctx.restore();
-    }
-    ctx.restore();
+    // Mandate Rule 11: Specular glint/sweep neutralized
 }
 
 function update() {
+    if (isTabHidden) {
+        requestAnimationFrame(update);
+        return;
+    }
     let speedMult = focusActive[currentPlayer] ? 0.25 : 1.0;
     t += 0.05 * speedMult;
     
-    let amp = currentWobbleAmp * (focusActive[currentPlayer] ? 0.25 : 1.0);
+    let amp = currentWobbleAmp * (focusActive[currentPlayer] ? 0.25 : 1.0) * wobbleAssistFactor;
     wobbleX = Math.sin(t * 1.3) * amp + Math.sin(t * 0.8) * (amp * 0.6);
     wobbleY = Math.cos(t * 1.5) * amp + Math.sin(t * 0.9) * (amp * 0.6);
     
@@ -3061,7 +3519,13 @@ function update() {
             ctx.stroke();
         }
 
-        const crossColor = focusActive[currentPlayer] ? '#00ff88' : (laserActive[currentPlayer] ? '#ff0080' : '#ffff00');
+        let baseCrossColor = '#ffff00';
+        if (reticleStyle === 'cyan') baseCrossColor = '#00d2ff';
+        else if (reticleStyle === 'gold') baseCrossColor = '#ffd700';
+        else if (reticleStyle === 'neon') baseCrossColor = '#00ff88';
+        else if (reticleStyle === 'ruby') baseCrossColor = '#ff3366';
+
+        const crossColor = focusActive[currentPlayer] ? '#00ff88' : (laserActive[currentPlayer] ? '#ff0080' : baseCrossColor);
         ctx.beginPath();
         ctx.moveTo(tx - 18, ty); ctx.lineTo(tx + 18, ty);
         ctx.moveTo(tx, ty - 18); ctx.lineTo(tx, ty + 18);
@@ -3117,6 +3581,10 @@ canvas.addEventListener('click', (e) => {
     if (helpP && getComputedStyle(helpP).display !== 'none') return;
     const mpModal = document.getElementById('multiplayer-modal');
     if (mpModal && getComputedStyle(mpModal).display === 'flex') return;
+    const repModal = document.getElementById('replay-modal');
+    if (repModal && getComputedStyle(repModal).display === 'flex') return;
+    const setModal = document.getElementById('settings-modal');
+    if (setModal && getComputedStyle(setModal).display === 'flex') return;
 
     if (isOnlineGame) {
         if (currentRoomStatus === 'waiting') {
@@ -3155,49 +3623,74 @@ window.addEventListener('keydown', (e) => {
     const isHelpOpen = helpP && getComputedStyle(helpP).display !== 'none';
     const mpModal = document.getElementById('multiplayer-modal');
     const isMpOpen = mpModal && getComputedStyle(mpModal).display === 'flex';
+    const repModal = document.getElementById('replay-modal');
+    const isRepOpen = repModal && getComputedStyle(repModal).display === 'flex';
+    const setModal = document.getElementById('settings-modal');
+    const isSetOpen = setModal && getComputedStyle(setModal).display === 'flex';
     
     if (k === 'escape') {
         if (helpP && isHelpOpen) { helpP.style.display = 'none'; return; }
         if (mpModal && isMpOpen) { closeMultiplayerModal(); return; }
+        if (repModal && isRepOpen) { closeReplayModal(); return; }
+        if (setModal && isSetOpen) { closeSettingsModal(); return; }
     }
-    if (k === 'h' && isHelpOpen) {
-        if (helpP) helpP.style.display = 'none';
+    if (activeRecordingAction) {
+        return; // Recording shortcut in settings modal
+    }
+    if (k === (userKeybinds.help || 'h').toLowerCase()) {
+        if (isHelpOpen && helpP) helpP.style.display = 'none';
+        else toggleHelp();
         return;
     }
-    if (k === 'h') {
-        toggleHelp();
+    if (k === (userKeybinds.replay || 'r').toLowerCase()) {
+        if (isRepOpen) closeReplayModal();
+        else openReplayModal();
         return;
     }
-    if (isHelpOpen || isMpOpen) return;
+    if (k === (userKeybinds.settings || 'k').toLowerCase()) {
+        if (isSetOpen) closeSettingsModal();
+        else openSettingsModal();
+        return;
+    }
+    if (k === (userKeybinds.online || 'o').toLowerCase() && !isOnlineGame && !isRepOpen && !isSetOpen) {
+        if (isMpOpen) closeMultiplayerModal();
+        else openMultiplayerModal();
+        return;
+    }
+    if (isHelpOpen || isMpOpen || isRepOpen || isSetOpen) return;
+
+    const keyThrow = (userKeybinds.throw || ' ').toLowerCase();
+    const keyNext = (userKeybinds.nextTurn || 'enter').toLowerCase();
+    const isThrowOrNext = (k === keyThrow || k === keyNext || e.key === ' ' || e.key === 'Enter');
     
     if (isOnlineGame) {
-        if (['1', '2', '3', '4', '5', '6', 'c', 's', 'o', 'z', 'y'].includes(k)) {
+        if (['1', '2', '3', '4', '5', '6', 'c', 's', 'z', 'y'].includes(k)) {
             showToast("Shortcut disabled during online match. Use Leave to exit.", "warning");
             return;
         }
         let isMyTurn = (myPlayerNum === 1 && currentPlayer === 0) || (myPlayerNum === 2 && currentPlayer === 1);
-        if ((e.key === ' ' || e.key === 'Enter') && state === 'TURN_END' && isMyTurn) {
+        if (isThrowOrNext && state === 'TURN_END' && isMyTurn) {
             e.preventDefault();
             nextTurn();
             return;
         }
-        if (k === 'f') activateFocus();
-        else if (k === 'm') activateMagnet();
-        else if (k === 'l') activateLaser();
+        if (k === (userKeybinds.focus || 'f').toLowerCase()) activateFocus();
+        else if (k === (userKeybinds.magnet || 'm').toLowerCase()) activateMagnet();
+        else if (k === (userKeybinds.laser || 'l').toLowerCase()) activateLaser();
         return;
     }
 
     let isP1OrHuman = (currentPlayer === 0 || (!isCampaign && aiDifficulty === 'Human'));
-    if ((e.key === ' ' || e.key === 'Enter') && (state === 'TURN_END' || state === 'WON' || state === 'CAMPAIGN_OVER') && isP1OrHuman) {
+    if (isThrowOrNext && (state === 'TURN_END' || state === 'WON' || state === 'CAMPAIGN_OVER') && isP1OrHuman) {
         e.preventDefault();
         nextTurn();
         return;
     }
     
-    if (k === 'f') activateFocus();
-    else if (k === 'm') activateMagnet();
-    else if (k === 'u') activateUndoDart();
-    else if (k === 'l') activateLaser();
+    if (k === (userKeybinds.focus || 'f').toLowerCase()) activateFocus();
+    else if (k === (userKeybinds.magnet || 'm').toLowerCase()) activateMagnet();
+    else if (k === (userKeybinds.undo || 'u').toLowerCase()) activateUndoDart();
+    else if (k === (userKeybinds.laser || 'l').toLowerCase()) activateLaser();
     else if (k === 'c') startCampaign(0);
     else if (k === '1') setMode('501');
     else if (k === '2') setMode('301');
@@ -3206,7 +3699,6 @@ window.addEventListener('keydown', (e) => {
     else if (k === '5') setMode('blitz');
     else if (k === '6') setMode('killer');
     else if (k === 's') saveState();
-    else if (k === 'o') loadState();
     else if (k === 'z') undo();
     else if (k === 'y') redo();
 });
@@ -3274,6 +3766,154 @@ update();
         <div id="mpLobbyList" class="mp-lobby-box">
           <div style="color: #aaa; font-style: italic; font-size: 12px; text-align: center; padding: 10px;">Connecting to lobby...</div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Match Replay & Leg Analytics Modal -->
+  <div id="replay-modal" class="modal" onclick="if(event.target===this) closeReplayModal()">
+    <div class="modal-content modal-content-lg">
+      <span class="close-btn" onclick="closeReplayModal()">&times;</span>
+      <h2 style="color: #ffd700; margin-top: 0; margin-bottom: 4px; text-align: center;">📊 Match Replay & Leg Analytics</h2>
+      <p style="font-size: 12px; color: #94a3b8; margin-top: 0; margin-bottom: 14px; text-align: center;">
+        Shot-by-shot timeline, 3-dart averages, and interactive sisal board replay.
+      </p>
+
+      <!-- Live Performance Cards -->
+      <div class="stat-grid" id="replayStatGrid">
+        <div class="stat-card">
+          <div class="stat-val" id="statP1Avg">0.0</div>
+          <div class="stat-label">P1 3-Dart Avg</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statP2Avg">0.0</div>
+          <div class="stat-label">P2 / AI Avg</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statHighCheckout">0</div>
+          <div class="stat-label">Highest Checkout</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statTon180">0</div>
+          <div class="stat-label">180s (Max)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statTon140">0</div>
+          <div class="stat-label">140+ Scores</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statTon100">0</div>
+          <div class="stat-label">100+ Scores</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statBulls">0</div>
+          <div class="stat-label">Bullseyes</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" id="statTotalDarts">0</div>
+          <div class="stat-label">Total Darts</div>
+        </div>
+      </div>
+
+      <!-- Interactive Sisal Board Replayer -->
+      <div class="replay-canvas-wrap">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+          <span style="font-size: 12px; font-weight: bold; color: #ffd700;">🎯 Board Trajectory Replay</span>
+          <span id="replayStepLabel" style="font-size: 11px; color: #38bdf8;">Throw 0 / 0</span>
+        </div>
+        <canvas id="replayCanvas" width="340" height="340" class="replay-board"></canvas>
+        <input type="range" id="replaySlider" min="0" max="0" value="0" class="replay-slider" oninput="onReplaySliderChange(this.value)">
+        <div class="replay-controls">
+          <button onclick="stepReplayToStart()" class="btn-tiny">⏮ First</button>
+          <button onclick="stepReplay(-1)" class="btn-tiny">◀ Prev</button>
+          <button id="btnReplayPlay" onclick="toggleReplayPlay()" class="btn-tiny" style="background:#0284c7; color:#fff; border-color:#38bdf8;">▶ Play</button>
+          <button onclick="stepReplay(1)" class="btn-tiny">Next ▶</button>
+          <button onclick="stepReplayToEnd()" class="btn-tiny">⏭ Last</button>
+          <select id="replaySpeedSelect" onchange="changeReplaySpeed(this.value)" style="padding: 2px 6px; font-size: 11px; background:#1e1e24; border:1px solid #444; color:#fff; border-radius:4px;">
+            <option value="1">Speed: 1x</option>
+            <option value="2">Speed: 2x</option>
+            <option value="4">Speed: 4x</option>
+          </select>
+        </div>
+        <div id="replayDartCard" style="width: 100%; background: #181824; border: 1px solid #334; border-radius: 4px; padding: 6px 10px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;">
+          <span id="replayDartDetail" style="color: #cbd5e1;">Select or play throws above to replay match.</span>
+          <span id="replayDartScore" style="color: #ffd700; font-weight: bold;">--</span>
+        </div>
+      </div>
+
+      <!-- Turn History Breakdown Table -->
+      <div style="margin-bottom: 12px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <h4 style="margin: 0; font-size: 13px; color: #38bdf8;">📜 Leg Turn-by-Turn Timeline</h4>
+          <span style="font-size: 10px; color: #64748b;">Click any turn to jump replay</span>
+        </div>
+        <div id="replayHistoryBox" class="history-box">
+          <div style="color: #64748b; font-style: italic; text-align: center; padding: 10px;">No throws recorded in current match.</div>
+        </div>
+      </div>
+
+      <!-- Export & Import Controls -->
+      <div style="display: flex; gap: 8px; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid #28283a;">
+        <div style="display: flex; gap: 6px;">
+          <button onclick="exportMatchJson()" style="background: #064e3b; border: 1px solid #10b981; color: #6ee7b7; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold;">📥 Export JSON</button>
+          <button onclick="triggerImportFileInput()" style="background: #1e293b; border: 1px solid #64748b; color: #cbd5e1; padding: 4px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; font-weight: bold;">📤 Import JSON</button>
+          <input type="file" id="replayFileInput" accept=".json" style="display: none;" onchange="handleImportFile(event)">
+        </div>
+        <button onclick="closeReplayModal()" style="background: #333; color: #fff; padding: 4px 12px; border-radius: 4px; font-size: 11px; border: 1px solid #555; cursor: pointer;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Rebinding & Aim Settings Modal -->
+  <div id="settings-modal" class="modal" onclick="if(event.target===this) closeSettingsModal()">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeSettingsModal()">&times;</span>
+      <h2 style="color: #818cf8; margin-top: 0; margin-bottom: 4px; text-align: center;">⚙️ Keys & Aim Settings</h2>
+      <p style="font-size: 12px; color: #94a3b8; margin-top: 0; margin-bottom: 14px; text-align: center;">
+        Customize keyboard shortcuts, crosshair visual style, and motor assistance.
+      </p>
+
+      <!-- Key Rebinding Table -->
+      <div class="mp-section">
+        <h3 style="margin: 0 0 8px 0; color: #c7d2fe; font-size: 13px;">⌨️ Keyboard Shortcuts</h3>
+        <div id="keybindList">
+          <!-- Populated dynamically by renderKeybindList() -->
+        </div>
+      </div>
+
+      <!-- Aim Crosshair Styling -->
+      <div class="mp-section">
+        <h3 style="margin: 0 0 8px 0; color: #ffd700; font-size: 13px;">🎯 Reticle Visual Style</h3>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <label style="font-size: 12px; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+            <input type="radio" name="reticleStyleRadio" value="cyan" onchange="changeReticleStyle(this.value)" checked> Classic Cyan
+          </label>
+          <label style="font-size: 12px; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+            <input type="radio" name="reticleStyleRadio" value="gold" onchange="changeReticleStyle(this.value)"> High-Contrast Gold
+          </label>
+          <label style="font-size: 12px; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+            <input type="radio" name="reticleStyleRadio" value="neon" onchange="changeReticleStyle(this.value)"> Neon Emerald
+          </label>
+          <label style="font-size: 12px; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+            <input type="radio" name="reticleStyleRadio" value="ruby" onchange="changeReticleStyle(this.value)"> Ruby Pinpoint
+          </label>
+        </div>
+      </div>
+
+      <!-- Aim Assistance & Wobble Sensitivity -->
+      <div class="mp-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <h3 style="margin: 0; color: #38bdf8; font-size: 13px;">🕹️ Motor Assistance (Wobble)</h3>
+          <span id="wobbleFactorText" style="font-size: 12px; font-weight: bold; color: #ffd700;">100% (Normal)</span>
+        </div>
+        <p style="font-size: 11px; color: #94a3b8; margin: 0 0 8px 0;">Adjust wobble amplitude for motor assistance or steady practice.</p>
+        <input type="range" id="wobbleAssistSlider" min="25" max="100" step="25" value="100" style="width: 100%; accent-color: #38bdf8;" oninput="changeWobbleAssist(this.value)">
+      </div>
+
+      <!-- Actions -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+        <button onclick="resetKeybindsToDefault()" style="background: #332222; border: 1px solid #774444; color: #ffaaaa; padding: 5px 10px; border-radius: 4px; font-size: 11px; cursor: pointer;">Reset Defaults</button>
+        <button onclick="closeSettingsModal()" style="background: #4338ca; border: 1px solid #818cf8; color: #fff; padding: 5px 14px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer;">Done</button>
       </div>
     </div>
   </div>

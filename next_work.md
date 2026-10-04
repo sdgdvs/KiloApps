@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KSanctuary
   kilo_usability: KMail
   kilo_qa: KMandel
-  kilo_expander: KDarts
+  kilo_expander: KGo
 virtual_web_target: "kweb://asm-temple"
 virtual_web_rotation:
   - "kweb://geocities"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-qa
-  app: KMail
-  timestamp: "2026-10-03T17:36:00-07:00"
+  agent: kilo-expander
+  app: KDarts
+  timestamp: "2026-10-03T18:40:00-07:00"
 last_planner_run: "2026-10-03T05:35:00Z"
 ---
 
@@ -178,7 +178,7 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 - **[FLEET: kilo-qa, kilo-usability, kilo-tester] — Toast Occlusion & Modal Clipping Remediation** | Vision Audit Directive
   - ⚠️ AGENT NOTE: Secondary state vision audit revealed 26 apps where persistent or timed toasts (`z-index: 150-200`) overlap interactive controls (buttons, inputs, close icons) and 10 apps with clipped dialogs/virtual keyboards.
-  - Instructions: During app passes, ensure toasts do not occlude interactive inputs or primary buttons (position toasts safely, dismiss on click/interaction, or use unobtrusive non-overlapping toast bars). Fix double-modal stacking (`kclip` - fixed, `kpomodoro` - fixed) and remove internal loop labels (`kdarts`, `kwords`).
+  - Instructions: During app passes, ensure toasts do not occlude interactive inputs or primary buttons (position toasts safely, dismiss on click/interaction, or use unobtrusive non-overlapping toast bars). Fix double-modal stacking (`kclip` - fixed, `kpomodoro` - fixed) and remove internal loop labels (`kdarts` - fixed, `kwords`).
 
 - **[ARG / FLEET-WIDE] — Middle-Game Puzzle Chain & Tier 3 Node Gating** | Director Directive
   - ⚠️ AGENT NOTE: Human director priority directive. ARG structural improvement.
@@ -210,6 +210,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 ---
 
 ## Recent Execution Logs (Max 5 Entries)
+ 
+- **2026-10-03T18:40:00-07:00 — kilo-expander: KDarts (Deep Feature Expansion, RFMS Multiplayer, Replay Viewer & Glint Purge)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 151.2 KB web / 41.0 KB native < 999 KB ceiling).
+  - Online Multiplayer: Integrated standardized RFMS RetroMultiplayer (DAR prefix, 25s solo AI fallback, room code sync).
+  - Replay & Telemetry: Built interactive 3D sisal board replay visualizer with timeline scrubbing, 3-dart average, and JSON export/import.
+  - Controls & Ergonomics: Built key rebinding engine, reticle visual themes (cyan/gold/neon/ruby), and motor assistance slider.
+  - Glint Ban & Remediation: Purged specular sweeps and pulsing borders across web and native C; removed Loop 7 label.
+  - ARCH-05: Added document visibility listener pausing AI timeouts and frame processing when backgrounded.
+  - Verification: MSVC clean (`KDarts.exe` 41 KB); Vite build clean in 448ms; security_lint 100% PASS.
 
 - **2026-10-03T17:36:00-07:00 — kilo-qa: KMail (Pass 5: State Persistence, Tutorial Integrity, Toast Remediation & ARCH-05)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 124.4 KB web / 519.7 KB native < 999 KB ceiling).
@@ -244,12 +253,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Memory & Cleanup: Added notification timeout ref with unmount cleanup; wrapped localStorage in try/catch.
   - Schema & Handlers: Added exeUrl: null to kexplorer/kdirector; stabilized os-launch-app event dependencies.
   - Audit Triage: Evaluated ARCH-01..09 tickets; purged false positives; queued ARCH-05 (timer visibility).
-
-- **2026-10-03T14:35:00-07:00 — kilo-graphics: KQuest (Game Content, Visual Polish, Glint Purge & Class Balance)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 300.5 KB web / 97.8 KB native < 999 KB ceiling).
-  - Glint & Border Ban: Purged pulsating perimeter shimmer from both web and C; installed clean static golden filigree HUD frames.
-  - Paladin & Ranger Visuals: Added full canvas and GDI character rendering for Paladin (golden plate, cross crest, mace) and Ranger (hood, cloak, longbow).
-  - Combat & Class Balance: Added Smite holy heal (+16 HP) and Ranger Aimed Shot critical precision (35% crit for 2.5x dmg) with class-specific FX.
-  - Native Character Creation Fix: Repaired button handler mapping in main.c allowing full selection and initialization of Paladin and Ranger.
-  - Verification: Clean MSVC native build (97.8 KB); Vite build clean in 471ms; security_lint 100% PASS; check_icons 100% PASS.
 
