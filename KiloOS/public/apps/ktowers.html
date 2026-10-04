@@ -555,6 +555,94 @@
             background: var(--accent-color);
             color: #0f172a;
         }
+
+        /* Move History Log Panel */
+        .move-log-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            width: 100%;
+            max-width: 860px;
+        }
+
+        .move-log-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 12px;
+            background: #0f172a;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .move-log-list {
+            overflow-y: auto;
+            max-height: 120px;
+            padding: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        .move-log-item {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 3px 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+            color: var(--text-color);
+        }
+
+        .move-log-item:hover {
+            border-color: var(--accent-color);
+            background: rgba(56, 189, 248, 0.15);
+        }
+
+        .move-log-item.active-step {
+            background: var(--accent-color);
+            color: #0f172a;
+            font-weight: bold;
+            border-color: #fff;
+        }
+
+        /* Stats Modal Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(115px, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .stats-card {
+            background: #0f172a;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .stats-card-lbl {
+            font-size: 11px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stats-card-val {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
@@ -634,10 +722,24 @@
                 <button onclick="showHelp()">❓ Help</button>
             </div>
 
+            <!-- Move History Drawer / Log Panel -->
+            <div id="moveLogPanel" class="move-log-panel" style="display: none;">
+                <div class="move-log-header">
+                    <span>📜 Move History (<span id="moveLogCount">0</span>)</span>
+                    <button onclick="toggleMoveLog()" style="padding: 2px 8px; font-size: 11px; background: transparent; border: 1px solid var(--border-color); color: var(--text-dim); cursor: pointer;">✕ Close</button>
+                </div>
+                <div class="move-log-list" id="moveLogList">
+                    <div style="color: var(--text-dim); text-align: center; padding: 10px; font-size: 12px; width: 100%;">No moves recorded yet.</div>
+                </div>
+            </div>
+
             <div class="controls-grid secondary-controls">
                 <button class="btn-mp" onclick="openMultiplayerModal()" id="duelBtn">⚔️ Speed Duel / Online</button>
                 <button class="btn-util" onclick="toggleReplayMode()" id="replayBtn">⏪ Replay</button>
                 <button class="btn-util" onclick="openFenModal()" id="fenBtn">💾 Board FEN</button>
+                <button class="btn-util" onclick="openNotationModal()" id="notationBtn">📜 Move Notation</button>
+                <button class="btn-util" onclick="toggleMoveLog()" id="logToggleBtn">📋 Move Log</button>
+                <button class="btn-util" onclick="openStatsModal()" id="statsBtn">📊 Career Stats</button>
                 <button class="btn-util" onclick="quicksaveState()" id="quicksaveBtn">💾 Quicksave [F5]</button>
                 <button class="btn-util" onclick="quickloadState()" id="quickloadBtn">📂 Quickload [F9]</button>
                 <button class="btn-util" onclick="openKeybindsModal()" id="keysBtn">⚙️ Keys</button>
@@ -796,6 +898,86 @@
         </div>
     </div>
 
+    <!-- Move Notation Modal -->
+    <div class="modal-overlay" id="notationModal" style="display: none;">
+        <div class="modal-content" style="max-width: 540px;">
+            <div class="modal-title" style="color: var(--accent-color);">📜 Tower Move Notation (TMN)</div>
+            <div class="modal-body">
+                <div class="modal-form">
+                    <label for="notationOutput">Match Move Notation Transcript:</label>
+                    <textarea id="notationOutput" rows="7" style="font-family: monospace; font-size: 12px;"></textarea>
+                    <div style="display: flex; gap: 8px; margin-top: 6px;">
+                        <button onclick="copyNotation()" style="flex: 1;">📋 Copy Notation</button>
+                        <button onclick="downloadNotationFile()" style="flex: 1;" class="btn-mp">💾 Download .ktow</button>
+                        <button onclick="applyNotationFromInput()" style="flex: 1; background: var(--accent-color); color: #0f172a; font-weight: bold;">📥 Load & Replay</button>
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-dim); margin: 6px 0 0 0;">
+                        Standard Tower Move Notation tracks every disc transfer (e.g. <code>1. P1-&gt;P3 2. P1-&gt;P2</code>) with event headers, allowing full solution playback in Replay Mode.
+                    </p>
+                </div>
+            </div>
+            <div class="modal-btns">
+                <button onclick="closeAllModals()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Career Progression & Stats Modal -->
+    <div class="modal-overlay" id="statsModal" style="display: none;">
+        <div class="modal-content" style="max-width: 580px;">
+            <div class="modal-title" style="color: var(--accent-color);">📊 KTowers Career Analytics</div>
+            <div class="modal-body">
+                <div class="stats-grid">
+                    <div class="stats-card">
+                        <div class="stats-card-lbl">Campaign Clear</div>
+                        <div class="stats-card-val" id="statCampaignClear">0 / 20</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-card-lbl">Stars Collected</div>
+                        <div class="stats-card-val" id="statTotalStars" style="color: #fde047;">0 / 60</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-card-lbl">Par Efficiency</div>
+                        <div class="stats-card-val" id="statParEff" style="color: #22c55e;">--%</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-card-lbl">Mastery Tier</div>
+                        <div class="stats-card-val" id="statMasteryTier" style="font-size: 15px;">Novice</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-card-lbl">Total Moves</div>
+                        <div class="stats-card-val" id="statLifetimeMoves">0</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-card-lbl">Speed Duels</div>
+                        <div class="stats-card-val" id="statDuelRecord">0W - 0L</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-card-lbl">AI Bot Record</div>
+                        <div class="stats-card-val" id="statAiRecord" style="font-size: 13px;">N:0 A:0 M:0</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-card-lbl">Powerups Used</div>
+                        <div class="stats-card-val" id="statPowerupsUsed" style="font-size: 13px;">0F / 0S</div>
+                    </div>
+                </div>
+
+                <div style="background: #0f172a; border: 1px solid var(--border-color); border-radius: 8px; padding: 10px; margin-top: 10px;">
+                    <div style="font-size: 12px; font-weight: bold; margin-bottom: 6px; color: var(--accent-color);">Data Backup & Restore:</div>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="exportCareerStatsJson()" style="flex: 1; font-size: 12px;">💾 Export JSON</button>
+                        <button onclick="triggerImportCareerStats()" style="flex: 1; font-size: 12px;">📂 Import JSON</button>
+                        <input type="file" id="statsFileInput" accept=".json" style="display: none;" onchange="importCareerStatsJson(event)">
+                        <button onclick="resetCareerStats()" style="background: rgba(239,68,68,0.2); border-color: var(--danger-color); color: #fca5a5; font-size: 12px;">🔄 Reset</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-btns">
+                <button onclick="closeAllModals()">Close</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ----------------------------------------------------
         // Stage Definitions (20 Campaign Stages)
@@ -919,6 +1101,36 @@
             campaignStats = {};
         }
 
+        // Career Progression Analytics State
+        const DEFAULT_CAREER_STATS = {
+            totalMoves: 0,
+            gamesWon: 0,
+            campaignClears: 0,
+            totalUndos: 0,
+            totalFreezes: 0,
+            totalSwaps: 0,
+            duelOnlineWins: 0,
+            duelOnlineLosses: 0,
+            duelAiWins: { novice: 0, adept: 0, master: 0 },
+            duelAiLosses: { novice: 0, adept: 0, master: 0 }
+        };
+        let careerStats = Object.assign({}, DEFAULT_CAREER_STATS);
+        try {
+            const rawCS = localStorage.getItem('ktowers_career_stats_v1');
+            if (rawCS) {
+                const parsedCS = JSON.parse(rawCS);
+                if (parsedCS && typeof parsedCS === 'object') {
+                    careerStats = Object.assign({}, DEFAULT_CAREER_STATS, parsedCS);
+                }
+            }
+        } catch (e) {}
+
+        function saveCareerStats() {
+            try {
+                localStorage.setItem('ktowers_career_stats_v1', JSON.stringify(careerStats));
+            } catch (e) {}
+        }
+
         // ----------------------------------------------------
         // Speed Duel & Multiplayer State (Retro Firebase Multiplayer Service)
         // ----------------------------------------------------
@@ -961,6 +1173,7 @@
             peg1: '1', peg2: '2', peg3: '3', peg4: '4', peg5: '5',
             undo: 'u', hint: 'h', freeze: 'f', swap: 's',
             autosolve: 'a', restart: 'r', replay: 'p',
+            movelog: 'l', notation: 'n', stats: 'c',
             quicksave: 'F5', quickload: 'F9'
         };
         let keybinds = Object.assign({}, DEFAULT_KEYBINDS);
@@ -1150,6 +1363,7 @@
 
             updateStatsDisplay();
             render();
+            renderMoveLog();
         }
 
         function updateStatsDisplay() {
@@ -1200,6 +1414,8 @@
             }
             freezeCharges--;
             freezeSeconds += 15;
+            careerStats.totalFreezes++;
+            saveCareerStats();
             document.getElementById('freezeChargesDisplay').innerText = freezeCharges;
             document.getElementById('frozenBadge').style.display = 'inline-block';
             document.getElementById('frozenBadge').innerText = `FROZEN (${freezeSeconds}s)`;
@@ -1254,6 +1470,10 @@
                 pegs[targetPeg].push(pegs[srcPeg].pop());
                 moves++;
                 swapCharges--;
+                careerStats.totalMoves++;
+                careerStats.totalSwaps++;
+                saveCareerStats();
+                renderMoveLog();
                 selectedPeg = null;
                 hintHighlight = null;
                 document.getElementById('swapChargesDisplay').innerText = swapCharges;
@@ -1290,6 +1510,9 @@
                 pegs[lastMove.from].push(pegs[lastMove.to].pop());
                 if (moves > 0) moves--;
             }
+            careerStats.totalUndos++;
+            saveCareerStats();
+            renderMoveLog();
             selectedPeg = null;
             hintHighlight = null;
             document.getElementById('moveDisplay').innerText = moves;
@@ -1366,6 +1589,9 @@
                     moveHistory.push({ from: prevFrom, to: pegIdx });
                     toPeg.push(fromPeg.pop());
                     moves++;
+                    careerStats.totalMoves++;
+                    saveCareerStats();
+                    renderMoveLog();
                     selectedPeg = null;
                     hintHighlight = null;
                     document.getElementById('moveDisplay').innerText = moves;
@@ -1535,6 +1761,10 @@
                         clearInterval(aiInterval);
                         aiInterval = null;
                     }
+                    careerStats.gamesWon++;
+                    if (duelMode === 'online') careerStats.duelOnlineWins++;
+                    else if (duelMode === 'solo_ai') careerStats.duelAiWins[aiDifficulty] = (careerStats.duelAiWins[aiDifficulty] || 0) + 1;
+                    saveCareerStats();
                     spawnVictoryFireworks();
                     playSound('win');
                     render();
@@ -1557,6 +1787,12 @@
                         populateStageDropdown();
                     }
                 }
+
+                careerStats.gamesWon++;
+                if (currentMode === 'campaign') {
+                    careerStats.campaignClears = Object.keys(campaignStats).length;
+                }
+                saveCareerStats();
 
                 // Spawn victory fireworks
                 spawnVictoryFireworks();
@@ -2648,7 +2884,7 @@
         }
 
         function closeAllModals() {
-            ['modalOverlay', 'mpModal', 'fenModal', 'keysModal', 'inviteModal'].forEach(id => {
+            ['modalOverlay', 'mpModal', 'fenModal', 'keysModal', 'inviteModal', 'notationModal', 'statsModal'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
@@ -2671,6 +2907,273 @@
             closeAllModals();
             renderKeybindsList();
             document.getElementById('keysModal').style.display = 'flex';
+        }
+
+        // ----------------------------------------------------
+        // Move History Drawer & Live Log
+        // ----------------------------------------------------
+        let moveLogVisible = false;
+
+        function toggleMoveLog() {
+            moveLogVisible = !moveLogVisible;
+            const panel = document.getElementById('moveLogPanel');
+            if (panel) panel.style.display = moveLogVisible ? 'flex' : 'none';
+            const btn = document.getElementById('logToggleBtn');
+            if (btn) {
+                btn.style.background = moveLogVisible ? 'var(--accent-color)' : '';
+                btn.style.color = moveLogVisible ? '#0f172a' : '';
+            }
+            if (moveLogVisible) renderMoveLog();
+        }
+
+        function renderMoveLog() {
+            const listEl = document.getElementById('moveLogList');
+            const countEl = document.getElementById('moveLogCount');
+            if (countEl) countEl.innerText = moveHistory.length;
+            if (!listEl) return;
+
+            if (moveHistory.length === 0) {
+                listEl.innerHTML = `<div style="color: var(--text-dim); text-align: center; padding: 10px; font-size: 12px; width: 100%;">No moves recorded yet.</div>`;
+                return;
+            }
+
+            let html = '';
+            for (let i = 0; i < moveHistory.length; i++) {
+                const m = moveHistory[i];
+                const activeClass = (isReplayMode && replayIndex === i + 1) ? ' active-step' : '';
+                html += `<div class="move-log-item${activeClass}" onclick="jumpToReplayMove(${i + 1})" title="Jump to move ${i + 1}">#${i + 1}: P${m.from + 1} ➔ P${m.to + 1}</div>`;
+            }
+            listEl.innerHTML = html;
+        }
+
+        function jumpToReplayMove(step) {
+            if (!isReplayMode) {
+                toggleReplayMode();
+            }
+            seekReplay(step);
+            renderMoveLog();
+        }
+
+        // ----------------------------------------------------
+        // Tower Move Notation (TMN) System
+        // ----------------------------------------------------
+        function generateMoveNotation() {
+            const config = getCurrentStageConfig();
+            const dateStr = new Date().toISOString().split('T')[0];
+            let header = `[Event "KTowers Match - ${config.name}"]\n`;
+            header += `[Date "${dateStr}"]\n`;
+            header += `[Mode "${currentMode}"]\n`;
+            header += `[Pegs "${numPegs}"]\n`;
+            header += `[Discs "${numDiscs}"]\n`;
+            header += `[Par "${config.par}"]\n`;
+            header += `[Moves "${moves}"]\n`;
+            header += `[Time "${formatTime(elapsedSeconds)}"]\n`;
+            header += `[Result "${won ? 'Solved' : (gameOver ? 'Failed' : 'In Progress')}"]\n`;
+            header += `[FEN "${generateFEN()}"]\n\n`;
+
+            if (moveHistory.length === 0) {
+                return header + "; No moves recorded yet.";
+            }
+
+            let body = '';
+            for (let i = 0; i < moveHistory.length; i++) {
+                const m = moveHistory[i];
+                body += `${i + 1}. P${m.from + 1}->P${m.to + 1}  `;
+                if ((i + 1) % 5 === 0) body += '\n';
+            }
+            return header + body.trim();
+        }
+
+        function openNotationModal() {
+            closeAllModals();
+            document.getElementById('notationOutput').value = generateMoveNotation();
+            document.getElementById('notationModal').style.display = 'flex';
+        }
+
+        function copyNotation() {
+            const notStr = document.getElementById('notationOutput').value;
+            navigator.clipboard.writeText(notStr).then(() => {
+                showMessage("📋 Notation copied to clipboard!", "success");
+            }).catch(() => {
+                showMessage("📋 Notation copied!");
+            });
+        }
+
+        function downloadNotationFile() {
+            const notStr = document.getElementById('notationOutput').value;
+            const blob = new Blob([notStr], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ktowers_match_${Date.now()}.ktow`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showMessage("💾 Match transcript saved (.ktow)!", "success");
+        }
+
+        function applyNotationFromInput() {
+            const text = document.getElementById('notationOutput').value;
+            if (!text.trim()) {
+                showMessage("Please paste notation text!", "warning");
+                return;
+            }
+
+            // Extract FEN tag if present
+            const fenMatch = text.match(/\[FEN\s+"([^"]+)"\]/i);
+            if (fenMatch && fenMatch[1]) {
+                parseAndLoadFEN(fenMatch[1]);
+            } else {
+                const pMatch = text.match(/\[Pegs\s+"(\d+)"\]/i);
+                const dMatch = text.match(/\[Discs\s+"(\d+)"\]/i);
+                if (pMatch && dMatch) {
+                    setMode('free');
+                    numPegs = parseInt(pMatch[1], 10);
+                    numDiscs = parseInt(dMatch[1], 10);
+                    document.getElementById('freePegs').value = numPegs;
+                    document.getElementById('freeDiscs').value = numDiscs;
+                    initGame();
+                }
+            }
+
+            const regex = /(?:P?([1-5]))\s*(?:->|➔|-)\s*(?:P?([1-5]))/gi;
+            let match;
+            const parsedMoves = [];
+            while ((match = regex.exec(text)) !== null) {
+                const f = parseInt(match[1], 10) - 1;
+                const t = parseInt(match[2], 10) - 1;
+                if (f >= 0 && f < numPegs && t >= 0 && t < numPegs) {
+                    parsedMoves.push({ from: f, to: t });
+                }
+            }
+
+            if (parsedMoves.length === 0) {
+                showMessage("No valid moves found in notation!", "error");
+                return;
+            }
+
+            pegs = Array.from({ length: numPegs }, () => []);
+            for (let i = numDiscs; i >= 1; i--) {
+                pegs[0].push(i);
+            }
+            moveHistory = [];
+            for (let i = 0; i < parsedMoves.length; i++) {
+                const m = parsedMoves[i];
+                if (pegs[m.from].length === 0) break;
+                const d = pegs[m.from].pop();
+                const dest = pegs[m.to];
+                if (dest.length > 0 && dest[dest.length - 1] < d) {
+                    pegs[m.from].push(d);
+                    break;
+                }
+                dest.push(d);
+                moveHistory.push(m);
+            }
+
+            closeAllModals();
+            toggleReplayMode();
+            showMessage(`Loaded notation with ${moveHistory.length} moves! Ready for Replay.`, "success");
+        }
+
+        // ----------------------------------------------------
+        // Career Progression Analytics & Statistics
+        // ----------------------------------------------------
+        function openStatsModal() {
+            closeAllModals();
+            const clearedCount = Object.keys(campaignStats).length;
+            document.getElementById('statCampaignClear').innerText = `${clearedCount} / ${CAMPAIGN_STAGES.length}`;
+
+            let totalStars = 0;
+            let totalParSum = 0;
+            let totalMovesSum = 0;
+            for (const s of CAMPAIGN_STAGES) {
+                const st = campaignStats[s.id];
+                if (st) {
+                    totalStars += st.stars;
+                    totalParSum += s.par;
+                    totalMovesSum += st.moves;
+                }
+            }
+            document.getElementById('statTotalStars').innerText = `${totalStars} / ${CAMPAIGN_STAGES.length * 3}`;
+
+            let parRatio = '--%';
+            if (totalMovesSum > 0 && totalParSum > 0) {
+                const ratio = Math.round((totalParSum / totalMovesSum) * 100);
+                parRatio = `${ratio}%`;
+                let tier = 'Novice';
+                if (ratio >= 95 && clearedCount >= 10) tier = 'Grandmaster';
+                else if (ratio >= 80 && clearedCount >= 5) tier = 'Master';
+                else if (ratio >= 65) tier = 'Adept';
+                document.getElementById('statMasteryTier').innerText = tier;
+            } else {
+                document.getElementById('statMasteryTier').innerText = 'Novice';
+            }
+            document.getElementById('statParEff').innerText = parRatio;
+            document.getElementById('statLifetimeMoves').innerText = careerStats.totalMoves;
+            document.getElementById('statDuelRecord').innerText = `${careerStats.duelOnlineWins}W - ${careerStats.duelOnlineLosses}L`;
+            const aiW = careerStats.duelAiWins || {};
+            document.getElementById('statAiRecord').innerText = `N:${aiW.novice || 0} A:${aiW.adept || 0} M:${aiW.master || 0}`;
+            document.getElementById('statPowerupsUsed').innerText = `${careerStats.totalFreezes}F / ${careerStats.totalSwaps}S`;
+
+            document.getElementById('statsModal').style.display = 'flex';
+        }
+
+        function exportCareerStatsJson() {
+            const data = {
+                campaignStats,
+                careerStats,
+                exportedAt: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ktowers_career_stats.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showMessage("Career statistics exported to JSON!", "success");
+        }
+
+        function triggerImportCareerStats() {
+            const input = document.getElementById('statsFileInput');
+            if (input) input.click();
+        }
+
+        function importCareerStatsJson(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data && data.careerStats) {
+                        careerStats = Object.assign({}, DEFAULT_CAREER_STATS, data.careerStats);
+                        saveCareerStats();
+                    }
+                    if (data && data.campaignStats) {
+                        campaignStats = data.campaignStats;
+                        localStorage.setItem('ktowers_campaign_v2', JSON.stringify(campaignStats));
+                        populateStageDropdown();
+                    }
+                    openStatsModal();
+                    showMessage("Career stats imported successfully!", "success");
+                } catch (err) {
+                    showMessage("Error parsing stats JSON file!", "error");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function resetCareerStats() {
+            if (confirm("Reset all career analytics? Campaign progress will be preserved.")) {
+                careerStats = Object.assign({}, DEFAULT_CAREER_STATS);
+                saveCareerStats();
+                openStatsModal();
+                showMessage("Career analytics reset.", "info");
+            }
         }
 
         function showInvitePrompt(code) {
@@ -2976,6 +3479,7 @@
             selectedPeg = null;
             hintHighlight = null;
             render();
+            renderMoveLog();
         }
 
         function replayFirst() {
@@ -3043,8 +3547,9 @@
                 undo: 'Undo Last Move', hint: 'Show Optimal Hint',
                 freeze: 'Time Freeze (15s)', swap: 'Disk Swap / Teleport',
                 autosolve: 'Auto-Solve Toggle', restart: 'Restart Current Puzzle',
-                replay: 'Toggle Move Replay', quicksave: 'Quicksave Snapshot',
-                quickload: 'Quickload Snapshot'
+                replay: 'Toggle Move Replay', movelog: 'Toggle Move Log Drawer',
+                notation: 'Open Move Notation Modal', stats: 'Open Career Analytics',
+                quicksave: 'Quicksave Snapshot', quickload: 'Quickload Snapshot'
             };
             let html = '';
             for (const [action, label] of Object.entries(labels)) {
@@ -3124,6 +3629,8 @@
                         renderOpponentCanvas();
 
                         if (data.won) {
+                            careerStats.duelOnlineLosses++;
+                            saveCareerStats();
                             playSound('error');
                             showDuelResultModal(false, `Challenger completed the tower in ${data.moves} moves (${formatTime(data.elapsed || 0)})!`);
                         }
@@ -3290,6 +3797,8 @@
 
                     if (aiPegs[numPegs - 1].length === numDiscs) {
                         oppData.won = true;
+                        careerStats.duelAiLosses[aiDifficulty] = (careerStats.duelAiLosses[aiDifficulty] || 0) + 1;
+                        saveCareerStats();
                         clearInterval(aiInterval);
                         aiInterval = null;
                         playSound('error');
@@ -3541,6 +4050,30 @@
                 }
             }
 
+            if (isReplayMode) {
+                if (e.key === 'ArrowLeft' || pressed === 'j') {
+                    e.preventDefault();
+                    replayPrev();
+                    return;
+                } else if (e.key === 'ArrowRight' || pressed === 'k') {
+                    e.preventDefault();
+                    replayNext();
+                    return;
+                } else if (e.key === 'Home') {
+                    e.preventDefault();
+                    replayFirst();
+                    return;
+                } else if (e.key === 'End') {
+                    e.preventDefault();
+                    replayLast();
+                    return;
+                } else if (e.key === ' ' || pressed === 'space') {
+                    e.preventDefault();
+                    toggleReplayPlay();
+                    return;
+                }
+            }
+
             if (pressed === (keybinds.undo || 'u').toLowerCase()) {
                 undoMove();
             } else if (pressed === (keybinds.hint || 'h').toLowerCase()) {
@@ -3555,8 +4088,15 @@
                 toggleAutoSolve();
             } else if (pressed === (keybinds.replay || 'p').toLowerCase()) {
                 toggleReplayMode();
+            } else if (pressed === (keybinds.movelog || 'l').toLowerCase()) {
+                toggleMoveLog();
+            } else if (pressed === (keybinds.notation || 'n').toLowerCase()) {
+                openNotationModal();
+            } else if (pressed === (keybinds.stats || 'c').toLowerCase()) {
+                openStatsModal();
             } else if (e.key === 'Escape') {
                 closeAllModals();
+                if (isReplayMode) exitReplayMode();
             }
         });
 
@@ -3634,8 +4174,11 @@
                     <li><strong>[H] Hint:</strong> Optimal Frame-Stewart move.</li>
                     <li><strong>[F] Freeze:</strong> Pauses timer for 15s.</li>
                     <li><strong>[S] Swap:</strong> Instant teleport to valid peg.</li>
+                    <li><strong>[P]:</strong> Move Replay scrubber (Left/Right arrows, Home/End, Space).</li>
+                    <li><strong>[L]:</strong> Toggle live Move History drawer.</li>
+                    <li><strong>[N]:</strong> Move Notation (TMN format transcript, copy/download/load).</li>
+                    <li><strong>[C]:</strong> Career Progression Analytics &amp; Par Rating.</li>
                     <li><strong>[F5] / [F9]:</strong> Quicksave / Quickload state snapshot.</li>
-                    <li><strong>[P]:</strong> Move Replay scrubber.</li>
                 </ul>
             `;
             document.getElementById('modalBtns').innerHTML = `<button onclick="closeAllModals()">Close</button>`;

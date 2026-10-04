@@ -137,6 +137,14 @@ int historyFrom[4096];
 int historyTo[4096];
 int historyCount = 0;
 
+// Replay Engine & Save State
+BOOL isReplayMode = FALSE;
+int replayIndex = 0;
+int livePegsBackup[MAX_PEGS][MAX_DISCS];
+int livePegCountsBackup[MAX_PEGS];
+int liveMovesBackup = 0;
+int liveElapsedBackup = 0;
+
 int elapsedSeconds = 0;
 int freezeSeconds = 0;
 int freezeCharges = 3;
@@ -211,6 +219,7 @@ DustParticle dusts[MAX_DUST];
 HWND hModeBtn, hStageMinusBtn, hStagePlusBtn, hStageLabel;
 HWND hPegMinusBtn, hPegPlusBtn, hDiscMinusBtn, hDiscPlusBtn;
 HWND hUndoBtn, hHintBtn, hFreezeBtn, hSwapBtn, hAutoBtn, hRestartBtn, hHelpBtn;
+HWND hReplayBtn, hFenBtn;
 
 DWORD WINAPI SoundThread(LPVOID lpParam) {
     int type = (int)(INT_PTR)lpParam;
@@ -652,6 +661,8 @@ void InitGame(HWND hwnd) {
     moves = 0;
     won = FALSE;
     gameOver = FALSE;
+    isReplayMode = FALSE;
+    if (hReplayBtn) SetWindowText(hReplayBtn, "Replay [P]");
     historyCount = 0;
     elapsedSeconds = 0;
     freezeSeconds = 0;
@@ -724,7 +735,7 @@ void CheckWinOrLoss(HWND hwnd) {
 }
 
 void PerformPegClick(HWND hwnd, int clickedPeg) {
-    if (won || gameOver) return;
+    if (isReplayMode || won || gameOver) return;
     if (clickedPeg < 0 || clickedPeg >= numPegs) return;
 
     StageConfig cfg = GetCurrentConfig();
@@ -825,7 +836,7 @@ void PerformPegClick(HWND hwnd, int clickedPeg) {
 }
 
 void UndoMove(HWND hwnd) {
-    if (historyCount == 0 || won || gameOver) return;
+    if (isReplayMode || historyCount == 0 || won || gameOver) return;
     historyCount--;
     int f = historyFrom[historyCount];
     int t = historyTo[historyCount];
@@ -843,7 +854,240 @@ void UndoMove(HWND hwnd) {
     InvalidateRect(hwnd, NULL, FALSE);
 }
 
+// ----------------------------------------------------
+// Replay Engine & Step Scrubber
+// ----------------------------------------------------
+void ApplyReplayState(HWND hwnd) {
+    memset(pegCounts, 0, sizeof(pegCounts));
+    for (int i = numDiscs; i >= 1; i--) {
+        pegs[0][pegCounts[0]++] = i;
+    }
+    for (int i = 0; i < replayIndex; i++) {
+        int f = historyFrom[i];
+        int t = historyTo[i];
+        if (f >= 0 && f < numPegs && t >= 0 && t < numPegs && pegCounts[f] > 0) {
+            int d = pegs[f][--pegCounts[f]];
+            pegs[t][pegCounts[t]++] = d;
+        }
+    }
+    moves = replayIndex;
+    selectedPeg = -1;
+    hintFrom = -1;
+    hintTo = -1;
+    snprintf(statusMessage, sizeof(statusMessage), "[REPLAY] Step %d / %d (Left/Right to step, [P] to exit)", replayIndex, historyCount);
+    InvalidateRect(hwnd, NULL, FALSE);
+}
+
+void ToggleReplayMode(HWND hwnd) {
+    if (isReplayMode) {
+        isReplayMode = FALSE;
+        memcpy(pegs, livePegsBackup, sizeof(pegs));
+        memcpy(pegCounts, livePegCountsBackup, sizeof(pegCounts));
+        moves = liveMovesBackup;
+        elapsedSeconds = liveElapsedBackup;
+        SetWindowText(hReplayBtn, "Replay [P]");
+        snprintf(statusMessage, sizeof(statusMessage), "Exited Replay Mode.");
+        InvalidateRect(hwnd, NULL, FALSE);
+    } else {
+        if (historyCount == 0) {
+            snprintf(statusMessage, sizeof(statusMessage), "No moves in history to replay!");
+            InvalidateRect(hwnd, NULL, FALSE);
+            return;
+        }
+        isReplayMode = TRUE;
+        memcpy(livePegsBackup, pegs, sizeof(pegs));
+        memcpy(livePegCountsBackup, pegCounts, sizeof(pegCounts));
+        liveMovesBackup = moves;
+        liveElapsedBackup = elapsedSeconds;
+        replayIndex = historyCount;
+        SetWindowText(hReplayBtn, "Exit [P]");
+        ApplyReplayState(hwnd);
+    }
+}
+
+void StepReplay(HWND hwnd, int delta) {
+    if (!isReplayMode) return;
+    int next = replayIndex + delta;
+    if (next < 0) next = 0;
+    if (next > historyCount) next = historyCount;
+    if (next != replayIndex) {
+        replayIndex = next;
+        ApplyReplayState(hwnd);
+        PlaySoundEffect(2);
+    }
+}
+
+void SeekReplay(HWND hwnd, int target) {
+    if (!isReplayMode) return;
+    if (target < 0) target = 0;
+    if (target > historyCount) target = historyCount;
+    replayIndex = target;
+    ApplyReplayState(hwnd);
+    PlaySoundEffect(2);
+}
+
+// ----------------------------------------------------
+// Board State FEN Export / Import via Clipboard
+// ----------------------------------------------------
+void ExportFENToClipboard(HWND hwnd) {
+    char fen[1024];
+    int offset = snprintf(fen, sizeof(fen), "KTOWERS:%d:%d:", numPegs, numDiscs);
+    for (int p = 0; p < numPegs; p++) {
+        if (p > 0) {
+            offset += snprintf(fen + offset, sizeof(fen) - offset, "|");
+        }
+        for (int d = 0; d < pegCounts[p]; d++) {
+            if (d > 0) {
+                offset += snprintf(fen + offset, sizeof(fen) - offset, ",");
+            }
+            offset += snprintf(fen + offset, sizeof(fen) - offset, "%d", pegs[p][d]);
+        }
+    }
+
+    if (OpenClipboard(hwnd)) {
+        EmptyClipboard();
+        HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, strlen(fen) + 1);
+        if (hMem) {
+            char* pMem = (char*)GlobalLock(hMem);
+            if (pMem) {
+                strcpy(pMem, fen);
+                GlobalUnlock(hMem);
+                SetClipboardData(CF_TEXT, hMem);
+            }
+        }
+        CloseClipboard();
+        snprintf(statusMessage, sizeof(statusMessage), "[FEN] Copied to clipboard: %s", fen);
+        PlaySoundEffect(4);
+    } else {
+        snprintf(statusMessage, sizeof(statusMessage), "Failed to open clipboard!");
+    }
+    InvalidateRect(hwnd, NULL, FALSE);
+}
+
+void ImportFENFromClipboard(HWND hwnd) {
+    if (!OpenClipboard(hwnd)) {
+        snprintf(statusMessage, sizeof(statusMessage), "Cannot open clipboard for FEN import!");
+        InvalidateRect(hwnd, NULL, FALSE);
+        return;
+    }
+    HANDLE hData = GetClipboardData(CF_TEXT);
+    if (!hData) {
+        CloseClipboard();
+        snprintf(statusMessage, sizeof(statusMessage), "Clipboard has no text!");
+        InvalidateRect(hwnd, NULL, FALSE);
+        return;
+    }
+    char* text = (char*)GlobalLock(hData);
+    if (!text) {
+        CloseClipboard();
+        return;
+    }
+
+    char buffer[1024];
+    strncpy(buffer, text, sizeof(buffer) - 1);
+    buffer[sizeof(buffer) - 1] = '\0';
+    GlobalUnlock(hData);
+    CloseClipboard();
+
+    char* p = buffer;
+    while (*p == ' ' || *p == '\t' || *p == '\r' || *p == '\n') p++;
+    if (strncmp(p, "KTOWERS:", 8) != 0) {
+        snprintf(statusMessage, sizeof(statusMessage), "Invalid FEN! Must start with KTOWERS:");
+        InvalidateRect(hwnd, NULL, FALSE);
+        PlaySoundEffect(3);
+        return;
+    }
+
+    int pCount = 0, dCount = 0;
+    char pegStr[512] = "";
+    if (sscanf(p, "KTOWERS:%d:%d:%511s", &pCount, &dCount, pegStr) < 2) {
+        snprintf(statusMessage, sizeof(statusMessage), "Malformed FEN format!");
+        InvalidateRect(hwnd, NULL, FALSE);
+        PlaySoundEffect(3);
+        return;
+    }
+
+    if (pCount < 3 || pCount > MAX_PEGS || dCount < 1 || dCount > MAX_DISCS) {
+        snprintf(statusMessage, sizeof(statusMessage), "FEN peg (%d) or disc (%d) count out of range!", pCount, dCount);
+        InvalidateRect(hwnd, NULL, FALSE);
+        PlaySoundEffect(3);
+        return;
+    }
+
+    int newPegs[MAX_PEGS][MAX_DISCS];
+    int newCounts[MAX_PEGS] = {0};
+    unsigned char seen[MAX_DISCS + 1] = {0};
+
+    char* pegTokens[MAX_PEGS];
+    int numTokens = 0;
+    char* cur = pegStr;
+    pegTokens[numTokens++] = cur;
+    while (*cur && numTokens < pCount) {
+        if (*cur == '|') {
+            *cur = '\0';
+            pegTokens[numTokens++] = cur + 1;
+        }
+        cur++;
+    }
+
+    if (numTokens != pCount) {
+        snprintf(statusMessage, sizeof(statusMessage), "FEN expected %d pegs, found %d!", pCount, numTokens);
+        InvalidateRect(hwnd, NULL, FALSE);
+        PlaySoundEffect(3);
+        return;
+    }
+
+    BOOL valid = TRUE;
+    for (int i = 0; i < pCount; i++) {
+        char* token = pegTokens[i];
+        if (strlen(token) == 0) continue;
+        char* discToken = strtok(token, ",");
+        while (discToken) {
+            int d = atoi(discToken);
+            if (d < 1 || d > dCount || seen[d]) {
+                valid = FALSE;
+                break;
+            }
+            if (newCounts[i] > 0 && d >= newPegs[i][newCounts[i] - 1]) {
+                valid = FALSE;
+                break;
+            }
+            seen[d] = 1;
+            newPegs[i][newCounts[i]++] = d;
+            discToken = strtok(NULL, ",");
+        }
+        if (!valid) break;
+    }
+
+    if (!valid) {
+        snprintf(statusMessage, sizeof(statusMessage), "Illegal stack or duplicate disc in FEN!");
+        InvalidateRect(hwnd, NULL, FALSE);
+        PlaySoundEffect(3);
+        return;
+    }
+
+    mode = 1; // Free Play
+    numPegs = pCount;
+    numDiscs = dCount;
+    memcpy(pegs, newPegs, sizeof(pegs));
+    memcpy(pegCounts, newCounts, sizeof(pegCounts));
+    moves = 0;
+    historyCount = 0;
+    selectedPeg = -1;
+    hintFrom = -1;
+    hintTo = -1;
+    won = FALSE;
+    gameOver = FALSE;
+    elapsedSeconds = 0;
+    isReplayMode = FALSE;
+    UpdateControlsVisibility();
+    snprintf(statusMessage, sizeof(statusMessage), "[FEN] Loaded custom board (%d pegs, %d discs)!", numPegs, numDiscs);
+    PlaySoundEffect(2);
+    InvalidateRect(hwnd, NULL, FALSE);
+}
+
 void DoQuicksave(HWND hwnd) {
+    if (isReplayMode) return;
     QuickSaveData qs;
     memset(&qs, 0, sizeof(qs));
     qs.mode = mode;
@@ -911,7 +1155,7 @@ void DoQuickload(HWND hwnd) {
 }
 
 void ApplyHint(HWND hwnd) {
-    if (won || gameOver) return;
+    if (isReplayMode || won || gameOver) return;
     int f, t;
     if (GetBFSNextMove(&f, &t)) {
         hintFrom = f;
@@ -924,7 +1168,7 @@ void ApplyHint(HWND hwnd) {
 }
 
 void UseTimeFreeze(HWND hwnd) {
-    if (won || gameOver) return;
+    if (isReplayMode || won || gameOver) return;
     if (freezeCharges <= 0) {
         strcpy(statusMessage, "No Freeze charges remaining!");
         PlaySoundEffect(3);
@@ -943,7 +1187,7 @@ void UseTimeFreeze(HWND hwnd) {
 }
 
 void UseDiskSwap(HWND hwnd) {
-    if (won || gameOver) return;
+    if (isReplayMode || won || gameOver) return;
     if (swapCharges <= 0) {
         strcpy(statusMessage, "No Swap charges remaining!");
         PlaySoundEffect(3);
@@ -1226,6 +1470,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             hAutoBtn = CreateWindow("BUTTON", "Auto-Solve", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 345, 45, 90, 28, hwnd, (HMENU)4, NULL, NULL);
             hRestartBtn = CreateWindow("BUTTON", "Restart [R]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 440, 45, 85, 28, hwnd, (HMENU)5, NULL, NULL);
             hHelpBtn = CreateWindow("BUTTON", "Help [?]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 530, 45, 70, 28, hwnd, (HMENU)6, NULL, NULL);
+            hReplayBtn = CreateWindow("BUTTON", "Replay [P]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 605, 45, 80, 28, hwnd, (HMENU)8, NULL, NULL);
+            hFenBtn = CreateWindow("BUTTON", "FEN [O/I]", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 690, 45, 80, 28, hwnd, (HMENU)9, NULL, NULL);
 
             SetTimer(hwnd, 3, 30, NULL); // 30fps animation timer
             InitGame(hwnd);
@@ -1314,9 +1560,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     }
                 }
             } else if (id == 5) InitGame(hwnd);
+            else if (id == 8) ToggleReplayMode(hwnd);
+            else if (id == 9) ExportFENToClipboard(hwnd);
             else if (id == 6) {
                 MessageBox(hwnd,
-                    "How to Play KTowers (Loop 7 Expanded)\n\n"
+                    "How to Play KTowers\n\n"
                     "Goal: Move all skyscraper blocks to the target (last) peg.\n\n"
                     "Rules & Modifiers:\n"
                     "- Only top skyscraper blocks can be moved.\n"
@@ -1331,6 +1579,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     "- [H] Optimal Frame-Stewart Hint.\n"
                     "- [F] Time Freeze (pauses timer for 15s).\n"
                     "- [S] Disk Swap / Instant Teleport to valid peg.\n"
+                    "- [P] Move Replay Mode (step with Left/Right arrows, Home/End).\n"
+                    "- [O] Export Board FEN to Windows Clipboard.\n"
+                    "- [I] Import Board FEN from Windows Clipboard.\n"
                     "- [F5] Quicksave state snapshot.\n"
                     "- [F9] Quickload state snapshot.",
                     "Help / Instructions", MB_OK | MB_ICONINFORMATION);
@@ -1344,6 +1595,26 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             BOOL altDown = (GetKeyState(VK_MENU) & 0x8000) != 0;
             if (ctrlDown || altDown) break;
 
+            if (isReplayMode) {
+                if (wParam == VK_LEFT || wParam == 'J' || wParam == 'j') {
+                    StepReplay(hwnd, -1);
+                    return 0;
+                } else if (wParam == VK_RIGHT || wParam == 'L' || wParam == 'l') {
+                    StepReplay(hwnd, 1);
+                    return 0;
+                } else if (wParam == VK_HOME) {
+                    SeekReplay(hwnd, 0);
+                    return 0;
+                } else if (wParam == VK_END) {
+                    SeekReplay(hwnd, historyCount);
+                    return 0;
+                } else if (wParam == 'P' || wParam == 'p' || wParam == VK_ESCAPE) {
+                    ToggleReplayMode(hwnd);
+                    return 0;
+                }
+                return 0;
+            }
+
             if (wParam >= '1' && wParam <= '5') {
                 int p = (int)(wParam - '1');
                 if (p < numPegs) PerformPegClick(hwnd, p);
@@ -1352,6 +1623,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             else if (wParam == 'F' || wParam == 'f') UseTimeFreeze(hwnd);
             else if (wParam == 'S' || wParam == 's') UseDiskSwap(hwnd);
             else if (wParam == 'R' || wParam == 'r') InitGame(hwnd);
+            else if (wParam == 'P' || wParam == 'p') ToggleReplayMode(hwnd);
+            else if (wParam == 'O' || wParam == 'o') ExportFENToClipboard(hwnd);
+            else if (wParam == 'I' || wParam == 'i') ImportFENFromClipboard(hwnd);
             else if (wParam == 'A' || wParam == 'a') {
                 SendMessage(hwnd, WM_COMMAND, 4, 0);
             } else if (wParam == VK_F5) {
@@ -1541,7 +1815,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SetTextColor(memDC, freezeSeconds > 0 ? RGB(6, 182, 212) : RGB(148, 163, 184));
             TextOut(memDC, 15, 105, line2, strlen(line2));
 
-            if (strlen(statusMessage) > 0) {
+            if (isReplayMode) {
+                char replayBanner[160];
+                snprintf(replayBanner, sizeof(replayBanner), "[REPLAY MODE - Move %d / %d] (Left/Right arrow to step, Home/End, [P] to exit)", replayIndex, historyCount);
+                SetTextColor(memDC, RGB(250, 204, 21));
+                TextOut(memDC, 15, 130, replayBanner, strlen(replayBanner));
+            } else if (strlen(statusMessage) > 0) {
                 SetTextColor(memDC, won ? RGB(34, 197, 94) : RGB(239, 68, 68));
                 TextOut(memDC, 15, 130, statusMessage, strlen(statusMessage));
             }

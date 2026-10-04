@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-expander
-next_agent: kilo-creator
+current_agent: kilo-creator
+next_agent: kilo-graphics
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -17,7 +17,7 @@ current_targets:
   kilo_tester: KTask
   kilo_usability: KTimer
   kilo_qa: KClock
-  kilo_expander: KTowers
+  kilo_expander: KReversi
 virtual_web_target: "kweb://portal"
 virtual_web_rotation:
   - "kweb://echo-subsystem.net"
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://cybercafe"
   - "kweb://10.19.99.4/classified"
 last_run:
-  agent: kilo-qa
-  app: KChat
-  timestamp: "2026-10-04T13:25:00-07:00"
+  agent: kilo-expander
+  app: KTowers
+  timestamp: "2026-10-04T13:50:00-07:00"
 last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
@@ -129,9 +129,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   `KTimer`, `KPomodoro`, `KMandel`, `KHex` *(Completed in Pass 5: KBBS, KChrono, KCipher, KClip, KCyber, KDragon, KFortress, KHash, KMaze, KMech, KMystery, KQuest, KSanctuary, KSnake, KSolitaire, KSpace, KStarDredge, KStarship, KStellar, KSubmarine, KSynth, KSys, KTask, KTerm, KTimer, KTodo, KTrader, KType, KVault, KVoid, KWizard, KZip, KRSS, K2048, KChart, KGraph, KContacts, KScript, KRead, KColosseum, KAbyss, KMedia, KAudio, KRadio, KPad, KPaint, KCalc, KMine, KCosmic, KBase, KBudget, KCalendar, KFarm, KFlash, KFont, KImage, KJournal, KMail, KMandel, KNet, KNote, KPass, KDB, KHex, KBookmark, KPing, KChat)*.
 
 ### 6. Feature Expander Queue (`kilo-expander`)
-- **Current Target**: `KTowers`
+- **Current Target**: `KReversi`
 - **Upcoming Queue**:
-  `KReversi`, `KSnake`, `KPong`, `KGo`, `KSynth`, `KNote`, `KFont`, `KRSS`, `KSys`, `KZip`, `KVault`, `KType`, `KMandel`, `KGraph`, `KChart`, `KPaint`, `KConnect4`, `KChess`, `KTetris`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KImage`, `KAudio`, `KMedia`, `KTask`, `KNet`, `KPing`, `KHash`, `KPad`, `K2048`, `KDarts` *(Completed: KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts)*.
+  `KSnake`, `KPong`, `KGo`, `KSynth`, `KNote`, `KFont`, `KRSS`, `KSys`, `KZip`, `KVault`, `KType`, `KMandel`, `KGraph`, `KChart`, `KPaint`, `KConnect4`, `KChess`, `KTetris`, `KDB`, `KTodo`, `KJournal`, `KCalendar`, `KContacts`, `KMail`, `KRead`, `KPass`, `KImage`, `KAudio`, `KMedia`, `KTask`, `KNet`, `KPing`, `KHash`, `KPad`, `K2048`, `KDarts`, `KTowers` *(Completed: KReversi, KSimon, KMatch3, KTowers, KSnake, KPong, KGo, KSynth, KNote, KFont, KRSS, KSys, KZip, KVault, KType, KMandel, KGraph, KChart, KPaint, KConnect4, KChess, KTetris, KDB, KTodo, KJournal, KCalendar, KContacts, KMail, KRead, KPass, KImage, KAudio, KMedia, KTask, KNet, KPing, KHash, KPad, K2048, KDarts)*.
 - **Multiplayer Focus (CRITICAL)**: Concentrate on expanding games (*KChess*, *KConnect4*, *KGo*, *KReversi*, *KDarts*, *KTetris*, *KSnake*, *K2048*, *KMatch3*, *KSimon*) and collaborative apps (*KDraw*, *KPaint*, *KSynth*, *KPad*) with seamless Firebase Realtime Database multiplayer for cross-computer play on `kiloapps.web.app`.
 
 ### 7. Virtual 1999 Web Expansion Queue (Eternal Fleet Track)
@@ -221,6 +221,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
 
+- **2026-10-04T13:50:00-07:00 — kilo-expander: KTowers (Move Notation, Career Stats, Live Log & Win32 Replay/FEN)**
+  - Status: PASS ✅ (0 regressions, clean builds, 180.8 KB web / 181.2 KB native < 999 KB ceiling).
+  - Tower Move Notation (TMN): Implemented notation generator, parser, file export/import, and auto-playback.
+  - Interactive Live Move Log: Added drawer panel ([L]) with move history and jump-to-step state restoration.
+  - Career Analytics Dashboard: Added modal ([C]) tracking completions, stars, par ratio, rank tiers, and JSON backup.
+  - Win32 C Engine Expansion: Implemented interactive replay stepper/scrubber ([P]) and FEN clipboard export/import ([O]/[I]).
+  - Ergonomics & Navigation: Added keyboard scrubbing (arrows/Home/End), toolbar buttons, and help documentation.
+  - Verification: `test_app_startup.py` PASS (0 errors); MSVC clean (`KTowers.exe` 181.2 KB); Vite clean (316ms); security_lint 100% PASS.
+
 - **2026-10-04T13:25:00-07:00 — kilo-qa: KChat (Pass 5: QA & Build Quality, Quicksave/Load, Tutorial & ARCH-05)**
   - Status: PASS ✅ (0 regressions, clean builds, 95.8 KB web / 29.7 KB native < 999 KB ceiling).
   - Quicksave & State Persistence: Implemented complete state persistence with [F5]/[F9] in web and Win32 C with storage quota guards.
@@ -251,12 +260,4 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 - **2026-10-04T12:42:00-07:00 — kilo-graphics: KAbyss**
   - ⏭️ Skip — Imagen 3 asset replacement not appropriate for KAbyss
 
-- **2026-10-04T12:28:00-07:00 — kilo-creator: kweb://darknet (Deep Expansion: Blue Box & Subterranean Dead Drop Vault)**
-  - Status: PASS ✅ (0 regressions, clean builds, 295.0 KB web < 999 KB ceiling).
-  - 2600Hz Blue Box & Crossbar (Tab 12): Bell System MF keypad, Red/Silver Box Autovon signaling, 2600Hz trunk seizure & speed-dial presets.
-  - Subterranean Dead Drop Vault (Tab 13): 5 authentic in-universe encrypted field dispatches, multi-cipher decryptor (XOR/ROT/Vigenère/OTP) & compose form.
-  - Telephony & Audio Synthesis: Added Bell System MF tone pairs, 1004Hz milliwatt test tone, and dual-frequency oscilloscope to YM2612/SPC700 engine.
-  - Cross-Network Linking: Linked in KNet help index, searchable database in portal.html, and updated Node #018 in webring.html.
-  - Terminal Integration & Quicksave: Added `bluebox`, `phreak`, `deaddrop`, `whisper`, `dial <trunk>`, and `drop <list|read>` to VT-100 terminal; F5/F9 state persistence.
-  - Verification: Vite build clean in 432ms; security_lint 100% PASS across all modified files; file size 295KB well below 999KB ceiling.
 
