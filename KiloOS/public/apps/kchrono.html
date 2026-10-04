@@ -523,7 +523,7 @@
             top: 0; left: 0;
             width: 100vw; height: 100vh;
             background: rgba(3, 6, 15, 0.92);
-            display: flex;
+            display: none;
             align-items: center;
             justify-content: center;
             z-index: 990;
@@ -532,6 +532,7 @@
             transition: opacity 0.25s ease;
         }
         .overlay.active {
+            display: flex;
             opacity: 1;
             pointer-events: auto;
         }
@@ -717,6 +718,8 @@
         .toast.visible {
             opacity: 1;
             transform: translateX(-50%) translateY(0);
+            pointer-events: auto;
+            cursor: pointer;
         }
 
         /* Responsive Usability Breakpoints */
@@ -931,29 +934,36 @@
     <!-- 1. Start Splash Screen Overlay -->
     <div class="overlay active" id="splashOverlay">
         <div class="modal-card splash-card">
-            <div class="modal-body">
+            <div class="modal-header" style="display: flex; justify-content: flex-end; padding-bottom: 0;">
+                <button class="btn-ctrl modal-close btn-close close" id="btnSplashClose" title="Enter Timeline [ESC / Space]">✕</button>
+            </div>
+            <div class="modal-body" style="padding-top: 4px;">
                 <div class="splash-title">K C H R O N O</div>
                 <div class="splash-subtitle">Chrono-Spatial Paradox Engine & Temporal Array Simulator</div>
 
                 <div class="splash-menu">
                     <button class="splash-btn" id="btnSplashNew">
-                        <span>▶ NEW TIMELINE</span>
+                        <span>▶ NEW TIMELINE [N]</span>
                         <span style="font-size: 11px; opacity: 0.7;">Initialize Sequence</span>
                     </button>
                     <button class="splash-btn" id="btnSplashContinue" disabled>
-                        <span>↻ RESUME TIMELINE</span>
+                        <span>↻ RESUME TIMELINE [C]</span>
                         <span style="font-size: 11px; opacity: 0.7;">Load Autosave</span>
                     </button>
                     <button class="splash-btn" id="btnSplashScenarios">
-                        <span>📋 SELECT SCENARIO</span>
+                        <span>📋 SELECT SCENARIO [S]</span>
                         <span style="font-size: 11px; opacity: 0.7;">7 Operations</span>
                     </button>
+                    <button class="splash-btn" id="btnSplashTutorial">
+                        <span>⏳ ONBOARDING TUTORIAL [T]</span>
+                        <span style="font-size: 11px; opacity: 0.7;">Tri-Epoch Mechanics</span>
+                    </button>
                     <button class="splash-btn" id="btnSplashHelp">
-                        <span>📖 TEMPORAL MANUAL</span>
+                        <span>📖 TEMPORAL MANUAL [H]</span>
                         <span style="font-size: 11px; opacity: 0.7;">Causal Physics</span>
                     </button>
                     <button class="splash-btn" id="btnSplashSettings">
-                        <span>⚙ SYSTEM SETTINGS</span>
+                        <span>⚙ SYSTEM SETTINGS [O]</span>
                         <span style="font-size: 11px; opacity: 0.7;">Audio & CRT</span>
                     </button>
                 </div>
@@ -969,7 +979,7 @@
         <div class="modal-card">
             <div class="modal-header">
                 <div class="modal-title"><span>⏳</span> TEMPORAL ARCHITECT ONBOARDING</div>
-                <button class="btn-ctrl" id="btnTutClose">✕</button>
+                <button class="btn-ctrl modal-close btn-close close" id="btnTutClose" title="Close Tutorial [ESC / Enter]">✕</button>
             </div>
             <div class="modal-body">
                 <div class="tut-step">
@@ -1012,7 +1022,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-ctrl" id="btnTutDismiss" style="background: var(--epoch-beta); color: #000; font-weight: bold; padding: 6px 16px;">
+                <button class="btn-ctrl modal-close btn-close close" id="btnTutDismiss" style="background: var(--epoch-beta); color: #000; font-weight: bold; padding: 6px 16px;">
                     ACKNOWLEDGE & BEGIN
                 </button>
             </div>
@@ -1024,7 +1034,7 @@
         <div class="modal-card">
             <div class="modal-header">
                 <div class="modal-title"><span>📋</span> MISSION SCENARIO ARCHIVES</div>
-                <button class="btn-ctrl" id="btnScenarioClose">✕</button>
+                <button class="btn-ctrl modal-close btn-close close" id="btnScenarioClose" title="Close Scenarios [ESC]">✕</button>
             </div>
             <div class="modal-body" id="scenarioList">
                 <!-- Injected dynamically -->
@@ -1042,7 +1052,7 @@
         <div class="modal-card">
             <div class="modal-header">
                 <div class="modal-title"><span>📖</span> TEMPORAL FIELD MANUAL & CAUSAL CODEX</div>
-                <button class="btn-ctrl" id="btnHelpClose">✕</button>
+                <button class="btn-ctrl modal-close btn-close close" id="btnHelpClose" title="Close Manual [ESC]">✕</button>
             </div>
             <div class="modal-body" style="font-size: 12px; line-height: 1.6;">
                 <h4 style="color: var(--epoch-alpha); margin-bottom: 6px;">CAUSAL ENTITIES & INTERACTIONS</h4>
@@ -1065,7 +1075,7 @@
                 <p>• <b>Esc</b>: Open Menu / Dismiss Dialog</p>
             </div>
             <div class="modal-footer">
-                <button class="btn-ctrl" id="btnHelpDismiss">Close</button>
+                <button class="btn-ctrl modal-close btn-close close" id="btnHelpDismiss">Close</button>
             </div>
         </div>
     </div>
@@ -1075,7 +1085,7 @@
         <div class="modal-card" style="width: 480px;">
             <div class="modal-header">
                 <div class="modal-title"><span>⚙</span> SYSTEM & AUDIO SETTINGS</div>
-                <button class="btn-ctrl" id="btnSettingsClose">✕</button>
+                <button class="btn-ctrl modal-close btn-close close" id="btnSettingsClose" title="Close Settings [ESC]">✕</button>
             </div>
             <div class="modal-body" style="display: flex; flex-direction: column; gap: 14px;">
                 <div>
@@ -1123,7 +1133,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button class="btn-ctrl" id="btnSettingsDismiss">Done</button>
+                <button class="btn-ctrl modal-close btn-close close" id="btnSettingsDismiss">Done</button>
             </div>
         </div>
     </div>
@@ -1133,7 +1143,7 @@
         <div class="modal-card" style="text-align: center; max-width: 460px;">
             <div class="modal-header">
                 <div class="modal-title" style="color: var(--accent-green);"><span>🎉</span> TIMELINE STABILIZED</div>
-                <button class="btn-ctrl" id="btnVictoryClose">✕</button>
+                <button class="btn-ctrl modal-close btn-close close" id="btnVictoryClose" title="Close [ESC]">✕</button>
             </div>
             <div class="modal-body" style="padding: 20px;">
                 <h3 id="victoryTitle" style="color: var(--text-bright); margin-bottom: 8px;">Scenario Complete!</h3>
@@ -3479,6 +3489,11 @@
             // If splash is active, handle splash menu hotkeys
             const splash = document.getElementById('splashOverlay');
             if (splash && splash.classList.contains('active')) {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    document.getElementById('btnSplashClose').click();
+                    return;
+                }
                 if (e.key === 'n' || e.key === 'N' || e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
                     document.getElementById('btnSplashNew').click();
@@ -3496,14 +3511,26 @@
                     document.getElementById('btnSplashScenarios').click();
                     return;
                 }
+                if (e.key === 't' || e.key === 'T') {
+                    e.preventDefault();
+                    document.getElementById('btnSplashTutorial').click();
+                    return;
+                }
+                if (e.key === 'h' || e.key === 'H' || e.key === 'F1') {
+                    e.preventDefault();
+                    document.getElementById('btnSplashHelp').click();
+                    return;
+                }
+                if (e.key === 'o' || e.key === 'O') {
+                    e.preventDefault();
+                    document.getElementById('btnSplashSettings').click();
+                    return;
+                }
                 if (e.key >= '1' && e.key <= '7') {
                     e.preventDefault();
                     const sIdx = parseInt(e.key, 10) - 1;
                     if (SCENARIOS[sIdx]) {
-                        selectedScenarioIndex = sIdx;
-                        gameStarted = true;
-                        closeAllOverlays();
-                        engine.initScenario(SCENARIOS[sIdx]);
+                        startTimeline(sIdx);
                         return;
                     }
                 }
@@ -3515,7 +3542,9 @@
                 if (activeModal) {
                     if (activeModal.id === 'victoryOverlay') {
                         document.getElementById('btnVictoryMenu').click();
-                    } else if (activeModal.id !== 'splashOverlay') {
+                    } else if (activeModal.id === 'splashOverlay') {
+                        document.getElementById('btnSplashClose').click();
+                    } else {
                         closeModal(activeModal.id);
                     }
                 } else {
@@ -3762,11 +3791,28 @@
             }
         });
 
+        function startTimeline(scenarioIndex = 0) {
+            audio.init();
+            gameStarted = true;
+            localStorage.setItem('kchrono_tutorialSeen', 'true');
+            closeAllOverlays();
+            selectedScenarioIndex = scenarioIndex;
+            engine.initScenario(SCENARIOS[scenarioIndex]);
+        }
+
         // Backdrop click to dismiss modal
         document.querySelectorAll('.overlay').forEach(overlay => {
             overlay.addEventListener('click', (e) => {
-                if (e.target === overlay && overlay.id !== 'splashOverlay') {
-                    closeModal(overlay.id);
+                if (e.target === overlay) {
+                    if (overlay.id === 'splashOverlay') {
+                        if (gameStarted) {
+                            closeModal('splashOverlay');
+                        } else {
+                            startTimeline(0);
+                        }
+                    } else {
+                        closeModal(overlay.id);
+                    }
                 }
             });
         });
@@ -3835,15 +3881,16 @@
         });
 
         // Splash Buttons
-        document.getElementById('btnSplashNew').addEventListener('click', () => {
-            audio.init();
-            gameStarted = true;
-            closeAllOverlays();
-            engine.initScenario(SCENARIOS[0]);
-            // Check first-run tutorial flag
-            if (!localStorage.getItem('kchrono_tutorialSeen')) {
-                document.getElementById('tutorialOverlay').classList.add('active');
+        document.getElementById('btnSplashClose').addEventListener('click', () => {
+            if (engine.turn > 0 && gameStarted) {
+                closeAllOverlays();
+            } else {
+                startTimeline(0);
             }
+        });
+
+        document.getElementById('btnSplashNew').addEventListener('click', () => {
+            startTimeline(0);
         });
 
         document.getElementById('btnSplashContinue').addEventListener('click', () => {
@@ -3860,6 +3907,11 @@
         document.getElementById('btnSplashScenarios').addEventListener('click', () => {
             audio.init();
             openScenarioModal();
+        });
+
+        document.getElementById('btnSplashTutorial').addEventListener('click', () => {
+            audio.init();
+            document.getElementById('tutorialOverlay').classList.add('active');
         });
 
         document.getElementById('btnSplashHelp').addEventListener('click', () => {
@@ -4069,6 +4121,7 @@
                     try {
                         const data = JSON.parse(evt.target.result);
                         localStorage.setItem('kchrono_quicksave', JSON.stringify(data));
+                        gameStarted = true;
                         engine.quickload();
                         closeAllOverlays();
                         showToast("JSON state loaded successfully!");
@@ -4076,9 +4129,25 @@
                         showToast("Error parsing JSON save file.");
                     }
                 };
+                reader.onerror = () => {
+                    showToast("Failed to read JSON save file.");
+                };
                 reader.readAsText(file);
             };
             input.click();
+        });
+
+        // ARCH-05: Resource & Tab Visibility Management
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (audio && audio.ctx && audio.ctx.state === 'running') {
+                    audio.ctx.suspend().catch(() => {});
+                }
+            } else {
+                if (audio && audio.ctx && audio.ctx.state === 'suspended') {
+                    audio.ctx.resume().catch(() => {});
+                }
+            }
         });
 
         // Restore saved settings on startup

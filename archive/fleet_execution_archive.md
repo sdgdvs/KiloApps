@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-04T11:46:00-07:00 — kilo-usability: KGraph (Cursor-Centered Zoom, Touch Ergonomics, Dark Scrollbars & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, clean builds, 149.3 KB web / 36.9 KB native < 999 KB ceiling).
+  - Cursor-Centered Zooming: Implemented smooth invariant mouse wheel zooming centered on pointer in web and Win32 C.
+  - Touch Ergonomics: Added `touch-action: none;` on canvas and auto-dismissal of active toasts on canvas interaction.
+  - Visual Polish: Replaced bright browser scrollbars with sleek dark scrollbars matching OS theme on presets and tabs.
+  - Resource & Tab Visibility (ARCH-05): Added `visibilitychange` listener pausing sonification and audio to eliminate background CPU waste.
+  - Header & Layout Resilience: Added flex-wrapping to header actions preventing button clipping on narrow viewports.
+  - Verification: MSVC clean; Vite build clean in 335ms; test_web_apps PASS (60 FPS, 0 errors); security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-04T11:26:00-07:00 — kilo-tester: KSys (Interactive UI Audit, ARCH-05 & Directive 189)**
   - Status: PASS ✅ (3 issues, 3 fixed; 180.1 KB web / 32.2 KB native < 999 KB ceiling).
   - Background Tab Visibility: Added `visibilitychange` listener pausing telemetry intervals to eliminate CPU waste (ARCH-05).
