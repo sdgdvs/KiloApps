@@ -1,6 +1,6 @@
 ---
-current_agent: kilo-tester
-next_agent: kilo-usability
+current_agent: kilo-usability
+next_agent: kilo-qa
 agent_rotation:
   - kilo-creator
   - kilo-graphics
@@ -14,7 +14,7 @@ status: ready
 current_targets:
   kilo_creator: "kweb://geocities (CyberSpire's Shrine)"
   kilo_graphics: KQuest
-  kilo_tester: KSanctuary
+  kilo_tester: KScript
   kilo_usability: KMandel
   kilo_qa: KMandel
   kilo_expander: KGo
@@ -32,9 +32,9 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-graphics
-  app: KAsteroids
-  timestamp: "2026-10-03T23:28:00-07:00"
+  agent: kilo-tester
+  app: KSanctuary
+  timestamp: "2026-10-03T23:45:00-07:00"
 last_planner_run: "2026-10-04T05:48:00Z"
 ---
 
@@ -91,6 +91,9 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
     - Clues to the ARG must be subtle, atmospheric, and diegetic (in-universe). Never use cudgel-like explanations or walkthroughs.
     - NEVER label content with `(ARG)`, `ARG Secrets`, `ARG Lore`, `ARG Guidance`, or `ARG Clue`.
     - Never explain the autonomous fleet meta-twist before the endgame, and never leak the master passkey `ECHO-1999-ARCHITECT` in plain text. The climax is reserved solely for App #100 (`KMatrix`) and `KDirector`.
+15. **🖼️ Exclusive Imagen 3 Asset Replacement Mandate for `kilo-graphics` (DIRECTOR MANDATE - CRITICAL)**:
+    - For upcoming turns, `kilo-graphics` does NOTHING BUT replace programmer art (geometric cutouts, primitive vector fills, procedural line art) with Imagen 3 generated game assets (sprites, sprite sheets, seamless textures, and backgrounds) using the standardized 2-stage asset pipeline (`generate_image` + `scripts/asset_pipeline.py`).
+    - **Turn Skipping for Inappropriate Targets**: If `kilo-graphics` reaches an application where replacing vector art with Imagen 3 generated assets is NOT appropriate (e.g. pure vector/wireframe arcade classics like *KAsteroids*, classic board games like *KChess*/*KGo*, text/utility games, or apps that already have complete production art), the agent MUST skip its turn (`⏭️ Skip — Imagen 3 asset replacement not appropriate for [app]`), rotate the target to the queue bottom, advance the rotation, and terminate cleanly without touching code.
 
 ---
 
@@ -104,14 +107,15 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   *(Completed: kweb://geocities, kweb://portal, kweb://cybercafe, kweb://asm-temple, kweb://users/~neon_rider, kweb://darknet, kweb://deep-core, kweb://echo-subsystem.net, kweb://10.19.99.4/classified, kweb://webring, kweb://warez)*.
 
 ### 2. Game Content & Graphics Queue (`kilo-graphics`)
+- **EXCLUSIVE MISSION**: Replace programmer vector art with Imagen 3 generated sprites and backgrounds via the 2-stage asset pipeline. If the target app is not appropriate for raster/sprite replacement (e.g. wireframe classics or abstract board games), skip the turn immediately.
 - **Current Target**: `KQuest` (Phase 1: Hero Class Sprites)
 - **Upcoming Queue**:
-  `KQuest` (Phase 2: Dungeon & Hub Backgrounds), `KQuest` (Phase 3: Monster & Boss Bestiary), `KQuest` (Phase 4: Town NPCs & Combat FX), `KQuest` (Phase 5: Performance & Win32 Parity), `KBreakout`, `KPac`, `KAbyss`, `KColosseum`, `KRogue`, `KSpace`, `KAsteroids` *(Completed: KRogue, KColony, KMystery, KMech, KColosseum, KAbyss, KWizard, KStarship, KChrono, KStarForge, KFortress, KCosmic, KStellar, KDragon, KSubmarine, KStarDredge, KSanctuary, KSpace, KQuest, KAsteroids)*.
+  `KQuest` (Phase 2: Dungeon & Hub Backgrounds), `KQuest` (Phase 3: Monster & Boss Bestiary), `KQuest` (Phase 4: Town NPCs & Combat FX), `KQuest` (Phase 5: Performance & Win32 Parity), `KRogue`, `KColosseum`, `KAbyss`, `KSpace`, `KPac`, `KBreakout`, `KAsteroids` *(Note: Pure vector/wireframe or abstract board targets skip automatically per Mandate 15)*.
 
 ### 3. App Tester Queue (`kilo-tester`)
-- **Current Target**: `KSanctuary`
+- **Current Target**: `KScript`
 - **Upcoming Queue**:
-  `KScript`, `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead)*.
+  `KStarDredge`, `KStarship`, `KStellar`, `KSubmarine`, `KSynth`, `KSys`, `KChrono`, `KTask`, `KStarForge`, `KTerm`, `KHash`, `KRSS`, `KClip`, `KCipher`, `KPomodoro`, `KTodo`, `KTrader`, `KType`, `KVault`, `KVoid`, `KWizard`, `KZip`, `KAbyss`, `KAudio`, `KBBS`, `KBase`, `KBudget`, `KCalendar`, `KChart`, `KChat`, `KColosseum`, `KContacts`, `KCosmic`, `KMech`, `KPad`, `KQuest`, `KRadio`, `KSanctuary` *(Completed: KCyber, KCosmic, KContacts, KDB, KDragon, KFlash, KFont, KFortress, KGraph, KHabit, KHex, KImage, KJournal, KMail, KMandel, KMech, KMedia, KMystery, KNet, KNote, KPad, KPaint, KPass, KPing, KQuest, KRadio, KRead, KSanctuary)*.
 
 ### 4. Usability & UX Queue (`kilo-usability`)
 - **Current Target**: `KMandel`
@@ -152,6 +156,10 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - ⚠️ AGENT NOTE: This is a human director request, not a machine-generated task. Evaluate whether this directive aligns with the project's core pillars (999KB retro OS, ludonarrative consonance, ARG integrity, fleet stability) before implementing. If counterproductive, skip and log your reasoning.
   - Instructions: <directive text here>
 -->
+
+- **[FLEET: kilo-graphics] — Exclusive Focus on Imagen 3 Asset Overhauls & Inappropriate App Turn Skipping** | Director Directive
+  - ⚠️ AGENT NOTE: Human director priority mandate for `kilo-graphics`.
+  - Instructions: The graphics agent must do nothing but replace programmer art with Imagen 3 generated assets for a while on its turns. If assigned an app where Imagen 3 asset replacement is not appropriate (pure vector/wireframe arcade games, abstract board games, text utilities, or apps with already mature art), skip the turn cleanly (`⏭️ Skip — Imagen 3 asset replacement not appropriate for [app]`), rotate the target to the queue bottom, and terminate without code changes.
 
 - **[KQuest] — Visual Art & Asset Overhaul (Imagen 3 Sprites & Backgrounds)** | Director Directive
   - ⚠️ AGENT NOTE: Human director priority directive for `kilo-graphics`. Replace programmer cutout vector shapes with authentic Imagen 3 generated game assets using the 2-stage asset pipeline.
@@ -220,6 +228,14 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
  
+- **2026-10-03T23:45:00-07:00 — kilo-tester: KSanctuary (Interactive UI Audit, Worker Dispatch Fixes, JSON Save/Load & ARCH-05)**
+  - Status: PASS ✅ (2 critical missing handlers fixed, 0 regressions, clean builds, 449.9 KB web / 264.2 KB native < 999 KB ceiling).
+  - Worker Controls: Implemented missing `changeWorker` and `assignSurvivorJob` handlers enabling facility staffing buttons and roster assignment.
+  - Storage Persistence: Added JSON state export and file import with schema validation alongside F5 quicksave and F9 quickload.
+  - Dialog Ergonomics: Wired modal backdrop click dismissal on all 5 overlays, added F1 manual hotkey, and protected input focus.
+  - ARCH-05 Visibility: Added visibilitychange event handler suspending audio, pausing animation/auto-run, and auto-saving on tab blur.
+  - Verification: MSVC native clean (`KSanctuary.exe` 264.2 KB); Vite build clean in 299ms; security_lint 100% PASS; check_icons 100% PASS.
+
 - **2026-10-03T23:28:00-07:00 — kilo-graphics: KAsteroids (Game Content, Glint & Comet Ban, YM2612 FM Audio & ARCH-05 Pass)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 142.1 KB web / 217.0 KB native < 999 KB ceiling).
   - Glint & Comet Ban: Purged random traveling comets, hull specular sweeps, UFO velocity glints, and pulsating borders across web and native C.
@@ -252,14 +268,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - Glint Ban & Remediation: Purged specular sweeps and pulsing borders across web and native C; removed Loop 7 label.
   - ARCH-05: Added document visibility listener pausing AI timeouts and frame processing when backgrounded.
   - Verification: MSVC clean (`KDarts.exe` 41 KB); Vite build clean in 448ms; security_lint 100% PASS.
-
-- **2026-10-03T17:36:00-07:00 — kilo-qa: KMail (Pass 5: State Persistence, Tutorial Integrity, Toast Remediation & ARCH-05)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 124.4 KB web / 519.7 KB native < 999 KB ceiling).
-  - State Persistence: Implemented universal quicksave (F5) and quickload (F9) across web and pure Win32 native C (`kmail_quicksave.dat`).
-  - First-Run Tutorial: Added interactive first-run guide modal and `.dat` flag guard preventing interruption on restored save states.
-  - Toast Remediation: Relocated toast container to top-right safe zone eliminating overlap with compose actions and status bar.
-  - ARCH-05 Visibility: Added visibilitychange event listener to auto-save active compose drafts on background tab switch.
-  - Modal Navigation: Added Enter/Space primary action activation and Escape modal dismissal across all dialogs.
-  - Verification: MSVC native clean (`KMail.exe` 519.7 KB); Vite clean in 384ms; check_icons 100% PASS; security_lint 100% PASS.
 
 

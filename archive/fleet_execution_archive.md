@@ -4,6 +4,15 @@ This file stores historical execution logs archived from `next_work.md` to keep 
 
 ## Archived Logs (Pre-Windows Task Scheduler Cutover)
 
+- **2026-10-03T17:36:00-07:00 — kilo-qa: KMail (Pass 5: State Persistence, Tutorial Integrity, Toast Remediation & ARCH-05)**
+  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 124.4 KB web / 519.7 KB native < 999 KB ceiling).
+  - State Persistence: Implemented universal quicksave (F5) and quickload (F9) across web and pure Win32 native C (`kmail_quicksave.dat`).
+  - First-Run Tutorial: Added interactive first-run guide modal and `.dat` flag guard preventing interruption on restored save states.
+  - Toast Remediation: Relocated toast container to top-right safe zone eliminating overlap with compose actions and status bar.
+  - ARCH-05 Visibility: Added visibilitychange event listener to auto-save active compose drafts on background tab switch.
+  - Modal Navigation: Added Enter/Space primary action activation and Escape modal dismissal across all dialogs.
+  - Verification: MSVC native clean (`KMail.exe` 519.7 KB); Vite clean in 384ms; check_icons 100% PASS; security_lint 100% PASS.
+
 - **2026-10-03T16:35:00-07:00 — kilo-usability: KJournal (UI/UX Layout, Toast Remediation, Responsive Toolbar & ARCH-05)**
   - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 132.7 KB web / 205.8 KB native < 999 KB ceiling).
   - Sidebar & Tabs: Installed compact Help [F1] badge preventing button wrap; wrapped notebook tabs to 3x2 matrix with 0 scrollbars.

@@ -1,28 +1,33 @@
 ---
 name: kilo-graphics
 description: >-
-  Executes gameplay content expansions, visual art polish, and balance passes for KiloApps games.
-  Use this skill to enhance ASCII/canvas graphics, enemy/stage variety, AI difficulty balance,
-  sound effects, verify file sizes (<999 KB) and builds, log tersely to next_work.md,
-  advance the queue handoff, and commit/push.
+  Executes game visual art overhauls replacing programmer art (vector cutouts, primitive canvas shapes)
+  with Imagen 3 generated game assets (sprites, sprite sheets, seamless backgrounds) via the 2-stage asset pipeline.
+  If the target app is not appropriate for Imagen 3 assets, cleanly skips the turn.
 ---
 
 # KiloApps Game Content & Graphics Skill
 
-This skill executes content depth, visual polish, or balance passes on exactly ONE game per turn.
+This skill executes visual art overhauls replacing programmer art with Imagen 3 generated assets on exactly ONE game per turn.
 
 ## Pre-flight
 1. Ensure git working tree is clean: `git status`.
 2. Pull latest changes: `git pull --rebase`.
 3. Open [next_work.md](../../next_work.md) to inspect the graphics/games target (`current_targets.kilo_graphics`).
+4. **Target Suitability Assessment**: Evaluate if the target game has programmer art suitable for replacement with Imagen 3 assets. If NOT appropriate (e.g. pure vector/wireframe arcade games, abstract board games, or games that already have production art), SKIP THE TURN immediately per Rule 2 below.
 
 ## Category Directives & Rules
-1. **🎮 Deep Games** (*KRogue, KQuest, KStarship, KAlchemy, KSpace, KAsteroids, KMaze, KPac, KBreakout, KSnake*):
-   - **Focus**: Add procedural depth, enemy variety, storyline/lore, crafting recipes, combat mechanics, and particle/visual feedback.
-   - Expand toward the 999 KB budget with rich, replayable systems.
-2. **♟️ Classic & Board/Puzzle Games** (*KChess, KGo, KReversi, KConnect4, KSolitaire, KSudoku, KTowers, KMines, KTetris, KPong*):
-   - **DO NOT** add campaigns, boss battles, or combat skills.
-   - **Focus**: AI intelligence, difficulty curves (Easy/Medium/Hard tuning), responsive controls, clean board rendering, victory animations, and audio feedback (Genesis YM2612 FM & SNES SPC700 chiptunes per `arg_plan.md`).
+1. **🖼️ Exclusive Mission: Replace Programmer Art with Imagen 3 Assets (DIRECTOR MANDATE - CRITICAL)**:
+   - For all upcoming turns, the `kilo-graphics` agent must do NOTHING BUT replace programmer art (primitive vector shapes, Canvas fills, geometric cutouts, procedural line art) with authentic Imagen 3 generated game assets (sprites, sprite sheets, seamless textures, and backgrounds) via the 2-stage asset pipeline.
+   - Do not add random gameplay mechanics, new campaign stages, or unrequested features. Channel all turns into visual asset generation, chroma keying, sprite strip packing, and engine rendering integration.
+2. **⏭️ Turn Skipping for Inappropriate Targets (DIRECTOR MANDATE - CRITICAL)**:
+   - If `kilo-graphics` reaches an application where Imagen 3 asset generation would NOT be appropriate:
+     - *Pure Vector / Wireframe Classics*: Games whose foundational aesthetic is authentic retro vector math or line art (e.g. *KAsteroids*, *Battlezone*-style wireframes).
+     - *Classic Abstract Board / Puzzle Games*: Traditional board games where standard geometric pieces or symbols are appropriate (*KChess*, *KGo*, *KReversi*, *KTowers*).
+     - *Mature / Completed Art*: Games that already possess complete, production-grade custom art with zero programmer cutouts.
+     - *Text / Terminal Apps*: Pure text or command-line style utilities.
+   - **ACTION**: Skip the turn immediately! Format: `⏭️ Skip — Imagen 3 asset replacement not appropriate for <TargetGame>`.
+   - Rotate the target to the bottom of the queue, advance `current_agent`, commit, push, and STOP without touching code or inventing arbitrary additions.
 3. **Maturity & Skip Protocol**:
    - For mature games (6+ passes) that are already cohesive, balanced, and complete without pending directives: log `⏭️ Skip — app is mature, balanced, and complete.` Rotate to queue bottom and finish turn cleanly without churning code.
 4. **Alternate Reality Fictionalization Mandate**:

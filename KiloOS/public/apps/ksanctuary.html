@@ -1400,10 +1400,10 @@
         /* Non-occluding Retro Toast Notifications */
         #toast-container {
             position: fixed;
-            bottom: 24px;
+            top: 52px;
             right: 24px;
             display: flex;
-            flex-direction: column-reverse;
+            flex-direction: column;
             gap: 8px;
             z-index: 2000;
             pointer-events: none;
@@ -1811,10 +1811,13 @@
             <button class="btn-header" onclick="toggleTheme()" id="btn-theme">THEME: AMBER CRT</button>
             <button class="btn-header" onclick="quicksaveGame()" id="btn-quicksave" title="Quicksave (F5)">SAVE (F5)</button>
             <button class="btn-header" onclick="quickloadGame()" id="btn-quickload" title="Quickload (F9)">LOAD (F9)</button>
+            <button class="btn-header" onclick="exportSaveFile()" id="btn-export-save" title="Export Vault JSON Archive">EXPORT JSON</button>
+            <button class="btn-header" onclick="triggerImportSave()" id="btn-import-save" title="Import Vault JSON Archive">IMPORT JSON</button>
+            <input type="file" id="import-save-file" accept=".json" style="display:none;" onchange="importSaveFile(event)">
             <button class="btn-header" onclick="toggleAudio()" id="btn-audio">AUDIO: ON</button>
             <button class="btn-header" onclick="toggleAmbientWind()" id="btn-wind">WIND: OFF</button>
             <button class="btn-header" onclick="toggleScanlines()" id="btn-scanlines">CRT: ON</button>
-            <button class="btn-header" onclick="showHelpModal()">HELP / MANUAL</button>
+            <button class="btn-header" onclick="showHelpModal()" title="Overseer Manual (F1 or H)">HELP / MANUAL [F1/H]</button>
             <button class="btn-header" onclick="resetShelter()">RESET</button>
         </div>
     </header>
@@ -5196,6 +5199,55 @@
             return false;
         }
 
+        function exportSaveFile() {
+            try {
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
+                const dlAnchor = document.createElement('a');
+                dlAnchor.setAttribute("href", dataStr);
+                dlAnchor.setAttribute("download", `ksanctuary_vault704_day${state.day}.json`);
+                document.body.appendChild(dlAnchor);
+                dlAnchor.click();
+                dlAnchor.remove();
+                showToast(`VAULT ARCHIVE EXPORTED // DAY ${state.day}`, 'success');
+                logEvent(`[SYSTEM] Vault state exported to JSON archive (Day ${state.day}).`, 'cycle');
+                playSound('craft');
+            } catch (e) {
+                showToast('FAILED TO EXPORT SAVE JSON', 'error');
+            }
+        }
+
+        function triggerImportSave() {
+            const input = document.getElementById('import-save-file');
+            if (input) input.click();
+        }
+
+        function importSaveFile(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed && parsed.facilities && parsed.survivors) {
+                        restoreParsedState(parsed);
+                        updateAll();
+                        updateVaultCutawayRooms();
+                        saveState();
+                        showToast(`ARCHIVE IMPORTED // DAY ${state.day} PHASE ${state.phase}`, 'success');
+                        logEvent(`[SYSTEM] Vault state successfully imported from JSON (Day ${state.day}).`, 'cycle');
+                        playSound('alert');
+                    } else {
+                        showToast('INVALID SAVE ARCHIVE: MISSING CORE DATA', 'error');
+                        playSound('alert');
+                    }
+                } catch (err) {
+                    showToast('FAILED TO PARSE SAVE FILE', 'error');
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
         function resetShelter() {
             if (confirm("Initiate Vault Emergency Reboot? All progress will reset to Day 1.")) {
                 state = JSON.parse(JSON.stringify(defaultState));
@@ -5374,6 +5426,78 @@
 
         function getUnassignedSurvivors() {
             return state.survivors.filter(s => !s.job || s.job === 'unassigned');
+        }
+
+        function assignSurvivorJob(survId, newJob) {
+            const surv = state.survivors.find(s => s.id === survId);
+            if (!surv) return;
+
+            if (newJob === 'unassigned') {
+                surv.job = 'unassigned';
+                logEvent(`WORKFORCE: ${surv.name} was stood down from active facility duty.`, 'info');
+            } else {
+                const fac = state.facilities.find(f => f.id === newJob);
+                if (!fac) return;
+                const assignedToFac = state.survivors.filter(s => s.job === newJob && s.id !== surv.id).length;
+                if (assignedToFac >= fac.maxWorkers) {
+                    showToast(`FACILITY FULL: ${fac.name} is at maximum capacity (${fac.maxWorkers} workers)`, 'warn');
+                    updateAll();
+                    return;
+                }
+                surv.job = newJob;
+                logEvent(`WORKFORCE: ${surv.name} assigned to ${fac.name}.`, 'cycle');
+            }
+
+            // Sync facility assigned counts
+            state.facilities.forEach(f => {
+                f.assigned = state.survivors.filter(s => s.job === f.id).length;
+            });
+
+            playSound('click');
+            updateAll();
+            updateVaultCutawayRooms();
+            saveState();
+        }
+
+        function changeWorker(facId, delta) {
+            const fac = state.facilities.find(f => f.id === facId);
+            if (!fac) return;
+
+            if (delta > 0) {
+                const unassigned = getUnassignedSurvivors();
+                if (unassigned.length === 0) {
+                    showToast('NO IDLE CITIZENS: Free up a worker from another room first', 'warn');
+                    playSound('alert');
+                    return;
+                }
+                const currentlyAssigned = state.survivors.filter(s => s.job === facId).length;
+                if (currentlyAssigned >= fac.maxWorkers) {
+                    showToast(`ROOM AT CAPACITY: ${fac.name} can hold max ${fac.maxWorkers} staff`, 'warn');
+                    return;
+                }
+                // Pick the unassigned survivor with highest efficiency for this facility
+                unassigned.sort((a, b) => getWorkerEfficiency(b, fac) - getWorkerEfficiency(a, fac));
+                const worker = unassigned[0];
+                worker.job = facId;
+                logEvent(`STAFFING: Assigned ${worker.name} to ${fac.name}.`, 'cycle');
+            } else if (delta < 0) {
+                const assignedWorkers = state.survivors.filter(s => s.job === facId);
+                if (assignedWorkers.length === 0) return;
+                // Unassign worker with lowest efficiency
+                assignedWorkers.sort((a, b) => getWorkerEfficiency(a, fac) - getWorkerEfficiency(b, fac));
+                const worker = assignedWorkers[0];
+                worker.job = 'unassigned';
+                logEvent(`STAFFING: Removed ${worker.name} from ${fac.name}.`, 'info');
+            }
+
+            state.facilities.forEach(f => {
+                f.assigned = state.survivors.filter(s => s.job === f.id).length;
+            });
+
+            playSound('click');
+            updateAll();
+            updateVaultCutawayRooms();
+            saveState();
         }
 
         // Base Defense & Security Calculations
@@ -8404,24 +8528,58 @@
                 return;
             }
 
-            // Modal Dismissal (Esc, Enter, Space when modal is active)
+            // Modal Interactions & Dismissal (Esc, Enter, Space when modal is active)
             const activeModal = getActiveModal();
-            if (e.key === 'Escape' || e.code === 'Escape') {
-                if (activeModal) {
+            if (activeModal) {
+                if (e.key === 'Escape' || e.code === 'Escape') {
                     e.preventDefault();
                     if (activeModal === 'tutorial-modal') closeTutorialModal();
                     else closeModal(activeModal);
                     return;
                 }
-            }
-            if ((e.code === 'Enter' || e.code === 'Space') && activeModal) {
-                e.preventDefault();
-                if (activeModal === 'tutorial-modal') closeTutorialModal();
-                else closeModal(activeModal);
+                if (e.code === 'Enter') {
+                    if (activeModal === 'tutorial-modal') {
+                        e.preventDefault();
+                        closeTutorialModal();
+                        return;
+                    } else if (activeModal === 'raid-modal' || activeModal === 'summary-modal') {
+                        e.preventDefault();
+                        closeModal(activeModal);
+                        return;
+                    } else if (activeModal === 'scout-modal') {
+                        e.preventDefault();
+                        const btn = document.querySelector('#scout-modal-body .btn-dispatch');
+                        if (btn) btn.click();
+                        return;
+                    }
+                }
+                if (e.code === 'Space') {
+                    if (activeModal === 'tutorial-modal') {
+                        e.preventDefault();
+                        closeTutorialModal();
+                        return;
+                    } else if (activeModal === 'raid-modal' || activeModal === 'summary-modal') {
+                        e.preventDefault();
+                        closeModal(activeModal);
+                        return;
+                    } else if (activeModal === 'scout-modal' && e.target && e.target.type === 'checkbox') {
+                        // Allow default spacebar behavior to toggle checkbox
+                        return;
+                    }
+                }
+                // Suppress background hotkeys while modal is open
                 return;
             }
 
-            if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+            // Suppress global hotkeys when focused inside text inputs, select dropdowns, or textareas
+            if (e.target && ['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) {
+                return;
+            }
+
+            if (e.key === 'F1' || e.code === 'F1' || e.code === 'KeyH') {
+                e.preventDefault();
+                showHelpModal();
+            } else if (e.code === 'Space') {
                 e.preventDefault();
                 advanceCycle();
             } else if (e.code === 'Digit1') {
@@ -8444,10 +8602,44 @@
                 toggleTheme();
             } else if (e.code === 'KeyC') {
                 toggleScanlines();
-            } else if (e.code === 'KeyH') {
-                showHelpModal();
             } else if (e.code === 'KeyA') {
                 toggleAutoRun();
+            }
+        });
+
+        // ARCH-05: Background Tab Visibility & Timer Drift Remediation
+        let autoRunPausedForVisibility = false;
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                if (audioCtx && audioCtx.state === 'running') {
+                    audioCtx.suspend();
+                }
+                if (vaultAnimId) {
+                    cancelAnimationFrame(vaultAnimId);
+                    vaultAnimId = null;
+                }
+                if (autoRunTimer) {
+                    clearInterval(autoRunTimer);
+                    autoRunTimer = null;
+                    autoRunPausedForVisibility = true;
+                }
+                saveState();
+            } else {
+                if (audioCtx && audioCtx.state === 'suspended' && soundEnabled) {
+                    audioCtx.resume();
+                }
+                if (!vaultAnimId && state.facilitySubTab === 'rooms') {
+                    vaultAnimId = requestAnimationFrame(animateVaultCutaway);
+                }
+                if (autoRunPausedForVisibility) {
+                    autoRunPausedForVisibility = false;
+                    const btn = document.getElementById('btn-autorun');
+                    if (btn && btn.textContent.includes('ON')) {
+                        autoRunTimer = setInterval(() => {
+                            advanceCycle();
+                        }, 1800);
+                    }
+                }
             }
         });
 
@@ -8468,6 +8660,16 @@
             logEvent('Life support and biometric sensors operating on standby power.', 'info');
             updateAll();
             initVaultCutaway();
+
+            // Modal backdrop dismissal
+            document.querySelectorAll('.modal-overlay').forEach(overlay => {
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) {
+                        if (overlay.id === 'tutorial-modal') closeTutorialModal();
+                        else closeModal(overlay.id);
+                    }
+                });
+            });
 
             // First-run tutorial check (only triggers on fresh Day 1 sessions without existing save)
             try {

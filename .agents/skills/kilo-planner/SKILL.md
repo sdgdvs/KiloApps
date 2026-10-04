@@ -24,12 +24,12 @@ This skill is invoked automatically every 24 hours by the orchestrator (`scripts
 2. **Daily Agent Schedule & Target Rework**:
    - In `next_work.md`, adjust the `agent_rotation` list for the upcoming 24-hour window across the 6 worker agents:
      - `kilo-creator` (new app creation / deep genre worlds)
-     - `kilo-graphics` (game content, visual polish, AI balance)
+     - `kilo-graphics` (programmer art replacement with Imagen 3 generated sprites/backgrounds)
      - `kilo-tester` (interactive UI element & button audits)
      - `kilo-usability` (layout, window sizing, crisp canvas, help UX)
      - `kilo-qa` (Pass 5 tutorial & state persistence, build verification)
      - `kilo-expander` (deep features for dev, productivity, media tools)
-   - Update `current_targets` for each active queue to align with current priorities.
+   - Update `current_targets` for each active queue to align with current priorities (channel `kilo_graphics` exclusively toward games with programmer art needing Imagen 3 sprites/backgrounds).
    - Evaluate `virtual_web_target`: review progress against `virtual_web_rotation` in `next_work.md`, verify sites meet the Anti-Potemkin Quality Standard (genuine interactive depth, Web Audio, simulated backends), and advance `virtual_web_target` to the next site in rotation.
    - If a new app was recently created, ensure subsequent turns prioritize its usability, testing, and graphical polish.
 
