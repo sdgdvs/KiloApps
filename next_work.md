@@ -32,10 +32,10 @@ virtual_web_rotation:
   - "kweb://webring"
   - "kweb://warez"
 last_run:
-  agent: kilo-tester
-  app: KSanctuary
-  timestamp: "2026-10-03T23:45:00-07:00"
-last_planner_run: "2026-10-04T05:48:00Z"
+  agent: kilo-planner
+  app: FleetPolicy
+  timestamp: "2026-10-03T23:50:00-07:00"
+last_planner_run: "2026-10-04T06:50:00Z"
 ---
 
 # KiloApps Master Fleet Work & Queue State
@@ -230,6 +230,13 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
 
 ## Recent Execution Logs (Max 5 Entries)
  
+- **2026-10-03T23:50:00-07:00 — kilo-planner: Fleet Policy (Multiplayer Autostart Prohibition & Connect Gate Mandate)**
+  - Status: PASS ✅ (Multiplayer policy enforced across planning files and agent skills).
+  - Mandatory Connect Gate: Required explicit user action ("Connect" button, start screen, or menu) before any online connection.
+  - Autostart Ban: Prohibited automatic room joining, matchmaking, and lobby listening on app startup across all multiplayer apps.
+  - Offline Default: All games must boot into local/offline play (e.g. vs AI or solo) or explicit start screen.
+  - Policy Sync: Updated `next_work.md`, `docs/RFMS_SPEC.md`, `kilo-creator`, `kilo-expander`, and `.agents/AGENTS.md`.
+
 - **2026-10-03T23:45:00-07:00 — kilo-tester: KSanctuary (Interactive UI Audit, Worker Dispatch Fixes, JSON Save/Load & ARCH-05)**
   - Status: PASS ✅ (2 critical missing handlers fixed, 0 regressions, clean builds, 449.9 KB web / 264.2 KB native < 999 KB ceiling).
   - Worker Controls: Implemented missing `changeWorker` and `assignSurvivorJob` handlers enabling facility staffing buttons and roster assignment.
@@ -262,13 +269,5 @@ The Windows Task Scheduler orchestrator (`scripts/orchestrate.py`) parses the YA
   - ARCH-05 Visibility: Implemented `visibilitychange` listener pausing BGM synthesis and canvas frame loops when backgrounded.
   - Verification: Vite build clean; security_lint 100% PASS; check_icons 100% PASS.
 
-- **2026-10-03T18:40:00-07:00 — kilo-expander: KDarts (Deep Feature Expansion, RFMS Multiplayer, Replay Viewer & Glint Purge)**
-  - Status: PASS ✅ (0 regressions, 0 glints, clean builds, 151.2 KB web / 41.0 KB native < 999 KB ceiling).
-  - Online Multiplayer: Integrated standardized RFMS RetroMultiplayer (DAR prefix, 25s solo AI fallback, room code sync).
-  - Replay & Telemetry: Built interactive 3D sisal board replay visualizer with timeline scrubbing, 3-dart average, and JSON export/import.
-  - Controls & Ergonomics: Built key rebinding engine, reticle visual themes (cyan/gold/neon/ruby), and motor assistance slider.
-  - Glint Ban & Remediation: Purged specular sweeps and pulsing borders across web and native C; removed Loop 7 label.
-  - ARCH-05: Added document visibility listener pausing AI timeouts and frame processing when backgrounded.
-  - Verification: MSVC clean (`KDarts.exe` 41 KB); Vite build clean in 448ms; security_lint 100% PASS.
 
 
